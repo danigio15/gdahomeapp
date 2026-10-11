@@ -980,12 +980,29 @@ export function sommarioConsole() {
      * Conversazioni, non messaggi: chi guarda vuole sapere quante porte ha da
      * aprire, non quante frasi ci sono dietro. Quante siano lo dice il filo. */
     nonLetti: state.nonLetti.length,
-    conversazioni: state.nonLetti.map((voce) => ({
-      number: Number(voce?.number) || 0,
-      title: clean(voce?.title),
-      messages: Number(voce?.messages) || 1,
-      opened: Boolean(voce?.opened),
-    })),
+    /* La piu' vecchia fra le ferme, per numero: la finestra in Home la nomina. */
+    piuVecchia: (() => {
+      const ferme = daLavorare
+        .map((ticket) => ({ numero: Number(ticket.number) || 0, quando: nate(ticket) }))
+        .filter((voce) => voce.numero && Number.isFinite(voce.quando) && voce.quando < limite)
+        .sort((a, b) => a.quando - b.quando);
+      return ferme[0]?.numero || 0;
+    })(),
+    conversazioni: state.nonLetti.map((voce) => {
+      /* Chi l'ha aperta e a che punto e', se la coda la conosce: la finestra
+       * in Home lo scrive sotto il titolo. */
+      const ticket = state.queue.find(
+        (una) => (Number(una?.number) || 0) === (Number(voce?.number) || 0),
+      );
+      return {
+        number: Number(voce?.number) || 0,
+        title: clean(voce?.title),
+        messages: Number(voce?.messages) || 1,
+        opened: Boolean(voce?.opened),
+        autore: clean(ticket?.author),
+        stato: clean(ticket?.state),
+      };
+    }),
   };
 }
 

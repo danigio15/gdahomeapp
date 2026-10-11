@@ -36,7 +36,11 @@ test("il tasto porta il servizio, e la conferma quando serve", () => {
 
 test("la Home chiede la finestra disegnata prima di quella generica", () => {
   const home = readFileSync(join(SRC, "sections/home-widgets-section.js"), "utf8");
-  assert.match(home, /const disegnata = finestraDi\(widget\.key\)/);
+  /* La chiede `finestraDisegnata`, in cima a `detailBody`: prima per chiave,
+   * poi per famiglia, e per le sezioni proprie quella di «sezionimie». Sta
+   * prima anche delle segnalazioni e dell'assistenza, che hanno la loro. */
+  assert.match(home, /const disegnata = finestraDisegnata\(widget\.key\)/);
+  assert.match(home, /finestraDi\(grezza\) \|\|\s*finestraDi\(famigliaDellaTessera\(grezza\)\)/);
   assert.match(home, /if \(suTastoServizio\(event\)\) return;/);
   assert.match(home, /entita\.some\(\(id\) => !siComanda\(id\)\)/);
 });

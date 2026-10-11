@@ -342,6 +342,7 @@ import {
   paginaVisibile,
   parlaDelCavo,
   parolaDelVerdetto,
+  paroleDelleRisposte,
   parseDurationSeconds,
   parseTimestampMs,
   passoDellUnita,
@@ -490,7 +491,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-IYH5IHM3.js";
+} from "../../chunk-GJERYIED.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2164,6 +2165,7 @@ var SOURCE_INDEX = Object.freeze({
   "Aiuto": "Help",
   "Al": "To",
   "al lavoro": "working",
+  "al lavoro adesso": "working now",
   "Al posto del percorso puoi scrivere un'entità immagine (image.auto) o una telecamera (camera.auto): la foto la tiene aggiornata l'integrazione, e la lente 🔍 te la fa cercare.": "Instead of a path you can write an image entity (image.car) or a camera (camera.car): the integration keeps the photo up to date, and the 🔍 lens finds it for you.",
   "Al posto di «Esco» quando l'antifurto è inserito": "Instead of «Leaving» when the alarm is armed",
   "Alberi": "Tree",
@@ -2298,6 +2300,7 @@ var SOURCE_INDEX = Object.freeze({
   "Apri l'allegato": "Open the attachment",
   "Apri l'immagine": "Open the image",
   "Apri la chat": "Open the chat",
+  "Apri la cucina": "Open the kitchen",
   "Apri la mappa": "Open the map",
   "Apri la telecamera": "Open camera",
   "Apri lo storico": "Open the history",
@@ -2306,6 +2309,7 @@ var SOURCE_INDEX = Object.freeze({
   "Apri porte/cancelli": "Door & gate openers",
   "Apri sezione": "Open section",
   "Apri su GitHub": "Open on GitHub",
+  "Apri tutta la conversazione": "Open the whole conversation",
   "Apri tutto": "Open all",
   "Apri una finestra per qualche minuto.": "Open a window for a few minutes.",
   "Aprila": "Open it",
@@ -2391,6 +2395,7 @@ var SOURCE_INDEX = Object.freeze({
   "Avvia filtrazione": "Start filtration",
   "Avvia la filtrazione all'ora programmata": "Start filtration at the scheduled time",
   "Avvia programma": "Start schedule",
+  "avviata alle": "started at",
   "avviata alle ${partita}": "started at ${partita}",
   "Avvio": "Start",
   "Avvio audio HLS…": "Starting HLS audio…",
@@ -2816,6 +2821,7 @@ var SOURCE_INDEX = Object.freeze({
   "Confronto disponibile dalla seconda settimana registrata": "Comparison is available from the second recorded week",
   "Confronto Settimanale": "Weekly comparison",
   "Congelatore": "Freezer",
+  "connessi": "connected",
   "Connessione stream…": "Connecting stream…",
   "Connessione WebRTC…": "Connecting WebRTC…",
   "Connessione…": "Connecting…",
@@ -2945,6 +2951,7 @@ var SOURCE_INDEX = Object.freeze({
   "da innaffiare": "needs water",
   "Da innaffiare sotto il (%)": "Needs water below (%)",
   "Da inviare": "To send",
+  "da lavorare": "to work on",
   "Da lavorare": "To work on",
   "Da leggere": "Unread",
   "Da mettere fuori stasera": "Put it out tonight",
@@ -3101,6 +3108,7 @@ var SOURCE_INDEX = Object.freeze({
   "e": "and",
   "e altre ${conversazioni.length - MOSTRATE}": "and ${conversazioni.length - MOSTRATE} more",
   "E altre ${quante} che non stanno in questo elenco.": "And ${quante} more that do not fit this list.",
+  "e altre:": "and more:",
   "e anche": "and also",
   "è arrivata": "has arrived",
   "È arrivata la posta": "The mail has arrived",
@@ -3117,6 +3125,7 @@ var SOURCE_INDEX = Object.freeze({
   "È quello che fa il tasto di QUESTA unità nel popup Clima della Home. Ogni unità ha i suoi passi, modificabili anche dalla matita; temperatura e ventola vuote vuol dire che il tasto non le tocca.": "This is what THIS unit's button does in the Home climate popup. Each unit keeps its own steps, editable from the pencil too; empty temperature and fan mean the button leaves them alone.",
   "è quello che sembra": "it is what it looks like",
   "È QUESTO campo ad accendere WebRTC: il nome del flusso come sta scritto dentro go2rtc/Frigate. Il nome della telecamera non c'entra.": "THIS field is what turns WebRTC on: the stream name as written inside go2rtc/Frigate. The camera name is not the lever.",
+  "È sotto sforzo": "Under heavy load",
   "è un climatizzatore": "it is a climate unit",
   "È un contatore di energia (kWh): dice quanto ha consumato in tutto, non quanto assorbe adesso. Qui viene ignorato — va nel campo «Energia totale per storico e Report».": "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.",
   "è un sensore del garage": "it is a garage sensor",
@@ -3313,6 +3322,7 @@ var SOURCE_INDEX = Object.freeze({
   "ferma": "stopped",
   "Ferma": "Stop",
   "Ferma l'irrigazione": "Stop watering",
+  "Ferme da oltre un mese:": "Stuck for over a month:",
   "Fermo": "Still",
   "Fermo da": "Still for",
   "Fermo in acqua": "Rinse hold",
@@ -3340,6 +3350,7 @@ var SOURCE_INDEX = Object.freeze({
   "Finché non scegli l'entità questo varco non si vede: né nella pagina, né nel conto di quanti sono aperti adesso.": "Until you pick the entity this opening is nowhere: not on the page, not in the count of how many are open right now.",
   "Finché non scegli lo stato di carica questo pacco non si vede: né in Energia, né nella tessera in Home.": "Until you pick the state of charge this pack is nowhere: not in Energy, not on the Home tile.",
   "Fine": "Ends",
+  "fine alle": "done at",
   "fine alle ${ora}": "done at ${ora}",
   "Fine alle ${ora}": "Done at ${ora}",
   "Finestra": "Window",
@@ -3354,6 +3365,8 @@ var SOURCE_INDEX = Object.freeze({
   "Finestrini (aperti/chiusi)": "Windows (open/closed)",
   "Finestrini aperti": "Windows open",
   "Finestrini chiusi": "Windows closed",
+  "finisce": "ends",
+  "finisce fra": "done in",
   "Finita": "Finished",
   "Fino a: buona": "Up to: good",
   "Fino a: discreta": "Up to: fair",
@@ -3453,6 +3466,7 @@ var SOURCE_INDEX = Object.freeze({
   "Guarda il display della stufa.": "Check the stove's display.",
   "Guardia": "Guard",
   "ha gia' piovuto abbastanza": "enough rain already",
+  "ha risposto alle": "replied at",
   "ha sete": "is thirsty",
   "HACS / personalizzata": "HACS / custom",
   "Hai già tutti i piani che si possono avere.": "You already have every floor you can have.",
@@ -3682,7 +3696,7 @@ var SOURCE_INDEX = Object.freeze({
   "in allarme": "triggered",
   "In allarme": "In alarm",
   "In apertura": "Opening",
-  "in attesa": "waiting",
+  "in attesa": "on standby",
   "In attesa": "Standby",
   "IN ATTESA": "WAITING",
   "In attesa del fotogramma": "Waiting for a frame",
@@ -3710,6 +3724,7 @@ var SOURCE_INDEX = Object.freeze({
   "In funzione anche: ${nomi}": "Also on: ${nomi}",
   "In Home": "On Home",
   "in Home Assistant non c'è": "not in Home Assistant",
+  "in lavorazione": "in progress",
   "In lavorazione": "In progress",
   "in meno di una tariffa unica": "less than a single rate",
   "In orario": "On time",
@@ -3720,6 +3735,7 @@ var SOURCE_INDEX = Object.freeze({
   "In pausa: aria già umida": "Paused: the air is already humid",
   "In percentuale diventa il serbatoio disegnato in pagina; in kg si legge in chili.": "As a percentage it becomes the hopper drawn on the page; in kg it is read in kilograms.",
   "In percentuale o in kg, come quello della caldaia; oppure un binary_sensor che si accende quando il pellet sta finendo.": "As a percentage or in kg, like the boiler's; or a binary_sensor that turns on when the pellet is running low.",
+  "in piedi:": "up:",
   "in più di una tariffa unica": "more than a single rate",
   "In quale fascia": "Which band",
   "In quale fascia consuma": "Which band it draws in",
@@ -3792,10 +3808,13 @@ var SOURCE_INDEX = Object.freeze({
   "Inserisci una entità valida": "Enter a valid entity",
   "Inserita · ${modo}": "Armed · ${modo}",
   "Inserito": "Armed",
+  "insieme": "together",
   "Installa": "Install",
   "Installa questo aggiornamento": "Install this update",
   "Integrazioni": "Integrations",
   "Intensità della pioggia": "Rain rate",
+  "Internet assente": "Internet down",
+  "Internet attivo": "Internet up",
   "Interruttore": "Toggle",
   "Interruttore (accende e spegne)": "Switch (turns it on and off)",
   "Interruttore (se non c'è il termostato)": "Switch (when there is no thermostat)",
@@ -3815,6 +3834,7 @@ var SOURCE_INDEX = Object.freeze({
   "Inverter Fotovoltaico": "PV inverter",
   "Inverti il verso (ON = chiusa)": "Flip the direction (ON = closed)",
   "Inverti le percentuali (100 = chiusa)": "Flip the percentages (100 = closed)",
+  "Invia": "Upload",
   "Inviata": "Sent",
   "Inviata. Grazie.": "Sent. Thank you.",
   "Invio…": "Sending…",
@@ -3874,6 +3894,7 @@ var SOURCE_INDEX = Object.freeze({
   "La centrale non ha accettato": "The alarm panel refused",
   "La centralina esterna detta il verdetto di tutta la casa: da qui si toglie di mezzo senza spegnere la tessera.": "The outdoor station dictates the verdict for the whole house: this drops it without turning the tile off.",
   "La ciotola e il cibo": "The bowl and the food",
+  "La coda da lavorare": "The queue to work on",
   "La colonnina è della casa, non di una macchina: si collega una volta e vale per tutte le vetture. Porta quello che misura: potenza, energia, tensione, temperatura, il cavo.": "The charger belongs to the house, not to one car: connect it once and it counts for every vehicle. It brings what it measures: power, energy, voltage, temperature, the cable.",
   "La colonnina e evcc": "The wallbox and evcc",
   "La configurazione è salvata": "Configuration is saved",
@@ -3907,6 +3928,7 @@ var SOURCE_INDEX = Object.freeze({
   "la più bassa": "lowest",
   "la più calda": "warmest",
   "la più fredda": "coldest",
+  "la più vecchia è la": "the oldest is",
   "La plancia a muro è Premium": "The wall dashboard is Premium",
   "La plancia a tutto schermo, sopra la barra laterale di Home Assistant. Vale solo per questa plancia e solo su questo apparecchio: sul telefono si accende da sola.": "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.",
   "La plancia è indipendente e senza abbonamenti: qui c'è come darle una mano": "The dashboard is independent and subscription-free: here is how to give it a hand",
@@ -3944,6 +3966,7 @@ var SOURCE_INDEX = Object.freeze({
   "La temperatura del pannello, nel disegno accanto ai collettori.": "The collector temperature, next to the panels in the drawing.",
   "La tessera del muro mostra il flusso continuo invece di un'istantanea ogni quattro secondi — è quello che fa «camera_view: live». Tiene aperta una connessione mentre guardi la sezione Sicurezza: accendilo sulle telecamere che vuoi vedere muoversi.": "The wall tile shows the continuous stream instead of a still every four seconds — this is what “camera_view: live” does. It holds a connection open while you are looking at the Security section: turn it on for the cameras you want to see moving.",
   "La tua domanda": "Your question",
+  "La tua sezione": "Your section",
   "La vita che resta al filtro della fontanella, in percentuale: sotto soglia la scheda dice che è a fine corsa.": "The fountain filter's remaining life, as a percentage: below the threshold the card says it is worn out.",
   "La wallbox": "The wallbox",
   "Lampada calda o riscaldamento": "Heat lamp or heating",
@@ -3966,6 +3989,7 @@ var SOURCE_INDEX = Object.freeze({
   "Lavastoviglie": "Dishwasher",
   "Lavatrice": "Washing machine",
   "LAVATRICE": "WASHING MACHINE",
+  "Lavora tranquillo": "Taking it easy",
   "Lavoro": "Working",
   "Le altre": "The others",
   "Le aperture della sezione Sicurezza: portone, porta di casa, cancello. Ogni porta ha la sua card; il tocco chiede conferma e, se imposti un PIN, il codice.": "The openings of the Security section: front door, house door, gate. Each door gets its own card; a tap asks to confirm and, with a PIN set, asks for the code.",
@@ -3975,6 +3999,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Se sta sullo stesso dispositivo del contatto, o si chiama come lui con «bypass» in fondo, la plancia lo trova da sola; altrimenti scrivilo qui. Nella pagina Varchi compare il tasto per escludere o includere questo varco. Acceso vuol dire escluso. Scrivi - per non mostrare il tasto.": "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. If it sits on the same device as the contact, or is named like it with «bypass» at the end, the dashboard finds it by itself; otherwise write it here. The button to bypass or re-include this opening shows up on the Openings page. On means bypassed. Write - to hide the button.",
   "Le coordinate scritte a mano vincono su tutto; se le lasci vuote vale la zona qui sopra, e se non scegli niente vale casa. Per un posto che non è casa tua, creagli una zona in Home Assistant: comparirà nella tendina col suo nome.": "Coordinates typed by hand win over everything; leave them empty and the zone above is used, and with no choice at all it is home. For somewhere that is not your house, give it a zone in Home Assistant: it shows up in the list under its own name.",
   "Le cose che la plancia sa gia'": "The things the dashboard already knows",
+  "Le cose che tieni d'occhio": "What you keep an eye on",
   "Le due sonde insieme dicono quanta acqua calda è rimasta.": "The two probes together say how much hot water is left.",
   "Le entità": "The entities",
   "Le entità che riempiono la finestra: la presa, l'avvio del ciclo, la fase, il tempo e i tre menu. Sono le stesse della scheda Lavatrice in Sezioni: quello che scrivi qui lo trovi anche lì.": "The entities that fill the window: the socket, the cycle start, the phase, the time and the three menus. They are the same as the Washing machine card under Sections: what you write here shows up there too.",
@@ -4113,6 +4138,8 @@ var SOURCE_INDEX = Object.freeze({
   "Magnitudo (facoltativa)": "Magnitude (optional)",
   "Mago": "Mage",
   "Mai": "Never",
+  "mai aperta": "never opened",
+  "Mai aperte": "Never opened",
   "Mai ferma in 24 ore": "Never still in 24 hours",
   "Mai ferma in 24 ore: forse una perdita": "Never still in 24 hours: maybe a leak",
   "Mai: resta accesa": "Never: it stays on",
@@ -4298,6 +4325,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessun comando in più: la finestra ha quelli dell'apparecchio e basta.": "No extra command: the window carries the appliance's own and nothing else.",
   "Nessun comando in più: la scheda ha i tasti del lettore e basta.": "No extra command: the card carries the player's own buttons and nothing else.",
   "Nessun comando in più: la scheda ha quelli del robot e basta.": "No extra command: the card carries the robot's own and nothing else.",
+  "Nessun comando: va riacceso a mano": "No controls: restart it by hand",
   "Nessun condizionatore configurato": "No air conditioner configured",
   "Nessun consumo istantaneo misurabile dagli elettrodomestici.": "No measurable instant appliance consumption.",
   "Nessun contatore configurato": "No meter configured",
@@ -4576,6 +4604,8 @@ var SOURCE_INDEX = Object.freeze({
   "oggi": "today",
   "Oggi": "Today",
   "OGGI": "TODAY",
+  "Oggi arrivate:": "In today:",
+  "Oggi non è arrivato niente": "Nothing came in today",
   "Oggi non e' arrivato niente.": "Nothing came in today.",
   "Oggi pioggia prevista: ${quanta}": "Rain expected today: ${quanta}",
   "Oggi ritirano": "Collected today",
@@ -4914,6 +4944,7 @@ var SOURCE_INDEX = Object.freeze({
   "Programmi rapidi del popup": "Quick programs of the popup",
   "pronta": "ready",
   "Pronta": "Ready",
+  "pronta alle": "ready at",
   "Pronta alle ${ora}": "Ready at ${ora}",
   "Pronta fra ${durata}": "Ready in ${durata}",
   "pronta per la doccia": "ready for a shower",
@@ -4968,6 +4999,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quante fasce": "How many bands",
   "Quanti giorni restano prima di sostituirlo. Sotto la soglia la scheda lo dice, e il tasto qui sotto azzera il conto una volta cambiato.": "How many days are left before replacing it. Below the threshold the card says so, and the button below resets the count once you have changed it.",
   "Quanto cibo resta nel distributore. In percentuale la scheda ne fa una barra; chi scrive «Low» o «Empty» vale lo stesso, e sotto soglia la scheda avvisa.": "How much food is left in the feeder. As a percentage the card draws a bar; a sensor saying “Low” or “Empty” counts the same, and below the threshold the card warns.",
+  "Quanto è pieno": "How full",
   "Quanto gli chiedi": "How much you ask of it",
   "Quanto resta accesa": "How long it stays on",
   "Quanto resta accesa dal momento dell'accensione. Il conto alla rovescia lo tiene Home Assistant, non questa pagina: si può chiudere la plancia e l'unità si spegne lo stesso. Sulla card resta modificabile ogni volta.": "How long it stays on from the moment you switch it on. Home Assistant keeps the countdown, not this page: you can close the dashboard and the unit still switches off. On the card you can change it every time.",
@@ -5243,6 +5275,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scaldabagno": "Water heater",
   "Scaldabagno di Home Assistant": "Home Assistant water heater",
   "Scaldabagno elettrico": "Electric water heater",
+  "Scarica": "Download",
   "Scarica il backup": "Download the backup",
   "Scarica il file": "Download the file",
   "Scaricata oggi": "Discharged today",
@@ -5253,6 +5286,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scegli con 🔍, oppure scrivi l'entità: dominio.nome": "Pick with 🔍, or type the entity: domain.name",
   "Scegli cosa deve premere": "Pick what it has to press",
   "Scegli cosa suonare": "Choose what to play",
+  "Scegli cosa tenere in evidenza": "Choose what to highlight",
   "Scegli da Elettrodomestici": "Pick from Appliances",
   "Scegli dove cercare": "Choose where to look",
   "Scegli entità": "Choose entity",
@@ -5313,6 +5347,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scrivi la tua domanda…": "Type your question…",
   "Scrivi pure: dall'altra parte c'e' una persona, non un modulo.": "Go ahead and write: on the other side there is a person, not a form.",
   "Scrivi qui: il messaggio finisce sotto la segnalazione, a nome tuo.": "Write here: the message goes under the report, under your name.",
+  "Scrivi una risposta…": "Write a reply…",
   "Scura": "Dark",
   "Scuro": "Dark",
   "Se ce l'hai, basta questa: stato, temperatura e obiettivo li dichiara lei.": "If you have one, this is enough: it declares state, temperature and target itself.",
@@ -5427,6 +5462,7 @@ var SOURCE_INDEX = Object.freeze({
   "Serve un'entità vacuum.* o lawn_mower.* valida.": "A valid vacuum.* or lawn_mower.* entity is required.",
   "Serve un'entità valida (dominio.nome).": "A valid entity is required (domain.name).",
   "Serve una mano a configurare o a capire": "You need a hand configuring or understanding",
+  "Server": "Servers",
   "Server e rete": "Server and network",
   "Servizio Energia canonico non disponibile": "Canonical Energy service unavailable",
   "Servizio radar": "Radar service",
@@ -5566,6 +5602,7 @@ var SOURCE_INDEX = Object.freeze({
   "sta deumidificando": "drying",
   "Sta deumidificando": "Drying the air",
   "Sta finendo": "Ending",
+  "Sta lavorando": "Working",
   "Sta per piovere: ${quanta}": "Rain on its way: ${quanta}",
   "sta piovendo": "raining now",
   "sta raffrescando": "cooling",
@@ -5780,6 +5817,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tessera a sé in Home": "Its own tile on Home",
   "Tessere": "Tiles",
   "Tessere compatte": "Compact tiles",
+  "Ti stanno aspettando": "Waiting for you",
   "Tiene il minimo quando il fotovoltaico non basta": "Keeps the minimum when solar is not enough",
   "Tieni premuta un'area per sceglierne più d'una": "Press and hold an area to pick more than one",
   "Timeout firma path": "Sign path timeout",
@@ -5878,6 +5916,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tutte spente": "All off",
   "Tutte, dalla più asciutta": "All of them, driest first",
   "Tutti e due i tasti": "Both buttons",
+  "tutti fermi": "all idle",
   "Tutti i campi sono facoltativi: la card mostra automaticamente ciò che è disponibile. Avvio, durata, consumo e costo dell'ultimo ciclo vengono calcolati da soli dalle transizioni di potenza se non indichi entità dedicate.": "Every field is optional: the card automatically shows what is available. Start, duration, energy and cost of the last cycle are computed automatically from power transitions unless you provide dedicated entities.",
   "Tutti i giorni": "All days",
   "Tutti in": "All in",
@@ -5888,6 +5927,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tutto fatto": "All done",
   "Tutto il config": "Full config",
   "Tutto il giorno": "All day",
+  "tutto in piedi": "all up",
   "Tutto in piedi · ${conto.totale}": "All up · ${conto.totale}",
   "Tutto nella norma": "All in range",
   "Tutto quello che c'e' sulla repository": "Everything on the repository",
@@ -28333,58 +28373,58 @@ function renderAllerte() {
   schedule5();
 }
 function installStyles9() {
-  const P5 = `#${ALLERTE_PAGE_ID}`;
+  const P6 = `#${ALLERTE_PAGE_ID}`;
   installStyle(
     "dm-allerte-section-style",
     `
-    ${P5} .dm-allerte-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P5} .dm-allerte-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-allerte-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P6} .dm-allerte-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-allerte-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-allerte-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-allerte-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-allerte-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* Il riassunto: una riga sola, col colore del livello piu' alto. */
-    ${P5} .dm-allerte-riassunto{
+    ${P6} .dm-allerte-riassunto{
       display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:20px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-allerte-riassunto-ic{
+    ${P6} .dm-allerte-riassunto-ic{
       display:grid;place-items:center;width:46px;height:46px;border-radius:14px;font-size:22px;
       background:color-mix(in srgb,var(--dm-allerta-colore,#22c55e) 16%,transparent)}
-    ${P5} .dm-allerte-riassunto-testo{display:grid;gap:2px;min-width:0}
-    ${P5} .dm-allerte-riassunto strong{font-size:16px;font-weight:900;color:var(--text,#0f172a)}
-    ${P5} .dm-allerte-riassunto small{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-allerte-riassunto-testo{display:grid;gap:2px;min-width:0}
+    ${P6} .dm-allerte-riassunto strong{font-size:16px;font-weight:900;color:var(--text,#0f172a)}
+    ${P6} .dm-allerte-riassunto small{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P5} .dm-allerte-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:12px}
-    ${P5} .dm-allerta{
+    ${P6} .dm-allerte-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:12px}
+    ${P6} .dm-allerta{
       position:relative;display:grid;gap:8px;padding:14px 16px;border-radius:18px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06));overflow:hidden}
     /* Una tessera che si apre lo dice al dito prima che al dito serva saperlo:
        il cursore, e un sollevamento appena percettibile. Chi non ha niente
        dentro non riceve niente di tutto questo: lo decide valeLaPenaAprirla. */
-    ${P5} .dm-allerta-apribile{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
-    ${P5} .dm-allerta-apribile:hover{transform:translateY(-1px);
+    ${P6} .dm-allerta-apribile{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+    ${P6} .dm-allerta-apribile:hover{transform:translateY(-1px);
       box-shadow:var(--shadow-glass-strong,0 12px 34px rgba(0,0,0,.10))}
-    ${P5} .dm-allerta-apribile:focus-visible{
+    ${P6} .dm-allerta-apribile:focus-visible{
       outline:3px solid color-mix(in srgb,var(--primary-color,#0ea5e9) 45%,transparent);
       outline-offset:3px}
     /* La striscia a sinistra e' il livello, detto col colore prima che con la parola. */
-    ${P5} .dm-allerta::before{
+    ${P6} .dm-allerta::before{
       content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
       background:var(--dm-allerta-colore,#94a3b8)}
     /* Il nome della fonte si legge intero: «Protezione civile» e «Voli sopra
        casa» vanno su due righe piuttosto che finire in «PROTE…». */
-    ${P5} .dm-allerta-testa{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
-    ${P5} .dm-allerta-ic{display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto}
-    ${P5} .dm-allerta-ic .dm-appliance-art{display:block;line-height:0}
-    ${P5} .dm-allerta-nome{
+    ${P6} .dm-allerta-testa{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+    ${P6} .dm-allerta-ic{display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto}
+    ${P6} .dm-allerta-ic .dm-appliance-art{display:block;line-height:0}
+    ${P6} .dm-allerta-nome{
       flex:1 1 90px;min-width:0;font-size:12px;font-weight:900;letter-spacing:.04em;line-height:1.15;
       text-transform:uppercase;color:var(--text,#0f172a);overflow-wrap:anywhere}
-    ${P5} .dm-allerta-livello{
+    ${P6} .dm-allerta-livello{
       flex:0 0 auto;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
       padding:3px 8px;border-radius:999px;color:#fff;background:var(--dm-allerta-colore,#94a3b8)}
-    ${P5} .dm-allerta-frase{font-size:17px;font-weight:800;line-height:1.25;color:var(--text,#0f172a)}
+    ${P6} .dm-allerta-frase{font-size:17px;font-weight:800;line-height:1.25;color:var(--text,#0f172a)}
     /* Le righe valgono nella pagina E nella finestra del dettaglio.
      *
      * La finestra riusa questo markup ma vive attaccata al corpo del
@@ -28394,31 +28434,31 @@ function installStyles9() {
      * «GraminaceeAlto · 4/4». Non si vedeva finche' le righe erano due parole;
      * con i pollini presi uno per uno e le frasi dell'integrazione (#428) e'
      * diventato il difetto piu' visibile della finestra. */
-    :is(${P5},#${POPUP_ID}) .dm-allerta-righe{
+    :is(${P6},#${POPUP_ID}) .dm-allerta-righe{
       list-style:none;margin:0;padding:0;display:grid;gap:4px}
-    :is(${P5},#${POPUP_ID}) .dm-allerta-righe li{
+    :is(${P6},#${POPUP_ID}) .dm-allerta-righe li{
       display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:12px;
       color:var(--text-dim,#64748b)}
-    :is(${P5},#${POPUP_ID}) .dm-allerta-righe li>span{flex:0 1 auto;min-width:0}
+    :is(${P6},#${POPUP_ID}) .dm-allerta-righe li>span{flex:0 1 auto;min-width:0}
     /* Una frase non sta sulla riga del suo nome: va a capo e si prende tutta
      * la larghezza, allineata a sinistra come si legge un testo. Un valore
      * corto — «4/4», «12 km» — resta a destra del nome, dov'era. */
-    :is(${P5},#${POPUP_ID}) .dm-allerta-righe li b{
+    :is(${P6},#${POPUP_ID}) .dm-allerta-righe li b{
       font-weight:800;color:var(--text,#0f172a);text-align:right;min-width:0;flex:0 1 auto}
-    :is(${P5},#${POPUP_ID}) .dm-allerta-righe li[data-lungo="true"] b{
+    :is(${P6},#${POPUP_ID}) .dm-allerta-righe li[data-lungo="true"] b{
       flex:1 0 100%;text-align:left}
 
     /* I quattro colori, piu' il grigio di chi non risponde. Stanno in una
        variabile perche' li usano tre pezzi — striscia, pastiglia, alone — e un
        colore scritto tre volte e' un colore che prima o poi diverge. */
-    ${P5} [data-livello="quiete"]{--dm-allerta-colore:#22c55e}
-    ${P5} [data-livello="nota"]{--dm-allerta-colore:#0ea5e9}
-    ${P5} [data-livello="attenzione"]{--dm-allerta-colore:#f59e0b}
-    ${P5} [data-livello="allarme"]{--dm-allerta-colore:#ef4444}
-    ${P5} [data-livello="ignoto"]{--dm-allerta-colore:#94a3b8}
-    ${P5} .dm-allerta[data-livello="allarme"]{
+    ${P6} [data-livello="quiete"]{--dm-allerta-colore:#22c55e}
+    ${P6} [data-livello="nota"]{--dm-allerta-colore:#0ea5e9}
+    ${P6} [data-livello="attenzione"]{--dm-allerta-colore:#f59e0b}
+    ${P6} [data-livello="allarme"]{--dm-allerta-colore:#ef4444}
+    ${P6} [data-livello="ignoto"]{--dm-allerta-colore:#94a3b8}
+    ${P6} .dm-allerta[data-livello="allarme"]{
       box-shadow:0 0 0 1px rgba(239,68,68,.35),0 14px 34px -14px rgba(239,68,68,.6)}
-    ${P5} .dm-allerta[data-livello="ignoto"] .dm-allerta-frase{color:var(--text-dim,#64748b);font-weight:700}
+    ${P6} .dm-allerta[data-livello="ignoto"] .dm-allerta-frase{color:var(--text-dim,#64748b);font-weight:700}
 
     /* Il pallino sulla voce della barra, quando c'e' qualcosa. */
     nav.tabs .tab[data-tab="${ALLERTE_TAB}"]{position:relative}
@@ -28429,8 +28469,8 @@ function installStyles9() {
     nav.tabs .tab[data-tab="${ALLERTE_TAB}"][data-dm-livello="attenzione"] .icon::after{background:#f59e0b}
 
     @media (max-width:640px){
-      ${P5} .dm-allerte-griglia{grid-template-columns:1fr}
-      ${P5} .dm-allerta-frase{font-size:16px}
+      ${P6} .dm-allerte-griglia{grid-template-columns:1fr}
+      ${P6} .dm-allerta-frase{font-size:16px}
     }
     
     /* ── la finestra del dettaglio (#422) ─────────────────────────────────
@@ -29675,74 +29715,74 @@ function renderCitofono() {
   schedule6();
 }
 function installStyles10() {
-  const P5 = `#${CITOFONO_PAGE_ID}`;
+  const P6 = `#${CITOFONO_PAGE_ID}`;
   installStyle(
     "dm-citofono-section-style",
     `
-    ${P5} .dm-citofono-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P5} .dm-citofono-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-citofono-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P6} .dm-citofono-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-citofono-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-citofono-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-citofono-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-citofono-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
-    ${P5} .dm-citofono-testa{
+    ${P6} .dm-citofono-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-citofono-testa small{
+    ${P6} .dm-citofono-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P5} .dm-citofono-testa strong{font-size:28px;font-weight:900;line-height:1.06;color:var(--text,#0f172a)}
-    ${P5} .dm-citofono-testa[data-stato="suona"] strong{color:#ea580c}
-    ${P5} .dm-citofono-testa[data-stato="posta"] strong{color:#2563eb}
-    ${P5} .dm-citofono-testa[data-stato="quiete"] strong{color:#15803d}
-    ${P5} .dm-citofono-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-citofono-testa strong{font-size:28px;font-weight:900;line-height:1.06;color:var(--text,#0f172a)}
+    ${P6} .dm-citofono-testa[data-stato="suona"] strong{color:#ea580c}
+    ${P6} .dm-citofono-testa[data-stato="posta"] strong{color:#2563eb}
+    ${P6} .dm-citofono-testa[data-stato="quiete"] strong{color:#15803d}
+    ${P6} .dm-citofono-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P5} .dm-citofono-fascia{display:grid;gap:9px}
-    ${P5} .dm-citofono-fascia>header>strong{
+    ${P6} .dm-citofono-fascia{display:grid;gap:9px}
+    ${P6} .dm-citofono-fascia>header>strong{
       font-family:'Oswald',system-ui,sans-serif;font-size:15px;letter-spacing:1.3px;
       text-transform:uppercase;color:var(--text,#0f172a)}
-    ${P5} .dm-citofono-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P6} .dm-citofono-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
 
-    ${P5} .dm-citofono,${P5} .dm-cassetta{
+    ${P6} .dm-citofono,${P6} .dm-cassetta{
       display:grid;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-ingresso,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-ingresso,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P5} .dm-citofono{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#16a34a}
-    ${P5} .dm-citofono[data-suona="true"]{--dm-ingresso:#ea580c}
-    ${P5} .dm-cassetta{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#94a3b8}
-    ${P5} .dm-cassetta[data-stato="piena"]{--dm-ingresso:#2563eb}
-    ${P5} .dm-cassetta[data-stato="aperta"]{--dm-ingresso:#eab308}
-    ${P5} .dm-cassetta[data-stato="vuota"]{--dm-ingresso:#16a34a}
-    ${P5} .dm-cassetta-presa{
+    ${P6} .dm-citofono{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#16a34a}
+    ${P6} .dm-citofono[data-suona="true"]{--dm-ingresso:#ea580c}
+    ${P6} .dm-cassetta{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#94a3b8}
+    ${P6} .dm-cassetta[data-stato="piena"]{--dm-ingresso:#2563eb}
+    ${P6} .dm-cassetta[data-stato="aperta"]{--dm-ingresso:#eab308}
+    ${P6} .dm-cassetta[data-stato="vuota"]{--dm-ingresso:#16a34a}
+    ${P6} .dm-cassetta-presa{
       grid-column:2/-1;justify-self:start;margin-top:6px;
       border:1px solid color-mix(in srgb,var(--dm-ingresso) 45%,transparent);
       background:color-mix(in srgb,var(--dm-ingresso) 12%,transparent);
       color:var(--dm-ingresso);border-radius:999px;
       padding:6px 14px;font:600 12px/1 inherit;letter-spacing:.02em;cursor:pointer
     }
-    ${P5} .dm-cassetta-presa:hover{background:color-mix(in srgb,var(--dm-ingresso) 22%,transparent)}
+    ${P6} .dm-cassetta-presa:hover{background:color-mix(in srgb,var(--dm-ingresso) 22%,transparent)}
 
-    ${P5} .dm-citofono-ic,${P5} .dm-cassetta-ic{
+    ${P6} .dm-citofono-ic,${P6} .dm-cassetta-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-ingresso,#94a3b8) 22%,transparent)}
-    ${P5} .dm-citofono-testo,${P5} .dm-cassetta-testo{display:grid;gap:2px;min-width:0}
-    ${P5} .dm-citofono-testo strong,${P5} .dm-cassetta-testo strong{
+    ${P6} .dm-citofono-testo,${P6} .dm-cassetta-testo{display:grid;gap:2px;min-width:0}
+    ${P6} .dm-citofono-testo strong,${P6} .dm-cassetta-testo strong{
       font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-citofono-testo small,${P5} .dm-cassetta-testo small{
+    ${P6} .dm-citofono-testo small,${P6} .dm-cassetta-testo small{
       font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-cassetta-stato{
+    ${P6} .dm-cassetta-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-ingresso,#94a3b8) 78%,var(--text,#0f172a))}
 
-    ${P5} .dm-citofono-apri{
+    ${P6} .dm-citofono-apri{
       flex:0 0 auto;padding:9px 16px;border:0;border-radius:999px;cursor:pointer;
       font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;
       color:#fff;background:#16a34a;transition:transform .12s ease,background .2s ease}
-    ${P5} .dm-citofono-apri:active,${P5} .dm-citofono-apri-premuto{transform:scale(.94);background:#15803d}
-    @media(max-width:520px){${P5} .dm-citofono-elenco{grid-template-columns:1fr}}
+    ${P6} .dm-citofono-apri:active,${P6} .dm-citofono-apri-premuto{transform:scale(.94);background:#15803d}
+    @media(max-width:520px){${P6} .dm-citofono-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -30068,74 +30108,74 @@ function renderRifiuti() {
   schedule7();
 }
 function installStyles11() {
-  const P5 = `#${RIFIUTI_PAGE_ID}`;
+  const P6 = `#${RIFIUTI_PAGE_ID}`;
   installStyle(
     "dm-rifiuti-section-style",
     `
-    ${P5} .dm-rifiuti-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P5} .dm-rifiuti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-rifiuti-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P6} .dm-rifiuti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-rifiuti-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-rifiuti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-rifiuti-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-rifiuti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* Il prossimo ritiro: la risposta grande alla domanda della sera. */
-    ${P5} .dm-rifiuti-prossimo{
+    ${P6} .dm-rifiuti-prossimo{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-rifiuti-prossimo small{
+    ${P6} .dm-rifiuti-prossimo small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P5} .dm-rifiuti-prossimo strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P5} .dm-rifiuti-prossimo[data-quando="oggi"] strong{color:#dc2626}
-    ${P5} .dm-rifiuti-prossimo[data-quando="domani"] strong{color:#d97706}
-    ${P5} .dm-rifiuti-prossimo-data{font-size:13px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
-    ${P5} .dm-rifiuti-domani{
+    ${P6} .dm-rifiuti-prossimo strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P6} .dm-rifiuti-prossimo[data-quando="oggi"] strong{color:#dc2626}
+    ${P6} .dm-rifiuti-prossimo[data-quando="domani"] strong{color:#d97706}
+    ${P6} .dm-rifiuti-prossimo-data{font-size:13px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
+    ${P6} .dm-rifiuti-domani{
       display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;padding-top:10px;
       border-top:1px dashed var(--card-border,rgba(0,0,0,.14))}
-    ${P5} .dm-rifiuti-domani>small{
+    ${P6} .dm-rifiuti-domani>small{
       font-size:9.5px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;
       color:var(--text-dim,#94a3b8)}
-    ${P5} .dm-rifiuti-domani .dm-rifiuti-prossimo-bidoni{margin:0}
-    ${P5} .dm-rifiuti-prossimo-bidoni{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    ${P6} .dm-rifiuti-domani .dm-rifiuti-prossimo-bidoni{margin:0}
+    ${P6} .dm-rifiuti-prossimo-bidoni{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 
     /* Il bidone: una pillola col colore del bidone vero. */
-    ${P5} .dm-rifiuti-bidone{
+    ${P6} .dm-rifiuti-bidone{
       display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;
       background:color-mix(in srgb,var(--dm-bidone,#0ea5e9) 16%,transparent);
       border:1px solid color-mix(in srgb,var(--dm-bidone,#0ea5e9) 45%,transparent);
       font-size:12px;font-weight:900;color:var(--text,#0f172a)}
-    ${P5} .dm-rifiuti-bidone.grande{font-size:14px;padding:8px 16px 8px 10px}
+    ${P6} .dm-rifiuti-bidone.grande{font-size:14px;padding:8px 16px 8px 10px}
     /* Il disegno del bidone si porta dietro il suo pannello e il suo colore:
      * dietro non ci va ne' un tondo tinto ne' un'ombra, che raddoppierebbero. */
-    ${P5} .dm-rifiuti-bidone-ic{display:grid;place-items:center;width:28px;height:28px;flex:0 0 auto}
-    ${P5} .dm-rifiuti-bidone.grande .dm-rifiuti-bidone-ic{width:34px;height:34px}
-    ${P5} .dm-rifiuti-bidone-ic .dm-appliance-art,
-    ${P5} .dm-rifiuti-riga-ic .dm-appliance-art{display:block;line-height:0}
+    ${P6} .dm-rifiuti-bidone-ic{display:grid;place-items:center;width:28px;height:28px;flex:0 0 auto}
+    ${P6} .dm-rifiuti-bidone.grande .dm-rifiuti-bidone-ic{width:34px;height:34px}
+    ${P6} .dm-rifiuti-bidone-ic .dm-appliance-art,
+    ${P6} .dm-rifiuti-riga-ic .dm-appliance-art{display:block;line-height:0}
 
-    ${P5} .dm-rifiuti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
-    ${P5} .dm-rifiuti-riga{
+    ${P6} .dm-rifiuti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P6} .dm-rifiuti-riga{
       position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px 12px 18px;
       border-radius:16px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06));overflow:hidden}
-    ${P5} .dm-rifiuti-riga::before{
+    ${P6} .dm-rifiuti-riga::before{
       content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--dm-bidone,#0ea5e9)}
-    ${P5} .dm-rifiuti-riga-ic{display:grid;place-items:center;width:40px;height:40px;flex:0 0 auto}
-    ${P5} .dm-rifiuti-riga-testo{display:grid;gap:2px;min-width:0;flex:1 1 auto}
-    ${P5} .dm-rifiuti-riga-testo strong{
+    ${P6} .dm-rifiuti-riga-ic{display:grid;place-items:center;width:40px;height:40px;flex:0 0 auto}
+    ${P6} .dm-rifiuti-riga-testo{display:grid;gap:2px;min-width:0;flex:1 1 auto}
+    ${P6} .dm-rifiuti-riga-testo strong{
       font-size:13px;font-weight:900;color:var(--text,#0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    ${P5} .dm-rifiuti-riga-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
-    ${P5} .dm-rifiuti-riga-quando{
+    ${P6} .dm-rifiuti-riga-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
+    ${P6} .dm-rifiuti-riga-quando{
       flex:0 0 auto;font-size:12px;font-weight:900;padding:5px 10px;border-radius:999px;
       background:var(--surface-3,#f1f5f9);color:var(--text,#0f172a);white-space:nowrap}
-    ${P5} .dm-rifiuti-riga[data-quando="oggi"] .dm-rifiuti-riga-quando{background:#fee2e2;color:#b91c1c}
-    ${P5} .dm-rifiuti-riga[data-quando="domani"] .dm-rifiuti-riga-quando{background:#fef3c7;color:#b45309}
-    ${P5} .dm-rifiuti-riga[data-quando="mai"] .dm-rifiuti-riga-quando,
-    ${P5} .dm-rifiuti-riga[data-quando="passato"] .dm-rifiuti-riga-quando{color:var(--text-dim,#64748b);font-weight:700}
+    ${P6} .dm-rifiuti-riga[data-quando="oggi"] .dm-rifiuti-riga-quando{background:#fee2e2;color:#b91c1c}
+    ${P6} .dm-rifiuti-riga[data-quando="domani"] .dm-rifiuti-riga-quando{background:#fef3c7;color:#b45309}
+    ${P6} .dm-rifiuti-riga[data-quando="mai"] .dm-rifiuti-riga-quando,
+    ${P6} .dm-rifiuti-riga[data-quando="passato"] .dm-rifiuti-riga-quando{color:var(--text-dim,#64748b);font-weight:700}
 
     @media (max-width:640px){
-      ${P5} .dm-rifiuti-prossimo strong{font-size:26px}
-      ${P5} .dm-rifiuti-elenco{grid-template-columns:1fr}
+      ${P6} .dm-rifiuti-prossimo strong{font-size:26px}
+      ${P6} .dm-rifiuti-elenco{grid-template-columns:1fr}
     }
     `
   );
@@ -35386,84 +35426,84 @@ function renderAcquario() {
   schedule9();
 }
 function installStyles13() {
-  const P5 = `#${VASCHE_PAGE_ID}`;
+  const P6 = `#${VASCHE_PAGE_ID}`;
   installStyle(
     "dm-acquario-section-style",
     `
     /* La risposta, come quella dei Varchi ma della misura di una scheda. */
-    ${P5} .dm-acq-testa{
+    ${P6} .dm-acq-testa{
       display:grid;gap:3px;padding:12px 14px;border-radius:16px;
       border:1px solid var(--card-border,#e2e8f0);
       background:color-mix(in srgb,var(--dm-acq-tinta,#16a34a) 8%,var(--card-bg,#fff))}
-    ${P5} .dm-acq-testa small{
+    ${P6} .dm-acq-testa small{
       font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P5} .dm-acq-testa strong{font-size:19px;font-weight:900;line-height:1.1;color:var(--dm-acq-tinta,#15803d)}
-    ${P5} .dm-acq-testa[data-stato="fuori"],
-    ${P5} .dm-acq-testa[data-stato="livello"],
-    ${P5} .dm-acq-testa[data-stato="cambio"]{--dm-acq-tinta:#b45309}
-    ${P5} .dm-acq-testa[data-stato="mute"]{--dm-acq-tinta:#64748b}
-    ${P5} .dm-acq-nomi{font-size:12.5px;font-weight:800;color:var(--text,#0f172a)}
-    ${P5} .dm-acq-sotto{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-acq-testa strong{font-size:19px;font-weight:900;line-height:1.1;color:var(--dm-acq-tinta,#15803d)}
+    ${P6} .dm-acq-testa[data-stato="fuori"],
+    ${P6} .dm-acq-testa[data-stato="livello"],
+    ${P6} .dm-acq-testa[data-stato="cambio"]{--dm-acq-tinta:#b45309}
+    ${P6} .dm-acq-testa[data-stato="mute"]{--dm-acq-tinta:#64748b}
+    ${P6} .dm-acq-nomi{font-size:12.5px;font-weight:800;color:var(--text,#0f172a)}
+    ${P6} .dm-acq-sotto{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
 
     /* Le mattonelle in una scheda stretta: due per riga, un po' più basse. */
-    ${P5} .dm-acq-mattonelle{grid-template-columns:repeat(auto-fill,minmax(min(132px,100%),1fr));gap:8px}
+    ${P6} .dm-acq-mattonelle{grid-template-columns:repeat(auto-fill,minmax(min(132px,100%),1fr));gap:8px}
     /* I posti si scrivono tutti: sul telefono i tasti della pagina prendono
        un'altra disposizione, e la mattonella si sfalsava. */
-    ${P5} .dm-acq-mattonelle .dm-pool-tile{display:grid;min-height:56px;padding:9px 10px;gap:1px 9px;
+    ${P6} .dm-acq-mattonelle .dm-pool-tile{display:grid;min-height:56px;padding:9px 10px;gap:1px 9px;
       grid-template-columns:36px minmax(0,1fr);grid-template-rows:auto auto;align-content:center;
       text-align:left;border-radius:15px}
-    ${P5} .dm-acq-mattonelle .dm-pool-tile-icon{grid-column:1;grid-row:1/3;width:36px;height:36px;border-radius:11px;font-size:17px}
+    ${P6} .dm-acq-mattonelle .dm-pool-tile-icon{grid-column:1;grid-row:1/3;width:36px;height:36px;border-radius:11px;font-size:17px}
     /* Il nome va a capo invece di finire in tre puntini: «Lampada calda» e
        «Luce del giorno» sono nomi, e mezzi non si capiscono. */
-    ${P5} .dm-acq-mattonelle .dm-pool-tile-label,
-    ${P5} .dm-acq-mattonelle .dm-pool-tile-state{justify-self:start;text-align:left}
-    ${P5} .dm-acq-mattonelle .dm-pool-tile-label{grid-column:2;grid-row:1;align-self:end;font-size:12.5px;line-height:1.15;
+    ${P6} .dm-acq-mattonelle .dm-pool-tile-label,
+    ${P6} .dm-acq-mattonelle .dm-pool-tile-state{justify-self:start;text-align:left}
+    ${P6} .dm-acq-mattonelle .dm-pool-tile-label{grid-column:2;grid-row:1;align-self:end;font-size:12.5px;line-height:1.15;
       overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;hyphens:auto}
-    ${P5} .dm-acq-mattonelle .dm-pool-tile-state{grid-column:2;grid-row:2;align-self:start;font-size:10.5px}
+    ${P6} .dm-acq-mattonelle .dm-pool-tile-state{grid-column:2;grid-row:2;align-self:start;font-size:10.5px}
     /* Chi è chiuso col lucchetto si vede, ma non si tocca. */
-    ${P5} .dm-pool-tile[aria-disabled="true"]{cursor:default}
-    ${P5} .dm-pool-tile[aria-disabled="true"]:hover{transform:none}
+    ${P6} .dm-pool-tile[aria-disabled="true"]{cursor:default}
+    ${P6} .dm-pool-tile[aria-disabled="true"]:hover{transform:none}
 
     /* I blocchi della scheda: le fasce delle schede degli animali. */
-    ${P5} .dm-acq-blocco{display:grid;gap:10px;padding:11px 12px;border:1px solid var(--divider-color,#dbe4ee);
+    ${P6} .dm-acq-blocco{display:grid;gap:10px;padding:11px 12px;border:1px solid var(--divider-color,#dbe4ee);
       border-radius:14px;background:color-mix(in srgb,var(--secondary-background-color,#eef3f8) 45%,transparent)}
-    ${P5} .dm-acq-blocco h4{display:flex;align-items:center;gap:6px;margin:0;font-size:10.5px;font-weight:900;
+    ${P6} .dm-acq-blocco h4{display:flex;align-items:center;gap:6px;margin:0;font-size:10.5px;font-weight:900;
       letter-spacing:.06em;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
-    ${P5} .dm-acq-blocco h4 .dm-pool-badge{margin-left:auto;font-size:10px;padding:3px 9px}
-    ${P5} .dm-acq-blocco .dm-gauge-value{font-size:17px}
+    ${P6} .dm-acq-blocco h4 .dm-pool-badge{margin-left:auto;font-size:10px;padding:3px 9px}
+    ${P6} .dm-acq-blocco .dm-gauge-value{font-size:17px}
 
     /* Il livello, come una riga delle Batterie. */
-    ${P5} .dm-acq-livello{
+    ${P6} .dm-acq-livello{
       display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;
       padding:9px 11px;border-radius:14px;
       border:1px solid color-mix(in srgb,var(--dm-acq,#10b981) 36%,transparent);
       background:color-mix(in srgb,var(--dm-acq,#10b981) 7%,var(--card-bg,#fff))}
-    ${P5} .dm-acq-livello[data-stato="basso"]{--dm-acq:#f59e0b}
-    ${P5} .dm-acq-livello[data-stato="muta"]{--dm-acq:#94a3b8;opacity:.72}
-    ${P5} .dm-acq-livello-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;
+    ${P6} .dm-acq-livello[data-stato="basso"]{--dm-acq:#f59e0b}
+    ${P6} .dm-acq-livello[data-stato="muta"]{--dm-acq:#94a3b8;opacity:.72}
+    ${P6} .dm-acq-livello-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;
       background:color-mix(in srgb,var(--dm-acq,#10b981) 18%,transparent)}
-    ${P5} .dm-acq-livello-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P5} .dm-acq-livello-ic svg{display:block;width:24px;height:24px}
-    ${P5} .dm-acq-livello-testo{display:grid;gap:3px;min-width:0}
-    ${P5} .dm-acq-livello-testo strong{font-size:13px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-acq-livello-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P6} .dm-acq-livello-ic svg{display:block;width:24px;height:24px}
+    ${P6} .dm-acq-livello-testo{display:grid;gap:3px;min-width:0}
+    ${P6} .dm-acq-livello-testo strong{font-size:13px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-acq-livello-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
-    ${P5} .dm-acq-livello-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
+    ${P6} .dm-acq-livello-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-acq-livello-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-acq,#10b981) 18%,transparent);overflow:hidden}
-    ${P5} .dm-acq-livello-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-acq,#10b981)}
-    ${P5} .dm-acq-livello-stato{font-size:12.5px;font-weight:900;text-align:right;line-height:1.2;
+    ${P6} .dm-acq-livello-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-acq,#10b981)}
+    ${P6} .dm-acq-livello-stato{font-size:12.5px;font-weight:900;text-align:right;line-height:1.2;
       color:color-mix(in srgb,var(--dm-acq,#10b981) 78%,var(--text,#0f172a))}
 
     /* Il cambio d'acqua: un anello più piccolo, un tasto solo largo quanto la
        colonna; e quando è in ritardo l'anello si scalda come la risposta. */
-    ${P5} .dm-acq-cambio .dm-pool-filtration-body{gap:12px}
-    ${P5} .dm-acq-cambio .dm-ring{width:76px;height:76px}
-    ${P5} .dm-acq-cambio .dm-ring-core{width:58px;height:58px}
-    ${P5} .dm-acq-cambio .dm-ring-core b{font-size:18px}
-    ${P5} .dm-acq-cambio .dm-ring-core i{font-size:10px}
-    ${P5} .dm-acq-azioni{grid-template-columns:minmax(0,1fr)}
-    ${P5} .dm-acq-cambio[data-stato="scaduto"] .dm-ring{
+    ${P6} .dm-acq-cambio .dm-pool-filtration-body{gap:12px}
+    ${P6} .dm-acq-cambio .dm-ring{width:76px;height:76px}
+    ${P6} .dm-acq-cambio .dm-ring-core{width:58px;height:58px}
+    ${P6} .dm-acq-cambio .dm-ring-core b{font-size:18px}
+    ${P6} .dm-acq-cambio .dm-ring-core i{font-size:10px}
+    ${P6} .dm-acq-azioni{grid-template-columns:minmax(0,1fr)}
+    ${P6} .dm-acq-cambio[data-stato="scaduto"] .dm-ring{
       background:conic-gradient(from -90deg,#f59e0b 0 calc(var(--pct,0) * 1%),var(--surface-3,#e2e8f0) 0)}
     `
   );
@@ -37253,99 +37293,99 @@ function renderContatori() {
   schedule11();
 }
 function installStyles15() {
-  const P5 = `#${CONTATORI_PAGE_ID}`;
+  const P6 = `#${CONTATORI_PAGE_ID}`;
   installStyle(
     "dm-contatori-section-style",
     `
-    ${P5} .dm-cont-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P5} .dm-cont-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-cont-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P6} .dm-cont-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-cont-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-cont-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-cont-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-cont-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande, come quella dei Varchi. */
-    ${P5} .dm-cont-testa{
+    ${P6} .dm-cont-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-cont-testa small{
+    ${P6} .dm-cont-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P5} .dm-cont-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P5} .dm-cont-testa[data-stato="perdita"] strong{color:#dc2626}
-    ${P5} .dm-cont-testa[data-stato="pressione"] strong{color:#b45309}
-    ${P5} .dm-cont-testa[data-stato="bene"] strong{color:#15803d}
-    ${P5} .dm-cont-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P5} .dm-cont-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-cont-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P6} .dm-cont-testa[data-stato="perdita"] strong{color:#dc2626}
+    ${P6} .dm-cont-testa[data-stato="pressione"] strong{color:#b45309}
+    ${P6} .dm-cont-testa[data-stato="bene"] strong{color:#15803d}
+    ${P6} .dm-cont-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P6} .dm-cont-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
     /* Le schede, come quelle della Piscina. */
-    ${P5} .dm-cont-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
-    ${P5} .dm-cont-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
+    ${P6} .dm-cont-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
+    ${P6} .dm-cont-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
       border:1px solid var(--card-border,#dbe4ee);border-radius:22px;background:var(--card-bg,#fff);
       box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07))}
-    ${P5} .dm-cont-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    ${P5} .dm-cont-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
-    ${P5} .dm-cont-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
-    ${P5} .dm-cont-scheda-titolo svg{display:block;width:22px;height:22px}
-    ${P5} .dm-cont-forcelle{display:grid;gap:14px}
-    ${P5} .dm-cont-righe{display:grid;gap:10px}
+    ${P6} .dm-cont-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    ${P6} .dm-cont-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
+    ${P6} .dm-cont-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
+    ${P6} .dm-cont-scheda-titolo svg{display:block;width:22px;height:22px}
+    ${P6} .dm-cont-forcelle{display:grid;gap:14px}
+    ${P6} .dm-cont-righe{display:grid;gap:10px}
 
     /* Le righe, come quelle delle Batterie, con la didascalia sotto la barra. */
-    ${P5} .dm-cont-riga{
+    ${P6} .dm-cont-riga{
       --dm-cont:#10b981;
       display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:12px 14px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-cont) 34%,var(--card-border,rgba(0,0,0,.08)));
       background:var(--card-bg,#fff)}
-    ${P5} .dm-cont-riga[data-stato="attenzione"]{--dm-cont:#f59e0b}
-    ${P5} .dm-cont-riga[data-stato="allarme"]{--dm-cont:#dc2626}
-    ${P5} .dm-cont-riga[data-stato="muto"]{--dm-cont:#94a3b8;opacity:.72}
-    ${P5} .dm-cont-riga-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P5} .dm-cont-riga-ic svg{display:block;width:26px;height:26px}
-    ${P5} .dm-cont-riga-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
+    ${P6} .dm-cont-riga[data-stato="attenzione"]{--dm-cont:#f59e0b}
+    ${P6} .dm-cont-riga[data-stato="allarme"]{--dm-cont:#dc2626}
+    ${P6} .dm-cont-riga[data-stato="muto"]{--dm-cont:#94a3b8;opacity:.72}
+    ${P6} .dm-cont-riga-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P6} .dm-cont-riga-ic svg{display:block;width:26px;height:26px}
+    ${P6} .dm-cont-riga-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
       font-size:19px;background:color-mix(in srgb,var(--dm-cont) 20%,transparent)}
-    ${P5} .dm-cont-riga-testo{display:grid;gap:3px;min-width:0}
-    ${P5} .dm-cont-riga-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-cont-riga-testo{display:grid;gap:3px;min-width:0}
+    ${P6} .dm-cont-riga-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     /* La didascalia va a capo invece di tagliarsi: «Il mese scorso 118 …»
        toglieva proprio il numero con cui ci si confronta. */
-    ${P5} .dm-cont-riga-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
+    ${P6} .dm-cont-riga-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
       color:var(--text-dim,#64748b);overflow-wrap:anywhere}
-    ${P5} .dm-cont-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
+    ${P6} .dm-cont-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-cont) 16%,transparent);overflow:hidden}
-    ${P5} .dm-cont-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-cont)}
-    ${P5} .dm-cont-riga-valore{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
+    ${P6} .dm-cont-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-cont)}
+    ${P6} .dm-cont-riga-valore{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
       text-align:right;color:color-mix(in srgb,var(--dm-cont) 78%,var(--text,#0f172a))}
 
     /* Il semaforo, come le carte dei Varchi. */
-    ${P5} .dm-cont-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
-    ${P5} .dm-cont-voce{
+    ${P6} .dm-cont-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P6} .dm-cont-voce{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-cont,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-cont,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P5} .dm-cont-voce[data-stato="allarme"]{--dm-cont:#dc2626}
-    ${P5} .dm-cont-voce[data-stato="attenzione"]{--dm-cont:#f59e0b}
-    ${P5} .dm-cont-voce[data-stato="bene"]{--dm-cont:#16a34a}
-    ${P5} .dm-cont-voce[data-stato="muto"]{--dm-cont:#94a3b8}
-    ${P5} .dm-cont-voce-ic{
+    ${P6} .dm-cont-voce[data-stato="allarme"]{--dm-cont:#dc2626}
+    ${P6} .dm-cont-voce[data-stato="attenzione"]{--dm-cont:#f59e0b}
+    ${P6} .dm-cont-voce[data-stato="bene"]{--dm-cont:#16a34a}
+    ${P6} .dm-cont-voce[data-stato="muto"]{--dm-cont:#94a3b8}
+    ${P6} .dm-cont-voce-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-cont,#94a3b8) 22%,transparent)}
-    ${P5} .dm-cont-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P5} .dm-cont-voce-ic svg{display:block;width:30px;height:30px}
-    ${P5} .dm-cont-voce-testo{display:grid;gap:2px;min-width:0}
-    ${P5} .dm-cont-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-cont-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P6} .dm-cont-voce-ic svg{display:block;width:30px;height:30px}
+    ${P6} .dm-cont-voce-testo{display:grid;gap:2px;min-width:0}
+    ${P6} .dm-cont-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
       overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
-    ${P5} .dm-cont-voce-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P6} .dm-cont-voce-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-cont-voce-stato{
+    ${P6} .dm-cont-voce-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       max-width:96px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-cont,#94a3b8) 78%,var(--text,#0f172a))}
 
     @media(max-width:520px){
-      ${P5} .dm-cont-elenco,${P5} .dm-cont-schede{grid-template-columns:minmax(0,1fr)}}
+      ${P6} .dm-cont-elenco,${P6} .dm-cont-schede{grid-template-columns:minmax(0,1fr)}}
     `
   );
 }
@@ -38800,73 +38840,73 @@ function renderPiante() {
   schedule12();
 }
 function installStyles16() {
-  const P5 = `#${PIANTE_PAGE_ID}`;
+  const P6 = `#${PIANTE_PAGE_ID}`;
   installStyle(
     "dm-piante-section-style",
     `
-    ${P5} .dm-pian-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P5} .dm-pian-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-pian-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P6} .dm-pian-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-pian-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-pian-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-pian-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-pian-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande, come quella dei Varchi. */
-    ${P5} .dm-pian-testa{
+    ${P6} .dm-pian-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-pian-testa small{
+    ${P6} .dm-pian-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P5} .dm-pian-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P5} .dm-pian-testa[data-stato="sete"] strong{color:#dc2626}
-    ${P5} .dm-pian-testa[data-stato="pioggia"] strong{color:#2563eb}
-    ${P5} .dm-pian-testa[data-stato="bene"] strong{color:#15803d}
-    ${P5} .dm-pian-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P5} .dm-pian-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-pian-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P6} .dm-pian-testa[data-stato="sete"] strong{color:#dc2626}
+    ${P6} .dm-pian-testa[data-stato="pioggia"] strong{color:#2563eb}
+    ${P6} .dm-pian-testa[data-stato="bene"] strong{color:#15803d}
+    ${P6} .dm-pian-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P6} .dm-pian-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
     /* Il semaforo, come le carte dei Varchi. */
-    ${P5} .dm-pian-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
-    ${P5} .dm-pian-voce{
+    ${P6} .dm-pian-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P6} .dm-pian-voce{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-pian,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-pian,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P5} .dm-pian-voce[data-stato="asciutta"]{--dm-pian:#dc2626}
-    ${P5} .dm-pian-voce[data-stato="bene"],${P5} .dm-pian-voce[data-stato="aspetta"]{--dm-pian:#16a34a}
-    ${P5} .dm-pian-voce[data-stato="muta"]{--dm-pian:#94a3b8}
+    ${P6} .dm-pian-voce[data-stato="asciutta"]{--dm-pian:#dc2626}
+    ${P6} .dm-pian-voce[data-stato="bene"],${P6} .dm-pian-voce[data-stato="aspetta"]{--dm-pian:#16a34a}
+    ${P6} .dm-pian-voce[data-stato="muta"]{--dm-pian:#94a3b8}
     /* Chi aspetta la pioggia lo dice anche da lontano: il tratteggio del varco
        escluso vuol dire «a posto, ma per una ragione». */
-    ${P5} .dm-pian-voce[data-stato="aspetta"]{border-style:dashed;border-color:#f59e0b}
-    ${P5} .dm-pian-voce-ic{
+    ${P6} .dm-pian-voce[data-stato="aspetta"]{border-style:dashed;border-color:#f59e0b}
+    ${P6} .dm-pian-voce-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-pian,#94a3b8) 22%,transparent)}
-    ${P5} .dm-pian-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P5} .dm-pian-voce-ic svg{display:block;width:30px;height:30px}
-    ${P5} .dm-pian-voce-testo{display:grid;gap:2px;min-width:0}
-    ${P5} .dm-pian-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-pian-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P6} .dm-pian-voce-ic svg{display:block;width:30px;height:30px}
+    ${P6} .dm-pian-voce-testo{display:grid;gap:2px;min-width:0}
+    ${P6} .dm-pian-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
       overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
-    ${P5} .dm-pian-voce-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
+    ${P6} .dm-pian-voce-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
       color:var(--text-dim,#64748b);overflow-wrap:anywhere}
-    ${P5} .dm-pian-voce-stato{
+    ${P6} .dm-pian-voce-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       max-width:96px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-pian,#94a3b8) 78%,var(--text,#0f172a))}
 
     /* Le schede, come quelle della Piscina. */
-    ${P5} .dm-pian-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
-    ${P5} .dm-pian-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
+    ${P6} .dm-pian-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
+    ${P6} .dm-pian-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
       border:1px solid var(--card-border,#dbe4ee);border-radius:22px;background:var(--card-bg,#fff);
       box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07))}
-    ${P5} .dm-pian-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    ${P5} .dm-pian-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
-    ${P5} .dm-pian-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
-    ${P5} .dm-pian-scheda-titolo svg{display:block;width:22px;height:22px}
-    ${P5} .dm-pian-forcelle{display:grid;gap:14px}
+    ${P6} .dm-pian-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    ${P6} .dm-pian-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
+    ${P6} .dm-pian-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
+    ${P6} .dm-pian-scheda-titolo svg{display:block;width:22px;height:22px}
+    ${P6} .dm-pian-forcelle{display:grid;gap:14px}
 
     @media(max-width:520px){
-      ${P5} .dm-pian-elenco,${P5} .dm-pian-schede{grid-template-columns:minmax(0,1fr)}}
+      ${P6} .dm-pian-elenco,${P6} .dm-pian-schede{grid-template-columns:minmax(0,1fr)}}
     `
   );
 }
@@ -43831,50 +43871,50 @@ function onClick5(event) {
   }
 }
 function installStyles18() {
-  const P5 = `#${SERVER_PAGE_ID}`;
+  const P6 = `#${SERVER_PAGE_ID}`;
   installStyle(
     "dm-macchine-section-style",
     `
-    ${P5} .dm-macchine-wrap{display:grid;gap:14px;padding:14px 0 24px}
-    ${P5} .dm-macchine-fascia{display:grid;gap:10px}
-    ${P5} .dm-macchine-testa{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
-    ${P5} .dm-macchine-testa strong{font-size:14px;font-weight:900;letter-spacing:.04em;
+    ${P6} .dm-macchine-wrap{display:grid;gap:14px;padding:14px 0 24px}
+    ${P6} .dm-macchine-fascia{display:grid;gap:10px}
+    ${P6} .dm-macchine-testa{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+    ${P6} .dm-macchine-testa strong{font-size:14px;font-weight:900;letter-spacing:.04em;
       text-transform:uppercase;color:var(--text,#0f172a)}
-    ${P5} .dm-macchine-testa span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-    ${P5} .dm-macchine-fascia[data-giu="true"] .dm-macchine-testa span{color:#dc2626}
-    ${P5} .dm-macchine-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}
+    ${P6} .dm-macchine-testa span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-macchine-fascia[data-giu="true"] .dm-macchine-testa span{color:#dc2626}
+    ${P6} .dm-macchine-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}
 
-    ${P5} .dm-macchina{
+    ${P6} .dm-macchina{
       display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:10px;
       padding:12px 14px;border-radius:16px;
       border:1px solid color-mix(in srgb,var(--dm-macchina,#94a3b8) 40%,transparent);
       background:color-mix(in srgb,var(--dm-macchina,#94a3b8) 9%,var(--card-bg,#fff))}
-    ${P5} .dm-macchina[data-stato="su"]{--dm-macchina:#16a34a}
-    ${P5} .dm-macchina[data-stato="giu"]{--dm-macchina:#dc2626}
-    ${P5} .dm-macchina[data-stato="muto"]{--dm-macchina:#94a3b8}
-    ${P5} .dm-macchina-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;
+    ${P6} .dm-macchina[data-stato="su"]{--dm-macchina:#16a34a}
+    ${P6} .dm-macchina[data-stato="giu"]{--dm-macchina:#dc2626}
+    ${P6} .dm-macchina[data-stato="muto"]{--dm-macchina:#94a3b8}
+    ${P6} .dm-macchina-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;
       font-size:18px;background:color-mix(in srgb,var(--dm-macchina,#94a3b8) 20%,transparent)}
     /* Il disegno sta dentro la scatola e non la sfonda: un'emoji si ferma da
        se' alla sua riga di testo, un SVG no. */
-    ${P5} .dm-macchina-ic svg{width:22px;height:22px;display:block}
-    ${P5} .dm-macchina-testo{display:grid;gap:2px;min-width:0}
-    ${P5} .dm-macchina-testo strong{font-size:13.5px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-macchina-ic svg{width:22px;height:22px;display:block}
+    ${P6} .dm-macchina-testo{display:grid;gap:2px;min-width:0}
+    ${P6} .dm-macchina-testo strong{font-size:13.5px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-macchina-stato{font-size:10.5px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
+    ${P6} .dm-macchina-stato{font-size:10.5px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-macchina,#94a3b8) 78%,var(--text,#0f172a))}
     /* I tasti vanno a capo e a destra, uno o due che siano: in riga con lo
        stato spingerebbero fuori il nome, e su un telefono il nome e' la sola
        cosa che serve leggere per intero. */
-    ${P5} .dm-macchina-tasti,${P5} .dm-macchina>.dm-macchina-tasto{
+    ${P6} .dm-macchina-tasti,${P6} .dm-macchina>.dm-macchina-tasto{
       grid-column:1/-1;justify-self:end}
-    ${P5} .dm-macchina-tasti{display:inline-flex;gap:6px}
-    ${P5} .dm-macchina-tasto{
+    ${P6} .dm-macchina-tasti{display:inline-flex;gap:6px}
+    ${P6} .dm-macchina-tasto{
       padding:6px 14px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);color:var(--text,#0f172a);
       font:inherit;font-size:11.5px;font-weight:900;cursor:pointer}
-    ${P5} .dm-macchina-tasto:hover{border-color:var(--primary-color,#0ea5e9)}
-    ${P5} .dm-macchina-tasto-ferma:hover{border-color:#dc2626;color:#dc2626}
-    @media(max-width:520px){${P5} .dm-macchine-elenco{grid-template-columns:1fr}}
+    ${P6} .dm-macchina-tasto:hover{border-color:var(--primary-color,#0ea5e9)}
+    ${P6} .dm-macchina-tasto-ferma:hover{border-color:#dc2626;color:#dc2626}
+    @media(max-width:520px){${P6} .dm-macchine-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -49057,7 +49097,695 @@ FINESTRE2.forEach(
 );
 
 // src/sections/finestre/sistema.js
-var FINESTRE_SISTEMA = Object.freeze([]);
+var P5 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
+var UN_MINUTO2 = 6e4;
+function durataCorta(ms) {
+  const minuti = Math.max(1, Math.round((Number(ms) || 0) / UN_MINUTO2));
+  if (minuti < 60) return `${minuti} min`;
+  const ore = Math.round(minuti / 60);
+  if (ore < 24) return `${ore} h`;
+  const giorni = Math.round(ore / 24);
+  return giorni === 1 ? `1 ${t("giorno", "day")}` : `${giorni} ${t("giorni", "days")}`;
+}
+function restaCorto(secondi) {
+  const minuti = Math.max(1, Math.ceil((Number(secondi) || 0) / 60));
+  if (minuti < 60) return `${minuti} min`;
+  const ore = Math.floor(minuti / 60);
+  const resto = minuti % 60;
+  return resto ? `${ore} h ${resto}` : `${ore} h`;
+}
+function quandoEra(ms, adesso = Date.now()) {
+  const data = new Date(ms);
+  if (!Number.isFinite(data.getTime())) return "";
+  const giorno = (valore3) => new Date(valore3).toDateString();
+  const ora3 = orologio2(ms);
+  if (giorno(ms) === giorno(adesso)) return `${t("oggi", "today")} ${ora3}`;
+  if (giorno(ms) === giorno(adesso - 864e5)) return `${t("ieri", "yesterday")} ${ora3}`;
+  return `${data.toLocaleDateString([], { day: "numeric", month: "short" })} ${ora3}`;
+}
+function numeroEUnita(valore3) {
+  const testo2 = clean(valore3);
+  const trovato = testo2.match(/^(-?[\d.,]+)\s*(.*)$/);
+  return trovato ? { numero: trovato[1], unita: trovato[2] } : { numero: testo2, unita: "" };
+}
+function nomePulito(nome, entity2 = "") {
+  const testo2 = clean(nome);
+  const grezzo = !testo2 || testo2 === clean(entity2) || /^[a-z_]+\.[a-z0-9_]+$/i.test(testo2) || /^[A-Z0-9]+(_[A-Z0-9]+)+$/.test(testo2);
+  if (!grezzo) return testo2;
+  const base = (testo2 || clean(entity2)).split(".").pop().replace(/_+/g, " ").trim().toLowerCase();
+  return base ? base.charAt(0).toUpperCase() + base.slice(1) : testo2;
+}
+var leva2 = (entity2, accesa3, etichetta3) => `<button type="button" class="dm-f-leva" data-dm-w-light="${esc(entity2)}" data-on="${accesa3}" role="switch" aria-checked="${accesa3}" aria-label="${esc(etichetta3)}"><i aria-hidden="true"></i></button>`;
+function cartaDellApparecchio(riga3, adesso) {
+  const sopra = [riga3.programma, riga3.gradi].filter(Boolean).join(" · ");
+  const fase = riga3.fase ? `<span class="dm-f-el-fase">${esc(riga3.fase)}</span>` : "";
+  const fine = riga3.prontaAlle || (riga3.restano != null ? adesso + riga3.restano * 1e3 : null);
+  const resta = riga3.restano != null ? `<span class="dm-f-el-resta"><b class="dm-f-num">${esc(restaCorto(riga3.restano))}</b><small>${esc(
+    riga3.cucina ? t("pronta alle", "ready at") : t("finisce", "ends")
+  )} ${esc(orologio2(fine))}</small></span>` : riga3.watts != null ? `<span class="dm-f-el-resta"><b class="dm-f-num">${esc(formatPowerLabel(riga3.watts))}</b></span>` : "";
+  const corsa = riga3.fatto != null ? `<div class="dm-f-corsa"><i style="width:${Math.round(Math.max(0, Math.min(1, riga3.fatto)) * 100)}%"></i></div>` : "";
+  const sinistra = [riga3.stanza, riga3.giri].filter(Boolean).join(" · ");
+  const destra = riga3.cucina ? `<button type="button" class="dm-f-el-link" data-dm-w-sezione="cottura">${esc(t("Cottura", "Cooking"))} <span aria-hidden="true">→</span></button>` : riga3.restano != null && riga3.watts != null && riga3.watts >= 1 ? `<b>${esc(formatPowerLabel(riga3.watts))}</b>` : "";
+  const piede = sinistra || destra ? `<div class="dm-f-el-piede"><span>${esc(sinistra)}</span>${destra}</div>` : "";
+  return `<article class="dm-f-el-mac" data-dm-f-apparecchio="${esc(riga3.id)}">
+    <div class="dm-f-el-su">
+      <span class="dm-f-el-ic" aria-hidden="true">${applianceArtwork(riga3.type, 30) || esc(riga3.glifo || "🔌")}</span>
+      <span class="dm-f-el-nome"><b data-dm-no-i18n>${esc(riga3.name)}</b>${sopra || fase ? `<em><span data-dm-no-i18n>${esc(sopra)}</span>${fase}</em>` : ""}</span>
+      ${resta}
+    </div>
+    ${corsa}${piede}
+  </article>`;
+}
+function parolaDelFermo(riga3, adesso) {
+  if (riga3.ultimoAvvio) return quandoEra(riga3.ultimoAvvio, adesso);
+  if (riga3.dentro) return `${t("dentro", "inside")} ${riga3.dentro}`;
+  if (riga3.mode === "standby") return t("in attesa", "on standby");
+  if (riga3.mode === "unavailable") return t("non risponde", "not answering");
+  return t("spento", "off");
+}
+function finestraElettrodomestici(widget) {
+  const adesso = Date.now();
+  const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
+  const accesi = righe2.filter((riga3) => riga3.mode === "running").sort((a, b) => (a.restano ?? Infinity) - (b.restano ?? Infinity));
+  const fermi = righe2.filter((riga3) => riga3.mode !== "running");
+  const watt5 = accesi.reduce((somma2, riga3) => somma2 + (Number(riga3.watts) || 0), 0);
+  const primo = accesi.find((riga3) => riga3.restano != null);
+  const frasi = [];
+  if (watt5 >= 1) frasi.push(`${t("insieme", "together")} ${formatPowerLabel(watt5)}`);
+  if (primo)
+    frasi.push(
+      `${primo.name} · ${t("finisce fra", "done in")} ${restaCorto(primo.restano)}`
+    );
+  const eroe = `<div class="dm-f-el-eroe">
+    <span class="dm-f-num">${accesi.length}</span>
+    <div><b>${esc(accesi.length ? t("al lavoro adesso", "working now") : t("tutti fermi", "all idle"))}</b>${frasi.map((frase2) => `<span data-dm-no-i18n>${esc(frase2)}</span>`).join("")}</div>
+  </div>`;
+  const inFunzione = accesi.length ? `<h4 class="dm-f-tit">${esc(t("In funzione", "Running"))}</h4>${accesi.map((riga3) => cartaDellApparecchio(riga3, adesso)).join("")}` : "";
+  const fermiMarkup = fermi.length ? `<h4 class="dm-f-tit">${esc(t("Fermi", "Idle"))}</h4><div class="dm-f-el-fermi">${fermi.map(
+    (riga3) => `<div class="dm-f-el-fermo" data-dm-f-apparecchio="${esc(riga3.id)}">
+            <span class="dm-f-el-ic" aria-hidden="true">${applianceArtwork(riga3.type, 26) || esc(riga3.glifo || "🔌")}</span>
+            <b data-dm-no-i18n>${esc(riga3.name)}</b><em>${esc(parolaDelFermo(riga3, adesso))}</em>
+          </div>`
+  ).join("")}</div>` : "";
+  return `<div class="dm-f dm-f-elettrodomestici">${eroe}${inFunzione}${fermiMarkup}</div>`;
+}
+var STILE_COMUNE = `
+${P5} .dm-f{display:grid;gap:10px;min-width:0}
+${P5} .dm-f-num{font-family:Oswald,var(--dm-font-num,system-ui),sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+${P5} .dm-f-tit{margin:8px 2px 0;font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P5} .dm-f-scheda{border-radius:20px;padding:13px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);min-width:0}
+${P5} .dm-f-leva{flex:0 0 auto;width:54px;height:32px;border-radius:999px;border:0;padding:0;background:#cbd5e1;position:relative;cursor:pointer;transition:background .2s}
+${P5} .dm-f-leva i{position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:left .2s}
+${P5} .dm-f-leva[data-on="true"]{background:#16a34a}
+${P5} .dm-f-leva[data-on="true"] i{left:26px}
+${P5} .dm-f-porta{width:100%;margin-top:4px;padding:14px;border:0;border-radius:18px;font:inherit;font-weight:850;font-size:15px;cursor:pointer;
+  color:var(--dm-widget-accent,#0ea5e9);background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 12%,var(--card-bg,#fff))}
+${P5} .dm-f-porta.dm-f-pieno{color:#fff;background:var(--dm-widget-accent,#0ea5e9)}
+`;
+var STILE_ELETTRODOMESTICI = `
+${P5} .dm-f-el-eroe{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:24px;
+  background:linear-gradient(155deg,color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 10%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 16%,var(--card-bg,#fff)));
+  border:1px solid color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 30%,transparent)}
+${P5} .dm-f-el-eroe>.dm-f-num{font-size:50px;line-height:1;color:var(--dm-widget-accent,#0e7490)}
+${P5} .dm-f-el-eroe b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a)}
+${P5} .dm-f-el-eroe span{display:block;font-size:12.5px;font-weight:750;color:var(--text-dim,#475569)}
+${P5} .dm-f-el-mac{border-radius:22px;padding:14px;background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 22%,transparent);
+  box-shadow:0 14px 26px -24px color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 90%,transparent);min-width:0}
+${P5} .dm-f-el-su{display:flex;align-items:center;gap:12px;min-width:0}
+${P5} .dm-f-el-ic{flex:0 0 auto;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:24px;
+  background:color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 12%,var(--card-bg,#fff));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 30%,transparent)}
+${P5} .dm-f-el-ic svg{width:30px;height:30px}
+${P5} .dm-f-el-nome{flex:1;min-width:0}
+${P5} .dm-f-el-nome b{display:block;font-size:15.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-el-nome em{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P5} .dm-f-el-fase{display:inline-flex;padding:3px 8px;border-radius:999px;background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:850}
+${P5} .dm-f-el-resta{flex:0 0 auto;text-align:right;padding-left:4px}
+${P5} .dm-f-el-resta b{display:block;font-size:26px;line-height:1;color:var(--text,#0f172a)}
+${P5} .dm-f-el-resta small{display:block;margin-top:3px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b);white-space:nowrap}
+${P5} .dm-f-corsa{height:8px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent);margin:12px 0 7px;overflow:hidden}
+${P5} .dm-f-corsa i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 60%,#fff),var(--dm-widget-accent,#0891b2))}
+${P5} .dm-f-el-piede{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P5} .dm-f-el-corsa+.dm-f-el-piede,${P5} .dm-f-corsa+.dm-f-el-piede{margin-top:0}
+${P5} .dm-f-el-piede b{color:var(--text,#0f172a)}
+${P5} .dm-f-el-link{border:0;background:none;padding:4px 0;font:inherit;font-weight:800;color:var(--dm-widget-accent,#0e7490);cursor:pointer}
+${P5} .dm-f-el-fermi{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+${P5} .dm-f-el-fermo{border-radius:18px;padding:12px 8px 10px;text-align:center;background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));
+  border:1px solid var(--card-border,#eef2f7);display:grid;justify-items:center;gap:3px;min-width:0}
+${P5} .dm-f-el-fermo .dm-f-el-ic{width:38px;height:38px;border-radius:12px;filter:grayscale(.35)}
+${P5} .dm-f-el-fermo b{font-size:12.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-el-fermo em{font-style:normal;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8)}
+`;
+function tastoCottura(cucina, chiave2, classe2, segno, parola) {
+  const comando = cucina.comandi?.[chiave2];
+  if (!comando) return "";
+  return tastoServizio(comando, {
+    classe: classe2,
+    testo: `<span aria-hidden="true">${segno}</span>${esc(parola)}`,
+    attributi: `data-dm-f-comando="${esc(chiave2)}"`
+  });
+}
+function finestraCottura(widget) {
+  const cucina = widget.cucina || {};
+  const cassetto = cucina.cassetto == null ? "" : `<span class="dm-f-cot-chip" data-aperto="${cucina.cassetto}">${esc(
+    cucina.cassetto ? cucina.tipo === "air-fryer" ? t("Cassetto aperto", "Drawer open") : t("Porta aperta", "Door open") : cucina.tipo === "air-fryer" ? t("Cassetto chiuso", "Drawer closed") : t("Porta chiusa", "Door closed")
+  )}</span>`;
+  const pronta = cucina.fase === "pronta";
+  let anello2 = "";
+  if (pronta)
+    anello2 = `<div class="dm-f-cot-anello" style="--p:100"><div><span class="dm-f-num">✓</span><small>${esc(cucina.parola)}</small></div></div>`;
+  else if (cucina.rimasti != null) {
+    const fatto = cucina.frazione == null ? 0 : Math.round((1 - cucina.frazione) * 100);
+    const sotto = cucina.totali != null ? `${t("di", "of")} ${Math.round(cucina.totali / 60)} min` : t("rimangono", "left");
+    anello2 = `<div class="dm-f-cot-anello" style="--p:${fatto}" role="timer"><div><span class="dm-f-num">${esc(
+      minutiESecondi(cucina.rimasti)
+    )}</span><small>${esc(sotto)}</small></div></div>`;
+  }
+  const righe2 = [];
+  if (cucina.prontaAlle)
+    righe2.push(
+      `${cucina.femminile ? t("pronta alle", "ready at") : t("pronto alle", "ready at")} <b>${esc(orologio2(cucina.prontaAlle))}</b>`
+    );
+  if (cucina.avviataAlle)
+    righe2.push(
+      `${esc(cucina.femminile ? t("avviata alle", "started at") : t("avviato alle", "started at"))} ${esc(orologio2(cucina.avviataAlle))}`
+    );
+  if (pronta && cucina.finitaAlle)
+    righe2.push(`${esc(t("fine alle", "done at"))} ${esc(orologio2(cucina.finitaAlle))}`);
+  const eroe = `<div class="dm-f-cot-eroe">${anello2}
+    <div class="dm-f-cot-dx"><b data-dm-no-i18n>${esc(cucina.programma || cucina.parola || "")}</b>${righe2.map((riga3) => `<span class="dm-f-cot-q">${riga3}</span>`).join("")}${cassetto}</div>
+  </div>`;
+  const gradi7 = cucina.gradi ? `<h4 class="dm-f-tit">${esc(t("Temperatura", "Temperature"))}</h4>
+      <div class="dm-f-cot-gradi"><b>🌡️ ${esc(t("Gradi", "Degrees"))}</b><div class="dm-f-cot-ctl">${tastoCottura(
+    cucina,
+    "meno_caldo",
+    "dm-f-cot-tondo",
+    "−",
+    ""
+  )}<span class="dm-f-num">${esc(String(Math.round(cucina.gradi.valore)))}${esc(
+    clean(cucina.gradi.unita).replace(/C$/, "") || "°"
+  )}</span>${tastoCottura(cucina, "piu_caldo", "dm-f-cot-tondo", "+", "")}</div></div>` : "";
+  const tasti = [
+    tastoCottura(cucina, "pausa", "dm-f-cot-tasto", "⏸", t("Pausa", "Pause")),
+    tastoCottura(cucina, "riprendi", "dm-f-cot-tasto", "▶", t("Riprendi", "Resume")),
+    tastoCottura(cucina, "piu_un_minuto", "dm-f-cot-tasto", "⏱", t("+1 min", "+1 min")),
+    tastoCottura(cucina, "stop", "dm-f-cot-tasto dm-f-cot-forte", "⏹", t("Stop", "Stop"))
+  ].filter(Boolean);
+  const altri = (cucina.altri || []).length ? `<h4 class="dm-f-tit">${esc(t("Gli altri in cucina", "The rest of the kitchen"))}</h4>
+      <div class="dm-f-cot-altri">${cucina.altri.map((altro) => {
+    const sotto = [
+      clean(altro.parola).toLowerCase(),
+      altro.gradi ? `${Math.round(altro.gradi.valore)} ${altro.gradi.unita}` : ""
+    ].filter(Boolean).join(" · ");
+    return `<div><span aria-hidden="true">${esc(altro.glifo)}</span><span><b data-dm-no-i18n>${esc(altro.nome)}</b><em>${esc(sotto)}</em></span></div>`;
+  }).join("")}</div>` : "";
+  return `<div class="dm-f dm-f-cottura" data-fase="${esc(cucina.fase || "")}">${eroe}${gradi7}${tasti.length ? `<div class="dm-f-cot-tasti" style="--n:${tasti.length}">${tasti.join("")}</div>` : ""}${altri}</div>`;
+}
+var STILE_COTTURA = `
+${P5} .dm-f-cot-eroe{display:flex;gap:16px;align-items:center;padding:18px;border-radius:26px;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--dm-widget-accent,#0891b2) 8%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#0891b2) 15%,var(--card-bg,#fff)));
+  border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0891b2) 28%,transparent)}
+${P5} .dm-f-cot-anello{flex:0 0 118px;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:conic-gradient(var(--dm-widget-accent,#0891b2) calc(var(--p)*1%),color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent) 0)}
+${P5} .dm-f-cot-anello::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--card-bg,#fff)}
+${P5} .dm-f-cot-anello>div{position:relative;z-index:1;text-align:center}
+${P5} .dm-f-cot-anello .dm-f-num{font-size:34px;line-height:1;color:var(--text,#0f172a)}
+${P5} .dm-f-cot-anello small{display:block;margin-top:2px;font-size:10.5px;font-weight:850;color:var(--text-dim,#64748b)}
+${P5} .dm-f-cot-dx{min-width:0}
+${P5} .dm-f-cot-dx>b{display:block;font-size:19px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-cot-q{display:block;font-size:13px;font-weight:750;color:var(--text-dim,#475569);margin-top:3px}
+${P5} .dm-f-cot-q b{color:var(--text,#0f172a)}
+${P5} .dm-f-cot-chip{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:850;
+  background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0891b2) 30%,transparent);color:var(--dm-widget-accent,#0e7490)}
+${P5} .dm-f-cot-chip::before{content:"✓"}
+${P5} .dm-f-cot-chip[data-aperto="true"]{color:#b45309;border-color:#fcd34d}
+${P5} .dm-f-cot-chip[data-aperto="true"]::before{content:"!"}
+${P5} .dm-f-cot-gradi{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:20px;padding:10px 12px 10px 16px;
+  background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}
+${P5} .dm-f-cot-gradi>b{font-size:13.5px;font-weight:850;color:var(--text,#0f172a)}
+${P5} .dm-f-cot-ctl{display:flex;align-items:center;gap:10px}
+${P5} .dm-f-cot-ctl .dm-f-num{font-size:30px;min-width:70px;text-align:center;color:var(--text,#0f172a)}
+${P5} .dm-f-cot-tondo{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer;font:inherit;font-size:22px;font-weight:700;
+  background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);color:var(--dm-widget-accent,#0e7490)}
+${P5} .dm-f-cot-tasti{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:9px}
+${P5} .dm-f-cot-tasto{border-radius:20px;padding:13px 6px;text-align:center;font:inherit;font-weight:850;font-size:14px;cursor:pointer;
+  background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);color:var(--text,#0f172a)}
+${P5} .dm-f-cot-tasto span{display:block;font-size:20px;margin-bottom:3px}
+${P5} .dm-f-cot-forte{background:var(--dm-widget-accent,#0e7490);border-color:var(--dm-widget-accent,#0e7490);color:#fff}
+${P5} .dm-f-cot-altri{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+${P5} .dm-f-cot-altri>div{display:flex;align-items:center;gap:9px;border-radius:16px;padding:10px 12px;font-size:13px;font-weight:800;
+  background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7);color:var(--text,#0f172a);min-width:0}
+${P5} .dm-f-cot-altri b{display:block;font-weight:800}
+${P5} .dm-f-cot-altri em{display:block;font-style:normal;font-size:11px;color:var(--text-dim,#94a3b8);font-weight:700}
+`;
+function fraseDelCarico(cpu) {
+  if (cpu < 50) return t("Lavora tranquillo", "Taking it easy");
+  if (cpu < 85) return t("Sta lavorando", "Working");
+  return t("È sotto sforzo", "Under heavy load");
+}
+function finestraMinipc(widget) {
+  const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
+  const di = (chiave2) => righe2.find((riga3) => riga3.chiave === chiave2);
+  const cpu = di("cpu");
+  const temperatura = di("temperatura");
+  const potenza = di("potenza");
+  const internet = di("internet");
+  const accanto = [
+    temperatura ? `🌡️ ${clean(temperatura.value)}` : "",
+    potenza ? `⚡ ${clean(potenza.value)}` : ""
+  ].filter(Boolean).join(" · ");
+  const pastiglia2 = internet ? `<span class="dm-f-pc-net" data-on="${Boolean(internet.on)}"><i></i>${esc(
+    internet.on ? t("Internet attivo", "Internet up") : t("Internet assente", "Internet down")
+  )}</span>` : "";
+  const percentuale4 = (riga3) => riga3 && Number.isFinite(Number(riga3.raw)) && /%$/.test(clean(riga3.value));
+  const carico = percentuale4(cpu) ? Number(cpu.raw) : null;
+  const eroe = `<div class="dm-f-pc-eroe">${carico != null ? `<div class="dm-f-pc-anello" style="--p:${Math.round(Math.max(0, Math.min(100, carico)))}"><div><span class="dm-f-num">${esc(
+    clean(cpu.value)
+  )}</span><small>CPU</small></div></div>` : ""}<div class="dm-f-pc-dx">${carico != null ? `<b>${esc(fraseDelCarico(carico))}</b>` : ""}${accanto ? `<span>${esc(accanto)}</span>` : ""}${pastiglia2}</div></div>`;
+  const quote = ["ram", "disco"].map(di).filter(percentuale4).map((riga3) => {
+    const pieno = Math.max(0, Math.min(100, Number(riga3.raw)));
+    const tono = pieno >= 92 ? "rosso" : pieno >= 80 ? "caldo" : "";
+    return `<div class="dm-f-pc-quota" data-tono="${tono}"><b>${esc(riga3.name)}</b><i style="--w:${pieno}%"></i><span class="dm-f-num">${esc(
+      clean(riga3.value)
+    )}</span></div>`;
+  });
+  const rete = ["scarica", "invia", "ping"].map((chiave2) => [chiave2, di(chiave2)]).filter(([, riga3]) => riga3).map(([chiave2, riga3]) => {
+    const { numero: numero48, unita: unita2 } = numeroEUnita(riga3.value);
+    const nome = chiave2 === "scarica" ? `⬇ ${t("Scarica", "Download")}` : chiave2 === "invia" ? `⬆ ${t("Invia", "Upload")}` : "Ping";
+    return `<div class="dm-f-pc-cas"><small>${esc(nome)}</small><span class="dm-f-num">${esc(numero48)}</span><em>${esc(unita2)}</em></div>`;
+  });
+  return `<div class="dm-f dm-f-minipc">${eroe}${quote.length ? `<h4 class="dm-f-tit">${esc(t("Quanto è pieno", "How full"))}</h4>${quote.join("")}` : ""}${rete.length ? `<h4 class="dm-f-tit">${esc(t("La rete", "Network"))}</h4><div class="dm-f-pc-tre">${rete.join("")}</div>` : ""}</div>`;
+}
+var STILE_MINIPC = `
+${P5} .dm-f-pc-eroe{display:flex;gap:16px;align-items:center;padding:18px;border-radius:26px;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--dm-widget-accent,#334155) 5%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#334155) 10%,var(--card-bg,#fff)));
+  border:1px solid color-mix(in srgb,var(--dm-widget-accent,#334155) 20%,transparent)}
+${P5} .dm-f-pc-anello{flex:0 0 108px;width:108px;height:108px;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:conic-gradient(var(--dm-widget-accent,#334155) calc(var(--p)*1%),color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent) 0)}
+${P5} .dm-f-pc-anello::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--card-bg,#fff)}
+${P5} .dm-f-pc-anello>div{position:relative;z-index:1;text-align:center}
+${P5} .dm-f-pc-anello .dm-f-num{font-size:32px;line-height:1;color:var(--text,#0f172a)}
+${P5} .dm-f-pc-anello small{display:block;font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--text-dim,#64748b)}
+${P5} .dm-f-pc-dx{min-width:0}
+${P5} .dm-f-pc-dx b{display:block;font-size:18px;font-weight:850;color:var(--text,#0f172a)}
+${P5} .dm-f-pc-dx>span{display:block;font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:3px}
+${P5} .dm-f-pc-dx .dm-f-pc-net{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:850;background:#dcfce7;color:#15803d}
+${P5} .dm-f-pc-net i{width:8px;height:8px;border-radius:50%;background:currentColor}
+${P5} .dm-f-pc-dx .dm-f-pc-net[data-on="false"]{background:#fee2e2;color:#b91c1c}
+${P5} .dm-f-pc-quota{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:18px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7)}
+${P5} .dm-f-pc-quota b{width:58px;font-size:13px;font-weight:850;color:var(--text,#0f172a)}
+${P5} .dm-f-pc-quota i{flex:1;height:9px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent);position:relative;overflow:hidden}
+${P5} .dm-f-pc-quota i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:999px;background:var(--dm-widget-accent,#475569)}
+${P5} .dm-f-pc-quota[data-tono="caldo"] i::after{background:#f59e0b}
+${P5} .dm-f-pc-quota[data-tono="rosso"] i::after{background:#dc2626}
+${P5} .dm-f-pc-quota .dm-f-num{width:52px;text-align:right;font-size:20px;color:var(--text,#0f172a)}
+${P5} .dm-f-pc-tre{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+${P5} .dm-f-pc-cas{border-radius:18px;padding:12px 11px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);min-width:0}
+${P5} .dm-f-pc-cas small{display:block;font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dim,#64748b);white-space:nowrap}
+${P5} .dm-f-pc-cas .dm-f-num{display:block;font-size:22px;margin-top:4px;color:var(--text,#0f172a)}
+${P5} .dm-f-pc-cas em{font-style:normal;font-size:11px;font-weight:750;color:var(--text-dim,#94a3b8)}
+`;
+var segnoDellaMacchina = (riga3, misura7) => disegnoDelCatalogo(riga3.glyph, misura7) || (/^[a-z-]+$/.test(clean(riga3.glyph)) ? "" : esc(clean(riga3.glyph)));
+function tastoAvvia(riga3) {
+  const comandi = riga3.comandi;
+  if (comandi?.tipo === "switch" && comandi.entity)
+    return tastoServizio(
+      { domain: "switch", service: "turn_on", data: { entity_id: comandi.entity } },
+      { classe: "dm-f-mac-avvia", testo: esc(t("Avvia", "Start")) }
+    );
+  if (comandi?.tipo === "button" && comandi.avvia)
+    return tastoServizio(
+      { domain: "button", service: "press", data: { entity_id: comandi.avvia } },
+      { classe: "dm-f-mac-avvia", testo: esc(t("Avvia", "Start")) }
+    );
+  return "";
+}
+function finestraMacchine(widget) {
+  const adesso = Date.now();
+  const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
+  const giu = righe2.filter((riga3) => riga3.stato !== "su");
+  const su = righe2.filter((riga3) => riga3.stato === "su");
+  const eroe = giu.length ? `<div class="dm-f-mac-eroe" data-giu="true">
+        <div class="dm-f-mac-riga"><span class="dm-f-num">${giu.length}</span><div><b>${esc(
+    giu.length === 1 ? t("non risponde", "not answering") : t("non rispondono", "not answering")
+  )}</b>${su.length ? `<span>${esc(t("in piedi:", "up:"))} ${su.length}</span>` : ""}</div></div>
+        ${giu.map((riga3) => {
+    const da = riga3.da ? `${t("da", "for")} ${durataCorta(adesso - riga3.da)}` : "";
+    const parola = riga3.stato === "giu" ? riga3.famiglia === "rete" ? t("Assente", "Down") : t("Ferma", "Stopped") : t("Non risponde", "Not answering");
+    const tasto2 = tastoAvvia(riga3);
+    return `<div class="dm-f-mac-giu">
+              <span class="dm-f-mac-ic" aria-hidden="true">${segnoDellaMacchina(riga3, 22)}</span>
+              <span class="dm-f-mac-n"><b data-dm-no-i18n>${esc(riga3.name)}</b><em>${esc(parola)}${da ? ` ${esc(da)}` : ""}</em>${tasto2 ? "" : `<small>${esc(t("Nessun comando: va riacceso a mano", "No controls: restart it by hand"))}</small>`}</span>${tasto2}
+            </div>`;
+  }).join("")}
+      </div>` : `<div class="dm-f-mac-eroe"><div class="dm-f-mac-riga"><span class="dm-f-num">${su.length}</span><div><b>${esc(
+    t("tutto in piedi", "all up")
+  )}</b></div></div></div>`;
+  const gruppi2 = /* @__PURE__ */ new Map();
+  for (const riga3 of su) {
+    const chiave2 = `${riga3.famiglia}|${riga3.integrazione || ""}`;
+    if (!gruppi2.has(chiave2)) gruppi2.set(chiave2, []);
+    gruppi2.get(chiave2).push(riga3);
+  }
+  const elenco9 = [...gruppi2.entries()].sort(([a], [b]) => (a.startsWith("macchine") ? 0 : 1) - (b.startsWith("macchine") ? 0 : 1)).map(([chiave2, membri]) => {
+    const [famiglia, integrazione] = chiave2.split("|");
+    const nome = famiglia === "rete" ? t("Rete", "Network") : t("Server", "Servers");
+    const conto = famiglia === "rete" ? `${membri.length} ${t("connessi", "connected")}` : `${membri.length} ${t("accesi", "running")}`;
+    return `<h4 class="dm-f-tit dm-f-mac-testa"><span>${esc(nome)}${integrazione ? ` · <span data-dm-no-i18n>${esc(integrazione)}</span>` : ""}</span><em>${esc(conto)}</em></h4>
+        <div class="dm-f-mac-gruppo">${membri.map(
+      (riga3) => `<div class="dm-f-mac-r"><i aria-hidden="true"></i><b data-dm-no-i18n>${esc(riga3.name)}</b><span aria-hidden="true">${segnoDellaMacchina(riga3, 18)}</span></div>`
+    ).join("")}</div>`;
+  }).join("");
+  return `<div class="dm-f dm-f-macchine">${eroe}${elenco9}</div>`;
+}
+var STILE_MACCHINE = `
+${P5} .dm-f-macchine{--dm-f-indaco:#4f46e5}
+${P5} .dm-f-mac-eroe{border-radius:24px;padding:16px 18px;background:linear-gradient(155deg,color-mix(in srgb,var(--dm-f-indaco) 5%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-f-indaco) 10%,var(--card-bg,#fff)));
+  border:1px solid color-mix(in srgb,var(--dm-f-indaco) 22%,transparent)}
+${P5} .dm-f-mac-eroe[data-giu="true"]{background:linear-gradient(155deg,color-mix(in srgb,#dc2626 4%,var(--card-bg,#fff)),color-mix(in srgb,#dc2626 8%,var(--card-bg,#fff)));border-color:#fecaca}
+${P5} .dm-f-mac-riga{display:flex;align-items:center;gap:12px}
+${P5} .dm-f-mac-riga .dm-f-num{font-size:48px;line-height:1;color:var(--dm-f-indaco)}
+${P5} .dm-f-mac-eroe[data-giu="true"] .dm-f-mac-riga .dm-f-num{color:#dc2626}
+${P5} .dm-f-mac-riga b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a)}
+${P5} .dm-f-mac-riga span{font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P5} .dm-f-mac-giu{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;background:var(--card-bg,#fff);border:1px solid #fecaca;margin-top:10px}
+${P5} .dm-f-mac-ic{flex:0 0 auto;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:#fef2f2;color:#b91c1c}
+${P5} .dm-f-mac-n{flex:1;min-width:0}
+${P5} .dm-f-mac-n b{display:block;font-size:14.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-mac-n em{font-style:normal;font-size:12px;font-weight:750;color:#b91c1c}
+${P5} .dm-f-mac-n small{display:block;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:2px}
+${P5} .dm-f-mac-avvia{flex:0 0 auto;padding:10px 16px;border:0;border-radius:14px;background:var(--dm-f-indaco);color:#fff;font:inherit;font-size:13px;font-weight:850;cursor:pointer}
+${P5} .dm-f-mac-testa{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+${P5} .dm-f-mac-testa em{font-style:normal;font-size:11.5px;font-weight:800;letter-spacing:.02em;text-transform:none;color:#15803d}
+${P5} .dm-f-mac-gruppo{border-radius:20px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);padding:4px 14px}
+${P5} .dm-f-mac-r{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--text-dim,#64748b) 12%,transparent)}
+${P5} .dm-f-mac-r:last-child{border-bottom:0}
+${P5} .dm-f-mac-r>i{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 4px rgba(22,163,74,.15)}
+${P5} .dm-f-mac-r b{flex:1;min-width:0;font-size:14px;font-weight:800;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-mac-r span{color:var(--dm-f-indaco);display:grid;place-items:center}
+`;
+var COMANDABILI3 = /* @__PURE__ */ new Set(["switch", "input_boolean", "light", "fan", "valve", "siren"]);
+var APERTURE3 = /* @__PURE__ */ new Set(["door", "window", "garage_door", "opening", "gate"]);
+var MISURE4 = Object.freeze({
+  temperature: ["temperatura", "temperature"],
+  humidity: ["umidità", "humidity"],
+  power: ["potenza", "power"],
+  energy: ["energia", "energy"],
+  battery: ["batteria", "battery"],
+  pressure: ["pressione", "pressure"],
+  illuminance: ["luce", "light"],
+  moisture: ["umidità", "moisture"],
+  volume: ["volume", "volume"],
+  water: ["acqua", "water"],
+  carbon_dioxide: ["CO₂", "CO₂"]
+});
+var eUnaValvola = (riga3) => clean(riga3.entity).startsWith("valve.") || /valvol|valve|rubinett/i.test(`${clean(riga3.name)} ${clean(riga3.entity)}`);
+function genereDellaVoce(riga3, states) {
+  const entity2 = clean(riga3.entity);
+  const dominio4 = entity2.split(".")[0];
+  const stato3 = states?.[entity2];
+  const classe2 = clean(stato3?.attributes?.device_class);
+  if (COMANDABILI3.has(dominio4) && typeof riga3.on === "boolean") return "comando";
+  if (dominio4 === "binary_sensor" && APERTURE3.has(classe2) && typeof riga3.on === "boolean")
+    return "apertura";
+  if (riga3.raw != null && clean(riga3.unit) === "%") return "percentuale";
+  if (riga3.raw != null) return "numero";
+  return "parola";
+}
+function parolaDelComando(riga3) {
+  if (eUnaValvola(riga3)) return riga3.on ? t("Aperta", "Open") : t("Chiusa", "Closed");
+  return riga3.on ? t("Acceso", "On") : t("Spento", "Off");
+}
+function daQuando2(states, entity2) {
+  const stato3 = states?.[clean(entity2)];
+  const quando4 = Date.parse(stato3?.last_changed || stato3?.last_updated || "");
+  return Number.isFinite(quando4) ? quando4 : null;
+}
+function iconaDellaVoce(riga3, states, ripiego = "") {
+  const scelta3 = clean(riga3.glyph);
+  if (scelta3 && scelta3 !== clean(ripiego)) return iconGlyphHtml(scelta3, { size: 22, fallback: "•" });
+  const classe2 = clean(states?.[clean(riga3.entity)]?.attributes?.device_class);
+  if (eUnaValvola(riga3)) return "🚰";
+  const proprie = {
+    temperature: "🌡️",
+    humidity: "💧",
+    moisture: "💧",
+    power: "⚡",
+    energy: "⚡",
+    battery: "🔋",
+    door: "🚪",
+    gate: "🚪",
+    window: "🪟",
+    garage_door: "🚗",
+    opening: "🚪"
+  };
+  if (proprie[classe2]) return proprie[classe2];
+  return iconGlyphHtml(scelta3 || "•", { size: 22, fallback: "•" });
+}
+function cartaDelComando(riga3, states, ripiego, adesso = Date.now()) {
+  const da = daQuando2(states, riga3.entity);
+  const nome = nomePulito(riga3.name, riga3.entity);
+  return `<div class="dm-f-ev-cmd" data-on="${Boolean(riga3.on)}">
+    <span class="dm-f-ev-cmd-ic" aria-hidden="true">${iconaDellaVoce(riga3, states, ripiego)}</span>
+    <span class="dm-f-ev-cmd-n"><b data-dm-no-i18n>${esc(nome)}</b><em>${esc(parolaDelComando(riga3))}${da ? ` ${esc(t("da", "for"))} ${esc(durataCorta(adesso - da))}` : ""}</em></span>
+    ${leva2(riga3.entity, Boolean(riga3.on), nome)}
+  </div>`;
+}
+function cartaDellaLettura(riga3, states, ripiego, adesso) {
+  const genere = genereDellaVoce(riga3, states);
+  const da = daQuando2(states, riga3.entity);
+  const classe2 = clean(states?.[clean(riga3.entity)]?.attributes?.device_class);
+  let quando4 = "";
+  if (da && genere === "apertura") quando4 = `${t("dalle", "since")} ${orologio2(da)}`;
+  else if (da) quando4 = `${durataCorta(adesso - da)} ${t("fa", "ago")}`;
+  let valore3 = `<span class="dm-f-num dm-f-ev-val">${esc(clean(riga3.value).replace(/\s+%$/, "%"))}</span>`;
+  if (genere === "apertura")
+    valore3 = `<span class="dm-f-num dm-f-ev-stato" data-aperto="${riga3.on}">${esc(
+      riga3.on ? t("Aperto", "Open") : t("Chiuso", "Closed")
+    )}</span>`;
+  else if (genere === "parola")
+    valore3 = `<span class="dm-f-num dm-f-ev-stato" data-dm-no-i18n>${esc(clean(riga3.value))}</span>`;
+  const misura7 = MISURE4[classe2] ? t(MISURE4[classe2][0], MISURE4[classe2][1]) : "";
+  const barra = genere === "percentuale" ? `<div class="dm-f-ev-barra"><i style="width:${Math.round(Math.max(0, Math.min(100, Number(riga3.raw))))}%"></i></div>` : "";
+  return `<div class="dm-f-ev-voce" data-genere="${genere}">
+    <div class="dm-f-ev-su"><span aria-hidden="true">${iconaDellaVoce(riga3, states, ripiego)}</span>${quando4 ? `<small>${esc(quando4)}</small>` : ""}</div>
+    ${valore3}<b data-dm-no-i18n>${esc(nomePulito(riga3.name, riga3.entity))}</b>${misura7 && genere !== "percentuale" ? `<em>${esc(misura7)}</em>` : ""}${barra}
+  </div>`;
+}
+function finestraEvidenza(widget, states) {
+  const adesso = Date.now();
+  const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
+  const comandi = righe2.filter((riga3) => genereDellaVoce(riga3, states) === "comando");
+  const letture2 = righe2.filter((riga3) => genereDellaVoce(riga3, states) !== "comando");
+  return `<div class="dm-f dm-f-evidenza">${comandi.map((riga3) => cartaDelComando(riga3, states, "", adesso)).join("")}${letture2.length ? `${comandi.length ? `<h4 class="dm-f-tit">${esc(t("Le letture", "Readings"))}</h4>` : ""}<div class="dm-f-ev-griglia">${letture2.map((riga3) => cartaDellaLettura(riga3, states, "", adesso)).join("")}</div>` : ""}<button type="button" class="dm-f-porta" data-dm-w-config="sez0">${esc(
+    t("Scegli cosa tenere in evidenza", "Choose what to highlight")
+  )} <span aria-hidden="true">→</span></button></div>`;
+}
+function finestraSezioneMia(widget, states) {
+  const ripiego = clean(widget.icon);
+  const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
+  const generi = righe2.map((riga3) => [riga3, genereDellaVoce(riga3, states)]);
+  const livello = generi.find(([, genere]) => genere === "percentuale")?.[0] || null;
+  const comandi = generi.filter(([, genere]) => genere === "comando").map(([riga3]) => riga3);
+  const letture2 = generi.filter(([riga3, genere]) => genere !== "comando" && riga3 !== livello).map(([riga3]) => riga3);
+  const frase2 = comandi.map((riga3) => `${nomePulito(riga3.name, riga3.entity)} ${parolaDelComando(riga3).toLowerCase()}`).join(" · ");
+  const eroe = livello ? `<div class="dm-f-mia-eroe">
+        <div class="dm-f-mia-vasca" aria-hidden="true"><i style="height:${Math.round(Math.max(0, Math.min(100, Number(livello.raw))))}%"></i></div>
+        <div><small data-dm-no-i18n>${esc(nomePulito(livello.name, livello.entity))}</small><span class="dm-f-num">${esc(
+    clean(livello.value).replace(/\s+%$/, "%")
+  )}</span>${frase2 ? `<em data-dm-no-i18n>${esc(frase2)}</em>` : ""}</div>
+      </div>` : "";
+  const leve = comandi.length ? `<h4 class="dm-f-tit">${esc(t("I comandi", "Controls"))}</h4><div class="dm-f-mia-leve">${comandi.map((riga3) => {
+    const nome = nomePulito(riga3.name, riga3.entity);
+    return `<div class="dm-f-mia-leva" data-on="${Boolean(riga3.on)}">
+            <div class="dm-f-mia-su"><span aria-hidden="true">${iconaDellaVoce(riga3, states, ripiego)}</span>${leva2(
+      riga3.entity,
+      Boolean(riga3.on),
+      nome
+    )}</div>
+            <b data-dm-no-i18n>${esc(nome)}</b><span class="dm-f-num">${esc(parolaDelComando(riga3))}</span>
+          </div>`;
+  }).join("")}</div>` : "";
+  const elenco9 = letture2.length ? `<h4 class="dm-f-tit">${esc(t("Le letture", "Readings"))}</h4>${letture2.map((riga3) => {
+    const genere = genereDellaVoce(riga3, states);
+    const valore3 = genere === "apertura" ? riga3.on ? t("Aperto", "Open") : t("Chiuso", "Closed") : clean(riga3.value);
+    return `<div class="dm-f-mia-riga"><span aria-hidden="true">${iconaDellaVoce(riga3, states, ripiego)}</span><b data-dm-no-i18n>${esc(
+      nomePulito(riga3.name, riga3.entity)
+    )}</b><span class="dm-f-num">${esc(valore3)}</span></div>`;
+  }).join("")}` : "";
+  return `<div class="dm-f dm-f-sezionimie">${eroe}${leve}${elenco9}</div>`;
+}
+var STILE_EVIDENZE = `
+${P5} .dm-f-ev-cmd{display:flex;align-items:center;gap:13px;padding:14px;border-radius:22px;
+  background:linear-gradient(155deg,color-mix(in srgb,var(--dm-widget-accent,#eab308) 7%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#eab308) 14%,var(--card-bg,#fff)));
+  border:1px solid color-mix(in srgb,var(--dm-widget-accent,#eab308) 35%,transparent)}
+${P5} .dm-f-ev-cmd-ic{flex:0 0 auto;width:48px;height:48px;border-radius:16px;display:grid;place-items:center;font-size:24px;background:var(--card-bg,#fff);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#eab308) 35%,transparent)}
+${P5} .dm-f-ev-cmd-n{flex:1;min-width:0}
+${P5} .dm-f-ev-cmd-n b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-ev-cmd-n em{font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P5} .dm-f-ev-cmd[data-on="true"] em{color:#15803d}
+${P5} .dm-f-ev-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
+${P5} .dm-f-ev-voce{border-radius:20px;padding:13px 13px 12px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);
+  box-shadow:0 12px 24px -22px rgba(15,23,42,.6);min-width:0}
+${P5} .dm-f-ev-su{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:20px}
+${P5} .dm-f-ev-su small{font-size:10.5px;font-weight:800;color:var(--text-dim,#94a3b8);white-space:nowrap}
+${P5} .dm-f-ev-val{display:block;font-size:26px;line-height:1.1;margin-top:8px;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-ev-stato{display:block;font-size:22px;margin-top:8px;color:var(--text,#0f172a)}
+${P5} .dm-f-ev-stato[data-aperto="true"]{color:#b45309}
+${P5} .dm-f-ev-voce>b{display:block;font-size:13px;font-weight:850;margin-top:2px;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-ev-voce>em{display:block;font-style:normal;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:3px}
+${P5} .dm-f-ev-barra{height:6px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent);margin-top:8px;overflow:hidden}
+${P5} .dm-f-ev-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-widget-accent,#eab308)}
+${P5} .dm-f-mia-eroe{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:24px;
+  background:linear-gradient(155deg,color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 7%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 14%,var(--card-bg,#fff)));
+  border:1px solid color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 30%,transparent)}
+${P5} .dm-f-mia-vasca{flex:0 0 70px;height:92px;border-radius:14px 14px 18px 18px;border:3px solid color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 55%,transparent);
+  background:var(--card-bg,#fff);position:relative;overflow:hidden}
+${P5} .dm-f-mia-vasca i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,#7dd3fc,#0ea5e9)}
+${P5} .dm-f-mia-eroe small{display:block;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 70%,#000)}
+${P5} .dm-f-mia-eroe .dm-f-num{display:block;font-size:44px;line-height:1;margin-top:2px;color:var(--text,#0f172a)}
+${P5} .dm-f-mia-eroe em{display:block;margin-top:4px;font-style:normal;font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P5} .dm-f-mia-leve{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
+${P5} .dm-f-mia-leva{border-radius:22px;padding:14px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);box-shadow:0 12px 24px -22px rgba(15,23,42,.6);min-width:0}
+${P5} .dm-f-mia-leva[data-on="true"]{background:linear-gradient(160deg,#f0fdf4,#dcfce7);border-color:#bbf7d0}
+${P5} .dm-f-mia-su{display:flex;justify-content:space-between;align-items:center;font-size:22px}
+${P5} .dm-f-mia-leva b{display:block;font-size:14px;font-weight:850;margin-top:12px;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-mia-leva .dm-f-num{font-size:22px;color:var(--text-dim,#64748b)}
+${P5} .dm-f-mia-leva[data-on="true"] .dm-f-num,${P5} .dm-f-mia-leva[data-on="true"] b{color:#15803d}
+${P5} .dm-f-mia-riga{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7)}
+${P5} .dm-f-mia-riga>span:first-child{font-size:20px}
+${P5} .dm-f-mia-riga b{flex:1;min-width:0;font-size:14px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-mia-riga .dm-f-num{font-size:22px;color:var(--text,#0f172a);white-space:nowrap}
+`;
+var iniziali = (nome) => clean(nome).split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((pezzo) => pezzo.charAt(0).toUpperCase()).join("") || "#";
+function finestraSegnalazioni(widget) {
+  const conto = widget.conto || {};
+  const generi = [
+    ["bug", "🐞", t("Difetti", "Bugs"), "var(--dm-widget-accent,#0369a1)"],
+    ["feature", "✨", t("Idee", "Ideas"), "#38bdf8"],
+    ["assistenza", "💬", t("Aiuto", "Help"), "#a5b4fc"]
+  ].filter(([id]) => Number(conto[id]) > 0);
+  const oggi = Number(conto.oggi) || 0;
+  const eroe = `<div class="dm-f-seg-eroe">
+    <div class="dm-f-seg-riga"><span class="dm-f-num">${Number(conto.quante) || 0}</span><div><b>${esc(
+    t("da lavorare", "to work on")
+  )}</b><span>${esc(oggi ? `${t("Oggi arrivate:", "In today:")} ${oggi}` : t("Oggi non è arrivato niente", "Nothing came in today"))}</span></div></div>
+    ${generi.length ? `<div class="dm-f-seg-barra">${generi.map(([id, , , colore]) => `<i style="flex:${Number(conto[id])};background:${colore}"></i>`).join("")}</div>
+          <div class="dm-f-seg-leg">${generi.map(
+    ([id, icona2, nome, colore]) => `<span><i style="background:${colore}"></i>${icona2} ${esc(nome)} <b>${Number(conto[id])}</b></span>`
+  ).join("")}</div>` : ""}
+  </div>`;
+  const conversazioni = Array.isArray(conto.conversazioni) ? conto.conversazioni : [];
+  const MOSTRATE = 3;
+  const attesa = conversazioni.length ? `<h4 class="dm-f-tit">${esc(t("Ti stanno aspettando", "Waiting for you"))}</h4>${conversazioni.slice(-MOSTRATE).reverse().map((voce2) => {
+    const numero48 = Number(voce2?.number) || 0;
+    const stato3 = voce2?.stato === "in-carico" ? t("in lavorazione", "in progress") : voce2?.stato === "inviato" ? t("mai aperta", "never opened") : "";
+    const sotto = [numero48 ? `#${numero48}` : "", clean(voce2?.autore), stato3].filter(Boolean).join(" · ");
+    return `<div class="dm-f-seg-att">
+            <span class="dm-f-seg-av" aria-hidden="true">${esc(iniziali(voce2?.autore))}</span>
+            <span class="dm-f-seg-n"><b data-dm-no-i18n>${esc(clean(voce2?.title) || `#${numero48}`)}</b><em>${esc(sotto)}</em></span>
+            <span class="dm-f-seg-badge" title="${esc(t("Messaggi nuovi", "New messages"))}">${Number(voce2?.messages) || 1}</span>
+          </div>`;
+  }).join("")}${conversazioni.length > MOSTRATE ? `<p class="dm-f-seg-altre">${esc(t("e altre:", "and more:"))} ${conversazioni.length - MOSTRATE}</p>` : ""}` : "";
+  const vecchie = Number(conto.vecchie) || 0;
+  const ferme = vecchie ? `<div class="dm-f-seg-ferme"><span aria-hidden="true">⏳</span><span>${esc(
+    t("Ferme da oltre un mese:", "Stuck for over a month:")
+  )} <b>${vecchie}</b>${conto.piuVecchia ? ` · ${esc(t("la più vecchia è la", "the oldest is"))} #${Number(conto.piuVecchia)}` : ""}</span></div>` : "";
+  const due2 = `<div class="dm-f-seg-due">
+    <div><small>${esc(t("Mai aperte", "Never opened"))}</small><span class="dm-f-num">${Number(conto.nuove) || 0}</span></div>
+    <div><small>${esc(t("In lavorazione", "In progress"))}</small><span class="dm-f-num">${Number(conto.inLavorazione) || 0}</span></div>
+  </div>`;
+  return `<div class="dm-f dm-f-segnalazioni">${eroe}${attesa}${ferme}${due2}
+    <button type="button" class="dm-f-porta dm-f-pieno" data-dm-apri-cruscotto>${esc(
+    t("Apri il cruscotto", "Open the console")
+  )} <span aria-hidden="true">→</span></button></div>`;
+}
+var STILE_SEGNALAZIONI = `
+${P5} .dm-f-seg-eroe{border-radius:24px;padding:16px 18px;
+  background:linear-gradient(155deg,color-mix(in srgb,var(--dm-widget-accent,#0369a1) 6%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#0369a1) 13%,var(--card-bg,#fff)));
+  border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0369a1) 28%,transparent)}
+${P5} .dm-f-seg-riga{display:flex;align-items:flex-end;gap:12px}
+${P5} .dm-f-seg-riga .dm-f-num{font-size:50px;line-height:1;color:var(--dm-widget-accent,#0369a1)}
+${P5} .dm-f-seg-riga b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a)}
+${P5} .dm-f-seg-riga span{display:block;font-size:12.5px;font-weight:750;color:var(--text-dim,#475569);margin-bottom:5px}
+${P5} .dm-f-seg-barra{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:14px 0 8px;gap:2px}
+${P5} .dm-f-seg-barra i{display:block}
+${P5} .dm-f-seg-leg{display:flex;gap:6px 12px;flex-wrap:wrap;font-size:12px;font-weight:800;color:var(--text-dim,#475569)}
+${P5} .dm-f-seg-leg span{display:inline-flex;align-items:center;gap:6px}
+${P5} .dm-f-seg-leg i{width:9px;height:9px;border-radius:50%}
+${P5} .dm-f-seg-leg b{color:var(--text,#0f172a)}
+${P5} .dm-f-seg-att{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:18px;background:var(--card-bg,#fff);
+  border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0369a1) 18%,transparent);box-shadow:0 12px 24px -22px color-mix(in srgb,var(--dm-widget-accent,#0369a1) 90%,transparent)}
+${P5} .dm-f-seg-av{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;color:#fff;background:var(--dm-widget-accent,#0ea5e9)}
+${P5} .dm-f-seg-n{flex:1;min-width:0}
+${P5} .dm-f-seg-n b{display:block;font-size:14px;font-weight:850;line-height:1.25;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P5} .dm-f-seg-n em{font-style:normal;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P5} .dm-f-seg-badge{flex:0 0 auto;min-width:26px;height:26px;padding:0 8px;border-radius:999px;display:grid;place-items:center;background:var(--dm-widget-accent,#0369a1);color:#fff;font-size:12px;font-weight:900}
+${P5} .dm-f-seg-altre{margin:0 4px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P5} .dm-f-seg-ferme{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:16px;background:#fffbeb;border:1px solid #fde68a;font-size:13px;font-weight:800;color:#92400e}
+${P5} .dm-f-seg-due{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+${P5} .dm-f-seg-due>div{border-radius:16px;padding:11px 13px;background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}
+${P5} .dm-f-seg-due small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P5} .dm-f-seg-due .dm-f-num{font-size:22px;color:var(--text,#0f172a)}
+`;
+function finestraAssistenza(widget) {
+  const scritto = Number(widget.scrittoIl) || 0;
+  const testo2 = clean(widget.testo) || clean(widget.anteprima);
+  const domanda = widget.domanda && clean(widget.domanda.testo) ? widget.domanda : null;
+  const chi = `<div class="dm-f-chat-chi">
+    <span class="dm-f-chat-av" aria-hidden="true">💬</span>
+    <span><b>${esc(t("Assistenza", "Support"))}</b>${scritto ? `<em>${esc(t("ha risposto alle", "replied at"))} ${esc(orologio2(scritto))}</em>` : ""}</span>
+  </div>`;
+  const mia = domanda ? `<div class="dm-f-chat-mia" data-dm-no-i18n>${esc(clean(domanda.testo))}${domanda.scrittoIl ? `<small>${esc(quandoEra(domanda.scrittoIl))}</small>` : ""}</div>` : "";
+  const bolla = testo2 ? `<div class="dm-f-chat-bolla" data-dm-no-i18n>${esc(testo2)}${scritto ? `<small>${esc(orologio2(scritto))}</small>` : ""}</div>` : "";
+  return `<div class="dm-f dm-f-assistenza">${chi}${mia}${bolla}
+    <div class="dm-f-chat-rispondi">
+      <input id="dm-w-chat-risposta" type="text" maxlength="4000" autocomplete="off" placeholder="${esc(
+    t("Scrivi una risposta…", "Write a reply…")
+  )}" aria-label="${esc(t("Scrivi una risposta…", "Write a reply…"))}">
+      <button type="button" data-dm-chat-rispondi aria-label="${esc(t("Invia", "Send"))}">➤</button>
+    </div>
+    <button type="button" class="dm-f-porta" data-dm-apri-chat>${esc(
+    t("Apri tutta la conversazione", "Open the whole conversation")
+  )} <span aria-hidden="true">→</span></button></div>`;
+}
+var STILE_ASSISTENZA = `
+${P5} .dm-f-chat-chi{display:flex;align-items:center;gap:11px;margin:2px 2px 4px}
+${P5} .dm-f-chat-av{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:20px;
+  background:color-mix(in srgb,var(--dm-widget-accent,#22c55e) 12%,var(--card-bg,#fff));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#22c55e) 35%,transparent)}
+${P5} .dm-f-chat-chi b{display:block;font-size:14px;font-weight:850;color:var(--text,#0f172a)}
+${P5} .dm-f-chat-chi em{font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P5} .dm-f-chat-bolla{max-width:88%;padding:12px 14px;border-radius:20px 20px 20px 6px;font-size:14.5px;line-height:1.45;font-weight:500;white-space:pre-wrap;overflow-wrap:anywhere;
+  color:var(--text,#0f172a);background:color-mix(in srgb,var(--dm-widget-accent,#22c55e) 8%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,var(--dm-widget-accent,#22c55e) 30%,transparent)}
+${P5} .dm-f-chat-bolla small,${P5} .dm-f-chat-mia small{display:block;margin-top:6px;font-size:11px;font-weight:800;color:var(--text-dim,#64748b)}
+${P5} .dm-f-chat-mia{margin-left:auto;max-width:80%;padding:10px 13px;border-radius:20px 20px 6px 20px;font-size:13px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;
+  background:color-mix(in srgb,var(--text-dim,#64748b) 10%,var(--card-bg,#fff));color:var(--text-dim,#475569)}
+${P5} .dm-f-chat-rispondi{display:flex;gap:8px;margin-top:6px}
+${P5} .dm-f-chat-rispondi input{flex:1;min-width:0;padding:14px 15px;border-radius:18px;font:inherit;font-size:14px;
+  background:color-mix(in srgb,var(--text-dim,#64748b) 5%,var(--card-bg,#fff));border:1px solid var(--card-border,#e2e8f0);color:var(--text,#0f172a)}
+${P5} .dm-f-chat-rispondi button{flex:0 0 50px;border:0;border-radius:18px;background:var(--dm-widget-accent,#15803d);color:#fff;font-size:20px;cursor:pointer}
+`;
+var FINESTRE_SISTEMA = Object.freeze([
+  "elettrodomestici",
+  "cottura",
+  "minipc",
+  "macchine",
+  "evidenza",
+  "sezionimie",
+  "segnalazioni",
+  "assistenza"
+]);
+registraFinestra("elettrodomestici", {
+  disegna: finestraElettrodomestici,
+  stile: STILE_COMUNE + STILE_ELETTRODOMESTICI
+});
+registraFinestra("cottura", { disegna: finestraCottura, stile: STILE_COTTURA });
+registraFinestra("minipc", { disegna: finestraMinipc, stile: STILE_MINIPC });
+registraFinestra("macchine", { disegna: finestraMacchine, stile: STILE_MACCHINE });
+registraFinestra("evidenza", { disegna: finestraEvidenza, stile: STILE_EVIDENZE });
+registraFinestra("sezionimie", { disegna: finestraSezioneMia });
+registraFinestra("segnalazioni", { disegna: finestraSegnalazioni, stile: STILE_SEGNALAZIONI });
+registraFinestra("assistenza", { disegna: finestraAssistenza, stile: STILE_ASSISTENZA });
 
 // src/sections/home-widgets-section.js
 var KEY51 = "__DASHBOARDMODERN_HOME_WIDGETS__";
@@ -50164,15 +50892,65 @@ function energyModels(states) {
     )
   ].filter(Boolean);
 }
+function dettagliDellApparecchio(device, states, adesso, voceDiCucina) {
+  let scheda8 = null;
+  try {
+    scheda8 = applianceCardModel(device, states, { now: adesso, locale: activeLocale() });
+  } catch (_errore) {
+    return {};
+  }
+  const chip = (chiave2) => clean(scheda8.program?.chips?.find((voce2) => voce2.key === chiave2)?.label);
+  const dettagli = {
+    glifo: applianceGlyph(applianceVisualKey(device)) || "",
+    /* Il nome della stanza, mai il suo identificativo. */
+    stanza: clean(roomLabel(device?.room_id)) === clean(device?.room_id) ? "" : roomLabel(device?.room_id),
+    restano: scheda8.remaining?.seconds ?? null,
+    /* Quanto e' fatto: l'opposto di quanto resta. */
+    fatto: scheda8.remaining?.fraction == null ? null : 1 - scheda8.remaining.fraction,
+    fase: clean(scheda8.program?.phase?.label),
+    programma: chip("programma"),
+    gradi: chip("temperatura"),
+    giri: chip("centrifuga"),
+    dentro: clean(scheda8.temperature?.label),
+    ultimoAvvio: scheda8.running ? null : scheda8.cycle?.startMs ?? null,
+    cucina: false
+  };
+  const lettura3 = voceDiCucina?.lettura;
+  if (lettura3) {
+    dettagli.cucina = true;
+    dettagli.glifo = applianceGlyph(lettura3.tipo) || dettagli.glifo;
+    if (lettura3.rimasti != null && lettura3.viva) dettagli.restano = lettura3.rimasti;
+    if (lettura3.frazione != null) dettagli.fatto = 1 - lettura3.frazione;
+    if (lettura3.prontaAlle) dettagli.prontaAlle = lettura3.prontaAlle;
+    if (lettura3.programma) dettagli.programma = lettura3.programma;
+    if (lettura3.gradi) dettagli.gradi = `${Math.round(lettura3.gradi.valore)}${lettura3.gradi.unita}`;
+    if (lettura3.fase === "spenta" && lettura3.gradi)
+      dettagli.dentro = `${Math.round(lettura3.gradi.valore)} ${lettura3.gradi.unita}`;
+    dettagli.faseCucina = lettura3.fase;
+  }
+  return dettagli;
+}
 function appliancesModel(states) {
   const devices3 = section("appliances", readJson("cd_appliances", []));
   if (!Array.isArray(devices3) || !devices3.length) return null;
   const fuori = widgetExcludedEntities("elettrodomestici");
+  const adesso = Date.now();
+  const cucina = /* @__PURE__ */ new Map();
+  try {
+    if (ceLaCucina())
+      for (const voce2 of vistaDellaCucina(states, adesso).voci)
+        cucina.set(clean(voce2.apparecchio?.id), voce2);
+  } catch (_errore) {
+  }
   const rows = devices3.filter((device) => device?.enabled !== false).filter(
     (device) => widgetIncludes(clean(device?.power_entity || device?.entity || device?.entities?.[0]), fuori)
   ).map((device) => {
     const model2 = createApplianceViewModel(device, states, [], "it");
     return {
+      /* Quello che serve alla finestra (vedi `finestre/sistema.js`): quanto
+       * manca, a che punto e', il programma, e per chi e' fermo l'ultima
+       * cosa utile. Senza il dato, il campo resta vuoto e la finestra tace. */
+      ...dettagliDellApparecchio(device, states, adesso, cucina.get(clean(device?.id))),
       id: model2.id || clean(device.id),
       name: model2.name,
       mode: model2.mode,
@@ -50360,8 +51138,8 @@ function rigaDaEntita(states, entity2, glifo = "•") {
       value: `${formatNumber(numero48, cifre2)}${unita2 ? ` ${unita2}` : ""}`
     };
   }
-  const daQuando2 = Date.parse(stato3?.last_changed ?? stato3?.last_updated ?? "");
-  const quando4 = Number.isFinite(daQuando2) ? daQuando2 : null;
+  const daQuando3 = Date.parse(stato3?.last_changed ?? stato3?.last_updated ?? "");
+  const quando4 = Number.isFinite(daQuando3) ? daQuando3 : null;
   if (STATI_ACCESI2.test(grezzo))
     return {
       glyph: glifo,
@@ -51253,6 +52031,7 @@ var CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_temperatura_cpu",
+    chiave: "temperatura",
     it: "Temperatura CPU",
     en: "CPU temperature",
     glyph: "🌡️",
@@ -51261,6 +52040,7 @@ var CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_temperature",
+    chiave: "temperatura",
     it: "Temperatura",
     en: "Temperature",
     glyph: "🌡️",
@@ -51269,6 +52049,7 @@ var CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_potenza_raspberry_server",
+    chiave: "potenza",
     it: "Potenza",
     en: "Power",
     glyph: "⚡",
@@ -51277,6 +52058,7 @@ var CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_speedtest_download",
+    chiave: "scarica",
     it: "Download",
     en: "Download",
     glyph: "⬇️",
@@ -51285,16 +52067,18 @@ var CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_speedtest_upload",
+    chiave: "invia",
     it: "Upload",
     en: "Upload",
     glyph: "⬆️",
     unita: " Mb/s",
     cifre: 0
   },
-  { ref: "dm.server_ping_internet", it: "Ping", en: "Ping", glyph: "📡", unita: " ms", cifre: 0 },
-  { ref: "dm.server_stato_internet", it: "Internet", en: "Internet", glyph: "🌐", acceso: true },
+  { ref: "dm.server_ping_internet", chiave: "ping", it: "Ping", en: "Ping", glyph: "📡", unita: " ms", cifre: 0 },
+  { ref: "dm.server_stato_internet", chiave: "internet", it: "Internet", en: "Internet", glyph: "🌐", acceso: true },
   {
     ref: "dm.server_raggiungibilita_google",
+    chiave: "internet",
     it: "Rete raggiungibile",
     en: "Network reachable",
     glyph: "🌐",
@@ -51330,6 +52114,7 @@ function minipcModel(states) {
       rows.push({
         glyph: casella5.glyph,
         name: friendlyName(states, dato.entity),
+        chiave: casella5.chiave || "",
         entity: dato.entity,
         on: attivo,
         value: attivo ? t("Attivo", "Up") : t("Assente", "Down")
@@ -51797,6 +52582,14 @@ function macchineModel(states) {
   );
   if (!righe2.length) return null;
   const conto = contoDelleMacchine(righe2);
+  const piattaforme = piattaformeConosciute() || {};
+  let nomi = {};
+  try {
+    nomi = nomiDelleIntegrazioni() || {};
+    if (!Object.keys(nomi).length && Object.keys(piattaforme).length) dispositiviDelCatalogo();
+  } catch (_errore) {
+    nomi = {};
+  }
   return {
     key: "macchine",
     accent: conto.giu ? "#dc2626" : "#6366f1",
@@ -51810,6 +52603,20 @@ function macchineModel(states) {
       entity: riga3.entity,
       name: riga3.name,
       glyph: riga3.glifo,
+      /* Per la finestra (vedi `finestre/sistema.js`): la famiglia, lo stato,
+       * i comandi che la casa offre, da quando sta cosi', e l'integrazione col
+       * suo nome leggibile — «Proxmox VE», non «proxmoxve». */
+      famiglia: riga3.famiglia,
+      stato: riga3.stato,
+      comandi: riga3.comandi || null,
+      da: (() => {
+        const quando4 = Date.parse(states?.[riga3.entity]?.last_changed || "");
+        return Number.isFinite(quando4) ? quando4 : null;
+      })(),
+      integrazione: (() => {
+        const dominio4 = clean(piattaforme[riga3.entity]);
+        return dominio4 ? clean(nomi[dominio4]) : "";
+      })(),
       on: riga3.stato === "su",
       tono: riga3.stato === "su" ? "quiete" : riga3.stato === "giu" ? "allarme" : "",
       value: riga3.stato === "su" ? riga3.famiglia === "rete" ? t("Connesso", "Connected") : t("Acceso", "Running") : riga3.stato === "giu" ? riga3.famiglia === "rete" ? t("Assente", "Down") : t("Fermo", "Stopped") : t("Non risponde", "Not answering")
@@ -52002,6 +52809,7 @@ function evidenzaModel(states) {
     // riassunto sotto le nomina una per una col loro valore.
     value: String(rows.length),
     caption: rows.map((riga3) => clean(`${riga3.name} ${riga3.value}`)).join(" · "),
+    sottotitolo: t("Le cose che tieni d'occhio", "What you keep an eye on"),
     ring: null,
     // Si accende se qualcosa fra le evidenze e' acceso davvero.
     attiva: rows.some((riga3) => riga3.on === true),
@@ -52066,6 +52874,7 @@ function sezioniMieModels(states) {
        * generi diversi: due valvole e due batterie non fanno un numero. */
       value: String(rows.length),
       caption: rows.map((riga3) => clean(`${riga3.name} ${riga3.value}`)).join(" · "),
+      sottotitolo: t("La tua sezione", "Your section"),
       ring: null,
       attiva: rows.some((riga3) => riga3.on === true),
       rows
@@ -52231,6 +53040,7 @@ function segnalazioniModel() {
     /* Senza niente da lavorare la didascalia non elenca zeri: dice che non c'e'
      * niente, che e' la risposta. */
     caption: pezzi.length ? pezzi.join("  ·  ") : t("Niente da lavorare", "Nothing to work on"),
+    sottotitolo: t("La coda da lavorare", "The queue to work on"),
     ring: null,
     // Si accende quando c'e' qualcosa che aspetta una risposta.
     attiva: conto.quante > 0,
@@ -52238,7 +53048,15 @@ function segnalazioniModel() {
   };
 }
 function chatModel() {
-  return tesseraDellaChat(statoDellaChat());
+  const stato3 = statoDellaChat();
+  const tessera2 = tesseraDellaChat(stato3);
+  return tessera2 && {
+    ...tessera2,
+    testo: clean(stato3.testo),
+    domanda: stato3.domanda || null,
+    /* Il conto va nel sottotitolo della finestra, non in una casella. */
+    sottotitolo: paroleDelleRisposte(tessera2.risposte)
+  };
 }
 function paroleDelleFontiMute(quante2) {
   const n = Number(quante2) || 0;
@@ -52558,7 +53376,41 @@ function cotturaModel(states) {
   const prima = vista2.prima?.apparecchio || {};
   const stato3 = clean(prima.cottura_stato || prima.state_entity);
   if (stato3 && !widgetIncludes(stato3, fuori)) return null;
-  return tessera2;
+  const voce2 = vista2.prima;
+  const lettura3 = voce2?.lettura || {};
+  const comandi = {};
+  for (const [chiave2, azione] of Object.entries(lettura3.comandi || {}))
+    if (azione?.dominio && azione?.servizio)
+      comandi[chiave2] = { domain: azione.dominio, service: azione.servizio, data: azione.dati || {} };
+  return {
+    ...tessera2,
+    cucina: {
+      nome: clean(voce2?.nome),
+      stanza: clean(voce2?.stanza),
+      glifo: applianceGlyph(lettura3.tipo) || "🍟",
+      tipo: clean(lettura3.tipo),
+      fase: clean(lettura3.fase),
+      parola: parolaDellaFase(lettura3),
+      rimasti: lettura3.rimasti ?? null,
+      totali: lettura3.totali ?? null,
+      frazione: lettura3.frazione ?? null,
+      prontaAlle: lettura3.prontaAlle ?? null,
+      avviataAlle: lettura3.avviataAlle ?? null,
+      finitaAlle: lettura3.finitaAlle ?? null,
+      programma: clean(lettura3.programma),
+      gradi: lettura3.gradi || null,
+      femminile: Boolean(lettura3.femminile),
+      cassetto: lettura3.haCassetto ? lettura3.cassetto : null,
+      comandi,
+      altri: (vista2.voci || []).filter((altra) => altra !== voce2).map((altra) => ({
+        nome: clean(altra.nome),
+        glifo: applianceGlyph(altra.lettura?.tipo) || "🍳",
+        parola: parolaDellaFase(altra.lettura || {}),
+        spenta: altra.lettura?.fase === "spenta",
+        gradi: altra.lettura?.dentro || altra.lettura?.gradi || null
+      }))
+    }
+  };
 }
 function vmcModel(states) {
   const config = readJson(CHIAVE_VMC, []);
@@ -52668,9 +53520,9 @@ var AMBRE = /* @__PURE__ */ new Set(["#f59e0b", "#d97706"]);
 var ROSSI = /* @__PURE__ */ new Set(["#dc2626", "#ef4444", "#e11d48", "#be123c", "#b91c1c", "#f43f5e"]);
 function colorataComeLaSezione(widget) {
   if (!widget || typeof widget !== "object") return widget;
-  if (widget.alert)
-    return AMBRE.has(clean(widget.accent).toLowerCase()) ? widget : { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
   const chiave2 = clean(widget.key);
+  if (widget.alert && chiave2 !== "assistenza")
+    return AMBRE.has(clean(widget.accent).toLowerCase()) ? widget : { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
   const tab = eUnaSezioneMia(chiave2) ? chiave2 : SEZIONE_DEL_WIDGET[famigliaDellaTessera(chiave2)];
   const tinta = tab ? tintaDellaPagina(`page-${tab}`) : "";
   if (tinta) return { ...widget, accent: tinta };
@@ -53767,7 +54619,13 @@ function chatDetail(widget) {
   )}</button>`;
 }
 var SOLO_COMANDI = /* @__PURE__ */ new Set(["luci", "clima", "aggiornamenti"]);
+function finestraDisegnata(chiave2) {
+  const grezza = clean(chiave2);
+  return finestraDi(grezza) || finestraDi(famigliaDellaTessera(grezza)) || (eUnaSezioneMia(grezza) ? finestraDi("sezionimie") : null) || (grezza.startsWith("evidenza-") ? finestraDi("evidenza") : null);
+}
 function detailBody(widget, states) {
+  const disegnata = finestraDisegnata(widget.key);
+  if (disegnata) return disegnata.disegna(widget, states);
   if (widget.key === "assistenza") return chatDetail(widget);
   if (widget.key === "segnalazioni") {
     const conto = widget.conto || {};
@@ -53828,8 +54686,6 @@ function detailBody(widget, states) {
     )}</button>`;
   }
   const comandi = detailRows(widget, states);
-  const disegnata = finestraDi(widget.key) || finestraDi(famigliaDellaTessera(widget.key));
-  if (disegnata) return disegnata.disegna(widget, states);
   if (SOLO_COMANDI.has(widget.key)) return comandi || "";
   return `${verdettoEFrase(widget)}
     ${caselleDelleMisure(widget)}
@@ -53960,7 +54816,7 @@ function bricioleDelWidget(widget) {
     } catch (_errore) {
     }
   }
-  return bricioleDellaSezione(widget.key, t).join(" · ") || clean(widget.caption);
+  return bricioleDellaSezione(widget.key, t).join(" · ") || clean(widget.sottotitolo) || clean(widget.caption);
 }
 function firmaDelPiede(widget) {
   return `${widget.key}|${clean(widget.impianto)}`;
@@ -53969,7 +54825,9 @@ function piedeDellaSezione(widget) {
   if (!voceDellaSezione(widget.key)) return "";
   return `<footer class="dm-w-piede" data-dm-piede="${esc(firmaDelPiede(widget))}">
         <button type="button" class="dm-w-vai" data-dm-w-sezione="${esc(widget.key)}"${widget.impianto ? ` data-dm-w-impianto="${esc(widget.impianto)}"` : ""}>
-          ${esc(t("Apri sezione", "Open section"))} <span aria-hidden="true">→</span>
+          ${esc(
+    widget.key === TESSERA_COTTURA ? t("Apri la cucina", "Open the kitchen") : t("Apri sezione", "Open section")
+  )} <span aria-hidden="true">→</span>
         </button>
       </footer>`;
 }
@@ -54291,6 +55149,7 @@ function popupHost() {
 function ascoltaLaPorta() {
   doc?.addEventListener?.("click", (event) => {
     if (event.target?.closest?.("[data-dm-apri-cruscotto],[data-dm-apri-chat]")) chiudiPopup();
+    if (event.target?.closest?.("[data-dm-chat-rispondi]")) root.setTimeout?.(chiudiPopup, 0);
   });
 }
 var NON_SI_FERMANO = /^dmTileIn/;
@@ -54634,6 +55493,21 @@ function onClick7(event) {
     voce2?.click();
     return;
   }
+  const config = event.target?.closest?.("[data-dm-w-config]");
+  if (config) {
+    event.preventDefault();
+    const scheda8 = clean(config.dataset.dmWConfig);
+    chiudiPopup();
+    if (typeof root.apriConfigEntita !== "function") return;
+    root.apriConfigEntita();
+    root.setTimeout?.(() => {
+      try {
+        if (scheda8) root.editorSwitch?.(scheda8);
+      } catch (_errore) {
+      }
+    }, 0);
+    return;
+  }
   const tutte = event.target?.closest?.("[data-dm-w-lights-off]");
   if (tutte) {
     event.preventDefault();
@@ -54827,14 +55701,6 @@ function onClick7(event) {
   const tile = event.target?.closest?.("#dm-widgets [data-dm-widget]");
   if (tile) {
     event.preventDefault();
-    if (tile.dataset.dmWidget === TESSERA_COTTURA) {
-      const voce2 = voceDellaSezione(TESSERA_COTTURA);
-      if (voce2) {
-        root.dispatchEvent?.(new CustomEvent(EVENTO_COTTURA));
-        voce2.click();
-        return;
-      }
-    }
     toggleExpand(tile.dataset.dmWidget);
   }
 }
@@ -56551,6 +57417,9 @@ function installHomeWidgetsSection() {
        tessera «Server e rete» conta solo quelle delle integrazioni scelte, e
        prima di quella risposta non ne conta nessuna. */
     EVENTO_PIATTAFORME,
+    /* E come si chiamano quelle integrazioni: la finestra di «Server e rete»
+       raggruppa per nome leggibile, che arriva col catalogo. */
+    EVENTO_CATALOGO,
     /* I consumi dell'acqua e del gas arrivano dal Recorder, dopo che la Home
        si e' gia' disegnata: la tessera va rifatta quando atterrano. */
     EVENTO_CONTATORI,
@@ -66795,7 +67664,7 @@ function installTemperatureLayoutSection() {
 // src/core/il-grafico-delle-stanze.js
 var CHIAVE_GRAFICO_STANZE = "cd_grafico_stanze";
 var pulito41 = (valore3) => String(valore3 ?? "").trim();
-var MISURE4 = Object.freeze([
+var MISURE5 = Object.freeze([
   Object.freeze({
     chiave: "temperatura",
     campo: "temp",
@@ -66818,9 +67687,9 @@ var MISURE4 = Object.freeze([
   })
 ]);
 function misuraDelGrafico(chiave2) {
-  return MISURE4.find((misura7) => misura7.chiave === pulito41(chiave2)) || MISURE4[0];
+  return MISURE5.find((misura7) => misura7.chiave === pulito41(chiave2)) || MISURE5[0];
 }
-function scriviIlValore(valore3, misura7 = MISURE4[0], virgola = ",") {
+function scriviIlValore(valore3, misura7 = MISURE5[0], virgola = ",") {
   const numero48 = Number(valore3);
   if (!Number.isFinite(numero48)) return "—";
   return `${numero48.toFixed(misura7.decimali).replace(".", virgola)}${misura7.unita}`;
@@ -66865,7 +67734,7 @@ var state63 = root[KEY67] ||= {
   /* La misura che si sta guardando. Non si tiene in configurazione: e' come il
    * periodo — si sceglie mentre si guarda, e la prossima volta si riparte dalla
    * temperatura, che e' la domanda che si fa quasi sempre. */
-  misura: MISURE4[0].chiave,
+  misura: MISURE5[0].chiave,
   signature: ""
 };
 function preferenze() {
@@ -66882,7 +67751,7 @@ function viewFor(panel2) {
   const height = width < 520 ? 210 : width < 900 ? VIEW.height : 320;
   return { ...VIEW, width, height, left: width < 520 ? VIEW.left : 44 };
 }
-var COMFORT_GRADI = MISURE4[0].comfort;
+var COMFORT_GRADI = MISURE5[0].comfort;
 var SERIES_COLOURS = Object.freeze([
   "14,165,233",
   "244,63,94",
@@ -66908,7 +67777,7 @@ function activeRoomId() {
   );
   return clean(active?.dataset?.roomFilter) || "all";
 }
-function trendSeriesModel(roomValues = rooms(), roomId = "all", misura7 = MISURE4[0]) {
+function trendSeriesModel(roomValues = rooms(), roomId = "all", misura7 = MISURE5[0]) {
   const campo5 = misura7.campo;
   const configured2 = roomValues.filter(
     (room) => temperatureEntries(room).some((entry) => clean(entry?.[campo5]))
@@ -67077,7 +67946,7 @@ function ensurePanel() {
     element3("h3", "dm-trend-title", "")
   );
   const misure = element3("div", "dm-trend-misure");
-  for (const misura7 of MISURE4) {
+  for (const misura7 of MISURE5) {
     const button = element3("button", "dm-trend-misura", `${misura7.glifo} ${t(misura7.it, misura7.en)}`);
     button.type = "button";
     button.dataset.dmMisura = misura7.chiave;
@@ -67317,7 +68186,7 @@ function renderTemperatureTrend() {
   panel2.querySelector(".dm-trend-range-custom")?.classList.toggle("active", Boolean(intervallo2.personalizzato));
   panel2.querySelector(".dm-trend-title").textContent = model2.title;
   if (!model2.series.length) {
-    panel2.querySelector(".dm-trend-empty").textContent = misura7.chiave === MISURE4[0].chiave ? t(
+    panel2.querySelector(".dm-trend-empty").textContent = misura7.chiave === MISURE5[0].chiave ? t(
       "Nessuno storico disponibile per questa stanza.",
       "No history yet for this room."
     ) : t(
@@ -82709,11 +83578,11 @@ async function premiumDellaCasa({ forza = false } = {}) {
   ricorda({ premium });
   return premium;
 }
-var UN_MINUTO2 = 60 * 1e3;
+var UN_MINUTO3 = 60 * 1e3;
 async function fonteDelMuro(muro, { forza = false } = {}) {
   const di = muro?.fonte || "primary";
   const quiDentro = !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
-  if (!forza && !quiDentro && state109.fonte && state109.fonteDi === di && Date.now() - state109.fonteLetta < UN_MINUTO2)
+  if (!forza && !quiDentro && state109.fonte && state109.fonteDi === di && Date.now() - state109.fonteLetta < UN_MINUTO3)
     return state109.fonte;
   let fonte = null;
   if (root.__DM_MURO_FONTE__ && typeof root.__DM_MURO_FONTE__ === "object")
@@ -85508,60 +86377,60 @@ function renderBatterie() {
   schedule25();
 }
 function installStyles49() {
-  const P5 = `#${BATTERIE_PAGE_ID}`;
+  const P6 = `#${BATTERIE_PAGE_ID}`;
   installStyle(
     "dm-batterie-style",
     `
-    ${P5} .dm-batt-wrap{display:grid;gap:14px;padding:14px 14px 26px}
-    ${P5} .dm-batt-testa{
+    ${P6} .dm-batt-wrap{display:grid;gap:14px;padding:14px 14px 26px}
+    ${P6} .dm-batt-testa{
       display:grid;gap:3px;padding:16px 18px;border-radius:20px;
       border:1px solid var(--card-border,rgba(0,0,0,.08));background:var(--card-bg,#fff)}
-    ${P5} .dm-batt-testa small{font-size:10px;font-weight:900;letter-spacing:.09em;
+    ${P6} .dm-batt-testa small{font-size:10px;font-weight:900;letter-spacing:.09em;
       text-transform:uppercase;color:var(--text-dim,#94a3b8)}
-    ${P5} .dm-batt-testa strong{font-size:24px;font-weight:900;letter-spacing:-.02em;
+    ${P6} .dm-batt-testa strong{font-size:24px;font-weight:900;letter-spacing:-.02em;
       color:var(--text,#0f172a)}
-    ${P5} .dm-batt-testa[data-stato="scariche"] strong{color:#b45309}
-    ${P5} .dm-batt-testa[data-stato="cariche"] strong{color:#047857}
-    ${P5} .dm-batt-sotto,${P5} .dm-batt-soglia{font-size:11.5px;font-weight:750;
+    ${P6} .dm-batt-testa[data-stato="scariche"] strong{color:#b45309}
+    ${P6} .dm-batt-testa[data-stato="cariche"] strong{color:#047857}
+    ${P6} .dm-batt-sotto,${P6} .dm-batt-soglia{font-size:11.5px;font-weight:750;
       color:var(--text-dim,#64748b)}
-    ${P5} .dm-batt-soglia{opacity:.75}
-    ${P5} .dm-batt-elenco{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))}
+    ${P6} .dm-batt-soglia{opacity:.75}
+    ${P6} .dm-batt-elenco{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))}
     /* Le due soglie di chi si ricarica: sotto la riga, tutta larga. La riga
        resta la riga di sempre — tre colonne — e questa e' una quarta cella che
        le attraversa, cosi' una batteria normale non cambia di un pixel. */
-    ${P5} .dm-batt-soglie{grid-column:1/-1;display:grid;gap:8px;margin-top:2px;
+    ${P6} .dm-batt-soglie{grid-column:1/-1;display:grid;gap:8px;margin-top:2px;
       padding-top:10px;border-top:1px solid color-mix(in srgb,var(--dm-batt) 22%,transparent)}
-    ${P5} .dm-batt-limite{display:grid;gap:4px}
-    ${P5} .dm-batt-limite-testa{display:flex;align-items:baseline;justify-content:space-between;
+    ${P6} .dm-batt-limite{display:grid;gap:4px}
+    ${P6} .dm-batt-limite-testa{display:flex;align-items:baseline;justify-content:space-between;
       gap:8px;font-size:10.5px;font-weight:850;color:var(--text-dim,#64748b)}
-    ${P5} .dm-batt-limite-testa b{font-size:12.5px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-batt-limite-testa b{font-size:12.5px;font-weight:900;color:var(--text,#0f172a);
       font-variant-numeric:tabular-nums}
-    ${P5} .dm-batt-limite-cursore{width:100%;accent-color:var(--dm-batt);margin:0}
-    ${P5} .dm-batt{
+    ${P6} .dm-batt-limite-cursore{width:100%;accent-color:var(--dm-batt);margin:0}
+    ${P6} .dm-batt{
       --dm-batt:#10b981;
       display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:12px 14px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-batt) 34%,var(--card-border,rgba(0,0,0,.08)));
       background:var(--card-bg,#fff)}
-    ${P5} .dm-batt[data-batt="scarica"]{--dm-batt:#f59e0b}
-    ${P5} .dm-batt[data-batt="muta"]{--dm-batt:#94a3b8;opacity:.72}
-    ${P5} .dm-batt-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P5} .dm-batt-ic svg{display:block;width:26px;height:26px}
-    ${P5} .dm-batt-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
+    ${P6} .dm-batt[data-batt="scarica"]{--dm-batt:#f59e0b}
+    ${P6} .dm-batt[data-batt="muta"]{--dm-batt:#94a3b8;opacity:.72}
+    ${P6} .dm-batt-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P6} .dm-batt-ic svg{display:block;width:26px;height:26px}
+    ${P6} .dm-batt-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
       font-size:19px;background:color-mix(in srgb,var(--dm-batt) 20%,transparent)}
-    ${P5} .dm-batt-testo{display:grid;gap:3px;min-width:0}
-    ${P5} .dm-batt-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-batt-testo{display:grid;gap:3px;min-width:0}
+    ${P6} .dm-batt-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-batt-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
+    ${P6} .dm-batt-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-batt) 16%,transparent);overflow:hidden}
-    ${P5} .dm-batt-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-batt)}
-    ${P5} .dm-batt-livello{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
+    ${P6} .dm-batt-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-batt)}
+    ${P6} .dm-batt-livello{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
       color:color-mix(in srgb,var(--dm-batt) 78%,var(--text,#0f172a))}
-    ${P5} .dm-batt-vuoto{display:grid;gap:6px;padding:22px;border-radius:20px;
+    ${P6} .dm-batt-vuoto{display:grid;gap:6px;padding:22px;border-radius:20px;
       border:1px dashed var(--card-border,rgba(0,0,0,.14));background:var(--card-bg,#fff)}
-    ${P5} .dm-batt-vuoto strong{font-size:16px;font-weight:900}
-    ${P5} .dm-batt-vuoto span{font-size:12.5px;color:var(--text-dim,#64748b);line-height:1.45}
-    @media(max-width:520px){${P5} .dm-batt-elenco{grid-template-columns:1fr}}
+    ${P6} .dm-batt-vuoto strong{font-size:16px;font-weight:900}
+    ${P6} .dm-batt-vuoto span{font-size:12.5px;color:var(--text-dim,#64748b);line-height:1.45}
+    @media(max-width:520px){${P6} .dm-batt-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -100010,11 +100879,11 @@ function onClick40(event) {
     ridisegna16();
     return;
   }
-  const leva2 = event.target.closest("[data-dm-it-scelta]");
-  if (leva2) {
+  const leva3 = event.target.closest("[data-dm-it-scelta]");
+  if (leva3) {
     event.preventDefault();
-    const tipo = clean(leva2.dataset.dmItScelta);
-    salvaScelta(tipo, leva2.dataset.on !== "true");
+    const tipo = clean(leva3.dataset.dmItScelta);
+    salvaScelta(tipo, leva3.dataset.on !== "true");
     ridisegna16();
     return;
   }
@@ -100617,24 +101486,24 @@ function schedule33() {
   if (!state142.frame) giro();
 }
 function installStyles69() {
-  const P5 = `#${UPS_PAGE_ID}`;
+  const P6 = `#${UPS_PAGE_ID}`;
   installStyle(
     "dm-ups-section-style",
     `
-    ${P5} .dm-ups-wrap{display:grid;gap:18px;padding:0 0 24px}
-    ${P5} .dm-ups-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-ups-wrap{display:grid;gap:18px;padding:0 0 24px}
+    ${P6} .dm-ups-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-ups-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-ups-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-ups-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-ups-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* Il palco: stessa misura, stesso raggio e stessa ombra delle altre scene
        della plancia — e' la stessa stanza vista da un'altra porta. */
     /* Il nome sopra la scena, che compare solo da due gruppi in su: con uno
        solo sarebbe un'etichetta su una cosa sola. */
-    ${P5} .dm-ups-titolo{margin:0 0 10px;font-size:15px;font-weight:900;letter-spacing:-.01em;color:var(--text,#0f172a)}
-    ${P5} .dm-ups-stage + .dm-ups-titolo{margin-top:22px}
-    ${P5} .dm-ups-stage + .dm-ups-stage{margin-top:22px}
-    ${P5} .dm-ups-stage{
+    ${P6} .dm-ups-titolo{margin:0 0 10px;font-size:15px;font-weight:900;letter-spacing:-.01em;color:var(--text,#0f172a)}
+    ${P6} .dm-ups-stage + .dm-ups-titolo{margin-top:22px}
+    ${P6} .dm-ups-stage + .dm-ups-stage{margin-top:22px}
+    ${P6} .dm-ups-stage{
       position:relative;width:100%;height:600px;overflow:hidden;border-radius:32px;
       border:1px solid var(--card-border,#e2e8f0);
       background:
@@ -100644,156 +101513,156 @@ function installStyles69() {
       box-shadow:inset 0 0 35px rgba(0,0,0,.03),var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
     /* A corrente caduta la stanza cambia luce: non e' decorazione, e' la sola
        differenza che si deve vedere da lontano. */
-    ${P5} .dm-ups-stage:has(.dm-ups-scena[data-buio="true"]){
+    ${P6} .dm-ups-stage:has(.dm-ups-scena[data-buio="true"]){
       background:
         radial-gradient(120% 90% at 88% 6%,rgba(244,63,94,.18),transparent 58%),
         radial-gradient(90% 80% at 6% 96%,rgba(251,146,60,.16),transparent 60%),
         var(--card-bg,#fff)}
-    ${P5} .dm-ups-scena{position:absolute;inset:0}
+    ${P6} .dm-ups-scena{position:absolute;inset:0}
     /* Le targhette stanno insieme in una scatola, ma finche' la scena e' un
        palco quella scatola non deve esistere: display:contents la fa sparire
        dal disegno e lascia ogni targhetta appesa dove la mette il suo posto.
        Serve in verticale, dove le cinque diventano una griglia sola. */
-    ${P5} .dm-ups-quadro{display:contents}
+    ${P6} .dm-ups-quadro{display:contents}
 
     /* I cavi: fondo spesso e anima chiara, come i tubi del locale caldaia. */
-    ${P5} .dm-ups-cavi{position:absolute;inset:0;width:100%;height:100%}
-    ${P5} .dm-ups-cavo{fill:none;stroke:#e2e8f0;stroke-width:20;stroke-linecap:round}
-    ${P5} .dm-ups-cavo-int{fill:none;stroke:#f8fafc;stroke-width:12;stroke-linecap:round}
-    ${P5} .dm-ups-corrente{
+    ${P6} .dm-ups-cavi{position:absolute;inset:0;width:100%;height:100%}
+    ${P6} .dm-ups-cavo{fill:none;stroke:#e2e8f0;stroke-width:20;stroke-linecap:round}
+    ${P6} .dm-ups-cavo-int{fill:none;stroke:#f8fafc;stroke-width:12;stroke-linecap:round}
+    ${P6} .dm-ups-corrente{
       fill:none;stroke-width:9;stroke-linecap:round;opacity:0;
       stroke-dasharray:26 190;transition:opacity .5s ease}
-    ${P5} .dm-ups-corrente-rete{stroke:#22c55e}
-    ${P5} .dm-ups-corrente-uscita{stroke:#38bdf8}
+    ${P6} .dm-ups-corrente-rete{stroke:#22c55e}
+    ${P6} .dm-ups-corrente-uscita{stroke:#38bdf8}
     /* Le frecce corrono nel verso in cui la corrente sta andando davvero: dalla
        rete quando c'e', dalla batteria quando manca. Il cavo di monte spento e'
        tutta la notizia. */
-    ${P5} .dm-ups-scena[data-rete="true"] .dm-ups-corrente{
+    ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-corrente{
       opacity:.92;animation:dmUpsFlusso 2.4s linear infinite}
-    ${P5} .dm-ups-scena[data-buio="true"] .dm-ups-corrente-uscita{
+    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-corrente-uscita{
       stroke:#fbbf24;opacity:.95;animation:dmUpsFlusso 1.5s linear infinite}
     @keyframes dmUpsFlusso{from{stroke-dashoffset:216}to{stroke-dashoffset:0}}
 
-    ${P5} .dm-ups-nodo{
+    ${P6} .dm-ups-nodo{
       position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;
       align-items:center;gap:10px;z-index:4}
-    ${P5} .dm-ups-nome{
+    ${P6} .dm-ups-nome{
       font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
       color:var(--text-dim,#64748b);background:rgba(255,255,255,.95);padding:5px 12px;
       border-radius:12px;box-shadow:0 5px 12px rgba(0,0,0,.06);white-space:nowrap}
 
-    ${P5} .dm-ups-plate{
+    ${P6} .dm-ups-plate{
       display:grid;gap:2px;padding:10px 16px;border-radius:14px;min-width:112px;
       background:linear-gradient(160deg,#1e293b,#0b1220);
       box-shadow:0 14px 30px -14px rgba(15,23,42,.8),inset 0 1px 0 rgba(255,255,255,.09)}
-    ${P5} .dm-ups-plate-lbl{
+    ${P6} .dm-ups-plate-lbl{
       font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8}
-    ${P5} .dm-ups-plate-val{
+    ${P6} .dm-ups-plate-val{
       font-family:'Oswald',sans-serif;font-size:27px;font-weight:500;line-height:1;
       font-variant-numeric:tabular-nums}
-    ${P5} .dm-ups-plate-val i{font-style:normal;font-size:.52em;margin-left:2px;opacity:.85}
+    ${P6} .dm-ups-plate-val i{font-style:normal;font-size:.52em;margin-left:2px;opacity:.85}
 
     /* ── il traliccio: la rete che entra ──────────────────────────────── */
-    ${P5} .dm-ups-traliccio{position:relative;width:120px;height:180px}
-    ${P5} .dm-ups-pilone{
+    ${P6} .dm-ups-traliccio{position:relative;width:120px;height:180px}
+    ${P6} .dm-ups-pilone{
       display:block;width:100%;height:100%;
       transition:opacity .5s ease,filter .5s ease}
-    ${P5} .dm-ups-pilone-tratti{
+    ${P6} .dm-ups-pilone-tratti{
       fill:none;stroke:#94a3b8;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
-    ${P5} .dm-ups-pilone-isolatori{fill:#cbd5e1;stroke:#94a3b8;stroke-width:2}
+    ${P6} .dm-ups-pilone-isolatori{fill:#cbd5e1;stroke:#94a3b8;stroke-width:2}
     /* La croce sul traliccio: quando la rete manca lo si vede da lontano,
        senza leggere una parola. */
-    ${P5} .dm-ups-taglio{
+    ${P6} .dm-ups-taglio{
       position:absolute;inset:0;display:grid;place-items:center;font-size:64px;font-weight:900;
       color:#f43f5e;opacity:0;transform:scale(.7);transition:opacity .4s ease,transform .4s ease}
-    ${P5} .dm-ups-scena[data-buio="true"] .dm-ups-pilone{opacity:.28;filter:grayscale(1)}
-    ${P5} .dm-ups-scena[data-buio="true"] .dm-ups-taglio{opacity:.92;transform:scale(1)}
+    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-pilone{opacity:.28;filter:grayscale(1)}
+    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-taglio{opacity:.92;transform:scale(1)}
 
     /* ── la scatola: l'LCD, le spie, le prese ─────────────────────────── */
-    ${P5} .dm-ups-box{
+    ${P6} .dm-ups-box{
       position:relative;width:206px;height:236px;border-radius:20px;
       background:linear-gradient(150deg,#475569,#1e293b 56%,#0b1220);
       box-shadow:0 28px 50px -22px rgba(15,23,42,.65),inset 0 1px 0 rgba(255,255,255,.12)}
-    ${P5} .dm-ups-lcd{
+    ${P6} .dm-ups-lcd{
       position:absolute;top:20px;left:20px;right:20px;height:86px;border-radius:12px;
       display:flex;align-items:center;justify-content:center;gap:14px;
       background:linear-gradient(180deg,#0f172a,#020617);
       box-shadow:inset 0 0 0 1px rgba(148,163,184,.4),inset 0 2px 10px rgba(0,0,0,.7)}
-    ${P5} .dm-ups-lcd b{
+    ${P6} .dm-ups-lcd b{
       font-family:'Oswald',sans-serif;font-size:40px;font-weight:500;line-height:1;color:#4ade80;
       font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(74,222,128,.5)}
-    ${P5} .dm-ups-lcd b em{font-style:normal;font-size:.45em;margin-left:2px;opacity:.8}
-    ${P5} .dm-ups-scena[data-buio="true"] .dm-ups-lcd b{
+    ${P6} .dm-ups-lcd b em{font-style:normal;font-size:.45em;margin-left:2px;opacity:.8}
+    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-lcd b{
       color:#fbbf24;text-shadow:0 0 14px rgba(251,191,36,.55)}
-    ${P5} .dm-ups-scena[data-bassa="true"] .dm-ups-lcd b{
+    ${P6} .dm-ups-scena[data-bassa="true"] .dm-ups-lcd b{
       color:#f87171;text-shadow:0 0 14px rgba(248,113,113,.55)}
     /* La cella: il livello si disegna, non solo si scrive — e senza carica
        mappata si riempie tutta, perche' una cella vuota direbbe «niente
        riserva» invece di «non lo so». */
-    ${P5} .dm-ups-cella{
+    ${P6} .dm-ups-cella{
       position:relative;width:34px;height:56px;border-radius:5px;
       box-shadow:inset 0 0 0 2px rgba(148,163,184,.75)}
-    ${P5} .dm-ups-cella::before{
+    ${P6} .dm-ups-cella::before{
       content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);
       width:15px;height:5px;border-radius:2px;background:rgba(148,163,184,.75)}
-    ${P5} .dm-ups-cella i{
+    ${P6} .dm-ups-cella i{
       position:absolute;left:4px;right:4px;bottom:4px;border-radius:3px;display:block;
       background:linear-gradient(to top,#16a34a,#4ade80);
       transition:height 1.2s cubic-bezier(.16,1,.3,1),background .8s ease}
-    ${P5} .dm-ups-scena[data-buio="true"] .dm-ups-cella i{
+    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-cella i{
       background:linear-gradient(to top,#d97706,#fbbf24)}
-    ${P5} .dm-ups-scena[data-bassa="true"] .dm-ups-cella i{
+    ${P6} .dm-ups-scena[data-bassa="true"] .dm-ups-cella i{
       background:linear-gradient(to top,#b91c1c,#f87171)}
 
-    ${P5} .dm-ups-spie{position:absolute;top:122px;left:22px;display:flex;gap:12px}
-    ${P5} .dm-ups-spie i{
+    ${P6} .dm-ups-spie{position:absolute;top:122px;left:22px;display:flex;gap:12px}
+    ${P6} .dm-ups-spie i{
       display:block;width:13px;height:13px;border-radius:50%;background:rgba(148,163,184,.28)}
-    ${P5} .dm-ups-scena[data-rete="true"] .dm-ups-spia-rete{
+    ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-spia-rete{
       background:#22c55e;box-shadow:0 0 12px 2px rgba(34,197,94,.75)}
     /* La spia della batteria lampeggia solo mentre la casa ci sta sopra: una
        spia fissa direbbe «c'e' una batteria», che si sapeva gia'. */
-    ${P5} .dm-ups-scena[data-buio="true"] .dm-ups-spia-batt{
+    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-spia-batt{
       background:#fbbf24;box-shadow:0 0 12px 2px rgba(251,191,36,.8);
       animation:dmUpsBattito 1.3s ease-in-out infinite}
     @keyframes dmUpsBattito{0%,100%{opacity:1}50%{opacity:.35}}
 
-    ${P5} .dm-ups-prese{position:absolute;bottom:22px;left:22px;right:22px;display:flex;gap:14px}
-    ${P5} .dm-ups-prese i{
+    ${P6} .dm-ups-prese{position:absolute;bottom:22px;left:22px;right:22px;display:flex;gap:14px}
+    ${P6} .dm-ups-prese i{
       position:relative;display:block;flex:1;height:28px;border-radius:8px;
       background:rgba(15,23,42,.6);box-shadow:inset 0 0 0 1px rgba(148,163,184,.35)}
     /* I due fori: una pillola vuota non e' una presa, e la scatola si
        riconosce proprio da quelle. */
-    ${P5} .dm-ups-prese i::before,${P5} .dm-ups-prese i::after{
+    ${P6} .dm-ups-prese i::before,${P6} .dm-ups-prese i::after{
       content:"";position:absolute;top:50%;width:4px;height:9px;border-radius:2px;
       transform:translateY(-50%);background:rgba(148,163,184,.55)}
-    ${P5} .dm-ups-prese i::before{left:calc(50% - 7px)}
-    ${P5} .dm-ups-prese i::after{left:calc(50% + 3px)}
+    ${P6} .dm-ups-prese i::before{left:calc(50% - 7px)}
+    ${P6} .dm-ups-prese i::after{left:calc(50% + 3px)}
 
     /* ── la casa: quello che sta tenendo acceso ───────────────────────── */
-    ${P5} .dm-ups-casa{position:relative;width:150px;height:150px}
-    ${P5} .dm-ups-tetto{
+    ${P6} .dm-ups-casa{position:relative;width:150px;height:150px}
+    ${P6} .dm-ups-tetto{
       position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:0;
       border-left:75px solid transparent;border-right:75px solid transparent;
       border-bottom:56px solid #94a3b8}
-    ${P5} .dm-ups-muro{
+    ${P6} .dm-ups-muro{
       position:absolute;top:56px;left:18px;right:18px;bottom:0;border-radius:0 0 12px 12px;
       display:flex;align-items:center;justify-content:center;gap:16px;
       background:linear-gradient(180deg,#e2e8f0,#cbd5e1)}
-    ${P5} .dm-ups-muro i{
+    ${P6} .dm-ups-muro i{
       display:block;width:26px;height:26px;border-radius:5px;background:rgba(15,23,42,.22);
       transition:background .6s ease,box-shadow .6s ease}
     /* Le finestre accese: la casa e' viva in tutti e due i casi — e' proprio il
        senso di questa scatola — ma di che luce lo dice chi la sta dando. */
-    ${P5} .dm-ups-scena[data-rete="true"] .dm-ups-muro i{
+    ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-muro i{
       background:#fde68a;box-shadow:0 0 14px 3px rgba(253,230,138,.7)}
-    ${P5} .dm-ups-scena[data-buio="true"] .dm-ups-muro i{
+    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-muro i{
       background:#fbbf24;box-shadow:0 0 14px 3px rgba(251,191,36,.6)}
 
-    ${P5} .dm-ups-verdetto{
+    ${P6} .dm-ups-verdetto{
       font-size:12px;font-weight:800;letter-spacing:.3px;padding:8px 14px;border-radius:14px;
       background:rgba(255,255,255,.95);color:var(--text-dim,#475569);
       box-shadow:0 6px 16px rgba(0,0,0,.08);white-space:nowrap}
-    ${P5} .dm-ups-scena[data-buio="true"] .dm-ups-verdetto{
+    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-verdetto{
       background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff;
       box-shadow:0 10px 24px -10px rgba(244,63,94,.85)}
 
@@ -100801,19 +101670,19 @@ function installStyles69() {
       /* Le pastiglie dei nomi vanno a capo invece di uscire dal palco: il
          telaio si stringe, le parole no — «Sotto protezione» su una riga sola
          e' piu' larga di un terzo di telefono. */
-      ${P5} .dm-ups-nome{
+      ${P6} .dm-ups-nome{
         max-width:min(40vw,150px);white-space:normal;text-align:center;line-height:1.25}
-      ${P5} .dm-ups-stage{height:520px;border-radius:24px}
-      ${P5} .dm-ups-box{width:158px;height:186px}
-      ${P5} .dm-ups-lcd{height:66px}
-      ${P5} .dm-ups-lcd b{font-size:30px}
-      ${P5} .dm-ups-spie{top:96px}
-      ${P5} .dm-ups-traliccio{width:84px;height:132px}
-      ${P5} .dm-ups-casa{width:110px;height:112px}
-      ${P5} .dm-ups-tetto{border-left-width:55px;border-right-width:55px;border-bottom-width:42px}
-      ${P5} .dm-ups-muro{top:42px}
-      ${P5} .dm-ups-plate{min-width:88px;padding:8px 12px}
-      ${P5} .dm-ups-plate-val{font-size:21px}
+      ${P6} .dm-ups-stage{height:520px;border-radius:24px}
+      ${P6} .dm-ups-box{width:158px;height:186px}
+      ${P6} .dm-ups-lcd{height:66px}
+      ${P6} .dm-ups-lcd b{font-size:30px}
+      ${P6} .dm-ups-spie{top:96px}
+      ${P6} .dm-ups-traliccio{width:84px;height:132px}
+      ${P6} .dm-ups-casa{width:110px;height:112px}
+      ${P6} .dm-ups-tetto{border-left-width:55px;border-right-width:55px;border-bottom-width:42px}
+      ${P6} .dm-ups-muro{top:42px}
+      ${P6} .dm-ups-plate{min-width:88px;padding:8px 12px}
+      ${P6} .dm-ups-plate-val{font-size:21px}
     }
 
     /* ── sul telefono la fila si alza in piedi ────────────────────────── */
@@ -100836,45 +101705,45 @@ function installStyles69() {
        corrente che scorre, e i numeri in una griglia sotto di loro. Gli
        oggetti restano della misura che avevano, e nessuno tocca nessuno. */
     @media (max-width:520px){
-      ${P5} .dm-ups-stage{height:auto;padding:22px 12px 20px}
-      ${P5} .dm-ups-scena{
+      ${P6} .dm-ups-stage{height:auto;padding:22px 12px 20px}
+      ${P6} .dm-ups-scena{
         position:static;display:flex;flex-direction:column;align-items:center;gap:0}
       /* I cavi disegnati erano due segmenti orizzontali su un palco largo:
          in colonna non hanno piu' niente da unire, e il loro posto lo prende
          il tratto verticale qui sotto. */
-      ${P5} .dm-ups-cavi{display:none}
-      ${P5} .dm-ups-nodo{position:static;transform:none;max-width:100%}
-      ${P5} .dm-ups-nodo[data-dm-ups-posto="rete"]{order:1}
-      ${P5} .dm-ups-nodo[data-dm-ups-posto="scatola"]{order:2}
-      ${P5} .dm-ups-nodo[data-dm-ups-posto="casa"]{order:3}
-      ${P5} .dm-ups-quadro{
+      ${P6} .dm-ups-cavi{display:none}
+      ${P6} .dm-ups-nodo{position:static;transform:none;max-width:100%}
+      ${P6} .dm-ups-nodo[data-dm-ups-posto="rete"]{order:1}
+      ${P6} .dm-ups-nodo[data-dm-ups-posto="scatola"]{order:2}
+      ${P6} .dm-ups-nodo[data-dm-ups-posto="casa"]{order:3}
+      ${P6} .dm-ups-quadro{
         order:4;display:grid;width:100%;margin-top:20px;gap:10px;
         grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
-      ${P5} .dm-ups-quadro .dm-ups-nodo{align-items:stretch;gap:0}
-      ${P5} .dm-ups-quadro .dm-ups-plate{min-width:0}
-      ${P5} .dm-ups-nodo-verdetto{order:5;margin-top:16px}
+      ${P6} .dm-ups-quadro .dm-ups-nodo{align-items:stretch;gap:0}
+      ${P6} .dm-ups-quadro .dm-ups-plate{min-width:0}
+      ${P6} .dm-ups-nodo-verdetto{order:5;margin-top:16px}
       /* La frase non ha piu' un angolo tutto suo in cui stare su una riga:
          al centro, sotto i numeri, va a capo come qualsiasi altra frase. */
-      ${P5} .dm-ups-verdetto{white-space:normal;text-align:center}
+      ${P6} .dm-ups-verdetto{white-space:normal;text-align:center}
 
       /* Il cavo verticale: fondo spesso, anima chiara e il tratto di corrente
          che scende — le stesse tre cose dei cavi orizzontali, in una sola
          pastiglia, perche' qui non c'e' un disegno sotto a cui appoggiarsi. */
-      ${P5} .dm-ups-nodo[data-dm-ups-posto="rete"]::after,
-      ${P5} .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
+      ${P6} .dm-ups-nodo[data-dm-ups-posto="rete"]::after,
+      ${P6} .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
         content:"";width:18px;height:46px;border-radius:9px;
         background:
           linear-gradient(180deg,var(--dm-ups-corrente,transparent) 0 20px,transparent 20px)
             center 0/9px 46px repeat-y,
           linear-gradient(180deg,#f8fafc,#f8fafc) center/10px 100% no-repeat,
           #e2e8f0}
-      ${P5} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="rete"]::after{
+      ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="rete"]::after{
         --dm-ups-corrente:#22c55e;animation:dmUpsScende 2.4s linear infinite}
-      ${P5} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
+      ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
         --dm-ups-corrente:#38bdf8;animation:dmUpsScende 2.4s linear infinite}
       /* A corrente caduta il cavo di monte resta spento — e' tutta la notizia
          — e quello di valle porta l'ambra della batteria, piu' in fretta. */
-      ${P5} .dm-ups-scena[data-buio="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
+      ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
         --dm-ups-corrente:#fbbf24;animation:dmUpsScende 1.5s linear infinite}
     }
     @keyframes dmUpsScende{
@@ -100882,7 +101751,7 @@ function installStyles69() {
       to{background-position:center 0,center,0 0}
     }
     @media (prefers-reduced-motion:reduce){
-      ${P5} .dm-ups-nodo::after{animation:none!important}
+      ${P6} .dm-ups-nodo::after{animation:none!important}
     }
     `
   );
@@ -101216,132 +102085,132 @@ function onClick41(event) {
   }
 }
 function installStyles70() {
-  const P5 = `#${CALENDARIO_PAGE_ID}`;
+  const P6 = `#${CALENDARIO_PAGE_ID}`;
   installStyle(
     "dm-calendario-section-style",
     `
-    ${P5} .dm-calp-wrap{display:grid;gap:16px;padding:0 0 24px}
-    ${P5} .dm-calp-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-calp-wrap{display:grid;gap:16px;padding:0 0 24px}
+    ${P6} .dm-calp-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-calp-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-calp-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-calp-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-calp-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* ── chi guarda l'agenda (#344) ────────────────────────────────────── */
-    ${P5} .dm-calp-chi{
+    ${P6} .dm-calp-chi{
       display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 14px;
       border-radius:18px;border:1px dashed var(--divider-color,#dbe4ee);
       background:color-mix(in srgb,#6366f1 6%,transparent)}
-    ${P5} .dm-calp-chi-lbl{
+    ${P6} .dm-calp-chi-lbl{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--secondary-text-color,#64748b)}
-    ${P5} .dm-calp-chi-voci{display:flex;flex-wrap:wrap;gap:6px}
-    ${P5} .dm-calp-chi-voce{
+    ${P6} .dm-calp-chi-voci{display:flex;flex-wrap:wrap;gap:6px}
+    ${P6} .dm-calp-chi-voce{
       padding:6px 12px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);
       background:var(--card-bg,#fff);color:var(--text,#0f172a);
       font:inherit;font-size:12px;font-weight:800;cursor:pointer}
-    ${P5} .dm-calp-chi-voce[aria-pressed="true"]{
+    ${P6} .dm-calp-chi-voce[aria-pressed="true"]{
       border-color:#6366f1;background:color-mix(in srgb,#6366f1 16%,var(--card-bg,#fff));color:#4338ca}
 
     /* ── la fascia della settimana ─────────────────────────────────────── */
-    ${P5} .dm-calp-fascia{
+    ${P6} .dm-calp-fascia{
       display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:14px;
       border-radius:22px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-calp-cella{
+    ${P6} .dm-calp-cella{
       display:grid;gap:4px;justify-items:center;padding:10px 4px 8px;border:0;cursor:pointer;
       border-radius:16px;background:transparent;transition:background .2s ease,transform .15s ease}
-    ${P5} .dm-calp-cella:hover{background:color-mix(in srgb,var(--primary-color,#6366f1) 8%,transparent)}
-    ${P5} .dm-calp-sett{
+    ${P6} .dm-calp-cella:hover{background:color-mix(in srgb,var(--primary-color,#6366f1) 8%,transparent)}
+    ${P6} .dm-calp-sett{
       font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
       color:var(--secondary-text-color,#94a3b8)}
-    ${P5} .dm-calp-numero{
+    ${P6} .dm-calp-numero{
       font-family:'Oswald',sans-serif;font-size:22px;font-weight:500;line-height:1.1;
       font-variant-numeric:tabular-nums;color:var(--text,#0f172a)}
     /* Oggi porta il cerchio pieno: e' il giorno da cui si conta tutto il
        resto, e cercarlo fra sette numeri uguali costa uno sguardo di troppo. */
-    ${P5} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{
+    ${P6} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{
       display:grid;place-items:center;width:34px;height:34px;border-radius:50%;color:#fff;
       background:linear-gradient(135deg,#818cf8,#4f46e5)}
-    ${P5} .dm-calp-cella[data-scelto="true"]{
+    ${P6} .dm-calp-cella[data-scelto="true"]{
       background:color-mix(in srgb,var(--primary-color,#6366f1) 14%,transparent);
       box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--primary-color,#6366f1) 45%,transparent)}
-    ${P5} .dm-calp-punti{display:flex;gap:3px;min-height:8px;align-items:center}
-    ${P5} .dm-calp-punti i{display:block;width:6px;height:6px;border-radius:50%}
-    ${P5} .dm-calp-tanti{
+    ${P6} .dm-calp-punti{display:flex;gap:3px;min-height:8px;align-items:center}
+    ${P6} .dm-calp-punti i{display:block;width:6px;height:6px;border-radius:50%}
+    ${P6} .dm-calp-tanti{
       font-size:10px;font-weight:900;color:var(--secondary-text-color,#64748b);
       font-variant-numeric:tabular-nums}
 
-    ${P5} .dm-calp-legenda{display:flex;flex-wrap:wrap;gap:6px 16px;padding:0 4px}
-    ${P5} .dm-calp-voce{
+    ${P6} .dm-calp-legenda{display:flex;flex-wrap:wrap;gap:6px 16px;padding:0 4px}
+    ${P6} .dm-calp-voce{
       display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;
       color:var(--secondary-text-color,#64748b)}
-    ${P5} .dm-calp-voce i{display:block;width:9px;height:9px;border-radius:50%}
+    ${P6} .dm-calp-voce i{display:block;width:9px;height:9px;border-radius:50%}
 
-    ${P5} .dm-calp-tutto{
+    ${P6} .dm-calp-tutto{
       justify-self:start;padding:8px 16px;border:0;border-radius:999px;cursor:pointer;
       font-size:12px;font-weight:800;color:var(--text,#0f172a);
       background:var(--card-bg,#fff);box-shadow:0 6px 16px rgba(0,0,0,.08)}
 
     /* ── l'agenda ──────────────────────────────────────────────────────── */
-    ${P5} .dm-calp-nuovo-riga{display:flex;justify-content:flex-start}
+    ${P6} .dm-calp-nuovo-riga{display:flex;justify-content:flex-start}
     /* Una scadenza dentro l'agenda (#259): la casella al posto dei tasti, e la
        parola «Da fare» dove gli altri hanno l'ora. */
-    ${P5} .dm-calp-evento[data-scadenza="true"] .dm-calp-ora{color:var(--dm-calp-tinta,#0ea5e9)}
-    ${P5} .dm-calp-evento[data-scadenza="true"] .dm-todo-check{
+    ${P6} .dm-calp-evento[data-scadenza="true"] .dm-calp-ora{color:var(--dm-calp-tinta,#0ea5e9)}
+    ${P6} .dm-calp-evento[data-scadenza="true"] .dm-todo-check{
       flex:0 0 19px;width:19px;height:19px;margin-top:2px}
-    ${P5} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-titolo{color:#b91c1c}
-    ${P5} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-evento{border-left-color:#ef4444}
-    ${P5} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-ora{color:#b91c1c}
+    ${P6} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-titolo{color:#b91c1c}
+    ${P6} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-evento{border-left-color:#ef4444}
+    ${P6} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-ora{color:#b91c1c}
     /* Le cose da fare: stessa scheda dei giorni, cosi' i due blocchi si
        leggono come due parti della stessa pagina e non come due pagine. */
-    ${P5} .dm-calp-cose{
+    ${P6} .dm-calp-cose{
       padding:16px 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-calp-cose .dm-w-block + .dm-w-block{margin-top:14px}
-    ${P5} .dm-calp-cose .dm-w-block-title{
+    ${P6} .dm-calp-cose .dm-w-block + .dm-w-block{margin-top:14px}
+    ${P6} .dm-calp-cose .dm-w-block-title{
       display:block;margin-bottom:8px;font-size:11px;font-weight:900;letter-spacing:1px;
       text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
-    ${P5} .dm-calp-agenda{display:grid;gap:12px}
-    ${P5} .dm-calp-giorno{
+    ${P6} .dm-calp-agenda{display:grid;gap:12px}
+    ${P6} .dm-calp-giorno{
       padding:16px 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-calp-titolo{
+    ${P6} .dm-calp-titolo{
       margin:0 0 12px;font-size:11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;
       color:var(--secondary-text-color,#64748b)}
-    ${P5} .dm-calp-lista{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+    ${P6} .dm-calp-lista{list-style:none;margin:0;padding:0;display:grid;gap:10px}
     /* Ogni riga porta a sinistra la stecca del suo calendario: con due agende
        nello stesso giorno, il colore dice di chi e' l'impegno senza leggere. */
-    ${P5} .dm-calp-evento{
+    ${P6} .dm-calp-evento{
       display:flex;align-items:flex-start;gap:13px;min-width:0;padding-left:12px;
       border-left:3px solid var(--dm-calp-tinta,#6366f1);border-radius:2px}
-    ${P5} .dm-calp-ora{
+    ${P6} .dm-calp-ora{
       flex:0 0 auto;min-width:96px;padding-top:1px;font-size:12px;font-weight:800;line-height:1.5;
       font-variant-numeric:tabular-nums;color:var(--secondary-text-color,#64748b)}
-    ${P5} .dm-calp-corpo{display:grid;gap:2px;min-width:0;flex:1}
-    ${P5} .dm-calp-corpo b{font-size:14px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
-    ${P5} .dm-calp-corpo small{
+    ${P6} .dm-calp-corpo{display:grid;gap:2px;min-width:0;flex:1}
+    ${P6} .dm-calp-corpo b{font-size:14px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
+    ${P6} .dm-calp-corpo small{
       font-size:11.5px;font-weight:700;color:var(--secondary-text-color,#94a3b8);
       overflow-wrap:anywhere}
-    ${P5} .dm-calp-nota{
+    ${P6} .dm-calp-nota{
       margin-top:3px;font-size:12px;font-weight:600;line-height:1.45;
       color:var(--secondary-text-color,#64748b);overflow-wrap:anywhere;white-space:pre-line}
-    ${P5} .dm-calp-evento[data-adesso="true"] .dm-calp-ora,
-    ${P5} .dm-calp-evento[data-adesso="true"] .dm-calp-corpo b{color:var(--dm-calp-tinta,#6366f1)}
-    ${P5} .dm-calp-adesso{
+    ${P6} .dm-calp-evento[data-adesso="true"] .dm-calp-ora,
+    ${P6} .dm-calp-evento[data-adesso="true"] .dm-calp-corpo b{color:var(--dm-calp-tinta,#6366f1)}
+    ${P6} .dm-calp-adesso{
       flex:0 0 auto;align-self:center;padding:4px 10px;border-radius:999px;color:#fff;
       font-size:9.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
       background:var(--dm-calp-tinta,#6366f1)}
-    ${P5} .dm-calp-niente{
+    ${P6} .dm-calp-niente{
       margin:0;padding:26px 18px;text-align:center;border-radius:22px;
       border:1px dashed var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);
       font-size:13px;font-weight:800;color:var(--secondary-text-color,#64748b)}
 
     @media (max-width:640px){
-      ${P5} .dm-calp-fascia{gap:4px;padding:10px 8px}
-      ${P5} .dm-calp-numero{font-size:18px}
-      ${P5} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{width:29px;height:29px}
-      ${P5} .dm-calp-ora{min-width:74px;font-size:11px}
-      ${P5} .dm-calp-evento{gap:10px;padding-left:10px}
+      ${P6} .dm-calp-fascia{gap:4px;padding:10px 8px}
+      ${P6} .dm-calp-numero{font-size:18px}
+      ${P6} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{width:29px;height:29px}
+      ${P6} .dm-calp-ora{min-width:74px;font-size:11px}
+      ${P6} .dm-calp-evento{gap:10px;padding-left:10px}
     }
     `
   );
@@ -102951,49 +103820,49 @@ function renderVarchi() {
   schedule35();
 }
 function installStyles74() {
-  const P5 = `#${VARCHI_PAGE_ID}`;
+  const P6 = `#${VARCHI_PAGE_ID}`;
   installStyle(
     "dm-varchi-section-style",
     `
-    ${P5} .dm-varchi-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P5} .dm-varchi-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-varchi-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P6} .dm-varchi-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-varchi-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-varchi-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-varchi-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-varchi-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande: quanti sono aperti adesso. */
-    ${P5} .dm-varchi-testa{
+    ${P6} .dm-varchi-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-varchi-testa small{
+    ${P6} .dm-varchi-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P5} .dm-varchi-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P5} .dm-varchi-testa[data-stato="aperti"] strong{color:#dc2626}
-    ${P5} .dm-varchi-testa[data-stato="chiusi"] strong{color:#15803d}
-    ${P5} .dm-varchi-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P5} .dm-varchi-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-varchi-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P6} .dm-varchi-testa[data-stato="aperti"] strong{color:#dc2626}
+    ${P6} .dm-varchi-testa[data-stato="chiusi"] strong{color:#15803d}
+    ${P6} .dm-varchi-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P6} .dm-varchi-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P5} .dm-varchi-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P6} .dm-varchi-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
 
     /* La carta di un varco: il colore lo dice prima della parola. */
-    ${P5} .dm-varco{
+    ${P6} .dm-varco{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-varco,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-varco,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P5} .dm-varco[data-varco="aperto"]{--dm-varco:#dc2626}
-    ${P5} .dm-varco[data-varco="chiuso"]{--dm-varco:#16a34a}
-    ${P5} .dm-varco[data-varco="muto"]{--dm-varco:#94a3b8}
-    ${P5} .dm-varco-ic{
+    ${P6} .dm-varco[data-varco="aperto"]{--dm-varco:#dc2626}
+    ${P6} .dm-varco[data-varco="chiuso"]{--dm-varco:#16a34a}
+    ${P6} .dm-varco[data-varco="muto"]{--dm-varco:#94a3b8}
+    ${P6} .dm-varco-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-varco,#94a3b8) 22%,transparent)}
     /* Il disegno del catalogo al posto dell'emoji (#74): la casella resta
        quella, cambia quello che ci sta dentro. */
-    ${P5} .dm-varco-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P5} .dm-varco-ic svg{display:block;width:30px;height:30px}
-    ${P5} .dm-varco-testo{display:grid;gap:2px;min-width:0}
+    ${P6} .dm-varco-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P6} .dm-varco-ic svg{display:block;width:30px;height:30px}
+    ${P6} .dm-varco-testo{display:grid;gap:2px;min-width:0}
     /* Il nome su due righe, e la pastiglia che gli lascia il posto.
      *
      * Su una riga sola, con «NON RISPONDE» accanto che si prende novanta
@@ -103004,12 +103873,12 @@ function installStyles74() {
      *
      * Due righe bastano quasi sempre, e la pastiglia dello stato va a capo
      * anche lei invece di mangiarsi la colonna del nome. */
-    ${P5} .dm-varco-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-varco-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
       overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
-    ${P5} .dm-varco-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P6} .dm-varco-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-varco-stato{
+    ${P6} .dm-varco-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       max-width:74px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-varco,#94a3b8) 78%,var(--text,#0f172a))}
@@ -103018,37 +103887,37 @@ function installStyles74() {
        suo. Sono due cose diverse — com'e' la finestra, e se la centrale la
        guarda — e una carta che le dicesse nella stessa casella farebbe credere
        che siano la stessa. */
-    ${P5} .dm-varco-coda{display:grid;justify-items:end;gap:6px}
-    ${P5} .dm-varco-scudo{
+    ${P6} .dm-varco-coda{display:grid;justify-items:end;gap:6px}
+    ${P6} .dm-varco-scudo{
       display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;cursor:pointer;
       border:1px solid color-mix(in srgb,var(--dm-varco,#94a3b8) 45%,transparent);
       background:var(--card-bg,#fff);color:var(--text-dim,#64748b);
       font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
       -webkit-tap-highlight-color:transparent}
-    ${P5} .dm-varco-scudo[aria-pressed="true"]{
+    ${P6} .dm-varco-scudo[aria-pressed="true"]{
       border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 16%,var(--card-bg,#fff));color:#b45309}
-    ${P5} .dm-varco-scudo[data-dm-varco-bloccato]{cursor:default;opacity:.75}
-    ${P5} .dm-varco-esclusa,${P5} .dm-varco-errore{
+    ${P6} .dm-varco-scudo[data-dm-varco-bloccato]{cursor:default;opacity:.75}
+    ${P6} .dm-varco-esclusa,${P6} .dm-varco-errore{
       display:flex;align-items:center;gap:5px;font-size:11px;font-weight:900;line-height:1.25}
-    ${P5} .dm-varco-esclusa{color:#b45309}
-    ${P5} .dm-varco-errore{color:#dc2626;white-space:normal}
+    ${P6} .dm-varco-esclusa{color:#b45309}
+    ${P6} .dm-varco-errore{color:#dc2626;white-space:normal}
     /* Il velo della domanda e dell'annulla: sopra la carta intera, come nelle
        stanze, perche' la domanda e' su tutta la carta e non su un suo angolo. */
-    ${P5} .dm-varco{position:relative}
-    ${P5} .dm-varco-velo{
+    ${P6} .dm-varco{position:relative}
+    ${P6} .dm-varco-velo{
       position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:10px;
       padding:10px 14px;border-radius:inherit;cursor:pointer;
       background:rgba(15,23,42,.9);color:#fff;font-size:13px;font-weight:900}
-    ${P5} .dm-varco-velo > span{display:flex;align-items:center;gap:7px;min-width:0}
-    ${P5} .dm-varco-velo button{
+    ${P6} .dm-varco-velo > span{display:flex;align-items:center;gap:7px;min-width:0}
+    ${P6} .dm-varco-velo button{
       flex:none;padding:8px 14px;border-radius:999px;border:0;cursor:pointer;
       background:#f59e0b;color:#111827;font:inherit;font-size:12px;font-weight:900}
-    ${P5} .dm-varco-velo[data-dm-varco-velo="annulla"] button{background:#fff}
+    ${P6} .dm-varco-velo[data-dm-varco-velo="annulla"] button{background:#fff}
     /* Una carta esclusa lo dice anche da lontano, senza leggere: il tratteggio
        vuol dire «questa la centrale non la guarda». */
-    ${P5} .dm-varco[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
+    ${P6} .dm-varco[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
 
-    @media(max-width:520px){${P5} .dm-varchi-elenco{grid-template-columns:1fr}}
+    @media(max-width:520px){${P6} .dm-varchi-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -103452,60 +104321,60 @@ function renderPresenza() {
   schedule36();
 }
 function installStyles75() {
-  const P5 = `#${PRESENZA_PAGE_ID}`;
+  const P6 = `#${PRESENZA_PAGE_ID}`;
   installStyle(
     "dm-presenza-section-style",
     `
-    ${P5} .dm-presenza-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P5} .dm-presenza-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-presenza-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P6} .dm-presenza-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-presenza-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-presenza-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-presenza-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-presenza-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande: in quante stanze c'è qualcuno adesso. */
-    ${P5} .dm-presenza-testa{
+    ${P6} .dm-presenza-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-presenza-testa small{
+    ${P6} .dm-presenza-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P5} .dm-presenza-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P5} .dm-presenza-testa[data-stato="attivi"] strong{color:#2563eb}
-    ${P5} .dm-presenza-testa[data-stato="liberi"] strong{color:#15803d}
-    ${P5} .dm-presenza-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P5} .dm-presenza-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-presenza-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P6} .dm-presenza-testa[data-stato="attivi"] strong{color:#2563eb}
+    ${P6} .dm-presenza-testa[data-stato="liberi"] strong{color:#15803d}
+    ${P6} .dm-presenza-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P6} .dm-presenza-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P5} .dm-presenza-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P6} .dm-presenza-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
 
     /* La carta di un rilevatore: il colore lo dice prima della parola. */
-    ${P5} .dm-presenza{
+    ${P6} .dm-presenza{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-presenza,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-presenza,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P5} .dm-presenza[data-presenza="attivo"]{--dm-presenza:#2563eb}
-    ${P5} .dm-presenza[data-presenza="libero"]{--dm-presenza:#16a34a}
-    ${P5} .dm-presenza[data-presenza="muto"]{--dm-presenza:#94a3b8}
+    ${P6} .dm-presenza[data-presenza="attivo"]{--dm-presenza:#2563eb}
+    ${P6} .dm-presenza[data-presenza="libero"]{--dm-presenza:#16a34a}
+    ${P6} .dm-presenza[data-presenza="muto"]{--dm-presenza:#94a3b8}
     /* Chi non c'e' piu' in Home Assistant: lo stesso grigio di chi non
        risponde — sono tutt'e due una sorveglianza che manca — e la parola in
        fondo alla riga dice quale delle due. */
-    ${P5} .dm-presenza[data-presenza="assente"]{--dm-presenza:#94a3b8}
-    ${P5} .dm-presenza-ic{
+    ${P6} .dm-presenza[data-presenza="assente"]{--dm-presenza:#94a3b8}
+    ${P6} .dm-presenza-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-presenza,#94a3b8) 22%,transparent)}
     /* Il disegno del catalogo al posto dell'emoji (#74). */
-    ${P5} .dm-presenza-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P5} .dm-presenza-ic svg{display:block;width:30px;height:30px}
-    ${P5} .dm-presenza-testo{display:grid;gap:2px;min-width:0}
-    ${P5} .dm-presenza-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-presenza-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P6} .dm-presenza-ic svg{display:block;width:30px;height:30px}
+    ${P6} .dm-presenza-testo{display:grid;gap:2px;min-width:0}
+    ${P6} .dm-presenza-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-presenza-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P6} .dm-presenza-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-presenza-stato{
+    ${P6} .dm-presenza-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-presenza,#94a3b8) 78%,var(--text,#0f172a))}
-    @media(max-width:520px){${P5} .dm-presenza-elenco{grid-template-columns:1fr}}
+    @media(max-width:520px){${P6} .dm-presenza-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -104163,78 +105032,78 @@ function renderStampanti() {
   schedule37();
 }
 function installStyles77() {
-  const P5 = `#${STAMPANTI_PAGE_ID}`;
+  const P6 = `#${STAMPANTI_PAGE_ID}`;
   installStyle(
     "dm-stampanti-section-style",
     `
-    ${P5} .dm-stampanti-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P5} .dm-stampanti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P6} .dm-stampanti-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P6} .dm-stampanti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P5} .dm-stampanti-vuoto strong{font-size:14px;font-weight:900}
-    ${P5} .dm-stampanti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P6} .dm-stampanti-vuoto strong{font-size:14px;font-weight:900}
+    ${P6} .dm-stampanti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
-    ${P5} .dm-stampanti-testa{
+    ${P6} .dm-stampanti-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P5} .dm-stampanti-testa small{
+    ${P6} .dm-stampanti-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P5} .dm-stampanti-testa strong{font-size:28px;font-weight:900;line-height:1.08;color:var(--text,#0f172a)}
-    ${P5} .dm-stampanti-testa[data-verdetto="ferma"] strong{color:#b91c1c}
-    ${P5} .dm-stampanti-testa[data-verdetto="inchiostro"] strong{color:#b45309}
-    ${P5} .dm-stampanti-testa[data-verdetto="stampa"] strong{color:#0369a1}
-    ${P5} .dm-stampanti-testa[data-verdetto="pronta"] strong{color:#15803d}
-    ${P5} .dm-stampanti-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P6} .dm-stampanti-testa strong{font-size:28px;font-weight:900;line-height:1.08;color:var(--text,#0f172a)}
+    ${P6} .dm-stampanti-testa[data-verdetto="ferma"] strong{color:#b91c1c}
+    ${P6} .dm-stampanti-testa[data-verdetto="inchiostro"] strong{color:#b45309}
+    ${P6} .dm-stampanti-testa[data-verdetto="stampa"] strong{color:#0369a1}
+    ${P6} .dm-stampanti-testa[data-verdetto="pronta"] strong{color:#15803d}
+    ${P6} .dm-stampanti-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P5} .dm-stampanti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px}
-    ${P5} .dm-stampante{
+    ${P6} .dm-stampanti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px}
+    ${P6} .dm-stampante{
       display:grid;gap:12px;padding:16px 18px;border-radius:20px;
       border:1px solid color-mix(in srgb,var(--dm-st,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-st,#94a3b8) 8%,var(--card-bg,#fff))}
-    ${P5} .dm-stampante[data-stato="pronta"]{--dm-st:#16a34a}
-    ${P5} .dm-stampante[data-stato="stampa"]{--dm-st:#0ea5e9}
-    ${P5} .dm-stampante[data-stato="ferma"]{--dm-st:#dc2626}
-    ${P5} .dm-stampante[data-stato="muta"],${P5} .dm-stampante[data-stato="spenta"]{--dm-st:#94a3b8}
-    ${P5} .dm-stampante-testa{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px}
-    ${P5} .dm-stampante-ic{display:grid;place-items:center;width:44px;height:44px}
-    ${P5} .dm-stampante-ic .dm-appliance-art{display:block;line-height:0}
-    ${P5} .dm-stampante-testo{display:grid;gap:2px;min-width:0}
-    ${P5} .dm-stampante-testo strong{font-size:14.5px;font-weight:900;color:var(--text,#0f172a);
+    ${P6} .dm-stampante[data-stato="pronta"]{--dm-st:#16a34a}
+    ${P6} .dm-stampante[data-stato="stampa"]{--dm-st:#0ea5e9}
+    ${P6} .dm-stampante[data-stato="ferma"]{--dm-st:#dc2626}
+    ${P6} .dm-stampante[data-stato="muta"],${P6} .dm-stampante[data-stato="spenta"]{--dm-st:#94a3b8}
+    ${P6} .dm-stampante-testa{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px}
+    ${P6} .dm-stampante-ic{display:grid;place-items:center;width:44px;height:44px}
+    ${P6} .dm-stampante-ic .dm-appliance-art{display:block;line-height:0}
+    ${P6} .dm-stampante-testo{display:grid;gap:2px;min-width:0}
+    ${P6} .dm-stampante-testo strong{font-size:14.5px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-stampante-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P6} .dm-stampante-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-stampante-stato{
+    ${P6} .dm-stampante-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-st,#94a3b8) 80%,var(--text,#0f172a))}
 
     /* Le cartucce: una riga per colore, con la barra del colore vero. */
-    ${P5} .dm-stampante-cartucce{display:grid;gap:7px}
-    ${P5} .dm-stampante-cart{display:grid;grid-template-columns:minmax(64px,88px) minmax(0,1fr) 42px;
+    ${P6} .dm-stampante-cartucce{display:grid;gap:7px}
+    ${P6} .dm-stampante-cart{display:grid;grid-template-columns:minmax(64px,88px) minmax(0,1fr) 42px;
       align-items:center;gap:10px}
-    ${P5} .dm-stampante-cart-nome{font-size:11px;font-weight:800;color:var(--text-dim,#64748b);
+    ${P6} .dm-stampante-cart-nome{font-size:11px;font-weight:800;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P5} .dm-stampante-cart-barra{display:block;height:9px;border-radius:999px;overflow:hidden;
+    ${P6} .dm-stampante-cart-barra{display:block;height:9px;border-radius:999px;overflow:hidden;
       background:color-mix(in srgb,var(--dm-cart,${COLORE_SENZA_TINTA}) 16%,var(--surface-3,#f1f5f9))}
-    ${P5} .dm-stampante-cart-barra i{display:block;height:100%;border-radius:999px;
+    ${P6} .dm-stampante-cart-barra i{display:block;height:100%;border-radius:999px;
       background:var(--dm-cart,${COLORE_SENZA_TINTA})}
     /* Il colore della tinta si scrive qui, e non sulla riga: quello che si
      * scrive sulla riga vince su ogni regola, e la riga del fondo scuro non
      * arriverebbe mai a valere. L'elenco e' quello del modello. */
     ${TINTE_DELLE_CARTUCCE.map(
-      ({ tinta, colore }) => `${P5} .dm-stampante-cart[data-tinta="${tinta}"]{--dm-cart:${colore}}`
+      ({ tinta, colore }) => `${P6} .dm-stampante-cart[data-tinta="${tinta}"]{--dm-cart:${colore}}`
     ).join("\n    ")}
     /* Il nero su fondo scuro e' il fondo: la barra del nero spariva, e chi ha
      * una stampante a due cartucce ne vedeva una sola colorata. L'inchiostro
      * nero scritto su una pagina nera si scrive chiaro — come il testo. */
-    html[data-theme="dark"] ${P5} .dm-stampante-cart[data-tinta="nero"],
-    body.dark-theme ${P5} .dm-stampante-cart[data-tinta="nero"]{--dm-cart:#e2e8f0}
-    ${P5} .dm-stampante-cart-val{font-size:11.5px;font-weight:900;text-align:right;
+    html[data-theme="dark"] ${P6} .dm-stampante-cart[data-tinta="nero"],
+    body.dark-theme ${P6} .dm-stampante-cart[data-tinta="nero"]{--dm-cart:#e2e8f0}
+    ${P6} .dm-stampante-cart-val{font-size:11.5px;font-weight:900;text-align:right;
       font-variant-numeric:tabular-nums;color:var(--text,#0f172a)}
-    ${P5} .dm-stampante-cart[data-scarsa="molto"] .dm-stampante-cart-val{color:#b91c1c}
-    ${P5} .dm-stampante-cart[data-scarsa="si"] .dm-stampante-cart-val{color:#b45309}
-    ${P5} .dm-stampante-senza{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
-    @media(max-width:520px){${P5} .dm-stampanti-elenco{grid-template-columns:1fr}}
+    ${P6} .dm-stampante-cart[data-scarsa="molto"] .dm-stampante-cart-val{color:#b91c1c}
+    ${P6} .dm-stampante-cart[data-scarsa="si"] .dm-stampante-cart-val{color:#b45309}
+    ${P6} .dm-stampante-senza{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    @media(max-width:520px){${P6} .dm-stampanti-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -106949,10 +107818,10 @@ function onClick49(event) {
     apriIlMenu(suo2);
     return;
   }
-  const leva2 = event.target?.closest?.("[data-dm-mia-tocca]");
-  if (!leva2) return;
+  const leva3 = event.target?.closest?.("[data-dm-mia-tocca]");
+  if (!leva3) return;
   event.preventDefault();
-  const entity2 = clean(leva2.dataset.dmMiaTocca);
+  const entity2 = clean(leva3.dataset.dmMiaTocca);
   const dominio4 = entity2.split(".")[0];
   if (!dominio4) return;
   if (root.navigator?.vibrate) root.navigator.vibrate(8);
@@ -107572,15 +108441,15 @@ function onClick51(event) {
     apriIlMenu(suo2);
     return;
   }
-  const leva2 = event.target?.closest?.("[data-dm-mie-tocca]");
-  if (!leva2) return;
+  const leva3 = event.target?.closest?.("[data-dm-mie-tocca]");
+  if (!leva3) return;
   event.preventDefault();
-  const entity2 = clean(leva2.dataset.dmMieTocca);
+  const entity2 = clean(leva3.dataset.dmMieTocca);
   const dominio4 = entity2.split(".")[0];
   if (!dominio4) return;
   root.navigator?.vibrate?.(8);
-  const acceso6 = leva2.getAttribute("aria-checked") === "true";
-  leva2.setAttribute("aria-checked", acceso6 ? "false" : "true");
+  const acceso6 = leva3.getAttribute("aria-checked") === "true";
+  leva3.setAttribute("aria-checked", acceso6 ? "false" : "true");
   const comando = comandoCheAbilita({ entity: entity2 }) || comandoDelDispositivo({ entity: entity2 }) || {
     domain: dominio4,
     service: "toggle",

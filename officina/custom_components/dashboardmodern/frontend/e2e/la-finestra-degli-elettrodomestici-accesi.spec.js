@@ -3,8 +3,11 @@
  * Dal campo: «il popup deve mostrare una icona piccola dell'elettrodomestico
  * in funzione, perche' puo' essere piu' di uno; quando clicco sopra si espande
  * e mostra tutta la card completa». Tre macchine accese sono tre card alte una
- * pagina l'una, e in una finestra si scorre e non si trova piu' niente: qui ci
- * sono le pastiglie, e una card alla volta.
+ * pagina l'una, e in una finestra si scorre e non si trova piu' niente.
+ *
+ * Prima la risposta erano le pastiglie, e una card alla volta. Adesso la
+ * finestra e' quella della bozza approvata: una scheda compatta per ogni
+ * apparecchio acceso — programma, fase, quanto manca — e i fermi in fondo.
  */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
@@ -105,7 +108,7 @@ const SEME = {
   visibility: { home: true, appliances: true },
 };
 
-test("le pastiglie di tutti, e una card alla volta", async ({ page }, testInfo) => {
+test("ci sono tutti, e chi lavora dice la sua fase", async ({ page }, testInfo) => {
   test.setTimeout(240_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await page.addInitScript((haStates) => {
@@ -161,27 +164,27 @@ test("le pastiglie di tutti, e una card alla volta", async ({ page }, testInfo) 
   await tessera.click();
   const popup = page.locator("#dm-widget-popup");
   await expect(popup).toBeVisible();
-  /* Tutti gli apparecchi, non solo quelli accesi: la finestra e' il posto da
-   * cui si arriva a ognuno. Chi lavora si riconosce dal pallino. */
-  await expect(popup.locator(".dm-w-appl-chip")).toHaveCount(3);
-  await expect(popup.locator('.dm-w-appl-chip[data-on="true"]')).toHaveCount(2);
-  await expect(popup.locator('[data-dm-appl-chip="a-forno"]')).toHaveAttribute("data-on", "false");
-  await page.waitForTimeout(600);
-
-  await popup.locator('[data-dm-appl-chip="a-lav"]').click();
-  await expect(popup.locator(".dm-w-appl-card .dm-ap-card")).toHaveCount(1);
-  await expect(popup.locator(".dm-w-appl-card .dm-ap-phase")).toContainText(/Lavaggio|Washing/);
-  await page.waitForTimeout(700);
-
-  await popup.locator('[data-dm-appl-chip="a-lst"]').click();
-  await expect(popup.locator(".dm-w-appl-card .dm-ap-phase")).toContainText(/Asciugatura|Drying/);
-
-  /* Riaperta la stessa pastiglia, la card si richiude: e' un interruttore. */
-  await popup.locator('[data-dm-appl-chip="a-lst"]').click();
-  await expect(popup.locator(".dm-w-appl-card .dm-ap-card")).toHaveCount(0);
-
-  /* E anche il forno spento si apre: e' un apparecchio come gli altri. */
-  await popup.locator('[data-dm-appl-chip="a-forno"]').click();
-  await expect(popup.locator(".dm-w-appl-card .dm-ap-card")).toHaveCount(1);
-  await expect(popup.locator(".dm-w-appl-card .dm-ap-badge")).toContainText(/SPENTO|OFF/);
+  /* La finestra adesso e' disegnata apposta (vedi `finestre/sistema.js`), e
+   * le pastiglie con la card completa che si apriva al tocco non ci sono piu':
+   * la bozza approvata mette una scheda compatta per ogni apparecchio acceso,
+   * in ordine di fine, e i fermi piccoli in fondo. Quello che questa prova
+   * guardava resta vero: ci sono tutti, chi lavora si riconosce subito, e di
+   * ognuno si legge la fase senza aprire niente. */
+  await expect(popup.locator(".dm-f-el-mac")).toHaveCount(2);
+  await expect(popup.locator(".dm-f-el-fermo")).toHaveCount(1);
+  /* Chi finisce prima sta sopra: la lavastoviglie (18 min), poi la lavatrice. */
+  const ordine = await popup
+    .locator(".dm-f-el-mac")
+    .evaluateAll((nodi) => nodi.map((nodo) => nodo.dataset.dmFApparecchio));
+  expect(ordine).toEqual(["a-lst", "a-lav"]);
+  await expect(popup.locator('[data-dm-f-apparecchio="a-lav"] .dm-f-el-fase')).toContainText(
+    /Lavaggio|Washing/,
+  );
+  await expect(popup.locator('[data-dm-f-apparecchio="a-lst"] .dm-f-el-fase')).toContainText(
+    /Asciugatura|Drying/,
+  );
+  /* E anche il forno spento c'e': e' un apparecchio come gli altri. */
+  await expect(popup.locator('.dm-f-el-fermo[data-dm-f-apparecchio="a-forno"]')).toContainText(
+    /spento|off/i,
+  );
 });

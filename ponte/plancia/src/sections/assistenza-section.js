@@ -73,6 +73,8 @@ const state = {
    * che la tessera in Home mostra prima che qualcuno apra la finestra. */
   preview: "",
   writtenAt: 0,
+  /* La stessa risposta, senza il taglio della tessera. */
+  testo: "",
   messages: [],
   conversazioni: [],
   linea: "",
@@ -515,7 +517,38 @@ export function statoDellaChat() {
     unread: state.unread,
     preview: state.preview,
     writtenAt: state.writtenAt,
+    /* Per la finestra in Home: l'ultima risposta come l'ha data il backend,
+     * senza il taglio della tessera, e l'ultima domanda di casa se il filo e'
+     * gia' stato letto. Senza, la finestra non le disegna. */
+    testo: state.unread ? state.testo : "",
+    domanda: state.unread ? ultimaDomanda() : null,
   };
+}
+
+function ultimaDomanda() {
+  const righe = Array.isArray(state.messages) ? state.messages : [];
+  for (let indice = righe.length - 1; indice >= 0; indice -= 1) {
+    const riga = righe[indice];
+    if (clean(riga?.da) === "console") continue;
+    const testo = clean(riga?.testo);
+    if (testo) return { testo, scrittoIl: Number(riga?.scritto_il) || 0 };
+  }
+  return null;
+}
+
+/* Rispondere dalla finestra della Home: si manda come dalla chat, e poi si
+ * apre la chat, che e' dove la conversazione continua. Se non riesce, la
+ * frase resta nella casella della chat con l'errore sopra. */
+async function rispondiDallaHome(testo) {
+  const frase = clean(testo).slice(0, MAX_TESTO);
+  if (!frase) return;
+  try {
+    await chiedi(WS_SEND, { message: frase, name: state.name, locale: lingua() });
+  } catch (errore) {
+    state.bozza = frase;
+    state.avviso = `!${clean(errore?.message) || t("Non riuscita.", "It did not work.")}`;
+  }
+  apri();
 }
 
 function annuncia() {
@@ -538,6 +571,7 @@ function lettaTutta() {
   state.unread = 0;
   state.preview = "";
   state.writtenAt = 0;
+  state.testo = "";
 }
 
 /* ─── L'orecchio sul bus di casa ─────────────────────────────────────────
@@ -921,6 +955,7 @@ async function ricaricaStato() {
     state.unread = letto.unread;
     state.preview = letto.preview;
     state.writtenAt = letto.writtenAt;
+    state.testo = letto.unread ? clean(stato?.preview) : "";
   } catch (_errore) {
     /* La finestra si apre lo stesso: quello che c'e' da scrivere si scrive
      * anche senza aver letto lo stato, e lo stato si riprende da solo. */
@@ -1225,6 +1260,11 @@ export function installAssistenzaSection() {
   /* La porta dalla Home: la tessera dell'avviso porta un tasto con questo
    * segno, e chi lo tocca vuole leggere. Apre chi possiede la finestra. */
   doc.addEventListener("click", (event) => {
+    /* La risposta scritta nella finestra della Home: parte, e si apre la chat. */
+    if (event.target?.closest?.("[data-dm-chat-rispondi]")) {
+      rispondiDallaHome(doc.getElementById("dm-w-chat-risposta")?.value || "");
+      return;
+    }
     if (event.target?.closest?.("[data-dm-apri-chat]")) apri();
   });
   prova();

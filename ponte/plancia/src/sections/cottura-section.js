@@ -133,7 +133,7 @@ export function vistaDellaCucina(states = allStates(), adesso = Date.now()) {
 
 const suo = (lettura, femminile, maschile) => (lettura?.femminile ? femminile : maschile);
 
-function parolaDellaFase(lettura) {
+export function parolaDellaFase(lettura) {
   if (lettura.fase === "cottura")
     return lettura.aTempo
       ? t("In cottura", "Cooking")

@@ -3,7 +3,8 @@
  * «Mi piacerebbe pilotare la mia friggitrice ad aria della Philips.» La
  * friggitrice sta cuocendo le patatine con l'integrazione `philips_airfryer`
  * da HACS: i tempi in secondi, i comandi soltanto come servizi. In Home c'e'
- * la sua tessera, e toccarla porta agli Elettrodomestici, sulla voce Cottura:
+ * la sua tessera, che apre la sua finestra; da li' «Apri la cucina» porta agli
+ * Elettrodomestici, sulla voce Cottura:
  * la risposta grande, l'anello, i gradi col − e il +, e i tasti che premono i
  * servizi giusti. Poi finisce, e la tessera dice «Pronta».
  */
@@ -167,10 +168,17 @@ async function cambia(page, stati) {
   }, stati);
 }
 
+/* La tessera apre la sua finestra, come tutte le altre — con l'anello e i
+ * tasti — e la pagina della Cottura si raggiunge dal piede «Apri la cucina».
+ * Prima il tocco portava dritto alla pagina: era l'unica tessera che non si
+ * apriva, e la bozza approvata l'ha rimessa in riga. */
 async function apriLaCottura(page) {
   const tessera = page.locator('#dm-widgets [data-dm-widget="cottura"]');
   await expect(tessera).toBeVisible({ timeout: 15_000 });
   await tessera.click();
+  const finestra = page.locator('#dm-widget-popup [data-dm-widget-detail="cottura"]');
+  await expect(finestra.locator(".dm-f-cottura")).toBeVisible();
+  await finestra.locator('[data-dm-w-sezione="cottura"]').click();
   const pagina = page.locator("#page-appliances-main");
   await expect(pagina).toHaveClass(/active/);
   const cottura = pagina.locator("[data-dm-cottura]");

@@ -37,7 +37,8 @@ import {
 } from "../core/le-vesti-della-carta.js";
 import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-view-model.js";
 import { applianceVisualKey, canonicalClimateType, climaScalda } from "../core/device-model.js";
-import { applianceArtwork } from "../core/appliance-artwork.js";
+import { applianceArtwork, applianceGlyph } from "../core/appliance-artwork.js";
+import { applianceCardModel } from "../core/appliance-card-view-model.js";
 import { applianceModelById, buildCardMarkup, cardLabels } from "./appliance-showcase-section.js";
 import { RIF_CENTRALE, alarmCodeNeeded } from "../core/alarm-panel.js";
 import {
@@ -95,7 +96,7 @@ import { sommarioConsole } from "./segnalazioni-section.js";
 /* E la tessera della chat di assistenza chiede lo stato a chi lo tiene: la
  * sezione della chat, che lo annuncia quando cambia. */
 import { quando as quandoScritto, statoDellaChat } from "./assistenza-section.js";
-import { tesseraDellaChat } from "../core/avviso-chat.js";
+import { paroleDelleRisposte, tesseraDellaChat } from "../core/avviso-chat.js";
 import {
   SCALDABAGNI_KEY,
   entitaDiUnoScaldabagno,
@@ -218,6 +219,7 @@ import {
   EVENTO_COTTURA,
   TESSERA_COTTURA,
   ceLaCucina,
+  parolaDellaFase,
   tesseraDellaCottura,
   vistaDellaCucina,
 } from "./cottura-section.js";
@@ -285,6 +287,11 @@ import { EVENTO_PIATTAFORME, piattaformeConosciute } from "./di-chi-e-unentita-s
 /* I server adottati per dispositivo (#411) li raccoglie la sezione Server, e
  * si leggono da li': la tessera e la pagina devono contare le stesse righe. */
 import { serverPerDispositivo } from "./macchine-e-rete-section.js";
+import {
+  EVENTO_CATALOGO,
+  dispositiviDelCatalogo,
+  nomiDelleIntegrazioni,
+} from "./appliance-integration-section.js";
 import {
   APERTURE_TAB,
   configuredSecurityDoors,
@@ -2095,10 +2102,63 @@ function energyModels(states) {
   ].filter(Boolean);
 }
 
+/* I dettagli di un apparecchio per la sua finestra in Home. */
+function dettagliDellApparecchio(device, states, adesso, voceDiCucina) {
+  let scheda = null;
+  try {
+    scheda = applianceCardModel(device, states, { now: adesso, locale: activeLocale() });
+  } catch (_errore) {
+    return {};
+  }
+  const chip = (chiave) =>
+    clean(scheda.program?.chips?.find((voce) => voce.key === chiave)?.label);
+  const dettagli = {
+    glifo: applianceGlyph(applianceVisualKey(device)) || "",
+    /* Il nome della stanza, mai il suo identificativo. */
+    stanza: clean(roomLabel(device?.room_id)) === clean(device?.room_id) ? "" : roomLabel(device?.room_id),
+    restano: scheda.remaining?.seconds ?? null,
+    /* Quanto e' fatto: l'opposto di quanto resta. */
+    fatto: scheda.remaining?.fraction == null ? null : 1 - scheda.remaining.fraction,
+    fase: clean(scheda.program?.phase?.label),
+    programma: chip("programma"),
+    gradi: chip("temperatura"),
+    giri: chip("centrifuga"),
+    dentro: clean(scheda.temperature?.label),
+    ultimoAvvio: scheda.running ? null : (scheda.cycle?.startMs ?? null),
+    cucina: false,
+  };
+  const lettura = voceDiCucina?.lettura;
+  if (lettura) {
+    dettagli.cucina = true;
+    dettagli.glifo = applianceGlyph(lettura.tipo) || dettagli.glifo;
+    if (lettura.rimasti != null && lettura.viva) dettagli.restano = lettura.rimasti;
+    if (lettura.frazione != null) dettagli.fatto = 1 - lettura.frazione;
+    if (lettura.prontaAlle) dettagli.prontaAlle = lettura.prontaAlle;
+    if (lettura.programma) dettagli.programma = lettura.programma;
+    if (lettura.gradi) dettagli.gradi = `${Math.round(lettura.gradi.valore)}${lettura.gradi.unita}`;
+    if (lettura.fase === "spenta" && lettura.gradi)
+      dettagli.dentro = `${Math.round(lettura.gradi.valore)} ${lettura.gradi.unita}`;
+    dettagli.faseCucina = lettura.fase;
+  }
+  return dettagli;
+}
+
 function appliancesModel(states) {
   const devices = section("appliances", readJson("cd_appliances", []));
   if (!Array.isArray(devices) || !devices.length) return null;
   const fuori = widgetExcludedEntities("elettrodomestici");
+  const adesso = Date.now();
+  /* La cucina sa i suoi tempi meglio della scheda generica: la friggitrice
+   * dice quanto manca dalla sua casella di cottura, non da `remaining_entity`.
+   * La finestra li legge di qui, con le stesse parole della Cottura. */
+  const cucina = new Map();
+  try {
+    if (ceLaCucina())
+      for (const voce of vistaDellaCucina(states, adesso).voci)
+        cucina.set(clean(voce.apparecchio?.id), voce);
+  } catch (_errore) {
+    /* Senza la cucina la finestra dice quello che sa la scheda. */
+  }
   const rows = devices
     .filter((device) => device?.enabled !== false)
     .filter((device) =>
@@ -2107,6 +2167,10 @@ function appliancesModel(states) {
     .map((device) => {
       const model = createApplianceViewModel(device, states, [], "it");
       return {
+        /* Quello che serve alla finestra (vedi `finestre/sistema.js`): quanto
+         * manca, a che punto e', il programma, e per chi e' fermo l'ultima
+         * cosa utile. Senza il dato, il campo resta vuoto e la finestra tace. */
+        ...dettagliDellApparecchio(device, states, adesso, cucina.get(clean(device?.id))),
         id: model.id || clean(device.id),
         name: model.name,
         mode: model.mode,
@@ -3728,6 +3792,7 @@ const CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_temperatura_cpu",
+    chiave: "temperatura",
     it: "Temperatura CPU",
     en: "CPU temperature",
     glyph: "🌡️",
@@ -3736,6 +3801,7 @@ const CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_temperature",
+    chiave: "temperatura",
     it: "Temperatura",
     en: "Temperature",
     glyph: "🌡️",
@@ -3744,6 +3810,7 @@ const CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_potenza_raspberry_server",
+    chiave: "potenza",
     it: "Potenza",
     en: "Power",
     glyph: "⚡",
@@ -3752,6 +3819,7 @@ const CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_speedtest_download",
+    chiave: "scarica",
     it: "Download",
     en: "Download",
     glyph: "⬇️",
@@ -3760,16 +3828,18 @@ const CASELLE_MINIPC = Object.freeze([
   },
   {
     ref: "dm.server_speedtest_upload",
+    chiave: "invia",
     it: "Upload",
     en: "Upload",
     glyph: "⬆️",
     unita: " Mb/s",
     cifre: 0,
   },
-  { ref: "dm.server_ping_internet", it: "Ping", en: "Ping", glyph: "📡", unita: " ms", cifre: 0 },
-  { ref: "dm.server_stato_internet", it: "Internet", en: "Internet", glyph: "🌐", acceso: true },
+  { ref: "dm.server_ping_internet", chiave: "ping", it: "Ping", en: "Ping", glyph: "📡", unita: " ms", cifre: 0 },
+  { ref: "dm.server_stato_internet", chiave: "internet", it: "Internet", en: "Internet", glyph: "🌐", acceso: true },
   {
     ref: "dm.server_raggiungibilita_google",
+    chiave: "internet",
     it: "Rete raggiungibile",
     en: "Network reachable",
     glyph: "🌐",
@@ -3840,6 +3910,7 @@ export function minipcModel(states) {
       rows.push({
         glyph: casella.glyph,
         name: friendlyName(states, dato.entity),
+        chiave: casella.chiave || "",
         entity: dato.entity,
         on: attivo,
         value: attivo ? t("Attivo", "Up") : t("Assente", "Down"),
@@ -4694,6 +4765,16 @@ function macchineModel(states) {
   );
   if (!righe.length) return null;
   const conto = contoDelleMacchine(righe);
+  const piattaforme = piattaformeConosciute() || {};
+  let nomi = {};
+  try {
+    nomi = nomiDelleIntegrazioni() || {};
+    /* Il catalogo si chiede una volta, se nessuno l'ha ancora chiesto: quando
+     * arriva, la Home si ridisegna (EVENTO_CATALOGO) coi nomi giusti. */
+    if (!Object.keys(nomi).length && Object.keys(piattaforme).length) dispositiviDelCatalogo();
+  } catch (_errore) {
+    nomi = {};
+  }
   return {
     key: "macchine",
     accent: conto.giu ? "#dc2626" : "#6366f1",
@@ -4709,6 +4790,22 @@ function macchineModel(states) {
       entity: riga.entity,
       name: riga.name,
       glyph: riga.glifo,
+      /* Per la finestra (vedi `finestre/sistema.js`): la famiglia, lo stato,
+       * i comandi che la casa offre, da quando sta cosi', e l'integrazione col
+       * suo nome leggibile — «Proxmox VE», non «proxmoxve». */
+      famiglia: riga.famiglia,
+      stato: riga.stato,
+      comandi: riga.comandi || null,
+      da: (() => {
+        const quando = Date.parse(states?.[riga.entity]?.last_changed || "");
+        return Number.isFinite(quando) ? quando : null;
+      })(),
+      integrazione: (() => {
+        const dominio = clean(piattaforme[riga.entity]);
+        /* Il dominio nudo non si scrive: e' un nome grezzo. Finche' il
+         * catalogo non dice come si chiama, il gruppo e' solo «Server». */
+        return dominio ? clean(nomi[dominio]) : "";
+      })(),
       on: riga.stato === "su",
       tono: riga.stato === "su" ? "quiete" : riga.stato === "giu" ? "allarme" : "",
       value:
@@ -4993,6 +5090,7 @@ export function evidenzaModel(states) {
     // riassunto sotto le nomina una per una col loro valore.
     value: String(rows.length),
     caption: rows.map((riga) => clean(`${riga.name} ${riga.value}`)).join(" · "),
+    sottotitolo: t("Le cose che tieni d'occhio", "What you keep an eye on"),
     ring: null,
     // Si accende se qualcosa fra le evidenze e' acceso davvero.
     attiva: rows.some((riga) => riga.on === true),
@@ -5086,6 +5184,7 @@ export function sezioniMieModels(states) {
          * generi diversi: due valvole e due batterie non fanno un numero. */
         value: String(rows.length),
         caption: rows.map((riga) => clean(`${riga.name} ${riga.value}`)).join(" · "),
+        sottotitolo: t("La tua sezione", "Your section"),
         ring: null,
         attiva: rows.some((riga) => riga.on === true),
         rows,
@@ -5411,6 +5510,7 @@ function segnalazioniModel() {
     /* Senza niente da lavorare la didascalia non elenca zeri: dice che non c'e'
      * niente, che e' la risposta. */
     caption: pezzi.length ? pezzi.join("  ·  ") : t("Niente da lavorare", "Nothing to work on"),
+    sottotitolo: t("La coda da lavorare", "The queue to work on"),
     ring: null,
     // Si accende quando c'e' qualcosa che aspetta una risposta.
     attiva: conto.quante > 0,
@@ -5426,7 +5526,19 @@ function segnalazioniModel() {
  * letta e se ne va quando la finestra si apre, perche' aprire la chat e'
  * leggerla. Lo stato lo tiene la sezione della chat; il modello sta nel nucleo. */
 function chatModel() {
-  return tesseraDellaChat(statoDellaChat());
+  const stato = statoDellaChat();
+  const tessera = tesseraDellaChat(stato);
+  /* La finestra (vedi `finestre/sistema.js`) legge la risposta intera e la
+   * domanda a cui risponde, quando la chat le ha. */
+  return (
+    tessera && {
+      ...tessera,
+      testo: clean(stato.testo),
+      domanda: stato.domanda || null,
+      /* Il conto va nel sottotitolo della finestra, non in una casella. */
+      sottotitolo: paroleDelleRisposte(tessera.risposte),
+    }
+  );
 }
 
 /* La tessera delle allerte (#296).
@@ -5962,7 +6074,45 @@ function cotturaModel(states) {
   const prima = vista.prima?.apparecchio || {};
   const stato = clean(prima.cottura_stato || prima.state_entity);
   if (stato && !widgetIncludes(stato, fuori)) return null;
-  return tessera;
+  /* La finestra della cottura (vedi `finestre/sistema.js`) ha bisogno della
+   * lettura intera e dei comandi gia' pronti, non delle righe della tessera. */
+  const voce = vista.prima;
+  const lettura = voce?.lettura || {};
+  const comandi = {};
+  for (const [chiave, azione] of Object.entries(lettura.comandi || {}))
+    if (azione?.dominio && azione?.servizio)
+      comandi[chiave] = { domain: azione.dominio, service: azione.servizio, data: azione.dati || {} };
+  return {
+    ...tessera,
+    cucina: {
+      nome: clean(voce?.nome),
+      stanza: clean(voce?.stanza),
+      glifo: applianceGlyph(lettura.tipo) || "🍟",
+      tipo: clean(lettura.tipo),
+      fase: clean(lettura.fase),
+      parola: parolaDellaFase(lettura),
+      rimasti: lettura.rimasti ?? null,
+      totali: lettura.totali ?? null,
+      frazione: lettura.frazione ?? null,
+      prontaAlle: lettura.prontaAlle ?? null,
+      avviataAlle: lettura.avviataAlle ?? null,
+      finitaAlle: lettura.finitaAlle ?? null,
+      programma: clean(lettura.programma),
+      gradi: lettura.gradi || null,
+      femminile: Boolean(lettura.femminile),
+      cassetto: lettura.haCassetto ? lettura.cassetto : null,
+      comandi,
+      altri: (vista.voci || [])
+        .filter((altra) => altra !== voce)
+        .map((altra) => ({
+          nome: clean(altra.nome),
+          glifo: applianceGlyph(altra.lettura?.tipo) || "🍳",
+          parola: parolaDellaFase(altra.lettura || {}),
+          spenta: altra.lettura?.fase === "spenta",
+          gradi: altra.lettura?.dentro || altra.lettura?.gradi || null,
+        })),
+    },
+  };
 }
 
 /* La ventilazione meccanica (#371).
@@ -6113,14 +6263,16 @@ const ROSSI = new Set(["#dc2626", "#ef4444", "#e11d48", "#be123c", "#b91c1c", "#
 
 export function colorataComeLaSezione(widget) {
   if (!widget || typeof widget !== "object") return widget;
+  const chiave = clean(widget.key);
+  /* Una risposta dell'assistenza e' una buona notizia, non un allarme: chiede
+   * attenzione, ma col verde della chat. Rosso mai. */
   /* L'ambra resta ambra: e' il primo gradino delle segnalazioni («occhio»),
    * prima del rosso («adesso»), come la soglia dell'Energia che si accende
    * ambra e poi rossa. Tutto il resto che segnala e' rosso. */
-  if (widget.alert)
+  if (widget.alert && chiave !== "assistenza")
     return AMBRE.has(clean(widget.accent).toLowerCase())
       ? widget
       : { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
-  const chiave = clean(widget.key);
   const tab = eUnaSezioneMia(chiave) ? chiave : SEZIONE_DEL_WIDGET[famigliaDellaTessera(chiave)];
   const tinta = tab ? tintaDellaPagina(`page-${tab}`) : "";
   if (tinta) return { ...widget, accent: tinta };
@@ -8117,7 +8269,27 @@ function chatDetail(widget) {
 
 const SOLO_COMANDI = new Set(["luci", "clima", "aggiornamenti"]);
 
+/* La finestra disegnata di una tessera (vedi `finestre-dei-widget.js`).
+ *
+ * Si chiede per chiave, poi per famiglia. Le sezioni proprie hanno una chiave
+ * per sezione (`mia-<id>`) e una finestra sola per tutte, registrata come
+ * «sezionimie»; le evidenze «a se'» (`evidenza-<n>`) usano quella delle
+ * evidenze, perche' sono la stessa cosa con una voce sola. */
+function finestraDisegnata(chiave) {
+  const grezza = clean(chiave);
+  return (
+    finestraDi(grezza) ||
+    finestraDi(famigliaDellaTessera(grezza)) ||
+    (eUnaSezioneMia(grezza) ? finestraDi("sezionimie") : null) ||
+    (grezza.startsWith("evidenza-") ? finestraDi("evidenza") : null)
+  );
+}
+
 function detailBody(widget, states) {
+  /* Prima di tutto la finestra disegnata, se la tessera ne ha una: anche le
+   * segnalazioni e l'assistenza, che qui sotto hanno la loro di prima. */
+  const disegnata = finestraDisegnata(widget.key);
+  if (disegnata) return disegnata.disegna(widget, states);
   if (widget.key === "assistenza") return chatDetail(widget);
   /* Le segnalazioni non si lavorano da qui. La finestra della tessera e'
    * larga un palmo, e rispondere a una issue vuol dire leggere il filo, gli
@@ -8244,10 +8416,6 @@ function detailBody(widget, states) {
       )}</button>`;
   }
   const comandi = detailRows(widget, states);
-  /* Le finestre disegnate una per una (vedi `finestre-dei-widget.js`): se la
-   * tessera ne ha una, e' quella. */
-  const disegnata = finestraDi(widget.key) || finestraDi(famigliaDellaTessera(widget.key));
-  if (disegnata) return disegnata.disegna(widget, states);
   /* Luci e Clima: solo l'elenco che si comanda (vedi `lightsDetail`). */
   if (SOLO_COMANDI.has(widget.key)) return comandi || "";
   return `${verdettoEFrase(widget)}
@@ -8435,7 +8603,14 @@ function bricioleDelWidget(widget) {
       /* Una riga che non si sa scrivere lascia le briciole di sempre. */
     }
   }
-  return bricioleDellaSezione(widget.key, t).join(" · ") || clean(widget.caption);
+  /* Le finestre disegnate possono dire il loro sottotitolo anche dal
+   * modello: la didascalia della tessera elenca le voci una per una, e
+   * nell'intestazione stretta della finestra usciva tagliata a meta'. */
+  return (
+    bricioleDellaSezione(widget.key, t).join(" · ") ||
+    clean(widget.sottotitolo) ||
+    clean(widget.caption)
+  );
 }
 
 /* Il piede della finestra: il tasto che porta alla sezione, quando c'e' dove
@@ -8451,7 +8626,11 @@ function piedeDellaSezione(widget) {
         <button type="button" class="dm-w-vai" data-dm-w-sezione="${esc(widget.key)}"${
           widget.impianto ? ` data-dm-w-impianto="${esc(widget.impianto)}"` : ""
         }>
-          ${esc(t("Apri sezione", "Open section"))} <span aria-hidden="true">→</span>
+          ${esc(
+            widget.key === TESSERA_COTTURA
+              ? t("Apri la cucina", "Open the kitchen")
+              : t("Apri sezione", "Open section"),
+          )} <span aria-hidden="true">→</span>
         </button>
       </footer>`;
 }
@@ -9048,6 +9227,9 @@ function popupHost() {
 function ascoltaLaPorta() {
   doc?.addEventListener?.("click", (event) => {
     if (event.target?.closest?.("[data-dm-apri-cruscotto],[data-dm-apri-chat]")) chiudiPopup();
+    /* La risposta scritta nella finestra: si chiude dopo, quando la chat ha
+     * gia' letto la casella. */
+    if (event.target?.closest?.("[data-dm-chat-rispondi]")) root.setTimeout?.(chiudiPopup, 0);
   });
 }
 
@@ -9586,6 +9768,22 @@ function onClick(event) {
     voce?.click();
     return;
   }
+  /* «Scegli cosa tenere in evidenza»: la finestra chiude e si apre il Config
+   * sulla sua scheda, dove quelle voci si scelgono. */
+  const config = event.target?.closest?.("[data-dm-w-config]");
+  if (config) {
+    event.preventDefault();
+    const scheda = clean(config.dataset.dmWConfig);
+    chiudiPopup();
+    if (typeof root.apriConfigEntita !== "function") return;
+    root.apriConfigEntita();
+    root.setTimeout?.(() => {
+      try {
+        if (scheda) root.editorSwitch?.(scheda);
+      } catch (_errore) {}
+    }, 0);
+    return;
+  }
   const tutte = event.target?.closest?.("[data-dm-w-lights-off]");
   if (tutte) {
     event.preventDefault();
@@ -9823,17 +10021,10 @@ function onClick(event) {
   const tile = event.target?.closest?.("#dm-widgets [data-dm-widget]");
   if (tile) {
     event.preventDefault();
-    /* La tessera della cottura (#71) porta dritta alla Cottura: quello che la
-     * finestra direbbe — quanto manca, a che gradi — la tessera lo dice gia',
-     * e quello che si vuole a quel punto sono i tasti. */
-    if (tile.dataset.dmWidget === TESSERA_COTTURA) {
-      const voce = voceDellaSezione(TESSERA_COTTURA);
-      if (voce) {
-        root.dispatchEvent?.(new CustomEvent(EVENTO_COTTURA));
-        voce.click();
-        return;
-      }
-    }
+    /* Anche la cottura (#71) apre la sua finestra, come tutte: li' ci sono
+     * gia' i tasti — gradi, pausa, +1 min, stop — e la pagina intera resta a
+     * un tocco, dal piede «Apri la cucina». Portare dritti in un'altra pagina
+     * era l'unica tessera che non si apriva. */
     toggleExpand(tile.dataset.dmWidget);
   }
 }
@@ -11612,6 +11803,9 @@ export function installHomeWidgetsSection() {
        tessera «Server e rete» conta solo quelle delle integrazioni scelte, e
        prima di quella risposta non ne conta nessuna. */
     EVENTO_PIATTAFORME,
+    /* E come si chiamano quelle integrazioni: la finestra di «Server e rete»
+       raggruppa per nome leggibile, che arriva col catalogo. */
+    EVENTO_CATALOGO,
     /* I consumi dell'acqua e del gas arrivano dal Recorder, dopo che la Home
        si e' gia' disegnata: la tessera va rifatta quando atterrano. */
     EVENTO_CONTATORI,
