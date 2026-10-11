@@ -57,6 +57,11 @@ da toccare che si illuminano, i climatizzatori schede arancio quando scaldano
 e azzurre quando raffrescano. Negli aggiornamenti ogni riga ha il logo, le
 versioni, le note e il tasto «Installa».
 
+**iPhone, nell'app di Home Assistant:** le finestre a schermo intero (la luce
+col colore, le finestre delle tessere, il config) e l'intestazione della Home
+partono sotto la barra di stato, e il tasto «Chiudi» non finisce più sotto
+l'ora e la batteria. La finestra della luce si chiude anche con Esc (#214, #215).
+
 **Codice regalo:** si riscatta anche quando l'app non ha ancora aperto il
 collegamento con la casa: il codice lo porta il server di gdahome, e se nemmeno
 lui ci riesce l'app aspetta la casa qualche secondo invece di dire subito che

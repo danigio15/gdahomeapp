@@ -493,7 +493,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-MYDBJFFW.js";
+} from "../../chunk-FEAMAWHK.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -56624,10 +56624,14 @@ function installStyles21() {
  * acceso aperto dalla barra sotto il meteo — e ripetere le stesse regole nel
  * modulo della barra vorrebbe dire due vesti che si scollano alla prima
  * ritoccata. Cosi' invece la veste e' scritta una volta, e chi la vuole si
- * chiama come si chiama: il contenuto resta affare di ciascuno. */
+ * chiama come si chiama: il contenuto resta affare di ciascuno.
+ *
+ * Il margine di sopra non scende mai sotto la fascia che il sistema si tiene
+ * in cima (#215): col chiosco su iPhone una finestra lunga partiva sotto
+ * l'orologio, con la sua chiusura. Il numero lo misura navigation-section. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup){
   position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
-  padding:20px;background:transparent;
+  padding:20px;padding-top:max(20px,var(--dm-cima-libera,0px));background:transparent;
   animation:dmWidgetPopupIn .2s ease-out}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)::before{
   content:"";position:absolute;inset:0;
@@ -57499,7 +57503,7 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-val{font-size:14.5px;font-weight:900}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-glyph{font-size:17px}
 @media(max-width:600px){
-  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup){padding:16px}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup){padding:16px;padding-top:max(16px,var(--dm-cima-libera,0px))}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail{border-radius:22px;max-height:82dvh}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head{padding:16px 16px 15px;column-gap:12px}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body{padding:13px 15px 18px}
@@ -76314,6 +76318,12 @@ function fondoDiSistema(proprio, ospite3, giaLasciato = 0) {
 function inPixel(valore3) {
   return `${Math.round(numero41(valore3))}px`;
 }
+var CIMA_MASSIMA = 96;
+function cimaDiSistema(proprio, ospite3, giaLasciatoSopra2 = 0) {
+  const mio = numero41(proprio);
+  const suo2 = Math.max(0, numero41(ospite3) - numero41(giaLasciatoSopra2));
+  return Math.min(CIMA_MASSIMA, Math.max(mio, suo2));
+}
 
 // src/sections/navigation-section.js
 var KEY96 = "__DASHBOARDMODERN_NAVIGATION_SECTION__";
@@ -77221,12 +77231,12 @@ function filtraDopo(nome) {
   root[nome] = avvolta;
   return true;
 }
-function insetDi(documento) {
+function insetDi(documento, lato = "bottom") {
   try {
     const dove = documento?.body || documento?.documentElement;
     if (!dove) return 0;
     const sonda = documento.createElement("div");
-    sonda.style.cssText = "position:fixed;left:0;bottom:0;width:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden";
+    sonda.style.cssText = `position:fixed;left:0;${lato}:0;width:0;height:env(safe-area-inset-${lato},0px);pointer-events:none;visibility:hidden`;
     dove.append(sonda);
     const alto = sonda.getBoundingClientRect().height;
     sonda.remove();
@@ -77262,13 +77272,80 @@ function misuraIlFondoDiSistema() {
   doc.documentElement.style.setProperty("--dm-fondo-di-sistema", inPixel(valore3));
   return valore3;
 }
+function giaLasciatoSopra() {
+  try {
+    const cornice = root.frameElement;
+    if (!cornice) return 0;
+    return Math.max(0, cornice.getBoundingClientRect().top);
+  } catch (_error) {
+    return 0;
+  }
+}
+var CIMA_DI_SISTEMA = "--dm-cima-di-sistema";
+function misuraLaCimaDiSistema() {
+  if (!doc?.documentElement) return 0;
+  const proprio = insetDi(doc, "top");
+  let ospite3 = 0;
+  let lasciato = 0;
+  try {
+    const cima = root.top && root.top !== root ? root.top.document : null;
+    if (cima) {
+      ospite3 = insetDi(cima, "top");
+      lasciato = giaLasciatoSopra();
+    }
+  } catch (_error) {
+  }
+  const valore3 = cimaDiSistema(proprio, ospite3, lasciato);
+  doc.documentElement.style.setProperty(CIMA_DI_SISTEMA, inPixel(valore3));
+  return valore3;
+}
+function misuraLeFasceDiSistema() {
+  misuraIlFondoDiSistema();
+  misuraLaCimaDiSistema();
+}
+function installaLaCima() {
+  installStyle(
+    "dm-cima-di-sistema-style",
+    `
+      :root{
+        --dm-cima-di-sistema:env(safe-area-inset-top,0px);
+        --dm-cima-libera:max(var(--dm-cima-di-sistema,0px),var(--gdahome-alto,0px))
+      }
+      /* Le finestre delle sezioni: la scheda della luce e quelle di modifica. */
+      html body .dm-section-modal{padding-top:max(16px,var(--dm-cima-libera))!important}
+      @media(max-width:620px){
+        /* Sul telefono la finestra e' tutto lo schermo: comincia sotto la
+           fascia e finisce in fondo, invece di restare alta quanto il vetro e
+           scivolare giu' oltre il bordo. */
+        html body .dm-section-modal{padding-top:var(--dm-cima-libera)!important}
+        html body .dm-section-modal .dm-section-dialog{height:100%!important;max-height:100%!important}
+      }
+      /* Le finestre del guscio — dettagli, conferme, tastierini — ognuna col
+         suo margine di prima come minimo: 15, 10 sotto i 768, 8 su WebKit. */
+      html body .modal-wrapper:not(#editor-modal){padding-top:max(15px,env(safe-area-inset-top,0px),var(--dm-cima-libera))!important}
+      @media(max-width:768px){
+        html body .modal-wrapper:not(#editor-modal){padding-top:max(10px,env(safe-area-inset-top,0px),var(--dm-cima-libera))!important}
+      }
+      @supports (-webkit-touch-callout:none){
+        html body .modal-wrapper:not(#editor-modal){padding-top:max(8px,var(--dm-cima-libera))!important}
+      }
+      html body #editor-modal.modal-wrapper{padding-top:max(24px,var(--dm-cima-libera))!important}
+      @media(max-width:760px){
+        html body #editor-modal.modal-wrapper{padding-top:var(--dm-cima-libera)!important}
+      }
+      /* Le finestre delle tessere di Home la leggono nel loro foglio, in
+         home-widgets-section: il margine e' suo e un padrone basta. */
+    `
+  );
+}
 function installNavigationSection() {
   if (!doc || state92.installed) return;
   state92.installed = true;
-  misuraIlFondoDiSistema();
+  installaLaCima();
+  misuraLeFasceDiSistema();
   for (const evento of ["resize", "orientationchange", "pageshow"])
-    root.addEventListener?.(evento, () => misuraIlFondoDiSistema());
-  for (const attesa of [400, 1500]) root.setTimeout?.(() => misuraIlFondoDiSistema(), attesa);
+    root.addEventListener?.(evento, () => misuraLeFasceDiSistema());
+  for (const attesa of [400, 1500]) root.setTimeout?.(() => misuraLeFasceDiSistema(), attesa);
   installStyles39();
   applyNavbarMode();
   installaLAttesaDellaBarra();
@@ -87717,18 +87794,24 @@ function installStili4() {
      *
      * Sopra i 900 px di altezza e basta: su uno schermo basso — un telefono
      * coricato, una finestra stretta — una testa ferma alta un quinto lascia
-     * per il resto una feritoia, e chi l'ha accesa non voleva quello. */
+     * per il resto una feritoia, e chi l'ha accesa non voleva quello.
+     *
+     * Ferma sotto la fascia del sistema, non sul bordo del vetro: col chiosco
+     * di Home Assistant su iPhone la cima della pagina e' sotto l'orologio, e
+     * una testa ferma a zero ci restava sotto con l'hamburger e il nome della
+     * casa (#214). Il fondo dietro sale fin li', o nella fascia si vedrebbe
+     * passare quello che scorre. */
     @media (min-height:560px){
       html[${ATTRIBUTO}="true"] body > header,
       html[${ATTRIBUTO}="true"] #page-home > header{
-        position:sticky;top:0;z-index:30;
+        position:sticky;top:var(--dm-cima-libera,0px);z-index:30;
         margin-bottom:0;padding-bottom:18px;
         background:var(--bg-sculpted,#f0f4f8)}
       /* L'intestazione ha il suo riquadro dentro di se': il fondo della
          striscia sta dietro, e la card resta quella di prima. */
       html[${ATTRIBUTO}="true"] body > header::before,
       html[${ATTRIBUTO}="true"] #page-home > header::before{
-        content:"";position:absolute;inset:-14px -14px 0;z-index:-1;
+        content:"";position:absolute;inset:calc(-14px - var(--dm-cima-libera,0px)) -14px 0;z-index:-1;
         background:var(--bg-sculpted,#f0f4f8)}
     }
     `

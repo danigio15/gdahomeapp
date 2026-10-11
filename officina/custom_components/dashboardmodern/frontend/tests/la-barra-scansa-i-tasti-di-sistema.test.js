@@ -77,8 +77,11 @@ test("la barra si misura invece di chiedere, e riscrive la sua variabile", () =>
     "utf8",
   );
   /* Non c'è modo di leggere una variabile d'ambiente da JavaScript, ma c'è di
-   * mettere un elemento alto quanto lei e guardare quanto è venuto. */
-  assert.match(barra, /height:env\(safe-area-inset-bottom,0px\)/);
+   * mettere un elemento alto quanto lei e guardare quanto è venuto. La stessa
+   * sonda misura anche la cima (#215): il lato è un argomento, e di serie è
+   * il fondo. */
+  assert.match(barra, /height:env\(safe-area-inset-\$\{lato\},0px\)/);
+  assert.match(barra, /function insetDi\(documento, lato = "bottom"\)/);
   /* E lo si chiede anche al documento in cima, che è dove le zone sicure
    * esistono davvero. */
   assert.match(barra, /root\.top && root\.top !== root \? root\.top\.document : null/);

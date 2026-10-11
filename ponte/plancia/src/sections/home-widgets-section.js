@@ -10191,10 +10191,14 @@ function installStyles() {
  * acceso aperto dalla barra sotto il meteo — e ripetere le stesse regole nel
  * modulo della barra vorrebbe dire due vesti che si scollano alla prima
  * ritoccata. Cosi' invece la veste e' scritta una volta, e chi la vuole si
- * chiama come si chiama: il contenuto resta affare di ciascuno. */
+ * chiama come si chiama: il contenuto resta affare di ciascuno.
+ *
+ * Il margine di sopra non scende mai sotto la fascia che il sistema si tiene
+ * in cima (#215): col chiosco su iPhone una finestra lunga partiva sotto
+ * l'orologio, con la sua chiusura. Il numero lo misura navigation-section. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup){
   position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
-  padding:20px;background:transparent;
+  padding:20px;padding-top:max(20px,var(--dm-cima-libera,0px));background:transparent;
   animation:dmWidgetPopupIn .2s ease-out}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)::before{
   content:"";position:absolute;inset:0;
@@ -11066,7 +11070,7 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-val{font-size:14.5px;font-weight:900}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-glyph{font-size:17px}
 @media(max-width:600px){
-  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup){padding:16px}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup){padding:16px;padding-top:max(16px,var(--dm-cima-libera,0px))}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail{border-radius:22px;max-height:82dvh}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head{padding:16px 16px 15px;column-gap:12px}
   :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body{padding:13px 15px 18px}
