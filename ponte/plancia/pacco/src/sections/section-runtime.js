@@ -20986,6 +20986,11 @@ function alarmVisibleModes(stateObj, stored, suMisura = []) {
   const restano = tutte.filter((voce2) => voce2.mode === ALARM_DISARM.mode || !tolte2.has(voce2.mode));
   return [...restano.length > 1 ? restano : tutte, ...miei];
 }
+function alarmActiveModeWithCustom(stateObj, disponibili, suMisura, states = {}) {
+  const dalPannello = alarmActiveMode(stateObj?.state, disponibili);
+  if (dalPannello) return dalPannello;
+  return modoSuMisuraAcceso(normalizzaModiSuMisura(suMisura), states);
+}
 var RIF_CENTRALE = "dm.security_centrale_allarme";
 var CHIAVE_CENTRALI = "cd_centrali";
 var CHIAVE_CENTRALE_SCELTA = "cd_centrale_scelta";
@@ -84322,7 +84327,11 @@ function fonteDaiValori(valori = {}) {
     overrides: json(valori.cd_entity_overrides, {}),
     avvisi: json(valori.cd_avvisi_custom, []),
     climaUnita: json(valori.cd_clima_units, []),
-    lettori: json(valori.cd_media_player, [])
+    lettori: json(valori.cd_media_player, []),
+    antifurtoModi: json(valori.cd_antifurto_modi, []),
+    antifurtoSuMisura: json(valori.cd_antifurto_su_misura, []),
+    varchi: json(valori.cd_varchi, {}),
+    invertiti: json(valori.cd_stati_invertiti, [])
   });
 }
 function climaColTipo(sezione2, unita2) {
@@ -84397,6 +84406,20 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
     persone: elenco6(altro.persone).filter((p) => p && entita2(p.entity) && p.nascosta !== true).map((p) => ({ entity: entita2(p.entity), name: testo(p.name) })),
     centrali: centrali2,
     aree: centrali2.map((id) => ({ entita: id, nome: nomiDelleAree.get(id) || "" })),
+    /* L'antifurto come lo ha messo a posto la plancia di origine: «stato e
+     * modalita' antifurto devono seguire quelle della plancia». I tasti tolti
+     * in configurazione, quelli scritti a mano, e gli ingressi che ogni
+     * centrale ha dichiarato — sono quelli, non ogni sensore con la classe
+     * «finestra», a dire cosa e' rimasto aperto. */
+    antifurto: {
+      tolte: alarmHiddenModes(altro.antifurtoModi),
+      suMisura: elenco6(altro.antifurtoSuMisura),
+      ingressi: Object.fromEntries(
+        centraliAllarme(elenco6(altro.centrali), overrides2).map((c) => [entitaDellaCentrale(c), ingressiScritti(c)]).filter(([id]) => id)
+      )
+    },
+    varchi: altro.varchi && typeof altro.varchi === "object" ? altro.varchi : {},
+    invertiti: elenco6(altro.invertiti),
     avvisi: elenco6(altro.avvisi).map((a) => ({
       name: testo(a?.name, 60),
       icon: testo(a?.icon, 16),
@@ -84661,7 +84684,11 @@ function fonteDiQui() {
       overrides: readJson("cd_entity_overrides", {}),
       avvisi: readJson("cd_avvisi_custom", []),
       climaUnita: readJson("cd_clima_units", []),
-      lettori: readJson("cd_media_player", [])
+      lettori: readJson("cd_media_player", []),
+      antifurtoModi: readJson("cd_antifurto_modi", []),
+      antifurtoSuMisura: readJson("cd_antifurto_su_misura", []),
+      varchi: readJson("cd_varchi", {}),
+      invertiti: readJson("cd_stati_invertiti", [])
     }
   );
 }
@@ -84984,13 +85011,32 @@ var STATI_DELL_ALLARME = () => ({
   disarming: t("Disinserimento…", "Disarming…")
 });
 var PAROLE_DEI_MODI = () => ({
-  home: t("In casa", "Home"),
+  /* Gli stessi nomi dei tasti della sezione Sicurezza della plancia. */
+  home: t("Casa", "Home"),
   away: t("Fuori", "Away"),
   night: t("Notte", "Night"),
   vacation: t("Vacanza", "Vacation"),
-  custom: t("Parziale", "Custom"),
-  disarm: t("Spegni", "Disarm")
+  custom: t("Parziale", "Partial"),
+  disarm: t("Sblocca", "Disarm")
 });
+function tastiDellAntifurto(s) {
+  const a = state109.fonte?.antifurto || {};
+  return alarmVisibleModes(s || null, a.tolte || [], a.suMisura || []).map((voce2) => ({
+    ...voce2,
+    label: voce2.suMisura ? voce2.label : PAROLE_DEI_MODI()[voce2.mode] || voce2.mode
+  }));
+}
+function tastoAcceso(s, tasti) {
+  return alarmActiveModeWithCustom(
+    s || null,
+    tasti.map((voce2) => voce2.mode),
+    state109.fonte?.antifurto?.suMisura || [],
+    allStates() || {}
+  );
+}
+function modoSuMisura(id) {
+  return normalizzaModiSuMisura(state109.fonte?.antifurto?.suMisura || []).find((m) => m.id === id) || null;
+}
 function centraleDelMuro(pagina2) {
   return clean(pagina2?.ingresso?.centrale) || state109.fonte?.centrali?.[0] || "";
 }
@@ -85241,7 +85287,9 @@ function paginaScene(pagina2) {
 function paginaAmbienti(pagina2) {
   const ambienti = ambientiDellaFonte(state109.fonte || {});
   if (!ambienti.length)
-    return griglia2(pagina2, [vuoto2(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))]);
+    return griglia2(pagina2, [
+      vuoto2(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))
+    ]);
   const carte = ambienti.map(({ stanza: stanza2, luci }, i) => {
     const temp = stanza2.temp ? numero43(stato2(stanza2.temp)?.state) : null;
     const umid = stanza2.hum ? numero43(stato2(stanza2.hum)?.state) : null;
@@ -85256,7 +85304,9 @@ function paginaAmbienti(pagina2) {
 function paginaTelecamere(pagina2) {
   const telecamere3 = telecamereDellaFonte(state109.fonte || {});
   if (!telecamere3.length)
-    return griglia2(pagina2, [vuoto2(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))]);
+    return griglia2(pagina2, [
+      vuoto2(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))
+    ]);
   const carte = telecamere3.map(
     (k, i) => `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video">${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi7(k.entita))}</span></div></button>`
   );
@@ -85275,10 +85325,7 @@ var GLIFI_MUSICA = {
 var glifo = (nome, misura7 = 30) => `<svg width="${misura7}" height="${misura7}" viewBox="0 0 24 24" fill="${["suona"].includes(nome) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${GLIFI_MUSICA[nome]}</svg>`;
 function lettoreOra(voce2) {
   segna(voce2.entita);
-  const lettura3 = letturaDelLettore(
-    { entity: voce2.entita, nome: voce2.nome },
-    allStates() || {}
-  );
+  const lettura3 = letturaDelLettore({ entity: voce2.entita, nome: voce2.nome }, allStates() || {});
   const attesa = state109.inAttesa[voce2.entita] || {};
   if (typeof attesa.suona === "boolean") {
     lettura3.suona = attesa.suona;
@@ -85355,7 +85402,13 @@ function paginaMusica(pagina2) {
   const voci3 = lettoriDellaPagina(pagina2, state109.fonte || {});
   if (!voci3.length)
     return griglia2(pagina2, [
-      vuoto2(0, t("Nessun lettore: aggiungili nella sezione Musica o qui nel config", "No player: add them in the Music section or here in the config"))
+      vuoto2(
+        0,
+        t(
+          "Nessun lettore: aggiungili nella sezione Musica o qui nel config",
+          "No player: add them in the Music section or here in the config"
+        )
+      )
     ]);
   const letture2 = voci3.map(lettoreOra);
   lettoriDiQui = letture2;
@@ -85406,23 +85459,53 @@ function paginaEnergia(pagina2) {
   const tessere = [];
   if (e.casa) {
     const p = potenza(e.casa);
-    tessere.push(["casa", "home", "#0ea5e9", t("Consuma la casa", "House uses"), p.testo, nomeDi7(e.casa)]);
+    tessere.push([
+      "casa",
+      "home",
+      "#0ea5e9",
+      t("Consuma la casa", "House uses"),
+      p.testo,
+      nomeDi7(e.casa)
+    ]);
   }
   if (e.solare) {
     const p = potenza(e.solare);
-    tessere.push(["solare", "solare", "#f59e0b", t("Produce il solare", "Solar makes"), p.testo, nomeDi7(e.solare)]);
+    tessere.push([
+      "solare",
+      "solare",
+      "#f59e0b",
+      t("Produce il solare", "Solar makes"),
+      p.testo,
+      nomeDi7(e.solare)
+    ]);
   }
   if (e.rete) {
     const p = potenza(e.rete);
     const parola = p.valore === null ? t("Rete", "Grid") : p.valore < 0 ? t("Cede alla rete", "To the grid") : t("Preleva dalla rete", "From the grid");
-    tessere.push(["rete", "energia", p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6", parola, p.testo, nomeDi7(e.rete)]);
+    tessere.push([
+      "rete",
+      "energia",
+      p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6",
+      parola,
+      p.testo,
+      nomeDi7(e.rete)
+    ]);
   }
   if (e.batteria) {
     const v = numero43(stato2(e.batteria)?.state);
-    tessere.push(["batteria", "batterie", "#10b981", t("Batteria", "Battery"), v === null ? "—" : `${decimale(v, 0)}%`, nomeDi7(e.batteria)]);
+    tessere.push([
+      "batteria",
+      "batterie",
+      "#10b981",
+      t("Batteria", "Battery"),
+      v === null ? "—" : `${decimale(v, 0)}%`,
+      nomeDi7(e.batteria)
+    ]);
   }
   if (!tessere.length)
-    return griglia2(pagina2, [vuoto2(0, t("Scegli le misure nel config", "Choose the readings in the config"))]);
+    return griglia2(pagina2, [
+      vuoto2(0, t("Scegli le misure nel config", "Choose the readings in the config"))
+    ]);
   const carte = tessere.map(
     ([k, d, acc, etichetta3, valore3, sotto], i) => `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta3)}</span></div>
@@ -85432,9 +85515,13 @@ function paginaEnergia(pagina2) {
 }
 function finestreAperte() {
   segnaDominio("binary_sensor");
-  return Object.entries(allStates() || {}).filter(
-    ([id, s]) => id.startsWith("binary_sensor.") && ["window", "door", "garage_door", "opening"].includes(s?.attributes?.device_class) && s?.state === "on"
-  ).map(([id]) => nomeDi7(id));
+  const fonte = state109.fonte || {};
+  const stati = allStates() || {};
+  const righe2 = varchiDiCasa(stati, fonte.varchi || {}, fonte.invertiti || [], (id) => nomeDi7(id));
+  const centrale = centraleDelMuro(state109.muro?.pagine?.[state109.pagina]);
+  const dichiarati = fonte.antifurto?.ingressi?.[centrale] || [];
+  const quali = dichiarati.length ? ingressiDellaCentrale(righe2, { ingressi: dichiarati }) : righe2;
+  return quali.filter((riga3) => riga3.stato === "aperto").map((riga3) => riga3.name);
 }
 function paginaIngressoCompatta(pagina2) {
   const ing = pagina2.ingresso;
@@ -85511,7 +85598,8 @@ function paginaIngresso(pagina2) {
   const scattato = valore3 === "triggered";
   const spento = valore3 === "disarmed";
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
-  const modi = s ? alarmModes(s).filter((m) => m.mode !== "custom") : [];
+  const modi = tastiDellAntifurto(s);
+  const acceso6 = tastoAcceso(s, modi);
   const aperte = ing.finestre ? finestreAperte() : [];
   const persone3 = personeInCasa();
   const uscita = spento ? ing.esco : ing.rientro || ing.esco;
@@ -85520,11 +85608,11 @@ function paginaIngresso(pagina2) {
   return `<div class="mu-ingresso">
     <div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
-        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? STATI_DELL_ALLARME()[valore3] || valore3 : t("Nessuna centrale", "No alarm panel"))}</div>
+        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? STATI_DELL_ALLARME()[valore3] || valore3 : modi.find((m) => m.mode === acceso6)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
         ${aperte.length ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>` : ""}</div></div>
       ${modi.length ? `<div class="mu-seg mu-modi">${modi.map((m) => {
-    const attivo = m.mode === "disarm" && spento || ALARM_MODES.find((x) => x.mode === m.mode)?.state === valore3;
-    return `<button type="button" class="${attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(PAROLE_DEI_MODI()[m.mode] || m.mode)}</button>`;
+    const attivo = m.mode === acceso6;
+    return `<button type="button" class="${attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`;
   }).join(
     ""
   )}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>` : ""}
@@ -85650,11 +85738,12 @@ function finestra4() {
     const centrale = centraleDelMuro(pagina2);
     const s = stato2(centrale);
     const valore3 = String(s?.state || "");
-    const modi = s ? alarmModes(s).filter((m) => m.mode !== "custom") : [];
+    const modi = tastiDellAntifurto(s);
+    const acceso6 = tastoAcceso(s, modi);
     const aperte = pagina2?.ingresso?.finestre ? finestreAperte() : [];
     dentro3 = `<div class="mu-fin-clima" style="--acc:${valore3 === "disarmed" ? "#10b981" : "#6366f1"}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore3] || valore3)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(PAROLE_DEI_MODI()[m.mode] || m.mode)}</button>`).join("")}</div></div>`;
+      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div></div>`;
   } else if (f.tipo === "citofono") {
     const ing = state109.muro?.pagine?.[state109.pagina]?.ingresso || {};
     dentro3 = `<div class="mu-fin-clima">
@@ -85797,10 +85886,28 @@ function scendiSottoIlMenu() {
 }
 function apriIlMenu2() {
   scendiSottoIlMenu();
-  const tasto2 = doc?.querySelector?.("body>header .ha-menu-btn") || doc?.querySelector?.(".ha-menu-btn");
-  if (tasto2) {
-    tasto2.click();
+  try {
+    if (root.gdahomeDice?.postMessage) {
+      root.gdahomeDice.postMessage("gdahome:menu");
+      return true;
+    }
+  } catch (_errore) {
+  }
+  let dentroHa = false;
+  try {
+    dentroHa = Boolean(root.documentoDiHomeAssistant?.());
+  } catch (_errore) {
+  }
+  if (dentroHa && typeof root.apriMenuLaterale === "function") {
+    root.apriMenuLaterale();
     return true;
+  }
+  try {
+    if (root.parent && root.parent !== root) {
+      root.parent.postMessage({ gdahome: "menu" }, "*");
+      if (!dentroHa) return true;
+    }
+  } catch (_errore) {
   }
   if (typeof root.apriMenuLaterale === "function") {
     root.apriMenuLaterale();
@@ -85993,7 +86100,9 @@ function disegna5() {
   raccolta = { ids: /* @__PURE__ */ new Set(), domini: /* @__PURE__ */ new Set() };
   let corpo2 = "";
   try {
-    corpo2 = state109.riposo ? riposo(muro) : `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${corpoDellaPagina(pagina2)}</div>${finestra4()}`;
+    corpo2 = state109.riposo ? riposo(muro) : `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${corpoDellaPagina(
+      pagina2
+    )}</div>${finestra4()}`;
     segna(centraleDelMuro(muro.pagine[0]));
     inVista2 = raccolta;
   } finally {
@@ -86083,8 +86192,10 @@ function attesaConfermata(cosa, atteso, reale) {
   if (cosa === "gruppo")
     return reale.gruppo === (Array.isArray(atteso) ? atteso : []).slice(1).sort().join(",");
   if (cosa === "volume") return reale.volume !== null && Math.abs(reale.volume - atteso) <= 1;
-  if (cosa === "luminosita") return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
-  if (cosa === "temperatura") return reale.temperatura !== null && Math.abs(reale.temperatura - atteso) < 0.05;
+  if (cosa === "luminosita")
+    return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
+  if (cosa === "temperatura")
+    return reale.temperatura !== null && Math.abs(reale.temperatura - atteso) < 0.05;
   return false;
 }
 function confermaLeAttese(event) {
@@ -86129,6 +86240,26 @@ function allarme(modo, codice = "") {
   const pagina2 = state109.muro?.pagine?.[state109.pagina];
   const centrale = centraleDelMuro(pagina2);
   const s = stato2(centrale);
+  const mio = modoSuMisura(modo);
+  if (mio) {
+    if (ilModoChiedeIlCodice(mio) && !codice) {
+      apriFinestra({ tipo: "codice", scopo: "allarme", modo, scritto: "" });
+      return;
+    }
+    if (codice && !ilCodiceApreIlModo(mio, codice)) {
+      const f = state109.finestra;
+      if (f?.tipo === "codice") {
+        f.errore = true;
+        f.scritto = "";
+        disegna5();
+      }
+      return;
+    }
+    const chiamata = chiamataDelModo2(mio);
+    chiudiFinestra();
+    if (chiamata) comanda2(chiamata.domain, chiamata.service, { ...chiamata.data });
+    return;
+  }
   if (!s) return;
   const voce2 = modo === "disarm" ? ALARM_DISARM : ALARM_MODES.find((m) => m.mode === modo);
   if (!voce2) return;
@@ -86278,7 +86409,10 @@ function onClick24(event) {
       if (cmd === "muto") dati.is_volume_muted = !l.mutato;
       if (cmd === "centro" && !l.spento) attendi(id, "suona", !l.suona);
       if ((cmd === "alza" || cmd === "abbassa") && l.volume !== null && l.puo.volume) {
-        const dopo = Math.min(100, Math.max(0, Math.round(l.volume * 100) + (cmd === "alza" ? 2 : -2)));
+        const dopo = Math.min(
+          100,
+          Math.max(0, Math.round(l.volume * 100) + (cmd === "alza" ? 2 : -2))
+        );
         attendi(id, "volume", dopo);
         comanda2("media_player", "volume_set", { entity_id: id, volume_level: dopo / 100 });
         disegna5();

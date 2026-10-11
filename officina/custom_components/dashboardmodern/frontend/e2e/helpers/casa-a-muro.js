@@ -143,7 +143,7 @@ export const STATI_A_MURO = {
 export async function apriLaCasaAMuro(
   page,
   testInfo,
-  { premium = true, muro = null, stati = STATI_A_MURO, seme = SEME_A_MURO } = {},
+  { premium = true, muro = null, stati = STATI_A_MURO, seme = SEME_A_MURO, caselle = {} } = {},
 ) {
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await page.addInitScript((p) => {
@@ -152,7 +152,7 @@ export async function apriLaCasaAMuro(
   }, premium);
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, seme);
   await page.evaluate(
-    ({ letture, azioni, muro }) => {
+    ({ letture, azioni, muro, caselle }) => {
       const raw = eval("_RAW_STATES");
       for (const [id, voce] of Object.entries(letture))
         raw[id] = { entity_id: id, state: voce.state, attributes: voce.attributes || {} };
@@ -166,13 +166,15 @@ export async function apriLaCasaAMuro(
         ]),
       );
       if (muro) localStorage.setItem("cd_muro", JSON.stringify(muro));
+      for (const [chiave, valore] of Object.entries(caselle))
+        localStorage.setItem(chiave, JSON.stringify(valore));
       /* I comandi non vanno a Home Assistant: si annotano. */
       window.cdCallServiceJson = (domain, service, data) =>
         window.__SERVIZI__.push({ domain, service, data });
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
       window.dispatchEvent(new CustomEvent("dashboardmodern:muro"));
     },
-    { letture: stati, azioni: AZIONI_A_MURO, muro },
+    { letture: stati, azioni: AZIONI_A_MURO, muro, caselle },
   );
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
 }

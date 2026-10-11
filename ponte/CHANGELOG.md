@@ -23,6 +23,17 @@ iOS si riprende la memoria chiudendo la pagina; al ritorno l'app lo prendeva
 per un errore e chiedeva di riprovare. Adesso la pagina si ricarica da sola,
 come fa Safari con una scheda.
 
+**Pannello a muro: il ☰ apre il menu laterale.** Premeva il ☰ della plancia
+sotto il pannello, che col chiosco fa uscire la barra in basso. Adesso chiede il
+menu a chi ce l'ha: l'app gdahome apre il suo, Home Assistant la sua barra
+laterale.
+
+**Pannello a muro: l'antifurto segue la plancia.** Gli stessi tasti della
+sezione Sicurezza — senza quelli tolti in configurazione, con quelli scritti a
+mano, con gli stessi nomi e lo stesso tasto acceso — e come «Aperte» gli
+ingressi dichiarati per la centrale, non più ogni sensore finestra di casa
+(i «Stato finestra» dei termosifoni).
+
 ## 1.11.2
 
 **La barra in basso sul telefono, fissa, torna al suo posto.** Con la barra
@@ -283,6 +294,7 @@ persona, «Apri in mappa» apre il navigatore con la strada fino a lei. Nel
 browser, o senza una posizione GPS, resta la mappa di Home Assistant.
 
 **In auto.**
+
 - I comandi della casa premuti in macchina — il cancello, le luci — partono
   dal collegamento che l'app ha già aperto, invece di aprirne un altro da
   capo: prima, se non ci riusciva in tempo, il comando si perdeva.
@@ -323,6 +335,7 @@ Premium, come dice la licenza. Senza Premium, in auto compare una pagina che
 spiega come attivarlo.
 
 **Più sicurezza per i telefoni abbinati.**
+
 - Un telefono, anche di chi amministra, non può più scrivere automazioni,
   script o scene, cambiare le risorse e le dashboard di Home Assistant,
   toccare blueprint, HACS e backup, né spegnere Home Assistant. L'app non usa
@@ -337,6 +350,7 @@ spiega come attivarlo.
   arrivano dal negozio, come per tutti gli add-on.
 
 **Il navigatore, nell'app.**
+
 - In guida la mappa non resta più ferma: se il GPS del telefono smette di
   mandare posizioni, e con Android Auto succede, gdanav se ne accorge in pochi
   secondi e lo fa ripartire. Intanto sullo schermo c'è «GPS assente».
@@ -1161,7 +1175,7 @@ guardando e apre la tendina per cambiarla.
 
 **Le fasce del dispositivo dicono quali kilowattora prezzano.** Nel dettaglio
 di un dispositivo, la riga di una fascia metteva accanto i kilowattora
-*totali* e gli euro *della sola rete*: due basi diverse sulla stessa riga, e i
+_totali_ e gli euro _della sola rete_: due basi diverse sulla stessa riga, e i
 conti non tornavano — 21 euro sopra e 12 sotto, sugli stessi consumi. Il sole
 non si paga, ed è giusto che gli euro siano quelli della rete: adesso la riga
 lo scrive, «di cui dalla rete», e la nota sotto porta tutti e tre i numeri.
@@ -1193,7 +1207,7 @@ centrale, non all'infisso.
 **L'avviso «Statistiche a lungo termine mancanti» non parla più alla prima
 lettura.** Era la frase che manda a controllare i sensori, e la si scriveva
 appena una casella tornava vuota — ma vuota non vuol dire sconfigurata: vuol
-dire che il Recorder non ha risposto *adesso*, cosa che succede proprio quando
+dire che il Recorder non ha risposto _adesso_, cosa che succede proprio quando
 l'add-on è appena ripartito e il database è ancora freddo. Cioè nel momento in
 cui uno apre la plancia dopo un aggiornamento. Un attimo dopo la stessa domanda
 si riempie, l'avviso sparisce da solo, e chi l'ha letto è già andato a cercare
@@ -1226,7 +1240,7 @@ trovava vuota se la ricompilava da sola pescando fra le altre entità. Adesso
 una scelta fatta resta fatta, anche quando la scelta è «nessuna».
 
 **Nel cruscotto, «telefoni collegati» non erano telefoni.** Diceva 22 dove i
-telefoni con l'app erano molti meno: contava i *collegamenti* aperti verso il
+telefoni con l'app erano molti meno: contava i _collegamenti_ aperti verso il
 centralino, che sono un'altra cosa. Adesso sono due numeri, e dicono quello che
 sono: **collegamenti aperti** e **app aperte**.
 
@@ -1638,17 +1652,17 @@ dice **la parte che costa**, cioè che per rimetterlo lo si riabbina da qui. Di
 un ripetitore si dice anche che tiene su la rete per gli altri.
 
 «Guarda la rete» apre la **mappa**: al centro l'antenna, intorno i ripetitori,
-fuori chi sta in fondo a un ramo — che è la forma che una rete Zigbee *ha*, non
+fuori chi sta in fondo a un ramo — che è la forma che una rete Zigbee _ha_, non
 una disposizione scelta. Lo spessore e il tratteggio dicono quanto è buono ogni
 collegamento, e chi non parla con nessuno sta in fondo con scritto perché. I
-pallini sono i disegni veri del catalogo: il disegno dice *cos'è*
-quell'apparecchio, l'anello colorato *che mestiere fa* nella rete.
+pallini sono i disegni veri del catalogo: il disegno dice _cos'è_
+quell'apparecchio, l'anello colorato _che mestiere fa_ nella rete.
 
 **Sul telefono la mappa usciva vuota.** Gli anelli, i fili e i nomi c'erano, e
 dentro ogni anello niente: proprio le icone dei dispositivi. Erano un `<svg>`
 dentro l'altro — un modo valido, che nel browser si vede — e `flutter_svg`
 quelli li salta. Nessuna prova se ne era accorta perché guardavano tutte il
-*testo* della figura, e il testo era giusto: si è visto fotografando la
+_testo_ della figura, e il testo era giusto: si è visto fotografando la
 schermata.
 
 **La plancia si mangiava un core intero, ferma.** La segnalazione diceva «la
@@ -1931,7 +1945,6 @@ può nemmeno andare a vedere: da una casa viaggiano solo i nomi dei
 dispositivi, mai quelli delle entità. Adesso quando qualcosa è giù la
 mattonella dice i dispositivi, che è il numero che si può aprire.
 
-
 **I Varchi si dichiarano, non si autocompilano (#74).** «Sezione varchi
 attuale non ha alcuna possibilità di inserire icone. Inoltre è differente
 dalle altre sezioni in quanto si autocompila, cosa che avevo detto già di
@@ -1996,7 +2009,6 @@ la ✏️ sbordava dal suo quadrato da 36 pixel. Adesso sono gemelli, sotto la
 pastiglia, sulla stessa riga. Nella stessa passata è sparito un difetto più
 silenzioso: un entity_id lungo apriva la riga in larghezza invece di
 accorciarsi con i puntini, e quello che sbordava veniva tagliato via.
-
 
 ## 1.6.0.3
 
@@ -2950,7 +2962,7 @@ a vederla e il codice continua a battersela, come prima.
 
 **Il quadro adesso dice quale versione sta girando.** Prima non lo diceva da
 nessuna parte: `/salute` diceva soltanto di essere vivo, la soglia è un testo
-fisso, e le pagine mostrano la versione *delle case*, non la sua. Per sapere se
+fisso, e le pagine mostrano la versione _delle case_, non la sua. Per sapere se
 una correzione era arrivata bisognava entrare nella macchina e leggere un
 registro — cioè proprio la cosa che questo quadro esiste per non dover fare.
 
@@ -2982,7 +2994,7 @@ mai spegnere.
 
 **Le icone degli aggiornamenti adesso arrivano davvero.** Nella 1.5.9.4 quel
 lavoro era tutto scritto e non funzionava niente: la casa non metteva nella
-riga il *segno* dell'aggiornamento — il pezzo da cui il quadro capisce quale
+riga il _segno_ dell'aggiornamento — il pezzo da cui il quadro capisce quale
 icona gli manca — e quindi il quadro non ne chiedeva mai una, e quindi non ne
 arrivava mai una. Le prove guardavano i pezzi, uno per uno, e nessuna guardava
 il giro intero: adesso c'è, e parte da quello che la casa manda davvero.
@@ -3136,7 +3148,7 @@ il nome di chi chiamare invece del nostro.
 
 **Se togli l'installatore, torna gdahome — e non perdi niente.** È la domanda
 che conta, e la risposta è nel come: si cambia **solo il titolo**. La
-configurazione della plancia sta sotto il *profilo*, e il profilo non si sfiora:
+configurazione della plancia sta sotto il _profilo_, e il profilo non si sfiora:
 cambiare il titolo è come cambiare la targhetta sulla porta, quello che c'è
 dentro la stanza non si muove. Tessere, colori, stanze, avvisi: tutto dov'era.
 
@@ -3152,8 +3164,8 @@ apri la plancia, il tuo browser andrebbe a farsi vedere da una macchina che non
 tua si guarda la plancia. Lo prende l'add-on, una volta al giorno, e da lì in
 poi lo serve lui dalla rete di casa.
 
-**C'è l'interruttore per dire di no:** *Casa › Lascia che la plancia porti il
-marchio di chi ti ha fatto l'impianto*, acceso di serie. Spento resta gdahome, e
+**C'è l'interruttore per dire di no:** _Casa › Lascia che la plancia porti il
+marchio di chi ti ha fatto l'impianto_, acceso di serie. Spento resta gdahome, e
 non cambia nient'altro — il rapporto parte lo stesso.
 
 **E nel cruscotto dell'installatore** il suo marchio sta in testata al posto del
@@ -3203,7 +3215,7 @@ succede più.
 menu di Home Assistant torna a sinistra, dov'è quello di Home Assistant e dove
 uno lo cerca.
 
-Ci si era sbattuto due volte. Quel tasto *galleggia*: sta nel documento di
+Ci si era sbattuto due volte. Quel tasto _galleggia_: sta nel documento di
 fuori, sopra la pagina, e la pagina non sa di averlo addosso. A sinistra si
 sedeva sopra il bollo; spostato a destra, si è seduto sulla nav. Scansarlo non
 funziona — da una parte o dall'altra, sotto c'è sempre qualcosa.
@@ -3213,7 +3225,6 @@ stare dentro un riquadro e gli lascia il posto in cima, e solo lì: aperta in un
 browser quel tasto non c'è, e un buco sarebbe solo un buco. Il bollo resta dove
 serve davvero — accanto agli aggiornamenti di gdahome, dove distingue la roba
 nostra senza scaricare niente.
-
 
 **Dal cruscotto si installa.** Era il pezzo che mancava: il quadro faceva
 vedere cosa c'era da aggiornare in ogni casa e non c'era modo di farlo. Il
@@ -3233,8 +3244,8 @@ numeri l'hai già deciso incollando il codice; questa è un'altra decisione, e l
 prendi tu. Spento — cioè finché non lo accendi — nel suo cruscotto il tasto non
 c'è e al posto suo c'è scritto perché.
 
-**Un verbo solo:** far partire un aggiornamento che questa casa *ha già in
-attesa*, gli stessi che vedi tu in Impostazioni. Non apre la tua plancia, non
+**Un verbo solo:** far partire un aggiornamento che questa casa _ha già in
+attesa_, gli stessi che vedi tu in Impostazioni. Non apre la tua plancia, non
 legge i tuoi sensori, non tocca la tua configurazione, non esegue comandi.
 L'elenco dei verbi sta nel programma del ponte, non nel messaggio: una parola
 che non è in quella lista viene rifiutata.
@@ -3254,8 +3265,8 @@ chiede conferma due volte, perché non stai premendo un tasto sul tuo computer.
 
 **Dove si accende, detto dove serve.** Quando una casa non ha aperto la
 manutenzione, il cruscotto dell'installatore adesso non dice solo «è chiusa»:
-dice la strada esatta da fare — *Impostazioni › Add-on › gdahome ›
-Configurazione*, la casella col suo nome per intero — perché è lui che deve
+dice la strada esatta da fare — _Impostazioni › Add-on › gdahome ›
+Configurazione_, la casella col suo nome per intero — perché è lui che deve
 spiegarla al cliente al telefono. Da lì non si accende: sarebbe il permesso che
 se lo dà da solo.
 
@@ -3273,7 +3284,7 @@ non c'era nessun motivo perché il quadro ne mostrasse meno — è lo stesso
 elenco, e chi lo guarda deve prendere la stessa decisione.
 
 **Il logo si compone, non si scarica da un indirizzo che arriva.** Da casa
-parte una *parola* — `shelly`, `zha`, `homeassistant` — e l'indirizzo dei
+parte una _parola_ — `shelly`, `zha`, `homeassistant` — e l'indirizzo dei
 marchi di Home Assistant lo sa il quadro. È la differenza fra una casa che
 dice «il mio logo è questo» e una casa che dice «vai a bussare qui»: la
 seconda, chiunque possa scrivere l'attributo di un'entità la può usare per
@@ -3295,7 +3306,7 @@ restava sempre indietro. Adesso è una.
 **I dispositivi che non rispondono adesso hanno un nome.** Prima nel quadro
 dell'installatore erano dodici pastiglie così: `#00a7`, `#033f`, `#03ad`.
 Quattro cifre ricavate dal nome con un sale che non usciva da casa, e
-servivano a dire *è lo stesso di ieri* oppure *è un altro* — cioè a
+servivano a dire _è lo stesso di ieri_ oppure _è un altro_ — cioè a
 distinguere un apparecchio morto da una rete che balla.
 
 Era la scelta giusta finché quella spia serviva a **sapere**. Non regge nel
@@ -3346,12 +3357,12 @@ Niente di rotto nei dati: era solo la pagina che non si disegnava.
 
 **E adesso una prova legge quel programma prima di te.** Erano 678, e nessuna
 lo faceva: c'è chi lo legge come testo e chi ci cerca dei numeri, nessuna aveva
-mai provato a leggerlo *come codice*. Era l'unico file del progetto che
+mai provato a leggerlo _come codice_. Era l'unico file del progetto che
 arrivava a destinazione senza che nessuno l'avesse mai aperto.
 
 ## 1.5.6.1
 
-*Tutto nel cruscotto di chi installa. Nelle case non cambia niente.*
+_Tutto nel cruscotto di chi installa. Nelle case non cambia niente._
 
 **Gli aggiornamenti si leggono per casa.** Erano raggruppati al contrario — un
 riquadro per ogni cosa da installare, e sotto le case che ce l'hanno indietro —
@@ -3417,8 +3428,8 @@ che apre il cruscotto di chi installa — e finché uno si chiamava «Quanto viv
 un codice» erano tre cose con un nome solo. Così anche «Giorni di silenzio»,
 che era una poesia: adesso dice «Dopo quanto un telefono va riabbinato».
 
-*Nell'app non cambia niente: è una correzione dell'add-on, e il numero
-dell'app resta 1.5.5.*
+_Nell'app non cambia niente: è una correzione dell'add-on, e il numero
+dell'app resta 1.5.5._
 
 ## 1.5.5
 
@@ -3493,8 +3504,8 @@ del cruscotto **non esce**. Sta nelle opzioni perché è lì che dice se la
 sezione esiste, ma servirlo a chi apre la pagina vorrebbe dire darlo a
 chiunque, in casa, apra quella pagina.
 
-*Nell'app non cambia niente: è una correzione dell'add-on, e il numero
-dell'app resta 1.5.4.*
+_Nell'app non cambia niente: è una correzione dell'add-on, e il numero
+dell'app resta 1.5.4._
 
 ## 1.5.4
 
@@ -3572,9 +3583,9 @@ La voce la vede solo chi amministra: porta agli impianti dei clienti di
 qualcuno, e Home Assistant in casa lo aprono anche i familiari. Spegnendo
 l'interruttore sparisce subito.
 
-*Nella 1.5.1 quella voce c'era già, ma nel posto sbagliato: stava
+_Nella 1.5.1 quella voce c'era già, ma nel posto sbagliato: stava
 nell'integrazione DashboardModern, che dalla 1.4 non arriva più nelle case —
-la plancia viene dall'add-on. Non faceva danno e non la vedeva nessuno.*
+la plancia viene dall'add-on. Non faceva danno e non la vedeva nessuno._
 
 ## 1.5.1
 

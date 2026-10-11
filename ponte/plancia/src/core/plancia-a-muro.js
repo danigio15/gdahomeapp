@@ -18,7 +18,9 @@
  * principale la rinomina anche sul tablet, e una luce tolta lascia il suo
  * posto vuoto invece di comandare un'entita' che non c'e' piu'. */
 
+import { alarmHiddenModes, centraliAllarme, entitaDellaCentrale } from "./alarm-panel.js";
 import { canonicalClimateType } from "./device-model.js";
+import { ingressiScritti } from "./le-zone-della-centrale.js";
 import { lettoriConfigurati } from "./media-player.js";
 
 export const CHIAVE_MURO = "cd_muro";
@@ -467,6 +469,10 @@ export function fonteDaiValori(valori = {}) {
     avvisi: json(valori.cd_avvisi_custom, []),
     climaUnita: json(valori.cd_clima_units, []),
     lettori: json(valori.cd_media_player, []),
+    antifurtoModi: json(valori.cd_antifurto_modi, []),
+    antifurtoSuMisura: json(valori.cd_antifurto_su_misura, []),
+    varchi: json(valori.cd_varchi, {}),
+    invertiti: json(valori.cd_stati_invertiti, []),
   });
 }
 
@@ -566,6 +572,22 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
       .map((p) => ({ entity: entita(p.entity), name: testo(p.name) })),
     centrali,
     aree: centrali.map((id) => ({ entita: id, nome: nomiDelleAree.get(id) || "" })),
+    /* L'antifurto come lo ha messo a posto la plancia di origine: «stato e
+     * modalita' antifurto devono seguire quelle della plancia». I tasti tolti
+     * in configurazione, quelli scritti a mano, e gli ingressi che ogni
+     * centrale ha dichiarato — sono quelli, non ogni sensore con la classe
+     * «finestra», a dire cosa e' rimasto aperto. */
+    antifurto: {
+      tolte: alarmHiddenModes(altro.antifurtoModi),
+      suMisura: elenco(altro.antifurtoSuMisura),
+      ingressi: Object.fromEntries(
+        centraliAllarme(elenco(altro.centrali), overrides)
+          .map((c) => [entitaDellaCentrale(c), ingressiScritti(c)])
+          .filter(([id]) => id),
+      ),
+    },
+    varchi: altro.varchi && typeof altro.varchi === "object" ? altro.varchi : {},
+    invertiti: elenco(altro.invertiti),
     avvisi: elenco(altro.avvisi)
       .map((a) => ({
         name: testo(a?.name, 60),
