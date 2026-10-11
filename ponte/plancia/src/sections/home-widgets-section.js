@@ -338,6 +338,7 @@ import {
 import { disegnaComeStaLaCasa } from "./come-sta-la-casa-section.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { laMisuraDallUnita, lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
+import { tintaDellaPagina } from "./page-masthead-section.js";
 
 const KEY = "__DASHBOARDMODERN_HOME_WIDGETS__";
 const STYLE_ID = "dm-widgets-style";
@@ -5798,8 +5799,36 @@ export function modelliDelleTessere(states) {
       fumoModel(states),
       ariaModel(states),
       ...customAlertModels(states),
-    ].filter(Boolean)
+    ]
+      .filter(Boolean)
+      .map(colorataComeLaSezione)
   );
+}
+
+/* Il colore della tessera: quello della sua sezione, e rosso solo se c'e'
+ * qualcosa da segnalare.
+ *
+ * «I colori dei widget devono richiamare i colori delle sezioni e diventare
+ * rossi solo in caso di segnalazioni.» Ogni tessera aveva un colore scelto a
+ * mano, e molte se lo cambiavano da sole a seconda dello stato: le batterie
+ * gialle sopra una pagina verde, le porte rosse anche solo aperte di giorno.
+ * Il rosso cosi' non voleva dire piu' niente.
+ *
+ * Adesso la regola e' una: la tessera che segnala (`alert`) e' rossa; le
+ * altre hanno il colore dell'intestazione della loro pagina. Chi una pagina
+ * non ce l'ha tiene il suo, ma il rosso no: quello e' delle segnalazioni. */
+const ROSSO_DELLE_SEGNALAZIONI = "#dc2626";
+const ROSSI = new Set(["#dc2626", "#ef4444", "#e11d48", "#be123c", "#b91c1c", "#f43f5e"]);
+
+export function colorataComeLaSezione(widget) {
+  if (!widget || typeof widget !== "object") return widget;
+  if (widget.alert) return { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
+  const chiave = clean(widget.key);
+  const tab = eUnaSezioneMia(chiave) ? chiave : SEZIONE_DEL_WIDGET[famigliaDellaTessera(chiave)];
+  const tinta = tab ? tintaDellaPagina(`page-${tab}`) : "";
+  if (tinta) return { ...widget, accent: tinta };
+  if (ROSSI.has(clean(widget.accent).toLowerCase())) return { ...widget, accent: "#64748b" };
+  return widget;
 }
 
 /* Cosa e' acceso, per nome.

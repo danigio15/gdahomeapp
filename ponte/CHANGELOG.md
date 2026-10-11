@@ -42,6 +42,10 @@ per qualche istante prima del numero.
 scheda Batterie, come la pagina: chi ne ha messe tre non si ritrova più in
 copertina il portatile all'1% e altre quaranta pile che non guarda.
 
+**I colori delle tessere sono quelli delle sezioni.** In Home ogni tessera ha
+il colore dell'intestazione della sua pagina, e diventa rossa solo quando
+segnala qualcosa: una batteria scarica, una porta rimasta aperta, un allarme.
+
 **Navigatore:** la freccia è come quella di Waze, e col traffico il celeste
 ai lati della coda si vede bene.
 

@@ -23542,6 +23542,12 @@ function registraPaginaARuntime(id, pagina2) {
 function tuttePagine() {
   return PAGINE_A_RUNTIME.size ? [...PAGES, ...PAGINE_A_RUNTIME.values()] : PAGES;
 }
+function tintaDellaPagina(id) {
+  const chiave2 = clean(id);
+  const pagina2 = tuttePagine().find((voce2) => voce2.id === chiave2);
+  const tinta = clean(pagina2?.tint?.[0]);
+  return /^\d{1,3},\d{1,3},\d{1,3}$/.test(tinta) ? `rgb(${tinta})` : "";
+}
 function registraTitoloDiPagina(id, produttore) {
   const chiave2 = clean(id);
   if (!chiave2) return false;
@@ -47837,7 +47843,19 @@ function modelliDelleTessere(states) {
     fumoModel(states),
     ariaModel(states),
     ...customAlertModels(states)
-  ].filter(Boolean);
+  ].filter(Boolean).map(colorataComeLaSezione);
+}
+var ROSSO_DELLE_SEGNALAZIONI = "#dc2626";
+var ROSSI = /* @__PURE__ */ new Set(["#dc2626", "#ef4444", "#e11d48", "#be123c", "#b91c1c", "#f43f5e"]);
+function colorataComeLaSezione(widget) {
+  if (!widget || typeof widget !== "object") return widget;
+  if (widget.alert) return { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
+  const chiave2 = clean(widget.key);
+  const tab = eUnaSezioneMia(chiave2) ? chiave2 : SEZIONE_DEL_WIDGET[famigliaDellaTessera(chiave2)];
+  const tinta = tab ? tintaDellaPagina(`page-${tab}`) : "";
+  if (tinta) return { ...widget, accent: tinta };
+  if (ROSSI.has(clean(widget.accent).toLowerCase())) return { ...widget, accent: "#64748b" };
+  return widget;
 }
 function nomiAccesi(rows, quali = (row) => row.on, fallback = "") {
   const nomi = (rows || []).filter((row) => {

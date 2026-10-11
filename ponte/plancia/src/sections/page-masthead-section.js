@@ -337,6 +337,19 @@ function tuttePagine() {
   return PAGINE_A_RUNTIME.size ? [...PAGES, ...PAGINE_A_RUNTIME.values()] : PAGES;
 }
 
+/* Il colore di una pagina, per chi la richiama da fuori.
+ *
+ * «I colori dei widget devono richiamare i colori delle sezioni.» La tessera
+ * delle batterie era gialla e la pagina Batterie verde: due colori per la
+ * stessa cosa. Il colore di una sezione e' il primo della sua intestazione, e
+ * sta in questa tabella; chi lo vuole lo chiede qui invece di riscriverlo. */
+export function tintaDellaPagina(id) {
+  const chiave = clean(id);
+  const pagina = tuttePagine().find((voce) => voce.id === chiave);
+  const tinta = clean(pagina?.tint?.[0]);
+  return /^\d{1,3},\d{1,3},\d{1,3}$/.test(tinta) ? `rgb(${tinta})` : "";
+}
+
 export function registraTitoloDiPagina(id, produttore) {
   const chiave = clean(id);
   if (!chiave) return false;
