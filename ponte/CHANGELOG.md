@@ -40,6 +40,21 @@ domanda degli eventi partiva prima che il collegamento fosse pronto, e il
 tentativo dopo aspettava che la Home si ridisegnasse. Adesso riprova da sola,
 dopo tre secondi, poi sei, poi dodici.
 
+**Le finestre dei widget con le icone del catalogo.** Finestre: ogni stanza col
+suo disegno e il segno della finestra o della tapparella, e in cima quante
+finestre sono aperte su tutte, stanza per stanza. Auto: in cima la foto scelta
+nella sezione Auto, poi carica, chilometri, la barra fino al traguardo e le
+gomme intorno all'auto vista dall'alto. Batterie: le pile disegnate, ogni
+sensore col disegno del suo tipo e il livello a forma di batteria. Dispositivi
+non connessi: l'icona viene dal tipo del sensore — una finestra è una finestra,
+non un termometro. Solare termico: il boiler è un boiler e non un bidone, e la
+pressione ha il manometro e il grafico delle ultime 24 ore.
+
+**Pannello a muro, Clima: il comando rapido.** Al posto del solo ⏻ c'è la
+pastiglia del comando rapido della plancia, coi gradi e la ventola di quella
+stanza: un tocco accende così, un altro spegne. Nel config «A muro» si sceglie
+se il ⏻ accende col comando rapido o con l'ultima modalità.
+
 ## 1.11.2
 
 **La barra in basso sul telefono, fissa, torna al suo posto.** Con la barra

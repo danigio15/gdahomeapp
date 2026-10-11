@@ -2976,7 +2976,10 @@ ${MURO} .mu-tondo.grande{width:96px;height:96px;font-size:42px}
 ${MURO} .mu-tondo.pieno{background:var(--acc);color:#fff;box-shadow:0 10px 24px -8px var(--acc)}
 /* La pastiglia del comando rapido: dice cosa fara', e col tasto in fondo. */
 ${MURO} .mu-col-rapido .mu-comandi{gap:8px}
-${MURO} .mu-col-rapido .mu-spazio{display:none}
+/* Con la pastiglia la riga e' «− + pastiglia»: la modalita' la dice gia' la
+ * pastiglia, e il suo tasto stretto fra i tondi la lasciava senza parole. */
+${MURO} .mu-col-rapido .mu-modo,${MURO} .mu-col-rapido .mu-spazio{display:none}
+${MURO} .mu-col-rapido .mu-comandi .mu-tondo{flex:0 0 auto}
 ${MURO} .mu-rapido{flex:1;min-width:0;height:52px;display:flex;align-items:center;gap:6px;padding:0 6px 0 12px;border-radius:999px;cursor:pointer;
   font:inherit;font-weight:800;font-size:14px;color:color-mix(in srgb,var(--acc) 70%,#0f172a);overflow:hidden;
   background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 7%,#fff),color-mix(in srgb,var(--acc) 15%,#fff));border:1px solid color-mix(in srgb,var(--acc) 35%,transparent)}

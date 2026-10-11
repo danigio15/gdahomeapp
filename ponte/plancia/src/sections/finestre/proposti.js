@@ -508,7 +508,7 @@ function casella(nome, valore, sotto = "", disegno = "") {
   /* Col disegno davanti, quando la casella ne ha uno: «metti un'icona vicino
    * alle cose, non lasciare solo testo». */
   return disegno
-    ? `<div class="dm-f-ev-cas dm-f-ev-cas-ic"><span class="dm-f-ev-cas-dis" aria-hidden="true">${disegnoDelCatalogo(disegno, 30)}</span><span>${testo}</span></div>`
+    ? `<div class="dm-f-ev-cas dm-f-ev-cas-ic"><span class="dm-f-ev-cas-dis" aria-hidden="true">${disegnoDelCatalogo(disegno, 26)}</span><span>${testo}</span></div>`
     : `<div class="dm-f-ev-cas">${testo}</div>`;
 }
 
@@ -566,7 +566,7 @@ function disegnaUnAuto(vettura, righe, conNome) {
           clean(vettura.fine)
             .replace(/(\d)H\b/g, "$1\u00a0h")
             .replace(/(\d)M\b/g, "$1\u00a0min"),
-          t("alla fine", "to go"),
+          "",
         ]
       : null,
   ].filter(Boolean);
@@ -574,7 +574,7 @@ function disegnaUnAuto(vettura, righe, conNome) {
     ? `<div class="dm-f-ev-misure">${misure
         .map(
           ([disegno, valore, cosa]) =>
-            `<span>${disegnoDelCatalogo(disegno, 28)}<span><b class="dm-f-num">${esc(valore)}</b><small>${esc(cosa)}</small></span></span>`,
+            `<span>${disegnoDelCatalogo(disegno, 28)}<span><b class="dm-f-num">${esc(valore)}</b>${cosa ? `<small>${esc(cosa)}</small>` : ""}</span></span>`,
         )
         .join("")}</div>`
     : "";
@@ -587,7 +587,11 @@ function disegnaUnAuto(vettura, righe, conNome) {
   const eroe = foto
     ? `<section class="dm-f-ev-vetrina">
       <div class="dm-f-ev-foto"><img src="${esc(foto)}" alt="" loading="lazy" decoding="async">
-        ${chip}${vettura.nome ? `<span class="dm-f-ev-targa">${esc(vettura.nome)}</span>` : ""}</div>
+        ${
+          vettura.ricarica
+            ? `<span class="dm-f-ev-chip" data-carica="${vettura.inCarica ? "true" : "false"}"><i aria-hidden="true"></i>${esc(vettura.ricarica)}</span>`
+            : ""
+        }${vettura.nome ? `<span class="dm-f-ev-targa">${esc(vettura.nome)}</span>` : ""}</div>
       <div class="dm-f-ev-numeri">
         <div class="dm-f-ev-riga">
           ${percentuale != null ? `<span class="dm-f-num dm-f-ev-pct">${Math.round(percentuale)}<small>%</small></span>` : "<span></span>"}
@@ -723,7 +727,7 @@ ${P} .dm-f-ev-chip{display:inline-flex;align-items:center;gap:7px;margin-top:6px
 ${P} .dm-f-ev-chip i{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:currentColor}
 ${P} .dm-f-ev-chip[data-carica="true"]{background:color-mix(in srgb,#16a34a 16%,transparent);color:#15803d}
 ${P} .dm-f-ev-chip[data-carica="true"] i{background:#16a34a;box-shadow:0 0 0 4px rgba(22,163,74,.2)}
-${P} .dm-f-ev-due{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:8px}
+${P} .dm-f-ev-due{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:8px}
 ${P} .dm-f-ev-cas{display:flex;flex-direction:column;min-width:0;border-radius:18px;padding:12px 13px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
 ${P} .dm-f-ev-cas small{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim,#64748b)}
@@ -737,7 +741,10 @@ ${P} .dm-f-ev-g{min-height:40px;font-size:12px;font-weight:800;color:var(--text-
 ${P} .dm-f-ev-g .dm-f-num{display:block;font-size:20px}
 ${P} .dm-f-ev-cas-ic{flex-direction:row;align-items:center;gap:12px}
 ${P} .dm-f-ev-cas-ic>span:last-child{display:flex;flex-direction:column;min-width:0}
-${P} .dm-f-ev-cas-dis{flex:0 0 auto;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+${P} .dm-f-ev-cas-ic .dm-f-num{font-size:20px;white-space:nowrap}
+${P} .dm-f-ev-cas-ic small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${P} .dm-f-ev-cas-ic{padding:11px 12px;gap:10px}
+${P} .dm-f-ev-cas-dis{flex:0 0 auto;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;
   background:color-mix(in srgb,#16a34a 9%,var(--card-bg,#fff))}
 ${P} .dm-f-ev-dallalto{display:block;width:72px;height:auto;margin:auto;filter:drop-shadow(0 8px 12px rgba(15,23,42,.22))}
 ${P} .dm-f-ev-vetrina{border-radius:24px;overflow:hidden;background:var(--card-bg,#fff);
@@ -745,7 +752,7 @@ ${P} .dm-f-ev-vetrina{border-radius:24px;overflow:hidden;background:var(--card-b
 ${P} .dm-f-ev-foto{position:relative;height:190px;display:grid;place-items:center;overflow:hidden;
   background:radial-gradient(120% 100% at 50% 100%,color-mix(in srgb,var(--text-dim,#94a3b8) 18%,var(--card-bg,#fff)),var(--card-bg,#fff) 70%)}
 ${P} .dm-f-ev-foto img{max-width:92%;max-height:176px;object-fit:contain;filter:drop-shadow(0 14px 18px rgba(15,23,42,.18))}
-${P} .dm-f-ev-foto .dm-f-ev-chip{position:absolute;left:12px;top:12px;margin:0}
+${P} .dm-f-ev-foto .dm-f-ev-chip{position:absolute;left:12px;top:12px;margin:0;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 ${P} .dm-f-ev-targa{position:absolute;right:12px;top:12px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:850;
   background:rgba(15,23,42,.72);color:#fff;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 ${P} .dm-f-ev-numeri{padding:12px 16px 16px;background:linear-gradient(180deg,color-mix(in srgb,#16a34a 7%,var(--card-bg,#fff)),var(--card-bg,#fff))}
@@ -763,7 +770,7 @@ ${P} .dm-f-ev-misure{display:grid;grid-template-columns:repeat(auto-fit,minmax(m
 ${P} .dm-f-ev-misure>span{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:16px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0)}
 ${P} .dm-f-ev-misure>span>span{display:flex;flex-direction:column;min-width:0}
-${P} .dm-f-ev-misure .dm-f-num{font-size:18px;white-space:nowrap}
+${P} .dm-f-ev-misure .dm-f-num{font-size:17px;line-height:1.15;overflow-wrap:anywhere}
 ${P} .dm-f-ev-misure small{font-size:11px;font-weight:750;color:var(--text-dim,#64748b)}
 @media (max-width:360px){${P} .dm-f-ev-eroe{flex-direction:column;align-items:flex-start}}
 `;

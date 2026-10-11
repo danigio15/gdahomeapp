@@ -45854,7 +45854,7 @@ function nomeSenzaAuto(riga3) {
 }
 function casella(nome, valore3, sotto = "", disegno4 = "") {
   const testo2 = `<small>${esc(nome)}</small><span class="dm-f-num">${valore3}</span>${sotto ? `<em>${esc(sotto)}</em>` : ""}`;
-  return disegno4 ? `<div class="dm-f-ev-cas dm-f-ev-cas-ic"><span class="dm-f-ev-cas-dis" aria-hidden="true">${disegnoDelCatalogo(disegno4, 30)}</span><span>${testo2}</span></div>` : `<div class="dm-f-ev-cas">${testo2}</div>`;
+  return disegno4 ? `<div class="dm-f-ev-cas dm-f-ev-cas-ic"><span class="dm-f-ev-cas-dis" aria-hidden="true">${disegnoDelCatalogo(disegno4, 26)}</span><span>${testo2}</span></div>` : `<div class="dm-f-ev-cas">${testo2}</div>`;
 }
 function disegnaUnAuto(vettura, righe2, conNome) {
   const percentuale4 = numero36(vettura.percentuale);
@@ -45890,16 +45890,16 @@ function disegnaUnAuto(vettura, righe2, conNome) {
     clean(vettura.fine) ? [
       "timer",
       clean(vettura.fine).replace(/(\d)H\b/g, "$1 h").replace(/(\d)M\b/g, "$1 min"),
-      t("alla fine", "to go")
+      ""
     ] : null
   ].filter(Boolean);
   const misureMarkup2 = misure.length ? `<div class="dm-f-ev-misure">${misure.map(
-    ([disegno4, valore3, cosa]) => `<span>${disegnoDelCatalogo(disegno4, 28)}<span><b class="dm-f-num">${esc(valore3)}</b><small>${esc(cosa)}</small></span></span>`
+    ([disegno4, valore3, cosa]) => `<span>${disegnoDelCatalogo(disegno4, 28)}<span><b class="dm-f-num">${esc(valore3)}</b>${cosa ? `<small>${esc(cosa)}</small>` : ""}</span></span>`
   ).join("")}</div>` : "";
   const barra = percentuale4 != null ? `<span class="dm-f-ev-barra" aria-hidden="true"><i style="width:${Math.max(0, Math.min(100, Math.round(percentuale4)))}%"></i>${target != null ? `<u style="left:${Math.max(0, Math.min(100, Math.round(target)))}%"></u>` : ""}</span>` : "";
   const eroe = foto ? `<section class="dm-f-ev-vetrina">
       <div class="dm-f-ev-foto"><img src="${esc(foto)}" alt="" loading="lazy" decoding="async">
-        ${chip}${vettura.nome ? `<span class="dm-f-ev-targa">${esc(vettura.nome)}</span>` : ""}</div>
+        ${vettura.ricarica ? `<span class="dm-f-ev-chip" data-carica="${vettura.inCarica ? "true" : "false"}"><i aria-hidden="true"></i>${esc(vettura.ricarica)}</span>` : ""}${vettura.nome ? `<span class="dm-f-ev-targa">${esc(vettura.nome)}</span>` : ""}</div>
       <div class="dm-f-ev-numeri">
         <div class="dm-f-ev-riga">
           ${percentuale4 != null ? `<span class="dm-f-num dm-f-ev-pct">${Math.round(percentuale4)}<small>%</small></span>` : "<span></span>"}
@@ -46008,7 +46008,7 @@ ${P} .dm-f-ev-chip{display:inline-flex;align-items:center;gap:7px;margin-top:6px
 ${P} .dm-f-ev-chip i{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:currentColor}
 ${P} .dm-f-ev-chip[data-carica="true"]{background:color-mix(in srgb,#16a34a 16%,transparent);color:#15803d}
 ${P} .dm-f-ev-chip[data-carica="true"] i{background:#16a34a;box-shadow:0 0 0 4px rgba(22,163,74,.2)}
-${P} .dm-f-ev-due{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:8px}
+${P} .dm-f-ev-due{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:8px}
 ${P} .dm-f-ev-cas{display:flex;flex-direction:column;min-width:0;border-radius:18px;padding:12px 13px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
 ${P} .dm-f-ev-cas small{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim,#64748b)}
@@ -46022,7 +46022,10 @@ ${P} .dm-f-ev-g{min-height:40px;font-size:12px;font-weight:800;color:var(--text-
 ${P} .dm-f-ev-g .dm-f-num{display:block;font-size:20px}
 ${P} .dm-f-ev-cas-ic{flex-direction:row;align-items:center;gap:12px}
 ${P} .dm-f-ev-cas-ic>span:last-child{display:flex;flex-direction:column;min-width:0}
-${P} .dm-f-ev-cas-dis{flex:0 0 auto;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+${P} .dm-f-ev-cas-ic .dm-f-num{font-size:20px;white-space:nowrap}
+${P} .dm-f-ev-cas-ic small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${P} .dm-f-ev-cas-ic{padding:11px 12px;gap:10px}
+${P} .dm-f-ev-cas-dis{flex:0 0 auto;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;
   background:color-mix(in srgb,#16a34a 9%,var(--card-bg,#fff))}
 ${P} .dm-f-ev-dallalto{display:block;width:72px;height:auto;margin:auto;filter:drop-shadow(0 8px 12px rgba(15,23,42,.22))}
 ${P} .dm-f-ev-vetrina{border-radius:24px;overflow:hidden;background:var(--card-bg,#fff);
@@ -46030,7 +46033,7 @@ ${P} .dm-f-ev-vetrina{border-radius:24px;overflow:hidden;background:var(--card-b
 ${P} .dm-f-ev-foto{position:relative;height:190px;display:grid;place-items:center;overflow:hidden;
   background:radial-gradient(120% 100% at 50% 100%,color-mix(in srgb,var(--text-dim,#94a3b8) 18%,var(--card-bg,#fff)),var(--card-bg,#fff) 70%)}
 ${P} .dm-f-ev-foto img{max-width:92%;max-height:176px;object-fit:contain;filter:drop-shadow(0 14px 18px rgba(15,23,42,.18))}
-${P} .dm-f-ev-foto .dm-f-ev-chip{position:absolute;left:12px;top:12px;margin:0}
+${P} .dm-f-ev-foto .dm-f-ev-chip{position:absolute;left:12px;top:12px;margin:0;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 ${P} .dm-f-ev-targa{position:absolute;right:12px;top:12px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:850;
   background:rgba(15,23,42,.72);color:#fff;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 ${P} .dm-f-ev-numeri{padding:12px 16px 16px;background:linear-gradient(180deg,color-mix(in srgb,#16a34a 7%,var(--card-bg,#fff)),var(--card-bg,#fff))}
@@ -46048,7 +46051,7 @@ ${P} .dm-f-ev-misure{display:grid;grid-template-columns:repeat(auto-fit,minmax(m
 ${P} .dm-f-ev-misure>span{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:16px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0)}
 ${P} .dm-f-ev-misure>span>span{display:flex;flex-direction:column;min-width:0}
-${P} .dm-f-ev-misure .dm-f-num{font-size:18px;white-space:nowrap}
+${P} .dm-f-ev-misure .dm-f-num{font-size:17px;line-height:1.15;overflow-wrap:anywhere}
 ${P} .dm-f-ev-misure small{font-size:11px;font-weight:750;color:var(--text-dim,#64748b)}
 @media (max-width:360px){${P} .dm-f-ev-eroe{flex-direction:column;align-items:flex-start}}
 `;
@@ -87433,7 +87436,10 @@ ${MURO} .mu-tondo.grande{width:96px;height:96px;font-size:42px}
 ${MURO} .mu-tondo.pieno{background:var(--acc);color:#fff;box-shadow:0 10px 24px -8px var(--acc)}
 /* La pastiglia del comando rapido: dice cosa fara', e col tasto in fondo. */
 ${MURO} .mu-col-rapido .mu-comandi{gap:8px}
-${MURO} .mu-col-rapido .mu-spazio{display:none}
+/* Con la pastiglia la riga e' «− + pastiglia»: la modalita' la dice gia' la
+ * pastiglia, e il suo tasto stretto fra i tondi la lasciava senza parole. */
+${MURO} .mu-col-rapido .mu-modo,${MURO} .mu-col-rapido .mu-spazio{display:none}
+${MURO} .mu-col-rapido .mu-comandi .mu-tondo{flex:0 0 auto}
 ${MURO} .mu-rapido{flex:1;min-width:0;height:52px;display:flex;align-items:center;gap:6px;padding:0 6px 0 12px;border-radius:999px;cursor:pointer;
   font:inherit;font-weight:800;font-size:14px;color:color-mix(in srgb,var(--acc) 70%,#0f172a);overflow:hidden;
   background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 7%,#fff),color-mix(in srgb,var(--acc) 15%,#fff));border:1px solid color-mix(in srgb,var(--acc) 35%,transparent)}

@@ -350,6 +350,51 @@ test.describe("la plancia a muro", () => {
     await expect(tutto).toHaveCount(0);
   });
 
+  /* «Nel pannello da muro, nella sezione clima, mi dai la possibilità di
+   * scegliere i Comandi Rapidi del clima.» Il ⏻ diventa la pastiglia del
+   * comando rapido di quella stanza: da spento lo accende coi passi della
+   * plancia — modalita', gradi, ventola — e da acceso spegne. */
+  test("sul clima il ⏻ accende col comando rapido della plancia, e rispegne", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: { attiva: true, pagine: [{ id: "p1", modello: "clima" }] },
+      stati: {
+        ...STATI_A_MURO,
+        "climate.soggiorno": {
+          ...STATI_A_MURO["climate.soggiorno"],
+          state: "off",
+          attributes: { ...STATI_A_MURO["climate.soggiorno"].attributes, hvac_action: "off" },
+        },
+      },
+      caselle: {
+        cd_clima_rapido_unita: {
+          "climate.soggiorno": { mode: "cool", temperature: 24, fan: "low" },
+        },
+      },
+    });
+    const pastiglia = muro(page).locator('.mu-rapido[data-mu-entita="climate.soggiorno"]');
+    await expect(pastiglia).toContainText("24°");
+    if (process.env.DM_FOTO)
+      await page.screenshot({ path: `${process.env.DM_FOTO}/fatta-muro-clima-spento.png` });
+    await expect(pastiglia).toContainText("bassa");
+    await pastiglia.click();
+    await expect
+      .poll(
+        async () => (await servizi(page)).map((s) => `${s.service}:${JSON.stringify(s.data)}`),
+        {
+          timeout: 5000,
+        },
+      )
+      .toEqual([
+        'set_hvac_mode:{"entity_id":"climate.soggiorno","hvac_mode":"cool"}',
+        'set_temperature:{"entity_id":"climate.soggiorno","temperature":24}',
+        'set_fan_mode:{"entity_id":"climate.soggiorno","fan_mode":"low"}',
+      ]);
+    if (process.env.DM_FOTO)
+      await page.screenshot({ path: `${process.env.DM_FOTO}/fatta-muro-clima.png` });
+  });
+
   test("le pagine si cambiano solo dalle linguette, e il clima ha caldo e freddo dentro", async ({
     page,
   }, testInfo) => {
