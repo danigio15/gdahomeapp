@@ -6,42 +6,47 @@ le due app — **gdahome** e **gdanav** — fatte vedere con le loro fotografie.
 
 Sta su **[gdahome.org](https://gdahome.org)**.
 
-## Fotografie, e non la plancia in un riquadro
+## Com'è fatta la pagina
 
-Nella sezione «La plancia» c'era, in un riquadro, **la plancia vera** — gli
-stessi file dell'add-on, con dietro una Home Assistant finta
-(`casa-in-pagina.js`) e la casa demo del collaudo. Sul server però la plancia
-nel sito non sta in git: la rifà `strumenti/porta-nel-sito.mjs` a ogni
-versione, e quando non c'era al suo posto compariva un riquadro con scritto
-«La plancia non è stata pubblicata su questo server». A chi legge non diceva
-niente, e lasciava un buco nel mezzo della pagina.
+Dall'alto in basso, una sezione per volta:
 
-Adesso le tre sezioni che raccontano le app — **la plancia** (`#plancia`),
-**l'app gdahome** (`#app`) e **gdanav** (`#gdanav`) — sono fatte di fotografie
-vere e di schede di testo. Le fotografie stanno nella repository, dentro
-`sito/`, e ci sono sempre. `casa-in-pagina.js` e `statico/casa.js` restano
-perché lo script li infila ancora nella plancia che porta (vedi «Quello che non
-si ribatte a mano»), ma la pagina non li usa più.
+| Sezione | Cosa fa vedere |
+| --- | --- |
+| `#inizio` | la copertina, scura: il titolo al centro, «Presto su Google Play e App Store», e sotto la scena con tutti gli schermi — il tablet a muro, i due telefoni (plancia e gdanav), Apple Watch e Wear OS — e i quattro numeri |
+| `#plancia` | le schermate della plancia in una fila che scorre di lato, e sotto l'elenco delle sezioni |
+| `#app` | «Una casa, ogni schermo»: tre racconti, il menu del telefono, la plancia a muro (Soggiorno ed Energia) e gli orologi su una scheda scura |
+| `#come` | come funziona, su fondo scuro: tre passi numerati e le tre cose che contano per la sicurezza |
+| `#gdanav` | il navigatore, col suo marchio e sette schermate in fila |
+| `#prezzi` | una tabella Base/Premium riga per riga, e i tre modi di avere Premium |
+| `#installatori`, `#scarica`, `#sostieni`, `#contatti` | per chi installa, le tre tappe per metterla in casa, il sostegno (una fascia ambra) e il modulo |
 
-## Una luce sola, e il prodotto in faccia
+**Fotografie vere, non mockup.** Tutte le immagini sono schermate dell'app e
+dei suoi schermi: quelle della plancia vengono da `docs/immagini/`, quelle del
+tablet a muro sono il pannello vero acceso con la casa delle prove e2e,
+quelle degli orologi vengono dai rami `vetrina/apple-watch` e
+`vetrina/wear-os`. Prima nella sezione della plancia c'era la plancia vera in
+un riquadro, e sul server a volte restava vuoto con un avviso: adesso sono
+fotografie, stanno nella repository e ci sono sempre.
 
-Due scelte che valgono più di tutto il resto, e che si possono disfare per
-distrazione.
+**Le file che scorrono di lato** (`.galleria`) caricano le loro fotografie
+subito, senza `loading="lazy"`: un'immagine che sta fuori a destra in un
+contenitore che scorre il browser non la chiede finché non ci si arriva, e
+il collaudo — che guarda che ogni immagine abbia dei pixel — la darebbe per
+persa.
 
-**Niente tema scuro.** C'era, e seguiva quello del sistema. Chi apriva
-gdahome.org con un telefono in tema scuro si trovava una pagina quasi nera —
-cioè una pagina diversa da quella che gli era stata mostrata — e le schermate
-dell'app, che sono chiare, ci galleggiavano sopra come ritagli. Una copertina
-si presenta sempre allo stesso modo. Dentro l'app il chiaro e scuro c'è, e lì
-ha senso: quella si guarda di notte, in corridoio, con una mano sola.
+## Una luce sola
 
-**Le schermate vere, in cima.** Sono `docs/immagini/`, le stesse del README e
-del negozio: fotografie dell'app, non dei mockup disegnati. Prima la copertina
-raccontava l'app a parole e chiedeva di fidarsi; adesso la fa vedere nella
-prima schermata. La fotografia di copertina è quella delle **luci** e non
-quella della plancia: la seconda mostra una casa non ancora configurata, col
-riquadro «La dashboard è quasi pronta», che è la schermata giusta per il
-manuale e la peggiore possibile per una copertina.
+**Il fondo resta chiaro**, anche a chi tiene il telefono in tema scuro: è
+carta calda (`--fondo`), e il collaudo lo controlla. C'era un tema scuro che
+seguiva quello del sistema, e chi apriva gdahome.org in tema scuro si trovava
+una pagina diversa da quella che gli era stata mostrata. Le fasce scure — la
+copertina, «come funziona», il racconto degli orologi, il fondo — sono parti
+della pagina e valgono per tutti: le schermate chiare dell'app ci stanno
+dentro una cornice, non galleggiano sul nero.
+
+**I caratteri** sono Inter per tutto, coi titoli stretti e in minuscolo, e
+Oswald solo per i numeri grandi (i quattro della copertina, i passi, le
+tappe). Tutti e due serviti da `statico/font/`.
 
 ## Per chi installa, e dove scrivere
 
@@ -81,14 +86,14 @@ Poi `http://127.0.0.1:8099/`.
 
 |                                   |                                                                                                                                                                                           |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.html`                      | la pagina: il colpo d'occhio, la plancia, come funziona, l'app gdahome, gdanav, quanto costa, per chi installa, scaricala, sostegno, contatti                                             |
+| `index.html`                      | la pagina: la copertina, la plancia, l'app gdahome (telefono, muro, polso), come funziona, gdanav, quanto costa, per chi installa, scaricala, sostegno, contatti                     |
 | `privacy.html`                    | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                                                                                        |
-| `stile.css`                       | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, le file di fotografie                                                                         |
+| `stile.css`                       | i colori, i caratteri, la scena della copertina, le file che scorrono, i racconti, il listino; l'informativa ne prende caratteri, colori e tasti della lingua                     |
 | `privacy.css`                     | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                                                                                              |
 | `casa-in-pagina.js`               | la Home Assistant finta della plancia di prima: la pagina non la usa più                                                                                                                  |
 | `sito.js`                         | la lingua, l'ombra sotto la barra, le schede che compaiono, il modulo dei contatti — lo caricano tutte e due le pagine                                                                    |
 | `statico/`                        | marchio, icone, caratteri, casa demo e le schermate della plancia — **non si toccano a mano**, sono salvati nella repository                                                              |
-| `statico/app/`, `statico/gdanav/` | le fotografie delle due app, ridotte in JPG dalle schermate dei README (quelle di gdanav vengono da `danigio15/gdanav`, `docs/immagini/`) — **si fanno a mano**, e lo script non le tocca |
+| `statico/app/`, `statico/gdanav/` | le fotografie delle due app, del tablet a muro e degli orologi, ridotte in JPG (quelle di gdanav e il suo marchio vengono da `danigio15/gdanav`) — **si fanno a mano**, e lo script non le tocca |
 | `dashboardmodern_static/`         | la plancia vera — fuori da git; la pagina non la usa più, la vuole lo scambio sul server                                                                                                  |
 | `gdahome.png`                     | il marchio dell'informativa                                                                                                                                                               |
 | `robots.txt`, `sitemap.xml`       | si può guardare tutto, e le pagine sono due                                                                                                                                               |

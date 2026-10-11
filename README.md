@@ -5,8 +5,14 @@
 <h3 align="center">La tua casa in una plancia. Anche fuori casa, senza aprire porte.</h3>
 
 <p align="center">
-  Home Assistant sul telefono, in una pagina fatta per essere guardata:<br>
-  le luci, il clima, le tapparelle, le telecamere, i consumi, le persone.
+  Home Assistant sul telefono, sul tablet a muro, al polso e in auto,<br>
+  in una pagina fatta per essere guardata: le luci, il clima, le tapparelle,<br>
+  le telecamere, i consumi, le persone.
+</p>
+
+<p align="center">
+  🚀 <b>Le app arrivano presto su Google Play e App Store.</b><br>
+  <sub>Intanto gdahome si usa dal browser, su <a href="https://webapp.gdahome.org">webapp.gdahome.org</a>.</sub>
 </p>
 
 <p align="center">
@@ -27,6 +33,7 @@
   <a href="https://github.com/danigio15/gdahomeapp/releases"><img src="https://img.shields.io/github/v/release/danigio15/gdahomeapp?label=versione&color=0ea5e9" alt="Ultima versione"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-OS%20%7C%20Supervised-18BCF2" alt="Home Assistant OS o Supervised">
   <img src="https://img.shields.io/badge/Android%20%C2%B7%20iPhone%20%C2%B7%20browser-16a34a" alt="Android, iPhone, browser">
+  <img src="https://img.shields.io/badge/Apple%20Watch%20%C2%B7%20Wear%20OS-111827" alt="Apple Watch e Wear OS">
   <img src="https://img.shields.io/badge/Base-gratis-16a34a" alt="Base gratis">
   <img src="https://img.shields.io/badge/Premium-14%20giorni%20gratis-f59e0b" alt="Premium, i primi 14 giorni gratis">
 </p>
@@ -102,6 +109,8 @@ posto. Gli aggiornamenti poi arrivano come per ogni altro add-on.
 dall'**App Store** (iPhone e iPad), oppure apri
 **[webapp.gdahome.org](https://webapp.gdahome.org)** dal browser, e inquadra il
 codice. Senza fotocamera lo si digita: sedici caratteri, in quattro gruppi.
+Le app nei negozi **arrivano presto**: fino ad allora il browser fa tutto,
+anche da telefono.
 
 Fatto: la casa è abbinata. Ogni telefono ha il suo abbinamento, e dalla scheda
 dell'add-on lo si toglie con un tasto — per esempio il giorno che un telefono
@@ -151,6 +160,61 @@ di assistenza**, privata.
 </td>
 </tr>
 </table>
+
+## A muro, al polso, in auto
+
+### 📟 La plancia a muro _(Premium)_
+
+Un **tablet fisso al muro** o un **NSPanel** che mostra una schermata sola,
+coi comandi grandi: si accende la luce col pollice passando in corridoio.
+Non è una plancia da riempire da capo: stanze, luci, clima, tapparelle,
+azioni e antifurto li prende dalla plancia principale, e qui si sceglie solo
+cosa mostrare.
+
+- **Fino a 8 pagine**, con le linguette in alto: Stanza, Scene, Ingresso,
+  Tutte le luci, Clima (Freddo e Caldo), Tapparelle, Ambienti, Telecamere,
+  Energia, e una Personalizzata coi posti tutti tuoi.
+- **In tempo reale**: il tablet cambia appena cambia la casa, e il tocco
+  risponde subito.
+- **La griglia si sceglie** (da 2×2 a 4×3) e si adatta in orizzontale e in
+  verticale; sul pannello piccolo un tocco accende, tenere premuto apre.
+- **A riposo** l'orologio grande, di notte lo schermo nero, e l'uscita col PIN
+  se il tablet è bloccato.
+
+Si crea da **Configura gdahome → Plance**, scegliendo «📟 A muro»: la plancia
+nasce già con le pagine riempite dalla principale. Tutto il resto sta in
+[`docs/PLANCIA-A-MURO.md`](docs/PLANCIA-A-MURO.md).
+
+<p align="center">
+  <img src="docs/immagini/plancia-a-muro.png" alt="La plancia a muro su un tablet: la pagina Soggiorno con luci, clima, tapparelle e scene" width="49%">
+  <img src="docs/immagini/plancia-a-muro-energia.png" alt="La plancia a muro: la pagina Energia con consumo, solare, rete e batteria" width="49%">
+</p>
+<p align="center"><sub>La pagina di una stanza, e quella dell'energia: quanto consuma la casa, quanto dà il sole, quanto va in rete.</sub></p>
+
+### ⌚ Al polso: Apple Watch e Wear OS _(Premium)_
+
+Sull'orologio c'è quello che serve in due secondi: **i comandi rapidi** (il
+cancello, il portone, le luci del giardino), **i dispositivi**, le azioni
+della plancia, chi è in casa, e in guida **la prossima svolta di gdanav**,
+quanto manca e quando si arriva.
+
+L'orologio con la casa non parla: lo fa il telefono per lui, con lo stesso
+collegamento di sempre. I comandi che chiedono conferma la chiedono anche al
+polso: «Sei sicuro?». Come funziona dentro:
+[`docs/OROLOGIO.md`](docs/OROLOGIO.md).
+
+<p align="center">
+  <img src="docs/immagini/apple-watch.png" alt="gdahome su Apple Watch: Casa al mare, coi comandi Cancello, Portone e Luci giardino" width="26%">
+  &nbsp;&nbsp;
+  <img src="docs/immagini/wear-os.png" alt="La guida di gdanav su Wear OS: fra 350 metri svolta a destra in Via Roma" width="29%">
+</p>
+<p align="center"><sub>La casa su Apple Watch, e la guida di gdanav su Wear OS.</sub></p>
+
+### 🚗 In auto _(Premium)_
+
+Con **Android Auto** e **CarPlay** la casa è sullo schermo dell'auto: i
+comandi rapidi scelti per l'auto, i dispositivi, le azioni della plancia, e la
+batteria dell'auto elettrica letta dalla casa.
 
 ### In auto: gdanav, il navigatore
 
@@ -206,11 +270,14 @@ Assistant non esce mai dall'add-on.
 |                                         | **Base**<br>gratis, per sempre     | **Premium**<br>4,99 € al mese · 49,99 € all'anno                |
 | --------------------------------------- | :--------------------------------: | :-------------------------------------------------------------: |
 | L'add-on e la plancia in Home Assistant | ✅                                  | ✅                                                               |
-| Plance                                  | una, la principale                 | fino a **8** per casa                                           |
+| Plance                                  | una, la principale                 | fino a **30** per casa                                          |
 | Case nell'app                           | una                                | fino a **10**                                                   |
 | Dove funziona                           | sulla rete di casa                 | **anche da fuori casa**, cifrato, senza aprire porte            |
 | Configurare la plancia dal telefono     | —                                  | ✅                                                               |
 | Aggiungere dispositivi Zigbee dall'app  | —                                  | ✅ con «Dove lo metto?»                                          |
+| La plancia a muro, su tablet e NSPanel  | —                                  | ✅ fino a 8 pagine                                               |
+| Al polso: Apple Watch e Wear OS         | —                                  | ✅ la casa e il navigatore                                       |
+| In auto: Android Auto e CarPlay         | —                                  | ✅ la casa                                                       |
 | gdanav, il navigatore                   | la versione gratis                 | **gdanav Premium compreso**                                     |
 | Segnalazioni e chat di assistenza       | ✅                                  | ✅                                                               |
 | Account da fare                         | nessuno                            | nessuno                                                         |
