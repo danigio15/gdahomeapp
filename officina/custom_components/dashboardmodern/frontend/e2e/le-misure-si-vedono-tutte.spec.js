@@ -72,22 +72,16 @@ test("le batterie oltre le prime dodici si mostrano col tasto", async ({ page },
   await expect(tessera).toBeVisible({ timeout: 20_000 });
   await tessera.click();
 
-  const caselle = page.locator("#dm-widget-popup .dm-w-caselle .dm-w-casella");
-  await expect(caselle.first()).toBeVisible({ timeout: 10_000 });
-  const quante = await caselle.count();
-  const viste = () => caselle.evaluateAll((nodi) => nodi.filter((n) => !n.hidden).length);
-  expect(quante).toBeGreaterThan(12);
-  expect(await viste()).toBe(12);
-
-  /* Il tasto dice quante sono in tutto, non quante se ne vedono. */
-  const tasto = page.locator("#dm-widget-popup [data-dm-w-tutte-misure]").first();
-  await expect(tasto).toBeVisible();
-  await expect(tasto).toContainText(String(quante));
-  await tasto.click();
-  expect(await viste()).toBe(quante);
-  await expect(tasto).toHaveAttribute("aria-expanded", "true");
-
-  /* E si richiude. */
-  await tasto.click();
-  expect(await viste()).toBe(12);
+  /* Le batterie non passano piu' dalle caselle de «Le misure»: la loro
+   * finestra e' quella disegnata apposta (`finestre/sicurezza.js`), che le
+   * divide in da cambiare, le prossime e le cariche. La domanda di questa
+   * prova resta — «ci sono tutte, non solo le prime dodici» — e la risposta
+   * adesso e' che sono tutte a schermo, senza tasto: le cariche stanno in una
+   * griglia compatta, ed e' per questo che un tasto non serve piu'. */
+  const finestra = page.locator("#dm-widget-popup .dm-f-batterie");
+  await expect(finestra).toBeVisible({ timeout: 10_000 });
+  const righe = finestra.locator(".dm-f-batterie-pila, .dm-f-batterie-ok > div");
+  await expect(righe).toHaveCount(Object.keys(STATI).length);
+  expect(Object.keys(STATI).length).toBeGreaterThan(12);
+  await expect(page.locator("#dm-widget-popup [data-dm-w-tutte-misure]")).toHaveCount(0);
 });

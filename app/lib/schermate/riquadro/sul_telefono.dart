@@ -18,6 +18,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../../casa/fuori.dart';
+import '../../casa/lo_schermo.dart';
 import '../../plancia/premesse.dart' show ilMenuDalTelefono, laPlanciaSiVede;
 import 'biglietto.dart';
 
@@ -149,6 +150,15 @@ WebViewController costruisciIlControllore({
       ),
     );
   }
+  /* Lo schermo del tablet a muro: barre di sistema e luminosita' le comanda
+   * l'app, su richiesta del pannello (`casa/lo_schermo.dart`). */
+  unawaited(
+    controllore.addJavaScriptChannel(
+      canaleDelloSchermo,
+      onMessageReceived: (messaggio) =>
+          unawaited(loSchermoDice(messaggio.message)),
+    ),
+  );
   if (iPhone) {
     unawaited(
       controllore.addJavaScriptChannel(

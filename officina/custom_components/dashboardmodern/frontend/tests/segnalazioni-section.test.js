@@ -715,6 +715,8 @@ test("il sommario conta quello che resta da lavorare, non tutto", () => {
         assistenza: 0,
         // Nessuno ha scritto: nessuna conversazione da aprire.
         nonLetti: 0,
+        // Nessuna ferma da un mese: la finestra in Home non nomina la piu' vecchia.
+        piuVecchia: 0,
         conversazioni: [],
       });
     },
@@ -1030,8 +1032,17 @@ test("il sommario porta le conversazioni, non solo il conto", () => {
     conINonLetti([{ number: 1, title: "le tapparelle", messages: 3 }], () => {
       const conto = sommarioConsole();
       assert.equal(conto.nonLetti, 1);
+      /* Con chi l'ha aperta e a che punto e': la finestra in Home lo scrive
+       * sotto il titolo («#209 · luca-p · mai aperta»). */
       assert.deepEqual(conto.conversazioni, [
-        { number: 1, title: "le tapparelle", messages: 3, opened: false },
+        {
+          number: 1,
+          title: "le tapparelle",
+          messages: 3,
+          opened: false,
+          autore: "anna-hub",
+          stato: "inviato",
+        },
       ]);
     });
   });

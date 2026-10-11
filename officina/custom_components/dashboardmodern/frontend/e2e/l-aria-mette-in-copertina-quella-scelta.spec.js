@@ -102,7 +102,9 @@ test("scelta la centralina, il suo indice va in grande e il giudizio resta il pe
 
   /* Le sostanze si leggono aprendo la scheda, tutte e tre. */
   await tessera.click();
-  const caselle = page.locator("#dm-widget-popup .dm-w-caselle .dm-w-casella");
+  /* Le caselle generiche sono diventate le righe «stanza per stanza» della
+   * finestra disegnata apposta: si leggono li'. */
+  const caselle = page.locator("#dm-widget-popup .dm-f-aria-mis");
   await expect(caselle.first()).toBeVisible({ timeout: 10_000 });
   const testo = await caselle.allTextContents();
   expect(testo.join(" · ")).toContain("68");
@@ -110,5 +112,7 @@ test("scelta la centralina, il suo indice va in grande e il giudizio resta il pe
 
   /* E il verdetto della scheda continua a essere quello della misura peggiore,
    * non quello dell'indice. */
-  await expect(page.locator("#dm-widget-popup .dm-w-verdetto")).not.toHaveText(/Buona|Good/);
+  await expect(page.locator("#dm-widget-popup .dm-f-aria-eroe small")).not.toContainText(
+    /Aria buona|Good air/,
+  );
 });

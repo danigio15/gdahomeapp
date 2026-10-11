@@ -256,6 +256,7 @@ const EVENTI_PER_TUTTI = new Set([
   "shopping_list_updated",
   "recorder_5min_statistics_generated",
   "dashboardmodern_chat",
+  "dashboardmodern_config",
 ]);
 
 /* I servizi che chi non amministra puo' chiamare: un elenco di domini, non

@@ -151,8 +151,11 @@ test("l'umidita' non si inventa dal termometro (#379)", async ({ page }, testInf
   await expect(tessera).toBeVisible({ timeout: 20_000 });
   await tessera.click();
 
-  const camera = page.locator(".dm-w-casella", { hasText: "Camera da letto" }).first();
-  const salotto = page.locator(".dm-w-casella", { hasText: "Salotto" }).first();
+  /* Le stanze stanno nelle righe della finestra della Temperatura, quella
+   * disegnata apposta (vedi `src/sections/finestre/proposti.js`), e non piu'
+   * nelle caselle della finestra generica: la promessa e' la stessa. */
+  const camera = page.locator(".dm-f-temperatura-stanza", { hasText: "Camera da letto" }).first();
+  const salotto = page.locator(".dm-f-temperatura-stanza", { hasText: "Salotto" }).first();
   await expect(camera).toBeVisible({ timeout: 10_000 });
   /* La camera ha solo il termometro: nessuna goccia, e nessun numero preso in
    * prestito dai gradi — prima diceva «💧 19%», che erano i gradi. */

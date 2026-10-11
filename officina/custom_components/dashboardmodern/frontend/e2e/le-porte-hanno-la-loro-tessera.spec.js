@@ -122,7 +122,11 @@ test("il tasto che apre è dentro le Porte, e non è rimasto anche nella Sicurez
   await expect(popup).toBeVisible({ timeout: 10_000 });
   /* Una riga per apertura, e il tasto che le apre: è lo stesso `data-dm-door`
    * della pagina Sicurezza, quindi conferma e PIN restano una mano sola. */
-  await expect(popup.locator("[data-dm-door]")).toHaveCount(2);
+  /* Una scheda per apertura (`finestre/comandi.js`); la serratura porta tutti
+   * i suoi gesti (#34), quindi i tasti sono piu' delle schede. */
+  await expect(popup.locator(".dm-f-porte-porta")).toHaveCount(2);
+  await expect(popup.locator('[data-dm-door="cancello"]')).toHaveCount(1);
+  await expect(popup.locator('[data-dm-door="portone"]').first()).toBeVisible();
   await expect(popup).toContainText("Portone");
   await expect(popup).toContainText("Cancello");
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CONFIG_KEYS } from "../src/core/chiavi-di-configurazione.js";
-import { installStateEventGate } from "../src/core/state-event-gate.js";
+import { IN_VISTA_KEY, installStateEventGate } from "../src/core/state-event-gate.js";
 
 function harness(delay = 0, sections = null, storageValues = {}) {
   const events = [];
@@ -133,6 +133,35 @@ test("legacy EV profile entities survive the global live-state filter", async ()
   assert.equal(states.size, 2);
   assert.equal(events.length, 1);
   assert.deepEqual(events[0].detail.entity_ids, ["sensor.leapmotor_b10_battery"]);
+});
+
+/* La plancia a muro prende le luci dalla principale: nella configurazione
+ * sua quelle luci non ci sono. «Se clicco per spegnere la luce in casa si
+ * spegne istantaneamente, ma sulla wall il cambio stato non e' immediato.» */
+test("un'entita' in vista sul tablet a muro passa, e non aspetta il mezzo secondo", async () => {
+  const { broker, events, root } = harness(500, {
+    energy: { house: { total_energy: "sensor.house_total" } },
+  });
+  root[IN_VISTA_KEY] = (id) => id === "light.soggiorno";
+  broker.subscription = 42;
+  broker.ingestState({ entity_id: "sensor.unrelated", state: "1", attributes: {} });
+  broker.ingestState({ entity_id: "light.soggiorno", state: "off", attributes: {} });
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.equal(events.length, 1, "doveva arrivare ben prima dei 500 ms");
+  assert.deepEqual(events[0].detail.entity_ids, ["light.soggiorno"]);
+});
+
+test("una domanda che cade non ferma gli stati della plancia", async () => {
+  const { broker, events, root } = harness(1, {
+    energy: { house: { total_energy: "sensor.house_total" } },
+  });
+  root[IN_VISTA_KEY] = () => {
+    throw new Error("rotta");
+  };
+  broker.subscription = 42;
+  broker.ingestState({ entity_id: "sensor.house_total", state: "1", attributes: {} });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.deepEqual(events[0].detail.entity_ids, ["sensor.house_total"]);
 });
 
 /* ── l'elenco delle entita' configurate non si rifa' a orologio ──────────── */

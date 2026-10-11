@@ -19,6 +19,7 @@
  * posto vuoto invece di comandare un'entita' che non c'e' piu'. */
 
 import { canonicalClimateType } from "./device-model.js";
+import { lettoriConfigurati } from "./media-player.js";
 
 export const CHIAVE_MURO = "cd_muro";
 
@@ -28,18 +29,86 @@ export const CHIAVE_MURO = "cd_muro";
  * - `luci`: tutte le luci della casa;
  * - `freddo` e `caldo`: le unita' del clima che raffrescano o che scaldano
  *   (la pompa di calore sta in tutte e due, come nella pagina Clima). */
-export const MODELLI = Object.freeze(["stanza", "scene", "ingresso", "personale", "luci", "clima"]);
+/* «Come sezioni da gestire e vedere riusciamo a fare meglio?» Le pagine da
+ * guardare, oltre a quelle da comandare:
+ * - `tapparelle`: tutte le tapparelle della casa, come `luci`;
+ * - `ambienti`: una tessera per stanza, con temperatura, umidita' e luci
+ *   accese, che cambia mentre cambia la casa;
+ * - `telecamere`: le telecamere della plancia di origine, tutte insieme;
+ * - `energia`: quanto consuma la casa adesso, quanto fa il solare, la rete e
+ *   la batteria;
+ * - `musica`: il lettore che suona, grande, con la copertina, i tasti, il
+ *   volume e le sorgenti; accanto gli altri lettori della casa. */
+export const MODELLI = Object.freeze([
+  "stanza",
+  "scene",
+  "ingresso",
+  "personale",
+  "luci",
+  "clima",
+  "tapparelle",
+  "ambienti",
+  "telecamere",
+  "energia",
+  "musica",
+]);
 
 /** Le pagine che si riempiono da sole con un intero gruppo della casa. */
-export const MODELLI_ELENCO = Object.freeze(["luci", "clima"]);
+export const MODELLI_ELENCO = Object.freeze(["luci", "clima", "tapparelle"]);
 
 /* «Clima caldo e freddo non devono essere due sezioni ma una che si chiama
  * clima e dentro due tab caldo freddo, come la sezione clima.» Le pagine
  * nate come «freddo» o «caldo» diventano una pagina Clima che si apre su
  * quella linguetta. */
 export const ZONE_DEL_CLIMA = Object.freeze(["freddo", "caldo"]);
-export const PAGINE_AL_MASSIMO = 4;
+/* Otto pagine: quattro bastavano per una stanza, non per la cucina che e'
+ * anche l'ingresso e il posto da cui si guarda il giardino. Con piu' di
+ * quattro, le linguette mostrano solo il disegno e il nome di quella aperta. */
+export const PAGINE_AL_MASSIMO = 8;
+/** I posti di una pagina, se nessuno ha scelto un'altra griglia. */
 export const POSTI = 6;
+
+/* La griglia di una pagina: quanti posti, e come stanno in orizzontale. In
+ * verticale colonne e righe si scambiano. Quattro posti grandi per chi guarda
+ * da lontano, dodici piccoli per chi ha tanto da comandare. */
+export const GRIGLIE = Object.freeze({
+  4: Object.freeze({ colonne: 2, righe: 2 }),
+  6: Object.freeze({ colonne: 3, righe: 2 }),
+  8: Object.freeze({ colonne: 4, righe: 2 }),
+  9: Object.freeze({ colonne: 3, righe: 3 }),
+  12: Object.freeze({ colonne: 4, righe: 3 }),
+});
+export const POSTI_AL_MASSIMO = 12;
+
+/* La griglia che una pagina nuova sceglie da se': le telecamere stanno meglio
+ * in quattro, l'energia ha le sue quattro tessere. */
+const GRIGLIA_DI_SERIE = Object.freeze({ telecamere: 4, energia: 4, ambienti: 6 });
+
+/** Quanti posti ha questa pagina. */
+export function postiDellaPagina(pagina) {
+  const n = Number(pagina?.griglia);
+  return GRIGLIE[n] ? n : POSTI;
+}
+
+/** Colonne e righe della pagina, per come e' girato il tablet. */
+export function grigliaDellaPagina(pagina, versoScelto = "orizzontale") {
+  const g = GRIGLIE[postiDellaPagina(pagina)];
+  return versoScelto === "verticale"
+    ? { colonne: g.righe, righe: g.colonne }
+    : { colonne: g.colonne, righe: g.righe };
+}
+
+/* Il colore della pagina: quello del suo tipo, o uno di questi. */
+export const COLORI_DELLE_PAGINE = Object.freeze([
+  "#f59e0b",
+  "#ef4444",
+  "#ec4899",
+  "#8b5cf6",
+  "#6366f1",
+  "#0ea5e9",
+  "#10b981",
+  "#64748b",
+]);
 export const TIPI_DI_COMANDO = Object.freeze([
   "luce",
   "clima",
@@ -189,14 +258,17 @@ export function paginaPulita(input, indice = 0) {
   const vecchia = ZONE_DEL_CLIMA.includes(dentro.modello) ? dentro.modello : "";
   const modello = vecchia ? "clima" : scelta(dentro.modello, MODELLI, "stanza");
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro.id || "")) ? dentro.id : `p${indice + 1}`;
+  /* `posti` e' come la chiamavano le plance della 1.11.1: vale lo stesso. */
+  const scritta = Number(dentro.griglia ?? dentro.posti);
+  const griglia = GRIGLIE[scritta] ? scritta : GRIGLIA_DI_SERIE[modello] || POSTI;
   const comandi = senzaVuotiInCoda(
     (Array.isArray(dentro.comandi) ? dentro.comandi : [])
-      .slice(0, POSTI)
+      .slice(0, griglia)
       .map((c) => comandoPulito(c) || { ...POSTO_VUOTO }),
   );
   const scene = senzaVuotiInCoda(
     (Array.isArray(dentro.scene) ? dentro.scene : [])
-      .slice(0, POSTI)
+      .slice(0, griglia)
       .map((c) =>
         c?.tipo === "vuoto" ? { ...POSTO_VUOTO } : scenaPulita(c) || { ...POSTO_VUOTO },
       ),
@@ -211,6 +283,11 @@ export function paginaPulita(input, indice = 0) {
     titolo: testo(dentro.titolo, 32),
     /* Il disegno della linguetta: vuoto, quello del tipo di pagina. */
     disegno: testo(dentro.disegno, 32),
+    /* Il colore della linguetta e del titolo: vuoto, quello del tipo. */
+    colore: COLORI_DELLE_PAGINE.includes(String(dentro.colore || "").toLowerCase())
+      ? String(dentro.colore).toLowerCase()
+      : "",
+    griglia,
     /* Su quale linguetta si apre la pagina Clima. */
     zona: scelta(vecchia || dentro.zona, ZONE_DEL_CLIMA, "freddo"),
     stanza: testo(dentro.stanza, 80),
@@ -222,8 +299,38 @@ export function paginaPulita(input, indice = 0) {
     scene,
     riga,
     ingresso: ingressoPulito(dentro.ingresso),
+    energia: energiaPulita(dentro.energia),
+    /* I lettori della pagina Musica: vuoto, quelli della plancia di origine. */
+    lettori: [...new Set((Array.isArray(dentro.lettori) ? dentro.lettori : []).map(entita))]
+      .filter((id) => id.startsWith("media_player."))
+      .slice(0, LETTORI_AL_MASSIMO),
     confermaUscita: vero(dentro.confermaUscita, false),
   };
+}
+
+export const LETTORI_AL_MASSIMO = 8;
+
+/** I lettori della pagina Musica: quelli scelti, o quelli della plancia. */
+export function lettoriDellaPagina(pagina, fonte = {}) {
+  if (pagina?.lettori?.length) return pagina.lettori.map((id) => ({ entita: id, nome: "" }));
+  return elenco(fonte.lettori)
+    .slice(0, LETTORI_AL_MASSIMO)
+    .map((l) => ({ entita: l.entity, nome: l.nome || "" }));
+}
+
+/* La pagina Energia: quattro misure, ognuna un'entita'. Vuote, le prende la
+ * plancia di origine dalla sua sezione Energia. */
+const ENERGIA_VUOTA = Object.freeze({ casa: "", solare: "", rete: "", batteria: "" });
+function energiaPulita(input) {
+  const dentro = input && typeof input === "object" ? input : {};
+  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, entita(dentro[k])]));
+}
+
+/** Le misure dell'energia: quelle scelte, e le altre dalla plancia di origine. */
+export function energiaDellaPagina(pagina, fonte = {}) {
+  const scelte = pagina?.energia || {};
+  const sue = fonte?.energia || {};
+  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, scelte[k] || sue[k] || ""]));
 }
 
 export const MURO_VUOTO = Object.freeze({
@@ -231,7 +338,8 @@ export const MURO_VUOTO = Object.freeze({
   fonte: PROFILO_DI_ORIGINE,
   orientamento: "auto",
   tema: "plancia",
-  riposo: { attivo: true, minuti: 2 },
+  meteo: "",
+  riposo: { attivo: true, minuti: 2, torna: true, sensore: "" },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
   risveglio: { attivo: false, entita: "" },
@@ -271,9 +379,15 @@ export function muroPulito(input) {
     fonte: profilo(dentro.fonte),
     orientamento: scelta(dentro.orientamento, ORIENTAMENTI, "auto"),
     tema: scelta(dentro.tema, TEMI, "plancia"),
+    /* Il meteo in alto e sul riposo: vuoto, il primo che Home Assistant ha. */
+    meteo: entita(dentro.meteo),
     riposo: {
       attivo: vero(riposo.attivo, true),
       minuti: MINUTI_DI_RIPOSO.includes(minuti) ? minuti : 2,
+      /* Al riposo il tablet torna alla prima pagina, o resta dov'era. */
+      torna: vero(riposo.torna, true),
+      /* La temperatura «in casa» del riposo: vuoto, quella della prima stanza. */
+      sensore: entita(riposo.sensore),
     },
     notte: {
       attiva: vero(notte.attiva, false),
@@ -314,7 +428,7 @@ export function muroDiPartenza(fonte = {}) {
 export function nuovaPagina(modello, fonte = {}, indice = 0) {
   const pagina = paginaPulita({ id: nuovoId().slice(0, 24), modello }, indice);
   if (pagina.modello === "stanza") pagina.stanza = fonte.stanze?.[0]?.name || "";
-  if (pagina.modello === "scene") pagina.scene = scenePropose(fonte);
+  if (pagina.modello === "scene") pagina.scene = scenePropose(fonte, pagina.griglia);
   if (pagina.modello === "ingresso") pagina.ingresso = ingressoProposto(fonte);
   /* La pagina personale nasce coi sei posti vuoti: li riempie chi la fa. */
   if (pagina.modello === "personale") pagina.scelti = true;
@@ -352,6 +466,7 @@ export function fonteDaiValori(valori = {}) {
     overrides: json(valori.cd_entity_overrides, {}),
     avvisi: json(valori.cd_avvisi_custom, []),
     climaUnita: json(valori.cd_clima_units, []),
+    lettori: json(valori.cd_media_player, []),
   });
 }
 
@@ -396,7 +511,29 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
     .filter(Boolean);
   const centraleSola = entita(overrides["dm.security_centrale_allarme"]);
   if (centraleSola && !centrali.includes(centraleSola)) centrali.unshift(centraleSola);
+  /* Il nome di ogni area, come l'ha scritto chi ha configurato l'antifurto:
+   * con piu' aree il riposo dice quali sono inserite. */
+  const nomiDelleAree = new Map(
+    elenco(altro.centrali)
+      .map((c) => [
+        entita(c?.caselle?.["dm.security_centrale_allarme"]),
+        testo(c?.nome || c?.name, 40),
+      ])
+      .filter(([id]) => id),
+  );
+  const misura = (chiave) => entita(overrides[`dm.energy_${chiave}`]);
   return {
+    /* Le misure dell'energia che la plancia di origine ha gia' scelto. */
+    energia: {
+      casa: misura("potenza_consumo_casa"),
+      solare: misura("potenza_fotovoltaico"),
+      rete: misura("potenza_scambio_rete"),
+      batteria: misura("stato_carica_batteria"),
+    },
+    /* I lettori della sezione Musica, per la pagina Musica. */
+    lettori: lettoriConfigurati(elenco(altro.lettori))
+      .filter((l) => entita(l.entity))
+      .map((l) => ({ entity: entita(l.entity), nome: testo(l.nome) })),
     stanze: elenco(sezioni.rooms)
       .filter((s) => s && testo(s.name))
       .map((s) => ({
@@ -420,10 +557,15 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
         confirm: a.confirm === true,
         option: testo(a.option, 80),
       })),
+    /* Il meteo scelto nella config della plancia (la casella della Home),
+     * come lo legge la plancia: «il meteo non ridice con quello che e' messo
+     * nella config». Vuoto, il tablet fa come la plancia senza scelta. */
+    meteo: entita(overrides["dm.home_meteo"]) || entita(overrides["dm.core_055"]),
     persone: elenco(altro.persone)
       .filter((p) => p && entita(p.entity) && p.nascosta !== true)
       .map((p) => ({ entity: entita(p.entity), name: testo(p.name) })),
     centrali,
+    aree: centrali.map((id) => ({ entita: id, nome: nomiDelleAree.get(id) || "" })),
     avvisi: elenco(altro.avvisi)
       .map((a) => ({
         name: testo(a?.name, 60),
@@ -457,6 +599,24 @@ function avvisoAcceso(avviso, stati = {}) {
   });
 }
 
+/**
+ * Dove sta il riposo in questo minuto: uno spostamento fra -1 e 1, su x e y.
+ *
+ * «Orario e le altre info si muovono nello schermo per non restare sempre
+ * allo stesso punto»: un tablet acceso tutto il giorno si stampa addosso
+ * quello che non si muove mai. Ogni minuto il blocco va altrove, seguendo una
+ * sequenza a bassa discrepanza (R2): posti sempre diversi, sparsi su tutto il
+ * riquadro, e due minuti di fila non cadono mai vicini.
+ */
+export function derivaDelRiposo(adesso = Date.now()) {
+  const n = Math.floor(Number(adesso) / 60000);
+  const parte = (v) => v - Math.floor(v);
+  return {
+    x: parte(0.5 + n * 0.7548776662466927) * 2 - 1,
+    y: parte(0.5 + n * 0.5698402909980532) * 2 - 1,
+  };
+}
+
 /** Gli avvisi da mostrare sul riposo: quelli accesi, e l'antifurto che suona. */
 export function avvisiAccesi(fonte = {}, stati = {}, centrale = "") {
   const accesi = elenco(fonte.avvisi)
@@ -467,9 +627,11 @@ export function avvisiAccesi(fonte = {}, stati = {}, centrale = "") {
       icon: a.icon,
       grave: false,
     }));
-  const allarme = entita(centrale) || elenco(fonte.centrali)[0] || "";
-  if (allarme && String(stati[allarme]?.state) === "triggered")
-    accesi.unshift({ chiave: allarme, testo: "", icon: "", grave: true });
+  /* Suona una qualunque area, non solo la prima: con piu' partizioni quella
+   * che scatta puo' essere la terza. */
+  const tutte = [...new Set([entita(centrale), ...elenco(fonte.centrali)].filter(Boolean))];
+  const allarme = tutte.find((id) => String(stati[id]?.state) === "triggered");
+  if (allarme) accesi.unshift({ chiave: allarme, testo: "", icon: "", grave: true });
   return accesi;
 }
 
@@ -493,7 +655,7 @@ function azioniDellaStanza(fonte, stanza) {
  * I comandi che una stanza propone da sola: prima le luci, poi il clima e le
  * tapparelle, poi le sue azioni. Sei posti, come la griglia.
  */
-export function comandiProposti(fonte = {}, nomeStanza = "") {
+export function comandiProposti(fonte = {}, nomeStanza = "", posti = POSTI) {
   const stanza =
     elenco(fonte.stanze).find((s) => s.name === nomeStanza || s.id === nomeStanza) || null;
   if (!stanza) return [];
@@ -509,14 +671,14 @@ export function comandiProposti(fonte = {}, nomeStanza = "") {
       .map((d) => ({ tipo: "tapparella", entita: d.entity, nome: "" })),
   ];
   /* Le azioni riempiono i posti che restano, almeno due se ci stanno. */
-  const liberi = Math.max(POSTI - proposti.length, Math.min(2, POSTI));
+  const liberi = Math.max(posti - proposti.length, Math.min(2, posti));
   const azioni = azioniDellaStanza(fonte, stanza)
     .slice(0, liberi)
     .map((a) => ({ tipo: "azione", azione: a.name, nome: "", sotto: "" }));
-  return [...proposti.slice(0, POSTI - azioni.length), ...azioni]
+  return [...proposti.slice(0, posti - azioni.length), ...azioni]
     .map(comandoPulito)
     .filter(Boolean)
-    .slice(0, POSTI);
+    .slice(0, posti);
 }
 
 /** I comandi che la pagina mostra adesso: quelli scelti, o quelli proposti. */
@@ -525,14 +687,26 @@ export function comandiDellaPagina(pagina, fonte = {}, zona = "") {
   if (pagina.modello === "personale") return pagina.comandi;
   if (pagina.modello === "clima") return comandiDellElenco(zona || pagina.zona || "freddo", fonte);
   if (MODELLI_ELENCO.includes(pagina.modello)) return comandiDellElenco(pagina.modello, fonte);
-  return pagina.scelti ? pagina.comandi : comandiProposti(fonte, pagina.stanza);
+  return pagina.scelti
+    ? pagina.comandi
+    : comandiProposti(fonte, pagina.stanza, postiDellaPagina(pagina));
 }
 
 /* Le pagine elenco: tutte le luci, il clima che raffresca, quello che scalda.
  * Non hanno tetto di sei: sul tablet la griglia scorre. */
 export function comandiDellElenco(modello, fonte = {}) {
+  /* Tutto quello che la plancia chiama luce fa la card della luce, anche una
+   * presa o un interruttore (`switch.*`): «nel wall le luci si vedono
+   * diverse». Come nelle stanze, dove le luci proposte sono gia' tutte uguali. */
   if (modello === "luci")
-    return elenco(fonte.luci).map((d) => comandoPulito({ tipo: "luce", entita: d.entity }));
+    return elenco(fonte.luci).map((d) => {
+      const comando = comandoPulito({ tipo: "luce", entita: d.entity });
+      return comando && { ...comando, tipo: "luce" };
+    });
+  if (modello === "tapparelle")
+    return elenco(fonte.tapparelle).map((d) =>
+      comandoPulito({ tipo: "tapparella", entita: d.entity }),
+    );
   if (modello === "freddo" || modello === "caldo")
     return elenco(fonte.clima)
       .filter((d) => zoneDelClima(d.tipo).includes(modello))
@@ -551,10 +725,10 @@ export function eUnaScena(azione) {
 }
 
 /* Le scene proposte: le azioni che il tablet sa far partire. */
-export function scenePropose(fonte = {}) {
+export function scenePropose(fonte = {}, posti = POSTI) {
   return elenco(fonte.azioni)
     .filter(eUnaScena)
-    .slice(0, POSTI)
+    .slice(0, posti)
     .map((a) => scenaPulita({ azione: a.name }))
     .filter(Boolean);
 }
@@ -562,6 +736,24 @@ export function scenePropose(fonte = {}) {
 const cercaAzione = (fonte, ...parole) =>
   elenco(fonte.azioni).find((a) => parole.some((p) => a.name.toLowerCase().includes(p)))?.name ||
   "";
+
+/* La pagina Ambienti: una tessera per stanza, con quello che si sa di lei. Le
+ * stanze senza sonde e senza luci non dicono niente, e non si mostrano. */
+export function ambientiDellaFonte(fonte = {}) {
+  return elenco(fonte.stanze)
+    .map((stanza) => ({
+      stanza,
+      luci: elenco(fonte.luci)
+        .filter((d) => diStanza(d, stanza))
+        .map((d) => d.entity),
+    }))
+    .filter((a) => a.stanza.temp || a.stanza.hum || a.luci.length);
+}
+
+/** Le telecamere della pagina: tutte quelle della plancia di origine. */
+export function telecamereDellaFonte(fonte = {}) {
+  return elenco(fonte.telecamere).map((d) => ({ entita: d.entity, nome: testo(d.name) }));
+}
 
 export function ingressoProposto(fonte = {}) {
   return ingressoPulito({

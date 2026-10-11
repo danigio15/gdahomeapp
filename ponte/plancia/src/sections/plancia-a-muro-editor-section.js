@@ -11,11 +11,18 @@
  * Premium. */
 import {
   CHIAVE_MURO,
+  COLORI_DELLE_PAGINE,
+  GRIGLIE,
   MINUTI_DI_RIPOSO,
   PAGINE_AL_MASSIMO,
   MODELLI_ELENCO,
-  POSTI,
+  ambientiDellaFonte,
   comandiDellaPagina,
+  energiaDellaPagina,
+  LETTORI_AL_MASSIMO,
+  lettoriDellaPagina,
+  postiDellaPagina,
+  telecamereDellaFonte,
   comandiProposti,
   eUnaScena,
   tipoDellEntita,
@@ -25,7 +32,11 @@ import {
 import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
-import { fonteDelMuro, premiumDellaCasa } from "./plancia-a-muro-section.js";
+import {
+  anteprimaDellaPagina,
+  fonteDelMuro,
+  premiumDellaCasa,
+} from "./plancia-a-muro-section.js";
 import {
   allStates,
   clean,
@@ -60,6 +71,10 @@ export const MURO_EDITOR_TAB = "muro";
 
 const schedaAttiva = () => clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 const bozza = () => (state.bozza ||= muroPulito(readJson(CHIAVE_MURO, null)));
+const salvato = () => muroPulito(readJson(CHIAVE_MURO, null));
+/* La bozza e' diversa da quello che il tablet legge? */
+const bozzaSporca = () =>
+  Boolean(state.bozza) && JSON.stringify(muroPulito(state.bozza)) !== JSON.stringify(salvato());
 const disegno = (chiave, misura, dove) =>
   oggettoWidget(chiave, "", `muro-ed-${dove}`).replace(
     'class="dm-oggetto"',
@@ -162,7 +177,7 @@ const DOMINI_DEI_POSTI =
  * «Devi dare la possibilita' di personalizzare le 6 card e scegliere a
  * piacimento cosa inserire, non solo quelle che hai inserito tu.»
  */
-function postoMarkup(i, lista, k, c) {
+function postoMarkup(i, lista, k, c, posti = 6) {
   const via = `pagine.${i}.${lista}.${k}`;
   const pieno = c && c.tipo !== "vuoto";
   const azioni = azioniUsabili();
@@ -173,7 +188,7 @@ function postoMarkup(i, lista, k, c) {
       : `${nomeDi(c.entita)} · ${c.entita}`;
   return `<div class="mu-ed-posto${pieno ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span>
-      <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista}"${k === POSTI - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
+      <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista}"${k === posti - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       <b class="mu-ed-cosa">${esc(descrizione)}</b>
       ${pieno ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
     <div class="mu-ed-posto-corpo">
@@ -193,9 +208,9 @@ function postoMarkup(i, lista, k, c) {
     </div></div>`;
 }
 
-function postiMarkup(i, lista, posti) {
-  return `<div class="mu-ed-posti">${Array.from({ length: POSTI }, (_, k) =>
-    postoMarkup(i, lista, k, posti[k]),
+function postiMarkup(i, lista, posti, quanti = 6) {
+  return `<div class="mu-ed-posti">${Array.from({ length: quanti }, (_, k) =>
+    postoMarkup(i, lista, k, posti[k], quanti),
   ).join("")}</div>`;
 }
 
@@ -206,6 +221,11 @@ const MODELLI = () => [
   ["personale", t("Personalizzata", "Custom")],
   ["luci", t("Tutte le luci", "All lights")],
   ["clima", t("Clima", "Climate")],
+  ["tapparelle", t("Tutte le tapparelle", "All blinds")],
+  ["ambienti", t("Ambienti", "Rooms")],
+  ["telecamere", t("Telecamere", "Cameras")],
+  ["energia", t("Energia", "Energy")],
+  ["musica", t("Musica", "Music")],
 ];
 const DISEGNO_DI_SERIE = {
   stanza: "stanze",
@@ -214,6 +234,11 @@ const DISEGNO_DI_SERIE = {
   personale: "widget",
   luci: "luci",
   clima: "clima",
+  tapparelle: "tapparelle",
+  ambienti: "temperatura",
+  telecamere: "telecamere",
+  energia: "energia",
+  musica: "media",
 };
 const NOME_DEL_MODELLO = (modello) => MODELLI().find(([v]) => v === modello)?.[1] || "";
 
@@ -224,6 +249,10 @@ function elencoMarkup(p, i) {
     luci: t(
       "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.",
       "It fills itself with every light of the source dashboard: a light added there shows up here too.",
+    ),
+    tapparelle: t(
+      "Si riempie da sola con tutte le tapparelle della plancia di origine: su, stop e giù per ognuna.",
+      "It fills itself with every blind of the source dashboard: up, stop and down for each one.",
     ),
     clima: t(
       "Si riempie da sola con il clima della plancia di origine, diviso nelle due linguette Freddo e Caldo come nella sezione Clima: i condizionatori nel freddo, termosifoni e termostati nel caldo, le pompe di calore in tutte e due.",
@@ -247,7 +276,8 @@ function paginaMarkup(p, i, tutte) {
   const via = `pagine.${i}`;
   let dentro = "";
   if (p.modello === "stanza") {
-    const comandi = p.scelti ? p.comandi : comandiProposti(f, p.stanza);
+    const quanti = postiDellaPagina(p);
+    const comandi = p.scelti ? p.comandi : comandiProposti(f, p.stanza, quanti);
     dentro = `${riga(
       t("Stanza", "Room"),
       t("Da qui la pagina prende la temperatura e i comandi proposti", "The page takes its temperature and suggested controls from here"),
@@ -261,8 +291,8 @@ function paginaMarkup(p, i, tutte) {
     ${riga(
       t("I comandi seguono la stanza", "Controls follow the room"),
       t(
-        "Accesa, una luce aggiunta alla stanza nella plancia di origine compare da sola. Spenta, i sei posti si scelgono qui: qualunque entità o azione, col nome e il disegno che vuoi.",
-        "On, a light added to the room in the source dashboard shows up by itself. Off, the six slots are chosen here: any entity or action, with the name and drawing you want.",
+        "Accesa, una luce aggiunta alla stanza nella plancia di origine compare da sola. Spenta, i posti si scelgono qui: qualunque entità o azione, col nome e il disegno che vuoi.",
+        "On, a light added to the room in the source dashboard shows up by itself. Off, the slots are chosen here: any entity or action, with the name and drawing you want.",
       ),
       interruttore(
         `${via}.segue`,
@@ -272,8 +302,8 @@ function paginaMarkup(p, i, tutte) {
     )}
     ${
       p.scelti
-        ? postiMarkup(i, "comandi", comandi)
-        : `<div class="mu-ed-posti">${Array.from({ length: POSTI }, (_, k) => {
+        ? postiMarkup(i, "comandi", comandi, quanti)
+        : `<div class="mu-ed-posti">${Array.from({ length: quanti }, (_, k) => {
             const c = comandi[k];
             return `<div class="mu-ed-posto"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><span class="mu-ed-proposto">${c ? esc(c.azione ? `⚡ ${c.azione}` : nomeDi(c.entita)) : esc(t("Posto libero", "Empty slot"))}</span></div></div>`;
           }).join("")}</div>`
@@ -283,22 +313,80 @@ function paginaMarkup(p, i, tutte) {
     ${riga(t("Stato dell'antifurto", "Alarm state"), "", interruttore(`${via}.riga.antifurto`, p.riga.antifurto, "antifurto"))}
     ${riga(t("Chi è in casa", "Who is home"), "", interruttore(`${via}.riga.persone`, p.riga.persone, "persone"))}
     ${riga(t("Meteo", "Weather"), "", interruttore(`${via}.riga.meteo`, p.riga.meteo, "meteo"))}`;
+  } else if (p.modello === "ambienti") {
+    const ambienti = ambientiDellaFonte(f);
+    dentro = `<div class="mu-ed-nota">${esc(
+      t(
+        "Una tessera per stanza, con la temperatura, l'umidità e quante luci sono accese, dal vivo. Le stanze e le loro sonde sono quelle della plancia di origine.",
+        "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.",
+      ),
+    )}</div><div class="mu-ed-riga"><div class="mu-ed-testo"><b>${ambienti.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(ambienti.map((a) => a.stanza.name).join(", ") || t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))}</small></div></div>`;
+  } else if (p.modello === "telecamere") {
+    const telecamere = telecamereDellaFonte(f);
+    dentro = `<div class="mu-ed-nota">${esc(
+      t(
+        "Le telecamere della plancia di origine, tutte insieme; un tocco ne apre una a tutto schermo.",
+        "The source dashboard's cameras, all together; a tap opens one full screen.",
+      ),
+    )}</div><div class="mu-ed-riga"><div class="mu-ed-testo"><b>${telecamere.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(telecamere.map((k) => k.nome || nomeDi(k.entita)).join(", ") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
+  } else if (p.modello === "energia") {
+    const sue = energiaDellaPagina({}, f);
+    const misura = (chiave, titolo, nota, domini = "sensor") =>
+      riga(
+        titolo,
+        sue[chiave] && !p.energia[chiave]
+          ? `${nota} · ${t("dalla plancia", "from the dashboard")}: ${nomeDi(sue[chiave])}`
+          : nota,
+        cerca(`${via}.energia.${chiave}`, p.energia[chiave], {
+          domini,
+          segnaposto: sue[chiave] || t("Entità", "Entity"),
+        }),
+      );
+    dentro = `<div class="mu-ed-nota">${esc(
+      t(
+        "Quattro numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine.",
+        "Four big live numbers. Left empty, they come from the source dashboard's Energy section.",
+      ),
+    )}</div>
+    ${misura("casa", t("Consumo della casa", "House consumption"), t("Potenza, in W o kW", "Power, in W or kW"))}
+    ${misura("solare", t("Produzione solare", "Solar production"), t("Potenza, in W o kW", "Power, in W or kW"))}
+    ${misura("rete", t("Scambio con la rete", "Grid exchange"), t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in"))}
+    ${misura("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}`;
+  } else if (p.modello === "musica") {
+    const sue = lettoriDellaPagina({}, f);
+    /* Un campo per lettore scelto, e uno vuoto per aggiungerne un altro. */
+    const campi = Math.min(p.lettori.length + 1, LETTORI_AL_MASSIMO);
+    dentro = `<div class="mu-ed-nota">${esc(
+      t(
+        "Il lettore che suona in grande, con la copertina, i tasti, il volume e le sorgenti; accanto gli altri, ognuno col suo play. Un tocco su un lettore lo porta in grande.",
+        "The player that's playing, big, with cover, buttons, volume and sources; beside it the others, each with its own play. A tap on a player brings it up big.",
+      ),
+    )}</div>
+    ${riga(
+      t("Lettori", "Players"),
+      p.lettori.length
+        ? t("Quelli scelti qui, in quest'ordine", "The ones chosen here, in this order")
+        : `${t("Vuoto: quelli della sezione Musica della plancia", "Empty: the ones from the dashboard's Music section")}${sue.length ? ` — ${sue.map((l) => l.nome || nomeDi(l.entita)).join(", ")}` : ""}`,
+      `<span class="mu-ed-lettori">${Array.from({ length: campi }, (_, k) =>
+        cerca(`${via}.lettori.${k}`, p.lettori[k] || "", { domini: "media_player" }),
+      ).join("")}</span>`,
+    )}`;
   } else if (p.modello === "personale") {
     dentro = `<div class="mu-ed-nota">${esc(
       t(
-        "Sei posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.",
-        "Six slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want.",
+        "Posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.",
+        "Slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want.",
       ),
-    )}</div>${postiMarkup(i, "comandi", p.comandi)}`;
+    )}</div>${postiMarkup(i, "comandi", p.comandi, postiDellaPagina(p))}`;
   } else if (MODELLI_ELENCO.includes(p.modello)) {
     dentro = elencoMarkup(p, i);
   } else if (p.modello === "scene") {
     dentro = `<div class="mu-ed-nota">${esc(
       t(
-        "Sei tasti grandi: un'azione della plancia o un'entità qualunque (una scena, uno script, un tasto). Per ognuno il nome sul tablet, la riga sotto e il disegno.",
-        "Six big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.",
+        "Tasti grandi: un'azione della plancia o un'entità qualunque (una scena, uno script, un tasto). Per ognuno il nome sul tablet, la riga sotto e il disegno.",
+        "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.",
       ),
-    )}</div>${postiMarkup(i, "scene", p.scene)}`;
+    )}</div>${postiMarkup(i, "scene", p.scene, postiDellaPagina(p))}`;
   } else {
     const ing = p.ingresso;
     const azioni = (f.azioni || []).filter(eUnaScena).map((a) => [a.name, a.name]);
@@ -320,13 +408,44 @@ function paginaMarkup(p, i, tutte) {
   const testa = `<div class="mu-ed-pagina-testa">
       <button type="button" class="mu-ed-apri" data-mu-ed-apri="${i}" aria-expanded="${aperta}">${disegno(clean(p.disegno) || DISEGNO_DI_SERIE[p.modello], 26, `pag-${i}`)}<span class="mu-ed-apri-tx"><b>${esc(clean(p.titolo) || nomeDiSerie)}</b><small>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(NOME_DEL_MODELLO(p.modello))}</small></span><span class="mu-ed-freccia" aria-hidden="true">${aperta ? "▾" : "▸"}</span></button>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-pagina-su="${i}"${i === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-pagina-giu="${i}"${i === tutte - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
+      ${tutte < PAGINE_AL_MASSIMO ? `<button type="button" class="mu-ed-copia" data-mu-ed-copia="${i}" aria-label="${esc(t("Duplica la pagina", "Duplicate page"))}" title="${esc(t("Duplica", "Duplicate"))}">⧉</button>` : ""}
       <button type="button" class="mu-ed-svuota" data-mu-ed-togli="${i}" aria-label="${esc(t("Togli la pagina", "Remove page"))}">🗑</button></div>`;
   if (!aperta) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}">${testa}</div>`;
   return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}">${testa}
     ${riga(t("Nome sul tablet", "Name on the tablet"), t("Si legge sulla linguetta in alto", "Shown on the tab at the top"), campo(`${via}.titolo`, p.titolo, nomeDiSerie))}
     ${riga(t("Icona", "Icon"), "", tendina(`${via}.disegno`, p.disegno, DISEGNI(), null))}
     ${riga(t("Tipo di pagina", "Page type"), "", tendina(`${via}.modello`, p.modello, MODELLI(), null))}
+    ${
+      SENZA_GRIGLIA.includes(p.modello)
+        ? ""
+        : riga(
+            t("Griglia", "Grid"),
+            MODELLI_ELENCO.includes(p.modello) || p.modello === "ambienti" || p.modello === "telecamere"
+              ? t("Quante card a schermo; le altre scorrono", "How many cards on screen; the rest scroll")
+              : t("Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano", "How many slots, and how big. In portrait columns and rows swap"),
+            scelte(`${via}.griglia`, p.griglia, GRIGLIE_SCRITTE()),
+          )
+    }
+    ${riga(t("Colore", "Colour"), t("Della linguetta e del titolo", "Of the tab and the title"), colori(`${via}.colore`, p.colore, p.modello))}
+    <div class="mu-ed-anteprima-box"><div class="mu-ed-sotto-titolo">${esc(t("Anteprima dal vivo", "Live preview"))}</div><div class="mu-ed-anteprima" data-mu-ed-anteprima="${i}"></div></div>
     ${dentro}</div>`;
+}
+
+/* Le pagine che la griglia non la scelgono: l'ingresso ha la sua forma,
+ * l'energia le sue quattro tessere. */
+const SENZA_GRIGLIA = ["ingresso", "energia", "musica"];
+const GRIGLIE_SCRITTE = () =>
+  Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
+
+/* Il colore di una pagina: un pallino per ognuno, e «come il tipo». */
+function colori(via, valore, modello) {
+  const pallini = [["", ""], ...COLORI_DELLE_PAGINE.map((c) => [c, c])];
+  return `<span class="mu-ed-colori">${pallini
+    .map(
+      ([v]) =>
+        `<button type="button" class="${String(v) === String(valore || "") ? "si" : ""}${v ? "" : " auto"}" style="${v ? `--c:${v}` : ""}" data-mu-ed-metti="${esc(via)}" data-mu-ed-valore="${esc(v)}" aria-label="${esc(v || t("Come il tipo di pagina", "Like the page type"))}">${v ? "" : "A"}</button>`,
+    )
+    .join("")}</span>`;
 }
 
 function corpoMarkup() {
@@ -335,7 +454,9 @@ function corpoMarkup() {
   const plance = state.plance?.length ? state.plance : [{ profilo: "primary", titolo: "gdahome" }];
   const qui = currentProfile();
   const altre = plance.filter((p) => p.profilo !== qui || p.profilo === m.fonte);
+  const sporca = bozzaSporca();
   const contenuto = `
+  ${sporca ? `<div class="mu-ed-sporca" role="status">● ${esc(t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save».") )}</div>` : ""}
   <div class="ed-intro">${esc(
     t(
       "Il pannello del tablet a muro. Scegli le pagine — le linguette in alto — e cosa c'è in ognuna. Sul tablet, tenendo premuto l'orologio per due secondi si torna qui.",
@@ -382,7 +503,7 @@ function corpoMarkup() {
           .join("")}</div>`
       : ""
   }
-  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, riposo, notte, risveglio, PIN", "Orientation, theme, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state.altro ? "▾" : "▸"}</span></button>
+  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, meteo, riposo, notte, risveglio, PIN", "Orientation, theme, weather, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state.altro ? "▾" : "▸"}</span></button>
   ${state.altro ? `<div class="mu-ed-blocco">
     ${riga(
       t("Orientamento", "Orientation"),
@@ -407,6 +528,11 @@ function corpoMarkup() {
       ]),
     )}
     ${riga(
+      t("Meteo", "Weather"),
+      t("In alto e sul riposo. Vuoto: il primo che Home Assistant ha", "At the top and on the rest screen. Empty: the first one Home Assistant has"),
+      cerca("meteo", m.meteo, { domini: "weather" }),
+    )}
+    ${riga(
       t("Riposo", "Rest"),
       t(
         "Dopo un po' senza tocchi resta l'orologio",
@@ -419,6 +545,8 @@ function corpoMarkup() {
         null,
       )}${interruttore("riposo.attivo", m.riposo.attivo, "riposo")}`,
     )}
+    ${riga(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
+    ${riga(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor" }))}
     ${riga(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo("notte.da", m.notte.da, "23:00", "time")}${campo("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
     ${riga(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga(
@@ -450,7 +578,11 @@ export function ensureMuroEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB) {
     if (schedaAttiva() !== MURO_EDITOR_TAB) {
-      state.bozza = null;
+      /* «Ho cambiato scheda e ho perso tutto.» Una bozza con modifiche resta
+       * finche' il config e' aperto, e torna quando si torna qui; una bozza
+       * uguale al salvato si rilegge, cosi' segue chi salva da un altro
+       * telefono. Il config chiuso la butta: si riapre da quello salvato. */
+      if (!bozzaSporca() || !doc?.getElementById("editor-modal")) state.bozza = null;
       state.fonte = null;
       state.premium = null;
     }
@@ -462,16 +594,51 @@ export function ensureMuroEditor() {
     Boolean(state.fonte),
     state.premium,
     state.plance?.length,
+    state.aperta,
+    state.altro,
   ]);
-  if (body.dataset.dmMuroEditor === firma && body.querySelector(".mu-ed")) return true;
+  if (body.dataset.dmMuroEditor === firma && body.querySelector(".mu-ed")) {
+    rinfrescaLAnteprima();
+    return true;
+  }
   body.dataset.dmMuroEditor = firma;
   body.innerHTML = corpoMarkup();
   body.dataset.renderer = MURO_EDITOR_TAB;
+  rinfrescaLAnteprima();
   /* Il titolo della scheda lo mette l'alberatura quando il guscio ridisegna;
    * questa scheda si riscrive anche da sola (la risposta del ponte, un tasto
    * premuto), e il titolo si rimette qui. */
   ensureTitoloDellaSezione();
   return true;
+}
+
+/* L'anteprima della pagina aperta: il disegno del tablet, rimpicciolito alla
+ * larghezza della scheda. Si rifà a ogni modifica della bozza e a ogni cambio
+ * di stato della casa, senza ridisegnare i campi sotto le dita. */
+function rinfrescaLAnteprima() {
+  const posto = doc?.querySelector?.("#ed-body [data-mu-ed-anteprima]");
+  if (!posto || !state.fonte) return;
+  const m = bozza();
+  const i = Number(posto.dataset.muEdAnteprima);
+  const verticale = m.orientamento === "verticale";
+  const larghezza = verticale ? 800 : 1280;
+  const tema =
+    m.tema === "chiaro"
+      ? "light"
+      : m.tema === "scuro"
+        ? "dark"
+        : doc.documentElement.getAttribute("data-theme") === "light"
+          ? "light"
+          : "dark";
+  const dentro = anteprimaDellaPagina(m, i, state.fonte);
+  const scritto = `${tema}|${verticale}|${dentro}`;
+  if (posto.dataset.scritto !== scritto) {
+    posto.dataset.scritto = scritto;
+    posto.innerHTML = `<div class="mu-anteprima" data-tema="${tema}" data-verso="${verticale ? "verticale" : "orizzontale"}" aria-hidden="true">${dentro}</div>`;
+  }
+  const zoom = Math.min(1, (posto.clientWidth || larghezza / 2) / larghezza);
+  const tela = posto.firstElementChild;
+  if (tela) tela.style.zoom = String(zoom);
 }
 
 function ridisegna() {
@@ -503,7 +670,10 @@ function metti(via, valore) {
       const lista = pezzi[2];
       const k = Number(pezzi[3]);
       const campo = pezzi[4];
-      const posti = Array.from({ length: POSTI }, (_, n) => p[lista][n] || { tipo: "vuoto" });
+      const posti = Array.from(
+        { length: postiDellaPagina(p) },
+        (_, n) => p[lista][n] || { tipo: "vuoto" },
+      );
       const ora = posti[k];
       const aspetto = { nome: ora.nome || "", sotto: ora.sotto || "", disegno: ora.disegno || "" };
       const scritto = clean(valore);
@@ -522,12 +692,20 @@ function metti(via, valore) {
       state.bozza = muroPulito(m);
       return;
     }
+    if (pezzi[2] === "griglia") {
+      p.griglia = Number(valore);
+      /* Una stanza che segue i suoi comandi li ripropone per la griglia
+       * nuova; quelli scelti a mano restano, fin dove ci stanno. */
+      state.bozza = muroPulito(m);
+      return;
+    }
     if (pezzi[2] === "modello" && p.modello !== valore) {
       m.pagine[i] = {
         ...nuovaPagina(valore, state.fonte || {}, i),
         id: p.id,
         titolo: p.titolo,
         disegno: p.disegno,
+        colore: p.colore,
       };
       state.bozza = muroPulito(m);
       return;
@@ -563,7 +741,7 @@ function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const el = event.target.closest(
-    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro]",
+    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia]",
   );
   if (!el || body.querySelector(".mu-ed-chiuso")) return;
   event.preventDefault();
@@ -603,6 +781,17 @@ function onClick(event) {
     m.pagine.push(nuovaPagina(d.muEdNuova, state.fonte || {}, m.pagine.length));
     state.bozza = muroPulito(m);
     state.aperta = state.bozza.pagine.length - 1;
+  } else if (d.muEdCopia !== undefined) {
+    /* Una pagina uguale, subito dopo: si cambia la stanza e si e' fatto. */
+    const m = structuredClone(bozza());
+    const i = Number(d.muEdCopia);
+    const copia = structuredClone(m.pagine[i]);
+    if (!copia || m.pagine.length >= PAGINE_AL_MASSIMO) return;
+    copia.id = nuovaPagina(copia.modello, {}, i + 1).id;
+    copia.titolo = copia.titolo ? `${copia.titolo} 2`.slice(0, 32) : "";
+    m.pagine.splice(i + 1, 0, copia);
+    state.bozza = muroPulito(m);
+    state.aperta = i + 1;
   } else if (d.muEdTogli !== undefined) {
     const m = structuredClone(bozza());
     m.pagine.splice(Number(d.muEdTogli), 1);
@@ -623,7 +812,10 @@ function onClick(event) {
     const p = m.pagine[i];
     const lista = d.muEdLista === "scene" ? "scene" : "comandi";
     /* Anche i posti vuoti si spostano: «il quinto lo voglio libero». */
-    const posti = Array.from({ length: POSTI }, (_, n) => p[lista][n] || { tipo: "vuoto" });
+    const posti = Array.from(
+      { length: postiDellaPagina(p) },
+      (_, n) => p[lista][n] || { tipo: "vuoto" },
+    );
     p[lista] = sposta(posti, k, d.muEdPostoSu !== undefined ? k - 1 : k + 1);
     if (lista === "comandi") p.scelti = true;
     state.bozza = muroPulito(m);
@@ -645,8 +837,23 @@ function onChange(event) {
    * tasti proprio sotto il dito: si scriveva un nome, si toccava «svuota» o
    * una freccia, e il tocco finiva su un tasto che non c'era piu'. */
   if (event.type === "change" && !SCRITTE.test(via)) ridisegna();
+  else dopoUnaScritta();
 }
 const SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin)$/;
+
+/* Le scritte non ridisegnano la scheda, ma l'anteprima e l'avviso «non
+ * salvate» si': sono fuori dai campi, e non rubano il tocco a nessuno. */
+function dopoUnaScritta() {
+  rinfrescaLAnteprima();
+  const avviso = doc?.querySelector?.("#ed-body .mu-ed-sporca");
+  if (!avviso && bozzaSporca()) {
+    const nuovo = doc.createElement("div");
+    nuovo.className = "mu-ed-sporca";
+    nuovo.setAttribute("role", "status");
+    nuovo.textContent = `● ${t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save».")}`;
+    doc.querySelector("#ed-body .mu-ed")?.prepend(nuovo);
+  }
+}
 
 export function salva() {
   const m = muroPulito(bozza());
@@ -736,6 +943,16 @@ html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}
 #ed-body .mu-ed-aggiungi{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-weight:800;font-size:13px}
 #ed-body .mu-ed-aggiungi .ed-btn-add{width:auto;margin:0;padding:10px 16px}
 #ed-body .mu-ed-chiuso{position:relative;min-height:420px}
+#ed-body .mu-ed-sporca{margin:0 0 10px;padding:10px 14px;border-radius:12px;font-size:12.5px;font-weight:800;color:#92400e;background:#fef3c7;border:1px solid #f59e0b88}
+html[data-theme="dark"] #ed-body .mu-ed-sporca{color:#fde68a;background:#78350f55}
+#ed-body .mu-ed-copia{margin:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--divider-color,#dbe4ee);background:none;color:var(--text-dim,#64748b);font-weight:900;cursor:pointer}
+#ed-body .mu-ed-colori{display:inline-flex;flex-wrap:wrap;gap:6px}
+#ed-body .mu-ed-colori button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;background:var(--c);cursor:pointer;padding:0;font-size:10px;font-weight:900;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-colori button.auto{background:conic-gradient(#f59e0b,#ef4444,#8b5cf6,#0ea5e9,#10b981,#f59e0b);color:#fff}
+#ed-body .mu-ed-colori button.si{border-color:var(--text,#0f172a);box-shadow:0 0 0 2px var(--card-background-color,#fff) inset}
+#ed-body .mu-ed-anteprima-box{margin-top:10px}
+#ed-body .mu-ed-lettori{display:grid;gap:8px;min-width:240px;flex:1}
+#ed-body .mu-ed-anteprima{margin-top:8px;width:100%;max-width:720px;overflow:hidden;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee)}
 #ed-body .mu-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}
 #ed-body .mu-ed-lucchetto b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:26px;text-transform:uppercase}
@@ -769,6 +986,12 @@ export function installPlanciaAMuroEditor() {
     ensureMuroEditor();
   });
   onEditorRedraw("__dmMuroEditor", ancora);
+  root.addEventListener?.("dashboardmodern:state-changed", () => {
+    if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+  });
+  root.addEventListener?.("resize", () => {
+    if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+  });
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
     root.addEventListener?.(evento, ancora);
   ensureMuroEditorTab();

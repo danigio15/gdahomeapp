@@ -115,7 +115,16 @@ test("l'evento e' quello che il backend spara sul bus di casa, e la risposta «s
 });
 
 test("la sezione della chat espone lo stato alla Home e lo annuncia quando cambia", () => {
-  assert.deepEqual(assistenza.statoDellaChat(), { enabled: false, unread: 0, preview: "", writtenAt: 0 });
+  /* `testo` e `domanda` sono per la finestra disegnata in Home: la risposta
+   * senza il taglio della tessera, e la domanda se il filo e' gia' stato letto. */
+  assert.deepEqual(assistenza.statoDellaChat(), {
+    enabled: false,
+    unread: 0,
+    preview: "",
+    writtenAt: 0,
+    testo: "",
+    domanda: null,
+  });
   assert.equal(assistenza.inAscolto(), false, "senza il socket del guscio non si ascolta");
   const sorgente = leggi("src/sections/assistenza-section.js");
   assert.equal(EVENTO_STATO, "dashboardmodern:chat-stato");
@@ -145,7 +154,12 @@ test("all'avvio si legge lo stato, non il filo: leggere il filo e' averlo letto"
 
 test("la Home disegna la tessera, la ridisegna all'annuncio, e la sua finestra porta alla chat", () => {
   const home = leggi("src/sections/home-widgets-section.js");
-  assert.match(home, /function chatModel\(\) \{\s*return tesseraDellaChat\(statoDellaChat\(\)\);/);
+  /* Il modello e' sempre la tessera del nucleo; la finestra disegnata ci
+   * aggiunge la risposta intera e la domanda (vedi `finestre/sistema.js`). */
+  assert.match(
+    home,
+    /function chatModel\(\) \{\s*const stato = statoDellaChat\(\);\s*const tessera = tesseraDellaChat\(stato\);/,
+  );
   /* Per prima: e' una risposta a chi ha chiesto aiuto. Quello che le viene
    * dietro sono le entita' scelte a mano — le evidenze e le sezioni che si fa
    * l'utente (#262) — e poi le segnalazioni. */

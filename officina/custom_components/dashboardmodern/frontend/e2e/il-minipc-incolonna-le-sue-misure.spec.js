@@ -86,25 +86,25 @@ test("la finestra del MiniPC mette le sue letture in colonna, una per casella", 
   const finestra = page.locator('[data-dm-widget-detail="minipc"]').first();
   await expect(finestra).toBeVisible();
 
-  /* Una casella per lettura, e ognuna dice il suo nome. Prima erano zero. */
-  const caselle = finestra.locator(".dm-w-casella");
-  await expect.poll(() => caselle.count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(7);
+  /* La finestra adesso e' quella disegnata per il MiniPC (vedi
+   * `finestre/sistema.js`): non piu' sette caselle uguali, ma ogni lettura al
+   * suo posto — la CPU nell'anello, temperatura e consumo accanto, RAM e disco
+   * come barre, la rete in caselle. Quello che questa prova chiedeva resta:
+   * ogni lettura c'e', col suo valore, e le caselle stanno in colonna. */
+  await expect(finestra.locator(".dm-f-pc-anello")).toContainText("37%");
+  await expect(finestra.locator(".dm-f-pc-dx")).toContainText("61,4 °C");
+  await expect(finestra.locator(".dm-f-pc-dx")).toContainText("13 W");
+  await expect(finestra.locator(".dm-f-pc-quota").filter({ hasText: "RAM" })).toContainText("68%");
+  await expect(finestra.locator(".dm-f-pc-quota").filter({ hasText: "Disco" })).toContainText(
+    "54%",
+  );
+  const caselle = finestra.locator(".dm-f-pc-cas");
+  await expect(caselle).toHaveCount(2);
+  await expect(caselle.first()).toContainText("214,7");
+  await expect(caselle.nth(1)).toContainText("96");
 
-  for (const [nome, valore] of [
-    ["CPU", "37%"],
-    ["RAM", "68%"],
-    ["Disco", "54%"],
-    ["Temperatura CPU", "61,4 °C"],
-    ["Potenza", "13 W"],
-  ]) {
-    const casella = caselle.filter({ hasText: nome }).first();
-    await expect(casella, `manca la casella «${nome}»`).toBeVisible();
-    await expect(casella).toContainText(valore);
-  }
-
-  /* E sono incolonnate davvero: le caselle stanno in una griglia, quindi ce ne
-   * sono almeno due che cominciano alla stessa altezza e almeno due che
-   * cominciano allo stesso bordo sinistro. Una riga sola di testo — il difetto
+  /* E sono incolonnate davvero: le due caselle della rete cominciano alla
+   * stessa altezza, una accanto all'altra. Una riga sola di testo — il difetto
    * segnalato — non lo fa. */
   const riquadri = await caselle.evaluateAll((nodi) =>
     nodi.map((n) => {
@@ -112,12 +112,6 @@ test("la finestra del MiniPC mette le sue letture in colonna, una per casella", 
       return { x: Math.round(r.left), y: Math.round(r.top) };
     }),
   );
-  const perRiga = new Map();
-  const perColonna = new Map();
-  for (const { x, y } of riquadri) {
-    perRiga.set(y, (perRiga.get(y) || 0) + 1);
-    perColonna.set(x, (perColonna.get(x) || 0) + 1);
-  }
-  expect(Math.max(...perRiga.values())).toBeGreaterThanOrEqual(2);
-  expect(Math.max(...perColonna.values())).toBeGreaterThanOrEqual(2);
+  expect(riquadri[0].y).toBe(riquadri[1].y);
+  expect(riquadri[1].x).toBeGreaterThan(riquadri[0].x);
 });

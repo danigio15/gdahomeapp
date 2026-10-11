@@ -1,4 +1,4 @@
-import { fondoDiSistema, inPixel } from "../core/fondo-di-sistema.js";
+import { cimaDiSistema, fondoDiSistema, inPixel } from "../core/fondo-di-sistema.js";
 import {
   disegnoGiaNellaCasella,
   haOggettoWidget,
@@ -73,6 +73,23 @@ function installStyles() {
       nav.tabs.bottom-nav-bar.visible,
       body.cd-nav-fixed nav.tabs.bottom-nav-bar{
         bottom:max(8px, var(--dm-fondo-di-sistema))!important
+      }
+      /* Sul telefono la barra sta attaccata al fondo, larga quanto lo schermo.
+       *
+       * «Deve stare subito sopra la barra Android: non voglio vedere lo
+       * spazio e le cose in mezzo della dashboard.» Galleggiando a otto pixel
+       * dal fondo, coi margini ai lati, sotto e accanto si vedevano passare le
+       * card. Qui la barra appoggia sul fondo, piatta sotto e tonda sopra, e
+       * la fascia del sistema — i tasti di Android, la barretta dell'iPhone —
+       * la riempie lei col suo fondo invece di lasciarla alla pagina. */
+      @media (max-width:820px){
+        nav.tabs.bottom-nav-bar.visible,
+        body.cd-nav-fixed nav.tabs.bottom-nav-bar{
+          bottom:0!important;left:0!important;right:0!important;
+          transform:none!important;width:auto!important;max-width:none!important;
+          border-radius:24px 24px 0 0!important;
+          padding-bottom:calc(6px + var(--dm-fondo-di-sistema))!important
+        }
       }
       /* E lo spazio sotto l'ultima card cresce insieme alla barra.
        *
@@ -1262,13 +1279,13 @@ function filtraDopo(nome) {
  * che chiesto: non c'è un modo di leggere una variabile d'ambiente da
  * JavaScript, ma c'è di mettere un elemento alto quanto lei e guardare quanto è
  * venuto. Il riquadro non si vede e non si tocca: nasce, si misura, se ne va. */
-function insetDi(documento) {
+function insetDi(documento, lato = "bottom") {
   try {
     const dove = documento?.body || documento?.documentElement;
     if (!dove) return 0;
     const sonda = documento.createElement("div");
     sonda.style.cssText =
-      "position:fixed;left:0;bottom:0;width:0;height:env(safe-area-inset-bottom,0px);" +
+      `position:fixed;left:0;${lato}:0;width:0;height:env(safe-area-inset-${lato},0px);` +
       "pointer-events:none;visibility:hidden";
     dove.append(sonda);
     const alto = sonda.getBoundingClientRect().height;
@@ -1316,17 +1333,117 @@ export function misuraIlFondoDiSistema() {
   return valore;
 }
 
+/* ── la cima che si prende il sistema (#215, #214) ──────────────────────
+ *
+ * Il conto sta in `core/fondo-di-sistema.js`, accanto a quello del fondo.
+ * Quanto l'ospite lascia libero sopra di noi e' dove comincia la cornice nel
+ * suo schermo: col chiosco comincia a zero, sotto l'orologio; senza chiosco
+ * comincia sotto la barra di Home Assistant, che la fascia l'ha gia' scansata
+ * lei. */
+function giaLasciatoSopra() {
+  try {
+    const cornice = root.frameElement;
+    if (!cornice) return 0;
+    return Math.max(0, cornice.getBoundingClientRect().top);
+  } catch (_error) {
+    return 0;
+  }
+}
+
+export const CIMA_DI_SISTEMA = "--dm-cima-di-sistema";
+
+export function misuraLaCimaDiSistema() {
+  if (!doc?.documentElement) return 0;
+  const proprio = insetDi(doc, "top");
+  let ospite = 0;
+  let lasciato = 0;
+  try {
+    const cima = root.top && root.top !== root ? root.top.document : null;
+    if (cima) {
+      ospite = insetDi(cima, "top");
+      lasciato = giaLasciatoSopra();
+    }
+  } catch (_error) {
+    /* Cornice di un'altra origine: non c'è niente da chiedere. */
+  }
+  const valore = cimaDiSistema(proprio, ospite, lasciato);
+  doc.documentElement.style.setProperty(CIMA_DI_SISTEMA, inPixel(valore));
+  return valore;
+}
+
+function misuraLeFasceDiSistema() {
+  misuraIlFondoDiSistema();
+  misuraLaCimaDiSistema();
+}
+
+/* Le finestre non cominciano sotto l'orologio.
+ *
+ * «Quando va sulle luci rgb per impostare i colori non si riesce più a
+ * cliccare chiudi per tornare indietro: bisogna chiudere gda e riaprirlo»
+ * (#215). Sul telefono la scheda della luce prende tutto lo schermo e la sua
+ * intestazione — il nome, e «✕ CHIUDI» a destra — partiva dal bordo di sopra
+ * della pagina. Dentro l'app di Home Assistant, col chiosco, quel bordo e'
+ * il bordo del vetro: la pastiglia era disegnata sotto l'ora e la batteria, e
+ * un dito li' lo prende il sistema, non la pagina.
+ *
+ * Il margine di sopra di ogni finestra diventa il piu' grande fra quello che
+ * aveva e la fascia che si prende il sistema — il piu' grande, non la somma:
+ * dove la fascia non c'e' (un computer, Home Assistant con la sua barra in
+ * cima, un browser) tutto resta com'era al pixel.
+ *
+ * Due numeri e non uno. `--dm-cima-di-sistema` lo misura la plancia;
+ * `--gdahome-alto` lo scrive l'app gdahome, che la fascia la sa da Flutter e
+ * la scansa col corpo della pagina — ma una finestra fissa sta sopra il corpo,
+ * e quel margine non lo eredita. */
+function installaLaCima() {
+  installStyle(
+    "dm-cima-di-sistema-style",
+    `
+      :root{
+        --dm-cima-di-sistema:env(safe-area-inset-top,0px);
+        --dm-cima-libera:max(var(--dm-cima-di-sistema,0px),var(--gdahome-alto,0px))
+      }
+      /* Le finestre delle sezioni: la scheda della luce e quelle di modifica. */
+      html body .dm-section-modal{padding-top:max(16px,var(--dm-cima-libera))!important}
+      @media(max-width:620px){
+        /* Sul telefono la finestra e' tutto lo schermo: comincia sotto la
+           fascia e finisce in fondo, invece di restare alta quanto il vetro e
+           scivolare giu' oltre il bordo. */
+        html body .dm-section-modal{padding-top:var(--dm-cima-libera)!important}
+        html body .dm-section-modal .dm-section-dialog{height:100%!important;max-height:100%!important}
+      }
+      /* Le finestre del guscio — dettagli, conferme, tastierini — ognuna col
+         suo margine di prima come minimo: 15, 10 sotto i 768, 8 su WebKit. */
+      html body .modal-wrapper:not(#editor-modal){padding-top:max(15px,env(safe-area-inset-top,0px),var(--dm-cima-libera))!important}
+      @media(max-width:768px){
+        html body .modal-wrapper:not(#editor-modal){padding-top:max(10px,env(safe-area-inset-top,0px),var(--dm-cima-libera))!important}
+      }
+      @supports (-webkit-touch-callout:none){
+        html body .modal-wrapper:not(#editor-modal){padding-top:max(8px,var(--dm-cima-libera))!important}
+      }
+      html body #editor-modal.modal-wrapper{padding-top:max(24px,var(--dm-cima-libera))!important}
+      @media(max-width:760px){
+        html body #editor-modal.modal-wrapper{padding-top:var(--dm-cima-libera)!important}
+      }
+      /* Le finestre delle tessere di Home la leggono nel loro foglio, in
+         home-widgets-section: il margine e' suo e un padrone basta. */
+    `,
+  );
+}
+
 export function installNavigationSection() {
   if (!doc || state.installed) return;
   state.installed = true;
-  misuraIlFondoDiSistema();
+  installaLaCima();
+  misuraLeFasceDiSistema();
   /* Si rimisura quando lo schermo cambia forma: girare il telefono, aprire la
-   * tastiera, entrare a schermo intero cambiano la fascia di sistema. */
+   * tastiera, entrare a schermo intero cambiano la fascia di sistema — e il
+   * chiosco, che allarga la cornice a tutto il vetro, la ridimensiona. */
   for (const evento of ["resize", "orientationchange", "pageshow"])
-    root.addEventListener?.(evento, () => misuraIlFondoDiSistema());
+    root.addEventListener?.(evento, () => misuraLeFasceDiSistema());
   /* E poco dopo l'avvio: il pannello di Home Assistant finisce di impaginarsi
    * dopo di noi, e una misura presa troppo presto è uno zero. */
-  for (const attesa of [400, 1500]) root.setTimeout?.(() => misuraIlFondoDiSistema(), attesa);
+  for (const attesa of [400, 1500]) root.setTimeout?.(() => misuraLeFasceDiSistema(), attesa);
   /* Il foglio prima di tutto: la tenda e' una regola di stile, e metterla
    * senza il foglio vorrebbe dire scriverla su un attributo che non tinge
    * niente — la barra resterebbe scoperta proprio nei millisecondi che si

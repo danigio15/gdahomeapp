@@ -760,7 +760,11 @@ const LETTURE = Object.freeze({
   },
 
   irrigazione: (tr, tessera, adesso) => {
-    const righe = Array.isArray(tessera?.rows) ? tessera.rows : [];
+    /* Le zone, e basta: il sensore del terreno sta fra le righe ma non e' una
+     * zona, e contarlo diceva «su 5 zone» a chi ne ha quattro. */
+    const righe = (Array.isArray(tessera?.rows) ? tessera.rows : []).filter(
+      (riga) => riga?.terreno !== true,
+    );
     const bagnano = righe.filter((r) => r?.on === true || r?.running === true);
     if (!bagnano.length && tessera?.attiva === true)
       return {

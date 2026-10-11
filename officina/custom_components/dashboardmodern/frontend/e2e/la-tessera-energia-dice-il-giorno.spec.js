@@ -97,11 +97,18 @@ test("la tessera dice il giorno, e aprendola ogni sorgente dice il suo", async (
   await tessera.evaluate((nodo) => nodo.click());
   const dettaglio = page.locator('[data-dm-widget-detail="energia"]').first();
   await expect(dettaglio).toBeVisible();
-  // Nella finestra le parole si scrivono per esteso: c'e' lo spazio.
-  await expect(dettaglio).toContainText("Oggi · Produzione 8,1 kWh");
-  // La rete ha due versi: preso e dato, sulla stessa riga.
-  await expect(dettaglio).toContainText("Oggi · Prelievo 5,2 kWh · Immissione 2,4 kWh");
-  await expect(dettaglio).toContainText("In batteria 3,6 kWh · Da batteria 1,9 kWh");
+  /* La finestra adesso e' quella disegnata apposta (vedi
+   * `src/sections/finestre/proposti.js`): ogni fonte e' una casella, e il suo
+   * giorno sta sotto la potenza. La rete e la batteria hanno due versi, con le
+   * frecce verso la casa (↓) e fuori (↑), e la parola nel suggerimento. */
+  const fonte = (quale) => dettaglio.locator(`.dm-f-energia-fonte[data-fonte="${quale}"]`);
+  await expect(fonte("solar")).toContainText("oggi 8,1 kWh");
+  await expect(fonte("grid")).toContainText("↓ 5,2 · ↑ 2,4 kWh");
+  await expect(fonte("grid").locator(".dm-f-giu")).toHaveAttribute("title", "Prelevata oggi");
+  await expect(fonte("battery")).toContainText("↓ 1,9 · ↑ 3,6 kWh");
+  await expect(fonte("battery").locator(".dm-f-su")).toHaveAttribute("title", "Caricata oggi");
+  // E la casa in grande, col suo giorno accanto.
+  await expect(dettaglio.locator(".dm-f-energia-eroe")).toContainText("oggi 12,3 kWh");
   await testInfo.attach("dettaglio-energia", {
     body: await dettaglio.screenshot(),
     contentType: "image/png",

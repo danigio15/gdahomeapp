@@ -61,7 +61,9 @@ test("il valore nuovo entra nei nodi che ci sono gia'", async ({ page }, testInf
   });
   const corpo = page.locator("#dm-widget-popup .dm-w-body");
   await expect(corpo).toBeVisible({ timeout: 10000 });
-  await expect(corpo.locator(".dm-w-name small").first()).toContainText("20", { timeout: 10000 });
+  await expect(corpo.locator(".dm-w-clima-gradi b").first()).toContainText("20", {
+    timeout: 10000,
+  });
 
   /* Si firma il nodo vivo: se la riscrittura lo butta via, la firma muore. */
   await page.evaluate(() => {
@@ -70,7 +72,9 @@ test("il valore nuovo entra nei nodi che ci sono gia'", async ({ page }, testInf
   });
 
   await semina(23.5);
-  await expect(corpo.locator(".dm-w-name small").first()).toContainText("23", { timeout: 10000 });
+  await expect(corpo.locator(".dm-w-clima-gradi b").first()).toContainText("23", {
+    timeout: 10000,
+  });
 
   const segno = await page.evaluate(
     () => document.querySelector("#dm-widget-popup .dm-w-body .dm-w-row")?.__dmSegno,

@@ -90,7 +90,7 @@ test("mobile wraps onto a second row instead of crushing eight bubbles into one"
    * barra dell'app. Il perche' sta accanto a `dueFile`, e la prova sotto. */
   assert.deepEqual(
     eight.map(({ top }) => top),
-    [62, 62, 62, 62, 75, 75, 75, 75],
+    [66, 66, 66, 66, 80, 80, 80, 80],
   );
   assert.ok(eight.every(({ path }) => path.startsWith("M 500 460 ")));
   const five = flowStageLayout(5, "mobile");
@@ -198,11 +198,14 @@ test("la linea che scavalca una fila arriva dritta sulla sua verticale (#118)", 
   }
 });
 
-/* La barra dell'app sul telefono galleggia in fondo allo schermo e arriva a
- * coprire gli ultimi 134 punti del palco: misurato, copre da 506 in giu' su un
- * palco alto 640. Qui si lavora in centesimi, che e' come sono scritte le
- * altezze delle file. */
-const DOVE_ARRIVA_LA_BARRA = (506 / 640) * 100;
+/* Dove comincia la barra dell'app sul telefono, in centesimi del palco.
+ *
+ * Quando galleggiava copriva il palco dal 79% in giu' (506 punti su 640).
+ * Adesso sta attaccata al fondo dello schermo: sulla fotografia della
+ * segnalazione comincia al 95% del palco. Si tiene un margine e si scrive 92:
+ * la regola e' che il numero dell'ultima fila si legga, non che sfiori la
+ * barra. */
+const DOVE_ARRIVA_LA_BARRA = 92;
 /* Mezza bolla, in centesimi dell'altezza del palco: 75 punti di diametro
  * ristretti da `flowNodeScale`, su 640. */
 const MEZZA_BOLLA = (quanti) => ((75 * flowNodeScale(quanti)) / 2 / 640) * 100;

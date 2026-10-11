@@ -81,6 +81,12 @@ async function avvia(page, testInfo) {
   });
 }
 
+/* A riposo la tessera ha il colore della sua sezione (l'intestazione della
+ * pagina Energia): «i colori dei widget devono richiamare i colori delle
+ * sezioni e diventare rossi solo in caso di segnalazioni». Prima era
+ * l'arancione scritto nel modello. */
+const COLORE_DELLA_SEZIONE = "rgb(245,158,11)";
+
 test("senza soglia la tessera resta dell'arancione di sempre", async ({ page }, testInfo) => {
   test.setTimeout(120_000);
   await avvia(page, testInfo);
@@ -88,7 +94,7 @@ test("senza soglia la tessera resta dell'arancione di sempre", async ({ page }, 
   await expect(tessera(page)).toHaveCount(1);
   /* Chi non ha chiesto niente non deve accorgersi che questa riga è cambiata:
      seimiladuecento watt senza una soglia scritta non sono un sovraccarico. */
-  await expect.poll(() => colore(page)).toBe("#f97316");
+  await expect.poll(() => colore(page)).toBe(COLORE_DELLA_SEZIONE);
   await expect(tessera(page)).toHaveAttribute("data-alert", "false");
 });
 
@@ -100,7 +106,7 @@ test("sopra l'ambra la tessera diventa ambra, sopra la rossa diventa rossa", asy
   await laSogliaE(page, { sorgente: "casa", ambra: 3000, rossa: 3300 });
 
   await laCasaTira(page, { casa: 2400, rete: 2400 });
-  await expect.poll(() => colore(page)).toBe("#f97316");
+  await expect.poll(() => colore(page)).toBe(COLORE_DELLA_SEZIONE);
 
   await laCasaTira(page, { casa: 3100, rete: 3100 });
   await expect.poll(() => colore(page)).toBe("#f59e0b");
@@ -123,7 +129,7 @@ test("l'energia immessa in rete non fa scattare la soglia della rete", async ({
      chilowatt FUORI. Col valore assoluto la tessera sarebbe diventata rossa
      nel momento migliore della giornata. */
   await laCasaTira(page, { casa: 700, rete: -6000 });
-  await expect.poll(() => colore(page)).toBe("#f97316");
+  await expect.poll(() => colore(page)).toBe(COLORE_DELLA_SEZIONE);
 
   // Lo stesso numero, ma in entrata, è il sovraccarico che si voleva vedere.
   await laCasaTira(page, { casa: 6700, rete: 6000 });

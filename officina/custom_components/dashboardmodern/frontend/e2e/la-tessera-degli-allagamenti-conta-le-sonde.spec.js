@@ -99,7 +99,10 @@ test("un avviso nel gruppo Allagamenti non diventa una sonda bagnata", async ({
   const finestra = page.locator("#dm-widget-popup .dm-widget-detail");
   await expect(finestra).toBeVisible({ timeout: 10000 });
   await expect(finestra).not.toContainText("C'e' acqua");
-  await expect(finestra.locator(".dm-w-row")).toHaveCount(2);
-  await expect(finestra).toContainText("Perdita Piscina Umidità");
+  /* Le sonde sono le schede della finestra disegnata apposta
+   * (`finestre/sicurezza.js`), non piu' le righe di quella generica; e il
+   * nome perde il «Perdita» davanti, che la finestra dice gia'. */
+  await expect(finestra.locator(".dm-f-allagamenti-sd")).toHaveCount(2);
+  await expect(finestra).toContainText("Piscina Umidità");
   await expect(finestra).not.toContainText("allarme");
 });

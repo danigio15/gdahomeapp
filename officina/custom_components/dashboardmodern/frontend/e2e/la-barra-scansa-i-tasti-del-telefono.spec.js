@@ -100,17 +100,22 @@ test("la barra si alza esattamente di quello che il sistema si prende", async ({
   await expect(page.locator("nav.tabs.bottom-nav-bar")).toBeVisible({ timeout: 20_000 });
   await laMisuraSiFerma(page);
 
-  /* Senza niente da scansare la barra sta dov'e' sempre stata: chi non ha i
-   * tasti non deve vedersela sollevata per un difetto che non ha. */
+  /* Sul telefono la barra sta attaccata al fondo: lo dice la prova qui
+   * sotto. Questa e' per tablet e computer, dove galleggia. */
+  test.skip(page.viewportSize().width <= 820, "sul telefono la barra appoggia sul fondo");
+
+  /* Senza niente da scansare la barra sta agli otto pixel del minimo: chi
+   * non ha i tasti non deve vedersela sollevata per un difetto che non ha. */
   await fingiIlFondoDiSistema(page, 0);
   const aRiposo = await misuraFerma(page, "nav.tabs.bottom-nav-bar");
-  expect(aRiposo).toBe(18);
+  expect(aRiposo).toBe(8);
 
   /* Con i tasti di sistema — qui quarantotto pixel, la misura tipica di un
-   * Android a tre tasti — sale esattamente di quei quarantotto. */
+   * Android a tre tasti — la barra appoggia sopra di loro: il piu' grande
+   * dei due, non la somma, cosi' in mezzo non resta una striscia di pagina. */
   await fingiIlFondoDiSistema(page, 48);
   const coiTasti = await misuraFerma(page, "nav.tabs.bottom-nav-bar");
-  expect(coiTasti).toBe(aRiposo + 48);
+  expect(coiTasti).toBe(48);
 
   /* E torna giu' quando la fascia sparisce: e' un adattamento, non uno
    * spostamento una volta per tutte. */
@@ -170,4 +175,39 @@ test("anche la maniglia che tira fuori la barra sta sopra i tasti", async ({ pag
   const aRiposo = await misuraFerma(page, maniglia);
   await fingiIlFondoDiSistema(page, 48);
   expect(await misuraFerma(page, maniglia)).toBe(aRiposo + 48);
+});
+
+/* «Deve stare subito sopra la barra Android: non voglio vedere lo spazio e le
+ * cose in mezzo della dashboard.» Sul telefono la barra appoggia sul fondo,
+ * larga quanto lo schermo, e la fascia dei tasti la riempie lei. */
+test("sul telefono la barra sta attaccata al fondo e copre la fascia dei tasti", async ({
+  browser,
+}, testInfo) => {
+  test.setTimeout(150_000);
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.evaluate(() => document.body.classList.add("cd-nav-fixed"));
+  await expect(page.locator("nav.tabs.bottom-nav-bar")).toBeVisible({ timeout: 20_000 });
+  await laMisuraSiFerma(page);
+  const barra = () =>
+    page.evaluate(() => {
+      const nodo = document.querySelector("nav.tabs.bottom-nav-bar");
+      const r = nodo.getBoundingClientRect();
+      return {
+        sotto: Math.round(innerHeight - r.bottom),
+        sinistra: Math.round(r.left),
+        destra: Math.round(innerWidth - r.right),
+        imbottitura: Math.round(parseFloat(getComputedStyle(nodo).paddingBottom)),
+      };
+    });
+  await fingiIlFondoDiSistema(page, 0);
+  expect(await barra()).toMatchObject({ sotto: 0, sinistra: 0, destra: 0 });
+  /* Coi tasti la barra resta sul fondo e si allunga sotto di loro. */
+  await fingiIlFondoDiSistema(page, 48);
+  const coiTasti = await barra();
+  expect(coiTasti.sotto).toBe(0);
+  expect(coiTasti.imbottitura).toBe(6 + 48);
+  await page.close();
 });

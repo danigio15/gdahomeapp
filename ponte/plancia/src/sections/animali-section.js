@@ -214,7 +214,7 @@ export function filtriMarkup(filtri, scelto) {
     .join("")}</div>`;
 }
 
-function parolaCasella(chiave) {
+export function parolaCasella(chiave) {
   switch (chiave) {
     case "cibo_livello":
       return t("Cibo", "Food");
@@ -285,7 +285,7 @@ export function parolaAvviso(chiave) {
 /* Le parole dei tasti (#373). Sono comandi, quindi si scrivono all'infinito:
  * «Eroga una porzione», non «Erogazione». Chi legge deve capire cosa succede
  * premendo, non come si chiama la funzione. */
-function parolaAzione(chiave) {
+export function parolaAzione(chiave) {
   switch (chiave) {
     case "cibo_eroga":
       return t("Eroga una porzione", "Feed a portion");

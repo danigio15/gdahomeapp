@@ -122,15 +122,16 @@ test("il passo della temperatura chiede il grado giusto", async ({ page }, testI
   ).toHaveText("21,5°");
 });
 
-test("in cima alla finestra ci sono i numeri che riassumono", async ({ page }, testInfo) => {
+/* «Togli sta parte stato, non mi interessa: mostra solo [l'elenco] con la
+ * possibilita' di accendere e spegnere, mettendo in alto quelle accese.» La
+ * finestra del Clima apre sull'elenco da comandare: niente caselle di
+ * riepilogo sopra, il conto sta in una riga sola, e l'accesa e' la prima. */
+test("la finestra apre sull'elenco, con le accese in cima", async ({ page }, testInfo) => {
   test.setTimeout(120_000);
   await avvia(page, testInfo);
-  const riepilogo = page.locator("#dm-widget-popup .dm-w-caselle .dm-w-casella");
-  await expect(riepilogo).toHaveCount(3);
-  await expect(riepilogo.first()).toContainText("1/3");
-  /* E si legge tutto: il vassoio non taglia le etichette. */
-  const tagliate = await riepilogo.evaluateAll(
-    (nodi) => nodi.filter((n) => n.scrollHeight > n.clientHeight + 1).length,
-  );
-  expect(tagliate).toBe(0);
+  const popup = page.locator("#dm-widget-popup");
+  await expect(popup.locator(".dm-w-caselle")).toHaveCount(0);
+  await expect(popup.locator(".dm-w-luci-conto")).toContainText("1");
+  const prima = popup.locator("[data-dm-w-clima-scheda]").first();
+  await expect(prima.locator(".dm-w-power")).toHaveAttribute("data-on", "true");
 });

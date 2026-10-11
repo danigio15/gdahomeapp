@@ -80,15 +80,17 @@ async function avvia(page, testInfo) {
   await page.waitForTimeout(1500);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   await page.locator('#dm-widgets .dm-tile[data-dm-widget="ev"]').click();
-  await expect(page.locator("#dm-widget-popup .dm-w-casella").first()).toBeVisible();
+  await expect(page.locator("#dm-widget-popup .dm-f-ev").first()).toBeVisible();
 }
 
-/* Dal 30 agosto il popup parla a carte: le misure stanno nelle caselle
- * (.dm-w-casella) e negli stati a pillola, le righe restano ai soli comandi.
- * La promessa dell'interruttore e' la stessa; si legge tutto quel che c'e'. */
+/* Dal 30 agosto il popup parla a carte; e adesso l'Auto ha la sua finestra
+ * disegnata apposta (vedi `src/sections/finestre/proposti.js`): la carica
+ * nell'anello, il traguardo sotto l'autonomia, il contachilometri in «Dov'e'»,
+ * le altre caselle in fondo e quelle della colonnina nella loro sezione. La
+ * promessa dell'interruttore e' la stessa; si legge tutto quel che c'e'. */
 const righe = (page) =>
   page
-    .locator("#dm-widget-popup :is(.dm-w-casella, .dm-w-pillola, .dm-w-row)")
+    .locator("#dm-widget-popup .dm-f-ev")
     .evaluateAll((nodi) => nodi.map((n) => n.textContent.replace(/\s+/g, " ").trim()));
 
 test("tutte le caselle mappate dell'auto arrivano nella finestra", async ({ page }, testInfo) => {
@@ -102,7 +104,7 @@ test("tutte le caselle mappate dell'auto arrivano nella finestra", async ({ page
   expect(testo, "la potenza della wallbox non arriva").toMatch(/7\.?400 W|7400 W/);
   expect(testo, "l'energia di sessione non arriva").toContain("18,2 kWh");
   expect(testo, "l'odometro non arriva").toMatch(/42\.?150 km/);
-  expect(testo, "il target non arriva").toContain("80 %");
+  expect(testo, "il target non arriva").toMatch(/80\s?%/);
   expect(testo, "il cavo collegato non arriva").toContain("Acceso");
 });
 

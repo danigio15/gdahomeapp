@@ -89,6 +89,11 @@ function codePairs() {
   for (const name of readdirSync(SECTIONS).sort()) {
     if (name.endsWith(".js")) collectCalls(readFileSync(join(SECTIONS, name), "utf8"), "t", pairs);
   }
+  /* Le finestre dei widget stanno in una cartella loro, una per gruppo. */
+  const FINESTRE = join(SECTIONS, "finestre");
+  for (const name of readdirSync(FINESTRE).sort()) {
+    if (name.endsWith(".js")) collectCalls(readFileSync(join(FINESTRE, name), "utf8"), "t", pairs);
+  }
   for (const name of readdirSync(CORE).sort()) {
     if (name.endsWith(".js")) collectCalls(readFileSync(join(CORE, name), "utf8"), "pick", pairs);
   }

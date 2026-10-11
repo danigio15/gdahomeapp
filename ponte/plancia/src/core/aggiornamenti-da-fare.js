@@ -56,6 +56,11 @@ function numero(valore) {
 
 /** Se questo aggiornamento si puo' far partire da qui. */
 function siInstalla(attributi) {
+  /* Dove l'attributo non arriva, non e' un no: il tasto c'e', e se Home
+   * Assistant rifiuta torna com'era. Senza, la finestra diceva le versioni e
+   * mandava altrove («mostra la possibilita' di installare da qui»). */
+  if (attributi?.supported_features === undefined || attributi?.supported_features === null)
+    return true;
   return (numero(attributi?.supported_features) & SI_INSTALLA) !== 0;
 }
 

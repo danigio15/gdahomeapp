@@ -63,6 +63,15 @@ import {
   vmcMarkup,
 } from "./vmc-section.js";
 import {
+  STILE_DEUMIDIFICATORI,
+  deumidificatoriMarkup,
+  firmaDeiDeumidificatori,
+  letturaDeiDeumidificatori,
+  sincronizzaIDeumidificatori,
+  toccaUnDeumidificatore,
+} from "./deumidificatori-section.js";
+import { eUnUmidificatore } from "../core/deumidificatori.js";
+import {
   EVENTO_SPEGNIMENTI,
   leggiGliSpegnimenti,
   avvisaCheNonSiPuo,
@@ -218,7 +227,10 @@ export function climateZones(unit) {
   return ["freddo"];
 }
 
-export function climateUnits() {
+/* Le unita' come le ha scritte la configurazione, tutte: anche i
+ * deumidificatori che ci sono finiti dentro (#205), che la fascia loro va a
+ * cercare qui. */
+export function unitaDelClimaScritte() {
   let values = null;
   if (typeof root.getClimaUnits === "function") {
     try {
@@ -227,7 +239,11 @@ export function climateUnits() {
     } catch (_error) {}
   }
   if (!values) values = readClimateUnits();
-  if (!Array.isArray(values)) return [];
+  return Array.isArray(values) ? values : [];
+}
+
+export function climateUnits() {
+  const values = unitaDelClimaScritte();
   let rooms = [];
   try {
     rooms = root.cdRoomList?.() || [];
@@ -236,6 +252,11 @@ export function climateUnits() {
     .flatMap((unit, index) => {
       const entity = clean(unit?.entity || unit?.entity_id || unit?.entities?.[0]);
       if (!entity) return [];
+      /* Un deumidificatore messo fra le unita' del Clima (#205) — era l'unica
+       * strada che c'era — non e' un termostato: la card dei gradi non sapeva
+       * comandarlo. Esce da qui ed entra nella fascia dei deumidificatori,
+       * con il suo nome e la sua stanza, senza riscrivere la configurazione. */
+      if (eUnUmidificatore(entity)) return [];
       // La prima zona tiene l'id storico `card-<entity>`: il runtime legacy
       // (`cdAutoHide`) lo cerca per nome. La card gemella della pompa di
       // calore, nell'altra zona, prende un suffisso per non duplicare l'id.
@@ -464,6 +485,10 @@ function skeletonMarkup(labels) {
        entrambe, perche' non e' ne' freddo ne' caldo — e' l'aria di tutta la
        casa, e si vede in tutti e due i modi. -->
   <div data-dm-vmc-posto></div>
+
+  <!-- I deumidificatori (#205): sotto la ventilazione, per la stessa ragione —
+       l'umidita' di casa non e' ne' freddo ne' caldo. -->
+  <div data-dm-deum-posto></div>
 </div>`;
 }
 
@@ -1198,6 +1223,7 @@ export function renderClimate({ rebuild = false, force = false } = {}) {
   }
   paintSummary(shell, units, states, labels);
   dipingiLaVentilazione(shell, states);
+  dipingiIDeumidificatori(shell, states);
   return true;
 }
 
@@ -1221,6 +1247,22 @@ function dipingiLaVentilazione(shell, states) {
     posto.innerHTML = vmcMarkup(letture);
   }
   sincronizzaLeVmc(posto, letture);
+}
+
+/* I deumidificatori (#205), con la stessa regola della ventilazione: il
+ * markup e' di `deumidificatori-section.js`, la mano che lo chiama e' questa,
+ * e si rifa' solo quando cambia la forma. Rifare la card a ogni punto di
+ * umidita' cancellerebbe il + sotto il dito. */
+function dipingiIDeumidificatori(shell, states) {
+  const posto = shell.querySelector("[data-dm-deum-posto]");
+  if (!posto) return;
+  const letture = letturaDeiDeumidificatori(states, unitaDelClimaScritte());
+  const firma = firmaDeiDeumidificatori(letture);
+  if (posto.dataset.dmDeumFirma !== firma) {
+    posto.dataset.dmDeumFirma = firma;
+    posto.innerHTML = deumidificatoriMarkup(letture);
+  }
+  sincronizzaIDeumidificatori(posto, letture);
 }
 
 /* ── wiring ───────────────────────────────────────────────────────────── */
@@ -1254,6 +1296,7 @@ function suiPastiglie(event) {
 }
 
 function onClick(event) {
+  if (toccaUnDeumidificatore(event, unitaDelClimaScritte())) return;
   if (event.target?.closest?.("[data-dm-cl-mostra-fuori]")) {
     event.preventDefault();
     state.mostraFuoriStagione = true;
@@ -2285,5 +2328,6 @@ html[data-theme="dark"] .dm-cl-knob{box-shadow:0 3px 8px rgba(0,0,0,.45)}
  * nello stesso foglio: due fogli per una pagina sola sarebbero due posti in cui
  * cercare quando qualcosa si sposta. Le regole le scrive il suo modulo. */
 ${STILE_VMC}
+${STILE_DEUMIDIFICATORI}
 `;
 }

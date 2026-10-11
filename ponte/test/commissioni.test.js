@@ -663,7 +663,12 @@ test("una plancia gia' configurata dall'app non viene coperta da quella dell'int
 
   const letta = await con.rispondi({ id: 2, type: "dashboardmodern/config/get" });
   assert.equal(letta.result.snapshot.values.cd_stanze, '[{"name":"Sala"}]');
-  assert.deepEqual(casa.chieste, [], "a Home Assistant non si chiede niente");
+  /* Se non l'avviso al pannello a muro, che e' un dire e non un chiedere. */
+  assert.deepEqual(
+    casa.chieste.filter((c) => c.type !== "fire_event"),
+    [],
+    "a Home Assistant non si chiede niente",
+  );
 
   rmSync(cartella, { recursive: true, force: true });
 });
@@ -717,6 +722,36 @@ test("se l'integrazione risponde una plancia vuota non si adotta niente, e il fi
   assert.equal(comunque.success, true, "una risposta, non un errore");
   assert.equal(comunque.result.snapshot, null);
 
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("una configurazione salvata si dice sul bus, perche' il pannello a muro la rilegga subito", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-config-"));
+  const casa = casaCheDice(null);
+  const con = new Commissioni({
+    casa,
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+  const scatto = {
+    values: { cd_stanze: '[{"name":"Sala"}]' },
+    keys_revision: 1,
+    writer_generation: 2,
+    updated_at: 0,
+  };
+  const scrivi = (id) =>
+    con.rispondi(
+      { id, type: "dashboardmodern/config/set", profile: "muro-1", snapshot: scatto },
+      { puoAmministrare: true },
+    );
+  assert.equal((await scrivi(1)).result.status, "saved");
+  const avvisi = () => casa.chieste.filter((c) => c.type === "fire_event");
+  assert.deepEqual(avvisi(), [
+    { type: "fire_event", event_type: "dashboardmodern_config", event_data: { profile: "muro-1" } },
+  ]);
+  /* Uguale a prima: niente da dire. */
+  assert.equal((await scrivi(2)).result.status, "unchanged");
+  assert.equal(avvisi().length, 1);
   rmSync(cartella, { recursive: true, force: true });
 });
 
@@ -894,7 +929,9 @@ test("col ponte in mezzo: la configurazione non arriva in Home Assistant, le alt
   assert.deepEqual(detti.find((uno) => uno.id === 4).result, { value: null });
   /* In Home Assistant sono arrivate solo le cose sue. */
   assert.deepEqual(
-    ha.arrivate.filter((una) => una.filo).map((una) => una.filo.type),
+    ha.arrivate
+      .filter((una) => una.filo && una.filo.type !== "fire_event")
+      .map((una) => una.filo.type),
     ["frontend/get_user_data", "dashboardmodern/www/list"],
   );
   assert.equal(
@@ -2041,4 +2078,44 @@ test("il telefono senza utente addosso amministra: il codice gli arriva", async 
   assert.equal(altrui.result.chiave, undefined);
   assert.equal(altrui.result.chiaveGestione, undefined);
   assert.equal(altrui.result.installatore, true, "e la voce invece sparisce");
+});
+
+/* Il tablet a muro chiede a che revisione sono le sue plance, ogni pochi
+ * secondi: la risposta sono numeri, e lo scatto si scarica solo se cambiano. */
+test("le revisioni delle plance si chiedono senza scaricare lo scatto", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-revisioni-"));
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+  assert.equal(con.riconosce({ type: "ponte/config/revisioni" }), true);
+
+  const prima = await con.rispondi({
+    id: 1,
+    type: "ponte/config/revisioni",
+    profili: ["primary", "tablet-cucina", "../fuori"],
+  });
+  assert.equal(prima.success, true);
+  assert.deepEqual(prima.result, { revisioni: { primary: 0, "tablet-cucina": 0 } });
+
+  await con.rispondi(
+    {
+      id: 2,
+      type: "dashboardmodern/config/set",
+      profile: "tablet-cucina",
+      snapshot: { values: { cd_muro: '{"attiva":true}' }, keys_revision: 1 },
+      expected_revision: 0,
+    },
+    { puoAmministrare: true },
+  );
+  const dopo = await con.rispondi({
+    id: 3,
+    type: "ponte/config/revisioni",
+    profili: ["primary", "tablet-cucina"],
+  });
+  assert.deepEqual(dopo.result, { revisioni: { primary: 0, "tablet-cucina": 1 } });
+  assert.equal(JSON.stringify(dopo).includes("cd_muro"), false, "niente valori, solo numeri");
+
+  rmSync(cartella, { recursive: true, force: true });
 });

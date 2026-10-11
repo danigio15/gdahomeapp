@@ -78,6 +78,32 @@ function osservaLaConfigurazione(root, dimentica, osservate) {
   storage.__dmStateEventGateWatch = true;
 }
 
+/* Le entita' che qualcuno sta guardando adesso, anche se la configurazione di
+ * questa plancia non le nomina.
+ *
+ * «Se clicco per spegnere la luce in casa si spegne istantaneamente, ma sulla
+ * wall il cambio stato non e' immediato.» La plancia a muro prende le luci, il
+ * clima e le tapparelle da un'altra plancia — di solito la principale — e nella
+ * configurazione sua quelle entita' non ci sono: il cancello le buttava come
+ * chiacchiere della casa, e il tablet si ridisegnava solo al suo battito, ogni
+ * quindici secondi.
+ *
+ * Chi mostra entita' prese altrove mette qui una domanda, `(id) => risposta`:
+ * `false` per «non mi interessa», qualunque altra cosa per «la sto mostrando».
+ * Quelle mostrate passano, e non aspettano il mezzo secondo del mazzetto: chi
+ * le guarda e' un pannello a muro, e li' il ritardo si vede. */
+export const IN_VISTA_KEY = "__DM_ENTITA_IN_VISTA__";
+const SUBITO_MS = 40;
+
+function inVista(root, id) {
+  try {
+    const domanda = root[IN_VISTA_KEY];
+    return typeof domanda === "function" ? Boolean(domanda(id)) : false;
+  } catch (_errore) {
+    return false;
+  }
+}
+
 /**
  * Discard live updates that are not used anywhere by the dashboard, then
  * coalesce the remaining notifications into a bounded batch. State registries
@@ -98,6 +124,7 @@ export function installStateEventGate(
   const pendingIds = new Set();
   let lastState = null;
   let timer = 0;
+  let timerSubito = false;
   let interests = null;
 
   const currentInterests = () => {
@@ -118,6 +145,7 @@ export function installStateEventGate(
 
   const flush = () => {
     timer = 0;
+    timerSubito = false;
     if (!pendingIds.size) return;
     const entityIds = [...pendingIds];
     pendingIds.clear();
@@ -140,11 +168,19 @@ export function installStateEventGate(
     // If neither the canonical nor legacy configuration is ready yet, remain
     // backward compatible and allow the event. Once configuration is known,
     // unrelated Home Assistant chatter is ignored.
-    if (configured.size && !configured.has(id)) return;
+    const visto = inVista(root, id);
+    if (!visto && configured.size && !configured.has(id)) return;
     pendingIds.add(id);
     lastState = state || lastState;
-    if (timer) return;
-    timer = root.setTimeout?.(flush, Math.max(0, Number(delay) || 0)) || 0;
+    const attesa = Math.max(0, Number(delay) || 0);
+    const subito = visto && attesa > SUBITO_MS;
+    /* Un mazzetto gia' in partenza basta, a meno che questo stato sia in
+     * vista e il mazzetto stia ancora aspettando il suo mezzo secondo: allora
+     * parte prima, e si porta dietro anche gli altri. */
+    if (timer && (timerSubito || !subito)) return;
+    if (timer) root.clearTimeout?.(timer);
+    timerSubito = subito;
+    timer = root.setTimeout?.(flush, subito ? SUBITO_MS : attesa) || 0;
     if (!timer) root.queueMicrotask?.(flush);
   };
 

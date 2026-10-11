@@ -42,8 +42,10 @@ test("l'attributo sta sulla radice, non sull'intestazione", () => {
 test("si tiene ferma con sticky, non con fixed", () => {
   /* Sticky resta dentro il flusso: la pagina sotto non ci va a finire dietro e
    * non serve compensare l'altezza a mano — che è il modo in cui queste cose
-   * si rompono al primo schermo di dimensione diversa. */
-  assert.match(sezione, /position:sticky;top:0/);
+   * si rompono al primo schermo di dimensione diversa. Ferma sotto la fascia
+   * del sistema, non sul bordo del vetro (#214): dove la fascia non c'e' la
+   * variabile vale zero, ed e' il «top:0» di prima. */
+  assert.match(sezione, /position:sticky;top:var\(--dm-cima-libera,0px\)/);
   assert.doesNotMatch(sezione, /position:fixed/);
   /* E non su uno schermo basso, dove del resto resterebbe una feritoia. */
   assert.match(sezione, /@media \(min-height:560px\)/);

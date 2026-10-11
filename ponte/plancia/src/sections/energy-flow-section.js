@@ -297,32 +297,44 @@ function soloPotenza(voce) {
   return resolvedEntity(clean(voce.power_entity) || clean(voce.power));
 }
 
+/* La memoria e' per entita', non per elenco. Era una sola voce per periodo,
+ * firmata dall'elenco di chi l'aveva chiesta: il flusso chiede tutti i
+ * carichi, la finestra di una stanza solo i suoi figli, e ogni elenco diverso
+ * buttava via i valori dell'altro. Il cerchio del boiler restava senza numero
+ * — «—» — finche' il giro dopo non lo richiedeva. Adesso ogni entita' tiene il
+ * suo valore e la sua ora: si chiede solo chi manca o e' vecchio, e quello
+ * che arriva si aggiunge a quello che c'era. */
 function chiediIKwh(periodo, entita) {
   const broker = root.DashboardModernEnergyService?.broker;
   if (!broker?.request || !entita.length) return;
   const memoria = (state.kwhDallaPotenza ||= {});
-  const voce = memoria[periodo];
-  const firma = entita.slice().sort().join("|");
-  if (voce && (voce.inCorso || (Date.now() - voce.quando < ATTESA_DEI_KWH && voce.firma === firma)))
-    return;
-  memoria[periodo] = { ...(voce || {}), inCorso: true, firma, quando: Date.now() };
+  const voce = (memoria[periodo] ||= { valori: new Map(), quando: new Map(), inCorso: new Set() });
+  const adesso = Date.now();
+  const daChiedere = entita.filter(
+    (id) => !voce.inCorso.has(id) && !(adesso - (voce.quando.get(id) ?? -Infinity) < ATTESA_DEI_KWH),
+  );
+  if (!daChiedere.length) return;
+  for (const id of daChiedere) voce.inCorso.add(id);
   const stati = allStates();
+  const chiudi = () => {
+    for (const id of daChiedere) {
+      voce.inCorso.delete(id);
+      voce.quando.set(id, Date.now());
+    }
+  };
   broker
-    .request(domandaDeiKwhDallaPotenza(entita, periodo, Date.now()), 15000)
+    .request(domandaDeiKwhDallaPotenza(daChiedere, periodo, adesso), 15000)
     .then((risposta) => {
-      const valori = new Map();
-      for (const id of entita) {
+      for (const id of daChiedere) {
         const kwh = kwhDallaPotenza(risposta, id, stati[id]?.attributes?.unit_of_measurement);
-        if (kwh !== null) valori.set(id, kwh);
+        if (kwh !== null) voce.valori.set(id, kwh);
       }
-      memoria[periodo] = { inCorso: false, firma, quando: Date.now(), valori };
+      chiudi();
       refreshEnergyFlows();
     })
-    .catch(() => {
-      /* Niente Recorder, o la domanda e' scaduta: si riprova al prossimo giro
-       * dopo l'attesa, e intanto il cerchio dice quello che sa. */
-      memoria[periodo] = { inCorso: false, firma, quando: Date.now(), valori: voce?.valori };
-    });
+    /* Niente Recorder, o la domanda e' scaduta: si riprova dopo l'attesa, e
+     * intanto il cerchio tiene il numero che aveva. */
+    .catch(chiudi);
 }
 
 /** I kilowattora del periodo per chi ha solo la potenza, per id della voce. */
@@ -598,6 +610,33 @@ function bindNodeClick(element, node, period) {
   if (click) element.dataset.dmFlowClickPeriod = period;
 }
 
+/* Il nome dentro il cerchio: «il testo non entra, deve essere adattato».
+ * In cima un cerchio e' piu' stretto che al centro, e «LOCALE TECNICO» usciva
+ * dai bordi anche coi puntini. Il nome va su due righe se serve, e la scritta
+ * scende di mezzo pixel alla volta finche' non entra — non sotto i 6 px. Si
+ * rifa' solo quando cambiano il nome o la misura del cerchio. */
+const NOME_PIU_PICCOLO = 6;
+
+function adattaIlNome(cerchio, nome) {
+  const largo = cerchio?.clientWidth || 0;
+  if (!nome || !largo) return;
+  const chiave = `${nome.textContent}|${largo}`;
+  if (nome.dataset.dmAdattato === chiave) return;
+  nome.style.removeProperty("font-size");
+  delete nome.dataset.dmNomeLungo;
+  const stile = doc.defaultView?.getComputedStyle?.(nome);
+  let misura = Number.parseFloat(stile?.fontSize) || 0;
+  const troppo = () =>
+    nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura * 1.1 * 2 + 1;
+  while (misura > NOME_PIU_PICCOLO && troppo()) {
+    misura -= 0.5;
+    nome.style.setProperty("font-size", `${misura}px`, "important");
+  }
+  /* Una parola sola che non entra nemmeno cosi': una riga, coi puntini. */
+  if (troppo()) nome.dataset.dmNomeLungo = "true";
+  nome.dataset.dmAdattato = chiave;
+}
+
 function ensureBubble(stage, node, period, scale) {
   let element = stage.querySelector(`[data-dm-flow-node="${cssEscape(node.id)}"]`);
   if (!element) {
@@ -624,6 +663,7 @@ function ensureBubble(stage, node, period, scale) {
   setStyleProperty(element, "--dm-flow-mobile-top", `${node.mobile.top}%`);
   const label = element.querySelector(".node-label");
   scriviTestoSeCambia(label, node.name);
+  adattaIlNome(element, label);
   writeIcon(element.querySelector(".node-icon"), node.icon);
   const value = element.querySelector(".dm-flow-value");
   scriviTestoSeCambia(value, node.text);
@@ -1396,6 +1436,10 @@ function installStyles() {
        so a wallbox at 7 kW is visibly heavier than a fridge at 60 W. */
     .flow-stage .node.dm-flow-node{display:flex!important;visibility:visible!important;transform:translate(-50%,-50%) scale(var(--dm-flow-scale,1))!important;transition:left .28s ease,top .28s ease,transform .28s ease!important}
     .flow-stage .node.dm-flow-node[data-dm-flow-active="false"]{opacity:.62!important}
+    /* Il nome sta dentro il cerchio: largo quanto la corda in cima, al massimo
+       due righe; la misura la stringe adattaIlNome. */
+    .flow-stage .node.dm-flow-node .node-label{width:72%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
+    .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
     .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
     .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:var(--dm-flow-duration,.8s)!important}
     /* La soglia e' quella del guscio, 768, e non una nostra.

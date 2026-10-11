@@ -1,9 +1,12 @@
 /* Il popup dei widget parla a carte, e l'auto dice quando finisce.
  *
- * Dal progetto approvato: sotto l'analisi niente elenco di righe — le letture
- * sono caselle sotto «Le misure», gli acceso/spento pillole sotto «Lo stato».
- * E l'auto in carica dice l'ora del pieno («verso le»), con la stessa formula
- * della pagina EV. Il tasto Chiudi sta a destra, come negli altri popup.
+ * Dal progetto approvato: niente elenco di righe di sola lettura. La finestra
+ * dell'Auto adesso e' quella disegnata apposta (vedi
+ * `src/sections/finestre/proposti.js`): l'anello della carica, i chilometri,
+ * e il chip della ricarica che dice la potenza e quanto manca alla fine — lo
+ * stesso conto della didascalia della tessera e della pagina EV. Il verdetto
+ * con la frase («verso le») era della finestra generica, che per l'Auto non
+ * c'e' piu'. Il tasto Chiudi sta a destra, come negli altri popup.
  */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
@@ -73,16 +76,23 @@ test("carte sotto l'analisi, Chiudi a destra, e l'ora del pieno", async ({ page 
   const finestra = page.locator("#dm-widget-popup .dm-widget-detail");
   await expect(finestra).toBeVisible({ timeout: 10000 });
 
-  /* La frase predittiva: in carica, e dice VERSO LE che ora finisce. */
-  await expect(finestra.locator(".dm-w-frase")).toContainText("In carica al 53%", {
-    timeout: 10000,
-  });
-  await expect(finestra.locator(".dm-w-frase")).toContainText("verso le");
+  /* La carica nell'anello, l'autonomia accanto, e il chip della ricarica:
+   * in carica, con la potenza e quanto manca alla fine. */
+  await expect(finestra.locator(".dm-f-ev-anello")).toContainText("53%", { timeout: 10000 });
+  await expect(finestra.locator(".dm-f-ev-dx")).toContainText("201 km");
+  const chip = finestra.locator(".dm-f-ev-chip");
+  await expect(chip).toHaveAttribute("data-carica", "true");
+  await expect(chip).toContainText("In carica");
+  await expect(chip).toContainText("1,6 kW");
+  /* Quanto manca si conta col traguardo dell'auto, come fa la didascalia
+   * della tessera: questa vettura non lo pubblica, e un'ora inventata su un
+   * «cento per cento» supposto non si scrive. */
+  await expect(chip).not.toContainText("alla fine");
 
-  /* Le misure a caselle — carica, autonomia — e NESSUNA riga di sola lettura. */
-  await expect(finestra.locator(".dm-w-caselle .dm-w-casella")).not.toHaveCount(0);
+  /* NESSUNA riga di sola lettura, e niente caselle generiche. */
   const righeDiLettura = await finestra.locator(".dm-w-row .dm-w-val").count();
   expect(righeDiLettura).toBe(0);
+  await expect(finestra.locator(".dm-w-casella")).toHaveCount(0);
 
   /* Il Chiudi sta a destra della finestra, non addosso alla testata. */
   const posizioni = await page.evaluate(() => {

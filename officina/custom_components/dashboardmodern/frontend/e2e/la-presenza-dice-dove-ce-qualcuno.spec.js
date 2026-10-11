@@ -92,13 +92,20 @@ test("la tessera dice in quante stanze c'è qualcuno, e quali", async ({ page },
   await expect(tessera).not.toHaveAttribute("data-alert", "true");
 
   await tessera.click();
-  const occupata = page.locator("#dm-widget-popup .dm-w-pillola", { hasText: "Salone" });
-  const libera = page.locator("#dm-widget-popup .dm-w-pillola", { hasText: "Cucina" });
-  await expect(occupata).toHaveAttribute("data-tono", "acceso");
-  await expect(libera).toHaveAttribute("data-tono", "quiete");
-  /* Un'occupazione stabile e un movimento non dicono la stessa cosa. */
+  /* La finestra adesso e' quella disegnata apposta (`finestre/sicurezza.js`):
+   * le stanze sono piastrelle, accese le occupate e spente le libere, al
+   * posto delle pastiglie della finestra generica. Le stesse due domande di
+   * prima — chi e' occupato, chi e' libero — sulle piastrelle. */
+  const occupata = page.locator("#dm-widget-popup .dm-f-presenza-st", { hasText: "Salone" });
+  const libera = page.locator("#dm-widget-popup .dm-f-presenza-st", { hasText: "Cucina" });
+  await expect(occupata).toHaveAttribute("data-on", "true");
+  await expect(libera).toHaveAttribute("data-on", "false");
+  /* Un'occupazione stabile si dice «Occupato»; una stanza vuota si dice
+   * «Libero» — «Fermo» per una stanza vuota era la parola strana che la
+   * bozza approvata ha tolto. */
   await expect(occupata).toContainText("Occupato");
-  await expect(libera).toContainText("Fermo");
+  await expect(libera).toContainText("Libero");
+  await expect(libera).not.toContainText("Fermo");
   await page.locator("#dm-widget-popup").screenshot({
     path: testInfo.outputPath("tessera-presenza.png"),
   });
@@ -149,7 +156,7 @@ test("la scheda del Config elenca i rilevatori e ne toglie uno", async ({ page }
   await page.evaluate(() => window.apriConfigEntita());
   await page.evaluate(() => window.editorSwitch?.("presenza"));
 
-  const righe = page.locator("#ed-body .dm-presenza-ed-riga");
+  const righe = page.locator("#ed-body .dm-dich-riga");
   await expect(righe).toHaveCount(4, { timeout: 20_000 });
   await page.locator("#ed-body").screenshot({ path: testInfo.outputPath("scheda-presenza.png") });
   await testInfo.attach("scheda-presenza", {
@@ -157,24 +164,29 @@ test("la scheda del Config elenca i rilevatori e ne toglie uno", async ({ page }
     contentType: "image/png",
   });
 
+  /* Dal #74 la scheda e' un elenco dichiarato: una riga si elimina col
+   * cestino, e la configurazione tiene le righe rimaste (non piu' un elenco di
+   * «escluse»). La prova resta la stessa: chi si toglie non torna. */
   /* Il sensore del garage, che la casa non la guarda, si toglie dai conti — e
    * la configurazione se lo ricorda. Si filtra per l'entity_id e non per il
    * nome: il nome sta dentro un `<input>`, e il valore di una casella non è
    * testo della pagina. */
   await righe
     .filter({ hasText: "binary_sensor.movimento_garage" })
-    .locator("[data-dm-presenza-escludi]")
+    .locator("[data-dm-dich-elimina]")
     .click();
   await expect
     .poll(
       async () =>
-        page.evaluate(
-          () => JSON.parse(window.localStorage.getItem("cd_presenza") || "{}")?.escluse || [],
+        page.evaluate(() =>
+          (JSON.parse(window.localStorage.getItem("cd_presenza") || "{}")?.righe || []).some(
+            (riga) => riga?.entity === "binary_sensor.movimento_garage",
+          ),
         ),
       { timeout: 10_000 },
     )
-    .toEqual(["binary_sensor.movimento_garage"]);
-  await expect(page.locator("#ed-body .dm-presenza-ed-riga")).toHaveCount(3);
+    .toBe(false);
+  await expect(page.locator("#ed-body .dm-dich-riga")).toHaveCount(3);
 });
 
 /* «Manca il tasto HOME» (#452).

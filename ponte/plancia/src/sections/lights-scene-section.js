@@ -667,7 +667,24 @@ export function renderLightControlMarkup(view) {
 
 function bindControl(modal, id) {
   const current = () => viewOf(id);
-  const close = () => modal.remove();
+  /* La chiusura non dipende da dove sta il fuoco (#215).
+   *
+   * «Non si riesce più a cliccare chiudi per tornare indietro: bisogna
+   * chiudere gda e riaprirlo.» Il tasto adesso sta sotto la fascia del
+   * sistema (navigation-section, la cima), ma una finestra deve avere piu'
+   * di una porta: il velo dietro, e Esc. Esc pero' ascoltato sulla finestra
+   * arriva solo se il fuoco e' dentro — e il selettore nativo del colore, su
+   * WebKit, il fuoco se lo porta via in un foglio suo. Si ascolta sul
+   * documento finche' la finestra c'e', e si smette quando se ne va. */
+  const onKey = (event) => {
+    if (event.key === "Escape") close();
+  };
+  const close = () => {
+    doc.removeEventListener("keydown", onKey, true);
+    modal.remove();
+  };
+  doc.addEventListener("keydown", onKey, true);
+  modal.__dmChiudi = close;
   modal.querySelector("[data-close]")?.addEventListener("click", close);
   modal.addEventListener("click", (event) => {
     if (event.target === modal) {
@@ -736,16 +753,15 @@ function bindControl(modal, id) {
   };
   modal.addEventListener("input", (event) => slide(event, false));
   modal.addEventListener("change", (event) => slide(event, true));
-  modal.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") close();
-  });
 }
 
 export function openLightControl(id) {
   if (!doc) return false;
   const view = lightViews().find((item) => item.id === clean(id)) || viewOf(id);
   if (!view) return false;
-  controlNode()?.remove();
+  const prima = controlNode();
+  if (typeof prima?.__dmChiudi === "function") prima.__dmChiudi();
+  else prima?.remove();
   const modal = doc.createElement("div");
   modal.id = CONTROL_ID;
   modal.className = "dm-section-modal dm-lightctl";

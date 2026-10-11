@@ -167,10 +167,15 @@ test("la tessera in Home parla del gruppo messo peggio, non del primo", async ({
   await expect(tessera).toContainText("Studio");
   await expect(tessera).toContainText(/batteria/i);
 
-  /* E nella finestra ci sono tutti e due, ognuno col suo nome davanti. */
+  /* E nella finestra ci sono tutti e due, ognuno col suo nome in testa.
+   *
+   * Prima le righe della finestra generica portavano il nome davanti —
+   * «Rack · Batteria» —; la finestra disegnata dell'UPS (vedi
+   * `finestre/impianti.js`) da' a ogni gruppo il suo blocco col nome come
+   * titolo, e il messo peggio per primo. */
   await tessera.click();
   const finestra = page.locator("#dm-widget-popup");
   await expect(finestra).toBeVisible();
-  await expect(finestra).toContainText("Rack · ");
-  await expect(finestra).toContainText("Studio · ");
+  await expect(finestra.locator(".dm-f-ups .dm-f-imp-nome")).toHaveText(["Studio", "Rack"]);
+  await expect(finestra.locator(".dm-f-ups-eroe").first()).toContainText("Va a batteria");
 });

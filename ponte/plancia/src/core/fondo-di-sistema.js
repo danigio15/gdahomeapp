@@ -54,3 +54,27 @@ export function fondoDiSistema(proprio, ospite, giaLasciato = 0) {
 export function inPixel(valore) {
   return `${Math.round(numero(valore))}px`;
 }
+
+/* E quanto si prende in cima (#215, #214).
+ *
+ * «Quando va sulle luci rgb per impostare i colori non si riesce più a
+ * cliccare chiudi per tornare indietro»: sul telefono la finestra della luce
+ * prende tutto lo schermo, e la sua intestazione — il nome a sinistra, «✕
+ * CHIUDI» a destra — cominciava dal bordo di sopra. Dentro l'app di Home
+ * Assistant su iPhone quel bordo e' sotto l'orologio e la batteria: la
+ * pastiglia c'era, disegnata sotto la barra di stato, e un dito li' lo prende
+ * il sistema, non la pagina. Restava solo chiudere l'app.
+ *
+ * E' lo stesso conto del fondo, rovesciato. Dentro la cornice
+ * `env(safe-area-inset-top)` risponde zero; il numero vero lo ha il documento
+ * in cima. Quello che l'ospite lascia gia' libero sopra la cornice — la barra
+ * di Home Assistant, quando la plancia non e' a schermo intero — non lo si
+ * scansa due volte: col chiosco la cornice parte da zero e la fascia e' tutta
+ * nostra, senza chiosco ci sta gia' sotto e qui torna zero. */
+export const CIMA_MASSIMA = 96;
+
+export function cimaDiSistema(proprio, ospite, giaLasciatoSopra = 0) {
+  const mio = numero(proprio);
+  const suo = Math.max(0, numero(ospite) - numero(giaLasciatoSopra));
+  return Math.min(CIMA_MASSIMA, Math.max(mio, suo));
+}

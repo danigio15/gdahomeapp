@@ -749,8 +749,14 @@ senzaCadere(() => installStyle("dm-beta12-room-color-lock-style", `
      * fondo bianco sotto le card scure degli screenshot. */
     background:var(--bg-sculpted,var(--primary-background-color,#f8fafc))!important
   }
+  /* La cima del corpo e' la fascia che il sistema si tiene sopra (#214).
+   * «env(safe-area-inset-top)» dentro la cornice di Home Assistant risponde
+   * zero, e col chiosco la cornice comincia sul bordo del vetro: la fascia
+   * della Home — il menu, il nome della casa, l'ingranaggio — finiva sotto
+   * l'orologio e si vedeva solo il meteo. Il numero vero lo misura
+   * navigation-section dal documento in cima, e lo scrive qui accanto. */
   html[data-dm-ios-kiosk="true"] body{
-    box-sizing:border-box!important;padding-top:max(env(safe-area-inset-top),0px)!important;
+    box-sizing:border-box!important;padding-top:max(env(safe-area-inset-top,0px),var(--dm-cima-di-sistema,0px))!important;
     padding-left:max(env(safe-area-inset-left),var(--dm-gutter,14px))!important;
     padding-right:max(env(safe-area-inset-right),var(--dm-gutter,14px))!important;
     -webkit-overflow-scrolling:touch!important

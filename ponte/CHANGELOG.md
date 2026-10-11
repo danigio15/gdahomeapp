@@ -10,6 +10,105 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.1
+
+**Deumidificatori nel Clima** (#205). Un deumidificatore non è un
+condizionatore, e messo fra le unità del Clima non si comandava. Adesso ha una
+fascia sua nella pagina Clima, sotto la ventilazione: l'umidità di adesso,
+l'obiettivo con − e +, l'accensione, le modalità della macchina (Continuo,
+Asciuga bucato…), la ventola, e l'avviso «Serbatoio pieno — svuotalo». Si
+aggiunge dal Config del Clima scegliendo la sua entità `humidifier`: serbatoio,
+umidità, temperatura, ventola e consumo si trovano da soli. Chi l'aveva già
+messo fra le unità del Clima lo ritrova lì, senza rifare niente.
+
+**Il pannello a muro si aggiorna subito.** Quando una plancia salva la sua
+configurazione, il pannello che legge da lei la rilegge all'istante, senza
+aspettare. Il ☰ in cima apre il menu laterale sopra il pannello, e nella
+pagina Luci le prese hanno la stessa card delle luci e si accendono davvero.
+A riposo l'orologio e le informazioni cambiano posto ogni minuto, così lo
+schermo non si segna; e passando davanti si legge anche chi è in casa e
+quante finestre sono rimaste aperte.
+
+Ogni pagina del pannello può avere 6, 8 o 12 riquadri, e le pagine sono fino
+a otto. Sul telefono i riquadri hanno un'altezza loro invece di riempire lo
+schermo. Il meteo è quello scelto nella config della plancia, e dal config
+del tablet si passa a tutto il config con «Tutto il config». Nell'app il
+pannello è a schermo intero, senza le barre di Android, e di notte lo schermo
+si abbassa al minimo invece di restare acceso.
+
+**Telefono:** la barra in basso sta attaccata al fondo, subito sopra i tasti
+di Android, senza la striscia di pagina in mezzo. E all'avvio l'app non mostra
+più per un attimo «da fuori casa serve Premium» a chi è Premium e non apriva
+l'app da qualche giorno.
+
+**Energia:** i nomi lunghi delle stanze stanno dentro i cerchi del flusso,
+su due righe se serve, e sul telefono i cerchi stanno più distanti da Casa:
+quello subito sotto non tocca più l'anello. Nella vista giornaliera e mensile
+il cerchio di un carico che misura solo i watt (il boiler) non mostra più «—»
+per qualche istante prima del numero.
+
+**Batterie:** la tessera in Home conta solo le batterie dichiarate nella
+scheda Batterie, come la pagina: chi ne ha messe tre non si ritrova più in
+copertina il portatile all'1% e altre quaranta pile che non guarda.
+
+**Tutte le finestre dei widget, rifatte una per una.** Toccando una tessera
+della Home si apre una finestra disegnata per lei, non più la stessa per tutte
+con «Le misure» e «Lo stato»: il numero che conta in grande, i comandi a
+portata di pollice, niente nomi tecnici e niente doppioni.
+
+- Luci e Clima aprono sull'elenco da comandare, con le accese in cima: le luci
+  sono schede che si illuminano, il clima è arancio quando scalda e azzurro
+  quando raffresca.
+- Energia dice quanto consuma la casa e da dove arriva (sole, batteria, rete);
+  Temperatura mette le stanze dalla più calda; Auto ha l'anello della carica e
+  le gomme attorno alla sagoma; il Solare termico disegna pannello e boiler.
+- Tapparelle, prese, porte, musica, citofono e robot hanno i loro tasti; le
+  porte contano anche il garage aperto.
+- Allarme coi suoi modi, telecamere col fotogramma grande, varchi aperti in
+  cima, presenza stanza per stanza, fumo, allagamenti con la valvola
+  dell'acqua, chi non risponde e le batterie da cambiare.
+- Scaldabagno, caldaia, UPS, accumulo, contatori, piscina, irrigazione (con le
+  zone da avviare e il tasto per fermarla) e ventilazione.
+- Aria, piante, acquario, animali, agenda, rifiuti, allerte e stampanti.
+- Elettrodomestici, cottura, mini PC, server e rete, in evidenza, le tue
+  sezioni, segnalazioni e assistenza.
+- Gli aggiornamenti hanno il logo e il tasto «Installa».
+
+Le azioni delicate — aprire un cancello, chiudere la valvola dell'acqua —
+chiedono un secondo tocco. Quello che la casa non sa (la spesa senza un prezzo
+del kWh, lo storico dell'allarme) non compare invece di essere inventato.
+
+**iPhone, nell'app di Home Assistant:** le finestre a schermo intero (la luce
+col colore, le finestre delle tessere, il config) e l'intestazione della Home
+partono sotto la barra di stato, e il tasto «Chiudi» non finisce più sotto
+l'ora e la batteria. La finestra della luce si chiude anche con Esc (#214, #215).
+
+**Codice regalo:** si riscatta anche quando l'app non ha ancora aperto il
+collegamento con la casa: il codice lo porta il server di gdahome, e se nemmeno
+lui ci riesce l'app aspetta la casa qualche secondo invece di dire subito che
+non è collegata.
+
+**Stanze:** in cima alla stanza temperatura e umidità sono arrotondate
+(«24,0°», «62%») e non si accavallano più.
+
+**I colori delle tessere sono quelli delle sezioni.** In Home ogni tessera ha
+il colore dell'intestazione della sua pagina, e diventa rossa solo quando
+segnala qualcosa: una batteria scarica, una porta rimasta aperta, un allarme.
+
+**Navigatore:** la freccia è come quella di Waze, e col traffico il celeste
+ai lati della coda si vede bene.
+
+**iPhone:** l'app con l'Apple Watch dentro si costruisce di nuovo per
+TestFlight.
+
+**La casa di prova si allunga, con lo stesso codice.** Nella scheda «Casa di
+prova» della console c'è «Allunga di 7 giorni»: il codice resta quello, e vale
+per altri sette giorni da adesso. I telefoni già entrati restano dentro fino
+alla nuova scadenza. Serve quando una revisione dura più del codice: il codice
+sta nelle note per Apple e per Google, e cambiarlo lì fa ripartire la
+revisione. Si può allungare più volte, e solo dall'Home Assistant del gestore,
+come farla.
+
 ## 1.11.0
 
 **gdahome anche al polso, su Apple Watch e Wear OS.** I comandi rapidi scelti

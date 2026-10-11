@@ -71,7 +71,9 @@ test("senza un solo contatto la tessera si chiama come quello che conta", async 
   );
   /* E la didascalia dice «alzate», non «aperte»: è la parola per cui questa
    * segnalazione esiste. */
-  assert.match(dentro, /t\(`\$\{alzate\.length\} alzate`, `\$\{alzate\.length\} up`\)/);
+  /* Il numero sta fuori dalla parola da tradurre: «3 alzate» come chiave
+   * cambiava a ogni tapparella e non stava in nessun catalogo. */
+  assert.match(dentro, /`\$\{alzate\.length\} \$\{t\("alzate", "raised"\)\}`/);
   assert.match(dentro, /t\("Tutte abbassate", "All down"\)/);
 });
 
@@ -83,8 +85,12 @@ test("con le due famiglie insieme la didascalia le dice separate", async () => {
    * Le finestre aperte si nominano — è la ragione per cui la tessera delle
    * «aperture» non esiste più, le diceva questa per nome — e le tapparelle si
    * contano, perché quali siano su non è una notizia. */
-  assert.match(dentro, /nomiAccesi\(aperte, \(\) => true, ""\)/);
-  assert.match(dentro, /alzate\.length \? t\(`\$\{alzate\.length\} alzate`/);
+  /* Le finestre si nominano per stanza, separate da una virgola: il « · »
+   * divide le due famiglie, e «Cucina · Finestra · Bagno · 3 alzate» si
+   * leggeva come tre stanze (vedi la finestra nuova, `finestre/comandi.js`). */
+  assert.match(dentro, /aperte\.map\(\(riga\) => clean\(riga\.stanza \|\| riga\.name\)\)/);
+  assert.match(dentro, /\.join\(", "\)/);
+  assert.match(dentro, /alzate\.length \? `\$\{alzate\.length\} \$\{t\("alzate", "raised"\)\}`/);
   assert.match(dentro, /pezzi\.join\(" · "\)/);
   /* A casa chiusa lo dice, invece di scrivere «0 aperte». */
   assert.match(dentro, /t\("Tutto chiuso", "All closed"\)/);

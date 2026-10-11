@@ -78,12 +78,17 @@ test("la tessera dice quanti sono aperti, e quali", async ({ page }, testInfo) =
   /* Rossa in cima, perché qualcosa è aperto. */
   await expect(tessera).toHaveAttribute("data-alert", "true");
 
-  /* Aprendola, le pastiglie: rossa l'aperta, verde la chiusa. */
+  /* Aprendola: l'aperta in cima come scheda rossa, la chiusa nella griglia
+   * col pallino verde. Prima erano pastiglie della finestra generica; la
+   * finestra disegnata apposta (`finestre/sicurezza.js`) dice le stesse due
+   * cose con le sue schede. */
   await tessera.click();
-  const aperta = page.locator("#dm-widget-popup .dm-w-pillola", { hasText: "Porta ingresso" });
-  const chiusa = page.locator("#dm-widget-popup .dm-w-pillola", { hasText: "Finestra cucina" });
-  await expect(aperta).toHaveAttribute("data-tono", "allarme");
-  await expect(chiusa).toHaveAttribute("data-tono", "quiete");
+  const aperta = page.locator("#dm-widget-popup .dm-f-varchi-aperto", {
+    hasText: "Porta ingresso",
+  });
+  const chiusa = page.locator("#dm-widget-popup .dm-f-varchi-ch", { hasText: "Finestra cucina" });
+  await expect(aperta).toBeVisible();
+  await expect(chiusa).toBeVisible();
 });
 
 test("la pagina Varchi elenca i contatti col loro colore", async ({ page }, testInfo) => {
@@ -117,25 +122,30 @@ test("la scheda di configurazione elenca i contatti e ne toglie uno", async ({
   await page.evaluate(() => window.apriConfigEntita());
   await page.evaluate(() => window.editorSwitch?.("varchi"));
 
-  const righe = page.locator("#ed-body .dm-varco-ed-riga");
+  const righe = page.locator("#ed-body .dm-dich-riga");
   await expect(righe).toHaveCount(3, { timeout: 20_000 });
 
   /* Il sensore che varco non è si toglie dai conti, e la configurazione se lo
    * ricorda. */
+  /* Dal #74 la scheda e' un elenco dichiarato: una riga si elimina col
+   * cestino, e la configurazione tiene le righe rimaste (non piu' un elenco di
+   * «escluse»). La prova resta la stessa: chi si toglie non torna. */
   /* Si filtra per l'entity_id e non per il nome: il nome sta dentro un
    * `<input>`, e il valore di una casella non e' testo della pagina. */
   await righe
     .filter({ hasText: "binary_sensor.portone_garage" })
-    .locator("[data-dm-varco-escludi]")
+    .locator("[data-dm-dich-elimina]")
     .click();
   await expect
     .poll(
       async () =>
-        page.evaluate(
-          () => JSON.parse(window.localStorage.getItem("cd_varchi") || "{}")?.escluse || [],
+        page.evaluate(() =>
+          (JSON.parse(window.localStorage.getItem("cd_varchi") || "{}")?.righe || []).some(
+            (riga) => riga?.entity === "binary_sensor.portone_garage",
+          ),
         ),
       { timeout: 10_000 },
     )
-    .toEqual(["binary_sensor.portone_garage"]);
-  await expect(page.locator("#ed-body .dm-varco-ed-riga")).toHaveCount(2);
+    .toBe(false);
+  await expect(page.locator("#ed-body .dm-dich-riga")).toHaveCount(2);
 });

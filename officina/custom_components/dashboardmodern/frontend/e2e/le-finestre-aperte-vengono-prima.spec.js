@@ -1,9 +1,8 @@
 /* «Mi mostri come prima entità quella aperta.»
  *
  * Nella finestra delle Finestre, aperta toccando la tessera in Home, l'elenco
- * delle letture mette in cima quelle aperte; e il conto «aperte» delle misure
- * dice lo stesso numero della frase in cima, finestre col solo sensore
- * comprese. */
+ * delle letture mette in cima quelle aperte; e il numero in cima conta le
+ * finestre aperte, quelle col solo sensore comprese. */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 
@@ -64,12 +63,19 @@ test("nella finestra delle Finestre l'aperta sta in cima", async ({ page }, test
   const tessera = page.locator('.dm-tile[data-dm-widget="tapparelle"]').first();
   await expect(tessera).toBeVisible({ timeout: 20_000 });
   await tessera.click();
-  await expect(page.getByText("Aperta", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
-  /* Le righe si leggono in quest'ordine: prima l'aperta, poi le altre. */
-  await expect(page.locator("body")).toContainText(
-    /Camera da letto[\s\S]{0,200}?Aperta[\s\S]{0,200}?Cucina[\s\S]{0,200}?Chiusa[\s\S]{0,200}?Cucinino/,
+  /* La finestra e' quella disegnata per le Finestre (`finestre/comandi.js`):
+   * una scheda per stanza, e l'anta dice «Finestra aperta». */
+  const finestra = page.locator('#dm-widget-popup [data-dm-widget-detail="tapparelle"]');
+  await expect(finestra.getByText("Finestra aperta").first()).toBeVisible({ timeout: 15_000 });
+  /* Le stanze si leggono in quest'ordine: prima l'aperta, poi le altre. */
+  await expect(finestra).toContainText(
+    /Camera da letto[\s\S]{0,200}?Finestra aperta[\s\S]{0,200}?Cucina[\s\S]{0,200}?Finestra chiusa[\s\S]{0,200}?Cucinino/,
   );
-  /* Le misure contano l'aperta come la frase in cima. */
-  await expect(page.getByText("1/3", { exact: true }).last()).toBeVisible();
+  /* Il numero in cima conta l'aperta, e la nomina: al posto del vecchio «1/3»
+   * delle misure c'e' «Finestre aperte 1 · Camera da letto». */
+  const eroe = finestra.locator(".dm-f-tapparelle-eroe").first();
+  await expect(eroe).toContainText("Finestre aperte");
+  await expect(eroe.locator(".dm-f-num")).toHaveText("1");
+  await expect(eroe).toContainText("Camera da letto");
   await page.screenshot({ path: testInfo.outputPath("finestre-aperte-prima.png") });
 });

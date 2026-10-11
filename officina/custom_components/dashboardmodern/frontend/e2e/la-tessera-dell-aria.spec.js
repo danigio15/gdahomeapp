@@ -89,10 +89,16 @@ test("la tessera dice com'e' l'aria, e la finestra tutte le misure", async ({ pa
   await tessera.click();
   const finestra = page.locator("#dm-widget-popup");
   await expect(finestra).toBeVisible();
-  /* In cima il giudizio dell'aria, non quello generico delle cose accese. */
-  await expect(finestra.locator(".dm-w-verdetto")).toHaveText("Scarsa");
-  await expect(finestra.locator(".dm-w-frase")).toContainText("Anidride carbonica");
-  await expect(finestra.locator(".dm-w-frase")).toContainText("Aprire una finestra");
+  /* In cima il giudizio dell'aria, non quello generico delle cose accese.
+   *
+   * La finestra e' quella disegnata apposta (`finestre/servizi.js`): il
+   * verdetto e la frase generici non ci sono piu', e il giudizio sta in cima
+   * al numero che conta, col consiglio subito sotto. Si guarda la stessa cosa
+   * di prima nel posto nuovo. */
+  await expect(finestra.locator(".dm-f-aria-eroe small")).toContainText("Da cambiare");
+  await expect(finestra.locator(".dm-f-aria-eroe")).toContainText("CO₂");
+  await expect(finestra).toContainText("Anidride carbonica");
+  await expect(finestra.locator(".dm-f-aria-consiglio")).toContainText("Apri una finestra");
   /* E sotto tutte e due le misure, ognuna con la sua unita'. Il numero si
    * scrive come lo scrive la lingua di casa. */
   await expect(finestra).toContainText("ppm");
@@ -134,7 +140,8 @@ test("il monossido in microgrammi e' aria buona, e si legge in microgrammi (#340
   await tessera.click();
   const finestra = page.locator("#dm-widget-popup");
   await expect(finestra).toBeVisible();
-  await expect(finestra.locator(".dm-w-verdetto")).toHaveText("Buona");
+  /* Il giudizio sta in cima alla finestra nuova, al posto del verdetto. */
+  await expect(finestra.locator(".dm-f-aria-eroe small")).toContainText("Aria buona");
   await expect(finestra).toContainText("156 µg/m³");
   await expect(finestra).not.toContainText("mg/m³");
 });

@@ -66,6 +66,18 @@ jobs:
           xcodebuild -project ios/Runner.xcodeproj -target "gdahome Watch" \
             -configuration Release -sdk watchsimulator \
             CODE_SIGNING_ALLOWED=NO build
+      # L'archivio come lo fa il rilascio: l'iPhone con l'orologio dentro.
+      # Senza questo passo la 1.11.0 e' caduta solo al momento di andare su
+      # TestFlight: compilato da solo l'orologio passava, ma nell'archivio
+      # dell'iPhone si compilava per l'iPhone.
+      - name: L'archivio, con l'orologio dentro
+        working-directory: app
+        run: |
+          xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner \
+            -configuration Release -destination "generic/platform=iOS" \
+            -archivePath build/prova.xcarchive archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+          ls -d build/prova.xcarchive/Products/Applications/*.app/Watch/*.app
 
   wear-os:
     name: Wear OS

@@ -52,6 +52,7 @@ import {
   eConfigurata,
   PROFILO_PRINCIPALE,
   ScattoTroppoGrande,
+  STATO,
 } from "./configurazione.js";
 import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
@@ -144,7 +145,17 @@ const LICENZA = new Map([
 
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
+const EVENTO_CONFIGURAZIONE = "dashboardmodern_config";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
+/* Le revisioni di una o piu' plance, e nient'altro.
+ *
+ * Un tablet a muro non perde mai il fuoco, e la plancia rilegge la
+ * configurazione quando lo riprende: una modifica fatta dal telefono arrivava
+ * sul tablet solo al riavvio. Chiedere lo scatto intero ogni pochi secondi
+ * vorrebbe dire centinaia di kB a giro, anche da fuori casa; questa risposta
+ * sono pochi byte, e lo scatto si chiede solo quando il numero e' cambiato. */
+const CONFIG_REVISIONI = "ponte/config/revisioni";
+const REVISIONI_AL_MASSIMO = 8;
 const CATALOGO = "dashboardmodern/integrations/catalog";
 const FOTO_ELENCO = "dashboardmodern/www/list";
 const FOTO_CARICA = "dashboardmodern/www/upload";
@@ -612,6 +623,7 @@ export class Commissioni {
     if (tipo === DIMMI_IL_DISPOSITIVO) return this._dimmiIlDispositivo(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
     if (tipo === REGISTRI) return this._registri(detto);
+    if (tipo === CONFIG_REVISIONI) return this._revisioni(detto, soloLaPrima);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE) {
       /* La configurazione di una plancia che all'app non si serve non le si
        * da' nemmeno da leggere o da scrivere: sarebbe la stessa plancia, per
@@ -1252,6 +1264,41 @@ export class Commissioni {
     }
   }
 
+  /* «Se aggiorno un'entita' nella plancia, nella plancia wall non si
+   * aggiorna. Gli aggiornamenti devono essere in tempo reale.» Una
+   * configurazione salvata davvero si dice sul bus di Home Assistant
+   * (`dashboardmodern_config`, col profilo): il pannello a muro che legge da
+   * quella plancia la rilegge subito. Lo dice e non aspetta: il salvataggio
+   * non dipende dall'avviso, e un avviso perso costa solo il giro successivo. */
+  _eCambiata(esito) {
+    if (esito?.status === STATO.salvato && typeof this.casa?.chiedi === "function") {
+      this.casa
+        .chiedi({
+          type: "fire_event",
+          event_type: EVENTO_CONFIGURAZIONE,
+          event_data: { profile: esito.profile },
+        })
+        .catch(() => {});
+    }
+    return esito;
+  }
+
+  _revisioni(detto, soloLaPrima = false) {
+    const id = detto?.id ?? null;
+    const cassetta = this.configurazione;
+    if (!cassetta) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    const chiesti = Array.isArray(detto?.profili) ? detto.profili : [PROFILO_PRINCIPALE];
+    const revisioni = {};
+    for (const profilo of chiesti.slice(0, REVISIONI_AL_MASSIMO)) {
+      if (!Configurazione.profiloBuono(profilo)) continue;
+      /* Con Base l'app vede la principale e basta: delle altre non si dice
+       * nemmeno il numero. */
+      if (soloLaPrima && profilo !== PROFILO_PRINCIPALE) continue;
+      revisioni[profilo] = cassetta.revisione(profilo);
+    }
+    return si(id, { revisioni });
+  }
+
   async _configurazione(detto) {
     const id = detto.id ?? null;
     const cassetta = this.configurazione;
@@ -1267,7 +1314,7 @@ export class Commissioni {
       if (detto.type === CONFIG_RESTORE) {
         const revisione = Number(detto.revision);
         if (!Number.isFinite(revisione)) return no(id, "invalid_format", "manca la revisione");
-        return si(id, cassetta.ripristina(profilo, revisione));
+        return si(id, this._eCambiata(cassetta.ripristina(profilo, revisione)));
       }
       const scatto = detto.snapshot;
       if (
@@ -1279,13 +1326,15 @@ export class Commissioni {
         return no(id, "invalid_format", "manca lo scatto");
       return si(
         id,
-        cassetta.scrivi(profilo, scatto.values, {
-          keys_revision: scatto.keys_revision ?? 0,
-          writer_generation: scatto.writer_generation ?? 0,
-          updated_at: scatto.updated_at ?? 0,
-          expected_revision: detto.expected_revision ?? null,
-          reset: detto.reset === true,
-        }),
+        this._eCambiata(
+          cassetta.scrivi(profilo, scatto.values, {
+            keys_revision: scatto.keys_revision ?? 0,
+            writer_generation: scatto.writer_generation ?? 0,
+            updated_at: scatto.updated_at ?? 0,
+            expected_revision: detto.expected_revision ?? null,
+            reset: detto.reset === true,
+          }),
+        ),
       );
     } catch (errore) {
       if (errore instanceof ScattoTroppoGrande) return no(id, "snapshot_too_large", errore.message);

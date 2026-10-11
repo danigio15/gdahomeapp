@@ -78,7 +78,11 @@ test("quello che diceva la tessera lo dice Finestre, ed è l'unico a dirlo", () 
   /* E la didascalia le NOMINA ancora: contarle e basta farebbe tornare la
    * tessera delle aperture. Le tapparelle alzate si contano, che è un'altra
    * cosa e va detta con un'altra parola. */
-  assert.match(coperture, /nomiAccesi\(aperte, \(\) => true, ""\)/);
+  /* Le nomina per stanza e con la virgola: il « · » separa le finestre dal
+   * conto delle tapparelle, e «Cucina · Finestra · Bagno · 3 alzate» si
+   * leggeva come tre stanze (la finestra nuova, `finestre/comandi.js`). */
+  assert.match(coperture, /const stanzeAperte = \[\.\.\.new Set\(aperte\.map\(/);
+  assert.match(coperture, /stanzeAperte,\s*\n\s*alzate\.length/);
   assert.match(coperture, /nomiAccesi\(alzate, \(\) => true, t\("Tutte abbassate", "All down"\)\)/);
   /* E i contatti li legge davvero: senza, resterebbe la sola posizione della
    * tapparella, che di una finestra aperta non dice niente. */

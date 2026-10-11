@@ -551,6 +551,9 @@ export function bridgeRequest(type, payload = {}) {
     }
   });
 }
+/* Per chi la vuole senza importare questo modulo (vedi i loghi degli
+ * aggiornamenti in Home). */
+root.dmBridgeRequest = bridgeRequest;
 
 function sharedPayload(extra = {}) {
   const payload = { profile: currentProfile(), ...extra };

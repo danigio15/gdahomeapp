@@ -51,13 +51,17 @@ test("le miniature aperte sopravvivono agli eventi di stato", async ({ page }, t
   await page.waitForTimeout(1400);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   await page.locator('#dm-widgets .dm-tile[data-dm-widget="telecamere"]').click();
-  await expect(page.locator("#dm-widget-popup .dm-w-cam").first()).toBeVisible();
+  /* I riquadri si cercano dal segno che usa chi posa i fotogrammi
+   * (`data-dm-w-cam`), non dalla classe: la finestra delle telecamere adesso
+   * e' quella disegnata apposta (`finestre/sicurezza.js`), con un riquadro
+   * grande e le altre in griglia, e le sue classi sono sue. */
+  await expect(page.locator("#dm-widget-popup [data-dm-w-cam]").first()).toBeVisible();
 
   /* Si segnano i riquadri che ci sono adesso: se il corpo si rifa', quelli
      vecchi escono dal documento e questi segni non si ritrovano piu'. */
   await page.evaluate(() => {
     document
-      .querySelectorAll("#dm-widget-popup .dm-w-cam")
+      .querySelectorAll("#dm-widget-popup [data-dm-w-cam]")
       .forEach((figura, indice) => (figura.dataset.dmProva = String(indice)));
   });
 
@@ -70,6 +74,6 @@ test("le miniature aperte sopravvivono agli eventi di stato", async ({ page }, t
     await page.waitForTimeout(250);
   }
 
-  const segnati = await page.locator("#dm-widget-popup .dm-w-cam[data-dm-prova]").count();
+  const segnati = await page.locator("#dm-widget-popup [data-dm-w-cam][data-dm-prova]").count();
   expect(segnati, "il corpo della finestra si e' rifatto e ha buttato le miniature").toBe(2);
 });

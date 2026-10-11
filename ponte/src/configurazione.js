@@ -195,6 +195,13 @@ export class Configurazione {
     return typeof profilo === "string" && PROFILO_BUONO.test(profilo);
   }
 
+  /* A che revisione e' una plancia: zero se non c'e' ancora niente. E' la
+   * domanda del tablet a muro (`ponte/config/revisioni`), che la fa ogni pochi
+   * secondi e scarica lo scatto solo quando il numero cambia. */
+  revisione(profilo = PROFILO_PRINCIPALE) {
+    return intero(this._profili[profilo]?.revision);
+  }
+
   /* Lo scatto condiviso di una plancia. */
   leggi(profilo = PROFILO_PRINCIPALE) {
     const scatto = this._profili[profilo];

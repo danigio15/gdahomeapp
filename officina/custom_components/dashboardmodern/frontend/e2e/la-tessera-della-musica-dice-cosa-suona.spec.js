@@ -102,7 +102,9 @@ test("con un brano solo: copertina, titolo e artista sotto", async ({ page }, te
   // E toccandola si apre la finestra coi comandi veri del lettore.
   await tessera.click();
   const finestra = page.locator("#dm-widget-popup");
-  await expect(finestra.locator(".dm-w-media")).toHaveCount(1);
+  /* La finestra della Musica e' quella disegnata per lei (`finestre/comandi.js`):
+   * quello che suona sta in cima, col lettore intero. */
+  await expect(finestra.locator(".dm-f-media-eroe")).toHaveCount(1);
   await expect(finestra.locator("[data-dm-mp]").first()).toBeVisible();
 });
 
