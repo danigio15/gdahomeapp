@@ -27,9 +27,12 @@ test("a riposo la tessera ha il colore dell'intestazione della sua pagina", () =
   assert.equal(luci.accent, tintaDellaPagina("page-luci"));
 });
 
-test("quando segnala diventa rossa, qualunque fosse il suo colore", () => {
+test("quando segnala diventa rossa, e l'ambra resta il gradino prima", () => {
   const batterie = colorataComeLaSezione({ key: "batterie", accent: "#eab308", alert: true });
   assert.equal(batterie.accent, "#dc2626");
+  /* La soglia dell'Energia: ambra «occhio», poi rossa «adesso». */
+  const occhio = colorataComeLaSezione({ key: "energia", accent: "#f59e0b", alert: true });
+  assert.equal(occhio.accent, "#f59e0b");
 });
 
 test("senza pagina tiene il suo colore, ma il rosso no", () => {

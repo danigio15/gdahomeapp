@@ -6108,11 +6108,18 @@ export function modelliDelleTessere(states) {
  * altre hanno il colore dell'intestazione della loro pagina. Chi una pagina
  * non ce l'ha tiene il suo, ma il rosso no: quello e' delle segnalazioni. */
 const ROSSO_DELLE_SEGNALAZIONI = "#dc2626";
+const AMBRE = new Set(["#f59e0b", "#d97706"]);
 const ROSSI = new Set(["#dc2626", "#ef4444", "#e11d48", "#be123c", "#b91c1c", "#f43f5e"]);
 
 export function colorataComeLaSezione(widget) {
   if (!widget || typeof widget !== "object") return widget;
-  if (widget.alert) return { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
+  /* L'ambra resta ambra: e' il primo gradino delle segnalazioni («occhio»),
+   * prima del rosso («adesso»), come la soglia dell'Energia che si accende
+   * ambra e poi rossa. Tutto il resto che segnala e' rosso. */
+  if (widget.alert)
+    return AMBRE.has(clean(widget.accent).toLowerCase())
+      ? widget
+      : { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
   const chiave = clean(widget.key);
   const tab = eUnaSezioneMia(chiave) ? chiave : SEZIONE_DEL_WIDGET[famigliaDellaTessera(chiave)];
   const tinta = tab ? tintaDellaPagina(`page-${tab}`) : "";

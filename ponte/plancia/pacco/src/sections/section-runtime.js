@@ -52664,10 +52664,12 @@ function modelliDelleTessere(states) {
   ].filter(Boolean).map(colorataComeLaSezione);
 }
 var ROSSO_DELLE_SEGNALAZIONI = "#dc2626";
+var AMBRE = /* @__PURE__ */ new Set(["#f59e0b", "#d97706"]);
 var ROSSI = /* @__PURE__ */ new Set(["#dc2626", "#ef4444", "#e11d48", "#be123c", "#b91c1c", "#f43f5e"]);
 function colorataComeLaSezione(widget) {
   if (!widget || typeof widget !== "object") return widget;
-  if (widget.alert) return { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
+  if (widget.alert)
+    return AMBRE.has(clean(widget.accent).toLowerCase()) ? widget : { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
   const chiave2 = clean(widget.key);
   const tab = eUnaSezioneMia(chiave2) ? chiave2 : SEZIONE_DEL_WIDGET[famigliaDellaTessera(chiave2)];
   const tinta = tab ? tintaDellaPagina(`page-${tab}`) : "";
