@@ -101,3 +101,18 @@ jobs:
           # Unione automatica appena le Prove sono verdi, se la repository la
           # permette (Settings → General → Allow auto-merge).
           gh pr merge "$ramo" --auto --squash || echo "::notice::Unione automatica non permessa: la richiesta resta da unire a mano."
+
+      # Se gdanav e' gia' all'ultimo su main — ci e' arrivato con un'altra
+      # richiesta, per esempio una release — la richiesta di prima non ha piu'
+      # niente da portare: si chiude, invece di restare aperta per sempre.
+      - name: La richiesta di prima, se non serve piu'
+        if: steps.gdanav.outputs.cambiato == 'no'
+        env:
+          GH_TOKEN: ${{ secrets.GDAHOME_TOKEN || github.token }}
+          DOPO: ${{ steps.gdanav.outputs.dopo }}
+        run: |
+          ramo="gdanav/aggiornato"
+          if gh pr view "$ramo" --json state -q .state 2>/dev/null | grep -q OPEN; then
+            gh pr close "$ramo" --delete-branch \
+              --comment "main usa gia' gdanav ${DOPO:0:7}: questa richiesta non serve piu'."
+          fi
