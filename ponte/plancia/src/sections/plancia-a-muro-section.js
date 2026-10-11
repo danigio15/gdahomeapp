@@ -20,7 +20,23 @@
  * browser (docs/LICENZE.md). Questo e' uno di quelli: il pannello si accende
  * solo se il ponte dice che gdahome e' Premium. Con Base la plancia resta
  * quella di sempre, e il config a muro resta scritto per il giorno dopo. */
-import { ALARM_DISARM, ALARM_MODES, alarmCodeNeeded, alarmModes } from "../core/alarm-panel.js";
+import { quickClimatePresetOf, quickClimateSteps } from "../core/quick-climate.js";
+import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import {
+  ALARM_DISARM,
+  ALARM_MODES,
+  alarmActiveModeWithCustom,
+  alarmCodeNeeded,
+  alarmVisibleModes,
+} from "../core/alarm-panel.js";
+import {
+  chiamataDelModo,
+  ilCodiceApreIlModo,
+  ilModoChiedeIlCodice,
+  normalizzaModiSuMisura,
+} from "../core/antifurto-su-misura.js";
+import { ingressiDellaCentrale } from "../core/le-zone-della-centrale.js";
+import { varchiDiCasa } from "../core/varchi-di-casa.js";
 import {
   FONDO_DELLA_CARTA,
   GRANA_DELLA_CARTA,
@@ -228,6 +244,12 @@ function fonteDiQui() {
       avvisi: readJson("cd_avvisi_custom", []),
       climaUnita: readJson("cd_clima_units", []),
       lettori: readJson("cd_media_player", []),
+      antifurtoModi: readJson("cd_antifurto_modi", []),
+      antifurtoSuMisura: readJson("cd_antifurto_su_misura", []),
+      varchi: readJson("cd_varchi", {}),
+      invertiti: readJson("cd_stati_invertiti", []),
+      rapidoGlobale: readJson("cd_clima_rapido", null),
+      rapidoPerUnita: readJson("cd_clima_rapido_unita", {}),
     },
   );
 }
@@ -626,13 +648,43 @@ const STATI_DELL_ALLARME = () => ({
   disarming: t("Disinserimento…", "Disarming…"),
 });
 const PAROLE_DEI_MODI = () => ({
-  home: t("In casa", "Home"),
+  /* Gli stessi nomi dei tasti della sezione Sicurezza della plancia. */
+  home: t("Casa", "Home"),
   away: t("Fuori", "Away"),
   night: t("Notte", "Night"),
   vacation: t("Vacanza", "Vacation"),
-  custom: t("Parziale", "Custom"),
-  disarm: t("Spegni", "Disarm"),
+  custom: t("Parziale", "Partial"),
+  disarm: t("Sblocca", "Disarm"),
 });
+
+/* I tasti dell'antifurto come li mostra la plancia di origine: quelli che la
+ * centrale accetta, meno quelli tolti in configurazione, piu' quelli scritti a
+ * mano per chi una centrale non ce l'ha. Prima qui c'erano tutti quelli che la
+ * centrale dichiara, coi nomi del pannello: «stato e modalita' antifurto deve
+ * seguire quelle della plancia». */
+function tastiDellAntifurto(s) {
+  const a = state.fonte?.antifurto || {};
+  return alarmVisibleModes(s || null, a.tolte || [], a.suMisura || []).map((voce) => ({
+    ...voce,
+    label: voce.suMisura ? voce.label : PAROLE_DEI_MODI()[voce.mode] || voce.mode,
+  }));
+}
+
+/* Quale tasto e' acceso: la regola della plancia, anche per quelli a mano. */
+function tastoAcceso(s, tasti) {
+  return alarmActiveModeWithCustom(
+    s || null,
+    tasti.map((voce) => voce.mode),
+    state.fonte?.antifurto?.suMisura || [],
+    allStates() || {},
+  );
+}
+
+function modoSuMisura(id) {
+  return (
+    normalizzaModiSuMisura(state.fonte?.antifurto?.suMisura || []).find((m) => m.id === id) || null
+  );
+}
 
 function centraleDelMuro(pagina) {
   return clean(pagina?.ingresso?.centrale) || state.fonte?.centrali?.[0] || "";
@@ -743,6 +795,16 @@ const PAROLE_DEL_CLIMA = () => ({
   fan_only: t("Ventola", "Fan"),
   off: t("Spento", "Off"),
 });
+/* Le velocita' della ventola come le dice Home Assistant, in parole. */
+const PAROLE_DELLA_VENTOLA = () => ({
+  auto: t("auto", "Auto"),
+  low: t("bassa", "low"),
+  medium: t("media", "medium"),
+  middle: t("media", "medium"),
+  high: t("alta", "high"),
+  quiet: t("silenziosa", "quiet"),
+  turbo: t("turbo", "Turbo"),
+});
 const AZIONI_DEL_CLIMA = () => ({
   heating: t("Riscalda", "Heating"),
   cooling: t("Raffresca", "Cooling"),
@@ -782,20 +844,47 @@ function zonaDiQui() {
   return pagina?.modello === "clima" ? zonaDellaPagina(pagina) : "";
 }
 
+/* Il comando rapido di questa unita', se la pagina accende con quello. */
+function rapidoDi(id, zona) {
+  const pagina = state.muro?.pagine?.[state.pagina];
+  if (pagina?.modello === "clima" && pagina.accensione === "ultima") return null;
+  const r = state.fonte?.rapido || {};
+  return quickClimatePresetOf(id, zona || zonaDiQui(), r.perUnita || {}, r.globale);
+}
+
+/* La pastiglia del comando rapido (#muro): «fai qualcosa più bello». Il
+ * riquadro resta quello di sempre; al posto del solo ⏻ c'e' una pastiglia
+ * che dice cosa fara' — i gradi e la ventola di quella stanza — e col tasto
+ * in fondo. Da spento accende cosi', da acceso spegne. */
+function pastigliaRapida(id, preset, on) {
+  const ventola = PAROLE_DELLA_VENTOLA()[clean(preset.fan).toLowerCase()] || clean(preset.fan);
+  const pezzi = [
+    `<span class="mu-rap-val">${disegnoDelCatalogo(preset.mode === "heat" ? "flame" : "wind", 18)}${esc(
+      preset.temperature == null ? PAROLE_DEL_CLIMA()[preset.mode] || preset.mode : `${decimale(preset.temperature)}°`,
+    )}</span>`,
+    ventola ? `<span class="mu-rap-val">${disegnoDelCatalogo("spiral", 18)}${esc(ventola)}</span>` : "",
+  ].filter(Boolean);
+  return `<button type="button" class="mu-rapido ${on ? "acceso" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(
+    on ? t("Spegni", "Turn off") : t("Comando rapido", "Quick command"),
+  )}"><span class="mu-rap-lampo" aria-hidden="true">⚡</span>${pezzi.join('<i aria-hidden="true"></i>')}<span class="mu-rap-tasto" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></span></button>`;
+}
+
 function cardClima(c, i, zona = "") {
   const id = c.entita;
   const a = attributi(id);
   const faccia = facciaDelClima(id, zona);
   const s = String(stato(id)?.state || "");
   const atteso = state.inAttesa[id]?.acceso;
-  const on = typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
+  const on =
+    typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
   const azione = a.hvac_action
     ? AZIONI_DEL_CLIMA()[a.hvac_action]
     : on
       ? PAROLE_DEL_CLIMA()[s]
       : t("Spento", "Off");
   const target = obiettivo(id);
-  return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
+  const rapido = rapidoDi(id, zona);
+  return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}${rapido ? " mu-col-rapido" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno(faccia.chiave, 26, `clima-${i}`)}</span>
       <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div>
       ${azione ? `<span class="mu-pasti">${esc(azione)}</span>` : ""}</div>
@@ -805,7 +894,11 @@ function cardClima(c, i, zona = "") {
       <span class="mu-spazio"></span>
       <button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button>
       <button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button>
-      <button type="button" class="mu-tondo ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>
+      ${
+        rapido
+          ? pastigliaRapida(id, rapido, on)
+          : `<button type="button" class="mu-tondo ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>`
+      }
     </div></div>`;
 }
 
@@ -927,9 +1020,7 @@ function paginaStanza(pagina) {
  * pannello piccolo al massimo tre per tre, e il resto scorre. */
 function misureDellaGriglia(pagina) {
   const g = grigliaDellaPagina(pagina, state.verso || "orizzontale");
-  return state.compatto
-    ? { colonne: Math.min(g.colonne, 3), righe: Math.min(g.righe, 3) }
-    : g;
+  return state.compatto ? { colonne: Math.min(g.colonne, 3), righe: Math.min(g.righe, 3) } : g;
 }
 const stileDellaGriglia = (pagina) => {
   const g = misureDellaGriglia(pagina);
@@ -961,7 +1052,9 @@ function paginaScene(pagina) {
 function paginaAmbienti(pagina) {
   const ambienti = ambientiDellaFonte(state.fonte || {});
   if (!ambienti.length)
-    return griglia(pagina, [vuoto(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))]);
+    return griglia(pagina, [
+      vuoto(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights")),
+    ]);
   const carte = ambienti.map(({ stanza, luci }, i) => {
     const temp = stanza.temp ? numero(stato(stanza.temp)?.state) : null;
     const umid = stanza.hum ? numero(stato(stanza.hum)?.state) : null;
@@ -983,7 +1076,9 @@ function paginaAmbienti(pagina) {
 function paginaTelecamere(pagina) {
   const telecamere = telecamereDellaFonte(state.fonte || {});
   if (!telecamere.length)
-    return griglia(pagina, [vuoto(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))]);
+    return griglia(pagina, [
+      vuoto(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard")),
+    ]);
   const carte = telecamere.map(
     (k, i) =>
       `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video">${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi(k.entita))}</span></div></button>`,
@@ -1016,10 +1111,7 @@ const glifo = (nome, misura = 30) =>
 /* La lettura di un lettore, con quello che il tocco sul tablet aspetta. */
 function lettoreOra(voce) {
   segna(voce.entita);
-  const lettura = letturaDelLettore(
-    { entity: voce.entita, nome: voce.nome },
-    allStates() || {},
-  );
+  const lettura = letturaDelLettore({ entity: voce.entita, nome: voce.nome }, allStates() || {});
   const attesa = state.inAttesa[voce.entita] || {};
   if (typeof attesa.suona === "boolean") {
     lettura.suona = attesa.suona;
@@ -1063,7 +1155,8 @@ function lettoreGrande(l) {
   const punto = posizioneOra(l);
   const volume = l.volume === null ? null : Math.round(l.volume * 100);
   const sotto = [l.artista, l.album].filter(Boolean).join(" · ");
-  const titolo = l.titolo || (l.spento ? t("Spento", "Off") : l.applicazione || l.sorgente || l.nome);
+  const titolo =
+    l.titolo || (l.spento ? t("Spento", "Off") : l.applicazione || l.sorgente || l.nome);
   return `<div class="mu-carta mu-mp ${l.suona ? "mu-accesa" : ""}" style="--acc:#ec4899" data-mu-mp="${esc(l.entity)}">
     ${l.copertina ? `<img class="mu-mp-fondo" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="" aria-hidden="true">` : ""}
     <div class="mu-mp-testa">
@@ -1130,8 +1223,7 @@ function rigaDelLettore(l, scelto) {
   const riga =
     (compagni.length
       ? `${t("In gruppo con", "Grouped with")} ${compagni.map((id) => nomeDi(id)).join(", ")} · `
-      : "") +
-    (l.titolo ? [l.titolo, l.artista].filter(Boolean).join(" · ") : parolaDelLettore(l));
+      : "") + (l.titolo ? [l.titolo, l.artista].filter(Boolean).join(" · ") : parolaDelLettore(l));
   return `<div class="mu-carta mu-mp-riga${l.entity === scelto ? " si" : ""}${l.suona ? " mu-accesa" : ""}" style="--acc:#ec4899" data-mu-fa="mp-scegli" data-mu-entita="${esc(l.entity)}" role="button" tabindex="0">
     ${l.copertina ? `<img class="mu-mp-mini" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-mini mu-mp-arte-vuota">${disegno("media", 30, `mpr-${l.entity}`)}</span>`}
     <div class="mu-nome"><div class="mu-n">${esc(l.nome)}</div><div class="mu-sotto">${l.suona ? '<i class="mu-mp-onde" aria-hidden="true"><b></b><b></b><b></b></i>' : ""}${esc(riga)}</div></div>
@@ -1143,7 +1235,13 @@ function paginaMusica(pagina) {
   const voci = lettoriDellaPagina(pagina, state.fonte || {});
   if (!voci.length)
     return griglia(pagina, [
-      vuoto(0, t("Nessun lettore: aggiungili nella sezione Musica o qui nel config", "No player: add them in the Music section or here in the config")),
+      vuoto(
+        0,
+        t(
+          "Nessun lettore: aggiungili nella sezione Musica o qui nel config",
+          "No player: add them in the Music section or here in the config",
+        ),
+      ),
     ]);
   const letture = voci.map(lettoreOra);
   lettoriDiQui = letture;
@@ -1207,11 +1305,25 @@ function paginaEnergia(pagina) {
   const tessere = [];
   if (e.casa) {
     const p = potenza(e.casa);
-    tessere.push(["casa", "home", "#0ea5e9", t("Consuma la casa", "House uses"), p.testo, nomeDi(e.casa)]);
+    tessere.push([
+      "casa",
+      "home",
+      "#0ea5e9",
+      t("Consuma la casa", "House uses"),
+      p.testo,
+      nomeDi(e.casa),
+    ]);
   }
   if (e.solare) {
     const p = potenza(e.solare);
-    tessere.push(["solare", "solare", "#f59e0b", t("Produce il solare", "Solar makes"), p.testo, nomeDi(e.solare)]);
+    tessere.push([
+      "solare",
+      "solare",
+      "#f59e0b",
+      t("Produce il solare", "Solar makes"),
+      p.testo,
+      nomeDi(e.solare),
+    ]);
   }
   if (e.rete) {
     const p = potenza(e.rete);
@@ -1222,14 +1334,30 @@ function paginaEnergia(pagina) {
         : p.valore < 0
           ? t("Cede alla rete", "To the grid")
           : t("Preleva dalla rete", "From the grid");
-    tessere.push(["rete", "energia", p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6", parola, p.testo, nomeDi(e.rete)]);
+    tessere.push([
+      "rete",
+      "energia",
+      p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6",
+      parola,
+      p.testo,
+      nomeDi(e.rete),
+    ]);
   }
   if (e.batteria) {
     const v = numero(stato(e.batteria)?.state);
-    tessere.push(["batteria", "batterie", "#10b981", t("Batteria", "Battery"), v === null ? "—" : `${decimale(v, 0)}%`, nomeDi(e.batteria)]);
+    tessere.push([
+      "batteria",
+      "batterie",
+      "#10b981",
+      t("Batteria", "Battery"),
+      v === null ? "—" : `${decimale(v, 0)}%`,
+      nomeDi(e.batteria),
+    ]);
   }
   if (!tessere.length)
-    return griglia(pagina, [vuoto(0, t("Scegli le misure nel config", "Choose the readings in the config"))]);
+    return griglia(pagina, [
+      vuoto(0, t("Scegli le misure nel config", "Choose the readings in the config")),
+    ]);
   const carte = tessere.map(
     ([k, d, acc, etichetta, valore, sotto], i) =>
       `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
@@ -1243,14 +1371,18 @@ function finestreAperte() {
   /* Una finestra che si apre adesso era chiusa un attimo fa: si guarda tutto
    * il dominio, non solo quelle aperte. */
   segnaDominio("binary_sensor");
-  return Object.entries(allStates() || {})
-    .filter(
-      ([id, s]) =>
-        id.startsWith("binary_sensor.") &&
-        ["window", "door", "garage_door", "opening"].includes(s?.attributes?.device_class) &&
-        s?.state === "on",
-    )
-    .map(([id]) => nomeDi(id));
+  /* Gli ingressi che la centrale ha dichiarato nella sezione Sicurezza, come
+   * li conta la plancia: prima qui finiva ogni sensore con la classe
+   * «finestra», e il pannello diceva aperti i «Stato finestra» dei
+   * termosifoni. Chi non ne ha dichiarato nessuno vede quelli della pagina
+   * Varchi della plancia, con le sue esclusioni e i suoi nomi. */
+  const fonte = state.fonte || {};
+  const stati = allStates() || {};
+  const righe = varchiDiCasa(stati, fonte.varchi || {}, fonte.invertiti || [], (id) => nomeDi(id));
+  const centrale = centraleDelMuro(state.muro?.pagine?.[state.pagina]);
+  const dichiarati = fonte.antifurto?.ingressi?.[centrale] || [];
+  const quali = dichiarati.length ? ingressiDellaCentrale(righe, { ingressi: dichiarati }) : righe;
+  return quali.filter((riga) => riga.stato === "aperto").map((riga) => riga.name);
 }
 
 /* L'ingresso su un pannello piccolo: sei tessere, ognuna un gesto. Lo stato
@@ -1343,7 +1475,8 @@ function paginaIngresso(pagina) {
   const scattato = valore === "triggered";
   const spento = valore === "disarmed";
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
-  const modi = s ? alarmModes(s).filter((m) => m.mode !== "custom") : [];
+  const modi = tastiDellAntifurto(s);
+  const acceso = tastoAcceso(s, modi);
   const aperte = ing.finestre ? finestreAperte() : [];
   const persone = personeInCasa();
   const uscita = spento ? ing.esco : ing.rientro || ing.esco;
@@ -1352,16 +1485,14 @@ function paginaIngresso(pagina) {
   return `<div class="mu-ingresso">
     <div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
-        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? STATI_DELL_ALLARME()[valore] || valore : t("Nessuna centrale", "No alarm panel"))}</div>
+        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? STATI_DELL_ALLARME()[valore] || valore : modi.find((m) => m.mode === acceso)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
         ${aperte.length ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>` : ""}</div></div>
       ${
         modi.length
           ? `<div class="mu-seg mu-modi">${modi
               .map((m) => {
-                const attivo =
-                  (m.mode === "disarm" && spento) ||
-                  ALARM_MODES.find((x) => x.mode === m.mode)?.state === valore;
-                return `<button type="button" class="${attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(PAROLE_DEI_MODI()[m.mode] || m.mode)}</button>`;
+                const attivo = m.mode === acceso;
+                return `<button type="button" class="${attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`;
               })
               .join(
                 "",
@@ -1526,11 +1657,12 @@ function finestra() {
     const centrale = centraleDelMuro(pagina);
     const s = stato(centrale);
     const valore = String(s?.state || "");
-    const modi = s ? alarmModes(s).filter((m) => m.mode !== "custom") : [];
+    const modi = tastiDellAntifurto(s);
+    const acceso = tastoAcceso(s, modi);
     const aperte = pagina?.ingresso?.finestre ? finestreAperte() : [];
     dentro = `<div class="mu-fin-clima" style="--acc:${valore === "disarmed" ? "#10b981" : "#6366f1"}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore] || valore)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(PAROLE_DEI_MODI()[m.mode] || m.mode)}</button>`).join("")}</div></div>`;
+      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div></div>`;
   } else if (f.tipo === "citofono") {
     const ing = state.muro?.pagine?.[state.pagina]?.ingresso || {};
     dentro = `<div class="mu-fin-clima">
@@ -1744,14 +1876,41 @@ function scendiSottoIlMenu() {
   doc.addEventListener("pointerdown", risali, true);
 }
 
+/* Chi ha il menu laterale, in ordine.
+ *
+ * «Hamburger ancora non va: quando clicco si e' aperta la navbar. Si deve
+ * aprire il menu laterale di Home Assistant se sono su HA, e su gdahome il
+ * menu laterale dell'app.» Prima qui si premeva il ☰ della plancia sotto il
+ * pannello; ma col chiosco quel tasto non apre il cassetto, fa uscire la barra
+ * in basso — e sul tablet appeso al muro la barra e' proprio quello che il
+ * pannello copre. Il menu adesso lo si chiede direttamente a chi lo ha:
+ *
+ * 1. l'app gdahome sul telefono o sul tablet: il suo canale;
+ * 2. Home Assistant, se la plancia ci sta dentro: il suo cassetto;
+ * 3. l'app gdahome nel browser, che ospita la plancia in un riquadro;
+ * 4. nessuno dei tre: la plancia e' aperta da sola, e il menu e' il suo. */
 export function apriIlMenu() {
   scendiSottoIlMenu();
-  const tasto =
-    doc?.querySelector?.("body>header .ha-menu-btn") || doc?.querySelector?.(".ha-menu-btn");
-  if (tasto) {
-    tasto.click();
+  try {
+    if (root.gdahomeDice?.postMessage) {
+      root.gdahomeDice.postMessage("gdahome:menu");
+      return true;
+    }
+  } catch (_errore) {}
+  let dentroHa = false;
+  try {
+    dentroHa = Boolean(root.documentoDiHomeAssistant?.());
+  } catch (_errore) {}
+  if (dentroHa && typeof root.apriMenuLaterale === "function") {
+    root.apriMenuLaterale();
     return true;
   }
+  try {
+    if (root.parent && root.parent !== root) {
+      root.parent.postMessage({ gdahome: "menu" }, "*");
+      if (!dentroHa) return true;
+    }
+  } catch (_errore) {}
   if (typeof root.apriMenuLaterale === "function") {
     root.apriMenuLaterale();
     return true;
@@ -1994,9 +2153,9 @@ export function disegna() {
   try {
     corpo = state.riposo
       ? riposo(muro)
-      : `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${
-          corpoDellaPagina(pagina)
-        }</div>${finestra()}`;
+      : `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${corpoDellaPagina(
+          pagina,
+        )}</div>${finestra()}`;
     /* Il riposo si sveglia per l'antifurto anche quando non lo mostra. */
     segna(centraleDelMuro(muro.pagine[0]));
     inVista = raccolta;
@@ -2104,16 +2263,12 @@ export function attesaConfermata(cosa, atteso, reale) {
   if (cosa === "acceso") return reale.acceso === atteso;
   if (cosa === "suona") return reale.suona === atteso;
   if (cosa === "gruppo")
-    return (
-      reale.gruppo ===
-      (Array.isArray(atteso) ? atteso : [])
-        .slice(1)
-        .sort()
-        .join(",")
-    );
+    return reale.gruppo === (Array.isArray(atteso) ? atteso : []).slice(1).sort().join(",");
   if (cosa === "volume") return reale.volume !== null && Math.abs(reale.volume - atteso) <= 1;
-  if (cosa === "luminosita") return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
-  if (cosa === "temperatura") return reale.temperatura !== null && Math.abs(reale.temperatura - atteso) < 0.05;
+  if (cosa === "luminosita")
+    return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
+  if (cosa === "temperatura")
+    return reale.temperatura !== null && Math.abs(reale.temperatura - atteso) < 0.05;
   return false;
 }
 
@@ -2126,14 +2281,21 @@ function confermaLeAttese(event) {
     const b = numero(attributi(id).brightness);
     const reale = {
       acceso: accesoVero(id),
-      luminosita: !accesoVero(id) ? 0 : b === null ? null : Math.max(1, Math.round((b / 255) * 100)),
+      luminosita: !accesoVero(id)
+        ? 0
+        : b === null
+          ? null
+          : Math.max(1, Math.round((b / 255) * 100)),
       temperatura: numero(attributi(id).temperature),
       volume:
         numero(attributi(id).volume_level) === null
           ? null
           : Math.round(numero(attributi(id).volume_level) * 100),
       suona: ["playing", "buffering"].includes(String(stato(id)?.state)),
-      gruppo: (attributi(id).group_members || []).filter((x) => x !== id).sort().join(","),
+      gruppo: (attributi(id).group_members || [])
+        .filter((x) => x !== id)
+        .sort()
+        .join(","),
     };
     for (const cosa of ATTESE)
       if (cosa in attesa && attesaConfermata(cosa, attesa[cosa], reale)) delete attesa[cosa];
@@ -2165,6 +2327,28 @@ function allarme(modo, codice = "") {
   const pagina = state.muro?.pagine?.[state.pagina];
   const centrale = centraleDelMuro(pagina);
   const s = stato(centrale);
+  /* Un tasto scritto a mano chiama la sua entita', col suo codice se ne ha
+   * uno: lo stesso giro della plancia (antifurto-su-misura.js). */
+  const mio = modoSuMisura(modo);
+  if (mio) {
+    if (ilModoChiedeIlCodice(mio) && !codice) {
+      apriFinestra({ tipo: "codice", scopo: "allarme", modo, scritto: "" });
+      return;
+    }
+    if (codice && !ilCodiceApreIlModo(mio, codice)) {
+      const f = state.finestra;
+      if (f?.tipo === "codice") {
+        f.errore = true;
+        f.scritto = "";
+        disegna();
+      }
+      return;
+    }
+    const chiamata = chiamataDelModo(mio);
+    chiudiFinestra();
+    if (chiamata) comanda(chiamata.domain, chiamata.service, { ...chiamata.data });
+    return;
+  }
   if (!s) return;
   const voce = modo === "disarm" ? ALARM_DISARM : ALARM_MODES.find((m) => m.mode === modo);
   if (!voce) return;
@@ -2298,8 +2482,20 @@ function onClick(event) {
       return;
     case "clima-acceso": {
       const s = String(stato(id)?.state || "off");
+      const rapido = rapidoDi(id, zonaDiQui());
       if (s !== "off") alterna(id, "climate", "turn_off");
-      else {
+      else if (rapido) {
+        /* I passi del comando rapido, distanziati come nella plancia: la
+         * temperatura mandata a un condizionatore ancora spento cade nel
+         * vuoto. */
+        attendi(id, "acceso", true);
+        quickClimateSteps(rapido).forEach((passo, indice) => {
+          const manda = () => comanda("climate", passo.service, { entity_id: id, ...passo.data });
+          if (indice === 0) manda();
+          else root.setTimeout?.(manda, indice * 700);
+        });
+        disegna();
+      } else {
         const modi = (attributi(id).hvac_modes || []).filter((m) => m !== "off");
         if (modi.length)
           alterna(id, "climate", "set_hvac_mode", { entity_id: id, hvac_mode: modi[0] });
@@ -2327,7 +2523,10 @@ function onClick(event) {
       if ((cmd === "alza" || cmd === "abbassa") && l.volume !== null && l.puo.volume) {
         /* Un punto alla volta, come nella sezione Musica: il numero si vede
          * subito. */
-        const dopo = Math.min(100, Math.max(0, Math.round(l.volume * 100) + (cmd === "alza" ? 2 : -2)));
+        const dopo = Math.min(
+          100,
+          Math.max(0, Math.round(l.volume * 100) + (cmd === "alza" ? 2 : -2)),
+        );
         attendi(id, "volume", dopo);
         comanda("media_player", "volume_set", { entity_id: id, volume_level: dopo / 100 });
         disegna();
@@ -2775,6 +2974,24 @@ ${MURO} .mu-spazio{flex:1}
 ${MURO} .mu-tondo{width:68px;height:68px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:30px;text-align:center;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
 ${MURO} .mu-tondo.grande{width:96px;height:96px;font-size:42px}
 ${MURO} .mu-tondo.pieno{background:var(--acc);color:#fff;box-shadow:0 10px 24px -8px var(--acc)}
+/* La pastiglia del comando rapido: dice cosa fara', e col tasto in fondo. */
+${MURO} .mu-col-rapido .mu-comandi{gap:8px}
+/* Con la pastiglia la riga e' «− + pastiglia»: la modalita' la dice gia' la
+ * pastiglia, e il suo tasto stretto fra i tondi la lasciava senza parole. */
+${MURO} .mu-col-rapido .mu-modo,${MURO} .mu-col-rapido .mu-spazio{display:none}
+${MURO} .mu-col-rapido .mu-comandi .mu-tondo{flex:0 0 auto}
+${MURO} .mu-rapido{flex:1;min-width:0;height:52px;display:flex;align-items:center;gap:6px;padding:0 6px 0 12px;border-radius:999px;cursor:pointer;
+  font:inherit;font-weight:800;font-size:14px;color:color-mix(in srgb,var(--acc) 70%,#0f172a);overflow:hidden;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 7%,#fff),color-mix(in srgb,var(--acc) 15%,#fff));border:1px solid color-mix(in srgb,var(--acc) 35%,transparent)}
+${MURO} .mu-rapido .mu-rap-lampo{flex:0 0 auto;font-size:15px}
+${MURO} .mu-rapido .mu-rap-val{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;min-width:0}
+${MURO} .mu-rapido>i{flex:0 0 4px;width:4px;height:4px;border-radius:50%;background:color-mix(in srgb,var(--acc) 50%,transparent)}
+${MURO} .mu-rapido .mu-rap-tasto{margin-left:auto;flex:0 0 40px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  background:var(--acc);color:#fff;box-shadow:0 4px 10px -2px var(--acc)}
+${MURO} .mu-rapido.acceso{background:linear-gradient(90deg,var(--acc),color-mix(in srgb,var(--acc) 75%,#0f172a));color:#fff;border-color:transparent}
+${MURO} .mu-rapido.acceso>i{background:rgba(255,255,255,.6)}
+${MURO} .mu-rapido.acceso .mu-rap-tasto{background:#fff;color:var(--acc)}
+${MURO} .mu-col-rapido.mu-accesa{box-shadow:0 14px 32px -10px color-mix(in srgb,var(--acc) 45%,transparent),inset 0 0 0 2px color-mix(in srgb,var(--acc) 70%,transparent)}
 ${MURO} .mu-seg{display:flex;padding:6px;gap:6px;border-radius:20px;margin-top:auto;background:color-mix(in srgb,var(--text) 4%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
 ${MURO} .mu-seg>button{flex:1;height:64px;border-radius:15px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:17px;color:var(--text-dim);text-align:center}
 ${MURO} .mu-seg>button.si{background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));color:color-mix(in srgb,var(--acc) 80%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent),0 8px 18px -10px var(--acc)}

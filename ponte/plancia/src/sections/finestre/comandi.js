@@ -19,7 +19,8 @@
  * una lingua non c'e', `tastoServizio`.
  */
 import { registraFinestra, tastoServizio } from "../finestre-dei-widget.js";
-import { clean, esc, formatNumber, locale, siComanda, t } from "../shared.js";
+import { clean, esc, formatNumber, locale, section, siComanda, t } from "../shared.js";
+import { iconGlyphMarkup } from "../icon-engine-section.js";
 import { quantoTempoInParole } from "../../core/da-quanto.js";
 import { ilTastoCentrale, orologio, posizioneOra } from "../../core/media-player.js";
 import { robotActions, robotCommand, robotStateLabel } from "../../core/robot-model.js";
@@ -169,6 +170,27 @@ function posizioneScelta(riga) {
     data-dm-w-verso="${riga.invertita ? "1" : ""}" aria-label="${esc(invito)}" title="${esc(invito)}"><option value="">↕</option>${voci}</select>`;
 }
 
+/* Il disegno della stanza, quello scelto nel catalogo della plancia.
+ *
+ * «Metti un'icona vicino alle cose, non lasciare solo testo», e poi «le icone
+ * non sono quelle del mio catalogo»: la stanza porta l'icona che le si e'
+ * data nella configurazione delle Stanze — la cucina col suo forno, il bagno
+ * con la sua doccia — disegnata dallo stesso motore che la disegna in tutta
+ * la plancia. Una stanza che un'icona non ce l'ha ha la casetta. */
+function disegnoDellaStanza(nome, misura) {
+  const chi = clean(nome).toLowerCase();
+  const stanza = (section("rooms", []) || []).find(
+    (voce) => clean(voce?.name).toLowerCase() === chi || clean(voce?.id).toLowerCase() === chi,
+  );
+  const icona = clean(stanza?.icon);
+  if (icona) {
+    try {
+      return iconGlyphMarkup("room", icona, { size: misura });
+    } catch (_errore) {}
+  }
+  return disegnoDelCatalogo("home", misura);
+}
+
 /** Le righe della tessera raccolte per stanza, nell'ordine in cui arrivano. */
 export function stanzeDelleFinestre(righe = []) {
   const stanze = new Map();
@@ -210,6 +232,16 @@ function motoreMarkup(riga, conFrecce) {
   </div>`;
 }
 
+/* La stanza col suo disegno, e sopra il segno di cosa la tiene in elenco:
+ * la finestra, o la tapparella quando di finestre non ne ha. */
+function iconaDellaStanza(stanza) {
+  const segno = stanza.ante.length ? "window" : "shutters";
+  return `<span class="dm-f-tapparelle-ic" data-viva="${Boolean(stanza.aperta || stanza.su)}" aria-hidden="true">${disegnoDellaStanza(
+    stanza.nome,
+    32,
+  )}<i>${disegnoDelCatalogo(segno, 16)}</i></span>`;
+}
+
 function stanzaMarkup(stanza) {
   const viva = stanza.aperta || stanza.su;
   const unMotore = stanza.motori.length === 1 ? stanza.motori[0] : null;
@@ -222,9 +254,10 @@ function stanzaMarkup(stanza) {
       .join(" · ");
     return `<article class="dm-f-tapparelle-stanza" data-viva="false">
       <div class="dm-f-tapparelle-riga">
+        ${iconaDellaStanza(stanza)}
         <span class="dm-f-tapparelle-nome"><b>${esc(stanza.nome)}</b>${
           ante ? `<span class="dm-f-tapparelle-ante">${ante}</span>` : ""
-        }${riassunto ? `<small>${esc(riassunto)}</small>` : ""}</span>
+        }${riassunto ? `<small>${disegnoDelCatalogo("shutters", 16)}${esc(riassunto)}</small>` : ""}</span>
         ${unMotore ? frecce(unMotore) : ""}
       </div>
       ${
@@ -241,11 +274,12 @@ function stanzaMarkup(stanza) {
   }
   return `<article class="dm-f-tapparelle-stanza" data-viva="true">
     <div class="dm-f-tapparelle-riga">
+      ${iconaDellaStanza(stanza)}
       <span class="dm-f-tapparelle-nome"><b>${esc(stanza.nome)}</b>${
         ante ? `<span class="dm-f-tapparelle-ante">${ante}</span>` : ""
       }${
         !stanza.motori.length
-          ? `<small>${esc(t("Solo sensore sull'anta · nessun motore", "Window sensor only · no motor"))}</small>`
+          ? `<small>${disegnoDelCatalogo("radar", 16)}${esc(t("Solo sensore sull'anta · nessun motore", "Window sensor only · no motor"))}</small>`
           : ""
       }</span>
       ${unMotore ? frecce(unMotore) : ""}
@@ -267,14 +301,30 @@ function finestraTapparelle(widget) {
       .map((riga) => riga.da)
       .filter(Number.isFinite)
       .sort((a, b) => a - b)[0];
-    eroi.push(`<div class="dm-f-tapparelle-eroe" data-tono="${aperte.length ? "aperte" : "quiete"}">
-      <small>${esc(t("Finestre aperte", "Open windows"))}</small>
-      <b class="dm-f-num">${aperte.length}</b>
-      <em>${
-        aperte.length
-          ? `${esc(elenco(nomiDi(aperte)))}${prima ? `<br>${esc(daQuanto(prima))}` : ""}`
-          : esc(t("Tutte chiuse", "All closed"))
-      }</em>
+    /* Le stanze aperte una per una, col loro disegno, invece di una riga di
+     * nomi separati da virgole. */
+    const stanzeAperte = nomiDi(aperte)
+      .map(
+        (nome) =>
+          `<span class="dm-f-tapparelle-chip">${disegnoDellaStanza(nome, 20)}${esc(nome)}</span>`,
+      )
+      .join("");
+    eroi.push(`<div class="dm-f-tapparelle-eroe dm-f-tapparelle-eroe-ic" data-tono="${aperte.length ? "aperte" : "quiete"}">
+      <span class="dm-f-tapparelle-vetro" aria-hidden="true">${disegnoDelCatalogo("window", 50)}${
+        aperte.length ? `<b>${aperte.length}</b>` : ""
+      }</span>
+      <span class="dm-f-tapparelle-eroe-testo">
+        <small>${esc(t("Finestre aperte", "Open windows"))}</small>
+        <b class="dm-f-num">${aperte.length}<span>${esc(t("su", "of"))} ${ante.length}</span></b>
+        <em>${
+          aperte.length
+            ? prima
+              ? esc(daQuanto(prima))
+              : ""
+            : esc(t("Tutte chiuse", "All closed"))
+        }</em>
+        ${stanzeAperte ? `<span class="dm-f-tapparelle-chips">${stanzeAperte}</span>` : ""}
+      </span>
     </div>`);
   }
   if (motori.length) {
@@ -816,6 +866,19 @@ ${P} .dm-f-tapparelle-eroe{min-width:0;border-radius:22px;padding:14px 15px;back
 ${P} .dm-f-tapparelle-eroe small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${A}}
 ${P} .dm-f-tapparelle-eroe .dm-f-num{display:block;font-size:44px;line-height:1;margin:6px 0 4px;color:${TESTO}}
 ${P} .dm-f-tapparelle-eroe em{display:block;font-style:normal;font-size:12.5px;font-weight:750;line-height:1.35;color:${SPENTO};overflow-wrap:anywhere}
+${P} .dm-f-tapparelle-eroe-ic{display:flex;align-items:center;gap:14px;grid-column:1/-1}
+${P} .dm-f-tapparelle-vetro{position:relative;flex:0 0 auto;width:74px;height:74px;border-radius:22px;display:grid;place-items:center;background:${FONDO};box-shadow:0 10px 22px -12px ${bordo(60)}}
+${P} .dm-f-tapparelle-vetro b{position:absolute;right:-7px;top:-7px;min-width:28px;padding:1px 8px;border-radius:999px;background:${A};color:#fff;border:3px solid ${FONDO};font-family:'Oswald',sans-serif;font-size:15px;text-align:center}
+${P} .dm-f-tapparelle-eroe-testo{flex:1;min-width:0}
+${P} .dm-f-tapparelle-eroe .dm-f-num span{font-size:20px;margin-left:8px;color:${SPENTO}}
+${P} .dm-f-tapparelle-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+${P} .dm-f-tapparelle-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 4px;border-radius:999px;background:${FONDO};border:1px solid ${bordo(30)};font-size:12px;font-weight:850;color:${TESTO}}
+${P} .dm-f-tapparelle-chip>*:first-child{flex:0 0 22px;width:22px!important;height:22px!important;min-width:0!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;display:grid;place-items:center;overflow:hidden}
+${P} .dm-f-tapparelle-eroi:has(.dm-f-tapparelle-eroe-ic){grid-template-columns:1fr}
+${P} .dm-f-tapparelle-ic{position:relative;flex:0 0 auto;width:50px;height:50px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,${SPENTO} 9%,${FONDO})}
+${P} .dm-f-tapparelle-ic[data-viva="true"]{background:${tinta(9)}}
+${P} .dm-f-tapparelle-ic>i{position:absolute;right:-6px;bottom:-6px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:${FONDO};box-shadow:0 2px 6px rgba(15,23,42,.18)}
+${P} .dm-f-tapparelle-nome small{display:inline-flex;align-items:center;gap:5px}
 ${P} .dm-f-tapparelle-tutte{display:grid;grid-template-columns:1fr 1fr 60px;gap:8px;margin-top:10px}
 ${P} .dm-f-tapparelle-stanza{padding:12px 12px 12px 14px;border-radius:20px;background:${FONDO};border:1px solid ${LINEA};margin-bottom:8px;box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
 ${P} .dm-f-tapparelle-stanza[data-viva="true"]{border-color:${bordo(32)};background:linear-gradient(180deg,${tinta(3)},${FONDO})}

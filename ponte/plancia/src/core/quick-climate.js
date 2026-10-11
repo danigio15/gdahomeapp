@@ -134,6 +134,21 @@ export function quickClimateSteps(preset) {
   return passi;
 }
 
+/**
+ * Il preset di un'unita' vista da una zona, con tutte le sue fonti.
+ *
+ * E' la regola del popup Clima della plancia scritta una volta sola, perche'
+ * la usa anche il tablet a muro: «nel pannello da muro, nella sezione clima,
+ * mi dai la possibilita' di scegliere i Comandi Rapidi del clima». Prima la
+ * scelta della propria unita', poi quella di tutta la casa, e in Caldo — dove
+ * il ripiego dei condizionatori farebbe il contrario — il riscaldamento.
+ */
+export function quickClimatePresetOf(entity, zona, perUnita, globale) {
+  const caldo = pulito(zona).toLowerCase() === "caldo";
+  const ripiego = caldo ? QUICK_CLIMATE_HEAT_DEFAULT : normalizeQuickClimate(globale);
+  return quickClimatePresetForZone(quickClimateForUnit(entity, perUnita, ripiego), zona);
+}
+
 /** Come si legge l'impostazione sotto il titolo del popup. */
 export function quickClimateHint(preset, parole) {
   const scelta = normalizeQuickClimate(preset);

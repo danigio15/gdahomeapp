@@ -122,7 +122,7 @@ const SEME = {
   visibility: { home: true, energy: true, ev: true, boiler: true, temp: true },
 };
 
-async function avvia(page, testInfo) {
+async function avvia(page, testInfo, auto = AUTO) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
@@ -134,7 +134,7 @@ async function avvia(page, testInfo) {
       localStorage.setItem("cd_ev_car_active", "0");
       window.cdApplyCanonicalOverrides?.(mappa);
     },
-    { mappa: MAPPA, auto: AUTO },
+    { mappa: MAPPA, auto },
   );
   await page.evaluate(
     ({ valori, oraFa }) => {
@@ -229,6 +229,28 @@ test("Auto: anello, posizione, chilometri e le quattro gomme, senza nomi grezzi"
   expect(tutto).not.toMatch(/TIRE|WINDOW|ODOMETER|LEAPMOTOR B10 /);
   expect(tutto).toMatch(/9019|9\.019/);
   await fotografa(page, "ev", testInfo);
+});
+
+/* «Auto: deve uscire l'immagine collegata alla sezione.» Con la foto scelta
+ * nella sezione Auto la finestra la mette in cima — quella «in carica» col
+ * cavo attaccato — e sotto la carica, i chilometri e le misure. */
+const FOTO_IN_CARICA =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="#16a34a"/></svg>',
+  );
+
+test("Auto con la foto della sezione: la foto in cima, poi carica e chilometri", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, [{ ...AUTO[0], img: "", imgPlugged: FOTO_IN_CARICA }]);
+  const finestra = await apri(page, "ev");
+  await expect(finestra.locator(".dm-f-ev-foto img")).toHaveAttribute("src", FOTO_IN_CARICA);
+  await expect(finestra.locator(".dm-f-ev-anello")).toHaveCount(0);
+  await expect(finestra.locator(".dm-f-ev-pct")).toContainText("32");
+  await expect(finestra.locator(".dm-f-ev-km")).toContainText("138 km");
+  await expect(finestra.locator(".dm-f-ev-misure")).toContainText("7,2 kW");
+  await expect(finestra.locator(".dm-f-ev-dallalto")).toHaveCount(1);
 });
 
 test("Solare termico: pannello e boiler, la frase, lo stato coi nomi dei tasti", async ({

@@ -146,6 +146,9 @@ const SHARED_ACROSS_LANGUAGES = new Set([
   "Humidex",
   "Humidex (optional)",
   "Auto",
+  /* La velocita' «Turbo» del condizionatore: e' il nome che le danno i
+   * telecomandi, e in mezza Europa non si traduce. */
+  "Turbo",
   "Boost",
   "Config",
   "Home Assistant entity",

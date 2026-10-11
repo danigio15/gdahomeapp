@@ -268,6 +268,7 @@ function elencoMarkup(p, i) {
     .filter((n, k, tutti) => tutti.indexOf(n) === k);
   return `<div class="mu-ed-nota">${esc(spiega)}</div>
     ${p.modello === "clima" ? riga(t("Si apre su", "Opens on"), "", scelte(`pagine.${i}.zona`, p.zona, [["freddo", `❄️ ${t("Freddo", "Cooling")}`], ["caldo", `🔥 ${t("Caldo", "Heating")}`]])) : ""}
+    ${p.modello === "clima" ? riga(t("Il tasto ⏻ accende con", "The ⏻ button turns on with"), t("Il comando rapido della plancia: modalità, gradi e ventola scelti per ogni stanza nella scheda Clima. Premuto di nuovo, spegne.", "The dashboard quick command: mode, degrees and fan chosen for each room in the Climate tab. Pressed again, it turns off."), scelte(`pagine.${i}.accensione`, p.accensione, [["rapido", `⚡ ${t("Comando rapido", "Quick command")}`], ["ultima", t("Ultima modalità", "Last mode")]])) : ""}
     <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${nomi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
 }
 

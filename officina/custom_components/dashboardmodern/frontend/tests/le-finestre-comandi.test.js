@@ -82,7 +82,9 @@ const CASA_FINESTRE = [
 test("finestre aperte e tapparelle su stanno in due numeri separati, non in uno", () => {
   const html = disegna("tapparelle", { rows: CASA_FINESTRE });
   const testo = senzaTag(html);
-  assert.match(testo, /Finestre aperte 2 Cucina e Bagno/);
+  /* Le stanze aperte stanno una per una, ognuna col suo disegno, dopo il
+   * conto «2 su 3» delle finestre. */
+  assert.match(testo, /Finestre aperte 2 su 3 .*Cucina Bagno/);
   assert.match(testo, /Tapparelle su 3 su 5/);
   assert.doesNotMatch(testo, /aperte su 8|5 aperte/, "la somma di cose diverse non torna");
   assert.doesNotMatch(testo, /Le misure|Apertura media/);

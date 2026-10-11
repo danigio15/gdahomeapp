@@ -77,7 +77,7 @@ test("col chiosco la fascia della Home comincia sotto l'orologio, anche ferma", 
   const chiosco = leggi("../src/sections/beta12-room-color-lock-section.js");
   assert.match(
     chiosco,
-    /padding-top:max\(env\(safe-area-inset-top,0px\),var\(--dm-cima-di-sistema,0px\)\)!important/,
+    /padding-top:max\(env\(safe-area-inset-top,0px\),var\(--dm-cima-di-sistema,0px\),var\(--gdahome-alto,0px\)\)!important/,
   );
   const testaFissa = leggi("../src/sections/testa-fissa-section.js");
   assert.match(testaFissa, /position:sticky;top:var\(--dm-cima-libera,0px\)/);
