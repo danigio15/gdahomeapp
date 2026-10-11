@@ -406,6 +406,10 @@ test("e non chiede di nuovo i gettoni che sono gia' sulla macchina", () => {
     ["GETTONE_SEGNALAZIONI", "GITHUB_SEGNALAZIONI", "ambiente"],
     ["REPO_SEGNALAZIONI", "GITHUB_REPO", "ambiente"],
     ["REPO_ALLEGATI", "GITHUB_REPO_ALLEGATI", "ambiente"],
+    /* E il modo delle licenze: chi ha scritto `impone` a mano non deve
+     * ritrovarsi a `registra` per aver rilanciato lo script. */
+    ["MODO_LICENZE", "MODO_LICENZE", "ambiente"],
+    ["QUADRO_REVOCHE", "QUADRO_REVOCHE", "ambiente"],
   ]) {
     const atteso = `${quale}="\${${quale}:-$(gia_scritto "$CONFIGURAZIONE/${dove}" ${chiave})}"`;
     assert.ok(
@@ -413,6 +417,13 @@ test("e non chiede di nuovo i gettoni che sono gia' sulla macchina", () => {
       `«${quale}» non si rilegge da «${dove}»: lo richiede, e cosi' lo cambia`,
     );
   }
+});
+
+test("il modo delle licenze e le licenze tolte finiscono in ambiente, e di serie vuoti", () => {
+  assert.match(ACCENDI, /^  printf 'MODO_LICENZE=%s\\n' "\$MODO_LICENZE"$/m);
+  assert.match(ACCENDI, /^  printf 'QUADRO_REVOCHE=%s\\n' "\$QUADRO_REVOCHE"$/m);
+  /* Nessun «impone» scritto di serie da nessuna parte dello script. */
+  assert.doesNotMatch(ACCENDI, /MODO_LICENZE=impone"|MODO_LICENZE:-impone/);
 });
 
 test("il sito viaggia con tutto il resto, e ha il suo nome davanti", () => {

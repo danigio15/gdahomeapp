@@ -52,6 +52,7 @@
  *   POST   /v1/licenze/negozio           e porta una ricevuta del negozio
  *   POST   /v1/licenze/riscatta          un codice regalo, per una casa o un telefono
  *   POST   /v1/licenze/telefono          gdanav da solo chiede i suoi
+ *   GET    /v1/licenze/revocate          le licenze tolte da poco, firmate: le chiede il centralino
  *
  *   GET    /gestore/                     la pagina di chi tiene il quadro
  *   GET    /gestore/installatori         chi c'e', quanti impianti ha ognuno e
@@ -903,6 +904,24 @@ export function costruisciIlServer({
     }
 
     /* ─── Le licenze, dalla casa e dal telefono ──────────────────────── */
+
+    /* Le licenze tolte, per il centralino (`licenze.js`, «Le licenze tolte,
+     * per il centralino»). Senza chiave: dentro ci sono identificativi di
+     * licenze e basta, nessuna casa e nessun nome, e la firma dice che
+     * l'elenco viene da qui. */
+    if (via === "/v1/licenze/revocate" && metodo === "GET") {
+      const fraQuanto = frenoDelleLicenze.passa(daChiSiConta(richiesta));
+      if (fraQuanto) {
+        frenato(risposta, fraQuanto);
+        return;
+      }
+      if (!licenze.accese) {
+        male(risposta, 503, "licenze-non-configurate");
+        return;
+      }
+      json(risposta, { elenco: licenze.elencoDelleTolte() });
+      return;
+    }
 
     const perLeLicenze = /^\/v1\/licenze\/(casa|negozio|riscatta|telefono)$/.exec(via);
     if (perLeLicenze && metodo === "POST") {

@@ -5,9 +5,12 @@ import { join } from "node:path";
 import { Case } from "./case.js";
 import { ArchivioDellaChat, Chat } from "./chat.js";
 import { Centralino } from "./centralino.js";
+import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
 import { numeroDa } from "./freno.js";
 import { Contatti, Postino } from "./posta.js";
+import { ilModoDelleLicenze } from "./modo-delle-licenze.js";
 import { apriIlRegistro } from "./registro.js";
+import { Revoche } from "./revoche.js";
 import { Ricevute } from "./ricevute.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
@@ -61,6 +64,16 @@ export async function alzaIlCentralino({
    * questa funzione — le prove dell'app, che accendono il centralino vero e
    * provano la strada da fuori, non la licenza. */
   chiaveLicenze = undefined,
+  /* Cosa si fa dei gettoni: `spento`, `registra` o `impone`
+   * (`modo-delle-licenze.js`). Vuoto vuol dire `spento` con la chiave vuota
+   * e `registra` con la chiave scritta: per chiudere il fuori casa a chi non
+   * e' Premium bisogna scrivere `impone`, e con una chiave vuota o storta non
+   * si impone comunque. */
+  modoLicenze = process.env.MODO_LICENZE || "",
+  /* Dove chiedere al quadro le licenze tolte (`revoche.js`), per esempio
+   * `https://quadro.gdahome.org/v1/licenze/revocate`. Vuoto: non si chiede,
+   * e una licenza tolta vale fino alla fine del suo gettone, come prima. */
+  dellaRevoche = process.env.QUADRO_REVOCHE || "",
   /* Se una linea della chat nasce solo col nome e il segreto di una casa
    * gia' presentata dal filo. Vedi `chat.js`: si accende quando il ponte
    * scrivera' in chat con l'identita' del filo. */
@@ -102,10 +115,20 @@ export async function alzaIlCentralino({
     giorniDiSilenzio,
     ...definiti({ nuovePerIndirizzo: caseNuovePerIndirizzo, nuoveInTutto: caseNuoveInTutto }),
   });
+  const chiaveVera = chiaveLicenze === undefined ? CHIAVE_PUBBLICA_LICENZE : chiaveLicenze;
+  const modo = ilModoDelleLicenze(modoLicenze, { chiave: chiaveVera, registro });
+  /* Le licenze tolte si chiedono solo se servono a qualcosa: a licenze spente
+   * nessuno guarda i gettoni. */
+  const revoche =
+    modo !== "spento" && dellaRevoche
+      ? new Revoche({ dove: dellaRevoche, chiave: chiaveVera, registro })
+      : null;
   const centralino = new Centralino({
     case: case_,
     registro,
-    ...(chiaveLicenze === undefined ? {} : { chiaveLicenze }),
+    chiaveLicenze: chiaveVera,
+    modoLicenze: modo,
+    revoche,
   });
   const sportello = new Sportello({
     case: case_,
@@ -192,6 +215,21 @@ export async function alzaIlCentralino({
       ? `le app sotto la ${minima} si fermano e chiedono di essere aggiornate`
       : "nessuna versione minima dell'app: non si ferma nessuno",
   );
+  /* Il modo delle licenze si dice sempre, all'accensione: e' la riga da
+   * cercare nel registro quando qualcuno dice «da fuori non entro». */
+  registro.info(
+    {
+      spento: "licenze spente: da fuori entrano tutti",
+      registra:
+        "licenze in registra: i gettoni si verificano e si contano (/salute), ma da fuori entrano tutti",
+      impone: "licenze in impone: da fuori si entra con gdahome Premium",
+    }[modo],
+  );
+  if (dellaRevoche && !revoche) {
+    registro.info("QUADRO_REVOCHE c'e', ma a licenze spente le licenze tolte non si chiedono");
+  }
+  revoche?.avvia();
+
   registro.info(
     contatti.pronto
       ? `il modulo dei contatti spedisce a ${postaA} passando da ${postaServer}`

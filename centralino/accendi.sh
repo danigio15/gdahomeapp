@@ -330,6 +330,15 @@ POSTA_A="${POSTA_A:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_A)}"
 # (VERSIONE_MINIMA_APP=1070000 bash accendi.sh) o si scrive in `ambiente`, e
 # un giro dopo resta com'era: vuoto o zero, non si ferma nessuno.
 VERSIONE_MINIMA_APP="${VERSIONE_MINIMA_APP:-$(gia_scritto "$CONFIGURAZIONE/ambiente" VERSIONE_MINIMA_APP)}"
+# Il modo delle licenze (centralino/src/modo-delle-licenze.js): `spento`,
+# `registra` o `impone`. Vuoto vuol dire spento con la chiave vuota e registra
+# con la chiave scritta: il fuori casa si chiude a chi non e' Premium solo con
+# `impone`, scritto apposta (MODO_LICENZE=impone bash accendi.sh, o a mano in
+# `ambiente` e un riavvio). E dove chiedere al quadro le licenze tolte: vuoto,
+# non si chiedono. Tutti e due si rileggono da `ambiente`, come gli altri:
+# rilanciare lo script non li porta via.
+MODO_LICENZE="${MODO_LICENZE:-$(gia_scritto "$CONFIGURAZIONE/ambiente" MODO_LICENZE)}"
+QUADRO_REVOCHE="${QUADRO_REVOCHE:-$(gia_scritto "$CONFIGURAZIONE/ambiente" QUADRO_REVOCHE)}"
 if [[ -n "$POSTA_SERVER" ]]; then
   bene "il modulo dei contatti spedisce da $POSTA_SERVER a ${POSTA_A:-?}"
 else
@@ -763,6 +772,8 @@ passo "Accendo il servizio"
   printf 'POSTA_DA=%s\n' "$POSTA_DA"
   printf 'POSTA_A=%s\n' "$POSTA_A"
   printf 'VERSIONE_MINIMA_APP=%s\n' "${VERSIONE_MINIMA_APP:-0}"
+  printf 'MODO_LICENZE=%s\n' "$MODO_LICENZE"
+  printf 'QUADRO_REVOCHE=%s\n' "$QUADRO_REVOCHE"
   printf 'NODE_OPTIONS=--disable-warning=ExperimentalWarning\n'
 } >"$CONFIGURAZIONE/ambiente"
 chmod 600 "$CONFIGURAZIONE/ambiente"

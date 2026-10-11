@@ -199,6 +199,20 @@ repository, né su GitHub, né in chat.
    negozi per tutti: `--fallo`, poi si rilascia il centralino col bottone «Il
    tramite» su Actions, e si alza la versione minima delle app (sotto).
 
+## Il terzo interruttore: `MODO_LICENZE`
+
+Dalla chiave nel centralino in poi c'è un interruttore in più, sulla macchina
+del tramite: `MODO_LICENZE` in `/etc/tramite/ambiente`
+([`centralino/README.md`](../centralino/README.md#le-licenze)). Senza, la
+chiave scritta **non chiude niente**: il centralino è in `registra`, verifica i
+gettoni e conta in `GET /salute` chi resterebbe fuori, ma lascia entrare tutti.
+Il fuori casa si chiude solo con `MODO_LICENZE=impone` e un riavvio
+(`systemctl restart tramite`); si riapre togliendo la riga e riavviando. Con la
+chiave vuota `impone` non si accende: il registro lo dice e resta tutto aperto.
+
+Per accorciare gli otto giorni di una licenza tolta, sulla stessa macchina:
+`QUADRO_REVOCHE=https://quadro.gdahome.org/v1/licenze/revocate`.
+
 ## Il secondo passo è quello che fa male
 
 Là il controllo si accende **per tutti insieme**. Una casa con l'add-on
@@ -255,8 +269,9 @@ massimo tre giorni in più.
   rilascia tutto: i gettoni vecchi smettono di valere entro otto giorni, e le
   case li rinnovano da sole.
 - **Si è acceso troppo presto.** Si rimette la chiave vuota e si rilascia:
-  tutti tornano come prima. Sul centralino basta togliere la chiave e
-  riavviare — quello è il pezzo che si rimette a posto in un minuto.
+  tutti tornano come prima. Sul centralino basta togliere `MODO_LICENZE=impone`
+  da `/etc/tramite/ambiente` e riavviare: torna `registra`, e da fuori
+  entrano tutti, senza rilasciare niente.
 - **Una casa pagante è rimasta fuori.** Dalla pagina del gestore le si regala
   una licenza subito; il gettone le arriva al prossimo giro (sei ore, o al
   riavvio dell'add-on).

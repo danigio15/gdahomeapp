@@ -26,7 +26,9 @@
  * Un gettone vale al massimo **otto giorni** dalla firma, e mai oltre la
  * scadenza della licenza. La casa lo rinnova ogni sei ore: una licenza tolta
  * smette di valere entro otto giorni anche su una casa che non risponde, e una
- * casa senza internet resta Premium per otto giorni.
+ * casa senza internet resta Premium per otto giorni. Per il fuori casa si fa
+ * prima: il centralino chiede qui le licenze tolte («Le licenze tolte, per il
+ * centralino»), e chiude entro qualche minuto.
  *
  * ─── Il pacchetto ────────────────────────────────────────────────────────
  *
@@ -563,6 +565,55 @@ export class Licenze {
       emesso: ora,
       ...(fine !== una.scade ? { pagato: una.scade } : {}),
       ...(una.prova ? { prova: true } : {}),
+    });
+  }
+
+  /* ─── Le licenze tolte, per il centralino ────────────────────────────
+   *
+   * Un gettone vale otto giorni, e una licenza tolta continua ad aprire il
+   * fuori casa finche' il gettone che la casa ha in mano non scade. Il
+   * gettone non si accorcia — tiene Premium in casa anche a una casa senza
+   * internet — e allora il centralino, in piu', chiede qui quali licenze sono
+   * state tolte (`centralino/src/revoche.js`), e chiude prima.
+   *
+   * Nell'elenco va una licenza gdahome di una casa:
+   *
+   *  - tolta (`revocata`) negli ultimi otto giorni: prima, ogni suo gettone e'
+   *    gia' scaduto da se';
+   *  - di una casa che **non** ha un'altra licenza gdahome buona. Chi ne ha
+   *    due e se ne vede togliere una non deve restare fuori nelle ore che gli
+   *    servono a farsi dare il gettone dell'altra.
+   *
+   * Le licenze scadute o rimborsate non ci vanno: il loro gettone porta gia'
+   * la scadenza, e un abbonamento rinnovato dopo torna buono con la stessa
+   * licenza — metterlo qui vorrebbe dire chiudere chi ha pagato. Una licenza
+   * tolta invece non torna mai. */
+  tolte(ora = this.adesso()) {
+    const conAltre = new Set(
+      this.licenze
+        .filter((una) => una.app === "gdahome" && this.vale(una, ora))
+        .map((una) => una.sog),
+    );
+    return this.licenze
+      .filter(
+        (una) =>
+          una.app === "gdahome" &&
+          CASA.test(String(una.sog)) &&
+          una.revocata &&
+          ora - una.revocata < OTTO_GIORNI &&
+          !conAltre.has(una.sog),
+      )
+      .map((una) => una.lic);
+  }
+
+  /** L'elenco delle licenze tolte, firmato come un gettone (`tipo: "revoche"`). */
+  elencoDelleTolte(ora = this.adesso()) {
+    if (!this.accese) throw new NoLicenza(503, "licenze-non-configurate");
+    return firmaIlGettone(this.privata, {
+      v: 1,
+      tipo: "revoche",
+      emesso: ora,
+      lic: this.tolte(ora),
     });
   }
 

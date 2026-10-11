@@ -45,11 +45,32 @@
  * del quadro, non un segreto, e i messaggi restano byte che si spostano.
  * L'abbinamento (`/abbinamento/…`) resta aperto a tutti. E con la chiave
  * vuota — com'e' di serie — il controllo e' spento: entrano tutti, come ieri.
+ *
+ * Quanto si fa sul serio lo dice `MODO_LICENZE` (`modo-delle-licenze.js`):
+ * `spento`, `registra` — si verifica e si conta, ma entrano tutti — e
+ * `impone`. Scrivere la chiave non basta piu' a chiudere: serve `impone`.
+ *
+ * ─── La porta dell'abbinamento non e' una porta di servizio ────────────────
+ *
+ * Da `/abbinamento/<impronta>` si arriva alla casa senza passare dalla
+ * licenza, e deve restare cosi': chi inquadra il QR fuori casa si deve poter
+ * abbinare. Ma il ponte, su quella porta, accetta anche la stretta di un
+ * telefono gia' abbinato — non sa da quale porta sia entrato se non per
+ * l'abbinamento — e un'impronta tenuta viva apposta (quella della casa di
+ * prova vive sette giorni) sarebbe un fuori casa senza licenza.
+ *
+ * Quindi su quella porta: un canale vive al massimo qualche minuto — una
+ * stretta di mano ne dura meno di uno — sempre; e con `impone` la prima
+ * parola deve essere quella di chi si abbina (`abbina`, in chiaro come tutta
+ * la stretta), le case di prova hanno un tetto per indirizzo e per giorno, e
+ * gli abbinamenti insieme su una casa sono pochi. L'app vera su quella porta
+ * non fa altro che abbinarsi, e nessuno di questi tetti la tocca.
  */
 
 import { CASA_VALIDA } from "./case.js";
 import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
 import { valeFino, verificaGettone } from "./gettone.js";
+import { ilModoDelleLicenze } from "./modo-delle-licenze.js";
 import { CHIUSURA } from "./presa.js";
 
 /* Quanti telefoni insieme puo' avere una casa. Oltre non e' una famiglia. */
@@ -63,6 +84,39 @@ const ABBINAMENTO_VIVE = 6 * 60 * 1000;
  * piu' telefoni (`ponte/src/casa-di-prova.js`). La casa dice quanto le
  * manca; oltre questo tetto non si crede a nessuno. */
 const PROVA_VIVE_AL_MASSIMO = 7 * 24 * 60 * 60 * 1000;
+
+/* Quanto puo' restare aperto un canale entrato dalla porta dell'abbinamento.
+ * La stretta di chi si abbina dura qualche secondo — il ponte aspetta quindici
+ * secondi la prima parola e quindici la conferma, e poi chiude lui il canale
+ * con «abbinato» — e il codice di tutti i giorni vive sei minuti. Dieci
+ * bastano a tutto quello che e' un abbinamento, e a niente di quello che non
+ * lo e'. Vale sempre: un'app vera non ci arriva nemmeno vicino. */
+export const VITA_DEL_CANALE_DI_ABBINAMENTO = 10 * 60 * 1000;
+
+/* Quante case di prova possono essere aperte insieme, in tutto. Le case di
+ * prova sono quelle di chi rivede l'app per i negozi: una o due al mondo.
+ * Il tetto e' per la memoria, e vale sempre. */
+export const PROVE_IN_TUTTO = 1000;
+
+/* E con `impone`: quante insieme da case collegate dallo stesso indirizzo, e
+ * quante impronte nuove di prova una casa puo' aprire in un giorno. Una casa
+ * vera ne fa una ogni tanto, dalla console; la stessa ridetta dopo una
+ * caduta del filo non e' nuova. */
+export const PROVE_PER_INDIRIZZO = 3;
+export const PROVE_NUOVE_PER_CASA_AL_GIORNO = 10;
+const GIORNO = 24 * 60 * 60 * 1000;
+
+/* E quanti canali insieme dalla porta dell'abbinamento, per casa. Il ponte
+ * stesso ne lascia passare cinque col codice di prova. */
+export const ABBINAMENTI_INSIEME_PER_CASA = 5;
+
+/* Chi bussa alla porta dell'abbinamento e non si abbina. 1008 e' «non per la
+ * rete, per la politica». L'app vera non lo vede mai: da li' si abbina e
+ * basta. */
+export const SOLO_PER_ABBINARSI = Object.freeze({
+  codice: 1008,
+  motivo: "da qui ci si abbina e basta",
+});
 
 /* Un messaggio piu' lungo di cosi' non e' un comando a Home Assistant. */
 export const MESSAGGIO_MASSIMO = 1024 * 1024;
@@ -147,10 +201,21 @@ export class Centralino {
     /* La chiave con cui si verificano i gettoni delle licenze. Vuota vuol
      * dire controllo spento. Si passa solo nelle prove. */
     chiaveLicenze = CHIAVE_PUBBLICA_LICENZE,
+    /* `spento`, `registra` o `impone` (`modo-delle-licenze.js`). `index.js`
+     * lo passa sempre, da `MODO_LICENZE`. Chi non lo passa — le prove, e chi
+     * accende la classe da se' — ha il comportamento di prima: con la chiave
+     * si impone, senza no. */
+    modoLicenze = undefined,
+    /* Le licenze tolte, chieste al quadro (`revoche.js`). Senza, decide solo
+     * il gettone. */
+    revoche = null,
+    vitaDelCanaleDiAbbinamento = VITA_DEL_CANALE_DI_ABBINAMENTO,
     attesaDellaRicevuta = ATTESA_DELLA_RICEVUTA,
   } = {}) {
     this.case = case_;
     this.chiaveLicenze = String(chiaveLicenze || "");
+    this.revoche = revoche;
+    this.vitaDelCanaleDiAbbinamento = vitaDelCanaleDiAbbinamento;
     /** Fino a quando una casa e' gdahome Premium, per identificativo.
      *
      * Sta qui e non sulla casa collegata: una casa che cade e si riaggancia
@@ -159,7 +224,26 @@ export class Centralino {
      * dire «casa non collegata», che e' la verita'. In memoria e basta: dopo
      * un riavvio del centralino ogni casa lo ridice rientrando. */
     this.premiumFino = new Map();
+    /** E di quale licenza era il gettone, per le licenze tolte. */
+    this.licenzaDi = new Map();
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
+    this.modoLicenze =
+      modoLicenze === undefined
+        ? this.chiaveLicenze
+          ? "impone"
+          : "spento"
+        : ilModoDelleLicenze(modoLicenze, { chiave: this.chiaveLicenze, registro: this.registro });
+    /** I conti di chi resterebbe fuori, o e' rimasto fuori: dall'accensione,
+     * per `/salute`. Con `registra` sono quelli che `impone` avrebbe chiuso. */
+    this.conti = {
+      telefoniSenzaLicenza: 0,
+      nonAbbinamenti: 0,
+      abbinamentiDiTroppo: 0,
+      proveRifiutate: 0,
+    };
+    /** Le impronte di prova che ogni casa ha aperto nell'ultimo giorno, con
+     * quando: per il tetto di `PROVE_NUOVE_PER_CASA_AL_GIORNO`. */
+    this.proveDelGiorno = new Map();
     this.adesso = adesso;
     this.attesaDellaPresentazione = attesaDellaPresentazione;
     this.attesaDellaPrimaParola = attesaDellaPrimaParola;
@@ -279,6 +363,53 @@ export class Centralino {
     return quante;
   }
 
+  /* Quante delle case collegate adesso dicono la licenza e non hanno un
+   * gettone buono: quelle che con `impone` si sentono dire «serve Premium».
+   * A licenze spente non lo sa nessuno — i gettoni non si guardano — e allora
+   * `null`, che non e' zero. */
+  quanteSenzaPremium() {
+    if (this.modoLicenze === "spento") return null;
+    let quante = 0;
+    for (const casa of this.collegate.values())
+      if (casa.dicelaLicenza && !this.ePremium(casa.id)) quante += 1;
+    return quante;
+  }
+
+  /* Le licenze, per `/salute`: in che modo si lavora, e chi resterebbe fuori.
+   *
+   *   · `senza_premium`    collegate adesso, con l'add-on nuovo e senza un
+   *                        gettone buono: con `impone`, `4402`;
+   *   · `da_aggiornare`    collegate adesso con l'add-on di prima: con
+   *                        `impone`, `4426` (e' `case` meno
+   *                        `pronte_alla_licenza`);
+   *   · `telefoni_senza_licenza`  dall'accensione, i telefoni arrivati a una
+   *                        casa senza Premium: chiusi con `impone`, lasciati
+   *                        passare con `registra`;
+   *   · `non_abbinamenti`, `abbinamenti_di_troppo`, `prove_rifiutate`  la
+   *                        porta dell'abbinamento usata per altro, o troppo:
+   *                        chiusi con `impone`, contati e basta altrimenti;
+   *   · `licenze_tolte`    quante licenze tolte ha detto il quadro, se le
+   *                        chiede (`revoche.js`). */
+  statoDelleLicenze() {
+    const pronte = this.quantePronteAllaLicenza();
+    return {
+      modo: this.modoLicenze,
+      senza_premium: this.quanteSenzaPremium(),
+      da_aggiornare: this.quanteCase() - pronte,
+      telefoni_senza_licenza: this.conti.telefoniSenzaLicenza,
+      non_abbinamenti: this.conti.nonAbbinamenti,
+      abbinamenti_di_troppo: this.conti.abbinamentiDiTroppo,
+      prove_rifiutate: this.conti.proveRifiutate,
+      licenze_tolte: this.revoche?.accese ? this.revoche.quante() : null,
+    };
+  }
+
+  /* Se i tetti della porta dell'abbinamento chiudono davvero, o contano e
+   * basta. */
+  get impone() {
+    return this.modoLicenze === "impone";
+  }
+
   _quantiCosi(che) {
     let quanti = 0;
     for (const casa of this.collegate.values())
@@ -365,19 +496,28 @@ export class Centralino {
      * Premium, quella con l'add-on di prima ha bisogno di aggiornarlo — li'
      * Premium non si puo' nemmeno comprare. */
     if (!this.ePremium(idDellaCasa)) {
-      const no = casa.dicelaLicenza ? PREMIUM_RICHIESTO : ADDON_DA_AGGIORNARE;
-      presa.chiudi(no.codice, no.motivo);
-      return null;
+      /* Con `registra` si conta e si lascia passare: e' il numero da
+       * guardare prima di imporre. */
+      this.conti.telefoniSenzaLicenza += 1;
+      if (this.impone) {
+        const no = casa.dicelaLicenza ? PREMIUM_RICHIESTO : ADDON_DA_AGGIORNARE;
+        presa.chiudi(no.codice, no.motivo);
+        return null;
+      }
     }
     return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "telefono", che);
   }
 
   /* ─── Le licenze ─────────────────────────────────────────────────────── */
 
-  /* Se da fuori si entra in questa casa. Con la chiave vuota si', sempre. */
+  /* Se questa casa e' Premium per il centralino: un gettone buono, non
+   * scaduto, di una licenza che il quadro non ha detto tolta. A licenze
+   * spente si', sempre. Con `registra` la risposta e' vera ma non chiude
+   * niente: chi decide se si entra e' `accogliUnTelefono`, col modo. */
   ePremium(idDellaCasa) {
-    if (!this.chiaveLicenze) return true;
-    return (this.premiumFino.get(idDellaCasa) || 0) > this.adesso();
+    if (this.modoLicenze === "spento") return true;
+    if (!((this.premiumFino.get(idDellaCasa) || 0) > this.adesso())) return false;
+    return !this.revoche?.tolta(this.licenzaDi.get(idDellaCasa));
   }
 
   /* Il gettone che la casa ha detto. Buono: ci si ricorda fino a quando vale.
@@ -392,19 +532,24 @@ export class Centralino {
      * qui, quelle case si chiuderebbero fuori da sole. Prima di accendere si
      * guarda `quantePronteAllaLicenza` contro `quanteCase`. */
     if (casa) casa.dicelaLicenza = true;
-    if (!this.chiaveLicenze || !casa?.id) return true;
+    if (this.modoLicenze === "spento" || !casa?.id) return true;
     const detto = verificaGettone(String(gettone ?? ""), {
       chiave: this.chiaveLicenze,
       sog: casa.id,
       app: "gdahome",
       adesso: this.adesso(),
     });
-    if (detto) {
+    /* Un gettone buono di una licenza tolta non vale piu': il quadro l'ha
+     * detto prima che il gettone scadesse da se' (`revoche.js`). */
+    if (detto && !this.revoche?.tolta(detto.lic)) {
       this.premiumFino.set(casa.id, valeFino(detto));
+      if (typeof detto.lic === "string") this.licenzaDi.set(casa.id, detto.lic);
+      else this.licenzaDi.delete(casa.id);
       return true;
     }
     this.premiumFino.delete(casa.id);
-    casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+    this.licenzaDi.delete(casa.id);
+    if (this.impone) casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
     return false;
   }
 
@@ -446,6 +591,15 @@ export class Centralino {
       presa.chiudi(CHIUSURA.normale, "casa non collegata");
       return null;
     }
+    /* Tanti abbinamenti insieme su una casa sola non sono una famiglia che
+     * inquadra un QR: sono un fuori casa che passa dalla porta sbagliata. */
+    if (casa.quantiInAbbinamento() >= ABBINAMENTI_INSIEME_PER_CASA) {
+      this.conti.abbinamentiDiTroppo += 1;
+      if (this.impone) {
+        presa.chiudi(RIPROVA_PIU_TARDI, "troppi abbinamenti insieme: riprova fra poco");
+        return null;
+      }
+    }
     return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "abbinamento");
   }
 
@@ -456,6 +610,11 @@ export class Centralino {
     for (const [impronta, attesa] of [...this.abbinamenti]) {
       if (attesa.scadeIl <= ora) this.abbinamenti.delete(impronta);
     }
+    for (const [id, impronte] of [...this.proveDelGiorno]) {
+      for (const [impronta, quando] of [...impronte])
+        if (ora - quando > GIORNO) impronte.delete(impronta);
+      if (!impronte.size) this.proveDelGiorno.delete(id);
+    }
     for (const casa of [...this.collegate.values()]) {
       if (ora - casa.vistaIl > SILENZIO_MASSIMO) {
         casa.chiudi("nessun segno di vita");
@@ -464,8 +623,9 @@ export class Centralino {
       /* Un gettone puo' scadere mentre un telefono e' gia' dentro. Le nuove
        * connessioni vengono fermate da accogliUnTelefono, ma senza questo
        * controllo il canale gia' aperto resterebbe vivo fino alla sua chiusura.
-       * L'abbinamento invece non si tocca: resta libero anche per una casa Base. */
-      if (this.chiaveLicenze && casa.dicelaLicenza && !this.ePremium(casa.id)) {
+       * L'abbinamento invece non si tocca: resta libero anche per una casa Base.
+       * Lo stesso per una licenza che il quadro dice tolta. */
+      if (this.impone && casa.dicelaLicenza && !this.ePremium(casa.id)) {
         casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
       }
       casa.presa.ping();
@@ -474,6 +634,7 @@ export class Centralino {
 
   chiudiTutto() {
     clearInterval(this._battito);
+    this.revoche?.ferma?.();
     for (const casa of [...this.collegate.values()]) casa.chiudi("il centralino si spegne");
   }
 }
@@ -666,12 +827,53 @@ class CasaCollegata {
   _apriUnaProva(impronta, vale) {
     const quanto = Math.min(Number(vale) || 0, PROVA_VIVE_AL_MASSIMO);
     if (!(quanto > 0) || !this._sePuoPrenderla(impronta)) return;
+    if (!this._cePostoPerUnaProva(impronta)) return;
     this._chiudiLeProve();
     this.centralino.abbinamenti.set(impronta, {
       casa: this.id,
       scadeIl: this.centralino.adesso() + quanto,
       prova: true,
     });
+  }
+
+  /* I tetti della casa di prova.
+   *
+   * Quello in tutto vale sempre: e' memoria, e le case di prova vere si
+   * contano sulle dita. Gli altri due chiudono solo con `impone`, e prima
+   * contano: lo stesso indirizzo con piu' case di prova aperte insieme, e una
+   * casa che ne apre di nuove di continuo. La stessa impronta ridetta — il
+   * ponte la ridice a ogni filo nuovo — non conta mai come nuova. */
+  _cePostoPerUnaProva(impronta) {
+    const centralino = this.centralino;
+    const ora = centralino.adesso();
+    const gia = centralino.abbinamenti.get(impronta);
+    const laStessa = gia && gia.casa === this.id && gia.prova;
+    let inTutto = 0;
+    let daQui = 0;
+    for (const attesa of centralino.abbinamenti.values()) {
+      if (!attesa.prova || attesa.casa === this.id || attesa.scadeIl <= ora) continue;
+      inTutto += 1;
+      if (centralino.collegate.get(attesa.casa)?.da === this.da) daQui += 1;
+    }
+    const rifiuta = (perche, sempre = false) => {
+      centralino.conti.proveRifiutate += 1;
+      centralino.registro.attenzione(`casa di prova ${perche}: ${this.da}`);
+      return !(sempre || centralino.impone);
+    };
+    if (!laStessa && inTutto >= PROVE_IN_TUTTO) return rifiuta("oltre il tetto in tutto", true);
+
+    const sue = centralino.proveDelGiorno.get(this.id) ?? new Map();
+    for (const [una, quando] of [...sue]) if (ora - quando > GIORNO) sue.delete(una);
+    const nuova = !sue.has(impronta);
+    if (!laStessa && daQui >= PROVE_PER_INDIRIZZO && !rifiuta("oltre il tetto per indirizzo"))
+      return false;
+    /* Oltre il tetto non si segna piu' niente, nemmeno quando si lascia
+     * passare: il conto di una casa non cresce oltre il tetto. */
+    if (nuova && sue.size >= PROVE_NUOVE_PER_CASA_AL_GIORNO)
+      return rifiuta("oltre il tetto del giorno");
+    if (nuova) sue.set(impronta, ora);
+    centralino.proveDelGiorno.set(this.id, sue);
+    return true;
   }
 
   /* Un'impronta gia' presa da un'altra casa, ancora collegata e ancora nel
@@ -780,6 +982,18 @@ class CasaCollegata {
     const canale = { numero, presa: presaDelTelefono, da, via, che };
     this.canali.set(numero, canale);
 
+    /* La porta dell'abbinamento serve a una stretta di mano, e una stretta di
+     * mano dura secondi: un canale entrato da li' non vive oltre
+     * `VITA_DEL_CANALE_DI_ABBINAMENTO`. */
+    let vita = null;
+    if (via === "abbinamento") {
+      vita = setTimeout(() => {
+        presaDelTelefono.chiudi(CHIUSURA.normale, "l'abbinamento dura poco");
+      }, this.centralino.vitaDelCanaleDiAbbinamento);
+      vita.unref?.();
+    }
+    let primaParola = true;
+
     presaDelTelefono.onMessaggio = (testo, eraTesto = typeof testo === "string") => {
       haParlato();
       if (this.chiusa) return;
@@ -787,6 +1001,19 @@ class CasaCollegata {
       if (!eraTesto || typeof testo !== "string") {
         presaDelTelefono.chiudi(DATI_NON_ACCETTATI, "solo testo");
         return;
+      }
+      if (primaParola) {
+        primaParola = false;
+        if (via === "abbinamento" && !this._eUnAbbinamento(testo)) {
+          this.centralino.conti.nonAbbinamenti += 1;
+          if (this.centralino.impone) {
+            this.centralino.registro.attenzione(
+              `dalla porta dell'abbinamento senza abbinarsi: ${da}`,
+            );
+            presaDelTelefono.chiudi(SOLO_PER_ABBINARSI.codice, SOLO_PER_ABBINARSI.motivo);
+            return;
+          }
+        }
       }
       const busta = JSON.stringify({ c: numero, t: "d", m: testo });
       if (Buffer.byteLength(busta) > BUSTA_MASSIMA) {
@@ -797,12 +1024,42 @@ class CasaCollegata {
     };
     presaDelTelefono.onChiusa = () => {
       haParlato();
+      clearTimeout(vita);
       if (!this.canali.delete(numero)) return;
       if (!this.chiusa) this._manda(JSON.stringify({ c: numero, t: "chiudi" }));
     };
 
     this._manda(JSON.stringify({ c: numero, t: "apri", da, via }));
     return canale;
+  }
+
+  /* Se la prima parola di un telefono e' quella di chi si abbina.
+   *
+   * La stretta di mano e' in chiaro — la chiave del filo si fa proprio li' —
+   * e chi si abbina lo dice con `abbina` (`ponte/src/portiere.js`: la stessa
+   * regola con cui il ponte la manda all'abbinamento). Qui si guarda quel
+   * campo e nient'altro, e solo nella prima parola della porta
+   * dell'abbinamento: il resto restano byte che si spostano. */
+  _eUnAbbinamento(testo) {
+    if (testo.length > 64 * 1024) return false;
+    try {
+      const detto = JSON.parse(testo);
+      return (
+        Boolean(detto) &&
+        typeof detto === "object" &&
+        detto.abbina != null &&
+        detto.abbina !== false
+      );
+    } catch (_errore) {
+      return false;
+    }
+  }
+
+  /* Quanti canali entrati dalla porta dell'abbinamento sono aperti adesso. */
+  quantiInAbbinamento() {
+    let quanti = 0;
+    for (const canale of this.canali.values()) if (canale.via === "abbinamento") quanti += 1;
+    return quanti;
   }
 
   /* Chiude i telefoni entrati da fuori, non quelli che si stanno abbinando:

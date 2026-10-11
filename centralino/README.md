@@ -114,11 +114,54 @@ da Node. Le variabili che legge:
 | `CHIAVE_CONSOLE` | la chiave della console: almeno 32 caratteri, se no la console resta chiusa |
 | `CHAT_SOLO_CASE_CONOSCIUTE` | `1`: una linea della chat nasce solo con nome e segreto di una casa del filo |
 | `VERSIONE_MINIMA_APP` | il numero di costruzione piu' piccolo dell'app che si puo' ancora usare, detto a tutti su `GET /versioni` (difetto: 0, nessuno si ferma; vedi `docs/LICENZE.md`) |
+| `MODO_LICENZE` | `spento`, `registra` o `impone`: cosa si fa dei gettoni delle licenze (difetto: `spento` con la chiave vuota, com'e' oggi; `registra` con la chiave scritta). Sotto, «Le licenze» |
+| `QUADRO_REVOCHE` | dove chiedere al quadro le licenze tolte, per esempio `https://quadro.gdahome.org/v1/licenze/revocate` (difetto: vuoto, non si chiedono). Si chiedono ogni dieci minuti, e solo con `registra` o `impone` |
 | `CONTATTO_ORIGINI` | da quali origini si manda il modulo (difetto: `https://<sito>` e `https://www.<sito>`) |
 | `POSTA_SERVER`, `POSTA_PORTA`, … | la posta del modulo dei contatti del sito: sotto |
 
 Davanti ci va un proxy che parla in cifrato — il centralino sta su internet, e
 sopra ci passano i fili delle case.
+
+## Le licenze
+
+Il fuori casa e' gdahome Premium (`docs/LICENZE.md`), e il centralino lo
+tiene in uno di tre modi, scritti in `MODO_LICENZE` dentro
+`/etc/tramite/ambiente` (lo script `accendi.sh` lo rilegge e lo riscrive a
+ogni giro, come gli altri):
+
+| | |
+|---|---|
+| `spento` | nessuno guarda i gettoni, entrano tutti. Di serie con la chiave vuota, cioe' oggi |
+| `registra` | i gettoni si verificano e si conta chi resterebbe fuori, ma entrano tutti. Di serie con la chiave scritta |
+| `impone` | da fuori si entra con Premium: `4402` a chi non ce l'ha, `4426` a chi ha l'add-on di prima |
+
+Scrivere la chiave pubblica non chiude piu' niente da solo: per chiudere
+serve `MODO_LICENZE=impone`, e con una chiave vuota o storta `impone` non si
+accende comunque — il registro lo dice, e il centralino resta `spento`. Si
+torna indietro togliendo la riga e riavviando (`systemctl restart tramite`).
+
+Prima di passare a `impone` si guarda `/salute` chiesto dalla macchina
+stessa (`curl http://127.0.0.1:8099/salute`): accanto a `pronte_alla_licenza`
+c'e' `licenze`, con `modo`, `senza_premium` (le case collegate che sentirebbero
+`4402`), `da_aggiornare` (quelle che sentirebbero `4426`),
+`telefoni_senza_licenza` (dall'accensione, i telefoni lasciati passare con
+`registra` o chiusi con `impone`), i conti della porta dell'abbinamento
+(`non_abbinamenti`, `abbinamenti_di_troppo`, `prove_rifiutate`) e
+`licenze_tolte`.
+
+La porta dell'abbinamento serve ad abbinarsi: un canale entrato da li' vive
+al massimo dieci minuti, sempre. Con `impone`, in piu', chi da li' non si
+abbina si chiude con `1008`, una casa ha al massimo cinque abbinamenti
+insieme, e le case di prova hanno un tetto per indirizzo (tre) e per giorno
+(dieci impronte nuove per casa). L'app vera su quella porta si abbina e basta,
+e non li tocca.
+
+Le licenze tolte (`QUADRO_REVOCHE`): un gettone vale otto giorni, e una
+licenza tolta dal gestore apriva il fuori casa fino alla fine del gettone.
+Con l'indirizzo scritto, il centralino chiede al quadro l'elenco firmato delle
+licenze tolte da poco e chiude entro dieci minuti. Se il quadro non risponde
+si tiene l'ultimo elenco buono, e dopo un giorno senza elenchi si torna agli
+otto giorni: non si chiude mai di piu' per un quadro che tace.
 
 ## Il modulo dei contatti
 
