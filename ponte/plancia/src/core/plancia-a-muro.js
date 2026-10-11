@@ -292,6 +292,10 @@ export function paginaPulita(input, indice = 0) {
     griglia,
     /* Su quale linguetta si apre la pagina Clima. */
     zona: scelta(vecchia || dentro.zona, ZONE_DEL_CLIMA, "freddo"),
+    /* Con cosa accende il ⏻ di una pagina Clima: il comando rapido della
+     * plancia — modalita', gradi e ventola di quella stanza — o la prima
+     * modalita' che il condizionatore dichiara, come prima. */
+    accensione: scelta(dentro.accensione, ["rapido", "ultima"], "rapido"),
     stanza: testo(dentro.stanza, 80),
     /* `scelti` dice se i comandi li ha scelti qualcuno. Finche' e' falso la
      * pagina segue la stanza: una luce aggiunta nella principale compare da
@@ -473,6 +477,8 @@ export function fonteDaiValori(valori = {}) {
     antifurtoSuMisura: json(valori.cd_antifurto_su_misura, []),
     varchi: json(valori.cd_varchi, {}),
     invertiti: json(valori.cd_stati_invertiti, []),
+    rapidoGlobale: json(valori.cd_clima_rapido, null),
+    rapidoPerUnita: json(valori.cd_clima_rapido_unita, {}),
   });
 }
 
@@ -587,6 +593,18 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
       ),
     },
     varchi: altro.varchi && typeof altro.varchi === "object" ? altro.varchi : {},
+    /* I Comandi Rapidi del clima della plancia di origine: quello di tutta la
+     * casa e quelli di ogni unita'. Il tablet accende come accende lei. */
+    rapido: {
+      globale:
+        altro.rapidoGlobale && typeof altro.rapidoGlobale === "object" ? altro.rapidoGlobale : null,
+      perUnita:
+        altro.rapidoPerUnita &&
+        typeof altro.rapidoPerUnita === "object" &&
+        !Array.isArray(altro.rapidoPerUnita)
+          ? altro.rapidoPerUnita
+          : {},
+    },
     invertiti: elenco(altro.invertiti),
     avvisi: elenco(altro.avvisi)
       .map((a) => ({

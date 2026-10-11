@@ -23,6 +23,9 @@ import { clean, esc, formatNumber, locale, t } from "../shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../../core/le-unita-della-corrente.js";
 import { inKilowatt } from "../../core/il-tempo-della-ricarica.js";
 import { roomGlyph } from "../../core/personalization-catalog.js";
+import { disegnoDelCatalogo } from "../../core/catalogo-disegni.js";
+import { AUTO_DALL_ALTO } from "../../core/auto-dallalto.js";
+import { activeVehiclePhoto, resolveVehicleAsset } from "../ev-section.js";
 
 const P = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
 
@@ -496,10 +499,15 @@ function nomeSenzaAuto(riga) {
   return nome || clean(riga?.name);
 }
 
-function casella(nome, valore, sotto = "") {
-  return `<div class="dm-f-ev-cas"><small>${esc(nome)}</small><span class="dm-f-num">${valore}</span>${
+function casella(nome, valore, sotto = "", disegno = "") {
+  const testo = `<small>${esc(nome)}</small><span class="dm-f-num">${valore}</span>${
     sotto ? `<em>${esc(sotto)}</em>` : ""
-  }</div>`;
+  }`;
+  /* Col disegno davanti, quando la casella ne ha uno: «metti un'icona vicino
+   * alle cose, non lasciare solo testo». */
+  return disegno
+    ? `<div class="dm-f-ev-cas dm-f-ev-cas-ic"><span class="dm-f-ev-cas-dis" aria-hidden="true">${disegnoDelCatalogo(disegno, 30)}</span><span>${testo}</span></div>`
+    : `<div class="dm-f-ev-cas">${testo}</div>`;
 }
 
 function disegnaUnAuto(vettura, righe, conNome) {
@@ -536,7 +544,58 @@ function disegnaUnAuto(vettura, righe, conNome) {
           vettura.carburante ? t("Carburante", "Fuel") : t("Carica", "Charge"),
         )}</small></div></div>`
       : "";
-  const eroe = `<section class="dm-f-ev-eroe">
+  /* «Auto: deve uscire l'immagine collegata alla sezione.» In cima la foto
+   * della vettura come la mostra la sezione Auto — quella «in carica» col
+   * cavo attaccato — con sopra lo stato della ricarica e il nome; sotto, la
+   * carica e i chilometri grandi, la barra fino al traguardo, e le misure
+   * della ricarica con il loro disegno. Senza una foto resta l'anello di
+   * prima: e' meglio di un'auto disegnata a rettangoli. */
+  let foto = "";
+  try {
+    foto = resolveVehicleAsset(vettura.foto || (conNome ? "" : activeVehiclePhoto()));
+  } catch (_errore) {
+    foto = "";
+  }
+  const misure = [
+    kw != null && kw > 0 ? ["power", `${formatNumber(kw, 1)} kW`, t("potenza ora", "power now")] : null,
+    clean(vettura.fine)
+      ? [
+          "timer",
+          clean(vettura.fine)
+            .replace(/(\d)H\b/g, "$1\u00a0h")
+            .replace(/(\d)M\b/g, "$1\u00a0min"),
+          t("alla fine", "to go"),
+        ]
+      : null,
+  ].filter(Boolean);
+  const misureMarkup = misure.length
+    ? `<div class="dm-f-ev-misure">${misure
+        .map(
+          ([disegno, valore, cosa]) =>
+            `<span>${disegnoDelCatalogo(disegno, 28)}<span><b class="dm-f-num">${esc(valore)}</b><small>${esc(cosa)}</small></span></span>`,
+        )
+        .join("")}</div>`
+    : "";
+  const barra =
+    percentuale != null
+      ? `<span class="dm-f-ev-barra" aria-hidden="true"><i style="width:${Math.max(0, Math.min(100, Math.round(percentuale)))}%"></i>${
+          target != null ? `<u style="left:${Math.max(0, Math.min(100, Math.round(target)))}%"></u>` : ""
+        }</span>`
+      : "";
+  const eroe = foto
+    ? `<section class="dm-f-ev-vetrina">
+      <div class="dm-f-ev-foto"><img src="${esc(foto)}" alt="" loading="lazy" decoding="async">
+        ${chip}${vettura.nome ? `<span class="dm-f-ev-targa">${esc(vettura.nome)}</span>` : ""}</div>
+      <div class="dm-f-ev-numeri">
+        <div class="dm-f-ev-riga">
+          ${percentuale != null ? `<span class="dm-f-num dm-f-ev-pct">${Math.round(percentuale)}<small>%</small></span>` : "<span></span>"}
+          ${km != null ? `<span class="dm-f-ev-km"><b class="dm-f-num">${esc(formatNumber(km, 0))} km</b><small>${esc(sottoKm)}</small></span>` : ""}
+        </div>
+        ${barra}
+        ${misureMarkup}
+      </div>
+    </section>`
+    : `<section class="dm-f-ev-eroe">
       ${anello}
       <div class="dm-f-ev-dx">
         ${vettura.nome ? `<b>${esc(vettura.nome)}</b>` : ""}
@@ -556,8 +615,9 @@ function disegnaUnAuto(vettura, righe, conNome) {
     dove.push(
       casella(
         t("Posizione", "Location"),
-        `${aCasa ? "🏠" : "📍"} ${esc(posizione.value)}`,
+        esc(posizione.value),
         daQuanto(posizione.daQuando),
+        aCasa ? "home" : "globe",
       ),
     );
   }
@@ -567,6 +627,7 @@ function disegnaUnAuto(vettura, righe, conNome) {
         t("Contachilometri", "Odometer"),
         esc(contachilometri.value),
         dallaCarica ? `${dallaCarica.value} ${t("dall'ultima carica", "since the last charge")}` : "",
+        "gauge",
       ),
     );
   else if (dallaCarica) dove.push(casella(nomeSenzaAuto(dallaCarica), esc(dallaCarica.value)));
@@ -584,7 +645,7 @@ function disegnaUnAuto(vettura, righe, conNome) {
   const gomme = Object.keys(ruote).length
     ? `${titoletto(t("Le gomme", "The tyres"))}<div class="dm-f-ev-gomme">
         <div class="dm-f-ev-col">${gomma("fl", t("Ant. sx", "Front L"))}${gomma("rl", t("Post. sx", "Rear L"))}</div>
-        <div class="dm-f-ev-sagoma" aria-hidden="true"></div>
+        <img class="dm-f-ev-dallalto" src="${AUTO_DALL_ALTO}" alt="" aria-hidden="true">
         <div class="dm-f-ev-col dm-f-ev-col-dx">${gomma("fr", t("Ant. dx", "Front R"))}${gomma("rr", t("Post. dx", "Rear R"))}</div>
       </div>`
     : "";
@@ -672,13 +733,36 @@ ${P} .dm-f-ev-col{display:grid;gap:44px;min-width:0}
 ${P} .dm-f-ev-col-dx{text-align:right}
 ${P} .dm-f-ev-g{min-height:40px;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
 ${P} .dm-f-ev-g .dm-f-num{display:block;font-size:20px}
-${P} .dm-f-ev-sagoma{width:84px;height:144px;border-radius:36px 36px 28px 28px;position:relative;
-  background:linear-gradient(180deg,color-mix(in srgb,#38bdf8 16%,var(--card-bg,#fff)),color-mix(in srgb,#38bdf8 30%,var(--card-bg,#fff)));
-  border:2px solid color-mix(in srgb,#38bdf8 60%,transparent)}
-${P} .dm-f-ev-sagoma::before{content:"";position:absolute;left:12px;right:12px;top:24px;height:28px;border-radius:12px 12px 6px 6px;
-  background:#0c4a6e;opacity:.18}
-${P} .dm-f-ev-sagoma::after{content:"";position:absolute;left:14px;right:14px;bottom:18px;height:17px;border-radius:6px 6px 10px 10px;
-  background:#0c4a6e;opacity:.18}
+${P} .dm-f-ev-cas-ic{flex-direction:row;align-items:center;gap:12px}
+${P} .dm-f-ev-cas-ic>span:last-child{display:flex;flex-direction:column;min-width:0}
+${P} .dm-f-ev-cas-dis{flex:0 0 auto;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+  background:color-mix(in srgb,#16a34a 9%,var(--card-bg,#fff))}
+${P} .dm-f-ev-dallalto{display:block;width:72px;height:auto;margin:auto;filter:drop-shadow(0 8px 12px rgba(15,23,42,.22))}
+${P} .dm-f-ev-vetrina{border-radius:24px;overflow:hidden;background:var(--card-bg,#fff);
+  border:1px solid color-mix(in srgb,#16a34a 28%,transparent)}
+${P} .dm-f-ev-foto{position:relative;height:190px;display:grid;place-items:center;overflow:hidden;
+  background:radial-gradient(120% 100% at 50% 100%,color-mix(in srgb,var(--text-dim,#94a3b8) 18%,var(--card-bg,#fff)),var(--card-bg,#fff) 70%)}
+${P} .dm-f-ev-foto img{max-width:92%;max-height:176px;object-fit:contain;filter:drop-shadow(0 14px 18px rgba(15,23,42,.18))}
+${P} .dm-f-ev-foto .dm-f-ev-chip{position:absolute;left:12px;top:12px;margin:0}
+${P} .dm-f-ev-targa{position:absolute;right:12px;top:12px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:850;
+  background:rgba(15,23,42,.72);color:#fff;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${P} .dm-f-ev-numeri{padding:12px 16px 16px;background:linear-gradient(180deg,color-mix(in srgb,#16a34a 7%,var(--card-bg,#fff)),var(--card-bg,#fff))}
+${P} .dm-f-ev-riga{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+${P} .dm-f-ev-pct{font-size:52px;line-height:.9;color:#15803d}
+${P} .dm-f-ev-pct small{font-size:22px}
+${P} .dm-f-ev-km{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0}
+${P} .dm-f-ev-km .dm-f-num{font-size:32px;line-height:1}
+${P} .dm-f-ev-km small{font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-ev-barra{position:relative;display:block;height:12px;border-radius:999px;margin:12px 0 4px;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent);overflow:visible}
+${P} .dm-f-ev-barra i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,#22c55e,#16a34a)}
+${P} .dm-f-ev-barra u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1px;border-radius:2px;background:#15803d}
+${P} .dm-f-ev-misure{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px;margin-top:10px}
+${P} .dm-f-ev-misure>span{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:16px;
+  background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0)}
+${P} .dm-f-ev-misure>span>span{display:flex;flex-direction:column;min-width:0}
+${P} .dm-f-ev-misure .dm-f-num{font-size:18px;white-space:nowrap}
+${P} .dm-f-ev-misure small{font-size:11px;font-weight:750;color:var(--text-dim,#64748b)}
 @media (max-width:360px){${P} .dm-f-ev-eroe{flex-direction:column;align-items:flex-start}}
 `;
 

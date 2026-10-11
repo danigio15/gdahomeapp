@@ -20,6 +20,8 @@
  * browser (docs/LICENZE.md). Questo e' uno di quelli: il pannello si accende
  * solo se il ponte dice che gdahome e' Premium. Con Base la plancia resta
  * quella di sempre, e il config a muro resta scritto per il giorno dopo. */
+import { quickClimatePresetOf, quickClimateSteps } from "../core/quick-climate.js";
+import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import {
   ALARM_DISARM,
   ALARM_MODES,
@@ -246,6 +248,8 @@ function fonteDiQui() {
       antifurtoSuMisura: readJson("cd_antifurto_su_misura", []),
       varchi: readJson("cd_varchi", {}),
       invertiti: readJson("cd_stati_invertiti", []),
+      rapidoGlobale: readJson("cd_clima_rapido", null),
+      rapidoPerUnita: readJson("cd_clima_rapido_unita", {}),
     },
   );
 }
@@ -791,6 +795,16 @@ const PAROLE_DEL_CLIMA = () => ({
   fan_only: t("Ventola", "Fan"),
   off: t("Spento", "Off"),
 });
+/* Le velocita' della ventola come le dice Home Assistant, in parole. */
+const PAROLE_DELLA_VENTOLA = () => ({
+  auto: t("auto", "Auto"),
+  low: t("bassa", "low"),
+  medium: t("media", "medium"),
+  middle: t("media", "medium"),
+  high: t("alta", "high"),
+  quiet: t("silenziosa", "quiet"),
+  turbo: t("turbo", "Turbo"),
+});
 const AZIONI_DEL_CLIMA = () => ({
   heating: t("Riscalda", "Heating"),
   cooling: t("Raffresca", "Cooling"),
@@ -830,6 +844,31 @@ function zonaDiQui() {
   return pagina?.modello === "clima" ? zonaDellaPagina(pagina) : "";
 }
 
+/* Il comando rapido di questa unita', se la pagina accende con quello. */
+function rapidoDi(id, zona) {
+  const pagina = state.muro?.pagine?.[state.pagina];
+  if (pagina?.modello === "clima" && pagina.accensione === "ultima") return null;
+  const r = state.fonte?.rapido || {};
+  return quickClimatePresetOf(id, zona || zonaDiQui(), r.perUnita || {}, r.globale);
+}
+
+/* La pastiglia del comando rapido (#muro): «fai qualcosa più bello». Il
+ * riquadro resta quello di sempre; al posto del solo ⏻ c'e' una pastiglia
+ * che dice cosa fara' — i gradi e la ventola di quella stanza — e col tasto
+ * in fondo. Da spento accende cosi', da acceso spegne. */
+function pastigliaRapida(id, preset, on) {
+  const ventola = PAROLE_DELLA_VENTOLA()[clean(preset.fan).toLowerCase()] || clean(preset.fan);
+  const pezzi = [
+    `<span class="mu-rap-val">${disegnoDelCatalogo(preset.mode === "heat" ? "flame" : "wind", 18)}${esc(
+      preset.temperature == null ? PAROLE_DEL_CLIMA()[preset.mode] || preset.mode : `${decimale(preset.temperature)}°`,
+    )}</span>`,
+    ventola ? `<span class="mu-rap-val">${disegnoDelCatalogo("spiral", 18)}${esc(ventola)}</span>` : "",
+  ].filter(Boolean);
+  return `<button type="button" class="mu-rapido ${on ? "acceso" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(
+    on ? t("Spegni", "Turn off") : t("Comando rapido", "Quick command"),
+  )}"><span class="mu-rap-lampo" aria-hidden="true">⚡</span>${pezzi.join('<i aria-hidden="true"></i>')}<span class="mu-rap-tasto" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></span></button>`;
+}
+
 function cardClima(c, i, zona = "") {
   const id = c.entita;
   const a = attributi(id);
@@ -844,7 +883,8 @@ function cardClima(c, i, zona = "") {
       ? PAROLE_DEL_CLIMA()[s]
       : t("Spento", "Off");
   const target = obiettivo(id);
-  return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
+  const rapido = rapidoDi(id, zona);
+  return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}${rapido ? " mu-col-rapido" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno(faccia.chiave, 26, `clima-${i}`)}</span>
       <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div>
       ${azione ? `<span class="mu-pasti">${esc(azione)}</span>` : ""}</div>
@@ -854,7 +894,11 @@ function cardClima(c, i, zona = "") {
       <span class="mu-spazio"></span>
       <button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button>
       <button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button>
-      <button type="button" class="mu-tondo ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>
+      ${
+        rapido
+          ? pastigliaRapida(id, rapido, on)
+          : `<button type="button" class="mu-tondo ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>`
+      }
     </div></div>`;
 }
 
@@ -2438,8 +2482,20 @@ function onClick(event) {
       return;
     case "clima-acceso": {
       const s = String(stato(id)?.state || "off");
+      const rapido = rapidoDi(id, zonaDiQui());
       if (s !== "off") alterna(id, "climate", "turn_off");
-      else {
+      else if (rapido) {
+        /* I passi del comando rapido, distanziati come nella plancia: la
+         * temperatura mandata a un condizionatore ancora spento cade nel
+         * vuoto. */
+        attendi(id, "acceso", true);
+        quickClimateSteps(rapido).forEach((passo, indice) => {
+          const manda = () => comanda("climate", passo.service, { entity_id: id, ...passo.data });
+          if (indice === 0) manda();
+          else root.setTimeout?.(manda, indice * 700);
+        });
+        disegna();
+      } else {
         const modi = (attributi(id).hvac_modes || []).filter((m) => m !== "off");
         if (modi.length)
           alterna(id, "climate", "set_hvac_mode", { entity_id: id, hvac_mode: modi[0] });
@@ -2918,6 +2974,21 @@ ${MURO} .mu-spazio{flex:1}
 ${MURO} .mu-tondo{width:68px;height:68px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:30px;text-align:center;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
 ${MURO} .mu-tondo.grande{width:96px;height:96px;font-size:42px}
 ${MURO} .mu-tondo.pieno{background:var(--acc);color:#fff;box-shadow:0 10px 24px -8px var(--acc)}
+/* La pastiglia del comando rapido: dice cosa fara', e col tasto in fondo. */
+${MURO} .mu-col-rapido .mu-comandi{gap:8px}
+${MURO} .mu-col-rapido .mu-spazio{display:none}
+${MURO} .mu-rapido{flex:1;min-width:0;height:52px;display:flex;align-items:center;gap:6px;padding:0 6px 0 12px;border-radius:999px;cursor:pointer;
+  font:inherit;font-weight:800;font-size:14px;color:color-mix(in srgb,var(--acc) 70%,#0f172a);overflow:hidden;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 7%,#fff),color-mix(in srgb,var(--acc) 15%,#fff));border:1px solid color-mix(in srgb,var(--acc) 35%,transparent)}
+${MURO} .mu-rapido .mu-rap-lampo{flex:0 0 auto;font-size:15px}
+${MURO} .mu-rapido .mu-rap-val{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;min-width:0}
+${MURO} .mu-rapido>i{flex:0 0 4px;width:4px;height:4px;border-radius:50%;background:color-mix(in srgb,var(--acc) 50%,transparent)}
+${MURO} .mu-rapido .mu-rap-tasto{margin-left:auto;flex:0 0 40px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  background:var(--acc);color:#fff;box-shadow:0 4px 10px -2px var(--acc)}
+${MURO} .mu-rapido.acceso{background:linear-gradient(90deg,var(--acc),color-mix(in srgb,var(--acc) 75%,#0f172a));color:#fff;border-color:transparent}
+${MURO} .mu-rapido.acceso>i{background:rgba(255,255,255,.6)}
+${MURO} .mu-rapido.acceso .mu-rap-tasto{background:#fff;color:var(--acc)}
+${MURO} .mu-col-rapido.mu-accesa{box-shadow:0 14px 32px -10px color-mix(in srgb,var(--acc) 45%,transparent),inset 0 0 0 2px color-mix(in srgb,var(--acc) 70%,transparent)}
 ${MURO} .mu-seg{display:flex;padding:6px;gap:6px;border-radius:20px;margin-top:auto;background:color-mix(in srgb,var(--text) 4%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
 ${MURO} .mu-seg>button{flex:1;height:64px;border-radius:15px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:17px;color:var(--text-dim);text-align:center}
 ${MURO} .mu-seg>button.si{background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));color:color-mix(in srgb,var(--acc) 80%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent),0 8px 18px -10px var(--acc)}

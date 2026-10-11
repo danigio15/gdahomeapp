@@ -18,6 +18,7 @@
  * markup si rifa' solo quando cambia la struttura — i valori si aggiornano al
  * loro posto, cosi' l'apertura di una tessera non riparte mai da sola.
  */
+import { vehiclePhoto } from "../core/vehicle-model.js";
 import {
   normalizeTodoLists,
   parseTodoItemsResponse,
@@ -2548,6 +2549,9 @@ function letturaVettura(states, auto, fuori, indice, visti = new Set()) {
     carburante: Boolean(serbatoio),
     km: autonomia?.value == null ? null : autonomia.value,
     ricarica: ricaricaDellaVettura(states, mappa, stato),
+    /* La foto scelta nella sezione Auto per QUESTA vettura: «in carica» col
+     * cavo attaccato, «a riposo» quando no. La finestra la mette in cima. */
+    foto: vehiclePhoto(auto || {}, autoAllaPresa(ricaricaDellaVettura(states, mappa, stato))),
     /* Da quale entita' viene ognuna delle tre righe: serve a non raccontare
      * due volte la stessa, quando due vetture leggono lo stesso sensore. */
     caricaEntita: carica?.entity || "",
@@ -2930,6 +2934,7 @@ function evModel(states) {
           (autoAllaPresa(lettura.ricarica) ? t("In carica", "Charging") : t("Scollegata", "Unplugged"))
         : "",
       fine: lettura === attaccata ? mancano : "",
+      foto: lettura.foto || "",
     })),
     rows,
   };
