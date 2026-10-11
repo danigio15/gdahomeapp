@@ -502,6 +502,9 @@ export const CONFIG_KEYS = Object.freeze([
   /* La ventilazione meccanica (#371): le sue caselle sono entita' di casa, e
    * viaggiano fra i dispositivi come tutte le altre. */
   "cd_vmc",
+  /* I deumidificatori (#205): l'humidifier di ogni macchina e le entita' che
+   * le stanno accanto. Sono entita' di casa, e viaggiano come le altre. */
+  "cd_deumidificatori",
   /* Assist (#360): quale assistente, se leggere la risposta ad alta voce, se
    * il tasto si vede. Sono preferenze della casa e non del vetro: chi accende
    * Assist dal computer se lo deve ritrovare sul telefono. */

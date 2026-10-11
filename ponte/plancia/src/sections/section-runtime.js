@@ -62,6 +62,7 @@ import { installTesseraDallaSchedaSection } from "./la-tessera-si-accende-dalla-
 import { installLaFotoVaInAuto } from "./la-foto-va-in-auto-section.js";
 import { installQuickClimateEditorSection } from "./quick-climate-editor-section.js";
 import { installVmcEditor } from "./vmc-editor-section.js";
+import { installDeumidificatoriEditor } from "./deumidificatori-editor-section.js";
 import { installAssistSection } from "./assist-section.js";
 import { installAssistEditor } from "./assist-editor-section.js";
 import { installClimaCosaManca } from "./il-clima-dice-cosa-manca-section.js";
@@ -1002,6 +1003,9 @@ export function installSectionRuntime() {
     /* La ventilazione meccanica (#371): la sua scheda si appende in fondo
      * alla configurazione del Clima, dov'e' che uno cerca l'aria di casa. */
     senzaCadere(installVmcEditor);
+    /* I deumidificatori (#205): la loro scheda sta accanto a quella della
+     * ventilazione, sopra il tasto che aggiunge un'unita' del Clima. */
+    senzaCadere(installDeumidificatoriEditor);
     /* Assist (#360): il tasto che apre l'assistente di Home Assistant, e la
      * riga che lo accende fra le Impostazioni. */
     senzaCadere(installAssistSection);

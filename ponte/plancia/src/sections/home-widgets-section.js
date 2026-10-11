@@ -6467,9 +6467,7 @@ function lightsDetail(widget) {
           aria-pressed="${row.on}" aria-label="${esc(row.name)}">${corpo}</button>`;
   };
   return `<div class="dm-w-luci-testa">
-      <span class="dm-w-luci-conto"><b>${accese}</b> ${esc(
-        t(`accese su ${rows.length}`, `on of ${rows.length}`),
-      )}</span>
+      <span class="dm-w-luci-conto"><b>${accese}</b> ${esc(t("accese su", "on of"))} ${rows.length}</span>
       ${tutte}
     </div>
     <div class="dm-w-luci">${rows.map(scheda).join("")}</div>`;
@@ -6748,9 +6746,7 @@ function climateDetail(widget) {
     })
     .join("");
   return `<div class="dm-w-luci-testa">
-      <span class="dm-w-luci-conto"><b>${accese}</b> ${esc(
-        t(`accese su ${righe.length}`, `on of ${righe.length}`),
-      )}</span>
+      <span class="dm-w-luci-conto"><b>${accese}</b> ${esc(t("accese su", "on of"))} ${righe.length}</span>
     </div>
     ${schede}`;
 }

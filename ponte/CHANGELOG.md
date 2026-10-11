@@ -12,6 +12,15 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.11.1
 
+**Deumidificatori nel Clima** (#205). Un deumidificatore non è un
+condizionatore, e messo fra le unità del Clima non si comandava. Adesso ha una
+fascia sua nella pagina Clima, sotto la ventilazione: l'umidità di adesso,
+l'obiettivo con − e +, l'accensione, le modalità della macchina (Continuo,
+Asciuga bucato…), la ventola, e l'avviso «Serbatoio pieno — svuotalo». Si
+aggiunge dal Config del Clima scegliendo la sua entità `humidifier`: serbatoio,
+umidità, temperatura, ventola e consumo si trovano da soli. Chi l'aveva già
+messo fra le unità del Clima lo ritrova lì, senza rifare niente.
+
 **Il pannello a muro si aggiorna subito.** Quando una plancia salva la sua
 configurazione, il pannello che legge da lei la rilegge all'istante, senza
 aspettare. Il ☰ in cima apre il menu laterale sopra il pannello, e nella
