@@ -43,4 +43,36 @@ void main() {
       expect(finestra.last.arguments, -1.0);
     },
   );
+
+  test('il chiosco nasconde le barre anche senza pannello, e al ritorno si rimettono', () async {
+    final sistema = <MethodCall>[];
+    final messaggero =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messaggero.setMockMethodCallHandler(SystemChannels.platform, (c) async {
+      sistema.add(c);
+      return null;
+    });
+    List<Object?> modi() => [
+      for (final c in sistema)
+        if (c.method == 'SystemChrome.setEnabledSystemUIMode') c.arguments,
+    ];
+
+    await loSchermoDice('chiosco:si');
+    expect(modi().last, 'SystemUiMode.immersiveSticky');
+    /* Il pannello che si spegne non rimette le barre: il chiosco e' acceso. */
+    await loSchermoDice('muro:si');
+    await loSchermoDice('muro:no');
+    expect(modi().last, 'SystemUiMode.immersiveSticky');
+    /* Android le ha rimesse (un ritorno, un pieghevole aperto): si ritolgono. */
+    final quante = modi().length;
+    await loSchermoRimetti();
+    expect(modi().length, quante + 1);
+    expect(modi().last, 'SystemUiMode.immersiveSticky');
+    /* Spento il chiosco tornano, e da li' il ritorno non tocca piu' niente. */
+    await loSchermoDice('chiosco:no');
+    expect(modi().last, 'SystemUiMode.edgeToEdge');
+    final dopo = modi().length;
+    await loSchermoRimetti();
+    expect(modi().length, dopo);
+  });
 }

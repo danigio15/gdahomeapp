@@ -616,10 +616,28 @@ export function releaseOwnerDocument() {
   }
 }
 
+/* Il chiosco lo dice anche all'app che ospita la plancia.
+ *
+ * «Non prende il modo chiosco: il flag e' abilitato, rimangono le icone in alto
+ * e in basso dell'Android.» Il chiosco copriva Home Assistant, ma le barre del
+ * telefono non sono della pagina: le nasconde l'app, e nessuno gliel'aveva
+ * chiesto. Si dice sul canale dello schermo (`gdahomeSchermo`), lo stesso del
+ * pannello a muro, e solo quando cambia. */
+function diciAllAppIlChiosco(acceso) {
+  const canale = root.gdahomeSchermo;
+  const valore = acceso ? "si" : "no";
+  if (!canale?.postMessage || state.chioscoDetto === valore) return;
+  state.chioscoDetto = valore;
+  try {
+    canale.postMessage(`chiosco:${valore}`);
+  } catch (_error) {}
+}
+
 function syncIosKiosk() {
   bindKioskGesture();
   if (kioskEnabled()) activateIosKiosk();
   else deactivateIosKiosk();
+  diciAllAppIlChiosco(state.active);
   return state.active;
 }
 
