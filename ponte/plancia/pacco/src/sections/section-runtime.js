@@ -64433,7 +64433,7 @@ function pruneStale(stage, keep) {
     if (!keep.has(id)) node.remove();
   });
 }
-var ARIA_FRA_BOLLE = 6;
+var ARIA_FRA_BOLLE = 4;
 var QUANTO_STRETTE_AL_MASSIMO = 0.55;
 var SOGLIE = Object.freeze([
   { quando: "(max-width: 480px)", bolla: 108, stretto: true },
@@ -64903,48 +64903,27 @@ function installStyles24() {
     @media(max-width:768px){
       .flow-stage .node.dm-flow-node{left:var(--dm-flow-mobile-left,50%)!important;top:var(--dm-flow-mobile-top,83%)!important}
     }
-    /* I cerchi che si leggono.
+    /* I cerchi sotto la Casa, che si leggono.
      *
      * «I dati dentro entrano a mala pena e sono troppo piccoli, il testo
-     * ancora tagliato.» Sul telefono il guscio faceva i cerchi da 75, 82 e 110
-     * punti dentro un palco da 384 che ne lasciava liberi piu' della meta', e
-     * per farci stare le scritte le portava a 7 pixel: «LOCALE TECNICO»
-     * toccava il bordo, i nomi non si leggevano da un palmo. Lo spazio c'era,
-     * e si usa: cerchi piu' grandi, scritte da leggere, e il palco un po' piu'
-     * alto perche' due file di stanze ci stiano con l'aria fra loro e la Casa.
-     * Le misure sono le stesse che legge \`comeSiamoMessi\`, cosi' il conto di
-     * quante bolle stanno in fila resta giusto. Sul computer i cerchi erano
-     * gia' grandi: cresce solo la scritta, che era rimasta quella del
-     * telefono. */
-    #page-energy .flow-stage{height:600px!important}
-    #page-energy .n-home{width:190px!important;height:190px!important}
-    #page-energy .n-main{width:160px!important;height:160px!important}
+     * ancora tagliato.» Le stanze e i carichi erano i cerchi piu' piccoli del
+     * palco — 75 punti sul telefono — e per farci stare il nome il guscio lo
+     * portava a 7 pixel: «LOCALE TECNICO» toccava il bordo. Crescono solo
+     * loro, coi loro nomi e numeri; Solare, Rete, Batteria e Casa restano come
+     * sono. Le misure sono le stesse che legge \`comeSiamoMessi\`, cosi' il
+     * conto di quante bolle stanno in fila resta giusto: sul telefono tre per
+     * fila si prendono tutto lo spazio che c'e', e non di piu'. */
     #page-energy .n-load{width:130px!important;height:130px!important}
-    #page-energy .node-label{font-size:12.5px!important;letter-spacing:.2px!important}
     #page-energy .n-load .node-label{font-size:11.5px!important;letter-spacing:0!important}
-    #page-energy #view-ist .node span{font-size:24px!important}
-    #page-energy #view-ist .n-home span{font-size:28px!important}
     #page-energy #view-ist .n-load span{font-size:20px!important}
-    #page-energy #v-battery-soc{font-size:13px!important}
-    #page-energy .node-icon{font-size:27px!important}
+    #page-energy .n-load .node-icon{font-size:26px!important}
     @media(max-width:768px){
-      #page-energy .flow-stage{height:900px!important}
-      #page-energy .n-home{width:170px!important;height:170px!important}
-      #page-energy .n-main{width:124px!important;height:124px!important}
       #page-energy .n-load{width:112px!important;height:112px!important}
-      #page-energy .node-label{font-size:12px!important;letter-spacing:.1px!important}
       #page-energy .n-load .node-label{font-size:10.5px!important;letter-spacing:0!important}
-      #page-energy #n-battery .node-label{font-size:11px!important;letter-spacing:0!important}
-      #page-energy #view-ist .node span{font-size:22px!important}
-      #page-energy #view-ist .n-home span{font-size:27px!important}
       #page-energy #view-ist .n-load span{font-size:18px!important}
-      #page-energy #v-battery-soc{font-size:12px!important}
-      #page-energy .node-icon{font-size:24px!important}
+      #page-energy .n-load .node-icon{font-size:23px!important}
     }
     @media(max-width:480px){
-      #page-energy .flow-stage{height:860px!important}
-      #page-energy .n-home{width:160px!important;height:160px!important}
-      #page-energy .n-main{width:118px!important;height:118px!important}
       #page-energy .n-load{width:108px!important;height:108px!important}
     }
   `
