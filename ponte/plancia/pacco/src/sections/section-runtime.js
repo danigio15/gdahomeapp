@@ -54288,10 +54288,7 @@ function sceneMarkup(pagina2, states) {
 function readingMarkup(pagina2, states, { daLa = 0 } = {}) {
   const associazioni = temperatureEntries(pagina2).filter((voce2) => voce2.temp || voce2.hum);
   if (associazioni.length <= daLa) return "";
-  const leggi2 = (entity2, coda) => {
-    const value = clean(states?.[entity2]?.state);
-    return value && value !== "unknown" && value !== "unavailable" ? `${value}${coda}` : "—";
-  };
+  const leggi2 = (entity2, coda) => letturaScritta(states?.[entity2]?.state, coda);
   const misura7 = (entity2, etichetta3, coda) => entity2 ? `<div><span>${esc(etichetta3)}</span><b data-dm-stanza-lettura="${esc(entity2)}" data-dm-stanza-coda="${esc(coda)}">${esc(leggi2(entity2, coda))}</b></div>` : "";
   return associazioni.slice(daLa).map((voce2) => {
     const titolo = associazioni.length > 1 ? clean(voce2.name) || clean(pagina2.name) : clean(pagina2.name) || clean(voce2.name);
@@ -54458,9 +54455,15 @@ function blockMarkup3(blocco3, states) {
 function vistaDellaPagina() {
   return vistaDellaStanza(readJson(CHIAVE_VISTA_STANZA, VISTA_TESSERE));
 }
+function letturaScritta(grezzo, coda) {
+  const valore3 = clean(grezzo);
+  if (!valore3 || valore3 === "unknown" || valore3 === "unavailable") return "—";
+  const numero46 = Number(valore3);
+  if (!Number.isFinite(numero46)) return `${valore3}${coda}`;
+  return `${formatNumber(numero46, coda === "%" ? 0 : 1)}${coda}`;
+}
 function valoreLetto(entity2, coda, states) {
-  const valore3 = clean(states?.[entity2]?.state);
-  return valore3 && valore3 !== "unknown" && valore3 !== "unavailable" ? `${valore3}${coda}` : "—";
+  return letturaScritta(states?.[entity2]?.state, coda);
 }
 function entitaDelClima(pagina2) {
   return ((pagina2?.blocchi || []).find((blocco3) => blocco3.key === "clima")?.voci || []).map((voce2) => entitaVoce(voce2)).filter(Boolean);
@@ -54932,7 +54935,7 @@ function paint4() {
     const entity2 = node.getAttribute("data-dm-stanza-lettura");
     const valore3 = clean(states?.[entity2]?.state);
     const coda = node.getAttribute("data-dm-stanza-coda") || "°";
-    const testo2 = valore3 && valore3 !== "unknown" && valore3 !== "unavailable" ? `${valore3}${coda}` : "—";
+    const testo2 = letturaScritta(valore3, coda);
     if (node.textContent !== testo2) node.textContent = testo2;
   }
   for (const node of wrap.querySelectorAll("[data-dm-stanza-stato]")) {
@@ -55429,7 +55432,7 @@ function installStyles22() {
       #page-stanze .dm-stanze-testa-misure{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
       #page-stanze .dm-stanze-testa-voce{display:grid;align-content:start;gap:3px;min-width:0}
       #page-stanze .dm-stanze-testa-voce>span:first-child{font-size:9.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
-      #page-stanze .dm-stanze-testa-voce b{font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1;color:var(--text,#0f172a);font-variant-numeric:tabular-nums;white-space:nowrap}
+      #page-stanze .dm-stanze-testa-voce b{font-size:clamp(22px,2.4vw,32px);font-weight:900;letter-spacing:-.5px;line-height:1;color:var(--text,#0f172a);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       #page-stanze .dm-stanze-testa-clima-dentro{display:grid;gap:3px}
       #page-stanze .dm-stanze-testa-clima small{font-size:10.5px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       #page-stanze .dm-stanze-testa-clima[data-tono="fresco"] b,#page-stanze .dm-stanze-testa-clima[data-tono="fresco"] small{color:#0284c7}

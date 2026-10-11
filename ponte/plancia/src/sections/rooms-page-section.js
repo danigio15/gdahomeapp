@@ -100,6 +100,7 @@ import {
   allStates,
   chiamaServizio,
   clean,
+  formatNumber,
   climaAccesoDaiWatt,
   doc,
   esc,
@@ -710,10 +711,7 @@ export function readingMarkup(pagina, states, { daLa = 0 } = {}) {
    * Le associazioni le sa gia' chi le scrive, e si chiedono a lui. */
   const associazioni = temperatureEntries(pagina).filter((voce) => voce.temp || voce.hum);
   if (associazioni.length <= daLa) return "";
-  const leggi = (entity, coda) => {
-    const value = clean(states?.[entity]?.state);
-    return value && value !== "unknown" && value !== "unavailable" ? `${value}${coda}` : "—";
-  };
+  const leggi = (entity, coda) => letturaScritta(states?.[entity]?.state, coda);
   const misura = (entity, etichetta, coda) =>
     entity
       ? `<div><span>${esc(etichetta)}</span><b data-dm-stanza-lettura="${esc(entity)}" data-dm-stanza-coda="${esc(coda)}">${esc(leggi(entity, coda))}</b></div>`
@@ -1054,9 +1052,23 @@ export function vistaDellaPagina() {
   return vistaDellaStanza(readJson(CHIAVE_VISTA_STANZA, VISTA_TESSERE));
 }
 
+/* Una lettura scritta come si legge (#stanze).
+ *
+ * «Informazioni in alto: il testo non si adatta, si attacca tutto.» La testata
+ * scriveva lo stato grezzo del sensore — «24.03°», «61.77%» — e due numeri da
+ * sei caratteri non stavano nelle loro colonne: si accavallavano. I gradi
+ * hanno un decimale e la virgola, l'umidita' nessun decimale, come dappertutto
+ * nella plancia. Un valore che non e' un numero resta com'e'. */
+export function letturaScritta(grezzo, coda) {
+  const valore = clean(grezzo);
+  if (!valore || valore === "unknown" || valore === "unavailable") return "—";
+  const numero = Number(valore);
+  if (!Number.isFinite(numero)) return `${valore}${coda}`;
+  return `${formatNumber(numero, coda === "%" ? 0 : 1)}${coda}`;
+}
+
 function valoreLetto(entity, coda, states) {
-  const valore = clean(states?.[entity]?.state);
-  return valore && valore !== "unknown" && valore !== "unavailable" ? `${valore}${coda}` : "—";
+  return letturaScritta(states?.[entity]?.state, coda);
 }
 
 /* Le unita' del clima della stanza, per la testata. */
@@ -1799,8 +1811,7 @@ function paint() {
      * sensori quel confronto sbagliava tutte le righe tranne la prima, e le
      * umidita' delle altre uscivano in gradi. */
     const coda = node.getAttribute("data-dm-stanza-coda") || "°";
-    const testo =
-      valore && valore !== "unknown" && valore !== "unavailable" ? `${valore}${coda}` : "—";
+    const testo = letturaScritta(valore, coda);
     if (node.textContent !== testo) node.textContent = testo;
   }
   for (const node of wrap.querySelectorAll("[data-dm-stanza-stato]")) {
@@ -2448,7 +2459,7 @@ function installStyles() {
       #page-stanze .dm-stanze-testa-misure{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
       #page-stanze .dm-stanze-testa-voce{display:grid;align-content:start;gap:3px;min-width:0}
       #page-stanze .dm-stanze-testa-voce>span:first-child{font-size:9.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
-      #page-stanze .dm-stanze-testa-voce b{font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1;color:var(--text,#0f172a);font-variant-numeric:tabular-nums;white-space:nowrap}
+      #page-stanze .dm-stanze-testa-voce b{font-size:clamp(22px,2.4vw,32px);font-weight:900;letter-spacing:-.5px;line-height:1;color:var(--text,#0f172a);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       #page-stanze .dm-stanze-testa-clima-dentro{display:grid;gap:3px}
       #page-stanze .dm-stanze-testa-clima small{font-size:10.5px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       #page-stanze .dm-stanze-testa-clima[data-tono="fresco"] b,#page-stanze .dm-stanze-testa-clima[data-tono="fresco"] small{color:#0284c7}

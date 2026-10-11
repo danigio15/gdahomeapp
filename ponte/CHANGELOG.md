@@ -57,6 +57,9 @@ da toccare che si illuminano, i climatizzatori schede arancio quando scaldano
 e azzurre quando raffrescano. Negli aggiornamenti ogni riga ha il logo, le
 versioni, le note e il tasto «Installa».
 
+**Stanze:** in cima alla stanza temperatura e umidità sono arrotondate
+(«24,0°», «62%») e non si accavallano più.
+
 **I colori delle tessere sono quelli delle sezioni.** In Home ogni tessera ha
 il colore dell'intestazione della sua pagina, e diventa rossa solo quando
 segnala qualcosa: una batteria scarica, una porta rimasta aperta, un allarme.

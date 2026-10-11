@@ -184,7 +184,9 @@ test("il Salone e' una tavola: la testata e le tessere, due o quattro per riga",
   await expect(testa).toContainText("Salone");
   await expect(testa).toContainText(/piano terra/i);
   await expect(testa).toContainText(/2 luci accese su 3|2 of 3 lights on/);
-  await expect(testa.locator('[data-dm-stanza-lettura="sensor.t_salone"]')).toHaveText("22.4°");
+  await expect(testa.locator('[data-dm-stanza-lettura="sensor.t_salone"]')).toHaveText(
+    /^22[,.]4°$/,
+  );
   await expect(testa.locator('[data-dm-stanza-lettura="sensor.h_salone"]')).toHaveText("46%");
   await expect(testa.locator("[data-dm-stanza-clima]")).toContainText("24°");
   await expect(testa.locator("[data-dm-stanza-clima]")).toContainText(/Raffresca|Cooling/);
