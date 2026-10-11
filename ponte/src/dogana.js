@@ -586,7 +586,15 @@ const VIE_DA_NON_SCRIVERE = Object.freeze([
   "/api/config/config_entries/subentries/flow",
 ]);
 
-/* Quelle da amministratore, per chi non lo e'. */
+/* Quelle da amministratore, per chi non lo e'.
+ *
+ * Le ultime tre sono viste che Home Assistant tiene per chi amministra e che
+ * si leggono con un GET: il dump della rete Z-Wave (`zwave_js/dump`), l'account
+ * di Nabu Casa e il suo accesso remoto (`cloud/…`), le proprieta' dei
+ * dispositivi Insteon. Col segno del Supervisor Home Assistant le darebbe a
+ * chiunque passi di qui, e una lettura e' tutto quello che serve per portarsi
+ * via la mappa della rete o l'indirizzo remoto della casa. La plancia e l'app
+ * non le chiedono. */
 const VIE_DI_CHI_AMMINISTRA = Object.freeze([
   "/api/config/",
   "/api/error_log",
@@ -595,6 +603,9 @@ const VIE_DI_CHI_AMMINISTRA = Object.freeze([
   "/api/logbook",
   "/api/events",
   "/api/states",
+  "/api/zwave_js",
+  "/api/cloud",
+  "/api/insteon",
 ]);
 
 const ICONA_DI_UN_ADDON = /^\/api\/hassio\/addons\/[A-Za-z0-9_-]+\/(?:icon|logo)$/;
