@@ -489,7 +489,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-QXAJTMPA.js";
+} from "../../chunk-P4UFW6TY.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1996,6 +1996,7 @@ var SOURCE_INDEX = Object.freeze({
   "6 Ore": "6 hours",
   "7 giorni": "7 days",
   "a ${km} km": "${km} km away",
+  "a batteria da": "on battery for",
   "A casa": "At home",
   "A che ora compri dalla rete": "When you buy from the grid",
   "A cosa ti servirebbe, e come te la immagini nella plancia.": "What you would need it for, and how you picture it in the dashboard.",
@@ -2024,6 +2025,9 @@ var SOURCE_INDEX = Object.freeze({
   "Accensione · Luminosità · Colore": "On/off · Brightness · Colour",
   "ACCESA": "ON",
   "Accesa / Attiva / Aperta (on)": "On / Active / Open (on)",
+  "Accesa, a riposo": "On, resting",
+  "Accesa, scalda l'acqua": "On, heating the water",
+  "Accesa, scalda la casa": "On, heating the house",
   "Accesa, una luce aggiunta alla stanza nella plancia di origine compare da sola. Spenta, i posti si scelgono qui: qualunque entità o azione, col nome e il disegno che vuoi.": "On, a light added to the room in the source dashboard shows up by itself. Off, the slots are chosen here: any entity or action, with the name and drawing you want.",
   "accese": "on",
   "accese su": "on out of",
@@ -2039,9 +2043,12 @@ var SOURCE_INDEX = Object.freeze({
   "Acqua calda · Resistenza · Consumo": "Hot water · Element · Consumption",
   "Acqua calda sanitaria": "Domestic hot water",
   "Acqua e gas": "Water and gas",
+  "acqua ferma da": "water still for",
   "acqua fra ${giorni} giorni": "needs water in ${giorni} days",
   "acqua fra un giorno": "needs water in a day",
   "Acqua in circolo": "Water circulating",
+  "acqua in ordine": "water in good shape",
+  "Acqua oggi": "Water today",
   "Acqua pronta": "Water ready",
   "Acqua quasi finita": "Water almost gone",
   "Acqua troppo calda": "Water too warm",
@@ -2401,6 +2408,7 @@ var SOURCE_INDEX = Object.freeze({
   "Bagagliaio (chiuso/aperto)": "Boot (closed/open)",
   "Bagagliaio aperto": "Boot open",
   "Bagagliaio chiuso": "Boot closed",
+  "bagnato": "wet",
   "Bagnato": "Wet",
   "Bagno": "Bathroom",
   "Bagno grande": "Main bathroom",
@@ -2410,6 +2418,7 @@ var SOURCE_INDEX = Object.freeze({
   "Barbecue": "Grill",
   "Barra di navigazione": "Navigation bar",
   "Barra sotto il meteo": "Bar under the weather",
+  "bassa: rabbocca": "low: top it up",
   "Basso": "Bottom",
   "Batt. Scariche": "Low batteries",
   "Batteria": "Battery",
@@ -2467,6 +2476,7 @@ var SOURCE_INDEX = Object.freeze({
   "Caffettiera": "Coffee machine",
   "Calcolata": "Calculated",
   "calcolato da Recorder": "calculated from Recorder",
+  "calda": "hot",
   "Caldaia": "Furnace",
   "Caldaia accesa": "Furnace on",
   "Caldaie accese": "Boilers on",
@@ -2476,6 +2486,7 @@ var SOURCE_INDEX = Object.freeze({
   "Calendario": "Calendar",
   "Calendario dei ritiri": "Collection calendar",
   "Calendario o sensore unico (facoltativo)": "Single calendar or sensor (optional)",
+  "Calore recuperato": "Heat recovered",
   "Calvo": "Bald",
   "Cambia dispositivo": "Change device",
   "Cambia icona": "Change icon",
@@ -2585,10 +2596,14 @@ var SOURCE_INDEX = Object.freeze({
   "Cavo attaccato": "Cable plugged in",
   "Cavo collegato (binary_sensor)": "Cable connected (binary_sensor)",
   "Cavo staccato": "Cable unplugged",
+  "cede": "gives off",
   "Cella ${cella.numero} · ${cifre(cella.volt, 3)} V": "Cell ${cella.numero} · ${cifre(cella.volt, 3)} V",
   "Cella ${cella.numero} · non risponde": "Cell ${cella.numero} · not answering",
+  "Cella più bassa": "Lowest cell",
+  "celle": "cells",
   "Celle": "Cells",
   "Celle (${celle.length})": "Cells (${celle.length})",
+  "celle sbilanciate": "cells out of balance",
   "Cena dai nonni": "Dinner at the grandparents",
   "Centrale allarme": "Alarm panel",
   "Centralina": "Controller",
@@ -2645,12 +2660,14 @@ var SOURCE_INDEX = Object.freeze({
   "Ciano": "Cyan",
   "Cibo": "Food",
   "Cibo in esaurimento": "Food running low",
+  "cicli": "cycles",
   "Cicli": "Cycles",
   "Cicli · Consumi · Stato di ogni apparecchio": "Cycles · Consumption · Each device's state",
   "Cielo libero": "Clear sky",
   "Cinema / Media": "Media room",
   "Ciotola · Lettiera · Acquari · Terrari": "Bowl · Litter · Aquariums · Terrariums",
   "Ciotola e distributore": "Bowl and feeder",
+  "circa": "roughly",
   "Circuito primario · Boiler · Ricircolo sanitario": "Primary loop · Tank · Recirculation",
   "citofoni": "intercoms",
   "Citofono": "Intercom",
@@ -2662,6 +2679,7 @@ var SOURCE_INDEX = Object.freeze({
   "Clima e acqua": "Climate and water",
   "Cloro": "Chlorine",
   "Cloro / Redox": "Chlorine / Redox",
+  "cloro da correggere": "chlorine needs correcting",
   "Cloro massimo": "Maximum chlorine",
   "Cloro minimo": "Minimum chlorine",
   "Coda non raggiungibile.": "Queue unreachable.",
@@ -2716,6 +2734,7 @@ var SOURCE_INDEX = Object.freeze({
   "Come si divide il costo reale": "How the real cost breaks down",
   "Come si presenta una stanza aperta nella pagina Stanze.": "How an open room looks on the Rooms page.",
   "Come si vedono le entità": "How the entities look",
+  "Come sta": "How it is doing",
   "Come ti chiami (facoltativo)": "Your name (optional)",
   "come una tariffa unica": "the same as a single rate",
   "Comfort termico": "Thermal comfort",
@@ -2770,6 +2789,7 @@ var SOURCE_INDEX = Object.freeze({
   "CONNESSO": "CONNECTED",
   "Connettività": "Connectivity",
   "Consiglio": "Advice",
+  "Consumato": "Energy used",
   "Consumato in totale": "Total fuel used",
   "Consumi": "Consumption",
   "Consumo": "Consumption",
@@ -2816,6 +2836,7 @@ var SOURCE_INDEX = Object.freeze({
   "Copio la foto…": "Copying the photo…",
   "Corpo caldaia": "Boiler body",
   "Corrente": "Current",
+  "Corrente presente": "Power on",
   "Corridoio": "Hallway",
   "Corta": "Short",
   "Cosa": "What",
@@ -2853,7 +2874,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cucina": "Kitchen",
   "Cumulativo. Giorno e Mese si calcolano da qui come differenza Recorder, quindi non serve un sensore per periodo.": "Cumulative. Day and Month are calculated from it as a Recorder difference, so no per-period sensor is needed.",
   "Cuoco": "Chef",
-  "da": "from",
+  "da": "running for",
   "Da … a": "From … to",
   "da ${da}": "for ${da}",
   "da ${giorni} giorni": "for ${giorni} days",
@@ -2901,6 +2922,7 @@ var SOURCE_INDEX = Object.freeze({
   "Da rabboccare": "Top up the water",
   "Da rabboccare sotto": "Top up below",
   "da Rete": "from Grid",
+  "da ricomprare": "time to buy more",
   "Da ricomprare": "Time to buy more",
   "Da ricomprare sotto": "Buy more below",
   "Da sole": "Sunglasses",
@@ -2909,6 +2931,7 @@ var SOURCE_INDEX = Object.freeze({
   "Da solo basta: la scheda dice acceso e spento, e non finge di sapere i gradi.": "Enough on its own: the card says on and off, and does not pretend to know the degrees.",
   "Da sostituire": "Replace now",
   "Da spuntare se la casella «presenza rete» è un sensore di mancanza rete: acceso quando la corrente NON c'è.": "Tick this if the mains field is a power-failure sensor: on when the power is OUT.",
+  "Da tenere d'occhio": "Keep an eye on",
   "Da Ultima Ric.": "Since last charge",
   "Dai un nome al gruppo": "Name the group",
   "Dai un nome al gruppo (es. Piano Terra)": "Name the group (e.g. Ground Floor)",
@@ -2927,6 +2950,7 @@ var SOURCE_INDEX = Object.freeze({
   "Data non trovata": "Date not found",
   "Dati non disponibili": "No data",
   "Dati storici disponibili": "Historical data available",
+  "del calore dell'aria che esce torna in casa con l'aria nuova": "of the heat in the outgoing air comes back in with the fresh air",
   "Delicati": "Delicates",
   "Della stampante servono due risposte: se è pronta, e quanto inchiostro le resta. Scrivi l'entità che dice come sta — la crea l'integrazione della stampante — e le cartucce si cercano da sole partendo da quel nome. La pagina Stampanti compare da sé appena ce n'è una.": "A printer needs two answers: whether it is ready, and how much ink is left. Write the entity that says how it is doing — the printer integration creates it — and the cartridges are found on their own from that name. The Printers page appears by itself as soon as there is one.",
   "Delta fra le celle": "Cell voltage delta",
@@ -2949,6 +2973,9 @@ var SOURCE_INDEX = Object.freeze({
   "Di chi è": "Whose it is",
   "di Home Assistant. Se i valori restano a zero, verifica che le entità abbiano": ". If values stay at zero, make sure the entities have",
   "Di notte schermo nero": "Black screen at night",
+  "di quello che può reggere: c'è margine": "of what it can take: plenty of headroom",
+  "di quello che può reggere: è al limite": "of what it can take: at the limit",
+  "di quello che può reggere: sta salendo": "of what it can take: getting up there",
   "Di questo c'è una lettura sola: il Recorder non ne ha ancora una storia da disegnare.": "There is a single reading for this: the Recorder has no history to draw yet.",
   "Di questo telecomando Home Assistant non dice l'integrazione: non compare.": "Home Assistant doesn't say which integration this remote belongs to: it won't show.",
   "di rete": "network",
@@ -3156,6 +3183,7 @@ var SOURCE_INDEX = Object.freeze({
   "Entità totale per lo storico ": "Lifetime total entity ",
   "Entità umidità": "Humidity entity",
   "Entity non valida": "Invalid entity",
+  "Entra": "Air in",
   "Entra in manutenzione": "Enter maintenance",
   "Erbacce": "Weed",
   "Erbacce (facoltativo)": "Weed (optional)",
@@ -3215,12 +3243,14 @@ var SOURCE_INDEX = Object.freeze({
   "Fatto.": "Done.",
   "Febbraio": "February",
   "Ferma": "Stop",
+  "Ferma l'irrigazione": "Stop watering",
   "Fermo": "Still",
   "Fermo da": "Still for",
   "Fermo in acqua": "Rinse hold",
   "Ferro da stiro": "Iron",
   "Festa": "Party",
   "Fiamma · Potenza · Pellet": "Flame · Power · Pellet",
+  "fiamma al": "flame at",
   "Ficus del salotto": "Living room ficus",
   "File in /local (config/www)": "Files in /local (config/www)",
   "Film": "Movie",
@@ -3293,7 +3323,9 @@ var SOURCE_INDEX = Object.freeze({
   "Fuori casa": "Away",
   "fuori dalla barra": "off the bar",
   "fuori è più umido": "wetter outside",
+  "fuori norma": "out of range",
   "Fuori norma": "Out of range",
+  "Gas oggi": "Gas today",
   "Gatti": "Cats",
   "Gatto": "Cat",
   "Gelo improbabile": "Frost unlikely",
@@ -3316,6 +3348,7 @@ var SOURCE_INDEX = Object.freeze({
   "giù": "down",
   "Giudice": "Judge",
   "Giugno": "June",
+  "giusto": "about right",
   "gli altri impianti hanno i loro, e questo salvataggio non li tocca": "the other plants have their own, and this save does not touch them",
   "Gli altri in cucina": "The rest of the kitchen",
   "Gli animali di casa: una scheda per ognuno, con la sua foto e quello che lo riguarda — la ciotola, la lettiera, l'acqua, la porta col microchip, il collare. Anche gli acquari e i terrari, quanti ne hai: ognuno con le sue entità.": "The pets of the house: one card each, with its photo and what concerns it — the bowl, the litter box, the water, the microchip door, the collar. Aquariums and terrariums too, as many as you have: each with its own entities.",
@@ -3396,6 +3429,7 @@ var SOURCE_INDEX = Object.freeze({
   "I livelli e gli avvisi": "The levels and the warnings",
   "I modi sono quelli che la centrale accetta": "The modes are the ones the panel accepts",
   "I numeri qui sotto sono quelli dell'ultima lettura riuscita.": "The numbers below are from the last successful read.",
+  "I pacchi": "The packs",
   "I pacchi compaiono qui quando li aggiungi nella scheda Batterie della famiglia Energia, in configurazione: lo stato di carica, le tensioni, le celle.": "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.",
   "I pacchi dell'accumulo e i loro BMS: si vedono nella linguetta Batterie di Energia e nella tessera Accumulo in Home. Un pacco per riga: la sua entità è lo stato di carica, e dentro ci sono le altre — salute, tensioni, correnti, temperature, cicli, capacità e le celle una per una.": "The storage packs and their BMS: they show in the Batteries tab of Energy and on the Battery storage tile in Home. One pack per row: its entity is the state of charge, and inside are the others — health, voltages, currents, temperatures, cycles, capacity and every single cell.",
   "I piani della casa": "The floors of the house",
@@ -3437,6 +3471,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il backup raccoglie tutta la configurazione della plancia in un file: sezioni, stanze, entità, persone, auto, tutto. Il ripristino la rimette al suo posto e ricarica.": "The backup gathers the whole dashboard configuration into one file: sections, rooms, entities, people, cars, everything. Restore puts it back and reloads.",
   "Il bidone si mette fuori la sera prima. Scegli l'ora dopo la quale la pastiglia smette di annunciare il ritiro di oggi — ormai passato — e annuncia quello di domani. Se domani non passa nessuno, la pastiglia non compare.": "The bin goes out the evening before. Pick the hour after which the pill stops announcing today's collection — by then already done — and announces tomorrow's instead. If nobody comes tomorrow, the pill does not show up.",
   "Il binary_sensor che dice se il cestino dei rifiuti ha problemi: acceso vuol dire da controllare — di solito è il momento di cambiare il sacco.": "The binary_sensor that says whether the waste bin has a problem: on means it needs checking — usually time to change the bag.",
+  "Il BMS dovrebbe pareggiarle a fine carica: se resta così controlla il bilanciatore.": "The BMS should even them out at the end of the charge: if it stays like this, check the balancer.",
   "Il bollettino della giornata: un sensore con l'indice (da 0 a 4), una percentuale, una concentrazione o una parola — basso, medio, alto. Se espone «Category», «Advice» e «Description», la plancia li legge e li mostra aprendo l'allerta.": "The bulletin for the day: a sensor with the index (0 to 4), a percentage, a concentration or a word — low, moderate, high. When it exposes Category, Advice and Description, the dashboard reads them and shows them when the alert is opened.",
   "Il browser chiede al servizio i quadratini della zona che guardi: quel servizio sa quindi che zona è. Scegli «Nessuno» e la plancia non bussa a nessuno.": "The browser asks the service for the tiles of the area you are looking at: that service then knows which area it is. Pick «None» and the dashboard knocks on nobody's door.",
   "Il browser non apre rtsp:// da solo: qualcuno deve riconfezionare il flusso. Tre strade, e ne basta una.": "A browser cannot open rtsp:// on its own: something has to repackage the stream. Three ways, and one is enough.",
@@ -3494,6 +3529,8 @@ var SOURCE_INDEX = Object.freeze({
   "Il riquadro PRESSIONE.": "The PRESSURE box.",
   "Il riquadro ΔT SOLARE: la differenza fra pannello e accumulo.": "The SOLAR ΔT box: the gap between collector and tank.",
   "Il rischio delle graminacee preso da sé: da 1, molto basso, a 4, alto. Chi è allergico a una sola famiglia vede l'allerta anche quando la media della giornata è tranquilla.": "The grass risk on its own: from 1, very low, to 4, high. Whoever is allergic to one family only still sees the alert when the day's average is quiet.",
+  "Il salto è grande: l'impianto sta chiedendo molto calore.": "The drop is large: the system is asking for a lot of heat.",
+  "Il salto è piccolo: l'acqua gira ma cede poco calore.": "The drop is small: the water is flowing but giving off little heat.",
   "Il sensore che dice aperto o chiuso: binary_sensor.*, oppure un cover.* se l'infisso è motorizzato.": "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.",
   "Il sensore che dice se c'è qualcuno: binary_sensor.* di classe motion, occupancy o presence.": "The sensor that says whether someone is there: a binary_sensor.* of class motion, occupancy or presence.",
   "Il sensore che dice se è accesa o raggiungibile: binary_sensor.* di classe running o connectivity.": "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.",
@@ -3519,6 +3556,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il tasto VALVOLA e la CHIAVE SOLARE nel disegno: aperta o chiusa. Vuota, resta valve.chiave_solare_termico.": "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.",
   "Il tema e la barra": "The theme and the bar",
   "Il tempo è fermo finché non riprende": "The timer is stopped until it resumes",
+  "Il terreno": "The soil",
   "Il testo della segnalazione": "The text of the report",
   "Il tocco chiede conferma; col PIN, il codice.": "A tap asks to confirm; with a PIN, the code.",
   "Il Vallhorn di IKEA, un contatto Zigbee sullo sportello, un sensore di luce… scegli il dispositivo della cassetta e le caselle che quell'integrazione pubblica si compilano da sole. Anche un sensore solo basta.": "IKEA's Vallhorn, a Zigbee contact on the flap, a light sensor… pick the mailbox device and whichever fields that integration publishes fill themselves in. One sensor alone is enough too.",
@@ -3596,6 +3634,7 @@ var SOURCE_INDEX = Object.freeze({
   "In questo momento": "Right now",
   "in quiete": "quiet",
   "In rete": "On mains",
+  "in rete da": "on mains for",
   "in riproduzione": "playing",
   "In riproduzione": "Playing",
   "In riserva": "Reserve",
@@ -3696,10 +3735,12 @@ var SOURCE_INDEX = Object.freeze({
   "kWh per m³ (dalla bolletta)": "kWh per m³ (from the bill)",
   "kWh Questo Mese": "kWh this month",
   "kWh/giorno": "kWh/day",
+  "L'acqua": "The water",
   "L'allarme": "The alarm",
   "L'animale": "The pet",
   "L’anteprima usa la stessa illustrazione della card per il tipo selezionato.": "The preview uses the same card artwork for the selected appliance type.",
   "L’anteprima usa lo stesso renderer dell’icona stanza nella dashboard.": "The preview uses the same room-icon renderer as the dashboard.",
+  "L'aria nuova entra senza passare dallo scambiatore.": "Fresh air comes in without going through the heat exchanger.",
   "L'auto": "The car",
   "L'auto non ha risposto in tempo: le vetture in cloud dormono, spesso basta riprovare fra un minuto.": "The car did not answer in time: cloud vehicles sleep, trying again in a minute usually works.",
   "L'azione del tasto in basso quando l'antifurto è spento": "The bottom button's action when the alarm is off",
@@ -3717,6 +3758,7 @@ var SOURCE_INDEX = Object.freeze({
   "L'ho presa": "Got it",
   "L’icona è personalizzabile anche per le azioni integrate e viene mostrata nella Home.": "The icon is customizable for built-in actions too and is shown on Home.",
   "L'impegno finisce prima di cominciare.": "The event ends before it starts.",
+  "L'impianto sta prendendo calore: il salto è quello giusto.": "The system is taking the heat: the drop is right.",
   "L'indirizzo del flusso della telecamera, se ce l'hai. Serve a ritrovarlo e a compilare il campo qui sopra.": "The camera's stream address, if you have one. It is here to keep it and to fill in the field above.",
   "L'indirizzo del radar non è un indirizzo di tessere ({z}/{x}/{y}): correggilo in Configurazione → Meteo, o scegli un servizio dalla tendina.": "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.",
   "L'integrazione INGV Terremoti espone un sensore col conteggio degli eventi e le entità geo_location dei singoli terremoti: vanno bene tutti e due.": "The INGV Earthquakes integration exposes a sensor with the event count and the geo_location entities of single quakes: both work.",
@@ -3781,6 +3823,7 @@ var SOURCE_INDEX = Object.freeze({
   "La risposta finisce sotto la segnalazione, su GitHub: chi l'ha aperta la legge li'.": "The reply goes under the report, on GitHub: whoever opened it reads it there.",
   "La sabbia che RESTA, in percentuale: quando scende sotto la soglia la scheda avvisa che sta per finire. È l'opposto del cassetto dei rifiuti, che invece si riempie.": "The litter that is LEFT, as a percentage: when it drops below the threshold the card warns you it is running out. It is the opposite of the waste drawer, which fills up.",
   "La sabbia sta finendo": "Litter is running out",
+  "La scatola": "The unit",
   "La scelta assegna l'elettrodomestico a questo carico: resta configurato nella sua sezione, e qui compare come riga «da Elettrodomestici».": "Choosing assigns the appliance to this load: it stays configured in its own section, and shows up here as a “from Appliances” row.",
   "La scheda grande in cima alla pagina Server è il computer su cui gira Home Assistant. Questi sono gli altri nodi: uno per riga, con il nome che gli dai e le entità che vuoi vedere. Le caselle sono tutte facoltative — Proxmox VE pubblica lo stato e le tre percentuali, Glances aggiunge i gradi, un ping dà solo il su e giù — e una casella vuota è una barra che non compare.": "The big card at the top of the Server page is the computer Home Assistant runs on. These are the other nodes: one per row, with the name you give it and the entities you want to see. Every field is optional — Proxmox VE publishes the status and the three percentages, Glances adds the degrees, a ping gives only up and down — and an empty field is a bar that does not show up.",
   "La scheda ne tiene quattro, e ci sono tutti: togline uno per farci stare questo.": "This tab holds four of them and they are all taken: remove one to make room.",
@@ -3879,6 +3922,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le voci del Report mensile (Energia → Analisi): nome, icona ed entità liberi.": "The monthly Report entries (Energy → Analysis): free name, icon and entity.",
   "Le voci del Report mensile in Energia → Analisi: nome, icona ed entità (kWh mese) a tua scelta.": "The monthly Report entries in Energy → Analysis: name, icon and entity (monthly kWh) of your choice.",
   "Le zone": "The zones",
+  "Le zone · tocca per avviare": "Zones · tap to start",
   "legge": "reads",
   "leggera → forte": "light → heavy",
   "Leggermente caldo": "Slightly warm",
@@ -3927,6 +3971,7 @@ var SOURCE_INDEX = Object.freeze({
   "Lo script, la scena, il pulsante, l'interruttore o l'elenco che inserisce: il servizio giusto lo sceglie la plancia dal dominio dell'entità.": "The script, scene, button, switch or select that arms it: the dashboard picks the right service from the entity domain.",
   "Lo stato": "The state",
   "Lo stato del dispositivo": "The device state",
+  "lo storico dei consumi non è ancora arrivato": "the usage history has not arrived yet",
   "Locale tecnico": "Utility room",
   "Longitudine": "Longitude",
   "luce": "light",
@@ -3960,6 +4005,7 @@ var SOURCE_INDEX = Object.freeze({
   "Mago": "Mage",
   "Mai": "Never",
   "Mai ferma in 24 ore": "Never still in 24 hours",
+  "Mai ferma in 24 ore: forse una perdita": "Never still in 24 hours: maybe a leak",
   "Mai: resta accesa": "Never: it stays on",
   "Mai: resta il ritiro più vicino": "Never: keep the nearest collection",
   "Manca": "Missing",
@@ -4229,6 +4275,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna mappa collegata": "No map linked",
   "Nessuna mappa: la scheda mostra stato, batteria e comandi.": "No map: the card shows state, battery and controls.",
   "Nessuna nuova persona da importare": "No new people to import",
+  "Nessuna perdita": "No leak",
   "Nessuna persona configurata": "No people configured",
   "Nessuna pianta configurata": "No plant configured",
   "Nessuna piscina configurata": "No pool configured",
@@ -4260,6 +4307,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna temperatura configurata.": "No temperature configured.",
   "Nessuna voce": "No entries",
   "Nessuna zona configurata": "No zone configured",
+  "Nessuna zona sta bagnando": "No zone is watering",
   "Nessuno": "Nobody",
   "Nessuno ha ancora scritto niente.": "Nobody has written anything yet.",
   "Nessuno in casa": "Nobody home",
@@ -4520,6 +4568,8 @@ var SOURCE_INDEX = Object.freeze({
   "Peso dell'animale": "Pet weight",
   "PetKit, SurePetcare, Tractive, Litter-Robot… scegli il dispositivo e la scheda arriva già fatta: il livello del cibo, la lettiera, il filtro dell'acqua, il collare. Oppure, qui sotto, una casella alla volta.": "PetKit, SurePetcare, Tractive, Litter-Robot… pick the device and the card arrives ready-made: the food level, the litter box, the water filter, the collar. Or, below, one field at a time.",
   "Pezzo di rete": "Network piece",
+  "pH da correggere": "pH needs correcting",
+  "pH e cloro giusti": "pH and chlorine right",
   "pH massimo": "Maximum pH",
   "pH minimo": "Minimum pH",
   "pH troppo alto": "pH too high",
@@ -4536,6 +4586,7 @@ var SOURCE_INDEX = Object.freeze({
   "picco": "peak",
   "Picco": "Peak",
   "Piccole": "Small",
+  "piena fra": "full in",
   "piena fra ${quanto}": "full in ${quanto}",
   "Pilota": "Pilot",
   "PIN (facoltativo)": "PIN (optional)",
@@ -4552,6 +4603,7 @@ var SOURCE_INDEX = Object.freeze({
   "Piscina grande": "Large pool",
   "Piscina piccola": "Small pool",
   "Piscine": "Pools",
+  "più alta": "highest",
   "Più caldo": "Hotter",
   "più entità": "more entities",
   "Più tardi": "Later",
@@ -4609,6 +4661,7 @@ var SOURCE_INDEX = Object.freeze({
   "Posizione di ${nome}": "Position of ${nome}",
   "Posizione di ${view.name}": "Position of ${view.name}",
   "Posizione preferita (%)": "Favorite position (%)",
+  "Possibile perdita: scorre da": "Possible leak: flowing for",
   "Posta": "Mail",
   "Posteriore destro": "Rear right",
   "Posteriore sinistro": "Rear left",
@@ -4725,6 +4778,7 @@ var SOURCE_INDEX = Object.freeze({
   "Pronta": "Ready",
   "Pronta alle ${ora}": "Ready at ${ora}",
   "Pronta fra ${durata}": "Ready in ${durata}",
+  "pronta per la doccia": "ready for a shower",
   "Pronte · Inchiostro · Pagine": "Ready · Ink · Pages",
   "Prossimo ritiro": "Next collection",
   "Protetta da PIN": "PIN protected",
@@ -4774,6 +4828,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quante fasce": "How many bands",
   "Quanti giorni restano prima di sostituirlo. Sotto la soglia la scheda lo dice, e il tasto qui sotto azzera il conto una volta cambiato.": "How many days are left before replacing it. Below the threshold the card says so, and the button below resets the count once you have changed it.",
   "Quanto cibo resta nel distributore. In percentuale la scheda ne fa una barra; chi scrive «Low» o «Empty» vale lo stesso, e sotto soglia la scheda avvisa.": "How much food is left in the feeder. As a percentage the card draws a bar; a sensor saying “Low” or “Empty” counts the same, and below the threshold the card warns.",
+  "Quanto gli chiedi": "How much you ask of it",
   "Quanto resta accesa": "How long it stays on",
   "Quanto resta accesa dal momento dell'accensione. Il conto alla rovescia lo tiene Home Assistant, non questa pagina: si può chiudere la plancia e l'unità si spegne lo stesso. Sulla card resta modificabile ogni volta.": "How long it stays on from the moment you switch it on. Home Assistant keeps the countdown, not this page: you can close the dashboard and the unit still switches off. On the card you can change it every time.",
   "Quanto sta passando dal contatore. È la soglia di chi teme il distacco: il limite del contratto sta qui. L'energia immessa in rete non conta mai come sovraccarico.": "How much is going through the meter. This is the threshold for those worried about a cut-off: the contract limit lives here. Energy exported to the grid never counts as an overload.",
@@ -4844,6 +4899,8 @@ var SOURCE_INDEX = Object.freeze({
   "Rapido 59'": "Quick 59'",
   "Rasata": "Stubble",
   "Recupero": "Recovery",
+  "Regge ancora": "It will last another",
+  "regolare": "normal",
   "relè di discesa": "down relay",
   "Relè di discesa": "Down relay",
   "Renderer attivo": "Active renderer",
@@ -4852,8 +4909,8 @@ var SOURCE_INDEX = Object.freeze({
   "Reset totale": "Full reset",
   "Reset tutto": "Reset all",
   "Resistenza": "Heating element",
-  "Resistenza accesa": "Element on",
-  "Resistenza spenta": "Element off",
+  "Resistenza accesa": "Heating element on",
+  "Resistenza spenta": "Heating element off",
   "Resta qui": "Stay here",
   "Restano scritti qui perché si sappia che ci sono. Col campanello tornano nell'avviso, se sono ancora muti.": "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.",
   "restano senza piano: non vengono cancellate.": "are left with no floor: they are not deleted.",
@@ -4922,6 +4979,7 @@ var SOURCE_INDEX = Object.freeze({
   "Riscaldamento a pavimento": "Underfloor heating",
   "Riscaldamento attivo": "Heating on",
   "Riscaldamento piscina": "Pool heating",
+  "Riscaldamento spento": "Heating off",
   "Riscaldatore": "Heater",
   "Rischio colpo di calore": "Heatstroke danger",
   "Rischio di gelo alto": "High frost risk",
@@ -4950,11 +5008,13 @@ var SOURCE_INDEX = Object.freeze({
   "Rosa": "Pink",
   "Rossa da": "Red from",
   "Rosso": "Red",
+  "rubinetti chiusi": "taps closed",
   "Sabato e domenica": "Saturday and Sunday",
   "Sabbia": "Sand",
   "Sabbia rimasta": "Litter left",
   "Sabbia rimasta (si svuota)": "Litter left (runs out)",
   "Sala da pranzo": "Dining room",
+  "Sale": "Salt",
   "Sale dell'addolcitore": "Softener salt",
   "Salone": "Living room",
   "Salta il programma se ≥ (%)": "Skip the program if ≥ (%)",
@@ -5030,6 +5090,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sbloccato": "Unlocked",
   "Scadenza": "Schedule",
   "Scala della barra Potenza attuale. Vuoto = valore tipico per il tipo.": "Scale of the current power bar. Empty = typical value for the type.",
+  "scalda da": "heating for",
   "Scalda verso ${meta}°": "Heating to ${meta}°",
   "Scaldabagno": "Water heater",
   "Scaldabagno di Home Assistant": "Home Assistant water heater",
@@ -5091,6 +5152,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scollegato: le caselle restano come sono, e si salva col tasto in fondo.": "Unlinked: the fields stay as they are, and the button at the bottom saves.",
   "Scongelamento": "Defrosting",
   "Sconosciuto": "Unknown",
+  "scorre": "flowing",
   "Scorre da ${durata}": "Flowing for ${durata}",
   "Scorre da più di un giorno": "Flowing for over a day",
   "Scritta come Home Assistant la elenca, lettera per lettera.": "Spelled the way Home Assistant lists it, letter for letter.",
@@ -5113,6 +5175,7 @@ var SOURCE_INDEX = Object.freeze({
   "Se lo compili, la card mostra la finestra aperta quando il contatto lo dice.": "Fill it in and the card shows the window open when the contact says so.",
   "Se sotto (%)": "If below (%)",
   "Se usi go2rtc o Frigate, metti questa riga sotto «streams:» nel loro file:": "If you run go2rtc or Frigate, put this line under “streams:” in their file:",
+  "Se va via la luce, regge": "If the power goes, it lasts",
   "Secco": "Dry",
   "Seconda elettrovalvola": "Second solenoid valve",
   "seconda temperatura": "second temperature",
@@ -5242,6 +5305,7 @@ var SOURCE_INDEX = Object.freeze({
   "Si riempie da sola con il clima della plancia di origine, diviso nelle due linguette Freddo e Caldo come nella sezione Clima: i condizionatori nel freddo, termosifoni e termostati nel caldo, le pompe di calore in tutte e due.": "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both.",
   "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.": "It fills itself with every light of the source dashboard: a light added there shows up here too.",
   "Si segna dalla pagina con «Fatto oggi»; qui si corregge.": "It is recorded from the page with “Done today”; here you can correct it.",
+  "si spegne da sola a": "switches itself off at",
   "Si sta allontanando da casa": "Moving away from home",
   "Si sta avvicinando a casa": "Approaching home",
   "Si sta bene": "Comfortable",
@@ -5308,6 +5372,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sostituisci il servizio qui sotto con quello del tuo telefono.": "Replace the service below with your phone's.",
   "Sostituzioni, carichi, avvisi, testi, sezioni ed esportazione HTML": "Replacements, loads, alerts, texts, sections and HTML export",
   "Sotto il meteo porte e finestre aperte sono due pastiglie. Di serie lo decide la classe che Home Assistant dà al contatto; scegli qui quando non è quella giusta.": "Under the weather, open doors and open windows are two pills. By default the class Home Assistant gives the contact decides; pick here when it is not the right one.",
+  "sotto l'obiettivo di": "below the target of",
   "Sotto la soglia In funzione e sopra questa = Standby.": "Below the running threshold and above this = Standby.",
   "Sotto protezione": "Protected load",
   "Sotto questa umidità la terra è asciutta e la pianta entra fra quelle da innaffiare.": "Below this moisture the soil is dry and the plant joins those that need water.",
@@ -5331,6 +5396,7 @@ var SOURCE_INDEX = Object.freeze({
   "Spente": "Turned off",
   "Spento": "Off",
   "SPENTO": "OFF",
+  "spento da": "off for",
   "Spesa": "Shopping",
   "Sportello aperto": "Flap opened",
   "Sposta giù": "Move down",
@@ -5339,6 +5405,7 @@ var SOURCE_INDEX = Object.freeze({
   "Spunta quello che hai davvero: la pagina mostra solo quello, e con più d'uno compaiono in alto le linguette per passare dall'uno all'altro.": "Tick what you actually have: the page shows only that, and with more than one the tabs appear at the top to switch between them.",
   "Squilibrio fra le celle": "Cell imbalance",
   "SSO": "SSW",
+  "Sta bagnando": "Watering",
   "Sta bene": "Doing well",
   "sta deumidificando": "drying",
   "Sta deumidificando": "Drying the air",
@@ -5481,6 +5548,7 @@ var SOURCE_INDEX = Object.freeze({
   "Temperatura colore": "Colour temperature",
   "Temperatura CPU": "CPU temperature",
   "Temperatura dei fumi": "Flue gas temperature",
+  "temperatura dell'acqua": "water temperature",
   "Temperatura dell'acqua": "Water temperature",
   "Temperatura della caldaia": "Boiler temperature",
   "Temperatura della stanza": "Room temperature",
@@ -5526,6 +5594,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tenda in chiusura": "Curtain closing",
   "Tenda ritratta": "Awning in",
   "Tensione": "Voltage",
+  "Tensione di rete": "Mains voltage",
   "Tensione WB": "WB voltage",
   "Termica": "Thermal",
   "Termica (benzina, diesel, GPL)": "Combustion (petrol, diesel, LPG)",
@@ -5560,6 +5629,7 @@ var SOURCE_INDEX = Object.freeze({
   "Titolo della sezione": "Section title",
   "Tocca la ventola": "Tap the fan",
   "tocca la voce da mettere": "tap the option to set",
+  "tocca per accendere": "tap to turn on",
   "Tocca per accendere · raffrescamento 26°C · ventola auto": "Tap to turn on · cooling 26°C · auto fan",
   "Tocca per aprire": "Tap to open",
   "Tocca per aprire l'Energia": "Tap to open Energy",
@@ -5569,6 +5639,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tocca per rimetterla nel grafico": "Tap to put it back on the chart",
   "Tocca per rinominare": "Tap to rename",
   "Tocca per rinominare l'etichetta": "Tap to rename the label",
+  "tocca per spegnere": "tap to turn off",
   "Tocca per toglierla dal grafico": "Tap to drop it from the chart",
   "Tocca un apparecchio per aprire la sua scheda.": "Tap an appliance to open its card.",
   "Tocca un sensore": "Tap a sensor",
@@ -5800,6 +5871,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vedi tutto": "See everything",
   "Veicoli": "Vehicles",
   "Velo": "Veil",
+  "Velocità": "Speed",
   "Velocità della ventola (fan o select)": "Fan speed (fan or select)",
   "Velocità Ventola": "Fan speed",
   "Venti secondi senza un'immagine: può essere spenta, o solo molto lenta": "Twenty seconds with no image: it may be off, or just very slow",
@@ -5851,6 +5923,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vorrei che facesse": "I would like it to",
   "vuota": "empty",
   "Vuota": "Empty",
+  "vuota fra": "empty in",
   "vuota fra ${quanto}": "empty in ${quanto}",
   "Vuota: usa l'«Entità stato programma».": "Empty: uses the “Program state entity”.",
   "vuoto — aggiungi carichi": "empty — add loads",
@@ -6675,9 +6748,9 @@ function installaFoglioDegliOggetti() {
     body.prepend(gia);
     return true;
   }
-  const guscio2 = doc.createElement("div");
-  guscio2.innerHTML = foglioDegliOggetti();
-  const foglio6 = guscio2.firstElementChild;
+  const guscio3 = doc.createElement("div");
+  guscio3.innerHTML = foglioDegliOggetti();
+  const foglio6 = guscio3.firstElementChild;
   if (!foglio6) return false;
   body.prepend(foglio6);
   return true;
@@ -9980,9 +10053,9 @@ function pastiglieDellaStanza(conti = {}) {
   for (const voce2 of PASTIGLIE_DELLA_STANZA) {
     if (voce2.chiave === "gradi") {
       const letta = conti.gradi;
-      const gradi5 = letta === null || letta === void 0 || letta === "" ? NaN : Number(letta);
-      if (!Number.isFinite(gradi5)) continue;
-      fuori.push({ ...voce2, valore: gradi5, conto: 0 });
+      const gradi6 = letta === null || letta === void 0 || letta === "" ? NaN : Number(letta);
+      if (!Number.isFinite(gradi6)) continue;
+      fuori.push({ ...voce2, valore: gradi6, conto: 0 });
       continue;
     }
     const conto = conta(conti[voce2.chiave]);
@@ -15680,8 +15753,8 @@ function letturaVmc(unita2 = {}, states = {}) {
     const lettura3 = letturaNumero(sua[voce2.chiave], states);
     if (lettura3) numeri[voce2.chiave] = { ...lettura3, ...voce2 };
   }
-  const gradi5 = (chiave2) => temperature[chiave2] && !temperature[chiave2].muto ? temperature[chiave2].valore : null;
-  const recupero = recuperoDiCalore(gradi5("esterna"), gradi5("immissione"), gradi5("ripresa"));
+  const gradi6 = (chiave2) => temperature[chiave2] && !temperature[chiave2].muto ? temperature[chiave2].valore : null;
+  const recupero = recuperoDiCalore(gradi6("esterna"), gradi6("immissione"), gradi6("ripresa"));
   const avvisi = [];
   if (interruttori.filtri && !interruttori.filtri.muto && interruttori.filtri.acceso === true)
     avvisi.push({ chiave: "filtri_da_cambiare", gravita: "attenzione" });
@@ -16575,9 +16648,9 @@ function statiDelleCaldaie() {
   const viste2 = /* @__PURE__ */ new Set();
   const caldaie2 = [];
   const aggiungi4 = (nome, entity2) => {
-    const vera = entitaViva(entity2);
-    if (!clean(entity2) || viste2.has(vera)) return;
-    viste2.add(vera);
+    const vera2 = entitaViva(entity2);
+    if (!clean(entity2) || viste2.has(vera2)) return;
+    viste2.add(vera2);
     caldaie2.push(comeSta(nome, entity2));
   };
   for (const voce2 of vociAttuali())
@@ -16601,14 +16674,14 @@ function pillolaDellaCaldaia() {
   return true;
 }
 function spiegaLaCasellaCaldaia(corpo2) {
-  const casella3 = corpo2?.querySelector?.('[data-ref="switch.caldaia"]');
-  const riquadro = casella3?.closest?.(".ed-slot");
+  const casella4 = corpo2?.querySelector?.('[data-ref="switch.caldaia"]');
+  const riquadro = casella4?.closest?.(".ed-slot");
   if (!riquadro) return false;
-  if (!clean(casella3.value)) {
+  if (!clean(casella4.value)) {
     const entita3 = caldaiaDelleVoci(
       vociTermiche(leggiConfig(), allStates() || {}, root.cdCfg?.("cd_entity_overrides") || {})
     );
-    if (entita3) casella3.value = entita3;
+    if (entita3) casella4.value = entita3;
   }
   if (riquadro.querySelector("[data-dm-termico-aiuto]")) return false;
   const riga3 = doc.createElement("div");
@@ -16633,9 +16706,9 @@ function caldaiaDelleVoci(voci3) {
   return clean(voce2?.entity);
 }
 function laCaldaiaEntraFraLeVoci(evento) {
-  const casella3 = evento.target;
-  if (!casella3?.matches?.('[data-ref="switch.caldaia"]')) return;
-  const entita3 = clean(casella3.value);
+  const casella4 = evento.target;
+  if (!casella4?.matches?.('[data-ref="switch.caldaia"]')) return;
+  const entita3 = clean(casella4.value);
   if (!entita3.includes(".")) return;
   const prima = vociTermiche(
     leggiConfig(),
@@ -17110,8 +17183,8 @@ function dallInterruttore() {
 }
 function daiWatt(soglia2, fattore = 1) {
   return (stato3) => {
-    const watt3 = numero7(stato3);
-    return watt3 != null && watt3 * fattore >= soglia2;
+    const watt4 = numero7(stato3);
+    return watt4 != null && watt4 * fattore >= soglia2;
   };
 }
 
@@ -17173,7 +17246,7 @@ function entitaDellApparecchio(apparecchio = {}) {
     viste2.add(id);
     elenco9.push(id);
   };
-  for (const casella3 of CASELLE_DELL_APPARECCHIO) aggiungi4(apparecchio?.[casella3]);
+  for (const casella4 of CASELLE_DELL_APPARECCHIO) aggiungi4(apparecchio?.[casella4]);
   for (const { campo: campo5, pulisci } of ELENCHI) {
     const scritto = apparecchio?.[campo5];
     if (pulisci) {
@@ -17831,10 +17904,10 @@ var RIPIEGHI = Object.freeze({
   cottura_tempo_rimanente: "remaining_entity",
   cottura_cassetto: "door_entity"
 });
-function entitaDellaLettura(apparecchio = {}, casella3) {
-  const sua = pulito13(apparecchio?.[casella3]);
+function entitaDellaLettura(apparecchio = {}, casella4) {
+  const sua = pulito13(apparecchio?.[casella4]);
   if (sua) return sua;
-  const ripiego = RIPIEGHI[casella3];
+  const ripiego = RIPIEGHI[casella4];
   return ripiego ? pulito13(apparecchio?.[ripiego]) : "";
 }
 var FASI = Object.freeze([
@@ -18131,8 +18204,8 @@ function passoDellaFine(prima, { fase, rimasti = null, adesso = Date.now(), camb
 }
 function letturaDellaCottura(apparecchio = {}, states = {}, { adesso = Date.now(), modo = "", memoria = null } = {}) {
   const tipo = tipoDellaCucina(apparecchio);
-  const leggi2 = (casella3) => {
-    const entita3 = entitaDellaLettura(apparecchio, casella3);
+  const leggi2 = (casella4) => {
+    const entita3 = entitaDellaLettura(apparecchio, casella4);
     return entita3 ? states?.[entita3] || null : null;
   };
   const stato3 = leggi2("cottura_stato");
@@ -18239,8 +18312,8 @@ var PROPOSTE = Object.freeze([
     casella: "cottura_temperatura",
     domini: ["sensor"],
     punti: (c, voce2, states) => {
-      const gradi5 = classeDi(voce2, states) === "temperature" || /°/.test(unitaDi(voce2, states)) || /\btemp\b/.test(c);
-      if (!gradi5 || /\b(probe|sonda|target|set|desired|voluta|keep warm)\b/.test(c)) return null;
+      const gradi6 = classeDi(voce2, states) === "temperature" || /°/.test(unitaDi(voce2, states)) || /\btemp\b/.test(c);
+      if (!gradi6 || /\b(probe|sonda|target|set|desired|voluta|keep warm)\b/.test(c)) return null;
       return /\b(current|attuale)\b/.test(c) ? 9 : 6;
     }
   },
@@ -18315,8 +18388,8 @@ function proponiLaCottura(entita3 = [], states = {}, { integrazione = "" } = {})
   }
   const philips = minuscolo(integrazione) === "philips_airfryer" || voci3.some((voce2) => /^[a-z_]+\.philips_airfryer_/.test(pulito13(voce2?.entity_id ?? voce2)));
   if (philips) {
-    for (const [casella3, servizio] of Object.entries(SERVIZI_PHILIPS_AIRFRYER))
-      if (!proposta[casella3]) proposta[casella3] = servizio;
+    for (const [casella4, servizio] of Object.entries(SERVIZI_PHILIPS_AIRFRYER))
+      if (!proposta[casella4]) proposta[casella4] = servizio;
     if (proposta.cottura_stato) proposta[CASELLA_DEL_BERSAGLIO] = proposta.cottura_stato;
   }
   return proposta;
@@ -18402,8 +18475,8 @@ function prontaFra(lettura3) {
     t(`Pronto fra ${durata3}`, `Ready in ${durata3}`)
   );
 }
-function gradiInParole(gradi5) {
-  return gradi5 ? `${Math.round(gradi5.valore)} ${gradi5.unita}` : "";
+function gradiInParole(gradi6) {
+  return gradi6 ? `${Math.round(gradi6.valore)} ${gradi6.unita}` : "";
 }
 function elenco2(nomi) {
   try {
@@ -18543,8 +18616,8 @@ function temperaturaMarkup(voce2) {
   const meno = tastoMarkup(voce2, "meno_caldo", "dm-cl-step", MENO, "", t("Meno caldo", "Cooler"));
   const piu = tastoMarkup(voce2, "piu_caldo", "dm-cl-step", PIU, "", t("Più caldo", "Hotter"));
   const dentro3 = lettura3.dentro ? (() => {
-    const gradi5 = gradiInParole(lettura3.dentro);
-    return `<small class="dm-cot-dentro">${esc(t(`dentro ${gradi5}`, `inside ${gradi5}`))}</small>`;
+    const gradi6 = gradiInParole(lettura3.dentro);
+    return `<small class="dm-cot-dentro">${esc(t(`dentro ${gradi6}`, `inside ${gradi6}`))}</small>`;
   })() : "";
   return `<div class="dm-cot-temp">
     <span class="dm-cot-temp-l">🌡️ ${esc(t("Temperatura", "Temperature"))}${dentro3}</span>
@@ -18574,16 +18647,16 @@ function sottotitolo(voce2) {
 function schedaMarkup3(voce2) {
   const { lettura: lettura3 } = voce2;
   const sotto = sottotitolo(voce2);
-  const anello = anelloMarkup(lettura3);
+  const anello2 = anelloMarkup(lettura3);
   return `<article class="dm-pool-card dm-cot-card" data-fase="${esc(lettura3.fase)}" data-dm-cot-scheda="${esc(voce2.chiave)}">
     <div class="dm-pool-card-head">
       <span class="dm-pool-card-title"><i aria-hidden="true">${applianceGlyph(lettura3.tipo) || "🍟"}</i><span class="dm-cot-tit"><span data-dm-no-i18n>${esc(voce2.nome)}</span>${sotto ? `<small data-dm-no-i18n>${esc(sotto)}</small>` : ""}</span></span>
       <span class="dm-pool-badge dm-cot-fase" data-fase="${esc(lettura3.fase)}">${esc(parolaDellaFase(lettura3))}</span>
     </div>
-    <div class="dm-cot-corpo${anello ? "" : " dm-cot-senza-anello"}">
-      ${anello}
+    <div class="dm-cot-corpo${anello2 ? "" : " dm-cot-senza-anello"}">
+      ${anello2}
       <div class="dm-cot-destra">
-        <div class="dm-cot-art">${applianceArtwork(lettura3.tipo, anello ? 64 : 84)}</div>
+        <div class="dm-cot-art">${applianceArtwork(lettura3.tipo, anello2 ? 64 : 84)}</div>
         ${pastiglieMarkup3(lettura3)}
         ${notaMarkup(voce2)}
       </div>
@@ -18597,8 +18670,8 @@ function rigaDegliAltri(voce2) {
   const accanto = [];
   const misura7 = lettura3.dentro || (lettura3.fase === "spenta" ? null : lettura3.gradi) || null;
   if (lettura3.fase === "spenta" && lettura3.gradi) {
-    const gradi5 = gradiInParole(lettura3.gradi);
-    accanto.push(t(`dentro ${gradi5}`, `inside ${gradi5}`));
+    const gradi6 = gradiInParole(lettura3.gradi);
+    accanto.push(t(`dentro ${gradi6}`, `inside ${gradi6}`));
   } else if (misura7) accanto.push(gradiInParole(misura7));
   if (lettura3.programma) accanto.push(lettura3.programma);
   if (lettura3.fase !== "spenta" && voce2.watt != null && voce2.watt >= 1)
@@ -18698,14 +18771,14 @@ function tesseraDellaCottura(vista2 = vistaDellaCucina()) {
   if (lettura3.fase === "pronta" && !lettura3.fresca) return null;
   const pronta = lettura3.fase === "pronta";
   const conta2 = (lettura3.fase === "cottura" || lettura3.fase === "preriscaldamento") && lettura3.rimasti != null;
-  const gradi5 = gradiInParole(lettura3.gradi);
+  const gradi6 = gradiInParole(lettura3.gradi);
   let valore3 = parolaDellaFase(lettura3);
   if (conta2) {
     const minuti = minutiCheMancano(lettura3.rimasti);
     valore3 = minuti < 60 ? t(`${minuti} min`, `${minuti} min`) : minutiESecondi(lettura3.rimasti).replace(/:\d\d$/, "");
   }
   const quando4 = quandoInParole(lettura3);
-  const racconto = conta2 ? [prontaFra(lettura3), gradi5, lettura3.programma] : pronta ? [lettura3.programma, quando4] : [parolaDellaFase(lettura3), gradi5, lettura3.programma, quando4];
+  const racconto = conta2 ? [prontaFra(lettura3), gradi6, lettura3.programma] : pronta ? [lettura3.programma, quando4] : [parolaDellaFase(lettura3), gradi6, lettura3.programma, quando4];
   const righe2 = [];
   if (lettura3.programma)
     righe2.push({
@@ -18718,7 +18791,7 @@ function tesseraDellaCottura(vista2 = vistaDellaCucina()) {
     righe2.push({
       name: t("Temperatura", "Temperature"),
       glyph: "🌡️",
-      value: gradi5,
+      value: gradi6,
       tono: "quiete"
     });
   if (lettura3.rimasti != null && !pronta)
@@ -21035,13 +21108,13 @@ function alarmActiveButton(stateObj = alarmStateObject()) {
   return modoAcceso(stateObj?.state, stateObj);
 }
 function vesteLaFinestraRapida() {
-  const griglia = doc?.getElementById?.("qa-alarm-grid");
-  if (!griglia) return;
+  const griglia2 = doc?.getElementById?.("qa-alarm-grid");
+  if (!griglia2) return;
   const stateObj = alarmStateObject();
   const tasti = alarmModeButtons(stateObj);
   const acceso6 = alarmActiveButton(stateObj);
-  griglia.dataset.dmTasti = String(tasti.length);
-  griglia.innerHTML = tasti.map(
+  griglia2.dataset.dmTasti = String(tasti.length);
+  griglia2.innerHTML = tasti.map(
     (voce2) => `<button class="qa-alarm-btn${voce2.mode === acceso6 ? " active" : ""}"
         data-mode="${esc(voce2.mode)}" onclick="promptPinAndSet(${jsArg(voce2.service)})">
         <span class="qa-alarm-btn-icon">${disegnoDelTastoAntifurto(voce2, 26)}</span>
@@ -22572,10 +22645,10 @@ var LETTURE = Object.freeze({
     const righe2 = Array.isArray(tessera2?.rows) ? tessera2.rows : [];
     const pompa = tessera2?.attiva === true;
     const gradoDi = (r) => num(r?.raw ?? r?.temperature);
-    const gradi5 = righe2.filter((r) => gradoDi(r) != null && r?.sonda !== false);
+    const gradi6 = righe2.filter((r) => gradoDi(r) != null && r?.sonda !== false);
     const punti = [];
     const estremo = estremi(
-      gradi5.map((r) => ({ ...r, gradi: gradoDi(r) })),
+      gradi6.map((r) => ({ ...r, gradi: gradoDi(r) })),
       "gradi"
     );
     if (estremo && estremo.massimo !== estremo.minimo) {
@@ -22592,7 +22665,7 @@ var LETTURE = Object.freeze({
         )
       );
     }
-    if (!gradi5.length)
+    if (!gradi6.length)
       return {
         tono: pompa ? VERDETTI.corso : VERDETTI.bene,
         frase: pompa ? tr("La pompa sta girando.", "The pump is running.") : tr("La pompa e' ferma.", "The pump is idle."),
@@ -22972,7 +23045,9 @@ var LETTURE = Object.freeze({
     };
   },
   irrigazione: (tr, tessera2, adesso) => {
-    const righe2 = Array.isArray(tessera2?.rows) ? tessera2.rows : [];
+    const righe2 = (Array.isArray(tessera2?.rows) ? tessera2.rows : []).filter(
+      (riga3) => riga3?.terreno !== true
+    );
     const bagnano = righe2.filter((r) => r?.on === true || r?.running === true);
     if (!bagnano.length && tessera2?.attiva === true)
       return {
@@ -24714,12 +24789,12 @@ function ensureTendinaMotore() {
   const nome = doc?.getElementById?.("ed-evcar-name");
   const riga3 = nome?.parentElement;
   if (!riga3) return false;
-  let casella3 = doc.querySelector("#ed-body [data-ev-tipo-riga]");
-  if (!casella3) {
-    casella3 = doc.createElement("label");
-    casella3.className = "ed-slot dm-termica-tipo";
-    casella3.dataset.evTipoRiga = "true";
-    casella3.innerHTML = `<span class="ed-slot-lbl">${esc(t("Motore", "Engine"))}</span>
+  let casella4 = doc.querySelector("#ed-body [data-ev-tipo-riga]");
+  if (!casella4) {
+    casella4 = doc.createElement("label");
+    casella4.className = "ed-slot dm-termica-tipo";
+    casella4.dataset.evTipoRiga = "true";
+    casella4.innerHTML = `<span class="ed-slot-lbl">${esc(t("Motore", "Engine"))}</span>
       <select class="ed-input" data-ev-tipo>${TIPI_MOTORE.map(
       (tipo) => `<option value="${tipo === "elettrica" ? "" : esc(tipo)}">${esc(nomeDelMotore(tipo))}</option>`
     ).join("")}</select>
@@ -24729,25 +24804,25 @@ function ensureTendinaMotore() {
         "Combustion: the page shows the tank, the doors and the engine instead of charging. Hybrid: both. The fuel fields are below, among the car's entities."
       )
     )}</small>`;
-    riga3.after(casella3);
+    riga3.after(casella4);
   }
   sincronizzaTendina();
-  ensureCasellaCapacita(casella3);
+  ensureCasellaCapacita(casella4);
   return true;
 }
 function ensureCasellaCapacita(dopo) {
   const { auto, casa } = diChiParlaLaScheda();
   const visibile = casa || !auto || siRicarica(auto);
-  let casella3 = doc.querySelector("#ed-body [data-ev-kwh-riga]");
+  let casella4 = doc.querySelector("#ed-body [data-ev-kwh-riga]");
   if (!visibile) {
-    casella3?.remove();
+    casella4?.remove();
     return false;
   }
-  if (!casella3) {
-    casella3 = doc.createElement("label");
-    casella3.className = "ed-slot dm-termica-kwh";
-    casella3.dataset.evKwhRiga = "true";
-    casella3.innerHTML = `<span class="ed-slot-lbl">${esc(
+  if (!casella4) {
+    casella4 = doc.createElement("label");
+    casella4.className = "ed-slot dm-termica-kwh";
+    casella4.dataset.evKwhRiga = "true";
+    casella4.innerHTML = `<span class="ed-slot-lbl">${esc(
       t("Capacità della batteria (kWh)", "Battery capacity (kWh)")
     )}</span>
       <input class="ed-input" type="number" min="1" max="300" step="0.1" inputmode="decimal"
@@ -24758,13 +24833,13 @@ function ensureCasellaCapacita(dopo) {
         "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion."
       )
     )}</small>`;
-    dopo.after(casella3);
+    dopo.after(casella4);
   }
-  sincronizzaCapacita(casella3);
+  sincronizzaCapacita(casella4);
   return true;
 }
-function sincronizzaCapacita(casella3) {
-  const campo5 = casella3?.querySelector("[data-ev-kwh]");
+function sincronizzaCapacita(casella4) {
+  const campo5 = casella4?.querySelector("[data-ev-kwh]");
   if (!campo5) return false;
   const { chiave: chiave2, auto, casa } = diChiParlaLaScheda();
   if (campo5.dataset.dmPer === chiave2) return true;
@@ -25617,9 +25692,9 @@ function scriviLaSessione() {
     "Nessun contatore della sessione: collega la colonnina o evcc nella scheda Auto, oppure scrivi l'entità in «Energia sessione».",
     "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”."
   );
-  for (const casella3 of caselle2) {
-    if (casella3.textContent !== testo2) casella3.textContent = testo2;
-    const riga3 = casella3.closest(".lm-kpi-card,.lm-sess-kpi,.ev-popup-session-row") || casella3;
+  for (const casella4 of caselle2) {
+    if (casella4.textContent !== testo2) casella4.textContent = testo2;
+    const riga3 = casella4.closest(".lm-kpi-card,.lm-sess-kpi,.ev-popup-session-row") || casella4;
     if (riga3.title !== perche3) riga3.title = perche3;
   }
 }
@@ -25840,9 +25915,23 @@ function letturaScaldabagno(row = {}, states = {}, resolve = (value) => value) {
   const potenza = numero16(leggi2(row.potenza)?.state);
   const energia = numero16(leggi2(row.energia)?.state);
   const base = numero16(attributi2.min_temp) ?? BASE_ACQUA;
+  const vera2 = (riferimento) => {
+    const chiave2 = clean11(riferimento);
+    if (!chiave2) return "";
+    try {
+      return clean11(resolve(chiave2)) || chiave2;
+    } catch (_error) {
+      return chiave2;
+    }
+  };
+  const cambio = Date.parse(
+    (interruttore3 || principale)?.last_changed ?? (interruttore3 || principale)?.last_updated ?? ""
+  );
   return {
     id: row.id,
     name: clean11(row.name) || clean11(attributi2.friendly_name) || clean11(row.entity),
+    obiettivoEntita: isWaterHeaterEntity(row.entity) ? vera2(row.entity) : vera2(row.obiettivo),
+    da: Number.isFinite(cambio) ? cambio : null,
     room: clean11(row.room),
     entity: clean11(row.entity),
     interruttore: clean11(row.interruttore),
@@ -26084,13 +26173,13 @@ function wattDaSorvegliare(letture2 = {}, sorgente = SORGENTE_CASA) {
 }
 function livelloDellaPotenza(soglia2, letture2 = {}) {
   const regola = sogliaDellaPotenza(soglia2);
-  const watt3 = wattDaSorvegliare(letture2, regola.sorgente);
-  const fermo = { livello: LIVELLO_QUIETE, watt: watt3, sorgente: regola.sorgente, limite: null };
-  if (watt3 === null || !sogliaScritta(regola)) return fermo;
-  if (regola.rossa != null && watt3 >= regola.rossa)
-    return { livello: LIVELLO_ROSSA, watt: watt3, sorgente: regola.sorgente, limite: regola.rossa };
-  if (regola.ambra != null && watt3 >= regola.ambra)
-    return { livello: LIVELLO_AMBRA, watt: watt3, sorgente: regola.sorgente, limite: regola.ambra };
+  const watt4 = wattDaSorvegliare(letture2, regola.sorgente);
+  const fermo = { livello: LIVELLO_QUIETE, watt: watt4, sorgente: regola.sorgente, limite: null };
+  if (watt4 === null || !sogliaScritta(regola)) return fermo;
+  if (regola.rossa != null && watt4 >= regola.rossa)
+    return { livello: LIVELLO_ROSSA, watt: watt4, sorgente: regola.sorgente, limite: regola.rossa };
+  if (regola.ambra != null && watt4 >= regola.ambra)
+    return { livello: LIVELLO_AMBRA, watt: watt4, sorgente: regola.sorgente, limite: regola.ambra };
   return fermo;
 }
 function coloreDelLivello(livello) {
@@ -26718,10 +26807,10 @@ function chiudiModulo() {
 function leggiCaselle(dentro3) {
   const modulo = dentro3?.closest?.("[data-dm-calm-modulo]") || doc?.querySelector?.("[data-dm-calm-modulo]");
   if (!modulo || !state24.bozza) return;
-  for (const casella3 of modulo.querySelectorAll("[data-dm-calm-campo-valore]")) {
-    const nome = clean(casella3.dataset.dmCalmCampoValore);
+  for (const casella4 of modulo.querySelectorAll("[data-dm-calm-campo-valore]")) {
+    const nome = clean(casella4.dataset.dmCalmCampoValore);
     if (!nome) continue;
-    state24.bozza[nome] = casella3.type === "checkbox" ? casella3.checked === true : clean(casella3.value);
+    state24.bozza[nome] = casella4.type === "checkbox" ? casella4.checked === true : clean(casella4.value);
   }
 }
 function lamenti() {
@@ -26894,10 +26983,10 @@ function onClick2(event) {
   if (bersaglio.closest("[data-dm-calm-modulo]")) event.stopPropagation();
 }
 function onChange2(event) {
-  const casella3 = event.target?.closest?.("[data-dm-calm-campo-valore]");
-  if (!casella3 || !state24.bozza) return;
-  leggiCaselle(casella3);
-  if (clean(casella3.dataset.dmCalmCampoValore) === "tuttoIlGiorno") ridisegnaOspiti();
+  const casella4 = event.target?.closest?.("[data-dm-calm-campo-valore]");
+  if (!casella4 || !state24.bozza) return;
+  leggiCaselle(casella4);
+  if (clean(casella4.dataset.dmCalmCampoValore) === "tuttoIlGiorno") ridisegnaOspiti();
 }
 var CALENDARI = [];
 function dichiaraCalendari(elenco9) {
@@ -27033,7 +27122,7 @@ function normalizzaAllerte(stored) {
   for (const { chiave: chiave2, caselle: caselle2 } of CATEGORIE) {
     const voce2 = dato[chiave2] && typeof dato[chiave2] === "object" ? dato[chiave2] : {};
     fuori[chiave2] = { nome: pulito22(voce2.nome) };
-    for (const casella3 of caselle2) fuori[chiave2][casella3] = pulito22(voce2[casella3]);
+    for (const casella4 of caselle2) fuori[chiave2][casella4] = pulito22(voce2[casella4]);
   }
   return { ...dato, ...fuori };
 }
@@ -27045,8 +27134,8 @@ function entitaDelleAllerte(config) {
   const dato = normalizzaAllerte(config);
   const viste2 = /* @__PURE__ */ new Set();
   for (const { chiave: chiave2, caselle: caselle2 } of CATEGORIE)
-    for (const casella3 of caselle2) {
-      const entity2 = dato[chiave2][casella3];
+    for (const casella4 of caselle2) {
+      const entity2 = dato[chiave2][casella4];
       if (entity2.includes(".")) viste2.add(entity2);
     }
   return [...viste2];
@@ -27251,12 +27340,12 @@ function leggiUnDisagio(stato3) {
   if (!stato3 || MUTI5.has(minuscolo4(stato3.state))) return null;
   const grezzo = parolaNormalizzata(stato3.state);
   const unita2 = pulito22(stato3?.attributes?.unit_of_measurement);
-  const gradi5 = gradiInCelsius(numero19(minuscolo4(stato3.state)), unita2);
+  const gradi6 = gradiInCelsius(numero19(minuscolo4(stato3.state)), unita2);
   let livello = "quiete";
-  if (gradi5 != null) {
-    if (gradi5 >= 41) livello = "allarme";
-    else if (gradi5 >= 32) livello = "attenzione";
-    else if (gradi5 >= 27 || gradi5 <= 0) livello = "nota";
+  if (gradi6 != null) {
+    if (gradi6 >= 41) livello = "allarme";
+    else if (gradi6 >= 32) livello = "attenzione";
+    else if (gradi6 >= 27 || gradi6 <= 0) livello = "nota";
   } else if (grezzo === "on" || grezzo === "off") {
     livello = grezzo === "on" ? "attenzione" : "quiete";
   } else {
@@ -27268,7 +27357,7 @@ function leggiUnDisagio(stato3) {
   }
   return {
     livello,
-    codice: gradi5 == null ? grezzo : "",
+    codice: gradi6 == null ? grezzo : "",
     /* Lo stato come lo scrive il sensore, senza toccarlo (#428): «anche se il
      * sensore espone uno stato scritto in italiano, la dashboard prende
      * l'opzione dell'attributo scritta in lowcase ed in inglese». Il codice
@@ -27282,7 +27371,7 @@ function leggiUnDisagio(stato3) {
      * uguale rendeva apribile ogni tessera del comfort per mostrarci dentro
      * niente. */
     scritto: pulito22(stato3.state),
-    gradi: gradi5,
+    gradi: gradi6,
     unita: unita2
   };
 }
@@ -27422,7 +27511,7 @@ function letturaAllerte(config, states = {}, resolve = (value) => value, adesso 
     const voce2 = dato[chiave2];
     if (!voce2.entity.includes(".")) continue;
     const stati = {};
-    for (const casella3 of caselle2) stati[casella3] = leggi2(voce2[casella3]);
+    for (const casella4 of caselle2) stati[casella4] = leggi2(voce2[casella4]);
     const principale = stati.entity;
     const muto2 = !principale || MUTI5.has(minuscolo4(principale.state));
     const lettura3 = muto2 ? { livello: IGNOTO } : LETTORI[chiave2](voce2, stati, adesso);
@@ -28060,58 +28149,58 @@ function renderAllerte() {
   schedule5();
 }
 function installStyles9() {
-  const P = `#${ALLERTE_PAGE_ID}`;
+  const P2 = `#${ALLERTE_PAGE_ID}`;
   installStyle(
     "dm-allerte-section-style",
     `
-    ${P} .dm-allerte-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P} .dm-allerte-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-allerte-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P2} .dm-allerte-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-allerte-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-allerte-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-allerte-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-allerte-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* Il riassunto: una riga sola, col colore del livello piu' alto. */
-    ${P} .dm-allerte-riassunto{
+    ${P2} .dm-allerte-riassunto{
       display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:20px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-allerte-riassunto-ic{
+    ${P2} .dm-allerte-riassunto-ic{
       display:grid;place-items:center;width:46px;height:46px;border-radius:14px;font-size:22px;
       background:color-mix(in srgb,var(--dm-allerta-colore,#22c55e) 16%,transparent)}
-    ${P} .dm-allerte-riassunto-testo{display:grid;gap:2px;min-width:0}
-    ${P} .dm-allerte-riassunto strong{font-size:16px;font-weight:900;color:var(--text,#0f172a)}
-    ${P} .dm-allerte-riassunto small{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-allerte-riassunto-testo{display:grid;gap:2px;min-width:0}
+    ${P2} .dm-allerte-riassunto strong{font-size:16px;font-weight:900;color:var(--text,#0f172a)}
+    ${P2} .dm-allerte-riassunto small{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P} .dm-allerte-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:12px}
-    ${P} .dm-allerta{
+    ${P2} .dm-allerte-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:12px}
+    ${P2} .dm-allerta{
       position:relative;display:grid;gap:8px;padding:14px 16px;border-radius:18px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06));overflow:hidden}
     /* Una tessera che si apre lo dice al dito prima che al dito serva saperlo:
        il cursore, e un sollevamento appena percettibile. Chi non ha niente
        dentro non riceve niente di tutto questo: lo decide valeLaPenaAprirla. */
-    ${P} .dm-allerta-apribile{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
-    ${P} .dm-allerta-apribile:hover{transform:translateY(-1px);
+    ${P2} .dm-allerta-apribile{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+    ${P2} .dm-allerta-apribile:hover{transform:translateY(-1px);
       box-shadow:var(--shadow-glass-strong,0 12px 34px rgba(0,0,0,.10))}
-    ${P} .dm-allerta-apribile:focus-visible{
+    ${P2} .dm-allerta-apribile:focus-visible{
       outline:3px solid color-mix(in srgb,var(--primary-color,#0ea5e9) 45%,transparent);
       outline-offset:3px}
     /* La striscia a sinistra e' il livello, detto col colore prima che con la parola. */
-    ${P} .dm-allerta::before{
+    ${P2} .dm-allerta::before{
       content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
       background:var(--dm-allerta-colore,#94a3b8)}
     /* Il nome della fonte si legge intero: «Protezione civile» e «Voli sopra
        casa» vanno su due righe piuttosto che finire in «PROTE…». */
-    ${P} .dm-allerta-testa{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
-    ${P} .dm-allerta-ic{display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto}
-    ${P} .dm-allerta-ic .dm-appliance-art{display:block;line-height:0}
-    ${P} .dm-allerta-nome{
+    ${P2} .dm-allerta-testa{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+    ${P2} .dm-allerta-ic{display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto}
+    ${P2} .dm-allerta-ic .dm-appliance-art{display:block;line-height:0}
+    ${P2} .dm-allerta-nome{
       flex:1 1 90px;min-width:0;font-size:12px;font-weight:900;letter-spacing:.04em;line-height:1.15;
       text-transform:uppercase;color:var(--text,#0f172a);overflow-wrap:anywhere}
-    ${P} .dm-allerta-livello{
+    ${P2} .dm-allerta-livello{
       flex:0 0 auto;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
       padding:3px 8px;border-radius:999px;color:#fff;background:var(--dm-allerta-colore,#94a3b8)}
-    ${P} .dm-allerta-frase{font-size:17px;font-weight:800;line-height:1.25;color:var(--text,#0f172a)}
+    ${P2} .dm-allerta-frase{font-size:17px;font-weight:800;line-height:1.25;color:var(--text,#0f172a)}
     /* Le righe valgono nella pagina E nella finestra del dettaglio.
      *
      * La finestra riusa questo markup ma vive attaccata al corpo del
@@ -28121,31 +28210,31 @@ function installStyles9() {
      * «GraminaceeAlto · 4/4». Non si vedeva finche' le righe erano due parole;
      * con i pollini presi uno per uno e le frasi dell'integrazione (#428) e'
      * diventato il difetto piu' visibile della finestra. */
-    :is(${P},#${POPUP_ID}) .dm-allerta-righe{
+    :is(${P2},#${POPUP_ID}) .dm-allerta-righe{
       list-style:none;margin:0;padding:0;display:grid;gap:4px}
-    :is(${P},#${POPUP_ID}) .dm-allerta-righe li{
+    :is(${P2},#${POPUP_ID}) .dm-allerta-righe li{
       display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:12px;
       color:var(--text-dim,#64748b)}
-    :is(${P},#${POPUP_ID}) .dm-allerta-righe li>span{flex:0 1 auto;min-width:0}
+    :is(${P2},#${POPUP_ID}) .dm-allerta-righe li>span{flex:0 1 auto;min-width:0}
     /* Una frase non sta sulla riga del suo nome: va a capo e si prende tutta
      * la larghezza, allineata a sinistra come si legge un testo. Un valore
      * corto — «4/4», «12 km» — resta a destra del nome, dov'era. */
-    :is(${P},#${POPUP_ID}) .dm-allerta-righe li b{
+    :is(${P2},#${POPUP_ID}) .dm-allerta-righe li b{
       font-weight:800;color:var(--text,#0f172a);text-align:right;min-width:0;flex:0 1 auto}
-    :is(${P},#${POPUP_ID}) .dm-allerta-righe li[data-lungo="true"] b{
+    :is(${P2},#${POPUP_ID}) .dm-allerta-righe li[data-lungo="true"] b{
       flex:1 0 100%;text-align:left}
 
     /* I quattro colori, piu' il grigio di chi non risponde. Stanno in una
        variabile perche' li usano tre pezzi — striscia, pastiglia, alone — e un
        colore scritto tre volte e' un colore che prima o poi diverge. */
-    ${P} [data-livello="quiete"]{--dm-allerta-colore:#22c55e}
-    ${P} [data-livello="nota"]{--dm-allerta-colore:#0ea5e9}
-    ${P} [data-livello="attenzione"]{--dm-allerta-colore:#f59e0b}
-    ${P} [data-livello="allarme"]{--dm-allerta-colore:#ef4444}
-    ${P} [data-livello="ignoto"]{--dm-allerta-colore:#94a3b8}
-    ${P} .dm-allerta[data-livello="allarme"]{
+    ${P2} [data-livello="quiete"]{--dm-allerta-colore:#22c55e}
+    ${P2} [data-livello="nota"]{--dm-allerta-colore:#0ea5e9}
+    ${P2} [data-livello="attenzione"]{--dm-allerta-colore:#f59e0b}
+    ${P2} [data-livello="allarme"]{--dm-allerta-colore:#ef4444}
+    ${P2} [data-livello="ignoto"]{--dm-allerta-colore:#94a3b8}
+    ${P2} .dm-allerta[data-livello="allarme"]{
       box-shadow:0 0 0 1px rgba(239,68,68,.35),0 14px 34px -14px rgba(239,68,68,.6)}
-    ${P} .dm-allerta[data-livello="ignoto"] .dm-allerta-frase{color:var(--text-dim,#64748b);font-weight:700}
+    ${P2} .dm-allerta[data-livello="ignoto"] .dm-allerta-frase{color:var(--text-dim,#64748b);font-weight:700}
 
     /* Il pallino sulla voce della barra, quando c'e' qualcosa. */
     nav.tabs .tab[data-tab="${ALLERTE_TAB}"]{position:relative}
@@ -28156,8 +28245,8 @@ function installStyles9() {
     nav.tabs .tab[data-tab="${ALLERTE_TAB}"][data-dm-livello="attenzione"] .icon::after{background:#f59e0b}
 
     @media (max-width:640px){
-      ${P} .dm-allerte-griglia{grid-template-columns:1fr}
-      ${P} .dm-allerta-frase{font-size:16px}
+      ${P2} .dm-allerte-griglia{grid-template-columns:1fr}
+      ${P2} .dm-allerta-frase{font-size:16px}
     }
     
     /* ── la finestra del dettaglio (#422) ─────────────────────────────────
@@ -28375,10 +28464,10 @@ function ritiriDalTurno(turno, adesso = Date.now()) {
   const fuori = [];
   for (let avanti = 0; avanti < GIORNI_DEL_TURNO; avanti += 1) {
     const quando4 = new Date(oggi.getTime() + avanti * 864e5 + 12 * 36e5);
-    const casella3 = caselleDelTurno(dato, quando4);
-    if (casella3 < 0) break;
+    const casella4 = caselleDelTurno(dato, quando4);
+    if (casella4 < 0) break;
     const vicino = avanti < GIORNI_VICINI;
-    for (const materiale of dato.giorni[casella3]) {
+    for (const materiale of dato.giorni[casella4]) {
       if (!vicino && visti.has(materiale)) continue;
       visti.add(materiale);
       const voce2 = materialeDiSerie(materiale);
@@ -29402,74 +29491,74 @@ function renderCitofono() {
   schedule6();
 }
 function installStyles10() {
-  const P = `#${CITOFONO_PAGE_ID}`;
+  const P2 = `#${CITOFONO_PAGE_ID}`;
   installStyle(
     "dm-citofono-section-style",
     `
-    ${P} .dm-citofono-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P} .dm-citofono-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-citofono-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P2} .dm-citofono-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-citofono-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-citofono-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-citofono-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-citofono-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
-    ${P} .dm-citofono-testa{
+    ${P2} .dm-citofono-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-citofono-testa small{
+    ${P2} .dm-citofono-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P} .dm-citofono-testa strong{font-size:28px;font-weight:900;line-height:1.06;color:var(--text,#0f172a)}
-    ${P} .dm-citofono-testa[data-stato="suona"] strong{color:#ea580c}
-    ${P} .dm-citofono-testa[data-stato="posta"] strong{color:#2563eb}
-    ${P} .dm-citofono-testa[data-stato="quiete"] strong{color:#15803d}
-    ${P} .dm-citofono-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-citofono-testa strong{font-size:28px;font-weight:900;line-height:1.06;color:var(--text,#0f172a)}
+    ${P2} .dm-citofono-testa[data-stato="suona"] strong{color:#ea580c}
+    ${P2} .dm-citofono-testa[data-stato="posta"] strong{color:#2563eb}
+    ${P2} .dm-citofono-testa[data-stato="quiete"] strong{color:#15803d}
+    ${P2} .dm-citofono-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P} .dm-citofono-fascia{display:grid;gap:9px}
-    ${P} .dm-citofono-fascia>header>strong{
+    ${P2} .dm-citofono-fascia{display:grid;gap:9px}
+    ${P2} .dm-citofono-fascia>header>strong{
       font-family:'Oswald',system-ui,sans-serif;font-size:15px;letter-spacing:1.3px;
       text-transform:uppercase;color:var(--text,#0f172a)}
-    ${P} .dm-citofono-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P2} .dm-citofono-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
 
-    ${P} .dm-citofono,${P} .dm-cassetta{
+    ${P2} .dm-citofono,${P2} .dm-cassetta{
       display:grid;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-ingresso,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-ingresso,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P} .dm-citofono{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#16a34a}
-    ${P} .dm-citofono[data-suona="true"]{--dm-ingresso:#ea580c}
-    ${P} .dm-cassetta{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#94a3b8}
-    ${P} .dm-cassetta[data-stato="piena"]{--dm-ingresso:#2563eb}
-    ${P} .dm-cassetta[data-stato="aperta"]{--dm-ingresso:#eab308}
-    ${P} .dm-cassetta[data-stato="vuota"]{--dm-ingresso:#16a34a}
-    ${P} .dm-cassetta-presa{
+    ${P2} .dm-citofono{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#16a34a}
+    ${P2} .dm-citofono[data-suona="true"]{--dm-ingresso:#ea580c}
+    ${P2} .dm-cassetta{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#94a3b8}
+    ${P2} .dm-cassetta[data-stato="piena"]{--dm-ingresso:#2563eb}
+    ${P2} .dm-cassetta[data-stato="aperta"]{--dm-ingresso:#eab308}
+    ${P2} .dm-cassetta[data-stato="vuota"]{--dm-ingresso:#16a34a}
+    ${P2} .dm-cassetta-presa{
       grid-column:2/-1;justify-self:start;margin-top:6px;
       border:1px solid color-mix(in srgb,var(--dm-ingresso) 45%,transparent);
       background:color-mix(in srgb,var(--dm-ingresso) 12%,transparent);
       color:var(--dm-ingresso);border-radius:999px;
       padding:6px 14px;font:600 12px/1 inherit;letter-spacing:.02em;cursor:pointer
     }
-    ${P} .dm-cassetta-presa:hover{background:color-mix(in srgb,var(--dm-ingresso) 22%,transparent)}
+    ${P2} .dm-cassetta-presa:hover{background:color-mix(in srgb,var(--dm-ingresso) 22%,transparent)}
 
-    ${P} .dm-citofono-ic,${P} .dm-cassetta-ic{
+    ${P2} .dm-citofono-ic,${P2} .dm-cassetta-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-ingresso,#94a3b8) 22%,transparent)}
-    ${P} .dm-citofono-testo,${P} .dm-cassetta-testo{display:grid;gap:2px;min-width:0}
-    ${P} .dm-citofono-testo strong,${P} .dm-cassetta-testo strong{
+    ${P2} .dm-citofono-testo,${P2} .dm-cassetta-testo{display:grid;gap:2px;min-width:0}
+    ${P2} .dm-citofono-testo strong,${P2} .dm-cassetta-testo strong{
       font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-citofono-testo small,${P} .dm-cassetta-testo small{
+    ${P2} .dm-citofono-testo small,${P2} .dm-cassetta-testo small{
       font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-cassetta-stato{
+    ${P2} .dm-cassetta-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-ingresso,#94a3b8) 78%,var(--text,#0f172a))}
 
-    ${P} .dm-citofono-apri{
+    ${P2} .dm-citofono-apri{
       flex:0 0 auto;padding:9px 16px;border:0;border-radius:999px;cursor:pointer;
       font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;
       color:#fff;background:#16a34a;transition:transform .12s ease,background .2s ease}
-    ${P} .dm-citofono-apri:active,${P} .dm-citofono-apri-premuto{transform:scale(.94);background:#15803d}
-    @media(max-width:520px){${P} .dm-citofono-elenco{grid-template-columns:1fr}}
+    ${P2} .dm-citofono-apri:active,${P2} .dm-citofono-apri-premuto{transform:scale(.94);background:#15803d}
+    @media(max-width:520px){${P2} .dm-citofono-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -29795,74 +29884,74 @@ function renderRifiuti() {
   schedule7();
 }
 function installStyles11() {
-  const P = `#${RIFIUTI_PAGE_ID}`;
+  const P2 = `#${RIFIUTI_PAGE_ID}`;
   installStyle(
     "dm-rifiuti-section-style",
     `
-    ${P} .dm-rifiuti-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P} .dm-rifiuti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-rifiuti-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P2} .dm-rifiuti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-rifiuti-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-rifiuti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-rifiuti-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-rifiuti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* Il prossimo ritiro: la risposta grande alla domanda della sera. */
-    ${P} .dm-rifiuti-prossimo{
+    ${P2} .dm-rifiuti-prossimo{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-rifiuti-prossimo small{
+    ${P2} .dm-rifiuti-prossimo small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P} .dm-rifiuti-prossimo strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P} .dm-rifiuti-prossimo[data-quando="oggi"] strong{color:#dc2626}
-    ${P} .dm-rifiuti-prossimo[data-quando="domani"] strong{color:#d97706}
-    ${P} .dm-rifiuti-prossimo-data{font-size:13px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
-    ${P} .dm-rifiuti-domani{
+    ${P2} .dm-rifiuti-prossimo strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P2} .dm-rifiuti-prossimo[data-quando="oggi"] strong{color:#dc2626}
+    ${P2} .dm-rifiuti-prossimo[data-quando="domani"] strong{color:#d97706}
+    ${P2} .dm-rifiuti-prossimo-data{font-size:13px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
+    ${P2} .dm-rifiuti-domani{
       display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;padding-top:10px;
       border-top:1px dashed var(--card-border,rgba(0,0,0,.14))}
-    ${P} .dm-rifiuti-domani>small{
+    ${P2} .dm-rifiuti-domani>small{
       font-size:9.5px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;
       color:var(--text-dim,#94a3b8)}
-    ${P} .dm-rifiuti-domani .dm-rifiuti-prossimo-bidoni{margin:0}
-    ${P} .dm-rifiuti-prossimo-bidoni{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    ${P2} .dm-rifiuti-domani .dm-rifiuti-prossimo-bidoni{margin:0}
+    ${P2} .dm-rifiuti-prossimo-bidoni{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 
     /* Il bidone: una pillola col colore del bidone vero. */
-    ${P} .dm-rifiuti-bidone{
+    ${P2} .dm-rifiuti-bidone{
       display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;
       background:color-mix(in srgb,var(--dm-bidone,#0ea5e9) 16%,transparent);
       border:1px solid color-mix(in srgb,var(--dm-bidone,#0ea5e9) 45%,transparent);
       font-size:12px;font-weight:900;color:var(--text,#0f172a)}
-    ${P} .dm-rifiuti-bidone.grande{font-size:14px;padding:8px 16px 8px 10px}
+    ${P2} .dm-rifiuti-bidone.grande{font-size:14px;padding:8px 16px 8px 10px}
     /* Il disegno del bidone si porta dietro il suo pannello e il suo colore:
      * dietro non ci va ne' un tondo tinto ne' un'ombra, che raddoppierebbero. */
-    ${P} .dm-rifiuti-bidone-ic{display:grid;place-items:center;width:28px;height:28px;flex:0 0 auto}
-    ${P} .dm-rifiuti-bidone.grande .dm-rifiuti-bidone-ic{width:34px;height:34px}
-    ${P} .dm-rifiuti-bidone-ic .dm-appliance-art,
-    ${P} .dm-rifiuti-riga-ic .dm-appliance-art{display:block;line-height:0}
+    ${P2} .dm-rifiuti-bidone-ic{display:grid;place-items:center;width:28px;height:28px;flex:0 0 auto}
+    ${P2} .dm-rifiuti-bidone.grande .dm-rifiuti-bidone-ic{width:34px;height:34px}
+    ${P2} .dm-rifiuti-bidone-ic .dm-appliance-art,
+    ${P2} .dm-rifiuti-riga-ic .dm-appliance-art{display:block;line-height:0}
 
-    ${P} .dm-rifiuti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
-    ${P} .dm-rifiuti-riga{
+    ${P2} .dm-rifiuti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P2} .dm-rifiuti-riga{
       position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px 12px 18px;
       border-radius:16px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06));overflow:hidden}
-    ${P} .dm-rifiuti-riga::before{
+    ${P2} .dm-rifiuti-riga::before{
       content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--dm-bidone,#0ea5e9)}
-    ${P} .dm-rifiuti-riga-ic{display:grid;place-items:center;width:40px;height:40px;flex:0 0 auto}
-    ${P} .dm-rifiuti-riga-testo{display:grid;gap:2px;min-width:0;flex:1 1 auto}
-    ${P} .dm-rifiuti-riga-testo strong{
+    ${P2} .dm-rifiuti-riga-ic{display:grid;place-items:center;width:40px;height:40px;flex:0 0 auto}
+    ${P2} .dm-rifiuti-riga-testo{display:grid;gap:2px;min-width:0;flex:1 1 auto}
+    ${P2} .dm-rifiuti-riga-testo strong{
       font-size:13px;font-weight:900;color:var(--text,#0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    ${P} .dm-rifiuti-riga-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
-    ${P} .dm-rifiuti-riga-quando{
+    ${P2} .dm-rifiuti-riga-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
+    ${P2} .dm-rifiuti-riga-quando{
       flex:0 0 auto;font-size:12px;font-weight:900;padding:5px 10px;border-radius:999px;
       background:var(--surface-3,#f1f5f9);color:var(--text,#0f172a);white-space:nowrap}
-    ${P} .dm-rifiuti-riga[data-quando="oggi"] .dm-rifiuti-riga-quando{background:#fee2e2;color:#b91c1c}
-    ${P} .dm-rifiuti-riga[data-quando="domani"] .dm-rifiuti-riga-quando{background:#fef3c7;color:#b45309}
-    ${P} .dm-rifiuti-riga[data-quando="mai"] .dm-rifiuti-riga-quando,
-    ${P} .dm-rifiuti-riga[data-quando="passato"] .dm-rifiuti-riga-quando{color:var(--text-dim,#64748b);font-weight:700}
+    ${P2} .dm-rifiuti-riga[data-quando="oggi"] .dm-rifiuti-riga-quando{background:#fee2e2;color:#b91c1c}
+    ${P2} .dm-rifiuti-riga[data-quando="domani"] .dm-rifiuti-riga-quando{background:#fef3c7;color:#b45309}
+    ${P2} .dm-rifiuti-riga[data-quando="mai"] .dm-rifiuti-riga-quando,
+    ${P2} .dm-rifiuti-riga[data-quando="passato"] .dm-rifiuti-riga-quando{color:var(--text-dim,#64748b);font-weight:700}
 
     @media (max-width:640px){
-      ${P} .dm-rifiuti-prossimo strong{font-size:26px}
-      ${P} .dm-rifiuti-elenco{grid-template-columns:1fr}
+      ${P2} .dm-rifiuti-prossimo strong{font-size:26px}
+      ${P2} .dm-rifiuti-elenco{grid-template-columns:1fr}
     }
     `
   );
@@ -32256,8 +32345,8 @@ var NOMI_DELLE_VOCI = () => ({
 });
 var laCasellaDella = (chiave2) => LE_CASELLE_DELLA_BARRA.find((una) => una.chiave === chiave2);
 var nomeDellaCasella = (chiave2) => {
-  const casella3 = laCasellaDella(chiave2);
-  return casella3 ? t(casella3.it, casella3.en) : "";
+  const casella4 = laCasellaDella(chiave2);
+  return casella4 ? t(casella4.it, casella4.en) : "";
 };
 var esempioDellaCasella = (chiave2) => laCasellaDella(chiave2)?.esempio ?? "";
 function campoDellaMisura(chiave2, valore3) {
@@ -32469,16 +32558,16 @@ function ensurePannelloDellaBarra(body = doc?.getElementById?.("ed-body")) {
 }
 function quelloCheDiceIlPannello(pannello) {
   const voci3 = {};
-  for (const casella3 of pannello.querySelectorAll("[data-dm-casa-voce]"))
-    voci3[clean(casella3.dataset.dmCasaVoce)] = casella3.checked;
+  for (const casella4 of pannello.querySelectorAll("[data-dm-casa-voce]"))
+    voci3[clean(casella4.dataset.dmCasaVoce)] = casella4.checked;
   const misure = {};
-  for (const casella3 of pannello.querySelectorAll("[data-dm-casa-misura]"))
-    misure[clean(casella3.dataset.dmCasaMisura)] = clean(casella3.value);
+  for (const casella4 of pannello.querySelectorAll("[data-dm-casa-misura]"))
+    misure[clean(casella4.dataset.dmCasaMisura)] = clean(casella4.value);
   const mie = [];
   for (const riga3 of pannello.querySelectorAll("[data-dm-casa-mia]")) {
     const mia = {};
-    for (const casella3 of riga3.querySelectorAll("[data-dm-casa-mia-campo]"))
-      mia[clean(casella3.dataset.dmCasaMiaCampo)] = clean(casella3.value);
+    for (const casella4 of riga3.querySelectorAll("[data-dm-casa-mia-campo]"))
+      mia[clean(casella4.dataset.dmCasaMiaCampo)] = clean(casella4.value);
     mie.push(mia);
   }
   return {
@@ -34927,9 +35016,9 @@ function misuraMarkup({ lettura: lettura3, verdetto }) {
 }
 function livelloMarkup({ lettura: lettura3, basso, giorni }) {
   const stato3 = lettura3.muto ? "muta" : basso ? "basso" : "bene";
-  const percento4 = !lettura3.binario && lettura3.valore !== null && /%/.test(lettura3.unita) ? Math.max(0, Math.min(100, lettura3.valore)) : null;
+  const percento5 = !lettura3.binario && lettura3.valore !== null && /%/.test(lettura3.unita) ? Math.max(0, Math.min(100, lettura3.valore)) : null;
   const destra = lettura3.muto ? t("Non risponde", "Not answering") : basso ? t("da rabboccare", "to top up") : giorni !== null ? rabboccoInParole(giorni) : lettura3.binario ? t("nella norma", "in range") : valoreInParole(lettura3);
-  const sotto = percento4 !== null ? `<span class="dm-acq-livello-barra"><i style="width:${esc(String(percento4))}%"></i></span>` : !lettura3.binario && !lettura3.muto && giorni !== null ? `<small>${esc(valoreInParole(lettura3))}</small>` : "";
+  const sotto = percento5 !== null ? `<span class="dm-acq-livello-barra"><i style="width:${esc(String(percento5))}%"></i></span>` : !lettura3.binario && !lettura3.muto && giorni !== null ? `<small>${esc(valoreInParole(lettura3))}</small>` : "";
   return `<div class="dm-acq-livello" data-stato="${esc(stato3)}">
     <span class="dm-acq-livello-ic" aria-hidden="true">${disegnoDiCasa(lettura3.icon, { misura: 26, ripiego: "water" })}</span>
     <div class="dm-acq-livello-testo"><strong>${esc(lettura3.name)}</strong>${sotto}</div>
@@ -35113,84 +35202,84 @@ function renderAcquario() {
   schedule9();
 }
 function installStyles13() {
-  const P = `#${VASCHE_PAGE_ID}`;
+  const P2 = `#${VASCHE_PAGE_ID}`;
   installStyle(
     "dm-acquario-section-style",
     `
     /* La risposta, come quella dei Varchi ma della misura di una scheda. */
-    ${P} .dm-acq-testa{
+    ${P2} .dm-acq-testa{
       display:grid;gap:3px;padding:12px 14px;border-radius:16px;
       border:1px solid var(--card-border,#e2e8f0);
       background:color-mix(in srgb,var(--dm-acq-tinta,#16a34a) 8%,var(--card-bg,#fff))}
-    ${P} .dm-acq-testa small{
+    ${P2} .dm-acq-testa small{
       font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P} .dm-acq-testa strong{font-size:19px;font-weight:900;line-height:1.1;color:var(--dm-acq-tinta,#15803d)}
-    ${P} .dm-acq-testa[data-stato="fuori"],
-    ${P} .dm-acq-testa[data-stato="livello"],
-    ${P} .dm-acq-testa[data-stato="cambio"]{--dm-acq-tinta:#b45309}
-    ${P} .dm-acq-testa[data-stato="mute"]{--dm-acq-tinta:#64748b}
-    ${P} .dm-acq-nomi{font-size:12.5px;font-weight:800;color:var(--text,#0f172a)}
-    ${P} .dm-acq-sotto{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-acq-testa strong{font-size:19px;font-weight:900;line-height:1.1;color:var(--dm-acq-tinta,#15803d)}
+    ${P2} .dm-acq-testa[data-stato="fuori"],
+    ${P2} .dm-acq-testa[data-stato="livello"],
+    ${P2} .dm-acq-testa[data-stato="cambio"]{--dm-acq-tinta:#b45309}
+    ${P2} .dm-acq-testa[data-stato="mute"]{--dm-acq-tinta:#64748b}
+    ${P2} .dm-acq-nomi{font-size:12.5px;font-weight:800;color:var(--text,#0f172a)}
+    ${P2} .dm-acq-sotto{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
 
     /* Le mattonelle in una scheda stretta: due per riga, un po' più basse. */
-    ${P} .dm-acq-mattonelle{grid-template-columns:repeat(auto-fill,minmax(min(132px,100%),1fr));gap:8px}
+    ${P2} .dm-acq-mattonelle{grid-template-columns:repeat(auto-fill,minmax(min(132px,100%),1fr));gap:8px}
     /* I posti si scrivono tutti: sul telefono i tasti della pagina prendono
        un'altra disposizione, e la mattonella si sfalsava. */
-    ${P} .dm-acq-mattonelle .dm-pool-tile{display:grid;min-height:56px;padding:9px 10px;gap:1px 9px;
+    ${P2} .dm-acq-mattonelle .dm-pool-tile{display:grid;min-height:56px;padding:9px 10px;gap:1px 9px;
       grid-template-columns:36px minmax(0,1fr);grid-template-rows:auto auto;align-content:center;
       text-align:left;border-radius:15px}
-    ${P} .dm-acq-mattonelle .dm-pool-tile-icon{grid-column:1;grid-row:1/3;width:36px;height:36px;border-radius:11px;font-size:17px}
+    ${P2} .dm-acq-mattonelle .dm-pool-tile-icon{grid-column:1;grid-row:1/3;width:36px;height:36px;border-radius:11px;font-size:17px}
     /* Il nome va a capo invece di finire in tre puntini: «Lampada calda» e
        «Luce del giorno» sono nomi, e mezzi non si capiscono. */
-    ${P} .dm-acq-mattonelle .dm-pool-tile-label,
-    ${P} .dm-acq-mattonelle .dm-pool-tile-state{justify-self:start;text-align:left}
-    ${P} .dm-acq-mattonelle .dm-pool-tile-label{grid-column:2;grid-row:1;align-self:end;font-size:12.5px;line-height:1.15;
+    ${P2} .dm-acq-mattonelle .dm-pool-tile-label,
+    ${P2} .dm-acq-mattonelle .dm-pool-tile-state{justify-self:start;text-align:left}
+    ${P2} .dm-acq-mattonelle .dm-pool-tile-label{grid-column:2;grid-row:1;align-self:end;font-size:12.5px;line-height:1.15;
       overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;hyphens:auto}
-    ${P} .dm-acq-mattonelle .dm-pool-tile-state{grid-column:2;grid-row:2;align-self:start;font-size:10.5px}
+    ${P2} .dm-acq-mattonelle .dm-pool-tile-state{grid-column:2;grid-row:2;align-self:start;font-size:10.5px}
     /* Chi è chiuso col lucchetto si vede, ma non si tocca. */
-    ${P} .dm-pool-tile[aria-disabled="true"]{cursor:default}
-    ${P} .dm-pool-tile[aria-disabled="true"]:hover{transform:none}
+    ${P2} .dm-pool-tile[aria-disabled="true"]{cursor:default}
+    ${P2} .dm-pool-tile[aria-disabled="true"]:hover{transform:none}
 
     /* I blocchi della scheda: le fasce delle schede degli animali. */
-    ${P} .dm-acq-blocco{display:grid;gap:10px;padding:11px 12px;border:1px solid var(--divider-color,#dbe4ee);
+    ${P2} .dm-acq-blocco{display:grid;gap:10px;padding:11px 12px;border:1px solid var(--divider-color,#dbe4ee);
       border-radius:14px;background:color-mix(in srgb,var(--secondary-background-color,#eef3f8) 45%,transparent)}
-    ${P} .dm-acq-blocco h4{display:flex;align-items:center;gap:6px;margin:0;font-size:10.5px;font-weight:900;
+    ${P2} .dm-acq-blocco h4{display:flex;align-items:center;gap:6px;margin:0;font-size:10.5px;font-weight:900;
       letter-spacing:.06em;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
-    ${P} .dm-acq-blocco h4 .dm-pool-badge{margin-left:auto;font-size:10px;padding:3px 9px}
-    ${P} .dm-acq-blocco .dm-gauge-value{font-size:17px}
+    ${P2} .dm-acq-blocco h4 .dm-pool-badge{margin-left:auto;font-size:10px;padding:3px 9px}
+    ${P2} .dm-acq-blocco .dm-gauge-value{font-size:17px}
 
     /* Il livello, come una riga delle Batterie. */
-    ${P} .dm-acq-livello{
+    ${P2} .dm-acq-livello{
       display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;
       padding:9px 11px;border-radius:14px;
       border:1px solid color-mix(in srgb,var(--dm-acq,#10b981) 36%,transparent);
       background:color-mix(in srgb,var(--dm-acq,#10b981) 7%,var(--card-bg,#fff))}
-    ${P} .dm-acq-livello[data-stato="basso"]{--dm-acq:#f59e0b}
-    ${P} .dm-acq-livello[data-stato="muta"]{--dm-acq:#94a3b8;opacity:.72}
-    ${P} .dm-acq-livello-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;
+    ${P2} .dm-acq-livello[data-stato="basso"]{--dm-acq:#f59e0b}
+    ${P2} .dm-acq-livello[data-stato="muta"]{--dm-acq:#94a3b8;opacity:.72}
+    ${P2} .dm-acq-livello-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;
       background:color-mix(in srgb,var(--dm-acq,#10b981) 18%,transparent)}
-    ${P} .dm-acq-livello-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P} .dm-acq-livello-ic svg{display:block;width:24px;height:24px}
-    ${P} .dm-acq-livello-testo{display:grid;gap:3px;min-width:0}
-    ${P} .dm-acq-livello-testo strong{font-size:13px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-acq-livello-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P2} .dm-acq-livello-ic svg{display:block;width:24px;height:24px}
+    ${P2} .dm-acq-livello-testo{display:grid;gap:3px;min-width:0}
+    ${P2} .dm-acq-livello-testo strong{font-size:13px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-acq-livello-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
-    ${P} .dm-acq-livello-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
+    ${P2} .dm-acq-livello-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-acq-livello-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-acq,#10b981) 18%,transparent);overflow:hidden}
-    ${P} .dm-acq-livello-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-acq,#10b981)}
-    ${P} .dm-acq-livello-stato{font-size:12.5px;font-weight:900;text-align:right;line-height:1.2;
+    ${P2} .dm-acq-livello-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-acq,#10b981)}
+    ${P2} .dm-acq-livello-stato{font-size:12.5px;font-weight:900;text-align:right;line-height:1.2;
       color:color-mix(in srgb,var(--dm-acq,#10b981) 78%,var(--text,#0f172a))}
 
     /* Il cambio d'acqua: un anello più piccolo, un tasto solo largo quanto la
        colonna; e quando è in ritardo l'anello si scalda come la risposta. */
-    ${P} .dm-acq-cambio .dm-pool-filtration-body{gap:12px}
-    ${P} .dm-acq-cambio .dm-ring{width:76px;height:76px}
-    ${P} .dm-acq-cambio .dm-ring-core{width:58px;height:58px}
-    ${P} .dm-acq-cambio .dm-ring-core b{font-size:18px}
-    ${P} .dm-acq-cambio .dm-ring-core i{font-size:10px}
-    ${P} .dm-acq-azioni{grid-template-columns:minmax(0,1fr)}
-    ${P} .dm-acq-cambio[data-stato="scaduto"] .dm-ring{
+    ${P2} .dm-acq-cambio .dm-pool-filtration-body{gap:12px}
+    ${P2} .dm-acq-cambio .dm-ring{width:76px;height:76px}
+    ${P2} .dm-acq-cambio .dm-ring-core{width:58px;height:58px}
+    ${P2} .dm-acq-cambio .dm-ring-core b{font-size:18px}
+    ${P2} .dm-acq-cambio .dm-ring-core i{font-size:10px}
+    ${P2} .dm-acq-azioni{grid-template-columns:minmax(0,1fr)}
+    ${P2} .dm-acq-cambio[data-stato="scaduto"] .dm-ring{
       background:conic-gradient(from -90deg,#f59e0b 0 calc(var(--pct,0) * 1%),var(--surface-3,#e2e8f0) 0)}
     `
   );
@@ -35558,8 +35647,8 @@ function pastigliaMarkup(vista2) {
 }
 function sottoDellaVasca(vista2) {
   const { voce: voce2, come } = vista2;
-  const litri = come.litri ? `${formatNumber(come.litri, 0)} L` : "";
-  return [parolaDelTipo(vista2.tipo), litri, roomLabel(voce2.stanza)].filter(Boolean).join(" · ");
+  const litri2 = come.litri ? `${formatNumber(come.litri, 0)} L` : "";
+  return [parolaDelTipo(vista2.tipo), litri2, roomLabel(voce2.stanza)].filter(Boolean).join(" · ");
 }
 function vascaMarkup(vista2) {
   const { voce: voce2 } = vista2;
@@ -35861,8 +35950,8 @@ function litriPerUnita(unita2) {
   const u = pulito29(unita2);
   return LITRI_PER_UNITA[u] ?? LITRI_PER_UNITA[u.toLowerCase()] ?? null;
 }
-function comeSiDiceIlVolume(litri) {
-  const n = numero28(litri);
+function comeSiDiceIlVolume(litri2) {
+  const n = numero28(litri2);
   if (n === null) return null;
   if (Math.abs(n) < 1e3) return { valore: Math.round(n), unita: "L", decimali: 0 };
   const metri = n / 1e3;
@@ -35916,14 +36005,14 @@ function giudizioDellaPressione(bar, { minimo, massimo } = {}) {
   return "ok";
 }
 var KWH_PER_METRO_CUBO = 10.7;
-function kwhDelGas(metriCubi, coefficiente = KWH_PER_METRO_CUBO) {
-  const m = numero28(metriCubi);
+function kwhDelGas(metriCubi2, coefficiente = KWH_PER_METRO_CUBO) {
+  const m = numero28(metriCubi2);
   const c = numero28(coefficiente);
   if (m === null) return null;
   return m * (c !== null && c > 0 ? c : KWH_PER_METRO_CUBO);
 }
-function quantoCosta(metriCubi, prezzoAlMetroCubo) {
-  const m = numero28(metriCubi);
+function quantoCosta(metriCubi2, prezzoAlMetroCubo) {
+  const m = numero28(metriCubi2);
   const p = numero28(prezzoAlMetroCubo);
   if (m === null || p === null || p <= 0) return null;
   return m * p;
@@ -36520,8 +36609,8 @@ function cifreUtili(valore3, cifre2) {
   const tondo = Math.round(valore3 * 10 ** cifre2) / 10 ** cifre2;
   return Number.isInteger(tondo) ? 0 : cifre2;
 }
-function volumeInParole(litri) {
-  const come = comeSiDiceIlVolume(litri);
+function volumeInParole(litri2) {
+  const come = comeSiDiceIlVolume(litri2);
   if (!come) return "—";
   return `${formatNumber(come.valore, cifreUtili(come.valore, come.decimali))}${SPAZIO2}${come.unita}`;
 }
@@ -36550,16 +36639,21 @@ function portataInParole(lettura3) {
   const decimo = Math.round(valore3 * 10) / 10;
   return `${formatNumber(valore3, valore3 < 10 && !Number.isInteger(decimo) ? 1 : 0)}${SPAZIO2}L/min`;
 }
+function letturaDelContatoreInParole(lettura3) {
+  if (!lettura3 || lettura3.valore === null || lettura3.valore === void 0) return "—";
+  const decimali = Math.min(3, (String(lettura3.valore).split(".")[1] || "").length);
+  return `${formatNumber(lettura3.valore, decimali)}${lettura3.unita ? `${SPAZIO2}${lettura3.unita}` : ""}`;
+}
 function giorniInParole(giorni) {
   return giorni === 1 ? `1${SPAZIO2}${t("giorno", "day")}` : `${giorni}${SPAZIO2}${t("giorni", "days")}`;
 }
-function oggiInParole(litri) {
-  if (litri === null || litri === void 0) return "—";
-  if (Math.abs(litri) < 1e3) {
-    const quanti3 = formatNumber(Math.round(litri), 0);
+function oggiInParole(litri2) {
+  if (litri2 === null || litri2 === void 0) return "—";
+  if (Math.abs(litri2) < 1e3) {
+    const quanti3 = formatNumber(Math.round(litri2), 0);
     return t(`${quanti3} litri oggi`, `${quanti3} litres today`);
   }
-  const quanti2 = formatNumber(litri / 1e3, cifreUtili(litri / 1e3, 1));
+  const quanti2 = formatNumber(litri2 / 1e3, cifreUtili(litri2 / 1e3, 1));
   return t(`${quanti2} m³ oggi`, `${quanti2} m³ today`);
 }
 function scorreDaInParole(minuti) {
@@ -36918,6 +37012,12 @@ function tesseraDeiContatori(vista2) {
   if (acqua?.oggi !== null && acqua?.oggi !== void 0) value = volumeInParole(acqua.oggi);
   else if (gas?.oggi !== null && gas?.oggi !== void 0) value = metriCubiInParole(gas.oggi);
   else if (!acqua && !gas && come.stato === "normale") value = testa2.grande;
+  if (value === "—") {
+    const contatore2 = vista2.letture.find(
+      (lettura3) => (lettura3.genere === "acqua" || lettura3.genere === "gas") && !lettura3.muto
+    );
+    if (contatore2) value = letturaDelContatoreInParole(contatore2);
+  }
   const caption = come.stato !== "normale" ? testa2.grande : [
     acqua && gas?.oggi !== null && gas?.oggi !== void 0 ? gasInParole(gas.oggi) : "",
     testa2.sotto
@@ -36969,99 +37069,99 @@ function renderContatori() {
   schedule11();
 }
 function installStyles15() {
-  const P = `#${CONTATORI_PAGE_ID}`;
+  const P2 = `#${CONTATORI_PAGE_ID}`;
   installStyle(
     "dm-contatori-section-style",
     `
-    ${P} .dm-cont-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P} .dm-cont-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-cont-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P2} .dm-cont-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-cont-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-cont-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-cont-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-cont-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande, come quella dei Varchi. */
-    ${P} .dm-cont-testa{
+    ${P2} .dm-cont-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-cont-testa small{
+    ${P2} .dm-cont-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P} .dm-cont-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P} .dm-cont-testa[data-stato="perdita"] strong{color:#dc2626}
-    ${P} .dm-cont-testa[data-stato="pressione"] strong{color:#b45309}
-    ${P} .dm-cont-testa[data-stato="bene"] strong{color:#15803d}
-    ${P} .dm-cont-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P} .dm-cont-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-cont-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P2} .dm-cont-testa[data-stato="perdita"] strong{color:#dc2626}
+    ${P2} .dm-cont-testa[data-stato="pressione"] strong{color:#b45309}
+    ${P2} .dm-cont-testa[data-stato="bene"] strong{color:#15803d}
+    ${P2} .dm-cont-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P2} .dm-cont-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
     /* Le schede, come quelle della Piscina. */
-    ${P} .dm-cont-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
-    ${P} .dm-cont-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
+    ${P2} .dm-cont-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
+    ${P2} .dm-cont-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
       border:1px solid var(--card-border,#dbe4ee);border-radius:22px;background:var(--card-bg,#fff);
       box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07))}
-    ${P} .dm-cont-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    ${P} .dm-cont-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
-    ${P} .dm-cont-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
-    ${P} .dm-cont-scheda-titolo svg{display:block;width:22px;height:22px}
-    ${P} .dm-cont-forcelle{display:grid;gap:14px}
-    ${P} .dm-cont-righe{display:grid;gap:10px}
+    ${P2} .dm-cont-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    ${P2} .dm-cont-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
+    ${P2} .dm-cont-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
+    ${P2} .dm-cont-scheda-titolo svg{display:block;width:22px;height:22px}
+    ${P2} .dm-cont-forcelle{display:grid;gap:14px}
+    ${P2} .dm-cont-righe{display:grid;gap:10px}
 
     /* Le righe, come quelle delle Batterie, con la didascalia sotto la barra. */
-    ${P} .dm-cont-riga{
+    ${P2} .dm-cont-riga{
       --dm-cont:#10b981;
       display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:12px 14px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-cont) 34%,var(--card-border,rgba(0,0,0,.08)));
       background:var(--card-bg,#fff)}
-    ${P} .dm-cont-riga[data-stato="attenzione"]{--dm-cont:#f59e0b}
-    ${P} .dm-cont-riga[data-stato="allarme"]{--dm-cont:#dc2626}
-    ${P} .dm-cont-riga[data-stato="muto"]{--dm-cont:#94a3b8;opacity:.72}
-    ${P} .dm-cont-riga-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P} .dm-cont-riga-ic svg{display:block;width:26px;height:26px}
-    ${P} .dm-cont-riga-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
+    ${P2} .dm-cont-riga[data-stato="attenzione"]{--dm-cont:#f59e0b}
+    ${P2} .dm-cont-riga[data-stato="allarme"]{--dm-cont:#dc2626}
+    ${P2} .dm-cont-riga[data-stato="muto"]{--dm-cont:#94a3b8;opacity:.72}
+    ${P2} .dm-cont-riga-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P2} .dm-cont-riga-ic svg{display:block;width:26px;height:26px}
+    ${P2} .dm-cont-riga-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
       font-size:19px;background:color-mix(in srgb,var(--dm-cont) 20%,transparent)}
-    ${P} .dm-cont-riga-testo{display:grid;gap:3px;min-width:0}
-    ${P} .dm-cont-riga-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-cont-riga-testo{display:grid;gap:3px;min-width:0}
+    ${P2} .dm-cont-riga-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     /* La didascalia va a capo invece di tagliarsi: «Il mese scorso 118 …»
        toglieva proprio il numero con cui ci si confronta. */
-    ${P} .dm-cont-riga-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
+    ${P2} .dm-cont-riga-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
       color:var(--text-dim,#64748b);overflow-wrap:anywhere}
-    ${P} .dm-cont-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
+    ${P2} .dm-cont-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-cont) 16%,transparent);overflow:hidden}
-    ${P} .dm-cont-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-cont)}
-    ${P} .dm-cont-riga-valore{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
+    ${P2} .dm-cont-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-cont)}
+    ${P2} .dm-cont-riga-valore{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
       text-align:right;color:color-mix(in srgb,var(--dm-cont) 78%,var(--text,#0f172a))}
 
     /* Il semaforo, come le carte dei Varchi. */
-    ${P} .dm-cont-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
-    ${P} .dm-cont-voce{
+    ${P2} .dm-cont-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P2} .dm-cont-voce{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-cont,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-cont,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P} .dm-cont-voce[data-stato="allarme"]{--dm-cont:#dc2626}
-    ${P} .dm-cont-voce[data-stato="attenzione"]{--dm-cont:#f59e0b}
-    ${P} .dm-cont-voce[data-stato="bene"]{--dm-cont:#16a34a}
-    ${P} .dm-cont-voce[data-stato="muto"]{--dm-cont:#94a3b8}
-    ${P} .dm-cont-voce-ic{
+    ${P2} .dm-cont-voce[data-stato="allarme"]{--dm-cont:#dc2626}
+    ${P2} .dm-cont-voce[data-stato="attenzione"]{--dm-cont:#f59e0b}
+    ${P2} .dm-cont-voce[data-stato="bene"]{--dm-cont:#16a34a}
+    ${P2} .dm-cont-voce[data-stato="muto"]{--dm-cont:#94a3b8}
+    ${P2} .dm-cont-voce-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-cont,#94a3b8) 22%,transparent)}
-    ${P} .dm-cont-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P} .dm-cont-voce-ic svg{display:block;width:30px;height:30px}
-    ${P} .dm-cont-voce-testo{display:grid;gap:2px;min-width:0}
-    ${P} .dm-cont-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-cont-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P2} .dm-cont-voce-ic svg{display:block;width:30px;height:30px}
+    ${P2} .dm-cont-voce-testo{display:grid;gap:2px;min-width:0}
+    ${P2} .dm-cont-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
       overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
-    ${P} .dm-cont-voce-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P2} .dm-cont-voce-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-cont-voce-stato{
+    ${P2} .dm-cont-voce-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       max-width:96px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-cont,#94a3b8) 78%,var(--text,#0f172a))}
 
     @media(max-width:520px){
-      ${P} .dm-cont-elenco,${P} .dm-cont-schede{grid-template-columns:minmax(0,1fr)}}
+      ${P2} .dm-cont-elenco,${P2} .dm-cont-schede{grid-template-columns:minmax(0,1fr)}}
     `
   );
 }
@@ -37613,10 +37713,10 @@ function avvolgiLeParole(meteo2) {
       if (!parti) continue;
       const gruppo = doc.createDocumentFragment();
       if (parti[1]) gruppo.append(parti[1]);
-      const guscio2 = doc.createElement("span");
-      guscio2.className = "dm-meteo-parola";
-      guscio2.textContent = parti[2];
-      gruppo.append(guscio2, parti[3] || " ");
+      const guscio3 = doc.createElement("span");
+      guscio3.className = "dm-meteo-parola";
+      guscio3.textContent = parti[2];
+      gruppo.append(guscio3, parti[3] || " ");
       pezzo.replaceWith(gruppo);
     }
   }
@@ -37693,23 +37793,23 @@ function montaFlagMeteo() {
   if (!fisarmonica) return false;
   const campi = [...fisarmonica.querySelectorAll('input[data-ref^="dm.home_meteo_"]')].map((input) => input.closest(".ed-slot")).filter(Boolean);
   if (!campi.length) return false;
-  let casella3 = fisarmonica.querySelector("[data-dm-meteo-flag]");
+  let casella4 = fisarmonica.querySelector("[data-dm-meteo-flag]");
   const scelto = flagMeteo();
   const mappati = campi.some((slot) => clean(slot.querySelector("input[data-ref]")?.value));
   const acceso6 = scelto == null ? mappati : scelto;
-  if (!casella3) {
-    casella3 = doc.createElement("label");
-    casella3.className = "ed-check dm-meteo-flag";
-    casella3.dataset.dmMeteoFlag = "";
-    casella3.innerHTML = `<input type="checkbox"${acceso6 ? " checked" : ""}> ` + t(
+  if (!casella4) {
+    casella4 = doc.createElement("label");
+    casella4.className = "ed-check dm-meteo-flag";
+    casella4.dataset.dmMeteoFlag = "";
+    casella4.innerHTML = `<input type="checkbox"${acceso6 ? " checked" : ""}> ` + t(
       "Usa entità proprie per la stazione meteo",
       "Use your own entities for the weather station"
     ) + `<small>${t(
       "Spenta, basta l'entità weather qui sopra: temperatura, umidità e vento si leggono da lei.",
       "Off, the weather entity above is enough: temperature, humidity and wind come from it."
     )}</small>`;
-    slotMeteo.closest(".ed-slot")?.after(casella3);
-    casella3.querySelector("input").addEventListener("change", (evento) => {
+    slotMeteo.closest(".ed-slot")?.after(casella4);
+    casella4.querySelector("input").addEventListener("change", (evento) => {
       try {
         root.localStorage?.setItem?.(FLAG_METEO, evento.target.checked ? "1" : "0");
         root.cdMarkDirty?.();
@@ -37719,7 +37819,7 @@ function montaFlagMeteo() {
       montaFlagMeteo();
     });
   }
-  const vivo2 = casella3.querySelector("input")?.checked ?? acceso6;
+  const vivo2 = casella4.querySelector("input")?.checked ?? acceso6;
   for (const slot of campi) slot.hidden = !vivo2;
   return true;
 }
@@ -38516,73 +38616,73 @@ function renderPiante() {
   schedule12();
 }
 function installStyles16() {
-  const P = `#${PIANTE_PAGE_ID}`;
+  const P2 = `#${PIANTE_PAGE_ID}`;
   installStyle(
     "dm-piante-section-style",
     `
-    ${P} .dm-pian-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P} .dm-pian-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-pian-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P2} .dm-pian-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-pian-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-pian-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-pian-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-pian-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande, come quella dei Varchi. */
-    ${P} .dm-pian-testa{
+    ${P2} .dm-pian-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-pian-testa small{
+    ${P2} .dm-pian-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P} .dm-pian-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P} .dm-pian-testa[data-stato="sete"] strong{color:#dc2626}
-    ${P} .dm-pian-testa[data-stato="pioggia"] strong{color:#2563eb}
-    ${P} .dm-pian-testa[data-stato="bene"] strong{color:#15803d}
-    ${P} .dm-pian-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P} .dm-pian-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-pian-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P2} .dm-pian-testa[data-stato="sete"] strong{color:#dc2626}
+    ${P2} .dm-pian-testa[data-stato="pioggia"] strong{color:#2563eb}
+    ${P2} .dm-pian-testa[data-stato="bene"] strong{color:#15803d}
+    ${P2} .dm-pian-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P2} .dm-pian-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
     /* Il semaforo, come le carte dei Varchi. */
-    ${P} .dm-pian-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
-    ${P} .dm-pian-voce{
+    ${P2} .dm-pian-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P2} .dm-pian-voce{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-pian,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-pian,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P} .dm-pian-voce[data-stato="asciutta"]{--dm-pian:#dc2626}
-    ${P} .dm-pian-voce[data-stato="bene"],${P} .dm-pian-voce[data-stato="aspetta"]{--dm-pian:#16a34a}
-    ${P} .dm-pian-voce[data-stato="muta"]{--dm-pian:#94a3b8}
+    ${P2} .dm-pian-voce[data-stato="asciutta"]{--dm-pian:#dc2626}
+    ${P2} .dm-pian-voce[data-stato="bene"],${P2} .dm-pian-voce[data-stato="aspetta"]{--dm-pian:#16a34a}
+    ${P2} .dm-pian-voce[data-stato="muta"]{--dm-pian:#94a3b8}
     /* Chi aspetta la pioggia lo dice anche da lontano: il tratteggio del varco
        escluso vuol dire «a posto, ma per una ragione». */
-    ${P} .dm-pian-voce[data-stato="aspetta"]{border-style:dashed;border-color:#f59e0b}
-    ${P} .dm-pian-voce-ic{
+    ${P2} .dm-pian-voce[data-stato="aspetta"]{border-style:dashed;border-color:#f59e0b}
+    ${P2} .dm-pian-voce-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-pian,#94a3b8) 22%,transparent)}
-    ${P} .dm-pian-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P} .dm-pian-voce-ic svg{display:block;width:30px;height:30px}
-    ${P} .dm-pian-voce-testo{display:grid;gap:2px;min-width:0}
-    ${P} .dm-pian-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-pian-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P2} .dm-pian-voce-ic svg{display:block;width:30px;height:30px}
+    ${P2} .dm-pian-voce-testo{display:grid;gap:2px;min-width:0}
+    ${P2} .dm-pian-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
       overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
-    ${P} .dm-pian-voce-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
+    ${P2} .dm-pian-voce-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
       color:var(--text-dim,#64748b);overflow-wrap:anywhere}
-    ${P} .dm-pian-voce-stato{
+    ${P2} .dm-pian-voce-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       max-width:96px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-pian,#94a3b8) 78%,var(--text,#0f172a))}
 
     /* Le schede, come quelle della Piscina. */
-    ${P} .dm-pian-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
-    ${P} .dm-pian-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
+    ${P2} .dm-pian-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
+    ${P2} .dm-pian-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
       border:1px solid var(--card-border,#dbe4ee);border-radius:22px;background:var(--card-bg,#fff);
       box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07))}
-    ${P} .dm-pian-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    ${P} .dm-pian-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
-    ${P} .dm-pian-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
-    ${P} .dm-pian-scheda-titolo svg{display:block;width:22px;height:22px}
-    ${P} .dm-pian-forcelle{display:grid;gap:14px}
+    ${P2} .dm-pian-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    ${P2} .dm-pian-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
+    ${P2} .dm-pian-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
+    ${P2} .dm-pian-scheda-titolo svg{display:block;width:22px;height:22px}
+    ${P2} .dm-pian-forcelle{display:grid;gap:14px}
 
     @media(max-width:520px){
-      ${P} .dm-pian-elenco,${P} .dm-pian-schede{grid-template-columns:minmax(0,1fr)}}
+      ${P2} .dm-pian-elenco,${P2} .dm-pian-schede{grid-template-columns:minmax(0,1fr)}}
     `
   );
 }
@@ -38984,13 +39084,13 @@ function minutiAllaFine({ verso: verso2, potenza, energiaKwh, capacitaKwh }) {
   return null;
 }
 function daDove(verso2, potenza, casa = {}) {
-  const watt3 = Math.abs(numero31(potenza) ?? 0);
-  if (!watt3) return null;
+  const watt4 = Math.abs(numero31(potenza) ?? 0);
+  if (!watt4) return null;
   if (verso2 === "carica") {
     const solare = numero31(casa?.solare);
     const rete = numero31(casa?.rete);
-    if (solare !== null && solare >= watt3 / 2) return "solare";
-    if (rete !== null && rete >= watt3 / 2) return "rete";
+    if (solare !== null && solare >= watt4 / 2) return "solare";
+    if (rete !== null && rete >= watt4 / 2) return "rete";
     return null;
   }
   if (verso2 === "scarica") {
@@ -39022,8 +39122,8 @@ function comeStaLAccumulo(pacchi = [], casa = {}) {
   const soc = conCapacita ? vivi.reduce((somma2, pacco) => somma2 + pacco.soc * pacco.capacitaKwh, 0) / capacitaKwh : vivi.reduce((somma2, pacco) => somma2 + pacco.soc, 0) / vivi.length;
   const conEnergia = vivi.every((pacco) => pacco.energiaKwh !== null);
   const energiaKwh = conEnergia ? vivi.reduce((somma2, pacco) => somma2 + pacco.energiaKwh, 0) : capacitaKwh !== null ? soc / 100 * capacitaKwh : null;
-  const potenze = vivi.map((pacco) => pacco.potenza).filter((watt3) => watt3 !== null);
-  const potenza = potenze.length ? potenze.reduce((somma2, watt3) => somma2 + watt3, 0) : null;
+  const potenze = vivi.map((pacco) => pacco.potenza).filter((watt4) => watt4 !== null);
+  const potenza = potenze.length ? potenze.reduce((somma2, watt4) => somma2 + watt4, 0) : null;
   const correnti = vivi.map((pacco) => pacco.corrente).filter((ampere) => ampere !== null);
   const verso2 = potenza !== null ? versoDelPacco(potenza, null) : correnti.length ? versoDelPacco(
     null,
@@ -39065,9 +39165,9 @@ function vistaDellAccumulo(states = allStates(), { dentro: dentro3, casa = {} } 
 }
 var SPAZIO4 = " ";
 var cifre = (valore3, quante2) => formatNumber(valore3, quante2);
-function potenzaInParole(watt3) {
-  if (watt3 === null || watt3 === void 0) return "—";
-  const assoluta = Math.abs(watt3);
+function potenzaInParole(watt4) {
+  if (watt4 === null || watt4 === void 0) return "—";
+  const assoluta = Math.abs(watt4);
   if (assoluta >= 1e3) return `${cifre(assoluta / 1e3, 2)}${SPAZIO4}kW`;
   return `${cifre(assoluta, 0)}${SPAZIO4}W`;
 }
@@ -39680,7 +39780,7 @@ function volumeMarkup(riga3) {
   const aPassi = riga3.puo.passiVolume && !riga3.puo.volume && !riga3.spento && !riga3.muto;
   const aTocchi = riga3.puo.volume && !riga3.spento;
   if (!riga3.puo.volume && !riga3.puo.muto && !aPassi) return "";
-  const percento4 = Math.round((riga3.volume ?? 0) * 100);
+  const percento5 = Math.round((riga3.volume ?? 0) * 100);
   return `<div class="dm-mp-volume">
     ${aPassi || aTocchi ? tastoMarkup2(riga3, "abbassa", t("Abbassa il volume", "Volume down"), GLIFI.abbassa) : ""}
     ${riga3.puo.muto ? tastoMarkup2(
@@ -39692,9 +39792,9 @@ function volumeMarkup(riga3) {
   ) : ""}
     ${aPassi ? tastoMarkup2(riga3, "alza", t("Alza il volume", "Volume up"), GLIFI.alza) : ""}
     ${riga3.puo.volume ? `<input type="range" class="dm-mp-slider" min="0" max="100" step="1"
-             value="${percento4}" data-dm-mp-volume="${esc(riga3.entity)}"
+             value="${percento5}" data-dm-mp-volume="${esc(riga3.entity)}"
              aria-label="${esc(t("Volume", "Volume"))}">
-           <span class="dm-mp-percento" data-dm-mp-percento>${percento4}%</span>` : ""}
+           <span class="dm-mp-percento" data-dm-mp-percento>${percento5}%</span>` : ""}
     ${aTocchi ? tastoMarkup2(riga3, "alza", t("Alza il volume", "Volume up"), GLIFI.alza) : ""}
   </div>`;
 }
@@ -40281,12 +40381,12 @@ function toccaIlVolume(entity2, riga3, verso2) {
 function onInput(event) {
   const cursore = event.target?.closest?.("[data-dm-mp-volume]");
   if (!cursore) return;
-  const percento4 = Math.min(100, Math.max(0, Number(cursore.value) || 0));
+  const percento5 = Math.min(100, Math.max(0, Number(cursore.value) || 0));
   const scritta = cursore.parentElement?.querySelector("[data-dm-mp-percento]");
-  if (scritta) scritta.textContent = `${percento4}%`;
+  if (scritta) scritta.textContent = `${percento5}%`;
   chiamaHa("media_player", "volume_set", {
     entity_id: clean(cursore.dataset.dmMpVolume),
-    volume_level: percento4 / 100
+    volume_level: percento5 / 100
   });
 }
 function onChange3(event) {
@@ -43547,50 +43647,50 @@ function onClick5(event) {
   }
 }
 function installStyles18() {
-  const P = `#${SERVER_PAGE_ID}`;
+  const P2 = `#${SERVER_PAGE_ID}`;
   installStyle(
     "dm-macchine-section-style",
     `
-    ${P} .dm-macchine-wrap{display:grid;gap:14px;padding:14px 0 24px}
-    ${P} .dm-macchine-fascia{display:grid;gap:10px}
-    ${P} .dm-macchine-testa{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
-    ${P} .dm-macchine-testa strong{font-size:14px;font-weight:900;letter-spacing:.04em;
+    ${P2} .dm-macchine-wrap{display:grid;gap:14px;padding:14px 0 24px}
+    ${P2} .dm-macchine-fascia{display:grid;gap:10px}
+    ${P2} .dm-macchine-testa{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+    ${P2} .dm-macchine-testa strong{font-size:14px;font-weight:900;letter-spacing:.04em;
       text-transform:uppercase;color:var(--text,#0f172a)}
-    ${P} .dm-macchine-testa span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-    ${P} .dm-macchine-fascia[data-giu="true"] .dm-macchine-testa span{color:#dc2626}
-    ${P} .dm-macchine-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}
+    ${P2} .dm-macchine-testa span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-macchine-fascia[data-giu="true"] .dm-macchine-testa span{color:#dc2626}
+    ${P2} .dm-macchine-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}
 
-    ${P} .dm-macchina{
+    ${P2} .dm-macchina{
       display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:10px;
       padding:12px 14px;border-radius:16px;
       border:1px solid color-mix(in srgb,var(--dm-macchina,#94a3b8) 40%,transparent);
       background:color-mix(in srgb,var(--dm-macchina,#94a3b8) 9%,var(--card-bg,#fff))}
-    ${P} .dm-macchina[data-stato="su"]{--dm-macchina:#16a34a}
-    ${P} .dm-macchina[data-stato="giu"]{--dm-macchina:#dc2626}
-    ${P} .dm-macchina[data-stato="muto"]{--dm-macchina:#94a3b8}
-    ${P} .dm-macchina-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;
+    ${P2} .dm-macchina[data-stato="su"]{--dm-macchina:#16a34a}
+    ${P2} .dm-macchina[data-stato="giu"]{--dm-macchina:#dc2626}
+    ${P2} .dm-macchina[data-stato="muto"]{--dm-macchina:#94a3b8}
+    ${P2} .dm-macchina-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;
       font-size:18px;background:color-mix(in srgb,var(--dm-macchina,#94a3b8) 20%,transparent)}
     /* Il disegno sta dentro la scatola e non la sfonda: un'emoji si ferma da
        se' alla sua riga di testo, un SVG no. */
-    ${P} .dm-macchina-ic svg{width:22px;height:22px;display:block}
-    ${P} .dm-macchina-testo{display:grid;gap:2px;min-width:0}
-    ${P} .dm-macchina-testo strong{font-size:13.5px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-macchina-ic svg{width:22px;height:22px;display:block}
+    ${P2} .dm-macchina-testo{display:grid;gap:2px;min-width:0}
+    ${P2} .dm-macchina-testo strong{font-size:13.5px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-macchina-stato{font-size:10.5px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
+    ${P2} .dm-macchina-stato{font-size:10.5px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-macchina,#94a3b8) 78%,var(--text,#0f172a))}
     /* I tasti vanno a capo e a destra, uno o due che siano: in riga con lo
        stato spingerebbero fuori il nome, e su un telefono il nome e' la sola
        cosa che serve leggere per intero. */
-    ${P} .dm-macchina-tasti,${P} .dm-macchina>.dm-macchina-tasto{
+    ${P2} .dm-macchina-tasti,${P2} .dm-macchina>.dm-macchina-tasto{
       grid-column:1/-1;justify-self:end}
-    ${P} .dm-macchina-tasti{display:inline-flex;gap:6px}
-    ${P} .dm-macchina-tasto{
+    ${P2} .dm-macchina-tasti{display:inline-flex;gap:6px}
+    ${P2} .dm-macchina-tasto{
       padding:6px 14px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);color:var(--text,#0f172a);
       font:inherit;font-size:11.5px;font-weight:900;cursor:pointer}
-    ${P} .dm-macchina-tasto:hover{border-color:var(--primary-color,#0ea5e9)}
-    ${P} .dm-macchina-tasto-ferma:hover{border-color:#dc2626;color:#dc2626}
-    @media(max-width:520px){${P} .dm-macchine-elenco{grid-template-columns:1fr}}
+    ${P2} .dm-macchina-tasto:hover{border-color:var(--primary-color,#0ea5e9)}
+    ${P2} .dm-macchina-tasto-ferma:hover{border-color:#dc2626;color:#dc2626}
+    @media(max-width:520px){${P2} .dm-macchine-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -45054,11 +45154,22 @@ if (doc?.readyState === "loading") {
 
 // src/sections/finestre-dei-widget.js
 var FINESTRE = /* @__PURE__ */ new Map();
+function registraFinestra(chiave2, { disegna: disegna7, stile: stile5 = "" } = {}) {
+  const quale = String(chiave2 ?? "").trim();
+  if (!quale || typeof disegna7 !== "function") return false;
+  FINESTRE.set(quale, { disegna: disegna7, stile: String(stile5 || "") });
+  return true;
+}
 function finestraDi(chiave2) {
   return FINESTRE.get(String(chiave2 ?? "").trim()) || null;
 }
 function stiliDelleFinestre() {
   return [...FINESTRE.values()].map((finestra7) => finestra7.stile).filter(Boolean).join("\n");
+}
+function tastoServizio({ domain, service, data = {} }, { classe: classe2 = "", testo: testo2 = "", conferma = "", attributi: attributi2 = "" } = {}) {
+  const comando = JSON.stringify({ domain, service, data });
+  const sicuro = (valore3) => String(valore3 ?? "").replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+  return `<button type="button" class="${sicuro(classe2)}" data-dm-w-servizio="${sicuro(comando)}"${conferma ? ` data-dm-w-conferma="${sicuro(conferma)}"` : ""} ${attributi2}>${testo2}</button>`;
 }
 
 // src/sections/finestre/proposti.js
@@ -45071,7 +45182,1035 @@ var FINESTRE_COMANDI = Object.freeze([]);
 var FINESTRE_SICUREZZA = Object.freeze([]);
 
 // src/sections/finestre/impianti.js
-var FINESTRE_IMPIANTI = Object.freeze([]);
+var P = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
+var num3 = (valore3) => {
+  if (valore3 === null || valore3 === void 0 || valore3 === "") return null;
+  const letto = Number(String(valore3).replace(",", "."));
+  return Number.isFinite(letto) ? letto : null;
+};
+var tra = (valore3, minimo, massimo) => Math.max(minimo, Math.min(massimo, valore3));
+var gradi5 = (valore3, cifre2 = 1) => `${formatNumber(valore3, cifre2)}°`;
+var gradiUtili = (valore3) => gradi5(valore3, Number.isInteger(Math.round(valore3 * 10) / 10) ? 0 : 1);
+var percento4 = (valore3) => `${formatNumber(Math.round(valore3), 0)}%`;
+function watt3(valore3) {
+  const assoluto = Math.abs(valore3);
+  if (assoluto >= 1e3) return `${formatNumber(assoluto / 1e3, 2)} kW`;
+  return `${formatNumber(assoluto, 0)} W`;
+}
+function daQuanto3(istante4) {
+  if (!Number.isFinite(istante4)) return "";
+  return quantoTempoInParole((Date.now() - istante4) / 6e4);
+}
+function vera(riferimento) {
+  const chiave2 = clean(riferimento);
+  if (!chiave2) return "";
+  try {
+    return clean(root.resolveEntity?.(chiave2)) || chiave2;
+  } catch (_error) {
+    return chiave2;
+  }
+}
+function prezzoDelKwh(states) {
+  let sorgente = importRateEntity(section("energy", {}));
+  if (sorgente) sorgente = vera(sorgente);
+  else {
+    sorgente = root.cdCfg?.("cd_costo_kwh");
+    if (sorgente === void 0 || sorgente === null || sorgente === "") {
+      try {
+        sorgente = root.localStorage?.getItem?.("cd_costo_kwh");
+      } catch (_error) {
+        sorgente = null;
+      }
+    }
+  }
+  return resolveRate(sorgente, states || {}, null);
+}
+var euro = (valore3) => `${formatNumber(valore3, 2)} €`;
+function guscio2(chiave2, corpo2, stile5 = "") {
+  return `<div class="dm-f-imp dm-f-${chiave2}"${stile5 ? ` style="${esc(stile5)}"` : ""}>${corpo2}</div>`;
+}
+var titoletto = (testo2) => `<h4 class="dm-w-titoletto dm-f-imp-tit">${esc(testo2)}</h4>`;
+function leva(entity2, acceso6, nome) {
+  return `<button type="button" class="dm-f-imp-leva" data-dm-w-light="${esc(entity2)}" data-on="${acceso6 === true}" aria-label="${esc(nome)}"><i></i></button>`;
+}
+function schedaComando({ icona, titolo, sotto = "", acceso: acceso6 = false, comando = "", chiave: chiave2 = "" }) {
+  return `<div class="dm-f-imp-comando"${chiave2 ? ` data-dm-f-comando="${esc(chiave2)}"` : ""} data-on="${acceso6 === true}">
+    <span class="dm-f-imp-ic" aria-hidden="true">${icona}</span>
+    <span class="dm-f-imp-tx"><b>${esc(titolo)}</b>${sotto ? `<small>${esc(sotto)}</small>` : ""}</span>
+    ${comando}
+  </div>`;
+}
+function casella({ etichetta: etichetta3, valore: valore3, sotto = "", tono = "", extra = "", chiave: chiave2 = "" }) {
+  return `<div class="dm-f-imp-cas"${chiave2 ? ` data-dm-f-casella="${esc(chiave2)}"` : ""}>
+    <small>${esc(etichetta3)}</small>
+    <span class="dm-f-imp-num">${esc(valore3)}</span>
+    ${extra}
+    ${sotto ? `<em${tono ? ` data-tono="${tono}"` : ""}>${esc(sotto)}</em>` : ""}
+  </div>`;
+}
+var griglia = (caselle2, quante2 = "due") => caselle2.filter(Boolean).length ? `<div class="dm-f-imp-griglia" data-dm-f-griglia="${quante2}">${caselle2.filter(Boolean).join("")}</div>` : "";
+function anello(valore3, etichetta3, colore = "") {
+  const quota = tra(Math.round(valore3), 0, 100);
+  return `<div class="dm-f-imp-anello" style="--p:${quota}${colore ? `;--c:${colore}` : ""}" role="img" aria-label="${esc(`${etichetta3} ${quota}%`)}">
+    <div><span class="dm-f-imp-num">${esc(percento4(quota))}</span><small>${esc(etichetta3)}</small></div>
+  </div>`;
+}
+var nomeSePiuDiUna = (nome, piuDiUna) => piuDiUna && clean(nome) ? `<h3 class="dm-f-imp-nome">${esc(nome)}</h3>` : "";
+function comandoDellObiettivo(entity2, valore3) {
+  const dominio4 = clean(entity2).split(".")[0];
+  if (dominio4 === "water_heater" || dominio4 === "climate")
+    return {
+      domain: dominio4,
+      service: "set_temperature",
+      data: { entity_id: entity2, temperature: valore3 }
+    };
+  if (dominio4 === "number" || dominio4 === "input_number")
+    return { domain: dominio4, service: "set_value", data: { entity_id: entity2, value: valore3 } };
+  return null;
+}
+function passiDellObiettivo(lettura3, states) {
+  const entity2 = clean(lettura3.obiettivoEntita);
+  if (!entity2 || lettura3.obiettivo == null || !siComanda(entity2)) return "";
+  if (!comandoDellObiettivo(entity2, 0)) return "";
+  const attributi2 = states?.[entity2]?.attributes || {};
+  const passo = num3(attributi2.target_temp_step) ?? num3(attributi2.step) ?? 1;
+  const minimo = num3(attributi2.min_temp) ?? num3(attributi2.min) ?? -Infinity;
+  const massimo = num3(attributi2.max_temp) ?? num3(attributi2.max) ?? Infinity;
+  const tasto2 = (verso2, segno, nome) => {
+    const nuovo = Math.round((lettura3.obiettivo + verso2 * passo) / passo * 1e3) / 1e3;
+    const arrotondato = Math.round(Math.round(nuovo / passo) * passo * 100) / 100;
+    const fuori = arrotondato < minimo || arrotondato > massimo;
+    return tastoServizio(comandoDellObiettivo(entity2, arrotondato), {
+      classe: "dm-f-imp-passo",
+      testo: segno,
+      attributi: `aria-label="${esc(nome)}" data-dm-f-obiettivo="${verso2 > 0 ? "su" : "giu"}"${fuori ? " disabled" : ""}`
+    });
+  };
+  return `<span class="dm-f-imp-passi">${tasto2(-1, "−", t("Abbassa l'obiettivo", "Lower the target"))}<b class="dm-f-imp-num">${esc(gradiUtili(lettura3.obiettivo))}</b>${tasto2(1, "+", t("Alza l'obiettivo", "Raise the target"))}</span>`;
+}
+function unoScaldabagno(lettura3, piuDiUno, states, prezzo) {
+  const temperatura = num3(lettura3.temperatura);
+  const obiettivo2 = num3(lettura3.obiettivo);
+  const potenza = num3(lettura3.potenza);
+  const acceso6 = lettura3.acceso === true;
+  const stato3 = lettura3.stato;
+  const quota = num3(lettura3.quota);
+  const serbatoio = quota == null ? "" : `<div class="dm-f-scaldabagno-serbatoio" aria-hidden="true"><i style="height:${Math.round(quota * 86)}%"></i><b></b><em>${esc(gradiUtili(obiettivo2))}</em></div>`;
+  const righe2 = [];
+  if (stato3 === "scalda" && obiettivo2 != null && temperatura != null)
+    righe2.push(
+      `<b>${esc(gradi5(Math.max(0, obiettivo2 - temperatura)))}</b> ${esc(t("sotto l'obiettivo di", "below the target of"))} ${esc(gradiUtili(obiettivo2))}`
+    );
+  else if (stato3 === "pronto" && obiettivo2 != null)
+    righe2.push(`${esc(t("Obiettivo", "Target"))} ${esc(gradiUtili(obiettivo2))}`);
+  if (Number.isFinite(lettura3.da) && (acceso6 || lettura3.acceso === false))
+    righe2.push(
+      esc(
+        `${acceso6 ? t("scalda da", "heating for") : t("spento da", "off for")} ${daQuanto3(lettura3.da)}`
+      )
+    );
+  const chip = stato3 === "scalda" ? `${t("Scalda", "Heating")}${potenza != null && potenza > 0 ? ` · ${watt3(potenza)}` : ""}` : stato3 === "pronto" ? t("Acqua pronta", "Water ready") : stato3 === "spento" ? t("Spento", "Off") : "";
+  const eroe = `<section class="dm-f-imp-eroe dm-f-scaldabagno-eroe" data-stato="${esc(stato3)}">
+    ${serbatoio}
+    <div class="dm-f-imp-dx">
+      <small class="dm-f-imp-etic">${esc(t("L'acqua adesso", "Water now"))}</small>
+      <span class="dm-f-imp-num dm-f-imp-grande">${esc(
+    temperatura != null ? gradi5(temperatura) : acceso6 ? t("Acceso", "On") : t("Spento", "Off")
+  )}</span>
+      ${righe2.length ? `<div class="dm-f-imp-fianco">${righe2.join("<br>")}</div>` : ""}
+      ${chip ? `<span class="dm-f-imp-chip" data-on="${stato3 === "scalda"}"><i></i>${esc(chip)}</span>` : ""}
+    </div>
+  </section>`;
+  const comandi = [];
+  const interruttore3 = clean(lettura3.comandabile);
+  if (interruttore3)
+    comandi.push(
+      schedaComando({
+        chiave: "resistenza",
+        icona: "🔌",
+        titolo: acceso6 ? t("Resistenza accesa", "Heating element on") : t("Resistenza spenta", "Heating element off"),
+        sotto: acceso6 && obiettivo2 != null ? `${t("si spegne da sola a", "switches itself off at")} ${gradiUtili(obiettivo2)}` : acceso6 ? t("tocca per spegnere", "tap to turn off") : t("tocca per accendere", "tap to turn on"),
+        acceso: acceso6,
+        comando: siComanda(vera(interruttore3)) ? leva(vera(interruttore3), acceso6, t("Resistenza", "Heating element")) : ""
+      })
+    );
+  if (obiettivo2 != null) {
+    const passi = passiDellObiettivo(lettura3, states);
+    comandi.push(
+      schedaComando({
+        chiave: "obiettivo",
+        icona: "🎯",
+        titolo: t("Obiettivo", "Target"),
+        sotto: t("temperatura dell'acqua", "water temperature"),
+        comando: passi || `<b class="dm-f-imp-num dm-f-imp-valore">${esc(gradiUtili(obiettivo2))}</b>`
+      })
+    );
+  }
+  const energia = num3(lettura3.energia);
+  const oggi = griglia([
+    energia == null ? "" : casella({
+      chiave: "consumato",
+      etichetta: t("Consumato", "Energy used"),
+      valore: `${formatNumber(energia, 1)} kWh`,
+      sotto: prezzo == null ? "" : `${t("circa", "roughly")} ${euro(energia * prezzo)}`
+    }),
+    potenza == null || stato3 === "scalda" ? "" : casella({ chiave: "potenza", etichetta: t("Adesso", "Now"), valore: watt3(potenza) })
+  ]);
+  return `${nomeSePiuDiUna(lettura3.name, piuDiUno)}${eroe}
+    ${comandi.length ? `${titoletto(t("Comandi", "Controls"))}<div class="dm-f-imp-pila">${comandi.join("")}</div>` : ""}
+    ${oggi ? `${titoletto(t("Oggi", "Today"))}${oggi}` : ""}`;
+}
+function disegnaScaldabagno(widget, states) {
+  const unita2 = Array.isArray(widget?.unita) ? widget.unita : [];
+  const prezzo = prezzoDelKwh(states);
+  return guscio2(
+    "scaldabagno",
+    unita2.map((lettura3) => unoScaldabagno(lettura3, unita2.length > 1, states, prezzo)).join("")
+  );
+}
+function fraseDelSalto(salto) {
+  if (salto < 5)
+    return t(
+      "Il salto è piccolo: l'acqua gira ma cede poco calore.",
+      "The drop is small: the water is flowing but giving off little heat."
+    );
+  if (salto > 25)
+    return t(
+      "Il salto è grande: l'impianto sta chiedendo molto calore.",
+      "The drop is large: the system is asking for a lot of heat."
+    );
+  return t(
+    "L'impianto sta prendendo calore: il salto è quello giusto.",
+    "The system is taking the heat: the drop is right."
+  );
+}
+function unaCaldaia(lettura3, piuDiUna) {
+  const accesa3 = lettura3.inFunzione === true;
+  const modulazione = num3(lettura3.modulazione);
+  const titolo = lettura3.inFunzione === true ? lettura3.uscita === "boiler" ? t("Accesa, scalda l'acqua", "On, heating the water") : t("Accesa, scalda la casa", "On, heating the house") : lettura3.inFunzione === false ? lettura3.interruttoreAcceso === true ? t("Accesa, a riposo", "On, resting") : t("Spenta", "Off") : lettura3.interruttoreAcceso === true ? t("Accesa", "On") : lettura3.interruttoreAcceso === false ? t("Spenta", "Off") : "";
+  const mandata = num3(lettura3.mandata);
+  const ritorno = num3(lettura3.ritorno);
+  const salto = num3(lettura3.salto);
+  const nodo2 = (etichetta3, valore3) => `<div class="dm-f-caldaia-nodo"><small class="dm-f-imp-etic">${esc(etichetta3)}</small><span class="dm-f-imp-num">${esc(valore3 == null ? "—" : gradi5(valore3))}</span></div>`;
+  const giro = mandata == null && ritorno == null ? "" : `<div class="dm-f-caldaia-giro">
+          ${nodo2(t("Mandata", "Flow"), mandata)}
+          <div class="dm-f-caldaia-freccia">${salto == null ? '<i aria-hidden="true">⇄</i>' : `<i aria-hidden="true">⇄</i>${esc(t("cede", "gives off"))}<br>${esc(gradi5(salto))}`}</div>
+          ${nodo2(t("Ritorno", "Return"), ritorno)}
+        </div>`;
+  const frase2 = accesa3 && salto != null ? `<p class="dm-f-imp-frase">${esc(fraseDelSalto(salto))}</p>` : "";
+  const eroe = titolo || giro ? `<section class="dm-f-imp-eroe dm-f-caldaia-eroe">
+          ${titolo ? `<div class="dm-f-caldaia-testa"><span class="dm-f-caldaia-fiamma" data-on="${accesa3}" aria-hidden="true">🔥</span><div>
+              <small class="dm-f-imp-etic">${esc(t("Adesso", "Now"))}</small>
+              <b class="dm-f-imp-titolo">${esc(titolo)}</b>
+              ${accesa3 && modulazione != null ? `<div class="dm-f-imp-fianco">${esc(`${t("fiamma al", "flame at")} ${percento4(modulazione)}`)}</div>` : ""}
+            </div></div>` : ""}
+          ${giro}
+          ${frase2}
+        </section>` : "";
+  const interruttore3 = vera(lettura3.interruttore);
+  const accesoComando = lettura3.interruttoreAcceso === true;
+  const comandi = interruttore3 ? schedaComando({
+    chiave: "riscaldamento",
+    icona: "♨️",
+    titolo: accesoComando ? t("Riscaldamento acceso", "Heating on") : t("Riscaldamento spento", "Heating off"),
+    sotto: siComanda(interruttore3) ? accesoComando ? t("tocca per spegnere", "tap to turn off") : t("tocca per accendere", "tap to turn on") : "",
+    acceso: accesoComando,
+    comando: siComanda(interruttore3) ? leva(interruttore3, accesoComando, t("Caldaia", "Boiler")) : ""
+  }) : "";
+  const pressione2 = num3(lettura3.pressione);
+  const giudizio = pressione2 == null ? "" : pressione2 < 1 ? "bassa" : pressione2 > 2.5 ? "alta" : "buona";
+  const manometro = pressione2 == null ? "" : `<div class="dm-f-caldaia-manometro" aria-hidden="true"><b style="left:${Math.round(tra(pressione2, 0, 3) / 3 * 1e3) / 10}%"></b></div>`;
+  const acquaCalda = num3(lettura3.acquaCalda);
+  const occhio = griglia([
+    pressione2 == null ? "" : casella({
+      chiave: "pressione",
+      etichetta: t("Pressione", "Pressure"),
+      valore: `${formatNumber(pressione2, 1)} bar`,
+      extra: manometro,
+      sotto: giudizio === "bassa" ? t("bassa: rabbocca", "low: top it up") : giudizio === "alta" ? t("alta", "too high") : t("nella norma", "in range"),
+      tono: giudizio === "bassa" ? "male" : giudizio === "alta" ? "occhio" : "bene"
+    }),
+    acquaCalda == null ? "" : casella({
+      chiave: "acqua-calda",
+      etichetta: t("Acqua calda", "Hot water"),
+      valore: gradi5(acquaCalda),
+      sotto: acquaCalda >= 40 ? t("pronta per la doccia", "ready for a shower") : ""
+    })
+  ]);
+  return `${nomeSePiuDiUna(lettura3.name, piuDiUna)}${eroe}
+    ${comandi ? `${titoletto(t("Comandi", "Controls"))}${comandi}` : ""}
+    ${occhio ? `${titoletto(t("Da tenere d'occhio", "Keep an eye on"))}${occhio}` : ""}`;
+}
+function disegnaCaldaia(widget) {
+  const letture2 = Array.isArray(widget?.letture) ? widget.letture : widget?.lettura ? [widget.lettura] : [];
+  return guscio2(
+    "caldaia",
+    letture2.map((lettura3) => unaCaldaia(lettura3, letture2.length > 1)).join("")
+  );
+}
+function unUps({ nome, lettura: lettura3 = {}, da = null }, piuDiUno) {
+  const aBatteria = lettura3.rete === false;
+  const batteria = num3(lettura3.batteria);
+  const autonomia = num3(lettura3.autonomia);
+  const chip = lettura3.rete === true ? t("Corrente presente", "Power on") : aBatteria ? t("Va a batteria", "On battery") : t("Non risponde", "Not answering");
+  const tono = lettura3.rete === true ? "bene" : aBatteria ? "male" : "muto";
+  const eroe = `<section class="dm-f-imp-eroe dm-f-ups-eroe" data-tono="${tono}">
+    ${batteria == null ? "" : anello(batteria, t("Batteria", "Battery"), aBatteria ? "#dc2626" : "#16a34a")}
+    <div class="dm-f-imp-dx">
+      <span class="dm-f-imp-chip" data-tono="${tono}"><i></i>${esc(chip)}</span>
+      ${autonomia == null ? "" : `<div class="dm-f-ups-regge">${esc(
+    aBatteria ? t("Regge ancora", "It will last another") : t("Se va via la luce, regge", "If the power goes, it lasts")
+  )}</div><span class="dm-f-imp-num dm-f-ups-autonomia">${esc(`${formatNumber(autonomia, 0)} min`)}</span>`}
+      ${Number.isFinite(da) && lettura3.rete != null ? `<div class="dm-f-imp-fianco">${esc(
+    `${aBatteria ? t("a batteria da", "on battery for") : t("in rete da", "on mains for")} ${daQuanto3(da)}`
+  )}</div>` : ""}
+    </div>
+  </section>`;
+  const carico = num3(lettura3.carico);
+  const potenza = num3(lettura3.potenza);
+  const margine = carico == null ? "" : `${percento4(carico)} ${carico < 60 ? t("di quello che può reggere: c'è margine", "of what it can take: plenty of headroom") : carico < 85 ? t("di quello che può reggere: sta salendo", "of what it can take: getting up there") : t("di quello che può reggere: è al limite", "of what it can take: at the limit")}`;
+  const quanto = carico == null && potenza == null ? "" : `${titoletto(t("Quanto gli chiedi", "How much you ask of it"))}
+        <div class="dm-f-imp-cas dm-f-ups-carico" data-dm-f-casella="carico">
+          <div class="dm-f-imp-riga"><small>${esc(t("Carico", "Load"))}</small><span class="dm-f-imp-num">${esc(
+    potenza != null ? watt3(potenza) : percento4(carico)
+  )}</span></div>
+          ${carico == null ? "" : `<div class="dm-f-imp-barra" data-alto="${carico >= 85}"><i style="width:${tra(carico, 0, 100)}%"></i></div>`}
+          ${margine ? `<em>${esc(margine)}</em>` : ""}
+        </div>`;
+  const tensione = num3(lettura3.tensione);
+  const temperatura = num3(lettura3.temperatura);
+  const scatola = griglia([
+    tensione == null ? "" : casella({
+      chiave: "tensione",
+      etichetta: t("Tensione di rete", "Mains voltage"),
+      valore: `${formatNumber(tensione, 0)} V`,
+      sotto: aBatteria ? "" : tensione >= 207 && tensione <= 253 ? t("regolare", "normal") : t("fuori norma", "out of range"),
+      tono: tensione >= 207 && tensione <= 253 ? "bene" : "occhio"
+    }),
+    temperatura == null ? "" : casella({
+      chiave: "temperatura",
+      etichetta: t("Temperatura", "Temperature"),
+      valore: gradi5(temperatura),
+      sotto: temperatura < 40 ? t("nella norma", "in range") : t("calda", "hot"),
+      tono: temperatura < 40 ? "bene" : "occhio"
+    })
+  ]);
+  return `${nomeSePiuDiUna(nome, piuDiUno)}${eroe}${quanto}
+    ${scatola ? `${titoletto(t("La scatola", "The unit"))}${scatola}` : ""}`;
+}
+function disegnaUps(widget) {
+  const gruppi2 = Array.isArray(widget?.gruppi) ? widget.gruppi : widget?.lettura ? [{ nome: "", lettura: widget.lettura, da: widget.da }] : [];
+  return guscio2("ups", gruppi2.map((gruppo) => unUps(gruppo, gruppi2.length > 1)).join(""));
+}
+function tempoCorto(minuti) {
+  if (minuti == null || !Number.isFinite(minuti)) return "";
+  if (minuti < 60) return `${Math.max(1, Math.round(minuti))} min`;
+  if (minuti >= 48 * 60) return `${Math.round(minuti / (24 * 60))} ${t("giorni", "days")}`;
+  const arrotondati = Math.round(minuti / 5) * 5;
+  const ore = Math.floor(arrotondati / 60);
+  const resto = arrotondati % 60;
+  return resto ? `${ore} h ${String(resto).padStart(2, "0")}` : `${ore} h`;
+}
+function unPacco(pacco) {
+  const soc = num3(pacco.soc);
+  const pillole2 = [];
+  if (pacco.muto)
+    pillole2.push(`<span data-tono="muto">${esc(t("Non risponde", "Not answering"))}</span>`);
+  else {
+    const potenza = num3(pacco.potenza);
+    if (potenza != null && pacco.verso !== "riposo")
+      pillole2.push(
+        `<span>⚡ ${esc(
+          `${watt3(potenza)} ${pacco.verso === "carica" ? t("in carica", "charging") : t("in scarica", "discharging")}`
+        )}</span>`
+      );
+    const temperatura = num3(pacco.temperatura) ?? num3(pacco.mos);
+    if (temperatura != null) pillole2.push(`<span>🌡️ ${esc(gradiUtili(temperatura))}</span>`);
+    if (num3(pacco.soh) != null)
+      pillole2.push(`<span>💚 ${esc(`${t("salute", "health")} ${percento4(pacco.soh)}`)}</span>`);
+    if (num3(pacco.delta) != null)
+      pillole2.push(
+        `<span${pacco.sbilanciato ? ' data-tono="male"' : ""}>${esc(
+          `${t("celle", "cells")} Δ ${formatNumber(pacco.delta, 0)} mV`
+        )}</span>`
+      );
+    if (num3(pacco.cicli) != null)
+      pillole2.push(
+        `<span>${esc(`${formatNumber(pacco.cicli, 0)} ${t("cicli", "cycles")}`)}</span>`
+      );
+  }
+  return `<article class="dm-f-accumulo-pacco" data-dm-f-pacco="${esc(pacco.entity)}" data-stato="${pacco.muto ? "muto" : pacco.sbilanciato ? "attenzione" : "bene"}">
+    <div class="dm-f-accumulo-su"><span aria-hidden="true">🔋</span><b>${esc(pacco.name)}</b><span class="dm-f-imp-num">${esc(
+    soc == null ? "—" : percento4(soc)
+  )}</span></div>
+    ${soc == null ? "" : `<div class="dm-f-imp-barra dm-f-accumulo-barra"><i style="width:${tra(soc, 0, 100)}%"></i></div>`}
+    ${pillole2.length ? `<div class="dm-f-imp-pillole">${pillole2.join("")}</div>` : ""}
+  </article>`;
+}
+function avvisoDelPacco(pacco) {
+  const dove = pacco.minima && pacco.massima ? `${t("Cella più bassa", "Lowest cell")} ${pacco.minima.numero}, ${t("più alta", "highest")} ${pacco.massima.numero}: Δ ${formatNumber(pacco.delta, 0)} mV. ` : `Δ ${formatNumber(pacco.delta, 0)} mV. `;
+  return `<div class="dm-f-imp-avviso" data-dm-f-avviso><span aria-hidden="true">⚠️</span><div>
+    <b>${esc(`${pacco.name}: ${t("celle sbilanciate", "cells out of balance")}`)}</b>
+    ${esc(dove)} ${esc(
+    t(
+      "Il BMS dovrebbe pareggiarle a fine carica: se resta così controlla il bilanciatore.",
+      "The BMS should even them out at the end of the charge: if it stays like this, check the balancer."
+    )
+  )}
+  </div></div>`;
+}
+function disegnaAccumulo(widget) {
+  const vista2 = widget?.vista;
+  if (!vista2) return guscio2("accumulo", "");
+  const { come = {}, pacchi = [] } = vista2;
+  const soc = num3(come.soc);
+  const muti = come.stato === "muti";
+  const verso2 = come.verso;
+  const potenza = num3(come.potenza);
+  const daDove2 = come.daDove === "solare" ? `☀️ ${t("dal fotovoltaico", "from solar")}` : come.daDove === "rete" ? `🔌 ${t("dalla rete", "from the grid")}` : come.daDove === "casa" ? `🏠 ${t("verso la casa", "to the house")}` : "";
+  const fine = tempoCorto(num3(come.minuti));
+  const energia = num3(come.energiaKwh) != null && num3(come.capacitaKwh) != null ? `${formatNumber(come.energiaKwh, 1)} / ${formatNumber(come.capacitaKwh, 1)} kWh` : "";
+  const righe2 = [
+    daDove2 ? esc(daDove2) : "",
+    fine && (verso2 === "carica" || verso2 === "scarica") ? `${esc(verso2 === "carica" ? t("piena fra", "full in") : t("vuota fra", "empty in"))} <b>${esc(fine)}</b>` : "",
+    energia ? esc(energia) : ""
+  ].filter(Boolean);
+  const eroe = `<section class="dm-f-imp-eroe dm-f-accumulo-eroe">
+    ${soc == null ? "" : anello(soc, t("Carica", "Charge"), "#16a34a")}
+    <div class="dm-f-imp-dx">
+      <small class="dm-f-imp-etic">${esc(
+    muti ? t("Nessun pacco risponde", "No pack answering") : verso2 === "carica" ? t("Si sta caricando", "Charging") : verso2 === "scarica" ? t("Si sta scaricando", "Discharging") : t("A riposo", "Idle")
+  )}</small>
+      ${!muti && potenza != null && (verso2 === "carica" || verso2 === "scarica") ? `<span class="dm-f-imp-num dm-f-accumulo-potenza">${esc(watt3(potenza))}</span>` : ""}
+      ${righe2.length ? `<div class="dm-f-imp-fianco">${righe2.join("<br>")}</div>` : ""}
+    </div>
+  </section>`;
+  const avvisi = (come.sbilanciati || []).map(avvisoDelPacco).join("");
+  const tinta = clean(widget.tintaDellaSezione);
+  return guscio2(
+    "accumulo",
+    `${eroe}${avvisi}${titoletto(t("I pacchi", "The packs"))}<div class="dm-f-imp-pila">${pacchi.map(unPacco).join("")}</div>`,
+    /* I colori dell'Energia anche quando la tessera e' rossa: il rosso sta
+     * solo nel riquadro dell'avviso. */
+    widget.alert && tinta ? `--dm-widget-accent:${tinta}` : ""
+  );
+}
+function litri(valore3) {
+  if (Math.abs(valore3) < 1e3) return `${formatNumber(Math.round(valore3), 0)} L`;
+  const metri = valore3 / 1e3;
+  return `${formatNumber(metri, Number.isInteger(Math.round(metri * 10) / 10) ? 0 : 1)} m³`;
+}
+function metriCubi(valore3) {
+  const tondo = Math.round(valore3 * 10) / 10;
+  return `${formatNumber(valore3, Number.isInteger(tondo) || Math.abs(valore3) >= 100 ? 0 : 1)} m³`;
+}
+function letturaDelContatore2(lettura3) {
+  const decimali = Math.min(3, (String(lettura3.valore).split(".")[1] || "").length);
+  return `${formatNumber(lettura3.valore, decimali)}${lettura3.unita ? ` ${lettura3.unita}` : ""}`;
+}
+function mediaDelMeseScorso(totale) {
+  if (totale == null) return null;
+  const oggi = /* @__PURE__ */ new Date();
+  const giorni = new Date(oggi.getFullYear(), oggi.getMonth(), 0).getDate();
+  return totale / giorni;
+}
+function rigaDellaPerdita(come) {
+  if (come.perdita) {
+    const perdita = come.perdita;
+    const testo3 = perdita.tipo === "contatore" ? t("Mai ferma in 24 ore: forse una perdita", "Never still in 24 hours: maybe a leak") : `${t("Possibile perdita: scorre da", "Possible leak: flowing for")} ${quantoTempoInParole((perdita.ore || 0) * 60)}`;
+    return `<div class="dm-f-contatori-perdita" data-tono="male" data-dm-f-perdita="si"><span aria-hidden="true">🚨</span>${esc(testo3)}</div>`;
+  }
+  const portate = (come.portate || []).filter((voce2) => voce2.scorre !== void 0);
+  if (!portate.length) return "";
+  const ferma3 = portate.find((voce2) => voce2.scorre === null || voce2.scorre === false);
+  const da = ferma3 && Number.isFinite(ferma3.lettura?.da) && !ferma3.lettura?.valore ? ferma3.lettura.da : null;
+  const testo2 = da ? `${t("Nessuna perdita", "No leak")} · ${t("acqua ferma da", "water still for")} ${daQuanto3(da)}` : t("Nessuna perdita", "No leak");
+  return `<div class="dm-f-contatori-perdita" data-tono="bene" data-dm-f-perdita="no"><span aria-hidden="true">✅</span>${esc(testo2)}</div>`;
+}
+function disegnaContatori(widget) {
+  const vista2 = widget?.vista;
+  if (!vista2) return guscio2("contatori", "");
+  const { come = {}, letture: letture2 = [] } = vista2;
+  const { acqua, gas } = come;
+  const contatore2 = (genere) => letture2.find((lettura3) => lettura3.genere === genere && !lettura3.muto) || null;
+  let eroe = "";
+  const principale = acqua ? "acqua" : gas ? "gas" : "";
+  if (principale) {
+    const dati = principale === "acqua" ? acqua : gas;
+    const forma2 = principale === "acqua" ? litri : metriCubi;
+    const oggi = num3(dati.oggi);
+    const lettura3 = contatore2(principale);
+    const confronti = [];
+    if (num3(dati.ieri) != null) confronti.push(`${t("ieri", "yesterday")} ${forma2(dati.ieri)}`);
+    const media2 = mediaDelMeseScorso(num3(dati.meseScorso));
+    if (media2 != null) confronti.push(`${t("media", "average")} ${forma2(media2)}`);
+    if (oggi != null || lettura3)
+      eroe = `<section class="dm-f-imp-eroe dm-f-contatori-eroe">
+        <small class="dm-f-imp-etic">${esc(
+        oggi != null ? principale === "acqua" ? t("Acqua oggi", "Water today") : t("Gas oggi", "Gas today") : principale === "acqua" ? t("Contatore acqua", "Water meter") : t("Contatore gas", "Gas meter")
+      )}</small>
+        <div class="dm-f-imp-riga-eroe"><span class="dm-f-imp-num dm-f-imp-grande" data-dm-f-oggi>${esc(
+        oggi != null ? forma2(oggi) : letturaDelContatore2(lettura3)
+      )}</span>${confronti.length && oggi != null ? `<span class="dm-f-imp-fianco">${confronti.map(esc).join("<br>")}</span>` : ""}</div>
+        ${oggi == null ? `<div class="dm-f-imp-fianco">${esc(t("lo storico dei consumi non è ancora arrivato", "the usage history has not arrived yet"))}</div>` : ""}
+      </section>`;
+  }
+  const caselle2 = [];
+  if (principale === "acqua" && gas && num3(gas.oggi) != null)
+    caselle2.push(
+      casella({
+        chiave: "gas",
+        etichetta: t("Gas oggi", "Gas today"),
+        valore: metriCubi(gas.oggi),
+        sotto: num3(gas.costoOggi) != null ? `≈ ${euro(gas.costoOggi)}` : num3(gas.kwhOggi) != null ? `${formatNumber(gas.kwhOggi, 1)} kWh` : ""
+      })
+    );
+  for (const voce2 of come.pressioni || []) {
+    if (num3(voce2.bar) == null) continue;
+    caselle2.push(
+      casella({
+        chiave: "pressione",
+        etichetta: t("Pressione", "Pressure"),
+        valore: `${formatNumber(voce2.bar, 1)} bar`,
+        sotto: voce2.verdetto === "low" ? t("bassa", "too low") : voce2.verdetto === "high" ? t("alta", "too high") : t("regolare", "normal"),
+        tono: voce2.verdetto === "low" || voce2.verdetto === "high" ? "occhio" : "bene"
+      })
+    );
+  }
+  for (const voce2 of come.portate || []) {
+    const lettura3 = voce2.lettura || {};
+    if (lettura3.muto) continue;
+    const valore3 = num3(lettura3.litriAlMinuto);
+    caselle2.push(
+      casella({
+        chiave: "portata",
+        etichetta: t("Portata", "Flow"),
+        valore: valore3 != null ? `${formatNumber(valore3, valore3 < 10 && !Number.isInteger(Math.round(valore3 * 10) / 10) ? 1 : 0)} L/min` : `${formatNumber(lettura3.valore, 1)}${lettura3.unita ? ` ${lettura3.unita}` : ""}`,
+        sotto: (valore3 ?? num3(lettura3.valore)) === 0 ? t("rubinetti chiusi", "taps closed") : t("scorre", "flowing")
+      })
+    );
+  }
+  for (const voce2 of come.sali || []) {
+    if (voce2.lettura?.muto) continue;
+    const giorni = num3(voce2.giorni);
+    const livello = num3(voce2.livello);
+    if (giorni == null && livello == null) continue;
+    caselle2.push(
+      casella({
+        chiave: "sale",
+        etichetta: t("Sale", "Salt"),
+        valore: giorni != null ? `${formatNumber(giorni, 0)} ${t("giorni", "days")}` : percento4(livello),
+        sotto: voce2.basso ? t("da ricomprare", "time to buy more") : "",
+        tono: voce2.basso ? "occhio" : ""
+      })
+    );
+  }
+  const contatori = letture2.filter((lettura3) => (lettura3.genere === "acqua" || lettura3.genere === "gas") && !lettura3.muto).map(
+    (lettura3) => `<span>${esc(lettura3.name || (lettura3.genere === "gas" ? t("Gas", "Gas") : t("Acqua", "Water")))} <b>${esc(
+      letturaDelContatore2(lettura3)
+    )}</b></span>`
+  );
+  return guscio2(
+    "contatori",
+    `${eroe}${rigaDellaPerdita(come)}
+    ${caselle2.length ? `${titoletto(t("Adesso", "Now"))}${griglia(caselle2, "tre")}` : ""}
+    ${contatori.length ? `<div class="dm-f-contatori-letture">${contatori.join("")}</div>` : ""}`
+  );
+}
+var COMANDI_DELLA_VASCA = Object.freeze({
+  pumpEnt: { icona: "🔄", nome: () => t("Filtrazione", "Filtration"), femminile: true },
+  heatEnt: { icona: "♨️", nome: () => t("Riscaldamento", "Heating"), femminile: false },
+  lightEnt: { icona: "💡", nome: () => t("Luce", "Light"), femminile: true }
+});
+function barraChimica({ chiave: chiave2, nome, valore: valore3, minimo, massimo, scalaDa, scalaA, cifre: cifre2 }) {
+  const da = Math.min(scalaDa, valore3);
+  const a = Math.max(scalaA, valore3);
+  const posto = (numero46) => Math.round((numero46 - da) / (a - da) * 1e3) / 10;
+  return `<div class="dm-f-piscina-chimica" data-dm-f-chimica="${chiave2}" data-bene="${valore3 >= minimo && valore3 <= massimo}">
+    <b>${esc(nome)}<em>${esc(`${formatNumber(minimo, cifre2)}–${formatNumber(massimo, cifre2)}`)}</em></b>
+    <span class="dm-f-piscina-fascia"><u style="left:${posto(minimo)}%;right:${100 - posto(massimo)}%"></u><s style="left:${posto(valore3)}%"></s></span>
+    <span class="dm-f-imp-num">${esc(formatNumber(valore3, 1))}</span>
+  </div>`;
+}
+function unaVasca(vasca, piuDiUna) {
+  const phMin = num3(vasca.phMin) ?? 7.2;
+  const phMax = num3(vasca.phMax) ?? 7.6;
+  const clMin = num3(vasca.clMin) ?? 1;
+  const clMax = num3(vasca.clMax) ?? 3;
+  const ph = num3(vasca.ph);
+  const cloro = num3(vasca.cloro);
+  const acqua = num3(vasca.acqua);
+  const phBene = ph == null ? null : ph >= phMin && ph <= phMax;
+  const cloroBene = cloro == null ? null : cloro >= clMin && cloro <= clMax;
+  let giudizio = "";
+  if (phBene === false || cloroBene === false) {
+    const cosa = [
+      phBene === false ? t("pH da correggere", "pH needs correcting") : "",
+      cloroBene === false ? t("cloro da correggere", "chlorine needs correcting") : ""
+    ].filter(Boolean);
+    giudizio = `<div class="dm-f-piscina-giudizio" data-tono="occhio">⚠ ${cosa.map(esc).join("<br>")}</div>`;
+  } else if (phBene && cloroBene)
+    giudizio = `<div class="dm-f-piscina-giudizio" data-tono="bene">✓ ${esc(t("acqua in ordine", "water in good shape"))}<br><span>${esc(t("pH e cloro giusti", "pH and chlorine right"))}</span></div>`;
+  const chimica = [
+    ph == null ? "" : barraChimica({
+      chiave: "ph",
+      nome: "pH",
+      valore: ph,
+      minimo: phMin,
+      massimo: phMax,
+      scalaDa: 6.6,
+      scalaA: 8.2,
+      cifre: 1
+    }),
+    cloro == null ? "" : barraChimica({
+      chiave: "cloro",
+      nome: t("Cloro", "Chlorine"),
+      valore: cloro,
+      minimo: clMin,
+      massimo: clMax,
+      scalaDa: 0,
+      scalaA: 5,
+      cifre: 0
+    })
+  ].filter(Boolean);
+  const eroe = acqua == null && !chimica.length ? "" : `<section class="dm-f-imp-eroe dm-f-piscina-eroe">
+        ${acqua == null ? giudizio : `<div class="dm-f-piscina-acqua"><div><small class="dm-f-imp-etic">${esc(t("L'acqua", "The water"))}</small><span class="dm-f-imp-num dm-f-imp-grande">${esc(gradi5(acqua))}</span></div>${giudizio}</div>`}
+        ${chimica.length ? `<div class="dm-f-piscina-chimiche">${chimica.join("")}</div>` : ""}
+      </section>`;
+  const tasti = (vasca.comandi || []).map((comando) => {
+    const voce2 = COMANDI_DELLA_VASCA[comando.chiave];
+    if (!voce2) return "";
+    const acceso6 = comando.on === true;
+    const parola = voce2.femminile ? acceso6 ? t("Accesa", "On") : t("Spenta", "Off") : acceso6 ? t("Acceso", "On") : t("Spento", "Off");
+    const dentro3 = `<span class="dm-f-imp-tasto-ic" aria-hidden="true">${voce2.icona}</span><b>${esc(voce2.nome())}</b><span>${esc(parola)}</span>`;
+    return comando.comando ? `<button type="button" class="dm-f-imp-tasto" data-dm-w-light="${esc(comando.entity)}" data-on="${acceso6}" aria-label="${esc(voce2.nome())}">${dentro3}</button>` : `<div class="dm-f-imp-tasto" data-on="${acceso6}">${dentro3}</div>`;
+  });
+  return `${nomeSePiuDiUna(vasca.nome, piuDiUna)}${eroe}
+    ${tasti.filter(Boolean).length ? `${titoletto(t("Comandi", "Controls"))}<div class="dm-f-imp-tasti">${tasti.join("")}</div>` : ""}`;
+}
+function disegnaPiscina(widget) {
+  const vasche = Array.isArray(widget?.vasche) ? widget.vasche : [];
+  return guscio2("piscina", vasche.map((vasca) => unaVasca(vasca, vasche.length > 1)).join(""));
+}
+function comandoDelFermo(zone) {
+  const entita3 = zone.map((zona) => zona.entity);
+  const domini2 = new Set(entita3.map((entity2) => entity2.split(".")[0]));
+  if (domini2.size === 1) {
+    const [dominio4] = domini2;
+    if (dominio4 === "valve")
+      return { domain: "valve", service: "close_valve", data: { entity_id: entita3 } };
+    return { domain: dominio4, service: "turn_off", data: { entity_id: entita3 } };
+  }
+  return { domain: "homeassistant", service: "turn_off", data: { entity_id: entita3 } };
+}
+function disegnaIrrigazione(widget) {
+  const zone = Array.isArray(widget?.zone) ? widget.zone : [];
+  const bagnano = zone.filter((zona) => zona.on === true);
+  let eroe = "";
+  if (bagnano.length) {
+    const dalla = bagnano.map((zona) => zona.da).filter(Number.isFinite).sort((a, b) => a - b)[0];
+    const ferma3 = bagnano.every((zona) => zona.comando) ? tastoServizio(comandoDelFermo(bagnano), {
+      classe: "dm-f-irrigazione-ferma",
+      testo: `<span aria-hidden="true">■</span> ${esc(t("Ferma l'irrigazione", "Stop watering"))}`,
+      attributi: 'data-dm-f-ferma="irrigazione"'
+    }) : "";
+    eroe = `<section class="dm-f-imp-eroe dm-f-irrigazione-eroe" data-on="true">
+      <div class="dm-f-irrigazione-ora"><span class="dm-f-irrigazione-goccia" aria-hidden="true">💦</span><div>
+        <small class="dm-f-imp-etic">${esc(t("Sta bagnando", "Watering"))}</small>
+        <b class="dm-f-imp-titolo">${esc(bagnano.map((zona) => zona.name).join(", "))}</b>
+        ${Number.isFinite(dalla) ? `<div class="dm-f-imp-fianco">${esc(`${t("da", "running for")} ${daQuanto3(dalla)}`)}</div>` : ""}
+      </div></div>
+      ${ferma3}
+    </section>`;
+  } else if (zone.length)
+    eroe = `<section class="dm-f-imp-eroe dm-f-irrigazione-eroe" data-on="false">
+      <div class="dm-f-irrigazione-ora"><span class="dm-f-irrigazione-goccia" aria-hidden="true">🌱</span><div>
+        <small class="dm-f-imp-etic">${esc(t("Adesso", "Now"))}</small>
+        <b class="dm-f-imp-titolo">${esc(t("Nessuna zona sta bagnando", "No zone is watering"))}</b>
+      </div></div>
+    </section>`;
+  const ordinate2 = [...bagnano, ...zone.filter((zona) => zona.on !== true)];
+  const schede = ordinate2.map((zona) => {
+    const dentro3 = `<span class="dm-f-imp-tasto-ic" aria-hidden="true">🌱</span><b>${esc(zona.name)}</b><span>${esc(
+      zona.on ? t("Sta bagnando", "Watering") : t("Ferma", "Idle")
+    )}</span>`;
+    return zona.comando ? `<button type="button" class="dm-f-imp-tasto dm-f-irrigazione-zona" data-dm-w-light="${esc(zona.entity)}" data-on="${zona.on === true}" aria-label="${esc(zona.name)}">${dentro3}</button>` : `<div class="dm-f-imp-tasto dm-f-irrigazione-zona" data-on="${zona.on === true}">${dentro3}</div>`;
+  });
+  const titoloZone = zone.some((zona) => zona.comando) ? t("Le zone · tocca per avviare", "Zones · tap to start") : t("Le zone", "Zones");
+  const umidita = num3(widget?.umidita);
+  const secco = num3(widget?.soilMin) ?? 30;
+  const bagnato = num3(widget?.soilMax) ?? 70;
+  const terreno = umidita == null ? "" : `${titoletto(t("Il terreno", "The soil"))}
+        <div class="dm-f-imp-cas dm-f-irrigazione-terreno" data-dm-f-casella="terreno">
+          <div class="dm-f-imp-riga"><small>${esc(t("Umidità", "Moisture"))}</small><span class="dm-f-imp-num">${esc(percento4(umidita))}</span></div>
+          <div class="dm-f-irrigazione-scala" style="--secco:${tra(secco, 0, 100)}%;--bagnato:${tra(bagnato, 0, 100)}%"><i style="left:${tra(umidita, 0, 100)}%"></i></div>
+          <div class="dm-f-irrigazione-parole"><span>${esc(t("secco", "dry"))}</span><span>${esc(t("giusto", "about right"))}</span><span>${esc(t("bagnato", "wet"))}</span></div>
+        </div>`;
+  return guscio2(
+    "irrigazione",
+    `${eroe}${schede.length ? `${titoletto(titoloZone)}<div class="dm-f-imp-tasti" data-dm-f-zone>${schede.join("")}</div>` : ""}${terreno}`
+  );
+}
+var PAROLE_DELLA_VELOCITA = Object.freeze([
+  [/^(low|min|minimum|ridott|bass|1$|level_?1|eco|quiet|silent)/i, "🌙", () => t("Ridotta", "Low")],
+  [/^(medium|mid|normal|normale|media|2$|level_?2)/i, "🌀", () => t("Normale", "Normal")],
+  [/^(high|max|maximum|alta|3$|level_?3)/i, "💨", () => t("Alta", "High")],
+  [/^(boost|turbo|party|intensiv)/i, "🚀", () => t("Massima", "Boost")],
+  [/^(auto|automatic|smart)/i, "🅰️", () => t("Automatica", "Automatic")],
+  [/^(away|assente|vacation|holiday|fuori)/i, "🧳", () => t("Fuori casa", "Away")],
+  [/^(sleep|night|notte)/i, "😴", () => t("Notte", "Night")],
+  [/^(off|spento|stop)/i, "⏻", () => t("Spenta", "Off")]
+]);
+function parolaDellaVelocita(modo) {
+  const voce2 = PAROLE_DELLA_VELOCITA.find(([forma2]) => forma2.test(clean(modo)));
+  if (voce2) return { icona: voce2[1], nome: voce2[2]() };
+  const testo2 = clean(modo).replace(/_/g, " ");
+  return { icona: "🌀", nome: testo2.charAt(0).toUpperCase() + testo2.slice(1) };
+}
+function selettoreDellaVelocita(clima, states) {
+  const entity2 = vera(clima);
+  if (!entity2 || !siComanda(entity2)) return "";
+  const stato3 = states?.[entity2];
+  if (!stato3) return "";
+  const attributi2 = stato3.attributes || {};
+  const dominio4 = entity2.split(".")[0];
+  let voci3 = [];
+  if (dominio4 === "climate" && Array.isArray(attributi2.fan_modes))
+    voci3 = attributi2.fan_modes.map((modo) => ({
+      modo,
+      acceso: clean(attributi2.fan_mode) === clean(modo),
+      comando: {
+        domain: "climate",
+        service: "set_fan_mode",
+        data: { entity_id: entity2, fan_mode: modo }
+      }
+    }));
+  else if (dominio4 === "fan" && Array.isArray(attributi2.preset_modes) && attributi2.preset_modes.length)
+    voci3 = attributi2.preset_modes.map((modo) => ({
+      modo,
+      acceso: clean(attributi2.preset_mode) === clean(modo),
+      comando: {
+        domain: "fan",
+        service: "set_preset_mode",
+        data: { entity_id: entity2, preset_mode: modo }
+      }
+    }));
+  else if (dominio4 === "fan" && attributi2.percentage !== void 0) {
+    const adesso = num3(attributi2.percentage);
+    voci3 = [
+      ["low", 33],
+      ["medium", 66],
+      ["high", 100]
+    ].map(([modo, quota]) => ({
+      modo,
+      acceso: adesso != null && Math.abs(adesso - quota) < 17,
+      comando: {
+        domain: "fan",
+        service: "set_percentage",
+        data: { entity_id: entity2, percentage: quota }
+      }
+    }));
+  } else if ((dominio4 === "select" || dominio4 === "input_select") && Array.isArray(attributi2.options))
+    voci3 = attributi2.options.map((modo) => ({
+      modo,
+      acceso: clean(stato3.state) === clean(modo),
+      comando: {
+        domain: dominio4,
+        service: "select_option",
+        data: { entity_id: entity2, option: modo }
+      }
+    }));
+  voci3 = voci3.slice(0, 5);
+  if (voci3.length < 2) return "";
+  return `${titoletto(t("Velocità", "Speed"))}<div class="dm-f-vmc-velocita" style="--quante:${voci3.length}">${voci3.map((voce2) => {
+    const parola = parolaDellaVelocita(voce2.modo);
+    return tastoServizio(voce2.comando, {
+      classe: "dm-f-vmc-modo",
+      testo: `<em aria-hidden="true">${parola.icona}</em>${esc(parola.nome)}`,
+      attributi: `data-on="${voce2.acceso}" data-dm-f-velocita="${esc(voce2.modo)}" aria-pressed="${voce2.acceso}"`
+    });
+  }).join("")}</div>`;
+}
+function unaVmc(lettura3, piuDiUna, states) {
+  const temperatura = (chiave2) => {
+    const voce2 = lettura3.temperature?.[chiave2];
+    return voce2 && !voce2.muto ? num3(voce2.valore) : null;
+  };
+  const esterna = temperatura("esterna");
+  const immissione = temperatura("immissione");
+  const ripresa = temperatura("ripresa");
+  const espulsione = temperatura("espulsione");
+  const recupero = num3(lettura3.recupero);
+  let testa2 = "";
+  if (lettura3.bypassAperto)
+    testa2 = `<small class="dm-f-imp-etic">${esc(t("Bypass aperto", "Bypass open"))}</small>
+      <div class="dm-f-imp-fianco">${esc(
+      t(
+        "L'aria nuova entra senza passare dallo scambiatore.",
+        "Fresh air comes in without going through the heat exchanger."
+      )
+    )}</div>`;
+  else if (recupero != null)
+    testa2 = `<small class="dm-f-imp-etic">${esc(t("Calore recuperato", "Heat recovered"))}</small>
+      <div class="dm-f-imp-riga-eroe"><span class="dm-f-imp-num dm-f-imp-grande">${esc(percento4(recupero))}</span><span class="dm-f-imp-fianco">${esc(
+      t(
+        "del calore dell'aria che esce torna in casa con l'aria nuova",
+        "of the heat in the outgoing air comes back in with the fresh air"
+      )
+    )}</span></div>`;
+  else if (immissione != null)
+    testa2 = `<small class="dm-f-imp-etic">${esc(t("Aria in casa", "Air into the house"))}</small>
+      <span class="dm-f-imp-num dm-f-imp-grande">${esc(gradi5(immissione))}</span>`;
+  const cella = (chiave2, etichetta3, valore3, casa = false) => `<div class="dm-f-vmc-t"${casa ? ' data-casa="true"' : ""} data-dm-f-temperatura="${chiave2}"><small class="dm-f-imp-etic">${esc(etichetta3)}</small><span class="dm-f-imp-num">${esc(
+    valore3 == null ? "—" : gradi5(valore3)
+  )}</span></div>`;
+  const quante2 = [esterna, immissione, ripresa, espulsione].filter(
+    (valore3) => valore3 != null
+  ).length;
+  const flussi = quante2 >= 2 ? `<div class="dm-f-vmc-flussi">
+          ${cella("esterna", t("Fuori", "Outdoors"), esterna)}<div class="dm-f-vmc-f" aria-hidden="true">→</div>${cella("immissione", t("Entra", "Air in"), immissione, true)}
+          ${cella("espulsione", t("Esce", "Air out"), espulsione)}<div class="dm-f-vmc-f" aria-hidden="true">←</div>${cella("ripresa", t("Casa", "Indoors"), ripresa, true)}
+        </div>` : "";
+  const eroe = testa2 || flussi ? `<section class="dm-f-imp-eroe dm-f-vmc-eroe">${testa2}${flussi}</section>` : "";
+  const pillole2 = [];
+  const filtri = lettura3.interruttori?.filtri;
+  if (filtri && !filtri.muto)
+    pillole2.push(
+      filtri.acceso ? `<span data-tono="male">🧽 ${esc(t("Filtri da cambiare", "Filters need changing"))}</span>` : `<span data-tono="bene">🧽 ${esc(t("Filtri a posto", "Filters fine"))}</span>`
+    );
+  const bypass = lettura3.interruttori?.bypass;
+  if (bypass && !bypass.muto)
+    pillole2.push(
+      `<span>🔀 ${esc(bypass.acceso ? t("Bypass aperto", "Bypass open") : t("Bypass chiuso", "Bypass closed"))}</span>`
+    );
+  const estate = lettura3.interruttori?.estate;
+  if (estate && !estate.muto)
+    pillole2.push(
+      estate.acceso ? `<span>☀️ ${esc(t("Estate", "Summer"))}</span>` : `<span>❄️ ${esc(t("Inverno", "Winter"))}</span>`
+    );
+  const nomiDeiNumeri = {
+    ventola_immissione: t("Immissione", "Supply"),
+    ventola_espulsione: t("Espulsione", "Exhaust"),
+    livello_immissione: t("Immissione", "Supply"),
+    livello_ripresa: t("Ripresa", "Return")
+  };
+  for (const voce2 of Object.values(lettura3.numeri || {})) {
+    if (!voce2 || voce2.muto || voce2.valore == null) continue;
+    pillole2.push(
+      `<span>${voce2.glifo} ${esc(
+        `${nomiDeiNumeri[voce2.chiave] || ""} ${formatNumber(voce2.valore, Number.isInteger(voce2.valore) ? 0 : 1)}${voce2.unita ? ` ${voce2.unita}` : ""}`.trim()
+      )}</span>`
+    );
+  }
+  return `${nomeSePiuDiUna(lettura3.nome, piuDiUna)}${eroe}${selettoreDellaVelocita(lettura3.clima, states)}
+    ${pillole2.length ? `${titoletto(t("Come sta", "How it is doing"))}<div class="dm-f-imp-pillole dm-f-vmc-pillole">${pillole2.join("")}</div>` : ""}`;
+}
+function disegnaVmc(widget, states) {
+  const letture2 = Array.isArray(widget?.letture) ? widget.letture : [];
+  return guscio2(
+    "vmc",
+    letture2.map((lettura3) => unaVmc(lettura3, letture2.length > 1, states)).join("")
+  );
+}
+var STILE6 = `
+${P} .dm-f-imp{display:grid;gap:9px;min-width:0;--imp-a:var(--dm-widget-accent,#0ea5e9);
+  --imp-tinta:color-mix(in srgb,var(--imp-a) 9%,var(--card-bg,#fff));
+  --imp-bordo:color-mix(in srgb,var(--imp-a) 30%,transparent)}
+${P} .dm-f-imp .dm-f-imp-tit{margin:12px 2px 0}
+${P} .dm-f-imp-nome{margin:14px 2px 0;font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:18px;
+  letter-spacing:.02em;text-transform:none;color:var(--imp-a)}
+${P} .dm-f-imp-nome:first-child{margin-top:0}
+${P} .dm-f-imp-num{font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-variant-numeric:tabular-nums;
+  color:var(--text,#0f172a);line-height:1.05}
+${P} .dm-f-imp-eroe{display:flex;flex-wrap:wrap;gap:14px 16px;align-items:center;min-width:0;border-radius:22px;padding:16px;
+  background:linear-gradient(155deg,color-mix(in srgb,var(--imp-a) 12%,var(--card-bg,#fff)),color-mix(in srgb,var(--imp-a) 4%,var(--card-bg,#fff)));
+  border:1px solid var(--imp-bordo)}
+${P} .dm-f-imp-eroe>*{min-width:0}
+${P} .dm-f-imp-dx{flex:1 1 150px;min-width:0}
+${P} .dm-f-imp-etic{display:block;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--imp-a)}
+${P} .dm-f-imp-grande{display:block;font-size:46px;margin-top:2px}
+${P} .dm-f-imp-titolo{display:block;font-size:19px;font-weight:850;line-height:1.2;color:var(--text,#0f172a);margin-top:2px}
+${P} .dm-f-imp-fianco{font-size:13px;font-weight:700;line-height:1.4;color:var(--text-dim,#64748b);margin-top:5px}
+${P} .dm-f-imp-fianco b{color:var(--text,#0f172a)}
+${P} .dm-f-imp-riga-eroe{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;width:100%}
+${P} .dm-f-imp-riga-eroe .dm-f-imp-fianco{margin:0 0 6px;flex:1 1 140px}
+${P} .dm-f-imp-frase{margin:0;width:100%;font-size:13.5px;font-weight:700;line-height:1.4;color:var(--text,#334155)}
+${P} .dm-f-imp-chip{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding:6px 11px;border-radius:999px;
+  font-size:12px;font-weight:850;background:var(--card-bg,#fff);color:var(--imp-a);border:1px solid var(--imp-bordo)}
+${P} .dm-f-imp-chip i{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.5}
+${P} .dm-f-imp-chip[data-on="true"] i,${P} .dm-f-imp-chip[data-tono] i{opacity:1;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 22%,transparent)}
+${P} .dm-f-imp-chip[data-tono="bene"]{color:#15803d;background:color-mix(in srgb,#16a34a 12%,var(--card-bg,#fff));border-color:color-mix(in srgb,#16a34a 30%,transparent)}
+${P} .dm-f-imp-chip[data-tono="male"]{color:#b91c1c;background:color-mix(in srgb,#dc2626 12%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 30%,transparent)}
+${P} .dm-f-imp-chip[data-tono="muto"]{color:var(--text-dim,#64748b)}
+${P} .dm-f-imp-pila{display:grid;gap:9px}
+${P} .dm-f-imp-comando{display:flex;align-items:center;gap:12px;min-width:0;padding:13px 14px;border-radius:20px;
+  background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 12px 24px -22px rgba(15,23,42,.6)}
+${P} .dm-f-imp-comando[data-on="true"]{background:var(--imp-tinta);border-color:var(--imp-bordo)}
+${P} .dm-f-imp-ic{flex:0 0 44px;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:21px;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 10%,var(--card-bg,#fff));box-shadow:inset 0 0 0 1px var(--card-border,#e2e8f0)}
+${P} .dm-f-imp-tx{flex:1;min-width:0}
+${P} .dm-f-imp-tx b{display:block;font-size:14.5px;font-weight:850;color:var(--text,#0f172a);line-height:1.25}
+${P} .dm-f-imp-tx small{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b);margin-top:2px;line-height:1.3}
+${P} .dm-f-imp-leva{flex:0 0 52px;width:52px;height:30px;position:relative;border:0;border-radius:999px;cursor:pointer;padding:0;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 34%,transparent);transition:background .25s ease}
+${P} .dm-f-imp-leva i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;
+  box-shadow:0 2px 6px rgba(15,23,42,.25);transition:transform .25s cubic-bezier(.16,1,.3,1)}
+${P} .dm-f-imp-leva[data-on="true"]{background:var(--imp-a)}
+${P} .dm-f-imp-leva[data-on="true"] i{transform:translateX(22px)}
+${P} .dm-f-imp-passi{display:flex;align-items:center;gap:6px;flex:none}
+${P} .dm-f-imp-passi .dm-f-imp-num,${P} .dm-f-imp-valore{font-size:23px;min-width:44px;text-align:center}
+${P} .dm-f-imp-passo{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;padding:0;cursor:pointer;
+  font:inherit;font-size:20px;font-weight:900;color:var(--imp-a);background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
+${P} .dm-f-imp-passo:disabled{opacity:.35;cursor:default}
+${P} .dm-f-imp-griglia{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:9px}
+${P} .dm-f-imp-griglia[data-dm-f-griglia="tre"]{grid-template-columns:repeat(auto-fit,minmax(94px,1fr))}
+${P} .dm-f-imp-cas{display:block;min-width:0;border-radius:18px;padding:12px 13px;background:var(--card-bg,#fff);
+  border:1px solid var(--card-border,#e2e8f0);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
+${P} .dm-f-imp-cas small{display:block;font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P} .dm-f-imp-cas>.dm-f-imp-num{display:block;font-size:21px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${P} .dm-f-imp-cas em{display:block;font-style:normal;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:3px;line-height:1.3}
+${P} .dm-f-imp-cas em[data-tono="bene"]{color:#15803d}
+${P} .dm-f-imp-cas em[data-tono="occhio"]{color:#b45309}
+${P} .dm-f-imp-cas em[data-tono="male"]{color:#b91c1c}
+${P} .dm-f-imp-riga{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+${P} .dm-f-imp-riga .dm-f-imp-num{font-size:21px}
+${P} .dm-f-imp-barra{height:10px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent);overflow:hidden;margin:8px 0 4px}
+${P} .dm-f-imp-barra i{display:block;height:100%;border-radius:999px;background:var(--imp-a)}
+${P} .dm-f-imp-barra[data-alto="true"] i{background:#dc2626}
+${P} .dm-f-imp-anello{--p:50;flex:0 0 auto;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:conic-gradient(var(--c,var(--imp-a)) calc(var(--p)*1%),color-mix(in srgb,var(--text-dim,#94a3b8) 25%,transparent) 0)}
+${P} .dm-f-imp-anello::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--card-bg,#fff)}
+${P} .dm-f-imp-anello>div{position:relative;z-index:1;text-align:center}
+${P} .dm-f-imp-anello .dm-f-imp-num{display:block;font-size:27px}
+${P} .dm-f-imp-anello small{font-size:9px;font-weight:900;letter-spacing:.1em;color:var(--text-dim,#64748b);text-transform:uppercase}
+${P} .dm-f-imp-tasti{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+${P} .dm-f-imp-tasti[data-dm-f-zone]{grid-template-columns:repeat(auto-fill,minmax(138px,1fr))}
+${P} .dm-f-imp-tasto{display:block;min-width:0;border-radius:20px;padding:14px 4px 12px;text-align:center;font:inherit;color:inherit;
+  background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 12px 24px -22px rgba(15,23,42,.6)}
+${P} button.dm-f-imp-tasto{cursor:pointer}
+${P} .dm-f-imp-tasto-ic{display:block;font-size:24px;line-height:1.1}
+${P} .dm-f-imp-tasto b{display:block;font-size:12.5px;font-weight:850;letter-spacing:-.01em;margin-top:6px;color:var(--text,#0f172a);overflow-wrap:break-word;hyphens:auto}
+${P} .dm-f-imp-tasto>span:last-child{display:block;font-size:10.5px;font-weight:800;color:var(--text-dim,#64748b);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+${P} .dm-f-imp-tasto[data-on="true"]{background:var(--imp-tinta);border-color:var(--imp-bordo)}
+${P} .dm-f-imp-tasto[data-on="true"]>span:last-child{color:var(--imp-a)}
+${P} .dm-f-imp-pillole{display:flex;gap:6px;flex-wrap:wrap}
+${P} .dm-f-imp-pillole span{font-size:11.5px;font-weight:800;color:var(--text,#334155);border-radius:999px;padding:5px 10px;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 9%,var(--card-bg,#fff));border:1px solid var(--card-border,#e2e8f0)}
+${P} .dm-f-imp-pillole span[data-tono="male"]{background:color-mix(in srgb,#dc2626 10%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 32%,transparent);color:#b91c1c}
+${P} .dm-f-imp-pillole span[data-tono="bene"]{background:color-mix(in srgb,#16a34a 10%,var(--card-bg,#fff));border-color:color-mix(in srgb,#16a34a 30%,transparent);color:#15803d}
+${P} .dm-f-imp-pillole span[data-tono="muto"]{color:var(--text-dim,#64748b)}
+${P} .dm-f-imp-avviso{display:flex;gap:11px;align-items:flex-start;border-radius:18px;padding:12px 13px;
+  background:color-mix(in srgb,#dc2626 9%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,#dc2626 30%,transparent);
+  color:color-mix(in srgb,#991b1b 80%,var(--text,#0f172a));font-size:13px;font-weight:700;line-height:1.4}
+${P} .dm-f-imp-avviso>span{font-size:19px;line-height:1.2}
+${P} .dm-f-imp-avviso b{display:block;font-size:14px;font-weight:850;color:#b91c1c}
+
+/* Lo scaldabagno: il serbatoio che si riempie fino alla linea dell'obiettivo. */
+${P} .dm-f-scaldabagno-serbatoio{flex:0 0 70px;height:126px;border-radius:28px;border:2px solid color-mix(in srgb,#f59e0b 60%,transparent);
+  background:var(--card-bg,#fff);position:relative;overflow:hidden}
+${P} .dm-f-scaldabagno-serbatoio i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,#fbbf24,#ea580c)}
+${P} .dm-f-scaldabagno-serbatoio b{position:absolute;left:-2px;right:-2px;top:14%;border-top:2px dashed #b45309}
+${P} .dm-f-scaldabagno-serbatoio em{position:absolute;left:0;right:0;top:calc(14% + 4px);text-align:center;font-style:normal;font-size:10px;font-weight:900;color:#b45309}
+
+/* La caldaia: mandata e ritorno come due nodi, col salto in mezzo. */
+${P} .dm-f-caldaia-testa{display:flex;align-items:center;gap:14px;width:100%}
+${P} .dm-f-caldaia-fiamma{flex:0 0 60px;width:60px;height:60px;border-radius:19px;display:grid;place-items:center;font-size:30px;
+  background:var(--card-bg,#fff);border:1px solid var(--imp-bordo);filter:grayscale(1);opacity:.55}
+${P} .dm-f-caldaia-fiamma[data-on="true"]{filter:none;opacity:1;box-shadow:0 0 0 6px color-mix(in srgb,#f59e0b 20%,transparent)}
+${P} .dm-f-caldaia-giro{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);align-items:center;gap:6px;width:100%}
+${P} .dm-f-caldaia-nodo{text-align:center;border-radius:17px;padding:10px 6px;background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
+${P} .dm-f-caldaia-nodo .dm-f-imp-num{display:block;font-size:26px;margin-top:3px}
+${P} .dm-f-caldaia-freccia{text-align:center;font-size:11px;font-weight:900;color:var(--imp-a);line-height:1.25}
+${P} .dm-f-caldaia-freccia i{display:block;font-style:normal;font-size:19px}
+${P} .dm-f-caldaia-manometro{position:relative;height:10px;margin:10px 0 2px;border-radius:999px;
+  background:linear-gradient(90deg,#fecaca 0 33%,#bbf7d0 33% 83%,#fde68a 83% 100%)}
+${P} .dm-f-caldaia-manometro b{position:absolute;top:-5px;width:4px;height:20px;margin-left:-2px;border-radius:3px;background:var(--text,#0f172a)}
+
+/* L'UPS: quanto regge se va via la luce. */
+${P} .dm-f-ups-regge{margin-top:10px;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
+${P} .dm-f-ups-autonomia{display:block;font-size:34px}
+${P} .dm-f-ups-eroe[data-tono="male"] .dm-f-ups-autonomia{color:#dc2626}
+
+/* L'accumulo: una scheda per pacco. */
+${P} .dm-f-accumulo-potenza{display:block;font-size:32px;margin-top:2px}
+${P} .dm-f-accumulo-pacco{border-radius:20px;padding:13px 14px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);
+  box-shadow:0 12px 24px -22px rgba(15,23,42,.6);min-width:0}
+${P} .dm-f-accumulo-su{display:flex;align-items:center;gap:10px}
+${P} .dm-f-accumulo-su b{flex:1;min-width:0;font-size:14.5px;font-weight:850;color:var(--text,#0f172a);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${P} .dm-f-accumulo-su .dm-f-imp-num{font-size:23px}
+${P} .dm-f-accumulo-barra i{background:#16a34a}
+${P} .dm-f-accumulo-pacco[data-stato="muto"]{opacity:.7}
+
+/* L'acqua e il gas. */
+${P} .dm-f-contatori-perdita{display:flex;align-items:center;gap:10px;border-radius:16px;padding:10px 12px;font-size:13px;font-weight:750;
+  background:color-mix(in srgb,#16a34a 9%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,#16a34a 28%,transparent);color:#166534}
+${P} .dm-f-contatori-perdita[data-tono="male"]{background:color-mix(in srgb,#dc2626 9%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 30%,transparent);color:#b91c1c}
+${P} .dm-f-contatori-perdita>span{font-size:17px}
+${P} .dm-f-contatori-letture{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;padding:10px 13px;border-radius:16px;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 8%,var(--card-bg,#fff));border:1px solid var(--card-border,#e2e8f0);
+  font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-contatori-letture b{color:var(--text,#0f172a);font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:14px}
+
+/* La piscina: la chimica come barre con la fascia giusta. */
+${P} .dm-f-piscina-acqua{display:flex;align-items:center;gap:14px;width:100%}
+${P} .dm-f-piscina-giudizio{margin-left:auto;text-align:right;font-size:13px;font-weight:850;line-height:1.35}
+${P} .dm-f-piscina-giudizio[data-tono="bene"]{color:#15803d}
+${P} .dm-f-piscina-giudizio[data-tono="occhio"]{color:#b45309}
+${P} .dm-f-piscina-giudizio span{color:var(--text-dim,#64748b);font-weight:750}
+${P} .dm-f-piscina-chimiche{display:grid;gap:10px;width:100%}
+${P} .dm-f-piscina-chimica{display:grid;grid-template-columns:62px minmax(0,1fr) 52px;align-items:center;gap:10px}
+${P} .dm-f-piscina-chimica b{font-size:12.5px;font-weight:850;color:var(--text,#334155)}
+${P} .dm-f-piscina-chimica b em{display:block;font-style:normal;font-size:10.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-piscina-chimica .dm-f-imp-num{font-size:20px;text-align:right}
+${P} .dm-f-piscina-chimica[data-bene="false"] .dm-f-imp-num{color:#b45309}
+${P} .dm-f-piscina-fascia{position:relative;height:10px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent)}
+${P} .dm-f-piscina-fascia u{position:absolute;top:0;bottom:0;border-radius:999px;background:#86efac;text-decoration:none}
+${P} .dm-f-piscina-fascia s{position:absolute;top:-4px;width:6px;height:18px;border-radius:3px;margin-left:-3px;background:var(--text,#0f172a)}
+
+/* L'irrigazione: la zona che bagna e il tasto per fermarla. */
+${P} .dm-f-irrigazione-ora{display:flex;align-items:center;gap:14px;width:100%}
+${P} .dm-f-irrigazione-goccia{flex:0 0 60px;width:60px;height:60px;border-radius:19px;display:grid;place-items:center;font-size:28px;
+  background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
+${P} .dm-f-irrigazione-eroe[data-on="true"] .dm-f-irrigazione-goccia{box-shadow:0 0 0 6px color-mix(in srgb,var(--imp-a) 16%,transparent)}
+${P} .dm-f-irrigazione-ferma{width:100%;padding:13px;border-radius:16px;cursor:pointer;font:inherit;font-weight:850;font-size:14px;
+  color:var(--imp-a);background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
+${P} .dm-f-irrigazione-scala{position:relative;height:12px;margin:10px 0 6px;border-radius:999px;
+  background:linear-gradient(90deg,#fde68a 0 var(--secco),#bbf7d0 var(--secco) var(--bagnato),#bfdbfe var(--bagnato))}
+${P} .dm-f-irrigazione-scala i{position:absolute;top:-4px;width:5px;height:20px;margin-left:-2.5px;border-radius:3px;background:var(--text,#0f172a)}
+${P} .dm-f-irrigazione-parole{display:flex;justify-content:space-between;font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}
+
+/* La ventilazione: due flussi incrociati e la velocita' a tasti. */
+${P} .dm-f-vmc-flussi{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:6px;align-items:center;width:100%}
+${P} .dm-f-vmc-t{border-radius:15px;padding:8px 6px;text-align:center;background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
+${P} .dm-f-vmc-t[data-casa="true"]{background:var(--imp-tinta)}
+${P} .dm-f-vmc-t small{font-size:9.5px}
+${P} .dm-f-vmc-t .dm-f-imp-num{display:block;font-size:21px}
+${P} .dm-f-vmc-f{text-align:center;font-size:18px;font-weight:900;color:var(--imp-a)}
+${P} .dm-f-vmc-velocita{display:grid;grid-template-columns:repeat(var(--quante,3),minmax(0,1fr));gap:6px;padding:5px;border-radius:18px;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 12%,var(--card-bg,#fff))}
+${P} .dm-f-vmc-modo{padding:11px 4px;border:0;border-radius:14px;cursor:pointer;font:inherit;font-size:12.5px;font-weight:850;
+  color:var(--text-dim,#475569);background:transparent;min-width:0;overflow-wrap:anywhere}
+${P} .dm-f-vmc-modo em{display:block;font-style:normal;font-size:16px}
+${P} .dm-f-vmc-modo[data-on="true"]{background:var(--card-bg,#fff);color:var(--imp-a);box-shadow:0 6px 16px -10px rgba(15,23,42,.5)}
+`;
+var FINESTRE_IMPIANTI = Object.freeze([
+  "scaldabagno",
+  "caldaia",
+  "ups",
+  "accumulo",
+  "contatori",
+  "piscina",
+  "irrigazione",
+  "vmc"
+]);
+registraFinestra("scaldabagno", { disegna: disegnaScaldabagno, stile: STILE6 });
+registraFinestra("caldaia", { disegna: disegnaCaldaia });
+registraFinestra("ups", { disegna: disegnaUps });
+registraFinestra("accumulo", { disegna: disegnaAccumulo });
+registraFinestra("contatori", { disegna: disegnaContatori });
+registraFinestra("piscina", { disegna: disegnaPiscina });
+registraFinestra("irrigazione", { disegna: disegnaIrrigazione });
+registraFinestra("vmc", { disegna: disegnaVmc });
 
 // src/sections/finestre/servizi.js
 var FINESTRE_SERVIZI = Object.freeze([]);
@@ -46595,18 +47734,18 @@ function solarThermalModel(states) {
   const visti = /* @__PURE__ */ new Set();
   let primaSonda = null;
   let pompa = null;
-  for (const casella3 of CASELLE_SOLARE2) {
-    const dato = refValue(states, casella3.ref, fuori);
+  for (const casella4 of CASELLE_SOLARE2) {
+    const dato = refValue(states, casella4.ref, fuori);
     if (!dato || visti.has(dato.entity)) continue;
-    if (casella3.acceso) {
+    if (casella4.acceso) {
       if (STATI_MUTI3.test(dato.state)) continue;
       const attivo = STATI_ACCESI2.test(dato.state);
-      if (pompa == null && casella3.ref.includes("pompa")) pompa = attivo;
+      if (pompa == null && casella4.ref.includes("pompa")) pompa = attivo;
       visti.add(dato.entity);
       const quando4 = stateOf(states, dato.entity);
       const cambiato = Date.parse(quando4?.last_changed ?? quando4?.last_updated ?? "");
       righe2.push({
-        glyph: casella3.glyph,
+        glyph: casella4.glyph,
         name: friendlyName(states, dato.entity),
         entity: dato.entity,
         on: attivo,
@@ -46616,10 +47755,10 @@ function solarThermalModel(states) {
       continue;
     }
     if (dato.value == null) continue;
-    if (primaSonda == null && casella3.ref.startsWith("dm.boiler_sonda")) primaSonda = dato.value;
+    if (primaSonda == null && casella4.ref.startsWith("dm.boiler_sonda")) primaSonda = dato.value;
     visti.add(dato.entity);
     righe2.push({
-      glyph: casella3.glyph,
+      glyph: casella4.glyph,
       name: friendlyName(states, dato.entity),
       entity: dato.entity,
       /* Il testo e' per gli occhi, `raw` per i conti: `Number("68°")` non e' un
@@ -46628,8 +47767,8 @@ function solarThermalModel(states) {
       /* Esplicito su ogni riga numerica: il confronto fra sonde legge questo,
        * e una riga senza marchio per lui e' una sonda — e' la forma che tiene
        * in piedi le righe costruite altrove, dove sono tutte sonde davvero. */
-      sonda: casella3.sonda === true,
-      value: `${formatNumber(dato.value, casella3.cifre)}${casella3.unita}`
+      sonda: casella4.sonda === true,
+      value: `${formatNumber(dato.value, casella4.cifre)}${casella4.unita}`
     });
   }
   if (!righe2.length) return null;
@@ -46808,6 +47947,9 @@ function caldaiaModel(states) {
      * altre quando c'e' da guardare. */
     alert: pressione2 === "bassa",
     lettura: lettura3,
+    /* Tutte le caldaie, per la finestra: ognuna col suo giro e il suo
+     * interruttore (vedi `finestre/impianti.js`). */
+    letture: letture2,
     rows
   };
 }
@@ -46816,12 +47958,12 @@ function righeDellUps(config, lettura3, conIlNome) {
   const suo2 = clean(dato.name);
   const nome = (testo2) => conIlNome && suo2 ? `${suo2} · ${testo2}` : testo2;
   const rows = [];
-  const casella3 = clean(dato.rete) || clean(dato.stato);
-  if (casella3)
+  const casella4 = clean(dato.rete) || clean(dato.stato);
+  if (casella4)
     rows.push({
       glyph: "🔌",
       name: nome(t("Rete elettrica", "Mains power")),
-      entity: casella3,
+      entity: casella4,
       on: lettura3.rete === true,
       value: lettura3.rete === true ? t("Presente", "Present") : lettura3.rete === false ? t("Manca", "Missing") : t("Sconosciuta", "Unknown")
     });
@@ -46924,6 +48066,13 @@ function upsModel(states) {
     alert: letti.some((voce2) => voce2.lettura.allarme === true),
     lettura: lettura3,
     da: daQuandoUps(config, states, risolvi2),
+    /* Ogni gruppo con la sua lettura, per la finestra: col nome quando sono
+     * piu' d'uno, il peggiore per primo. */
+    gruppi: [capofila, ...letti.filter((voce2) => voce2 !== capofila)].map((voce2) => ({
+      nome: clean(normalizzaUps(voce2.config).name),
+      lettura: voce2.lettura,
+      da: daQuandoUps(voce2.config, states, risolvi2)
+    })),
     rows
   };
 }
@@ -46983,13 +48132,29 @@ function poolModel(states) {
   const etichetta3 = (pool, index, testo2) => piuDiUna ? `${clean(pool.name) || `${t("Piscina", "Pool")} ${index + 1}`} · ${testo2}` : testo2;
   const rows = [];
   const visti = /* @__PURE__ */ new Set();
+  const perVasca = [];
   vasche.forEach((pool, index) => {
+    const vasca = {
+      nome: clean(pool.name),
+      acqua: null,
+      ph: null,
+      cloro: null,
+      phMin: pool.phMin,
+      phMax: pool.phMax,
+      clMin: pool.clMin,
+      clMax: pool.clMax,
+      comandi: []
+    };
+    perVasca.push(vasca);
     const leggi2 = (chiave2, testo2, glyph, unita2 = "") => {
       const entity2 = clean(pool[chiave2]);
       if (!entity2 || visti.has(entity2) || !widgetIncludes(entity2, fuori)) return;
       const valore3 = numOf(states, entity2);
       if (valore3 == null) return;
       visti.add(entity2);
+      if (chiave2 === "tempEnt") vasca.acqua = valore3;
+      if (chiave2 === "phEnt") vasca.ph = valore3;
+      if (chiave2 === "clEnt") vasca.cloro = valore3;
       rows.push({
         glyph,
         name: etichetta3(pool, index, testo2),
@@ -47007,6 +48172,13 @@ function poolModel(states) {
       const riga3 = rigaDaEntita(states, entity2, glifo);
       if (!riga3) continue;
       visti.add(entity2);
+      vasca.comandi.push({
+        chiave: chiave2,
+        entity: entity2,
+        on: riga3.on === true,
+        da: riga3.daQuando ?? null,
+        comando: siComanda(entity2)
+      });
       rows.push({
         ...riga3,
         name: etichetta3(pool, index, riga3.name),
@@ -47028,6 +48200,9 @@ function poolModel(states) {
     value: testa2.value,
     caption: compagna ? `${compagna.name} ${compagna.value}` : "",
     ring: null,
+    vasche: perVasca.filter(
+      (vasca) => vasca.acqua != null || vasca.ph != null || vasca.cloro != null || vasca.comandi.length
+    ),
     rows
   };
 }
@@ -47202,12 +48377,12 @@ var CASELLE_MINIPC = Object.freeze([
     acceso: true
   }
 ]);
-function misuraDelMiniPC(casella3, dato, states) {
-  const attesa = clean(casella3.unita);
+function misuraDelMiniPC(casella4, dato, states) {
+  const attesa = clean(casella4.unita);
   const sua = clean(states?.[dato.entity]?.attributes?.unit_of_measurement);
   const unita2 = sua || attesa;
   const numero46 = Number(dato.value);
-  const cifre2 = !sua || sua === attesa ? casella3.cifre : Number.isInteger(numero46) ? 0 : 1;
+  const cifre2 = !sua || sua === attesa ? casella4.cifre : Number.isInteger(numero46) ? 0 : 1;
   const scritto = formatNumber(dato.value, cifre2);
   if (!unita2) return scritto;
   return unita2 === "%" ? `${scritto}%` : `${scritto} ${unita2}`;
@@ -47221,15 +48396,15 @@ function minipcModel(states) {
   const rows = [];
   const visti = /* @__PURE__ */ new Set();
   let carico = null;
-  for (const casella3 of CASELLE_MINIPC) {
-    const dato = refValue(states, casella3.ref, fuori);
+  for (const casella4 of CASELLE_MINIPC) {
+    const dato = refValue(states, casella4.ref, fuori);
     if (!dato || visti.has(dato.entity)) continue;
-    if (casella3.acceso) {
+    if (casella4.acceso) {
       if (STATI_MUTI3.test(dato.state)) continue;
       visti.add(dato.entity);
       const attivo = STATI_ACCESI2.test(dato.state);
       rows.push({
-        glyph: casella3.glyph,
+        glyph: casella4.glyph,
         name: friendlyName(states, dato.entity),
         entity: dato.entity,
         on: attivo,
@@ -47239,20 +48414,20 @@ function minipcModel(states) {
     }
     if (dato.value == null) continue;
     visti.add(dato.entity);
-    if (casella3.quota && carico === null && casella3.ref === "dm.server_cpu" && eUnaPercentuale(dato, states))
+    if (casella4.quota && carico === null && casella4.ref === "dm.server_cpu" && eUnaPercentuale(dato, states))
       carico = dato.value;
     rows.push({
-      glyph: casella3.glyph,
-      name: t(casella3.it, casella3.en),
+      glyph: casella4.glyph,
+      name: t(casella4.it, casella4.en),
       /* Il nome della misura, non la parola tradotta.
        *
        * La didascalia sceglieva le righe leggendo l'etichetta: in arabo e in
        * giapponese quelle parole sono tradotte, e la tessera perdeva RAM e
        * disco pur avendone le letture. Chiesto in revisione. */
-      chiave: casella3.chiave || "",
+      chiave: casella4.chiave || "",
       entity: dato.entity,
       raw: dato.value,
-      value: misuraDelMiniPC(casella3, dato, states)
+      value: misuraDelMiniPC(casella4, dato, states)
     });
   }
   if (!rows.length) return null;
@@ -47296,6 +48471,23 @@ function irrigationModel(states) {
      * analisi — che cerca un booleano — leggeva tutte le zone come ferme
      * proprio mentre l'acqua usciva. Il testo e' per gli occhi, `on` per i
      * conti: due mestieri, due campi. */
+    /* Per la finestra: le zone da toccare, il terreno con la sua fascia. */
+    zone: attive.map((zona) => {
+      const entity2 = clean(zona.entity);
+      const cambio = Date.parse(
+        stateOf(states, entity2)?.last_changed ?? stateOf(states, entity2)?.last_updated ?? ""
+      );
+      return {
+        entity: entity2,
+        name: clean(zona.name) || friendlyName(states, entity2),
+        on: zonaInFunzione(states, zona),
+        da: Number.isFinite(cambio) ? cambio : null,
+        comando: siComanda(entity2)
+      };
+    }),
+    umidita,
+    soilMin: config.soilMin,
+    soilMax: config.soilMax,
     rows: [
       ...attive.map((zona) => ({
         glyph: "🌱",
@@ -47314,7 +48506,10 @@ function irrigationModel(states) {
           glyph: "💦",
           name: t("Umidità terreno", "Soil moisture"),
           entity: terreno,
-          value: `${Math.round(umidita)}%`
+          value: `${Math.round(umidita)}%`,
+          /* Una misura, non una zona: chi conta le zone la salta. «Sta
+           * bagnando, su 5 zone» con quattro zone e un sensore. */
+          terreno: true
         }
       ]
     ]
@@ -48312,10 +49507,9 @@ function animaliModel(states) {
 }
 function contatoriModel(states) {
   const fuori = widgetExcludedEntities("contatori");
-  const tessera2 = tesseraDeiContatori(
-    vistaDeiContatori(states, { dentro: (entity2) => widgetIncludes(entity2, fuori) })
-  );
-  return tessera2 && { ...tessera2, key: "contatori" };
+  const vista2 = vistaDeiContatori(states, { dentro: (entity2) => widgetIncludes(entity2, fuori) });
+  const tessera2 = tesseraDeiContatori(vista2);
+  return tessera2 && { ...tessera2, key: "contatori", vista: vista2 };
 }
 function pianteModel(states) {
   const fuori = widgetExcludedEntities("piante");
@@ -48338,13 +49532,17 @@ function acquarioModel(states) {
 }
 function accumuloModel(states) {
   const fuori = widgetExcludedEntities("accumulo");
-  const tessera2 = tesseraDellAccumulo(
-    vistaDellAccumulo(states, {
-      dentro: (entity2) => widgetIncludes(entity2, fuori),
-      casa: lettureDiCasa(states)
-    })
-  );
-  return tessera2 && { ...tessera2, key: "accumulo" };
+  const vista2 = vistaDellAccumulo(states, {
+    dentro: (entity2) => widgetIncludes(entity2, fuori),
+    casa: lettureDiCasa(states)
+  });
+  const tessera2 = tesseraDellAccumulo(vista2);
+  return tessera2 && {
+    ...tessera2,
+    key: "accumulo",
+    vista: vista2,
+    tintaDellaSezione: tintaDellaPagina("page-energy")
+  };
 }
 function cotturaModel(states) {
   if (!ceLaCucina()) return null;
@@ -48385,6 +49583,8 @@ function vmcModel(states) {
     ring: prima.bypassAperto || prima.recupero === null ? null : prima.recupero,
     attiva: false,
     alert: filtri,
+    /* Le letture intere, per la finestra: i due flussi, la velocita', i filtri. */
+    letture: letture2,
     rows: letture2.flatMap(
       (lettura3) => Object.values(lettura3.temperature).filter((voce2) => voce2 && !voce2.muto && voce2.valore !== null).map((voce2) => ({
         glyph: voce2.glifo,
@@ -48865,13 +50065,13 @@ function climatePanel(row, solo = false) {
     )}</button>`
   ).join("")}</div>
       </div>` : "";
-  const gradi5 = row.target == null ? null : formatNumber(row.target, 1);
+  const gradi6 = row.target == null ? null : formatNumber(row.target, 1);
   const temperaturaMarkup2 = row.target == null ? "" : `<div class="dm-w-panel-row">
           <span class="dm-w-panel-lbl">${esc(t("Temperatura", "Temperature"))}</span>
           <div class="dm-w-stepper">
             <button type="button" data-dm-w-temp="-1" data-dm-w-target="${esc(row.entity)}"
               aria-label="${esc(t("Abbassa", "Lower"))}">−</button>
-            <b>${gradi5}°</b>
+            <b>${gradi6}°</b>
             <button type="button" data-dm-w-temp="1" data-dm-w-target="${esc(row.entity)}"
               aria-label="${esc(t("Alza", "Raise"))}">+</button>
           </div>
@@ -49069,11 +50269,11 @@ function appliancesDetail(widget) {
   const pastiglie = righe2.map((riga3) => {
     const scelta3 = riga3.id === aperto2;
     const acceso6 = riga3.mode === "running";
-    const watt3 = acceso6 && Number.isFinite(Number(riga3.watts)) ? laPotenzaInParole(riga3.watts) : "";
+    const watt4 = acceso6 && Number.isFinite(Number(riga3.watts)) ? laPotenzaInParole(riga3.watts) : "";
     return `<button type="button" class="dm-w-appl-chip" data-dm-appl-chip="${esc(riga3.id)}" data-on="${acceso6 ? "true" : "false"}" aria-expanded="${scelta3 ? "true" : "false"}">
         <span class="dm-w-appl-art" aria-hidden="true">${applianceArtwork(riga3.type, 26) || "🔌"}</span>
         <span class="dm-w-appl-nome">${esc(riga3.name)}</span>
-        ${watt3 ? `<span class="dm-w-appl-watt">${esc(watt3)}</span>` : ""}
+        ${watt4 ? `<span class="dm-w-appl-watt">${esc(watt4)}</span>` : ""}
       </button>`;
   }).join("");
   const model2 = aperto2 ? applianceModelById(aperto2) : null;
@@ -49208,12 +50408,12 @@ function summaryChips(widget) {
     ];
   }
   if (widget.key === "temperatura") {
-    const gradi5 = numeri("temperature");
-    if (!gradi5.length) return [];
+    const gradi6 = numeri("temperature");
+    if (!gradi6.length) return [];
     return [
-      [t("media", "average"), `${formatNumber(media2(gradi5), 1)}°`],
-      [t("la più fredda", "coldest"), `${formatNumber(Math.min(...gradi5), 1)}°`],
-      [t("la più calda", "warmest"), `${formatNumber(Math.max(...gradi5), 1)}°`]
+      [t("media", "average"), `${formatNumber(media2(gradi6), 1)}°`],
+      [t("la più fredda", "coldest"), `${formatNumber(Math.min(...gradi6), 1)}°`],
+      [t("la più calda", "warmest"), `${formatNumber(Math.max(...gradi6), 1)}°`]
     ];
   }
   return [];
@@ -50325,19 +51525,19 @@ function listaTodo(id) {
   return configuredTodoLists().find((value) => value.id === clean(id)) || null;
 }
 function onInput2(event) {
-  const casella3 = event.target?.closest?.("[data-dm-todo-new]");
-  if (!casella3) return;
-  const id = clean(casella3.dataset.dmTodoNew);
-  if (casella3.value) state47.bozze.set(id, casella3.value);
+  const casella4 = event.target?.closest?.("[data-dm-todo-new]");
+  if (!casella4) return;
+  const id = clean(casella4.dataset.dmTodoNew);
+  if (casella4.value) state47.bozze.set(id, casella4.value);
   else state47.bozze.delete(id);
 }
 function onKeydown(event) {
   if (event.key !== "Enter") return;
-  const casella3 = event.target?.closest?.("[data-dm-todo-new]");
-  if (!casella3) return;
+  const casella4 = event.target?.closest?.("[data-dm-todo-new]");
+  if (!casella4) return;
   event.preventDefault();
-  const lista5 = listaTodo(casella3.dataset.dmTodoNew);
-  if (lista5) addItem(lista5, casella3.value);
+  const lista5 = listaTodo(casella4.dataset.dmTodoNew);
+  if (lista5) addItem(lista5, casella4.value);
 }
 function suTastoServizio(event) {
   const tasto2 = event.target?.closest?.("[data-dm-w-servizio]");
@@ -50380,8 +51580,8 @@ function onClick7(event) {
     event.preventDefault();
     const id = clean(aggiungi4.dataset.dmTodoAdd);
     const lista5 = listaTodo(id);
-    const casella3 = aggiungi4.parentElement?.querySelector?.("[data-dm-todo-new]");
-    if (lista5) addItem(lista5, casella3?.value || state47.bozze.get(id) || "");
+    const casella4 = aggiungi4.parentElement?.querySelector?.("[data-dm-todo-new]");
+    if (lista5) addItem(lista5, casella4?.value || state47.bozze.get(id) || "");
     return;
   }
   const cestino = event.target?.closest?.("[data-dm-todo-del]");
@@ -50453,12 +51653,12 @@ function onClick7(event) {
     const apri6 = !misureAperte().has(chiave2);
     if (apri6) misureAperte().add(chiave2);
     else misureAperte().delete(chiave2);
-    const griglia = misure.previousElementSibling;
+    const griglia2 = misure.previousElementSibling;
     const caselle2 = [
-      ...griglia?.querySelectorAll?.(".dm-w-casella, .dm-w-pillola") || []
+      ...griglia2?.querySelectorAll?.(".dm-w-casella, .dm-w-pillola") || []
     ];
-    caselle2.forEach((casella3, indice) => {
-      casella3.hidden = !apri6 && indice >= MISURE_IN_VISTA;
+    caselle2.forEach((casella4, indice) => {
+      casella4.hidden = !apri6 && indice >= MISURE_IN_VISTA;
     });
     misure.setAttribute("aria-expanded", String(apri6));
     misure.innerHTML = `<span aria-hidden="true">${apri6 ? "▴" : "▾"}</span>${esc(
@@ -50521,16 +51721,16 @@ function onClick7(event) {
     root.setTimeout?.(schedule18, 500);
     return;
   }
-  const gradi5 = event.target?.closest?.("[data-dm-w-temp]");
-  if (gradi5) {
+  const gradi6 = event.target?.closest?.("[data-dm-w-temp]");
+  if (gradi6) {
     event.preventDefault();
-    const entity2 = clean(gradi5.dataset.dmWTarget);
+    const entity2 = clean(gradi6.dataset.dmWTarget);
     const riga3 = climateRow(entity2);
     if (riga3 && riga3.target != null) {
-      const passo = (Number(gradi5.dataset.dmWTemp) || 0) * (riga3.passo || 0.5);
+      const passo = (Number(gradi6.dataset.dmWTemp) || 0) * (riga3.passo || 0.5);
       const voluta = Math.min(riga3.massima, Math.max(riga3.minima, riga3.target + passo));
-      const casella3 = gradi5.parentElement?.querySelector?.("b");
-      if (casella3) casella3.textContent = `${formatNumber(voluta, 1)}°`;
+      const casella4 = gradi6.parentElement?.querySelector?.("b");
+      if (casella4) casella4.textContent = `${formatNumber(voluta, 1)}°`;
       callHa("climate", "set_temperature", { entity_id: entity2, temperature: voluta });
       root.setTimeout?.(schedule18, 700);
     }
@@ -53046,13 +54246,13 @@ function paintSummary(shell, units, states, labels) {
       caselle2.push(copia2);
     }
     for (const avanzata of caselle2.splice(Math.max(1, caldaie2.length))) avanzata.remove();
-    caselle2.forEach((casella3, indice) => {
+    caselle2.forEach((casella4, indice) => {
       const caldaia = caldaie2[indice];
-      casella3.hidden = !caldaia;
+      casella4.hidden = !caldaia;
       if (!caldaia) return;
-      const nomeEl = casella3.querySelector("[data-dm-cl-caldaia-nome]");
+      const nomeEl = casella4.querySelector("[data-dm-cl-caldaia-nome]");
       if (nomeEl) nomeEl.textContent = caldaia.nome || t("Caldaia", "Boiler");
-      const statoEl = casella3.querySelector("[data-dm-cl-caldaia-stato]");
+      const statoEl = casella4.querySelector("[data-dm-cl-caldaia-stato]");
       if (statoEl) {
         const da = caldaia.da;
         statoEl.textContent = !caldaia.noto ? "--" : caldaia.acceso ? `${t("Accesa", "On")}${da ? ` · ${t(`da ${da}`, `for ${da}`)}` : ""}` : t("Spenta", "Off");
@@ -53327,13 +54527,13 @@ function gradoDalPunto(presa, clientX) {
 }
 function dipingiPresa(presa) {
   const [low, high] = scalaDellaPresa(presa).scala;
-  const percento4 = ((presa.grado - low) / (high - low || 1) * 100).toFixed(1);
+  const percento5 = ((presa.grado - low) / (high - low || 1) * 100).toFixed(1);
   const fill = presa.card.querySelector("[data-dm-cl-fill]");
   const knob = presa.card.querySelector("[data-dm-cl-knob]");
-  if (fill) fill.style.width = `${percento4}%`;
+  if (fill) fill.style.width = `${percento5}%`;
   if (knob) {
     knob.hidden = false;
-    knob.style.left = `${percento4}%`;
+    knob.style.left = `${percento5}%`;
   }
   if (!cartaInvertita()) {
     const target = presa.card.querySelector("[data-dm-cl-target]");
@@ -53494,12 +54694,12 @@ function tastoRapido(unita2, states) {
   const acceso6 = climaAccesoDaiWatt(unita2.entity, states) ?? perLEntita;
   const modo = clean(lexicalGlobal("currentClimaMode")).toLowerCase() || "freddo";
   const freddo = modo !== "caldo";
-  let gradi5 = "";
+  let gradi6 = "";
   if (freddo && stato3) {
     const obiettivo2 = stato3.attributes?.temperature;
     const ambiente = stato3.attributes?.current_temperature;
-    if (acceso6 && obiettivo2 !== void 0) gradi5 = `${obiettivo2}°`;
-    else if (ambiente !== void 0) gradi5 = `${Math.round(ambiente)}°`;
+    if (acceso6 && obiettivo2 !== void 0) gradi6 = `${obiettivo2}°`;
+    else if (ambiente !== void 0) gradi6 = `${Math.round(ambiente)}°`;
   }
   const tasto2 = doc.createElement("button");
   tasto2.type = "button";
@@ -53514,25 +54714,25 @@ function tastoRapido(unita2, states) {
   const nome = clean(unita2.name) || clean(unita2.room) || unita2.entity;
   const disegno4 = disegnoDellaStanza(unita2.room, unita2.name) || disegnoDelModo(freddo);
   const icona = freddo ? "❄️" : "🔥";
-  tasto2.innerHTML = `${gradi5 ? `<span class="ns-clima-btn-temp">${esc(gradi5)}</span>` : ""}<span class="ns-clima-btn-icon">${disegno4 || esc(icona)}</span><span class="ns-clima-btn-name">${esc(nome)}</span>`;
+  tasto2.innerHTML = `${gradi6 ? `<span class="ns-clima-btn-temp">${esc(gradi6)}</span>` : ""}<span class="ns-clima-btn-icon">${disegno4 || esc(icona)}</span><span class="ns-clima-btn-name">${esc(nome)}</span>`;
   return tasto2;
 }
 function disegnaClimaRapido() {
-  const griglia = doc?.getElementById?.("quick-clima-grid");
-  if (!griglia) return false;
+  const griglia2 = doc?.getElementById?.("quick-clima-grid");
+  if (!griglia2) return false;
   if (!climateUnits().length) return false;
   const modo = clean(lexicalGlobal("currentClimaMode")).toLowerCase() || "freddo";
   const unita2 = unitaDelModo(modo);
   const states = allStates();
-  griglia.replaceChildren();
+  griglia2.replaceChildren();
   if (!unita2.length) {
     const vuoto4 = doc.createElement("p");
     vuoto4.className = "ns-clima-empty";
     vuoto4.textContent = modo === "caldo" ? t("Nessun termosifone configurato", "No radiator configured") : t("Nessun condizionatore configurato", "No air conditioner configured");
-    griglia.append(vuoto4);
+    griglia2.append(vuoto4);
     return true;
   }
-  for (const voce2 of unita2) griglia.append(tastoRapido(voce2, states));
+  for (const voce2 of unita2) griglia2.append(tastoRapido(voce2, states));
   return true;
 }
 function installClimaRapido() {
@@ -53613,14 +54813,14 @@ function montaFlagCarta() {
     if (!blocco3.contains(nodo2)) nodo2.remove();
   });
   if (blocco3.querySelector("[data-dm-cl-inverti]")) return true;
-  const casella3 = doc.createElement("label");
-  casella3.className = "ed-check dm-cl-inverti";
-  casella3.dataset.dmClInverti = "";
-  casella3.innerHTML = `<input type="checkbox"${cartaInvertita() ? " checked" : ""}> ` + t(
+  const casella4 = doc.createElement("label");
+  casella4.className = "ed-check dm-cl-inverti";
+  casella4.dataset.dmClInverti = "";
+  casella4.innerHTML = `<input type="checkbox"${cartaInvertita() ? " checked" : ""}> ` + t(
     "Nelle card mostra grande l'ambiente (target sotto)",
     "On cards show the room temperature big (target below)"
   );
-  casella3.querySelector("input").addEventListener("change", (evento) => {
+  casella4.querySelector("input").addEventListener("change", (evento) => {
     try {
       root.localStorage?.setItem?.("cd_clima_inverti_card", evento.target.checked ? "1" : "0");
       root.cdMarkDirty?.();
@@ -53629,7 +54829,7 @@ function montaFlagCarta() {
     }
     renderClimate({ rebuild: true });
   });
-  blocco3.append(casella3);
+  blocco3.append(casella4);
   return true;
 }
 function osservaLaPagina() {
@@ -54537,9 +55737,9 @@ function entitaDelClima(pagina2) {
   return ((pagina2?.blocchi || []).find((blocco3) => blocco3.key === "clima")?.voci || []).map((voce2) => entitaVoce(voce2)).filter(Boolean);
 }
 function dentroAlClima(clima) {
-  const gradi5 = clima?.obiettivo == null ? "—" : `${clima.obiettivo}°`;
+  const gradi6 = clima?.obiettivo == null ? "—" : `${clima.obiettivo}°`;
   const modo = clima ? parolaDiStato(clima.modo) : t("Non disponibile", "Unavailable");
-  return `<b>${esc(gradi5)}</b><small>${esc(modo)}</small>`;
+  return `<b>${esc(gradi6)}</b><small>${esc(modo)}</small>`;
 }
 function toniDelClima(clima) {
   if (!clima?.acceso) return "spento";
@@ -54645,14 +55845,14 @@ function tavolaMarkup(pagina2, states = {}) {
     const caselle2 = blocco3.voci.map((item) => {
       const dentro3 = tesseraDellaVoce(item, conTab, states, aperture);
       if (!dentro3) return "";
-      const watt3 = blocco3.key === "prese" && clean(item?.power) ? ` data-dm-stanza-watt="${esc(clean(item.power))}"` : "";
-      return `<div class="dm-stanze-casella" data-dm-stanza-casella="${esc(blocco3.key)}"${larga}${watt3}>${dentro3}</div>`;
+      const watt4 = blocco3.key === "prese" && clean(item?.power) ? ` data-dm-stanza-watt="${esc(clean(item.power))}"` : "";
+      return `<div class="dm-stanze-casella" data-dm-stanza-casella="${esc(blocco3.key)}"${larga}${watt4}>${dentro3}</div>`;
     }).join("");
     return `<h2 class="dm-stanze-a-voce">${esc(nomeBlocco(blocco3))}</h2>${caselle2}`;
   }).join("");
   const altre = readingMarkup(pagina2, states, { daLa: 1 });
-  const griglia = tessere || altre ? `<div class="dm-stanze-grid dm-stanze-tavola" data-dm-stanza-vista="${VISTA_TESSERE}">${tessere}${altre}</div>` : "";
-  return `${testaDellaStanza(pagina2, states)}${griglia}`;
+  const griglia2 = tessere || altre ? `<div class="dm-stanze-grid dm-stanze-tavola" data-dm-stanza-vista="${VISTA_TESSERE}">${tessere}${altre}</div>` : "";
+  return `${testaDellaStanza(pagina2, states)}${griglia2}`;
 }
 function aggiornaLaTavola(wrap, states) {
   for (const nodo2 of wrap.querySelectorAll("[data-dm-stanza-clima]")) {
@@ -55657,7 +56857,7 @@ var OGGETTO_DEL_BLOCCO = Object.freeze({
   altro: "evidenza"
 });
 function riassuntoDellaStanza(pagina2, states = allStates()) {
-  const gradi5 = numero36(pagina2?.temp, states);
+  const gradi6 = numero36(pagina2?.temp, states);
   const umidita = numero36(pagina2?.hum, states);
   let accese = 0;
   const perTipo = [];
@@ -55672,7 +56872,7 @@ function riassuntoDellaStanza(pagina2, states = allStates()) {
     accese += quante2;
     perTipo.push({ chiave: chiave2, oggetto: OGGETTO_DEL_BLOCCO[chiave2] || "evidenza", quante: quante2 });
   }
-  return { gradi: gradi5, umidita, accese, perTipo, quante: Number(pagina2?.count) || 0 };
+  return { gradi: gradi6, umidita, accese, perTipo, quante: Number(pagina2?.count) || 0 };
 }
 var SI_SPENGONO2 = PASTIGLIE_DELLA_STANZA.filter((voce2) => voce2.comanda === "spegni").map(
   (voce2) => voce2.chiave
@@ -55733,9 +56933,9 @@ function zonaDeiComandi(pagina2, tasti) {
   if (!tasti.length) return "";
   return `<span class="dm-stanza-plancia-comandi" data-dm-momento="tasti">${tasti.map((tasto2) => tastoMarkup3(pagina2, tasto2)).join("")}</span>`;
 }
-function misureMarkup(gradi5, umidita) {
-  if (gradi5 === null && umidita === null) return "";
-  const grado = gradi5 === null ? "" : `<b class="dm-stanza-plancia-gradi">${esc(formatNumber(gradi5, 1))}</b><i class="dm-stanza-plancia-grado">°</i>`;
+function misureMarkup(gradi6, umidita) {
+  if (gradi6 === null && umidita === null) return "";
+  const grado = gradi6 === null ? "" : `<b class="dm-stanza-plancia-gradi">${esc(formatNumber(gradi6, 1))}</b><i class="dm-stanza-plancia-grado">°</i>`;
   const umido = umidita === null ? "" : `<i class="dm-stanza-plancia-umido">${esc(String(Math.round(umidita)))}%</i>`;
   return `<span class="dm-stanza-plancia-misure">${grado}${umido}</span>`;
 }
@@ -56084,9 +57284,9 @@ function pezziDelBlocco(nome, pagina2) {
       Boolean
     );
   if (nome === "azioni") {
-    const griglia = doc.getElementById("qa-grid");
-    const vassoio = griglia?.closest?.("[data-dm-vassoio]");
-    const corpo2 = dentro3(vassoio) || dentro3(griglia);
+    const griglia2 = doc.getElementById("qa-grid");
+    const vassoio = griglia2?.closest?.("[data-dm-vassoio]");
+    const corpo2 = dentro3(vassoio) || dentro3(griglia2);
     if (!corpo2) return [];
     const titolo = corpo2.previousElementSibling;
     return titolo?.classList?.contains("section-title") && !titolo.id ? [titolo, corpo2] : [corpo2];
@@ -56298,9 +57498,9 @@ function ensurePannelloDeiBlocchi(body = doc?.getElementById?.("ed-body")) {
   return true;
 }
 function onClickFreccia(event) {
-  const casella3 = event.target?.closest?.("[data-dm-home-blocchi] [data-dm-pastiglie]");
-  if (casella3) {
-    writeJsonIfChanged(CHIAVE_PASTIGLIE, casella3.checked ? null : "no");
+  const casella4 = event.target?.closest?.("[data-dm-home-blocchi] [data-dm-pastiglie]");
+  if (casella4) {
+    writeJsonIfChanged(CHIAVE_PASTIGLIE, casella4.checked ? null : "no");
     vestiLePastiglie();
     return;
   }
@@ -57018,7 +58218,7 @@ function laQuadraturaNonTorna(letture2 = {}) {
   const chi = ["battery", "grid"].find((quale) => !loSbilancio({ ...letto, [quale]: -letto[quale] })) ?? "";
   return { ...sbilancio, chi };
 }
-function batteryReadout(battery = 0, format = (watt3) => laPotenzaInParole(watt3)) {
+function batteryReadout(battery = 0, format = (watt4) => laPotenzaInParole(watt4)) {
   const value = Number(battery);
   if (!Number.isFinite(value) || value === 0) return null;
   return value < 0 ? `▼ ${format(-value)}` : `▲ ${format(value)}`;
@@ -58245,8 +59445,8 @@ function carichiTravasati({ loads = [], flowNodes = null } = {}) {
   const elenco9 = Array.isArray(loads) ? loads.filter(Boolean) : [];
   const dalloSpecchio = /* @__PURE__ */ new Set();
   if (flowNodes && typeof flowNodes === "object" && !Array.isArray(flowNodes))
-    for (const casella3 of CASELLE) {
-      const potenza = clean23(flowNodes?.[casella3]?.pwr);
+    for (const casella4 of CASELLE) {
+      const potenza = clean23(flowNodes?.[casella4]?.pwr);
       if (potenza) dalloSpecchio.add(potenza);
     }
   if (!dalloSpecchio.size) return [];
@@ -59352,25 +60552,25 @@ function wattDi(states, entity2) {
 }
 function comeInElettrodomestici(child, states) {
   const potenza = campoDiPotenza(child, states);
-  const watt3 = wattDi(states, potenza);
+  const watt4 = wattDi(states, potenza);
   const device = {
     ...child,
     power_entity: potenza,
     state_entity: clean24(child.state_entity || child.status_entity || child.state || child.bin),
     control_entity: clean24(child.control_entity || child.switch_entity || child.switch)
   };
-  if (!potenza || watt3 === null) return { device, letture: states || {}, watt: watt3 };
+  if (!potenza || watt4 === null) return { device, letture: states || {}, watt: watt4 };
   const letture2 = Object.create(states || null);
   letture2[potenza] = {
     ...states?.[potenza] || {},
-    state: String(watt3),
+    state: String(watt4),
     attributes: { ...states?.[potenza]?.attributes || {}, unit_of_measurement: "W" }
   };
-  return { device, letture: letture2, watt: watt3 };
+  return { device, letture: letture2, watt: watt4 };
 }
 function subloadState(child = {}, states = {}) {
-  const { device, letture: letture2, watt: watt3 } = comeInElettrodomestici(child, states);
-  if (watt3 === null && !device.state_entity && !device.control_entity)
+  const { device, letture: letture2, watt: watt4 } = comeInElettrodomestici(child, states);
+  if (watt4 === null && !device.state_entity && !device.control_entity)
     return SUBLOAD_STATES.unknown;
   const modello = createApplianceViewModel(device, letture2);
   return SUBLOAD_STATES[modello.mode] || SUBLOAD_STATES.unknown;
@@ -59603,17 +60803,17 @@ function scriviIlGiorno(node, item) {
 }
 function riconcilia(list, model2) {
   let testata4 = list.querySelector(".dm-subload-summary");
-  let griglia = list.querySelector(".dm-subload-grid");
-  if (!testata4 || !griglia) {
+  let griglia2 = list.querySelector(".dm-subload-grid");
+  if (!testata4 || !griglia2) {
     testata4 = header(model2);
-    griglia = element2("div", "dm-subload-grid");
-    list.replaceChildren(testata4, griglia);
+    griglia2 = element2("div", "dm-subload-grid");
+    list.replaceChildren(testata4, griglia2);
   } else {
     aggiornaTestata(testata4, model2);
   }
-  const vuoto4 = griglia.querySelector(".dm-subload-empty");
+  const vuoto4 = griglia2.querySelector(".dm-subload-empty");
   if (!model2.count && !vuoto4)
-    griglia.append(
+    griglia2.append(
       element2(
         "div",
         "dm-subload-empty",
@@ -59625,7 +60825,7 @@ function riconcilia(list, model2) {
     );
   else if (model2.count && vuoto4) vuoto4.remove?.();
   const carte = new Map(
-    [...griglia.querySelectorAll("[data-dm-subload-card]")].map((nodo2) => [
+    [...griglia2.querySelectorAll("[data-dm-subload-card]")].map((nodo2) => [
       nodo2.dataset.dmSubloadCard,
       nodo2
     ])
@@ -59639,17 +60839,17 @@ function riconcilia(list, model2) {
     inFila.push(nodo2 || card(item, model2));
   }
   for (const [id, nodo2] of carte) if (!vivi.has(id)) nodo2.remove?.();
-  const gia = vuotoInScena(griglia) ? 1 : 0;
+  const gia = vuotoInScena(griglia2) ? 1 : 0;
   for (let posto = 0; posto < inFila.length; posto++) {
     const atteso = inFila[posto];
-    const attuale = griglia.children[posto + gia];
+    const attuale = griglia2.children[posto + gia];
     if (attuale === atteso) continue;
-    if (attuale) griglia.insertBefore(atteso, attuale);
-    else griglia.append(atteso);
+    if (attuale) griglia2.insertBefore(atteso, attuale);
+    else griglia2.append(atteso);
   }
   return true;
 }
-var vuotoInScena = (griglia) => Boolean(griglia.querySelector(".dm-subload-empty"));
+var vuotoInScena = (griglia2) => Boolean(griglia2.querySelector(".dm-subload-empty"));
 var ETICHETTE = () => ({
   running: t("IN FUNZIONE", "RUNNING"),
   standby: t("STANDBY", "STANDBY"),
@@ -59897,7 +61097,7 @@ function entita(appliance) {
     viste2.add(id);
     elenco9.push(id);
   };
-  for (const casella3 of CASELLE_PROPRIE) aggiungi4(appliance?.[casella3]);
+  for (const casella4 of CASELLE_PROPRIE) aggiungi4(appliance?.[casella4]);
   for (const voce2 of appliance?.entities || []) aggiungi4(voce2);
   return elenco9;
 }
@@ -60042,7 +61242,7 @@ function riveste(indice) {
     agganciaLaCard(vetrina, model2);
     lista5.append(vetrina);
   }
-  const titoletto = (parole4) => {
+  const titoletto2 = (parole4) => {
     const nodo2 = doc.createElement("h4");
     nodo2.className = "dm-apde-titoletto";
     nodo2.textContent = parole4;
@@ -60051,7 +61251,7 @@ function riveste(indice) {
   const collegato = Boolean(clean(appliance.device_id)) || Boolean(appliance.device_entities?.length);
   if (collegato) {
     try {
-      vesteIntegrazione(lista5, appliance, mostrateDallaCard(appliance, model2), titoletto);
+      vesteIntegrazione(lista5, appliance, mostrateDallaCard(appliance, model2), titoletto2);
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] dettaglio integrazione", errore);
     }
@@ -60059,22 +61259,22 @@ function riveste(indice) {
   }
   const { misure, pillole: pillole2, comandi } = famiglie(appliance);
   if (misure.length) {
-    lista5.append(titoletto(t("Le misure", "The readings")));
-    const griglia = doc.createElement("div");
-    griglia.className = "dm-apde-caselle";
+    lista5.append(titoletto2(t("Le misure", "The readings")));
+    const griglia2 = doc.createElement("div");
+    griglia2.className = "dm-apde-caselle";
     for (const misura7 of misure) {
-      const casella3 = doc.createElement("button");
-      casella3.type = "button";
-      casella3.className = "dm-apde-casella hist-clickable";
-      casella3.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${misura7.glifo}</span>
+      const casella4 = doc.createElement("button");
+      casella4.type = "button";
+      casella4.className = "dm-apde-casella hist-clickable";
+      casella4.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${misura7.glifo}</span>
         <b>${esc(misura7.valore)}</b><span>${esc(misura7.nome)}</span>`;
-      casella3.addEventListener("click", (event) => apriStorico(event, misura7.entity, misura7.nome));
-      griglia.append(casella3);
+      casella4.addEventListener("click", (event) => apriStorico(event, misura7.entity, misura7.nome));
+      griglia2.append(casella4);
     }
-    lista5.append(griglia);
+    lista5.append(griglia2);
   }
   if (pillole2.length) {
-    lista5.append(titoletto(t("Lo stato", "The state")));
+    lista5.append(titoletto2(t("Lo stato", "The state")));
     const fila2 = doc.createElement("div");
     fila2.className = "dm-apde-pillole";
     for (const pillola2 of pillole2) {
@@ -60089,7 +61289,7 @@ function riveste(indice) {
     lista5.append(fila2);
   }
   if (comandi.length) {
-    lista5.append(titoletto(t("Comandi", "Controls")));
+    lista5.append(titoletto2(t("Comandi", "Controls")));
     for (const comando of comandi) {
       const riga3 = doc.createElement("div");
       riga3.className = "dm-apde-comando";
@@ -60113,8 +61313,8 @@ function riveste(indice) {
       lista5.append(riga3);
     }
   }
-  aggiungiAltreLetture(lista5, appliance, titoletto);
-  aggiungiAltriComandi(lista5, appliance, titoletto);
+  aggiungiAltreLetture(lista5, appliance, titoletto2);
+  aggiungiAltriComandi(lista5, appliance, titoletto2);
   return true;
 }
 function mostrateDallaCard(appliance, model2) {
@@ -60123,7 +61323,7 @@ function mostrateDallaCard(appliance, model2) {
     const id = clean(voce2);
     if (id.includes(".")) viste2.add(id);
   };
-  for (const casella3 of [
+  for (const casella4 of [
     "control_entity",
     "power_entity",
     "remaining_entity",
@@ -60131,7 +61331,7 @@ function mostrateDallaCard(appliance, model2) {
     "temperature_entity_2",
     "state_entity"
   ])
-    aggiungi4(appliance?.[casella3]);
+    aggiungi4(appliance?.[casella4]);
   for (const chip of model2?.program?.chips || []) aggiungi4(chip.entity);
   aggiungi4(model2?.program?.phase?.entity);
   for (const id of model2?.program?.considerate || []) aggiungi4(id);
@@ -60196,7 +61396,7 @@ function tastoDelComandoExtra(voce2) {
   });
   return tasto2;
 }
-function aggiungiAltreLetture(lista5, appliance, titoletto) {
+function aggiungiAltreLetture(lista5, appliance, titoletto2) {
   const voci3 = soloQuelleViste(
     lettureDelDispositivo(
       { ...apparecchioDeiComandi(appliance), letture: appliance?.letture },
@@ -60205,28 +61405,28 @@ function aggiungiAltreLetture(lista5, appliance, titoletto) {
     appliance
   );
   if (!voci3.length) return false;
-  lista5.append(titoletto(t("Altre letture", "Other readings")));
-  const griglia = doc.createElement("div");
-  griglia.className = "dm-apde-caselle";
+  lista5.append(titoletto2(t("Altre letture", "Other readings")));
+  const griglia2 = doc.createElement("div");
+  griglia2.className = "dm-apde-caselle";
   for (const voce2 of voci3) {
-    const casella3 = doc.createElement("button");
-    casella3.type = "button";
-    casella3.className = "dm-apde-casella hist-clickable";
-    casella3.dataset.dmApdeEntity = voce2.entity;
-    casella3.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce2.testo)}</b><span>${esc(voce2.name)}</span>`;
-    casella3.addEventListener("click", (event) => apriStorico(event, voce2.entity, voce2.name));
-    griglia.append(casella3);
+    const casella4 = doc.createElement("button");
+    casella4.type = "button";
+    casella4.className = "dm-apde-casella hist-clickable";
+    casella4.dataset.dmApdeEntity = voce2.entity;
+    casella4.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce2.testo)}</b><span>${esc(voce2.name)}</span>`;
+    casella4.addEventListener("click", (event) => apriStorico(event, voce2.entity, voce2.name));
+    griglia2.append(casella4);
   }
-  lista5.append(griglia);
+  lista5.append(griglia2);
   return true;
 }
-function aggiungiAltriComandi(lista5, appliance, titoletto) {
+function aggiungiAltriComandi(lista5, appliance, titoletto2) {
   const voci3 = soloQuelleViste(
     comandiDelDispositivo(apparecchioDeiComandi(appliance), allStates()),
     appliance
   );
   if (!voci3.length) return false;
-  lista5.append(titoletto(t("Altri comandi", "Other commands")));
+  lista5.append(titoletto2(t("Altri comandi", "Other commands")));
   for (const voce2 of voci3) {
     const riga3 = doc.createElement("div");
     riga3.className = "dm-apde-comando dm-apde-comando-extra";
@@ -60307,7 +61507,7 @@ function tastoDelComando(voce2) {
   });
   return tasto2;
 }
-function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto) {
+function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto2) {
   const deviceId = clean(appliance?.device_id);
   const memoria = Array.isArray(appliance?.device_entities) ? appliance.device_entities : [];
   if (!deviceId && !memoria.length) return;
@@ -60345,7 +61545,7 @@ function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto) {
   testa2.innerHTML = `<strong>🔗 ${esc(t("Dall'integrazione", "From the integration"))}${nome ? ` ${esc(nome)}` : ""}</strong>${chi ? `<span>${esc(chi)}</span>` : ""}`;
   lista5.append(testa2);
   if (stato3.length) {
-    lista5.append(titoletto(t("Lo stato del dispositivo", "The device state")));
+    lista5.append(titoletto2(t("Lo stato del dispositivo", "The device state")));
     const fila2 = doc.createElement("div");
     fila2.className = "dm-apde-pillole";
     for (const voce2 of stato3) {
@@ -60361,19 +61561,19 @@ function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto) {
     lista5.append(fila2);
   }
   if (letture2.length) {
-    lista5.append(titoletto(t("Le letture del dispositivo", "The device readings")));
-    const griglia = doc.createElement("div");
-    griglia.className = "dm-apde-caselle";
+    lista5.append(titoletto2(t("Le letture del dispositivo", "The device readings")));
+    const griglia2 = doc.createElement("div");
+    griglia2.className = "dm-apde-caselle";
     for (const voce2 of letture2) {
-      const casella3 = doc.createElement("button");
-      casella3.type = "button";
-      casella3.className = "dm-apde-casella hist-clickable";
-      casella3.dataset.dmApdeEntity = voce2.entity;
-      casella3.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce2.value)}</b><span>${esc(voce2.name)}</span>`;
-      casella3.addEventListener("click", (event) => apriStorico(event, voce2.entity, voce2.name));
-      griglia.append(casella3);
+      const casella4 = doc.createElement("button");
+      casella4.type = "button";
+      casella4.className = "dm-apde-casella hist-clickable";
+      casella4.dataset.dmApdeEntity = voce2.entity;
+      casella4.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce2.value)}</b><span>${esc(voce2.name)}</span>`;
+      casella4.addEventListener("click", (event) => apriStorico(event, voce2.entity, voce2.name));
+      griglia2.append(casella4);
     }
-    lista5.append(griglia);
+    lista5.append(griglia2);
   }
   const rigaDiComando = (voce2) => {
     const riga3 = doc.createElement("div");
@@ -60388,11 +61588,11 @@ function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto) {
     return riga3;
   };
   if (comandi.length) {
-    lista5.append(titoletto(t("I comandi del dispositivo", "The device controls")));
+    lista5.append(titoletto2(t("I comandi del dispositivo", "The device controls")));
     for (const voce2 of comandi) lista5.append(rigaDiComando(voce2));
   }
-  aggiungiAltreLetture(lista5, appliance, titoletto);
-  aggiungiAltriComandi(lista5, appliance, titoletto);
+  aggiungiAltreLetture(lista5, appliance, titoletto2);
+  aggiungiAltriComandi(lista5, appliance, titoletto2);
   if (diagnostica.length) {
     const cassetto = doc.createElement("details");
     cassetto.className = "dm-apde-diagnostica";
@@ -61074,16 +62274,16 @@ function laVoceDaScrivere(quale, voce2 = {}, dentro3 = {}, daImportare = []) {
     if (dove2 < 0) return null;
     const sua = { ...stanze3[dove2] };
     const umidita = pulito40(voce2.classe || voce2.device_class).toLowerCase() === "humidity";
-    const casella3 = umidita ? "hum" : "temp";
-    if (!pulito40(sua[casella3])) {
-      sua[casella3] = entita3;
+    const casella4 = umidita ? "hum" : "temp";
+    if (!pulito40(sua[casella4])) {
+      sua[casella4] = entita3;
       if (!umidita && !pulito40(sua.temp_name)) sua.temp_name = nome;
     } else {
       const extra = Array.isArray(sua.metadata?.temperature_entries) ? [...sua.metadata.temperature_entries] : [];
       const gia = extra.findIndex(
         (una) => pulito40(una?.temp) === entita3 || pulito40(una?.hum) === entita3
       );
-      const riga3 = { id: `temperature-extra-${extra.length + 1}`, name: nome, [casella3]: entita3 };
+      const riga3 = { id: `temperature-extra-${extra.length + 1}`, name: nome, [casella4]: entita3 };
       if (gia >= 0) extra[gia] = { ...extra[gia], ...riga3 };
       else extra.push(riga3);
       sua.metadata = { ...sua.metadata || {}, temperature_entries: extra };
@@ -61883,10 +63083,10 @@ function reportDelleFasce(righe2, fasceSalvate, { prezzoUnico = 0, totale = null
     const giorno = giornoDi(ora2.quando);
     if (!perGiorno.has(giorno)) perGiorno.set(giorno, vuoto(quante2));
     perGiorno.get(giorno)[quale] += ora2.kwh;
-    const casella3 = perOra[quando4.getHours()];
-    if (!casella3) continue;
-    casella3.kwh += ora2.kwh;
-    casella3.euro += ora2.kwh * prezzoDi(quale);
+    const casella4 = perOra[quando4.getHours()];
+    if (!casella4) continue;
+    casella4.kwh += ora2.kwh;
+    casella4.euro += ora2.kwh * prezzoDi(quale);
   }
   const tutti = numero38(totale);
   const scoperti = tutti === null ? 0 : Math.max(0, tutti - spiegati);
@@ -61897,7 +63097,7 @@ function reportDelleFasce(righe2, fasceSalvate, { prezzoUnico = 0, totale = null
   );
   const euroScoperti = scoperti * mediaPesata;
   const kwh2 = spiegati + scoperti;
-  const euro = euroSpiegati + euroScoperti;
+  const euro2 = euroSpiegati + euroScoperti;
   const giorni = [...perGiorno.entries()].sort((uno, due2) => uno[0] < due2[0] ? -1 : 1).map(([giorno, per]) => ({ giorno, per, kwh: per.reduce((a, b) => a + b, 0) }));
   return {
     fasce: config.voci.map((voce2, indice) => ({
@@ -61917,20 +63117,20 @@ function reportDelleFasce(righe2, fasceSalvate, { prezzoUnico = 0, totale = null
      * quella FERIALE di quell'ora — una colonna ha un colore solo, e il sabato
      * non puo' tingerla a meta' — mentre i kilowattora e gli euro sono quelli
      * veri, weekend compreso. */
-    ore: perOra.map((casella3, ora2) => ({
+    ore: perOra.map((casella4, ora2) => ({
       ora: ora2,
-      kwh: casella3.kwh,
-      euro: casella3.euro,
+      kwh: casella4.kwh,
+      euro: casella4.euro,
       fascia: fasciaDelleOre(config, ora2 * 60)
     })),
     kwh: kwh2,
-    euro,
+    euro: euro2,
     /* Il confronto che risponde alla domanda vera: le fasce mi convengono?
      * Si misura sugli stessi kilowattora, col prezzo unico che hai scritto
      * nella stessa scheda. Senza quel prezzo non c'e' confronto da fare —
      * `null`, e chi disegna non scrive la riga. */
     unico: unico > 0 ? { prezzo: unico, euro: kwh2 * unico } : null,
-    risparmio: unico > 0 ? kwh2 * unico - euro : null,
+    risparmio: unico > 0 ? kwh2 * unico - euro2 : null,
     /* Quanta parte e' misurata ora per ora e quanta e' stimata. */
     misurato: { kwh: spiegati, euro: euroSpiegati },
     stimato: { kwh: scoperti, euro: euroScoperti, prezzo: mediaPesata },
@@ -62059,8 +63259,8 @@ function quandoLaPanoramicaSiVede(fai) {
   state60.sentinella.observe(vista2);
 }
 function ilBlocco(crea = false) {
-  const griglia = doc?.querySelector("#ed-pane-panoramica .ed-fin-grid");
-  if (!griglia) return null;
+  const griglia2 = doc?.querySelector("#ed-pane-panoramica .ed-fin-grid");
+  if (!griglia2) return null;
   let blocco3 = doc.getElementById("dm-fasce-report");
   if (!blocco3) {
     if (!crea) return null;
@@ -62068,7 +63268,7 @@ function ilBlocco(crea = false) {
     blocco3.id = "dm-fasce-report";
     blocco3.className = "dm-fasce-report";
   }
-  if (blocco3.previousElementSibling !== griglia) griglia.after(blocco3);
+  if (blocco3.previousElementSibling !== griglia2) griglia2.after(blocco3);
   return blocco3;
 }
 function ilProfilo(crea = false) {
@@ -63695,14 +64895,14 @@ function wireComandi(modal, form) {
     const aggiungi4 = event.target.closest("[data-appl-cmd-add]");
     if (!togli && !proposta && !aggiungi4) return;
     event.preventDefault();
-    const casella3 = blocco3.querySelector("[data-appl-comando-nuovo]");
+    const casella4 = blocco3.querySelector("[data-appl-comando-nuovo]");
     const scelti = elencoComandi(nascosto.value);
     if (togli) {
       if (errore) errore.textContent = "";
       scrivi3(scelti.filter((entity2) => entity2 !== clean(togli.dataset.applCmdDel)));
       return;
     }
-    const nuovo = proposta ? clean(proposta.dataset.applCmdSug) : clean(casella3?.value);
+    const nuovo = proposta ? clean(proposta.dataset.applCmdSug) : clean(casella4?.value);
     if (!genereDelComando(nuovo)) {
       if (errore)
         errore.textContent = t(
@@ -63712,7 +64912,7 @@ function wireComandi(modal, form) {
       return;
     }
     if (errore) errore.textContent = "";
-    if (casella3 && !proposta) casella3.value = "";
+    if (casella4 && !proposta) casella4.value = "";
     scrivi3([...scelti, nuovo]);
   });
   disegnaComandi(modal, form);
@@ -63799,14 +64999,14 @@ function wireLetture(modal, form) {
     const aggiungi4 = event.target.closest("[data-appl-let-add]");
     if (!togli && !proposta && !aggiungi4) return;
     event.preventDefault();
-    const casella3 = blocco3.querySelector("[data-appl-lettura-nuova]");
+    const casella4 = blocco3.querySelector("[data-appl-lettura-nuova]");
     const scelte4 = elencoLetture(nascosto.value);
     if (togli) {
       if (errore) errore.textContent = "";
       scrivi3(scelte4.filter((entity2) => entity2 !== clean(togli.dataset.applLetDel)));
       return;
     }
-    const nuova = proposta ? clean(proposta.dataset.applLetSug) : clean(casella3?.value);
+    const nuova = proposta ? clean(proposta.dataset.applLetSug) : clean(casella4?.value);
     if (!eUnaLettura(nuova)) {
       if (errore)
         errore.textContent = t(
@@ -63816,7 +65016,7 @@ function wireLetture(modal, form) {
       return;
     }
     if (errore) errore.textContent = "";
-    if (casella3 && !proposta) casella3.value = "";
+    if (casella4 && !proposta) casella4.value = "";
     scrivi3([...scelte4, nuova]);
   });
   disegnaLetture(modal, form);
@@ -63895,15 +65095,15 @@ var PAROLE_DELLA_COTTURA = Object.freeze({
   cottura_meno_caldo: () => t("Meno caldo", "Cooler"),
   cottura_bersaglio: () => t("Entità per i servizi", "Entity for the services")
 });
-function parolaDellaCasella(casella3) {
-  const parola = PAROLE_DELLA_COTTURA[casella3];
-  return parola ? parola() : casella3;
+function parolaDellaCasella(casella4) {
+  const parola = PAROLE_DELLA_COTTURA[casella4];
+  return parola ? parola() : casella4;
 }
-function casellaDellaCottura(casella3, valore3, aiuto = "", segnaposto = "") {
-  return `<label class="ed-slot"><span class="ed-slot-lbl">${esc(parolaDellaCasella(casella3))}</span><span class="ed-form-row"><input class="ed-input mono" name="${casella3}" value="${esc(valore3 ?? "")}" placeholder="${esc(segnaposto)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-pick="${casella3}" aria-label="${t("Seleziona entità", "Select entity")}">🔍</button></span>${aiuto ? `<small>${aiuto}</small>` : ""}</label>`;
+function casellaDellaCottura(casella4, valore3, aiuto = "", segnaposto = "") {
+  return `<label class="ed-slot"><span class="ed-slot-lbl">${esc(parolaDellaCasella(casella4))}</span><span class="ed-form-row"><input class="ed-input mono" name="${casella4}" value="${esc(valore3 ?? "")}" placeholder="${esc(segnaposto)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-pick="${casella4}" aria-label="${t("Seleziona entità", "Select entity")}">🔍</button></span>${aiuto ? `<small>${aiuto}</small>` : ""}</label>`;
 }
 function cotturaMarkup(device = {}, tipo = "") {
-  const valore3 = (casella3) => device[casella3] ?? "";
+  const valore3 = (casella4) => device[casella4] ?? "";
   const letture2 = [
     ["cottura_stato", t("Vuota: usa l'«Entità stato programma».", "Empty: uses the “Program state entity”."), "sensor.philips_airfryer_status"],
     ["cottura_programma", "", "sensor.friggitrice_programma"],
@@ -63922,7 +65122,7 @@ function cotturaMarkup(device = {}, tipo = "") {
     cottura_meno_caldo: "philips_airfryer.adjust_temp temp=5 method=subtract"
   };
   const comandi = COMANDI_DELLA_COTTURA.map((chiave2) => `cottura_${chiave2}`);
-  const aperta = CASELLE_DELLA_COTTURA.some((casella3) => clean(device[casella3]));
+  const aperta = CASELLE_DELLA_COTTURA.some((casella4) => clean(device[casella4]));
   return `<details class="dm-appliance-cottura" data-appl-cottura${aperta ? " open" : ""}${tipo ? "" : " hidden"}>
     <summary>🍟 ${t("Cottura — stato, tempi, temperatura e comandi", "Cooking — status, times, temperature and controls")}</summary>
     <div class="dm-appliance-card-fields-intro">${t(
@@ -63931,8 +65131,8 @@ function cotturaMarkup(device = {}, tipo = "") {
   )}</div>
     <div class="dm-appliance-cottura-azioni"><button type="button" class="ed-btn-add" data-appl-cottura-cerca>🔍 ${t("Compila dalle entità dell'apparecchio", "Fill in from the appliance's entities")}</button><output data-appl-cottura-esito></output></div>
     <section class="dm-appliance-entity-grid">
-      ${letture2.map(([casella3, aiuto, segnaposto]) => casellaDellaCottura(casella3, valore3(casella3), aiuto, segnaposto)).join("")}
-      ${comandi.map((casella3) => casellaDellaCottura(casella3, valore3(casella3), "", segnaposti[casella3])).join("")}
+      ${letture2.map(([casella4, aiuto, segnaposto]) => casellaDellaCottura(casella4, valore3(casella4), aiuto, segnaposto)).join("")}
+      ${comandi.map((casella4) => casellaDellaCottura(casella4, valore3(casella4), "", segnaposti[casella4])).join("")}
       ${casellaDellaCottura(CASELLA_DEL_BERSAGLIO, valore3(CASELLA_DEL_BERSAGLIO), t("L'entity_id dato ai servizi che non ne scrivono uno. Vuota: lo stato della cottura.", "The entity_id given to services that do not name one. Empty: the cooking status."), "sensor.philips_airfryer_status")}
     </section>
     <small class="dm-appliance-cottura-anteprima" data-appl-cottura-anteprima></small>
@@ -63966,12 +65166,12 @@ function entitaPerLaCottura(values) {
 function compilaLaCottura(form, entita3, integrazione = "") {
   const proposta = proponiLaCottura(entita3, allStates(), { integrazione });
   const scritte = [];
-  for (const [casella3, valore3] of Object.entries(proposta)) {
-    const campo5 = form.elements[casella3];
+  for (const [casella4, valore3] of Object.entries(proposta)) {
+    const campo5 = form.elements[casella4];
     if (!campo5 || clean(campo5.value)) continue;
     campo5.value = valore3;
     campo5.dispatchEvent(new Event("change", { bubbles: true }));
-    scritte.push(parolaDellaCasella(casella3));
+    scritte.push(parolaDellaCasella(casella4));
   }
   return scritte;
 }
@@ -64038,7 +65238,7 @@ function vociDellApparecchio(values) {
     viste2.add(id);
     elenco9.push(id);
   };
-  for (const casella3 of CASELLE_DELLA_FINESTRA) aggiungi4(values[casella3]);
+  for (const casella4 of CASELLE_DELLA_FINESTRA) aggiungi4(values[casella4]);
   for (const entity2 of elencoLetture(values.letture)) aggiungi4(entity2);
   for (const entity2 of elencoComandi(values.comandi)) aggiungi4(entity2);
   for (const voce2 of entitaDelDispositivo(clean(values.device_id)) || [])
@@ -64461,10 +65661,10 @@ function openApplianceEditor(index) {
     const colorano = elencoColorano(values.colorano);
     if (colorano.length) next[COLORANO_CAMPO] = colorano;
     else delete next[COLORANO_CAMPO];
-    for (const casella3 of CASELLE_DELLA_COTTURA) {
-      const scritto = clean(values[casella3]);
-      if (scritto) next[casella3] = scritto;
-      else delete next[casella3];
+    for (const casella4 of CASELLE_DELLA_COTTURA) {
+      const scritto = clean(values[casella4]);
+      if (scritto) next[casella4] = scritto;
+      else delete next[casella4];
     }
     if (next.threshold_standby === "") delete next.threshold_standby;
     for (const key of [
@@ -64691,7 +65891,7 @@ var RAFFREDDAMENTO = Object.freeze({
   en: "Temperatures & cooling"
 });
 var FLUSSI = Object.freeze({ it: "Flussi ed entità", en: "Flows & entities" });
-var casella = (id, it, en, scheda8, pannello, dove) => Object.freeze({ id, it, en, scheda: scheda8, pannello, dove });
+var casella2 = (id, it, en, scheda8, pannello, dove) => Object.freeze({ id, it, en, scheda: scheda8, pannello, dove });
 function leCaselleDellEnergia(gruppi2 = ENERGY_GROUPS) {
   const fuori = [];
   const viste2 = /* @__PURE__ */ new Set();
@@ -64700,11 +65900,11 @@ function leCaselleDellEnergia(gruppi2 = ENERGY_GROUPS) {
       const id = `${gruppo}.${chiave2}`;
       if (viste2.has(id)) continue;
       viste2.add(id);
-      fuori.push(casella(id, etichetta3, etichetta3, "sez1", "flows", `${FLUSSI.it} · ${titolo}`));
+      fuori.push(casella2(id, etichetta3, etichetta3, "sez1", "flows", `${FLUSSI.it} · ${titolo}`));
     }
   }
   for (const [chiave2, it, en] of raffreddamento())
-    fuori.push(casella(`cooling.${chiave2}`, it, en, "sez1", "settings", RAFFREDDAMENTO.it));
+    fuori.push(casella2(`cooling.${chiave2}`, it, en, "sez1", "settings", RAFFREDDAMENTO.it));
   return fuori;
 }
 function leCaselleDelGuscio(raccolte = []) {
@@ -64717,13 +65917,13 @@ function leCaselleDelGuscio(raccolte = []) {
       ([inizio]) => ref.startsWith(inizio)
     )?.[1];
     if (!scheda8) continue;
-    fuori.push(casella(ref, nome, nome, scheda8, "", pulito42(raccolta?.dove)));
+    fuori.push(casella2(ref, nome, nome, scheda8, "", pulito42(raccolta?.dove)));
   }
   return fuori;
 }
 function leCaselleDellaBarra(righe2 = LE_CASELLE_DELLA_BARRA) {
   return (Array.isArray(righe2) ? righe2 : []).map(
-    (una) => casella(`dm-casa.${una.chiave}`, una.it, una.en, "sez0", "", IL_RIQUADRO_IN_ITALIANO)
+    (una) => casella2(`dm-casa.${una.chiave}`, una.it, una.en, "sez0", "", IL_RIQUADRO_IN_ITALIANO)
   );
 }
 function leCaselleDelConfig(raccolte = [], gruppi2 = ENERGY_GROUPS) {
@@ -64755,7 +65955,7 @@ function cercaFraLeCaselle(parola, caselle2 = [], lingua2 = "it") {
 var KEY70 = "__DASHBOARDMODERN_CERCA_CONFIG__";
 var state66 = root[KEY70] ||= { installed: false, parola: "", aperta: false, raccolte: null };
 var BARRA = "dm-cerca-config";
-var STILE6 = "dm-cerca-config-style";
+var STILE7 = "dm-cerca-config-style";
 var SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_stanze: "stanze",
   cd_stanze_entita: "stanze",
@@ -64866,11 +66066,11 @@ var SCHEDA_DELLO_SLOT = Object.freeze({
 });
 var CASSETTI_DELLE_MAPPATURE = /* @__PURE__ */ new Set(["cd_entity_overrides", "entityOverrides"]);
 function schedaDiUnaCasellaMappata(esito2) {
-  const casella3 = [clean(esito2?.campo), clean(esito2?.percorso?.at?.(-1))].find(
+  const casella4 = [clean(esito2?.campo), clean(esito2?.percorso?.at?.(-1))].find(
     (una) => una.startsWith("dm.")
   );
-  if (!casella3 || isRetiredEditorSlot(casella3)) return "";
-  return Object.entries(SCHEDA_DELLO_SLOT).find(([inizio]) => casella3.startsWith(inizio))?.[1] || "";
+  if (!casella4 || isRetiredEditorSlot(casella4)) return "";
+  return Object.entries(SCHEDA_DELLO_SLOT).find(([inizio]) => casella4.startsWith(inizio))?.[1] || "";
 }
 function schedaDelRisultato(esito2) {
   if (esito2.chiave === "dm_dashboard_state") {
@@ -64891,7 +66091,7 @@ function linguette() {
 }
 function installaLoStile2() {
   installStyle(
-    STILE6,
+    STILE7,
     `
     /* Dentro il corpo e appiccicata in cima, non sopra di lui: una riga in piu'
        fra le linguette e il corpo rubava altezza al modale, e su un telefono
@@ -65068,12 +66268,12 @@ function disegnaGliEsiti(contenitore2, parola) {
 }
 function ensureBarraDiRicerca() {
   const strisce = linguette();
-  const guscio2 = strisce?.parentElement || null;
-  if (!strisce || !guscio2) return false;
+  const guscio3 = strisce?.parentElement || null;
+  if (!strisce || !guscio3) return false;
   installaLoStile2();
-  let barra = guscio2.querySelector(`:scope > .${BARRA}`);
+  let barra = guscio3.querySelector(`:scope > .${BARRA}`);
   if (barra) {
-    const famiglie3 = guscio2.querySelector(":scope > #dm-alberatura-famiglie");
+    const famiglie3 = guscio3.querySelector(":scope > #dm-alberatura-famiglie");
     const dopo = famiglie3 || strisce;
     if (barra.nextElementSibling !== dopo) dopo.before(barra);
     return false;
@@ -65098,7 +66298,7 @@ function ensureBarraDiRicerca() {
   esiti.className = `${BARRA}-esiti`;
   esiti.hidden = !state66.parola;
   barra.append(riga3, esiti);
-  const famiglie2 = guscio2.querySelector(":scope > #dm-alberatura-famiglie");
+  const famiglie2 = guscio3.querySelector(":scope > #dm-alberatura-famiglie");
   (famiglie2 || strisce).before(barra);
   const ridisegna27 = () => {
     state66.parola = clean(campo5.value);
@@ -65242,10 +66442,10 @@ var KEY72 = "__DASHBOARDMODERN_REPORT_TENDINA__";
 var state68 = root[KEY72] ||= { installed: false };
 var SELETTORE = "ed-dev-selector";
 var TASTO = "dm-report-tendina";
-var STILE7 = "dm-report-tendina-style";
+var STILE8 = "dm-report-tendina-style";
 function installaLoStile4() {
   installStyle(
-    STILE7,
+    STILE8,
     `
     .dm-report-tendina-cornice{position:relative!important;display:block!important;width:100%!important;min-width:0!important}
     .dm-report-tendina-cornice>#${SELETTORE}{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:0!important;pointer-events:none!important}
@@ -65673,12 +66873,12 @@ var NOME_MDI = /^mdi:[a-z0-9-]+$/i;
 function disegnoDelToken(token) {
   return root.DashboardModernIconEngine?.markup?.("action", token, { size: 22 }) || "";
 }
-function disegnaIlNomeMdi(casella3) {
-  const token = clean(casella3?.textContent);
+function disegnaIlNomeMdi(casella4) {
+  const token = clean(casella4?.textContent);
   if (!NOME_MDI.test(token)) return false;
   const disegnata = disegnoDelToken(token);
   if (!disegnata) return false;
-  casella3.innerHTML = disegnata;
+  casella4.innerHTML = disegnata;
   return true;
 }
 function disegnaIlNomeInTesta(riga3) {
@@ -65689,11 +66889,11 @@ function disegnaIlNomeInTesta(riga3) {
   if (!trovato) return false;
   const disegnata = disegnoDelToken(trovato[1]);
   if (!disegnata) return false;
-  const casella3 = doc.createElement("span");
-  casella3.className = "dm-avviso-icona";
-  casella3.innerHTML = disegnata;
+  const casella4 = doc.createElement("span");
+  casella4.className = "dm-avviso-icona";
+  casella4.innerHTML = disegnata;
   primo.nodeValue = testo2.slice(trovato[0].length);
-  riga3.insertBefore(casella3, primo);
+  riga3.insertBefore(casella4, primo);
   return true;
 }
 function ridisegnaLeIconeDegliAvvisi() {
@@ -65706,7 +66906,7 @@ function disegnaLeIconeDegliAvvisi() {
   const passa = (radice2, caselle2, nomi) => {
     if (!radice2) return;
     for (const dove of caselle2)
-      for (const casella3 of radice2.querySelectorAll(dove)) if (disegnaIlNomeMdi(casella3)) quante2 += 1;
+      for (const casella4 of radice2.querySelectorAll(dove)) if (disegnaIlNomeMdi(casella4)) quante2 += 1;
     for (const dove of nomi)
       for (const riga3 of radice2.querySelectorAll(dove)) if (disegnaIlNomeInTesta(riga3)) quante2 += 1;
   };
@@ -66140,10 +67340,10 @@ function casellaDellaCentrale() {
   ) || null;
 }
 function ensureAlarmModesBlock() {
-  const casella3 = casellaDellaCentrale();
+  const casella4 = casellaDellaCentrale();
   let blocco3 = doc?.getElementById?.(BLOCK_ID);
-  const modi = casella3 ? accettate() : [];
-  if (!casella3 || modi.length < 2) {
+  const modi = casella4 ? accettate() : [];
+  if (!casella4 || modi.length < 2) {
     blocco3?.remove();
     return false;
   }
@@ -66152,9 +67352,9 @@ function ensureAlarmModesBlock() {
     blocco3 = doc.createElement("section");
     blocco3.id = BLOCK_ID;
     blocco3.className = "dm-alarm-modes";
-    casella3.after(blocco3);
-  } else if (blocco3.previousElementSibling !== casella3) {
-    casella3.after(blocco3);
+    casella4.after(blocco3);
+  } else if (blocco3.previousElementSibling !== casella4) {
+    casella4.after(blocco3);
   }
   if (blocco3.dataset.firma === firma2) return false;
   blocco3.dataset.firma = firma2;
@@ -66316,14 +67516,14 @@ function firmaDelle(modi) {
   ).join("|");
 }
 function ensureAntifurtoSuMisuraBlock() {
-  const casella3 = casellaDellaCentrale();
+  const casella4 = casellaDellaCentrale();
   let blocco3 = doc?.getElementById?.(BLOCK_ID2);
-  if (!casella3) {
+  if (!casella4) {
     blocco3?.remove();
     return false;
   }
   const modi = grezze();
-  const sopra = doc?.getElementById?.("dm-alarm-modes") || casella3;
+  const sopra = doc?.getElementById?.("dm-alarm-modes") || casella4;
   if (!blocco3) {
     blocco3 = doc.createElement("section");
     blocco3.id = BLOCK_ID2;
@@ -66534,9 +67734,9 @@ function casellaDelleTelecamere() {
   return slot?.closest?.(".ed-slot") || slot || null;
 }
 function ensureRilevamentiBlock() {
-  const casella3 = casellaDelleTelecamere();
+  const casella4 = casellaDelleTelecamere();
   let blocco3 = doc?.getElementById?.(BLOCK_ID3);
-  if (!casella3) {
+  if (!casella4) {
     blocco3?.remove();
     return false;
   }
@@ -66546,9 +67746,9 @@ function ensureRilevamentiBlock() {
     blocco3 = doc.createElement("section");
     blocco3.id = BLOCK_ID3;
     blocco3.className = "dm-ril";
-    casella3.after(blocco3);
-  } else if (blocco3.previousElementSibling !== casella3) {
-    casella3.after(blocco3);
+    casella4.after(blocco3);
+  } else if (blocco3.previousElementSibling !== casella4) {
+    casella4.after(blocco3);
   }
   const firma2 = firmaDelle2(camere, tutte);
   if (blocco3.dataset.firma === firma2) return false;
@@ -66742,9 +67942,9 @@ function casellaDelleTelecamere2() {
   return slot?.closest?.(".ed-slot") || slot || null;
 }
 function ensureTelecamereRiservateBlock() {
-  const casella3 = casellaDelleTelecamere2();
+  const casella4 = casellaDelleTelecamere2();
   let blocco3 = doc?.getElementById?.(BLOCK_ID4);
-  if (!casella3) {
+  if (!casella4) {
     blocco3?.remove();
     return false;
   }
@@ -66754,9 +67954,9 @@ function ensureTelecamereRiservateBlock() {
     blocco3 = doc.createElement("section");
     blocco3.id = BLOCK_ID4;
     blocco3.className = "dm-camp";
-    casella3.after(blocco3);
-  } else if (blocco3.previousElementSibling !== casella3) {
-    casella3.after(blocco3);
+    casella4.after(blocco3);
+  } else if (blocco3.previousElementSibling !== casella4) {
+    casella4.after(blocco3);
   }
   const firma2 = firmaDelle3(camere, cEQualcuno);
   if (blocco3.dataset.firma === firma2) return false;
@@ -66765,15 +67965,15 @@ function ensureTelecamereRiservateBlock() {
   return true;
 }
 function onCambio2(evento) {
-  const casella3 = evento?.target?.closest?.("[data-dm-camp]");
-  if (!casella3 || !doc?.getElementById?.(BLOCK_ID4)?.contains(casella3)) return;
-  const entity2 = clean(casella3.dataset.dmCamp);
+  const casella4 = evento?.target?.closest?.("[data-dm-camp]");
+  if (!casella4 || !doc?.getElementById?.(BLOCK_ID4)?.contains(casella4)) return;
+  const entity2 = clean(casella4.dataset.dmCamp);
   if (!entity2) return;
-  if (casella3.checked && !persone2().length) {
-    casella3.checked = false;
+  if (casella4.checked && !persone2().length) {
+    casella4.checked = false;
     return;
   }
-  salva6(conLaRiservata(scelte2(), entity2, casella3.checked));
+  salva6(conLaRiservata(scelte2(), entity2, casella4.checked));
   ensureTelecamereRiservateBlock();
 }
 function css6() {
@@ -66865,9 +68065,9 @@ function doveVa() {
   return slot?.closest?.(".ed-slot") || slot || null;
 }
 function ensureTelecamereSpenteBlock() {
-  const casella3 = doveVa();
+  const casella4 = doveVa();
   let blocco3 = doc?.getElementById?.(BLOCK_ID5);
-  if (!casella3) {
+  if (!casella4) {
     blocco3?.remove();
     return false;
   }
@@ -66875,9 +68075,9 @@ function ensureTelecamereSpenteBlock() {
     blocco3 = doc.createElement("section");
     blocco3.id = BLOCK_ID5;
     blocco3.className = "dm-cams";
-    casella3.after(blocco3);
-  } else if (blocco3.previousElementSibling !== casella3) {
-    casella3.after(blocco3);
+    casella4.after(blocco3);
+  } else if (blocco3.previousElementSibling !== casella4) {
+    casella4.after(blocco3);
   }
   const acceso6 = siVedono();
   const quante2 = quanteCeNeSono();
@@ -66888,9 +68088,9 @@ function ensureTelecamereSpenteBlock() {
   return true;
 }
 function onCambio3(evento) {
-  const casella3 = evento?.target?.closest?.("[data-dm-cams]");
-  if (!casella3 || !doc?.getElementById?.(BLOCK_ID5)?.contains(casella3)) return;
-  salva7(casella3.checked);
+  const casella4 = evento?.target?.closest?.("[data-dm-cams]");
+  if (!casella4 || !doc?.getElementById?.(BLOCK_ID5)?.contains(casella4)) return;
+  salva7(casella4.checked);
   ensureTelecamereSpenteBlock();
 }
 function css7() {
@@ -66984,9 +68184,9 @@ function ensureTesseraDallaScheda() {
   return true;
 }
 function onCambio4(evento) {
-  const casella3 = evento?.target?.closest?.("[data-dm-tessc]");
-  if (!casella3 || !doc?.getElementById?.(BLOCK_ID6)?.contains(casella3)) return;
-  salva8(casella3.checked);
+  const casella4 = evento?.target?.closest?.("[data-dm-tessc]");
+  if (!casella4 || !doc?.getElementById?.(BLOCK_ID6)?.contains(casella4)) return;
+  salva8(casella4.checked);
   ensureTesseraDallaScheda();
 }
 function css8() {
@@ -67070,11 +68270,11 @@ function laRicettaDelDispositivo(entita3, risolvi2) {
   const scritta = pulito43(entita3);
   if (!scritta.includes(".")) return null;
   const risolta2 = typeof risolvi2 === "function" ? risolvi2(scritta) : null;
-  const vera = pulito43(risolta2?.entita) || scritta;
-  if (!vera.includes(".")) return null;
-  const dominio4 = vera.split(".")[0].toLowerCase();
+  const vera2 = pulito43(risolta2?.entita) || scritta;
+  if (!vera2.includes(".")) return null;
+  const dominio4 = vera2.split(".")[0].toLowerCase();
   if (NON_SI_COMMUTA_AL_BUIO.has(dominio4) || !SI_COMMUTANO.has(dominio4)) return null;
-  return { dominio: dominio4, servizio: "toggle", entita: vera, dati: {} };
+  return { dominio: dominio4, servizio: "toggle", entita: vera2, dati: {} };
 }
 function iDispositiviPerLAuto(candidati = [], risolvi2 = null) {
   const perGenere = new Map(GENERI_IN_AUTO.map((genere) => [genere, []]));
@@ -67390,12 +68590,12 @@ function normalizeQuickClimate(stored) {
   const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
   const mode = pulito44(dato.mode).toLowerCase();
   const fan = pulito44(dato.fan);
-  const gradi5 = Number(dato.temperature);
+  const gradi6 = Number(dato.temperature);
   return {
     mode: QUICK_CLIMATE_MODES.includes(mode) ? mode : QUICK_CLIMATE_DEFAULT.mode,
     /* `null` non e' «zero gradi»: e' «la temperatura non la tocco». Si
      * distingue dalla casella vuota, che e' proprio quello che si vuol dire. */
-    temperature: dato.temperature === null || pulito44(dato.temperature) === "" ? null : Number.isFinite(gradi5) ? Math.min(MAX, Math.max(MIN, Math.round(gradi5 * 2) / 2)) : QUICK_CLIMATE_DEFAULT.temperature,
+    temperature: dato.temperature === null || pulito44(dato.temperature) === "" ? null : Number.isFinite(gradi6) ? Math.min(MAX, Math.max(MIN, Math.round(gradi6 * 2) / 2)) : QUICK_CLIMATE_DEFAULT.temperature,
     fan
   };
 }
@@ -67825,8 +69025,8 @@ function onClick14(evento) {
   const lente = evento.target.closest("[data-dm-vmc-pick]");
   if (lente) {
     evento.preventDefault();
-    const casella3 = doc.getElementById(lente.dataset.dmVmcPick);
-    if (casella3) root.wzPickEntity?.(casella3);
+    const casella4 = doc.getElementById(lente.dataset.dmVmcPick);
+    if (casella4) root.wzPickEntity?.(casella4);
     return;
   }
   const togli = evento.target.closest("[data-dm-vmc-togli]");
@@ -68023,8 +69223,8 @@ function onClick15(evento) {
   const lente = evento.target.closest("[data-dm-deum-pick]");
   if (lente) {
     evento.preventDefault();
-    const casella3 = doc.getElementById(lente.dataset.dmDeumPick);
-    if (casella3) root.wzPickEntity?.(casella3);
+    const casella4 = doc.getElementById(lente.dataset.dmDeumPick);
+    if (casella4) root.wzPickEntity?.(casella4);
     return;
   }
   const togli = evento.target.closest("[data-dm-deum-togli]");
@@ -68278,11 +69478,11 @@ function ascolta() {
   riconoscimento.onresult = (evento) => {
     let frase2 = "";
     for (const voce2 of evento.results) frase2 += voce2[0]?.transcript || "";
-    const casella3 = doc?.querySelector?.("[data-dm-assist-testo]");
-    if (casella3) casella3.value = frase2;
+    const casella4 = doc?.querySelector?.("[data-dm-assist-testo]");
+    if (casella4) casella4.value = frase2;
     if (evento.results[evento.results.length - 1]?.isFinal) {
       state81.ascolto = null;
-      if (casella3) casella3.value = "";
+      if (casella4) casella4.value = "";
       chiedi4(frase2);
     }
   };
@@ -68352,9 +69552,9 @@ function finestra3() {
   modale.querySelector("[data-dm-assist-mic]")?.addEventListener("click", () => ascolta());
   modale.querySelector("[data-dm-assist-form]")?.addEventListener("submit", (evento) => {
     evento.preventDefault();
-    const casella3 = modale.querySelector("[data-dm-assist-testo]");
-    const frase2 = clean(casella3?.value);
-    if (casella3) casella3.value = "";
+    const casella4 = modale.querySelector("[data-dm-assist-testo]");
+    const frase2 = clean(casella4?.value);
+    if (casella4) casella4.value = "";
     chiedi4(frase2);
   });
   doc.body.append(modale);
@@ -68544,9 +69744,9 @@ function ensureAssistEditor() {
   const corpo2 = doc?.getElementById?.("ed-body");
   if (!corpo2 || schedaAttiva() !== SCHEDA2) return false;
   if (corpo2.querySelector("[data-dm-assist-ed]")) return true;
-  const guscio2 = doc.createElement("div");
-  guscio2.innerHTML = rigaMarkup8();
-  const riga3 = guscio2.firstElementChild;
+  const guscio3 = doc.createElement("div");
+  guscio3.innerHTML = rigaMarkup8();
+  const riga3 = guscio3.firstElementChild;
   if (!riga3) return false;
   inserisciInOrdine(corpo2, riga3, ORDINE_IMPOSTAZIONI.assist, dopoIGenerali);
   return true;
@@ -68629,11 +69829,11 @@ function avvisa(quale) {
   else root.alert?.(detto2);
 }
 function proponiIlNome() {
-  const casella3 = campo2(CAMPO_NOME);
-  if (!casella3 || clean(casella3.value)) return false;
+  const casella4 = campo2(CAMPO_NOME);
+  if (!casella4 || clean(casella4.value)) return false;
   const proposto = nomeProposto(valore2(CAMPO_ENTITA));
   if (!proposto) return false;
-  casella3.value = proposto;
+  casella4.value = proposto;
   return true;
 }
 function onInput3(event) {
@@ -68687,24 +69887,24 @@ function tastoAggiungi2() {
 function ensureTrvField() {
   const body = doc?.getElementById?.("ed-body");
   const dentroClima = Boolean(body?.querySelector?.("#ed-cl-ent"));
-  let casella3 = doc?.getElementById?.(CAMPO_ID)?.closest?.(".dm-trv-slot");
+  let casella4 = doc?.getElementById?.(CAMPO_ID)?.closest?.(".dm-trv-slot");
   if (!dentroClima) {
-    casella3?.remove();
+    casella4?.remove();
     return false;
   }
-  if (casella3) return true;
+  if (casella4) return true;
   const ancora2 = body.querySelector("#dm-quick-climate") || tastoAggiungi2();
   if (!ancora2) return false;
-  casella3 = doc.createElement("div");
-  casella3.className = "dm-trv-slot";
-  casella3.innerHTML = `<div class="dm-trv-campo" style="display:flex; gap:8px; margin-bottom:6px;"><input id="${CAMPO_ID}" class="ed-input mono" style="flex:1;" placeholder="sensor.trv_valve_position" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-trv-pick aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></div>
+  casella4 = doc.createElement("div");
+  casella4.className = "dm-trv-slot";
+  casella4.innerHTML = `<div class="dm-trv-campo" style="display:flex; gap:8px; margin-bottom:6px;"><input id="${CAMPO_ID}" class="ed-input mono" style="flex:1;" placeholder="sensor.trv_valve_position" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-trv-pick aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></div>
     <small>${esc(
     t(
       "Il sensore o il number con la posizione della valvola termostatica, da 0 a 100: la card mostra quanto è aperta e quanto chiusa. Se l'unità climate espone già valve_position, non serve.",
       "The sensor or number with the thermostatic valve position, 0 to 100: the card shows how open and how closed it is. If the climate entity already exposes valve_position, you do not need it."
     )
   )}</small>`;
-  ancora2.before(casella3);
+  ancora2.before(casella4);
   return true;
 }
 function agganciaAggiunta2() {
@@ -68722,8 +69922,8 @@ function agganciaAggiunta2() {
           writeJsonIfChanged("cd_clima_units", lista5);
           root.buildClimaCards?.();
         }
-        const casella3 = doc?.getElementById?.(CAMPO_ID);
-        if (casella3) casella3.value = "";
+        const casella4 = doc?.getElementById?.(CAMPO_ID);
+        if (casella4) casella4.value = "";
       }
     } catch (_error) {
     }
@@ -68738,8 +69938,8 @@ function agganciaAggiunta2() {
 function onClick16(event) {
   if (!event.target?.closest?.("[data-dm-trv-pick]")) return;
   event.preventDefault();
-  const casella3 = doc?.getElementById?.(CAMPO_ID);
-  if (casella3) root.wzPickEntity?.(casella3);
+  const casella4 = doc?.getElementById?.(CAMPO_ID);
+  if (casella4) root.wzPickEntity?.(casella4);
 }
 function installTrvEditor() {
   if (!doc || state84.installed) return false;
@@ -69259,10 +70459,10 @@ function metti() {
     aggiornaNota();
     return false;
   }
-  const casella3 = doc.createElement("div");
-  casella3.className = "dm-rtsp-casella";
-  casella3.innerHTML = campoMarkup3(indirizzoDelForm());
-  (flusso.nextElementSibling || flusso).after(casella3);
+  const casella4 = doc.createElement("div");
+  casella4.className = "dm-rtsp-casella";
+  casella4.innerHTML = campoMarkup3(indirizzoDelForm());
+  (flusso.nextElementSibling || flusso).after(casella4);
   aggiornaNota();
   return true;
 }
@@ -69550,11 +70750,11 @@ var accesa2 = (lista5) => clean(lista5.find((riga3) => riga3?.corrente)?.id);
 function ensureAreeEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva2() !== SCHEDA3) return false;
-  const casella3 = casellaDelGuscio();
+  const casella4 = casellaDelGuscio();
   const inElenco = readJson(CHIAVE_CENTRALI, []);
   const pieno = aree(inElenco);
-  const accordion = casella3?.closest?.("details.ed-acc") || null;
-  const suo2 = casella3?.closest?.(".ed-slot, .dm-slot") || casella3;
+  const accordion = casella4?.closest?.("details.ed-acc") || null;
+  const suo2 = casella4?.closest?.(".ed-slot, .dm-slot") || casella4;
   if (suo2) suo2.hidden = pieno;
   let blocco3 = body.querySelector(`.${BLOCCO}`);
   if (!blocco3) {
@@ -69868,22 +71068,22 @@ function metti2() {
   const dove = ancora();
   if (!dove) return false;
   if (doc?.getElementById?.(CAMPO2)) return false;
-  const casella3 = doc.createElement("div");
-  casella3.className = "dm-vivo-casella";
-  casella3.innerHTML = campoMarkup4(vuoleIlVivo(telecameraDelForm() || {}));
-  dove.after(casella3);
+  const casella4 = doc.createElement("div");
+  casella4.className = "dm-vivo-casella";
+  casella4.innerHTML = campoMarkup4(vuoleIlVivo(telecameraDelForm() || {}));
+  dove.after(casella4);
   return true;
 }
 function rileggi2() {
-  const casella3 = doc?.getElementById?.(CAMPO2);
-  if (!casella3) return false;
-  casella3.checked = vuoleIlVivo(telecameraDelForm() || {});
+  const casella4 = doc?.getElementById?.(CAMPO2);
+  if (!casella4) return false;
+  casella4.checked = vuoleIlVivo(telecameraDelForm() || {});
   return true;
 }
 function arricchisci2(cams) {
-  const casella3 = doc?.getElementById?.(CAMPO2);
-  if (!Array.isArray(cams) || !casella3) return cams;
-  const acceso6 = casella3.checked === true;
+  const casella4 = doc?.getElementById?.(CAMPO2);
+  if (!Array.isArray(cams) || !casella4) return cams;
+  const acceso6 = casella4.checked === true;
   const nome = valoreDi2("ed-cam-name");
   const entita3 = valoreDi2("ed-cam-ent");
   return cams.map((cam) => {
@@ -70005,7 +71205,7 @@ function aggancia4() {
   root.apriDettagli = vestito;
   return true;
 }
-var STILE8 = `
+var STILE9 = `
 #details-list .dm-clpd-testata{
   font-size:10px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;
   color:var(--text-dim,#94a3b8);padding:12px 4px 6px}
@@ -70015,7 +71215,7 @@ var STILE8 = `
 function installPopupClimaDistingue() {
   if (!doc || state90.installed) return;
   state90.installed = true;
-  installStyle("dm-popup-clima-distingue-style", STILE8);
+  installStyle("dm-popup-clima-distingue-style", STILE9);
   aggancia4();
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"]) {
     root.addEventListener?.(evento, aggancia4);
@@ -70084,12 +71284,12 @@ function tasto(voce2) {
   return nodo2;
 }
 function disegnaProgrammi() {
-  const griglia = doc?.querySelector?.("#lavatrice-modal .lav-preset-grid");
-  if (!griglia) return false;
+  const griglia2 = doc?.querySelector?.("#lavatrice-modal .lav-preset-grid");
+  if (!griglia2) return false;
   const voci3 = programmiAttuali();
-  griglia.replaceChildren(...voci3.map(tasto));
-  const titolo = griglia.previousElementSibling;
-  griglia.style.display = voci3.length ? "" : "none";
+  griglia2.replaceChildren(...voci3.map(tasto));
+  const titolo = griglia2.previousElementSibling;
+  griglia2.style.display = voci3.length ? "" : "none";
   if (titolo?.tagName === "H4") titolo.style.display = voci3.length ? "" : "none";
   return true;
 }
@@ -70182,11 +71382,11 @@ function scriviCasella(ref, valore3) {
   }
   return true;
 }
-function rigaCasella(casella3) {
+function rigaCasella(casella4) {
   const nodo2 = doc.createElement("div");
   nodo2.className = "ed-slot dm-lav-slot";
-  const valore3 = clean(overrides()[casella3.ref]);
-  nodo2.innerHTML = `<div class="ed-slot-lbl">${esc(t(casella3.it, casella3.en))}</div><div class="dm-lav-slot-riga"><input class="ed-input mono ed-slot-in dm-lav-slot-in" autocomplete="off" data-ref="${esc(casella3.ref)}" value="${esc(valore3)}" placeholder="es. sensor.lavatrice_fase" aria-label="${esc(t(casella3.it, casella3.en))}"></div>`;
+  const valore3 = clean(overrides()[casella4.ref]);
+  nodo2.innerHTML = `<div class="ed-slot-lbl">${esc(t(casella4.it, casella4.en))}</div><div class="dm-lav-slot-riga"><input class="ed-input mono ed-slot-in dm-lav-slot-in" autocomplete="off" data-ref="${esc(casella4.ref)}" value="${esc(valore3)}" placeholder="es. sensor.lavatrice_fase" aria-label="${esc(t(casella4.it, casella4.en))}"></div>`;
   return nodo2;
 }
 function creaCarta() {
@@ -70203,16 +71403,16 @@ function creaCarta() {
   const righe2 = carta.querySelector(".dm-lav-righe");
   programmiAttuali().forEach((voce2) => righe2.append(rigaEditor2(voce2)));
   const caselle2 = carta.querySelector(".dm-lav-caselle");
-  CASELLE2.forEach((casella3) => caselle2.append(rigaCasella(casella3)));
+  CASELLE2.forEach((casella4) => caselle2.append(rigaCasella(casella4)));
   decoraCaselleDiUnaCarta(caselle2);
   const salva30 = () => {
     scriviConfig2(raccogli6(carta));
     disegnaProgrammi();
   };
   carta.addEventListener("change", (evento) => {
-    const casella3 = evento.target?.closest?.(".dm-lav-slot-in");
-    if (casella3) {
-      scriviCasella(casella3.dataset.ref, casella3.value);
+    const casella4 = evento.target?.closest?.(".dm-lav-slot-in");
+    if (casella4) {
+      scriviCasella(casella4.dataset.ref, casella4.value);
       return;
     }
     salva30();
@@ -70266,7 +71466,7 @@ function montaNelleAzioni() {
   }
   return montata;
 }
-var STILE9 = `
+var STILE10 = `
 #lavatrice-modal .lav-preset-btn{
   border:1px solid var(--card-border,#e2e8f0);border-radius:14px;background:var(--card-bg,#fff);
   box-shadow:0 1px 3px rgba(15,23,42,.05);cursor:pointer;transition:transform .15s ease,border-color .2s ease}
@@ -70298,7 +71498,7 @@ function laFinestraSiVede() {
 function installPopupLavatrice() {
   if (state91.installed) return false;
   if (!doc?.getElementById) return false;
-  installStyle("dm-popup-lavatrice-style", STILE9);
+  installStyle("dm-popup-lavatrice-style", STILE10);
   const ridisegna27 = () => {
     disegnaProgrammi();
     vesteImmagine();
@@ -71095,12 +72295,12 @@ function disegniNellaBarra(scope = doc) {
     const pagina2 = clean(scheda8.dataset.tab);
     const disegno4 = disegnoDellaPagina(pagina2);
     if (!disegno4) continue;
-    const casella3 = scheda8.querySelector(":scope > .icon");
-    if (!casella3 || disegnoGiaNellaCasella(casella3, disegno4)) continue;
+    const casella4 = scheda8.querySelector(":scope > .icon");
+    if (!casella4 || disegnoGiaNellaCasella(casella4, disegno4)) continue;
     const marchio = oggettoWidget(disegno4, "", `nav-${pagina2}`);
     if (!marchio) continue;
-    casella3.innerHTML = marchio;
-    casella3.dataset.dmOggetto = disegno4;
+    casella4.innerHTML = marchio;
+    casella4.dataset.dmOggetto = disegno4;
     messi += 1;
   }
   return messi;
@@ -74315,14 +75515,14 @@ function installAddWrappers() {
       const umidita = umiditaDellaRiga(doc.getElementById("ed-tp-umidita")?.value);
       if (umidita == null) delete list[index].umidita;
       else list[index].umidita = umidita;
-      for (const [campo5, chiave2, casella3] of [
+      for (const [campo5, chiave2, casella4] of [
         ["entity", "down", "ed-tp-down"],
         ["tenda", "tendaDown", "ed-tp-down-tenda"],
         ["tendaSole", "tendaSoleDown", "ed-tp-down-tendasole"]
       ]) {
         const giu = coverDownRelay({
           entity: list[index][campo5],
-          down: doc.getElementById(casella3)?.value
+          down: doc.getElementById(casella4)?.value
         });
         if (giu) list[index][chiave2] = giu;
         else delete list[index][chiave2];
@@ -75324,10 +76524,10 @@ function normalizeReportEditorSection() {
     row.dataset.historyValid = String(!fields.entity?.value || isLifetimeMeter(fields.entity.value));
     fields.enabled?.closest("label")?.classList.add("dm-report-enabled");
     fields.label?.classList.add("dm-report-label");
-    const casella3 = fields.icon?.closest(".dm-icon-field,.ed-form-row");
-    if (casella3) {
-      casella3.classList.add("dm-report-icon");
-      casella3.dataset.dmIconOwner = "report";
+    const casella4 = fields.icon?.closest(".dm-icon-field,.ed-form-row");
+    if (casella4) {
+      casella4.classList.add("dm-report-icon");
+      casella4.dataset.dmIconOwner = "report";
     }
     paintEmptyReportIcon(row, fields);
     fields.entity?.closest("[data-entity-field],.dm-entity-field")?.classList.add("dm-report-history");
@@ -75837,7 +77037,7 @@ function risolta(entity2, risolvi2) {
 var KEY104 = "__DASHBOARDMODERN_AZIONI_VASSOIO__";
 var STYLE_ID22 = "dm-azioni-vassoio-style";
 var state100 = root[KEY104] ||= { installed: false };
-var STILE10 = `
+var STILE11 = `
 /* Le intestazioni della Home: il titolo, un filo che sfuma fino al bordo, e
    l'aria sopra. Il titolo aveva quindici pixel di margine e la card sopra ne
    butta diciotto di ombra: cominciava dentro l'ombra della card precedente. */
@@ -75963,14 +77163,14 @@ html body #page-home .dm-vassoio #qa-grid .qa-btn:active .icon{transform:scale(.
 }
 `;
 function avvolgi2() {
-  const griglia = doc?.getElementById?.("qa-grid");
-  if (!griglia) return false;
-  if (griglia.parentElement?.classList?.contains("dm-vassoio")) return false;
+  const griglia2 = doc?.getElementById?.("qa-grid");
+  if (!griglia2) return false;
+  if (griglia2.parentElement?.classList?.contains("dm-vassoio")) return false;
   const vassoio = doc.createElement("div");
   vassoio.className = "dm-vassoio";
   vassoio.dataset.dmVassoio = "azioni";
-  griglia.replaceWith(vassoio);
-  vassoio.append(griglia);
+  griglia2.replaceWith(vassoio);
+  vassoio.append(griglia2);
   return true;
 }
 function azioniDelGuscio() {
@@ -76009,10 +77209,10 @@ function onda(evento) {
   root.setTimeout?.(() => cerchio.remove(), 640);
 }
 function adegua() {
-  const griglia = doc?.getElementById?.("qa-grid");
-  const vassoio = griglia?.parentElement;
+  const griglia2 = doc?.getElementById?.("qa-grid");
+  const vassoio = griglia2?.parentElement;
   if (!vassoio?.classList?.contains?.("dm-vassoio")) return;
-  const vuoto4 = griglia.style.display === "none";
+  const vuoto4 = griglia2.style.display === "none";
   vassoio.hidden = vuoto4;
   const titolo = vassoio.previousElementSibling;
   if (titolo && /azioni/i.test(titolo.textContent || ""))
@@ -76027,7 +77227,7 @@ function ripassa2() {
 function installAzioniRapideVassoio() {
   if (state100.installed) return false;
   if (!doc?.getElementById) return false;
-  installStyle(STYLE_ID22, STILE10);
+  installStyle(STYLE_ID22, STILE11);
   ripassa2();
   wrapFunction("buildQuickActions", "__dmVassoioAzioni", ripassa2);
   for (const evento of ["dashboardmodern:editor-rendered", "dashboardmodern:state-changed"])
@@ -76152,16 +77352,16 @@ function titoloMarkup(gruppo, chiuso, segno) {
     <span class="dm-qa-gruppo-freccia" aria-hidden="true">▾</span>`;
 }
 function raggruppa() {
-  const griglia = doc?.getElementById?.("qa-grid");
-  if (!griglia) return 0;
+  const griglia2 = doc?.getElementById?.("qa-grid");
+  if (!griglia2) return 0;
   const azioni2 = azioniDelGuscio2();
   const states = allStates();
   const struttura = gruppiDelleAzioni(
     azioni2,
     (azione) => azioneAccesa(azione, states, root.resolveEntity)
   );
-  const tasti = [...griglia.children].filter((nodo2) => nodo2.classList?.contains("qa-btn"));
-  const titoli = [...griglia.querySelectorAll(":scope > .dm-qa-gruppo")];
+  const tasti = [...griglia2.children].filter((nodo2) => nodo2.classList?.contains("qa-btn"));
+  const titoli = [...griglia2.querySelectorAll(":scope > .dm-qa-gruppo")];
   if (!struttura.gruppi.length) {
     for (const titolo of titoli) titolo.remove();
     for (const tasto2 of tasti) {
@@ -76169,7 +77369,7 @@ function raggruppa() {
       delete tasto2.dataset.dmQaChiuso;
       delete tasto2.dataset.dmQaGruppo;
     }
-    delete griglia.dataset.dmQaGruppi;
+    delete griglia2.dataset.dmQaGruppi;
     return 0;
   }
   const metti4 = (nodo2, campo5, valore3) => {
@@ -76180,7 +77380,7 @@ function raggruppa() {
   const ordina = (nodo2, valore3) => {
     if (nodo2.style.order !== valore3) nodo2.style.order = valore3;
   };
-  metti4(griglia, "dmQaGruppi", String(struttura.gruppi.length));
+  metti4(griglia2, "dmQaGruppi", String(struttura.gruppi.length));
   const chiusi = gruppiChiusi(leggiChiusi(), struttura.gruppi);
   const gruppoDi2 = /* @__PURE__ */ new Map();
   for (const gruppo of struttura.gruppi)
@@ -76194,7 +77394,7 @@ function raggruppa() {
   const presenti = new Set(struttura.gruppi.map((gruppo) => gruppo.chiave));
   for (const titolo of titoli) if (!presenti.has(titolo.dataset.dmQaTitolo)) titolo.remove();
   struttura.gruppi.forEach((gruppo, posto) => {
-    let titolo = griglia.querySelector(
+    let titolo = griglia2.querySelector(
       `:scope > .dm-qa-gruppo[data-dm-qa-titolo="${CSS.escape(gruppo.chiave)}"]`
     );
     if (!titolo) {
@@ -76202,7 +77402,7 @@ function raggruppa() {
       titolo.type = "button";
       titolo.className = "dm-qa-gruppo";
       titolo.dataset.dmQaTitolo = gruppo.chiave;
-      griglia.append(titolo);
+      griglia2.append(titolo);
     }
     const chiuso = chiusi.has(gruppo.chiave);
     const segno = segnoDaTasto(tasti[gruppo.indici[0]]);
@@ -76265,18 +77465,18 @@ function caselleDeiGruppi() {
   const opzioni = datalistMarkup(nomi);
   if (elenco9.innerHTML !== opzioni) elenco9.innerHTML = opzioni;
   righe2.forEach((riga3, indice) => {
-    let casella3 = riga3.querySelector(":scope > .dm-qa-gruppo-campo [data-dm-qa-gruppo-indice]");
-    if (!casella3) {
+    let casella4 = riga3.querySelector(":scope > .dm-qa-gruppo-campo [data-dm-qa-gruppo-indice]");
+    if (!casella4) {
       const etichetta3 = doc.createElement("label");
       etichetta3.className = "dm-qa-gruppo-campo";
       etichetta3.innerHTML = `<span>${esc(t("Gruppo", "Group"))}</span><input class="ed-input dm-qa-gruppo-riga" data-dm-qa-gruppo-indice="${indice}" list="${DATALIST_ID}" maxlength="${LUNGHEZZA_DEL_GRUPPO}" autocomplete="off" placeholder="${esc(t("es. Luci, Tapparelle", "e.g. Lights, Shutters"))}">`;
       riga3.append(etichetta3);
       if (riga3.style.flexWrap !== "wrap") riga3.style.flexWrap = "wrap";
-      casella3 = etichetta3.querySelector("input");
-      casella3.value = gruppoDellAzione(azioni2[indice]);
+      casella4 = etichetta3.querySelector("input");
+      casella4.value = gruppoDellAzione(azioni2[indice]);
     }
-    casella3.dataset.dmQaGruppoIndice = String(indice);
-    if (doc.activeElement !== casella3) casella3.value = gruppoDellAzione(azioni2[indice]);
+    casella4.dataset.dmQaGruppoIndice = String(indice);
+    if (doc.activeElement !== casella4) casella4.value = gruppoDellAzione(azioni2[indice]);
   });
   if (!cassetto.querySelector(".dm-qa-gruppi-aiuto")) {
     const aiuto = doc.createElement("small");
@@ -76290,19 +77490,19 @@ function caselleDeiGruppi() {
   return righe2.length;
 }
 function onChange6(evento) {
-  const casella3 = evento.target?.closest?.("[data-dm-qa-gruppo-indice]");
-  if (!casella3) return;
-  const indice = Number(casella3.dataset.dmQaGruppoIndice);
+  const casella4 = evento.target?.closest?.("[data-dm-qa-gruppo-indice]");
+  if (!casella4) return;
+  const indice = Number(casella4.dataset.dmQaGruppoIndice);
   const azioni2 = azioniDelGuscio2().slice();
   if (!Number.isInteger(indice) || !azioni2[indice]) return;
-  const prossima = conIlGruppo2(azioni2[indice], casella3.value);
+  const prossima = conIlGruppo2(azioni2[indice], casella4.value);
   if (gruppoDellAzione(prossima) === gruppoDellAzione(azioni2[indice])) {
-    casella3.value = gruppoDellAzione(prossima);
+    casella4.value = gruppoDellAzione(prossima);
     return;
   }
   azioni2[indice] = prossima;
   writeJsonIfChanged("cd_quick_actions", azioni2);
-  casella3.value = gruppoDellAzione(prossima);
+  casella4.value = gruppoDellAzione(prossima);
   try {
     root.buildQuickActions?.();
   } catch (_errore) {
@@ -80623,8 +81823,8 @@ function onClick25(event) {
   event.preventDefault();
   const d = el.dataset;
   if (d.muEdPick) {
-    const casella3 = doc.getElementById(d.muEdPick);
-    if (casella3) root.wzPickEntity?.(casella3);
+    const casella4 = doc.getElementById(d.muEdPick);
+    if (casella4) root.wzPickEntity?.(casella4);
     return;
   }
   if (d.muEdApri !== void 0) {
@@ -80828,13 +82028,13 @@ function testaFissaAttiva() {
   }
 }
 function setTestaFissa(accesa3) {
-  const vera = Boolean(accesa3);
+  const vera2 = Boolean(accesa3);
   try {
-    root.localStorage?.setItem?.(CASELLA, vera ? "1" : "0");
+    root.localStorage?.setItem?.(CASELLA, vera2 ? "1" : "0");
   } catch (_errore) {
   }
   applicaTestaFissa();
-  return vera;
+  return vera2;
 }
 function applicaTestaFissa() {
   const radice2 = doc?.documentElement;
@@ -81269,60 +82469,60 @@ function renderBatterie() {
   schedule25();
 }
 function installStyles49() {
-  const P = `#${BATTERIE_PAGE_ID}`;
+  const P2 = `#${BATTERIE_PAGE_ID}`;
   installStyle(
     "dm-batterie-style",
     `
-    ${P} .dm-batt-wrap{display:grid;gap:14px;padding:14px 14px 26px}
-    ${P} .dm-batt-testa{
+    ${P2} .dm-batt-wrap{display:grid;gap:14px;padding:14px 14px 26px}
+    ${P2} .dm-batt-testa{
       display:grid;gap:3px;padding:16px 18px;border-radius:20px;
       border:1px solid var(--card-border,rgba(0,0,0,.08));background:var(--card-bg,#fff)}
-    ${P} .dm-batt-testa small{font-size:10px;font-weight:900;letter-spacing:.09em;
+    ${P2} .dm-batt-testa small{font-size:10px;font-weight:900;letter-spacing:.09em;
       text-transform:uppercase;color:var(--text-dim,#94a3b8)}
-    ${P} .dm-batt-testa strong{font-size:24px;font-weight:900;letter-spacing:-.02em;
+    ${P2} .dm-batt-testa strong{font-size:24px;font-weight:900;letter-spacing:-.02em;
       color:var(--text,#0f172a)}
-    ${P} .dm-batt-testa[data-stato="scariche"] strong{color:#b45309}
-    ${P} .dm-batt-testa[data-stato="cariche"] strong{color:#047857}
-    ${P} .dm-batt-sotto,${P} .dm-batt-soglia{font-size:11.5px;font-weight:750;
+    ${P2} .dm-batt-testa[data-stato="scariche"] strong{color:#b45309}
+    ${P2} .dm-batt-testa[data-stato="cariche"] strong{color:#047857}
+    ${P2} .dm-batt-sotto,${P2} .dm-batt-soglia{font-size:11.5px;font-weight:750;
       color:var(--text-dim,#64748b)}
-    ${P} .dm-batt-soglia{opacity:.75}
-    ${P} .dm-batt-elenco{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))}
+    ${P2} .dm-batt-soglia{opacity:.75}
+    ${P2} .dm-batt-elenco{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))}
     /* Le due soglie di chi si ricarica: sotto la riga, tutta larga. La riga
        resta la riga di sempre — tre colonne — e questa e' una quarta cella che
        le attraversa, cosi' una batteria normale non cambia di un pixel. */
-    ${P} .dm-batt-soglie{grid-column:1/-1;display:grid;gap:8px;margin-top:2px;
+    ${P2} .dm-batt-soglie{grid-column:1/-1;display:grid;gap:8px;margin-top:2px;
       padding-top:10px;border-top:1px solid color-mix(in srgb,var(--dm-batt) 22%,transparent)}
-    ${P} .dm-batt-limite{display:grid;gap:4px}
-    ${P} .dm-batt-limite-testa{display:flex;align-items:baseline;justify-content:space-between;
+    ${P2} .dm-batt-limite{display:grid;gap:4px}
+    ${P2} .dm-batt-limite-testa{display:flex;align-items:baseline;justify-content:space-between;
       gap:8px;font-size:10.5px;font-weight:850;color:var(--text-dim,#64748b)}
-    ${P} .dm-batt-limite-testa b{font-size:12.5px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-batt-limite-testa b{font-size:12.5px;font-weight:900;color:var(--text,#0f172a);
       font-variant-numeric:tabular-nums}
-    ${P} .dm-batt-limite-cursore{width:100%;accent-color:var(--dm-batt);margin:0}
-    ${P} .dm-batt{
+    ${P2} .dm-batt-limite-cursore{width:100%;accent-color:var(--dm-batt);margin:0}
+    ${P2} .dm-batt{
       --dm-batt:#10b981;
       display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:12px 14px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-batt) 34%,var(--card-border,rgba(0,0,0,.08)));
       background:var(--card-bg,#fff)}
-    ${P} .dm-batt[data-batt="scarica"]{--dm-batt:#f59e0b}
-    ${P} .dm-batt[data-batt="muta"]{--dm-batt:#94a3b8;opacity:.72}
-    ${P} .dm-batt-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P} .dm-batt-ic svg{display:block;width:26px;height:26px}
-    ${P} .dm-batt-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
+    ${P2} .dm-batt[data-batt="scarica"]{--dm-batt:#f59e0b}
+    ${P2} .dm-batt[data-batt="muta"]{--dm-batt:#94a3b8;opacity:.72}
+    ${P2} .dm-batt-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P2} .dm-batt-ic svg{display:block;width:26px;height:26px}
+    ${P2} .dm-batt-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
       font-size:19px;background:color-mix(in srgb,var(--dm-batt) 20%,transparent)}
-    ${P} .dm-batt-testo{display:grid;gap:3px;min-width:0}
-    ${P} .dm-batt-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-batt-testo{display:grid;gap:3px;min-width:0}
+    ${P2} .dm-batt-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-batt-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
+    ${P2} .dm-batt-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-batt) 16%,transparent);overflow:hidden}
-    ${P} .dm-batt-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-batt)}
-    ${P} .dm-batt-livello{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
+    ${P2} .dm-batt-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-batt)}
+    ${P2} .dm-batt-livello{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
       color:color-mix(in srgb,var(--dm-batt) 78%,var(--text,#0f172a))}
-    ${P} .dm-batt-vuoto{display:grid;gap:6px;padding:22px;border-radius:20px;
+    ${P2} .dm-batt-vuoto{display:grid;gap:6px;padding:22px;border-radius:20px;
       border:1px dashed var(--card-border,rgba(0,0,0,.14));background:var(--card-bg,#fff)}
-    ${P} .dm-batt-vuoto strong{font-size:16px;font-weight:900}
-    ${P} .dm-batt-vuoto span{font-size:12.5px;color:var(--text-dim,#64748b);line-height:1.45}
-    @media(max-width:520px){${P} .dm-batt-elenco{grid-template-columns:1fr}}
+    ${P2} .dm-batt-vuoto strong{font-size:16px;font-weight:900}
+    ${P2} .dm-batt-vuoto span{font-size:12.5px;color:var(--text-dim,#64748b);line-height:1.45}
+    @media(max-width:520px){${P2} .dm-batt-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -81495,14 +82695,14 @@ function costruisciSchedaDichiarata(scheda8) {
       if (doc.getElementById(scheda8.ancora)) return false;
       migraSeServe();
       scheda8.primaDiDisegnare?.();
-      const casella3 = doc.createElement("div");
-      casella3.id = scheda8.ancora;
-      casella3.className = "dm-dich-scheda";
-      casella3.dataset.dmDichSezione = nome;
+      const casella4 = doc.createElement("div");
+      casella4.id = scheda8.ancora;
+      casella4.className = "dm-dich-scheda";
+      casella4.dataset.dmDichSezione = nome;
       for (const [attributo2, valore3] of Object.entries(scheda8.attributi || {}))
-        casella3.setAttribute(attributo2, valore3);
-      casella3.innerHTML = schedaMarkup12();
-      body.append(casella3);
+        casella4.setAttribute(attributo2, valore3);
+      casella4.innerHTML = schedaMarkup12();
+      body.append(casella4);
       return true;
     }
     if (!body || !dentroLaScheda()) return false;
@@ -81899,12 +83099,12 @@ var scheda = costruisciSchedaDichiarata({
    * dire un tasto che salva meta' di quello che ha davanti. */
   inPiuAllInstallazione(documento, { ridisegna: ridisegna27 }) {
     documento.addEventListener("change", (evento) => {
-      const casella3 = evento.target?.closest?.("[data-dm-batt-ricarica]");
-      if (casella3) {
+      const casella4 = evento.target?.closest?.("[data-dm-batt-ricarica]");
+      if (casella4) {
         salvaSogliaDiRicarica(
-          casella3.dataset.dmBattRicarica,
-          clean(casella3.dataset.dmBattQuale),
-          casella3.value
+          casella4.dataset.dmBattRicarica,
+          clean(casella4.dataset.dmBattQuale),
+          casella4.value
         );
         return;
       }
@@ -82406,7 +83606,7 @@ function casellaPreset() {
   holder.innerHTML = `<span class="ed-slot-lbl">${t("Posizione preferita (%)", "Favorite position (%)")}</span><input id="ed-tp-preset" class="ed-input" type="number" min="0" max="100" step="1" placeholder="es. 5" autocomplete="off">`;
   return holder;
 }
-function casella2(id, etichetta3, esempio3) {
+function casella3(id, etichetta3, esempio3) {
   const holder = doc.createElement("div");
   holder.className = "dm-tw-slot";
   holder.dataset.dmTwSlot = id;
@@ -82597,7 +83797,7 @@ function ensureContactField(body = doc?.getElementById("ed-body")) {
   for (const [id, etichetta4, esempio3] of caselle()) {
     let campo5 = body.querySelector(`#${id}`);
     if (!campo5) {
-      campo5 = casella2(id, etichetta4, esempio3);
+      campo5 = casella3(id, etichetta4, esempio3);
       aggiunte += 1;
     } else {
       campo5 = campo5.closest("[data-dm-tw-slot], label, .ed-slot") || campo5;
@@ -83378,8 +84578,8 @@ function syncCard2(card2, view) {
     battery.dataset.charging = String(view.charging);
     const bar = battery.querySelector("b");
     if (bar) bar.style.width = `${livello}%`;
-    const num3 = battery.querySelector(".dm-robot-batt-num");
-    if (num3) num3.textContent = `${livello}%`;
+    const num4 = battery.querySelector(".dm-robot-batt-num");
+    if (num4) num4.textContent = `${livello}%`;
   }
   const fan = card2.querySelector("[data-dm-robot-fan]");
   if (fan && fan !== doc.activeElement && view.fanSpeed && fan.value !== view.fanSpeed)
@@ -83395,10 +84595,10 @@ function syncCard2(card2, view) {
     }
   }
   for (const lettura3 of view.letture || []) {
-    const casella3 = card2.querySelector(
+    const casella4 = card2.querySelector(
       `[data-dm-lettura="${CSS.escape(lettura3.entity)}"] [data-dm-lettura-valore]`
     );
-    if (casella3 && casella3.textContent !== lettura3.testo) casella3.textContent = lettura3.testo;
+    if (casella4 && casella4.textContent !== lettura3.testo) casella4.textContent = lettura3.testo;
   }
   const error = card2.querySelector("[data-dm-robot-error]");
   if (error) {
@@ -85724,7 +86924,7 @@ async function onClick31(event) {
     const tocco2 = proposta || togli || aggiungi4;
     const tipo = clean(tocco2.dataset.robotChipTipo || tocco2.dataset.robotChipAdd);
     if (!LISTE[tipo]) return;
-    const casella3 = tocco2.closest(`[data-robot-lista="${CSS.escape(tipo)}"]`);
+    const casella4 = tocco2.closest(`[data-robot-lista="${CSS.escape(tipo)}"]`);
     const letta = leggiRiga4(riga3, robots[index]);
     if (!/^(?:vacuum|lawn_mower)\.[a-z0-9_]+$/i.test(letta.entity))
       letta.entity = robots[index].entity;
@@ -85733,7 +86933,7 @@ async function onClick31(event) {
     if (togli) {
       elenco9 = elenco9.filter((entity2) => entity2 !== clean(togli.dataset.robotChipDel));
     } else {
-      const nuovo = proposta ? clean(proposta.dataset.robotChipSug) : clean(casella3?.querySelector("[data-robot-chip-nuovo]")?.value);
+      const nuovo = proposta ? clean(proposta.dataset.robotChipSug) : clean(casella4?.querySelector("[data-robot-chip-nuovo]")?.value);
       const esito2 = conLaVoce(elenco9, nuovo, tipo);
       if (esito2.esito !== ESITI_ELENCO.aggiunto) {
         if (errore) errore.textContent = spiegazione(esito2.esito, tipo);
@@ -86049,9 +87249,9 @@ function vascaEditorMarkup(animale, indice, { esclusi = [] } = {}) {
 function leggiLaVasca(nodo2, animale) {
   const fuori = { ...animale };
   const tipo = tipoValido(animale.specie);
-  for (const casella3 of nodo2.querySelectorAll("[data-vasca-dato]")) {
-    const campo5 = clean(casella3.dataset.vascaDato);
-    const valore3 = clean(casella3.value);
+  for (const casella4 of nodo2.querySelectorAll("[data-vasca-dato]")) {
+    const campo5 = clean(casella4.dataset.vascaDato);
+    const valore3 = clean(casella4.value);
     const scritto = campo5 === "cambio" || campo5 === "pulizia" ? istanteDi2(valore3) : valore3;
     if (scritto) fuori[campo5] = scritto;
     else delete fuori[campo5];
@@ -86061,8 +87261,8 @@ function leggiLaVasca(nodo2, animale) {
     const posto = Number(blocco3.dataset.vascaRiga);
     const prima = (Array.isArray(animale.righe) ? animale.righe : [])[posto] || {};
     const riga3 = { ...prima };
-    for (const casella3 of blocco3.querySelectorAll("[data-vasca-campo]"))
-      riga3[clean(casella3.dataset.vascaCampo)] = clean(casella3.value);
+    for (const casella4 of blocco3.querySelectorAll("[data-vasca-campo]"))
+      riga3[clean(casella4.dataset.vascaCampo)] = clean(casella4.value);
     const generi = generiDelTipo(tipo);
     riga3.genere = generi.includes(riga3.genere) ? riga3.genere : genereDellaRiga(riga3, tipo);
     const diPrima = genereValido(prima.genere);
@@ -91564,15 +92764,15 @@ function laScelta() {
   return doc?.querySelector?.("#ed-body [data-ev-mezzo-riga]") || null;
 }
 function sincronizzaLaScelta() {
-  const casella3 = laScelta();
-  if (!casella3) return false;
+  const casella4 = laScelta();
+  if (!casella4) return false;
   const { chiave: chiave2, auto, casa } = diChiParlaLaScheda();
-  if (casella3.dataset.dmPer !== chiave2) {
-    casella3.dataset.dmPer = chiave2;
-    casella3.dataset.dmMezzo = casa ? mezzoDelVeicolo(readJson(MEZZO_DI_CASA_KEY, "")) : mezzoDelVeicolo(auto?.[MEZZO_FIELD]);
+  if (casella4.dataset.dmPer !== chiave2) {
+    casella4.dataset.dmPer = chiave2;
+    casella4.dataset.dmMezzo = casa ? mezzoDelVeicolo(readJson(MEZZO_DI_CASA_KEY, "")) : mezzoDelVeicolo(auto?.[MEZZO_FIELD]);
   }
-  const scelto = clean(casella3.dataset.dmMezzo) || "auto";
-  for (const voce2 of casella3.querySelectorAll("[data-ev-mezzo]")) {
+  const scelto = clean(casella4.dataset.dmMezzo) || "auto";
+  for (const voce2 of casella4.querySelectorAll("[data-ev-mezzo]")) {
     const suo2 = voce2.dataset.evMezzo === "moto" ? "moto" : "auto";
     const acceso6 = suo2 === (scelto === "moto" ? "moto" : "auto");
     voce2.classList.toggle("on", acceso6);
@@ -91583,8 +92783,8 @@ function sincronizzaLaScelta() {
 function scriviIlMezzo(valore3) {
   const mezzo = mezzoDelVeicolo(valore3);
   const { auto, casa } = diChiParlaLaScheda();
-  const casella3 = laScelta();
-  if (casella3) casella3.dataset.dmMezzo = mezzo;
+  const casella4 = laScelta();
+  if (casella4) casella4.dataset.dmMezzo = mezzo;
   if (casa) {
     writeJsonIfChanged(MEZZO_DI_CASA_KEY, mezzo);
   } else if (auto) {
@@ -91606,12 +92806,12 @@ function ensureLaSceltaDelMezzo() {
   const nome = doc?.getElementById?.("ed-evcar-name");
   const rigaNome = nome?.parentElement;
   if (!rigaNome) return false;
-  let casella3 = laScelta();
-  if (!casella3) {
-    casella3 = doc.createElement("label");
-    casella3.className = "ed-slot dm-mezzo";
-    casella3.dataset.evMezzoRiga = "true";
-    casella3.innerHTML = `<span class="ed-slot-lbl">${esc(t("Mezzo", "Vehicle kind"))}</span>
+  let casella4 = laScelta();
+  if (!casella4) {
+    casella4 = doc.createElement("label");
+    casella4.className = "ed-slot dm-mezzo";
+    casella4.dataset.evMezzoRiga = "true";
+    casella4.innerHTML = `<span class="ed-slot-lbl">${esc(t("Mezzo", "Vehicle kind"))}</span>
       <div class="dm-mezzo-scelta" role="radiogroup" aria-label="${esc(t("Mezzo", "Vehicle kind"))}">${MEZZI.map(
       (mezzo) => `<button type="button" class="dm-mezzo-voce" role="radio" aria-checked="false" data-ev-mezzo="${esc(mezzo)}">${disegnoDiCasa(
         mezzo === "moto" ? "moto" : "ev",
@@ -91627,9 +92827,9 @@ function ensureLaSceltaDelMezzo() {
   }
   const motore = doc.querySelector("#ed-body [data-ev-tipo-riga]");
   if (motore) {
-    if (motore.previousElementSibling !== casella3) motore.before(casella3);
-  } else if (rigaNome.nextElementSibling !== casella3) {
-    rigaNome.after(casella3);
+    if (motore.previousElementSibling !== casella4) motore.before(casella4);
+  } else if (rigaNome.nextElementSibling !== casella4) {
+    rigaNome.after(casella4);
   }
   sincronizzaLaScelta();
   nascondiLeCaselleCheNonHa();
@@ -91777,8 +92977,8 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
     if (quale < 0) continue;
     suoiKwh += kwh2;
     kwhPerFascia[quale] += kwh2;
-    const casella3 = perOra[quando4.getHours()];
-    if (casella3) casella3.kwh += kwh2;
+    const casella4 = perOra[quando4.getHours()];
+    if (casella4) casella4.kwh += kwh2;
     if (!diCasa.has(momento) || !dallaRete.has(momento)) {
       senzaSpartizione += kwh2;
       continue;
@@ -91788,7 +92988,7 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
     spartiti += kwh2;
     retePerFascia[quale] += dallaPresa;
     solePerFascia[quale] += kwh2 - dallaPresa;
-    if (casella3) casella3.rete += dallaPresa;
+    if (casella4) casella4.rete += dallaPresa;
   }
   if (!(suoiKwh > 0)) return null;
   const fasce = config.voci.map((voce2, indice) => {
@@ -91811,23 +93011,23 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
   });
   const dallaRete_ = retePerFascia.reduce((a, b) => a + b, 0);
   const dalSole = solePerFascia.reduce((a, b) => a + b, 0);
-  const euro = fasce.reduce((somma2, fascia2) => somma2 + fascia2.euro, 0);
+  const euro2 = fasce.reduce((somma2, fascia2) => somma2 + fascia2.euro, 0);
   const punta = fasce.reduce((alta, fascia2) => fascia2.kwh > alta.kwh ? fascia2 : alta, fasce[0]);
   return {
     fasce,
     kwh: suoiKwh,
     rete: dallaRete_,
     sole: dalSole,
-    euro,
+    euro: euro2,
     punta,
     /* Le ventiquattro ore, sempre tutte e sempre in ordine. La fascia e'
      * quella FERIALE di quell'ora — una colonna ha un colore solo, e il
      * sabato non puo' tingerla a meta' — mentre i kilowattora sono quelli
      * veri, weekend compreso. */
-    ore: perOra.map((casella3, ora2) => ({
+    ore: perOra.map((casella4, ora2) => ({
       ora: ora2,
-      kwh: casella3.kwh,
-      rete: casella3.rete,
+      kwh: casella4.kwh,
+      rete: casella4.rete,
       fascia: fasciaDelleOre(config, ora2 * 60)
     })),
     /* Quanto avrebbe speso con una tariffa unica, sugli stessi kilowattora
@@ -91841,7 +93041,7 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
      * qui invece il prezzo e' quello dell'ora in cui il sole e' entrato. */
     valoreDelSole: fasce.reduce((somma2, fascia2) => somma2 + fascia2.sole * fascia2.prezzo, 0),
     unico: unico > 0 ? { prezzo: unico, euro: dallaRete_ * unico } : null,
-    risparmio: unico > 0 ? dallaRete_ * unico - euro : null,
+    risparmio: unico > 0 ? dallaRete_ * unico - euro2 : null,
     /* Quanta parte dei suoi kilowattora si e' potuta dividere fra sole e
      * rete. Chi legge deve saperlo: le fasce sono esatte comunque — l'ora in
      * cui ha consumato si sa sempre — ma gli euro riguardano solo la parte
@@ -95674,9 +96874,9 @@ function ensureImpiantiTermiciEditor() {
   }
   state141.firma = firma2;
   if (caselle2 && caselle2.parentElement !== body) body.append(caselle2);
-  const guscio2 = doc.createElement("div");
-  guscio2.innerHTML = corpoMarkup10();
-  const nuovo = guscio2.firstElementChild;
+  const guscio3 = doc.createElement("div");
+  guscio3.innerHTML = corpoMarkup10();
+  const nuovo = guscio3.firstElementChild;
   if (blocco3) blocco3.replaceWith(nuovo);
   else body.append(nuovo);
   sistemaLeCaselleDelSolare(body, attiva2);
@@ -95700,12 +96900,12 @@ function sistemaLeCaselleDelSolare(body, attiva2) {
 function ordinaLeCaselleDelSolare(caselle2) {
   const corpo2 = caselle2.querySelector(".ed-acc-body");
   if (!corpo2) return false;
-  const casella3 = (ref) => corpo2.querySelector(`.ed-slot-in[data-ref="${ref}"]`)?.closest(".ed-slot") || null;
-  const prima = CASELLE_SOLARE.map((riga3) => casella3(riga3.ref)).find(Boolean);
+  const casella4 = (ref) => corpo2.querySelector(`.ed-slot-in[data-ref="${ref}"]`)?.closest(".ed-slot") || null;
+  const prima = CASELLE_SOLARE.map((riga3) => casella4(riga3.ref)).find(Boolean);
   if (!prima || prima.parentElement !== corpo2) return false;
   const voluti = [];
   for (const gruppo of GRUPPI_DEL_SOLARE) {
-    const righe2 = CASELLE_SOLARE.filter((riga3) => riga3.gruppo === gruppo.id).map((riga3) => [riga3, casella3(riga3.ref)]).filter(([, nodo2]) => nodo2 && nodo2.parentElement === corpo2);
+    const righe2 = CASELLE_SOLARE.filter((riga3) => riga3.gruppo === gruppo.id).map((riga3) => [riga3, casella4(riga3.ref)]).filter(([, nodo2]) => nodo2 && nodo2.parentElement === corpo2);
     if (!righe2.length) continue;
     let titolo = corpo2.querySelector(`:scope > [data-dm-solare-gruppo="${gruppo.id}"]`);
     if (!titolo) {
@@ -95771,11 +96971,11 @@ function onClick40(event) {
     ridisegna16();
     return;
   }
-  const leva = event.target.closest("[data-dm-it-scelta]");
-  if (leva) {
+  const leva2 = event.target.closest("[data-dm-it-scelta]");
+  if (leva2) {
     event.preventDefault();
-    const tipo = clean(leva.dataset.dmItScelta);
-    salvaScelta(tipo, leva.dataset.on !== "true");
+    const tipo = clean(leva2.dataset.dmItScelta);
+    salvaScelta(tipo, leva2.dataset.on !== "true");
     ridisegna16();
     return;
   }
@@ -96378,24 +97578,24 @@ function schedule33() {
   if (!state142.frame) giro();
 }
 function installStyles69() {
-  const P = `#${UPS_PAGE_ID}`;
+  const P2 = `#${UPS_PAGE_ID}`;
   installStyle(
     "dm-ups-section-style",
     `
-    ${P} .dm-ups-wrap{display:grid;gap:18px;padding:0 0 24px}
-    ${P} .dm-ups-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-ups-wrap{display:grid;gap:18px;padding:0 0 24px}
+    ${P2} .dm-ups-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-ups-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-ups-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-ups-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-ups-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* Il palco: stessa misura, stesso raggio e stessa ombra delle altre scene
        della plancia — e' la stessa stanza vista da un'altra porta. */
     /* Il nome sopra la scena, che compare solo da due gruppi in su: con uno
        solo sarebbe un'etichetta su una cosa sola. */
-    ${P} .dm-ups-titolo{margin:0 0 10px;font-size:15px;font-weight:900;letter-spacing:-.01em;color:var(--text,#0f172a)}
-    ${P} .dm-ups-stage + .dm-ups-titolo{margin-top:22px}
-    ${P} .dm-ups-stage + .dm-ups-stage{margin-top:22px}
-    ${P} .dm-ups-stage{
+    ${P2} .dm-ups-titolo{margin:0 0 10px;font-size:15px;font-weight:900;letter-spacing:-.01em;color:var(--text,#0f172a)}
+    ${P2} .dm-ups-stage + .dm-ups-titolo{margin-top:22px}
+    ${P2} .dm-ups-stage + .dm-ups-stage{margin-top:22px}
+    ${P2} .dm-ups-stage{
       position:relative;width:100%;height:600px;overflow:hidden;border-radius:32px;
       border:1px solid var(--card-border,#e2e8f0);
       background:
@@ -96405,156 +97605,156 @@ function installStyles69() {
       box-shadow:inset 0 0 35px rgba(0,0,0,.03),var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
     /* A corrente caduta la stanza cambia luce: non e' decorazione, e' la sola
        differenza che si deve vedere da lontano. */
-    ${P} .dm-ups-stage:has(.dm-ups-scena[data-buio="true"]){
+    ${P2} .dm-ups-stage:has(.dm-ups-scena[data-buio="true"]){
       background:
         radial-gradient(120% 90% at 88% 6%,rgba(244,63,94,.18),transparent 58%),
         radial-gradient(90% 80% at 6% 96%,rgba(251,146,60,.16),transparent 60%),
         var(--card-bg,#fff)}
-    ${P} .dm-ups-scena{position:absolute;inset:0}
+    ${P2} .dm-ups-scena{position:absolute;inset:0}
     /* Le targhette stanno insieme in una scatola, ma finche' la scena e' un
        palco quella scatola non deve esistere: display:contents la fa sparire
        dal disegno e lascia ogni targhetta appesa dove la mette il suo posto.
        Serve in verticale, dove le cinque diventano una griglia sola. */
-    ${P} .dm-ups-quadro{display:contents}
+    ${P2} .dm-ups-quadro{display:contents}
 
     /* I cavi: fondo spesso e anima chiara, come i tubi del locale caldaia. */
-    ${P} .dm-ups-cavi{position:absolute;inset:0;width:100%;height:100%}
-    ${P} .dm-ups-cavo{fill:none;stroke:#e2e8f0;stroke-width:20;stroke-linecap:round}
-    ${P} .dm-ups-cavo-int{fill:none;stroke:#f8fafc;stroke-width:12;stroke-linecap:round}
-    ${P} .dm-ups-corrente{
+    ${P2} .dm-ups-cavi{position:absolute;inset:0;width:100%;height:100%}
+    ${P2} .dm-ups-cavo{fill:none;stroke:#e2e8f0;stroke-width:20;stroke-linecap:round}
+    ${P2} .dm-ups-cavo-int{fill:none;stroke:#f8fafc;stroke-width:12;stroke-linecap:round}
+    ${P2} .dm-ups-corrente{
       fill:none;stroke-width:9;stroke-linecap:round;opacity:0;
       stroke-dasharray:26 190;transition:opacity .5s ease}
-    ${P} .dm-ups-corrente-rete{stroke:#22c55e}
-    ${P} .dm-ups-corrente-uscita{stroke:#38bdf8}
+    ${P2} .dm-ups-corrente-rete{stroke:#22c55e}
+    ${P2} .dm-ups-corrente-uscita{stroke:#38bdf8}
     /* Le frecce corrono nel verso in cui la corrente sta andando davvero: dalla
        rete quando c'e', dalla batteria quando manca. Il cavo di monte spento e'
        tutta la notizia. */
-    ${P} .dm-ups-scena[data-rete="true"] .dm-ups-corrente{
+    ${P2} .dm-ups-scena[data-rete="true"] .dm-ups-corrente{
       opacity:.92;animation:dmUpsFlusso 2.4s linear infinite}
-    ${P} .dm-ups-scena[data-buio="true"] .dm-ups-corrente-uscita{
+    ${P2} .dm-ups-scena[data-buio="true"] .dm-ups-corrente-uscita{
       stroke:#fbbf24;opacity:.95;animation:dmUpsFlusso 1.5s linear infinite}
     @keyframes dmUpsFlusso{from{stroke-dashoffset:216}to{stroke-dashoffset:0}}
 
-    ${P} .dm-ups-nodo{
+    ${P2} .dm-ups-nodo{
       position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;
       align-items:center;gap:10px;z-index:4}
-    ${P} .dm-ups-nome{
+    ${P2} .dm-ups-nome{
       font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
       color:var(--text-dim,#64748b);background:rgba(255,255,255,.95);padding:5px 12px;
       border-radius:12px;box-shadow:0 5px 12px rgba(0,0,0,.06);white-space:nowrap}
 
-    ${P} .dm-ups-plate{
+    ${P2} .dm-ups-plate{
       display:grid;gap:2px;padding:10px 16px;border-radius:14px;min-width:112px;
       background:linear-gradient(160deg,#1e293b,#0b1220);
       box-shadow:0 14px 30px -14px rgba(15,23,42,.8),inset 0 1px 0 rgba(255,255,255,.09)}
-    ${P} .dm-ups-plate-lbl{
+    ${P2} .dm-ups-plate-lbl{
       font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8}
-    ${P} .dm-ups-plate-val{
+    ${P2} .dm-ups-plate-val{
       font-family:'Oswald',sans-serif;font-size:27px;font-weight:500;line-height:1;
       font-variant-numeric:tabular-nums}
-    ${P} .dm-ups-plate-val i{font-style:normal;font-size:.52em;margin-left:2px;opacity:.85}
+    ${P2} .dm-ups-plate-val i{font-style:normal;font-size:.52em;margin-left:2px;opacity:.85}
 
     /* ── il traliccio: la rete che entra ──────────────────────────────── */
-    ${P} .dm-ups-traliccio{position:relative;width:120px;height:180px}
-    ${P} .dm-ups-pilone{
+    ${P2} .dm-ups-traliccio{position:relative;width:120px;height:180px}
+    ${P2} .dm-ups-pilone{
       display:block;width:100%;height:100%;
       transition:opacity .5s ease,filter .5s ease}
-    ${P} .dm-ups-pilone-tratti{
+    ${P2} .dm-ups-pilone-tratti{
       fill:none;stroke:#94a3b8;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
-    ${P} .dm-ups-pilone-isolatori{fill:#cbd5e1;stroke:#94a3b8;stroke-width:2}
+    ${P2} .dm-ups-pilone-isolatori{fill:#cbd5e1;stroke:#94a3b8;stroke-width:2}
     /* La croce sul traliccio: quando la rete manca lo si vede da lontano,
        senza leggere una parola. */
-    ${P} .dm-ups-taglio{
+    ${P2} .dm-ups-taglio{
       position:absolute;inset:0;display:grid;place-items:center;font-size:64px;font-weight:900;
       color:#f43f5e;opacity:0;transform:scale(.7);transition:opacity .4s ease,transform .4s ease}
-    ${P} .dm-ups-scena[data-buio="true"] .dm-ups-pilone{opacity:.28;filter:grayscale(1)}
-    ${P} .dm-ups-scena[data-buio="true"] .dm-ups-taglio{opacity:.92;transform:scale(1)}
+    ${P2} .dm-ups-scena[data-buio="true"] .dm-ups-pilone{opacity:.28;filter:grayscale(1)}
+    ${P2} .dm-ups-scena[data-buio="true"] .dm-ups-taglio{opacity:.92;transform:scale(1)}
 
     /* ── la scatola: l'LCD, le spie, le prese ─────────────────────────── */
-    ${P} .dm-ups-box{
+    ${P2} .dm-ups-box{
       position:relative;width:206px;height:236px;border-radius:20px;
       background:linear-gradient(150deg,#475569,#1e293b 56%,#0b1220);
       box-shadow:0 28px 50px -22px rgba(15,23,42,.65),inset 0 1px 0 rgba(255,255,255,.12)}
-    ${P} .dm-ups-lcd{
+    ${P2} .dm-ups-lcd{
       position:absolute;top:20px;left:20px;right:20px;height:86px;border-radius:12px;
       display:flex;align-items:center;justify-content:center;gap:14px;
       background:linear-gradient(180deg,#0f172a,#020617);
       box-shadow:inset 0 0 0 1px rgba(148,163,184,.4),inset 0 2px 10px rgba(0,0,0,.7)}
-    ${P} .dm-ups-lcd b{
+    ${P2} .dm-ups-lcd b{
       font-family:'Oswald',sans-serif;font-size:40px;font-weight:500;line-height:1;color:#4ade80;
       font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(74,222,128,.5)}
-    ${P} .dm-ups-lcd b em{font-style:normal;font-size:.45em;margin-left:2px;opacity:.8}
-    ${P} .dm-ups-scena[data-buio="true"] .dm-ups-lcd b{
+    ${P2} .dm-ups-lcd b em{font-style:normal;font-size:.45em;margin-left:2px;opacity:.8}
+    ${P2} .dm-ups-scena[data-buio="true"] .dm-ups-lcd b{
       color:#fbbf24;text-shadow:0 0 14px rgba(251,191,36,.55)}
-    ${P} .dm-ups-scena[data-bassa="true"] .dm-ups-lcd b{
+    ${P2} .dm-ups-scena[data-bassa="true"] .dm-ups-lcd b{
       color:#f87171;text-shadow:0 0 14px rgba(248,113,113,.55)}
     /* La cella: il livello si disegna, non solo si scrive — e senza carica
        mappata si riempie tutta, perche' una cella vuota direbbe «niente
        riserva» invece di «non lo so». */
-    ${P} .dm-ups-cella{
+    ${P2} .dm-ups-cella{
       position:relative;width:34px;height:56px;border-radius:5px;
       box-shadow:inset 0 0 0 2px rgba(148,163,184,.75)}
-    ${P} .dm-ups-cella::before{
+    ${P2} .dm-ups-cella::before{
       content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);
       width:15px;height:5px;border-radius:2px;background:rgba(148,163,184,.75)}
-    ${P} .dm-ups-cella i{
+    ${P2} .dm-ups-cella i{
       position:absolute;left:4px;right:4px;bottom:4px;border-radius:3px;display:block;
       background:linear-gradient(to top,#16a34a,#4ade80);
       transition:height 1.2s cubic-bezier(.16,1,.3,1),background .8s ease}
-    ${P} .dm-ups-scena[data-buio="true"] .dm-ups-cella i{
+    ${P2} .dm-ups-scena[data-buio="true"] .dm-ups-cella i{
       background:linear-gradient(to top,#d97706,#fbbf24)}
-    ${P} .dm-ups-scena[data-bassa="true"] .dm-ups-cella i{
+    ${P2} .dm-ups-scena[data-bassa="true"] .dm-ups-cella i{
       background:linear-gradient(to top,#b91c1c,#f87171)}
 
-    ${P} .dm-ups-spie{position:absolute;top:122px;left:22px;display:flex;gap:12px}
-    ${P} .dm-ups-spie i{
+    ${P2} .dm-ups-spie{position:absolute;top:122px;left:22px;display:flex;gap:12px}
+    ${P2} .dm-ups-spie i{
       display:block;width:13px;height:13px;border-radius:50%;background:rgba(148,163,184,.28)}
-    ${P} .dm-ups-scena[data-rete="true"] .dm-ups-spia-rete{
+    ${P2} .dm-ups-scena[data-rete="true"] .dm-ups-spia-rete{
       background:#22c55e;box-shadow:0 0 12px 2px rgba(34,197,94,.75)}
     /* La spia della batteria lampeggia solo mentre la casa ci sta sopra: una
        spia fissa direbbe «c'e' una batteria», che si sapeva gia'. */
-    ${P} .dm-ups-scena[data-buio="true"] .dm-ups-spia-batt{
+    ${P2} .dm-ups-scena[data-buio="true"] .dm-ups-spia-batt{
       background:#fbbf24;box-shadow:0 0 12px 2px rgba(251,191,36,.8);
       animation:dmUpsBattito 1.3s ease-in-out infinite}
     @keyframes dmUpsBattito{0%,100%{opacity:1}50%{opacity:.35}}
 
-    ${P} .dm-ups-prese{position:absolute;bottom:22px;left:22px;right:22px;display:flex;gap:14px}
-    ${P} .dm-ups-prese i{
+    ${P2} .dm-ups-prese{position:absolute;bottom:22px;left:22px;right:22px;display:flex;gap:14px}
+    ${P2} .dm-ups-prese i{
       position:relative;display:block;flex:1;height:28px;border-radius:8px;
       background:rgba(15,23,42,.6);box-shadow:inset 0 0 0 1px rgba(148,163,184,.35)}
     /* I due fori: una pillola vuota non e' una presa, e la scatola si
        riconosce proprio da quelle. */
-    ${P} .dm-ups-prese i::before,${P} .dm-ups-prese i::after{
+    ${P2} .dm-ups-prese i::before,${P2} .dm-ups-prese i::after{
       content:"";position:absolute;top:50%;width:4px;height:9px;border-radius:2px;
       transform:translateY(-50%);background:rgba(148,163,184,.55)}
-    ${P} .dm-ups-prese i::before{left:calc(50% - 7px)}
-    ${P} .dm-ups-prese i::after{left:calc(50% + 3px)}
+    ${P2} .dm-ups-prese i::before{left:calc(50% - 7px)}
+    ${P2} .dm-ups-prese i::after{left:calc(50% + 3px)}
 
     /* ── la casa: quello che sta tenendo acceso ───────────────────────── */
-    ${P} .dm-ups-casa{position:relative;width:150px;height:150px}
-    ${P} .dm-ups-tetto{
+    ${P2} .dm-ups-casa{position:relative;width:150px;height:150px}
+    ${P2} .dm-ups-tetto{
       position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:0;
       border-left:75px solid transparent;border-right:75px solid transparent;
       border-bottom:56px solid #94a3b8}
-    ${P} .dm-ups-muro{
+    ${P2} .dm-ups-muro{
       position:absolute;top:56px;left:18px;right:18px;bottom:0;border-radius:0 0 12px 12px;
       display:flex;align-items:center;justify-content:center;gap:16px;
       background:linear-gradient(180deg,#e2e8f0,#cbd5e1)}
-    ${P} .dm-ups-muro i{
+    ${P2} .dm-ups-muro i{
       display:block;width:26px;height:26px;border-radius:5px;background:rgba(15,23,42,.22);
       transition:background .6s ease,box-shadow .6s ease}
     /* Le finestre accese: la casa e' viva in tutti e due i casi — e' proprio il
        senso di questa scatola — ma di che luce lo dice chi la sta dando. */
-    ${P} .dm-ups-scena[data-rete="true"] .dm-ups-muro i{
+    ${P2} .dm-ups-scena[data-rete="true"] .dm-ups-muro i{
       background:#fde68a;box-shadow:0 0 14px 3px rgba(253,230,138,.7)}
-    ${P} .dm-ups-scena[data-buio="true"] .dm-ups-muro i{
+    ${P2} .dm-ups-scena[data-buio="true"] .dm-ups-muro i{
       background:#fbbf24;box-shadow:0 0 14px 3px rgba(251,191,36,.6)}
 
-    ${P} .dm-ups-verdetto{
+    ${P2} .dm-ups-verdetto{
       font-size:12px;font-weight:800;letter-spacing:.3px;padding:8px 14px;border-radius:14px;
       background:rgba(255,255,255,.95);color:var(--text-dim,#475569);
       box-shadow:0 6px 16px rgba(0,0,0,.08);white-space:nowrap}
-    ${P} .dm-ups-scena[data-buio="true"] .dm-ups-verdetto{
+    ${P2} .dm-ups-scena[data-buio="true"] .dm-ups-verdetto{
       background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff;
       box-shadow:0 10px 24px -10px rgba(244,63,94,.85)}
 
@@ -96562,19 +97762,19 @@ function installStyles69() {
       /* Le pastiglie dei nomi vanno a capo invece di uscire dal palco: il
          telaio si stringe, le parole no — «Sotto protezione» su una riga sola
          e' piu' larga di un terzo di telefono. */
-      ${P} .dm-ups-nome{
+      ${P2} .dm-ups-nome{
         max-width:min(40vw,150px);white-space:normal;text-align:center;line-height:1.25}
-      ${P} .dm-ups-stage{height:520px;border-radius:24px}
-      ${P} .dm-ups-box{width:158px;height:186px}
-      ${P} .dm-ups-lcd{height:66px}
-      ${P} .dm-ups-lcd b{font-size:30px}
-      ${P} .dm-ups-spie{top:96px}
-      ${P} .dm-ups-traliccio{width:84px;height:132px}
-      ${P} .dm-ups-casa{width:110px;height:112px}
-      ${P} .dm-ups-tetto{border-left-width:55px;border-right-width:55px;border-bottom-width:42px}
-      ${P} .dm-ups-muro{top:42px}
-      ${P} .dm-ups-plate{min-width:88px;padding:8px 12px}
-      ${P} .dm-ups-plate-val{font-size:21px}
+      ${P2} .dm-ups-stage{height:520px;border-radius:24px}
+      ${P2} .dm-ups-box{width:158px;height:186px}
+      ${P2} .dm-ups-lcd{height:66px}
+      ${P2} .dm-ups-lcd b{font-size:30px}
+      ${P2} .dm-ups-spie{top:96px}
+      ${P2} .dm-ups-traliccio{width:84px;height:132px}
+      ${P2} .dm-ups-casa{width:110px;height:112px}
+      ${P2} .dm-ups-tetto{border-left-width:55px;border-right-width:55px;border-bottom-width:42px}
+      ${P2} .dm-ups-muro{top:42px}
+      ${P2} .dm-ups-plate{min-width:88px;padding:8px 12px}
+      ${P2} .dm-ups-plate-val{font-size:21px}
     }
 
     /* ── sul telefono la fila si alza in piedi ────────────────────────── */
@@ -96597,45 +97797,45 @@ function installStyles69() {
        corrente che scorre, e i numeri in una griglia sotto di loro. Gli
        oggetti restano della misura che avevano, e nessuno tocca nessuno. */
     @media (max-width:520px){
-      ${P} .dm-ups-stage{height:auto;padding:22px 12px 20px}
-      ${P} .dm-ups-scena{
+      ${P2} .dm-ups-stage{height:auto;padding:22px 12px 20px}
+      ${P2} .dm-ups-scena{
         position:static;display:flex;flex-direction:column;align-items:center;gap:0}
       /* I cavi disegnati erano due segmenti orizzontali su un palco largo:
          in colonna non hanno piu' niente da unire, e il loro posto lo prende
          il tratto verticale qui sotto. */
-      ${P} .dm-ups-cavi{display:none}
-      ${P} .dm-ups-nodo{position:static;transform:none;max-width:100%}
-      ${P} .dm-ups-nodo[data-dm-ups-posto="rete"]{order:1}
-      ${P} .dm-ups-nodo[data-dm-ups-posto="scatola"]{order:2}
-      ${P} .dm-ups-nodo[data-dm-ups-posto="casa"]{order:3}
-      ${P} .dm-ups-quadro{
+      ${P2} .dm-ups-cavi{display:none}
+      ${P2} .dm-ups-nodo{position:static;transform:none;max-width:100%}
+      ${P2} .dm-ups-nodo[data-dm-ups-posto="rete"]{order:1}
+      ${P2} .dm-ups-nodo[data-dm-ups-posto="scatola"]{order:2}
+      ${P2} .dm-ups-nodo[data-dm-ups-posto="casa"]{order:3}
+      ${P2} .dm-ups-quadro{
         order:4;display:grid;width:100%;margin-top:20px;gap:10px;
         grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
-      ${P} .dm-ups-quadro .dm-ups-nodo{align-items:stretch;gap:0}
-      ${P} .dm-ups-quadro .dm-ups-plate{min-width:0}
-      ${P} .dm-ups-nodo-verdetto{order:5;margin-top:16px}
+      ${P2} .dm-ups-quadro .dm-ups-nodo{align-items:stretch;gap:0}
+      ${P2} .dm-ups-quadro .dm-ups-plate{min-width:0}
+      ${P2} .dm-ups-nodo-verdetto{order:5;margin-top:16px}
       /* La frase non ha piu' un angolo tutto suo in cui stare su una riga:
          al centro, sotto i numeri, va a capo come qualsiasi altra frase. */
-      ${P} .dm-ups-verdetto{white-space:normal;text-align:center}
+      ${P2} .dm-ups-verdetto{white-space:normal;text-align:center}
 
       /* Il cavo verticale: fondo spesso, anima chiara e il tratto di corrente
          che scende — le stesse tre cose dei cavi orizzontali, in una sola
          pastiglia, perche' qui non c'e' un disegno sotto a cui appoggiarsi. */
-      ${P} .dm-ups-nodo[data-dm-ups-posto="rete"]::after,
-      ${P} .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
+      ${P2} .dm-ups-nodo[data-dm-ups-posto="rete"]::after,
+      ${P2} .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
         content:"";width:18px;height:46px;border-radius:9px;
         background:
           linear-gradient(180deg,var(--dm-ups-corrente,transparent) 0 20px,transparent 20px)
             center 0/9px 46px repeat-y,
           linear-gradient(180deg,#f8fafc,#f8fafc) center/10px 100% no-repeat,
           #e2e8f0}
-      ${P} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="rete"]::after{
+      ${P2} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="rete"]::after{
         --dm-ups-corrente:#22c55e;animation:dmUpsScende 2.4s linear infinite}
-      ${P} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
+      ${P2} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
         --dm-ups-corrente:#38bdf8;animation:dmUpsScende 2.4s linear infinite}
       /* A corrente caduta il cavo di monte resta spento — e' tutta la notizia
          — e quello di valle porta l'ambra della batteria, piu' in fretta. */
-      ${P} .dm-ups-scena[data-buio="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
+      ${P2} .dm-ups-scena[data-buio="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
         --dm-ups-corrente:#fbbf24;animation:dmUpsScende 1.5s linear infinite}
     }
     @keyframes dmUpsScende{
@@ -96643,7 +97843,7 @@ function installStyles69() {
       to{background-position:center 0,center,0 0}
     }
     @media (prefers-reduced-motion:reduce){
-      ${P} .dm-ups-nodo::after{animation:none!important}
+      ${P2} .dm-ups-nodo::after{animation:none!important}
     }
     `
   );
@@ -96977,132 +98177,132 @@ function onClick41(event) {
   }
 }
 function installStyles70() {
-  const P = `#${CALENDARIO_PAGE_ID}`;
+  const P2 = `#${CALENDARIO_PAGE_ID}`;
   installStyle(
     "dm-calendario-section-style",
     `
-    ${P} .dm-calp-wrap{display:grid;gap:16px;padding:0 0 24px}
-    ${P} .dm-calp-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-calp-wrap{display:grid;gap:16px;padding:0 0 24px}
+    ${P2} .dm-calp-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-calp-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-calp-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-calp-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-calp-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* ── chi guarda l'agenda (#344) ────────────────────────────────────── */
-    ${P} .dm-calp-chi{
+    ${P2} .dm-calp-chi{
       display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 14px;
       border-radius:18px;border:1px dashed var(--divider-color,#dbe4ee);
       background:color-mix(in srgb,#6366f1 6%,transparent)}
-    ${P} .dm-calp-chi-lbl{
+    ${P2} .dm-calp-chi-lbl{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--secondary-text-color,#64748b)}
-    ${P} .dm-calp-chi-voci{display:flex;flex-wrap:wrap;gap:6px}
-    ${P} .dm-calp-chi-voce{
+    ${P2} .dm-calp-chi-voci{display:flex;flex-wrap:wrap;gap:6px}
+    ${P2} .dm-calp-chi-voce{
       padding:6px 12px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);
       background:var(--card-bg,#fff);color:var(--text,#0f172a);
       font:inherit;font-size:12px;font-weight:800;cursor:pointer}
-    ${P} .dm-calp-chi-voce[aria-pressed="true"]{
+    ${P2} .dm-calp-chi-voce[aria-pressed="true"]{
       border-color:#6366f1;background:color-mix(in srgb,#6366f1 16%,var(--card-bg,#fff));color:#4338ca}
 
     /* ── la fascia della settimana ─────────────────────────────────────── */
-    ${P} .dm-calp-fascia{
+    ${P2} .dm-calp-fascia{
       display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:14px;
       border-radius:22px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-calp-cella{
+    ${P2} .dm-calp-cella{
       display:grid;gap:4px;justify-items:center;padding:10px 4px 8px;border:0;cursor:pointer;
       border-radius:16px;background:transparent;transition:background .2s ease,transform .15s ease}
-    ${P} .dm-calp-cella:hover{background:color-mix(in srgb,var(--primary-color,#6366f1) 8%,transparent)}
-    ${P} .dm-calp-sett{
+    ${P2} .dm-calp-cella:hover{background:color-mix(in srgb,var(--primary-color,#6366f1) 8%,transparent)}
+    ${P2} .dm-calp-sett{
       font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
       color:var(--secondary-text-color,#94a3b8)}
-    ${P} .dm-calp-numero{
+    ${P2} .dm-calp-numero{
       font-family:'Oswald',sans-serif;font-size:22px;font-weight:500;line-height:1.1;
       font-variant-numeric:tabular-nums;color:var(--text,#0f172a)}
     /* Oggi porta il cerchio pieno: e' il giorno da cui si conta tutto il
        resto, e cercarlo fra sette numeri uguali costa uno sguardo di troppo. */
-    ${P} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{
+    ${P2} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{
       display:grid;place-items:center;width:34px;height:34px;border-radius:50%;color:#fff;
       background:linear-gradient(135deg,#818cf8,#4f46e5)}
-    ${P} .dm-calp-cella[data-scelto="true"]{
+    ${P2} .dm-calp-cella[data-scelto="true"]{
       background:color-mix(in srgb,var(--primary-color,#6366f1) 14%,transparent);
       box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--primary-color,#6366f1) 45%,transparent)}
-    ${P} .dm-calp-punti{display:flex;gap:3px;min-height:8px;align-items:center}
-    ${P} .dm-calp-punti i{display:block;width:6px;height:6px;border-radius:50%}
-    ${P} .dm-calp-tanti{
+    ${P2} .dm-calp-punti{display:flex;gap:3px;min-height:8px;align-items:center}
+    ${P2} .dm-calp-punti i{display:block;width:6px;height:6px;border-radius:50%}
+    ${P2} .dm-calp-tanti{
       font-size:10px;font-weight:900;color:var(--secondary-text-color,#64748b);
       font-variant-numeric:tabular-nums}
 
-    ${P} .dm-calp-legenda{display:flex;flex-wrap:wrap;gap:6px 16px;padding:0 4px}
-    ${P} .dm-calp-voce{
+    ${P2} .dm-calp-legenda{display:flex;flex-wrap:wrap;gap:6px 16px;padding:0 4px}
+    ${P2} .dm-calp-voce{
       display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;
       color:var(--secondary-text-color,#64748b)}
-    ${P} .dm-calp-voce i{display:block;width:9px;height:9px;border-radius:50%}
+    ${P2} .dm-calp-voce i{display:block;width:9px;height:9px;border-radius:50%}
 
-    ${P} .dm-calp-tutto{
+    ${P2} .dm-calp-tutto{
       justify-self:start;padding:8px 16px;border:0;border-radius:999px;cursor:pointer;
       font-size:12px;font-weight:800;color:var(--text,#0f172a);
       background:var(--card-bg,#fff);box-shadow:0 6px 16px rgba(0,0,0,.08)}
 
     /* ── l'agenda ──────────────────────────────────────────────────────── */
-    ${P} .dm-calp-nuovo-riga{display:flex;justify-content:flex-start}
+    ${P2} .dm-calp-nuovo-riga{display:flex;justify-content:flex-start}
     /* Una scadenza dentro l'agenda (#259): la casella al posto dei tasti, e la
        parola «Da fare» dove gli altri hanno l'ora. */
-    ${P} .dm-calp-evento[data-scadenza="true"] .dm-calp-ora{color:var(--dm-calp-tinta,#0ea5e9)}
-    ${P} .dm-calp-evento[data-scadenza="true"] .dm-todo-check{
+    ${P2} .dm-calp-evento[data-scadenza="true"] .dm-calp-ora{color:var(--dm-calp-tinta,#0ea5e9)}
+    ${P2} .dm-calp-evento[data-scadenza="true"] .dm-todo-check{
       flex:0 0 19px;width:19px;height:19px;margin-top:2px}
-    ${P} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-titolo{color:#b91c1c}
-    ${P} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-evento{border-left-color:#ef4444}
-    ${P} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-ora{color:#b91c1c}
+    ${P2} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-titolo{color:#b91c1c}
+    ${P2} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-evento{border-left-color:#ef4444}
+    ${P2} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-ora{color:#b91c1c}
     /* Le cose da fare: stessa scheda dei giorni, cosi' i due blocchi si
        leggono come due parti della stessa pagina e non come due pagine. */
-    ${P} .dm-calp-cose{
+    ${P2} .dm-calp-cose{
       padding:16px 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-calp-cose .dm-w-block + .dm-w-block{margin-top:14px}
-    ${P} .dm-calp-cose .dm-w-block-title{
+    ${P2} .dm-calp-cose .dm-w-block + .dm-w-block{margin-top:14px}
+    ${P2} .dm-calp-cose .dm-w-block-title{
       display:block;margin-bottom:8px;font-size:11px;font-weight:900;letter-spacing:1px;
       text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
-    ${P} .dm-calp-agenda{display:grid;gap:12px}
-    ${P} .dm-calp-giorno{
+    ${P2} .dm-calp-agenda{display:grid;gap:12px}
+    ${P2} .dm-calp-giorno{
       padding:16px 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-calp-titolo{
+    ${P2} .dm-calp-titolo{
       margin:0 0 12px;font-size:11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;
       color:var(--secondary-text-color,#64748b)}
-    ${P} .dm-calp-lista{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+    ${P2} .dm-calp-lista{list-style:none;margin:0;padding:0;display:grid;gap:10px}
     /* Ogni riga porta a sinistra la stecca del suo calendario: con due agende
        nello stesso giorno, il colore dice di chi e' l'impegno senza leggere. */
-    ${P} .dm-calp-evento{
+    ${P2} .dm-calp-evento{
       display:flex;align-items:flex-start;gap:13px;min-width:0;padding-left:12px;
       border-left:3px solid var(--dm-calp-tinta,#6366f1);border-radius:2px}
-    ${P} .dm-calp-ora{
+    ${P2} .dm-calp-ora{
       flex:0 0 auto;min-width:96px;padding-top:1px;font-size:12px;font-weight:800;line-height:1.5;
       font-variant-numeric:tabular-nums;color:var(--secondary-text-color,#64748b)}
-    ${P} .dm-calp-corpo{display:grid;gap:2px;min-width:0;flex:1}
-    ${P} .dm-calp-corpo b{font-size:14px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
-    ${P} .dm-calp-corpo small{
+    ${P2} .dm-calp-corpo{display:grid;gap:2px;min-width:0;flex:1}
+    ${P2} .dm-calp-corpo b{font-size:14px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
+    ${P2} .dm-calp-corpo small{
       font-size:11.5px;font-weight:700;color:var(--secondary-text-color,#94a3b8);
       overflow-wrap:anywhere}
-    ${P} .dm-calp-nota{
+    ${P2} .dm-calp-nota{
       margin-top:3px;font-size:12px;font-weight:600;line-height:1.45;
       color:var(--secondary-text-color,#64748b);overflow-wrap:anywhere;white-space:pre-line}
-    ${P} .dm-calp-evento[data-adesso="true"] .dm-calp-ora,
-    ${P} .dm-calp-evento[data-adesso="true"] .dm-calp-corpo b{color:var(--dm-calp-tinta,#6366f1)}
-    ${P} .dm-calp-adesso{
+    ${P2} .dm-calp-evento[data-adesso="true"] .dm-calp-ora,
+    ${P2} .dm-calp-evento[data-adesso="true"] .dm-calp-corpo b{color:var(--dm-calp-tinta,#6366f1)}
+    ${P2} .dm-calp-adesso{
       flex:0 0 auto;align-self:center;padding:4px 10px;border-radius:999px;color:#fff;
       font-size:9.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
       background:var(--dm-calp-tinta,#6366f1)}
-    ${P} .dm-calp-niente{
+    ${P2} .dm-calp-niente{
       margin:0;padding:26px 18px;text-align:center;border-radius:22px;
       border:1px dashed var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);
       font-size:13px;font-weight:800;color:var(--secondary-text-color,#64748b)}
 
     @media (max-width:640px){
-      ${P} .dm-calp-fascia{gap:4px;padding:10px 8px}
-      ${P} .dm-calp-numero{font-size:18px}
-      ${P} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{width:29px;height:29px}
-      ${P} .dm-calp-ora{min-width:74px;font-size:11px}
-      ${P} .dm-calp-evento{gap:10px;padding-left:10px}
+      ${P2} .dm-calp-fascia{gap:4px;padding:10px 8px}
+      ${P2} .dm-calp-numero{font-size:18px}
+      ${P2} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{width:29px;height:29px}
+      ${P2} .dm-calp-ora{min-width:74px;font-size:11px}
+      ${P2} .dm-calp-evento{gap:10px;padding-left:10px}
     }
     `
   );
@@ -97777,10 +98977,10 @@ function ariaClick(event, body) {
   return false;
 }
 function ariaCambio(event) {
-  const casella3 = event.target?.closest?.("[data-dm-aria-soglia]");
+  const casella4 = event.target?.closest?.("[data-dm-aria-soglia]");
   const body = doc?.getElementById("ed-body");
-  if (!casella3 || !body || !body.contains(casella3)) return;
-  const classe2 = clean(casella3.dataset.dmAriaSoglia);
+  if (!casella4 || !body || !body.contains(casella4)) return;
+  const classe2 = clean(casella4.dataset.dmAriaSoglia);
   const caselle2 = [...body.querySelectorAll(`[data-dm-aria-soglia="${CSS.escape(classe2)}"]`)].sort(
     (sinistra, destra) => Number(sinistra.dataset.dmAriaGradino) - Number(destra.dataset.dmAriaGradino)
   );
@@ -98712,49 +99912,49 @@ function renderVarchi() {
   schedule35();
 }
 function installStyles74() {
-  const P = `#${VARCHI_PAGE_ID}`;
+  const P2 = `#${VARCHI_PAGE_ID}`;
   installStyle(
     "dm-varchi-section-style",
     `
-    ${P} .dm-varchi-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P} .dm-varchi-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-varchi-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P2} .dm-varchi-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-varchi-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-varchi-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-varchi-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-varchi-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande: quanti sono aperti adesso. */
-    ${P} .dm-varchi-testa{
+    ${P2} .dm-varchi-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-varchi-testa small{
+    ${P2} .dm-varchi-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P} .dm-varchi-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P} .dm-varchi-testa[data-stato="aperti"] strong{color:#dc2626}
-    ${P} .dm-varchi-testa[data-stato="chiusi"] strong{color:#15803d}
-    ${P} .dm-varchi-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P} .dm-varchi-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-varchi-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P2} .dm-varchi-testa[data-stato="aperti"] strong{color:#dc2626}
+    ${P2} .dm-varchi-testa[data-stato="chiusi"] strong{color:#15803d}
+    ${P2} .dm-varchi-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P2} .dm-varchi-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P} .dm-varchi-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P2} .dm-varchi-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
 
     /* La carta di un varco: il colore lo dice prima della parola. */
-    ${P} .dm-varco{
+    ${P2} .dm-varco{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-varco,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-varco,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P} .dm-varco[data-varco="aperto"]{--dm-varco:#dc2626}
-    ${P} .dm-varco[data-varco="chiuso"]{--dm-varco:#16a34a}
-    ${P} .dm-varco[data-varco="muto"]{--dm-varco:#94a3b8}
-    ${P} .dm-varco-ic{
+    ${P2} .dm-varco[data-varco="aperto"]{--dm-varco:#dc2626}
+    ${P2} .dm-varco[data-varco="chiuso"]{--dm-varco:#16a34a}
+    ${P2} .dm-varco[data-varco="muto"]{--dm-varco:#94a3b8}
+    ${P2} .dm-varco-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-varco,#94a3b8) 22%,transparent)}
     /* Il disegno del catalogo al posto dell'emoji (#74): la casella resta
        quella, cambia quello che ci sta dentro. */
-    ${P} .dm-varco-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P} .dm-varco-ic svg{display:block;width:30px;height:30px}
-    ${P} .dm-varco-testo{display:grid;gap:2px;min-width:0}
+    ${P2} .dm-varco-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P2} .dm-varco-ic svg{display:block;width:30px;height:30px}
+    ${P2} .dm-varco-testo{display:grid;gap:2px;min-width:0}
     /* Il nome su due righe, e la pastiglia che gli lascia il posto.
      *
      * Su una riga sola, con «NON RISPONDE» accanto che si prende novanta
@@ -98765,12 +99965,12 @@ function installStyles74() {
      *
      * Due righe bastano quasi sempre, e la pastiglia dello stato va a capo
      * anche lei invece di mangiarsi la colonna del nome. */
-    ${P} .dm-varco-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-varco-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
       overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
-    ${P} .dm-varco-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P2} .dm-varco-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-varco-stato{
+    ${P2} .dm-varco-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       max-width:74px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-varco,#94a3b8) 78%,var(--text,#0f172a))}
@@ -98779,37 +99979,37 @@ function installStyles74() {
        suo. Sono due cose diverse — com'e' la finestra, e se la centrale la
        guarda — e una carta che le dicesse nella stessa casella farebbe credere
        che siano la stessa. */
-    ${P} .dm-varco-coda{display:grid;justify-items:end;gap:6px}
-    ${P} .dm-varco-scudo{
+    ${P2} .dm-varco-coda{display:grid;justify-items:end;gap:6px}
+    ${P2} .dm-varco-scudo{
       display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;cursor:pointer;
       border:1px solid color-mix(in srgb,var(--dm-varco,#94a3b8) 45%,transparent);
       background:var(--card-bg,#fff);color:var(--text-dim,#64748b);
       font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
       -webkit-tap-highlight-color:transparent}
-    ${P} .dm-varco-scudo[aria-pressed="true"]{
+    ${P2} .dm-varco-scudo[aria-pressed="true"]{
       border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 16%,var(--card-bg,#fff));color:#b45309}
-    ${P} .dm-varco-scudo[data-dm-varco-bloccato]{cursor:default;opacity:.75}
-    ${P} .dm-varco-esclusa,${P} .dm-varco-errore{
+    ${P2} .dm-varco-scudo[data-dm-varco-bloccato]{cursor:default;opacity:.75}
+    ${P2} .dm-varco-esclusa,${P2} .dm-varco-errore{
       display:flex;align-items:center;gap:5px;font-size:11px;font-weight:900;line-height:1.25}
-    ${P} .dm-varco-esclusa{color:#b45309}
-    ${P} .dm-varco-errore{color:#dc2626;white-space:normal}
+    ${P2} .dm-varco-esclusa{color:#b45309}
+    ${P2} .dm-varco-errore{color:#dc2626;white-space:normal}
     /* Il velo della domanda e dell'annulla: sopra la carta intera, come nelle
        stanze, perche' la domanda e' su tutta la carta e non su un suo angolo. */
-    ${P} .dm-varco{position:relative}
-    ${P} .dm-varco-velo{
+    ${P2} .dm-varco{position:relative}
+    ${P2} .dm-varco-velo{
       position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:10px;
       padding:10px 14px;border-radius:inherit;cursor:pointer;
       background:rgba(15,23,42,.9);color:#fff;font-size:13px;font-weight:900}
-    ${P} .dm-varco-velo > span{display:flex;align-items:center;gap:7px;min-width:0}
-    ${P} .dm-varco-velo button{
+    ${P2} .dm-varco-velo > span{display:flex;align-items:center;gap:7px;min-width:0}
+    ${P2} .dm-varco-velo button{
       flex:none;padding:8px 14px;border-radius:999px;border:0;cursor:pointer;
       background:#f59e0b;color:#111827;font:inherit;font-size:12px;font-weight:900}
-    ${P} .dm-varco-velo[data-dm-varco-velo="annulla"] button{background:#fff}
+    ${P2} .dm-varco-velo[data-dm-varco-velo="annulla"] button{background:#fff}
     /* Una carta esclusa lo dice anche da lontano, senza leggere: il tratteggio
        vuol dire «questa la centrale non la guarda». */
-    ${P} .dm-varco[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
+    ${P2} .dm-varco[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
 
-    @media(max-width:520px){${P} .dm-varchi-elenco{grid-template-columns:1fr}}
+    @media(max-width:520px){${P2} .dm-varchi-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -98934,10 +100134,10 @@ var scheda2 = costruisciSchedaDichiarata({
   bozzaInPiu(bozza3, body, indice) {
     const fuori = { ...bozza3 };
     for (const campo5 of [CAMPO_ESCLUSIONE, CAMPO_TIPO]) {
-      const casella3 = body.querySelector(
+      const casella4 = body.querySelector(
         `[data-dm-dich-campo="${campo5}"][data-dm-dich-riga="${indice}"]`
       );
-      if (casella3) fuori[campo5] = clean(casella3.value);
+      if (casella4) fuori[campo5] = clean(casella4.value);
     }
     return fuori;
   },
@@ -99213,60 +100413,60 @@ function renderPresenza() {
   schedule36();
 }
 function installStyles75() {
-  const P = `#${PRESENZA_PAGE_ID}`;
+  const P2 = `#${PRESENZA_PAGE_ID}`;
   installStyle(
     "dm-presenza-section-style",
     `
-    ${P} .dm-presenza-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P} .dm-presenza-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-presenza-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P2} .dm-presenza-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-presenza-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-presenza-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-presenza-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-presenza-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande: in quante stanze c'è qualcuno adesso. */
-    ${P} .dm-presenza-testa{
+    ${P2} .dm-presenza-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-presenza-testa small{
+    ${P2} .dm-presenza-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P} .dm-presenza-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P} .dm-presenza-testa[data-stato="attivi"] strong{color:#2563eb}
-    ${P} .dm-presenza-testa[data-stato="liberi"] strong{color:#15803d}
-    ${P} .dm-presenza-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P} .dm-presenza-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-presenza-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P2} .dm-presenza-testa[data-stato="attivi"] strong{color:#2563eb}
+    ${P2} .dm-presenza-testa[data-stato="liberi"] strong{color:#15803d}
+    ${P2} .dm-presenza-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P2} .dm-presenza-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P} .dm-presenza-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P2} .dm-presenza-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
 
     /* La carta di un rilevatore: il colore lo dice prima della parola. */
-    ${P} .dm-presenza{
+    ${P2} .dm-presenza{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-presenza,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-presenza,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P} .dm-presenza[data-presenza="attivo"]{--dm-presenza:#2563eb}
-    ${P} .dm-presenza[data-presenza="libero"]{--dm-presenza:#16a34a}
-    ${P} .dm-presenza[data-presenza="muto"]{--dm-presenza:#94a3b8}
+    ${P2} .dm-presenza[data-presenza="attivo"]{--dm-presenza:#2563eb}
+    ${P2} .dm-presenza[data-presenza="libero"]{--dm-presenza:#16a34a}
+    ${P2} .dm-presenza[data-presenza="muto"]{--dm-presenza:#94a3b8}
     /* Chi non c'e' piu' in Home Assistant: lo stesso grigio di chi non
        risponde — sono tutt'e due una sorveglianza che manca — e la parola in
        fondo alla riga dice quale delle due. */
-    ${P} .dm-presenza[data-presenza="assente"]{--dm-presenza:#94a3b8}
-    ${P} .dm-presenza-ic{
+    ${P2} .dm-presenza[data-presenza="assente"]{--dm-presenza:#94a3b8}
+    ${P2} .dm-presenza-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-presenza,#94a3b8) 22%,transparent)}
     /* Il disegno del catalogo al posto dell'emoji (#74). */
-    ${P} .dm-presenza-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P} .dm-presenza-ic svg{display:block;width:30px;height:30px}
-    ${P} .dm-presenza-testo{display:grid;gap:2px;min-width:0}
-    ${P} .dm-presenza-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-presenza-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P2} .dm-presenza-ic svg{display:block;width:30px;height:30px}
+    ${P2} .dm-presenza-testo{display:grid;gap:2px;min-width:0}
+    ${P2} .dm-presenza-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-presenza-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P2} .dm-presenza-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-presenza-stato{
+    ${P2} .dm-presenza-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-presenza,#94a3b8) 78%,var(--text,#0f172a))}
-    @media(max-width:520px){${P} .dm-presenza-elenco{grid-template-columns:1fr}}
+    @media(max-width:520px){${P2} .dm-presenza-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -99549,10 +100749,10 @@ function anteprima2(lista5, { device, entities }) {
   const regole = LISTE2()[lista5];
   const nato = regole.lega({ device, entities, states: allStates() });
   const etichette = ETICHETTE3();
-  const casella3 = (campo5) => `<div class="dm-integ-casella"><span>${esc(etichette[campo5][0])}</span><b class="mono">${esc(nato[campo5]) || "—"}</b></div>`;
+  const casella4 = (campo5) => `<div class="dm-integ-casella"><span>${esc(etichette[campo5][0])}</span><b class="mono">${esc(nato[campo5]) || "—"}</b></div>`;
   return {
     etichetta: regole.titolo,
-    corpo: `<div class="dm-integ-caselle">${regole.campi.map(casella3).join("")}</div>`
+    corpo: `<div class="dm-integ-caselle">${regole.campi.map(casella4).join("")}</div>`
   };
 }
 function creaDaDispositivo4(lista5, { device, entities, integration }) {
@@ -99924,78 +101124,78 @@ function renderStampanti() {
   schedule37();
 }
 function installStyles77() {
-  const P = `#${STAMPANTI_PAGE_ID}`;
+  const P2 = `#${STAMPANTI_PAGE_ID}`;
   installStyle(
     "dm-stampanti-section-style",
     `
-    ${P} .dm-stampanti-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P} .dm-stampanti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P2} .dm-stampanti-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P2} .dm-stampanti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P} .dm-stampanti-vuoto strong{font-size:14px;font-weight:900}
-    ${P} .dm-stampanti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P2} .dm-stampanti-vuoto strong{font-size:14px;font-weight:900}
+    ${P2} .dm-stampanti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
-    ${P} .dm-stampanti-testa{
+    ${P2} .dm-stampanti-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P} .dm-stampanti-testa small{
+    ${P2} .dm-stampanti-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P} .dm-stampanti-testa strong{font-size:28px;font-weight:900;line-height:1.08;color:var(--text,#0f172a)}
-    ${P} .dm-stampanti-testa[data-verdetto="ferma"] strong{color:#b91c1c}
-    ${P} .dm-stampanti-testa[data-verdetto="inchiostro"] strong{color:#b45309}
-    ${P} .dm-stampanti-testa[data-verdetto="stampa"] strong{color:#0369a1}
-    ${P} .dm-stampanti-testa[data-verdetto="pronta"] strong{color:#15803d}
-    ${P} .dm-stampanti-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P2} .dm-stampanti-testa strong{font-size:28px;font-weight:900;line-height:1.08;color:var(--text,#0f172a)}
+    ${P2} .dm-stampanti-testa[data-verdetto="ferma"] strong{color:#b91c1c}
+    ${P2} .dm-stampanti-testa[data-verdetto="inchiostro"] strong{color:#b45309}
+    ${P2} .dm-stampanti-testa[data-verdetto="stampa"] strong{color:#0369a1}
+    ${P2} .dm-stampanti-testa[data-verdetto="pronta"] strong{color:#15803d}
+    ${P2} .dm-stampanti-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P} .dm-stampanti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px}
-    ${P} .dm-stampante{
+    ${P2} .dm-stampanti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px}
+    ${P2} .dm-stampante{
       display:grid;gap:12px;padding:16px 18px;border-radius:20px;
       border:1px solid color-mix(in srgb,var(--dm-st,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-st,#94a3b8) 8%,var(--card-bg,#fff))}
-    ${P} .dm-stampante[data-stato="pronta"]{--dm-st:#16a34a}
-    ${P} .dm-stampante[data-stato="stampa"]{--dm-st:#0ea5e9}
-    ${P} .dm-stampante[data-stato="ferma"]{--dm-st:#dc2626}
-    ${P} .dm-stampante[data-stato="muta"],${P} .dm-stampante[data-stato="spenta"]{--dm-st:#94a3b8}
-    ${P} .dm-stampante-testa{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px}
-    ${P} .dm-stampante-ic{display:grid;place-items:center;width:44px;height:44px}
-    ${P} .dm-stampante-ic .dm-appliance-art{display:block;line-height:0}
-    ${P} .dm-stampante-testo{display:grid;gap:2px;min-width:0}
-    ${P} .dm-stampante-testo strong{font-size:14.5px;font-weight:900;color:var(--text,#0f172a);
+    ${P2} .dm-stampante[data-stato="pronta"]{--dm-st:#16a34a}
+    ${P2} .dm-stampante[data-stato="stampa"]{--dm-st:#0ea5e9}
+    ${P2} .dm-stampante[data-stato="ferma"]{--dm-st:#dc2626}
+    ${P2} .dm-stampante[data-stato="muta"],${P2} .dm-stampante[data-stato="spenta"]{--dm-st:#94a3b8}
+    ${P2} .dm-stampante-testa{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px}
+    ${P2} .dm-stampante-ic{display:grid;place-items:center;width:44px;height:44px}
+    ${P2} .dm-stampante-ic .dm-appliance-art{display:block;line-height:0}
+    ${P2} .dm-stampante-testo{display:grid;gap:2px;min-width:0}
+    ${P2} .dm-stampante-testo strong{font-size:14.5px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-stampante-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P2} .dm-stampante-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-stampante-stato{
+    ${P2} .dm-stampante-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-st,#94a3b8) 80%,var(--text,#0f172a))}
 
     /* Le cartucce: una riga per colore, con la barra del colore vero. */
-    ${P} .dm-stampante-cartucce{display:grid;gap:7px}
-    ${P} .dm-stampante-cart{display:grid;grid-template-columns:minmax(64px,88px) minmax(0,1fr) 42px;
+    ${P2} .dm-stampante-cartucce{display:grid;gap:7px}
+    ${P2} .dm-stampante-cart{display:grid;grid-template-columns:minmax(64px,88px) minmax(0,1fr) 42px;
       align-items:center;gap:10px}
-    ${P} .dm-stampante-cart-nome{font-size:11px;font-weight:800;color:var(--text-dim,#64748b);
+    ${P2} .dm-stampante-cart-nome{font-size:11px;font-weight:800;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-stampante-cart-barra{display:block;height:9px;border-radius:999px;overflow:hidden;
+    ${P2} .dm-stampante-cart-barra{display:block;height:9px;border-radius:999px;overflow:hidden;
       background:color-mix(in srgb,var(--dm-cart,${COLORE_SENZA_TINTA}) 16%,var(--surface-3,#f1f5f9))}
-    ${P} .dm-stampante-cart-barra i{display:block;height:100%;border-radius:999px;
+    ${P2} .dm-stampante-cart-barra i{display:block;height:100%;border-radius:999px;
       background:var(--dm-cart,${COLORE_SENZA_TINTA})}
     /* Il colore della tinta si scrive qui, e non sulla riga: quello che si
      * scrive sulla riga vince su ogni regola, e la riga del fondo scuro non
      * arriverebbe mai a valere. L'elenco e' quello del modello. */
     ${TINTE_DELLE_CARTUCCE.map(
-      ({ tinta, colore }) => `${P} .dm-stampante-cart[data-tinta="${tinta}"]{--dm-cart:${colore}}`
+      ({ tinta, colore }) => `${P2} .dm-stampante-cart[data-tinta="${tinta}"]{--dm-cart:${colore}}`
     ).join("\n    ")}
     /* Il nero su fondo scuro e' il fondo: la barra del nero spariva, e chi ha
      * una stampante a due cartucce ne vedeva una sola colorata. L'inchiostro
      * nero scritto su una pagina nera si scrive chiaro — come il testo. */
-    html[data-theme="dark"] ${P} .dm-stampante-cart[data-tinta="nero"],
-    body.dark-theme ${P} .dm-stampante-cart[data-tinta="nero"]{--dm-cart:#e2e8f0}
-    ${P} .dm-stampante-cart-val{font-size:11.5px;font-weight:900;text-align:right;
+    html[data-theme="dark"] ${P2} .dm-stampante-cart[data-tinta="nero"],
+    body.dark-theme ${P2} .dm-stampante-cart[data-tinta="nero"]{--dm-cart:#e2e8f0}
+    ${P2} .dm-stampante-cart-val{font-size:11.5px;font-weight:900;text-align:right;
       font-variant-numeric:tabular-nums;color:var(--text,#0f172a)}
-    ${P} .dm-stampante-cart[data-scarsa="molto"] .dm-stampante-cart-val{color:#b91c1c}
-    ${P} .dm-stampante-cart[data-scarsa="si"] .dm-stampante-cart-val{color:#b45309}
-    ${P} .dm-stampante-senza{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
-    @media(max-width:520px){${P} .dm-stampanti-elenco{grid-template-columns:1fr}}
+    ${P2} .dm-stampante-cart[data-scarsa="molto"] .dm-stampante-cart-val{color:#b91c1c}
+    ${P2} .dm-stampante-cart[data-scarsa="si"] .dm-stampante-cart-val{color:#b45309}
+    ${P2} .dm-stampante-senza{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    @media(max-width:520px){${P2} .dm-stampanti-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -100354,10 +101554,10 @@ function conICampiDelContatore(bozza3, body, indice) {
   const genere = genereValido2(tendina4?.value) || genereDellaRiga2(bozza3);
   const fuori = { ...bozza3, genere };
   for (const nome of NUMERI4) {
-    const casella3 = body.querySelector(
+    const casella4 = body.querySelector(
       `[data-dm-dich-campo="${nome}"][data-dm-dich-riga="${indice}"]`
     );
-    if (casella3) fuori[nome] = clean(casella3.value);
+    if (casella4) fuori[nome] = clean(casella4.value);
     if (!CAMPI_DEL_GENERE[genere].includes(nome)) delete fuori[nome];
   }
   return fuori;
@@ -100534,13 +101734,13 @@ function campiDellaPianta(riga3, indice) {
   )}</small></span></label>`;
 }
 function conICampiDellaPianta(bozza3, body, indice) {
-  const casella3 = (nome) => body.querySelector(`[data-dm-dich-campo="${nome}"][data-dm-dich-riga="${indice}"]`);
+  const casella4 = (nome) => body.querySelector(`[data-dm-dich-campo="${nome}"][data-dm-dich-riga="${indice}"]`);
   const fuori = { ...bozza3 };
   for (const nome of ["temperatura", "minimo", "massimo"]) {
-    const campo5 = casella3(nome);
+    const campo5 = casella4(nome);
     if (campo5) fuori[nome] = clean(campo5.value);
   }
-  const spunta = casella3("fuori");
+  const spunta = casella4("fuori");
   if (spunta) fuori.fuori = Boolean(spunta.checked);
   return fuori;
 }
@@ -100955,16 +102155,16 @@ function campiDellaRiga(riga3, indice) {
   return scelta3 + entita3 + celleMarkup2 + soglia2;
 }
 function conICampiDellaRiga(bozza3, body, indice) {
-  const casella3 = (campo5) => body.querySelector(`[data-dm-dich-campo="${campo5}"][data-dm-dich-riga="${indice}"]`);
+  const casella4 = (campo5) => body.querySelector(`[data-dm-dich-campo="${campo5}"][data-dm-dich-riga="${indice}"]`);
   const fuori = { ...bozza3 };
   for (const campo5 of ["tipo", ...CAMPI_DEL_PACCO, "unita", "soglia"]) {
-    const nodo2 = casella3(campo5);
+    const nodo2 = casella4(campo5);
     if (!nodo2) continue;
     const valore3 = clean(nodo2.value);
     if (valore3) fuori[campo5] = valore3;
     else delete fuori[campo5];
   }
-  const celle = casella3("celle");
+  const celle = casella4("celle");
   if (celle) {
     const elenco9 = celleDaTesto(celle.value);
     if (elenco9.length) fuori.celle = elenco9;
@@ -101065,16 +102265,16 @@ var scheda6 = costruisciSchedaDichiarata({
       const bozza3 = { entity: valore3("entity") };
       for (const campo5 of CAMPI_DEL_PACCO) bozza3[campo5] = valore3(campo5);
       const trovate = celleDelPacco(allStates(), bozza3);
-      const casella3 = body.querySelector(
+      const casella4 = body.querySelector(
         `[data-dm-dich-campo="celle"][data-dm-dich-riga="${indice}"]`
       );
-      if (!casella3) return;
+      if (!casella4) return;
       if (!trovate.length) {
         root.edToast?.(t("Nessuna cella trovata", "No cells found"));
         return;
       }
-      casella3.value = trovate.join("\n");
-      casella3.rows = Math.min(8, Math.max(3, trovate.length));
+      casella4.value = trovate.join("\n");
+      casella4.rows = Math.min(8, Math.max(3, trovate.length));
       root.edToast?.(t(`${trovate.length} celle trovate`, `${trovate.length} cells found`));
     });
   }
@@ -101430,7 +102630,7 @@ function bindNodoToDevice({
   ) || elenco9.find(
     (voce2) => dominio4(voce2) === "binary_sensor" && PAROLE7.stato.test(parole3(voce2, states))
   );
-  const gradi5 = elenco9.find(
+  const gradi6 = elenco9.find(
     (voce2) => dominio4(voce2) === "sensor" && (classe2(voce2) === "temperature" || ["°c", "°f"].includes(unita2(voce2))) && PAROLE7.temperatura.test(parole3(voce2, states))
   );
   return {
@@ -101440,7 +102640,7 @@ function bindNodoToDevice({
     cpu: clean28(percentuale4("cpu")?.entity_id) || clean28(precedente.cpu),
     ram: clean28(percentuale4("ram")?.entity_id) || clean28(precedente.ram),
     disco: clean28(percentuale4("disco")?.entity_id) || clean28(precedente.disco),
-    temperatura: clean28(gradi5?.entity_id) || clean28(precedente.temperatura)
+    temperatura: clean28(gradi6?.entity_id) || clean28(precedente.temperatura)
   };
 }
 
@@ -101695,10 +102895,10 @@ function ensureNodiEditor() {
     return false;
   }
   if (doc.getElementById(ANCORA4)) return false;
-  const casella3 = doc.createElement("div");
-  casella3.id = ANCORA4;
-  casella3.innerHTML = schedaMarkup11();
-  body.append(casella3);
+  const casella4 = doc.createElement("div");
+  casella4.id = ANCORA4;
+  casella4.innerHTML = schedaMarkup11();
+  body.append(casella4);
   return true;
 }
 function leggiLaRiga2(riga3, nodo2) {
@@ -101710,10 +102910,10 @@ function leggiLaRiga2(riga3, nodo2) {
 function anteprimaNodo({ device, entities }) {
   const nato = bindNodoToDevice({ device, entities, states: allStates() });
   const etichette = ETICHETTE4();
-  const casella3 = (campo5) => `<div class="dm-integ-casella"><span>${esc(etichette[campo5][0])}</span><b class="mono">${esc(nato[campo5]) || "—"}</b></div>`;
+  const casella4 = (campo5) => `<div class="dm-integ-casella"><span>${esc(etichette[campo5][0])}</span><b class="mono">${esc(nato[campo5]) || "—"}</b></div>`;
   return {
     etichetta: t("Nodo", "Node"),
-    corpo: `<div class="dm-integ-caselle">${CAMPI_DEL_NODO.map(casella3).join("")}</div>`
+    corpo: `<div class="dm-integ-caselle">${CAMPI_DEL_NODO.map(casella4).join("")}</div>`
   };
 }
 function creaDaDispositivo5({ device, entities, integration }) {
@@ -102323,9 +103523,9 @@ function ensureLingua() {
     if (scelta3 && clean(scelta3.value) !== linguaScelta()) scelta3.value = linguaScelta();
     return true;
   }
-  const guscio2 = doc.createElement("div");
-  guscio2.innerHTML = rigaMarkup24();
-  const riga3 = guscio2.firstElementChild;
+  const guscio3 = doc.createElement("div");
+  guscio3.innerHTML = rigaMarkup24();
+  const riga3 = guscio3.firstElementChild;
   if (!riga3) return false;
   inserisciInOrdine(corpo2, riga3, ORDINE_IMPOSTAZIONI.lingua, dopoIGenerali);
   installStile();
@@ -102465,8 +103665,8 @@ function tesseraMarkup2() {
     <div class="cfg-card-arrow">›</div>`;
 }
 function ensureTessera() {
-  const griglia = doc?.querySelector?.("#page-config .cfg-grid");
-  if (!griglia) return false;
+  const griglia2 = doc?.querySelector?.("#page-config .cfg-grid");
+  if (!griglia2) return false;
   let tessera2 = doc.getElementById(TESSERA_ID);
   if (!tessera2) {
     tessera2 = doc.createElement("div");
@@ -102474,7 +103674,7 @@ function ensureTessera() {
     tessera2.id = TESSERA_ID;
     tessera2.dataset.dmSostieniApri = "true";
   }
-  if (griglia.lastElementChild !== tessera2) griglia.append(tessera2);
+  if (griglia2.lastElementChild !== tessera2) griglia2.append(tessera2);
   const disegno4 = tesseraMarkup2();
   if (tessera2.innerHTML !== disegno4) tessera2.innerHTML = disegno4;
   return true;
@@ -102710,10 +103910,10 @@ function onClick49(event) {
     apriIlMenu(suo2);
     return;
   }
-  const leva = event.target?.closest?.("[data-dm-mia-tocca]");
-  if (!leva) return;
+  const leva2 = event.target?.closest?.("[data-dm-mia-tocca]");
+  if (!leva2) return;
   event.preventDefault();
-  const entity2 = clean(leva.dataset.dmMiaTocca);
+  const entity2 = clean(leva2.dataset.dmMiaTocca);
   const dominio4 = entity2.split(".")[0];
   if (!dominio4) return;
   if (root.navigator?.vibrate) root.navigator.vibrate(8);
@@ -103333,15 +104533,15 @@ function onClick51(event) {
     apriIlMenu(suo2);
     return;
   }
-  const leva = event.target?.closest?.("[data-dm-mie-tocca]");
-  if (!leva) return;
+  const leva2 = event.target?.closest?.("[data-dm-mie-tocca]");
+  if (!leva2) return;
   event.preventDefault();
-  const entity2 = clean(leva.dataset.dmMieTocca);
+  const entity2 = clean(leva2.dataset.dmMieTocca);
   const dominio4 = entity2.split(".")[0];
   if (!dominio4) return;
   root.navigator?.vibrate?.(8);
-  const acceso6 = leva.getAttribute("aria-checked") === "true";
-  leva.setAttribute("aria-checked", acceso6 ? "false" : "true");
+  const acceso6 = leva2.getAttribute("aria-checked") === "true";
+  leva2.setAttribute("aria-checked", acceso6 ? "false" : "true");
   const comando = comandoCheAbilita({ entity: entity2 }) || comandoDelDispositivo({ entity: entity2 }) || {
     domain: dominio4,
     service: "toggle",
@@ -103984,15 +105184,15 @@ function righeDalDocumento2(body) {
 function anteprimaLettore({ device, entities }) {
   const states = allStates();
   const nato = bindLettoreToDevice({ device, entities, states });
-  const casella3 = (etichetta3, valore3) => `<div class="dm-integ-casella"><span>${esc(etichetta3)}</span><b class="mono">${esc(valore3) || "—"}</b></div>`;
+  const casella4 = (etichetta3, valore3) => `<div class="dm-integ-casella"><span>${esc(etichetta3)}</span><b class="mono">${esc(valore3) || "—"}</b></div>`;
   const nomi = (voci3) => voci3.length ? `${voci3.length} — ${voci3.map((voce2) => nomeAccantoAlDispositivo(voce2, nato, states)).join(", ")}` : "";
   return {
     etichetta: t("Lettore", "Player"),
     corpo: `<div class="dm-integ-caselle">
-        ${casella3(t("Entità", "Entity"), nato.entity)}
-        ${nato.telecomando ? casella3(t("Telecomando", "Remote control"), nato.telecomando) : ""}
-        ${casella3(t("Altri comandi", "Other commands"), nomi(nato.comandi))}
-        ${casella3(t("Altre letture", "Other readings"), nomi(nato.letture))}
+        ${casella4(t("Entità", "Entity"), nato.entity)}
+        ${nato.telecomando ? casella4(t("Telecomando", "Remote control"), nato.telecomando) : ""}
+        ${casella4(t("Altri comandi", "Other commands"), nomi(nato.comandi))}
+        ${casella4(t("Altre letture", "Other readings"), nomi(nato.letture))}
       </div>`
   };
 }
@@ -104083,14 +105283,14 @@ function onClick53(event) {
     const tocco2 = proposta || togli || aggiungi4;
     const tipo = clean(tocco2.dataset.mpChipTipo || tocco2.dataset.mpChipAdd);
     if (!LISTE3[tipo]) return;
-    const casella3 = tocco2.closest(`[data-mp-lista="${CSS.escape(tipo)}"]`);
+    const casella4 = tocco2.closest(`[data-mp-lista="${CSS.escape(tipo)}"]`);
     const errore = riga3.querySelector("[data-mp-errore]");
     const letta = leggiLaRiga5(riga3);
     let elenco9 = LISTE3[tipo].elenco(letta[tipo]);
     if (togli) {
       elenco9 = elenco9.filter((entity2) => entity2 !== clean(togli.dataset.mpChipDel));
     } else {
-      const nuovo = proposta ? clean(proposta.dataset.mpChipSug) : clean(casella3?.querySelector("[data-mp-chip-nuovo]")?.value);
+      const nuovo = proposta ? clean(proposta.dataset.mpChipSug) : clean(casella4?.querySelector("[data-mp-chip-nuovo]")?.value);
       const esito2 = conLaVoce(elenco9, nuovo, tipo);
       if (esito2.esito !== ESITI_ELENCO.aggiunto) {
         if (errore) errore.textContent = spiegazione2(esito2.esito, tipo);
@@ -104256,9 +105456,9 @@ function scrittaDelTasto(riga3) {
   return { titolo, sotto };
 }
 function vestiLeAzioni() {
-  const griglia = doc?.getElementById?.("qa-grid");
-  if (!griglia) return 0;
-  const tasti = [...griglia.querySelectorAll(".qa-btn")];
+  const griglia2 = doc?.getElementById?.("qa-grid");
+  if (!griglia2) return 0;
+  const tasti = [...griglia2.querySelectorAll(".qa-btn")];
   if (!tasti.length) return 0;
   const lista5 = azioni();
   const states = allStates();
@@ -105708,13 +106908,13 @@ function montaLaCasella() {
   if (!riquadro) return false;
   const fisarmonica = riquadro.closest("details.ed-acc");
   if (!fisarmonica || fisarmonica.querySelector("[data-dm-radar-campo]")) return false;
-  const casella3 = doc.createElement("label");
-  casella3.className = "ed-slot dm-radar-ed";
+  const casella4 = doc.createElement("label");
+  casella4.className = "ed-slot dm-radar-ed";
   const config = configurazione22();
-  casella3.innerHTML = casellaMarkup(config);
-  riquadro.after(casella3);
-  aggiornaVisibilita(casella3);
-  mostraIlProblema(casella3, config);
+  casella4.innerHTML = casellaMarkup(config);
+  riquadro.after(casella4);
+  aggiornaVisibilita(casella4);
+  mostraIlProblema(casella4, config);
   return true;
 }
 function raccogli9(dentro3) {

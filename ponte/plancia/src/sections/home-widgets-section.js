@@ -3076,6 +3076,9 @@ function caldaiaModel(states) {
      * altre quando c'e' da guardare. */
     alert: pressione === "bassa",
     lettura,
+    /* Tutte le caldaie, per la finestra: ognuna col suo giro e il suo
+     * interruttore (vedi `finestre/impianti.js`). */
+    letture,
     rows,
   };
 }
@@ -3240,6 +3243,13 @@ function upsModel(states) {
     alert: letti.some((voce) => voce.lettura.allarme === true),
     lettura,
     da: daQuandoUps(config, states, risolvi),
+    /* Ogni gruppo con la sua lettura, per la finestra: col nome quando sono
+     * piu' d'uno, il peggiore per primo. */
+    gruppi: [capofila, ...letti.filter((voce) => voce !== capofila)].map((voce) => ({
+      nome: clean(normalizzaUps(voce.config).name),
+      lettura: voce.lettura,
+      da: daQuandoUps(voce.config, states, risolvi),
+    })),
     rows,
   };
 }
@@ -3340,13 +3350,31 @@ function poolModel(states) {
 
   const rows = [];
   const visti = new Set();
+  /* Le vasche una per una, per la finestra: l'acqua, la chimica con la sua
+   * fascia, e i comandi col loro nome umano (vedi `finestre/impianti.js`). */
+  const perVasca = [];
   vasche.forEach((pool, index) => {
+    const vasca = {
+      nome: clean(pool.name),
+      acqua: null,
+      ph: null,
+      cloro: null,
+      phMin: pool.phMin,
+      phMax: pool.phMax,
+      clMin: pool.clMin,
+      clMax: pool.clMax,
+      comandi: [],
+    };
+    perVasca.push(vasca);
     const leggi = (chiave, testo, glyph, unita = "") => {
       const entity = clean(pool[chiave]);
       if (!entity || visti.has(entity) || !widgetIncludes(entity, fuori)) return;
       const valore = numOf(states, entity);
       if (valore == null) return;
       visti.add(entity);
+      if (chiave === "tempEnt") vasca.acqua = valore;
+      if (chiave === "phEnt") vasca.ph = valore;
+      if (chiave === "clEnt") vasca.cloro = valore;
       rows.push({
         glyph,
         name: etichetta(pool, index, testo),
@@ -3373,6 +3401,13 @@ function poolModel(states) {
       const riga = rigaDaEntita(states, entity, glifo);
       if (!riga) continue;
       visti.add(entity);
+      vasca.comandi.push({
+        chiave,
+        entity,
+        on: riga.on === true,
+        da: riga.daQuando ?? null,
+        comando: siComanda(entity),
+      });
       rows.push({
         ...riga,
         name: etichetta(pool, index, riga.name),
@@ -3402,6 +3437,10 @@ function poolModel(states) {
     value: testa.value,
     caption: compagna ? `${compagna.name} ${compagna.value}` : "",
     ring: null,
+    vasche: perVasca.filter(
+      (vasca) =>
+        vasca.acqua != null || vasca.ph != null || vasca.cloro != null || vasca.comandi.length,
+    ),
     rows,
   };
 }
@@ -3793,6 +3832,23 @@ function irrigationModel(states) {
      * analisi — che cerca un booleano — leggeva tutte le zone come ferme
      * proprio mentre l'acqua usciva. Il testo e' per gli occhi, `on` per i
      * conti: due mestieri, due campi. */
+    /* Per la finestra: le zone da toccare, il terreno con la sua fascia. */
+    zone: attive.map((zona) => {
+      const entity = clean(zona.entity);
+      const cambio = Date.parse(
+        stateOf(states, entity)?.last_changed ?? stateOf(states, entity)?.last_updated ?? "",
+      );
+      return {
+        entity,
+        name: clean(zona.name) || friendlyName(states, entity),
+        on: zonaInFunzione(states, zona),
+        da: Number.isFinite(cambio) ? cambio : null,
+        comando: siComanda(entity),
+      };
+    }),
+    umidita,
+    soilMin: config.soilMin,
+    soilMax: config.soilMax,
     rows: [
       ...attive.map((zona) => ({
         glyph: "🌱",
@@ -3814,6 +3870,9 @@ function irrigationModel(states) {
               name: t("Umidità terreno", "Soil moisture"),
               entity: terreno,
               value: `${Math.round(umidita)}%`,
+              /* Una misura, non una zona: chi conta le zone la salta. «Sta
+               * bagnando, su 5 zone» con quattro zone e un sensore. */
+              terreno: true,
             },
           ]),
     ],
@@ -5623,10 +5682,11 @@ export function animaliModel(states) {
  * «nel widget» ha spento, come per le altre tessere, prima di leggere. */
 function contatoriModel(states) {
   const fuori = widgetExcludedEntities("contatori");
-  const tessera = tesseraDeiContatori(
-    vistaDeiContatori(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
-  );
-  return tessera && { ...tessera, key: "contatori" };
+  const vista = vistaDeiContatori(states, { dentro: (entity) => widgetIncludes(entity, fuori) });
+  const tessera = tesseraDeiContatori(vista);
+  /* La vista intera viaggia con la tessera: la finestra disegna l'acqua di
+   * oggi, la perdita, la pressione e le letture dei contatori. */
+  return tessera && { ...tessera, key: "contatori", vista };
 }
 
 /* Le piante (#159): quante sono da innaffiare, e quali. Le parole le fa la
@@ -5668,13 +5728,21 @@ function acquarioModel(states) {
  * carica. */
 function accumuloModel(states) {
   const fuori = widgetExcludedEntities("accumulo");
-  const tessera = tesseraDellAccumulo(
-    vistaDellAccumulo(states, {
-      dentro: (entity) => widgetIncludes(entity, fuori),
-      casa: lettureDiCasa(states),
-    }),
+  const vista = vistaDellAccumulo(states, {
+    dentro: (entity) => widgetIncludes(entity, fuori),
+    casa: lettureDiCasa(states),
+  });
+  const tessera = tesseraDellAccumulo(vista);
+  /* La vista viaggia con la tessera: la finestra disegna un pacco per scheda,
+   * coi colori dell'Energia anche quando la tessera e' rossa per un pacco. */
+  return (
+    tessera && {
+      ...tessera,
+      key: "accumulo",
+      vista,
+      tintaDellaSezione: tintaDellaPagina("page-energy"),
+    }
   );
-  return tessera && { ...tessera, key: "accumulo" };
 }
 
 /* La cottura (#71): la friggitrice che cuoce, e per un po' quella che ha
@@ -5730,6 +5798,8 @@ function vmcModel(states) {
     ring: prima.bypassAperto || prima.recupero === null ? null : prima.recupero,
     attiva: false,
     alert: filtri,
+    /* Le letture intere, per la finestra: i due flussi, la velocita', i filtri. */
+    letture,
     rows: letture.flatMap((lettura) =>
       Object.values(lettura.temperature)
         .filter((voce) => voce && !voce.muto && voce.valore !== null)

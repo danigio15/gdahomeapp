@@ -630,22 +630,19 @@ const BRICIOLE = Object.freeze({
     ["Circuito primario", "Boiler", "Ricircolo sanitario"],
     ["Primary loop", "Tank", "Recirculation"],
   ],
-  scaldabagno: [
-    ["Acqua calda", "Resistenza", "Consumo"],
-    ["Hot water", "Element", "Consumption"],
-  ],
+  /* Le macchine di casa dicono quello che la loro finestra mostra davvero:
+   * «Programmi · Pioggia» sull'irrigazione prometteva due cose che non c'erano,
+   * e «Acqua calda · Resistenza · Consumo» non ci stava e finiva nei puntini. */
+  scaldabagno: [["Acqua calda"], ["Hot water"]],
   caldaia: [
-    ["Mandata", "Ritorno", "Pressione"],
-    ["Flow", "Return", "Pressure"],
+    ["Riscaldamento", "Acqua calda"],
+    ["Heating", "Hot water"],
   ],
   piscina: [
-    ["Qualita' dell'acqua", "Filtrazione", "Riscaldamento"],
-    ["Water quality", "Filtering", "Heating"],
+    ["Acqua", "Filtrazione"],
+    ["Water", "Filtering"],
   ],
-  irrigazione: [
-    ["Zone", "Programmi", "Pioggia"],
-    ["Zones", "Schedules", "Rain"],
-  ],
+  irrigazione: [["Zone"], ["Zones"]],
   batterie: [
     ["Livelli", "Soglie", "Autonomia"],
     ["Levels", "Thresholds", "Runtime"],

@@ -409,6 +409,13 @@ function portataInParole(lettura) {
   return `${formatNumber(valore, valore < 10 && !Number.isInteger(decimo) ? 1 : 0)}${SPAZIO}L/min`;
 }
 
+/** La lettura di un contatore com'è: «412,873 m³», con le cifre che ha. */
+function letturaDelContatoreInParole(lettura) {
+  if (!lettura || lettura.valore === null || lettura.valore === undefined) return "—";
+  const decimali = Math.min(3, (String(lettura.valore).split(".")[1] || "").length);
+  return `${formatNumber(lettura.valore, decimali)}${lettura.unita ? `${SPAZIO}${lettura.unita}` : ""}`;
+}
+
 function giorniInParole(giorni) {
   return giorni === 1
     ? `1${SPAZIO}${t("giorno", "day")}`
@@ -874,6 +881,15 @@ export function tesseraDeiContatori(vista) {
   if (acqua?.oggi !== null && acqua?.oggi !== undefined) value = volumeInParole(acqua.oggi);
   else if (gas?.oggi !== null && gas?.oggi !== undefined) value = metriCubiInParole(gas.oggi);
   else if (!acqua && !gas && come.stato === "normale") value = testa.grande;
+  /* Senza lo storico del Recorder — appena installato, o con un contatore che
+   * non ha le statistiche — il numero grande era un trattino. La lettura del
+   * contatore pero' c'è, ed è un numero vero: si mostra quella. */
+  if (value === "—") {
+    const contatore = vista.letture.find(
+      (lettura) => (lettura.genere === "acqua" || lettura.genere === "gas") && !lettura.muto,
+    );
+    if (contatore) value = letturaDelContatoreInParole(contatore);
+  }
   const caption =
     come.stato !== "normale"
       ? testa.grande

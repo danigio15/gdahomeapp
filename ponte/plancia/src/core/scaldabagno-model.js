@@ -180,9 +180,28 @@ export function letturaScaldabagno(row = {}, states = {}, resolve = (value) => v
   /* Il fondo della barra: quello che l'entita' dichiara, se lo dichiara. */
   const base = numero(attributi.min_temp) ?? BASE_ACQUA;
 
+  /* Le entita' vere dietro le caselle, per chi deve comandarle: l'obiettivo
+   * si alza e si abbassa dalla finestra della Home, e per farlo serve sapere
+   * a chi chiederlo. E da quando l'interruttore sta com'e': «scalda da 47
+   * minuti» lo dice Home Assistant, non un conto. */
+  const vera = (riferimento) => {
+    const chiave = clean(riferimento);
+    if (!chiave) return "";
+    try {
+      return clean(resolve(chiave)) || chiave;
+    } catch (_error) {
+      return chiave;
+    }
+  };
+  const cambio = Date.parse(
+    (interruttore || principale)?.last_changed ?? (interruttore || principale)?.last_updated ?? "",
+  );
+
   return {
     id: row.id,
     name: clean(row.name) || clean(attributi.friendly_name) || clean(row.entity),
+    obiettivoEntita: isWaterHeaterEntity(row.entity) ? vera(row.entity) : vera(row.obiettivo),
+    da: Number.isFinite(cambio) ? cambio : null,
     room: clean(row.room),
     entity: clean(row.entity),
     interruttore: clean(row.interruttore),
