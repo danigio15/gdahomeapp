@@ -131,7 +131,7 @@ test("aprendo la tessera si vedono tutti, uno per uno, con le loro versioni", ()
    * basta, come già fa la tessera. */
   assert.match(finestra, /const da = clean\(voce\?\.da\);/);
   assert.match(finestra, /const a = clean\(voce\?\.a\);/);
-  assert.match(finestra, /da \&\& a \?/);
+  assert.match(finestra, /\$\{esc\(da \|\| "\?"\)\}/);
 
   /* E il tasto per installare, che prima non c'era: «gli aggiornamenti vengono
    * segnalati ma non è possibile avviarli, è necessario andarli a fare
@@ -141,9 +141,9 @@ test("aprendo la tessera si vedono tutti, uno per uno, con le loro versioni", ()
   assert.match(finestra, /dm-w-agg-note/);
   /* Nel disegno, non nel codice: le note stanno PRIMA del tasto, perché è
    * l'ordine in cui si fanno le due cose. */
-  const disegno = finestra.slice(finestra.indexOf("return rowShell("));
+  const disegno = finestra.slice(finestra.indexOf('return `<div class="dm-w-agg"'));
   assert.ok(
-    disegno.indexOf("dm-w-agg-note") < disegno.indexOf("${coda}"),
+    disegno.indexOf("dm-w-agg-note") < disegno.indexOf("${tasto}"),
     "il tasto viene prima delle note, e si preme senza averle lette",
   );
   /* Il servizio è quello di Home Assistant, chiamato dalla sezione. */
@@ -223,4 +223,14 @@ test("se il servizio rifiuta, il tasto Installa torna com'era", () => {
   assert.match(sorgente, /if \(esito !== undefined\) return;/);
   assert.match(sorgente, /aggiornamento\.disabled = false;/);
   assert.match(sorgente, /aggiornamento\.textContent = parola;/);
+});
+
+test("dove supported_features non arriva, il tasto c'è lo stesso", () => {
+  /* «Mostra la possibilità di installare da qui»: senza l'attributo il tasto
+   * non compariva mai. Il no lo deve dire Home Assistant, non il silenzio; e
+   * se Home Assistant rifiuta, il tasto torna com'era. */
+  const [voce] = aggiornamentiDaFare({
+    "update.senza": stato("update.senza", "on", { title: "Senza attributo" }),
+  });
+  assert.equal(voce.installabile, true);
 });

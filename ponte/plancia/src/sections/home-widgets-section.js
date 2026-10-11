@@ -328,6 +328,7 @@ import {
   planciaVisibile,
   readClimateUnits,
   readJson,
+  roomLabel,
   root,
   section,
   siComanda,
@@ -1009,6 +1010,13 @@ function lightsModel(states) {
         room: group.room,
         name: clean(group.lights?.[entity]) || entity.split(".")[1]?.replaceAll("_", " ") || entity,
         on: clean(stateOf(states, entity)?.state).toLowerCase() === "on",
+        /* Quanto e' accesa, in centesimi: la scheda della finestra lo scrive
+         * sotto il nome. Solo per chi lo dichiara — un interruttore e' acceso
+         * e basta. */
+        luminosita: (() => {
+          const grezza = Number(stateOf(states, entity)?.attributes?.brightness);
+          return Number.isFinite(grezza) && grezza > 0 ? Math.round((grezza / 255) * 100) : null;
+        })(),
         /* «Si vede ma non si comanda» vale anche qui: la tessera della Home
          * disegnava l'interruttore per tutte e il gestore chiamava il
          * servizio dritto, senza passare dal divieto. */
@@ -1052,6 +1060,7 @@ function rigaClima(states, unit) {
   return {
     entity,
     name: clean(unit?.name) || entity,
+    stanza: roomLabel(clean(unit?.room_id) || clean(unit?.room)),
     /* Con la presa e la soglia l'acceso lo dicono i watt, come sulla pagina
      * Clima (#490): un climatizzatore acceso dal telecomando per Home
      * Assistant resta «off», e in Home risultava spento. */
@@ -6421,32 +6430,49 @@ function lightsDetail(widget) {
   const spegnibili = widget.on.filter((row) => row.comando !== false);
   const tutte =
     spegnibili.length > 1
-      ? `<div class="dm-w-riga dm-w-tutte">
-          <button type="button" class="dm-w-tutte-btn" data-dm-w-lights-off="${esc(
-            spegnibili.map((row) => clean(row.entity)).filter(Boolean).join(" "),
-          )}" aria-label="${esc(t("Spegni tutte le luci", "Turn all lights off"))}">
-            <span aria-hidden="true">🌙</span>${esc(t("Spegni tutte", "Turn all off"))}
-            <b>${spegnibili.length}</b>
-          </button>
-        </div>`
+      ? `<button type="button" class="dm-w-tutte-btn" data-dm-w-lights-off="${esc(
+          spegnibili.map((row) => clean(row.entity)).filter(Boolean).join(" "),
+        )}" aria-label="${esc(t("Spegni tutte le luci", "Turn all lights off"))}">
+          <span aria-hidden="true">🌙</span>${esc(t("Spegni tutte", "Turn all off"))}
+        </button>`
       : "";
-  return (
-    tutte +
-    rows
-      .map((row) =>
-        rowShell(
-          `<span class="dm-w-glyph" data-on="${row.on}" aria-hidden="true">💡</span>
-         <span class="dm-w-name">${esc(row.name)}<small>${esc(row.room)}</small></span>
-         ${
-           row.comando === false
-             ? `<span class="dm-w-bloccata" title="${esc(t("Si vede ma non si comanda", "Shown but not controllable"))}" aria-hidden="true">🔒</span>`
-             : `<button type="button" class="dm-w-switch" data-dm-w-light="${esc(row.entity)}" data-on="${row.on}"
-           aria-label="${esc(row.name)}"><i></i></button>`
-         }`,
-        ),
-      )
-      .join("")
-  );
+  /* «Togli sta parte stato, non mi interessa: mostra solo le luci con la
+   * possibilita' di accendere e spegnere, mettendo in alto quelle accese.
+   * Falle graficamente piu' belle.»
+   *
+   * La finestra apriva con il verdetto, le caselle «Accese / Spente» e le
+   * pillole dello stato — tre modi di dire la stessa cosa — e l'elenco che si
+   * comanda finiva sotto «Apri sezione», dove non lo vedeva nessuno. Adesso e'
+   * l'elenco e basta: una scheda per luce, due per riga, che si tocca tutta
+   * per accendere e spegnere. Le accese stanno in cima e si illuminano. */
+  const accese = rows.filter((row) => row.on).length;
+  const scheda = (row) => {
+    const stanza = clean(row.room) === clean(row.name) ? "" : clean(row.room);
+    const sotto = [stanza, row.on && row.luminosita != null ? `${row.luminosita}%` : ""]
+      .filter(Boolean)
+      .join(" · ");
+    const corpo = `<span class="dm-w-luce-cima">
+          <span class="dm-w-luce-bulbo" aria-hidden="true">💡</span>
+          ${
+            row.comando === false
+              ? `<span class="dm-w-bloccata" title="${esc(t("Si vede ma non si comanda", "Shown but not controllable"))}" aria-hidden="true">🔒</span>`
+              : `<span class="dm-w-luce-leva" aria-hidden="true"><i></i></span>`
+          }
+        </span>
+        <span class="dm-w-luce-nome">${esc(row.name)}</span>
+        <small class="dm-w-luce-sotto">${esc(sotto || (row.on ? t("Accesa", "On") : t("Spenta", "Off")))}</small>`;
+    return row.comando === false
+      ? `<div class="dm-w-luce" data-on="${row.on}" data-bloccata="true">${corpo}</div>`
+      : `<button type="button" class="dm-w-luce" data-dm-w-light="${esc(row.entity)}" data-on="${row.on}"
+          aria-pressed="${row.on}" aria-label="${esc(row.name)}">${corpo}</button>`;
+  };
+  return `<div class="dm-w-luci-testa">
+      <span class="dm-w-luci-conto"><b>${accese}</b> ${esc(
+        t(`accese su ${rows.length}`, `on of ${rows.length}`),
+      )}</span>
+      ${tutte}
+    </div>
+    <div class="dm-w-luci">${rows.map(scheda).join("")}</div>`;
 }
 
 /* L'icona racconta cosa sta facendo l'unita': fiamma quando scalda, fiocco
@@ -6670,24 +6696,42 @@ export function climatePanelMarkup(entity) {
 }
 
 function climateDetail(widget) {
-  return widget.rows
+  /* Come le luci: niente verdetto, caselle e pillole sopra — l'elenco che si
+   * comanda, con le unita' accese in cima. Ogni scheda dice dove sta, quanti
+   * gradi ci sono e quanti ne vuole, e ha l'accensione a portata di pollice. */
+  const righe = [...widget.rows].sort((a, b) => Number(b.on) - Number(a.on));
+  const accese = righe.filter((row) => row.on).length;
+  const verso = (row) => {
+    if (!row.on) return "spento";
+    const modo = clean(row.mode);
+    const azione = clean(row.azione);
+    if (azione === "heating" || modo === "heat") return "caldo";
+    if (azione === "cooling" || modo === "cool") return "freddo";
+    if (modo === "dry") return "secco";
+    return "acceso";
+  };
+  const parola = (row) =>
+    ({
+      caldo: t("Scalda", "Heating"),
+      freddo: t("Raffresca", "Cooling"),
+      secco: t("Deumidifica", "Drying"),
+      acceso: t("Acceso", "On"),
+      spento: t("Spento", "Off"),
+    })[verso(row)];
+  const schede = righe
     .map((row) => {
       const pannello = climatePanel(row);
       const aperto = pannello && state.aperti.has(row.entity);
-      /* Il pannello sta FUORI dalla riga, subito sotto, e le si ricuce addosso
-       * con un margine negativo e gli angoli aperti.
-       *
-       * Dentro non poteva stare: la riga e' una fila flessibile, e una fila
-       * che va a capo, dentro una griglia, viene misurata come se non andasse
-       * a capo — la griglia le dava l'altezza di una riga sola e il pannello
-       * usciva sopra a quella dopo. Fuori e' un elemento come gli altri, alto
-       * quanto gli serve. */
+      const stanza = clean(row.stanza) === clean(row.name) ? "" : clean(row.stanza);
+      const sotto = [stanza, parola(row)].filter(Boolean).join(" · ");
       return (
         rowShell(
-          `<span class="dm-w-glyph" data-on="${row.on}" aria-hidden="true">${climateGlyph(row.mode || "", row.tipo, row.azione)}</span>
-         <span class="dm-w-name">${esc(row.name)}<small>${
-           row.ambient == null ? "" : `${formatNumber(row.ambient, 1)}°`
-         }${row.on && row.target != null ? ` → ${formatNumber(row.target, 1)}°` : ""}</small></span>
+          `<span class="dm-w-glyph dm-w-clima-ic" data-on="${row.on}" aria-hidden="true">${climateGlyph(row.mode || "", row.tipo, row.azione)}</span>
+         <span class="dm-w-name">${esc(row.name)}<small>${esc(sotto)}</small></span>
+         <span class="dm-w-clima-gradi">
+           <b>${row.ambient == null ? "--" : `${formatNumber(row.ambient, 1)}°`}</b>
+           ${row.on && row.target != null ? `<small>→ ${formatNumber(row.target, 1)}°</small>` : ""}
+         </span>
          ${
            pannello
              ? `<button type="button" class="dm-w-more" data-dm-w-more="${esc(row.entity)}"
@@ -6698,11 +6742,17 @@ function climateDetail(widget) {
          }
          <button type="button" class="dm-w-power" data-dm-w-clima="${esc(row.entity)}" data-on="${row.on}"
            aria-label="${esc(row.name)}">${GLIFO_ACCENSIONE}</button>`,
-          `data-dm-w-open="${Boolean(aperto)}"`,
+          `data-dm-w-open="${Boolean(aperto)}" data-dm-w-clima-scheda="${verso(row)}"`,
         ) + pannello
       );
     })
     .join("");
+  return `<div class="dm-w-luci-testa">
+      <span class="dm-w-luci-conto"><b>${accese}</b> ${esc(
+        t(`accese su ${righe.length}`, `on of ${righe.length}`),
+      )}</span>
+    </div>
+    ${schede}`;
 }
 
 /* La tendina della posizione, la stessa della pagina Tapparelle (#200): la
@@ -6995,39 +7045,94 @@ function fumoDetail(widget) {
  * tasto c'e' solo dove Home Assistant dice che quell'aggiornamento si installa
  * chiamando un servizio: dove si fa col cacciavite, un tasto sarebbe una
  * promessa che non si mantiene. */
+/* I segni degli aggiornamenti, chiesti al ponte una volta sola.
+ *
+ * «Sistema aggiornamenti: mostra icone e la possibilita' di installare da
+ * qui.» Sei righe tutte con la stessa freccia si leggono una per una; col
+ * marchio davanti — la casetta di Home Assistant, il logo dell'add-on, quello
+ * dell'integrazione — si riconosce quello che si cerca senza leggere. Il
+ * ponte sa gia' prenderli (`ponte/aggiornamenti/logo`, lo usa l'app): qui si
+ * chiedono, si tengono come indirizzo `data:` e si mettono nel markup, cosi'
+ * il travaso della finestra non li strappa. */
+const LOGHI = new Map();
+
+function logoDellAggiornamento(entita) {
+  const voce = LOGHI.get(entita);
+  if (voce !== undefined) return voce || "";
+  LOGHI.set(entita, null);
+  /* La domanda al ponte la fa la persistenza della configurazione: importarla
+   * da qui la caricherebbe (con i suoi effetti sul salvataggio) anche dove la
+   * Home e' l'unica cosa accesa. La si chiede a runtime, quando c'e'. */
+  const chiedi = root.dmBridgeRequest;
+  if (typeof chiedi !== "function") {
+    LOGHI.delete(entita);
+    return "";
+  }
+  Promise.resolve(chiedi("ponte/aggiornamenti/logo", { entity_id: entita }))
+    .then((risposta) => {
+      const corpo = clean(risposta?.corpo);
+      if (Number(risposta?.stato) !== 200 || !corpo) return;
+      const tipo = clean(risposta?.tipo) || "image/png";
+      LOGHI.set(entita, `data:${tipo};base64,${corpo}`);
+      senzaCadere(renderHomeWidgets);
+    })
+    .catch(() => {});
+  return "";
+}
+
+/* Si installa da qui quando Home Assistant non dice di no.
+ *
+ * Il tasto compariva solo davanti al bit «si installa» di `supported_features`;
+ * dove l'attributo non arriva, non compariva mai, e la finestra diceva le
+ * versioni e mandava altrove. Se Home Assistant poi rifiuta, il tasto torna
+ * com'era (vedi il gestore di `data-dm-w-update`). */
+function siInstallaDaQui(voce) {
+  return voce?.installabile === true || voce?.installabile === undefined;
+}
+
 function aggiornamentiDetail(widget) {
-  return (widget.aggiornamenti || [])
+  const fila = widget.aggiornamenti || [];
+  const schede = fila
     .map((voce) => {
       const da = clean(voce?.da);
       const a = clean(voce?.a);
-      const versioni = da && a ? `${da} \u2192 ${a}` : a || da;
+      const nome = clean(voce?.nome) || clean(voce?.entity);
       const note = clean(voce?.note);
       const entity = clean(voce?.entity);
-      const coda = voce?.inCorso
+      const logo = logoDellAggiornamento(entity);
+      const segno = logo
+        ? `<img class="dm-w-agg-img" src="${esc(logo)}" alt="">`
+        : `<span class="dm-w-agg-iniziale">${esc(nome.charAt(0).toUpperCase() || "?")}</span>`;
+      const tasto = voce?.inCorso
         ? `<b class="dm-w-agg-corso">${esc(t("In corso", "Installing"))}</b>`
-        : voce?.installabile
+        : siInstallaDaQui(voce)
           ? `<button type="button" class="dm-w-agg-via" data-dm-w-update="${esc(entity)}"
                title="${esc(t("Installa questo aggiornamento", "Install this update"))}">${esc(
                  t("Installa", "Install"),
                )}</button>`
           : "";
-      return rowShell(
-        `<span class="dm-w-glyph" data-on="true" aria-hidden="true">\u2B06\uFE0F</span>
-         <span class="dm-w-name">${esc(clean(voce?.nome) || entity)}</span>
-         <span class="dm-w-val">${esc(versioni || t("Disponibile", "Available"))}</span>
-         ${
-           note
-             ? `<a class="dm-w-agg-note" href="${esc(note)}" target="_blank" rel="noopener noreferrer"
-                  title="${esc(t("Le note di questa versione", "This version's notes"))}">${esc(
+      return `<div class="dm-w-agg" data-dm-w-agg="${esc(entity)}">
+          <span class="dm-w-agg-logo" aria-hidden="true">${segno}</span>
+          <span class="dm-w-agg-testo">
+            <b>${esc(nome)}</b>
+            <small>${esc(da || "?")} <span aria-hidden="true">→</span> <em>${esc(a || t("nuova", "new"))}</em>${
+              note
+                ? ` · <a class="dm-w-agg-note" href="${esc(note)}" target="_blank" rel="noopener noreferrer">${esc(
                     t("Note", "Notes"),
                   )}</a>`
-             : ""
-         }
-         ${coda}`,
-        'data-dm-w-agg=""',
-      );
+                : ""
+            }</small>
+          </span>
+          ${tasto}
+        </div>`;
     })
     .join("");
+  return `<div class="dm-w-luci-testa">
+      <span class="dm-w-luci-conto"><b>${fila.length}</b> ${esc(
+        t(fila.length === 1 ? "da installare" : "da installare", "to install"),
+      )}</span>
+    </div>
+    <div class="dm-w-aggs">${schede}</div>`;
 }
 
 /* Anche gli avvisi personalizzati sono caselle: nome e stato, in carta. */
@@ -7725,6 +7830,8 @@ function chatDetail(widget) {
       )}</button>`;
 }
 
+const SOLO_COMANDI = new Set(["luci", "clima", "aggiornamenti"]);
+
 function detailBody(widget, states) {
   if (widget.key === "assistenza") return chatDetail(widget);
   /* Le segnalazioni non si lavorano da qui. La finestra della tessera e'
@@ -7852,6 +7959,8 @@ function detailBody(widget, states) {
       )}</button>`;
   }
   const comandi = detailRows(widget, states);
+  /* Luci e Clima: solo l'elenco che si comanda (vedi `lightsDetail`). */
+  if (SOLO_COMANDI.has(widget.key)) return comandi || "";
   return `${verdettoEFrase(widget)}
     ${caselleDelleMisure(widget)}
     ${pilloleDelloStato(widget)}
@@ -10090,6 +10199,105 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-tutte-btn>b{
   margin-left:auto;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:900;
   background:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 22%,transparent)}
+/* Le luci della finestra: una scheda per luce, due per riga. Si tocca tutta;
+   accesa, la lampadina si illumina e la scheda prende il caldo della luce. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luci-testa{
+  display:flex;align-items:center;gap:10px;margin:2px 0 12px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luci-conto{
+  flex:1 1 auto;font-size:13px;font-weight:750;color:var(--text-dim,#64748b)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luci-conto b{
+  font-family:'Oswald',system-ui,sans-serif;font-size:24px;font-weight:600;
+  color:var(--text,#0f172a);margin-right:2px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luci-testa .dm-w-tutte-btn{
+  width:auto;flex:0 0 auto;padding:8px 13px;border-radius:999px;font-size:12.5px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luci{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(142px,1fr));gap:10px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce{
+  position:relative;display:grid;gap:3px;align-content:start;text-align:left;
+  min-height:104px;padding:12px 13px;border-radius:20px;cursor:pointer;font:inherit;
+  color:var(--text,#0f172a);border:1px solid var(--card-border,#e8edf3);
+  background:var(--surface-2,#f8fafc);transition:background .25s,border-color .25s,box-shadow .25s,transform .12s}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce:active{transform:scale(.97)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"]{
+  border-color:color-mix(in srgb,#f59e0b 45%,transparent);
+  background:radial-gradient(120% 90% at 18% 0%,rgba(253,224,71,.55),transparent 62%),
+    linear-gradient(160deg,#fffbeb,#fef3c7);
+  box-shadow:0 14px 26px -18px rgba(217,119,6,.75)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce-cima{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce-bulbo{
+  width:36px;height:36px;border-radius:13px;display:grid;place-items:center;font-size:19px;
+  background:var(--card-bg,#fff);filter:grayscale(1) opacity(.55);
+  box-shadow:inset 0 0 0 1px var(--card-border,#e8edf3)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-bulbo{
+  filter:none;background:#fff;box-shadow:0 0 0 4px rgba(253,224,71,.35),0 0 18px rgba(250,204,21,.8)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce-leva{
+  position:relative;width:38px;height:22px;border-radius:999px;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 30%,transparent);transition:background .25s}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce-leva i{
+  position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(15,23,42,.3);transition:transform .25s}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-leva{background:#f59e0b}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-leva i{transform:translateX(16px)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce-nome{
+  font-size:14px;font-weight:850;line-height:1.2;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce-sotto{
+  font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-sotto{color:#b45309}
+/* Il clima della finestra: una scheda per unita', col colore di quello che
+   sta facendo — arancio quando scalda, azzurro quando raffresca. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda]{
+  min-height:68px;padding:12px;border-radius:20px;margin-bottom:10px;flex-wrap:nowrap!important;gap:10px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda] .dm-w-name{flex:1 1 auto;min-width:0}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda] .dm-w-more{flex:0 0 36px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="freddo"]{
+  border-color:color-mix(in srgb,#0ea5e9 40%,transparent)!important;
+  background:linear-gradient(150deg,#f0f9ff,#e0f2fe)!important}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="caldo"]{
+  border-color:color-mix(in srgb,#f97316 40%,transparent)!important;
+  background:linear-gradient(150deg,#fff7ed,#ffedd5)!important}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="caldo"] .dm-w-clima-ic{
+  background:linear-gradient(150deg,#ffedd5,#fed7aa)!important;box-shadow:none!important}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda] .dm-w-clima-ic{
+  width:42px;height:42px;flex:0 0 42px;border-radius:14px;font-size:20px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-clima-gradi{
+  display:grid;justify-items:end;line-height:1.05;margin-left:auto}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-clima-gradi b{
+  font-family:'Oswald',system-ui,sans-serif;font-size:22px;font-weight:600;color:var(--text,#0f172a)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-clima-gradi small{
+  font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="freddo"] .dm-w-power[data-on="true"]{background:#0ea5e9}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="caldo"] .dm-w-power[data-on="true"]{background:#f97316}
+/* Gli aggiornamenti: il marchio, il nome, da che versione a che versione, e
+   il tasto per installare a portata di pollice. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-aggs{display:grid;gap:9px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg{
+  display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:18px;
+  border:1px solid var(--card-border,#e8edf3);background:var(--card-bg,#fff);
+  box-shadow:0 10px 22px -20px rgba(15,23,42,.6)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg-logo{
+  flex:0 0 44px;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;overflow:hidden;
+  background:linear-gradient(150deg,#f1f5f9,#e2e8f0);box-shadow:inset 0 0 0 1px rgba(15,23,42,.06)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg-img{width:34px;height:34px;object-fit:contain}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg-iniziale{
+  font-family:'Oswald',system-ui,sans-serif;font-size:20px;font-weight:600;color:#475569}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg-testo{display:grid;gap:2px;flex:1 1 auto;min-width:0}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg-testo b{
+  font-size:14px;font-weight:850;line-height:1.2;color:var(--text,#0f172a);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg-testo small{
+  font-size:12px;font-weight:700;color:var(--text-dim,#64748b);font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg-testo em{font-style:normal;color:#16a34a;font-weight:850}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg .dm-w-agg-note{
+  all:unset;cursor:pointer;color:var(--text-dim,#64748b);text-decoration:underline;font-weight:750}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-agg .dm-w-agg-via{
+  flex:0 0 auto;padding:8px 13px;border:0;border-radius:999px;cursor:pointer;font:inherit;
+  font-size:12.5px;font-weight:850;text-transform:none;letter-spacing:0;color:#fff;
+  background:linear-gradient(150deg,#22c55e,#16a34a);
+  box-shadow:0 8px 16px -10px rgba(22,163,74,.9)}
 /* L'interruttore: un filo piu' largo, e da spento un grigio che si vede senza
    gridare. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-switch{
