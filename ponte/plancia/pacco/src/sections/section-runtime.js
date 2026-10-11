@@ -77115,6 +77115,23 @@ function cimaDiSistema(proprio, ospite3, giaLasciatoSopra2 = 0) {
   const suo2 = Math.max(0, numero42(ospite3) - numero42(giaLasciatoSopra2));
   return Math.min(CIMA_MASSIMA, Math.max(mio, suo2));
 }
+function laCorniceNellaCima(finestra7) {
+  try {
+    let sopra = 0;
+    let altezza = null;
+    let w = finestra7;
+    while (w && w !== w.parent && w.frameElement) {
+      const riquadro = w.frameElement.getBoundingClientRect();
+      if (altezza === null) altezza = riquadro.height;
+      sopra += riquadro.top;
+      w = w.parent;
+    }
+    if (altezza === null) return null;
+    return { sopra, sotto: sopra + altezza };
+  } catch (_error) {
+    return null;
+  }
+}
 
 // src/sections/navigation-section.js
 var KEY96 = "__DASHBOARDMODERN_NAVIGATION_SECTION__";
@@ -78069,10 +78086,9 @@ function insetDi(documento, lato = "bottom") {
 }
 function giaLasciatoSotto(cima) {
   try {
-    const cornice = root.frameElement;
-    if (!cornice || !cima?.documentElement) return 0;
-    const suo2 = cornice.getBoundingClientRect();
-    return cima.documentElement.clientHeight - suo2.bottom;
+    const dove = laCorniceNellaCima(root);
+    if (!dove || !cima?.documentElement) return 0;
+    return Math.max(0, cima.documentElement.clientHeight - dove.sotto);
   } catch (_error) {
     return 0;
   }
@@ -78095,13 +78111,8 @@ function misuraIlFondoDiSistema() {
   return valore3;
 }
 function giaLasciatoSopra() {
-  try {
-    const cornice = root.frameElement;
-    if (!cornice) return 0;
-    return Math.max(0, cornice.getBoundingClientRect().top);
-  } catch (_error) {
-    return 0;
-  }
+  const dove = laCorniceNellaCima(root);
+  return dove ? Math.max(0, dove.sopra) : 0;
 }
 var CIMA_DI_SISTEMA = "--dm-cima-di-sistema";
 function misuraLaCimaDiSistema() {
@@ -78124,6 +78135,30 @@ function misuraLaCimaDiSistema() {
 function misuraLeFasceDiSistema() {
   misuraIlFondoDiSistema();
   misuraLaCimaDiSistema();
+}
+function tieniLeFasceMisurate() {
+  const misura7 = () => misuraLeFasceDiSistema();
+  const finestre = [root];
+  try {
+    for (let w = root; w && w !== w.parent; w = w.parent) finestre.push(w.parent);
+  } catch (_error) {
+  }
+  for (const w of finestre) {
+    for (const evento of ["resize", "orientationchange", "pageshow"]) {
+      try {
+        w.addEventListener?.(evento, misura7);
+      } catch (_error) {
+      }
+    }
+    try {
+      w.visualViewport?.addEventListener?.("resize", misura7);
+    } catch (_error) {
+    }
+  }
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState === "visible") misura7();
+  });
+  for (const attesa of [100, 400, 1500, 3e3, 6e3]) root.setTimeout?.(misura7, attesa);
 }
 function installaLaCima() {
   installStyle(
@@ -78165,9 +78200,7 @@ function installNavigationSection() {
   state92.installed = true;
   installaLaCima();
   misuraLeFasceDiSistema();
-  for (const evento of ["resize", "orientationchange", "pageshow"])
-    root.addEventListener?.(evento, () => misuraLeFasceDiSistema());
-  for (const attesa of [400, 1500]) root.setTimeout?.(() => misuraLeFasceDiSistema(), attesa);
+  tieniLeFasceMisurate();
   installStyles39();
   applyNavbarMode();
   installaLAttesaDellaBarra();

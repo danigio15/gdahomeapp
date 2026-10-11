@@ -78,3 +78,30 @@ export function cimaDiSistema(proprio, ospite, giaLasciatoSopra = 0) {
   const suo = Math.max(0, numero(ospite) - numero(giaLasciatoSopra));
   return Math.min(CIMA_MASSIMA, Math.max(mio, suo));
 }
+
+/* Dove sta la nostra cornice nello schermo del documento in cima.
+ *
+ * Non nello schermo di chi la contiene: Home Assistant puo' mettere la
+ * plancia dentro una cornice dentro un'altra cornice, e il riquadro di una
+ * cornice si misura sempre rispetto a quella che la contiene. Preso cosi', un
+ * pannello che comincia sotto l'orologio diceva «comincio a zero», e la
+ * fascia si scansava due volte: una la lasciava Home Assistant, l'altra la
+ * plancia — la striscia vuota sotto l'orologio su iPhone. Si sale cornice per
+ * cornice fino in cima, sommando. `null` quando non si puo' sapere. */
+export function laCorniceNellaCima(finestra) {
+  try {
+    let sopra = 0;
+    let altezza = null;
+    let w = finestra;
+    while (w && w !== w.parent && w.frameElement) {
+      const riquadro = w.frameElement.getBoundingClientRect();
+      if (altezza === null) altezza = riquadro.height;
+      sopra += riquadro.top;
+      w = w.parent;
+    }
+    if (altezza === null) return null;
+    return { sopra, sotto: sopra + altezza };
+  } catch (_error) {
+    return null;
+  }
+}

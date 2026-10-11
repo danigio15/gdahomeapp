@@ -34,6 +34,17 @@ senza romperlo. App e add-on di prima continuano a parlarsi come sempre.
 saranno pubblici sta accanto ai bottoni, la prima volta si conferma, e la
 posizione GPS si toglie da foto e video prima di mandarli.
 
+**iPhone, nell'app di Home Assistant: niente più striscia vuota sotto
+l'orologio.** La plancia sta in due cornici una dentro l'altra, e lo spazio
+dell'orologio lo lasciava due volte: una Home Assistant, una lei. Adesso la
+posizione si misura fino allo schermo vero, e si rimisura da sola quando lo
+schermo cambia — si gira il telefono, si torna nell'app, Home Assistant
+sposta la sua tessera.
+
+**Pannello a muro: le persone col loro nome.** Il muro mostrava il nome
+dell'account di Home Assistant invece di quello dato nella sezione Persone;
+adesso usa lo stesso della plancia, anche in «in casa» e nel riposo.
+
 **Le foto di `/local` non seguono collegamenti che portano fuori da `www`.**
 Tolto l'aggiornamento da sé dell'add-on, che non poteva più partire.
 

@@ -1,4 +1,9 @@
-import { cimaDiSistema, fondoDiSistema, inPixel } from "../core/fondo-di-sistema.js";
+import {
+  cimaDiSistema,
+  fondoDiSistema,
+  inPixel,
+  laCorniceNellaCima,
+} from "../core/fondo-di-sistema.js";
 import { disegnoGiaNellaCasella, haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
 import { clean, doc, installStyle, root, t, senzaCadere } from "./shared.js";
 
@@ -1328,10 +1333,9 @@ function insetDi(documento, lato = "bottom") {
  * più niente invece di alzare la barra due volte. */
 function giaLasciatoSotto(cima) {
   try {
-    const cornice = root.frameElement;
-    if (!cornice || !cima?.documentElement) return 0;
-    const suo = cornice.getBoundingClientRect();
-    return cima.documentElement.clientHeight - suo.bottom;
+    const dove = laCorniceNellaCima(root);
+    if (!dove || !cima?.documentElement) return 0;
+    return Math.max(0, cima.documentElement.clientHeight - dove.sotto);
   } catch (_error) {
     return 0;
   }
@@ -1368,13 +1372,8 @@ export function misuraIlFondoDiSistema() {
  * comincia sotto la barra di Home Assistant, che la fascia l'ha gia' scansata
  * lei. */
 function giaLasciatoSopra() {
-  try {
-    const cornice = root.frameElement;
-    if (!cornice) return 0;
-    return Math.max(0, cornice.getBoundingClientRect().top);
-  } catch (_error) {
-    return 0;
-  }
+  const dove = laCorniceNellaCima(root);
+  return dove ? Math.max(0, dove.sopra) : 0;
 }
 
 export const CIMA_DI_SISTEMA = "--dm-cima-di-sistema";
@@ -1401,6 +1400,51 @@ export function misuraLaCimaDiSistema() {
 function misuraLeFasceDiSistema() {
   misuraIlFondoDiSistema();
   misuraLaCimaDiSistema();
+}
+
+/* Le fasce si misurano sempre, non in due istanti fissi.
+ *
+ * Prima si misurava all'avvio, a 400 e a 1500 millisecondi, e poi solo se la
+ * finestra cambiava misura. Ma chi decide dove sta la cornice e' Home
+ * Assistant, e lo decide quando vuole: finisce di impaginarsi dopo di noi,
+ * toglie la sua barra col chiosco, la rimette, scansa l'orologio tornando
+ * dall'app. Ogni volta che lo faceva dopo il secondo e mezzo, la plancia
+ * restava col numero di prima — «sono sbagliati ancora». Adesso la misura
+ * segue lo schermo: quando cambia la finestra, la nostra o quella in cima;
+ * quando cambia il riquadro di una delle cornici che ci contengono — Home
+ * Assistant che scansa l'orologio o toglie la sua barra ridimensiona la
+ * tessera, e la finestra di ogni cornice lo dice col suo «resize», che qui si
+ * ascolta su tutte fino in cima — e quando si torna a guardare. Nessun giro a orologio: e' tutto
+ * mosso dagli eventi, come il resto della barra. */
+function tieniLeFasceMisurate() {
+  const misura = () => misuraLeFasceDiSistema();
+  const finestre = [root];
+  try {
+    for (let w = root; w && w !== w.parent; w = w.parent) finestre.push(w.parent);
+  } catch (_error) {
+    /* Una cornice di un'altra origine: si guarda solo la nostra. */
+  }
+  for (const w of finestre) {
+    for (const evento of ["resize", "orientationchange", "pageshow"]) {
+      try {
+        w.addEventListener?.(evento, misura);
+      } catch (_error) {
+        /* Non si puo' ascoltare: ci pensano le attese qui sotto. */
+      }
+    }
+    try {
+      w.visualViewport?.addEventListener?.("resize", misura);
+    } catch (_error) {
+      /* idem */
+    }
+  }
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState === "visible") misura();
+  });
+  /* E qualche volta dopo l'avvio, finche' Home Assistant finisce di
+   * impaginarsi: il «resize» dice le cornici che cambiano misura, non quelle
+   * che si spostano senza cambiarla. */
+  for (const attesa of [100, 400, 1500, 3000, 6000]) root.setTimeout?.(misura, attesa);
 }
 
 /* Le finestre non cominciano sotto l'orologio.
@@ -1466,11 +1510,7 @@ export function installNavigationSection() {
   /* Si rimisura quando lo schermo cambia forma: girare il telefono, aprire la
    * tastiera, entrare a schermo intero cambiano la fascia di sistema — e il
    * chiosco, che allarga la cornice a tutto il vetro, la ridimensiona. */
-  for (const evento of ["resize", "orientationchange", "pageshow"])
-    root.addEventListener?.(evento, () => misuraLeFasceDiSistema());
-  /* E poco dopo l'avvio: il pannello di Home Assistant finisce di impaginarsi
-   * dopo di noi, e una misura presa troppo presto è uno zero. */
-  for (const attesa of [400, 1500]) root.setTimeout?.(() => misuraLeFasceDiSistema(), attesa);
+  tieniLeFasceMisurate();
   /* Il foglio prima di tutto: la tenda e' una regola di stile, e metterla
    * senza il foglio vorrebbe dire scriverla su un attributo che non tinge
    * niente — la barra resterebbe scoperta proprio nei millisecondi che si
