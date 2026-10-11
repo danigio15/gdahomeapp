@@ -2632,6 +2632,7 @@ export default Object.freeze({
   "Only applies in Smart: not in effect here": "스마트 모드에서만 적용: 여기서는 해당 없음",
   "ENDS AT ${ora}": "${ora}에 종료",
   "ENDS TOMORROW AT ${ora}": "내일 ${ora}에 종료",
+  "this dashboard": "이 대시보드",
   "Open Assist": "Assist 열기",
   "Open GitHub": "GitHub 열기",
   "Open all": "전체 열기",

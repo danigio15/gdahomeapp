@@ -3569,6 +3569,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Questa luce dichiara solo acceso e spento: Home Assistant non espone né luminosità né colore.": "This light only reports on and off: Home Assistant exposes neither brightness nor colour.",
   "Questa luce è collegata a uno switch: accende e spegne soltanto.": "This light is wired to a switch: it only turns on and off.",
   "Questa mappa c'è già.": "That map is already there.",
+  "questa plancia": "this dashboard",
   "Questa presa è configurata come «si vede ma non si comanda»: la finestra la racconta, ma non la accende né la spegne.": "This socket is configured as shown but not controllable: this window reports it, it never switches it.",
   "Questa ricarica": "This charge",
   "Questa serratura sa fare tutte e due le cose, e sono diverse: «sblocca» gira la chiave, «apri» tira lo scrocco e la porta si apre. Lasciandola com'è il tocco apre, come ha sempre fatto.": "This lock can do both, and they are not the same: “unlock” turns the key, “open” pulls the latch and the door opens. Left as it is, a tap opens, as it always has.",

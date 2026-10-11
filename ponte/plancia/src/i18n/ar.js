@@ -2622,6 +2622,7 @@ export default Object.freeze({
   "Only applies in Smart: not in effect here": "يسري فقط في الوضع الذكي: لا يُطبَّق هنا",
   "ENDS AT ${ora}": "تنتهي في ${ora}",
   "ENDS TOMORROW AT ${ora}": "تنتهي غدًا في ${ora}",
+  "this dashboard": "هذه اللوحة",
   "Open Assist": "افتح Assist",
   "Open GitHub": "فتح GitHub",
   "Open all": "فتح الكل",

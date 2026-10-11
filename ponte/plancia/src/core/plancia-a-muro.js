@@ -79,8 +79,15 @@ export const GRIGLIE = Object.freeze({
   8: Object.freeze({ colonne: 4, righe: 2 }),
   9: Object.freeze({ colonne: 3, righe: 3 }),
   12: Object.freeze({ colonne: 4, righe: 3 }),
+  /* «Se riempio le 12 caselle solo di dati tecnici della casa c'e' molto
+   * spazio inutilizzato e se ne potrebbero mettere di piu'.» Le letture hanno
+   * la loro tessera compatta, e su un tablet grande ne stanno sedici, venti,
+   * ventiquattro. */
+  16: Object.freeze({ colonne: 4, righe: 4 }),
+  20: Object.freeze({ colonne: 5, righe: 4 }),
+  24: Object.freeze({ colonne: 6, righe: 4 }),
 });
-export const POSTI_AL_MASSIMO = 12;
+export const POSTI_AL_MASSIMO = 24;
 
 /* La griglia che una pagina nuova sceglie da se': le telecamere stanno meglio
  * in quattro, l'energia ha le sue quattro tessere. */
@@ -545,7 +552,13 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
     /* I lettori della sezione Musica, per la pagina Musica. */
     lettori: lettoriConfigurati(elenco(altro.lettori))
       .filter((l) => entita(l.entity))
-      .map((l) => ({ entity: entita(l.entity), nome: testo(l.nome) })),
+      /* Con gli «altri comandi» scelti accanto al lettore: «quelli che ho
+       * abilitato nella plancia li vedo, nel pannello no». */
+      .map((l) => ({
+        entity: entita(l.entity),
+        nome: testo(l.nome),
+        comandi: elenco(l.comandi).map(entita).filter(Boolean),
+      })),
     stanze: elenco(sezioni.rooms)
       .filter((s) => s && testo(s.name))
       .map((s) => ({

@@ -32,11 +32,7 @@ import {
 import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
-import {
-  anteprimaDellaPagina,
-  fonteDelMuro,
-  premiumDellaCasa,
-} from "./plancia-a-muro-section.js";
+import { anteprimaDellaPagina, fonteDelMuro, premiumDellaCasa } from "./plancia-a-muro-section.js";
 import {
   allStates,
   clean,
@@ -261,14 +257,42 @@ function elencoMarkup(p, i) {
   }[p.modello];
   const nomi = (
     p.modello === "clima"
-      ? [...comandiDellaPagina(p, state.fonte || {}, "freddo"), ...comandiDellaPagina(p, state.fonte || {}, "caldo")]
+      ? [
+          ...comandiDellaPagina(p, state.fonte || {}, "freddo"),
+          ...comandiDellaPagina(p, state.fonte || {}, "caldo"),
+        ]
       : comandi
   )
     .map((c) => nomeDi(c.entita))
     .filter((n, k, tutti) => tutti.indexOf(n) === k);
   return `<div class="mu-ed-nota">${esc(spiega)}</div>
-    ${p.modello === "clima" ? riga(t("Si apre su", "Opens on"), "", scelte(`pagine.${i}.zona`, p.zona, [["freddo", `❄️ ${t("Freddo", "Cooling")}`], ["caldo", `🔥 ${t("Caldo", "Heating")}`]])) : ""}
-    ${p.modello === "clima" ? riga(t("Il tasto ⏻ accende con", "The ⏻ button turns on with"), t("Il comando rapido della plancia: modalità, gradi e ventola scelti per ogni stanza nella scheda Clima. Premuto di nuovo, spegne.", "The dashboard quick command: mode, degrees and fan chosen for each room in the Climate tab. Pressed again, it turns off."), scelte(`pagine.${i}.accensione`, p.accensione, [["rapido", `⚡ ${t("Comando rapido", "Quick command")}`], ["ultima", t("Ultima modalità", "Last mode")]])) : ""}
+    ${
+      p.modello === "clima"
+        ? riga(
+            t("Si apre su", "Opens on"),
+            "",
+            scelte(`pagine.${i}.zona`, p.zona, [
+              ["freddo", `❄️ ${t("Freddo", "Cooling")}`],
+              ["caldo", `🔥 ${t("Caldo", "Heating")}`],
+            ]),
+          )
+        : ""
+    }
+    ${
+      p.modello === "clima"
+        ? riga(
+            t("Il tasto ⏻ accende con", "The ⏻ button turns on with"),
+            t(
+              "Il comando rapido della plancia: modalità, gradi e ventola scelti per ogni stanza nella scheda Clima. Premuto di nuovo, spegne.",
+              "The dashboard quick command: mode, degrees and fan chosen for each room in the Climate tab. Pressed again, it turns off.",
+            ),
+            scelte(`pagine.${i}.accensione`, p.accensione, [
+              ["rapido", `⚡ ${t("Comando rapido", "Quick command")}`],
+              ["ultima", t("Ultima modalità", "Last mode")],
+            ]),
+          )
+        : ""
+    }
     <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${nomi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
 }
 
@@ -281,7 +305,10 @@ function paginaMarkup(p, i, tutte) {
     const comandi = p.scelti ? p.comandi : comandiProposti(f, p.stanza, quanti);
     dentro = `${riga(
       t("Stanza", "Room"),
-      t("Da qui la pagina prende la temperatura e i comandi proposti", "The page takes its temperature and suggested controls from here"),
+      t(
+        "Da qui la pagina prende la temperatura e i comandi proposti",
+        "The page takes its temperature and suggested controls from here",
+      ),
       tendina(
         `${via}.stanza`,
         p.stanza,
@@ -421,9 +448,17 @@ function paginaMarkup(p, i, tutte) {
         ? ""
         : riga(
             t("Griglia", "Grid"),
-            MODELLI_ELENCO.includes(p.modello) || p.modello === "ambienti" || p.modello === "telecamere"
-              ? t("Quante card a schermo; le altre scorrono", "How many cards on screen; the rest scroll")
-              : t("Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano", "How many slots, and how big. In portrait columns and rows swap"),
+            MODELLI_ELENCO.includes(p.modello) ||
+              p.modello === "ambienti" ||
+              p.modello === "telecamere"
+              ? t(
+                  "Quante card a schermo; le altre scorrono",
+                  "How many cards on screen; the rest scroll",
+                )
+              : t(
+                  "Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano",
+                  "How many slots, and how big. In portrait columns and rows swap",
+                ),
             scelte(`${via}.griglia`, p.griglia, GRIGLIE_SCRITTE()),
           )
     }
@@ -454,10 +489,14 @@ function corpoMarkup() {
   const premium = state.premium === true;
   const plance = state.plance?.length ? state.plance : [{ profilo: "primary", titolo: "gdahome" }];
   const qui = currentProfile();
-  const altre = plance.filter((p) => p.profilo !== qui || p.profilo === m.fonte);
+  /* Tutte le plance, questa compresa. «Quel flag che sceglievo da dove
+   * prendere i dati facendo la plancia nuova non c'e' piu'»: l'elenco lasciava
+   * fuori la plancia in cui si e', e con due plance ne restava una sola — la
+   * riga spariva e il pannello restava legato alla principale. */
+  const altre = plance;
   const sporca = bozzaSporca();
   const contenuto = `
-  ${sporca ? `<div class="mu-ed-sporca" role="status">● ${esc(t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save».") )}</div>` : ""}
+  ${sporca ? `<div class="mu-ed-sporca" role="status">● ${esc(t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save»."))}</div>` : ""}
   <div class="ed-intro">${esc(
     t(
       "Il pannello del tablet a muro. Scegli le pagine — le linguette in alto — e cosa c'è in ognuna. Sul tablet, tenendo premuto l'orologio per due secondi si torna qui.",
@@ -469,21 +508,25 @@ function corpoMarkup() {
     ${
       altre.length > 1
         ? riga(
-      t("Prende le cose da", "Takes things from"),
-      t(
-        "Le stanze, le luci, le azioni e l'antifurto arrivano da qui",
-        "Rooms, lights, actions and the alarm come from here",
-      ),
-      tendina(
-        "fonte",
-        m.fonte,
-        altre.map((p) => [
-          p.profilo,
-          p.profilo === "primary" ? `${p.titolo} (${t("principale", "main")})` : p.titolo,
-        ]),
-        null,
-      ),
-    )
+            t("Prende le cose da", "Takes things from"),
+            t(
+              "Le stanze, le luci, le azioni e l'antifurto arrivano da qui",
+              "Rooms, lights, actions and the alarm come from here",
+            ),
+            tendina(
+              "fonte",
+              m.fonte,
+              altre.map((p) => [
+                p.profilo,
+                p.profilo === qui
+                  ? `${p.titolo} (${t("questa plancia", "this dashboard")})`
+                  : p.profilo === "primary"
+                    ? `${p.titolo} (${t("principale", "main")})`
+                    : p.titolo,
+              ]),
+              null,
+            ),
+          )
         : ""
     }
   </div>
@@ -505,7 +548,9 @@ function corpoMarkup() {
       : ""
   }
   <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, meteo, riposo, notte, risveglio, PIN", "Orientation, theme, weather, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state.altro ? "▾" : "▸"}</span></button>
-  ${state.altro ? `<div class="mu-ed-blocco">
+  ${
+    state.altro
+      ? `<div class="mu-ed-blocco">
     ${riga(
       t("Orientamento", "Orientation"),
       t("Automatico segue come è montato il tablet", "Automatic follows how the tablet is mounted"),
@@ -530,7 +575,10 @@ function corpoMarkup() {
     )}
     ${riga(
       t("Meteo", "Weather"),
-      t("In alto e sul riposo. Vuoto: il primo che Home Assistant ha", "At the top and on the rest screen. Empty: the first one Home Assistant has"),
+      t(
+        "In alto e sul riposo. Vuoto: il primo che Home Assistant ha",
+        "At the top and on the rest screen. Empty: the first one Home Assistant has",
+      ),
       cerca("meteo", m.meteo, { domini: "weather" }),
     )}
     ${riga(
@@ -560,7 +608,9 @@ function corpoMarkup() {
     )}
     ${riga(t("Blocca il tablet", "Lock the tablet"), t("Per uscire dal pannello serve il PIN, da 4 a 8 cifre", "Leaving the panel needs the PIN, 4 to 8 digits"), `${campo("blocco.pin", m.blocco.pin, "PIN", "password")}${interruttore("blocco.attivo", m.blocco.attivo, "blocco")}`)}
     ${riga(t("Antifurto e serrature chiedono il codice", "Alarm and locks ask for the code"), t("Sempre, quando la centrale ne ha uno", "Always, when the panel has one"), `<span class="mu-ed-int fermo" aria-checked="true"><i></i></span>`)}
-  </div>` : ""}
+  </div>`
+      : ""
+  }
   <button type="button" class="ed-save-btn" data-mu-ed-salva>💾 ${esc(t("Salva", "Save"))}</button>`;
   if (premium || state.premium === null)
     return `<div class="mu-ed">${state.premium === null ? `<div class="mu-ed-nota">${esc(t("Controllo la licenza…", "Checking the licence…"))}</div>` : ""}${contenuto}</div>`;
@@ -680,12 +730,20 @@ function metti(via, valore) {
       const scritto = clean(valore);
       if (campo === "entita")
         posti[k] = scritto
-          ? { ...aspetto, tipo: lista === "scene" ? "entita" : tipoDellEntita(scritto), entita: scritto }
+          ? {
+              ...aspetto,
+              tipo: lista === "scene" ? "entita" : tipoDellEntita(scritto),
+              entita: scritto,
+            }
           : ora.azione
             ? ora
             : { tipo: "vuoto" };
       else if (campo === "azione")
-        posti[k] = scritto ? { ...aspetto, tipo: "azione", azione: scritto } : ora.entita ? ora : { tipo: "vuoto" };
+        posti[k] = scritto
+          ? { ...aspetto, tipo: "azione", azione: scritto }
+          : ora.entita
+            ? ora
+            : { tipo: "vuoto" };
       else if (campo === "svuota") posti[k] = { tipo: "vuoto" };
       else if (ora.tipo !== "vuoto") posti[k] = { ...ora, [campo]: valore };
       p[lista] = posti;

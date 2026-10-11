@@ -4268,6 +4268,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.",
   "This browser cannot transcribe speech: the microphone does not appear, but you can still type the question. It works on Chrome, Edge and Safari.",
   "This charge",
+  "this dashboard",
   "This device brings in ${quante} more entities, and one has a place of its own: add it from its own tab.",
   "This device brings in ${quante} more entities, and some have a place of their own: add them from their own tabs.",
   "This device brings in ${quante} more entities: they are what the device says about itself — battery, signal — and they are fine where they are.",

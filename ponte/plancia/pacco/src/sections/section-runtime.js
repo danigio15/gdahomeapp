@@ -504,7 +504,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GB5BX7WJ.js";
+} from "../../chunk-KPZSFPVF.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -5116,6 +5116,7 @@ var SOURCE_INDEX = Object.freeze({
   "Questa luce dichiara solo acceso e spento: Home Assistant non espone né luminosità né colore.": "This light only reports on and off: Home Assistant exposes neither brightness nor colour.",
   "Questa luce è collegata a uno switch: accende e spegne soltanto.": "This light is wired to a switch: it only turns on and off.",
   "Questa mappa c'è già.": "That map is already there.",
+  "questa plancia": "this dashboard",
   "Questa presa è configurata come «si vede ma non si comanda»: la finestra la racconta, ma non la accende né la spegne.": "This socket is configured as shown but not controllable: this window reports it, it never switches it.",
   "Questa ricarica": "This charge",
   "Questa serratura sa fare tutte e due le cose, e sono diverse: «sblocca» gira la chiave, «apri» tira lo scrocco e la porta si apre. Lasciandola com'è il tocco apre, come ha sempre fatto.": "This lock can do both, and they are not the same: “unlock” turns the key, “open” pulls the latch and the door opens. Left as it is, a tap opens, as it always has.",
@@ -37985,6 +37986,15 @@ body .dm-testata-riga .w-detail{
  * meta' in larghezza e non costa niente in altezza, perche' la fascia e' gia'
  * alta quanto il tasto del menu. */
 @media(max-width:768px){
+  /* Tutta la fascia, non solo sotto i 480: «iPhone Duo aperto», 626 pixel in
+     piedi, prendeva la testata centrata dei tablet — il menu da solo in alto,
+     l'ingranaggio in mezzo sotto il titolo, l'orologio piccolo al centro.
+     Fino ai 768 la testata e' quella del telefono: menu, nome, pallino e
+     ingranaggio su una riga, sotto la fascia del meteo e dell'ora. */
+  header.dm-testata-col-meteo{flex-direction:row;align-items:center;justify-content:flex-start}
+  header.dm-testata-col-meteo>.dm-testata-riga{flex:1 1 100%}
+  header.dm-testata-col-meteo>.dm-editor-entry{margin-left:6px;flex:0 0 auto}
+  header.dm-testata-col-meteo>.header-left-wrap{width:auto!important;flex:1 1 0!important;min-width:0}
   header.dm-testata-col-meteo{flex-wrap:wrap;gap:7px;row-gap:6px;padding:10px 12px;text-align:left}
   header.dm-testata-col-meteo .header-left-wrap{flex:1 1 auto;min-width:0;gap:7px}
   header.dm-testata-col-meteo .ha-menu-btn{
@@ -84847,7 +84857,14 @@ var GRIGLIE = Object.freeze({
   6: Object.freeze({ colonne: 3, righe: 2 }),
   8: Object.freeze({ colonne: 4, righe: 2 }),
   9: Object.freeze({ colonne: 3, righe: 3 }),
-  12: Object.freeze({ colonne: 4, righe: 3 })
+  12: Object.freeze({ colonne: 4, righe: 3 }),
+  /* «Se riempio le 12 caselle solo di dati tecnici della casa c'e' molto
+   * spazio inutilizzato e se ne potrebbero mettere di piu'.» Le letture hanno
+   * la loro tessera compatta, e su un tablet grande ne stanno sedici, venti,
+   * ventiquattro. */
+  16: Object.freeze({ colonne: 4, righe: 4 }),
+  20: Object.freeze({ colonne: 5, righe: 4 }),
+  24: Object.freeze({ colonne: 6, righe: 4 })
 });
 var GRIGLIA_DI_SERIE = Object.freeze({ telecamere: 4, energia: 4, ambienti: 6 });
 function postiDellaPagina(pagina2) {
@@ -85183,7 +85200,11 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
       batteria: misura7("stato_carica_batteria")
     },
     /* I lettori della sezione Musica, per la pagina Musica. */
-    lettori: lettoriConfigurati(elenco5(altro.lettori)).filter((l) => entita2(l.entity)).map((l) => ({ entity: entita2(l.entity), nome: testo(l.nome) })),
+    lettori: lettoriConfigurati(elenco5(altro.lettori)).filter((l) => entita2(l.entity)).map((l) => ({
+      entity: entita2(l.entity),
+      nome: testo(l.nome),
+      comandi: elenco5(l.comandi).map(entita2).filter(Boolean)
+    })),
     stanze: elenco5(sezioni2.rooms).filter((s) => s && testo(s.name)).map((s) => ({
       id: testo(s.id, 80),
       name: testo(s.name),
@@ -86056,6 +86077,10 @@ function cardEntita(c, i, grande = false) {
   const id = c.entita;
   const s = stato2(id);
   const servizio = servizioDellEntita(id, String(s?.state || ""));
+  if (!servizio && !grande) {
+    const dato = cardDato(c, i, s);
+    if (dato) return dato;
+  }
   const on = acceso4(id) || ["unlocked", "playing", "cleaning"].includes(String(s?.state));
   const parole4 = statoInParole2(id);
   return tessera({
@@ -86071,6 +86096,19 @@ function cardEntita(c, i, grande = false) {
     dati: servizio ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`,
     dove: `en-${i}-${grande ? "g" : "p"}`
   });
+}
+function cardDato(c, i, s) {
+  const v = String(s?.state ?? "").trim();
+  const n = numero44(v);
+  if (n === null || v === "") return "";
+  const id = c.entita;
+  const unita2 = clean(s.attributes?.unit_of_measurement);
+  const valore3 = decimale(n, Number.isInteger(n) ? 0 : 1);
+  return `<div class="mu-carta mu-card mu-dato" style="--acc:${ACCENTI.azione}" data-mu-entita="${esc(id)}" aria-disabled="true">
+    <div class="mu-dato-testa">${disegno(clean(c.disegno) || disegnoDellEntita(id), 22, `da-${i}`)}<span class="mu-dato-n">${esc(nomeDi7(id, c.nome))}</span></div>
+    <div class="mu-dato-v">${esc(valore3)}${unita2 ? `<small>${esc(unita2)}</small>` : ""}</div>
+    ${clean(c.sotto) ? `<div class="mu-dato-s">${esc(clean(c.sotto))}</div>` : ""}
+  </div>`;
 }
 var vuoto2 = (i, perche3 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche3 || t("Posto libero", "Empty slot"))}</span></div>`;
 function paginaStanza(pagina2) {
@@ -86218,7 +86256,19 @@ function lettoreGrande(l) {
     ${l.puo.sorgente && l.sorgenti.length && !l.spento ? `<div class="mu-mp-sorgenti">${l.sorgenti.slice(0, 8).map(
     (sorgente) => `<button type="button" class="${sorgente === l.sorgente ? "si" : ""}" data-mu-fa="mp-sorgente" data-mu-sorgente="${esc(sorgente)}" data-mu-entita="${esc(l.entity)}">${esc(sorgente)}</button>`
   ).join("")}</div>` : ""}
+    ${comandiDelLettore(l.entity)}
   </div>`;
+}
+function comandiDelLettore(entity2) {
+  const voce2 = (state109.fonte?.lettori || []).find((l) => l.entity === entity2);
+  const comandi = (voce2?.comandi || []).filter((id) => stato2(id));
+  if (!comandi.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi.map((id) => {
+    const s = stato2(id);
+    const servizio = servizioDellEntita(id, String(s?.state || ""));
+    const parole4 = statoInParole2(id);
+    return `<button type="button" class="${acceso4(id) ? "si" : ""}" ${servizio ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`}>${esc(nomeDi7(id))}${parole4 ? ` <small>${esc(parole4)}</small>` : ""}</button>`;
+  }).join("")}</div>`;
 }
 var lettoriDiQui = [];
 function bottoneDelGruppo(l) {
@@ -86724,7 +86774,65 @@ function scendiSottoIlMenu() {
   };
   doc.addEventListener("pointerdown", risali, true);
 }
+function homeAssistantLargo() {
+  try {
+    const casa = root.documentoDiHomeAssistant?.();
+    const vista2 = casa?.defaultView;
+    if (!casa || !vista2?.matchMedia) return null;
+    return vista2.matchMedia("(max-width: 870px)").matches ? null : casa;
+  } catch (_errore) {
+    return null;
+  }
+}
+function laBarraDiHomeAssistant(casa) {
+  try {
+    const ha = casa.querySelector("home-assistant");
+    const main = ha?.shadowRoot?.querySelector("home-assistant-main");
+    return { main, barra: main?.shadowRoot?.querySelector("ha-sidebar") || null };
+  } catch (_errore) {
+    return { main: null, barra: null };
+  }
+}
+function apriLaBarraAccanto(casa) {
+  const tela2 = doc?.getElementById?.(ID2);
+  const { main, barra } = laBarraDiHomeAssistant(casa);
+  if (!tela2 || !main) return false;
+  const vista2 = casa.defaultView || root;
+  try {
+    const Evento = vista2.CustomEvent || CustomEvent;
+    main.dispatchEvent(
+      new Evento("hass-toggle-menu", { bubbles: true, composed: true, detail: { open: true } })
+    );
+  } catch (_errore) {
+    return false;
+  }
+  const scosta = () => {
+    const destra = Math.round(barra?.getBoundingClientRect?.().right || 0);
+    state109.accanto = destra > 0 ? destra : 256;
+    tela2.style.setProperty("left", `${state109.accanto}px`, "important");
+    misura4(tela2, state109.muro);
+  };
+  tela2.dataset.muAccantoAlMenu = "true";
+  scosta();
+  root.setTimeout?.(scosta, 320);
+  const aperto2 = Date.now();
+  const rimetti2 = (evento) => {
+    if (Date.now() - aperto2 < 300) return;
+    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    const strada2 = evento?.composedPath?.() || [evento?.target];
+    if (!strada2.includes(tela2)) return;
+    doc.removeEventListener("pointerdown", rimetti2, true);
+    delete tela2.dataset.muAccantoAlMenu;
+    state109.accanto = 0;
+    tela2.style.removeProperty("left");
+    misura4(tela2, state109.muro);
+  };
+  doc.addEventListener("pointerdown", rimetti2, true);
+  return true;
+}
 function apriIlMenu2() {
+  const largo = root.gdahomeDice?.postMessage ? null : homeAssistantLargo();
+  if (largo && apriLaBarraAccanto(largo)) return true;
   scendiSottoIlMenu();
   try {
     if (root.gdahomeDice?.postMessage) {
@@ -86907,7 +87015,7 @@ function togliLaTela() {
   doc?.documentElement?.classList?.remove("dm-muro-acceso");
 }
 function misura4(nodo2, muro) {
-  const larghezza = root.innerWidth || 1280;
+  const larghezza = Math.max(320, (root.innerWidth || 1280) - (state109.accanto || 0));
   const altezza = root.innerHeight || 800;
   const v = verso(muro, larghezza, altezza);
   const s = scala(v, larghezza, altezza);
@@ -87580,6 +87688,7 @@ ${MURO} .mu-mp-volume{display:flex;align-items:center;gap:14px}
 ${MURO} .mu-mp-cursore{flex:1}
 ${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 ${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
+${MURO} .mu-mp-comandi button small{margin-left:4px;font-weight:700;opacity:.75}
 ${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
 ${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}
@@ -87601,6 +87710,14 @@ ${MURO}[data-compatto="1"] .mu-mp-arte{width:72px;height:72px;border-radius:14px
 ${MURO}[data-compatto="1"] .mu-mp-titolo{font-size:24px}
 ${MURO}[data-compatto="1"] .mu-mp-tasti{gap:16px}
 ${MURO}[data-compatto="1"] .mu-mp-tasti .mu-tondo.grande{width:72px;height:72px}
+${MURO} .mu-dato{display:flex;flex-direction:column;justify-content:space-between;gap:6px;padding:16px 18px;cursor:default;min-width:0}
+${MURO} .mu-dato-testa{display:flex;align-items:center;gap:8px;min-width:0}
+${MURO} .mu-dato-testa svg{flex:none;width:22px;height:22px}
+${MURO} .mu-dato-n{font-size:14px;font-weight:800;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-dato-v{font-family:Oswald,Inter,sans-serif;font-weight:500;line-height:.95;font-variant-numeric:tabular-nums;
+  font-size:clamp(28px,min(calc(100vh / var(--mu-righe,3) * .3),calc(100vw / var(--mu-col,4) * .22)),96px);color:var(--text);white-space:nowrap}
+${MURO} .mu-dato-v small{font-size:.38em;margin-left:5px;font-weight:600;color:var(--text-dim)}
+${MURO} .mu-dato-s{font-size:12px;font-weight:700;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-fitta{--mu-gap:12px}
 ${MURO} .mu-fitta .mu-card{padding:16px;gap:10px;border-radius:20px}
 ${MURO} .mu-fitta .mu-riga1{gap:10px}
@@ -88060,10 +88177,30 @@ function elencoMarkup(p, i) {
       "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both."
     )
   }[p.modello];
-  const nomi = (p.modello === "clima" ? [...comandiDellaPagina(p, state110.fonte || {}, "freddo"), ...comandiDellaPagina(p, state110.fonte || {}, "caldo")] : comandi).map((c) => nomeDi8(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
+  const nomi = (p.modello === "clima" ? [
+    ...comandiDellaPagina(p, state110.fonte || {}, "freddo"),
+    ...comandiDellaPagina(p, state110.fonte || {}, "caldo")
+  ] : comandi).map((c) => nomeDi8(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
   return `<div class="mu-ed-nota">${esc(spiega)}</div>
-    ${p.modello === "clima" ? riga2(t("Si apre su", "Opens on"), "", scelte3(`pagine.${i}.zona`, p.zona, [["freddo", `❄️ ${t("Freddo", "Cooling")}`], ["caldo", `🔥 ${t("Caldo", "Heating")}`]])) : ""}
-    ${p.modello === "clima" ? riga2(t("Il tasto ⏻ accende con", "The ⏻ button turns on with"), t("Il comando rapido della plancia: modalità, gradi e ventola scelti per ogni stanza nella scheda Clima. Premuto di nuovo, spegne.", "The dashboard quick command: mode, degrees and fan chosen for each room in the Climate tab. Pressed again, it turns off."), scelte3(`pagine.${i}.accensione`, p.accensione, [["rapido", `⚡ ${t("Comando rapido", "Quick command")}`], ["ultima", t("Ultima modalità", "Last mode")]])) : ""}
+    ${p.modello === "clima" ? riga2(
+    t("Si apre su", "Opens on"),
+    "",
+    scelte3(`pagine.${i}.zona`, p.zona, [
+      ["freddo", `❄️ ${t("Freddo", "Cooling")}`],
+      ["caldo", `🔥 ${t("Caldo", "Heating")}`]
+    ])
+  ) : ""}
+    ${p.modello === "clima" ? riga2(
+    t("Il tasto ⏻ accende con", "The ⏻ button turns on with"),
+    t(
+      "Il comando rapido della plancia: modalità, gradi e ventola scelti per ogni stanza nella scheda Clima. Premuto di nuovo, spegne.",
+      "The dashboard quick command: mode, degrees and fan chosen for each room in the Climate tab. Pressed again, it turns off."
+    ),
+    scelte3(`pagine.${i}.accensione`, p.accensione, [
+      ["rapido", `⚡ ${t("Comando rapido", "Quick command")}`],
+      ["ultima", t("Ultima modalità", "Last mode")]
+    ])
+  ) : ""}
     <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${nomi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
 }
 function paginaMarkup(p, i, tutte) {
@@ -88075,7 +88212,10 @@ function paginaMarkup(p, i, tutte) {
     const comandi = p.scelti ? p.comandi : comandiProposti2(f, p.stanza, quanti2);
     dentro3 = `${riga2(
       t("Stanza", "Room"),
-      t("Da qui la pagina prende la temperatura e i comandi proposti", "The page takes its temperature and suggested controls from here"),
+      t(
+        "Da qui la pagina prende la temperatura e i comandi proposti",
+        "The page takes its temperature and suggested controls from here"
+      ),
       tendina2(
         `${via}.stanza`,
         p.stanza,
@@ -88202,7 +88342,13 @@ function paginaMarkup(p, i, tutte) {
     ${riga2(t("Tipo di pagina", "Page type"), "", tendina2(`${via}.modello`, p.modello, MODELLI2(), null))}
     ${SENZA_GRIGLIA.includes(p.modello) ? "" : riga2(
     t("Griglia", "Grid"),
-    MODELLI_ELENCO.includes(p.modello) || p.modello === "ambienti" || p.modello === "telecamere" ? t("Quante card a schermo; le altre scorrono", "How many cards on screen; the rest scroll") : t("Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano", "How many slots, and how big. In portrait columns and rows swap"),
+    MODELLI_ELENCO.includes(p.modello) || p.modello === "ambienti" || p.modello === "telecamere" ? t(
+      "Quante card a schermo; le altre scorrono",
+      "How many cards on screen; the rest scroll"
+    ) : t(
+      "Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano",
+      "How many slots, and how big. In portrait columns and rows swap"
+    ),
     scelte3(`${via}.griglia`, p.griglia, GRIGLIE_SCRITTE())
   )}
     ${riga2(t("Colore", "Colour"), t("Della linguetta e del titolo", "Of the tab and the title"), colori(`${via}.colore`, p.colore, p.modello))}
@@ -88222,7 +88368,7 @@ function corpoMarkup7() {
   const premium = state110.premium === true;
   const plance = state110.plance?.length ? state110.plance : [{ profilo: "primary", titolo: "gdahome" }];
   const qui = currentProfile();
-  const altre = plance.filter((p) => p.profilo !== qui || p.profilo === m.fonte);
+  const altre = plance;
   const sporca = bozzaSporca();
   const contenuto = `
   ${sporca ? `<div class="mu-ed-sporca" role="status">● ${esc(t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save»."))}</div>` : ""}
@@ -88245,7 +88391,7 @@ function corpoMarkup7() {
       m.fonte,
       altre.map((p) => [
         p.profilo,
-        p.profilo === "primary" ? `${p.titolo} (${t("principale", "main")})` : p.titolo
+        p.profilo === qui ? `${p.titolo} (${t("questa plancia", "this dashboard")})` : p.profilo === "primary" ? `${p.titolo} (${t("principale", "main")})` : p.titolo
       ]),
       null
     )
@@ -88282,7 +88428,10 @@ function corpoMarkup7() {
   )}
     ${riga2(
     t("Meteo", "Weather"),
-    t("In alto e sul riposo. Vuoto: il primo che Home Assistant ha", "At the top and on the rest screen. Empty: the first one Home Assistant has"),
+    t(
+      "In alto e sul riposo. Vuoto: il primo che Home Assistant ha",
+      "At the top and on the rest screen. Empty: the first one Home Assistant has"
+    ),
     cerca("meteo", m.meteo, { domini: "weather" })
   )}
     ${riga2(
@@ -88404,7 +88553,11 @@ function metti3(via, valore3) {
       const aspetto = { nome: ora3.nome || "", sotto: ora3.sotto || "", disegno: ora3.disegno || "" };
       const scritto = clean(valore3);
       if (campo5 === "entita")
-        posti[k] = scritto ? { ...aspetto, tipo: lista5 === "scene" ? "entita" : tipoDellEntita(scritto), entita: scritto } : ora3.azione ? ora3 : { tipo: "vuoto" };
+        posti[k] = scritto ? {
+          ...aspetto,
+          tipo: lista5 === "scene" ? "entita" : tipoDellEntita(scritto),
+          entita: scritto
+        } : ora3.azione ? ora3 : { tipo: "vuoto" };
       else if (campo5 === "azione")
         posti[k] = scritto ? { ...aspetto, tipo: "azione", azione: scritto } : ora3.entita ? ora3 : { tipo: "vuoto" };
       else if (campo5 === "svuota") posti[k] = { tipo: "vuoto" };

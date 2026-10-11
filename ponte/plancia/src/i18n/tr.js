@@ -2641,6 +2641,7 @@ export default Object.freeze({
   "Only applies in Smart: not in effect here": "Yalnızca Akıllı modda geçerli: burada etkisiz",
   "ENDS AT ${ora}": "${ora} SAATİNDE BİTER",
   "ENDS TOMORROW AT ${ora}": "YARIN ${ora} SAATİNDE BİTER",
+  "this dashboard": "bu pano",
   "Open Assist": "Assist'i aç",
   "Open GitHub": "GitHub'ı aç",
   "Open all": "Tümünü aç",
