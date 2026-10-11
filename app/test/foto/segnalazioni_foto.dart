@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gdahome/casa/allegati.dart';
 import 'package:gdahome/casa/dispensa/dispensa.dart';
 import 'package:gdahome/casa/impostazioni.dart';
 import 'package:gdahome/casa/segnalazioni.dart';
