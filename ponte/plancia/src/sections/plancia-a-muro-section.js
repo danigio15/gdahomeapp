@@ -28,6 +28,7 @@ import {
 } from "../core/le-vesti-della-carta.js";
 import { climaScalda } from "../core/device-model.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
+import { IN_VISTA_KEY } from "../core/state-event-gate.js";
 import {
   CHIAVE_MURO,
   avvisiAccesi,
@@ -159,8 +160,12 @@ const CINQUE_MINUTI = 5 * 60 * 1000;
 /** Le cose della plancia di origine, gia' pronte per il tablet. */
 export async function fonteDelMuro(muro, { forza = false } = {}) {
   const di = muro?.fonte || "primary";
+  /* La plancia stessa si legge dal deposito di qui, che e' gia' in mano:
+   * niente da tenere da parte, e una luce aggiunta e ripristinata da un altro
+   * telefono si vede al ripristino, non cinque minuti dopo. */
   if (
     !forza &&
+    !fonteEQui(di) &&
     state.fonte &&
     state.fonteDi === di &&
     Date.now() - state.fonteLetta < CINQUE_MINUTI
@@ -169,7 +174,7 @@ export async function fonteDelMuro(muro, { forza = false } = {}) {
   let fonte = null;
   if (root.__DM_MURO_FONTE__ && typeof root.__DM_MURO_FONTE__ === "object")
     fonte = fonteDaiValori(root.__DM_MURO_FONTE__);
-  else if (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__) fonte = fonteDiQui();
+  else if (fonteEQui(di)) fonte = fonteDiQui();
   else {
     try {
       const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
@@ -184,6 +189,9 @@ export async function fonteDelMuro(muro, { forza = false } = {}) {
   ricorda({ fonte: state.fonte, fonteDi: di });
   return state.fonte;
 }
+
+const fonteEQui = (di) =>
+  !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
 
 /* La plancia stessa come fonte: quando il tablet legge da se'. */
 function fonteDiQui() {
@@ -208,13 +216,41 @@ function fonteDiQui() {
 
 /* ── piccole letture ─────────────────────────────────────────────────────── */
 
-const stato = (id) => allStates()?.[id] || null;
+/* Quello che il tablet sta mostrando: ogni entita' letta mentre si disegna, e
+ * i domini che si guardano tutti insieme (le finestre aperte, il meteo, le
+ * persone). Il cancello degli stati lo chiede per sapere cosa far passare
+ * subito (`state-event-gate.js`): le luci della principale non stanno nella
+ * configurazione di questa plancia, e senza questa domanda i loro cambi
+ * arrivavano solo al battito. */
+let raccolta = null;
+let inVista = { ids: new Set(), domini: new Set() };
+const segna = (id) => {
+  if (raccolta && id) raccolta.ids.add(String(id));
+};
+const segnaDominio = (d) => raccolta?.domini.add(d);
+export function eInVista(id) {
+  const muro = state.muro;
+  if (!muro?.attiva || state.premium !== true || state.uscito) return false;
+  const chiave = String(id || "");
+  if (inVista.ids.has(chiave) || inVista.domini.has(chiave.split(".")[0])) return true;
+  return Boolean(muro.risveglio?.attivo && muro.risveglio.entita === chiave);
+}
+
+const stato = (id) => {
+  segna(id);
+  return allStates()?.[id] || null;
+};
 const attributi = (id) => stato(id)?.attributes || {};
 const dominio = (id) => String(id || "").split(".")[0];
-const acceso = (id) =>
+const accesoVero = (id) =>
   ["on", "open", "opening", "heat", "cool", "heat_cool", "auto", "dry", "fan_only"].includes(
     String(stato(id)?.state),
   );
+/* Acceso o spento come lo si vede: il tocco sul tablet cambia la card subito,
+ * prima che Home Assistant risponda; la risposta vera prende il suo posto
+ * appena arriva (`confermaLeAttese`). */
+const acceso = (id) =>
+  typeof state.inAttesa[id]?.acceso === "boolean" ? state.inAttesa[id].acceso : accesoVero(id);
 const numero = (valore) => {
   const n = Number(valore);
   return Number.isFinite(n) ? n : null;
@@ -477,6 +513,7 @@ function orologio(adesso = new Date()) {
 }
 
 function meteo() {
+  segnaDominio("weather");
   const id = Object.keys(allStates() || {}).find((k) => k.startsWith("weather."));
   if (!id) return null;
   const s = stato(id);
@@ -696,7 +733,8 @@ function cardClima(c, i, zona = "") {
   const a = attributi(id);
   const faccia = facciaDelClima(id, zona);
   const s = String(stato(id)?.state || "");
-  const on = s && s !== "off" && s !== "unavailable";
+  const atteso = state.inAttesa[id]?.acceso;
+  const on = typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
   const azione = a.hvac_action
     ? AZIONI_DEL_CLIMA()[a.hvac_action]
     : on
@@ -841,6 +879,9 @@ function paginaScene(pagina) {
 }
 
 function finestreAperte() {
+  /* Una finestra che si apre adesso era chiusa un attimo fa: si guarda tutto
+   * il dominio, non solo quelle aperte. */
+  segnaDominio("binary_sensor");
   return Object.entries(allStates() || {})
     .filter(
       ([id, s]) =>
@@ -1130,6 +1171,7 @@ function riposo(muro) {
   const o = orologio();
   const notte = eNotte(muro);
   const pagina = muro.pagine[0];
+  if (muro.avvisi) for (const a of state.fonte?.avvisi || []) a.entita.forEach(segna);
   const avvisi = muro.avvisi
     ? avvisiAccesi(state.fonte || {}, allStates() || {}, centraleDelMuro(pagina))
     : [];
@@ -1278,12 +1320,80 @@ function avviaIlBattito() {
     battito();
     rinfrescaLeTelecamere();
     if (giri % 40 === 0) rileggi({ forza: true }).catch(() => {});
+    /* Un ponte di prima, che le revisioni non le sa dire: la configurazione
+     * si rilegge intera, ma ogni minuto e non ogni dieci secondi. */
+    if (state.revisioniNo && giri % 4 === 0) root.cdSyncPull?.();
   }, 15 * 1000);
+  state.guardia = root.setInterval?.(() => {
+    guardaLeRevisioni().catch(() => {});
+  }, GUARDIA_MS);
+  allineaLOrologio();
 }
 
 function fermaIlBattito() {
   if (state.timer) root.clearInterval?.(state.timer);
+  if (state.guardia) root.clearInterval?.(state.guardia);
+  root.clearTimeout?.(state.minuto);
   state.timer = null;
+  state.guardia = null;
+  state.minuto = null;
+}
+
+/* L'orologio cambia al minuto giusto, non fino a quindici secondi dopo: su
+ * un tablet a muro l'ora si guarda, e un'ora indietro si nota. */
+function allineaLOrologio() {
+  root.clearTimeout?.(state.minuto);
+  const adesso = new Date();
+  const mancano = 60_000 - (adesso.getSeconds() * 1000 + adesso.getMilliseconds()) + 50;
+  state.minuto = root.setTimeout?.(() => {
+    battito();
+    allineaLOrologio();
+  }, mancano);
+}
+
+/* ── la configurazione che cambia da un altro telefono ────────────────────
+ *
+ * «I dati devono essere in real time.» La plancia rilegge la configurazione
+ * quando riprende il fuoco, e un tablet a muro il fuoco non lo perde mai: una
+ * pagina aggiunta dal telefono, o una luce nuova nella principale, arrivava
+ * sul tablet al riavvio. Ogni dieci secondi si chiede al ponte a che
+ * revisione sono questa plancia e quella da cui si legge — pochi byte — e si
+ * scarica lo scatto solo se il numero e' cambiato. */
+const GUARDIA_MS = 10 * 1000;
+
+export async function guardaLeRevisioni() {
+  if (!root.__DASHBOARDMODERN_HOSTED__ || state.revisioniNo || state.guardando) return false;
+  const qui = currentProfile();
+  const fonte = state.muro?.fonte || "primary";
+  const profili = [...new Set([qui, fonte])];
+  state.guardando = true;
+  let risposta = null;
+  try {
+    risposta = await bridgeRequest("ponte/config/revisioni", { profili });
+  } catch (errore) {
+    if (/non conosco|unknown/i.test(String(errore?.message || ""))) state.revisioniNo = true;
+    return false;
+  } finally {
+    state.guardando = false;
+  }
+  const nuove = risposta?.revisioni;
+  if (!nuove || typeof nuove !== "object") return false;
+  const viste = (state.revisioni ||= {});
+  const cambiata = (profilo) =>
+    Object.hasOwn(nuove, profilo) &&
+    Object.hasOwn(viste, profilo) &&
+    Number(nuove[profilo]) !== Number(viste[profilo]);
+  const quiCambiata = cambiata(qui);
+  const fonteCambiata = fonte !== qui && cambiata(fonte);
+  Object.assign(viste, nuove);
+  /* La plancia di qui: la ripristina chi la sa ripristinare, e il ripristino
+   * annuncia `persistence-restored`, che rilegge il muro. */
+  if (quiCambiata) root.cdSyncPull?.();
+  if (fonteCambiata && state.muro) {
+    await fonteDelMuro(state.muro, { forza: true });
+    disegna();
+  }
+  return quiCambiata || fonteCambiata;
 }
 
 function togliLaTela() {
@@ -1330,15 +1440,24 @@ export function disegna() {
   misura(nodo, muro);
   if (state.pagina >= muro.pagine.length) state.pagina = 0;
   const pagina = muro.pagine[state.pagina];
-  const corpo = state.riposo
-    ? riposo(muro)
-    : `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${
-        pagina.modello === "scene"
-          ? paginaScene(pagina)
-          : pagina.modello === "ingresso"
-            ? paginaIngresso(pagina)
-            : paginaStanza(pagina)
-      }</div>${finestra()}`;
+  raccolta = { ids: new Set(), domini: new Set() };
+  let corpo = "";
+  try {
+    corpo = state.riposo
+      ? riposo(muro)
+      : `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${
+          pagina.modello === "scene"
+            ? paginaScene(pagina)
+            : pagina.modello === "ingresso"
+              ? paginaIngresso(pagina)
+              : paginaStanza(pagina)
+        }</div>${finestra()}`;
+    /* Il riposo si sveglia per l'antifurto anche quando non lo mostra. */
+    segna(centraleDelMuro(muro.pagine[0]));
+    inVista = raccolta;
+  } finally {
+    raccolta = null;
+  }
   /* Mentre il dito trascina un cursore non si ridisegna: la barra la muove il
    * dito, e un aggiornamento di Home Assistant a meta' la farebbe saltare. */
   if (state.trascina) return;
@@ -1387,6 +1506,43 @@ function attendi(id, cosa, valore) {
     delete state.inAttesa[id];
     disegna();
   }, 4000);
+}
+
+/* Il tocco che accende o spegne: la card cambia subito, il comando parte. */
+function alterna(id, domain, service, data = { entity_id: id }) {
+  attendi(id, "acceso", !acceso(id));
+  comanda(domain, service, data);
+  disegna();
+}
+
+/* Quando Home Assistant dice lo stesso che il tablet aspettava, l'attesa
+ * finisce subito: niente quattro secondi in cui il tablet non ascolta. */
+export function attesaConfermata(cosa, atteso, reale) {
+  if (cosa === "acceso") return reale.acceso === atteso;
+  if (cosa === "luminosita") return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
+  if (cosa === "temperatura") return reale.temperatura !== null && Math.abs(reale.temperatura - atteso) < 0.05;
+  return false;
+}
+
+function confermaLeAttese(event) {
+  const ids =
+    event?.detail?.entity_ids || (event?.detail?.entity_id ? [event.detail.entity_id] : []);
+  for (const id of ids) {
+    const attesa = state.inAttesa[id];
+    if (!attesa) continue;
+    const b = numero(attributi(id).brightness);
+    const reale = {
+      acceso: accesoVero(id),
+      luminosita: !accesoVero(id) ? 0 : b === null ? null : Math.max(1, Math.round((b / 255) * 100)),
+      temperatura: numero(attributi(id).temperature),
+    };
+    for (const cosa of ["acceso", "luminosita", "temperatura"])
+      if (cosa in attesa && attesaConfermata(cosa, attesa[cosa], reale)) delete attesa[cosa];
+    if (!["acceso", "luminosita", "temperatura"].some((cosa) => cosa in attesa)) {
+      root.clearTimeout?.(attesa._timer);
+      delete state.inAttesa[id];
+    }
+  }
 }
 
 let timerClima = null;
@@ -1478,7 +1634,7 @@ function onClick(event) {
       return;
     }
     if (entita && dominio(entita) === "light") {
-      if (state.compatto) comanda("light", "toggle", { entity_id: entita });
+      if (state.compatto) alterna(entita, "light", "toggle");
       else apriFinestra({ tipo: "luce", entita });
     } else if (entita && dominio(entita) === "climate")
       apriFinestra({ tipo: "clima", entita, zona: zonaDiQui() });
@@ -1504,13 +1660,16 @@ function onClick(event) {
       chiudiFinestra();
       return;
     case "interruttore":
-      comanda("light", "toggle", { entity_id: id });
+      alterna(id, "light", "toggle");
       return;
     case "spegni":
+      attendi(id, "acceso", false);
       comanda(dominio(id) || "light", "turn_off", { entity_id: id });
       chiudiFinestra();
+      disegna();
       return;
     case "livello":
+      attendi(id, "acceso", true);
       attendi(id, "luminosita", Number(bersaglio.dataset.muLivello));
       comanda("light", "turn_on", {
         entity_id: id,
@@ -1534,11 +1693,12 @@ function onClick(event) {
       return;
     case "clima-acceso": {
       const s = String(stato(id)?.state || "off");
-      if (s !== "off") comanda("climate", "turn_off", { entity_id: id });
+      if (s !== "off") alterna(id, "climate", "turn_off");
       else {
         const modi = (attributi(id).hvac_modes || []).filter((m) => m !== "off");
-        if (modi.length) comanda("climate", "set_hvac_mode", { entity_id: id, hvac_mode: modi[0] });
-        else comanda("climate", "turn_on", { entity_id: id });
+        if (modi.length)
+          alterna(id, "climate", "set_hvac_mode", { entity_id: id, hvac_mode: modi[0] });
+        else alterna(id, "climate", "turn_on");
       }
       return;
     }
@@ -1581,7 +1741,11 @@ function onClick(event) {
       return;
     case "entita": {
       const servizio = servizioDellEntita(id, String(stato(id)?.state || ""));
-      if (servizio) comanda(servizio.domain, servizio.service, { entity_id: id });
+      if (!servizio) return;
+      /* Accendi e spegni si vedono subito; un tasto o una scena no: non
+       * restano accesi. */
+      if (servizio.service === "toggle") alterna(id, servizio.domain, servizio.service);
+      else comanda(servizio.domain, servizio.service, { entity_id: id });
       return;
     }
     case "apri": {
@@ -1661,6 +1825,7 @@ function onPointerUp(event) {
   if (t) {
     state.trascina = null;
     if (t.valore) {
+      attendi(t.id, "acceso", true);
       attendi(t.id, "luminosita", t.valore);
       comanda("light", "turn_on", { entity_id: t.id, brightness_pct: t.valore });
     }
@@ -1978,8 +2143,14 @@ export function installPlanciaAMuro() {
   ])
     root.addEventListener?.(evento, ancora);
   root.addEventListener?.("dashboardmodern:states-ready", () => disegna());
+  root[IN_VISTA_KEY] = eInVista;
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
     svegliaSeServe(event);
+    confermaLeAttese(event);
+    /* Un mazzetto che non tocca niente di quello che si vede non ridisegna:
+     * su un tablet economico la casa che parla di continuo si sente. */
+    const ids = event?.detail?.entity_ids || [];
+    if (ids.length && !ids.some(eInVista)) return;
     disegna();
   });
   root.addEventListener?.("resize", () => disegna());

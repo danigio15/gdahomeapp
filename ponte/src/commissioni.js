@@ -145,6 +145,15 @@ const LICENZA = new Map([
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
+/* Le revisioni di una o piu' plance, e nient'altro.
+ *
+ * Un tablet a muro non perde mai il fuoco, e la plancia rilegge la
+ * configurazione quando lo riprende: una modifica fatta dal telefono arrivava
+ * sul tablet solo al riavvio. Chiedere lo scatto intero ogni pochi secondi
+ * vorrebbe dire centinaia di kB a giro, anche da fuori casa; questa risposta
+ * sono pochi byte, e lo scatto si chiede solo quando il numero e' cambiato. */
+const CONFIG_REVISIONI = "ponte/config/revisioni";
+const REVISIONI_AL_MASSIMO = 8;
 const CATALOGO = "dashboardmodern/integrations/catalog";
 const FOTO_ELENCO = "dashboardmodern/www/list";
 const FOTO_CARICA = "dashboardmodern/www/upload";
@@ -612,6 +621,7 @@ export class Commissioni {
     if (tipo === DIMMI_IL_DISPOSITIVO) return this._dimmiIlDispositivo(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
     if (tipo === REGISTRI) return this._registri(detto);
+    if (tipo === CONFIG_REVISIONI) return this._revisioni(detto, soloLaPrima);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE) {
       /* La configurazione di una plancia che all'app non si serve non le si
        * da' nemmeno da leggere o da scrivere: sarebbe la stessa plancia, per
@@ -1250,6 +1260,22 @@ export class Commissioni {
       this.registro.errore(`la licenza e' andata storta: ${errore?.message || errore}`);
       return no(id, "ponte_licenza", "non ha funzionato");
     }
+  }
+
+  _revisioni(detto, soloLaPrima = false) {
+    const id = detto?.id ?? null;
+    const cassetta = this.configurazione;
+    if (!cassetta) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    const chiesti = Array.isArray(detto?.profili) ? detto.profili : [PROFILO_PRINCIPALE];
+    const revisioni = {};
+    for (const profilo of chiesti.slice(0, REVISIONI_AL_MASSIMO)) {
+      if (!Configurazione.profiloBuono(profilo)) continue;
+      /* Con Base l'app vede la principale e basta: delle altre non si dice
+       * nemmeno il numero. */
+      if (soloLaPrima && profilo !== PROFILO_PRINCIPALE) continue;
+      revisioni[profilo] = cassetta.revisione(profilo);
+    }
+    return si(id, { revisioni });
   }
 
   async _configurazione(detto) {

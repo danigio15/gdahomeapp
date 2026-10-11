@@ -2042,3 +2042,43 @@ test("il telefono senza utente addosso amministra: il codice gli arriva", async 
   assert.equal(altrui.result.chiaveGestione, undefined);
   assert.equal(altrui.result.installatore, true, "e la voce invece sparisce");
 });
+
+/* Il tablet a muro chiede a che revisione sono le sue plance, ogni pochi
+ * secondi: la risposta sono numeri, e lo scatto si scarica solo se cambiano. */
+test("le revisioni delle plance si chiedono senza scaricare lo scatto", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-revisioni-"));
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+  assert.equal(con.riconosce({ type: "ponte/config/revisioni" }), true);
+
+  const prima = await con.rispondi({
+    id: 1,
+    type: "ponte/config/revisioni",
+    profili: ["primary", "tablet-cucina", "../fuori"],
+  });
+  assert.equal(prima.success, true);
+  assert.deepEqual(prima.result, { revisioni: { primary: 0, "tablet-cucina": 0 } });
+
+  await con.rispondi(
+    {
+      id: 2,
+      type: "dashboardmodern/config/set",
+      profile: "tablet-cucina",
+      snapshot: { values: { cd_muro: '{"attiva":true}' }, keys_revision: 1 },
+      expected_revision: 0,
+    },
+    { puoAmministrare: true },
+  );
+  const dopo = await con.rispondi({
+    id: 3,
+    type: "ponte/config/revisioni",
+    profili: ["primary", "tablet-cucina"],
+  });
+  assert.deepEqual(dopo.result, { revisioni: { primary: 0, "tablet-cucina": 1 } });
+  assert.equal(JSON.stringify(dopo).includes("cd_muro"), false, "niente valori, solo numeri");
+
+  rmSync(cartella, { recursive: true, force: true });
+});
