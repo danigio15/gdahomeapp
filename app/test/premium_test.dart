@@ -88,6 +88,7 @@ void main() {
     String? gettone,
     bool addonVecchio = false,
     bool conUnAltraAbbonata = false,
+    Duration attesa = const Duration(seconds: 20),
   }) async {
     late Collegamento collegamento;
     await tester.runAsync(() async {
@@ -120,6 +121,7 @@ void main() {
       collegamento = Collegamento(
         archivio: archivio,
         licenza: GestoreLicenza(chiave: chiaveDiProva),
+        attesaPerLaRicevuta: attesa,
       );
       await collegamento.apri();
     });
@@ -317,7 +319,12 @@ void main() {
   testWidgets('il codice regalo: il foglio, l\'errore, Annulla', (
     tester,
   ) async {
-    final collegamento = await casaSenzaFilo(tester);
+    /* Senza filo il regalo prova il centralino e poi aspetta la casa un poco:
+     * qui l'attesa e' corta, perche' la casa di prova non arriva mai. */
+    final collegamento = await casaSenzaFilo(
+      tester,
+      attesa: const Duration(milliseconds: 30),
+    );
     await mostra(
       tester,
       SchermataPremium(collegamento: collegamento, sulWeb: false),
@@ -332,7 +339,7 @@ void main() {
     /* Senza filo la casa non risponde: il foglio lo dice e resta aperto. */
     await tester.runAsync(() async {
       await tester.tap(find.byKey(const Key('riscatta-codice')));
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await Future<void>.delayed(const Duration(milliseconds: 400));
     });
     await tester.pump();
     expect(find.text('Codice regalo'), findsOneWidget);

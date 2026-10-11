@@ -758,6 +758,52 @@ void main() {
     });
 
     test(
+      'un codice regalo col filo non ancora aperto lo porta il '
+      'centralino, anche se l\'app non ha ancora deciso di essere fuori',
+      () async {
+        /* «Codice regalo inserito in app ma non va»: la pagina Premium aperta
+       * prima che il filo rispondesse diceva «la casa non è collegata». */
+        final centralino = IndirizzoDelCentralino.leggi(
+          'wss://centralino.esempio.it',
+        )!;
+        final casa = await archivio.aggiungi(
+          nome: 'Casa',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          casaAlCentralino: casaDiProva,
+          centralino: centralino,
+          inCasa: IndirizzoDelPonte.leggi('192.168.1.50')!,
+        );
+        await archivio.segnaIlGettone(casa.id, '');
+        final gettone = await firmaUnGettone(origine: 'regalo');
+        var consegnati = 0;
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: sondaChe({}),
+          licenza: GestoreLicenza(chiave: chiaveDiProva),
+          attesaPerLaRicevuta: const Duration(milliseconds: 300),
+          consegnaAlCentralino: (_, _) async {
+            consegnati += 1;
+            return (
+              200,
+              jsonEncode({
+                'gdahome': {'attiva': true, 'origine': 'regalo'},
+                'gettoni': {'gdahome': gettone},
+              }),
+            );
+          },
+        );
+        /* Il filo non si e' mai aperto: l'app non sa ancora dove si trova. */
+        expect(collegamento.fuoriCasaSenzaPremium, isFalse);
+        await collegamento.riscatta('GDA-86DA-RSDW-WAFT');
+        expect(consegnati, 1);
+        /* La casa ha il suo gettone Premium: il regalo e' arrivato. */
+        expect(archivio.quella(casa.id)!.gettone, gettone);
+      },
+    );
+
+    test(
       'un codice regalo già usato, da fuori, lo dice come dal filo',
       () async {
         final casa = await archivio.aggiungi(

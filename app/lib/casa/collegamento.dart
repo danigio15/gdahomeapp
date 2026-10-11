@@ -520,9 +520,20 @@ class Collegamento {
   /// come prima che la casa non e' collegata.
   ///
   /// Solleva [LicenzaRifiutata], con la frase da mostrare.
+  ///
+  /// «Codice regalo inserito in app ma non va»: la strada del centralino si
+  /// provava solo quando l'app aveva gia' concluso di essere fuori casa senza
+  /// Premium. Con il filo non ancora aperto per qualunque altra ragione — la
+  /// pagina Premium aperta prima che la casa rispondesse, un cambio di rete,
+  /// un filo che si sta riaprendo — il regalo si fermava su «la casa non e'
+  /// collegata». Adesso, se il filo non c'e', il regalo lo porta il
+  /// centralino; se nemmeno lui ci riesce, si bussa alla casa e la si aspetta
+  /// un poco, come per la ricevuta di chi compra.
   Future<void> riscatta(String codice) async {
-    if (!_pronta && _fuoriSenzaPremium) {
+    if (!_pronta) {
       if (await _ilRegaloDalCentralino(codice)) return;
+      unawaited(apri(forza: true));
+      await _aspettaLaCasa(attesaPerLaRicevuta);
     }
     final (filo, casa) = _perLaLicenza();
     await licenza.riscatta(codice, filo, casa, archivio);

@@ -57,6 +57,11 @@ da toccare che si illuminano, i climatizzatori schede arancio quando scaldano
 e azzurre quando raffrescano. Negli aggiornamenti ogni riga ha il logo, le
 versioni, le note e il tasto «Installa».
 
+**Codice regalo:** si riscatta anche quando l'app non ha ancora aperto il
+collegamento con la casa: il codice lo porta il server di gdahome, e se nemmeno
+lui ci riesce l'app aspetta la casa qualche secondo invece di dire subito che
+non è collegata.
+
 **Stanze:** in cima alla stanza temperatura e umidità sono arrotondate
 («24,0°», «62%») e non si accavallano più.
 
