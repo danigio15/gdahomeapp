@@ -21,8 +21,8 @@ export default Object.freeze({
     "Es wird eine lesbare Entität benötigt: sensor.*, binary_sensor.*, number.*, input_number oder input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "Eine Kachel auf der Startseite für jede beliebige Entität, auch aus einem Bereich, den es nicht gibt: der Salzstand der Enthärtungsanlage, der Fühler im Rack, die Brunnenpumpe. Zusammen fasst die Kachel „Hervorgehoben“ sie in einer Zeile zusammen und zeigt sie geöffnet als Karten; mit „Eigene Kachel“ bekommt jede ihre eigene, mit dem Namen und dem Symbol, das du ihr gibst.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "Oberhalb der Schwelle ändert die Energie-Kachel auf der Startseite ihre Farbe: Bernstein zum Beobachten, Rot bei Überlast. Ein leeres Feld wird übersprungen.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "Über der Schwelle erscheint auf Home ein Überlast-Hinweis und die Energie-Kachel ändert ihre Farbe: Gelb zum Im-Auge-Behalten, Rot, wenn es gleich auslöst. Lass ein Feld leer, um es nicht zu nutzen.",
   "Add reading": "Messwert hinzufügen",
   "Add to queue": "Zur Warteschlange hinzufügen",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2654,6 +2654,8 @@ export default Object.freeze({
   "Charge without sun too": "Auch ohne Sonne laden",
   "How it charges": "Wie sie lädt",
   "Only applies in Smart: not in effect here": "Gilt nur in Smart: hier ohne Wirkung",
+  "ENDS AT ${ora}": "ENDE UM ${ora}",
+  "ENDS TOMORROW AT ${ora}": "ENDE MORGEN UM ${ora}",
   "Open Assist": "Assist öffnen",
   "Open GitHub": "GitHub öffnen",
   "Open all": "Alle öffnen",

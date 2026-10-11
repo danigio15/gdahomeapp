@@ -21,8 +21,8 @@ export default Object.freeze({
     "Okunabilir bir varlık gerekir: sensor.*, binary_sensor.*, number.*, input_number veya input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "Ana ekranda herhangi bir varlık için bir karo — var olmayan bir bölümden bile olsa: yumuşatıcının tuz seviyesi, kabinetteki sonda, kuyu pompası. Birlikte tutulduğunda «Öne çıkanlar» karosu onları tek satırda özetler ve açıldığında kart olarak gösterir; «Kendi karosu» ile her biri kendi karosuna kavuşur, ona verdiğiniz ad ve çizimle.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "Eşiğin üzerinde Ana ekrandaki Enerji kartı renk değiştirir: göz kulak olmak için kehribar, aşırı yük için kırmızı. Kullanmamak için bir alanı boş bırakın.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "Eşiğin üzerinde Ana sayfada aşırı yük uyarısı çıkar ve Enerji kutucuğunun rengi değişir: göz kulak olmak için kehribar, atmak üzereyken kırmızı. Kullanmamak için bir alanı boş bırakın.",
   "Add reading": "Ölçüm ekle",
   "Add to queue": "Sıraya ekle",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2639,6 +2639,8 @@ export default Object.freeze({
   "Charge without sun too": "Güneş olmadan da şarj et",
   "How it charges": "Nasıl şarj oluyor",
   "Only applies in Smart: not in effect here": "Yalnızca Akıllı modda geçerli: burada etkisiz",
+  "ENDS AT ${ora}": "${ora} SAATİNDE BİTER",
+  "ENDS TOMORROW AT ${ora}": "YARIN ${ora} SAATİNDE BİTER",
   "Open Assist": "Assist'i aç",
   "Open GitHub": "GitHub'ı aç",
   "Open all": "Tümünü aç",

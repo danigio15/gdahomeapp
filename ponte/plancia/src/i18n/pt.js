@@ -21,8 +21,8 @@ export default Object.freeze({
     "É precisa uma entidade que se leia: sensor.*, binary_sensor.*, number.*, input_number ou input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "Uma tessela no Início para qualquer entidade, mesmo de uma secção que não existe: o nível de sal do descalcificador, a sonda do bastidor, a bomba do poço. Juntas, a tessela «Em destaque» resume-as numa linha e, aberta, mostra-as como cartões; com «Tessela própria» cada uma tem a sua, com o nome e o desenho que lhe deres.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "Acima do limite, o cartão Energia no Início muda de cor: âmbar para ficar de olho, vermelho para sobrecarga. Deixa um campo vazio para o ignorar.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "Acima do limite aparece no Início um aviso de sobrecarga e o cartão Energia muda de cor: âmbar para ficar de olho, vermelho quando está prestes a disparar. Deixe um campo vazio para não o usar.",
   "Add reading": "Adicionar leitura",
   "Add to queue": "Adicionar à fila",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2651,6 +2651,8 @@ export default Object.freeze({
   "Charge without sun too": "Carregar também sem sol",
   "How it charges": "Como carrega",
   "Only applies in Smart: not in effect here": "Só vale no Inteligente: aqui não conta",
+  "ENDS AT ${ora}": "TERMINA ÀS ${ora}",
+  "ENDS TOMORROW AT ${ora}": "TERMINA AMANHÃ ÀS ${ora}",
   "Open Assist": "Abrir o Assist",
   "Open GitHub": "Abrir o GitHub",
   "Open all": "Abrir todas",

@@ -21,8 +21,8 @@ export default Object.freeze({
     "Er is een leesbare entiteit nodig: sensor.*, binary_sensor.*, number.*, input_number of input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "Een tegel op Home voor welke entiteit dan ook, ook uit een sectie die niet bestaat: het zoutniveau van de waterontharder, de sonde in het rack, de putpomp. Samen vat de tegel “Uitgelicht” ze in één regel samen en toont ze, geopend, als kaartjes; met “Eigen tegel” krijgt elke entiteit er een van zichzelf, met de naam en het pictogram die jij geeft.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "Boven de drempel verandert de Energie-tegel op Home van kleur: amber om in de gaten te houden, rood bij overbelasting. Laat een veld leeg om het over te slaan.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "Boven de drempel verschijnt op Home een overbelastingsmelding en verandert de Energie-tegel van kleur: oranje om in de gaten te houden, rood als hij op het punt staat uit te slaan. Laat een veld leeg om het niet te gebruiken.",
   "Add reading": "Meetwaarde toevoegen",
   "Add to queue": "Aan de wachtrij toevoegen",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2648,6 +2648,8 @@ export default Object.freeze({
   "Charge without sun too": "Ook zonder zon laden",
   "How it charges": "Hoe hij laadt",
   "Only applies in Smart: not in effect here": "Geldt alleen in Slim: hier niet van toepassing",
+  "ENDS AT ${ora}": "KLAAR OM ${ora}",
+  "ENDS TOMORROW AT ${ora}": "MORGEN KLAAR OM ${ora}",
   "Open Assist": "Assist openen",
   "Open GitHub": "GitHub openen",
   "Open all": "Alles openen",

@@ -21,8 +21,8 @@ export default Object.freeze({
     "読み取れるエンティティが必要です：sensor.*、binary_sensor.*、number.*、input_number、input_text。",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "どんなエンティティでもホームにタイルを置けます。存在しないセクションのものでもかまいません — 軟水器の塩の残量、ラックのセンサー、井戸のポンプ。まとめておくと「注目」タイルが一行に要約し、開くとカードとして並べます。「専用タイル」にすれば、それぞれが自分のタイルを持ち、名前も絵柄も自分で決められます。",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "しきい値を超えるとホームのエネルギーカードの色が変わります。注意はアンバー、過負荷は赤です。使わない項目は空欄のままにしてください。",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "しきい値を超えるとホームに過負荷の警告が表示され、エネルギーのタイルの色が変わります：注意は琥珀色、遮断寸前は赤。使わない欄は空欄のままにしてください。",
   "Add reading": "計測値を追加",
   "Add to queue": "キューに追加",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2636,6 +2636,8 @@ export default Object.freeze({
   "Charge without sun too": "日光がなくても充電",
   "How it charges": "充電のしかた",
   "Only applies in Smart: not in effect here": "スマートでのみ有効：ここでは無効",
+  "ENDS AT ${ora}": "${ora} に終了",
+  "ENDS TOMORROW AT ${ora}": "明日 ${ora} に終了",
   "Open Assist": "Assist を開く",
   "Open GitHub": "GitHub を開く",
   "Open all": "すべて開く",

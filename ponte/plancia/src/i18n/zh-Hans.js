@@ -21,8 +21,8 @@ export default Object.freeze({
     "需要一个可读取的实体：sensor.*、binary_sensor.*、number.*、input_number 或 input_text。",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "可以为任何实体在首页放一块磁贴，哪怕它属于一个并不存在的板块：软水机的盐位、机柜的探头、水井的水泵。放在一起时，「重点关注」磁贴把它们汇总成一行，打开后以卡片形式展示；选择「单独成贴」，每一个都有自己的磁贴，名称和图案由你决定。",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "超过阈值后，首页的能源磁贴会变色：琥珀色表示留意，红色表示过载。留空即不启用该项。",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "超过阈值时，主页会出现过载提醒，能源卡片也会变色：琥珀色表示需要留意，红色表示即将跳闸。留空某个字段即不使用它。",
   "Add reading": "添加读数",
   "Add to queue": "加入播放队列",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2596,6 +2596,8 @@ export default Object.freeze({
   "Charge without sun too": "没有阳光也充电",
   "How it charges": "充电方式",
   "Only applies in Smart: not in effect here": "仅在智能模式下生效：此处不适用",
+  "ENDS AT ${ora}": "${ora} 结束",
+  "ENDS TOMORROW AT ${ora}": "明天 ${ora} 结束",
   "Open Assist": "打开 Assist",
   "Open GitHub": "打开 GitHub",
   "Open all": "全部打开",

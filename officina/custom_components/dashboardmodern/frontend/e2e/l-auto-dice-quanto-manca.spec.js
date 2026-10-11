@@ -83,7 +83,15 @@ test("il tempo di fine si calcola anche se la colonnina non parla la norma", asy
   test.setTimeout(120_000);
   await avvia(page, testInfo);
   /* Da 30 a 80 su una batteria da 40 kWh sono 20 kWh: a 10 kW, due ore. */
-  await expect(page.locator("#page-ev .v-ev-remain").first()).toHaveText("2H 0M RIM.");
+  const casella = page.locator("#page-ev .v-ev-remain").first();
+  await expect(casella).toContainText("2H 0M RIM.");
+  /* Sotto, l'ora in cui finisce: «Nel tempo rimanente metti l'orario di fine». */
+  await expect(casella.locator(".dm-ev-fine")).toHaveText(/^FINE (DOMANI )?ALLE \d{1,2}:\d{2}$/);
+  if (process.env.DM_FOTO) {
+    await casella.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: `${process.env.DM_FOTO}/auto-fine-carica.png` });
+  }
   /* E nel popup c'è anche l'ora dell'orologio. */
   await page.locator("#lm-hero-card").click();
   await expect(page.locator("#v-ev-remain-popup")).toContainText("2H 0M RIM.");
@@ -94,7 +102,7 @@ test("i kWh della sessione escono, nell'unità giusta", async ({ page }, testInf
   test.setTimeout(120_000);
   await avvia(page, testInfo);
   /* 4200 Wh sono 4,2 kWh — non 4200. */
-  await expect(page.locator("#page-ev .v-ev-energy-all").first()).toHaveText("4.2 kWh");
+  await expect(page.locator("#page-ev .v-ev-energy-all").first()).toHaveText("4,20 kWh");
 });
 
 test("il menù della percentuale è quello dell'entità", async ({ page }, testInfo) => {

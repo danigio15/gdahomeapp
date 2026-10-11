@@ -129,8 +129,8 @@ function schedaMarkup(soglia) {
     <div class="ed-sec-title">⚠️ ${esc(t("Soglia di potenza", "Power threshold"))}</div>
     <div class="ed-hint">${esc(
       t(
-        "Sopra la soglia la tessera Energia in Home cambia colore: ambra per tenerla d'occhio, rossa per il sovraccarico. Lascia vuoto un campo per non usarlo.",
-        "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.",
+        "Sopra la soglia in Home compare l'avviso di sovraccarico e la tessera Energia cambia colore: ambra per tenerla d'occhio, rossa quando sta per saltare. Lascia vuoto un campo per non usarlo.",
+        "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.",
       ),
     )}</div>
     <div class="dm-soglia-scelte" role="group" aria-label="${esc(t("Carico da sorvegliare", "Load to watch"))}">
@@ -241,10 +241,13 @@ function ensureStriscia() {
  * scorre: si vede se la si cerca. Un contatore che sta per saltare non e' una
  * cosa da cercare.
  *
- * Quindi in Home, e SOLO sul rosso — l'ambra e' un «occhio», il rosso e'
- * «adesso salta» — sopra ogni altra cosa compare un riquadro che si vede da
- * lontano: il disegno del nostro catalogo, la parola, i due numeri grandi, e
- * un alone che respira. Si tocca e porta all'Energia, dove c'e' il resto.
+ * Quindi in Home, sopra ogni altra cosa, compare un riquadro che si vede da
+ * lontano. Prima solo sul rosso; ma «non esce piu' l'avviso di sovraccarico»
+ * con la casa a 5,91 kW e la soglia ambra a 4,50: chi ha scritto una sola
+ * soglia l'ha scritta nell'ambra, e da quel momento l'avviso in Home non
+ * usciva mai. Adesso esce su tutte e due, col tono della soglia passata: in
+ * ambra fermo, in rosso col respiro: il disegno del nostro catalogo, la
+ * parola e i due numeri grandi. Si tocca e porta all'Energia, dove c'e' il resto.
  *
  * Non ha un tasto per chiuderla, ed e' voluto: se ne va da sola quando il
  * carico rientra, che e' l'unico momento in cui non serve piu'. Una chiusura a
@@ -289,11 +292,12 @@ function ensureAllertaInHome() {
     return;
   }
   const verdetto = livelloDellaPotenza(soglia, lettureDiCasa());
-  if (verdetto.livello !== LIVELLO_ROSSA) {
+  if (verdetto.livello === LIVELLO_QUIETE) {
     gia?.remove();
     return;
   }
   const allerta = gia || doc.createElement("button");
+  allerta.dataset.livello = verdetto.livello === LIVELLO_ROSSA ? "rossa" : "ambra";
   if (!gia) {
     allerta.id = ID_ALLERTA;
     allerta.type = "button";
@@ -500,6 +504,14 @@ function installStyles() {
         background:color-mix(in srgb,#dc2626 14%,transparent);color:#dc2626}
       .dm-soglia-allerta .dm-casa-testa{color:#b91c1c}
       .dm-soglia-allerta .dm-casa-coda{color:#dc2626}
+      /* Sull'ambra lo stesso riquadro, nel giallo della fascia dell'Energia e
+         senza il respiro: si legge, ma non dice «adesso salta». */
+      .dm-soglia-allerta[data-livello="ambra"]{
+        border-color:color-mix(in srgb,#f59e0b 50%,transparent);animation:none}
+      .dm-soglia-allerta[data-livello="ambra"] .dm-casa-chip{
+        background:color-mix(in srgb,#f59e0b 16%,transparent);color:#d97706}
+      .dm-soglia-allerta[data-livello="ambra"] .dm-casa-testa{color:#b45309}
+      .dm-soglia-allerta[data-livello="ambra"] .dm-casa-coda{color:#d97706}
       @keyframes dm-soglia-respiro{
         0%,100%{box-shadow:0 6px 18px -12px rgba(15,23,42,.28)}
         50%{box-shadow:0 6px 18px -12px rgba(15,23,42,.28),

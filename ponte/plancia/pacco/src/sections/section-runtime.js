@@ -3407,6 +3407,8 @@ var SOURCE_INDEX = Object.freeze({
   "fine alle": "done at",
   "fine alle ${ora}": "done at ${ora}",
   "Fine alle ${ora}": "Done at ${ora}",
+  "FINE ALLE ${ora}": "ENDS AT ${ora}",
+  "FINE DOMANI ALLE ${ora}": "ENDS TOMORROW AT ${ora}",
   "Finestra": "Window",
   "Finestra / Tapparella": "Window / Shutter",
   "finestra aperta": "window open",
@@ -5654,7 +5656,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sono mostrate solo le stanze che contengono almeno una luce. Modifica apre tutti i dati della luce, non una finestra del browser. Le pastiglie dicono cosa sa fare ogni luce — RGB, bianco regolabile, dimmer o solo acceso/spento — ed è quello che comanda i controlli nel popup.": "Only rooms containing a light are shown. Edit opens all light fields, not a browser prompt. The pills say what each light can do — RGB, tunable white, dimmer or plain on/off — and that is what drives the controls in the popup.",
   "Sono otto: la barra non ne tiene di più senza diventare illeggibile.": "That is eight: the bar cannot hold more without becoming unreadable.",
   "sopra la soglia": "above the threshold",
-  "Sopra la soglia la tessera Energia in Home cambia colore: ambra per tenerla d'occhio, rossa per il sovraccarico. Lascia vuoto un campo per non usarlo.": "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.",
+  "Sopra la soglia in Home compare l'avviso di sovraccarico e la tessera Energia cambia colore: ambra per tenerla d'occhio, rossa quando sta per saltare. Lascia vuoto un campo per non usarlo.": "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.",
   "Sopra questa potenza = In funzione. Per elettrodomestici non-wifi imposta ~5 W.": "Above this power = Running. For non-wifi appliances set ~5 W.",
   "Sorgente": "Source",
   "Sorgente del prezzo di acquisto": "Purchase price source",
@@ -26004,11 +26006,41 @@ function paroleDelTempo(esito2) {
     return `${oreEMinuti(esito2.minuti)} ${t("RIM.", "LEFT")}`;
   return t("IN ATTESA", "WAITING");
 }
+function fineInParole(esito2, adesso = Date.now()) {
+  if (esito2?.stato !== "carica" || esito2.minuti == null) return "";
+  const fine = oraDiArrivo(esito2.minuti, adesso);
+  if (!fine) return "";
+  const oggi = new Date(adesso);
+  const domani = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + 1);
+  const dopodomani = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + 2);
+  const ora3 = oraInParole(fine);
+  if (fine < domani) return t(`FINE ALLE ${ora3}`, `ENDS AT ${ora3}`);
+  if (fine < dopodomani) return t(`FINE DOMANI ALLE ${ora3}`, `ENDS TOMORROW AT ${ora3}`);
+  return "";
+}
+function scriviNellaCasella(nodo2, parole4, fine) {
+  const primo = nodo2.firstChild;
+  if (primo?.nodeType !== 3 || primo.textContent !== parole4) {
+    nodo2.replaceChildren(doc.createTextNode(parole4));
+  }
+  let sotto = nodo2.querySelector(".dm-ev-fine");
+  if (!fine) {
+    sotto?.remove();
+    return;
+  }
+  if (!sotto) {
+    sotto = doc.createElement("span");
+    sotto.className = "dm-ev-fine";
+    nodo2.append(sotto);
+  }
+  if (sotto.textContent !== fine) sotto.textContent = fine;
+}
 function scriviIlTempo() {
   const esito2 = quantoManca2();
   const parole4 = paroleDelTempo(esito2);
+  const fine = fineInParole(esito2);
   for (const nodo2 of doc?.querySelectorAll?.(".v-ev-remain") || [])
-    if (nodo2.textContent !== parole4) nodo2.textContent = parole4;
+    scriviNellaCasella(nodo2, parole4, fine);
   const popup = doc?.getElementById?.("v-ev-remain-popup");
   if (!popup) return;
   const ora3 = esito2.stato === "carica" ? oraInParole(oraDiArrivo(esito2.minuti)) : "";
@@ -26070,6 +26102,7 @@ function rivesti() {
 }
 var STILE3 = `
 #v-ev-remain-popup .dm-ev-verso{opacity:.75;font-weight:700}
+.v-ev-remain .dm-ev-fine{display:block;margin-top:2px;font-size:max(11px,.5em);line-height:1.2;letter-spacing:.06em;opacity:.7}
 `;
 function installPopupAutoRacconta() {
   if (!doc || state23.installed) return;
@@ -39549,7 +39582,7 @@ function daDoveInParole(dove) {
   if (dove === "casa") return t("verso la casa", "to the house");
   return "";
 }
-function fineInParole(verso2, minuti) {
+function fineInParole2(verso2, minuti) {
   const quanto = tempoInParole(minuti);
   if (!quanto) return "";
   return verso2 === "carica" ? t(`piena fra ${quanto}`, `full in ${quanto}`) : t(`vuota fra ${quanto}`, `empty in ${quanto}`);
@@ -39611,7 +39644,7 @@ function testaDellAccumulo(vista2) {
     stato: come.verso || "riposo",
     grande: versoInParole(come.verso),
     soc: come.soc,
-    nomi: [passa, fineInParole(come.verso, come.minuti)].filter(Boolean).join(" · "),
+    nomi: [passa, fineInParole2(come.verso, come.minuti)].filter(Boolean).join(" · "),
     sotto: [energia, pacchiInParole(pacchi), come.muti.length ? quantiMuti(come.muti.length) : ""].filter(Boolean).join(" · "),
     avvisi
   };
@@ -39772,7 +39805,7 @@ function tesseraDellAccumulo(vista2) {
     value: come.soc === null ? "—" : `${percento3(come.soc)}%`,
     caption: [
       [versoInParole(come.verso), passa].filter(Boolean).join(" "),
-      fineInParole(come.verso, come.minuti),
+      fineInParole2(come.verso, come.minuti),
       ...come.sbilanciati.map((pacco) => `${pacco.name} ${deltaInParole(pacco.delta)}`)
     ].filter(Boolean).join(" · "),
     ring: come.soc === null ? null : percento3(come.soc),
@@ -92106,8 +92139,8 @@ function schedaMarkup8(soglia2) {
     <div class="ed-sec-title">⚠️ ${esc(t("Soglia di potenza", "Power threshold"))}</div>
     <div class="ed-hint">${esc(
     t(
-      "Sopra la soglia la tessera Energia in Home cambia colore: ambra per tenerla d'occhio, rossa per il sovraccarico. Lascia vuoto un campo per non usarlo.",
-      "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it."
+      "Sopra la soglia in Home compare l'avviso di sovraccarico e la tessera Energia cambia colore: ambra per tenerla d'occhio, rossa quando sta per saltare. Lascia vuoto un campo per non usarlo.",
+      "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it."
     )
   )}</div>
     <div class="dm-soglia-scelte" role="group" aria-label="${esc(t("Carico da sorvegliare", "Load to watch"))}">
@@ -92199,11 +92232,12 @@ function ensureAllertaInHome() {
     return;
   }
   const verdetto = livelloDellaPotenza(soglia2, lettureDiCasa());
-  if (verdetto.livello !== LIVELLO_ROSSA) {
+  if (verdetto.livello === LIVELLO_QUIETE) {
     gia?.remove();
     return;
   }
   const allerta = gia || doc.createElement("button");
+  allerta.dataset.livello = verdetto.livello === LIVELLO_ROSSA ? "rossa" : "ambra";
   if (!gia) {
     allerta.id = ID_ALLERTA;
     allerta.type = "button";
@@ -92357,6 +92391,14 @@ function installStyles55() {
         background:color-mix(in srgb,#dc2626 14%,transparent);color:#dc2626}
       .dm-soglia-allerta .dm-casa-testa{color:#b91c1c}
       .dm-soglia-allerta .dm-casa-coda{color:#dc2626}
+      /* Sull'ambra lo stesso riquadro, nel giallo della fascia dell'Energia e
+         senza il respiro: si legge, ma non dice «adesso salta». */
+      .dm-soglia-allerta[data-livello="ambra"]{
+        border-color:color-mix(in srgb,#f59e0b 50%,transparent);animation:none}
+      .dm-soglia-allerta[data-livello="ambra"] .dm-casa-chip{
+        background:color-mix(in srgb,#f59e0b 16%,transparent);color:#d97706}
+      .dm-soglia-allerta[data-livello="ambra"] .dm-casa-testa{color:#b45309}
+      .dm-soglia-allerta[data-livello="ambra"] .dm-casa-coda{color:#d97706}
       @keyframes dm-soglia-respiro{
         0%,100%{box-shadow:0 6px 18px -12px rgba(15,23,42,.28)}
         50%{box-shadow:0 6px 18px -12px rgba(15,23,42,.28),

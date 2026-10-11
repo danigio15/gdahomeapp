@@ -21,8 +21,8 @@ export default Object.freeze({
     "읽을 수 있는 엔티티가 필요합니다: sensor.*, binary_sensor.*, number.*, input_number 또는 input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "홈에 어떤 엔터티든 타일로 놓을 수 있습니다. 존재하지 않는 섹션의 것이어도 됩니다 — 연수기의 소금 잔량, 랙의 센서, 우물 펌프. 함께 두면 「주목」 타일이 한 줄로 요약하고, 열면 카드로 보여 줍니다. 「자기 타일」을 고르면 각각 자기 타일을 갖고, 이름과 그림도 직접 정합니다.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "임계값을 넘으면 홈의 에너지 타일 색이 바뀝니다. 주의는 호박색, 과부하는 빨간색입니다. 사용하지 않을 항목은 비워 두세요.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "임계값을 넘으면 홈에 과부하 알림이 표시되고 에너지 타일 색이 바뀝니다: 주의는 호박색, 차단 직전은 빨간색. 사용하지 않을 칸은 비워 두세요.",
   "Add reading": "측정값 추가",
   "Add to queue": "대기열에 추가",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2630,6 +2630,8 @@ export default Object.freeze({
   "Charge without sun too": "햇빛 없이도 충전",
   "How it charges": "충전 방식",
   "Only applies in Smart: not in effect here": "스마트 모드에서만 적용: 여기서는 해당 없음",
+  "ENDS AT ${ora}": "${ora}에 종료",
+  "ENDS TOMORROW AT ${ora}": "내일 ${ora}에 종료",
   "Open Assist": "Assist 열기",
   "Open GitHub": "GitHub 열기",
   "Open all": "전체 열기",

@@ -21,8 +21,8 @@ export default Object.freeze({
     "Нужна сущность, которую можно читать: sensor.*, binary_sensor.*, number.*, input_number или input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "Плитка на главной для любой сущности, даже из раздела, которого нет: уровень соли в умягчителе, датчик в стойке, насос в скважине. Вместе плитка «Избранное» сводит их в одну строку, а при открытии показывает карточками; с параметром «Отдельная плитка» у каждой появляется своя, с тем именем и рисунком, которые вы ей дадите.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "Выше порога плитка «Энергия» на главном экране меняет цвет: янтарный — приглядеться, красный — перегрузка. Оставьте поле пустым, чтобы его не использовать.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "Выше порога на главной появляется предупреждение о перегрузке, а плитка «Энергия» меняет цвет: янтарный — следить, красный — вот-вот выбьет. Оставьте поле пустым, чтобы не использовать его.",
   "Add reading": "Добавить показание",
   "Add to queue": "Добавить в очередь",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2647,6 +2647,8 @@ export default Object.freeze({
   "How it charges": "Как заряжается",
   "Only applies in Smart: not in effect here":
     "Действует только в режиме «Умный»: здесь не применяется",
+  "ENDS AT ${ora}": "ЗАКОНЧИТ В ${ora}",
+  "ENDS TOMORROW AT ${ora}": "ЗАКОНЧИТ ЗАВТРА В ${ora}",
   "Open Assist": "Открыть Assist",
   "Open GitHub": "Открыть GitHub",
   "Open all": "Открыть все",

@@ -21,8 +21,8 @@ export default Object.freeze({
     "Hace falta una entidad que se pueda leer: sensor.*, binary_sensor.*, number.*, input_number o input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "Una tarjeta en Inicio para cualquier entidad, incluso de una sección que no existe: el nivel de sal del descalcificador, la sonda del rack, la bomba del pozo. Juntas, la tarjeta «Destacados» las resume en una línea y, al abrirla, las muestra como fichas; con «Tarjeta propia» cada una tiene la suya, con el nombre y el dibujo que le des.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "Por encima del umbral, la tarjeta Energía de Inicio cambia de color: ámbar para vigilarla, rojo para la sobrecarga. Deja un campo vacío para no usarlo.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "Por encima del umbral aparece en Inicio un aviso de sobrecarga y la tarjeta Energía cambia de color: ámbar para vigilarla, rojo cuando está a punto de saltar. Deja un campo vacío para no usarlo.",
   "Add reading": "Añadir lectura",
   "Add to queue": "Añadir a la cola",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2648,6 +2648,8 @@ export default Object.freeze({
   "Charge without sun too": "Cargar también sin sol",
   "How it charges": "Cómo carga",
   "Only applies in Smart: not in effect here": "Solo vale en Inteligente: aquí no cuenta",
+  "ENDS AT ${ora}": "TERMINA A LAS ${ora}",
+  "ENDS TOMORROW AT ${ora}": "TERMINA MAÑANA A LAS ${ora}",
   "Open Assist": "Abrir Assist",
   "Open GitHub": "Abrir GitHub",
   "Open all": "Abrir todas",

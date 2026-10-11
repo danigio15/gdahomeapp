@@ -21,8 +21,8 @@ export default Object.freeze({
     "पढ़ी जा सकने वाली एंटिटी चाहिए: sensor.*, binary_sensor.*, number.*, input_number या input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "होम पर किसी भी एंटिटी के लिए एक टाइल, भले ही वह किसी ऐसे सेक्शन की हो जो मौजूद ही नहीं: वाटर सॉफ़्नर में नमक का स्तर, रैक का सेंसर, कुएँ का पंप। एक साथ रखने पर «विशेष» टाइल उन्हें एक पंक्ति में समेट देती है और खोलने पर कार्ड के रूप में दिखाती है; «अपनी अलग टाइल» चुनने पर हर एक को अपनी टाइल मिलती है, उस नाम और चित्र के साथ जो आप दें।",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "सीमा से ऊपर होम पर ऊर्जा टाइल का रंग बदल जाता है: नज़र रखने के लिए अंबर, अधिभार के लिए लाल। किसी फ़ील्ड को छोड़ने के लिए उसे ख़ाली रखें।",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "सीमा से ऊपर होम पर ओवरलोड चेतावनी दिखती है और ऊर्जा टाइल का रंग बदलता है: नज़र रखने के लिए एम्बर, ट्रिप होने वाला हो तो लाल। किसी फ़ील्ड को उपयोग न करने के लिए खाली छोड़ें।",
   "Add reading": "रीडिंग जोड़ें",
   "Add to queue": "कतार में जोड़ें",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2629,6 +2629,8 @@ export default Object.freeze({
   "Charge without sun too": "धूप के बिना भी चार्ज करें",
   "How it charges": "यह कैसे चार्ज होती है",
   "Only applies in Smart: not in effect here": "केवल स्मार्ट में लागू: यहाँ प्रभावी नहीं",
+  "ENDS AT ${ora}": "${ora} बजे समाप्त",
+  "ENDS TOMORROW AT ${ora}": "कल ${ora} बजे समाप्त",
   "Open Assist": "Assist खोलें",
   "Open GitHub": "GitHub खोलें",
   "Open all": "सब खोलें",

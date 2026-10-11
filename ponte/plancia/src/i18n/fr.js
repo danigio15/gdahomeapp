@@ -21,8 +21,8 @@ export default Object.freeze({
     "Il faut une entité qui se lit : sensor.*, binary_sensor.*, number.*, input_number ou input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "Une tuile sur l'Accueil pour n'importe quelle entité, même d'une section qui n'existe pas : le niveau de sel de l'adoucisseur, la sonde du rack, la pompe du puits. Ensemble, la tuile « En vedette » les résume en une ligne et, ouverte, les montre en cartes ; avec « Tuile à elle seule », chacune a la sienne, avec le nom et le dessin que tu lui donnes.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "Au-delà du seuil, la tuile Énergie de l'accueil change de couleur : ambre pour la surveiller, rouge pour la surcharge. Laisse un champ vide pour ne pas l'utiliser.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "Au-dessus du seuil, une alerte de surcharge apparaît sur l'accueil et la tuile Énergie change de couleur : ambre pour la surveiller, rouge quand ça va disjoncter. Laisse un champ vide pour ne pas l'utiliser.",
   "Add reading": "Ajouter une mesure",
   "Add to queue": "Ajouter à la file d'attente",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2660,6 +2660,8 @@ export default Object.freeze({
   "Charge without sun too": "Charger aussi sans soleil",
   "How it charges": "Comment elle charge",
   "Only applies in Smart: not in effect here": "Ne vaut qu'en Intelligent : sans effet ici",
+  "ENDS AT ${ora}": "FIN À ${ora}",
+  "ENDS TOMORROW AT ${ora}": "FIN DEMAIN À ${ora}",
   "Open Assist": "Ouvrir Assist",
   "Open GitHub": "Ouvrir GitHub",
   "Open all": "Tout ouvrir",

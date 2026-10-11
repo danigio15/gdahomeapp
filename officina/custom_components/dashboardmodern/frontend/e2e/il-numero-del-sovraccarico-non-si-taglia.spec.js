@@ -86,3 +86,37 @@ test("la misura del sovraccarico resta intera alle larghezze dei telefoni", asyn
   });
   expect(larghezze.pastiglia).toBeLessThan(larghezze.corsia);
 });
+
+/* «Non esce più l'avviso di sovraccarico»: casa a 5,91 kW, una sola soglia
+ * scritta, l'ambra a 4,50. L'avviso in Home usciva solo sul rosso, e senza
+ * rossa non usciva mai. Adesso esce anche sull'ambra, nel suo giallo. */
+test("con la sola soglia ambra l'avviso in Home esce, giallo e fermo", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(120_000);
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true);
+  await page.evaluate(() => {
+    const mappa = { "dm.energy_potenza_consumo_casa": "sensor.casa_w" };
+    localStorage.setItem("cd_entity_overrides", JSON.stringify(mappa));
+    window.cdApplyCanonicalOverrides?.(mappa);
+    localStorage.setItem("cd_energia_soglia", JSON.stringify({ sorgente: "casa", ambra: 4500 }));
+    const stati = eval("_RAW_STATES");
+    stati["sensor.casa_w"] = {
+      entity_id: "sensor.casa_w",
+      state: "5910",
+      attributes: { unit_of_measurement: "W", friendly_name: "Consumo casa" },
+    };
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed"));
+  });
+  await expect(avviso(page)).toHaveCount(1);
+  await expect(avviso(page)).toHaveAttribute("data-livello", "ambra");
+  await expect(avviso(page)).toContainText("Sovraccarico");
+  expect(await avviso(page).evaluate((nodo) => getComputedStyle(nodo).animationName)).toBe("none");
+  if (process.env.DM_FOTO) {
+    await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: `${process.env.DM_FOTO}/sovraccarico-ambra.png` });
+  }
+});

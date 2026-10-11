@@ -31,6 +31,15 @@ il manometro con la sua forcella e la linea delle ultime 24 ore, come il
 solare termico; e la tessera di chi ha solo la pressione dice i bar invece del
 trattino.
 
+**Auto: sotto il tempo che manca, l'ora in cui finisce.** «7H 13M RIM.» e
+sotto «FINE ALLE 23:36» (o «FINE DOMANI ALLE ...»), nella pagina e nella
+sessione di ricarica.
+
+**L'avviso di sovraccarico torna in Home anche sulla soglia gialla.** Usciva
+solo oltre la soglia rossa: chi aveva scritto soltanto la gialla non lo vedeva
+mai, anche con la casa ben oltre il limite. Adesso esce su tutte e due, in
+giallo fermo o in rosso che respira.
+
 **Navigatore: temperature, velocità e potenza arrivano.** Temperatura della
 batteria, velocità e potenza in uso non hanno una casella nella plancia, e
 gdanav diceva «non arriva». L'app le trova fra i sensori del dispositivo

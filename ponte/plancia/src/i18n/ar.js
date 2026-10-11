@@ -21,8 +21,8 @@ export default Object.freeze({
     "يلزم كيان يمكن قراءته: sensor.* أو binary_sensor.* أو number.* أو input_number أو input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "بطاقة في الرئيسية لأي كيان كان، حتى من قسم غير موجود: مستوى الملح في جهاز تليين الماء، أو مجس الخزانة، أو مضخة البئر. مجتمعةً، تلخّصها بطاقة «قيد الإبراز» في سطر واحد وتعرضها كبطاقات عند فتحها؛ ومع «بطاقة خاصة بها» يحصل كل كيان على بطاقته، بالاسم والرسم اللذين تختارهما له.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "فوق العتبة تُغيّر بطاقة الطاقة في الرئيسية لونها: كهرماني للانتباه، وأحمر للحمل الزائد. اترك الحقل فارغًا لتجاهله.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "فوق العتبة يظهر تنبيه الحمل الزائد في الرئيسية ويتغير لون بطاقة الطاقة: كهرماني للمراقبة، وأحمر عندما يوشك على الفصل. اترك حقلًا فارغًا لعدم استخدامه.",
   "Add reading": "إضافة قراءة",
   "Add to queue": "إضافة إلى قائمة التشغيل",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2620,6 +2620,8 @@ export default Object.freeze({
   "Charge without sun too": "الشحن بدون شمس أيضًا",
   "How it charges": "كيف تُشحن",
   "Only applies in Smart: not in effect here": "يسري فقط في الوضع الذكي: لا يُطبَّق هنا",
+  "ENDS AT ${ora}": "تنتهي في ${ora}",
+  "ENDS TOMORROW AT ${ora}": "تنتهي غدًا في ${ora}",
   "Open Assist": "افتح Assist",
   "Open GitHub": "فتح GitHub",
   "Open all": "فتح الكل",

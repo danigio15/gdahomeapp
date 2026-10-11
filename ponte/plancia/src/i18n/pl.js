@@ -21,8 +21,8 @@ export default Object.freeze({
     "Potrzebna jest encja, którą da się odczytać: sensor.*, binary_sensor.*, number.*, input_number lub input_text.",
   "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.":
     "Kafelek na ekranie głównym dla dowolnej encji, nawet z sekcji, której nie ma: poziom soli w zmiękczaczu, sonda w szafie rack, pompa studzienna. Razem kafelek „Wyróżnione” streszcza je w jednym wierszu, a po otwarciu pokazuje jako karty; przy opcji „Własny kafelek” każda dostaje swój, z nazwą i rysunkiem, które jej nadasz.",
-  "Above the threshold the Energy tile on Home changes colour: amber to keep an eye on it, red for an overload. Leave a field empty to skip it.":
-    "Powyżej progu kafelek Energia na ekranie głównym zmienia kolor: bursztynowy, gdy warto mieć go na oku, czerwony przy przeciążeniu. Puste pole jest pomijane.",
+  "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.":
+    "Powyżej progu na stronie głównej pojawia się ostrzeżenie o przeciążeniu, a kafelek Energia zmienia kolor: bursztynowy, by mieć na oku, czerwony, gdy zaraz wybije. Zostaw pole puste, aby go nie używać.",
   "Add reading": "Dodaj odczyt",
   "Add to queue": "Dodaj do kolejki",
   "Advanced card — image, duration, temperature, door, costs":
@@ -2645,6 +2645,8 @@ export default Object.freeze({
   "How it charges": "Jak się ładuje",
   "Only applies in Smart: not in effect here":
     "Działa tylko w trybie Inteligentnym: tu nie obowiązuje",
+  "ENDS AT ${ora}": "KONIEC O ${ora}",
+  "ENDS TOMORROW AT ${ora}": "KONIEC JUTRO O ${ora}",
   "Open Assist": "Otwórz Assist",
   "Open GitHub": "Otwórz GitHuba",
   "Open all": "Otwórz wszystkie",
