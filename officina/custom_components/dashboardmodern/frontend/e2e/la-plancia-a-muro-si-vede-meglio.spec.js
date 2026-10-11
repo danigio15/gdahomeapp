@@ -36,12 +36,16 @@ const MURO = {
   pagine: [
     { id: "p1", modello: "stanza", stanza: "Soggiorno", griglia: 4, colore: "#ec4899" },
     { id: "p2", modello: "ambienti" },
-    { id: "p3", modello: "energia", energia: {
-      casa: "sensor.casa_w",
-      solare: "sensor.fv_w",
-      rete: "sensor.rete_w",
-      batteria: "sensor.batteria",
-    } },
+    {
+      id: "p3",
+      modello: "energia",
+      energia: {
+        casa: "sensor.casa_w",
+        solare: "sensor.fv_w",
+        rete: "sensor.rete_w",
+        batteria: "sensor.batteria",
+      },
+    },
     { id: "p4", modello: "telecamere" },
     { id: "p5", modello: "tapparelle" },
   ],
@@ -258,10 +262,7 @@ test.describe("la plancia a muro si vede meglio", () => {
     /* Un tocco sull'altro lettore lo porta in grande: la TV spenta si accende. */
     await muro(page).locator('.mu-mp-riga[data-mu-entita="media_player.tv_sala"]').click();
     await expect(grande).toContainText("TV sala");
-    await expect(grande.locator('[data-mu-cmd="centro"]')).toHaveAttribute(
-      "aria-label",
-      /Accendi/,
-    );
+    await expect(grande.locator('[data-mu-cmd="centro"]')).toHaveAttribute("aria-label", /Accendi/);
   });
 
   /* «Metterei disattivo. E quando sono piu' di una partizione andrei a capo,
@@ -346,7 +347,11 @@ test.describe("la plancia a muro si vede meglio", () => {
           {
             id: "m1",
             modello: "musica",
-            lettori: ["media_player.sonos_cucina", "media_player.sonos_sala", "media_player.tv_sala"],
+            lettori: [
+              "media_player.sonos_cucina",
+              "media_player.sonos_sala",
+              "media_player.tv_sala",
+            ],
           },
         ],
       },
@@ -369,7 +374,10 @@ test.describe("la plancia a muro si vede meglio", () => {
       {
         domain: "media_player",
         service: "join",
-        data: { entity_id: "media_player.sonos_cucina", group_members: ["media_player.sonos_sala"] },
+        data: {
+          entity_id: "media_player.sonos_cucina",
+          group_members: ["media_player.sonos_sala"],
+        },
       },
     ]);
   });

@@ -260,9 +260,7 @@ export function paginaPulita(input, indice = 0) {
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro.id || "")) ? dentro.id : `p${indice + 1}`;
   /* `posti` e' come la chiamavano le plance della 1.11.1: vale lo stesso. */
   const scritta = Number(dentro.griglia ?? dentro.posti);
-  const griglia = GRIGLIE[scritta]
-    ? scritta
-    : GRIGLIA_DI_SERIE[modello] || POSTI;
+  const griglia = GRIGLIE[scritta] ? scritta : GRIGLIA_DI_SERIE[modello] || POSTI;
   const comandi = senzaVuotiInCoda(
     (Array.isArray(dentro.comandi) ? dentro.comandi : [])
       .slice(0, griglia)
@@ -303,9 +301,7 @@ export function paginaPulita(input, indice = 0) {
     ingresso: ingressoPulito(dentro.ingresso),
     energia: energiaPulita(dentro.energia),
     /* I lettori della pagina Musica: vuoto, quelli della plancia di origine. */
-    lettori: [
-      ...new Set((Array.isArray(dentro.lettori) ? dentro.lettori : []).map(entita)),
-    ]
+    lettori: [...new Set((Array.isArray(dentro.lettori) ? dentro.lettori : []).map(entita))]
       .filter((id) => id.startsWith("media_player."))
       .slice(0, LETTORI_AL_MASSIMO),
     confermaUscita: vero(dentro.confermaUscita, false),
@@ -519,7 +515,10 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
    * con piu' aree il riposo dice quali sono inserite. */
   const nomiDelleAree = new Map(
     elenco(altro.centrali)
-      .map((c) => [entita(c?.caselle?.["dm.security_centrale_allarme"]), testo(c?.nome || c?.name, 40)])
+      .map((c) => [
+        entita(c?.caselle?.["dm.security_centrale_allarme"]),
+        testo(c?.nome || c?.name, 40),
+      ])
       .filter(([id]) => id),
   );
   const misura = (chiave) => entita(overrides[`dm.energy_${chiave}`]);

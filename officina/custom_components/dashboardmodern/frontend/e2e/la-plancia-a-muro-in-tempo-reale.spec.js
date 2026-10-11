@@ -73,9 +73,7 @@ test.describe("la plancia a muro in tempo reale", () => {
     const card = muro(page).locator('[data-mu-entita="light.studio"].mu-card');
     await expect(card).toHaveClass(/mu-accesa/);
     /* Home Assistant qui non risponde mai: lo stato vero resta «on». */
-    await muro(page)
-      .locator('[data-mu-fa="interruttore"][data-mu-entita="light.studio"]')
-      .click();
+    await muro(page).locator('[data-mu-fa="interruttore"][data-mu-entita="light.studio"]').click();
     await expect(card).not.toHaveClass(/mu-accesa/, { timeout: 500 });
     await expect
       .poll(() => page.evaluate(() => window.__SERVIZI__.map((s) => `${s.domain}.${s.service}`)))

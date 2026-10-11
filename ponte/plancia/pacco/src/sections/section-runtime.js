@@ -84126,9 +84126,7 @@ function paginaPulita(input, indice = 0) {
     ingresso: ingressoPulito(dentro3.ingresso),
     energia: energiaPulita(dentro3.energia),
     /* I lettori della pagina Musica: vuoto, quelli della plancia di origine. */
-    lettori: [
-      ...new Set((Array.isArray(dentro3.lettori) ? dentro3.lettori : []).map(entita2))
-    ].filter((id2) => id2.startsWith("media_player.")).slice(0, LETTORI_AL_MASSIMO),
+    lettori: [...new Set((Array.isArray(dentro3.lettori) ? dentro3.lettori : []).map(entita2))].filter((id2) => id2.startsWith("media_player.")).slice(0, LETTORI_AL_MASSIMO),
     confermaUscita: vero2(dentro3.confermaUscita, false)
   };
 }
@@ -84274,7 +84272,10 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
   const centraleSola = entita2(overrides2["dm.security_centrale_allarme"]);
   if (centraleSola && !centrali2.includes(centraleSola)) centrali2.unshift(centraleSola);
   const nomiDelleAree = new Map(
-    elenco6(altro.centrali).map((c) => [entita2(c?.caselle?.["dm.security_centrale_allarme"]), testo(c?.nome || c?.name, 40)]).filter(([id]) => id)
+    elenco6(altro.centrali).map((c) => [
+      entita2(c?.caselle?.["dm.security_centrale_allarme"]),
+      testo(c?.nome || c?.name, 40)
+    ]).filter(([id]) => id)
   );
   const misura7 = (chiave2) => entita2(overrides2[`dm.energy_${chiave2}`]);
   return {
