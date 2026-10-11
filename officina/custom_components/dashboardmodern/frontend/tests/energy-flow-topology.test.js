@@ -260,15 +260,22 @@ test("le file si sfalsano come i mattoni, e non si incolonnano (#118)", () => {
     sei.map(({ x }) => x),
     [250, 500, 750, 125, 375, 625],
   );
-  /* Con sette la fila di sotto sta giusto nei varchi di quella di sopra. */
+  /* Con sette la fila di sopra si prende tutta la larghezza — ogni bolla al
+   * centro della sua parte, perche' «sono troppo attaccati» — e quella di
+   * sotto sta giusto nei varchi fra le bolle di sopra. */
   assert.deepEqual(
     flowStageLayout(7, "mobile").map(({ x }) => x),
-    [200, 400, 600, 800, 300, 500, 700],
+    [125, 375, 625, 875, 250, 500, 750],
   );
-  /* E una fila sola non si sfalsa con niente: resta dov'era. */
+  /* Con cinque, che e' il caso di chi ha quattro stanze e la wallbox. */
+  assert.deepEqual(
+    flowStageLayout(5, "mobile").map(({ x }) => x),
+    [166.7, 500, 833.3, 333.3, 666.7],
+  );
+  /* E una fila sola non si sfalsa con niente: si allarga e basta. */
   assert.deepEqual(
     flowStageLayout(4, "mobile").map(({ x }) => x),
-    [200, 400, 600, 800],
+    [125, 375, 625, 875],
   );
 });
 

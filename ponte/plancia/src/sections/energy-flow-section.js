@@ -715,7 +715,7 @@ function pruneStale(stage, keep) {
  * quel passo ci deve stare una bolla piu' un dito d'aria. Qui si guarda la
  * larghezza vera e si stringe quel tanto che basta. Non si ingrandisce mai:
  * il conto del modello resta il tetto. */
-const ARIA_FRA_BOLLE = 4;
+const ARIA_FRA_BOLLE = 16;
 const QUANTO_STRETTE_AL_MASSIMO = 0.55;
 
 /* Com'e' messa la scena adesso: quanto misura una bolla a riposo e se le bolle
@@ -727,8 +727,8 @@ const QUANTO_STRETTE_AL_MASSIMO = 0.55;
  * una terza soglia — vorrebbe dire due risposte alla stessa domanda, che e'
  * il difetto che questa passata e' venuta a togliere. */
 const SOGLIE = Object.freeze([
-  { quando: "(max-width: 480px)", bolla: 108, stretto: true },
-  { quando: "(max-width: 768px)", bolla: 112, stretto: true },
+  { quando: "(max-width: 480px)", bolla: 96, stretto: true },
+  { quando: "(max-width: 768px)", bolla: 104, stretto: true },
 ]);
 
 function comeSiamoMessi() {
@@ -753,12 +753,36 @@ function quanteInFila(nodes, stretto) {
   return perFila.size ? Math.max(...perFila.values()) : 1;
 }
 
+/* Il passo piu' stretto fra due bolle della stessa fila, in centesimi del
+ * palco: lo dice il disegno, che sul telefono spartisce la larghezza in un
+ * modo e sul largo in un altro. Chiederlo a lui invece di rifare il conto qui
+ * vuol dire una regola sola. */
+function passoPiuStretto(nodes, stretto) {
+  const perFila = new Map();
+  for (const nodo of nodes) {
+    const dove = stretto ? nodo.mobile : nodo.desktop;
+    if (!dove) continue;
+    const fila = perFila.get(dove.top) || [];
+    fila.push(Number(dove.left));
+    perFila.set(dove.top, fila);
+  }
+  let passo = 0;
+  for (const fila of perFila.values()) {
+    fila.sort((a, b) => a - b);
+    for (let i = 1; i < fila.length; i += 1) {
+      const qui = fila[i] - fila[i - 1];
+      if (qui > 0 && (!passo || qui < passo)) passo = qui;
+    }
+  }
+  return passo;
+}
+
 function quantoCiStaNelPalco(stage, model, scala) {
   const largo = stage?.getBoundingClientRect?.().width || 0;
   const { bolla, stretto } = comeSiamoMessi();
   const inFila = quanteInFila(model.nodes, stretto);
   if (!largo || inFila <= 1) return scala;
-  const passo = largo / (inFila + 1);
+  const passo = (largo * passoPiuStretto(model.nodes, stretto)) / 100 || largo / (inFila + 1);
   const ciSta = Math.max(0, passo - ARIA_FRA_BOLLE) / bolla;
   return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(scala, Number(ciSta.toFixed(3))));
 }
@@ -1477,13 +1501,15 @@ function installStyles() {
     #page-energy #view-ist .n-load span{font-size:20px!important}
     #page-energy .n-load .node-icon{font-size:26px!important}
     @media(max-width:768px){
-      #page-energy .n-load{width:112px!important;height:112px!important}
+      #page-energy .flow-stage{height:800px!important}
+      #page-energy .n-load{width:104px!important;height:104px!important}
       #page-energy .n-load .node-label{font-size:10.5px!important;letter-spacing:0!important}
       #page-energy #view-ist .n-load span{font-size:18px!important}
       #page-energy .n-load .node-icon{font-size:23px!important}
     }
     @media(max-width:480px){
-      #page-energy .n-load{width:108px!important;height:108px!important}
+      #page-energy .flow-stage{height:720px!important}
+      #page-energy .n-load{width:96px!important;height:96px!important}
     }
   `,
   );

@@ -216,6 +216,14 @@ function sfalsata(width, primaFila, size, column) {
   return passo * (inizio + column + 0.5);
 }
 
+/* Dove sta una bolla di sotto quando la fila di sopra si prende tutta la
+ * larghezza: nei varchi FRA le bolle di sopra, che sono `n - 1`, al centro. */
+function nelVarco(width, primaFila, size, column) {
+  const passo = width / primaFila;
+  const inizio = Math.floor((primaFila - 1 - size) / 2) + 1;
+  return passo * (inizio + column);
+}
+
 /* La linea, e dove deve gia' essere quando passa la fila di sopra.
  *
  * [oltre] serve alle bolle della seconda fila (#118). Sfalsate, ognuna ha un
@@ -261,12 +269,27 @@ export function flowStageLayout(count, variant = "desktop") {
   /* Dove stanno le file: piu' in alto quando sono due, cosi' la seconda non
    * finisce sotto la barra dell'app. Il perche' sta accanto a `dueFile`. */
   const righe = sizes.length > 1 && geometry.dueFile ? geometry.dueFile : geometry;
+  /* Sul telefono le bolle si prendono tutta la larghezza.
+   *
+   * «Sono troppo attaccati tra di loro.» Spartire la larghezza in `n + 1`
+   * parti lascia ai due bordi un passo intero di vuoto: con tre bolle su un
+   * telefono da 384 punti fra un centro e l'altro ne restavano 96, e una
+   * bolla appena leggibile li riempiva tutti. Spartita in `n` parti — ogni
+   * bolla al centro della sua — il passo diventa 128, e la stessa bolla ha
+   * trenta punti d'aria intorno. La fila di sotto, quando e' piu' corta, sta
+   * nei varchi fra le bolle di sopra, come i mattoni (#118). Quando le file
+   * sono uguali i varchi interni non bastano, e si resta al disegno di prima.
+   * Il disegno largo ha una fila sola e lo spazio ce l'ha gia': non cambia. */
+  const piena = variant === "mobile" && (sizes.length === 1 || sizes[1] < primaFila);
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
       /* La prima fila spartisce la larghezza; quelle sotto si sfalsano nei
        * varchi della prima, o le linee le attraversano (#118). */
-      const x =
-        rowIndex === 0
+      const x = piena
+        ? rowIndex === 0
+          ? (geometry.width * (column + 0.5)) / size
+          : nelVarco(geometry.width, primaFila, size, column)
+        : rowIndex === 0
           ? (geometry.width * (column + 1)) / (size + 1)
           : sfalsata(geometry.width, primaFila, size, column);
       /* Chi sta sotto deve scavalcare la fila di sopra: la sua linea si

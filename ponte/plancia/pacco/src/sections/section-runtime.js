@@ -63486,6 +63486,11 @@ function sfalsata(width, primaFila, size, column) {
   const inizio = Math.floor((varchi - size) / 2);
   return passo * (inizio + column + 0.5);
 }
+function nelVarco(width, primaFila, size, column) {
+  const passo = width / primaFila;
+  const inizio = Math.floor((primaFila - 1 - size) / 2) + 1;
+  return passo * (inizio + column);
+}
 function comandoOltreLaFila(variant, x, y, rowY) {
   const salto = y - variant.homeY;
   const fino = rowY - variant.homeY;
@@ -63505,9 +63510,10 @@ function flowStageLayout(count, variant = "desktop") {
   const positions = [];
   const primaFila = sizes[0] || 0;
   const righe2 = sizes.length > 1 && geometry.dueFile ? geometry.dueFile : geometry;
+  const piena = variant === "mobile" && (sizes.length === 1 || sizes[1] < primaFila);
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
-      const x = rowIndex === 0 ? geometry.width * (column + 1) / (size + 1) : sfalsata(geometry.width, primaFila, size, column);
+      const x = piena ? rowIndex === 0 ? geometry.width * (column + 0.5) / size : nelVarco(geometry.width, primaFila, size, column) : rowIndex === 0 ? geometry.width * (column + 1) / (size + 1) : sfalsata(geometry.width, primaFila, size, column);
       const oltre = rowIndex === 0 ? null : righe2.rowY[rowIndex - 1];
       positions.push({
         index: positions.length,
@@ -64433,11 +64439,11 @@ function pruneStale(stage, keep) {
     if (!keep.has(id)) node.remove();
   });
 }
-var ARIA_FRA_BOLLE = 4;
+var ARIA_FRA_BOLLE = 16;
 var QUANTO_STRETTE_AL_MASSIMO = 0.55;
 var SOGLIE = Object.freeze([
-  { quando: "(max-width: 480px)", bolla: 108, stretto: true },
-  { quando: "(max-width: 768px)", bolla: 112, stretto: true }
+  { quando: "(max-width: 480px)", bolla: 96, stretto: true },
+  { quando: "(max-width: 768px)", bolla: 104, stretto: true }
 ]);
 function comeSiamoMessi() {
   for (const soglia2 of SOGLIE) {
@@ -64456,12 +64462,31 @@ function quanteInFila(nodes, stretto) {
   }
   return perFila.size ? Math.max(...perFila.values()) : 1;
 }
+function passoPiuStretto(nodes, stretto) {
+  const perFila = /* @__PURE__ */ new Map();
+  for (const nodo2 of nodes) {
+    const dove = stretto ? nodo2.mobile : nodo2.desktop;
+    if (!dove) continue;
+    const fila2 = perFila.get(dove.top) || [];
+    fila2.push(Number(dove.left));
+    perFila.set(dove.top, fila2);
+  }
+  let passo = 0;
+  for (const fila2 of perFila.values()) {
+    fila2.sort((a, b) => a - b);
+    for (let i = 1; i < fila2.length; i += 1) {
+      const qui = fila2[i] - fila2[i - 1];
+      if (qui > 0 && (!passo || qui < passo)) passo = qui;
+    }
+  }
+  return passo;
+}
 function quantoCiStaNelPalco(stage, model2, scala2) {
   const largo = stage?.getBoundingClientRect?.().width || 0;
   const { bolla, stretto } = comeSiamoMessi();
   const inFila = quanteInFila(model2.nodes, stretto);
   if (!largo || inFila <= 1) return scala2;
-  const passo = largo / (inFila + 1);
+  const passo = largo * passoPiuStretto(model2.nodes, stretto) / 100 || largo / (inFila + 1);
   const ciSta = Math.max(0, passo - ARIA_FRA_BOLLE) / bolla;
   return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(scala2, Number(ciSta.toFixed(3))));
 }
@@ -64918,13 +64943,15 @@ function installStyles24() {
     #page-energy #view-ist .n-load span{font-size:20px!important}
     #page-energy .n-load .node-icon{font-size:26px!important}
     @media(max-width:768px){
-      #page-energy .n-load{width:112px!important;height:112px!important}
+      #page-energy .flow-stage{height:800px!important}
+      #page-energy .n-load{width:104px!important;height:104px!important}
       #page-energy .n-load .node-label{font-size:10.5px!important;letter-spacing:0!important}
       #page-energy #view-ist .n-load span{font-size:18px!important}
       #page-energy .n-load .node-icon{font-size:23px!important}
     }
     @media(max-width:480px){
-      #page-energy .n-load{width:108px!important;height:108px!important}
+      #page-energy .flow-stage{height:720px!important}
+      #page-energy .n-load{width:96px!important;height:96px!important}
     }
   `
   );
