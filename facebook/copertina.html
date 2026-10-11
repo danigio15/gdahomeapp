@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Inter;font-weight:400;src:url(../sito/statico/font/inter-latin-400-normal.woff2)}
+@font-face{font-family:Inter;font-weight:700;src:url(../sito/statico/font/inter-latin-700-normal.woff2)}
+@font-face{font-family:Oswald;font-weight:500;src:url(../sito/statico/font/oswald-latin-500-normal.woff2)}
+:root{--notte:#0b1224;--ambra:#f59e0b;--azzurro:#38bdf8}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:var(--w);height:var(--h);overflow:hidden;background:var(--notte)}
+body{font-family:Inter,sans-serif;color:#fff;position:relative}
+.fondo{position:absolute;inset:0;
+  background:
+   radial-gradient(ellipse 55% 75% at 12% 55%, rgba(37,99,235,.55), transparent 70%),
+   radial-gradient(ellipse 50% 70% at 90% 50%, rgba(245,158,11,.38), transparent 70%),
+   radial-gradient(ellipse 40% 50% at 50% 0%, rgba(56,189,248,.18), transparent 70%),
+   linear-gradient(180deg,#0f172a,#0b1224)}
+.griglia{position:absolute;inset:0;opacity:.07;
+  background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);
+  background-size:48px 48px;mask-image:radial-gradient(ellipse 60% 60% at 50% 50%,#000,transparent)}
+.tel{position:absolute;border-radius:34px;padding:9px;background:#1e293b;
+  box-shadow:0 0 0 2px rgba(255,255,255,.12),0 30px 70px rgba(0,0,0,.6);overflow:hidden}
+.tel img{display:block;width:100%;border-radius:26px}
+.centro{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1000px;text-align:center}
+.marchi{display:flex;align-items:center;justify-content:center;gap:22px;margin-bottom:22px}
+.marchi img{width:var(--icona);height:var(--icona);border-radius:22%;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.marchi span{font-family:Oswald;font-weight:500;font-size:calc(var(--icona)*.62);letter-spacing:.01em}
+.marchi .piu{color:rgba(255,255,255,.4);font-size:calc(var(--icona)*.45)}
+h1{font-family:Oswald;font-weight:500;font-size:var(--titolo);line-height:1.05;letter-spacing:.005em}
+h1 em{font-style:normal;color:var(--ambra)}
+.sotto{margin-top:16px;font-size:var(--testo);color:rgba(226,232,240,.85);line-height:1.4}
+.presto{display:inline-flex;align-items:center;gap:14px;margin-top:28px;padding:12px 26px 12px 14px;
+  border-radius:999px;background:rgba(245,158,11,.14);border:2px solid rgba(245,158,11,.7)}
+.presto b{background:var(--ambra);color:#1a1205;font-size:calc(var(--testo)*.8);letter-spacing:.12em;
+  padding:7px 14px;border-radius:999px;text-transform:uppercase}
+.presto span{font-size:var(--testo);font-weight:700}
+.sito{margin-top:18px;font-weight:700;font-size:calc(var(--testo)*.9);color:rgba(255,255,255,.7);letter-spacing:.06em}
+</style></head>
+<body>
+<div class="fondo"></div><div class="griglia"></div>
+<div class="tel" id="t1"><img src="../sito/statico/schermate/1-la-plancia.png"></div>
+<div class="tel" id="t2"><img src="../sito/statico/schermate/3-le-luci.png"></div>
+<div class="tel" id="t3"><img src="../sito/statico/gdanav/guida-svincolo.jpg"></div>
+<div class="tel" id="t4"><img src="../sito/statico/schermate/4-il-clima.png"></div>
+<div class="centro">
+  <div class="marchi"><img src="../sito/statico/marchio.png"><span>gdahome</span><span class="piu">+</span><img src="gdanav-icona.png"><span>gdanav</span></div>
+  <h1>La tua casa in una plancia.<br><em>Anche fuori casa.</em></h1>
+  <p class="sotto">Home Assistant sul telefono, sul tablet a muro, al polso e in auto.<br>E il navigatore che conosce la tua auto elettrica.</p>
+  <div class="presto"><b>Presto</b><span>Le app arrivano su Google Play e App Store</span></div>
+  <div class="sito">gdahome.org</div>
+</div>
+</body></html>
