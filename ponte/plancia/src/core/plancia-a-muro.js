@@ -19,6 +19,7 @@
  * posto vuoto invece di comandare un'entita' che non c'e' piu'. */
 
 import { canonicalClimateType } from "./device-model.js";
+import { lettoriConfigurati } from "./media-player.js";
 
 export const CHIAVE_MURO = "cd_muro";
 
@@ -35,7 +36,9 @@ export const CHIAVE_MURO = "cd_muro";
  *   accese, che cambia mentre cambia la casa;
  * - `telecamere`: le telecamere della plancia di origine, tutte insieme;
  * - `energia`: quanto consuma la casa adesso, quanto fa il solare, la rete e
- *   la batteria. */
+ *   la batteria;
+ * - `musica`: il lettore che suona, grande, con la copertina, i tasti, il
+ *   volume e le sorgenti; accanto gli altri lettori della casa. */
 export const MODELLI = Object.freeze([
   "stanza",
   "scene",
@@ -47,6 +50,7 @@ export const MODELLI = Object.freeze([
   "ambienti",
   "telecamere",
   "energia",
+  "musica",
 ]);
 
 /** Le pagine che si riempiono da sole con un intero gruppo della casa. */
@@ -296,8 +300,24 @@ export function paginaPulita(input, indice = 0) {
     riga,
     ingresso: ingressoPulito(dentro.ingresso),
     energia: energiaPulita(dentro.energia),
+    /* I lettori della pagina Musica: vuoto, quelli della plancia di origine. */
+    lettori: [
+      ...new Set((Array.isArray(dentro.lettori) ? dentro.lettori : []).map(entita)),
+    ]
+      .filter((id) => id.startsWith("media_player."))
+      .slice(0, LETTORI_AL_MASSIMO),
     confermaUscita: vero(dentro.confermaUscita, false),
   };
+}
+
+export const LETTORI_AL_MASSIMO = 8;
+
+/** I lettori della pagina Musica: quelli scelti, o quelli della plancia. */
+export function lettoriDellaPagina(pagina, fonte = {}) {
+  if (pagina?.lettori?.length) return pagina.lettori.map((id) => ({ entita: id, nome: "" }));
+  return elenco(fonte.lettori)
+    .slice(0, LETTORI_AL_MASSIMO)
+    .map((l) => ({ entita: l.entity, nome: l.nome || "" }));
 }
 
 /* La pagina Energia: quattro misure, ognuna un'entita'. Vuote, le prende la
@@ -448,6 +468,7 @@ export function fonteDaiValori(valori = {}) {
     overrides: json(valori.cd_entity_overrides, {}),
     avvisi: json(valori.cd_avvisi_custom, []),
     climaUnita: json(valori.cd_clima_units, []),
+    lettori: json(valori.cd_media_player, []),
   });
 }
 
@@ -492,6 +513,13 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
     .filter(Boolean);
   const centraleSola = entita(overrides["dm.security_centrale_allarme"]);
   if (centraleSola && !centrali.includes(centraleSola)) centrali.unshift(centraleSola);
+  /* Il nome di ogni area, come l'ha scritto chi ha configurato l'antifurto:
+   * con piu' aree il riposo dice quali sono inserite. */
+  const nomiDelleAree = new Map(
+    elenco(altro.centrali)
+      .map((c) => [entita(c?.caselle?.["dm.security_centrale_allarme"]), testo(c?.nome || c?.name, 40)])
+      .filter(([id]) => id),
+  );
   const misura = (chiave) => entita(overrides[`dm.energy_${chiave}`]);
   return {
     /* Le misure dell'energia che la plancia di origine ha gia' scelto. */
@@ -501,6 +529,10 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
       rete: misura("potenza_scambio_rete"),
       batteria: misura("stato_carica_batteria"),
     },
+    /* I lettori della sezione Musica, per la pagina Musica. */
+    lettori: lettoriConfigurati(elenco(altro.lettori))
+      .filter((l) => entita(l.entity))
+      .map((l) => ({ entity: entita(l.entity), nome: testo(l.nome) })),
     stanze: elenco(sezioni.rooms)
       .filter((s) => s && testo(s.name))
       .map((s) => ({
@@ -528,6 +560,7 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
       .filter((p) => p && entita(p.entity) && p.nascosta !== true)
       .map((p) => ({ entity: entita(p.entity), name: testo(p.name) })),
     centrali,
+    aree: centrali.map((id) => ({ entita: id, nome: nomiDelleAree.get(id) || "" })),
     avvisi: elenco(altro.avvisi)
       .map((a) => ({
         name: testo(a?.name, 60),
@@ -571,9 +604,11 @@ export function avvisiAccesi(fonte = {}, stati = {}, centrale = "") {
       icon: a.icon,
       grave: false,
     }));
-  const allarme = entita(centrale) || elenco(fonte.centrali)[0] || "";
-  if (allarme && String(stati[allarme]?.state) === "triggered")
-    accesi.unshift({ chiave: allarme, testo: "", icon: "", grave: true });
+  /* Suona una qualunque area, non solo la prima: con piu' partizioni quella
+   * che scatta puo' essere la terza. */
+  const tutte = [...new Set([entita(centrale), ...elenco(fonte.centrali)].filter(Boolean))];
+  const allarme = tutte.find((id) => String(stati[id]?.state) === "triggered");
+  if (allarme) accesi.unshift({ chiave: allarme, testo: "", icon: "", grave: true });
   return accesi;
 }
 

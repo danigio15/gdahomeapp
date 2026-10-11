@@ -30,6 +30,15 @@ import { climaScalda } from "../core/device-model.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { IN_VISTA_KEY } from "../core/state-event-gate.js";
 import {
+  comandoDelLettore,
+  compagniDelGruppo,
+  ilTastoCentrale,
+  servizioDelGruppo,
+  letturaDelLettore,
+  orologio as orologioDelBrano,
+  posizioneOra,
+} from "../core/media-player.js";
+import {
   CHIAVE_MURO,
   avvisiAccesi,
   comandiDellaPagina,
@@ -41,6 +50,7 @@ import {
   energiaDellaPagina,
   fonteDaiValori,
   grigliaDellaPagina,
+  lettoriDellaPagina,
   postiDellaPagina,
   telecamereDellaFonte,
   fonteDalleSezioni,
@@ -215,6 +225,7 @@ function fonteDiQui() {
       overrides: readJson("cd_entity_overrides", {}),
       avvisi: readJson("cd_avvisi_custom", []),
       climaUnita: readJson("cd_clima_units", []),
+      lettori: readJson("cd_media_player", []),
     },
   );
 }
@@ -238,6 +249,9 @@ export function eInVista(id) {
   if (!muro?.attiva || state.premium !== true || state.uscito) return false;
   const chiave = String(id || "");
   if (inVista.ids.has(chiave) || inVista.domini.has(chiave.split(".")[0])) return true;
+  /* Le aree dell'antifurto si guardano sempre: una che scatta sveglia il
+   * tablet anche se la pagina aperta non la mostra. */
+  if (state.fonte?.centrali?.includes(chiave)) return true;
   return Boolean(muro.risveglio?.attivo && muro.risveglio.entita === chiave);
 }
 
@@ -479,6 +493,7 @@ const MODELLI_SCRITTI = () => ({
   ambienti: t("Ambienti", "Rooms"),
   telecamere: t("Telecamere", "Cameras"),
   energia: t("Energia", "Energy"),
+  musica: t("Musica", "Music"),
 });
 const SOTTO = () => ({
   stanza: t("Luci · Clima · Tapparelle · Scene", "Lights · Climate · Blinds · Scenes"),
@@ -491,6 +506,7 @@ const SOTTO = () => ({
   ambienti: t("Temperatura · Umidità · Luci", "Temperature · Humidity · Lights"),
   telecamere: t("Le immagini dal vivo", "Live pictures"),
   energia: t("Adesso, in casa", "Right now, at home"),
+  musica: t("Cosa suona in casa", "What's playing at home"),
 });
 const DISEGNO_DEL_MODELLO = {
   stanza: "stanze",
@@ -503,6 +519,7 @@ const DISEGNO_DEL_MODELLO = {
   ambienti: "temperatura",
   telecamere: "telecamere",
   energia: "energia",
+  musica: "media",
 };
 const ACCENTO_DEL_MODELLO = {
   stanza: "#f59e0b",
@@ -515,6 +532,7 @@ const ACCENTO_DEL_MODELLO = {
   ambienti: "#ef4444",
   telecamere: "#2563eb",
   energia: "#10b981",
+  musica: "#ec4899",
 };
 const accentoDi = (pagina) => clean(pagina?.colore) || ACCENTO_DEL_MODELLO[pagina?.modello];
 
@@ -586,7 +604,8 @@ function testa(pagina, muro) {
 }
 
 const STATI_DELL_ALLARME = () => ({
-  disarmed: t("Spento", "Off"),
+  /* «Metterei disattivo»: l'antifurto non si spegne, si disattiva. */
+  disarmed: t("Disattivo", "Disarmed"),
   armed_home: t("In casa", "Home"),
   armed_away: t("Fuori", "Away"),
   armed_night: t("Notte", "Night"),
@@ -963,6 +982,201 @@ function paginaTelecamere(pagina) {
   return griglia(pagina, carte);
 }
 
+/* ── la musica ─────────────────────────────────────────────────────────────
+ *
+ * «Me ne devi fare una con sezione musica.» Il lettore che conta, grande:
+ * la copertina come fondo, titolo e artista, il tempo che scorre, i tre tasti,
+ * il volume largo quanto la card, le sorgenti. Accanto gli altri lettori
+ * della casa, ognuno col suo play: un tocco lo porta in grande. Le letture e
+ * i tasti sono quelli della sezione Musica (`core/media-player.js`): un tasto
+ * che il lettore non sa fare non si disegna. */
+const GLIFI_MUSICA = {
+  precedente: '<path d="M6 5v14M19 5 9 12l10 7z"/>',
+  successivo: '<path d="M18 5v14M5 5l10 7-10 7z"/>',
+  suona: '<path d="M7 4.5v15l13-7.5z"/>',
+  pausa: '<path d="M8 5v14M16 5v14"/>',
+  accendi: '<path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/>',
+  muto: '<path d="M4 9v6h4l5 4V5L8 9zM17 9l5 6M22 9l-5 6"/>',
+  voce: '<path d="M4 9v6h4l5 4V5L8 9zM17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/>',
+  gruppo:
+    '<rect x="2.5" y="6" width="8" height="13" rx="2"/><rect x="13.5" y="6" width="8" height="13" rx="2"/><circle cx="6.5" cy="14.5" r="2"/><circle cx="17.5" cy="14.5" r="2"/><path d="M6.5 9.5h.01M17.5 9.5h.01"/>',
+};
+const glifo = (nome, misura = 30) =>
+  `<svg width="${misura}" height="${misura}" viewBox="0 0 24 24" fill="${["suona"].includes(nome) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${GLIFI_MUSICA[nome]}</svg>`;
+
+/* La lettura di un lettore, con quello che il tocco sul tablet aspetta. */
+function lettoreOra(voce) {
+  segna(voce.entita);
+  const lettura = letturaDelLettore(
+    { entity: voce.entita, nome: voce.nome },
+    allStates() || {},
+  );
+  const attesa = state.inAttesa[voce.entita] || {};
+  if (typeof attesa.suona === "boolean") {
+    lettura.suona = attesa.suona;
+    lettura.inPausa = !attesa.suona;
+  }
+  if (attesa.volume !== undefined) lettura.volume = attesa.volume / 100;
+  if (Array.isArray(attesa.gruppo)) lettura.gruppo = attesa.gruppo;
+  if (!clean(voce.nome) && !stato(voce.entita)?.attributes?.friendly_name)
+    lettura.nome = nomeDi(voce.entita);
+  return lettura;
+}
+
+/* Quale lettore sta in grande: quello toccato, o il primo che suona. */
+function lettoreScelto(pagina, letture) {
+  const scelto = (state.lettori ||= {})[pagina.id];
+  return (
+    letture.find((l) => l.entity === scelto) ||
+    letture.find((l) => l.suona) ||
+    letture.find((l) => l.inPausa) ||
+    letture[0]
+  );
+}
+
+const parolaDelLettore = (l) =>
+  l.muto
+    ? t("Non disponibile", "Unavailable")
+    : l.suona
+      ? t("In riproduzione", "Playing")
+      : l.inPausa
+        ? t("In pausa", "Paused")
+        : l.spento
+          ? t("Spento", "Off")
+          : t("Acceso", "On");
+
+function tastoMusica(l, comando, nome, { grande = false, etichetta = "" } = {}) {
+  return `<button type="button" class="mu-tondo${grande ? " grande pieno" : ""}" data-mu-fa="mp" data-mu-cmd="${comando}" data-mu-entita="${esc(l.entity)}" aria-label="${esc(etichetta || nome)}">${glifo(nome, grande ? 40 : 28)}</button>`;
+}
+
+function lettoreGrande(l) {
+  const centro = ilTastoCentrale(l);
+  const punto = posizioneOra(l);
+  const volume = l.volume === null ? null : Math.round(l.volume * 100);
+  const sotto = [l.artista, l.album].filter(Boolean).join(" · ");
+  const titolo = l.titolo || (l.spento ? t("Spento", "Off") : l.applicazione || l.sorgente || l.nome);
+  return `<div class="mu-carta mu-mp ${l.suona ? "mu-accesa" : ""}" style="--acc:#ec4899" data-mu-mp="${esc(l.entity)}">
+    ${l.copertina ? `<img class="mu-mp-fondo" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="" aria-hidden="true">` : ""}
+    <div class="mu-mp-testa">
+      ${l.copertina ? `<img class="mu-mp-arte" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-arte mu-mp-arte-vuota">${disegno("media", 64, `mp-${l.entity}`)}</span>`}
+      <div class="mu-mp-dici">
+        <span class="mu-et">${esc(l.nome)} · ${esc(parolaDelLettore(l))}</span>
+        <div class="mu-osw mu-mp-titolo">${esc(titolo)}</div>
+        ${sotto ? `<div class="mu-sotto">${esc(sotto)}</div>` : ""}
+      </div>
+      ${bottoneDelGruppo(l)}
+      ${l.puo.spegni && !l.spento ? tastoMusica(l, "spegni", "accendi", { etichetta: t("Spegni", "Turn off") }) : ""}
+    </div>
+    ${
+      punto
+        ? `<div class="mu-mp-tempo"><span data-mu-mp-ora>${esc(orologioDelBrano(punto.secondi))}</span><span class="mu-bar"><i data-mu-mp-avanza style="width:${(punto.quota * 100).toFixed(1)}%"></i></span><span>${esc(orologioDelBrano(punto.durata))}</span></div>`
+        : ""
+    }
+    <div class="mu-mp-tasti">
+      ${l.puo.precedente && !l.spento ? tastoMusica(l, "precedente", "precedente", { etichetta: t("Brano precedente", "Previous track") }) : ""}
+      ${centro ? tastoMusica(l, "centro", centro === "pausa" ? "pausa" : centro === "accendi" ? "accendi" : "suona", { grande: true, etichetta: centro === "pausa" ? t("Pausa", "Pause") : centro === "accendi" ? t("Accendi", "Turn on") : t("Riproduci", "Play") }) : ""}
+      ${l.puo.successivo && !l.spento ? tastoMusica(l, "successivo", "successivo", { etichetta: t("Brano successivo", "Next track") }) : ""}
+    </div>
+    ${
+      !l.spento && (l.puo.volume || l.puo.passiVolume)
+        ? `<div class="mu-mp-volume">
+      ${l.puo.muto ? `<button type="button" class="mu-tondo${l.mutato ? " pieno" : ""}" data-mu-fa="mp" data-mu-cmd="muto" data-mu-entita="${esc(l.entity)}" aria-pressed="${l.mutato}" aria-label="${esc(t("Muto", "Mute"))}">${glifo(l.mutato ? "muto" : "voce", 26)}</button>` : ""}
+      <button type="button" class="mu-tondo" data-mu-fa="mp" data-mu-cmd="abbassa" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Abbassa", "Volume down"))}">−</button>
+      ${
+        l.puo.volume && volume !== null
+          ? `<div class="mu-bar mu-mp-cursore" data-mu-cursore="volume" data-mu-entita="${esc(l.entity)}"><i style="width:${volume}%"></i><u style="left:${volume}%"></u></div><b class="mu-mp-pct">${volume}%</b>`
+          : `<span class="mu-spazio"></span>`
+      }
+      <button type="button" class="mu-tondo" data-mu-fa="mp" data-mu-cmd="alza" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Alza", "Volume up"))}">+</button>
+    </div>`
+        : ""
+    }
+    ${
+      l.puo.sorgente && l.sorgenti.length && !l.spento
+        ? `<div class="mu-mp-sorgenti">${l.sorgenti
+            .slice(0, 8)
+            .map(
+              (sorgente) =>
+                `<button type="button" class="${sorgente === l.sorgente ? "si" : ""}" data-mu-fa="mp-sorgente" data-mu-sorgente="${esc(sorgente)}" data-mu-entita="${esc(l.entity)}">${esc(sorgente)}</button>`,
+            )
+            .join("")}</div>`
+        : ""
+    }
+  </div>`;
+}
+
+/* I lettori della pagina che sanno mettersi in gruppo, letti adesso. */
+let lettoriDiQui = [];
+function bottoneDelGruppo(l) {
+  if (!l.puo.gruppo || l.spento) return "";
+  const altri = lettoriDiQui.filter((x) => x.entity !== l.entity && x.puo.gruppo);
+  if (!altri.length) return "";
+  const insieme = compagniDelGruppo(l).length;
+  return `<button type="button" class="mu-mp-gruppo${insieme ? " si" : ""}" data-mu-fa="mp-gruppo" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Gruppo", "Group"))}">${glifo("gruppo", 24)}<span>${esc(t("Gruppo", "Group"))}${insieme ? ` · ${insieme + 1}` : ""}</span></button>`;
+}
+
+function rigaDelLettore(l, scelto) {
+  const centro = ilTastoCentrale(l);
+  const compagni = compagniDelGruppo(l);
+  const riga =
+    (compagni.length
+      ? `${t("In gruppo con", "Grouped with")} ${compagni.map((id) => nomeDi(id)).join(", ")} · `
+      : "") +
+    (l.titolo ? [l.titolo, l.artista].filter(Boolean).join(" · ") : parolaDelLettore(l));
+  return `<div class="mu-carta mu-mp-riga${l.entity === scelto ? " si" : ""}${l.suona ? " mu-accesa" : ""}" style="--acc:#ec4899" data-mu-fa="mp-scegli" data-mu-entita="${esc(l.entity)}" role="button" tabindex="0">
+    ${l.copertina ? `<img class="mu-mp-mini" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-mini mu-mp-arte-vuota">${disegno("media", 30, `mpr-${l.entity}`)}</span>`}
+    <div class="mu-nome"><div class="mu-n">${esc(l.nome)}</div><div class="mu-sotto">${l.suona ? '<i class="mu-mp-onde" aria-hidden="true"><b></b><b></b><b></b></i>' : ""}${esc(riga)}</div></div>
+    ${centro ? tastoMusica(l, "centro", centro === "pausa" ? "pausa" : centro === "accendi" ? "accendi" : "suona", { etichetta: l.nome }) : ""}
+  </div>`;
+}
+
+function paginaMusica(pagina) {
+  const voci = lettoriDellaPagina(pagina, state.fonte || {});
+  if (!voci.length)
+    return griglia(pagina, [
+      vuoto(0, t("Nessun lettore: aggiungili nella sezione Musica o qui nel config", "No player: add them in the Music section or here in the config")),
+    ]);
+  const letture = voci.map(lettoreOra);
+  lettoriDiQui = letture;
+  const grande = lettoreScelto(pagina, letture);
+  const altri = letture.length > 1;
+  return `<div class="mu-musica${altri ? "" : " solo"}">${lettoreGrande(grande)}${
+    altri
+      ? `<div class="mu-mp-elenco">${letture.map((l) => rigaDelLettore(l, grande.entity)).join("")}</div>`
+      : ""
+  }</div>`;
+}
+
+/* Il tempo del brano scorre senza che arrivi uno stato: un battito al
+ * secondo, solo mentre la pagina Musica e' davanti e qualcosa suona, che
+ * sposta la barra e il numero senza ridisegnare la pagina. */
+function battitoDellaMusica() {
+  const nodo = doc?.getElementById(ID);
+  const lettore = nodo?.querySelector?.("[data-mu-mp]");
+  const suona = lettore && !state.riposo && lettore.querySelector("[data-mu-mp-avanza]");
+  if (!suona) {
+    root.clearInterval?.(state.musica);
+    state.musica = null;
+    return;
+  }
+  if (state.musica) return;
+  state.musica = root.setInterval?.(() => {
+    const qui = doc?.getElementById(ID)?.querySelector?.("[data-mu-mp]");
+    if (!qui || state.riposo) {
+      root.clearInterval?.(state.musica);
+      state.musica = null;
+      return;
+    }
+    const l = letturaDelLettore({ entity: qui.dataset.muMp }, allStates() || {});
+    const punto = posizioneOra(l);
+    if (!punto) return;
+    const barra = qui.querySelector("[data-mu-mp-avanza]");
+    const ora = qui.querySelector("[data-mu-mp-ora]");
+    if (barra) barra.style.width = `${(punto.quota * 100).toFixed(1)}%`;
+    if (ora) ora.textContent = orologioDelBrano(punto.secondi);
+  }, 1000);
+}
+
 /* Watt scritti per chi guarda da lontano: «850 W», «3,2 kW». */
 function potenza(id) {
   const s = stato(id);
@@ -1194,6 +1408,7 @@ function corpoDellaPagina(pagina) {
   if (pagina.modello === "ambienti") return paginaAmbienti(pagina);
   if (pagina.modello === "telecamere") return paginaTelecamere(pagina);
   if (pagina.modello === "energia") return paginaEnergia(pagina);
+  if (pagina.modello === "musica") return paginaMusica(pagina);
   return paginaStanza(pagina);
 }
 
@@ -1313,6 +1528,24 @@ function finestra() {
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi(ing.telecamera))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(ing.telecamera)}" alt=""></div>
       ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${esc(nomeDi(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${esc(nomeDi(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}</div>`;
+  } else if (f.tipo === "gruppo") {
+    const pagina = state.muro?.pagine?.[state.pagina];
+    const tutti = lettoriDellaPagina(pagina, state.fonte || {}).map(lettoreOra);
+    const capo = tutti.find((x) => x.entity === f.entita) || lettoreOra({ entita: f.entita });
+    const compagni = compagniDelGruppo(capo);
+    const altri = tutti.filter((x) => x.entity !== capo.entity && x.puo.gruppo);
+    dentro = `<div class="mu-fin-clima">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${glifo("gruppo", 28)}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(t("Suona insieme a", "Plays together with"))} ${esc(capo.nome)}</div><div class="mu-sotto">${esc(t("Tocca un lettore per metterlo o toglierlo dal gruppo", "Tap a player to add it to or remove it from the group"))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-mp-gruppo-elenco">${altri
+        .map((x) => {
+          const dentroIlGruppo = compagni.includes(x.entity);
+          return `<button type="button" class="mu-carta mu-mp-riga${dentroIlGruppo ? " si mu-accesa" : ""}" style="--acc:#ec4899" data-mu-fa="mp-unisci" data-mu-entita="${esc(capo.entity)}" data-mu-altro="${esc(x.entity)}" aria-pressed="${dentroIlGruppo}">
+          ${x.copertina ? `<img class="mu-mp-mini" src="${esc(x.copertina)}" alt="">` : `<span class="mu-mp-mini mu-mp-arte-vuota">${disegno("media", 30, `grp-${x.entity}`)}</span>`}
+          <div class="mu-nome"><div class="mu-n">${esc(x.nome)}</div><div class="mu-sotto">${esc(dentroIlGruppo ? t("Nel gruppo", "In the group") : parolaDelLettore(x))}</div></div>
+          <span class="mu-inter ${dentroIlGruppo ? "on" : ""}"><i></i></span></button>`;
+        })
+        .join("")}</div>
+      ${compagni.length ? `<button type="button" class="mu-btn" data-mu-fa="mp-sciogli" data-mu-entita="${esc(capo.entity)}">${esc(t("Sciogli il gruppo", "Ungroup all"))}</button>` : ""}</div>`;
   } else if (f.tipo === "telecamera") {
     dentro = `<div class="mu-fin-clima">
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi(f.entita))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
@@ -1341,6 +1574,7 @@ function finestra() {
       antifurto: "#10b981",
       citofono: "#2563eb",
       telecamera: "#2563eb",
+      gruppo: "#ec4899",
     }[f.tipo] || ACCENTI.luce;
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro}</div></div>`;
 }
@@ -1376,7 +1610,13 @@ function riposo(muro) {
     return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}</div>`;
   const m = meteo();
   const centrale = centraleDelMuro(pagina);
-  const allarme = centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
+  /* Con piu' aree l'antifurto va su una riga sua, al centro, e dice quali
+   * sono inserite: «Antifurto · Spento» non diceva niente a chi ha la
+   * perimetrale accesa e la zona notte no. */
+  const aree = state.fonte?.aree?.length > 1 ? state.fonte.aree : null;
+  const allarme =
+    !aree && centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
+  const rigaDelleAree = aree ? areeSulRiposo(aree) : "";
   const stanza = (state.fonte?.stanze || []).find((s) => s.name === pagina?.stanza);
   const sonda = clean(muro.riposo?.sensore) || stanza?.temp || "";
   const dentro =
@@ -1390,7 +1630,32 @@ function riposo(muro) {
       ${dentro ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro} ${esc(t("in casa", "inside"))}</span>` : ""}
       ${allarme ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme)}</span>` : ""}
     </div>
+    ${rigaDelleAree}
     <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div>`;
+}
+
+function areeSulRiposo(aree) {
+  const lette = aree
+    .map((a, i) => ({
+      nome:
+        clean(a.nome) ||
+        clean(stato(a.entita)?.attributes?.friendly_name) ||
+        `${t("Area", "Area")} ${i + 1}`,
+      valore: String(stato(a.entita)?.state || ""),
+    }))
+    .filter((a) => a.valore);
+  if (!lette.length) return "";
+  const attive = lette.filter((a) => a.valore !== "disarmed");
+  const suona = attive.some((a) => a.valore === "triggered");
+  const dette = attive.length
+    ? attive
+        .map(
+          (a) =>
+            `<span class="${a.valore === "triggered" ? "grave" : ""}"><b>${esc(a.nome)}</b> ${esc(STATI_DELL_ALLARME()[a.valore] || a.valore)}</span>`,
+        )
+        .join('<i aria-hidden="true">·</i>')
+    : `<b>${esc(STATI_DELL_ALLARME().disarmed)}</b>`;
+  return `<div class="mu-riposo-aree${suona ? " grave" : ""}">${disegno("sicurezza", 30, "rip-aree")}<span>${esc(t("Antifurto", "Alarm"))}</span><i aria-hidden="true">·</i>${dette}</div>`;
 }
 
 /* ── la tela: dove sta, quanto e' grande, cosa mostra ────────────────────── */
@@ -1655,7 +1920,21 @@ export function disegna() {
       img,
     ]),
   );
-  if (scriviSeCambia(nodo.firstElementChild, corpo)) caricaLeTelecamere(nodo, vecchie);
+  const copertine = new Map(
+    [...nodo.querySelectorAll("img[data-mu-copertina]")].map((img) => [
+      `${img.className}|${img.dataset.muCopertina}`,
+      img,
+    ]),
+  );
+  if (scriviSeCambia(nodo.firstElementChild, corpo)) {
+    caricaLeTelecamere(nodo, vecchie);
+    /* La copertina che c'era resta la stessa immagine: niente lampo. */
+    for (const img of nodo.querySelectorAll("img[data-mu-copertina]")) {
+      const prima = copertine.get(`${img.className}|${img.dataset.muCopertina}`);
+      if (prima && prima !== img) img.replaceWith(prima);
+    }
+  }
+  battitoDellaMusica();
 }
 
 function caricaLeTelecamere(nodo, vecchie = new Map()) {
@@ -1703,8 +1982,19 @@ function alterna(id, domain, service, data = { entity_id: id }) {
 
 /* Quando Home Assistant dice lo stesso che il tablet aspettava, l'attesa
  * finisce subito: niente quattro secondi in cui il tablet non ascolta. */
+const ATTESE = ["acceso", "luminosita", "temperatura", "volume", "suona", "gruppo"];
 export function attesaConfermata(cosa, atteso, reale) {
   if (cosa === "acceso") return reale.acceso === atteso;
+  if (cosa === "suona") return reale.suona === atteso;
+  if (cosa === "gruppo")
+    return (
+      reale.gruppo ===
+      (Array.isArray(atteso) ? atteso : [])
+        .slice(1)
+        .sort()
+        .join(",")
+    );
+  if (cosa === "volume") return reale.volume !== null && Math.abs(reale.volume - atteso) <= 1;
   if (cosa === "luminosita") return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
   if (cosa === "temperatura") return reale.temperatura !== null && Math.abs(reale.temperatura - atteso) < 0.05;
   return false;
@@ -1721,10 +2011,16 @@ function confermaLeAttese(event) {
       acceso: accesoVero(id),
       luminosita: !accesoVero(id) ? 0 : b === null ? null : Math.max(1, Math.round((b / 255) * 100)),
       temperatura: numero(attributi(id).temperature),
+      volume:
+        numero(attributi(id).volume_level) === null
+          ? null
+          : Math.round(numero(attributi(id).volume_level) * 100),
+      suona: ["playing", "buffering"].includes(String(stato(id)?.state)),
+      gruppo: (attributi(id).group_members || []).filter((x) => x !== id).sort().join(","),
     };
-    for (const cosa of ["acceso", "luminosita", "temperatura"])
+    for (const cosa of ATTESE)
       if (cosa in attesa && attesaConfermata(cosa, attesa[cosa], reale)) delete attesa[cosa];
-    if (!["acceso", "luminosita", "temperatura"].some((cosa) => cosa in attesa)) {
+    if (!ATTESE.some((cosa) => cosa in attesa)) {
       root.clearTimeout?.(attesa._timer);
       delete state.inAttesa[id];
     }
@@ -1897,6 +2193,67 @@ function onClick(event) {
     case "finestra-citofono":
       apriFinestra({ tipo: "citofono" });
       return;
+    case "mp": {
+      const l = letturaDelLettore({ entity: id }, allStates() || {});
+      const cmd = bersaglio.dataset.muCmd;
+      const servizio = comandoDelLettore(cmd, l);
+      if (!servizio) return;
+      const dati = { entity_id: id };
+      if (cmd === "muto") dati.is_volume_muted = !l.mutato;
+      if (cmd === "centro" && !l.spento) attendi(id, "suona", !l.suona);
+      if ((cmd === "alza" || cmd === "abbassa") && l.volume !== null && l.puo.volume) {
+        /* Un punto alla volta, come nella sezione Musica: il numero si vede
+         * subito. */
+        const dopo = Math.min(100, Math.max(0, Math.round(l.volume * 100) + (cmd === "alza" ? 2 : -2)));
+        attendi(id, "volume", dopo);
+        comanda("media_player", "volume_set", { entity_id: id, volume_level: dopo / 100 });
+        disegna();
+        return;
+      }
+      comanda("media_player", servizio, dati);
+      disegna();
+      return;
+    }
+    case "mp-gruppo":
+      apriFinestra({ tipo: "gruppo", entita: id });
+      return;
+    case "mp-unisci": {
+      const capo = lettoreOra({ entita: id });
+      const altro = bersaglio.dataset.muAltro;
+      const servizio = servizioDelGruppo(capo, altro);
+      if (!servizio) return;
+      /* Il gruppo cambia subito sul tablet: quello vero lo conferma. */
+      const compagni = compagniDelGruppo(capo);
+      const dopo =
+        servizio.service === "join"
+          ? [capo.entity, ...compagni, altro]
+          : [capo.entity, ...compagni.filter((x) => x !== altro)];
+      attendi(id, "gruppo", dopo.length > 1 ? dopo : []);
+      comanda("media_player", servizio.service, servizio.data);
+      disegna();
+      return;
+    }
+    case "mp-sciogli": {
+      const capo = lettoreOra({ entita: id });
+      for (const altro of compagniDelGruppo(capo))
+        comanda("media_player", "unjoin", { entity_id: altro });
+      attendi(id, "gruppo", []);
+      chiudiFinestra();
+      disegna();
+      return;
+    }
+    case "mp-sorgente":
+      comanda("media_player", "select_source", {
+        entity_id: id,
+        source: bersaglio.dataset.muSorgente,
+      });
+      return;
+    case "mp-scegli": {
+      const pagina = state.muro?.pagine?.[state.pagina];
+      if (pagina) (state.lettori ||= {})[pagina.id] = id;
+      disegna();
+      return;
+    }
     case "finestra-telecamera":
       apriFinestra({ tipo: "telecamera", entita: id });
       return;
@@ -1950,10 +2307,10 @@ function onClick(event) {
 }
 
 /* Il cursore: la barra della luce nella card, e la colonna nella finestra. */
-function percentualeDalDito(event, barra, verticale) {
+function percentualeDalDito(event, barra, verticale, minimo = 1) {
   const r = barra.getBoundingClientRect();
   const p = verticale ? 1 - (event.clientY - r.top) / r.height : (event.clientX - r.left) / r.width;
-  return Math.max(1, Math.min(100, Math.round(p * 100)));
+  return Math.max(minimo, Math.min(100, Math.round(p * 100)));
 }
 
 function onPointerDown(event) {
@@ -1967,7 +2324,12 @@ function onPointerDown(event) {
   const barra = event.target?.closest?.("[data-mu-cursore]");
   if (barra) {
     const verticale = barra.dataset.muCursore === "luce-alta";
-    state.trascina = { barra, id: barra.dataset.muEntita, verticale };
+    state.trascina = {
+      barra,
+      id: barra.dataset.muEntita,
+      verticale,
+      volume: barra.dataset.muCursore === "volume",
+    };
     barra.setPointerCapture?.(event.pointerId);
     onPointerMove(event);
     return;
@@ -1997,13 +2359,13 @@ function onPointerDown(event) {
 function onPointerMove(event) {
   const t = state.trascina;
   if (!t) return;
-  const p = percentualeDalDito(event, t.barra, t.verticale);
+  const p = percentualeDalDito(event, t.barra, t.verticale, t.volume ? 0 : 1);
   t.valore = p;
   const riempi = t.barra.querySelector("i");
   if (riempi) riempi.style[t.verticale ? "height" : "width"] = `${p}%`;
   const pallino = t.barra.querySelector("u");
   if (pallino) pallino.style.left = `${p}%`;
-  const scritta = t.barra.querySelector("b");
+  const scritta = t.barra.querySelector("b") || (t.volume && t.barra.nextElementSibling);
   if (scritta) scritta.textContent = `${p}%`;
 }
 
@@ -2013,7 +2375,10 @@ function onPointerUp(event) {
   const t = state.trascina;
   if (t) {
     state.trascina = null;
-    if (t.valore) {
+    if (t.volume && t.valore !== undefined) {
+      attendi(t.id, "volume", t.valore);
+      comanda("media_player", "volume_set", { entity_id: t.id, volume_level: t.valore / 100 });
+    } else if (t.valore) {
       attendi(t.id, "acceso", true);
       attendi(t.id, "luminosita", t.valore);
       comanda("light", "turn_on", { entity_id: t.id, brightness_pct: t.valore });
@@ -2047,13 +2412,15 @@ function svegliaSeServe(event) {
   const muro = state.muro;
   if (!state.riposo || !muro) return;
   const sensore = muro.risveglio.attivo ? muro.risveglio.entita : "";
-  const centrale = centraleDelMuro(muro.pagine[0]);
+  const centrali = [
+    ...new Set([centraleDelMuro(muro.pagine[0]), ...(state.fonte?.centrali || [])].filter(Boolean)),
+  ];
   const ids =
     event?.detail?.entity_ids || (event?.detail?.entity_id ? [event.detail.entity_id] : []);
   const tocca = (id) => !ids.length || ids.includes(id);
   if (
     (sensore && tocca(sensore) && String(stato(sensore)?.state) === "on") ||
-    (centrale && tocca(centrale) && String(stato(centrale)?.state) === "triggered")
+    centrali.some((id) => tocca(id) && String(stato(id)?.state) === "triggered")
   ) {
     state.riposo = false;
     tocco();
@@ -2168,6 +2535,52 @@ ${MURO} .mu-pill .mu-et{font-size:10.5px}
 ${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;display:grid;grid-template-columns:repeat(var(--mu-col),minmax(0,1fr));grid-template-rows:repeat(var(--mu-righe),minmax(0,1fr));gap:var(--mu-gap);min-height:0}
 ${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
 ${MURO} .mu-pagine.mu-molte button:not(.si) span{display:none}
+${MURO} .mu-pag-musica{grid-template-rows:auto 1fr}
+${MURO} .mu-musica{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;min-height:0}
+${MURO} .mu-musica.solo{grid-template-columns:1fr}
+${MURO} .mu-mp{padding:26px;display:flex;flex-direction:column;gap:20px;min-height:0}
+${MURO} .mu-mp-fondo{position:absolute!important;inset:-40px;width:calc(100% + 80px);height:calc(100% + 80px);object-fit:cover;filter:blur(42px) saturate(1.3);opacity:.32;pointer-events:none}
+${MURO} .mu-mp-testa{display:flex;align-items:center;gap:22px;min-width:0}
+${MURO} .mu-mp-arte{flex:none;width:150px;height:150px;border-radius:22px;object-fit:cover;box-shadow:0 18px 34px -14px rgba(15,23,42,.55)}
+${MURO} .mu-mp-arte-vuota{display:grid;place-items:center;background:color-mix(in srgb,var(--acc) 14%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 30%,transparent)}
+${MURO} .mu-mp-dici{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+${MURO} .mu-mp-titolo{font-size:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mp-dici .mu-sotto{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mp-testa>.mu-tondo{align-self:flex-start}
+${MURO} .mu-mp-gruppo{align-self:flex-start;display:flex;align-items:center;gap:8px;height:56px;padding:0 18px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
+${MURO} .mu-mp-gruppo.si{color:#fff;background:var(--acc);box-shadow:0 10px 24px -10px var(--acc)}
+${MURO} .mu-mp-gruppo-elenco{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto}
+${MURO} .mu-mp-gruppo-elenco .mu-mp-riga{text-align:left;width:100%}
+${MURO} .mu-mp-gruppo-elenco .mu-inter.on{background:var(--acc)}
+${MURO} .mu-mp-tempo{display:flex;align-items:center;gap:14px;font-size:14px;font-weight:800;color:var(--text-dim);font-variant-numeric:tabular-nums}
+${MURO} .mu-mp-tempo .mu-bar{flex:1}
+${MURO} .mu-mp-tasti{display:flex;align-items:center;justify-content:center;gap:34px;margin-top:auto}
+${MURO} .mu-mp-tasti .mu-tondo.grande{width:104px;height:104px}
+${MURO} .mu-mp-volume{display:flex;align-items:center;gap:14px}
+${MURO} .mu-mp-cursore{flex:1}
+${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
+${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
+${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
+${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}
+${MURO} .mu-mp-riga{display:flex;align-items:center;gap:14px;padding:14px;cursor:pointer;flex:none}
+${MURO} .mu-mp-riga.si{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--acc) 60%,transparent),0 14px 28px -16px var(--acc)}
+${MURO} .mu-mp-riga .mu-tondo{width:56px;height:56px}
+${MURO} .mu-mp-riga .mu-sotto{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+${MURO} .mu-mp-mini{flex:none;width:64px;height:64px;border-radius:14px;object-fit:cover}
+${MURO} .mu-mp-onde{display:inline-flex;align-items:flex-end;gap:2px;height:14px;flex:none}
+${MURO} .mu-mp-onde b{width:3px;border-radius:2px;background:var(--acc);animation:mu-onda 1s ease-in-out infinite}
+${MURO} .mu-mp-onde b:nth-child(2){animation-delay:-.4s}
+${MURO} .mu-mp-onde b:nth-child(3){animation-delay:-.7s}
+@keyframes mu-onda{0%,100%{height:4px}50%{height:14px}}
+${MURO}[data-verso="verticale"] .mu-musica{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+${MURO}[data-compatto="1"] .mu-musica{grid-template-columns:1fr}
+${MURO}[data-compatto="1"] .mu-mp-elenco,${MURO}[data-compatto="1"] .mu-mp-sorgenti{display:none}
+${MURO}[data-compatto="1"] .mu-mp{padding:14px;gap:12px}
+${MURO}[data-compatto="1"] .mu-mp-arte{width:72px;height:72px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-mp-titolo{font-size:24px}
+${MURO}[data-compatto="1"] .mu-mp-tasti{gap:16px}
+${MURO}[data-compatto="1"] .mu-mp-tasti .mu-tondo.grande{width:72px;height:72px}
 ${MURO} .mu-fitta{--mu-gap:12px}
 ${MURO} .mu-fitta .mu-card{padding:16px;gap:10px;border-radius:20px}
 ${MURO} .mu-fitta .mu-riga1{gap:10px}
@@ -2276,6 +2689,11 @@ ${MURO} .mu-data{font-size:18px;letter-spacing:.2em}
 ${MURO} .mu-riposo-riga{display:flex;gap:40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
 ${MURO} .mu-riposo-riga span{display:flex;align-items:center;gap:10px}
 ${MURO} .mu-tocca{position:absolute;bottom:28px;opacity:.6}
+${MURO} .mu-riposo-aree{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;max-width:90%;margin-top:14px;color:#92a4c2;font-weight:700;font-size:20px;text-align:center}
+${MURO} .mu-riposo-aree b{color:#dbe4f3;font-weight:800}
+${MURO} .mu-riposo-aree .grave,${MURO} .mu-riposo-aree .grave b{color:#fda4af}
+${MURO} .mu-riposo-aree i{font-style:normal;opacity:.6}
+${MURO}[data-compatto="1"] .mu-riposo-aree{font-size:15px;gap:6px}
 ${MURO} .mu-avvisi{position:absolute;top:28px;left:0;right:0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 20px}
 ${MURO} .mu-avviso{display:flex;align-items:center;gap:12px;padding:12px 20px 12px 12px;border-radius:999px;font-size:16px}
 ${MURO} .mu-avviso.grave b{color:#fda4af}

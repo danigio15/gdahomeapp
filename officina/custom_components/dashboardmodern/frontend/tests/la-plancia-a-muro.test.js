@@ -468,3 +468,107 @@ test("meteo e riposo si scelgono, e di serie il riposo torna alla prima pagina",
     sensore: "sensor.salotto_t",
   });
 });
+
+/* «Me ne devi fare una con sezione musica.» I lettori vengono dalla sezione
+ * Musica della plancia di origine, o si scelgono. */
+test("la pagina Musica prende i lettori della plancia, o quelli scelti", async () => {
+  const { lettoriDellaPagina, LETTORI_AL_MASSIMO } = await import(
+    "../src/core/plancia-a-muro.js"
+  );
+  const fonte = fonteDaiValori({
+    ...VALORI,
+    cd_media_player: JSON.stringify([
+      { entity: "media_player.sonos_cucina", nome: "Cucina" },
+      { entity: "media_player.tv_sala" },
+      { nome: "senza entita'" },
+    ]),
+  });
+  assert.deepEqual(fonte.lettori, [
+    { entity: "media_player.sonos_cucina", nome: "Cucina" },
+    { entity: "media_player.tv_sala", nome: "" },
+  ]);
+  const pagina = muroPulito({ pagine: [{ modello: "musica" }] }).pagine[0];
+  assert.deepEqual(
+    lettoriDellaPagina(pagina, fonte).map((l) => l.entita),
+    ["media_player.sonos_cucina", "media_player.tv_sala"],
+  );
+  const scelti = muroPulito({
+    pagine: [
+      {
+        modello: "musica",
+        lettori: [
+          "media_player.studio",
+          "media_player.studio",
+          "light.non_e_un_lettore",
+          "",
+          ...Array.from({ length: 12 }, (_, i) => `media_player.l${i}`),
+        ],
+      },
+    ],
+  }).pagine[0];
+  assert.equal(scelti.lettori[0], "media_player.studio");
+  assert.equal(scelti.lettori.length, LETTORI_AL_MASSIMO, "doppi e non lettori fuori");
+  assert.ok(!scelti.lettori.includes("light.non_e_un_lettore"));
+  const giro = muroPulito({ pagine: [scelti] }).pagine[0];
+  assert.deepEqual(giro.lettori, scelti.lettori, "si rilegge uguale");
+});
+
+/* «Quando sono piu' di una partizione andrei a capo, con le partizioni
+ * attive scritte.» Le aree portano il loro nome, e suona una qualunque. */
+test("le aree dell'antifurto: col nome, e l'allarme di una qualunque", async () => {
+  const { avvisiAccesi } = await import("../src/core/plancia-a-muro.js");
+  const fonte = fonteDaiValori({
+    ...VALORI,
+    cd_centrali: JSON.stringify([
+      { nome: "Perimetrale", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.p" } },
+      { nome: "Zona notte", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.n" } },
+    ]),
+  });
+  assert.deepEqual(fonte.aree, [
+    { entita: "alarm_control_panel.casa", nome: "" },
+    { entita: "alarm_control_panel.p", nome: "Perimetrale" },
+    { entita: "alarm_control_panel.n", nome: "Zona notte" },
+  ]);
+  const accesi = avvisiAccesi(fonte, {
+    "alarm_control_panel.casa": { state: "disarmed" },
+    "alarm_control_panel.n": { state: "triggered" },
+  });
+  assert.deepEqual(
+    accesi.map((a) => [a.chiave, a.grave]),
+    [["alarm_control_panel.n", true]],
+  );
+});
+
+/* «Visto che hai Sonos prevedi il pulsante gruppo.» */
+test("il gruppo dei lettori: chi c'e', e il servizio per entrare e uscire", async () => {
+  const { compagniDelGruppo, letturaDelLettore, servizioDelGruppo, SA } = await import(
+    "../src/core/media-player.js"
+  );
+  const stati = {
+    "media_player.cucina": {
+      state: "playing",
+      attributes: {
+        supported_features: SA.GRUPPO | SA.PAUSA,
+        group_members: ["media_player.cucina", "media_player.sala"],
+      },
+    },
+  };
+  const l = letturaDelLettore({ entity: "media_player.cucina" }, stati);
+  assert.equal(l.puo.gruppo, true);
+  assert.deepEqual(compagniDelGruppo(l), ["media_player.sala"]);
+  assert.deepEqual(servizioDelGruppo(l, "media_player.sala"), {
+    service: "unjoin",
+    data: { entity_id: "media_player.sala" },
+  });
+  assert.deepEqual(servizioDelGruppo(l, "media_player.bagno"), {
+    service: "join",
+    data: { entity_id: "media_player.cucina", group_members: ["media_player.bagno"] },
+  });
+  assert.equal(servizioDelGruppo(l, "media_player.cucina"), null, "con se' stesso no");
+  const solo = letturaDelLettore(
+    { entity: "media_player.tv" },
+    { "media_player.tv": { state: "on", attributes: { supported_features: SA.PAUSA } } },
+  );
+  assert.equal(solo.puo.gruppo, false);
+  assert.deepEqual(compagniDelGruppo(solo), []);
+});

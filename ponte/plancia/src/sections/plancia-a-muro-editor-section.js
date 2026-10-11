@@ -19,6 +19,8 @@ import {
   ambientiDellaFonte,
   comandiDellaPagina,
   energiaDellaPagina,
+  LETTORI_AL_MASSIMO,
+  lettoriDellaPagina,
   postiDellaPagina,
   telecamereDellaFonte,
   comandiProposti,
@@ -223,6 +225,7 @@ const MODELLI = () => [
   ["ambienti", t("Ambienti", "Rooms")],
   ["telecamere", t("Telecamere", "Cameras")],
   ["energia", t("Energia", "Energy")],
+  ["musica", t("Musica", "Music")],
 ];
 const DISEGNO_DI_SERIE = {
   stanza: "stanze",
@@ -235,6 +238,7 @@ const DISEGNO_DI_SERIE = {
   ambienti: "temperatura",
   telecamere: "telecamere",
   energia: "energia",
+  musica: "media",
 };
 const NOME_DEL_MODELLO = (modello) => MODELLI().find(([v]) => v === modello)?.[1] || "";
 
@@ -348,6 +352,25 @@ function paginaMarkup(p, i, tutte) {
     ${misura("solare", t("Produzione solare", "Solar production"), t("Potenza, in W o kW", "Power, in W or kW"))}
     ${misura("rete", t("Scambio con la rete", "Grid exchange"), t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in"))}
     ${misura("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}`;
+  } else if (p.modello === "musica") {
+    const sue = lettoriDellaPagina({}, f);
+    /* Un campo per lettore scelto, e uno vuoto per aggiungerne un altro. */
+    const campi = Math.min(p.lettori.length + 1, LETTORI_AL_MASSIMO);
+    dentro = `<div class="mu-ed-nota">${esc(
+      t(
+        "Il lettore che suona in grande, con la copertina, i tasti, il volume e le sorgenti; accanto gli altri, ognuno col suo play. Un tocco su un lettore lo porta in grande.",
+        "The player that's playing, big, with cover, buttons, volume and sources; beside it the others, each with its own play. A tap on a player brings it up big.",
+      ),
+    )}</div>
+    ${riga(
+      t("Lettori", "Players"),
+      p.lettori.length
+        ? t("Quelli scelti qui, in quest'ordine", "The ones chosen here, in this order")
+        : `${t("Vuoto: quelli della sezione Musica della plancia", "Empty: the ones from the dashboard's Music section")}${sue.length ? ` — ${sue.map((l) => l.nome || nomeDi(l.entita)).join(", ")}` : ""}`,
+      `<span class="mu-ed-lettori">${Array.from({ length: campi }, (_, k) =>
+        cerca(`${via}.lettori.${k}`, p.lettori[k] || "", { domini: "media_player" }),
+      ).join("")}</span>`,
+    )}`;
   } else if (p.modello === "personale") {
     dentro = `<div class="mu-ed-nota">${esc(
       t(
@@ -410,7 +433,7 @@ function paginaMarkup(p, i, tutte) {
 
 /* Le pagine che la griglia non la scelgono: l'ingresso ha la sua forma,
  * l'energia le sue quattro tessere. */
-const SENZA_GRIGLIA = ["ingresso", "energia"];
+const SENZA_GRIGLIA = ["ingresso", "energia", "musica"];
 const GRIGLIE_SCRITTE = () =>
   Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
 
@@ -928,6 +951,7 @@ html[data-theme="dark"] #ed-body .mu-ed-sporca{color:#fde68a;background:#78350f5
 #ed-body .mu-ed-colori button.auto{background:conic-gradient(#f59e0b,#ef4444,#8b5cf6,#0ea5e9,#10b981,#f59e0b);color:#fff}
 #ed-body .mu-ed-colori button.si{border-color:var(--text,#0f172a);box-shadow:0 0 0 2px var(--card-background-color,#fff) inset}
 #ed-body .mu-ed-anteprima-box{margin-top:10px}
+#ed-body .mu-ed-lettori{display:grid;gap:8px;min-width:240px;flex:1}
 #ed-body .mu-ed-anteprima{margin-top:8px;width:100%;max-width:720px;overflow:hidden;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee)}
 #ed-body .mu-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}

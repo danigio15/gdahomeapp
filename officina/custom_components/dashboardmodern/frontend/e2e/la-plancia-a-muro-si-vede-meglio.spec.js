@@ -181,4 +181,196 @@ test.describe("la plancia a muro si vede meglio", () => {
     expect(m.meteo).toBe("weather.casa");
     expect(m.riposo.torna).toBe(false);
   });
+
+  /* «Me ne devi fare una con sezione musica.» */
+  test("la pagina Musica: il lettore grande, i tasti, il volume, gli altri lettori", async ({
+    page,
+  }, testInfo) => {
+    const COPERTINA =
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f472b6"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><circle cx="150" cy="150" r="70" fill="#0f172a" opacity=".85"/><circle cx="150" cy="150" r="14" fill="#f472b6"/></svg>',
+      );
+    const SA_TUTTO = 1 + 4 + 8 + 16 + 32 + 128 + 256 + 2048 + 16384;
+    const stati = {
+      ...STATI,
+      "media_player.sonos_cucina": {
+        state: "playing",
+        attributes: {
+          friendly_name: "Sonos cucina",
+          supported_features: SA_TUTTO,
+          media_title: "Nuvole bianche",
+          media_artist: "Ludovico Einaudi",
+          media_album_name: "Una mattina",
+          entity_picture: COPERTINA,
+          volume_level: 0.35,
+          source: "Spotify",
+          source_list: ["Spotify", "Radio", "TV"],
+          media_duration: 340,
+          media_position: 120,
+          media_position_updated_at: new Date().toISOString(),
+        },
+      },
+      "media_player.tv_sala": {
+        state: "off",
+        attributes: { friendly_name: "TV sala", supported_features: 128 + 256 + 4 },
+      },
+    };
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: {
+        attiva: true,
+        pagine: [
+          {
+            id: "m1",
+            modello: "musica",
+            lettori: ["media_player.sonos_cucina", "media_player.tv_sala"],
+          },
+        ],
+      },
+      stati,
+    });
+    const grande = muro(page).locator(".mu-mp");
+    await expect(grande).toContainText("Nuvole bianche");
+    await expect(grande).toContainText("Ludovico Einaudi");
+    await expect(grande.locator(".mu-mp-pct")).toHaveText("35%");
+    await expect(muro(page).locator(".mu-mp-riga")).toHaveCount(2);
+
+    await grande.locator('[data-mu-cmd="successivo"]').click();
+    /* La pausa si vede subito, prima che Home Assistant risponda. */
+    await grande.locator('[data-mu-cmd="centro"]').click();
+    await expect(grande.locator('[data-mu-cmd="centro"]')).toHaveAttribute(
+      "aria-label",
+      /Riproduci/,
+    );
+    await grande.locator('[data-mu-cmd="alza"]').click();
+    await expect(grande.locator(".mu-mp-pct")).toHaveText("37%");
+    await grande.locator('[data-mu-sorgente="Radio"]').click();
+    const chiesti = await page.evaluate(() =>
+      window.__SERVIZI__.map((s) => `${s.domain}.${s.service}`),
+    );
+    expect(chiesti).toEqual([
+      "media_player.media_next_track",
+      "media_player.media_play_pause",
+      "media_player.volume_set",
+      "media_player.select_source",
+    ]);
+
+    /* Un tocco sull'altro lettore lo porta in grande: la TV spenta si accende. */
+    await muro(page).locator('.mu-mp-riga[data-mu-entita="media_player.tv_sala"]').click();
+    await expect(grande).toContainText("TV sala");
+    await expect(grande.locator('[data-mu-cmd="centro"]')).toHaveAttribute(
+      "aria-label",
+      /Accendi/,
+    );
+  });
+
+  /* «Metterei disattivo. E quando sono piu' di una partizione andrei a capo,
+   * centrato, e con le partizioni attive scritte.» */
+  test("il riposo: «Disattivo», e con piu' aree una riga con quelle inserite", async ({
+    page,
+  }, testInfo) => {
+    const stati = {
+      ...STATI,
+      "alarm_control_panel.perimetrale": { state: "armed_away", attributes: {} },
+      "alarm_control_panel.notte": { state: "armed_night", attributes: {} },
+      "alarm_control_panel.garage": { state: "disarmed", attributes: {} },
+    };
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: { attiva: true, pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }] },
+      stati,
+    });
+    /* Un'area sola: nella riga, con la parola nuova. */
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect(muro(page).locator(".mu-riposo")).toContainText(/Antifurto · Disattivo/);
+    await expect(muro(page).locator(".mu-riposo-aree")).toHaveCount(0);
+
+    const area = (nome, id) => ({ nome, caselle: { "dm.security_centrale_allarme": id } });
+    await page.evaluate(
+      async (aree) => {
+        localStorage.setItem("cd_centrali", JSON.stringify(aree));
+        await window.dmMuro.rileggi({ forza: true });
+        window.dmMuro.riposa();
+      },
+      [
+        area("Perimetrale", "alarm_control_panel.perimetrale"),
+        area("Zona notte", "alarm_control_panel.notte"),
+        area("Garage", "alarm_control_panel.garage"),
+      ],
+    );
+    const riga = muro(page).locator(".mu-riposo-aree");
+    await expect(riga).toBeVisible();
+    await expect(riga).toContainText("Perimetrale");
+    await expect(riga).toContainText("Fuori");
+    await expect(riga).toContainText("Zona notte");
+    await expect(riga).not.toContainText("Garage");
+
+    /* Tutte disinserite: «Disattivo». */
+    await page.evaluate(() => {
+      const raw = eval("_RAW_STATES");
+      for (const id of ["alarm_control_panel.perimetrale", "alarm_control_panel.notte"])
+        raw[id] = { entity_id: id, state: "disarmed", attributes: {} };
+      window.dmMuro.riposa();
+    });
+    await expect(riga).toContainText(/Antifurto\s*·\s*Disattivo/);
+  });
+
+  test("la pagina Musica: il gruppo dei Sonos si fa e si scioglie dal tablet", async ({
+    page,
+  }, testInfo) => {
+    const GRUPPO = 524288;
+    const stati = {
+      ...STATI,
+      "media_player.sonos_cucina": {
+        state: "playing",
+        attributes: {
+          friendly_name: "Sonos cucina",
+          supported_features: 1 + 4 + 16384 + GRUPPO,
+          media_title: "Nuvole bianche",
+          volume_level: 0.3,
+          group_members: ["media_player.sonos_cucina"],
+        },
+      },
+      "media_player.sonos_sala": {
+        state: "idle",
+        attributes: { friendly_name: "Sonos sala", supported_features: 1 + 4 + 16384 + GRUPPO },
+      },
+      "media_player.tv_sala": {
+        state: "off",
+        attributes: { friendly_name: "TV sala", supported_features: 128 + 256 },
+      },
+    };
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: {
+        attiva: true,
+        pagine: [
+          {
+            id: "m1",
+            modello: "musica",
+            lettori: ["media_player.sonos_cucina", "media_player.sonos_sala", "media_player.tv_sala"],
+          },
+        ],
+      },
+      stati,
+    });
+    const grande = muro(page).locator(".mu-mp");
+    await grande.locator('[data-mu-fa="mp-gruppo"]').click();
+    const finestra = muro(page).locator(".mu-finestra");
+    /* La TV non sa stare in gruppo: non si offre. */
+    await expect(finestra.locator("[data-mu-altro]")).toHaveCount(1);
+    await finestra.locator('[data-mu-altro="media_player.sonos_sala"]').click();
+    await expect(finestra.locator('[data-mu-altro="media_player.sonos_sala"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await finestra.locator('[data-mu-fa="chiudi"]').click();
+    await expect(grande.locator('[data-mu-fa="mp-gruppo"]')).toContainText("2");
+    const chiesti = await page.evaluate(() => window.__SERVIZI__.slice());
+    expect(chiesti).toEqual([
+      {
+        domain: "media_player",
+        service: "join",
+        data: { entity_id: "media_player.sonos_cucina", group_members: ["media_player.sonos_sala"] },
+      },
+    ]);
+  });
 });
