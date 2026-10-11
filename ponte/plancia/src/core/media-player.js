@@ -55,6 +55,10 @@ export const SA = Object.freeze({
    * dei tasti: `BROWSE_MEDIA` dice che quel lettore sa elencare cosa ha da
    * offrire, `MEDIA_ENQUEUE` che sa mettere in coda invece di interrompere. */
   SFOGLIA: 131072,
+  /* Mettersi in gruppo con altri lettori e suonare la stessa cosa: Sonos,
+   * Music Assistant, gli altoparlanti Google. «Visto che hai Sonos prevedi il
+   * pulsante gruppo.» */
+  GRUPPO: 524288,
   ACCODA: 2097152,
 });
 
@@ -190,6 +194,12 @@ export function letturaDelLettore(
     volume: volume === null ? null : Math.min(1, Math.max(0, volume)),
     mutato: attributi.is_volume_muted === true,
     sorgente: pulito(attributi.source),
+    /* Con chi suona insieme: Home Assistant mette per primo chi guida il
+     * gruppo, e lo stesso elenco sta su tutti i lettori del gruppo. Da solo,
+     * l'elenco e' vuoto o ha solo lui. */
+    gruppo: (Array.isArray(attributi.group_members) ? attributi.group_members : [])
+      .map(pulito)
+      .filter(Boolean),
     sorgenti: (Array.isArray(attributi.source_list) ? attributi.source_list : [])
       .map(pulito)
       .filter(Boolean),
@@ -215,6 +225,7 @@ export function letturaDelLettore(
       /* La coda la sa solo chi ce l'ha: su un Chromecast «accoda» sostituisce
        * quello che sta suonando, e chi lo premeva perdeva il brano. */
       accoda: sa(SA.ACCODA) && sa(SA.SUONA),
+      gruppo: sa(SA.GRUPPO),
     },
     /* Quello che sta accanto (#451): l'interruttore dell'alimentazione, la
      * tendina della sorgente di SmartThings, il canale, il volume, il
@@ -300,6 +311,30 @@ export function lettureDeiLettori(stored, states = {}, resolve, piattaforme = {}
   return lettoriConfigurati(stored).map((voce) =>
     letturaDelLettore(voce, states, resolve, piattaforme),
   );
+}
+
+/**
+ * Il gruppo di un lettore, detto dalla sua parte: gli altri con cui suona.
+ * Torna `[]` se suona da solo.
+ */
+export function compagniDelGruppo(lettura) {
+  const gruppo = Array.isArray(lettura?.gruppo) ? lettura.gruppo : [];
+  return gruppo.filter((id) => id !== lettura?.entity);
+}
+
+/**
+ * Il servizio per mettere o togliere `altro` dal gruppo di `lettura`.
+ *
+ * Entrare: `join` sul lettore che guida, con l'altro fra i `group_members`.
+ * Uscire: `unjoin` su chi esce — e' lui a lasciare il gruppo, non chi lo
+ * guida a cacciarlo.
+ */
+export function servizioDelGruppo(lettura, altro) {
+  const id = pulito(altro);
+  if (!lettura?.entity || !id || id === lettura.entity) return null;
+  if (compagniDelGruppo(lettura).includes(id))
+    return { service: "unjoin", data: { entity_id: id } };
+  return { service: "join", data: { entity_id: lettura.entity, group_members: [id] } };
 }
 
 /**

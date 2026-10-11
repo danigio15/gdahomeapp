@@ -131,6 +131,7 @@ test("sei posti di serie, otto pagine, e un comando senza entita' vera non entra
       ],
     })),
   });
+  assert.equal(PAGINE_AL_MASSIMO, 8);
   assert.equal(muro.pagine.length, PAGINE_AL_MASSIMO);
   assert.equal(muro.pagine[0].comandi.length, POSTI);
   assert.ok(
@@ -387,16 +388,15 @@ test("il riposo cambia posto ogni minuto, e mai vicino a quello di prima", () =>
   }
 });
 
-test("una pagina ha 6, 8 o 12 riquadri, e le pagine sono fino a otto", () => {
-  assert.deepEqual([...GRIGLIE], [6, 8, 12]);
+test("le plance della 1.11.1 scrivevano `posti`: 6, 8 o 12 valgono ancora", () => {
   assert.equal(PAGINE_AL_MASSIMO, 8);
   const comandi = Array.from({ length: 12 }, (_, n) => ({ tipo: "luce", entita: `light.l${n}` }));
   const di = (posti) =>
     muroPulito({ attiva: true, pagine: [{ modello: "personale", posti, comandi }] }).pagine[0];
-  assert.equal(di(8).posti, 8);
+  assert.equal(di(8).griglia, 8);
   assert.equal(di(8).comandi.length, 8);
   assert.equal(di(12).comandi.length, 12);
-  assert.equal(di(7).posti, 6, "un numero che non e' fra quelli si rimette a sei");
+  assert.equal(di(7).griglia, 6, "un numero che non e' fra quelli si rimette a sei");
   assert.equal(di(undefined).comandi.length, 6);
 });
 
@@ -407,4 +407,218 @@ test("il meteo del tablet e' quello scelto nella config della plancia", () => {
   });
   assert.equal(fonte.meteo, "weather.openweathermap");
   assert.equal(fonteDaiValori(VALORI).meteo, "");
+});
+
+/* «Come configuratore e come sezioni da gestire e vedere riusciamo a fare
+ * meglio?» La griglia si sceglie, le pagine hanno un colore, e ci sono le
+ * pagine da guardare: tapparelle, ambienti, telecamere, energia. */
+test("la griglia si sceglie: da quattro a dodici posti, e in verticale si gira", async () => {
+  const { GRIGLIE, grigliaDellaPagina, postiDellaPagina } = await import(
+    "../src/core/plancia-a-muro.js"
+  );
+  assert.deepEqual(Object.keys(GRIGLIE), ["4", "6", "8", "9", "12"]);
+  const troppi = Array.from({ length: 14 }, (_, i) => ({ tipo: "luce", entita: `light.l${i}` }));
+  const muro = muroPulito({
+    pagine: [
+      { modello: "personale", griglia: 12, comandi: troppi },
+      { modello: "personale", griglia: 7, comandi: troppi },
+      { modello: "telecamere" },
+    ],
+  });
+  assert.equal(muro.pagine[0].griglia, 12);
+  assert.equal(muro.pagine[0].comandi.length, 12);
+  assert.equal(muro.pagine[1].griglia, POSTI, "una griglia che non c'e' torna quella di serie");
+  assert.equal(muro.pagine[1].comandi.length, POSTI);
+  assert.equal(postiDellaPagina(muro.pagine[2]), 4, "le telecamere nascono in quattro");
+  assert.deepEqual(grigliaDellaPagina(muro.pagine[0], "orizzontale"), { colonne: 4, righe: 3 });
+  assert.deepEqual(grigliaDellaPagina(muro.pagine[0], "verticale"), { colonne: 3, righe: 4 });
+  assert.deepEqual(muroPulito(JSON.stringify(muro)), muro);
+});
+
+test("una stanza con la griglia grande propone piu' comandi", () => {
+  const fonte = fonteDaiValori(VALORI);
+  const pagina = muroPulito({ pagine: [{ modello: "stanza", stanza: "Soggiorno", griglia: 4 }] })
+    .pagine[0];
+  assert.equal(comandiDellaPagina(pagina, fonte).length, 4);
+  assert.equal(comandiProposti(fonte, "Soggiorno", 12).length, 7, "tutto quello che c'e'");
+});
+
+test("il colore della pagina e' uno della tavolozza, o quello del tipo", async () => {
+  const { COLORI_DELLE_PAGINE } = await import("../src/core/plancia-a-muro.js");
+  const muro = muroPulito({
+    pagine: [
+      { modello: "stanza", colore: COLORI_DELLE_PAGINE[2].toUpperCase() },
+      { modello: "stanza", colore: "red; background:url(x)" },
+    ],
+  });
+  assert.equal(muro.pagine[0].colore, COLORI_DELLE_PAGINE[2]);
+  assert.equal(muro.pagine[1].colore, "");
+});
+
+test("le pagine da guardare: tapparelle, ambienti, telecamere, energia", async () => {
+  const { ambientiDellaFonte, comandiDellElenco, energiaDellaPagina, telecamereDellaFonte } =
+    await import("../src/core/plancia-a-muro.js");
+  const fonte = fonteDaiValori({
+    ...VALORI,
+    dm_dashboard_state: JSON.stringify({
+      ...STATO,
+      sections: {
+        ...STATO.sections,
+        rooms: [
+          { id: "soggiorno", name: "Soggiorno", temp: "sensor.t_sog", hum: "sensor.h_sog" },
+          { id: "cucina", name: "Cucina" },
+          { id: "cantina", name: "Cantina" },
+        ],
+      },
+    }),
+    cd_entity_overrides: JSON.stringify({
+      "dm.security_centrale_allarme": "alarm_control_panel.casa",
+      "dm.energy_potenza_consumo_casa": "sensor.casa_w",
+      "dm.energy_potenza_fotovoltaico": "sensor.fv_w",
+    }),
+  });
+  assert.deepEqual(
+    comandiDellElenco("tapparelle", fonte).map((c) => [c.tipo, c.entita]),
+    [["tapparella", "cover.soggiorno"]],
+  );
+  assert.deepEqual(
+    ambientiDellaFonte(fonte).map((a) => [a.stanza.name, a.luci.length]),
+    [
+      ["Soggiorno", 2],
+      ["Cucina", 1],
+    ],
+    "la cantina senza sonde ne' luci non dice niente",
+  );
+  assert.deepEqual(telecamereDellaFonte(fonte), [{ entita: "camera.cancello", nome: "" }]);
+  const pagina = muroPulito({
+    pagine: [{ modello: "energia", energia: { casa: "sensor.mia_casa", rete: "non valida" } }],
+  }).pagine[0];
+  assert.deepEqual(energiaDellaPagina(pagina, fonte), {
+    casa: "sensor.mia_casa",
+    solare: "sensor.fv_w",
+    rete: "",
+    batteria: "",
+  });
+});
+
+test("meteo e riposo si scelgono, e di serie il riposo torna alla prima pagina", () => {
+  const vuoto = muroPulito({});
+  assert.equal(vuoto.meteo, "");
+  assert.equal(vuoto.riposo.torna, true);
+  assert.equal(vuoto.riposo.sensore, "");
+  const scelto = muroPulito({
+    meteo: "weather.casa",
+    riposo: { torna: false, sensore: "sensor.salotto_t", minuti: 5 },
+  });
+  assert.equal(scelto.meteo, "weather.casa");
+  assert.deepEqual(scelto.riposo, {
+    attivo: true,
+    minuti: 5,
+    torna: false,
+    sensore: "sensor.salotto_t",
+  });
+});
+
+/* «Me ne devi fare una con sezione musica.» I lettori vengono dalla sezione
+ * Musica della plancia di origine, o si scelgono. */
+test("la pagina Musica prende i lettori della plancia, o quelli scelti", async () => {
+  const { lettoriDellaPagina, LETTORI_AL_MASSIMO } = await import(
+    "../src/core/plancia-a-muro.js"
+  );
+  const fonte = fonteDaiValori({
+    ...VALORI,
+    cd_media_player: JSON.stringify([
+      { entity: "media_player.sonos_cucina", nome: "Cucina" },
+      { entity: "media_player.tv_sala" },
+      { nome: "senza entita'" },
+    ]),
+  });
+  assert.deepEqual(fonte.lettori, [
+    { entity: "media_player.sonos_cucina", nome: "Cucina" },
+    { entity: "media_player.tv_sala", nome: "" },
+  ]);
+  const pagina = muroPulito({ pagine: [{ modello: "musica" }] }).pagine[0];
+  assert.deepEqual(
+    lettoriDellaPagina(pagina, fonte).map((l) => l.entita),
+    ["media_player.sonos_cucina", "media_player.tv_sala"],
+  );
+  const scelti = muroPulito({
+    pagine: [
+      {
+        modello: "musica",
+        lettori: [
+          "media_player.studio",
+          "media_player.studio",
+          "light.non_e_un_lettore",
+          "",
+          ...Array.from({ length: 12 }, (_, i) => `media_player.l${i}`),
+        ],
+      },
+    ],
+  }).pagine[0];
+  assert.equal(scelti.lettori[0], "media_player.studio");
+  assert.equal(scelti.lettori.length, LETTORI_AL_MASSIMO, "doppi e non lettori fuori");
+  assert.ok(!scelti.lettori.includes("light.non_e_un_lettore"));
+  const giro = muroPulito({ pagine: [scelti] }).pagine[0];
+  assert.deepEqual(giro.lettori, scelti.lettori, "si rilegge uguale");
+});
+
+/* «Quando sono piu' di una partizione andrei a capo, con le partizioni
+ * attive scritte.» Le aree portano il loro nome, e suona una qualunque. */
+test("le aree dell'antifurto: col nome, e l'allarme di una qualunque", async () => {
+  const { avvisiAccesi } = await import("../src/core/plancia-a-muro.js");
+  const fonte = fonteDaiValori({
+    ...VALORI,
+    cd_centrali: JSON.stringify([
+      { nome: "Perimetrale", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.p" } },
+      { nome: "Zona notte", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.n" } },
+    ]),
+  });
+  assert.deepEqual(fonte.aree, [
+    { entita: "alarm_control_panel.casa", nome: "" },
+    { entita: "alarm_control_panel.p", nome: "Perimetrale" },
+    { entita: "alarm_control_panel.n", nome: "Zona notte" },
+  ]);
+  const accesi = avvisiAccesi(fonte, {
+    "alarm_control_panel.casa": { state: "disarmed" },
+    "alarm_control_panel.n": { state: "triggered" },
+  });
+  assert.deepEqual(
+    accesi.map((a) => [a.chiave, a.grave]),
+    [["alarm_control_panel.n", true]],
+  );
+});
+
+/* «Visto che hai Sonos prevedi il pulsante gruppo.» */
+test("il gruppo dei lettori: chi c'e', e il servizio per entrare e uscire", async () => {
+  const { compagniDelGruppo, letturaDelLettore, servizioDelGruppo, SA } = await import(
+    "../src/core/media-player.js"
+  );
+  const stati = {
+    "media_player.cucina": {
+      state: "playing",
+      attributes: {
+        supported_features: SA.GRUPPO | SA.PAUSA,
+        group_members: ["media_player.cucina", "media_player.sala"],
+      },
+    },
+  };
+  const l = letturaDelLettore({ entity: "media_player.cucina" }, stati);
+  assert.equal(l.puo.gruppo, true);
+  assert.deepEqual(compagniDelGruppo(l), ["media_player.sala"]);
+  assert.deepEqual(servizioDelGruppo(l, "media_player.sala"), {
+    service: "unjoin",
+    data: { entity_id: "media_player.sala" },
+  });
+  assert.deepEqual(servizioDelGruppo(l, "media_player.bagno"), {
+    service: "join",
+    data: { entity_id: "media_player.cucina", group_members: ["media_player.bagno"] },
+  });
+  assert.equal(servizioDelGruppo(l, "media_player.cucina"), null, "con se' stesso no");
+  const solo = letturaDelLettore(
+    { entity: "media_player.tv" },
+    { "media_player.tv": { state: "on", attributes: { supported_features: SA.PAUSA } } },
+  );
+  assert.equal(solo.puo.gruppo, false);
+  assert.deepEqual(compagniDelGruppo(solo), []);
 });

@@ -72,7 +72,7 @@ test.describe("la plancia a muro", () => {
   test("l'antifurto chiede il codice prima di inserire", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
     await muro(page).locator('[data-mu-pagina="2"]').click();
-    await expect(muro(page).locator(".mu-stato-allarme")).toHaveText(/Spento/i);
+    await expect(muro(page).locator(".mu-stato-allarme")).toHaveText(/Disattivo/i);
     await expect(muro(page).locator(".mu-avviso-finestre")).toContainText("Finestra cucina");
     await muro(page).locator('[data-mu-fa="allarme"][data-mu-modo="away"]').click();
     await expect(muro(page).locator(".mu-fin-codice")).toBeVisible();

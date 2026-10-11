@@ -144,6 +144,7 @@ import {
   comandoObiettivo,
   comeSiVedeLEnergia,
   comeStaIlVarco,
+  compagniDelGruppo,
   conLaRiga,
   conLaVoce,
   conLeRighe,
@@ -430,6 +431,7 @@ import {
   senzaLaRiga,
   serbatoiDellaCaldaia,
   serramentoModel,
+  servizioDelGruppo,
   servonoLinguette,
   setKioskMode,
   setLocale,
@@ -491,7 +493,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GJERYIED.js";
+} from "../../chunk-MYDBJFFW.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1052,6 +1054,16 @@ function osservaLaConfigurazione(root7, dimentica, osservate) {
   }
   storage.__dmStateEventGateWatch = true;
 }
+var IN_VISTA_KEY = "__DM_ENTITA_IN_VISTA__";
+var SUBITO_MS = 40;
+function inVista(root7, id) {
+  try {
+    const domanda = root7[IN_VISTA_KEY];
+    return typeof domanda === "function" ? Boolean(domanda(id)) : false;
+  } catch (_errore) {
+    return false;
+  }
+}
 function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiavi: chiavi2 = [] } = {}) {
   if (!broker2 || typeof broker2.ingestState !== "function" || broker2.__dmStateEventGate)
     return false;
@@ -1060,6 +1072,7 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
   const pendingIds = /* @__PURE__ */ new Set();
   let lastState = null;
   let timer = 0;
+  let timerSubito = false;
   let interests = null;
   const currentInterests = () => {
     if (!interests) interests = entitaConfigurate(root7, osservate);
@@ -1074,6 +1087,7 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
   );
   const flush = () => {
     timer = 0;
+    timerSubito = false;
     if (!pendingIds.size) return;
     const entityIds = [...pendingIds];
     pendingIds.clear();
@@ -1092,11 +1106,16 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
     const id = String(state168?.entity_id || "").trim();
     if (!id) return;
     const configured2 = currentInterests();
-    if (configured2.size && !configured2.has(id)) return;
+    const visto = inVista(root7, id);
+    if (!visto && configured2.size && !configured2.has(id)) return;
     pendingIds.add(id);
     lastState = state168 || lastState;
-    if (timer) return;
-    timer = root7.setTimeout?.(flush, Math.max(0, Number(delay) || 0)) || 0;
+    const attesa = Math.max(0, Number(delay) || 0);
+    const subito = visto && attesa > SUBITO_MS;
+    if (timer && (timerSubito || !subito)) return;
+    if (timer) root7.clearTimeout?.(timer);
+    timerSubito = subito;
+    timer = root7.setTimeout?.(flush, subito ? SUBITO_MS : attesa) || 0;
     if (!timer) root7.queueMicrotask?.(flush);
   };
   broker2.ingestState = function gatedIngestState(state168, options) {
@@ -2067,6 +2086,7 @@ var SOURCE_INDEX = Object.freeze({
   "Adesso è spento: scrivi una quota fra 30 e 95 per accenderlo, zero lo rispegne.": "Right now it is off: write a level between 30 and 95 to turn it on, zero turns it back off.",
   "Adesso non c'è una lettura per questo carico.": "There is no reading for this load right now.",
   "Adesso risponde tutto. Se qualcosa smette di farlo compare qui, e in Home compare la sua tessera.": "Everything is answering right now. If something stops, it shows up here, and its card shows up on Home.",
+  "Adesso, in casa": "Right now, at home",
   "Afoso": "Muggy",
   "Agenda": "Calendar",
   "Aggiorna": "Refresh",
@@ -2167,6 +2187,7 @@ var SOURCE_INDEX = Object.freeze({
   "al lavoro adesso": "working now",
   "Al posto del percorso puoi scrivere un'entità immagine (image.auto) o una telecamera (camera.auto): la foto la tiene aggiornata l'integrazione, e la lente 🔍 te la fa cercare.": "Instead of a path you can write an image entity (image.car) or a camera (camera.car): the integration keeps the photo up to date, and the 🔍 lens finds it for you.",
   "Al posto di «Esco» quando l'antifurto è inserito": "Instead of «Leaving» when the alarm is armed",
+  "Al riposo torna alla prima pagina": "On rest go back to the first page",
   "Alberi": "Tree",
   "Alberi (facoltativo)": "Tree (optional)",
   "Alcune schede sono elenchi — Luci, Prese, Telecamere — e lì un'entità in più si è sempre potuta aggiungere. Altre sono fatte di caselle con un ruolo preciso: l'Energia ha una rete e un fotovoltaico, la Sicurezza una centrale, e per un sensore in più non c'era posto. Qui c'è: scegli l'entità, in quale scheda farla comparire, come chiamarla e con che icona. Compare in fondo alla pagina che scegli, e quelle che si accendono si accendono.": "Some pages are lists — Lights, Sockets, Cameras — and there you could always add one more entity. Others are made of boxes with a set role: Energy has a grid and a solar array, Security an alarm panel, and there was no place for one more sensor. Here there is: pick the entity, which page it should appear on, what to call it and with which icon. It shows up at the bottom of the page you choose, and the ones that switch, switch.",
@@ -2249,6 +2270,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ant. dx": "Front R",
   "Ant. sx": "Front L",
   'Anteprima ~2 fps · Tocca "Attiva audio" per audio + video': 'Preview ~2 fps · Tap "Enable audio" for audio + video',
+  "Anteprima dal vivo": "Live preview",
   "Anteriore destro": "Front right",
   "Anteriore sinistro": "Front left",
   "antifurto": "alarm",
@@ -2566,6 +2588,7 @@ var SOURCE_INDEX = Object.freeze({
   "Carica · Carburante · Autonomia": "Charge · Fuel · Range",
   "Carica anche senza sole": "Charge even without sun",
   "CARICA COMPLETA": "FULLY CHARGED",
+  "Carica in %": "Charge in %",
   "carica più bassa": "lowest charge",
   "CARICAMENTO": "LOADING",
   "Caricamento dati Energia…": "Loading Energy data…",
@@ -2636,6 +2659,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cavo collegato (binary_sensor)": "Cable connected (binary_sensor)",
   "Cavo staccato": "Cable unplugged",
   "cede": "gives off",
+  "Cede alla rete": "To the grid",
   "Cella ${cella.numero} · ${cifre(cella.volt, 3)} V": "Cell ${cella.numero} · ${cifre(cella.volt, 3)} V",
   "Cella ${cella.numero} · non risponde": "Cell ${cella.numero} · not answering",
   "Cella più bassa": "Lowest cell",
@@ -2768,6 +2792,7 @@ var SOURCE_INDEX = Object.freeze({
   "Comando ON/OFF": "On/off control",
   "Combustibile solido: pellet o legna": "Solid fuel: pellet or wood",
   "come i giorni feriali": "same as weekdays",
+  "Come il tipo di pagina": "Like the page type",
   "come la casa": "as the house",
   "Come la plancia": "Like the dashboard",
   "Come leggere la configurazione Energia": "How to read the Energy configuration",
@@ -2833,6 +2858,7 @@ var SOURCE_INDEX = Object.freeze({
   "CONNESSO": "CONNECTED",
   "Connettività": "Connectivity",
   "Consiglio": "Advice",
+  "Consuma la casa": "House uses",
   "Consumato": "Energy used",
   "Consumato in totale": "Total fuel used",
   "Consumi": "Consumption",
@@ -2843,6 +2869,7 @@ var SOURCE_INDEX = Object.freeze({
   "Consumo casa · Mese": "Home consumption · Month",
   "Consumo casa · Oggi": "Home consumption · Today",
   "consumo dell'ultimo ciclo": "last cycle energy",
+  "Consumo della casa": "House consumption",
   "consumo in Watt": "power draw in Watts",
   "Consumo istantaneo": "Instant consumption",
   "Consumo Total": "Total consumption",
@@ -2898,6 +2925,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cosa premere": "What to press",
   "Cosa provare": "What to try",
   "Cosa sa fare": "What it can do",
+  "Cosa suona in casa": "What's playing at home",
   "Cosa vorresti ottenere e dove ti sei fermato.": "What you are trying to achieve and where you got stuck.",
   "Cose da fare": "To-do",
   "Cose dell'animale": "Pet things",
@@ -3019,6 +3047,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dati storici disponibili": "Historical data available",
   "del calore dell'aria che esce torna in casa con l'aria nuova": "of the heat in the outgoing air comes back in with the fresh air",
   "Delicati": "Delicates",
+  "Della linguetta e del titolo": "Of the tab and the title",
   "Della stampante servono due risposte: se è pronta, e quanto inchiostro le resta. Scrivi l'entità che dice come sta — la crea l'integrazione della stampante — e le cartucce si cercano da sole partendo da quel nome. La pagina Stampanti compare da sé appena ce n'è una.": "A printer needs two answers: whether it is ready, and how much ink is left. Write the entity that says how it is doing — the printer integration creates it — and the cartridges are found on their own from that name. The Printers page appears by itself as soon as there is one.",
   "Delta fra le celle": "Cell voltage delta",
   "Delta temperatura (°C)": "Temperature delta (°C)",
@@ -3103,6 +3132,8 @@ var SOURCE_INDEX = Object.freeze({
   "Due scatti della stessa auto: la plancia mostra quello con il cavo attaccato mentre è in ricarica e l'altro nel resto del tempo. Basta la prima: senza la seconda resta sempre quella.": "Two shots of the same car: the dashboard shows the plugged-in one while it charges and the other one the rest of the time. The first is enough — without the second it simply stays.",
   "Due settimane che si ripetono, scritte a mano: tocca un giorno e scegli cosa esce. Non serve nessun sensore e nessun calendario di Home Assistant — la pagina e la tessera in Home leggono questo esattamente come leggerebbero un'integrazione. Un materiale che ha già il suo sensore qui sopra non si ripete: comanda il sensore.": "Two weeks that repeat, written by hand: tap a day and pick what goes out. No sensor and no Home Assistant calendar needed — the page and the Home tile read this exactly as they would read an integration. A material that already has its own sensor above is not repeated: the sensor wins.",
   "Due tocchi per aprire": "Two taps to open",
+  "Duplica": "Duplicate",
+  "Duplica la pagina": "Duplicate page",
   "Durata": "Duration",
   "Durata (minuti)": "Duration (minutes)",
   "Durata automatica: temperatura / 2": "Automatic duration: temperature / 2",
@@ -3601,6 +3632,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il gruppo decide dove l’avviso viene sorvegliato.": "The group decides where the alert is watched.",
   "Il gruppo è facoltativo: le azioni con lo stesso gruppo stanno insieme in Home, sotto un titolo che dice quante sono accese e che si chiude con un tocco. Senza gruppi resta una fila sola.": "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.",
   "Il gruppo è il popup aperto dal cerchio del flow. I figli sono le card interne, per esempio Forno, Frigorifero o Lavastoviglie.": "Groups are the popup opened from a flow circle. Their children are the cards shown inside, such as Oven, Fridge or Dishwasher.",
+  "Il lettore che suona in grande, con la copertina, i tasti, il volume e le sorgenti; accanto gli altri, ognuno col suo play. Un tocco su un lettore lo porta in grande.": "The player that's playing, big, with cover, buttons, volume and sources; beside it the others, each with its own play. A tap on a player brings it up big.",
   "Il lettore non ha risposto.": "The player did not answer.",
   "Il logo viene associato automaticamente al marchio. Il modello sostituisce la vecchia icona auto generica.": "The logo is automatically associated with the brand. The model replaces the old generic car icon.",
   "Il massimo è": "The most you can have is",
@@ -3706,6 +3738,7 @@ var SOURCE_INDEX = Object.freeze({
   "In Ah, Wh o kWh. Vuota, si ricava dalla carica e dalla capacità.": "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.",
   "in allarme": "triggered",
   "In allarme": "In alarm",
+  "In alto e sul riposo. Vuoto: il primo che Home Assistant ha": "At the top and on the rest screen. Empty: the first one Home Assistant has",
   "In apertura": "Opening",
   "in attesa": "on standby",
   "In attesa": "Standby",
@@ -3733,6 +3766,7 @@ var SOURCE_INDEX = Object.freeze({
   "IN FUNZIONE": "RUNNING",
   "In funzione adesso": "Currently running",
   "In funzione anche: ${nomi}": "Also on: ${nomi}",
+  "In gruppo con": "Grouped with",
   "In Home": "On Home",
   "in Home Assistant non c'è": "not in Home Assistant",
   "in lavorazione": "in progress",
@@ -4024,6 +4058,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le frecce, OK, indietro, la schermata iniziale e i canali della TV, sotto la sua scheda e solo a TV accesa. Serve l'entità remote.* della TV: Samsung (integrazione Samsung Smart TV), Sony Bravia, Philips, Android TV e Google TV, Apple TV, Roku. Le LG webOS non ne hanno bisogno.": "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.",
   "Le gomme": "The tyres",
   "Le gomme e le letture": "The tyres and the readings",
+  "Le immagini dal vivo": "Live pictures",
   "Le integrazioni che portano una colonnina: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Scegli il dispositivo e le caselle della ricarica si riempiono da sole — potenza, energia, tensione, temperatura, il cavo.": "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.",
   "Le integrazioni di Home Assistant, ufficiali o da HACS, con i dispositivi che portano. Scegli il dispositivo: le caselle entrano da sole.": "Home Assistant integrations, official or from HACS, with the devices they bring. Pick the device: the fields come along by themselves.",
   "Le integrazioni di Home Assistant, ufficiali o da HACS, con i dispositivi che portano. Scegli il nodo: lo stato, il processore, la memoria, il disco e i gradi entrano da soli.": "Home Assistant integrations, official or from HACS, with the devices they bring. Pick the node: status, CPU, memory, disk and degrees come along by themselves.",
@@ -4058,6 +4093,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le stanze, le luci, le azioni e l'antifurto arrivano da qui": "Rooms, lights, actions and the alarm come from here",
   "Le tapparelle e le tende compaiono nella pagina 🪟 Finestre, raggruppate per piano e stanza. Ogni riga accetta un'entità cover.* — con posizione e percentuali — oppure un relè switch.*: uno solo se accendendolo la tapparella sta su, due se ce n'è uno per la salita e uno per la discesa, come uno Shelly in modalità interruttore. Se la finestra si apre a mano — persiane, scuri, una maniglia — lascia vuote le caselle dei comandi e compila solo il sensore di apertura: la card la disegna lo stesso e dice se è aperta.": "Shutters and curtains show up on the 🪟 Windows page, grouped by floor and room. Every row accepts a cover.* entity — with position and percentages — or a switch.* relay: one when switching it on keeps the shutter up, two when one relay sends it up and another sends it down, like a Shelly in switch mode. When the window opens by hand — shutters, blinds, a handle — leave the command boxes empty and fill in the contact sensor alone: the card still draws it and says whether it is open.",
   "Le telecamere": "The cameras",
+  "Le telecamere della plancia di origine, tutte insieme; un tocco ne apre una a tutto schermo.": "The source dashboard's cameras, all together; a tap opens one full screen.",
   "Le temperature": "The temperatures",
   "Le tessere": "The widgets",
   "Le tessere d'avviso della Home — batterie, allagamenti — si accendono da sole solo quando hanno qualcosa da dire. Qui scegli quali sensori sorvegliano, con un nome pulito, oppure crei un avviso personalizzato su una o più entità, con condizione, stato a mano e icona a scelta. Le porte e le finestre non stanno più qui: le dice la tessera Finestre, con i contatti delle coperture.": "The Home alert tiles — batteries, floods — light up on their own only when they have something to say. Here you choose which sensors they watch, with a clean name, or you create a custom alert on one or more entities, with a condition, a hand-written state and an icon of your choice. Doors and windows are no longer here: the Windows tile says them, from the contacts of the covers.",
@@ -4092,6 +4128,7 @@ var SOURCE_INDEX = Object.freeze({
   "Lettore": "Player",
   "Lettore multimediale": "Media player",
   "Lettore nuovo": "New player",
+  "Lettori": "Players",
   "Letture": "Readings",
   "libero": "free",
   "Libero": "Free",
@@ -4135,6 +4172,7 @@ var SOURCE_INDEX = Object.freeze({
   "Luci · Clima · Tapparelle · Scene": "Lights · Climate · Blinds · Scenes",
   "luci accese": "lights on",
   "Luci Accese": "Lights on",
+  "Luci spente": "Lights off",
   "Luglio": "July",
   "Luminosità": "Brightness",
   "Lunga": "Long",
@@ -4265,6 +4303,7 @@ var SOURCE_INDEX = Object.freeze({
   "Modifica voce Report": "Edit Report entry",
   "modificare": "edit",
   "Modifiche non salvate": "Unsaved changes",
+  "Modifiche non salvate: il tablet le vede dopo «Salva».": "Unsaved changes: the tablet sees them after «Save».",
   "modifiche) — ricarica per applicare": "changes) — reload to apply",
   "Modo chiosco": "Kiosk mode",
   "Modulazione": "Modulating",
@@ -4315,6 +4354,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nebulizzatore": "Mister",
   "Nel dettaglio dell'apparecchio escono tutte le entità del dispositivo; qui sotto quelle che disegnano la card.": "The appliance detail shows every entity of the device; below, the ones that draw the card.",
   "Nel frattempo si mostrano i valori istantanei.": "Instant values are shown meanwhile.",
+  "Nel gruppo": "In the group",
   "nel menu (visibile agli admin)": "page in the menu (visible to admins)",
   "Nel widget": "In the widget",
   "Nella fascia scelta il riposo spegne anche l'orologio": "In the chosen hours rest turns off the clock too",
@@ -4367,6 +4407,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessun gruppo": "No group",
   "Nessun gruppo di continuità configurato": "No UPS configured",
   "Nessun lettore configurato.": "No media player configured.",
+  "Nessun lettore: aggiungili nella sezione Musica o qui nel config": "No player: add them in the Music section or here in the config",
   "nessun movimento": "no motion",
   "Nessun pacco configurato": "No battery pack configured",
   "Nessun pacco di batterie": "No battery pack",
@@ -4452,6 +4493,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna stampante configurata": "No printer configured",
   "Nessuna stanza": "No room",
   "Nessuna stanza con sensore — aggiungila nel tab Temperatura dell'editor": "No room with a sensor — add one in the editor's Temperature tab",
+  "Nessuna stanza con sonde o luci": "No room with sensors or lights",
   "Nessuna stanza configurata. Aggiungile dalla scheda Stanze dell'editor: da lì ogni sezione può assegnare le sue entità.": "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.",
   "Nessuna stanza ha ancora un sensore temperatura configurato.": "No room has a temperature sensor configured yet.",
   "Nessuna stanza ha una sonda dell'umidità: si aggiunge dalla scheda Temperature.": "No room has a humidity probe: add one from the Temperature tab.",
@@ -4462,6 +4504,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna tapparella o tenda configurata": "No shutter or curtain configured",
   "Nessuna telecamera": "No camera",
   "Nessuna telecamera configurata": "No camera configured",
+  "Nessuna telecamera nella plancia": "No camera in the dashboard",
   "Nessuna temperatura configurata.": "No temperature configured.",
   "Nessuna voce": "No entries",
   "Nessuna zona configurata": "No zone configured",
@@ -4663,7 +4706,7 @@ var SOURCE_INDEX = Object.freeze({
   "ore fa": "hours ago",
   "Organico": "Organic waste",
   "Orientamento": "Orientation",
-  "Orientamento, tema, riposo, notte, risveglio, PIN": "Orientation, theme, rest, night, wake-up, PIN",
+  "Orientamento, tema, meteo, riposo, notte, risveglio, PIN": "Orientation, theme, weather, rest, night, wake-up, PIN",
   "Orizzontale": "Landscape",
   "OSO": "WSW",
   "Ossigeno": "Oxygen",
@@ -4833,6 +4876,7 @@ var SOURCE_INDEX = Object.freeze({
   "Porzioni erogate": "Portions dispensed",
   "Porzioni oggi": "Portions today",
   "Positiva in carica e negativa in scarica, come la scrivono JK, JBD e Daly.": "Positive when charging and negative when discharging, as JK, JBD and Daly write it.",
+  "Positivo si preleva, negativo si cede": "Positive is drawn, negative is fed in",
   "Posizione": "Location",
   "Posizione (device_tracker)": "Location (device_tracker)",
   "Posizione (indirizzo)": "Location (address)",
@@ -4879,6 +4923,7 @@ var SOURCE_INDEX = Object.freeze({
   "Potenza ventola inverter (W)": "Inverter fan power (W)",
   "Potenza wallbox (W)": "Wallbox power (W)",
   "Potenza WB": "WB power",
+  "Potenza, in W o kW": "Power, in W or kW",
   "Potrai controllare, correggere o rimuovere ogni proposta dall'editor.": "You can review, fix or remove every proposal from the editor.",
   "Power batteria (W)": "Battery power (W)",
   "Power Boiler": "Boiler power",
@@ -4896,6 +4941,7 @@ var SOURCE_INDEX = Object.freeze({
   "Preferite": "Favourites",
   "Preferito": "Favorite",
   "Prelavaggio": "Pre-wash",
+  "Preleva dalla rete": "From the grid",
   "Prelevata dalla rete · Oggi": "Taken from the grid · Today",
   "Prelevata oggi": "Imported today",
   "Prelievo AC Tot.": "Total AC draw",
@@ -4942,9 +4988,11 @@ var SOURCE_INDEX = Object.freeze({
   "principale": "main",
   "Processore": "CPU",
   "Processore, memoria e disco": "CPU, memory and disk",
+  "Produce il solare": "Solar makes",
   "Produzione": "Production",
   "Produzione · Consumi · Report": "Production · Consumption · Report",
   "Produzione FV": "PV production",
+  "Produzione solare": "Solar production",
   "Produzione solare · Mese": "Solar production · Month",
   "Produzione solare · Oggi": "Solar production · Today",
   "Profilo EV": "EV profile",
@@ -5015,8 +5063,10 @@ var SOURCE_INDEX = Object.freeze({
   "Quando la terra è asciutta ma il meteo di casa prevede pioggia nelle prossime ore, la pianta aspetta invece di chiedere acqua. Solo per chi la pioggia la prende davvero.": "When the soil is dry but the home weather forecasts rain in the next hours, the plant waits instead of asking for water. Only for those the rain really reaches.",
   "Quando questo sensore si accende (per esempio una presenza)": "When this sensor turns on (for example a presence sensor)",
   "Quando un avviso personalizzato si accende, la plancia lo apre da sola. Solo quando si accende, e mai sopra una finestra gia' aperta.": "When a custom alert turns on, the dashboard opens it by itself. Only when it turns on, and never on top of a window that is already open.",
+  "Quante card a schermo; le altre scorrono": "How many cards on screen; the rest scroll",
   "Quante fasce": "How many bands",
   "Quanti giorni restano prima di sostituirlo. Sotto la soglia la scheda lo dice, e il tasto qui sotto azzera il conto una volta cambiato.": "How many days are left before replacing it. Below the threshold the card says so, and the button below resets the count once you have changed it.",
+  "Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano": "How many slots, and how big. In portrait columns and rows swap",
   "Quanto cibo resta nel distributore. In percentuale la scheda ne fa una barra; chi scrive «Low» o «Empty» vale lo stesso, e sotto soglia la scheda avvisa.": "How much food is left in the feeder. As a percentage the card draws a bar; a sensor saying “Low” or “Empty” counts the same, and below the threshold the card warns.",
   "Quanto è pieno": "How full",
   "Quanto gli chiedi": "How much you ask of it",
@@ -5024,9 +5074,11 @@ var SOURCE_INDEX = Object.freeze({
   "Quanto resta accesa dal momento dell'accensione. Il conto alla rovescia lo tiene Home Assistant, non questa pagina: si può chiudere la plancia e l'unità si spegne lo stesso. Sulla card resta modificabile ogni volta.": "How long it stays on from the moment you switch it on. Home Assistant keeps the countdown, not this page: you can close the dashboard and the unit still switches off. On the card you can change it every time.",
   "Quanto sta passando dal contatore. È la soglia di chi teme il distacco: il limite del contratto sta qui. L'energia immessa in rete non conta mai come sovraccarico.": "How much is going through the meter. This is the threshold for those worried about a cut-off: the contract limit lives here. Energy exported to the grid never counts as an overload.",
   "Quanto stanno consumando gli apparecchi, da qualunque parte arrivi la corrente. È la soglia di chi ha il fotovoltaico e vuole sapere quanto tira la casa.": "How much the appliances are drawing, wherever the power comes from. This is the threshold for those with solar who want to know what the house is pulling.",
+  "Quattro numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine.": "Four big live numbers. Left empty, they come from the source dashboard's Energy section.",
   "Quattro sensori scelti da te: quelli che leggi per decidere, non una media della casa. Il tipico è quello fuori, con cui ci si regola per i clima interni. L'unità la dice Home Assistant, e un sensore che non indichi è una pastiglia che non compare.": "Four sensors of your choosing: the ones you actually read to decide, not a house average. The typical one is outdoors, the one you go by for the indoor units. The unit comes from Home Assistant, and a sensor you do not name is a pill that does not show up.",
   "Quella che dice pronta, in stampa o ferma — la crea l'integrazione della stampante col suo nome.": "The one that says ready, printing or stopped — the printer integration creates it with its name.",
   "Quella che si guarda: Thermal Comfort la espone come parola («comfortable», «quite_uncomfortable»…). Se il sensore la scrive in italiano, la plancia scrive quello che c'è scritto.": "The one you look at: Thermal Comfort exposes it as a word (comfortable, quite_uncomfortable…). When the sensor writes it in your own language, the dashboard writes what it says.",
+  "Quelli scelti qui, in quest'ordine": "The ones chosen here, in this order",
   "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Compaiono sulla scheda sotto i comandi del brano.": "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.",
   "Quello che la voce «Cottura» degli Elettrodomestici legge e preme. Un comando è un'entità (button, switch, number, script) oppure un servizio con i suoi parametri: philips_airfryer.adjust_time time=60 method=add. Si mostra solo il tasto che ha la sua casella, e solo se risponde.": "What the “Cooking” entry of Appliances reads and presses. A control is an entity (button, switch, number, script) or a service with its parameters: philips_airfryer.adjust_time time=60 method=add. A button only shows up when its field is filled in, and only if it answers.",
   "Quello che scrivi qui arriva a chi mantiene la plancia, e a nessun altro. Non passa da GitHub e non diventa pubblico. Insieme al messaggio partono solo la versione della plancia, quella di Home Assistant e la lingua. Puoi cancellare la conversazione quando vuoi.": "What you write here reaches whoever maintains the dashboard, and nobody else. It does not go through GitHub and does not become public. Along with the message only the dashboard version, the Home Assistant version and the language are sent. You can delete the conversation whenever you want.",
@@ -5167,7 +5219,6 @@ var SOURCE_INDEX = Object.freeze({
   "Riproduci": "Play",
   "Riprova a contattarli": "Try reaching them again",
   "Riprova da «Le mie».": "Try again from «Mine».",
-  "Riquadri nella pagina": "Tiles on the page",
   "Riscaldamento": "Heating",
   "Riscaldamento · Raffrescamento · Zone": "Heating · Cooling · Zones",
   "Riscaldamento a pavimento": "Underfloor heating",
@@ -5294,6 +5345,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scaldabagno": "Water heater",
   "Scaldabagno di Home Assistant": "Home Assistant water heater",
   "Scaldabagno elettrico": "Electric water heater",
+  "Scambio con la rete": "Grid exchange",
   "Scarica": "Download",
   "Scarica il backup": "Download the backup",
   "Scarica il file": "Download the file",
@@ -5330,6 +5382,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scegli la foto": "Choose the photo",
   "Scegli la posizione": "Choose the position",
   "Scegli la scheda": "Choose the page",
+  "Scegli le misure nel config": "Choose the readings in the config",
   "Scegli parametro": "Choose parameter",
   "Scegli quali tessere vedere in Home e in che ordine. Le tessere degli avvisi — batterie, allagamenti e avvisi personalizzati — compaiono da sole solo quando hanno qualcosa da dire.": "Choose which tiles show on Home and in what order. The alert tiles — batteries, floods and custom alerts — only appear on their own when they have something to say.",
   "Scegli un calendario.": "Pick a calendar.",
@@ -5344,6 +5397,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scene della stanza": "Room scenes",
   "Schermata iniziale della TV": "TV home screen",
   "Scienziato": "Scientist",
+  "Sciogli il gruppo": "Ungroup all",
   "Scioperi": "Strikes",
   "Sciopero": "Strike",
   "Sciopero oggi": "Strike today",
@@ -5394,7 +5448,6 @@ var SOURCE_INDEX = Object.freeze({
   "Segnalazione aperta": "Report opened",
   "Segnalazioni": "Reports",
   "Segnata a mano": "Marked by hand",
-  "Sei di serie. Otto stanno bene anche su un pannello piccolo in orizzontale; dodici su un tablet da 10 pollici.": "Six by default. Eight still fit a small panel in landscape; twelve suit a 10-inch tablet.",
   "Sei sicuro di voler aprire il cancello?": "Are you sure you want to open the gate?",
   "Seleziona": "Select",
   "Seleziona almeno una luce": "Select at least one light",
@@ -5513,6 +5566,7 @@ var SOURCE_INDEX = Object.freeze({
   "Si legge sulla linguetta in alto": "Shown on the tab at the top",
   "Si riempie da sola con il clima della plancia di origine, diviso nelle due linguette Freddo e Caldo come nella sezione Clima: i condizionatori nel freddo, termosifoni e termostati nel caldo, le pompe di calore in tutte e due.": "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both.",
   "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.": "It fills itself with every light of the source dashboard: a light added there shows up here too.",
+  "Si riempie da sola con tutte le tapparelle della plancia di origine: su, stop e giù per ognuna.": "It fills itself with every blind of the source dashboard: up, stop and down for each one.",
   "Si segna dalla pagina con «Fatto oggi»; qui si corregge.": "It is recorded from the page with “Done today”; here you can correct it.",
   "si spegne da sola a": "switches itself off at",
   "Si sta allontanando da casa": "Moving away from home",
@@ -5610,6 +5664,7 @@ var SOURCE_INDEX = Object.freeze({
   "Spento": "Off",
   "SPENTO": "OFF",
   "spento da": "off for",
+  "Spento, il tablet resta sulla pagina dov'era": "Off, the tablet stays on the page it was on",
   "Spesa": "Shopping",
   "Spesa stimata": "Estimated cost",
   "Sportello aperto": "Flap opened",
@@ -5723,6 +5778,7 @@ var SOURCE_INDEX = Object.freeze({
   "Suggerito: ha una potenza mappata": "Suggested: it has a mapped power sensor",
   "sul tablet": "on the tablet",
   "Suona": "Ringing",
+  "Suona insieme a": "Plays together with",
   "Supercattivo": "Supervillain",
   "Supereroe": "Superhero",
   "Svuota i campi di periodo": "Clear the period fields",
@@ -5763,6 +5819,7 @@ var SOURCE_INDEX = Object.freeze({
   "Temp. Wallbox": "Wallbox temp.",
   "temperatura": "temperature",
   "Temperatura": "Temperature",
+  "Temperatura · Umidità · Luci": "Temperature · Humidity · Lights",
   "Temperatura (lato caldo)": "Temperature (warm side)",
   "Temperatura (lato fresco)": "Temperature (cool side)",
   "Temperatura (select)": "Temperature (select)",
@@ -5789,6 +5846,7 @@ var SOURCE_INDEX = Object.freeze({
   "Temperatura MOS": "MOS temperature",
   "Temperatura olio": "Oil temperature",
   "Temperatura piscina": "Pool temperature",
+  "Temperatura sul riposo": "Temperature on the rest screen",
   "Temperatura Target": "Target temperature",
   "Temperatura usa le stanze canoniche: aggiunge i sensori senza creare stanze duplicate.": "Temperature uses canonical rooms: it adds sensors without creating duplicate rooms.",
   "Temperatura voluta": "Target temperature",
@@ -5871,6 +5929,7 @@ var SOURCE_INDEX = Object.freeze({
   "tocca per spegnere": "tap to turn off",
   "Tocca per toglierla dal grafico": "Tap to drop it from the chart",
   "Tocca un apparecchio per aprire la sua scheda.": "Tap an appliance to open its card.",
+  "Tocca un lettore per metterlo o toglierlo dal gruppo": "Tap a player to add it to or remove it from the group",
   "Tocca un sensore": "Tap a sensor",
   "Tocca una stanza: ogni unità accende con i suoi passi": "Tap a room: each unit starts with its own steps",
   "Toccando una stanza": "Tapping a room",
@@ -5937,6 +5996,8 @@ var SOURCE_INDEX = Object.freeze({
   "Tutte le luci": "All lights",
   "Tutte le luci di casa": "Every light in the house",
   "Tutte le stanze": "All rooms",
+  "Tutte le tapparelle": "All blinds",
+  "Tutte le tapparelle di casa": "Every blind in the house",
   "Tutte pronte": "All ready",
   "Tutte spente": "All off",
   "Tutte, dalla più asciutta": "All of them, driest first",
@@ -6072,6 +6133,7 @@ var SOURCE_INDEX = Object.freeze({
   "Una telecamera dentro casa serve a guardare la casa quando non ci sei. Spunta quelle che vuoi vedere solo a casa vuota: mentre qualcuno è in casa spariscono da tutte le pagine, e il fotogramma non viene nemmeno scaricato. Chi rientra le fa sparire subito, non al prossimo cambio pagina.": "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.",
   "Una tensione di cella per riga, nell'ordine delle celle. Si possono incollare tutte insieme, anche separate da virgole; «Trova le celle» le prende da Home Assistant col prefisso delle altre entità del pacco.": "One cell voltage per line, in cell order. You can paste them all at once, commas work too; “Find the cells” takes them from Home Assistant using the prefix of the pack's other entities.",
   "Una tessera in Home per un'entità qualsiasi, anche di una sezione che non c'è: il livello del sale dell'addolcitore, la sonda del rack, la pompa del pozzo. Messe insieme, la tessera «In evidenza» le riassume in una riga e, aperta, le mostra a caselle; con «Tessera a sé» ognuna ha la sua, col nome e il disegno che le dai tu.": "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.",
+  "Una tessera per stanza, con la temperatura, l'umidità e quante luci sono accese, dal vivo. Le stanze e le loro sonde sono quelle della plancia di origine.": "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.",
   "Una tessera sola": "One single tile",
   "unità accesa": "unit on",
   "unità accese": "units on",
@@ -6183,6 +6245,8 @@ var SOURCE_INDEX = Object.freeze({
   "Vuoto vuol dire «on». Senza questo il tasto funziona lo stesso: semplicemente non resta acceso.": "Empty means “on”. Without it the button still works: it simply does not stay lit.",
   "Vuoto: il nome dell'entità": "Empty: the entity name",
   "Vuoto: le iniziali del nome": "Empty: the initials of the name",
+  "Vuoto: quella della stanza della prima pagina": "Empty: the one of the first page's room",
+  "Vuoto: quelli della sezione Musica della plancia": "Empty: the ones from the dashboard's Music section",
   "WebRTC: il nome stream go2rtc funziona solo aprendo la plancia fuori da Home Assistant — qui dentro la telecamera passa dalla sua entità": "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity",
   "WebRTC: provato per primo col suo tempo intero, il video non è arrivato": "WebRTC: tried first with its full time, the video did not arrive",
   "WebRTC: saltato — compila «Nome stream go2rtc» nella scheda Telecamere (il nome della telecamera non c’entra)": "WebRTC: skipped — fill in “go2rtc stream name” in the Cameras tab (the camera name is not the lever)",
@@ -10160,8 +10224,8 @@ var BLOCCHI_DELLA_HOME = Object.freeze([
   "dispositivi"
 ]);
 var NOTI = new Set(BLOCCHI_DELLA_HOME);
-function ordineDeiBlocchi(salvato) {
-  const scritto = Array.isArray(salvato) ? salvato : [];
+function ordineDeiBlocchi(salvato2) {
+  const scritto = Array.isArray(salvato2) ? salvato2 : [];
   const fila2 = [];
   for (const voce2 of scritto) {
     const nome = String(voce2 ?? "").trim();
@@ -10188,17 +10252,17 @@ function ordinePossibile(fila2) {
   rimessa.splice(testata4, 0, BLOCCO_DEL_METEO);
   return rimessa;
 }
-function staSopraLaPagina(nome, salvato) {
-  const fila2 = ordineDeiBlocchi(salvato);
+function staSopraLaPagina(nome, salvato2) {
+  const fila2 = ordineDeiBlocchi(salvato2);
   const posto = fila2.indexOf(nome);
   if (posto < 0) return false;
   return fila2.slice(0, posto).every((prima) => SOPRA_LA_PAGINA.includes(prima));
 }
-function ilMeteoStaInTestata(salvato) {
-  return staSopraLaPagina(BLOCCO_DEL_METEO, salvato) && lIntestazioneStaInCima(salvato);
+function ilMeteoStaInTestata(salvato2) {
+  return staSopraLaPagina(BLOCCO_DEL_METEO, salvato2) && lIntestazioneStaInCima(salvato2);
 }
-function lIntestazioneStaInCima(salvato) {
-  return staSopraLaPagina(BLOCCO_INTESTAZIONE, salvato);
+function lIntestazioneStaInCima(salvato2) {
+  return staSopraLaPagina(BLOCCO_INTESTAZIONE, salvato2);
 }
 
 // src/core/pastiglie-di-stato.js
@@ -21360,13 +21424,13 @@ function alarmActiveButton(stateObj = alarmStateObject()) {
   return modoAcceso(stateObj?.state, stateObj);
 }
 function vesteLaFinestraRapida() {
-  const griglia2 = doc?.getElementById?.("qa-alarm-grid");
-  if (!griglia2) return;
+  const griglia3 = doc?.getElementById?.("qa-alarm-grid");
+  if (!griglia3) return;
   const stateObj = alarmStateObject();
   const tasti = alarmModeButtons(stateObj);
   const acceso6 = alarmActiveButton(stateObj);
-  griglia2.dataset.dmTasti = String(tasti.length);
-  griglia2.innerHTML = tasti.map(
+  griglia3.dataset.dmTasti = String(tasti.length);
+  griglia3.innerHTML = tasti.map(
     (voce2) => `<button class="qa-alarm-btn${voce2.mode === acceso6 ? " active" : ""}"
         data-mode="${esc(voce2.mode)}" onclick="promptPinAndSet(${jsArg(voce2.service)})">
         <span class="qa-alarm-btn-icon">${disegnoDelTastoAntifurto(voce2, 26)}</span>
@@ -22790,12 +22854,12 @@ function daQuandoDelleRighe(righe2, adesso) {
 var CAPACITA_ASSUNTA_KWH = 70;
 function oraDelPieno(tessera2, adesso, linguaDeiNumeri) {
   const carica = num(tessera2?.ring);
-  const potenza = num(tessera2?.ricaricaKw);
-  if (carica == null || potenza == null || potenza <= 0) return null;
+  const potenza2 = num(tessera2?.ricaricaKw);
+  if (carica == null || potenza2 == null || potenza2 <= 0) return null;
   const grezzo = num(tessera2?.targetSoc);
   const traguardo = grezzo != null && grezzo > 0 && grezzo <= 100 ? Math.round(grezzo) : 100;
   if (carica >= traguardo) return null;
-  const kw = potenza > 100 ? potenza / 1e3 : potenza;
+  const kw = potenza2 > 100 ? potenza2 / 1e3 : potenza2;
   const ore = (traguardo - carica) * CAPACITA_ASSUNTA_KWH / 100 / kw;
   if (!Number.isFinite(ore) || ore <= 0 || ore > 48) return null;
   const fine = new Date(adesso + ore * 3600 * 1e3);
@@ -23044,9 +23108,9 @@ var LETTURE = Object.freeze({
     const righe2 = Array.isArray(tessera2?.rows) ? tessera2.rows : [];
     const accesi = righe2.filter((r) => pulito19(r?.mode) === "running");
     const punti = [];
-    const potenza = accesi.reduce((s, r) => s + (num(r?.watts) || 0), 0);
-    if (potenza > 10)
-      punti.push(tr(`Insieme fanno ${watt2(potenza, l)}`, `Together they draw ${watt2(potenza, l)}`));
+    const potenza2 = accesi.reduce((s, r) => s + (num(r?.watts) || 0), 0);
+    if (potenza2 > 10)
+      punti.push(tr(`Insieme fanno ${watt2(potenza2, l)}`, `Together they draw ${watt2(potenza2, l)}`));
     const minuti = daQuandoDelleRighe(accesi, adesso);
     if (minuti != null)
       punti.push(
@@ -23881,8 +23945,8 @@ var numero11 = (valore3) => {
   const letto = Number(valore3);
   return Number.isFinite(letto) ? letto : null;
 };
-function inKilowatt(potenza, unita2 = "") {
-  const letto = numero11(potenza);
+function inKilowatt(potenza2, unita2 = "") {
+  const letto = numero11(potenza2);
   if (letto === null) return null;
   const nome = String(unita2 || "").trim().toLowerCase();
   if (nome === "kw") return letto;
@@ -23898,16 +23962,16 @@ function tempoDellaRicarica({
 } = {}) {
   const adesso = numero11(soc);
   const limite = numero11(target);
-  const potenza = numero11(kilowatt);
+  const potenza2 = numero11(kilowatt);
   const pacco = numero11(capacita) || CAPACITA_DI_SERIE;
   if (adesso !== null && adesso >= 100) return { stato: "completa", minuti: null };
   if (adesso !== null && limite !== null && adesso >= limite)
     return { stato: "raggiunto", minuti: null };
-  if (codice !== "C" || potenza === null || potenza <= 0 || adesso === null || limite === null)
+  if (codice !== "C" || potenza2 === null || potenza2 <= 0 || adesso === null || limite === null)
     return { stato: "attesa", minuti: null };
   const kwh3 = (limite - adesso) / 100 * pacco;
   if (kwh3 <= 0) return { stato: "raggiunto", minuti: null };
-  return { stato: "carica", minuti: Math.max(1, Math.round(kwh3 / potenza * 60)) };
+  return { stato: "carica", minuti: Math.max(1, Math.round(kwh3 / potenza2 * 60)) };
 }
 function oreEMinuti(minuti) {
   const totale = numero11(minuti);
@@ -25130,14 +25194,14 @@ function arco2(percentuale4) {
   const pieno = valore3 / 100 * ARC_LENGTH;
   return `${pieno.toFixed(1)} ${(ARC_LENGTH - pieno).toFixed(1)}`;
 }
-function pillola(glifo, testo2, tono) {
-  return `<span class="dm-termica-pillola" data-tono="${esc(tono)}"><i aria-hidden="true">${glifo}</i>${esc(testo2)}</span>`;
+function pillola(glifo2, testo2, tono) {
+  return `<span class="dm-termica-pillola" data-tono="${esc(tono)}"><i aria-hidden="true">${glifo2}</i>${esc(testo2)}</span>`;
 }
-function misura(glifo, etichetta3, valore3, unita2, ref, cifre2 = 0) {
+function misura(glifo2, etichetta3, valore3, unita2, ref, cifre2 = 0) {
   if (valore3 === null || valore3 === void 0) return "";
   const nome = etichettaScelta(ref, etichetta3);
   return `<button type="button" class="dm-termica-misura" data-dm-storico="${esc(ref)}" data-dm-nome="${esc(nome)}">
-    <i aria-hidden="true">${glifo}</i>
+    <i aria-hidden="true">${glifo2}</i>
     <span class="dm-termica-misura-testo"><small>${esc(nome)}</small><b>${esc(formatNumber(valore3, cifre2))}<em>${esc(unita2)}</em></b></span>
   </button>`;
 }
@@ -26164,7 +26228,7 @@ function letturaScaldabagno(row = {}, states = {}, resolve = (value) => value) {
   numero16(leggi2(row.obiettivo)?.attributes?.temperature);
   const interruttore3 = leggi2(row.interruttore);
   const acceso6 = accesoDalloStato2(interruttore3?.state) ?? (principale ? accesoDalloStato2(principale.state) : null);
-  const potenza = numero16(leggi2(row.potenza)?.state);
+  const potenza2 = numero16(leggi2(row.potenza)?.state);
   const energia = numero16(leggi2(row.energia)?.state);
   const base = numero16(attributi2.min_temp) ?? BASE_ACQUA;
   const vera2 = (riferimento) => {
@@ -26193,7 +26257,7 @@ function letturaScaldabagno(row = {}, states = {}, resolve = (value) => value) {
     acceso: acceso6,
     temperatura,
     obiettivo: obiettivo2,
-    potenza,
+    potenza: potenza2,
     energia,
     quota: quotaVersoObiettivo(temperatura, obiettivo2, base),
     stato: statoScaldabagno({ acceso: acceso6, temperatura, obiettivo: obiettivo2 })
@@ -31665,8 +31729,8 @@ function finestreAperteDellaCasa(varchi, finestre) {
   }
   return fuori;
 }
-function normalizzaBarra(salvato) {
-  const dato = salvato && typeof salvato === "object" && !Array.isArray(salvato) ? salvato : {};
+function normalizzaBarra(salvato2) {
+  const dato = salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
   const scelte4 = dato.voci && typeof dato.voci === "object" ? dato.voci : {};
   const voci3 = {};
   for (const voce2 of VOCI_DELLA_BARRA) {
@@ -35232,12 +35296,12 @@ var MATTONELLA = Object.freeze({
   comando: { vestito: "pump", glifo: "🔌" }
 });
 function mattonellaMarkup(lettura3) {
-  const { vestito, glifo } = MATTONELLA[lettura3.genere] || MATTONELLA.comando;
+  const { vestito, glifo: glifo2 } = MATTONELLA[lettura3.genere] || MATTONELLA.comando;
   const acceso6 = lettura3.acceso === true;
   const comandabile = !lettura3.muto && siComanda(lettura3.entity);
   return `<button type="button" class="dm-pool-tile" data-dm-pool-tile="${vestito}" data-on="${acceso6}"
       aria-pressed="${acceso6}" data-dm-acq-comando="${esc(lettura3.entity)}"${comandabile ? "" : ' aria-disabled="true"'}>
-    <span class="dm-pool-tile-icon" aria-hidden="true">${glifo}</span>
+    <span class="dm-pool-tile-icon" aria-hidden="true">${glifo2}</span>
     <span class="dm-pool-tile-label">${esc(lettura3.name)}</span>
     <span class="dm-pool-tile-state">${esc(statoDelComando(lettura3))}</span>
   </button>`;
@@ -39234,10 +39298,10 @@ function capacitaScritta(riga3, states) {
   if (valore3 === null || valore3 <= 0) return null;
   return { valore: valore3, unita: /kwh/i.test(pulito31(riga3?.unita)) ? "kWh" : "Ah" };
 }
-function versoDelPacco(potenza, corrente2) {
-  if (potenza !== null && potenza !== void 0) {
-    if (potenza >= RIPOSO_W) return "carica";
-    if (potenza <= -RIPOSO_W) return "scarica";
+function versoDelPacco(potenza2, corrente2) {
+  if (potenza2 !== null && potenza2 !== void 0) {
+    if (potenza2 >= RIPOSO_W) return "carica";
+    if (potenza2 <= -RIPOSO_W) return "scarica";
     return "riposo";
   }
   if (corrente2 !== null && corrente2 !== void 0) {
@@ -39276,7 +39340,7 @@ function letturaDelPacco(riga3, states = {}, nomeDi14 = (entity2) => entity2) {
   const tensione = inVolt(misura3(states, riga3?.tensione));
   const corrente2 = inAmpere(misura3(states, riga3?.corrente));
   const scritta = inWatt(misura3(states, riga3?.potenza));
-  const potenza = scritta ?? (tensione !== null && corrente2 !== null ? Math.round(tensione * corrente2) : null);
+  const potenza2 = scritta ?? (tensione !== null && corrente2 !== null ? Math.round(tensione * corrente2) : null);
   const temperatura = misura3(states, riga3?.temperatura);
   const mos = misura3(states, riga3?.mos);
   const celle = celleLette(states, celleDellaRiga(riga3));
@@ -39299,7 +39363,7 @@ function letturaDelPacco(riga3, states = {}, nomeDi14 = (entity2) => entity2) {
     soh: misura3(states, riga3?.soh)?.valore ?? null,
     tensione,
     corrente: corrente2,
-    potenza,
+    potenza: potenza2,
     temperatura: temperatura?.valore ?? null,
     unitaTemperatura: temperatura?.unita || mos?.unita || "",
     mos: mos?.valore ?? null,
@@ -39315,15 +39379,15 @@ function letturaDelPacco(riga3, states = {}, nomeDi14 = (entity2) => entity2) {
     deltaDalBms: deltaBms !== null,
     soglia: soglia2,
     sbilanciato: delta !== null && delta > soglia2,
-    verso: versoDelPacco(potenza, corrente2)
+    verso: versoDelPacco(potenza2, corrente2)
   });
 }
 function accumuloDiCasa(states = {}, config, nomeDi14 = (entity2) => entity2) {
   return pacchiDellAccumulo(config).map((riga3) => letturaDelPacco(riga3, states, nomeDi14));
 }
-function minutiAllaFine({ verso: verso2, potenza, energiaKwh, capacitaKwh }) {
-  if (potenza === null || potenza === void 0 || Math.abs(potenza) < RIPOSO_W) return null;
-  const kw = Math.abs(potenza) / 1e3;
+function minutiAllaFine({ verso: verso2, potenza: potenza2, energiaKwh, capacitaKwh }) {
+  if (potenza2 === null || potenza2 === void 0 || Math.abs(potenza2) < RIPOSO_W) return null;
+  const kw = Math.abs(potenza2) / 1e3;
   if (verso2 === "carica") {
     if (capacitaKwh === null || energiaKwh === null || capacitaKwh === void 0) return null;
     const mancano = Math.max(0, capacitaKwh - energiaKwh);
@@ -39335,8 +39399,8 @@ function minutiAllaFine({ verso: verso2, potenza, energiaKwh, capacitaKwh }) {
   }
   return null;
 }
-function daDove(verso2, potenza, casa = {}) {
-  const watt5 = Math.abs(numero31(potenza) ?? 0);
+function daDove(verso2, potenza2, casa = {}) {
+  const watt5 = Math.abs(numero31(potenza2) ?? 0);
   if (!watt5) return null;
   if (verso2 === "carica") {
     const solare = numero31(casa?.solare);
@@ -39375,9 +39439,9 @@ function comeStaLAccumulo(pacchi = [], casa = {}) {
   const conEnergia = vivi.every((pacco) => pacco.energiaKwh !== null);
   const energiaKwh = conEnergia ? vivi.reduce((somma2, pacco) => somma2 + pacco.energiaKwh, 0) : capacitaKwh !== null ? soc / 100 * capacitaKwh : null;
   const potenze = vivi.map((pacco) => pacco.potenza).filter((watt5) => watt5 !== null);
-  const potenza = potenze.length ? potenze.reduce((somma2, watt5) => somma2 + watt5, 0) : null;
+  const potenza2 = potenze.length ? potenze.reduce((somma2, watt5) => somma2 + watt5, 0) : null;
   const correnti = vivi.map((pacco) => pacco.corrente).filter((ampere) => ampere !== null);
-  const verso2 = potenza !== null ? versoDelPacco(potenza, null) : correnti.length ? versoDelPacco(
+  const verso2 = potenza2 !== null ? versoDelPacco(potenza2, null) : correnti.length ? versoDelPacco(
     null,
     correnti.reduce((somma2, ampere) => somma2 + ampere, 0)
   ) : null;
@@ -39385,12 +39449,12 @@ function comeStaLAccumulo(pacchi = [], casa = {}) {
     stato: sbilanciati.length ? "sbilanciato" : "bene",
     soc,
     pesata: conCapacita,
-    potenza,
+    potenza: potenza2,
     verso: verso2,
     capacitaKwh,
     energiaKwh,
-    minuti: minutiAllaFine({ verso: verso2, potenza, energiaKwh, capacitaKwh }),
-    daDove: daDove(verso2, potenza, casa),
+    minuti: minutiAllaFine({ verso: verso2, potenza: potenza2, energiaKwh, capacitaKwh }),
+    daDove: daDove(verso2, potenza2, casa),
     sbilanciati,
     muti: pacchi.filter((pacco) => pacco.muto),
     vivi
@@ -39954,10 +40018,10 @@ function sottoDelLettore(riga3) {
   if (riga3.titolo && riga3.applicazione) return riga3.applicazione;
   return riga3.entity;
 }
-function tastoMarkup2(riga3, comando, etichetta3, glifo, acceso6 = false) {
+function tastoMarkup2(riga3, comando, etichetta3, glifo2, acceso6 = false) {
   return `<button type="button" class="dm-mp-tasto" data-dm-mp="${esc(comando)}"
     data-dm-mp-entity="${esc(riga3.entity)}" data-acceso="${acceso6}"
-    aria-label="${esc(etichetta3)}">${glifo}</button>`;
+    aria-label="${esc(etichetta3)}">${glifo2}</button>`;
 }
 var GLIFI = Object.freeze({
   precedente: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M18.5 6.4v11.2a.8.8 0 0 1-1.24.67l-8.4-5.6a.8.8 0 0 1 0-1.34l8.4-5.6a.8.8 0 0 1 1.24.67Z" fill="currentColor"/></svg>`,
@@ -46123,10 +46187,10 @@ function posizioneInParole(riga3) {
   if (riga3.position <= 0) return tapparella ? t("Giù", "Down") : t("Chiusa", "Closed");
   return `${riga3.position}% ${tapparella ? t("su", "up") : t("aperta", "open")}`;
 }
-function tastoTapparella(riga3, servizio, glifo, parola) {
+function tastoTapparella(riga3, servizio, glifo2, parola) {
   return `<button type="button" class="dm-f-tapparelle-freccia" data-dm-w-cover="${esc(riga3.entity)}"
     data-dm-w-down="${esc(riga3.down)}" data-svc="${servizio}" title="${esc(parola)}"
-    aria-label="${esc(`${parola}: ${riga3.stanza || riga3.name}`)}">${glifo}</button>`;
+    aria-label="${esc(`${parola}: ${riga3.stanza || riga3.name}`)}">${glifo2}</button>`;
 }
 function frecce(riga3) {
   if (!(riga3.isCover || riga3.relay)) return "";
@@ -46354,8 +46418,8 @@ function finestraPorte(widget) {
   ).join("")}</div>` : ""}
   </div>`;
 }
-function tastoMp(riga3, comando, etichetta3, glifo, classe2 = "", centro2 = "") {
-  return `<button type="button" class="dm-f-media-tasto ${esc(classe2)}" data-dm-mp="${esc(comando)}"${centro2 ? ` data-centro="${esc(centro2)}"` : ""} data-dm-mp-entity="${esc(riga3.entity)}" aria-label="${esc(etichetta3)}" title="${esc(etichetta3)}">${glifo}</button>`;
+function tastoMp(riga3, comando, etichetta3, glifo2, classe2 = "", centro2 = "") {
+  return `<button type="button" class="dm-f-media-tasto ${esc(classe2)}" data-dm-mp="${esc(comando)}"${centro2 ? ` data-centro="${esc(centro2)}"` : ""} data-dm-mp-entity="${esc(riga3.entity)}" aria-label="${esc(etichetta3)}" title="${esc(etichetta3)}">${glifo2}</button>`;
 }
 var parolaDelCentro = (centro2) => centro2 === "accendi" ? t("Accendi", "Turn on") : centro2 === "pausa" ? t("Pausa", "Pause") : t("Riproduci", "Play");
 function statoDellaCassa(riga3) {
@@ -47630,7 +47694,7 @@ function passiDellObiettivo(lettura3, states) {
 function unoScaldabagno(lettura3, piuDiUno, states, prezzo) {
   const temperatura = num3(lettura3.temperatura);
   const obiettivo2 = num3(lettura3.obiettivo);
-  const potenza = num3(lettura3.potenza);
+  const potenza2 = num3(lettura3.potenza);
   const acceso6 = lettura3.acceso === true;
   const stato3 = lettura3.stato;
   const quota = num3(lettura3.quota);
@@ -47648,7 +47712,7 @@ function unoScaldabagno(lettura3, piuDiUno, states, prezzo) {
         `${acceso6 ? t("scalda da", "heating for") : t("spento da", "off for")} ${daQuanto5(lettura3.da)}`
       )
     );
-  const chip = stato3 === "scalda" ? `${t("Scalda", "Heating")}${potenza != null && potenza > 0 ? ` · ${watt4(potenza)}` : ""}` : stato3 === "pronto" ? t("Acqua pronta", "Water ready") : stato3 === "spento" ? t("Spento", "Off") : "";
+  const chip = stato3 === "scalda" ? `${t("Scalda", "Heating")}${potenza2 != null && potenza2 > 0 ? ` · ${watt4(potenza2)}` : ""}` : stato3 === "pronto" ? t("Acqua pronta", "Water ready") : stato3 === "spento" ? t("Spento", "Off") : "";
   const eroe = `<section class="dm-f-imp-eroe dm-f-scaldabagno-eroe" data-stato="${esc(stato3)}">
     ${serbatoio}
     <div class="dm-f-imp-dx">
@@ -47693,7 +47757,7 @@ function unoScaldabagno(lettura3, piuDiUno, states, prezzo) {
       valore: `${formatNumber(energia, 1)} kWh`,
       sotto: prezzo == null ? "" : `${t("circa", "roughly")} ${euro(energia * prezzo)}`
     }),
-    potenza == null || stato3 === "scalda" ? "" : casella2({ chiave: "potenza", etichetta: t("Adesso", "Now"), valore: watt4(potenza) })
+    potenza2 == null || stato3 === "scalda" ? "" : casella2({ chiave: "potenza", etichetta: t("Adesso", "Now"), valore: watt4(potenza2) })
   ]);
   return `${nomeSePiuDiUna(lettura3.name, piuDiUno)}${eroe}
     ${comandi.length ? `${titoletto2(t("Comandi", "Controls"))}<div class="dm-f-imp-pila">${comandi.join("")}</div>` : ""}
@@ -47806,12 +47870,12 @@ function unUps({ nome, lettura: lettura3 = {}, da = null }, piuDiUno) {
     </div>
   </section>`;
   const carico = num3(lettura3.carico);
-  const potenza = num3(lettura3.potenza);
+  const potenza2 = num3(lettura3.potenza);
   const margine = carico == null ? "" : `${percento4(carico)} ${carico < 60 ? t("di quello che può reggere: c'è margine", "of what it can take: plenty of headroom") : carico < 85 ? t("di quello che può reggere: sta salendo", "of what it can take: getting up there") : t("di quello che può reggere: è al limite", "of what it can take: at the limit")}`;
-  const quanto = carico == null && potenza == null ? "" : `${titoletto2(t("Quanto gli chiedi", "How much you ask of it"))}
+  const quanto = carico == null && potenza2 == null ? "" : `${titoletto2(t("Quanto gli chiedi", "How much you ask of it"))}
         <div class="dm-f-imp-cas dm-f-ups-carico" data-dm-f-casella="carico">
           <div class="dm-f-imp-riga"><small>${esc(t("Carico", "Load"))}</small><span class="dm-f-imp-num">${esc(
-    potenza != null ? watt4(potenza) : percento4(carico)
+    potenza2 != null ? watt4(potenza2) : percento4(carico)
   )}</span></div>
           ${carico == null ? "" : `<div class="dm-f-imp-barra" data-alto="${carico >= 85}"><i style="width:${tra(carico, 0, 100)}%"></i></div>`}
           ${margine ? `<em>${esc(margine)}</em>` : ""}
@@ -47856,11 +47920,11 @@ function unPacco(pacco) {
   if (pacco.muto)
     pillole2.push(`<span data-tono="muto">${esc(t("Non risponde", "Not answering"))}</span>`);
   else {
-    const potenza = num3(pacco.potenza);
-    if (potenza != null && pacco.verso !== "riposo")
+    const potenza2 = num3(pacco.potenza);
+    if (potenza2 != null && pacco.verso !== "riposo")
       pillole2.push(
         `<span>⚡ ${esc(
-          `${watt4(potenza)} ${pacco.verso === "carica" ? t("in carica", "charging") : t("in scarica", "discharging")}`
+          `${watt4(potenza2)} ${pacco.verso === "carica" ? t("in carica", "charging") : t("in scarica", "discharging")}`
         )}</span>`
       );
     const temperatura = num3(pacco.temperatura) ?? num3(pacco.mos);
@@ -47905,7 +47969,7 @@ function disegnaAccumulo(widget) {
   const soc = num3(come.soc);
   const muti = come.stato === "muti";
   const verso2 = come.verso;
-  const potenza = num3(come.potenza);
+  const potenza2 = num3(come.potenza);
   const daDove2 = come.daDove === "solare" ? `☀️ ${t("dal fotovoltaico", "from solar")}` : come.daDove === "rete" ? `🔌 ${t("dalla rete", "from the grid")}` : come.daDove === "casa" ? `🏠 ${t("verso la casa", "to the house")}` : "";
   const fine = tempoCorto(num3(come.minuti));
   const energia = num3(come.energiaKwh) != null && num3(come.capacitaKwh) != null ? `${formatNumber(come.energiaKwh, 1)} / ${formatNumber(come.capacitaKwh, 1)} kWh` : "";
@@ -47920,7 +47984,7 @@ function disegnaAccumulo(widget) {
       <small class="dm-f-imp-etic">${esc(
     muti ? t("Nessun pacco risponde", "No pack answering") : verso2 === "carica" ? t("Si sta caricando", "Charging") : verso2 === "scarica" ? t("Si sta scaricando", "Discharging") : t("A riposo", "Idle")
   )}</small>
-      ${!muti && potenza != null && (verso2 === "carica" || verso2 === "scarica") ? `<span class="dm-f-imp-num dm-f-accumulo-potenza">${esc(watt4(potenza))}</span>` : ""}
+      ${!muti && potenza2 != null && (verso2 === "carica" || verso2 === "scarica") ? `<span class="dm-f-imp-num dm-f-accumulo-potenza">${esc(watt4(potenza2))}</span>` : ""}
       ${righe2.length ? `<div class="dm-f-imp-fianco">${righe2.join("<br>")}</div>` : ""}
     </div>
   </section>`;
@@ -48788,14 +48852,14 @@ function finestraPiante(widget) {
   const come = widget.come;
   if (!come?.piante?.length) return "";
   const adesso = Date.now();
-  const glifo = (pianta, misura7) => disegnoDiCasa(pianta.lettura.icon, { misura: misura7, ripiego: "plant" });
+  const glifo2 = (pianta, misura7) => disegnoDiCasa(pianta.lettura.icon, { misura: misura7, ripiego: "plant" });
   let eroe = "";
   const sete = come.daInnaffiare || [];
   if (sete.length) {
     const [prima] = sete;
     const acqua = prima.ultimaAcqua ? ` · ${t("ultima acqua", "last watered")} ${quantoFa3(prima.ultimaAcqua, adesso)}` : "";
     eroe = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
-        <span class="dm-f-piante-vaso" aria-hidden="true">${glifo(prima, 48)}</span>
+        <span class="dm-f-piante-vaso" aria-hidden="true">${glifo2(prima, 48)}</span>
         <div>
           <small>${esc(t("Da innaffiare oggi", "Water today"))}${sete.length > 1 ? ` · +${sete.length - 1}` : ""}</small>
           <b>${esc(prima.lettura.name)}</b>
@@ -48813,7 +48877,7 @@ function finestraPiante(widget) {
   } else if (come.aspettano?.length) {
     const [prima] = come.aspettano;
     eroe = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
-        <span class="dm-f-piante-vaso" aria-hidden="true">${glifo(prima, 48)}</span>
+        <span class="dm-f-piante-vaso" aria-hidden="true">${glifo2(prima, 48)}</span>
         <div>
           <small>${esc(t("Aspetta la pioggia", "Waiting for the rain"))}</small>
           <b>${esc(prima.lettura.name)}</b>
@@ -48823,7 +48887,7 @@ function finestraPiante(widget) {
   } else if (come.prossima) {
     const prossima = come.prossima;
     eroe = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
-        <span class="dm-f-piante-vaso" aria-hidden="true">${glifo(prossima, 48)}</span>
+        <span class="dm-f-piante-vaso" aria-hidden="true">${glifo2(prossima, 48)}</span>
         <div>
           <small>${esc(t("Tutte a posto", "All fine"))}</small>
           <b>${esc(prossima.lettura.name)}</b>
@@ -48846,7 +48910,7 @@ function finestraPiante(widget) {
     if (lettura3.gradi !== null && lettura3.gradi !== void 0)
       sotto.push(`${t("terra", "soil")} ${formatNumber(lettura3.gradi, 1)}°`);
     return `<div class="dm-f-sv-riga" data-stato="${esc(pianta.stato)}">
-          <span class="dm-f-sv-ic" aria-hidden="true">${glifo(pianta, 22)}</span>
+          <span class="dm-f-sv-ic" aria-hidden="true">${glifo2(pianta, 22)}</span>
           <span class="dm-f-sv-nome"><b>${esc(lettura3.name)}</b>${sotto.length ? `<em>${esc(sotto.join(" · "))}</em>` : ""}${terraMarkup(lettura3)}</span>
           <span class="dm-f-sv-val">${lettura3.umidita === null ? "" : `<span class="dm-f-sv-num">${esc(formatNumber(lettura3.umidita, 0))}%</span>`}<em data-tono="${esc(tono)}">${esc(parola)}</em></span>
         </div>`;
@@ -50073,11 +50137,11 @@ function finestraMinipc(widget) {
   const di = (chiave2) => righe2.find((riga3) => riga3.chiave === chiave2);
   const cpu = di("cpu");
   const temperatura = di("temperatura");
-  const potenza = di("potenza");
+  const potenza2 = di("potenza");
   const internet = di("internet");
   const accanto = [
     temperatura ? `🌡️ ${clean(temperatura.value)}` : "",
-    potenza ? `⚡ ${clean(potenza.value)}` : ""
+    potenza2 ? `⚡ ${clean(potenza2.value)}` : ""
   ].filter(Boolean).join(" · ");
   const pastiglia2 = internet ? `<span class="dm-f-pc-net" data-on="${Boolean(internet.on)}"><i></i>${esc(
     internet.on ? t("Internet attivo", "Internet up") : t("Internet assente", "Internet down")
@@ -51815,15 +51879,15 @@ function testimoniDellaRicarica(states, mappa) {
     return stateOf(states, entity2);
   };
   const collegata = cavoDalloStato(statoDi5("dm.ev_cavo_collegato")?.state);
-  let potenza = null;
+  let potenza2 = null;
   for (const riferimento of ["dm.ev_potenza_wallbox", "dm.ev_charge_power"]) {
     const letta = Number(statoDi5(riferimento)?.state);
     if (Number.isFinite(letta)) {
-      potenza = letta;
+      potenza2 = letta;
       break;
     }
   }
-  return { collegata, potenza };
+  return { collegata, potenza: potenza2 };
 }
 function ricaricaDellaVettura(states, mappa, stato3) {
   const grezzo = clean(stato3?.state);
@@ -51887,7 +51951,7 @@ function letturaVettura(states, auto, fuori, indice, visti = /* @__PURE__ */ new
     altre: altreCaselleEv(states, mappa, fuori, visti)
   };
 }
-function rigaDaEntita(states, entity2, glifo = "•") {
+function rigaDaEntita(states, entity2, glifo2 = "•") {
   const chiave2 = clean(entity2);
   if (!chiave2) return null;
   const stato3 = stateOf(states, chiave2);
@@ -51899,7 +51963,7 @@ function rigaDaEntita(states, entity2, glifo = "•") {
     const unita2 = clean(stato3?.attributes?.unit_of_measurement);
     const cifre2 = Number.isInteger(numero48) || Math.abs(numero48) >= 100 ? 0 : 1;
     return {
-      glyph: glifo,
+      glyph: glifo2,
       /* Il nome senza la parola che il numero dice gia': «Temperatura Pannello
        * solare Temperature» diventa «Temperatura Pannello solare». La seconda
        * parola arriva dall'incastro fra il nome del dispositivo, scritto da chi
@@ -51915,7 +51979,7 @@ function rigaDaEntita(states, entity2, glifo = "•") {
   const quando4 = Number.isFinite(daQuando3) ? daQuando3 : null;
   if (STATI_ACCESI2.test(grezzo))
     return {
-      glyph: glifo,
+      glyph: glifo2,
       name: nome,
       entity: chiave2,
       on: true,
@@ -51924,7 +51988,7 @@ function rigaDaEntita(states, entity2, glifo = "•") {
     };
   if (STATI_SPENTI.test(grezzo))
     return {
-      glyph: glifo,
+      glyph: glifo2,
       name: nome,
       entity: chiave2,
       on: false,
@@ -51932,7 +51996,7 @@ function rigaDaEntita(states, entity2, glifo = "•") {
       value: t("Spento", "Off")
     };
   return {
-    glyph: glifo,
+    glyph: glifo2,
     name: nome,
     entity: chiave2,
     daQuando: quando4,
@@ -51949,7 +52013,7 @@ var GLIFI_EV = Object.freeze([
   [/solare/, "☀️"]
 ]);
 function glifoEv(riferimento) {
-  for (const [prova, glifo] of GLIFI_EV) if (prova.test(riferimento)) return glifo;
+  for (const [prova, glifo2] of GLIFI_EV) if (prova.test(riferimento)) return glifo2;
   return "🚗";
 }
 var RIF_MOTORE = "dm.ev_motore";
@@ -52654,10 +52718,10 @@ function poolModel(states) {
     leggi2("tempEnt", t("Acqua", "Water"), "🌡️", "°");
     leggi2("phEnt", "pH", "🧪");
     leggi2("clEnt", t("Cloro", "Chlorine"), "💧");
-    for (const [chiave2, glifo] of Object.entries(COMANDI_PISCINA)) {
+    for (const [chiave2, glifo2] of Object.entries(COMANDI_PISCINA)) {
       const entity2 = clean(pool[chiave2]);
       if (!entity2 || visti.has(entity2) || !widgetIncludes(entity2, fuori)) continue;
-      const riga3 = rigaDaEntita(states, entity2, glifo);
+      const riga3 = rigaDaEntita(states, entity2, glifo2);
       if (!riga3) continue;
       visti.add(entity2);
       vasca.comandi.push({
@@ -53588,11 +53652,11 @@ function customAlertModels(states) {
 function rigaInEvidenza(states, voce2, fuori) {
   const entity2 = clean(voce2?.entity);
   if (!entity2 || !widgetIncludes(entity2, fuori)) return null;
-  const glifo = clean(voce2?.icon) || "⭐";
+  const glifo2 = clean(voce2?.icon) || "⭐";
   const nome = clean(voce2?.name);
-  const riga3 = rigaDaEntita(states, entity2, glifo);
+  const riga3 = rigaDaEntita(states, entity2, glifo2);
   if (!riga3)
-    return { glyph: glifo, name: nome || friendlyName(states, entity2), entity: entity2, value: "—" };
+    return { glyph: glifo2, name: nome || friendlyName(states, entity2), entity: entity2, value: "—" };
   return nome ? { ...riga3, name: nome } : riga3;
 }
 var eUnaTesseraSola = (voce2) => voce2?.sola === true || voce2?.sola === "true" || voce2?.sola === 1 || voce2?.sola === "1";
@@ -54847,10 +54911,10 @@ function positionSelectMarkup(row) {
       data-dm-w-verso="${row.invertita ? "1" : ""}"
       aria-label="${esc(invito)}" title="${esc(invito)}"><option value="">↕</option>${voci3}</select>`;
 }
-function comandoTapparella(row, servizio, glifo, parola) {
+function comandoTapparella(row, servizio, glifo2, parola) {
   const invito = `${parola}: ${row.name}`;
   return `<button type="button" data-dm-w-cover="${esc(row.entity)}" data-dm-w-down="${esc(row.down)}"
-      data-svc="${servizio}" title="${esc(parola)}" aria-label="${esc(invito)}">${glifo}</button>`;
+      data-svc="${servizio}" title="${esc(parola)}" aria-label="${esc(invito)}">${glifo2}</button>`;
 }
 function coversDetail(widget) {
   return widget.rows.map(
@@ -56344,9 +56408,9 @@ function onClick7(event) {
     const apri6 = !misureAperte().has(chiave2);
     if (apri6) misureAperte().add(chiave2);
     else misureAperte().delete(chiave2);
-    const griglia2 = misure.previousElementSibling;
+    const griglia3 = misure.previousElementSibling;
     const caselle2 = [
-      ...griglia2?.querySelectorAll?.(".dm-w-casella, .dm-w-pillola") || []
+      ...griglia3?.querySelectorAll?.(".dm-w-casella, .dm-w-pillola") || []
     ];
     caselle2.forEach((casella5, indice) => {
       casella5.hidden = !apri6 && indice >= MISURE_IN_VISTA;
@@ -59428,21 +59492,21 @@ function tastoRapido(unita2, states) {
   return tasto2;
 }
 function disegnaClimaRapido() {
-  const griglia2 = doc?.getElementById?.("quick-clima-grid");
-  if (!griglia2) return false;
+  const griglia3 = doc?.getElementById?.("quick-clima-grid");
+  if (!griglia3) return false;
   if (!climateUnits().length) return false;
   const modo = clean(lexicalGlobal("currentClimaMode")).toLowerCase() || "freddo";
   const unita2 = unitaDelModo(modo);
   const states = allStates();
-  griglia2.replaceChildren();
+  griglia3.replaceChildren();
   if (!unita2.length) {
     const vuoto4 = doc.createElement("p");
     vuoto4.className = "ns-clima-empty";
     vuoto4.textContent = modo === "caldo" ? t("Nessun termosifone configurato", "No radiator configured") : t("Nessun condizionatore configurato", "No air conditioner configured");
-    griglia2.append(vuoto4);
+    griglia3.append(vuoto4);
     return true;
   }
-  for (const voce2 of unita2) griglia2.append(tastoRapido(voce2, states));
+  for (const voce2 of unita2) griglia3.append(tastoRapido(voce2, states));
   return true;
 }
 function installClimaRapido() {
@@ -59481,9 +59545,9 @@ function intestazioneDellaFinestra(entity2) {
   if (!unita2) return false;
   const nome = doc?.getElementById?.("cp-name");
   const stanza2 = doc?.getElementById?.("cp-room");
-  const glifo = ICONE_CLIMA2[canonicalClimateType(grezza?.type)] || "🌡️";
+  const glifo2 = ICONE_CLIMA2[canonicalClimateType(grezza?.type)] || "🌡️";
   if (nome && clean(unita2.name)) nome.textContent = unita2.name;
-  if (stanza2) stanza2.textContent = `${glifo} ${clean(unita2.room) || t("Clima", "Climate")}`;
+  if (stanza2) stanza2.textContent = `${glifo2} ${clean(unita2.room) || t("Clima", "Climate")}`;
   return true;
 }
 function installPannelloDellaFinestra() {
@@ -59548,9 +59612,9 @@ function osservaLaPagina() {
   if (!pagina2) return false;
   let eraInVista = climaInVista();
   state48.osservatore = new root.MutationObserver(() => {
-    const inVista = climaInVista();
-    if (inVista && !eraInVista) renderClimate();
-    eraInVista = inVista;
+    const inVista3 = climaInVista();
+    if (inVista3 && !eraInVista) renderClimate();
+    eraInVista = inVista3;
   });
   state48.osservatore.observe(pagina2, { attributes: true, attributeFilter: ["class"] });
   return true;
@@ -60561,8 +60625,8 @@ function tavolaMarkup(pagina2, states = {}) {
     return `<h2 class="dm-stanze-a-voce">${esc(nomeBlocco(blocco3))}</h2>${caselle2}`;
   }).join("");
   const altre = readingMarkup(pagina2, states, { daLa: 1 });
-  const griglia2 = tessere || altre ? `<div class="dm-stanze-grid dm-stanze-tavola" data-dm-stanza-vista="${VISTA_TESSERE}">${tessere}${altre}</div>` : "";
-  return `${testaDellaStanza(pagina2, states)}${griglia2}`;
+  const griglia3 = tessere || altre ? `<div class="dm-stanze-grid dm-stanze-tavola" data-dm-stanza-vista="${VISTA_TESSERE}">${tessere}${altre}</div>` : "";
+  return `${testaDellaStanza(pagina2, states)}${griglia3}`;
 }
 function aggiornaLaTavola(wrap, states) {
   for (const nodo2 of wrap.querySelectorAll("[data-dm-stanza-clima]")) {
@@ -61994,9 +62058,9 @@ function pezziDelBlocco(nome, pagina2) {
       Boolean
     );
   if (nome === "azioni") {
-    const griglia2 = doc.getElementById("qa-grid");
-    const vassoio = griglia2?.closest?.("[data-dm-vassoio]");
-    const corpo2 = dentro3(vassoio) || dentro3(griglia2);
+    const griglia3 = doc.getElementById("qa-grid");
+    const vassoio = griglia3?.closest?.("[data-dm-vassoio]");
+    const corpo2 = dentro3(vassoio) || dentro3(griglia3);
     if (!corpo2) return [];
     const titolo3 = corpo2.previousElementSibling;
     return titolo3?.classList?.contains("section-title") && !titolo3.id ? [titolo3, corpo2] : [corpo2];
@@ -64156,16 +64220,16 @@ function carichiTravasati({ loads = [], flowNodes = null } = {}) {
   const dalloSpecchio = /* @__PURE__ */ new Set();
   if (flowNodes && typeof flowNodes === "object" && !Array.isArray(flowNodes))
     for (const casella5 of CASELLE) {
-      const potenza = clean23(flowNodes?.[casella5]?.pwr);
-      if (potenza) dalloSpecchio.add(potenza);
+      const potenza2 = clean23(flowNodes?.[casella5]?.pwr);
+      if (potenza2) dalloSpecchio.add(potenza2);
     }
   if (!dalloSpecchio.size) return [];
   const perEntita = /* @__PURE__ */ new Map();
   for (const load of elenco10) {
-    const potenza = clean23(load?.power_entity);
-    if (!potenza || !dalloSpecchio.has(potenza)) continue;
-    if (!perEntita.has(potenza)) perEntita.set(potenza, []);
-    perEntita.get(potenza).push(load);
+    const potenza2 = clean23(load?.power_entity);
+    if (!potenza2 || !dalloSpecchio.has(potenza2)) continue;
+    if (!perEntita.has(potenza2)) perEntita.set(potenza2, []);
+    perEntita.get(potenza2).push(load);
   }
   const trovati = [];
   for (const [entita3, portatori] of perEntita) {
@@ -64478,15 +64542,15 @@ function entityField2(id, label, value, hint, onChange18) {
   return field;
 }
 function travasoDelCerchio(load) {
-  const potenza = clean(load?.power);
-  if (!potenza) return null;
+  const potenza2 = clean(load?.power);
+  if (!potenza2) return null;
   const { plant, list } = impiantoAperto();
   if (!Array.isArray(list) || list.length < 2) return null;
   const mio = plant && clean(plant.id) !== PRIMO_IMPIANTO ? clean(plant.id) : "";
   const voce2 = carichiTravasati({
     loads: configuredLoads2(),
     flowNodes: readJson("cd_flow_nodes", null)
-  }).find((trovato) => trovato.entita === potenza && trovato.impianto === mio);
+  }).find((trovato) => trovato.entita === potenza2 && trovato.impianto === mio);
   if (!voce2) return null;
   const nomi = voce2.altri.map((id) => {
     const posto = list.findIndex(
@@ -64494,7 +64558,7 @@ function travasoDelCerchio(load) {
     );
     return posto < 0 ? "" : plantLabel(list[posto], posto, t("Impianto", "Plant"));
   }).filter(Boolean);
-  return { potenza, nomi };
+  return { potenza: potenza2, nomi };
 }
 function warnings(load) {
   const messages = loadConfigWarnings(load, activeLocale());
@@ -65261,20 +65325,20 @@ function wattDi(states, entity2) {
   return finiteOrNull4(source?.state ?? source);
 }
 function comeInElettrodomestici(child, states) {
-  const potenza = campoDiPotenza(child, states);
-  const watt5 = wattDi(states, potenza);
+  const potenza2 = campoDiPotenza(child, states);
+  const watt5 = wattDi(states, potenza2);
   const device = {
     ...child,
-    power_entity: potenza,
+    power_entity: potenza2,
     state_entity: clean24(child.state_entity || child.status_entity || child.state || child.bin),
     control_entity: clean24(child.control_entity || child.switch_entity || child.switch)
   };
-  if (!potenza || watt5 === null) return { device, letture: states || {}, watt: watt5 };
+  if (!potenza2 || watt5 === null) return { device, letture: states || {}, watt: watt5 };
   const letture2 = Object.create(states || null);
-  letture2[potenza] = {
-    ...states?.[potenza] || {},
+  letture2[potenza2] = {
+    ...states?.[potenza2] || {},
     state: String(watt5),
-    attributes: { ...states?.[potenza]?.attributes || {}, unit_of_measurement: "W" }
+    attributes: { ...states?.[potenza2]?.attributes || {}, unit_of_measurement: "W" }
   };
   return { device, letture: letture2, watt: watt5 };
 }
@@ -65513,17 +65577,17 @@ function scriviIlGiorno(node, item) {
 }
 function riconcilia(list, model2) {
   let testata4 = list.querySelector(".dm-subload-summary");
-  let griglia2 = list.querySelector(".dm-subload-grid");
-  if (!testata4 || !griglia2) {
+  let griglia3 = list.querySelector(".dm-subload-grid");
+  if (!testata4 || !griglia3) {
     testata4 = header(model2);
-    griglia2 = element2("div", "dm-subload-grid");
-    list.replaceChildren(testata4, griglia2);
+    griglia3 = element2("div", "dm-subload-grid");
+    list.replaceChildren(testata4, griglia3);
   } else {
     aggiornaTestata(testata4, model2);
   }
-  const vuoto4 = griglia2.querySelector(".dm-subload-empty");
+  const vuoto4 = griglia3.querySelector(".dm-subload-empty");
   if (!model2.count && !vuoto4)
-    griglia2.append(
+    griglia3.append(
       element2(
         "div",
         "dm-subload-empty",
@@ -65535,7 +65599,7 @@ function riconcilia(list, model2) {
     );
   else if (model2.count && vuoto4) vuoto4.remove?.();
   const carte = new Map(
-    [...griglia2.querySelectorAll("[data-dm-subload-card]")].map((nodo2) => [
+    [...griglia3.querySelectorAll("[data-dm-subload-card]")].map((nodo2) => [
       nodo2.dataset.dmSubloadCard,
       nodo2
     ])
@@ -65549,17 +65613,17 @@ function riconcilia(list, model2) {
     inFila.push(nodo2 || card(item, model2));
   }
   for (const [id, nodo2] of carte) if (!vivi.has(id)) nodo2.remove?.();
-  const gia = vuotoInScena(griglia2) ? 1 : 0;
+  const gia = vuotoInScena(griglia3) ? 1 : 0;
   for (let posto = 0; posto < inFila.length; posto++) {
     const atteso = inFila[posto];
-    const attuale = griglia2.children[posto + gia];
+    const attuale = griglia3.children[posto + gia];
     if (attuale === atteso) continue;
-    if (attuale) griglia2.insertBefore(atteso, attuale);
-    else griglia2.append(atteso);
+    if (attuale) griglia3.insertBefore(atteso, attuale);
+    else griglia3.append(atteso);
   }
   return true;
 }
-var vuotoInScena = (griglia2) => Boolean(griglia2.querySelector(".dm-subload-empty"));
+var vuotoInScena = (griglia3) => Boolean(griglia3.querySelector(".dm-subload-empty"));
 var ETICHETTE = () => ({
   running: t("IN FUNZIONE", "RUNNING"),
   standby: t("STANDBY", "STANDBY"),
@@ -65970,8 +66034,8 @@ function riveste(indice) {
   const { misure, pillole: pillole2, comandi } = famiglie(appliance);
   if (misure.length) {
     lista5.append(titoletto4(t("Le misure", "The readings")));
-    const griglia2 = doc.createElement("div");
-    griglia2.className = "dm-apde-caselle";
+    const griglia3 = doc.createElement("div");
+    griglia3.className = "dm-apde-caselle";
     for (const misura7 of misure) {
       const casella5 = doc.createElement("button");
       casella5.type = "button";
@@ -65979,9 +66043,9 @@ function riveste(indice) {
       casella5.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${misura7.glifo}</span>
         <b>${esc(misura7.valore)}</b><span>${esc(misura7.nome)}</span>`;
       casella5.addEventListener("click", (event) => apriStorico(event, misura7.entity, misura7.nome));
-      griglia2.append(casella5);
+      griglia3.append(casella5);
     }
-    lista5.append(griglia2);
+    lista5.append(griglia3);
   }
   if (pillole2.length) {
     lista5.append(titoletto4(t("Lo stato", "The state")));
@@ -66116,8 +66180,8 @@ function aggiungiAltreLetture(lista5, appliance, titoletto4) {
   );
   if (!voci3.length) return false;
   lista5.append(titoletto4(t("Altre letture", "Other readings")));
-  const griglia2 = doc.createElement("div");
-  griglia2.className = "dm-apde-caselle";
+  const griglia3 = doc.createElement("div");
+  griglia3.className = "dm-apde-caselle";
   for (const voce2 of voci3) {
     const casella5 = doc.createElement("button");
     casella5.type = "button";
@@ -66125,9 +66189,9 @@ function aggiungiAltreLetture(lista5, appliance, titoletto4) {
     casella5.dataset.dmApdeEntity = voce2.entity;
     casella5.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce2.testo)}</b><span>${esc(voce2.name)}</span>`;
     casella5.addEventListener("click", (event) => apriStorico(event, voce2.entity, voce2.name));
-    griglia2.append(casella5);
+    griglia3.append(casella5);
   }
-  lista5.append(griglia2);
+  lista5.append(griglia3);
   return true;
 }
 function aggiungiAltriComandi(lista5, appliance, titoletto4) {
@@ -66272,8 +66336,8 @@ function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto4) {
   }
   if (letture2.length) {
     lista5.append(titoletto4(t("Le letture del dispositivo", "The device readings")));
-    const griglia2 = doc.createElement("div");
-    griglia2.className = "dm-apde-caselle";
+    const griglia3 = doc.createElement("div");
+    griglia3.className = "dm-apde-caselle";
     for (const voce2 of letture2) {
       const casella5 = doc.createElement("button");
       casella5.type = "button";
@@ -66281,9 +66345,9 @@ function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto4) {
       casella5.dataset.dmApdeEntity = voce2.entity;
       casella5.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce2.value)}</b><span>${esc(voce2.name)}</span>`;
       casella5.addEventListener("click", (event) => apriStorico(event, voce2.entity, voce2.name));
-      griglia2.append(casella5);
+      griglia3.append(casella5);
     }
-    lista5.append(griglia2);
+    lista5.append(griglia3);
   }
   const rigaDiComando = (voce2) => {
     const riga3 = doc.createElement("div");
@@ -67969,8 +68033,8 @@ function quandoLaPanoramicaSiVede(fai) {
   state60.sentinella.observe(vista2);
 }
 function ilBlocco(crea = false) {
-  const griglia2 = doc?.querySelector("#ed-pane-panoramica .ed-fin-grid");
-  if (!griglia2) return null;
+  const griglia3 = doc?.querySelector("#ed-pane-panoramica .ed-fin-grid");
+  if (!griglia3) return null;
   let blocco3 = doc.getElementById("dm-fasce-report");
   if (!blocco3) {
     if (!crea) return null;
@@ -67978,7 +68042,7 @@ function ilBlocco(crea = false) {
     blocco3.id = "dm-fasce-report";
     blocco3.className = "dm-fasce-report";
   }
-  if (blocco3.previousElementSibling !== griglia2) griglia2.after(blocco3);
+  if (blocco3.previousElementSibling !== griglia3) griglia3.after(blocco3);
   return blocco3;
 }
 function ilProfilo(crea = false) {
@@ -70619,15 +70683,15 @@ function leCaselleDellEnergia(gruppi2 = ENERGY_GROUPS) {
 }
 function leCaselleDelGuscio(raccolte = []) {
   const fuori = [];
-  for (const raccolta of Array.isArray(raccolte) ? raccolte : []) {
-    const ref = pulito42(raccolta?.ref);
-    const nome = pulito42(raccolta?.nome);
+  for (const raccolta2 of Array.isArray(raccolte) ? raccolte : []) {
+    const ref = pulito42(raccolta2?.ref);
+    const nome = pulito42(raccolta2?.nome);
     if (!ref || !nome || isRetiredEditorSlot(ref)) continue;
     const scheda8 = Object.entries(SCHEDA_DELLA_FAMIGLIA).find(
       ([inizio]) => ref.startsWith(inizio)
     )?.[1];
     if (!scheda8) continue;
-    fuori.push(casella3(ref, nome, nome, scheda8, "", pulito42(raccolta?.dove)));
+    fuori.push(casella3(ref, nome, nome, scheda8, "", pulito42(raccolta2?.dove)));
   }
   return fuori;
 }
@@ -71195,8 +71259,8 @@ function facceDeiDispositivi() {
 var EMOJI_DAVANTI = /^(?:\p{Extended_Pictographic}[\uFE0E\uFE0F\u200D\u{1F3FB}-\u{1F3FF}]*)+\s*/u;
 function nomeSenzaEmoji(testo2) {
   const scritto = clean(testo2);
-  const glifo = scritto.match(EMOJI_DAVANTI)?.[0] || "";
-  return { glifo: clean(glifo), nome: clean(scritto.slice(glifo.length)) || scritto };
+  const glifo2 = scritto.match(EMOJI_DAVANTI)?.[0] || "";
+  return { glifo: clean(glifo2), nome: clean(scritto.slice(glifo2.length)) || scritto };
 }
 function vociDelGuscio() {
   const elenco10 = Array.isArray(root.ED_DEVICES) ? root.ED_DEVICES : [];
@@ -75994,12 +76058,12 @@ function tasto(voce2) {
   return nodo2;
 }
 function disegnaProgrammi() {
-  const griglia2 = doc?.querySelector?.("#lavatrice-modal .lav-preset-grid");
-  if (!griglia2) return false;
+  const griglia3 = doc?.querySelector?.("#lavatrice-modal .lav-preset-grid");
+  if (!griglia3) return false;
   const voci3 = programmiAttuali();
-  griglia2.replaceChildren(...voci3.map(tasto));
-  const titolo3 = griglia2.previousElementSibling;
-  griglia2.style.display = voci3.length ? "" : "none";
+  griglia3.replaceChildren(...voci3.map(tasto));
+  const titolo3 = griglia3.previousElementSibling;
+  griglia3.style.display = voci3.length ? "" : "none";
   if (titolo3?.tagName === "H4") titolo3.style.display = voci3.length ? "" : "none";
   return true;
 }
@@ -79687,8 +79751,8 @@ async function writeEnergyAssignments(assignments) {
   if (!energy.length) return assignments;
   const store = dashboardStore();
   const rest = assignments.filter((item) => !ENERGY_SLOT_PATHS.has(item.ref));
-  const salvato = store?.getSection ? { ...store.getSection("energy") || {} } : readJson("cd_energy_model", {}) || {};
-  const model2 = scriviNellImpianto(salvato, impiantoScelto(), (bersaglio) => {
+  const salvato2 = store?.getSection ? { ...store.getSection("energy") || {} } : readJson("cd_energy_model", {}) || {};
+  const model2 = scriviNellImpianto(salvato2, impiantoScelto(), (bersaglio) => {
     for (const item of energy) {
       const [group, key] = ENERGY_SLOT_PATHS.get(item.ref);
       bersaglio[group] = { ...bersaglio[group] || {} };
@@ -81873,14 +81937,14 @@ html body #page-home .dm-vassoio #qa-grid .qa-btn:active .icon{transform:scale(.
 }
 `;
 function avvolgi2() {
-  const griglia2 = doc?.getElementById?.("qa-grid");
-  if (!griglia2) return false;
-  if (griglia2.parentElement?.classList?.contains("dm-vassoio")) return false;
+  const griglia3 = doc?.getElementById?.("qa-grid");
+  if (!griglia3) return false;
+  if (griglia3.parentElement?.classList?.contains("dm-vassoio")) return false;
   const vassoio = doc.createElement("div");
   vassoio.className = "dm-vassoio";
   vassoio.dataset.dmVassoio = "azioni";
-  griglia2.replaceWith(vassoio);
-  vassoio.append(griglia2);
+  griglia3.replaceWith(vassoio);
+  vassoio.append(griglia3);
   return true;
 }
 function azioniDelGuscio() {
@@ -81919,10 +81983,10 @@ function onda(evento) {
   root.setTimeout?.(() => cerchio.remove(), 640);
 }
 function adegua() {
-  const griglia2 = doc?.getElementById?.("qa-grid");
-  const vassoio = griglia2?.parentElement;
+  const griglia3 = doc?.getElementById?.("qa-grid");
+  const vassoio = griglia3?.parentElement;
   if (!vassoio?.classList?.contains?.("dm-vassoio")) return;
-  const vuoto4 = griglia2.style.display === "none";
+  const vuoto4 = griglia3.style.display === "none";
   vassoio.hidden = vuoto4;
   const titolo3 = vassoio.previousElementSibling;
   if (titolo3 && /azioni/i.test(titolo3.textContent || ""))
@@ -82062,16 +82126,16 @@ function titoloMarkup(gruppo, chiuso, segno) {
     <span class="dm-qa-gruppo-freccia" aria-hidden="true">▾</span>`;
 }
 function raggruppa() {
-  const griglia2 = doc?.getElementById?.("qa-grid");
-  if (!griglia2) return 0;
+  const griglia3 = doc?.getElementById?.("qa-grid");
+  if (!griglia3) return 0;
   const azioni2 = azioniDelGuscio2();
   const states = allStates();
   const struttura = gruppiDelleAzioni(
     azioni2,
     (azione) => azioneAccesa(azione, states, root.resolveEntity)
   );
-  const tasti = [...griglia2.children].filter((nodo2) => nodo2.classList?.contains("qa-btn"));
-  const titoli = [...griglia2.querySelectorAll(":scope > .dm-qa-gruppo")];
+  const tasti = [...griglia3.children].filter((nodo2) => nodo2.classList?.contains("qa-btn"));
+  const titoli = [...griglia3.querySelectorAll(":scope > .dm-qa-gruppo")];
   if (!struttura.gruppi.length) {
     for (const titolo3 of titoli) titolo3.remove();
     for (const tasto2 of tasti) {
@@ -82079,7 +82143,7 @@ function raggruppa() {
       delete tasto2.dataset.dmQaChiuso;
       delete tasto2.dataset.dmQaGruppo;
     }
-    delete griglia2.dataset.dmQaGruppi;
+    delete griglia3.dataset.dmQaGruppi;
     return 0;
   }
   const metti4 = (nodo2, campo5, valore3) => {
@@ -82090,7 +82154,7 @@ function raggruppa() {
   const ordina = (nodo2, valore3) => {
     if (nodo2.style.order !== valore3) nodo2.style.order = valore3;
   };
-  metti4(griglia2, "dmQaGruppi", String(struttura.gruppi.length));
+  metti4(griglia3, "dmQaGruppi", String(struttura.gruppi.length));
   const chiusi = gruppiChiusi(leggiChiusi(), struttura.gruppi);
   const gruppoDi2 = /* @__PURE__ */ new Map();
   for (const gruppo of struttura.gruppi)
@@ -82104,7 +82168,7 @@ function raggruppa() {
   const presenti = new Set(struttura.gruppi.map((gruppo) => gruppo.chiave));
   for (const titolo3 of titoli) if (!presenti.has(titolo3.dataset.dmQaTitolo)) titolo3.remove();
   struttura.gruppi.forEach((gruppo, posto) => {
-    let titolo3 = griglia2.querySelector(
+    let titolo3 = griglia3.querySelector(
       `:scope > .dm-qa-gruppo[data-dm-qa-titolo="${CSS.escape(gruppo.chiave)}"]`
     );
     if (!titolo3) {
@@ -82112,7 +82176,7 @@ function raggruppa() {
       titolo3.type = "button";
       titolo3.className = "dm-qa-gruppo";
       titolo3.dataset.dmQaTitolo = gruppo.chiave;
-      griglia2.append(titolo3);
+      griglia3.append(titolo3);
     }
     const chiuso = chiusi.has(gruppo.chiave);
     const segno = segnoDaTasto(tasti[gruppo.indici[0]]);
@@ -83875,13 +83939,49 @@ senzaCadere(installModoChiosco);
 
 // src/core/plancia-a-muro.js
 var CHIAVE_MURO = "cd_muro";
-var MODELLI = Object.freeze(["stanza", "scene", "ingresso", "personale", "luci", "clima"]);
-var MODELLI_ELENCO = Object.freeze(["luci", "clima"]);
+var MODELLI = Object.freeze([
+  "stanza",
+  "scene",
+  "ingresso",
+  "personale",
+  "luci",
+  "clima",
+  "tapparelle",
+  "ambienti",
+  "telecamere",
+  "energia",
+  "musica"
+]);
+var MODELLI_ELENCO = Object.freeze(["luci", "clima", "tapparelle"]);
 var ZONE_DEL_CLIMA = Object.freeze(["freddo", "caldo"]);
 var PAGINE_AL_MASSIMO = 8;
 var POSTI = 6;
-var GRIGLIE = Object.freeze([6, 8, 12]);
-var postiDi = (valore3) => GRIGLIE.includes(Number(valore3)) ? Number(valore3) : POSTI;
+var GRIGLIE = Object.freeze({
+  4: Object.freeze({ colonne: 2, righe: 2 }),
+  6: Object.freeze({ colonne: 3, righe: 2 }),
+  8: Object.freeze({ colonne: 4, righe: 2 }),
+  9: Object.freeze({ colonne: 3, righe: 3 }),
+  12: Object.freeze({ colonne: 4, righe: 3 })
+});
+var GRIGLIA_DI_SERIE = Object.freeze({ telecamere: 4, energia: 4, ambienti: 6 });
+function postiDellaPagina(pagina2) {
+  const n = Number(pagina2?.griglia);
+  return GRIGLIE[n] ? n : POSTI;
+}
+function grigliaDellaPagina(pagina2, versoScelto = "orizzontale") {
+  const g = GRIGLIE[postiDellaPagina(pagina2)];
+  return versoScelto === "verticale" ? { colonne: g.righe, righe: g.colonne } : { colonne: g.colonne, righe: g.righe };
+}
+var COLORI_DELLE_PAGINE = Object.freeze([
+  "#f59e0b",
+  "#ef4444",
+  "#ec4899",
+  "#8b5cf6",
+  "#6366f1",
+  "#0ea5e9",
+  "#10b981",
+  "#64748b"
+]);
 var TIPI_DI_COMANDO = Object.freeze([
   "luce",
   "clima",
@@ -83990,12 +84090,13 @@ function paginaPulita(input, indice = 0) {
   const vecchia = ZONE_DEL_CLIMA.includes(dentro3.modello) ? dentro3.modello : "";
   const modello = vecchia ? "clima" : scelta(dentro3.modello, MODELLI, "stanza");
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro3.id || "")) ? dentro3.id : `p${indice + 1}`;
-  const posti = postiDi(dentro3.posti);
+  const scritta = Number(dentro3.griglia ?? dentro3.posti);
+  const griglia3 = GRIGLIE[scritta] ? scritta : GRIGLIA_DI_SERIE[modello] || POSTI;
   const comandi = senzaVuotiInCoda(
-    (Array.isArray(dentro3.comandi) ? dentro3.comandi : []).slice(0, posti).map((c) => comandoPulito(c) || { ...POSTO_VUOTO })
+    (Array.isArray(dentro3.comandi) ? dentro3.comandi : []).slice(0, griglia3).map((c) => comandoPulito(c) || { ...POSTO_VUOTO })
   );
   const scene = senzaVuotiInCoda(
-    (Array.isArray(dentro3.scene) ? dentro3.scene : []).slice(0, posti).map(
+    (Array.isArray(dentro3.scene) ? dentro3.scene : []).slice(0, griglia3).map(
       (c) => c?.tipo === "vuoto" ? { ...POSTO_VUOTO } : scenaPulita(c) || { ...POSTO_VUOTO }
     )
   );
@@ -84009,11 +84110,12 @@ function paginaPulita(input, indice = 0) {
     titolo: testo(dentro3.titolo, 32),
     /* Il disegno della linguetta: vuoto, quello del tipo di pagina. */
     disegno: testo(dentro3.disegno, 32),
+    /* Il colore della linguetta e del titolo: vuoto, quello del tipo. */
+    colore: COLORI_DELLE_PAGINE.includes(String(dentro3.colore || "").toLowerCase()) ? String(dentro3.colore).toLowerCase() : "",
+    griglia: griglia3,
     /* Su quale linguetta si apre la pagina Clima. */
     zona: scelta(vecchia || dentro3.zona, ZONE_DEL_CLIMA, "freddo"),
     stanza: testo(dentro3.stanza, 80),
-    /* Quanti riquadri ha la pagina: 6, 8 o 12. */
-    posti,
     /* `scelti` dice se i comandi li ha scelti qualcuno. Finche' e' falso la
      * pagina segue la stanza: una luce aggiunta nella principale compare da
      * sola sul tablet. */
@@ -84022,15 +84124,36 @@ function paginaPulita(input, indice = 0) {
     scene,
     riga: riga3,
     ingresso: ingressoPulito(dentro3.ingresso),
+    energia: energiaPulita(dentro3.energia),
+    /* I lettori della pagina Musica: vuoto, quelli della plancia di origine. */
+    lettori: [
+      ...new Set((Array.isArray(dentro3.lettori) ? dentro3.lettori : []).map(entita2))
+    ].filter((id2) => id2.startsWith("media_player.")).slice(0, LETTORI_AL_MASSIMO),
     confermaUscita: vero2(dentro3.confermaUscita, false)
   };
+}
+var LETTORI_AL_MASSIMO = 8;
+function lettoriDellaPagina(pagina2, fonte = {}) {
+  if (pagina2?.lettori?.length) return pagina2.lettori.map((id) => ({ entita: id, nome: "" }));
+  return elenco6(fonte.lettori).slice(0, LETTORI_AL_MASSIMO).map((l) => ({ entita: l.entity, nome: l.nome || "" }));
+}
+var ENERGIA_VUOTA = Object.freeze({ casa: "", solare: "", rete: "", batteria: "" });
+function energiaPulita(input) {
+  const dentro3 = input && typeof input === "object" ? input : {};
+  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, entita2(dentro3[k])]));
+}
+function energiaDellaPagina(pagina2, fonte = {}) {
+  const scelte4 = pagina2?.energia || {};
+  const sue = fonte?.energia || {};
+  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, scelte4[k] || sue[k] || ""]));
 }
 var MURO_VUOTO = Object.freeze({
   attiva: false,
   fonte: PROFILO_DI_ORIGINE,
   orientamento: "auto",
   tema: "plancia",
-  riposo: { attivo: true, minuti: 2 },
+  meteo: "",
+  riposo: { attivo: true, minuti: 2, torna: true, sensore: "" },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
   risveglio: { attivo: false, entita: "" },
@@ -84064,9 +84187,15 @@ function muroPulito(input) {
     fonte: profilo(dentro3.fonte),
     orientamento: scelta(dentro3.orientamento, ORIENTAMENTI, "auto"),
     tema: scelta(dentro3.tema, TEMI, "plancia"),
+    /* Il meteo in alto e sul riposo: vuoto, il primo che Home Assistant ha. */
+    meteo: entita2(dentro3.meteo),
     riposo: {
       attivo: vero2(riposo2.attivo, true),
-      minuti: MINUTI_DI_RIPOSO.includes(minuti) ? minuti : 2
+      minuti: MINUTI_DI_RIPOSO.includes(minuti) ? minuti : 2,
+      /* Al riposo il tablet torna alla prima pagina, o resta dov'era. */
+      torna: vero2(riposo2.torna, true),
+      /* La temperatura «in casa» del riposo: vuoto, quella della prima stanza. */
+      sensore: entita2(riposo2.sensore)
     },
     notte: {
       attiva: vero2(notte.attiva, false),
@@ -84087,7 +84216,7 @@ function muroPulito(input) {
 function nuovaPagina(modello, fonte = {}, indice = 0) {
   const pagina2 = paginaPulita({ id: nuovoId().slice(0, 24), modello }, indice);
   if (pagina2.modello === "stanza") pagina2.stanza = fonte.stanze?.[0]?.name || "";
-  if (pagina2.modello === "scene") pagina2.scene = scenePropose(fonte);
+  if (pagina2.modello === "scene") pagina2.scene = scenePropose(fonte, pagina2.griglia);
   if (pagina2.modello === "ingresso") pagina2.ingresso = ingressoProposto(fonte);
   if (pagina2.modello === "personale") pagina2.scelti = true;
   return pagina2;
@@ -84111,7 +84240,8 @@ function fonteDaiValori(valori = {}) {
     centrali: json(valori.cd_centrali, []),
     overrides: json(valori.cd_entity_overrides, {}),
     avvisi: json(valori.cd_avvisi_custom, []),
-    climaUnita: json(valori.cd_clima_units, [])
+    climaUnita: json(valori.cd_clima_units, []),
+    lettori: json(valori.cd_media_player, [])
   });
 }
 function climaColTipo(sezione2, unita2) {
@@ -84143,7 +84273,20 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
   const centrali2 = elenco6(altro.centrali).map((c) => entita2(c?.caselle?.["dm.security_centrale_allarme"])).filter(Boolean);
   const centraleSola = entita2(overrides2["dm.security_centrale_allarme"]);
   if (centraleSola && !centrali2.includes(centraleSola)) centrali2.unshift(centraleSola);
+  const nomiDelleAree = new Map(
+    elenco6(altro.centrali).map((c) => [entita2(c?.caselle?.["dm.security_centrale_allarme"]), testo(c?.nome || c?.name, 40)]).filter(([id]) => id)
+  );
+  const misura7 = (chiave2) => entita2(overrides2[`dm.energy_${chiave2}`]);
   return {
+    /* Le misure dell'energia che la plancia di origine ha gia' scelto. */
+    energia: {
+      casa: misura7("potenza_consumo_casa"),
+      solare: misura7("potenza_fotovoltaico"),
+      rete: misura7("potenza_scambio_rete"),
+      batteria: misura7("stato_carica_batteria")
+    },
+    /* I lettori della sezione Musica, per la pagina Musica. */
+    lettori: lettoriConfigurati(elenco6(altro.lettori)).filter((l) => entita2(l.entity)).map((l) => ({ entity: entita2(l.entity), nome: testo(l.nome) })),
     stanze: elenco6(sezioni2.rooms).filter((s) => s && testo(s.name)).map((s) => ({
       id: testo(s.id, 80),
       name: testo(s.name),
@@ -84169,6 +84312,7 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
     meteo: entita2(overrides2["dm.home_meteo"]) || entita2(overrides2["dm.core_055"]),
     persone: elenco6(altro.persone).filter((p) => p && entita2(p.entity) && p.nascosta !== true).map((p) => ({ entity: entita2(p.entity), name: testo(p.name) })),
     centrali: centrali2,
+    aree: centrali2.map((id) => ({ entita: id, nome: nomiDelleAree.get(id) || "" })),
     avvisi: elenco6(altro.avvisi).map((a) => ({
       name: testo(a?.name, 60),
       icon: testo(a?.icon, 16),
@@ -84208,9 +84352,9 @@ function avvisiAccesi(fonte = {}, stati = {}, centrale = "") {
     icon: a.icon,
     grave: false
   }));
-  const allarme2 = entita2(centrale) || elenco6(fonte.centrali)[0] || "";
-  if (allarme2 && String(stati[allarme2]?.state) === "triggered")
-    accesi.unshift({ chiave: allarme2, testo: "", icon: "", grave: true });
+  const tutte = [...new Set([entita2(centrale), ...elenco6(fonte.centrali)].filter(Boolean))];
+  const allarme2 = tutte.find((id) => String(stati[id]?.state) === "triggered");
+  if (allarme2) accesi.unshift({ chiave: allarme2, testo: "", icon: "", grave: true });
   return accesi;
 }
 var diStanza = (dispositivo, stanza2) => Boolean(stanza2) && (dispositivo.room === stanza2.name || dispositivo.room === stanza2.id || stanza2.id && dispositivo.room_id === stanza2.id);
@@ -84237,7 +84381,7 @@ function comandiDellaPagina(pagina2, fonte = {}, zona = "") {
   if (pagina2.modello === "personale") return pagina2.comandi;
   if (pagina2.modello === "clima") return comandiDellElenco(zona || pagina2.zona || "freddo", fonte);
   if (MODELLI_ELENCO.includes(pagina2.modello)) return comandiDellElenco(pagina2.modello, fonte);
-  return pagina2.scelti ? pagina2.comandi : comandiProposti2(fonte, pagina2.stanza, postiDi(pagina2.posti));
+  return pagina2.scelti ? pagina2.comandi : comandiProposti2(fonte, pagina2.stanza, postiDellaPagina(pagina2));
 }
 function comandiDellElenco(modello, fonte = {}) {
   if (modello === "luci")
@@ -84245,6 +84389,10 @@ function comandiDellElenco(modello, fonte = {}) {
       const comando = comandoPulito({ tipo: "luce", entita: d.entity });
       return comando && { ...comando, tipo: "luce" };
     });
+  if (modello === "tapparelle")
+    return elenco6(fonte.tapparelle).map(
+      (d) => comandoPulito({ tipo: "tapparella", entita: d.entity })
+    );
   if (modello === "freddo" || modello === "caldo")
     return elenco6(fonte.clima).filter((d) => zoneDelClima(d.tipo).includes(modello)).map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
   return [];
@@ -84253,9 +84401,18 @@ function eUnaScena(azione) {
   return Boolean(azione) && !["builtin", "luci_group"].includes(azione.type) && Boolean(azione.entity);
 }
 function scenePropose(fonte = {}, posti = POSTI) {
-  return elenco6(fonte.azioni).filter(eUnaScena).slice(0, postiDi(posti)).map((a) => scenaPulita({ azione: a.name })).filter(Boolean);
+  return elenco6(fonte.azioni).filter(eUnaScena).slice(0, posti).map((a) => scenaPulita({ azione: a.name })).filter(Boolean);
 }
 var cercaAzione = (fonte, ...parole4) => elenco6(fonte.azioni).find((a) => parole4.some((p) => a.name.toLowerCase().includes(p)))?.name || "";
+function ambientiDellaFonte(fonte = {}) {
+  return elenco6(fonte.stanze).map((stanza2) => ({
+    stanza: stanza2,
+    luci: elenco6(fonte.luci).filter((d) => diStanza(d, stanza2)).map((d) => d.entity)
+  })).filter((a) => a.stanza.temp || a.stanza.hum || a.luci.length);
+}
+function telecamereDellaFonte(fonte = {}) {
+  return elenco6(fonte.telecamere).map((d) => ({ entita: d.entity, nome: testo(d.name) }));
+}
 function ingressoProposto(fonte = {}) {
   return ingressoPulito({
     centrale: elenco6(fonte.centrali)[0] || "",
@@ -84383,13 +84540,12 @@ async function premiumDellaCasa({ forza = false } = {}) {
 var UN_MINUTO3 = 60 * 1e3;
 async function fonteDelMuro(muro, { forza = false } = {}) {
   const di = muro?.fonte || "primary";
-  const quiDentro = !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
-  if (!forza && !quiDentro && state109.fonte && state109.fonteDi === di && Date.now() - state109.fonteLetta < UN_MINUTO3)
+  if (!forza && !fonteEQui(di) && state109.fonte && state109.fonteDi === di && Date.now() - state109.fonteLetta < UN_MINUTO3)
     return state109.fonte;
   let fonte = null;
   if (root.__DM_MURO_FONTE__ && typeof root.__DM_MURO_FONTE__ === "object")
     fonte = fonteDaiValori(root.__DM_MURO_FONTE__);
-  else if (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__) fonte = fonteDiQui();
+  else if (fonteEQui(di)) fonte = fonteDiQui();
   else {
     try {
       const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
@@ -84404,6 +84560,7 @@ async function fonteDelMuro(muro, { forza = false } = {}) {
   ricorda({ fonte: state109.fonte, fonteDi: di });
   return state109.fonte;
 }
+var fonteEQui = (di) => !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
 function fonteDiQui() {
   return fonteDalleSezioni(
     {
@@ -84419,16 +84576,35 @@ function fonteDiQui() {
       centrali: readJson("cd_centrali", []),
       overrides: readJson("cd_entity_overrides", {}),
       avvisi: readJson("cd_avvisi_custom", []),
-      climaUnita: readJson("cd_clima_units", [])
+      climaUnita: readJson("cd_clima_units", []),
+      lettori: readJson("cd_media_player", [])
     }
   );
 }
-var stato2 = (id) => allStates()?.[id] || null;
+var raccolta = null;
+var inVista2 = { ids: /* @__PURE__ */ new Set(), domini: /* @__PURE__ */ new Set() };
+var segna = (id) => {
+  if (raccolta && id) raccolta.ids.add(String(id));
+};
+var segnaDominio = (d) => raccolta?.domini.add(d);
+function eInVista(id) {
+  const muro = state109.muro;
+  if (!muro?.attiva || state109.premium !== true || state109.uscito) return false;
+  const chiave2 = String(id || "");
+  if (inVista2.ids.has(chiave2) || inVista2.domini.has(chiave2.split(".")[0])) return true;
+  if (state109.fonte?.centrali?.includes(chiave2)) return true;
+  return Boolean(muro.risveglio?.attivo && muro.risveglio.entita === chiave2);
+}
+var stato2 = (id) => {
+  segna(id);
+  return allStates()?.[id] || null;
+};
 var attributi = (id) => stato2(id)?.attributes || {};
 var dominio2 = (id) => String(id || "").split(".")[0];
-var acceso4 = (id) => ["on", "open", "opening", "heat", "cool", "heat_cool", "auto", "dry", "fan_only"].includes(
+var accesoVero = (id) => ["on", "open", "opening", "heat", "cool", "heat_cool", "auto", "dry", "fan_only"].includes(
   String(stato2(id)?.state)
 );
+var acceso4 = (id) => typeof state109.inAttesa[id]?.acceso === "boolean" ? state109.inAttesa[id].acceso : accesoVero(id);
 var numero43 = (valore3) => {
   const n = Number(valore3);
   return Number.isFinite(n) ? n : null;
@@ -84618,7 +84794,12 @@ var MODELLI_SCRITTI = () => ({
   ingresso: t("Ingresso", "Entrance"),
   personale: t("La mia pagina", "My page"),
   luci: t("Luci", "Lights"),
-  clima: t("Clima", "Climate")
+  clima: t("Clima", "Climate"),
+  tapparelle: t("Tapparelle", "Blinds"),
+  ambienti: t("Ambienti", "Rooms"),
+  telecamere: t("Telecamere", "Cameras"),
+  energia: t("Energia", "Energy"),
+  musica: t("Musica", "Music")
 });
 var SOTTO = () => ({
   stanza: t("Luci · Clima · Tapparelle · Scene", "Lights · Climate · Blinds · Scenes"),
@@ -84626,7 +84807,12 @@ var SOTTO = () => ({
   ingresso: t("Antifurto · Citofono · Uscita", "Alarm · Intercom · Leaving"),
   personale: t("I comandi scelti da te", "Your own controls"),
   luci: t("Tutte le luci di casa", "Every light in the house"),
-  clima: t("Caldo · Freddo", "Heating · Cooling")
+  clima: t("Caldo · Freddo", "Heating · Cooling"),
+  tapparelle: t("Tutte le tapparelle di casa", "Every blind in the house"),
+  ambienti: t("Temperatura · Umidità · Luci", "Temperature · Humidity · Lights"),
+  telecamere: t("Le immagini dal vivo", "Live pictures"),
+  energia: t("Adesso, in casa", "Right now, at home"),
+  musica: t("Cosa suona in casa", "What's playing at home")
 });
 var DISEGNO_DEL_MODELLO = {
   stanza: "stanze",
@@ -84634,7 +84820,12 @@ var DISEGNO_DEL_MODELLO = {
   ingresso: "sicurezza",
   personale: "widget",
   luci: "luci",
-  clima: "clima"
+  clima: "clima",
+  tapparelle: "tapparelle",
+  ambienti: "temperatura",
+  telecamere: "telecamere",
+  energia: "energia",
+  musica: "media"
 };
 var ACCENTO_DEL_MODELLO = {
   stanza: "#f59e0b",
@@ -84642,8 +84833,14 @@ var ACCENTO_DEL_MODELLO = {
   ingresso: "#10b981",
   personale: "#8b5cf6",
   luci: "#f59e0b",
-  clima: "#0ea5e9"
+  clima: "#0ea5e9",
+  tapparelle: "#8b5cf6",
+  ambienti: "#ef4444",
+  telecamere: "#2563eb",
+  energia: "#10b981",
+  musica: "#ec4899"
 };
+var accentoDi = (pagina2) => clean(pagina2?.colore) || ACCENTO_DEL_MODELLO[pagina2?.modello];
 var titoloDi = (pagina2) => clean(pagina2.titolo) || pagina2.modello === "stanza" && clean(pagina2.stanza) || MODELLI_SCRITTI()[pagina2.modello];
 function orologio3(adesso = /* @__PURE__ */ new Date()) {
   return {
@@ -84654,8 +84851,9 @@ function orologio3(adesso = /* @__PURE__ */ new Date()) {
 }
 function meteo() {
   const stati = allStates() || {};
-  const scelto = state109.fonte?.meteo;
-  const id = scelto && stati[scelto] && scelto || stati["weather.home"] && "weather.home" || Object.keys(stati).find((k) => k.startsWith("weather."));
+  const fisso = clean(state109.muro?.meteo) || clean(state109.fonte?.meteo);
+  if (!fisso) segnaDominio("weather");
+  const id = fisso && stati[fisso] && fisso || stati["weather.home"] && "weather.home" || Object.keys(stati).find((k) => k.startsWith("weather."));
   if (!id) return null;
   const s = stato2(id);
   return { temperatura: s?.attributes?.temperature, condizione: s?.state };
@@ -84676,9 +84874,10 @@ var PAROLE_DEL_METEO = () => ({
 function testa(pagina2, muro) {
   const o = orologio3();
   const m = pagina2.riga?.meteo !== false ? meteo() : null;
-  const accento = ACCENTO_DEL_MODELLO[pagina2.modello];
-  const linguette3 = muro.pagine.length > 1 ? `<div class="mu-pagine" role="tablist">${muro.pagine.map(
-    (p, i) => `<button type="button" role="tab" class="${i === state109.pagina ? "si" : ""}" style="--acc:${ACCENTO_DEL_MODELLO[p.modello]}" data-mu-pagina="${i}" aria-selected="${i === state109.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`
+  const accento = accentoDi(pagina2);
+  const molte = muro.pagine.length > 4 ? " mu-molte" : "";
+  const linguette3 = muro.pagine.length > 1 ? `<div class="mu-pagine${molte}" role="tablist">${muro.pagine.map(
+    (p, i) => `<button type="button" role="tab" class="${i === state109.pagina ? "si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state109.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`
   ).join("")}</div>` : "";
   return `<div class="mu-carta mu-testa" style="--acc:${accento}">
     <button type="button" class="mu-menu" data-mu-fa="menu" aria-label="${esc(t("Apri il menu", "Open the menu"))}"><span></span><span></span><span></span></button>
@@ -84688,7 +84887,8 @@ function testa(pagina2, muro) {
   </div>`;
 }
 var STATI_DELL_ALLARME = () => ({
-  disarmed: t("Spento", "Off"),
+  /* «Metterei disattivo»: l'antifurto non si spegne, si disattiva. */
+  disarmed: t("Disattivo", "Disarmed"),
   armed_home: t("In casa", "Home"),
   armed_away: t("Fuori", "Away"),
   armed_night: t("Notte", "Night"),
@@ -84829,7 +85029,8 @@ function cardClima(c, i, zona = "") {
   const a = attributi(id);
   const faccia = facciaDelClima(id, zona);
   const s = String(stato2(id)?.state || "");
-  const on = s && s !== "off" && s !== "unavailable";
+  const atteso = state109.inAttesa[id]?.acceso;
+  const on = typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
   const azione = a.hvac_action ? AZIONI_DEL_CLIMA()[a.hvac_action] : on ? PAROLE_DEL_CLIMA()[s] : t("Spento", "Off");
   const target = obiettivo(id);
   return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
@@ -84912,10 +85113,10 @@ function paginaStanza(pagina2) {
   ].map(
     ([z, d, parola, acc]) => `<button type="button" role="tab" class="${z === zona ? "si" : ""}" style="--acc:${acc}" data-mu-zona="${z}" aria-selected="${z === zona}">${disegno(d, 22, `zona-${z}`)}${esc(parola)}</button>`
   ).join("")}</div>` : "";
-  const posti = pagina2.posti || 6;
+  const posti = postiDellaPagina(pagina2);
   const quante2 = elenco10 ? Math.max(comandi.length, 1) : posti;
   if (elenco10 && !comandi.length)
-    return `${linguette3}<div class="mu-g6" data-posti="${posti}">${vuoto2(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+    return `${linguette3}<div class="mu-g6" style="${stileDellaGriglia(pagina2)}">${vuoto2(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
   const carte = Array.from({ length: quante2 }, (_, i) => {
     const c = comandi[i];
     if (!c || c.tipo === "vuoto") return vuoto2(i);
@@ -84926,19 +85127,227 @@ function paginaStanza(pagina2) {
     return cardAzione(c, i);
   });
   const riga3 = pagina2.modello === "stanza" ? pillole(pagina2) : linguette3;
-  return `${riga3}<div class="mu-g6${elenco10 && quante2 > posti ? " mu-scorre" : ""}" data-posti="${posti}">${carte.join("")}</div>`;
+  return `${riga3}${griglia2(pagina2, carte, quante2)}`;
+}
+function misureDellaGriglia(pagina2) {
+  const g = grigliaDellaPagina(pagina2, state109.verso || "orizzontale");
+  return state109.compatto ? { colonne: Math.min(g.colonne, 3), righe: Math.min(g.righe, 3) } : g;
+}
+var stileDellaGriglia = (pagina2) => {
+  const g = misureDellaGriglia(pagina2);
+  return `--mu-col:${g.colonne};--mu-righe:${g.righe}`;
+};
+var CARD_STRETTA = 340;
+function griglia2(pagina2, carte, quante2 = carte.length) {
+  const g = misureDellaGriglia(pagina2);
+  const scorre = quante2 > g.colonne * g.righe ? " mu-scorre" : "";
+  const base = (state109.verso === "verticale" ? 800 : 1280) / g.colonne;
+  const fitta = !state109.compatto && base < CARD_STRETTA ? " mu-fitta" : "";
+  return `<div class="mu-g6${scorre}${fitta}" style="${stileDellaGriglia(pagina2)}">${carte.join("")}</div>`;
 }
 function paginaScene(pagina2) {
   const scene = pagina2.scene.length ? pagina2.scene : [];
-  const posti = pagina2.posti || 6;
-  const carte = Array.from({ length: posti }, (_, i) => {
+  const carte = Array.from({ length: postiDellaPagina(pagina2) }, (_, i) => {
     const c = scene[i];
     if (!c || c.tipo === "vuoto") return vuoto2(i);
     return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
   });
-  return `<div class="mu-g6" data-posti="${posti}">${carte.join("")}</div>`;
+  return griglia2(pagina2, carte);
+}
+function paginaAmbienti(pagina2) {
+  const ambienti = ambientiDellaFonte(state109.fonte || {});
+  if (!ambienti.length)
+    return griglia2(pagina2, [vuoto2(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))]);
+  const carte = ambienti.map(({ stanza: stanza2, luci }, i) => {
+    const temp = stanza2.temp ? numero43(stato2(stanza2.temp)?.state) : null;
+    const umid = stanza2.hum ? numero43(stato2(stanza2.hum)?.state) : null;
+    const accese = luci.filter((id) => acceso4(id)).length;
+    const accento = accese ? ACCENTI.luce : "#ef4444";
+    return `<div class="mu-carta mu-card mu-ambiente ${accese ? "mu-accesa" : ""}" style="--acc:${accento}" data-mu-card="${i}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno("stanze", 26, `amb-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(stanza2.name)}</div>${luci.length ? `<div class="mu-stato ${accese ? "" : "spento"}">${esc(accese ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}` : t("Luci spente", "Lights off"))}</div>` : ""}</div></div>
+      <div class="mu-target">${stanza2.temp ? `<span class="mu-grande">${temp === null ? "—" : `${decimale(temp)}°`}</span>` : luci.length ? `<span class="mu-grande">${accese}/${luci.length}</span><span class="mu-et">${esc(t("luci", "lights"))}</span>` : ""}${umid === null ? "" : `<span class="mu-et">${decimale(umid, 0)}% ${esc(t("umidità", "humidity"))}</span>`}</div></div>`;
+  });
+  return griglia2(pagina2, carte);
+}
+function paginaTelecamere(pagina2) {
+  const telecamere3 = telecamereDellaFonte(state109.fonte || {});
+  if (!telecamere3.length)
+    return griglia2(pagina2, [vuoto2(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))]);
+  const carte = telecamere3.map(
+    (k, i) => `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video">${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi7(k.entita))}</span></div></button>`
+  );
+  return griglia2(pagina2, carte);
+}
+var GLIFI_MUSICA = {
+  precedente: '<path d="M6 5v14M19 5 9 12l10 7z"/>',
+  successivo: '<path d="M18 5v14M5 5l10 7-10 7z"/>',
+  suona: '<path d="M7 4.5v15l13-7.5z"/>',
+  pausa: '<path d="M8 5v14M16 5v14"/>',
+  accendi: '<path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/>',
+  muto: '<path d="M4 9v6h4l5 4V5L8 9zM17 9l5 6M22 9l-5 6"/>',
+  voce: '<path d="M4 9v6h4l5 4V5L8 9zM17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/>',
+  gruppo: '<rect x="2.5" y="6" width="8" height="13" rx="2"/><rect x="13.5" y="6" width="8" height="13" rx="2"/><circle cx="6.5" cy="14.5" r="2"/><circle cx="17.5" cy="14.5" r="2"/><path d="M6.5 9.5h.01M17.5 9.5h.01"/>'
+};
+var glifo = (nome, misura7 = 30) => `<svg width="${misura7}" height="${misura7}" viewBox="0 0 24 24" fill="${["suona"].includes(nome) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${GLIFI_MUSICA[nome]}</svg>`;
+function lettoreOra(voce2) {
+  segna(voce2.entita);
+  const lettura3 = letturaDelLettore(
+    { entity: voce2.entita, nome: voce2.nome },
+    allStates() || {}
+  );
+  const attesa = state109.inAttesa[voce2.entita] || {};
+  if (typeof attesa.suona === "boolean") {
+    lettura3.suona = attesa.suona;
+    lettura3.inPausa = !attesa.suona;
+  }
+  if (attesa.volume !== void 0) lettura3.volume = attesa.volume / 100;
+  if (Array.isArray(attesa.gruppo)) lettura3.gruppo = attesa.gruppo;
+  if (!clean(voce2.nome) && !stato2(voce2.entita)?.attributes?.friendly_name)
+    lettura3.nome = nomeDi7(voce2.entita);
+  return lettura3;
+}
+function lettoreScelto(pagina2, letture2) {
+  const scelto = (state109.lettori ||= {})[pagina2.id];
+  return letture2.find((l) => l.entity === scelto) || letture2.find((l) => l.suona) || letture2.find((l) => l.inPausa) || letture2[0];
+}
+var parolaDelLettore = (l) => l.muto ? t("Non disponibile", "Unavailable") : l.suona ? t("In riproduzione", "Playing") : l.inPausa ? t("In pausa", "Paused") : l.spento ? t("Spento", "Off") : t("Acceso", "On");
+function tastoMusica(l, comando, nome, { grande = false, etichetta: etichetta3 = "" } = {}) {
+  return `<button type="button" class="mu-tondo${grande ? " grande pieno" : ""}" data-mu-fa="mp" data-mu-cmd="${comando}" data-mu-entita="${esc(l.entity)}" aria-label="${esc(etichetta3 || nome)}">${glifo(nome, grande ? 40 : 28)}</button>`;
+}
+function lettoreGrande(l) {
+  const centro2 = ilTastoCentrale(l);
+  const punto2 = posizioneOra(l);
+  const volume = l.volume === null ? null : Math.round(l.volume * 100);
+  const sotto = [l.artista, l.album].filter(Boolean).join(" · ");
+  const titolo3 = l.titolo || (l.spento ? t("Spento", "Off") : l.applicazione || l.sorgente || l.nome);
+  return `<div class="mu-carta mu-mp ${l.suona ? "mu-accesa" : ""}" style="--acc:#ec4899" data-mu-mp="${esc(l.entity)}">
+    ${l.copertina ? `<img class="mu-mp-fondo" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="" aria-hidden="true">` : ""}
+    <div class="mu-mp-testa">
+      ${l.copertina ? `<img class="mu-mp-arte" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-arte mu-mp-arte-vuota">${disegno("media", 64, `mp-${l.entity}`)}</span>`}
+      <div class="mu-mp-dici">
+        <span class="mu-et">${esc(l.nome)} · ${esc(parolaDelLettore(l))}</span>
+        <div class="mu-osw mu-mp-titolo">${esc(titolo3)}</div>
+        ${sotto ? `<div class="mu-sotto">${esc(sotto)}</div>` : ""}
+      </div>
+      ${bottoneDelGruppo(l)}
+      ${l.puo.spegni && !l.spento ? tastoMusica(l, "spegni", "accendi", { etichetta: t("Spegni", "Turn off") }) : ""}
+    </div>
+    ${punto2 ? `<div class="mu-mp-tempo"><span data-mu-mp-ora>${esc(orologio(punto2.secondi))}</span><span class="mu-bar"><i data-mu-mp-avanza style="width:${(punto2.quota * 100).toFixed(1)}%"></i></span><span>${esc(orologio(punto2.durata))}</span></div>` : ""}
+    <div class="mu-mp-tasti">
+      ${l.puo.precedente && !l.spento ? tastoMusica(l, "precedente", "precedente", { etichetta: t("Brano precedente", "Previous track") }) : ""}
+      ${centro2 ? tastoMusica(l, "centro", centro2 === "pausa" ? "pausa" : centro2 === "accendi" ? "accendi" : "suona", { grande: true, etichetta: centro2 === "pausa" ? t("Pausa", "Pause") : centro2 === "accendi" ? t("Accendi", "Turn on") : t("Riproduci", "Play") }) : ""}
+      ${l.puo.successivo && !l.spento ? tastoMusica(l, "successivo", "successivo", { etichetta: t("Brano successivo", "Next track") }) : ""}
+    </div>
+    ${!l.spento && (l.puo.volume || l.puo.passiVolume) ? `<div class="mu-mp-volume">
+      ${l.puo.muto ? `<button type="button" class="mu-tondo${l.mutato ? " pieno" : ""}" data-mu-fa="mp" data-mu-cmd="muto" data-mu-entita="${esc(l.entity)}" aria-pressed="${l.mutato}" aria-label="${esc(t("Muto", "Mute"))}">${glifo(l.mutato ? "muto" : "voce", 26)}</button>` : ""}
+      <button type="button" class="mu-tondo" data-mu-fa="mp" data-mu-cmd="abbassa" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Abbassa", "Volume down"))}">−</button>
+      ${l.puo.volume && volume !== null ? `<div class="mu-bar mu-mp-cursore" data-mu-cursore="volume" data-mu-entita="${esc(l.entity)}"><i style="width:${volume}%"></i><u style="left:${volume}%"></u></div><b class="mu-mp-pct">${volume}%</b>` : `<span class="mu-spazio"></span>`}
+      <button type="button" class="mu-tondo" data-mu-fa="mp" data-mu-cmd="alza" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Alza", "Volume up"))}">+</button>
+    </div>` : ""}
+    ${l.puo.sorgente && l.sorgenti.length && !l.spento ? `<div class="mu-mp-sorgenti">${l.sorgenti.slice(0, 8).map(
+    (sorgente) => `<button type="button" class="${sorgente === l.sorgente ? "si" : ""}" data-mu-fa="mp-sorgente" data-mu-sorgente="${esc(sorgente)}" data-mu-entita="${esc(l.entity)}">${esc(sorgente)}</button>`
+  ).join("")}</div>` : ""}
+  </div>`;
+}
+var lettoriDiQui = [];
+function bottoneDelGruppo(l) {
+  if (!l.puo.gruppo || l.spento) return "";
+  const altri = lettoriDiQui.filter((x) => x.entity !== l.entity && x.puo.gruppo);
+  if (!altri.length) return "";
+  const insieme3 = compagniDelGruppo(l).length;
+  return `<button type="button" class="mu-mp-gruppo${insieme3 ? " si" : ""}" data-mu-fa="mp-gruppo" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Gruppo", "Group"))}">${glifo("gruppo", 24)}<span>${esc(t("Gruppo", "Group"))}${insieme3 ? ` · ${insieme3 + 1}` : ""}</span></button>`;
+}
+function rigaDelLettore(l, scelto) {
+  const centro2 = ilTastoCentrale(l);
+  const compagni = compagniDelGruppo(l);
+  const riga3 = (compagni.length ? `${t("In gruppo con", "Grouped with")} ${compagni.map((id) => nomeDi7(id)).join(", ")} · ` : "") + (l.titolo ? [l.titolo, l.artista].filter(Boolean).join(" · ") : parolaDelLettore(l));
+  return `<div class="mu-carta mu-mp-riga${l.entity === scelto ? " si" : ""}${l.suona ? " mu-accesa" : ""}" style="--acc:#ec4899" data-mu-fa="mp-scegli" data-mu-entita="${esc(l.entity)}" role="button" tabindex="0">
+    ${l.copertina ? `<img class="mu-mp-mini" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-mini mu-mp-arte-vuota">${disegno("media", 30, `mpr-${l.entity}`)}</span>`}
+    <div class="mu-nome"><div class="mu-n">${esc(l.nome)}</div><div class="mu-sotto">${l.suona ? '<i class="mu-mp-onde" aria-hidden="true"><b></b><b></b><b></b></i>' : ""}${esc(riga3)}</div></div>
+    ${centro2 ? tastoMusica(l, "centro", centro2 === "pausa" ? "pausa" : centro2 === "accendi" ? "accendi" : "suona", { etichetta: l.nome }) : ""}
+  </div>`;
+}
+function paginaMusica(pagina2) {
+  const voci3 = lettoriDellaPagina(pagina2, state109.fonte || {});
+  if (!voci3.length)
+    return griglia2(pagina2, [
+      vuoto2(0, t("Nessun lettore: aggiungili nella sezione Musica o qui nel config", "No player: add them in the Music section or here in the config"))
+    ]);
+  const letture2 = voci3.map(lettoreOra);
+  lettoriDiQui = letture2;
+  const grande = lettoreScelto(pagina2, letture2);
+  const altri = letture2.length > 1;
+  return `<div class="mu-musica${altri ? "" : " solo"}">${lettoreGrande(grande)}${altri ? `<div class="mu-mp-elenco">${letture2.map((l) => rigaDelLettore(l, grande.entity)).join("")}</div>` : ""}</div>`;
+}
+function battitoDellaMusica() {
+  const nodo2 = doc?.getElementById(ID2);
+  const lettore = nodo2?.querySelector?.("[data-mu-mp]");
+  const suona = lettore && !state109.riposo && lettore.querySelector("[data-mu-mp-avanza]");
+  if (!suona) {
+    root.clearInterval?.(state109.musica);
+    state109.musica = null;
+    return;
+  }
+  if (state109.musica) return;
+  state109.musica = root.setInterval?.(() => {
+    const qui = doc?.getElementById(ID2)?.querySelector?.("[data-mu-mp]");
+    if (!qui || state109.riposo) {
+      root.clearInterval?.(state109.musica);
+      state109.musica = null;
+      return;
+    }
+    const l = letturaDelLettore({ entity: qui.dataset.muMp }, allStates() || {});
+    const punto2 = posizioneOra(l);
+    if (!punto2) return;
+    const barra = qui.querySelector("[data-mu-mp-avanza]");
+    const ora3 = qui.querySelector("[data-mu-mp-ora]");
+    if (barra) barra.style.width = `${(punto2.quota * 100).toFixed(1)}%`;
+    if (ora3) ora3.textContent = orologio(punto2.secondi);
+  }, 1e3);
+}
+function potenza(id) {
+  const s = stato2(id);
+  const v = numero43(s?.state);
+  if (v === null) return { testo: "—", valore: null };
+  const unita2 = clean(s?.attributes?.unit_of_measurement) || "W";
+  const watt5 = /^kw$/i.test(unita2) ? v * 1e3 : v;
+  const quanto = Math.abs(watt5);
+  return {
+    valore: watt5,
+    testo: quanto >= 1e3 ? `${decimale(quanto / 1e3, 1)} kW` : `${decimale(quanto, 0)} W`
+  };
+}
+function paginaEnergia(pagina2) {
+  const e = energiaDellaPagina(pagina2, state109.fonte || {});
+  const tessere = [];
+  if (e.casa) {
+    const p = potenza(e.casa);
+    tessere.push(["casa", "home", "#0ea5e9", t("Consuma la casa", "House uses"), p.testo, nomeDi7(e.casa)]);
+  }
+  if (e.solare) {
+    const p = potenza(e.solare);
+    tessere.push(["solare", "solare", "#f59e0b", t("Produce il solare", "Solar makes"), p.testo, nomeDi7(e.solare)]);
+  }
+  if (e.rete) {
+    const p = potenza(e.rete);
+    const parola = p.valore === null ? t("Rete", "Grid") : p.valore < 0 ? t("Cede alla rete", "To the grid") : t("Preleva dalla rete", "From the grid");
+    tessere.push(["rete", "energia", p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6", parola, p.testo, nomeDi7(e.rete)]);
+  }
+  if (e.batteria) {
+    const v = numero43(stato2(e.batteria)?.state);
+    tessere.push(["batteria", "batterie", "#10b981", t("Batteria", "Battery"), v === null ? "—" : `${decimale(v, 0)}%`, nomeDi7(e.batteria)]);
+  }
+  if (!tessere.length)
+    return griglia2(pagina2, [vuoto2(0, t("Scegli le misure nel config", "Choose the readings in the config"))]);
+  const carte = tessere.map(
+    ([k, d, acc, etichetta3, valore3, sotto], i) => `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta3)}</span></div>
+      <div class="mu-grande">${esc(valore3)}</div><div class="mu-sotto">${esc(sotto)}</div></div>`
+  );
+  return griglia2({ ...pagina2, griglia: carte.length <= 4 ? 4 : pagina2.griglia }, carte);
 }
 function finestreAperte() {
+  segnaDominio("binary_sensor");
   return Object.entries(allStates() || {}).filter(
     ([id, s]) => id.startsWith("binary_sensor.") && ["window", "door", "garage_door", "opening"].includes(s?.attributes?.device_class) && s?.state === "on"
   ).map(([id]) => nomeDi7(id));
@@ -85062,6 +85471,46 @@ function paginaIngresso(pagina2) {
     </div>
   </div>`;
 }
+function corpoDellaPagina(pagina2) {
+  if (pagina2.modello === "scene") return paginaScene(pagina2);
+  if (pagina2.modello === "ingresso") return paginaIngresso(pagina2);
+  if (pagina2.modello === "ambienti") return paginaAmbienti(pagina2);
+  if (pagina2.modello === "telecamere") return paginaTelecamere(pagina2);
+  if (pagina2.modello === "energia") return paginaEnergia(pagina2);
+  if (pagina2.modello === "musica") return paginaMusica(pagina2);
+  return paginaStanza(pagina2);
+}
+var anteprimaInCorso = false;
+function anteprimaDellaPagina(muro, indice = 0, fonte = state109.fonte) {
+  const pagina2 = muro?.pagine?.[indice];
+  if (!pagina2 || !fonte) return "";
+  const prima = {
+    muro: state109.muro,
+    fonte: state109.fonte,
+    pagina: state109.pagina,
+    finestra: state109.finestra,
+    compatto: state109.compatto,
+    verso: state109.verso
+  };
+  const raccoltaPrima = raccolta;
+  raccolta = null;
+  anteprimaInCorso = true;
+  try {
+    Object.assign(state109, {
+      muro,
+      fonte,
+      pagina: indice,
+      finestra: null,
+      compatto: false,
+      verso: muro.orientamento === "verticale" ? "verticale" : "orizzontale"
+    });
+    return `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${corpoDellaPagina(pagina2)}</div>`;
+  } finally {
+    Object.assign(state109, prima);
+    raccolta = raccoltaPrima;
+    anteprimaInCorso = false;
+  }
+}
 var COLORI3 = Object.freeze([
   ["#ffd8a8", null, 2700],
   ["#fff1d6", null, 3500],
@@ -85128,6 +85577,26 @@ function finestra4() {
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi7(ing.telecamera))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(ing.telecamera)}" alt=""></div>
       ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${esc(nomeDi7(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${esc(nomeDi7(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}</div>`;
+  } else if (f.tipo === "gruppo") {
+    const pagina2 = state109.muro?.pagine?.[state109.pagina];
+    const tutti = lettoriDellaPagina(pagina2, state109.fonte || {}).map(lettoreOra);
+    const capo = tutti.find((x) => x.entity === f.entita) || lettoreOra({ entita: f.entita });
+    const compagni = compagniDelGruppo(capo);
+    const altri = tutti.filter((x) => x.entity !== capo.entity && x.puo.gruppo);
+    dentro3 = `<div class="mu-fin-clima">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${glifo("gruppo", 28)}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(t("Suona insieme a", "Plays together with"))} ${esc(capo.nome)}</div><div class="mu-sotto">${esc(t("Tocca un lettore per metterlo o toglierlo dal gruppo", "Tap a player to add it to or remove it from the group"))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-mp-gruppo-elenco">${altri.map((x) => {
+      const dentroIlGruppo = compagni.includes(x.entity);
+      return `<button type="button" class="mu-carta mu-mp-riga${dentroIlGruppo ? " si mu-accesa" : ""}" style="--acc:#ec4899" data-mu-fa="mp-unisci" data-mu-entita="${esc(capo.entity)}" data-mu-altro="${esc(x.entity)}" aria-pressed="${dentroIlGruppo}">
+          ${x.copertina ? `<img class="mu-mp-mini" src="${esc(x.copertina)}" alt="">` : `<span class="mu-mp-mini mu-mp-arte-vuota">${disegno("media", 30, `grp-${x.entity}`)}</span>`}
+          <div class="mu-nome"><div class="mu-n">${esc(x.nome)}</div><div class="mu-sotto">${esc(dentroIlGruppo ? t("Nel gruppo", "In the group") : parolaDelLettore(x))}</div></div>
+          <span class="mu-inter ${dentroIlGruppo ? "on" : ""}"><i></i></span></button>`;
+    }).join("")}</div>
+      ${compagni.length ? `<button type="button" class="mu-btn" data-mu-fa="mp-sciogli" data-mu-entita="${esc(capo.entity)}">${esc(t("Sciogli il gruppo", "Ungroup all"))}</button>` : ""}</div>`;
+  } else if (f.tipo === "telecamera") {
+    dentro3 = `<div class="mu-fin-clima">
+      <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi7(f.entita))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(f.entita)}" alt=""></div></div>`;
   } else if (f.tipo === "conferma") {
     dentro3 = `<div class="mu-fin-conferma"><div class="mu-osw" style="font-size:40px">${esc(f.azione)}</div><div class="mu-sotto">${esc(t("Confermi?", "Confirm?"))}</div>
       <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="chiudi">${esc(t("Annulla", "Cancel"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="azione" data-mu-azione="${esc(f.azione)}" data-mu-confermata="1">${esc(t("Sì, vai", "Yes, go"))}</button></div></div>`;
@@ -85143,7 +85612,9 @@ function finestra4() {
     codice: "#6366f1",
     tapparella: ACCENTI.tapparella,
     antifurto: "#10b981",
-    citofono: "#2563eb"
+    citofono: "#2563eb",
+    telecamera: "#2563eb",
+    gruppo: "#ec4899"
   }[f.tipo] || ACCENTI.luce;
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro3}</div></div>`;
 }
@@ -85160,6 +85631,7 @@ function riposo(muro) {
   const o = orologio3();
   const notte = eNotte(muro);
   const pagina2 = muro.pagine[0];
+  if (muro.avvisi) for (const a of state109.fonte?.avvisi || []) a.entita.forEach(segna);
   const avvisi = muro.avvisi ? avvisiAccesi(state109.fonte || {}, allStates() || {}, centraleDelMuro(pagina2)) : [];
   const chip = avvisi.slice(0, 3).map(
     (a) => `<div class="mu-carta mu-avviso ${a.grave ? "grave" : ""}" style="--acc:${a.grave ? ACCENTI.allarme : "#06b6d4"}"><span class="mu-chip mu-acc" style="--c:40px">${a.grave ? disegno("sicurezza", 24, "av-allarme") : disegno("avvisi", 24, `av-${esc(a.chiave)}`)}</span><b>${esc(a.grave ? t("Antifurto: allarme in corso", "Alarm: triggered") : a.testo)}</b></div>`
@@ -85170,9 +85642,12 @@ function riposo(muro) {
     return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-deriva" ${deriva}><div class="mu-avvisi">${chip}</div></div>` : ""}</div>`;
   const m = meteo();
   const centrale = centraleDelMuro(pagina2);
-  const allarme2 = centrale && stato2(centrale) ? STATI_DELL_ALLARME()[stato2(centrale).state] : "";
+  const aree2 = state109.fonte?.aree?.length > 1 ? state109.fonte.aree : null;
+  const allarme2 = !aree2 && centrale && stato2(centrale) ? STATI_DELL_ALLARME()[stato2(centrale).state] : "";
+  const rigaDelleAree = aree2 ? areeSulRiposo(aree2) : "";
   const stanza2 = (state109.fonte?.stanze || []).find((s) => s.name === pagina2?.stanza);
-  const dentro3 = stanza2?.temp && numero43(stato2(stanza2.temp)?.state) !== null ? `${decimale(stato2(stanza2.temp).state)}°` : "";
+  const sonda = clean(muro.riposo?.sensore) || stanza2?.temp || "";
+  const dentro3 = sonda && numero43(stato2(sonda)?.state) !== null ? `${decimale(stato2(sonda).state)}°` : "";
   const persone3 = personeInCasa();
   const chi = persone3.inCasa === 0 ? t("Nessuno in casa", "Nobody home") : persone3.nomi.length <= 2 ? persone3.nomi.join(" · ") : `${persone3.inCasa} ${t("in casa", "at home")}`;
   const aperte = finestreAperte().length;
@@ -85187,7 +85662,21 @@ function riposo(muro) {
       ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
       ${allarme2 ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme2)}</span>` : ""}
     </div>
+    ${rigaDelleAree}
     <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div></div>`;
+}
+function areeSulRiposo(aree2) {
+  const lette = aree2.map((a, i) => ({
+    nome: clean(a.nome) || clean(stato2(a.entita)?.attributes?.friendly_name) || `${t("Area", "Area")} ${i + 1}`,
+    valore: String(stato2(a.entita)?.state || "")
+  })).filter((a) => a.valore);
+  if (!lette.length) return "";
+  const attive = lette.filter((a) => a.valore !== "disarmed");
+  const suona = attive.some((a) => a.valore === "triggered");
+  const dette = attive.length ? attive.map(
+    (a) => `<span class="${a.valore === "triggered" ? "grave" : ""}"><b>${esc(a.nome)}</b> ${esc(STATI_DELL_ALLARME()[a.valore] || a.valore)}</span>`
+  ).join('<i aria-hidden="true">·</i>') : `<b>${esc(STATI_DELL_ALLARME().disarmed)}</b>`;
+  return `<div class="mu-riposo-aree${suona ? " grave" : ""}">${disegno("sicurezza", 30, "rip-aree")}<span>${esc(t("Antifurto", "Alarm"))}</span><i aria-hidden="true">·</i>${dette}</div>`;
 }
 var SOLO_MURO = "dm-solo-muro";
 var guardaIlConfig = 0;
@@ -85313,11 +85802,60 @@ function avviaIlBattito() {
     rinfrescaLeTelecamere();
     if (giri % 40 === 0) rileggi3({ forza: true }).catch(() => {
     });
+    if (state109.revisioniNo && giri % 4 === 0) root.cdSyncPull?.();
   }, 15 * 1e3);
+  state109.guardia = root.setInterval?.(() => {
+    guardaLeRevisioni().catch(() => {
+    });
+  }, GUARDIA_MS);
+  allineaLOrologio();
 }
 function fermaIlBattito() {
   if (state109.timer) root.clearInterval?.(state109.timer);
+  if (state109.guardia) root.clearInterval?.(state109.guardia);
+  root.clearTimeout?.(state109.minuto);
   state109.timer = null;
+  state109.guardia = null;
+  state109.minuto = null;
+}
+function allineaLOrologio() {
+  root.clearTimeout?.(state109.minuto);
+  const adesso = /* @__PURE__ */ new Date();
+  const mancano = 6e4 - (adesso.getSeconds() * 1e3 + adesso.getMilliseconds()) + 50;
+  state109.minuto = root.setTimeout?.(() => {
+    battito();
+    allineaLOrologio();
+  }, mancano);
+}
+var GUARDIA_MS = 10 * 1e3;
+async function guardaLeRevisioni() {
+  if (!root.__DASHBOARDMODERN_HOSTED__ || state109.revisioniNo || state109.guardando) return false;
+  const qui = currentProfile();
+  const fonte = state109.muro?.fonte || "primary";
+  const profili = [.../* @__PURE__ */ new Set([qui, fonte])];
+  state109.guardando = true;
+  let risposta = null;
+  try {
+    risposta = await bridgeRequest("ponte/config/revisioni", { profili });
+  } catch (errore) {
+    if (/non conosco|unknown/i.test(String(errore?.message || ""))) state109.revisioniNo = true;
+    return false;
+  } finally {
+    state109.guardando = false;
+  }
+  const nuove = risposta?.revisioni;
+  if (!nuove || typeof nuove !== "object") return false;
+  const viste2 = state109.revisioni ||= {};
+  const cambiata = (profilo2) => Object.hasOwn(nuove, profilo2) && Object.hasOwn(viste2, profilo2) && Number(nuove[profilo2]) !== Number(viste2[profilo2]);
+  const quiCambiata = cambiata(qui);
+  const fonteCambiata = fonte !== qui && cambiata(fonte);
+  Object.assign(viste2, nuove);
+  if (quiCambiata) root.cdSyncPull?.();
+  if (fonteCambiata && state109.muro) {
+    await fonteDelMuro(state109.muro, { forza: true });
+    disegna5();
+  }
+  return quiCambiata || fonteCambiata;
 }
 var detto = { muro: "", spento: "" };
 function diciAlloSchermo(chiave2, si) {
@@ -85344,6 +85882,7 @@ function misura4(nodo2, muro) {
   const s = scala(v, larghezza, altezza);
   const dentro3 = nodo2.firstElementChild;
   state109.compatto = eCompatto(larghezza, altezza);
+  state109.verso = v;
   nodo2.dataset.verso = v;
   nodo2.dataset.compatto = state109.compatto ? "1" : "";
   dentro3.style.zoom = String(s);
@@ -85367,7 +85906,15 @@ function disegna5() {
   misura4(nodo2, muro);
   if (state109.pagina >= muro.pagine.length) state109.pagina = 0;
   const pagina2 = muro.pagine[state109.pagina];
-  const corpo2 = state109.riposo ? riposo(muro) : `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${pagina2.modello === "scene" ? paginaScene(pagina2) : pagina2.modello === "ingresso" ? paginaIngresso(pagina2) : paginaStanza(pagina2)}</div>${finestra4()}`;
+  raccolta = { ids: /* @__PURE__ */ new Set(), domini: /* @__PURE__ */ new Set() };
+  let corpo2 = "";
+  try {
+    corpo2 = state109.riposo ? riposo(muro) : `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${corpoDellaPagina(pagina2)}</div>${finestra4()}`;
+    segna(centraleDelMuro(muro.pagine[0]));
+    inVista2 = raccolta;
+  } finally {
+    raccolta = null;
+  }
   if (state109.trascina) return;
   const vecchie = new Map(
     [...nodo2.querySelectorAll("img[data-mu-telecamera]")].map((img) => [
@@ -85375,7 +85922,20 @@ function disegna5() {
       img
     ])
   );
-  if (scriviSeCambia(nodo2.firstElementChild, corpo2)) caricaLeTelecamere(nodo2, vecchie);
+  const copertine = new Map(
+    [...nodo2.querySelectorAll("img[data-mu-copertina]")].map((img) => [
+      `${img.className}|${img.dataset.muCopertina}`,
+      img
+    ])
+  );
+  if (scriviSeCambia(nodo2.firstElementChild, corpo2)) {
+    caricaLeTelecamere(nodo2, vecchie);
+    for (const img of nodo2.querySelectorAll("img[data-mu-copertina]")) {
+      const prima = copertine.get(`${img.className}|${img.dataset.muCopertina}`);
+      if (prima && prima !== img) img.replaceWith(prima);
+    }
+  }
+  battitoDellaMusica();
   if (state109.riposo) posizionaIlRiposo(nodo2);
   diciAlloSchermo("muro", true);
   diciAlloSchermo("spento", Boolean(state109.riposo && eNotte(muro)));
@@ -85426,6 +85986,44 @@ function attendi(id, cosa, valore3) {
     delete state109.inAttesa[id];
     disegna5();
   }, 4e3);
+}
+function alterna(id, domain, service, data = { entity_id: id }) {
+  attendi(id, "acceso", !acceso4(id));
+  comanda2(domain, service, data);
+  disegna5();
+}
+var ATTESE2 = ["acceso", "luminosita", "temperatura", "volume", "suona", "gruppo"];
+function attesaConfermata(cosa, atteso, reale) {
+  if (cosa === "acceso") return reale.acceso === atteso;
+  if (cosa === "suona") return reale.suona === atteso;
+  if (cosa === "gruppo")
+    return reale.gruppo === (Array.isArray(atteso) ? atteso : []).slice(1).sort().join(",");
+  if (cosa === "volume") return reale.volume !== null && Math.abs(reale.volume - atteso) <= 1;
+  if (cosa === "luminosita") return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
+  if (cosa === "temperatura") return reale.temperatura !== null && Math.abs(reale.temperatura - atteso) < 0.05;
+  return false;
+}
+function confermaLeAttese(event) {
+  const ids = event?.detail?.entity_ids || (event?.detail?.entity_id ? [event.detail.entity_id] : []);
+  for (const id of ids) {
+    const attesa = state109.inAttesa[id];
+    if (!attesa) continue;
+    const b = numero43(attributi(id).brightness);
+    const reale = {
+      acceso: accesoVero(id),
+      luminosita: !accesoVero(id) ? 0 : b === null ? null : Math.max(1, Math.round(b / 255 * 100)),
+      temperatura: numero43(attributi(id).temperature),
+      volume: numero43(attributi(id).volume_level) === null ? null : Math.round(numero43(attributi(id).volume_level) * 100),
+      suona: ["playing", "buffering"].includes(String(stato2(id)?.state)),
+      gruppo: (attributi(id).group_members || []).filter((x) => x !== id).sort().join(",")
+    };
+    for (const cosa of ATTESE2)
+      if (cosa in attesa && attesaConfermata(cosa, attesa[cosa], reale)) delete attesa[cosa];
+    if (!ATTESE2.some((cosa) => cosa in attesa)) {
+      root.clearTimeout?.(attesa._timer);
+      delete state109.inAttesa[id];
+    }
+  }
 }
 var timerClima = null;
 function cambiaTemperatura(id, verso2) {
@@ -85510,7 +86108,7 @@ function onClick24(event) {
       return;
     }
     if (entita3 && dominio2(entita3) === "light") {
-      if (state109.compatto) comanda2("light", "toggle", { entity_id: entita3 });
+      if (state109.compatto) alterna(entita3, "light", "toggle");
       else apriFinestra({ tipo: "luce", entita: entita3 });
     } else if (entita3 && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
       comanda2(dominio2(entita3), "toggle", { entity_id: entita3 });
@@ -85536,13 +86134,16 @@ function onClick24(event) {
       chiudiFinestra();
       return;
     case "interruttore":
-      comanda2(dominio2(id) || "light", "toggle", { entity_id: id });
+      alterna(id, dominio2(id) || "light", "toggle");
       return;
     case "spegni":
+      attendi(id, "acceso", false);
       comanda2(dominio2(id) || "light", "turn_off", { entity_id: id });
       chiudiFinestra();
+      disegna5();
       return;
     case "livello":
+      attendi(id, "acceso", true);
       attendi(id, "luminosita", Number(bersaglio.dataset.muLivello));
       comanda2("light", "turn_on", {
         entity_id: id,
@@ -85566,11 +86167,12 @@ function onClick24(event) {
       return;
     case "clima-acceso": {
       const s = String(stato2(id)?.state || "off");
-      if (s !== "off") comanda2("climate", "turn_off", { entity_id: id });
+      if (s !== "off") alterna(id, "climate", "turn_off");
       else {
         const modi = (attributi(id).hvac_modes || []).filter((m) => m !== "off");
-        if (modi.length) comanda2("climate", "set_hvac_mode", { entity_id: id, hvac_mode: modi[0] });
-        else comanda2("climate", "turn_on", { entity_id: id });
+        if (modi.length)
+          alterna(id, "climate", "set_hvac_mode", { entity_id: id, hvac_mode: modi[0] });
+        else alterna(id, "climate", "turn_on");
       }
       return;
     }
@@ -85582,6 +86184,64 @@ function onClick24(event) {
       return;
     case "finestra-citofono":
       apriFinestra({ tipo: "citofono" });
+      return;
+    case "mp": {
+      const l = letturaDelLettore({ entity: id }, allStates() || {});
+      const cmd = bersaglio.dataset.muCmd;
+      const servizio = comandoDelLettore(cmd, l);
+      if (!servizio) return;
+      const dati = { entity_id: id };
+      if (cmd === "muto") dati.is_volume_muted = !l.mutato;
+      if (cmd === "centro" && !l.spento) attendi(id, "suona", !l.suona);
+      if ((cmd === "alza" || cmd === "abbassa") && l.volume !== null && l.puo.volume) {
+        const dopo = Math.min(100, Math.max(0, Math.round(l.volume * 100) + (cmd === "alza" ? 2 : -2)));
+        attendi(id, "volume", dopo);
+        comanda2("media_player", "volume_set", { entity_id: id, volume_level: dopo / 100 });
+        disegna5();
+        return;
+      }
+      comanda2("media_player", servizio, dati);
+      disegna5();
+      return;
+    }
+    case "mp-gruppo":
+      apriFinestra({ tipo: "gruppo", entita: id });
+      return;
+    case "mp-unisci": {
+      const capo = lettoreOra({ entita: id });
+      const altro = bersaglio.dataset.muAltro;
+      const servizio = servizioDelGruppo(capo, altro);
+      if (!servizio) return;
+      const compagni = compagniDelGruppo(capo);
+      const dopo = servizio.service === "join" ? [capo.entity, ...compagni, altro] : [capo.entity, ...compagni.filter((x) => x !== altro)];
+      attendi(id, "gruppo", dopo.length > 1 ? dopo : []);
+      comanda2("media_player", servizio.service, servizio.data);
+      disegna5();
+      return;
+    }
+    case "mp-sciogli": {
+      const capo = lettoreOra({ entita: id });
+      for (const altro of compagniDelGruppo(capo))
+        comanda2("media_player", "unjoin", { entity_id: altro });
+      attendi(id, "gruppo", []);
+      chiudiFinestra();
+      disegna5();
+      return;
+    }
+    case "mp-sorgente":
+      comanda2("media_player", "select_source", {
+        entity_id: id,
+        source: bersaglio.dataset.muSorgente
+      });
+      return;
+    case "mp-scegli": {
+      const pagina2 = state109.muro?.pagine?.[state109.pagina];
+      if (pagina2) (state109.lettori ||= {})[pagina2.id] = id;
+      disegna5();
+      return;
+    }
+    case "finestra-telecamera":
+      apriFinestra({ tipo: "telecamera", entita: id });
       return;
     case "hvac":
       comanda2("climate", "set_hvac_mode", { entity_id: id, hvac_mode: bersaglio.dataset.muModo });
@@ -85613,7 +86273,9 @@ function onClick24(event) {
       return;
     case "entita": {
       const servizio = servizioDellEntita(id, String(stato2(id)?.state || ""));
-      if (servizio) comanda2(servizio.domain, servizio.service, { entity_id: id });
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(id, servizio.domain, servizio.service);
+      else comanda2(servizio.domain, servizio.service, { entity_id: id });
       return;
     }
     case "apri": {
@@ -85627,10 +86289,10 @@ function onClick24(event) {
     default:
   }
 }
-function percentualeDalDito(event, barra, verticale) {
+function percentualeDalDito(event, barra, verticale, minimo = 1) {
   const r = barra.getBoundingClientRect();
   const p = verticale ? 1 - (event.clientY - r.top) / r.height : (event.clientX - r.left) / r.width;
-  return Math.max(1, Math.min(100, Math.round(p * 100)));
+  return Math.max(minimo, Math.min(100, Math.round(p * 100)));
 }
 function onPointerDown(event) {
   tocco();
@@ -85638,7 +86300,12 @@ function onPointerDown(event) {
   const barra = event.target?.closest?.("[data-mu-cursore]");
   if (barra) {
     const verticale = barra.dataset.muCursore === "luce-alta";
-    state109.trascina = { barra, id: barra.dataset.muEntita, verticale };
+    state109.trascina = {
+      barra,
+      id: barra.dataset.muEntita,
+      verticale,
+      volume: barra.dataset.muCursore === "volume"
+    };
     barra.setPointerCapture?.(event.pointerId);
     onPointerMove(event);
     return;
@@ -85665,13 +86332,13 @@ function onPointerDown(event) {
 function onPointerMove(event) {
   const t2 = state109.trascina;
   if (!t2) return;
-  const p = percentualeDalDito(event, t2.barra, t2.verticale);
+  const p = percentualeDalDito(event, t2.barra, t2.verticale, t2.volume ? 0 : 1);
   t2.valore = p;
   const riempi = t2.barra.querySelector("i");
   if (riempi) riempi.style[t2.verticale ? "height" : "width"] = `${p}%`;
   const pallino = t2.barra.querySelector("u");
   if (pallino) pallino.style.left = `${p}%`;
-  const scritta = t2.barra.querySelector("b");
+  const scritta = t2.barra.querySelector("b") || t2.volume && t2.barra.nextElementSibling;
   if (scritta) scritta.textContent = `${p}%`;
 }
 function onPointerUp(event) {
@@ -85680,7 +86347,11 @@ function onPointerUp(event) {
   const t2 = state109.trascina;
   if (t2) {
     state109.trascina = null;
-    if (t2.valore) {
+    if (t2.volume && t2.valore !== void 0) {
+      attendi(t2.id, "volume", t2.valore);
+      comanda2("media_player", "volume_set", { entity_id: t2.id, volume_level: t2.valore / 100 });
+    } else if (t2.valore) {
+      attendi(t2.id, "acceso", true);
       attendi(t2.id, "luminosita", t2.valore);
       comanda2("light", "turn_on", { entity_id: t2.id, brightness_pct: t2.valore });
     }
@@ -85695,11 +86366,11 @@ function battito() {
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1e3;
   if (!state109.riposo && !state109.finestra && !state109.trascina && sonno && fermo > sonno) {
     state109.riposo = true;
-    state109.pagina = 0;
+    if (muro.riposo.torna !== false) state109.pagina = 0;
   }
   if (!state109.riposo && eNotte(muro) && fermo > 60 * 1e3 && !state109.finestra) {
     state109.riposo = true;
-    state109.pagina = 0;
+    if (muro.riposo.torna !== false) state109.pagina = 0;
   }
   disegna5();
 }
@@ -85707,10 +86378,12 @@ function svegliaSeServe(event) {
   const muro = state109.muro;
   if (!state109.riposo || !muro) return;
   const sensore = muro.risveglio.attivo ? muro.risveglio.entita : "";
-  const centrale = centraleDelMuro(muro.pagine[0]);
+  const centrali2 = [
+    ...new Set([centraleDelMuro(muro.pagine[0]), ...state109.fonte?.centrali || []].filter(Boolean))
+  ];
   const ids = event?.detail?.entity_ids || (event?.detail?.entity_id ? [event.detail.entity_id] : []);
   const tocca2 = (id) => !ids.length || ids.includes(id);
-  if (sensore && tocca2(sensore) && String(stato2(sensore)?.state) === "on" || centrale && tocca2(centrale) && String(stato2(centrale)?.state) === "triggered") {
+  if (sensore && tocca2(sensore) && String(stato2(sensore)?.state) === "on" || centrali2.some((id) => tocca2(id) && String(stato2(id)?.state) === "triggered")) {
     state109.riposo = false;
     tocco();
   }
@@ -85742,7 +86415,7 @@ async function rileggi3({ forza = false } = {}) {
   lasciaIlVelo();
 }
 function stili() {
-  const MURO = `#${ID2}`;
+  const MURO = `:is(#${ID2},.mu-anteprima)`;
   const tokens = (tema) => tema === "dark" ? `--bg-sculpted:#0c1322;--card-bg:#161f36;--text:#e6edf7;--text-dim:#92a4c2;--dm-vetrino:rgba(255,255,255,.06);--dm-velo:14%;--dm-cuscino:22%;--dm-grana:.34` : `--bg-sculpted:#f0f4f8;--card-bg:#ffffff;--text:#0f172a;--text-dim:#64748b;--dm-vetrino:rgba(255,255,255,.72);--dm-velo:9%;--dm-cuscino:15%;--dm-grana:.5`;
   installStyle(
     "dm-muro-style",
@@ -85753,7 +86426,8 @@ html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alb
 html.dm-solo-muro #editor-modal .mu-tutto-il-config{display:inline-flex;align-items:center;gap:6px;margin-right:8px;padding:8px 14px;border-radius:12px;border:none;background:var(--accent,#3b82f6);color:#fff;font-weight:800;font-size:13px;cursor:pointer}
 html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
 ${MURO}[data-mu-sotto-il-menu]{z-index:4!important}
-${MURO}{position:fixed;inset:0;z-index:2147482000;overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
+#dm-muro{position:fixed;inset:0;z-index:2147482000}
+${MURO}{overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation;
   background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}[data-tema="dark"]{${tokens("dark")}}
@@ -85805,21 +86479,84 @@ ${MURO} .mu-pill{display:flex;align-items:center;gap:12px}
 ${MURO} .mu-pill .mu-chip{--c:38px}
 ${MURO} .mu-pill b{font-size:20px;font-weight:800;display:block;line-height:1}
 ${MURO} .mu-pill .mu-et{font-size:10.5px}
-${MURO} .mu-g6{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:16px;min-height:0}
-${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 16px) / 2);overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
+${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;--mu-alto:150px;display:grid;grid-template-columns:repeat(var(--mu-col),minmax(0,1fr));grid-template-rows:repeat(var(--mu-righe),minmax(0,1fr));gap:var(--mu-gap);min-height:0}
+${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
+${MURO} .mu-pagine.mu-molte button:not(.si) span{display:none}
+${MURO} .mu-pag-musica{grid-template-rows:auto 1fr}
+${MURO} .mu-musica{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;min-height:0}
+${MURO} .mu-musica.solo{grid-template-columns:1fr}
+${MURO} .mu-mp{padding:26px;display:flex;flex-direction:column;gap:20px;min-height:0}
+${MURO} .mu-mp-fondo{position:absolute!important;inset:-40px;width:calc(100% + 80px);height:calc(100% + 80px);object-fit:cover;filter:blur(42px) saturate(1.3);opacity:.32;pointer-events:none}
+${MURO} .mu-mp-testa{display:flex;align-items:center;gap:22px;min-width:0}
+${MURO} .mu-mp-arte{flex:none;width:150px;height:150px;border-radius:22px;object-fit:cover;box-shadow:0 18px 34px -14px rgba(15,23,42,.55)}
+${MURO} .mu-mp-arte-vuota{display:grid;place-items:center;background:color-mix(in srgb,var(--acc) 14%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 30%,transparent)}
+${MURO} .mu-mp-dici{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+${MURO} .mu-mp-titolo{font-size:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mp-dici .mu-sotto{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mp-testa>.mu-tondo{align-self:flex-start}
+${MURO} .mu-mp-gruppo{align-self:flex-start;display:flex;align-items:center;gap:8px;height:56px;padding:0 18px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
+${MURO} .mu-mp-gruppo.si{color:#fff;background:var(--acc);box-shadow:0 10px 24px -10px var(--acc)}
+${MURO} .mu-mp-gruppo-elenco{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto}
+${MURO} .mu-mp-gruppo-elenco .mu-mp-riga{text-align:left;width:100%}
+${MURO} .mu-mp-gruppo-elenco .mu-inter.on{background:var(--acc)}
+${MURO} .mu-mp-tempo{display:flex;align-items:center;gap:14px;font-size:14px;font-weight:800;color:var(--text-dim);font-variant-numeric:tabular-nums}
+${MURO} .mu-mp-tempo .mu-bar{flex:1}
+${MURO} .mu-mp-tasti{display:flex;align-items:center;justify-content:center;gap:34px;margin-top:auto}
+${MURO} .mu-mp-tasti .mu-tondo.grande{width:104px;height:104px}
+${MURO} .mu-mp-volume{display:flex;align-items:center;gap:14px}
+${MURO} .mu-mp-cursore{flex:1}
+${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
+${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
+${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
+${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}
+${MURO} .mu-mp-riga{display:flex;align-items:center;gap:14px;padding:14px;cursor:pointer;flex:none}
+${MURO} .mu-mp-riga.si{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--acc) 60%,transparent),0 14px 28px -16px var(--acc)}
+${MURO} .mu-mp-riga .mu-tondo{width:56px;height:56px}
+${MURO} .mu-mp-riga .mu-sotto{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+${MURO} .mu-mp-mini{flex:none;width:64px;height:64px;border-radius:14px;object-fit:cover}
+${MURO} .mu-mp-onde{display:inline-flex;align-items:flex-end;gap:2px;height:14px;flex:none}
+${MURO} .mu-mp-onde b{width:3px;border-radius:2px;background:var(--acc);animation:mu-onda 1s ease-in-out infinite}
+${MURO} .mu-mp-onde b:nth-child(2){animation-delay:-.4s}
+${MURO} .mu-mp-onde b:nth-child(3){animation-delay:-.7s}
+@keyframes mu-onda{0%,100%{height:4px}50%{height:14px}}
+${MURO}[data-verso="verticale"] .mu-musica{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+${MURO}[data-compatto="1"] .mu-musica{grid-template-columns:1fr}
+${MURO}[data-compatto="1"] .mu-mp-elenco,${MURO}[data-compatto="1"] .mu-mp-sorgenti{display:none}
+${MURO}[data-compatto="1"] .mu-mp{padding:14px;gap:12px}
+${MURO}[data-compatto="1"] .mu-mp-arte{width:72px;height:72px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-mp-titolo{font-size:24px}
+${MURO}[data-compatto="1"] .mu-mp-tasti{gap:16px}
+${MURO}[data-compatto="1"] .mu-mp-tasti .mu-tondo.grande{width:72px;height:72px}
+${MURO} .mu-fitta{--mu-gap:12px}
+${MURO} .mu-fitta .mu-card{padding:16px;gap:10px;border-radius:20px}
+${MURO} .mu-fitta .mu-riga1{gap:10px}
+${MURO} .mu-fitta .mu-card .mu-disco{width:48px;height:48px}
+${MURO} .mu-fitta .mu-card .mu-disco svg{width:24px;height:24px}
+${MURO} .mu-fitta .mu-n{font-size:17px;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+${MURO} .mu-fitta .mu-tag,${MURO} .mu-fitta .mu-modo,${MURO} .mu-fitta .mu-riga1>.mu-pasti{display:none}
+${MURO} .mu-fitta .mu-inter{width:50px;height:30px}
+${MURO} .mu-fitta .mu-inter i{width:22px;height:22px}
+${MURO} .mu-fitta .mu-inter.on i{left:24px}
+${MURO} .mu-fitta .mu-chip{--c:44px!important}
+${MURO} .mu-fitta .mu-grande{font-size:48px}
+${MURO} .mu-fitta .mu-tondo{width:52px;height:52px;font-size:24px}
+${MURO} .mu-fitta .mu-comandi{gap:8px}
+${MURO} .mu-fitta .mu-seg>button{height:52px;font-size:14px;gap:4px;padding:0 4px}
+${MURO} .mu-fitta .mu-osw,${MURO} .mu-fitta .mu-tessera.grande .mu-osw{font-size:28px}
+${MURO} .mu-pagine.mu-molte button{padding:10px 12px}
+${MURO} .mu-pag-ambienti,${MURO} .mu-pag-telecamere,${MURO} .mu-pag-energia,${MURO} .mu-pag-tapparelle{grid-template-rows:auto 1fr}
+${MURO} .mu-ambiente .mu-target{margin-top:auto;flex-wrap:wrap}
+${MURO} .mu-cam{padding:8px}
+${MURO} .mu-cam .mu-video{height:100%;min-height:0}
+${MURO} .mu-energia .mu-grande{margin-top:auto;font-size:72px}
+${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
+${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
+${MURO}.mu-anteprima .mu-pagina{height:100%}
 ${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
-${MURO} .mu-g6[data-posti="8"]{grid-template-columns:repeat(4,minmax(0,1fr))}
-${MURO} .mu-g6[data-posti="12"]{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,1fr)}
-${MURO} .mu-g6[data-posti="12"].mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 32px) / 3)}
-${MURO} .mu-g6[data-posti="8"],${MURO} .mu-g6[data-posti="12"]{gap:12px}
-${MURO} .mu-g6[data-posti="8"] .mu-n,${MURO} .mu-g6[data-posti="12"] .mu-n{font-size:17px;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-${MURO} .mu-g6[data-posti="8"] .mu-stato,${MURO} .mu-g6[data-posti="12"] .mu-stato{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-${MURO} .mu-g6[data-posti="8"] .mu-tag,${MURO} .mu-g6[data-posti="12"] .mu-tag{display:none}
-${MURO}[data-compatto="1"] .mu-g6[data-posti="8"] .mu-n,${MURO}[data-compatto="1"] .mu-g6[data-posti="12"] .mu-n{font-size:14px}
 /* Sul telefono i riquadri non si allungano a riempire lo schermo: «li trovo
    troppo grandi». Hanno un'altezza loro, e la pagina scorre se servono. */
 ${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:minmax(0,var(--mu-alto,150px))!important;align-content:start;overflow-y:auto;scrollbar-width:none}
-${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6[data-posti="12"]{--mu-alto:120px}
 ${MURO} .mu-card{padding:22px;display:flex;flex-direction:column;gap:14px;min-height:0;width:100%}
 ${MURO} .mu-tessera{text-align:left}
 ${MURO} .mu-tessera .mu-osw{margin-top:auto}
@@ -85908,6 +86645,11 @@ ${MURO} .mu-data{font-size:18px;letter-spacing:.2em}
 ${MURO} .mu-riposo-riga{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
 ${MURO} .mu-riposo-riga span{display:flex;align-items:center;gap:10px}
 ${MURO} .mu-tocca{position:absolute;bottom:28px;opacity:.6}
+${MURO} .mu-riposo-aree{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;max-width:90%;margin-top:14px;color:#92a4c2;font-weight:700;font-size:20px;text-align:center}
+${MURO} .mu-riposo-aree b{color:#dbe4f3;font-weight:800}
+${MURO} .mu-riposo-aree .grave,${MURO} .mu-riposo-aree .grave b{color:#fda4af}
+${MURO} .mu-riposo-aree i{font-style:normal;opacity:.6}
+${MURO}[data-compatto="1"] .mu-riposo-aree{font-size:15px;gap:6px}
 ${MURO} .mu-avvisi{position:absolute;top:28px;left:0;right:0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 20px}
 ${MURO} .mu-avviso{display:flex;align-items:center;gap:12px;padding:12px 20px 12px 12px;border-radius:999px;font-size:16px}
 ${MURO} .mu-avviso.grave b{color:#fda4af}
@@ -85922,7 +86664,7 @@ ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;paddi
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
 ${MURO}[data-compatto="1"] .mu-pagine button span{display:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
-${MURO}[data-compatto="1"] .mu-g6{gap:10px}
+${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-card .mu-riga1{flex-wrap:wrap;gap:8px;align-content:flex-start}
 ${MURO}[data-compatto="1"] .mu-card .mu-nome{flex:1 1 100%}
@@ -85961,12 +86703,6 @@ ${MURO}[data-compatto="1"] .mu-orologione{font-size:110px}
 ${MURO}[data-compatto="1"] .mu-data{font-size:13px}
 ${MURO}[data-compatto="1"] .mu-riposo-riga{flex-direction:column;gap:10px;align-items:center;font-size:15px}
 ${MURO}[data-compatto="1"] .mu-avviso{font-size:13px}
-${MURO}[data-verso="verticale"] .mu-g6{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,1fr)}
-${MURO}[data-verso="verticale"] .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 32px) / 3)}
-${MURO}[data-verso="verticale"] .mu-g6[data-posti="8"]{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,1fr)}
-${MURO}[data-verso="verticale"] .mu-g6[data-posti="8"].mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 36px) / 4)}
-${MURO}[data-verso="verticale"] .mu-g6[data-posti="12"]{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,1fr)}
-${MURO}[data-verso="verticale"] .mu-g6[data-posti="12"].mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 36px) / 4)}
 ${MURO}[data-verso="verticale"] .mu-testa{flex-wrap:wrap}
 ${MURO}[data-verso="verticale"] .mu-pagine{order:3;width:100%;margin:6px 0 4px}
 ${MURO}[data-verso="verticale"] .mu-pagine button{flex:1;justify-content:center}
@@ -86003,7 +86739,9 @@ function ascoltaLaFonte() {
   }
   if (!Number.isFinite(Number(id))) return false;
   const gestore = (messaggio) => {
-    if (state109.muro?.attiva && eCambiataLaFonte(messaggio, state109.muro.fonte))
+    if (!state109.muro?.attiva) return;
+    if (eCambiataLaFonte(messaggio, currentProfile())) root.cdSyncPull?.();
+    else if (eCambiataLaFonte(messaggio, state109.muro.fonte))
       rileggi3({ forza: true }).catch(() => {
       });
   };
@@ -86042,9 +86780,13 @@ function installPlanciaAMuro() {
   ])
     root.addEventListener?.(evento, ancora2);
   root.addEventListener?.("dashboardmodern:states-ready", () => disegna5());
+  root[IN_VISTA_KEY] = eInVista;
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
     controllaLOrecchio();
     svegliaSeServe(event);
+    confermaLeAttese(event);
+    const ids = event?.detail?.entity_ids || [];
+    if (ids.length && !ids.some(eInVista)) return;
     disegna5();
   });
   root.addEventListener?.("resize", () => disegna5());
@@ -86105,6 +86847,8 @@ var state110 = root[KEY114] ||= {
 var MURO_EDITOR_TAB = "muro";
 var schedaAttiva6 = () => clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 var bozza = () => state110.bozza ||= muroPulito(readJson(CHIAVE_MURO, null));
+var salvato = () => muroPulito(readJson(CHIAVE_MURO, null));
+var bozzaSporca = () => Boolean(state110.bozza) && JSON.stringify(muroPulito(state110.bozza)) !== JSON.stringify(salvato());
 var disegno2 = (chiave2, misura7, dove) => oggettoWidget(chiave2, "", `muro-ed-${dove}`).replace(
   'class="dm-oggetto"',
   `class="dm-oggetto" style="width:${misura7}px;height:${misura7}px"`
@@ -86158,14 +86902,14 @@ var DISEGNI2 = () => [
   ])
 ];
 var DOMINI_DEI_POSTI = "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,media_player,vacuum,sensor,binary_sensor";
-function postoMarkup(i, lista5, k, c, quanti2 = POSTI) {
+function postoMarkup(i, lista5, k, c, posti = 6) {
   const via = `pagine.${i}.${lista5}.${k}`;
   const pieno = c && c.tipo !== "vuoto";
   const azioni2 = azioniUsabili();
   const descrizione = !pieno ? t("Posto libero", "Empty slot") : c.azione ? `⚡ ${c.azione}` : `${nomeDi8(c.entita)} · ${c.entita}`;
   return `<div class="mu-ed-posto${pieno ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span>
-      <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista5}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista5}"${k === quanti2 - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
+      <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista5}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista5}"${k === posti - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       <b class="mu-ed-cosa">${esc(descrizione)}</b>
       ${pieno ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
     <div class="mu-ed-posto-corpo">
@@ -86176,7 +86920,7 @@ function postoMarkup(i, lista5, k, c, quanti2 = POSTI) {
       <label class="mu-ed-voce"><span>${esc(t("Disegno", "Drawing"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI2(), null)}</label>` : ""}
     </div></div>`;
 }
-function postiMarkup(i, lista5, posti, quanti2 = POSTI) {
+function postiMarkup(i, lista5, posti, quanti2 = 6) {
   return `<div class="mu-ed-posti">${Array.from(
     { length: quanti2 },
     (_, k) => postoMarkup(i, lista5, k, posti[k], quanti2)
@@ -86188,7 +86932,12 @@ var MODELLI2 = () => [
   ["ingresso", t("Ingresso", "Entrance")],
   ["personale", t("Personalizzata", "Custom")],
   ["luci", t("Tutte le luci", "All lights")],
-  ["clima", t("Clima", "Climate")]
+  ["clima", t("Clima", "Climate")],
+  ["tapparelle", t("Tutte le tapparelle", "All blinds")],
+  ["ambienti", t("Ambienti", "Rooms")],
+  ["telecamere", t("Telecamere", "Cameras")],
+  ["energia", t("Energia", "Energy")],
+  ["musica", t("Musica", "Music")]
 ];
 var DISEGNO_DI_SERIE = {
   stanza: "stanze",
@@ -86196,7 +86945,12 @@ var DISEGNO_DI_SERIE = {
   ingresso: "sicurezza",
   personale: "widget",
   luci: "luci",
-  clima: "clima"
+  clima: "clima",
+  tapparelle: "tapparelle",
+  ambienti: "temperatura",
+  telecamere: "telecamere",
+  energia: "energia",
+  musica: "media"
 };
 var NOME_DEL_MODELLO = (modello) => MODELLI2().find(([v]) => v === modello)?.[1] || "";
 function elencoMarkup(p, i) {
@@ -86206,24 +86960,18 @@ function elencoMarkup(p, i) {
       "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.",
       "It fills itself with every light of the source dashboard: a light added there shows up here too."
     ),
+    tapparelle: t(
+      "Si riempie da sola con tutte le tapparelle della plancia di origine: su, stop e giù per ognuna.",
+      "It fills itself with every blind of the source dashboard: up, stop and down for each one."
+    ),
     clima: t(
       "Si riempie da sola con il clima della plancia di origine, diviso nelle due linguette Freddo e Caldo come nella sezione Clima: i condizionatori nel freddo, termosifoni e termostati nel caldo, le pompe di calore in tutte e due.",
       "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both."
     )
   }[p.modello];
-  const nomi = (p.modello === "clima" ? [
-    ...comandiDellaPagina(p, state110.fonte || {}, "freddo"),
-    ...comandiDellaPagina(p, state110.fonte || {}, "caldo")
-  ] : comandi).map((c) => nomeDi8(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
+  const nomi = (p.modello === "clima" ? [...comandiDellaPagina(p, state110.fonte || {}, "freddo"), ...comandiDellaPagina(p, state110.fonte || {}, "caldo")] : comandi).map((c) => nomeDi8(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
   return `<div class="mu-ed-nota">${esc(spiega)}</div>
-    ${p.modello === "clima" ? riga2(
-    t("Si apre su", "Opens on"),
-    "",
-    scelte3(`pagine.${i}.zona`, p.zona, [
-      ["freddo", `❄️ ${t("Freddo", "Cooling")}`],
-      ["caldo", `🔥 ${t("Caldo", "Heating")}`]
-    ])
-  ) : ""}
+    ${p.modello === "clima" ? riga2(t("Si apre su", "Opens on"), "", scelte3(`pagine.${i}.zona`, p.zona, [["freddo", `❄️ ${t("Freddo", "Cooling")}`], ["caldo", `🔥 ${t("Caldo", "Heating")}`]])) : ""}
     <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${nomi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
 }
 function paginaMarkup(p, i, tutte) {
@@ -86231,13 +86979,11 @@ function paginaMarkup(p, i, tutte) {
   const via = `pagine.${i}`;
   let dentro3 = "";
   if (p.modello === "stanza") {
-    const comandi = p.scelti ? p.comandi : comandiProposti2(f, p.stanza, p.posti);
+    const quanti2 = postiDellaPagina(p);
+    const comandi = p.scelti ? p.comandi : comandiProposti2(f, p.stanza, quanti2);
     dentro3 = `${riga2(
       t("Stanza", "Room"),
-      t(
-        "Da qui la pagina prende la temperatura e i comandi proposti",
-        "The page takes its temperature and suggested controls from here"
-      ),
+      t("Da qui la pagina prende la temperatura e i comandi proposti", "The page takes its temperature and suggested controls from here"),
       tendina2(
         `${via}.stanza`,
         p.stanza,
@@ -86257,7 +87003,7 @@ function paginaMarkup(p, i, tutte) {
         t("I comandi seguono la stanza", "Controls follow the room")
       )
     )}
-    ${p.scelti ? postiMarkup(i, "comandi", comandi, p.posti) : `<div class="mu-ed-posti">${Array.from({ length: p.posti }, (_, k) => {
+    ${p.scelti ? postiMarkup(i, "comandi", comandi, quanti2) : `<div class="mu-ed-posti">${Array.from({ length: quanti2 }, (_, k) => {
       const c = comandi[k];
       return `<div class="mu-ed-posto"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><span class="mu-ed-proposto">${c ? esc(c.azione ? `⚡ ${c.azione}` : nomeDi8(c.entita)) : esc(t("Posto libero", "Empty slot"))}</span></div></div>`;
     }).join("")}</div>`}
@@ -86266,13 +87012,66 @@ function paginaMarkup(p, i, tutte) {
     ${riga2(t("Stato dell'antifurto", "Alarm state"), "", interruttore(`${via}.riga.antifurto`, p.riga.antifurto, "antifurto"))}
     ${riga2(t("Chi è in casa", "Who is home"), "", interruttore(`${via}.riga.persone`, p.riga.persone, "persone"))}
     ${riga2(t("Meteo", "Weather"), "", interruttore(`${via}.riga.meteo`, p.riga.meteo, "meteo"))}`;
+  } else if (p.modello === "ambienti") {
+    const ambienti = ambientiDellaFonte(f);
+    dentro3 = `<div class="mu-ed-nota">${esc(
+      t(
+        "Una tessera per stanza, con la temperatura, l'umidità e quante luci sono accese, dal vivo. Le stanze e le loro sonde sono quelle della plancia di origine.",
+        "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard."
+      )
+    )}</div><div class="mu-ed-riga"><div class="mu-ed-testo"><b>${ambienti.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(ambienti.map((a) => a.stanza.name).join(", ") || t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))}</small></div></div>`;
+  } else if (p.modello === "telecamere") {
+    const telecamere3 = telecamereDellaFonte(f);
+    dentro3 = `<div class="mu-ed-nota">${esc(
+      t(
+        "Le telecamere della plancia di origine, tutte insieme; un tocco ne apre una a tutto schermo.",
+        "The source dashboard's cameras, all together; a tap opens one full screen."
+      )
+    )}</div><div class="mu-ed-riga"><div class="mu-ed-testo"><b>${telecamere3.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(telecamere3.map((k) => k.nome || nomeDi8(k.entita)).join(", ") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
+  } else if (p.modello === "energia") {
+    const sue = energiaDellaPagina({}, f);
+    const misura7 = (chiave2, titolo3, nota, domini2 = "sensor") => riga2(
+      titolo3,
+      sue[chiave2] && !p.energia[chiave2] ? `${nota} · ${t("dalla plancia", "from the dashboard")}: ${nomeDi8(sue[chiave2])}` : nota,
+      cerca(`${via}.energia.${chiave2}`, p.energia[chiave2], {
+        domini: domini2,
+        segnaposto: sue[chiave2] || t("Entità", "Entity")
+      })
+    );
+    dentro3 = `<div class="mu-ed-nota">${esc(
+      t(
+        "Quattro numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine.",
+        "Four big live numbers. Left empty, they come from the source dashboard's Energy section."
+      )
+    )}</div>
+    ${misura7("casa", t("Consumo della casa", "House consumption"), t("Potenza, in W o kW", "Power, in W or kW"))}
+    ${misura7("solare", t("Produzione solare", "Solar production"), t("Potenza, in W o kW", "Power, in W or kW"))}
+    ${misura7("rete", t("Scambio con la rete", "Grid exchange"), t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in"))}
+    ${misura7("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}`;
+  } else if (p.modello === "musica") {
+    const sue = lettoriDellaPagina({}, f);
+    const campi = Math.min(p.lettori.length + 1, LETTORI_AL_MASSIMO);
+    dentro3 = `<div class="mu-ed-nota">${esc(
+      t(
+        "Il lettore che suona in grande, con la copertina, i tasti, il volume e le sorgenti; accanto gli altri, ognuno col suo play. Un tocco su un lettore lo porta in grande.",
+        "The player that's playing, big, with cover, buttons, volume and sources; beside it the others, each with its own play. A tap on a player brings it up big."
+      )
+    )}</div>
+    ${riga2(
+      t("Lettori", "Players"),
+      p.lettori.length ? t("Quelli scelti qui, in quest'ordine", "The ones chosen here, in this order") : `${t("Vuoto: quelli della sezione Musica della plancia", "Empty: the ones from the dashboard's Music section")}${sue.length ? ` — ${sue.map((l) => l.nome || nomeDi8(l.entita)).join(", ")}` : ""}`,
+      `<span class="mu-ed-lettori">${Array.from(
+        { length: campi },
+        (_, k) => cerca(`${via}.lettori.${k}`, p.lettori[k] || "", { domini: "media_player" })
+      ).join("")}</span>`
+    )}`;
   } else if (p.modello === "personale") {
     dentro3 = `<div class="mu-ed-nota">${esc(
       t(
         "Posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.",
         "Slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want."
       )
-    )}</div>${postiMarkup(i, "comandi", p.comandi, p.posti)}`;
+    )}</div>${postiMarkup(i, "comandi", p.comandi, postiDellaPagina(p))}`;
   } else if (MODELLI_ELENCO.includes(p.modello)) {
     dentro3 = elencoMarkup(p, i);
   } else if (p.modello === "scene") {
@@ -86281,7 +87080,7 @@ function paginaMarkup(p, i, tutte) {
         "Tasti grandi: un'azione della plancia o un'entità qualunque (una scena, uno script, un tasto). Per ognuno il nome sul tablet, la riga sotto e il disegno.",
         "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing."
       )
-    )}</div>${postiMarkup(i, "scene", p.scene, p.posti)}`;
+    )}</div>${postiMarkup(i, "scene", p.scene, postiDellaPagina(p))}`;
   } else {
     const ing = p.ingresso;
     const azioni2 = (f.azioni || []).filter(eUnaScena).map((a) => [a.name, a.name]);
@@ -86302,26 +87101,29 @@ function paginaMarkup(p, i, tutte) {
   const testa2 = `<div class="mu-ed-pagina-testa">
       <button type="button" class="mu-ed-apri" data-mu-ed-apri="${i}" aria-expanded="${aperta}">${disegno2(clean(p.disegno) || DISEGNO_DI_SERIE[p.modello], 26, `pag-${i}`)}<span class="mu-ed-apri-tx"><b>${esc(clean(p.titolo) || nomeDiSerie)}</b><small>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(NOME_DEL_MODELLO(p.modello))}</small></span><span class="mu-ed-freccia" aria-hidden="true">${aperta ? "▾" : "▸"}</span></button>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-pagina-su="${i}"${i === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-pagina-giu="${i}"${i === tutte - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
+      ${tutte < PAGINE_AL_MASSIMO ? `<button type="button" class="mu-ed-copia" data-mu-ed-copia="${i}" aria-label="${esc(t("Duplica la pagina", "Duplicate page"))}" title="${esc(t("Duplica", "Duplicate"))}">⧉</button>` : ""}
       <button type="button" class="mu-ed-svuota" data-mu-ed-togli="${i}" aria-label="${esc(t("Togli la pagina", "Remove page"))}">🗑</button></div>`;
   if (!aperta) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}">${testa2}</div>`;
   return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}">${testa2}
     ${riga2(t("Nome sul tablet", "Name on the tablet"), t("Si legge sulla linguetta in alto", "Shown on the tab at the top"), campo3(`${via}.titolo`, p.titolo, nomeDiSerie))}
     ${riga2(t("Icona", "Icon"), "", tendina2(`${via}.disegno`, p.disegno, DISEGNI2(), null))}
     ${riga2(t("Tipo di pagina", "Page type"), "", tendina2(`${via}.modello`, p.modello, MODELLI2(), null))}
-    ${p.modello === "ingresso" ? "" : riga2(
-    t("Riquadri nella pagina", "Tiles on the page"),
-    t(
-      "Sei di serie. Otto stanno bene anche su un pannello piccolo in orizzontale; dodici su un tablet da 10 pollici.",
-      "Six by default. Eight still fit a small panel in landscape; twelve suit a 10-inch tablet."
-    ),
-    tendina2(
-      `${via}.posti`,
-      String(p.posti),
-      GRIGLIE.map((n) => [String(n), String(n)]),
-      null
-    )
+    ${SENZA_GRIGLIA.includes(p.modello) ? "" : riga2(
+    t("Griglia", "Grid"),
+    MODELLI_ELENCO.includes(p.modello) || p.modello === "ambienti" || p.modello === "telecamere" ? t("Quante card a schermo; le altre scorrono", "How many cards on screen; the rest scroll") : t("Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano", "How many slots, and how big. In portrait columns and rows swap"),
+    scelte3(`${via}.griglia`, p.griglia, GRIGLIE_SCRITTE())
   )}
+    ${riga2(t("Colore", "Colour"), t("Della linguetta e del titolo", "Of the tab and the title"), colori(`${via}.colore`, p.colore, p.modello))}
+    <div class="mu-ed-anteprima-box"><div class="mu-ed-sotto-titolo">${esc(t("Anteprima dal vivo", "Live preview"))}</div><div class="mu-ed-anteprima" data-mu-ed-anteprima="${i}"></div></div>
     ${dentro3}</div>`;
+}
+var SENZA_GRIGLIA = ["ingresso", "energia", "musica"];
+var GRIGLIE_SCRITTE = () => Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
+function colori(via, valore3, modello) {
+  const pallini2 = [["", ""], ...COLORI_DELLE_PAGINE.map((c) => [c, c])];
+  return `<span class="mu-ed-colori">${pallini2.map(
+    ([v]) => `<button type="button" class="${String(v) === String(valore3 || "") ? "si" : ""}${v ? "" : " auto"}" style="${v ? `--c:${v}` : ""}" data-mu-ed-metti="${esc(via)}" data-mu-ed-valore="${esc(v)}" aria-label="${esc(v || t("Come il tipo di pagina", "Like the page type"))}">${v ? "" : "A"}</button>`
+  ).join("")}</span>`;
 }
 function corpoMarkup7() {
   const m = bozza();
@@ -86329,7 +87131,9 @@ function corpoMarkup7() {
   const plance = state110.plance?.length ? state110.plance : [{ profilo: "primary", titolo: "gdahome" }];
   const qui = currentProfile();
   const altre = plance.filter((p) => p.profilo !== qui || p.profilo === m.fonte);
+  const sporca = bozzaSporca();
   const contenuto = `
+  ${sporca ? `<div class="mu-ed-sporca" role="status">● ${esc(t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save»."))}</div>` : ""}
   <div class="ed-intro">${esc(
     t(
       "Il pannello del tablet a muro. Scegli le pagine — le linguette in alto — e cosa c'è in ognuna. Sul tablet, tenendo premuto l'orologio per due secondi si torna qui.",
@@ -86360,7 +87164,7 @@ function corpoMarkup7() {
   ${m.pagine.length < PAGINE_AL_MASSIMO ? `<div class="mu-ed-aggiungi"><span>＋ ${esc(t("Aggiungi una pagina", "Add a page"))}</span>${MODELLI2().map(
     ([v, testo2]) => `<button type="button" class="ed-btn-add" data-mu-ed-nuova="${v}">${esc(testo2)}</button>`
   ).join("")}</div>` : ""}
-  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state110.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, riposo, notte, risveglio, PIN", "Orientation, theme, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state110.altro ? "▾" : "▸"}</span></button>
+  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state110.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, meteo, riposo, notte, risveglio, PIN", "Orientation, theme, weather, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state110.altro ? "▾" : "▸"}</span></button>
   ${state110.altro ? `<div class="mu-ed-blocco">
     ${riga2(
     t("Orientamento", "Orientation"),
@@ -86385,6 +87189,11 @@ function corpoMarkup7() {
     ])
   )}
     ${riga2(
+    t("Meteo", "Weather"),
+    t("In alto e sul riposo. Vuoto: il primo che Home Assistant ha", "At the top and on the rest screen. Empty: the first one Home Assistant has"),
+    cerca("meteo", m.meteo, { domini: "weather" })
+  )}
+    ${riga2(
     t("Riposo", "Rest"),
     t(
       "Dopo un po' senza tocchi resta l'orologio",
@@ -86397,6 +87206,8 @@ function corpoMarkup7() {
       null
     )}${interruttore("riposo.attivo", m.riposo.attivo, "riposo")}`
   )}
+    ${riga2(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
+    ${riga2(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor" }))}
     ${riga2(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo3("notte.da", m.notte.da, "23:00", "time")}${campo3("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
     ${riga2(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga2(
@@ -86427,7 +87238,7 @@ function ensureMuroEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva6() !== MURO_EDITOR_TAB) {
     if (schedaAttiva6() !== MURO_EDITOR_TAB) {
-      state110.bozza = null;
+      if (!bozzaSporca() || !doc?.getElementById("editor-modal")) state110.bozza = null;
       state110.fonte = null;
       state110.premium = null;
     }
@@ -86438,14 +87249,38 @@ function ensureMuroEditor() {
     bozza(),
     Boolean(state110.fonte),
     state110.premium,
-    state110.plance?.length
+    state110.plance?.length,
+    state110.aperta,
+    state110.altro
   ]);
-  if (body.dataset.dmMuroEditor === firma2 && body.querySelector(".mu-ed")) return true;
+  if (body.dataset.dmMuroEditor === firma2 && body.querySelector(".mu-ed")) {
+    rinfrescaLAnteprima();
+    return true;
+  }
   body.dataset.dmMuroEditor = firma2;
   body.innerHTML = corpoMarkup7();
   body.dataset.renderer = MURO_EDITOR_TAB;
+  rinfrescaLAnteprima();
   ensureTitoloDellaSezione();
   return true;
+}
+function rinfrescaLAnteprima() {
+  const posto = doc?.querySelector?.("#ed-body [data-mu-ed-anteprima]");
+  if (!posto || !state110.fonte) return;
+  const m = bozza();
+  const i = Number(posto.dataset.muEdAnteprima);
+  const verticale = m.orientamento === "verticale";
+  const larghezza = verticale ? 800 : 1280;
+  const tema = m.tema === "chiaro" ? "light" : m.tema === "scuro" ? "dark" : doc.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  const dentro3 = anteprimaDellaPagina(m, i, state110.fonte);
+  const scritto = `${tema}|${verticale}|${dentro3}`;
+  if (posto.dataset.scritto !== scritto) {
+    posto.dataset.scritto = scritto;
+    posto.innerHTML = `<div class="mu-anteprima" data-tema="${tema}" data-verso="${verticale ? "verticale" : "orizzontale"}" aria-hidden="true">${dentro3}</div>`;
+  }
+  const zoom = Math.min(1, (posto.clientWidth || larghezza / 2) / larghezza);
+  const tela2 = posto.firstElementChild;
+  if (tela2) tela2.style.zoom = String(zoom);
 }
 function ridisegna8() {
   const body = doc?.getElementById("ed-body");
@@ -86461,8 +87296,7 @@ function metti3(via, valore3) {
     if (!p) return;
     if (pezzi[2] === "segue") {
       p.scelti = !valore3;
-      if (p.scelti && !p.comandi.length)
-        p.comandi = comandiProposti2(state110.fonte || {}, p.stanza, p.posti);
+      if (p.scelti && !p.comandi.length) p.comandi = comandiProposti2(state110.fonte || {}, p.stanza);
       state110.bozza = muroPulito(m);
       return;
     }
@@ -86471,18 +87305,14 @@ function metti3(via, valore3) {
       const k = Number(pezzi[3]);
       const campo5 = pezzi[4];
       const posti = Array.from(
-        { length: p.posti || POSTI },
+        { length: postiDellaPagina(p) },
         (_, n) => p[lista5][n] || { tipo: "vuoto" }
       );
       const ora3 = posti[k];
       const aspetto = { nome: ora3.nome || "", sotto: ora3.sotto || "", disegno: ora3.disegno || "" };
       const scritto = clean(valore3);
       if (campo5 === "entita")
-        posti[k] = scritto ? {
-          ...aspetto,
-          tipo: lista5 === "scene" ? "entita" : tipoDellEntita(scritto),
-          entita: scritto
-        } : ora3.azione ? ora3 : { tipo: "vuoto" };
+        posti[k] = scritto ? { ...aspetto, tipo: lista5 === "scene" ? "entita" : tipoDellEntita(scritto), entita: scritto } : ora3.azione ? ora3 : { tipo: "vuoto" };
       else if (campo5 === "azione")
         posti[k] = scritto ? { ...aspetto, tipo: "azione", azione: scritto } : ora3.entita ? ora3 : { tipo: "vuoto" };
       else if (campo5 === "svuota") posti[k] = { tipo: "vuoto" };
@@ -86492,12 +87322,18 @@ function metti3(via, valore3) {
       state110.bozza = muroPulito(m);
       return;
     }
+    if (pezzi[2] === "griglia") {
+      p.griglia = Number(valore3);
+      state110.bozza = muroPulito(m);
+      return;
+    }
     if (pezzi[2] === "modello" && p.modello !== valore3) {
       m.pagine[i] = {
         ...nuovaPagina(valore3, state110.fonte || {}, i),
         id: p.id,
         titolo: p.titolo,
-        disegno: p.disegno
+        disegno: p.disegno,
+        colore: p.colore
       };
       state110.bozza = muroPulito(m);
       return;
@@ -86527,7 +87363,7 @@ function onClick25(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva6() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const el = event.target.closest(
-    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro]"
+    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia]"
   );
   if (!el || body.querySelector(".mu-ed-chiuso")) return;
   event.preventDefault();
@@ -86563,6 +87399,16 @@ function onClick25(event) {
     m.pagine.push(nuovaPagina(d.muEdNuova, state110.fonte || {}, m.pagine.length));
     state110.bozza = muroPulito(m);
     state110.aperta = state110.bozza.pagine.length - 1;
+  } else if (d.muEdCopia !== void 0) {
+    const m = structuredClone(bozza());
+    const i = Number(d.muEdCopia);
+    const copia2 = structuredClone(m.pagine[i]);
+    if (!copia2 || m.pagine.length >= PAGINE_AL_MASSIMO) return;
+    copia2.id = nuovaPagina(copia2.modello, {}, i + 1).id;
+    copia2.titolo = copia2.titolo ? `${copia2.titolo} 2`.slice(0, 32) : "";
+    m.pagine.splice(i + 1, 0, copia2);
+    state110.bozza = muroPulito(m);
+    state110.aperta = i + 1;
   } else if (d.muEdTogli !== void 0) {
     const m = structuredClone(bozza());
     m.pagine.splice(Number(d.muEdTogli), 1);
@@ -86581,7 +87427,7 @@ function onClick25(event) {
     const p = m.pagine[i];
     const lista5 = d.muEdLista === "scene" ? "scene" : "comandi";
     const posti = Array.from(
-      { length: p.posti || POSTI },
+      { length: postiDellaPagina(p) },
       (_, n) => p[lista5][n] || { tipo: "vuoto" }
     );
     p[lista5] = sposta2(posti, k, d.muEdPostoSu !== void 0 ? k - 1 : k + 1);
@@ -86600,8 +87446,20 @@ function onChange7(event) {
   if (!via) return;
   metti3(via, event.target.value);
   if (event.type === "change" && !SCRITTE.test(via)) ridisegna8();
+  else dopoUnaScritta();
 }
 var SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin)$/;
+function dopoUnaScritta() {
+  rinfrescaLAnteprima();
+  const avviso = doc?.querySelector?.("#ed-body .mu-ed-sporca");
+  if (!avviso && bozzaSporca()) {
+    const nuovo = doc.createElement("div");
+    nuovo.className = "mu-ed-sporca";
+    nuovo.setAttribute("role", "status");
+    nuovo.textContent = `● ${t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save».")}`;
+    doc.querySelector("#ed-body .mu-ed")?.prepend(nuovo);
+  }
+}
 function salva14() {
   const m = muroPulito(bozza());
   writeJsonIfChanged(CHIAVE_MURO, m);
@@ -86686,6 +87544,16 @@ html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}
 #ed-body .mu-ed-aggiungi{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-weight:800;font-size:13px}
 #ed-body .mu-ed-aggiungi .ed-btn-add{width:auto;margin:0;padding:10px 16px}
 #ed-body .mu-ed-chiuso{position:relative;min-height:420px}
+#ed-body .mu-ed-sporca{margin:0 0 10px;padding:10px 14px;border-radius:12px;font-size:12.5px;font-weight:800;color:#92400e;background:#fef3c7;border:1px solid #f59e0b88}
+html[data-theme="dark"] #ed-body .mu-ed-sporca{color:#fde68a;background:#78350f55}
+#ed-body .mu-ed-copia{margin:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--divider-color,#dbe4ee);background:none;color:var(--text-dim,#64748b);font-weight:900;cursor:pointer}
+#ed-body .mu-ed-colori{display:inline-flex;flex-wrap:wrap;gap:6px}
+#ed-body .mu-ed-colori button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;background:var(--c);cursor:pointer;padding:0;font-size:10px;font-weight:900;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-colori button.auto{background:conic-gradient(#f59e0b,#ef4444,#8b5cf6,#0ea5e9,#10b981,#f59e0b);color:#fff}
+#ed-body .mu-ed-colori button.si{border-color:var(--text,#0f172a);box-shadow:0 0 0 2px var(--card-background-color,#fff) inset}
+#ed-body .mu-ed-anteprima-box{margin-top:10px}
+#ed-body .mu-ed-lettori{display:grid;gap:8px;min-width:240px;flex:1}
+#ed-body .mu-ed-anteprima{margin-top:8px;width:100%;max-width:720px;overflow:hidden;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee)}
 #ed-body .mu-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}
 #ed-body .mu-ed-lucchetto b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:26px;text-transform:uppercase}
@@ -86712,6 +87580,12 @@ function installPlanciaAMuroEditor() {
     ensureMuroEditor();
   });
   onEditorRedraw("__dmMuroEditor", ancora2);
+  root.addEventListener?.("dashboardmodern:state-changed", () => {
+    if (schedaAttiva6() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+  });
+  root.addEventListener?.("resize", () => {
+    if (schedaAttiva6() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+  });
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
     root.addEventListener?.(evento, ancora2);
   ensureMuroEditorTab();
@@ -89155,9 +90029,9 @@ function comandiTastiMarkup(view) {
   return voci3.map((voce2) => {
     const interruttore3 = voce2.genere === "interruttore";
     const premuto = interruttore3 ? ` aria-pressed="${voce2.acceso === true}"` : "";
-    const glifo = interruttore3 ? "⏻" : "✦";
+    const glifo2 = interruttore3 ? "⏻" : "✦";
     return `<button type="button" class="dm-robot-btn dm-robot-cmd" data-dm-robot-cmd="${esc(voce2.entity)}" data-dm-robot-cmd-genere="${esc(voce2.genere)}"${premuto}${voce2.available ? "" : " disabled"} title="${esc(voce2.name)}">
-          <span aria-hidden="true">${glifo}</span><span class="dm-robot-btn-tx">${esc(voce2.name)}</span>
+          <span aria-hidden="true">${glifo2}</span><span class="dm-robot-btn-tx">${esc(voce2.name)}</span>
         </button>`;
   }).join("");
 }
@@ -89976,15 +90850,15 @@ function sceltaTessereMarkup(lista5) {
 async function salvaLista(lista5) {
   const store = dashboardStore();
   if (!store?.getSection || !store?.replaceSection) return;
-  const salvato = store.getSection("energy") || {};
-  await store.replaceSection("energy", storedPlants(lista5, salvato));
+  const salvato2 = store.getSection("energy") || {};
+  await store.replaceSection("energy", storedPlants(lista5, salvato2));
   root.cdMarkDirty?.();
   root.cdSyncPush?.();
 }
 async function aggiungi3() {
   const lista5 = impianti();
-  const salvato = section("energy", {}) || {};
-  const nato = nuovoImpianto(lista5, "", salvato.metadata);
+  const salvato2 = section("energy", {}) || {};
+  const nato = nuovoImpianto(lista5, "", salvato2.metadata);
   await salvaLista([...lista5, nato]);
   scegli3(nato.id);
 }
@@ -95011,7 +95885,7 @@ function sensoriCampi(index, person) {
 }
 function rigaMarkup17(person, index, ultima = false) {
   const aperto2 = state131.aperto === index;
-  const colori = AVATAR_COLORS.map(
+  const colori2 = AVATAR_COLORS.map(
     (color) => `<button type="button" class="dm-people-color${person.avatar.color === color ? " on" : ""}" data-person-color="${esc(color)}" style="--dm-person-color:${esc(color)}" aria-label="${esc(color)}"></button>`
   ).join("");
   return `<article class="ed-row dm-people-row" data-person-index="${index}" data-open="${aperto2}" data-nascosta="${person.nascosta === true}">
@@ -95050,7 +95924,7 @@ function rigaMarkup17(person, index, ultima = false) {
         <div class="dm-face-builder" data-face-builder>${builderMarkup(person)}</div>
         <span class="ed-form-row"><input id="dm-person-${index}-emoji" class="ed-input dm-people-emoji" data-person-field="emoji" value="${esc(person.avatar.emoji)}" placeholder="${t("Vuoto: le iniziali del nome", "Empty: the initials of the name")}" autocomplete="off" spellcheck="false"><button type="button" class="dm-people-pick" data-person-emoji="dm-person-${index}-emoji" aria-label="${t("Scegli un'emoji", "Choose an emoji")}">😀</button></span>
         <span class="dm-face-row-lbl">${t("Sfondo", "Background")}</span>
-        <span class="dm-people-colors">${colori}</span>
+        <span class="dm-people-colors">${colori2}</span>
       </div>
       <output class="dm-people-error" data-person-error></output>
       <button type="button" class="ed-save-btn" data-person-save>💾 ${t("Salva persona", "Save person")}</button>
@@ -96976,7 +97850,7 @@ function paintEvccConsole(scope = doc) {
   } catch (_error) {
   }
   const presente = evccPresence(allStates(), resolve);
-  const segna = (node, visibile) => {
+  const segna2 = (node, visibile) => {
     const nascosto = node.hasAttribute("hidden");
     if (visibile && nascosto) node.removeAttribute("hidden");
     else if (!visibile && !nascosto) node.setAttribute("hidden", "hidden");
@@ -96984,12 +97858,12 @@ function paintEvccConsole(scope = doc) {
     if (node.dataset.dmEvcc !== stato3) node.dataset.dmEvcc = stato3;
   };
   const mostra2 = (selector, visibile) => {
-    for (const node of scope.querySelectorAll(selector)) segna(node, visibile);
+    for (const node of scope.querySelectorAll(selector)) segna2(node, visibile);
   };
   mostra2(".lm-target-card,.ev-popup-target", presente.target);
   for (const value of scope.querySelectorAll(".v-auto-limite")) {
     const riga3 = value.closest(".lm-stat-card,.dm-evv-row,.ev-popup-session-row,.ev-popup-stat");
-    if (riga3) segna(riga3, presente.target);
+    if (riga3) segna2(riga3, presente.target);
   }
   mostra2(".lm-evcc-card,.ev-popup-modes", presente.mode);
   return presente;
@@ -99786,9 +100660,9 @@ function parolaDellaFase2(lettura3) {
 function altezzaDelFuoco(lettura3) {
   if (lettura3.fase === "accensione") return 0.55;
   if (lettura3.fase === "modulazione") return 0.7;
-  const potenza = lettura3.potenza;
-  if (potenza?.livello != null && potenza.quanti)
-    return Math.round((0.62 + 0.5 * Math.min(1, potenza.livello / potenza.quanti)) * 100) / 100;
+  const potenza2 = lettura3.potenza;
+  if (potenza2?.livello != null && potenza2.quanti)
+    return Math.round((0.62 + 0.5 * Math.min(1, potenza2.livello / potenza2.quanti)) * 100) / 100;
   return 0.9;
 }
 function ventoDellaStufa(lettura3) {
@@ -99800,8 +100674,8 @@ function ventoDellaStufa(lettura3) {
   return { gira: true, durata: Math.round((2 - 1.4 * quota) * 100) / 100 };
 }
 function disegnoStufa(lettura3) {
-  const potenza = lettura3.potenza;
-  const display2 = lettura3.brucia && potenza?.livello != null ? `P${potenza.livello}` : "";
+  const potenza2 = lettura3.potenza;
+  const display2 = lettura3.brucia && potenza2?.livello != null ? `P${potenza2.livello}` : "";
   return `<div class="dm-it-stufa">
     <span class="dm-it-stufa-piano" aria-hidden="true">${display2 ? `<i class="dm-it-stufa-display">${esc(display2)}</i>` : ""}</span>
     <span class="dm-it-stufa-griglia" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -103099,8 +103973,8 @@ function configurazione12() {
   return elencoUps(readJson(CHIAVE_UPS, {}));
 }
 var metadati = () => {
-  const salvato = readJson(CHIAVE_META_UPS, {});
-  return salvato && typeof salvato === "object" && !Array.isArray(salvato) ? salvato : {};
+  const salvato2 = readJson(CHIAVE_META_UPS, {});
+  return salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
 };
 function salva20(elenco10) {
   const { gruppi: gruppi2, metadata } = upsDaSalvare(elenco10, metadati());
@@ -105331,8 +106205,8 @@ var ETICHETTE3 = () => ({
   contatore: [t("Contatore lettere", "Letter counter"), "counter.lettere"]
 });
 function configurazione17() {
-  const salvato = readJson(CHIAVE_CITOFONO, {});
-  const dato = salvato && typeof salvato === "object" && !Array.isArray(salvato) ? salvato : {};
+  const salvato2 = readJson(CHIAVE_CITOFONO, {});
+  const dato = salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
   return {
     citofoni: Array.isArray(dato.citofoni) ? dato.citofoni : [],
     cassette: Array.isArray(dato.cassette) ? dato.cassette : []
@@ -106532,11 +107406,11 @@ var state152 = root[KEY156] ||= {
   richiesto: false
 };
 var ACCUMULO_VIEW_ID = "view-batterie";
-function paginaEnergia() {
+function paginaEnergia2() {
   return doc?.getElementById?.("page-energy") || null;
 }
 function filaDelleLinguette() {
-  return paginaEnergia()?.querySelector?.(".sub-tabs-container .sub-tabs-energy") || null;
+  return paginaEnergia2()?.querySelector?.(".sub-tabs-container .sub-tabs-energy") || null;
 }
 function laLinguetta() {
   return filaDelleLinguette()?.querySelector?.(`[data-dm-energia-vista="${ACCUMULO_TAB}"]`) || null;
@@ -106547,7 +107421,7 @@ function laVista() {
 function ensureVista() {
   let vista2 = laVista();
   if (vista2) return vista2;
-  const pagina2 = paginaEnergia();
+  const pagina2 = paginaEnergia2();
   const sorelle = pagina2?.querySelectorAll?.(".flow-view");
   if (!sorelle?.length) return null;
   vista2 = doc.createElement("div");
@@ -106561,7 +107435,7 @@ function apriLAccumulo() {
   const linguetta = ensureLinguetta();
   const vista2 = ensureVista();
   if (!linguetta || !vista2) return false;
-  for (const nodo2 of paginaEnergia().querySelectorAll(".sub-tabs-container .sub-tab-btn"))
+  for (const nodo2 of paginaEnergia2().querySelectorAll(".sub-tabs-container .sub-tab-btn"))
     nodo2.classList.remove("active");
   for (const nodo2 of doc.querySelectorAll(".flow-view")) nodo2.classList.remove("active");
   linguetta.classList.add("active");
@@ -106615,7 +107489,7 @@ function accendiLaLinguetta() {
 function siVede2() {
   if (!planciaVisibile()) return false;
   return Boolean(
-    paginaEnergia()?.classList.contains("active") && laVista()?.classList.contains("active")
+    paginaEnergia2()?.classList.contains("active") && laVista()?.classList.contains("active")
   );
 }
 function vistaDiAdesso() {
@@ -106640,7 +107514,7 @@ function schedule38() {
     state152.frame = 0;
     try {
       accendiLaLinguetta();
-      if (state152.richiesto && paginaEnergia()?.classList.contains("active")) {
+      if (state152.richiesto && paginaEnergia2()?.classList.contains("active")) {
         state152.richiesto = false;
         if (ciSonoPacchi()) apriLAccumulo();
       }
@@ -107360,8 +108234,8 @@ var state154 = root[KEY158] ||= { installed: false, frame: 0, firma: "" };
 var FASCIA_ID = "dm-nodi-fascia";
 var STYLE_ID31 = "dm-nodi-style";
 function nodiConfigurati() {
-  const salvato = readJson(CHIAVE_NODI, []);
-  return Array.isArray(salvato) ? salvato : [];
+  const salvato2 = readJson(CHIAVE_NODI, []);
+  return Array.isArray(salvato2) ? salvato2 : [];
 }
 function lettureDeiNodiOra(states = allStates()) {
   return lettureDeiNodi(nodiConfigurati(), states);
@@ -107522,8 +108396,8 @@ var KEY159 = "__DASHBOARDMODERN_NODI_EDITOR__";
 var state155 = root[KEY159] ||= { installed: false, aperto: -1 };
 var ANCORA4 = "dm-nodi-editor";
 function elenco9() {
-  const salvato = readJson(CHIAVE_NODI, []);
-  return Array.isArray(salvato) ? salvato : [];
+  const salvato2 = readJson(CHIAVE_NODI, []);
+  return Array.isArray(salvato2) ? salvato2 : [];
 }
 function salva25(lista5) {
   writeJsonIfChanged(CHIAVE_NODI, normalizzaNodi(lista5));
@@ -108375,8 +109249,8 @@ function tesseraMarkup2() {
     <div class="cfg-card-arrow">›</div>`;
 }
 function ensureTessera() {
-  const griglia2 = doc?.querySelector?.("#page-config .cfg-grid");
-  if (!griglia2) return false;
+  const griglia3 = doc?.querySelector?.("#page-config .cfg-grid");
+  if (!griglia3) return false;
   let tessera2 = doc.getElementById(TESSERA_ID);
   if (!tessera2) {
     tessera2 = doc.createElement("div");
@@ -108384,7 +109258,7 @@ function ensureTessera() {
     tessera2.id = TESSERA_ID;
     tessera2.dataset.dmSostieniApri = "true";
   }
-  if (griglia2.lastElementChild !== tessera2) griglia2.append(tessera2);
+  if (griglia3.lastElementChild !== tessera2) griglia3.append(tessera2);
   const disegno4 = tesseraMarkup2();
   if (tessera2.innerHTML !== disegno4) tessera2.innerHTML = disegno4;
   return true;
@@ -110166,9 +111040,9 @@ function scrittaDelTasto(riga3) {
   return { titolo: titolo3, sotto };
 }
 function vestiLeAzioni() {
-  const griglia2 = doc?.getElementById?.("qa-grid");
-  if (!griglia2) return 0;
-  const tasti = [...griglia2.querySelectorAll(".qa-btn")];
+  const griglia3 = doc?.getElementById?.("qa-grid");
+  if (!griglia3) return 0;
+  const tasti = [...griglia3.querySelectorAll(".qa-btn")];
   if (!tasti.length) return 0;
   const lista5 = azioni();
   const states = allStates();
