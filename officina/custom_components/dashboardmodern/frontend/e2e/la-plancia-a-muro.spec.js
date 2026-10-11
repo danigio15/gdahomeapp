@@ -534,6 +534,23 @@ test.describe("la plancia a muro", () => {
     await expect(muro(page)).not.toHaveAttribute("data-mu-sotto-il-menu", "true");
   });
 
+  /* «Su wall quando premo l'hamburger da telefono aperto si alza la navbar,
+   * che sul pannello a muro non deve esserci.» Il pannello scende sotto il
+   * menu, e la barra della plancia gli passava davanti. */
+  test("col pannello acceso la barra della plancia non si vede, nemmeno dopo il ☰", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => {
+      document.body.classList.add("cd-nav-fixed", "nav-visible");
+      document.querySelector("nav.tabs.bottom-nav-bar")?.classList.add("visible");
+    });
+    await muro(page).locator('[data-mu-fa="menu"]').click();
+    await expect(muro(page)).toHaveAttribute("data-mu-sotto-il-menu", "true");
+    await expect(page.locator("nav.tabs.bottom-nav-bar")).toBeHidden();
+    await expect(page.locator(".bottom-nav-handle")).toBeHidden();
+  });
+
   test("col blocco il ☰ vuole il PIN", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, {
       muro: { ...MURO_DI_PROVA, blocco: { attivo: true, pin: "2468" } },

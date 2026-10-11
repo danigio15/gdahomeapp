@@ -284,6 +284,24 @@ test("le finestre degli impianti: la risposta in cima, i comandi sotto", async (
   page,
 }, testInfo) => {
   await avvia(page, testInfo);
+  /* La giornata della pressione dal Recorder: solo lei, gli altri restano
+   * senza storico come prima. */
+  await page.evaluate(() => {
+    /* Il servizio e' congelato, il suo broker no: si risponde al suo posto. */
+    const broker = window.DashboardModernEnergyService.broker;
+    const prima = broker.request.bind(broker);
+    const adesso = Date.now();
+    broker.request = (domanda, ...resto) => {
+      if ((domanda?.entity_ids || []).includes("sensor.pressione_acqua"))
+        return Promise.resolve({
+          "sensor.pressione_acqua": Array.from({ length: 24 }, (_, ora) => ({
+            s: String((3.4 - ora * 0.012 + (ora % 5 === 0 ? 0.08 : 0)).toFixed(2)),
+            lu: (adesso - (24 - ora) * 3600_000) / 1000,
+          })),
+        });
+      return prima(domanda, ...resto);
+    };
+  });
 
   // Lo scaldabagno: il serbatoio, la resistenza e l'obiettivo coi tasti.
   let finestra = await apri(page, "scaldabagno");
@@ -334,6 +352,13 @@ test("le finestre degli impianti: la risposta in cima, i comandi sotto", async (
   finestra = await apri(page, "contatori");
   await expect(finestra.locator("[data-dm-f-oggi]")).toContainText("412,873");
   await expect(finestra.locator('[data-dm-f-casella="pressione"]')).toContainText("3,1 bar");
+  /* Il manometro con la sua forcella e la linea delle ventiquattr'ore. */
+  await expect(
+    finestra.locator('[data-dm-f-casella="pressione"] .dm-f-solare-manometro'),
+  ).toBeVisible();
+  await expect(
+    finestra.locator('[data-dm-f-casella="pressione"] .dm-f-solare-linea'),
+  ).toBeVisible();
   await expect(finestra.locator(".dm-f-contatori-letture")).toContainText("1.834,2");
   await fotografa(page, testInfo, "contatori");
   await chiudi(page);

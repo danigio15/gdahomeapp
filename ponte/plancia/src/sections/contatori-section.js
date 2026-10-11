@@ -890,6 +890,12 @@ export function tesseraDeiContatori(vista) {
     );
     if (contatore) value = letturaDelContatoreInParole(contatore);
   }
+  /* Chi ha solo il sensore della pressione vedeva il trattino, e sotto
+   * «Pressione alta»: alta quanto? Il numero c'è, e va in grande. */
+  if (value === "—") {
+    const pressione = come.pressioni.find((voce) => voce.bar !== null && voce.bar !== undefined);
+    if (pressione) value = `${formatNumber(pressione.bar, 1)}\u00a0bar`;
+  }
   const caption =
     come.stato !== "normale"
       ? testa.grande

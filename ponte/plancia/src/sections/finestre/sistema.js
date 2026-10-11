@@ -136,9 +136,7 @@ function finestraElettrodomestici(widget) {
   const frasi = [];
   if (watt >= 1) frasi.push(`${t("insieme", "together")} ${formatPowerLabel(watt)}`);
   if (primo)
-    frasi.push(
-      `${primo.name} · ${t("finisce fra", "done in")} ${restaCorto(primo.restano)}`,
-    );
+    frasi.push(`${primo.name} · ${t("finisce fra", "done in")} ${restaCorto(primo.restano)}`);
   const eroe = `<div class="dm-f-el-eroe">
     <span class="dm-f-num">${accesi.length}</span>
     <div><b>${esc(accesi.length ? t("al lavoro adesso", "working now") : t("tutti fermi", "all idle"))}</b>${frasi
@@ -300,7 +298,9 @@ function finestraCottura(widget) {
         .join("")}</div>`
     : "";
   return `<div class="dm-f dm-f-cottura" data-fase="${esc(cucina.fase || "")}">${eroe}${gradi}${
-    tasti.length ? `<div class="dm-f-cot-tasti" style="--n:${tasti.length}">${tasti.join("")}</div>` : ""
+    tasti.length
+      ? `<div class="dm-f-cot-tasti" style="--n:${tasti.length}">${tasti.join("")}</div>`
+      : ""
   }${altri}</div>`;
 }
 
@@ -469,7 +469,9 @@ function finestraMacchine(widget) {
   const eroe = giu.length
     ? `<div class="dm-f-mac-eroe" data-giu="true">
         <div class="dm-f-mac-riga"><span class="dm-f-num">${giu.length}</span><div><b>${esc(
-          giu.length === 1 ? t("non risponde", "not answering") : t("non rispondono", "not answering"),
+          giu.length === 1
+            ? t("non risponde", "not answering")
+            : t("non rispondono", "not answering"),
         )}</b>${su.length ? `<span>${esc(t("in piedi:", "up:"))} ${su.length}</span>` : ""}</div></div>
         ${giu
           .map((riga) => {
@@ -484,7 +486,9 @@ function finestraMacchine(widget) {
             return `<div class="dm-f-mac-giu">
               <span class="dm-f-mac-ic" aria-hidden="true">${segnoDellaMacchina(riga, 22)}</span>
               <span class="dm-f-mac-n"><b data-dm-no-i18n>${esc(riga.name)}</b><em>${esc(parola)}${da ? ` ${esc(da)}` : ""}</em>${
-                tasto ? "" : `<small>${esc(t("Nessun comando: va riacceso a mano", "No controls: restart it by hand"))}</small>`
+                tasto
+                  ? ""
+                  : `<small>${esc(t("Nessun comando: va riacceso a mano", "No controls: restart it by hand"))}</small>`
               }</span>${tasto}
             </div>`;
           })
@@ -598,7 +602,8 @@ function daQuando(states, entity) {
 
 function iconaDellaVoce(riga, states, ripiego = "") {
   const scelta = clean(riga.glyph);
-  if (scelta && scelta !== clean(ripiego)) return iconGlyphHtml(scelta, { size: 22, fallback: "•" });
+  if (scelta && scelta !== clean(ripiego))
+    return iconGlyphHtml(scelta, { size: 22, fallback: "•" });
   const classe = clean(states?.[clean(riga.entity)]?.attributes?.device_class);
   if (eUnaValvola(riga)) return "🚰";
   const proprie = {
@@ -801,7 +806,10 @@ function finestraSegnalazioni(widget) {
     ${
       generi.length
         ? `<div class="dm-f-seg-barra">${generi
-            .map(([id, , , colore]) => `<i style="flex:${Number(conto[id])};background:${colore}"></i>`)
+            .map(
+              ([id, , , colore]) =>
+                `<i style="flex:${Number(conto[id])};background:${colore}"></i>`,
+            )
             .join("")}</div>
           <div class="dm-f-seg-leg">${generi
             .map(
@@ -826,7 +834,9 @@ function finestraSegnalazioni(widget) {
               : voce?.stato === "inviato"
                 ? t("mai aperta", "never opened")
                 : "";
-          const sotto = [numero ? `#${numero}` : "", clean(voce?.autore), stato].filter(Boolean).join(" · ");
+          const sotto = [numero ? `#${numero}` : "", clean(voce?.autore), stato]
+            .filter(Boolean)
+            .join(" · ");
           return `<div class="dm-f-seg-att">
             <span class="dm-f-seg-av" aria-hidden="true">${esc(iniziali(voce?.autore))}</span>
             <span class="dm-f-seg-n"><b data-dm-no-i18n>${esc(clean(voce?.title) || `#${numero}`)}</b><em>${esc(sotto)}</em></span>
@@ -899,7 +909,9 @@ function finestraAssistenza(widget) {
   const chi = `<div class="dm-f-chat-chi">
     <span class="dm-f-chat-av" aria-hidden="true">💬</span>
     <span><b>${esc(t("Assistenza", "Support"))}</b>${
-      scritto ? `<em>${esc(t("ha risposto alle", "replied at"))} ${esc(orologio(scritto))}</em>` : ""
+      scritto
+        ? `<em>${esc(t("ha risposto alle", "replied at"))} ${esc(orologio(scritto))}</em>`
+        : ""
     }</span>
   </div>`;
   const mia = domanda
@@ -965,4 +977,3 @@ registraFinestra("evidenza", { disegna: finestraEvidenza, stile: STILE_EVIDENZE 
 registraFinestra("sezionimie", { disegna: finestraSezioneMia });
 registraFinestra("segnalazioni", { disegna: finestraSegnalazioni, stile: STILE_SEGNALAZIONI });
 registraFinestra("assistenza", { disegna: finestraAssistenza, stile: STILE_ASSISTENZA });
-

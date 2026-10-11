@@ -2805,6 +2805,12 @@ html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alb
 html.dm-solo-muro #editor-modal .mu-tutto-il-config{display:inline-flex;align-items:center;gap:6px;margin-right:8px;padding:8px 14px;border-radius:12px;border:none;background:var(--accent,#3b82f6);color:#fff;font-weight:800;font-size:13px;cursor:pointer}
 html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
 ${MURO}[data-mu-sotto-il-menu]{z-index:4!important}
+/* Sul pannello a muro la barra della plancia non c'e', mai. «Su wall quando
+ * premo l'hamburger da telefono aperto si alza la navbar, che sul pannello a
+ * muro non deve esserci.» Per far passare il menu sopra, il pannello scende a
+ * z-index 4 — e la barra di sotto, che sta piu' in alto, gli passava davanti.
+ * Finche' il pannello e' acceso la barra e la sua maniglia non si disegnano. */
+html.dm-muro-acceso nav.tabs.bottom-nav-bar,html.dm-muro-acceso .bottom-nav-handle{display:none!important}
 #dm-muro{position:fixed;inset:0;z-index:2147482000}
 ${MURO}{overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation;

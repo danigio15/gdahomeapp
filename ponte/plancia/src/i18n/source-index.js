@@ -1259,6 +1259,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Comando ON/OFF": "On/off control",
   "Comando rapido": "Quick command",
   "Combustibile solido: pellet o legna": "Solid fuel: pellet or wood",
+  "Come carica": "How it charges",
   "come i giorni feriali": "same as weekdays",
   "Come il tipo di pagina": "Like the page type",
   "come la casa": "as the house",

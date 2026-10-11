@@ -231,6 +231,14 @@ import { comandiMediaMarkup, sottoDelLettore, titoloDelLettore } from "./media-p
 import { iconaPresaMarkup } from "./prese-section.js";
 import { puntiDi, quandoArrivaLoStorico } from "./storico-condiviso-section.js";
 import {
+  iModiDiEvcc,
+  iValoriDelSempre,
+  ilModoAcceso,
+  ilSempreEInVigore,
+  ilValoreDelSempreAcceso,
+  laFilaDelSempreServe,
+} from "../core/le-modalita-di-evcc.js";
+import {
   CHIAVE_SOGLIA_CHIUSA,
   coperturaAlzata,
   coverEntries,
@@ -2821,6 +2829,41 @@ export function lettureDelleVetture(states, auto = [], fuori = new Set()) {
   return letture;
 }
 
+/* I comandi di evcc per la finestra dell'auto: i modi che evcc dichiara, quale
+ * e' acceso, e la fila del «sempre». «Widget auto mi deve dare la possibilita'
+ * di cambiare modalita' evcc.» Le parole e i colori sono quelli della pagina
+ * Auto (`core/le-modalita-di-evcc.js`): due posti, una modalita' sola. Senza
+ * l'entita' mappata, o muta, niente tasti: un tasto che non comanda niente e'
+ * peggio di nessuno. */
+function comandiDiEvcc(states) {
+  const viva = (ref) => {
+    const entity = clean(root.resolveEntity?.(ref) || "");
+    if (!entity || entity === ref || entity.startsWith("dm.")) return null;
+    const stato = states?.[entity];
+    if (!stato || /^(unavailable|unknown)$/i.test(clean(stato.state))) return null;
+    return { entity, stato };
+  };
+  const modo = viva("dm.ev_modalita_ricarica_evcc");
+  if (!modo) return null;
+  const voci = iModiDiEvcc(modo.stato);
+  const acceso = ilModoAcceso(modo.stato, voci);
+  const sempre = viva("dm.ev_ricarica_sempre_evcc");
+  const valori = sempre && laFilaDelSempreServe(sempre.stato) ? iValoriDelSempre(sempre.stato) : [];
+  return {
+    entity: modo.entity,
+    voci,
+    acceso,
+    sempre: valori.length
+      ? {
+          entity: sempre.entity,
+          voci: valori,
+          scelto: ilValoreDelSempreAcceso(sempre.stato, valori),
+          inVigore: ilSempreEInVigore(acceso),
+        }
+      : null,
+  };
+}
+
 function evModel(states) {
   const fuori = widgetExcludedEntities("ev");
   const profilate = lettureDelleVetture(states, vetture(), fuori);
@@ -2936,6 +2979,7 @@ function evModel(states) {
       fine: lettura === attaccata ? mancano : "",
       foto: lettura.foto || "",
     })),
+    evcc: comandiDiEvcc(states),
     rows,
   };
 }
