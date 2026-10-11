@@ -199,10 +199,16 @@ import {
   vistaAnimale,
 } from "../core/animali-model.js";
 import { parolaAvviso, testoLettura } from "./animali-section.js";
+import { parolaAzione, parolaCasella } from "./animali-section.js";
 import { EVENTO_CONTATORI, tesseraDeiContatori, vistaDeiContatori } from "./contatori-section.js";
 import { EVENTO_PIANTE, tesseraDellePiante, vistaDellePiante } from "./piante-section.js";
 
-import { EVENTO_ACQUARIO, tesseraDellAcquario, vistaDelleVasche } from "./acquario-section.js";
+import {
+  EVENTO_ACQUARIO,
+  tesseraDellAcquario,
+  testaDellAcquario,
+  vistaDelleVasche,
+} from "./acquario-section.js";
 import {
   EVENTO_APRI_ACCUMULO,
   tesseraDellAccumulo,
@@ -3319,6 +3325,9 @@ function agendaModel(states) {
     calendari: calendario?.calendari || [],
     daFare,
     blocks: cose?.blocks || [],
+    /* Quello che si sta scrivendo nelle caselle delle liste: la finestra si
+     * riscrive da sola, e la riga a meta' non deve sparire. */
+    bozze: Object.fromEntries(state.bozze),
   };
 }
 
@@ -4199,7 +4208,12 @@ function ariaModel(states) {
       glyph: lettura.glifo,
       value: `${valoreScritto(lettura, locale())}${lettura.unita ? ` ${lettura.unita}` : ""}`,
       grado: lettura.grado,
+      /* La lettura intera, per la finestra: la sostanza, la scala e quanto e'
+       * lontana dal primo gradino (`finestre/servizi.js`). */
+      lettura,
     })),
+    copertina,
+    peggiore: giudizio.peggiore,
   };
 }
 
@@ -4522,6 +4536,8 @@ function stampantiModel(states) {
         ? `${parolaDelloStatoStampante(lettura)} · ${lettura.piuScarica.quanta}%`
         : parolaDelloStatoStampante(lettura),
     })),
+    // Le letture intere: la finestra disegna una scheda per stampante.
+    letture,
   };
 }
 
@@ -5375,6 +5391,36 @@ function daQuandoTace(quando) {
   return t(`da ${giorni} giorni`, `for ${giorni} days`);
 }
 
+/* Da quando a quando vale un avviso, se l'integrazione lo dice: Meteoalarm
+ * scrive `onset` ed `expires`, altre `effective`, `start` ed `end`. Senza,
+ * niente: una finestra di validita' inventata sarebbe peggio di nessuna. */
+function validitaDellAvviso(stato) {
+  const attributi = stato?.attributes || {};
+  const istante = (...nomi) => {
+    for (const nome of nomi) {
+      const quando = Date.parse(clean(attributi[nome]));
+      if (Number.isFinite(quando)) return quando;
+    }
+    return null;
+  };
+  const parole = (...nomi) => {
+    for (const nome of nomi) {
+      const valore = attributi[nome];
+      const scritto = Array.isArray(valore) ? valore.map(clean).filter(Boolean).join(", ") : clean(valore);
+      if (scritto) return scritto;
+    }
+    return "";
+  };
+  return {
+    dal: istante("onset", "effective", "valid_from", "start", "start_time", "inizio"),
+    al: istante("expires", "ends", "valid_to", "valid_until", "end", "end_time", "fine"),
+    /* Il testo intero e la zona, come li scrivono le integrazioni: la tessera
+     * li taglia, la finestra li dice tutti. */
+    testo: parole("description", "descrizione", "event_description", "message", "messaggio"),
+    zona: parole("zone", "zona", "area", "areas", "region"),
+  };
+}
+
 function allerteModel(states) {
   const config = readJson(CHIAVE_ALLERTE, {});
   if (!categorieConfigurate(config).length) return null;
@@ -5394,6 +5440,10 @@ function allerteModel(states) {
     entity: lettura.entity,
     value: fraseDellAllerta(lettura),
     livello: lettura.livello,
+    /* La lettura intera e, per un avviso, da quando a quando vale: la finestra
+     * mette in cima l'avviso vero col suo testo (`finestre/servizi.js`). */
+    lettura,
+    ...validitaDellAvviso(stateOf(states, lettura.entity)),
   }));
   return {
     key: "allerte",
@@ -5509,6 +5559,11 @@ function rifiutiModel(states) {
     value: parolaDelQuando(riga),
     quando: riga.quando,
     giorni: riga.giorni,
+    /* Il materiale e il suo colore: la finestra disegna il bidone grande e
+     * colora i giorni della settimana come il bidone vero. */
+    materiale: clean(riga.materiale),
+    colore: clean(riga.colore),
+    dalCalendario: Boolean(riga.dalCalendario),
   });
   /* Il calendario non ripete una riga: stesso materiale e stesso giorno e' lo
    * stesso bidone.
@@ -5651,6 +5706,21 @@ export function animaliModel(states) {
     ring: null,
     attiva: daFare.length > 0,
     alert: urgenti,
+    /* Le schede intere, con le parole gia' dette: la finestra ne disegna una
+     * per animale, coi livelli e coi tasti (`finestre/servizi.js`). */
+    schede: inFila.map((vista) => ({
+      id: vista.id,
+      nome: vista.nome,
+      disegno: vista.disegno,
+      foto: vista.foto,
+      gravita: vista.gravita,
+      dentro: vista.dentro,
+      avvisi: vista.avvisi.map((avviso) => ({ ...avviso, testo: parolaAvviso(avviso.chiave) })),
+      letture: CHIAVI_CAMPI_ANIMALI.map((chiave) => vista.letture[chiave])
+        .filter((voce) => voce && !voce.muto)
+        .map((voce) => ({ ...voce, etichetta: parolaCasella(voce.chiave), testo: testoLettura(voce) })),
+      azioni: vista.azioni.map((azione) => ({ ...azione, testo: parolaAzione(azione.chiave) })),
+    })),
     rows: inFila.map((vista) => {
       const avviso = suoAvviso(vista);
       const voce = suaLettura(vista);
@@ -5693,10 +5763,11 @@ function contatoriModel(states) {
  * sezione; qui si toglie quello che l'interruttore «nel widget» ha spento. */
 function pianteModel(states) {
   const fuori = widgetExcludedEntities("piante");
-  const tessera = tesseraDellePiante(
-    vistaDellePiante(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
-  );
-  return tessera && { ...tessera, key: "piante" };
+  const vista = vistaDellePiante(states, { dentro: (entity) => widgetIncludes(entity, fuori) });
+  const tessera = tesseraDellePiante(vista);
+  /* `come` e' il giudizio intero: la finestra elenca tutte le piante con la
+   * loro forcella, non solo quella da innaffiare. */
+  return tessera && { ...tessera, key: "piante", come: vista.come };
 }
 
 /* Le vasche (#127): gli acquari e i terrari, che adesso sono voci degli
@@ -5711,14 +5782,19 @@ function acquarioModel(states) {
     ...widgetExcludedEntities("acquario"),
     ...widgetExcludedEntities("animali"),
   ]);
-  const tessera = tesseraDellAcquario(
-    vistaDelleVasche(states, { dentro: (entity) => widgetIncludes(entity, fuori) }),
-  );
+  const dentro = (entity) => widgetIncludes(entity, fuori);
+  const tessera = tesseraDellAcquario(vistaDelleVasche(states, { dentro }));
   if (!tessera) return null;
+  const viste = vistaDelleVasche(states, { dentro });
+  /* Le vasche intere, per la finestra: la temperatura con la sua forcella, i
+   * valori dell'acqua e i comandi, vasca per vasca. */
+  const elenco = viste
+    .filter((vista) => vista?.letture?.length)
+    .map((vista) => ({ tipo: vista.tipo, come: vista.come, testa: testaDellAcquario(vista.come) }));
   /* Solo terrari: il disegno è il terrario, non la vasca coi pesci. */
   const faccia =
     tessera.icon === "🦎" ? oggettoWidget("terrario", "", "tessera-acquario") : undefined;
-  return { ...tessera, key: "acquario", ...(faccia ? { faccia } : {}) };
+  return { ...tessera, key: "acquario", elenco, ...(faccia ? { faccia } : {}) };
 }
 
 /* Le batterie di accumulo (#117): la carica di tutti i pacchi insieme, e la
@@ -8213,6 +8289,17 @@ function voceDellaSezione(chiave) {
  * le scrive chi apre la finestra e le riscrive chi la aggiorna, e se i due non
  * dicono la stessa cosa il secondo cancella il primo. */
 function bricioleDelWidget(widget) {
+  /* Una finestra disegnata puo' dire lei cosa scrivere sotto il titolo: «2
+   * impegni oggi · 3 da fare» dice di piu' delle briciole della sezione. */
+  const disegnata = finestraDi(widget.key) || finestraDi(famigliaDellaTessera(widget.key));
+  if (disegnata?.sottotitolo) {
+    try {
+      const suo = clean(disegnata.sottotitolo(widget));
+      if (suo) return suo;
+    } catch (_errore) {
+      /* Una riga che non si sa scrivere lascia le briciole di sempre. */
+    }
+  }
   return bricioleDellaSezione(widget.key, t).join(" · ") || clean(widget.caption);
 }
 

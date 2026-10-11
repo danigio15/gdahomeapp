@@ -19,12 +19,20 @@ const FINESTRE = new Map();
  * Registra la finestra di una tessera.
  *
  * @param {string} chiave la chiave della tessera (o la sua famiglia)
- * @param {{disegna:(widget:object, states:object)=>string, stile?:string}} finestra
+ * `sottotitolo`, se c'e', scrive la riga sotto il titolo della finestra al
+ * posto delle briciole della sezione: «2 impegni oggi · 3 da fare» dice di
+ * piu' di «Impegni · Da fare · Prossimi giorni».
+ *
+ * @param {{disegna:(widget:object, states:object)=>string, stile?:string, sottotitolo?:(widget:object)=>string}} finestra
  */
-export function registraFinestra(chiave, { disegna, stile = "" } = {}) {
+export function registraFinestra(chiave, { disegna, stile = "", sottotitolo = null } = {}) {
   const quale = String(chiave ?? "").trim();
   if (!quale || typeof disegna !== "function") return false;
-  FINESTRE.set(quale, { disegna, stile: String(stile || "") });
+  FINESTRE.set(quale, {
+    disegna,
+    stile: String(stile || ""),
+    sottotitolo: typeof sottotitolo === "function" ? sottotitolo : null,
+  });
   return true;
 }
 
