@@ -119,61 +119,56 @@
            pagina resta chiaro (vedi README): scura è solo questa fascia. -->
       <section class="palco" id="inizio">
         <div class="limite palco-dentro">
-          <div class="palco-detto">
-            <p class="palco-sopra" data-en="For Home Assistant · Android, iPhone, browser">
-              Per Home Assistant · Android, iPhone, browser
-            </p>
-            <h1
-              class="titolone"
-              data-en="Your home in one dashboard. &lt;em&gt;Away too.&lt;/em&gt;"
+          <p class="presto">
+            <b data-en="Soon">Presto</b>
+            <span data-en="The apps are coming to Google Play and the App Store"
+              >Le app arrivano su Google Play e App Store</span
             >
-              La tua casa in una plancia. <em>Anche fuori casa.</em>
-            </h1>
-            <p
-              class="palco-testo"
-              data-en="Home Assistant on your phone, on a tablet on the wall, on your wrist and in the car. You pair it with a QR code, and you open no ports on the router."
+          </p>
+          <h1 class="titolone" data-en="Your home in one dashboard. &lt;em&gt;Away too.&lt;/em&gt;">
+            La tua casa in una plancia. <em>Anche fuori casa.</em>
+          </h1>
+          <p
+            class="palco-testo"
+            data-en="Home Assistant on your phone, on a tablet on the wall, on your wrist and in the car. You pair it with a QR code, and you open no ports on the router."
+          >
+            Home Assistant sul telefono, sul tablet a muro, al polso e in auto. Si abbina con un QR
+            code, e sul router non si apre niente.
+          </p>
+          <div class="bottoni">
+            <a class="bottone bottone-ambra" href="#scarica" data-en="Install the add-on"
+              >Installa l'add-on</a
             >
-              Home Assistant sul telefono, sul tablet a muro, al polso e in auto. Si abbina con un
-              QR code, e sul router non si apre niente.
-            </p>
-            <div class="bottoni">
-              <a class="bottone bottone-ambra" href="#scarica" data-en="Install the add-on"
-                >Installa l'add-on</a
-              >
-              <a class="bottone bottone-chiaro" href="#plancia" data-en="See it first"
-                >Prima fammela vedere</a
-              >
-            </div>
-            <p class="presto">
-              <b data-en="Soon">Presto</b>
-              <span data-en="The apps are coming to Google Play and the App Store"
-                >Le app arrivano su Google Play e App Store</span
-              >
-            </p>
+            <a class="bottone bottone-chiaro" href="#plancia" data-en="See it first"
+              >Prima fammela vedere</a
+            >
           </div>
+        </div>
 
-          <div class="palco-schermi" aria-hidden="true">
-            <div class="schermo schermo-tablet">
-              <img
-                src="statico/app/plancia-a-muro.jpg"
-                alt=""
-                width="960"
-                height="600"
-                fetchpriority="high"
-              />
-            </div>
-            <div class="schermo schermo-telefono">
-              <img src="statico/schermate/3-le-luci.png" alt="" width="380" height="741" />
-            </div>
-            <div class="schermo schermo-nav">
-              <img src="statico/gdanav/guida-svincolo.jpg" alt="" width="420" height="909" />
-            </div>
-            <div class="schermo schermo-polso">
-              <img src="statico/app/apple-watch.jpg" alt="" width="410" height="502" />
-            </div>
-            <div class="schermo schermo-tondo">
-              <img src="statico/app/wear-os.jpg" alt="" width="454" height="454" />
-            </div>
+        <!-- La scena: il tablet a muro in mezzo, i due telefoni ai lati, gli
+             orologi davanti. Posti in percentuale, così resta uguale a ogni
+             larghezza. -->
+        <div class="scena" aria-hidden="true">
+          <div class="schermo schermo-telefono">
+            <img src="statico/schermate/3-le-luci.png" alt="" width="380" height="741" />
+          </div>
+          <div class="schermo schermo-nav">
+            <img src="statico/gdanav/guida-svincolo.jpg" alt="" width="420" height="909" />
+          </div>
+          <div class="schermo schermo-tablet">
+            <img
+              src="statico/app/plancia-a-muro.jpg"
+              alt=""
+              width="960"
+              height="600"
+              fetchpriority="high"
+            />
+          </div>
+          <div class="schermo schermo-polso">
+            <img src="statico/app/apple-watch.jpg" alt="" width="410" height="502" />
+          </div>
+          <div class="schermo schermo-tondo">
+            <img src="statico/app/wear-os.jpg" alt="" width="454" height="454" />
           </div>
         </div>
 
@@ -296,20 +291,22 @@
       <!-- ── Dove la usi ──────────────────────────────────────────────────── -->
       <section id="app">
         <div class="limite">
-          <div class="testa-sezione">
+          <div class="testa-centro">
             <h2 data-en="One home, every screen.">Una casa, ogni schermo.</h2>
             <p
-              data-en="gdahome is the app for Android and iPhone, and it also opens from a browser. Around the dashboard it puts the things that in Home Assistant take several steps: devices, Zigbee, configuration, reports."
+              data-en="gdahome is the app for Android and iPhone, and it also opens from a browser. The same home follows you from the phone to the wall, to the wrist, to the car."
             >
-              gdahome è l'app per Android e iPhone, e si apre anche dal browser. Intorno alla
-              plancia mette le cose che in Home Assistant richiedono più passaggi: i dispositivi, lo
-              Zigbee, la configurazione, le segnalazioni.
+              gdahome è l'app per Android e iPhone, e si apre anche dal browser. La stessa casa ti
+              segue dal telefono al muro, al polso, all'auto.
             </p>
           </div>
 
-          <div class="mosaico">
-            <figure class="tessera tessera-alta">
+          <!-- Il menu per primo: la sua didascalia è la prima della sezione,
+               e il collaudo la legge per controllare la lingua. -->
+          <div class="racconto">
+            <figure class="racconto-foto">
               <img
+                class="foto-telefono"
                 src="statico/app/menu.jpg"
                 alt="Il menu dell'app: la casa, la plancia, i dispositivi, gdanav, la configurazione, gli aggiornamenti, lo Zigbee, le segnalazioni e l'assistenza."
                 data-en-alt="The app menu: the home, the dashboard, the devices, gdanav, the configuration, the updates, Zigbee, reports and support."
@@ -317,18 +314,55 @@
                 height="909"
                 loading="lazy"
               />
-              <figcaption>
-                <b data-en="The menu">Il menu</b>
-                <span
-                  data-en="Dashboards, devices, Zigbee with “Where do I put it?”, updates, reports."
-                  >Plance, dispositivi, Zigbee con «Dove lo metto?», aggiornamenti,
-                  segnalazioni.</span
-                >
+              <figcaption data-en="The menu: dashboards, devices, Zigbee">
+                Il menu: plance, dispositivi, Zigbee
               </figcaption>
             </figure>
+            <div class="racconto-detto">
+              <p class="racconto-sopra" data-en="On the phone">Sul telefono</p>
+              <h3 data-en="Everything Home Assistant makes you search for.">
+                Tutto quello che in Home Assistant si cerca.
+              </h3>
+              <ul class="punti">
+                <li
+                  data-en="&lt;b&gt;Devices&lt;/b&gt;: every entity by domain, with its controls."
+                >
+                  <b>Dispositivi</b>: tutte le entità per dominio, con i comandi.
+                </li>
+                <li
+                  data-en="&lt;b&gt;Zigbee&lt;/b&gt;: you pair a device and answer “Where do I put it?”."
+                >
+                  <b>Zigbee</b>: abbini un dispositivo e rispondi a «Dove lo metto?».
+                </li>
+                <li
+                  data-en="&lt;b&gt;More homes&lt;/b&gt;: your parents', the one by the sea. Up to ten, one tap apart."
+                >
+                  <b>Più case</b>: quella dei genitori, quella al mare. Fino a dieci, a un tocco.
+                </li>
+                <li
+                  data-en="&lt;b&gt;Updates and reports&lt;/b&gt;, with photos, videos and a private support chat."
+                >
+                  <b>Aggiornamenti e segnalazioni</b>, con foto, video e una chat di assistenza.
+                </li>
+              </ul>
+            </div>
+          </div>
 
-            <figure class="tessera tessera-larga tessera-scura">
+          <div class="racconto racconto-muro">
+            <div class="racconto-detto">
+              <p class="racconto-sopra" data-en="On the wall · Premium">A muro · Premium</p>
+              <h3 data-en="A dashboard made for the wall.">Una plancia fatta per il muro.</h3>
+              <p
+                data-en="A fixed tablet or an NSPanel shows one screen with big controls: room, scenes, entrance, lights, climate, shutters, cameras, energy. It takes them from the main dashboard, and changes the moment the home changes."
+              >
+                Un tablet fisso o un NSPanel mostra una schermata sola coi comandi grandi: stanza,
+                scene, ingresso, luci, clima, tapparelle, telecamere, energia. Li prende dalla
+                plancia principale, e cambia nell'istante in cui cambia la casa.
+              </p>
+            </div>
+            <div class="racconto-foto muro-foto">
               <img
+                class="foto-tablet"
                 src="statico/app/plancia-a-muro.jpg"
                 alt="La plancia a muro su un tablet: la pagina Soggiorno con le linguette Scene, Energia e Ingresso, l'orologio, le luci, il clima, le tapparelle e due scene."
                 data-en-alt="The wall dashboard on a tablet: the Living room page with the Scenes, Energy and Entrance tabs, the clock, the lights, the climate, the shutters and two scenes."
@@ -336,52 +370,8 @@
                 height="600"
                 loading="lazy"
               />
-              <figcaption>
-                <b data-en="On the wall">A muro</b>
-                <span
-                  data-en="A fixed tablet or an NSPanel with big controls, taken from the main dashboard. Premium."
-                  >Un tablet fisso o un NSPanel coi comandi grandi, presi dalla plancia principale.
-                  Premium.</span
-                >
-              </figcaption>
-            </figure>
-
-            <figure class="tessera tessera-scura tessera-polso">
               <img
-                src="statico/app/apple-watch.jpg"
-                alt="gdahome su Apple Watch: Casa al mare, coi comandi Cancello, Portone e Luci giardino."
-                data-en-alt="gdahome on Apple Watch: the beach house, with the Gate, Front door and Garden lights commands."
-                width="410"
-                height="502"
-                loading="lazy"
-              />
-              <figcaption>
-                <b>Apple Watch</b>
-                <span data-en="The quick commands and the devices."
-                  >I comandi rapidi e i dispositivi.</span
-                >
-              </figcaption>
-            </figure>
-
-            <figure class="tessera tessera-scura tessera-polso tessera-tonda">
-              <img
-                src="statico/app/wear-os.jpg"
-                alt="La guida di gdanav su Wear OS: fra 350 metri svolta a destra in Via Roma."
-                data-en-alt="The gdanav guidance on Wear OS: in 350 metres turn right onto Via Roma."
-                width="454"
-                height="454"
-                loading="lazy"
-              />
-              <figcaption>
-                <b>Wear OS</b>
-                <span data-en="The home, and the navigator's next turn."
-                  >La casa, e la prossima svolta del navigatore.</span
-                >
-              </figcaption>
-            </figure>
-
-            <figure class="tessera tessera-larga">
-              <img
+                class="foto-tablet foto-sopra"
                 src="statico/app/plancia-a-muro-energia.jpg"
                 alt="La pagina Energia della plancia a muro: consumo della casa, solare, rete e batteria."
                 data-en-alt="The Energy page of the wall dashboard: home use, solar, grid and battery."
@@ -389,24 +379,48 @@
                 height="600"
                 loading="lazy"
               />
-              <figcaption>
-                <b data-en="Live">In tempo reale</b>
-                <span data-en="What the house uses, what the sun gives, what goes to the grid."
-                  >Quanto consuma la casa, quanto dà il sole, quanto va in rete.</span
-                >
-              </figcaption>
-            </figure>
+            </div>
           </div>
 
-          <p class="a-parte">
-            <span data-en="Also in the car, on Android Auto and CarPlay, and in the browser at"
-              >Anche in auto, su Android Auto e CarPlay, e nel browser su</span
-            >
-            <a href="https://webapp.gdahome.org" rel="noopener">webapp.gdahome.org</a>.
-            <span data-en="Coming: Home Assistant helpers and automations, written from the app."
-              >In arrivo: gli aiutanti di Home Assistant e le automazioni, scritte dall'app.</span
-            >
-          </p>
+          <div class="racconto racconto-polso">
+            <div class="polsi">
+              <img
+                class="foto-polso"
+                src="statico/app/apple-watch.jpg"
+                alt="gdahome su Apple Watch: Casa al mare, coi comandi Cancello, Portone e Luci giardino."
+                data-en-alt="gdahome on Apple Watch: the beach house, with the Gate, Front door and Garden lights commands."
+                width="410"
+                height="502"
+                loading="lazy"
+              />
+              <img
+                class="foto-polso foto-tonda"
+                src="statico/app/wear-os.jpg"
+                alt="La guida di gdanav su Wear OS: fra 350 metri svolta a destra in Via Roma."
+                data-en-alt="The gdanav guidance on Wear OS: in 350 metres turn right onto Via Roma."
+                width="454"
+                height="454"
+                loading="lazy"
+              />
+            </div>
+            <div class="racconto-detto">
+              <p class="racconto-sopra" data-en="On your wrist · Premium">Al polso · Premium</p>
+              <h3 data-en="The gate, from your wrist.">Il cancello, dal polso.</h3>
+              <p
+                data-en="On Apple Watch and Wear OS: the quick commands, the devices, who is home and, while driving, the next turn of gdanav. The watch never talks to the home: the phone does it for it."
+              >
+                Su Apple Watch e Wear OS: i comandi rapidi, i dispositivi, chi è in casa e, in
+                guida, la prossima svolta di gdanav. L'orologio non parla mai con la casa: lo fa il
+                telefono per lui.
+              </p>
+              <p
+                class="piccolo"
+                data-en="Also in the car, on Android Auto and CarPlay, and in the browser at webapp.gdahome.org."
+              >
+                Anche in auto, su Android Auto e CarPlay, e nel browser su webapp.gdahome.org.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
