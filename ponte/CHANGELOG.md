@@ -51,11 +51,32 @@ per qualche istante prima del numero.
 scheda Batterie, come la pagina: chi ne ha messe tre non si ritrova più in
 copertina il portatile all'1% e altre quaranta pile che non guarda.
 
-**Le finestre di Luci, Clima e Aggiornamenti, rifatte.** Luci e Clima aprono
-direttamente l'elenco da comandare, con le accese in cima: le luci sono schede
-da toccare che si illuminano, i climatizzatori schede arancio quando scaldano
-e azzurre quando raffrescano. Negli aggiornamenti ogni riga ha il logo, le
-versioni, le note e il tasto «Installa».
+**Tutte le finestre dei widget, rifatte una per una.** Toccando una tessera
+della Home si apre una finestra disegnata per lei, non più la stessa per tutte
+con «Le misure» e «Lo stato»: il numero che conta in grande, i comandi a
+portata di pollice, niente nomi tecnici e niente doppioni.
+
+- Luci e Clima aprono sull'elenco da comandare, con le accese in cima: le luci
+  sono schede che si illuminano, il clima è arancio quando scalda e azzurro
+  quando raffresca.
+- Energia dice quanto consuma la casa e da dove arriva (sole, batteria, rete);
+  Temperatura mette le stanze dalla più calda; Auto ha l'anello della carica e
+  le gomme attorno alla sagoma; il Solare termico disegna pannello e boiler.
+- Tapparelle, prese, porte, musica, citofono e robot hanno i loro tasti; le
+  porte contano anche il garage aperto.
+- Allarme coi suoi modi, telecamere col fotogramma grande, varchi aperti in
+  cima, presenza stanza per stanza, fumo, allagamenti con la valvola
+  dell'acqua, chi non risponde e le batterie da cambiare.
+- Scaldabagno, caldaia, UPS, accumulo, contatori, piscina, irrigazione (con le
+  zone da avviare e il tasto per fermarla) e ventilazione.
+- Aria, piante, acquario, animali, agenda, rifiuti, allerte e stampanti.
+- Elettrodomestici, cottura, mini PC, server e rete, in evidenza, le tue
+  sezioni, segnalazioni e assistenza.
+- Gli aggiornamenti hanno il logo e il tasto «Installa».
+
+Le azioni delicate — aprire un cancello, chiudere la valvola dell'acqua —
+chiedono un secondo tocco. Quello che la casa non sa (la spesa senza un prezzo
+del kWh, lo storico dell'allarme) non compare invece di essere inventato.
 
 **iPhone, nell'app di Home Assistant:** le finestre a schermo intero (la luce
 col colore, le finestre delle tessere, il config) e l'intestazione della Home
