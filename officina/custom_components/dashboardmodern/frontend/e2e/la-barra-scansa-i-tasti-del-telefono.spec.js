@@ -246,3 +246,39 @@ test("barra fissa scelta davvero, su un telefono touch: attaccata al fondo e lar
   expect(barra).toEqual({ sinistra: 0, larga: 412, sotto: 0 });
   await page.close();
 });
+
+/* «Ho un Samsung Z Fold: da chiuso la navbar è allineata bene sotto, quando
+ * apro lo schermo si alza.» Aperto, lo schermo passa gli 820 pixel: la regola
+ * del telefono smetteva di valere e tornava la barra sospesa dei tablet. Con
+ * il dito la barra sta attaccata al fondo a qualunque larghezza. */
+test("telefono che si apre, largo e col dito: la barra resta attaccata al fondo", async ({
+  browser,
+}, testInfo) => {
+  test.setTimeout(150_000);
+  const page = await browser.newPage({
+    viewport: { width: 1100, height: 900 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await laMisuraSiFerma(page);
+  await page.evaluate(() => {
+    localStorage.setItem("cd_navbar_mode", "fixed");
+    window.cdApplyNavMode?.();
+    document.body.classList.add("cd-nav-fixed");
+    document.querySelector("nav.tabs.bottom-nav-bar")?.classList.add("visible");
+  });
+  await page.waitForTimeout(800);
+  const barra = await page.evaluate(() => {
+    const r = document.querySelector("nav.tabs.bottom-nav-bar").getBoundingClientRect();
+    return {
+      sinistra: Math.round(r.left),
+      larga: Math.round(r.width),
+      sotto: Math.round(innerHeight - r.bottom),
+    };
+  });
+  expect(barra).toEqual({ sinistra: 0, larga: 1100, sotto: 0 });
+  await page.close();
+});

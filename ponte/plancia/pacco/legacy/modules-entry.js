@@ -14,12 +14,19 @@ import {
   createRenderCoordinator,
   daProvare,
   diagnosi,
+  eIlModoIntelligente,
   energyWriteInFlight,
   flushEnergyWrites,
   getDeviceDisplayName,
   getDeviceVisual,
   getLocale,
   go2rtcRaggiungibile,
+  iModiDiEvcc,
+  iValoriDelSempre,
+  ilModoAcceso,
+  ilSempreEInVigore,
+  ilValoreDelSempreAcceso,
+  laFilaDelSempreServe,
   loadPopupMetrics,
   normalizeDevice,
   persistEnergyField,
@@ -38,7 +45,7 @@ import {
   stepReporter,
   stradaAppenaCaduta,
   strategieDellaTelecamera
-} from "../chunk-FEAMAWHK.js";
+} from "../chunk-KPZSFPVF.js";
 
 // src/legacy/dashboard-data.js
 function stableRoomId(room, index = 0) {
@@ -169,88 +176,6 @@ function saveCamera(input, camera, editIndex = null) {
 }
 function removeCamera(input, index) {
   return normalizeCameras(input).filter((_camera, cameraIndex) => cameraIndex !== index);
-}
-
-// src/core/le-modalita-di-evcc.js
-var pulito = (valore) => String(valore ?? "").trim();
-var RAPIDA = Object.freeze({
-  /* «Fast» e non «Subito»: e' la parola che l'integrazione scrive nella tendina
-   * di Home Assistant, e chiamarla in due modi vuol dire due modalita' per chi
-   * legge. Il nome nell'API e' `now`, quello mostrato e' `fast`: sono la stessa,
-   * e stanno qui tutte e due perche' quale delle due arrivi lo decide
-   * l'integrazione, non noi. */
-  it: "Fast",
-  en: "Fast",
-  icona: "🚀",
-  colore: "#0284c7",
-  sfondo: "#f0f9ff"
-});
-var SOLE = Object.freeze({ icona: "☀️", colore: "#059669", sfondo: "#f0fdf4" });
-var MODI = Object.freeze({
-  off: { it: "Spento", en: "Off", icona: "🛑", colore: "#e11d48", sfondo: "#fff1f2" },
-  pv: { it: "Solar", en: "Solar", ...SOLE },
-  smart: { it: "Intelligente", en: "Smart", ...SOLE },
-  minpv: { it: "Min+Sol", en: "Min+Sol", icona: "⛅", colore: "#d97706", sfondo: "#fffbeb" },
-  now: RAPIDA,
-  fast: RAPIDA
-});
-var MODI_STORICI = Object.freeze(["off", "pv", "minpv", "now"]);
-var LO_STESSO = Object.freeze({ pv: "smart", smart: "pv" });
-var sonoLoStesso = (uno, altro) => uno === altro || LO_STESSO[uno] === altro;
-function iModiDiEvcc(stato) {
-  const dichiarate = stato?.attributes?.options;
-  const elenco = (Array.isArray(dichiarate) ? dichiarate : []).map(pulito).filter(Boolean).filter((voce, indice, tutte) => tutte.indexOf(voce) === indice);
-  const quali = elenco.length ? elenco : MODI_STORICI;
-  return quali.map((id) => {
-    const noto = MODI[id.toLowerCase()];
-    return {
-      id,
-      it: noto?.it || id,
-      en: noto?.en || id,
-      icona: noto?.icona || "⚡",
-      colore: noto?.colore || "#64748b",
-      sfondo: noto?.sfondo || "#f1f5f9",
-      /* Vero quando il nome non lo conosciamo: chi disegna puo' decidere di
-       * scriverlo com'e' invece di fingere di saperlo tradurre. */
-      ignoto: !noto
-    };
-  });
-}
-function ilModoAcceso(stato, disegnati = iModiDiEvcc(stato)) {
-  const adesso = pulito(stato?.state).toLowerCase();
-  if (!adesso || adesso === "unavailable" || adesso === "unknown" || adesso === "—") return "";
-  const esatto = disegnati.find((modo) => modo.id.toLowerCase() === adesso);
-  if (esatto) return esatto.id;
-  const equivalente = disegnati.find((modo) => sonoLoStesso(modo.id.toLowerCase(), adesso));
-  return equivalente?.id || "";
-}
-function eIlModoIntelligente(id) {
-  const quale = pulito(id).toLowerCase();
-  return quale === "smart" || quale === "pv";
-}
-var IL_SEMPRE = Object.freeze({
-  off: { it: "Mai", en: "Never" },
-  on: { it: "Sempre", en: "Always" },
-  once: { it: "Solo stavolta", en: "Just this time" }
-});
-function iValoriDelSempre(stato) {
-  const dichiarate = stato?.attributes?.options;
-  const elenco = (Array.isArray(dichiarate) ? dichiarate : []).map(pulito).filter(Boolean).filter((voce, indice, tutte) => tutte.indexOf(voce) === indice);
-  return elenco.map((id) => {
-    const noto = IL_SEMPRE[id.toLowerCase()];
-    return { id, it: noto?.it || id, en: noto?.en || id, ignoto: !noto };
-  });
-}
-function ilValoreDelSempreAcceso(stato, disegnati = iValoriDelSempre(stato)) {
-  const adesso = pulito(stato?.state).toLowerCase();
-  if (!adesso || adesso === "unavailable" || adesso === "unknown" || adesso === "—") return "";
-  return disegnati.find((voce) => voce.id.toLowerCase() === adesso)?.id || "";
-}
-function laFilaDelSempreServe(statoDelSempre) {
-  return iValoriDelSempre(statoDelSempre).length > 0;
-}
-function ilSempreEInVigore(modoAcceso) {
-  return eIlModoIntelligente(modoAcceso);
 }
 
 // legacy/modules-entry.js

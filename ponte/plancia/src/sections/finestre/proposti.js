@@ -13,16 +13,26 @@
  *   - Auto: l'anello della carica con l'autonomia, dove si trova, i
  *     chilometri, le quattro gomme attorno alla sagoma;
  *   - Solare termico: il pannello e il boiler con la differenza di gradi, una
- *     frase su cosa sta succedendo, e lo stato dei tasti dell'impianto.
+ *     frase su cosa sta succedendo, il manometro con la sua giornata, la
+ *     resistenza, e lo stato dei tasti dell'impianto.
  *
  * La regola di tutte: si mostra solo quello che la casa sa. Un numero che non
  * c'e' non si inventa — la sezione che lo conterrebbe non compare.
  */
-import { registraFinestra } from "../finestre-dei-widget.js";
-import { clean, esc, formatNumber, locale, t } from "../shared.js";
+import { registraFinestra, tastoServizio } from "../finestre-dei-widget.js";
+import { clean, disegnoDiCasa, esc, formatNumber, locale, t } from "../shared.js";
+import {
+  casellaDellaPressione,
+  PRESSIONE_NORMA,
+  comeStaLaPressione,
+  storiaDellaPressione,
+} from "./la-pressione.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../../core/le-unita-della-corrente.js";
 import { inKilowatt } from "../../core/il-tempo-della-ricarica.js";
 import { roomGlyph } from "../../core/personalization-catalog.js";
+import { disegnoDelCatalogo } from "../../core/catalogo-disegni.js";
+import { AUTO_DALL_ALTO } from "../../core/auto-dallalto.js";
+import { activeVehiclePhoto, resolveVehicleAsset } from "../ev-section.js";
 
 const P = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
 
@@ -121,8 +131,7 @@ function disegnaEnergia(widget) {
         quote.map((q) => `${nomeDellaFonte(q.fonte)} ${Math.round(q.quota)}%`).join(", "),
       )}">${quote
         .map(
-          (q) =>
-            `<i style="width:${q.quota.toFixed(1)}%;background:${COLORE_FONTE[q.fonte]}"></i>`,
+          (q) => `<i style="width:${q.quota.toFixed(1)}%;background:${COLORE_FONTE[q.fonte]}"></i>`,
         )
         .join("")}</div>
       <div class="dm-f-energia-leg">${quote
@@ -174,7 +183,11 @@ function disegnaEnergia(widget) {
         : "",
     ].filter(Boolean);
     const verso =
-      rete > 10 ? t("Prelevata oggi", "Imported today") : rete < -10 ? t("Immessa oggi", "Exported today") : "";
+      rete > 10
+        ? t("Prelevata oggi", "Imported today")
+        : rete < -10
+          ? t("Immessa oggi", "Exported today")
+          : "";
     fonti.push(`<div class="dm-f-energia-fonte" data-fonte="grid">
         <span class="dm-f-energia-ic" aria-hidden="true">🔌</span>
         <span class="dm-f-num">${esc(watt(Math.abs(rete)))}</span>
@@ -218,11 +231,7 @@ function disegnaEnergia(widget) {
         <span class="dm-f-num">${esc(piena != null ? `${piena}%` : watt(Math.abs(battW ?? 0)))}</span>
         <span class="dm-f-energia-nome">${esc(t("Batteria", "Battery"))}</span>
         ${come ? `<span class="dm-f-energia-sotto">${esc(come)}</span>` : ""}
-        ${
-          verso.length
-            ? `<span class="dm-f-energia-sotto">${verso.join(" · ")} kWh</span>`
-            : ""
-        }
+        ${verso.length ? `<span class="dm-f-energia-sotto">${verso.join(" · ")} kWh</span>` : ""}
       </div>`);
   }
 
@@ -345,7 +354,8 @@ function disegnaTemperatura(widget) {
     </section>`;
   const elenco = stanze
     .map((riga) => {
-      const larga = ampiezza > 0 ? 10 + (90 * (riga.temperature - fredda.temperature)) / ampiezza : 60;
+      const larga =
+        ampiezza > 0 ? 10 + (90 * (riga.temperature - fredda.temperature)) / ampiezza : 60;
       const umidita = numero(riga.humidity);
       return `<div class="dm-f-temperatura-stanza">
         <span class="dm-f-temperatura-ic" aria-hidden="true">${esc(roomGlyph(riga.icon || riga.name))}</span>
@@ -496,10 +506,15 @@ function nomeSenzaAuto(riga) {
   return nome || clean(riga?.name);
 }
 
-function casella(nome, valore, sotto = "") {
-  return `<div class="dm-f-ev-cas"><small>${esc(nome)}</small><span class="dm-f-num">${valore}</span>${
+function casella(nome, valore, sotto = "", disegno = "") {
+  const testo = `<small>${esc(nome)}</small><span class="dm-f-num">${valore}</span>${
     sotto ? `<em>${esc(sotto)}</em>` : ""
-  }</div>`;
+  }`;
+  /* Col disegno davanti, quando la casella ne ha uno: «metti un'icona vicino
+   * alle cose, non lasciare solo testo». */
+  return disegno
+    ? `<div class="dm-f-ev-cas dm-f-ev-cas-ic"><span class="dm-f-ev-cas-dis" aria-hidden="true">${disegnoDelCatalogo(disegno, 26)}</span><span>${testo}</span></div>`
+    : `<div class="dm-f-ev-cas">${testo}</div>`;
 }
 
 function disegnaUnAuto(vettura, righe, conNome) {
@@ -536,7 +551,66 @@ function disegnaUnAuto(vettura, righe, conNome) {
           vettura.carburante ? t("Carburante", "Fuel") : t("Carica", "Charge"),
         )}</small></div></div>`
       : "";
-  const eroe = `<section class="dm-f-ev-eroe">
+  /* «Auto: deve uscire l'immagine collegata alla sezione.» In cima la foto
+   * della vettura come la mostra la sezione Auto — quella «in carica» col
+   * cavo attaccato — con sopra lo stato della ricarica e il nome; sotto, la
+   * carica e i chilometri grandi, la barra fino al traguardo, e le misure
+   * della ricarica con il loro disegno. Senza una foto resta l'anello di
+   * prima: e' meglio di un'auto disegnata a rettangoli. */
+  let foto = "";
+  try {
+    foto = resolveVehicleAsset(vettura.foto || (conNome ? "" : activeVehiclePhoto()));
+  } catch (_errore) {
+    foto = "";
+  }
+  const misure = [
+    kw != null && kw > 0
+      ? ["power", `${formatNumber(kw, 1)} kW`, t("potenza ora", "power now")]
+      : null,
+    clean(vettura.fine)
+      ? [
+          "timer",
+          clean(vettura.fine)
+            .replace(/(\d)H\b/g, "$1\u00a0h")
+            .replace(/(\d)M\b/g, "$1\u00a0min"),
+          "",
+        ]
+      : null,
+  ].filter(Boolean);
+  const misureMarkup = misure.length
+    ? `<div class="dm-f-ev-misure">${misure
+        .map(
+          ([disegno, valore, cosa]) =>
+            `<span>${disegnoDelCatalogo(disegno, 28)}<span><b class="dm-f-num">${esc(valore)}</b>${cosa ? `<small>${esc(cosa)}</small>` : ""}</span></span>`,
+        )
+        .join("")}</div>`
+    : "";
+  const barra =
+    percentuale != null
+      ? `<span class="dm-f-ev-barra" aria-hidden="true"><i style="width:${Math.max(0, Math.min(100, Math.round(percentuale)))}%"></i>${
+          target != null
+            ? `<u style="left:${Math.max(0, Math.min(100, Math.round(target)))}%"></u>`
+            : ""
+        }</span>`
+      : "";
+  const eroe = foto
+    ? `<section class="dm-f-ev-vetrina">
+      <div class="dm-f-ev-foto"><img src="${esc(foto)}" alt="" loading="lazy" decoding="async">
+        ${
+          vettura.ricarica
+            ? `<span class="dm-f-ev-chip" data-carica="${vettura.inCarica ? "true" : "false"}"><i aria-hidden="true"></i>${esc(vettura.ricarica)}</span>`
+            : ""
+        }${vettura.nome ? `<span class="dm-f-ev-targa">${esc(vettura.nome)}</span>` : ""}</div>
+      <div class="dm-f-ev-numeri">
+        <div class="dm-f-ev-riga">
+          ${percentuale != null ? `<span class="dm-f-num dm-f-ev-pct">${Math.round(percentuale)}<small>%</small></span>` : "<span></span>"}
+          ${km != null ? `<span class="dm-f-ev-km"><b class="dm-f-num">${esc(formatNumber(km, 0))} km</b><small>${esc(sottoKm)}</small></span>` : ""}
+        </div>
+        ${barra}
+        ${misureMarkup}
+      </div>
+    </section>`
+    : `<section class="dm-f-ev-eroe">
       ${anello}
       <div class="dm-f-ev-dx">
         ${vettura.nome ? `<b>${esc(vettura.nome)}</b>` : ""}
@@ -556,8 +630,9 @@ function disegnaUnAuto(vettura, righe, conNome) {
     dove.push(
       casella(
         t("Posizione", "Location"),
-        `${aCasa ? "🏠" : "📍"} ${esc(posizione.value)}`,
+        esc(posizione.value),
         daQuanto(posizione.daQuando),
+        aCasa ? "home" : "globe",
       ),
     );
   }
@@ -566,7 +641,10 @@ function disegnaUnAuto(vettura, righe, conNome) {
       casella(
         t("Contachilometri", "Odometer"),
         esc(contachilometri.value),
-        dallaCarica ? `${dallaCarica.value} ${t("dall'ultima carica", "since the last charge")}` : "",
+        dallaCarica
+          ? `${dallaCarica.value} ${t("dall'ultima carica", "since the last charge")}`
+          : "",
+        "gauge",
       ),
     );
   else if (dallaCarica) dove.push(casella(nomeSenzaAuto(dallaCarica), esc(dallaCarica.value)));
@@ -584,7 +662,7 @@ function disegnaUnAuto(vettura, righe, conNome) {
   const gomme = Object.keys(ruote).length
     ? `${titoletto(t("Le gomme", "The tyres"))}<div class="dm-f-ev-gomme">
         <div class="dm-f-ev-col">${gomma("fl", t("Ant. sx", "Front L"))}${gomma("rl", t("Post. sx", "Rear L"))}</div>
-        <div class="dm-f-ev-sagoma" aria-hidden="true"></div>
+        <img class="dm-f-ev-dallalto" src="${AUTO_DALL_ALTO}" alt="" aria-hidden="true">
         <div class="dm-f-ev-col dm-f-ev-col-dx">${gomma("fr", t("Ant. dx", "Front R"))}${gomma("rr", t("Post. dx", "Rear R"))}</div>
       </div>`
     : "";
@@ -621,19 +699,91 @@ function disegnaEv(widget) {
   const piu = vetture.length > 1;
   /* Le tre righe di testa sono gia' nell'anello e nel chip: qui restano le
    * caselle, divise per auto. Quelle della colonnina sono della casa. */
-  const caselle = righe.filter((riga) => !["carica", "autonomia", "ricarica"].includes(riga?.ruolo));
+  const caselle = righe.filter(
+    (riga) => !["carica", "autonomia", "ricarica"].includes(riga?.ruolo),
+  );
   const dellAuto = (nome) =>
     caselle.filter((riga) => !riga.diCasa && (!piu || clean(riga.vettura) === clean(nome)));
   const auto = vetture.length
     ? vetture.map((vettura) => disegnaUnAuto(vettura, dellAuto(vettura.nome), piu)).join("")
     : "";
-  const wallbox = caselle.filter((riga) => riga.diCasa && clean(riga.value));
+  const evcc =
+    widget?.evcc && Array.isArray(widget.evcc.voci) && widget.evcc.voci.length ? widget.evcc : null;
+  /* Con i tasti, la casella «Modalita'» fra quelle della wallbox e' un doppione. */
+  const wallbox = caselle.filter(
+    (riga) => riga.diCasa && clean(riga.value) && !(evcc && COMANDATE_DA_EVCC.has(clean(riga.rif))),
+  );
   const wallboxMarkup = wallbox.length
     ? `${titoletto(t("La wallbox", "The wallbox"))}<div class="dm-f-ev-due">${wallbox
         .map((riga) => casella(nomeSenzaAuto(riga), esc(riga.value)))
         .join("")}</div>`
     : "";
-  return `<div class="dm-f dm-f-ev">${auto}${wallboxMarkup}</div>`;
+  return `<div class="dm-f dm-f-ev">${auto}${evcc ? tastiDiEvcc(evcc) : ""}${wallboxMarkup}</div>`;
+}
+
+const COMANDATE_DA_EVCC = new Set(["dm.ev_modalita_ricarica_evcc", "dm.ev_ricarica_sempre_evcc"]);
+
+/* La parola di una modalita' nella lingua di chi guarda: evcc la da' in due. */
+const parolaDi = (voce) => (String(locale()).toLowerCase().startsWith("it") ? voce.it : voce.en);
+
+/* «Widget auto mi deve dare la possibilità di cambiare modalità evcc.»
+ *
+ * I tasti sono quelli della pagina Auto — i modi che evcc dichiara, con le
+ * loro icone e i loro colori — e sotto la fila del «sempre», che vale solo in
+ * Intelligente e lo dice invece di sparire. */
+function tastiDiEvcc(evcc) {
+  const modi = evcc.voci
+    .map((voce) => {
+      const acceso = voce.id === evcc.acceso;
+      return tastoServizio(
+        {
+          domain: evcc.entity.split(".")[0],
+          service: "select_option",
+          data: { entity_id: evcc.entity, option: voce.id },
+        },
+        {
+          classe: "dm-f-evcc-modo",
+          testo: `<span class="dm-f-evcc-ic" aria-hidden="true">${esc(voce.icona)}</span><span>${esc(parolaDi(voce))}</span>`,
+          attributi: `aria-pressed="${acceso}" style="--modo:${esc(voce.colore)};--modo-bg:${esc(voce.sfondo)}"`,
+        },
+      );
+    })
+    .join("");
+  const sempre = evcc.sempre;
+  const fila = sempre
+    ? `<div class="dm-f-evcc-sempre" data-vigore="${sempre.inVigore ? "true" : "false"}">
+        <span class="dm-f-evcc-sempre-cap"><b>${esc(t("Carica anche senza sole", "Charge without sun too"))}</b><small>${esc(
+          sempre.inVigore
+            ? t(
+                "Tiene il minimo quando il fotovoltaico non basta",
+                "Keeps the minimum when solar is not enough",
+              )
+            : t(
+                "Vale solo in Intelligente: qui non conta",
+                "Only applies in Smart: not in effect here",
+              ),
+        )}</small></span>
+        <span class="dm-f-evcc-sempre-righe">${sempre.voci
+          .map((voce) =>
+            tastoServizio(
+              {
+                domain: sempre.entity.split(".")[0],
+                service: "select_option",
+                data: { entity_id: sempre.entity, option: voce.id },
+              },
+              {
+                classe: "dm-f-evcc-sempre-btn",
+                testo: esc(parolaDi(voce)),
+                attributi: `aria-pressed="${voce.id === sempre.scelto}"`,
+              },
+            ),
+          )
+          .join("")}</span>
+      </div>`
+    : "";
+  return `${titoletto(t("Come carica", "How it charges"))}<div class="dm-f-evcc" data-acceso="${esc(evcc.acceso)}">
+    <div class="dm-f-evcc-modi" style="--quanti:${evcc.voci.length}">${modi}</div>${fila}
+  </div>`;
 }
 
 const STILE_EV = `
@@ -660,7 +810,7 @@ ${P} .dm-f-ev-chip{display:inline-flex;align-items:center;gap:7px;margin-top:6px
 ${P} .dm-f-ev-chip i{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:currentColor}
 ${P} .dm-f-ev-chip[data-carica="true"]{background:color-mix(in srgb,#16a34a 16%,transparent);color:#15803d}
 ${P} .dm-f-ev-chip[data-carica="true"] i{background:#16a34a;box-shadow:0 0 0 4px rgba(22,163,74,.2)}
-${P} .dm-f-ev-due{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:8px}
+${P} .dm-f-ev-due{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:8px}
 ${P} .dm-f-ev-cas{display:flex;flex-direction:column;min-width:0;border-radius:18px;padding:12px 13px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
 ${P} .dm-f-ev-cas small{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim,#64748b)}
@@ -672,38 +822,158 @@ ${P} .dm-f-ev-col{display:grid;gap:44px;min-width:0}
 ${P} .dm-f-ev-col-dx{text-align:right}
 ${P} .dm-f-ev-g{min-height:40px;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
 ${P} .dm-f-ev-g .dm-f-num{display:block;font-size:20px}
-${P} .dm-f-ev-sagoma{width:84px;height:144px;border-radius:36px 36px 28px 28px;position:relative;
-  background:linear-gradient(180deg,color-mix(in srgb,#38bdf8 16%,var(--card-bg,#fff)),color-mix(in srgb,#38bdf8 30%,var(--card-bg,#fff)));
-  border:2px solid color-mix(in srgb,#38bdf8 60%,transparent)}
-${P} .dm-f-ev-sagoma::before{content:"";position:absolute;left:12px;right:12px;top:24px;height:28px;border-radius:12px 12px 6px 6px;
-  background:#0c4a6e;opacity:.18}
-${P} .dm-f-ev-sagoma::after{content:"";position:absolute;left:14px;right:14px;bottom:18px;height:17px;border-radius:6px 6px 10px 10px;
-  background:#0c4a6e;opacity:.18}
+${P} .dm-f-ev-cas-ic{flex-direction:row;align-items:center;gap:12px}
+${P} .dm-f-ev-cas-ic>span:last-child{display:flex;flex-direction:column;min-width:0}
+${P} .dm-f-ev-cas-ic .dm-f-num{font-size:20px;white-space:nowrap}
+${P} .dm-f-ev-cas-ic small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${P} .dm-f-ev-cas-ic{padding:11px 12px;gap:10px}
+${P} .dm-f-ev-cas-dis{flex:0 0 auto;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;
+  background:color-mix(in srgb,#16a34a 9%,var(--card-bg,#fff))}
+${P} .dm-f-ev-dallalto{display:block;width:72px;height:auto;margin:auto;filter:drop-shadow(0 8px 12px rgba(15,23,42,.22))}
+${P} .dm-f-ev-vetrina{border-radius:24px;overflow:hidden;background:var(--card-bg,#fff);
+  border:1px solid color-mix(in srgb,#16a34a 28%,transparent)}
+${P} .dm-f-ev-foto{position:relative;height:190px;display:grid;place-items:center;overflow:hidden;
+  background:radial-gradient(120% 100% at 50% 100%,color-mix(in srgb,var(--text-dim,#94a3b8) 18%,var(--card-bg,#fff)),var(--card-bg,#fff) 70%)}
+${P} .dm-f-ev-foto img{max-width:92%;max-height:176px;object-fit:contain;filter:drop-shadow(0 14px 18px rgba(15,23,42,.18))}
+${P} .dm-f-ev-foto .dm-f-ev-chip{position:absolute;left:12px;top:12px;margin:0;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${P} .dm-f-ev-targa{position:absolute;right:12px;top:12px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:850;
+  background:rgba(15,23,42,.72);color:#fff;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${P} .dm-f-ev-numeri{padding:12px 16px 16px;background:linear-gradient(180deg,color-mix(in srgb,#16a34a 7%,var(--card-bg,#fff)),var(--card-bg,#fff))}
+${P} .dm-f-ev-riga{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+${P} .dm-f-ev-pct{font-size:52px;line-height:.9;color:#15803d}
+${P} .dm-f-ev-pct small{font-size:22px}
+${P} .dm-f-ev-km{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0}
+${P} .dm-f-ev-km .dm-f-num{font-size:32px;line-height:1}
+${P} .dm-f-ev-km small{font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-ev-barra{position:relative;display:block;height:12px;border-radius:999px;margin:12px 0 4px;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent);overflow:visible}
+${P} .dm-f-ev-barra i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,#22c55e,#16a34a)}
+${P} .dm-f-ev-barra u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1px;border-radius:2px;background:#15803d}
+${P} .dm-f-ev-misure{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px;margin-top:10px}
+${P} .dm-f-ev-misure>span{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:16px;
+  background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0)}
+${P} .dm-f-ev-misure>span>span{display:flex;flex-direction:column;min-width:0}
+${P} .dm-f-ev-misure .dm-f-num{font-size:17px;line-height:1.15;overflow-wrap:anywhere}
+${P} .dm-f-ev-misure small{font-size:11px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-evcc{display:grid;gap:10px}
+${P} .dm-f-evcc-modi{display:grid;grid-template-columns:repeat(var(--quanti,3),minmax(0,1fr));gap:8px}
+${P} .dm-f-evcc-modo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:76px;padding:10px 6px;
+  border-radius:20px;border:1.5px solid color-mix(in srgb,var(--modo,#64748b) 22%,transparent);background:var(--card-bg,#fff);
+  color:var(--modo,#64748b);font:inherit;font-size:12px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;
+  transition:transform .15s ease,background .2s ease,box-shadow .2s ease}
+${P} .dm-f-evcc-modo:active{transform:scale(.96)}
+${P} .dm-f-evcc-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:14px;font-size:21px;line-height:1;
+  background:var(--modo-bg,#f1f5f9)}
+${P} .dm-f-evcc-modo[aria-pressed="true"]{background:var(--modo,#0f172a);border-color:var(--modo,#0f172a);color:#fff;
+  box-shadow:0 10px 22px -10px var(--modo,#0f172a)}
+${P} .dm-f-evcc-modo[aria-pressed="true"] .dm-f-evcc-ic{background:rgba(255,255,255,.22)}
+${P} .dm-f-evcc-sempre{display:grid;gap:8px;padding:12px 14px;border-radius:18px;background:var(--card-bg,#fff);
+  border:1px solid color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent)}
+${P} .dm-f-evcc-sempre-cap{display:grid;gap:1px}
+${P} .dm-f-evcc-sempre-cap b{font-size:13px;font-weight:850;color:var(--text,#0f172a)}
+${P} .dm-f-evcc-sempre-cap small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
+${P} .dm-f-evcc-sempre[data-vigore="false"] .dm-f-evcc-sempre-cap small{font-style:italic}
+${P} .dm-f-evcc-sempre-righe{display:flex;gap:6px;flex-wrap:wrap}
+${P} .dm-f-evcc-sempre-btn{flex:1 1 auto;min-width:72px;min-height:38px;padding:7px 10px;border-radius:999px;cursor:pointer;font:inherit;
+  font-size:12px;font-weight:850;color:var(--text,#0f172a);background:transparent;border:1.5px solid color-mix(in srgb,var(--text-dim,#94a3b8) 35%,transparent)}
+${P} .dm-f-evcc-sempre-btn[aria-pressed="true"]{border-color:#059669;color:#047857;background:color-mix(in srgb,#059669 12%,transparent)}
+${P} .dm-f-evcc-sempre[data-vigore="false"] .dm-f-evcc-sempre-btn[aria-pressed="true"]{border-color:#94a3b8;color:#475569;background:color-mix(in srgb,#94a3b8 14%,transparent)}
 @media (max-width:360px){${P} .dm-f-ev-eroe{flex-direction:column;align-items:flex-start}}
 `;
 
 /* ── Solare termico ───────────────────────────────────────────────────── */
 
 /* Le caselle dello stato, col nome del loro tasto nella pagina del solare e
- * nell'ordine in cui si guardano: prima il boiler, poi la pompa. */
+ * nell'ordine in cui si guardano: prima il boiler, poi la pompa.
+ *
+ * «Metti un'icona vicino alle cose, non lasciare solo testo»: ogni casella
+ * porta il disegno del catalogo di casa (`disegno`); l'emoji (`ic`) resta il
+ * ripiego per una plancia vecchia che quel disegno non lo sa ancora. */
 const STATI_SOLARE = Object.freeze([
-  { ref: "dm.boiler_interruttore_boiler", nome: () => t("Boiler", "Boiler"), ic: "🔌" },
-  { ref: "dm.boiler_stato_pompa_solare", nome: () => t("Pompa solare", "Solar pump"), ic: "🔄", pompa: true },
-  { ref: "dm.boiler_pompa_solare", nome: () => t("Pompa solare", "Solar pump"), ic: "🔄", pompa: true },
-  { ref: "dm.boiler_sensore_pompa_solare", nome: () => t("Pompa solare", "Solar pump"), ic: "🔄", pompa: true },
-  { ref: "dm.boiler_valvola_di_sicurezza", nome: () => t("Valvola di sicurezza", "Safety valve"), ic: "🛡️", valvola: true },
-  { ref: "dm.boiler_chiave_solare", nome: () => t("Valvola solare", "Solar valve"), ic: "🗝️", valvola: true },
-  { ref: "dm.boiler_centralina_solare_termico", nome: () => t("Centralina", "Controller"), ic: "🎛️" },
-  { ref: "dm.boiler_interruttore_solare_termico", nome: () => t("Ctrl solare", "Solar control"), ic: "☀️" },
+  {
+    ref: "dm.boiler_interruttore_boiler",
+    nome: () => t("Boiler", "Boiler"),
+    ic: "🔌",
+    disegno: "boiler",
+  },
+  {
+    ref: "dm.boiler_stato_pompa_solare",
+    nome: () => t("Pompa solare", "Solar pump"),
+    ic: "🔄",
+    disegno: "pump",
+    pompa: true,
+  },
+  {
+    ref: "dm.boiler_pompa_solare",
+    nome: () => t("Pompa solare", "Solar pump"),
+    ic: "🔄",
+    disegno: "pump",
+    pompa: true,
+  },
+  {
+    ref: "dm.boiler_sensore_pompa_solare",
+    nome: () => t("Pompa solare", "Solar pump"),
+    ic: "🔄",
+    disegno: "pump",
+    pompa: true,
+  },
+  {
+    ref: "dm.boiler_valvola_di_sicurezza",
+    nome: () => t("Valvola di sicurezza", "Safety valve"),
+    ic: "🛡️",
+    disegno: "security",
+    valvola: true,
+  },
+  {
+    ref: "dm.boiler_chiave_solare",
+    nome: () => t("Valvola solare", "Solar valve"),
+    ic: "🗝️",
+    disegno: "key",
+    valvola: true,
+  },
+  {
+    ref: "dm.boiler_centralina_solare_termico",
+    nome: () => t("Centralina", "Controller"),
+    ic: "🎛️",
+    disegno: "sliders",
+  },
+  {
+    ref: "dm.boiler_interruttore_solare_termico",
+    nome: () => t("Ctrl solare", "Solar control"),
+    ic: "☀️",
+    disegno: "solar",
+  },
 ]);
 
-/* Le misure dell'impianto che non stanno nello schema: la pressione, e le
- * due potenze col nome che hanno nella pagina. */
+/* Le misure dell'impianto che non stanno nello schema. La pressione e la
+ * resistenza hanno la loro casella disegnata (sotto); qui resta la potenza
+ * del boiler, col nome che ha nella pagina. */
 const MISURE_SOLARE = Object.freeze([
-  { ref: "dm.boiler_pressione_acqua", nome: () => t("Pressione", "Pressure") },
-  { ref: "dm.boiler_potenza_resistenza_boiler", nome: () => t("Resistenza", "Heater") },
   { ref: "dm.boiler_potenza", nome: () => t("Potenza boiler", "Boiler power") },
 ]);
+
+/* La casella della resistenza: i watt, la barra fino alla potenza piena, e
+ * in una riga che cosa vuol dire. */
+const RESISTENZA_PIENA = 2000;
+
+function casellaDellaResistenza(riga, pompa) {
+  const watt = numero(riga?.raw);
+  if (watt == null) return "";
+  const pieno = Math.max(RESISTENZA_PIENA, watt);
+  const quota = watt > 0 ? Math.max(3, Math.min(100, Math.round((watt / pieno) * 100))) : 0;
+  const frase =
+    watt > 0
+      ? t("Accesa: scalda l'acqua con la corrente.", "On: heating the water with electricity.")
+      : pompa
+        ? t("Spenta: ci pensa il sole.", "Off: the sun is doing the work.")
+        : t("Spenta: non sta consumando.", "Off: not drawing power.");
+  return `<div class="dm-f-solare-gr dm-f-solare-resistenza"${watt > 0 ? ' data-on="true"' : ""}>
+      <small class="dm-f-solare-gr-tit"><i aria-hidden="true">${disegnoDiCasa("power", { misura: 22 })}</i>${esc(t("Resistenza", "Heater"))}</small>
+      <span class="dm-f-num">${esc(clean(riga.value) || watt)}</span>
+      <i class="dm-f-solare-barra" aria-hidden="true"><i style="width:${quota}%"></i></i>
+      <p>${esc(frase)}</p>
+    </div>`;
+}
 
 /** Cosa sta succedendo fra pannello e boiler, in una frase, o `""`. */
 export function fraseDelSolare(pannello, boiler, pompa) {
@@ -748,9 +1018,12 @@ function disegnaSolare(widget) {
   const segno = (valore) =>
     `${valore > 0 ? "+" : valore < 0 ? "−" : ""}${formatNumber(Math.abs(valore), 0)}°`;
 
+  /* «Icona boiler: che c'entra con il bidone?» Il boiler era un 🛢️, il fusto
+   * del petrolio; adesso e' il serbatoio dell'acqua calda del catalogo di
+   * casa, e il pannello e' il pannello solare — non un sole qualunque. */
   const nodoPannello =
     pannello != null
-      ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">☀️</span>
+      ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">${disegnoDiCasa("solar", { misura: 48 })}</span>
           <small>${esc(t("Pannello", "Panel"))}</small><span class="dm-f-num">${esc(gradi(pannello))}</span>${
             boiler != null && pannello !== boiler
               ? `<em>${esc(pannello < boiler ? t("più freddo del boiler", "colder than the boiler") : t("più caldo del boiler", "warmer than the boiler"))}</em>`
@@ -763,7 +1036,7 @@ function disegnaSolare(widget) {
       : "";
   const nodoBoiler =
     boiler != null
-      ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">🛢️</span>
+      ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">${disegnoDiCasa("boiler", { misura: 48 })}</span>
           <small>${esc(t("Boiler", "Boiler"))}</small><span class="dm-f-num">${esc(gradi(boiler))}</span>${
             sottoBoiler ? `<em>${esc(sottoBoiler)}</em>` : ""
           }</div>`
@@ -780,6 +1053,14 @@ function disegnaSolare(widget) {
       : "";
   const frase = fraseDelSolare(pannello, boiler, pompa);
 
+  /* La pressione e la resistenza, disegnate: il manometro con la sua
+   * giornata, e i watt con la barra e una riga che li spiega. */
+  const rigaPressione = daRif("dm.boiler_pressione_acqua");
+  const grandi = [
+    casellaDellaPressione(rigaPressione, storiaDellaPressione(rigaPressione)),
+    casellaDellaResistenza(daRif("dm.boiler_potenza_resistenza_boiler"), pompa),
+  ].filter(Boolean);
+
   const misure = MISURE_SOLARE.map((voce) => ({ voce, riga: daRif(voce.ref) }))
     .filter(({ riga }) => riga && clean(riga.value))
     .map(
@@ -788,7 +1069,11 @@ function disegnaSolare(widget) {
     );
   /* Il boiler letto due volte — la sonda in alto e la sua temperatura — sono
    * due numeri veri: quello che non sta nello schema va fra le misure. */
-  if (alto != null && delBoiler != null && daRif("dm.boiler_temperatura")?.entity !== daRif("dm.boiler_sonda_temperatura_3")?.entity)
+  if (
+    alto != null &&
+    delBoiler != null &&
+    daRif("dm.boiler_temperatura")?.entity !== daRif("dm.boiler_sonda_temperatura_3")?.entity
+  )
     misure.unshift(
       `<div class="dm-f-solare-cas"><small>${esc(t("Temperatura del boiler", "Tank temperature"))}</small><span class="dm-f-num">${esc(gradi(delBoiler))}</span></div>`,
     );
@@ -821,16 +1106,19 @@ function disegnaSolare(widget) {
             ? t("Acceso", "On")
             : t("Spento", "Off");
       return `<div class="dm-f-solare-st"${riga.on ? ' data-on="true"' : ""}>
-        <span class="dm-f-solare-st-ic" aria-hidden="true">${voce.ic}</span>
+        <span class="dm-f-solare-st-ic" aria-hidden="true">${disegnoDiCasa(voce.disegno, { misura: 28 }) || voce.ic}</span>
         <b>${esc(voce.nome())}</b>
         <span class="dm-f-solare-st-s">${esc(parola)}</span>
       </div>`;
     });
 
+  const impianto = grandi.length || misure.length;
   return `<div class="dm-f dm-f-solare">
     ${schema}
     ${frase ? `<p class="dm-f-solare-frase">${esc(frase)}</p>` : ""}
-    ${misure.length ? `${titoletto(t("L'impianto", "The system"))}<div class="dm-f-solare-tre">${misure.join("")}</div>` : ""}
+    ${impianto ? titoletto(t("L'impianto", "The system")) : ""}
+    ${grandi.length ? `<div class="dm-f-solare-due">${grandi.join("")}</div>` : ""}
+    ${misure.length ? `<div class="dm-f-solare-tre">${misure.join("")}</div>` : ""}
     ${stati.length ? `${titoletto(t("Lo stato", "The state"))}<div class="dm-f-solare-stati">${stati.join("")}</div>` : ""}
   </div>`;
 }
@@ -844,7 +1132,8 @@ ${P} .dm-f-solare-schema[data-due="false"]{grid-template-columns:minmax(0,1fr)}
 ${P} .dm-f-solare-nodo{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0;border-radius:20px;padding:12px 8px;
   background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 30%,transparent);
   box-shadow:0 12px 22px -20px rgba(180,83,9,.7)}
-${P} .dm-f-solare-ic{font-size:28px;line-height:1}
+${P} .dm-f-solare-ic{display:grid;place-items:center;min-height:48px;font-size:28px;line-height:1}
+${P} .dm-f-solare-ic > .dm-catalogo-art{display:grid}
 ${P} .dm-f-solare-nodo small{margin-top:4px;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
   color:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 60%,var(--text,#0f172a))}
 ${P} .dm-f-solare-nodo .dm-f-num{margin-top:4px;font-size:29px}
@@ -856,6 +1145,26 @@ ${P} .dm-f-solare-filo[data-gira="true"] i{background:repeating-linear-gradient(
 ${P} .dm-f-solare-filo b{font-size:11px;font-weight:900;line-height:1.25;text-align:center;color:var(--text-dim,#64748b)}
 ${P} .dm-f-solare-frase{margin:12px 0 0;border-radius:16px;padding:11px 13px;font-size:13px;font-weight:750;line-height:1.4;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 12%,var(--card-bg,#fff));color:var(--text,#334155)}
+${P} .dm-f-solare-due{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:9px;margin-bottom:8px}
+${P} .dm-f-solare-gr{display:flex;flex-direction:column;min-width:0;border-radius:20px;padding:13px 14px;
+  background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
+${P} .dm-f-solare-gr-tit{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P} .dm-f-solare-gr-tit > i{display:grid;place-items:center;width:22px;height:22px}
+${P} .dm-f-solare-pr{display:flex;align-items:center;gap:12px;margin-top:8px}
+${P} .dm-f-solare-manometro{flex:none;width:62px;height:62px}
+${P} .dm-f-solare-pr .dm-f-num{display:block;font-size:27px;line-height:1.05;white-space:nowrap}
+${P} .dm-f-solare-pr em{display:inline-flex;align-items:center;gap:5px;margin-top:3px;font-style:normal;font-size:11.5px;font-weight:850;color:#15803d}
+${P} .dm-f-solare-pr em i{width:7px;height:7px;border-radius:50%;background:currentColor}
+${P} .dm-f-solare-pressione[data-come="bassa"] em,${P} .dm-f-solare-pressione[data-come="alta"] em{color:#dc2626}
+${P} .dm-f-solare-linea{margin-top:10px}
+${P} .dm-f-solare-linea svg{display:block;width:100%;height:46px;border-radius:8px}
+${P} .dm-f-solare-asse{display:flex;justify-content:space-between;margin-top:3px}
+${P} .dm-f-solare-asse small{font-size:10px;font-weight:800;color:var(--text-dim,#94a3b8)}
+${P} .dm-f-solare-resistenza .dm-f-num{margin-top:8px;font-size:27px;line-height:1.05;white-space:nowrap}
+${P} .dm-f-solare-barra{display:block;height:9px;margin-top:10px;border-radius:999px;overflow:hidden;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 16%,transparent)}
+${P} .dm-f-solare-barra > i{display:block;height:100%;border-radius:999px;background:var(--dm-widget-accent,#f59e0b)}
+${P} .dm-f-solare-resistenza p{margin:8px 0 0;font-size:12px;font-weight:750;line-height:1.4;color:var(--text-dim,#64748b)}
 ${P} .dm-f-solare-tre{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
 ${P} .dm-f-solare-cas{display:flex;flex-direction:column;min-width:0;border-radius:18px;padding:12px 11px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
@@ -866,6 +1175,7 @@ ${P} .dm-f-solare-st{display:flex;align-items:center;gap:11px;min-width:0;paddin
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0)}
 ${P} .dm-f-solare-st-ic{flex:0 0 36px;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:17px;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 10%,var(--card-bg,#fff))}
+${P} .dm-f-solare-st-ic > .dm-catalogo-art{display:grid}
 ${P} .dm-f-solare-st b{flex:1;min-width:0;font-size:13.5px;font-weight:850;color:var(--text,#0f172a)}
 ${P} .dm-f-solare-st-s{flex:0 0 auto;padding:5px 9px;border-radius:999px;font-size:10.5px;font-weight:900;letter-spacing:.08em;
   text-transform:uppercase;background:color-mix(in srgb,var(--text-dim,#94a3b8) 14%,transparent);color:var(--text-dim,#64748b)}
@@ -879,3 +1189,5 @@ registraFinestra("ev", { disegna: disegnaEv, stile: STILE_EV });
 registraFinestra("solare", { disegna: disegnaSolare, stile: STILE_SOLARE });
 
 export const FINESTRE_PROPOSTI = Object.freeze(["energia", "temperatura", "ev", "solare"]);
+
+export { PRESSIONE_NORMA, comeStaLaPressione };

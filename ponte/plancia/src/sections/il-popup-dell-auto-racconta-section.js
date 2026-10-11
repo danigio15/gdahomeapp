@@ -100,14 +100,53 @@ export function paroleDelTempo(esito) {
   return t("IN ATTESA", "WAITING");
 }
 
-/* Il tempo che manca, dove il guscio lo scrive: la casella della pagina e la
- * riga del popup. Nel popup c'e' spazio anche per l'ora dell'orologio, che e'
- * quella con cui uno decide se aspettare. */
+/**
+ * L'ora in cui finisce la carica, in parole: «FINE ALLE 23:36», o
+ * «FINE DOMANI ALLE 7:10» quando passa la mezzanotte. `""` se non si carica.
+ */
+export function fineInParole(esito, adesso = Date.now()) {
+  if (esito?.stato !== "carica" || esito.minuti == null) return "";
+  const fine = oraDiArrivo(esito.minuti, adesso);
+  if (!fine) return "";
+  const oggi = new Date(adesso);
+  const domani = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + 1);
+  const dopodomani = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + 2);
+  const ora = oraInParole(fine);
+  if (fine < domani) return t(`FINE ALLE ${ora}`, `ENDS AT ${ora}`);
+  if (fine < dopodomani) return t(`FINE DOMANI ALLE ${ora}`, `ENDS TOMORROW AT ${ora}`);
+  return "";
+}
+
+/* Il tempo che manca, con sotto l'ora in cui finisce.
+ *
+ * «Nel tempo rimanente metti l'orario di fine.» «7H 13M RIM.» costringe a
+ * fare il conto; l'ora dell'orologio e' quella con cui uno decide se
+ * aspettare o staccare. Va sotto, piu' piccola, nelle caselle della pagina; e
+ * nel popup, dove la riga e' una sola, in coda («verso le ...»). */
+function scriviNellaCasella(nodo, parole, fine) {
+  const primo = nodo.firstChild;
+  if (primo?.nodeType !== 3 || primo.textContent !== parole) {
+    nodo.replaceChildren(doc.createTextNode(parole));
+  }
+  let sotto = nodo.querySelector(".dm-ev-fine");
+  if (!fine) {
+    sotto?.remove();
+    return;
+  }
+  if (!sotto) {
+    sotto = doc.createElement("span");
+    sotto.className = "dm-ev-fine";
+    nodo.append(sotto);
+  }
+  if (sotto.textContent !== fine) sotto.textContent = fine;
+}
+
 function scriviIlTempo() {
   const esito = quantoManca();
   const parole = paroleDelTempo(esito);
+  const fine = fineInParole(esito);
   for (const nodo of doc?.querySelectorAll?.(".v-ev-remain") || [])
-    if (nodo.textContent !== parole) nodo.textContent = parole;
+    scriviNellaCasella(nodo, parole, fine);
   const popup = doc?.getElementById?.("v-ev-remain-popup");
   if (!popup) return;
   const ora = esito.stato === "carica" ? oraInParole(oraDiArrivo(esito.minuti)) : "";
@@ -196,6 +235,7 @@ function rivesti() {
 
 const STILE = `
 #v-ev-remain-popup .dm-ev-verso{opacity:.75;font-weight:700}
+.v-ev-remain .dm-ev-fine{display:block;margin-top:2px;font-size:max(11px,.5em);line-height:1.2;letter-spacing:.06em;opacity:.7}
 `;
 
 export function installPopupAutoRacconta() {

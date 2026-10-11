@@ -128,7 +128,9 @@ function quantoFa(istante, adesso = Date.now()) {
 /* Il tasto che accende e spegne un'entita', col servizio del suo dominio. */
 function comandoAccendiSpegni(entity) {
   const dominio = clean(entity).split(".")[0];
-  const proprio = ["light", "switch", "fan", "input_boolean", "humidifier", "siren"].includes(dominio);
+  const proprio = ["light", "switch", "fan", "input_boolean", "humidifier", "siren"].includes(
+    dominio,
+  );
   return {
     domain: proprio ? dominio : "homeassistant",
     service: "toggle",
@@ -216,7 +218,10 @@ function scalaDellAria(lettura) {
     if (!(valore > 0)) return 0;
     for (let i = 1; i < punti.length; i += 1)
       if (valore <= punti[i])
-        return posti[i - 1] + ((valore - punti[i - 1]) / (punti[i] - punti[i - 1])) * (posti[i] - posti[i - 1]);
+        return (
+          posti[i - 1] +
+          ((valore - punti[i - 1]) / (punti[i] - punti[i - 1])) * (posti[i] - posti[i - 1])
+        );
     return 100;
   };
   const [uno, due, tre] = soglie.map((s) => dove(s).toFixed(1));
@@ -252,7 +257,10 @@ function finestraAria(widget) {
       <div class="dm-f-aria-su">
         <span class="dm-f-sv-num dm-f-sv-grande">${esc(numeroGrande)}</span>
         <span class="dm-f-aria-u">${esc(
-          [copertina.unita, copertina.classe === "carbon_dioxide" ? "CO₂" : nomeDellaSostanza(copertina)]
+          [
+            copertina.unita,
+            copertina.classe === "carbon_dioxide" ? "CO₂" : nomeDellaSostanza(copertina),
+          ]
             .filter(Boolean)
             .join(" · "),
         )}</span>
@@ -333,9 +341,7 @@ function terraMarkup(lettura) {
   const minimo = Math.max(0, Math.min(100, numero(lettura.minimo) ?? 25));
   const massimo = Math.max(minimo, Math.min(100, numero(lettura.massimo) ?? 70));
   return `<span class="dm-f-piante-terra" aria-hidden="true" style="--min:${minimo}%;--max:${massimo}%">${
-    umidita === null
-      ? ""
-      : `<i style="--x:${Math.max(1, Math.min(99, umidita)).toFixed(0)}%"></i>`
+    umidita === null ? "" : `<i style="--x:${Math.max(1, Math.min(99, umidita)).toFixed(0)}%"></i>`
   }</span>`;
 }
 
@@ -363,7 +369,9 @@ function finestraPiante(widget) {
   const sete = come.daInnaffiare || [];
   if (sete.length) {
     const [prima] = sete;
-    const acqua = prima.ultimaAcqua ? ` · ${t("ultima acqua", "last watered")} ${quantoFa(prima.ultimaAcqua, adesso)}` : "";
+    const acqua = prima.ultimaAcqua
+      ? ` · ${t("ultima acqua", "last watered")} ${quantoFa(prima.ultimaAcqua, adesso)}`
+      : "";
     eroe = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
         <span class="dm-f-piante-vaso" aria-hidden="true">${glifo(prima, 48)}</span>
         <div>
@@ -415,7 +423,9 @@ function finestraPiante(widget) {
         if (pioggia) sotto.push(pioggia);
       }
       if (lettura.minimo !== 25 || lettura.massimo !== 70)
-        sotto.push(`${t("vuole fra", "likes between")} ${lettura.minimo} ${t("e", "and")} ${lettura.massimo}%`);
+        sotto.push(
+          `${t("vuole fra", "likes between")} ${lettura.minimo} ${t("e", "and")} ${lettura.massimo}%`,
+        );
       if (lettura.gradi !== null && lettura.gradi !== undefined)
         sotto.push(`${t("terra", "soil")} ${formatNumber(lettura.gradi, 1)}°`);
       return `<div class="dm-f-sv-riga" data-stato="${esc(pianta.stato)}">
@@ -447,7 +457,10 @@ function sottotitoloPiante(widget) {
   const tutte = come.piante.length;
   const sete = come.daInnaffiare?.length || 0;
   const pezzi = [`${tutte} ${tutte === 1 ? t("pianta", "plant") : t("piante", "plants")}`];
-  if (sete) pezzi.push(`${sete} ${sete === 1 ? t("ha sete", "is thirsty") : t("hanno sete", "are thirsty")}`);
+  if (sete)
+    pezzi.push(
+      `${sete} ${sete === 1 ? t("ha sete", "is thirsty") : t("hanno sete", "are thirsty")}`,
+    );
   return pezzi.join(" · ");
 }
 
@@ -482,8 +495,15 @@ function vascaMarkup(vasca, piuVasche) {
     (voce) => voce.lettura.genere === "temperatura" && !voce.lettura.muto,
   );
   const tonoTesta =
-    come.stato === "fuori" ? "rosso" : come.stato === "bene" ? "ok" : come.stato === "mute" ? "" : "occhio";
-  const parolaTesta = come.stato === "bene" ? t("Tutto regolare", "All normal") : testa?.grande || "";
+    come.stato === "fuori"
+      ? "rosso"
+      : come.stato === "bene"
+        ? "ok"
+        : come.stato === "mute"
+          ? ""
+          : "occhio";
+  const parolaTesta =
+    come.stato === "bene" ? t("Tutto regolare", "All normal") : testa?.grande || "";
   let eroe = "";
   if (caldo) {
     const { lettura } = caldo;
@@ -503,7 +523,9 @@ function vascaMarkup(vasca, piuVasche) {
     }
     eroe = `<section class="dm-f-sv-eroe dm-f-acquario-eroe" data-tipo="${esc(tipo)}">
         <small>${esc(
-          tipo === "terrario" ? t("Il terrario adesso", "The terrarium now") : t("L'acqua adesso", "The water now"),
+          tipo === "terrario"
+            ? t("Il terrario adesso", "The terrarium now")
+            : t("L'acqua adesso", "The water now"),
         )}</small>
         <div class="dm-f-acquario-su">
           <span class="dm-f-sv-num dm-f-sv-grande">${esc(formatNumber(lettura.valore, 1))}°</span>
@@ -592,7 +614,9 @@ function vascaMarkup(vasca, piuVasche) {
 
   const nome = piuVasche
     ? `<h5 class="dm-f-acquario-nome">${esc(
-        [come.vasca, come.litri ? `${formatNumber(come.litri, 0)} L` : ""].filter(Boolean).join(" · "),
+        [come.vasca, come.litri ? `${formatNumber(come.litri, 0)} L` : ""]
+          .filter(Boolean)
+          .join(" · "),
       )}</h5>`
     : "";
   return `<section class="dm-f-acquario-vasca">${nome}${eroe}${
@@ -662,7 +686,13 @@ const COLORE_DEL_LIVELLO = Object.freeze({
 });
 
 /* Le letture che stanno sotto il nome invece che in una casella. */
-const SOTTO_IL_NOME = new Set(["cibo_ultima", "lettiera_ultima", "lettiera_visite", "porta", "collare_posizione"]);
+const SOTTO_IL_NOME = new Set([
+  "cibo_ultima",
+  "lettiera_ultima",
+  "lettiera_visite",
+  "porta",
+  "collare_posizione",
+]);
 
 /* Prima quello che si mangia e si beve, poi la lettiera, poi il resto. */
 const ORDINE_DEI_LIVELLI = Object.freeze([
@@ -683,7 +713,9 @@ function sottoIlNome(scheda) {
     pezzi.push(`${t("ultimo pasto", "last meal")} ${clean(pasto.testo)}`);
   const visite = di("lettiera_visite");
   if (visite?.valore !== null && visite?.valore !== undefined)
-    pezzi.push(`${Math.round(visite.valore)} ${t("visite alla lettiera oggi", "litter box visits today")}`);
+    pezzi.push(
+      `${Math.round(visite.valore)} ${t("visite alla lettiera oggi", "litter box visits today")}`,
+    );
   const pulita = di("lettiera_ultima");
   if (pulita?.minuti !== null && pulita?.minuti !== undefined)
     pezzi.push(`${t("lettiera pulita", "litter cleaned")} ${clean(pulita.testo)}`);
@@ -788,7 +820,10 @@ function finestraAnimali(widget) {
 }
 
 function sottotitoloAnimali(widget) {
-  return (widget.schede || []).map((scheda) => clean(scheda.nome)).filter(Boolean).join(" · ");
+  return (widget.schede || [])
+    .map((scheda) => clean(scheda.nome))
+    .filter(Boolean)
+    .join(" · ");
 }
 
 /* ── l'agenda ────────────────────────────────────────────────────────── */
@@ -848,7 +883,8 @@ function settimanaDellAgenda(eventi, scadenze, adesso) {
   const conto = new Map();
   const oggi = chiaveDelGiorno(adesso);
   for (const voce of [...eventi, ...scadenze]) {
-    const giorno = voce.inizio < adesso && voce.tipo !== "scadenza" ? oggi : chiaveDelGiorno(voce.inizio);
+    const giorno =
+      voce.inizio < adesso && voce.tipo !== "scadenza" ? oggi : chiaveDelGiorno(voce.inizio);
     conto.set(giorno, (conto.get(giorno) || 0) + 1);
   }
   const giorni = Array.from({ length: 7 }, (_, indice) => {
@@ -925,10 +961,13 @@ function listaDaFare({ list, items }, bozze) {
   let corpo;
   if (items === null || items === undefined)
     corpo = `<p class="dm-f-sv-vuoto">${esc(t("Caricamento…", "Loading…"))}</p>`;
-  else if (!mostrate.length) corpo = `<p class="dm-f-sv-vuoto">✨ ${esc(t("Tutto fatto", "All done"))}</p>`;
+  else if (!mostrate.length)
+    corpo = `<p class="dm-f-sv-vuoto">✨ ${esc(t("Tutto fatto", "All done"))}</p>`;
   else
     corpo = `<ul class="dm-todo-items dm-f-agenda-voci">${mostrate.map((item) => cosaDaFare(list, item)).join("")}</ul>${
-      altre > 0 ? `<p class="dm-f-sv-vuoto">+${altre} ${esc(t("altre voci", "more items"))}</p>` : ""
+      altre > 0
+        ? `<p class="dm-f-sv-vuoto">+${altre} ${esc(t("altre voci", "more items"))}</p>`
+        : ""
     }`;
   return `<section class="dm-f-agenda-lista">
       <h4 class="dm-f-sv-tit dm-w-block-title">${esc(t("Da fare", "To-do"))} · ${esc(nome)}</h4>
@@ -978,12 +1017,16 @@ function finestraAgenda(widget) {
       ${
         blocchi ||
         `<p class="dm-f-sv-vuoto">${esc(
-          widget.inArrivo ? t("Caricamento…", "Loading…") : t("✨ Niente in programma", "✨ Nothing scheduled"),
+          widget.inArrivo
+            ? t("Caricamento…", "Loading…")
+            : t("✨ Niente in programma", "✨ Nothing scheduled"),
         )}</p>`
       }
       ${dopo ? `<p class="dm-f-sv-vuoto">+${dopo} ${esc(t("più avanti", "later on"))}</p>` : ""}`;
   }
-  const liste = (widget.cose?.blocks || []).map((blocco) => listaDaFare(blocco, widget.bozze)).join("");
+  const liste = (widget.cose?.blocks || [])
+    .map((blocco) => listaDaFare(blocco, widget.bozze))
+    .join("");
   return `<div class="dm-f-sv dm-f-agenda">${impegni}${liste}</div>`;
 }
 
@@ -993,7 +1036,8 @@ function sottotitoloAgenda(widget) {
   const pezzi = [];
   if (widget.calendario) {
     const diOggi = (widget.eventi || []).filter(
-      (evento) => evento.fine > adesso && (evento.inizio < adesso || chiaveDelGiorno(evento.inizio) === oggi),
+      (evento) =>
+        evento.fine > adesso && (evento.inizio < adesso || chiaveDelGiorno(evento.inizio) === oggi),
     ).length;
     pezzi.push(
       `${diOggi} ${diOggi === 1 ? t("impegno oggi", "appointment today") : t("impegni oggi", "appointments today")}`,
@@ -1065,7 +1109,10 @@ function finestraRifiuti(widget) {
         <small>${esc(giornoDellaSettimana(istante, "short").replace(/\.$/, "").toUpperCase())}</small>
         <span class="dm-f-sv-num">${new Date(istante).getDate()}</span>
         <span class="dm-f-rifiuti-colori">${quel
-          .map((riga) => `<i style="--c:${esc(riga.colore || "#94a3b8")}" title="${esc(riga.name)}"></i>`)
+          .map(
+            (riga) =>
+              `<i style="--c:${esc(riga.colore || "#94a3b8")}" title="${esc(riga.name)}"></i>`,
+          )
           .join("")}</span>
       </div>`;
   }).join("");
@@ -1168,7 +1215,9 @@ function finestraAllerte(widget) {
         <span class="dm-f-sv-ic" aria-hidden="true">${riga.glyph || "•"}</span>
         <span class="dm-f-sv-nome"><b>${esc(riga.name)}</b><em>${esc(
           /* La distanza sta gia' a destra, in grande: sotto il nome non si ripete. */
-          grande && riga.lettura.chiave === "fulmini" ? clean(riga.value).split(" · ")[0] : riga.value,
+          grande && riga.lettura.chiave === "fulmini"
+            ? clean(riga.value).split(" · ")[0]
+            : riga.value,
         )}</em></span>
         ${grande ? `<span class="dm-f-sv-val"><span class="dm-f-sv-num">${esc(grande)}</span><em>${esc(piccolo)}</em></span>` : ""}
       </div>`;
@@ -1208,9 +1257,13 @@ function sottotitoloAllerte(widget) {
   const avvisi = righe.filter(eAvviso).length;
   const occhio = righe.filter((riga) => !eAvviso(riga) && riga.livello === "nota").length;
   const pezzi = [];
-  if (avvisi) pezzi.push(`${avvisi} ${avvisi === 1 ? t("avviso", "warning") : t("avvisi", "warnings")}`);
+  if (avvisi)
+    pezzi.push(`${avvisi} ${avvisi === 1 ? t("avviso", "warning") : t("avvisi", "warnings")}`);
   if (occhio > 0) pezzi.push(`${occhio} ${t("da tenere d'occhio", "to watch")}`);
-  if (!pezzi.length) pezzi.push(`${righe.length} ${righe.length === 1 ? t("fonte", "source") : t("fonti", "sources")}`);
+  if (!pezzi.length)
+    pezzi.push(
+      `${righe.length} ${righe.length === 1 ? t("fonte", "source") : t("fonti", "sources")}`,
+    );
   return pezzi.join(" · ");
 }
 

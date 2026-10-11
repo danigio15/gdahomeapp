@@ -8,6 +8,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  fineInParole,
   oraDiFineCarica,
   statoUmanoEV,
 } from "../src/sections/il-popup-dell-auto-racconta-section.js";
@@ -44,4 +45,12 @@ test("quello che non si riconosce non si inventa", () => {
   assert.equal(statoUmanoEV("boh"), "");
   assert.equal(statoUmanoEV(""), "");
   assert.equal(statoUmanoEV("—"), "");
+});
+
+test("sotto il tempo che manca, l'ora in cui finisce", () => {
+  const sera = new Date(2026, 9, 11, 16, 23).getTime();
+  assert.equal(fineInParole({ stato: "carica", minuti: 433 }, sera), "FINE ALLE 23:36");
+  assert.equal(fineInParole({ stato: "carica", minuti: 600 }, sera), "FINE DOMANI ALLE 2:23");
+  assert.equal(fineInParole({ stato: "completa" }, sera), "");
+  assert.equal(fineInParole({ stato: "carica", minuti: null }, sera), "");
 });

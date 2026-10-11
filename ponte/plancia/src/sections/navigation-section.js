@@ -1,9 +1,5 @@
 import { cimaDiSistema, fondoDiSistema, inPixel } from "../core/fondo-di-sistema.js";
-import {
-  disegnoGiaNellaCasella,
-  haOggettoWidget,
-  oggettoWidget,
-} from "../core/oggetti-widget.js";
+import { disegnoGiaNellaCasella, haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
 import { clean, doc, installStyle, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_NAVIGATION_SECTION__";
@@ -89,6 +85,31 @@ function installStyles() {
        * si sballa completamente» — usciva per meta' a sinistra e staccata di
        * 18 pixel dal fondo. Cosi' vince sempre questa. */
       @media (max-width:820px){
+        html:root body nav.tabs.bottom-nav-bar.visible,
+        html:root body.cd-nav-fixed nav.tabs.bottom-nav-bar{
+          bottom:0!important;left:0!important;right:0!important;
+          transform:none!important;width:auto!important;max-width:none!important;
+          border-radius:24px 24px 0 0!important;
+          padding-bottom:calc(6px + var(--dm-fondo-di-sistema))!important
+        }
+      }
+      /* E attaccata anche sul telefono che si apre.
+       *
+       * «Ho un Samsung Z Fold: da chiuso la navbar e' allineata bene sotto,
+       * quando apro lo schermo si alza.» Aperto, lo schermo supera gli 820
+       * pixel e la regola qui sopra smetteva di valere: tornava quella della
+       * plancia di prima per i tablet, sospesa a diciotto pixel dal fondo e
+       * stretta in mezzo, con le card che le passavano sotto. Quello che conta
+       * non e' la larghezza ma il dito: chi tocca lo schermo ha la barra
+       * attaccata al fondo, piegato o aperto, telefono o tablet. */
+      html.dm-touch-navigation:root body nav.tabs.bottom-nav-bar.visible,
+      html.dm-touch-navigation:root body.cd-nav-fixed nav.tabs.bottom-nav-bar{
+        bottom:0!important;left:0!important;right:0!important;
+        transform:none!important;width:auto!important;max-width:none!important;
+        border-radius:24px 24px 0 0!important;
+        padding-bottom:calc(6px + var(--dm-fondo-di-sistema))!important
+      }
+      @media (hover:none) and (pointer:coarse){
         html:root body nav.tabs.bottom-nav-bar.visible,
         html:root body.cd-nav-fixed nav.tabs.bottom-nav-bar{
           bottom:0!important;left:0!important;right:0!important;

@@ -32,6 +32,7 @@ import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
 import 'schermate/navigatore_qui/qui.dart' as navigatore;
 import 'licenza/negozio.dart';
+import 'casa/lo_schermo.dart' show loSchermoRimetti;
 import 'schermate/plancia_vera.dart';
 import 'schermate/premium.dart';
 import 'schermate/riconoscimento.dart';
@@ -484,8 +485,15 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
    * Non subito, pero': chi guarda un messaggio e torna dopo due secondi non
    * deve rifare la strada da capo. */
   @override
+  void didChangeMetrics() {
+    /* Un pieghevole che si apre, una rotazione: Android rimette le barre. */
+    unawaited(loSchermoRimetti());
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState stato) {
     if (stato == AppLifecycleState.resumed) {
+      unawaited(loSchermoRimetti());
       _seNonTorna?.cancel();
       _seNonTorna = null;
       _collegamento.sveglia();

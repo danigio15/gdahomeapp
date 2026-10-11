@@ -80,7 +80,7 @@ test("le batterie oltre le prime dodici si mostrano col tasto", async ({ page },
    * griglia compatta, ed e' per questo che un tasto non serve piu'. */
   const finestra = page.locator("#dm-widget-popup .dm-f-batterie");
   await expect(finestra).toBeVisible({ timeout: 10_000 });
-  const righe = finestra.locator(".dm-f-batterie-pila, .dm-f-batterie-ok > div");
+  const righe = finestra.locator(".dm-f-batterie-pila");
   await expect(righe).toHaveCount(Object.keys(STATI).length);
   expect(Object.keys(STATI).length).toBeGreaterThan(12);
   await expect(page.locator("#dm-widget-popup [data-dm-w-tutte-misure]")).toHaveCount(0);

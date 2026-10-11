@@ -28,6 +28,7 @@ import {
   quickClimateHint,
   quickClimatePresetForZone,
   quickClimateSteps,
+  quickClimatePresetOf,
 } from "../core/quick-climate.js";
 import { climateUnits } from "./climate-thermal-section.js";
 import {
@@ -77,12 +78,7 @@ function impostazione() {
  * condizionatori. Un preset detto dalla persona resta suo, salvo le modalita'
  * che in Caldo farebbero il contrario della promessa (vedi il core). */
 function presetDi(entita, zona = "") {
-  const caldo = clean(zona).toLowerCase() === "caldo";
-  const ripiego = caldo ? QUICK_CLIMATE_HEAT_DEFAULT : impostazione();
-  return quickClimatePresetForZone(
-    quickClimateForUnit(entita, readJson(QUICK_CLIMATE_UNITS_KEY, {}), ripiego),
-    zona,
-  );
+  return quickClimatePresetOf(entita, zona, readJson(QUICK_CLIMATE_UNITS_KEY, {}), impostazione());
 }
 
 function salvaPresetDi(entita, scelta) {

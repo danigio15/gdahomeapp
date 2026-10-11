@@ -18,6 +18,7 @@
  * markup si rifa' solo quando cambia la struttura — i valori si aggiornano al
  * loro posto, cosi' l'apertura di una tessera non riparte mai da sola.
  */
+import { vehiclePhoto } from "../core/vehicle-model.js";
 import {
   normalizeTodoLists,
   parseTodoItemsResponse,
@@ -230,6 +231,14 @@ import { comandiMediaMarkup, sottoDelLettore, titoloDelLettore } from "./media-p
 import { iconaPresaMarkup } from "./prese-section.js";
 import { puntiDi, quandoArrivaLoStorico } from "./storico-condiviso-section.js";
 import {
+  iModiDiEvcc,
+  iValoriDelSempre,
+  ilModoAcceso,
+  ilSempreEInVigore,
+  ilValoreDelSempreAcceso,
+  laFilaDelSempreServe,
+} from "../core/le-modalita-di-evcc.js";
+import {
   CHIAVE_SOGLIA_CHIUSA,
   coperturaAlzata,
   coverEntries,
@@ -404,6 +413,37 @@ export function ancoraInVolo(scheda, adesso = Date.now()) {
   const da = Number(scheda.inVoloDa) || 0;
   return da > 0 && adesso - da < IN_VOLO_MS;
 }
+/* Un nuovo tentativo, programmato e non sperato.
+ *
+ * «Ad ogni apertura di HA bisogna aprire la sezione agenda per vedere gli
+ * eventi dei widget, altrimenti mette il trattino.» All'avvio la prima
+ * domanda parte quando la presa con Home Assistant non e' ancora pronta, e
+ * fallisce. Dopo un fallimento si aspettava venti secondi, e il tentativo
+ * successivo partiva solo al disegno dopo: se in casa non cambia niente la
+ * Home non si ridisegna, e la tessera restava col trattino finche' qualcuno
+ * non apriva la sezione, che chiede di nuovo a forza. Adesso il tentativo si
+ * mette in fila da solo, uno per entita'. */
+const tentativiInFila = new Map();
+
+/* Quanto aspettare dopo il fallimento numero `quanti`: tre secondi, poi sei,
+ * dodici, e da li' i venti di sempre. All'avvio la presa si apre in un attimo,
+ * e venti secondi di trattino erano venti secondi di «non funziona». */
+export function attesaDopoIFallimenti(quanti) {
+  const n = Math.max(1, Number(quanti) || 1);
+  return Math.min(RETRY_MS, 3000 * 2 ** (n - 1));
+}
+
+function riprovaFra(chiave, quanto, cosa) {
+  if (tentativiInFila.has(chiave)) return;
+  const timer = root.setTimeout?.(() => {
+    tentativiInFila.delete(chiave);
+    try {
+      cosa();
+    } catch (_error) {}
+  }, quanto);
+  if (timer) tentativiInFila.set(chiave, timer);
+}
+
 /* Un appuntamento non cambia ogni mezzo minuto come una lista della spesa:
  * cinque minuti bastano, e sono cinque richieste l'ora invece di centoventi. */
 const CALENDARIO_STALE_MS = 300000;
@@ -600,7 +640,8 @@ async function fetchItems(entity, { force = false } = {}) {
    * scaduto non ferma nessuno: col socket giu' il disegno richiedeva, la
    * richiesta falliva, il fallimento faceva ridisegnare, e il giro ripartiva
    * a ogni fotogramma. Dopo un errore si aspetta prima di riprovare. */
-  if (!force && !cache.items && now - cache.failedAt < RETRY_MS) return;
+  if (!force && !cache.items && now - cache.failedAt < attesaDopoIFallimenti(cache.fallimenti))
+    return;
   cache.inflight = true;
   cache.inVoloDa = now;
   let riuscita = false;
@@ -615,10 +656,15 @@ async function fetchItems(entity, { force = false } = {}) {
     cache.items = parseTodoItemsResponse(result, entity);
     cache.fetchedAt = Date.now();
     cache.failedAt = 0;
+    cache.fallimenti = 0;
     riuscita = true;
   } catch (error) {
     cache.failedAt = Date.now();
+    cache.fallimenti = (cache.fallimenti || 0) + 1;
     root.console?.warn?.("[DashboardModern] todo items", error);
+    riprovaFra(`lista:${entity}`, attesaDopoIFallimenti(cache.fallimenti) + 50, () =>
+      fetchItems(entity),
+    );
   }
   cache.inflight = false;
   // Un fallimento non ha cambiato niente da disegnare: ridisegnare lo stesso
@@ -721,7 +767,12 @@ async function fetchEventi(entity, { force = false } = {}) {
   /* Come per le liste: dopo un errore si aspetta, o col socket giu' il disegno
    * chiederebbe, la richiesta fallirebbe, il fallimento farebbe ridisegnare, e
    * il giro ripartirebbe a ogni fotogramma. */
-  if (!force && !scheda.eventi && adesso - scheda.failedAt < RETRY_MS) return;
+  if (
+    !force &&
+    !scheda.eventi &&
+    adesso - scheda.failedAt < attesaDopoIFallimenti(scheda.fallimenti)
+  )
+    return;
   scheda.inflight = true;
   scheda.inVoloDa = adesso;
   let riuscita = false;
@@ -750,10 +801,15 @@ async function fetchEventi(entity, { force = false } = {}) {
     scheda.eventi = letti;
     scheda.fetchedAt = Date.now();
     scheda.failedAt = 0;
+    scheda.fallimenti = 0;
     riuscita = true;
   } catch (error) {
     scheda.failedAt = Date.now();
+    scheda.fallimenti = (scheda.fallimenti || 0) + 1;
     root.console?.warn?.("[DashboardModern] calendar events", error);
+    riprovaFra(`calendario:${entity}`, attesaDopoIFallimenti(scheda.fallimenti) + 50, () =>
+      fetchEventi(entity),
+    );
   }
   scheda.inflight = false;
   if (riuscita) {
@@ -2501,6 +2557,9 @@ function letturaVettura(states, auto, fuori, indice, visti = new Set()) {
     carburante: Boolean(serbatoio),
     km: autonomia?.value == null ? null : autonomia.value,
     ricarica: ricaricaDellaVettura(states, mappa, stato),
+    /* La foto scelta nella sezione Auto per QUESTA vettura: «in carica» col
+     * cavo attaccato, «a riposo» quando no. La finestra la mette in cima. */
+    foto: vehiclePhoto(auto || {}, autoAllaPresa(ricaricaDellaVettura(states, mappa, stato))),
     /* Da quale entita' viene ognuna delle tre righe: serve a non raccontare
      * due volte la stessa, quando due vetture leggono lo stesso sensore. */
     caricaEntita: carica?.entity || "",
@@ -2770,6 +2829,41 @@ export function lettureDelleVetture(states, auto = [], fuori = new Set()) {
   return letture;
 }
 
+/* I comandi di evcc per la finestra dell'auto: i modi che evcc dichiara, quale
+ * e' acceso, e la fila del «sempre». «Widget auto mi deve dare la possibilita'
+ * di cambiare modalita' evcc.» Le parole e i colori sono quelli della pagina
+ * Auto (`core/le-modalita-di-evcc.js`): due posti, una modalita' sola. Senza
+ * l'entita' mappata, o muta, niente tasti: un tasto che non comanda niente e'
+ * peggio di nessuno. */
+function comandiDiEvcc(states) {
+  const viva = (ref) => {
+    const entity = clean(root.resolveEntity?.(ref) || "");
+    if (!entity || entity === ref || entity.startsWith("dm.")) return null;
+    const stato = states?.[entity];
+    if (!stato || /^(unavailable|unknown)$/i.test(clean(stato.state))) return null;
+    return { entity, stato };
+  };
+  const modo = viva("dm.ev_modalita_ricarica_evcc");
+  if (!modo) return null;
+  const voci = iModiDiEvcc(modo.stato);
+  const acceso = ilModoAcceso(modo.stato, voci);
+  const sempre = viva("dm.ev_ricarica_sempre_evcc");
+  const valori = sempre && laFilaDelSempreServe(sempre.stato) ? iValoriDelSempre(sempre.stato) : [];
+  return {
+    entity: modo.entity,
+    voci,
+    acceso,
+    sempre: valori.length
+      ? {
+          entity: sempre.entity,
+          voci: valori,
+          scelto: ilValoreDelSempreAcceso(sempre.stato, valori),
+          inVigore: ilSempreEInVigore(acceso),
+        }
+      : null,
+  };
+}
+
 function evModel(states) {
   const fuori = widgetExcludedEntities("ev");
   const profilate = lettureDelleVetture(states, vetture(), fuori);
@@ -2883,7 +2977,9 @@ function evModel(states) {
           (autoAllaPresa(lettura.ricarica) ? t("In carica", "Charging") : t("Scollegata", "Unplugged"))
         : "",
       fine: lettura === attaccata ? mancano : "",
+      foto: lettura.foto || "",
     })),
+    evcc: comandiDiEvcc(states),
     rows,
   };
 }

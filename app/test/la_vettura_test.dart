@@ -153,6 +153,53 @@ void main() {
     expect(l.letto, DateTime(2026, 9, 25, 10));
   });
 
+  test(
+    'quello che la plancia non chiede si trova fra i sensori dell\'auto',
+    () {
+      final v = LaVettura.daiValori(valori(auto: [zoe]))!.coiVicini([
+        'sensor.zoe_outdoor_temperature',
+        'sensor.zoe_battery_temperature',
+        'sensor.zoe_speed',
+        'sensor.zoe_power',
+        'sensor.zoe_charging_power',
+        'sensor.zoe_12v_battery_temperature',
+      ]);
+      final stati = {
+        for (final x in [
+          e('sensor.zoe_batteria', '42'),
+          e('sensor.zoe_outdoor_temperature', '18.5', {
+            'device_class': 'temperature',
+            'unit_of_measurement': '°C',
+            'friendly_name': 'Zoe Outdoor temperature',
+          }),
+          e('sensor.zoe_12v_battery_temperature', '30', {
+            'device_class': 'temperature',
+            'unit_of_measurement': '°C',
+          }),
+          e('sensor.zoe_battery_temperature', '77', {
+            'device_class': 'temperature',
+            'unit_of_measurement': '°F',
+          }),
+          e('sensor.zoe_speed', '50', {'unit_of_measurement': 'mph'}),
+          e('sensor.zoe_charging_power', '7400', {
+            'device_class': 'power',
+            'unit_of_measurement': 'W',
+          }),
+          e('sensor.zoe_power', '12500', {
+            'device_class': 'power',
+            'unit_of_measurement': 'W',
+          }),
+        ])
+          x.id: x,
+      };
+      final l = v.lettura((id) => stati[id])!;
+      expect(l.temperaturaEsternaC, 18.5);
+      expect(l.temperaturaBatteriaC, closeTo(25, 0.01));
+      expect(l.velocitaKmh, closeTo(80.47, 0.01));
+      expect(l.potenzaKw, 12.5);
+    },
+  );
+
   test('senza batteria (o col sensore muto) non si manda niente', () {
     final v = LaVettura.daiValori(valori(auto: [zoe]))!;
     expect(v.lettura((_) => null), isNull);

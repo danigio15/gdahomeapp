@@ -143,7 +143,10 @@ export const APPLIANCE_GLYPHS = Object.freeze({
   fan: "🌀",
   "air-conditioner": "❄️",
   boiler: "♨️",
-  "storage-boiler": "🛢️",
+  /* Non il 🛢️: «icona boiler, che c'entra con il bidone?». Il fusto e' del
+   * petrolio; un accumulo d'acqua calda e' acqua calda, come lo scaldabagno.
+   * Il disegno grande (`storage-boiler` qui sopra) era gia' il serbatoio. */
+  "storage-boiler": "♨️",
   vacuum: "🧹",
   "robot-vacuum": "🤖",
   wallbox: "⛽",

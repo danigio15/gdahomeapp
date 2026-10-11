@@ -25,6 +25,9 @@ import {
 } from "../shared.js";
 import { iDispositiviRicordati } from "../../core/i-dispositivi-di-home-assistant.js";
 import { eUnaBatteria } from "../../core/batterie-di-casa.js";
+import { tipoDelDispositivo, tipoFraLeEntita } from "../../core/il-tipo-del-sensore.js";
+import { chiaviDaProvare, disegnoDelCatalogo } from "../../core/catalogo-disegni.js";
+import { roomCatalogMatch } from "../../core/personalization-catalog.js";
 import {
   CHIAVE_RILEVAMENTI,
   TIPI_RILEVAMENTO,
@@ -845,50 +848,131 @@ ${P} .dm-f-allagamenti-sd[data-come="muto"] .dm-f-allagamenti-pt i{background:va
 
 /* ── Non rispondono ───────────────────────────────────────────────────── */
 
-const SEGNI_DEL_DOMINIO = Object.freeze({
-  light: "💡",
-  switch: "🔌",
-  sensor: "🌡️",
-  binary_sensor: "📟",
-  climate: "❄️",
-  camera: "📹",
-  media_player: "🔊",
-  cover: "🪟",
-  lock: "🔒",
-  vacuum: "🧹",
-  fan: "🌀",
-  valve: "🚰",
-  water_heater: "♨️",
-});
-
-function tipoDelDominio(dominio) {
-  switch (dominio) {
-    case "light":
+/* Il segno di un sensore viene dal suo tipo, non dal dominio.
+ *
+ * «Simbolo temperatura su un sensore che è finestra, che c'entra?» Qui prima
+ * c'era una tabella dominio → emoji: ogni `sensor` era un 🌡️ e ogni
+ * `binary_sensor` un 📟, e il contatto della finestra del cucinino usciva col
+ * termometro. Il tipo vero lo dice la `device_class` — la regola sta nel
+ * nucleo (`core/il-tipo-del-sensore.js`), qui ci sono solo le parole — e il
+ * disegno e' quello del catalogo di casa, non un'emoji: «metti un'icona
+ * vicino alle cose, non lasciare solo testo». */
+function parolaDelSensore(tipo) {
+  switch (tipo) {
+    case "finestra":
+      return t("Sensore finestra", "Window sensor");
+    case "porta":
+      return t("Sensore porta", "Door sensor");
+    case "movimento":
+      return t("Movimento", "Motion");
+    case "fumo":
+      return t("Rilevatore di fumo", "Smoke detector");
+    case "perdita":
+      return t("Sensore perdite", "Leak sensor");
+    case "temperatura":
+      return t("Temperatura", "Temperature");
+    case "umidita":
+      return t("Umidità", "Humidity");
+    case "potenza":
+      return t("Potenza", "Power");
+    case "batteria":
+      return t("Batteria", "Battery");
+    case "luce-ambiente":
+      return t("Luminosità", "Illuminance");
+    case "pressione":
+      return t("Pressione", "Pressure");
+    case "aria":
+      return t("Qualità dell'aria", "Air quality");
+    case "luce":
       return t("Luce", "Light");
-    case "switch":
+    case "presa":
       return t("Presa", "Plug");
-    case "sensor":
-    case "binary_sensor":
+    case "sensore":
       return t("Sensore", "Sensor");
-    case "climate":
+    case "clima":
       return t("Clima", "Climate");
-    case "camera":
+    case "telecamera":
       return t("Telecamera", "Camera");
-    case "media_player":
+    case "lettore":
       return t("Lettore", "Player");
-    case "cover":
+    case "tapparella":
       return t("Tapparella", "Shutter");
-    case "lock":
+    case "serratura":
       return t("Serratura", "Lock");
+    case "aspirapolvere":
+      return t("Aspirapolvere", "Vacuum");
+    case "ventilatore":
+      return t("Ventilatore", "Fan");
+    case "valvola":
+      return t("Valvola", "Valve");
+    case "boiler":
+      return t("Boiler", "Boiler");
     default:
       return "";
   }
 }
 
+/* Il disegno della stanza accanto al suo nome, quando il catalogo ce l'ha:
+ * «Cucinino» porta la cucina, «Corridoio» il corridoio. Se il nome non dice
+ * niente al catalogo non si mette niente: meglio il nome solo che una casetta
+ * qualunque davanti a ogni riga. */
+function disegnoDellaStanza(nome, misura = 15) {
+  const posto = clean(nome);
+  if (!posto) return "";
+  let voce = null;
+  try {
+    voce = roomCatalogMatch(posto);
+  } catch (_errore) {
+    voce = null;
+  }
+  if (!voce) return "";
+  for (const chiave of chiaviDaProvare("room", posto, voce)) {
+    const disegno = disegnoDelCatalogo(chiave, misura);
+    if (disegno) return disegno;
+  }
+  return "";
+}
+
+/* La riga sotto il nome: il tipo in parole e la stanza col suo disegno. */
+function sottoConStanza(k, parola, posto) {
+  const pezzi = [];
+  if (parola) pezzi.push(`<span>${esc(parola)}</span>`);
+  if (posto) {
+    const disegno = disegnoDellaStanza(posto);
+    pezzi.push(
+      `<span class="dm-f-${k}-posto">${disegno ? `<i aria-hidden="true">${disegno}</i>` : ""}${esc(posto)}</span>`,
+    );
+  }
+  return pezzi.join(`<span aria-hidden="true">·</span>`);
+}
+
+/* Il bollino «non risponde» sull'angolo del disegno: l'onda del segnale
+ * barrata, rossa. */
+const SENZA_SEGNALE = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="${ROSSO}"/><path d="M6.5 11a8 8 0 0 1 11 0M9 14a4.4 4.4 0 0 1 6 0" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.4" fill="#fff"/><path d="M6 6l12 12" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+
 const ORE_LUNGHE = 2;
 
-function disegnaNonRisponde(widget) {
+function disegnaNonRisponde(widget, states = {}) {
   const k = "nonrisponde";
+  let di = {};
+  try {
+    di = iDispositiviRicordati().di || {};
+  } catch (_errore) {
+    di = {};
+  }
+  /* Le entita' sorelle, dello stesso dispositivo: chi ha configurato la presa
+   * del contatto della finestra ha in elenco solo la presa, ma il dispositivo
+   * e' la finestra — e il suo contatto lo dice. */
+  const conLeSorelle = (entita) => {
+    const tutte = new Set(entita);
+    for (const id of entita) {
+      const suo = clean(di[id]);
+      if (!suo) continue;
+      for (const [altra, dispositivo] of Object.entries(di))
+        if (clean(dispositivo) === suo) tutte.add(altra);
+    }
+    return [...tutte];
+  };
   const righe = (Array.isArray(widget.rows) ? widget.rows : [])
     .map((riga) => {
       const entita = (Array.isArray(riga.entita) ? riga.entita : [riga.entity])
@@ -896,31 +980,50 @@ function disegnaNonRisponde(widget) {
         .filter((id) => id.includes(".") && !id.startsWith("dispositivo:"));
       const dominio = (entita[0] || "").split(".")[0];
       const posto = entita.map(stanza).find(Boolean) || "";
-      return { ...riga, entita, dominio, posto };
+      /* Il tipo dalle entita' della riga: un dispositivo che tace sono tutte
+       * le sue entita', e fra la pila, il chip e il contatto vince il
+       * contatto — e' una finestra. */
+      const tipo = tipoFraLeEntita(conLeSorelle(entita), { states, nome: riga.name });
+      return { ...riga, entita, dominio, posto, tipo };
     })
     /* Dalla piu' lunga: chi tace da piu' tempo e' il guasto vero. */
     .sort((a, b) => (Number(a.da) || Infinity) - (Number(b.da) || Infinity));
   const posti = [...new Set(righe.map((riga) => riga.posto))];
   const insieme = righe.length > 1 && posti.length === 1 && posti[0];
-  const sotto = insieme
-    ? `${t("Tutti in", "All in")} ${posti[0]}`
-    : righe.length === 1 && righe[0].posto
-      ? righe[0].posto
-      : "";
+  const adesso = Date.now();
+  /* «Ultimo segnale 2 giorni fa»: e' il «da quando» della riga che tace da
+   * piu' tempo, che la tessera gia' sa. Se non lo sa, non si scrive. */
+  const primo = righe.find((riga) => Number(riga.da) > 0);
+  const ultimo = primo ? durata(primo.da, adesso) : "";
+  const sotto = [
+    ultimo
+      ? righe.length === 1
+        ? `${t("Ultimo segnale", "Last signal")} ${ultimo} ${t("fa", "ago")}`
+        : `${t("Il più lungo tace da", "Longest silent for")} ${ultimo}`
+      : "",
+    insieme
+      ? `${t("Tutti in", "All in")} ${posti[0]}`
+      : righe.length === 1 && righe[0].posto
+        ? righe[0].posto
+        : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const eroe = `<div class="dm-f-${k}-eroe" data-tono="allarme">
       <span class="dm-f-${k}-num">${righe.length}</span>
       <div><b>${esc(righe.length === 1 ? t("dispositivo muto", "silent device") : t("dispositivi muti", "silent devices"))}</b>${
         sotto ? `<span class="dm-f-${k}-sotto">${esc(sotto)}</span>` : ""
       }</div>
     </div>`;
-  const adesso = Date.now();
   const riga = (voce) => {
     const quanto = durata(voce.da, adesso);
     const lungo = Number(voce.da) > 0 && adesso - Number(voce.da) > ORE_LUNGHE * 60 * MINUTO;
-    const sottoRiga = [tipoDelDominio(voce.dominio), voce.posto].filter(Boolean).join(" · ");
-    return `<div class="dm-f-${k}-dev"${lungo ? ' data-lungo="true"' : ""}>
-        <span class="dm-f-${k}-ic" aria-hidden="true">${SEGNI_DEL_DOMINIO[voce.dominio] || "📡"}</span>
-        <div class="dm-f-${k}-nome"><b>${esc(voce.name)}</b>${sottoRiga ? `<span>${esc(sottoRiga)}</span>` : ""}</div>
+    const sottoRiga = sottoConStanza(k, parolaDelSensore(voce.tipo.tipo), voce.posto);
+    return `<div class="dm-f-${k}-dev"${lungo ? ' data-lungo="true"' : ""} data-tipo="${esc(voce.tipo.tipo || "sensore")}">
+        <span class="dm-f-${k}-ic" aria-hidden="true">${disegnoDiCasa(voce.tipo.disegno, { misura: 32, ripiego: "radar" })}<i class="dm-f-${k}-bollino" title="${esc(
+          t("non risponde", "not answering"),
+        )}">${SENZA_SEGNALE}</i></span>
+        <div class="dm-f-${k}-nome"><b>${esc(voce.name)}</b>${sottoRiga ? `<span>${sottoRiga}</span>` : ""}</div>
         ${quanto ? `<div class="dm-f-${k}-da"><small>${esc(t("da", "for"))}</small><span class="dm-f-${k}-num">${esc(quanto)}</span></div>` : ""}
       </div>`;
   };
@@ -952,13 +1055,20 @@ function disegnaNonRisponde(widget) {
 }
 
 const STILE_NONRISPONDE = `${stileComune("nonrisponde")}
-${P} .dm-f-nonrisponde-dev{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;min-width:0;
-  background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P} .dm-f-nonrisponde-dev .dm-f-nonrisponde-ic{flex:none;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;
-  background:color-mix(in srgb,var(--text-dim,#64748b) 8%,var(--card-bg,#fff));filter:grayscale(.6)}
+${P} .dm-f-nonrisponde-dev{display:flex;align-items:center;gap:13px;padding:12px 14px;border-radius:20px;min-width:0;
+  background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,${ROSSO} 22%,var(--card-border,#eef2f7));box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
+${P} .dm-f-nonrisponde-dev .dm-f-nonrisponde-ic{position:relative;flex:none;width:48px;height:48px;border-radius:15px;display:grid;place-items:center;
+  background:color-mix(in srgb,${ROSSO} 7%,var(--card-bg,#fff))}
+${P} .dm-f-nonrisponde-dev .dm-f-nonrisponde-ic > .dm-catalogo-art{display:grid;filter:saturate(.75)}
+${P} .dm-f-nonrisponde-bollino{position:absolute;right:-5px;bottom:-5px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  background:var(--card-bg,#fff);box-shadow:0 2px 6px rgba(15,23,42,.18)}
+${P} .dm-f-nonrisponde-bollino svg{width:18px;height:18px}
 ${P} .dm-f-nonrisponde-nome{flex:1;min-width:0}
 ${P} .dm-f-nonrisponde-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
-${P} .dm-f-nonrisponde-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-nonrisponde-nome > span{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin-top:2px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-nonrisponde-posto{display:inline-flex;align-items:center;gap:4px}
+${P} .dm-f-nonrisponde-posto > i{display:inline-grid;place-items:center;width:16px;height:16px}
+${P} .dm-f-nonrisponde-posto > i svg{width:16px;height:16px}
 ${P} .dm-f-nonrisponde-da{flex:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
 ${P} .dm-f-nonrisponde-da .dm-f-nonrisponde-num{font-size:20px;line-height:1}
 ${P} .dm-f-nonrisponde-da small{font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b)}
@@ -986,85 +1096,153 @@ function nomePulitoDellaPila(nome) {
 
 const PROSSIME = 60;
 
-function disegnaBatterie(widget) {
+/* Quante pile si disegnano in grande nell'eroe: sei stanno in un telefono
+ * senza andare a capo, e sono le piu' scariche — quelle che contano. */
+const PILE_IN_GRANDE = 6;
+
+/* Il tono di una pila: rossa quando e' davvero agli sgoccioli (meta' della
+ * soglia, mai sotto il cinque), ambra sotto la soglia, gialla quando sara'
+ * la prossima, verde carica. */
+function tonoDellaPila(livello, soglia) {
+  const critica = Math.max(5, Math.round(soglia / 2));
+  if (livello <= critica) return "critica";
+  if (livello <= soglia) return "giu";
+  if (livello < PROSSIME) return "prossima";
+  return "carica";
+}
+
+const COLORE_DELLA_PILA = Object.freeze({
+  critica: ROSSO,
+  giu: AMBRA,
+  prossima: "#eab308",
+  carica: VERDE,
+});
+
+/* La pila disegnata in piedi, riempita fino al suo livello. */
+function pilaInPiedi(livello, tono) {
+  const colore = COLORE_DELLA_PILA[tono] || VERDE;
+  const pieno = Math.max(4, Math.min(100, livello));
+  const alto = Math.round((50 * pieno) / 100);
+  return `<svg class="dm-f-batterie-inpiedi" viewBox="0 0 34 62" aria-hidden="true"><rect x="12" y="1" width="10" height="6" rx="2" fill="${colore}"/><rect x="2.5" y="6.5" width="29" height="54" rx="8" fill="var(--card-bg,#fff)" stroke="${colore}" stroke-width="3"/><rect x="6" y="${57 - alto}" width="22" height="${alto}" rx="4.5" fill="${colore}" opacity=".9"/></svg>`;
+}
+
+function disegnaBatterie(widget, states = {}) {
   const k = "batterie";
   const soglia = Number.isFinite(Number(widget.soglia)) ? Number(widget.soglia) : 20;
+  let di = {};
+  try {
+    di = iDispositiviRicordati().di || {};
+  } catch (_errore) {
+    di = {};
+  }
   const righe = (Array.isArray(widget.rows) ? widget.rows : [])
     .filter((riga) => Number.isFinite(Number(riga.level)))
-    .map((riga) => ({
-      ...riga,
-      livello: Math.round(Number(riga.level)),
-      nome: nomePulitoDellaPila(riga.name),
-      posto: stanza(riga.entity),
-    }))
+    .map((riga) => {
+      const livello = Math.round(Number(riga.level));
+      const nome = nomePulitoDellaPila(riga.name);
+      return {
+        ...riga,
+        livello,
+        nome,
+        posto: stanza(riga.entity),
+        tono: tonoDellaPila(livello, soglia),
+        /* «Idem batteria: mostra icone, non solo testo»: il disegno e' quello
+         * della cosa che la pila alimenta — la porta, il sensore di
+         * movimento — preso dai fratelli dello stesso dispositivo, o dal nome.
+         * Se non si sa, resta la pila. */
+        tipo: tipoDelDispositivo(riga.entity, { states, di, nome }),
+      };
+    })
     .sort((a, b) => a.livello - b.livello);
   const giu = righe.filter((riga) => riga.livello <= soglia);
   const prossime = righe.filter((riga) => riga.livello > soglia && riga.livello < PROSSIME);
   const cariche = righe.filter((riga) => riga.livello >= PROSSIME && riga.livello > soglia);
   const altre = righe.length - giu.length;
-  const eroe = `<div class="dm-f-${k}-eroe" data-tono="${giu.length ? "" : "ok"}">
-      <span class="dm-f-${k}-num">${giu.length || righe.length}</span>
-      <div><b>${esc(
-        giu.length
-          ? t("da cambiare", "to replace")
-          : righe.length === 1
-            ? t("batteria, carica", "battery, charged")
-            : t("batterie, tutte cariche", "batteries, all charged"),
-      )}</b><span class="dm-f-${k}-sotto">${esc(
-        giu.length && altre
-          ? `${altre} ${t("sopra la soglia", "above the threshold")} · ${t("soglia", "threshold")} ${soglia}%`
-          : `${t("soglia", "threshold")} ${soglia}%`,
-      )}</span></div>
+  const tonoEroe = giu.length
+    ? giu.some((riga) => riga.tono === "critica")
+      ? "allarme"
+      : ""
+    : "ok";
+  const parole = giu.length
+    ? t("da cambiare", "to replace")
+    : !prossime.length
+      ? righe.length === 1
+        ? t("batteria, carica", "battery, charged")
+        : t("batterie, tutte cariche", "batteries, all charged")
+      : [
+          righe.length === 1 ? t("batteria", "battery") : t("batterie", "batteries"),
+          [
+            cariche.length ? `${cariche.length} ${t("cariche", "charged")}` : "",
+            `${prossime.length} ${t("da tenere d'occhio", "to keep an eye on")}`,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        ].join(", ");
+  const sotto =
+    giu.length && altre
+      ? `${altre} ${t("sopra la soglia", "above the threshold")} · ${t("soglia", "threshold")} ${soglia}%`
+      : `${t("soglia", "threshold")} ${soglia}%`;
+  const eroe = `<div class="dm-f-${k}-eroe" data-tono="${tonoEroe}">
+      <span class="dm-f-${k}-pile" aria-hidden="true">${righe
+        .slice(0, PILE_IN_GRANDE)
+        .map((riga) => pilaInPiedi(riga.livello, riga.tono))
+        .join("")}</span>
+      <div><span class="dm-f-${k}-num">${giu.length || righe.length}</span><b>${esc(parole)}</b><span class="dm-f-${k}-sotto">${esc(sotto)}</span></div>
     </div>`;
-  const pila = (
-    riga,
-    colore,
-    giuSi,
-  ) => `<div class="dm-f-${k}-pila"${giuSi ? ' data-giu="true"' : ""}>
-      <span class="dm-f-${k}-ic" aria-hidden="true">${giuSi ? "🪫" : "🔋"}</span>
-      <span class="dm-f-${k}-nome"><b>${esc(riga.nome)}</b>${riga.posto ? `<small>${esc(riga.posto)}</small>` : ""}<i style="--w:${Math.max(
-        3,
+  const bollino = (tono) =>
+    tono === "carica"
+      ? `<i class="dm-f-${k}-bollino" data-ok="true">${SPUNTA}</i>`
+      : `<i class="dm-f-${k}-bollino">!</i>`;
+  const pila = (riga) => {
+    const colore = COLORE_DELLA_PILA[riga.tono];
+    /* Il tipo «batteria» non si scrive: in questa finestra lo sono tutte. */
+    const parola = riga.tipo.tipo === "batteria" ? "" : parolaDelSensore(riga.tipo.tipo);
+    const sottoRiga = sottoConStanza(k, parola, riga.posto);
+    return `<div class="dm-f-${k}-pila" data-tono="${riga.tono}"${riga.livello <= soglia ? ' data-giu="true"' : ""} style="--c:${colore}">
+      <span class="dm-f-${k}-ic" aria-hidden="true">${disegnoDiCasa(riga.tipo.disegno, { misura: 32, ripiego: "battery" })}${bollino(riga.tono)}</span>
+      <span class="dm-f-${k}-nome"><b>${esc(riga.nome)}</b>${sottoRiga ? `<small>${sottoRiga}</small>` : ""}<span class="dm-f-${k}-livello"><i aria-hidden="true"><i style="width:${Math.max(
+        4,
         Math.min(100, riga.livello),
-      )}%;--c:${colore}"></i></span>
-      <span class="dm-f-${k}-num">${riga.livello}%</span>
+      )}%"></i></i><span class="dm-f-${k}-num">${riga.livello}%</span></span></span>
     </div>`;
+  };
   return `<div class="dm-f-${k}">
       ${eroe}
-      ${giu.length ? `${titolo(k, t("Da cambiare", "To replace"))}${giu.map((riga) => pila(riga, ROSSO, true)).join("")}` : ""}
-      ${prossime.length ? `${titolo(k, t("Le prossime", "Next ones"))}${prossime.map((riga) => pila(riga, "#eab308", false)).join("")}` : ""}
-      ${
-        cariche.length
-          ? `${titolo(k, t("Cariche", "Charged"))}<div class="dm-f-${k}-ok">${cariche
-              .map(
-                (riga) =>
-                  `<div><b>${esc(riga.nome)}</b><span class="dm-f-${k}-num">${riga.livello}%</span></div>`,
-              )
-              .join("")}</div>`
-          : ""
-      }
+      ${titolo(k, t("Dalla più scarica", "Most drained first"))}
+      <div class="dm-f-${k}-griglia">${righe.map(pila).join("")}</div>
     </div>`;
 }
 
 const STILE_BATTERIE = `${stileComune("batterie")}
-${P} .dm-f-batterie-eroe[data-tono=""]{--tono:#ca8a04}
-${P} .dm-f-batterie-pila{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:18px;min-width:0;
+${P} .dm-f-batterie-eroe[data-tono=""]{--tono:${AMBRA}}
+${P} .dm-f-batterie-eroe{gap:18px}
+${P} .dm-f-batterie-eroe .dm-f-batterie-num{display:block;font-size:46px;line-height:1;color:color-mix(in srgb,var(--tono) 78%,var(--text,#0f172a))}
+${P} .dm-f-batterie-pile{flex:none;display:flex;align-items:flex-end;gap:5px}
+${P} .dm-f-batterie-inpiedi{width:26px;height:48px;display:block}
+${P} .dm-f-batterie-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:9px}
+${P} .dm-f-batterie-pila{display:flex;align-items:center;gap:13px;padding:12px 13px;border-radius:20px;min-width:0;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P} .dm-f-batterie-pila .dm-f-batterie-ic{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:19px;
-  background:color-mix(in srgb,var(--text-dim,#64748b) 8%,var(--card-bg,#fff))}
+${P} .dm-f-batterie-pila .dm-f-batterie-ic{position:relative;flex:none;width:48px;height:48px;border-radius:15px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--c) 10%,var(--card-bg,#fff))}
+${P} .dm-f-batterie-pila .dm-f-batterie-ic > .dm-catalogo-art{display:grid}
+${P} .dm-f-batterie-bollino{position:absolute;right:-5px;bottom:-5px;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;
+  font-style:normal;font-size:13px;font-weight:950;line-height:1;color:#fff;background:var(--c,${AMBRA});box-shadow:0 0 0 2px var(--card-bg,#fff),0 2px 6px rgba(15,23,42,.2)}
+${P} .dm-f-batterie-bollino[data-ok="true"]{background:var(--card-bg,#fff)}
+${P} .dm-f-batterie-bollino svg{width:14px;height:14px}
 ${P} .dm-f-batterie-nome{flex:1;min-width:0}
-${P} .dm-f-batterie-nome b{display:block;font-size:14px;font-weight:850;overflow-wrap:anywhere}
-${P} .dm-f-batterie-nome small{display:block;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
-${P} .dm-f-batterie-nome i{display:block;position:relative;overflow:hidden;height:6px;margin-top:6px;border-radius:999px;
-  background:color-mix(in srgb,var(--text-dim,#64748b) 14%,transparent)}
-${P} .dm-f-batterie-nome i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:999px;background:var(--c)}
-${P} .dm-f-batterie-pila .dm-f-batterie-num{flex:none;min-width:52px;text-align:right;font-size:22px}
-${P} .dm-f-batterie-pila[data-giu="true"]{border-color:color-mix(in srgb,${ROSSO} 35%,transparent);background:color-mix(in srgb,${ROSSO} 4%,var(--card-bg,#fff))}
-${P} .dm-f-batterie-pila[data-giu="true"] .dm-f-batterie-num{color:${ROSSO}}
-${P} .dm-f-batterie-ok{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-${P} .dm-f-batterie-ok > div{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0;padding:10px 12px;border-radius:15px;
-  background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}
-${P} .dm-f-batterie-ok b{min-width:0;font-size:12.5px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
-${P} .dm-f-batterie-ok .dm-f-batterie-num{flex:none;font-size:16px;color:${VERDE}}`;
+${P} .dm-f-batterie-nome b{display:block;font-size:14px;font-weight:850;line-height:1.2;overflow-wrap:anywhere}
+${P} .dm-f-batterie-nome > small{display:flex;flex-wrap:wrap;align-items:center;gap:2px 5px;margin-top:2px;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-batterie-posto{display:inline-flex;align-items:center;gap:4px}
+${P} .dm-f-batterie-posto > i{display:inline-grid;place-items:center;width:15px;height:15px}
+${P} .dm-f-batterie-posto > i svg{width:15px;height:15px}
+${P} .dm-f-batterie-livello{display:flex;align-items:center;gap:10px;margin-top:6px}
+${P} .dm-f-batterie-livello > i{position:relative;flex:none;width:52px;height:18px;padding:2px;border-radius:5px;border:2px solid var(--c)}
+${P} .dm-f-batterie-livello > i::after{content:"";position:absolute;right:-6px;top:4px;width:3px;height:6px;border-radius:0 2px 2px 0;background:var(--c)}
+${P} .dm-f-batterie-livello > i > i{display:block;height:100%;border-radius:2px;background:var(--c)}
+${P} .dm-f-batterie-livello .dm-f-batterie-num{font-size:20px;line-height:1;color:color-mix(in srgb,var(--c) 85%,var(--text,#0f172a))}
+${P} .dm-f-batterie-pila[data-tono="giu"],${P} .dm-f-batterie-pila[data-tono="prossima"]{border-color:color-mix(in srgb,var(--c) 40%,transparent);
+  background:color-mix(in srgb,var(--c) 6%,var(--card-bg,#fff))}
+${P} .dm-f-batterie-pila[data-tono="critica"]{border-color:color-mix(in srgb,${ROSSO} 45%,transparent);background:color-mix(in srgb,${ROSSO} 6%,var(--card-bg,#fff))}`;
 
 /* ── la registrazione ─────────────────────────────────────────────────── */
 
@@ -1078,4 +1256,4 @@ registraFinestra("nonrisponde", { disegna: disegnaNonRisponde, stile: STILE_NONR
 registraFinestra("batterie", { disegna: disegnaBatterie, stile: STILE_BATTERIE });
 
 /* Per le prove: i nomi ripuliti e il «da quanto». */
-export { durata, nomePulitoDellaSonda, nomePulitoDellaPila };
+export { durata, nomePulitoDellaSonda, nomePulitoDellaPila, parolaDelSensore, tonoDellaPila };

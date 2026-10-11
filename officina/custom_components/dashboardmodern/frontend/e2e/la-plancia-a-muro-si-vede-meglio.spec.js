@@ -265,6 +265,64 @@ test.describe("la plancia a muro si vede meglio", () => {
     await expect(grande.locator('[data-mu-cmd="centro"]')).toHaveAttribute("aria-label", /Accendi/);
   });
 
+  /* «Gli altri comandi che ho abilitato nell'altra plancia, e che vedo, di qua
+   * non me li fa vedere.» Quelli scelti accanto al lettore nella sezione
+   * Musica stanno anche sul pannello, sotto il lettore grande. */
+  test("la pagina Musica mostra gli altri comandi del lettore", async ({ page }, testInfo) => {
+    const stati = {
+      ...STATI,
+      "media_player.sonos_cucina": {
+        state: "playing",
+        attributes: {
+          friendly_name: "Sonos cucina",
+          supported_features: 1 + 4 + 16 + 32 + 128 + 256 + 2048 + 16384,
+          media_title: "Nuvole bianche",
+          media_artist: "Ludovico Einaudi",
+          volume_level: 0.35,
+          source: "Spotify",
+          source_list: ["Spotify", "Radio"],
+        },
+      },
+      "switch.sonos_cucina_loudness": {
+        state: "on",
+        attributes: { friendly_name: "Loudness" },
+      },
+      "switch.sonos_cucina_night_sound": {
+        state: "off",
+        attributes: { friendly_name: "Suono notturno" },
+      },
+    };
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: { attiva: true, pagine: [{ id: "m1", modello: "musica" }] },
+      stati,
+      caselle: {
+        cd_media_player: [
+          {
+            entity: "media_player.sonos_cucina",
+            nome: "Cucina",
+            comandi: ["switch.sonos_cucina_loudness", "switch.sonos_cucina_night_sound"],
+          },
+        ],
+      },
+    });
+    const comandi = muro(page).locator(".mu-mp-comandi button");
+    await expect(comandi).toHaveCount(2);
+    await expect(comandi.first()).toContainText("Loudness");
+    await expect(comandi.first()).toHaveClass(/si/);
+    if (process.env.DM_FOTO) {
+      await page.waitForTimeout(600);
+      await page.screenshot({ path: `${process.env.DM_FOTO}/muro-musica-comandi.png` });
+    }
+    await comandi.nth(1).click();
+    expect(await page.evaluate(() => window.__SERVIZI__)).toEqual([
+      {
+        domain: "homeassistant",
+        service: "toggle",
+        data: { entity_id: "switch.sonos_cucina_night_sound" },
+      },
+    ]);
+  });
+
   /* «Metterei disattivo. E quando sono piu' di una partizione andrei a capo,
    * centrato, e con le partizioni attive scritte.» */
   test("il riposo: «Disattivo», e con piu' aree una riga con quelle inserite", async ({

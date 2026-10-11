@@ -177,6 +177,12 @@ test("la tessera in Home dice il guaio con le parole della pagina", () => {
   assert.equal(tesseraDeiContatori(null), null);
 });
 
+test("la tessera con la sola pressione: il numero in grande, non il trattino", () => {
+  const sola = tesseraDeiContatori(vista([PRESSIONE(6.1)]));
+  assert.equal(sola.value, "6,1\u00a0bar");
+  assert.equal(sola.caption, "Pressione alta");
+});
+
 test("le domande al Recorder passano dal ponte, e non c'è un battito che gira", () => {
   /* Il ponte e il pannello lasciano passare statistics_during_period al
    * plurale e la storia: la sorella al singolare morirebbe con «Message type

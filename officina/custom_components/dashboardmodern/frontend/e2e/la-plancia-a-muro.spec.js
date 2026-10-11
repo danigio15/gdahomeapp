@@ -89,6 +89,48 @@ test.describe("la plancia a muro", () => {
     ]);
   });
 
+  /* «Stato e modalita' antifurto deve seguire quelle della plancia.» Il
+   * pannello mostrava tutti gli inserimenti che la centrale dichiara coi nomi
+   * suoi, e come «Aperte» ogni sensore con la classe finestra — anche i
+   * «Stato finestra» dei termosifoni. Adesso legge la configurazione della
+   * plancia: i tasti tolti, quelli scritti a mano, gli ingressi dichiarati. */
+  test("l'antifurto segue i tasti e gli ingressi della plancia", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: MURO_DI_PROVA,
+      stati: {
+        ...STATI_A_MURO,
+        "binary_sensor.termosifone_finestra": {
+          state: "on",
+          attributes: { friendly_name: "Termosifone Stato finestra", device_class: "window" },
+        },
+        "switch.giardino": { state: "off", attributes: { friendly_name: "Giardino" } },
+      },
+      caselle: {
+        cd_antifurto_modi: ["night"],
+        cd_antifurto_su_misura: [{ id: "giardino", nome: "Giardino", entita: "switch.giardino" }],
+        cd_centrali: [
+          {
+            id: "casa",
+            nome: "Casa",
+            caselle: { "dm.security_centrale_allarme": "alarm_control_panel.casa" },
+            ingressi: ["binary_sensor.finestra_cucina"],
+          },
+        ],
+      },
+    });
+    await muro(page).locator('[data-mu-pagina="2"]').click();
+    const tasti = muro(page).locator('.mu-modi [data-mu-fa="allarme"]');
+    await expect(tasti).toHaveText(["Casa", "Fuori", "Sblocca", "Giardino"]);
+    await expect(muro(page).locator('.mu-modi [data-mu-modo="disarm"]')).toHaveClass(/si/);
+    const aperte = muro(page).locator(".mu-avviso-finestre");
+    await expect(aperte).toContainText("Finestra cucina");
+    await expect(aperte).not.toContainText("Termosifone");
+    await muro(page).locator('[data-mu-fa="allarme"][data-mu-modo="giardino"]').click();
+    await expect
+      .poll(() => servizi(page))
+      .toEqual([{ domain: "switch", service: "turn_on", data: { entity_id: "switch.giardino" } }]);
+  });
+
   test("il riposo mostra l'orologio e il tocco sveglia", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
     await muro(page).locator('[data-mu-pagina="1"]').click();
@@ -308,6 +350,51 @@ test.describe("la plancia a muro", () => {
     await expect(tutto).toHaveCount(0);
   });
 
+  /* «Nel pannello da muro, nella sezione clima, mi dai la possibilità di
+   * scegliere i Comandi Rapidi del clima.» Il ⏻ diventa la pastiglia del
+   * comando rapido di quella stanza: da spento lo accende coi passi della
+   * plancia — modalita', gradi, ventola — e da acceso spegne. */
+  test("sul clima il ⏻ accende col comando rapido della plancia, e rispegne", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: { attiva: true, pagine: [{ id: "p1", modello: "clima" }] },
+      stati: {
+        ...STATI_A_MURO,
+        "climate.soggiorno": {
+          ...STATI_A_MURO["climate.soggiorno"],
+          state: "off",
+          attributes: { ...STATI_A_MURO["climate.soggiorno"].attributes, hvac_action: "off" },
+        },
+      },
+      caselle: {
+        cd_clima_rapido_unita: {
+          "climate.soggiorno": { mode: "cool", temperature: 24, fan: "low" },
+        },
+      },
+    });
+    const pastiglia = muro(page).locator('.mu-rapido[data-mu-entita="climate.soggiorno"]');
+    await expect(pastiglia).toContainText("24°");
+    if (process.env.DM_FOTO)
+      await page.screenshot({ path: `${process.env.DM_FOTO}/fatta-muro-clima-spento.png` });
+    await expect(pastiglia).toContainText("bassa");
+    await pastiglia.click();
+    await expect
+      .poll(
+        async () => (await servizi(page)).map((s) => `${s.service}:${JSON.stringify(s.data)}`),
+        {
+          timeout: 5000,
+        },
+      )
+      .toEqual([
+        'set_hvac_mode:{"entity_id":"climate.soggiorno","hvac_mode":"cool"}',
+        'set_temperature:{"entity_id":"climate.soggiorno","temperature":24}',
+        'set_fan_mode:{"entity_id":"climate.soggiorno","fan_mode":"low"}',
+      ]);
+    if (process.env.DM_FOTO)
+      await page.screenshot({ path: `${process.env.DM_FOTO}/fatta-muro-clima.png` });
+  });
+
   test("le pagine si cambiano solo dalle linguette, e il clima ha caldo e freddo dentro", async ({
     page,
   }, testInfo) => {
@@ -388,20 +475,90 @@ test.describe("la plancia a muro", () => {
   });
 
   /* «Metti l'hamburger in alto come la dashboard main: in Home Assistant apre
-   * la barra laterale, nell'app il menu di gdahome.» Il ☰ del pannello preme
-   * quello della plancia, che fa l'una o l'altra cosa a seconda di chi la
-   * ospita; qui si guarda che lo prema, e che col blocco chieda il codice. */
-  test("il ☰ in cima apre il menu della plancia", async ({ page }, testInfo) => {
+   * la barra laterale, nell'app il menu di gdahome.» E poi, dal campo:
+   * «hamburger ancora non va: quando clicco si e' aperta la navbar». Il ☰
+   * premeva quello della plancia, che col chiosco fa uscire la barra in basso.
+   * Adesso il menu lo si chiede direttamente a chi lo ha. */
+  const spiaDellApp = (page) =>
+    page.evaluate(() => {
+      window.__DETTO__ = [];
+      window.gdahomeDice = { postMessage: (m) => window.__DETTO__.push(m) };
+      window.__BARRA__ = 0;
+      document.querySelector("body>header .ha-menu-btn").onclick = () => (window.__BARRA__ += 1);
+    });
+
+  test("nell'app il ☰ apre il menu di gdahome, non la barra", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
-    const premuto = () =>
-      page.evaluate(() => {
-        window.__MENU_PREMUTO__ = 0;
-        const tasto = document.querySelector("body>header .ha-menu-btn");
-        tasto.onclick = () => (window.__MENU_PREMUTO__ += 1);
-      });
-    await premuto();
+    await spiaDellApp(page);
     await muro(page).locator('[data-mu-fa="menu"]').click();
-    await expect.poll(() => page.evaluate(() => window.__MENU_PREMUTO__)).toBe(1);
+    await expect.poll(() => page.evaluate(() => window.__DETTO__)).toEqual(["gdahome:menu"]);
+    expect(await page.evaluate(() => window.__BARRA__)).toBe(0);
+  });
+
+  test("dentro Home Assistant il ☰ apre il suo menu laterale", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => {
+      window.__CASSETTO__ = 0;
+      window.__BARRA__ = 0;
+      const ha = document.createElement("home-assistant");
+      ha.addEventListener("hass-toggle-menu", () => (window.__CASSETTO__ += 1));
+      document.body.appendChild(ha);
+      document.querySelector("body>header .ha-menu-btn").onclick = () => (window.__BARRA__ += 1);
+    });
+    await muro(page).locator('[data-mu-fa="menu"]').click();
+    await expect.poll(() => page.evaluate(() => window.__CASSETTO__)).toBeGreaterThan(0);
+    expect(await page.evaluate(() => window.__BARRA__)).toBe(0);
+  });
+
+  /* «Su Z Fold aperto premo l'hamburger del pannello e non va.» Largo, Home
+   * Assistant tiene la barra laterale di lato: il pannello si scosta e la
+   * lascia vedere aperta; un tocco sul pannello lo rimette a tutto schermo. */
+  test("Home Assistant largo: il ☰ apre la barra laterale accanto al pannello", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => {
+      window.__APERTO__ = [];
+      const ha = document.createElement("home-assistant");
+      ha.attachShadow({ mode: "open" });
+      const main = document.createElement("home-assistant-main");
+      main.attachShadow({ mode: "open" });
+      const barra = document.createElement("ha-sidebar");
+      barra.style.cssText =
+        "position:fixed;left:0;top:0;bottom:0;width:256px;background:#1e293b;z-index:1";
+      main.shadowRoot.append(barra);
+      ha.shadowRoot.append(main);
+      main.addEventListener("hass-toggle-menu", (e) => window.__APERTO__.push(e.detail));
+      document.body.appendChild(ha);
+    });
+    await muro(page).locator('[data-mu-fa="menu"]').click();
+    await expect.poll(() => page.evaluate(() => window.__APERTO__)).toEqual([{ open: true }]);
+    await expect(muro(page)).toHaveAttribute("data-mu-accanto-al-menu", "true");
+    await expect
+      .poll(() => muro(page).evaluate((n) => Math.round(n.getBoundingClientRect().left)))
+      .toBe(256);
+    /* Il pannello non scende sotto la plancia: niente barra in basso. */
+    await expect(muro(page)).not.toHaveAttribute("data-mu-sotto-il-menu", "true");
+    await expect(page.locator("nav.tabs.bottom-nav-bar")).toBeHidden();
+    /* E il pannello si stringe nello spazio che resta, non esce a destra. */
+    expect(
+      await muro(page).evaluate((n) => Math.round(n.getBoundingClientRect().right - innerWidth)),
+    ).toBeLessThanOrEqual(0);
+    expect(await muro(page).evaluate((n) => n.scrollWidth - n.clientWidth)).toBeLessThanOrEqual(1);
+    if (process.env.DM_FOTO) {
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: `${process.env.DM_FOTO}/muro-menu-largo.png` });
+    }
+    /* Un tocco sulla barra non lo rimette; un tocco sul pannello si'. */
+    await page.waitForTimeout(400);
+    await page.mouse.click(100, 400);
+    await expect(muro(page)).toHaveAttribute("data-mu-accanto-al-menu", "true");
+    await page.mouse.click(700, 400);
+    await expect(muro(page)).not.toHaveAttribute("data-mu-accanto-al-menu", "true");
+    await expect
+      .poll(() => muro(page).evaluate((n) => Math.round(n.getBoundingClientRect().left)))
+      .toBe(0);
   });
 
   /* «L'icona hamburger non funziona, non si apre il menu laterale»: il menu si
@@ -428,21 +585,34 @@ test.describe("la plancia a muro", () => {
     await expect(muro(page)).not.toHaveAttribute("data-mu-sotto-il-menu", "true");
   });
 
+  /* «Su wall quando premo l'hamburger da telefono aperto si alza la navbar,
+   * che sul pannello a muro non deve esserci.» Il pannello scende sotto il
+   * menu, e la barra della plancia gli passava davanti. */
+  test("col pannello acceso la barra della plancia non si vede, nemmeno dopo il ☰", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => {
+      document.body.classList.add("cd-nav-fixed", "nav-visible");
+      document.querySelector("nav.tabs.bottom-nav-bar")?.classList.add("visible");
+    });
+    await muro(page).locator('[data-mu-fa="menu"]').click();
+    await expect(muro(page)).toHaveAttribute("data-mu-sotto-il-menu", "true");
+    await expect(page.locator("nav.tabs.bottom-nav-bar")).toBeHidden();
+    await expect(page.locator(".bottom-nav-handle")).toBeHidden();
+  });
+
   test("col blocco il ☰ vuole il PIN", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, {
       muro: { ...MURO_DI_PROVA, blocco: { attivo: true, pin: "2468" } },
     });
-    await page.evaluate(() => {
-      window.__MENU_PREMUTO__ = 0;
-      document.querySelector("body>header .ha-menu-btn").onclick = () =>
-        (window.__MENU_PREMUTO__ += 1);
-    });
+    await spiaDellApp(page);
     await muro(page).locator('[data-mu-fa="menu"]').click();
     await expect(muro(page).locator(".mu-fin-codice")).toBeVisible();
-    expect(await page.evaluate(() => window.__MENU_PREMUTO__)).toBe(0);
+    expect(await page.evaluate(() => window.__DETTO__)).toEqual([]);
     for (const k of ["2", "4", "6", "8", "✓"])
       await muro(page).locator(`[data-mu-cifra="${k}"]`).click();
-    await expect.poll(() => page.evaluate(() => window.__MENU_PREMUTO__)).toBe(1);
+    await expect.poll(() => page.evaluate(() => window.__DETTO__)).toEqual(["gdahome:menu"]);
     /* Il pannello resta: il menu si apre sopra, non si esce dal muro. */
     await expect(muro(page)).toBeVisible();
     await expect(muro(page).locator(".mu-fin-codice")).toHaveCount(0);

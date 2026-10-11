@@ -616,10 +616,28 @@ export function releaseOwnerDocument() {
   }
 }
 
+/* Il chiosco lo dice anche all'app che ospita la plancia.
+ *
+ * «Non prende il modo chiosco: il flag e' abilitato, rimangono le icone in alto
+ * e in basso dell'Android.» Il chiosco copriva Home Assistant, ma le barre del
+ * telefono non sono della pagina: le nasconde l'app, e nessuno gliel'aveva
+ * chiesto. Si dice sul canale dello schermo (`gdahomeSchermo`), lo stesso del
+ * pannello a muro, e solo quando cambia. */
+function diciAllAppIlChiosco(acceso) {
+  const canale = root.gdahomeSchermo;
+  const valore = acceso ? "si" : "no";
+  if (!canale?.postMessage || state.chioscoDetto === valore) return;
+  state.chioscoDetto = valore;
+  try {
+    canale.postMessage(`chiosco:${valore}`);
+  } catch (_error) {}
+}
+
 function syncIosKiosk() {
   bindKioskGesture();
   if (kioskEnabled()) activateIosKiosk();
   else deactivateIosKiosk();
+  diciAllAppIlChiosco(state.active);
   return state.active;
 }
 
@@ -721,6 +739,20 @@ if (!state.listeners) {
     root.addEventListener?.(eventName, syncIosKiosk);
   }
   doc?.addEventListener?.("visibilitychange", syncIosKiosk);
+  /* Il telefono che si apre non ruota: cambia larghezza. «Su Z Fold da chiuso
+   * l'hamburger funziona, quando apro lo schermo non va.» Il chiosco si
+   * decideva solo a una rotazione, e aprendo il Fold restava quello di prima:
+   * la plancia a tutto schermo sopra un Home Assistant ormai largo, col menu
+   * agganciato di lato invece del cassetto, e l'hamburger che lo chiamava
+   * dietro la plancia. Si ridecide anche quando la finestra cambia misura,
+   * una volta sola a misura ferma. */
+  let misuraFerma = null;
+  const allaNuovaMisura = () => {
+    root.clearTimeout?.(misuraFerma);
+    misuraFerma = root.setTimeout?.(syncIosKiosk, 180);
+  };
+  for (const vista of new Set([root, parentWindow()].filter(Boolean)))
+    vista.addEventListener?.("resize", allaNuovaMisura, { passive: true });
   for (const eventName of ["pagehide", "unload"]) {
     root.addEventListener?.(eventName, releaseOwnerDocument);
   }
@@ -738,7 +770,11 @@ if (!state.listeners) {
   root.dmReleaseOwnerDocument = releaseOwnerDocument;
 }
 
-senzaCadere(() => installStyle("dm-beta12-room-color-lock-style", `
+senzaCadere(
+  () =>
+    installStyle(
+      "dm-beta12-room-color-lock-style",
+      `
   html[data-dm-ios-kiosk="true"],html[data-dm-ios-kiosk="true"] body{
     width:100%!important;min-width:0!important;height:var(--dm-ios-kiosk-height,100dvh)!important;
     min-height:var(--dm-ios-kiosk-height,100dvh)!important;max-height:none!important;margin:0!important;
@@ -754,9 +790,17 @@ senzaCadere(() => installStyle("dm-beta12-room-color-lock-style", `
    * zero, e col chiosco la cornice comincia sul bordo del vetro: la fascia
    * della Home — il menu, il nome della casa, l'ingranaggio — finiva sotto
    * l'orologio e si vedeva solo il meteo. Il numero vero lo misura
-   * navigation-section dal documento in cima, e lo scrive qui accanto. */
+   * navigation-section dal documento in cima, e lo scrive qui accanto.
+   *
+   * E c'e' un terzo numero, quello dell'app gdahome: «--gdahome-alto», che
+   * Flutter sa e scrive. Dentro l'app su iPhone questa regola si accende
+   * (e' un iPhone, la plancia e' a tutto vetro) e, piu' pesante della sua
+   * «html body», la batteva con uno zero: env() li' risponde zero e la
+   * misura dal documento in cima pure, perche' il documento in cima e' lei.
+   * La testata — il menu, il nome della pagina, l'ora — finiva sotto
+   * l'orologio e la batteria del telefono. Il piu' grande dei tre. */
   html[data-dm-ios-kiosk="true"] body{
-    box-sizing:border-box!important;padding-top:max(env(safe-area-inset-top,0px),var(--dm-cima-di-sistema,0px))!important;
+    box-sizing:border-box!important;padding-top:max(env(safe-area-inset-top,0px),var(--dm-cima-di-sistema,0px),var(--gdahome-alto,0px))!important;
     padding-left:max(env(safe-area-inset-left),var(--dm-gutter,14px))!important;
     padding-right:max(env(safe-area-inset-right),var(--dm-gutter,14px))!important;
     -webkit-overflow-scrolling:touch!important
@@ -767,6 +811,9 @@ senzaCadere(() => installStyle("dm-beta12-room-color-lock-style", `
     background:rgba(15,23,42,.92);color:#f8fafc;font-size:13px;font-weight:800;letter-spacing:.02em;
     pointer-events:none;opacity:0;transition:opacity .2s ease,transform .2s ease}
   #dm-kiosk-toast[data-visible="true"]{opacity:1;transform:translate(-50%,0)}
-`), "installStyle");
+`,
+    ),
+  "installStyle",
+);
 
 senzaCadere(syncIosKiosk);
