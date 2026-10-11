@@ -115,6 +115,15 @@ const CORPI = Object.freeze({
 
   gauge: `${PANNELLO}<rect ${SCOCCA} x="42" y="70" width="12" height="14" rx="3"/><rect ${SCOCCA} x="34" y="80" width="28" height="7" rx="3.5"/><circle ${SCOCCA} cx="48" cy="44" r="30"/><circle ${FRONTALE} cx="48" cy="44" r="23"/><path ${TRATTO} d="M35 57a18 18 0 1 1 26 0"/><path ${TRATTO_ACCENTO} d="M48 44 60 32"/><circle ${SCOCCA} cx="48" cy="44" r="4.5"/>`,
 
+  /* Il boiler dell'acqua calda: il serbatoio alto e tondo, il termometro a
+   * quadrante in cima, la goccia calda sul frontale, i due tubi e i piedini.
+   *
+   * «Icona boiler: che c'entra con il bidone?» La finestra del solare termico
+   * metteva il boiler come 🛢️, il fusto del petrolio — l'unica cosa che un
+   * accumulo d'acqua calda non e'. Qui c'e' il serbatoio vero, nella scocca
+   * blu notte come il termosifone e il manometro accanto. */
+  boiler: `${PANNELLO}<path ${TRATTO} d="M66 34h14M66 64h14"/><rect ${SCOCCA} x="26" y="9" width="44" height="74" rx="21"/><circle ${FRONTALE} cx="48" cy="25" r="8.5"/><path ${TRATTO_ACCENTO} d="M48 25l4.5-4.5"/><circle ${SCOCCA} cx="48" cy="25" r="2"/><rect ${FRONTALE} x="33" y="39" width="30" height="36" rx="13"/><path ${CALDO} d="M48 44c6.5 7.5 9.5 12 9.5 16.5a9.5 9.5 0 0 1-19 0c0-4.5 3-9 9.5-16.5Z"/><path ${TRATTO_CHIARO} stroke-width="2.4" d="M44.5 61.5a4 4 0 0 0 3 3.6"/><path ${TRATTO} d="M35 83v6M61 83v6"/>`,
+
   flame: `${PANNELLO}<rect ${SCOCCA} x="22" y="70" width="52" height="10" rx="5"/><rect ${SCOCCA} x="30" y="80" width="36" height="6" rx="3"/><path ${ACCENTO} d="M48 12c10 12 18 22 18 34 0 11-8 20-18 20s-18-9-18-20c0-8 5-14 9-19 1 6 4 9 7 10-2-9 0-17 2-25Z"/><path ${VETRO} d="M48 36c5 6 8 11 8 16a8 8 0 0 1-16 0c0-5 3-10 8-16Z"/>`,
 
   /* La pianta in vaso (#159): tre foglie e il vaso. Il catalogo aveva il fiore
@@ -500,6 +509,9 @@ const ALIAS = Object.freeze({
   contatore: "meter",
   manometro: "gauge",
   pressione: "gauge",
+  /* Il boiler dell'acqua calda, come lo chiama chi ce l'ha. */
+  accumulo: "boiler",
+  "acqua-calda": "boiler",
   fiamma: "flame",
   metano: "flame",
   /* La pianta in vaso, come la chiama chi la cerca. */
