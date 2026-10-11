@@ -1497,11 +1497,16 @@ function installStyles() {
      * conto di quante bolle stanno in fila resta giusto: sul telefono tre per
      * fila si prendono tutto lo spazio che c'e', e non di piu'. */
     #page-energy .n-load{width:130px!important;height:130px!important}
+    /* E la Casa un poco piu' piccola: «riesci a fare un po' piu' piccolo
+     * quello della casa». Resta il cerchio piu' grande, ma non schiaccia piu'
+     * la fila di sotto. */
+    #page-energy .n-home{width:145px!important;height:145px!important}
     #page-energy .n-load .node-label{font-size:11.5px!important;letter-spacing:0!important}
     #page-energy #view-ist .n-load span{font-size:20px!important}
     #page-energy .n-load .node-icon{font-size:26px!important}
     @media(max-width:768px){
       #page-energy .flow-stage{height:800px!important}
+      #page-energy .n-home{width:110px!important;height:110px!important}
       #page-energy .n-load{width:104px!important;height:104px!important}
       #page-energy .n-load .node-label{font-size:10.5px!important;letter-spacing:0!important}
       #page-energy #view-ist .n-load span{font-size:18px!important}
@@ -1509,6 +1514,7 @@ function installStyles() {
     }
     @media(max-width:480px){
       #page-energy .flow-stage{height:720px!important}
+      #page-energy .n-home{width:96px!important;height:96px!important}
       #page-energy .n-load{width:96px!important;height:96px!important}
     }
   `,
