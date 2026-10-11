@@ -10,6 +10,32 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.5
+
+**Pannello a muro col Fold aperto: il ☰ apre la barra di Home Assistant.**
+Oltre gli 870 pixel Home Assistant tiene la barra laterale di lato invece di
+aprire il cassetto, e il pannello copriva anche quella: il ☰ funzionava ma non
+si vedeva niente. Adesso la barra si apre e il pannello si scosta accanto; un
+tocco sul pannello lo rimette a tutto schermo.
+
+**Pannello a muro: le letture in grande, e più caselle.** I sensori che non si
+comandano hanno il nome piccolo in alto e il numero grande; la pagina
+personalizzata arriva a 16, 20 e 24 caselle.
+
+**Pannello a muro: si sceglie di nuovo da quale plancia prende le cose.** La
+tendina «Prende le cose da» torna visibile appena ci sono due plance, con
+anche «questa plancia». E la pagina Musica mostra gli altri comandi scelti
+accanto al lettore.
+
+**Chiosco su Android: le barre del telefono spariscono davvero.** La plancia
+lo dice all'app, che le nasconde e le rinasconde tornando nell'app o aprendo
+il pieghevole.
+
+**Pieghevoli e iPhone Duo.** La testata della plancia, fra i 480 e i 768
+pixel, prendeva la disposizione dei tablet e si scomponeva: ora è quella del
+telefono. Nel navigatore il popup dello svincolo e i pannelli non coprono più
+tutta la mappa sugli schermi larghi.
+
 ## 1.11.4
 
 **Samsung Z Fold aperto: la barra resta in fondo e il ☰ funziona.** Aperto, lo
