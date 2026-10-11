@@ -10,6 +10,33 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.4
+
+**Samsung Z Fold aperto: la barra resta in fondo e il ☰ funziona.** Aperto, lo
+schermo supera gli 820 pixel e la barra tornava sospesa come sui tablet; ora
+chi tocca lo schermo ha la barra attaccata al fondo a qualunque larghezza. E il
+chiosco si decideva solo ruotando il telefono: aprendo il Fold restava a tutto
+schermo sopra Home Assistant ormai largo, e il ☰ chiamava il menu dietro la
+plancia. Adesso si ridecide quando cambia la misura.
+
+**Pannello a muro: la barra della plancia non c'è mai.** Premendo ☰ il pannello
+scende sotto il menu, e la barra della plancia gli passava davanti.
+
+**Widget Auto: le modalità di evcc dalla finestra.** I tasti che evcc dichiara
+— Spento, Intelligente, Fast — e la fila «Carica anche senza sole», con le
+stesse parole e gli stessi colori della pagina Auto.
+
+**Acqua e gas: la pressione col manometro e il grafico.** La finestra disegna
+il manometro con la sua forcella e la linea delle ultime 24 ore, come il
+solare termico; e la tessera di chi ha solo la pressione dice i bar invece del
+trattino.
+
+**Navigatore: temperature, velocità e potenza arrivano.** Temperatura della
+batteria, velocità e potenza in uso non hanno una casella nella plancia, e
+gdanav diceva «non arriva». L'app le trova fra i sensori del dispositivo
+dell'auto in Home Assistant, insieme alla temperatura di fuori quando non è
+mappata (anche se si chiama «outdoor»).
+
 ## 1.11.3
 
 **Nell'app su iPhone la testata non finisce più sotto l'orologio.** Su Luci e
