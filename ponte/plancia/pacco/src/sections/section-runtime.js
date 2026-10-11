@@ -92738,7 +92738,7 @@ var PAROLE6 = Object.freeze({
   cofano: /\b(hood|bonnet|cofano|motorhaube|cap[óo]|capot|frunk)\b/i,
   allarme: /\b(alarm|allarm|antifurt|alarma|alarme)\b/i,
   olio: /\b(oil|olio|[öo]l\b|aceite|huile)\b/i,
-  esterna: /\b(outside|external|ambient|esterna|au(ss|ß)en|exterior|ext[ée]rieur)\b/i,
+  esterna: /\b(outside|outdoor|external|ambient|esterna|au(ss|ß)en|exterior|ext[ée]rieur)\b/i,
   pneumatici: /\b(tyre|tire|pneumatic|pneumatici|reifen|neum[áa]tic|pneu)\b/i
 });
 var RUOTE3 = Object.freeze([

@@ -32,13 +32,33 @@ import 'le_persone.dart';
 
 /// La vettura come la racconta la configurazione della plancia.
 class LaVettura {
-  const LaVettura({required this.auto, required this.sensori});
+  const LaVettura({
+    required this.auto,
+    required this.sensori,
+    this.vicini = const [],
+  });
 
   /// Nome, marca, modello e batteria, per gdanav.
   final AutoDiGdahome auto;
 
   /// Per ogni casella `dm.ev_*` il sensore di Home Assistant che la riempie.
   final Map<String, String> sensori;
+
+  /// Gli altri sensori dello stesso dispositivo della batteria, dal registro
+  /// di Home Assistant ([IlFiloDellaVettura]).
+  ///
+  /// «Dice che i dati non arrivano, ma su Home Assistant ci sono e su gdahome
+  /// ho integrato tutto.» La temperatura della batteria, la velocita' e la
+  /// potenza in uso la plancia non le chiede — non hanno una casella — e la
+  /// temperatura di fuori una casella ce l'ha, ma l'auto importata prima
+  /// che esistesse non l'ha riempita. Le caselle restano le prime a parlare;
+  /// dove tacciono si guarda fra i sensori dell'auto stessa, riconoscendoli
+  /// dalla classe e dal nome come fa la plancia quando importa l'auto.
+  final List<String> vicini;
+
+  /// La stessa vettura, coi sensori del suo dispositivo.
+  LaVettura coiVicini(List<String> vicini) =>
+      LaVettura(auto: auto, sensori: sensori, vicini: vicini);
 
   /// Le caselle della batteria, nell'ordine in cui le guarda la plancia
   /// (`BATTERY_REFS` in `ev-section.js`).
@@ -53,6 +73,18 @@ class LaVettura {
   static const posizione = 'dm.ev_posizione';
   static const odometro = 'dm.ev_odometro';
   static const temperaturaEsterna = 'dm.ev_temperatura_esterna';
+  static const temperaturaBatteria = 'dm.ev_temperatura_batteria';
+  static const velocita = 'dm.ev_velocita';
+  static const potenzaInUso = 'dm.ev_potenza_istantanea';
+
+  /// Il sensore della batteria, se e' mappato: da lui si trova il dispositivo.
+  String? get sensoreDellaBatteria {
+    for (final c in batteria) {
+      final id = sensori[c];
+      if (id != null && !id.startsWith('dm.')) return id;
+    }
+    return null;
+  }
 
   /// L'auto attiva dai valori della configurazione (`snapshot.values`), o
   /// `null` se nella plancia di auto elettriche non ce n'e'.
@@ -128,6 +160,13 @@ class LaVettura {
         .nonNulls
         .firstOrNull;
     final kw = _kw(potenza);
+    final mappati = {...sensori.values};
+    final accanto = [
+      for (final id in vicini)
+        if (!mappati.contains(id)) ?di0(stato, id),
+    ];
+    Entita? oDaVicino(String casella, bool Function(Entita) prova) =>
+        di(casella) ?? accanto.where(prova).firstOrNull;
     return StatoAuto(
       sorgente: TipoSorgente.gdahome,
       letto: b.aggiornataIl ?? b.cambiataIl ?? DateTime.now(),
@@ -142,9 +181,66 @@ class LaVettura {
       latitudine: _numero(dove?.attributi['latitude']),
       longitudine: _numero(dove?.attributi['longitude']),
       odometroKm: _km(di(odometro)),
-      temperaturaEsternaC: _gradi(di(temperaturaEsterna)),
+      temperaturaEsternaC: _gradi(oDaVicino(temperaturaEsterna, eDiFuori)),
+      temperaturaBatteriaC: _gradi(
+        oDaVicino(temperaturaBatteria, eDellaBatteria),
+      ),
+      velocitaKmh: _kmh(oDaVicino(velocita, eVelocita)),
+      potenzaKw: _kw(oDaVicino(potenzaInUso, ePotenzaInUso)),
     );
   }
+
+  static Entita? di0(Entita? Function(String id) stato, String id) {
+    final e = stato(id);
+    return e == null || e.muta || _numero(e.stato) == null ? null : e;
+  }
+
+  /* ── I sensori riconosciuti dal dispositivo ────────────────────────────
+   *
+   * Le stesse prove della plancia quando importa un'auto
+   * (`auto-device-binding.js`): la classe di Home Assistant, o l'unita', e le
+   * parole del nome. */
+
+  static String _parole(Entita e) => '${e.id} ${e.nome}'.replaceAll('_', ' ');
+  static bool _dice(Entita e, String re) =>
+      RegExp(re, caseSensitive: false).hasMatch(_parole(e));
+  static String _classe(Entita e) => '${e.attributi['device_class'] ?? ''}';
+  static bool _gradiDi(Entita e) =>
+      _classe(e) == 'temperature' ||
+      RegExp(r'°\s?[CF]').hasMatch(e.unita ?? '');
+
+  /// La temperatura di fuori: «outside», «outdoor», «esterna», ...
+  static bool eDiFuori(Entita e) =>
+      _gradiDi(e) &&
+      _dice(
+        e,
+        r'\b(outside|outdoor|external|exterior|ambient|esterna|esterno|au(ss|ß)en|ext[ée]rieur)\b',
+      );
+
+  /// La temperatura della batteria di trazione, non di quella da 12 volt.
+  static bool eDellaBatteria(Entita e) =>
+      _gradiDi(e) &&
+      _dice(e, r'\b(battery|batteria|pack|hv|akku|batterie|bater[ií]a)\b') &&
+      !_dice(e, r'\b12\s?v\b');
+
+  /// La velocita' dell'auto: la classe o l'unita' delle velocita', non il
+  /// vento.
+  static bool eVelocita(Entita e) =>
+      (_classe(e) == 'speed' ||
+          RegExp(
+            r'^(km/h|mph|m/s)$',
+            caseSensitive: false,
+          ).hasMatch(e.unita ?? '')) &&
+      !_dice(e, r'\b(wind|vento)\b');
+
+  /// La potenza che l'auto usa adesso: una potenza che non parla di carica.
+  static bool ePotenzaInUso(Entita e) =>
+      (_classe(e) == 'power' ||
+          RegExp(r'^(w|kw)$', caseSensitive: false).hasMatch(e.unita ?? '')) &&
+      !_dice(
+        e,
+        r'(charg|ricaric|carica|lade|recharge|wallbox|plug|solar|sole)',
+      );
 
   /// Se l'auto sta caricando, con le parole della pagina
   /// (`codiceDellaRicarica` in `stato-della-ricarica.js`): la «C» e basta.
@@ -224,6 +320,16 @@ class LaVettura {
     return switch ((e!.unita ?? '').toLowerCase()) {
       'w' => n / 1000,
       'mw' => n * 1000,
+      _ => n,
+    };
+  }
+
+  static double? _kmh(Entita? e) {
+    final n = _numero(e?.stato);
+    if (n == null) return null;
+    return switch ((e!.unita ?? '').toLowerCase()) {
+      'mph' => n * 1.609344,
+      'm/s' => n * 3.6,
       _ => n,
     };
   }
@@ -356,7 +462,11 @@ class IlFiloDellaVettura {
       final valori = risposta is Map ? risposta['snapshot'] : null;
       if (_spento || valori is! Map || valori['values'] is! Map) return;
       final tutti = Map<String, dynamic>.from(valori['values'] as Map);
-      _vettura = LaVettura.daiValori(tutti);
+      var vettura = LaVettura.daiValori(tutti);
+      if (vettura != null) {
+        vettura = vettura.coiVicini(await _viciniDi(filo, vettura));
+      }
+      _vettura = vettura;
       if (persone != null) _diCasa = lePersoneDallaPlancia(tutti);
       fonte.descrivi(_vettura?.auto);
       await _abbonati(filo);
@@ -366,6 +476,44 @@ class IlFiloDellaVettura {
        * riprova alla prossima occasione, al piu' fra un minuto. */
     }
   }
+
+  /// I sensori dello stesso dispositivo della batteria ([LaVettura.vicini]).
+  ///
+  /// Il registro si chiede una volta per batteria, non a ogni rilettura: la
+  /// risposta e' pesante, e un dispositivo non cambia sensori ogni minuto.
+  Future<List<String>> _viciniDi(Filo filo, LaVettura vettura) async {
+    final batteria = vettura.sensoreDellaBatteria;
+    if (batteria == null) return const [];
+    if (batteria == _viciniDella) return _vicini;
+    try {
+      final r = await filo.risultato({
+        'type': 'config/entity_registry/list_for_display',
+      });
+      final elenco = r is Map ? r['entities'] : null;
+      if (elenco is! List) return const [];
+      String? dispositivo;
+      for (final e in elenco) {
+        if (e is Map && e['ei'] == batteria) dispositivo = '${e['di'] ?? ''}';
+      }
+      if (dispositivo == null || dispositivo.isEmpty) return const [];
+      _vicini = [
+        for (final e in elenco)
+          if (e is Map &&
+              '${e['di'] ?? ''}' == dispositivo &&
+              '${e['ei'] ?? ''}'.startsWith('sensor.') &&
+              e['ei'] != batteria)
+            '${e['ei']}',
+      ];
+      _viciniDella = batteria;
+      return _vicini;
+    } catch (_) {
+      /* Un registro che non risponde non toglie niente: restano le caselle. */
+      return const [];
+    }
+  }
+
+  String? _viciniDella;
+  List<String> _vicini = const [];
 
   /// Si abbona ai sensori dell'auto, e a nient'altro.
   ///
@@ -383,6 +531,7 @@ class IlFiloDellaVettura {
     final ids = <String>{
       for (final id in _vettura?.sensori.values ?? const <String>[])
         if (!id.startsWith('dm.')) id,
+      ...?_vettura?.vicini,
       for (final p in _diCasa) ...[
         p.entita,
         if (p.indirizzo.isNotEmpty) p.indirizzo,
@@ -464,5 +613,8 @@ class IlFiloDellaVettura {
       a.latitudine == b.latitudine &&
       a.longitudine == b.longitudine &&
       a.odometroKm == b.odometroKm &&
-      a.temperaturaEsternaC == b.temperaturaEsternaC;
+      a.temperaturaEsternaC == b.temperaturaEsternaC &&
+      a.temperaturaBatteriaC == b.temperaturaBatteriaC &&
+      a.velocitaKmh == b.velocitaKmh &&
+      a.potenzaKw == b.potenzaKw;
 }
