@@ -138,8 +138,16 @@ async function boot(page, testInfo) {
   });
 }
 
-/* Il segno sta sul nodo, non nel documento: un nodo ristampato lo perde. */
-const NODI = ".dm-w-racconto, .dm-w-verdetto, .dm-w-frase, .dm-w-caselle, .dm-w-casella";
+/* Il segno sta sul nodo, non nel documento: un nodo ristampato lo perde.
+ *
+ * La finestra dell'Energia adesso e' quella disegnata apposta (vedi
+ * `src/sections/finestre/proposti.js`): niente verdetto e niente «Le misure»,
+ * ma la casa in grande, la barra delle fonti e le tre caselle. La storia non
+ * aggiunge piu' un punto sotto una frase — la frase non c'e' — e la prova
+ * guarda la stessa promessa sui nodi nuovi: passa la storia, cambia un
+ * numero, e la finestra resta la stessa, coi suoi nodi, col numero nuovo. */
+const NODI =
+  ".dm-f-energia, .dm-f-energia-eroe, .dm-f-energia-casa, .dm-f-energia-barra, .dm-f-energia-fonte";
 const marca = (page) =>
   page.evaluate((selettore) => {
     const nodi = [...document.querySelectorAll(`#dm-widget-popup .dm-w-body :is(${selettore})`)];
@@ -154,12 +162,11 @@ const conta = (page) =>
     return {
       quanti: nodi.length,
       stessi: nodi.filter((nodo) => nodo.__dmStessoNodo === true).length,
-      punti: document.querySelectorAll("#dm-widget-popup .dm-w-punti li").length,
-      caselle: document.querySelectorAll("#dm-widget-popup .dm-w-casella").length,
+      fonti: document.querySelectorAll("#dm-widget-popup .dm-f-energia-fonte").length,
     };
   }, NODI);
 
-test("la finestra si apre subito, e la storia aggiunge il suo punto senza rifare il resto", async ({
+test("la finestra si apre subito, e la storia e i numeri nuovi non la rifanno", async ({
   page,
 }, testInfo) => {
   await boot(page, testInfo);
@@ -168,26 +175,31 @@ test("la finestra si apre subito, e la storia aggiunge il suo punto senza rifare
   });
   const corpo = page.locator("#dm-widget-popup .dm-w-body");
   await expect(corpo).toBeVisible({ timeout: 10_000 });
-  /* Subito, senza aspettare Recorder: i numeri di adesso e le caselle. */
+  /* Subito, senza aspettare Recorder: i numeri di adesso e le fonti. */
   await expect(corpo).toContainText("480 W");
   await expect(corpo).toContainText("Batteria");
-  await expect(corpo.locator(".dm-w-racconto")).toHaveCount(1);
+  await expect(corpo.locator(".dm-w-racconto")).toHaveCount(0);
   const prima = await conta(page);
-  expect(prima.caselle).toBe(4);
+  expect(prima.fonti).toBe(3);
   const marcati = await marca(page);
-  expect(marcati).toBeGreaterThanOrEqual(8);
+  expect(marcati).toBeGreaterThanOrEqual(6);
 
-  /* Arriva la storia: un punto in piu' sotto la frase. */
-  await expect
-    .poll(() => page.evaluate(() => (window.__storieChieste || []).length), { timeout: 10_000 })
-    .toBeGreaterThan(0);
-  await expect
-    .poll(async () => (await conta(page)).punti, { timeout: 15_000 })
-    .toBeGreaterThan(prima.punti);
+  /* Passa il tempo in cui Recorder risponde, e la casa cambia numero. */
+  await page.waitForTimeout(RECORDER_DOPO_MS + 500);
+  await page.evaluate(() => {
+    const voce = {
+      entity_id: "sensor.casa_w",
+      state: "520",
+      attributes: { friendly_name: "Casa", unit_of_measurement: "W" },
+    };
+    _RAW_STATES["sensor.casa_w"] = structuredClone(voce);
+    STATES["sensor.casa_w"] = structuredClone(voce);
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
+  });
+  await expect(corpo.locator(".dm-f-energia-casa")).toContainText("520 W", { timeout: 15_000 });
 
   /* E tutto il resto e' ancora lo stesso nodo di prima: niente ristampa. */
   const dopo = await conta(page);
-  expect(dopo.caselle).toBe(4);
+  expect(dopo.fonti).toBe(3);
   expect(dopo.stessi, "i nodi della finestra sono stati ristampati").toBe(marcati);
-  await expect(corpo).toContainText(/Piu' alto del solito|Higher than usual/);
 });

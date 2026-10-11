@@ -345,6 +345,8 @@ import {
 import { disegnaComeStaLaCasa } from "./come-sta-la-casa-section.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { laMisuraDallUnita, lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
+import { importRateEntity, resolveRate } from "../core/energy-calculations.js";
+import { CHIAVE_FASCE, normalizzaLeFasce, prezzoMedioDelleFasce } from "../core/fasce-della-tariffa.js";
 import { tintaDellaPagina } from "./page-masthead-section.js";
 import { finestraDi, stiliDelleFinestre } from "./finestre-dei-widget.js";
 import "./finestre/proposti.js";
@@ -1971,7 +1973,36 @@ function tesseraEnergia(
     /* Quanto ha fatto oggi ogni sorgente: la didascalia ne fa una riga, e la
      * finestra del dettaglio lo scrive sotto la potenza di ciascuna. */
     oggi: oggi || {},
+    /* Il prezzo del kWh comprato, solo se qualcuno l'ha scritto: la finestra
+     * ne fa la spesa di oggi. Il ripiego di 0,25 € del Report qui non vale —
+     * una spesa calcolata su un prezzo inventato e' un numero finto. */
+    prezzoKwh: prezzoDelKwhScritto(),
   };
+}
+
+/* Il prezzo di acquisto che chi ha la casa ha scritto davvero, o `null`.
+ *
+ * Le stesse fonti della sezione Energia — l'entita' del prezzo nel modello
+ * canonico, poi la casella del costo, e le fasce orarie mediate sulle ore —
+ * ma senza il default: chi non ha scritto niente non ha una spesa da leggere. */
+function prezzoDelKwhScritto(states = allStates()) {
+  try {
+    const entita = clean(importRateEntity(section("energy", {}) || {}));
+    let scritto = "";
+    if (entita) scritto = clean(root.resolveEntity?.(entita) || entita);
+    else {
+      const configurato = root.cdCfg?.("cd_costo_kwh");
+      scritto =
+        configurato !== undefined && configurato !== null && configurato !== ""
+          ? configurato
+          : root.localStorage?.getItem?.("cd_costo_kwh");
+    }
+    const unico = resolveRate(scritto, states, 0);
+    const prezzo = prezzoMedioDelleFasce(normalizzaLeFasce(readJson(CHIAVE_FASCE, {})), unico);
+    return Number.isFinite(Number(prezzo)) && Number(prezzo) > 0 ? Number(prezzo) : null;
+  } catch (_errore) {
+    return null;
+  }
 }
 
 /* Le tessere dell'energia: una, o una per impianto (#286).
@@ -2096,6 +2127,9 @@ function temperatureModel(states) {
       return {
         name: clean(room.name) || clean(room.id),
         entity: clean(room.temp),
+        /* Il disegno della stanza, per la sua finestra: e' quello scelto nella
+         * pagina delle stanze. */
+        icon: clean(room.icon),
         temperature,
         humidity,
       };
@@ -2394,7 +2428,14 @@ function rigaDaEntita(states, entity, glifo = "•") {
    * e' una parola ne' in italiano ne' in inglese. Il nome di una zona —
    * «Lavoro», «Palestra» — non sta in tabella e passa intatto, che e'
    * esattamente quello che deve succedere: quella parola l'ha scritta qualcuno. */
-  return { glyph: glifo, name: nome, value: parolaDiStato(grezzo) };
+  return {
+    glyph: glifo,
+    name: nome,
+    entity: chiave,
+    daQuando: quando,
+    stato: grezzo,
+    value: parolaDiStato(grezzo),
+  };
 }
 
 /* Il disegno di una casella dell'auto, indovinato dal nome del riferimento:
@@ -2434,7 +2475,10 @@ function altreCaselleEv(states, mappa, fuori, visti) {
     /* Il motore porta scritto che e' il motore. Fra venti caselle tutte uguali
      * era una riga come le altre, e chi racconta la tessera non aveva modo di
      * sapere se la macchina e' accesa: diceva «ferma» a prescindere (#326). */
-    righe.push(riferimento === RIF_MOTORE ? { ...vestita, ruolo: "motore" } : vestita);
+    /* E ogni riga porta la sua casella: la finestra dell'auto mette le gomme
+     * attorno alla sagoma e la posizione al suo posto riconoscendole da qui. */
+    const conCasella = { ...vestita, rif: riferimento };
+    righe.push(riferimento === RIF_MOTORE ? { ...conCasella, ruolo: "motore" } : conCasella);
   }
   return righe;
 }
@@ -2495,9 +2539,14 @@ function righeVettura(lettura, conNome) {
    * se ne parla. La distinzione era scritta ma nessuno la scriveva sulle
    * righe, e cosi' di un serbatoio si continuava a dire che era «ferma» —
    * parola della colonnina, non del motore. */
-  const dellaVettura = (riga) => ({ ...riga, carburante: lettura.carburante === true });
+  const dellaVettura = (riga) => ({
+    ...riga,
+    carburante: lettura.carburante === true,
+    vettura: lettura.nome || "",
+  });
   if (lettura.percentuale != null)
     righe.push(dellaVettura({
+      ruolo: "carica",
       glyph: lettura.carburante ? "⛽" : "🔋",
       name: `${prefisso}${lettura.carburante ? t("Carburante", "Fuel") : t("Carica", "Charge")}`,
       entity: lettura.caricaEntita || "",
@@ -2505,6 +2554,7 @@ function righeVettura(lettura, conNome) {
     }));
   if (lettura.km != null)
     righe.push(dellaVettura({
+      ruolo: "autonomia",
       glyph: "🛣️",
       name: `${prefisso}${t("Autonomia", "Range")}`,
       entity: lettura.kmEntita || "",
@@ -2512,6 +2562,7 @@ function righeVettura(lettura, conNome) {
     }));
   if (lettura.ricarica)
     righe.push(dellaVettura({
+      ruolo: "ricarica",
       glyph: "🔌",
       name: `${prefisso}${t("Ricarica", "Charging")}`,
       entity: lettura.ricaricaEntita || "",
@@ -2659,6 +2710,22 @@ function evModel(states) {
      * piu' scarica e'...» a chi ne ha una. Le auto le sa questo modello, che le
      * ha appena messe in fila. */
     quante: letture.length,
+    /* Ogni auto per conto suo, per la finestra: l'anello, i chilometri e la
+     * ricarica di QUESTA vettura, non della piu' scarica. */
+    vetture: letture.map((lettura) => ({
+      nome: lettura.nome || "",
+      percentuale: lettura.percentuale,
+      carburante: lettura.carburante === true,
+      km: lettura.km,
+      kw: lettura.kw,
+      target: lettura.target,
+      inCarica: autoAllaPresa(lettura.ricarica),
+      ricarica: lettura.ricarica
+        ? statoUmanoEV(lettura.ricarica) ||
+          (autoAllaPresa(lettura.ricarica) ? t("In carica", "Charging") : t("Scollegata", "Unplugged"))
+        : "",
+      fine: lettura === attaccata ? mancano : "",
+    })),
     rows,
   };
 }
@@ -2807,6 +2874,9 @@ function solarThermalModel(states) {
         glyph: casella.glyph,
         name: friendlyName(states, dato.entity),
         entity: dato.entity,
+        /* Quale casella e': la finestra la chiama col nome del suo tasto, non
+         * con quello che l'integrazione ha dato all'entita'. */
+        ref: casella.ref,
         on: attivo,
         daQuando: Number.isFinite(cambiato) ? cambiato : null,
         value: attivo ? t("Acceso", "On") : t("Spento", "Off"),
@@ -2820,6 +2890,7 @@ function solarThermalModel(states) {
       glyph: casella.glyph,
       name: friendlyName(states, dato.entity),
       entity: dato.entity,
+      ref: casella.ref,
       /* Il testo e' per gli occhi, `raw` per i conti: `Number("68°")` non e' un
        * numero, e l'analisi delle sonde non usciva mai. */
       raw: dato.value,

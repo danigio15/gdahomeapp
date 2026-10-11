@@ -178,10 +178,14 @@ test("la tabella delle parole sta in un posto solo", () => {
   }
   /* E la riga costruita da una entita' qualunque — quella della segnalazione —
    * ci passa davvero: senza questa chiamata le prove qui sopra girerebbero a
-   * vuoto il giorno che qualcuno la togliesse. */
+   * vuoto il giorno che qualcuno la togliesse.
+   *
+   * La riga porta anche la sua entita', da quando e' cambiata e lo stato
+   * grezzo: la finestra dell'Auto riconosce da li' la posizione «home» e dice
+   * da quanto e' ferma. La parola resta quella del modulo. */
   assert.match(
     leggi("sections/home-widgets-section.js"),
-    /return \{ glyph: glifo, name: nome, value: parolaDiStato\(grezzo\) \};/,
+    /return \{\s*glyph: glifo,\s*name: nome,\s*entity: chiave,\s*daQuando: quando,\s*stato: grezzo,\s*value: parolaDiStato\(grezzo\),\s*\};/,
   );
 });
 

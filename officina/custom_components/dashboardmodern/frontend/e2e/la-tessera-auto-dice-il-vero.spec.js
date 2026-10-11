@@ -104,21 +104,25 @@ test("la finestra della tessera: il cavo una volta, e «Collegata» come la pagi
 }, testInfo) => {
   await avvia(page, testInfo);
   await page.locator('#dm-widgets .dm-tile[data-dm-widget="ev"]').click();
-  await expect(page.locator("#dm-widget-popup .dm-w-casella").first()).toBeVisible();
+  /* La finestra dell'Auto adesso e' quella disegnata apposta (vedi
+   * `src/sections/finestre/proposti.js`): la carica nell'anello, la ricarica
+   * nel chip, le caselle della colonnina nella loro sezione. Le promesse di
+   * #348 sono le stesse, lette sui pezzi nuovi. */
+  await expect(page.locator("#dm-widget-popup .dm-f-ev-anello").first()).toBeVisible();
 
-  /* Cinque profili uguali sono un'auto: la carica si legge una volta. */
-  const caselle = await testi(page, ".dm-w-casella");
-  expect(caselle.filter((testo) => /Carica/.test(testo))).toHaveLength(1);
-  expect(caselle.filter((testo) => /Autonomia/.test(testo))).toHaveLength(1);
+  /* Cinque profili uguali sono un'auto: un anello, un chip. */
+  await expect(page.locator("#dm-widget-popup .dm-f-ev-auto")).toHaveCount(1);
+  await expect(page.locator("#dm-widget-popup .dm-f-ev-anello")).toHaveCount(1);
 
-  /* E ogni sensore acceso/spento fa una pillola, non cinque. */
-  const pillole = await testi(page, ".dm-w-pillola");
-  expect(pillole.filter((testo) => /wallbox cavo/i.test(testo))).toHaveLength(1);
-  expect(pillole.filter((testo) => /leaf motore/i.test(testo))).toHaveLength(1);
+  /* E ogni sensore della colonnina fa una casella, non cinque. */
+  const caselle = await testi(page, ".dm-f-ev-cas");
+  expect(caselle.filter((testo) => /^Cavo/.test(testo))).toHaveLength(1);
+  /* Il motore spento non si dice: e' la normalita' di un'auto in garage. */
+  expect(caselle.filter((testo) => /motore/i.test(testo))).toHaveLength(0);
 
   /* Il sensore di carica dice «off» col cavo dentro: la tessera chiede al
    * nucleo con il cavo come testimone, come fa la pastiglia della pagina. */
-  const ricarica = caselle.find((testo) => /Ricarica/.test(testo)) || "";
+  const ricarica = (await testi(page, ".dm-f-ev-chip")).join(" ");
   expect(ricarica).toMatch(/Collegata/);
   expect(ricarica).not.toMatch(/Scollegata/);
 });
