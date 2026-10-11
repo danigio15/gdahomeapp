@@ -23,7 +23,12 @@ import {
   parseTodoItemsResponse,
   pendingTodoItems,
 } from "../core/todo-model.js";
-import { batterieDiCasa, CHIAVE_BATTERIE, sogliaDelleBatterie } from "../core/batterie-di-casa.js";
+import {
+  batterieDiCasa,
+  batterieDichiarate,
+  CHIAVE_BATTERIE,
+  sogliaDelleBatterie,
+} from "../core/batterie-di-casa.js";
 import {
   FONDO_DELLA_CARTA,
   GRANA_DELLA_CARTA,
@@ -3979,18 +3984,33 @@ function batteriesModel(states) {
    * Home, non un modo di dire che quella pila non esiste. La regola che
    * compone l'elenco sta in `batterie-di-casa.js`, ed e' una sola. */
   const fuoriDaiWidget = widgetExcludedEntities("batterie");
-  const entities = batterieDiCasa({
-    configurate: gruppoEntita("batt", "batterie"),
-    stati: states,
-    tolte: readJson("cd_gruppi_removed", {})?.batt,
-  }).filter((entity) => widgetIncludes(entity, fuoriDaiWidget));
+  /* Dichiarate vuol dire dichiarate, anche qui (#74).
+   *
+   * «Sezione batterie: configurate 3 batterie, il widget mi segnala batterie
+   * che non voglio osservare.» La pagina leggeva l'elenco scritto nella scheda
+   * Batterie e mostrava le tre; la tessera ripassava dal rilevamento di prima
+   * — tutto quello che Home Assistant chiama batteria — e ne contava 45, col
+   * MacBook all'1% in copertina. Stessa casa, due risposte. Adesso la tessera
+   * parte dallo stesso elenco della pagina, e solo chi non ha mai dichiarato
+   * niente resta col rilevamento. */
+  const dichiarate = batterieDichiarate(readJson(CHIAVE_BATTERIE, {}));
+  const nomiScelti = new Map((dichiarate || []).map((riga) => [riga.entity, riga.name]));
+  const entities = (
+    dichiarate
+      ? dichiarate.map((riga) => riga.entity)
+      : batterieDiCasa({
+          configurate: gruppoEntita("batt", "batterie"),
+          stati: states,
+          tolte: readJson("cd_gruppi_removed", {})?.batt,
+        })
+  ).filter((entity) => widgetIncludes(entity, fuoriDaiWidget));
   if (!entities.length) return null;
   const rows = entities
     .map((entity) => {
       const level = Number(stateOf(states, entity)?.state);
       return {
         entity,
-        name: friendlyName(states, entity),
+        name: clean(nomiScelti.get(entity)) || friendlyName(states, entity),
         level: Number.isFinite(level) ? level : null,
       };
     })

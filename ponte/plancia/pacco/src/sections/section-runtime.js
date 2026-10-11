@@ -46771,17 +46771,19 @@ function friendlyName(states, entity2) {
 }
 function batteriesModel(states) {
   const fuoriDaiWidget = widgetExcludedEntities("batterie");
-  const entities = batterieDiCasa({
+  const dichiarate = batterieDichiarate(readJson(CHIAVE_BATTERIE, {}));
+  const nomiScelti = new Map((dichiarate || []).map((riga3) => [riga3.entity, riga3.name]));
+  const entities = (dichiarate ? dichiarate.map((riga3) => riga3.entity) : batterieDiCasa({
     configurate: gruppoEntita("batt", "batterie"),
     stati: states,
     tolte: readJson("cd_gruppi_removed", {})?.batt
-  }).filter((entity2) => widgetIncludes(entity2, fuoriDaiWidget));
+  })).filter((entity2) => widgetIncludes(entity2, fuoriDaiWidget));
   if (!entities.length) return null;
   const rows = entities.map((entity2) => {
     const level = Number(stateOf(states, entity2)?.state);
     return {
       entity: entity2,
-      name: friendlyName(states, entity2),
+      name: clean(nomiScelti.get(entity2)) || friendlyName(states, entity2),
       level: Number.isFinite(level) ? level : null
     };
   }).filter((row) => row.level != null).sort((a, b) => a.level - b.level);

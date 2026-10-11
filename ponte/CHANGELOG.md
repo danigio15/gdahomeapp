@@ -38,6 +38,10 @@ quello subito sotto non tocca più l'anello. Nella vista giornaliera e mensile
 il cerchio di un carico che misura solo i watt (il boiler) non mostra più «—»
 per qualche istante prima del numero.
 
+**Batterie:** la tessera in Home conta solo le batterie dichiarate nella
+scheda Batterie, come la pagina: chi ne ha messe tre non si ritrova più in
+copertina il portatile all'1% e altre quaranta pile che non guarda.
+
 **Navigatore:** la freccia è come quella di Waze, e col traffico il celeste
 ai lati della coda si vede bene.
 

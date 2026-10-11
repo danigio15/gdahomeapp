@@ -154,3 +154,14 @@ test("la pagina delle Batterie e' nel catalogo delle intestazioni, come tutte", 
   assert.match(voce.slice(0, 300), /it: \["Batterie"/);
   assert.match(voce.slice(0, 300), /en: \["Batteries"/);
 });
+
+/* «Configurate 3 batterie, il widget mi segnala batterie che non voglio
+ * osservare»: la tessera contava tutto quello che Home Assistant chiama
+ * batteria anche a chi aveva dichiarato il suo elenco. Dichiarate vuol dire
+ * dichiarate, nella pagina come in Home. */
+test("la tessera delle batterie parte dall'elenco dichiarato, come la pagina", async () => {
+  const home = await sorgente("../src/sections/home-widgets-section.js");
+  const modello = home.slice(home.indexOf("function batteriesModel"), home.indexOf("function ariaModel"));
+  assert.match(modello, /batterieDichiarate\(readJson\(CHIAVE_BATTERIE/);
+  assert.match(modello, /dichiarate\s*\?\s*dichiarate\.map/);
+});
