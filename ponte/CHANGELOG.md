@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.2
+
+**La barra in basso sul telefono, fissa, torna al suo posto.** Con la barra
+fissa scelta nelle impostazioni, sui telefoni usciva per metà a sinistra e si
+staccava dal fondo: una regola della plancia di prima, pensata per i
+dispositivi touch, pesava più di quella che la attacca al fondo. Adesso la
+barra fissa sta appoggiata sul fondo, larga quanto lo schermo, subito sopra i
+tasti di Android.
+
 ## 1.11.1
 
 **Deumidificatori nel Clima** (#205). Un deumidificatore non è un

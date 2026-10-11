@@ -211,3 +211,38 @@ test("sul telefono la barra sta attaccata al fondo e copre la fascia dei tasti",
   expect(coiTasti.imbottitura).toBe(6 + 48);
   await page.close();
 });
+
+/* «Adesso è fissa e si sballa completamente.» Sui telefoni (dispositivi
+ * touch) il foglio di prima ha una regola per la barra visibile che la sposta
+ * di mezza larghezza, e pesava piu' di quella che la attacca al fondo. La
+ * prova qui sopra non la vedeva: aggiunge la classe a mano, senza passare da
+ * dove la plancia applica davvero la barra fissa. */
+test("barra fissa scelta davvero, su un telefono touch: attaccata al fondo e larga quanto lo schermo", async ({
+  browser,
+}, testInfo) => {
+  test.setTimeout(150_000);
+  const page = await browser.newPage({
+    viewport: { width: 412, height: 860 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await laMisuraSiFerma(page);
+  await page.evaluate(() => {
+    localStorage.setItem("cd_navbar_mode", "fixed");
+    window.cdApplyNavMode?.();
+  });
+  await page.waitForTimeout(800);
+  const barra = await page.evaluate(() => {
+    const r = document.querySelector("nav.tabs.bottom-nav-bar").getBoundingClientRect();
+    return {
+      sinistra: Math.round(r.left),
+      larga: Math.round(r.width),
+      sotto: Math.round(innerHeight - r.bottom),
+    };
+  });
+  expect(barra).toEqual({ sinistra: 0, larga: 412, sotto: 0 });
+  await page.close();
+});

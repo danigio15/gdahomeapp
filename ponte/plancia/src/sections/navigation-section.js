@@ -82,9 +82,15 @@ function installStyles() {
        * card. Qui la barra appoggia sul fondo, piatta sotto e tonda sopra, e
        * la fascia del sistema — i tasti di Android, la barretta dell'iPhone —
        * la riempie lei col suo fondo invece di lasciarla alla pagina. */
+      /* Con «html:root body» davanti: il foglio della plancia di prima, sui
+       * telefoni (html.dm-touch-navigation), ha
+       * «html.dm-touch-navigation nav.tabs.bottom-nav-bar.visible» con
+       * translateX(-50%) e un peso piu' alto di questa regola: «barra fissa e
+       * si sballa completamente» — usciva per meta' a sinistra e staccata di
+       * 18 pixel dal fondo. Cosi' vince sempre questa. */
       @media (max-width:820px){
-        nav.tabs.bottom-nav-bar.visible,
-        body.cd-nav-fixed nav.tabs.bottom-nav-bar{
+        html:root body nav.tabs.bottom-nav-bar.visible,
+        html:root body.cd-nav-fixed nav.tabs.bottom-nav-bar{
           bottom:0!important;left:0!important;right:0!important;
           transform:none!important;width:auto!important;max-width:none!important;
           border-radius:24px 24px 0 0!important;
