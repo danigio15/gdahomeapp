@@ -74,6 +74,23 @@ function installStyles() {
       body.cd-nav-fixed nav.tabs.bottom-nav-bar{
         bottom:max(8px, var(--dm-fondo-di-sistema))!important
       }
+      /* Sul telefono la barra sta attaccata al fondo, larga quanto lo schermo.
+       *
+       * «Deve stare subito sopra la barra Android: non voglio vedere lo
+       * spazio e le cose in mezzo della dashboard.» Galleggiando a otto pixel
+       * dal fondo, coi margini ai lati, sotto e accanto si vedevano passare le
+       * card. Qui la barra appoggia sul fondo, piatta sotto e tonda sopra, e
+       * la fascia del sistema — i tasti di Android, la barretta dell'iPhone —
+       * la riempie lei col suo fondo invece di lasciarla alla pagina. */
+      @media (max-width:820px){
+        nav.tabs.bottom-nav-bar.visible,
+        body.cd-nav-fixed nav.tabs.bottom-nav-bar{
+          bottom:0!important;left:0!important;right:0!important;
+          transform:none!important;width:auto!important;max-width:none!important;
+          border-radius:24px 24px 0 0!important;
+          padding-bottom:calc(6px + var(--dm-fondo-di-sistema))!important
+        }
+      }
       /* E lo spazio sotto l'ultima card cresce insieme alla barra.
        *
        * Chiesto in revisione: la barra ferma si alza dell'inset, ma lo spazio

@@ -277,7 +277,26 @@ class GestoreLicenza extends ChangeNotifier {
     if (premiumDi(casa)) return true;
     if (_forza == false) return false;
     if (_ricevutaDaPortare) return true;
+    /* «Quando parte, per un attimo fa vedere la schermata "non sei Premium"
+     * e poi carica.» Il gettone si rinnova a ogni collegamento e dura poco:
+     * chi non apre l'app da qualche giorno lo trova scaduto, e la casa —
+     * che e' Premium — sembrava Base finche' non rispondeva da casa. Un
+     * gettone della casa giusta che e' solo scaduto lascia provare le strade
+     * di fuori: li' decide il centralino, che lo sa davvero. */
+    if (eraPremium(casa)) return true;
     return comeSta(casa) == ComeStaLaLicenza.maiChiesto;
+  }
+
+  /// Se questa casa aveva un gettone gdahome suo, firmato, che adesso e'
+  /// soltanto scaduto: era Premium l'ultima volta che si e' sentita.
+  bool eraPremium(CasaConosciuta casa) {
+    final letto = _letti[casa.id];
+    if (letto == null) return false;
+    if (_grezzi[casa.id] != (casa.gettone ?? '')) return false;
+    /* Scaduto l'abbonamento (`scade`), non era «soltanto scaduto». */
+    final scade = letto.scade;
+    if (scade != null && !scade.isAfter(_orologio())) return false;
+    return letto.vale(soggetto: casa.casaAlCentralino, adesso: letto.emesso);
   }
 
   /* ─── Quello che si chiede alla casa ──────────────────────────────────── */

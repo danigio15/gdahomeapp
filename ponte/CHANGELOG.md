@@ -27,6 +27,11 @@ del tablet si passa a tutto il config con «Tutto il config». Nell'app il
 pannello è a schermo intero, senza le barre di Android, e di notte lo schermo
 si abbassa al minimo invece di restare acceso.
 
+**Telefono:** la barra in basso sta attaccata al fondo, subito sopra i tasti
+di Android, senza la striscia di pagina in mezzo. E all'avvio l'app non mostra
+più per un attimo «da fuori casa serve Premium» a chi è Premium e non apriva
+l'app da qualche giorno.
+
 **Energia:** i nomi lunghi delle stanze stanno dentro i cerchi del flusso,
 su due righe se serve.
 

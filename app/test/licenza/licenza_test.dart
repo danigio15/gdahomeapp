@@ -84,6 +84,46 @@ void main() {
     );
 
     test(
+      'un gettone soltanto scaduto lascia provare da fuori, senza dire Base',
+      () async {
+        /* «Quando parte, per un attimo fa vedere la schermata "non sei
+         * Premium" e poi carica.» L'app non si apriva da piu' di una
+         * settimana: il gettone era scaduto, ma la casa e' Premium. */
+        final adesso = DateTime.now();
+        final scaduto = await firmaUnGettone(
+          emesso: adesso.subtract(const Duration(days: 10)),
+          fino: adesso.subtract(const Duration(days: 3)),
+        );
+        final licenza = GestoreLicenza(chiave: chiaveDiProva);
+        final casa = unaCasa('a', gettone: scaduto);
+        await licenza.conosci([casa]);
+        expect(licenza.premiumDi(casa), isFalse, reason: 'qui non lo sa');
+        expect(licenza.eraPremium(casa), isTrue);
+        expect(licenza.stradeDaFuoriPer(casa), isTrue);
+
+        /* Un abbonamento finito davvero non era «soltanto scaduto». */
+        final finito = await firmaUnGettone(
+          emesso: adesso.subtract(const Duration(days: 10)),
+          fino: adesso.subtract(const Duration(days: 3)),
+          scade: adesso.subtract(const Duration(days: 1)),
+        );
+        final base = unaCasa('b', gettone: finito);
+        await licenza.conosci([base]);
+        expect(licenza.eraPremium(base), isFalse);
+        expect(licenza.stradeDaFuoriPer(base), isFalse);
+
+        /* E il gettone di un'altra casa non conta. */
+        final altra = unaCasa(
+          'c',
+          gettone: scaduto,
+          casaAlCentralino: 'casa_ffffffffffffffffffffffffffffffff',
+        );
+        await licenza.conosci([altra]);
+        expect(licenza.eraPremium(altra), isFalse);
+      },
+    );
+
+    test(
       'con una ricevuta da portare, da fuori si passa anche da Base',
       () async {
         /* Chi compra fuori casa deve poterla portare subito: la strada si apre
