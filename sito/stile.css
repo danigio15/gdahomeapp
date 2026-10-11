@@ -1,29 +1,18 @@
 /* Il vestito del sito.
  *
- * I colori non sono scelti qui: sono quelli dell'app, presi da
- * `app/lib/vestito/tema.dart` — blu notte come colore primo, ambra come
- * accento perché è il colore di una luce accesa, l'azzurro della plancia per
- * dire «premi qui». I caratteri sono quelli della plancia, Inter e Oswald,
- * serviti da qui dentro: un sito che racconta che la casa non parla con
- * nessuno e poi va a prendersi i caratteri da Google si smentisce da solo.
+ * I caratteri sono quelli della plancia, Inter e Oswald, serviti da qui
+ * dentro: un sito che racconta che la casa non parla con nessuno e poi va a
+ * prendersi i caratteri da Google si smentisce da solo.
  *
- * Il fondo è lo stesso dell'app: non un grigio piatto — che è l'assenza di
- * una scelta — ma un azzurrino con due aloni sfocati che si muovono
- * pianissimo, verde da una parte e celeste dall'altra, e le schede bianche
- * che ci galleggiano sopra.
+ * Il fondo è carta chiara e calda, e resta chiaro anche a chi tiene il
+ * telefono in tema scuro: è la copertina di gdahome, e si presenta sempre allo
+ * stesso modo. Le fasce scure (la copertina, «come funziona», il fondo) sono
+ * parti della pagina, non un secondo tema: le schermate chiare dell'app ci
+ * stanno dentro una cornice, non galleggiano sul nero.
  *
- * ## Una luce sola, e chiara
- *
- * C'era un tema scuro, e seguiva quello del sistema. Non c'è più, ed è una
- * scelta: questa è la copertina di gdahome — l'indirizzo che si scrive su un
- * negozio o su un biglietto — e una copertina si presenta sempre allo stesso
- * modo. Chi apriva il sito con un telefono in tema scuro se lo trovava quasi
- * nero, cioè una pagina diversa da quella che gli era stata mostrata, e le
- * schermate dell'app che ci stanno dentro sono chiare comunque: sopra un
- * fondo nero galleggiavano come ritagli.
- *
- * Dentro l'app il chiaro e scuro c'è, e lì ha senso: quella si guarda di
- * notte, in corridoio, con una mano sola.
+ * Quello che l'informativa (`privacy.html`) prende da qui: i caratteri, i
+ * colori, il corpo, i tasti della lingua e `.riga-di-testa`. Il resto se lo
+ * mette `privacy.css`.
  */
 
 /* ── I caratteri ────────────────────────────────────────────────────────── */
@@ -104,30 +93,29 @@
 /* ── I colori ───────────────────────────────────────────────────────────── */
 
 :root {
-  --notte: #0f172a;
-  --notte-chiara: #1e293b;
-  --azzurro: #0ea5e9;
-  --azzurro-cupo: #075985;
-  --ambra: #f59e0b;
-  --ambra-scura: #b45309;
-  --bene: #16a34a;
-  --male: #e11d48;
+  --notte: #10141c;
+  --notte-chiara: #1b2130;
+  --azzurro: #1d5bb8;
+  --azzurro-cupo: #17427f;
+  --ambra: #f29b11;
+  --ambra-scura: #a35b00;
+  --ambra-tenue: #f8e3bd;
+  --bene: #2f7d32;
+  --male: #c62828;
 
-  --fondo: #f0f4f8;
-  --alone-1: #dcfce7;
-  --alone-2: #e0f2fe;
-  --carta: #ffffff;
-  --carta-alta: #f8fafc;
-  --bordo: #e2e8f0;
-  --bordo-tenue: #eef2f7;
-  --testo: #0f172a;
-  --testo-lieve: #64748b;
-  --ombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
-  --ombra-alta: 0 2px 6px rgba(15, 23, 42, 0.06), 0 24px 60px rgba(15, 23, 42, 0.12);
+  --fondo: #f3efe7;
+  --carta: #fbf8f2;
+  --carta-alta: #e9e3d7;
+  --bordo: #d4ccbc;
+  --bordo-tenue: #e3ddd1;
+  --testo: #15171c;
+  --testo-lieve: #5b5e66;
+  --chiaro: #eef0f4;
+  --chiaro-lieve: #a3a9b6;
 
-  --largo: 1180px;
-  --raggio: 20px;
-  --raggio-piccolo: 14px;
+  --largo: 1240px;
+  --raggio: 6px;
+  --raggio-piccolo: 4px;
 }
 
 /* ── Le basi ────────────────────────────────────────────────────────────── */
@@ -143,6 +131,11 @@ html {
   scroll-padding-top: 88px;
   -webkit-text-size-adjust: 100%;
 }
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
 
 body {
   margin: 0;
@@ -155,62 +148,9 @@ body {
     "Segoe UI",
     sans-serif;
   font-size: 17px;
-  line-height: 1.62;
-  font-weight: 400;
+  line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-}
-
-/* Il fondo vivo: due aloni sfocati che si muovono pianissimo, come nell'app.
- * Stanno dietro tutto e non prendono clic. */
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  z-index: -1;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.85;
-  pointer-events: none;
-}
-body::before {
-  width: 46vw;
-  height: 46vw;
-  min-width: 320px;
-  min-height: 320px;
-  background: var(--alone-1);
-  top: -12vw;
-  left: -10vw;
-  animation: vaga1 34s ease-in-out infinite alternate;
-}
-body::after {
-  width: 52vw;
-  height: 52vw;
-  min-width: 340px;
-  min-height: 340px;
-  background: var(--alone-2);
-  top: 24vh;
-  right: -16vw;
-  animation: vaga2 41s ease-in-out infinite alternate;
-}
-@keyframes vaga1 {
-  to {
-    transform: translate3d(8vw, 12vh, 0) scale(1.15);
-  }
-}
-@keyframes vaga2 {
-  to {
-    transform: translate3d(-10vw, -8vh, 0) scale(1.1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  body::before,
-  body::after {
-    animation: none;
-  }
-  html {
-    scroll-behavior: auto;
-  }
 }
 
 img {
@@ -219,24 +159,25 @@ img {
 
 h1,
 h2,
-h3,
-h4 {
-  line-height: 1.15;
-  letter-spacing: -0.022em;
-  font-weight: 700;
+h3 {
   margin: 0 0 0.5em;
+  line-height: 1.1;
   text-wrap: balance;
 }
-h1 {
-  font-size: clamp(2.1rem, 5.4vw, 3.6rem);
-  letter-spacing: -0.032em;
+h1,
+h2 {
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0;
 }
 h2 {
-  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
-  letter-spacing: -0.028em;
+  font-size: clamp(2.2rem, 4.8vw, 4rem);
+  line-height: 0.98;
 }
 h3 {
-  font-size: 1.16rem;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 p {
   margin: 0 0 1em;
@@ -244,6 +185,10 @@ p {
 }
 a {
   color: inherit;
+  text-underline-offset: 3px;
+}
+b {
+  font-weight: 700;
 }
 
 .limite {
@@ -254,110 +199,99 @@ a {
 }
 
 section {
-  padding-block: clamp(56px, 8vw, 104px);
+  padding-block: clamp(64px, 9vw, 128px);
 }
 
-.occhiello {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ambra-scura);
-  margin-bottom: 14px;
-}
-.occhiello {
-  color: var(--ambra-scura);
-}
-.occhiello::before {
-  content: "";
-  width: 22px;
-  height: 2px;
-  background: currentColor;
-  border-radius: 2px;
+.nascosto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.guida {
-  font-size: 1.08rem;
+.piccolo,
+.nota {
+  font-size: 0.88rem;
   color: var(--testo-lieve);
-  max-width: 62ch;
+}
+
+:where(a, button, input, textarea, summary, [tabindex]):focus-visible {
+  outline: 2.5px solid var(--ambra);
+  outline-offset: 3px;
 }
 
 /* ── I bottoni ──────────────────────────────────────────────────────────── */
 
+.bottoni {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 .bottone {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 13px 22px;
+  padding: 14px 24px;
+  border: 2px solid transparent;
   border-radius: var(--raggio-piccolo);
-  border: 1px solid transparent;
   font: inherit;
   font-weight: 700;
-  font-size: 0.97rem;
+  font-size: 0.95rem;
   text-decoration: none;
   cursor: pointer;
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
     background 0.15s ease,
+    color 0.15s ease,
     border-color 0.15s ease;
 }
-.bottone:hover {
-  transform: translateY(-1px);
+.bottone-ambra {
+  background: var(--ambra);
+  color: var(--notte);
 }
-.bottone:active {
-  transform: translateY(0);
+.bottone-ambra:hover {
+  background: #fff;
+}
+.bottone-chiaro {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+.bottone-chiaro:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.08);
 }
 .bottone-pieno {
   background: var(--notte);
   color: #fff;
-  box-shadow: var(--ombra);
 }
 .bottone-pieno:hover {
-  background: var(--notte-chiara);
-  box-shadow: var(--ombra-alta);
+  background: var(--ambra);
+  color: var(--notte);
 }
 .bottone-vuoto {
-  background: var(--carta);
+  border-color: var(--notte);
   color: var(--testo);
-  border-color: var(--bordo);
 }
 .bottone-vuoto:hover {
-  border-color: var(--azzurro);
-}
-.bottone-ambra {
-  background: var(--ambra);
-  color: #3b2800;
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
-}
-.bottone-ambra:hover {
-  background: #fbbf24;
+  background: var(--notte);
+  color: #fff;
 }
 
-:where(a, button, input, textarea, summary):focus-visible {
-  outline: 2.5px solid var(--azzurro);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-/* ── La barra in cima ───────────────────────────────────────────────────── */
+/* ── La barra in cima ───────────────────────────────────────────────────
+ *
+ * Scura come la copertina, così la prima schermata è un pezzo solo. */
 
 .cappello {
   position: sticky;
   top: 0;
   z-index: 40;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  background: color-mix(in srgb, var(--fondo) 82%, transparent);
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease;
+  background: var(--notte);
+  color: var(--chiaro);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .cappello.giu {
-  border-bottom-color: var(--bordo);
+  border-bottom-color: rgba(242, 155, 17, 0.5);
 }
 .cappello .limite {
   display: flex;
@@ -369,119 +303,93 @@ section {
   display: flex;
   align-items: center;
   gap: 10px;
-  text-decoration: none;
-  font-weight: 700;
-  letter-spacing: -0.02em;
   flex-shrink: 0;
+  text-decoration: none;
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 1.35rem;
 }
 .marchio img {
-  border-radius: 9px;
   display: block;
+  border-radius: 7px;
 }
 .navigazione {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   margin-left: auto;
 }
 .navigazione a {
-  padding: 8px 10px;
-  border-radius: 10px;
+  padding: 8px 9px;
+  font-size: 0.92rem;
+  color: var(--chiaro-lieve);
   text-decoration: none;
-  font-size: 0.93rem;
-  font-weight: 400;
-  color: var(--testo-lieve);
   white-space: nowrap;
 }
 .navigazione a:hover {
-  color: var(--testo);
-  background: var(--carta);
+  color: #fff;
 }
 .attrezzi {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-left: auto;
 }
 .navigazione + .attrezzi {
   margin-left: 0;
 }
-.interruttore-tema {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  border: 1px solid var(--bordo);
-  background: var(--carta);
-  color: var(--testo);
-  cursor: pointer;
-  flex-shrink: 0;
+.cappello .attrezzi .bottone {
+  padding: 9px 16px;
+  background: var(--ambra);
+  color: var(--notte);
 }
-.interruttore-tema:hover {
-  border-color: var(--azzurro);
+.cappello .attrezzi .bottone:hover {
+  background: #fff;
 }
 
-/* ── La lingua ───────────────────────────────────────────────────────────
- *
- * Due tasti attaccati, dentro una cornice sola: si legge come un
- * interruttore a due posizioni, e quella accesa dice in che lingua si sta
- * leggendo. Non e' un menu: le lingue sono due, e per due voci un menu e'
- * un clic in piu' per niente.
- *
- * Il tasto acceso lo dice `aria-pressed`, che e' la stessa cosa che legge
- * chi usa un lettore di schermo: lo stato sta in un posto solo, e il colore
- * lo segue. */
+/* I tasti della lingua: qui scuri su chiaro, come nell'informativa; nella
+ * barra si rovesciano. */
 .lingue {
   display: flex;
-  padding: 2px;
-  gap: 2px;
-  border: 1px solid var(--bordo);
-  border-radius: 11px;
-  background: var(--carta);
   flex-shrink: 0;
+  border: 1.5px solid var(--testo);
+  border-radius: var(--raggio-piccolo);
+  overflow: hidden;
 }
 .lingua {
   min-width: 34px;
   padding: 5px 8px;
   border: 0;
-  border-radius: 8px;
   background: transparent;
-  color: var(--testo-lieve);
+  color: var(--testo);
   font: inherit;
-  font-size: 0.8rem;
-  font-weight: 650;
-  letter-spacing: 0.04em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   cursor: pointer;
 }
-.lingua:hover {
-  color: var(--testo);
-}
 .lingua[aria-pressed="true"] {
-  background: var(--azzurro);
+  background: var(--testo);
   color: #fff;
 }
-.lingua:focus-visible {
-  outline: 2px solid var(--azzurro);
-  outline-offset: 2px;
+.cappello .lingue {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.cappello .lingua {
+  color: var(--chiaro-lieve);
+}
+.cappello .lingua[aria-pressed="true"] {
+  background: #fff;
+  color: var(--notte);
 }
 
-/* Nell'informativa la barra non c'e': il marchio a sinistra e la lingua a
-   destra, sulla stessa riga. */
 .riga-di-testa {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
-/* ── Il menu sul telefono ─────────────────────────────────────────────────
- *
- * Sul computer il tasto non c'e' e le voci stanno in fila nella barra. Sotto
- * i 940 pixel le voci non spariscono piu' — sparivano, e dal telefono non si
- * arrivava a nessuna sezione se non scorrendo tutto — ma stanno dietro un
- * tasto in fondo alla barra, e si aprono una sotto l'altra, sotto la barra.
- * E' un <details>: l'attributo `open` lo mette il browser, senza script, e
- * le voci sono quelle di sempre — `.menu[open] ~ .navigazione` — non una
- * seconda copia. */
+
+/* Il menu del telefono: un <details>, che si apre anche senza script. */
 .menu {
   display: none;
 }
@@ -491,10 +399,9 @@ section {
   place-items: center;
   width: 40px;
   height: 40px;
-  border: 1px solid var(--bordo);
-  border-radius: 11px;
-  background: var(--carta);
-  color: var(--testo);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--raggio-piccolo);
+  color: #fff;
   cursor: pointer;
 }
 .menu > summary::-webkit-details-marker {
@@ -507,7 +414,7 @@ section {
 .menu[open] .menu-aperto {
   display: block;
 }
-@media (max-width: 940px) {
+@media (max-width: 1100px) {
   .menu {
     display: block;
     order: 3;
@@ -524,749 +431,727 @@ section {
     left: 0;
     right: 0;
     flex-direction: column;
-    gap: 2px;
     margin: 0;
-    padding: 10px 14px 14px;
-    background: var(--carta);
-    border-bottom: 1px solid var(--bordo);
-    box-shadow: var(--ombra-alta);
+    padding: 8px 22px 18px;
+    background: var(--notte);
+    border-bottom: 2px solid var(--ambra);
   }
   .menu[open] ~ .navigazione {
     display: flex;
   }
   .navigazione a {
-    padding: 12px 10px;
-    font-size: 1rem;
-    color: var(--testo);
+    padding: 12px 0;
+    font-size: 1.05rem;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
-
-/* Con sette voci nella barra — «Installatori» e «Contatti» sono arrivate dopo
- * — fra i 940 e i 1120 pixel il tasto «Installa l'add-on» non ci sta piu' di
- * fianco al menu. Va via lui e non il menu: lo stesso tasto sta due centimetri
- * sotto, nella copertina, e il menu e' l'unico modo di arrivare in fondo alla
- * pagina senza scorrerla tutta. */
-@media (max-width: 1120px) {
-  .cappello .attrezzi .bottone {
-    display: none;
-  }
-}
-/* Con otto voci — «L'app» e «gdanav» sono arrivate dopo — appena sopra i 940
- * pixel la barra in inglese sforava di qualche pixel: le voci si stringono un
- * po' invece di spingere la lingua fuori dallo schermo. */
-@media (min-width: 941px) and (max-width: 1060px) {
-  .navigazione a {
-    padding-inline: 7px;
-  }
-}
-
-/* Sul telefono in cima restano il marchio e la lingua.
- *
- * «Installa l'add-on» in quattrocento pixel si spezza in due righe e fa
- * crescere la barra, che sta fissa e ruba schermo a tutto il resto. Non e' un
- * tasto perduto: lo stesso sta due centimetri sotto, nella copertina, dove
- * chiunque arrivi guarda per primo. */
 @media (max-width: 560px) {
   .cappello .attrezzi .bottone {
     display: none;
   }
 }
 
-/* ── Il colpo d'occhio ──────────────────────────────────────────────────── */
+/* ── La copertina ───────────────────────────────────────────────────────── */
 
-/* ── La copertina ───────────────────────────────────────────────────────
- *
- * Due colonne: a sinistra quello che si dice, a destra quello che si vede.
- * Prima era una colonna sola, centrata, e la prima schermata finiva con un
- * mucchio di vuoto sotto: chi arrivava leggeva quattro righe su un'app senza
- * averla mai vista in faccia. */
-.apertura {
-  padding-top: clamp(36px, 5.5vw, 68px);
-  padding-bottom: clamp(28px, 4vw, 52px);
+.palco {
+  position: relative;
+  background:
+    radial-gradient(ellipse 50% 60% at 0% 40%, rgba(37, 99, 235, 0.35), transparent 70%),
+    radial-gradient(ellipse 45% 60% at 100% 30%, rgba(242, 155, 17, 0.25), transparent 70%),
+    var(--notte);
+  color: var(--chiaro);
+  padding-top: clamp(40px, 6vw, 80px);
+  padding-bottom: 0;
+  overflow: hidden;
 }
-.apertura-dentro {
+.palco-dentro {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: clamp(28px, 5vw, 64px);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(28px, 4vw, 56px);
   align-items: center;
 }
-/* Il titolo della copertina sta in una colonna, non in tutta la pagina: un
- * po' piu' piccolo di quello generico, se no si spezza in quattro righe
- * corte e non si legge come una frase. */
-.apertura h1 {
-  font-size: clamp(2rem, 3.5vw, 3.1rem);
-  margin-bottom: 0.42em;
+.palco-sopra {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chiaro-lieve);
 }
-/* Le parole in risalto: un colore solo, e del marchio.
- *
- * C'era una sfumatura da azzurro ad ambra. Anche interpolata in oklch, in
- * mezzo passava per un giallo-verde spento — su un titolo grande sembrava un
- * errore di stampa, ed era la prima cosa che si vedeva della pagina. Un blu
- * fondo non fa nessun effetto speciale, e per questo funziona. */
-.apertura h1 .filo {
-  color: var(--azzurro-cupo);
+.titolone {
+  font-size: clamp(2.8rem, 6vw, 5.2rem);
+  line-height: 0.95;
+  color: #fff;
+  margin-bottom: 0.4em;
 }
-.apertura .guida {
-  font-size: clamp(1.02rem, 1.5vw, 1.16rem);
-  max-width: 34em;
-  margin-bottom: 1.7em;
+.titolone em {
+  display: block;
+  font-style: normal;
+  color: var(--ambra);
 }
-.bottoni {
-  display: flex;
+.palco-testo {
+  font-size: 1.12rem;
+  color: #c9cdd6;
+  max-width: 32em;
+  margin-bottom: 1.6em;
+}
+.presto {
+  display: inline-flex;
+  align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  margin: 26px 0 0;
+  padding: 6px 16px 6px 6px;
+  border: 1.5px solid rgba(242, 155, 17, 0.6);
+  border-radius: 999px;
+  font-size: 0.92rem;
 }
-.sottobottoni {
-  margin-top: 16px;
-  font-size: 0.88rem;
-  color: var(--testo-lieve);
-  max-width: 36em;
+.presto b {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ambra);
+  color: var(--notte);
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-/* ── Il telefono ────────────────────────────────────────────────────────
- *
- * Una cornice sobria intorno alla fotografia: il bordo scuro del telefono e
- * un'ombra. Non un mockup disegnato con riflessi e mani — quelli invecchiano
- * male e si vede che sono finti. */
-.telefono {
+/* Gli schermi: posti a mano, in percentuale, così la composizione resta la
+ * stessa a ogni larghezza. */
+.palco-schermi {
   position: relative;
-  margin-inline: auto;
-  width: min(300px, 100%);
-  padding: 9px;
-  background: linear-gradient(160deg, #2b3a55, #0f172a 60%);
-  border-radius: 38px;
-  box-shadow: var(--ombra-alta);
+  aspect-ratio: 1.22;
 }
-.telefono img {
+.schermo {
+  position: absolute;
+  background: #05070b;
+  box-shadow:
+    0 0 0 1.5px rgba(255, 255, 255, 0.14),
+    0 30px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.schermo img {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 30px;
-  background: var(--carta);
 }
-.apertura-telefono {
-  display: flex;
-  justify-content: center;
+.schermo-tablet {
+  left: 4%;
+  top: 6%;
+  width: 74%;
+  padding: 1.6%;
+  border-radius: 18px;
 }
-
-/* ── La fila delle schermate ────────────────────────────────────────────── */
-.fila-schermate {
-  --spazio: clamp(14px, 2.4vw, 28px);
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--spazio);
-  margin-top: clamp(30px, 4vw, 46px);
+.schermo-tablet img {
+  border-radius: 9px;
 }
-.fila-schermate figure {
-  margin: 0;
-}
-.telefono-piccolo {
-  width: 100%;
-  padding: 6px;
+.schermo-telefono {
+  right: 0;
+  top: 0;
+  width: 27%;
+  padding: 1.1%;
   border-radius: 26px;
 }
-.telefono-piccolo img {
-  border-radius: 21px;
+.schermo-telefono img,
+.schermo-nav img {
+  border-radius: 20px;
 }
-.fila-schermate figcaption {
-  margin-top: 12px;
-  text-align: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--testo-lieve);
+.schermo-nav {
+  left: -2%;
+  top: 44%;
+  width: 22%;
+  padding: 1%;
+  border-radius: 24px;
+  transform: rotate(-4deg);
+}
+.schermo-polso {
+  left: 40%;
+  bottom: -4%;
+  width: 19%;
+  padding: 1.6%;
+  border-radius: 30% / 25%;
+}
+.schermo-polso img {
+  border-radius: 24% / 19%;
+}
+.schermo-tondo {
+  right: 3%;
+  bottom: -2%;
+  width: 20%;
+  padding: 1.4%;
+  border-radius: 50%;
+}
+.schermo-tondo img {
+  border-radius: 50%;
+}
+
+.fatti {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: clamp(40px, 6vw, 72px) 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.fatti div {
+  padding: 22px 16px 26px 0;
+}
+.fatti dt {
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  line-height: 1;
+  color: #fff;
+}
+.fatti dd {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  color: var(--chiaro-lieve);
 }
 
 @media (max-width: 900px) {
-  .apertura-dentro {
+  .palco-dentro {
     grid-template-columns: minmax(0, 1fr);
-    text-align: center;
   }
-  .apertura .guida,
-  .sottobottoni {
-    margin-inline: auto;
+  .palco-schermi {
+    margin-top: 10px;
   }
-  .bottoni {
-    justify-content: center;
-  }
-  /* Su una colonna sola il telefono va **sotto**, non sopra. Sopra si mangia
-   * tutta la prima schermata, e chi arriva vede una fotografia senza ancora
-   * sapere di cosa: prima si dice cos'e' e come si prende, poi si fa vedere. */
-  .apertura-telefono {
-    margin-top: 30px;
-  }
-  .telefono {
-    width: min(238px, 66%);
-  }
-  .fila-schermate {
+  .fatti {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-/* Sul telefono restano due per riga: una per riga, le sezioni con sette
- * fotografie diventavano lunghe cinque schermate. */
-@media (max-width: 460px) {
-  .fila-schermate {
-    --spazio: 12px;
-  }
-  .telefono-piccolo {
-    padding: 4px;
-    border-radius: 20px;
-  }
-  .telefono-piccolo img {
-    border-radius: 16px;
-  }
-  .fila-schermate figcaption {
-    font-size: 0.82rem;
-    line-height: 1.35;
+
+/* ── La testa delle sezioni: il titolo a sinistra, due righe a destra ───── */
+
+.testa-sezione {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(20px, 4vw, 64px);
+  align-items: end;
+  margin-bottom: clamp(36px, 5vw, 64px);
+}
+.testa-sezione h2 {
+  margin: 0;
+}
+.testa-sezione p {
+  margin: 0;
+  color: var(--testo-lieve);
+  font-size: 1.05rem;
+}
+.testa-con-marchio h2::before {
+  /* il marchio di gdanav sopra il titolo */
+  content: "";
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 22px;
+  border-radius: 14px;
+  background: url("statico/gdanav/marchio.jpg") center / cover;
+}
+@media (max-width: 820px) {
+  .testa-sezione {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-.numeroni {
+/* ── Le fotografie in fila, che scorrono di lato ────────────────────────── */
+
+.galleria {
+  display: flex;
+  gap: clamp(16px, 2vw, 28px);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-inline: max(22px, calc((100vw - var(--largo)) / 2 + 22px));
+  scroll-padding-inline: max(22px, calc((100vw - var(--largo)) / 2 + 22px));
+  padding-bottom: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bordo) transparent;
+}
+.galleria figure {
+  flex: 0 0 clamp(190px, 21vw, 250px);
+  margin: 0;
+  scroll-snap-align: start;
+}
+.galleria img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 7px solid var(--notte);
+  border-radius: 30px;
+  background: #fff;
+}
+.galleria figcaption {
+  margin-top: 12px;
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+}
+
+.sezioni-elenco {
+  margin: clamp(30px, 4vw, 48px) 0 0;
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+  line-height: 1.35;
+  text-transform: uppercase;
+  color: var(--testo);
+}
+.sezioni-elenco span::after {
+  content: " /";
+  color: var(--ambra);
+}
+.sezioni-elenco i {
+  font-style: normal;
+  color: var(--testo-lieve);
+}
+
+/* ── Il mosaico degli schermi ───────────────────────────────────────────── */
+
+.mosaico {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-  gap: 10px;
-  margin-top: clamp(30px, 4.5vw, 52px);
-  text-align: center;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-areas:
+    "menu muro muro polso"
+    "menu energia energia tondo";
+  gap: 14px;
 }
-.numerone {
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio-piccolo);
-  padding: 18px 14px;
-  box-shadow: var(--ombra);
+.tessera {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+  padding: 22px;
+  border-radius: var(--raggio);
+  background: var(--carta-alta);
+  overflow: hidden;
 }
-.numerone b {
+.tessera:nth-child(1) {
+  grid-area: menu;
+}
+.tessera:nth-child(2) {
+  grid-area: muro;
+}
+.tessera:nth-child(3) {
+  grid-area: polso;
+}
+.tessera:nth-child(4) {
+  grid-area: tondo;
+}
+.tessera:nth-child(5) {
+  grid-area: energia;
+}
+.tessera img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+.tessera-alta img {
+  width: min(100%, 250px);
+  border: 6px solid var(--notte);
+  border-radius: 28px;
+}
+.tessera-larga img {
+  border: 8px solid var(--notte);
+  border-radius: 14px;
+}
+.tessera-scura {
+  background: var(--notte);
+  color: var(--chiaro);
+}
+.tessera-polso img {
+  width: min(100%, 180px);
+  border-radius: 26% / 21%;
+}
+.tessera-tonda img {
+  border-radius: 50%;
+}
+.tessera figcaption b {
   display: block;
   font-family: "Oswald", "Inter", sans-serif;
   font-weight: 500;
-  font-size: 2.1rem;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  font-feature-settings: "tnum";
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  line-height: 1.1;
 }
-.numerone span {
+.tessera figcaption span {
   display: block;
-  font-size: 0.84rem;
+  margin-top: 4px;
+  font-size: 0.9rem;
   color: var(--testo-lieve);
-  margin-top: 6px;
-  line-height: 1.35;
 }
-
-/* ── Le schede ──────────────────────────────────────────────────────────── */
-
-.carte {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  margin-top: 34px;
+.tessera-scura figcaption span {
+  color: var(--chiaro-lieve);
 }
-.carta {
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio);
-  padding: 26px;
-  box-shadow: var(--ombra);
-}
-.carta h3 {
-  margin-bottom: 0.4em;
-}
-.carta p:last-child {
-  margin-bottom: 0;
-}
-.carta p {
+.a-parte {
+  margin-top: 28px;
+  font-size: 0.95rem;
   color: var(--testo-lieve);
-  font-size: 0.97rem;
-  margin-bottom: 0.6em;
 }
-.carta .segno {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+.a-parte a {
+  margin-right: 14px;
+  color: var(--testo);
+  font-weight: 700;
+  text-decoration-color: var(--ambra);
+  text-decoration-thickness: 2px;
+}
+@media (max-width: 900px) {
+  .mosaico {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "muro muro"
+      "menu polso"
+      "menu tondo"
+      "energia energia";
+  }
+}
+
+/* ── Come funziona: la fascia scura ─────────────────────────────────────── */
+
+.fascia-scura {
+  background: var(--notte);
+  color: var(--chiaro);
+}
+.fascia-scura h2 {
+  color: #fff;
+}
+.fascia-scura .testa-sezione p {
+  color: var(--chiaro-lieve);
+}
+.passi {
   display: grid;
-  place-items: center;
-  background: var(--carta-alta);
-  margin-bottom: 16px;
-}
-.carta .segno img {
-  display: block;
-}
-
-/* ── Come ci si arriva: il disegno ──────────────────────────────────────── */
-
-.strada {
-  margin-top: 34px;
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio);
-  padding: clamp(20px, 3.4vw, 34px);
-  box-shadow: var(--ombra);
-  overflow-x: auto;
-}
-.strada svg {
-  display: block;
-  width: 100%;
-  min-width: 560px;
-  height: auto;
-}
-.strada figcaption {
-  margin-top: 18px;
-  font-size: 0.92rem;
-  color: var(--testo-lieve);
-  min-width: 0;
-}
-
-.tre-strade {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  margin-top: 20px;
-  list-style: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(24px, 3vw, 48px);
+  margin: 0;
   padding: 0;
+  list-style: none;
+  counter-reset: passo;
 }
-.tre-strade li {
-  background: var(--carta-alta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio-piccolo);
-  padding: 16px 18px;
+.passi li {
+  counter-increment: passo;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.passi li::before {
+  content: counter(passo);
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: clamp(4rem, 8vw, 6.5rem);
+  line-height: 0.9;
+  color: var(--ambra);
+}
+.passi b {
+  font-size: 1.15rem;
+  color: #fff;
+}
+.passi span {
+  color: var(--chiaro-lieve);
+}
+.garanzie {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(24px, 3vw, 48px);
+  margin: clamp(48px, 6vw, 80px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.garanzie li {
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
   font-size: 0.93rem;
 }
-.tre-strade b {
+.garanzie b {
   display: block;
   margin-bottom: 4px;
+  color: #fff;
 }
-.tre-strade span {
-  color: var(--testo-lieve);
+.garanzie span {
+  color: var(--chiaro-lieve);
 }
-
-/* ── Le sezioni con le fotografie ───────────────────────────────────────
- *
- * La plancia, l'app e gdanav si raccontano allo stesso modo: una fila di
- * fotografie vere e, sotto, le schede con le parole. Nessuna riproduzione
- * disegnata a mano e niente che giri nella pagina: sono fotografie, e ci sono
- * sempre. */
-
-/* Tre fotografie invece di quattro: piu' strette della pagina, se no ognuna
- * diventa alta come uno schermo intero. */
-.fila-tre {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  max-width: 880px;
-  margin-inline: auto;
-}
-/* La plancia a muro e gli orologi: il tablet largo, e accanto i due polsi.
- * Le cornici sono come quella del telefono — il bordo scuro e un'ombra — e
- * Wear OS e' tondo perche' l'orologio e' tondo. */
-.fila-dispositivi {
-  display: grid;
-  grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(14px, 2.4vw, 28px);
-  align-items: center;
-  margin-top: clamp(24px, 3vw, 36px);
-}
-.fila-dispositivi figure {
-  margin: 0;
-}
-.fila-dispositivi figcaption {
-  margin-top: 12px;
-  text-align: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--testo-lieve);
-}
-.tablet,
-.orologio {
-  padding: 10px;
-  background: linear-gradient(160deg, #2b3a55, #0f172a 60%);
-  box-shadow: var(--ombra-alta);
-}
-.tablet {
-  border-radius: 26px;
-}
-.orologio {
-  border-radius: 34%/28%;
-}
-.orologio-tondo {
-  border-radius: 50%;
-}
-.tablet img,
-.orologio img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.tablet img {
-  border-radius: 14px;
-}
-.orologio img {
-  border-radius: 28%/22%;
-}
-.orologio-tondo img {
-  border-radius: 50%;
-}
-@media (max-width: 760px) {
-  .fila-dispositivi {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-  .dispositivo-muro {
-    grid-column: 1 / -1;
-  }
-}
-
-.fila-schermate + .carte,
-.carte + .fila-schermate {
-  margin-top: clamp(30px, 4vw, 46px);
-}
-
-/* Una scheda con accanto una fotografia: le parole a sinistra, quello che si
- * vede a destra. Sul telefono la fotografia va sotto. */
-.vetrina {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
-  gap: clamp(20px, 4vw, 48px);
-  align-items: center;
-  margin-top: 16px;
-  border-left: 4px solid var(--ambra);
-}
-.vetrina-sola {
-  grid-template-columns: minmax(0, 1fr);
-  margin-top: clamp(30px, 4vw, 46px);
-}
-.vetrina-detto {
-  max-width: 44em;
-}
-.vetrina-detto .bottone {
-  margin-top: 8px;
-}
-.vetrina-foto {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  align-items: start;
-  width: 100%;
-}
-.vetrina-foto img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: var(--raggio-piccolo);
-  border: 1px solid var(--bordo);
-}
-
-.carte-strette {
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-}
-
-@media (max-width: 900px) {
-  .fila-tre {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  /* La terza, da sola sulla sua riga, sta in mezzo e non a sinistra. */
-  .fila-tre > figure:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-    justify-self: center;
-    width: calc((100% - var(--spazio)) / 2);
-  }
-}
-@media (max-width: 760px) {
-  .vetrina {
+@media (max-width: 820px) {
+  .passi,
+  .garanzie {
     grid-template-columns: minmax(0, 1fr);
   }
-  .vetrina-foto {
-    justify-self: center;
-    max-width: 420px;
+}
+
+/* ── gdanav ─────────────────────────────────────────────────────────────── */
+
+.due-colonne {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(24px, 4vw, 64px);
+  margin-top: clamp(30px, 4vw, 48px);
+  color: var(--testo-lieve);
+}
+.due-colonne b {
+  color: var(--testo);
+}
+@media (max-width: 760px) {
+  .due-colonne {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-/* ── Le funzioni ────────────────────────────────────────────────────────── */
+/* ── Il listino ─────────────────────────────────────────────────────────── */
 
-.elenco-segni {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 10px;
+.tabella-scorre {
+  overflow-x: auto;
 }
-.elenco-segni li {
-  display: flex;
-  gap: 11px;
-  align-items: flex-start;
+.listino {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
   font-size: 0.97rem;
 }
-/* Una parola in grassetto dentro una voce non e' una colonna: la voce e' un
- * flex per mettere il segno di fianco al testo, e senza questa riga il `<b>`
- * diventerebbe un pezzo a se', col resto della frase incolonnato accanto. */
-.elenco-segni li > b {
-  display: contents;
+.listino th,
+.listino td {
+  padding: 15px 18px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--bordo);
 }
-.elenco-segni li::before {
-  content: "";
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--bene) 16%, transparent);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316a34a' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
-  background-size: 13px;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-.elenco-segni.in-arrivo li::before {
-  background: color-mix(in srgb, var(--ambra) 18%, transparent);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b45309' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M12 7v5.5l3.5 2'/%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3C/svg%3E");
-  background-size: 14px;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.fasi {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  margin-top: 30px;
-  counter-reset: fase;
-}
-.fase {
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio-piccolo);
-  padding: 18px;
-  position: relative;
-}
-.fase.fatta {
-  border-color: color-mix(in srgb, var(--bene) 40%, transparent);
-  background: color-mix(in srgb, var(--bene) 7%, var(--carta));
-}
-.fase b {
-  display: block;
-  font-size: 0.75rem;
-  letter-spacing: 0.09em;
+.listino thead th {
+  vertical-align: bottom;
+  border-bottom: 2px solid var(--testo);
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 1.8rem;
   text-transform: uppercase;
+  line-height: 1.1;
+}
+.listino tbody th {
+  font-weight: 700;
+  width: 32%;
+}
+.listino td {
   color: var(--testo-lieve);
-  margin-bottom: 6px;
 }
-.fase p {
-  margin: 0;
+.listino .col-premium,
+.listino td:last-child {
+  background: var(--ambra-tenue);
+  color: var(--testo);
+}
+.listino .cifra {
+  display: block;
+  margin-top: 6px;
+  font-family: "Inter", sans-serif;
   font-size: 0.95rem;
+  text-transform: none;
+  color: var(--testo-lieve);
 }
-.fase .stato {
-  position: absolute;
-  top: 16px;
-  right: 16px;
+.listino .col-premium .cifra {
+  color: var(--testo);
+}
+.listino .cifra b {
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 1.5rem;
+}
+.listino .prova {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--notte);
+  color: #fff;
+  font-family: "Inter", sans-serif;
   font-size: 0.72rem;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: var(--carta-alta);
-  color: var(--testo-lieve);
+  letter-spacing: 0.06em;
 }
-.fase.fatta .stato {
-  background: color-mix(in srgb, var(--bene) 18%, transparent);
-  color: var(--bene);
+.nota {
+  margin-top: 18px;
+  max-width: 70ch;
 }
 
-/* ── I download ─────────────────────────────────────────────────────────── */
-
-.scarichi {
+.come-si-ha {
   display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  margin-top: 34px;
-}
-.scarico code {
-  overflow-wrap: anywhere;
-  font-size: 0.86em;
-}
-.scarico {
-  display: flex;
-  flex-direction: column;
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio);
-  padding: 24px;
-  box-shadow: var(--ombra);
-  text-decoration: none;
-  transition:
-    transform 0.16s ease,
-    border-color 0.16s ease,
-    box-shadow 0.16s ease;
-}
-a.scarico:hover {
-  transform: translateY(-2px);
-  border-color: var(--azzurro);
-  box-shadow: var(--ombra-alta);
-}
-.scarico .segno {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: var(--carta-alta);
-  margin-bottom: 16px;
-  color: var(--testo);
-}
-.scarico h3 {
-  margin-bottom: 0.25em;
-}
-.scarico p {
-  color: var(--testo-lieve);
-  font-size: 0.93rem;
-  margin-bottom: 0.7em;
-}
-.scarico .come {
-  margin-top: auto;
-  font-size: 0.87rem;
-  font-weight: 700;
-  color: var(--azzurro-cupo);
-  display: inline-flex;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 64px);
   align-items: center;
-  gap: 6px;
+  margin-top: clamp(48px, 6vw, 80px);
+  padding-top: clamp(28px, 4vw, 44px);
+  border-top: 2px solid var(--testo);
 }
-.scarico.spento {
-  opacity: 0.62;
-}
-.scarico .fra-poco {
-  align-self: flex-start;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
+.come-si-ha h3 {
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 1.8rem;
   text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--carta-alta);
-  color: var(--testo-lieve);
-  margin-bottom: 12px;
 }
-
-/* ── I documenti ────────────────────────────────────────────────────────── */
-
-.documenti {
+.come-si-ha a {
+  color: var(--azzurro);
+  font-weight: 700;
+}
+.come-foto {
   display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  margin-top: 30px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
 }
-.documento {
+.come-foto img {
   display: block;
-  padding: 16px 18px;
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio-piccolo);
-  text-decoration: none;
-  transition: border-color 0.15s ease;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
 }
-.documento:hover {
-  border-color: var(--azzurro);
-}
-.documento b {
-  display: block;
-  margin-bottom: 3px;
-  font-size: 0.97rem;
-}
-.documento span {
-  font-size: 0.87rem;
-  color: var(--testo-lieve);
-}
-
-/* ── Il fondo ───────────────────────────────────────────────────────────── */
-
-.fondo-pagina {
-  border-top: 1px solid var(--bordo);
-  padding-block: 40px 52px;
-  margin-top: 40px;
-  font-size: 0.9rem;
-  color: var(--testo-lieve);
-}
-.fondo-pagina .limite {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px 32px;
-  align-items: flex-start;
-}
-.fondo-pagina p {
-  margin: 0;
-  max-width: 46ch;
-}
-.fondo-pagina nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 20px;
-  margin-left: auto;
-}
-.fondo-pagina a {
-  color: var(--testo-lieve);
-  text-decoration: none;
-}
-.fondo-pagina a:hover {
-  color: var(--testo);
-  text-decoration: underline;
-}
-
-/* ── Comparire salendo ─────────────────────────────────────────────────── */
-
-.appare {
-  opacity: 0;
-  transform: translateY(14px);
-  transition:
-    opacity 0.55s ease,
-    transform 0.55s ease;
-}
-.appare.qui {
-  opacity: 1;
-  transform: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .appare {
-    opacity: 1;
-    transform: none;
-    transition: none;
+@media (max-width: 820px) {
+  .come-si-ha {
+    grid-template-columns: minmax(0, 1fr);
   }
-}
-
-/* ── Sostieni ───────────────────────────────────────────────────────────── */
-
-.bottoni-mezzo {
-  justify-content: center;
-  margin-top: clamp(26px, 4vw, 40px);
-}
-.sottobottoni-mezzo {
-  text-align: center;
-  margin-inline: auto;
 }
 
 /* ── Per chi installa ───────────────────────────────────────────────────── */
 
-/* La stessa lista con le spunte, ma per le cose che il cruscotto NON vede: una
- * croce, e il rosso del progetto. */
-.elenco-segni.contro li::before {
-  background-color: color-mix(in srgb, var(--male) 14%, transparent);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
-  background-size: 11px;
+.fascia-carta {
+  background: var(--carta-alta);
 }
-.carta .elenco-segni + p {
-  margin-top: 16px;
+.installatori-dentro {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  gap: clamp(28px, 5vw, 80px);
+}
+.installatori-dentro > div:first-child p {
+  color: var(--testo-lieve);
+  font-size: 1.05rem;
+  margin-bottom: 1.6em;
+}
+.si-no h3 {
+  margin-top: 0;
+  padding-top: 12px;
+  border-top: 2px solid var(--testo);
+}
+.si-no ul {
+  margin: 0 0 28px;
+  padding: 0;
+  list-style: none;
+}
+.si-no li {
+  position: relative;
+  padding: 7px 0 7px 26px;
+  border-bottom: 1px solid var(--bordo);
+  font-size: 0.95rem;
+}
+.si-no li::before {
+  content: "+";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  font-weight: 700;
+  color: var(--ambra-scura);
+}
+.si-no .no li::before {
+  content: "×";
+  color: var(--male);
+}
+@media (max-width: 820px) {
+  .installatori-dentro {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Scaricala ──────────────────────────────────────────────────────────── */
+
+.tappe {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(24px, 3vw, 48px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: tappa;
+}
+.tappe li {
+  counter-increment: tappa;
+  display: flex;
+  flex-direction: column;
+  padding-top: 14px;
+  border-top: 2px solid var(--testo);
+}
+.tappe li::before {
+  content: counter(tappa, decimal-leading-zero);
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--ambra-scura);
+  margin-bottom: 8px;
+}
+.tappe h3 {
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 1.8rem;
+  text-transform: uppercase;
+}
+.tappe p {
+  color: var(--testo-lieve);
+  font-size: 0.97rem;
+}
+.tappe code {
+  display: block;
+  margin: 0 0 1em;
+  padding: 10px 12px;
+  border-radius: var(--raggio-piccolo);
+  background: var(--notte);
+  color: #fff;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+.tappe a {
+  margin-top: auto;
+  font-weight: 700;
+  text-decoration-color: var(--ambra);
+  text-decoration-thickness: 2px;
+}
+@media (max-width: 820px) {
+  .tappe {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Sostegno: la fascia ambra ──────────────────────────────────────────── */
+
+.fascia-ambra {
+  background: var(--ambra);
+  color: var(--notte);
+  padding-block: clamp(48px, 6vw, 80px);
+}
+.sostieni-dentro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+.sostieni-dentro > div:first-child {
+  max-width: 40em;
+}
+.sostieni-dentro h2 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+}
+.sostieni-dentro p {
+  margin: 0;
 }
 
 /* ── Contatti ───────────────────────────────────────────────────────────── */
 
-/* Il modulo a sinistra, largo, e di fianco la scheda che dice a chi serve.
- * Sul telefono la scheda scende sotto. */
 .contatto {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 56px);
   align-items: start;
-  margin-top: 34px;
 }
 .modulo {
   position: relative;
   display: grid;
   gap: 16px;
+  padding: clamp(20px, 3vw, 32px);
   background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
+  border: 2px solid var(--testo);
   border-radius: var(--raggio);
-  padding: 26px;
-  box-shadow: var(--ombra);
 }
 .modulo-riga {
   display: grid;
@@ -1276,35 +1161,30 @@ a.scarico:hover {
 .campo {
   display: grid;
   gap: 6px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .campo input,
 .campo textarea {
   width: 100%;
   min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio-piccolo);
+  background: #fff;
+  color: var(--testo);
   font: inherit;
   font-size: 1rem;
   font-weight: 400;
-  color: var(--testo);
-  background: var(--carta-alta);
-  border: 1px solid var(--bordo);
-  border-radius: var(--raggio-piccolo);
-  padding: 12px 14px;
+  letter-spacing: 0;
+  text-transform: none;
   resize: vertical;
 }
-.campo input:focus-visible,
-.campo textarea:focus-visible {
-  outline-offset: 1px;
-  border-radius: var(--raggio-piccolo);
-}
-/* La trappola per i programmi: fuori dallo schermo, non nascosta con
- * `display: none` — che i programmi sanno leggere — e fuori dal giro del
- * tabulatore, che una persona non ci deve mai finire. */
 .miele {
   position: absolute;
   left: -10000px;
-  top: auto;
   width: 1px;
   height: 1px;
   overflow: hidden;
@@ -1317,9 +1197,9 @@ a.scarico:hover {
 }
 .modulo-nota {
   margin: 0;
+  max-width: 40ch;
   font-size: 0.85rem;
   color: var(--testo-lieve);
-  max-width: 40ch;
 }
 .modulo-esito {
   margin: 0;
@@ -1340,150 +1220,48 @@ a.scarico:hover {
 .contatto-a-fianco b {
   display: block;
   margin-bottom: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--testo);
 }
 .contatto-a-fianco p {
-  margin-bottom: 18px;
-}
-.contatto-a-fianco p:last-child {
-  margin-bottom: 0;
+  margin-bottom: 24px;
+  color: var(--testo-lieve);
+  font-size: 0.95rem;
 }
 @media (max-width: 900px) {
   .contatto {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-/* ── Quanto costa ───────────────────────────────────────────────────────
- *
- * Due piani di fianco, Base e Premium, e sotto le tre strade per avere
- * Premium. Premium ha il bordo ambra — il colore di una luce accesa — e non
- * un'altra forma: sono la stessa app, una con qualcosa in piu'. */
-.piani {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 34px;
+/* ── In fondo ───────────────────────────────────────────────────────────── */
+
+.fondo-pagina {
+  background: var(--notte);
+  color: var(--chiaro-lieve);
+  padding-block: 48px 60px;
+  font-size: 0.9rem;
 }
-.piano {
-  position: relative;
+.fondo-pagina .limite {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 20px 32px;
+  align-items: flex-start;
 }
-.piano-premium {
-  border: 2px solid color-mix(in srgb, var(--ambra) 70%, transparent);
-  box-shadow: var(--ombra-alta);
+.fondo-pagina p {
+  margin: 0;
+  max-width: 46ch;
 }
-.piano-prova {
-  position: absolute;
-  top: 22px;
-  right: 22px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--ambra) 18%, var(--carta));
-  color: var(--ambra-scura);
+.fondo-pagina nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-left: auto;
 }
-.piano h3 {
-  padding-right: 170px;
+.fondo-pagina a {
+  color: #fff;
+  text-decoration: none;
 }
-.carta .prezzo {
-  color: var(--testo);
-  font-size: 1rem;
-  margin: 2px 0 18px;
-}
-.prezzo b {
-  font-family: "Oswald", "Inter", sans-serif;
-  font-weight: 500;
-  font-size: 2rem;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
-}
-.prezzo span {
-  color: var(--testo-lieve);
-}
-.prezzo span b {
-  font-size: 1.25rem;
-  color: var(--testo);
-}
-.sottotitolo {
-  font-size: clamp(1.3rem, 2.4vw, 1.6rem);
-  margin-top: clamp(40px, 6vw, 64px);
-}
-.carte-tre {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 20px;
-}
-.carte-due {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.carta code,
-.scarico code {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  background: var(--carta-alta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: 6px;
-  padding: 1px 5px;
-  white-space: nowrap;
-}
-.scarico code {
-  display: block;
-  width: fit-content;
-  max-width: 100%;
-  margin: 6px 0;
-  white-space: normal;
-}
-.nota-privacy {
-  margin-top: clamp(30px, 4vw, 44px);
-  border-left: 4px solid var(--azzurro);
-}
-.nota-privacy b {
-  display: block;
-  margin-bottom: 6px;
-}
-.nota-privacy a {
-  color: var(--azzurro-cupo);
-  font-weight: 700;
-}
-@media (max-width: 900px) {
-  .carte-tre {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-@media (max-width: 760px) {
-  .piani,
-  .carte-due {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-@media (max-width: 460px) {
-  .piano-prova {
-    position: static;
-    align-self: flex-start;
-    margin-bottom: 12px;
-  }
-  .piano h3 {
-    padding-right: 0;
-  }
-}
-
-/* Le funzioni: la scheda dell'app e' lunga, e sta da sola su tutta la riga,
- * con la lista in due colonne; sotto, di fianco, l'auto e quello che arriva. */
-.carte-funzioni {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.carta-larga {
-  grid-column: 1 / -1;
-}
-.elenco-due {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 28px;
-}
-@media (max-width: 760px) {
-  .carte-funzioni,
-  .elenco-due {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.fondo-pagina a:hover {
+  color: var(--ambra);
 }
