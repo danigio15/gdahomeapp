@@ -33,7 +33,8 @@ più per un attimo «da fuori casa serve Premium» a chi è Premium e non apriva
 l'app da qualche giorno.
 
 **Energia:** i nomi lunghi delle stanze stanno dentro i cerchi del flusso,
-su due righe se serve.
+su due righe se serve, e sul telefono i cerchi stanno più distanti da Casa:
+quello subito sotto non tocca più l'anello.
 
 **Navigatore:** la freccia è come quella di Waze, e col traffico il celeste
 ai lati della coda si vede bene.

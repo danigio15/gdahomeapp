@@ -55786,8 +55786,13 @@ var MOBILE = Object.freeze({
    * salgono di 67 punti e i numeri tornano sopra la barra.
    *
    * Con una fila sola non cambia niente, ed e' voluto: chi ha quattro carichi
-   * o meno non deve accorgersi di questa riga. */
-  dueFile: { rowY: [620, 750], rowTop: [62, 75] },
+   * o meno non deve accorgersi di questa riga.
+   *
+   * Poi la barra si e' attaccata al fondo e si e' presa meno palco, e le file
+   * scendono di nuovo un poco: «il carico subito sotto Casa sta troppo
+   * attaccato». Al 62% il cerchio di mezzo toccava l'anello di Casa; al 66%
+   * fra i due c'e' aria, e la seconda fila all'80% sta ancora sopra la barra. */
+  dueFile: { rowY: [660, 800], rowTop: [66, 80] },
   perRow: 4
 });
 var INSTANT_THRESHOLD = 0.5;
