@@ -311,7 +311,9 @@ test("finita, la tessera dice «Pronta» in verde e la Cottura lo dice in cima",
   ]);
   await expect(tessera.locator("[data-dm-tile-value]")).toHaveText("Pronta");
   await expect(tessera.locator("[data-dm-tile-caption]")).toContainText("Patatine · fine alle");
-  await expect(tessera).toHaveAttribute("style", /#16a34a/);
+  /* «Pronta» non e' una segnalazione: la tessera resta col colore della sua
+   * sezione, gli Elettrodomestici. Il rosso e' solo per gli avvisi. */
+  await expect(tessera).toHaveAttribute("style", /--dm-widget-accent:rgb\(14,165,233\)/);
   /* La fine apre da sola la finestra della tessera, come un avviso
    * personalizzato: una volta, quando succede. */
   const finestra = page.locator('#dm-widget-popup [data-dm-widget-detail="cottura"]');

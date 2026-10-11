@@ -294,13 +294,17 @@ test("dal config si spunta l'integrazione, e la sezione si riempie", async ({ pa
    * lista di nomi scritta dentro la plancia. */
   await expect(page.locator('#ed-body [data-dm-macchina-integrazione="hon"]')).toHaveCount(1);
   /* Ma finché non si spunta niente, nessuna riga. */
-  await expect(page.locator("#ed-body .dm-macchina-ed-riga")).toHaveCount(0);
+  await expect(page.locator("#ed-body .dm-dich-riga")).toHaveCount(0);
 
   await proxmox.click();
 
-  /* Spuntata quella giusta: i due container entrano, la lavatrice no. */
-  await expect(page.locator("#ed-body .dm-macchina-ed-riga")).toHaveCount(2);
-  await expect(page.locator("#ed-body .dm-macchina-ed-riga")).toContainText(["pve", "pve"]);
+  /* Spuntata quella giusta, le righe si prendono col tasto d'importazione: dal
+   * #74 la scheda e' un elenco dichiarato, e quello che Home Assistant trova
+   * entra una volta sola, quando lo si chiede. I due container entrano, la
+   * lavatrice no. */
+  await page.locator("#ed-body [data-dm-dich-prendi]").click();
+  await expect(page.locator("#ed-body .dm-dich-riga")).toHaveCount(2);
+  await expect(page.locator("#ed-body .dm-dich-riga")).toContainText(["pve", "pve"]);
   expect(
     await page.evaluate(() => JSON.parse(localStorage.getItem("cd_macchine") || "{}").integrazioni),
   ).toEqual(["proxmoxve"]);

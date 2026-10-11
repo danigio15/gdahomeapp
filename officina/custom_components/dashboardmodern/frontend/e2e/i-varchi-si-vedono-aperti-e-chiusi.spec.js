@@ -122,25 +122,30 @@ test("la scheda di configurazione elenca i contatti e ne toglie uno", async ({
   await page.evaluate(() => window.apriConfigEntita());
   await page.evaluate(() => window.editorSwitch?.("varchi"));
 
-  const righe = page.locator("#ed-body .dm-varco-ed-riga");
+  const righe = page.locator("#ed-body .dm-dich-riga");
   await expect(righe).toHaveCount(3, { timeout: 20_000 });
 
   /* Il sensore che varco non è si toglie dai conti, e la configurazione se lo
    * ricorda. */
+  /* Dal #74 la scheda e' un elenco dichiarato: una riga si elimina col
+   * cestino, e la configurazione tiene le righe rimaste (non piu' un elenco di
+   * «escluse»). La prova resta la stessa: chi si toglie non torna. */
   /* Si filtra per l'entity_id e non per il nome: il nome sta dentro un
    * `<input>`, e il valore di una casella non e' testo della pagina. */
   await righe
     .filter({ hasText: "binary_sensor.portone_garage" })
-    .locator("[data-dm-varco-escludi]")
+    .locator("[data-dm-dich-elimina]")
     .click();
   await expect
     .poll(
       async () =>
-        page.evaluate(
-          () => JSON.parse(window.localStorage.getItem("cd_varchi") || "{}")?.escluse || [],
+        page.evaluate(() =>
+          (JSON.parse(window.localStorage.getItem("cd_varchi") || "{}")?.righe || []).some(
+            (riga) => riga?.entity === "binary_sensor.portone_garage",
+          ),
         ),
       { timeout: 10_000 },
     )
-    .toEqual(["binary_sensor.portone_garage"]);
-  await expect(page.locator("#ed-body .dm-varco-ed-riga")).toHaveCount(2);
+    .toBe(false);
+  await expect(page.locator("#ed-body .dm-dich-riga")).toHaveCount(2);
 });
