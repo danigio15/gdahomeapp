@@ -4332,7 +4332,6 @@ export const MESSAGE_KEYS = Object.freeze([
   "To do",
   "to each; the status (Running / Standby / Off) is derived from",
   "to full",
-  "to go",
   "to keep an eye on",
   "To play",
   "to refill",

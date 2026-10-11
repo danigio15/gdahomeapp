@@ -666,7 +666,7 @@ export const SOURCE_INDEX = Object.freeze({
   "All'indirizzo manca un segnaposto: servono tutti e tre — {z} per l'ingrandimento, {x} e {y} per il quadratino. Con uno solo si chiederebbe sempre lo stesso pezzo di mondo.": "The address is missing a placeholder: all three are needed — {z} for the zoom, {x} and {y} for the tile. With only one it would always ask for the same piece of the world.",
   "All'uscita c'è": "At the outlet there is",
   "Alla base": "Docked",
-  "alla fine": "to go",
+  "alla fine": "to full",
   "Allagamenti": "Floods",
   "Allagamento": "Flood",
   "Allarme": "Alarm",

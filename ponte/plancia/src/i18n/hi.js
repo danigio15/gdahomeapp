@@ -2306,7 +2306,6 @@ export default Object.freeze({
   "Quick command": "त्वरित आदेश",
   "Last mode": "पिछला मोड",
   "power now": "अभी शक्ति",
-  "to go": "शेष",
   "Window sensor": "खिड़की सेंसर",
   "Door sensor": "दरवाज़ा सेंसर",
   "Smoke detector": "धुआँ डिटेक्टर",

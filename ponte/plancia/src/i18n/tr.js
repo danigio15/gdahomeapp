@@ -2306,7 +2306,6 @@ export default Object.freeze({
   "Quick command": "Hızlı komut",
   "Last mode": "Son mod",
   "power now": "şu anki güç",
-  "to go": "kaldı",
   "Window sensor": "Pencere sensörü",
   "Door sensor": "Kapı sensörü",
   "Smoke detector": "Duman dedektörü",

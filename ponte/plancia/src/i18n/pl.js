@@ -2306,7 +2306,6 @@ export default Object.freeze({
   "Quick command": "Szybkie polecenie",
   "Last mode": "Ostatni tryb",
   "power now": "moc teraz",
-  "to go": "do końca",
   "Window sensor": "Czujnik okna",
   "Door sensor": "Czujnik drzwi",
   "Smoke detector": "Czujnik dymu",
