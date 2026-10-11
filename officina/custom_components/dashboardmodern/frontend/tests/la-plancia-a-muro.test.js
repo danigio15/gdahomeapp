@@ -116,10 +116,10 @@ test("finche' nessuno li sceglie, i comandi seguono la stanza", () => {
   );
 });
 
-test("sei posti, quattro pagine, e un comando senza entita' vera non entra", () => {
+test("sei posti di serie, otto pagine, e un comando senza entita' vera non entra", () => {
   const troppi = Array.from({ length: 9 }, (_, i) => ({ tipo: "luce", entita: `light.l${i}` }));
   const muro = muroPulito({
-    pagine: Array.from({ length: 6 }, () => ({
+    pagine: Array.from({ length: 10 }, () => ({
       modello: "stanza",
       comandi: [
         ...troppi,
@@ -128,6 +128,7 @@ test("sei posti, quattro pagine, e un comando senza entita' vera non entra", () 
       ],
     })),
   });
+  assert.equal(PAGINE_AL_MASSIMO, 8);
   assert.equal(muro.pagine.length, PAGINE_AL_MASSIMO);
   assert.equal(muro.pagine[0].comandi.length, POSTI);
   assert.ok(
@@ -356,4 +357,114 @@ test("caldo o freddo: comanda quello che fa, poi la pagina, poi il tipo", () => 
   assert.equal(climaScalda({ stato: "off", tipo: "clima" }), false);
   assert.equal(climaScalda({ stato: "off", tipo: "pompa", zona: "caldo" }), true);
   assert.equal(climaScalda({ stato: "off", tipo: "pompa" }), false);
+});
+
+/* «Come configuratore e come sezioni da gestire e vedere riusciamo a fare
+ * meglio?» La griglia si sceglie, le pagine hanno un colore, e ci sono le
+ * pagine da guardare: tapparelle, ambienti, telecamere, energia. */
+test("la griglia si sceglie: da quattro a dodici posti, e in verticale si gira", async () => {
+  const { GRIGLIE, grigliaDellaPagina, postiDellaPagina } = await import(
+    "../src/core/plancia-a-muro.js"
+  );
+  assert.deepEqual(Object.keys(GRIGLIE), ["4", "6", "8", "9", "12"]);
+  const troppi = Array.from({ length: 14 }, (_, i) => ({ tipo: "luce", entita: `light.l${i}` }));
+  const muro = muroPulito({
+    pagine: [
+      { modello: "personale", griglia: 12, comandi: troppi },
+      { modello: "personale", griglia: 7, comandi: troppi },
+      { modello: "telecamere" },
+    ],
+  });
+  assert.equal(muro.pagine[0].griglia, 12);
+  assert.equal(muro.pagine[0].comandi.length, 12);
+  assert.equal(muro.pagine[1].griglia, POSTI, "una griglia che non c'e' torna quella di serie");
+  assert.equal(muro.pagine[1].comandi.length, POSTI);
+  assert.equal(postiDellaPagina(muro.pagine[2]), 4, "le telecamere nascono in quattro");
+  assert.deepEqual(grigliaDellaPagina(muro.pagine[0], "orizzontale"), { colonne: 4, righe: 3 });
+  assert.deepEqual(grigliaDellaPagina(muro.pagine[0], "verticale"), { colonne: 3, righe: 4 });
+  assert.deepEqual(muroPulito(JSON.stringify(muro)), muro);
+});
+
+test("una stanza con la griglia grande propone piu' comandi", () => {
+  const fonte = fonteDaiValori(VALORI);
+  const pagina = muroPulito({ pagine: [{ modello: "stanza", stanza: "Soggiorno", griglia: 4 }] })
+    .pagine[0];
+  assert.equal(comandiDellaPagina(pagina, fonte).length, 4);
+  assert.equal(comandiProposti(fonte, "Soggiorno", 12).length, 7, "tutto quello che c'e'");
+});
+
+test("il colore della pagina e' uno della tavolozza, o quello del tipo", async () => {
+  const { COLORI_DELLE_PAGINE } = await import("../src/core/plancia-a-muro.js");
+  const muro = muroPulito({
+    pagine: [
+      { modello: "stanza", colore: COLORI_DELLE_PAGINE[2].toUpperCase() },
+      { modello: "stanza", colore: "red; background:url(x)" },
+    ],
+  });
+  assert.equal(muro.pagine[0].colore, COLORI_DELLE_PAGINE[2]);
+  assert.equal(muro.pagine[1].colore, "");
+});
+
+test("le pagine da guardare: tapparelle, ambienti, telecamere, energia", async () => {
+  const { ambientiDellaFonte, comandiDellElenco, energiaDellaPagina, telecamereDellaFonte } =
+    await import("../src/core/plancia-a-muro.js");
+  const fonte = fonteDaiValori({
+    ...VALORI,
+    dm_dashboard_state: JSON.stringify({
+      ...STATO,
+      sections: {
+        ...STATO.sections,
+        rooms: [
+          { id: "soggiorno", name: "Soggiorno", temp: "sensor.t_sog", hum: "sensor.h_sog" },
+          { id: "cucina", name: "Cucina" },
+          { id: "cantina", name: "Cantina" },
+        ],
+      },
+    }),
+    cd_entity_overrides: JSON.stringify({
+      "dm.security_centrale_allarme": "alarm_control_panel.casa",
+      "dm.energy_potenza_consumo_casa": "sensor.casa_w",
+      "dm.energy_potenza_fotovoltaico": "sensor.fv_w",
+    }),
+  });
+  assert.deepEqual(
+    comandiDellElenco("tapparelle", fonte).map((c) => [c.tipo, c.entita]),
+    [["tapparella", "cover.soggiorno"]],
+  );
+  assert.deepEqual(
+    ambientiDellaFonte(fonte).map((a) => [a.stanza.name, a.luci.length]),
+    [
+      ["Soggiorno", 2],
+      ["Cucina", 1],
+    ],
+    "la cantina senza sonde ne' luci non dice niente",
+  );
+  assert.deepEqual(telecamereDellaFonte(fonte), [{ entita: "camera.cancello", nome: "" }]);
+  const pagina = muroPulito({
+    pagine: [{ modello: "energia", energia: { casa: "sensor.mia_casa", rete: "non valida" } }],
+  }).pagine[0];
+  assert.deepEqual(energiaDellaPagina(pagina, fonte), {
+    casa: "sensor.mia_casa",
+    solare: "sensor.fv_w",
+    rete: "",
+    batteria: "",
+  });
+});
+
+test("meteo e riposo si scelgono, e di serie il riposo torna alla prima pagina", () => {
+  const vuoto = muroPulito({});
+  assert.equal(vuoto.meteo, "");
+  assert.equal(vuoto.riposo.torna, true);
+  assert.equal(vuoto.riposo.sensore, "");
+  const scelto = muroPulito({
+    meteo: "weather.casa",
+    riposo: { torna: false, sensore: "sensor.salotto_t", minuti: 5 },
+  });
+  assert.equal(scelto.meteo, "weather.casa");
+  assert.deepEqual(scelto.riposo, {
+    attivo: true,
+    minuti: 5,
+    torna: false,
+    sensore: "sensor.salotto_t",
+  });
 });

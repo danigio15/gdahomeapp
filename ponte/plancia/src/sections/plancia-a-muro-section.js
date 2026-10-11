@@ -37,7 +37,12 @@ import {
   eNotte,
   eUnaScena,
   MODELLI_ELENCO,
+  ambientiDellaFonte,
+  energiaDellaPagina,
   fonteDaiValori,
+  grigliaDellaPagina,
+  postiDellaPagina,
+  telecamereDellaFonte,
   fonteDalleSezioni,
   muroPulito,
   pinGiusto,
@@ -470,6 +475,10 @@ const MODELLI_SCRITTI = () => ({
   personale: t("La mia pagina", "My page"),
   luci: t("Luci", "Lights"),
   clima: t("Clima", "Climate"),
+  tapparelle: t("Tapparelle", "Blinds"),
+  ambienti: t("Ambienti", "Rooms"),
+  telecamere: t("Telecamere", "Cameras"),
+  energia: t("Energia", "Energy"),
 });
 const SOTTO = () => ({
   stanza: t("Luci · Clima · Tapparelle · Scene", "Lights · Climate · Blinds · Scenes"),
@@ -478,6 +487,10 @@ const SOTTO = () => ({
   personale: t("I comandi scelti da te", "Your own controls"),
   luci: t("Tutte le luci di casa", "Every light in the house"),
   clima: t("Caldo · Freddo", "Heating · Cooling"),
+  tapparelle: t("Tutte le tapparelle di casa", "Every blind in the house"),
+  ambienti: t("Temperatura · Umidità · Luci", "Temperature · Humidity · Lights"),
+  telecamere: t("Le immagini dal vivo", "Live pictures"),
+  energia: t("Adesso, in casa", "Right now, at home"),
 });
 const DISEGNO_DEL_MODELLO = {
   stanza: "stanze",
@@ -486,6 +499,10 @@ const DISEGNO_DEL_MODELLO = {
   personale: "widget",
   luci: "luci",
   clima: "clima",
+  tapparelle: "tapparelle",
+  ambienti: "temperatura",
+  telecamere: "telecamere",
+  energia: "energia",
 };
 const ACCENTO_DEL_MODELLO = {
   stanza: "#f59e0b",
@@ -494,7 +511,12 @@ const ACCENTO_DEL_MODELLO = {
   personale: "#8b5cf6",
   luci: "#f59e0b",
   clima: "#0ea5e9",
+  tapparelle: "#8b5cf6",
+  ambienti: "#ef4444",
+  telecamere: "#2563eb",
+  energia: "#10b981",
 };
+const accentoDi = (pagina) => clean(pagina?.colore) || ACCENTO_DEL_MODELLO[pagina?.modello];
 
 const titoloDi = (pagina) =>
   clean(pagina.titolo) ||
@@ -513,8 +535,9 @@ function orologio(adesso = new Date()) {
 }
 
 function meteo() {
-  segnaDominio("weather");
-  const id = Object.keys(allStates() || {}).find((k) => k.startsWith("weather."));
+  const scelto = clean(state.muro?.meteo);
+  if (!scelto) segnaDominio("weather");
+  const id = scelto || Object.keys(allStates() || {}).find((k) => k.startsWith("weather."));
   if (!id) return null;
   const s = stato(id);
   return { temperatura: s?.attributes?.temperature, condizione: s?.state };
@@ -537,13 +560,16 @@ const PAROLE_DEL_METEO = () => ({
 function testa(pagina, muro) {
   const o = orologio();
   const m = pagina.riga?.meteo !== false ? meteo() : null;
-  const accento = ACCENTO_DEL_MODELLO[pagina.modello];
+  const accento = accentoDi(pagina);
+  /* Con piu' di quattro pagine le linguette tengono il disegno, e il nome
+   * solo quella aperta: otto nomi interi non ci stanno accanto all'ora. */
+  const molte = muro.pagine.length > 4 ? " mu-molte" : "";
   const linguette =
     muro.pagine.length > 1
-      ? `<div class="mu-pagine" role="tablist">${muro.pagine
+      ? `<div class="mu-pagine${molte}" role="tablist">${muro.pagine
           .map(
             (p, i) =>
-              `<button type="button" role="tab" class="${i === state.pagina ? "si" : ""}" style="--acc:${ACCENTO_DEL_MODELLO[p.modello]}" data-mu-pagina="${i}" aria-selected="${i === state.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`,
+              `<button type="button" role="tab" class="${i === state.pagina ? "si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`,
           )
           .join("")}</div>`
       : "";
@@ -850,11 +876,12 @@ function paginaStanza(pagina) {
           )
           .join("")}</div>`
       : "";
-  /* Le pagine elenco non hanno tetto: sei per volta a schermo, e la griglia
-   * scorre col dito. Vuote, lo dicono. */
-  const quante = elenco ? Math.max(comandi.length, 1) : 6;
+  /* Le pagine elenco non hanno tetto: una griglia per volta a schermo, e la
+   * griglia scorre col dito. Vuote, lo dicono. */
+  const posti = postiDellaPagina(pagina);
+  const quante = elenco ? Math.max(comandi.length, 1) : posti;
   if (elenco && !comandi.length)
-    return `${linguette}<div class="mu-g6">${vuoto(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+    return `${linguette}<div class="mu-g6" style="${stileDellaGriglia(pagina)}">${vuoto(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
   const carte = Array.from({ length: quante }, (_, i) => {
     const c = comandi[i];
     if (!c || c.tipo === "vuoto") return vuoto(i);
@@ -865,17 +892,128 @@ function paginaStanza(pagina) {
     return cardAzione(c, i);
   });
   const riga = pagina.modello === "stanza" ? pillole(pagina) : linguette;
-  return `${riga}<div class="mu-g6${elenco && quante > 6 ? " mu-scorre" : ""}">${carte.join("")}</div>`;
+  return `${riga}${griglia(pagina, carte, quante)}`;
+}
+
+/* La griglia della pagina: colonne e righe secondo la scelta e il verso. Sul
+ * pannello piccolo al massimo tre per tre, e il resto scorre. */
+function misureDellaGriglia(pagina) {
+  const g = grigliaDellaPagina(pagina, state.verso || "orizzontale");
+  return state.compatto
+    ? { colonne: Math.min(g.colonne, 3), righe: Math.min(g.righe, 3) }
+    : g;
+}
+const stileDellaGriglia = (pagina) => {
+  const g = misureDellaGriglia(pagina);
+  return `--mu-col:${g.colonne};--mu-righe:${g.righe}`;
+};
+/* Una card piu' stretta di cosi' non tiene il disco, il nome e l'interruttore
+ * su una riga: la griglia passa alla forma fitta (`mu-fitta`). */
+const CARD_STRETTA = 340;
+function griglia(pagina, carte, quante = carte.length) {
+  const g = misureDellaGriglia(pagina);
+  const scorre = quante > g.colonne * g.righe ? " mu-scorre" : "";
+  const base = (state.verso === "verticale" ? 800 : 1280) / g.colonne;
+  const fitta = !state.compatto && base < CARD_STRETTA ? " mu-fitta" : "";
+  return `<div class="mu-g6${scorre}${fitta}" style="${stileDellaGriglia(pagina)}">${carte.join("")}</div>`;
 }
 
 function paginaScene(pagina) {
   const scene = pagina.scene.length ? pagina.scene : [];
-  const carte = Array.from({ length: 6 }, (_, i) => {
+  const carte = Array.from({ length: postiDellaPagina(pagina) }, (_, i) => {
     const c = scene[i];
     if (!c || c.tipo === "vuoto") return vuoto(i);
     return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
   });
-  return `<div class="mu-g6">${carte.join("")}</div>`;
+  return griglia(pagina, carte);
+}
+
+/* ── le pagine da guardare: ambienti, telecamere, energia ───────────────── */
+
+function paginaAmbienti(pagina) {
+  const ambienti = ambientiDellaFonte(state.fonte || {});
+  if (!ambienti.length)
+    return griglia(pagina, [vuoto(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))]);
+  const carte = ambienti.map(({ stanza, luci }, i) => {
+    const temp = stanza.temp ? numero(stato(stanza.temp)?.state) : null;
+    const umid = stanza.hum ? numero(stato(stanza.hum)?.state) : null;
+    const accese = luci.filter((id) => acceso(id)).length;
+    const accento = accese ? ACCENTI.luce : "#ef4444";
+    return `<div class="mu-carta mu-card mu-ambiente ${accese ? "mu-accesa" : ""}" style="--acc:${accento}" data-mu-card="${i}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno("stanze", 26, `amb-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(stanza.name)}</div>${luci.length ? `<div class="mu-stato ${accese ? "" : "spento"}">${esc(accese ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}` : t("Luci spente", "Lights off"))}</div>` : ""}</div></div>
+      <div class="mu-target">${
+        stanza.temp
+          ? `<span class="mu-grande">${temp === null ? "—" : `${decimale(temp)}°`}</span>`
+          : luci.length
+            ? `<span class="mu-grande">${accese}/${luci.length}</span><span class="mu-et">${esc(t("luci", "lights"))}</span>`
+            : ""
+      }${umid === null ? "" : `<span class="mu-et">${decimale(umid, 0)}% ${esc(t("umidità", "humidity"))}</span>`}</div></div>`;
+  });
+  return griglia(pagina, carte);
+}
+
+function paginaTelecamere(pagina) {
+  const telecamere = telecamereDellaFonte(state.fonte || {});
+  if (!telecamere.length)
+    return griglia(pagina, [vuoto(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))]);
+  const carte = telecamere.map(
+    (k, i) =>
+      `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video">${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi(k.entita))}</span></div></button>`,
+  );
+  return griglia(pagina, carte);
+}
+
+/* Watt scritti per chi guarda da lontano: «850 W», «3,2 kW». */
+function potenza(id) {
+  const s = stato(id);
+  const v = numero(s?.state);
+  if (v === null) return { testo: "—", valore: null };
+  const unita = clean(s?.attributes?.unit_of_measurement) || "W";
+  const watt = /^kw$/i.test(unita) ? v * 1000 : v;
+  /* Il verso lo dice la parola sopra («preleva», «cede»): il numero e' senza
+   * segno. */
+  const quanto = Math.abs(watt);
+  return {
+    valore: watt,
+    testo: quanto >= 1000 ? `${decimale(quanto / 1000, 1)} kW` : `${decimale(quanto, 0)} W`,
+  };
+}
+
+function paginaEnergia(pagina) {
+  const e = energiaDellaPagina(pagina, state.fonte || {});
+  const tessere = [];
+  if (e.casa) {
+    const p = potenza(e.casa);
+    tessere.push(["casa", "home", "#0ea5e9", t("Consuma la casa", "House uses"), p.testo, nomeDi(e.casa)]);
+  }
+  if (e.solare) {
+    const p = potenza(e.solare);
+    tessere.push(["solare", "solare", "#f59e0b", t("Produce il solare", "Solar makes"), p.testo, nomeDi(e.solare)]);
+  }
+  if (e.rete) {
+    const p = potenza(e.rete);
+    /* Il segno lo decide chi misura: positivo si preleva, negativo si cede. */
+    const parola =
+      p.valore === null
+        ? t("Rete", "Grid")
+        : p.valore < 0
+          ? t("Cede alla rete", "To the grid")
+          : t("Preleva dalla rete", "From the grid");
+    tessere.push(["rete", "energia", p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6", parola, p.testo, nomeDi(e.rete)]);
+  }
+  if (e.batteria) {
+    const v = numero(stato(e.batteria)?.state);
+    tessere.push(["batteria", "batterie", "#10b981", t("Batteria", "Battery"), v === null ? "—" : `${decimale(v, 0)}%`, nomeDi(e.batteria)]);
+  }
+  if (!tessere.length)
+    return griglia(pagina, [vuoto(0, t("Scegli le misure nel config", "Choose the readings in the config"))]);
+  const carte = tessere.map(
+    ([k, d, acc, etichetta, valore, sotto], i) =>
+      `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta)}</span></div>
+      <div class="mu-grande">${esc(valore)}</div><div class="mu-sotto">${esc(sotto)}</div></div>`,
+  );
+  return griglia({ ...pagina, griglia: carte.length <= 4 ? 4 : pagina.griglia }, carte);
 }
 
 function finestreAperte() {
@@ -1050,6 +1188,53 @@ function paginaIngresso(pagina) {
   </div>`;
 }
 
+function corpoDellaPagina(pagina) {
+  if (pagina.modello === "scene") return paginaScene(pagina);
+  if (pagina.modello === "ingresso") return paginaIngresso(pagina);
+  if (pagina.modello === "ambienti") return paginaAmbienti(pagina);
+  if (pagina.modello === "telecamere") return paginaTelecamere(pagina);
+  if (pagina.modello === "energia") return paginaEnergia(pagina);
+  return paginaStanza(pagina);
+}
+
+/* ── l'anteprima nel config ────────────────────────────────────────────────
+ *
+ * «Come configuratore riusciamo a fare meglio?» Chi sceglie i posti deve
+ * vedere cosa sta facendo, senza salvare e andare al tablet: il config mostra
+ * la pagina aperta disegnata come sul tablet, con gli stati veri di adesso.
+ * E' lo stesso disegno del pannello, con la bozza al posto del muro salvato. */
+let anteprimaInCorso = false;
+export function anteprimaDellaPagina(muro, indice = 0, fonte = state.fonte) {
+  const pagina = muro?.pagine?.[indice];
+  if (!pagina || !fonte) return "";
+  const prima = {
+    muro: state.muro,
+    fonte: state.fonte,
+    pagina: state.pagina,
+    finestra: state.finestra,
+    compatto: state.compatto,
+    verso: state.verso,
+  };
+  const raccoltaPrima = raccolta;
+  raccolta = null;
+  anteprimaInCorso = true;
+  try {
+    Object.assign(state, {
+      muro,
+      fonte,
+      pagina: indice,
+      finestra: null,
+      compatto: false,
+      verso: muro.orientamento === "verticale" ? "verticale" : "orizzontale",
+    });
+    return `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${corpoDellaPagina(pagina)}</div>`;
+  } finally {
+    Object.assign(state, prima);
+    raccolta = raccoltaPrima;
+    anteprimaInCorso = false;
+  }
+}
+
 /* ── le finestre: quello che si apre sopra la pagina ─────────────────────── */
 
 const COLORI = Object.freeze([
@@ -1128,6 +1313,10 @@ function finestra() {
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi(ing.telecamera))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(ing.telecamera)}" alt=""></div>
       ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${esc(nomeDi(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${esc(nomeDi(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}</div>`;
+  } else if (f.tipo === "telecamera") {
+    dentro = `<div class="mu-fin-clima">
+      <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi(f.entita))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(f.entita)}" alt=""></div></div>`;
   } else if (f.tipo === "conferma") {
     dentro = `<div class="mu-fin-conferma"><div class="mu-osw" style="font-size:40px">${esc(f.azione)}</div><div class="mu-sotto">${esc(t("Confermi?", "Confirm?"))}</div>
       <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="chiudi">${esc(t("Annulla", "Cancel"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="azione" data-mu-azione="${esc(f.azione)}" data-mu-confermata="1">${esc(t("Sì, vai", "Yes, go"))}</button></div></div>`;
@@ -1151,6 +1340,7 @@ function finestra() {
       tapparella: ACCENTI.tapparella,
       antifurto: "#10b981",
       citofono: "#2563eb",
+      telecamera: "#2563eb",
     }[f.tipo] || ACCENTI.luce;
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro}</div></div>`;
 }
@@ -1188,10 +1378,9 @@ function riposo(muro) {
   const centrale = centraleDelMuro(pagina);
   const allarme = centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
   const stanza = (state.fonte?.stanze || []).find((s) => s.name === pagina?.stanza);
+  const sonda = clean(muro.riposo?.sensore) || stanza?.temp || "";
   const dentro =
-    stanza?.temp && numero(stato(stanza.temp)?.state) !== null
-      ? `${decimale(stato(stanza.temp).state)}°`
-      : "";
+    sonda && numero(stato(sonda)?.state) !== null ? `${decimale(stato(sonda).state)}°` : "";
   return `<div class="mu-riposo" data-mu-fa="sveglia">
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
@@ -1409,6 +1598,7 @@ function misura(nodo, muro) {
   const s = scala(v, larghezza, altezza);
   const dentro = nodo.firstElementChild;
   state.compatto = eCompatto(larghezza, altezza);
+  state.verso = v;
   nodo.dataset.verso = v;
   nodo.dataset.compatto = state.compatto ? "1" : "";
   dentro.style.zoom = String(s);
@@ -1446,11 +1636,7 @@ export function disegna() {
     corpo = state.riposo
       ? riposo(muro)
       : `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${
-          pagina.modello === "scene"
-            ? paginaScene(pagina)
-            : pagina.modello === "ingresso"
-              ? paginaIngresso(pagina)
-              : paginaStanza(pagina)
+          corpoDellaPagina(pagina)
         }</div>${finestra()}`;
     /* Il riposo si sveglia per l'antifurto anche quando non lo mostra. */
     segna(centraleDelMuro(muro.pagine[0]));
@@ -1711,6 +1897,9 @@ function onClick(event) {
     case "finestra-citofono":
       apriFinestra({ tipo: "citofono" });
       return;
+    case "finestra-telecamera":
+      apriFinestra({ tipo: "telecamera", entita: id });
+      return;
     case "hvac":
       comanda("climate", "set_hvac_mode", { entity_id: id, hvac_mode: bersaglio.dataset.muModo });
       return;
@@ -1845,11 +2034,11 @@ function battito() {
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1000;
   if (!state.riposo && !state.finestra && !state.trascina && sonno && fermo > sonno) {
     state.riposo = true;
-    state.pagina = 0;
+    if (muro.riposo.torna !== false) state.pagina = 0;
   }
   if (!state.riposo && eNotte(muro) && fermo > 60 * 1000 && !state.finestra) {
     state.riposo = true;
-    state.pagina = 0;
+    if (muro.riposo.torna !== false) state.pagina = 0;
   }
   disegna();
 }
@@ -1910,7 +2099,9 @@ export async function rileggi({ forza = false } = {}) {
 }
 
 function stili() {
-  const MURO = `#${ID}`;
+  /* Le stesse regole valgono per il pannello e per la sua anteprima nel
+   * config (`.mu-anteprima`). */
+  const MURO = `:is(#${ID},.mu-anteprima)`;
   const tokens = (tema) =>
     tema === "dark"
       ? `--bg-sculpted:#0c1322;--card-bg:#161f36;--text:#e6edf7;--text-dim:#92a4c2;--dm-vetrino:rgba(255,255,255,.06);--dm-velo:14%;--dm-cuscino:22%;--dm-grana:.34`
@@ -1921,7 +2112,8 @@ function stili() {
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
 html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
 html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
-${MURO}{position:fixed;inset:0;z-index:2147482000;overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
+#dm-muro{position:fixed;inset:0;z-index:2147482000}
+${MURO}{overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation;
   background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}[data-tema="dark"]{${tokens("dark")}}
@@ -1973,8 +2165,34 @@ ${MURO} .mu-pill{display:flex;align-items:center;gap:12px}
 ${MURO} .mu-pill .mu-chip{--c:38px}
 ${MURO} .mu-pill b{font-size:20px;font-weight:800;display:block;line-height:1}
 ${MURO} .mu-pill .mu-et{font-size:10.5px}
-${MURO} .mu-g6{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:16px;min-height:0}
-${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 16px) / 2);overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
+${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;display:grid;grid-template-columns:repeat(var(--mu-col),minmax(0,1fr));grid-template-rows:repeat(var(--mu-righe),minmax(0,1fr));gap:var(--mu-gap);min-height:0}
+${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
+${MURO} .mu-pagine.mu-molte button:not(.si) span{display:none}
+${MURO} .mu-fitta{--mu-gap:12px}
+${MURO} .mu-fitta .mu-card{padding:16px;gap:10px;border-radius:20px}
+${MURO} .mu-fitta .mu-riga1{gap:10px}
+${MURO} .mu-fitta .mu-card .mu-disco{width:48px;height:48px}
+${MURO} .mu-fitta .mu-card .mu-disco svg{width:24px;height:24px}
+${MURO} .mu-fitta .mu-n{font-size:17px;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+${MURO} .mu-fitta .mu-tag,${MURO} .mu-fitta .mu-modo,${MURO} .mu-fitta .mu-riga1>.mu-pasti{display:none}
+${MURO} .mu-fitta .mu-inter{width:50px;height:30px}
+${MURO} .mu-fitta .mu-inter i{width:22px;height:22px}
+${MURO} .mu-fitta .mu-inter.on i{left:24px}
+${MURO} .mu-fitta .mu-chip{--c:44px!important}
+${MURO} .mu-fitta .mu-grande{font-size:48px}
+${MURO} .mu-fitta .mu-tondo{width:52px;height:52px;font-size:24px}
+${MURO} .mu-fitta .mu-comandi{gap:8px}
+${MURO} .mu-fitta .mu-seg>button{height:52px;font-size:14px;gap:4px;padding:0 4px}
+${MURO} .mu-fitta .mu-osw,${MURO} .mu-fitta .mu-tessera.grande .mu-osw{font-size:28px}
+${MURO} .mu-pagine.mu-molte button{padding:10px 12px}
+${MURO} .mu-pag-ambienti,${MURO} .mu-pag-telecamere,${MURO} .mu-pag-energia,${MURO} .mu-pag-tapparelle{grid-template-rows:auto 1fr}
+${MURO} .mu-ambiente .mu-target{margin-top:auto;flex-wrap:wrap}
+${MURO} .mu-cam{padding:8px}
+${MURO} .mu-cam .mu-video{height:100%;min-height:0}
+${MURO} .mu-energia .mu-grande{margin-top:auto;font-size:72px}
+${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
+${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
+${MURO}.mu-anteprima .mu-pagina{height:100%}
 ${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
 ${MURO} .mu-card{padding:22px;display:flex;flex-direction:column;gap:14px;min-height:0;width:100%}
 ${MURO} .mu-tessera{text-align:left}
@@ -2072,7 +2290,7 @@ ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;paddi
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
 ${MURO}[data-compatto="1"] .mu-pagine button span{display:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
-${MURO}[data-compatto="1"] .mu-g6{gap:10px}
+${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-card .mu-riga1{flex-wrap:wrap;gap:8px;align-content:flex-start}
 ${MURO}[data-compatto="1"] .mu-card .mu-nome{flex:1 1 100%}
@@ -2111,8 +2329,6 @@ ${MURO}[data-compatto="1"] .mu-orologione{font-size:110px}
 ${MURO}[data-compatto="1"] .mu-data{font-size:13px}
 ${MURO}[data-compatto="1"] .mu-riposo-riga{flex-direction:column;gap:10px;align-items:center;font-size:15px}
 ${MURO}[data-compatto="1"] .mu-avviso{font-size:13px}
-${MURO}[data-verso="verticale"] .mu-g6{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,1fr)}
-${MURO}[data-verso="verticale"] .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 32px) / 3)}
 ${MURO}[data-verso="verticale"] .mu-testa{flex-wrap:wrap}
 ${MURO}[data-verso="verticale"] .mu-pagine{order:3;width:100%;margin:6px 0 4px}
 ${MURO}[data-verso="verticale"] .mu-pagine button{flex:1;justify-content:center}

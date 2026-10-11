@@ -1050,6 +1050,16 @@ function osservaLaConfigurazione(root7, dimentica, osservate) {
   }
   storage.__dmStateEventGateWatch = true;
 }
+var IN_VISTA_KEY = "__DM_ENTITA_IN_VISTA__";
+var SUBITO_MS = 40;
+function inVista(root7, id) {
+  try {
+    const domanda = root7[IN_VISTA_KEY];
+    return typeof domanda === "function" ? Boolean(domanda(id)) : false;
+  } catch (_errore) {
+    return false;
+  }
+}
 function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiavi: chiavi2 = [] } = {}) {
   if (!broker2 || typeof broker2.ingestState !== "function" || broker2.__dmStateEventGate)
     return false;
@@ -1058,6 +1068,7 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
   const pendingIds = /* @__PURE__ */ new Set();
   let lastState = null;
   let timer = 0;
+  let timerSubito = false;
   let interests = null;
   const currentInterests = () => {
     if (!interests) interests = entitaConfigurate(root7, osservate);
@@ -1072,6 +1083,7 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
   );
   const flush = () => {
     timer = 0;
+    timerSubito = false;
     if (!pendingIds.size) return;
     const entityIds = [...pendingIds];
     pendingIds.clear();
@@ -1090,11 +1102,16 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
     const id = String(state166?.entity_id || "").trim();
     if (!id) return;
     const configured2 = currentInterests();
-    if (configured2.size && !configured2.has(id)) return;
+    const visto = inVista(root7, id);
+    if (!visto && configured2.size && !configured2.has(id)) return;
     pendingIds.add(id);
     lastState = state166 || lastState;
-    if (timer) return;
-    timer = root7.setTimeout?.(flush, Math.max(0, Number(delay) || 0)) || 0;
+    const attesa = Math.max(0, Number(delay) || 0);
+    const subito = visto && attesa > SUBITO_MS;
+    if (timer && (timerSubito || !subito)) return;
+    if (timer) root7.clearTimeout?.(timer);
+    timerSubito = subito;
+    timer = root7.setTimeout?.(flush, subito ? SUBITO_MS : attesa) || 0;
     if (!timer) root7.queueMicrotask?.(flush);
   };
   broker2.ingestState = function gatedIngestState(state166, options) {
@@ -2056,6 +2073,7 @@ var SOURCE_INDEX = Object.freeze({
   "Adesso è spento: scrivi una quota fra 30 e 95 per accenderlo, zero lo rispegne.": "Right now it is off: write a level between 30 and 95 to turn it on, zero turns it back off.",
   "Adesso non c'è una lettura per questo carico.": "There is no reading for this load right now.",
   "Adesso risponde tutto. Se qualcosa smette di farlo compare qui, e in Home compare la sua tessera.": "Everything is answering right now. If something stops, it shows up here, and its card shows up on Home.",
+  "Adesso, in casa": "Right now, at home",
   "Afoso": "Muggy",
   "Agenda": "Calendar",
   "Aggiorna": "Refresh",
@@ -2152,6 +2170,7 @@ var SOURCE_INDEX = Object.freeze({
   "al lavoro": "working",
   "Al posto del percorso puoi scrivere un'entità immagine (image.auto) o una telecamera (camera.auto): la foto la tiene aggiornata l'integrazione, e la lente 🔍 te la fa cercare.": "Instead of a path you can write an image entity (image.car) or a camera (camera.car): the integration keeps the photo up to date, and the 🔍 lens finds it for you.",
   "Al posto di «Esco» quando l'antifurto è inserito": "Instead of «Leaving» when the alarm is armed",
+  "Al riposo torna alla prima pagina": "On rest go back to the first page",
   "Alberi": "Tree",
   "Alberi (facoltativo)": "Tree (optional)",
   "Alcune schede sono elenchi — Luci, Prese, Telecamere — e lì un'entità in più si è sempre potuta aggiungere. Altre sono fatte di caselle con un ruolo preciso: l'Energia ha una rete e un fotovoltaico, la Sicurezza una centrale, e per un sensore in più non c'era posto. Qui c'è: scegli l'entità, in quale scheda farla comparire, come chiamarla e con che icona. Compare in fondo alla pagina che scegli, e quelle che si accendono si accendono.": "Some pages are lists — Lights, Sockets, Cameras — and there you could always add one more entity. Others are made of boxes with a set role: Energy has a grid and a solar array, Security an alarm panel, and there was no place for one more sensor. Here there is: pick the entity, which page it should appear on, what to call it and with which icon. It shows up at the bottom of the page you choose, and the ones that switch, switch.",
@@ -2226,6 +2245,7 @@ var SOURCE_INDEX = Object.freeze({
   "ANNULLA OPERAZIONE": "CANCEL OPERATION",
   "Annullamento": "Aborting",
   'Anteprima ~2 fps · Tocca "Attiva audio" per audio + video': 'Preview ~2 fps · Tap "Enable audio" for audio + video',
+  "Anteprima dal vivo": "Live preview",
   "Anteriore destro": "Front right",
   "Anteriore sinistro": "Front left",
   "antifurto": "alarm",
@@ -2515,6 +2535,7 @@ var SOURCE_INDEX = Object.freeze({
   "Carica · Carburante · Autonomia": "Charge · Fuel · Range",
   "Carica anche senza sole": "Charge even without sun",
   "CARICA COMPLETA": "FULLY CHARGED",
+  "Carica in %": "Charge in %",
   "carica più bassa": "lowest charge",
   "CARICAMENTO": "LOADING",
   "Caricamento dati Energia…": "Loading Energy data…",
@@ -2580,6 +2601,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cavo attaccato": "Cable plugged in",
   "Cavo collegato (binary_sensor)": "Cable connected (binary_sensor)",
   "Cavo staccato": "Cable unplugged",
+  "Cede alla rete": "To the grid",
   "Cella ${cella.numero} · ${cifre(cella.volt, 3)} V": "Cell ${cella.numero} · ${cifre(cella.volt, 3)} V",
   "Cella ${cella.numero} · non risponde": "Cell ${cella.numero} · not answering",
   "Celle": "Cells",
@@ -2703,6 +2725,7 @@ var SOURCE_INDEX = Object.freeze({
   "Comando ON/OFF": "On/off control",
   "Combustibile solido: pellet o legna": "Solid fuel: pellet or wood",
   "come i giorni feriali": "same as weekdays",
+  "Come il tipo di pagina": "Like the page type",
   "come la casa": "as the house",
   "Come la plancia": "Like the dashboard",
   "Come leggere la configurazione Energia": "How to read the Energy configuration",
@@ -2765,6 +2788,7 @@ var SOURCE_INDEX = Object.freeze({
   "CONNESSO": "CONNECTED",
   "Connettività": "Connectivity",
   "Consiglio": "Advice",
+  "Consuma la casa": "House uses",
   "Consumato in totale": "Total fuel used",
   "Consumi": "Consumption",
   "Consumo": "Consumption",
@@ -2774,6 +2798,7 @@ var SOURCE_INDEX = Object.freeze({
   "Consumo casa · Mese": "Home consumption · Month",
   "Consumo casa · Oggi": "Home consumption · Today",
   "consumo dell'ultimo ciclo": "last cycle energy",
+  "Consumo della casa": "House consumption",
   "consumo in Watt": "power draw in Watts",
   "Consumo istantaneo": "Instant consumption",
   "Consumo Total": "Total consumption",
@@ -2922,6 +2947,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dati non disponibili": "No data",
   "Dati storici disponibili": "Historical data available",
   "Delicati": "Delicates",
+  "Della linguetta e del titolo": "Of the tab and the title",
   "Della stampante servono due risposte: se è pronta, e quanto inchiostro le resta. Scrivi l'entità che dice come sta — la crea l'integrazione della stampante — e le cartucce si cercano da sole partendo da quel nome. La pagina Stampanti compare da sé appena ce n'è una.": "A printer needs two answers: whether it is ready, and how much ink is left. Write the entity that says how it is doing — the printer integration creates it — and the cartridges are found on their own from that name. The Printers page appears by itself as soon as there is one.",
   "Delta fra le celle": "Cell voltage delta",
   "Delta temperatura (°C)": "Temperature delta (°C)",
@@ -2994,6 +3020,8 @@ var SOURCE_INDEX = Object.freeze({
   "Due fasce": "Two bands",
   "Due scatti della stessa auto: la plancia mostra quello con il cavo attaccato mentre è in ricarica e l'altro nel resto del tempo. Basta la prima: senza la seconda resta sempre quella.": "Two shots of the same car: the dashboard shows the plugged-in one while it charges and the other one the rest of the time. The first is enough — without the second it simply stays.",
   "Due settimane che si ripetono, scritte a mano: tocca un giorno e scegli cosa esce. Non serve nessun sensore e nessun calendario di Home Assistant — la pagina e la tessera in Home leggono questo esattamente come leggerebbero un'integrazione. Un materiale che ha già il suo sensore qui sopra non si ripete: comanda il sensore.": "Two weeks that repeat, written by hand: tap a day and pick what goes out. No sensor and no Home Assistant calendar needed — the page and the Home tile read this exactly as they would read an integration. A material that already has its own sensor above is not repeated: the sensor wins.",
+  "Duplica": "Duplicate",
+  "Duplica la pagina": "Duplicate page",
   "Durata": "Duration",
   "Durata (minuti)": "Duration (minutes)",
   "Durata automatica: temperatura / 2": "Automatic duration: temperature / 2",
@@ -3544,6 +3572,7 @@ var SOURCE_INDEX = Object.freeze({
   "In Ah, Wh o kWh. Vuota, si ricava dalla carica e dalla capacità.": "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.",
   "in allarme": "triggered",
   "In allarme": "In alarm",
+  "In alto e sul riposo. Vuoto: il primo che Home Assistant ha": "At the top and on the rest screen. Empty: the first one Home Assistant has",
   "In apertura": "Opening",
   "in attesa": "waiting",
   "In attesa": "Standby",
@@ -3825,6 +3854,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le fonti": "The sources",
   "Le frecce, OK, indietro, la schermata iniziale e i canali della TV, sotto la sua scheda e solo a TV accesa. Serve l'entità remote.* della TV: Samsung (integrazione Samsung Smart TV), Sony Bravia, Philips, Android TV e Google TV, Apple TV, Roku. Le LG webOS non ne hanno bisogno.": "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.",
   "Le gomme e le letture": "The tyres and the readings",
+  "Le immagini dal vivo": "Live pictures",
   "Le integrazioni che portano una colonnina: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Scegli il dispositivo e le caselle della ricarica si riempiono da sole — potenza, energia, tensione, temperatura, il cavo.": "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.",
   "Le integrazioni di Home Assistant, ufficiali o da HACS, con i dispositivi che portano. Scegli il dispositivo: le caselle entrano da sole.": "Home Assistant integrations, official or from HACS, with the devices they bring. Pick the device: the fields come along by themselves.",
   "Le integrazioni di Home Assistant, ufficiali o da HACS, con i dispositivi che portano. Scegli il nodo: lo stato, il processore, la memoria, il disco e i gradi entrano da soli.": "Home Assistant integrations, official or from HACS, with the devices they bring. Pick the node: status, CPU, memory, disk and degrees come along by themselves.",
@@ -3858,6 +3888,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le stanze, le luci, le azioni e l'antifurto arrivano da qui": "Rooms, lights, actions and the alarm come from here",
   "Le tapparelle e le tende compaiono nella pagina 🪟 Finestre, raggruppate per piano e stanza. Ogni riga accetta un'entità cover.* — con posizione e percentuali — oppure un relè switch.*: uno solo se accendendolo la tapparella sta su, due se ce n'è uno per la salita e uno per la discesa, come uno Shelly in modalità interruttore. Se la finestra si apre a mano — persiane, scuri, una maniglia — lascia vuote le caselle dei comandi e compila solo il sensore di apertura: la card la disegna lo stesso e dice se è aperta.": "Shutters and curtains show up on the 🪟 Windows page, grouped by floor and room. Every row accepts a cover.* entity — with position and percentages — or a switch.* relay: one when switching it on keeps the shutter up, two when one relay sends it up and another sends it down, like a Shelly in switch mode. When the window opens by hand — shutters, blinds, a handle — leave the command boxes empty and fill in the contact sensor alone: the card still draws it and says whether it is open.",
   "Le telecamere": "The cameras",
+  "Le telecamere della plancia di origine, tutte insieme; un tocco ne apre una a tutto schermo.": "The source dashboard's cameras, all together; a tap opens one full screen.",
   "Le temperature": "The temperatures",
   "Le tessere": "The widgets",
   "Le tessere d'avviso della Home — batterie, allagamenti — si accendono da sole solo quando hanno qualcosa da dire. Qui scegli quali sensori sorvegliano, con un nome pulito, oppure crei un avviso personalizzato su una o più entità, con condizione, stato a mano e icona a scelta. Le porte e le finestre non stanno più qui: le dice la tessera Finestre, con i contatti delle coperture.": "The Home alert tiles — batteries, floods — light up on their own only when they have something to say. Here you choose which sensors they watch, with a clean name, or you create a custom alert on one or more entities, with a condition, a hand-written state and an icon of your choice. Doors and windows are no longer here: the Windows tile says them, from the contacts of the covers.",
@@ -3932,6 +3963,7 @@ var SOURCE_INDEX = Object.freeze({
   "Luci · Clima · Tapparelle · Scene": "Lights · Climate · Blinds · Scenes",
   "luci accese": "lights on",
   "Luci Accese": "Lights on",
+  "Luci spente": "Lights off",
   "Luglio": "July",
   "Luminosità": "Brightness",
   "Lunga": "Long",
@@ -4054,6 +4086,7 @@ var SOURCE_INDEX = Object.freeze({
   "Modifica voce Report": "Edit Report entry",
   "modificare": "edit",
   "Modifiche non salvate": "Unsaved changes",
+  "Modifiche non salvate: il tablet le vede dopo «Salva».": "Unsaved changes: the tablet sees them after «Save».",
   "modifiche) — ricarica per applicare": "changes) — reload to apply",
   "Modo chiosco": "Kiosk mode",
   "Modulazione": "Modulating",
@@ -4235,6 +4268,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna stampante configurata": "No printer configured",
   "Nessuna stanza": "No room",
   "Nessuna stanza con sensore — aggiungila nel tab Temperatura dell'editor": "No room with a sensor — add one in the editor's Temperature tab",
+  "Nessuna stanza con sonde o luci": "No room with sensors or lights",
   "Nessuna stanza configurata. Aggiungile dalla scheda Stanze dell'editor: da lì ogni sezione può assegnare le sue entità.": "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.",
   "Nessuna stanza ha ancora un sensore temperatura configurato.": "No room has a temperature sensor configured yet.",
   "Nessuna stanza ha una sonda dell'umidità: si aggiunge dalla scheda Temperature.": "No room has a humidity probe: add one from the Temperature tab.",
@@ -4245,6 +4279,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna tapparella o tenda configurata": "No shutter or curtain configured",
   "Nessuna telecamera": "No camera",
   "Nessuna telecamera configurata": "No camera configured",
+  "Nessuna telecamera nella plancia": "No camera in the dashboard",
   "Nessuna temperatura configurata.": "No temperature configured.",
   "Nessuna voce": "No entries",
   "Nessuna zona configurata": "No zone configured",
@@ -4437,7 +4472,7 @@ var SOURCE_INDEX = Object.freeze({
   "ore fa": "hours ago",
   "Organico": "Organic waste",
   "Orientamento": "Orientation",
-  "Orientamento, tema, riposo, notte, risveglio, PIN": "Orientation, theme, rest, night, wake-up, PIN",
+  "Orientamento, tema, meteo, riposo, notte, risveglio, PIN": "Orientation, theme, weather, rest, night, wake-up, PIN",
   "Orizzontale": "Landscape",
   "OSO": "WSW",
   "Ossigeno": "Oxygen",
@@ -4586,6 +4621,7 @@ var SOURCE_INDEX = Object.freeze({
   "Porzioni erogate": "Portions dispensed",
   "Porzioni oggi": "Portions today",
   "Positiva in carica e negativa in scarica, come la scrivono JK, JBD e Daly.": "Positive when charging and negative when discharging, as JK, JBD and Daly write it.",
+  "Positivo si preleva, negativo si cede": "Positive is drawn, negative is fed in",
   "Posizione": "Location",
   "Posizione (device_tracker)": "Location (device_tracker)",
   "Posizione (indirizzo)": "Location (address)",
@@ -4625,6 +4661,7 @@ var SOURCE_INDEX = Object.freeze({
   "Potenza ventola inverter (W)": "Inverter fan power (W)",
   "Potenza wallbox (W)": "Wallbox power (W)",
   "Potenza WB": "WB power",
+  "Potenza, in W o kW": "Power, in W or kW",
   "Potrai controllare, correggere o rimuovere ogni proposta dall'editor.": "You can review, fix or remove every proposal from the editor.",
   "Power batteria (W)": "Battery power (W)",
   "Power Boiler": "Boiler power",
@@ -4642,6 +4679,7 @@ var SOURCE_INDEX = Object.freeze({
   "Preferite": "Favourites",
   "Preferito": "Favorite",
   "Prelavaggio": "Pre-wash",
+  "Preleva dalla rete": "From the grid",
   "Prelevata dalla rete · Oggi": "Taken from the grid · Today",
   "Prelievo AC Tot.": "Total AC draw",
   "Prende le cose da": "Takes things from",
@@ -4687,9 +4725,11 @@ var SOURCE_INDEX = Object.freeze({
   "principale": "main",
   "Processore": "CPU",
   "Processore, memoria e disco": "CPU, memory and disk",
+  "Produce il solare": "Solar makes",
   "Produzione": "Production",
   "Produzione · Consumi · Report": "Production · Consumption · Report",
   "Produzione FV": "PV production",
+  "Produzione solare": "Solar production",
   "Produzione solare · Mese": "Solar production · Month",
   "Produzione solare · Oggi": "Solar production · Today",
   "Profilo EV": "EV profile",
@@ -4753,13 +4793,16 @@ var SOURCE_INDEX = Object.freeze({
   "Quando la terra è asciutta ma il meteo di casa prevede pioggia nelle prossime ore, la pianta aspetta invece di chiedere acqua. Solo per chi la pioggia la prende davvero.": "When the soil is dry but the home weather forecasts rain in the next hours, the plant waits instead of asking for water. Only for those the rain really reaches.",
   "Quando questo sensore si accende (per esempio una presenza)": "When this sensor turns on (for example a presence sensor)",
   "Quando un avviso personalizzato si accende, la plancia lo apre da sola. Solo quando si accende, e mai sopra una finestra gia' aperta.": "When a custom alert turns on, the dashboard opens it by itself. Only when it turns on, and never on top of a window that is already open.",
+  "Quante card a schermo; le altre scorrono": "How many cards on screen; the rest scroll",
   "Quante fasce": "How many bands",
   "Quanti giorni restano prima di sostituirlo. Sotto la soglia la scheda lo dice, e il tasto qui sotto azzera il conto una volta cambiato.": "How many days are left before replacing it. Below the threshold the card says so, and the button below resets the count once you have changed it.",
+  "Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano": "How many slots, and how big. In portrait columns and rows swap",
   "Quanto cibo resta nel distributore. In percentuale la scheda ne fa una barra; chi scrive «Low» o «Empty» vale lo stesso, e sotto soglia la scheda avvisa.": "How much food is left in the feeder. As a percentage the card draws a bar; a sensor saying “Low” or “Empty” counts the same, and below the threshold the card warns.",
   "Quanto resta accesa": "How long it stays on",
   "Quanto resta accesa dal momento dell'accensione. Il conto alla rovescia lo tiene Home Assistant, non questa pagina: si può chiudere la plancia e l'unità si spegne lo stesso. Sulla card resta modificabile ogni volta.": "How long it stays on from the moment you switch it on. Home Assistant keeps the countdown, not this page: you can close the dashboard and the unit still switches off. On the card you can change it every time.",
   "Quanto sta passando dal contatore. È la soglia di chi teme il distacco: il limite del contratto sta qui. L'energia immessa in rete non conta mai come sovraccarico.": "How much is going through the meter. This is the threshold for those worried about a cut-off: the contract limit lives here. Energy exported to the grid never counts as an overload.",
   "Quanto stanno consumando gli apparecchi, da qualunque parte arrivi la corrente. È la soglia di chi ha il fotovoltaico e vuole sapere quanto tira la casa.": "How much the appliances are drawing, wherever the power comes from. This is the threshold for those with solar who want to know what the house is pulling.",
+  "Quattro numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine.": "Four big live numbers. Left empty, they come from the source dashboard's Energy section.",
   "Quattro sensori scelti da te: quelli che leggi per decidere, non una media della casa. Il tipico è quello fuori, con cui ci si regola per i clima interni. L'unità la dice Home Assistant, e un sensore che non indichi è una pastiglia che non compare.": "Four sensors of your choosing: the ones you actually read to decide, not a house average. The typical one is outdoors, the one you go by for the indoor units. The unit comes from Home Assistant, and a sensor you do not name is a pill that does not show up.",
   "Quella che dice pronta, in stampa o ferma — la crea l'integrazione della stampante col suo nome.": "The one that says ready, printing or stopped — the printer integration creates it with its name.",
   "Quella che si guarda: Thermal Comfort la espone come parola («comfortable», «quite_uncomfortable»…). Se il sensore la scrive in italiano, la plancia scrive quello che c'è scritto.": "The one you look at: Thermal Comfort exposes it as a word (comfortable, quite_uncomfortable…). When the sensor writes it in your own language, the dashboard writes what it says.",
@@ -5014,6 +5057,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scaldabagno": "Water heater",
   "Scaldabagno di Home Assistant": "Home Assistant water heater",
   "Scaldabagno elettrico": "Electric water heater",
+  "Scambio con la rete": "Grid exchange",
   "Scarica il backup": "Download the backup",
   "Scarica il file": "Download the file",
   "Scaricata oggi": "Discharged today",
@@ -5048,6 +5092,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scegli la foto": "Choose the photo",
   "Scegli la posizione": "Choose the position",
   "Scegli la scheda": "Choose the page",
+  "Scegli le misure nel config": "Choose the readings in the config",
   "Scegli parametro": "Choose parameter",
   "Scegli quali tessere vedere in Home e in che ordine. Le tessere degli avvisi — batterie, allagamenti e avvisi personalizzati — compaiono da sole solo quando hanno qualcosa da dire.": "Choose which tiles show on Home and in what order. The alert tiles — batteries, floods and custom alerts — only appear on their own when they have something to say.",
   "Scegli un calendario.": "Pick a calendar.",
@@ -5220,6 +5265,7 @@ var SOURCE_INDEX = Object.freeze({
   "Si legge sulla linguetta in alto": "Shown on the tab at the top",
   "Si riempie da sola con il clima della plancia di origine, diviso nelle due linguette Freddo e Caldo come nella sezione Clima: i condizionatori nel freddo, termosifoni e termostati nel caldo, le pompe di calore in tutte e due.": "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both.",
   "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.": "It fills itself with every light of the source dashboard: a light added there shows up here too.",
+  "Si riempie da sola con tutte le tapparelle della plancia di origine: su, stop e giù per ognuna.": "It fills itself with every blind of the source dashboard: up, stop and down for each one.",
   "Si segna dalla pagina con «Fatto oggi»; qui si corregge.": "It is recorded from the page with “Done today”; here you can correct it.",
   "Si sta allontanando da casa": "Moving away from home",
   "Si sta avvicinando a casa": "Approaching home",
@@ -5309,6 +5355,7 @@ var SOURCE_INDEX = Object.freeze({
   "Spente": "Turned off",
   "Spento": "Off",
   "SPENTO": "OFF",
+  "Spento, il tablet resta sulla pagina dov'era": "Off, the tablet stays on the page it was on",
   "Spesa": "Shopping",
   "Sportello aperto": "Flap opened",
   "Sposta giù": "Move down",
@@ -5447,6 +5494,7 @@ var SOURCE_INDEX = Object.freeze({
   "Temp. Wallbox": "Wallbox temp.",
   "temperatura": "temperature",
   "Temperatura": "Temperature",
+  "Temperatura · Umidità · Luci": "Temperature · Humidity · Lights",
   "Temperatura (lato caldo)": "Temperature (warm side)",
   "Temperatura (lato fresco)": "Temperature (cool side)",
   "Temperatura (select)": "Temperature (select)",
@@ -5471,6 +5519,7 @@ var SOURCE_INDEX = Object.freeze({
   "Temperatura MOS": "MOS temperature",
   "Temperatura olio": "Oil temperature",
   "Temperatura piscina": "Pool temperature",
+  "Temperatura sul riposo": "Temperature on the rest screen",
   "Temperatura Target": "Target temperature",
   "Temperatura usa le stanze canoniche: aggiunge i sensori senza creare stanze duplicate.": "Temperature uses canonical rooms: it adds sensors without creating duplicate rooms.",
   "Temperatura voluta": "Target temperature",
@@ -5609,6 +5658,8 @@ var SOURCE_INDEX = Object.freeze({
   "Tutte le luci": "All lights",
   "Tutte le luci di casa": "Every light in the house",
   "Tutte le stanze": "All rooms",
+  "Tutte le tapparelle": "All blinds",
+  "Tutte le tapparelle di casa": "Every blind in the house",
   "Tutte pronte": "All ready",
   "Tutte spente": "All off",
   "Tutti e due i tasti": "Both buttons",
@@ -5727,6 +5778,7 @@ var SOURCE_INDEX = Object.freeze({
   "Una telecamera dentro casa serve a guardare la casa quando non ci sei. Spunta quelle che vuoi vedere solo a casa vuota: mentre qualcuno è in casa spariscono da tutte le pagine, e il fotogramma non viene nemmeno scaricato. Chi rientra le fa sparire subito, non al prossimo cambio pagina.": "A camera inside the house is there to watch the house while you are out. Tick the ones you only want to see when nobody is home: while someone is in, they disappear from every page, and the frame is not even fetched. Whoever comes back makes them vanish at once, not at the next page change.",
   "Una tensione di cella per riga, nell'ordine delle celle. Si possono incollare tutte insieme, anche separate da virgole; «Trova le celle» le prende da Home Assistant col prefisso delle altre entità del pacco.": "One cell voltage per line, in cell order. You can paste them all at once, commas work too; “Find the cells” takes them from Home Assistant using the prefix of the pack's other entities.",
   "Una tessera in Home per un'entità qualsiasi, anche di una sezione che non c'è: il livello del sale dell'addolcitore, la sonda del rack, la pompa del pozzo. Messe insieme, la tessera «In evidenza» le riassume in una riga e, aperta, le mostra a caselle; con «Tessera a sé» ognuna ha la sua, col nome e il disegno che le dai tu.": "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.",
+  "Una tessera per stanza, con la temperatura, l'umidità e quante luci sono accese, dal vivo. Le stanze e le loro sonde sono quelle della plancia di origine.": "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.",
   "Una tessera sola": "One single tile",
   "unità accesa": "unit on",
   "unità accese": "units on",
@@ -5830,6 +5882,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vuoto vuol dire «on». Senza questo il tasto funziona lo stesso: semplicemente non resta acceso.": "Empty means “on”. Without it the button still works: it simply does not stay lit.",
   "Vuoto: il nome dell'entità": "Empty: the entity name",
   "Vuoto: le iniziali del nome": "Empty: the initials of the name",
+  "Vuoto: quella della stanza della prima pagina": "Empty: the one of the first page's room",
   "WebRTC: il nome stream go2rtc funziona solo aprendo la plancia fuori da Home Assistant — qui dentro la telecamera passa dalla sua entità": "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity",
   "WebRTC: provato per primo col suo tempo intero, il video non è arrivato": "WebRTC: tried first with its full time, the video did not arrive",
   "WebRTC: saltato — compila «Nome stream go2rtc» nella scheda Telecamere (il nome della telecamera non c’entra)": "WebRTC: skipped — fill in “go2rtc stream name” in the Cameras tab (the camera name is not the lever)",
@@ -9806,8 +9859,8 @@ var BLOCCHI_DELLA_HOME = Object.freeze([
   "dispositivi"
 ]);
 var NOTI = new Set(BLOCCHI_DELLA_HOME);
-function ordineDeiBlocchi(salvato) {
-  const scritto = Array.isArray(salvato) ? salvato : [];
+function ordineDeiBlocchi(salvato2) {
+  const scritto = Array.isArray(salvato2) ? salvato2 : [];
   const fila2 = [];
   for (const voce2 of scritto) {
     const nome = String(voce2 ?? "").trim();
@@ -9834,17 +9887,17 @@ function ordinePossibile(fila2) {
   rimessa.splice(testata4, 0, BLOCCO_DEL_METEO);
   return rimessa;
 }
-function staSopraLaPagina(nome, salvato) {
-  const fila2 = ordineDeiBlocchi(salvato);
+function staSopraLaPagina(nome, salvato2) {
+  const fila2 = ordineDeiBlocchi(salvato2);
   const posto = fila2.indexOf(nome);
   if (posto < 0) return false;
   return fila2.slice(0, posto).every((prima) => SOPRA_LA_PAGINA.includes(prima));
 }
-function ilMeteoStaInTestata(salvato) {
-  return staSopraLaPagina(BLOCCO_DEL_METEO, salvato) && lIntestazioneStaInCima(salvato);
+function ilMeteoStaInTestata(salvato2) {
+  return staSopraLaPagina(BLOCCO_DEL_METEO, salvato2) && lIntestazioneStaInCima(salvato2);
 }
-function lIntestazioneStaInCima(salvato) {
-  return staSopraLaPagina(BLOCCO_INTESTAZIONE, salvato);
+function lIntestazioneStaInCima(salvato2) {
+  return staSopraLaPagina(BLOCCO_INTESTAZIONE, salvato2);
 }
 
 // src/core/pastiglie-di-stato.js
@@ -20455,13 +20508,13 @@ function alarmActiveButton(stateObj = alarmStateObject()) {
   return modoAcceso(stateObj?.state, stateObj);
 }
 function vesteLaFinestraRapida() {
-  const griglia = doc?.getElementById?.("qa-alarm-grid");
-  if (!griglia) return;
+  const griglia2 = doc?.getElementById?.("qa-alarm-grid");
+  if (!griglia2) return;
   const stateObj = alarmStateObject();
   const tasti = alarmModeButtons(stateObj);
   const acceso6 = alarmActiveButton(stateObj);
-  griglia.dataset.dmTasti = String(tasti.length);
-  griglia.innerHTML = tasti.map(
+  griglia2.dataset.dmTasti = String(tasti.length);
+  griglia2.innerHTML = tasti.map(
     (voce2) => `<button class="qa-alarm-btn${voce2.mode === acceso6 ? " active" : ""}"
         data-mode="${esc(voce2.mode)}" onclick="promptPinAndSet(${jsArg(voce2.service)})">
         <span class="qa-alarm-btn-icon">${disegnoDelTastoAntifurto(voce2, 26)}</span>
@@ -21885,12 +21938,12 @@ function daQuandoDelleRighe(righe2, adesso) {
 var CAPACITA_ASSUNTA_KWH = 70;
 function oraDelPieno(tessera2, adesso, linguaDeiNumeri) {
   const carica = num(tessera2?.ring);
-  const potenza = num(tessera2?.ricaricaKw);
-  if (carica == null || potenza == null || potenza <= 0) return null;
+  const potenza2 = num(tessera2?.ricaricaKw);
+  if (carica == null || potenza2 == null || potenza2 <= 0) return null;
   const grezzo = num(tessera2?.targetSoc);
   const traguardo = grezzo != null && grezzo > 0 && grezzo <= 100 ? Math.round(grezzo) : 100;
   if (carica >= traguardo) return null;
-  const kw = potenza > 100 ? potenza / 1e3 : potenza;
+  const kw = potenza2 > 100 ? potenza2 / 1e3 : potenza2;
   const ore = (traguardo - carica) * CAPACITA_ASSUNTA_KWH / 100 / kw;
   if (!Number.isFinite(ore) || ore <= 0 || ore > 48) return null;
   const fine = new Date(adesso + ore * 3600 * 1e3);
@@ -22139,9 +22192,9 @@ var LETTURE = Object.freeze({
     const righe2 = Array.isArray(tessera2?.rows) ? tessera2.rows : [];
     const accesi = righe2.filter((r) => pulito18(r?.mode) === "running");
     const punti = [];
-    const potenza = accesi.reduce((s, r) => s + (num(r?.watts) || 0), 0);
-    if (potenza > 10)
-      punti.push(tr(`Insieme fanno ${watt(potenza, l)}`, `Together they draw ${watt(potenza, l)}`));
+    const potenza2 = accesi.reduce((s, r) => s + (num(r?.watts) || 0), 0);
+    if (potenza2 > 10)
+      punti.push(tr(`Insieme fanno ${watt(potenza2, l)}`, `Together they draw ${watt(potenza2, l)}`));
     const minuti = daQuandoDelleRighe(accesi, adesso);
     if (minuti != null)
       punti.push(
@@ -22974,8 +23027,8 @@ var numero10 = (valore3) => {
   const letto = Number(valore3);
   return Number.isFinite(letto) ? letto : null;
 };
-function inKilowatt(potenza, unita2 = "") {
-  const letto = numero10(potenza);
+function inKilowatt(potenza2, unita2 = "") {
+  const letto = numero10(potenza2);
   if (letto === null) return null;
   const nome = String(unita2 || "").trim().toLowerCase();
   if (nome === "kw") return letto;
@@ -22991,16 +23044,16 @@ function tempoDellaRicarica({
 } = {}) {
   const adesso = numero10(soc);
   const limite = numero10(target);
-  const potenza = numero10(kilowatt);
+  const potenza2 = numero10(kilowatt);
   const pacco = numero10(capacita) || CAPACITA_DI_SERIE;
   if (adesso !== null && adesso >= 100) return { stato: "completa", minuti: null };
   if (adesso !== null && limite !== null && adesso >= limite)
     return { stato: "raggiunto", minuti: null };
-  if (codice !== "C" || potenza === null || potenza <= 0 || adesso === null || limite === null)
+  if (codice !== "C" || potenza2 === null || potenza2 <= 0 || adesso === null || limite === null)
     return { stato: "attesa", minuti: null };
   const kwh2 = (limite - adesso) / 100 * pacco;
   if (kwh2 <= 0) return { stato: "raggiunto", minuti: null };
-  return { stato: "carica", minuti: Math.max(1, Math.round(kwh2 / potenza * 60)) };
+  return { stato: "carica", minuti: Math.max(1, Math.round(kwh2 / potenza2 * 60)) };
 }
 function oreEMinuti(minuti) {
   const totale = numero10(minuti);
@@ -25251,7 +25304,7 @@ function letturaScaldabagno(row = {}, states = {}, resolve = (value) => value) {
   numero15(leggi2(row.obiettivo)?.attributes?.temperature);
   const interruttore3 = leggi2(row.interruttore);
   const acceso6 = accesoDalloStato2(interruttore3?.state) ?? (principale ? accesoDalloStato2(principale.state) : null);
-  const potenza = numero15(leggi2(row.potenza)?.state);
+  const potenza2 = numero15(leggi2(row.potenza)?.state);
   const energia = numero15(leggi2(row.energia)?.state);
   const base = numero15(attributi2.min_temp) ?? BASE_ACQUA;
   return {
@@ -25266,7 +25319,7 @@ function letturaScaldabagno(row = {}, states = {}, resolve = (value) => value) {
     acceso: acceso6,
     temperatura,
     obiettivo: obiettivo2,
-    potenza,
+    potenza: potenza2,
     energia,
     quota: quotaVersoObiettivo(temperatura, obiettivo2, base),
     stato: statoScaldabagno({ acceso: acceso6, temperatura, obiettivo: obiettivo2 })
@@ -30738,8 +30791,8 @@ function finestreAperteDellaCasa(varchi, finestre) {
   }
   return fuori;
 }
-function normalizzaBarra(salvato) {
-  const dato = salvato && typeof salvato === "object" && !Array.isArray(salvato) ? salvato : {};
+function normalizzaBarra(salvato2) {
+  const dato = salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
   const scelte4 = dato.voci && typeof dato.voci === "object" ? dato.voci : {};
   const voci3 = {};
   for (const voce2 of VOCI_DELLA_BARRA) {
@@ -38296,10 +38349,10 @@ function capacitaScritta(riga3, states) {
   if (valore3 === null || valore3 <= 0) return null;
   return { valore: valore3, unita: /kwh/i.test(pulito30(riga3?.unita)) ? "kWh" : "Ah" };
 }
-function versoDelPacco(potenza, corrente2) {
-  if (potenza !== null && potenza !== void 0) {
-    if (potenza >= RIPOSO_W) return "carica";
-    if (potenza <= -RIPOSO_W) return "scarica";
+function versoDelPacco(potenza2, corrente2) {
+  if (potenza2 !== null && potenza2 !== void 0) {
+    if (potenza2 >= RIPOSO_W) return "carica";
+    if (potenza2 <= -RIPOSO_W) return "scarica";
     return "riposo";
   }
   if (corrente2 !== null && corrente2 !== void 0) {
@@ -38338,7 +38391,7 @@ function letturaDelPacco(riga3, states = {}, nomeDi14 = (entity2) => entity2) {
   const tensione = inVolt(misura3(states, riga3?.tensione));
   const corrente2 = inAmpere(misura3(states, riga3?.corrente));
   const scritta = inWatt(misura3(states, riga3?.potenza));
-  const potenza = scritta ?? (tensione !== null && corrente2 !== null ? Math.round(tensione * corrente2) : null);
+  const potenza2 = scritta ?? (tensione !== null && corrente2 !== null ? Math.round(tensione * corrente2) : null);
   const temperatura = misura3(states, riga3?.temperatura);
   const mos = misura3(states, riga3?.mos);
   const celle = celleLette(states, celleDellaRiga(riga3));
@@ -38361,7 +38414,7 @@ function letturaDelPacco(riga3, states = {}, nomeDi14 = (entity2) => entity2) {
     soh: misura3(states, riga3?.soh)?.valore ?? null,
     tensione,
     corrente: corrente2,
-    potenza,
+    potenza: potenza2,
     temperatura: temperatura?.valore ?? null,
     unitaTemperatura: temperatura?.unita || mos?.unita || "",
     mos: mos?.valore ?? null,
@@ -38377,15 +38430,15 @@ function letturaDelPacco(riga3, states = {}, nomeDi14 = (entity2) => entity2) {
     deltaDalBms: deltaBms !== null,
     soglia: soglia2,
     sbilanciato: delta !== null && delta > soglia2,
-    verso: versoDelPacco(potenza, corrente2)
+    verso: versoDelPacco(potenza2, corrente2)
   });
 }
 function accumuloDiCasa(states = {}, config, nomeDi14 = (entity2) => entity2) {
   return pacchiDellAccumulo(config).map((riga3) => letturaDelPacco(riga3, states, nomeDi14));
 }
-function minutiAllaFine({ verso: verso2, potenza, energiaKwh, capacitaKwh }) {
-  if (potenza === null || potenza === void 0 || Math.abs(potenza) < RIPOSO_W) return null;
-  const kw = Math.abs(potenza) / 1e3;
+function minutiAllaFine({ verso: verso2, potenza: potenza2, energiaKwh, capacitaKwh }) {
+  if (potenza2 === null || potenza2 === void 0 || Math.abs(potenza2) < RIPOSO_W) return null;
+  const kw = Math.abs(potenza2) / 1e3;
   if (verso2 === "carica") {
     if (capacitaKwh === null || energiaKwh === null || capacitaKwh === void 0) return null;
     const mancano = Math.max(0, capacitaKwh - energiaKwh);
@@ -38397,8 +38450,8 @@ function minutiAllaFine({ verso: verso2, potenza, energiaKwh, capacitaKwh }) {
   }
   return null;
 }
-function daDove(verso2, potenza, casa = {}) {
-  const watt2 = Math.abs(numero30(potenza) ?? 0);
+function daDove(verso2, potenza2, casa = {}) {
+  const watt2 = Math.abs(numero30(potenza2) ?? 0);
   if (!watt2) return null;
   if (verso2 === "carica") {
     const solare = numero30(casa?.solare);
@@ -38437,9 +38490,9 @@ function comeStaLAccumulo(pacchi = [], casa = {}) {
   const conEnergia = vivi.every((pacco) => pacco.energiaKwh !== null);
   const energiaKwh = conEnergia ? vivi.reduce((somma2, pacco) => somma2 + pacco.energiaKwh, 0) : capacitaKwh !== null ? soc / 100 * capacitaKwh : null;
   const potenze = vivi.map((pacco) => pacco.potenza).filter((watt2) => watt2 !== null);
-  const potenza = potenze.length ? potenze.reduce((somma2, watt2) => somma2 + watt2, 0) : null;
+  const potenza2 = potenze.length ? potenze.reduce((somma2, watt2) => somma2 + watt2, 0) : null;
   const correnti = vivi.map((pacco) => pacco.corrente).filter((ampere) => ampere !== null);
-  const verso2 = potenza !== null ? versoDelPacco(potenza, null) : correnti.length ? versoDelPacco(
+  const verso2 = potenza2 !== null ? versoDelPacco(potenza2, null) : correnti.length ? versoDelPacco(
     null,
     correnti.reduce((somma2, ampere) => somma2 + ampere, 0)
   ) : null;
@@ -38447,12 +38500,12 @@ function comeStaLAccumulo(pacchi = [], casa = {}) {
     stato: sbilanciati.length ? "sbilanciato" : "bene",
     soc,
     pesata: conCapacita,
-    potenza,
+    potenza: potenza2,
     verso: verso2,
     capacitaKwh,
     energiaKwh,
-    minuti: minutiAllaFine({ verso: verso2, potenza, energiaKwh, capacitaKwh }),
-    daDove: daDove(verso2, potenza, casa),
+    minuti: minutiAllaFine({ verso: verso2, potenza: potenza2, energiaKwh, capacitaKwh }),
+    daDove: daDove(verso2, potenza2, casa),
     sbilanciati,
     muti: pacchi.filter((pacco) => pacco.muto),
     vivi
@@ -45613,15 +45666,15 @@ function testimoniDellaRicarica(states, mappa) {
     return stateOf(states, entity2);
   };
   const collegata = cavoDalloStato(statoDi4("dm.ev_cavo_collegato")?.state);
-  let potenza = null;
+  let potenza2 = null;
   for (const riferimento of ["dm.ev_potenza_wallbox", "dm.ev_charge_power"]) {
     const letta = Number(statoDi4(riferimento)?.state);
     if (Number.isFinite(letta)) {
-      potenza = letta;
+      potenza2 = letta;
       break;
     }
   }
-  return { collegata, potenza };
+  return { collegata, potenza: potenza2 };
 }
 function ricaricaDellaVettura(states, mappa, stato2) {
   const grezzo = clean(stato2?.state);
@@ -49710,9 +49763,9 @@ function onClick7(event) {
     const apri6 = !misureAperte().has(chiave2);
     if (apri6) misureAperte().add(chiave2);
     else misureAperte().delete(chiave2);
-    const griglia = misure.previousElementSibling;
+    const griglia2 = misure.previousElementSibling;
     const caselle2 = [
-      ...griglia?.querySelectorAll?.(".dm-w-casella, .dm-w-pillola") || []
+      ...griglia2?.querySelectorAll?.(".dm-w-casella, .dm-w-pillola") || []
     ];
     caselle2.forEach((casella3, indice) => {
       casella3.hidden = !apri6 && indice >= MISURE_IN_VISTA;
@@ -52651,21 +52704,21 @@ function tastoRapido(unita2, states) {
   return tasto2;
 }
 function disegnaClimaRapido() {
-  const griglia = doc?.getElementById?.("quick-clima-grid");
-  if (!griglia) return false;
+  const griglia2 = doc?.getElementById?.("quick-clima-grid");
+  if (!griglia2) return false;
   if (!climateUnits().length) return false;
   const modo = clean(lexicalGlobal("currentClimaMode")).toLowerCase() || "freddo";
   const unita2 = unitaDelModo(modo);
   const states = allStates();
-  griglia.replaceChildren();
+  griglia2.replaceChildren();
   if (!unita2.length) {
     const vuoto4 = doc.createElement("p");
     vuoto4.className = "ns-clima-empty";
     vuoto4.textContent = modo === "caldo" ? t("Nessun termosifone configurato", "No radiator configured") : t("Nessun condizionatore configurato", "No air conditioner configured");
-    griglia.append(vuoto4);
+    griglia2.append(vuoto4);
     return true;
   }
-  for (const voce2 of unita2) griglia.append(tastoRapido(voce2, states));
+  for (const voce2 of unita2) griglia2.append(tastoRapido(voce2, states));
   return true;
 }
 function installClimaRapido() {
@@ -52771,9 +52824,9 @@ function osservaLaPagina() {
   if (!pagina2) return false;
   let eraInVista = climaInVista();
   state47.osservatore = new root.MutationObserver(() => {
-    const inVista = climaInVista();
-    if (inVista && !eraInVista) renderClimate();
-    eraInVista = inVista;
+    const inVista3 = climaInVista();
+    if (inVista3 && !eraInVista) renderClimate();
+    eraInVista = inVista3;
   });
   state47.osservatore.observe(pagina2, { attributes: true, attributeFilter: ["class"] });
   return true;
@@ -53780,8 +53833,8 @@ function tavolaMarkup(pagina2, states = {}) {
     return `<h2 class="dm-stanze-a-voce">${esc(nomeBlocco(blocco3))}</h2>${caselle2}`;
   }).join("");
   const altre = readingMarkup(pagina2, states, { daLa: 1 });
-  const griglia = tessere || altre ? `<div class="dm-stanze-grid dm-stanze-tavola" data-dm-stanza-vista="${VISTA_TESSERE}">${tessere}${altre}</div>` : "";
-  return `${testaDellaStanza(pagina2, states)}${griglia}`;
+  const griglia2 = tessere || altre ? `<div class="dm-stanze-grid dm-stanze-tavola" data-dm-stanza-vista="${VISTA_TESSERE}">${tessere}${altre}</div>` : "";
+  return `${testaDellaStanza(pagina2, states)}${griglia2}`;
 }
 function aggiornaLaTavola(wrap, states) {
   for (const nodo2 of wrap.querySelectorAll("[data-dm-stanza-clima]")) {
@@ -55213,9 +55266,9 @@ function pezziDelBlocco(nome, pagina2) {
       Boolean
     );
   if (nome === "azioni") {
-    const griglia = doc.getElementById("qa-grid");
-    const vassoio = griglia?.closest?.("[data-dm-vassoio]");
-    const corpo2 = dentro3(vassoio) || dentro3(griglia);
+    const griglia2 = doc.getElementById("qa-grid");
+    const vassoio = griglia2?.closest?.("[data-dm-vassoio]");
+    const corpo2 = dentro3(vassoio) || dentro3(griglia2);
     if (!corpo2) return [];
     const titolo = corpo2.previousElementSibling;
     return titolo?.classList?.contains("section-title") && !titolo.id ? [titolo, corpo2] : [corpo2];
@@ -57342,16 +57395,16 @@ function carichiTravasati({ loads = [], flowNodes = null } = {}) {
   const dalloSpecchio = /* @__PURE__ */ new Set();
   if (flowNodes && typeof flowNodes === "object" && !Array.isArray(flowNodes))
     for (const casella3 of CASELLE) {
-      const potenza = clean23(flowNodes?.[casella3]?.pwr);
-      if (potenza) dalloSpecchio.add(potenza);
+      const potenza2 = clean23(flowNodes?.[casella3]?.pwr);
+      if (potenza2) dalloSpecchio.add(potenza2);
     }
   if (!dalloSpecchio.size) return [];
   const perEntita = /* @__PURE__ */ new Map();
   for (const load of elenco9) {
-    const potenza = clean23(load?.power_entity);
-    if (!potenza || !dalloSpecchio.has(potenza)) continue;
-    if (!perEntita.has(potenza)) perEntita.set(potenza, []);
-    perEntita.get(potenza).push(load);
+    const potenza2 = clean23(load?.power_entity);
+    if (!potenza2 || !dalloSpecchio.has(potenza2)) continue;
+    if (!perEntita.has(potenza2)) perEntita.set(potenza2, []);
+    perEntita.get(potenza2).push(load);
   }
   const trovati = [];
   for (const [entita3, portatori] of perEntita) {
@@ -57664,15 +57717,15 @@ function entityField2(id, label, value, hint, onChange18) {
   return field;
 }
 function travasoDelCerchio(load) {
-  const potenza = clean(load?.power);
-  if (!potenza) return null;
+  const potenza2 = clean(load?.power);
+  if (!potenza2) return null;
   const { plant, list } = impiantoAperto();
   if (!Array.isArray(list) || list.length < 2) return null;
   const mio = plant && clean(plant.id) !== PRIMO_IMPIANTO ? clean(plant.id) : "";
   const voce2 = carichiTravasati({
     loads: configuredLoads2(),
     flowNodes: readJson("cd_flow_nodes", null)
-  }).find((trovato) => trovato.entita === potenza && trovato.impianto === mio);
+  }).find((trovato) => trovato.entita === potenza2 && trovato.impianto === mio);
   if (!voce2) return null;
   const nomi = voce2.altri.map((id) => {
     const posto = list.findIndex(
@@ -57680,7 +57733,7 @@ function travasoDelCerchio(load) {
     );
     return posto < 0 ? "" : plantLabel(list[posto], posto, t("Impianto", "Plant"));
   }).filter(Boolean);
-  return { potenza, nomi };
+  return { potenza: potenza2, nomi };
 }
 function warnings(load) {
   const messages = loadConfigWarnings(load, activeLocale());
@@ -58447,20 +58500,20 @@ function wattDi(states, entity2) {
   return finiteOrNull4(source?.state ?? source);
 }
 function comeInElettrodomestici(child, states) {
-  const potenza = campoDiPotenza(child, states);
-  const watt2 = wattDi(states, potenza);
+  const potenza2 = campoDiPotenza(child, states);
+  const watt2 = wattDi(states, potenza2);
   const device = {
     ...child,
-    power_entity: potenza,
+    power_entity: potenza2,
     state_entity: clean24(child.state_entity || child.status_entity || child.state || child.bin),
     control_entity: clean24(child.control_entity || child.switch_entity || child.switch)
   };
-  if (!potenza || watt2 === null) return { device, letture: states || {}, watt: watt2 };
+  if (!potenza2 || watt2 === null) return { device, letture: states || {}, watt: watt2 };
   const letture2 = Object.create(states || null);
-  letture2[potenza] = {
-    ...states?.[potenza] || {},
+  letture2[potenza2] = {
+    ...states?.[potenza2] || {},
     state: String(watt2),
-    attributes: { ...states?.[potenza]?.attributes || {}, unit_of_measurement: "W" }
+    attributes: { ...states?.[potenza2]?.attributes || {}, unit_of_measurement: "W" }
   };
   return { device, letture: letture2, watt: watt2 };
 }
@@ -58699,17 +58752,17 @@ function scriviIlGiorno(node, item) {
 }
 function riconcilia(list, model2) {
   let testata4 = list.querySelector(".dm-subload-summary");
-  let griglia = list.querySelector(".dm-subload-grid");
-  if (!testata4 || !griglia) {
+  let griglia2 = list.querySelector(".dm-subload-grid");
+  if (!testata4 || !griglia2) {
     testata4 = header(model2);
-    griglia = element2("div", "dm-subload-grid");
-    list.replaceChildren(testata4, griglia);
+    griglia2 = element2("div", "dm-subload-grid");
+    list.replaceChildren(testata4, griglia2);
   } else {
     aggiornaTestata(testata4, model2);
   }
-  const vuoto4 = griglia.querySelector(".dm-subload-empty");
+  const vuoto4 = griglia2.querySelector(".dm-subload-empty");
   if (!model2.count && !vuoto4)
-    griglia.append(
+    griglia2.append(
       element2(
         "div",
         "dm-subload-empty",
@@ -58721,7 +58774,7 @@ function riconcilia(list, model2) {
     );
   else if (model2.count && vuoto4) vuoto4.remove?.();
   const carte = new Map(
-    [...griglia.querySelectorAll("[data-dm-subload-card]")].map((nodo2) => [
+    [...griglia2.querySelectorAll("[data-dm-subload-card]")].map((nodo2) => [
       nodo2.dataset.dmSubloadCard,
       nodo2
     ])
@@ -58735,17 +58788,17 @@ function riconcilia(list, model2) {
     inFila.push(nodo2 || card(item, model2));
   }
   for (const [id, nodo2] of carte) if (!vivi.has(id)) nodo2.remove?.();
-  const gia = vuotoInScena(griglia) ? 1 : 0;
+  const gia = vuotoInScena(griglia2) ? 1 : 0;
   for (let posto = 0; posto < inFila.length; posto++) {
     const atteso = inFila[posto];
-    const attuale = griglia.children[posto + gia];
+    const attuale = griglia2.children[posto + gia];
     if (attuale === atteso) continue;
-    if (attuale) griglia.insertBefore(atteso, attuale);
-    else griglia.append(atteso);
+    if (attuale) griglia2.insertBefore(atteso, attuale);
+    else griglia2.append(atteso);
   }
   return true;
 }
-var vuotoInScena = (griglia) => Boolean(griglia.querySelector(".dm-subload-empty"));
+var vuotoInScena = (griglia2) => Boolean(griglia2.querySelector(".dm-subload-empty"));
 var ETICHETTE = () => ({
   running: t("IN FUNZIONE", "RUNNING"),
   standby: t("STANDBY", "STANDBY"),
@@ -59156,8 +59209,8 @@ function riveste(indice) {
   const { misure, pillole: pillole2, comandi } = famiglie(appliance);
   if (misure.length) {
     lista5.append(titoletto(t("Le misure", "The readings")));
-    const griglia = doc.createElement("div");
-    griglia.className = "dm-apde-caselle";
+    const griglia2 = doc.createElement("div");
+    griglia2.className = "dm-apde-caselle";
     for (const misura7 of misure) {
       const casella3 = doc.createElement("button");
       casella3.type = "button";
@@ -59165,9 +59218,9 @@ function riveste(indice) {
       casella3.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${misura7.glifo}</span>
         <b>${esc(misura7.valore)}</b><span>${esc(misura7.nome)}</span>`;
       casella3.addEventListener("click", (event) => apriStorico(event, misura7.entity, misura7.nome));
-      griglia.append(casella3);
+      griglia2.append(casella3);
     }
-    lista5.append(griglia);
+    lista5.append(griglia2);
   }
   if (pillole2.length) {
     lista5.append(titoletto(t("Lo stato", "The state")));
@@ -59302,8 +59355,8 @@ function aggiungiAltreLetture(lista5, appliance, titoletto) {
   );
   if (!voci3.length) return false;
   lista5.append(titoletto(t("Altre letture", "Other readings")));
-  const griglia = doc.createElement("div");
-  griglia.className = "dm-apde-caselle";
+  const griglia2 = doc.createElement("div");
+  griglia2.className = "dm-apde-caselle";
   for (const voce2 of voci3) {
     const casella3 = doc.createElement("button");
     casella3.type = "button";
@@ -59311,9 +59364,9 @@ function aggiungiAltreLetture(lista5, appliance, titoletto) {
     casella3.dataset.dmApdeEntity = voce2.entity;
     casella3.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce2.testo)}</b><span>${esc(voce2.name)}</span>`;
     casella3.addEventListener("click", (event) => apriStorico(event, voce2.entity, voce2.name));
-    griglia.append(casella3);
+    griglia2.append(casella3);
   }
-  lista5.append(griglia);
+  lista5.append(griglia2);
   return true;
 }
 function aggiungiAltriComandi(lista5, appliance, titoletto) {
@@ -59458,8 +59511,8 @@ function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto) {
   }
   if (letture2.length) {
     lista5.append(titoletto(t("Le letture del dispositivo", "The device readings")));
-    const griglia = doc.createElement("div");
-    griglia.className = "dm-apde-caselle";
+    const griglia2 = doc.createElement("div");
+    griglia2.className = "dm-apde-caselle";
     for (const voce2 of letture2) {
       const casella3 = doc.createElement("button");
       casella3.type = "button";
@@ -59467,9 +59520,9 @@ function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto) {
       casella3.dataset.dmApdeEntity = voce2.entity;
       casella3.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce2.value)}</b><span>${esc(voce2.name)}</span>`;
       casella3.addEventListener("click", (event) => apriStorico(event, voce2.entity, voce2.name));
-      griglia.append(casella3);
+      griglia2.append(casella3);
     }
-    lista5.append(griglia);
+    lista5.append(griglia2);
   }
   const rigaDiComando = (voce2) => {
     const riga3 = doc.createElement("div");
@@ -61155,8 +61208,8 @@ function quandoLaPanoramicaSiVede(fai) {
   state59.sentinella.observe(vista2);
 }
 function ilBlocco(crea = false) {
-  const griglia = doc?.querySelector("#ed-pane-panoramica .ed-fin-grid");
-  if (!griglia) return null;
+  const griglia2 = doc?.querySelector("#ed-pane-panoramica .ed-fin-grid");
+  if (!griglia2) return null;
   let blocco3 = doc.getElementById("dm-fasce-report");
   if (!blocco3) {
     if (!crea) return null;
@@ -61164,7 +61217,7 @@ function ilBlocco(crea = false) {
     blocco3.id = "dm-fasce-report";
     blocco3.className = "dm-fasce-report";
   }
-  if (blocco3.previousElementSibling !== griglia) griglia.after(blocco3);
+  if (blocco3.previousElementSibling !== griglia2) griglia2.after(blocco3);
   return blocco3;
 }
 function ilProfilo(crea = false) {
@@ -63805,15 +63858,15 @@ function leCaselleDellEnergia(gruppi2 = ENERGY_GROUPS) {
 }
 function leCaselleDelGuscio(raccolte = []) {
   const fuori = [];
-  for (const raccolta of Array.isArray(raccolte) ? raccolte : []) {
-    const ref = pulito41(raccolta?.ref);
-    const nome = pulito41(raccolta?.nome);
+  for (const raccolta2 of Array.isArray(raccolte) ? raccolte : []) {
+    const ref = pulito41(raccolta2?.ref);
+    const nome = pulito41(raccolta2?.nome);
     if (!ref || !nome || isRetiredEditorSlot(ref)) continue;
     const scheda8 = Object.entries(SCHEDA_DELLA_FAMIGLIA).find(
       ([inizio]) => ref.startsWith(inizio)
     )?.[1];
     if (!scheda8) continue;
-    fuori.push(casella(ref, nome, nome, scheda8, "", pulito41(raccolta?.dove)));
+    fuori.push(casella(ref, nome, nome, scheda8, "", pulito41(raccolta2?.dove)));
   }
   return fuori;
 }
@@ -68978,12 +69031,12 @@ function tasto(voce2) {
   return nodo2;
 }
 function disegnaProgrammi() {
-  const griglia = doc?.querySelector?.("#lavatrice-modal .lav-preset-grid");
-  if (!griglia) return false;
+  const griglia2 = doc?.querySelector?.("#lavatrice-modal .lav-preset-grid");
+  if (!griglia2) return false;
   const voci3 = programmiAttuali();
-  griglia.replaceChildren(...voci3.map(tasto));
-  const titolo = griglia.previousElementSibling;
-  griglia.style.display = voci3.length ? "" : "none";
+  griglia2.replaceChildren(...voci3.map(tasto));
+  const titolo = griglia2.previousElementSibling;
+  griglia2.style.display = voci3.length ? "" : "none";
   if (titolo?.tagName === "H4") titolo.style.display = voci3.length ? "" : "none";
   return true;
 }
@@ -72654,8 +72707,8 @@ async function writeEnergyAssignments(assignments) {
   if (!energy.length) return assignments;
   const store = dashboardStore();
   const rest = assignments.filter((item) => !ENERGY_SLOT_PATHS.has(item.ref));
-  const salvato = store?.getSection ? { ...store.getSection("energy") || {} } : readJson("cd_energy_model", {}) || {};
-  const model2 = scriviNellImpianto(salvato, impiantoScelto(), (bersaglio) => {
+  const salvato2 = store?.getSection ? { ...store.getSection("energy") || {} } : readJson("cd_energy_model", {}) || {};
+  const model2 = scriviNellImpianto(salvato2, impiantoScelto(), (bersaglio) => {
     for (const item of energy) {
       const [group, key] = ENERGY_SLOT_PATHS.get(item.ref);
       bersaglio[group] = { ...bersaglio[group] || {} };
@@ -74840,14 +74893,14 @@ html body #page-home .dm-vassoio #qa-grid .qa-btn:active .icon{transform:scale(.
 }
 `;
 function avvolgi2() {
-  const griglia = doc?.getElementById?.("qa-grid");
-  if (!griglia) return false;
-  if (griglia.parentElement?.classList?.contains("dm-vassoio")) return false;
+  const griglia2 = doc?.getElementById?.("qa-grid");
+  if (!griglia2) return false;
+  if (griglia2.parentElement?.classList?.contains("dm-vassoio")) return false;
   const vassoio = doc.createElement("div");
   vassoio.className = "dm-vassoio";
   vassoio.dataset.dmVassoio = "azioni";
-  griglia.replaceWith(vassoio);
-  vassoio.append(griglia);
+  griglia2.replaceWith(vassoio);
+  vassoio.append(griglia2);
   return true;
 }
 function azioniDelGuscio() {
@@ -74886,10 +74939,10 @@ function onda(evento) {
   root.setTimeout?.(() => cerchio.remove(), 640);
 }
 function adegua() {
-  const griglia = doc?.getElementById?.("qa-grid");
-  const vassoio = griglia?.parentElement;
+  const griglia2 = doc?.getElementById?.("qa-grid");
+  const vassoio = griglia2?.parentElement;
   if (!vassoio?.classList?.contains?.("dm-vassoio")) return;
-  const vuoto4 = griglia.style.display === "none";
+  const vuoto4 = griglia2.style.display === "none";
   vassoio.hidden = vuoto4;
   const titolo = vassoio.previousElementSibling;
   if (titolo && /azioni/i.test(titolo.textContent || ""))
@@ -75029,16 +75082,16 @@ function titoloMarkup(gruppo, chiuso, segno) {
     <span class="dm-qa-gruppo-freccia" aria-hidden="true">▾</span>`;
 }
 function raggruppa() {
-  const griglia = doc?.getElementById?.("qa-grid");
-  if (!griglia) return 0;
+  const griglia2 = doc?.getElementById?.("qa-grid");
+  if (!griglia2) return 0;
   const azioni2 = azioniDelGuscio2();
   const states = allStates();
   const struttura = gruppiDelleAzioni(
     azioni2,
     (azione) => azioneAccesa(azione, states, root.resolveEntity)
   );
-  const tasti = [...griglia.children].filter((nodo2) => nodo2.classList?.contains("qa-btn"));
-  const titoli = [...griglia.querySelectorAll(":scope > .dm-qa-gruppo")];
+  const tasti = [...griglia2.children].filter((nodo2) => nodo2.classList?.contains("qa-btn"));
+  const titoli = [...griglia2.querySelectorAll(":scope > .dm-qa-gruppo")];
   if (!struttura.gruppi.length) {
     for (const titolo of titoli) titolo.remove();
     for (const tasto2 of tasti) {
@@ -75046,7 +75099,7 @@ function raggruppa() {
       delete tasto2.dataset.dmQaChiuso;
       delete tasto2.dataset.dmQaGruppo;
     }
-    delete griglia.dataset.dmQaGruppi;
+    delete griglia2.dataset.dmQaGruppi;
     return 0;
   }
   const metti4 = (nodo2, campo5, valore3) => {
@@ -75057,7 +75110,7 @@ function raggruppa() {
   const ordina = (nodo2, valore3) => {
     if (nodo2.style.order !== valore3) nodo2.style.order = valore3;
   };
-  metti4(griglia, "dmQaGruppi", String(struttura.gruppi.length));
+  metti4(griglia2, "dmQaGruppi", String(struttura.gruppi.length));
   const chiusi = gruppiChiusi(leggiChiusi(), struttura.gruppi);
   const gruppoDi2 = /* @__PURE__ */ new Map();
   for (const gruppo of struttura.gruppi)
@@ -75071,7 +75124,7 @@ function raggruppa() {
   const presenti = new Set(struttura.gruppi.map((gruppo) => gruppo.chiave));
   for (const titolo of titoli) if (!presenti.has(titolo.dataset.dmQaTitolo)) titolo.remove();
   struttura.gruppi.forEach((gruppo, posto) => {
-    let titolo = griglia.querySelector(
+    let titolo = griglia2.querySelector(
       `:scope > .dm-qa-gruppo[data-dm-qa-titolo="${CSS.escape(gruppo.chiave)}"]`
     );
     if (!titolo) {
@@ -75079,7 +75132,7 @@ function raggruppa() {
       titolo.type = "button";
       titolo.className = "dm-qa-gruppo";
       titolo.dataset.dmQaTitolo = gruppo.chiave;
-      griglia.append(titolo);
+      griglia2.append(titolo);
     }
     const chiuso = chiusi.has(gruppo.chiave);
     const segno = segnoDaTasto(tasti[gruppo.indici[0]]);
@@ -76842,11 +76895,48 @@ senzaCadere(installModoChiosco);
 
 // src/core/plancia-a-muro.js
 var CHIAVE_MURO = "cd_muro";
-var MODELLI = Object.freeze(["stanza", "scene", "ingresso", "personale", "luci", "clima"]);
-var MODELLI_ELENCO = Object.freeze(["luci", "clima"]);
+var MODELLI = Object.freeze([
+  "stanza",
+  "scene",
+  "ingresso",
+  "personale",
+  "luci",
+  "clima",
+  "tapparelle",
+  "ambienti",
+  "telecamere",
+  "energia"
+]);
+var MODELLI_ELENCO = Object.freeze(["luci", "clima", "tapparelle"]);
 var ZONE_DEL_CLIMA = Object.freeze(["freddo", "caldo"]);
-var PAGINE_AL_MASSIMO = 4;
+var PAGINE_AL_MASSIMO = 8;
 var POSTI = 6;
+var GRIGLIE = Object.freeze({
+  4: Object.freeze({ colonne: 2, righe: 2 }),
+  6: Object.freeze({ colonne: 3, righe: 2 }),
+  8: Object.freeze({ colonne: 4, righe: 2 }),
+  9: Object.freeze({ colonne: 3, righe: 3 }),
+  12: Object.freeze({ colonne: 4, righe: 3 })
+});
+var GRIGLIA_DI_SERIE = Object.freeze({ telecamere: 4, energia: 4, ambienti: 6 });
+function postiDellaPagina(pagina2) {
+  const n = Number(pagina2?.griglia);
+  return GRIGLIE[n] ? n : POSTI;
+}
+function grigliaDellaPagina(pagina2, versoScelto = "orizzontale") {
+  const g = GRIGLIE[postiDellaPagina(pagina2)];
+  return versoScelto === "verticale" ? { colonne: g.righe, righe: g.colonne } : { colonne: g.colonne, righe: g.righe };
+}
+var COLORI_DELLE_PAGINE = Object.freeze([
+  "#f59e0b",
+  "#ef4444",
+  "#ec4899",
+  "#8b5cf6",
+  "#6366f1",
+  "#0ea5e9",
+  "#10b981",
+  "#64748b"
+]);
 var TIPI_DI_COMANDO = Object.freeze([
   "luce",
   "clima",
@@ -76955,11 +77045,12 @@ function paginaPulita(input, indice = 0) {
   const vecchia = ZONE_DEL_CLIMA.includes(dentro3.modello) ? dentro3.modello : "";
   const modello = vecchia ? "clima" : scelta(dentro3.modello, MODELLI, "stanza");
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro3.id || "")) ? dentro3.id : `p${indice + 1}`;
+  const griglia2 = GRIGLIE[Number(dentro3.griglia)] ? Number(dentro3.griglia) : GRIGLIA_DI_SERIE[modello] || POSTI;
   const comandi = senzaVuotiInCoda(
-    (Array.isArray(dentro3.comandi) ? dentro3.comandi : []).slice(0, POSTI).map((c) => comandoPulito(c) || { ...POSTO_VUOTO })
+    (Array.isArray(dentro3.comandi) ? dentro3.comandi : []).slice(0, griglia2).map((c) => comandoPulito(c) || { ...POSTO_VUOTO })
   );
   const scene = senzaVuotiInCoda(
-    (Array.isArray(dentro3.scene) ? dentro3.scene : []).slice(0, POSTI).map(
+    (Array.isArray(dentro3.scene) ? dentro3.scene : []).slice(0, griglia2).map(
       (c) => c?.tipo === "vuoto" ? { ...POSTO_VUOTO } : scenaPulita(c) || { ...POSTO_VUOTO }
     )
   );
@@ -76973,6 +77064,9 @@ function paginaPulita(input, indice = 0) {
     titolo: testo(dentro3.titolo, 32),
     /* Il disegno della linguetta: vuoto, quello del tipo di pagina. */
     disegno: testo(dentro3.disegno, 32),
+    /* Il colore della linguetta e del titolo: vuoto, quello del tipo. */
+    colore: COLORI_DELLE_PAGINE.includes(String(dentro3.colore || "").toLowerCase()) ? String(dentro3.colore).toLowerCase() : "",
+    griglia: griglia2,
     /* Su quale linguetta si apre la pagina Clima. */
     zona: scelta(vecchia || dentro3.zona, ZONE_DEL_CLIMA, "freddo"),
     stanza: testo(dentro3.stanza, 80),
@@ -76984,15 +77078,27 @@ function paginaPulita(input, indice = 0) {
     scene,
     riga: riga3,
     ingresso: ingressoPulito(dentro3.ingresso),
+    energia: energiaPulita(dentro3.energia),
     confermaUscita: vero2(dentro3.confermaUscita, false)
   };
+}
+var ENERGIA_VUOTA = Object.freeze({ casa: "", solare: "", rete: "", batteria: "" });
+function energiaPulita(input) {
+  const dentro3 = input && typeof input === "object" ? input : {};
+  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, entita2(dentro3[k])]));
+}
+function energiaDellaPagina(pagina2, fonte = {}) {
+  const scelte4 = pagina2?.energia || {};
+  const sue = fonte?.energia || {};
+  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, scelte4[k] || sue[k] || ""]));
 }
 var MURO_VUOTO = Object.freeze({
   attiva: false,
   fonte: PROFILO_DI_ORIGINE,
   orientamento: "auto",
   tema: "plancia",
-  riposo: { attivo: true, minuti: 2 },
+  meteo: "",
+  riposo: { attivo: true, minuti: 2, torna: true, sensore: "" },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
   risveglio: { attivo: false, entita: "" },
@@ -77026,9 +77132,15 @@ function muroPulito(input) {
     fonte: profilo(dentro3.fonte),
     orientamento: scelta(dentro3.orientamento, ORIENTAMENTI, "auto"),
     tema: scelta(dentro3.tema, TEMI, "plancia"),
+    /* Il meteo in alto e sul riposo: vuoto, il primo che Home Assistant ha. */
+    meteo: entita2(dentro3.meteo),
     riposo: {
       attivo: vero2(riposo2.attivo, true),
-      minuti: MINUTI_DI_RIPOSO.includes(minuti) ? minuti : 2
+      minuti: MINUTI_DI_RIPOSO.includes(minuti) ? minuti : 2,
+      /* Al riposo il tablet torna alla prima pagina, o resta dov'era. */
+      torna: vero2(riposo2.torna, true),
+      /* La temperatura «in casa» del riposo: vuoto, quella della prima stanza. */
+      sensore: entita2(riposo2.sensore)
     },
     notte: {
       attiva: vero2(notte.attiva, false),
@@ -77049,7 +77161,7 @@ function muroPulito(input) {
 function nuovaPagina(modello, fonte = {}, indice = 0) {
   const pagina2 = paginaPulita({ id: nuovoId().slice(0, 24), modello }, indice);
   if (pagina2.modello === "stanza") pagina2.stanza = fonte.stanze?.[0]?.name || "";
-  if (pagina2.modello === "scene") pagina2.scene = scenePropose(fonte);
+  if (pagina2.modello === "scene") pagina2.scene = scenePropose(fonte, pagina2.griglia);
   if (pagina2.modello === "ingresso") pagina2.ingresso = ingressoProposto(fonte);
   if (pagina2.modello === "personale") pagina2.scelti = true;
   return pagina2;
@@ -77105,7 +77217,15 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
   const centrali2 = elenco5(altro.centrali).map((c) => entita2(c?.caselle?.["dm.security_centrale_allarme"])).filter(Boolean);
   const centraleSola = entita2(overrides2["dm.security_centrale_allarme"]);
   if (centraleSola && !centrali2.includes(centraleSola)) centrali2.unshift(centraleSola);
+  const misura7 = (chiave2) => entita2(overrides2[`dm.energy_${chiave2}`]);
   return {
+    /* Le misure dell'energia che la plancia di origine ha gia' scelto. */
+    energia: {
+      casa: misura7("potenza_consumo_casa"),
+      solare: misura7("potenza_fotovoltaico"),
+      rete: misura7("potenza_scambio_rete"),
+      batteria: misura7("stato_carica_batteria")
+    },
     stanze: elenco5(sezioni2.rooms).filter((s) => s && testo(s.name)).map((s) => ({
       id: testo(s.id, 80),
       name: testo(s.name),
@@ -77170,7 +77290,7 @@ function azioniDellaStanza(fonte, stanza) {
   const sue = nome ? azioni2.filter((a) => a.name.toLowerCase().includes(nome)) : [];
   return sue.length ? sue : azioni2.filter((a) => a.type === "scene" || a.type === "script");
 }
-function comandiProposti2(fonte = {}, nomeStanza = "") {
+function comandiProposti2(fonte = {}, nomeStanza = "", posti = POSTI) {
   const stanza = elenco5(fonte.stanze).find((s) => s.name === nomeStanza || s.id === nomeStanza) || null;
   if (!stanza) return [];
   const proposti = [
@@ -77178,20 +77298,24 @@ function comandiProposti2(fonte = {}, nomeStanza = "") {
     ...elenco5(fonte.clima).filter((d) => diStanza(d, stanza)).map((d) => ({ tipo: "clima", entita: d.entity, nome: "" })),
     ...elenco5(fonte.tapparelle).filter((d) => diStanza(d, stanza)).map((d) => ({ tipo: "tapparella", entita: d.entity, nome: "" }))
   ];
-  const liberi = Math.max(POSTI - proposti.length, Math.min(2, POSTI));
+  const liberi = Math.max(posti - proposti.length, Math.min(2, posti));
   const azioni2 = azioniDellaStanza(fonte, stanza).slice(0, liberi).map((a) => ({ tipo: "azione", azione: a.name, nome: "", sotto: "" }));
-  return [...proposti.slice(0, POSTI - azioni2.length), ...azioni2].map(comandoPulito).filter(Boolean).slice(0, POSTI);
+  return [...proposti.slice(0, posti - azioni2.length), ...azioni2].map(comandoPulito).filter(Boolean).slice(0, posti);
 }
 function comandiDellaPagina(pagina2, fonte = {}, zona = "") {
   if (!pagina2) return [];
   if (pagina2.modello === "personale") return pagina2.comandi;
   if (pagina2.modello === "clima") return comandiDellElenco(zona || pagina2.zona || "freddo", fonte);
   if (MODELLI_ELENCO.includes(pagina2.modello)) return comandiDellElenco(pagina2.modello, fonte);
-  return pagina2.scelti ? pagina2.comandi : comandiProposti2(fonte, pagina2.stanza);
+  return pagina2.scelti ? pagina2.comandi : comandiProposti2(fonte, pagina2.stanza, postiDellaPagina(pagina2));
 }
 function comandiDellElenco(modello, fonte = {}) {
   if (modello === "luci")
     return elenco5(fonte.luci).map((d) => comandoPulito({ tipo: "luce", entita: d.entity }));
+  if (modello === "tapparelle")
+    return elenco5(fonte.tapparelle).map(
+      (d) => comandoPulito({ tipo: "tapparella", entita: d.entity })
+    );
   if (modello === "freddo" || modello === "caldo")
     return elenco5(fonte.clima).filter((d) => zoneDelClima(d.tipo).includes(modello)).map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
   return [];
@@ -77199,10 +77323,19 @@ function comandiDellElenco(modello, fonte = {}) {
 function eUnaScena(azione) {
   return Boolean(azione) && !["builtin", "luci_group"].includes(azione.type) && Boolean(azione.entity);
 }
-function scenePropose(fonte = {}) {
-  return elenco5(fonte.azioni).filter(eUnaScena).slice(0, POSTI).map((a) => scenaPulita({ azione: a.name })).filter(Boolean);
+function scenePropose(fonte = {}, posti = POSTI) {
+  return elenco5(fonte.azioni).filter(eUnaScena).slice(0, posti).map((a) => scenaPulita({ azione: a.name })).filter(Boolean);
 }
 var cercaAzione = (fonte, ...parole4) => elenco5(fonte.azioni).find((a) => parole4.some((p) => a.name.toLowerCase().includes(p)))?.name || "";
+function ambientiDellaFonte(fonte = {}) {
+  return elenco5(fonte.stanze).map((stanza) => ({
+    stanza,
+    luci: elenco5(fonte.luci).filter((d) => diStanza(d, stanza)).map((d) => d.entity)
+  })).filter((a) => a.stanza.temp || a.stanza.hum || a.luci.length);
+}
+function telecamereDellaFonte(fonte = {}) {
+  return elenco5(fonte.telecamere).map((d) => ({ entita: d.entity, nome: testo(d.name) }));
+}
 function ingressoProposto(fonte = {}) {
   return ingressoPulito({
     centrale: elenco5(fonte.centrali)[0] || "",
@@ -77330,12 +77463,12 @@ async function premiumDellaCasa({ forza = false } = {}) {
 var CINQUE_MINUTI = 5 * 60 * 1e3;
 async function fonteDelMuro(muro, { forza = false } = {}) {
   const di = muro?.fonte || "primary";
-  if (!forza && state107.fonte && state107.fonteDi === di && Date.now() - state107.fonteLetta < CINQUE_MINUTI)
+  if (!forza && !fonteEQui(di) && state107.fonte && state107.fonteDi === di && Date.now() - state107.fonteLetta < CINQUE_MINUTI)
     return state107.fonte;
   let fonte = null;
   if (root.__DM_MURO_FONTE__ && typeof root.__DM_MURO_FONTE__ === "object")
     fonte = fonteDaiValori(root.__DM_MURO_FONTE__);
-  else if (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__) fonte = fonteDiQui();
+  else if (fonteEQui(di)) fonte = fonteDiQui();
   else {
     try {
       const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
@@ -77350,6 +77483,7 @@ async function fonteDelMuro(muro, { forza = false } = {}) {
   ricorda({ fonte: state107.fonte, fonteDi: di });
   return state107.fonte;
 }
+var fonteEQui = (di) => !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
 function fonteDiQui() {
   return fonteDalleSezioni(
     {
@@ -77369,12 +77503,29 @@ function fonteDiQui() {
     }
   );
 }
-var stato = (id) => allStates()?.[id] || null;
+var raccolta = null;
+var inVista2 = { ids: /* @__PURE__ */ new Set(), domini: /* @__PURE__ */ new Set() };
+var segna = (id) => {
+  if (raccolta && id) raccolta.ids.add(String(id));
+};
+var segnaDominio = (d) => raccolta?.domini.add(d);
+function eInVista(id) {
+  const muro = state107.muro;
+  if (!muro?.attiva || state107.premium !== true || state107.uscito) return false;
+  const chiave2 = String(id || "");
+  if (inVista2.ids.has(chiave2) || inVista2.domini.has(chiave2.split(".")[0])) return true;
+  return Boolean(muro.risveglio?.attivo && muro.risveglio.entita === chiave2);
+}
+var stato = (id) => {
+  segna(id);
+  return allStates()?.[id] || null;
+};
 var attributi = (id) => stato(id)?.attributes || {};
 var dominio2 = (id) => String(id || "").split(".")[0];
-var acceso4 = (id) => ["on", "open", "opening", "heat", "cool", "heat_cool", "auto", "dry", "fan_only"].includes(
+var accesoVero = (id) => ["on", "open", "opening", "heat", "cool", "heat_cool", "auto", "dry", "fan_only"].includes(
   String(stato(id)?.state)
 );
+var acceso4 = (id) => typeof state107.inAttesa[id]?.acceso === "boolean" ? state107.inAttesa[id].acceso : accesoVero(id);
 var numero40 = (valore3) => {
   const n = Number(valore3);
   return Number.isFinite(n) ? n : null;
@@ -77564,7 +77715,11 @@ var MODELLI_SCRITTI = () => ({
   ingresso: t("Ingresso", "Entrance"),
   personale: t("La mia pagina", "My page"),
   luci: t("Luci", "Lights"),
-  clima: t("Clima", "Climate")
+  clima: t("Clima", "Climate"),
+  tapparelle: t("Tapparelle", "Blinds"),
+  ambienti: t("Ambienti", "Rooms"),
+  telecamere: t("Telecamere", "Cameras"),
+  energia: t("Energia", "Energy")
 });
 var SOTTO = () => ({
   stanza: t("Luci · Clima · Tapparelle · Scene", "Lights · Climate · Blinds · Scenes"),
@@ -77572,7 +77727,11 @@ var SOTTO = () => ({
   ingresso: t("Antifurto · Citofono · Uscita", "Alarm · Intercom · Leaving"),
   personale: t("I comandi scelti da te", "Your own controls"),
   luci: t("Tutte le luci di casa", "Every light in the house"),
-  clima: t("Caldo · Freddo", "Heating · Cooling")
+  clima: t("Caldo · Freddo", "Heating · Cooling"),
+  tapparelle: t("Tutte le tapparelle di casa", "Every blind in the house"),
+  ambienti: t("Temperatura · Umidità · Luci", "Temperature · Humidity · Lights"),
+  telecamere: t("Le immagini dal vivo", "Live pictures"),
+  energia: t("Adesso, in casa", "Right now, at home")
 });
 var DISEGNO_DEL_MODELLO = {
   stanza: "stanze",
@@ -77580,7 +77739,11 @@ var DISEGNO_DEL_MODELLO = {
   ingresso: "sicurezza",
   personale: "widget",
   luci: "luci",
-  clima: "clima"
+  clima: "clima",
+  tapparelle: "tapparelle",
+  ambienti: "temperatura",
+  telecamere: "telecamere",
+  energia: "energia"
 };
 var ACCENTO_DEL_MODELLO = {
   stanza: "#f59e0b",
@@ -77588,8 +77751,13 @@ var ACCENTO_DEL_MODELLO = {
   ingresso: "#10b981",
   personale: "#8b5cf6",
   luci: "#f59e0b",
-  clima: "#0ea5e9"
+  clima: "#0ea5e9",
+  tapparelle: "#8b5cf6",
+  ambienti: "#ef4444",
+  telecamere: "#2563eb",
+  energia: "#10b981"
 };
+var accentoDi = (pagina2) => clean(pagina2?.colore) || ACCENTO_DEL_MODELLO[pagina2?.modello];
 var titoloDi = (pagina2) => clean(pagina2.titolo) || pagina2.modello === "stanza" && clean(pagina2.stanza) || MODELLI_SCRITTI()[pagina2.modello];
 function orologio3(adesso = /* @__PURE__ */ new Date()) {
   return {
@@ -77599,7 +77767,9 @@ function orologio3(adesso = /* @__PURE__ */ new Date()) {
   };
 }
 function meteo() {
-  const id = Object.keys(allStates() || {}).find((k) => k.startsWith("weather."));
+  const scelto = clean(state107.muro?.meteo);
+  if (!scelto) segnaDominio("weather");
+  const id = scelto || Object.keys(allStates() || {}).find((k) => k.startsWith("weather."));
   if (!id) return null;
   const s = stato(id);
   return { temperatura: s?.attributes?.temperature, condizione: s?.state };
@@ -77620,9 +77790,10 @@ var PAROLE_DEL_METEO = () => ({
 function testa(pagina2, muro) {
   const o = orologio3();
   const m = pagina2.riga?.meteo !== false ? meteo() : null;
-  const accento = ACCENTO_DEL_MODELLO[pagina2.modello];
-  const linguette3 = muro.pagine.length > 1 ? `<div class="mu-pagine" role="tablist">${muro.pagine.map(
-    (p, i) => `<button type="button" role="tab" class="${i === state107.pagina ? "si" : ""}" style="--acc:${ACCENTO_DEL_MODELLO[p.modello]}" data-mu-pagina="${i}" aria-selected="${i === state107.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`
+  const accento = accentoDi(pagina2);
+  const molte = muro.pagine.length > 4 ? " mu-molte" : "";
+  const linguette3 = muro.pagine.length > 1 ? `<div class="mu-pagine${molte}" role="tablist">${muro.pagine.map(
+    (p, i) => `<button type="button" role="tab" class="${i === state107.pagina ? "si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state107.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`
   ).join("")}</div>` : "";
   return `<div class="mu-carta mu-testa" style="--acc:${accento}">
     <button type="button" class="mu-menu" data-mu-fa="menu" aria-label="${esc(t("Apri il menu", "Open the menu"))}"><span></span><span></span><span></span></button>
@@ -77773,7 +77944,8 @@ function cardClima(c, i, zona = "") {
   const a = attributi(id);
   const faccia = facciaDelClima(id, zona);
   const s = String(stato(id)?.state || "");
-  const on = s && s !== "off" && s !== "unavailable";
+  const atteso = state107.inAttesa[id]?.acceso;
+  const on = typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
   const azione = a.hvac_action ? AZIONI_DEL_CLIMA()[a.hvac_action] : on ? PAROLE_DEL_CLIMA()[s] : t("Spento", "Off");
   const target = obiettivo(id);
   return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
@@ -77856,9 +78028,10 @@ function paginaStanza(pagina2) {
   ].map(
     ([z, d, parola, acc]) => `<button type="button" role="tab" class="${z === zona ? "si" : ""}" style="--acc:${acc}" data-mu-zona="${z}" aria-selected="${z === zona}">${disegno(d, 22, `zona-${z}`)}${esc(parola)}</button>`
   ).join("")}</div>` : "";
-  const quante2 = elenco9 ? Math.max(comandi.length, 1) : 6;
+  const posti = postiDellaPagina(pagina2);
+  const quante2 = elenco9 ? Math.max(comandi.length, 1) : posti;
   if (elenco9 && !comandi.length)
-    return `${linguette3}<div class="mu-g6">${vuoto2(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+    return `${linguette3}<div class="mu-g6" style="${stileDellaGriglia(pagina2)}">${vuoto2(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
   const carte = Array.from({ length: quante2 }, (_, i) => {
     const c = comandi[i];
     if (!c || c.tipo === "vuoto") return vuoto2(i);
@@ -77869,18 +78042,100 @@ function paginaStanza(pagina2) {
     return cardAzione(c, i);
   });
   const riga3 = pagina2.modello === "stanza" ? pillole(pagina2) : linguette3;
-  return `${riga3}<div class="mu-g6${elenco9 && quante2 > 6 ? " mu-scorre" : ""}">${carte.join("")}</div>`;
+  return `${riga3}${griglia(pagina2, carte, quante2)}`;
+}
+function misureDellaGriglia(pagina2) {
+  const g = grigliaDellaPagina(pagina2, state107.verso || "orizzontale");
+  return state107.compatto ? { colonne: Math.min(g.colonne, 3), righe: Math.min(g.righe, 3) } : g;
+}
+var stileDellaGriglia = (pagina2) => {
+  const g = misureDellaGriglia(pagina2);
+  return `--mu-col:${g.colonne};--mu-righe:${g.righe}`;
+};
+var CARD_STRETTA = 340;
+function griglia(pagina2, carte, quante2 = carte.length) {
+  const g = misureDellaGriglia(pagina2);
+  const scorre = quante2 > g.colonne * g.righe ? " mu-scorre" : "";
+  const base = (state107.verso === "verticale" ? 800 : 1280) / g.colonne;
+  const fitta = !state107.compatto && base < CARD_STRETTA ? " mu-fitta" : "";
+  return `<div class="mu-g6${scorre}${fitta}" style="${stileDellaGriglia(pagina2)}">${carte.join("")}</div>`;
 }
 function paginaScene(pagina2) {
   const scene = pagina2.scene.length ? pagina2.scene : [];
-  const carte = Array.from({ length: 6 }, (_, i) => {
+  const carte = Array.from({ length: postiDellaPagina(pagina2) }, (_, i) => {
     const c = scene[i];
     if (!c || c.tipo === "vuoto") return vuoto2(i);
     return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
   });
-  return `<div class="mu-g6">${carte.join("")}</div>`;
+  return griglia(pagina2, carte);
+}
+function paginaAmbienti(pagina2) {
+  const ambienti = ambientiDellaFonte(state107.fonte || {});
+  if (!ambienti.length)
+    return griglia(pagina2, [vuoto2(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))]);
+  const carte = ambienti.map(({ stanza, luci }, i) => {
+    const temp = stanza.temp ? numero40(stato(stanza.temp)?.state) : null;
+    const umid = stanza.hum ? numero40(stato(stanza.hum)?.state) : null;
+    const accese = luci.filter((id) => acceso4(id)).length;
+    const accento = accese ? ACCENTI.luce : "#ef4444";
+    return `<div class="mu-carta mu-card mu-ambiente ${accese ? "mu-accesa" : ""}" style="--acc:${accento}" data-mu-card="${i}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno("stanze", 26, `amb-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(stanza.name)}</div>${luci.length ? `<div class="mu-stato ${accese ? "" : "spento"}">${esc(accese ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}` : t("Luci spente", "Lights off"))}</div>` : ""}</div></div>
+      <div class="mu-target">${stanza.temp ? `<span class="mu-grande">${temp === null ? "—" : `${decimale(temp)}°`}</span>` : luci.length ? `<span class="mu-grande">${accese}/${luci.length}</span><span class="mu-et">${esc(t("luci", "lights"))}</span>` : ""}${umid === null ? "" : `<span class="mu-et">${decimale(umid, 0)}% ${esc(t("umidità", "humidity"))}</span>`}</div></div>`;
+  });
+  return griglia(pagina2, carte);
+}
+function paginaTelecamere(pagina2) {
+  const telecamere3 = telecamereDellaFonte(state107.fonte || {});
+  if (!telecamere3.length)
+    return griglia(pagina2, [vuoto2(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))]);
+  const carte = telecamere3.map(
+    (k, i) => `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video">${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi7(k.entita))}</span></div></button>`
+  );
+  return griglia(pagina2, carte);
+}
+function potenza(id) {
+  const s = stato(id);
+  const v = numero40(s?.state);
+  if (v === null) return { testo: "—", valore: null };
+  const unita2 = clean(s?.attributes?.unit_of_measurement) || "W";
+  const watt2 = /^kw$/i.test(unita2) ? v * 1e3 : v;
+  const quanto = Math.abs(watt2);
+  return {
+    valore: watt2,
+    testo: quanto >= 1e3 ? `${decimale(quanto / 1e3, 1)} kW` : `${decimale(quanto, 0)} W`
+  };
+}
+function paginaEnergia(pagina2) {
+  const e = energiaDellaPagina(pagina2, state107.fonte || {});
+  const tessere = [];
+  if (e.casa) {
+    const p = potenza(e.casa);
+    tessere.push(["casa", "home", "#0ea5e9", t("Consuma la casa", "House uses"), p.testo, nomeDi7(e.casa)]);
+  }
+  if (e.solare) {
+    const p = potenza(e.solare);
+    tessere.push(["solare", "solare", "#f59e0b", t("Produce il solare", "Solar makes"), p.testo, nomeDi7(e.solare)]);
+  }
+  if (e.rete) {
+    const p = potenza(e.rete);
+    const parola = p.valore === null ? t("Rete", "Grid") : p.valore < 0 ? t("Cede alla rete", "To the grid") : t("Preleva dalla rete", "From the grid");
+    tessere.push(["rete", "energia", p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6", parola, p.testo, nomeDi7(e.rete)]);
+  }
+  if (e.batteria) {
+    const v = numero40(stato(e.batteria)?.state);
+    tessere.push(["batteria", "batterie", "#10b981", t("Batteria", "Battery"), v === null ? "—" : `${decimale(v, 0)}%`, nomeDi7(e.batteria)]);
+  }
+  if (!tessere.length)
+    return griglia(pagina2, [vuoto2(0, t("Scegli le misure nel config", "Choose the readings in the config"))]);
+  const carte = tessere.map(
+    ([k, d, acc, etichetta2, valore3, sotto], i) => `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta2)}</span></div>
+      <div class="mu-grande">${esc(valore3)}</div><div class="mu-sotto">${esc(sotto)}</div></div>`
+  );
+  return griglia({ ...pagina2, griglia: carte.length <= 4 ? 4 : pagina2.griglia }, carte);
 }
 function finestreAperte() {
+  segnaDominio("binary_sensor");
   return Object.entries(allStates() || {}).filter(
     ([id, s]) => id.startsWith("binary_sensor.") && ["window", "door", "garage_door", "opening"].includes(s?.attributes?.device_class) && s?.state === "on"
   ).map(([id]) => nomeDi7(id));
@@ -78004,6 +78259,45 @@ function paginaIngresso(pagina2) {
     </div>
   </div>`;
 }
+function corpoDellaPagina(pagina2) {
+  if (pagina2.modello === "scene") return paginaScene(pagina2);
+  if (pagina2.modello === "ingresso") return paginaIngresso(pagina2);
+  if (pagina2.modello === "ambienti") return paginaAmbienti(pagina2);
+  if (pagina2.modello === "telecamere") return paginaTelecamere(pagina2);
+  if (pagina2.modello === "energia") return paginaEnergia(pagina2);
+  return paginaStanza(pagina2);
+}
+var anteprimaInCorso = false;
+function anteprimaDellaPagina(muro, indice = 0, fonte = state107.fonte) {
+  const pagina2 = muro?.pagine?.[indice];
+  if (!pagina2 || !fonte) return "";
+  const prima = {
+    muro: state107.muro,
+    fonte: state107.fonte,
+    pagina: state107.pagina,
+    finestra: state107.finestra,
+    compatto: state107.compatto,
+    verso: state107.verso
+  };
+  const raccoltaPrima = raccolta;
+  raccolta = null;
+  anteprimaInCorso = true;
+  try {
+    Object.assign(state107, {
+      muro,
+      fonte,
+      pagina: indice,
+      finestra: null,
+      compatto: false,
+      verso: muro.orientamento === "verticale" ? "verticale" : "orizzontale"
+    });
+    return `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${corpoDellaPagina(pagina2)}</div>`;
+  } finally {
+    Object.assign(state107, prima);
+    raccolta = raccoltaPrima;
+    anteprimaInCorso = false;
+  }
+}
 var COLORI2 = Object.freeze([
   ["#ffd8a8", null, 2700],
   ["#fff1d6", null, 3500],
@@ -78070,6 +78364,10 @@ function finestra4() {
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi7(ing.telecamera))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(ing.telecamera)}" alt=""></div>
       ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${esc(nomeDi7(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${esc(nomeDi7(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}</div>`;
+  } else if (f.tipo === "telecamera") {
+    dentro3 = `<div class="mu-fin-clima">
+      <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi7(f.entita))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(f.entita)}" alt=""></div></div>`;
   } else if (f.tipo === "conferma") {
     dentro3 = `<div class="mu-fin-conferma"><div class="mu-osw" style="font-size:40px">${esc(f.azione)}</div><div class="mu-sotto">${esc(t("Confermi?", "Confirm?"))}</div>
       <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="chiudi">${esc(t("Annulla", "Cancel"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="azione" data-mu-azione="${esc(f.azione)}" data-mu-confermata="1">${esc(t("Sì, vai", "Yes, go"))}</button></div></div>`;
@@ -78085,7 +78383,8 @@ function finestra4() {
     codice: "#6366f1",
     tapparella: ACCENTI.tapparella,
     antifurto: "#10b981",
-    citofono: "#2563eb"
+    citofono: "#2563eb",
+    telecamera: "#2563eb"
   }[f.tipo] || ACCENTI.luce;
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro3}</div></div>`;
 }
@@ -78102,6 +78401,7 @@ function riposo(muro) {
   const o = orologio3();
   const notte = eNotte(muro);
   const pagina2 = muro.pagine[0];
+  if (muro.avvisi) for (const a of state107.fonte?.avvisi || []) a.entita.forEach(segna);
   const avvisi = muro.avvisi ? avvisiAccesi(state107.fonte || {}, allStates() || {}, centraleDelMuro(pagina2)) : [];
   const chip = avvisi.slice(0, 3).map(
     (a) => `<div class="mu-carta mu-avviso ${a.grave ? "grave" : ""}" style="--acc:${a.grave ? ACCENTI.allarme : "#06b6d4"}"><span class="mu-chip mu-acc" style="--c:40px">${a.grave ? disegno("sicurezza", 24, "av-allarme") : disegno("avvisi", 24, `av-${esc(a.chiave)}`)}</span><b>${esc(a.grave ? t("Antifurto: allarme in corso", "Alarm: triggered") : a.testo)}</b></div>`
@@ -78112,7 +78412,8 @@ function riposo(muro) {
   const centrale = centraleDelMuro(pagina2);
   const allarme2 = centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
   const stanza = (state107.fonte?.stanze || []).find((s) => s.name === pagina2?.stanza);
-  const dentro3 = stanza?.temp && numero40(stato(stanza.temp)?.state) !== null ? `${decimale(stato(stanza.temp).state)}°` : "";
+  const sonda = clean(muro.riposo?.sensore) || stanza?.temp || "";
+  const dentro3 = sonda && numero40(stato(sonda)?.state) !== null ? `${decimale(stato(sonda).state)}°` : "";
   return `<div class="mu-riposo" data-mu-fa="sveglia">
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
@@ -78209,11 +78510,60 @@ function avviaIlBattito() {
     rinfrescaLeTelecamere();
     if (giri % 40 === 0) rileggi3({ forza: true }).catch(() => {
     });
+    if (state107.revisioniNo && giri % 4 === 0) root.cdSyncPull?.();
   }, 15 * 1e3);
+  state107.guardia = root.setInterval?.(() => {
+    guardaLeRevisioni().catch(() => {
+    });
+  }, GUARDIA_MS);
+  allineaLOrologio();
 }
 function fermaIlBattito() {
   if (state107.timer) root.clearInterval?.(state107.timer);
+  if (state107.guardia) root.clearInterval?.(state107.guardia);
+  root.clearTimeout?.(state107.minuto);
   state107.timer = null;
+  state107.guardia = null;
+  state107.minuto = null;
+}
+function allineaLOrologio() {
+  root.clearTimeout?.(state107.minuto);
+  const adesso = /* @__PURE__ */ new Date();
+  const mancano = 6e4 - (adesso.getSeconds() * 1e3 + adesso.getMilliseconds()) + 50;
+  state107.minuto = root.setTimeout?.(() => {
+    battito();
+    allineaLOrologio();
+  }, mancano);
+}
+var GUARDIA_MS = 10 * 1e3;
+async function guardaLeRevisioni() {
+  if (!root.__DASHBOARDMODERN_HOSTED__ || state107.revisioniNo || state107.guardando) return false;
+  const qui = currentProfile();
+  const fonte = state107.muro?.fonte || "primary";
+  const profili = [.../* @__PURE__ */ new Set([qui, fonte])];
+  state107.guardando = true;
+  let risposta = null;
+  try {
+    risposta = await bridgeRequest("ponte/config/revisioni", { profili });
+  } catch (errore) {
+    if (/non conosco|unknown/i.test(String(errore?.message || ""))) state107.revisioniNo = true;
+    return false;
+  } finally {
+    state107.guardando = false;
+  }
+  const nuove = risposta?.revisioni;
+  if (!nuove || typeof nuove !== "object") return false;
+  const viste2 = state107.revisioni ||= {};
+  const cambiata = (profilo2) => Object.hasOwn(nuove, profilo2) && Object.hasOwn(viste2, profilo2) && Number(nuove[profilo2]) !== Number(viste2[profilo2]);
+  const quiCambiata = cambiata(qui);
+  const fonteCambiata = fonte !== qui && cambiata(fonte);
+  Object.assign(viste2, nuove);
+  if (quiCambiata) root.cdSyncPull?.();
+  if (fonteCambiata && state107.muro) {
+    await fonteDelMuro(state107.muro, { forza: true });
+    disegna5();
+  }
+  return quiCambiata || fonteCambiata;
 }
 function togliLaTela() {
   fermaIlBattito();
@@ -78227,6 +78577,7 @@ function misura4(nodo2, muro) {
   const s = scala(v, larghezza, altezza);
   const dentro3 = nodo2.firstElementChild;
   state107.compatto = eCompatto(larghezza, altezza);
+  state107.verso = v;
   nodo2.dataset.verso = v;
   nodo2.dataset.compatto = state107.compatto ? "1" : "";
   dentro3.style.zoom = String(s);
@@ -78250,7 +78601,15 @@ function disegna5() {
   misura4(nodo2, muro);
   if (state107.pagina >= muro.pagine.length) state107.pagina = 0;
   const pagina2 = muro.pagine[state107.pagina];
-  const corpo2 = state107.riposo ? riposo(muro) : `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${pagina2.modello === "scene" ? paginaScene(pagina2) : pagina2.modello === "ingresso" ? paginaIngresso(pagina2) : paginaStanza(pagina2)}</div>${finestra4()}`;
+  raccolta = { ids: /* @__PURE__ */ new Set(), domini: /* @__PURE__ */ new Set() };
+  let corpo2 = "";
+  try {
+    corpo2 = state107.riposo ? riposo(muro) : `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${corpoDellaPagina(pagina2)}</div>${finestra4()}`;
+    segna(centraleDelMuro(muro.pagine[0]));
+    inVista2 = raccolta;
+  } finally {
+    raccolta = null;
+  }
   if (state107.trascina) return;
   const vecchie = new Map(
     [...nodo2.querySelectorAll("img[data-mu-telecamera]")].map((img) => [
@@ -78290,6 +78649,36 @@ function attendi(id, cosa, valore3) {
     delete state107.inAttesa[id];
     disegna5();
   }, 4e3);
+}
+function alterna(id, domain, service, data = { entity_id: id }) {
+  attendi(id, "acceso", !acceso4(id));
+  comanda2(domain, service, data);
+  disegna5();
+}
+function attesaConfermata(cosa, atteso, reale) {
+  if (cosa === "acceso") return reale.acceso === atteso;
+  if (cosa === "luminosita") return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
+  if (cosa === "temperatura") return reale.temperatura !== null && Math.abs(reale.temperatura - atteso) < 0.05;
+  return false;
+}
+function confermaLeAttese(event) {
+  const ids = event?.detail?.entity_ids || (event?.detail?.entity_id ? [event.detail.entity_id] : []);
+  for (const id of ids) {
+    const attesa = state107.inAttesa[id];
+    if (!attesa) continue;
+    const b = numero40(attributi(id).brightness);
+    const reale = {
+      acceso: accesoVero(id),
+      luminosita: !accesoVero(id) ? 0 : b === null ? null : Math.max(1, Math.round(b / 255 * 100)),
+      temperatura: numero40(attributi(id).temperature)
+    };
+    for (const cosa of ["acceso", "luminosita", "temperatura"])
+      if (cosa in attesa && attesaConfermata(cosa, attesa[cosa], reale)) delete attesa[cosa];
+    if (!["acceso", "luminosita", "temperatura"].some((cosa) => cosa in attesa)) {
+      root.clearTimeout?.(attesa._timer);
+      delete state107.inAttesa[id];
+    }
+  }
 }
 var timerClima = null;
 function cambiaTemperatura(id, verso2) {
@@ -78374,7 +78763,7 @@ function onClick23(event) {
       return;
     }
     if (entita3 && dominio2(entita3) === "light") {
-      if (state107.compatto) comanda2("light", "toggle", { entity_id: entita3 });
+      if (state107.compatto) alterna(entita3, "light", "toggle");
       else apriFinestra({ tipo: "luce", entita: entita3 });
     } else if (entita3 && dominio2(entita3) === "climate")
       apriFinestra({ tipo: "clima", entita: entita3, zona: zonaDiQui() });
@@ -78398,13 +78787,16 @@ function onClick23(event) {
       chiudiFinestra();
       return;
     case "interruttore":
-      comanda2("light", "toggle", { entity_id: id });
+      alterna(id, "light", "toggle");
       return;
     case "spegni":
+      attendi(id, "acceso", false);
       comanda2(dominio2(id) || "light", "turn_off", { entity_id: id });
       chiudiFinestra();
+      disegna5();
       return;
     case "livello":
+      attendi(id, "acceso", true);
       attendi(id, "luminosita", Number(bersaglio.dataset.muLivello));
       comanda2("light", "turn_on", {
         entity_id: id,
@@ -78428,11 +78820,12 @@ function onClick23(event) {
       return;
     case "clima-acceso": {
       const s = String(stato(id)?.state || "off");
-      if (s !== "off") comanda2("climate", "turn_off", { entity_id: id });
+      if (s !== "off") alterna(id, "climate", "turn_off");
       else {
         const modi = (attributi(id).hvac_modes || []).filter((m) => m !== "off");
-        if (modi.length) comanda2("climate", "set_hvac_mode", { entity_id: id, hvac_mode: modi[0] });
-        else comanda2("climate", "turn_on", { entity_id: id });
+        if (modi.length)
+          alterna(id, "climate", "set_hvac_mode", { entity_id: id, hvac_mode: modi[0] });
+        else alterna(id, "climate", "turn_on");
       }
       return;
     }
@@ -78444,6 +78837,9 @@ function onClick23(event) {
       return;
     case "finestra-citofono":
       apriFinestra({ tipo: "citofono" });
+      return;
+    case "finestra-telecamera":
+      apriFinestra({ tipo: "telecamera", entita: id });
       return;
     case "hvac":
       comanda2("climate", "set_hvac_mode", { entity_id: id, hvac_mode: bersaglio.dataset.muModo });
@@ -78475,7 +78871,9 @@ function onClick23(event) {
       return;
     case "entita": {
       const servizio = servizioDellEntita(id, String(stato(id)?.state || ""));
-      if (servizio) comanda2(servizio.domain, servizio.service, { entity_id: id });
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(id, servizio.domain, servizio.service);
+      else comanda2(servizio.domain, servizio.service, { entity_id: id });
       return;
     }
     case "apri": {
@@ -78543,6 +78941,7 @@ function onPointerUp(event) {
   if (t2) {
     state107.trascina = null;
     if (t2.valore) {
+      attendi(t2.id, "acceso", true);
       attendi(t2.id, "luminosita", t2.valore);
       comanda2("light", "turn_on", { entity_id: t2.id, brightness_pct: t2.valore });
     }
@@ -78557,11 +78956,11 @@ function battito() {
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1e3;
   if (!state107.riposo && !state107.finestra && !state107.trascina && sonno && fermo > sonno) {
     state107.riposo = true;
-    state107.pagina = 0;
+    if (muro.riposo.torna !== false) state107.pagina = 0;
   }
   if (!state107.riposo && eNotte(muro) && fermo > 60 * 1e3 && !state107.finestra) {
     state107.riposo = true;
-    state107.pagina = 0;
+    if (muro.riposo.torna !== false) state107.pagina = 0;
   }
   disegna5();
 }
@@ -78603,7 +79002,7 @@ async function rileggi3({ forza = false } = {}) {
   lasciaIlVelo();
 }
 function stili() {
-  const MURO = `#${ID2}`;
+  const MURO = `:is(#${ID2},.mu-anteprima)`;
   const tokens = (tema) => tema === "dark" ? `--bg-sculpted:#0c1322;--card-bg:#161f36;--text:#e6edf7;--text-dim:#92a4c2;--dm-vetrino:rgba(255,255,255,.06);--dm-velo:14%;--dm-cuscino:22%;--dm-grana:.34` : `--bg-sculpted:#f0f4f8;--card-bg:#ffffff;--text:#0f172a;--text-dim:#64748b;--dm-vetrino:rgba(255,255,255,.72);--dm-velo:9%;--dm-cuscino:15%;--dm-grana:.5`;
   installStyle(
     "dm-muro-style",
@@ -78611,7 +79010,8 @@ function stili() {
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
 html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
 html.dm-solo-muro #editor-modal .ed-body,html.dm-solo-muro #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
-${MURO}{position:fixed;inset:0;z-index:2147482000;overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
+#dm-muro{position:fixed;inset:0;z-index:2147482000}
+${MURO}{overflow:hidden;color:var(--text);font-family:Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation;
   background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}[data-tema="dark"]{${tokens("dark")}}
@@ -78663,8 +79063,34 @@ ${MURO} .mu-pill{display:flex;align-items:center;gap:12px}
 ${MURO} .mu-pill .mu-chip{--c:38px}
 ${MURO} .mu-pill b{font-size:20px;font-weight:800;display:block;line-height:1}
 ${MURO} .mu-pill .mu-et{font-size:10.5px}
-${MURO} .mu-g6{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:16px;min-height:0}
-${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 16px) / 2);overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
+${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;display:grid;grid-template-columns:repeat(var(--mu-col),minmax(0,1fr));grid-template-rows:repeat(var(--mu-righe),minmax(0,1fr));gap:var(--mu-gap);min-height:0}
+${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
+${MURO} .mu-pagine.mu-molte button:not(.si) span{display:none}
+${MURO} .mu-fitta{--mu-gap:12px}
+${MURO} .mu-fitta .mu-card{padding:16px;gap:10px;border-radius:20px}
+${MURO} .mu-fitta .mu-riga1{gap:10px}
+${MURO} .mu-fitta .mu-card .mu-disco{width:48px;height:48px}
+${MURO} .mu-fitta .mu-card .mu-disco svg{width:24px;height:24px}
+${MURO} .mu-fitta .mu-n{font-size:17px;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+${MURO} .mu-fitta .mu-tag,${MURO} .mu-fitta .mu-modo,${MURO} .mu-fitta .mu-riga1>.mu-pasti{display:none}
+${MURO} .mu-fitta .mu-inter{width:50px;height:30px}
+${MURO} .mu-fitta .mu-inter i{width:22px;height:22px}
+${MURO} .mu-fitta .mu-inter.on i{left:24px}
+${MURO} .mu-fitta .mu-chip{--c:44px!important}
+${MURO} .mu-fitta .mu-grande{font-size:48px}
+${MURO} .mu-fitta .mu-tondo{width:52px;height:52px;font-size:24px}
+${MURO} .mu-fitta .mu-comandi{gap:8px}
+${MURO} .mu-fitta .mu-seg>button{height:52px;font-size:14px;gap:4px;padding:0 4px}
+${MURO} .mu-fitta .mu-osw,${MURO} .mu-fitta .mu-tessera.grande .mu-osw{font-size:28px}
+${MURO} .mu-pagine.mu-molte button{padding:10px 12px}
+${MURO} .mu-pag-ambienti,${MURO} .mu-pag-telecamere,${MURO} .mu-pag-energia,${MURO} .mu-pag-tapparelle{grid-template-rows:auto 1fr}
+${MURO} .mu-ambiente .mu-target{margin-top:auto;flex-wrap:wrap}
+${MURO} .mu-cam{padding:8px}
+${MURO} .mu-cam .mu-video{height:100%;min-height:0}
+${MURO} .mu-energia .mu-grande{margin-top:auto;font-size:72px}
+${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
+${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
+${MURO}.mu-anteprima .mu-pagina{height:100%}
 ${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
 ${MURO} .mu-card{padding:22px;display:flex;flex-direction:column;gap:14px;min-height:0;width:100%}
 ${MURO} .mu-tessera{text-align:left}
@@ -78762,7 +79188,7 @@ ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;paddi
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
 ${MURO}[data-compatto="1"] .mu-pagine button span{display:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
-${MURO}[data-compatto="1"] .mu-g6{gap:10px}
+${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-card .mu-riga1{flex-wrap:wrap;gap:8px;align-content:flex-start}
 ${MURO}[data-compatto="1"] .mu-card .mu-nome{flex:1 1 100%}
@@ -78801,8 +79227,6 @@ ${MURO}[data-compatto="1"] .mu-orologione{font-size:110px}
 ${MURO}[data-compatto="1"] .mu-data{font-size:13px}
 ${MURO}[data-compatto="1"] .mu-riposo-riga{flex-direction:column;gap:10px;align-items:center;font-size:15px}
 ${MURO}[data-compatto="1"] .mu-avviso{font-size:13px}
-${MURO}[data-verso="verticale"] .mu-g6{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,1fr)}
-${MURO}[data-verso="verticale"] .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - 32px) / 3)}
 ${MURO}[data-verso="verticale"] .mu-testa{flex-wrap:wrap}
 ${MURO}[data-verso="verticale"] .mu-pagine{order:3;width:100%;margin:6px 0 4px}
 ${MURO}[data-verso="verticale"] .mu-pagine button{flex:1;justify-content:center}
@@ -78833,8 +79257,12 @@ function installPlanciaAMuro() {
   ])
     root.addEventListener?.(evento, ancora2);
   root.addEventListener?.("dashboardmodern:states-ready", () => disegna5());
+  root[IN_VISTA_KEY] = eInVista;
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
     svegliaSeServe(event);
+    confermaLeAttese(event);
+    const ids = event?.detail?.entity_ids || [];
+    if (ids.length && !ids.some(eInVista)) return;
     disegna5();
   });
   root.addEventListener?.("resize", () => disegna5());
@@ -78885,6 +79313,8 @@ var state108 = root[KEY112] ||= {
 var MURO_EDITOR_TAB = "muro";
 var schedaAttiva6 = () => clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 var bozza = () => state108.bozza ||= muroPulito(readJson(CHIAVE_MURO, null));
+var salvato = () => muroPulito(readJson(CHIAVE_MURO, null));
+var bozzaSporca = () => Boolean(state108.bozza) && JSON.stringify(muroPulito(state108.bozza)) !== JSON.stringify(salvato());
 var disegno2 = (chiave2, misura7, dove) => oggettoWidget(chiave2, "", `muro-ed-${dove}`).replace(
   'class="dm-oggetto"',
   `class="dm-oggetto" style="width:${misura7}px;height:${misura7}px"`
@@ -78938,14 +79368,14 @@ var DISEGNI2 = () => [
   ])
 ];
 var DOMINI_DEI_POSTI = "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,media_player,vacuum,sensor,binary_sensor";
-function postoMarkup(i, lista5, k, c) {
+function postoMarkup(i, lista5, k, c, posti = 6) {
   const via = `pagine.${i}.${lista5}.${k}`;
   const pieno = c && c.tipo !== "vuoto";
   const azioni2 = azioniUsabili();
   const descrizione = !pieno ? t("Posto libero", "Empty slot") : c.azione ? `⚡ ${c.azione}` : `${nomeDi8(c.entita)} · ${c.entita}`;
   return `<div class="mu-ed-posto${pieno ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span>
-      <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista5}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista5}"${k === POSTI - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
+      <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista5}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista5}"${k === posti - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       <b class="mu-ed-cosa">${esc(descrizione)}</b>
       ${pieno ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
     <div class="mu-ed-posto-corpo">
@@ -78956,10 +79386,10 @@ function postoMarkup(i, lista5, k, c) {
       <label class="mu-ed-voce"><span>${esc(t("Disegno", "Drawing"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI2(), null)}</label>` : ""}
     </div></div>`;
 }
-function postiMarkup(i, lista5, posti) {
+function postiMarkup(i, lista5, posti, quanti2 = 6) {
   return `<div class="mu-ed-posti">${Array.from(
-    { length: POSTI },
-    (_, k) => postoMarkup(i, lista5, k, posti[k])
+    { length: quanti2 },
+    (_, k) => postoMarkup(i, lista5, k, posti[k], quanti2)
   ).join("")}</div>`;
 }
 var MODELLI2 = () => [
@@ -78968,7 +79398,11 @@ var MODELLI2 = () => [
   ["ingresso", t("Ingresso", "Entrance")],
   ["personale", t("Personalizzata", "Custom")],
   ["luci", t("Tutte le luci", "All lights")],
-  ["clima", t("Clima", "Climate")]
+  ["clima", t("Clima", "Climate")],
+  ["tapparelle", t("Tutte le tapparelle", "All blinds")],
+  ["ambienti", t("Ambienti", "Rooms")],
+  ["telecamere", t("Telecamere", "Cameras")],
+  ["energia", t("Energia", "Energy")]
 ];
 var DISEGNO_DI_SERIE = {
   stanza: "stanze",
@@ -78976,7 +79410,11 @@ var DISEGNO_DI_SERIE = {
   ingresso: "sicurezza",
   personale: "widget",
   luci: "luci",
-  clima: "clima"
+  clima: "clima",
+  tapparelle: "tapparelle",
+  ambienti: "temperatura",
+  telecamere: "telecamere",
+  energia: "energia"
 };
 var NOME_DEL_MODELLO = (modello) => MODELLI2().find(([v]) => v === modello)?.[1] || "";
 function elencoMarkup(p, i) {
@@ -78985,6 +79423,10 @@ function elencoMarkup(p, i) {
     luci: t(
       "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.",
       "It fills itself with every light of the source dashboard: a light added there shows up here too."
+    ),
+    tapparelle: t(
+      "Si riempie da sola con tutte le tapparelle della plancia di origine: su, stop e giù per ognuna.",
+      "It fills itself with every blind of the source dashboard: up, stop and down for each one."
     ),
     clima: t(
       "Si riempie da sola con il clima della plancia di origine, diviso nelle due linguette Freddo e Caldo come nella sezione Clima: i condizionatori nel freddo, termosifoni e termostati nel caldo, le pompe di calore in tutte e due.",
@@ -79001,7 +79443,8 @@ function paginaMarkup(p, i, tutte) {
   const via = `pagine.${i}`;
   let dentro3 = "";
   if (p.modello === "stanza") {
-    const comandi = p.scelti ? p.comandi : comandiProposti2(f, p.stanza);
+    const quanti2 = postiDellaPagina(p);
+    const comandi = p.scelti ? p.comandi : comandiProposti2(f, p.stanza, quanti2);
     dentro3 = `${riga2(
       t("Stanza", "Room"),
       t("Da qui la pagina prende la temperatura e i comandi proposti", "The page takes its temperature and suggested controls from here"),
@@ -79024,7 +79467,7 @@ function paginaMarkup(p, i, tutte) {
         t("I comandi seguono la stanza", "Controls follow the room")
       )
     )}
-    ${p.scelti ? postiMarkup(i, "comandi", comandi) : `<div class="mu-ed-posti">${Array.from({ length: POSTI }, (_, k) => {
+    ${p.scelti ? postiMarkup(i, "comandi", comandi, quanti2) : `<div class="mu-ed-posti">${Array.from({ length: quanti2 }, (_, k) => {
       const c = comandi[k];
       return `<div class="mu-ed-posto"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><span class="mu-ed-proposto">${c ? esc(c.azione ? `⚡ ${c.azione}` : nomeDi8(c.entita)) : esc(t("Posto libero", "Empty slot"))}</span></div></div>`;
     }).join("")}</div>`}
@@ -79033,13 +79476,49 @@ function paginaMarkup(p, i, tutte) {
     ${riga2(t("Stato dell'antifurto", "Alarm state"), "", interruttore(`${via}.riga.antifurto`, p.riga.antifurto, "antifurto"))}
     ${riga2(t("Chi è in casa", "Who is home"), "", interruttore(`${via}.riga.persone`, p.riga.persone, "persone"))}
     ${riga2(t("Meteo", "Weather"), "", interruttore(`${via}.riga.meteo`, p.riga.meteo, "meteo"))}`;
+  } else if (p.modello === "ambienti") {
+    const ambienti = ambientiDellaFonte(f);
+    dentro3 = `<div class="mu-ed-nota">${esc(
+      t(
+        "Una tessera per stanza, con la temperatura, l'umidità e quante luci sono accese, dal vivo. Le stanze e le loro sonde sono quelle della plancia di origine.",
+        "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard."
+      )
+    )}</div><div class="mu-ed-riga"><div class="mu-ed-testo"><b>${ambienti.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(ambienti.map((a) => a.stanza.name).join(", ") || t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))}</small></div></div>`;
+  } else if (p.modello === "telecamere") {
+    const telecamere3 = telecamereDellaFonte(f);
+    dentro3 = `<div class="mu-ed-nota">${esc(
+      t(
+        "Le telecamere della plancia di origine, tutte insieme; un tocco ne apre una a tutto schermo.",
+        "The source dashboard's cameras, all together; a tap opens one full screen."
+      )
+    )}</div><div class="mu-ed-riga"><div class="mu-ed-testo"><b>${telecamere3.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(telecamere3.map((k) => k.nome || nomeDi8(k.entita)).join(", ") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
+  } else if (p.modello === "energia") {
+    const sue = energiaDellaPagina({}, f);
+    const misura7 = (chiave2, titolo, nota, domini2 = "sensor") => riga2(
+      titolo,
+      sue[chiave2] && !p.energia[chiave2] ? `${nota} · ${t("dalla plancia", "from the dashboard")}: ${nomeDi8(sue[chiave2])}` : nota,
+      cerca(`${via}.energia.${chiave2}`, p.energia[chiave2], {
+        domini: domini2,
+        segnaposto: sue[chiave2] || t("Entità", "Entity")
+      })
+    );
+    dentro3 = `<div class="mu-ed-nota">${esc(
+      t(
+        "Quattro numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine.",
+        "Four big live numbers. Left empty, they come from the source dashboard's Energy section."
+      )
+    )}</div>
+    ${misura7("casa", t("Consumo della casa", "House consumption"), t("Potenza, in W o kW", "Power, in W or kW"))}
+    ${misura7("solare", t("Produzione solare", "Solar production"), t("Potenza, in W o kW", "Power, in W or kW"))}
+    ${misura7("rete", t("Scambio con la rete", "Grid exchange"), t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in"))}
+    ${misura7("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}`;
   } else if (p.modello === "personale") {
     dentro3 = `<div class="mu-ed-nota">${esc(
       t(
         "Sei posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.",
         "Six slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want."
       )
-    )}</div>${postiMarkup(i, "comandi", p.comandi)}`;
+    )}</div>${postiMarkup(i, "comandi", p.comandi, postiDellaPagina(p))}`;
   } else if (MODELLI_ELENCO.includes(p.modello)) {
     dentro3 = elencoMarkup(p, i);
   } else if (p.modello === "scene") {
@@ -79048,7 +79527,7 @@ function paginaMarkup(p, i, tutte) {
         "Sei tasti grandi: un'azione della plancia o un'entità qualunque (una scena, uno script, un tasto). Per ognuno il nome sul tablet, la riga sotto e il disegno.",
         "Six big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing."
       )
-    )}</div>${postiMarkup(i, "scene", p.scene)}`;
+    )}</div>${postiMarkup(i, "scene", p.scene, postiDellaPagina(p))}`;
   } else {
     const ing = p.ingresso;
     const azioni2 = (f.azioni || []).filter(eUnaScena).map((a) => [a.name, a.name]);
@@ -79069,13 +79548,29 @@ function paginaMarkup(p, i, tutte) {
   const testa2 = `<div class="mu-ed-pagina-testa">
       <button type="button" class="mu-ed-apri" data-mu-ed-apri="${i}" aria-expanded="${aperta}">${disegno2(clean(p.disegno) || DISEGNO_DI_SERIE[p.modello], 26, `pag-${i}`)}<span class="mu-ed-apri-tx"><b>${esc(clean(p.titolo) || nomeDiSerie)}</b><small>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(NOME_DEL_MODELLO(p.modello))}</small></span><span class="mu-ed-freccia" aria-hidden="true">${aperta ? "▾" : "▸"}</span></button>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-pagina-su="${i}"${i === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-pagina-giu="${i}"${i === tutte - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
+      ${tutte < PAGINE_AL_MASSIMO ? `<button type="button" class="mu-ed-copia" data-mu-ed-copia="${i}" aria-label="${esc(t("Duplica la pagina", "Duplicate page"))}" title="${esc(t("Duplica", "Duplicate"))}">⧉</button>` : ""}
       <button type="button" class="mu-ed-svuota" data-mu-ed-togli="${i}" aria-label="${esc(t("Togli la pagina", "Remove page"))}">🗑</button></div>`;
   if (!aperta) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}">${testa2}</div>`;
   return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}">${testa2}
     ${riga2(t("Nome sul tablet", "Name on the tablet"), t("Si legge sulla linguetta in alto", "Shown on the tab at the top"), campo3(`${via}.titolo`, p.titolo, nomeDiSerie))}
     ${riga2(t("Icona", "Icon"), "", tendina2(`${via}.disegno`, p.disegno, DISEGNI2(), null))}
     ${riga2(t("Tipo di pagina", "Page type"), "", tendina2(`${via}.modello`, p.modello, MODELLI2(), null))}
+    ${SENZA_GRIGLIA.includes(p.modello) ? "" : riga2(
+    t("Griglia", "Grid"),
+    MODELLI_ELENCO.includes(p.modello) || p.modello === "ambienti" || p.modello === "telecamere" ? t("Quante card a schermo; le altre scorrono", "How many cards on screen; the rest scroll") : t("Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano", "How many slots, and how big. In portrait columns and rows swap"),
+    scelte3(`${via}.griglia`, p.griglia, GRIGLIE_SCRITTE())
+  )}
+    ${riga2(t("Colore", "Colour"), t("Della linguetta e del titolo", "Of the tab and the title"), colori(`${via}.colore`, p.colore, p.modello))}
+    <div class="mu-ed-anteprima-box"><div class="mu-ed-sotto-titolo">${esc(t("Anteprima dal vivo", "Live preview"))}</div><div class="mu-ed-anteprima" data-mu-ed-anteprima="${i}"></div></div>
     ${dentro3}</div>`;
+}
+var SENZA_GRIGLIA = ["ingresso", "energia"];
+var GRIGLIE_SCRITTE = () => Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
+function colori(via, valore3, modello) {
+  const pallini2 = [["", ""], ...COLORI_DELLE_PAGINE.map((c) => [c, c])];
+  return `<span class="mu-ed-colori">${pallini2.map(
+    ([v]) => `<button type="button" class="${String(v) === String(valore3 || "") ? "si" : ""}${v ? "" : " auto"}" style="${v ? `--c:${v}` : ""}" data-mu-ed-metti="${esc(via)}" data-mu-ed-valore="${esc(v)}" aria-label="${esc(v || t("Come il tipo di pagina", "Like the page type"))}">${v ? "" : "A"}</button>`
+  ).join("")}</span>`;
 }
 function corpoMarkup6() {
   const m = bozza();
@@ -79083,7 +79578,9 @@ function corpoMarkup6() {
   const plance = state108.plance?.length ? state108.plance : [{ profilo: "primary", titolo: "gdahome" }];
   const qui = currentProfile();
   const altre = plance.filter((p) => p.profilo !== qui || p.profilo === m.fonte);
+  const sporca = bozzaSporca();
   const contenuto = `
+  ${sporca ? `<div class="mu-ed-sporca" role="status">● ${esc(t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save»."))}</div>` : ""}
   <div class="ed-intro">${esc(
     t(
       "Il pannello del tablet a muro. Scegli le pagine — le linguette in alto — e cosa c'è in ognuna. Sul tablet, tenendo premuto l'orologio per due secondi si torna qui.",
@@ -79114,7 +79611,7 @@ function corpoMarkup6() {
   ${m.pagine.length < PAGINE_AL_MASSIMO ? `<div class="mu-ed-aggiungi"><span>＋ ${esc(t("Aggiungi una pagina", "Add a page"))}</span>${MODELLI2().map(
     ([v, testo2]) => `<button type="button" class="ed-btn-add" data-mu-ed-nuova="${v}">${esc(testo2)}</button>`
   ).join("")}</div>` : ""}
-  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state108.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, riposo, notte, risveglio, PIN", "Orientation, theme, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state108.altro ? "▾" : "▸"}</span></button>
+  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state108.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, meteo, riposo, notte, risveglio, PIN", "Orientation, theme, weather, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state108.altro ? "▾" : "▸"}</span></button>
   ${state108.altro ? `<div class="mu-ed-blocco">
     ${riga2(
     t("Orientamento", "Orientation"),
@@ -79139,6 +79636,11 @@ function corpoMarkup6() {
     ])
   )}
     ${riga2(
+    t("Meteo", "Weather"),
+    t("In alto e sul riposo. Vuoto: il primo che Home Assistant ha", "At the top and on the rest screen. Empty: the first one Home Assistant has"),
+    cerca("meteo", m.meteo, { domini: "weather" })
+  )}
+    ${riga2(
     t("Riposo", "Rest"),
     t(
       "Dopo un po' senza tocchi resta l'orologio",
@@ -79151,6 +79653,8 @@ function corpoMarkup6() {
       null
     )}${interruttore("riposo.attivo", m.riposo.attivo, "riposo")}`
   )}
+    ${riga2(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
+    ${riga2(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor" }))}
     ${riga2(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo3("notte.da", m.notte.da, "23:00", "time")}${campo3("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
     ${riga2(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga2(
@@ -79181,7 +79685,7 @@ function ensureMuroEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva6() !== MURO_EDITOR_TAB) {
     if (schedaAttiva6() !== MURO_EDITOR_TAB) {
-      state108.bozza = null;
+      if (!bozzaSporca() || !doc?.getElementById("editor-modal")) state108.bozza = null;
       state108.fonte = null;
       state108.premium = null;
     }
@@ -79192,14 +79696,38 @@ function ensureMuroEditor() {
     bozza(),
     Boolean(state108.fonte),
     state108.premium,
-    state108.plance?.length
+    state108.plance?.length,
+    state108.aperta,
+    state108.altro
   ]);
-  if (body.dataset.dmMuroEditor === firma2 && body.querySelector(".mu-ed")) return true;
+  if (body.dataset.dmMuroEditor === firma2 && body.querySelector(".mu-ed")) {
+    rinfrescaLAnteprima();
+    return true;
+  }
   body.dataset.dmMuroEditor = firma2;
   body.innerHTML = corpoMarkup6();
   body.dataset.renderer = MURO_EDITOR_TAB;
+  rinfrescaLAnteprima();
   ensureTitoloDellaSezione();
   return true;
+}
+function rinfrescaLAnteprima() {
+  const posto = doc?.querySelector?.("#ed-body [data-mu-ed-anteprima]");
+  if (!posto || !state108.fonte) return;
+  const m = bozza();
+  const i = Number(posto.dataset.muEdAnteprima);
+  const verticale = m.orientamento === "verticale";
+  const larghezza = verticale ? 800 : 1280;
+  const tema = m.tema === "chiaro" ? "light" : m.tema === "scuro" ? "dark" : doc.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  const dentro3 = anteprimaDellaPagina(m, i, state108.fonte);
+  const scritto = `${tema}|${verticale}|${dentro3}`;
+  if (posto.dataset.scritto !== scritto) {
+    posto.dataset.scritto = scritto;
+    posto.innerHTML = `<div class="mu-anteprima" data-tema="${tema}" data-verso="${verticale ? "verticale" : "orizzontale"}" aria-hidden="true">${dentro3}</div>`;
+  }
+  const zoom = Math.min(1, (posto.clientWidth || larghezza / 2) / larghezza);
+  const tela2 = posto.firstElementChild;
+  if (tela2) tela2.style.zoom = String(zoom);
 }
 function ridisegna7() {
   const body = doc?.getElementById("ed-body");
@@ -79223,7 +79751,10 @@ function metti3(via, valore3) {
       const lista5 = pezzi[2];
       const k = Number(pezzi[3]);
       const campo5 = pezzi[4];
-      const posti = Array.from({ length: POSTI }, (_, n) => p[lista5][n] || { tipo: "vuoto" });
+      const posti = Array.from(
+        { length: postiDellaPagina(p) },
+        (_, n) => p[lista5][n] || { tipo: "vuoto" }
+      );
       const ora2 = posti[k];
       const aspetto = { nome: ora2.nome || "", sotto: ora2.sotto || "", disegno: ora2.disegno || "" };
       const scritto = clean(valore3);
@@ -79238,12 +79769,18 @@ function metti3(via, valore3) {
       state108.bozza = muroPulito(m);
       return;
     }
+    if (pezzi[2] === "griglia") {
+      p.griglia = Number(valore3);
+      state108.bozza = muroPulito(m);
+      return;
+    }
     if (pezzi[2] === "modello" && p.modello !== valore3) {
       m.pagine[i] = {
         ...nuovaPagina(valore3, state108.fonte || {}, i),
         id: p.id,
         titolo: p.titolo,
-        disegno: p.disegno
+        disegno: p.disegno,
+        colore: p.colore
       };
       state108.bozza = muroPulito(m);
       return;
@@ -79273,7 +79810,7 @@ function onClick24(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva6() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const el = event.target.closest(
-    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro]"
+    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia]"
   );
   if (!el || body.querySelector(".mu-ed-chiuso")) return;
   event.preventDefault();
@@ -79309,6 +79846,16 @@ function onClick24(event) {
     m.pagine.push(nuovaPagina(d.muEdNuova, state108.fonte || {}, m.pagine.length));
     state108.bozza = muroPulito(m);
     state108.aperta = state108.bozza.pagine.length - 1;
+  } else if (d.muEdCopia !== void 0) {
+    const m = structuredClone(bozza());
+    const i = Number(d.muEdCopia);
+    const copia2 = structuredClone(m.pagine[i]);
+    if (!copia2 || m.pagine.length >= PAGINE_AL_MASSIMO) return;
+    copia2.id = nuovaPagina(copia2.modello, {}, i + 1).id;
+    copia2.titolo = copia2.titolo ? `${copia2.titolo} 2`.slice(0, 32) : "";
+    m.pagine.splice(i + 1, 0, copia2);
+    state108.bozza = muroPulito(m);
+    state108.aperta = i + 1;
   } else if (d.muEdTogli !== void 0) {
     const m = structuredClone(bozza());
     m.pagine.splice(Number(d.muEdTogli), 1);
@@ -79326,7 +79873,10 @@ function onClick24(event) {
     const m = structuredClone(bozza());
     const p = m.pagine[i];
     const lista5 = d.muEdLista === "scene" ? "scene" : "comandi";
-    const posti = Array.from({ length: POSTI }, (_, n) => p[lista5][n] || { tipo: "vuoto" });
+    const posti = Array.from(
+      { length: postiDellaPagina(p) },
+      (_, n) => p[lista5][n] || { tipo: "vuoto" }
+    );
     p[lista5] = sposta2(posti, k, d.muEdPostoSu !== void 0 ? k - 1 : k + 1);
     if (lista5 === "comandi") p.scelti = true;
     state108.bozza = muroPulito(m);
@@ -79343,8 +79893,20 @@ function onChange7(event) {
   if (!via) return;
   metti3(via, event.target.value);
   if (event.type === "change" && !SCRITTE.test(via)) ridisegna7();
+  else dopoUnaScritta();
 }
 var SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin)$/;
+function dopoUnaScritta() {
+  rinfrescaLAnteprima();
+  const avviso = doc?.querySelector?.("#ed-body .mu-ed-sporca");
+  if (!avviso && bozzaSporca()) {
+    const nuovo = doc.createElement("div");
+    nuovo.className = "mu-ed-sporca";
+    nuovo.setAttribute("role", "status");
+    nuovo.textContent = `● ${t("Modifiche non salvate: il tablet le vede dopo «Salva».", "Unsaved changes: the tablet sees them after «Save».")}`;
+    doc.querySelector("#ed-body .mu-ed")?.prepend(nuovo);
+  }
+}
 function salva13() {
   const m = muroPulito(bozza());
   writeJsonIfChanged(CHIAVE_MURO, m);
@@ -79429,6 +79991,15 @@ html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}
 #ed-body .mu-ed-aggiungi{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-weight:800;font-size:13px}
 #ed-body .mu-ed-aggiungi .ed-btn-add{width:auto;margin:0;padding:10px 16px}
 #ed-body .mu-ed-chiuso{position:relative;min-height:420px}
+#ed-body .mu-ed-sporca{margin:0 0 10px;padding:10px 14px;border-radius:12px;font-size:12.5px;font-weight:800;color:#92400e;background:#fef3c7;border:1px solid #f59e0b88}
+html[data-theme="dark"] #ed-body .mu-ed-sporca{color:#fde68a;background:#78350f55}
+#ed-body .mu-ed-copia{margin:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--divider-color,#dbe4ee);background:none;color:var(--text-dim,#64748b);font-weight:900;cursor:pointer}
+#ed-body .mu-ed-colori{display:inline-flex;flex-wrap:wrap;gap:6px}
+#ed-body .mu-ed-colori button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;background:var(--c);cursor:pointer;padding:0;font-size:10px;font-weight:900;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-colori button.auto{background:conic-gradient(#f59e0b,#ef4444,#8b5cf6,#0ea5e9,#10b981,#f59e0b);color:#fff}
+#ed-body .mu-ed-colori button.si{border-color:var(--text,#0f172a);box-shadow:0 0 0 2px var(--card-background-color,#fff) inset}
+#ed-body .mu-ed-anteprima-box{margin-top:10px}
+#ed-body .mu-ed-anteprima{margin-top:8px;width:100%;max-width:720px;overflow:hidden;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee)}
 #ed-body .mu-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}
 #ed-body .mu-ed-lucchetto b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:26px;text-transform:uppercase}
@@ -79455,6 +80026,12 @@ function installPlanciaAMuroEditor() {
     ensureMuroEditor();
   });
   onEditorRedraw("__dmMuroEditor", ancora2);
+  root.addEventListener?.("dashboardmodern:state-changed", () => {
+    if (schedaAttiva6() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+  });
+  root.addEventListener?.("resize", () => {
+    if (schedaAttiva6() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+  });
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
     root.addEventListener?.(evento, ancora2);
   ensureMuroEditorTab();
@@ -82719,15 +83296,15 @@ function sceltaTessereMarkup(lista5) {
 async function salvaLista(lista5) {
   const store = dashboardStore();
   if (!store?.getSection || !store?.replaceSection) return;
-  const salvato = store.getSection("energy") || {};
-  await store.replaceSection("energy", storedPlants(lista5, salvato));
+  const salvato2 = store.getSection("energy") || {};
+  await store.replaceSection("energy", storedPlants(lista5, salvato2));
   root.cdMarkDirty?.();
   root.cdSyncPush?.();
 }
 async function aggiungi3() {
   const lista5 = impianti();
-  const salvato = section("energy", {}) || {};
-  const nato = nuovoImpianto(lista5, "", salvato.metadata);
+  const salvato2 = section("energy", {}) || {};
+  const nato = nuovoImpianto(lista5, "", salvato2.metadata);
   await salvaLista([...lista5, nato]);
   scegli3(nato.id);
 }
@@ -87754,7 +88331,7 @@ function sensoriCampi(index, person) {
 }
 function rigaMarkup17(person, index, ultima = false) {
   const aperto2 = state129.aperto === index;
-  const colori = AVATAR_COLORS.map(
+  const colori2 = AVATAR_COLORS.map(
     (color) => `<button type="button" class="dm-people-color${person.avatar.color === color ? " on" : ""}" data-person-color="${esc(color)}" style="--dm-person-color:${esc(color)}" aria-label="${esc(color)}"></button>`
   ).join("");
   return `<article class="ed-row dm-people-row" data-person-index="${index}" data-open="${aperto2}" data-nascosta="${person.nascosta === true}">
@@ -87793,7 +88370,7 @@ function rigaMarkup17(person, index, ultima = false) {
         <div class="dm-face-builder" data-face-builder>${builderMarkup(person)}</div>
         <span class="ed-form-row"><input id="dm-person-${index}-emoji" class="ed-input dm-people-emoji" data-person-field="emoji" value="${esc(person.avatar.emoji)}" placeholder="${t("Vuoto: le iniziali del nome", "Empty: the initials of the name")}" autocomplete="off" spellcheck="false"><button type="button" class="dm-people-pick" data-person-emoji="dm-person-${index}-emoji" aria-label="${t("Scegli un'emoji", "Choose an emoji")}">😀</button></span>
         <span class="dm-face-row-lbl">${t("Sfondo", "Background")}</span>
-        <span class="dm-people-colors">${colori}</span>
+        <span class="dm-people-colors">${colori2}</span>
       </div>
       <output class="dm-people-error" data-person-error></output>
       <button type="button" class="ed-save-btn" data-person-save>💾 ${t("Salva persona", "Save person")}</button>
@@ -89719,7 +90296,7 @@ function paintEvccConsole(scope = doc) {
   } catch (_error) {
   }
   const presente = evccPresence(allStates(), resolve);
-  const segna = (node, visibile) => {
+  const segna2 = (node, visibile) => {
     const nascosto = node.hasAttribute("hidden");
     if (visibile && nascosto) node.removeAttribute("hidden");
     else if (!visibile && !nascosto) node.setAttribute("hidden", "hidden");
@@ -89727,12 +90304,12 @@ function paintEvccConsole(scope = doc) {
     if (node.dataset.dmEvcc !== stato2) node.dataset.dmEvcc = stato2;
   };
   const mostra2 = (selector, visibile) => {
-    for (const node of scope.querySelectorAll(selector)) segna(node, visibile);
+    for (const node of scope.querySelectorAll(selector)) segna2(node, visibile);
   };
   mostra2(".lm-target-card,.ev-popup-target", presente.target);
   for (const value of scope.querySelectorAll(".v-auto-limite")) {
     const riga3 = value.closest(".lm-stat-card,.dm-evv-row,.ev-popup-session-row,.ev-popup-stat");
-    if (riga3) segna(riga3, presente.target);
+    if (riga3) segna2(riga3, presente.target);
   }
   mostra2(".lm-evcc-card,.ev-popup-modes", presente.mode);
   return presente;
@@ -92529,9 +93106,9 @@ function parolaDellaFase2(lettura3) {
 function altezzaDelFuoco(lettura3) {
   if (lettura3.fase === "accensione") return 0.55;
   if (lettura3.fase === "modulazione") return 0.7;
-  const potenza = lettura3.potenza;
-  if (potenza?.livello != null && potenza.quanti)
-    return Math.round((0.62 + 0.5 * Math.min(1, potenza.livello / potenza.quanti)) * 100) / 100;
+  const potenza2 = lettura3.potenza;
+  if (potenza2?.livello != null && potenza2.quanti)
+    return Math.round((0.62 + 0.5 * Math.min(1, potenza2.livello / potenza2.quanti)) * 100) / 100;
   return 0.9;
 }
 function ventoDellaStufa(lettura3) {
@@ -92543,8 +93120,8 @@ function ventoDellaStufa(lettura3) {
   return { gira: true, durata: Math.round((2 - 1.4 * quota) * 100) / 100 };
 }
 function disegnoStufa(lettura3) {
-  const potenza = lettura3.potenza;
-  const display2 = lettura3.brucia && potenza?.livello != null ? `P${potenza.livello}` : "";
+  const potenza2 = lettura3.potenza;
+  const display2 = lettura3.brucia && potenza2?.livello != null ? `P${potenza2.livello}` : "";
   return `<div class="dm-it-stufa">
     <span class="dm-it-stufa-piano" aria-hidden="true">${display2 ? `<i class="dm-it-stufa-display">${esc(display2)}</i>` : ""}</span>
     <span class="dm-it-stufa-griglia" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -95842,8 +96419,8 @@ function configurazione12() {
   return elencoUps(readJson(CHIAVE_UPS, {}));
 }
 var metadati = () => {
-  const salvato = readJson(CHIAVE_META_UPS, {});
-  return salvato && typeof salvato === "object" && !Array.isArray(salvato) ? salvato : {};
+  const salvato2 = readJson(CHIAVE_META_UPS, {});
+  return salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
 };
 function salva19(elenco9) {
   const { gruppi: gruppi2, metadata } = upsDaSalvare(elenco9, metadati());
@@ -98074,8 +98651,8 @@ var ETICHETTE3 = () => ({
   contatore: [t("Contatore lettere", "Letter counter"), "counter.lettere"]
 });
 function configurazione17() {
-  const salvato = readJson(CHIAVE_CITOFONO, {});
-  const dato = salvato && typeof salvato === "object" && !Array.isArray(salvato) ? salvato : {};
+  const salvato2 = readJson(CHIAVE_CITOFONO, {});
+  const dato = salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
   return {
     citofoni: Array.isArray(dato.citofoni) ? dato.citofoni : [],
     cassette: Array.isArray(dato.cassette) ? dato.cassette : []
@@ -99275,11 +99852,11 @@ var state150 = root[KEY154] ||= {
   richiesto: false
 };
 var ACCUMULO_VIEW_ID = "view-batterie";
-function paginaEnergia() {
+function paginaEnergia2() {
   return doc?.getElementById?.("page-energy") || null;
 }
 function filaDelleLinguette() {
-  return paginaEnergia()?.querySelector?.(".sub-tabs-container .sub-tabs-energy") || null;
+  return paginaEnergia2()?.querySelector?.(".sub-tabs-container .sub-tabs-energy") || null;
 }
 function laLinguetta() {
   return filaDelleLinguette()?.querySelector?.(`[data-dm-energia-vista="${ACCUMULO_TAB}"]`) || null;
@@ -99290,7 +99867,7 @@ function laVista() {
 function ensureVista() {
   let vista2 = laVista();
   if (vista2) return vista2;
-  const pagina2 = paginaEnergia();
+  const pagina2 = paginaEnergia2();
   const sorelle = pagina2?.querySelectorAll?.(".flow-view");
   if (!sorelle?.length) return null;
   vista2 = doc.createElement("div");
@@ -99304,7 +99881,7 @@ function apriLAccumulo() {
   const linguetta = ensureLinguetta();
   const vista2 = ensureVista();
   if (!linguetta || !vista2) return false;
-  for (const nodo2 of paginaEnergia().querySelectorAll(".sub-tabs-container .sub-tab-btn"))
+  for (const nodo2 of paginaEnergia2().querySelectorAll(".sub-tabs-container .sub-tab-btn"))
     nodo2.classList.remove("active");
   for (const nodo2 of doc.querySelectorAll(".flow-view")) nodo2.classList.remove("active");
   linguetta.classList.add("active");
@@ -99358,7 +99935,7 @@ function accendiLaLinguetta() {
 function siVede2() {
   if (!planciaVisibile()) return false;
   return Boolean(
-    paginaEnergia()?.classList.contains("active") && laVista()?.classList.contains("active")
+    paginaEnergia2()?.classList.contains("active") && laVista()?.classList.contains("active")
   );
 }
 function vistaDiAdesso() {
@@ -99383,7 +99960,7 @@ function schedule38() {
     state150.frame = 0;
     try {
       accendiLaLinguetta();
-      if (state150.richiesto && paginaEnergia()?.classList.contains("active")) {
+      if (state150.richiesto && paginaEnergia2()?.classList.contains("active")) {
         state150.richiesto = false;
         if (ciSonoPacchi()) apriLAccumulo();
       }
@@ -100103,8 +100680,8 @@ var state152 = root[KEY156] ||= { installed: false, frame: 0, firma: "" };
 var FASCIA_ID = "dm-nodi-fascia";
 var STYLE_ID31 = "dm-nodi-style";
 function nodiConfigurati() {
-  const salvato = readJson(CHIAVE_NODI, []);
-  return Array.isArray(salvato) ? salvato : [];
+  const salvato2 = readJson(CHIAVE_NODI, []);
+  return Array.isArray(salvato2) ? salvato2 : [];
 }
 function lettureDeiNodiOra(states = allStates()) {
   return lettureDeiNodi(nodiConfigurati(), states);
@@ -100265,8 +100842,8 @@ var KEY157 = "__DASHBOARDMODERN_NODI_EDITOR__";
 var state153 = root[KEY157] ||= { installed: false, aperto: -1 };
 var ANCORA3 = "dm-nodi-editor";
 function elenco8() {
-  const salvato = readJson(CHIAVE_NODI, []);
-  return Array.isArray(salvato) ? salvato : [];
+  const salvato2 = readJson(CHIAVE_NODI, []);
+  return Array.isArray(salvato2) ? salvato2 : [];
 }
 function salva24(lista5) {
   writeJsonIfChanged(CHIAVE_NODI, normalizzaNodi(lista5));
@@ -101118,8 +101695,8 @@ function tesseraMarkup2() {
     <div class="cfg-card-arrow">›</div>`;
 }
 function ensureTessera() {
-  const griglia = doc?.querySelector?.("#page-config .cfg-grid");
-  if (!griglia) return false;
+  const griglia2 = doc?.querySelector?.("#page-config .cfg-grid");
+  if (!griglia2) return false;
   let tessera2 = doc.getElementById(TESSERA_ID);
   if (!tessera2) {
     tessera2 = doc.createElement("div");
@@ -101127,7 +101704,7 @@ function ensureTessera() {
     tessera2.id = TESSERA_ID;
     tessera2.dataset.dmSostieniApri = "true";
   }
-  if (griglia.lastElementChild !== tessera2) griglia.append(tessera2);
+  if (griglia2.lastElementChild !== tessera2) griglia2.append(tessera2);
   const disegno4 = tesseraMarkup2();
   if (tessera2.innerHTML !== disegno4) tessera2.innerHTML = disegno4;
   return true;
@@ -102909,9 +103486,9 @@ function scrittaDelTasto(riga3) {
   return { titolo, sotto };
 }
 function vestiLeAzioni() {
-  const griglia = doc?.getElementById?.("qa-grid");
-  if (!griglia) return 0;
-  const tasti = [...griglia.querySelectorAll(".qa-btn")];
+  const griglia2 = doc?.getElementById?.("qa-grid");
+  if (!griglia2) return 0;
+  const tasti = [...griglia2.querySelectorAll(".qa-btn")];
   if (!tasti.length) return 0;
   const lista5 = azioni();
   const states = allStates();
