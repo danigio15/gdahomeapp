@@ -623,13 +623,22 @@ export class Commissioni {
     if (tipo === DIMMI_IL_DISPOSITIVO) return this._dimmiIlDispositivo(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
     if (tipo === REGISTRI) return this._registri(detto);
-    if (tipo === CONFIG_REVISIONI) return this._revisioni(detto, soloLaPrima);
+    if (tipo === CONFIG_REVISIONI)
+      return this._revisioni(detto, soloLaPrima, chiChiede, amministra);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE) {
       /* La configurazione di una plancia che all'app non si serve non le si
        * da' nemmeno da leggere o da scrivere: sarebbe la stessa plancia, per
        * un'altra porta. */
       if (soloLaPrima && (detto?.profile ?? PROFILO_PRINCIPALE) !== PROFILO_PRINCIPALE) {
         return no(id, "premium-richiesto", "con gdahome Base l'app vede la plancia principale");
+      }
+      /* E la configurazione di una plancia riservata a un altro non la legge
+       * chi non la vede. L'elenco e l'apertura la nascondevano gia'; questa
+       * porta no, e bastava chiederla per nome. Si risponde come per un
+       * profilo vuoto che non c'e': dire «esiste ma non e' tua» sarebbe dire
+       * una cosa che non deve sapere. */
+      if (this._profiloNascosto(detto?.profile ?? PROFILO_PRINCIPALE, chiChiede, amministra)) {
+        return no(id, "not_found", "quella plancia non c'e'");
       }
       return this._configurazione(detto);
     }
@@ -1123,6 +1132,68 @@ export class Commissioni {
     return this._lePlanceSue(chiChiede, amministra).length > 0;
   }
 
+  /* Le telecamere che a chi chiede restano chiuse.
+   *
+   * Sono quelle messe in una plancia che lui non vede, e in **nessuna** di
+   * quelle che vede. Una telecamera che non sta in nessuna configurazione —
+   * la plancia le trova anche da se' — resta aperta com'era: chiuderla
+   * vorrebbe dire spegnere a qualcuno una cosa che non e' riservata a
+   * nessuno. Chi non si sa chi e', o vede tutte le plance, non ha niente di
+   * chiuso.
+   *
+   * Si rifa' solo quando cambia qualcosa — le plance, le loro
+   * configurazioni, chi chiede — perche' lo si chiede a ogni messaggio che
+   * apre una telecamera. */
+  telecamereChiuse(chiChiede = "", amministra = null) {
+    const nessuna = new Set();
+    if (!chiChiede || !this.plance || !this.configurazione) return nessuna;
+    let tutte;
+    try {
+      tutte = this.plance.elenco();
+    } catch (_errore) {
+      return nessuna;
+    }
+    const nascoste = tutte.filter((una) => !laVede(una, chiChiede, amministra));
+    if (!nascoste.length) return nessuna;
+    const viste = tutte.filter((una) => laVede(una, chiChiede, amministra));
+    const firma = [
+      chiChiede,
+      amministra,
+      ...tutte.map((una) => `${una.profilo}:${this.configurazione.revisione(una.profilo)}`),
+      ...nascoste.map((una) => una.profilo),
+    ].join("|");
+    if (this._chiuseDi?.firma === firma) return this._chiuseDi.chiuse;
+    const nominate = (plance) => {
+      const trovate = new Set();
+      for (const una of plance) {
+        let valori;
+        try {
+          valori = this.configurazione.leggi(una.profilo)?.snapshot?.values;
+        } catch (_errore) {
+          continue;
+        }
+        const testo = valori ? JSON.stringify(valori) : "";
+        for (const id of testo.match(/\bcamera\.[a-z0-9_]+/gi) || []) trovate.add(id.toLowerCase());
+      }
+      return trovate;
+    };
+    const aperte = nominate(viste);
+    const chiuse = new Set([...nominate(nascoste)].filter((una) => !aperte.has(una)));
+    this._chiuseDi = { firma, chiuse };
+    return chiuse;
+  }
+
+  /* Se il profilo e' quello di una plancia che chi chiede non vede. Un
+   * profilo che non e' di nessuna plancia — la cassetta ne ha anche per chi
+   * non ha ancora fatto la sua — resta com'era: non c'e' niente da riservare.
+   * Chi non si sa chi e' vede tutto, come altrove. */
+  _profiloNascosto(profilo, chiChiede = "", amministra = null) {
+    if (!chiChiede || !this.plance) return false;
+    const quale = this.plance.quale?.(String(profilo || PROFILO_PRINCIPALE));
+    if (!quale) return false;
+    return !laVede(quale, chiChiede, amministra);
+  }
+
   _lePlanceSue(chiChiede = "", amministra = null, soloLaPrima = false) {
     const elenco = this.plance ? this.plance.elenco() : [];
     /* Con gdahome Base l'elenco che va all'app ha dentro la principale e
@@ -1283,7 +1354,7 @@ export class Commissioni {
     return esito;
   }
 
-  _revisioni(detto, soloLaPrima = false) {
+  _revisioni(detto, soloLaPrima = false, chiChiede = "", amministra = null) {
     const id = detto?.id ?? null;
     const cassetta = this.configurazione;
     if (!cassetta) return no(id, "unknown_command", `non conosco ${detto?.type}`);
@@ -1294,6 +1365,8 @@ export class Commissioni {
       /* Con Base l'app vede la principale e basta: delle altre non si dice
        * nemmeno il numero. */
       if (soloLaPrima && profilo !== PROFILO_PRINCIPALE) continue;
+      /* Di una plancia che non vede, nemmeno il numero. */
+      if (this._profiloNascosto(profilo, chiChiede, amministra)) continue;
       revisioni[profilo] = cassetta.revisione(profilo);
     }
     return si(id, { revisioni });
@@ -1999,7 +2072,13 @@ export class Commissioni {
     /* Le vie REST di Home Assistant passano dalla stessa dogana dei messaggi
      * sul filo: il segno che le apre e' quello del Supervisor. */
     if (percorso.startsWith("/api/")) {
-      const vietata = perLaVia({ metodo, percorso, amministra: puoAmministrare === true });
+      const vietata = perLaVia({
+        metodo,
+        percorso,
+        amministra: puoAmministrare === true,
+        telecamereChiuse:
+          puoAmministrare === true ? null : this.telecamereChiuse(chiChiede, amministra),
+      });
       if (vietata) return no(id, "unauthorized", vietata);
     }
 

@@ -114,7 +114,7 @@ map:
 #
 # C'era, in **scrittura**, per il bottone «Aggiorna gdahome» della console: il
 # ponte si scaricava la versione nuova da GitHub e la metteva lui in
-# `/addons/gdahome` (`src/aggiornamento.js`). Serviva a chi l'add-on l'aveva
+# `/addons/gdahome` (un codice che non c'e' piu': e' stato tolto). Serviva a chi l'add-on l'aveva
 # copiato a mano, che dietro non ha nessun negozio.
 #
 # Ma l'add-on si installa dal negozio — l'archivio di `repository.yaml` — e li'

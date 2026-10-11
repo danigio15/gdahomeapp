@@ -259,8 +259,15 @@ export class Foto {
     const dove = resolve(this.cartella, ...pezzi);
     if (!dove.startsWith(this.cartella + sep)) return questoNo();
     try {
-      if (!statSync(dove).isFile()) return questoNo();
-      return { stato: 200, tipo, corpo: readFileSync(dove) };
+      /* Dove porta davvero, come in `elenca`: un collegamento simbolico che
+       * si chiama `foto.jpg` dentro `www` e porta fuori — ai segreti di Home
+       * Assistant, per dire — non si segue. Il nome dice immagine, il
+       * contenuto potrebbe essere qualunque cosa. */
+      const base = realpathSync(this.cartella);
+      const vero = realpathSync(dove);
+      if (!vero.startsWith(base + sep)) return questoNo();
+      if (!statSync(vero).isFile()) return questoNo();
+      return { stato: 200, tipo, corpo: readFileSync(vero) };
     } catch (_errore) {
       return questoNo();
     }

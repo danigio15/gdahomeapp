@@ -436,7 +436,35 @@ export function servizioVietato(dominio, servizio, { amministra = false } = {}) 
  * @param {object} detto il messaggio, gia' letto
  * @param {{amministra: boolean}} chi `amministra` vale solo se e' `true`
  */
-export function perche(detto, { amministra = false } = {}) {
+/* ─── Le telecamere delle plance riservate ─────────────────────────────── */
+
+const TELECAMERA = /\bcamera\.[a-z0-9_]+/gi;
+
+/* Le telecamere che un messaggio nomina, se e' un messaggio che ne apre una:
+ * il flusso, l'istantanea, la firma del suo indirizzo, un servizio delle
+ * telecamere. Gli altri — l'elenco degli stati, gli abbonamenti — non si
+ * guardano: chiuderli per una telecamera vorrebbe dire spegnere la plancia
+ * intera. */
+export function telecamereNominate(detto) {
+  const tipo = typeof detto?.type === "string" ? detto.type : "";
+  let dove = "";
+  if (tipo.startsWith("camera/") || tipo === "camera_thumbnail") dove = JSON.stringify(detto);
+  else if (tipo === "auth/sign_path") dove = typeof detto.path === "string" ? detto.path : "";
+  else if (tipo === "call_service" && String(detto.domain || "") === "camera")
+    dove = JSON.stringify(detto);
+  return new Set((dove.match(TELECAMERA) || []).map((una) => una.toLowerCase()));
+}
+
+/* Se fra quelle nominate ce n'e' una chiusa a chi chiede. */
+function apreUnaChiusa(nominate, chiuse) {
+  if (!chiuse || !chiuse.size) return false;
+  for (const una of nominate) if (chiuse.has(una)) return true;
+  return false;
+}
+
+const LA_TELECAMERA_E_CHIUSA = "quella telecamera sta in una plancia che non e' tua";
+
+export function perche(detto, { amministra = false, telecamereChiuse = null } = {}) {
   const admin = amministra === true;
   if (!detto || typeof detto !== "object" || Array.isArray(detto)) return "messaggio non valido";
   const tipo = typeof detto.type === "string" ? detto.type.trim() : "";
@@ -460,6 +488,12 @@ export function perche(detto, { amministra = false } = {}) {
   }
 
   if (admin) return null;
+
+  /* Una telecamera messa solo in una plancia riservata a qualcun altro non si
+   * apre a chi quella plancia non la vede (`commissioni.js`,
+   * `telecamereChiuse`). Chi amministra non c'entra: in Home Assistant le
+   * telecamere le vede comunque tutte. */
+  if (apreUnaChiusa(telecamereNominate(detto), telecamereChiuse)) return LA_TELECAMERA_E_CHIUSA;
 
   /* I comandi della plancia li fa il ponte (`commissioni.js`), con le sue
    * regole su chi puo' cosa. Uno che arriva fin qui non l'ha preso lui, e a
@@ -496,7 +530,7 @@ export function unNo(id, messaggio) {
  * @param {string} testo
  * @param {{amministra: boolean}} chi
  */
-export function passaLaDogana(testo, { amministra = false } = {}) {
+export function passaLaDogana(testo, { amministra = false, telecamereChiuse = null } = {}) {
   let letto;
   try {
     letto = JSON.parse(testo);
@@ -515,7 +549,7 @@ export function passaLaDogana(testo, { amministra = false } = {}) {
     const no =
       Array.isArray(letto) && (tipo.startsWith(DELLA_PLANCIA) || tipo.startsWith("ponte/"))
         ? `${tipo} non passa dentro un elenco`
-        : perche(uno, { amministra });
+        : perche(uno, { amministra, telecamereChiuse });
     if (no) {
       const id = uno && typeof uno === "object" ? (uno.id ?? null) : null;
       rifiuti.push(unNo(id, no));
@@ -577,7 +611,12 @@ const sottoLaVia = (percorso, via) =>
  * Torna `null` se passa, o il perche' di un no. Il percorso e' quello dopo
  * l'indirizzo di Home Assistant, e comincia per `/api/`.
  */
-export function perLaVia({ metodo = "GET", percorso = "", amministra = false } = {}) {
+export function perLaVia({
+  metodo = "GET",
+  percorso = "",
+  amministra = false,
+  telecamereChiuse = null,
+} = {}) {
   const admin = amministra === true;
   if (!percorsoSenzaTrucchi(percorso)) return "percorso non valido";
   const grezza = percorso.split("?")[0];
@@ -604,6 +643,9 @@ export function perLaVia({ metodo = "GET", percorso = "", amministra = false } =
   if (verbo !== "GET" && VIE_DA_NON_SCRIVERE.some((una) => sottoLaVia(via, una)))
     return `${verbo} ${via} non passa dal ponte`;
   if (admin) return null;
+  const dellaTelecamera = /^\/api\/camera_proxy(?:_stream)?\/(camera\.[a-z0-9_]+)/.exec(via);
+  if (dellaTelecamera && apreUnaChiusa(new Set([dellaTelecamera[1]]), telecamereChiuse))
+    return LA_TELECAMERA_E_CHIUSA;
   /* `GET /api/states` e `/api/config` da soli sono letture che un utente
    * qualunque fa; scriverli, o entrare sotto `/api/config/`, no. */
   if (verbo === "GET" && (via === "/api/states" || via.startsWith("/api/states/"))) return null;

@@ -223,21 +223,6 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     minutiDelCodice: numero(scritte.minuti_del_codice, DIFETTO.minuti_del_codice),
     giorniDiSilenzio: numero(scritte.giorni_di_silenzio, DIFETTO.giorni_di_silenzio),
     registro: String(scritte.registro || DIFETTO.registro),
-    /* Il gettone con cui il ponte si scarica le versioni nuove di se stesso.
-     *
-     * **Nella scheda dell'add-on non c'e' piu' nessuna casella.** La
-     * repository di gdahome e' pubblica: chi installa dal negozio riceve gli
-     * aggiornamenti dal negozio, e chi tiene l'add-on copiato a mano lo
-     * aggiorna ricopiando la cartella. Il bottone della console che se li
-     * portava dentro da se' dorme, perche' il manifesto non monta piu'
-     * `/addons` (vedi `aggiornamento.js`). Una casella che tutti devono
-     * lasciare vuota e' una casella che prima o poi qualcuno riempie.
-     *
-     * La riga resta per chi si tiene una copia **privata** di questo add-on e
-     * quel bottone se l'e' riacceso: li' il manifesto senza gettone non si
-     * legge, e glielo si passa dall'ambiente. Non finisce in nessun registro e
-     * non esce da nessuna risposta. */
-    gettone: String(process.env.PONTE_GETTONE || scritte.gettone || ""),
     /* La cartella della console si cerca di fianco al codice, non dentro la
      * cartella da cui si e' stati lanciati: `npm test` e l'add-on partono da
      * due posti diversi, e la pagina deve trovarsi in tutti e due. */

@@ -73,7 +73,14 @@ async function casaFinta({ rifiutaIlSegno = false, muta = false } = {}) {
 
 async function banco(
   opzioniDellaCasa = {},
-  { da = "prova", mucchio = false, conLePlance = false, utenti = null, licenze = null } = {},
+  {
+    da = "prova",
+    mucchio = false,
+    conLePlance = false,
+    utenti = null,
+    licenze = null,
+    chi = () => null,
+  } = {},
 ) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-prova-"));
   const ha = await casaFinta(opzioniDellaCasa);
@@ -101,7 +108,7 @@ async function banco(
   const server = createServer((_r, risposta) => risposta.end());
   server.on("upgrade", (richiesta, socket) => {
     const presa = accetta(richiesta, socket, {});
-    if (presa) ponte.accogli(presa, { da, mucchio });
+    if (presa) ponte.accogli(presa, { da, mucchio, chi: chi() });
   });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
 
@@ -880,6 +887,122 @@ test("la licenza dice «telefono di prova» al telefono della casa di prova, e a
     assert.equal(diCasa.success, true);
     assert.equal("telefonoDiProva" in diCasa.result, false);
     assert.equal(diCasa.result.gdahome.attiva, true);
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* ─── Chi entra, dopo la verifica di sicurezza ───────────────────────────── */
+
+test("su un filo fatto con la chiave di un telefono non entra il segno di un altro", async () => {
+  let delFilo = null;
+  const b = await banco({}, { chi: () => delFilo });
+  try {
+    const uno = b.dispositivi.abbina({ nome: "uno", sistema: "ios" });
+    const due = b.dispositivi.abbina({ nome: "due", sistema: "ios" });
+    /* La stretta di mano l'ha fatta «uno»; il segno e' di «due». */
+    delFilo = uno.dispositivo.id;
+    const t = telefono(b.indirizzo);
+    await t.aperta;
+    await t.aspetta("auth_required");
+    t.manda({ type: "auth", access_token: due.segno });
+    await t.aspetta("auth_invalid");
+    await t.chiusa;
+    assert.equal(b.ha.prese.length, 0, "il filo con la casa non si apre nemmeno");
+
+    /* E il suo segno, sul suo filo, passa com'e' sempre passato. */
+    const giusto = telefono(b.indirizzo);
+    await giusto.aperta;
+    await giusto.aspetta("auth_required");
+    giusto.manda({ type: "auth", access_token: uno.segno });
+    await giusto.aspetta("auth_ok");
+    giusto.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* Un `utenti.js` finto che si puo' cambiare a meta' prova. */
+function utentiCheCambiano(vivi) {
+  const chiAscolta = new Set();
+  return {
+    vivi,
+    amministratore: async () => false,
+    amministratoreSubito: () => false,
+    eVivo: async (chi) => vivi.has(chi),
+    quandoCambia(ascolta) {
+      chiAscolta.add(ascolta);
+      return () => chiAscolta.delete(ascolta);
+    },
+    rinfresca() {
+      const elenco = [...vivi].map((id) => ({ id, attivo: true }));
+      elenco.push({ id: "f".repeat(32), attivo: true });
+      for (const ascolta of chiAscolta) ascolta(elenco);
+    },
+  };
+}
+
+test("il telefono di un utente tolto da Home Assistant non entra, e se era dentro esce", async () => {
+  const LEI = "a".repeat(32);
+  const LUI = "b".repeat(32);
+  const utenti = utentiCheCambiano(new Set([LEI]));
+  const b = await banco({}, { utenti });
+  try {
+    /* Lui non c'e' piu': non entra. */
+    const suo = b.dispositivi.abbina({ nome: "di lui", sistema: "ios", utente: LUI });
+    const fuori = telefono(b.indirizzo);
+    await fuori.aperta;
+    await fuori.aspetta("auth_required");
+    fuori.manda({ type: "auth", access_token: suo.segno });
+    await fuori.aspetta("auth_invalid");
+    await fuori.chiusa;
+
+    /* Lei entra; poi la si toglie, e al giro dopo dell'elenco il suo filo cade. */
+    const t = await dentroCome(b, LEI);
+    utenti.vivi.delete(LEI);
+    utenti.rinfresca();
+    await t.chiusa;
+    assert.equal(t.presa.readyState, WebSocket.CLOSED);
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("un telefono staccato mentre entra non riceve il suo «auth_ok»", async () => {
+  const LEI = "a".repeat(32);
+  let lascia;
+  const fermo = new Promise((ok) => {
+    lascia = ok;
+  });
+  const utenti = {
+    amministratore: async () => {
+      await fermo;
+      return false;
+    },
+    amministratoreSubito: () => false,
+  };
+  const b = await banco({}, { utenti });
+  try {
+    const { dispositivo, segno } = b.dispositivi.abbina({
+      nome: "lei",
+      sistema: "ios",
+      utente: LEI,
+    });
+    const id = dispositivo.id;
+    const t = telefono(b.indirizzo);
+    await t.aperta;
+    await t.aspetta("auth_required");
+    t.manda({ type: "auth", access_token: segno });
+    /* Il ponte sta chiedendo a Home Assistant chi e': intanto lo si stacca. */
+    await attendi(() => b.ha.prese.length > 0);
+    b.dispositivi.stacca(id);
+    b.ponte.scollega(id);
+    lascia();
+    await t.chiusa;
+    assert.equal(
+      t.detti.some((uno) => uno.type === "auth_ok"),
+      false,
+    );
   } finally {
     await b.spegni();
   }
