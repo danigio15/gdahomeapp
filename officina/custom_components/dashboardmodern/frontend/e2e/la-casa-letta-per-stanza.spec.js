@@ -101,7 +101,7 @@ test("ogni stanza porta quello che le appartiene, e le sue luci sono le card ver
   // «Raffredda» e la pagina Clima «Raffresca», la stessa macchina con due
   // parole a due dita di distanza (#11).
   await expect(page.locator("#page-stanze")).toContainText(/Raffresca|Cooling/);
-  await expect(page.locator("#page-stanze")).toContainText("29.2°");
+  await expect(page.locator("#page-stanze")).toContainText(/29[,.]2°/);
 
   // Un'altra stanza, un altro contenuto: la cucina ha una luce e un elettrodomestico.
   await page.locator('#page-stanze [data-dm-stanza="room-cucina"]').click();

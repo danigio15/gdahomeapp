@@ -234,6 +234,7 @@ import {
   coperturaAlzata,
   coverEntries,
   contoDelleAperture,
+  coverKind,
   coverKindLabel,
   coverPositionChoices,
   coverPresetPosition,
@@ -297,6 +298,7 @@ import {
   configuredSecurityDoors,
   iconaPortaMarkup,
   parolaDelGesto,
+  siChiedeConferma,
 } from "./security-doors-section.js";
 import { applySignedSources, wattsFromState } from "../core/signed-energy.js";
 import {
@@ -1267,10 +1269,11 @@ function coversModel(states) {
               ? `${nome || entita} · ${t("Finestra", "Window")}`
               : nome || entita,
           soloSensore: true,
+          grata,
         }));
       return [...righeMotore, ...righeContatto];
     })
-    .map(({ item, voce, etichetta, soloSensore }) => {
+    .map(({ item, voce, etichetta, soloSensore, grata }) => {
       const entity = clean(voce.entity);
       if (!entity || !widgetIncludes(entity, fuori)) return null;
       const current = stateOf(states, entity);
@@ -1314,6 +1317,15 @@ function coversModel(states) {
          * cambia solo la lingua in cui parlano. */
         relay: isRelayEntity(entity),
         down: clean(voce.down),
+        /* Per la finestra della tessera (vedi `finestre/comandi.js`): la
+         * stanza senza il qualificativo — la finestra raccoglie per stanza
+         * la tapparella, la tenda e l'anta della stessa riga —, cosa e' quel
+         * motore, e da quando sta com'e'. */
+        stanza: clean(item?.name) || etichetta,
+        grata: Boolean(grata),
+        kind: soloSensore ? "" : voce.kind || coverKind(item, current),
+        muta: !current || /^(unavailable|unknown)$/i.test(clean(current?.state)),
+        da: Date.parse(current?.last_changed || "") || null,
       };
     })
     .filter(Boolean)
@@ -1395,9 +1407,16 @@ function coversModel(states) {
      * diceva questa, per nome, e contarle e basta la farebbe tornare. Le
      * tapparelle invece si contano: quali siano su non e' una notizia, quante
      * ne restano alzate quando esci di casa si'. */
+    /* Le finestre si nominano per stanza, e separate da una virgola: il
+     * « · » divide le due cose — le finestre aperte e il conto delle
+     * tapparelle — e dentro «Cucina · Finestra · Bagno · 3 alzate» non si
+     * capiva piu' quante stanze fossero. */
+    const stanzeAperte = [...new Set(aperte.map((riga) => clean(riga.stanza || riga.name)))]
+      .filter(Boolean)
+      .join(", ");
     const pezzi = [
-      nomiAccesi(aperte, () => true, ""),
-      alzate.length ? t(`${alzate.length} alzate`, `${alzate.length} up`) : "",
+      stanzeAperte,
+      alzate.length ? `${alzate.length} ${t("alzate", "raised")}` : "",
     ].filter(Boolean);
     return pezzi.length ? pezzi.join(" · ") : t("Tutto chiuso", "All closed");
   };
@@ -1557,11 +1576,22 @@ function modiDellaFinestra(centrale) {
  */
 const PORTA_APERTA = /^(unlocked|open|opening)$/;
 
+/* Chi dichiara davvero di stare aperto: le serrature e le coperture.
+ *
+ * Il garage e' una `cover.`: dice «open» quando la basculante e' su, ed e'
+ * una dichiarazione vera quanto quella di una serratura. Contando solo le
+ * serrature la finestra diceva «Tutto chiuso · Tutto regolare» con la riga
+ * del Garage, due dita piu' sotto, che diceva «Aperta». Un rele' o un
+ * pulsante restano fuori, per la ragione scritta qui sopra. */
+const DICHIARANO_APERTURA = new Set(["lock", "cover"]);
+
+export function dichiaraLApertura(entity) {
+  return DICHIARANO_APERTURA.has(clean(entity).split(".")[0]);
+}
+
 export function porteAperte(doors = [], states = {}) {
   return doors.filter((door) => {
-    /* Solo le serrature: sono le uniche che dichiarano davvero di stare
-     * aperte. Vedi sopra perche' un rele' non conta. */
-    if (clean(door?.entity).split(".")[0] !== "lock") return false;
+    if (!dichiaraLApertura(door?.entity)) return false;
     return PORTA_APERTA.test(clean(stateOf(states, door.entity)?.state).toLowerCase());
   });
 }
@@ -1621,9 +1651,44 @@ function porteModel(states) {
   /* Le entita' delle Prese non sono porte: la lista arriva gia' filtrata. */
   const doors = configuredSecurityDoors().filter((door) => widgetIncludes(door.entity, fuori));
   if (!doors.length) return null;
-  const serrature = doors.filter((door) => clean(door.entity).split(".")[0] === "lock");
+  const serrature = doors.filter((door) => dichiaraLApertura(door.entity));
   const aperte = porteAperte(doors, states);
   const nome = (door) => clean(door.name) || clean(door.entity);
+  /* Quello che la finestra della tessera disegna (`finestre/comandi.js`):
+   * ogni apertura con lo stato in parole, i gesti che offre, e da quando sta
+   * com'e'. Il disegno dell'icona e le parole si fanno qui, dove si sanno
+   * fare: la finestra non importa le sezioni. */
+  const righe = doors.map((door) => {
+    const stato = stateOf(states, door.entity);
+    const grezzo = clean(stato?.state).toLowerCase();
+    const dominio = clean(door.entity).split(".")[0];
+    const dichiara = dichiaraLApertura(door.entity);
+    const muta = !stato || grezzo === "unavailable";
+    /* Un pulsante ha per stato l'istante dell'ultima pressione: e' la sua
+     * ultima apertura, e non serve inventarne un'altra. */
+    const premuto = /^(button|input_button)$/.test(dominio) ? Date.parse(stato?.state || "") : NaN;
+    const cambiato = Date.parse(stato?.last_changed || "");
+    return {
+      id: door.id,
+      entity: clean(door.entity),
+      name: nome(door),
+      icona: iconaPortaMarkup(door.icon, 24),
+      dominio,
+      grezzo,
+      dichiara,
+      muta,
+      aperta: dichiara && PORTA_APERTA.test(grezzo),
+      chiusaAChiave: dominio === "lock" && grezzo === "locked",
+      parola: dichiara ? parolaDellaPorta(grezzo) : "",
+      pin: Boolean(door.pin),
+      gesti: azioniDellaPorta(door, stato).map((azione) => ({
+        gesto: azione.gesto,
+        parola: parolaDelGesto(azione.gesto),
+      })),
+      da: dichiara && Number.isFinite(cambiato) ? cambiato : null,
+      ultima: Number.isFinite(premuto) ? premuto : dichiara && Number.isFinite(cambiato) ? cambiato : null,
+    };
+  });
   return {
     key: "porte",
     accent: aperte.length ? "#dc2626" : serrature.length ? "#16a34a" : "#d97706",
@@ -1644,6 +1709,9 @@ function porteModel(states) {
         : nome(doors[0]),
     ring: serrature.length ? Math.round((aperte.length / serrature.length) * 100) : null,
     doors,
+    righe,
+    /* Se il tocco chiede conferma: la nota sotto i tasti dice com'e' davvero. */
+    conferma: siChiedeConferma(),
     /* Le porte aperte escono col modello, come le aperture delle Finestre
      * (#482). La fascia sotto il meteo legge questo campo invece di rifiltrare
      * le righe per conto suo: il numero nella fascia e quello sulla tessera
@@ -2868,7 +2936,9 @@ function robotsModel(states) {
      * fermo, e l'avviso di batteria scarica non poteva mai uscire. */
     rows: viste.map((vista) => ({
       glyph: disegnoDelCatalogo(
-        vista.mowing ? "mower" : vista.cleaning ? "broom" : vista.charging ? "socket" : "robot",
+        /* La specie decide il disegno: un tagliaerba fermo in carica era una
+         * presa di corrente, cioe' il disegno di un'altra tessera. */
+        vista.species === "lawn_mower" ? "mower" : vista.cleaning ? "broom" : "robot",
         20,
       ),
       name: vista.name,
@@ -2877,6 +2947,17 @@ function robotsModel(states) {
       state: vista.state,
       battery: vista.battery,
       entity: clean(vista.entity),
+      /* Per la finestra della tessera (`finestre/comandi.js`): la specie —
+       * un tagliaerba non e' un aspirapolvere, ne' nel disegno ne' nei tasti
+       * —, la stanza, la potenza, cosa sa fare, e da quando sta com'e'. */
+      species: vista.species,
+      mowing: vista.mowing,
+      available: vista.available,
+      room: roomLabel(vista.room),
+      fanSpeed: vista.fanSpeed,
+      features: vista.features,
+      error: vista.error,
+      da: Date.parse(stateOf(states, vista.entity)?.last_changed || "") || null,
       value:
         vista.battery == null
           ? robotStateLabel(vista.state)
@@ -3653,6 +3734,14 @@ function preseModel(states) {
       entity: presa.entity,
       on: grezzo === "on",
       comando: siComanda(presa.entity) && disponibile,
+      /* Per la finestra della tessera (`finestre/comandi.js`): la stanza, i
+       * watt se la presa li misura, se risponde, se e' protetta — si vede ma
+       * non si comanda, come il modem — e da quando sta com'e'. */
+      stanza: roomLabel(presa.room_id),
+      watt: presa.power ? wattsFromState(stateOf(states, presa.power)) : null,
+      disponibile,
+      protetta: disponibile && !siComanda(presa.entity),
+      da: Date.parse(stato.last_changed || "") || null,
       value: !disponibile
         ? t("Non disponibile", "Unavailable")
         : grezzo === "on"
@@ -3675,6 +3764,11 @@ function preseModel(states) {
     rows,
     // Le prese accese, per chi le conta e non le disegna.
     on,
+    /* I watt di adesso, sommati solo se almeno una presa li misura: «0 W» su
+     * una casa senza wattmetri sarebbe un numero inventato. */
+    watt: rows.some((row) => row.watt != null)
+      ? rows.reduce((somma, row) => somma + (row.watt ?? 0), 0)
+      : null,
   };
 }
 
@@ -4610,6 +4704,11 @@ export function citofonoModel(states) {
   if (!citofoni.length && !cassette.length) return null;
   const riassunto = riassuntoDellIngresso({ citofoni, cassette });
   return {
+    /* Le letture intere, per la finestra della tessera (`finestre/comandi.js`):
+     * chi apre, chi ha suonato e quando, quando e' arrivata la posta. */
+    citofoni,
+    cassette,
+    riassunto,
     key: "citofono",
     accent: riassunto.suona ? "#f97316" : riassunto.conPosta ? "#2563eb" : "#16a34a",
     icon: "📮",

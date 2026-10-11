@@ -71,8 +71,10 @@ test("le finestre col solo contatto si contano in Home", async ({ page }, testIn
   await expect(dettaglio).toBeVisible();
   await expect(dettaglio).toContainText("Bagnetto");
   await expect(dettaglio).toContainText("Cucina");
-  await expect(dettaglio).toContainText("Aperta");
-  await expect(dettaglio).toContainText("Chiusa");
+  /* Nella finestra delle Finestre (`finestre/comandi.js`) l'anta dice cosa e':
+   * «Finestra aperta», «Finestra chiusa». */
+  await expect(dettaglio).toContainText("Finestra aperta");
+  await expect(dettaglio).toContainText("Finestra chiusa");
 
   /* Una finestra che non si comanda non offre i comandi: le frecce sono una
    * promessa, e su un contatto sarebbe una promessa che nessuno mantiene. */

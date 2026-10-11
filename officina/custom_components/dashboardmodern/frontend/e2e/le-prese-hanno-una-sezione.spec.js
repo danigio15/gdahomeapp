@@ -274,5 +274,7 @@ test("l'icona si sceglie dal catalogo di casa, e si disegna col suo tratto", asy
   await page.waitForTimeout(400);
   const finestra = page.locator('#dm-widget-popup [data-dm-widget-detail="prese"]');
   await expect(finestra).toBeVisible();
-  await expect(finestra.locator(".dm-w-row .dm-w-glyph svg").first()).toBeVisible();
+  /* La finestra delle Prese e' quella disegnata per loro (`finestre/comandi.js`):
+   * una scheda per presa, e il disegno del catalogo nel suo riquadro. */
+  await expect(finestra.locator(".dm-f-prese-presa .dm-f-prese-ic svg").first()).toBeVisible();
 });

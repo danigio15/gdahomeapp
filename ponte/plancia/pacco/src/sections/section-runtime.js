@@ -1019,8 +1019,8 @@ function entitaConfigurate(root7, chiavi2) {
 var STATE_EVENT = "dashboardmodern:state-changed";
 var SERVICE_KEY = "DashboardModernEnergyService";
 function chiaviDate(chiavi2) {
-  const elenco9 = Array.isArray(chiavi2) ? chiavi2 : [];
-  return [...new Set(elenco9.map((chiave2) => String(chiave2 || "").trim()).filter(Boolean))];
+  const elenco10 = Array.isArray(chiavi2) ? chiavi2 : [];
+  return [...new Set(elenco10.map((chiave2) => String(chiave2 || "").trim()).filter(Boolean))];
 }
 function makeEvent(root7, detail) {
   if (typeof root7.CustomEvent === "function") return new root7.CustomEvent(STATE_EVENT, { detail });
@@ -1325,10 +1325,10 @@ var TIMER_DEL_GUSCIO = Object.freeze([
    * gira solo con la Sicurezza aperta e la scheda in vista. */
   { nome: "orologi", period: 1e3, firma: /^function updateCamClocks\b/ }
 ]);
-function potaITimerDelGuscio(elenco9 = root.__DASHBOARDMODERN_LEGACY_INTERVALS__) {
-  if (!Array.isArray(elenco9)) return [];
+function potaITimerDelGuscio(elenco10 = root.__DASHBOARDMODERN_LEGACY_INTERVALS__) {
+  if (!Array.isArray(elenco10)) return [];
   const potati = [];
-  for (const voce2 of elenco9) {
+  for (const voce2 of elenco10) {
     if (!voce2 || voce2.cleared) continue;
     const regola = TIMER_DEL_GUSCIO.find(
       (candidata) => candidata.period === voce2.period && candidata.firma.test(String(voce2.fn || ""))
@@ -1842,7 +1842,6 @@ var SOURCE_INDEX = Object.freeze({
   "${accese} luci accese su ${totale}": "${accese} of ${totale} lights on",
   "${accesi} in funzione": "${accesi} on",
   "${allarmi} in allarme": "${allarmi} alarming",
-  "${alzate.length} alzate": "${alzate.length} up",
   "${alzate} tapparelle alzate": "${alzate} shutters up",
   "${appliance.name} aggiunto dall'integrazione": "${appliance.name} added from the integration",
   "${appliance.name} aggiunto: ${quante} caselle compilate dall'integrazione": "${appliance.name} added: ${quante} fields filled from the integration",
@@ -2228,6 +2227,7 @@ var SOURCE_INDEX = Object.freeze({
   "Alza il target": "Raise the target",
   "Alza il volume": "Volume up",
   "Alza la potenza": "Raise the power",
+  "alzate": "raised",
   "Ambiente medio": "Average room",
   "Ambiente: --°": "Ambient: --°",
   "Ambra": "Amber",
@@ -2289,6 +2289,7 @@ var SOURCE_INDEX = Object.freeze({
   "Apri dettaglio energia elettrodomestici di oggi": "Open today's appliance energy breakdown",
   "Apri elettrodomestici in funzione": "Open appliances running",
   "Apri GitHub": "Open GitHub",
+  "Apri il cancello": "Open the gate",
   "apri il cassetto": "open the drawer",
   "Apri il cruscotto": "Open the console",
   "apri il dettaglio": "open the detail",
@@ -2336,6 +2337,7 @@ var SOURCE_INDEX = Object.freeze({
   "ARMATO ·": "ARMED ·",
   "Arriva: il quadratino c'è.": "It arrives: the tile is there.",
   "Arrivata": "Arrived",
+  "arrivata alle": "arrived at",
   "Arrivata da una dashboard: la risposta le torna dentro": "Came from a dashboard: the reply goes back into it",
   "Arrivo": "Arriving",
   "Artista": "Artist",
@@ -2360,6 +2362,7 @@ var SOURCE_INDEX = Object.freeze({
   "Assistenza": "Support",
   "ASSOCIA SENSORI": "ASSOCIATE SENSORS",
   "ASSORBIMENTO": "DRAW",
+  "assorbiti adesso": "drawn right now",
   "Astronauta": "Astronaut",
   "Attendi il caricamento delle entità…": "Wait for entities to load…",
   "Attenzione": "Warning",
@@ -2613,7 +2616,7 @@ var SOURCE_INDEX = Object.freeze({
   "caselle compilate": "fields filled in",
   "Caselle riconosciute": "Recognised fields",
   "Casse": "Speaker",
-  "Cassetta aperta": "Mailbox open",
+  "Cassetta aperta": "Mailbox opened",
   "Cassetta della posta": "Mailbox",
   "Cassetta nuova": "New mailbox",
   "cassette": "mailboxes",
@@ -2672,6 +2675,7 @@ var SOURCE_INDEX = Object.freeze({
   "Chiaro": "Light",
   "Chiave": "Key",
   "Chiave Solare": "Solar Valve",
+  "Chiede conferma prima di aprire": "Asks for confirmation before opening",
   "Chiede il codice": "Asks for the code",
   "chiede il PIN": "asks for the PIN",
   "Chiedi a casa, scrivendo o parlando": "Ask the house, by typing or speaking",
@@ -2919,7 +2923,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cucina": "Kitchen",
   "Cumulativo. Giorno e Mese si calcolano da qui come differenza Recorder, quindi non serve un sensore per periodo.": "Cumulative. Day and Month are calculated from it as a Recorder difference, so no per-period sensor is needed.",
   "Cuoco": "Chef",
-  "da": "for",
+  "da": "running for",
   "Da": "For",
   "Da … a": "From … to",
   "da ${da}": "for ${da}",
@@ -3098,6 +3102,7 @@ var SOURCE_INDEX = Object.freeze({
   "Due fasce": "Two bands",
   "Due scatti della stessa auto: la plancia mostra quello con il cavo attaccato mentre è in ricarica e l'altro nel resto del tempo. Basta la prima: senza la seconda resta sempre quella.": "Two shots of the same car: the dashboard shows the plugged-in one while it charges and the other one the rest of the time. The first is enough — without the second it simply stays.",
   "Due settimane che si ripetono, scritte a mano: tocca un giorno e scegli cosa esce. Non serve nessun sensore e nessun calendario di Home Assistant — la pagina e la tessera in Home leggono questo esattamente come leggerebbero un'integrazione. Un materiale che ha già il suo sensore qui sopra non si ripete: comanda il sensore.": "Two weeks that repeat, written by hand: tap a day and pick what goes out. No sensor and no Home Assistant calendar needed — the page and the Home tile read this exactly as they would read an integration. A material that already has its own sensor above is not repeated: the sensor wins.",
+  "Due tocchi per aprire": "Two taps to open",
   "Durata": "Duration",
   "Durata (minuti)": "Duration (minutes)",
   "Durata automatica: temperatura / 2": "Automatic duration: temperature / 2",
@@ -3322,6 +3327,7 @@ var SOURCE_INDEX = Object.freeze({
   "ferma": "stopped",
   "Ferma": "Stop",
   "Ferma l'irrigazione": "Stop watering",
+  "Ferma tutte": "Stop all",
   "Ferme da oltre un mese:": "Stuck for over a month:",
   "Fermo": "Still",
   "Fermo da": "Still for",
@@ -3361,6 +3367,7 @@ var SOURCE_INDEX = Object.freeze({
   "Finestra cucina": "Kitchen window",
   "Finestre": "Windows",
   "finestre aperte": "windows open",
+  "Finestre aperte": "Open windows",
   "Finestre e tapparelle": "Windows and shutters",
   "Finestrini (aperti/chiusi)": "Windows (open/closed)",
   "Finestrini aperti": "Windows open",
@@ -3437,6 +3444,7 @@ var SOURCE_INDEX = Object.freeze({
   "Giugno": "June",
   "giusta": "just right",
   "giusto": "right",
+  "Gli altri": "The others",
   "gli altri impianti hanno i loro, e questo salvataggio non li tocca": "the other plants have their own, and this save does not touch them",
   "Gli altri in cucina": "The rest of the kitchen",
   "Gli animali di casa: una scheda per ognuno, con la sua foto e quello che lo riguarda — la ciotola, la lettiera, l'acqua, la porta col microchip, il collare. Anche gli acquari e i terrari, quanti ne hai: ognuno con le sue entità.": "The pets of the house: one card each, with its photo and what concerns it — the bowl, the litter box, the water, the microchip door, the collar. Aquariums and terrariums too, as many as you have: each with its own entities.",
@@ -3473,6 +3481,7 @@ var SOURCE_INDEX = Object.freeze({
   "Hai inserito delle entità in questa sezione senza salvarle. Se esci adesso, andranno perse.": "You entered entities in this section without saving them. If you leave now, they will be lost.",
   "Hai scelto «Un indirizzo mio» ma non c'è un indirizzo: scrivilo in Configurazione → Meteo, o scegli un servizio dalla tendina.": "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.",
   "hanno sete": "are thirsty",
+  "Hanno suonato": "Someone rang",
   "History API non raggiungibile:": "History API unreachable:",
   "History N/D": "History N/A",
   "HLS non disponibile": "HLS not available",
@@ -3531,6 +3540,7 @@ var SOURCE_INDEX = Object.freeze({
   "I prossimi sette giorni": "The next seven days",
   "I radiatori": "The radiators",
   "I rilevatori di presenza. Ogni riga è un rilevatore — l'entità, il nome che vuoi tu, il disegno — e la pagina Presenza mostra queste: in cima quante stanze hanno qualcuno dentro, sotto una card per rilevatore con da quanto è così.": "The presence detectors. Each row is a detector — the entity, the name you want, the drawing — and the Presence page shows these: how many rooms have someone in them on top, and one card per detector below with how long it has been that way.",
+  "I robot": "The robots",
   "I robot di casa — aspirapolvere e tagliaerba: stato, batteria, comandi e mappa. Ogni robot ha la sua scheda nella sezione Robot.": "The home robots — vacuums and lawn mowers: state, battery, controls and map. Each robot gets its own card in the Robot section.",
   "I sensori che il robot pubblica accanto a sé — durata del filtro, spazzola principale e laterale, area pulita, pulizie fatte: entità sensor.*, binary_sensor.*, number.*. Compaiono sulla scheda sotto i comandi, col loro nome e la loro unità, nell'ordine in cui le aggiungi.": "The sensors the robot publishes next to itself — filter life, main and side brush, area cleaned, cleaning count: sensor.*, binary_sensor.*, number.* entities. They appear on the card under the controls, with their own name and unit, in the order you add them.",
   "I sensori che l'apparecchio pubblica e che le caselle qui sopra non prevedono — temperatura dell'aria e umidità residua di un'asciugatrice, una seconda porta di un frigorifero: entità sensor.*, binary_sensor.*, number.*. Compaiono nella finestra dell'apparecchio, col loro nome e la loro unità, nell'ordine in cui le aggiungi.": "The sensors the appliance publishes that the fields above do not cover — air temperature and residual humidity of a dryer, a second door on a fridge: sensor.*, binary_sensor.*, number.* entities. They show up in the appliance window, with their own name and unit, in the order you add them.",
@@ -3690,6 +3700,7 @@ var SOURCE_INDEX = Object.freeze({
   "IMPOSTAZIONI": "SETTINGS",
   "Impostazioni Manuali": "Manual settings",
   "impostazioni. La dashboard si ricarica.": "settings. The dashboard will reload.",
+  "Impulso": "Pulse",
   "In ${conto.attivi} stanze c'è qualcuno": "Someone in ${conto.attivi} rooms",
   "In 1 stanza c'è qualcuno": "Someone in 1 room",
   "In Ah, Wh o kWh. Vuota, si ricava dalla carica e dalla capacità.": "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.",
@@ -3771,6 +3782,7 @@ var SOURCE_INDEX = Object.freeze({
   "Indirizzo RTSP della telecamera": "Camera RTSP address",
   "Inferriata": "Grate",
   "Inferriata aperta": "Grate open",
+  "Inferriata chiusa": "Grate closed",
   "Inferriata e finestra aperte": "Grate and window open",
   "Informatico": "Technologist",
   "Informazione": "Information",
@@ -3882,6 +3894,7 @@ var SOURCE_INDEX = Object.freeze({
   "L’ordine dei piani è quello che vedi qui: vale per la pagina Stanze, per le scene delle luci e per le tapparelle. Rinominare un piano si porta dietro le sue stanze; eliminarlo le lascia senza piano, e te lo chiede prima.": "The order of the floors is the one you see here: it applies to the Rooms page, to the light scenes and to the shutters. Renaming a floor carries its rooms along; deleting one leaves them with no floor, and asks you first.",
   "L'ultima risposta": "The latest reply",
   "L'umidità del terreno": "The soil moisture",
+  "l'unica cosa aperta": "the only thing open",
   "l'unità è": "the unit is",
   "L'UPS non risponde": "The UPS is not answering",
   "La % di umidità del terreno compare nella card del programma.": "The soil moisture % appears on the schedule card.",
@@ -3991,11 +4004,13 @@ var SOURCE_INDEX = Object.freeze({
   "LAVATRICE": "WASHING MACHINE",
   "Lavora tranquillo": "Taking it easy",
   "Lavoro": "Working",
-  "Le altre": "The others",
+  "Le altre casse": "The other speakers",
+  "Le aperture": "The openers",
   "Le aperture della sezione Sicurezza: portone, porta di casa, cancello. Ogni porta ha la sua card; il tocco chiede conferma e, se imposti un PIN, il codice.": "The openings of the Security section: front door, house door, gate. Each door gets its own card; a tap asks to confirm and, with a PIN set, asks for the code.",
   "Le azioni rapide": "The quick actions",
   "Le batterie che vuoi tenere d'occhio. Ogni riga è una batteria — l'entità in percentuale, il nome che vuoi tu, il disegno — e la pagina Batterie le mostra dalla più scarica alla più piena, con in cima quante sono da cambiare.": "The batteries you want to keep an eye on. Each row is a battery — the entity in percent, the name you want, the drawing — and the Batteries page shows them from the flattest to the fullest, with how many need replacing on top.",
   "Le caselle di una caldaia a pellet o a legna: la combustione, il serbatoio e l'obiettivo della centralina. Lasciale vuote se la tua caldaia va a gas: quello che non mappi non compare in pagina.": "The fields of a pellet or wood boiler: the combustion, the hopper and the controller's own target. Leave them empty if your boiler runs on gas: what you do not map does not appear on the page.",
+  "Le casse": "Speakers",
   "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Se sta sullo stesso dispositivo del contatto, o si chiama come lui con «bypass» in fondo, la plancia lo trova da sola; altrimenti scrivilo qui. Nella pagina Varchi compare il tasto per escludere o includere questo varco. Acceso vuol dire escluso. Scrivi - per non mostrare il tasto.": "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. If it sits on the same device as the contact, or is named like it with «bypass» at the end, the dashboard finds it by itself; otherwise write it here. The button to bypass or re-include this opening shows up on the Openings page. On means bypassed. Write - to hide the button.",
   "Le coordinate scritte a mano vincono su tutto; se le lasci vuote vale la zona qui sopra, e se non scegli niente vale casa. Per un posto che non è casa tua, creagli una zona in Home Assistant: comparirà nella tendina col suo nome.": "Coordinates typed by hand win over everything; leave them empty and the zone above is used, and with no choice at all it is home. For somewhere that is not your house, give it a zone in Home Assistant: it shows up in the list under its own name.",
   "Le cose che la plancia sa gia'": "The things the dashboard already knows",
@@ -4695,6 +4710,7 @@ var SOURCE_INDEX = Object.freeze({
   "Per ora nessuna": "None yet",
   "Per quelle ore Home Assistant non tiene il consumo della casa, e non si sa quanto venisse dal sole. La fascia però è quella giusta.": "For those hours Home Assistant doesn't keep the house consumption, so we can't tell how much came from the sun. The band is right all the same.",
   "Per quello che si ricarica e non si cambia: il tablet a muro, un accumulatore. Le due entità sono number.* o input_number.*, quelle che il dispositivo espone per dire sotto quanto riparte e sopra quanto si ferma. Lasciale vuote e questa resta una batteria come le altre.": "For what recharges instead of being replaced: the wall tablet, a power bank. The two entities are number.* or input_number.*, the ones the device exposes to say where it starts again and where it stops. Leave them empty and this stays a battery like the others.",
+  "Per stanza · prima le aperte": "By room · open first",
   "Per tornare in configurazione in qualsiasi momento:": "To reopen configuration at any time:",
   "Per uscire dal pannello serve il PIN, da 4 a 8 cifre": "Leaving the panel needs the PIN, 4 to 8 digits",
   "per vedere il grafico storico.": "to see the historical chart.",
@@ -4828,6 +4844,8 @@ var SOURCE_INDEX = Object.freeze({
   "Post. dx": "Rear R",
   "Post. sx": "Rear L",
   "Posta": "Mail",
+  "Posta arrivata": "Mail arrived",
+  "Posta ritirata": "Mail collected",
   "Posteriore destro": "Rear right",
   "Posteriore sinistro": "Rear left",
   "Posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.": "Slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want.",
@@ -4951,6 +4969,7 @@ var SOURCE_INDEX = Object.freeze({
   "Pronte · Inchiostro · Pagine": "Ready · Ink · Pages",
   "prossimo": "next",
   "Prossimo ritiro": "Next collection",
+  "protetta": "protected",
   "Protetta da PIN": "PIN protected",
   "Protetto": "Protected",
   "Protezione civile": "Civil protection",
@@ -5374,6 +5393,7 @@ var SOURCE_INDEX = Object.freeze({
   "Segnala un difetto, proponi un'idea, chiedi aiuto": "Report a bug, suggest an idea, ask for help",
   "Segnalazione aperta": "Report opened",
   "Segnalazioni": "Reports",
+  "Segnata a mano": "Marked by hand",
   "Sei di serie. Otto stanno bene anche su un pannello piccolo in orizzontale; dodici su un tablet da 10 pollici.": "Six by default. Eight still fit a small panel in landscape; twelve suit a 10-inch tablet.",
   "Sei sicuro di voler aprire il cancello?": "Are you sure you want to open the gate?",
   "Seleziona": "Select",
@@ -5501,6 +5521,7 @@ var SOURCE_INDEX = Object.freeze({
   "Si sveglia da solo": "Wakes up by itself",
   "Si vede in Home": "Shown on Home",
   "Si vede ma non si comanda": "Shown but not controllable",
+  "Si vede ma non si comanda da qui": "Visible but not controlled from here",
   "Si vede quando questa entità…": "Show it when this entity…",
   "Si vedono: ${periodo}. Se li accendi compaiono comunque.": "They show: ${periodo}. Switched on, they show anyway.",
   "Sì, vai": "Yes, go",
@@ -5540,6 +5561,7 @@ var SOURCE_INDEX = Object.freeze({
   "Solo sblocca": "Unlock only",
   "Solo se hai già un helper che misura il periodo. Senza, il periodo viene dal contatore totale.": "Only if you already have a helper measuring the period. Without one, the period comes from the total meter.",
   "Solo sensore di apertura: nessun comando.": "Opening sensor only: nothing to command.",
+  "Solo sensore sull'anta · nessun motore": "Window sensor only · no motor",
   "somma di ${children} dispositivi": "sum of ${children} appliances",
   "somma di ${children} dispositivo": "sum of ${children} appliance",
   "Sonda accumulo alto (°C)": "Tank top probe (°C)",
@@ -5692,6 +5714,7 @@ var SOURCE_INDEX = Object.freeze({
   "Stufa del soggiorno": "Living room stove",
   "su": "of",
   "su questo dispositivo": "on this device",
+  "Su tutte": "All up",
   "Su una finestra ci stanno tutte e tre: compila le caselle che hai, il tipo lo dice la casella.": "One window can carry all three: fill in the boxes you have, the box tells the type.",
   "su una o": "alert on one or",
   "Su una scheda ne compaiono al massimo dodici: oltre non è più «qualcosa in più», è un elenco — e per quello c'è «Le tue sezioni».": "At most twelve show up on one page: past that it is not «one more thing» any more, it is a list — and for that there is «Your sections».",
@@ -5715,6 +5738,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tapparelle": "Shutters",
   "Tapparelle · Tende · Sensori di apertura": "Shutters · Curtains · Contact sensors",
   "tapparelle aperte": "shutters open",
+  "Tapparelle su": "Shutters up",
   "TARGET RAGGIUNTO": "TARGET REACHED",
   "Target Ricarica (SoC)": "Charge target (SoC)",
   "Tariffe usate dal Report Energia.": "Rates used by the Energy Report.",
@@ -5904,6 +5928,7 @@ var SOURCE_INDEX = Object.freeze({
   "tua": "your",
   "Turbante": "Turban",
   "Tutta la casa": "Whole house",
+  "Tutta su": "All the way up",
   "Tutte": "All",
   "Tutte a posto": "All fine",
   "Tutte abbassate": "All down",
@@ -5958,6 +5983,9 @@ var SOURCE_INDEX = Object.freeze({
   "Ultima erogazione": "Last meal",
   "Ultima pulizia": "Last cleaned",
   "Ultima pulizia della lettiera": "Litter box last cleaned",
+  "Ultima volta": "Last time",
+  "Ultime aperture": "Latest openings",
+  "Ultime cose": "Latest events",
   "Ultimi 7 giorni": "Last 7 days",
   "Ultimo": "Last",
   "Ultimo aggiornamento": "Last update",
@@ -7038,11 +7066,11 @@ function eDiQuestoApparecchio(entity2, parole4 = []) {
   const pezzi = new Set(nome.split("-"));
   return parole4.every((parola) => pezzi.has(parola));
 }
-function paroleDegliAltri(apparecchio = {}, elenco9 = []) {
+function paroleDegliAltri(apparecchio = {}, elenco10 = []) {
   const nostre = paroleDellApparecchio(apparecchio).join("-");
   const viste2 = /* @__PURE__ */ new Set([nostre]);
   const fuori = [];
-  for (const altro of elenco9) {
+  for (const altro of elenco10) {
     if (!altro || altro === apparecchio) continue;
     const parole4 = paroleDellApparecchio(altro);
     const firma2 = parole4.join("-");
@@ -8231,10 +8259,10 @@ function pianiDeiCarichi() {
     return entity2 ? [{ key: load.id, entity: entity2, source: entity2, kind: "day", direct: false }] : [];
   });
 }
-function pianiPerIDispositivi(elenco9, kind, prefisso = "report-device") {
+function pianiPerIDispositivi(elenco10, kind, prefisso = "report-device") {
   const states = allStates();
   const sorgente = (entity2) => sorgenteDichiarata(entity2, states);
-  return elenco9.flatMap((item, index) => {
+  return elenco10.flatMap((item, index) => {
     const history = clean(item.history);
     const entity2 = clean(item.entity);
     const key = clean(item.key) ? `${prefisso}:${clean(item.key)}` : `${prefisso}-${index}`;
@@ -8487,10 +8515,10 @@ function laChiaveDelMancante({ kind, plan }) {
   return `${kind}:${plan.group}.${plan.key}:${plan.entity}`;
 }
 function confermaIMancanti(mancanti, primaErano) {
-  const elenco9 = mancanti || [];
+  const elenco10 = mancanti || [];
   return {
-    confermati: elenco9.filter((uno) => primaErano?.has?.(laChiaveDelMancante(uno))),
-    adesso: new Set(elenco9.map(laChiaveDelMancante))
+    confermati: elenco10.filter((uno) => primaErano?.has?.(laChiaveDelMancante(uno))),
+    adesso: new Set(elenco10.map(laChiaveDelMancante))
   };
 }
 function ragioneDelPacchetto(bundle) {
@@ -8888,8 +8916,8 @@ function dimenticaLaStrada() {
     riga3.remove();
 }
 function scriviLAmmanco(bundle, source) {
-  const titolo2 = doc?.getElementById("ed-dkpi-year-lbl");
-  const blocco3 = titolo2?.parentElement;
+  const titolo3 = doc?.getElementById("ed-dkpi-year-lbl");
+  const blocco3 = titolo3?.parentElement;
   const panel2 = blocco3 || doc?.querySelector(".ed-device-detail,#ed-device-detail");
   if (!panel2) return false;
   let riga3 = (blocco3 ? panel2.parentElement : panel2)?.querySelector?.(".dm-ed-ammanco");
@@ -10084,8 +10112,8 @@ if (doc?.readyState === "loading")
 else senzaCadere(installEnergyStabilitySection);
 
 // src/core/ordine-a-mano.js
-function spostaNellElenco(elenco9, indice, passo = -1) {
-  const lista5 = Array.isArray(elenco9) ? [...elenco9] : [];
+function spostaNellElenco(elenco10, indice, passo = -1) {
+  const lista5 = Array.isArray(elenco10) ? [...elenco10] : [];
   const da = Number(indice);
   const salto = Number(passo);
   if (!Number.isInteger(da) || da < 0 || da >= lista5.length) return lista5;
@@ -10149,13 +10177,13 @@ function ordineDeiBlocchi(salvato) {
 }
 var SOPRA_LA_PAGINA = [BLOCCO_INTESTAZIONE, BLOCCO_DEL_METEO];
 function ordinePossibile(fila2) {
-  const elenco9 = Array.isArray(fila2) ? fila2 : [];
-  const meteo2 = elenco9.indexOf(BLOCCO_DEL_METEO);
-  const testata4 = elenco9.indexOf(BLOCCO_INTESTAZIONE);
-  if (meteo2 < 0 || testata4 < 0 || meteo2 > testata4) return elenco9;
-  const scesa = elenco9.slice(meteo2 + 1, testata4).some((nome) => !SOPRA_LA_PAGINA.includes(nome));
-  if (scesa) return elenco9;
-  const rimessa = [...elenco9];
+  const elenco10 = Array.isArray(fila2) ? fila2 : [];
+  const meteo2 = elenco10.indexOf(BLOCCO_DEL_METEO);
+  const testata4 = elenco10.indexOf(BLOCCO_INTESTAZIONE);
+  if (meteo2 < 0 || testata4 < 0 || meteo2 > testata4) return elenco10;
+  const scesa = elenco10.slice(meteo2 + 1, testata4).some((nome) => !SOPRA_LA_PAGINA.includes(nome));
+  if (scesa) return elenco10;
+  const rimessa = [...elenco10];
   rimessa.splice(meteo2, 1);
   rimessa.splice(testata4, 0, BLOCCO_DEL_METEO);
   return rimessa;
@@ -10238,9 +10266,9 @@ var conta = (valore3) => {
   return Number.isFinite(numero48) && numero48 > 0 ? Math.round(numero48) : 0;
 };
 function stanzePerPiano(pagine, { piani = [] } = {}) {
-  const elenco9 = Array.isArray(pagine) ? pagine.filter(Boolean) : [];
+  const elenco10 = Array.isArray(pagine) ? pagine.filter(Boolean) : [];
   const gruppi2 = /* @__PURE__ */ new Map();
-  for (const stanza2 of elenco9) {
+  for (const stanza2 of elenco10) {
     const piano = pulito5(stanza2.floor);
     if (!gruppi2.has(piano)) gruppi2.set(piano, []);
     gruppi2.get(piano).push(stanza2);
@@ -13819,7 +13847,7 @@ var AVATAR_MISURE = {
 };
 
 // src/core/avatar-3d.js
-var chiavi = (elenco9) => elenco9.map((voce2) => voce2.key);
+var chiavi = (elenco10) => elenco10.map((voce2) => voce2.key);
 var PERSONE = Object.freeze(chiavi(AVATAR_PERSONE));
 var CARNAGIONI = Object.freeze(chiavi(AVATAR_CARNAGIONI));
 var VESTITI = Object.freeze(["nessuno", ...chiavi(AVATAR_VESTITI)]);
@@ -13849,7 +13877,7 @@ var SINTETICI = Object.fromEntries(
 );
 var FEMMINILI = /* @__PURE__ */ new Set(["donna", "ragazza", "anziana"]);
 var genereDi = (persona) => FEMMINILI.has(persona) ? "donna" : "uomo";
-var dentro = (valore3, elenco9) => elenco9.includes(valore3) ? valore3 : elenco9[0];
+var dentro = (valore3, elenco10) => elenco10.includes(valore3) ? valore3 : elenco10[0];
 function normalizeAvatar3d(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) return null;
   const persona = dentro(String(input.persona ?? ""), [...PERSONE]);
@@ -14020,10 +14048,10 @@ function testaEOperazioni(scelte4) {
       variante = VARIANTE_COLORE[scelte4.coloreCapelli];
   }
   const testa2 = cerca2(variante) || cerca2(scelte4.capelli) || cerca2("lisci");
-  const tinta = TINTE_CAPELLI[scelte4.coloreCapelli];
+  const tinta2 = TINTE_CAPELLI[scelte4.coloreCapelli];
   const colorePronto = scelte4.coloreCapelli === "naturale" || scelte4.capelli === "lisci" && variante === VARIANTE_COLORE[scelte4.coloreCapelli];
-  if (tinta && !colorePronto && scelte4.capelli !== "calvo" && !barbaNativa)
-    operazioni.push({ tipo: "tintaCapelli", rgb: tinta.rgb, lift: tinta.lift });
+  if (tinta2 && !colorePronto && scelte4.capelli !== "calvo" && !barbaNativa)
+    operazioni.push({ tipo: "tintaCapelli", rgb: tinta2.rgb, lift: tinta2.lift });
   if (scelte4.barba !== "nessuna") {
     const gia = barbaNativa && scelte4.barba === "corta" && !tintaBarba;
     if (!gia)
@@ -14119,8 +14147,8 @@ function risolviAvatar3d(input) {
   return risultato(scala2, x, y);
 }
 function avatar3dACaso(sorteggio = Math.random) {
-  const uno = (elenco9) => elenco9[Math.floor(sorteggio() * elenco9.length)];
-  const raro = (elenco9) => sorteggio() < 0.25 ? uno(elenco9.slice(1)) : elenco9[0];
+  const uno = (elenco10) => elenco10[Math.floor(sorteggio() * elenco10.length)];
+  const raro = (elenco10) => sorteggio() < 0.25 ? uno(elenco10.slice(1)) : elenco10[0];
   return normalizeAvatar3d({
     persona: uno([...PERSONE]),
     capelli: uno([...CAPELLI]),
@@ -14592,8 +14620,8 @@ var numero3 = (valore3) => {
 };
 var ACCESO = /^(heat|cool|auto|dry|fan_only|heat_cool)$/i;
 function climaDellaStanza(entita3 = [], states = {}) {
-  const elenco9 = (Array.isArray(entita3) ? entita3 : []).map(clean4).filter(Boolean);
-  const vivi = elenco9.filter((entity2) => {
+  const elenco10 = (Array.isArray(entita3) ? entita3 : []).map(clean4).filter(Boolean);
+  const vivi = elenco10.filter((entity2) => {
     const stato4 = clean4(states?.[entity2]?.state).toLowerCase();
     return stato4 && stato4 !== "unavailable" && stato4 !== "unknown";
   });
@@ -14950,11 +14978,11 @@ function apriIlMenu(entity2, azione = null) {
   if (!nodo2) return false;
   const { nome, attuale, voci: voci3 } = vociDelMenu(entity2, allStates());
   aperto = { entity: entity2, azione };
-  const titolo2 = nodo2.querySelector("[data-dm-qa-titolo]");
+  const titolo3 = nodo2.querySelector("[data-dm-qa-titolo]");
   const sotto = nodo2.querySelector("[data-dm-qa-sotto]");
   const faccia = nodo2.querySelector("[data-dm-qa-faccia]");
   const corpo2 = nodo2.querySelector("[data-dm-qa-voci]");
-  if (titolo2) titolo2.textContent = clean(azione?.name) || nome;
+  if (titolo3) titolo3.textContent = clean(azione?.name) || nome;
   if (sotto)
     sotto.textContent = voci3.length ? t("tocca la voce da mettere", "tap the option to set") : t("questo menu non dice le sue voci", "this menu does not list its options");
   if (faccia) writeIconGlyph(faccia, azione?.icon, { size: 22, fallback: "🎚️" });
@@ -15134,8 +15162,8 @@ var clean5 = (value) => String(value ?? "").trim();
 var CLIMATE_TURN_ON = 256;
 var PREFERITE = Object.freeze(["auto", "heat_cool", "heat", "cool", "dry", "fan_only"]);
 function modalita(state168) {
-  const elenco9 = state168?.attributes?.hvac_modes;
-  return Array.isArray(elenco9) ? elenco9.map(clean5).filter(Boolean) : [];
+  const elenco10 = state168?.attributes?.hvac_modes;
+  return Array.isArray(elenco10) ? elenco10.map(clean5).filter(Boolean) : [];
 }
 function supporta(state168, bit) {
   const dichiarate = Number(state168?.attributes?.supported_features);
@@ -15819,7 +15847,7 @@ function chiudiIlFoglioDiScelta() {
   }
   return true;
 }
-function apriIlFoglioDiScelta({ titolo: titolo2 = "", id = "dm-foglio-scelta" } = {}) {
+function apriIlFoglioDiScelta({ titolo: titolo3 = "", id = "dm-foglio-scelta" } = {}) {
   if (!doc?.body) return null;
   installaLoStile();
   chiudiIlFoglioDiScelta();
@@ -15833,7 +15861,7 @@ function apriIlFoglioDiScelta({ titolo: titolo2 = "", id = "dm-foglio-scelta" } 
     <div class="dm-foglio-scelta-corpo"></div>
     <button type="button" class="dm-foglio-scelta-chiudi"></button>
   </section>`;
-  sfondo.querySelector("strong").textContent = titolo2;
+  sfondo.querySelector("strong").textContent = titolo3;
   const chiudi3 = sfondo.querySelector(".dm-foglio-scelta-chiudi");
   chiudi3.textContent = t("Chiudi", "Close");
   chiudi3.addEventListener("click", () => chiudiIlFoglioDiScelta());
@@ -15902,10 +15930,10 @@ function normalizzaVmc(input = {}, indice = 0) {
   return unita2;
 }
 function normalizzaVmcTutte(input = []) {
-  const elenco9 = Array.isArray(input) ? input : input && typeof input === "object" ? [input] : [];
+  const elenco10 = Array.isArray(input) ? input : input && typeof input === "object" ? [input] : [];
   const visti = /* @__PURE__ */ new Set();
   const fuori = [];
-  for (const [indice, voce2] of elenco9.entries()) {
+  for (const [indice, voce2] of elenco10.entries()) {
     const unita2 = normalizzaVmc(voce2, indice);
     let id = unita2.id;
     let scarto = 2;
@@ -16236,10 +16264,10 @@ function normalizzaDeumidificatore(input = {}, indice = 0) {
   return unita2;
 }
 function normalizzaDeumidificatori(input = []) {
-  const elenco9 = Array.isArray(input) ? input : input && typeof input === "object" ? [input] : [];
+  const elenco10 = Array.isArray(input) ? input : input && typeof input === "object" ? [input] : [];
   const visti = /* @__PURE__ */ new Set();
   const fuori = [];
-  for (const [indice, voce2] of elenco9.entries()) {
+  for (const [indice, voce2] of elenco10.entries()) {
     const unita2 = normalizzaDeumidificatore(voce2, indice);
     let id = unita2.id;
     let scarto = 2;
@@ -16252,10 +16280,10 @@ function normalizzaDeumidificatori(input = []) {
 }
 var eUnUmidificatore = (entita3) => pulito12(entita3).startsWith("humidifier.");
 function deumidificatoriDalClima(unitaDelClima = []) {
-  const elenco9 = Array.isArray(unitaDelClima) ? unitaDelClima : [];
+  const elenco10 = Array.isArray(unitaDelClima) ? unitaDelClima : [];
   const visti = /* @__PURE__ */ new Set();
   const fuori = [];
-  for (const unita2 of elenco9) {
+  for (const unita2 of elenco10) {
     const entita3 = pulito12(unita2?.entity ?? unita2?.entity_id);
     if (!eUnUmidificatore(entita3) || visti.has(entita3)) continue;
     visti.add(entita3);
@@ -16920,10 +16948,10 @@ function spiegaLaCasellaCaldaia(corpo2) {
 }
 function conLaCaldaia(voci3, entita3) {
   const scelta3 = clean(entita3);
-  const elenco9 = Array.isArray(voci3) ? voci3 : [];
-  if (!scelta3.includes(".")) return elenco9;
-  if (elenco9.some((voce2) => clean(voce2?.entity) === scelta3)) return elenco9;
-  return [{ name: t("Caldaia", "Boiler"), entity: scelta3, icon: "🔥" }, ...elenco9];
+  const elenco10 = Array.isArray(voci3) ? voci3 : [];
+  if (!scelta3.includes(".")) return elenco10;
+  if (elenco10.some((voce2) => clean(voce2?.entity) === scelta3)) return elenco10;
+  return [{ name: t("Caldaia", "Boiler"), entity: scelta3, icon: "🔥" }, ...elenco10];
 }
 function caldaiaDelleVoci(voci3) {
   const voce2 = voci3.find((una) => REGEX_CALDAIA.test(clean(una?.name))) || voci3.find((una) => clean(una?.entity) === "switch.caldaia");
@@ -17373,8 +17401,8 @@ function domandaDellAvvio(entity2, adesso, ore = ORE_DI_STORIA) {
   };
 }
 function righeDellaStoria(risposta, entity2) {
-  const elenco9 = Array.isArray(risposta?.[entity2]) ? risposta[entity2] : Array.isArray(risposta) ? risposta.flat() : [];
-  return elenco9.map((voce2) => {
+  const elenco10 = Array.isArray(risposta?.[entity2]) ? risposta[entity2] : Array.isArray(risposta) ? risposta.flat() : [];
+  return elenco10.map((voce2) => {
     const stato3 = String(voce2?.s ?? voce2?.state ?? "");
     const secondi = numero7(voce2?.lu ?? voce2?.last_updated_ts ?? voce2?.last_changed_ts);
     const quando4 = secondi != null ? secondi * 1e3 : Date.parse(voce2?.last_changed ?? voce2?.last_updated ?? "");
@@ -17463,12 +17491,12 @@ var ELENCHI = Object.freeze([
 ]);
 function entitaDellApparecchio(apparecchio = {}) {
   const viste2 = /* @__PURE__ */ new Set();
-  const elenco9 = [];
+  const elenco10 = [];
   const aggiungi4 = (valore3) => {
     const id = identificativo(valore3);
     if (!id || !id.includes(".") || viste2.has(id)) return;
     viste2.add(id);
-    elenco9.push(id);
+    elenco10.push(id);
   };
   for (const casella5 of CASELLE_DELL_APPARECCHIO) aggiungi4(apparecchio?.[casella5]);
   for (const { campo: campo5, pulisci } of ELENCHI) {
@@ -17479,7 +17507,7 @@ function entitaDellApparecchio(apparecchio = {}) {
     }
     for (const voce2 of Array.isArray(scritto) ? scritto : []) aggiungi4(voce2);
   }
-  return elenco9;
+  return elenco10;
 }
 function entitaDegliApparecchi(apparecchi2 = []) {
   const insieme3 = /* @__PURE__ */ new Set();
@@ -18632,12 +18660,12 @@ var state17 = root[KEY21] ||= {
 var EVENTO_COTTURA = "dashboardmodern:cottura-requested";
 var TESSERA_COTTURA = "cottura";
 function apparecchi() {
-  const elenco9 = section("appliances", readJson("cd_appliances", []));
-  return Array.isArray(elenco9) ? elenco9 : [];
+  const elenco10 = section("appliances", readJson("cd_appliances", []));
+  return Array.isArray(elenco10) ? elenco10 : [];
 }
 function stanze() {
-  const elenco9 = section("rooms", readJson("cd_stanze", []));
-  return Array.isArray(elenco9) ? elenco9 : [];
+  const elenco10 = section("rooms", readJson("cd_stanze", []));
+  return Array.isArray(elenco10) ? elenco10 : [];
 }
 function ceLaCucina() {
   return apparecchi().some(
@@ -20752,14 +20780,14 @@ var CAMPO_INGRESSI = "ingressi";
 function elencoDiEntita(scritto) {
   const grezzo = Array.isArray(scritto) ? scritto : pulito16(scritto).split(",");
   const viste2 = /* @__PURE__ */ new Set();
-  const elenco9 = [];
+  const elenco10 = [];
   for (const voce2 of grezzo) {
     const id = pulito16(typeof voce2 === "string" ? voce2 : voce2?.entity || voce2?.entity_id);
     if (!id || !id.includes(".") || viste2.has(id)) continue;
     viste2.add(id);
-    elenco9.push(id);
+    elenco10.push(id);
   }
-  return elenco9;
+  return elenco10;
 }
 function zoneScritte(centrale = {}) {
   return elencoDiEntita(centrale?.[CAMPO_ZONE]);
@@ -20859,8 +20887,8 @@ function alarmModes(stateObj) {
 function alarmActiveMode(state168, disponibili = null) {
   const valore3 = String(state168 ?? "").trim().toLowerCase();
   if (!valore3) return "";
-  const elenco9 = Array.isArray(disponibili) && disponibili.length ? disponibili.map(String) : null;
-  const disegnato = (mode) => !elenco9 || elenco9.includes(mode);
+  const elenco10 = Array.isArray(disponibili) && disponibili.length ? disponibili.map(String) : null;
+  const disegnato = (mode) => !elenco10 || elenco10.includes(mode);
   if (valore3 === ALARM_DISARM.state) return ALARM_DISARM.mode;
   const esatto = ALARM_MODES.find((voce2) => voce2.state === valore3);
   if (esatto) {
@@ -21240,15 +21268,15 @@ function pastigliaDellaZona(riga3) {
 function pastigliaDellIngresso(riga3) {
   const come = riga3.stato === "aperto" ? "aperto" : riga3.stato === "chiuso" ? "chiuso" : "muto";
   const escluso = riga3.escluso === "escluso";
-  const titolo2 = escluso ? `${riga3.entity} · ${t("Esclusione dall'antifurto", "Alarm bypass")}` : riga3.entity;
-  return `<span class="dm-sec-zona" data-stato="${esc(come)}" data-escluso="${escluso}" title="${esc(titolo2)}">
+  const titolo3 = escluso ? `${riga3.entity} · ${t("Esclusione dall'antifurto", "Alarm bypass")}` : riga3.entity;
+  return `<span class="dm-sec-zona" data-stato="${esc(come)}" data-escluso="${escluso}" title="${esc(titolo3)}">
     <i aria-hidden="true">${disegnoDiCasa(riga3.glifo, { misura: 20, ripiego: "door" })}</i><b>${esc(riga3.name)}</b>${escluso ? `<em class="dm-sec-zona-esclusa">🔓</em>` : ""}</span>`;
 }
 function riquadroDelleZone(zone, ingressi, labels) {
   const conto = contoDellaPresenza(zone);
   const varchi = contoDeiVarchi(ingressi);
-  const fila2 = (titolo2, sommario, pastiglie) => pastiglie ? `<div class="dm-sec-zone-fila">
-          <div class="dm-sec-zone-cap"><strong>${esc(titolo2)}</strong><span>${esc(sommario)}</span></div>
+  const fila2 = (titolo3, sommario, pastiglie) => pastiglie ? `<div class="dm-sec-zone-fila">
+          <div class="dm-sec-zone-cap"><strong>${esc(titolo3)}</strong><span>${esc(sommario)}</span></div>
           <div class="dm-sec-zone-righe">${pastiglie}</div>
         </div>` : "";
   return `<div class="dm-sec-zone-head">
@@ -22387,31 +22415,31 @@ var NOMI_DI_PRIMA = Object.freeze({ porte: ["sicurezza"] });
 function eISuoiNomiDiPrima(tessera2) {
   return /* @__PURE__ */ new Set([tessera2, ...NOMI_DI_PRIMA[tessera2] || []]);
 }
-function escluseDellaTessera(elenco9, chiave2 = "") {
+function escluseDellaTessera(elenco10, chiave2 = "") {
   const tessera2 = pulito17(chiave2);
   const nomi = eISuoiNomiDiPrima(tessera2);
   const fuori = /* @__PURE__ */ new Set();
-  for (const voce2 of Array.isArray(elenco9) ? elenco9 : []) {
+  for (const voce2 of Array.isArray(elenco10) ? elenco10 : []) {
     const letta = leggiLaVoce(voce2);
     if (!letta) continue;
     if (!letta.chiave || nomi.has(letta.chiave)) fuori.add(letta.entita);
   }
   return fuori;
 }
-function eFuori(elenco9, chiave2, entita3) {
-  return escluseDellaTessera(elenco9, chiave2).has(pulito17(entita3));
+function eFuori(elenco10, chiave2, entita3) {
+  return escluseDellaTessera(elenco10, chiave2).has(pulito17(entita3));
 }
-function togliDallaTessera(elenco9, chiave2, entita3) {
+function togliDallaTessera(elenco10, chiave2, entita3) {
   const id = pulito17(entita3);
-  const voci3 = (Array.isArray(elenco9) ? elenco9 : []).map(pulito17).filter(Boolean);
+  const voci3 = (Array.isArray(elenco10) ? elenco10 : []).map(pulito17).filter(Boolean);
   if (!id) return voci3;
   if (eFuori(voci3, chiave2, id)) return voci3;
   return [...voci3, scriviLaVoce(chiave2, id)];
 }
-function rimettiNellaTessera(elenco9, chiave2, entita3) {
+function rimettiNellaTessera(elenco10, chiave2, entita3) {
   const id = pulito17(entita3);
   const tessera2 = pulito17(chiave2);
-  const voci3 = (Array.isArray(elenco9) ? elenco9 : []).map(pulito17).filter(Boolean);
+  const voci3 = (Array.isArray(elenco10) ? elenco10 : []).map(pulito17).filter(Boolean);
   if (!id) return voci3;
   return voci3.filter((voce2) => {
     const letta = leggiLaVoce(voce2);
@@ -22564,11 +22592,11 @@ function perDispositivo(sciolte, di, nomi) {
   return [...fuori, ...insieme3.values()];
 }
 var mettiDaParte = (escluse, entita3) => (Array.isArray(entita3) ? entita3 : [entita3]).reduce(
-  (elenco9, una) => togliDallaTessera(elenco9, TESSERA_SCOLLEGATI, una),
+  (elenco10, una) => togliDallaTessera(elenco10, TESSERA_SCOLLEGATI, una),
   escluse
 );
 var rimettiInElenco = (escluse, entita3) => (Array.isArray(entita3) ? entita3 : [entita3]).reduce(
-  (elenco9, una) => rimettiNellaTessera(elenco9, TESSERA_SCOLLEGATI, una),
+  (elenco10, una) => rimettiNellaTessera(elenco10, TESSERA_SCOLLEGATI, una),
   escluse
 );
 
@@ -24420,8 +24448,8 @@ function tuttePagine() {
 function tintaDellaPagina(id) {
   const chiave2 = clean(id);
   const pagina2 = tuttePagine().find((voce2) => voce2.id === chiave2);
-  const tinta = clean(pagina2?.tint?.[0]);
-  return /^\d{1,3},\d{1,3},\d{1,3}$/.test(tinta) ? `rgb(${tinta})` : "";
+  const tinta2 = clean(pagina2?.tint?.[0]);
+  return /^\d{1,3},\d{1,3},\d{1,3}$/.test(tinta2) ? `rgb(${tinta2})` : "";
 }
 function registraTitoloDiPagina(id, produttore) {
   const chiave2 = clean(id);
@@ -25575,14 +25603,14 @@ function conQuellaDiAdesso(voci3, stato3) {
   );
 }
 function voceDiAdesso(voci3, stato3) {
-  const elenco9 = Array.isArray(voci3) ? voci3 : [];
+  const elenco10 = Array.isArray(voci3) ? voci3 : [];
   const grezzo = clean9(stato3);
   if (!grezzo) return "";
-  const esatta = elenco9.find((voce2) => voce2.valore === grezzo);
+  const esatta = elenco10.find((voce2) => voce2.valore === grezzo);
   if (esatta) return esatta.valore;
   const cercato = Number.parseFloat(grezzo.replace(",", "."));
   if (!Number.isFinite(cercato)) return "";
-  const pari = elenco9.find(
+  const pari = elenco10.find(
     (voce2) => Math.abs(Number.parseFloat(String(voce2.valore).replace(",", ".")) - cercato) < 1e-9
   );
   return pari ? pari.valore : "";
@@ -25708,7 +25736,7 @@ function paintTarget() {
   const solaLettura = targetDiSolaLettura();
   const entita3 = entitaDi("dm.ev_target_soc");
   const stato3 = entita3 ? liveState("dm.ev_target_soc") : null;
-  const titolo2 = solaLettura ? t(
+  const titolo3 = solaLettura ? t(
     "Questo target è un sensore di sola lettura: per cambiarlo da qui collega evcc, o un'entità number/select, nella scheda Auto.",
     "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab."
   ) : "";
@@ -25718,7 +25746,7 @@ function paintTarget() {
     const select = doc.getElementById(id);
     if (!select) continue;
     if (select.disabled !== spenta) select.disabled = spenta;
-    if (select.title !== titolo2) select.title = titolo2;
+    if (select.title !== titolo3) select.title = titolo3;
     const segno = solaLettura ? "sola-lettura" : muta ? "muta" : entita3 ? "comando" : "";
     if (select.dataset.dmTarget !== segno) select.dataset.dmTarget = segno;
     if (!solaLettura && stato3) assicuraLeVoci(select, stato3);
@@ -26242,8 +26270,8 @@ function normalizzaUps(stored, posizione = 0) {
   for (const { campo: campo5 } of CASELLE_UPS) fuori[campo5] = clean12(dato[campo5]);
   return fuori;
 }
-var richiestaDelSegno = (elenco9, metadata) => ({
-  elenco: Array.isArray(elenco9) ? elenco9 : [],
+var richiestaDelSegno = (elenco10, metadata) => ({
+  elenco: Array.isArray(elenco10) ? elenco10 : [],
   metadata: metadata && typeof metadata === "object" ? metadata : {},
   prefisso: PREFISSO_UPS,
   identificativo: (gruppo) => gruppo?.[CAMPO_UID_UPS],
@@ -26260,8 +26288,8 @@ function elencoUps(stored) {
     return uid === gruppo[CAMPO_UID_UPS] ? gruppo : { ...gruppo, [CAMPO_UID_UPS]: uid };
   });
 }
-function upsDaSalvare(elenco9 = [], metadata = {}) {
-  const gruppi2 = elencoUps(elenco9);
+function upsDaSalvare(elenco10 = [], metadata = {}) {
+  const gruppi2 = elencoUps(elenco10);
   return {
     gruppi: gruppi2,
     metadata: {
@@ -26270,16 +26298,16 @@ function upsDaSalvare(elenco9 = [], metadata = {}) {
     }
   };
 }
-function nuovoUps(elenco9 = [], nome = "", metadata = {}) {
+function nuovoUps(elenco10 = [], nome = "", metadata = {}) {
   return normalizzaUps({
-    [CAMPO_UID_UPS]: prossimoIdentificativo(richiestaDelSegno(elenco9, metadata)),
+    [CAMPO_UID_UPS]: prossimoIdentificativo(richiestaDelSegno(elenco10, metadata)),
     name: clean12(nome)
   });
 }
-function togliUps(elenco9 = [], uid) {
+function togliUps(elenco10 = [], uid) {
   const cercato = clean12(uid);
-  if (!cercato) return Array.isArray(elenco9) ? elenco9 : [];
-  return (Array.isArray(elenco9) ? elenco9 : []).filter(
+  if (!cercato) return Array.isArray(elenco10) ? elenco10 : [];
+  return (Array.isArray(elenco10) ? elenco10 : []).filter(
     (gruppo) => clean12(gruppo?.[CAMPO_UID_UPS]) !== cercato
   );
 }
@@ -26445,12 +26473,12 @@ function utentiDiCasa(states = {}) {
   })).filter((voce2) => voce2.utente).sort((a, b) => a.name.localeCompare(b.name));
 }
 function calendariDellUtente(calendari = [], utente = "") {
-  const elenco9 = Array.isArray(calendari) ? calendari : [];
+  const elenco10 = Array.isArray(calendari) ? calendari : [];
   const chi = clean14(utente);
-  if (chi === TUTTA_LA_CASA) return elenco9;
-  const diCasa = elenco9.filter((voce2) => persone(voce2).length === 0);
-  if (!chi) return diCasa.length ? diCasa : elenco9;
-  return elenco9.filter((voce2) => {
+  if (chi === TUTTA_LA_CASA) return elenco10;
+  const diCasa = elenco10.filter((voce2) => persone(voce2).length === 0);
+  if (!chi) return diCasa.length ? diCasa : elenco10;
+  return elenco10.filter((voce2) => {
     const suoi2 = persone(voce2);
     return suoi2.length === 0 || suoi2.includes(chi);
   });
@@ -26613,15 +26641,15 @@ var LAMENTI_CALENDARIO = Object.freeze({
 });
 function messaggioDellEvento(bozza3, lamenti2 = LAMENTI_CALENDARIO) {
   const dette = { ...LAMENTI_CALENDARIO, ...lamenti2 || {} };
-  const titolo2 = clean14(bozza3?.summary);
+  const titolo3 = clean14(bozza3?.summary);
   if (!clean14(bozza3?.entity)) return { errore: dette.calendario };
-  if (!titolo2) return { errore: dette.titolo };
+  if (!titolo3) return { errore: dette.titolo };
   const tutto = bozza3?.tuttoIlGiorno === true;
   const inizio = istanteDaCaselle(bozza3?.giornoInizio, tutto ? "00:00" : bozza3?.oraInizio);
   const fine = istanteDaCaselle(bozza3?.giornoFine, tutto ? "00:00" : bozza3?.oraFine);
   if (inizio === null || fine === null) return { errore: dette.quando };
   if (fine < inizio) return { errore: dette.ordine };
-  const evento = { summary: titolo2 };
+  const evento = { summary: titolo3 };
   if (clean14(bozza3?.location)) evento.location = clean14(bozza3.location);
   if (clean14(bozza3?.description)) evento.description = clean14(bozza3.description);
   if (tutto) {
@@ -26713,7 +26741,7 @@ function agendaPerGiorno(eventi, scadenze, adesso = Date.now()) {
   }
   return {
     ritardo: ordinaEventi(ritardo),
-    giorni: [...giorni.entries()].sort(([uno], [altro]) => uno < altro ? -1 : uno > altro ? 1 : 0).map(([giorno, elenco9]) => ({ giorno, eventi: ordinaEventi(elenco9) }))
+    giorni: [...giorni.entries()].sort(([uno], [altro]) => uno < altro ? -1 : uno > altro ? 1 : 0).map(([giorno, elenco10]) => ({ giorno, eventi: ordinaEventi(elenco10) }))
   };
 }
 function bozzaDaVoce(voce2, lista5) {
@@ -26737,12 +26765,12 @@ function bozzaDaVoce(voce2, lista5) {
 }
 function campiDellaCosa(bozza3, lamenti2 = LAMENTI_CALENDARIO) {
   const dette = { ...LAMENTI_CALENDARIO, ...lamenti2 || {} };
-  const titolo2 = clean14(bozza3?.summary);
+  const titolo3 = clean14(bozza3?.summary);
   if (!clean14(bozza3?.entity)) return { errore: dette.calendario };
-  if (!titolo2) return { errore: dette.titolo };
+  if (!titolo3) return { errore: dette.titolo };
   const giorno = clean14(bozza3?.giornoScadenza);
   const ora3 = clean14(bozza3?.oraScadenza);
-  const campi = { item: titolo2, description: clean14(bozza3?.description) || null };
+  const campi = { item: titolo3, description: clean14(bozza3?.description) || null };
   if (!giorno) {
     campi.due_date = null;
   } else if (ora3) {
@@ -27213,8 +27241,8 @@ function onChange2(event) {
   if (clean(casella5.dataset.dmCalmCampoValore) === "tuttoIlGiorno") ridisegnaOspiti();
 }
 var CALENDARI = [];
-function dichiaraCalendari(elenco9) {
-  CALENDARI = Array.isArray(elenco9) ? elenco9 : [];
+function dichiaraCalendari(elenco10) {
+  CALENDARI = Array.isArray(elenco10) ? elenco10 : [];
 }
 function calendariDelMomento() {
   return CALENDARI;
@@ -27628,9 +27656,9 @@ function luogoDelVolo(volo, lato) {
 }
 function leggiVoli(voce2, stati) {
   const principale = stati.entity;
-  const elenco9 = Array.isArray(principale?.attributes?.flights) ? principale.attributes.flights : [];
-  const conteggio = numero19(principale?.state) ?? elenco9.length;
-  const voci3 = elenco9.slice(0, VOLI_MOSTRATI).map((volo) => ({
+  const elenco10 = Array.isArray(principale?.attributes?.flights) ? principale.attributes.flights : [];
+  const conteggio = numero19(principale?.state) ?? elenco10.length;
+  const voci3 = elenco10.slice(0, VOLI_MOSTRATI).map((volo) => ({
     numero: pulito22(volo?.flight_number || volo?.callsign || volo?.id),
     compagnia: pulito22(volo?.airline_short || volo?.airline || volo?.airline_iata),
     aereo: pulito22(volo?.aircraft_model || volo?.aircraft_code),
@@ -27646,10 +27674,10 @@ function leggiVoli(voce2, stati) {
 var SCIOPERI_MOSTRATI = 5;
 function leggiScioperi(voce2, stati, adesso) {
   const principale = stati.entity;
-  const elenco9 = Array.isArray(attributo(principale, ["strikes", "scioperi", "events"])) ? attributo(principale, ["strikes", "scioperi", "events"]) : [];
-  const conteggio = numero19(principale?.state) ?? elenco9.length;
+  const elenco10 = Array.isArray(attributo(principale, ["strikes", "scioperi", "events"])) ? attributo(principale, ["strikes", "scioperi", "events"]) : [];
+  const conteggio = numero19(principale?.state) ?? elenco10.length;
   const oggi = new Date(adesso);
-  const voci3 = elenco9.slice(0, SCIOPERI_MOSTRATI).map((sciopero) => {
+  const voci3 = elenco10.slice(0, SCIOPERI_MOSTRATI).map((sciopero) => {
     const quando4 = Date.parse(
       pulito22(
         sciopero?.start_date || sciopero?.start_date_str || sciopero?.data || sciopero?.inizio
@@ -27694,7 +27722,7 @@ function leggiTreni(voce2, stati) {
     attributo(principale, ["partenza", "origin", "departure", "from", "stazione_partenza"])
   );
   const binario = pulito22(attributo(principale, ["binario", "platform", "track"]));
-  const orario = pulito22(
+  const orario2 = pulito22(
     attributo(principale, ["orario", "time", "scheduled", "orario_partenza", "departure_time"])
   );
   const stazione = pulito22(stati.stazione?.attributes?.friendly_name) || pulito22(attributo(principale, ["stazione", "station", "station_name"]));
@@ -27705,7 +27733,7 @@ function leggiTreni(voce2, stati) {
     else if (ritardo >= RITARDO_ATTENZIONE) livello = "attenzione";
     else if (ritardo >= RITARDO_NOTA) livello = "nota";
   }
-  return { livello, ritardo, soppresso, treno, destinazione, partenza, binario, orario, stazione };
+  return { livello, ritardo, soppresso, treno, destinazione, partenza, binario, orario: orario2, stazione };
 }
 var LETTORI = Object.freeze({
   terremoti: leggiTerremoti,
@@ -27809,13 +27837,13 @@ function vociDelDettaglio(attributi2 = {}, salta = RUMORE) {
     if (salta.has(chiave2)) continue;
     const valore3 = comeSiLegge(grezzo);
     if (!valore3) continue;
-    const titolo2 = titoloDellaVoce(chiave2);
-    if (!titolo2) continue;
+    const titolo3 = titoloDellaVoce(chiave2);
+    if (!titolo3) continue;
     const istante4 = eUnIstante(valore3);
     voci3.push(
       Object.freeze({
         chiave: chiave2,
-        titolo: titolo2,
+        titolo: titolo3,
         valore: valore3,
         istante: istante4,
         /* Una data non e' mai un paragrafo, per quanto lunga sia scritta. */
@@ -28224,12 +28252,12 @@ function riassuntoMarkup(letture2) {
   const attive = allerteAttive(letture2);
   const livello = livelloMassimo(letture2);
   const mute = letture2.filter((voce2) => voce2.livello === IGNOTO).length;
-  const titolo2 = !attive.length ? t("Tutto tranquillo", "All quiet") : attive.length === 1 ? t("1 allerta in corso", "1 alert in force") : t(`${attive.length} allerte in corso`, `${attive.length} alerts in force`);
+  const titolo3 = !attive.length ? t("Tutto tranquillo", "All quiet") : attive.length === 1 ? t("1 allerta in corso", "1 alert in force") : t(`${attive.length} allerte in corso`, `${attive.length} alerts in force`);
   const fonti = letture2.length === 1 ? t("1 fonte", "1 source") : t(`${letture2.length} fonti`, `${letture2.length} sources`);
   const sotto = mute ? `${fonti} · ${mute === 1 ? t("1 non risponde", "1 not answering") : t(`${mute} non rispondono`, `${mute} not answering`)}` : attive.length ? `${fonti} · ${attive.map((voce2) => categoriaDelleAllerte(voce2.chiave).nome).join(", ")}` : fonti;
   return `<div class="dm-allerte-riassunto" data-livello="${esc(livello)}">
     <span class="dm-allerte-riassunto-ic" aria-hidden="true">${livello === "quiete" ? "🛡️" : "⚠️"}</span>
-    <div class="dm-allerte-riassunto-testo"><strong>${esc(titolo2)}</strong><small>${esc(sotto)}</small></div>
+    <div class="dm-allerte-riassunto-testo"><strong>${esc(titolo3)}</strong><small>${esc(sotto)}</small></div>
   </div>`;
 }
 var POPUP_ID = "dm-allerta-dettaglio";
@@ -28373,58 +28401,58 @@ function renderAllerte() {
   schedule5();
 }
 function installStyles9() {
-  const P6 = `#${ALLERTE_PAGE_ID}`;
+  const P7 = `#${ALLERTE_PAGE_ID}`;
   installStyle(
     "dm-allerte-section-style",
     `
-    ${P6} .dm-allerte-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P6} .dm-allerte-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-allerte-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P7} .dm-allerte-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-allerte-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-allerte-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-allerte-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-allerte-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* Il riassunto: una riga sola, col colore del livello piu' alto. */
-    ${P6} .dm-allerte-riassunto{
+    ${P7} .dm-allerte-riassunto{
       display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:20px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-allerte-riassunto-ic{
+    ${P7} .dm-allerte-riassunto-ic{
       display:grid;place-items:center;width:46px;height:46px;border-radius:14px;font-size:22px;
       background:color-mix(in srgb,var(--dm-allerta-colore,#22c55e) 16%,transparent)}
-    ${P6} .dm-allerte-riassunto-testo{display:grid;gap:2px;min-width:0}
-    ${P6} .dm-allerte-riassunto strong{font-size:16px;font-weight:900;color:var(--text,#0f172a)}
-    ${P6} .dm-allerte-riassunto small{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-allerte-riassunto-testo{display:grid;gap:2px;min-width:0}
+    ${P7} .dm-allerte-riassunto strong{font-size:16px;font-weight:900;color:var(--text,#0f172a)}
+    ${P7} .dm-allerte-riassunto small{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P6} .dm-allerte-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:12px}
-    ${P6} .dm-allerta{
+    ${P7} .dm-allerte-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:12px}
+    ${P7} .dm-allerta{
       position:relative;display:grid;gap:8px;padding:14px 16px;border-radius:18px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06));overflow:hidden}
     /* Una tessera che si apre lo dice al dito prima che al dito serva saperlo:
        il cursore, e un sollevamento appena percettibile. Chi non ha niente
        dentro non riceve niente di tutto questo: lo decide valeLaPenaAprirla. */
-    ${P6} .dm-allerta-apribile{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
-    ${P6} .dm-allerta-apribile:hover{transform:translateY(-1px);
+    ${P7} .dm-allerta-apribile{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+    ${P7} .dm-allerta-apribile:hover{transform:translateY(-1px);
       box-shadow:var(--shadow-glass-strong,0 12px 34px rgba(0,0,0,.10))}
-    ${P6} .dm-allerta-apribile:focus-visible{
+    ${P7} .dm-allerta-apribile:focus-visible{
       outline:3px solid color-mix(in srgb,var(--primary-color,#0ea5e9) 45%,transparent);
       outline-offset:3px}
     /* La striscia a sinistra e' il livello, detto col colore prima che con la parola. */
-    ${P6} .dm-allerta::before{
+    ${P7} .dm-allerta::before{
       content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
       background:var(--dm-allerta-colore,#94a3b8)}
     /* Il nome della fonte si legge intero: «Protezione civile» e «Voli sopra
        casa» vanno su due righe piuttosto che finire in «PROTE…». */
-    ${P6} .dm-allerta-testa{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
-    ${P6} .dm-allerta-ic{display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto}
-    ${P6} .dm-allerta-ic .dm-appliance-art{display:block;line-height:0}
-    ${P6} .dm-allerta-nome{
+    ${P7} .dm-allerta-testa{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+    ${P7} .dm-allerta-ic{display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto}
+    ${P7} .dm-allerta-ic .dm-appliance-art{display:block;line-height:0}
+    ${P7} .dm-allerta-nome{
       flex:1 1 90px;min-width:0;font-size:12px;font-weight:900;letter-spacing:.04em;line-height:1.15;
       text-transform:uppercase;color:var(--text,#0f172a);overflow-wrap:anywhere}
-    ${P6} .dm-allerta-livello{
+    ${P7} .dm-allerta-livello{
       flex:0 0 auto;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
       padding:3px 8px;border-radius:999px;color:#fff;background:var(--dm-allerta-colore,#94a3b8)}
-    ${P6} .dm-allerta-frase{font-size:17px;font-weight:800;line-height:1.25;color:var(--text,#0f172a)}
+    ${P7} .dm-allerta-frase{font-size:17px;font-weight:800;line-height:1.25;color:var(--text,#0f172a)}
     /* Le righe valgono nella pagina E nella finestra del dettaglio.
      *
      * La finestra riusa questo markup ma vive attaccata al corpo del
@@ -28434,31 +28462,31 @@ function installStyles9() {
      * «GraminaceeAlto · 4/4». Non si vedeva finche' le righe erano due parole;
      * con i pollini presi uno per uno e le frasi dell'integrazione (#428) e'
      * diventato il difetto piu' visibile della finestra. */
-    :is(${P6},#${POPUP_ID}) .dm-allerta-righe{
+    :is(${P7},#${POPUP_ID}) .dm-allerta-righe{
       list-style:none;margin:0;padding:0;display:grid;gap:4px}
-    :is(${P6},#${POPUP_ID}) .dm-allerta-righe li{
+    :is(${P7},#${POPUP_ID}) .dm-allerta-righe li{
       display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:12px;
       color:var(--text-dim,#64748b)}
-    :is(${P6},#${POPUP_ID}) .dm-allerta-righe li>span{flex:0 1 auto;min-width:0}
+    :is(${P7},#${POPUP_ID}) .dm-allerta-righe li>span{flex:0 1 auto;min-width:0}
     /* Una frase non sta sulla riga del suo nome: va a capo e si prende tutta
      * la larghezza, allineata a sinistra come si legge un testo. Un valore
      * corto — «4/4», «12 km» — resta a destra del nome, dov'era. */
-    :is(${P6},#${POPUP_ID}) .dm-allerta-righe li b{
+    :is(${P7},#${POPUP_ID}) .dm-allerta-righe li b{
       font-weight:800;color:var(--text,#0f172a);text-align:right;min-width:0;flex:0 1 auto}
-    :is(${P6},#${POPUP_ID}) .dm-allerta-righe li[data-lungo="true"] b{
+    :is(${P7},#${POPUP_ID}) .dm-allerta-righe li[data-lungo="true"] b{
       flex:1 0 100%;text-align:left}
 
     /* I quattro colori, piu' il grigio di chi non risponde. Stanno in una
        variabile perche' li usano tre pezzi — striscia, pastiglia, alone — e un
        colore scritto tre volte e' un colore che prima o poi diverge. */
-    ${P6} [data-livello="quiete"]{--dm-allerta-colore:#22c55e}
-    ${P6} [data-livello="nota"]{--dm-allerta-colore:#0ea5e9}
-    ${P6} [data-livello="attenzione"]{--dm-allerta-colore:#f59e0b}
-    ${P6} [data-livello="allarme"]{--dm-allerta-colore:#ef4444}
-    ${P6} [data-livello="ignoto"]{--dm-allerta-colore:#94a3b8}
-    ${P6} .dm-allerta[data-livello="allarme"]{
+    ${P7} [data-livello="quiete"]{--dm-allerta-colore:#22c55e}
+    ${P7} [data-livello="nota"]{--dm-allerta-colore:#0ea5e9}
+    ${P7} [data-livello="attenzione"]{--dm-allerta-colore:#f59e0b}
+    ${P7} [data-livello="allarme"]{--dm-allerta-colore:#ef4444}
+    ${P7} [data-livello="ignoto"]{--dm-allerta-colore:#94a3b8}
+    ${P7} .dm-allerta[data-livello="allarme"]{
       box-shadow:0 0 0 1px rgba(239,68,68,.35),0 14px 34px -14px rgba(239,68,68,.6)}
-    ${P6} .dm-allerta[data-livello="ignoto"] .dm-allerta-frase{color:var(--text-dim,#64748b);font-weight:700}
+    ${P7} .dm-allerta[data-livello="ignoto"] .dm-allerta-frase{color:var(--text-dim,#64748b);font-weight:700}
 
     /* Il pallino sulla voce della barra, quando c'e' qualcosa. */
     nav.tabs .tab[data-tab="${ALLERTE_TAB}"]{position:relative}
@@ -28469,8 +28497,8 @@ function installStyles9() {
     nav.tabs .tab[data-tab="${ALLERTE_TAB}"][data-dm-livello="attenzione"] .icon::after{background:#f59e0b}
 
     @media (max-width:640px){
-      ${P6} .dm-allerte-griglia{grid-template-columns:1fr}
-      ${P6} .dm-allerta-frase{font-size:16px}
+      ${P7} .dm-allerte-griglia{grid-template-columns:1fr}
+      ${P7} .dm-allerta-frase{font-size:16px}
     }
     
     /* ── la finestra del dettaglio (#422) ─────────────────────────────────
@@ -28656,9 +28684,9 @@ function normalizzaTurno(stored) {
   const giorni = [];
   for (let indice = 0; indice < GIORNI_DEL_TURNO; indice += 1) {
     const voce2 = grezzi[indice];
-    const elenco9 = Array.isArray(voce2) ? voce2 : voce2 ? [voce2] : [];
+    const elenco10 = Array.isArray(voce2) ? voce2 : voce2 ? [voce2] : [];
     const visti = [];
-    for (const materiale of elenco9) {
+    for (const materiale of elenco10) {
       const chiave2 = pulito24(materiale);
       if (!MATERIALI.some((noto) => noto.chiave === chiave2)) continue;
       if (!visti.includes(chiave2)) visti.push(chiave2);
@@ -29394,16 +29422,16 @@ function bindCitofonoToDevice({
   indice = 0,
   precedente = {}
 } = {}) {
-  const elenco9 = utilizzabili(entities);
-  const apri6 = elenco9.find((voce2) => dominioDi3(voce2) === "button" && PAROLE4.apri.test(parole(voce2, states))) || elenco9.find((voce2) => dominioDi3(voce2) === "lock") || elenco9.find((voce2) => puoAprire(voce2.entity_id) && PAROLE4.apri.test(parole(voce2, states)));
-  const campanello = elenco9.find(
+  const elenco10 = utilizzabili(entities);
+  const apri6 = elenco10.find((voce2) => dominioDi3(voce2) === "button" && PAROLE4.apri.test(parole(voce2, states))) || elenco10.find((voce2) => dominioDi3(voce2) === "lock") || elenco10.find((voce2) => puoAprire(voce2.entity_id) && PAROLE4.apri.test(parole(voce2, states)));
+  const campanello = elenco10.find(
     (voce2) => dominioDi3(voce2) === "event" && (classeDi2(voce2, states) === "doorbell" || PAROLE4.campanello.test(parole(voce2, states)))
-  ) || elenco9.find(
+  ) || elenco10.find(
     (voce2) => dominioDi3(voce2) === "binary_sensor" && PAROLE4.campanello.test(parole(voce2, states))
-  ) || elenco9.find(
+  ) || elenco10.find(
     (voce2) => dominioDi3(voce2) === "binary_sensor" && ["occupancy", "sound"].includes(classeDi2(voce2, states))
   );
-  const telecamera = elenco9.find((voce2) => dominioDi3(voce2) === "camera");
+  const telecamera = elenco10.find((voce2) => dominioDi3(voce2) === "camera");
   return {
     ...normalizzaCitofono(precedente, indice),
     nome: clean15(precedente.nome) || clean15(device.name),
@@ -29419,18 +29447,18 @@ function bindCassettaToDevice({
   indice = 0,
   precedente = {}
 } = {}) {
-  const elenco9 = utilizzabili(entities);
-  const posta = elenco9.find(
+  const elenco10 = utilizzabili(entities);
+  const posta = elenco10.find(
     (voce2) => dominioDi3(voce2) === "binary_sensor" && ["motion", "occupancy"].includes(classeDi2(voce2, states))
-  ) || elenco9.find(
+  ) || elenco10.find(
     (voce2) => dominioDi3(voce2) === "binary_sensor" && PAROLE4.posta.test(parole(voce2, states))
   );
-  const ritiro = elenco9.find(
+  const ritiro = elenco10.find(
     (voce2) => dominioDi3(voce2) === "sensor" && classeDi2(voce2, states) === "illuminance"
-  ) || elenco9.find(
+  ) || elenco10.find(
     (voce2) => (dominioDi3(voce2) === "sensor" || dominioDi3(voce2) === "binary_sensor") && PAROLE4.ritiro.test(parole(voce2, states))
   );
-  const contatore2 = elenco9.find(
+  const contatore2 = elenco10.find(
     (voce2) => (dominioDi3(voce2) === "counter" || dominioDi3(voce2) === "sensor") && PAROLE4.contatore.test(parole(voce2, states))
   );
   return {
@@ -29638,10 +29666,10 @@ function vuotoMarkup2() {
   )}</span>
   </div>`;
 }
-function fascia(titolo2, carte) {
+function fascia(titolo3, carte) {
   if (!carte.length) return "";
   return `<section class="dm-citofono-fascia">
-    <header><strong>${esc(titolo2)}</strong></header>
+    <header><strong>${esc(titolo3)}</strong></header>
     <div class="dm-citofono-elenco">${carte.join("")}</div>
   </section>`;
 }
@@ -29715,74 +29743,74 @@ function renderCitofono() {
   schedule6();
 }
 function installStyles10() {
-  const P6 = `#${CITOFONO_PAGE_ID}`;
+  const P7 = `#${CITOFONO_PAGE_ID}`;
   installStyle(
     "dm-citofono-section-style",
     `
-    ${P6} .dm-citofono-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P6} .dm-citofono-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-citofono-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P7} .dm-citofono-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-citofono-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-citofono-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-citofono-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-citofono-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
-    ${P6} .dm-citofono-testa{
+    ${P7} .dm-citofono-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-citofono-testa small{
+    ${P7} .dm-citofono-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P6} .dm-citofono-testa strong{font-size:28px;font-weight:900;line-height:1.06;color:var(--text,#0f172a)}
-    ${P6} .dm-citofono-testa[data-stato="suona"] strong{color:#ea580c}
-    ${P6} .dm-citofono-testa[data-stato="posta"] strong{color:#2563eb}
-    ${P6} .dm-citofono-testa[data-stato="quiete"] strong{color:#15803d}
-    ${P6} .dm-citofono-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-citofono-testa strong{font-size:28px;font-weight:900;line-height:1.06;color:var(--text,#0f172a)}
+    ${P7} .dm-citofono-testa[data-stato="suona"] strong{color:#ea580c}
+    ${P7} .dm-citofono-testa[data-stato="posta"] strong{color:#2563eb}
+    ${P7} .dm-citofono-testa[data-stato="quiete"] strong{color:#15803d}
+    ${P7} .dm-citofono-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P6} .dm-citofono-fascia{display:grid;gap:9px}
-    ${P6} .dm-citofono-fascia>header>strong{
+    ${P7} .dm-citofono-fascia{display:grid;gap:9px}
+    ${P7} .dm-citofono-fascia>header>strong{
       font-family:'Oswald',system-ui,sans-serif;font-size:15px;letter-spacing:1.3px;
       text-transform:uppercase;color:var(--text,#0f172a)}
-    ${P6} .dm-citofono-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P7} .dm-citofono-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
 
-    ${P6} .dm-citofono,${P6} .dm-cassetta{
+    ${P7} .dm-citofono,${P7} .dm-cassetta{
       display:grid;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-ingresso,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-ingresso,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P6} .dm-citofono{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#16a34a}
-    ${P6} .dm-citofono[data-suona="true"]{--dm-ingresso:#ea580c}
-    ${P6} .dm-cassetta{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#94a3b8}
-    ${P6} .dm-cassetta[data-stato="piena"]{--dm-ingresso:#2563eb}
-    ${P6} .dm-cassetta[data-stato="aperta"]{--dm-ingresso:#eab308}
-    ${P6} .dm-cassetta[data-stato="vuota"]{--dm-ingresso:#16a34a}
-    ${P6} .dm-cassetta-presa{
+    ${P7} .dm-citofono{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#16a34a}
+    ${P7} .dm-citofono[data-suona="true"]{--dm-ingresso:#ea580c}
+    ${P7} .dm-cassetta{grid-template-columns:44px minmax(0,1fr) auto;--dm-ingresso:#94a3b8}
+    ${P7} .dm-cassetta[data-stato="piena"]{--dm-ingresso:#2563eb}
+    ${P7} .dm-cassetta[data-stato="aperta"]{--dm-ingresso:#eab308}
+    ${P7} .dm-cassetta[data-stato="vuota"]{--dm-ingresso:#16a34a}
+    ${P7} .dm-cassetta-presa{
       grid-column:2/-1;justify-self:start;margin-top:6px;
       border:1px solid color-mix(in srgb,var(--dm-ingresso) 45%,transparent);
       background:color-mix(in srgb,var(--dm-ingresso) 12%,transparent);
       color:var(--dm-ingresso);border-radius:999px;
       padding:6px 14px;font:600 12px/1 inherit;letter-spacing:.02em;cursor:pointer
     }
-    ${P6} .dm-cassetta-presa:hover{background:color-mix(in srgb,var(--dm-ingresso) 22%,transparent)}
+    ${P7} .dm-cassetta-presa:hover{background:color-mix(in srgb,var(--dm-ingresso) 22%,transparent)}
 
-    ${P6} .dm-citofono-ic,${P6} .dm-cassetta-ic{
+    ${P7} .dm-citofono-ic,${P7} .dm-cassetta-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-ingresso,#94a3b8) 22%,transparent)}
-    ${P6} .dm-citofono-testo,${P6} .dm-cassetta-testo{display:grid;gap:2px;min-width:0}
-    ${P6} .dm-citofono-testo strong,${P6} .dm-cassetta-testo strong{
+    ${P7} .dm-citofono-testo,${P7} .dm-cassetta-testo{display:grid;gap:2px;min-width:0}
+    ${P7} .dm-citofono-testo strong,${P7} .dm-cassetta-testo strong{
       font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-citofono-testo small,${P6} .dm-cassetta-testo small{
+    ${P7} .dm-citofono-testo small,${P7} .dm-cassetta-testo small{
       font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-cassetta-stato{
+    ${P7} .dm-cassetta-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-ingresso,#94a3b8) 78%,var(--text,#0f172a))}
 
-    ${P6} .dm-citofono-apri{
+    ${P7} .dm-citofono-apri{
       flex:0 0 auto;padding:9px 16px;border:0;border-radius:999px;cursor:pointer;
       font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;
       color:#fff;background:#16a34a;transition:transform .12s ease,background .2s ease}
-    ${P6} .dm-citofono-apri:active,${P6} .dm-citofono-apri-premuto{transform:scale(.94);background:#15803d}
-    @media(max-width:520px){${P6} .dm-citofono-elenco{grid-template-columns:1fr}}
+    ${P7} .dm-citofono-apri:active,${P7} .dm-citofono-apri-premuto{transform:scale(.94);background:#15803d}
+    @media(max-width:520px){${P7} .dm-citofono-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -30108,74 +30136,74 @@ function renderRifiuti() {
   schedule7();
 }
 function installStyles11() {
-  const P6 = `#${RIFIUTI_PAGE_ID}`;
+  const P7 = `#${RIFIUTI_PAGE_ID}`;
   installStyle(
     "dm-rifiuti-section-style",
     `
-    ${P6} .dm-rifiuti-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P6} .dm-rifiuti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-rifiuti-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P7} .dm-rifiuti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-rifiuti-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-rifiuti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-rifiuti-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-rifiuti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* Il prossimo ritiro: la risposta grande alla domanda della sera. */
-    ${P6} .dm-rifiuti-prossimo{
+    ${P7} .dm-rifiuti-prossimo{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-rifiuti-prossimo small{
+    ${P7} .dm-rifiuti-prossimo small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P6} .dm-rifiuti-prossimo strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P6} .dm-rifiuti-prossimo[data-quando="oggi"] strong{color:#dc2626}
-    ${P6} .dm-rifiuti-prossimo[data-quando="domani"] strong{color:#d97706}
-    ${P6} .dm-rifiuti-prossimo-data{font-size:13px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
-    ${P6} .dm-rifiuti-domani{
+    ${P7} .dm-rifiuti-prossimo strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P7} .dm-rifiuti-prossimo[data-quando="oggi"] strong{color:#dc2626}
+    ${P7} .dm-rifiuti-prossimo[data-quando="domani"] strong{color:#d97706}
+    ${P7} .dm-rifiuti-prossimo-data{font-size:13px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
+    ${P7} .dm-rifiuti-domani{
       display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;padding-top:10px;
       border-top:1px dashed var(--card-border,rgba(0,0,0,.14))}
-    ${P6} .dm-rifiuti-domani>small{
+    ${P7} .dm-rifiuti-domani>small{
       font-size:9.5px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;
       color:var(--text-dim,#94a3b8)}
-    ${P6} .dm-rifiuti-domani .dm-rifiuti-prossimo-bidoni{margin:0}
-    ${P6} .dm-rifiuti-prossimo-bidoni{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    ${P7} .dm-rifiuti-domani .dm-rifiuti-prossimo-bidoni{margin:0}
+    ${P7} .dm-rifiuti-prossimo-bidoni{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 
     /* Il bidone: una pillola col colore del bidone vero. */
-    ${P6} .dm-rifiuti-bidone{
+    ${P7} .dm-rifiuti-bidone{
       display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;
       background:color-mix(in srgb,var(--dm-bidone,#0ea5e9) 16%,transparent);
       border:1px solid color-mix(in srgb,var(--dm-bidone,#0ea5e9) 45%,transparent);
       font-size:12px;font-weight:900;color:var(--text,#0f172a)}
-    ${P6} .dm-rifiuti-bidone.grande{font-size:14px;padding:8px 16px 8px 10px}
+    ${P7} .dm-rifiuti-bidone.grande{font-size:14px;padding:8px 16px 8px 10px}
     /* Il disegno del bidone si porta dietro il suo pannello e il suo colore:
      * dietro non ci va ne' un tondo tinto ne' un'ombra, che raddoppierebbero. */
-    ${P6} .dm-rifiuti-bidone-ic{display:grid;place-items:center;width:28px;height:28px;flex:0 0 auto}
-    ${P6} .dm-rifiuti-bidone.grande .dm-rifiuti-bidone-ic{width:34px;height:34px}
-    ${P6} .dm-rifiuti-bidone-ic .dm-appliance-art,
-    ${P6} .dm-rifiuti-riga-ic .dm-appliance-art{display:block;line-height:0}
+    ${P7} .dm-rifiuti-bidone-ic{display:grid;place-items:center;width:28px;height:28px;flex:0 0 auto}
+    ${P7} .dm-rifiuti-bidone.grande .dm-rifiuti-bidone-ic{width:34px;height:34px}
+    ${P7} .dm-rifiuti-bidone-ic .dm-appliance-art,
+    ${P7} .dm-rifiuti-riga-ic .dm-appliance-art{display:block;line-height:0}
 
-    ${P6} .dm-rifiuti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
-    ${P6} .dm-rifiuti-riga{
+    ${P7} .dm-rifiuti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P7} .dm-rifiuti-riga{
       position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px 12px 18px;
       border-radius:16px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06));overflow:hidden}
-    ${P6} .dm-rifiuti-riga::before{
+    ${P7} .dm-rifiuti-riga::before{
       content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--dm-bidone,#0ea5e9)}
-    ${P6} .dm-rifiuti-riga-ic{display:grid;place-items:center;width:40px;height:40px;flex:0 0 auto}
-    ${P6} .dm-rifiuti-riga-testo{display:grid;gap:2px;min-width:0;flex:1 1 auto}
-    ${P6} .dm-rifiuti-riga-testo strong{
+    ${P7} .dm-rifiuti-riga-ic{display:grid;place-items:center;width:40px;height:40px;flex:0 0 auto}
+    ${P7} .dm-rifiuti-riga-testo{display:grid;gap:2px;min-width:0;flex:1 1 auto}
+    ${P7} .dm-rifiuti-riga-testo strong{
       font-size:13px;font-weight:900;color:var(--text,#0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    ${P6} .dm-rifiuti-riga-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
-    ${P6} .dm-rifiuti-riga-quando{
+    ${P7} .dm-rifiuti-riga-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
+    ${P7} .dm-rifiuti-riga-quando{
       flex:0 0 auto;font-size:12px;font-weight:900;padding:5px 10px;border-radius:999px;
       background:var(--surface-3,#f1f5f9);color:var(--text,#0f172a);white-space:nowrap}
-    ${P6} .dm-rifiuti-riga[data-quando="oggi"] .dm-rifiuti-riga-quando{background:#fee2e2;color:#b91c1c}
-    ${P6} .dm-rifiuti-riga[data-quando="domani"] .dm-rifiuti-riga-quando{background:#fef3c7;color:#b45309}
-    ${P6} .dm-rifiuti-riga[data-quando="mai"] .dm-rifiuti-riga-quando,
-    ${P6} .dm-rifiuti-riga[data-quando="passato"] .dm-rifiuti-riga-quando{color:var(--text-dim,#64748b);font-weight:700}
+    ${P7} .dm-rifiuti-riga[data-quando="oggi"] .dm-rifiuti-riga-quando{background:#fee2e2;color:#b91c1c}
+    ${P7} .dm-rifiuti-riga[data-quando="domani"] .dm-rifiuti-riga-quando{background:#fef3c7;color:#b45309}
+    ${P7} .dm-rifiuti-riga[data-quando="mai"] .dm-rifiuti-riga-quando,
+    ${P7} .dm-rifiuti-riga[data-quando="passato"] .dm-rifiuti-riga-quando{color:var(--text-dim,#64748b);font-weight:700}
 
     @media (max-width:640px){
-      ${P6} .dm-rifiuti-prossimo strong{font-size:26px}
-      ${P6} .dm-rifiuti-elenco{grid-template-columns:1fr}
+      ${P7} .dm-rifiuti-prossimo strong{font-size:26px}
+      ${P7} .dm-rifiuti-elenco{grid-template-columns:1fr}
     }
     `
   );
@@ -30269,8 +30297,8 @@ function inizioDelSecchiello(voce2) {
   return Number.isFinite(letto) ? letto : null;
 }
 function serieDelleMedieDiOgniOra(risposta, entity2) {
-  const elenco9 = risposta?.[pulito25(entity2)];
-  return (Array.isArray(elenco9) ? elenco9 : []).map((voce2) => ({ quando: inizioDelSecchiello(voce2), valore: numero22(voce2?.mean) })).filter((punto2) => punto2.quando !== null && punto2.valore !== null).map((punto2) => ({ quando: punto2.quando + H / 2, valore: punto2.valore })).sort((a, b) => a.quando - b.quando);
+  const elenco10 = risposta?.[pulito25(entity2)];
+  return (Array.isArray(elenco10) ? elenco10 : []).map((voce2) => ({ quando: inizioDelSecchiello(voce2), valore: numero22(voce2?.mean) })).filter((punto2) => punto2.quando !== null && punto2.valore !== null).map((punto2) => ({ quando: punto2.quando + H / 2, valore: punto2.valore })).sort((a, b) => a.quando - b.quando);
 }
 
 // src/core/l-acquario-di-casa.js
@@ -30582,12 +30610,12 @@ function manutenzioneDellaVasca(config, adesso) {
   return tipoValido(config?.specie) === "terrario" ? puliziaDelTerrario(config, adesso) : cambioDAcqua(config, adesso);
 }
 function comeStaLAcquario(letture2 = [], { serie: serie2 = {}, config = {}, adesso = 0 } = {}) {
-  const elenco9 = Array.isArray(letture2) ? letture2 : [];
-  const misure = elenco9.filter((lettura3) => MISURE2.includes(lettura3.genere)).map((lettura3) => ({
+  const elenco10 = Array.isArray(letture2) ? letture2 : [];
+  const misure = elenco10.filter((lettura3) => MISURE2.includes(lettura3.genere)).map((lettura3) => ({
     lettura: lettura3,
     verdetto: lettura3.muto ? "" : nellaForcella(lettura3.valore, lettura3.minimo, lettura3.massimo)
   }));
-  const livelli = elenco9.filter((lettura3) => lettura3.genere === "livello").map((lettura3) => {
+  const livelli = elenco10.filter((lettura3) => lettura3.genere === "livello").map((lettura3) => {
     const basso = !lettura3.muto && (lettura3.binario ? Boolean(lettura3.basso) : lettura3.soglia !== null && lettura3.valore < lettura3.soglia);
     return {
       lettura: lettura3,
@@ -30595,18 +30623,18 @@ function comeStaLAcquario(letture2 = [], { serie: serie2 = {}, config = {}, ades
       giorni: basso || lettura3.muto ? null : giorniAlRabbocco(serie2?.[lettura3.entity], lettura3)
     };
   });
-  const comandi = elenco9.filter((lettura3) => COMANDI.includes(lettura3.genere));
+  const comandi = elenco10.filter((lettura3) => COMANDI.includes(lettura3.genere));
   const fuori = misure.filter((voce2) => voce2.verdetto === "low" || voce2.verdetto === "high");
   const bassi = livelli.filter((voce2) => voce2.basso);
-  const mute = elenco9.filter((lettura3) => lettura3.muto);
+  const mute = elenco10.filter((lettura3) => lettura3.muto);
   const cambio = manutenzioneDellaVasca(config, adesso);
   const rabbocco = livelli.filter((voce2) => voce2.giorni !== null).sort((a, b) => a.giorni - b.giorni)[0] || null;
   let stato3 = "bene";
-  if (!elenco9.length) stato3 = "vuoto";
+  if (!elenco10.length) stato3 = "vuoto";
   else if (fuori.length) stato3 = "fuori";
   else if (bassi.length) stato3 = "livello";
   else if (cambio?.scaduto) stato3 = "cambio";
-  else if (mute.length === elenco9.length) stato3 = "mute";
+  else if (mute.length === elenco10.length) stato3 = "mute";
   return {
     tipo: tipoValido(config?.specie),
     vasca: nomeDellaVasca(config),
@@ -30960,10 +30988,10 @@ function normalizzaAnimale(input = {}, indice = 0) {
   return animale;
 }
 function normalizzaAnimali(input = []) {
-  const elenco9 = Array.isArray(input) ? input : input && typeof input === "object" ? [input] : [];
+  const elenco10 = Array.isArray(input) ? input : input && typeof input === "object" ? [input] : [];
   const visti = /* @__PURE__ */ new Set();
   const fuori = [];
-  for (const [indice, voce2] of elenco9.entries()) {
+  for (const [indice, voce2] of elenco10.entries()) {
     const animale = normalizzaAnimale(voce2, indice);
     let id = animale.id;
     let scarto = 2;
@@ -30988,12 +31016,12 @@ function acquarioDaTravasare(acquario) {
 }
 function travasaLAcquario(animali = [], acquario = {}) {
   if (!acquarioDaTravasare(acquario)) return null;
-  const elenco9 = Array.isArray(animali) ? animali : [];
+  const elenco10 = Array.isArray(animali) ? animali : [];
   const segnato = { ...acquario, travasato: true };
-  if (elenco9.some((voce3) => pulito27(voce3?.origine) === "cd_acquario"))
-    return { animali: elenco9, acquario: segnato };
-  if (elenco9.length >= MASSIMO_ANIMALI) return null;
-  const usati = new Set(elenco9.map((voce3) => pulito27(voce3?.id)));
+  if (elenco10.some((voce3) => pulito27(voce3?.origine) === "cd_acquario"))
+    return { animali: elenco10, acquario: segnato };
+  if (elenco10.length >= MASSIMO_ANIMALI) return null;
+  const usati = new Set(elenco10.map((voce3) => pulito27(voce3?.id)));
   let id = ID_DELL_ACQUARIO_TRAVASATO;
   for (let scarto = 2; usati.has(id); scarto += 1) id = `${ID_DELL_ACQUARIO_TRAVASATO}-${scarto}`;
   const voce2 = {
@@ -31005,7 +31033,7 @@ function travasaLAcquario(animali = [], acquario = {}) {
   };
   for (const campo5 of ["vasca", "litri", "ogni", "cambio"])
     if (pulito27(acquario[campo5])) voce2[campo5] = pulito27(acquario[campo5]);
-  return { animali: [...elenco9, voce2], acquario: segnato };
+  return { animali: [...elenco10, voce2], acquario: segnato };
 }
 function paroleDi(voce2, states) {
   const id = pulito27(voce2?.entity_id);
@@ -31026,14 +31054,14 @@ function classeDi3(voce2, states) {
   );
 }
 function proponiCaselle(entities = [], states = {}) {
-  const elenco9 = (Array.isArray(entities) ? entities : []).filter((voce2) => voce2 && !voce2.disabled && pulito27(voce2.entity_id).includes(".")).filter((voce2) => !["config", "diagnostic"].includes(minuscolo6(voce2.category)));
+  const elenco10 = (Array.isArray(entities) ? entities : []).filter((voce2) => voce2 && !voce2.disabled && pulito27(voce2.entity_id).includes(".")).filter((voce2) => !["config", "diagnostic"].includes(minuscolo6(voce2.category)));
   const tutte = (Array.isArray(entities) ? entities : []).filter(
     (voce2) => voce2 && !voce2.disabled && pulito27(voce2.entity_id).includes(".")
   );
   const presi = /* @__PURE__ */ new Set();
   const proposta = {};
   for (const campo5 of CAMPI) {
-    const scelta3 = elenco9.filter((voce2) => !presi.has(pulito27(voce2.entity_id))).filter((voce2) => campo5.domini.includes(dominioDi4(voce2))).filter((voce2) => !campo5.classe || classeDi3(voce2, states) === campo5.classe).filter((voce2) => {
+    const scelta3 = elenco10.filter((voce2) => !presi.has(pulito27(voce2.entity_id))).filter((voce2) => campo5.domini.includes(dominioDi4(voce2))).filter((voce2) => !campo5.classe || classeDi3(voce2, states) === campo5.classe).filter((voce2) => {
       const parole4 = paroleDi(voce2, states);
       if (!campo5.deve.test(parole4)) return false;
       if (campo5.poi && !campo5.poi.test(parole4)) return false;
@@ -31325,16 +31353,16 @@ function costruisci(ora3, riga3, principale) {
 }
 function orariDelProgramma(config = {}) {
   const principale = orarioNormalizzato({ ora: clean16(config.time) || ORARIO_PREDEFINITO }, true);
-  const elenco9 = principale ? [principale] : [];
+  const elenco10 = principale ? [principale] : [];
   const righe2 = Array.isArray(config.orari) ? config.orari : [];
   for (const riga3 of righe2) {
-    const orario = orarioNormalizzato(riga3);
-    if (orario && !elenco9.some((altro) => altro.ora === orario.ora)) elenco9.push(orario);
+    const orario2 = orarioNormalizzato(riga3);
+    if (orario2 && !elenco10.some((altro) => altro.ora === orario2.ora)) elenco10.push(orario2);
   }
-  return elenco9.sort((uno, altro) => minutiDelGiorno(uno.ora) - minutiDelGiorno(altro.ora));
+  return elenco10.sort((uno, altro) => minutiDelGiorno(uno.ora) - minutiDelGiorno(altro.ora));
 }
 function elencoDegliOrari(orari) {
-  return (Array.isArray(orari) ? orari : []).map((orario) => orario.ora);
+  return (Array.isArray(orari) ? orari : []).map((orario2) => orario2.ora);
 }
 function orarioDaAvviare({
   orari = [],
@@ -31346,18 +31374,18 @@ function orarioDaAvviare({
 } = {}) {
   const minutiAdesso2 = Number(adesso);
   if (!Number.isFinite(minutiAdesso2)) return null;
-  for (const orario of orari) {
-    const suo2 = minutiDelGiorno(orario.ora);
+  for (const orario2 of orari) {
+    const suo2 = minutiDelGiorno(orario2.ora);
     if (suo2 == null) continue;
-    if (corse2?.[orario.chiave] === giorno && giorno !== "") continue;
+    if (corse2?.[orario2.chiave] === giorno && giorno !== "") continue;
     if (minutiAdesso2 < suo2 || minutiAdesso2 > suo2 + finestra7) continue;
-    if (orario.seSottoA != null) {
+    if (orario2.seSottoA != null) {
       const lettura3 = percentuale2(umidita);
-      if (lettura3 == null) return { orario, esito: "senza-lettura" };
-      if (lettura3 >= orario.seSottoA) return { orario, esito: "terreno-bagnato", lettura: lettura3 };
-      return { orario, esito: "avvia", lettura: lettura3 };
+      if (lettura3 == null) return { orario: orario2, esito: "senza-lettura" };
+      if (lettura3 >= orario2.seSottoA) return { orario: orario2, esito: "terreno-bagnato", lettura: lettura3 };
+      return { orario: orario2, esito: "avvia", lettura: lettura3 };
     }
-    return { orario, esito: "avvia" };
+    return { orario: orario2, esito: "avvia" };
   }
   return null;
 }
@@ -31365,8 +31393,8 @@ function minutiAlProssimo(orari, adesso) {
   const minutiAdesso2 = Number(adesso);
   if (!Array.isArray(orari) || !orari.length || !Number.isFinite(minutiAdesso2)) return null;
   let migliore = null;
-  for (const orario of orari) {
-    const suo2 = minutiDelGiorno(orario.ora);
+  for (const orario2 of orari) {
+    const suo2 = minutiDelGiorno(orario2.ora);
     if (suo2 == null) continue;
     const attesa = suo2 >= minutiAdesso2 ? suo2 - minutiAdesso2 : suo2 + 1440 - minutiAdesso2;
     if (migliore == null || attesa < migliore) migliore = attesa;
@@ -31564,10 +31592,10 @@ function normalizzaLaMia(voce2) {
   };
 }
 function normalizzaLeMie(salvate) {
-  const elenco9 = Array.isArray(salvate) ? salvate : [];
+  const elenco10 = Array.isArray(salvate) ? salvate : [];
   const fuori = [];
   const gia = /* @__PURE__ */ new Set();
-  for (const voce2 of elenco9) {
+  for (const voce2 of elenco10) {
     if (fuori.length >= QUANTE_MIE) break;
     const mia = normalizzaLaMia(voce2);
     if (mia.entity) {
@@ -32216,7 +32244,7 @@ function nuovaPastiglia(pastiglia2) {
   return nodo2;
 }
 function vestiLaPastiglia(nodo2, pastiglia2) {
-  const { testa: testa2, coda, titolo: titolo2 } = paroleDellaPastiglia(pastiglia2);
+  const { testa: testa2, coda, titolo: titolo3 } = paroleDellaPastiglia(pastiglia2);
   const scrivi3 = (elemento, campo5, valore3) => {
     if (elemento && elemento[campo5] !== valore3) elemento[campo5] = valore3;
   };
@@ -32226,11 +32254,11 @@ function vestiLaPastiglia(nodo2, pastiglia2) {
   attributo2("data-tessera", pastiglia2.tessera || "");
   attributo2("data-dm-entita", pastiglia2.entity || "");
   attributo2("data-avviso", String(Boolean(pastiglia2.avviso)));
-  attributo2("title", titolo2);
-  attributo2("aria-label", titolo2);
-  const tinta = clean(pastiglia2.tinta);
-  if (tinta && nodo2.style.getPropertyValue("--dm-casa-tinta") !== tinta)
-    nodo2.style.setProperty("--dm-casa-tinta", tinta);
+  attributo2("title", titolo3);
+  attributo2("aria-label", titolo3);
+  const tinta2 = clean(pastiglia2.tinta);
+  if (tinta2 && nodo2.style.getPropertyValue("--dm-casa-tinta") !== tinta2)
+    nodo2.style.setProperty("--dm-casa-tinta", tinta2);
   const chip = nodo2.querySelector(".dm-casa-chip");
   const faccia = facciaDellaPastiglia(pastiglia2);
   if (chip && chip.innerHTML !== faccia) chip.innerHTML = faccia;
@@ -32431,22 +32459,22 @@ function disegnaLElenco() {
   if (!nodo2 || nodo2.hidden) return false;
   const pastiglia2 = pastigliaDiChiave(chiave2);
   const voci3 = vociDellaPastiglia(pastiglia2);
-  const titolo2 = nodo2.querySelector("[data-dm-casa-titolo]");
-  const elenco9 = nodo2.querySelector("[data-dm-casa-elenco]");
+  const titolo3 = nodo2.querySelector("[data-dm-casa-titolo]");
+  const elenco10 = nodo2.querySelector("[data-dm-casa-elenco]");
   const faccia = nodo2.querySelector("[data-dm-casa-faccia]");
   const sotto = nodo2.querySelector("[data-dm-casa-sotto]");
-  if (!titolo2 || !elenco9) return false;
+  if (!titolo3 || !elenco10) return false;
   if (faccia && pastiglia2) {
     const disegno5 = facciaDellaPastiglia(pastiglia2);
     if (faccia.innerHTML !== disegno5) faccia.innerHTML = disegno5;
   }
-  const tinta = clean(pastiglia2?.tinta) || "#0ea5e9";
+  const tinta2 = clean(pastiglia2?.tinta) || "#0ea5e9";
   const scheda8 = nodo2.querySelector("[data-dm-casa-scheda]");
-  if (scheda8 && scheda8.style.getPropertyValue("--dm-widget-accent") !== tinta)
-    scheda8.style.setProperty("--dm-widget-accent", tinta);
+  if (scheda8 && scheda8.style.getPropertyValue("--dm-widget-accent") !== tinta2)
+    scheda8.style.setProperty("--dm-widget-accent", tinta2);
   const { testa: testa2, coda } = pastiglia2 ? paroleDellaPastiglia(pastiglia2) : { testa: "", coda: t("niente di acceso", "nothing on") };
   const parole4 = `${testa2} ${coda}`.trim().toUpperCase();
-  if (titolo2.textContent !== parole4) titolo2.textContent = parole4;
+  if (titolo3.textContent !== parole4) titolo3.textContent = parole4;
   const states = allStates() || {};
   if (!voci3.length) {
     chiudiLElenco();
@@ -32457,7 +32485,7 @@ function disegnaLElenco() {
     if (sotto.textContent !== briciola) sotto.textContent = briciola;
   }
   const disegno4 = voci3.map((voce2) => rigaDellElenco(voce2, states, chiave2)).join("");
-  if (elenco9.innerHTML !== disegno4) elenco9.innerHTML = disegno4;
+  if (elenco10.innerHTML !== disegno4) elenco10.innerHTML = disegno4;
   return true;
 }
 function apriLElenco(chiave2) {
@@ -34548,11 +34576,11 @@ function scriviGliOrari(righe2) {
   schedule8();
 }
 function disegnaLeRighe(holder, righe2 = orariSalvati()) {
-  const elenco9 = holder.querySelector("[data-dm-irr-ore]");
-  if (!elenco9) return;
-  const presenti = elenco9.querySelectorAll("[data-dm-irr-ora]");
+  const elenco10 = holder.querySelector("[data-dm-irr-ore]");
+  if (!elenco10) return;
+  const presenti = elenco10.querySelectorAll("[data-dm-irr-ora]");
   if (presenti.length !== righe2.length) {
-    elenco9.innerHTML = righe2.map((riga3, indice) => rigaOrario(riga3, indice)).join("");
+    elenco10.innerHTML = righe2.map((riga3, indice) => rigaOrario(riga3, indice)).join("");
     return;
   }
   presenti.forEach((riga3, indice) => {
@@ -34754,14 +34782,14 @@ function corseDiOggi() {
   corse2[CHIAVE_PRINCIPALE] = clean(root.localStorage?.getItem?.(RUNTIME_RUN_KEY));
   return corse2;
 }
-function segnaLaCorsa(orario, giorno) {
+function segnaLaCorsa(orario2, giorno) {
   try {
-    if (orario.principale) {
+    if (orario2.principale) {
       root.localStorage?.setItem?.(RUNTIME_RUN_KEY, giorno);
       return;
     }
     const salvate = leggiLeCorse();
-    salvate[orario.chiave] = giorno;
+    salvate[orario2.chiave] = giorno;
     for (const chiave2 of Object.keys(salvate))
       if (salvate[chiave2] !== giorno) delete salvate[chiave2];
     root.localStorage?.setItem?.(ORARI_RUN_KEY, JSON.stringify(salvate));
@@ -34807,14 +34835,14 @@ function installDurationOwner() {
     root.cdIrrStopAll = conLoStop;
   }
 }
-function avviaLOrario(orario) {
-  state30.durataDaImporre = num2(orario.minuti);
+function avviaLOrario(orario2) {
+  state30.durataDaImporre = num2(orario2.minuti);
   try {
     root.cdIrrProgram?.(false);
   } finally {
     state30.durataDaImporre = null;
   }
-  segnaLaCorsa(orario, giornoDiOggi());
+  segnaLaCorsa(orario2, giornoDiOggi());
 }
 function guardaLOrologio() {
   try {
@@ -35329,27 +35357,27 @@ function nomeDellaTessera(viste2) {
   return parolaDelTipo(tipo);
 }
 function tesseraDellAcquario(viste2) {
-  const elenco9 = (Array.isArray(viste2) ? viste2 : viste2 ? [viste2] : []).filter(
+  const elenco10 = (Array.isArray(viste2) ? viste2 : viste2 ? [viste2] : []).filter(
     (vista2) => vista2?.letture?.length
   );
-  if (!elenco9.length) return null;
+  if (!elenco10.length) return null;
   const daFareIn = (vista2) => vista2.come.stato === "fuori" || vista2.come.stato === "livello" || vista2.come.stato === "cambio";
-  const daFare = elenco9.filter(daFareIn);
-  const soloTerrari = elenco9.every((vista2) => vista2.tipo === "terrario");
+  const daFare = elenco10.filter(daFareIn);
+  const soloTerrari = elenco10.every((vista2) => vista2.tipo === "terrario");
   const base = {
     key: TESSERA_DELLE_VASCHE,
     accent: daFare.length ? "#f59e0b" : soloTerrari ? "#16a34a" : "#0ea5e9",
     icon: soloTerrari ? "🦎" : "🐠",
-    label: nomeDellaTessera(elenco9),
+    label: nomeDellaTessera(elenco10),
     ring: null,
     attiva: daFare.length > 0,
     alert: daFare.length > 0,
     /* Per la frase della finestra: quante vasche, e quante vogliono qualcosa. */
-    vasche: elenco9.length,
+    vasche: elenco10.length,
     daGuardare: daFare.length
   };
-  if (elenco9.length === 1) {
-    const [{ come }] = elenco9;
+  if (elenco10.length === 1) {
+    const [{ come }] = elenco10;
     const testa2 = testaDellAcquario(come);
     const caldo = temperaturaDi(come);
     return {
@@ -35361,9 +35389,9 @@ function tesseraDellAcquario(viste2) {
   }
   return {
     ...base,
-    value: String(elenco9.length),
-    caption: daFare.length ? daFare.map((vista2) => `${nomeDellaVista(vista2)}: ${testaDellAcquario(vista2.come).grande.toLowerCase()}`).join(" · ") : elenco9.map(nomeDellaVista).join(" · "),
-    rows: elenco9.map((vista2) => {
+    value: String(elenco10.length),
+    caption: daFare.length ? daFare.map((vista2) => `${nomeDellaVista(vista2)}: ${testaDellAcquario(vista2.come).grande.toLowerCase()}`).join(" · ") : elenco10.map(nomeDellaVista).join(" · "),
+    rows: elenco10.map((vista2) => {
       const testa2 = testaDellAcquario(vista2.come);
       const prima = vista2.come.fuori[0]?.lettura || temperaturaDi(vista2.come) || vista2.letture[0];
       return {
@@ -35426,84 +35454,84 @@ function renderAcquario() {
   schedule9();
 }
 function installStyles13() {
-  const P6 = `#${VASCHE_PAGE_ID}`;
+  const P7 = `#${VASCHE_PAGE_ID}`;
   installStyle(
     "dm-acquario-section-style",
     `
     /* La risposta, come quella dei Varchi ma della misura di una scheda. */
-    ${P6} .dm-acq-testa{
+    ${P7} .dm-acq-testa{
       display:grid;gap:3px;padding:12px 14px;border-radius:16px;
       border:1px solid var(--card-border,#e2e8f0);
       background:color-mix(in srgb,var(--dm-acq-tinta,#16a34a) 8%,var(--card-bg,#fff))}
-    ${P6} .dm-acq-testa small{
+    ${P7} .dm-acq-testa small{
       font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P6} .dm-acq-testa strong{font-size:19px;font-weight:900;line-height:1.1;color:var(--dm-acq-tinta,#15803d)}
-    ${P6} .dm-acq-testa[data-stato="fuori"],
-    ${P6} .dm-acq-testa[data-stato="livello"],
-    ${P6} .dm-acq-testa[data-stato="cambio"]{--dm-acq-tinta:#b45309}
-    ${P6} .dm-acq-testa[data-stato="mute"]{--dm-acq-tinta:#64748b}
-    ${P6} .dm-acq-nomi{font-size:12.5px;font-weight:800;color:var(--text,#0f172a)}
-    ${P6} .dm-acq-sotto{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-acq-testa strong{font-size:19px;font-weight:900;line-height:1.1;color:var(--dm-acq-tinta,#15803d)}
+    ${P7} .dm-acq-testa[data-stato="fuori"],
+    ${P7} .dm-acq-testa[data-stato="livello"],
+    ${P7} .dm-acq-testa[data-stato="cambio"]{--dm-acq-tinta:#b45309}
+    ${P7} .dm-acq-testa[data-stato="mute"]{--dm-acq-tinta:#64748b}
+    ${P7} .dm-acq-nomi{font-size:12.5px;font-weight:800;color:var(--text,#0f172a)}
+    ${P7} .dm-acq-sotto{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
 
     /* Le mattonelle in una scheda stretta: due per riga, un po' più basse. */
-    ${P6} .dm-acq-mattonelle{grid-template-columns:repeat(auto-fill,minmax(min(132px,100%),1fr));gap:8px}
+    ${P7} .dm-acq-mattonelle{grid-template-columns:repeat(auto-fill,minmax(min(132px,100%),1fr));gap:8px}
     /* I posti si scrivono tutti: sul telefono i tasti della pagina prendono
        un'altra disposizione, e la mattonella si sfalsava. */
-    ${P6} .dm-acq-mattonelle .dm-pool-tile{display:grid;min-height:56px;padding:9px 10px;gap:1px 9px;
+    ${P7} .dm-acq-mattonelle .dm-pool-tile{display:grid;min-height:56px;padding:9px 10px;gap:1px 9px;
       grid-template-columns:36px minmax(0,1fr);grid-template-rows:auto auto;align-content:center;
       text-align:left;border-radius:15px}
-    ${P6} .dm-acq-mattonelle .dm-pool-tile-icon{grid-column:1;grid-row:1/3;width:36px;height:36px;border-radius:11px;font-size:17px}
+    ${P7} .dm-acq-mattonelle .dm-pool-tile-icon{grid-column:1;grid-row:1/3;width:36px;height:36px;border-radius:11px;font-size:17px}
     /* Il nome va a capo invece di finire in tre puntini: «Lampada calda» e
        «Luce del giorno» sono nomi, e mezzi non si capiscono. */
-    ${P6} .dm-acq-mattonelle .dm-pool-tile-label,
-    ${P6} .dm-acq-mattonelle .dm-pool-tile-state{justify-self:start;text-align:left}
-    ${P6} .dm-acq-mattonelle .dm-pool-tile-label{grid-column:2;grid-row:1;align-self:end;font-size:12.5px;line-height:1.15;
+    ${P7} .dm-acq-mattonelle .dm-pool-tile-label,
+    ${P7} .dm-acq-mattonelle .dm-pool-tile-state{justify-self:start;text-align:left}
+    ${P7} .dm-acq-mattonelle .dm-pool-tile-label{grid-column:2;grid-row:1;align-self:end;font-size:12.5px;line-height:1.15;
       overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;hyphens:auto}
-    ${P6} .dm-acq-mattonelle .dm-pool-tile-state{grid-column:2;grid-row:2;align-self:start;font-size:10.5px}
+    ${P7} .dm-acq-mattonelle .dm-pool-tile-state{grid-column:2;grid-row:2;align-self:start;font-size:10.5px}
     /* Chi è chiuso col lucchetto si vede, ma non si tocca. */
-    ${P6} .dm-pool-tile[aria-disabled="true"]{cursor:default}
-    ${P6} .dm-pool-tile[aria-disabled="true"]:hover{transform:none}
+    ${P7} .dm-pool-tile[aria-disabled="true"]{cursor:default}
+    ${P7} .dm-pool-tile[aria-disabled="true"]:hover{transform:none}
 
     /* I blocchi della scheda: le fasce delle schede degli animali. */
-    ${P6} .dm-acq-blocco{display:grid;gap:10px;padding:11px 12px;border:1px solid var(--divider-color,#dbe4ee);
+    ${P7} .dm-acq-blocco{display:grid;gap:10px;padding:11px 12px;border:1px solid var(--divider-color,#dbe4ee);
       border-radius:14px;background:color-mix(in srgb,var(--secondary-background-color,#eef3f8) 45%,transparent)}
-    ${P6} .dm-acq-blocco h4{display:flex;align-items:center;gap:6px;margin:0;font-size:10.5px;font-weight:900;
+    ${P7} .dm-acq-blocco h4{display:flex;align-items:center;gap:6px;margin:0;font-size:10.5px;font-weight:900;
       letter-spacing:.06em;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
-    ${P6} .dm-acq-blocco h4 .dm-pool-badge{margin-left:auto;font-size:10px;padding:3px 9px}
-    ${P6} .dm-acq-blocco .dm-gauge-value{font-size:17px}
+    ${P7} .dm-acq-blocco h4 .dm-pool-badge{margin-left:auto;font-size:10px;padding:3px 9px}
+    ${P7} .dm-acq-blocco .dm-gauge-value{font-size:17px}
 
     /* Il livello, come una riga delle Batterie. */
-    ${P6} .dm-acq-livello{
+    ${P7} .dm-acq-livello{
       display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;
       padding:9px 11px;border-radius:14px;
       border:1px solid color-mix(in srgb,var(--dm-acq,#10b981) 36%,transparent);
       background:color-mix(in srgb,var(--dm-acq,#10b981) 7%,var(--card-bg,#fff))}
-    ${P6} .dm-acq-livello[data-stato="basso"]{--dm-acq:#f59e0b}
-    ${P6} .dm-acq-livello[data-stato="muta"]{--dm-acq:#94a3b8;opacity:.72}
-    ${P6} .dm-acq-livello-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;
+    ${P7} .dm-acq-livello[data-stato="basso"]{--dm-acq:#f59e0b}
+    ${P7} .dm-acq-livello[data-stato="muta"]{--dm-acq:#94a3b8;opacity:.72}
+    ${P7} .dm-acq-livello-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;
       background:color-mix(in srgb,var(--dm-acq,#10b981) 18%,transparent)}
-    ${P6} .dm-acq-livello-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P6} .dm-acq-livello-ic svg{display:block;width:24px;height:24px}
-    ${P6} .dm-acq-livello-testo{display:grid;gap:3px;min-width:0}
-    ${P6} .dm-acq-livello-testo strong{font-size:13px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-acq-livello-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P7} .dm-acq-livello-ic svg{display:block;width:24px;height:24px}
+    ${P7} .dm-acq-livello-testo{display:grid;gap:3px;min-width:0}
+    ${P7} .dm-acq-livello-testo strong{font-size:13px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-acq-livello-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
-    ${P6} .dm-acq-livello-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
+    ${P7} .dm-acq-livello-testo small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-acq-livello-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-acq,#10b981) 18%,transparent);overflow:hidden}
-    ${P6} .dm-acq-livello-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-acq,#10b981)}
-    ${P6} .dm-acq-livello-stato{font-size:12.5px;font-weight:900;text-align:right;line-height:1.2;
+    ${P7} .dm-acq-livello-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-acq,#10b981)}
+    ${P7} .dm-acq-livello-stato{font-size:12.5px;font-weight:900;text-align:right;line-height:1.2;
       color:color-mix(in srgb,var(--dm-acq,#10b981) 78%,var(--text,#0f172a))}
 
     /* Il cambio d'acqua: un anello più piccolo, un tasto solo largo quanto la
        colonna; e quando è in ritardo l'anello si scalda come la risposta. */
-    ${P6} .dm-acq-cambio .dm-pool-filtration-body{gap:12px}
-    ${P6} .dm-acq-cambio .dm-ring{width:76px;height:76px}
-    ${P6} .dm-acq-cambio .dm-ring-core{width:58px;height:58px}
-    ${P6} .dm-acq-cambio .dm-ring-core b{font-size:18px}
-    ${P6} .dm-acq-cambio .dm-ring-core i{font-size:10px}
-    ${P6} .dm-acq-azioni{grid-template-columns:minmax(0,1fr)}
-    ${P6} .dm-acq-cambio[data-stato="scaduto"] .dm-ring{
+    ${P7} .dm-acq-cambio .dm-pool-filtration-body{gap:12px}
+    ${P7} .dm-acq-cambio .dm-ring{width:76px;height:76px}
+    ${P7} .dm-acq-cambio .dm-ring-core{width:58px;height:58px}
+    ${P7} .dm-acq-cambio .dm-ring-core b{font-size:18px}
+    ${P7} .dm-acq-cambio .dm-ring-core i{font-size:10px}
+    ${P7} .dm-acq-azioni{grid-template-columns:minmax(0,1fr)}
+    ${P7} .dm-acq-cambio[data-stato="scaduto"] .dm-ring{
       background:conic-gradient(from -90deg,#f59e0b 0 calc(var(--pct,0) * 1%),var(--surface-3,#e2e8f0) 0)}
     `
   );
@@ -36372,12 +36400,12 @@ function inizioDelSecchiello2(voce2) {
   return Number.isFinite(letto) ? letto : null;
 }
 function secchielli(risposta, entity2) {
-  const elenco9 = risposta?.[pulito29(entity2)];
-  return (Array.isArray(elenco9) ? elenco9 : []).map((voce2) => ({ quando: inizioDelSecchiello2(voce2), voce: voce2 })).filter((voce2) => voce2.quando !== null).sort((a, b) => a.quando - b.quando);
+  const elenco10 = risposta?.[pulito29(entity2)];
+  return (Array.isArray(elenco10) ? elenco10 : []).map((voce2) => ({ quando: inizioDelSecchiello2(voce2), voce: voce2 })).filter((voce2) => voce2.quando !== null).sort((a, b) => a.quando - b.quando);
 }
 function consumiDallaRisposta(risposta, entity2, adesso) {
-  const elenco9 = secchielli(risposta, entity2);
-  if (!elenco9.length) return { oggi: null, ieri: null, mese: null, meseScorso: null };
+  const elenco10 = secchielli(risposta, entity2);
+  if (!elenco10.length) return { oggi: null, ieri: null, mese: null, meseScorso: null };
   const oggi = chiaveDelGiorno2(adesso);
   const ieri = chiaveDelGiorno2(mezzanotte2(adesso) - GIORNO_MS3 / 2);
   const mese = chiaveDelMese(adesso);
@@ -36386,7 +36414,7 @@ function consumiDallaRisposta(risposta, entity2, adesso) {
   const aggiungi4 = (dove, valore3) => {
     somme[dove] = (somme[dove] ?? 0) + valore3;
   };
-  for (const { quando: quando4, voce: voce2 } of elenco9) {
+  for (const { quando: quando4, voce: voce2 } of elenco10) {
     const cambio = numero28(voce2.change);
     if (cambio === null) continue;
     const meta = quando4 + GIORNO_MS3 / 2;
@@ -36462,9 +36490,9 @@ function giudizioDellaPerdita(scorre, { adesso, ore = ORE_PRIMA_DELLA_PERDITA } 
   return { perdita: durata4 >= soglia2, ore: durata4, certo: scorre.certo !== false };
 }
 function nessunaOraFerma(ore) {
-  const elenco9 = (Array.isArray(ore) ? ore : []).map(numero28);
-  if (elenco9.length < 24) return false;
-  return elenco9.slice(-24).every((consumo) => consumo !== null && consumo > 0);
+  const elenco10 = (Array.isArray(ore) ? ore : []).map(numero28);
+  if (elenco10.length < 24) return false;
+  return elenco10.slice(-24).every((consumo) => consumo !== null && consumo > 0);
 }
 var SALE_DA_RICOMPRARE = 10;
 function giorniDiSale(serie2, { soglia: soglia2 = SALE_DA_RICOMPRARE } = {}) {
@@ -36551,10 +36579,10 @@ function storiaConAdesso(storia, lettura3) {
   return righe2;
 }
 function comeStannoIContatori(letture2 = [], dati = {}, { adesso = 0, qualcunoInCasa: qualcunoInCasa2 = null } = {}) {
-  const elenco9 = Array.isArray(letture2) ? letture2 : [];
-  const acqua = consumiDelGenere(elenco9, dati?.consumi, "acqua");
-  const gas = consumiDelGenere(elenco9, dati?.consumi, "gas");
-  const pressioni = elenco9.filter((lettura3) => lettura3.genere === "pressione").map((lettura3) => {
+  const elenco10 = Array.isArray(letture2) ? letture2 : [];
+  const acqua = consumiDelGenere(elenco10, dati?.consumi, "acqua");
+  const gas = consumiDelGenere(elenco10, dati?.consumi, "gas");
+  const pressioni = elenco10.filter((lettura3) => lettura3.genere === "pressione").map((lettura3) => {
     const minimo = lettura3.minimo ?? FORCELLA_DELLA_PRESSIONE.minimo;
     const massimo = lettura3.massimo ?? FORCELLA_DELLA_PRESSIONE.massimo;
     return {
@@ -36565,13 +36593,13 @@ function comeStannoIContatori(letture2 = [], dati = {}, { adesso = 0, qualcunoIn
       verdetto: giudizioDellaPressione(lettura3.bar, { minimo, massimo })
     };
   });
-  const portate = elenco9.filter((lettura3) => lettura3.genere === "portata").map((lettura3) => {
+  const portate = elenco10.filter((lettura3) => lettura3.genere === "portata").map((lettura3) => {
     const storia = dati?.portata?.[lettura3.entity];
     if (!storia || lettura3.muto) return { lettura: lettura3, scorre: void 0, perdita: null };
     const scorre = scorreDa(storiaConAdesso(storia, lettura3), { adesso, da: storia.da });
     return { lettura: lettura3, scorre, perdita: giudizioDellaPerdita(scorre, { adesso }) };
   });
-  const sali = elenco9.filter((lettura3) => lettura3.genere === "sale").map((lettura3) => ({ lettura: lettura3, ...comeStaIlSale(lettura3, dati?.sale?.[lettura3.entity]) }));
+  const sali = elenco10.filter((lettura3) => lettura3.genere === "sale").map((lettura3) => ({ lettura: lettura3, ...comeStaIlSale(lettura3, dati?.sale?.[lettura3.entity]) }));
   let perdita = null;
   const dallaPortata = portate.find((voce2) => voce2.perdita?.perdita);
   if (dallaPortata)
@@ -37019,11 +37047,11 @@ function forcellaDellaPressione(voce2) {
     forchetta: `${t("ideale", "ideal")} ${forcellaInParole(minimo, massimo)}`
   });
 }
-function schedaMarkup5(chiave2, disegno4, titolo2, dentro3) {
+function schedaMarkup5(chiave2, disegno4, titolo3, dentro3) {
   if (!dentro3) return "";
   return `<article class="dm-cont-scheda" data-dm-cont-scheda="${esc(chiave2)}">
     <div class="dm-cont-scheda-testa">
-      <span class="dm-cont-scheda-titolo"><i aria-hidden="true">${disegnoDiCasa(disegno4, { misura: 22 })}</i>${esc(titolo2)}</span>
+      <span class="dm-cont-scheda-titolo"><i aria-hidden="true">${disegnoDiCasa(disegno4, { misura: 22 })}</i>${esc(titolo3)}</span>
     </div>
     ${dentro3}
   </article>`;
@@ -37293,99 +37321,99 @@ function renderContatori() {
   schedule11();
 }
 function installStyles15() {
-  const P6 = `#${CONTATORI_PAGE_ID}`;
+  const P7 = `#${CONTATORI_PAGE_ID}`;
   installStyle(
     "dm-contatori-section-style",
     `
-    ${P6} .dm-cont-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P6} .dm-cont-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-cont-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P7} .dm-cont-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-cont-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-cont-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-cont-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-cont-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande, come quella dei Varchi. */
-    ${P6} .dm-cont-testa{
+    ${P7} .dm-cont-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-cont-testa small{
+    ${P7} .dm-cont-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P6} .dm-cont-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P6} .dm-cont-testa[data-stato="perdita"] strong{color:#dc2626}
-    ${P6} .dm-cont-testa[data-stato="pressione"] strong{color:#b45309}
-    ${P6} .dm-cont-testa[data-stato="bene"] strong{color:#15803d}
-    ${P6} .dm-cont-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P6} .dm-cont-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-cont-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P7} .dm-cont-testa[data-stato="perdita"] strong{color:#dc2626}
+    ${P7} .dm-cont-testa[data-stato="pressione"] strong{color:#b45309}
+    ${P7} .dm-cont-testa[data-stato="bene"] strong{color:#15803d}
+    ${P7} .dm-cont-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P7} .dm-cont-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
     /* Le schede, come quelle della Piscina. */
-    ${P6} .dm-cont-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
-    ${P6} .dm-cont-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
+    ${P7} .dm-cont-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
+    ${P7} .dm-cont-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
       border:1px solid var(--card-border,#dbe4ee);border-radius:22px;background:var(--card-bg,#fff);
       box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07))}
-    ${P6} .dm-cont-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    ${P6} .dm-cont-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
-    ${P6} .dm-cont-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
-    ${P6} .dm-cont-scheda-titolo svg{display:block;width:22px;height:22px}
-    ${P6} .dm-cont-forcelle{display:grid;gap:14px}
-    ${P6} .dm-cont-righe{display:grid;gap:10px}
+    ${P7} .dm-cont-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    ${P7} .dm-cont-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
+    ${P7} .dm-cont-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
+    ${P7} .dm-cont-scheda-titolo svg{display:block;width:22px;height:22px}
+    ${P7} .dm-cont-forcelle{display:grid;gap:14px}
+    ${P7} .dm-cont-righe{display:grid;gap:10px}
 
     /* Le righe, come quelle delle Batterie, con la didascalia sotto la barra. */
-    ${P6} .dm-cont-riga{
+    ${P7} .dm-cont-riga{
       --dm-cont:#10b981;
       display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:12px 14px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-cont) 34%,var(--card-border,rgba(0,0,0,.08)));
       background:var(--card-bg,#fff)}
-    ${P6} .dm-cont-riga[data-stato="attenzione"]{--dm-cont:#f59e0b}
-    ${P6} .dm-cont-riga[data-stato="allarme"]{--dm-cont:#dc2626}
-    ${P6} .dm-cont-riga[data-stato="muto"]{--dm-cont:#94a3b8;opacity:.72}
-    ${P6} .dm-cont-riga-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P6} .dm-cont-riga-ic svg{display:block;width:26px;height:26px}
-    ${P6} .dm-cont-riga-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
+    ${P7} .dm-cont-riga[data-stato="attenzione"]{--dm-cont:#f59e0b}
+    ${P7} .dm-cont-riga[data-stato="allarme"]{--dm-cont:#dc2626}
+    ${P7} .dm-cont-riga[data-stato="muto"]{--dm-cont:#94a3b8;opacity:.72}
+    ${P7} .dm-cont-riga-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P7} .dm-cont-riga-ic svg{display:block;width:26px;height:26px}
+    ${P7} .dm-cont-riga-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
       font-size:19px;background:color-mix(in srgb,var(--dm-cont) 20%,transparent)}
-    ${P6} .dm-cont-riga-testo{display:grid;gap:3px;min-width:0}
-    ${P6} .dm-cont-riga-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-cont-riga-testo{display:grid;gap:3px;min-width:0}
+    ${P7} .dm-cont-riga-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     /* La didascalia va a capo invece di tagliarsi: «Il mese scorso 118 …»
        toglieva proprio il numero con cui ci si confronta. */
-    ${P6} .dm-cont-riga-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
+    ${P7} .dm-cont-riga-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
       color:var(--text-dim,#64748b);overflow-wrap:anywhere}
-    ${P6} .dm-cont-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
+    ${P7} .dm-cont-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-cont) 16%,transparent);overflow:hidden}
-    ${P6} .dm-cont-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-cont)}
-    ${P6} .dm-cont-riga-valore{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
+    ${P7} .dm-cont-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-cont)}
+    ${P7} .dm-cont-riga-valore{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
       text-align:right;color:color-mix(in srgb,var(--dm-cont) 78%,var(--text,#0f172a))}
 
     /* Il semaforo, come le carte dei Varchi. */
-    ${P6} .dm-cont-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
-    ${P6} .dm-cont-voce{
+    ${P7} .dm-cont-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P7} .dm-cont-voce{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-cont,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-cont,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P6} .dm-cont-voce[data-stato="allarme"]{--dm-cont:#dc2626}
-    ${P6} .dm-cont-voce[data-stato="attenzione"]{--dm-cont:#f59e0b}
-    ${P6} .dm-cont-voce[data-stato="bene"]{--dm-cont:#16a34a}
-    ${P6} .dm-cont-voce[data-stato="muto"]{--dm-cont:#94a3b8}
-    ${P6} .dm-cont-voce-ic{
+    ${P7} .dm-cont-voce[data-stato="allarme"]{--dm-cont:#dc2626}
+    ${P7} .dm-cont-voce[data-stato="attenzione"]{--dm-cont:#f59e0b}
+    ${P7} .dm-cont-voce[data-stato="bene"]{--dm-cont:#16a34a}
+    ${P7} .dm-cont-voce[data-stato="muto"]{--dm-cont:#94a3b8}
+    ${P7} .dm-cont-voce-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-cont,#94a3b8) 22%,transparent)}
-    ${P6} .dm-cont-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P6} .dm-cont-voce-ic svg{display:block;width:30px;height:30px}
-    ${P6} .dm-cont-voce-testo{display:grid;gap:2px;min-width:0}
-    ${P6} .dm-cont-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-cont-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P7} .dm-cont-voce-ic svg{display:block;width:30px;height:30px}
+    ${P7} .dm-cont-voce-testo{display:grid;gap:2px;min-width:0}
+    ${P7} .dm-cont-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
       overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
-    ${P6} .dm-cont-voce-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P7} .dm-cont-voce-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-cont-voce-stato{
+    ${P7} .dm-cont-voce-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       max-width:96px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-cont,#94a3b8) 78%,var(--text,#0f172a))}
 
     @media(max-width:520px){
-      ${P6} .dm-cont-elenco,${P6} .dm-cont-schede{grid-template-columns:minmax(0,1fr)}}
+      ${P7} .dm-cont-elenco,${P7} .dm-cont-schede{grid-template-columns:minmax(0,1fr)}}
     `
   );
 }
@@ -37541,8 +37569,8 @@ function domandaDellePrevisioni(entita3, tipo = "hourly") {
   };
 }
 function previsioniDallaRisposta(risposta, entita3) {
-  const elenco9 = risposta?.response?.[pulito30(entita3)]?.forecast;
-  return Array.isArray(elenco9) ? elenco9 : [];
+  const elenco10 = risposta?.response?.[pulito30(entita3)]?.forecast;
+  return Array.isArray(elenco10) ? elenco10 : [];
 }
 var PROBABILITA_CHE_CONTA = 40;
 function pioggiaInArrivo(previsioni, { adesso, ore = ORE_DI_PIOGGIA, unita: unita2 = "mm" } = {}) {
@@ -38254,19 +38282,19 @@ function misureInPiu(riquadro) {
 var CLASSE_DEL_TITOLO = "dm-testata-titolo";
 function titoloDelMeteo(riga3, acceso6) {
   const pagina2 = riga3.parentElement;
-  let titolo2 = pagina2?.querySelector(`:scope > .${CLASSE_DEL_TITOLO}`) || null;
+  let titolo3 = pagina2?.querySelector(`:scope > .${CLASSE_DEL_TITOLO}`) || null;
   if (!acceso6) {
-    titolo2?.remove();
+    titolo3?.remove();
     return;
   }
-  if (!titolo2) {
-    titolo2 = doc.createElement("h3");
-    titolo2.className = `section-title ${CLASSE_DEL_TITOLO}`;
-    riga3.before(titolo2);
+  if (!titolo3) {
+    titolo3 = doc.createElement("h3");
+    titolo3.className = `section-title ${CLASSE_DEL_TITOLO}`;
+    riga3.before(titolo3);
   }
   const testo2 = t("Meteo", "Weather");
-  if (titolo2.textContent !== testo2) titolo2.textContent = testo2;
-  if (titolo2.nextElementSibling !== riga3) riga3.before(titolo2);
+  if (titolo3.textContent !== testo2) titolo3.textContent = testo2;
+  if (titolo3.nextElementSibling !== riga3) riga3.before(titolo3);
 }
 function vestiLaCard() {
   const riga3 = doc?.querySelector?.(".dm-testata-riga");
@@ -38840,73 +38868,73 @@ function renderPiante() {
   schedule12();
 }
 function installStyles16() {
-  const P6 = `#${PIANTE_PAGE_ID}`;
+  const P7 = `#${PIANTE_PAGE_ID}`;
   installStyle(
     "dm-piante-section-style",
     `
-    ${P6} .dm-pian-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P6} .dm-pian-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-pian-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P7} .dm-pian-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-pian-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-pian-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-pian-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-pian-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande, come quella dei Varchi. */
-    ${P6} .dm-pian-testa{
+    ${P7} .dm-pian-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-pian-testa small{
+    ${P7} .dm-pian-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P6} .dm-pian-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P6} .dm-pian-testa[data-stato="sete"] strong{color:#dc2626}
-    ${P6} .dm-pian-testa[data-stato="pioggia"] strong{color:#2563eb}
-    ${P6} .dm-pian-testa[data-stato="bene"] strong{color:#15803d}
-    ${P6} .dm-pian-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P6} .dm-pian-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-pian-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P7} .dm-pian-testa[data-stato="sete"] strong{color:#dc2626}
+    ${P7} .dm-pian-testa[data-stato="pioggia"] strong{color:#2563eb}
+    ${P7} .dm-pian-testa[data-stato="bene"] strong{color:#15803d}
+    ${P7} .dm-pian-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P7} .dm-pian-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
     /* Il semaforo, come le carte dei Varchi. */
-    ${P6} .dm-pian-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
-    ${P6} .dm-pian-voce{
+    ${P7} .dm-pian-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P7} .dm-pian-voce{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-pian,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-pian,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P6} .dm-pian-voce[data-stato="asciutta"]{--dm-pian:#dc2626}
-    ${P6} .dm-pian-voce[data-stato="bene"],${P6} .dm-pian-voce[data-stato="aspetta"]{--dm-pian:#16a34a}
-    ${P6} .dm-pian-voce[data-stato="muta"]{--dm-pian:#94a3b8}
+    ${P7} .dm-pian-voce[data-stato="asciutta"]{--dm-pian:#dc2626}
+    ${P7} .dm-pian-voce[data-stato="bene"],${P7} .dm-pian-voce[data-stato="aspetta"]{--dm-pian:#16a34a}
+    ${P7} .dm-pian-voce[data-stato="muta"]{--dm-pian:#94a3b8}
     /* Chi aspetta la pioggia lo dice anche da lontano: il tratteggio del varco
        escluso vuol dire «a posto, ma per una ragione». */
-    ${P6} .dm-pian-voce[data-stato="aspetta"]{border-style:dashed;border-color:#f59e0b}
-    ${P6} .dm-pian-voce-ic{
+    ${P7} .dm-pian-voce[data-stato="aspetta"]{border-style:dashed;border-color:#f59e0b}
+    ${P7} .dm-pian-voce-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-pian,#94a3b8) 22%,transparent)}
-    ${P6} .dm-pian-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P6} .dm-pian-voce-ic svg{display:block;width:30px;height:30px}
-    ${P6} .dm-pian-voce-testo{display:grid;gap:2px;min-width:0}
-    ${P6} .dm-pian-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-pian-voce-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P7} .dm-pian-voce-ic svg{display:block;width:30px;height:30px}
+    ${P7} .dm-pian-voce-testo{display:grid;gap:2px;min-width:0}
+    ${P7} .dm-pian-voce-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
       overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
-    ${P6} .dm-pian-voce-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
+    ${P7} .dm-pian-voce-testo small{font-size:10.5px;font-weight:700;line-height:1.3;
       color:var(--text-dim,#64748b);overflow-wrap:anywhere}
-    ${P6} .dm-pian-voce-stato{
+    ${P7} .dm-pian-voce-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       max-width:96px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-pian,#94a3b8) 78%,var(--text,#0f172a))}
 
     /* Le schede, come quelle della Piscina. */
-    ${P6} .dm-pian-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
-    ${P6} .dm-pian-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
+    ${P7} .dm-pian-schede{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(298px,100%),1fr));gap:12px;align-items:start}
+    ${P7} .dm-pian-scheda{box-sizing:border-box;display:grid;gap:12px;padding:16px;
       border:1px solid var(--card-border,#dbe4ee);border-radius:22px;background:var(--card-bg,#fff);
       box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07))}
-    ${P6} .dm-pian-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    ${P6} .dm-pian-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
-    ${P6} .dm-pian-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
-    ${P6} .dm-pian-scheda-titolo svg{display:block;width:22px;height:22px}
-    ${P6} .dm-pian-forcelle{display:grid;gap:14px}
+    ${P7} .dm-pian-scheda-testa{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    ${P7} .dm-pian-scheda-titolo{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:14px;font-weight:900}
+    ${P7} .dm-pian-scheda-titolo i{font-style:normal;display:grid;place-items:center;line-height:0}
+    ${P7} .dm-pian-scheda-titolo svg{display:block;width:22px;height:22px}
+    ${P7} .dm-pian-forcelle{display:grid;gap:14px}
 
     @media(max-width:520px){
-      ${P6} .dm-pian-elenco,${P6} .dm-pian-schede{grid-template-columns:minmax(0,1fr)}}
+      ${P7} .dm-pian-elenco,${P7} .dm-pian-schede{grid-template-columns:minmax(0,1fr)}}
     `
   );
 }
@@ -39544,11 +39572,11 @@ function celleMarkup(pacco) {
   const barre = pacco.celle.map((cella) => {
     const tipo = cella.volt === null ? "muta" : cella === pacco.minima ? "min" : cella === pacco.massima ? "max" : "";
     const altezza = cella.volt === null ? 0 : Math.max(8, (cella.volt - basso) / campo5 * 100);
-    const titolo2 = cella.volt === null ? t(`Cella ${cella.numero} · non risponde`, `Cell ${cella.numero} · not answering`) : t(
+    const titolo3 = cella.volt === null ? t(`Cella ${cella.numero} · non risponde`, `Cell ${cella.numero} · not answering`) : t(
       `Cella ${cella.numero} · ${cifre(cella.volt, 3)} V`,
       `Cell ${cella.numero} · ${cifre(cella.volt, 3)} V`
     );
-    return `<span class="dm-accu-cella" data-tipo="${tipo}" title="${esc(titolo2)}"><i style="height:${altezza.toFixed(0)}%"></i><em>${cella.numero}</em></span>`;
+    return `<span class="dm-accu-cella" data-tipo="${tipo}" title="${esc(titolo3)}"><i style="height:${altezza.toFixed(0)}%"></i><em>${cella.numero}</em></span>`;
   }).join("");
   const media2 = pacco.media === null ? "" : `${cifre(pacco.media, 3)}${SPAZIO4}V`;
   return `<div class="dm-accu-sez">${esc(t("Celle", "Cells"))} <small>${esc(
@@ -39730,8 +39758,8 @@ function ilComandoPerSuonare(entity2, voce2, come = "subito") {
   if (come === "coda") dati.enqueue = "add";
   return { domain: "media_player", service: "play_media", data: dati };
 }
-function ilFiloDallaRadice(titolo2 = "") {
-  return [{ id: "", tipo: "", titolo: pulito32(titolo2) }];
+function ilFiloDallaRadice(titolo3 = "") {
+  return [{ id: "", tipo: "", titolo: pulito32(titolo3) }];
 }
 function ilFiloDopo(filo, voce2) {
   const passi = Array.isArray(filo) ? filo : [];
@@ -40082,11 +40110,11 @@ function tastoDelTelecomando(riga3, tasto2) {
 function telecomandoMarkup(riga3) {
   const tasti = new Set(tastiDelTelecomando(riga3?.telecomando));
   if (!tasti.size) return "";
-  const quali = (elenco9) => elenco9.filter((tasto2) => tasti.has(tasto2));
+  const quali = (elenco10) => elenco10.filter((tasto2) => tasti.has(tasto2));
   const croce = quali(["su", "sinistra", "ok", "destra", "giu"]);
   const navigare = quali(["indietro", "home", "menu"]);
   const canali = quali(["canale_meno", "canale_piu"]);
-  const tutti = (elenco9) => elenco9.map((tasto2) => tastoDelTelecomando(riga3, tasto2)).join("");
+  const tutti = (elenco10) => elenco10.map((tasto2) => tastoDelTelecomando(riga3, tasto2)).join("");
   return `<div class="dm-mp-tele" data-dm-mp-tele="${esc(riga3.entity)}">
     ${croce.length ? `<div class="dm-mp-croce">${tutti(croce)}</div>` : ""}
     ${navigare.length || canali.length ? `<div class="dm-mp-tele-fila">${tutti(navigare)}${canali.length ? `<span class="dm-mp-tele-canali">${tutti(canali)}</span>` : ""}</div>` : ""}
@@ -41163,8 +41191,8 @@ function istanteMs(valore3) {
   return Number.isFinite(letto) ? letto : null;
 }
 function righeDalleStatistiche(risposta, entity2) {
-  const elenco9 = Array.isArray(risposta?.[entity2]) ? risposta[entity2] : [];
-  return elenco9.map((voce2) => {
+  const elenco10 = Array.isArray(risposta?.[entity2]) ? risposta[entity2] : [];
+  return elenco10.map((voce2) => {
     const valore3 = numero33(voce2?.mean) ?? numero33(voce2?.state);
     const quando4 = istanteMs(voce2?.start);
     if (valore3 === null || quando4 === null) return null;
@@ -41987,8 +42015,8 @@ function cosaMancaPerArieggiare({
 function stanzaDiUnaFinestra(cover, stanze3 = []) {
   const cercato = String(cover?.room_id ?? cover?.roomId ?? cover?.room ?? "").trim();
   if (!cercato) return null;
-  const elenco9 = Array.isArray(stanze3) ? stanze3 : [];
-  return elenco9.find(
+  const elenco10 = Array.isArray(stanze3) ? stanze3 : [];
+  return elenco10.find(
     (stanza2) => String(stanza2?.id ?? "").trim() === cercato || String(stanza2?.name ?? "").trim() === cercato
   ) || null;
 }
@@ -42301,7 +42329,7 @@ function qualeCartuccia(nome) {
 }
 var COLORE_SENZA_TINTA = "#0ea5e9";
 var TINTE_DELLE_CARTUCCE = Object.freeze(
-  CARTUCCE.map(([tinta, , colore]) => Object.freeze({ tinta, colore }))
+  CARTUCCE.map(([tinta2, , colore]) => Object.freeze({ tinta: tinta2, colore }))
 );
 function tintaDellaCartuccia(nome) {
   return qualeCartuccia(nome)?.[0] || "altra";
@@ -42434,19 +42462,19 @@ function lettureDelleStampanti(stored, states = {}, resolve) {
   return normalizzaStampanti(stored).map((voce2) => letturaDellaStampante(voce2, states, resolve));
 }
 function riassuntoDelleStampanti(letture2 = []) {
-  const elenco9 = Array.isArray(letture2) ? letture2 : [];
-  const ferme = elenco9.filter((voce2) => voce2.ferma);
-  const sgoccioli = elenco9.filter((voce2) => voce2.piuScarica?.agliSgoccioli);
-  const stampano = elenco9.filter((voce2) => voce2.stampa);
-  const mute = elenco9.filter((voce2) => voce2.muta);
+  const elenco10 = Array.isArray(letture2) ? letture2 : [];
+  const ferme = elenco10.filter((voce2) => voce2.ferma);
+  const sgoccioli = elenco10.filter((voce2) => voce2.piuScarica?.agliSgoccioli);
+  const stampano = elenco10.filter((voce2) => voce2.stampa);
+  const mute = elenco10.filter((voce2) => voce2.muta);
   return {
-    quante: elenco9.length,
+    quante: elenco10.length,
     ferme,
     sgoccioli,
     stampano,
     mute,
     /* Il verdetto in una parola: e' quello che colora la tessera. */
-    verdetto: ferme.length ? "ferma" : sgoccioli.length ? "inchiostro" : stampano.length ? "stampa" : mute.length === elenco9.length && elenco9.length ? "muta" : "pronta"
+    verdetto: ferme.length ? "ferma" : sgoccioli.length ? "inchiostro" : stampano.length ? "stampa" : mute.length === elenco10.length && elenco10.length ? "muta" : "pronta"
   };
 }
 function stampantiConfigurate(stored) {
@@ -43049,8 +43077,8 @@ function integrationsWithDevices(catalog = {}) {
   const per = /* @__PURE__ */ new Map();
   for (const device of devices3)
     for (const dominio4 of domini(device)) {
-      const elenco9 = per.get(dominio4);
-      if (elenco9) elenco9.push(device);
+      const elenco10 = per.get(dominio4);
+      if (elenco10) elenco10.push(device);
       else per.set(dominio4, [device]);
     }
   return (catalog.integrations || []).map((integration) => ({
@@ -43364,13 +43392,13 @@ function anteprimaEntita(entities) {
 function anteprimaFuori(fuori) {
   const voci3 = Object.values(fuori);
   if (!voci3.length) return "";
-  const elenco9 = voci3.map((record2) => `<code>${esc(record2.entity_id)}</code>`).join('<span aria-hidden="true"> · </span>');
+  const elenco10 = voci3.map((record2) => `<code>${esc(record2.entity_id)}</code>`).join('<span aria-hidden="true"> · </span>');
   return `<label class="dm-integ-fuori">
     <input type="checkbox" data-outside checked>
     <span>
       <b>${voci3.length === 1 ? t("Prendi anche 1 sensore che sta fuori dal dispositivo", "Also take 1 sensor that lives outside the device") : t(`Prendi anche ${voci3.length} sensori che stanno fuori dal dispositivo`, `Also take ${voci3.length} sensors that live outside the device`)}</b>
       <small>${t("Portano il nome di questo apparecchio ma appartengono a un'altra voce del registro: quasi sempre la presa smart sotto la macchina, o un sensore che ti sei costruito.", "They carry this appliance's name but belong to another registry entry: almost always the smart plug under the machine, or a sensor you built yourself.")}</small>
-      <small class="dm-integ-fuori-ids">${elenco9}</small>
+      <small class="dm-integ-fuori-ids">${elenco10}</small>
     </span>
   </label>`;
 }
@@ -43401,7 +43429,7 @@ function anteprimaElettrodomestico({ device, entities, integration }) {
 }
 function apriMenuIntegrazioni({
   onScelto,
-  titolo: titolo2 = "",
+  titolo: titolo3 = "",
   intro = "",
   anteprima: disegnaAnteprima = anteprimaElettrodomestico,
   /* Quali integrazioni mostrare: chi apre «Collega evcc» non vuole scegliere
@@ -43417,7 +43445,7 @@ function apriMenuIntegrazioni({
   modal.id = "dm-integ-menu";
   modal.className = "dm-section-modal dm-integ-modal";
   modal.innerHTML = `<section class="dm-section-dialog dm-integ-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-integ-title">
-    <header><strong id="dm-integ-title">🔗 ${esc(titolo2 || t("Collega a un'integrazione", "Link to an integration"))}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <header><strong id="dm-integ-title">🔗 ${esc(titolo3 || t("Collega a un'integrazione", "Link to an integration"))}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
     <div class="dm-integ-body">
       <p class="dm-integ-intro">${esc(intro) || t("Le integrazioni di Home Assistant, ufficiali o da HACS, con i dispositivi che portano. Scegli il tuo elettrodomestico: le sue entità entrano tutte, e le caselle della card si compilano da sole.", "Home Assistant integrations, official or from HACS, with the devices they bring. Pick your appliance: every entity comes along, and the card fields fill themselves in.")}</p>
       <div class="dm-integ-status" data-status>${t("Leggo le integrazioni di Home Assistant…", "Reading Home Assistant integrations…")}</div>
@@ -43435,7 +43463,7 @@ function apriMenuIntegrazioni({
   const stato3 = modal.querySelector("[data-status]");
   const colonne = modal.querySelector("[data-columns]");
   const navigazione = modal.querySelector("[data-integrations]");
-  const elenco9 = modal.querySelector("[data-devices]");
+  const elenco10 = modal.querySelector("[data-devices]");
   const ricerca = modal.querySelector("[data-search]");
   const anteprima3 = modal.querySelector("[data-preview]");
   const close = () => modal.remove();
@@ -43451,8 +43479,8 @@ function apriMenuIntegrazioni({
     const voci3 = (scelta3?.devices || []).filter(
       (device) => !filtro || [device.name, device.manufacturer, device.model, device.area].map(clean).join(" ").toLowerCase().includes(filtro)
     );
-    elenco9.innerHTML = voci3.length ? voci3.map(rigaDispositivo).join("") : `<div class="dm-integ-empty">${t("Nessun dispositivo con questo nome.", "No device by that name.")}</div>`;
-    for (const button of elenco9.querySelectorAll("[data-device-id]"))
+    elenco10.innerHTML = voci3.length ? voci3.map(rigaDispositivo).join("") : `<div class="dm-integ-empty">${t("Nessun dispositivo con questo nome.", "No device by that name.")}</div>`;
+    for (const button of elenco10.querySelectorAll("[data-device-id]"))
       button.setAttribute("aria-pressed", String(button.dataset.deviceId === dispositivo?.id));
   };
   const disegnaIntegrazioni = () => {
@@ -43510,7 +43538,7 @@ function apriMenuIntegrazioni({
     disegnaIntegrazioni();
     disegnaDispositivi();
   });
-  elenco9.addEventListener("click", (event) => {
+  elenco10.addEventListener("click", (event) => {
     const button = event.target.closest("[data-device-id]");
     if (!button) return;
     const device = (scelta3?.devices || []).find((item) => item.id === button.dataset.deviceId);
@@ -43789,13 +43817,13 @@ function rigaMarkup4(riga3) {
     ${comandiMarkup(riga3)}
   </article>`;
 }
-function fasciaMarkup(titolo2, righe2) {
+function fasciaMarkup(titolo3, righe2) {
   if (!righe2.length) return "";
   const conto = contoDelleMacchine(righe2);
   const sotto = conto.giu ? conto.fermi.join(" · ") : t(`Tutte in piedi · ${conto.su}`, `All up · ${conto.su}`);
   return `<section class="dm-macchine-fascia" data-giu="${conto.giu > 0}">
     <header class="dm-macchine-testa">
-      <strong>${esc(titolo2)}</strong>
+      <strong>${esc(titolo3)}</strong>
       <span>${esc(sotto)}</span>
     </header>
     <div class="dm-macchine-elenco">${righe2.map(rigaMarkup4).join("")}</div>
@@ -43871,50 +43899,50 @@ function onClick5(event) {
   }
 }
 function installStyles18() {
-  const P6 = `#${SERVER_PAGE_ID}`;
+  const P7 = `#${SERVER_PAGE_ID}`;
   installStyle(
     "dm-macchine-section-style",
     `
-    ${P6} .dm-macchine-wrap{display:grid;gap:14px;padding:14px 0 24px}
-    ${P6} .dm-macchine-fascia{display:grid;gap:10px}
-    ${P6} .dm-macchine-testa{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
-    ${P6} .dm-macchine-testa strong{font-size:14px;font-weight:900;letter-spacing:.04em;
+    ${P7} .dm-macchine-wrap{display:grid;gap:14px;padding:14px 0 24px}
+    ${P7} .dm-macchine-fascia{display:grid;gap:10px}
+    ${P7} .dm-macchine-testa{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+    ${P7} .dm-macchine-testa strong{font-size:14px;font-weight:900;letter-spacing:.04em;
       text-transform:uppercase;color:var(--text,#0f172a)}
-    ${P6} .dm-macchine-testa span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-    ${P6} .dm-macchine-fascia[data-giu="true"] .dm-macchine-testa span{color:#dc2626}
-    ${P6} .dm-macchine-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}
+    ${P7} .dm-macchine-testa span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-macchine-fascia[data-giu="true"] .dm-macchine-testa span{color:#dc2626}
+    ${P7} .dm-macchine-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}
 
-    ${P6} .dm-macchina{
+    ${P7} .dm-macchina{
       display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:10px;
       padding:12px 14px;border-radius:16px;
       border:1px solid color-mix(in srgb,var(--dm-macchina,#94a3b8) 40%,transparent);
       background:color-mix(in srgb,var(--dm-macchina,#94a3b8) 9%,var(--card-bg,#fff))}
-    ${P6} .dm-macchina[data-stato="su"]{--dm-macchina:#16a34a}
-    ${P6} .dm-macchina[data-stato="giu"]{--dm-macchina:#dc2626}
-    ${P6} .dm-macchina[data-stato="muto"]{--dm-macchina:#94a3b8}
-    ${P6} .dm-macchina-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;
+    ${P7} .dm-macchina[data-stato="su"]{--dm-macchina:#16a34a}
+    ${P7} .dm-macchina[data-stato="giu"]{--dm-macchina:#dc2626}
+    ${P7} .dm-macchina[data-stato="muto"]{--dm-macchina:#94a3b8}
+    ${P7} .dm-macchina-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;
       font-size:18px;background:color-mix(in srgb,var(--dm-macchina,#94a3b8) 20%,transparent)}
     /* Il disegno sta dentro la scatola e non la sfonda: un'emoji si ferma da
        se' alla sua riga di testo, un SVG no. */
-    ${P6} .dm-macchina-ic svg{width:22px;height:22px;display:block}
-    ${P6} .dm-macchina-testo{display:grid;gap:2px;min-width:0}
-    ${P6} .dm-macchina-testo strong{font-size:13.5px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-macchina-ic svg{width:22px;height:22px;display:block}
+    ${P7} .dm-macchina-testo{display:grid;gap:2px;min-width:0}
+    ${P7} .dm-macchina-testo strong{font-size:13.5px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-macchina-stato{font-size:10.5px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
+    ${P7} .dm-macchina-stato{font-size:10.5px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-macchina,#94a3b8) 78%,var(--text,#0f172a))}
     /* I tasti vanno a capo e a destra, uno o due che siano: in riga con lo
        stato spingerebbero fuori il nome, e su un telefono il nome e' la sola
        cosa che serve leggere per intero. */
-    ${P6} .dm-macchina-tasti,${P6} .dm-macchina>.dm-macchina-tasto{
+    ${P7} .dm-macchina-tasti,${P7} .dm-macchina>.dm-macchina-tasto{
       grid-column:1/-1;justify-self:end}
-    ${P6} .dm-macchina-tasti{display:inline-flex;gap:6px}
-    ${P6} .dm-macchina-tasto{
+    ${P7} .dm-macchina-tasti{display:inline-flex;gap:6px}
+    ${P7} .dm-macchina-tasto{
       padding:6px 14px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);color:var(--text,#0f172a);
       font:inherit;font-size:11.5px;font-weight:900;cursor:pointer}
-    ${P6} .dm-macchina-tasto:hover{border-color:var(--primary-color,#0ea5e9)}
-    ${P6} .dm-macchina-tasto-ferma:hover{border-color:#dc2626;color:#dc2626}
-    @media(max-width:520px){${P6} .dm-macchine-elenco{grid-template-columns:1fr}}
+    ${P7} .dm-macchina-tasto:hover{border-color:var(--primary-color,#0ea5e9)}
+    ${P7} .dm-macchina-tasto-ferma:hover{border-color:#dc2626;color:#dc2626}
+    @media(max-width:520px){${P7} .dm-macchine-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -44430,10 +44458,10 @@ var FLOOD_SEEN_KEY = "cd_allag_rilevato";
 function floodEntities(extras = {}, removed = {}, states = {}, gia = false) {
   const tolte2 = new Set((removed[FLOOD_GROUP] || []).map(clean).filter(Boolean));
   const dichiarate = extras[FLOOD_GROUP];
-  const elenco9 = Array.isArray(dichiarate) ? dichiarate : gia ? [] : Object.entries(states).filter(([id, stato3]) => isFloodSensor(id, stato3)).map(([id]) => id);
+  const elenco10 = Array.isArray(dichiarate) ? dichiarate : gia ? [] : Object.entries(states).filter(([id, stato3]) => isFloodSensor(id, stato3)).map(([id]) => id);
   const viste2 = /* @__PURE__ */ new Set();
   const uscita = [];
-  for (const voce2 of elenco9) {
+  for (const voce2 of elenco10) {
     const id = clean(voce2);
     if (!id || tolte2.has(id) || viste2.has(id)) continue;
     viste2.add(id);
@@ -45611,7 +45639,7 @@ function disegnaTemperatura(widget) {
         <span class="dm-f-num">${esc(gradi5(media2))}</span></div>
       ${scala2}
     </section>`;
-  const elenco9 = stanze3.map((riga3) => {
+  const elenco10 = stanze3.map((riga3) => {
     const larga = ampiezza > 0 ? 10 + 90 * (riga3.temperature - fredda.temperature) / ampiezza : 60;
     const umidita = numero36(riga3.humidity);
     return `<div class="dm-f-temperatura-stanza">
@@ -45625,7 +45653,7 @@ function disegnaTemperatura(widget) {
   return `<div class="dm-f dm-f-temperatura">
     ${eroe}
     ${stanze3.length > 1 ? titoletto(t("Dalla più calda", "Warmest first")) : ""}
-    <div class="dm-f-temperatura-elenco">${elenco9}</div>
+    <div class="dm-f-temperatura-elenco">${elenco10}</div>
   </div>`;
 }
 var STILE_TEMPERATURA = `
@@ -46012,7 +46040,705 @@ registraFinestra("solare", { disegna: disegnaSolare, stile: STILE_SOLARE });
 var FINESTRE_PROPOSTI = Object.freeze(["energia", "temperatura", "ev", "solare"]);
 
 // src/sections/finestre/comandi.js
-var FINESTRE_COMANDI = Object.freeze([]);
+var FINESTRE_COMANDI = Object.freeze([
+  "tapparelle",
+  "prese",
+  "porte",
+  "media",
+  "citofono",
+  "robot"
+]);
+var P2 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
+var minutiDa2 = (da, adesso = Date.now()) => Number.isFinite(da) ? Math.max(0, (adesso - da) / 6e4) : null;
+function daQuanto4(da, adesso = Date.now()) {
+  const minuti = minutiDa2(da, adesso);
+  if (minuti == null) return "";
+  if (minuti < 1) return quantoTempoInParole(0);
+  return `${t("da", "for")} ${quantoTempoInParole(minuti)}`;
+}
+function quantoFa2(da, adesso = Date.now()) {
+  const minuti = minutiDa2(da, adesso);
+  if (minuti == null) return "";
+  if (minuti < 1) return quantoTempoInParole(0);
+  return `${quantoTempoInParole(minuti)} ${t("fa", "ago")}`;
+}
+function orario(quando4, adesso = Date.now()) {
+  if (!Number.isFinite(quando4)) return "";
+  const data = new Date(quando4);
+  let ora3 = "";
+  try {
+    ora3 = data.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
+  } catch (_error) {
+    ora3 = `${String(data.getHours()).padStart(2, "0")}:${String(data.getMinutes()).padStart(2, "0")}`;
+  }
+  const giorno = (istante4) => {
+    const d = new Date(istante4);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  };
+  const giorni = Math.round((giorno(adesso) - giorno(quando4)) / 864e5);
+  if (giorni === 0) return ora3;
+  if (giorni === 1) return `${t("ieri", "yesterday")} ${ora3}`;
+  let quale = "";
+  try {
+    quale = data.toLocaleDateString(locale(), { day: "numeric", month: "short" });
+  } catch (_error) {
+    quale = `${data.getDate()}/${data.getMonth() + 1}`;
+  }
+  return `${quale} ${ora3}`;
+}
+function elenco5(nomi) {
+  const voci3 = nomi.filter(Boolean);
+  try {
+    return new Intl.ListFormat(locale(), { style: "long", type: "conjunction" }).format(voci3);
+  } catch (_error) {
+    return voci3.join(", ");
+  }
+}
+var titolo = (testo2) => `<p class="dm-f-tit">${esc(testo2)}</p>`;
+var TRATTO = 'viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"';
+var SU = `<svg ${TRATTO}><path d="M12 19V6"/><path d="M6 11.5 12 5.5l6 6"/></svg>`;
+var GIU = `<svg ${TRATTO}><path d="M12 5v13"/><path d="M6 12.5 12 18.5l6-6"/></svg>`;
+var FERMA2 = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false" fill="currentColor"><rect x="6.5" y="6.5" width="11" height="11" rx="2.4"/></svg>';
+var SPUNTA = `<svg ${TRATTO}><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>`;
+var CASA = `<svg ${TRATTO}><path d="M4.4 11.4 12 4.9l7.6 6.5"/><path d="M6.8 9.8v9.3h10.4V9.8"/></svg>`;
+var ACCENSIONE = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.8 6.6a7.5 7.5 0 1 0 10.4 0"/></svg>';
+var GLIFI_MP = Object.freeze({
+  precedente: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5v13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M18.5 6.4v11.2a.8.8 0 0 1-1.24.67l-8.4-5.6a.8.8 0 0 1 0-1.34l8.4-5.6a.8.8 0 0 1 1.24.67Z" fill="currentColor"/></svg>',
+  successivo: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5.5v13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M5.5 6.4v11.2a.8.8 0 0 0 1.24.67l8.4-5.6a.8.8 0 0 0 0-1.34l-8.4-5.6a.8.8 0 0 0-1.24.67Z" fill="currentColor"/></svg>',
+  suona: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4.9v14.2a.9.9 0 0 0 1.38.76l11-7.1a.9.9 0 0 0 0-1.52l-11-7.1a.9.9 0 0 0-1.38.76Z" fill="currentColor"/></svg>',
+  pausa: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.6" y="4.8" width="4.2" height="14.4" rx="1.6" fill="currentColor"/><rect x="13.2" y="4.8" width="4.2" height="14.4" rx="1.6" fill="currentColor"/></svg>',
+  accendi: ACCENSIONE,
+  voce: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.4h3.4L12 5.2v13.6L7.4 14.6H4Z" fill="currentColor"/><path d="M15.6 9.2a4 4 0 0 1 0 5.6" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>'
+});
+var eUnMotore = (riga3) => !riga3.soloSensore;
+var eUnaGrata = (riga3) => riga3.soloSensore && riga3.grata === true;
+function posizioneInParole(riga3) {
+  const tapparella = !riga3.kind || riga3.kind === "tapparella";
+  if (riga3.muta) return t("Non risponde", "Not responding");
+  if (riga3.position == null) {
+    if (tapparella) return riga3.open ? t("Su", "Up") : t("Giù", "Down");
+    return riga3.open ? t("Aperta", "Open") : t("Chiusa", "Closed");
+  }
+  if (riga3.position >= 100) return tapparella ? t("Tutta su", "All the way up") : t("Aperta", "Open");
+  if (riga3.position <= 0) return tapparella ? t("Giù", "Down") : t("Chiusa", "Closed");
+  return `${riga3.position}% ${tapparella ? t("su", "up") : t("aperta", "open")}`;
+}
+function tastoTapparella(riga3, servizio, glifo, parola) {
+  return `<button type="button" class="dm-f-tapparelle-freccia" data-dm-w-cover="${esc(riga3.entity)}"
+    data-dm-w-down="${esc(riga3.down)}" data-svc="${servizio}" title="${esc(parola)}"
+    aria-label="${esc(`${parola}: ${riga3.stanza || riga3.name}`)}">${glifo}</button>`;
+}
+function frecce(riga3) {
+  if (!(riga3.isCover || riga3.relay)) return "";
+  return `<span class="dm-f-tapparelle-frecce">${tastoTapparella(riga3, "open_cover", SU, t("Alza", "Raise"))}${tastoTapparella(
+    riga3,
+    "stop_cover",
+    FERMA2,
+    t("Ferma", "Stop")
+  )}${tastoTapparella(riga3, "close_cover", GIU, t("Abbassa", "Lower"))}</span>`;
+}
+function posizioneScelta(riga3) {
+  if (!riga3.settable) return "";
+  const invito = t("Scegli la posizione", "Choose the position");
+  const voci3 = [0, 25, 50, 75, 100].map((valore3) => `<option value="${valore3}">${valore3}%</option>`).join("");
+  return `<select class="dm-f-tapparelle-pos" data-dm-w-position="${esc(riga3.entity)}"
+    data-dm-w-verso="${riga3.invertita ? "1" : ""}" aria-label="${esc(invito)}" title="${esc(invito)}"><option value="">↕</option>${voci3}</select>`;
+}
+function stanzeDelleFinestre(righe2 = []) {
+  const stanze3 = /* @__PURE__ */ new Map();
+  for (const riga3 of righe2) {
+    const chiave2 = clean(riga3.stanza || riga3.name);
+    if (!stanze3.has(chiave2)) stanze3.set(chiave2, { nome: chiave2, ante: [], motori: [] });
+    const stanza2 = stanze3.get(chiave2);
+    (eUnMotore(riga3) ? stanza2.motori : stanza2.ante).push(riga3);
+  }
+  return [...stanze3.values()].map((stanza2) => ({
+    ...stanza2,
+    aperta: stanza2.ante.some((riga3) => riga3.open),
+    su: stanza2.motori.some((riga3) => riga3.open)
+  }));
+}
+function antaPill(riga3) {
+  const grata = eUnaGrata(riga3);
+  const parola = riga3.muta ? t("Non risponde", "Not responding") : riga3.open ? grata ? t("Inferriata aperta", "Grate open") : t("Finestra aperta", "Window open") : grata ? t("Inferriata chiusa", "Grate closed") : t("Finestra chiusa", "Window closed");
+  return `<span class="dm-f-tapparelle-anta" data-aperta="${riga3.open === true}">${riga3.open ? '<i aria-hidden="true"></i>' : ""}${esc(parola)}</span>`;
+}
+function motoreMarkup(riga3, conFrecce) {
+  const quota = riga3.position != null ? riga3.position : riga3.open ? 100 : 0;
+  return `<div class="dm-f-tapparelle-motore">
+    ${conFrecce ? `<div class="dm-f-tapparelle-riga"><b class="dm-f-tapparelle-tipo">${esc(coverKindLabel(riga3.kind))}</b>${frecce(riga3)}</div>` : ""}
+    <span class="dm-f-tapparelle-barra" aria-hidden="true"><i style="width:${Math.max(0, Math.min(100, quota))}%"></i></span>
+    <span class="dm-f-tapparelle-sotto"><span>${conFrecce ? "" : esc(coverKindLabel(riga3.kind))}</span>${posizioneScelta(riga3)}<b>${esc(posizioneInParole(riga3))}</b></span>
+  </div>`;
+}
+function stanzaMarkup(stanza2) {
+  const viva = stanza2.aperta || stanza2.su;
+  const unMotore = stanza2.motori.length === 1 ? stanza2.motori[0] : null;
+  const ante = stanza2.ante.map(antaPill).join("");
+  if (!viva) {
+    const riassunto2 = stanza2.motori.map((riga3) => `${coverKindLabel(riga3.kind)} ${posizioneInParole(riga3).toLowerCase()}`).join(" · ");
+    return `<article class="dm-f-tapparelle-stanza" data-viva="false">
+      <div class="dm-f-tapparelle-riga">
+        <span class="dm-f-tapparelle-nome"><b>${esc(stanza2.nome)}</b>${ante ? `<span class="dm-f-tapparelle-ante">${ante}</span>` : ""}${riassunto2 ? `<small>${esc(riassunto2)}</small>` : ""}</span>
+        ${unMotore ? frecce(unMotore) : ""}
+      </div>
+      ${stanza2.motori.length > 1 ? stanza2.motori.map(
+      (riga3) => `<div class="dm-f-tapparelle-riga dm-f-tapparelle-piccola"><small>${esc(coverKindLabel(riga3.kind))}</small>${frecce(riga3)}</div>`
+    ).join("") : ""}
+    </article>`;
+  }
+  return `<article class="dm-f-tapparelle-stanza" data-viva="true">
+    <div class="dm-f-tapparelle-riga">
+      <span class="dm-f-tapparelle-nome"><b>${esc(stanza2.nome)}</b>${ante ? `<span class="dm-f-tapparelle-ante">${ante}</span>` : ""}${!stanza2.motori.length ? `<small>${esc(t("Solo sensore sull'anta · nessun motore", "Window sensor only · no motor"))}</small>` : ""}</span>
+      ${unMotore ? frecce(unMotore) : ""}
+    </div>
+    ${stanza2.motori.map((riga3) => motoreMarkup(riga3, !unMotore)).join("")}
+  </article>`;
+}
+function finestraTapparelle(widget) {
+  const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
+  const ante = righe2.filter((riga3) => !eUnMotore(riga3));
+  const motori = righe2.filter(eUnMotore);
+  const aperte = ante.filter((riga3) => riga3.open);
+  const alzate = motori.filter((riga3) => riga3.open);
+  const nomiDi = (lista5) => [...new Set(lista5.map((riga3) => clean(riga3.stanza || riga3.name)))];
+  const eroi = [];
+  if (ante.length) {
+    const prima = aperte.map((riga3) => riga3.da).filter(Number.isFinite).sort((a, b) => a - b)[0];
+    eroi.push(`<div class="dm-f-tapparelle-eroe" data-tono="${aperte.length ? "aperte" : "quiete"}">
+      <small>${esc(t("Finestre aperte", "Open windows"))}</small>
+      <b class="dm-f-num">${aperte.length}</b>
+      <em>${aperte.length ? `${esc(elenco5(nomiDi(aperte)))}${prima ? `<br>${esc(daQuanto4(prima))}` : ""}` : esc(t("Tutte chiuse", "All closed"))}</em>
+    </div>`);
+  }
+  if (motori.length) {
+    eroi.push(`<div class="dm-f-tapparelle-eroe">
+      <small>${esc(t("Tapparelle su", "Shutters up"))}</small>
+      <b class="dm-f-num">${alzate.length}</b>
+      <em>${esc(
+      [`${t("su", "of")} ${motori.length}`, alzate.length ? nomiDi(alzate).join(", ") : ""].filter(Boolean).join(" · ")
+    )}</em>
+    </div>`);
+  }
+  const comandabili = motori.filter((riga3) => riga3.isCover && !riga3.relay && siComanda(riga3.entity)).map((riga3) => riga3.entity);
+  const tutte = comandabili.length > 1 ? `<div class="dm-f-tapparelle-tutte">
+      ${tastoServizio(
+    { domain: "cover", service: "close_cover", data: { entity_id: comandabili } },
+    { classe: "dm-f-tasto dm-f-pieno", testo: `${GIU} ${esc(t("Giù tutte", "All down"))}` }
+  )}
+      ${tastoServizio(
+    { domain: "cover", service: "open_cover", data: { entity_id: comandabili } },
+    { classe: "dm-f-tasto", testo: `${SU} ${esc(t("Su tutte", "All up"))}` }
+  )}
+      ${tastoServizio(
+    { domain: "cover", service: "stop_cover", data: { entity_id: comandabili } },
+    {
+      classe: "dm-f-tasto dm-f-tasto-quadro",
+      testo: FERMA2,
+      attributi: `aria-label="${esc(t("Ferma tutte", "Stop all"))}" title="${esc(t("Ferma tutte", "Stop all"))}"`
+    }
+  )}
+    </div>` : "";
+  const stanze3 = stanzeDelleFinestre(righe2).sort(
+    (a, b) => Number(b.aperta || b.su) - Number(a.aperta || a.su) || Number(b.aperta) - Number(a.aperta)
+  );
+  return `<div class="dm-f-tapparelle">
+    <div class="dm-f-tapparelle-eroi" data-quanti="${eroi.length}">${eroi.join("")}</div>
+    ${tutte}
+    ${titolo(t("Per stanza · prima le aperte", "By room · open first"))}
+    <div class="dm-f-tapparelle-stanze">${stanze3.map(stanzaMarkup).join("")}</div>
+  </div>`;
+}
+function presaMarkup(riga3) {
+  const watt5 = riga3.on && Number.isFinite(riga3.watt) ? `${formatNumber(riga3.watt, 0)} W` : "";
+  const sotto = !riga3.disponibile ? [riga3.stanza, riga3.da ? `${t("Non risponde", "Not responding")} ${daQuanto4(riga3.da)}` : t("Non risponde", "Not responding")] : riga3.on ? [riga3.stanza, watt5] : [riga3.stanza, riga3.da ? `${t("spenta", "off")} ${daQuanto4(riga3.da)}` : ""];
+  const comando = riga3.comando ? `<button type="button" class="dm-f-prese-int" data-dm-w-light="${esc(riga3.entity)}" data-on="${riga3.on === true}"
+        role="switch" aria-checked="${riga3.on === true}" aria-label="${esc(riga3.name)}"><i></i></button>` : riga3.protetta ? `<span class="dm-f-prese-lucchetto" title="${esc(t("Si vede ma non si comanda da qui", "Visible but not controlled from here"))}">🔒 ${esc(t("protetta", "protected"))}</span>` : "";
+  return `<article class="dm-f-prese-presa" data-on="${riga3.on === true}" data-muta="${!riga3.disponibile}">
+    <span class="dm-f-prese-ic" aria-hidden="true">${riga3.glyph || "🔌"}</span>
+    ${comando}
+    <b>${esc(riga3.name)}</b>
+    <small>${esc(sotto.filter(Boolean).join(" · "))}</small>
+  </article>`;
+}
+function finestraPrese(widget) {
+  const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
+  const accese = righe2.filter((riga3) => riga3.on);
+  const spente = [
+    ...righe2.filter((riga3) => !riga3.on && riga3.disponibile),
+    ...righe2.filter((riga3) => !riga3.on && !riga3.disponibile)
+  ];
+  const watt5 = Number.isFinite(widget.watt) ? `<span class="dm-f-prese-watt"><b class="dm-f-num">${esc(formatNumber(widget.watt, 0))} W</b><small>${esc(
+    t("assorbiti adesso", "drawn right now")
+  )}</small></span>` : "";
+  return `<div class="dm-f-prese">
+    <div class="dm-f-eroe dm-f-prese-eroe">
+      <span class="dm-f-prese-conto"><small>${esc(t("Accese", "On"))}</small><b class="dm-f-num">${accese.length}<em> / ${righe2.length}</em></b></span>
+      ${watt5}
+    </div>
+    ${accese.length ? `${titolo(t("Accese", "On"))}<div class="dm-f-griglia">${accese.map(presaMarkup).join("")}</div>` : ""}
+    ${spente.length ? `${titolo(t("Spente", "Off"))}<div class="dm-f-griglia">${spente.map(presaMarkup).join("")}</div>` : ""}
+  </div>`;
+}
+function tastoPorta(riga3, gesto, parola, leggero = false) {
+  const chiede = riga3.pin && gesto !== "blocca";
+  const invito = chiede ? `${parola} · ${t("chiede il PIN", "asks for the PIN")}` : parola;
+  return `<button type="button" class="dm-f-porte-tasto" data-leggero="${leggero}" data-dm-door="${esc(riga3.id)}"
+    data-dm-door-gesto="${esc(gesto)}" title="${esc(invito)}" aria-label="${esc(`${invito}: ${riga3.name}`)}">${esc(parola)}${chiede ? ' <span aria-hidden="true">🔐</span>' : ""}</button>`;
+}
+function tastiDellaPorta(riga3) {
+  const gesti = Array.isArray(riga3.gesti) ? riga3.gesti : [];
+  if (riga3.dominio === "cover") {
+    if (riga3.aperta)
+      return tastoServizio(
+        { domain: "cover", service: "close_cover", data: { entity_id: riga3.entity } },
+        { classe: "dm-f-porte-tasto", testo: esc(t("Chiudi", "Close")) }
+      );
+    const apri6 = gesti.find((voce2) => voce2.gesto === "apri");
+    return apri6 ? tastoPorta(riga3, "apri", apri6.parola) : "";
+  }
+  if (riga3.dominio === "lock") {
+    const adesso = riga3.aperta ? gesti.find((voce2) => voce2.gesto === "blocca") : gesti.find((voce2) => voce2.gesto !== "blocca");
+    return gesti.map((voce2) => tastoPorta(riga3, voce2.gesto, voce2.parola, voce2 !== adesso)).join("");
+  }
+  return gesti.map((voce2) => tastoPorta(riga3, voce2.gesto, voce2.parola, true)).join("");
+}
+function statoDellaPorta(riga3) {
+  if (riga3.muta) return { testo: t("Non risponde", "Not responding"), tono: "muta" };
+  if (riga3.aperta)
+    return { testo: [riga3.parola, daQuanto4(riga3.da)].filter(Boolean).join(" "), tono: "ko" };
+  if (riga3.chiusaAChiave) return { testo: `🔒 ${riga3.parola}`, tono: "ok" };
+  if (riga3.dichiara) return { testo: riga3.parola, tono: "" };
+  return {
+    testo: riga3.ultima ? `${t("Ultima volta", "Last time")} ${orario(riga3.ultima)}` : t("Impulso", "Pulse"),
+    tono: ""
+  };
+}
+function finestraPorte(widget) {
+  const righe2 = Array.isArray(widget.righe) ? widget.righe : [];
+  const aperte = righe2.filter((riga3) => riga3.aperta);
+  const dichiarano = righe2.some((riga3) => riga3.dichiara);
+  const avviso = aperte.length ? aperte.map(
+    (riga3) => `<div class="dm-f-porte-avviso" data-tono="ko">
+        <span class="dm-f-porte-avviso-ic" aria-hidden="true">${riga3.icona}</span>
+        <span><b>${esc(riga3.name)} · ${esc(riga3.parola || t("Aperta", "Open"))}</b><small>${esc(
+      [daQuanto4(riga3.da), aperte.length === 1 ? t("l'unica cosa aperta", "the only thing open") : ""].filter(Boolean).join(" · ")
+    )}</small></span>
+      </div>`
+  ).join("") : dichiarano ? `<div class="dm-f-porte-avviso" data-tono="ok"><span class="dm-f-porte-avviso-ic" aria-hidden="true">✓</span><span><b>${esc(
+    t("Tutto chiuso", "All closed")
+  )}</b></span></div>` : "";
+  const schede = righe2.map((riga3) => {
+    const stato3 = statoDellaPorta(riga3);
+    return `<article class="dm-f-porte-porta" data-tono="${stato3.tono}">
+        <span class="dm-f-porte-ic" aria-hidden="true">${riga3.icona}</span>
+        <b>${esc(riga3.name)}</b>
+        <small data-tono="${stato3.tono}">${esc(stato3.testo)}</small>
+        <span class="dm-f-porte-tasti">${tastiDellaPorta(riga3)}</span>
+      </article>`;
+  }).join("");
+  const nota = [
+    widget.conferma ? t("Chiede conferma prima di aprire", "Asks for confirmation before opening") : "",
+    righe2.some((riga3) => riga3.pin) ? `🔐 ${t("chiede il PIN", "asks for the PIN")}` : ""
+  ].filter(Boolean).join(" · ");
+  const storia = righe2.filter((riga3) => Number.isFinite(riga3.ultima)).sort((a, b) => b.ultima - a.ultima).slice(0, 3);
+  return `<div class="dm-f-porte">
+    ${avviso}
+    ${titolo(t("Le aperture", "The openers"))}
+    <div class="dm-f-griglia dm-f-porte-griglia">${schede}</div>
+    ${nota ? `<p class="dm-f-nota">${esc(nota)}</p>` : ""}
+    ${storia.length ? `${titolo(t("Ultime aperture", "Latest openings"))}<div class="dm-f-storia">${storia.map(
+    (riga3) => `<div><span>${esc([riga3.name, riga3.dichiara ? clean(riga3.parola).toLowerCase() : ""].filter(Boolean).join(" · "))}</span><b class="dm-f-num">${esc(
+      orario(riga3.ultima)
+    )}</b></div>`
+  ).join("")}</div>` : ""}
+  </div>`;
+}
+function tastoMp(riga3, comando, etichetta3, glifo, classe2 = "", centro2 = "") {
+  return `<button type="button" class="dm-f-media-tasto ${esc(classe2)}" data-dm-mp="${esc(comando)}"${centro2 ? ` data-centro="${esc(centro2)}"` : ""} data-dm-mp-entity="${esc(riga3.entity)}" aria-label="${esc(etichetta3)}" title="${esc(etichetta3)}">${glifo}</button>`;
+}
+var parolaDelCentro = (centro2) => centro2 === "accendi" ? t("Accendi", "Turn on") : centro2 === "pausa" ? t("Pausa", "Pause") : t("Riproduci", "Play");
+function statoDellaCassa(riga3) {
+  const stato3 = riga3.muto ? t("Non risponde", "Not responding") : riga3.suona ? t("In riproduzione", "Playing") : riga3.inPausa ? t("In pausa", "Paused") : riga3.spento ? t("Spenta", "Off") : t("Ferma", "Idle");
+  const cosa = riga3.spento || riga3.muto ? "" : riga3.titolo || riga3.sorgente || riga3.applicazione;
+  return [stato3, cosa].filter(Boolean).join(" · ");
+}
+function eroeMedia(riga3) {
+  const dove = [riga3.nome, riga3.sorgente || riga3.applicazione].filter(Boolean).join(" · ");
+  const sotto = [riga3.artista, riga3.album].filter(Boolean).join(" · ");
+  const punto2 = posizioneOra(riga3);
+  const centro2 = ilTastoCentrale(riga3);
+  const percento5 = Math.round((riga3.volume ?? 0) * 100);
+  return `<div class="dm-f-media-eroe">
+    <div class="dm-f-media-testa">
+      ${riga3.copertina ? `<img class="dm-f-media-arte" src="${esc(riga3.copertina)}" alt="" aria-hidden="true">` : `<span class="dm-f-media-arte" aria-hidden="true">${riga3.icona ? esc(riga3.icona) : "🎵"}</span>`}
+      <span class="dm-f-media-cosa">
+        <small>${esc(dove)}</small>
+        <b>${esc(riga3.titolo || riga3.sorgente || riga3.applicazione || statoDellaCassa(riga3))}</b>
+        ${sotto ? `<em>${esc(sotto)}</em>` : ""}
+      </span>
+    </div>
+    ${punto2 ? `<span class="dm-f-media-barra" aria-hidden="true"><i style="width:${(punto2.quota * 100).toFixed(1)}%"></i></span>
+           <span class="dm-f-media-tempi"><span>${esc(orologio(punto2.secondi))}</span><span>${esc(orologio(punto2.durata))}</span></span>` : ""}
+    <div class="dm-f-media-cmd">
+      ${riga3.puo?.precedente ? tastoMp(riga3, "precedente", t("Brano precedente", "Previous track"), GLIFI_MP.precedente) : ""}
+      ${centro2 ? tastoMp(riga3, "centro", parolaDelCentro(centro2), GLIFI_MP[centro2], "dm-f-media-centro") : ""}
+      ${riga3.puo?.successivo ? tastoMp(riga3, "successivo", t("Brano successivo", "Next track"), GLIFI_MP.successivo) : ""}
+    </div>
+    ${riga3.puo?.volume ? `<label class="dm-f-media-volume"><span aria-hidden="true">${GLIFI_MP.voce}</span>
+            <input type="range" min="0" max="100" step="1" value="${percento5}" style="--v:${percento5}%" data-dm-mp-volume="${esc(riga3.entity)}"
+              aria-label="${esc(t("Volume", "Volume"))}">
+            <b class="dm-f-num" data-dm-mp-percento>${percento5}%</b></label>` : ""}
+  </div>`;
+}
+function cassaMarkup(riga3) {
+  const centro2 = ilTastoCentrale(riga3);
+  return `<article class="dm-f-media-cassa" data-spenta="${riga3.spento || riga3.muto}">
+    <span class="dm-f-media-ic" aria-hidden="true">${riga3.copertina && !riga3.spento ? `<img src="${esc(riga3.copertina)}" alt="">` : esc(riga3.icona || (riga3.spento ? "📺" : "🔊"))}</span>
+    <span class="dm-f-media-nome"><b>${esc(riga3.nome)}</b><small>${esc(statoDellaCassa(riga3))}</small></span>
+    ${centro2 ? tastoMp(riga3, "centro", parolaDelCentro(centro2), GLIFI_MP[centro2], "dm-f-media-uno", centro2) : ""}
+  </article>`;
+}
+function finestraMedia(widget) {
+  const lettori2 = Array.isArray(widget.lettori) ? widget.lettori : [];
+  const eroe = lettori2.find((riga3) => riga3.suona) || null;
+  const altre = lettori2.filter((riga3) => riga3 !== eroe);
+  return `<div class="dm-f-media">
+    ${eroe ? eroeMedia(eroe) : ""}
+    ${altre.length ? `${titolo(eroe ? t("Le altre casse", "The other speakers") : t("Le casse", "Speakers"))}${altre.map(cassaMarkup).join("")}` : ""}
+  </div>`;
+}
+function parolaDellaCassetta2(voce2) {
+  if (voce2.muta) return t("Non risponde", "Not answering");
+  if (voce2.aperta === true) return t("Aperta", "Open");
+  if (voce2.ce === true) return t("C'è posta", "Mail inside");
+  if (voce2.ce === false) return t("Vuota", "Empty");
+  return t("Non si sa", "Unknown");
+}
+function cassettaMarkup2(voce2, sola) {
+  const arrivata = voce2.ce === true && Number.isFinite(voce2.arrivata) ? `${t("arrivata alle", "arrived at")} ${orario(voce2.arrivata)} · ${quantoFa2(voce2.arrivata)}` : "";
+  return `<div class="dm-f-citofono-eroe" data-tono="${voce2.ce === true ? "posta" : "quiete"}">
+    <div class="dm-f-citofono-riga">
+      <span class="dm-f-citofono-ic" aria-hidden="true">${voce2.ce === true ? "📬" : "📭"}</span>
+      <span><small>${esc(sola || !voce2.nome ? t("Cassetta", "Mailbox") : voce2.nome)}</small><b>${esc(
+    parolaDellaCassetta2(voce2)
+  )}</b>${arrivata ? `<em>${esc(arrivata)}</em>` : ""}</span>
+    </div>
+    ${voce2.ce === true ? `<button type="button" class="dm-f-citofono-presa" data-dm-cassetta-presa="${esc(voce2.id)}">${SPUNTA} ${esc(
+    t("L'ho presa", "Got it")
+  )}</button>` : ""}
+  </div>`;
+}
+function citofonoMarkup2(voce2, solo) {
+  const suona = voce2.suona === true;
+  const apri6 = voce2.puoAprire && voce2.comando ? tastoServizio(voce2.comando, {
+    classe: "dm-f-citofono-apri",
+    conferma: t("Tocca ancora per aprire", "Tap again to open"),
+    testo: `<span class="dm-f-citofono-apri-ic" aria-hidden="true">🔓</span><span><b>${esc(
+      solo ? t("Apri il cancello", "Open the gate") : `${t("Apri", "Open")} · ${voce2.nome}`
+    )}</b><small>${esc(t("Due tocchi per aprire", "Two taps to open"))}</small></span>`
+  }) : "";
+  if (!suona) return apri6;
+  return `<div class="dm-f-citofono-eroe" data-tono="suona">
+    <div class="dm-f-citofono-riga">
+      <span class="dm-f-citofono-ic" aria-hidden="true">🔔</span>
+      <span><small>${esc(voce2.nome || t("Citofono", "Intercom"))}</small><b>${esc(
+    t("C'è qualcuno alla porta", "Someone is at the door")
+  )}</b>${Number.isFinite(voce2.squillo) ? `<em>${esc(quantoFa2(voce2.squillo))}</em>` : ""}</span>
+    </div>
+    ${apri6}
+  </div>`;
+}
+function finestraCitofono(widget) {
+  const citofoni = Array.isArray(widget.citofoni) ? widget.citofoni : [];
+  const cassette = Array.isArray(widget.cassette) ? widget.cassette : [];
+  const suonano = citofoni.filter((voce2) => voce2.suona === true);
+  const quieti = citofoni.filter((voce2) => voce2.suona !== true);
+  const cose = [
+    ...citofoni.filter((voce2) => Number.isFinite(voce2.squillo)).map((voce2) => ({
+      quando: voce2.squillo,
+      ic: "🔔",
+      cosa: t("Hanno suonato", "Someone rang"),
+      dove: citofoni.length > 1 ? voce2.nome : ""
+    })),
+    ...cassette.flatMap((voce2) => [
+      ...Number.isFinite(voce2.arrivata) ? [
+        {
+          quando: voce2.arrivata,
+          ic: "📬",
+          cosa: t("Posta arrivata", "Mail arrived"),
+          dove: cassette.length > 1 ? voce2.nome : ""
+        }
+      ] : [],
+      ...Number.isFinite(voce2.ritirata) ? [
+        {
+          quando: voce2.ritirata,
+          ic: "📭",
+          cosa: t("Posta ritirata", "Mail collected"),
+          dove: voce2.ritiroAMano ? t("Segnata a mano", "Marked by hand") : t("Cassetta aperta", "Mailbox opened")
+        }
+      ] : []
+    ])
+  ].sort((a, b) => b.quando - a.quando).slice(0, 4);
+  const cancelli = quieti.map((voce2) => citofonoMarkup2(voce2, citofoni.length === 1)).filter(Boolean);
+  return `<div class="dm-f-citofono">
+    ${suonano.map((voce2) => citofonoMarkup2(voce2, citofoni.length === 1)).join("")}
+    ${cassette.map((voce2) => cassettaMarkup2(voce2, cassette.length === 1)).join("")}
+    ${cancelli.length ? `${titolo(t("Cancello", "Gate"))}${cancelli.join("")}` : ""}
+    ${cose.length ? `${titolo(t("Ultime cose", "Latest events"))}${cose.map(
+    (cosa) => `<div class="dm-f-citofono-cosa"><span aria-hidden="true">${cosa.ic}</span>
+          <span><b>${esc(cosa.cosa)}</b>${cosa.dove ? `<small>${esc(cosa.dove)}</small>` : ""}</span>
+          <b class="dm-f-num">${esc(orario(cosa.quando))}</b></div>`
+  ).join("")}` : ""}
+  </div>`;
+}
+var SCARICA2 = 20;
+function tastoRobot(riga3, azione, testo2, classe2) {
+  const comando = robotCommand(azione, riga3);
+  if (!comando) return "";
+  return tastoServizio(comando, { classe: classe2, testo: testo2 });
+}
+var saFare = (riga3, azione) => robotActions(riga3).some((voce2) => voce2.act === azione);
+function disegnoDelRobot(riga3, misura7) {
+  return disegnoDelCatalogo(riga3.species === "lawn_mower" ? "mower" : riga3.cleaning ? "broom" : "robot", misura7) || "🤖";
+}
+function eroeRobot(riga3) {
+  const batteria = Number.isFinite(riga3.battery) ? Math.round(riga3.battery) : null;
+  const dettagli = [
+    riga3.room,
+    daQuanto4(riga3.da),
+    riga3.fanSpeed ? `${t("Potenza", "Power")} ${riga3.fanSpeed}` : ""
+  ].filter(Boolean);
+  const tasti = [
+    saFare(riga3, "pause") ? tastoRobot(riga3, "pause", `${GLIFI_MP.pausa} ${esc(t("Pausa", "Pause"))}`, "dm-f-tasto dm-f-pieno") : "",
+    saFare(riga3, "return") ? tastoRobot(riga3, "return", `${CASA} ${esc(t("Alla base", "Dock"))}`, "dm-f-tasto") : ""
+  ].filter(Boolean);
+  return `<div class="dm-f-robot-eroe">
+    <div class="dm-f-robot-riga">
+      ${batteria == null ? `<span class="dm-f-robot-anello" data-vuoto="true" aria-hidden="true">${disegnoDelRobot(riga3, 40)}</span>` : `<span class="dm-f-robot-anello" data-scarica="${batteria < SCARICA2}" style="--p:${batteria}"><span><b class="dm-f-num">${batteria}%</b><small>${esc(
+    t("batteria", "battery")
+  )}</small></span></span>`}
+      <span class="dm-f-robot-chi">
+        <span class="dm-f-robot-chip"><i aria-hidden="true"></i>${esc(robotStateLabel(riga3.state))}</span>
+        <b>${esc(riga3.name)}</b>
+        ${dettagli.length ? `<small>${esc(dettagli.join(" · "))}</small>` : ""}
+      </span>
+    </div>
+    ${tasti.length ? `<div class="dm-f-robot-tasti" data-quanti="${tasti.length}">${tasti.join("")}</div>` : ""}
+  </div>`;
+}
+function robotMarkup(riga3) {
+  const batteria = Number.isFinite(riga3.battery) ? Math.round(riga3.battery) : null;
+  const stato3 = [
+    robotStateLabel(riga3.state),
+    batteria == null ? "" : `${batteria}%`,
+    riga3.state === "error" && riga3.error ? riga3.error : ""
+  ].filter(Boolean).join(" · ");
+  const avvia2 = riga3.available && saFare(riga3, "start") ? tastoRobot(riga3, "start", `${GLIFI_MP.suona} ${esc(t("Avvia", "Start"))}`, "dm-f-robot-avvia") : "";
+  return `<article class="dm-f-robot-robot">
+    <span class="dm-f-robot-ic" aria-hidden="true">${disegnoDelRobot(riga3, 24)}</span>
+    <span class="dm-f-robot-nome"><b>${esc(riga3.name)}</b><small>${esc(stato3)}</small>${batteria == null ? "" : `<span class="dm-f-robot-bat" data-scarica="${batteria < SCARICA2}" aria-hidden="true"><i style="width:${batteria}%"></i></span>`}</span>
+    ${avvia2}
+  </article>`;
+}
+function finestraRobot(widget) {
+  const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
+  const eroe = righe2.find((riga3) => riga3.cleaning || riga3.mowing) || null;
+  const altri = righe2.filter((riga3) => riga3 !== eroe);
+  return `<div class="dm-f-robot">
+    ${eroe ? eroeRobot(eroe) : ""}
+    ${altri.length ? `${titolo(eroe ? t("Gli altri", "The others") : t("I robot", "The robots"))}${altri.map(robotMarkup).join("")}` : ""}
+  </div>`;
+}
+var A = "var(--dm-widget-accent,#6366f1)";
+var tinta = (quanto) => `color-mix(in srgb,${A} ${quanto}%,var(--card-bg,#fff))`;
+var bordo = (quanto) => `color-mix(in srgb,${A} ${quanto}%,var(--card-border,#e2e8f0))`;
+var FONDO = "var(--card-bg,#fff)";
+var TESTO = "var(--text,#0f172a)";
+var SPENTO3 = "var(--text-dim,#64748b)";
+var LINEA = "var(--card-border,#e8edf3)";
+var STILE6 = `
+${P2} .dm-f-num{font-family:'Oswald',sans-serif;font-weight:600;font-variant-numeric:tabular-nums}
+${P2} .dm-f-tit{margin:18px 2px 9px;font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:${SPENTO3}}
+${P2} .dm-f-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+${P2} .dm-f-nota{margin:12px 2px 0;font-size:12px;font-weight:700;line-height:1.4;color:${SPENTO3};text-align:center}
+${P2} .dm-f-tasto{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 12px;border-radius:16px;
+  font:inherit;font-size:14px;font-weight:850;cursor:pointer;background:${FONDO};border:1px solid ${bordo(40)};color:${A}}
+${P2} .dm-f-tasto.dm-f-pieno{background:${A};border-color:${A};color:#fff}
+${P2} .dm-f-tasto svg{flex:0 0 auto;width:18px;height:18px}
+${P2} .dm-f-storia{border-radius:18px;background:${tinta(4)};border:1px solid ${LINEA};padding:2px 14px}
+${P2} .dm-f-storia>div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 0;font-size:13px;font-weight:750;color:${TESTO};border-bottom:1px solid ${LINEA}}
+${P2} .dm-f-storia>div:last-child{border-bottom:0}
+${P2} .dm-f-storia .dm-f-num{color:${SPENTO3};font-size:14px;white-space:nowrap}
+
+/* Finestre e tapparelle */
+${P2} .dm-f-tapparelle-eroi{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+${P2} .dm-f-tapparelle-eroi[data-quanti="1"]{grid-template-columns:1fr}
+${P2} .dm-f-tapparelle-eroe{min-width:0;border-radius:22px;padding:14px 15px;background:linear-gradient(155deg,${tinta(6)},${tinta(13)});border:1px solid ${bordo(32)}}
+${P2} .dm-f-tapparelle-eroe small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${A}}
+${P2} .dm-f-tapparelle-eroe .dm-f-num{display:block;font-size:44px;line-height:1;margin:6px 0 4px;color:${TESTO}}
+${P2} .dm-f-tapparelle-eroe em{display:block;font-style:normal;font-size:12.5px;font-weight:750;line-height:1.35;color:${SPENTO3};overflow-wrap:anywhere}
+${P2} .dm-f-tapparelle-tutte{display:grid;grid-template-columns:1fr 1fr 60px;gap:8px;margin-top:10px}
+${P2} .dm-f-tapparelle-stanza{padding:12px 12px 12px 14px;border-radius:20px;background:${FONDO};border:1px solid ${LINEA};margin-bottom:8px;box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
+${P2} .dm-f-tapparelle-stanza[data-viva="true"]{border-color:${bordo(32)};background:linear-gradient(180deg,${tinta(3)},${FONDO})}
+${P2} .dm-f-tapparelle-riga{display:flex;align-items:center;gap:10px}
+${P2} .dm-f-tapparelle-piccola{margin-top:8px;justify-content:space-between}
+${P2} .dm-f-tapparelle-piccola small,${P2} .dm-f-tapparelle-tipo{font-size:12px;font-weight:750;color:${SPENTO3}}
+${P2} .dm-f-tapparelle-motore .dm-f-tapparelle-riga{justify-content:space-between;margin-top:10px}
+${P2} .dm-f-tapparelle-nome{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+${P2} .dm-f-tapparelle-nome b{font-size:15px;font-weight:850;color:${TESTO};overflow-wrap:anywhere}
+${P2} .dm-f-tapparelle-nome small{font-size:12px;font-weight:750;color:${SPENTO3}}
+${P2} .dm-f-tapparelle-ante{display:flex;flex-wrap:wrap;gap:4px}
+${P2} .dm-f-tapparelle-anta{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:850;background:color-mix(in srgb,${SPENTO3} 12%,transparent);color:${SPENTO3}}
+${P2} .dm-f-tapparelle-anta[data-aperta="true"]{background:${tinta(14)};color:${A}}
+${P2} .dm-f-tapparelle-anta i{width:8px;height:8px;border-radius:50%;background:currentColor}
+${P2} .dm-f-tapparelle-frecce{display:flex;gap:6px;flex:0 0 auto}
+${P2} .dm-f-tapparelle-freccia{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;padding:0;cursor:pointer;
+  background:${tinta(6)};border:1px solid ${bordo(25)};color:${A}}
+${P2} .dm-f-tapparelle-barra{display:block;height:6px;border-radius:999px;background:color-mix(in srgb,${SPENTO3} 14%,transparent);margin-top:10px;overflow:hidden}
+${P2} .dm-f-tapparelle-barra i{display:block;height:100%;border-radius:999px;background:${A}}
+${P2} .dm-f-tapparelle-sotto{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;font-size:11.5px;font-weight:750;color:${SPENTO3}}
+${P2} .dm-f-tapparelle-sotto>span{flex:1}
+${P2} .dm-f-tapparelle-sotto b{font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;color:${TESTO}}
+${P2} .dm-f-tapparelle-pos{height:26px;border-radius:9px;border:1px solid ${bordo(25)};background:${FONDO};color:${A};font:inherit;font-size:12px;font-weight:800;padding:0 4px}
+
+/* Prese */
+${P2} .dm-f-eroe{display:flex;align-items:center;gap:16px;border-radius:24px;padding:16px 18px;background:linear-gradient(155deg,${tinta(3)},${tinta(11)});border:1px solid ${bordo(30)}}
+${P2} .dm-f-prese-eroe small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${SPENTO3}}
+${P2} .dm-f-prese-conto .dm-f-num{font-size:46px;line-height:1;color:${TESTO}}
+${P2} .dm-f-prese-eroe em{font-style:normal;font-size:22px;color:${SPENTO3}}
+${P2} .dm-f-prese-watt{margin-left:auto;text-align:right}
+${P2} .dm-f-prese-watt .dm-f-num{display:block;font-size:26px;color:${TESTO}}
+${P2} .dm-f-prese-watt small{letter-spacing:0;text-transform:none;font-size:12px;font-weight:750}
+${P2} .dm-f-prese-presa{position:relative;display:flex;flex-direction:column;min-height:112px;padding:13px;border-radius:20px;background:${FONDO};border:1px solid ${LINEA};box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
+${P2} .dm-f-prese-presa[data-on="true"]{background:linear-gradient(160deg,${tinta(3)},${tinta(9)});border-color:${bordo(45)}}
+${P2} .dm-f-prese-presa[data-muta="true"]{opacity:.6;border-style:dashed;box-shadow:none}
+${P2} .dm-f-prese-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb,${SPENTO3} 10%,transparent);color:${SPENTO3}}
+${P2} .dm-f-prese-presa[data-on="true"] .dm-f-prese-ic{background:${A};color:#fff}
+${P2} .dm-f-prese-presa b{margin-top:auto;padding-top:10px;font-size:14.5px;font-weight:850;line-height:1.2;color:${TESTO};overflow-wrap:anywhere}
+${P2} .dm-f-prese-presa small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO3}}
+${P2} .dm-f-prese-int{position:absolute;top:13px;right:13px;width:46px;height:28px;padding:0;border:0;border-radius:999px;cursor:pointer;background:color-mix(in srgb,${SPENTO3} 25%,transparent)}
+${P2} .dm-f-prese-int i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .18s}
+${P2} .dm-f-prese-int[data-on="true"]{background:${A}}
+${P2} .dm-f-prese-int[data-on="true"] i{left:22px}
+${P2} .dm-f-prese-lucchetto{position:absolute;top:15px;right:13px;font-size:11px;font-weight:850;color:${SPENTO3}}
+
+/* Apri porte */
+${P2} .dm-f-porte-avviso{display:flex;align-items:center;gap:13px;margin-bottom:8px;border-radius:22px;padding:14px 16px;border:1px solid #fecaca;background:linear-gradient(155deg,color-mix(in srgb,#dc2626 5%,${FONDO}),color-mix(in srgb,#dc2626 13%,${FONDO}))}
+${P2} .dm-f-porte-avviso[data-tono="ok"]{border-color:color-mix(in srgb,#16a34a 35%,${LINEA});background:color-mix(in srgb,#16a34a 8%,${FONDO})}
+${P2} .dm-f-porte-avviso-ic{flex:0 0 auto;font-size:24px;line-height:1;display:grid;place-items:center}
+${P2} .dm-f-porte-avviso[data-tono="ok"] .dm-f-porte-avviso-ic{font-size:18px;font-weight:900;color:#15803d}
+${P2} .dm-f-porte-avviso b{display:block;font-size:16px;font-weight:850;color:#b91c1c}
+${P2} .dm-f-porte-avviso[data-tono="ok"] b{color:#15803d;font-size:15px}
+${P2} .dm-f-porte-avviso small{font-size:12.5px;font-weight:750;color:#dc2626}
+${P2} .dm-f-porte-porta{display:flex;flex-direction:column;min-height:168px;padding:14px;border-radius:22px;background:${FONDO};border:1px solid ${LINEA};box-shadow:0 12px 24px -22px rgba(15,23,42,.6)}
+${P2} .dm-f-porte-porta[data-tono="ko"]{border-color:#fecaca}
+${P2} .dm-f-porte-ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:21px;background:color-mix(in srgb,var(--dm-f-porte-tasto) 11%,${FONDO})}
+${P2} .dm-f-porte-porta>b{margin-top:12px;font-size:15px;font-weight:850;color:${TESTO};overflow-wrap:anywhere}
+${P2} .dm-f-porte-porta>small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO3}}
+${P2} .dm-f-porte-porta>small[data-tono="ok"]{color:#15803d}
+${P2} .dm-f-porte-porta>small[data-tono="ko"]{color:#b91c1c}
+${P2} .dm-f-porte-tasti{display:grid;gap:6px;margin-top:auto;padding-top:12px}
+/* I tasti hanno il colore dei comandi, non quello della tessera: la tessera si
+ * fa rossa quando qualcosa e' aperto, e un «Sblocca» rosso sembra un allarme. */
+${P2} .dm-f-porte{--dm-f-porte-tasto:#0284c7}
+${P2} .dm-f-porte-tasto{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border:0;border-radius:14px;cursor:pointer;font:inherit;font-size:14px;font-weight:850;background:var(--dm-f-porte-tasto);color:#fff}
+${P2} .dm-f-porte-tasto[data-leggero="true"]{background:color-mix(in srgb,var(--dm-f-porte-tasto) 13%,${FONDO});color:var(--dm-f-porte-tasto)}
+:root[data-theme="dark"] ${P2} .dm-f-porte-avviso b,:root[data-theme="dark"] ${P2} .dm-f-porte-porta>small[data-tono="ko"]{color:#fca5a5}
+:root[data-theme="dark"] ${P2} .dm-f-porte-avviso small{color:#fecaca}
+
+/* Musica */
+${P2} .dm-f-media-eroe{border-radius:26px;padding:16px;color:#fff;background:linear-gradient(160deg,color-mix(in srgb,${A} 45%,#0b0420),color-mix(in srgb,${A} 80%,#1e0b3d) 60%,${A});box-shadow:0 20px 40px -28px color-mix(in srgb,${A} 90%,#000)}
+${P2} .dm-f-media-testa{display:flex;gap:14px;align-items:center}
+${P2} .dm-f-media-arte{flex:0 0 96px;width:96px;height:96px;border-radius:18px;object-fit:cover;display:grid;place-items:center;font-size:40px;background:rgba(255,255,255,.14);box-shadow:0 10px 24px -12px rgba(0,0,0,.6)}
+${P2} .dm-f-media-cosa{min-width:0;display:flex;flex-direction:column}
+${P2} .dm-f-media-cosa small{font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.72)}
+${P2} .dm-f-media-cosa b{margin:3px 0 2px;font-size:22px;font-weight:850;line-height:1.15;overflow-wrap:anywhere}
+${P2} .dm-f-media-cosa em{font-style:normal;font-size:13.5px;font-weight:700;color:rgba(255,255,255,.82)}
+${P2} .dm-f-media-barra{display:block;margin-top:16px;height:5px;border-radius:999px;background:rgba(255,255,255,.22);overflow:hidden}
+${P2} .dm-f-media-barra i{display:block;height:100%;border-radius:999px;background:#fff}
+${P2} .dm-f-media-tempi{display:flex;justify-content:space-between;margin-top:5px;font-size:11.5px;font-weight:750;color:rgba(255,255,255,.72)}
+${P2} .dm-f-media-cmd{display:flex;justify-content:center;align-items:center;gap:20px;margin-top:10px}
+${P2} .dm-f-media-tasto{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;padding:0;border:0;cursor:pointer;color:#fff;background:rgba(255,255,255,.14)}
+${P2} .dm-f-media-tasto svg{width:20px;height:20px}
+${P2} .dm-f-media-centro{width:66px;height:66px;background:#fff;color:color-mix(in srgb,${A} 70%,#000)}
+${P2} .dm-f-media-centro svg{width:26px;height:26px}
+${P2} .dm-f-media-volume{display:flex;align-items:center;gap:10px;margin-top:14px}
+${P2} .dm-f-media-volume svg{width:18px;height:18px}
+${P2} .dm-f-media-volume input{flex:1;min-width:0;height:6px;margin:0;border-radius:999px;-webkit-appearance:none;appearance:none;
+  background:linear-gradient(90deg,#fff var(--v,0%),rgba(255,255,255,.22) var(--v,0%))}
+${P2} .dm-f-media-volume input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+${P2} .dm-f-media-volume input::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#fff}
+${P2} .dm-f-media-volume .dm-f-num{width:42px;text-align:right;font-size:15px}
+${P2} .dm-f-media-cassa{display:flex;align-items:center;gap:12px;padding:11px 12px;margin-bottom:8px;border-radius:18px;background:${FONDO};border:1px solid ${LINEA};box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
+${P2} .dm-f-media-cassa[data-spenta="true"]{opacity:.75}
+${P2} .dm-f-media-ic{flex:0 0 44px;width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:20px;overflow:hidden;background:${tinta(12)}}
+${P2} .dm-f-media-ic img{width:100%;height:100%;object-fit:cover}
+${P2} .dm-f-media-nome{flex:1;min-width:0}
+${P2} .dm-f-media-nome b{display:block;font-size:14.5px;font-weight:850;color:${TESTO}}
+${P2} .dm-f-media-nome small{display:block;font-size:12px;font-weight:750;color:${SPENTO3};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${P2} .dm-f-media-uno{width:44px;height:44px;background:${A};color:#fff}
+${P2} .dm-f-media-uno[data-centro="accendi"]{background:color-mix(in srgb,${SPENTO3} 12%,transparent);color:${SPENTO3}}
+${P2} .dm-f-media-uno svg{width:17px;height:17px}
+
+/* Citofono e posta */
+${P2} .dm-f-citofono-eroe{margin-bottom:8px;border-radius:24px;padding:18px;background:linear-gradient(155deg,${tinta(5)},${tinta(14)});border:1px solid ${bordo(35)}}
+${P2} .dm-f-citofono-eroe[data-tono="quiete"]{background:${FONDO};border-color:${LINEA}}
+${P2} .dm-f-citofono-riga{display:flex;align-items:center;gap:14px}
+${P2} .dm-f-citofono-ic{flex:0 0 60px;width:60px;height:60px;border-radius:18px;display:grid;place-items:center;font-size:30px;background:${FONDO};box-shadow:inset 0 0 0 1px ${bordo(30)}}
+${P2} .dm-f-citofono-riga>span:last-child{min-width:0;display:flex;flex-direction:column}
+${P2} .dm-f-citofono-riga small{font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${A}}
+${P2} .dm-f-citofono-riga b{margin-top:2px;font-size:24px;font-weight:850;line-height:1.15;color:${TESTO}}
+${P2} .dm-f-citofono-riga em{font-style:normal;font-size:13px;font-weight:750;color:${A}}
+${P2} .dm-f-citofono-presa{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:48px;margin-top:14px;border-radius:15px;cursor:pointer;font:inherit;font-size:14.5px;font-weight:850;background:${FONDO};border:1px solid ${bordo(35)};color:${A}}
+${P2} .dm-f-citofono-apri{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 8px;padding:16px 18px;border:0;border-radius:24px;cursor:pointer;font:inherit;text-align:left;background:${A};color:#fff;box-shadow:0 16px 30px -20px ${A}}
+${P2} .dm-f-citofono-eroe .dm-f-citofono-apri{margin:14px 0 0}
+${P2} .dm-f-citofono-apri-ic{flex:0 0 52px;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:24px;background:rgba(255,255,255,.18)}
+${P2} .dm-f-citofono-apri b{display:block;font-size:19px;font-weight:850}
+${P2} .dm-f-citofono-apri small{font-size:12.5px;font-weight:750;color:rgba(255,255,255,.85)}
+${P2} .dm-f-citofono-cosa{display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:12px 14px;border-radius:18px;background:${FONDO};border:1px solid ${LINEA}}
+${P2} .dm-f-citofono-cosa>span:first-child{font-size:20px}
+${P2} .dm-f-citofono-cosa>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column}
+${P2} .dm-f-citofono-cosa>span b{font-size:14.5px;font-weight:850;color:${TESTO}}
+${P2} .dm-f-citofono-cosa small{font-size:12px;font-weight:750;color:${SPENTO3}}
+${P2} .dm-f-citofono-cosa>.dm-f-num{font-size:15px;color:${SPENTO3};white-space:nowrap}
+
+/* Robot */
+${P2} .dm-f-robot-eroe{border-radius:26px;padding:16px;background:linear-gradient(160deg,${tinta(4)},${tinta(14)});border:1px solid ${bordo(35)}}
+${P2} .dm-f-robot-riga{display:flex;align-items:center;gap:14px}
+${P2} .dm-f-robot-anello{--p:0;position:relative;flex:0 0 96px;width:96px;height:96px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(${A} calc(var(--p)*1%),${tinta(18)} 0)}
+${P2} .dm-f-robot-anello[data-scarica="true"]{background:conic-gradient(#dc2626 calc(var(--p)*1%),color-mix(in srgb,#dc2626 15%,${FONDO}) 0)}
+${P2} .dm-f-robot-anello::after{content:"";position:absolute;inset:9px;border-radius:50%;background:${tinta(4)}}
+${P2} .dm-f-robot-anello[data-vuoto="true"]{background:${tinta(14)}}
+${P2} .dm-f-robot-anello>*{position:relative;z-index:1}
+${P2} .dm-f-robot-anello>span{display:flex;flex-direction:column;align-items:center}
+${P2} .dm-f-robot-anello .dm-f-num{font-size:26px;line-height:1;color:${TESTO}}
+${P2} .dm-f-robot-anello small{font-size:9.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:${SPENTO3}}
+${P2} .dm-f-robot-chi{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+${P2} .dm-f-robot-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:850;background:${FONDO};color:${A}}
+${P2} .dm-f-robot-chip i{width:8px;height:8px;border-radius:50%;background:${A};box-shadow:0 0 0 4px ${tinta(25)}}
+${P2} .dm-f-robot-chi b{margin-top:7px;font-size:18px;font-weight:850;line-height:1.2;color:${TESTO};overflow-wrap:anywhere}
+${P2} .dm-f-robot-chi small{margin-top:3px;font-size:12.5px;font-weight:750;color:${SPENTO3}}
+${P2} .dm-f-robot-tasti{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+${P2} .dm-f-robot-tasti[data-quanti="1"]{grid-template-columns:1fr}
+${P2} .dm-f-robot-robot{display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:12px;border-radius:20px;background:${FONDO};border:1px solid ${LINEA};box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
+${P2} .dm-f-robot-ic{flex:0 0 46px;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:${tinta(10)};color:${A}}
+${P2} .dm-f-robot-nome{flex:1;min-width:0;display:flex;flex-direction:column}
+${P2} .dm-f-robot-nome b{font-size:14.5px;font-weight:850;color:${TESTO};overflow-wrap:anywhere}
+${P2} .dm-f-robot-nome small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO3}}
+${P2} .dm-f-robot-bat{display:block;width:56px;height:6px;margin-top:6px;border-radius:999px;overflow:hidden;background:color-mix(in srgb,${SPENTO3} 18%,transparent)}
+${P2} .dm-f-robot-bat i{display:block;height:100%;background:${A}}
+${P2} .dm-f-robot-bat[data-scarica="true"] i{background:#dc2626}
+${P2} .dm-f-robot-avvia{display:flex;align-items:center;gap:6px;flex:0 0 auto;padding:12px 15px;border:0;border-radius:14px;cursor:pointer;font:inherit;font-size:13.5px;font-weight:850;background:${tinta(12)};color:${A}}
+${P2} .dm-f-robot-avvia svg,${P2} .dm-f-robot-tasti svg{width:16px;height:16px}
+`;
+registraFinestra("tapparelle", { disegna: finestraTapparelle, stile: STILE6 });
+registraFinestra("prese", { disegna: finestraPrese });
+registraFinestra("porte", { disegna: finestraPorte });
+registraFinestra("media", { disegna: finestraMedia });
+registraFinestra("citofono", { disegna: finestraCitofono });
+registraFinestra("robot", { disegna: finestraRobot });
 
 // src/sections/finestre/sicurezza.js
 var FINESTRE_SICUREZZA = Object.freeze([
@@ -46025,7 +46751,7 @@ var FINESTRE_SICUREZZA = Object.freeze([
   "nonrisponde",
   "batterie"
 ]);
-var P2 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
+var P3 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
 var VERDE = "#16a34a";
 var ROSSO = "#dc2626";
 var AMBRA = "#d97706";
@@ -46084,38 +46810,38 @@ function pilaDi(entity2, states) {
   }
   return null;
 }
-var titolo = (k, testo2, conto = null) => `<h4 class="dm-f-${k}-tit">${esc(testo2)}${conto == null ? "" : ` <i>${esc(String(conto))}</i>`}</h4>`;
+var titolo2 = (k, testo2, conto = null) => `<h4 class="dm-f-${k}-tit">${esc(testo2)}${conto == null ? "" : ` <i>${esc(String(conto))}</i>`}</h4>`;
 function stileComune(k) {
   return `
-${P2} .dm-f-${k}{display:grid;gap:9px;min-width:0}
-${P2} .dm-f-${k} *{box-sizing:border-box}
-${P2} .dm-f-${k}-tit{display:flex;align-items:center;gap:8px;margin:10px 2px 0;
+${P3} .dm-f-${k}{display:grid;gap:9px;min-width:0}
+${P3} .dm-f-${k} *{box-sizing:border-box}
+${P3} .dm-f-${k}-tit{display:flex;align-items:center;gap:8px;margin:10px 2px 0;
   font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-${P2} .dm-f-${k}-tit i{font-style:normal;padding:2px 8px;border-radius:999px;letter-spacing:.04em;
+${P3} .dm-f-${k}-tit i{font-style:normal;padding:2px 8px;border-radius:999px;letter-spacing:.04em;
   background:color-mix(in srgb,var(--text-dim,#64748b) 14%,transparent);color:var(--text,#0f172a)}
-${P2} .dm-f-${k}-num{font-family:Oswald,var(--dm-font-display,sans-serif);font-weight:600;font-variant-numeric:tabular-nums}
-${P2} .dm-f-${k}-eroe{--tono:var(--dm-widget-accent,#0ea5e9);display:flex;align-items:center;gap:14px;
+${P3} .dm-f-${k}-num{font-family:Oswald,var(--dm-font-display,sans-serif);font-weight:600;font-variant-numeric:tabular-nums}
+${P3} .dm-f-${k}-eroe{--tono:var(--dm-widget-accent,#0ea5e9);display:flex;align-items:center;gap:14px;
   padding:16px 18px;border-radius:24px;
   background:linear-gradient(155deg,color-mix(in srgb,var(--tono) 13%,var(--card-bg,#fff)),color-mix(in srgb,var(--tono) 6%,var(--card-bg,#fff)));
   border:1px solid color-mix(in srgb,var(--tono) 30%,transparent)}
-${P2} .dm-f-${k}-eroe[data-tono="ok"]{--tono:${VERDE}}
-${P2} .dm-f-${k}-eroe[data-tono="allarme"]{--tono:${ROSSO}}
-${P2} .dm-f-${k}-eroe[data-tono="ambra"]{--tono:${AMBRA}}
-${P2} .dm-f-${k}-eroe[data-tono="spento"]{--tono:#64748b}
-${P2} .dm-f-${k}-eroe > .dm-f-${k}-num{font-size:54px;line-height:1;color:color-mix(in srgb,var(--tono) 78%,var(--text,#0f172a))}
-${P2} .dm-f-${k}-eroe b{display:block;font-size:17px;font-weight:850;line-height:1.2;color:color-mix(in srgb,var(--tono) 60%,var(--text,#0f172a))}
-${P2} .dm-f-${k}-eroe span.dm-f-${k}-sotto{display:block;margin-top:3px;font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b)}
-${P2} .dm-f-${k}-segno{flex:0 0 66px;width:66px;height:66px;border-radius:22px;display:grid;place-items:center;font-size:32px;
+${P3} .dm-f-${k}-eroe[data-tono="ok"]{--tono:${VERDE}}
+${P3} .dm-f-${k}-eroe[data-tono="allarme"]{--tono:${ROSSO}}
+${P3} .dm-f-${k}-eroe[data-tono="ambra"]{--tono:${AMBRA}}
+${P3} .dm-f-${k}-eroe[data-tono="spento"]{--tono:#64748b}
+${P3} .dm-f-${k}-eroe > .dm-f-${k}-num{font-size:54px;line-height:1;color:color-mix(in srgb,var(--tono) 78%,var(--text,#0f172a))}
+${P3} .dm-f-${k}-eroe b{display:block;font-size:17px;font-weight:850;line-height:1.2;color:color-mix(in srgb,var(--tono) 60%,var(--text,#0f172a))}
+${P3} .dm-f-${k}-eroe span.dm-f-${k}-sotto{display:block;margin-top:3px;font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P3} .dm-f-${k}-segno{flex:0 0 66px;width:66px;height:66px;border-radius:22px;display:grid;place-items:center;font-size:32px;
   background:var(--card-bg,#fff);box-shadow:0 0 0 6px color-mix(in srgb,var(--tono) 14%,transparent)}
-${P2} .dm-f-${k}-segno svg{width:34px;height:34px}
-${P2} .dm-f-${k}-muto{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:16px;min-width:0;
+${P3} .dm-f-${k}-segno svg{width:34px;height:34px}
+${P3} .dm-f-${k}-muto{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:16px;min-width:0;
   border:1px dashed color-mix(in srgb,var(--text-dim,#64748b) 45%,transparent);color:var(--text-dim,#64748b);font-size:13px;font-weight:800}
-${P2} .dm-f-${k}-muto > b{flex:1;min-width:0;font-weight:800;overflow-wrap:anywhere}
-${P2} .dm-f-${k}-muto > small{margin-left:auto;flex:none;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
-${P2} .dm-f-${k}-muto .dm-f-${k}-ic{display:grid;place-items:center;flex:none;width:22px;height:22px;opacity:.7}
-${P2} .dm-f-${k}-muto .dm-f-${k}-ic svg{width:20px;height:20px}`;
+${P3} .dm-f-${k}-muto > b{flex:1;min-width:0;font-weight:800;overflow-wrap:anywhere}
+${P3} .dm-f-${k}-muto > small{margin-left:auto;flex:none;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+${P3} .dm-f-${k}-muto .dm-f-${k}-ic{display:grid;place-items:center;flex:none;width:22px;height:22px;opacity:.7}
+${P3} .dm-f-${k}-muto .dm-f-${k}-ic svg{width:20px;height:20px}`;
 }
-var SPUNTA = `<svg viewBox="0 0 24 24" fill="none" stroke="${VERDE}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+var SPUNTA2 = `<svg viewBox="0 0 24 24" fill="none" stroke="${VERDE}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 function disegnaSicurezza(widget) {
   const k = "sicurezza";
   const modi = Array.isArray(widget.modi) ? widget.modi : [];
@@ -46155,7 +46881,7 @@ function disegnaSicurezza(widget) {
     voce2.on ? t("Attivo", "Active") : voce2.hint
   )}</small></span>
     </button>`;
-  const modiMarkup = inserimenti.length ? `${titolo(k, t("Cambia modo", "Change mode"))}
+  const modiMarkup = inserimenti.length ? `${titolo2(k, t("Cambia modo", "Change mode"))}
       <div class="dm-f-${k}-modi">${inserimenti.map(scheda8).join("")}</div>` : "";
   const spegniMarkup = spegni2 && (widget.armed || widget.triggered) ? `<button type="button" class="dm-f-${k}-spegni" data-dm-w-alarm="${esc(spegni2.service)}">
         <span class="dm-f-${k}-ic" aria-hidden="true">${spegni2.disegno || "🔓"}</span>
@@ -46165,46 +46891,46 @@ function disegnaSicurezza(widget) {
       </button>` : "";
   return `<div class="dm-f-${k}">
       ${eroe}
-      ${avvisi ? `${titolo(k, t("Da sapere", "Good to know"))}${avvisi}` : ""}
+      ${avvisi ? `${titolo2(k, t("Da sapere", "Good to know"))}${avvisi}` : ""}
       ${modiMarkup}
       ${spegniMarkup}
     </div>`;
 }
 var STILE_SICUREZZA = `${stileComune("sicurezza")}
-${P2} .dm-f-sicurezza-eroe{padding:18px}
-${P2} .dm-f-sicurezza-eroe .dm-f-sicurezza-segno{flex-basis:76px;width:76px;height:76px;border-radius:24px;font-size:38px}
-${P2} .dm-f-sicurezza-cosa{display:block;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+${P3} .dm-f-sicurezza-eroe{padding:18px}
+${P3} .dm-f-sicurezza-eroe .dm-f-sicurezza-segno{flex-basis:76px;width:76px;height:76px;border-radius:24px;font-size:38px}
+${P3} .dm-f-sicurezza-cosa{display:block;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
   color:color-mix(in srgb,var(--tono) 75%,var(--text,#0f172a))}
-${P2} .dm-f-sicurezza-stato{display:block;font-size:38px;line-height:1.05;color:color-mix(in srgb,var(--tono) 70%,var(--text,#0f172a))}
-${P2} .dm-f-sicurezza-avviso{--tono:${ROSSO};display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:18px;
+${P3} .dm-f-sicurezza-stato{display:block;font-size:38px;line-height:1.05;color:color-mix(in srgb,var(--tono) 70%,var(--text,#0f172a))}
+${P3} .dm-f-sicurezza-avviso{--tono:${ROSSO};display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:18px;
   background:color-mix(in srgb,var(--tono) 9%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,var(--tono) 32%,transparent)}
-${P2} .dm-f-sicurezza-avviso[data-tono="ambra"]{--tono:${AMBRA}}
-${P2} .dm-f-sicurezza-avviso .dm-f-sicurezza-ic{flex:none;display:grid;place-items:center;width:24px;height:24px;color:var(--tono)}
-${P2} .dm-f-sicurezza-avviso > div{flex:1;min-width:0}
-${P2} .dm-f-sicurezza-avviso b{display:block;font-size:13.5px;font-weight:850;color:color-mix(in srgb,var(--tono) 70%,var(--text,#0f172a));overflow-wrap:anywhere}
-${P2} .dm-f-sicurezza-avviso span{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-${P2} .dm-f-sicurezza-avviso i{flex:none;font-style:normal;font-size:12px;font-weight:900;color:var(--tono);white-space:nowrap}
-${P2} .dm-f-sicurezza-modi{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
-${P2} .dm-f-sicurezza-modo,${P2} .dm-f-sicurezza-spegni{font:inherit;color:inherit;text-align:left;cursor:pointer;
+${P3} .dm-f-sicurezza-avviso[data-tono="ambra"]{--tono:${AMBRA}}
+${P3} .dm-f-sicurezza-avviso .dm-f-sicurezza-ic{flex:none;display:grid;place-items:center;width:24px;height:24px;color:var(--tono)}
+${P3} .dm-f-sicurezza-avviso > div{flex:1;min-width:0}
+${P3} .dm-f-sicurezza-avviso b{display:block;font-size:13.5px;font-weight:850;color:color-mix(in srgb,var(--tono) 70%,var(--text,#0f172a));overflow-wrap:anywhere}
+${P3} .dm-f-sicurezza-avviso span{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+${P3} .dm-f-sicurezza-avviso i{flex:none;font-style:normal;font-size:12px;font-weight:900;color:var(--tono);white-space:nowrap}
+${P3} .dm-f-sicurezza-modi{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+${P3} .dm-f-sicurezza-modo,${P3} .dm-f-sicurezza-spegni{font:inherit;color:inherit;text-align:left;cursor:pointer;
   display:flex;align-items:center;gap:11px;min-height:66px;min-width:0;padding:12px 13px;border-radius:20px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e8edf3);box-shadow:0 10px 22px -22px rgba(15,23,42,.6);
   transition:transform .15s ease,border-color .15s ease}
-${P2} .dm-f-sicurezza-modo:active,${P2} .dm-f-sicurezza-spegni:active{transform:scale(.98)}
-${P2} .dm-f-sicurezza-modo .dm-f-sicurezza-ic,${P2} .dm-f-sicurezza-spegni .dm-f-sicurezza-ic{flex:none;width:40px;height:40px;border-radius:13px;
+${P3} .dm-f-sicurezza-modo:active,${P3} .dm-f-sicurezza-spegni:active{transform:scale(.98)}
+${P3} .dm-f-sicurezza-modo .dm-f-sicurezza-ic,${P3} .dm-f-sicurezza-spegni .dm-f-sicurezza-ic{flex:none;width:40px;height:40px;border-radius:13px;
   display:grid;place-items:center;font-size:19px;background:color-mix(in srgb,var(--text-dim,#64748b) 9%,var(--card-bg,#fff))}
-${P2} .dm-f-sicurezza-testo{min-width:0}
-${P2} .dm-f-sicurezza-testo b{display:block;font-size:14.5px;font-weight:850;line-height:1.2}
-${P2} .dm-f-sicurezza-testo small{display:block;margin-top:1px;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
-${P2} .dm-f-sicurezza-modo[data-on="true"]{border-color:color-mix(in srgb,${VERDE} 55%,transparent);
+${P3} .dm-f-sicurezza-testo{min-width:0}
+${P3} .dm-f-sicurezza-testo b{display:block;font-size:14.5px;font-weight:850;line-height:1.2}
+${P3} .dm-f-sicurezza-testo small{display:block;margin-top:1px;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P3} .dm-f-sicurezza-modo[data-on="true"]{border-color:color-mix(in srgb,${VERDE} 55%,transparent);
   background:color-mix(in srgb,${VERDE} 9%,var(--card-bg,#fff));box-shadow:inset 0 0 0 2px color-mix(in srgb,${VERDE} 75%,transparent)}
-${P2} .dm-f-sicurezza-modo[data-on="true"] .dm-f-sicurezza-ic{background:color-mix(in srgb,${VERDE} 18%,var(--card-bg,#fff));color:${VERDE}}
-${P2} .dm-f-sicurezza-modo[data-on="true"] small{color:${VERDE}}
-${P2} .dm-f-sicurezza-spegni{justify-content:center;min-height:56px;margin-top:2px;background:#0f172a;border-color:#0f172a;color:#fff}
-${P2} .dm-f-sicurezza-spegni .dm-f-sicurezza-ic{width:34px;height:34px;background:rgba(255,255,255,.12);color:#fff}
-${P2} .dm-f-sicurezza-spegni small{color:#cbd5e1}
-html[data-theme="dark"] ${P2} .dm-f-sicurezza-spegni{background:#f8fafc;border-color:#f8fafc;color:#0f172a}
-html[data-theme="dark"] ${P2} .dm-f-sicurezza-spegni .dm-f-sicurezza-ic{background:rgba(15,23,42,.08);color:#0f172a}
-html[data-theme="dark"] ${P2} .dm-f-sicurezza-spegni small{color:#475569}`;
+${P3} .dm-f-sicurezza-modo[data-on="true"] .dm-f-sicurezza-ic{background:color-mix(in srgb,${VERDE} 18%,var(--card-bg,#fff));color:${VERDE}}
+${P3} .dm-f-sicurezza-modo[data-on="true"] small{color:${VERDE}}
+${P3} .dm-f-sicurezza-spegni{justify-content:center;min-height:56px;margin-top:2px;background:#0f172a;border-color:#0f172a;color:#fff}
+${P3} .dm-f-sicurezza-spegni .dm-f-sicurezza-ic{width:34px;height:34px;background:rgba(255,255,255,.12);color:#fff}
+${P3} .dm-f-sicurezza-spegni small{color:#cbd5e1}
+html[data-theme="dark"] ${P3} .dm-f-sicurezza-spegni{background:#f8fafc;border-color:#f8fafc;color:#0f172a}
+html[data-theme="dark"] ${P3} .dm-f-sicurezza-spegni .dm-f-sicurezza-ic{background:rgba(15,23,42,.08);color:#0f172a}
+html[data-theme="dark"] ${P3} .dm-f-sicurezza-spegni small{color:#475569}`;
 function ultimiRilevamenti(states) {
   let scelte4 = {};
   try {
@@ -46270,37 +46996,37 @@ function disegnaTelecamere(widget, states) {
   return `<div class="dm-f-${k}">
       ${grande}
       ${fascia2}
-      ${altre.length ? `${titolo(k, t("Le altre", "The others"))}<div class="dm-f-${k}-griglia">${altre.map(mini).join("")}</div>` : ""}
+      ${altre.length ? `${titolo2(k, t("Le altre", "The others"))}<div class="dm-f-${k}-griglia">${altre.map(mini).join("")}</div>` : ""}
       ${azioni2}
     </div>`;
 }
 var STILE_TELECAMERE = `${stileComune("telecamere")}
-${P2} .dm-f-telecamere-big,${P2} .dm-f-telecamere-mini{position:relative;margin:0;overflow:hidden;background:#0b1220;min-width:0}
-${P2} .dm-f-telecamere-big{border-radius:22px;aspect-ratio:16/10}
-${P2} .dm-f-telecamere-mini{border-radius:18px;aspect-ratio:16/11}
-${P2} .dm-f-telecamere-big[data-dm-w-apri-cam],${P2} .dm-f-telecamere-mini[data-dm-w-apri-cam]{cursor:pointer}
-${P2} .dm-f-telecamere-big img,${P2} .dm-f-telecamere-mini img{display:block;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s ease}
-${P2} .dm-f-telecamere-big img[data-dm-camera-state="ready"],${P2} .dm-f-telecamere-mini img[data-dm-camera-state="ready"]{opacity:1}
-${P2} .dm-f-telecamere-tag{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;
+${P3} .dm-f-telecamere-big,${P3} .dm-f-telecamere-mini{position:relative;margin:0;overflow:hidden;background:#0b1220;min-width:0}
+${P3} .dm-f-telecamere-big{border-radius:22px;aspect-ratio:16/10}
+${P3} .dm-f-telecamere-mini{border-radius:18px;aspect-ratio:16/11}
+${P3} .dm-f-telecamere-big[data-dm-w-apri-cam],${P3} .dm-f-telecamere-mini[data-dm-w-apri-cam]{cursor:pointer}
+${P3} .dm-f-telecamere-big img,${P3} .dm-f-telecamere-mini img{display:block;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s ease}
+${P3} .dm-f-telecamere-big img[data-dm-camera-state="ready"],${P3} .dm-f-telecamere-mini img[data-dm-camera-state="ready"]{opacity:1}
+${P3} .dm-f-telecamere-tag{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;
   border-radius:999px;background:rgba(15,23,42,.62);color:#fff;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
   -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-${P2} .dm-f-telecamere-tag i{width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.3)}
-${P2} .dm-f-telecamere-giu{position:absolute;left:0;right:0;bottom:0;margin:0;padding:26px 14px 11px;color:#fff;
+${P3} .dm-f-telecamere-tag i{width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.3)}
+${P3} .dm-f-telecamere-giu{position:absolute;left:0;right:0;bottom:0;margin:0;padding:26px 14px 11px;color:#fff;
   background:linear-gradient(transparent,rgba(2,6,23,.8));display:flex;flex-direction:column;gap:1px}
-${P2} .dm-f-telecamere-giu b{font-family:Oswald,var(--dm-font-display,sans-serif);font-weight:600;font-size:21px;letter-spacing:.02em;
+${P3} .dm-f-telecamere-giu b{font-family:Oswald,var(--dm-font-display,sans-serif);font-weight:600;font-size:21px;letter-spacing:.02em;
   line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-${P2} .dm-f-telecamere-mini .dm-f-telecamere-giu{padding:20px 11px 8px}
-${P2} .dm-f-telecamere-mini .dm-f-telecamere-giu b{font-size:15px}
-${P2} .dm-f-telecamere-giu span{font-size:10.5px;font-weight:800;opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-${P2} .dm-f-telecamere-rileva{--tono:${AMBRA};display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:16px;
+${P3} .dm-f-telecamere-mini .dm-f-telecamere-giu{padding:20px 11px 8px}
+${P3} .dm-f-telecamere-mini .dm-f-telecamere-giu b{font-size:15px}
+${P3} .dm-f-telecamere-giu span{font-size:10.5px;font-weight:800;opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${P3} .dm-f-telecamere-rileva{--tono:${AMBRA};display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:16px;
   background:color-mix(in srgb,var(--tono) 10%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,var(--tono) 35%,transparent);
   font-size:13px;color:color-mix(in srgb,var(--tono) 70%,var(--text,#0f172a))}
-${P2} .dm-f-telecamere-rileva[data-ora="true"]{--tono:${ROSSO}}
-${P2} .dm-f-telecamere-rileva b{flex:1;min-width:0;font-weight:800}
-${P2} .dm-f-telecamere-rileva .dm-f-telecamere-num{flex:none;font-size:16px}
-${P2} .dm-f-telecamere-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
-${P2} .dm-f-telecamere-azioni{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-top:4px}
-${P2} .dm-f-telecamere-az{font:inherit;cursor:pointer;padding:13px;border-radius:16px;text-align:center;font-size:13px;font-weight:850;
+${P3} .dm-f-telecamere-rileva[data-ora="true"]{--tono:${ROSSO}}
+${P3} .dm-f-telecamere-rileva b{flex:1;min-width:0;font-weight:800}
+${P3} .dm-f-telecamere-rileva .dm-f-telecamere-num{flex:none;font-size:16px}
+${P3} .dm-f-telecamere-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+${P3} .dm-f-telecamere-azioni{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-top:4px}
+${P3} .dm-f-telecamere-az{font:inherit;cursor:pointer;padding:13px;border-radius:16px;text-align:center;font-size:13px;font-weight:850;
   color:var(--text,#334155);background:color-mix(in srgb,var(--text-dim,#64748b) 8%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}`;
 var icona = (riga3, ripiego) => `<span class="dm-f-ic-varco" aria-hidden="true">${disegnoDiCasa(riga3.glyph, { misura: 22, ripiego })}</span>`;
 function parolaDelTipo22(riga3) {
@@ -46343,32 +47069,32 @@ function disegnaVarchi(widget) {
   };
   return `<div class="dm-f-${k}">
       ${eroe}
-      ${aperti.length ? `${titolo(k, t("Aperti", "Open"))}${aperti.map(aperto2).join("")}` : ""}
-      ${chiusi.length ? `${titolo(k, t("Chiusi", "Closed"))}<div class="dm-f-${k}-chiusi">${chiusi.map(chiuso).join("")}</div>` : ""}
-      ${muti.length ? `${titolo(k, muti.length === 1 ? t("Non risponde", "Not answering") : t("Non rispondono", "Not answering"))}${muti.map(muto2).join("")}` : ""}
+      ${aperti.length ? `${titolo2(k, t("Aperti", "Open"))}${aperti.map(aperto2).join("")}` : ""}
+      ${chiusi.length ? `${titolo2(k, t("Chiusi", "Closed"))}<div class="dm-f-${k}-chiusi">${chiusi.map(chiuso).join("")}</div>` : ""}
+      ${muti.length ? `${titolo2(k, muti.length === 1 ? t("Non risponde", "Not answering") : t("Non rispondono", "Not answering"))}${muti.map(muto2).join("")}` : ""}
     </div>`;
 }
 var STILE_VARCHI = `${stileComune("varchi")}
-${P2} .dm-f-varchi .dm-f-ic-varco{display:grid;place-items:center}
-${P2} .dm-f-varchi .dm-f-ic-varco svg{width:22px;height:22px}
-${P2} .dm-f-varchi-aperto{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;min-width:0;
+${P3} .dm-f-varchi .dm-f-ic-varco{display:grid;place-items:center}
+${P3} .dm-f-varchi .dm-f-ic-varco svg{width:22px;height:22px}
+${P3} .dm-f-varchi-aperto{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;min-width:0;
   background:color-mix(in srgb,${ROSSO} 5%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,${ROSSO} 35%,transparent)}
-${P2} .dm-f-varchi-aperto .dm-f-varchi-ic{flex:none;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
+${P3} .dm-f-varchi-aperto .dm-f-varchi-ic{flex:none;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
   color:${ROSSO};background:color-mix(in srgb,${ROSSO} 11%,var(--card-bg,#fff))}
-${P2} .dm-f-varchi-nome{flex:1;min-width:0}
-${P2} .dm-f-varchi-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
-${P2} .dm-f-varchi-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:color-mix(in srgb,${ROSSO} 80%,var(--text,#0f172a))}
-${P2} .dm-f-varchi-da{flex:none;text-align:right;display:flex;flex-direction:column;align-items:flex-end}
-${P2} .dm-f-varchi-da .dm-f-varchi-num{font-size:20px;line-height:1}
-${P2} .dm-f-varchi-da small{font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-${P2} .dm-f-varchi-chiusi{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-${P2} .dm-f-varchi-ch{display:flex;align-items:center;gap:9px;padding:10px 11px;border-radius:16px;min-width:0;
+${P3} .dm-f-varchi-nome{flex:1;min-width:0}
+${P3} .dm-f-varchi-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
+${P3} .dm-f-varchi-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:color-mix(in srgb,${ROSSO} 80%,var(--text,#0f172a))}
+${P3} .dm-f-varchi-da{flex:none;text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+${P3} .dm-f-varchi-da .dm-f-varchi-num{font-size:20px;line-height:1}
+${P3} .dm-f-varchi-da small{font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P3} .dm-f-varchi-chiusi{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+${P3} .dm-f-varchi-ch{display:flex;align-items:center;gap:9px;padding:10px 11px;border-radius:16px;min-width:0;
   background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}
-${P2} .dm-f-varchi-ch .dm-f-varchi-ic{flex:none;color:var(--dm-widget-accent,#0f766e)}
-${P2} .dm-f-varchi-ch b{flex:1;min-width:0;font-size:13px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
-${P2} .dm-f-varchi-ch small{flex:none;font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:${AMBRA}}
-${P2} .dm-f-varchi-ch i{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:${VERDE}}
-${P2} .dm-f-varchi-ch[data-escluso="true"] i{background:${AMBRA}}`;
+${P3} .dm-f-varchi-ch .dm-f-varchi-ic{flex:none;color:var(--dm-widget-accent,#0f766e)}
+${P3} .dm-f-varchi-ch b{flex:1;min-width:0;font-size:13px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+${P3} .dm-f-varchi-ch small{flex:none;font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:${AMBRA}}
+${P3} .dm-f-varchi-ch i{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:${VERDE}}
+${P3} .dm-f-varchi-ch[data-escluso="true"] i{background:${AMBRA}}`;
 function disegnaPresenza(widget) {
   const k = "presenza";
   const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
@@ -46431,31 +47157,31 @@ function disegnaPresenza(widget) {
   const stanze3 = [...occupati, ...liberi];
   return `<div class="dm-f-${k}">
       ${eroe}
-      ${stanze3.length ? `${titolo(k, t("Le stanze", "The rooms"))}<div class="dm-f-${k}-casa">${stanze3.map(piastrella).join("")}</div>` : ""}
-      ${muti.length ? `${titolo(k, muti.length === 1 ? t("Non risponde", "Not answering") : t("Non rispondono", "Not answering"))}${muti.map(muto2).join("")}` : ""}
+      ${stanze3.length ? `${titolo2(k, t("Le stanze", "The rooms"))}<div class="dm-f-${k}-casa">${stanze3.map(piastrella).join("")}</div>` : ""}
+      ${muti.length ? `${titolo2(k, muti.length === 1 ? t("Non risponde", "Not answering") : t("Non rispondono", "Not answering"))}${muti.map(muto2).join("")}` : ""}
     </div>`;
 }
 var STILE_PRESENZA = `${stileComune("presenza")}
-${P2} .dm-f-presenza-eroe{display:block}
-${P2} .dm-f-presenza-cosa{font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+${P3} .dm-f-presenza-eroe{display:block}
+${P3} .dm-f-presenza-cosa{font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
   color:color-mix(in srgb,var(--tono) 75%,var(--text,#0f172a))}
-${P2} .dm-f-presenza-riga{display:flex;align-items:baseline;gap:10px;margin-top:2px}
-${P2} .dm-f-presenza-riga .dm-f-presenza-num{font-size:52px;line-height:1;color:color-mix(in srgb,var(--tono) 70%,var(--text,#0f172a))}
-${P2} .dm-f-presenza-eroe p{margin:6px 0 0;font-size:13px;font-weight:750;color:color-mix(in srgb,var(--tono) 55%,var(--text,#0f172a))}
-${P2} .dm-f-presenza-casa{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
-${P2} .dm-f-presenza-st{display:flex;flex-direction:column;min-height:96px;min-width:0;padding:13px;border-radius:20px;
+${P3} .dm-f-presenza-riga{display:flex;align-items:baseline;gap:10px;margin-top:2px}
+${P3} .dm-f-presenza-riga .dm-f-presenza-num{font-size:52px;line-height:1;color:color-mix(in srgb,var(--tono) 70%,var(--text,#0f172a))}
+${P3} .dm-f-presenza-eroe p{margin:6px 0 0;font-size:13px;font-weight:750;color:color-mix(in srgb,var(--tono) 55%,var(--text,#0f172a))}
+${P3} .dm-f-presenza-casa{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+${P3} .dm-f-presenza-st{display:flex;flex-direction:column;min-height:96px;min-width:0;padding:13px;border-radius:20px;
   background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}
-${P2} .dm-f-presenza-st .dm-f-presenza-ic{display:grid;place-items:start;opacity:.75;color:var(--text-dim,#64748b)}
-${P2} .dm-f-presenza-st .dm-f-presenza-ic svg{width:22px;height:22px}
-${P2} .dm-f-presenza-st b{margin-top:8px;font-size:14.5px;font-weight:850;line-height:1.2;color:var(--text-dim,#475569);overflow-wrap:anywhere}
-${P2} .dm-f-presenza-come{display:inline-flex;align-items:center;gap:6px;margin-top:2px;font-size:12px;font-weight:750;color:var(--text-dim,#94a3b8)}
-${P2} .dm-f-presenza-come i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--dm-widget-accent,#7c3aed);
+${P3} .dm-f-presenza-st .dm-f-presenza-ic{display:grid;place-items:start;opacity:.75;color:var(--text-dim,#64748b)}
+${P3} .dm-f-presenza-st .dm-f-presenza-ic svg{width:22px;height:22px}
+${P3} .dm-f-presenza-st b{margin-top:8px;font-size:14.5px;font-weight:850;line-height:1.2;color:var(--text-dim,#475569);overflow-wrap:anywhere}
+${P3} .dm-f-presenza-come{display:inline-flex;align-items:center;gap:6px;margin-top:2px;font-size:12px;font-weight:750;color:var(--text-dim,#94a3b8)}
+${P3} .dm-f-presenza-come i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--dm-widget-accent,#7c3aed);
   box-shadow:0 0 0 4px color-mix(in srgb,var(--dm-widget-accent,#7c3aed) 22%,transparent)}
-${P2} .dm-f-presenza-st[data-on="true"]{background:var(--card-bg,#fff);border-color:color-mix(in srgb,var(--dm-widget-accent,#7c3aed) 45%,transparent);
+${P3} .dm-f-presenza-st[data-on="true"]{background:var(--card-bg,#fff);border-color:color-mix(in srgb,var(--dm-widget-accent,#7c3aed) 45%,transparent);
   box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--dm-widget-accent,#7c3aed) 60%,transparent),0 14px 26px -22px color-mix(in srgb,var(--dm-widget-accent,#7c3aed) 90%,transparent)}
-${P2} .dm-f-presenza-st[data-on="true"] .dm-f-presenza-ic{opacity:1;color:var(--dm-widget-accent,#7c3aed)}
-${P2} .dm-f-presenza-st[data-on="true"] b{color:var(--text,#0f172a)}
-${P2} .dm-f-presenza-st[data-on="true"] .dm-f-presenza-come{color:color-mix(in srgb,var(--dm-widget-accent,#7c3aed) 80%,var(--text,#0f172a))}`;
+${P3} .dm-f-presenza-st[data-on="true"] .dm-f-presenza-ic{opacity:1;color:var(--dm-widget-accent,#7c3aed)}
+${P3} .dm-f-presenza-st[data-on="true"] b{color:var(--text,#0f172a)}
+${P3} .dm-f-presenza-st[data-on="true"] .dm-f-presenza-come{color:color-mix(in srgb,var(--dm-widget-accent,#7c3aed) 80%,var(--text,#0f172a))}`;
 var GAS = /* @__PURE__ */ new Set(["gas", "carbon_monoxide"]);
 function disegnaFumo(widget, states) {
   const k = "fumo";
@@ -46474,7 +47200,7 @@ function disegnaFumo(widget, states) {
   const sotto = muti.length ? `${muti.length} ${muti.length === 1 ? t("non risponde", "not answering") : t("non rispondono", "not answering")}` : `${t("Rispondono tutti", "All answering")} · ${righe2.length}`;
   const eroe = suonano.length ? `<div class="dm-f-${k}-eroe" data-tono="allarme"><span class="dm-f-${k}-segno" aria-hidden="true">🚨</span>
         <div><b>${esc(t("Allarme", "Alarm"))}: ${esc(suonano.map((riga4) => riga4.name).join(" · "))}</b>
-        <span class="dm-f-${k}-sotto">${esc(sotto)}</span></div></div>` : `<div class="dm-f-${k}-eroe" data-tono="${muti.length ? "ambra" : "ok"}"><span class="dm-f-${k}-segno" aria-hidden="true">${muti.length ? "⚠️" : SPUNTA}</span>
+        <span class="dm-f-${k}-sotto">${esc(sotto)}</span></div></div>` : `<div class="dm-f-${k}-eroe" data-tono="${muti.length ? "ambra" : "ok"}"><span class="dm-f-${k}-segno" aria-hidden="true">${muti.length ? "⚠️" : SPUNTA2}</span>
         <div><b>${esc(t("Nessun allarme", "No alarm"))}</b><span class="dm-f-${k}-sotto">${esc(sotto)}</span></div></div>`;
   const riga3 = (voce2) => {
     const segno = voce2.classe === "carbon_monoxide" ? "♨️" : voce2.classe === "gas" ? "🔥" : "💨";
@@ -46489,7 +47215,7 @@ function disegnaFumo(widget, states) {
   };
   const fumo = righe2.filter((voce2) => !GAS.has(voce2.classe));
   const gas = righe2.filter((voce2) => GAS.has(voce2.classe));
-  const gruppo = (nome, elenco9) => elenco9.length ? `${titolo(k, nome, elenco9.length)}${elenco9.map(riga3).join("")}` : "";
+  const gruppo = (nome, elenco10) => elenco10.length ? `${titolo2(k, nome, elenco10.length)}${elenco10.map(riga3).join("")}` : "";
   return `<div class="dm-f-${k}">
       ${eroe}
       ${gruppo(t("Fumo", "Smoke"), fumo)}
@@ -46503,20 +47229,20 @@ function disegnaFumo(widget, states) {
     </div>`;
 }
 var STILE_FUMO = `${stileComune("fumo")}
-${P2} .dm-f-fumo-eroe b{font-size:20px;overflow-wrap:anywhere}
-${P2} .dm-f-fumo-ril{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:18px;min-width:0;
+${P3} .dm-f-fumo-eroe b{font-size:20px;overflow-wrap:anywhere}
+${P3} .dm-f-fumo-ril{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:18px;min-width:0;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P2} .dm-f-fumo-ril .dm-f-fumo-ic{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:19px;
+${P3} .dm-f-fumo-ril .dm-f-fumo-ic{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:19px;
   background:color-mix(in srgb,var(--text-dim,#64748b) 8%,var(--card-bg,#fff))}
-${P2} .dm-f-fumo-nome{flex:1;min-width:0}
-${P2} .dm-f-fumo-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
-${P2} .dm-f-fumo-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:${VERDE}}
-${P2} .dm-f-fumo-ril[data-come="muto"] .dm-f-fumo-nome span{color:var(--text-dim,#64748b)}
-${P2} .dm-f-fumo-ril[data-come="allarme"]{border-color:color-mix(in srgb,${ROSSO} 45%,transparent);background:color-mix(in srgb,${ROSSO} 7%,var(--card-bg,#fff))}
-${P2} .dm-f-fumo-ril[data-come="allarme"] .dm-f-fumo-nome span{color:${ROSSO};font-weight:900}
-${P2} .dm-f-fumo-pila{flex:none;margin-left:auto;font-size:12px;font-weight:850;color:var(--text-dim,#64748b);white-space:nowrap}
-${P2} .dm-f-fumo-pila[data-bassa="true"]{color:${AMBRA}}
-${P2} .dm-f-fumo-nota{margin:4px 0 0;padding:11px 13px;border-radius:16px;font-size:12.5px;font-weight:750;line-height:1.4;
+${P3} .dm-f-fumo-nome{flex:1;min-width:0}
+${P3} .dm-f-fumo-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
+${P3} .dm-f-fumo-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:${VERDE}}
+${P3} .dm-f-fumo-ril[data-come="muto"] .dm-f-fumo-nome span{color:var(--text-dim,#64748b)}
+${P3} .dm-f-fumo-ril[data-come="allarme"]{border-color:color-mix(in srgb,${ROSSO} 45%,transparent);background:color-mix(in srgb,${ROSSO} 7%,var(--card-bg,#fff))}
+${P3} .dm-f-fumo-ril[data-come="allarme"] .dm-f-fumo-nome span{color:${ROSSO};font-weight:900}
+${P3} .dm-f-fumo-pila{flex:none;margin-left:auto;font-size:12px;font-weight:850;color:var(--text-dim,#64748b);white-space:nowrap}
+${P3} .dm-f-fumo-pila[data-bassa="true"]{color:${AMBRA}}
+${P3} .dm-f-fumo-nota{margin:4px 0 0;padding:11px 13px;border-radius:16px;font-size:12.5px;font-weight:750;line-height:1.4;
   color:var(--text-dim,#475569);background:color-mix(in srgb,var(--text-dim,#64748b) 7%,var(--card-bg,#fff))}`;
 function nomePulitoDellaSonda(nome) {
   const pulito53 = clean(nome).replace(
@@ -46581,41 +47307,41 @@ function disegnaAllagamenti(widget, states) {
   };
   return `<div class="dm-f-${k}">
       ${eroe}
-      ${valvole ? `${titolo(k, t("Acqua di casa", "House water"))}${valvole}` : ""}
-      ${titolo(k, t("Le sonde", "The probes"))}
+      ${valvole ? `${titolo2(k, t("Acqua di casa", "House water"))}${valvole}` : ""}
+      ${titolo2(k, t("Le sonde", "The probes"))}
       <div class="dm-f-${k}-sonde">${righe2.map(sonda).join("")}</div>
     </div>`;
 }
 var STILE_ALLAGAMENTI = `${stileComune("allagamenti")}
-${P2} .dm-f-allagamenti-eroe:not([data-tono]),${P2} .dm-f-allagamenti-eroe[data-tono=""]{--tono:#0284c7}
-${P2} .dm-f-allagamenti-eroe b{font-size:20px;overflow-wrap:anywhere}
-${P2} .dm-f-allagamenti-valvola{display:flex;align-items:center;gap:12px;padding:13px;border-radius:20px;min-width:0;
+${P3} .dm-f-allagamenti-eroe:not([data-tono]),${P3} .dm-f-allagamenti-eroe[data-tono=""]{--tono:#0284c7}
+${P3} .dm-f-allagamenti-eroe b{font-size:20px;overflow-wrap:anywhere}
+${P3} .dm-f-allagamenti-valvola{display:flex;align-items:center;gap:12px;padding:13px;border-radius:20px;min-width:0;
   background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,#0284c7 35%,transparent);box-shadow:0 12px 24px -22px rgba(2,132,199,.9)}
-${P2} .dm-f-allagamenti-valvola .dm-f-allagamenti-ic{flex:none;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:22px;
+${P3} .dm-f-allagamenti-valvola .dm-f-allagamenti-ic{flex:none;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:22px;
   background:color-mix(in srgb,#0284c7 12%,var(--card-bg,#fff))}
-${P2} .dm-f-allagamenti-nome{flex:1;min-width:0}
-${P2} .dm-f-allagamenti-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
-${P2} .dm-f-allagamenti-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:#0369a1}
-${P2} .dm-f-allagamenti-tasto{flex:none;font:inherit;cursor:pointer;padding:10px 16px;border-radius:14px;border:0;
+${P3} .dm-f-allagamenti-nome{flex:1;min-width:0}
+${P3} .dm-f-allagamenti-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
+${P3} .dm-f-allagamenti-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:#0369a1}
+${P3} .dm-f-allagamenti-tasto{flex:none;font:inherit;cursor:pointer;padding:10px 16px;border-radius:14px;border:0;
   background:#0f172a;color:#fff;font-size:13px;font-weight:850}
-${P2} .dm-f-allagamenti-tasto[data-dm-w-armato="true"]{background:${ROSSO}}
-html[data-theme="dark"] ${P2} .dm-f-allagamenti-tasto{background:#f8fafc;color:#0f172a}
-${P2} .dm-f-allagamenti-sonde{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
-${P2} .dm-f-allagamenti-sd{min-width:0;padding:13px;border-radius:20px;background:var(--card-bg,#fff);
+${P3} .dm-f-allagamenti-tasto[data-dm-w-armato="true"]{background:${ROSSO}}
+html[data-theme="dark"] ${P3} .dm-f-allagamenti-tasto{background:#f8fafc;color:#0f172a}
+${P3} .dm-f-allagamenti-sonde{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+${P3} .dm-f-allagamenti-sd{min-width:0;padding:13px;border-radius:20px;background:var(--card-bg,#fff);
   border:1px solid var(--card-border,#eef2f7);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P2} .dm-f-allagamenti-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
-${P2} .dm-f-allagamenti-sd .dm-f-allagamenti-ic{font-size:20px}
-${P2} .dm-f-allagamenti-pt{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:900;letter-spacing:.08em;
+${P3} .dm-f-allagamenti-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+${P3} .dm-f-allagamenti-sd .dm-f-allagamenti-ic{font-size:20px}
+${P3} .dm-f-allagamenti-pt{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:900;letter-spacing:.08em;
   text-transform:uppercase;color:#0369a1;white-space:nowrap}
-${P2} .dm-f-allagamenti-pt i{width:7px;height:7px;border-radius:50%;background:#38bdf8}
-${P2} .dm-f-allagamenti-sd b{display:block;margin-top:9px;font-size:14.5px;font-weight:850;line-height:1.2;overflow-wrap:anywhere}
-${P2} .dm-f-allagamenti-s{display:block;margin-top:2px;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
-${P2} .dm-f-allagamenti-sd[data-come="bagnato"]{border-color:color-mix(in srgb,${ROSSO} 45%,transparent);background:color-mix(in srgb,${ROSSO} 7%,var(--card-bg,#fff))}
-${P2} .dm-f-allagamenti-sd[data-come="bagnato"] .dm-f-allagamenti-pt{color:${ROSSO}}
-${P2} .dm-f-allagamenti-sd[data-come="bagnato"] .dm-f-allagamenti-pt i{background:${ROSSO}}
-${P2} .dm-f-allagamenti-sd[data-come="muto"]{border-style:dashed;box-shadow:none}
-${P2} .dm-f-allagamenti-sd[data-come="muto"] .dm-f-allagamenti-pt{color:var(--text-dim,#64748b)}
-${P2} .dm-f-allagamenti-sd[data-come="muto"] .dm-f-allagamenti-pt i{background:var(--text-dim,#94a3b8)}`;
+${P3} .dm-f-allagamenti-pt i{width:7px;height:7px;border-radius:50%;background:#38bdf8}
+${P3} .dm-f-allagamenti-sd b{display:block;margin-top:9px;font-size:14.5px;font-weight:850;line-height:1.2;overflow-wrap:anywhere}
+${P3} .dm-f-allagamenti-s{display:block;margin-top:2px;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P3} .dm-f-allagamenti-sd[data-come="bagnato"]{border-color:color-mix(in srgb,${ROSSO} 45%,transparent);background:color-mix(in srgb,${ROSSO} 7%,var(--card-bg,#fff))}
+${P3} .dm-f-allagamenti-sd[data-come="bagnato"] .dm-f-allagamenti-pt{color:${ROSSO}}
+${P3} .dm-f-allagamenti-sd[data-come="bagnato"] .dm-f-allagamenti-pt i{background:${ROSSO}}
+${P3} .dm-f-allagamenti-sd[data-come="muto"]{border-style:dashed;box-shadow:none}
+${P3} .dm-f-allagamenti-sd[data-come="muto"] .dm-f-allagamenti-pt{color:var(--text-dim,#64748b)}
+${P3} .dm-f-allagamenti-sd[data-come="muto"] .dm-f-allagamenti-pt i{background:var(--text-dim,#94a3b8)}`;
 var SEGNI_DEL_DOMINIO = Object.freeze({
   light: "💡",
   switch: "🔌",
@@ -46682,7 +47408,7 @@ function disegnaNonRisponde(widget) {
       </div>`;
   };
   const tutte = [...new Set(righe2.flatMap((voce2) => voce2.entita))];
-  const consiglio = insieme3 ? `${titolo(k, t("Cosa provare", "What to try"))}<p class="dm-f-${k}-consiglio">${esc(
+  const consiglio = insieme3 ? `${titolo2(k, t("Cosa provare", "What to try"))}<p class="dm-f-${k}-consiglio">${esc(
     t(
       "Stanno nella stessa zona: di solito è il segnale (Wi-Fi o Zigbee). Controlla il ripetitore più vicino, oppure spegni e riaccendi i dispositivi.",
       "They are in the same area: it is usually the signal (Wi-Fi or Zigbee). Check the nearest repeater, or power the devices off and on again."
@@ -46697,31 +47423,31 @@ function disegnaNonRisponde(widget) {
   ) : "";
   return `<div class="dm-f-${k}">
       ${eroe}
-      ${titolo(k, t("Dalla più lunga", "Longest first"))}
+      ${titolo2(k, t("Dalla più lunga", "Longest first"))}
       ${righe2.map(riga3).join("")}
       ${consiglio}
       ${riprova2}
     </div>`;
 }
 var STILE_NONRISPONDE = `${stileComune("nonrisponde")}
-${P2} .dm-f-nonrisponde-dev{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;min-width:0;
+${P3} .dm-f-nonrisponde-dev{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;min-width:0;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P2} .dm-f-nonrisponde-dev .dm-f-nonrisponde-ic{flex:none;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;
+${P3} .dm-f-nonrisponde-dev .dm-f-nonrisponde-ic{flex:none;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;
   background:color-mix(in srgb,var(--text-dim,#64748b) 8%,var(--card-bg,#fff));filter:grayscale(.6)}
-${P2} .dm-f-nonrisponde-nome{flex:1;min-width:0}
-${P2} .dm-f-nonrisponde-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
-${P2} .dm-f-nonrisponde-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
-${P2} .dm-f-nonrisponde-da{flex:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
-${P2} .dm-f-nonrisponde-da .dm-f-nonrisponde-num{font-size:20px;line-height:1}
-${P2} .dm-f-nonrisponde-da small{font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-${P2} .dm-f-nonrisponde-dev[data-lungo="true"]{border-color:color-mix(in srgb,${ROSSO} 40%,transparent)}
-${P2} .dm-f-nonrisponde-dev[data-lungo="true"] .dm-f-nonrisponde-num{color:${ROSSO}}
-${P2} .dm-f-nonrisponde-consiglio{margin:0;padding:12px 13px;border-radius:16px;font-size:12.5px;font-weight:750;line-height:1.45;
+${P3} .dm-f-nonrisponde-nome{flex:1;min-width:0}
+${P3} .dm-f-nonrisponde-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
+${P3} .dm-f-nonrisponde-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P3} .dm-f-nonrisponde-da{flex:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+${P3} .dm-f-nonrisponde-da .dm-f-nonrisponde-num{font-size:20px;line-height:1}
+${P3} .dm-f-nonrisponde-da small{font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P3} .dm-f-nonrisponde-dev[data-lungo="true"]{border-color:color-mix(in srgb,${ROSSO} 40%,transparent)}
+${P3} .dm-f-nonrisponde-dev[data-lungo="true"] .dm-f-nonrisponde-num{color:${ROSSO}}
+${P3} .dm-f-nonrisponde-consiglio{margin:0;padding:12px 13px;border-radius:16px;font-size:12.5px;font-weight:750;line-height:1.45;
   color:var(--text-dim,#475569);background:color-mix(in srgb,var(--text-dim,#64748b) 7%,var(--card-bg,#fff))}
-${P2} .dm-f-nonrisponde-tasto{font:inherit;cursor:pointer;margin-top:4px;padding:14px;border-radius:18px;border:0;
+${P3} .dm-f-nonrisponde-tasto{font:inherit;cursor:pointer;margin-top:4px;padding:14px;border-radius:18px;border:0;
   background:#0f172a;color:#fff;font-size:14px;font-weight:850}
-${P2} .dm-f-nonrisponde-tasto[data-dm-w-in-corso="true"]{opacity:.6}
-html[data-theme="dark"] ${P2} .dm-f-nonrisponde-tasto{background:#f8fafc;color:#0f172a}`;
+${P3} .dm-f-nonrisponde-tasto[data-dm-w-in-corso="true"]{opacity:.6}
+html[data-theme="dark"] ${P3} .dm-f-nonrisponde-tasto{background:#f8fafc;color:#0f172a}`;
 function nomePulitoDellaPila(nome) {
   const pulito53 = clean(nome).replace(/\b(livello\s+(della\s+)?)?(batteria|battery|batt)(\s+level)?\b/gi, " ").replace(/\s{2,}/g, " ").replace(/^[\s·:,-]+|[\s·:,-]+$/g, "").trim();
   return pulito53 ? pulito53.charAt(0).toLocaleUpperCase() + pulito53.slice(1) : clean(nome);
@@ -46758,33 +47484,33 @@ function disegnaBatterie(widget) {
     </div>`;
   return `<div class="dm-f-${k}">
       ${eroe}
-      ${giu.length ? `${titolo(k, t("Da cambiare", "To replace"))}${giu.map((riga3) => pila(riga3, ROSSO, true)).join("")}` : ""}
-      ${prossime.length ? `${titolo(k, t("Le prossime", "Next ones"))}${prossime.map((riga3) => pila(riga3, "#eab308", false)).join("")}` : ""}
-      ${cariche.length ? `${titolo(k, t("Cariche", "Charged"))}<div class="dm-f-${k}-ok">${cariche.map(
+      ${giu.length ? `${titolo2(k, t("Da cambiare", "To replace"))}${giu.map((riga3) => pila(riga3, ROSSO, true)).join("")}` : ""}
+      ${prossime.length ? `${titolo2(k, t("Le prossime", "Next ones"))}${prossime.map((riga3) => pila(riga3, "#eab308", false)).join("")}` : ""}
+      ${cariche.length ? `${titolo2(k, t("Cariche", "Charged"))}<div class="dm-f-${k}-ok">${cariche.map(
     (riga3) => `<div><b>${esc(riga3.nome)}</b><span class="dm-f-${k}-num">${riga3.livello}%</span></div>`
   ).join("")}</div>` : ""}
     </div>`;
 }
 var STILE_BATTERIE = `${stileComune("batterie")}
-${P2} .dm-f-batterie-eroe[data-tono=""]{--tono:#ca8a04}
-${P2} .dm-f-batterie-pila{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:18px;min-width:0;
+${P3} .dm-f-batterie-eroe[data-tono=""]{--tono:#ca8a04}
+${P3} .dm-f-batterie-pila{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:18px;min-width:0;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P2} .dm-f-batterie-pila .dm-f-batterie-ic{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:19px;
+${P3} .dm-f-batterie-pila .dm-f-batterie-ic{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:19px;
   background:color-mix(in srgb,var(--text-dim,#64748b) 8%,var(--card-bg,#fff))}
-${P2} .dm-f-batterie-nome{flex:1;min-width:0}
-${P2} .dm-f-batterie-nome b{display:block;font-size:14px;font-weight:850;overflow-wrap:anywhere}
-${P2} .dm-f-batterie-nome small{display:block;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
-${P2} .dm-f-batterie-nome i{display:block;position:relative;overflow:hidden;height:6px;margin-top:6px;border-radius:999px;
+${P3} .dm-f-batterie-nome{flex:1;min-width:0}
+${P3} .dm-f-batterie-nome b{display:block;font-size:14px;font-weight:850;overflow-wrap:anywhere}
+${P3} .dm-f-batterie-nome small{display:block;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P3} .dm-f-batterie-nome i{display:block;position:relative;overflow:hidden;height:6px;margin-top:6px;border-radius:999px;
   background:color-mix(in srgb,var(--text-dim,#64748b) 14%,transparent)}
-${P2} .dm-f-batterie-nome i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:999px;background:var(--c)}
-${P2} .dm-f-batterie-pila .dm-f-batterie-num{flex:none;min-width:52px;text-align:right;font-size:22px}
-${P2} .dm-f-batterie-pila[data-giu="true"]{border-color:color-mix(in srgb,${ROSSO} 35%,transparent);background:color-mix(in srgb,${ROSSO} 4%,var(--card-bg,#fff))}
-${P2} .dm-f-batterie-pila[data-giu="true"] .dm-f-batterie-num{color:${ROSSO}}
-${P2} .dm-f-batterie-ok{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-${P2} .dm-f-batterie-ok > div{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0;padding:10px 12px;border-radius:15px;
+${P3} .dm-f-batterie-nome i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:999px;background:var(--c)}
+${P3} .dm-f-batterie-pila .dm-f-batterie-num{flex:none;min-width:52px;text-align:right;font-size:22px}
+${P3} .dm-f-batterie-pila[data-giu="true"]{border-color:color-mix(in srgb,${ROSSO} 35%,transparent);background:color-mix(in srgb,${ROSSO} 4%,var(--card-bg,#fff))}
+${P3} .dm-f-batterie-pila[data-giu="true"] .dm-f-batterie-num{color:${ROSSO}}
+${P3} .dm-f-batterie-ok{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+${P3} .dm-f-batterie-ok > div{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0;padding:10px 12px;border-radius:15px;
   background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}
-${P2} .dm-f-batterie-ok b{min-width:0;font-size:12.5px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
-${P2} .dm-f-batterie-ok .dm-f-batterie-num{flex:none;font-size:16px;color:${VERDE}}`;
+${P3} .dm-f-batterie-ok b{min-width:0;font-size:12.5px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+${P3} .dm-f-batterie-ok .dm-f-batterie-num{flex:none;font-size:16px;color:${VERDE}}`;
 registraFinestra("sicurezza", { disegna: disegnaSicurezza, stile: STILE_SICUREZZA });
 registraFinestra("telecamere", { disegna: disegnaTelecamere, stile: STILE_TELECAMERE });
 registraFinestra("varchi", { disegna: disegnaVarchi, stile: STILE_VARCHI });
@@ -46795,7 +47521,7 @@ registraFinestra("nonrisponde", { disegna: disegnaNonRisponde, stile: STILE_NONR
 registraFinestra("batterie", { disegna: disegnaBatterie, stile: STILE_BATTERIE });
 
 // src/sections/finestre/impianti.js
-var P3 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
+var P4 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
 var num3 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || valore3 === "") return null;
   const letto = Number(String(valore3).replace(",", "."));
@@ -46810,7 +47536,7 @@ function watt4(valore3) {
   if (assoluto >= 1e3) return `${formatNumber(assoluto / 1e3, 2)} kW`;
   return `${formatNumber(assoluto, 0)} W`;
 }
-function daQuanto4(istante4) {
+function daQuanto5(istante4) {
   if (!Number.isFinite(istante4)) return "";
   return quantoTempoInParole((Date.now() - istante4) / 6e4);
 }
@@ -46846,10 +47572,10 @@ var titoletto2 = (testo2) => `<h4 class="dm-w-titoletto dm-f-imp-tit">${esc(test
 function leva(entity2, acceso6, nome) {
   return `<button type="button" class="dm-f-imp-leva" data-dm-w-light="${esc(entity2)}" data-on="${acceso6 === true}" aria-label="${esc(nome)}"><i></i></button>`;
 }
-function schedaComando({ icona: icona2, titolo: titolo2, sotto = "", acceso: acceso6 = false, comando = "", chiave: chiave2 = "" }) {
+function schedaComando({ icona: icona2, titolo: titolo3, sotto = "", acceso: acceso6 = false, comando = "", chiave: chiave2 = "" }) {
   return `<div class="dm-f-imp-comando"${chiave2 ? ` data-dm-f-comando="${esc(chiave2)}"` : ""} data-on="${acceso6 === true}">
     <span class="dm-f-imp-ic" aria-hidden="true">${icona2}</span>
-    <span class="dm-f-imp-tx"><b>${esc(titolo2)}</b>${sotto ? `<small>${esc(sotto)}</small>` : ""}</span>
+    <span class="dm-f-imp-tx"><b>${esc(titolo3)}</b>${sotto ? `<small>${esc(sotto)}</small>` : ""}</span>
     ${comando}
   </div>`;
 }
@@ -46919,7 +47645,7 @@ function unoScaldabagno(lettura3, piuDiUno, states, prezzo) {
   if (Number.isFinite(lettura3.da) && (acceso6 || lettura3.acceso === false))
     righe2.push(
       esc(
-        `${acceso6 ? t("scalda da", "heating for") : t("spento da", "off for")} ${daQuanto4(lettura3.da)}`
+        `${acceso6 ? t("scalda da", "heating for") : t("spento da", "off for")} ${daQuanto5(lettura3.da)}`
       )
     );
   const chip = stato3 === "scalda" ? `${t("Scalda", "Heating")}${potenza != null && potenza > 0 ? ` · ${watt4(potenza)}` : ""}` : stato3 === "pronto" ? t("Acqua pronta", "Water ready") : stato3 === "spento" ? t("Spento", "Off") : "";
@@ -47000,7 +47726,7 @@ function fraseDelSalto(salto) {
 function unaCaldaia(lettura3, piuDiUna) {
   const accesa3 = lettura3.inFunzione === true;
   const modulazione = num3(lettura3.modulazione);
-  const titolo2 = lettura3.inFunzione === true ? lettura3.uscita === "boiler" ? t("Accesa, scalda l'acqua", "On, heating the water") : t("Accesa, scalda la casa", "On, heating the house") : lettura3.inFunzione === false ? lettura3.interruttoreAcceso === true ? t("Accesa, a riposo", "On, resting") : t("Spenta", "Off") : lettura3.interruttoreAcceso === true ? t("Accesa", "On") : lettura3.interruttoreAcceso === false ? t("Spenta", "Off") : "";
+  const titolo3 = lettura3.inFunzione === true ? lettura3.uscita === "boiler" ? t("Accesa, scalda l'acqua", "On, heating the water") : t("Accesa, scalda la casa", "On, heating the house") : lettura3.inFunzione === false ? lettura3.interruttoreAcceso === true ? t("Accesa, a riposo", "On, resting") : t("Spenta", "Off") : lettura3.interruttoreAcceso === true ? t("Accesa", "On") : lettura3.interruttoreAcceso === false ? t("Spenta", "Off") : "";
   const mandata = num3(lettura3.mandata);
   const ritorno = num3(lettura3.ritorno);
   const salto = num3(lettura3.salto);
@@ -47011,10 +47737,10 @@ function unaCaldaia(lettura3, piuDiUna) {
           ${nodo2(t("Ritorno", "Return"), ritorno)}
         </div>`;
   const frase2 = accesa3 && salto != null ? `<p class="dm-f-imp-frase">${esc(fraseDelSalto(salto))}</p>` : "";
-  const eroe = titolo2 || giro ? `<section class="dm-f-imp-eroe dm-f-caldaia-eroe">
-          ${titolo2 ? `<div class="dm-f-caldaia-testa"><span class="dm-f-caldaia-fiamma" data-on="${accesa3}" aria-hidden="true">🔥</span><div>
+  const eroe = titolo3 || giro ? `<section class="dm-f-imp-eroe dm-f-caldaia-eroe">
+          ${titolo3 ? `<div class="dm-f-caldaia-testa"><span class="dm-f-caldaia-fiamma" data-on="${accesa3}" aria-hidden="true">🔥</span><div>
               <small class="dm-f-imp-etic">${esc(t("Adesso", "Now"))}</small>
-              <b class="dm-f-imp-titolo">${esc(titolo2)}</b>
+              <b class="dm-f-imp-titolo">${esc(titolo3)}</b>
               ${accesa3 && modulazione != null ? `<div class="dm-f-imp-fianco">${esc(`${t("fiamma al", "flame at")} ${percento4(modulazione)}`)}</div>` : ""}
             </div></div>` : ""}
           ${giro}
@@ -47075,7 +47801,7 @@ function unUps({ nome, lettura: lettura3 = {}, da = null }, piuDiUno) {
     aBatteria ? t("Regge ancora", "It will last another") : t("Se va via la luce, regge", "If the power goes, it lasts")
   )}</div><span class="dm-f-imp-num dm-f-ups-autonomia">${esc(`${formatNumber(autonomia, 0)} min`)}</span>`}
       ${Number.isFinite(da) && lettura3.rete != null ? `<div class="dm-f-imp-fianco">${esc(
-    `${aBatteria ? t("a batteria da", "on battery for") : t("in rete da", "on mains for")} ${daQuanto4(da)}`
+    `${aBatteria ? t("a batteria da", "on battery for") : t("in rete da", "on mains for")} ${daQuanto5(da)}`
   )}</div>` : ""}
     </div>
   </section>`;
@@ -47199,13 +47925,13 @@ function disegnaAccumulo(widget) {
     </div>
   </section>`;
   const avvisi = (come.sbilanciati || []).map(avvisoDelPacco).join("");
-  const tinta = clean(widget.tintaDellaSezione);
+  const tinta2 = clean(widget.tintaDellaSezione);
   return guscio2(
     "accumulo",
     `${eroe}${avvisi}${titoletto2(t("I pacchi", "The packs"))}<div class="dm-f-imp-pila">${pacchi.map(unPacco).join("")}</div>`,
     /* I colori dell'Energia anche quando la tessera e' rossa: il rosso sta
      * solo nel riquadro dell'avviso. */
-    widget.alert && tinta ? `--dm-widget-accent:${tinta}` : ""
+    widget.alert && tinta2 ? `--dm-widget-accent:${tinta2}` : ""
   );
 }
 function litri(valore3) {
@@ -47237,7 +47963,7 @@ function rigaDellaPerdita(come) {
   if (!portate.length) return "";
   const ferma3 = portate.find((voce2) => voce2.scorre === null || voce2.scorre === false);
   const da = ferma3 && Number.isFinite(ferma3.lettura?.da) && !ferma3.lettura?.valore ? ferma3.lettura.da : null;
-  const testo2 = da ? `${t("Nessuna perdita", "No leak")} · ${t("acqua ferma da", "water still for")} ${daQuanto4(da)}` : t("Nessuna perdita", "No leak");
+  const testo2 = da ? `${t("Nessuna perdita", "No leak")} · ${t("acqua ferma da", "water still for")} ${daQuanto5(da)}` : t("Nessuna perdita", "No leak");
   return `<div class="dm-f-contatori-perdita" data-tono="bene" data-dm-f-perdita="no"><span aria-hidden="true">✅</span>${esc(testo2)}</div>`;
 }
 function disegnaContatori(widget) {
@@ -47431,7 +48157,7 @@ function disegnaIrrigazione(widget) {
       <div class="dm-f-irrigazione-ora"><span class="dm-f-irrigazione-goccia" aria-hidden="true">💦</span><div>
         <small class="dm-f-imp-etic">${esc(t("Sta bagnando", "Watering"))}</small>
         <b class="dm-f-imp-titolo">${esc(bagnano.map((zona) => zona.name).join(", "))}</b>
-        ${Number.isFinite(dalla) ? `<div class="dm-f-imp-fianco">${esc(`${t("da", "running for")} ${daQuanto4(dalla)}`)}</div>` : ""}
+        ${Number.isFinite(dalla) ? `<div class="dm-f-imp-fianco">${esc(`${t("da", "running for")} ${daQuanto5(dalla)}`)}</div>` : ""}
       </div></div>
       ${ferma3}
     </section>`;
@@ -47625,186 +48351,186 @@ function disegnaVmc(widget, states) {
     letture2.map((lettura3) => unaVmc(lettura3, letture2.length > 1, states)).join("")
   );
 }
-var STILE6 = `
-${P3} .dm-f-imp{display:grid;gap:9px;min-width:0;--imp-a:var(--dm-widget-accent,#0ea5e9);
+var STILE7 = `
+${P4} .dm-f-imp{display:grid;gap:9px;min-width:0;--imp-a:var(--dm-widget-accent,#0ea5e9);
   --imp-tinta:color-mix(in srgb,var(--imp-a) 9%,var(--card-bg,#fff));
   --imp-bordo:color-mix(in srgb,var(--imp-a) 30%,transparent)}
-${P3} .dm-f-imp .dm-f-imp-tit{margin:12px 2px 0}
-${P3} .dm-f-imp-nome{margin:14px 2px 0;font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:18px;
+${P4} .dm-f-imp .dm-f-imp-tit{margin:12px 2px 0}
+${P4} .dm-f-imp-nome{margin:14px 2px 0;font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:18px;
   letter-spacing:.02em;text-transform:none;color:var(--imp-a)}
-${P3} .dm-f-imp-nome:first-child{margin-top:0}
-${P3} .dm-f-imp-num{font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-variant-numeric:tabular-nums;
+${P4} .dm-f-imp-nome:first-child{margin-top:0}
+${P4} .dm-f-imp-num{font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-variant-numeric:tabular-nums;
   color:var(--text,#0f172a);line-height:1.05}
-${P3} .dm-f-imp-eroe{display:flex;flex-wrap:wrap;gap:14px 16px;align-items:center;min-width:0;border-radius:22px;padding:16px;
+${P4} .dm-f-imp-eroe{display:flex;flex-wrap:wrap;gap:14px 16px;align-items:center;min-width:0;border-radius:22px;padding:16px;
   background:linear-gradient(155deg,color-mix(in srgb,var(--imp-a) 12%,var(--card-bg,#fff)),color-mix(in srgb,var(--imp-a) 4%,var(--card-bg,#fff)));
   border:1px solid var(--imp-bordo)}
-${P3} .dm-f-imp-eroe>*{min-width:0}
-${P3} .dm-f-imp-dx{flex:1 1 150px;min-width:0}
-${P3} .dm-f-imp-etic{display:block;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--imp-a)}
-${P3} .dm-f-imp-grande{display:block;font-size:46px;margin-top:2px}
-${P3} .dm-f-imp-titolo{display:block;font-size:19px;font-weight:850;line-height:1.2;color:var(--text,#0f172a);margin-top:2px}
-${P3} .dm-f-imp-fianco{font-size:13px;font-weight:700;line-height:1.4;color:var(--text-dim,#64748b);margin-top:5px}
-${P3} .dm-f-imp-fianco b{color:var(--text,#0f172a)}
-${P3} .dm-f-imp-riga-eroe{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;width:100%}
-${P3} .dm-f-imp-riga-eroe .dm-f-imp-fianco{margin:0 0 6px;flex:1 1 140px}
-${P3} .dm-f-imp-frase{margin:0;width:100%;font-size:13.5px;font-weight:700;line-height:1.4;color:var(--text,#334155)}
-${P3} .dm-f-imp-chip{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding:6px 11px;border-radius:999px;
+${P4} .dm-f-imp-eroe>*{min-width:0}
+${P4} .dm-f-imp-dx{flex:1 1 150px;min-width:0}
+${P4} .dm-f-imp-etic{display:block;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--imp-a)}
+${P4} .dm-f-imp-grande{display:block;font-size:46px;margin-top:2px}
+${P4} .dm-f-imp-titolo{display:block;font-size:19px;font-weight:850;line-height:1.2;color:var(--text,#0f172a);margin-top:2px}
+${P4} .dm-f-imp-fianco{font-size:13px;font-weight:700;line-height:1.4;color:var(--text-dim,#64748b);margin-top:5px}
+${P4} .dm-f-imp-fianco b{color:var(--text,#0f172a)}
+${P4} .dm-f-imp-riga-eroe{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;width:100%}
+${P4} .dm-f-imp-riga-eroe .dm-f-imp-fianco{margin:0 0 6px;flex:1 1 140px}
+${P4} .dm-f-imp-frase{margin:0;width:100%;font-size:13.5px;font-weight:700;line-height:1.4;color:var(--text,#334155)}
+${P4} .dm-f-imp-chip{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding:6px 11px;border-radius:999px;
   font-size:12px;font-weight:850;background:var(--card-bg,#fff);color:var(--imp-a);border:1px solid var(--imp-bordo)}
-${P3} .dm-f-imp-chip i{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.5}
-${P3} .dm-f-imp-chip[data-on="true"] i,${P3} .dm-f-imp-chip[data-tono] i{opacity:1;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 22%,transparent)}
-${P3} .dm-f-imp-chip[data-tono="bene"]{color:#15803d;background:color-mix(in srgb,#16a34a 12%,var(--card-bg,#fff));border-color:color-mix(in srgb,#16a34a 30%,transparent)}
-${P3} .dm-f-imp-chip[data-tono="male"]{color:#b91c1c;background:color-mix(in srgb,#dc2626 12%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 30%,transparent)}
-${P3} .dm-f-imp-chip[data-tono="muto"]{color:var(--text-dim,#64748b)}
-${P3} .dm-f-imp-pila{display:grid;gap:9px}
-${P3} .dm-f-imp-comando{display:flex;align-items:center;gap:12px;min-width:0;padding:13px 14px;border-radius:20px;
+${P4} .dm-f-imp-chip i{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.5}
+${P4} .dm-f-imp-chip[data-on="true"] i,${P4} .dm-f-imp-chip[data-tono] i{opacity:1;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 22%,transparent)}
+${P4} .dm-f-imp-chip[data-tono="bene"]{color:#15803d;background:color-mix(in srgb,#16a34a 12%,var(--card-bg,#fff));border-color:color-mix(in srgb,#16a34a 30%,transparent)}
+${P4} .dm-f-imp-chip[data-tono="male"]{color:#b91c1c;background:color-mix(in srgb,#dc2626 12%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 30%,transparent)}
+${P4} .dm-f-imp-chip[data-tono="muto"]{color:var(--text-dim,#64748b)}
+${P4} .dm-f-imp-pila{display:grid;gap:9px}
+${P4} .dm-f-imp-comando{display:flex;align-items:center;gap:12px;min-width:0;padding:13px 14px;border-radius:20px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 12px 24px -22px rgba(15,23,42,.6)}
-${P3} .dm-f-imp-comando[data-on="true"]{background:var(--imp-tinta);border-color:var(--imp-bordo)}
-${P3} .dm-f-imp-ic{flex:0 0 44px;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:21px;
+${P4} .dm-f-imp-comando[data-on="true"]{background:var(--imp-tinta);border-color:var(--imp-bordo)}
+${P4} .dm-f-imp-ic{flex:0 0 44px;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:21px;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 10%,var(--card-bg,#fff));box-shadow:inset 0 0 0 1px var(--card-border,#e2e8f0)}
-${P3} .dm-f-imp-tx{flex:1;min-width:0}
-${P3} .dm-f-imp-tx b{display:block;font-size:14.5px;font-weight:850;color:var(--text,#0f172a);line-height:1.25}
-${P3} .dm-f-imp-tx small{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b);margin-top:2px;line-height:1.3}
-${P3} .dm-f-imp-leva{flex:0 0 52px;width:52px;height:30px;position:relative;border:0;border-radius:999px;cursor:pointer;padding:0;
+${P4} .dm-f-imp-tx{flex:1;min-width:0}
+${P4} .dm-f-imp-tx b{display:block;font-size:14.5px;font-weight:850;color:var(--text,#0f172a);line-height:1.25}
+${P4} .dm-f-imp-tx small{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b);margin-top:2px;line-height:1.3}
+${P4} .dm-f-imp-leva{flex:0 0 52px;width:52px;height:30px;position:relative;border:0;border-radius:999px;cursor:pointer;padding:0;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 34%,transparent);transition:background .25s ease}
-${P3} .dm-f-imp-leva i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;
+${P4} .dm-f-imp-leva i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;
   box-shadow:0 2px 6px rgba(15,23,42,.25);transition:transform .25s cubic-bezier(.16,1,.3,1)}
-${P3} .dm-f-imp-leva[data-on="true"]{background:var(--imp-a)}
-${P3} .dm-f-imp-leva[data-on="true"] i{transform:translateX(22px)}
-${P3} .dm-f-imp-passi{display:flex;align-items:center;gap:6px;flex:none}
-${P3} .dm-f-imp-passi .dm-f-imp-num,${P3} .dm-f-imp-valore{font-size:23px;min-width:44px;text-align:center}
-${P3} .dm-f-imp-passo{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;padding:0;cursor:pointer;
+${P4} .dm-f-imp-leva[data-on="true"]{background:var(--imp-a)}
+${P4} .dm-f-imp-leva[data-on="true"] i{transform:translateX(22px)}
+${P4} .dm-f-imp-passi{display:flex;align-items:center;gap:6px;flex:none}
+${P4} .dm-f-imp-passi .dm-f-imp-num,${P4} .dm-f-imp-valore{font-size:23px;min-width:44px;text-align:center}
+${P4} .dm-f-imp-passo{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;padding:0;cursor:pointer;
   font:inherit;font-size:20px;font-weight:900;color:var(--imp-a);background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
-${P3} .dm-f-imp-passo:disabled{opacity:.35;cursor:default}
-${P3} .dm-f-imp-griglia{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:9px}
-${P3} .dm-f-imp-griglia[data-dm-f-griglia="tre"]{grid-template-columns:repeat(auto-fit,minmax(94px,1fr))}
-${P3} .dm-f-imp-cas{display:block;min-width:0;border-radius:18px;padding:12px 13px;background:var(--card-bg,#fff);
+${P4} .dm-f-imp-passo:disabled{opacity:.35;cursor:default}
+${P4} .dm-f-imp-griglia{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:9px}
+${P4} .dm-f-imp-griglia[data-dm-f-griglia="tre"]{grid-template-columns:repeat(auto-fit,minmax(94px,1fr))}
+${P4} .dm-f-imp-cas{display:block;min-width:0;border-radius:18px;padding:12px 13px;background:var(--card-bg,#fff);
   border:1px solid var(--card-border,#e2e8f0);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P3} .dm-f-imp-cas small{display:block;font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-${P3} .dm-f-imp-cas>.dm-f-imp-num{display:block;font-size:21px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-${P3} .dm-f-imp-cas em{display:block;font-style:normal;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:3px;line-height:1.3}
-${P3} .dm-f-imp-cas em[data-tono="bene"]{color:#15803d}
-${P3} .dm-f-imp-cas em[data-tono="occhio"]{color:#b45309}
-${P3} .dm-f-imp-cas em[data-tono="male"]{color:#b91c1c}
-${P3} .dm-f-imp-riga{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-${P3} .dm-f-imp-riga .dm-f-imp-num{font-size:21px}
-${P3} .dm-f-imp-barra{height:10px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent);overflow:hidden;margin:8px 0 4px}
-${P3} .dm-f-imp-barra i{display:block;height:100%;border-radius:999px;background:var(--imp-a)}
-${P3} .dm-f-imp-barra[data-alto="true"] i{background:#dc2626}
-${P3} .dm-f-imp-anello{--p:50;flex:0 0 auto;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;position:relative;
+${P4} .dm-f-imp-cas small{display:block;font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P4} .dm-f-imp-cas>.dm-f-imp-num{display:block;font-size:21px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${P4} .dm-f-imp-cas em{display:block;font-style:normal;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:3px;line-height:1.3}
+${P4} .dm-f-imp-cas em[data-tono="bene"]{color:#15803d}
+${P4} .dm-f-imp-cas em[data-tono="occhio"]{color:#b45309}
+${P4} .dm-f-imp-cas em[data-tono="male"]{color:#b91c1c}
+${P4} .dm-f-imp-riga{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+${P4} .dm-f-imp-riga .dm-f-imp-num{font-size:21px}
+${P4} .dm-f-imp-barra{height:10px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent);overflow:hidden;margin:8px 0 4px}
+${P4} .dm-f-imp-barra i{display:block;height:100%;border-radius:999px;background:var(--imp-a)}
+${P4} .dm-f-imp-barra[data-alto="true"] i{background:#dc2626}
+${P4} .dm-f-imp-anello{--p:50;flex:0 0 auto;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;position:relative;
   background:conic-gradient(var(--c,var(--imp-a)) calc(var(--p)*1%),color-mix(in srgb,var(--text-dim,#94a3b8) 25%,transparent) 0)}
-${P3} .dm-f-imp-anello::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--card-bg,#fff)}
-${P3} .dm-f-imp-anello>div{position:relative;z-index:1;text-align:center}
-${P3} .dm-f-imp-anello .dm-f-imp-num{display:block;font-size:27px}
-${P3} .dm-f-imp-anello small{font-size:9px;font-weight:900;letter-spacing:.1em;color:var(--text-dim,#64748b);text-transform:uppercase}
-${P3} .dm-f-imp-tasti{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
-${P3} .dm-f-imp-tasti[data-dm-f-zone]{grid-template-columns:repeat(auto-fill,minmax(138px,1fr))}
-${P3} .dm-f-imp-tasto{display:block;min-width:0;border-radius:20px;padding:14px 4px 12px;text-align:center;font:inherit;color:inherit;
+${P4} .dm-f-imp-anello::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--card-bg,#fff)}
+${P4} .dm-f-imp-anello>div{position:relative;z-index:1;text-align:center}
+${P4} .dm-f-imp-anello .dm-f-imp-num{display:block;font-size:27px}
+${P4} .dm-f-imp-anello small{font-size:9px;font-weight:900;letter-spacing:.1em;color:var(--text-dim,#64748b);text-transform:uppercase}
+${P4} .dm-f-imp-tasti{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+${P4} .dm-f-imp-tasti[data-dm-f-zone]{grid-template-columns:repeat(auto-fill,minmax(138px,1fr))}
+${P4} .dm-f-imp-tasto{display:block;min-width:0;border-radius:20px;padding:14px 4px 12px;text-align:center;font:inherit;color:inherit;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 12px 24px -22px rgba(15,23,42,.6)}
-${P3} button.dm-f-imp-tasto{cursor:pointer}
-${P3} .dm-f-imp-tasto-ic{display:block;font-size:24px;line-height:1.1}
-${P3} .dm-f-imp-tasto b{display:block;font-size:12.5px;font-weight:850;letter-spacing:-.01em;margin-top:6px;color:var(--text,#0f172a);overflow-wrap:break-word;hyphens:auto}
-${P3} .dm-f-imp-tasto>span:last-child{display:block;font-size:10.5px;font-weight:800;color:var(--text-dim,#64748b);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
-${P3} .dm-f-imp-tasto[data-on="true"]{background:var(--imp-tinta);border-color:var(--imp-bordo)}
-${P3} .dm-f-imp-tasto[data-on="true"]>span:last-child{color:var(--imp-a)}
-${P3} .dm-f-imp-pillole{display:flex;gap:6px;flex-wrap:wrap}
-${P3} .dm-f-imp-pillole span{font-size:11.5px;font-weight:800;color:var(--text,#334155);border-radius:999px;padding:5px 10px;
+${P4} button.dm-f-imp-tasto{cursor:pointer}
+${P4} .dm-f-imp-tasto-ic{display:block;font-size:24px;line-height:1.1}
+${P4} .dm-f-imp-tasto b{display:block;font-size:12.5px;font-weight:850;letter-spacing:-.01em;margin-top:6px;color:var(--text,#0f172a);overflow-wrap:break-word;hyphens:auto}
+${P4} .dm-f-imp-tasto>span:last-child{display:block;font-size:10.5px;font-weight:800;color:var(--text-dim,#64748b);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+${P4} .dm-f-imp-tasto[data-on="true"]{background:var(--imp-tinta);border-color:var(--imp-bordo)}
+${P4} .dm-f-imp-tasto[data-on="true"]>span:last-child{color:var(--imp-a)}
+${P4} .dm-f-imp-pillole{display:flex;gap:6px;flex-wrap:wrap}
+${P4} .dm-f-imp-pillole span{font-size:11.5px;font-weight:800;color:var(--text,#334155);border-radius:999px;padding:5px 10px;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 9%,var(--card-bg,#fff));border:1px solid var(--card-border,#e2e8f0)}
-${P3} .dm-f-imp-pillole span[data-tono="male"]{background:color-mix(in srgb,#dc2626 10%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 32%,transparent);color:#b91c1c}
-${P3} .dm-f-imp-pillole span[data-tono="bene"]{background:color-mix(in srgb,#16a34a 10%,var(--card-bg,#fff));border-color:color-mix(in srgb,#16a34a 30%,transparent);color:#15803d}
-${P3} .dm-f-imp-pillole span[data-tono="muto"]{color:var(--text-dim,#64748b)}
-${P3} .dm-f-imp-avviso{display:flex;gap:11px;align-items:flex-start;border-radius:18px;padding:12px 13px;
+${P4} .dm-f-imp-pillole span[data-tono="male"]{background:color-mix(in srgb,#dc2626 10%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 32%,transparent);color:#b91c1c}
+${P4} .dm-f-imp-pillole span[data-tono="bene"]{background:color-mix(in srgb,#16a34a 10%,var(--card-bg,#fff));border-color:color-mix(in srgb,#16a34a 30%,transparent);color:#15803d}
+${P4} .dm-f-imp-pillole span[data-tono="muto"]{color:var(--text-dim,#64748b)}
+${P4} .dm-f-imp-avviso{display:flex;gap:11px;align-items:flex-start;border-radius:18px;padding:12px 13px;
   background:color-mix(in srgb,#dc2626 9%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,#dc2626 30%,transparent);
   color:color-mix(in srgb,#991b1b 80%,var(--text,#0f172a));font-size:13px;font-weight:700;line-height:1.4}
-${P3} .dm-f-imp-avviso>span{font-size:19px;line-height:1.2}
-${P3} .dm-f-imp-avviso b{display:block;font-size:14px;font-weight:850;color:#b91c1c}
+${P4} .dm-f-imp-avviso>span{font-size:19px;line-height:1.2}
+${P4} .dm-f-imp-avviso b{display:block;font-size:14px;font-weight:850;color:#b91c1c}
 
 /* Lo scaldabagno: il serbatoio che si riempie fino alla linea dell'obiettivo. */
-${P3} .dm-f-scaldabagno-serbatoio{flex:0 0 70px;height:126px;border-radius:28px;border:2px solid color-mix(in srgb,#f59e0b 60%,transparent);
+${P4} .dm-f-scaldabagno-serbatoio{flex:0 0 70px;height:126px;border-radius:28px;border:2px solid color-mix(in srgb,#f59e0b 60%,transparent);
   background:var(--card-bg,#fff);position:relative;overflow:hidden}
-${P3} .dm-f-scaldabagno-serbatoio i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,#fbbf24,#ea580c)}
-${P3} .dm-f-scaldabagno-serbatoio b{position:absolute;left:-2px;right:-2px;top:14%;border-top:2px dashed #b45309}
-${P3} .dm-f-scaldabagno-serbatoio em{position:absolute;left:0;right:0;top:calc(14% + 4px);text-align:center;font-style:normal;font-size:10px;font-weight:900;color:#b45309}
+${P4} .dm-f-scaldabagno-serbatoio i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,#fbbf24,#ea580c)}
+${P4} .dm-f-scaldabagno-serbatoio b{position:absolute;left:-2px;right:-2px;top:14%;border-top:2px dashed #b45309}
+${P4} .dm-f-scaldabagno-serbatoio em{position:absolute;left:0;right:0;top:calc(14% + 4px);text-align:center;font-style:normal;font-size:10px;font-weight:900;color:#b45309}
 
 /* La caldaia: mandata e ritorno come due nodi, col salto in mezzo. */
-${P3} .dm-f-caldaia-testa{display:flex;align-items:center;gap:14px;width:100%}
-${P3} .dm-f-caldaia-fiamma{flex:0 0 60px;width:60px;height:60px;border-radius:19px;display:grid;place-items:center;font-size:30px;
+${P4} .dm-f-caldaia-testa{display:flex;align-items:center;gap:14px;width:100%}
+${P4} .dm-f-caldaia-fiamma{flex:0 0 60px;width:60px;height:60px;border-radius:19px;display:grid;place-items:center;font-size:30px;
   background:var(--card-bg,#fff);border:1px solid var(--imp-bordo);filter:grayscale(1);opacity:.55}
-${P3} .dm-f-caldaia-fiamma[data-on="true"]{filter:none;opacity:1;box-shadow:0 0 0 6px color-mix(in srgb,#f59e0b 20%,transparent)}
-${P3} .dm-f-caldaia-giro{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);align-items:center;gap:6px;width:100%}
-${P3} .dm-f-caldaia-nodo{text-align:center;border-radius:17px;padding:10px 6px;background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
-${P3} .dm-f-caldaia-nodo .dm-f-imp-num{display:block;font-size:26px;margin-top:3px}
-${P3} .dm-f-caldaia-freccia{text-align:center;font-size:11px;font-weight:900;color:var(--imp-a);line-height:1.25}
-${P3} .dm-f-caldaia-freccia i{display:block;font-style:normal;font-size:19px}
-${P3} .dm-f-caldaia-manometro{position:relative;height:10px;margin:10px 0 2px;border-radius:999px;
+${P4} .dm-f-caldaia-fiamma[data-on="true"]{filter:none;opacity:1;box-shadow:0 0 0 6px color-mix(in srgb,#f59e0b 20%,transparent)}
+${P4} .dm-f-caldaia-giro{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);align-items:center;gap:6px;width:100%}
+${P4} .dm-f-caldaia-nodo{text-align:center;border-radius:17px;padding:10px 6px;background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
+${P4} .dm-f-caldaia-nodo .dm-f-imp-num{display:block;font-size:26px;margin-top:3px}
+${P4} .dm-f-caldaia-freccia{text-align:center;font-size:11px;font-weight:900;color:var(--imp-a);line-height:1.25}
+${P4} .dm-f-caldaia-freccia i{display:block;font-style:normal;font-size:19px}
+${P4} .dm-f-caldaia-manometro{position:relative;height:10px;margin:10px 0 2px;border-radius:999px;
   background:linear-gradient(90deg,#fecaca 0 33%,#bbf7d0 33% 83%,#fde68a 83% 100%)}
-${P3} .dm-f-caldaia-manometro b{position:absolute;top:-5px;width:4px;height:20px;margin-left:-2px;border-radius:3px;background:var(--text,#0f172a)}
+${P4} .dm-f-caldaia-manometro b{position:absolute;top:-5px;width:4px;height:20px;margin-left:-2px;border-radius:3px;background:var(--text,#0f172a)}
 
 /* L'UPS: quanto regge se va via la luce. */
-${P3} .dm-f-ups-regge{margin-top:10px;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
-${P3} .dm-f-ups-autonomia{display:block;font-size:34px}
-${P3} .dm-f-ups-eroe[data-tono="male"] .dm-f-ups-autonomia{color:#dc2626}
+${P4} .dm-f-ups-regge{margin-top:10px;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
+${P4} .dm-f-ups-autonomia{display:block;font-size:34px}
+${P4} .dm-f-ups-eroe[data-tono="male"] .dm-f-ups-autonomia{color:#dc2626}
 
 /* L'accumulo: una scheda per pacco. */
-${P3} .dm-f-accumulo-potenza{display:block;font-size:32px;margin-top:2px}
-${P3} .dm-f-accumulo-pacco{border-radius:20px;padding:13px 14px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);
+${P4} .dm-f-accumulo-potenza{display:block;font-size:32px;margin-top:2px}
+${P4} .dm-f-accumulo-pacco{border-radius:20px;padding:13px 14px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);
   box-shadow:0 12px 24px -22px rgba(15,23,42,.6);min-width:0}
-${P3} .dm-f-accumulo-su{display:flex;align-items:center;gap:10px}
-${P3} .dm-f-accumulo-su b{flex:1;min-width:0;font-size:14.5px;font-weight:850;color:var(--text,#0f172a);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-${P3} .dm-f-accumulo-su .dm-f-imp-num{font-size:23px}
-${P3} .dm-f-accumulo-barra i{background:#16a34a}
-${P3} .dm-f-accumulo-pacco[data-stato="muto"]{opacity:.7}
+${P4} .dm-f-accumulo-su{display:flex;align-items:center;gap:10px}
+${P4} .dm-f-accumulo-su b{flex:1;min-width:0;font-size:14.5px;font-weight:850;color:var(--text,#0f172a);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${P4} .dm-f-accumulo-su .dm-f-imp-num{font-size:23px}
+${P4} .dm-f-accumulo-barra i{background:#16a34a}
+${P4} .dm-f-accumulo-pacco[data-stato="muto"]{opacity:.7}
 
 /* L'acqua e il gas. */
-${P3} .dm-f-contatori-perdita{display:flex;align-items:center;gap:10px;border-radius:16px;padding:10px 12px;font-size:13px;font-weight:750;
+${P4} .dm-f-contatori-perdita{display:flex;align-items:center;gap:10px;border-radius:16px;padding:10px 12px;font-size:13px;font-weight:750;
   background:color-mix(in srgb,#16a34a 9%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,#16a34a 28%,transparent);color:#166534}
-${P3} .dm-f-contatori-perdita[data-tono="male"]{background:color-mix(in srgb,#dc2626 9%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 30%,transparent);color:#b91c1c}
-${P3} .dm-f-contatori-perdita>span{font-size:17px}
-${P3} .dm-f-contatori-letture{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;padding:10px 13px;border-radius:16px;
+${P4} .dm-f-contatori-perdita[data-tono="male"]{background:color-mix(in srgb,#dc2626 9%,var(--card-bg,#fff));border-color:color-mix(in srgb,#dc2626 30%,transparent);color:#b91c1c}
+${P4} .dm-f-contatori-perdita>span{font-size:17px}
+${P4} .dm-f-contatori-letture{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;padding:10px 13px;border-radius:16px;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 8%,var(--card-bg,#fff));border:1px solid var(--card-border,#e2e8f0);
   font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
-${P3} .dm-f-contatori-letture b{color:var(--text,#0f172a);font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:14px}
+${P4} .dm-f-contatori-letture b{color:var(--text,#0f172a);font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:14px}
 
 /* La piscina: la chimica come barre con la fascia giusta. */
-${P3} .dm-f-piscina-acqua{display:flex;align-items:center;gap:14px;width:100%}
-${P3} .dm-f-piscina-giudizio{margin-left:auto;text-align:right;font-size:13px;font-weight:850;line-height:1.35}
-${P3} .dm-f-piscina-giudizio[data-tono="bene"]{color:#15803d}
-${P3} .dm-f-piscina-giudizio[data-tono="occhio"]{color:#b45309}
-${P3} .dm-f-piscina-giudizio span{color:var(--text-dim,#64748b);font-weight:750}
-${P3} .dm-f-piscina-chimiche{display:grid;gap:10px;width:100%}
-${P3} .dm-f-piscina-chimica{display:grid;grid-template-columns:62px minmax(0,1fr) 52px;align-items:center;gap:10px}
-${P3} .dm-f-piscina-chimica b{font-size:12.5px;font-weight:850;color:var(--text,#334155)}
-${P3} .dm-f-piscina-chimica b em{display:block;font-style:normal;font-size:10.5px;font-weight:750;color:var(--text-dim,#64748b)}
-${P3} .dm-f-piscina-chimica .dm-f-imp-num{font-size:20px;text-align:right}
-${P3} .dm-f-piscina-chimica[data-bene="false"] .dm-f-imp-num{color:#b45309}
-${P3} .dm-f-piscina-fascia{position:relative;height:10px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent)}
-${P3} .dm-f-piscina-fascia u{position:absolute;top:0;bottom:0;border-radius:999px;background:#86efac;text-decoration:none}
-${P3} .dm-f-piscina-fascia s{position:absolute;top:-4px;width:6px;height:18px;border-radius:3px;margin-left:-3px;background:var(--text,#0f172a)}
+${P4} .dm-f-piscina-acqua{display:flex;align-items:center;gap:14px;width:100%}
+${P4} .dm-f-piscina-giudizio{margin-left:auto;text-align:right;font-size:13px;font-weight:850;line-height:1.35}
+${P4} .dm-f-piscina-giudizio[data-tono="bene"]{color:#15803d}
+${P4} .dm-f-piscina-giudizio[data-tono="occhio"]{color:#b45309}
+${P4} .dm-f-piscina-giudizio span{color:var(--text-dim,#64748b);font-weight:750}
+${P4} .dm-f-piscina-chimiche{display:grid;gap:10px;width:100%}
+${P4} .dm-f-piscina-chimica{display:grid;grid-template-columns:62px minmax(0,1fr) 52px;align-items:center;gap:10px}
+${P4} .dm-f-piscina-chimica b{font-size:12.5px;font-weight:850;color:var(--text,#334155)}
+${P4} .dm-f-piscina-chimica b em{display:block;font-style:normal;font-size:10.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P4} .dm-f-piscina-chimica .dm-f-imp-num{font-size:20px;text-align:right}
+${P4} .dm-f-piscina-chimica[data-bene="false"] .dm-f-imp-num{color:#b45309}
+${P4} .dm-f-piscina-fascia{position:relative;height:10px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent)}
+${P4} .dm-f-piscina-fascia u{position:absolute;top:0;bottom:0;border-radius:999px;background:#86efac;text-decoration:none}
+${P4} .dm-f-piscina-fascia s{position:absolute;top:-4px;width:6px;height:18px;border-radius:3px;margin-left:-3px;background:var(--text,#0f172a)}
 
 /* L'irrigazione: la zona che bagna e il tasto per fermarla. */
-${P3} .dm-f-irrigazione-ora{display:flex;align-items:center;gap:14px;width:100%}
-${P3} .dm-f-irrigazione-goccia{flex:0 0 60px;width:60px;height:60px;border-radius:19px;display:grid;place-items:center;font-size:28px;
+${P4} .dm-f-irrigazione-ora{display:flex;align-items:center;gap:14px;width:100%}
+${P4} .dm-f-irrigazione-goccia{flex:0 0 60px;width:60px;height:60px;border-radius:19px;display:grid;place-items:center;font-size:28px;
   background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
-${P3} .dm-f-irrigazione-eroe[data-on="true"] .dm-f-irrigazione-goccia{box-shadow:0 0 0 6px color-mix(in srgb,var(--imp-a) 16%,transparent)}
-${P3} .dm-f-irrigazione-ferma{width:100%;padding:13px;border-radius:16px;cursor:pointer;font:inherit;font-weight:850;font-size:14px;
+${P4} .dm-f-irrigazione-eroe[data-on="true"] .dm-f-irrigazione-goccia{box-shadow:0 0 0 6px color-mix(in srgb,var(--imp-a) 16%,transparent)}
+${P4} .dm-f-irrigazione-ferma{width:100%;padding:13px;border-radius:16px;cursor:pointer;font:inherit;font-weight:850;font-size:14px;
   color:var(--imp-a);background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
-${P3} .dm-f-irrigazione-scala{position:relative;height:12px;margin:10px 0 6px;border-radius:999px;
+${P4} .dm-f-irrigazione-scala{position:relative;height:12px;margin:10px 0 6px;border-radius:999px;
   background:linear-gradient(90deg,#fde68a 0 var(--secco),#bbf7d0 var(--secco) var(--bagnato),#bfdbfe var(--bagnato))}
-${P3} .dm-f-irrigazione-scala i{position:absolute;top:-4px;width:5px;height:20px;margin-left:-2.5px;border-radius:3px;background:var(--text,#0f172a)}
-${P3} .dm-f-irrigazione-parole{display:flex;justify-content:space-between;font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}
+${P4} .dm-f-irrigazione-scala i{position:absolute;top:-4px;width:5px;height:20px;margin-left:-2.5px;border-radius:3px;background:var(--text,#0f172a)}
+${P4} .dm-f-irrigazione-parole{display:flex;justify-content:space-between;font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}
 
 /* La ventilazione: due flussi incrociati e la velocita' a tasti. */
-${P3} .dm-f-vmc-flussi{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:6px;align-items:center;width:100%}
-${P3} .dm-f-vmc-t{border-radius:15px;padding:8px 6px;text-align:center;background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
-${P3} .dm-f-vmc-t[data-casa="true"]{background:var(--imp-tinta)}
-${P3} .dm-f-vmc-t small{font-size:9.5px}
-${P3} .dm-f-vmc-t .dm-f-imp-num{display:block;font-size:21px}
-${P3} .dm-f-vmc-f{text-align:center;font-size:18px;font-weight:900;color:var(--imp-a)}
-${P3} .dm-f-vmc-velocita{display:grid;grid-template-columns:repeat(var(--quante,3),minmax(0,1fr));gap:6px;padding:5px;border-radius:18px;
+${P4} .dm-f-vmc-flussi{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:6px;align-items:center;width:100%}
+${P4} .dm-f-vmc-t{border-radius:15px;padding:8px 6px;text-align:center;background:var(--card-bg,#fff);border:1px solid var(--imp-bordo)}
+${P4} .dm-f-vmc-t[data-casa="true"]{background:var(--imp-tinta)}
+${P4} .dm-f-vmc-t small{font-size:9.5px}
+${P4} .dm-f-vmc-t .dm-f-imp-num{display:block;font-size:21px}
+${P4} .dm-f-vmc-f{text-align:center;font-size:18px;font-weight:900;color:var(--imp-a)}
+${P4} .dm-f-vmc-velocita{display:grid;grid-template-columns:repeat(var(--quante,3),minmax(0,1fr));gap:6px;padding:5px;border-radius:18px;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 12%,var(--card-bg,#fff))}
-${P3} .dm-f-vmc-modo{padding:11px 4px;border:0;border-radius:14px;cursor:pointer;font:inherit;font-size:12.5px;font-weight:850;
+${P4} .dm-f-vmc-modo{padding:11px 4px;border:0;border-radius:14px;cursor:pointer;font:inherit;font-size:12.5px;font-weight:850;
   color:var(--text-dim,#475569);background:transparent;min-width:0;overflow-wrap:anywhere}
-${P3} .dm-f-vmc-modo em{display:block;font-style:normal;font-size:16px}
-${P3} .dm-f-vmc-modo[data-on="true"]{background:var(--card-bg,#fff);color:var(--imp-a);box-shadow:0 6px 16px -10px rgba(15,23,42,.5)}
+${P4} .dm-f-vmc-modo em{display:block;font-style:normal;font-size:16px}
+${P4} .dm-f-vmc-modo[data-on="true"]{background:var(--card-bg,#fff);color:var(--imp-a);box-shadow:0 6px 16px -10px rgba(15,23,42,.5)}
 `;
 var FINESTRE_IMPIANTI = Object.freeze([
   "scaldabagno",
@@ -47816,7 +48542,7 @@ var FINESTRE_IMPIANTI = Object.freeze([
   "irrigazione",
   "vmc"
 ]);
-registraFinestra("scaldabagno", { disegna: disegnaScaldabagno, stile: STILE6 });
+registraFinestra("scaldabagno", { disegna: disegnaScaldabagno, stile: STILE7 });
 registraFinestra("caldaia", { disegna: disegnaCaldaia });
 registraFinestra("ups", { disegna: disegnaUps });
 registraFinestra("accumulo", { disegna: disegnaAccumulo });
@@ -47837,7 +48563,7 @@ var COLORI2 = Object.freeze({
   stampanti: "#0284c7"
 });
 var FINESTRE_SERVIZI = Object.freeze(Object.keys(COLORI2));
-var P4 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
+var P5 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
 var numero37 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || valore3 === "") return null;
   const n = Number(valore3);
@@ -47878,7 +48604,7 @@ function fraGiorni(giorni) {
   if (giorni === 1) return t("domani", "tomorrow");
   return `${t("fra", "in")} ${giorni} ${t("giorni", "days")}`;
 }
-function quantoFa2(istante4, adesso = Date.now()) {
+function quantoFa3(istante4, adesso = Date.now()) {
   const minuti = Math.max(0, Math.round((adesso - istante4) / 6e4));
   if (minuti < 1) return t("adesso", "just now");
   if (minuti < 60) return `${minuti} ${t("min fa", "min ago")}`;
@@ -47998,14 +48724,14 @@ function finestraAria(widget) {
     gruppi2.get(stanza2).push(lettura3);
   }
   const peso = (lettura3) => GRADI.indexOf(lettura3.grado);
-  const ordinati = [...gruppi2.entries()].map(([stanza2, elenco9]) => ({
+  const ordinati = [...gruppi2.entries()].map(([stanza2, elenco10]) => ({
     stanza: stanza2,
-    elenco: [...elenco9].sort((a, b) => peso(b) - peso(a)),
-    peggio: elenco9.reduce((massimo, voce2) => Math.max(massimo, peso(voce2)), 0)
+    elenco: [...elenco10].sort((a, b) => peso(b) - peso(a)),
+    peggio: elenco10.reduce((massimo, voce2) => Math.max(massimo, peso(voce2)), 0)
   })).sort((a, b) => b.peggio - a.peggio || (a.stanza ? 0 : 1) - (b.stanza ? 0 : 1));
-  const stanze3 = ordinati.map(({ stanza: stanza2, elenco: elenco9, peggio }) => {
+  const stanze3 = ordinati.map(({ stanza: stanza2, elenco: elenco10, peggio }) => {
     const grado = GRADI[peggio] || "buona";
-    const misure = elenco9.map(
+    const misure = elenco10.map(
       (lettura3) => `<div class="dm-f-aria-mis" data-grado="${esc(lettura3.grado)}">
             <span class="dm-f-aria-n">${esc(nomeDellaSostanza(lettura3))}${stanza2 ? "" : `<small>${esc(lettura3.name)}</small>`}</span>
             <span class="dm-f-aria-v"><span class="dm-f-sv-num">${esc(
@@ -48067,7 +48793,7 @@ function finestraPiante(widget) {
   const sete = come.daInnaffiare || [];
   if (sete.length) {
     const [prima] = sete;
-    const acqua = prima.ultimaAcqua ? ` · ${t("ultima acqua", "last watered")} ${quantoFa2(prima.ultimaAcqua, adesso)}` : "";
+    const acqua = prima.ultimaAcqua ? ` · ${t("ultima acqua", "last watered")} ${quantoFa3(prima.ultimaAcqua, adesso)}` : "";
     eroe = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
         <span class="dm-f-piante-vaso" aria-hidden="true">${glifo(prima, 48)}</span>
         <div>
@@ -48250,20 +48976,20 @@ function vascaMarkup2(vasca, piuVasche) {
   return `<section class="dm-f-acquario-vasca">${nome}${eroe}${caselle2 ? `${titoletto3(tipo === "terrario" ? t("Le misure", "Readings") : t("I valori dell'acqua", "Water values"))}<div class="dm-f-acquario-due">${caselle2}</div>` : ""}${tasti ? `${titoletto3(t("Comandi", "Controls"))}<div class="dm-f-sv-tasti">${tasti}</div>` : ""}${manutenzione}</section>`;
 }
 function finestraAcquario(widget) {
-  const elenco9 = widget.elenco || [];
-  if (!elenco9.length) return "";
-  return `<div class="dm-f-sv dm-f-acquario">${elenco9.map((vasca) => vascaMarkup2(vasca, elenco9.length > 1)).join("")}</div>`;
+  const elenco10 = widget.elenco || [];
+  if (!elenco10.length) return "";
+  return `<div class="dm-f-sv dm-f-acquario">${elenco10.map((vasca) => vascaMarkup2(vasca, elenco10.length > 1)).join("")}</div>`;
 }
 function sottotitoloAcquario(widget) {
-  const elenco9 = widget.elenco || [];
-  if (elenco9.length === 1) {
-    const { come } = elenco9[0];
+  const elenco10 = widget.elenco || [];
+  if (elenco10.length === 1) {
+    const { come } = elenco10[0];
     return [clean(come.vasca), come.litri ? `${formatNumber(come.litri, 0)} L` : ""].filter(Boolean).join(" · ");
   }
-  if (!elenco9.length) return "";
-  const guardare = elenco9.filter((vasca) => !["bene", "mute"].includes(vasca.come.stato)).length;
+  if (!elenco10.length) return "";
+  const guardare = elenco10.filter((vasca) => !["bene", "mute"].includes(vasca.come.stato)).length;
   return [
-    `${elenco9.length} ${t("vasche", "tanks")}`,
+    `${elenco10.length} ${t("vasche", "tanks")}`,
     guardare ? `${guardare} ${t("da guardare", "to check")}` : ""
   ].filter(Boolean).join(" · ");
 }
@@ -48330,17 +49056,17 @@ function etichettaDelLivello(voce2) {
 function tastoDellAnimale(azione, forte) {
   const premi2 = pressioneDellAzione(azione.entita);
   if (!premi2) return "";
-  let titolo2 = clean(azione.testo);
+  let titolo3 = clean(azione.testo);
   let sotto = "";
   if (azione.chiave === "cibo_eroga") {
-    titolo2 = t("Una porzione", "One portion");
+    titolo3 = t("Una porzione", "One portion");
     sotto = t("adesso", "now");
   } else if (azione.chiave === "lettiera_pulisci") {
-    titolo2 = t("Pulisci", "Clean");
+    titolo3 = t("Pulisci", "Clean");
     sotto = t("la lettiera", "the litter box");
   }
   const corpo2 = `<span class="dm-f-sv-tic" aria-hidden="true">${esc(azione.glifo || "▶️")}</span>
-    <span class="dm-f-sv-tt"><b>${esc(titolo2)}</b>${sotto ? `<em>${esc(sotto)}</em>` : ""}</span>`;
+    <span class="dm-f-sv-tt"><b>${esc(titolo3)}</b>${sotto ? `<em>${esc(sotto)}</em>` : ""}</span>`;
   if (!siComanda(azione.entita))
     return `<div class="dm-f-sv-tasto" data-fermo="true">${corpo2}</div>`;
   return tastoServizio(
@@ -48539,13 +49265,13 @@ function finestraAgenda(widget) {
     const { ritardo, giorni } = agendaPerGiorno(eventi, scadenze, adesso);
     const limite = chiaveDelGiorno(giornoDaOggi(6, adesso));
     const dentro3 = giorni.filter(({ giorno }) => giorno <= limite);
-    const dopo = giorni.filter(({ giorno }) => giorno > limite).reduce((somma2, { eventi: elenco9 }) => somma2 + elenco9.length, 0);
+    const dopo = giorni.filter(({ giorno }) => giorno > limite).reduce((somma2, { eventi: elenco10 }) => somma2 + elenco10.length, 0);
     const blocchi = [
       ritardo.length ? `<div class="dm-f-agenda-giorno" data-ritardo="true"><h5>⚠️ ${esc(parole4.inRitardo)}</h5><ul>${ritardo.map((riga3) => rigaDellAgenda(riga3, adesso, lingua2, parole4)).join("")}</ul></div>` : "",
       ...dentro3.map(
-        ({ giorno, eventi: elenco9 }) => `<div class="dm-f-agenda-giorno"><h5>${esc(
+        ({ giorno, eventi: elenco10 }) => `<div class="dm-f-agenda-giorno"><h5>${esc(
           etichettaDelGiorno(giorno, adesso, parole4, lingua2)
-        )}</h5><ul>${elenco9.map((riga3) => rigaDellAgenda(riga3, adesso, lingua2, parole4)).join("")}</ul></div>`
+        )}</h5><ul>${elenco10.map((riga3) => rigaDellAgenda(riga3, adesso, lingua2, parole4)).join("")}</ul></div>`
       )
     ].join("");
     impegni = `${eroeDellAgenda(widget, adesso, lingua2, parole4)}
@@ -48618,7 +49344,7 @@ function finestraRifiuti(widget) {
         <span class="dm-f-rifiuti-colori">${quel.map((riga3) => `<i style="--c:${esc(riga3.colore || "#94a3b8")}" title="${esc(riga3.name)}"></i>`).join("")}</span>
       </div>`;
   }).join("");
-  const elenco9 = righe2.map((riga3) => {
+  const elenco10 = righe2.map((riga3) => {
     const [grande, piccolo] = quandoDelRitiro(riga3, adesso);
     return `<div class="dm-f-sv-riga dm-f-rifiuti-riga">
           <span class="dm-f-sv-ic dm-f-rifiuti-ic" aria-hidden="true" style="--c:${esc(riga3.colore || "#94a3b8")}">${riga3.disegno || esc(riga3.glyph || "♻️")}</span>
@@ -48630,7 +49356,7 @@ function finestraRifiuti(widget) {
     t("I prossimi sette giorni", "The next seven days")
   )}<div class="dm-f-sv-settimana" aria-hidden="true">${settimana}</div>${titoletto3(
     t("In ordine", "In order")
-  )}<div class="dm-f-sv-elenco">${elenco9}</div></div>`;
+  )}<div class="dm-f-sv-elenco">${elenco10}</div></div>`;
 }
 function sottotitoloRifiuti(widget) {
   const righe2 = widget.rows || [];
@@ -48654,7 +49380,7 @@ function quandoScritto(istante4, adesso) {
 function avvisoGrande(riga3, adesso) {
   const lettura3 = riga3.lettura || {};
   const meteo2 = lettura3.chiave === "meteo";
-  const titolo2 = meteo2 ? parolaDellAvviso(riga3.livello) : clean(riga3.name);
+  const titolo3 = meteo2 ? parolaDellAvviso(riga3.livello) : clean(riga3.name);
   const sotto = meteo2 ? [clean(riga3.name), clean(riga3.zona) || clean(lettura3.evento)].filter(Boolean).join(" · ") : clean(riga3.value);
   const testo2 = clean(riga3.testo) || clean(lettura3.testo);
   const quando4 = [
@@ -48664,7 +49390,7 @@ function avvisoGrande(riga3, adesso) {
   return `<section class="dm-f-allerte-avviso" data-livello="${esc(riga3.livello)}">
       <div class="dm-f-allerte-capo">
         <span class="dm-f-allerte-seg" aria-hidden="true">${riga3.glyph || "⚠️"}</span>
-        <div><b>${esc(titolo2)}</b>${sotto ? `<em>${esc(sotto)}</em>` : ""}</div>
+        <div><b>${esc(titolo3)}</b>${sotto ? `<em>${esc(sotto)}</em>` : ""}</div>
       </div>
       ${testo2 ? `<p>${esc(testo2)}</p>` : ""}
       ${quando4.length ? `<div class="dm-f-allerte-quando">${quando4.map((pezzo) => `<span>${esc(pezzo)}</span>`).join("")}</div>` : ""}
@@ -48729,7 +49455,7 @@ function sottotitoloAllerte(widget) {
   return pezzi.join(" · ");
 }
 var COLORE_DELLA_TINTA = Object.freeze(
-  Object.fromEntries(TINTE_DELLE_CARTUCCE.map(({ tinta, colore }) => [tinta, colore]))
+  Object.fromEntries(TINTE_DELLE_CARTUCCE.map(({ tinta: tinta2, colore }) => [tinta2, colore]))
 );
 function nomeDellaTinta(cartuccia) {
   switch (cartuccia.tinta) {
@@ -48812,275 +49538,275 @@ function sottotitoloStampanti(widget) {
   if (ricaricare) pezzi.push(`${ricaricare} ${t("da ricaricare", "to refill")}`);
   return pezzi.join(" · ");
 }
-var STILE7 = `
+var STILE8 = `
 ${Object.entries(COLORI2).map(
-  ([chiave2, colore]) => `${P4} [data-dm-widget-detail="${chiave2}"]{--dm-widget-accent:${colore}!important;--dm-f-a:${colore}}`
+  ([chiave2, colore]) => `${P5} [data-dm-widget-detail="${chiave2}"]{--dm-widget-accent:${colore}!important;--dm-f-a:${colore}}`
 ).join("\n")}
-${P4} .dm-f-sv{--dm-f-a:var(--dm-widget-accent,#0d9488);
+${P5} .dm-f-sv{--dm-f-a:var(--dm-widget-accent,#0d9488);
   --sv-card:var(--card-bg,#fff);--sv-bordo:var(--card-border,#eef2f7);
   --sv-testo:var(--text,#0f172a);--sv-fioco:var(--text-dim,#64748b);
   --sv-tinta:color-mix(in srgb,var(--dm-f-a) 11%,var(--sv-card));
   --sv-tinta2:color-mix(in srgb,var(--dm-f-a) 38%,var(--sv-card));
   --sv-fondo:color-mix(in srgb,var(--sv-fioco) 10%,var(--sv-card));
   display:grid;gap:10px;min-width:0;color:var(--sv-testo)}
-${P4} .dm-f-sv *{box-sizing:border-box}
-${P4} .dm-f-sv-num{font-family:'Oswald',system-ui,sans-serif;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
-${P4} .dm-f-sv-tit{margin:8px 2px 0;font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--sv-fioco)}
-${P4} .dm-f-sv-eroe{border-radius:24px;padding:18px;border:1px solid var(--sv-tinta2);min-width:0;
+${P5} .dm-f-sv *{box-sizing:border-box}
+${P5} .dm-f-sv-num{font-family:'Oswald',system-ui,sans-serif;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+${P5} .dm-f-sv-tit{margin:8px 2px 0;font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--sv-fioco)}
+${P5} .dm-f-sv-eroe{border-radius:24px;padding:18px;border:1px solid var(--sv-tinta2);min-width:0;
   background:linear-gradient(155deg,var(--sv-card),var(--sv-tinta))}
-${P4} .dm-f-sv-eroe small{display:block;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--dm-f-a)}
-${P4} .dm-f-sv-eroe p{margin:6px 0 0;font-size:13.5px;font-weight:750;color:var(--sv-fioco);line-height:1.4}
-${P4} .dm-f-sv-grande{font-size:46px;display:block}
-${P4} .dm-f-sv-nota{margin:0;border-radius:16px;padding:11px 13px;background:var(--sv-fondo);font-size:13px;font-weight:750;line-height:1.4;color:var(--sv-testo)}
-${P4} .dm-f-sv-nota[data-tono="occhio"]{background:color-mix(in srgb,#f59e0b 16%,var(--sv-card));color:#b45309}
-${P4} .dm-f-sv-vuoto{margin:2px 4px;font-size:13px;font-weight:700;color:var(--sv-fioco)}
-${P4} .dm-f-sv-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:850;
+${P5} .dm-f-sv-eroe small{display:block;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--dm-f-a)}
+${P5} .dm-f-sv-eroe p{margin:6px 0 0;font-size:13.5px;font-weight:750;color:var(--sv-fioco);line-height:1.4}
+${P5} .dm-f-sv-grande{font-size:46px;display:block}
+${P5} .dm-f-sv-nota{margin:0;border-radius:16px;padding:11px 13px;background:var(--sv-fondo);font-size:13px;font-weight:750;line-height:1.4;color:var(--sv-testo)}
+${P5} .dm-f-sv-nota[data-tono="occhio"]{background:color-mix(in srgb,#f59e0b 16%,var(--sv-card));color:#b45309}
+${P5} .dm-f-sv-vuoto{margin:2px 4px;font-size:13px;font-weight:700;color:var(--sv-fioco)}
+${P5} .dm-f-sv-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:850;
   white-space:nowrap;background:var(--sv-fondo);color:var(--sv-fioco);font-family:inherit;letter-spacing:0;text-transform:none}
-${P4} .dm-f-sv-pill i{width:7px;height:7px;border-radius:50%;background:currentColor}
-${P4} .dm-f-sv-pill[data-tono="ok"]{background:color-mix(in srgb,#22c55e 18%,var(--sv-card));color:#15803d}
-${P4} .dm-f-sv-pill[data-tono="occhio"]{background:color-mix(in srgb,#f59e0b 20%,var(--sv-card));color:#b45309}
-${P4} .dm-f-sv-pill[data-tono="rosso"]{background:color-mix(in srgb,#ef4444 18%,var(--sv-card));color:#b91c1c}
-${P4} .dm-f-sv-pill[data-tono="sez"]{background:var(--sv-tinta);color:var(--dm-f-a)}
-${P4} .dm-f-sv-barra{display:block;position:relative;height:6px;border-radius:999px;overflow:hidden;
+${P5} .dm-f-sv-pill i{width:7px;height:7px;border-radius:50%;background:currentColor}
+${P5} .dm-f-sv-pill[data-tono="ok"]{background:color-mix(in srgb,#22c55e 18%,var(--sv-card));color:#15803d}
+${P5} .dm-f-sv-pill[data-tono="occhio"]{background:color-mix(in srgb,#f59e0b 20%,var(--sv-card));color:#b45309}
+${P5} .dm-f-sv-pill[data-tono="rosso"]{background:color-mix(in srgb,#ef4444 18%,var(--sv-card));color:#b91c1c}
+${P5} .dm-f-sv-pill[data-tono="sez"]{background:var(--sv-tinta);color:var(--dm-f-a)}
+${P5} .dm-f-sv-barra{display:block;position:relative;height:6px;border-radius:999px;overflow:hidden;
   background:color-mix(in srgb,var(--sv-fioco) 16%,transparent)}
-${P4} .dm-f-sv-barra::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:999px;background:var(--c,var(--dm-f-a))}
-${P4} .dm-f-sv-griglia{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));align-items:start}
-${P4} .dm-f-sv-elenco{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
-${P4} .dm-f-sv-scheda{border-radius:20px;background:var(--sv-card);border:1px solid var(--sv-bordo);padding:12px 13px;min-width:0;
+${P5} .dm-f-sv-barra::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:999px;background:var(--c,var(--dm-f-a))}
+${P5} .dm-f-sv-griglia{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));align-items:start}
+${P5} .dm-f-sv-elenco{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
+${P5} .dm-f-sv-scheda{border-radius:20px;background:var(--sv-card);border:1px solid var(--sv-bordo);padding:12px 13px;min-width:0;
   box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P4} .dm-f-sv-riga{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:18px;min-width:0;
+${P5} .dm-f-sv-riga{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:18px;min-width:0;
   background:var(--sv-card);border:1px solid var(--sv-bordo);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P4} .dm-f-sv-ic{flex:0 0 40px;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:19px;
+${P5} .dm-f-sv-ic{flex:0 0 40px;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:19px;
   background:var(--sv-fondo)}
-${P4} .dm-f-sv-ic svg{width:24px;height:24px}
-${P4} .dm-f-sv-nome{flex:1;min-width:0}
-${P4} .dm-f-sv-nome b{display:block;font-size:14px;font-weight:850;overflow-wrap:anywhere}
-${P4} .dm-f-sv-nome em,${P4} .dm-f-sv-val em{display:block;font-style:normal;font-size:12px;font-weight:700;color:var(--sv-fioco);margin-top:2px}
-${P4} .dm-f-sv-val{flex:0 0 auto;text-align:right;max-width:45%}
-${P4} .dm-f-sv-val .dm-f-sv-num{display:block;font-size:22px}
-${P4} .dm-f-sv-val em[data-tono="asciutta"]{color:#b45309}
-${P4} .dm-f-sv-val em[data-tono="giusta"]{color:#15803d}
-${P4} .dm-f-sv-val em[data-tono="zuppa"]{color:#0369a1}
-${P4} .dm-f-sv-tasti{display:grid;gap:9px;grid-template-columns:repeat(auto-fill,minmax(min(100%,128px),1fr))}
-${P4} .dm-f-sv-tasto{display:flex;align-items:center;gap:11px;padding:13px 12px;border-radius:20px;min-width:0;text-align:left;
+${P5} .dm-f-sv-ic svg{width:24px;height:24px}
+${P5} .dm-f-sv-nome{flex:1;min-width:0}
+${P5} .dm-f-sv-nome b{display:block;font-size:14px;font-weight:850;overflow-wrap:anywhere}
+${P5} .dm-f-sv-nome em,${P5} .dm-f-sv-val em{display:block;font-style:normal;font-size:12px;font-weight:700;color:var(--sv-fioco);margin-top:2px}
+${P5} .dm-f-sv-val{flex:0 0 auto;text-align:right;max-width:45%}
+${P5} .dm-f-sv-val .dm-f-sv-num{display:block;font-size:22px}
+${P5} .dm-f-sv-val em[data-tono="asciutta"]{color:#b45309}
+${P5} .dm-f-sv-val em[data-tono="giusta"]{color:#15803d}
+${P5} .dm-f-sv-val em[data-tono="zuppa"]{color:#0369a1}
+${P5} .dm-f-sv-tasti{display:grid;gap:9px;grid-template-columns:repeat(auto-fill,minmax(min(100%,128px),1fr))}
+${P5} .dm-f-sv-tasto{display:flex;align-items:center;gap:11px;padding:13px 12px;border-radius:20px;min-width:0;text-align:left;
   font:inherit;color:var(--sv-testo);background:var(--sv-card);border:1px solid var(--sv-bordo);cursor:pointer;
   box-shadow:0 12px 24px -22px rgba(15,23,42,.6);transition:background .2s,border-color .2s,transform .12s}
-${P4} .dm-f-sv-tasto:active{transform:scale(.97)}
-${P4} .dm-f-sv-tasto[data-fermo="true"]{cursor:default;opacity:.7}
-${P4} .dm-f-sv-tasto[data-on="true"]{background:var(--sv-tinta);border-color:var(--sv-tinta2)}
-${P4} .dm-f-sv-tasto[data-on="true"] em{color:var(--dm-f-a)}
-${P4} .dm-f-sv-tasto[data-dm-w-armato="true"]{background:#fef3c7;border-color:#fcd34d;font-weight:850}
-${P4} .dm-f-sv-tasto[data-dm-w-in-corso="true"]{opacity:.65}
-${P4} .dm-f-sv-tic{flex:0 0 40px;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:var(--sv-fondo)}
-${P4} .dm-f-sv-tic svg{width:24px;height:24px}
-${P4} .dm-f-sv-tasto[data-on="true"] .dm-f-sv-tic{background:var(--sv-card)}
-${P4} .dm-f-sv-tt{min-width:0}
-${P4} .dm-f-sv-tt b{display:block;font-size:13.5px;font-weight:850;overflow-wrap:anywhere}
-${P4} .dm-f-sv-tt em{display:block;font-style:normal;font-size:11.5px;font-weight:750;color:var(--sv-fioco)}
-${P4} .dm-f-sv-settimana{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
-${P4} .dm-f-sv-giorno{border-radius:14px;padding:8px 0 7px;text-align:center;background:var(--sv-card);border:1px solid var(--sv-bordo);min-width:0}
-${P4} .dm-f-sv-giorno small{display:block;font-size:9.5px;font-weight:900;letter-spacing:.04em;color:var(--sv-fioco);overflow:hidden;text-overflow:clip;white-space:nowrap}
-${P4} .dm-f-sv-giorno .dm-f-sv-num{display:block;font-size:19px;margin-top:2px}
-${P4} .dm-f-sv-giorno i{display:flex;justify-content:center;gap:3px;height:6px;margin-top:4px}
-${P4} .dm-f-sv-giorno i b{width:5px;height:5px;border-radius:50%;background:var(--dm-f-a)}
-${P4} .dm-f-sv-giorno[data-oggi="true"]{background:var(--dm-f-a);border-color:var(--dm-f-a);color:#fff}
-${P4} .dm-f-sv-giorno[data-oggi="true"] small{color:rgba(255,255,255,.8)}
-${P4} .dm-f-sv-giorno[data-oggi="true"] i b{background:#fff}
+${P5} .dm-f-sv-tasto:active{transform:scale(.97)}
+${P5} .dm-f-sv-tasto[data-fermo="true"]{cursor:default;opacity:.7}
+${P5} .dm-f-sv-tasto[data-on="true"]{background:var(--sv-tinta);border-color:var(--sv-tinta2)}
+${P5} .dm-f-sv-tasto[data-on="true"] em{color:var(--dm-f-a)}
+${P5} .dm-f-sv-tasto[data-dm-w-armato="true"]{background:#fef3c7;border-color:#fcd34d;font-weight:850}
+${P5} .dm-f-sv-tasto[data-dm-w-in-corso="true"]{opacity:.65}
+${P5} .dm-f-sv-tic{flex:0 0 40px;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:var(--sv-fondo)}
+${P5} .dm-f-sv-tic svg{width:24px;height:24px}
+${P5} .dm-f-sv-tasto[data-on="true"] .dm-f-sv-tic{background:var(--sv-card)}
+${P5} .dm-f-sv-tt{min-width:0}
+${P5} .dm-f-sv-tt b{display:block;font-size:13.5px;font-weight:850;overflow-wrap:anywhere}
+${P5} .dm-f-sv-tt em{display:block;font-style:normal;font-size:11.5px;font-weight:750;color:var(--sv-fioco)}
+${P5} .dm-f-sv-settimana{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+${P5} .dm-f-sv-giorno{border-radius:14px;padding:8px 0 7px;text-align:center;background:var(--sv-card);border:1px solid var(--sv-bordo);min-width:0}
+${P5} .dm-f-sv-giorno small{display:block;font-size:9.5px;font-weight:900;letter-spacing:.04em;color:var(--sv-fioco);overflow:hidden;text-overflow:clip;white-space:nowrap}
+${P5} .dm-f-sv-giorno .dm-f-sv-num{display:block;font-size:19px;margin-top:2px}
+${P5} .dm-f-sv-giorno i{display:flex;justify-content:center;gap:3px;height:6px;margin-top:4px}
+${P5} .dm-f-sv-giorno i b{width:5px;height:5px;border-radius:50%;background:var(--dm-f-a)}
+${P5} .dm-f-sv-giorno[data-oggi="true"]{background:var(--dm-f-a);border-color:var(--dm-f-a);color:#fff}
+${P5} .dm-f-sv-giorno[data-oggi="true"] small{color:rgba(255,255,255,.8)}
+${P5} .dm-f-sv-giorno[data-oggi="true"] i b{background:#fff}
 
-${P4} .dm-f-aria-su{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:4px}
-${P4} .dm-f-aria-u{font-size:15px;font-weight:850;color:var(--sv-fioco);margin-bottom:6px}
-${P4} .dm-f-aria-scala{position:relative;margin:16px 0 6px;height:12px;border-radius:999px;
+${P5} .dm-f-aria-su{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:4px}
+${P5} .dm-f-aria-u{font-size:15px;font-weight:850;color:var(--sv-fioco);margin-bottom:6px}
+${P5} .dm-f-aria-scala{position:relative;margin:16px 0 6px;height:12px;border-radius:999px;
   background:linear-gradient(90deg,#22c55e 0 var(--s1),#a3e635 var(--s1) var(--s2),#f59e0b var(--s2) var(--s3),#f97316 var(--s3))}
-${P4} .dm-f-aria-scala b{position:absolute;top:-5px;left:var(--x);width:6px;height:22px;margin-left:-3px;border-radius:4px;
+${P5} .dm-f-aria-scala b{position:absolute;top:-5px;left:var(--x);width:6px;height:22px;margin-left:-3px;border-radius:4px;
   background:var(--sv-testo);box-shadow:0 0 0 3px var(--sv-card)}
-${P4} .dm-f-aria-tacche{position:relative;height:16px;font-size:11px;font-weight:800;color:var(--sv-fioco)}
-${P4} .dm-f-aria-tacche span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
-${P4} .dm-f-aria-tacche .dm-f-aria-buona{left:0;transform:none}
-${P4} .dm-f-aria-tacche .dm-f-aria-cattiva{right:0;transform:none}
-${P4} .dm-f-aria-consiglio{display:block;margin:14px 0 0!important;padding:11px 13px;border-radius:16px;background:var(--sv-card);
+${P5} .dm-f-aria-tacche{position:relative;height:16px;font-size:11px;font-weight:800;color:var(--sv-fioco)}
+${P5} .dm-f-aria-tacche span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+${P5} .dm-f-aria-tacche .dm-f-aria-buona{left:0;transform:none}
+${P5} .dm-f-aria-tacche .dm-f-aria-cattiva{right:0;transform:none}
+${P5} .dm-f-aria-consiglio{display:block;margin:14px 0 0!important;padding:11px 13px;border-radius:16px;background:var(--sv-card);
   border:1px solid var(--sv-tinta2);font-size:13px!important;font-weight:800!important;color:var(--sv-testo)!important}
-${P4} .dm-f-aria-stanza h5{margin:0 0 6px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14.5px;font-weight:850}
-${P4} .dm-f-aria-mis{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;padding:7px 0;
+${P5} .dm-f-aria-stanza h5{margin:0 0 6px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14.5px;font-weight:850}
+${P5} .dm-f-aria-mis{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;padding:7px 0;
   border-top:1px solid color-mix(in srgb,var(--sv-fioco) 14%,transparent)}
-${P4} .dm-f-aria-mis:first-of-type{border-top:0}
-${P4} .dm-f-aria-n{font-size:13px;font-weight:750;min-width:0;overflow-wrap:anywhere}
-${P4} .dm-f-aria-n small{display:block;font-size:11px;font-weight:700;color:var(--sv-fioco)}
-${P4} .dm-f-aria-v{text-align:right;white-space:nowrap}
-${P4} .dm-f-aria-v .dm-f-sv-num{font-size:17px}
-${P4} .dm-f-aria-v small{font-size:11px;font-weight:800;color:var(--sv-fioco)}
-${P4} .dm-f-aria-mis .dm-f-sv-barra{grid-column:1/-1;margin-top:3px}
+${P5} .dm-f-aria-mis:first-of-type{border-top:0}
+${P5} .dm-f-aria-n{font-size:13px;font-weight:750;min-width:0;overflow-wrap:anywhere}
+${P5} .dm-f-aria-n small{display:block;font-size:11px;font-weight:700;color:var(--sv-fioco)}
+${P5} .dm-f-aria-v{text-align:right;white-space:nowrap}
+${P5} .dm-f-aria-v .dm-f-sv-num{font-size:17px}
+${P5} .dm-f-aria-v small{font-size:11px;font-weight:800;color:var(--sv-fioco)}
+${P5} .dm-f-aria-mis .dm-f-sv-barra{grid-column:1/-1;margin-top:3px}
 
-${P4} .dm-f-piante-eroe{display:flex;gap:14px;align-items:center}
-${P4} .dm-f-piante-eroe > div{flex:1;min-width:0}
-${P4} .dm-f-piante-eroe b{display:block;font-size:20px;font-weight:850;margin-top:3px;overflow-wrap:anywhere}
-${P4} .dm-f-piante-eroe p .dm-f-sv-num{font-size:22px;color:var(--sv-testo)}
-${P4} .dm-f-piante-vaso{flex:0 0 84px;height:84px;border-radius:24px;display:grid;place-items:center;font-size:44px;
+${P5} .dm-f-piante-eroe{display:flex;gap:14px;align-items:center}
+${P5} .dm-f-piante-eroe > div{flex:1;min-width:0}
+${P5} .dm-f-piante-eroe b{display:block;font-size:20px;font-weight:850;margin-top:3px;overflow-wrap:anywhere}
+${P5} .dm-f-piante-eroe p .dm-f-sv-num{font-size:22px;color:var(--sv-testo)}
+${P5} .dm-f-piante-vaso{flex:0 0 84px;height:84px;border-radius:24px;display:grid;place-items:center;font-size:44px;
   background:var(--sv-card);border:1px solid var(--sv-tinta2)}
-${P4} .dm-f-piante-terra{display:block;position:relative;height:8px;border-radius:999px;margin-top:9px;
+${P5} .dm-f-piante-terra{display:block;position:relative;height:8px;border-radius:999px;margin-top:9px;
   background:linear-gradient(90deg,#fde68a 0 var(--min),#bbf7d0 var(--min) var(--max),#bae6fd var(--max))}
-${P4} .dm-f-piante-terra i{position:absolute;top:-4px;left:var(--x);width:6px;height:16px;margin-left:-3px;border-radius:4px;
+${P5} .dm-f-piante-terra i{position:absolute;top:-4px;left:var(--x);width:6px;height:16px;margin-left:-3px;border-radius:4px;
   background:var(--sv-testo);box-shadow:0 0 0 2px var(--sv-card)}
-${P4} .dm-f-piante-leg{display:flex;gap:14px;flex-wrap:wrap;margin:0 4px;font-size:12px;font-weight:750;color:var(--sv-fioco)}
-${P4} .dm-f-piante-leg span{display:inline-flex;align-items:center;gap:6px}
-${P4} .dm-f-piante-leg b{width:10px;height:10px;border-radius:3px}
-${P4} .dm-f-piante-leg b[data-t="asciutta"]{background:#fde68a}
-${P4} .dm-f-piante-leg b[data-t="giusta"]{background:#bbf7d0}
-${P4} .dm-f-piante-leg b[data-t="zuppa"]{background:#bae6fd}
-${P4} .dm-f-piante .dm-f-sv-riga[data-stato="asciutta"]{border-color:color-mix(in srgb,#f59e0b 45%,var(--sv-bordo))}
+${P5} .dm-f-piante-leg{display:flex;gap:14px;flex-wrap:wrap;margin:0 4px;font-size:12px;font-weight:750;color:var(--sv-fioco)}
+${P5} .dm-f-piante-leg span{display:inline-flex;align-items:center;gap:6px}
+${P5} .dm-f-piante-leg b{width:10px;height:10px;border-radius:3px}
+${P5} .dm-f-piante-leg b[data-t="asciutta"]{background:#fde68a}
+${P5} .dm-f-piante-leg b[data-t="giusta"]{background:#bbf7d0}
+${P5} .dm-f-piante-leg b[data-t="zuppa"]{background:#bae6fd}
+${P5} .dm-f-piante .dm-f-sv-riga[data-stato="asciutta"]{border-color:color-mix(in srgb,#f59e0b 45%,var(--sv-bordo))}
 
-${P4} .dm-f-acquario-vasca{display:grid;gap:10px;min-width:0}
-${P4} .dm-f-acquario-nome{margin:6px 2px 0;font-size:15px;font-weight:850}
-${P4} .dm-f-acquario-eroe{position:relative;overflow:hidden;
+${P5} .dm-f-acquario-vasca{display:grid;gap:10px;min-width:0}
+${P5} .dm-f-acquario-nome{margin:6px 2px 0;font-size:15px;font-weight:850}
+${P5} .dm-f-acquario-eroe{position:relative;overflow:hidden;
   background:linear-gradient(170deg,var(--sv-card),var(--sv-tinta) 60%,color-mix(in srgb,var(--dm-f-a) 20%,var(--sv-card)))}
-${P4} .dm-f-acquario-eroe[data-tipo="acquario"]::after{content:"🐠";position:absolute;right:18px;top:16px;font-size:38px;opacity:.9}
-${P4} .dm-f-acquario-eroe[data-tipo="terrario"]::after{content:"🦎";position:absolute;right:18px;top:16px;font-size:38px;opacity:.9}
-${P4} .dm-f-acquario-su{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:4px;padding-right:52px}
-${P4} .dm-f-acquario-su .dm-f-sv-pill{margin-bottom:8px}
-${P4} .dm-f-acquario-forc{position:relative;height:10px;border-radius:999px;margin:14px 0 4px;
+${P5} .dm-f-acquario-eroe[data-tipo="acquario"]::after{content:"🐠";position:absolute;right:18px;top:16px;font-size:38px;opacity:.9}
+${P5} .dm-f-acquario-eroe[data-tipo="terrario"]::after{content:"🦎";position:absolute;right:18px;top:16px;font-size:38px;opacity:.9}
+${P5} .dm-f-acquario-su{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:4px;padding-right:52px}
+${P5} .dm-f-acquario-su .dm-f-sv-pill{margin-bottom:8px}
+${P5} .dm-f-acquario-forc{position:relative;height:10px;border-radius:999px;margin:14px 0 4px;
   background:linear-gradient(90deg,#bae6fd 0 30%,#86efac 30% 70%,#fed7aa 70%)}
-${P4} .dm-f-acquario-forc b{position:absolute;top:-4px;left:var(--x);width:6px;height:18px;margin-left:-3px;border-radius:4px;
+${P5} .dm-f-acquario-forc b{position:absolute;top:-4px;left:var(--x);width:6px;height:18px;margin-left:-3px;border-radius:4px;
   background:var(--sv-testo);box-shadow:0 0 0 2px var(--sv-card)}
-${P4} .dm-f-acquario-tacche{display:flex;justify-content:space-between;gap:6px;font-size:11px;font-weight:800;color:var(--sv-fioco)}
-${P4} .dm-f-acquario-due{display:grid;gap:9px;grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr))}
-${P4} .dm-f-acquario-cas{border-radius:18px;padding:12px 13px;background:var(--sv-card);border:1px solid var(--sv-bordo);min-width:0;
+${P5} .dm-f-acquario-tacche{display:flex;justify-content:space-between;gap:6px;font-size:11px;font-weight:800;color:var(--sv-fioco)}
+${P5} .dm-f-acquario-due{display:grid;gap:9px;grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr))}
+${P5} .dm-f-acquario-cas{border-radius:18px;padding:12px 13px;background:var(--sv-card);border:1px solid var(--sv-bordo);min-width:0;
   box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P4} .dm-f-acquario-cas small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--sv-fioco);overflow-wrap:anywhere}
-${P4} .dm-f-acquario-cas small[data-sigla="true"]{text-transform:none;letter-spacing:.02em;font-size:12px}
-${P4} .dm-f-acquario-cas .dm-f-sv-num{display:block;font-size:24px;margin-top:4px}
-${P4} .dm-f-acquario-cas em{display:block;margin-top:3px;font-style:normal;font-size:11.5px;font-weight:750;color:var(--sv-fioco)}
-${P4} .dm-f-acquario-cas em[data-tono="ok"]{color:#15803d}
-${P4} .dm-f-acquario-cas em[data-tono="rosso"]{color:#b91c1c}
+${P5} .dm-f-acquario-cas small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--sv-fioco);overflow-wrap:anywhere}
+${P5} .dm-f-acquario-cas small[data-sigla="true"]{text-transform:none;letter-spacing:.02em;font-size:12px}
+${P5} .dm-f-acquario-cas .dm-f-sv-num{display:block;font-size:24px;margin-top:4px}
+${P5} .dm-f-acquario-cas em{display:block;margin-top:3px;font-style:normal;font-size:11.5px;font-weight:750;color:var(--sv-fioco)}
+${P5} .dm-f-acquario-cas em[data-tono="ok"]{color:#15803d}
+${P5} .dm-f-acquario-cas em[data-tono="rosso"]{color:#b91c1c}
 
-${P4} .dm-f-animali-bestia{border-radius:24px;border:1px solid var(--sv-bordo);background:var(--sv-card);padding:14px;min-width:0;
+${P5} .dm-f-animali-bestia{border-radius:24px;border:1px solid var(--sv-bordo);background:var(--sv-card);padding:14px;min-width:0;
   box-shadow:0 14px 26px -24px rgba(15,23,42,.6);display:grid;gap:10px}
-${P4} .dm-f-animali-bestia[data-chiede="true"]{border-color:var(--sv-tinta2);background:linear-gradient(160deg,var(--sv-card),var(--sv-tinta))}
-${P4} .dm-f-animali-capo{display:flex;align-items:center;gap:12px;min-width:0}
-${P4} .dm-f-animali-volto{flex:0 0 52px;width:52px;height:52px;border-radius:17px;display:grid;place-items:center;overflow:hidden;
+${P5} .dm-f-animali-bestia[data-chiede="true"]{border-color:var(--sv-tinta2);background:linear-gradient(160deg,var(--sv-card),var(--sv-tinta))}
+${P5} .dm-f-animali-capo{display:flex;align-items:center;gap:12px;min-width:0}
+${P5} .dm-f-animali-volto{flex:0 0 52px;width:52px;height:52px;border-radius:17px;display:grid;place-items:center;overflow:hidden;
   background:var(--sv-card);box-shadow:inset 0 0 0 1px var(--sv-tinta2)}
-${P4} .dm-f-animali-volto img{width:100%;height:100%;object-fit:cover}
-${P4} .dm-f-animali-chi{flex:1;min-width:0}
-${P4} .dm-f-animali-chi b{display:block;font-size:18px;font-weight:850}
-${P4} .dm-f-animali-chi em{display:block;font-style:normal;font-size:12px;font-weight:750;color:var(--sv-fioco)}
-${P4} .dm-f-animali-avv{margin:0;padding:10px 12px;border-radius:14px;font-size:13px;font-weight:800;
+${P5} .dm-f-animali-volto img{width:100%;height:100%;object-fit:cover}
+${P5} .dm-f-animali-chi{flex:1;min-width:0}
+${P5} .dm-f-animali-chi b{display:block;font-size:18px;font-weight:850}
+${P5} .dm-f-animali-chi em{display:block;font-style:normal;font-size:12px;font-weight:750;color:var(--sv-fioco)}
+${P5} .dm-f-animali-avv{margin:0;padding:10px 12px;border-radius:14px;font-size:13px;font-weight:800;
   background:color-mix(in srgb,#f59e0b 18%,var(--sv-card));color:#92400e}
-${P4} .dm-f-animali-avv[data-gravita="urgente"]{background:color-mix(in srgb,#ef4444 15%,var(--sv-card));color:#991b1b}
-${P4} .dm-f-animali-livelli{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));align-items:start}
-${P4} .dm-f-animali-liv{border-radius:16px;padding:10px;background:var(--sv-card);border:1px solid var(--sv-bordo);min-width:0}
-${P4} .dm-f-animali-liv small{display:block;font-size:9.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--sv-fioco);
+${P5} .dm-f-animali-avv[data-gravita="urgente"]{background:color-mix(in srgb,#ef4444 15%,var(--sv-card));color:#991b1b}
+${P5} .dm-f-animali-livelli{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));align-items:start}
+${P5} .dm-f-animali-liv{border-radius:16px;padding:10px;background:var(--sv-card);border:1px solid var(--sv-bordo);min-width:0}
+${P5} .dm-f-animali-liv small{display:block;font-size:9.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--sv-fioco);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-${P4} .dm-f-animali-liv .dm-f-sv-num{display:block;font-size:21px;margin:3px 0 6px;overflow-wrap:anywhere}
-${P4} .dm-f-animali-liv[data-basso="true"] .dm-f-sv-num{color:#b45309}
-${P4} .dm-f-animali-liv em{display:block;font-style:normal;font-size:11px;font-weight:750;color:var(--sv-fioco);margin-top:5px}
-${P4} .dm-f-animali-forte{background:var(--dm-f-a)!important;border-color:var(--dm-f-a)!important;color:#fff!important}
-${P4} .dm-f-animali-forte em{color:rgba(255,255,255,.85)!important}
-${P4} .dm-f-animali-forte .dm-f-sv-tic{background:rgba(255,255,255,.2)}
+${P5} .dm-f-animali-liv .dm-f-sv-num{display:block;font-size:21px;margin:3px 0 6px;overflow-wrap:anywhere}
+${P5} .dm-f-animali-liv[data-basso="true"] .dm-f-sv-num{color:#b45309}
+${P5} .dm-f-animali-liv em{display:block;font-style:normal;font-size:11px;font-weight:750;color:var(--sv-fioco);margin-top:5px}
+${P5} .dm-f-animali-forte{background:var(--dm-f-a)!important;border-color:var(--dm-f-a)!important;color:#fff!important}
+${P5} .dm-f-animali-forte em{color:rgba(255,255,255,.85)!important}
+${P5} .dm-f-animali-forte .dm-f-sv-tic{background:rgba(255,255,255,.2)}
 
-${P4} .dm-f-agenda-quando{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:4px}
-${P4} .dm-f-agenda-quando .dm-f-sv-num{font-size:44px}
-${P4} .dm-f-agenda-fra{font-size:13px;font-weight:850;color:var(--dm-f-a)}
-${P4} .dm-f-agenda-cosa{display:block;font-size:20px;font-weight:850;margin-top:6px;overflow-wrap:anywhere}
-${P4} .dm-f-agenda-eroe em{display:block;font-style:normal;font-size:12.5px;font-weight:750;color:var(--sv-fioco);margin-top:2px}
-${P4} .dm-f-agenda-giorno h5{margin:6px 4px 0;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--sv-fioco)}
-${P4} .dm-f-agenda-giorno[data-ritardo="true"] h5{color:#b45309}
-${P4} .dm-f-agenda-giorno ul{list-style:none;margin:0;padding:0}
-${P4} .dm-f-agenda-ev{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:10px 4px;align-items:start;
+${P5} .dm-f-agenda-quando{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:4px}
+${P5} .dm-f-agenda-quando .dm-f-sv-num{font-size:44px}
+${P5} .dm-f-agenda-fra{font-size:13px;font-weight:850;color:var(--dm-f-a)}
+${P5} .dm-f-agenda-cosa{display:block;font-size:20px;font-weight:850;margin-top:6px;overflow-wrap:anywhere}
+${P5} .dm-f-agenda-eroe em{display:block;font-style:normal;font-size:12.5px;font-weight:750;color:var(--sv-fioco);margin-top:2px}
+${P5} .dm-f-agenda-giorno h5{margin:6px 4px 0;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--sv-fioco)}
+${P5} .dm-f-agenda-giorno[data-ritardo="true"] h5{color:#b45309}
+${P5} .dm-f-agenda-giorno ul{list-style:none;margin:0;padding:0}
+${P5} .dm-f-agenda-ev{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:10px 4px;align-items:start;
   border-top:1px solid color-mix(in srgb,var(--sv-fioco) 14%,transparent)}
-${P4} .dm-f-agenda-ev:first-child{border-top:0}
-${P4} .dm-f-agenda-ora{font-family:'Oswald',system-ui,sans-serif;font-weight:600;font-size:17px;color:var(--dm-f-a);line-height:1.2}
-${P4} .dm-f-agenda-ora[data-giorno="true"],${P4} .dm-f-agenda-ev[data-scadenza="true"] .dm-f-agenda-ora{font-family:inherit;font-size:12px;font-weight:850}
-${P4} .dm-f-agenda-che{display:flex;align-items:flex-start;gap:10px;min-width:0}
-${P4} .dm-f-agenda-che > span{flex:1;min-width:0}
-${P4} .dm-f-agenda-che b{display:block;font-size:14px;font-weight:850;overflow-wrap:anywhere}
-${P4} .dm-f-agenda-che em{display:block;font-style:normal;font-size:12px;font-weight:700;color:var(--sv-fioco)}
-${P4} .dm-f-agenda-che .dm-todo-check{flex:0 0 auto}
-${P4} .dm-f-agenda-lista{display:grid;gap:4px;min-width:0}
-${P4} .dm-f-agenda-lista .dm-w-block-title{display:block;padding:0;background:none;border:0}
-${P4} .dm-f-agenda-voci{gap:0!important;padding:0!important}
-${P4} .dm-f-agenda-voce{display:block!important;border-top:1px solid color-mix(in srgb,var(--sv-fioco) 14%,transparent)}
-${P4} .dm-f-agenda-voce:first-child{border-top:0}
-${P4} .dm-f-agenda-scorri{display:flex;align-items:center;gap:8px;min-width:0}
-${P4} .dm-f-agenda-riga{flex:1 0 auto;min-width:0;display:flex;align-items:center;gap:12px;padding:10px 4px}
-${P4} .dm-f-agenda-riga .dm-todo-text{font-size:14.5px;font-weight:750}
-${P4} .dm-f-agenda-voce .dm-todo-check{width:24px;height:24px;flex:0 0 24px;margin:0}
+${P5} .dm-f-agenda-ev:first-child{border-top:0}
+${P5} .dm-f-agenda-ora{font-family:'Oswald',system-ui,sans-serif;font-weight:600;font-size:17px;color:var(--dm-f-a);line-height:1.2}
+${P5} .dm-f-agenda-ora[data-giorno="true"],${P5} .dm-f-agenda-ev[data-scadenza="true"] .dm-f-agenda-ora{font-family:inherit;font-size:12px;font-weight:850}
+${P5} .dm-f-agenda-che{display:flex;align-items:flex-start;gap:10px;min-width:0}
+${P5} .dm-f-agenda-che > span{flex:1;min-width:0}
+${P5} .dm-f-agenda-che b{display:block;font-size:14px;font-weight:850;overflow-wrap:anywhere}
+${P5} .dm-f-agenda-che em{display:block;font-style:normal;font-size:12px;font-weight:700;color:var(--sv-fioco)}
+${P5} .dm-f-agenda-che .dm-todo-check{flex:0 0 auto}
+${P5} .dm-f-agenda-lista{display:grid;gap:4px;min-width:0}
+${P5} .dm-f-agenda-lista .dm-w-block-title{display:block;padding:0;background:none;border:0}
+${P5} .dm-f-agenda-voci{gap:0!important;padding:0!important}
+${P5} .dm-f-agenda-voce{display:block!important;border-top:1px solid color-mix(in srgb,var(--sv-fioco) 14%,transparent)}
+${P5} .dm-f-agenda-voce:first-child{border-top:0}
+${P5} .dm-f-agenda-scorri{display:flex;align-items:center;gap:8px;min-width:0}
+${P5} .dm-f-agenda-riga{flex:1 0 auto;min-width:0;display:flex;align-items:center;gap:12px;padding:10px 4px}
+${P5} .dm-f-agenda-riga .dm-todo-text{font-size:14.5px;font-weight:750}
+${P5} .dm-f-agenda-voce .dm-todo-check{width:24px;height:24px;flex:0 0 24px;margin:0}
 /* Sul telefono il cestino si scopre scorrendo la riga col dito: sempre in vista
    era rumore in una lista della spesa. */
 @media (hover:none){
-  ${P4} .dm-f-agenda-scorri{overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:0}
-  ${P4} .dm-f-agenda-scorri::-webkit-scrollbar{display:none}
-  ${P4} .dm-f-agenda-riga{flex:0 0 100%;scroll-snap-align:start}
-  ${P4} .dm-f-agenda-voce .dm-todo-del{flex:0 0 64px;align-self:stretch;height:auto;width:64px;border-radius:14px;opacity:1!important;
+  ${P5} .dm-f-agenda-scorri{overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:0}
+  ${P5} .dm-f-agenda-scorri::-webkit-scrollbar{display:none}
+  ${P5} .dm-f-agenda-riga{flex:0 0 100%;scroll-snap-align:start}
+  ${P5} .dm-f-agenda-voce .dm-todo-del{flex:0 0 64px;align-self:stretch;height:auto;width:64px;border-radius:14px;opacity:1!important;
     scroll-snap-align:end;background:color-mix(in srgb,#ef4444 16%,var(--sv-card))}
 }
-${P4} .dm-f-agenda-nuovo{margin-top:6px}
+${P5} .dm-f-agenda-nuovo{margin-top:6px}
 
-${P4} .dm-f-rifiuti-eroe{display:flex;gap:16px;align-items:center}
-${P4} .dm-f-rifiuti-eroe > div{flex:1;min-width:0}
-${P4} .dm-f-rifiuti-bidone{flex:0 0 92px;display:grid;place-items:center}
-${P4} .dm-f-rifiuti-bidone svg{width:92px;height:92px}
-${P4} .dm-f-rifiuti-cosa{display:block;font-family:'Oswald',system-ui,sans-serif;font-weight:600;font-size:30px;line-height:1.05;
+${P5} .dm-f-rifiuti-eroe{display:flex;gap:16px;align-items:center}
+${P5} .dm-f-rifiuti-eroe > div{flex:1;min-width:0}
+${P5} .dm-f-rifiuti-bidone{flex:0 0 92px;display:grid;place-items:center}
+${P5} .dm-f-rifiuti-bidone svg{width:92px;height:92px}
+${P5} .dm-f-rifiuti-cosa{display:block;font-family:'Oswald',system-ui,sans-serif;font-weight:600;font-size:30px;line-height:1.05;
   text-transform:uppercase;margin-top:4px;overflow-wrap:anywhere}
-${P4} .dm-f-rifiuti-eroe em{display:block;font-style:normal;font-size:13px;font-weight:800;color:var(--sv-fioco);margin-top:4px}
-${P4} .dm-f-rifiuti-giorno{min-height:72px}
-${P4} .dm-f-rifiuti-colori{display:grid;justify-items:center;gap:3px;margin-top:4px}
-${P4} .dm-f-rifiuti-colori i{display:block;width:20px;height:20px;border-radius:7px;background:var(--c)}
-${P4} .dm-f-rifiuti-giorno[data-oggi="true"]{background:var(--sv-tinta);border-color:var(--sv-tinta2);color:var(--sv-testo)}
-${P4} .dm-f-rifiuti-giorno[data-oggi="true"] small{color:var(--sv-fioco)}
-${P4} .dm-f-rifiuti-ic{background:color-mix(in srgb,var(--c) 22%,var(--sv-card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 45%,transparent)}
-${P4} .dm-f-rifiuti-riga .dm-f-sv-val .dm-f-sv-num{font-size:19px}
+${P5} .dm-f-rifiuti-eroe em{display:block;font-style:normal;font-size:13px;font-weight:800;color:var(--sv-fioco);margin-top:4px}
+${P5} .dm-f-rifiuti-giorno{min-height:72px}
+${P5} .dm-f-rifiuti-colori{display:grid;justify-items:center;gap:3px;margin-top:4px}
+${P5} .dm-f-rifiuti-colori i{display:block;width:20px;height:20px;border-radius:7px;background:var(--c)}
+${P5} .dm-f-rifiuti-giorno[data-oggi="true"]{background:var(--sv-tinta);border-color:var(--sv-tinta2);color:var(--sv-testo)}
+${P5} .dm-f-rifiuti-giorno[data-oggi="true"] small{color:var(--sv-fioco)}
+${P5} .dm-f-rifiuti-ic{background:color-mix(in srgb,var(--c) 22%,var(--sv-card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 45%,transparent)}
+${P5} .dm-f-rifiuti-riga .dm-f-sv-val .dm-f-sv-num{font-size:19px}
 
-${P4} .dm-f-allerte-avviso{border-radius:24px;padding:16px;min-width:0;border:1px solid #fcd34d;
+${P5} .dm-f-allerte-avviso{border-radius:24px;padding:16px;min-width:0;border:1px solid #fcd34d;
   background:linear-gradient(160deg,color-mix(in srgb,#fef3c7 50%,var(--sv-card)),color-mix(in srgb,#fde68a 55%,var(--sv-card)))}
-${P4} .dm-f-allerte-avviso[data-livello="attenzione"]{border-color:#fdba74;background:linear-gradient(160deg,color-mix(in srgb,#ffedd5 55%,var(--sv-card)),color-mix(in srgb,#fed7aa 60%,var(--sv-card)))}
-${P4} .dm-f-allerte-avviso[data-livello="allarme"]{border-color:#fca5a5;background:linear-gradient(160deg,color-mix(in srgb,#fee2e2 55%,var(--sv-card)),color-mix(in srgb,#fecaca 60%,var(--sv-card)))}
-${P4} .dm-f-allerte-capo{display:flex;align-items:center;gap:12px;min-width:0}
-${P4} .dm-f-allerte-capo > div{flex:1;min-width:0}
-${P4} .dm-f-allerte-seg{flex:0 0 52px;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:26px;background:#facc15}
-${P4} .dm-f-allerte-seg svg{width:28px;height:28px}
-${P4} .dm-f-allerte-avviso[data-livello="attenzione"] .dm-f-allerte-seg{background:#fb923c}
-${P4} .dm-f-allerte-avviso[data-livello="allarme"] .dm-f-allerte-seg{background:#f87171}
-${P4} .dm-f-allerte-capo b{display:block;font-family:'Oswald',system-ui,sans-serif;font-weight:600;font-size:26px;text-transform:uppercase;line-height:1.05;color:#92400e;overflow-wrap:anywhere}
-${P4} .dm-f-allerte-avviso[data-livello="allarme"] .dm-f-allerte-capo b{color:#991b1b}
-${P4} .dm-f-allerte-capo em{display:block;font-style:normal;font-size:12px;font-weight:800;color:#a16207;margin-top:2px}
-${P4} .dm-f-allerte-avviso p{margin:12px 0 0;font-size:13.5px;font-weight:650;line-height:1.5;color:var(--sv-testo)}
-${P4} .dm-f-allerte-quando{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-${P4} .dm-f-allerte-quando span{padding:6px 10px;border-radius:999px;background:var(--sv-card);font-size:12px;font-weight:800;color:#92400e;border:1px solid #fde68a}
-${P4} .dm-f-allerte-calma b{display:block;font-size:20px;font-weight:850;margin-top:4px}
-${P4} .dm-f-allerte .dm-f-sv-riga[data-livello="nota"] .dm-f-sv-ic{background:color-mix(in srgb,#f59e0b 16%,var(--sv-card))}
-${P4} .dm-f-allerte .dm-f-sv-ic svg,${P4} .dm-f-allerte-calma-voce svg{width:22px;height:22px}
-${P4} .dm-f-allerte-calme{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr))}
-${P4} .dm-f-allerte-calma-voce{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:16px;background:var(--sv-fondo);min-width:0}
-${P4} .dm-f-allerte-calma-voce > span:last-child{min-width:0}
-${P4} .dm-f-allerte-calma-voce b{display:block;font-size:12.5px;font-weight:850}
-${P4} .dm-f-allerte-calma-voce em{display:block;font-style:normal;font-size:11px;font-weight:700;color:var(--sv-fioco);overflow-wrap:anywhere}
+${P5} .dm-f-allerte-avviso[data-livello="attenzione"]{border-color:#fdba74;background:linear-gradient(160deg,color-mix(in srgb,#ffedd5 55%,var(--sv-card)),color-mix(in srgb,#fed7aa 60%,var(--sv-card)))}
+${P5} .dm-f-allerte-avviso[data-livello="allarme"]{border-color:#fca5a5;background:linear-gradient(160deg,color-mix(in srgb,#fee2e2 55%,var(--sv-card)),color-mix(in srgb,#fecaca 60%,var(--sv-card)))}
+${P5} .dm-f-allerte-capo{display:flex;align-items:center;gap:12px;min-width:0}
+${P5} .dm-f-allerte-capo > div{flex:1;min-width:0}
+${P5} .dm-f-allerte-seg{flex:0 0 52px;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:26px;background:#facc15}
+${P5} .dm-f-allerte-seg svg{width:28px;height:28px}
+${P5} .dm-f-allerte-avviso[data-livello="attenzione"] .dm-f-allerte-seg{background:#fb923c}
+${P5} .dm-f-allerte-avviso[data-livello="allarme"] .dm-f-allerte-seg{background:#f87171}
+${P5} .dm-f-allerte-capo b{display:block;font-family:'Oswald',system-ui,sans-serif;font-weight:600;font-size:26px;text-transform:uppercase;line-height:1.05;color:#92400e;overflow-wrap:anywhere}
+${P5} .dm-f-allerte-avviso[data-livello="allarme"] .dm-f-allerte-capo b{color:#991b1b}
+${P5} .dm-f-allerte-capo em{display:block;font-style:normal;font-size:12px;font-weight:800;color:#a16207;margin-top:2px}
+${P5} .dm-f-allerte-avviso p{margin:12px 0 0;font-size:13.5px;font-weight:650;line-height:1.5;color:var(--sv-testo)}
+${P5} .dm-f-allerte-quando{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+${P5} .dm-f-allerte-quando span{padding:6px 10px;border-radius:999px;background:var(--sv-card);font-size:12px;font-weight:800;color:#92400e;border:1px solid #fde68a}
+${P5} .dm-f-allerte-calma b{display:block;font-size:20px;font-weight:850;margin-top:4px}
+${P5} .dm-f-allerte .dm-f-sv-riga[data-livello="nota"] .dm-f-sv-ic{background:color-mix(in srgb,#f59e0b 16%,var(--sv-card))}
+${P5} .dm-f-allerte .dm-f-sv-ic svg,${P5} .dm-f-allerte-calma-voce svg{width:22px;height:22px}
+${P5} .dm-f-allerte-calme{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr))}
+${P5} .dm-f-allerte-calma-voce{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:16px;background:var(--sv-fondo);min-width:0}
+${P5} .dm-f-allerte-calma-voce > span:last-child{min-width:0}
+${P5} .dm-f-allerte-calma-voce b{display:block;font-size:12.5px;font-weight:850}
+${P5} .dm-f-allerte-calma-voce em{display:block;font-style:normal;font-size:11px;font-weight:700;color:var(--sv-fioco);overflow-wrap:anywhere}
 
-${P4} .dm-f-stampanti-st{border-radius:24px;border:1px solid var(--sv-bordo);background:var(--sv-card);padding:14px;min-width:0;
+${P5} .dm-f-stampanti-st{border-radius:24px;border:1px solid var(--sv-bordo);background:var(--sv-card);padding:14px;min-width:0;
   box-shadow:0 14px 26px -24px rgba(15,23,42,.6)}
-${P4} .dm-f-stampanti-st[data-chiede="true"]{border-color:#fde68a;background:linear-gradient(160deg,var(--sv-card),color-mix(in srgb,#fef3c7 60%,var(--sv-card)))}
-${P4} .dm-f-stampanti-capo{display:flex;align-items:center;gap:12px;min-width:0}
-${P4} .dm-f-stampanti-fac{flex:0 0 50px;width:50px;height:50px;border-radius:16px;display:grid;place-items:center;font-size:26px;background:var(--sv-tinta)}
-${P4} .dm-f-stampanti-chi{flex:1;min-width:0}
-${P4} .dm-f-stampanti-chi b{display:block;font-size:17px;font-weight:850;overflow-wrap:anywhere}
-${P4} .dm-f-stampanti-chi em{display:block;font-style:normal;font-size:12px;font-weight:750;color:var(--sv-fioco)}
-${P4} .dm-f-stampanti-chi em[data-tono="stampa"]{color:var(--dm-f-a)}
-${P4} .dm-f-stampanti-chi em[data-tono="ferma"]{color:#b91c1c}
-${P4} .dm-f-stampanti-cart{display:flex;gap:10px;margin-top:14px;height:120px}
-${P4} .dm-f-stampanti-c{flex:1;max-width:72px;height:100%;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
-${P4} .dm-f-stampanti-tubo{display:block;width:100%;max-width:56px;flex:1;border-radius:12px;position:relative;overflow:hidden;
+${P5} .dm-f-stampanti-st[data-chiede="true"]{border-color:#fde68a;background:linear-gradient(160deg,var(--sv-card),color-mix(in srgb,#fef3c7 60%,var(--sv-card)))}
+${P5} .dm-f-stampanti-capo{display:flex;align-items:center;gap:12px;min-width:0}
+${P5} .dm-f-stampanti-fac{flex:0 0 50px;width:50px;height:50px;border-radius:16px;display:grid;place-items:center;font-size:26px;background:var(--sv-tinta)}
+${P5} .dm-f-stampanti-chi{flex:1;min-width:0}
+${P5} .dm-f-stampanti-chi b{display:block;font-size:17px;font-weight:850;overflow-wrap:anywhere}
+${P5} .dm-f-stampanti-chi em{display:block;font-style:normal;font-size:12px;font-weight:750;color:var(--sv-fioco)}
+${P5} .dm-f-stampanti-chi em[data-tono="stampa"]{color:var(--dm-f-a)}
+${P5} .dm-f-stampanti-chi em[data-tono="ferma"]{color:#b91c1c}
+${P5} .dm-f-stampanti-cart{display:flex;gap:10px;margin-top:14px;height:120px}
+${P5} .dm-f-stampanti-c{flex:1;max-width:72px;height:100%;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+${P5} .dm-f-stampanti-tubo{display:block;width:100%;max-width:56px;flex:1;border-radius:12px;position:relative;overflow:hidden;
   background:var(--sv-fondo);box-shadow:inset 0 0 0 1px var(--sv-bordo)}
-${P4} .dm-f-stampanti-tubo::after{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--h);background:var(--c)}
-${P4} .dm-f-stampanti-c .dm-f-sv-num{font-size:16px}
-${P4} .dm-f-stampanti-c[data-basso="true"] .dm-f-sv-num{color:#b45309}
-${P4} .dm-f-stampanti-c small{font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--sv-fioco);text-transform:uppercase;
+${P5} .dm-f-stampanti-tubo::after{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--h);background:var(--c)}
+${P5} .dm-f-stampanti-c .dm-f-sv-num{font-size:16px}
+${P5} .dm-f-stampanti-c[data-basso="true"] .dm-f-sv-num{color:#b45309}
+${P5} .dm-f-stampanti-c small{font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--sv-fioco);text-transform:uppercase;
   max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-${P4} .dm-f-stampanti-consiglio{margin:12px 0 0;padding:10px 12px;border-radius:14px;font-size:13px;font-weight:800;
+${P5} .dm-f-stampanti-consiglio{margin:12px 0 0;padding:10px 12px;border-radius:14px;font-size:13px;font-weight:800;
   background:color-mix(in srgb,#f59e0b 18%,var(--sv-card));color:#92400e}
-${P4} .dm-f-stampanti-cart[data-una="true"]{height:104px;align-items:center}
-${P4} .dm-f-stampanti-cart[data-una="true"] .dm-f-stampanti-c{flex:0 0 64px}
-${P4} .dm-f-stampanti-cart[data-una="true"] .dm-f-stampanti-consiglio{flex:1;margin:0;align-self:center}
-html[data-theme="dark"] ${P4} .dm-f-stampanti-tubo[data-tinta="nero"]{--c:#cbd5e1!important}
-html[data-theme="dark"] ${P4} .dm-f-allerte-capo b,html[data-theme="dark"] ${P4} .dm-f-allerte-capo em,
-html[data-theme="dark"] ${P4} .dm-f-allerte-quando span,html[data-theme="dark"] ${P4} .dm-f-stampanti-consiglio,
-html[data-theme="dark"] ${P4} .dm-f-animali-avv{color:#fde68a}
+${P5} .dm-f-stampanti-cart[data-una="true"]{height:104px;align-items:center}
+${P5} .dm-f-stampanti-cart[data-una="true"] .dm-f-stampanti-c{flex:0 0 64px}
+${P5} .dm-f-stampanti-cart[data-una="true"] .dm-f-stampanti-consiglio{flex:1;margin:0;align-self:center}
+html[data-theme="dark"] ${P5} .dm-f-stampanti-tubo[data-tinta="nero"]{--c:#cbd5e1!important}
+html[data-theme="dark"] ${P5} .dm-f-allerte-capo b,html[data-theme="dark"] ${P5} .dm-f-allerte-capo em,
+html[data-theme="dark"] ${P5} .dm-f-allerte-quando span,html[data-theme="dark"] ${P5} .dm-f-stampanti-consiglio,
+html[data-theme="dark"] ${P5} .dm-f-animali-avv{color:#fde68a}
 `;
 var FINESTRE2 = [
   ["aria", finestraAria, sottotitoloAria],
@@ -49093,11 +49819,11 @@ var FINESTRE2 = [
   ["stampanti", finestraStampanti, sottotitoloStampanti]
 ];
 FINESTRE2.forEach(
-  ([chiave2, disegna7, sottotitolo5], indice) => registraFinestra(chiave2, { disegna: disegna7, sottotitolo: sottotitolo5, stile: indice === 0 ? STILE7 : "" })
+  ([chiave2, disegna7, sottotitolo5], indice) => registraFinestra(chiave2, { disegna: disegna7, sottotitolo: sottotitolo5, stile: indice === 0 ? STILE8 : "" })
 );
 
 // src/sections/finestre/sistema.js
-var P5 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
+var P6 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
 var UN_MINUTO2 = 6e4;
 function durataCorta(ms) {
   const minuti = Math.max(1, Math.round((Number(ms) || 0) / UN_MINUTO2));
@@ -49190,50 +49916,50 @@ function finestraElettrodomestici(widget) {
   return `<div class="dm-f dm-f-elettrodomestici">${eroe}${inFunzione}${fermiMarkup}</div>`;
 }
 var STILE_COMUNE = `
-${P5} .dm-f{display:grid;gap:10px;min-width:0}
-${P5} .dm-f-num{font-family:Oswald,var(--dm-font-num,system-ui),sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em}
-${P5} .dm-f-tit{margin:8px 2px 0;font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-${P5} .dm-f-scheda{border-radius:20px;padding:13px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);min-width:0}
-${P5} .dm-f-leva{flex:0 0 auto;width:54px;height:32px;border-radius:999px;border:0;padding:0;background:#cbd5e1;position:relative;cursor:pointer;transition:background .2s}
-${P5} .dm-f-leva i{position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:left .2s}
-${P5} .dm-f-leva[data-on="true"]{background:#16a34a}
-${P5} .dm-f-leva[data-on="true"] i{left:26px}
-${P5} .dm-f-porta{width:100%;margin-top:4px;padding:14px;border:0;border-radius:18px;font:inherit;font-weight:850;font-size:15px;cursor:pointer;
+${P6} .dm-f{display:grid;gap:10px;min-width:0}
+${P6} .dm-f-num{font-family:Oswald,var(--dm-font-num,system-ui),sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+${P6} .dm-f-tit{margin:8px 2px 0;font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P6} .dm-f-scheda{border-radius:20px;padding:13px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);min-width:0}
+${P6} .dm-f-leva{flex:0 0 auto;width:54px;height:32px;border-radius:999px;border:0;padding:0;background:#cbd5e1;position:relative;cursor:pointer;transition:background .2s}
+${P6} .dm-f-leva i{position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:left .2s}
+${P6} .dm-f-leva[data-on="true"]{background:#16a34a}
+${P6} .dm-f-leva[data-on="true"] i{left:26px}
+${P6} .dm-f-porta{width:100%;margin-top:4px;padding:14px;border:0;border-radius:18px;font:inherit;font-weight:850;font-size:15px;cursor:pointer;
   color:var(--dm-widget-accent,#0ea5e9);background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 12%,var(--card-bg,#fff))}
-${P5} .dm-f-porta.dm-f-pieno{color:#fff;background:var(--dm-widget-accent,#0ea5e9)}
+${P6} .dm-f-porta.dm-f-pieno{color:#fff;background:var(--dm-widget-accent,#0ea5e9)}
 `;
 var STILE_ELETTRODOMESTICI = `
-${P5} .dm-f-el-eroe{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:24px;
+${P6} .dm-f-el-eroe{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:24px;
   background:linear-gradient(155deg,color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 10%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 16%,var(--card-bg,#fff)));
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 30%,transparent)}
-${P5} .dm-f-el-eroe>.dm-f-num{font-size:50px;line-height:1;color:var(--dm-widget-accent,#0e7490)}
-${P5} .dm-f-el-eroe b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a)}
-${P5} .dm-f-el-eroe span{display:block;font-size:12.5px;font-weight:750;color:var(--text-dim,#475569)}
-${P5} .dm-f-el-mac{border-radius:22px;padding:14px;background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 22%,transparent);
+${P6} .dm-f-el-eroe>.dm-f-num{font-size:50px;line-height:1;color:var(--dm-widget-accent,#0e7490)}
+${P6} .dm-f-el-eroe b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a)}
+${P6} .dm-f-el-eroe span{display:block;font-size:12.5px;font-weight:750;color:var(--text-dim,#475569)}
+${P6} .dm-f-el-mac{border-radius:22px;padding:14px;background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 22%,transparent);
   box-shadow:0 14px 26px -24px color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 90%,transparent);min-width:0}
-${P5} .dm-f-el-su{display:flex;align-items:center;gap:12px;min-width:0}
-${P5} .dm-f-el-ic{flex:0 0 auto;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:24px;
+${P6} .dm-f-el-su{display:flex;align-items:center;gap:12px;min-width:0}
+${P6} .dm-f-el-ic{flex:0 0 auto;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:24px;
   background:color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 12%,var(--card-bg,#fff));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 30%,transparent)}
-${P5} .dm-f-el-ic svg{width:30px;height:30px}
-${P5} .dm-f-el-nome{flex:1;min-width:0}
-${P5} .dm-f-el-nome b{display:block;font-size:15.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-el-nome em{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
-${P5} .dm-f-el-fase{display:inline-flex;padding:3px 8px;border-radius:999px;background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:850}
-${P5} .dm-f-el-resta{flex:0 0 auto;text-align:right;padding-left:4px}
-${P5} .dm-f-el-resta b{display:block;font-size:26px;line-height:1;color:var(--text,#0f172a)}
-${P5} .dm-f-el-resta small{display:block;margin-top:3px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b);white-space:nowrap}
-${P5} .dm-f-corsa{height:8px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent);margin:12px 0 7px;overflow:hidden}
-${P5} .dm-f-corsa i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 60%,#fff),var(--dm-widget-accent,#0891b2))}
-${P5} .dm-f-el-piede{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
-${P5} .dm-f-el-corsa+.dm-f-el-piede,${P5} .dm-f-corsa+.dm-f-el-piede{margin-top:0}
-${P5} .dm-f-el-piede b{color:var(--text,#0f172a)}
-${P5} .dm-f-el-link{border:0;background:none;padding:4px 0;font:inherit;font-weight:800;color:var(--dm-widget-accent,#0e7490);cursor:pointer}
-${P5} .dm-f-el-fermi{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
-${P5} .dm-f-el-fermo{border-radius:18px;padding:12px 8px 10px;text-align:center;background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));
+${P6} .dm-f-el-ic svg{width:30px;height:30px}
+${P6} .dm-f-el-nome{flex:1;min-width:0}
+${P6} .dm-f-el-nome b{display:block;font-size:15.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-el-nome em{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P6} .dm-f-el-fase{display:inline-flex;padding:3px 8px;border-radius:999px;background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:850}
+${P6} .dm-f-el-resta{flex:0 0 auto;text-align:right;padding-left:4px}
+${P6} .dm-f-el-resta b{display:block;font-size:26px;line-height:1;color:var(--text,#0f172a)}
+${P6} .dm-f-el-resta small{display:block;margin-top:3px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b);white-space:nowrap}
+${P6} .dm-f-corsa{height:8px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent);margin:12px 0 7px;overflow:hidden}
+${P6} .dm-f-corsa i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 60%,#fff),var(--dm-widget-accent,#0891b2))}
+${P6} .dm-f-el-piede{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P6} .dm-f-el-corsa+.dm-f-el-piede,${P6} .dm-f-corsa+.dm-f-el-piede{margin-top:0}
+${P6} .dm-f-el-piede b{color:var(--text,#0f172a)}
+${P6} .dm-f-el-link{border:0;background:none;padding:4px 0;font:inherit;font-weight:800;color:var(--dm-widget-accent,#0e7490);cursor:pointer}
+${P6} .dm-f-el-fermi{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+${P6} .dm-f-el-fermo{border-radius:18px;padding:12px 8px 10px;text-align:center;background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));
   border:1px solid var(--card-border,#eef2f7);display:grid;justify-items:center;gap:3px;min-width:0}
-${P5} .dm-f-el-fermo .dm-f-el-ic{width:38px;height:38px;border-radius:12px;filter:grayscale(.35)}
-${P5} .dm-f-el-fermo b{font-size:12.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-el-fermo em{font-style:normal;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8)}
+${P6} .dm-f-el-fermo .dm-f-el-ic{width:38px;height:38px;border-radius:12px;filter:grayscale(.35)}
+${P6} .dm-f-el-fermo b{font-size:12.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-el-fermo em{font-style:normal;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8)}
 `;
 function tastoCottura(cucina, chiave2, classe2, segno, parola) {
   const comando = cucina.comandi?.[chiave2];
@@ -49301,41 +50027,41 @@ function finestraCottura(widget) {
   return `<div class="dm-f dm-f-cottura" data-fase="${esc(cucina.fase || "")}">${eroe}${gradi7}${tasti.length ? `<div class="dm-f-cot-tasti" style="--n:${tasti.length}">${tasti.join("")}</div>` : ""}${altri}</div>`;
 }
 var STILE_COTTURA = `
-${P5} .dm-f-cot-eroe{display:flex;gap:16px;align-items:center;padding:18px;border-radius:26px;
+${P6} .dm-f-cot-eroe{display:flex;gap:16px;align-items:center;padding:18px;border-radius:26px;
   background:linear-gradient(160deg,color-mix(in srgb,var(--dm-widget-accent,#0891b2) 8%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#0891b2) 15%,var(--card-bg,#fff)));
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0891b2) 28%,transparent)}
-${P5} .dm-f-cot-anello{flex:0 0 118px;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;position:relative;
+${P6} .dm-f-cot-anello{flex:0 0 118px;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;position:relative;
   background:conic-gradient(var(--dm-widget-accent,#0891b2) calc(var(--p)*1%),color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent) 0)}
-${P5} .dm-f-cot-anello::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--card-bg,#fff)}
-${P5} .dm-f-cot-anello>div{position:relative;z-index:1;text-align:center}
-${P5} .dm-f-cot-anello .dm-f-num{font-size:34px;line-height:1;color:var(--text,#0f172a)}
-${P5} .dm-f-cot-anello small{display:block;margin-top:2px;font-size:10.5px;font-weight:850;color:var(--text-dim,#64748b)}
-${P5} .dm-f-cot-dx{min-width:0}
-${P5} .dm-f-cot-dx>b{display:block;font-size:19px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-cot-q{display:block;font-size:13px;font-weight:750;color:var(--text-dim,#475569);margin-top:3px}
-${P5} .dm-f-cot-q b{color:var(--text,#0f172a)}
-${P5} .dm-f-cot-chip{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:850;
+${P6} .dm-f-cot-anello::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--card-bg,#fff)}
+${P6} .dm-f-cot-anello>div{position:relative;z-index:1;text-align:center}
+${P6} .dm-f-cot-anello .dm-f-num{font-size:34px;line-height:1;color:var(--text,#0f172a)}
+${P6} .dm-f-cot-anello small{display:block;margin-top:2px;font-size:10.5px;font-weight:850;color:var(--text-dim,#64748b)}
+${P6} .dm-f-cot-dx{min-width:0}
+${P6} .dm-f-cot-dx>b{display:block;font-size:19px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-cot-q{display:block;font-size:13px;font-weight:750;color:var(--text-dim,#475569);margin-top:3px}
+${P6} .dm-f-cot-q b{color:var(--text,#0f172a)}
+${P6} .dm-f-cot-chip{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:850;
   background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0891b2) 30%,transparent);color:var(--dm-widget-accent,#0e7490)}
-${P5} .dm-f-cot-chip::before{content:"✓"}
-${P5} .dm-f-cot-chip[data-aperto="true"]{color:#b45309;border-color:#fcd34d}
-${P5} .dm-f-cot-chip[data-aperto="true"]::before{content:"!"}
-${P5} .dm-f-cot-gradi{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:20px;padding:10px 12px 10px 16px;
+${P6} .dm-f-cot-chip::before{content:"✓"}
+${P6} .dm-f-cot-chip[data-aperto="true"]{color:#b45309;border-color:#fcd34d}
+${P6} .dm-f-cot-chip[data-aperto="true"]::before{content:"!"}
+${P6} .dm-f-cot-gradi{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:20px;padding:10px 12px 10px 16px;
   background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}
-${P5} .dm-f-cot-gradi>b{font-size:13.5px;font-weight:850;color:var(--text,#0f172a)}
-${P5} .dm-f-cot-ctl{display:flex;align-items:center;gap:10px}
-${P5} .dm-f-cot-ctl .dm-f-num{font-size:30px;min-width:70px;text-align:center;color:var(--text,#0f172a)}
-${P5} .dm-f-cot-tondo{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer;font:inherit;font-size:22px;font-weight:700;
+${P6} .dm-f-cot-gradi>b{font-size:13.5px;font-weight:850;color:var(--text,#0f172a)}
+${P6} .dm-f-cot-ctl{display:flex;align-items:center;gap:10px}
+${P6} .dm-f-cot-ctl .dm-f-num{font-size:30px;min-width:70px;text-align:center;color:var(--text,#0f172a)}
+${P6} .dm-f-cot-tondo{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer;font:inherit;font-size:22px;font-weight:700;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);color:var(--dm-widget-accent,#0e7490)}
-${P5} .dm-f-cot-tasti{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:9px}
-${P5} .dm-f-cot-tasto{border-radius:20px;padding:13px 6px;text-align:center;font:inherit;font-weight:850;font-size:14px;cursor:pointer;
+${P6} .dm-f-cot-tasti{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:9px}
+${P6} .dm-f-cot-tasto{border-radius:20px;padding:13px 6px;text-align:center;font:inherit;font-weight:850;font-size:14px;cursor:pointer;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);color:var(--text,#0f172a)}
-${P5} .dm-f-cot-tasto span{display:block;font-size:20px;margin-bottom:3px}
-${P5} .dm-f-cot-forte{background:var(--dm-widget-accent,#0e7490);border-color:var(--dm-widget-accent,#0e7490);color:#fff}
-${P5} .dm-f-cot-altri{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
-${P5} .dm-f-cot-altri>div{display:flex;align-items:center;gap:9px;border-radius:16px;padding:10px 12px;font-size:13px;font-weight:800;
+${P6} .dm-f-cot-tasto span{display:block;font-size:20px;margin-bottom:3px}
+${P6} .dm-f-cot-forte{background:var(--dm-widget-accent,#0e7490);border-color:var(--dm-widget-accent,#0e7490);color:#fff}
+${P6} .dm-f-cot-altri{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+${P6} .dm-f-cot-altri>div{display:flex;align-items:center;gap:9px;border-radius:16px;padding:10px 12px;font-size:13px;font-weight:800;
   background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7);color:var(--text,#0f172a);min-width:0}
-${P5} .dm-f-cot-altri b{display:block;font-weight:800}
-${P5} .dm-f-cot-altri em{display:block;font-style:normal;font-size:11px;color:var(--text-dim,#94a3b8);font-weight:700}
+${P6} .dm-f-cot-altri b{display:block;font-weight:800}
+${P6} .dm-f-cot-altri em{display:block;font-style:normal;font-size:11px;color:var(--text-dim,#94a3b8);font-weight:700}
 `;
 function fraseDelCarico(cpu) {
   if (cpu < 50) return t("Lavora tranquillo", "Taking it easy");
@@ -49376,33 +50102,33 @@ function finestraMinipc(widget) {
   return `<div class="dm-f dm-f-minipc">${eroe}${quote.length ? `<h4 class="dm-f-tit">${esc(t("Quanto è pieno", "How full"))}</h4>${quote.join("")}` : ""}${rete.length ? `<h4 class="dm-f-tit">${esc(t("La rete", "Network"))}</h4><div class="dm-f-pc-tre">${rete.join("")}</div>` : ""}</div>`;
 }
 var STILE_MINIPC = `
-${P5} .dm-f-pc-eroe{display:flex;gap:16px;align-items:center;padding:18px;border-radius:26px;
+${P6} .dm-f-pc-eroe{display:flex;gap:16px;align-items:center;padding:18px;border-radius:26px;
   background:linear-gradient(160deg,color-mix(in srgb,var(--dm-widget-accent,#334155) 5%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#334155) 10%,var(--card-bg,#fff)));
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#334155) 20%,transparent)}
-${P5} .dm-f-pc-anello{flex:0 0 108px;width:108px;height:108px;border-radius:50%;display:grid;place-items:center;position:relative;
+${P6} .dm-f-pc-anello{flex:0 0 108px;width:108px;height:108px;border-radius:50%;display:grid;place-items:center;position:relative;
   background:conic-gradient(var(--dm-widget-accent,#334155) calc(var(--p)*1%),color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent) 0)}
-${P5} .dm-f-pc-anello::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--card-bg,#fff)}
-${P5} .dm-f-pc-anello>div{position:relative;z-index:1;text-align:center}
-${P5} .dm-f-pc-anello .dm-f-num{font-size:32px;line-height:1;color:var(--text,#0f172a)}
-${P5} .dm-f-pc-anello small{display:block;font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--text-dim,#64748b)}
-${P5} .dm-f-pc-dx{min-width:0}
-${P5} .dm-f-pc-dx b{display:block;font-size:18px;font-weight:850;color:var(--text,#0f172a)}
-${P5} .dm-f-pc-dx>span{display:block;font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:3px}
-${P5} .dm-f-pc-dx .dm-f-pc-net{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:850;background:#dcfce7;color:#15803d}
-${P5} .dm-f-pc-net i{width:8px;height:8px;border-radius:50%;background:currentColor}
-${P5} .dm-f-pc-dx .dm-f-pc-net[data-on="false"]{background:#fee2e2;color:#b91c1c}
-${P5} .dm-f-pc-quota{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:18px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7)}
-${P5} .dm-f-pc-quota b{width:58px;font-size:13px;font-weight:850;color:var(--text,#0f172a)}
-${P5} .dm-f-pc-quota i{flex:1;height:9px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent);position:relative;overflow:hidden}
-${P5} .dm-f-pc-quota i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:999px;background:var(--dm-widget-accent,#475569)}
-${P5} .dm-f-pc-quota[data-tono="caldo"] i::after{background:#f59e0b}
-${P5} .dm-f-pc-quota[data-tono="rosso"] i::after{background:#dc2626}
-${P5} .dm-f-pc-quota .dm-f-num{width:52px;text-align:right;font-size:20px;color:var(--text,#0f172a)}
-${P5} .dm-f-pc-tre{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
-${P5} .dm-f-pc-cas{border-radius:18px;padding:12px 11px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);min-width:0}
-${P5} .dm-f-pc-cas small{display:block;font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dim,#64748b);white-space:nowrap}
-${P5} .dm-f-pc-cas .dm-f-num{display:block;font-size:22px;margin-top:4px;color:var(--text,#0f172a)}
-${P5} .dm-f-pc-cas em{font-style:normal;font-size:11px;font-weight:750;color:var(--text-dim,#94a3b8)}
+${P6} .dm-f-pc-anello::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--card-bg,#fff)}
+${P6} .dm-f-pc-anello>div{position:relative;z-index:1;text-align:center}
+${P6} .dm-f-pc-anello .dm-f-num{font-size:32px;line-height:1;color:var(--text,#0f172a)}
+${P6} .dm-f-pc-anello small{display:block;font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--text-dim,#64748b)}
+${P6} .dm-f-pc-dx{min-width:0}
+${P6} .dm-f-pc-dx b{display:block;font-size:18px;font-weight:850;color:var(--text,#0f172a)}
+${P6} .dm-f-pc-dx>span{display:block;font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:3px}
+${P6} .dm-f-pc-dx .dm-f-pc-net{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:850;background:#dcfce7;color:#15803d}
+${P6} .dm-f-pc-net i{width:8px;height:8px;border-radius:50%;background:currentColor}
+${P6} .dm-f-pc-dx .dm-f-pc-net[data-on="false"]{background:#fee2e2;color:#b91c1c}
+${P6} .dm-f-pc-quota{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:18px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7)}
+${P6} .dm-f-pc-quota b{width:58px;font-size:13px;font-weight:850;color:var(--text,#0f172a)}
+${P6} .dm-f-pc-quota i{flex:1;height:9px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent);position:relative;overflow:hidden}
+${P6} .dm-f-pc-quota i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:999px;background:var(--dm-widget-accent,#475569)}
+${P6} .dm-f-pc-quota[data-tono="caldo"] i::after{background:#f59e0b}
+${P6} .dm-f-pc-quota[data-tono="rosso"] i::after{background:#dc2626}
+${P6} .dm-f-pc-quota .dm-f-num{width:52px;text-align:right;font-size:20px;color:var(--text,#0f172a)}
+${P6} .dm-f-pc-tre{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+${P6} .dm-f-pc-cas{border-radius:18px;padding:12px 11px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);min-width:0}
+${P6} .dm-f-pc-cas small{display:block;font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dim,#64748b);white-space:nowrap}
+${P6} .dm-f-pc-cas .dm-f-num{display:block;font-size:22px;margin-top:4px;color:var(--text,#0f172a)}
+${P6} .dm-f-pc-cas em{font-style:normal;font-size:11px;font-weight:750;color:var(--text-dim,#94a3b8)}
 `;
 var segnoDellaMacchina = (riga3, misura7) => disegnoDelCatalogo(riga3.glyph, misura7) || (/^[a-z-]+$/.test(clean(riga3.glyph)) ? "" : esc(clean(riga3.glyph)));
 function tastoAvvia(riga3) {
@@ -49446,7 +50172,7 @@ function finestraMacchine(widget) {
     if (!gruppi2.has(chiave2)) gruppi2.set(chiave2, []);
     gruppi2.get(chiave2).push(riga3);
   }
-  const elenco9 = [...gruppi2.entries()].sort(([a], [b]) => (a.startsWith("macchine") ? 0 : 1) - (b.startsWith("macchine") ? 0 : 1)).map(([chiave2, membri]) => {
+  const elenco10 = [...gruppi2.entries()].sort(([a], [b]) => (a.startsWith("macchine") ? 0 : 1) - (b.startsWith("macchine") ? 0 : 1)).map(([chiave2, membri]) => {
     const [famiglia, integrazione] = chiave2.split("|");
     const nome = famiglia === "rete" ? t("Rete", "Network") : t("Server", "Servers");
     const conto = famiglia === "rete" ? `${membri.length} ${t("connessi", "connected")}` : `${membri.length} ${t("accesi", "running")}`;
@@ -49455,33 +50181,33 @@ function finestraMacchine(widget) {
       (riga3) => `<div class="dm-f-mac-r"><i aria-hidden="true"></i><b data-dm-no-i18n>${esc(riga3.name)}</b><span aria-hidden="true">${segnoDellaMacchina(riga3, 18)}</span></div>`
     ).join("")}</div>`;
   }).join("");
-  return `<div class="dm-f dm-f-macchine">${eroe}${elenco9}</div>`;
+  return `<div class="dm-f dm-f-macchine">${eroe}${elenco10}</div>`;
 }
 var STILE_MACCHINE = `
-${P5} .dm-f-macchine{--dm-f-indaco:#4f46e5}
-${P5} .dm-f-mac-eroe{border-radius:24px;padding:16px 18px;background:linear-gradient(155deg,color-mix(in srgb,var(--dm-f-indaco) 5%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-f-indaco) 10%,var(--card-bg,#fff)));
+${P6} .dm-f-macchine{--dm-f-indaco:#4f46e5}
+${P6} .dm-f-mac-eroe{border-radius:24px;padding:16px 18px;background:linear-gradient(155deg,color-mix(in srgb,var(--dm-f-indaco) 5%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-f-indaco) 10%,var(--card-bg,#fff)));
   border:1px solid color-mix(in srgb,var(--dm-f-indaco) 22%,transparent)}
-${P5} .dm-f-mac-eroe[data-giu="true"]{background:linear-gradient(155deg,color-mix(in srgb,#dc2626 4%,var(--card-bg,#fff)),color-mix(in srgb,#dc2626 8%,var(--card-bg,#fff)));border-color:#fecaca}
-${P5} .dm-f-mac-riga{display:flex;align-items:center;gap:12px}
-${P5} .dm-f-mac-riga .dm-f-num{font-size:48px;line-height:1;color:var(--dm-f-indaco)}
-${P5} .dm-f-mac-eroe[data-giu="true"] .dm-f-mac-riga .dm-f-num{color:#dc2626}
-${P5} .dm-f-mac-riga b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a)}
-${P5} .dm-f-mac-riga span{font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b)}
-${P5} .dm-f-mac-giu{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;background:var(--card-bg,#fff);border:1px solid #fecaca;margin-top:10px}
-${P5} .dm-f-mac-ic{flex:0 0 auto;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:#fef2f2;color:#b91c1c}
-${P5} .dm-f-mac-n{flex:1;min-width:0}
-${P5} .dm-f-mac-n b{display:block;font-size:14.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-mac-n em{font-style:normal;font-size:12px;font-weight:750;color:#b91c1c}
-${P5} .dm-f-mac-n small{display:block;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:2px}
-${P5} .dm-f-mac-avvia{flex:0 0 auto;padding:10px 16px;border:0;border-radius:14px;background:var(--dm-f-indaco);color:#fff;font:inherit;font-size:13px;font-weight:850;cursor:pointer}
-${P5} .dm-f-mac-testa{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-${P5} .dm-f-mac-testa em{font-style:normal;font-size:11.5px;font-weight:800;letter-spacing:.02em;text-transform:none;color:#15803d}
-${P5} .dm-f-mac-gruppo{border-radius:20px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);padding:4px 14px}
-${P5} .dm-f-mac-r{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--text-dim,#64748b) 12%,transparent)}
-${P5} .dm-f-mac-r:last-child{border-bottom:0}
-${P5} .dm-f-mac-r>i{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 4px rgba(22,163,74,.15)}
-${P5} .dm-f-mac-r b{flex:1;min-width:0;font-size:14px;font-weight:800;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-mac-r span{color:var(--dm-f-indaco);display:grid;place-items:center}
+${P6} .dm-f-mac-eroe[data-giu="true"]{background:linear-gradient(155deg,color-mix(in srgb,#dc2626 4%,var(--card-bg,#fff)),color-mix(in srgb,#dc2626 8%,var(--card-bg,#fff)));border-color:#fecaca}
+${P6} .dm-f-mac-riga{display:flex;align-items:center;gap:12px}
+${P6} .dm-f-mac-riga .dm-f-num{font-size:48px;line-height:1;color:var(--dm-f-indaco)}
+${P6} .dm-f-mac-eroe[data-giu="true"] .dm-f-mac-riga .dm-f-num{color:#dc2626}
+${P6} .dm-f-mac-riga b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a)}
+${P6} .dm-f-mac-riga span{font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P6} .dm-f-mac-giu{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;background:var(--card-bg,#fff);border:1px solid #fecaca;margin-top:10px}
+${P6} .dm-f-mac-ic{flex:0 0 auto;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:#fef2f2;color:#b91c1c}
+${P6} .dm-f-mac-n{flex:1;min-width:0}
+${P6} .dm-f-mac-n b{display:block;font-size:14.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-mac-n em{font-style:normal;font-size:12px;font-weight:750;color:#b91c1c}
+${P6} .dm-f-mac-n small{display:block;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:2px}
+${P6} .dm-f-mac-avvia{flex:0 0 auto;padding:10px 16px;border:0;border-radius:14px;background:var(--dm-f-indaco);color:#fff;font:inherit;font-size:13px;font-weight:850;cursor:pointer}
+${P6} .dm-f-mac-testa{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+${P6} .dm-f-mac-testa em{font-style:normal;font-size:11.5px;font-weight:800;letter-spacing:.02em;text-transform:none;color:#15803d}
+${P6} .dm-f-mac-gruppo{border-radius:20px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);padding:4px 14px}
+${P6} .dm-f-mac-r{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--text-dim,#64748b) 12%,transparent)}
+${P6} .dm-f-mac-r:last-child{border-bottom:0}
+${P6} .dm-f-mac-r>i{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 4px rgba(22,163,74,.15)}
+${P6} .dm-f-mac-r b{flex:1;min-width:0;font-size:14px;font-weight:800;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-mac-r span{color:var(--dm-f-indaco);display:grid;place-items:center}
 `;
 var COMANDABILI3 = /* @__PURE__ */ new Set(["switch", "input_boolean", "light", "fan", "valve", "siren"]);
 var APERTURE3 = /* @__PURE__ */ new Set(["door", "window", "garage_door", "opening", "gate"]);
@@ -49605,57 +50331,57 @@ function finestraSezioneMia(widget, states) {
             <b data-dm-no-i18n>${esc(nome)}</b><span class="dm-f-num">${esc(parolaDelComando(riga3))}</span>
           </div>`;
   }).join("")}</div>` : "";
-  const elenco9 = letture2.length ? `<h4 class="dm-f-tit">${esc(t("Le letture", "Readings"))}</h4>${letture2.map((riga3) => {
+  const elenco10 = letture2.length ? `<h4 class="dm-f-tit">${esc(t("Le letture", "Readings"))}</h4>${letture2.map((riga3) => {
     const genere = genereDellaVoce(riga3, states);
     const valore3 = genere === "apertura" ? riga3.on ? t("Aperto", "Open") : t("Chiuso", "Closed") : clean(riga3.value);
     return `<div class="dm-f-mia-riga"><span aria-hidden="true">${iconaDellaVoce(riga3, states, ripiego)}</span><b data-dm-no-i18n>${esc(
       nomePulito(riga3.name, riga3.entity)
     )}</b><span class="dm-f-num">${esc(valore3)}</span></div>`;
   }).join("")}` : "";
-  return `<div class="dm-f dm-f-sezionimie">${eroe}${leve}${elenco9}</div>`;
+  return `<div class="dm-f dm-f-sezionimie">${eroe}${leve}${elenco10}</div>`;
 }
 var STILE_EVIDENZE = `
-${P5} .dm-f-ev-cmd{display:flex;align-items:center;gap:13px;padding:14px;border-radius:22px;
+${P6} .dm-f-ev-cmd{display:flex;align-items:center;gap:13px;padding:14px;border-radius:22px;
   background:linear-gradient(155deg,color-mix(in srgb,var(--dm-widget-accent,#eab308) 7%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#eab308) 14%,var(--card-bg,#fff)));
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#eab308) 35%,transparent)}
-${P5} .dm-f-ev-cmd-ic{flex:0 0 auto;width:48px;height:48px;border-radius:16px;display:grid;place-items:center;font-size:24px;background:var(--card-bg,#fff);
+${P6} .dm-f-ev-cmd-ic{flex:0 0 auto;width:48px;height:48px;border-radius:16px;display:grid;place-items:center;font-size:24px;background:var(--card-bg,#fff);
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#eab308) 35%,transparent)}
-${P5} .dm-f-ev-cmd-n{flex:1;min-width:0}
-${P5} .dm-f-ev-cmd-n b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-ev-cmd-n em{font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
-${P5} .dm-f-ev-cmd[data-on="true"] em{color:#15803d}
-${P5} .dm-f-ev-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
-${P5} .dm-f-ev-voce{border-radius:20px;padding:13px 13px 12px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);
+${P6} .dm-f-ev-cmd-n{flex:1;min-width:0}
+${P6} .dm-f-ev-cmd-n b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-ev-cmd-n em{font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P6} .dm-f-ev-cmd[data-on="true"] em{color:#15803d}
+${P6} .dm-f-ev-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
+${P6} .dm-f-ev-voce{border-radius:20px;padding:13px 13px 12px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);
   box-shadow:0 12px 24px -22px rgba(15,23,42,.6);min-width:0}
-${P5} .dm-f-ev-su{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:20px}
-${P5} .dm-f-ev-su small{font-size:10.5px;font-weight:800;color:var(--text-dim,#94a3b8);white-space:nowrap}
-${P5} .dm-f-ev-val{display:block;font-size:26px;line-height:1.1;margin-top:8px;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-ev-stato{display:block;font-size:22px;margin-top:8px;color:var(--text,#0f172a)}
-${P5} .dm-f-ev-stato[data-aperto="true"]{color:#b45309}
-${P5} .dm-f-ev-voce>b{display:block;font-size:13px;font-weight:850;margin-top:2px;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-ev-voce>em{display:block;font-style:normal;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:3px}
-${P5} .dm-f-ev-barra{height:6px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent);margin-top:8px;overflow:hidden}
-${P5} .dm-f-ev-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-widget-accent,#eab308)}
-${P5} .dm-f-mia-eroe{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:24px;
+${P6} .dm-f-ev-su{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:20px}
+${P6} .dm-f-ev-su small{font-size:10.5px;font-weight:800;color:var(--text-dim,#94a3b8);white-space:nowrap}
+${P6} .dm-f-ev-val{display:block;font-size:26px;line-height:1.1;margin-top:8px;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-ev-stato{display:block;font-size:22px;margin-top:8px;color:var(--text,#0f172a)}
+${P6} .dm-f-ev-stato[data-aperto="true"]{color:#b45309}
+${P6} .dm-f-ev-voce>b{display:block;font-size:13px;font-weight:850;margin-top:2px;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-ev-voce>em{display:block;font-style:normal;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);margin-top:3px}
+${P6} .dm-f-ev-barra{height:6px;border-radius:999px;background:color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent);margin-top:8px;overflow:hidden}
+${P6} .dm-f-ev-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-widget-accent,#eab308)}
+${P6} .dm-f-mia-eroe{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:24px;
   background:linear-gradient(155deg,color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 7%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 14%,var(--card-bg,#fff)));
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 30%,transparent)}
-${P5} .dm-f-mia-vasca{flex:0 0 70px;height:92px;border-radius:14px 14px 18px 18px;border:3px solid color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 55%,transparent);
+${P6} .dm-f-mia-vasca{flex:0 0 70px;height:92px;border-radius:14px 14px 18px 18px;border:3px solid color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 55%,transparent);
   background:var(--card-bg,#fff);position:relative;overflow:hidden}
-${P5} .dm-f-mia-vasca i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,#7dd3fc,#0ea5e9)}
-${P5} .dm-f-mia-eroe small{display:block;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 70%,#000)}
-${P5} .dm-f-mia-eroe .dm-f-num{display:block;font-size:44px;line-height:1;margin-top:2px;color:var(--text,#0f172a)}
-${P5} .dm-f-mia-eroe em{display:block;margin-top:4px;font-style:normal;font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b)}
-${P5} .dm-f-mia-leve{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
-${P5} .dm-f-mia-leva{border-radius:22px;padding:14px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);box-shadow:0 12px 24px -22px rgba(15,23,42,.6);min-width:0}
-${P5} .dm-f-mia-leva[data-on="true"]{background:linear-gradient(160deg,#f0fdf4,#dcfce7);border-color:#bbf7d0}
-${P5} .dm-f-mia-su{display:flex;justify-content:space-between;align-items:center;font-size:22px}
-${P5} .dm-f-mia-leva b{display:block;font-size:14px;font-weight:850;margin-top:12px;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-mia-leva .dm-f-num{font-size:22px;color:var(--text-dim,#64748b)}
-${P5} .dm-f-mia-leva[data-on="true"] .dm-f-num,${P5} .dm-f-mia-leva[data-on="true"] b{color:#15803d}
-${P5} .dm-f-mia-riga{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7)}
-${P5} .dm-f-mia-riga>span:first-child{font-size:20px}
-${P5} .dm-f-mia-riga b{flex:1;min-width:0;font-size:14px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-mia-riga .dm-f-num{font-size:22px;color:var(--text,#0f172a);white-space:nowrap}
+${P6} .dm-f-mia-vasca i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,#7dd3fc,#0ea5e9)}
+${P6} .dm-f-mia-eroe small{display:block;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 70%,#000)}
+${P6} .dm-f-mia-eroe .dm-f-num{display:block;font-size:44px;line-height:1;margin-top:2px;color:var(--text,#0f172a)}
+${P6} .dm-f-mia-eroe em{display:block;margin-top:4px;font-style:normal;font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P6} .dm-f-mia-leve{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
+${P6} .dm-f-mia-leva{border-radius:22px;padding:14px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7);box-shadow:0 12px 24px -22px rgba(15,23,42,.6);min-width:0}
+${P6} .dm-f-mia-leva[data-on="true"]{background:linear-gradient(160deg,#f0fdf4,#dcfce7);border-color:#bbf7d0}
+${P6} .dm-f-mia-su{display:flex;justify-content:space-between;align-items:center;font-size:22px}
+${P6} .dm-f-mia-leva b{display:block;font-size:14px;font-weight:850;margin-top:12px;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-mia-leva .dm-f-num{font-size:22px;color:var(--text-dim,#64748b)}
+${P6} .dm-f-mia-leva[data-on="true"] .dm-f-num,${P6} .dm-f-mia-leva[data-on="true"] b{color:#15803d}
+${P6} .dm-f-mia-riga{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#eef2f7)}
+${P6} .dm-f-mia-riga>span:first-child{font-size:20px}
+${P6} .dm-f-mia-riga b{flex:1;min-width:0;font-size:14px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-mia-riga .dm-f-num{font-size:22px;color:var(--text,#0f172a);white-space:nowrap}
 `;
 var iniziali = (nome) => clean(nome).split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((pezzo) => pezzo.charAt(0).toUpperCase()).join("") || "#";
 function finestraSegnalazioni(widget) {
@@ -49701,32 +50427,32 @@ function finestraSegnalazioni(widget) {
   )} <span aria-hidden="true">→</span></button></div>`;
 }
 var STILE_SEGNALAZIONI = `
-${P5} .dm-f-seg-eroe{border-radius:24px;padding:16px 18px;
+${P6} .dm-f-seg-eroe{border-radius:24px;padding:16px 18px;
   background:linear-gradient(155deg,color-mix(in srgb,var(--dm-widget-accent,#0369a1) 6%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-widget-accent,#0369a1) 13%,var(--card-bg,#fff)));
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0369a1) 28%,transparent)}
-${P5} .dm-f-seg-riga{display:flex;align-items:flex-end;gap:12px}
-${P5} .dm-f-seg-riga .dm-f-num{font-size:50px;line-height:1;color:var(--dm-widget-accent,#0369a1)}
-${P5} .dm-f-seg-riga b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a)}
-${P5} .dm-f-seg-riga span{display:block;font-size:12.5px;font-weight:750;color:var(--text-dim,#475569);margin-bottom:5px}
-${P5} .dm-f-seg-barra{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:14px 0 8px;gap:2px}
-${P5} .dm-f-seg-barra i{display:block}
-${P5} .dm-f-seg-leg{display:flex;gap:6px 12px;flex-wrap:wrap;font-size:12px;font-weight:800;color:var(--text-dim,#475569)}
-${P5} .dm-f-seg-leg span{display:inline-flex;align-items:center;gap:6px}
-${P5} .dm-f-seg-leg i{width:9px;height:9px;border-radius:50%}
-${P5} .dm-f-seg-leg b{color:var(--text,#0f172a)}
-${P5} .dm-f-seg-att{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:18px;background:var(--card-bg,#fff);
+${P6} .dm-f-seg-riga{display:flex;align-items:flex-end;gap:12px}
+${P6} .dm-f-seg-riga .dm-f-num{font-size:50px;line-height:1;color:var(--dm-widget-accent,#0369a1)}
+${P6} .dm-f-seg-riga b{display:block;font-size:16px;font-weight:850;color:var(--text,#0f172a)}
+${P6} .dm-f-seg-riga span{display:block;font-size:12.5px;font-weight:750;color:var(--text-dim,#475569);margin-bottom:5px}
+${P6} .dm-f-seg-barra{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:14px 0 8px;gap:2px}
+${P6} .dm-f-seg-barra i{display:block}
+${P6} .dm-f-seg-leg{display:flex;gap:6px 12px;flex-wrap:wrap;font-size:12px;font-weight:800;color:var(--text-dim,#475569)}
+${P6} .dm-f-seg-leg span{display:inline-flex;align-items:center;gap:6px}
+${P6} .dm-f-seg-leg i{width:9px;height:9px;border-radius:50%}
+${P6} .dm-f-seg-leg b{color:var(--text,#0f172a)}
+${P6} .dm-f-seg-att{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:18px;background:var(--card-bg,#fff);
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0369a1) 18%,transparent);box-shadow:0 12px 24px -22px color-mix(in srgb,var(--dm-widget-accent,#0369a1) 90%,transparent)}
-${P5} .dm-f-seg-av{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;color:#fff;background:var(--dm-widget-accent,#0ea5e9)}
-${P5} .dm-f-seg-n{flex:1;min-width:0}
-${P5} .dm-f-seg-n b{display:block;font-size:14px;font-weight:850;line-height:1.25;color:var(--text,#0f172a);overflow-wrap:anywhere}
-${P5} .dm-f-seg-n em{font-style:normal;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
-${P5} .dm-f-seg-badge{flex:0 0 auto;min-width:26px;height:26px;padding:0 8px;border-radius:999px;display:grid;place-items:center;background:var(--dm-widget-accent,#0369a1);color:#fff;font-size:12px;font-weight:900}
-${P5} .dm-f-seg-altre{margin:0 4px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
-${P5} .dm-f-seg-ferme{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:16px;background:#fffbeb;border:1px solid #fde68a;font-size:13px;font-weight:800;color:#92400e}
-${P5} .dm-f-seg-due{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-${P5} .dm-f-seg-due>div{border-radius:16px;padding:11px 13px;background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}
-${P5} .dm-f-seg-due small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-${P5} .dm-f-seg-due .dm-f-num{font-size:22px;color:var(--text,#0f172a)}
+${P6} .dm-f-seg-av{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;color:#fff;background:var(--dm-widget-accent,#0ea5e9)}
+${P6} .dm-f-seg-n{flex:1;min-width:0}
+${P6} .dm-f-seg-n b{display:block;font-size:14px;font-weight:850;line-height:1.25;color:var(--text,#0f172a);overflow-wrap:anywhere}
+${P6} .dm-f-seg-n em{font-style:normal;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P6} .dm-f-seg-badge{flex:0 0 auto;min-width:26px;height:26px;padding:0 8px;border-radius:999px;display:grid;place-items:center;background:var(--dm-widget-accent,#0369a1);color:#fff;font-size:12px;font-weight:900}
+${P6} .dm-f-seg-altre{margin:0 4px;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P6} .dm-f-seg-ferme{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:16px;background:#fffbeb;border:1px solid #fde68a;font-size:13px;font-weight:800;color:#92400e}
+${P6} .dm-f-seg-due{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+${P6} .dm-f-seg-due>div{border-radius:16px;padding:11px 13px;background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--card-bg,#fff));border:1px solid var(--card-border,#eef2f7)}
+${P6} .dm-f-seg-due small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P6} .dm-f-seg-due .dm-f-num{font-size:22px;color:var(--text,#0f172a)}
 `;
 function finestraAssistenza(widget) {
   const scritto = Number(widget.scrittoIl) || 0;
@@ -49750,20 +50476,20 @@ function finestraAssistenza(widget) {
   )} <span aria-hidden="true">→</span></button></div>`;
 }
 var STILE_ASSISTENZA = `
-${P5} .dm-f-chat-chi{display:flex;align-items:center;gap:11px;margin:2px 2px 4px}
-${P5} .dm-f-chat-av{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:20px;
+${P6} .dm-f-chat-chi{display:flex;align-items:center;gap:11px;margin:2px 2px 4px}
+${P6} .dm-f-chat-av{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:20px;
   background:color-mix(in srgb,var(--dm-widget-accent,#22c55e) 12%,var(--card-bg,#fff));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#22c55e) 35%,transparent)}
-${P5} .dm-f-chat-chi b{display:block;font-size:14px;font-weight:850;color:var(--text,#0f172a)}
-${P5} .dm-f-chat-chi em{font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
-${P5} .dm-f-chat-bolla{max-width:88%;padding:12px 14px;border-radius:20px 20px 20px 6px;font-size:14.5px;line-height:1.45;font-weight:500;white-space:pre-wrap;overflow-wrap:anywhere;
+${P6} .dm-f-chat-chi b{display:block;font-size:14px;font-weight:850;color:var(--text,#0f172a)}
+${P6} .dm-f-chat-chi em{font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+${P6} .dm-f-chat-bolla{max-width:88%;padding:12px 14px;border-radius:20px 20px 20px 6px;font-size:14.5px;line-height:1.45;font-weight:500;white-space:pre-wrap;overflow-wrap:anywhere;
   color:var(--text,#0f172a);background:color-mix(in srgb,var(--dm-widget-accent,#22c55e) 8%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,var(--dm-widget-accent,#22c55e) 30%,transparent)}
-${P5} .dm-f-chat-bolla small,${P5} .dm-f-chat-mia small{display:block;margin-top:6px;font-size:11px;font-weight:800;color:var(--text-dim,#64748b)}
-${P5} .dm-f-chat-mia{margin-left:auto;max-width:80%;padding:10px 13px;border-radius:20px 20px 6px 20px;font-size:13px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;
+${P6} .dm-f-chat-bolla small,${P6} .dm-f-chat-mia small{display:block;margin-top:6px;font-size:11px;font-weight:800;color:var(--text-dim,#64748b)}
+${P6} .dm-f-chat-mia{margin-left:auto;max-width:80%;padding:10px 13px;border-radius:20px 20px 6px 20px;font-size:13px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;
   background:color-mix(in srgb,var(--text-dim,#64748b) 10%,var(--card-bg,#fff));color:var(--text-dim,#475569)}
-${P5} .dm-f-chat-rispondi{display:flex;gap:8px;margin-top:6px}
-${P5} .dm-f-chat-rispondi input{flex:1;min-width:0;padding:14px 15px;border-radius:18px;font:inherit;font-size:14px;
+${P6} .dm-f-chat-rispondi{display:flex;gap:8px;margin-top:6px}
+${P6} .dm-f-chat-rispondi input{flex:1;min-width:0;padding:14px 15px;border-radius:18px;font:inherit;font-size:14px;
   background:color-mix(in srgb,var(--text-dim,#64748b) 5%,var(--card-bg,#fff));border:1px solid var(--card-border,#e2e8f0);color:var(--text,#0f172a)}
-${P5} .dm-f-chat-rispondi button{flex:0 0 50px;border:0;border-radius:18px;background:var(--dm-widget-accent,#15803d);color:#fff;font-size:20px;cursor:pointer}
+${P6} .dm-f-chat-rispondi button{flex:0 0 50px;border:0;border-radius:18px;background:var(--dm-widget-accent,#15803d);color:#fff;font-size:20px;cursor:pointer}
 `;
 var FINESTRE_SISTEMA = Object.freeze([
   "elettrodomestici",
@@ -50201,12 +50927,12 @@ function calendarioModel() {
   const oggi = chiaveDelGiorno(adesso);
   const conto = contoDellaTessera(eventi, scadenzeDelleListe(blocchiDelleListe()), adesso);
   const scritto = (evento) => {
-    const titolo2 = clean(evento.summary) || t("Senza titolo", "Untitled");
-    if (inCorso(evento, adesso)) return `${t("Adesso", "Now")} · ${titolo2}`;
+    const titolo3 = clean(evento.summary) || t("Senza titolo", "Untitled");
+    if (inCorso(evento, adesso)) return `${t("Adesso", "Now")} · ${titolo3}`;
     const giorno = chiaveDelGiorno(evento.inizio);
     const quando4 = evento.tuttoIlGiorno ? "" : orarioDi(evento.inizio, lingua2);
     const dove = giorno === oggi ? quando4 : `${etichettaDelGiorno(giorno, adesso, parole4, lingua2)}${quando4 ? ` ${quando4}` : ""}`;
-    return dove ? `${dove} · ${titolo2}` : titolo2;
+    return dove ? `${dove} · ${titolo3}` : titolo3;
   };
   const didascalia = () => {
     if (!primi.length)
@@ -50288,7 +51014,7 @@ function rigaClima(states, unit) {
   const current = stateOf(states, entity2);
   const raw = clean(current?.state).toLowerCase();
   const attributi2 = current?.attributes || {};
-  const elenco9 = (valori) => Array.isArray(valori) ? valori.map(clean).filter(Boolean) : [];
+  const elenco10 = (valori) => Array.isArray(valori) ? valori.map(clean).filter(Boolean) : [];
   const numero48 = (valore3, difetto = null) => Number.isFinite(Number(valore3)) ? Number(valore3) : difetto;
   const scala2 = scalaDellUnita(attributi2);
   return {
@@ -50306,8 +51032,8 @@ function rigaClima(states, unit) {
      * dove sta adesso. Sono attributi che Home Assistant pubblica gia' —
      * il modello si limita a portarli in riga invece di farli cercare a
      * chi disegna. */
-    modi: elenco9(attributi2.hvac_modes),
-    ventole: elenco9(attributi2.fan_modes),
+    modi: elenco10(attributi2.hvac_modes),
+    ventole: elenco10(attributi2.fan_modes),
     ventola: clean(attributi2.fan_mode),
     /* Le alette (#475): «oltre la modalita temperature etc... poter
      * visualizzare le modalita delle alette». Home Assistant le pubblica
@@ -50315,7 +51041,7 @@ function rigaClima(states, unit) {
      * quindi qui non c'e' nessun motore nuovo: c'e' una riga in piu' che porta
      * dentro quello che l'unita' dichiara gia'. Un condizionatore che le
      * alette non le muove non dichiara niente, e la riga non compare. */
-    alette: elenco9(attributi2.swing_modes),
+    alette: elenco10(attributi2.swing_modes),
     aletta: clean(attributi2.swing_mode),
     /* E le alette orizzontali (#56): «i miei climatizzatori hanno alette sia
      * verticali che orizzontali, al momento vengono visti solo i comandi per
@@ -50325,7 +51051,7 @@ function rigaClima(states, unit) {
      * come sopra, non c'e' nessun motore nuovo: c'e' l'altra meta' di quello
      * che l'unita' dichiara gia'. Chi ha un asse solo non dichiara il
      * secondo, e la riga non compare. */
-    aletteOrizzontali: elenco9(attributi2.swing_horizontal_modes),
+    aletteOrizzontali: elenco10(attributi2.swing_horizontal_modes),
     alettaOrizzontale: clean(attributi2.swing_horizontal_mode),
     /* Fin dove il pannello lascia andare l'obiettivo: la scala e' quella che
      * l'unita' dichiara, e la regola sta nel nucleo insieme a quella della
@@ -50409,10 +51135,11 @@ function coversModel(states) {
        * alzata e una aperta, e non si capirebbe quale e' quale. Da sola,
        * la finestra resta «Camera» come e' sempre stata. */
       etichetta: grata ? `${nome || entita3} · ${t("Inferriata", "Grate")}` : motori.length ? `${nome || entita3} · ${t("Finestra", "Window")}` : nome || entita3,
-      soloSensore: true
+      soloSensore: true,
+      grata
     }));
     return [...righeMotore, ...righeContatto];
-  }).map(({ item, voce: voce2, etichetta: etichetta3, soloSensore }) => {
+  }).map(({ item, voce: voce2, etichetta: etichetta3, soloSensore, grata }) => {
     const entity2 = clean(voce2.entity);
     if (!entity2 || !widgetIncludes(entity2, fuori)) return null;
     const current = stateOf(states, entity2);
@@ -50441,7 +51168,16 @@ function coversModel(states) {
        * gia', e da qui doveva restare a guardare. Le frecce sono le stesse,
        * cambia solo la lingua in cui parlano. */
       relay: isRelayEntity(entity2),
-      down: clean(voce2.down)
+      down: clean(voce2.down),
+      /* Per la finestra della tessera (vedi `finestre/comandi.js`): la
+       * stanza senza il qualificativo — la finestra raccoglie per stanza
+       * la tapparella, la tenda e l'anta della stessa riga —, cosa e' quel
+       * motore, e da quando sta com'e'. */
+      stanza: clean(item?.name) || etichetta3,
+      grata: Boolean(grata),
+      kind: soloSensore ? "" : voce2.kind || coverKind(item, current),
+      muta: !current || /^(unavailable|unknown)$/i.test(clean(current?.state)),
+      da: Date.parse(current?.last_changed || "") || null
     };
   }).filter(Boolean).sort((a, b) => Number(b.open) - Number(a.open));
   if (!rows.length) return null;
@@ -50470,9 +51206,10 @@ function coversModel(states) {
       return `${t("Arieggia", "Air out")}: ${dove} ${Math.round(prima.esito.dentro)}%${quante2}`;
     }
     if (soloMotori) return nomiAccesi(alzate, () => true, t("Tutte abbassate", "All down"));
+    const stanzeAperte = [...new Set(aperte.map((riga3) => clean(riga3.stanza || riga3.name)))].filter(Boolean).join(", ");
     const pezzi = [
-      nomiAccesi(aperte, () => true, ""),
-      alzate.length ? t(`${alzate.length} alzate`, `${alzate.length} up`) : ""
+      stanzeAperte,
+      alzate.length ? `${alzate.length} ${t("alzate", "raised")}` : ""
     ].filter(Boolean);
     return pezzi.length ? pezzi.join(" · ") : t("Tutto chiuso", "All closed");
   };
@@ -50580,9 +51317,13 @@ function modiDellaFinestra(centrale) {
   }
 }
 var PORTA_APERTA = /^(unlocked|open|opening)$/;
+var DICHIARANO_APERTURA = /* @__PURE__ */ new Set(["lock", "cover"]);
+function dichiaraLApertura(entity2) {
+  return DICHIARANO_APERTURA.has(clean(entity2).split(".")[0]);
+}
 function porteAperte(doors = [], states = {}) {
   return doors.filter((door) => {
-    if (clean(door?.entity).split(".")[0] !== "lock") return false;
+    if (!dichiaraLApertura(door?.entity)) return false;
     return PORTA_APERTA.test(clean(stateOf(states, door.entity)?.state).toLowerCase());
   });
 }
@@ -50618,9 +51359,38 @@ function porteModel(states) {
   const fuori = widgetExcludedEntities("porte");
   const doors = configuredSecurityDoors().filter((door) => widgetIncludes(door.entity, fuori));
   if (!doors.length) return null;
-  const serrature = doors.filter((door) => clean(door.entity).split(".")[0] === "lock");
+  const serrature = doors.filter((door) => dichiaraLApertura(door.entity));
   const aperte = porteAperte(doors, states);
   const nome = (door) => clean(door.name) || clean(door.entity);
+  const righe2 = doors.map((door) => {
+    const stato3 = stateOf(states, door.entity);
+    const grezzo = clean(stato3?.state).toLowerCase();
+    const dominio4 = clean(door.entity).split(".")[0];
+    const dichiara = dichiaraLApertura(door.entity);
+    const muta = !stato3 || grezzo === "unavailable";
+    const premuto = /^(button|input_button)$/.test(dominio4) ? Date.parse(stato3?.state || "") : NaN;
+    const cambiato = Date.parse(stato3?.last_changed || "");
+    return {
+      id: door.id,
+      entity: clean(door.entity),
+      name: nome(door),
+      icona: iconaPortaMarkup(door.icon, 24),
+      dominio: dominio4,
+      grezzo,
+      dichiara,
+      muta,
+      aperta: dichiara && PORTA_APERTA.test(grezzo),
+      chiusaAChiave: dominio4 === "lock" && grezzo === "locked",
+      parola: dichiara ? parolaDellaPorta(grezzo) : "",
+      pin: Boolean(door.pin),
+      gesti: azioniDellaPorta(door, stato3).map((azione) => ({
+        gesto: azione.gesto,
+        parola: parolaDelGesto(azione.gesto)
+      })),
+      da: dichiara && Number.isFinite(cambiato) ? cambiato : null,
+      ultima: Number.isFinite(premuto) ? premuto : dichiara && Number.isFinite(cambiato) ? cambiato : null
+    };
+  });
   return {
     key: "porte",
     accent: aperte.length ? "#dc2626" : serrature.length ? "#16a34a" : "#d97706",
@@ -50637,6 +51407,9 @@ function porteModel(states) {
     caption: aperte.length ? aperte.map(nome).join(" · ") : serrature.length ? t("Tutto chiuso", "All closed") : nome(doors[0]),
     ring: serrature.length ? Math.round(aperte.length / serrature.length * 100) : null,
     doors,
+    righe: righe2,
+    /* Se il tocco chiede conferma: la nota sotto i tasti dice com'e' davvero. */
+    conferma: siChiedeConferma(),
     /* Le porte aperte escono col modello, come le aperture delle Finestre
      * (#482). La fascia sotto il meteo legge questo campo invece di rifiltrare
      * le righe per conto suo: il numero nella fascia e quello sulla tessera
@@ -51022,8 +51795,8 @@ function refValue(states, ref, fuori) {
 }
 var RIF_BATTERIA_EV = Object.freeze(["dm.ev_batteria_auto", "dm.ev_battery", "dm.ev_soc"]);
 function vetture() {
-  const elenco9 = section("ev", readJson("cd_ev_cars", []));
-  return (Array.isArray(elenco9) ? elenco9 : []).filter((auto) => auto && typeof auto === "object");
+  const elenco10 = section("ev", readJson("cd_ev_cars", []));
+  return (Array.isArray(elenco10) ? elenco10 : []).filter((auto) => auto && typeof auto === "object");
 }
 function autoAllaPresa(stato3) {
   const testo2 = String(stato3 ?? "").trim().toLowerCase();
@@ -51389,7 +52162,9 @@ function robotsModel(states) {
      * fermo, e l'avviso di batteria scarica non poteva mai uscire. */
     rows: viste2.map((vista2) => ({
       glyph: disegnoDelCatalogo(
-        vista2.mowing ? "mower" : vista2.cleaning ? "broom" : vista2.charging ? "socket" : "robot",
+        /* La specie decide il disegno: un tagliaerba fermo in carica era una
+         * presa di corrente, cioe' il disegno di un'altra tessera. */
+        vista2.species === "lawn_mower" ? "mower" : vista2.cleaning ? "broom" : "robot",
         20
       ),
       name: vista2.name,
@@ -51398,6 +52173,17 @@ function robotsModel(states) {
       state: vista2.state,
       battery: vista2.battery,
       entity: clean(vista2.entity),
+      /* Per la finestra della tessera (`finestre/comandi.js`): la specie —
+       * un tagliaerba non e' un aspirapolvere, ne' nel disegno ne' nei tasti
+       * —, la stanza, la potenza, cosa sa fare, e da quando sta com'e'. */
+      species: vista2.species,
+      mowing: vista2.mowing,
+      available: vista2.available,
+      room: roomLabel(vista2.room),
+      fanSpeed: vista2.fanSpeed,
+      features: vista2.features,
+      error: vista2.error,
+      da: Date.parse(stateOf(states, vista2.entity)?.last_changed || "") || null,
       value: vista2.battery == null ? robotStateLabel(vista2.state) : `${robotStateLabel(vista2.state)} · ${Math.round(vista2.battery)}%`
     }))
   };
@@ -51933,6 +52719,14 @@ function preseModel(states) {
       entity: presa.entity,
       on: grezzo2 === "on",
       comando: siComanda(presa.entity) && disponibile,
+      /* Per la finestra della tessera (`finestre/comandi.js`): la stanza, i
+       * watt se la presa li misura, se risponde, se e' protetta — si vede ma
+       * non si comanda, come il modem — e da quando sta com'e'. */
+      stanza: roomLabel(presa.room_id),
+      watt: presa.power ? wattsFromState(stateOf(states, presa.power)) : null,
+      disponibile,
+      protetta: disponibile && !siComanda(presa.entity),
+      da: Date.parse(stato3.last_changed || "") || null,
       value: !disponibile ? t("Non disponibile", "Unavailable") : grezzo2 === "on" ? t("Accesa", "On") : t("Spenta", "Off")
     });
   }
@@ -51950,7 +52744,10 @@ function preseModel(states) {
     attiva: accese > 0,
     rows,
     // Le prese accese, per chi le conta e non le disegna.
-    on
+    on,
+    /* I watt di adesso, sommati solo se almeno una presa li misura: «0 W» su
+     * una casa senza wattmetri sarebbe un numero inventato. */
+    watt: rows.some((row) => row.watt != null) ? rows.reduce((somma2, row) => somma2 + (row.watt ?? 0), 0) : null
   };
 }
 function cosaSuona(riga3, conIlPosto) {
@@ -52259,12 +53056,12 @@ function mediaDetail(widget) {
 }
 function entitaSorvegliate(chiave2, { extras, removed, vive } = {}) {
   const gruppo = clean(chiave2);
-  const elenco9 = (lista5) => Array.isArray(lista5) ? lista5.map(clean).filter(Boolean) : [];
-  const scelte4 = elenco9(extras?.[gruppo]);
-  const tolte2 = new Set(elenco9(removed?.[gruppo]).filter((id) => !scelte4.includes(id)));
+  const elenco10 = (lista5) => Array.isArray(lista5) ? lista5.map(clean).filter(Boolean) : [];
+  const scelte4 = elenco10(extras?.[gruppo]);
+  const tolte2 = new Set(elenco10(removed?.[gruppo]).filter((id) => !scelte4.includes(id)));
   const viste2 = /* @__PURE__ */ new Set();
   const uscita = [];
-  for (const id of [...scelte4, ...elenco9(vive)]) {
+  for (const id of [...scelte4, ...elenco10(vive)]) {
     if (tolte2.has(id) || viste2.has(id)) continue;
     viste2.add(id);
     uscita.push(id);
@@ -52398,7 +53195,7 @@ function varchiModel(states) {
   const conto = contoDeiVarchi(righe2);
   const esclusioni = contoDelleEsclusioni(righe2);
   const escluse = esclusioni.esclusi ? esclusioni.esclusi === 1 ? t("1 escluso", "1 bypassed") : t(`${esclusioni.esclusi} esclusi`, `${esclusioni.esclusi} bypassed`) : "";
-  const perLaFascia = (elenco9) => elenco9.map((riga3) => ({ entity: riga3.entity, name: clean(riga3.name) || riga3.entity }));
+  const perLaFascia = (elenco10) => elenco10.map((riga3) => ({ entity: riga3.entity, name: clean(riga3.name) || riga3.entity }));
   return {
     key: "varchi",
     accent: conto.aperti ? "#dc2626" : "#16a34a",
@@ -52492,6 +53289,11 @@ function citofonoModel(states) {
   if (!citofoni.length && !cassette.length) return null;
   const riassunto2 = riassuntoDellIngresso({ citofoni, cassette });
   return {
+    /* Le letture intere, per la finestra della tessera (`finestre/comandi.js`):
+     * chi apre, chi ha suonato e quando, quando e' arrivata la posta. */
+    citofoni,
+    cassette,
+    riassunto: riassunto2,
     key: "citofono",
     accent: riassunto2.suona ? "#f97316" : riassunto2.conPosta ? "#2563eb" : "#16a34a",
     icon: "📮",
@@ -52819,7 +53621,7 @@ function evidenzaModel(states) {
 function evidenzeSingole(states) {
   const voci3 = readJson(EVIDENZA_CONFIG_KEY, []);
   if (!Array.isArray(voci3)) return [];
-  const elenco9 = widgetPreferences().excluded;
+  const elenco10 = widgetPreferences().excluded;
   let stanze3 = [];
   try {
     stanze3 = root.getStanze?.() || readJson("cd_stanze", []) || [];
@@ -52828,7 +53630,7 @@ function evidenzeSingole(states) {
   }
   return voci3.map((voce2, index) => {
     if (!eUnaTesseraSola(voce2)) return null;
-    const riga3 = rigaInEvidenza(states, voce2, escluseDellaTessera(elenco9, `evidenza-${index}`));
+    const riga3 = rigaInEvidenza(states, voce2, escluseDellaTessera(elenco10, `evidenza-${index}`));
     if (!riga3) return null;
     const stanza2 = Array.isArray(stanze3) ? stanze3.find((room) => clean(room?.id) === clean(voce2?.room_id)) : null;
     return {
@@ -52852,10 +53654,10 @@ function sezioniMieModels(states) {
     return [];
   }
   if (!sezioni2.length) return [];
-  const elenco9 = widgetPreferences().excluded;
+  const elenco10 = widgetPreferences().excluded;
   return sezioni2.map((sezione2) => {
     const chiave2 = chiaveDellaSezione(sezione2.id);
-    const fuori = escluseDellaTessera(elenco9, chiave2);
+    const fuori = escluseDellaTessera(elenco10, chiave2);
     const rows = sezione2.voci.map(
       (voce2) => rigaInEvidenza(
         states,
@@ -53349,9 +54151,9 @@ function acquarioModel(states) {
   const tessera2 = tesseraDellAcquario(vistaDelleVasche(states, { dentro: dentro3 }));
   if (!tessera2) return null;
   const viste2 = vistaDelleVasche(states, { dentro: dentro3 });
-  const elenco9 = viste2.filter((vista2) => vista2?.letture?.length).map((vista2) => ({ tipo: vista2.tipo, come: vista2.come, testa: testaDellAcquario(vista2.come) }));
+  const elenco10 = viste2.filter((vista2) => vista2?.letture?.length).map((vista2) => ({ tipo: vista2.tipo, come: vista2.come, testa: testaDellAcquario(vista2.come) }));
   const faccia = tessera2.icon === "🦎" ? oggettoWidget("terrario", "", "tessera-acquario") : void 0;
-  return { ...tessera2, key: "acquario", elenco: elenco9, ...faccia ? { faccia } : {} };
+  return { ...tessera2, key: "acquario", elenco: elenco10, ...faccia ? { faccia } : {} };
 }
 function accumuloModel(states) {
   const fuori = widgetExcludedEntities("accumulo");
@@ -53524,8 +54326,8 @@ function colorataComeLaSezione(widget) {
   if (widget.alert && chiave2 !== "assistenza")
     return AMBRE.has(clean(widget.accent).toLowerCase()) ? widget : { ...widget, accent: ROSSO_DELLE_SEGNALAZIONI };
   const tab = eUnaSezioneMia(chiave2) ? chiave2 : SEZIONE_DEL_WIDGET[famigliaDellaTessera(chiave2)];
-  const tinta = tab ? tintaDellaPagina(`page-${tab}`) : "";
-  if (tinta) return { ...widget, accent: tinta };
+  const tinta2 = tab ? tintaDellaPagina(`page-${tab}`) : "";
+  if (tinta2) return { ...widget, accent: tinta2 };
   if (ROSSI.has(clean(widget.accent).toLowerCase())) return { ...widget, accent: "#64748b" };
   return widget;
 }
@@ -53643,8 +54445,8 @@ function fallaEntrare(nodo2, spazioBase, corpoMinimo) {
 function sistemaLeScritte(dove = doc) {
   for (const nome of dove?.querySelectorAll?.("[data-dm-tile-label]") || [])
     fallaEntrare(nome, 0.11, 6.7);
-  for (const titolo2 of dove?.querySelectorAll?.("[data-dm-titolo]") || [])
-    fallaEntrare(titolo2, 0.09, 15);
+  for (const titolo3 of dove?.querySelectorAll?.("[data-dm-titolo]") || [])
+    fallaEntrare(titolo3, 0.09, 15);
 }
 function tesseraAccesa(widget) {
   if (widget?.alert) return true;
@@ -53710,8 +54512,8 @@ function percentualeDellaRiga(riga3) {
   const trovata = /^(\d{1,3})(?:[.,]\d+)?\s*%$/.exec(testo2);
   return trovata ? Number(trovata[1]) : null;
 }
-function segnaFatta(titolo2) {
-  const nome = clean(titolo2);
+function segnaFatta(titolo3) {
+  const nome = clean(titolo3);
   return t(`Segna fatta: ${nome}`, `Mark done: ${nome}`);
 }
 function todoItemMarkup(list, item, today) {
@@ -53821,12 +54623,12 @@ function calendarioDetail(widget, scadenze = []) {
     return `${modulo}${testa2}<p class="dm-w-empty">${esc(
       widget.inArrivo ? t("Caricamento…", "Loading…") : t("✨ Niente in programma", "✨ Nothing scheduled")
     )}</p>`;
-  const elenco9 = giorni.slice(0, GIORNI_NEL_PANNELLO).map(
+  const elenco10 = giorni.slice(0, GIORNI_NEL_PANNELLO).map(
     ({ giorno, eventi }) => `<div class="dm-w-block"><span class="dm-w-block-title">${esc(
       etichettaDelGiorno(giorno, adesso, parole4, lingua2)
     )}</span><ul class="dm-cal-lista">${eventi.map((riga3) => rigaAgendaMarkup(riga3, adesso, parole4, lingua2, piuCalendari)).join("")}</ul></div>`
   ).join("");
-  return `${modulo}${testa2}${arretrati}${elenco9}`;
+  return `${modulo}${testa2}${arretrati}${elenco10}`;
 }
 function agendaDetail(widget, states) {
   const scadenze = scadenzeDelleListe(widget.blocks);
@@ -53889,11 +54691,11 @@ function climateGlyph(mode, tipo = "clima", azione = "") {
   if (mode.includes("fan")) return "🌀";
   return ICONE_CLIMA[tipo] || "❄️";
 }
-var TRATTO = 'viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"';
-var GLIFO_SU = `<svg ${TRATTO}><path d="M12 19V6"/><path d="M6 11.5 12 5.5l6 6"/></svg>`;
-var GLIFO_GIU = `<svg ${TRATTO}><path d="M12 5v13"/><path d="M6 12.5 12 18.5l6-6"/></svg>`;
+var TRATTO2 = 'viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"';
+var GLIFO_SU = `<svg ${TRATTO2}><path d="M12 19V6"/><path d="M6 11.5 12 5.5l6 6"/></svg>`;
+var GLIFO_GIU = `<svg ${TRATTO2}><path d="M12 5v13"/><path d="M6 12.5 12 18.5l6-6"/></svg>`;
 var GLIFO_FERMA = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2.4"/></svg>';
-var GLIFO_ROTELLA = `<svg ${TRATTO}><circle cx="12" cy="12" r="3.1"/><path d="M12 3.6v2.2M12 18.2v2.2M20.4 12h-2.2M5.8 12H3.6M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg>`;
+var GLIFO_ROTELLA = `<svg ${TRATTO2}><circle cx="12" cy="12" r="3.1"/><path d="M12 3.6v2.2M12 18.2v2.2M20.4 12h-2.2M5.8 12H3.6M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg>`;
 var GLIFO_ACCENSIONE = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.8 6.6a7.5 7.5 0 1 0 10.4 0"/></svg>';
 var NOMI_MODO = () => ({
   off: t("Spento", "Off"),
@@ -54691,8 +55493,8 @@ function detailBody(widget, states) {
     ${caselleDelleMisure(widget)}
     ${pilloleDelloStato(widget)}
     ${comandi ? `${(() => {
-    const titolo2 = titoloDelBlocco(comandi, widget.key);
-    return titolo2 ? `<h4 class="dm-w-titoletto">${esc(titolo2)}</h4>` : "";
+    const titolo3 = titoloDelBlocco(comandi, widget.key);
+    return titolo3 ? `<h4 class="dm-w-titoletto">${esc(titolo3)}</h4>` : "";
   })()}${comandi}` : ""}`;
 }
 function titoloDelBlocco(markup7, chiave2 = "") {
@@ -57946,9 +58748,9 @@ function groupedMarkup(units, labels) {
     let ultima = null;
     const corpo2 = ordinate2.map((unit) => {
       const nome = clean(unit.room);
-      const titolo2 = nome && nome !== ultima ? `<div class="dm-cl-room">${esc(nome)}</div>` : "";
+      const titolo3 = nome && nome !== ultima ? `<div class="dm-cl-room">${esc(nome)}</div>` : "";
       ultima = nome || ultima;
-      return `${titolo2}${cardMarkup3(unit, labels)}`;
+      return `${titolo3}${cardMarkup3(unit, labels)}`;
     }).join("");
     return `${heading}${corpo2}`;
   }).join("");
@@ -59467,11 +60269,11 @@ function readingMarkup(pagina2, states, { daLa = 0 } = {}) {
   const leggi2 = (entity2, coda) => letturaScritta(states?.[entity2]?.state, coda);
   const misura7 = (entity2, etichetta3, coda) => entity2 ? `<div><span>${esc(etichetta3)}</span><b data-dm-stanza-lettura="${esc(entity2)}" data-dm-stanza-coda="${esc(coda)}">${esc(leggi2(entity2, coda))}</b></div>` : "";
   return associazioni.slice(daLa).map((voce2) => {
-    const titolo2 = associazioni.length > 1 ? clean(voce2.name) || clean(pagina2.name) : clean(pagina2.name) || clean(voce2.name);
+    const titolo3 = associazioni.length > 1 ? clean(voce2.name) || clean(pagina2.name) : clean(pagina2.name) || clean(voce2.name);
     return `<article class="dm-stanze-card dm-stanze-clima">
     <div class="dm-stanze-card-row">
       <span class="dm-stanze-orb">🌡️</span>
-      <span class="dm-stanze-title"><b>${esc(titolo2)}</b><s>${esc(t("Sensori della stanza", "Room sensors"))}</s></span>
+      <span class="dm-stanze-title"><b>${esc(titolo3)}</b><s>${esc(t("Sensori della stanza", "Room sensors"))}</s></span>
     </div>
     <div class="dm-stanze-readings">
       ${misura7(voce2.temp, t("Temperatura", "Temperature"), "°")}
@@ -61196,8 +61998,8 @@ function pezziDelBlocco(nome, pagina2) {
     const vassoio = griglia2?.closest?.("[data-dm-vassoio]");
     const corpo2 = dentro3(vassoio) || dentro3(griglia2);
     if (!corpo2) return [];
-    const titolo2 = corpo2.previousElementSibling;
-    return titolo2?.classList?.contains("section-title") && !titolo2.id ? [titolo2, corpo2] : [corpo2];
+    const titolo3 = corpo2.previousElementSibling;
+    return titolo3?.classList?.contains("section-title") && !titolo3.id ? [titolo3, corpo2] : [corpo2];
   }
   return [];
 }
@@ -61213,14 +62015,14 @@ function togliIlTitoloDellaTestata() {
 }
 function metteIlTitoloDellaTestata(testata4) {
   if (!testata4) return;
-  let titolo2 = titoloDellaTestata();
-  if (!titolo2) {
-    titolo2 = doc.createElement("h3");
-    titolo2.className = `section-title ${CLASSE_DEL_TITOLO_DELLA_TESTATA}`;
+  let titolo3 = titoloDellaTestata();
+  if (!titolo3) {
+    titolo3 = doc.createElement("h3");
+    titolo3.className = `section-title ${CLASSE_DEL_TITOLO_DELLA_TESTATA}`;
   }
   const parola = t("Intestazione e menù", "Header and menu");
-  if (titolo2.textContent !== parola) titolo2.textContent = parola;
-  if (titolo2.nextElementSibling !== testata4) testata4.before(titolo2);
+  if (titolo3.textContent !== parola) titolo3.textContent = parola;
+  if (titolo3.nextElementSibling !== testata4) testata4.before(titolo3);
 }
 function rimettiLaTestata() {
   const testata4 = laTestata();
@@ -62314,12 +63116,12 @@ function wattPerUnita(unita2) {
   return 1;
 }
 function kwhDallaPotenza(risposta, entity2, unita2 = "W") {
-  const elenco9 = risposta?.[pulito39(entity2)];
-  if (!Array.isArray(elenco9) || !elenco9.length) return null;
+  const elenco10 = risposta?.[pulito39(entity2)];
+  if (!Array.isArray(elenco10) || !elenco10.length) return null;
   const fattore = wattPerUnita(unita2);
   let wattora = 0;
   let ore = 0;
-  for (const voce2 of elenco9) {
+  for (const voce2 of elenco10) {
     const media2 = numero39(voce2?.mean);
     if (media2 === null) continue;
     wattora += Math.max(0, media2) * fattore;
@@ -63350,7 +64152,7 @@ function laRiconosce(load, entity2) {
   return altreEntita(load).some((altra) => radiceDellEntita(altra) === radice2);
 }
 function carichiTravasati({ loads = [], flowNodes = null } = {}) {
-  const elenco9 = Array.isArray(loads) ? loads.filter(Boolean) : [];
+  const elenco10 = Array.isArray(loads) ? loads.filter(Boolean) : [];
   const dalloSpecchio = /* @__PURE__ */ new Set();
   if (flowNodes && typeof flowNodes === "object" && !Array.isArray(flowNodes))
     for (const casella5 of CASELLE) {
@@ -63359,7 +64161,7 @@ function carichiTravasati({ loads = [], flowNodes = null } = {}) {
     }
   if (!dalloSpecchio.size) return [];
   const perEntita = /* @__PURE__ */ new Map();
-  for (const load of elenco9) {
+  for (const load of elenco10) {
     const potenza = clean23(load?.power_entity);
     if (!potenza || !dalloSpecchio.has(potenza)) continue;
     if (!perEntita.has(potenza)) perEntita.set(potenza, []);
@@ -64841,8 +65643,8 @@ function renderSubloadPopup(groupId = state55.group) {
     monthlyValues: kwhDelPeriodo(figli, "month")
   });
   const firma2 = `${groupId}§${model2.id}§${model2.items.map((item) => item.id).sort().join(",")}§${model2.name}§${model2.icon}§${model2.color}`;
-  const titolo2 = doc?.getElementById?.(TITLE);
-  if (list.dataset.dmSubloadFirma !== firma2 || !titolo2?.querySelector?.(".dm-subload-title-name"))
+  const titolo3 = doc?.getElementById?.(TITLE);
+  if (list.dataset.dmSubloadFirma !== firma2 || !titolo3?.querySelector?.(".dm-subload-title-name"))
     writeTitle(model2, groupId);
   poniDato(list, "dmSubloadOwner", "beta30");
   poniDato(list, "dmSubloadCount", String(model2.count));
@@ -64960,23 +65762,23 @@ var CAMPO_NASCOSTE = "nascoste";
 function elencoNascoste(scritto) {
   const grezzo = Array.isArray(scritto) ? scritto : clean25(scritto).split(",");
   const viste2 = /* @__PURE__ */ new Set();
-  const elenco9 = [];
+  const elenco10 = [];
   for (const voce2 of grezzo) {
     const id = clean25(typeof voce2 === "string" ? voce2 : voce2?.entity || voce2?.entity_id);
     if (!id || !id.includes(".") || viste2.has(id)) continue;
     viste2.add(id);
-    elenco9.push(id);
+    elenco10.push(id);
   }
-  return elenco9;
+  return elenco10;
 }
 function vociNascoste(apparecchio = {}) {
   return new Set(elencoNascoste(apparecchio?.[CAMPO_NASCOSTE]));
 }
-function soloQuelleViste(elenco9 = [], apparecchio = {}, prendi) {
+function soloQuelleViste(elenco10 = [], apparecchio = {}, prendi) {
   const nascoste = vociNascoste(apparecchio);
-  if (!nascoste.size) return Array.isArray(elenco9) ? [...elenco9] : [];
+  if (!nascoste.size) return Array.isArray(elenco10) ? [...elenco10] : [];
   const identificativo2 = typeof prendi === "function" ? prendi : (voce2) => typeof voce2 === "string" ? voce2 : voce2?.entity || voce2?.entity_id;
-  return (Array.isArray(elenco9) ? elenco9 : []).filter(
+  return (Array.isArray(elenco10) ? elenco10 : []).filter(
     (voce2) => !nascoste.has(clean25(identificativo2(voce2)))
   );
 }
@@ -64998,16 +65800,16 @@ var CASELLE_PROPRIE = Object.freeze([
 ]);
 function entita(appliance) {
   const viste2 = /* @__PURE__ */ new Set();
-  const elenco9 = [];
+  const elenco10 = [];
   const aggiungi4 = (voce2) => {
     const id = clean(typeof voce2 === "string" ? voce2 : voce2?.entity || voce2?.entity_id);
     if (!id || !id.includes(".") || viste2.has(id)) return;
     viste2.add(id);
-    elenco9.push(id);
+    elenco10.push(id);
   };
   for (const casella5 of CASELLE_PROPRIE) aggiungi4(appliance?.[casella5]);
   for (const voce2 of appliance?.entities || []) aggiungi4(voce2);
-  return elenco9;
+  return elenco10;
 }
 function nomeDi4(states, entity2) {
   return clean(states?.[entity2]?.attributes?.friendly_name) || entity2.split(".")[1]?.replaceAll("_", " ") || entity2;
@@ -65104,7 +65906,7 @@ function famiglie(appliance) {
     const acceso6 = /^(on|open|aperto|running|cleaning|heat|cool)$/i.test(grezzo);
     pillole2.push({ entity: entity2, nome: nomeInParole(nome, token), acceso: acceso6, valore: grezzo });
   }
-  const viste2 = (elenco9) => soloQuelleViste(elenco9, appliance);
+  const viste2 = (elenco10) => soloQuelleViste(elenco10, appliance);
   return {
     misure: viste2(misure).slice(0, 12),
     pillole: viste2(pillole2).slice(0, 12),
@@ -65435,7 +66237,7 @@ function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto4) {
   const stato3 = soloQuelleViste(nuove(gruppi2.state), appliance);
   const scelti = new Set(elencoComandi(appliance?.comandi));
   const scelteDaLeggere = new Set(elencoLetture(appliance?.letture));
-  const viste2 = (elenco9) => soloQuelleViste(elenco9, appliance);
+  const viste2 = (elenco10) => soloQuelleViste(elenco10, appliance);
   const letture2 = viste2(nuove(gruppi2.readings)).filter(
     (voce2) => !scelteDaLeggere.has(voce2.entity)
   );
@@ -66593,7 +67395,7 @@ function pannelloDeiPiani(piani, senza = [], { chiede = "", rinomina: rinomina2 
             <button type="button" class="dm-piano-rosso" data-dm-piano-cancella>${esc(t("Elimina", "Delete"))}</button>
           </div>
         </div>`;
-    const titolo2 = rinomina2 === piano.nome ? `<input class="ed-input dm-piano-campo" value="${esc(piano.nome)}" data-dm-piano-nuovo-nome aria-label="${esc(t("Nome del piano", "Floor name"))}">` : `<div class="dm-piano-nome">${esc(piano.nome)}</div>
+    const titolo3 = rinomina2 === piano.nome ? `<input class="ed-input dm-piano-campo" value="${esc(piano.nome)}" data-dm-piano-nuovo-nome aria-label="${esc(t("Nome del piano", "Floor name"))}">` : `<div class="dm-piano-nome">${esc(piano.nome)}</div>
              <div class="dm-piano-stanze">${esc(quante(piano.stanze.length))}${nomi.length ? ` · ${esc(nomi.join(" · "))}` : ""}</div>`;
     const striscia = segnoAperto === piano.nome ? `<div class="dm-piano-segni">${SEGNI_DEI_PIANI.map(
       (voce2) => `<button type="button" data-dm-piano-scegli="${esc(voce2)}"${voce2 === piano.segno ? ' aria-pressed="true"' : ""}>${esc(voce2)}</button>`
@@ -66605,7 +67407,7 @@ function pannelloDeiPiani(piani, senza = [], { chiede = "", rinomina: rinomina2 
           <button type="button" data-dm-piano-giu ${indice === piani.length - 1 ? "disabled" : ""} title="${esc(t("Più in basso", "Move down"))}" aria-label="${esc(t("Più in basso", "Move down"))}">▼</button>
         </div>
         <button type="button" class="dm-piano-icona" data-dm-piano-segno title="${esc(t("Cambia icona", "Change icon"))}">${esc(piano.segno)}</button>
-        <div class="dm-piano-testa">${titolo2}</div>
+        <div class="dm-piano-testa">${titolo3}</div>
         <div class="dm-piano-tasti">
           <button type="button" data-dm-piano-rinomina title="${esc(t("Rinomina", "Rename"))}" aria-label="${esc(t("Rinomina", "Rename"))}">${rinomina2 === piano.nome ? "💾" : "✏️"}</button>
           <button type="button" data-dm-piano-chiedi title="${esc(t("Elimina", "Delete"))}" aria-label="${esc(t("Elimina", "Delete"))}">🗑️</button>
@@ -67122,9 +67924,9 @@ function ilProfiloDelleOre(report, config) {
   if (!(massimo > 0)) return "";
   const colonne = ore.map((ora3) => {
     const alta = Math.max(2, Math.round(ora3.kwh / massimo * 100));
-    const tinta = ora3.fascia >= 0 ? tintaDellaFascia(quante2, ora3.fascia) : "#94a3b8";
+    const tinta2 = ora3.fascia >= 0 ? tintaDellaFascia(quante2, ora3.fascia) : "#94a3b8";
     const nome = ora3.fascia >= 0 ? nomeDellaFascia(ora3.fascia) : "";
-    return `<span class="dm-profilo-colonna" style="height:${alta}%;background:${tinta}" title="${String(ora3.ora).padStart(2, "0")}:00 ${esc(nome)} · ${formatNumber(ora3.kwh, 2)} kWh · ${soldi(ora3.euro)}"></span>`;
+    return `<span class="dm-profilo-colonna" style="height:${alta}%;background:${tinta2}" title="${String(ora3.ora).padStart(2, "0")}:00 ${esc(nome)} · ${formatNumber(ora3.kwh, 2)} kWh · ${soldi(ora3.euro)}"></span>`;
   }).join("");
   const tacche2 = [0, 3, 6, 9, 12, 15, 18, 21].map((ora3) => `<span>${String(ora3).padStart(2, "0")}</span>`).join("");
   const pallini2 = (config?.voci || []).map(
@@ -67695,8 +68497,8 @@ function scriviIlValore(valore3, misura7 = MISURE5[0], virgola = ",") {
   return `${numero48.toFixed(misura7.decimali).replace(".", virgola)}${misura7.unita}`;
 }
 function serieSpente(stored) {
-  const elenco9 = Array.isArray(stored?.spente) ? stored.spente : [];
-  return new Set(elenco9.map(pulito41).filter(Boolean));
+  const elenco10 = Array.isArray(stored?.spente) ? stored.spente : [];
+  return new Set(elenco10.map(pulito41).filter(Boolean));
 }
 function serieAccese(serie2 = [], spente = /* @__PURE__ */ new Set()) {
   const fuori = spente instanceof Set ? spente : serieSpente({ spente });
@@ -68793,8 +69595,8 @@ function wireComandi(modal, form) {
   if (!blocco3) return;
   const nascosto = form.elements.comandi;
   const errore = blocco3.querySelector("[data-appl-cmd-error]");
-  const scrivi3 = (elenco9) => {
-    nascosto.value = elencoComandi(elenco9).join(",");
+  const scrivi3 = (elenco10) => {
+    nascosto.value = elencoComandi(elenco10).join(",");
     disegnaComandi(modal, form);
   };
   blocco3.addEventListener("click", (event) => {
@@ -68897,8 +69699,8 @@ function wireLetture(modal, form) {
   if (!blocco3) return;
   const nascosto = form.elements.letture;
   const errore = blocco3.querySelector("[data-appl-let-error]");
-  const scrivi3 = (elenco9) => {
-    nascosto.value = elencoLetture(elenco9).join(",");
+  const scrivi3 = (elenco10) => {
+    nascosto.value = elencoLetture(elenco10).join(",");
     disegnaLetture(modal, form);
   };
   blocco3.addEventListener("click", (event) => {
@@ -68929,9 +69731,9 @@ function wireLetture(modal, form) {
   });
   disegnaLetture(modal, form);
 }
-function normalizeEntities(device, values, elenco9 = []) {
+function normalizeEntities(device, values, elenco10 = []) {
   const parole4 = paroleDellApparecchio(device);
-  const altrui = paroleDegliAltri(device, elenco9);
+  const altrui = paroleDegliAltri(device, elenco10);
   return [
     ...new Set(
       [
@@ -69139,12 +69941,12 @@ function bindingMarkup(device = {}) {
 }
 function vociDellApparecchio(values) {
   const viste2 = /* @__PURE__ */ new Set();
-  const elenco9 = [];
+  const elenco10 = [];
   const aggiungi4 = (voce2) => {
     const id = clean(voce2);
     if (!id || !id.includes(".") || viste2.has(id)) return;
     viste2.add(id);
-    elenco9.push(id);
+    elenco10.push(id);
   };
   for (const casella5 of CASELLE_DELLA_FINESTRA) aggiungi4(values[casella5]);
   for (const entity2 of elencoLetture(values.letture)) aggiungi4(entity2);
@@ -69152,7 +69954,7 @@ function vociDellApparecchio(values) {
   for (const voce2 of entitaDelDispositivo(clean(values.device_id)) || [])
     aggiungi4(voce2?.entity_id);
   for (const entity2 of bindingSnapshot(values)) aggiungi4(entity2);
-  return elenco9;
+  return elenco10;
 }
 var CASELLE_DELLA_FINESTRA = Object.freeze([
   "control_entity",
@@ -69714,7 +70516,7 @@ else senzaCadere(installApplianceEditorSection);
 function appiattisci(testo2) {
   return String(testo2 ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
-var FONDO = 12;
+var FONDO2 = 12;
 var CAMPI_MUTI = /* @__PURE__ */ new Set(["id", "uid", "key", "__ts", "_savedAt"]);
 function foglia(valore3) {
   if (valore3 === null || valore3 === void 0) return "";
@@ -69735,7 +70537,7 @@ function nomeDellaRiga3(riga3, indice) {
   return `#${indice + 1}`;
 }
 function cammina(dentro3, ago, pezzi, chiave2, uscita, profondita) {
-  if (profondita > FONDO || uscita.length >= 200) return;
+  if (profondita > FONDO2 || uscita.length >= 200) return;
   if (Array.isArray(dentro3)) {
     dentro3.forEach(
       (riga3, indice) => cammina(riga3, ago, [...pezzi, nomeDellaRiga3(riga3, indice)], chiave2, uscita, profondita + 1)
@@ -69803,12 +70605,12 @@ var casella3 = (id, it, en, scheda8, pannello, dove) => Object.freeze({ id, it, 
 function leCaselleDellEnergia(gruppi2 = ENERGY_GROUPS) {
   const fuori = [];
   const viste2 = /* @__PURE__ */ new Set();
-  for (const [gruppo, titolo2, campi] of Array.isArray(gruppi2) ? gruppi2 : []) {
+  for (const [gruppo, titolo3, campi] of Array.isArray(gruppi2) ? gruppi2 : []) {
     for (const [chiave2, etichetta3] of Array.isArray(campi) ? campi : []) {
       const id = `${gruppo}.${chiave2}`;
       if (viste2.has(id)) continue;
       viste2.add(id);
-      fuori.push(casella3(id, etichetta3, etichetta3, "sez1", "flows", `${FLUSSI.it} · ${titolo2}`));
+      fuori.push(casella3(id, etichetta3, etichetta3, "sez1", "flows", `${FLUSSI.it} · ${titolo3}`));
     }
   }
   for (const [chiave2, it, en] of raffreddamento())
@@ -69863,7 +70665,7 @@ function cercaFraLeCaselle(parola, caselle2 = [], lingua2 = "it") {
 var KEY70 = "__DASHBOARDMODERN_CERCA_CONFIG__";
 var state66 = root[KEY70] ||= { installed: false, parola: "", aperta: false, raccolte: null };
 var BARRA = "dm-cerca-config";
-var STILE8 = "dm-cerca-config-style";
+var STILE9 = "dm-cerca-config-style";
 var SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_stanze: "stanze",
   cd_stanze_entita: "stanze",
@@ -69999,7 +70801,7 @@ function linguette() {
 }
 function installaLoStile2() {
   installStyle(
-    STILE8,
+    STILE9,
     `
     /* Dentro il corpo e appiccicata in cima, non sopra di lui: una riga in piu'
        fra le linguette e il corpo rubava altezza al modale, e su un telefono
@@ -70152,10 +70954,10 @@ function disegnaGliEsiti(contenitore2, parola) {
     contenitore2.append(riga3);
   }
   if (caselle2.length) {
-    const titolo2 = doc.createElement("p");
-    titolo2.className = `${BARRA}-titolo`;
-    titolo2.textContent = t("Dove si configura", "Where it is configured");
-    contenitore2.append(titolo2);
+    const titolo3 = doc.createElement("p");
+    titolo3.className = `${BARRA}-titolo`;
+    titolo3.textContent = t("Dove si configura", "Where it is configured");
+    contenitore2.append(titolo3);
   }
   for (const una of caselle2.slice(0, 20)) {
     const nome = nomeDellaScheda(una.scheda);
@@ -70297,11 +71099,11 @@ function vestiLaRiga(riga3, states, girati2) {
   return true;
 }
 function vestiIlGruppo(dettaglio, states, girati2) {
-  const titolo2 = dettaglio.querySelector(":scope > summary");
-  if (!titolo2) return;
+  const titolo3 = dettaglio.querySelector(":scope > summary");
+  if (!titolo3) return;
   const entita3 = [...dettaglio.querySelectorAll(".ed-row")].map(entitaDellaRiga).filter(Boolean);
   const conto = contaIVarchi(entita3, states, girati2);
-  const vecchio = titolo2.querySelector(`:scope > .${CONTO}`);
+  const vecchio = titolo3.querySelector(`:scope > .${CONTO}`);
   if (conto.totale < 2) {
     vecchio?.remove();
     return;
@@ -70310,7 +71112,7 @@ function vestiIlGruppo(dettaglio, states, girati2) {
   const nodo2 = vecchio || doc.createElement("span");
   if (!vecchio) {
     nodo2.className = CONTO;
-    titolo2.append(nodo2);
+    titolo3.append(nodo2);
   }
   const tutte = conto.aperti ? "no" : "si";
   if (nodo2.dataset.tutteChiuse !== tutte) nodo2.dataset.tutteChiuse = tutte;
@@ -70350,10 +71152,10 @@ var KEY72 = "__DASHBOARDMODERN_REPORT_TENDINA__";
 var state68 = root[KEY72] ||= { installed: false };
 var SELETTORE = "ed-dev-selector";
 var TASTO = "dm-report-tendina";
-var STILE9 = "dm-report-tendina-style";
+var STILE10 = "dm-report-tendina-style";
 function installaLoStile4() {
   installStyle(
-    STILE9,
+    STILE10,
     `
     .dm-report-tendina-cornice{position:relative!important;display:block!important;width:100%!important;min-width:0!important}
     .dm-report-tendina-cornice>#${SELETTORE}{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:0!important;pointer-events:none!important}
@@ -70397,9 +71199,9 @@ function nomeSenzaEmoji(testo2) {
   return { glifo: clean(glifo), nome: clean(scritto.slice(glifo.length)) || scritto };
 }
 function vociDelGuscio() {
-  const elenco9 = Array.isArray(root.ED_DEVICES) ? root.ED_DEVICES : [];
+  const elenco10 = Array.isArray(root.ED_DEVICES) ? root.ED_DEVICES : [];
   const facce = /* @__PURE__ */ new Map();
-  for (const voce2 of elenco9) {
+  for (const voce2 of elenco10) {
     const entita3 = clean(voce2?.sensor);
     if (entita3) facce.set(entita3, { nome: clean(voce2?.name), icona: clean(voce2?.icon), foto: "" });
   }
@@ -70447,9 +71249,9 @@ function apriLElenco2(select, tasto2) {
   });
   if (!corpo2) return;
   const scelto = clean(select.value);
-  const elenco9 = doc.createElement("div");
-  elenco9.className = `${TASTO}-elenco`;
-  elenco9.setAttribute("role", "listbox");
+  const elenco10 = doc.createElement("div");
+  elenco10.className = `${TASTO}-elenco`;
+  elenco10.setAttribute("role", "listbox");
   for (const voce2 of vociDelSelettore(select)) {
     const riga3 = doc.createElement("button");
     riga3.type = "button";
@@ -70466,9 +71268,9 @@ function apriLElenco2(select, tasto2) {
       select.dispatchEvent(new Event("change", { bubbles: true }));
       disegnaIlTasto(select, tasto2);
     });
-    elenco9.append(riga3);
+    elenco10.append(riga3);
   }
-  corpo2.append(elenco9);
+  corpo2.append(elenco10);
 }
 function vestiIlSelettore2() {
   const select = doc?.getElementById?.(SELETTORE);
@@ -71198,15 +72000,15 @@ var ETICHETTE2 = () => ({
   custom: t("Parziale", "Partial")
 });
 function accettate() {
-  let elenco9 = [];
+  let elenco10 = [];
   try {
-    elenco9 = root.dmAlarmSupportedModes?.() || [];
+    elenco10 = root.dmAlarmSupportedModes?.() || [];
   } catch (_error) {
-    elenco9 = [];
+    elenco10 = [];
   }
   const validi = new Set(ALARM_MODES.map((voce2) => voce2.mode));
   return ALARM_MODES.map((voce2) => voce2.mode).filter(
-    (mode) => validi.has(mode) && elenco9.includes(mode)
+    (mode) => validi.has(mode) && elenco10.includes(mode)
   );
 }
 function tolte() {
@@ -72778,8 +73580,8 @@ var ANCORA = "dm-vmc-ed";
 function configurate() {
   return normalizzaVmcTutte(readJson(CHIAVE_VMC, []));
 }
-function salva9(elenco9) {
-  const pulita = normalizzaVmcTutte(elenco9);
+function salva9(elenco10) {
+  const pulita = normalizzaVmcTutte(elenco10);
   writeJsonIfChanged(CHIAVE_VMC, pulita);
   try {
     renderClimate({ rebuild: true });
@@ -72849,9 +73651,9 @@ function campoMarkup(unita2, indice, chiave2) {
   return `<label class="ed-slot dm-vmc-ed-campo"><span class="ed-slot-lbl">${esc(etichetta(chiave2))}</span>
     <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-dm-vmc-campo="${esc(chiave2)}" value="${esc(unita2[chiave2])}" placeholder="${esc(esempio(chiave2))}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-vmc-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
 }
-function fasciaMarkup2(unita2, indice, titolo2, chiavi2) {
+function fasciaMarkup2(unita2, indice, titolo3, chiavi2) {
   return `<div class="dm-vmc-ed-fascia">
-    <span class="dm-vmc-ed-fascia-lbl">${esc(titolo2)}</span>
+    <span class="dm-vmc-ed-fascia-lbl">${esc(titolo3)}</span>
     ${chiavi2.map((chiave2) => campoMarkup(unita2, indice, chiave2)).join("")}
   </div>`;
 }
@@ -72869,8 +73671,8 @@ function unitaMarkup(unita2, indice) {
   </article>`;
 }
 function corpoMarkup() {
-  const elenco9 = configurate();
-  const piene = elenco9.length >= MASSIMO_VMC;
+  const elenco10 = configurate();
+  const piene = elenco10.length >= MASSIMO_VMC;
   return `<div class="ed-sec-title">🔄 ${esc(t("Ventilazione meccanica", "Mechanical ventilation"))}</div>
   <div class="ed-intro">${esc(
     t(
@@ -72879,7 +73681,7 @@ function corpoMarkup() {
     )
   )}</div>
   <div class="ed-list dm-vmc-ed-lista">
-    ${elenco9.map(unitaMarkup).join("")}
+    ${elenco10.map(unitaMarkup).join("")}
     <button type="button" class="ed-btn-add" data-dm-vmc-aggiungi${piene ? " disabled" : ""}>＋ ${esc(t("Aggiungi una VMC", "Add a ventilation unit"))}</button>
     <button type="button" class="ed-save-btn" data-dm-vmc-salva>💾 ${esc(t("Salva ventilazione", "Save ventilation"))}</button>
   </div>`;
@@ -72947,10 +73749,10 @@ function onClick14(evento) {
   }
   if (evento.target.closest("[data-dm-vmc-aggiungi]")) {
     evento.preventDefault();
-    const elenco9 = raccogli3(scheda8);
-    if (elenco9.length >= MASSIMO_VMC) return;
+    const elenco10 = raccogli3(scheda8);
+    if (elenco10.length >= MASSIMO_VMC) return;
     state79.contatore += 1;
-    salva9([...elenco9, { id: `vmc-${Date.now()}-${state79.contatore}`, nome: "" }]);
+    salva9([...elenco10, { id: `vmc-${Date.now()}-${state79.contatore}`, nome: "" }]);
     ridisegna4();
     return;
   }
@@ -72998,8 +73800,8 @@ var ANCORA2 = "dm-deum-ed";
 function configurati() {
   return normalizzaDeumidificatori(readJson(CHIAVE_DEUMIDIFICATORI, []));
 }
-function salva10(elenco9) {
-  const pulita = normalizzaDeumidificatori(elenco9);
+function salva10(elenco10) {
+  const pulita = normalizzaDeumidificatori(elenco10);
   writeJsonIfChanged(CHIAVE_DEUMIDIFICATORI, pulita);
   try {
     renderClimate({ rebuild: true });
@@ -73068,8 +73870,8 @@ function unitaMarkup2(unita2, indice) {
   </article>`;
 }
 function corpoMarkup2() {
-  const elenco9 = configurati();
-  const pieni = elenco9.length >= MASSIMO_DEUMIDIFICATORI;
+  const elenco10 = configurati();
+  const pieni = elenco10.length >= MASSIMO_DEUMIDIFICATORI;
   return `<div class="ed-sec-title">💧 ${esc(t("Deumidificatori", "Dehumidifiers"))}</div>
   <div class="ed-intro">${esc(
     t(
@@ -73078,7 +73880,7 @@ function corpoMarkup2() {
     )
   )}</div>
   <div class="ed-list dm-deum-ed-lista">
-    ${elenco9.map(unitaMarkup2).join("")}
+    ${elenco10.map(unitaMarkup2).join("")}
     <button type="button" class="ed-btn-add" data-dm-deum-aggiungi${pieni ? " disabled" : ""}>＋ ${esc(t("Aggiungi un deumidificatore", "Add a dehumidifier"))}</button>
     <button type="button" class="ed-save-btn" data-dm-deum-salva>💾 ${esc(t("Salva deumidificatori", "Save dehumidifiers"))}</button>
   </div>`;
@@ -73145,10 +73947,10 @@ function onClick15(evento) {
   }
   if (evento.target.closest("[data-dm-deum-aggiungi]")) {
     evento.preventDefault();
-    const elenco9 = raccogli4(scheda8);
-    if (elenco9.length >= MASSIMO_DEUMIDIFICATORI) return;
+    const elenco10 = raccogli4(scheda8);
+    if (elenco10.length >= MASSIMO_DEUMIDIFICATORI) return;
     state80.contatore += 1;
-    salva10([...elenco9, { id: `deum-${Date.now()}-${state80.contatore}`, nome: "" }]);
+    salva10([...elenco10, { id: `deum-${Date.now()}-${state80.contatore}`, nome: "" }]);
     ridisegna5();
     return;
   }
@@ -74489,8 +75291,8 @@ function salva13(lista5, scelta3) {
       caselle: { [RIF_CENTRALE]: clean(riga3?.caselle?.[RIF_CENTRALE]) }
     };
     for (const campo5 of [CAMPO_ZONE, CAMPO_INGRESSI]) {
-      const elenco9 = elencoDiEntita(riga3?.[campo5]);
-      if (elenco9.length) scritta[campo5] = elenco9;
+      const elenco10 = elencoDiEntita(riga3?.[campo5]);
+      if (elenco10.length) scritta[campo5] = elenco10;
     }
     return scritta;
   });
@@ -74648,8 +75450,8 @@ function leggiRiga3(riga3, voce2) {
     caselle: { [RIF_CENTRALE]: suaEntita() }
   };
   for (const campo5 of [CAMPO_ZONE, CAMPO_INGRESSI]) {
-    const elenco9 = scelte4(campo5);
-    if (elenco9.length) prossima[campo5] = elenco9;
+    const elenco10 = scelte4(campo5);
+    if (elenco10.length) prossima[campo5] = elenco10;
     else delete prossima[campo5];
   }
   return prossima;
@@ -75113,7 +75915,7 @@ function aggancia4() {
   root.apriDettagli = vestito;
   return true;
 }
-var STILE10 = `
+var STILE11 = `
 #details-list .dm-clpd-testata{
   font-size:10px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;
   color:var(--text-dim,#94a3b8);padding:12px 4px 6px}
@@ -75123,7 +75925,7 @@ var STILE10 = `
 function installPopupClimaDistingue() {
   if (!doc || state90.installed) return;
   state90.installed = true;
-  installStyle("dm-popup-clima-distingue-style", STILE10);
+  installStyle("dm-popup-clima-distingue-style", STILE11);
   aggancia4();
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"]) {
     root.addEventListener?.(evento, aggancia4);
@@ -75196,9 +75998,9 @@ function disegnaProgrammi() {
   if (!griglia2) return false;
   const voci3 = programmiAttuali();
   griglia2.replaceChildren(...voci3.map(tasto));
-  const titolo2 = griglia2.previousElementSibling;
+  const titolo3 = griglia2.previousElementSibling;
   griglia2.style.display = voci3.length ? "" : "none";
-  if (titolo2?.tagName === "H4") titolo2.style.display = voci3.length ? "" : "none";
+  if (titolo3?.tagName === "H4") titolo3.style.display = voci3.length ? "" : "none";
   return true;
 }
 function immagineDellaSezione() {
@@ -75374,7 +76176,7 @@ function montaNelleAzioni() {
   }
   return montata;
 }
-var STILE11 = `
+var STILE12 = `
 #lavatrice-modal .lav-preset-btn{
   border:1px solid var(--card-border,#e2e8f0);border-radius:14px;background:var(--card-bg,#fff);
   box-shadow:0 1px 3px rgba(15,23,42,.05);cursor:pointer;transition:transform .15s ease,border-color .2s ease}
@@ -75406,7 +76208,7 @@ function laFinestraSiVede() {
 function installPopupLavatrice() {
   if (state91.installed) return false;
   if (!doc?.getElementById) return false;
-  installStyle("dm-popup-lavatrice-style", STILE11);
+  installStyle("dm-popup-lavatrice-style", STILE12);
   const ridisegna27 = () => {
     disegnaProgrammi();
     vesteImmagine();
@@ -80945,7 +81747,7 @@ function risolta(entity2, risolvi2) {
 var KEY104 = "__DASHBOARDMODERN_AZIONI_VASSOIO__";
 var STYLE_ID22 = "dm-azioni-vassoio-style";
 var state100 = root[KEY104] ||= { installed: false };
-var STILE12 = `
+var STILE13 = `
 /* Le intestazioni della Home: il titolo, un filo che sfuma fino al bordo, e
    l'aria sopra. Il titolo aveva quindici pixel di margine e la card sopra ne
    butta diciotto di ombra: cominciava dentro l'ombra della card precedente. */
@@ -81083,8 +81885,8 @@ function avvolgi2() {
 }
 function azioniDelGuscio() {
   try {
-    const elenco9 = root.getQuickActions?.();
-    return Array.isArray(elenco9) ? elenco9 : [];
+    const elenco10 = root.getQuickActions?.();
+    return Array.isArray(elenco10) ? elenco10 : [];
   } catch (_errore) {
     return [];
   }
@@ -81096,8 +81898,8 @@ function tingi() {
   let indice = 0;
   for (const tasto2 of tasti) {
     const simbolo = tasto2.querySelector(".icon");
-    const tinta = simbolo?.style?.color;
-    if (tinta) tasto2.style.setProperty("--dm-azione-tinta", tinta);
+    const tinta2 = simbolo?.style?.color;
+    if (tinta2) tasto2.style.setProperty("--dm-azione-tinta", tinta2);
     const acceso6 = azioneAccesa(azioni2[indice], states, root.resolveEntity);
     if (acceso6 === true) tasto2.dataset.dmAcceso = "true";
     else delete tasto2.dataset.dmAcceso;
@@ -81108,11 +81910,11 @@ function onda(evento) {
   const tasto2 = evento.target?.closest?.("#page-home .dm-vassoio .qa-btn");
   if (!tasto2) return;
   if (root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
-  const bordo = tasto2.getBoundingClientRect();
-  const lato = Math.max(bordo.width, bordo.height) * 2.4;
+  const bordo2 = tasto2.getBoundingClientRect();
+  const lato = Math.max(bordo2.width, bordo2.height) * 2.4;
   const cerchio = doc.createElement("span");
   cerchio.className = "dm-onda";
-  cerchio.style.cssText = `width:${lato}px;height:${lato}px;left:${evento.clientX - bordo.left}px;top:${evento.clientY - bordo.top}px`;
+  cerchio.style.cssText = `width:${lato}px;height:${lato}px;left:${evento.clientX - bordo2.left}px;top:${evento.clientY - bordo2.top}px`;
   tasto2.append(cerchio);
   root.setTimeout?.(() => cerchio.remove(), 640);
 }
@@ -81122,9 +81924,9 @@ function adegua() {
   if (!vassoio?.classList?.contains?.("dm-vassoio")) return;
   const vuoto4 = griglia2.style.display === "none";
   vassoio.hidden = vuoto4;
-  const titolo2 = vassoio.previousElementSibling;
-  if (titolo2 && /azioni/i.test(titolo2.textContent || ""))
-    titolo2.style.display = vuoto4 ? "none" : "";
+  const titolo3 = vassoio.previousElementSibling;
+  if (titolo3 && /azioni/i.test(titolo3.textContent || ""))
+    titolo3.style.display = vuoto4 ? "none" : "";
 }
 function ripassa2() {
   if (!paginaVisibile("page-home")) return;
@@ -81135,7 +81937,7 @@ function ripassa2() {
 function installAzioniRapideVassoio() {
   if (state100.installed) return false;
   if (!doc?.getElementById) return false;
-  installStyle(STYLE_ID22, STILE12);
+  installStyle(STYLE_ID22, STILE13);
   ripassa2();
   wrapFunction("buildQuickActions", "__dmVassoioAzioni", ripassa2);
   for (const evento of ["dashboardmodern:editor-rendered", "dashboardmodern:state-changed"])
@@ -81154,10 +81956,10 @@ function gruppoDellAzione(azione) {
 }
 var chiaveDelGruppo = (nome) => pulito48(nome).toLocaleLowerCase("it");
 function gruppiDelleAzioni(azioni2 = [], acceso6 = () => null) {
-  const elenco9 = Array.isArray(azioni2) ? azioni2 : [];
+  const elenco10 = Array.isArray(azioni2) ? azioni2 : [];
   const perChiave = /* @__PURE__ */ new Map();
   const senzaGruppo = [];
-  elenco9.forEach((azione, indice) => {
+  elenco10.forEach((azione, indice) => {
     const nome = gruppoDellAzione(azione);
     if (!nome) {
       senzaGruppo.push(indice);
@@ -81170,7 +81972,7 @@ function gruppiDelleAzioni(azioni2 = [], acceso6 = () => null) {
     if (acceso6(azione, indice) === true) gruppo.accese += 1;
   });
   const gruppi2 = [...perChiave.values()];
-  const tasti = elenco9.map((_azione, indice) => indice);
+  const tasti = elenco10.map((_azione, indice) => indice);
   const titoli = {};
   let posto = 0;
   for (const indice of senzaGruppo) tasti[indice] = posto++;
@@ -81192,14 +81994,14 @@ function conIlGruppo2(azione, nome) {
 }
 function gruppiChiusi(salvati, gruppi2 = []) {
   const presenti = new Set((gruppi2 || []).map((gruppo) => gruppo.chiave));
-  const elenco9 = Array.isArray(salvati) ? salvati : [];
-  return new Set(elenco9.map(chiaveDelGruppo).filter((chiave2) => presenti.has(chiave2)));
+  const elenco10 = Array.isArray(salvati) ? salvati : [];
+  return new Set(elenco10.map(chiaveDelGruppo).filter((chiave2) => presenti.has(chiave2)));
 }
 function inverti(salvati, chiave2) {
-  const elenco9 = (Array.isArray(salvati) ? salvati : []).map(chiaveDelGruppo).filter(Boolean);
+  const elenco10 = (Array.isArray(salvati) ? salvati : []).map(chiaveDelGruppo).filter(Boolean);
   const questa = chiaveDelGruppo(chiave2);
-  if (!questa) return elenco9;
-  return elenco9.includes(questa) ? elenco9.filter((voce2) => voce2 !== questa) : [...elenco9, questa];
+  if (!questa) return elenco10;
+  return elenco10.includes(questa) ? elenco10.filter((voce2) => voce2 !== questa) : [...elenco10, questa];
 }
 
 // src/sections/azioni-rapide-gruppi-section.js
@@ -81210,8 +82012,8 @@ var CHIAVE_GRUPPI_CHIUSI = "dm_azioni_gruppi_chiusi";
 var DATALIST_ID = "dm-qa-gruppi-nomi";
 function azioniDelGuscio2() {
   try {
-    const elenco9 = root.getQuickActions?.();
-    return Array.isArray(elenco9) ? elenco9 : [];
+    const elenco10 = root.getQuickActions?.();
+    return Array.isArray(elenco10) ? elenco10 : [];
   } catch (_errore) {
     return [];
   }
@@ -81224,9 +82026,9 @@ function leggiChiusi() {
     return [];
   }
 }
-function scriviChiusi(elenco9) {
+function scriviChiusi(elenco10) {
   try {
-    root.localStorage?.setItem?.(CHIAVE_GRUPPI_CHIUSI, JSON.stringify(elenco9));
+    root.localStorage?.setItem?.(CHIAVE_GRUPPI_CHIUSI, JSON.stringify(elenco10));
   } catch (_errore) {
   }
 }
@@ -81271,7 +82073,7 @@ function raggruppa() {
   const tasti = [...griglia2.children].filter((nodo2) => nodo2.classList?.contains("qa-btn"));
   const titoli = [...griglia2.querySelectorAll(":scope > .dm-qa-gruppo")];
   if (!struttura.gruppi.length) {
-    for (const titolo2 of titoli) titolo2.remove();
+    for (const titolo3 of titoli) titolo3.remove();
     for (const tasto2 of tasti) {
       tasto2.style.removeProperty("order");
       delete tasto2.dataset.dmQaChiuso;
@@ -81300,33 +82102,33 @@ function raggruppa() {
     metti4(tasto2, "dmQaChiuso", gruppo && chiusi.has(gruppo.chiave) ? "true" : void 0);
   });
   const presenti = new Set(struttura.gruppi.map((gruppo) => gruppo.chiave));
-  for (const titolo2 of titoli) if (!presenti.has(titolo2.dataset.dmQaTitolo)) titolo2.remove();
+  for (const titolo3 of titoli) if (!presenti.has(titolo3.dataset.dmQaTitolo)) titolo3.remove();
   struttura.gruppi.forEach((gruppo, posto) => {
-    let titolo2 = griglia2.querySelector(
+    let titolo3 = griglia2.querySelector(
       `:scope > .dm-qa-gruppo[data-dm-qa-titolo="${CSS.escape(gruppo.chiave)}"]`
     );
-    if (!titolo2) {
-      titolo2 = doc.createElement("button");
-      titolo2.type = "button";
-      titolo2.className = "dm-qa-gruppo";
-      titolo2.dataset.dmQaTitolo = gruppo.chiave;
-      griglia2.append(titolo2);
+    if (!titolo3) {
+      titolo3 = doc.createElement("button");
+      titolo3.type = "button";
+      titolo3.className = "dm-qa-gruppo";
+      titolo3.dataset.dmQaTitolo = gruppo.chiave;
+      griglia2.append(titolo3);
     }
     const chiuso = chiusi.has(gruppo.chiave);
     const segno = segnoDaTasto(tasti[gruppo.indici[0]]);
     const { nome } = gruppo;
     const firma2 = [nome, gruppo.accese, gruppo.indici.length, chiuso, segno].join("|");
-    if (titolo2.dataset.dmQaFirma !== firma2) {
-      titolo2.dataset.dmQaFirma = firma2;
-      titolo2.innerHTML = titoloMarkup(gruppo, chiuso, segno);
-      titolo2.setAttribute("aria-expanded", String(!chiuso));
-      titolo2.setAttribute(
+    if (titolo3.dataset.dmQaFirma !== firma2) {
+      titolo3.dataset.dmQaFirma = firma2;
+      titolo3.innerHTML = titoloMarkup(gruppo, chiuso, segno);
+      titolo3.setAttribute("aria-expanded", String(!chiuso));
+      titolo3.setAttribute(
         "aria-label",
         chiuso ? t(`Apri il gruppo ${nome}`, `Open the ${nome} group`) : t(`Chiudi il gruppo ${nome}`, `Close the ${nome} group`)
       );
     }
-    ordina(titolo2, String(struttura.ordine.titoli[gruppo.chiave]));
-    metti4(titolo2, "dmQaPrimo", String(posto === 0 && !struttura.senzaGruppo.length));
+    ordina(titolo3, String(struttura.ordine.titoli[gruppo.chiave]));
+    metti4(titolo3, "dmQaPrimo", String(posto === 0 && !struttura.senzaGruppo.length));
   });
   return struttura.gruppi.length;
 }
@@ -81339,21 +82141,21 @@ function ripassa3() {
   }
 }
 function onClick20(evento) {
-  const titolo2 = evento.target?.closest?.("#qa-grid > .dm-qa-gruppo[data-dm-qa-titolo]");
-  if (!titolo2) return;
+  const titolo3 = evento.target?.closest?.("#qa-grid > .dm-qa-gruppo[data-dm-qa-titolo]");
+  if (!titolo3) return;
   evento.preventDefault();
-  scriviChiusi(inverti(leggiChiusi(), titolo2.dataset.dmQaTitolo));
+  scriviChiusi(inverti(leggiChiusi(), titolo3.dataset.dmQaTitolo));
   root.navigator?.vibrate?.(6);
   raggruppa();
 }
 function righeDelleAzioni() {
   const tipo = doc?.getElementById?.("ed-qa-type");
   const cassetto = tipo?.closest?.("details");
-  const elenco9 = cassetto?.querySelector?.(".ed-list");
-  if (!elenco9) return { cassetto: null, righe: [] };
+  const elenco10 = cassetto?.querySelector?.(".ed-list");
+  if (!elenco10) return { cassetto: null, righe: [] };
   return {
     cassetto,
-    righe: [...elenco9.children].filter((nodo2) => nodo2.classList?.contains("ed-row"))
+    righe: [...elenco10.children].filter((nodo2) => nodo2.classList?.contains("ed-row"))
   };
 }
 function datalistMarkup(nomi) {
@@ -81364,14 +82166,14 @@ function caselleDeiGruppi() {
   if (!cassetto || !righe2.length) return 0;
   const azioni2 = azioniDelGuscio2();
   const nomi = nomiDeiGruppi(azioni2);
-  let elenco9 = doc.getElementById(DATALIST_ID);
-  if (!elenco9) {
-    elenco9 = doc.createElement("datalist");
-    elenco9.id = DATALIST_ID;
-    cassetto.querySelector(".ed-acc-body")?.append(elenco9);
+  let elenco10 = doc.getElementById(DATALIST_ID);
+  if (!elenco10) {
+    elenco10 = doc.createElement("datalist");
+    elenco10.id = DATALIST_ID;
+    cassetto.querySelector(".ed-acc-body")?.append(elenco10);
   }
   const opzioni = datalistMarkup(nomi);
-  if (elenco9.innerHTML !== opzioni) elenco9.innerHTML = opzioni;
+  if (elenco10.innerHTML !== opzioni) elenco10.innerHTML = opzioni;
   righe2.forEach((riga3, indice) => {
     let casella5 = riga3.querySelector(":scope > .dm-qa-gruppo-campo [data-dm-qa-gruppo-indice]");
     if (!casella5) {
@@ -81783,9 +82585,9 @@ function heroMarkup2() {
   </section>`;
 }
 function contoDelGruppo(views2) {
-  const elenco9 = Array.isArray(views2) ? views2 : [];
-  const infissi = elenco9.filter((view) => Boolean(view?.soloInfisso));
-  const motori = elenco9.filter((view) => view && !view.soloInfisso);
+  const elenco10 = Array.isArray(views2) ? views2 : [];
+  const infissi = elenco10.filter((view) => Boolean(view?.soloInfisso));
+  const motori = elenco10.filter((view) => view && !view.soloInfisso);
   return {
     /* Le tapparelle «aperte» sono quelle alzate: la pastiglia della card dice
      * aperta appena una delle sue coperture lo e'. */
@@ -81914,11 +82716,11 @@ function cardMarkup5(view) {
   </article>`;
 }
 function stanzeConIntestazione(views2) {
-  const elenco9 = Array.isArray(views2) ? views2 : [];
+  const elenco10 = Array.isArray(views2) ? views2 : [];
   const chiavi2 = /* @__PURE__ */ new Set();
-  if (!elenco9.some((view) => clean(view?.room))) return chiavi2;
+  if (!elenco10.some((view) => clean(view?.room))) return chiavi2;
   const gruppi2 = /* @__PURE__ */ new Map();
-  elenco9.forEach((view) => {
+  elenco10.forEach((view) => {
     const chiave2 = groupKey(view);
     if (!gruppi2.has(chiave2)) gruppi2.set(chiave2, []);
     gruppi2.get(chiave2).push(view);
@@ -83299,7 +84101,7 @@ var json = (valore3, ripiego) => {
     return ripiego;
   }
 };
-var elenco5 = (valore3) => Array.isArray(valore3) ? valore3 : [];
+var elenco6 = (valore3) => Array.isArray(valore3) ? valore3 : [];
 function fonteDaiValori(valori = {}) {
   const stato3 = json(valori.dm_dashboard_state, {});
   const sezioni2 = stato3?.sections && typeof stato3.sections === "object" ? stato3.sections : {};
@@ -83313,7 +84115,7 @@ function fonteDaiValori(valori = {}) {
   });
 }
 function climaColTipo(sezione2, unita2) {
-  const altre = elenco5(unita2).filter((u) => u && entita2(u.entity || u.entity_id));
+  const altre = elenco6(unita2).filter((u) => u && entita2(u.entity || u.entity_id));
   const tipoDi = (id, proprio) => canonicalClimateType(
     proprio || altre.find((u) => entita2(u.entity || u.entity_id) === id)?.type
   );
@@ -83336,13 +84138,13 @@ function zoneDelClima(tipo) {
   return ["freddo"];
 }
 function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
-  const dispositivi = (nome) => elenco5(sezioni2[nome]).filter((d) => d && d.enabled !== false && entita2(d.entity));
+  const dispositivi = (nome) => elenco6(sezioni2[nome]).filter((d) => d && d.enabled !== false && entita2(d.entity));
   const overrides2 = altro.overrides && typeof altro.overrides === "object" ? altro.overrides : {};
-  const centrali2 = elenco5(altro.centrali).map((c) => entita2(c?.caselle?.["dm.security_centrale_allarme"])).filter(Boolean);
+  const centrali2 = elenco6(altro.centrali).map((c) => entita2(c?.caselle?.["dm.security_centrale_allarme"])).filter(Boolean);
   const centraleSola = entita2(overrides2["dm.security_centrale_allarme"]);
   if (centraleSola && !centrali2.includes(centraleSola)) centrali2.unshift(centraleSola);
   return {
-    stanze: elenco5(sezioni2.rooms).filter((s) => s && testo(s.name)).map((s) => ({
+    stanze: elenco6(sezioni2.rooms).filter((s) => s && testo(s.name)).map((s) => ({
       id: testo(s.id, 80),
       name: testo(s.name),
       temp: entita2(s.temp),
@@ -83352,7 +84154,7 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
     tapparelle: dispositivi("covers"),
     telecamere: dispositivi("cameras"),
-    azioni: elenco5(altro.azioni).filter((a) => a && testo(a.name)).map((a) => ({
+    azioni: elenco6(altro.azioni).filter((a) => a && testo(a.name)).map((a) => ({
       name: testo(a.name),
       icon: testo(a.icon, 32),
       type: testo(a.type, 16),
@@ -83365,12 +84167,12 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
      * come lo legge la plancia: «il meteo non ridice con quello che e' messo
      * nella config». Vuoto, il tablet fa come la plancia senza scelta. */
     meteo: entita2(overrides2["dm.home_meteo"]) || entita2(overrides2["dm.core_055"]),
-    persone: elenco5(altro.persone).filter((p) => p && entita2(p.entity) && p.nascosta !== true).map((p) => ({ entity: entita2(p.entity), name: testo(p.name) })),
+    persone: elenco6(altro.persone).filter((p) => p && entita2(p.entity) && p.nascosta !== true).map((p) => ({ entity: entita2(p.entity), name: testo(p.name) })),
     centrali: centrali2,
-    avvisi: elenco5(altro.avvisi).map((a) => ({
+    avvisi: elenco6(altro.avvisi).map((a) => ({
       name: testo(a?.name, 60),
       icon: testo(a?.icon, 16),
-      entita: elenco5(a?.entities?.length ? a.entities : [a?.entity]).map(entita2).filter(Boolean),
+      entita: elenco6(a?.entities?.length ? a.entities : [a?.entity]).map(entita2).filter(Boolean),
       cond: scelta(a?.cond, ["on", "off", "eq", "neq", "gt", "lt"], "on"),
       value: testo(a?.value, 40)
     })).filter((a) => a.entita.length)
@@ -83400,31 +84202,31 @@ function derivaDelRiposo(adesso = Date.now()) {
   };
 }
 function avvisiAccesi(fonte = {}, stati = {}, centrale = "") {
-  const accesi = elenco5(fonte.avvisi).filter((a) => avvisoAcceso(a, stati)).map((a) => ({
+  const accesi = elenco6(fonte.avvisi).filter((a) => avvisoAcceso(a, stati)).map((a) => ({
     chiave: a.entita[0],
     testo: a.name || a.entita[0],
     icon: a.icon,
     grave: false
   }));
-  const allarme2 = entita2(centrale) || elenco5(fonte.centrali)[0] || "";
+  const allarme2 = entita2(centrale) || elenco6(fonte.centrali)[0] || "";
   if (allarme2 && String(stati[allarme2]?.state) === "triggered")
     accesi.unshift({ chiave: allarme2, testo: "", icon: "", grave: true });
   return accesi;
 }
 var diStanza = (dispositivo, stanza2) => Boolean(stanza2) && (dispositivo.room === stanza2.name || dispositivo.room === stanza2.id || stanza2.id && dispositivo.room_id === stanza2.id);
 function azioniDellaStanza(fonte, stanza2) {
-  const azioni2 = elenco5(fonte.azioni).filter((a) => eUnaScena(a));
+  const azioni2 = elenco6(fonte.azioni).filter((a) => eUnaScena(a));
   const nome = String(stanza2?.name || "").toLowerCase();
   const sue = nome ? azioni2.filter((a) => a.name.toLowerCase().includes(nome)) : [];
   return sue.length ? sue : azioni2.filter((a) => a.type === "scene" || a.type === "script");
 }
 function comandiProposti2(fonte = {}, nomeStanza = "", posti = POSTI) {
-  const stanza2 = elenco5(fonte.stanze).find((s) => s.name === nomeStanza || s.id === nomeStanza) || null;
+  const stanza2 = elenco6(fonte.stanze).find((s) => s.name === nomeStanza || s.id === nomeStanza) || null;
   if (!stanza2) return [];
   const proposti = [
-    ...elenco5(fonte.luci).filter((d) => diStanza(d, stanza2)).map((d) => ({ tipo: "luce", entita: d.entity, nome: "" })),
-    ...elenco5(fonte.clima).filter((d) => diStanza(d, stanza2)).map((d) => ({ tipo: "clima", entita: d.entity, nome: "" })),
-    ...elenco5(fonte.tapparelle).filter((d) => diStanza(d, stanza2)).map((d) => ({ tipo: "tapparella", entita: d.entity, nome: "" }))
+    ...elenco6(fonte.luci).filter((d) => diStanza(d, stanza2)).map((d) => ({ tipo: "luce", entita: d.entity, nome: "" })),
+    ...elenco6(fonte.clima).filter((d) => diStanza(d, stanza2)).map((d) => ({ tipo: "clima", entita: d.entity, nome: "" })),
+    ...elenco6(fonte.tapparelle).filter((d) => diStanza(d, stanza2)).map((d) => ({ tipo: "tapparella", entita: d.entity, nome: "" }))
   ];
   const liberi = Math.max(posti - proposti.length, Math.min(2, posti));
   const azioni2 = azioniDellaStanza(fonte, stanza2).slice(0, liberi).map((a) => ({ tipo: "azione", azione: a.name, nome: "", sotto: "" }));
@@ -83439,37 +84241,37 @@ function comandiDellaPagina(pagina2, fonte = {}, zona = "") {
 }
 function comandiDellElenco(modello, fonte = {}) {
   if (modello === "luci")
-    return elenco5(fonte.luci).map((d) => {
+    return elenco6(fonte.luci).map((d) => {
       const comando = comandoPulito({ tipo: "luce", entita: d.entity });
       return comando && { ...comando, tipo: "luce" };
     });
   if (modello === "freddo" || modello === "caldo")
-    return elenco5(fonte.clima).filter((d) => zoneDelClima(d.tipo).includes(modello)).map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
+    return elenco6(fonte.clima).filter((d) => zoneDelClima(d.tipo).includes(modello)).map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
   return [];
 }
 function eUnaScena(azione) {
   return Boolean(azione) && !["builtin", "luci_group"].includes(azione.type) && Boolean(azione.entity);
 }
 function scenePropose(fonte = {}, posti = POSTI) {
-  return elenco5(fonte.azioni).filter(eUnaScena).slice(0, postiDi(posti)).map((a) => scenaPulita({ azione: a.name })).filter(Boolean);
+  return elenco6(fonte.azioni).filter(eUnaScena).slice(0, postiDi(posti)).map((a) => scenaPulita({ azione: a.name })).filter(Boolean);
 }
-var cercaAzione = (fonte, ...parole4) => elenco5(fonte.azioni).find((a) => parole4.some((p) => a.name.toLowerCase().includes(p)))?.name || "";
+var cercaAzione = (fonte, ...parole4) => elenco6(fonte.azioni).find((a) => parole4.some((p) => a.name.toLowerCase().includes(p)))?.name || "";
 function ingressoProposto(fonte = {}) {
   return ingressoPulito({
-    centrale: elenco5(fonte.centrali)[0] || "",
-    telecamera: elenco5(fonte.telecamere)[0]?.entity || "",
+    centrale: elenco6(fonte.centrali)[0] || "",
+    telecamera: elenco6(fonte.telecamere)[0]?.entity || "",
     esco: cercaAzione(fonte, "esco", "uscita", "leave", "away"),
     rientro: cercaAzione(fonte, "rientro", "arrivo", "torno", "home")
   });
 }
-var minutiDa2 = (hhmm) => {
+var minutiDa3 = (hhmm) => {
   const [h, m] = String(hhmm).split(":").map(Number);
   return h * 60 + m;
 };
 function eNotte(muro, adesso = /* @__PURE__ */ new Date()) {
   if (!muro?.notte?.attiva) return false;
-  const da = minutiDa2(muro.notte.da);
-  const a = minutiDa2(muro.notte.a);
+  const da = minutiDa3(muro.notte.da);
+  const a = minutiDa3(muro.notte.a);
   const qui = adesso.getHours() * 60 + adesso.getMinutes();
   if (da === a) return false;
   return da < a ? qui >= da && qui < a : qui >= da || qui < a;
@@ -83956,9 +84758,9 @@ function pillole(pagina2) {
   ).join("")}</div>`;
 }
 function personeInCasa() {
-  const elenco9 = state109.fonte?.persone?.length ? state109.fonte.persone.map((p) => p.entity) : Object.keys(allStates() || {}).filter((k) => k.startsWith("person."));
-  const inCasa = elenco9.filter((id) => String(stato2(id)?.state) === "home");
-  return { tutte: elenco9.length, inCasa: inCasa.length, nomi: inCasa.map((id) => nomeDi7(id)) };
+  const elenco10 = state109.fonte?.persone?.length ? state109.fonte.persone.map((p) => p.entity) : Object.keys(allStates() || {}).filter((k) => k.startsWith("person."));
+  const inCasa = elenco10.filter((id) => String(stato2(id)?.state) === "home");
+  return { tutte: elenco10.length, inCasa: inCasa.length, nomi: inCasa.map((id) => nomeDi7(id)) };
 }
 var bulbo = (colore) => `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${colore}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>`;
 function luminosita(id) {
@@ -84059,10 +84861,10 @@ function cardTapparella(c, i) {
       <button type="button" data-mu-fa="giu" data-mu-entita="${esc(id)}">▼ ${esc(t("Giù", "Down"))}</button>
     </div></div>`;
 }
-function tessera({ chiave: chiave2, accento, etichetta: etichetta3, titolo: titolo2, sotto, attiva: attiva2, grande, dati = "", dove }) {
+function tessera({ chiave: chiave2, accento, etichetta: etichetta3, titolo: titolo3, sotto, attiva: attiva2, grande, dati = "", dove }) {
   return `<button type="button" class="mu-carta mu-card mu-tessera ${attiva2 ? "mu-accesa" : ""} ${grande ? "grande" : ""}" style="--acc:${accento}" ${dati}>
     <div class="mu-riga1"><span class="mu-chip" style="--c:${grande ? 84 : 54}px">${disegno(chiave2, grande ? 50 : 32, dove)}</span><span class="mu-et">${esc(etichetta3)}</span>${attiva2 ? `<span class="mu-pasti">${esc(t("attiva", "active"))}</span>` : ""}</div>
-    <div class="mu-osw">${esc(titolo2)}</div><div class="mu-sotto">${esc(sotto)}</div></button>`;
+    <div class="mu-osw">${esc(titolo3)}</div><div class="mu-sotto">${esc(sotto)}</div></button>`;
 }
 function cardAzione(c, i, grande = false) {
   const azione = azioneDi(c.azione);
@@ -84103,7 +84905,7 @@ var vuoto2 = (i, perche3 = "") => `<div class="mu-carta mu-card mu-vuoto" data-m
 function paginaStanza(pagina2) {
   const zona = pagina2.modello === "clima" ? zonaDellaPagina(pagina2) : "";
   const comandi = comandiDellaPagina(pagina2, state109.fonte, zona);
-  const elenco9 = MODELLI_ELENCO.includes(pagina2.modello);
+  const elenco10 = MODELLI_ELENCO.includes(pagina2.modello);
   const linguette3 = pagina2.modello === "clima" ? `<div class="mu-zone" role="tablist">${[
     ["freddo", "clima", t("Freddo", "Cooling"), "#0ea5e9"],
     ["caldo", "caldo", t("Caldo", "Heating"), "#f97316"]
@@ -84111,8 +84913,8 @@ function paginaStanza(pagina2) {
     ([z, d, parola, acc]) => `<button type="button" role="tab" class="${z === zona ? "si" : ""}" style="--acc:${acc}" data-mu-zona="${z}" aria-selected="${z === zona}">${disegno(d, 22, `zona-${z}`)}${esc(parola)}</button>`
   ).join("")}</div>` : "";
   const posti = pagina2.posti || 6;
-  const quante2 = elenco9 ? Math.max(comandi.length, 1) : posti;
-  if (elenco9 && !comandi.length)
+  const quante2 = elenco10 ? Math.max(comandi.length, 1) : posti;
+  if (elenco10 && !comandi.length)
     return `${linguette3}<div class="mu-g6" data-posti="${posti}">${vuoto2(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
   const carte = Array.from({ length: quante2 }, (_, i) => {
     const c = comandi[i];
@@ -84124,7 +84926,7 @@ function paginaStanza(pagina2) {
     return cardAzione(c, i);
   });
   const riga3 = pagina2.modello === "stanza" ? pillole(pagina2) : linguette3;
-  return `${riga3}<div class="mu-g6${elenco9 && quante2 > posti ? " mu-scorre" : ""}" data-posti="${posti}">${carte.join("")}</div>`;
+  return `${riga3}<div class="mu-g6${elenco10 && quante2 > posti ? " mu-scorre" : ""}" data-posti="${posti}">${carte.join("")}</div>`;
 }
 function paginaScene(pagina2) {
   const scene = pagina2.scene.length ? pagina2.scene : [];
@@ -84330,8 +85132,8 @@ function finestra4() {
     dentro3 = `<div class="mu-fin-conferma"><div class="mu-osw" style="font-size:40px">${esc(f.azione)}</div><div class="mu-sotto">${esc(t("Confermi?", "Confirm?"))}</div>
       <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="chiudi">${esc(t("Annulla", "Cancel"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="azione" data-mu-azione="${esc(f.azione)}" data-mu-confermata="1">${esc(t("Sì, vai", "Yes, go"))}</button></div></div>`;
   } else if (f.tipo === "codice") {
-    const titolo2 = f.scopo === "uscita" || f.scopo === "menu" ? t("Codice per uscire", "Code to exit") : t("Codice dell'antifurto", "Alarm code");
-    dentro3 = `<div class="mu-fin-codice"><div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(titolo2)}</div><div class="mu-puntini">${"●".repeat((f.scritto || "").length) || "&nbsp;"}</div>${f.errore ? `<div class="mu-stato" style="--acc:#e11d48">${esc(t("Codice sbagliato", "Wrong code"))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+    const titolo3 = f.scopo === "uscita" || f.scopo === "menu" ? t("Codice per uscire", "Code to exit") : t("Codice dell'antifurto", "Alarm code");
+    dentro3 = `<div class="mu-fin-codice"><div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(titolo3)}</div><div class="mu-puntini">${"●".repeat((f.scritto || "").length) || "&nbsp;"}</div>${f.errore ? `<div class="mu-stato" style="--acc:#e11d48">${esc(t("Codice sbagliato", "Wrong code"))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-tasti">${["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"].map(
       (k) => `<button type="button" class="mu-tondo ${k === "✓" ? "pieno" : ""}" data-mu-fa="cifra" data-mu-cifra="${k}">${k}</button>`
     ).join("")}</div></div>`;
@@ -85314,8 +86116,8 @@ async function chiediAlPonte() {
     state110.premium = await premiumDellaCasa({ forza: true });
     state110.fonte = await fonteDelMuro(bozza(), { forza: true });
     try {
-      const elenco9 = await bridgeRequest("ponte/plance/elenco", {});
-      state110.plance = Array.isArray(elenco9?.plance) ? elenco9.plance : null;
+      const elenco10 = await bridgeRequest("ponte/plance/elenco", {});
+      state110.plance = Array.isArray(elenco10?.plance) ? elenco10.plance : null;
     } catch (_errore) {
       state110.plance = null;
     }
@@ -85334,7 +86136,7 @@ var tendina2 = (via, valore3, voci3, vuota = "") => `<select class="ed-input mu-
   ""
 )}${valore3 && !voci3.some(([v]) => String(v) === String(valore3)) ? `<option value="${esc(valore3)}" selected>${esc(valore3)}</option>` : ""}</select>`;
 var campo3 = (via, valore3, segnaposto = "", tipo = "text") => `<input class="ed-input${tipo === "text" ? " mono" : ""} mu-ed-campo" type="${tipo}" data-mu-ed-campo="${esc(via)}" value="${esc(valore3)}" placeholder="${esc(segnaposto)}" autocomplete="off" spellcheck="false"${tipo === "password" ? ' inputmode="numeric"' : ""}>`;
-var riga2 = (titolo2, nota, destra) => `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(titolo2)}</b>${nota ? `<small>${esc(nota)}</small>` : ""}</div><div class="mu-ed-dx">${destra}</div></div>`;
+var riga2 = (titolo3, nota, destra) => `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(titolo3)}</b>${nota ? `<small>${esc(nota)}</small>` : ""}</div><div class="mu-ed-dx">${destra}</div></div>`;
 var nomeDi8 = (id) => clean(
   [
     ...state110.fonte?.luci || [],
@@ -85714,9 +86516,9 @@ function metti3(via, valore3) {
 function leggiDalPercorso(via) {
   return via.split(".").reduce((dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo], bozza());
 }
-function sposta2(elenco9, da, a) {
-  if (a < 0 || a >= elenco9.length) return elenco9;
-  const copia2 = elenco9.slice();
+function sposta2(elenco10, da, a) {
+  if (a < 0 || a >= elenco10.length) return elenco10;
+  const copia2 = elenco10.slice();
   const [preso] = copia2.splice(da, 1);
   copia2.splice(a, 0, preso);
   return copia2;
@@ -86377,60 +87179,60 @@ function renderBatterie() {
   schedule25();
 }
 function installStyles49() {
-  const P6 = `#${BATTERIE_PAGE_ID}`;
+  const P7 = `#${BATTERIE_PAGE_ID}`;
   installStyle(
     "dm-batterie-style",
     `
-    ${P6} .dm-batt-wrap{display:grid;gap:14px;padding:14px 14px 26px}
-    ${P6} .dm-batt-testa{
+    ${P7} .dm-batt-wrap{display:grid;gap:14px;padding:14px 14px 26px}
+    ${P7} .dm-batt-testa{
       display:grid;gap:3px;padding:16px 18px;border-radius:20px;
       border:1px solid var(--card-border,rgba(0,0,0,.08));background:var(--card-bg,#fff)}
-    ${P6} .dm-batt-testa small{font-size:10px;font-weight:900;letter-spacing:.09em;
+    ${P7} .dm-batt-testa small{font-size:10px;font-weight:900;letter-spacing:.09em;
       text-transform:uppercase;color:var(--text-dim,#94a3b8)}
-    ${P6} .dm-batt-testa strong{font-size:24px;font-weight:900;letter-spacing:-.02em;
+    ${P7} .dm-batt-testa strong{font-size:24px;font-weight:900;letter-spacing:-.02em;
       color:var(--text,#0f172a)}
-    ${P6} .dm-batt-testa[data-stato="scariche"] strong{color:#b45309}
-    ${P6} .dm-batt-testa[data-stato="cariche"] strong{color:#047857}
-    ${P6} .dm-batt-sotto,${P6} .dm-batt-soglia{font-size:11.5px;font-weight:750;
+    ${P7} .dm-batt-testa[data-stato="scariche"] strong{color:#b45309}
+    ${P7} .dm-batt-testa[data-stato="cariche"] strong{color:#047857}
+    ${P7} .dm-batt-sotto,${P7} .dm-batt-soglia{font-size:11.5px;font-weight:750;
       color:var(--text-dim,#64748b)}
-    ${P6} .dm-batt-soglia{opacity:.75}
-    ${P6} .dm-batt-elenco{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))}
+    ${P7} .dm-batt-soglia{opacity:.75}
+    ${P7} .dm-batt-elenco{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))}
     /* Le due soglie di chi si ricarica: sotto la riga, tutta larga. La riga
        resta la riga di sempre — tre colonne — e questa e' una quarta cella che
        le attraversa, cosi' una batteria normale non cambia di un pixel. */
-    ${P6} .dm-batt-soglie{grid-column:1/-1;display:grid;gap:8px;margin-top:2px;
+    ${P7} .dm-batt-soglie{grid-column:1/-1;display:grid;gap:8px;margin-top:2px;
       padding-top:10px;border-top:1px solid color-mix(in srgb,var(--dm-batt) 22%,transparent)}
-    ${P6} .dm-batt-limite{display:grid;gap:4px}
-    ${P6} .dm-batt-limite-testa{display:flex;align-items:baseline;justify-content:space-between;
+    ${P7} .dm-batt-limite{display:grid;gap:4px}
+    ${P7} .dm-batt-limite-testa{display:flex;align-items:baseline;justify-content:space-between;
       gap:8px;font-size:10.5px;font-weight:850;color:var(--text-dim,#64748b)}
-    ${P6} .dm-batt-limite-testa b{font-size:12.5px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-batt-limite-testa b{font-size:12.5px;font-weight:900;color:var(--text,#0f172a);
       font-variant-numeric:tabular-nums}
-    ${P6} .dm-batt-limite-cursore{width:100%;accent-color:var(--dm-batt);margin:0}
-    ${P6} .dm-batt{
+    ${P7} .dm-batt-limite-cursore{width:100%;accent-color:var(--dm-batt);margin:0}
+    ${P7} .dm-batt{
       --dm-batt:#10b981;
       display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:12px 14px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-batt) 34%,var(--card-border,rgba(0,0,0,.08)));
       background:var(--card-bg,#fff)}
-    ${P6} .dm-batt[data-batt="scarica"]{--dm-batt:#f59e0b}
-    ${P6} .dm-batt[data-batt="muta"]{--dm-batt:#94a3b8;opacity:.72}
-    ${P6} .dm-batt-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P6} .dm-batt-ic svg{display:block;width:26px;height:26px}
-    ${P6} .dm-batt-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
+    ${P7} .dm-batt[data-batt="scarica"]{--dm-batt:#f59e0b}
+    ${P7} .dm-batt[data-batt="muta"]{--dm-batt:#94a3b8;opacity:.72}
+    ${P7} .dm-batt-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P7} .dm-batt-ic svg{display:block;width:26px;height:26px}
+    ${P7} .dm-batt-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
       font-size:19px;background:color-mix(in srgb,var(--dm-batt) 20%,transparent)}
-    ${P6} .dm-batt-testo{display:grid;gap:3px;min-width:0}
-    ${P6} .dm-batt-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-batt-testo{display:grid;gap:3px;min-width:0}
+    ${P7} .dm-batt-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-batt-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
+    ${P7} .dm-batt-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-batt) 16%,transparent);overflow:hidden}
-    ${P6} .dm-batt-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-batt)}
-    ${P6} .dm-batt-livello{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
+    ${P7} .dm-batt-barra i{display:block;height:100%;border-radius:999px;background:var(--dm-batt)}
+    ${P7} .dm-batt-livello{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;
       color:color-mix(in srgb,var(--dm-batt) 78%,var(--text,#0f172a))}
-    ${P6} .dm-batt-vuoto{display:grid;gap:6px;padding:22px;border-radius:20px;
+    ${P7} .dm-batt-vuoto{display:grid;gap:6px;padding:22px;border-radius:20px;
       border:1px dashed var(--card-border,rgba(0,0,0,.14));background:var(--card-bg,#fff)}
-    ${P6} .dm-batt-vuoto strong{font-size:16px;font-weight:900}
-    ${P6} .dm-batt-vuoto span{font-size:12.5px;color:var(--text-dim,#64748b);line-height:1.45}
-    @media(max-width:520px){${P6} .dm-batt-elenco{grid-template-columns:1fr}}
+    ${P7} .dm-batt-vuoto strong{font-size:16px;font-weight:900}
+    ${P7} .dm-batt-vuoto span{font-size:12.5px;color:var(--text-dim,#64748b);line-height:1.45}
+    @media(max-width:520px){${P7} .dm-batt-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -86576,12 +87378,12 @@ function costruisciSchedaDichiarata(scheda8) {
     return scheda8.daImportare(configurazione23()).filter((riga3) => !gia.has(riga3.entity));
   }
   function schedaMarkup12() {
-    const elenco9 = righe2() || [];
-    const lette = scheda8.leggi(elenco9);
+    const elenco10 = righe2() || [];
+    const lette = scheda8.leggi(elenco10);
     const mancano = daPrendere();
     return `<div class="ed-intro">${esc(parole4.intro)}</div>
     ${scheda8.inTesta ? scheda8.inTesta() : ""}
-    ${elenco9.length ? `<div class="ed-list dm-dich-lista">${elenco9.map(
+    ${elenco10.length ? `<div class="ed-list dm-dich-lista">${elenco10.map(
       (riga3, indice) => rigaMarkup13(scheda8, riga3, indice, lette.get(riga3.entity), stato3.aperto === indice)
     ).join("")}</div>` : `<div class="ed-empty">${esc(parole4.vuoto)}</div>`}
     <button type="button" class="ed-btn-add" data-dm-dich-aggiungi>＋ ${esc(parole4.aggiungi)}</button>
@@ -86635,8 +87437,8 @@ function costruisciSchedaDichiarata(scheda8) {
     return true;
   }
   function bozza3(body, indice) {
-    const elenco9 = righe2() || [];
-    const riga3 = elenco9[indice] || { entity: "", name: "", icon: "" };
+    const elenco10 = righe2() || [];
+    const riga3 = elenco10[indice] || { entity: "", name: "", icon: "" };
     const campo5 = (quale) => body.querySelector(`[data-dm-dich-campo="${quale}"][data-dm-dich-riga="${indice}"]`);
     const fuori = {
       entity: clean(campo5("entity")?.value ?? riga3.entity),
@@ -86983,8 +87785,8 @@ var scheda = costruisciSchedaDichiarata({
       ${campoDellaSoglia(riga3, "alta", t("Si ferma sopra il", "Stops above"), "number.tablet_soglia_alta")}
     </details>`;
   },
-  leggi(elenco9) {
-    const dentro3 = new Set(elenco9.map((riga3) => riga3.entity).filter(Boolean));
+  leggi(elenco10) {
+    const dentro3 = new Set(elenco10.map((riga3) => riga3.entity).filter(Boolean));
     return new Map(
       batterieInPlancia().filter((riga3) => dentro3.has(riga3.entity)).map((riga3) => [riga3.entity, riga3])
     );
@@ -87380,12 +88182,12 @@ function ensureArieggia(card2, cover, states, model2 = null) {
   const fuori = esito2.fuori === null ? "" : `${Math.round(esito2.fuori)}%`;
   const testo2 = esito2.arieggia ? `💨 ${t("Apri per arieggiare", "Open to air out")} · ${dentro3}${soglia2 ? ` > ${soglia2}` : ""}${esito2.fuoriPiuUmido ? ` · ${t("fuori è più umido", "wetter outside")} (${fuori})` : ""}` : `💧 ${t("Umidità", "Humidity")} ${dentro3}${soglia2 ? ` · ${t("soglia", "threshold")} ${soglia2}` : ""}`;
   if (riga3.textContent !== testo2) riga3.textContent = testo2;
-  const titolo2 = [
+  const titolo3 = [
     `${t("Umidità in stanza", "Room humidity")} ${dentro3}`,
     soglia2 ? `${t("soglia", "threshold")} ${soglia2}` : "",
     fuori ? `${t("fuori", "outside")} ${fuori}` : ""
   ].filter(Boolean).join(" · ");
-  if (riga3.title !== titolo2) riga3.title = titolo2;
+  if (riga3.title !== titolo3) riga3.title = titolo3;
 }
 function ensurePill(card2, model2) {
   const head = card2.querySelector(".tapp-head");
@@ -88052,7 +88854,7 @@ function poolsStored() {
     return {};
   }
 }
-function elenco6() {
+function elenco7() {
   return poolList(poolsStored());
 }
 function salva15(list) {
@@ -88146,7 +88948,7 @@ function ensurePoolEditor() {
     panel2.addEventListener("change", (event) => onChange8(event, panel2));
     state116.firma = "";
   }
-  const pools2 = elenco6();
+  const pools2 = elenco7();
   const attuale = firma(pools2);
   if (panel2.dataset.firma !== attuale || !panel2.firstElementChild) {
     panel2.dataset.firma = attuale;
@@ -88165,7 +88967,7 @@ function ridisegna9(panel2) {
 function onChange8(event, panel2) {
   const campo5 = event.target?.closest?.("[data-pool-first-name]");
   if (!campo5) return;
-  const pools2 = elenco6();
+  const pools2 = elenco7();
   if (!pools2.length) return;
   const nome = clean(campo5.value);
   if (clean(pools2[0].name) === nome) return;
@@ -88179,7 +88981,7 @@ function onChange8(event, panel2) {
   }
 }
 function onClick27(event, panel2) {
-  const pools2 = elenco6();
+  const pools2 = elenco7();
   const add = event.target?.closest?.("[data-pool-add]");
   if (add) {
     event.preventDefault();
@@ -88697,9 +89499,9 @@ function apriMappaRobot(entity2) {
   if (!sorgente) return false;
   const visore = creaVisore();
   const figura = visore.querySelector("[data-dm-map-big]");
-  const titolo2 = visore.querySelector("[data-dm-map-title]");
-  if (titolo2)
-    titolo2.textContent = clean(
+  const titolo3 = visore.querySelector("[data-dm-map-title]");
+  if (titolo3)
+    titolo3.textContent = clean(
       card2?.closest?.("[data-dm-robot-card]")?.querySelector?.(".dm-robot-name")?.textContent
     ) || t("Mappa", "Map");
   if (figura) {
@@ -89711,9 +90513,9 @@ function ownedEntities(sorgenti = roomSources()) {
       if (ENTITY_RE.test(valore3)) dentro3.add(valore3);
     }
     for (const campo5 of ["entities", "ents"]) {
-      const elenco9 = item[campo5];
-      if (!Array.isArray(elenco9)) continue;
-      for (const voce2 of elenco9) {
+      const elenco10 = item[campo5];
+      if (!Array.isArray(elenco10)) continue;
+      for (const voce2 of elenco10) {
         const valore3 = clean(typeof voce2 === "string" ? voce2 : voce2?.entity);
         if (ENTITY_RE.test(valore3)) dentro3.add(valore3);
       }
@@ -89873,9 +90675,9 @@ function schedaStanze() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab) === "stanze";
 }
 function righe() {
-  const elenco9 = doc?.querySelector?.("#ed-body .ed-list");
-  if (!elenco9) return [];
-  return [...elenco9.querySelectorAll(":scope > .ed-row")];
+  const elenco10 = doc?.querySelector?.("#ed-body .ed-list");
+  if (!elenco10) return [];
+  return [...elenco10.querySelectorAll(":scope > .ed-row")];
 }
 function freccia(direzione, posizione, disabilitata) {
   const su = direzione === -1;
@@ -89884,12 +90686,12 @@ function freccia(direzione, posizione, disabilitata) {
 }
 function ensureRoomsOrder() {
   if (!schedaStanze()) return false;
-  const elenco9 = righe();
+  const elenco10 = righe();
   const quante2 = stanze2().length;
-  if (!elenco9.length || elenco9.length !== quante2) return false;
+  if (!elenco10.length || elenco10.length !== quante2) return false;
   allineaOrdine();
   let messe = 0;
-  elenco9.forEach((riga3, posizione) => {
+  elenco10.forEach((riga3, posizione) => {
     if (riga3.querySelector("[data-dm-room-move]")) return;
     const cestino = riga3.querySelector(".ed-del");
     const markup7 = freccia(-1, posizione, posizione === 0) + freccia(1, posizione, posizione === quante2 - 1);
@@ -89899,25 +90701,25 @@ function ensureRoomsOrder() {
   });
   return messe > 0;
 }
-function numerate(elenco9) {
-  return elenco9.map(
+function numerate(elenco10) {
+  return elenco10.map(
     (stanza2, posizione) => Number(stanza2?.order) === posizione ? stanza2 : { ...stanza2, order: posizione }
   );
 }
-function daRinumerare(elenco9) {
-  return elenco9.some((stanza2, posizione) => Number(stanza2?.order) !== posizione);
+function daRinumerare(elenco10) {
+  return elenco10.some((stanza2, posizione) => Number(stanza2?.order) !== posizione);
 }
 function allineaOrdine() {
-  const elenco9 = stanze2();
-  if (!elenco9.length || !daRinumerare(elenco9)) return false;
-  return writeJsonIfChanged(ROOMS_KEY, numerate(elenco9));
+  const elenco10 = stanze2();
+  if (!elenco10.length || !daRinumerare(elenco10)) return false;
+  return writeJsonIfChanged(ROOMS_KEY, numerate(elenco10));
 }
 function spostaStanza(posizione, direzione) {
-  const elenco9 = stanze2();
+  const elenco10 = stanze2();
   const bersaglio = posizione + direzione;
-  if (!Number.isInteger(posizione) || posizione < 0 || posizione >= elenco9.length) return false;
-  if (bersaglio < 0 || bersaglio >= elenco9.length) return false;
-  const prossimo = elenco9.slice();
+  if (!Number.isInteger(posizione) || posizione < 0 || posizione >= elenco10.length) return false;
+  if (bersaglio < 0 || bersaglio >= elenco10.length) return false;
+  const prossimo = elenco10.slice();
   [prossimo[posizione], prossimo[bersaglio]] = [prossimo[bersaglio], prossimo[posizione]];
   writeJsonIfChanged(ROOMS_KEY, numerate(prossimo));
   return true;
@@ -90028,14 +90830,14 @@ var classe = (voce2, states) => clean26(
 ).toLowerCase();
 var unita = (voce2, states) => clean26(voce2?.unit || states?.[clean26(voce2?.entity_id)]?.attributes?.unit_of_measurement);
 function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
-  const elenco9 = (Array.isArray(entities) ? entities : []).filter(
+  const elenco10 = (Array.isArray(entities) ? entities : []).filter(
     (voce2) => voce2 && !voce2.disabled && clean26(voce2.entity_id).includes(".")
   );
-  const libere = new Set(elenco9.map((voce2) => clean26(voce2.entity_id)));
+  const libere = new Set(elenco10.map((voce2) => clean26(voce2.entity_id)));
   const mappa = {};
   const prendi = (ref, domanda) => {
     if (mappa[ref]) return false;
-    for (const voce2 of elenco9) {
+    for (const voce2 of elenco10) {
       const id = clean26(voce2.entity_id);
       if (!libere.has(id) || SOLO_IMPOSTAZIONE(voce2)) continue;
       if (!domanda(voce2)) continue;
@@ -90837,21 +91639,21 @@ async function onClick31(event) {
     if (!/^(?:vacuum|lawn_mower)\.[a-z0-9_]+$/i.test(letta.entity))
       letta.entity = robots[index].entity;
     const errore = riga3.querySelector("[data-robot-error]");
-    let elenco9 = LISTE[tipo].elenco(letta[tipo]);
+    let elenco10 = LISTE[tipo].elenco(letta[tipo]);
     if (togli) {
-      elenco9 = elenco9.filter((entity2) => entity2 !== clean(togli.dataset.robotChipDel));
+      elenco10 = elenco10.filter((entity2) => entity2 !== clean(togli.dataset.robotChipDel));
     } else {
       const nuovo = proposta ? clean(proposta.dataset.robotChipSug) : clean(casella5?.querySelector("[data-robot-chip-nuovo]")?.value);
-      const esito2 = conLaVoce(elenco9, nuovo, tipo);
+      const esito2 = conLaVoce(elenco10, nuovo, tipo);
       if (esito2.esito !== ESITI_ELENCO.aggiunto) {
         if (errore) errore.textContent = spiegazione(esito2.esito, tipo);
         return;
       }
-      elenco9 = esito2.elenco;
+      elenco10 = esito2.elenco;
     }
     if (errore) errore.textContent = "";
     const next = robots.slice();
-    next[index] = { ...letta, [tipo]: elenco9 };
+    next[index] = { ...letta, [tipo]: elenco10 };
     await salva17(next);
     ridisegna10();
     return;
@@ -91997,7 +92799,7 @@ function activeTab5() {
 function nomeDi12(states, entity2) {
   return clean(states?.[entity2]?.attributes?.friendly_name);
 }
-function elenco7() {
+function elenco8() {
   const states = allStates() || {};
   let configurate2 = [];
   try {
@@ -92088,7 +92890,7 @@ function firmaDi2({ adesso, messiDaParte }) {
 function ensureScollegatiEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || activeTab5() !== SCOLLEGATI_TAB) return false;
-  const dati = elenco7();
+  const dati = elenco8();
   const firma2 = firmaDi2(dati);
   if (body.dataset.dmScollegati === firma2 && body.querySelector(`.${BLOCCO5}-list, .${BLOCCO5}-vuoto`))
     return true;
@@ -92102,10 +92904,10 @@ function ridisegna12() {
   if (body) delete body.dataset.dmScollegati;
   ensureScollegatiEditor();
 }
-function salvaLeEscluse(elenco9) {
+function salvaLeEscluse(elenco10) {
   const stored = readJson(WIDGETS_CONFIG_KEY, {});
   const base = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
-  writeJsonIfChanged(WIDGETS_CONFIG_KEY, { ...base, excluded: [...new Set(elenco9)].sort() });
+  writeJsonIfChanged(WIDGETS_CONFIG_KEY, { ...base, excluded: [...new Set(elenco10)].sort() });
   try {
     renderHomeWidgets();
   } catch (_errore) {
@@ -92695,17 +93497,17 @@ function daRgbAHsv(r, g, b) {
   const massimo = Math.max(r, g, b) / 255;
   const minimo = Math.min(r, g, b) / 255;
   const delta = massimo - minimo;
-  let tinta = 0;
+  let tinta2 = 0;
   if (delta > 0) {
-    if (massimo === r / 255) tinta = (g - b) / 255 / delta % 6 / 6;
-    else if (massimo === g / 255) tinta = ((b - r) / 255 / delta + 2) / 6;
-    else tinta = ((r - g) / 255 / delta + 4) / 6;
-    if (tinta < 0) tinta += 1;
+    if (massimo === r / 255) tinta2 = (g - b) / 255 / delta % 6 / 6;
+    else if (massimo === g / 255) tinta2 = ((b - r) / 255 / delta + 2) / 6;
+    else tinta2 = ((r - g) / 255 / delta + 4) / 6;
+    if (tinta2 < 0) tinta2 += 1;
   }
-  return [tinta, massimo ? delta / massimo : 0, massimo];
+  return [tinta2, massimo ? delta / massimo : 0, massimo];
 }
-function daHsvARgb(tinta, saturazione, valore3) {
-  const settore = tinta * 6;
+function daHsvARgb(tinta2, saturazione, valore3) {
+  const settore = tinta2 * 6;
   const c = valore3 * saturazione;
   const x = c * (1 - Math.abs(settore % 2 - 1));
   const base = valore3 - c;
@@ -92725,8 +93527,8 @@ function ricoloraAbito(telaBusto, op) {
   const [th, ts, tv] = daRgbAHsv(op.rgb[0], op.rgb[1], op.rgb[2]);
   for (let i = 0; i < dati.length; i += 4) {
     if (dati[i + 3] < 40) continue;
-    const [tinta, saturazione, valore3] = daRgbAHsv(dati[i], dati[i + 1], dati[i + 2]);
-    if (saturazione < satMin || tinta < hueLo || tinta > hueHi) continue;
+    const [tinta2, saturazione, valore3] = daRgbAHsv(dati[i], dati[i + 1], dati[i + 2]);
+    if (saturazione < satMin || tinta2 < hueLo || tinta2 > hueHi) continue;
     const ns = op.desatura == null ? ts * (0.55 + 0.45 * saturazione) : op.desatura;
     const [nr, ng, nb] = daHsvARgb(th, ns, valore3 * (0.75 + 0.25 * tv));
     dati[i] = nr;
@@ -92875,7 +93677,7 @@ function disegnaPalpebre(pennello, occhi, quanto, curva = 0) {
     const larghezza = occhio.w * 1.3;
     const altezza = occhio.h * 1.5;
     const cima = occhio.cy - altezza / 2;
-    const bordo = cima + altezza * Math.min(1, quanto);
+    const bordo2 = cima + altezza * Math.min(1, quanto);
     pennello.save();
     pennello.beginPath();
     pennello.ellipse(occhio.cx, occhio.cy, larghezza / 2, altezza / 2, 0, 0, Math.PI * 2);
@@ -92884,24 +93686,24 @@ function disegnaPalpebre(pennello, occhi, quanto, curva = 0) {
     pennello.beginPath();
     pennello.moveTo(occhio.cx - larghezza, cima - altezza);
     pennello.lineTo(occhio.cx + larghezza, cima - altezza);
-    pennello.lineTo(occhio.cx + larghezza, bordo);
+    pennello.lineTo(occhio.cx + larghezza, bordo2);
     pennello.quadraticCurveTo(
       occhio.cx,
-      bordo + altezza * (0.18 + curva),
+      bordo2 + altezza * (0.18 + curva),
       occhio.cx - larghezza,
-      bordo
+      bordo2
     );
     pennello.closePath();
     pennello.fill();
     pennello.strokeStyle = `rgba(${r * 0.55 | 0},${g * 0.5 | 0},${b * 0.5 | 0},${0.3 + 0.55 * quanto})`;
     pennello.lineWidth = Math.max(1, altezza * 0.09);
     pennello.beginPath();
-    pennello.moveTo(occhio.cx - larghezza / 2, bordo);
+    pennello.moveTo(occhio.cx - larghezza / 2, bordo2);
     pennello.quadraticCurveTo(
       occhio.cx,
-      bordo + altezza * (0.18 + curva),
+      bordo2 + altezza * (0.18 + curva),
       occhio.cx + larghezza / 2,
-      bordo
+      bordo2
     );
     pennello.stroke();
     pennello.restore();
@@ -93214,12 +94016,12 @@ function indirizzoRitirato(modello) {
   return OSPITI_RITIRATI.some((forma2) => forma2.test(ospite3));
 }
 var FOTOGRAMMI_ANIMATI = 6;
-function fotogrammiRainViewer(elenco9, quanti2 = FOTOGRAMMI_ANIMATI) {
-  const host2 = stringa(elenco9?.host);
+function fotogrammiRainViewer(elenco10, quanti2 = FOTOGRAMMI_ANIMATI) {
+  const host2 = stringa(elenco10?.host);
   if (!host2) return [];
   const tetto = Number(quanti2);
   const quanti_ = Number.isFinite(tetto) && tetto > 0 ? Math.floor(tetto) : FOTOGRAMMI_ANIMATI;
-  const passati = Array.isArray(elenco9?.radar?.past) ? elenco9.radar.past : [];
+  const passati = Array.isArray(elenco10?.radar?.past) ? elenco10.radar.past : [];
   const puliti = passati.filter((voce2) => stringa(voce2?.path));
   return puliti.slice(-quanti_).map((voce2) => {
     const quando4 = Number(voce2.time);
@@ -93230,8 +94032,8 @@ function fotogrammiRainViewer(elenco9, quanti2 = FOTOGRAMMI_ANIMATI) {
     };
   });
 }
-function fotogrammaRainViewer(elenco9) {
-  const tutti = fotogrammiRainViewer(elenco9, FOTOGRAMMI_ANIMATI);
+function fotogrammaRainViewer(elenco10) {
+  const tutti = fotogrammiRainViewer(elenco10, FOTOGRAMMI_ANIMATI);
   return tutti.length ? tutti[tutti.length - 1] : null;
 }
 function modelloDelServizio(servizio, fotogramma2 = null) {
@@ -93247,8 +94049,8 @@ function modelloDelServizio(servizio, fotogramma2 = null) {
   return /\{[zxy]\}/.test(modello) ? modello : "";
 }
 function modelliDelServizio(servizio, fotogrammi = []) {
-  const elenco9 = Array.isArray(fotogrammi) ? fotogrammi : [];
-  return elenco9.map((fotogramma2) => ({ modello: modelloDelServizio(servizio, fotogramma2), fotogramma: fotogramma2 })).filter((voce2) => voce2.modello);
+  const elenco10 = Array.isArray(fotogrammi) ? fotogrammi : [];
+  return elenco10.map((fotogramma2) => ({ modello: modelloDelServizio(servizio, fotogramma2), fotogramma: fotogramma2 })).filter((voce2) => voce2.modello);
 }
 var SERVIZIO_DI_SERIE = "rainviewer";
 var FONDO_DI_SERIE = "esri";
@@ -95678,10 +96480,10 @@ var TESSERA_ATTRIBUTE = "data-dm-widget-tessera";
 function elencoDelleEscluse() {
   return widgetPreferences().excluded;
 }
-function salvaEscluse(elenco9) {
+function salvaEscluse(elenco10) {
   const stored = readJson(WIDGETS_CONFIG_KEY, {});
   const base = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
-  writeJsonIfChanged(WIDGETS_CONFIG_KEY, { ...base, excluded: [...new Set(elenco9)].sort() });
+  writeJsonIfChanged(WIDGETS_CONFIG_KEY, { ...base, excluded: [...new Set(elenco10)].sort() });
   try {
     renderHomeWidgets();
   } catch (_error) {
@@ -95779,11 +96581,11 @@ function attacca2(contenitore2, entities, fuori, tessera2, dove) {
 function ensureEntityChoices() {
   const body = doc?.getElementById?.("ed-body");
   if (!body) return 0;
-  const elenco9 = elencoDelleEscluse();
+  const elenco10 = elencoDelleEscluse();
   const ritagli = /* @__PURE__ */ new Map();
   const perTessera = (nodo2) => {
     const tessera2 = tesseraDellaRiga(nodo2);
-    if (!ritagli.has(tessera2)) ritagli.set(tessera2, escluseDellaTessera(elenco9, tessera2));
+    if (!ritagli.has(tessera2)) ritagli.set(tessera2, escluseDellaTessera(elenco10, tessera2));
     return { tessera: tessera2, fuori: ritagli.get(tessera2) };
   };
   let messi = 0;
@@ -95855,14 +96657,14 @@ function onClick37(event) {
   const entities = clean(button.getAttribute(CHOICE_ATTRIBUTE)).split(",").map(clean).filter(Boolean);
   if (!entities.length) return;
   const tessera2 = clean(button.getAttribute(TESSERA_ATTRIBUTE));
-  let elenco9 = elencoDelleEscluse();
-  const fuori = escluseDellaTessera(elenco9, tessera2);
+  let elenco10 = elencoDelleEscluse();
+  const fuori = escluseDellaTessera(elenco10, tessera2);
   const dentro3 = entities.some((entity2) => !fuori.has(entity2));
   for (const entity2 of entities)
-    elenco9 = dentro3 ? togliDallaTessera(elenco9, tessera2, entity2) : rimettiNellaTessera(elenco9, tessera2, entity2);
+    elenco10 = dentro3 ? togliDallaTessera(elenco10, tessera2, entity2) : rimettiNellaTessera(elenco10, tessera2, entity2);
   button.dataset.on = String(!dentro3);
   vestiInterruttore(button, !dentro3);
-  salvaEscluse(elenco9);
+  salvaEscluse(elenco10);
   root.edToast?.(
     dentro3 ? t("🧩 Fuori dai widget", "🧩 Out of the widgets") : t("🧩 Nei widget", "🧩 In the widgets")
   );
@@ -96760,13 +97562,13 @@ function nascondiLeCaselleCheNonHa() {
 function decoraLElencoDeiVeicoli() {
   const corpo2 = doc?.getElementById?.("ed-body");
   if (!corpo2 || !doc.getElementById("ed-evcar-name")) return 0;
-  const elenco9 = profiles();
+  const elenco10 = profiles();
   let disegnate = 0;
   for (const bottone of corpo2.querySelectorAll('[data-act="use"]')) {
     const riga3 = bottone.closest(".ed-row");
     if (!riga3) continue;
     const indice = Number.parseInt(bottone.dataset.idx || "-1", 10);
-    const auto = Number.isFinite(indice) ? elenco9[indice] : null;
+    const auto = Number.isFinite(indice) ? elenco10[indice] : null;
     if (!auto) continue;
     let posto = riga3.querySelector(":scope > .dm-veicolo-ic");
     if (!posto) {
@@ -97006,8 +97808,8 @@ function ilBloccoDelDispositivo(detto2, config, nome = "") {
   const massimo = detto2.ore.reduce((alto, ora3) => Math.max(alto, ora3.kwh), 0);
   const colonne = massimo ? detto2.ore.map((ora3) => {
     const alta = ora3.kwh > 0 ? Math.max(3, Math.round(ora3.kwh / massimo * 100)) : 2;
-    const tinta = ora3.fascia >= 0 ? tintaDellaFascia(quante2, ora3.fascia) : "#94a3b8";
-    return `<span class="dm-profilo-colonna" style="height:${alta}%;background:${tinta}${ora3.kwh > 0 ? "" : ";opacity:.28"}" title="${String(ora3.ora).padStart(2, "0")}:00 · ${formatNumber(ora3.kwh, 2)} kWh"></span>`;
+    const tinta2 = ora3.fascia >= 0 ? tintaDellaFascia(quante2, ora3.fascia) : "#94a3b8";
+    return `<span class="dm-profilo-colonna" style="height:${alta}%;background:${tinta2}${ora3.kwh > 0 ? "" : ";opacity:.28"}" title="${String(ora3.ora).padStart(2, "0")}:00 · ${formatNumber(ora3.kwh, 2)} kWh"></span>`;
   }).join("") : "";
   const tacche2 = [0, 3, 6, 9, 12, 15, 18, 21].map((ora3) => `<span>${String(ora3).padStart(2, "0")}</span>`).join("");
   const dalSole = detto2.sole > 0.05 ? `<span aria-hidden="true">☀️</span> ${esc(t("Dal sole:", "From the sun:"))} <b>${formatNumber(detto2.sole, 1)} kWh</b> · ${esc(t("dalla rete", "from grid"))}: <b>${formatNumber(detto2.rete, 1)} kWh</b>. ${esc(t("Non costano niente a nessun'ora, e gli euro qui sopra sono solo su quello che ha preso dalla rete.", "They cost nothing at any hour, and the euros above are only on what it took from the grid."))}` : "";
@@ -100456,9 +101258,9 @@ function caselleCaldaia(index, voce2) {
   return CASELLE_CALDAIA.map(({ campo: campo5, gruppo }) => {
     const { it, en, esempio: esempio3, aiutoIt, aiutoEn } = CAMPI_CALDAIA[campo5];
     const id = `dm-caldaia-${index}-${campo5}`;
-    const titolo2 = gruppo === GRUPPO_PELLET && precedente !== gruppo ? titoloPellet() : "";
+    const titolo3 = gruppo === GRUPPO_PELLET && precedente !== gruppo ? titoloPellet() : "";
     precedente = gruppo || "";
-    return `${titolo2}<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t(it, en))}</span>
+    return `${titolo3}<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t(it, en))}</span>
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-caldaia-field="${esc(campo5)}"
         value="${esc(clean(voce2?.[campo5]))}" placeholder="${esc(esempio3)}" autocomplete="off" spellcheck="false"><button
         type="button" class="dm-entity-picker" data-caldaia-pick="${id}"
@@ -100815,14 +101617,14 @@ function ordinaLeCaselleDelSolare(caselle2) {
   for (const gruppo of GRUPPI_DEL_SOLARE) {
     const righe2 = CASELLE_SOLARE.filter((riga3) => riga3.gruppo === gruppo.id).map((riga3) => [riga3, casella5(riga3.ref)]).filter(([, nodo2]) => nodo2 && nodo2.parentElement === corpo2);
     if (!righe2.length) continue;
-    let titolo2 = corpo2.querySelector(`:scope > [data-dm-solare-gruppo="${gruppo.id}"]`);
-    if (!titolo2) {
-      titolo2 = doc.createElement("div");
-      titolo2.className = "ed-sec-title dm-solare-gruppo";
-      titolo2.dataset.dmSolareGruppo = gruppo.id;
-      titolo2.textContent = t(gruppo.it, gruppo.en);
+    let titolo3 = corpo2.querySelector(`:scope > [data-dm-solare-gruppo="${gruppo.id}"]`);
+    if (!titolo3) {
+      titolo3 = doc.createElement("div");
+      titolo3.className = "ed-sec-title dm-solare-gruppo";
+      titolo3.dataset.dmSolareGruppo = gruppo.id;
+      titolo3.textContent = t(gruppo.it, gruppo.en);
     }
-    voluti.push(titolo2);
+    voluti.push(titolo3);
     for (const [riga3, nodo2] of righe2) {
       const nome = nodo2.querySelector(".ed-slot-lbl input.wz-lbl-edit");
       const nuovo = t(riga3.it, riga3.en);
@@ -101458,8 +102260,8 @@ function dipingi9() {
     }
     return;
   }
-  const elenco9 = gruppi().filter((gruppo) => entitaDellUps(gruppo).length > 0);
-  const scene = elenco9.map((gruppo, posizione) => ({
+  const elenco10 = gruppi().filter((gruppo) => entitaDellUps(gruppo).length > 0);
+  const scene = elenco10.map((gruppo, posizione) => ({
     nome: clean(gruppo.name) || `${t("UPS", "UPS")} ${posizione + 1}`,
     dato: letturaDi3(gruppo),
     da: daQuandoUps(gruppo, allStates(), risolvi())
@@ -101468,7 +102270,7 @@ function dipingi9() {
   if (state142.firma === firma2 && dove.firstElementChild) return;
   state142.firma = firma2;
   dove.innerHTML = scene.map(
-    (voce2) => `${elenco9.length > 1 ? `<h3 class="dm-ups-titolo">${esc(voce2.nome)}</h3>` : ""}<div class="dm-ups-stage">${scena(voce2.dato, voce2.da)}</div>`
+    (voce2) => `${elenco10.length > 1 ? `<h3 class="dm-ups-titolo">${esc(voce2.nome)}</h3>` : ""}<div class="dm-ups-stage">${scena(voce2.dato, voce2.da)}</div>`
   ).join("");
 }
 function schedule33() {
@@ -101486,24 +102288,24 @@ function schedule33() {
   if (!state142.frame) giro();
 }
 function installStyles69() {
-  const P6 = `#${UPS_PAGE_ID}`;
+  const P7 = `#${UPS_PAGE_ID}`;
   installStyle(
     "dm-ups-section-style",
     `
-    ${P6} .dm-ups-wrap{display:grid;gap:18px;padding:0 0 24px}
-    ${P6} .dm-ups-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-ups-wrap{display:grid;gap:18px;padding:0 0 24px}
+    ${P7} .dm-ups-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-ups-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-ups-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-ups-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-ups-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* Il palco: stessa misura, stesso raggio e stessa ombra delle altre scene
        della plancia — e' la stessa stanza vista da un'altra porta. */
     /* Il nome sopra la scena, che compare solo da due gruppi in su: con uno
        solo sarebbe un'etichetta su una cosa sola. */
-    ${P6} .dm-ups-titolo{margin:0 0 10px;font-size:15px;font-weight:900;letter-spacing:-.01em;color:var(--text,#0f172a)}
-    ${P6} .dm-ups-stage + .dm-ups-titolo{margin-top:22px}
-    ${P6} .dm-ups-stage + .dm-ups-stage{margin-top:22px}
-    ${P6} .dm-ups-stage{
+    ${P7} .dm-ups-titolo{margin:0 0 10px;font-size:15px;font-weight:900;letter-spacing:-.01em;color:var(--text,#0f172a)}
+    ${P7} .dm-ups-stage + .dm-ups-titolo{margin-top:22px}
+    ${P7} .dm-ups-stage + .dm-ups-stage{margin-top:22px}
+    ${P7} .dm-ups-stage{
       position:relative;width:100%;height:600px;overflow:hidden;border-radius:32px;
       border:1px solid var(--card-border,#e2e8f0);
       background:
@@ -101513,156 +102315,156 @@ function installStyles69() {
       box-shadow:inset 0 0 35px rgba(0,0,0,.03),var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
     /* A corrente caduta la stanza cambia luce: non e' decorazione, e' la sola
        differenza che si deve vedere da lontano. */
-    ${P6} .dm-ups-stage:has(.dm-ups-scena[data-buio="true"]){
+    ${P7} .dm-ups-stage:has(.dm-ups-scena[data-buio="true"]){
       background:
         radial-gradient(120% 90% at 88% 6%,rgba(244,63,94,.18),transparent 58%),
         radial-gradient(90% 80% at 6% 96%,rgba(251,146,60,.16),transparent 60%),
         var(--card-bg,#fff)}
-    ${P6} .dm-ups-scena{position:absolute;inset:0}
+    ${P7} .dm-ups-scena{position:absolute;inset:0}
     /* Le targhette stanno insieme in una scatola, ma finche' la scena e' un
        palco quella scatola non deve esistere: display:contents la fa sparire
        dal disegno e lascia ogni targhetta appesa dove la mette il suo posto.
        Serve in verticale, dove le cinque diventano una griglia sola. */
-    ${P6} .dm-ups-quadro{display:contents}
+    ${P7} .dm-ups-quadro{display:contents}
 
     /* I cavi: fondo spesso e anima chiara, come i tubi del locale caldaia. */
-    ${P6} .dm-ups-cavi{position:absolute;inset:0;width:100%;height:100%}
-    ${P6} .dm-ups-cavo{fill:none;stroke:#e2e8f0;stroke-width:20;stroke-linecap:round}
-    ${P6} .dm-ups-cavo-int{fill:none;stroke:#f8fafc;stroke-width:12;stroke-linecap:round}
-    ${P6} .dm-ups-corrente{
+    ${P7} .dm-ups-cavi{position:absolute;inset:0;width:100%;height:100%}
+    ${P7} .dm-ups-cavo{fill:none;stroke:#e2e8f0;stroke-width:20;stroke-linecap:round}
+    ${P7} .dm-ups-cavo-int{fill:none;stroke:#f8fafc;stroke-width:12;stroke-linecap:round}
+    ${P7} .dm-ups-corrente{
       fill:none;stroke-width:9;stroke-linecap:round;opacity:0;
       stroke-dasharray:26 190;transition:opacity .5s ease}
-    ${P6} .dm-ups-corrente-rete{stroke:#22c55e}
-    ${P6} .dm-ups-corrente-uscita{stroke:#38bdf8}
+    ${P7} .dm-ups-corrente-rete{stroke:#22c55e}
+    ${P7} .dm-ups-corrente-uscita{stroke:#38bdf8}
     /* Le frecce corrono nel verso in cui la corrente sta andando davvero: dalla
        rete quando c'e', dalla batteria quando manca. Il cavo di monte spento e'
        tutta la notizia. */
-    ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-corrente{
+    ${P7} .dm-ups-scena[data-rete="true"] .dm-ups-corrente{
       opacity:.92;animation:dmUpsFlusso 2.4s linear infinite}
-    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-corrente-uscita{
+    ${P7} .dm-ups-scena[data-buio="true"] .dm-ups-corrente-uscita{
       stroke:#fbbf24;opacity:.95;animation:dmUpsFlusso 1.5s linear infinite}
     @keyframes dmUpsFlusso{from{stroke-dashoffset:216}to{stroke-dashoffset:0}}
 
-    ${P6} .dm-ups-nodo{
+    ${P7} .dm-ups-nodo{
       position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;
       align-items:center;gap:10px;z-index:4}
-    ${P6} .dm-ups-nome{
+    ${P7} .dm-ups-nome{
       font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
       color:var(--text-dim,#64748b);background:rgba(255,255,255,.95);padding:5px 12px;
       border-radius:12px;box-shadow:0 5px 12px rgba(0,0,0,.06);white-space:nowrap}
 
-    ${P6} .dm-ups-plate{
+    ${P7} .dm-ups-plate{
       display:grid;gap:2px;padding:10px 16px;border-radius:14px;min-width:112px;
       background:linear-gradient(160deg,#1e293b,#0b1220);
       box-shadow:0 14px 30px -14px rgba(15,23,42,.8),inset 0 1px 0 rgba(255,255,255,.09)}
-    ${P6} .dm-ups-plate-lbl{
+    ${P7} .dm-ups-plate-lbl{
       font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8}
-    ${P6} .dm-ups-plate-val{
+    ${P7} .dm-ups-plate-val{
       font-family:'Oswald',sans-serif;font-size:27px;font-weight:500;line-height:1;
       font-variant-numeric:tabular-nums}
-    ${P6} .dm-ups-plate-val i{font-style:normal;font-size:.52em;margin-left:2px;opacity:.85}
+    ${P7} .dm-ups-plate-val i{font-style:normal;font-size:.52em;margin-left:2px;opacity:.85}
 
     /* ── il traliccio: la rete che entra ──────────────────────────────── */
-    ${P6} .dm-ups-traliccio{position:relative;width:120px;height:180px}
-    ${P6} .dm-ups-pilone{
+    ${P7} .dm-ups-traliccio{position:relative;width:120px;height:180px}
+    ${P7} .dm-ups-pilone{
       display:block;width:100%;height:100%;
       transition:opacity .5s ease,filter .5s ease}
-    ${P6} .dm-ups-pilone-tratti{
+    ${P7} .dm-ups-pilone-tratti{
       fill:none;stroke:#94a3b8;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
-    ${P6} .dm-ups-pilone-isolatori{fill:#cbd5e1;stroke:#94a3b8;stroke-width:2}
+    ${P7} .dm-ups-pilone-isolatori{fill:#cbd5e1;stroke:#94a3b8;stroke-width:2}
     /* La croce sul traliccio: quando la rete manca lo si vede da lontano,
        senza leggere una parola. */
-    ${P6} .dm-ups-taglio{
+    ${P7} .dm-ups-taglio{
       position:absolute;inset:0;display:grid;place-items:center;font-size:64px;font-weight:900;
       color:#f43f5e;opacity:0;transform:scale(.7);transition:opacity .4s ease,transform .4s ease}
-    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-pilone{opacity:.28;filter:grayscale(1)}
-    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-taglio{opacity:.92;transform:scale(1)}
+    ${P7} .dm-ups-scena[data-buio="true"] .dm-ups-pilone{opacity:.28;filter:grayscale(1)}
+    ${P7} .dm-ups-scena[data-buio="true"] .dm-ups-taglio{opacity:.92;transform:scale(1)}
 
     /* ── la scatola: l'LCD, le spie, le prese ─────────────────────────── */
-    ${P6} .dm-ups-box{
+    ${P7} .dm-ups-box{
       position:relative;width:206px;height:236px;border-radius:20px;
       background:linear-gradient(150deg,#475569,#1e293b 56%,#0b1220);
       box-shadow:0 28px 50px -22px rgba(15,23,42,.65),inset 0 1px 0 rgba(255,255,255,.12)}
-    ${P6} .dm-ups-lcd{
+    ${P7} .dm-ups-lcd{
       position:absolute;top:20px;left:20px;right:20px;height:86px;border-radius:12px;
       display:flex;align-items:center;justify-content:center;gap:14px;
       background:linear-gradient(180deg,#0f172a,#020617);
       box-shadow:inset 0 0 0 1px rgba(148,163,184,.4),inset 0 2px 10px rgba(0,0,0,.7)}
-    ${P6} .dm-ups-lcd b{
+    ${P7} .dm-ups-lcd b{
       font-family:'Oswald',sans-serif;font-size:40px;font-weight:500;line-height:1;color:#4ade80;
       font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(74,222,128,.5)}
-    ${P6} .dm-ups-lcd b em{font-style:normal;font-size:.45em;margin-left:2px;opacity:.8}
-    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-lcd b{
+    ${P7} .dm-ups-lcd b em{font-style:normal;font-size:.45em;margin-left:2px;opacity:.8}
+    ${P7} .dm-ups-scena[data-buio="true"] .dm-ups-lcd b{
       color:#fbbf24;text-shadow:0 0 14px rgba(251,191,36,.55)}
-    ${P6} .dm-ups-scena[data-bassa="true"] .dm-ups-lcd b{
+    ${P7} .dm-ups-scena[data-bassa="true"] .dm-ups-lcd b{
       color:#f87171;text-shadow:0 0 14px rgba(248,113,113,.55)}
     /* La cella: il livello si disegna, non solo si scrive — e senza carica
        mappata si riempie tutta, perche' una cella vuota direbbe «niente
        riserva» invece di «non lo so». */
-    ${P6} .dm-ups-cella{
+    ${P7} .dm-ups-cella{
       position:relative;width:34px;height:56px;border-radius:5px;
       box-shadow:inset 0 0 0 2px rgba(148,163,184,.75)}
-    ${P6} .dm-ups-cella::before{
+    ${P7} .dm-ups-cella::before{
       content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);
       width:15px;height:5px;border-radius:2px;background:rgba(148,163,184,.75)}
-    ${P6} .dm-ups-cella i{
+    ${P7} .dm-ups-cella i{
       position:absolute;left:4px;right:4px;bottom:4px;border-radius:3px;display:block;
       background:linear-gradient(to top,#16a34a,#4ade80);
       transition:height 1.2s cubic-bezier(.16,1,.3,1),background .8s ease}
-    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-cella i{
+    ${P7} .dm-ups-scena[data-buio="true"] .dm-ups-cella i{
       background:linear-gradient(to top,#d97706,#fbbf24)}
-    ${P6} .dm-ups-scena[data-bassa="true"] .dm-ups-cella i{
+    ${P7} .dm-ups-scena[data-bassa="true"] .dm-ups-cella i{
       background:linear-gradient(to top,#b91c1c,#f87171)}
 
-    ${P6} .dm-ups-spie{position:absolute;top:122px;left:22px;display:flex;gap:12px}
-    ${P6} .dm-ups-spie i{
+    ${P7} .dm-ups-spie{position:absolute;top:122px;left:22px;display:flex;gap:12px}
+    ${P7} .dm-ups-spie i{
       display:block;width:13px;height:13px;border-radius:50%;background:rgba(148,163,184,.28)}
-    ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-spia-rete{
+    ${P7} .dm-ups-scena[data-rete="true"] .dm-ups-spia-rete{
       background:#22c55e;box-shadow:0 0 12px 2px rgba(34,197,94,.75)}
     /* La spia della batteria lampeggia solo mentre la casa ci sta sopra: una
        spia fissa direbbe «c'e' una batteria», che si sapeva gia'. */
-    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-spia-batt{
+    ${P7} .dm-ups-scena[data-buio="true"] .dm-ups-spia-batt{
       background:#fbbf24;box-shadow:0 0 12px 2px rgba(251,191,36,.8);
       animation:dmUpsBattito 1.3s ease-in-out infinite}
     @keyframes dmUpsBattito{0%,100%{opacity:1}50%{opacity:.35}}
 
-    ${P6} .dm-ups-prese{position:absolute;bottom:22px;left:22px;right:22px;display:flex;gap:14px}
-    ${P6} .dm-ups-prese i{
+    ${P7} .dm-ups-prese{position:absolute;bottom:22px;left:22px;right:22px;display:flex;gap:14px}
+    ${P7} .dm-ups-prese i{
       position:relative;display:block;flex:1;height:28px;border-radius:8px;
       background:rgba(15,23,42,.6);box-shadow:inset 0 0 0 1px rgba(148,163,184,.35)}
     /* I due fori: una pillola vuota non e' una presa, e la scatola si
        riconosce proprio da quelle. */
-    ${P6} .dm-ups-prese i::before,${P6} .dm-ups-prese i::after{
+    ${P7} .dm-ups-prese i::before,${P7} .dm-ups-prese i::after{
       content:"";position:absolute;top:50%;width:4px;height:9px;border-radius:2px;
       transform:translateY(-50%);background:rgba(148,163,184,.55)}
-    ${P6} .dm-ups-prese i::before{left:calc(50% - 7px)}
-    ${P6} .dm-ups-prese i::after{left:calc(50% + 3px)}
+    ${P7} .dm-ups-prese i::before{left:calc(50% - 7px)}
+    ${P7} .dm-ups-prese i::after{left:calc(50% + 3px)}
 
     /* ── la casa: quello che sta tenendo acceso ───────────────────────── */
-    ${P6} .dm-ups-casa{position:relative;width:150px;height:150px}
-    ${P6} .dm-ups-tetto{
+    ${P7} .dm-ups-casa{position:relative;width:150px;height:150px}
+    ${P7} .dm-ups-tetto{
       position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:0;
       border-left:75px solid transparent;border-right:75px solid transparent;
       border-bottom:56px solid #94a3b8}
-    ${P6} .dm-ups-muro{
+    ${P7} .dm-ups-muro{
       position:absolute;top:56px;left:18px;right:18px;bottom:0;border-radius:0 0 12px 12px;
       display:flex;align-items:center;justify-content:center;gap:16px;
       background:linear-gradient(180deg,#e2e8f0,#cbd5e1)}
-    ${P6} .dm-ups-muro i{
+    ${P7} .dm-ups-muro i{
       display:block;width:26px;height:26px;border-radius:5px;background:rgba(15,23,42,.22);
       transition:background .6s ease,box-shadow .6s ease}
     /* Le finestre accese: la casa e' viva in tutti e due i casi — e' proprio il
        senso di questa scatola — ma di che luce lo dice chi la sta dando. */
-    ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-muro i{
+    ${P7} .dm-ups-scena[data-rete="true"] .dm-ups-muro i{
       background:#fde68a;box-shadow:0 0 14px 3px rgba(253,230,138,.7)}
-    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-muro i{
+    ${P7} .dm-ups-scena[data-buio="true"] .dm-ups-muro i{
       background:#fbbf24;box-shadow:0 0 14px 3px rgba(251,191,36,.6)}
 
-    ${P6} .dm-ups-verdetto{
+    ${P7} .dm-ups-verdetto{
       font-size:12px;font-weight:800;letter-spacing:.3px;padding:8px 14px;border-radius:14px;
       background:rgba(255,255,255,.95);color:var(--text-dim,#475569);
       box-shadow:0 6px 16px rgba(0,0,0,.08);white-space:nowrap}
-    ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-verdetto{
+    ${P7} .dm-ups-scena[data-buio="true"] .dm-ups-verdetto{
       background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff;
       box-shadow:0 10px 24px -10px rgba(244,63,94,.85)}
 
@@ -101670,19 +102472,19 @@ function installStyles69() {
       /* Le pastiglie dei nomi vanno a capo invece di uscire dal palco: il
          telaio si stringe, le parole no — «Sotto protezione» su una riga sola
          e' piu' larga di un terzo di telefono. */
-      ${P6} .dm-ups-nome{
+      ${P7} .dm-ups-nome{
         max-width:min(40vw,150px);white-space:normal;text-align:center;line-height:1.25}
-      ${P6} .dm-ups-stage{height:520px;border-radius:24px}
-      ${P6} .dm-ups-box{width:158px;height:186px}
-      ${P6} .dm-ups-lcd{height:66px}
-      ${P6} .dm-ups-lcd b{font-size:30px}
-      ${P6} .dm-ups-spie{top:96px}
-      ${P6} .dm-ups-traliccio{width:84px;height:132px}
-      ${P6} .dm-ups-casa{width:110px;height:112px}
-      ${P6} .dm-ups-tetto{border-left-width:55px;border-right-width:55px;border-bottom-width:42px}
-      ${P6} .dm-ups-muro{top:42px}
-      ${P6} .dm-ups-plate{min-width:88px;padding:8px 12px}
-      ${P6} .dm-ups-plate-val{font-size:21px}
+      ${P7} .dm-ups-stage{height:520px;border-radius:24px}
+      ${P7} .dm-ups-box{width:158px;height:186px}
+      ${P7} .dm-ups-lcd{height:66px}
+      ${P7} .dm-ups-lcd b{font-size:30px}
+      ${P7} .dm-ups-spie{top:96px}
+      ${P7} .dm-ups-traliccio{width:84px;height:132px}
+      ${P7} .dm-ups-casa{width:110px;height:112px}
+      ${P7} .dm-ups-tetto{border-left-width:55px;border-right-width:55px;border-bottom-width:42px}
+      ${P7} .dm-ups-muro{top:42px}
+      ${P7} .dm-ups-plate{min-width:88px;padding:8px 12px}
+      ${P7} .dm-ups-plate-val{font-size:21px}
     }
 
     /* ── sul telefono la fila si alza in piedi ────────────────────────── */
@@ -101705,45 +102507,45 @@ function installStyles69() {
        corrente che scorre, e i numeri in una griglia sotto di loro. Gli
        oggetti restano della misura che avevano, e nessuno tocca nessuno. */
     @media (max-width:520px){
-      ${P6} .dm-ups-stage{height:auto;padding:22px 12px 20px}
-      ${P6} .dm-ups-scena{
+      ${P7} .dm-ups-stage{height:auto;padding:22px 12px 20px}
+      ${P7} .dm-ups-scena{
         position:static;display:flex;flex-direction:column;align-items:center;gap:0}
       /* I cavi disegnati erano due segmenti orizzontali su un palco largo:
          in colonna non hanno piu' niente da unire, e il loro posto lo prende
          il tratto verticale qui sotto. */
-      ${P6} .dm-ups-cavi{display:none}
-      ${P6} .dm-ups-nodo{position:static;transform:none;max-width:100%}
-      ${P6} .dm-ups-nodo[data-dm-ups-posto="rete"]{order:1}
-      ${P6} .dm-ups-nodo[data-dm-ups-posto="scatola"]{order:2}
-      ${P6} .dm-ups-nodo[data-dm-ups-posto="casa"]{order:3}
-      ${P6} .dm-ups-quadro{
+      ${P7} .dm-ups-cavi{display:none}
+      ${P7} .dm-ups-nodo{position:static;transform:none;max-width:100%}
+      ${P7} .dm-ups-nodo[data-dm-ups-posto="rete"]{order:1}
+      ${P7} .dm-ups-nodo[data-dm-ups-posto="scatola"]{order:2}
+      ${P7} .dm-ups-nodo[data-dm-ups-posto="casa"]{order:3}
+      ${P7} .dm-ups-quadro{
         order:4;display:grid;width:100%;margin-top:20px;gap:10px;
         grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
-      ${P6} .dm-ups-quadro .dm-ups-nodo{align-items:stretch;gap:0}
-      ${P6} .dm-ups-quadro .dm-ups-plate{min-width:0}
-      ${P6} .dm-ups-nodo-verdetto{order:5;margin-top:16px}
+      ${P7} .dm-ups-quadro .dm-ups-nodo{align-items:stretch;gap:0}
+      ${P7} .dm-ups-quadro .dm-ups-plate{min-width:0}
+      ${P7} .dm-ups-nodo-verdetto{order:5;margin-top:16px}
       /* La frase non ha piu' un angolo tutto suo in cui stare su una riga:
          al centro, sotto i numeri, va a capo come qualsiasi altra frase. */
-      ${P6} .dm-ups-verdetto{white-space:normal;text-align:center}
+      ${P7} .dm-ups-verdetto{white-space:normal;text-align:center}
 
       /* Il cavo verticale: fondo spesso, anima chiara e il tratto di corrente
          che scende — le stesse tre cose dei cavi orizzontali, in una sola
          pastiglia, perche' qui non c'e' un disegno sotto a cui appoggiarsi. */
-      ${P6} .dm-ups-nodo[data-dm-ups-posto="rete"]::after,
-      ${P6} .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
+      ${P7} .dm-ups-nodo[data-dm-ups-posto="rete"]::after,
+      ${P7} .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
         content:"";width:18px;height:46px;border-radius:9px;
         background:
           linear-gradient(180deg,var(--dm-ups-corrente,transparent) 0 20px,transparent 20px)
             center 0/9px 46px repeat-y,
           linear-gradient(180deg,#f8fafc,#f8fafc) center/10px 100% no-repeat,
           #e2e8f0}
-      ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="rete"]::after{
+      ${P7} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="rete"]::after{
         --dm-ups-corrente:#22c55e;animation:dmUpsScende 2.4s linear infinite}
-      ${P6} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
+      ${P7} .dm-ups-scena[data-rete="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
         --dm-ups-corrente:#38bdf8;animation:dmUpsScende 2.4s linear infinite}
       /* A corrente caduta il cavo di monte resta spento — e' tutta la notizia
          — e quello di valle porta l'ambra della batteria, piu' in fretta. */
-      ${P6} .dm-ups-scena[data-buio="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
+      ${P7} .dm-ups-scena[data-buio="true"] .dm-ups-nodo[data-dm-ups-posto="scatola"]::after{
         --dm-ups-corrente:#fbbf24;animation:dmUpsScende 1.5s linear infinite}
     }
     @keyframes dmUpsScende{
@@ -101751,7 +102553,7 @@ function installStyles69() {
       to{background-position:center 0,center,0 0}
     }
     @media (prefers-reduced-motion:reduce){
-      ${P6} .dm-ups-nodo::after{animation:none!important}
+      ${P7} .dm-ups-nodo::after{animation:none!important}
     }
     `
   );
@@ -102028,7 +102830,7 @@ function dipingi10() {
     ...scadenze.length ? [[TINTA_SCADENZA, t("Da fare", "To-do")]] : []
   ];
   const legenda = vociLegenda.length ? `<div class="dm-calp-legenda">${vociLegenda.map(
-    ([tinta, nome]) => `<span class="dm-calp-voce"><i style="background:${esc(tinta)}"></i>${esc(nome)}</span>`
+    ([tinta2, nome]) => `<span class="dm-calp-voce"><i style="background:${esc(tinta2)}"></i>${esc(nome)}</span>`
   ).join("")}</div>` : "";
   dichiaraCalendari(calendari);
   const modulo = moduloMarkup(calendari, listeConNome());
@@ -102085,132 +102887,132 @@ function onClick41(event) {
   }
 }
 function installStyles70() {
-  const P6 = `#${CALENDARIO_PAGE_ID}`;
+  const P7 = `#${CALENDARIO_PAGE_ID}`;
   installStyle(
     "dm-calendario-section-style",
     `
-    ${P6} .dm-calp-wrap{display:grid;gap:16px;padding:0 0 24px}
-    ${P6} .dm-calp-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-calp-wrap{display:grid;gap:16px;padding:0 0 24px}
+    ${P7} .dm-calp-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-calp-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-calp-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-calp-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-calp-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* ── chi guarda l'agenda (#344) ────────────────────────────────────── */
-    ${P6} .dm-calp-chi{
+    ${P7} .dm-calp-chi{
       display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 14px;
       border-radius:18px;border:1px dashed var(--divider-color,#dbe4ee);
       background:color-mix(in srgb,#6366f1 6%,transparent)}
-    ${P6} .dm-calp-chi-lbl{
+    ${P7} .dm-calp-chi-lbl{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--secondary-text-color,#64748b)}
-    ${P6} .dm-calp-chi-voci{display:flex;flex-wrap:wrap;gap:6px}
-    ${P6} .dm-calp-chi-voce{
+    ${P7} .dm-calp-chi-voci{display:flex;flex-wrap:wrap;gap:6px}
+    ${P7} .dm-calp-chi-voce{
       padding:6px 12px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);
       background:var(--card-bg,#fff);color:var(--text,#0f172a);
       font:inherit;font-size:12px;font-weight:800;cursor:pointer}
-    ${P6} .dm-calp-chi-voce[aria-pressed="true"]{
+    ${P7} .dm-calp-chi-voce[aria-pressed="true"]{
       border-color:#6366f1;background:color-mix(in srgb,#6366f1 16%,var(--card-bg,#fff));color:#4338ca}
 
     /* ── la fascia della settimana ─────────────────────────────────────── */
-    ${P6} .dm-calp-fascia{
+    ${P7} .dm-calp-fascia{
       display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:14px;
       border-radius:22px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-calp-cella{
+    ${P7} .dm-calp-cella{
       display:grid;gap:4px;justify-items:center;padding:10px 4px 8px;border:0;cursor:pointer;
       border-radius:16px;background:transparent;transition:background .2s ease,transform .15s ease}
-    ${P6} .dm-calp-cella:hover{background:color-mix(in srgb,var(--primary-color,#6366f1) 8%,transparent)}
-    ${P6} .dm-calp-sett{
+    ${P7} .dm-calp-cella:hover{background:color-mix(in srgb,var(--primary-color,#6366f1) 8%,transparent)}
+    ${P7} .dm-calp-sett{
       font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
       color:var(--secondary-text-color,#94a3b8)}
-    ${P6} .dm-calp-numero{
+    ${P7} .dm-calp-numero{
       font-family:'Oswald',sans-serif;font-size:22px;font-weight:500;line-height:1.1;
       font-variant-numeric:tabular-nums;color:var(--text,#0f172a)}
     /* Oggi porta il cerchio pieno: e' il giorno da cui si conta tutto il
        resto, e cercarlo fra sette numeri uguali costa uno sguardo di troppo. */
-    ${P6} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{
+    ${P7} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{
       display:grid;place-items:center;width:34px;height:34px;border-radius:50%;color:#fff;
       background:linear-gradient(135deg,#818cf8,#4f46e5)}
-    ${P6} .dm-calp-cella[data-scelto="true"]{
+    ${P7} .dm-calp-cella[data-scelto="true"]{
       background:color-mix(in srgb,var(--primary-color,#6366f1) 14%,transparent);
       box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--primary-color,#6366f1) 45%,transparent)}
-    ${P6} .dm-calp-punti{display:flex;gap:3px;min-height:8px;align-items:center}
-    ${P6} .dm-calp-punti i{display:block;width:6px;height:6px;border-radius:50%}
-    ${P6} .dm-calp-tanti{
+    ${P7} .dm-calp-punti{display:flex;gap:3px;min-height:8px;align-items:center}
+    ${P7} .dm-calp-punti i{display:block;width:6px;height:6px;border-radius:50%}
+    ${P7} .dm-calp-tanti{
       font-size:10px;font-weight:900;color:var(--secondary-text-color,#64748b);
       font-variant-numeric:tabular-nums}
 
-    ${P6} .dm-calp-legenda{display:flex;flex-wrap:wrap;gap:6px 16px;padding:0 4px}
-    ${P6} .dm-calp-voce{
+    ${P7} .dm-calp-legenda{display:flex;flex-wrap:wrap;gap:6px 16px;padding:0 4px}
+    ${P7} .dm-calp-voce{
       display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;
       color:var(--secondary-text-color,#64748b)}
-    ${P6} .dm-calp-voce i{display:block;width:9px;height:9px;border-radius:50%}
+    ${P7} .dm-calp-voce i{display:block;width:9px;height:9px;border-radius:50%}
 
-    ${P6} .dm-calp-tutto{
+    ${P7} .dm-calp-tutto{
       justify-self:start;padding:8px 16px;border:0;border-radius:999px;cursor:pointer;
       font-size:12px;font-weight:800;color:var(--text,#0f172a);
       background:var(--card-bg,#fff);box-shadow:0 6px 16px rgba(0,0,0,.08)}
 
     /* ── l'agenda ──────────────────────────────────────────────────────── */
-    ${P6} .dm-calp-nuovo-riga{display:flex;justify-content:flex-start}
+    ${P7} .dm-calp-nuovo-riga{display:flex;justify-content:flex-start}
     /* Una scadenza dentro l'agenda (#259): la casella al posto dei tasti, e la
        parola «Da fare» dove gli altri hanno l'ora. */
-    ${P6} .dm-calp-evento[data-scadenza="true"] .dm-calp-ora{color:var(--dm-calp-tinta,#0ea5e9)}
-    ${P6} .dm-calp-evento[data-scadenza="true"] .dm-todo-check{
+    ${P7} .dm-calp-evento[data-scadenza="true"] .dm-calp-ora{color:var(--dm-calp-tinta,#0ea5e9)}
+    ${P7} .dm-calp-evento[data-scadenza="true"] .dm-todo-check{
       flex:0 0 19px;width:19px;height:19px;margin-top:2px}
-    ${P6} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-titolo{color:#b91c1c}
-    ${P6} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-evento{border-left-color:#ef4444}
-    ${P6} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-ora{color:#b91c1c}
+    ${P7} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-titolo{color:#b91c1c}
+    ${P7} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-evento{border-left-color:#ef4444}
+    ${P7} .dm-calp-giorno[data-dm-ritardo="true"] .dm-calp-ora{color:#b91c1c}
     /* Le cose da fare: stessa scheda dei giorni, cosi' i due blocchi si
        leggono come due parti della stessa pagina e non come due pagine. */
-    ${P6} .dm-calp-cose{
+    ${P7} .dm-calp-cose{
       padding:16px 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-calp-cose .dm-w-block + .dm-w-block{margin-top:14px}
-    ${P6} .dm-calp-cose .dm-w-block-title{
+    ${P7} .dm-calp-cose .dm-w-block + .dm-w-block{margin-top:14px}
+    ${P7} .dm-calp-cose .dm-w-block-title{
       display:block;margin-bottom:8px;font-size:11px;font-weight:900;letter-spacing:1px;
       text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
-    ${P6} .dm-calp-agenda{display:grid;gap:12px}
-    ${P6} .dm-calp-giorno{
+    ${P7} .dm-calp-agenda{display:grid;gap:12px}
+    ${P7} .dm-calp-giorno{
       padding:16px 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-calp-titolo{
+    ${P7} .dm-calp-titolo{
       margin:0 0 12px;font-size:11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;
       color:var(--secondary-text-color,#64748b)}
-    ${P6} .dm-calp-lista{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+    ${P7} .dm-calp-lista{list-style:none;margin:0;padding:0;display:grid;gap:10px}
     /* Ogni riga porta a sinistra la stecca del suo calendario: con due agende
        nello stesso giorno, il colore dice di chi e' l'impegno senza leggere. */
-    ${P6} .dm-calp-evento{
+    ${P7} .dm-calp-evento{
       display:flex;align-items:flex-start;gap:13px;min-width:0;padding-left:12px;
       border-left:3px solid var(--dm-calp-tinta,#6366f1);border-radius:2px}
-    ${P6} .dm-calp-ora{
+    ${P7} .dm-calp-ora{
       flex:0 0 auto;min-width:96px;padding-top:1px;font-size:12px;font-weight:800;line-height:1.5;
       font-variant-numeric:tabular-nums;color:var(--secondary-text-color,#64748b)}
-    ${P6} .dm-calp-corpo{display:grid;gap:2px;min-width:0;flex:1}
-    ${P6} .dm-calp-corpo b{font-size:14px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
-    ${P6} .dm-calp-corpo small{
+    ${P7} .dm-calp-corpo{display:grid;gap:2px;min-width:0;flex:1}
+    ${P7} .dm-calp-corpo b{font-size:14px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
+    ${P7} .dm-calp-corpo small{
       font-size:11.5px;font-weight:700;color:var(--secondary-text-color,#94a3b8);
       overflow-wrap:anywhere}
-    ${P6} .dm-calp-nota{
+    ${P7} .dm-calp-nota{
       margin-top:3px;font-size:12px;font-weight:600;line-height:1.45;
       color:var(--secondary-text-color,#64748b);overflow-wrap:anywhere;white-space:pre-line}
-    ${P6} .dm-calp-evento[data-adesso="true"] .dm-calp-ora,
-    ${P6} .dm-calp-evento[data-adesso="true"] .dm-calp-corpo b{color:var(--dm-calp-tinta,#6366f1)}
-    ${P6} .dm-calp-adesso{
+    ${P7} .dm-calp-evento[data-adesso="true"] .dm-calp-ora,
+    ${P7} .dm-calp-evento[data-adesso="true"] .dm-calp-corpo b{color:var(--dm-calp-tinta,#6366f1)}
+    ${P7} .dm-calp-adesso{
       flex:0 0 auto;align-self:center;padding:4px 10px;border-radius:999px;color:#fff;
       font-size:9.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
       background:var(--dm-calp-tinta,#6366f1)}
-    ${P6} .dm-calp-niente{
+    ${P7} .dm-calp-niente{
       margin:0;padding:26px 18px;text-align:center;border-radius:22px;
       border:1px dashed var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);
       font-size:13px;font-weight:800;color:var(--secondary-text-color,#64748b)}
 
     @media (max-width:640px){
-      ${P6} .dm-calp-fascia{gap:4px;padding:10px 8px}
-      ${P6} .dm-calp-numero{font-size:18px}
-      ${P6} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{width:29px;height:29px}
-      ${P6} .dm-calp-ora{min-width:74px;font-size:11px}
-      ${P6} .dm-calp-evento{gap:10px;padding-left:10px}
+      ${P7} .dm-calp-fascia{gap:4px;padding:10px 8px}
+      ${P7} .dm-calp-numero{font-size:18px}
+      ${P7} .dm-calp-cella[data-oggi="true"] .dm-calp-numero{width:29px;height:29px}
+      ${P7} .dm-calp-ora{min-width:74px;font-size:11px}
+      ${P7} .dm-calp-evento{gap:10px;padding-left:10px}
     }
     `
   );
@@ -102300,8 +103102,8 @@ var metadati = () => {
   const salvato = readJson(CHIAVE_META_UPS, {});
   return salvato && typeof salvato === "object" && !Array.isArray(salvato) ? salvato : {};
 };
-function salva20(elenco9) {
-  const { gruppi: gruppi2, metadata } = upsDaSalvare(elenco9, metadati());
+function salva20(elenco10) {
+  const { gruppi: gruppi2, metadata } = upsDaSalvare(elenco10, metadati());
   writeJsonIfChanged(CHIAVE_UPS, gruppi2);
   writeJsonIfChanged(CHIAVE_META_UPS, metadata, { sync: false });
   try {
@@ -102337,10 +103139,10 @@ function sezioneNascosta() {
 }
 function gruppoMarkup2(config, posizione) {
   const uid = config[CAMPO_UID_UPS];
-  const titolo2 = clean(config.name) || `${t("Gruppo", "Unit")} ${posizione + 1}`;
+  const titolo3 = clean(config.name) || `${t("Gruppo", "Unit")} ${posizione + 1}`;
   return `<article class="ed-row dm-todo-ed-row dm-ups-ed-gruppo" data-open="true" data-dm-ups-gruppo="${esc(uid)}">
       <div class="dm-todo-ed-body">
-        <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Nome", "Name"))}</span><span class="ed-form-row"><input id="dm-ups-${esc(uid)}-name" class="ed-input" data-dm-ups-field="name" value="${esc(config.name)}" placeholder="${esc(t("UPS del rack", "Rack UPS"))}"><button type="button" class="ed-btn-add dm-ups-ed-togli" data-dm-ups-togli="${esc(uid)}" aria-label="${esc(t("Togli", "Remove"))} ${esc(titolo2)}" title="${esc(t("Togli questo gruppo", "Remove this unit"))}">🗑️</button></span></label>
+        <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Nome", "Name"))}</span><span class="ed-form-row"><input id="dm-ups-${esc(uid)}-name" class="ed-input" data-dm-ups-field="name" value="${esc(config.name)}" placeholder="${esc(t("UPS del rack", "Rack UPS"))}"><button type="button" class="ed-btn-add dm-ups-ed-togli" data-dm-ups-togli="${esc(uid)}" aria-label="${esc(t("Togli", "Remove"))} ${esc(titolo3)}" title="${esc(t("Togli questo gruppo", "Remove this unit"))}">🗑️</button></span></label>
         ${campiMarkup(config)}
         <label class="ed-slot dm-todo-ed-field dm-ups-ed-verso">
           <span class="ed-form-row"><input type="checkbox" id="dm-ups-${esc(uid)}-invertita" data-dm-ups-flag="invertita"${config.invertita ? " checked" : ""}><span class="ed-slot-lbl">${esc(t("Il sensore dice il contrario", "The sensor means the opposite"))}</span></span>
@@ -102355,8 +103157,8 @@ function gruppoMarkup2(config, posizione) {
     </article>`;
 }
 function corpoMarkup11() {
-  const elenco9 = configurazione12();
-  const schede = elenco9.length ? elenco9 : [nuovoUps([], "", metadati())];
+  const elenco10 = configurazione12();
+  const schede = elenco10.length ? elenco10 : [nuovoUps([], "", metadati())];
   return `${fasciaMarkup5()}<div class="dm-ups-ed">
   <div class="ed-sec-title">🔌 ${esc(t("Gruppi di continuità (UPS)", "Uninterruptible power supplies"))}</div>
   <div class="ed-intro">${esc(
@@ -102407,14 +103209,14 @@ function onClick42(event) {
   }
   if (event.target.closest("[data-dm-ups-aggiungi]")) {
     event.preventDefault();
-    const elenco9 = body.querySelector(".dm-todo-ed-list");
-    if (!elenco9) return;
+    const elenco10 = body.querySelector(".dm-todo-ed-list");
+    if (!elenco10) return;
     const adesso = schedeAperte(body);
-    elenco9.insertAdjacentHTML(
+    elenco10.insertAdjacentHTML(
       "beforeend",
       gruppoMarkup2(nuovoUps(adesso, "", metadati()), adesso.length)
     );
-    elenco9.lastElementChild?.querySelector('[data-dm-ups-field="name"]')?.focus();
+    elenco10.lastElementChild?.querySelector('[data-dm-ups-field="name"]')?.focus();
     return;
   }
   if (event.target.closest("[data-dm-ups-save]")) {
@@ -103096,10 +103898,10 @@ function turnoMarkup(dato) {
   const inizio = turno.inizio || lunediDiOggi();
   const oggi = turnoConfigurato(turno) ? caselleDelTurno(turno, Date.now()) : -1;
   const caselle2 = turno.giorni.map((giorno, indice) => {
-    const titolo2 = giorno.length ? giorno.map((materiale) => nomeDelMateriale(materiale)).join(" · ") : t("Nessun ritiro", "No collection");
+    const titolo3 = giorno.length ? giorno.map((materiale) => nomeDelMateriale(materiale)).join(" · ") : t("Nessun ritiro", "No collection");
     return `${indice === 0 || indice === 7 ? `<div class="dm-turno-sett">${esc(indice === 0 ? t("Settimana 1", "Week 1") : t("Settimana 2", "Week 2"))}</div>` : ""}
       <button type="button" class="dm-turno-giorno" data-dm-turno-giorno="${indice}"
-        ${indice === oggi ? 'data-oggi="true"' : ""} title="${esc(titolo2)}" aria-label="${esc(titolo2)}">
+        ${indice === oggi ? 'data-oggi="true"' : ""} title="${esc(titolo3)}" aria-label="${esc(titolo3)}">
         <span class="dm-turno-gg">${esc(nomeDelGiorno2(inizio, indice))}</span>
         <span class="dm-turno-bidoni">${bidoniDellaCasella(giorno)}</span>
       </button>`;
@@ -103552,9 +104354,9 @@ function scudoMarkup(riga3, states) {
       t("Solo lettura", "Read only")
     )}</span></span>`;
   const verbo = giu ? t("Includi", "Re-include") : t("Escludi", "Bypass");
-  const titolo2 = `${verbo} · ${t("Esclusione dall'antifurto", "Alarm bypass")}`;
+  const titolo3 = `${verbo} · ${t("Esclusione dall'antifurto", "Alarm bypass")}`;
   return `<button type="button" class="dm-varco-scudo" data-dm-varco-scudo="${esc(riga3.entity)}"
-    aria-pressed="${giu}" aria-label="${esc(titolo2)}" title="${esc(titolo2)}">
+    aria-pressed="${giu}" aria-label="${esc(titolo3)}" title="${esc(titolo3)}">
     ${giu ? "🛡️" : "🔓"}<span>${esc(verbo)}</span>
   </button>`;
 }
@@ -103820,49 +104622,49 @@ function renderVarchi() {
   schedule35();
 }
 function installStyles74() {
-  const P6 = `#${VARCHI_PAGE_ID}`;
+  const P7 = `#${VARCHI_PAGE_ID}`;
   installStyle(
     "dm-varchi-section-style",
     `
-    ${P6} .dm-varchi-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P6} .dm-varchi-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-varchi-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P7} .dm-varchi-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-varchi-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-varchi-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-varchi-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-varchi-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande: quanti sono aperti adesso. */
-    ${P6} .dm-varchi-testa{
+    ${P7} .dm-varchi-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-varchi-testa small{
+    ${P7} .dm-varchi-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P6} .dm-varchi-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P6} .dm-varchi-testa[data-stato="aperti"] strong{color:#dc2626}
-    ${P6} .dm-varchi-testa[data-stato="chiusi"] strong{color:#15803d}
-    ${P6} .dm-varchi-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P6} .dm-varchi-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-varchi-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P7} .dm-varchi-testa[data-stato="aperti"] strong{color:#dc2626}
+    ${P7} .dm-varchi-testa[data-stato="chiusi"] strong{color:#15803d}
+    ${P7} .dm-varchi-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P7} .dm-varchi-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P6} .dm-varchi-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P7} .dm-varchi-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
 
     /* La carta di un varco: il colore lo dice prima della parola. */
-    ${P6} .dm-varco{
+    ${P7} .dm-varco{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-varco,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-varco,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P6} .dm-varco[data-varco="aperto"]{--dm-varco:#dc2626}
-    ${P6} .dm-varco[data-varco="chiuso"]{--dm-varco:#16a34a}
-    ${P6} .dm-varco[data-varco="muto"]{--dm-varco:#94a3b8}
-    ${P6} .dm-varco-ic{
+    ${P7} .dm-varco[data-varco="aperto"]{--dm-varco:#dc2626}
+    ${P7} .dm-varco[data-varco="chiuso"]{--dm-varco:#16a34a}
+    ${P7} .dm-varco[data-varco="muto"]{--dm-varco:#94a3b8}
+    ${P7} .dm-varco-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-varco,#94a3b8) 22%,transparent)}
     /* Il disegno del catalogo al posto dell'emoji (#74): la casella resta
        quella, cambia quello che ci sta dentro. */
-    ${P6} .dm-varco-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P6} .dm-varco-ic svg{display:block;width:30px;height:30px}
-    ${P6} .dm-varco-testo{display:grid;gap:2px;min-width:0}
+    ${P7} .dm-varco-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P7} .dm-varco-ic svg{display:block;width:30px;height:30px}
+    ${P7} .dm-varco-testo{display:grid;gap:2px;min-width:0}
     /* Il nome su due righe, e la pastiglia che gli lascia il posto.
      *
      * Su una riga sola, con «NON RISPONDE» accanto che si prende novanta
@@ -103873,12 +104675,12 @@ function installStyles74() {
      *
      * Due righe bastano quasi sempre, e la pastiglia dello stato va a capo
      * anche lei invece di mangiarsi la colonna del nome. */
-    ${P6} .dm-varco-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-varco-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
       overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
-    ${P6} .dm-varco-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P7} .dm-varco-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-varco-stato{
+    ${P7} .dm-varco-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       max-width:74px;text-align:right;line-height:1.25;
       color:color-mix(in srgb,var(--dm-varco,#94a3b8) 78%,var(--text,#0f172a))}
@@ -103887,37 +104689,37 @@ function installStyles74() {
        suo. Sono due cose diverse — com'e' la finestra, e se la centrale la
        guarda — e una carta che le dicesse nella stessa casella farebbe credere
        che siano la stessa. */
-    ${P6} .dm-varco-coda{display:grid;justify-items:end;gap:6px}
-    ${P6} .dm-varco-scudo{
+    ${P7} .dm-varco-coda{display:grid;justify-items:end;gap:6px}
+    ${P7} .dm-varco-scudo{
       display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;cursor:pointer;
       border:1px solid color-mix(in srgb,var(--dm-varco,#94a3b8) 45%,transparent);
       background:var(--card-bg,#fff);color:var(--text-dim,#64748b);
       font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
       -webkit-tap-highlight-color:transparent}
-    ${P6} .dm-varco-scudo[aria-pressed="true"]{
+    ${P7} .dm-varco-scudo[aria-pressed="true"]{
       border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 16%,var(--card-bg,#fff));color:#b45309}
-    ${P6} .dm-varco-scudo[data-dm-varco-bloccato]{cursor:default;opacity:.75}
-    ${P6} .dm-varco-esclusa,${P6} .dm-varco-errore{
+    ${P7} .dm-varco-scudo[data-dm-varco-bloccato]{cursor:default;opacity:.75}
+    ${P7} .dm-varco-esclusa,${P7} .dm-varco-errore{
       display:flex;align-items:center;gap:5px;font-size:11px;font-weight:900;line-height:1.25}
-    ${P6} .dm-varco-esclusa{color:#b45309}
-    ${P6} .dm-varco-errore{color:#dc2626;white-space:normal}
+    ${P7} .dm-varco-esclusa{color:#b45309}
+    ${P7} .dm-varco-errore{color:#dc2626;white-space:normal}
     /* Il velo della domanda e dell'annulla: sopra la carta intera, come nelle
        stanze, perche' la domanda e' su tutta la carta e non su un suo angolo. */
-    ${P6} .dm-varco{position:relative}
-    ${P6} .dm-varco-velo{
+    ${P7} .dm-varco{position:relative}
+    ${P7} .dm-varco-velo{
       position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:10px;
       padding:10px 14px;border-radius:inherit;cursor:pointer;
       background:rgba(15,23,42,.9);color:#fff;font-size:13px;font-weight:900}
-    ${P6} .dm-varco-velo > span{display:flex;align-items:center;gap:7px;min-width:0}
-    ${P6} .dm-varco-velo button{
+    ${P7} .dm-varco-velo > span{display:flex;align-items:center;gap:7px;min-width:0}
+    ${P7} .dm-varco-velo button{
       flex:none;padding:8px 14px;border-radius:999px;border:0;cursor:pointer;
       background:#f59e0b;color:#111827;font:inherit;font-size:12px;font-weight:900}
-    ${P6} .dm-varco-velo[data-dm-varco-velo="annulla"] button{background:#fff}
+    ${P7} .dm-varco-velo[data-dm-varco-velo="annulla"] button{background:#fff}
     /* Una carta esclusa lo dice anche da lontano, senza leggere: il tratteggio
        vuol dire «questa la centrale non la guarda». */
-    ${P6} .dm-varco[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
+    ${P7} .dm-varco[data-escluso="true"]{border-style:dashed;border-color:#f59e0b}
 
-    @media(max-width:520px){${P6} .dm-varchi-elenco{grid-template-columns:1fr}}
+    @media(max-width:520px){${P7} .dm-varchi-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -104089,12 +104891,12 @@ var scheda2 = costruisciSchedaDichiarata({
   /* Come stanno adesso i varchi dichiarati: la pagina e la scheda leggono lo
    * stesso elenco dalla stessa funzione, che e' il motivo per cui non si
    * contraddicono piu'. */
-  leggi(elenco9) {
+  leggi(elenco10) {
     const states = allStates();
     return new Map(
       varchiDiCasa(
         states,
-        { righe: elenco9 },
+        { righe: elenco10 },
         insiemeInvertiti(readJson(CHIAVE_VERSI, {})),
         (entity2) => nomeDaHomeAssistant(entity2, states),
         dichiaratiNelleFinestre()
@@ -104321,60 +105123,60 @@ function renderPresenza() {
   schedule36();
 }
 function installStyles75() {
-  const P6 = `#${PRESENZA_PAGE_ID}`;
+  const P7 = `#${PRESENZA_PAGE_ID}`;
   installStyle(
     "dm-presenza-section-style",
     `
-    ${P6} .dm-presenza-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P6} .dm-presenza-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-presenza-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P7} .dm-presenza-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-presenza-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-presenza-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-presenza-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-presenza-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
     /* La risposta grande: in quante stanze c'è qualcuno adesso. */
-    ${P6} .dm-presenza-testa{
+    ${P7} .dm-presenza-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-presenza-testa small{
+    ${P7} .dm-presenza-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P6} .dm-presenza-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
-    ${P6} .dm-presenza-testa[data-stato="attivi"] strong{color:#2563eb}
-    ${P6} .dm-presenza-testa[data-stato="liberi"] strong{color:#15803d}
-    ${P6} .dm-presenza-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    ${P6} .dm-presenza-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-presenza-testa strong{font-size:30px;font-weight:900;line-height:1.05;color:var(--text,#0f172a)}
+    ${P7} .dm-presenza-testa[data-stato="attivi"] strong{color:#2563eb}
+    ${P7} .dm-presenza-testa[data-stato="liberi"] strong{color:#15803d}
+    ${P7} .dm-presenza-nomi{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    ${P7} .dm-presenza-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P6} .dm-presenza-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
+    ${P7} .dm-presenza-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px}
 
     /* La carta di un rilevatore: il colore lo dice prima della parola. */
-    ${P6} .dm-presenza{
+    ${P7} .dm-presenza{
       display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;
       padding:14px 16px;border-radius:18px;
       border:1px solid color-mix(in srgb,var(--dm-presenza,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-presenza,#94a3b8) 10%,var(--card-bg,#fff))}
-    ${P6} .dm-presenza[data-presenza="attivo"]{--dm-presenza:#2563eb}
-    ${P6} .dm-presenza[data-presenza="libero"]{--dm-presenza:#16a34a}
-    ${P6} .dm-presenza[data-presenza="muto"]{--dm-presenza:#94a3b8}
+    ${P7} .dm-presenza[data-presenza="attivo"]{--dm-presenza:#2563eb}
+    ${P7} .dm-presenza[data-presenza="libero"]{--dm-presenza:#16a34a}
+    ${P7} .dm-presenza[data-presenza="muto"]{--dm-presenza:#94a3b8}
     /* Chi non c'e' piu' in Home Assistant: lo stesso grigio di chi non
        risponde — sono tutt'e due una sorveglianza che manca — e la parola in
        fondo alla riga dice quale delle due. */
-    ${P6} .dm-presenza[data-presenza="assente"]{--dm-presenza:#94a3b8}
-    ${P6} .dm-presenza-ic{
+    ${P7} .dm-presenza[data-presenza="assente"]{--dm-presenza:#94a3b8}
+    ${P7} .dm-presenza-ic{
       display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:20px;
       background:color-mix(in srgb,var(--dm-presenza,#94a3b8) 22%,transparent)}
     /* Il disegno del catalogo al posto dell'emoji (#74). */
-    ${P6} .dm-presenza-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-    ${P6} .dm-presenza-ic svg{display:block;width:30px;height:30px}
-    ${P6} .dm-presenza-testo{display:grid;gap:2px;min-width:0}
-    ${P6} .dm-presenza-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-presenza-ic .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+    ${P7} .dm-presenza-ic svg{display:block;width:30px;height:30px}
+    ${P7} .dm-presenza-testo{display:grid;gap:2px;min-width:0}
+    ${P7} .dm-presenza-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-presenza-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P7} .dm-presenza-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-presenza-stato{
+    ${P7} .dm-presenza-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-presenza,#94a3b8) 78%,var(--text,#0f172a))}
-    @media(max-width:520px){${P6} .dm-presenza-elenco{grid-template-columns:1fr}}
+    @media(max-width:520px){${P7} .dm-presenza-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -104469,12 +105271,12 @@ var scheda3 = costruisciSchedaDichiarata({
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back."
     )
   },
-  leggi(elenco9) {
+  leggi(elenco10) {
     const states = allStates();
     return new Map(
       presenzaDiCasa(
         states,
-        { righe: elenco9 },
+        { righe: elenco10 },
         (entity2) => nomeDaHomeAssistant(entity2, states),
         stanzaDiHomeAssistant
       ).map((riga3) => [riga3.entity, riga3])
@@ -105032,78 +105834,78 @@ function renderStampanti() {
   schedule37();
 }
 function installStyles77() {
-  const P6 = `#${STAMPANTI_PAGE_ID}`;
+  const P7 = `#${STAMPANTI_PAGE_ID}`;
   installStyle(
     "dm-stampanti-section-style",
     `
-    ${P6} .dm-stampanti-wrap{display:grid;gap:14px;padding:0 0 24px}
-    ${P6} .dm-stampanti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
+    ${P7} .dm-stampanti-wrap{display:grid;gap:14px;padding:0 0 24px}
+    ${P7} .dm-stampanti-vuoto{display:grid;gap:6px;padding:22px 18px;text-align:center;
       border:1px dashed var(--divider-color,#dbe4ee);border-radius:18px;background:var(--card-bg,#fff)}
-    ${P6} .dm-stampanti-vuoto strong{font-size:14px;font-weight:900}
-    ${P6} .dm-stampanti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
+    ${P7} .dm-stampanti-vuoto strong{font-size:14px;font-weight:900}
+    ${P7} .dm-stampanti-vuoto span{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 
-    ${P6} .dm-stampanti-testa{
+    ${P7} .dm-stampanti-testa{
       display:grid;gap:4px;padding:20px 22px;border-radius:22px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
       box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    ${P6} .dm-stampanti-testa small{
+    ${P7} .dm-stampanti-testa small{
       font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
-    ${P6} .dm-stampanti-testa strong{font-size:28px;font-weight:900;line-height:1.08;color:var(--text,#0f172a)}
-    ${P6} .dm-stampanti-testa[data-verdetto="ferma"] strong{color:#b91c1c}
-    ${P6} .dm-stampanti-testa[data-verdetto="inchiostro"] strong{color:#b45309}
-    ${P6} .dm-stampanti-testa[data-verdetto="stampa"] strong{color:#0369a1}
-    ${P6} .dm-stampanti-testa[data-verdetto="pronta"] strong{color:#15803d}
-    ${P6} .dm-stampanti-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    ${P7} .dm-stampanti-testa strong{font-size:28px;font-weight:900;line-height:1.08;color:var(--text,#0f172a)}
+    ${P7} .dm-stampanti-testa[data-verdetto="ferma"] strong{color:#b91c1c}
+    ${P7} .dm-stampanti-testa[data-verdetto="inchiostro"] strong{color:#b45309}
+    ${P7} .dm-stampanti-testa[data-verdetto="stampa"] strong{color:#0369a1}
+    ${P7} .dm-stampanti-testa[data-verdetto="pronta"] strong{color:#15803d}
+    ${P7} .dm-stampanti-sotto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 
-    ${P6} .dm-stampanti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px}
-    ${P6} .dm-stampante{
+    ${P7} .dm-stampanti-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px}
+    ${P7} .dm-stampante{
       display:grid;gap:12px;padding:16px 18px;border-radius:20px;
       border:1px solid color-mix(in srgb,var(--dm-st,#94a3b8) 42%,transparent);
       background:color-mix(in srgb,var(--dm-st,#94a3b8) 8%,var(--card-bg,#fff))}
-    ${P6} .dm-stampante[data-stato="pronta"]{--dm-st:#16a34a}
-    ${P6} .dm-stampante[data-stato="stampa"]{--dm-st:#0ea5e9}
-    ${P6} .dm-stampante[data-stato="ferma"]{--dm-st:#dc2626}
-    ${P6} .dm-stampante[data-stato="muta"],${P6} .dm-stampante[data-stato="spenta"]{--dm-st:#94a3b8}
-    ${P6} .dm-stampante-testa{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px}
-    ${P6} .dm-stampante-ic{display:grid;place-items:center;width:44px;height:44px}
-    ${P6} .dm-stampante-ic .dm-appliance-art{display:block;line-height:0}
-    ${P6} .dm-stampante-testo{display:grid;gap:2px;min-width:0}
-    ${P6} .dm-stampante-testo strong{font-size:14.5px;font-weight:900;color:var(--text,#0f172a);
+    ${P7} .dm-stampante[data-stato="pronta"]{--dm-st:#16a34a}
+    ${P7} .dm-stampante[data-stato="stampa"]{--dm-st:#0ea5e9}
+    ${P7} .dm-stampante[data-stato="ferma"]{--dm-st:#dc2626}
+    ${P7} .dm-stampante[data-stato="muta"],${P7} .dm-stampante[data-stato="spenta"]{--dm-st:#94a3b8}
+    ${P7} .dm-stampante-testa{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px}
+    ${P7} .dm-stampante-ic{display:grid;place-items:center;width:44px;height:44px}
+    ${P7} .dm-stampante-ic .dm-appliance-art{display:block;line-height:0}
+    ${P7} .dm-stampante-testo{display:grid;gap:2px;min-width:0}
+    ${P7} .dm-stampante-testo strong{font-size:14.5px;font-weight:900;color:var(--text,#0f172a);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-stampante-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
+    ${P7} .dm-stampante-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-stampante-stato{
+    ${P7} .dm-stampante-stato{
       font-size:11px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-st,#94a3b8) 80%,var(--text,#0f172a))}
 
     /* Le cartucce: una riga per colore, con la barra del colore vero. */
-    ${P6} .dm-stampante-cartucce{display:grid;gap:7px}
-    ${P6} .dm-stampante-cart{display:grid;grid-template-columns:minmax(64px,88px) minmax(0,1fr) 42px;
+    ${P7} .dm-stampante-cartucce{display:grid;gap:7px}
+    ${P7} .dm-stampante-cart{display:grid;grid-template-columns:minmax(64px,88px) minmax(0,1fr) 42px;
       align-items:center;gap:10px}
-    ${P6} .dm-stampante-cart-nome{font-size:11px;font-weight:800;color:var(--text-dim,#64748b);
+    ${P7} .dm-stampante-cart-nome{font-size:11px;font-weight:800;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P6} .dm-stampante-cart-barra{display:block;height:9px;border-radius:999px;overflow:hidden;
+    ${P7} .dm-stampante-cart-barra{display:block;height:9px;border-radius:999px;overflow:hidden;
       background:color-mix(in srgb,var(--dm-cart,${COLORE_SENZA_TINTA}) 16%,var(--surface-3,#f1f5f9))}
-    ${P6} .dm-stampante-cart-barra i{display:block;height:100%;border-radius:999px;
+    ${P7} .dm-stampante-cart-barra i{display:block;height:100%;border-radius:999px;
       background:var(--dm-cart,${COLORE_SENZA_TINTA})}
     /* Il colore della tinta si scrive qui, e non sulla riga: quello che si
      * scrive sulla riga vince su ogni regola, e la riga del fondo scuro non
      * arriverebbe mai a valere. L'elenco e' quello del modello. */
     ${TINTE_DELLE_CARTUCCE.map(
-      ({ tinta, colore }) => `${P6} .dm-stampante-cart[data-tinta="${tinta}"]{--dm-cart:${colore}}`
+      ({ tinta: tinta2, colore }) => `${P7} .dm-stampante-cart[data-tinta="${tinta2}"]{--dm-cart:${colore}}`
     ).join("\n    ")}
     /* Il nero su fondo scuro e' il fondo: la barra del nero spariva, e chi ha
      * una stampante a due cartucce ne vedeva una sola colorata. L'inchiostro
      * nero scritto su una pagina nera si scrive chiaro — come il testo. */
-    html[data-theme="dark"] ${P6} .dm-stampante-cart[data-tinta="nero"],
-    body.dark-theme ${P6} .dm-stampante-cart[data-tinta="nero"]{--dm-cart:#e2e8f0}
-    ${P6} .dm-stampante-cart-val{font-size:11.5px;font-weight:900;text-align:right;
+    html[data-theme="dark"] ${P7} .dm-stampante-cart[data-tinta="nero"],
+    body.dark-theme ${P7} .dm-stampante-cart[data-tinta="nero"]{--dm-cart:#e2e8f0}
+    ${P7} .dm-stampante-cart-val{font-size:11.5px;font-weight:900;text-align:right;
       font-variant-numeric:tabular-nums;color:var(--text,#0f172a)}
-    ${P6} .dm-stampante-cart[data-scarsa="molto"] .dm-stampante-cart-val{color:#b91c1c}
-    ${P6} .dm-stampante-cart[data-scarsa="si"] .dm-stampante-cart-val{color:#b45309}
-    ${P6} .dm-stampante-senza{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
-    @media(max-width:520px){${P6} .dm-stampanti-elenco{grid-template-columns:1fr}}
+    ${P7} .dm-stampante-cart[data-scarsa="molto"] .dm-stampante-cart-val{color:#b91c1c}
+    ${P7} .dm-stampante-cart[data-scarsa="si"] .dm-stampante-cart-val{color:#b45309}
+    ${P7} .dm-stampante-senza{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    @media(max-width:520px){${P7} .dm-stampanti-elenco{grid-template-columns:1fr}}
     `
   );
 }
@@ -105525,12 +106327,12 @@ var scheda4 = costruisciSchedaDichiarata({
   },
   /* Come stanno adesso le righe scritte: la pagina e la scheda le leggono
    * dalla stessa funzione. */
-  leggi(elenco9) {
+  leggi(elenco10) {
     const states = allStates();
     return new Map(
       contatoriDiCasa(
         states,
-        { righe: elenco9 },
+        { righe: elenco10 },
         (entity2) => nomeDaHomeAssistant(entity2, states)
       ).map((letta) => [letta.entity, letta])
     );
@@ -105700,10 +106502,10 @@ var scheda5 = costruisciSchedaDichiarata({
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back."
     )
   },
-  leggi(elenco9) {
+  leggi(elenco10) {
     const states = allStates();
     return new Map(
-      pianteDiCasa(states, { righe: elenco9 }, (entity2) => nomeDaHomeAssistant(entity2, states)).map(
+      pianteDiCasa(states, { righe: elenco10 }, (entity2) => nomeDaHomeAssistant(entity2, states)).map(
         (letta) => [letta.entity, letta]
       )
     );
@@ -106074,8 +106876,8 @@ function conICampiDellaRiga(bozza3, body, indice) {
   }
   const celle = casella5("celle");
   if (celle) {
-    const elenco9 = celleDaTesto(celle.value);
-    if (elenco9.length) fuori.celle = elenco9;
+    const elenco10 = celleDaTesto(celle.value);
+    if (elenco10.length) fuori.celle = elenco10;
     else delete fuori.celle;
   }
   if (!tipoValido2(fuori.tipo)) fuori.tipo = "altro";
@@ -106134,11 +106936,11 @@ var scheda6 = costruisciSchedaDichiarata({
   },
   /* Come stanno adesso i pacchi scritti: la pagina e la scheda li leggono
    * dalla stessa funzione. */
-  leggi(elenco9) {
+  leggi(elenco10) {
     const states = allStates();
     const letti = accumuloDiCasa(
       states,
-      { righe: elenco9 },
+      { righe: elenco10 },
       (entity2) => nomeDaHomeAssistant(entity2, states)
     );
     return new Map(letti.map((pacco) => [pacco.entity, pacco]));
@@ -106346,11 +107148,11 @@ var scheda7 = costruisciSchedaDichiarata({
     const scelta3 = clean(tendina4?.value);
     return { ...bozza3, famiglia: FAMIGLIE2[scelta3] ? scelta3 : bozza3.famiglia || "macchine" };
   },
-  leggi(elenco9) {
+  leggi(elenco10) {
     const states = allStates();
     const elenchi = macchineERete(
       states,
-      { righe: elenco9 },
+      { righe: elenco10 },
       (entity2) => nomeDaHomeAssistant(entity2, states),
       piattaformeConosciute(),
       registro()
@@ -106524,21 +107326,21 @@ function bindNodoToDevice({
   indice = 0,
   precedente = {}
 } = {}) {
-  const elenco9 = (Array.isArray(entities) ? entities : []).filter(
+  const elenco10 = (Array.isArray(entities) ? entities : []).filter(
     (voce2) => voce2 && !voce2.disabled && clean28(voce2.entity_id).includes(".")
   );
   const dominio4 = (voce2) => clean28(voce2.entity_id).split(".")[0];
   const unita2 = (voce2) => clean28(states?.[clean28(voce2.entity_id)]?.attributes?.unit_of_measurement).toLowerCase();
   const classe2 = (voce2) => clean28(voce2.device_class || states?.[clean28(voce2.entity_id)]?.attributes?.device_class);
-  const percentuale4 = (chiave2) => elenco9.find(
+  const percentuale4 = (chiave2) => elenco10.find(
     (voce2) => dominio4(voce2) === "sensor" && unita2(voce2) === "%" && PAROLE7[chiave2].test(parole3(voce2, states))
   );
-  const stato3 = elenco9.find(
+  const stato3 = elenco10.find(
     (voce2) => dominio4(voce2) === "binary_sensor" && ["connectivity", "running", "power"].includes(classe2(voce2))
-  ) || elenco9.find(
+  ) || elenco10.find(
     (voce2) => dominio4(voce2) === "binary_sensor" && PAROLE7.stato.test(parole3(voce2, states))
   );
-  const gradi7 = elenco9.find(
+  const gradi7 = elenco10.find(
     (voce2) => dominio4(voce2) === "sensor" && (classe2(voce2) === "temperature" || ["°c", "°f"].includes(unita2(voce2))) && PAROLE7.temperatura.test(parole3(voce2, states))
   );
   return {
@@ -106719,7 +107521,7 @@ function installNodiSection() {
 var KEY159 = "__DASHBOARDMODERN_NODI_EDITOR__";
 var state155 = root[KEY159] ||= { installed: false, aperto: -1 };
 var ANCORA4 = "dm-nodi-editor";
-function elenco8() {
+function elenco9() {
   const salvato = readJson(CHIAVE_NODI, []);
   return Array.isArray(salvato) ? salvato : [];
 }
@@ -106774,7 +107576,7 @@ function rigaMarkup23(nodo2, indice) {
   </article>`;
 }
 function schedaMarkup11() {
-  const lista5 = elenco8();
+  const lista5 = elenco9();
   return `<div class="ed-sec-title">🖧 ${esc(t("Altri nodi del cluster", "Other cluster nodes"))}</div>
     <div class="ed-intro">${esc(
     t(
@@ -106825,7 +107627,7 @@ function anteprimaNodo({ device, entities }) {
   };
 }
 function creaDaDispositivo5({ device, entities, integration }) {
-  const lista5 = elenco8();
+  const lista5 = elenco9();
   if (lista5.length >= NODI_MASSIMI) {
     root.alert?.(
       t(
@@ -106859,7 +107661,7 @@ function creaDaDispositivo5({ device, entities, integration }) {
 function onClick47(event) {
   const dentro3 = event.target?.closest?.(`#${ANCORA4}`);
   if (!dentro3) return;
-  const lista5 = elenco8();
+  const lista5 = elenco9();
   if (event.target.closest("[data-dm-nodo-integ]")) {
     event.preventDefault();
     apriMenuIntegrazioni({
@@ -107699,11 +108501,11 @@ function ensureVoce3(sezione2) {
   return voce2;
 }
 function scriviLaVoce2(voce2, sezione2) {
-  const titolo2 = sezione2.titolo || t("Senza titolo", "Untitled");
-  const atteso = `${sezione2.icona} ${titolo2}`;
+  const titolo3 = sezione2.titolo || t("Senza titolo", "Untitled");
+  const atteso = `${sezione2.icona} ${titolo3}`;
   if (voce2.dataset.dmMiaFirma === atteso) return;
   voce2.dataset.dmMiaFirma = atteso;
-  voce2.innerHTML = `<span class="icon">${esc(sezione2.icona)}</span><span class="text">${esc(titolo2)}</span>`;
+  voce2.innerHTML = `<span class="icon">${esc(sezione2.icona)}</span><span class="text">${esc(titolo3)}</span>`;
 }
 function toglieteLeVecchie(vive) {
   if (!doc) return;
@@ -107749,12 +108551,12 @@ function sottotitolo4(letture2) {
   return conto.mute ? `${vive} · ${conto.mute} ${t("mute", "silent")}` : vive;
 }
 function annunciaLaPagina(sezione2, indice, letture2) {
-  const titolo2 = sezione2.titolo || t("Senza titolo", "Untitled");
+  const titolo3 = sezione2.titolo || t("Senza titolo", "Untitled");
   const sotto = sottotitolo4(letture2);
   registraPaginaARuntime(PAGINA2(sezione2.id), {
     tint: TINTE2[indice % TINTE2.length],
-    it: [titolo2, sotto],
-    en: [titolo2, sotto]
+    it: [titolo3, sotto],
+    en: [titolo3, sotto]
   });
 }
 function paginaMarkup2(letture2, formato) {
@@ -108061,12 +108863,12 @@ function rigaVoceMarkup(voce2, sezione2, riga3) {
 function rigaSezioneMarkup(sezione2, indice) {
   const aperta = state160.aperta === indice;
   const voci3 = vociDi(sezione2);
-  const titolo2 = clean(sezione2?.titolo) || `${t("Sezione", "Section")} ${indice + 1}`;
+  const titolo3 = clean(sezione2?.titolo) || `${t("Sezione", "Section")} ${indice + 1}`;
   return `<article class="ed-row dm-todo-ed-row dm-mia-ed-riga" data-mia-sezione="${indice}" data-open="${aperta}">
     <div class="dm-todo-ed-head">
       <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(sezione2?.icona) || "⭐")}</span>
       <span class="ed-row-main">
-        <strong class="ed-row-new">${esc(titolo2)}</strong>
+        <strong class="ed-row-new">${esc(titolo3)}</strong>
         <small class="ed-row-old">${voci3.length} ${esc(
     voci3.length === 1 ? t("entità", "entity") : t("entità", "entities")
   )}${sezione2?.mostra === false ? ` · ${esc(t("fuori dalla barra", "off the bar"))}` : ""}</small>
@@ -108555,15 +109357,15 @@ function salva27(lista5) {
 }
 function sezioniDisponibili(scope = doc) {
   const viste2 = /* @__PURE__ */ new Set();
-  const elenco9 = [];
+  const elenco10 = [];
   for (const scheda8 of scope?.querySelectorAll?.("nav.tabs .tab[data-tab]") || []) {
     const tab = clean(scheda8.dataset.tab);
     if (!tab || tab === "config" || viste2.has(tab)) continue;
     if (!scope.getElementById?.(`page-${tab}`)) continue;
     viste2.add(tab);
-    elenco9.push({ tab, nome: clean(scheda8.querySelector(".text")?.textContent) || tab });
+    elenco10.push({ tab, nome: clean(scheda8.querySelector(".text")?.textContent) || tab });
   }
-  return elenco9;
+  return elenco10;
 }
 function sezioniMarkup(scelta3, sezioni2) {
   const quale = clean(scelta3);
@@ -109194,21 +109996,21 @@ function onClick53(event) {
     const casella5 = tocco2.closest(`[data-mp-lista="${CSS.escape(tipo)}"]`);
     const errore = riga3.querySelector("[data-mp-errore]");
     const letta = leggiLaRiga5(riga3);
-    let elenco9 = LISTE3[tipo].elenco(letta[tipo]);
+    let elenco10 = LISTE3[tipo].elenco(letta[tipo]);
     if (togli) {
-      elenco9 = elenco9.filter((entity2) => entity2 !== clean(togli.dataset.mpChipDel));
+      elenco10 = elenco10.filter((entity2) => entity2 !== clean(togli.dataset.mpChipDel));
     } else {
       const nuovo = proposta ? clean(proposta.dataset.mpChipSug) : clean(casella5?.querySelector("[data-mp-chip-nuovo]")?.value);
-      const esito2 = conLaVoce(elenco9, nuovo, tipo);
+      const esito2 = conLaVoce(elenco10, nuovo, tipo);
       if (esito2.esito !== ESITI_ELENCO.aggiunto) {
         if (errore) errore.textContent = spiegazione2(esito2.esito, tipo);
         return;
       }
-      elenco9 = esito2.elenco;
+      elenco10 = esito2.elenco;
     }
     if (errore) errore.textContent = "";
     const lista5 = righeDalDocumento2(body);
-    lista5[indice] = { ...letta, [tipo]: elenco9 };
+    lista5[indice] = { ...letta, [tipo]: elenco10 };
     salva28(lista5);
     ridisegna26();
     return;
@@ -109358,10 +110160,10 @@ function eUnLettore(azione) {
   return entitaDellAzione2(azione).startsWith("media_player.");
 }
 function scrittaDelTasto(riga3) {
-  const titolo2 = clean(riga3?.titolo) || clean(riga3?.sorgente) || clean(riga3?.applicazione);
-  if (!titolo2) return { titolo: "", sotto: "" };
+  const titolo3 = clean(riga3?.titolo) || clean(riga3?.sorgente) || clean(riga3?.applicazione);
+  if (!titolo3) return { titolo: "", sotto: "" };
   const sotto = [riga3?.artista, riga3?.album].map(clean).filter(Boolean).join(" · ");
-  return { titolo: titolo2, sotto };
+  return { titolo: titolo3, sotto };
 }
 function vestiLeAzioni() {
   const griglia2 = doc?.getElementById?.("qa-grid");
@@ -109404,9 +110206,9 @@ function spogliaIlTasto(tasto2) {
   tasto2.querySelector(":scope > .dm-qa-media-menu")?.remove();
 }
 function scriviIlBrano(tasto2, entity2, states) {
-  const { titolo: titolo2, sotto } = scrittaDelTasto(letturaDiUnLettore(entity2, states));
+  const { titolo: titolo3, sotto } = scrittaDelTasto(letturaDiUnLettore(entity2, states));
   let blocco3 = tasto2.querySelector(":scope > .dm-qa-media-testo");
-  if (!titolo2) {
+  if (!titolo3) {
     blocco3?.remove();
     return false;
   }
@@ -109418,7 +110220,7 @@ function scriviIlBrano(tasto2, entity2, states) {
   }
   const riga3 = blocco3.querySelector(".dm-qa-media-titolo");
   const seconda = blocco3.querySelector(".dm-qa-media-sotto");
-  if (riga3 && riga3.textContent !== titolo2) riga3.textContent = titolo2;
+  if (riga3 && riga3.textContent !== titolo3) riga3.textContent = titolo3;
   if (seconda && seconda.textContent !== sotto) seconda.textContent = sotto;
   if (seconda) seconda.hidden = !sotto;
   return true;
@@ -109779,15 +110581,15 @@ function rispostaDalleStatistiche(risultato, entityIds = [], period = "hour", ad
   return fuori;
 }
 function entitaSenzaRighe(entityIds = [], righe2 = []) {
-  const presenti = new Set(righe2.map((elenco9) => pulito52(elenco9?.[0]?.entity_id)).filter(Boolean));
+  const presenti = new Set(righe2.map((elenco10) => pulito52(elenco10?.[0]?.entity_id)).filter(Boolean));
   return entityIds.map(pulito52).filter((id) => id && !presenti.has(id));
 }
 function unisciRisposte(entityIds = [], ...risposte) {
   const perEntita = /* @__PURE__ */ new Map();
   for (const risposta of risposte) {
-    for (const elenco9 of Array.isArray(risposta) ? risposta : []) {
-      const id = pulito52(elenco9?.[0]?.entity_id);
-      if (id && !perEntita.has(id)) perEntita.set(id, elenco9);
+    for (const elenco10 of Array.isArray(risposta) ? risposta : []) {
+      const id = pulito52(elenco10?.[0]?.entity_id);
+      if (id && !perEntita.has(id)) perEntita.set(id, elenco10);
     }
   }
   return entityIds.map((id) => perEntita.get(pulito52(id))).filter(Boolean);
@@ -109904,7 +110706,7 @@ function storicoViaSocket(indirizzo, ripiego) {
       (risultatoStoria) => unisciRisposte(domanda.entity_ids, tradotte, rispostaComeRest(risultatoStoria, mancanti))
     ).catch(() => tradotte);
   }) : dallaStoria();
-  return righe2.then((elenco9) => rispostaJson(elenco9)).catch(() => gettoneDiAccesso() ? ripiego() : rispostaJson([], 502));
+  return righe2.then((elenco10) => rispostaJson(elenco10)).catch(() => gettoneDiAccesso() ? ripiego() : rispostaJson([], 502));
 }
 var SENZA_CREDENZIALE = 401;
 function haUnaCredenzialeNellIndirizzo(indirizzo) {
@@ -110213,19 +111015,19 @@ async function aggiornaFotogramma(servizio) {
   if (state167.chiedendo[servizio]) return state167.chiedendo[servizio];
   state167.chiedendo[servizio] = (async () => {
     let fotogramma2 = null;
-    let elenco9 = [];
+    let elenco10 = [];
     try {
       const risposta = await root.fetch(dichiarato.elenco, { cache: "no-store" });
       if (risposta?.ok) {
         const detto2 = await risposta.json();
         fotogramma2 = leggi2(detto2);
-        elenco9 = ELENCHI2[servizio]?.(detto2) || [];
+        elenco10 = ELENCHI2[servizio]?.(detto2) || [];
       }
     } catch (_errore) {
       fotogramma2 = null;
-      elenco9 = [];
+      elenco10 = [];
     }
-    state167.fotogrammi[servizio] = { quando: Date.now(), fotogramma: fotogramma2, elenco: elenco9 };
+    state167.fotogrammi[servizio] = { quando: Date.now(), fotogramma: fotogramma2, elenco: elenco10 };
     delete state167.chiedendo[servizio];
     disegnaRadar();
     return fotogramma2;
@@ -110244,8 +111046,8 @@ function modelliVivi(scelto) {
   if (!adesso) return [];
   const solo = [{ modello: adesso, fotogramma: fotogrammaDi(scelto.servizio)?.fotogramma || null }];
   if (!scelto?.animato) return solo;
-  const elenco9 = fotogrammaDi(scelto.servizio)?.elenco;
-  const tutti = modelliDelServizio(scelto.servizio, elenco9);
+  const elenco10 = fotogrammaDi(scelto.servizio)?.elenco;
+  const tutti = modelliDelServizio(scelto.servizio, elenco10);
   return tutti.length > 1 ? tutti : solo;
 }
 var finestra6 = () => doc?.getElementById?.("weather-modal") || null;
@@ -110263,8 +111065,8 @@ function blocco2() {
   if (!modale) return null;
   let nodo2 = modale.querySelector(`.${BLOCCO6}`);
   if (nodo2) return nodo2;
-  const elenco9 = modale.querySelector("#weather-forecast-list");
-  if (!elenco9) return null;
+  const elenco10 = modale.querySelector("#weather-forecast-list");
+  if (!elenco10) return null;
   nodo2 = doc.createElement("div");
   nodo2.className = BLOCCO6;
   nodo2.innerHTML = `<div class="dm-radar-testa">
@@ -110296,7 +111098,7 @@ function blocco2() {
   )}</small>
       <small class="dm-radar-firma" data-dm-radar-firma-fondo></small>
     </div>`;
-  elenco9.before(nodo2);
+  elenco10.before(nodo2);
   return nodo2;
 }
 async function daEntita(scelto, nodo2) {
@@ -110456,8 +111258,8 @@ function disegnaRadar() {
     if (!avviso) return false;
     avviso.hidden = false;
     avviso.dataset.dmModo = "guasto";
-    const titolo2 = avviso.querySelector(".dm-radar-nome");
-    if (titolo2) titolo2.textContent = t("Radar meteo", "Weather radar");
+    const titolo3 = avviso.querySelector(".dm-radar-nome");
+    if (titolo3) titolo3.textContent = t("Radar meteo", "Weather radar");
     const spiegazione3 = avviso.querySelector(".dm-radar-nota");
     if (spiegazione3 && spiegazione3.textContent !== guasto) spiegazione3.textContent = guasto;
     return false;
@@ -110499,8 +111301,8 @@ function mostraIlFotogramma(nodo2, posto) {
   const orologio4 = nodo2.querySelector("[data-dm-radar-ora]");
   if (!orologio4) return;
   const scelto = radarScelto();
-  const elenco9 = modelliVivi(scelto);
-  const ora3 = oraDelFotogramma(elenco9[quale]?.fotogramma?.time);
+  const elenco10 = modelliVivi(scelto);
+  const ora3 = oraDelFotogramma(elenco10[quale]?.fotogramma?.time);
   orologio4.textContent = ora3;
   orologio4.hidden = !ora3 || fila2.length < 2;
 }
