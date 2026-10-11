@@ -13,13 +13,15 @@
  *   - Auto: l'anello della carica con l'autonomia, dove si trova, i
  *     chilometri, le quattro gomme attorno alla sagoma;
  *   - Solare termico: il pannello e il boiler con la differenza di gradi, una
- *     frase su cosa sta succedendo, e lo stato dei tasti dell'impianto.
+ *     frase su cosa sta succedendo, il manometro con la sua giornata, la
+ *     resistenza, e lo stato dei tasti dell'impianto.
  *
  * La regola di tutte: si mostra solo quello che la casa sa. Un numero che non
  * c'e' non si inventa — la sezione che lo conterrebbe non compare.
  */
 import { registraFinestra } from "../finestre-dei-widget.js";
-import { clean, esc, formatNumber, locale, t } from "../shared.js";
+import { clean, disegnoDiCasa, esc, formatNumber, locale, t } from "../shared.js";
+import { puntiDi } from "../storico-condiviso-section.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../../core/le-unita-della-corrente.js";
 import { inKilowatt } from "../../core/il-tempo-della-ricarica.js";
 import { roomGlyph } from "../../core/personalization-catalog.js";
@@ -769,25 +771,189 @@ ${P} .dm-f-ev-misure small{font-size:11px;font-weight:750;color:var(--text-dim,#
 /* ── Solare termico ───────────────────────────────────────────────────── */
 
 /* Le caselle dello stato, col nome del loro tasto nella pagina del solare e
- * nell'ordine in cui si guardano: prima il boiler, poi la pompa. */
+ * nell'ordine in cui si guardano: prima il boiler, poi la pompa.
+ *
+ * «Metti un'icona vicino alle cose, non lasciare solo testo»: ogni casella
+ * porta il disegno del catalogo di casa (`disegno`); l'emoji (`ic`) resta il
+ * ripiego per una plancia vecchia che quel disegno non lo sa ancora. */
 const STATI_SOLARE = Object.freeze([
-  { ref: "dm.boiler_interruttore_boiler", nome: () => t("Boiler", "Boiler"), ic: "🔌" },
-  { ref: "dm.boiler_stato_pompa_solare", nome: () => t("Pompa solare", "Solar pump"), ic: "🔄", pompa: true },
-  { ref: "dm.boiler_pompa_solare", nome: () => t("Pompa solare", "Solar pump"), ic: "🔄", pompa: true },
-  { ref: "dm.boiler_sensore_pompa_solare", nome: () => t("Pompa solare", "Solar pump"), ic: "🔄", pompa: true },
-  { ref: "dm.boiler_valvola_di_sicurezza", nome: () => t("Valvola di sicurezza", "Safety valve"), ic: "🛡️", valvola: true },
-  { ref: "dm.boiler_chiave_solare", nome: () => t("Valvola solare", "Solar valve"), ic: "🗝️", valvola: true },
-  { ref: "dm.boiler_centralina_solare_termico", nome: () => t("Centralina", "Controller"), ic: "🎛️" },
-  { ref: "dm.boiler_interruttore_solare_termico", nome: () => t("Ctrl solare", "Solar control"), ic: "☀️" },
+  {
+    ref: "dm.boiler_interruttore_boiler",
+    nome: () => t("Boiler", "Boiler"),
+    ic: "🔌",
+    disegno: "boiler",
+  },
+  {
+    ref: "dm.boiler_stato_pompa_solare",
+    nome: () => t("Pompa solare", "Solar pump"),
+    ic: "🔄",
+    disegno: "pump",
+    pompa: true,
+  },
+  {
+    ref: "dm.boiler_pompa_solare",
+    nome: () => t("Pompa solare", "Solar pump"),
+    ic: "🔄",
+    disegno: "pump",
+    pompa: true,
+  },
+  {
+    ref: "dm.boiler_sensore_pompa_solare",
+    nome: () => t("Pompa solare", "Solar pump"),
+    ic: "🔄",
+    disegno: "pump",
+    pompa: true,
+  },
+  {
+    ref: "dm.boiler_valvola_di_sicurezza",
+    nome: () => t("Valvola di sicurezza", "Safety valve"),
+    ic: "🛡️",
+    disegno: "security",
+    valvola: true,
+  },
+  {
+    ref: "dm.boiler_chiave_solare",
+    nome: () => t("Valvola solare", "Solar valve"),
+    ic: "🗝️",
+    disegno: "key",
+    valvola: true,
+  },
+  {
+    ref: "dm.boiler_centralina_solare_termico",
+    nome: () => t("Centralina", "Controller"),
+    ic: "🎛️",
+    disegno: "sliders",
+  },
+  {
+    ref: "dm.boiler_interruttore_solare_termico",
+    nome: () => t("Ctrl solare", "Solar control"),
+    ic: "☀️",
+    disegno: "solar",
+  },
 ]);
 
-/* Le misure dell'impianto che non stanno nello schema: la pressione, e le
- * due potenze col nome che hanno nella pagina. */
+/* Le misure dell'impianto che non stanno nello schema. La pressione e la
+ * resistenza hanno la loro casella disegnata (sotto); qui resta la potenza
+ * del boiler, col nome che ha nella pagina. */
 const MISURE_SOLARE = Object.freeze([
-  { ref: "dm.boiler_pressione_acqua", nome: () => t("Pressione", "Pressure") },
-  { ref: "dm.boiler_potenza_resistenza_boiler", nome: () => t("Resistenza", "Heater") },
   { ref: "dm.boiler_potenza", nome: () => t("Potenza boiler", "Boiler power") },
 ]);
+
+/* La pressione «nella norma» di un circuito solare chiuso: sotto un bar e
+ * mezzo il circuito ha perso liquido (o il vaso d'espansione si e' scaricato),
+ * sopra i quattro si avvicina alla valvola di sicurezza, che di solito apre a
+ * sei. Il quadrante va da zero a sei, come quello del manometro vero. */
+export const PRESSIONE_NORMA = Object.freeze({ min: 1.5, max: 4, fondo: 6 });
+
+/** Com'e' la pressione: `"bassa"`, `"norma"`, `"alta"`, o `""` se non c'e'. */
+export function comeStaLaPressione(bar, norma = PRESSIONE_NORMA) {
+  const valore = numero(bar);
+  if (valore == null) return "";
+  if (valore < norma.min) return "bassa";
+  if (valore > norma.max) return "alta";
+  return "norma";
+}
+
+/* Il manometro disegnato: l'arco di 240 gradi da zero al fondo scala, la
+ * fascia verde della norma, le due rosa fuori, e la lancetta sul valore. */
+function manometro(bar, norma = PRESSIONE_NORMA) {
+  const fondo = Math.max(norma.fondo, Math.ceil(Number(bar) || 0));
+  const angolo = (valore) => -210 + (240 * Math.max(0, Math.min(fondo, valore))) / fondo;
+  const punto = (gradi, raggio) => {
+    const r = (gradi * Math.PI) / 180;
+    return [32 + raggio * Math.cos(r), 32 + raggio * Math.sin(r)].map((n) => n.toFixed(2));
+  };
+  const arco = (da, a, colore) => {
+    const [x1, y1] = punto(angolo(da), 22);
+    const [x2, y2] = punto(angolo(a), 22);
+    const grande = angolo(a) - angolo(da) > 180 ? 1 : 0;
+    return `<path d="M${x1} ${y1}A22 22 0 ${grande} 1 ${x2} ${y2}" fill="none" stroke="${colore}" stroke-width="6"/>`;
+  };
+  const [lx, ly] = punto(angolo(Number(bar) || 0), 17);
+  return `<svg class="dm-f-solare-manometro" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="var(--card-bg,#fff)" stroke="color-mix(in srgb,var(--text-dim,#94a3b8) 45%,transparent)" stroke-width="3.5"/>${arco(
+    0,
+    norma.min,
+    "#fca5a5",
+  )}${arco(norma.min, norma.max, "#86efac")}${arco(norma.max, fondo, "#fca5a5")}<path d="M32 32L${lx} ${ly}" stroke="var(--text,#0f172a)" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="var(--text,#0f172a)"/></svg>`;
+}
+
+/* La linea delle ultime ventiquattr'ore, con la fascia della norma dietro.
+ *
+ * «Pressione: mostra un grafico, qualcosa di più bello oltre a un dato così
+ * statico.» Un numero solo non dice se la pressione e' ferma o se sta
+ * calando da ieri, che e' la cosa che fa chiamare il tecnico. Lo storico
+ * arriva da Recorder (`storico-condiviso-section.js`, lo stesso padrone del
+ * grafico delle temperature): finche' non c'e' — o se la casa Recorder non
+ * ce l'ha — la linea non compare e resta il manometro. */
+function lineaDellaPressione(punti, norma = PRESSIONE_NORMA) {
+  if (!Array.isArray(punti) || punti.length < 2) return "";
+  const valori = punti.map((punto) => punto.valore);
+  const basso = Math.min(...valori, norma.min) - 0.2;
+  const alto = Math.max(...valori, norma.max) + 0.2;
+  const inizio = punti[0].quando;
+  const fine = punti[punti.length - 1].quando;
+  const durata = Math.max(1, fine - inizio);
+  const x = (quando) => ((200 * (quando - inizio)) / durata).toFixed(1);
+  const y = (valore) => (4 + (40 * (alto - valore)) / (alto - basso)).toFixed(1);
+  /* A gradini: Recorder scrive quando lo stato cambia, e fra due letture la
+   * pressione e' rimasta quella di prima. */
+  let tratto = `M${x(punti[0].quando)} ${y(punti[0].valore)}`;
+  for (let i = 1; i < punti.length; i += 1)
+    tratto += `H${x(punti[i].quando)}V${y(punti[i].valore)}`;
+  const ultimo = punti[punti.length - 1];
+  return `<div class="dm-f-solare-linea"><svg viewBox="0 0 200 48" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="${y(
+    norma.max,
+  )}" width="200" height="${(Number(y(norma.min)) - Number(y(norma.max))).toFixed(1)}" fill="color-mix(in srgb,#16a34a 12%,transparent)"/><path d="${tratto}" fill="none" stroke="var(--dm-widget-accent,#ea580c)" stroke-width="2.4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><circle cx="${x(
+    ultimo.quando,
+  )}" cy="${y(ultimo.valore)}" r="3" fill="var(--dm-widget-accent,#ea580c)" vector-effect="non-scaling-stroke"/></svg><span class="dm-f-solare-asse"><small>${esc(
+    t("24 h fa", "24 h ago"),
+  )}</small><small>${esc(t("adesso", "now"))}</small></span></div>`;
+}
+
+/* La casella della pressione: il manometro, il numero, se e' nella norma, e
+ * sotto la sua giornata. */
+function casellaDellaPressione(riga, storia) {
+  const bar = numero(riga?.raw);
+  if (bar == null) return "";
+  const come = comeStaLaPressione(bar);
+  const fascia = `(${formatNumber(PRESSIONE_NORMA.min, 1)}–${formatNumber(PRESSIONE_NORMA.max, 0)})`;
+  const parola =
+    come === "bassa"
+      ? t("bassa", "low")
+      : come === "alta"
+        ? t("alta", "high")
+        : t("nella norma", "normal");
+  return `<div class="dm-f-solare-gr dm-f-solare-pressione" data-come="${come}">
+      <small class="dm-f-solare-gr-tit"><i aria-hidden="true">${disegnoDiCasa("gauge", { misura: 22 })}</i>${esc(t("Pressione", "Pressure"))}</small>
+      <div class="dm-f-solare-pr">${manometro(bar)}<div><span class="dm-f-num">${esc(unito(clean(riga.value) || `${formatNumber(bar, 1)} bar`))}</span><em><i aria-hidden="true"></i>${esc(
+        parola,
+      )} ${esc(fascia)}</em></div></div>
+      ${lineaDellaPressione(storia)}
+    </div>`;
+}
+
+/* La casella della resistenza: i watt, la barra fino alla potenza piena, e
+ * in una riga che cosa vuol dire. */
+const RESISTENZA_PIENA = 2000;
+
+function casellaDellaResistenza(riga, pompa) {
+  const watt = numero(riga?.raw);
+  if (watt == null) return "";
+  const pieno = Math.max(RESISTENZA_PIENA, watt);
+  const quota = watt > 0 ? Math.max(3, Math.min(100, Math.round((watt / pieno) * 100))) : 0;
+  const frase =
+    watt > 0
+      ? t("Accesa: scalda l'acqua con la corrente.", "On: heating the water with electricity.")
+      : pompa
+        ? t("Spenta: ci pensa il sole.", "Off: the sun is doing the work.")
+        : t("Spenta: non sta consumando.", "Off: not drawing power.");
+  return `<div class="dm-f-solare-gr dm-f-solare-resistenza"${watt > 0 ? ' data-on="true"' : ""}>
+      <small class="dm-f-solare-gr-tit"><i aria-hidden="true">${disegnoDiCasa("power", { misura: 22 })}</i>${esc(t("Resistenza", "Heater"))}</small>
+      <span class="dm-f-num">${esc(clean(riga.value) || watt)}</span>
+      <i class="dm-f-solare-barra" aria-hidden="true"><i style="width:${quota}%"></i></i>
+      <p>${esc(frase)}</p>
+    </div>`;
+}
 
 /** Cosa sta succedendo fra pannello e boiler, in una frase, o `""`. */
 export function fraseDelSolare(pannello, boiler, pompa) {
@@ -814,6 +980,24 @@ export function fraseDelSolare(pannello, boiler, pompa) {
   );
 }
 
+/* Le ventiquattr'ore della pressione, se lo storico le ha gia' date. Non si
+ * aspetta: la finestra si apre col manometro, e quando la risposta arriva la
+ * Home ridisegna (`quandoArrivaLoStorico`). */
+function storiaDellaPressione(riga) {
+  const entita = clean(riga?.entity);
+  if (!entita) return null;
+  const vivo = numero(riga?.raw);
+  try {
+    return puntiDi(
+      entita,
+      24,
+      vivo != null ? { adesso: { quando: Date.now(), valore: vivo } } : {},
+    );
+  } catch (_errore) {
+    return null;
+  }
+}
+
 function disegnaSolare(widget) {
   const righe = Array.isArray(widget?.rows) ? widget.rows : [];
   const daRif = (ref) => righe.find((riga) => riga?.ref === ref) || null;
@@ -832,9 +1016,12 @@ function disegnaSolare(widget) {
   const segno = (valore) =>
     `${valore > 0 ? "+" : valore < 0 ? "−" : ""}${formatNumber(Math.abs(valore), 0)}°`;
 
+  /* «Icona boiler: che c'entra con il bidone?» Il boiler era un 🛢️, il fusto
+   * del petrolio; adesso e' il serbatoio dell'acqua calda del catalogo di
+   * casa, e il pannello e' il pannello solare — non un sole qualunque. */
   const nodoPannello =
     pannello != null
-      ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">☀️</span>
+      ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">${disegnoDiCasa("solar", { misura: 48 })}</span>
           <small>${esc(t("Pannello", "Panel"))}</small><span class="dm-f-num">${esc(gradi(pannello))}</span>${
             boiler != null && pannello !== boiler
               ? `<em>${esc(pannello < boiler ? t("più freddo del boiler", "colder than the boiler") : t("più caldo del boiler", "warmer than the boiler"))}</em>`
@@ -847,7 +1034,7 @@ function disegnaSolare(widget) {
       : "";
   const nodoBoiler =
     boiler != null
-      ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">🛢️</span>
+      ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">${disegnoDiCasa("boiler", { misura: 48 })}</span>
           <small>${esc(t("Boiler", "Boiler"))}</small><span class="dm-f-num">${esc(gradi(boiler))}</span>${
             sottoBoiler ? `<em>${esc(sottoBoiler)}</em>` : ""
           }</div>`
@@ -863,6 +1050,14 @@ function disegnaSolare(widget) {
       ? `<section class="dm-f-solare-schema" data-due="${Boolean(nodoPannello && nodoBoiler)}">${nodoPannello}${filo}${nodoBoiler}</section>`
       : "";
   const frase = fraseDelSolare(pannello, boiler, pompa);
+
+  /* La pressione e la resistenza, disegnate: il manometro con la sua
+   * giornata, e i watt con la barra e una riga che li spiega. */
+  const rigaPressione = daRif("dm.boiler_pressione_acqua");
+  const grandi = [
+    casellaDellaPressione(rigaPressione, storiaDellaPressione(rigaPressione)),
+    casellaDellaResistenza(daRif("dm.boiler_potenza_resistenza_boiler"), pompa),
+  ].filter(Boolean);
 
   const misure = MISURE_SOLARE.map((voce) => ({ voce, riga: daRif(voce.ref) }))
     .filter(({ riga }) => riga && clean(riga.value))
@@ -905,16 +1100,19 @@ function disegnaSolare(widget) {
             ? t("Acceso", "On")
             : t("Spento", "Off");
       return `<div class="dm-f-solare-st"${riga.on ? ' data-on="true"' : ""}>
-        <span class="dm-f-solare-st-ic" aria-hidden="true">${voce.ic}</span>
+        <span class="dm-f-solare-st-ic" aria-hidden="true">${disegnoDiCasa(voce.disegno, { misura: 28 }) || voce.ic}</span>
         <b>${esc(voce.nome())}</b>
         <span class="dm-f-solare-st-s">${esc(parola)}</span>
       </div>`;
     });
 
+  const impianto = grandi.length || misure.length;
   return `<div class="dm-f dm-f-solare">
     ${schema}
     ${frase ? `<p class="dm-f-solare-frase">${esc(frase)}</p>` : ""}
-    ${misure.length ? `${titoletto(t("L'impianto", "The system"))}<div class="dm-f-solare-tre">${misure.join("")}</div>` : ""}
+    ${impianto ? titoletto(t("L'impianto", "The system")) : ""}
+    ${grandi.length ? `<div class="dm-f-solare-due">${grandi.join("")}</div>` : ""}
+    ${misure.length ? `<div class="dm-f-solare-tre">${misure.join("")}</div>` : ""}
     ${stati.length ? `${titoletto(t("Lo stato", "The state"))}<div class="dm-f-solare-stati">${stati.join("")}</div>` : ""}
   </div>`;
 }
@@ -928,7 +1126,8 @@ ${P} .dm-f-solare-schema[data-due="false"]{grid-template-columns:minmax(0,1fr)}
 ${P} .dm-f-solare-nodo{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0;border-radius:20px;padding:12px 8px;
   background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 30%,transparent);
   box-shadow:0 12px 22px -20px rgba(180,83,9,.7)}
-${P} .dm-f-solare-ic{font-size:28px;line-height:1}
+${P} .dm-f-solare-ic{display:grid;place-items:center;min-height:48px;font-size:28px;line-height:1}
+${P} .dm-f-solare-ic > .dm-catalogo-art{display:grid}
 ${P} .dm-f-solare-nodo small{margin-top:4px;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
   color:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 60%,var(--text,#0f172a))}
 ${P} .dm-f-solare-nodo .dm-f-num{margin-top:4px;font-size:29px}
@@ -940,6 +1139,26 @@ ${P} .dm-f-solare-filo[data-gira="true"] i{background:repeating-linear-gradient(
 ${P} .dm-f-solare-filo b{font-size:11px;font-weight:900;line-height:1.25;text-align:center;color:var(--text-dim,#64748b)}
 ${P} .dm-f-solare-frase{margin:12px 0 0;border-radius:16px;padding:11px 13px;font-size:13px;font-weight:750;line-height:1.4;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 12%,var(--card-bg,#fff));color:var(--text,#334155)}
+${P} .dm-f-solare-due{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:9px;margin-bottom:8px}
+${P} .dm-f-solare-gr{display:flex;flex-direction:column;min-width:0;border-radius:20px;padding:13px 14px;
+  background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
+${P} .dm-f-solare-gr-tit{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${P} .dm-f-solare-gr-tit > i{display:grid;place-items:center;width:22px;height:22px}
+${P} .dm-f-solare-pr{display:flex;align-items:center;gap:12px;margin-top:8px}
+${P} .dm-f-solare-manometro{flex:none;width:62px;height:62px}
+${P} .dm-f-solare-pr .dm-f-num{display:block;font-size:27px;line-height:1.05;white-space:nowrap}
+${P} .dm-f-solare-pr em{display:inline-flex;align-items:center;gap:5px;margin-top:3px;font-style:normal;font-size:11.5px;font-weight:850;color:#15803d}
+${P} .dm-f-solare-pr em i{width:7px;height:7px;border-radius:50%;background:currentColor}
+${P} .dm-f-solare-pressione[data-come="bassa"] em,${P} .dm-f-solare-pressione[data-come="alta"] em{color:#dc2626}
+${P} .dm-f-solare-linea{margin-top:10px}
+${P} .dm-f-solare-linea svg{display:block;width:100%;height:46px;border-radius:8px}
+${P} .dm-f-solare-asse{display:flex;justify-content:space-between;margin-top:3px}
+${P} .dm-f-solare-asse small{font-size:10px;font-weight:800;color:var(--text-dim,#94a3b8)}
+${P} .dm-f-solare-resistenza .dm-f-num{margin-top:8px;font-size:27px;line-height:1.05;white-space:nowrap}
+${P} .dm-f-solare-barra{display:block;height:9px;margin-top:10px;border-radius:999px;overflow:hidden;
+  background:color-mix(in srgb,var(--text-dim,#94a3b8) 16%,transparent)}
+${P} .dm-f-solare-barra > i{display:block;height:100%;border-radius:999px;background:var(--dm-widget-accent,#f59e0b)}
+${P} .dm-f-solare-resistenza p{margin:8px 0 0;font-size:12px;font-weight:750;line-height:1.4;color:var(--text-dim,#64748b)}
 ${P} .dm-f-solare-tre{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
 ${P} .dm-f-solare-cas{display:flex;flex-direction:column;min-width:0;border-radius:18px;padding:12px 11px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
@@ -950,6 +1169,7 @@ ${P} .dm-f-solare-st{display:flex;align-items:center;gap:11px;min-width:0;paddin
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0)}
 ${P} .dm-f-solare-st-ic{flex:0 0 36px;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:17px;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 10%,var(--card-bg,#fff))}
+${P} .dm-f-solare-st-ic > .dm-catalogo-art{display:grid}
 ${P} .dm-f-solare-st b{flex:1;min-width:0;font-size:13.5px;font-weight:850;color:var(--text,#0f172a)}
 ${P} .dm-f-solare-st-s{flex:0 0 auto;padding:5px 9px;border-radius:999px;font-size:10.5px;font-weight:900;letter-spacing:.08em;
   text-transform:uppercase;background:color-mix(in srgb,var(--text-dim,#94a3b8) 14%,transparent);color:var(--text-dim,#64748b)}

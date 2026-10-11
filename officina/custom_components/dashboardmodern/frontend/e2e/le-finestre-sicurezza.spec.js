@@ -337,6 +337,9 @@ test("chi non risponde e le batterie", async ({ page }, testInfo) => {
     "Sensore porta ingresso",
   );
   await expect(finestra.locator(".dm-f-batterie-pila[data-giu]")).not.toContainText("Batteria");
-  await expect(finestra.locator(".dm-f-batterie-ok > div")).toHaveCount(2);
+  /* Le altre stanno nella stessa griglia «Dalla più scarica», col disegno del
+   * loro dispositivo e la barra a forma di pila. */
+  await expect(finestra.locator(".dm-f-batterie-pila:not([data-giu])")).toHaveCount(4);
+  await expect(finestra.locator(".dm-f-batterie-inpiedi")).toHaveCount(5);
   await fotografa(page, "batterie", testInfo);
 });
