@@ -16,9 +16,9 @@
 /// Un messaggio per parte, in chiaro. E' l'unico pezzo che il centralino vede,
 /// e non c'e' niente dentro che gli serva.
 ///
-///     telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, app:N}   telefono noto
-///     telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…", app:N}              telefono nuovo
-///     casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true, da_casa:true}
+///     telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, app:N, lega:1}   telefono noto
+///     telefono → casa   {v:1, abbina:2, apertura:"…", mia:"…", app:N, lega:1}              telefono nuovo
+///     casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, lega:1, mucchio:true, da_casa:true}
 ///     casa → telefono   {v:1, no:"…"}                              e basta
 ///     casa → telefono   {v:1, no:"…", riabbina:true}               non ti conosco
 ///     casa → telefono   {v:1, no:"…", motivo:"…"}                  l'abbinamento non parte
@@ -58,6 +58,17 @@
 /// dall'indirizzo: un indirizzo `https` pubblico si apre anche dal divano, e
 /// un indirizzo «di casa» scritto nel QR si apre anche da fuori se e'
 /// pubblico. Vedi `casa/collegamento.dart`.
+///
+/// `lega: 1` dice «lega la chiave a queste due righe»: se la casa lo ripete,
+/// le due righe intere entrano nella chiave, e chi le ha ritoccate per strada
+/// — un `da_casa` girato, un `gzip` tolto — fa si' che la prima busta non si
+/// apra. Un ponte di prima non lo ripete, e si va come sempre; ma una casa
+/// che l'ha ripetuto una volta deve ripeterlo sempre ([LegameMancato]): se
+/// lo ricorda il filo di quella casa (`filo.dart`), finche' l'app resta
+/// aperta. Ricordarselo anche fra un'apertura e l'altra vorrebbe dire
+/// scriverlo nell'archivio delle case, e il filo e' gia' pronto a farlo
+/// (`legameGiaVisto`, `quandoLega`): manca solo chi glielo passi. Vedi
+/// `cifra.dart`.
 ///
 /// `app` e' il numero di costruzione di quest'app (`costruzioneDiQuestApp`):
 /// la casa lo confronta con la versione minima del giorno dei pagamenti, e a
@@ -120,11 +131,17 @@ const int interoMassimo = 16 * 1024 * 1024;
 /// chiave si fa col codice. Chi sta in mezzo, senza il codice, arriva a
 /// un'altra chiave. Dopo la stretta, chi si abbina manda la conferma: vedi
 /// `abbinamento.dart`.
+///
+/// [pretendiIlLegame] dice che questa casa il legame (`lega`) l'ha gia'
+/// ripetuto un'altra volta: allora una risposta senza non si accetta, e la
+/// stretta finisce con [LegameMancato]. Chi chiama se lo ricorda casa per
+/// casa, guardando [PresaCifrata.legata] dopo una stretta andata bene.
 Future<PresaCifrata> stringiLaMano(
   Presa sotto, {
   String? chi,
   String? chiaveDelFilo,
   String? codice,
+  bool pretendiIlLegame = false,
   Duration entro = attesaDellaStretta,
 }) async {
   final perAbbinarsi = codice != null;
@@ -136,8 +153,35 @@ Future<PresaCifrata> stringiLaMano(
     perAbbinarsi: perAbbinarsi,
   );
 
+  /* La prima riga si scrive una volta sola e si tiene: col legame entra
+   * nella chiave **com'e' uscita da qui**, byte per byte. */
+  final ciao = jsonEncode({
+    'v': versioneDelProtocollo,
+    if (perAbbinarsi) 'abbina': versioneDellAbbinamento else 'chi': chi,
+    'apertura': base64.encode(apertura),
+    'mia': mia.inBase64,
+    /* Sul telefono si'; nel browser no, e non lo si dice. Abbinandosi
+     * nemmeno: passano il segno e la chiave, e per quattro righe non serve
+     * a niente. */
+    if (gzipDisponibile && !perAbbinarsi) 'gzip': true,
+    /* Un mucchio di eventi in un messaggio solo: qui si sa spacchettare, e
+     * si dice sempre — nel browser come sul telefono. Il ponte lo fa solo
+     * passando dal centralino, che e' dove ogni messaggio e' una richiesta
+     * contata; in casa manda come prima. Vedi `ponte/src/ponte.js`. */
+    'mucchio': true,
+    /* Che numero e' quest'app: la casa ferma quelle sotto la versione
+     * minima (`ponte/src/versione-minima.js`). Nel browser come sul
+     * telefono: l'app web servita dall'add-on e' della stessa costruzione. */
+    'app': costruzioneDiQuestApp,
+    /* Lega la chiave a queste due righe: una casa che lo sa fare lo ripete,
+     * e da li' chi le ritocca per strada non entra. Un ponte di prima non lo
+     * conosce, lo ignora, e si va con la chiave di sempre. Sempre, anche
+     * abbinandosi: e' li' che passano il segno e la chiave del filo. */
+    'lega': versioneDelLegame,
+  });
+
   cifrata._ascolta(
-    laPrima: (detto) async {
+    laPrima: (detto, grezzo) async {
       if (detto['v'] != versioneDelProtocollo) {
         throw const StrettaRifiutata(
           'questa casa parla una lingua che non conosco: aggiorna gdahome, o l\'app',
@@ -199,6 +243,34 @@ Future<PresaCifrata> stringiLaMano(
       if (detto['pronto'] != true || sua is! String) {
         throw const StrettaRifiutata('la casa non ha stretto la mano');
       }
+      /* Il legame: la casa l'ha ripetuto, e allora la chiave si fa anche
+       * con le due righe intere — la nostra com'e' uscita, la sua com'e'
+       * arrivata. Se qualcuno ne ha toccata una, le due punte arrivano a due
+       * chiavi diverse e la prima busta non si apre: e' quello che si vuole.
+       *
+       * Se non l'ha ripetuto e' una casa di prima, e si entra come sempre
+       * — a meno che questa casa l'avesse gia' ripetuto un'altra volta: una
+       * casa non lo dimentica da sola, e una risposta senza vuol dire che
+       * qualcuno l'ha tolto dalla nostra riga per strada, o che sulla casa
+       * e' tornato un gdahome di prima. Nel dubbio non si entra. */
+      final legata = detto['lega'] == versioneDelLegame;
+      if (!legata && pretendiIlLegame) {
+        throw LegameMancato(
+          inLingua(
+            it:
+                'la casa ha risposto in un modo meno sicuro di come fa di '
+                'solito, e non entro: qualcuno potrebbe essersi messo in '
+                'mezzo. Se hai rimesso una versione vecchia di gdahome in '
+                'Home Assistant, aggiornala o riabbina il telefono',
+            en:
+                'your home answered in a less secure way than it usually '
+                'does, so I\'m not going in: someone may be in the middle. If '
+                'you put an older version of gdahome back in Home Assistant, '
+                'update it or pair the phone again',
+          ),
+        );
+      }
+      cifrata._legata = legata;
       cifrata._suaPubblica = sua;
       final daCasa = detto['da_casa'];
       cifrata._daCasa = daCasa is bool ? daCasa : null;
@@ -211,31 +283,12 @@ Future<PresaCifrata> stringiLaMano(
         apertura: apertura,
         chiaveDelFilo: perAbbinarsi ? null : chiaveDelFilo,
         codice: codice,
+        stretta: legata ? await improntaDellaStretta(ciao, grezzo) : null,
       );
     },
   );
 
-  sotto.manda(
-    jsonEncode({
-      'v': versioneDelProtocollo,
-      if (perAbbinarsi) 'abbina': versioneDellAbbinamento else 'chi': chi,
-      'apertura': base64.encode(apertura),
-      'mia': mia.inBase64,
-      /* Sul telefono si'; nel browser no, e non lo si dice. Abbinandosi
-       * nemmeno: passano il segno e la chiave, e per quattro righe non serve
-       * a niente. */
-      if (gzipDisponibile && !perAbbinarsi) 'gzip': true,
-      /* Un mucchio di eventi in un messaggio solo: qui si sa spacchettare, e
-       * si dice sempre — nel browser come sul telefono. Il ponte lo fa solo
-       * passando dal centralino, che e' dove ogni messaggio e' una richiesta
-       * contata; in casa manda come prima. Vedi `ponte/src/ponte.js`. */
-      'mucchio': true,
-      /* Che numero e' quest'app: la casa ferma quelle sotto la versione
-       * minima (`ponte/src/versione-minima.js`). Nel browser come sul
-       * telefono: l'app web servita dall'add-on e' della stessa costruzione. */
-      'app': costruzioneDiQuestApp,
-    }),
-  );
+  sotto.manda(ciao);
 
   await cifrata._pronta.future.timeout(
     entro,
@@ -302,6 +355,24 @@ class PresaCifrata implements PresaAperta {
   bool? get daCasa => _daCasa;
   bool? _daCasa;
 
+  /// Se la chiave di questo filo e' legata alle due righe in chiaro: la casa
+  /// ha ripetuto il `lega`. Da li' in poi [daCasa], e tutto il resto del
+  /// `pronto`, e' quello che ha scritto la casa e non chi sta in mezzo — se
+  /// fosse stato toccato, la prima busta non si sarebbe aperta. `false` con
+  /// un ponte di prima.
+  bool get legata => _legata;
+  bool _legata = false;
+
+  /// Se la chiave e' legata **e** almeno una busta della casa si e' aperta.
+  ///
+  /// E' questa, e non [legata], quella da ricordarsi per la volta dopo: un
+  /// `lega` lo puo' aggiungere alla risposta anche chi sta in mezzo, e a
+  /// ricordarselo prima della prova lascerebbe dietro di se' una casa che
+  /// non si apre piu' — perche' una casa di prima il legame non lo sa fare.
+  /// Una busta aperta con la chiave legata, invece, l'ha chiusa la casa.
+  bool get legataEProvata => _legata && _unaBustaAperta;
+  bool _unaBustaAperta = false;
+
   /// Se questa e' la presa di un abbinamento. Li', dopo la stretta, si
   /// ascolta anche una riga in chiaro: il no a una conferma che non si e'
   /// aperta.
@@ -357,7 +428,7 @@ class PresaCifrata implements PresaAperta {
   Stream<Uint8List> get messaggi => _uscita.stream;
 
   void _ascolta({
-    required Future<SecretKey> Function(Map<String, dynamic>) laPrima,
+    required Future<SecretKey> Function(Map<String, dynamic>, String) laPrima,
   }) {
     _sotto.messaggi.listen(
       (testo) {
@@ -398,7 +469,7 @@ class PresaCifrata implements PresaAperta {
 
   void _laStretta(
     String testo,
-    Future<SecretKey> Function(Map<String, dynamic>) laPrima,
+    Future<SecretKey> Function(Map<String, dynamic>, String) laPrima,
   ) {
     _codaInEntrata = _codaInEntrata.then((_) async {
       if (_busta != null || _chiusa) return;
@@ -410,7 +481,7 @@ class PresaCifrata implements PresaAperta {
           );
         }
         _busta = Busta(
-          await laPrima(letto),
+          await laPrima(letto, testo),
           io: DaChi.telefono,
           comprime: gzipDisponibile && letto['gzip'] == true,
         );
@@ -482,6 +553,7 @@ class PresaCifrata implements PresaAperta {
        * le stringhe si copiano, i byte si trasferiscono — per poi buttarla
        * subito dopo. */
       final dentro = await _busta!.apriByte(intero);
+      _unaBustaAperta = true;
       if (!_uscita.isClosed) _uscita.add(dentro);
     } on BustaGuasta catch (errore) {
       /* Su un canale che passa da un terzo, un messaggio che non si apre o e'

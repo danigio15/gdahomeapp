@@ -46,6 +46,7 @@
 import {
   createDecipheriv,
   createCipheriv,
+  createHash,
   createPrivateKey,
   createPublicKey,
   diffieHellman,
@@ -69,6 +70,65 @@ export const VERSIONE_DELL_ABBINAMENTO = 2;
 
 const ETICHETTA_FILO = "gdahome/filo/v1";
 const ETICHETTA_ABBINAMENTO = "gdahome/abbinamento/v2";
+
+/* ─── Il legame con le due righe in chiaro ─────────────────────────────────
+ *
+ * Le due righe della stretta di mano viaggiano in chiaro, e chi sta in mezzo
+ * — il centralino, o chi risponde all'indirizzo di casa — le puo' riscrivere.
+ * La chiave non dipendeva da quasi niente di quello che c'e' scritto li':
+ * solo le due chiavi pubbliche e l'apertura. Tutto il resto — `gzip`,
+ * `mucchio`, `app`, e soprattutto il `da_casa` della risposta, che con
+ * gdahome Base decide se l'app tiene aperto il filo — si poteva girare senza
+ * che nessuno se ne accorgesse.
+ *
+ * Il legame lo chiude: le due righe, **cosi' come sono passate sul filo**,
+ * byte per byte, entrano nella chiave. Se qualcuno ne tocca anche una
+ * virgola, le due punte arrivano a due chiavi diverse e la prima busta non si
+ * apre. Le righe intere e non i campi uno per uno: cosi' non serve mettersi
+ * d'accordo su come si scrive un JSON «canonico» in due lingue diverse, e non
+ * resta fuori niente — nemmeno un campo che verra' aggiunto domani. Il
+ * centralino le righe le porta dentro una stringa (`m`), e una stringa dentro
+ * un JSON fa andata e ritorno identica: per strada non cambia niente.
+ *
+ * Non e' una versione nuova del protocollo, come il gzip: il telefono che lo
+ * sa fare lo dice nella prima riga (`lega: 1`), e la casa che lo sa fare lo
+ * ripete nella risposta. Solo se l'hanno detto tutti e due la chiave si fa
+ * cosi'; un'app di prima, o una casa di prima, si parlano come sempre.
+ *
+ * Chi togliesse il `lega` dalla prima riga, per riportare tutti alla chiave
+ * di prima, ci riesce solo con un filo che quella casa non l'ha ancora vista
+ * legare: il filo dell'app si ricorda se la casa l'ha gia' ripetuto — con una
+ * busta aperta a provarlo — e da li' in poi una risposta senza non la accetta
+ * (`app/lib/ponte/stretta.dart`, `filo.dart`). Per ora se lo ricorda finche'
+ * l'app resta aperta: alla prima stretta dopo un'apertura da zero, chi sta in
+ * mezzo puo' ancora togliere il legame. */
+export const VERSIONE_DEL_LEGAME = 1;
+
+const ETICHETTA_DEL_LEGAME = "gdahome/lega/v1";
+
+/* L'impronta delle due righe in chiaro: la prima del telefono e la risposta
+ * della casa, ognuna preceduta dalla sua lunghezza in quattro byte — cosi'
+ * non c'e' modo di spostare un pezzo dall'una all'altra e ottenere la stessa
+ * impronta. Le righe entrano come byte UTF-8, cioe' come sono passate sul
+ * filo. */
+export function improntaDellaStretta(ciao, pronto) {
+  const inByte = (riga) => (Buffer.isBuffer(riga) ? riga : Buffer.from(String(riga), "utf8"));
+  const lunga = (byte) => {
+    const quattro = Buffer.alloc(4);
+    quattro.writeUInt32BE(byte.length, 0);
+    return quattro;
+  };
+  const daCiao = inByte(ciao);
+  const daPronto = inByte(pronto);
+  return createHash("sha256")
+    .update(Buffer.from(ETICHETTA_DEL_LEGAME, "utf8"))
+    .update(Buffer.from([0]))
+    .update(lunga(daCiao))
+    .update(daCiao)
+    .update(lunga(daPronto))
+    .update(daPronto)
+    .digest();
+}
 
 /* ─── La compressione, prima della cifratura ──────────────────────────────
  *
@@ -184,6 +244,10 @@ export function chiaveDiSessione({
   apertura,
   chiaveDelFilo = null,
   codice = null,
+  /* L'impronta delle due righe in chiaro (`improntaDellaStretta`), quando
+   * tutte e due le punte hanno detto `lega`. Senza, la chiave e' quella di
+   * sempre, byte per byte. */
+  stretta = null,
 }) {
   if (Boolean(chiaveDelFilo) === Boolean(codice)) {
     throw new Error("serve la chiave del filo oppure il codice, e uno solo dei due");
@@ -205,14 +269,20 @@ export function chiaveDiSessione({
   const materia = Buffer.concat([daLloScambio, segreto]);
   /* Le due chiavi pubbliche entrano nel sale in un ordine fisso: cosi' le due
    * punte arrivano alla stessa chiave, e la chiave dipende da *quale* stretta
-   * di mano e' stata. */
+   * di mano e' stata.
+   *
+   * Col legame, l'impronta delle due righe va in fondo al sale, e
+   * all'etichetta si aggiunge `+lega`: una chiave legata e una no non vengono
+   * uguali nemmeno per caso. */
   const sale = Buffer.concat([
     Buffer.from(apertura),
     Buffer.from(delTelefono),
     Buffer.from(dellaCasa),
+    ...(stretta ? [Buffer.from(stretta)] : []),
   ]);
+  const etichetta = chiaveDelFilo ? ETICHETTA_FILO : ETICHETTA_ABBINAMENTO;
   return Buffer.from(
-    hkdfSync("sha256", materia, sale, chiaveDelFilo ? ETICHETTA_FILO : ETICHETTA_ABBINAMENTO, 32),
+    hkdfSync("sha256", materia, sale, stretta ? `${etichetta}+lega` : etichetta, 32),
   );
 }
 

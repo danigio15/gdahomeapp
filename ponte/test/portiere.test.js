@@ -18,7 +18,9 @@ import {
   chiaveDelFiloNuova,
   chiaveDiSessione,
   coppiaEffimera,
+  improntaDellaStretta,
   VERSIONE,
+  VERSIONE_DEL_LEGAME,
   VERSIONE_DELL_ABBINAMENTO,
 } from "../src/cifra.js";
 import { Portiere, PresaCifrata } from "../src/portiere.js";
@@ -82,20 +84,38 @@ function unPortiere({ dispositivi = dispositiviFinti(), attesaDellaStretta } = {
 
 /* Un telefono fatto a mano: dice la prima parola, e quando la casa risponde
  * ricava la chiave con quello che ha — un codice, o una chiave del filo. */
-function unTelefono(presa, { codice = null, chiaveDelFilo = null, chi = null, prima = {} } = {}) {
+/*
+ * `lega: true` e' l'app di adesso, che chiede di legare la chiave alle due
+ * righe in chiaro. `perStrada` e' chi sta in mezzo: `ciao` riscrive la prima
+ * riga dopo che il telefono l'ha scritta, `pronto` la risposta prima che il
+ * telefono la legga. */
+function unTelefono(
+  presa,
+  {
+    codice = null,
+    chiaveDelFilo = null,
+    chi = null,
+    prima = {},
+    lega = false,
+    perStrada = {},
+  } = {},
+) {
   const mia = coppiaEffimera();
   const apertura = aperturaNuova();
-  presa.arriva(
-    JSON.stringify({
-      v: VERSIONE,
-      ...(codice != null ? { abbina: VERSIONE_DELL_ABBINAMENTO } : { chi }),
-      apertura: apertura.toString("base64"),
-      mia: mia.pubblica.toString("base64"),
-      ...prima,
-    }),
-  );
-  const pronto = presa.inChiaro.find((uno) => uno.pronto);
-  if (!pronto) return { pronto: null };
+  const ciao = JSON.stringify({
+    v: VERSIONE,
+    ...(codice != null ? { abbina: VERSIONE_DELL_ABBINAMENTO } : { chi }),
+    apertura: apertura.toString("base64"),
+    mia: mia.pubblica.toString("base64"),
+    ...(lega ? { lega: VERSIONE_DEL_LEGAME } : {}),
+    ...prima,
+  });
+  presa.arriva(perStrada.ciao ? perStrada.ciao(ciao) : ciao);
+  const quale = presa.mandati.findIndex((uno) => uno.startsWith("{") && JSON.parse(uno).pronto);
+  if (quale < 0) return { pronto: null };
+  const riga = perStrada.pronto ? perStrada.pronto(presa.mandati[quale]) : presa.mandati[quale];
+  const pronto = JSON.parse(riga);
+  const legata = lega && pronto.lega === VERSIONE_DEL_LEGAME;
   const chiave = chiaveDiSessione({
     miaPrivata: mia.privata,
     suaPubblica: pronto.mia,
@@ -103,10 +123,13 @@ function unTelefono(presa, { codice = null, chiaveDelFilo = null, chi = null, pr
     dellaCasa: Buffer.from(pronto.mia, "base64"),
     apertura,
     ...(codice != null ? { codice } : { chiaveDelFilo }),
+    stretta: legata ? improntaDellaStretta(ciao, riga) : null,
   });
   const busta = new Busta(chiave, { io: "telefono" });
   return {
     pronto,
+    legata,
+    busta,
     mia: mia.pubblica.toString("base64"),
     sua: pronto.mia,
     manda: (cosa) => presa.arriva(busta.chiudi(JSON.stringify(cosa))),
@@ -350,4 +373,148 @@ test("il pronto dice se il filo arriva dalla rete di casa", () => {
     assert.equal(telefono.pronto?.da_casa, atteso, JSON.stringify(come));
     assert.equal(accolti.length, 1, "la casa non chiude: lo dice e basta");
   }
+});
+
+/* ─── Il legame con le due righe in chiaro ───────────────────────────────── */
+
+/* Una casa, un telefono che la conosce, e quello che la casa gli manda per
+ * prima cosa dentro il cifrato: come fa il ponte vero con `auth_required`. */
+function unaStrettaLegata({ lega = true, perStrada = {}, come = { da: "192.168.1.20" } } = {}) {
+  const chiave = chiaveDelFiloNuova();
+  const { portiere, accolti } = unPortiere({
+    dispositivi: dispositiviFinti({ chiavi: { dm_qui: chiave } }),
+  });
+  const presa = presaFinta();
+  portiere.accogli(presa, come);
+  const telefono = unTelefono(presa, { chi: "dm_qui", chiaveDelFilo: chiave, lega, perStrada });
+  const [accolto] = accolti;
+  accolto?.presa.manda(JSON.stringify({ type: "auth_required" }));
+  return { presa, telefono, accolto };
+}
+
+const tipi = (telefono) => telefono.lette().map((uno) => uno.type);
+
+test("chi chiede il legame se lo vede ripetere, e la chiave lo tiene", () => {
+  const { telefono, accolto } = unaStrettaLegata();
+  assert.equal(telefono.pronto.lega, VERSIONE_DEL_LEGAME);
+  assert.equal(telefono.legata, true);
+  assert.deepEqual(tipi(telefono), ["auth_required"]);
+  /* E il ponte sa con la chiave di quale telefono si e' fatta la stretta. */
+  assert.equal(accolto.come.chi, "dm_qui");
+});
+
+test("un'app di prima non chiede il legame, non se lo vede ripetere, ed entra come sempre", () => {
+  const { telefono, accolto } = unaStrettaLegata({ lega: false });
+  assert.equal(telefono.pronto.lega, undefined, "a chi non lo chiede non si dice");
+  assert.equal(telefono.legata, false);
+  assert.deepEqual(tipi(telefono), ["auth_required"]);
+  assert.equal(accolto.come.chi, "dm_qui");
+});
+
+test("un da_casa girato per strada, col legame, fa si' che la prima busta non si apra", () => {
+  /* Dal centralino non si e' mai in casa: chi sta in mezzo lo gira, perche'
+   * con gdahome Base l'app tenga aperto un filo che dovrebbe chiudere. */
+  const { telefono } = unaStrettaLegata({
+    come: { da: "centralino 93.40.1.2" },
+    perStrada: { pronto: (riga) => riga.replace('"da_casa":false', '"da_casa":true') },
+  });
+  assert.equal(telefono.pronto.da_casa, true, "il telefono legge quello che e' stato scritto");
+  assert.throws(() => telefono.lette(), /non si apre/);
+});
+
+test("senza legame, lo stesso da_casa girato passava liscio: e' il buco che si chiude", () => {
+  const { telefono } = unaStrettaLegata({
+    lega: false,
+    come: { da: "centralino 93.40.1.2" },
+    perStrada: { pronto: (riga) => riga.replace('"da_casa":false', '"da_casa":true') },
+  });
+  assert.equal(telefono.pronto.da_casa, true);
+  assert.deepEqual(tipi(telefono), ["auth_required"]);
+});
+
+test("un gzip tolto dalla risposta, col legame, si paga alla prima busta", () => {
+  const { telefono } = unaStrettaLegata({
+    perStrada: { pronto: (riga) => riga.replace('"gzip":true,', "") },
+  });
+  assert.equal(telefono.pronto.gzip, undefined);
+  assert.throws(() => telefono.lette(), /non si apre/);
+});
+
+test("un gzip aggiunto alla prima riga, col legame, la casa non lo apre", () => {
+  const { presa, telefono } = unaStrettaLegata({
+    perStrada: { ciao: (riga) => riga.replace(/}$/, ',"gzip":true}') },
+  });
+  /* Le due chiavi sono diverse: la casa non legge il telefono... */
+  telefono.manda({ type: "auth", access_token: "x" });
+  assert.equal(presa.chiusa?.codice, 1008);
+  /* ...e il telefono non legge la casa. */
+  assert.throws(() => telefono.lette(), /non si apre/);
+});
+
+test("chi toglie il legame dalla prima riga torna alla chiave di prima, e il telefono lo vede", () => {
+  /* E' cosi' che si presenta anche una casa di prima: non ripete il legame.
+   * Il filo va — un'app nuova con un ponte vecchio deve entrare — e il
+   * telefono sa che la chiave non e' legata: e' l'app che si ricorda se
+   * questa casa l'aveva gia' ripetuto (`app/lib/ponte/stretta.dart`). */
+  const { telefono } = unaStrettaLegata({
+    perStrada: { ciao: (riga) => riga.replace(`,"lega":${VERSIONE_DEL_LEGAME}`, "") },
+  });
+  assert.equal(telefono.pronto.lega, undefined);
+  assert.equal(telefono.legata, false);
+  assert.deepEqual(tipi(telefono), ["auth_required"]);
+});
+
+test("un legame aggiunto per strada alla risposta non fa entrare nessuno", () => {
+  const { telefono } = unaStrettaLegata({
+    perStrada: {
+      ciao: (riga) => riga.replace(`,"lega":${VERSIONE_DEL_LEGAME}`, ""),
+      pronto: (riga) => riga.replace(/}$/, `,"lega":${VERSIONE_DEL_LEGAME}}`),
+    },
+  });
+  assert.equal(telefono.legata, true);
+  assert.throws(() => telefono.lette(), /non si apre/);
+});
+
+test("abbinandosi col legame, un pronto ritoccato e' un codice che non torna", async () => {
+  const { portiere, abbinamento, dispositivi } = unPortiere();
+  const { codice } = abbinamento.nuovo();
+  const presa = presaFinta();
+  portiere.accogli(presa, { da: "192.168.1.20" });
+  const telefono = unTelefono(presa, {
+    codice,
+    lega: true,
+    perStrada: { pronto: (riga) => riga.replace(/}$/, ',"da_casa":true}') },
+  });
+  assert.equal(telefono.legata, true);
+  telefono.manda({ t: "conferma", telefono: telefono.mia, casa: telefono.sua });
+  await giro();
+  assert.equal(presa.inChiaro.at(-1).motivo, "codice");
+  assert.equal(dispositivi.abbinati.length, 0, "niente segno a chi sta in mezzo");
+});
+
+test("abbinandosi col legame, senza toccare niente, si entra", async () => {
+  const { portiere, abbinamento, dispositivi } = unPortiere();
+  const { codice } = abbinamento.nuovo();
+  const presa = presaFinta();
+  portiere.accogli(presa, { da: "192.168.1.20" });
+  const telefono = unTelefono(presa, { codice, lega: true });
+  assert.equal(telefono.legata, true);
+  telefono.manda({ t: "conferma", telefono: telefono.mia, casa: telefono.sua });
+  await giro();
+  const [ecco] = telefono.lette();
+  assert.equal(ecco.t, "ecco");
+  assert.equal(dispositivi.abbinati.length, 1);
+});
+
+test("un telefono staccato col legame lo sa lo stesso, dentro il cifrato", () => {
+  const vecchia = chiaveDelFiloNuova();
+  const { portiere } = unPortiere({
+    dispositivi: dispositiviFinti({ revocate: { dm_via: vecchia } }),
+  });
+  const presa = presaFinta();
+  portiere.accogli(presa, { da: "192.168.1.20" });
+  const telefono = unTelefono(presa, { chi: "dm_via", chiaveDelFilo: vecchia, lega: true });
+  assert.equal(telefono.legata, true);
+  const [detto] = telefono.lette();
+  assert.equal(detto.type, "auth_invalid");
 });

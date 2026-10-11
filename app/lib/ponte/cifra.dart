@@ -53,6 +53,45 @@ const int apertaMassima = 16 * 1024 * 1024;
 const String _etichettaFilo = 'gdahome/filo/v1';
 const String _etichettaAbbinamento = 'gdahome/abbinamento/v2';
 
+/// Il legame fra la chiave e le due righe in chiaro della stretta di mano
+/// (`lega: 1`).
+///
+/// Le due righe viaggiano in chiaro, e chi sta in mezzo le puo' riscrivere:
+/// un `da_casa` girato, un `gzip` tolto. Col legame, le due righe intere —
+/// cosi' come sono passate sul filo, byte per byte — entrano nella chiave, e
+/// chi le ha toccate fa si' che la prima busta non si apra. Il telefono lo
+/// chiede nella sua riga, la casa che lo sa fare lo ripete nella risposta, e
+/// solo allora la chiave si fa cosi': con una casa di prima si va come
+/// sempre. Vedi `ponte/src/cifra.js`, e `stretta.dart` per come l'app si
+/// ricorda delle case che l'hanno gia' ripetuto.
+const int versioneDelLegame = 1;
+
+const String _etichettaDelLegame = 'gdahome/lega/v1';
+
+/// L'impronta delle due righe in chiaro: la prima del telefono e la risposta
+/// della casa, ognuna preceduta dalla sua lunghezza in quattro byte, cosi'
+/// non si puo' spostare un pezzo dall'una all'altra e avere la stessa
+/// impronta. Le righe entrano come byte UTF-8, cioe' come sono passate sul
+/// filo: e' la stessa `improntaDellaStretta` di `ponte/src/cifra.js`.
+Future<List<int>> improntaDellaStretta(String ciao, String pronto) async {
+  List<int> lunga(int quanti) {
+    final quattro = ByteData(4)..setUint32(0, quanti);
+    return quattro.buffer.asUint8List();
+  }
+
+  final daCiao = utf8.encode(ciao);
+  final daPronto = utf8.encode(pronto);
+  final impronta = await Sha256().hash([
+    ...utf8.encode(_etichettaDelLegame),
+    0,
+    ...lunga(daCiao.length),
+    ...daCiao,
+    ...lunga(daPronto.length),
+    ...daPronto,
+  ]);
+  return impronta.bytes;
+}
+
 /// L'involucro con cui una chiave pubblica X25519 viaggia sul filo.
 ///
 /// Node le esporta in SPKI DER: dodici byte di intestazione fissa e poi i
@@ -159,6 +198,10 @@ Uint8List _spogliaSpki(List<int> vestita) {
 ///
 /// Ci vuole uno dei due segreti, e uno solo: senza, la chiave verrebbe dal
 /// solo scambio effimero, che era la stretta di mano di una volta.
+///
+/// [stretta] e' l'impronta delle due righe in chiaro ([improntaDellaStretta]),
+/// quando tutte e due le punte hanno detto `lega`: va in fondo al sale, e
+/// all'etichetta si aggiunge `+lega`. Senza, la chiave e' quella di sempre.
 Future<SecretKey> chiaveDiSessione({
   required SimpleKeyPair miaPrivata,
   required List<int> suaPubblica,
@@ -167,6 +210,7 @@ Future<SecretKey> chiaveDiSessione({
   required List<int> apertura,
   String? chiaveDelFilo,
   String? codice,
+  List<int>? stretta,
 }) async {
   if ((chiaveDelFilo == null) == (codice == null)) {
     throw ArgumentError(
@@ -191,13 +235,14 @@ Future<SecretKey> chiaveDiSessione({
   ];
   /* Le due chiavi pubbliche entrano nel sale in un ordine fisso: cosi' le due
    * punte arrivano alla stessa chiave. */
-  final sale = <int>[...apertura, ...delTelefono, ...dellaCasa];
+  final sale = <int>[...apertura, ...delTelefono, ...dellaCasa, ...?stretta];
+  final etichetta = chiaveDelFilo != null
+      ? _etichettaFilo
+      : _etichettaAbbinamento;
   return _hkdf.deriveKey(
     secretKey: SecretKey(materia),
     nonce: sale,
-    info: utf8.encode(
-      chiaveDelFilo != null ? _etichettaFilo : _etichettaAbbinamento,
-    ),
+    info: utf8.encode(stretta != null ? '$etichetta+lega' : etichetta),
   );
 }
 

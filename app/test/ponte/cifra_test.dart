@@ -59,6 +59,18 @@ const _confermaChiusa =
     'go7QoP0fySJ+9YivboZgCKGiP2kmMJX/k+9f4Vdx7fuCK/pEFPSCO+XAdQDgW78mKGZcCGYW'
     'q74NX+zJW1lAtFthIg8Xl9kOYHvLX4zEGoY=';
 
+/* Il legame (`lega: 1`): due righe in chiaro qualunque — con una lettera
+ * accentata, perche' entrano come byte UTF-8 e non come caratteri — la loro
+ * impronta, e le due chiavi fatte con quella. */
+const _ciao = '{"v":1,"chi":"dm_così","lega":1}';
+const _pronto = '{"v":1,"pronto":true,"lega":1,"da_casa":false}';
+const _improntaDellaStretta =
+    'd9494f2138336ef7c34202646b90a6626632f6ae8bcebe3065b4eebc8689121f';
+const _chiaveConFiloLegata =
+    'a24d3fce3de6f4bfef6001430fd085413330605678b16fbe5575daa6beddede5';
+const _chiaveDellAbbinamentoLegata =
+    '6f8718a6bf70d269946c23538b027cff687798121be5d280987054b9197f2fae';
+
 const _testoDalTelefono = '{"type":"auth","access_token":"segno"}';
 const _testoDallaCasa = '{"type":"auth_required"}';
 
@@ -160,6 +172,77 @@ void main() {
       );
       expect(await dalTelefono.extractBytes(), await dallaCasa.extractBytes());
     });
+
+    test('l\'impronta delle due righe in chiaro è quella del Node', () async {
+      expect(
+        _inEsadecimale(await improntaDellaStretta(_ciao, _pronto)),
+        _improntaDellaStretta,
+      );
+    });
+
+    test(
+      'e le chiavi legate a quell\'impronta, col filo e col codice',
+      () async {
+        final stretta = await improntaDellaStretta(_ciao, _pronto);
+        expect(
+          _inEsadecimale(
+            await (await _chiaveDelVettore(
+              chiaveDelFilo: _chiaveDelFilo,
+              stretta: stretta,
+            )).extractBytes(),
+          ),
+          _chiaveConFiloLegata,
+        );
+        expect(
+          _inEsadecimale(
+            await (await _chiaveDelVettore(
+              codice: _codice,
+              stretta: stretta,
+            )).extractBytes(),
+          ),
+          _chiaveDellAbbinamentoLegata,
+        );
+      },
+    );
+
+    test('senza legame la chiave resta quella di sempre', () async {
+      /* Un'app nuova con un ponte di prima, o il contrario: se questa
+       * cambiasse, non entrerebbe piu' nessuno. */
+      final chiave = await _chiaveDelVettore(chiaveDelFilo: _chiaveDelFilo);
+      expect(_inEsadecimale(await chiave.extractBytes()), _chiaveConFilo);
+    });
+
+    test(
+      'una virgola cambiata in una delle due righe cambia la chiave',
+      () async {
+        final giusta = await _chiaveDelVettore(
+          chiaveDelFilo: _chiaveDelFilo,
+          stretta: await improntaDellaStretta(_ciao, _pronto),
+        );
+        final toccata = await _chiaveDelVettore(
+          chiaveDelFilo: _chiaveDelFilo,
+          stretta: await improntaDellaStretta(
+            _ciao,
+            _pronto.replaceFirst('"da_casa":false', '"da_casa":true'),
+          ),
+        );
+        expect(
+          await toccata.extractBytes(),
+          isNot(await giusta.extractBytes()),
+        );
+        /* E un pezzo spostato da una riga all'altra pure: le lunghezze stanno
+       * dentro l'impronta. */
+        expect(
+          _inEsadecimale(
+            await improntaDellaStretta(
+              '$_ciao${_pronto.substring(0, 5)}',
+              _pronto.substring(5),
+            ),
+          ),
+          isNot(_improntaDellaStretta),
+        );
+      },
+    );
 
     test('la casa apre le buste che ha chiuso il telefono del Node', () async {
       final busta = Busta(
@@ -543,6 +626,7 @@ String _unaCasaGrande() => jsonEncode({
 Future<SecretKey> _chiaveDelVettore({
   String? chiaveDelFilo,
   String? codice,
+  List<int>? stretta,
 }) async {
   final telefono = await coppiaDalloScalare(_daEsadecimale(_scalareTelefono));
   return chiaveDiSessione(
@@ -553,6 +637,7 @@ Future<SecretKey> _chiaveDelVettore({
     apertura: base64.decode(_apertura),
     chiaveDelFilo: chiaveDelFilo,
     codice: codice,
+    stretta: stretta,
   );
 }
 

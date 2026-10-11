@@ -10,7 +10,9 @@ import {
   Busta,
   chiaveDiSessione,
   coppiaEffimera,
+  improntaDellaStretta,
   VERSIONE,
+  VERSIONE_DEL_LEGAME,
   VERSIONE_DELL_ABBINAMENTO,
 } from "../src/cifra.js";
 
@@ -19,10 +21,27 @@ import {
  *   - `chi` e `chiave`: un telefono gia' abbinato;
  *   - `codice`: un telefono che si abbina, con la stretta di mano legata al
  *     codice (`abbina: 2`). Dopo `dentro` si manda `conferma(...)`;
- *   - `abbina: true`: l'app di prima, che una casa di adesso rifiuta. */
+ *   - `abbina: true`: l'app di prima, che una casa di adesso rifiuta.
+ *
+ * `lega: true` e' l'app di adesso: chiede di legare la chiave alle due righe
+ * in chiaro (`cifra.js`), e se la casa lo ripete la chiave si fa cosi'.
+ * Senza, e' un'app di prima, e deve entrare lo stesso.
+ *
+ * `perStrada` fa la parte di chi sta in mezzo: `ciao` riscrive la prima riga
+ * dopo che il telefono l'ha scritta — il telefono la ricorda com'era — e
+ * `pronto` riscrive la risposta prima che il telefono la legga. Serve a
+ * provare che quello che si tocca per strada si paga. */
 export function telefonoCifrato(
   indirizzo,
-  { chi = null, chiave = null, codice = null, abbina = false, gzip = false } = {},
+  {
+    chi = null,
+    chiave = null,
+    codice = null,
+    abbina = false,
+    gzip = false,
+    lega = false,
+    perStrada = {},
+  } = {},
 ) {
   const presa = new WebSocket(indirizzo);
   const mia = coppiaEffimera();
@@ -37,35 +56,40 @@ export function telefonoCifrato(
   let laStretta = null;
   let guasta = null;
   let sua = null;
+  let legata = false;
+  /* La prima riga com'e' uscita da qui: e' quella che entra nell'impronta,
+   * anche se per strada qualcuno l'ha cambiata. */
+  let ciao = null;
 
   const dentro = new Promise((riuscito, fallito) => {
     laStretta = { riuscito, fallito };
   });
 
   presa.addEventListener("open", () => {
-    presa.send(
-      JSON.stringify({
-        v: VERSIONE,
-        ...(codice != null
-          ? { abbina: VERSIONE_DELL_ABBINAMENTO }
-          : abbina
-            ? { abbina: true }
-            : { chi }),
-        apertura: apertura.toString("base64"),
-        mia: mia.pubblica.toString("base64"),
-        /* Un telefono che sa aprire il gzip lo dice; uno vecchio no. */
-        ...(gzip ? { gzip: true } : {}),
-      }),
-    );
+    ciao = JSON.stringify({
+      v: VERSIONE,
+      ...(codice != null
+        ? { abbina: VERSIONE_DELL_ABBINAMENTO }
+        : abbina
+          ? { abbina: true }
+          : { chi }),
+      apertura: apertura.toString("base64"),
+      mia: mia.pubblica.toString("base64"),
+      /* Un telefono che sa aprire il gzip lo dice; uno vecchio no. */
+      ...(gzip ? { gzip: true } : {}),
+      ...(lega ? { lega: VERSIONE_DEL_LEGAME } : {}),
+    });
+    presa.send(perStrada.ciao ? perStrada.ciao(ciao) : ciao);
   });
 
   let quantiTelai = 0;
   let quantiCaratteri = 0;
   presa.addEventListener("message", (evento) => {
     quantiTelai += 1;
-    const testo = typeof evento.data === "string" ? evento.data : String(evento.data);
+    let testo = typeof evento.data === "string" ? evento.data : String(evento.data);
     quantiCaratteri += testo.length;
     if (!busta) {
+      if (perStrada.pronto) testo = perStrada.pronto(testo);
       const detto = JSON.parse(testo);
       inChiaro.push(detto);
       if (detto.no) {
@@ -73,6 +97,10 @@ export function telefonoCifrato(
         return;
       }
       sua = detto.mia;
+      /* Legata solo se l'abbiamo chiesto **e** la casa l'ha ripetuto: e'
+       * la regola dell'app vera. Una casa di prima non lo ripete, e si va
+       * con la chiave di sempre. */
+      legata = lega && detto.lega === VERSIONE_DEL_LEGAME;
       busta = new Busta(
         chiaveDiSessione({
           miaPrivata: mia.privata,
@@ -81,6 +109,7 @@ export function telefonoCifrato(
           dellaCasa: Buffer.from(detto.mia, "base64"),
           apertura,
           ...(codice != null ? { codice } : { chiaveDelFilo: chiave }),
+          stretta: legata ? improntaDellaStretta(ciao, testo) : null,
         }),
         /* Si comprime verso la casa solo se la casa ha detto di saperlo
          * aprire: e' la stessa regola dell'app vera. */
@@ -133,6 +162,10 @@ export function telefonoCifrato(
     chiusa,
     get guasta() {
       return guasta;
+    },
+    /* Se la chiave di questo filo e' legata alle due righe in chiaro. */
+    get legata() {
+      return legata;
     },
     manda: (cosa) => presa.send(busta.chiudi(JSON.stringify(cosa))),
     /* La conferma dell'abbinamento: le due chiavi pubbliche, come le ha viste
