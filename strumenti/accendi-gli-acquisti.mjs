@@ -23,8 +23,10 @@
  *      nell'add-on e nell'app. La casa tiene la licenza e gira le ricevute
  *      senza limitare niente; l'app e il browser mettono i lucchetti di Base;
  *      il centralino resta senza chiave, e il fuori casa aperto.
- *   2. `--fallo`, qui: la stessa chiave nel centralino. Da li' il fuori casa
- *      si chiude alle case che non sono Premium.
+ *   2. `--fallo`, qui: la stessa chiave nel centralino. Da li' il centralino
+ *      conta chi resterebbe fuori, e non chiude niente (`registra`).
+ *   3. `MODO_LICENZE=impone` nell'ambiente del tramite: solo allora il fuori
+ *      casa si chiude alle case che non sono Premium (`centralino/README.md`).
  *
  * ─── Perche' un programma e non un foglietto ─────────────────────────────
  *
@@ -171,7 +173,8 @@ export const I_PASSI_A_MANO = Object.freeze([
   {
     quando: "quando l'app nuova e' nei negozi",
     che: "Il centralino, per ultimo",
-    come: `\`--fallo\`, qui: la stessa chiave anche li'. Da quel momento il fuori casa e' Premium.
+    come: `\`--fallo\`, qui: la stessa chiave anche li'. Da quel momento il centralino conta chi
+    resterebbe fuori; il fuori casa diventa Premium quando nel tramite si scrive MODO_LICENZE=impone.
     Chi ha l'add-on vecchio si sente dire «aggiorna l'add-on», e nessuno ha pagato a vuoto:
     con l'add-on vecchio l'app non vende. Quante case lo sentiranno lo dice
     \`pronte_alla_licenza\` contro \`case\`, in \`GET /salute\` del centralino chiesto dalla macchina
@@ -285,6 +288,7 @@ if (process.argv[1] && process.argv[1].endsWith("accendi-gli-acquisti.mjs")) {
   console.log(`\n── E adesso ${"─".repeat(64)}\n`);
   console.log("  1. la chiave e' quella di prima: sul quadro non cambia niente.");
   console.log("  2. si rilascia il centralino, col bottone «Il tramite» su Actions.");
-  console.log("     Da li' il fuori casa e' Premium, e chi ha l'add-on vecchio si sente");
-  console.log("     dire di aggiornarlo.\n");
+  console.log("     Da li' il centralino conta chi resterebbe fuori (/salute, «licenze»).");
+  console.log("  3. quando i numeri tornano, MODO_LICENZE=impone in /etc/tramite/ambiente");
+  console.log("     e systemctl restart tramite: da li' il fuori casa e' Premium.\n");
 }
