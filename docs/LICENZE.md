@@ -8,7 +8,7 @@ mostrano. Chi tocca uno di questi pezzi legge qui prima.
 
 | | Base / gratis | Premium |
 | --- | --- | --- |
-| **gdahome** (4,99 €/mese · 49,99 €/anno) | una plancia (la principale), una casa, collegamento solo in casa | fino a 8 plance e 10 case, collegamento da fuori casa (centralino), configurazione della plancia dall'app, dispositivi Zigbee dall'app con «Dove lo metto?», **gdanav Premium compreso** |
+| **gdahome** (4,99 €/mese · 49,99 €/anno) | una plancia (la principale), una casa, collegamento solo in casa | fino a 30 plance e 10 case, collegamento da fuori casa (centralino), configurazione della plancia dall'app, dispositivi Zigbee dall'app con «Dove lo metto?», plancia a muro (tablet e NSPanel), la casa al polso (Apple Watch, Wear OS) e in auto (Android Auto, CarPlay), **gdanav Premium compreso** |
 | **gdanav** (2,99 €/mese · 29,99 €/anno) | auto termica completa (percorso, distributori, prezzi); auto elettrica con la batteria scritta a mano e percorso senza soste; traffico, autovelox e meteo per tutti | Home Assistant e fonti automatiche della batteria (OBD, Android Auto, gdahome), percorso con le soste alle colonnine e il loro stato in tempo reale, Android Auto e CarPlay |
 
 I prezzi stanno nei negozi (Play Console, App Store Connect), non nel codice.
