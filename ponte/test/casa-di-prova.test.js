@@ -29,6 +29,7 @@ import {
   CasaDiProva,
   GIORNI_AL_MASSIMO,
   InUso,
+  NonCe,
   SenzaUtente,
   TELEFONI_DI_PROVA,
 } from "../src/casa-di-prova.js";
@@ -142,6 +143,71 @@ test("una alla volta: la seconda si fa dopo aver revocato la prima, o dopo la sc
     assert.equal(prova.togli(), true);
     assert.equal(prova.viva(), null);
     assert.equal(prova.togli(), false, "togliere due volte non fa niente");
+  } finally {
+    cartella.via();
+  }
+});
+
+test("allungare tiene lo stesso codice, e da' al massimo sette giorni da adesso", () => {
+  const cartella = cartellaFinta();
+  try {
+    const tempo = orologio();
+    const prova = new CasaDiProva({ cartella: cartella.dove, adesso: tempo.adesso });
+    assert.throws(
+      () => prova.allunga(),
+      NonCe,
+      "senza una casa di prova non c'e' niente da allungare",
+    );
+
+    const fatta = prova.nuova({ utente: REVISIONE, giorni: 7 });
+    /* Sei giorni dopo, a un giorno dalla scadenza: altri sette da adesso. */
+    tempo.avanti(6 * GIORNO);
+    const allungata = prova.allunga({ giorni: 30 });
+    assert.equal(allungata.codice, fatta.codice);
+    assert.equal(allungata.natoIl, fatta.natoIl);
+    assert.equal(allungata.utente, REVISIONE);
+    assert.equal(allungata.scadeIl - tempo.adesso(), GIORNI_AL_MASSIMO * GIORNO);
+
+    /* Mai piu' corta: un giorno solo, con sette davanti, la lascia dov'e'. */
+    assert.equal(prova.allunga({ giorni: 1 }).scadeIl, allungata.scadeIl);
+
+    /* Si puo' allungare ancora, e resta dopo un riavvio. */
+    tempo.avanti(5 * GIORNO);
+    const ancora = prova.allunga();
+    assert.equal(ancora.scadeIl - tempo.adesso(), GIORNI_AL_MASSIMO * GIORNO);
+    const dopo = new CasaDiProva({ cartella: cartella.dove, adesso: tempo.adesso });
+    assert.deepEqual(dopo.viva(), ancora);
+
+    /* Una scaduta non si allunga: si rifa'. */
+    tempo.avanti(GIORNI_AL_MASSIMO * GIORNO);
+    assert.throws(() => prova.allunga(), NonCe);
+  } finally {
+    cartella.via();
+  }
+});
+
+test("allungando, i telefoni di prova ancora dentro restano dentro fino alla nuova scadenza", () => {
+  const cartella = cartellaFinta();
+  try {
+    const tempo = orologio();
+    const dispositivi = new Dispositivi({ cartella: cartella.dove, adesso: tempo.adesso });
+    const diCasa = dispositivi.abbina({ nome: "di casa" });
+    const dentro = dispositivi.abbina({ nome: "dentro", finoA: tempo.adesso() + 2 * GIORNO });
+    const fuori = dispositivi.abbina({ nome: "fuori", finoA: tempo.adesso() + GIORNO });
+    tempo.avanti(GIORNO);
+
+    assert.equal(dispositivi.allungaQuelliDiProva(tempo.adesso() + 7 * GIORNO), 1);
+    tempo.avanti(5 * GIORNO);
+    assert.ok(dispositivi.riconosci(dentro.segno), "oltre la vecchia scadenza, e' ancora dentro");
+    assert.equal(dispositivi.riconosci(fuori.segno), null, "uno gia' scaduto non rientra");
+    assert.ok(dispositivi.riconosci(diCasa.segno));
+    assert.equal("finoA" in dispositivi.lista.find((uno) => uno.nome === "di casa"), false);
+
+    /* E resta su disco. */
+    const dopo = new Dispositivi({ cartella: cartella.dove, adesso: tempo.adesso });
+    assert.ok(dopo.riconosci(dentro.segno));
+    tempo.avanti(2 * GIORNO);
+    assert.equal(dispositivi.riconosci(dentro.segno), null, "alla nuova scadenza esce");
   } finally {
     cartella.via();
   }
@@ -726,8 +792,23 @@ test("la casa di prova si fa solo dall'Home Assistant del gestore", async () => 
     c.chiamata.apriLaProva(impronta(codice), scadeIl);
     const vista = await (await c.allaConsole("/api/prova")).json();
     assert.equal(vista.attiva, true);
+    /* Allungarla no: e' come farla di nuovo. */
+    const allunga = await c.allaConsole("/api/prova", { method: "PATCH", corpo: { giorni: 7 } });
+    assert.equal(allunga.status, 403);
+    assert.equal(c.casaDiProva.viva().scadeIl, scadeIl);
     const revocata = await (await c.allaConsole("/api/prova", { method: "DELETE" })).json();
     assert.equal(revocata.revocata, true);
+    assert.equal(c.casaDiProva.viva(), null);
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("senza una casa di prova non c'e' niente da allungare", async () => {
+  const c = await catena();
+  try {
+    const risposta = await c.allaConsole("/api/prova", { method: "PATCH", corpo: { giorni: 7 } });
+    assert.equal(risposta.status, 404);
     assert.equal(c.casaDiProva.viva(), null);
   } finally {
     await c.spegni();
@@ -810,6 +891,24 @@ test("dalla console al telefono che entra da fuori, e la revoca che lo butta fuo
       { attiva: true, telefoni: 2 },
     );
     assert.equal(JSON.stringify(stato).includes(fatta.codice), false);
+
+    /* Allungare: lo stesso codice, sette giorni da adesso, i telefoni
+     * restano dentro con la scadenza nuova, e il centralino tiene l'attesa
+     * aperta piu' a lungo. */
+    const allungata = await (
+      await c.allaConsole("/api/prova", { method: "PATCH", corpo: { giorni: 7 } })
+    ).json();
+    assert.equal(allungata.codice, fatta.codice);
+    assert.equal(allungata.natoIl, fatta.natoIl);
+    assert.ok(allungata.scadeIl > fatta.scadeIl + 3 * GIORNO);
+    assert.equal(allungata.telefoni, 2);
+    assert.ok(
+      c.dispositivi.lista.every((uno) => uno.finoA === allungata.scadeIl),
+      "i telefoni entrati restano fino alla nuova scadenza",
+    );
+    await attendi(
+      () => c.centralino.abbinamenti.get(impronta(fatta.codice))?.scadeIl - Date.now() > 6 * GIORNO,
+    );
 
     /* La revoca: il codice smette di valere, i telefoni escono, il filo si
      * chiude, il centralino dimentica l'attesa. */

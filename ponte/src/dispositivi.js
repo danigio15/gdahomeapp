@@ -290,6 +290,18 @@ export class Dispositivi {
     return [...via];
   }
 
+  /* I telefoni della casa di prova restano dentro fino a `finoA`, la nuova
+   * scadenza di un codice allungato (`allunga` in `casa-di-prova.js`). Solo
+   * quelli ancora nel loro tempo: uno scaduto e' gia' fuori, e rientra col
+   * codice come tutti. Torna quanti ne ha toccati. */
+  allungaQuelliDiProva(finoA) {
+    if (!Number.isFinite(finoA)) return 0;
+    const dentro = this.lista.filter((uno) => Number.isFinite(uno.finoA) && !this._scaduto(uno));
+    for (const uno of dentro) uno.finoA = Math.max(uno.finoA, finoA);
+    if (dentro.length) this.archivio.salva();
+    return dentro.length;
+  }
+
   rinomina(id, nome) {
     const dispositivo = this.lista.find((uno) => uno.id === id);
     if (!dispositivo) return false;
