@@ -510,6 +510,57 @@ test.describe("la plancia a muro", () => {
     expect(await page.evaluate(() => window.__BARRA__)).toBe(0);
   });
 
+  /* «Su Z Fold aperto premo l'hamburger del pannello e non va.» Largo, Home
+   * Assistant tiene la barra laterale di lato: il pannello si scosta e la
+   * lascia vedere aperta; un tocco sul pannello lo rimette a tutto schermo. */
+  test("Home Assistant largo: il ☰ apre la barra laterale accanto al pannello", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => {
+      window.__APERTO__ = [];
+      const ha = document.createElement("home-assistant");
+      ha.attachShadow({ mode: "open" });
+      const main = document.createElement("home-assistant-main");
+      main.attachShadow({ mode: "open" });
+      const barra = document.createElement("ha-sidebar");
+      barra.style.cssText =
+        "position:fixed;left:0;top:0;bottom:0;width:256px;background:#1e293b;z-index:1";
+      main.shadowRoot.append(barra);
+      ha.shadowRoot.append(main);
+      main.addEventListener("hass-toggle-menu", (e) => window.__APERTO__.push(e.detail));
+      document.body.appendChild(ha);
+    });
+    await muro(page).locator('[data-mu-fa="menu"]').click();
+    await expect.poll(() => page.evaluate(() => window.__APERTO__)).toEqual([{ open: true }]);
+    await expect(muro(page)).toHaveAttribute("data-mu-accanto-al-menu", "true");
+    await expect
+      .poll(() => muro(page).evaluate((n) => Math.round(n.getBoundingClientRect().left)))
+      .toBe(256);
+    /* Il pannello non scende sotto la plancia: niente barra in basso. */
+    await expect(muro(page)).not.toHaveAttribute("data-mu-sotto-il-menu", "true");
+    await expect(page.locator("nav.tabs.bottom-nav-bar")).toBeHidden();
+    /* E il pannello si stringe nello spazio che resta, non esce a destra. */
+    expect(
+      await muro(page).evaluate((n) => Math.round(n.getBoundingClientRect().right - innerWidth)),
+    ).toBeLessThanOrEqual(0);
+    expect(await muro(page).evaluate((n) => n.scrollWidth - n.clientWidth)).toBeLessThanOrEqual(1);
+    if (process.env.DM_FOTO) {
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: `${process.env.DM_FOTO}/muro-menu-largo.png` });
+    }
+    /* Un tocco sulla barra non lo rimette; un tocco sul pannello si'. */
+    await page.waitForTimeout(400);
+    await page.mouse.click(100, 400);
+    await expect(muro(page)).toHaveAttribute("data-mu-accanto-al-menu", "true");
+    await page.mouse.click(700, 400);
+    await expect(muro(page)).not.toHaveAttribute("data-mu-accanto-al-menu", "true");
+    await expect
+      .poll(() => muro(page).evaluate((n) => Math.round(n.getBoundingClientRect().left)))
+      .toBe(0);
+  });
+
   /* «L'icona hamburger non funziona, non si apre il menu laterale»: il menu si
    * apriva, ma sotto il pannello, che sta sopra a tutto. */
   test("il menu aperto dal ☰ si vede sopra il pannello", async ({ page }, testInfo) => {

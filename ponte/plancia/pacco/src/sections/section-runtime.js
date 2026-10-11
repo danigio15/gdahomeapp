@@ -84847,7 +84847,14 @@ var GRIGLIE = Object.freeze({
   6: Object.freeze({ colonne: 3, righe: 2 }),
   8: Object.freeze({ colonne: 4, righe: 2 }),
   9: Object.freeze({ colonne: 3, righe: 3 }),
-  12: Object.freeze({ colonne: 4, righe: 3 })
+  12: Object.freeze({ colonne: 4, righe: 3 }),
+  /* «Se riempio le 12 caselle solo di dati tecnici della casa c'e' molto
+   * spazio inutilizzato e se ne potrebbero mettere di piu'.» Le letture hanno
+   * la loro tessera compatta, e su un tablet grande ne stanno sedici, venti,
+   * ventiquattro. */
+  16: Object.freeze({ colonne: 4, righe: 4 }),
+  20: Object.freeze({ colonne: 5, righe: 4 }),
+  24: Object.freeze({ colonne: 6, righe: 4 })
 });
 var GRIGLIA_DI_SERIE = Object.freeze({ telecamere: 4, energia: 4, ambienti: 6 });
 function postiDellaPagina(pagina2) {
@@ -86056,6 +86063,10 @@ function cardEntita(c, i, grande = false) {
   const id = c.entita;
   const s = stato2(id);
   const servizio = servizioDellEntita(id, String(s?.state || ""));
+  if (!servizio && !grande) {
+    const dato = cardDato(c, i, s);
+    if (dato) return dato;
+  }
   const on = acceso4(id) || ["unlocked", "playing", "cleaning"].includes(String(s?.state));
   const parole4 = statoInParole2(id);
   return tessera({
@@ -86071,6 +86082,19 @@ function cardEntita(c, i, grande = false) {
     dati: servizio ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`,
     dove: `en-${i}-${grande ? "g" : "p"}`
   });
+}
+function cardDato(c, i, s) {
+  const v = String(s?.state ?? "").trim();
+  const n = numero44(v);
+  if (n === null || v === "") return "";
+  const id = c.entita;
+  const unita2 = clean(s.attributes?.unit_of_measurement);
+  const valore3 = decimale(n, Number.isInteger(n) ? 0 : 1);
+  return `<div class="mu-carta mu-card mu-dato" style="--acc:${ACCENTI.azione}" data-mu-entita="${esc(id)}" aria-disabled="true">
+    <div class="mu-dato-testa">${disegno(clean(c.disegno) || disegnoDellEntita(id), 22, `da-${i}`)}<span class="mu-dato-n">${esc(nomeDi7(id, c.nome))}</span></div>
+    <div class="mu-dato-v">${esc(valore3)}${unita2 ? `<small>${esc(unita2)}</small>` : ""}</div>
+    ${clean(c.sotto) ? `<div class="mu-dato-s">${esc(clean(c.sotto))}</div>` : ""}
+  </div>`;
 }
 var vuoto2 = (i, perche3 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche3 || t("Posto libero", "Empty slot"))}</span></div>`;
 function paginaStanza(pagina2) {
@@ -86724,7 +86748,65 @@ function scendiSottoIlMenu() {
   };
   doc.addEventListener("pointerdown", risali, true);
 }
+function homeAssistantLargo() {
+  try {
+    const casa = root.documentoDiHomeAssistant?.();
+    const vista2 = casa?.defaultView;
+    if (!casa || !vista2?.matchMedia) return null;
+    return vista2.matchMedia("(max-width: 870px)").matches ? null : casa;
+  } catch (_errore) {
+    return null;
+  }
+}
+function laBarraDiHomeAssistant(casa) {
+  try {
+    const ha = casa.querySelector("home-assistant");
+    const main = ha?.shadowRoot?.querySelector("home-assistant-main");
+    return { main, barra: main?.shadowRoot?.querySelector("ha-sidebar") || null };
+  } catch (_errore) {
+    return { main: null, barra: null };
+  }
+}
+function apriLaBarraAccanto(casa) {
+  const tela2 = doc?.getElementById?.(ID2);
+  const { main, barra } = laBarraDiHomeAssistant(casa);
+  if (!tela2 || !main) return false;
+  const vista2 = casa.defaultView || root;
+  try {
+    const Evento = vista2.CustomEvent || CustomEvent;
+    main.dispatchEvent(
+      new Evento("hass-toggle-menu", { bubbles: true, composed: true, detail: { open: true } })
+    );
+  } catch (_errore) {
+    return false;
+  }
+  const scosta = () => {
+    const destra = Math.round(barra?.getBoundingClientRect?.().right || 0);
+    state109.accanto = destra > 0 ? destra : 256;
+    tela2.style.setProperty("left", `${state109.accanto}px`, "important");
+    misura4(tela2, state109.muro);
+  };
+  tela2.dataset.muAccantoAlMenu = "true";
+  scosta();
+  root.setTimeout?.(scosta, 320);
+  const aperto2 = Date.now();
+  const rimetti2 = (evento) => {
+    if (Date.now() - aperto2 < 300) return;
+    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    const strada2 = evento?.composedPath?.() || [evento?.target];
+    if (!strada2.includes(tela2)) return;
+    doc.removeEventListener("pointerdown", rimetti2, true);
+    delete tela2.dataset.muAccantoAlMenu;
+    state109.accanto = 0;
+    tela2.style.removeProperty("left");
+    misura4(tela2, state109.muro);
+  };
+  doc.addEventListener("pointerdown", rimetti2, true);
+  return true;
+}
 function apriIlMenu2() {
+  const largo = root.gdahomeDice?.postMessage ? null : homeAssistantLargo();
+  if (largo && apriLaBarraAccanto(largo)) return true;
   scendiSottoIlMenu();
   try {
     if (root.gdahomeDice?.postMessage) {
@@ -86907,7 +86989,7 @@ function togliLaTela() {
   doc?.documentElement?.classList?.remove("dm-muro-acceso");
 }
 function misura4(nodo2, muro) {
-  const larghezza = root.innerWidth || 1280;
+  const larghezza = Math.max(320, (root.innerWidth || 1280) - (state109.accanto || 0));
   const altezza = root.innerHeight || 800;
   const v = verso(muro, larghezza, altezza);
   const s = scala(v, larghezza, altezza);
@@ -87601,6 +87683,14 @@ ${MURO}[data-compatto="1"] .mu-mp-arte{width:72px;height:72px;border-radius:14px
 ${MURO}[data-compatto="1"] .mu-mp-titolo{font-size:24px}
 ${MURO}[data-compatto="1"] .mu-mp-tasti{gap:16px}
 ${MURO}[data-compatto="1"] .mu-mp-tasti .mu-tondo.grande{width:72px;height:72px}
+${MURO} .mu-dato{display:flex;flex-direction:column;justify-content:space-between;gap:6px;padding:16px 18px;cursor:default;min-width:0}
+${MURO} .mu-dato-testa{display:flex;align-items:center;gap:8px;min-width:0}
+${MURO} .mu-dato-testa svg{flex:none;width:22px;height:22px}
+${MURO} .mu-dato-n{font-size:14px;font-weight:800;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-dato-v{font-family:Oswald,Inter,sans-serif;font-weight:500;line-height:.95;font-variant-numeric:tabular-nums;
+  font-size:clamp(28px,min(calc(100vh / var(--mu-righe,3) * .3),calc(100vw / var(--mu-col,4) * .22)),96px);color:var(--text);white-space:nowrap}
+${MURO} .mu-dato-v small{font-size:.38em;margin-left:5px;font-weight:600;color:var(--text-dim)}
+${MURO} .mu-dato-s{font-size:12px;font-weight:700;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-fitta{--mu-gap:12px}
 ${MURO} .mu-fitta .mu-card{padding:16px;gap:10px;border-radius:20px}
 ${MURO} .mu-fitta .mu-riga1{gap:10px}

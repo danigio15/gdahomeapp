@@ -860,9 +860,13 @@ function pastigliaRapida(id, preset, on) {
   const ventola = PAROLE_DELLA_VENTOLA()[clean(preset.fan).toLowerCase()] || clean(preset.fan);
   const pezzi = [
     `<span class="mu-rap-val">${disegnoDelCatalogo(preset.mode === "heat" ? "flame" : "wind", 18)}${esc(
-      preset.temperature == null ? PAROLE_DEL_CLIMA()[preset.mode] || preset.mode : `${decimale(preset.temperature)}°`,
+      preset.temperature == null
+        ? PAROLE_DEL_CLIMA()[preset.mode] || preset.mode
+        : `${decimale(preset.temperature)}°`,
     )}</span>`,
-    ventola ? `<span class="mu-rap-val">${disegnoDelCatalogo("spiral", 18)}${esc(ventola)}</span>` : "",
+    ventola
+      ? `<span class="mu-rap-val">${disegnoDelCatalogo("spiral", 18)}${esc(ventola)}</span>`
+      : "",
   ].filter(Boolean);
   return `<button type="button" class="mu-rapido ${on ? "acceso" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(
     on ? t("Spegni", "Turn off") : t("Comando rapido", "Quick command"),
@@ -958,6 +962,10 @@ function cardEntita(c, i, grande = false) {
   const id = c.entita;
   const s = stato(id);
   const servizio = servizioDellEntita(id, String(s?.state || ""));
+  if (!servizio && !grande) {
+    const dato = cardDato(c, i, s);
+    if (dato) return dato;
+  }
   const on = acceso(id) || ["unlocked", "playing", "cleaning"].includes(String(s?.state));
   const parole = statoInParole(id);
   return tessera({
@@ -975,6 +983,27 @@ function cardEntita(c, i, grande = false) {
       : `data-mu-entita="${esc(id)}" aria-disabled="true"`,
     dove: `en-${i}-${grande ? "g" : "p"}`,
   });
+}
+
+/* La tessera di una lettura: il nome piccolo in alto, il numero grande.
+ *
+ * «Sulla personalizzata i numeri sono molto piccoli e le scritte grandi.» La
+ * tessera di un'entita' e' fatta per le scene, dove il nome e' il contenuto e
+ * lo stato una didascalia; per un sensore e' il contrario. Un sensore che non
+ * si comanda e dice un numero ha la sua forma: niente disco grande, il nome in
+ * una riga, il valore che cresce con la casella. */
+function cardDato(c, i, s) {
+  const v = String(s?.state ?? "").trim();
+  const n = numero(v);
+  if (n === null || v === "") return "";
+  const id = c.entita;
+  const unita = clean(s.attributes?.unit_of_measurement);
+  const valore = decimale(n, Number.isInteger(n) ? 0 : 1);
+  return `<div class="mu-carta mu-card mu-dato" style="--acc:${ACCENTI.azione}" data-mu-entita="${esc(id)}" aria-disabled="true">
+    <div class="mu-dato-testa">${disegno(clean(c.disegno) || disegnoDellEntita(id), 22, `da-${i}`)}<span class="mu-dato-n">${esc(nomeDi(id, c.nome))}</span></div>
+    <div class="mu-dato-v">${esc(valore)}${unita ? `<small>${esc(unita)}</small>` : ""}</div>
+    ${clean(c.sotto) ? `<div class="mu-dato-s">${esc(clean(c.sotto))}</div>` : ""}
+  </div>`;
 }
 
 const vuoto = (i, perche = "") =>
@@ -1889,7 +1918,82 @@ function scendiSottoIlMenu() {
  * 2. Home Assistant, se la plancia ci sta dentro: il suo cassetto;
  * 3. l'app gdahome nel browser, che ospita la plancia in un riquadro;
  * 4. nessuno dei tre: la plancia e' aperta da sola, e il menu e' il suo. */
+/* Home Assistant largo: la barra laterale sta di lato, non sopra.
+ *
+ * «Su Z Fold aperto premo l'hamburger del pannello a muro e non va.» Aperto,
+ * lo schermo passa gli 870 pixel e Home Assistant non apre piu' un cassetto
+ * sopra la pagina: la sua barra laterale sta sempre a sinistra, e il comando
+ * del menu la allarga o la stringe. Il pannello pero' copre tutto lo schermo,
+ * barra compresa, e il comando arrivava senza che si vedesse niente.
+ *
+ * Qui la barra si apre (allargata, coi nomi) e il pannello si scosta della sua
+ * larghezza: la barra si vede accanto, si tocca, e un tocco sul pannello lo
+ * rimette a tutto schermo. */
+function homeAssistantLargo() {
+  try {
+    const casa = root.documentoDiHomeAssistant?.();
+    const vista = casa?.defaultView;
+    if (!casa || !vista?.matchMedia) return null;
+    return vista.matchMedia("(max-width: 870px)").matches ? null : casa;
+  } catch (_errore) {
+    return null;
+  }
+}
+
+function laBarraDiHomeAssistant(casa) {
+  try {
+    const ha = casa.querySelector("home-assistant");
+    const main = ha?.shadowRoot?.querySelector("home-assistant-main");
+    return { main, barra: main?.shadowRoot?.querySelector("ha-sidebar") || null };
+  } catch (_errore) {
+    return { main: null, barra: null };
+  }
+}
+
+export function apriLaBarraAccanto(casa) {
+  const tela = doc?.getElementById?.(ID);
+  const { main, barra } = laBarraDiHomeAssistant(casa);
+  if (!tela || !main) return false;
+  const vista = casa.defaultView || root;
+  try {
+    const Evento = vista.CustomEvent || CustomEvent;
+    main.dispatchEvent(
+      new Evento("hass-toggle-menu", { bubbles: true, composed: true, detail: { open: true } }),
+    );
+  } catch (_errore) {
+    return false;
+  }
+  const scosta = () => {
+    const destra = Math.round(barra?.getBoundingClientRect?.().right || 0);
+    state.accanto = destra > 0 ? destra : 256;
+    tela.style.setProperty("left", `${state.accanto}px`, "important");
+    misura(tela, state.muro);
+  };
+  tela.dataset.muAccantoAlMenu = "true";
+  scosta();
+  /* La barra si allarga con un'animazione: si rimisura quando ha finito. */
+  root.setTimeout?.(scosta, 320);
+  const aperto = Date.now();
+  const rimetti = (evento) => {
+    if (Date.now() - aperto < 300) return;
+    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    /* Solo un tocco sul pannello lo rimette: un tocco sulla barra e' la scelta
+     * di una voce, e il pannello che le torna sopra se la mangerebbe. */
+    const strada = evento?.composedPath?.() || [evento?.target];
+    if (!strada.includes(tela)) return;
+    doc.removeEventListener("pointerdown", rimetti, true);
+    delete tela.dataset.muAccantoAlMenu;
+    state.accanto = 0;
+    tela.style.removeProperty("left");
+    misura(tela, state.muro);
+  };
+  doc.addEventListener("pointerdown", rimetti, true);
+  return true;
+}
+
 export function apriIlMenu() {
+  const largo = root.gdahomeDice?.postMessage ? null : homeAssistantLargo();
+  if (largo && apriLaBarraAccanto(largo)) return true;
   scendiSottoIlMenu();
   try {
     if (root.gdahomeDice?.postMessage) {
@@ -2110,7 +2214,9 @@ function togliLaTela() {
 }
 
 function misura(nodo, muro) {
-  const larghezza = root.innerWidth || 1280;
+  /* Con la barra di Home Assistant accanto, il pannello ha la larghezza che
+   * resta, non quella dello schermo. */
+  const larghezza = Math.max(320, (root.innerWidth || 1280) - (state.accanto || 0));
   const altezza = root.innerHeight || 800;
   const v = verso(muro, larghezza, altezza);
   const s = scala(v, larghezza, altezza);
@@ -2913,6 +3019,14 @@ ${MURO}[data-compatto="1"] .mu-mp-arte{width:72px;height:72px;border-radius:14px
 ${MURO}[data-compatto="1"] .mu-mp-titolo{font-size:24px}
 ${MURO}[data-compatto="1"] .mu-mp-tasti{gap:16px}
 ${MURO}[data-compatto="1"] .mu-mp-tasti .mu-tondo.grande{width:72px;height:72px}
+${MURO} .mu-dato{display:flex;flex-direction:column;justify-content:space-between;gap:6px;padding:16px 18px;cursor:default;min-width:0}
+${MURO} .mu-dato-testa{display:flex;align-items:center;gap:8px;min-width:0}
+${MURO} .mu-dato-testa svg{flex:none;width:22px;height:22px}
+${MURO} .mu-dato-n{font-size:14px;font-weight:800;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-dato-v{font-family:Oswald,Inter,sans-serif;font-weight:500;line-height:.95;font-variant-numeric:tabular-nums;
+  font-size:clamp(28px,min(calc(100vh / var(--mu-righe,3) * .3),calc(100vw / var(--mu-col,4) * .22)),96px);color:var(--text);white-space:nowrap}
+${MURO} .mu-dato-v small{font-size:.38em;margin-left:5px;font-weight:600;color:var(--text-dim)}
+${MURO} .mu-dato-s{font-size:12px;font-weight:700;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-fitta{--mu-gap:12px}
 ${MURO} .mu-fitta .mu-card{padding:16px;gap:10px;border-radius:20px}
 ${MURO} .mu-fitta .mu-riga1{gap:10px}

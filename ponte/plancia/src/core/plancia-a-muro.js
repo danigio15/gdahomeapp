@@ -79,8 +79,15 @@ export const GRIGLIE = Object.freeze({
   8: Object.freeze({ colonne: 4, righe: 2 }),
   9: Object.freeze({ colonne: 3, righe: 3 }),
   12: Object.freeze({ colonne: 4, righe: 3 }),
+  /* «Se riempio le 12 caselle solo di dati tecnici della casa c'e' molto
+   * spazio inutilizzato e se ne potrebbero mettere di piu'.» Le letture hanno
+   * la loro tessera compatta, e su un tablet grande ne stanno sedici, venti,
+   * ventiquattro. */
+  16: Object.freeze({ colonne: 4, righe: 4 }),
+  20: Object.freeze({ colonne: 5, righe: 4 }),
+  24: Object.freeze({ colonne: 6, righe: 4 }),
 });
-export const POSTI_AL_MASSIMO = 12;
+export const POSTI_AL_MASSIMO = 24;
 
 /* La griglia che una pagina nuova sceglie da se': le telecamere stanno meglio
  * in quattro, l'energia ha le sue quattro tessere. */

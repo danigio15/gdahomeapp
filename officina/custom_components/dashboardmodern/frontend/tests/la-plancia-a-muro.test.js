@@ -412,11 +412,11 @@ test("il meteo del tablet e' quello scelto nella config della plancia", () => {
 /* «Come configuratore e come sezioni da gestire e vedere riusciamo a fare
  * meglio?» La griglia si sceglie, le pagine hanno un colore, e ci sono le
  * pagine da guardare: tapparelle, ambienti, telecamere, energia. */
-test("la griglia si sceglie: da quattro a dodici posti, e in verticale si gira", async () => {
-  const { GRIGLIE, grigliaDellaPagina, postiDellaPagina } = await import(
-    "../src/core/plancia-a-muro.js"
-  );
-  assert.deepEqual(Object.keys(GRIGLIE), ["4", "6", "8", "9", "12"]);
+test("la griglia si sceglie: da quattro a ventiquattro posti, e in verticale si gira", async () => {
+  const { GRIGLIE, grigliaDellaPagina, postiDellaPagina } =
+    await import("../src/core/plancia-a-muro.js");
+  assert.deepEqual(Object.keys(GRIGLIE), ["4", "6", "8", "9", "12", "16", "20", "24"]);
+  assert.deepEqual(GRIGLIE[20], { colonne: 5, righe: 4 });
   const troppi = Array.from({ length: 14 }, (_, i) => ({ tipo: "luce", entita: `light.l${i}` }));
   const muro = muroPulito({
     pagine: [
@@ -522,9 +522,7 @@ test("meteo e riposo si scelgono, e di serie il riposo torna alla prima pagina",
 /* «Me ne devi fare una con sezione musica.» I lettori vengono dalla sezione
  * Musica della plancia di origine, o si scelgono. */
 test("la pagina Musica prende i lettori della plancia, o quelli scelti", async () => {
-  const { lettoriDellaPagina, LETTORI_AL_MASSIMO } = await import(
-    "../src/core/plancia-a-muro.js"
-  );
+  const { lettoriDellaPagina, LETTORI_AL_MASSIMO } = await import("../src/core/plancia-a-muro.js");
   const fonte = fonteDaiValori({
     ...VALORI,
     cd_media_player: JSON.stringify([
@@ -591,9 +589,8 @@ test("le aree dell'antifurto: col nome, e l'allarme di una qualunque", async () 
 
 /* «Visto che hai Sonos prevedi il pulsante gruppo.» */
 test("il gruppo dei lettori: chi c'e', e il servizio per entrare e uscire", async () => {
-  const { compagniDelGruppo, letturaDelLettore, servizioDelGruppo, SA } = await import(
-    "../src/core/media-player.js"
-  );
+  const { compagniDelGruppo, letturaDelLettore, servizioDelGruppo, SA } =
+    await import("../src/core/media-player.js");
   const stati = {
     "media_player.cucina": {
       state: "playing",
