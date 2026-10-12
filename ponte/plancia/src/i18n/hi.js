@@ -147,6 +147,8 @@ export default Object.freeze({
     "इनका किसी भी घंटे कोई खर्च नहीं, और ऊपर की रकम केवल ग्रिड से लिए गए पर है।",
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.":
     "ये यहाँ लिखे रहते हैं ताकि पता रहे कि हैं। घंटी इन्हें चेतावनी में वापस ले आती है, अगर ये अब भी चुप हों।",
+  "This dashboard's configuration is reserved for its administrator.":
+    "इस डैशबोर्ड का कॉन्फ़िगरेशन केवल इसके व्यवस्थापक के लिए है।",
   "This entity is not present in this home.": "यह एंटिटी इस घर में मौजूद नहीं है।",
   "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.":
     "यह एक एनर्जी मीटर (kWh) है: यह बताता है कि कुल कितनी खपत हुई, न कि अभी कितनी हो रही है। यहाँ इसे अनदेखा किया जाता है — इसकी जगह «इतिहास और रिपोर्ट के लिए कुल ऊर्जा» फ़ील्ड है।",

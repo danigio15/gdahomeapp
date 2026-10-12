@@ -73,6 +73,7 @@ import { LicenzaNo } from "./licenze.js";
 import { perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
 import { iFili, iRami, laMappaDisegnata } from "./mappa-zigbee.js";
 import { comeSiPresenta } from "./zigbee.js";
+import { amministratoriDellaPlancia, puoConfigurare } from "./chi-configura.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -153,6 +154,25 @@ const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
 const EVENTO_CONFIGURAZIONE = "dashboardmodern_config";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
+/* Chi sta guardando, chiesto con le parole di Home Assistant.
+ *
+ * Il filo verso Home Assistant e' aperto col segno del Supervisor: se questa
+ * domanda arrivasse a Home Assistant, la risposta sarebbe l'add-on — un
+ * amministratore — per chiunque la facesse, e la dogana la ferma apposta
+ * (`dogana.js`, tutto `auth/` tranne la firma degli indirizzi). Ma la pagina
+ * ha bisogno di saperlo: la Config si apre solo a chi la casella «Utente
+ * admin» nomina (`chi-configura.js`), e nell'app la pagina da sola non ha
+ * nessun modo di sapere chi tiene in mano il telefono.
+ *
+ * Allora risponde il ponte, che lo sa: l'utente a cui e' intestato il
+ * telefono che ha aperto il filo, o quello che l'ingress dice che sta
+ * guardando dentro Home Assistant. La risposta ha la forma di quella di Home
+ * Assistant — `id`, `name`, `is_admin` — e una riga in piu', che Home
+ * Assistant non ha: `gdahome_config`, se a lui la Config della plancia si
+ * apre. La decide il ponte, con la stessa regola con cui poi accetta o
+ * rifiuta il salvataggio: due regole, una nella pagina e una qui, prima o poi
+ * direbbero due cose diverse. */
+const CHI_SONO = "auth/current_user";
 /* Le revisioni di una o piu' plance, e nient'altro.
  *
  * Un tablet a muro non perde mai il fuoco, e la plancia rilegge la
@@ -375,7 +395,8 @@ export function eUnaCommissione(testo) {
     typeof testo === "string" &&
     (testo.includes('"ponte/') ||
       testo.includes('"dashboardmodern/') ||
-      testo.includes('"frontend/'))
+      testo.includes('"frontend/') ||
+      testo.includes(`"${CHI_SONO}"`))
   );
 }
 
@@ -549,6 +570,9 @@ export class Commissioni {
     const tipo = detto?.type;
     if (typeof tipo !== "string") return false;
     if (tipo.startsWith("ponte/")) return true;
+    /* Chi sta guardando lo dice sempre il ponte: a Home Assistant questa
+     * domanda direbbe «l'add-on», per chiunque. */
+    if (tipo === CHI_SONO) return true;
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return Boolean(this.configurazione);
     if (tipo === CATALOGO) return Boolean(this.catalogo);
@@ -646,8 +670,34 @@ export class Commissioni {
       if (this._profiloNascosto(detto?.profile ?? PROFILO_PRINCIPALE, chiChiede, amministra)) {
         return no(id, "not_found", "quella plancia non c'e'");
       }
+      /* E scriverla — salvare, ripristinare una revisione, il «Reset totale»
+       * che e' un salvataggio col segno `reset` — la puo' solo chi la casella
+       * «Utente admin» di quella plancia nomina, quando nomina qualcuno.
+       * Amministrare Home Assistant non basta piu': e' il controllo che la
+       * pagina faceva da sola nascondendo una linguetta, e una linguetta
+       * nascosta si tocca lo stesso (`chi-configura.js`). Leggere resta come
+       * prima: la plancia la configurazione la legge per disegnarsi. */
+      /* Senza nessun nome nella casella non si aspetta niente: un `await` in
+       * piu' qui farebbe passare una lettura arrivata dopo davanti al
+       * salvataggio arrivato prima, e la pagina rileggerebbe la copia vecchia. */
+      if (
+        (tipo === CONFIG_SET || tipo === CONFIG_RESTORE) &&
+        this._amministratoriDi(detto?.profile ?? PROFILO_PRINCIPALE).length > 0 &&
+        !(await this._puoConfigurare(
+          detto?.profile ?? PROFILO_PRINCIPALE,
+          chiChiede,
+          puoAmministrare,
+        ))
+      ) {
+        return no(
+          id,
+          "unauthorized",
+          "la configurazione di questa plancia la cambia solo l'utente che la amministra",
+        );
+      }
       return this._configurazione(detto);
     }
+    if (tipo === CHI_SONO) return this._chiSono(detto, chiChiede, puoAmministrare);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
     if (tipo === CATALOGO) return this._catalogo(detto);
     if (tipo === FOTO_ELENCO) return this._elencoDelleFoto(detto);
@@ -1376,6 +1426,67 @@ export class Commissioni {
       revisioni[profilo] = cassetta.revisione(profilo);
     }
     return si(id, { revisioni });
+  }
+
+  /* Se chi chiede puo' mettere mano alla Config di questa plancia: la regola
+   * sta in `chi-configura.js`, qui si va a prendere quello che le serve.
+   *
+   * Gli amministratori si leggono dallo scatto **gia' salvato**, non da quello
+   * che arriva: chi non e' l'amministratore non si toglie la restrizione
+   * scrivendola vuota nel salvataggio che manda. L'elenco degli utenti si
+   * chiede solo quando la casella e' piena — una plancia senza restrizione non
+   * deve pagare una domanda a Home Assistant per ogni salvataggio — e se Home
+   * Assistant non lo sa dire la risposta e' no. */
+  async _puoConfigurare(profilo, chiChiede = "", puoAmministrare = false) {
+    const amministratori = this._amministratoriDi(profilo);
+    if (!amministratori.length) return true;
+    let utenti = null;
+    if (chiChiede && this.utenti?.elenco) {
+      try {
+        utenti = await this.utenti.elenco();
+      } catch (_errore) {
+        utenti = null;
+      }
+    }
+    return puoConfigurare({ amministratori, chiChiede, utenti, puoAmministrare });
+  }
+
+  _amministratoriDi(profilo) {
+    if (!this.configurazione || !Configurazione.profiloBuono(profilo)) return [];
+    try {
+      return amministratoriDellaPlancia(this.configurazione.leggi(profilo)?.snapshot?.values);
+    } catch (_errore) {
+      return [];
+    }
+  }
+
+  /* La risposta ad `auth/current_user`: chi c'e' dall'altra parte del filo,
+   * nella forma di Home Assistant, e se a lui la Config si apre.
+   *
+   * Chi non si sa chi sia — un telefono abbinato prima che i telefoni si
+   * intestassero a qualcuno — riceve un utente senza nome: e' la verita', e la
+   * pagina con un utente senza nome sa cosa fare. Il profilo e' quello della
+   * plancia che chiede, perche' ogni plancia ha la sua casella. */
+  async _chiSono(detto, chiChiede = "", puoAmministrare = false) {
+    const id = detto?.id ?? null;
+    const chi = String(chiChiede || "").trim();
+    let lui = null;
+    if (chi && this.utenti?.elenco) {
+      try {
+        lui = (await this.utenti.elenco()).find((uno) => uno.id === chi) ?? null;
+      } catch (_errore) {
+        lui = null;
+      }
+    }
+    const profilo = Configurazione.profiloBuono(detto?.profile)
+      ? detto.profile
+      : PROFILO_PRINCIPALE;
+    return si(id, {
+      id: chi,
+      name: lui?.nome ?? "",
+      is_admin: puoAmministrare === true,
+      gdahome_config: await this._puoConfigurare(profilo, chi, puoAmministrare),
+    });
   }
 
   async _configurazione(detto) {
