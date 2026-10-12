@@ -61,7 +61,13 @@ import { ChatHaDettoNo } from "./chat.js";
 import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
-import { laVede, PremiumRichiesto, QuellaPlanciaNo, TroppePlance } from "./plance.js";
+import {
+  eDiQuestaVita,
+  laVede,
+  PremiumRichiesto,
+  QuellaPlanciaNo,
+  TroppePlance,
+} from "./plance.js";
 import { aggiungiUnaPlancia } from "./plancia-nuova.js";
 import { LicenzaNo } from "./licenze.js";
 import { perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
@@ -1383,6 +1389,29 @@ export class Commissioni {
       if (detto.type === CONFIG_GET) {
         await this._laPrendeDallIntegrazione(profilo);
         return si(id, cassetta.leggi(profilo));
+      }
+      /* Scrivere si', ma solo nel cassetto di una plancia che c'e', e solo
+       * da una pagina di questa sua vita.
+       *
+       * Senza queste due righe una plancia tolta poteva tornare: una pagina
+       * rimasta aperta da qualche parte, al suo giro, trova il cassetto vuoto
+       * — `togli` l'ha appena svuotato — e ci rispinge la copia che ha in
+       * mano. Prima che la plancia venga rifatta, quel cassetto non e' di
+       * nessuno e nessuno lo vede; il giorno che qualcuno rifa' una plancia
+       * con lo stesso titolo, se la ritrova piena della roba di quella morta.
+       * Dopo, la pagina vecchia scriverebbe direttamente in quella nuova.
+       * Leggere invece resta libero: un cassetto vuoto letto non fa danni.
+       * Dove le plance non ci sono — un ponte di prova, una cassetta usata da
+       * sola — non si guarda niente, come prima. */
+      if (this.plance) {
+        const quale = this.plance.quale(profilo);
+        if (!quale) return no(id, "not_found", "quella plancia non c'e'");
+        if (!eDiQuestaVita(quale, detto.entry_id)) {
+          this.registro.info(
+            `una pagina della plancia «${quale.titolo}» di prima voleva scriverci dentro: non scrive`,
+          );
+          return no(id, "plancia_rinata", "questa pagina e' di una plancia che non c'e' piu'");
+        }
       }
       if (detto.type === CONFIG_RESTORE) {
         const revisione = Number(detto.revision);

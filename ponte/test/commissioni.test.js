@@ -30,6 +30,7 @@ import { BASE_DELLE_FOTO, BASE_DI_CASA, Foto } from "../src/foto.js";
 import { Dispositivi } from "../src/dispositivi.js";
 import { Plancia } from "../src/plancia.js";
 import { Plance } from "../src/plance.js";
+import { aggiungiUnaPlancia } from "../src/plancia-nuova.js";
 import { Ponte } from "../src/ponte.js";
 
 const SEGNO_DEL_SUPERVISOR = "il-segno-del-supervisor";
@@ -1735,7 +1736,9 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
       profilo: "casa-al-mare",
     });
     assert.equal(altra.result.titolo, "Casa al mare");
-    assert.equal(altra.result.istanza, "gdahome-casa-al-mare");
+    /* L'istanza porta il cassetto e la nascita: una plancia rifatta con lo
+     * stesso titolo non ritrova nel browser la roba di quella tolta. */
+    assert.match(altra.result.istanza, /^gdahome-casa-al-mare-[a-f0-9]{8}$/);
     assert.equal(altra.result.profilo, "casa-al-mare");
     assert.equal(altra.result.primario, false);
     /* I file sono gli stessi per tutte: una plancia sul disco, una impronta. */
@@ -1758,7 +1761,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
       { puoAmministrare: true },
     );
     assert.equal(rinominata.result.quale.titolo, "Al mare");
-    assert.equal(rinominata.result.quale.istanza, "gdahome-casa-al-mare");
+    assert.equal(rinominata.result.quale.istanza, altra.result.istanza);
 
     /* Togliendola va via anche il suo cassetto nella configurazione. */
     cassetta.scrivi("casa-al-mare", { "dm-home": '{"x":1}' }, { updated_at: 5000 });
@@ -1795,6 +1798,108 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
     const detta = await senza.rispondi({ id: 8, type: "ponte/plance/elenco" });
     assert.equal(detta.success, false);
     assert.equal(detta.error.code, "unknown_command");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+/* «Ho creato una plancia "Revisione" a muro, l'ho cancellata, l'ho rifatta
+ * classica con lo stesso nome, e si e' riaperta a muro.» La pagina della
+ * plancia tolta — su un tablet rimasto acceso, o nel deposito del telefono —
+ * ha ancora in mano la configurazione a muro, e davanti a un cassetto vuoto
+ * la rispingeva dentro. Qui la si fa provare, prima e dopo che la plancia
+ * venga rifatta, e non deve riuscirci. */
+test("una plancia tolta non torna: la sua pagina non riempie il cassetto, ne' prima ne' dopo", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-rinata-"));
+  try {
+    const nascite = ["aaaa1111", "bbbb2222"];
+    const plance = new Plance({ cartella, registro: ZITTO, nascita: () => nascite.shift() });
+    const cassetta = new Configurazione({ cartella, adesso: () => 5000 });
+    const con = new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      plancia: new Plancia(),
+      plance,
+      configurazione: cassetta,
+    });
+    const chiedi = (detto) => con.rispondi(detto, { puoAmministrare: true });
+    const aMuro = { cd_muro: '{"attiva":true}', cd_stanze: '[{"nome":"Sala"}]' };
+    const scrivi = (id, entry_id, values = aMuro) =>
+      chiedi({
+        id,
+        type: "dashboardmodern/config/set",
+        profile: "revisione",
+        ...(entry_id === null ? {} : { entry_id }),
+        snapshot: { values, keys_revision: 1, updated_at: 5000 },
+      });
+
+    const prima = await chiedi({
+      id: 1,
+      type: "ponte/plance/aggiungi",
+      titolo: "Revisione",
+      modello: "muro",
+    });
+    const vecchia = prima.result.quale.istanza;
+    assert.equal(vecchia, "gdahome-revisione-aaaa1111");
+    assert.equal((await scrivi(2, `${vecchia}-casa1`)).success, true);
+
+    await chiedi({ id: 3, type: "ponte/plance/togli", profilo: "revisione" });
+    assert.equal(cassetta.leggi("revisione").snapshot, null);
+
+    /* Tolta: la pagina rimasta aperta prova a rimetterci la sua copia. Il
+     * cassetto non e' di nessuna plancia, e resta vuoto. */
+    const orfana = await scrivi(4, `${vecchia}-casa1`);
+    assert.equal(orfana.success, false);
+    assert.equal(orfana.error.code, "not_found");
+    assert.equal(cassetta.leggi("revisione").snapshot, null);
+
+    /* Rifatta classica, con lo stesso titolo: stesso cassetto, vuoto, e
+     * un'istanza nuova — il deposito del browser di prima non si ritrova. */
+    const rifatta = await chiedi({ id: 5, type: "ponte/plance/aggiungi", titolo: "Revisione" });
+    assert.equal(rifatta.result.quale.profilo, "revisione");
+    assert.equal(rifatta.result.quale.istanza, "gdahome-revisione-bbbb2222");
+    assert.equal(rifatta.result.quale.a_muro, false);
+
+    /* La pagina vecchia ci riprova: non scrive, ne' con l'istanza di quella
+     * morta ne' con quella di una plancia senza nascita. */
+    for (const [id, istanza] of [
+      [6, `${vecchia}-casa1`],
+      [7, vecchia],
+      [8, "gdahome-revisione"],
+    ]) {
+      const respinta = await scrivi(id, istanza);
+      assert.equal(respinta.success, false, istanza);
+      assert.equal(respinta.error.code, "plancia_rinata");
+    }
+    assert.equal(cassetta.leggi("revisione").snapshot, null);
+    const elenco = await chiedi({ id: 9, type: "ponte/plance/elenco" });
+    assert.equal(elenco.success, true);
+
+    /* La sua pagina invece scrive: dal browser, dall'app (che ci attacca la
+     * casa) e da una pagina di ieri che l'istanza non la dice. */
+    const classica = { cd_stanze: '[{"nome":"Cucina"}]' };
+    assert.equal((await scrivi(10, "gdahome-revisione-bbbb2222", classica)).success, true);
+    assert.equal((await scrivi(11, "gdahome-revisione-bbbb2222-casa1", classica)).success, true);
+    assert.equal((await scrivi(12, null, classica)).success, true);
+    assert.equal(cassetta.leggi("revisione").snapshot.values.cd_muro, undefined);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("una plancia nuova non adotta il cassetto rimasto da una tolta prima di oggi", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-cassetto-orfano-"));
+  try {
+    const plance = new Plance({ cartella, registro: ZITTO });
+    const cassetta = new Configurazione({ cartella, adesso: () => 5000 });
+    /* Un cassetto senza plancia: quello che una pagina rimasta aperta poteva
+     * riempire, prima di oggi, dopo che la sua plancia era stata tolta. */
+    cassetta.scrivi("revisione", { cd_muro: '{"attiva":true}' }, { updated_at: 5000 });
+    const nuova = aggiungiUnaPlancia({ plance, configurazione: cassetta }, { titolo: "Revisione" });
+    assert.equal(nuova.profilo, "revisione");
+    assert.equal(nuova.a_muro, false);
+    assert.equal(cassetta.leggi("revisione").snapshot, null);
+    assert.deepEqual(cassetta.leggi("revisione").recoverable, []);
   } finally {
     rmSync(cartella, { recursive: true, force: true });
   }

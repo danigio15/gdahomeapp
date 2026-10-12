@@ -29,6 +29,7 @@
  * aggiungere altre.
  */
 
+import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
@@ -110,6 +111,28 @@ export function vedeQualcosa(elenco, chi, amministra = null) {
   return plance.some((una) => laVede(una, chi, amministra));
 }
 
+/* Se chi scrive nel cassetto di questa plancia e' una pagina di **questa**
+ * plancia, e non di una tolta che aveva lo stesso cassetto.
+ *
+ * La pagina, quando scrive la sua configurazione, dice anche la sua istanza
+ * (`entry_id`, in `config-persistence-section.js`). Una pagina rimasta aperta
+ * su un tablet mentre la sua plancia veniva tolta e rifatta con lo stesso
+ * titolo ha in mano la configurazione di quella morta, e al primo giro
+ * troverebbe il cassetto nuovo vuoto e ce la rispingerebbe dentro: la nascita
+ * nell'istanza (`nascitaACaso`) protegge i telefoni che la ricaricano, questa
+ * protegge il cassetto da quelli che non la ricaricano.
+ *
+ * Va bene l'istanza giusta e va bene l'istanza giusta con un pezzo in piu':
+ * l'app ci attacca la casa (`istanzaDi`, in `premesse.dart`). Chi non dice
+ * niente passa, perche' una pagina di ieri non lo dice e deve continuare a
+ * salvare. */
+export function eDiQuestaVita(quale, istanza) {
+  const detta = String(istanza ?? "").trim();
+  const sua = String(quale?.istanza || "");
+  if (!detta || !sua) return true;
+  return detta === sua || detta.startsWith(`${sua}-`);
+}
+
 /* Quante se ne possono tenere.
  *
  * Non e' un limite tecnico — i profili starebbero in mille — e' il selettore:
@@ -135,6 +158,46 @@ const TITOLO_DELLA_PRIMA = "gdahome";
 const TITOLO_DI_PRIMA = "DashboardModern";
 
 const DIFETTO = Object.freeze({ plance: [] });
+
+/* La nascita di una plancia: un segno a caso, scelto quando nasce e mai piu'.
+ *
+ * «Ho creato una plancia "Revisione" a muro, l'ho cancellata, l'ho rifatta
+ * classica con lo stesso nome, e si e' riaperta a muro.» Il cassetto
+ * (`profilo`) si ricava dal titolo, quindi lo stesso titolo da' lo stesso
+ * cassetto — e fin qui va bene, perche' `togli` il cassetto lo svuota davvero.
+ * Il guaio stava sul telefono: la pagina tiene una copia della configurazione
+ * nel deposito del browser, sotto il nome dell'istanza, e l'istanza era
+ * `gdahome-<profilo>`, cioe' **la stessa** per la plancia morta e per quella
+ * rinata. La pagina nuova trovava nel deposito la roba di quella di prima,
+ * vedeva sul ponte un cassetto vuoto, e faceva quello che deve fare un
+ * dispositivo configurato davanti a un cassetto vuoto: ce la rispingeva
+ * dentro (`sharedReconcileAction`, «push-local»). La plancia morta tornava
+ * viva, e non solo su quel telefono: sul ponte, per tutti.
+ *
+ * Con la nascita nel nome dell'istanza ogni plancia che nasce ha un deposito
+ * suo, che nessuna plancia di prima ha mai riempito: quella rinata parte
+ * pulita su ogni telefono e in ogni browser, anche su un'app di ieri — il
+ * nome dell'istanza glielo dice il ponte — e senza toccare la pagina. La
+ * roba della plancia morta resta nel deposito del telefono, ma sotto un nome
+ * che nessuno chiedera' piu'.
+ *
+ * Le plance nate prima di oggi non ce l'hanno, e non la prendono: dargliela
+ * vorrebbe dire cambiarle l'istanza, cioe' far perdere a ogni telefono il
+ * tema, la barra e le modifiche non ancora arrivate al ponte. Restano
+ * `gdahome-<profilo>`, come sono sempre state. Otto cifre esadecimali bastano
+ * e avanzano: devono distinguere le vite dello stesso cassetto, non tutte le
+ * plance del mondo. */
+function nascitaACaso() {
+  return randomBytes(4).toString("hex");
+}
+
+/* Una nascita come la scriviamo noi, o niente: dal file puo' arrivare di
+ * tutto, e quello che finisce nel nome di un deposito deve essere corto e
+ * senza sorprese. */
+function nascitaPulita(nato) {
+  const testo = String(nato ?? "").trim();
+  return /^[a-f0-9]{4,32}$/.test(testo) ? testo : "";
+}
 
 /* Il nome del cassetto, ricavato dal titolo.
  *
@@ -214,8 +277,12 @@ export class Plance {
      * funzione, perche' la risposta cambia mentre il ponte gira; di serie no,
      * che e' come stanno le licenze finche' la chiave e' vuota. */
     limitata = () => false,
+    /* Da dove vengono le nascite delle plance nuove: a caso, e passata da
+     * fuori solo dalle prove, che vogliono un'istanza da scrivere per intero. */
+    nascita = nascitaACaso,
   } = {}) {
     this.limitata = limitata;
+    this.nascita = nascita;
     this.archivio = new Archivio(percorso || join(cartella, "plance.json"), DIFETTO);
     this.adesso = adesso;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
@@ -257,6 +324,9 @@ export class Plance {
         profilo,
         titolo: titoloPulito(una?.titolo, profilo),
         creata_il: Number(una?.creata_il) || 0,
+        /* Vuota per quelle nate prima di oggi, e per la prima: vedi
+         * `nascitaACaso`. Mai inventata qui, dove si rilegge il file. */
+        nato: una?.profilo === PROFILO_PRINCIPALE ? "" : nascitaPulita(una?.nato),
         utenti: utentiPuliti(una?.utenti),
         solo_admin: una?.solo_admin === true,
         /* Il titolo che ci ha messo l'installatore, se ce l'ha messo lui.
@@ -282,6 +352,7 @@ export class Plance {
         profilo: PROFILO_PRINCIPALE,
         titolo: TITOLO_DELLA_PRIMA,
         creata_il: 0,
+        nato: "",
         utenti: [],
         solo_admin: false,
         daInstallatore: "",
@@ -313,8 +384,17 @@ export class Plance {
        * browser le loro cose le teneva sotto quel nome. Si e' cambiato adesso
        * per lo stesso motivo dello slug — ce l'ha una persona, su una macchina
        * di prova — e adesso e' l'unico momento in cui costa questo e non
-       * di piu'. */
-      istanza: una.profilo === PROFILO_PRINCIPALE ? NOME : `${NOME}-${una.profilo}`,
+       * di piu'.
+       *
+       * Una plancia nata da oggi ci porta dietro anche la sua nascita, cosi'
+       * una plancia rifatta con lo stesso titolo non ritrova nel browser la
+       * roba di quella tolta: vedi `nascitaACaso`. */
+      istanza:
+        una.profilo === PROFILO_PRINCIPALE
+          ? NOME
+          : una.nato
+            ? `${NOME}-${una.profilo}-${una.nato}`
+            : `${NOME}-${una.profilo}`,
       primaria: una.profilo === PROFILO_PRINCIPALE,
       creata_il: una.creata_il,
       /* Chi la vede. Una copia, non l'array del disco: chi legge l'elenco non
@@ -332,6 +412,20 @@ export class Plance {
   quale(profilo = PROFILO_PRINCIPALE) {
     const cercato = String(profilo || PROFILO_PRINCIPALE);
     return this.elenco().find((una) => una.profilo === cercato) || null;
+  }
+
+  /* La nascita di una plancia che nasce adesso. Se chi le fa sbaglia —
+   * nelle prove si puo' — la plancia nasce lo stesso, con un segno a caso:
+   * una plancia senza nascita sarebbe proprio quella che si ritrova la roba
+   * di una morta. */
+  _nuovaNascita() {
+    let nato = "";
+    try {
+      nato = nascitaPulita(this.nascita?.());
+    } catch (_errore) {
+      nato = "";
+    }
+    return nato || nascitaACaso();
   }
 
   _limitata() {
@@ -373,6 +467,7 @@ export class Plance {
       profilo,
       titolo: nome,
       creata_il: this.adesso(),
+      nato: this._nuovaNascita(),
       utenti: [],
       solo_admin: false,
     };
@@ -417,6 +512,7 @@ export class Plance {
       profilo: quale,
       titolo: nome,
       creata_il: this.adesso(),
+      nato: this._nuovaNascita(),
       utenti: [],
       solo_admin: false,
       daInstallatore: nome,

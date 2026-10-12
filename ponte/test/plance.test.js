@@ -22,7 +22,13 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { Plance, QUANTE_AL_MASSIMO, QuellaPlanciaNo, TroppePlance } from "../src/plance.js";
+import {
+  eDiQuestaVita,
+  Plance,
+  QUANTE_AL_MASSIMO,
+  QuellaPlanciaNo,
+  TroppePlance,
+} from "../src/plance.js";
 import { Configurazione } from "../src/configurazione.js";
 
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
@@ -32,8 +38,8 @@ function unPosto() {
   return { cartella, via: () => rmSync(cartella, { recursive: true, force: true }) };
 }
 
-function lePlance(cartella, { adesso = () => 1000 } = {}) {
-  return new Plance({ cartella, registro: ZITTO, adesso });
+function lePlance(cartella, { adesso = () => 1000, nascita } = {}) {
+  return new Plance({ cartella, registro: ZITTO, adesso, ...(nascita ? { nascita } : {}) });
 }
 
 test("la prima plancia c'e' sempre, e si chiama come il prodotto", () => {
@@ -67,12 +73,14 @@ test("la prima plancia c'e' sempre, e si chiama come il prodotto", () => {
 test("una plancia in piu' ha un cassetto suo, e un'istanza sua", () => {
   const { cartella, via } = unPosto();
   try {
-    const plance = lePlance(cartella, { adesso: () => 7000 });
+    const plance = lePlance(cartella, { adesso: () => 7000, nascita: () => "0a0b0c0d" });
     const nuova = plance.aggiungi("Casa al mare");
     assert.deepEqual(nuova, {
       profilo: "casa-al-mare",
       titolo: "Casa al mare",
-      istanza: "gdahome-casa-al-mare",
+      /* Il cassetto e la nascita: vedi «una plancia rifatta con lo stesso
+       * titolo...», piu' sotto. */
+      istanza: "gdahome-casa-al-mare-0a0b0c0d",
       primaria: false,
       creata_il: 7000,
       utenti: [],
@@ -159,6 +167,86 @@ test("togliendo una plancia va via anche il suo cassetto", () => {
   } finally {
     via();
   }
+});
+
+/* «Ho creato una plancia "Revisione" a muro, l'ho cancellata, l'ho rifatta
+ * classica con lo stesso nome, e si e' riaperta a muro.» Il cassetto e' lo
+ * stesso — si ricava dal titolo — e sul ponte e' vuoto davvero; quello che
+ * non era vuoto era il deposito del telefono, che si chiama come l'istanza.
+ * Allora l'istanza della plancia rifatta deve essere un'altra. */
+test("una plancia rifatta con lo stesso titolo ha un'istanza nuova, e il cassetto vuoto", () => {
+  const { cartella, via } = unPosto();
+  try {
+    const nascite = ["aaaa1111", "bbbb2222"];
+    const plance = lePlance(cartella, { nascita: () => nascite.shift() });
+    const cassetta = new Configurazione({ cartella, adesso: () => 1000 });
+    const prima = plance.aggiungi("Revisione");
+    assert.equal(prima.istanza, "gdahome-revisione-aaaa1111");
+    cassetta.scrivi(prima.profilo, { cd_muro: '{"attiva":true}' }, { updated_at: 1000 });
+
+    plance.togli(prima.profilo, { dimentica: (quale) => cassetta.dimentica(quale) });
+    const rifatta = plance.aggiungi("Revisione");
+    /* Lo stesso cassetto, vuoto; un'altra istanza, cioe' un altro deposito
+     * nel browser, che nessuna plancia di prima ha mai riempito. */
+    assert.equal(rifatta.profilo, prima.profilo);
+    assert.equal(cassetta.leggi(rifatta.profilo).snapshot, null);
+    assert.equal(rifatta.istanza, "gdahome-revisione-bbbb2222");
+    assert.notEqual(rifatta.istanza, prima.istanza);
+
+    /* E la nascita resta quella: riaprendo il file l'istanza non cambia, se
+     * no ogni riavvio del ponte farebbe perdere il tema a ogni telefono. */
+    assert.equal(lePlance(cartella).quale(rifatta.profilo).istanza, rifatta.istanza);
+
+    /* Chi fa le nascite puo' sbagliare: la plancia nasce lo stesso, e con
+     * una nascita sua, non senza. */
+    const storta = lePlance(cartella, { nascita: () => "</script>" }).aggiungi("Storta");
+    assert.match(storta.istanza, /^gdahome-storta-[a-f0-9]{8}$/);
+  } finally {
+    via();
+  }
+});
+
+test("le plance nate prima della nascita tengono l'istanza di sempre", () => {
+  const { cartella, via } = unPosto();
+  try {
+    writeFileSync(
+      join(cartella, "plance.json"),
+      JSON.stringify({
+        plance: [
+          { profilo: "primary", titolo: "gdahome", creata_il: 0 },
+          { profilo: "mare", titolo: "Mare", creata_il: 5 },
+          /* Una nascita storta nel file non finisce nel nome di un deposito. */
+          { profilo: "monti", titolo: "Monti", creata_il: 6, nato: "<b>" },
+          { profilo: "lago", titolo: "Lago", creata_il: 7, nato: "c0ffee00" },
+        ],
+      }),
+    );
+    const plance = lePlance(cartella);
+    /* Cambiarla vorrebbe dire far perdere a ogni telefono il tema, la barra
+     * e le modifiche non ancora arrivate: quelle di ieri restano come sono. */
+    assert.equal(plance.quale("mare").istanza, "gdahome-mare");
+    assert.equal(plance.quale("monti").istanza, "gdahome-monti");
+    assert.equal(plance.quale("lago").istanza, "gdahome-lago-c0ffee00");
+    assert.equal(plance.prima.istanza, "gdahome");
+    /* E la nascita non si inventa riaprendo il file. */
+    assert.equal(lePlance(cartella).quale("mare").istanza, "gdahome-mare");
+  } finally {
+    via();
+  }
+});
+
+test("una pagina scrive nel cassetto solo se e' di questa vita della plancia", () => {
+  const quale = { istanza: "gdahome-revisione-bbbb2222" };
+  /* La sua, dal browser di Home Assistant e dall'app, che ci attacca la casa. */
+  assert.equal(eDiQuestaVita(quale, "gdahome-revisione-bbbb2222"), true);
+  assert.equal(eDiQuestaVita(quale, "gdahome-revisione-bbbb2222-casa1"), true);
+  /* Una pagina di ieri non lo dice, e continua a salvare. */
+  assert.equal(eDiQuestaVita(quale, undefined), true);
+  assert.equal(eDiQuestaVita(quale, ""), true);
+  /* Quella della plancia tolta no, con o senza nascita, con o senza casa. */
+  assert.equal(eDiQuestaVita(quale, "gdahome-revisione-aaaa1111"), false);
+  assert.equal(eDiQuestaVita(quale, "gdahome-revisione"), false);
+  assert.equal(eDiQuestaVita(quale, "gdahome-revisione-casa1"), false);
 });
 
 test("la prima non si toglie, e quella che non c'e' nemmeno", () => {
@@ -381,7 +469,7 @@ test("una plancia voluta dal cruscotto nasce una volta, gia' vestita, e se in ca
     const mappa = { taverna: { titolo: "Taverna", velo: "Rossi", nuova: true } };
     assert.equal(plance.vesti(mappa), true);
     assert.equal(plance.quale("taverna").titolo, "Taverna");
-    assert.equal(plance.quale("taverna").istanza, "gdahome-taverna");
+    assert.match(plance.quale("taverna").istanza, /^gdahome-taverna-[a-f0-9]{8}$/);
     assert.deepEqual(avvisi, [["primary", "taverna"]]);
 
     /* La stessa mappa, il giro dopo: niente da fare. E senza «nuova» — il
