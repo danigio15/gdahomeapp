@@ -378,8 +378,20 @@ class PlanciaVeraState extends State<PlanciaVera> {
      * accorciare vorrebbe dire una fascia vuota sotto l'orologio.
      *
      * `basso: 0` non e' una svista: alla pagina si dice che in fondo non
-     * deve lasciare niente, se no lo spazio verrebbe contato due volte. */
-    final margini = (alto: inCima, basso: 0.0);
+     * deve lasciare niente, se no lo spazio verrebbe contato due volte.
+     *
+     * Sull'iPhone pero' no, e la foto e' quella dell'app di Home Assistant.
+     * Sul telefono la plancia la barra la attacca al fondo e la allunga lei
+     * sotto la barretta di casa, col suo colore e senza bordo
+     * (`navigation-section.js`, `padding-bottom: 6px + fondo`). Accorciando
+     * il riquadro la barra si chiudeva col suo filo appena sopra la barretta,
+     * e sotto restava una fascia a parte: una linea che in Home Assistant non
+     * c'e'. Sull'iPhone allora il riquadro arriva fino al vetro, e alla
+     * pagina si dice quanto si prende la barretta: lo stesso numero che le da'
+     * WebKit dentro Home Assistant, e quindi la stessa barra. Su Android resta
+     * com'era: li' le tre regole di stile non hanno mai tenuto. */
+    final finoAlVetro = unaFasciaSottoLOrologio;
+    final margini = (alto: inCima, basso: finoAlVetro ? inFondo : 0.0);
     switch (collegamento.comeVa) {
       case ComeVa.nessunaCasa:
         return _Stato(
@@ -677,7 +689,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
         /* La chiave sulla composizione: cambiarla rifa' il riquadro da capo,
          * perche' un WebView nasce in un modo e in quello resta. */
         Padding(
-          padding: EdgeInsets.only(bottom: inFondo),
+          padding: EdgeInsets.only(bottom: finoAlVetro ? 0 : inFondo),
           child: KeyedSubtree(
             key: ValueKey<bool>(_ibrida),
             child: widget.fabbrica.riquadro(
@@ -794,8 +806,9 @@ class PlanciaVeraState extends State<PlanciaVera> {
   }
 }
 
-/// Se sopra la plancia, sotto l'orologio del telefono, ci va una fascia
-/// piena: sull'iPhone si'. Vedi dove si disegna, in [PlanciaVera].
+/// Sull'iPhone la plancia si disegna come dentro Home Assistant: fino al
+/// vetro in fondo, con la barra che si allunga sotto la barretta di casa, e
+/// con una fascia piena sotto l'orologio in cima. Vedi [PlanciaVera].
 @visibleForTesting
 bool get unaFasciaSottoLOrologio =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;

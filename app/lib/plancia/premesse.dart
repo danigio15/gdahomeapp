@@ -234,8 +234,11 @@ class Premesse {
        * niente. «Troppo alta su iPhone», segnalato con la foto.
        *
        * Zero non vuol dire «non lo so»: vuol dire «il fondo e' mio, tu non
-       * aggiungere niente». Ed e' vero su tutti e due i sistemi, perche' il
-       * riquadro lo accorciamo sempre (`plancia_vera.dart`, `basso: 0.0`).
+       * aggiungere niente». Su Android e' sempre cosi': il riquadro lo
+       * accorciamo (`plancia_vera.dart`). Sull'iPhone invece il riquadro
+       * arriva al vetro, come dentro Home Assistant, e qui si scrive quello
+       * che si prende la barretta di casa: la barra si attacca al fondo e ci
+       * si allunga sotto lei, senza nessuna fascia a parte.
        *
        * Si scrive solo se cambia davvero: l'osservatore qui sotto guarda
        * l'attributo dello stile della radice, e riscriverlo uguale lo farebbe
