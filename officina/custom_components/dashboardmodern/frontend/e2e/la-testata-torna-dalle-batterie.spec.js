@@ -93,3 +93,29 @@ test("la regola della fascia non chiede piu' niente a :has", async ({ page }, te
   );
   expect(conHas).toBe(0);
 });
+
+/* «Scompaiono il menu e il tasto per configurare entrando e uscendo da Luci»
+ * (#228): su Safari il blocco a sinistra tornava acceso ma largo zero. Qui un
+ * conto sbagliato lo si simula schiacciandolo a zero: il foglio non lo lascia
+ * scendere sotto la sua misura minima, e l'ingranaggio resta al suo posto. */
+test("tornando da Luci il menu e l'ingranaggio non restano larghi zero", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo);
+  await page.locator('.tab[data-tab="luci"]').evaluate((b) => b.click());
+  await expect.poll(() => segno(page)).toBe("page-luci");
+  await page.locator('.tab[data-tab="home"]').evaluate((b) => b.click());
+  await expect.poll(() => segno(page)).toBe("page-home");
+  const larghezze = await page.evaluate(() => {
+    const sinistra = document.querySelector("body>header>.header-left-wrap");
+    sinistra.style.flex = "0 0 0px";
+    sinistra.style.width = "0px";
+    const ingranaggio = document.querySelector("body>header>.dm-editor-entry");
+    return {
+      sinistra: sinistra.getBoundingClientRect().width,
+      ingranaggio: ingranaggio ? ingranaggio.getBoundingClientRect().width : 34,
+    };
+  });
+  expect(larghezze.sinistra).toBeGreaterThanOrEqual(96);
+  expect(larghezze.ingranaggio).toBeGreaterThanOrEqual(34);
+});

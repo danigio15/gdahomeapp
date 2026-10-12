@@ -37888,6 +37888,10 @@ var STILE4 = `
    Il meteo si prende lo spazio che avanza in mezzo. */
 header.dm-testata-col-meteo{gap:14px}
 header.dm-testata-col-meteo .header-left-wrap{flex:0 0 auto;min-width:0}
+/* Mai larga zero: il tasto del menu e un pezzo del nome ci stanno sempre, e
+   l'ingranaggio pure, qualunque conto faccia Safari tornando alla Home (#228). */
+body>header>.header-left-wrap{min-width:96px!important}
+body>header>.dm-editor-entry{min-width:34px!important;flex-shrink:0!important}
 /* Larga quanto le serve, non quanto avanza: una fascia tirata fino allo stato
    del ponte sarebbe mezzo schermo di vuoto attorno a quattro numeri.
    E staccata dal nome della casa: appiccicata sembrava una parte del nome,
@@ -38186,6 +38190,21 @@ function ripara() {
   }
   riparaIlBloccoASinistra(header2);
   sposta();
+  rifaiLaFila(header2);
+  root.requestAnimationFrame?.(() => rifaiLaFila(header2));
+}
+function rifaiLaFila(header2) {
+  if (!header2 || doc?.querySelector?.(".page.active")?.id !== "page-home") return false;
+  const sinistra = header2.querySelector?.(":scope > .header-left-wrap");
+  if (!sinistra) return false;
+  const larga = header2.getBoundingClientRect?.().width || 0;
+  if (larga < 1 || (sinistra.getBoundingClientRect?.().width || 0) >= 1) return false;
+  const prima = header2.style.display;
+  header2.style.display = "none";
+  void header2.offsetWidth;
+  header2.style.display = prima;
+  void header2.offsetWidth;
+  return true;
 }
 var FLAG_METEO = "cd_meteo_entita_proprie";
 function flagMeteo() {

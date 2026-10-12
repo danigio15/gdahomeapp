@@ -1,11 +1,11 @@
 {
   "repository": "danigio15/gdahomeapp",
-  "commit": "b875439a31e954674fba6ae1cf7ffd81510b498d",
+  "commit": "61392dd32565daf9c6e7ebf5d4154e23359eeac7",
   "versione": "1.11.8",
-  "portata_il": "2026-10-12T09:07:34.696Z",
+  "portata_il": "2026-10-12T09:39:45.121Z",
   "file": 1007,
-  "byte": 30108268,
-  "sigillo": "afa9283190df64f175a6fb2141441df7fd2c1332fecfd988dd01315bea433f7a",
+  "byte": 30111194,
+  "sigillo": "f87dbc5cfc4200e93f759d218d4b135596edba7a826627476924d4ff632490d3",
   "firma": "",
   "impronte": {
     "avatars/LICENSE.txt": "e8c7c216d5a15ec564f66c8070b9bbce1b39e20822440af18d4ad735dd9b9e6e",
@@ -565,8 +565,8 @@
     "legacy/vendor/hls.min.js": "bf908f85f3941c514bd3df640695d1bf1190798720a74569700f64cc19845d6b",
     "pacco/chunk-KPZSFPVF.js": "4db6e9efc5a047ce55c1dd1d2be2423172a253b0e059bf55c3f447964550e187",
     "pacco/legacy/modules-entry.js": "23f78ac77542f715b6f507f752d754a2c378043e4241ba536868d8eaf1aa12d5",
-    "pacco/sorgenti.json": "07f58a70a5ea0fabd859f56301c91f9dde49a63d20901e7a494330ea7d443ce5",
-    "pacco/src/sections/section-runtime.js": "6a4b796294c5d1a7ee68306ae83f20f8bc5fea2d6b3af8e69e90bc9cfc485e86",
+    "pacco/sorgenti.json": "3920d8d5a54956282ded10efcae23e6d245721f3e782e634033ca0b60efdc390",
+    "pacco/src/sections/section-runtime.js": "5b1c85a0850ab4b7eb4bba74cd4267a4a7a92e67df872d02235db5e31380bf1b",
     "src/core/aggiornamenti-da-fare.js": "605628c1bf12f809eac625f1812a625857e8693bfa5dfcbec13969ef1b2488ae",
     "src/core/alarm-panel.js": "221050eebba560e51858ec6c7cd76312535ef66ae120e122129ecefb92861a5d",
     "src/core/alberatura-del-config.js": "2a6bb1b601800ddc7853687103e748405318c0f018bb1e5065467f68cc164832",
@@ -1012,7 +1012,7 @@
     "src/sections/varchi-section.js": "f150bccd8d966171c9e0028d68efd6e939eaa9f274b98c25f26dcaa7d444d71f",
     "src/sections/vmc-editor-section.js": "1ba9550f61530cac530c59946bae60f03f373bc19f8144319ca4f595b59e1f79",
     "src/sections/vmc-section.js": "5313a30cd5ddb2fdf0c52ce9e0576977149339cc163d16c21291afb40ed14160",
-    "src/sections/weather-in-masthead-section.js": "db447c99c417957349a8be5728d12fa28e07b28fc4de9894b7661a8489ac9c73",
+    "src/sections/weather-in-masthead-section.js": "8d677410fbc7bd773c0bbad6e79c82c9a28da5d2cc8327e0c60b262fb1d2d114",
     "src/sections/widget-entity-choice-section.js": "5e513db16d88f54f408bc5fa25ee0395dd15aeddbc91f0586e417d28554e1e44",
     "src/transport/hosted-bridge-guard.js": "77e53478578121b139b595af3b8b5514af320232bc7cb8b4440bc7c18ff27ab3"
   }

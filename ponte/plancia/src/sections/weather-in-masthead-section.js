@@ -27,6 +27,10 @@ const STILE = `
    Il meteo si prende lo spazio che avanza in mezzo. */
 header.dm-testata-col-meteo{gap:14px}
 header.dm-testata-col-meteo .header-left-wrap{flex:0 0 auto;min-width:0}
+/* Mai larga zero: il tasto del menu e un pezzo del nome ci stanno sempre, e
+   l'ingranaggio pure, qualunque conto faccia Safari tornando alla Home (#228). */
+body>header>.header-left-wrap{min-width:96px!important}
+body>header>.dm-editor-entry{min-width:34px!important;flex-shrink:0!important}
 /* Larga quanto le serve, non quanto avanza: una fascia tirata fino allo stato
    del ponte sarebbe mezzo schermo di vuoto attorno a quattro numeri.
    E staccata dal nome della casa: appiccicata sembrava una parte del nome,
@@ -435,6 +439,39 @@ function ripara() {
   }
   riparaIlBloccoASinistra(header);
   sposta();
+  rifaiLaFila(header);
+  /* Safari rifa' i conti un fotogramma dopo: si guarda anche li'. */
+  root.requestAnimationFrame?.(() => rifaiLaFila(header));
+}
+
+/* La fila in alto che Safari lascia larga zero (#228).
+ *
+ * «Scompaiono il menu e il tasto per configurare, solo entrando e uscendo da
+ * Luci e da Porte e cancelli», su iPhone e iPad. La diagnostica della
+ * segnalazione lo dice esatto: il blocco a sinistra c'e', sta nella testata,
+ * e' acceso e visibile — ma e' largo zero. Non e' nascosto: e' stato messo in
+ * fila con una larghezza sbagliata, e WebKit non rifa' il conto quando la
+ * testata torna accesa. In Chrome lo stesso giro non lo fa, e da qui non lo
+ * si puo' vedere succedere.
+ *
+ * Due cose, una per parte. Il foglio non lascia piu' scendere a zero ne' il
+ * blocco ne' l'ingranaggio (`min-width`), qualunque conto faccia il browser.
+ * E sulla Home, se la testata e' larga e il blocco no, la fila si fa rifare:
+ * spenta e riaccesa nello stesso giro, che e' il modo in cui WebKit butta via
+ * i conti vecchi di un contenitore flessibile. Quando e' tutto a posto —
+ * sempre, fuori da Safari — sono due misure e via. */
+function rifaiLaFila(header) {
+  if (!header || doc?.querySelector?.(".page.active")?.id !== "page-home") return false;
+  const sinistra = header.querySelector?.(":scope > .header-left-wrap");
+  if (!sinistra) return false;
+  const larga = header.getBoundingClientRect?.().width || 0;
+  if (larga < 1 || (sinistra.getBoundingClientRect?.().width || 0) >= 1) return false;
+  const prima = header.style.display;
+  header.style.display = "none";
+  void header.offsetWidth;
+  header.style.display = prima;
+  void header.offsetWidth;
+  return true;
 }
 
 /* La mappatura del meteo, sfoltita: «non mostrare tutte le entita'; un flag

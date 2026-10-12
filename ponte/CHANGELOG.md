@@ -12,6 +12,11 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.11.8
 
+**Home su iPhone e iPad: il menu e l'ingranaggio non spariscono più.** Entrando
+e uscendo da Luci o da Porte e cancelli, Safari poteva lasciare larga zero la
+fila in alto con il menu, il nome della casa e il tasto per configurare. Adesso
+quella fila ha una larghezza minima, e tornando alla Home si ricalcola.
+
 **Sicurezza, tre rifiniture.** I tentativi di abbinamento si contano appena
 cominciano, anche se ne arrivano tanti insieme dallo stesso indirizzo. L'app
 ricorda casa per casa che la stretta di mano è già stata legata, anche dopo
