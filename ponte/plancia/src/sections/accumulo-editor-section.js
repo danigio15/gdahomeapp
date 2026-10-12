@@ -22,6 +22,7 @@ import {
   CAMPI_DEL_PACCO,
   CAMPI_IN_PIU,
   CHIAVE_ACCUMULO,
+  SEGNO_INVERSO,
   SOGLIA_DELTA_MV,
   TIPI,
   accumuloDiCasa,
@@ -29,6 +30,7 @@ import {
   celleDelPacco,
   celleDellaRiga,
   pacchiDaImportare,
+  segnoInverso,
   tipoValido,
 } from "../core/l-accumulo-di-casa.js";
 import { ACCUMULO_TAB, tipoInParole } from "./accumulo-section.js";
@@ -77,8 +79,8 @@ function aiutoDelCampo(campo) {
     );
   if (campo === "corrente" || campo === "potenza")
     return t(
-      "Positiva in carica e negativa in scarica, come la scrivono JK, JBD e Daly.",
-      "Positive when charging and negative when discharging, as JK, JBD and Daly write it.",
+      "Col segno che usa il BMS: se in carica la scrive negativa, sceglilo in «Segno della corrente».",
+      "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.",
     );
   return "";
 }
@@ -144,7 +146,19 @@ function campiDellaRiga(riga, indice) {
         "When the highest and lowest cells are further apart than this, the pack says “Needs balancing” and the Home tile asks for attention.",
       ),
     )}</small></label>`;
-  return scelta + entita + celleMarkup + soglia;
+  const inverso = segnoInverso(riga);
+  const segno = `<label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(t("Segno della corrente", "Current sign"))}</span>
+    <span class="ed-form-row"><select class="ed-input" data-dm-dich-campo="segno" data-dm-dich-riga="${indice}">
+      <option value=""${inverso ? "" : " selected"}>${esc(t("Positiva in carica (JK, JBD, Daly)", "Positive when charging (JK, JBD, Daly)"))}</option>
+      <option value="${SEGNO_INVERSO}"${inverso ? " selected" : ""}>${esc(t("Negativa in carica", "Negative when charging"))}</option>
+    </select></span>
+    <small>${esc(
+      t(
+        "Se la pagina dice «In scarica» mentre la batteria si sta caricando, il tuo BMS scrive la corrente al contrario: scegli «Negativa in carica».",
+        "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.",
+      ),
+    )}</small></label>`;
+  return scelta + segno + entita + celleMarkup + soglia;
 }
 
 /* Quello che la riga aperta ha nelle sue caselle adesso. */
@@ -152,7 +166,7 @@ function conICampiDellaRiga(bozza, body, indice) {
   const casella = (campo) =>
     body.querySelector(`[data-dm-dich-campo="${campo}"][data-dm-dich-riga="${indice}"]`);
   const fuori = { ...bozza };
-  for (const campo of ["tipo", ...CAMPI_DEL_PACCO, "unita", "soglia"]) {
+  for (const campo of ["tipo", ...CAMPI_DEL_PACCO, "unita", "soglia", "segno"]) {
     const nodo = casella(campo);
     if (!nodo) continue;
     const valore = clean(nodo.value);

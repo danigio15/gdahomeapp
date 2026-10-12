@@ -12,6 +12,11 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.11.8
 
+**Batterie: il BMS che scrive la corrente al contrario.** Nella scheda della
+batteria di accumulo c'è «Segno della corrente»: chi ha un BMS che in carica
+la scrive negativa sceglie «Negativa in carica», e la pagina smette di dire
+«In scarica» mentre la batteria si carica.
+
 **Energia: gli anelli dei carichi si riempiono.** Sotto la Casa l'anello dei
 carichi con l'icona di una stanza o di un elettrodomestico restava vuoto: ora
 si riempie quanto pesa il suo numero, come quello degli altri cerchi.

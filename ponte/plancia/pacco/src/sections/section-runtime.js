@@ -39146,7 +39146,19 @@ var CAMPI_DEL_PACCO = Object.freeze([
   "energia",
   "delta"
 ]);
-var CAMPI_IN_PIU5 = Object.freeze(["tipo", ...CAMPI_DEL_PACCO, "unita", "celle", "soglia"]);
+var CAMPI_IN_PIU5 = Object.freeze([
+  "tipo",
+  ...CAMPI_DEL_PACCO,
+  "unita",
+  "celle",
+  "soglia",
+  "segno"
+]);
+var SEGNO_INVERSO = "inverso";
+function segnoInverso(riga3) {
+  return pulito31(riga3?.segno).toLowerCase() === SEGNO_INVERSO;
+}
+var girato = (valore3, inverso) => valore3 === null || !inverso ? valore3 : 0 - valore3 || 0;
 function tipoValido2(tipo) {
   const scritto = pulito31(tipo).toLowerCase();
   return TIPI2.includes(scritto) ? scritto : "";
@@ -39422,8 +39434,9 @@ function letturaDelPacco(riga3, states = {}, nomeDi14 = (entity2) => entity2) {
   const entity2 = pulito31(riga3?.entity);
   const soc = misura3(states, entity2)?.valore ?? null;
   const tensione = inVolt(misura3(states, riga3?.tensione));
-  const corrente2 = inAmpere(misura3(states, riga3?.corrente));
-  const scritta = inWatt(misura3(states, riga3?.potenza));
+  const inverso = segnoInverso(riga3);
+  const corrente2 = girato(inAmpere(misura3(states, riga3?.corrente)), inverso);
+  const scritta = girato(inWatt(misura3(states, riga3?.potenza)), inverso);
   const potenza2 = scritta ?? (tensione !== null && corrente2 !== null ? Math.round(tensione * corrente2) : null);
   const temperatura = misura3(states, riga3?.temperatura);
   const mos = misura3(states, riga3?.mos);
@@ -109153,8 +109166,8 @@ function aiutoDelCampo(campo5) {
     );
   if (campo5 === "corrente" || campo5 === "potenza")
     return t(
-      "Positiva in carica e negativa in scarica, come la scrivono JK, JBD e Daly.",
-      "Positive when charging and negative when discharging, as JK, JBD and Daly write it."
+      "Col segno che usa il BMS: se in carica la scrive negativa, sceglilo in «Segno della corrente».",
+      "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”."
     );
   return "";
 }
@@ -109213,12 +109226,24 @@ function campiDellaRiga(riga3, indice) {
       "When the highest and lowest cells are further apart than this, the pack says “Needs balancing” and the Home tile asks for attention."
     )
   )}</small></label>`;
-  return scelta3 + entita3 + celleMarkup2 + soglia2;
+  const inverso = segnoInverso(riga3);
+  const segno = `<label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(t("Segno della corrente", "Current sign"))}</span>
+    <span class="ed-form-row"><select class="ed-input" data-dm-dich-campo="segno" data-dm-dich-riga="${indice}">
+      <option value=""${inverso ? "" : " selected"}>${esc(t("Positiva in carica (JK, JBD, Daly)", "Positive when charging (JK, JBD, Daly)"))}</option>
+      <option value="${SEGNO_INVERSO}"${inverso ? " selected" : ""}>${esc(t("Negativa in carica", "Negative when charging"))}</option>
+    </select></span>
+    <small>${esc(
+    t(
+      "Se la pagina dice «In scarica» mentre la batteria si sta caricando, il tuo BMS scrive la corrente al contrario: scegli «Negativa in carica».",
+      "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”."
+    )
+  )}</small></label>`;
+  return scelta3 + segno + entita3 + celleMarkup2 + soglia2;
 }
 function conICampiDellaRiga(bozza3, body, indice) {
   const casella5 = (campo5) => body.querySelector(`[data-dm-dich-campo="${campo5}"][data-dm-dich-riga="${indice}"]`);
   const fuori = { ...bozza3 };
-  for (const campo5 of ["tipo", ...CAMPI_DEL_PACCO, "unita", "soglia"]) {
+  for (const campo5 of ["tipo", ...CAMPI_DEL_PACCO, "unita", "soglia", "segno"]) {
     const nodo2 = casella5(campo5);
     if (!nodo2) continue;
     const valore3 = clean(nodo2.value);

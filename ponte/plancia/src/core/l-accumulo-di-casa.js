@@ -76,7 +76,27 @@ export const CAMPI_DEL_PACCO = Object.freeze([
 /* Quello che una riga tiene oltre a entità, nome e disegno: la marca del BMS,
  * le entità del pacco, l'unità di una capacità scritta a mano, l'elenco delle
  * celle e la soglia del delta. */
-export const CAMPI_IN_PIU = Object.freeze(["tipo", ...CAMPI_DEL_PACCO, "unita", "celle", "soglia"]);
+export const CAMPI_IN_PIU = Object.freeze([
+  "tipo",
+  ...CAMPI_DEL_PACCO,
+  "unita",
+  "celle",
+  "soglia",
+  "segno",
+]);
+
+/* Il segno della corrente e della potenza. JK, JBD e Daly le scrivono
+ * positive in carica, e la pagina parte da li'; ma non tutti: «i valori
+ * negativi caricano la batteria, non la scaricano». `inverso` dice che questo
+ * BMS le scrive al contrario, e la pagina le gira prima di leggerle. */
+export const SEGNO_INVERSO = "inverso";
+
+/** Se questa riga scrive la corrente al contrario: negativa in carica. */
+export function segnoInverso(riga) {
+  return pulito(riga?.segno).toLowerCase() === SEGNO_INVERSO;
+}
+
+const girato = (valore, inverso) => (valore === null || !inverso ? valore : 0 - valore || 0);
 
 /** Il tipo, se è uno di quelli che si sanno dire. */
 export function tipoValido(tipo) {
@@ -480,8 +500,9 @@ export function celleLette(states = {}, celle = []) {
  * Un pacco, letto adesso dagli stati.
  *
  * I numeri sono già nelle unità di casa: volt, ampere, watt, kWh, millivolt
- * per il delta. La corrente e la potenza sono col segno del BMS — positive in
- * carica — perché è così che le scrivono JK, JBD e Daly. Quello che il pacco
+ * per il delta. La corrente e la potenza escono positive in carica — come le
+ * scrivono JK, JBD e Daly — e girate per un BMS che le scrive al contrario
+ * (`segno: "inverso"`). Quello che il pacco
  * non pubblica resta `null`: la potenza si ricava da tensione e corrente,
  * l'energia residua dalla carica e dalla capacità, il delta dalle celle.
  */
@@ -489,8 +510,9 @@ export function letturaDelPacco(riga, states = {}, nomeDi = (entity) => entity) 
   const entity = pulito(riga?.entity);
   const soc = misura(states, entity)?.valore ?? null;
   const tensione = inVolt(misura(states, riga?.tensione));
-  const corrente = inAmpere(misura(states, riga?.corrente));
-  const scritta = inWatt(misura(states, riga?.potenza));
+  const inverso = segnoInverso(riga);
+  const corrente = girato(inAmpere(misura(states, riga?.corrente)), inverso);
+  const scritta = girato(inWatt(misura(states, riga?.potenza)), inverso);
   const potenza =
     scritta ?? (tensione !== null && corrente !== null ? Math.round(tensione * corrente) : null);
   const temperatura = misura(states, riga?.temperatura);
