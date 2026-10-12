@@ -277,16 +277,25 @@ export function flowStageLayout(count, variant = "desktop") {
    * bolla appena leggibile li riempiva tutti. Spartita in `n` parti — ogni
    * bolla al centro della sua — il passo diventa 128, e la stessa bolla ha
    * trenta punti d'aria intorno. La fila di sotto, quando e' piu' corta, sta
-   * nei varchi fra le bolle di sopra, come i mattoni (#118). Quando le file
-   * sono uguali i varchi interni non bastano, e si resta al disegno di prima.
-   * Il disegno largo ha una fila sola e lo spazio ce l'ha gia': non cambia. */
-  const piena = variant === "mobile" && (sizes.length === 1 || sizes[1] < primaFila);
+   * nei varchi fra le bolle di sopra, come i mattoni (#118).
+   *
+   * Quando le file sono uguali da quattro — otto carichi — i varchi non
+   * bastano: sfalsarle voleva dire spartire la larghezza in `n + 1`, e le
+   * bolle scendevano a cinquantotto punti, illeggibili. Con sei (tre e tre)
+   * lo sfalsamento ci sta ancora, e resta. «4+4
+   * grandi, linee dietro»: le due file si prendono la stessa larghezza, una
+   * sotto l'altra, e la linea di chi sta sotto passa dietro il cerchio di
+   * sopra. Il disegno largo ha una fila sola e lo spazio ce l'ha gia': non
+   * cambia. */
+  const mobile = variant === "mobile";
+  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 4;
+  const piena = mobile && (sizes.length === 1 || sizes[1] < primaFila || uguali);
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
       /* La prima fila spartisce la larghezza; quelle sotto si sfalsano nei
        * varchi della prima, o le linee le attraversano (#118). */
       const x = piena
-        ? rowIndex === 0
+        ? rowIndex === 0 || uguali
           ? (geometry.width * (column + 0.5)) / size
           : nelVarco(geometry.width, primaFila, size, column)
         : rowIndex === 0
@@ -294,7 +303,8 @@ export function flowStageLayout(count, variant = "desktop") {
           : sfalsata(geometry.width, primaFila, size, column);
       /* Chi sta sotto deve scavalcare la fila di sopra: la sua linea si
        * raddrizza prima di arrivarci. Il perche' sta in `connectorPath`. */
-      const oltre = rowIndex === 0 ? null : righe.rowY[rowIndex - 1];
+      /* Con le file uguali non c'e' niente da scavalcare: passa dietro. */
+      const oltre = rowIndex === 0 || uguali ? null : righe.rowY[rowIndex - 1];
       positions.push({
         index: positions.length,
         row: rowIndex,

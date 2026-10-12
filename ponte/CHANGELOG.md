@@ -10,6 +10,21 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.7
+
+**Energia: cerchi nuovi, flussi che si vedono.** I cerchi del flusso hanno la
+stessa carta, lo stesso bordo e la stessa ombra delle tessere della plancia, e
+intorno a ognuno gira un anello che si riempie quanto pesa il suo numero: la
+batteria quanto è carica, gli altri rispetto al più grosso della scena. Sulle
+linee corre una scia di luce sopra la sua strada in tinta tenue. I cerchi
+sotto la Casa sono più grandi, con nomi e numeri che si leggono, e sul
+telefono si prendono tutta la larghezza; con otto carichi stanno su due file
+da quattro invece di rimpicciolirsi.
+
+**Sicurezza: le viste da amministratore restano agli amministratori.** Anche
+lette con una semplice richiesta, le pagine di Z-Wave, del cloud e di Insteon
+non si aprono da chi non amministra la casa.
+
 ## 1.11.6
 
 **Sicurezza: le plance riservate restano riservate.** La configurazione di

@@ -63,7 +63,7 @@ test("valued energy connectors are revived, animated and restore legacy visibili
   assert.doesNotMatch(source, /active && nodeVisible\(line\)/);
   assert.doesNotMatch(source, /removeAttribute\?\.\("hidden"\)/);
   assert.match(source, /animation-name:dmEnergyFlowDash!important/);
-  assert.match(source, /animation-duration:\.8s!important/);
+  assert.match(source, /animation-duration:1\.6s!important/);
   assert.match(source, /animation-timing-function:linear!important/);
   assert.match(source, /animation-iteration-count:infinite!important/);
   assert.match(source, /animation-play-state:running!important/);
