@@ -19,7 +19,8 @@ library;
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -28,6 +29,7 @@ import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
 import '../licenza/licenza.dart' show ComeStaLaLicenza;
 import '../parole.dart';
+import '../plancia/il_fondo.dart';
 import '../plancia/servitore_qui/qui.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
@@ -728,6 +730,30 @@ class PlanciaVeraState extends State<PlanciaVera> {
             ),
           ),
         ),
+        /* Sull'iPhone, sotto l'orologio, una fascia del colore della plancia.
+         *
+         * La pagina si tiene la cima libera col margine del corpo, ma quello
+         * che scorre ci passa sotto: nella Config i testi salivano fino a
+         * mescolarsi con l'ora e la batteria (la foto del tester). La fascia
+         * e' piena e non prende i tocchi; c'e' solo quando la pagina ha detto
+         * il suo colore, se no sarebbe una striscia di un altro colore. Solo
+         * sull'iPhone: su Android ogni pezzo sopra un WebView ibrido e' una
+         * superficie in piu' a ogni fotogramma. */
+        if (unaFasciaSottoLOrologio && inCima > 0)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: inCima,
+            child: IgnorePointer(
+              child: ValueListenableBuilder<Color?>(
+                valueListenable: ilFondoDellaPlancia,
+                builder: (_, fondo, _) => fondo == null
+                    ? const SizedBox.shrink()
+                    : ColoredBox(color: fondo),
+              ),
+            ),
+          ),
         if (_perche != null)
           _Velo(
             child: StatoVuoto(
@@ -767,6 +793,12 @@ class PlanciaVeraState extends State<PlanciaVera> {
     );
   }
 }
+
+/// Se sopra la plancia, sotto l'orologio del telefono, ci va una fascia
+/// piena: sull'iPhone si'. Vedi dove si disegna, in [PlanciaVera].
+@visibleForTesting
+bool get unaFasciaSottoLOrologio =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
 /// Il WebView con dentro la plancia.
 class RiquadroDellaPlancia extends StatefulWidget {
@@ -950,9 +982,11 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       quandoSiVede: () => widget.quandoSiVede?.call(),
       quandoFotografaLaCasa: widget.quandoFotografaLaCasa,
       quandoApreLaPersona: widget.quandoApreLaPersona,
-      /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
-       * si vede un lampo di un altro colore. */
-      sfondo: Theme.of(context).colorScheme.surface,
+      /* Il fondo della plancia, se l'ha gia' detto — si riapre la stessa
+       * casa, un'altra plancia — se no lo stesso dell'app: sotto la pagina,
+       * finche' non arriva, non si vede un lampo di un altro colore. */
+      sfondo:
+          ilFondoDellaPlancia.value ?? Theme.of(context).colorScheme.surface,
     );
     _controllore = controllore;
     unawaited(riquadro.apriLaPagina(controllore, widget.pagina));
