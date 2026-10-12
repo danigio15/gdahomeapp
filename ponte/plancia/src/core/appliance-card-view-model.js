@@ -235,7 +235,20 @@ export const CASELLE_DEL_TOTALE = Object.freeze([
 export function eIlTotaleTravestito(device = {}, entity = "", resolve = (value) => value) {
   const quale = clean(resolve(entityRef(entity)));
   if (!quale) return false;
-  return CASELLE_DEL_TOTALE.some((casella) => clean(resolve(entityRef(device[casella]))) === quale);
+  /* Il report da solo non basta quando il totale c'e' ed e' un'altra entita'.
+   *
+   * «Ho impostato un sensore totale ma all'improvviso il valore sparisce.» La
+   * passata dei contratti, senza un mensile, riempiva il report col primo
+   * sensore di energia — spesso proprio il giornaliero. Da li' il giornaliero
+   * vero passava per «il totale scritto due volte», veniva chiesto al
+   * Recorder come un contatore di vita, e il suo numero spariva dalla tessera
+   * di oggi. Se il contatore di vita sta scritto nella sua casella ed e' un
+   * altro, il giornaliero non e' lui: il report puo' essere scelto a parte. */
+  const totale = clean(resolve(entityRef(device.total_energy_entity)));
+  return CASELLE_DEL_TOTALE.some((casella) => {
+    if (clean(resolve(entityRef(device[casella]))) !== quale) return false;
+    return casella !== "report_entity" || !totale || totale === quale;
+  });
 }
 
 export function dailyEnergyKwh(device = {}, states = {}) {

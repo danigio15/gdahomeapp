@@ -5189,8 +5189,11 @@ export default Object.freeze({
   "Pack saved": "Блок сохранён",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "Блоки появятся здесь, когда вы добавите их на вкладке «Батареи» в группе «Энергия» настроек: уровень заряда, напряжения, ячейки.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "Положительный при заряде и отрицательный при разряде — так, как его пишут JK, JBD и Daly.",
+  "Current sign": "Знак тока",
+  "Positive when charging (JK, JBD, Daly)": "Положительный при зарядке (JK, JBD, Daly)",
+  "Negative when charging": "Отрицательный при зарядке",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "Со знаком, который использует BMS: если при зарядке он пишет ток отрицательным, выберите это в «Знак тока».",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "Если страница показывает «Разряд», когда батарея заряжается, ваш BMS пишет ток наоборот: выберите «Отрицательный при зарядке».",
   "Remaining energy": "Оставшаяся энергия",
   "Save pack": "Сохранить блок",
   "State of charge (SoC)": "Уровень заряда (SoC)",
@@ -5585,4 +5588,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Коснитесь плеера, чтобы добавить его в группу или убрать из неё",
   "Ungroup all": "Распустить группу",
+  "Full-screen alerts": "Оповещения на весь экран",
+  "Press": "Нажать",
+  "Someone at the door": "Звонят в дверь",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Когда срабатывает оповещение или сигнализация, панель просыпается и показывает его крупно, пока кто-нибудь не нажмёт «Понятно»",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Когда звонят, панель просыпается и сама открывает домофон",
 });

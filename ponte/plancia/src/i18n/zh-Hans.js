@@ -5092,8 +5092,11 @@ export default Object.freeze({
   "Pack saved": "电池组已保存",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "在设置中“能源”下的“电池”标签中添加后，电池组会显示在这里：电量、电压、电芯。",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "充电为正，放电为负，与 JK、JBD 和 Daly 的写法一致。",
+  "Current sign": "电流符号",
+  "Positive when charging (JK, JBD, Daly)": "充电时为正（JK、JBD、Daly）",
+  "Negative when charging": "充电时为负",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "按 BMS 使用的符号：如果充电时写为负值，请在“电流符号”中选择。",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "如果电池正在充电而页面显示“放电中”，说明你的 BMS 把电流写反了：请选择“充电时为负”。",
   "Remaining energy": "剩余能量",
   "Save pack": "保存电池组",
   "State of charge (SoC)": "电量 (SoC)",
@@ -5471,4 +5474,9 @@ export default Object.freeze({
   "Plays together with": "一起播放：",
   "Tap a player to add it to or remove it from the group": "轻点播放器以加入或移出分组",
   "Ungroup all": "解散分组",
+  "Full-screen alerts": "全屏提醒",
+  "Press": "按下",
+  "Someone at the door": "有人在门口",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "当提醒触发或警报响起时，面板会唤醒并放大显示，直到有人点按“知道了”",
+  "When it rings, the panel wakes up and opens the intercom by itself": "门铃响起时，面板会唤醒并自动打开对讲",
 });

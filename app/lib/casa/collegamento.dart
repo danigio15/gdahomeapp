@@ -336,6 +336,18 @@ class Collegamento {
       chi: casa.identificativo!,
       chiave: casa.chiave!,
       apri: apriLaPresa,
+      /* Il legame (`lega`, vedi `ponte/stretta.dart`) si ricorda per casa,
+       * nell'archivio: una casa che l'ha provato una volta lo deve ripetere
+       * anche alla prima stretta dopo che l'app si e' riaperta, che e'
+       * proprio quella che chi sta in mezzo proverebbe a scoprire. Una casa
+       * mai vista legare — un add-on di prima — si apre come sempre. */
+      legameGiaVisto: casa.legata,
+      quandoLega: () => unawaited(
+        archivio.segnaIlLegame(casa.id).catchError((Object _) {
+          /* Non scritto: il filo se lo ricorda lo stesso finche' vive, e la
+           * prossima stretta legata ci riprova. */
+        }),
+      ),
     );
     _filo = filo;
 

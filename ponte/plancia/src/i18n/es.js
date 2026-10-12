@@ -5201,8 +5201,11 @@ export default Object.freeze({
   "Pack saved": "Paquete guardado",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "Los paquetes aparecen aquí cuando los añades en la pestaña Baterías, bajo Energía, de la configuración: estado de carga, tensiones, celdas.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "Positiva al cargar y negativa al descargar, como la escriben JK, JBD y Daly.",
+  "Current sign": "Signo de la corriente",
+  "Positive when charging (JK, JBD, Daly)": "Positiva al cargar (JK, JBD, Daly)",
+  "Negative when charging": "Negativa al cargar",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "Con el signo que usa el BMS: si la escribe negativa al cargar, elígelo en «Signo de la corriente».",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "Si la página dice «Descargando» mientras la batería se carga, tu BMS escribe la corriente al revés: elige «Negativa al cargar».",
   "Remaining energy": "Energía restante",
   "Save pack": "Guardar paquete",
   "State of charge (SoC)": "Estado de carga (SoC)",
@@ -5600,4 +5603,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Toca un reproductor para añadirlo o quitarlo del grupo",
   "Ungroup all": "Deshacer el grupo",
+  "Full-screen alerts": "Avisos a pantalla completa",
+  "Press": "Pulsar",
+  "Someone at the door": "Llaman a la puerta",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Cuando se activa un aviso o salta la alarma, el panel se despierta y lo muestra en grande hasta que alguien toca «Visto»",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Cuando suena, el panel se despierta y abre el portero solo",
 });

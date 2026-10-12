@@ -358,3 +358,32 @@ test("la linguetta nasce spenta: conta solo un pacco dichiarato con la sua entit
   assert.equal(letti.length, 1);
   assert.equal(letti[0].celle.length, 16);
 });
+
+/* «Questo è errato: i valori negativi caricano la batteria, non la
+ * scaricano.» Non tutti i BMS scrivono la corrente positiva in carica: chi la
+ * scrive al contrario lo dice nella riga, e la pagina la gira. */
+test("un BMS che scrive la corrente negativa in carica si legge in carica", () => {
+  const stati = {
+    "sensor.bms_soc": stato(20, "%"),
+    "sensor.bms_tensione": stato(53.43, "V"),
+    "sensor.bms_corrente": stato(-51.1, "A"),
+  };
+  const riga = {
+    entity: "sensor.bms_soc",
+    tensione: "sensor.bms_tensione",
+    corrente: "sensor.bms_corrente",
+  };
+  /* Senza dirlo, si legge come JK, JBD e Daly: negativa vuol dire scarica. */
+  assert.equal(letturaDelPacco(riga, stati).verso, "scarica");
+  const girato = letturaDelPacco({ ...riga, segno: "inverso" }, stati);
+  assert.equal(girato.verso, "carica");
+  assert.equal(girato.corrente, 51.1);
+  assert.ok(girato.potenza > 2700);
+  /* E anche la potenza scritta dal BMS si gira con lei. */
+  const conPotenza = letturaDelPacco(
+    { ...riga, potenza: "sensor.bms_potenza", segno: "inverso" },
+    { ...stati, "sensor.bms_potenza": stato(-2730, "W") },
+  );
+  assert.equal(conPotenza.potenza, 2730);
+  assert.equal(conPotenza.verso, "carica");
+});

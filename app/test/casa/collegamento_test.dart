@@ -943,6 +943,64 @@ void main() {
       await ponte.spegni();
     },
   );
+
+  test(
+    'il legame si scrive nell\'archivio, e alla riapertura si pretende',
+    () async {
+      final ponte = await PonteFinto.alza();
+      final casa = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({ponte.indirizzo}),
+      );
+      await collegamento.apri();
+      expect(collegamento.comeVa, ComeVa.aperta);
+      await _finoA(() => archivio.quella(casa.id)!.legata);
+      await collegamento.chiudi();
+
+      /* L'app si riapre, e chi sta in mezzo toglie il legame alla prima
+       * stretta: la casa non si apre. */
+      final riaperto = ArchivioDelleCase(cassaforte);
+      await riaperto.apri();
+      expect(riaperto.quella(casa.id)!.legata, isTrue);
+      ponte.conosceIlLegame = false;
+      collegamento = Collegamento(
+        archivio: riaperto,
+        sonda: sondaChe({ponte.indirizzo}),
+      );
+      await collegamento.apri();
+      expect(collegamento.comeVa, isNot(ComeVa.aperta));
+      expect(collegamento.dentro, isFalse);
+      expect(collegamento.filo!.legameVisto, isTrue);
+      await ponte.spegni();
+    },
+  );
+
+  test('una casa di prima, che non lega, si apre come sempre', () async {
+    final ponte = await PonteFinto.alza()
+      ..conosceIlLegame = false;
+    final casa = await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    expect(collegamento.comeVa, ComeVa.aperta);
+    expect(archivio.quella(casa.id)!.legata, isFalse);
+    await ponte.spegni();
+  });
 }
 
 Future<void> _finoA(

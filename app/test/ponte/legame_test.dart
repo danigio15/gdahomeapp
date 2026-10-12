@@ -13,6 +13,8 @@ library;
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/casa/archivio_delle_case.dart';
+import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/ponte/cifra.dart';
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/filo.dart';
@@ -210,6 +212,119 @@ void main() {
         await filo.chiudi();
       },
     );
+  });
+
+  group('e l\'archivio se lo ricorda fra un\'apertura e l\'altra', () {
+    /* Il filo di una casa dell'archivio, come lo fa il collegamento: parte
+     * da quello che l'archivio sa, e quando la casa lega lo scrive li'. */
+    Filo ilFiloDi(ArchivioDelleCase archivio, String id) {
+      final casa = archivio.quella(id)!;
+      return unFilo(
+        legameGiaVisto: casa.legata,
+        quandoLega: () => archivio.segnaIlLegame(id),
+      );
+    }
+
+    Future<(CassaforteInMemoria, String)> unaCasaCheHaLegato() async {
+      final cassaforte = CassaforteInMemoria();
+      final archivio = ArchivioDelleCase(cassaforte);
+      await archivio.apri();
+      final casa = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      expect(casa.legata, isFalse, reason: 'appena abbinata non ha legato');
+      final filo = ilFiloDi(archivio, casa.id);
+      await filo.apri();
+      await _finche(() => archivio.quella(casa.id)!.legata);
+      await filo.chiudi();
+      return (cassaforte, casa.id);
+    }
+
+    test('dopo una stretta legata, il legame e\' scritto', () async {
+      final (cassaforte, id) = await unaCasaCheHaLegato();
+
+      /* L'app si riapre: un archivio nuovo, sulla stessa cassaforte. */
+      final riaperto = ArchivioDelleCase(cassaforte);
+      await riaperto.apri();
+      expect(riaperto.quella(id)!.legata, isTrue);
+
+      /* Ricollegandosi con la casa che lega ancora, non si riscrive. */
+      final prima = cassaforte.scritture;
+      final filo = ilFiloDi(riaperto, id);
+      await filo.apri();
+      expect(filo.legameVisto, isTrue);
+      await filo.chiudi();
+      expect(cassaforte.scritture, prima);
+    });
+
+    test(
+      'riaperta l\'app, chi toglie il legame per strada non entra',
+      () async {
+        final (cassaforte, id) = await unaCasaCheHaLegato();
+        final riaperto = ArchivioDelleCase(cassaforte);
+        await riaperto.apri();
+
+        /* Chi sta in mezzo toglie il `lega` alla prima stretta dopo
+         * l'apertura, e ritocca le righe in chiaro: la casa risponde come
+         * una di prima, e il filo non la accetta. */
+        ponte
+          ..conosceIlLegame = false
+          ..perStradaIlPronto = (pronto) =>
+              pronto.replaceFirst(RegExp(r'}$'), ',"da_casa":true}');
+        final filo = ilFiloDi(riaperto, id);
+        await expectLater(filo.apri(), throwsA(isA<LegameMancato>()));
+        expect(filo.dentro, isFalse);
+        await filo.chiudi();
+      },
+    );
+
+    test('una casa mai vista legare si apre anche senza legame', () async {
+      ponte.conosceIlLegame = false;
+      final cassaforte = CassaforteInMemoria();
+      final archivio = ArchivioDelleCase(cassaforte);
+      await archivio.apri();
+      final casa = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      final filo = ilFiloDi(archivio, casa.id);
+      await filo.apri();
+      expect(filo.dentro, isTrue);
+      await filo.chiudi();
+      expect(archivio.quella(casa.id)!.legata, isFalse);
+    });
+
+    test('togliere la casa si porta via anche il legame', () async {
+      final (cassaforte, id) = await unaCasaCheHaLegato();
+      final archivio = ArchivioDelleCase(cassaforte);
+      await archivio.apri();
+      await archivio.togli(id);
+
+      /* Riabbinata, e' una casa nuova: col ponte di prima si entra. */
+      ponte.conosceIlLegame = false;
+      final nuova = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      expect(nuova.legata, isFalse);
+      final riaperto = ArchivioDelleCase(cassaforte);
+      await riaperto.apri();
+      expect(riaperto.quella(id), isNull);
+      final filo = ilFiloDi(riaperto, nuova.id);
+      await filo.apri();
+      expect(filo.dentro, isTrue);
+      await filo.chiudi();
+    });
   });
 }
 

@@ -235,6 +235,7 @@ const INGRESSO_VUOTO = Object.freeze({
   nomeApri2: "",
   esco: "",
   rientro: "",
+  campanello: "",
   persone: true,
   finestre: true,
 });
@@ -252,6 +253,10 @@ function ingressoPulito(input = {}) {
     nomeApri2: testo(dentro.nomeApri2, 32),
     esco: testo(dentro.esco, 80),
     rientro: testo(dentro.rientro, 80),
+    /* Il campanello: quando suona, il pannello si sveglia e apre il citofono
+     * da solo, col video e i tasti per aprire. Un sensore che si accende, o
+     * un evento di Home Assistant che scatta. */
+    campanello: entita(dentro.campanello),
     persone: vero(dentro.persone, INGRESSO_VUOTO.persone),
     finestre: vero(dentro.finestre, INGRESSO_VUOTO.finestre),
   };
@@ -356,6 +361,7 @@ export const MURO_VUOTO = Object.freeze({
   riposo: { attivo: true, minuti: 2, torna: true, sensore: "" },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
+  avvisiGrandi: true,
   risveglio: { attivo: false, entita: "" },
   blocco: { attivo: false, pin: "" },
   pagine: [],
@@ -409,6 +415,9 @@ export function muroPulito(input) {
       a: ora(notte.a, "06:30"),
     },
     avvisi: vero(dentro.avvisi, true),
+    /* Un avviso che si accende — l'allagamento, il fumo, l'antifurto che
+     * suona — prende tutto lo schermo finche' qualcuno tocca «Ho visto». */
+    avvisiGrandi: vero(dentro.avvisiGrandi, true),
     risveglio: {
       attivo: vero(risveglio.attivo, false) && Boolean(entita(risveglio.entita)),
       entita: entita(risveglio.entita),

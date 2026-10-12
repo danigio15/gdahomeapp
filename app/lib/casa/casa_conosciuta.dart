@@ -37,6 +37,7 @@ class CasaConosciuta {
     this.plancia,
     this.gettone,
     this.senzaLicenze = false,
+    this.legata = false,
   });
 
   /// Identificativo interno dell'app, mai mostrato. Non e' quello del ponte.
@@ -109,6 +110,23 @@ class CasaConosciuta {
   /// stesso invito. Si ricorda, come il gettone: all'apertura si sa gia',
   /// prima di bussare.
   final bool senzaLicenze;
+
+  /// `true` quando questa casa la chiave del filo l'ha legata alle due righe
+  /// in chiaro della stretta di mano (`lega`, vedi `ponte/stretta.dart`), e
+  /// una busta aperta l'ha provato.
+  ///
+  /// Da li' in poi una risposta senza legame non si accetta: una casa non lo
+  /// dimentica da sola, e chi sta in mezzo — sulla rete di casa, o fra il
+  /// centralino e il telefono — che lo toglie lo fa per tornare alle righe
+  /// che si possono ritoccare. Si ricorda per casa e fra un'apertura e
+  /// l'altra, perche' il filo da solo se lo ricorda solo finche' l'app resta
+  /// aperta, e la prima stretta dopo l'apertura sarebbe quella scoperta.
+  ///
+  /// Si accende e basta: non c'e' modo di spegnerlo se non togliendo la casa.
+  /// Riabbinarla fa una casa nuova, che parte da `false` — ed e' giusto: un
+  /// add-on di prima si rimette con un abbinamento, non con un ritocco per
+  /// strada. Una casa mai vista legare resta `false` e si apre come sempre.
+  final bool legata;
 
   /// `true` quando questa casa e' stata abbinata prima che esistessero le
   /// chiavi, e adesso non basta piu'.
@@ -185,6 +203,7 @@ class CasaConosciuta {
     String? plancia,
     String? gettone,
     bool? senzaLicenze,
+    bool? legata,
     bool togliInCasa = false,
     bool togliDaFuori = false,
     bool togliLaPlancia = false,
@@ -208,6 +227,7 @@ class CasaConosciuta {
      * cosa da poter dire, e `gettone: null` vuol gia' dire «com'era». */
     gettone: togliIlGettone ? null : (gettone ?? this.gettone),
     senzaLicenze: senzaLicenze ?? this.senzaLicenze,
+    legata: legata ?? this.legata,
   );
 
   /// La stessa casa, con la sola strada di casa.
@@ -226,6 +246,7 @@ class CasaConosciuta {
     plancia: plancia,
     gettone: gettone,
     senzaLicenze: senzaLicenze,
+    legata: legata,
   );
 
   /// Se questa casa ha una strada che porta da fuori: il centralino, o un
@@ -248,6 +269,7 @@ class CasaConosciuta {
     if (plancia != null && plancia!.isNotEmpty) 'plancia': plancia,
     if (gettone != null) 'gettone': gettone,
     if (senzaLicenze) 'senza_licenze': true,
+    if (legata) 'legata': true,
   };
 
   /// Torna `null` quando quello che c'e' scritto non e' una casa: un archivio
@@ -286,6 +308,9 @@ class CasaConosciuta {
         _ => null,
       },
       senzaLicenze: grezza['senza_licenze'] == true,
+      /* Un archivio scritto prima del legame non ce l'ha: `false`, e la
+       * prima stretta legata lo riaccende. */
+      legata: grezza['legata'] == true,
     );
   }
 

@@ -1251,13 +1251,26 @@ export function quotaDellAnello(valore, riferimento) {
   return Math.min(1, Math.max(0.04, valore / riferimento));
 }
 
+/* Dove sta il numero di una bolla. Non «il primo span»: nei carichi l'icona
+ * di una stanza o di un elettrodomestico e' anch'essa uno span, viene prima
+ * del numero, e l'anello leggeva l'icona — vuoto per sempre. I carichi
+ * hanno il loro posto per il numero; i quattro cerchioni lo tengono in uno
+ * span figlio diretto. */
+export function numeroScrittoNellaBolla(bolla) {
+  return (
+    bolla?.querySelector?.(".dm-flow-value") ||
+    [...(bolla?.children || [])].find((figlio) => figlio.tagName === "SPAN") ||
+    null
+  );
+}
+
 function riempiGliAnelli(targetDocument = doc) {
   for (const palco of targetDocument?.querySelectorAll?.("#page-energy .flow-stage") || []) {
     const bolle = [...palco.querySelectorAll(".node")];
     const valori = new Map();
     let massimo = 0;
     for (const bolla of bolle) {
-      const valore = numeroDellaBolla(bolla.querySelector("span")?.textContent);
+      const valore = numeroDellaBolla(numeroScrittoNellaBolla(bolla)?.textContent);
       valori.set(bolla, valore);
       if (valore > massimo) massimo = valore;
     }

@@ -819,11 +819,43 @@ export async function loadAtomicEnergyBundle(
    *   indistinguibili — «non calcola» e «calcola sbagliato».
    *
    * La differenza la sapeva gia' `cadutaLa`, e non la si chiedeva. */
-  const paniere = (chiaveDelPaniere, lettura, piani) => {
+  /* E dentro un arco che ha risposto, il singolo contatore che per un giro
+   * torna senza righe.
+   *
+   * «Ho impostato un sensore totale ma all'improvviso il valore sparisce.»
+   * Il paniere teneva i numeri di prima solo se cadeva TUTTO l'arco; bastava
+   * che il Recorder non avesse righe per un solo contatore — l'add-on che
+   * riparte, l'integrazione che si ricarica — e quell'elettrodomestico
+   * perdeva il suo numero nella Giornaliera e nella Mensile fino al giro
+   * dopo. Nello STESSO periodo un consumo gia' letto resta vero: si tiene
+   * finche' non ne arriva uno nuovo, e solo per chi c'e' ancora nell'elenco.
+   * Su un periodo diverso no, per la ragione scritta qui sopra. */
+  const stessoPeriodo = (kind) => {
+    const prima = state.bundle;
+    if (!prima?.period) return false;
+    if (Number(prima.period.year) !== Number(period?.year)) return false;
+    if (Number(prima.period.month) !== Number(period?.month)) return false;
+    return kind !== "day" || prima.giorno === today.toDateString();
+  };
+  const paniere = (chiaveDelPaniere, lettura, piani, kind) => {
     const caduta = cadutaLa(lettura);
     const values = caduta ? new Map() : valoriPerEntita(piani.plans, lettura.valori);
     const precedente = state.bundle?.[chiaveDelPaniere];
     if (caduta && precedente?.values?.size) return precedente;
+    if (precedente?.values?.size && stessoPeriodo(kind)) {
+      const ancoraQui = new Set(
+        [
+          ...piani.plans.flatMap((plan) => [plan.entity, plan.source]),
+          ...piani.devices.flatMap((device) => [device.entity, device.history]),
+        ]
+          .map(clean)
+          .filter(Boolean),
+      );
+      for (const entita of ancoraQui) {
+        if (!values.has(entita) && precedente.values.has(entita))
+          values.set(entita, precedente.values.get(entita));
+      }
+    }
     return { devices: piani.devices, values };
   };
 
@@ -838,14 +870,17 @@ export async function loadAtomicEnergyBundle(
       letti: Object.freeze(letti),
       mancanti,
       caduta: caduti.length ? clean(caduti[0]?.errore?.message || caduti[0]?.errore) : "",
-      deviceDay: paniere("deviceDay", letture.dispDay, dispositivi.day),
-      deviceMonth: paniere("deviceMonth", letture.dispMonth, dispositivi.month),
+      /* Il giorno su cui sono stati tagliati gli archi: il paniere del giorno
+       * si tiene solo dentro lo stesso giorno. */
+      giorno: today.toDateString(),
+      deviceDay: paniere("deviceDay", letture.dispDay, dispositivi.day, "day"),
+      deviceMonth: paniere("deviceMonth", letture.dispMonth, dispositivi.month, "month"),
       deviceMonthDays: giorniPerEntita(
         dispositivi.month.plans,
         giorniRicavati,
         letture.dispMonth.prefisso,
       ),
-      deviceYear: paniere("deviceYear", letture.dispYear, dispositivi.year),
+      deviceYear: paniere("deviceYear", letture.dispYear, dispositivi.year, "year"),
       /* Quanto manca all'anno di ogni dispositivo perche' le sue statistiche
        * cominciano dopo il contatore: la card lo scrive, invece di lasciare un
        * numero corto senza una parola. */

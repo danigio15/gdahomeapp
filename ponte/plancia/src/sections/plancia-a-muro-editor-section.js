@@ -421,6 +421,7 @@ function paginaMarkup(p, i, tutte) {
     dentro = `${riga(t("Centrale dell'antifurto", "Alarm panel"), t("I modi sono quelli che la centrale accetta", "The modes are the ones the panel accepts"), cerca(`${via}.ingresso.centrale`, ing.centrale, { domini: "alarm_control_panel" }))}
     ${riga(t("Avvisa se restano finestre aperte", "Warn about open windows"), "", interruttore(`${via}.ingresso.finestre`, ing.finestre, "finestre"))}
     ${riga(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
+    ${riga(t("Campanello", "Doorbell"), t("Quando suona, il pannello si sveglia e apre il citofono da solo", "When it rings, the panel wakes up and opens the intercom by itself"), cerca(`${via}.ingresso.campanello`, ing.campanello, { domini: "binary_sensor,event,input_boolean,switch" }))}
     ${riga(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga(t("Nome del tasto grande", "Big button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo(`${via}.ingresso.nomeApri`, ing.nomeApri, ing.apri ? nomeDi(ing.apri) : t("Cancello", "Gate")))}
     ${riga(t("Secondo tasto", "Second button"), t("Per esempio: apri porta", "For example: open the door"), cerca(`${via}.ingresso.apri2`, ing.apri2, { domini: "button,lock,cover,switch,script,input_button" }))}
@@ -598,6 +599,7 @@ function corpoMarkup() {
     ${riga(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor" }))}
     ${riga(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo("notte.da", m.notte.da, "23:00", "time")}${campo("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
     ${riga(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
+    ${riga(t("Avvisi a tutto schermo", "Full-screen alerts"), t("Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»", "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”"), interruttore("avvisiGrandi", m.avvisiGrandi, "avvisi-grandi"))}
     ${riga(
       t("Si sveglia da solo", "Wakes up by itself"),
       t(

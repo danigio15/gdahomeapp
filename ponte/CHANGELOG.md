@@ -10,6 +10,56 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.8
+
+**Elettrodomestici: il sensore totale non sparisce più.** All'avvio, se il
+sensore totale di un elettrodomestico non si leggeva ancora, la plancia lo
+toglieva dalla configurazione, e Giornaliera, Mensile e la tessera di oggi
+restavano senza numero per sempre. Adesso un sensore che per un momento non
+risponde resta dov'è, e un valore già letto resta finché ne arriva uno nuovo,
+nello stesso giorno o nello stesso mese. Chi ha già la casella vuota la
+ricollega una volta.
+
+**Home su iPhone e iPad: il menu e l'ingranaggio non spariscono più.** Entrando
+e uscendo da Luci o da Porte e cancelli, Safari poteva lasciare larga zero la
+fila in alto con il menu, il nome della casa e il tasto per configurare. Adesso
+quella fila ha una larghezza minima, e tornando alla Home si ricalcola.
+
+**Sicurezza, tre rifiniture.** I tentativi di abbinamento si contano appena
+cominciano, anche se ne arrivano tanti insieme dallo stesso indirizzo. L'app
+ricorda casa per casa che la stretta di mano è già stata legata, anche dopo
+averla chiusa. Nel centralino una casa rimasta in silenzio a lungo tiene la sua
+identità, e quando torna rientra solo lei.
+
+**Pannello a muro: cancelli, citofono e avvisi.**
+- Un cancello o una porta del garage ha il suo riquadro: il suo disegno,
+  «Aperto» o «Chiuso», e un tasto grande che apre, chiude o ferma.
+- Sul pannello da 4 pollici il termostato ha il meno e il più sul riquadro.
+- Pulsanti e interruttori in una pagina Personale hanno la stessa forma delle
+  luci, e un titolo lungo si stringe invece di essere tagliato.
+- Nella pagina Ingresso si sceglie il campanello: quando suona, il pannello si
+  sveglia e apre da solo il citofono con la telecamera e i tasti per aprire.
+- Un avviso che si accende o l'antifurto che suona prendono tutto lo schermo
+  finché qualcuno tocca «Ho visto». Si spegne in «Avvisi a tutto schermo».
+
+**Batterie: il BMS che scrive la corrente al contrario.** Nella scheda della
+batteria di accumulo c'è «Segno della corrente»: chi ha un BMS che in carica
+la scrive negativa sceglie «Negativa in carica», e la pagina smette di dire
+«In scarica» mentre la batteria si carica.
+
+**Energia: gli anelli dei carichi si riempiono.** Sotto la Casa l'anello dei
+carichi con l'icona di una stanza o di un elettrodomestico restava vuoto: ora
+si riempie quanto pesa il suo numero, come quello degli altri cerchi.
+
+**Pannello a muro: il clima in una pagina Personale funziona come nella
+pagina Clima.** Fuori dalla pagina Clima mancava la linguetta Caldo/Freddo, e
+il comando rapido ripiegava sul freddo: un termostato si accendeva a
+raffrescare, e su un riscaldamento o un boiler che il freddo non ce l'hanno il
+tasto non accendeva niente. Adesso la parte la dice l'unità stessa: chi sa
+solo scaldare scalda, chi fa tutt'e due segue quello che sta facendo, e da
+spento la stagione. Un comando rapido con un modo che l'unità non ha ripiega
+su uno che ha.
+
 ## 1.11.7
 
 **Energia: cerchi nuovi, flussi che si vedono.** I cerchi del flusso hanno la

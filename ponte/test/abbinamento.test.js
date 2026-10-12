@@ -190,6 +190,67 @@ test("chi continua a sbagliare aspetta dall'ultimo che ha riempito il tetto", ()
   assert.equal(a.bloccato("93.40.1.9"), null, "il primo tentativo e' scaduto: ne restano quattro");
 });
 
+test("un tentativo si conta quando comincia: il sesto di una raffica aspetta", () => {
+  /* Cinque strette di mano aperte insieme e nessuna ancora finita: prima
+   * passavano tutte, e anche la sesta, la ventesima, perche' si contavano
+   * solo alla fine. */
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  a.nuovo();
+  const aperti = [];
+  for (let i = 0; i < 5; i += 1) aperti.push(a.comincia("93.40.1.9"));
+  assert.throws(() => a.comincia("93.40.1.9"), TroppiTentativi);
+  assert.throws(() => a.comincia("93.40.1.9"), TroppiTentativi);
+  assert.equal(a.stato().tentativiSbagliati, 5, "i rifiutati non si contano");
+  assert.notEqual(a.bloccato("93.40.1.9"), null);
+  assert.ok(a.comincia("93.40.1.10"), "gli altri no");
+});
+
+test("un tentativo restituito non conta, e si restituisce una volta sola", () => {
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  a.nuovo();
+  for (let i = 0; i < 4; i += 1) a.sbagliato("93.40.1.9");
+  const tentativo = a.comincia("93.40.1.9");
+  assert.equal(a.stato().tentativiSbagliati, 5);
+  assert.notEqual(a.bloccato("93.40.1.9"), null, "contato mentre e' in corso");
+  a.restituisci(tentativo);
+  a.restituisci(tentativo);
+  assert.equal(a.stato().tentativiSbagliati, 4, "tornato una volta, non due");
+  assert.equal(a.bloccato("93.40.1.9"), null);
+  a.comincia("93.40.1.9");
+  assert.throws(() => a.comincia("93.40.1.9"), TroppiTentativi);
+});
+
+test("chi restituisce il suo unico tentativo torna uno che non ha mai sbagliato", () => {
+  /* Il tetto di tutti insieme vale solo per chi ha gia' sbagliato: un
+   * tentativo andato bene non lo deve mettere fra quelli. */
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  a.nuovo();
+  for (let i = 0; i < 999; i += 1) a.sbagliato(`estraneo ${i % 200}`);
+  const tentativo = a.comincia("192.168.1.20");
+  assert.notEqual(a.bloccato("192.168.1.20"), null, "il mucchio di tutti e' pieno");
+  a.restituisci(tentativo);
+  assert.equal(a.stato().tentativiSbagliati, 999, "il mucchio di tutti torna com'era");
+  assert.equal(a.bloccato("192.168.1.20"), null);
+});
+
+test("dal centralino senza indirizzo, il tetto del gruppo vale anche per chi comincia", () => {
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  a.nuovo();
+  for (let i = 0; i < 50; i += 1) a.comincia("centralino");
+  assert.throws(() => a.comincia("centralino"), TroppiTentativi);
+  assert.ok(a.comincia("centralino 93.40.1.2"), "chi dice l'indirizzo e' uno a parte");
+});
+
+test("un tentativo restituito dopo un codice nuovo non toglie niente a nessuno", () => {
+  const a = new Abbinamento({ adesso: orologio().adesso });
+  a.nuovo();
+  const vecchio = a.comincia("93.40.1.9");
+  a.nuovo();
+  a.sbagliato("93.40.1.9");
+  a.restituisci(vecchio);
+  assert.equal(a.stato().tentativiSbagliati, 1);
+});
+
 test("un IPv6 conta per la sua rete /64, non per il singolo indirizzo", () => {
   const a = new Abbinamento({ adesso: orologio().adesso });
   a.nuovo();

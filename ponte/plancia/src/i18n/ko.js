@@ -5160,8 +5160,11 @@ export default Object.freeze({
   "Pack saved": "팩 저장됨",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "설정의 에너지 아래 배터리 탭에서 추가하면 팩이 여기에 표시됩니다: 충전 상태, 전압, 셀.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "충전 시 양수, 방전 시 음수. JK, JBD, Daly가 쓰는 방식 그대로입니다.",
+  "Current sign": "전류 부호",
+  "Positive when charging (JK, JBD, Daly)": "충전 시 양수 (JK, JBD, Daly)",
+  "Negative when charging": "충전 시 음수",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "BMS가 쓰는 부호 그대로: 충전 중에 음수로 쓴다면 「전류 부호」에서 그것을 선택하세요.",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "배터리가 충전 중인데 페이지가 「방전 중」이라고 하면 BMS가 전류를 반대로 씁니다: 「충전 시 음수」를 선택하세요.",
   "Remaining energy": "남은 에너지",
   "Save pack": "팩 저장",
   "State of charge (SoC)": "충전 상태 (SoC)",
@@ -5543,4 +5546,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "플레이어를 탭해 그룹에 추가하거나 제거하세요",
   "Ungroup all": "그룹 해제",
+  "Full-screen alerts": "전체 화면 알림",
+  "Press": "누르기",
+  "Someone at the door": "누군가 문 앞에 있어요",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "알림이 켜지거나 경보가 울리면 패널이 깨어나 누군가 「확인」을 누를 때까지 크게 보여 줍니다",
+  "When it rings, the panel wakes up and opens the intercom by itself": "초인종이 울리면 패널이 깨어나 인터폰을 자동으로 엽니다",
 });

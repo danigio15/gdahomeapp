@@ -271,6 +271,87 @@ test("chi ha sbagliato troppe volte aspetta, e gli altri no", async () => {
   assert.equal(dispositivi.abbinati.length, 1);
 });
 
+test("venti strette di mano insieme dallo stesso indirizzo non passano il tetto di cinque", async () => {
+  /* Prima il tetto si guardava all'apertura e si riempiva solo alla fine:
+   * venti prese aperte insieme, prima di mandare una sola conferma,
+   * passavano tutte. */
+  const { portiere, abbinamento, dispositivi } = unPortiere();
+  const { codice } = abbinamento.nuovo();
+  const prese = [];
+  const telefoni = [];
+  for (let i = 0; i < 20; i += 1) {
+    const presa = presaFinta();
+    portiere.accogli(presa, { da: "93.40.1.9" });
+    prese.push(presa);
+    telefoni.push(unTelefono(presa, { codice: `SBAGLIATO${i}` }));
+  }
+  const passati = telefoni.filter((uno) => uno.pronto);
+  assert.equal(passati.length, 5, "ne passano cinque, non venti");
+  for (const presa of prese.slice(5)) {
+    assert.equal(presa.inChiaro[0].motivo, "tentativi");
+    assert.ok(presa.chiusa);
+  }
+  assert.equal(abbinamento.stato().tentativiSbagliati, 5);
+
+  /* E nemmeno col codice giusto: il tetto e' pieno di tentativi in corso. */
+  const ancora = presaFinta();
+  portiere.accogli(ancora, { da: "93.40.1.9" });
+  assert.equal(unTelefono(ancora, { codice }).pronto, null);
+  assert.equal(ancora.inChiaro[0].motivo, "tentativi");
+
+  /* Le cinque che finiscono male non si contano una seconda volta. */
+  for (const furbo of passati) furbo.manda({ t: "conferma", telefono: furbo.mia, casa: furbo.sua });
+  await giro();
+  assert.equal(abbinamento.stato().tentativiSbagliati, 5, "contate una volta sola");
+  assert.equal(dispositivi.abbinati.length, 0);
+
+  /* E chi sta altrove entra. */
+  const presa = presaFinta();
+  portiere.accogli(presa, { da: "192.168.1.20" });
+  const telefono = unTelefono(presa, { codice });
+  telefono.manda({ t: "conferma", telefono: telefono.mia, casa: telefono.sua });
+  await giro();
+  assert.equal(telefono.lette()[0].t, "ecco");
+});
+
+test("una raffica di strette di mano lasciate a meta' resta contata", async () => {
+  /* Chi apre e non conferma non ha dimostrato niente: il tentativo non torna
+   * indietro, nemmeno quando la presa si chiude da sola. */
+  const { portiere, abbinamento } = unPortiere({ attesaDellaStretta: 30 });
+  const { codice } = abbinamento.nuovo();
+  for (let i = 0; i < 5; i += 1) {
+    const presa = presaFinta();
+    portiere.accogli(presa, { da: "93.40.1.9" });
+    assert.ok(unTelefono(presa, { codice }).pronto);
+  }
+  await new Promise((ok) => setTimeout(ok, 80));
+  const ancora = presaFinta();
+  portiere.accogli(ancora, { da: "93.40.1.9" });
+  assert.equal(unTelefono(ancora, { codice }).pronto, null);
+  assert.equal(ancora.inChiaro[0].motivo, "tentativi");
+});
+
+test("chi ha sbagliato quattro volte e poi ha il codice giusto entra", async () => {
+  /* Il suo tentativo si conta all'inizio — e' il quinto — ma torna indietro
+   * prima di `consuma`, che altrimenti ci troverebbe il tetto pieno. */
+  const { portiere, abbinamento, dispositivi } = unPortiere();
+  const { codice } = abbinamento.nuovo();
+  for (let i = 0; i < 4; i += 1) {
+    const presa = presaFinta();
+    portiere.accogli(presa, { da: "93.40.1.9" });
+    const furbo = unTelefono(presa, { codice: `SBAGLIATO${i}` });
+    furbo.manda({ t: "conferma", telefono: furbo.mia, casa: furbo.sua });
+  }
+  assert.equal(abbinamento.stato().tentativiSbagliati, 4);
+  const presa = presaFinta();
+  portiere.accogli(presa, { da: "93.40.1.9" });
+  const telefono = unTelefono(presa, { codice });
+  telefono.manda({ t: "conferma", telefono: telefono.mia, casa: telefono.sua });
+  await giro();
+  assert.equal(telefono.lette()[0].t, "ecco");
+  assert.equal(dispositivi.abbinati.length, 1);
+});
+
 test("una stretta di mano che non arriva si chiude da sola", async () => {
   const { portiere, abbinamento } = unPortiere({ attesaDellaStretta: 30 });
   const muta = presaFinta();

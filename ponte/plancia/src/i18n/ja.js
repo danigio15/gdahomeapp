@@ -5176,8 +5176,11 @@ export default Object.freeze({
   "Pack saved": "パックを保存しました",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "設定の「エネルギー」にある「バッテリー」タブで追加すると、パックがここに表示されます: 充電率、電圧、セル。",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "充電時は正、放電時は負。JK、JBD、Dalyの表記どおりです。",
+  "Current sign": "電流の符号",
+  "Positive when charging (JK, JBD, Daly)": "充電時に正（JK、JBD、Daly）",
+  "Negative when charging": "充電時に負",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "BMSが使う符号のまま：充電時に負で書く場合は「電流の符号」でそれを選んでください。",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "バッテリーが充電中なのにページが「放電中」と表示する場合、BMSは電流を逆に書いています：「充電時に負」を選んでください。",
   "Remaining energy": "残りエネルギー",
   "Save pack": "パックを保存",
   "State of charge (SoC)": "充電率 (SoC)",
@@ -5565,4 +5568,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "プレーヤーをタップしてグループに追加または削除",
   "Ungroup all": "グループを解除",
+  "Full-screen alerts": "全画面アラート",
+  "Press": "押す",
+  "Someone at the door": "玄関で呼び出しがあります",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "アラートがオンになるか警報が鳴ると、パネルが起動し、誰かが「確認しました」をタップするまで大きく表示します",
+  "When it rings, the panel wakes up and opens the intercom by itself": "呼び出しがあると、パネルが起動してインターホンを自動で開きます",
 });

@@ -5174,8 +5174,11 @@ export default Object.freeze({
   "Pack saved": "Paket kaydedildi",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "Paketler, ayarlarda Enerji altındaki Bataryalar sekmesine eklediğinizde burada görünür: şarj durumu, gerilimler, hücreler.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "Şarjda pozitif, deşarjda negatif; JK, JBD ve Daly'nin yazdığı gibi.",
+  "Current sign": "Akımın işareti",
+  "Positive when charging (JK, JBD, Daly)": "Şarjda pozitif (JK, JBD, Daly)",
+  "Negative when charging": "Şarjda negatif",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "BMS'nin kullandığı işaretle: şarj ederken negatif yazıyorsa bunu «Akımın işareti» içinde seçin.",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "Batarya şarj olurken sayfa «Deşarj oluyor» diyorsa BMS'niz akımı ters yazıyor: «Şarjda negatif» seçin.",
   "Remaining energy": "Kalan enerji",
   "Save pack": "Paketi kaydet",
   "State of charge (SoC)": "Şarj durumu (SoC)",
@@ -5563,4 +5566,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Gruba eklemek veya çıkarmak için bir oynatıcıya dokun",
   "Ungroup all": "Grubu dağıt",
+  "Full-screen alerts": "Tam ekran uyarılar",
+  "Press": "Bas",
+  "Someone at the door": "Kapı çalıyor",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Bir uyarı açıldığında veya alarm çaldığında panel uyanır ve biri «Gördüm» düğmesine dokunana kadar büyük gösterir",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Zil çaldığında panel uyanır ve diafonu kendiliğinden açar",
 });

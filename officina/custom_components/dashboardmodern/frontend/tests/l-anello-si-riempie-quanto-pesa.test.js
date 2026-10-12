@@ -5,7 +5,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { numeroDellaBolla, quotaDellAnello } from "../src/sections/energy-flow-section.js";
+import {
+  numeroDellaBolla,
+  numeroScrittoNellaBolla,
+  quotaDellAnello,
+} from "../src/sections/energy-flow-section.js";
 
 test("il numero della bolla si legge in tutte le forme della plancia", () => {
   assert.equal(numeroDellaBolla("101 W"), 101);
@@ -26,4 +30,24 @@ test("l'anello va da vuoto a pieno, con un filo se c'e' qualcosa", () => {
   /* Sei watt contro cinque chilowatt non sono zero: un filo si vede. */
   assert.equal(quotaDellAnello(6, 5000), 0.04);
   assert.equal(quotaDellAnello(100, 0), 0);
+});
+
+test("nei carichi l'anello legge il numero, non l'icona", () => {
+  /* L'icona di una stanza e' uno span, e viene prima del numero: leggendo
+   * «il primo span» l'anello dei carichi restava vuoto. */
+  const span = (testo, classe = "") => ({ tagName: "SPAN", textContent: testo, classe });
+  const icona = span("", "dm-icon-engine-glyph");
+  const valore = span("121,9 kWh", "dm-flow-value");
+  const carico = {
+    children: [{ tagName: "DIV" }, { tagName: "DIV", children: [icona] }, valore],
+    querySelector: (sel) => (sel === ".dm-flow-value" ? valore : icona),
+  };
+  assert.equal(numeroScrittoNellaBolla(carico), valore);
+  /* I cerchioni: il numero e' lo span figlio diretto. */
+  const numero = span("5,30 kW");
+  const casa = {
+    children: [{ tagName: "DIV" }, { tagName: "DIV" }, numero],
+    querySelector: () => null,
+  };
+  assert.equal(numeroScrittoNellaBolla(casa), numero);
 });

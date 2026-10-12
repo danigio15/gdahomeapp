@@ -436,7 +436,16 @@ export class Portiere {
       this._no(presa, "nessun codice di abbinamento e' attivo", { motivo: MOTIVO.nessuno });
       return;
     }
-    if (this.abbinamento.bloccato(da)) {
+    /* Il tentativo si conta qui, all'inizio, prima di guardare nessun
+     * segreto: guardare il tetto e contarlo sono un passo solo, e una raffica
+     * di strette di mano insieme dallo stesso indirizzo non passa il tetto
+     * di una fila. Torna indietro solo quando la conferma dimostra il codice
+     * (`_laConferma`); altrimenti resta contato, e una volta sola. */
+    let tentativo;
+    try {
+      tentativo = this.abbinamento.comincia(da);
+    } catch (errore) {
+      if (!(errore instanceof TroppiTentativi)) throw errore;
       this.registro.attenzione(`troppi tentativi di abbinamento da ${da}`);
       this._no(presa, "troppi tentativi: riprova piu' tardi", { motivo: MOTIVO.tentativi });
       return;
@@ -480,12 +489,12 @@ export class Portiere {
       /* Le chiavi degli altri codici vivi, da provare sulla prima busta. */
       altre: chiavi.slice(1),
       /* Una busta che non si apre, qui, vuol dire quasi sempre un codice
-       * sbagliato: chi l'ha chiusa aveva un altro codice, o nessuno. Si conta
-       * come tale, e glielo si dice in chiaro — non c'e' una chiave in
-       * comune con cui dirglielo in un altro modo. Non gli si dice altro. */
+       * sbagliato: chi l'ha chiusa aveva un altro codice, o nessuno. Il
+       * tentativo e' gia' contato, da `comincia`, e resta: glielo si dice in
+       * chiaro — non c'e' una chiave in comune con cui dirglielo in un altro
+       * modo. Non gli si dice altro. */
       onGuasta: () => {
         clearTimeout(timer);
-        this.abbinamento.sbagliato(da);
         this.registro.attenzione(`codice di abbinamento sbagliato da ${da}`);
         presa.manda(JSON.stringify({ v: VERSIONE, no: "codice sbagliato", motivo: MOTIVO.codice }));
       },
@@ -505,6 +514,7 @@ export class Portiere {
         codice: usato.codice,
         prova: usato.prova,
         pubbliche,
+        tentativo,
       }).catch((errore) => {
         this.registro.errore(`abbinamento andato storto: ${errore?.message || errore}`);
         cifrata.chiudi(1011, "");
@@ -513,7 +523,7 @@ export class Portiere {
     cifrata.onChiusa = () => clearTimeout(timer);
   }
 
-  async _laConferma(cifrata, testo, { da, codice, prova = false, pubbliche }) {
+  async _laConferma(cifrata, testo, { da, codice, prova = false, pubbliche, tentativo = null }) {
     let detto;
     try {
       detto = JSON.parse(testo);
@@ -530,13 +540,23 @@ export class Portiere {
       detto.telefono !== pubbliche.telefono ||
       detto.casa !== pubbliche.casa
     ) {
-      this.abbinamento.sbagliato(da);
+      /* Il tentativo e' gia' contato, da `comincia`: non lo si conta due
+       * volte. */
       cifrata.manda(
         JSON.stringify({ t: "no", perche: "conferma sbagliata", motivo: MOTIVO.codice }),
       );
       cifrata.chiudi(CHIUSA_PER_REGOLA, "conferma sbagliata");
       return;
     }
+
+    /* Da qui il telefono ha dimostrato di avere il codice: il tentativo
+     * contato all'inizio torna indietro. Va restituito **prima** di
+     * `consuma`, che guarda il tetto di chi bussa e non deve trovarci dentro
+     * proprio questo tentativo. Quello che puo' ancora andare storto — un
+     * codice che la console ha cambiato nel frattempo, troppi telefoni, una
+     * casa di prova revocata — non e' indovinare un codice, e si comporta
+     * come prima: `consuma` conta da se' un codice che non e' piu' quello. */
+    this.abbinamento.restituisci(tentativo);
 
     let perChi = "";
     let finoA = null;
