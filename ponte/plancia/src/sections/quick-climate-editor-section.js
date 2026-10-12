@@ -270,7 +270,12 @@ function publishQuickClimate() {
   /* La zona e' facoltativa: chi chiama alla vecchia maniera (il ramo Freddo
    * del runtime) non la passa e non cambia niente; la parte Caldo la dice, e
    * riceve passi che scaldano. */
-  root.dmQuickClimateSteps = (entita, zona) => quickClimateSteps(presetDi(entita, zona));
+  /* Con gli attributi dell'unita': un termostato a due obiettivi vuole la
+   * coppia `target_temp_low`/`target_temp_high`, non il numero solo. */
+  root.dmQuickClimateSteps = (entita, zona) =>
+    quickClimateSteps(presetDi(entita, zona), allStates()?.[entita]?.attributes || null, {
+      zona,
+    });
   root.dmQuickClimateHint = (parole) => {
     /* Con preset per unita' una riga sola non puo' dire i passi di tutte:
      * si dice la verita' generica invece del dettaglio di una sola. */

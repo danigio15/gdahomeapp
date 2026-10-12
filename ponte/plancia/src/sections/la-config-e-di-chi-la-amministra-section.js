@@ -251,7 +251,10 @@ export function applica() {
 function travasa() {
   if (state.travasato) return;
   const branding = readJson("cd_branding", null);
-  if (branding && typeof branding === "object" && Array.isArray(branding.admin_users)) {
+  /* Un elenco vuoto non conta come «gia' travasato»: la 1.11.10 lo scriveva
+   * anche senza che nessuno avesse svuotato la casella (vedi
+   * `amministratoriScritti`). */
+  if (nomiPuliti(branding?.admin_users).length) {
     state.travasato = true;
     return;
   }
@@ -307,14 +310,23 @@ export function installLaConfigEDiChiLaAmministra() {
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:states-ready", "pageshow"])
     root.addEventListener?.(evento, ancora);
   /* La configurazione arrivata puo' aver cambiato la casella: si richiede la
-   * risposta al ponte, e il nome di prima passa dove deve stare. */
-  root.addEventListener?.("dashboardmodern:persistence-restored", () => {
+   * risposta al ponte, e il nome di prima passa dove deve stare.
+   *
+   * Non solo quando la configurazione arriva **diversa**. `persistence-
+   * restored` suona solo quando la copia condivisa sovrascrive quella del
+   * vetro; un vetro gia' allineato — il computer da cui il nome era stato
+   * scritto, cioe' l'unico che lo conosceva — non lo sentiva mai, e il nome
+   * restava li': la casella piena in Home Assistant e vuota nell'app.
+   * `persistence-hydrated` suona a ogni lettura andata a buon fine. */
+  const configurazioneArrivata = () => {
     state.ripristinata = true;
     chiudiLePorte();
     travasa();
     chiediChiSono({ ancora: true });
     applica();
-  });
+  };
+  for (const evento of ["dashboardmodern:persistence-restored", "dashboardmodern:persistence-hydrated"])
+    root.addEventListener?.(evento, configurazioneArrivata);
   if (doc.readyState === "loading") doc.addEventListener("DOMContentLoaded", ancora, { once: true });
   else ancora();
   return true;

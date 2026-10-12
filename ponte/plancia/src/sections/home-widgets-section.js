@@ -324,6 +324,12 @@ import {
 } from "../core/verso-aperture.js";
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
 import { passoDellUnita, scalaDellUnita } from "../core/scala-clima.js";
+import {
+  coppiaSpostata,
+  obiettiviDelClima,
+  obiettiviScritti,
+  obiettivoMostrato,
+} from "../core/i-due-obiettivi-del-clima.js";
 import { accesoPerIlConsumo } from "../core/consumo-del-clima.js";
 import { configuredLightGroups } from "./lights-alerts-section.js";
 import { floodEntities, floodIsWet, puoEssereUnaSonda } from "./flood-alerts-section.js";
@@ -1137,6 +1143,9 @@ function rigaClima(states, unit) {
   const numero = (valore, difetto = null) =>
     Number.isFinite(Number(valore)) ? Number(valore) : difetto;
   const scala = scalaDellUnita(attributi);
+  /* Uno o due obiettivi (il caldo e il freddo): la regola e' del nucleo, la
+   * stessa della card del Clima. */
+  const obiettivi = obiettiviDelClima(attributi, raw);
   return {
     entity,
     name: clean(unit?.name) || entity,
@@ -1149,7 +1158,11 @@ function rigaClima(states, unit) {
       (Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown"),
     mode: raw,
     ambient: numero(attributi.current_temperature),
-    target: numero(attributi.temperature),
+    /* Per chi ne ha due, quello che la modalita' rende vero — il basso in
+     * caldo, l'alto in freddo — e `null` in automatico: la coppia la porta
+     * `obiettivi`, e chi ha posto per un numero solo la scrive intera. */
+    target: obiettivi.doppio ? obiettivoMostrato(obiettivi) : numero(attributi.temperature),
+    obiettivi,
     /* Quello che serve al pannello della rotella: cosa l'unita' accetta, e
      * dove sta adesso. Sono attributi che Home Assistant pubblica gia' —
      * il modello si limita a portarli in riga invece di farli cercare a
@@ -7218,8 +7231,9 @@ function climatePanel(row, solo = false) {
       </div>`
     : "";
   const gradi = row.target == null ? null : formatNumber(row.target, 1);
-  const temperaturaMarkup =
-    row.target == null
+  const temperaturaMarkup = row.obiettivi?.doppio
+    ? obiettiviDoppiMarkup(row)
+    : row.target == null
       ? ""
       : `<div class="dm-w-panel-row">
           <span class="dm-w-panel-lbl">${esc(t("Temperatura", "Temperature"))}</span>
@@ -7297,6 +7311,44 @@ function climatePanel(row, solo = false) {
   }>${dentro}</div>`;
 }
 
+/* Il passo della temperatura per chi ha due obiettivi: il caldo e il freddo,
+ * ognuno col suo meno e il suo piu'.
+ *
+ * In riscaldamento si vede il caldo, in raffrescamento il freddo; in
+ * automatico — e da spento, come fa Home Assistant — tutti e due. Ogni tasto
+ * dice quale estremo muove, e il gestore manda sempre la coppia intera. */
+function obiettiviDoppiMarkup(row) {
+  const { mostra } = row.obiettivi;
+  const estremi = mostra === "entrambi" ? ["basso", "alto"] : [mostra];
+  return estremi
+    .map((estremo) => {
+      const caldo = estremo === "basso";
+      const nome = caldo ? t("Caldo", "Heating") : t("Freddo", "Cooling");
+      return `<div class="dm-w-panel-row" data-dm-w-obiettivo="${estremo}">
+          <span class="dm-w-panel-lbl">${esc(nome)}</span>
+          <div class="dm-w-stepper">
+            <button type="button" data-dm-w-temp="-1" data-dm-w-obj="${estremo}" data-dm-w-target="${esc(row.entity)}"
+              aria-label="${esc(`${t("Abbassa", "Lower")} · ${nome}`)}">−</button>
+            <b>${formatNumber(row.obiettivi[estremo], 1)}°</b>
+            <button type="button" data-dm-w-temp="1" data-dm-w-obj="${estremo}" data-dm-w-target="${esc(row.entity)}"
+              aria-label="${esc(`${t("Alza", "Raise")} · ${nome}`)}">+</button>
+          </div>
+        </div>`;
+    })
+    .join("");
+}
+
+/* La coppia nella riga, stretta: accanto al nome e all'ambiente non c'e'
+ * posto per «22,0° – 40,0°», che sul telefono andava a capo. I decimali
+ * restano solo dove ci sono davvero: «22–40°», «21,5–26°». Un obiettivo solo
+ * (la coppia in caldo o in freddo) si scrive come il singolo. */
+function gradiDellaCoppia(obiettivi) {
+  const gradi = (valore) => formatNumber(valore, Number.isInteger(valore) ? 0 : 1);
+  if (obiettivi.mostra === "entrambi")
+    return `${gradi(obiettivi.basso)}–${gradi(obiettivi.alto)}°`;
+  return obiettiviScritti(obiettivi, (valore) => formatNumber(valore, 1));
+}
+
 /* Lo stesso pannello, per chi non e' una tessera.
  *
  * La finestra della pagina Clima aveva la sua idea di cosa un'unita' sa fare:
@@ -7364,7 +7416,13 @@ function climateDetail(widget) {
          <span class="dm-w-name">${esc(row.name)}<small>${esc(sotto)}</small></span>
          <span class="dm-w-clima-gradi">
            <b>${row.ambient == null ? "--" : `${formatNumber(row.ambient, 1)}°`}</b>
-           ${row.on && row.target != null ? `<small>→ ${formatNumber(row.target, 1)}°</small>` : ""}
+           ${
+             row.on && row.obiettivi?.doppio
+               ? `<small data-dm-w-coppia>→ ${esc(gradiDellaCoppia(row.obiettivi))}</small>`
+               : row.on && row.target != null
+                 ? `<small>→ ${formatNumber(row.target, 1)}°</small>`
+                 : ""
+           }
          </span>
          ${
            pannello
@@ -10051,8 +10109,13 @@ function onClick(event) {
   if (rotella) {
     event.preventDefault();
     const entity = clean(rotella.dataset.dmWMore);
+    /* Il pannello che si apre e si chiude, non quello «solo»: la finestra
+     * della pagina Clima ne tiene uno sempre aperto per la stessa entita', e
+     * resta nel documento anche a finestra chiusa. Cercando il primo col
+     * nome giusto si toglieva `hidden` a quello, e la rotella girava su un
+     * pannello che restava chiuso. */
     const pannello = doc?.querySelector?.(
-      `[data-dm-w-panel="${entity.replace(/["\\]/g, "\\$&")}"]`,
+      `[data-dm-w-panel="${entity.replace(/["\\]/g, "\\$&")}"]:not(.dm-w-panel-solo)`,
     );
     const apri = !state.aperti.has(entity);
     if (apri) state.aperti.add(entity);
@@ -10108,6 +10171,25 @@ function onClick(event) {
     event.preventDefault();
     const entity = clean(gradi.dataset.dmWTarget);
     const riga = climateRow(entity);
+    const estremo = clean(gradi.dataset.dmWObj);
+    if (riga?.obiettivi?.doppio && (estremo === "basso" || estremo === "alto")) {
+      /* Coi due obiettivi parte la coppia intera — Home Assistant non ne
+       * accetta uno solo — col passo dell'unita', dentro la sua scala, e
+       * senza che il caldo scavalchi il freddo. A fine corsa non parte
+       * niente. */
+      const dati = coppiaSpostata(riga.obiettivi, estremo, Number(gradi.dataset.dmWTemp) || 0, {
+        passo: riga.passo || 0.5,
+        scala: [riga.minima, riga.massima],
+      });
+      if (dati) {
+        const casella = gradi.parentElement?.querySelector?.("b");
+        const nuovo = estremo === "basso" ? dati.target_temp_low : dati.target_temp_high;
+        if (casella) casella.textContent = `${formatNumber(nuovo, 1)}°`;
+        callHa("climate", "set_temperature", { entity_id: entity, ...dati });
+        root.setTimeout?.(schedule, 700);
+      }
+      return;
+    }
     if (riga && riga.target != null) {
       const passo = (Number(gradi.dataset.dmWTemp) || 0) * (riga.passo || 0.5);
       const voluta = Math.min(riga.massima, Math.max(riga.minima, riga.target + passo));
@@ -10839,6 +10921,14 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
   min-width:52px;text-align:center;
   font-family:'Oswald',system-ui,sans-serif;font-size:17px;font-weight:600;
   font-variant-numeric:tabular-nums}
+/* La coppia accanto all'ambiente non va a capo sul trattino. */
+.dm-w-clima-gradi small[data-dm-w-coppia]{white-space:nowrap}
+/* I due obiettivi: il numero del caldo arancio, quello del freddo azzurro,
+ * come le due mezze lune del termostato di Home Assistant. */
+.dm-w-panel-row[data-dm-w-obiettivo="basso"] .dm-w-stepper b{color:#ea580c}
+.dm-w-panel-row[data-dm-w-obiettivo="alto"] .dm-w-stepper b{color:#0284c7}
+html[data-theme="dark"] .dm-w-panel-row[data-dm-w-obiettivo="basso"] .dm-w-stepper b{color:#fb923c}
+html[data-theme="dark"] .dm-w-panel-row[data-dm-w-obiettivo="alto"] .dm-w-stepper b{color:#38bdf8}
 .dm-w-panel-note{
   margin:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8)}
 /* Sul telefono l'etichetta va sopra: ottantadue pixel di colonna, su

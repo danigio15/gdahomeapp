@@ -1039,6 +1039,18 @@ async function hydrateRemote(options = {}) {
     const changed = shared ? await hydrateShared() : await hydrateLegacyUserData();
     state.hydrated = true;
     state.transportFailures = 0;
+    /* La lettura e' andata, cambiata o no. `persistence-restored` suona solo
+     * quando la copia condivisa ha sovrascritto quella di qui: chi deve sapere
+     * che adesso il deposito e' allineato — il travaso del nome dell'utente
+     * admin (`la-config-e-di-chi-la-amministra-section.js`) — non lo sentiva
+     * mai su un vetro gia' in pari. */
+    try {
+      root.dispatchEvent?.(
+        new CustomEvent("dashboardmodern:persistence-hydrated", { detail: { changed } }),
+      );
+    } catch (_error) {
+      /* Chi ascolta non fa fallire la lettura. */
+    }
     return changed;
   } catch (error) {
     // A read that never completed says nothing about the stored configuration.

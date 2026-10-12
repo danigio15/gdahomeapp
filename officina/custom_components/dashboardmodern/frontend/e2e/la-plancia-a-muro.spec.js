@@ -599,6 +599,124 @@ test.describe("la plancia a muro", () => {
       "aria-selected",
       "true",
     );
+    /* Senza termostati a coppia la terza linguetta non c'e'. */
+    await expect(muro(page).locator('[data-mu-zona="termostato"]')).toHaveCount(0);
+  });
+
+  /* «Il termostato di Home Assistant mi vede le due mezze lune, da una parte
+   * caldo e dall'altra freddo»: i termostati a coppia (`target_temp_low` e
+   * `target_temp_high`, senza `temperature`) sul muro scrivevano «—», e il
+   * meno e il piu' mandavano `temperature`, che Home Assistant a loro
+   * rifiuta. Ora stanno in una terza linguetta, «Termostato», e non in Caldo
+   * o in Freddo: la card ha due righe — «Caldo 22°» e «Freddo 26°» — ognuna
+   * col suo meno e il suo piu', che mandano sempre la coppia intera. Un clima
+   * a obiettivo solo, accanto, resta com'era. */
+  test("un termostato a coppia sta nella linguetta Termostato, con un meno e un piu' per numero", async ({
+    page,
+  }, testInfo) => {
+    const seme = structuredClone(SEME_A_MURO);
+    seme.sections.climate.push({
+      id: "c2",
+      name: "Termostato",
+      entity: "climate.termostato",
+      type: "pompa",
+      room_id: "soggiorno",
+      room: "Soggiorno",
+    });
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      muro: { attiva: true, pagine: [{ id: "p1", modello: "clima", zona: "caldo" }] },
+      stati: {
+        ...STATI_A_MURO,
+        "climate.soggiorno": {
+          ...STATI_A_MURO["climate.soggiorno"],
+          attributes: { ...STATI_A_MURO["climate.soggiorno"].attributes },
+        },
+        "climate.termostato": {
+          state: "heat_cool",
+          attributes: {
+            friendly_name: "Termostato",
+            hvac_modes: ["off", "heat", "cool", "heat_cool"],
+            hvac_action: "idle",
+            current_temperature: 21.4,
+            temperature: null,
+            target_temp_low: 22,
+            target_temp_high: 26,
+            min_temp: 4,
+            max_temp: 40,
+            target_temp_step: 0.5,
+          },
+        },
+      },
+    });
+    const zona = (z) => muro(page).locator(`[data-mu-zona="${z}"]`);
+    const carta = muro(page).locator('.mu-card[data-mu-entita="climate.termostato"]');
+    /* Tre linguette, nell'ordine; dal Caldo il termostato non si vede. */
+    await expect(muro(page).locator("[data-mu-zona]")).toHaveCount(3);
+    expect(
+      await muro(page)
+        .locator("[data-mu-zona]")
+        .evaluateAll((tasti) => tasti.map((t) => t.dataset.muZona)),
+    ).toEqual(["freddo", "caldo", "termostato"]);
+    await expect(zona("caldo")).toHaveAttribute("aria-selected", "true");
+    await expect(carta).toHaveCount(0);
+    await zona("freddo").click();
+    await expect(carta).toHaveCount(0);
+    await expect(muro(page).locator('.mu-card[data-mu-entita="climate.soggiorno"]')).toBeVisible();
+
+    await zona("termostato").click();
+    await expect(zona("termostato")).toHaveAttribute("aria-selected", "true");
+    await expect(carta).toBeVisible();
+    await expect(muro(page).locator('.mu-card[data-mu-entita="climate.soggiorno"]')).toHaveCount(0);
+    const caldo = carta.locator('.mu-est[data-mu-estremo="basso"]');
+    const freddo = carta.locator('.mu-est[data-mu-estremo="alto"]');
+    await expect(caldo.locator(".mu-est-v")).toHaveText("22°");
+    await expect(freddo.locator(".mu-est-v")).toHaveText("26°");
+
+    await caldo.locator('[data-mu-fa="piu"]').click();
+    await expect(caldo.locator(".mu-est-v")).toHaveText("22,5°");
+    await expect.poll(async () => (await servizi(page)).length).toBe(1);
+    expect((await servizi(page))[0]).toEqual({
+      domain: "climate",
+      service: "set_temperature",
+      data: { entity_id: "climate.termostato", target_temp_low: 22.5, target_temp_high: 26 },
+    });
+
+    /* Il meno del freddo muove il freddo, e il caldo resta quello appena
+     * mandato. */
+    await freddo.locator('[data-mu-fa="meno"]').click();
+    await expect(freddo.locator(".mu-est-v")).toHaveText("25,5°");
+    await expect.poll(async () => (await servizi(page)).length).toBe(2);
+    expect((await servizi(page))[1].data).toEqual({
+      entity_id: "climate.termostato",
+      target_temp_low: 22.5,
+      target_temp_high: 25.5,
+    });
+
+    /* Nella finestra le stesse due righe, grandi, coi loro tasti. */
+    await carta.locator(".mu-nome").click();
+    const finestra = muro(page).locator(".mu-fin-clima");
+    await expect(finestra.locator(".mu-est")).toHaveCount(2);
+    await finestra.locator('.mu-est[data-mu-estremo="basso"] [data-mu-fa="meno"]').click();
+    await expect.poll(async () => (await servizi(page)).length).toBe(3);
+    expect((await servizi(page))[2].data).toEqual({
+      entity_id: "climate.termostato",
+      target_temp_low: 22,
+      target_temp_high: 25.5,
+    });
+    await finestra.locator('[data-mu-fa="chiudi"]').first().click();
+
+    /* Il clima a obiettivo solo, nella linguetta Freddo, manda `temperature`
+     * come sempre. */
+    await zona("freddo").click();
+    await muro(page)
+      .locator('.mu-card[data-mu-entita="climate.soggiorno"] [data-mu-fa="piu"]')
+      .click();
+    await expect.poll(async () => (await servizi(page)).length).toBe(4);
+    expect((await servizi(page))[3].data).toEqual({
+      entity_id: "climate.soggiorno",
+      temperature: 22,
+    });
   });
 
   test("nella pagina Luci una presa ha la stessa card delle luci, e si comanda", async ({
@@ -933,5 +1051,215 @@ test.describe("la plancia a muro", () => {
     await expect
       .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("cd_muro")).batteria))
       .toEqual({ attiva: true, livello: "sensor.tablet_battery_level", carica: "" });
+  });
+
+  /* «Schermi piccoli e griglia 3x3: le scritte sotto sono tagliate», «anche
+   * quando resta in 4x3 in questo widget la parte sotto e' tagliata», e «la
+   * grafica dei due sensori e' diversa, con il nome grande sotto: forse meglio
+   * la seconda». Su ogni misura nessuna riga esce dal suo riquadro, e un
+   * interruttore e un sensore nella stessa pagina hanno la stessa forma. */
+  const UNITA = [
+    "Soggiorno",
+    "Cucina",
+    "Studio",
+    "Camera",
+    "Cameretta",
+    "Bagno",
+    "Corridoio",
+    "Taverna",
+    "Lavanderia",
+    "Ospiti",
+  ];
+  const chiave = (n) => n.toLowerCase();
+  function casaFitta() {
+    const seme = structuredClone(SEME_A_MURO);
+    const stati = structuredClone(STATI_A_MURO);
+    seme.sections.rooms = UNITA.map((n) => ({
+      id: chiave(n),
+      name: n,
+      temp: `sensor.t_${chiave(n)}`,
+    }));
+    seme.sections.lights = UNITA.map((n) => ({
+      id: `l-${chiave(n)}`,
+      name: n,
+      entity: `light.${chiave(n)}`,
+      room_id: chiave(n),
+      room: n,
+    }));
+    seme.sections.climate = UNITA.map((n) => ({
+      id: `c-${chiave(n)}`,
+      name: n,
+      entity: `climate.${chiave(n)}`,
+      room_id: chiave(n),
+      room: n,
+    }));
+    UNITA.forEach((n, i) => {
+      stati[`sensor.t_${chiave(n)}`] = { state: "21.5", attributes: { unit_of_measurement: "°C" } };
+      stati[`light.${chiave(n)}`] = {
+        state: i ? "off" : "on",
+        attributes: { friendly_name: n, brightness: 120, supported_color_modes: ["brightness"] },
+      };
+      stati[`climate.${chiave(n)}`] = {
+        state: "heat",
+        attributes: {
+          friendly_name: n,
+          current_temperature: 20.4,
+          temperature: 21,
+          hvac_modes: ["off", "heat"],
+          hvac_action: "heating",
+        },
+      };
+    });
+    /* Lo studio ha un termostato a coppia, coi decimali: sta nella linguetta
+     * Termostato, con le due righe e i quattro tasti, e non deve uscire. */
+    stati["climate.studio"] = {
+      state: "heat_cool",
+      attributes: {
+        friendly_name: "Studio",
+        current_temperature: 20.4,
+        temperature: null,
+        target_temp_low: 21.5,
+        target_temp_high: 24.5,
+        hvac_modes: ["off", "heat", "cool", "heat_cool"],
+        hvac_action: "idle",
+        target_temp_step: 0.5,
+      },
+    };
+    for (const n of ["cancello", "garage_1", "portoncino"])
+      stati[`switch.${n}`] = { state: "off", attributes: { friendly_name: n } };
+    stati["binary_sensor.garage_1"] = {
+      state: "on",
+      attributes: { friendly_name: "Garage 1", device_class: "garage_door" },
+    };
+    stati["cover.carraio"] = {
+      state: "closed",
+      attributes: { friendly_name: "Carraio", device_class: "gate" },
+    };
+    const caselle = {
+      cd_clima_units: UNITA.map((n) => ({
+        entity: `climate.${chiave(n)}`,
+        type: "termo",
+        name: n,
+      })),
+      cd_clima_rapido_unita: Object.fromEntries(
+        UNITA.map((n) => [`climate.${chiave(n)}`, { mode: "heat", temperature: 26, fan: "auto" }]),
+      ),
+    };
+    const muroFitto = {
+      attiva: true,
+      pagine: [
+        {
+          id: "p1",
+          modello: "personale",
+          titolo: "Esterno",
+          griglia: 12,
+          comandi: [
+            { tipo: "entita", entita: "switch.cancello", nome: "Cancello", disegno: "varchi" },
+            { tipo: "entita", entita: "switch.garage_1", nome: "Garage 1", sotto: "Apre/chiude" },
+            { tipo: "entita", entita: "switch.portoncino", nome: "Portoncino" },
+            { tipo: "entita", entita: "binary_sensor.garage_1", nome: "Garage 1", sotto: "Aperto" },
+            { tipo: "tapparella", entita: "cover.carraio", nome: "Carraio" },
+            { tipo: "entita", entita: "lock.porta", nome: "Porta" },
+          ],
+        },
+        { id: "p2", modello: "luci", griglia: 12 },
+        { id: "p3", modello: "ambienti", griglia: 12 },
+        { id: "p4", modello: "clima", zona: "caldo", griglia: 12 },
+        MURO_DI_PROVA.pagine[2],
+      ],
+    };
+    return { seme, stati, caselle, muro: muroFitto };
+  }
+  /* Ogni pezzo visibile di ogni riquadro sta dentro il riquadro. */
+  const fuoriDalRiquadro = (page) =>
+    page.evaluate(() => {
+      const fuori = [];
+      for (const card of document.querySelectorAll("#dm-muro .mu-card")) {
+        const r = card.getBoundingClientRect();
+        for (const el of card.querySelectorAll("*")) {
+          if (el.closest("svg") && el.tagName.toLowerCase() !== "svg") continue;
+          const s = getComputedStyle(el);
+          if (s.display === "none" || s.visibility === "hidden") continue;
+          const b = el.getBoundingClientRect();
+          if (!b.width || !b.height) continue;
+          if (b.bottom > r.bottom + 0.5 || b.top < r.top - 0.5 || b.right > r.right + 0.5) {
+            fuori.push(
+              `${card.dataset.muEntita || card.className}: ${(el.textContent || el.className).toString().trim().slice(0, 24)}`,
+            );
+            break;
+          }
+        }
+      }
+      return fuori;
+    });
+
+  for (const [larghezza, altezza] of [
+    [1280, 800],
+    [1024, 600],
+    [800, 480],
+    [844, 390],
+  ])
+    test(`a ${larghezza}x${altezza} nessuna scritta esce dal suo riquadro`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize({ width: larghezza, height: altezza });
+      await apriLaCasaAMuro(page, testInfo, casaFitta());
+      for (const indice of [0, 1, 2, 3, 4]) {
+        if (indice) await muro(page).locator(`[data-mu-pagina="${indice}"]`).click();
+        await expect(muro(page).locator(".mu-card").first()).toBeVisible();
+        expect(await fuoriDalRiquadro(page), `pagina ${indice}`).toEqual([]);
+      }
+      /* La linguetta Termostato della pagina Clima: le due righe coi loro
+       * quattro tasti stanno nel riquadro anche sul pannello piccolo. */
+      await muro(page).locator('[data-mu-pagina="3"]').click();
+      await muro(page).locator('[data-mu-zona="termostato"]').click();
+      const termostato = muro(page).locator('.mu-card[data-mu-entita="climate.studio"]');
+      await expect(termostato).toBeVisible();
+      await expect(termostato.locator(".mu-est-t")).toHaveCount(4);
+      for (const tasto of await termostato.locator(".mu-est-t").all())
+        await expect(tasto).toBeVisible();
+      expect(await fuoriDalRiquadro(page), "linguetta Termostato").toEqual([]);
+    });
+
+  test("su uno schermo piccolo l'interruttore e il sensore hanno la stessa forma, col nome grande in fondo", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 800, height: 480 });
+    await apriLaCasaAMuro(page, testInfo, casaFitta());
+    await expect(muro(page)).toHaveAttribute("data-compatto", "1");
+    const interruttore = muro(page).locator('.mu-card[data-mu-entita="switch.garage_1"]');
+    const sensore = muro(page).locator('.mu-card[data-mu-entita="binary_sensor.garage_1"]');
+    const carraio = muro(page).locator('.mu-card[data-mu-entita="cover.carraio"]');
+    const forma = (carta) =>
+      carta.evaluate((c) => {
+        const nome = c.querySelector(".mu-fam-nome");
+        const r = c.getBoundingClientRect();
+        const n = nome.getBoundingClientRect();
+        return {
+          famiglia: c.classList.contains("mu-fam"),
+          inAlto: [...c.querySelector(".mu-riga1").children]
+            .slice(0, 2)
+            .map((x) =>
+              [...x.classList].find((k) => ["mu-chip", "mu-disco", "mu-stato"].includes(k)),
+            ),
+          nomeInFondo: r.bottom - n.bottom < r.height * 0.3,
+          corpo: getComputedStyle(nome).fontSize,
+        };
+      });
+    const a = await forma(interruttore);
+    const b = await forma(sensore);
+    expect(a.famiglia && b.famiglia).toBe(true);
+    expect(a.inAlto).toEqual(["mu-chip", "mu-stato"]);
+    expect(b.inAlto).toEqual(["mu-chip", "mu-stato"]);
+    expect(a.nomeInFondo && b.nomeInFondo).toBe(true);
+    expect(a.corpo).toBe(b.corpo);
+    expect((await forma(carraio)).inAlto).toEqual(["mu-chip", "mu-stato"]);
+    /* L'interruttore si vede anche qui, e il tocco su tutto il riquadro
+     * resta quello di sempre. */
+    await expect(interruttore.locator(".mu-inter")).toBeVisible();
+    await interruttore.click();
+    expect(await servizi(page)).toEqual([
+      { domain: "homeassistant", service: "toggle", data: { entity_id: "switch.garage_1" } },
+    ]);
   });
 });

@@ -17,6 +17,8 @@
  * gliela riscriva.
  */
 
+import { coppiaCon, estremoDiPartenza, obiettiviDelClima } from "./i-due-obiettivi-del-clima.js";
+
 export const QUICK_CLIMATE_KEY = "cd_clima_rapido";
 
 /* I passi di OGNI unita', per entita': «come e' impostato ora viene attribuito
@@ -124,14 +126,74 @@ export function quickClimatePresetForZone(preset, zona) {
  * cosi' che le accettano i condizionatori veri: mandare la temperatura a uno
  * che e' ancora spento la fa cadere nel vuoto, ed e' il motivo per cui i tre
  * passi sono distanziati anche nel tempo.
+ *
+ * `attributi` sono quelli dell'unita' che si accende, e servono solo a sapere
+ * se ha UN obiettivo o DUE (vedi `temperaturaDelPreset`); `zona` e' la parte
+ * da cui si preme, che decide quale estremo porta un preset automatico. Chi
+ * non li passa riceve i passi di sempre.
  */
-export function quickClimateSteps(preset) {
+export function quickClimateSteps(preset, attributi = null, { zona = "" } = {}) {
   const scelta = normalizeQuickClimate(preset);
   const passi = [{ service: "set_hvac_mode", data: { hvac_mode: scelta.mode } }];
-  if (scelta.temperature != null)
-    passi.push({ service: "set_temperature", data: { temperature: scelta.temperature } });
+  if (scelta.temperature != null) {
+    const temperatura = temperaturaDelPreset(scelta, attributi, zona);
+    if (temperatura) passi.push({ service: "set_temperature", data: temperatura });
+  }
   if (scelta.fan) passi.push({ service: "set_fan_mode", data: { fan_mode: scelta.fan } });
   return passi;
+}
+
+/* Le modalita' del preset che vogliono dire «raffresca»: il loro numero e'
+ * la soglia sopra cui l'unita' lavora, cioe' l'estremo alto della coppia. */
+const RAFFRESCANO = new Set(["cool", "dry", "fan_only"]);
+
+/* `Number(null)` fa zero, e zero gradi non e' un estremo dichiarato. */
+const gradi = (valore) => {
+  if (valore === null || valore === undefined || pulito(valore) === "") return null;
+  const dato = Number(valore);
+  return Number.isFinite(dato) ? dato : null;
+};
+
+/**
+ * Cosa mandare a `climate.set_temperature` per i gradi del preset.
+ *
+ * Per quasi tutti e' `{temperature}`, com'e' sempre stato — e chi chiama
+ * senza attributi riceve esattamente quello. Ma un termostato a DUE obiettivi
+ * (i Zigbee che Home Assistant mostra con le due mezze lune, 22 e 40) rifiuta
+ * il numero solo: vuole `target_temp_low` e `target_temp_high` insieme. Il
+ * tasto rapido, che prima gli mandava `temperature` e non accendeva niente di
+ * quel che diceva, adesso gli manda la coppia:
+ *
+ * - un preset che scalda porta il basso, la soglia sotto cui scalda; uno che
+ *   raffresca porta l'alto; in automatico decide la zona da cui si preme
+ *   (dal Caldo il basso, altrimenti l'alto), come fa il meno e il piu';
+ * - l'altro estremo resta com'e': chi ha chiesto 22 gradi di caldo non ha
+ *   chiesto di toccare il freddo;
+ * - il numero va sulla griglia del passo dell'unita' (che parte dal suo
+ *   minimo, come sulla barra del Clima), dentro il suo minimo e il suo
+ *   massimo, e non scavalca l'altro estremo: si ferma li', perche' Home
+ *   Assistant rifiuta un basso sopra l'alto.
+ *
+ * `null` se non c'e' niente da mandare: la coppia e' gia' quella.
+ */
+function temperaturaDelPreset(scelta, attributi, zona) {
+  const lettura = attributi ? obiettiviDelClima(attributi, scelta.mode) : null;
+  if (!lettura?.doppio) return { temperature: scelta.temperature };
+  const quale =
+    scelta.mode === "heat"
+      ? "basso"
+      : RAFFRESCANO.has(scelta.mode)
+        ? "alto"
+        : estremoDiPartenza({ zona });
+  const minimo = gradi(attributi.min_temp);
+  const massimo = gradi(attributi.max_temp);
+  const passo = gradi(attributi.target_temp_step) > 0 ? gradi(attributi.target_temp_step) : null;
+  let voluto = scelta.temperature;
+  if (passo) {
+    const origine = minimo ?? 0;
+    voluto = origine + Math.round((voluto - origine) / passo) * passo;
+  }
+  return coppiaCon(lettura, quale, voluto, { scala: [minimo, massimo] });
 }
 
 /**

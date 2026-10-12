@@ -5565,4 +5565,12 @@ export default Object.freeze({
   "On the rest screen: how charged it is and whether it is plugged in": "विश्राम स्क्रीन पर: कितनी चार्ज है और चार्जर से जुड़ी है या नहीं",
   "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "उदाहरण के लिए Home Assistant ऐप का बैटरी सेंसर। खाली: टैबलेट का ब्राउज़र जो बताता है",
   "Optional: the “is charging” sensor or the battery state": "वैकल्पिक: “चार्ज हो रही है” सेंसर या बैटरी की स्थिति",
+  "Thermostat": "थर्मोस्टैट",
+  "Thermostats": "थर्मोस्टैट",
+  "No thermostat configured": "कोई थर्मोस्टैट कॉन्फ़िगर नहीं है",
+  "Thermostats out of season": "मौसम से बाहर के थर्मोस्टैट",
+  "Lower the heating": "हीटिंग कम करें",
+  "Raise the heating": "हीटिंग बढ़ाएँ",
+  "Lower the cooling": "कूलिंग कम करें",
+  "Raise the cooling": "कूलिंग बढ़ाएँ",
 });

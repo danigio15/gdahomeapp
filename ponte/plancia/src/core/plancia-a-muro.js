@@ -809,11 +809,18 @@ export function comandiProposti(fonte = {}, nomeStanza = "", posti = POSTI) {
     .slice(0, posti);
 }
 
-/** I comandi che la pagina mostra adesso: quelli scelti, o quelli proposti. */
-export function comandiDellaPagina(pagina, fonte = {}, zona = "") {
+/** I comandi che la pagina mostra adesso: quelli scelti, o quelli proposti.
+ *
+ * `aCoppia` dice, per entita', se e' un termostato a coppia (il caldo e il
+ * freddo coi loro due numeri): nella pagina Clima quelli vanno nella
+ * linguetta «Termostato» e in nessun'altra. Lo sa chi ha in mano gli stati —
+ * la sezione — e non questo modulo, che di stati non ne vede; chi non lo dice
+ * riceve le due linguette di sempre. */
+export function comandiDellaPagina(pagina, fonte = {}, zona = "", { aCoppia = null } = {}) {
   if (!pagina) return [];
   if (pagina.modello === "personale") return pagina.comandi;
-  if (pagina.modello === "clima") return comandiDellElenco(zona || pagina.zona || "freddo", fonte);
+  if (pagina.modello === "clima")
+    return comandiDellElenco(zona || pagina.zona || "freddo", fonte, { aCoppia });
   if (MODELLI_ELENCO.includes(pagina.modello)) return comandiDellElenco(pagina.modello, fonte);
   return pagina.scelti
     ? pagina.comandi
@@ -822,7 +829,7 @@ export function comandiDellaPagina(pagina, fonte = {}, zona = "") {
 
 /* Le pagine elenco: tutte le luci, il clima che raffresca, quello che scalda.
  * Non hanno tetto di sei: sul tablet la griglia scorre. */
-export function comandiDellElenco(modello, fonte = {}) {
+export function comandiDellElenco(modello, fonte = {}, { aCoppia = null } = {}) {
   /* Tutto quello che la plancia chiama luce fa la card della luce, anche una
    * presa o un interruttore (`switch.*`): «nel wall le luci si vedono
    * diverse». Come nelle stanze, dove le luci proposte sono gia' tutte uguali. */
@@ -835,9 +842,17 @@ export function comandiDellElenco(modello, fonte = {}) {
     return elenco(fonte.tapparelle).map((d) =>
       comandoPulito({ tipo: "tapparella", entita: d.entity }),
     );
+  /* Il termostato a coppia sta nella sua linguetta e fuori dalle altre due:
+   * una card sola, coi due numeri insieme, invece di una in Caldo che muove
+   * il caldo e una in Freddo che muove il freddo. */
+  const doppio = (d) => typeof aCoppia === "function" && Boolean(aCoppia(d.entity));
+  if (modello === "termostato")
+    return elenco(fonte.clima)
+      .filter(doppio)
+      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
   if (modello === "freddo" || modello === "caldo")
     return elenco(fonte.clima)
-      .filter((d) => zoneDelClima(d.tipo).includes(modello))
+      .filter((d) => !doppio(d) && zoneDelClima(d.tipo).includes(modello))
       .map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
   return [];
 }

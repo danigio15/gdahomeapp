@@ -68,10 +68,11 @@ test("la casella sta in cd_branding, e cd_connection vale solo se la plancia non
     }),
     ["Persona Titolare"],
   );
-  /* Vuota apposta e' vuota: qualcuno l'ha svuotata. */
+  /* Un elenco vuoto in cd_branding non butta il nome che questo vetro ha:
+   * la 1.11.10 lo scriveva anche quando nessuno aveva svuotato niente. */
   assert.deepEqual(
     amministratoriScritti({ branding: { admin_users: [] }, collegamento: { admin_users: ["x"] } }),
-    [],
+    ["x"],
   );
   assert.deepEqual(
     amministratoriScritti({ branding: { title: "Casa" }, collegamento: { admin_users: ["x"] } }),
@@ -181,9 +182,8 @@ for (const guscio of ["dashboard-runtime-it.js", "dashboard-runtime-en.js"]) {
     const testo = readFileSync(new URL(`../legacy/${guscio}`, import.meta.url), "utf8");
     const salva = /function edSaveGeneral\(\)\{[\s\S]*?\} function editorRenderVisib/.exec(testo)?.[0];
     assert.ok(salva, "edSaveGeneral c'e'");
-    assert.match(salva, /br\.admin_users = a \? \[a\] : \[\]; localStorage\.setItem\('cd_branding'/);
+    assert.match(salva, /if\(a\) br\.admin_users=\[a\]; else if\(prima\) br\.admin_users=\[\];/);
     assert.doesNotMatch(salva, /cn\.admin_users = a/);
-    assert.match(testo, /var adm=\(Array\.isArray\(br\.admin_users\)/);
     const visibile = /function updateEditButtonVisibility\(\) \{[\s\S]*?\n\}/.exec(testo)?.[0];
     assert.ok(visibile);
     assert.match(visibile, /window\.dmPuoConfigurare\(\) === true/);
@@ -191,3 +191,85 @@ for (const guscio of ["dashboard-runtime-it.js", "dashboard-runtime-en.js"]) {
     assert.match(testo, /subtitle: WIZ\.subtitle, admin_users: WIZ\.admin \? \[WIZ\.admin\] : \[\]/);
   });
 }
+
+/* ─── Il nome vuoto nell'app (1.11.10) ───────────────────────────────────── */
+
+/* `edSaveGeneral` com'e' scritta nel guscio, fatta girare con una casella e un
+ * deposito finti. */
+function salvaIGenerali(guscio, { casella, branding, collegamento = null }) {
+  const testo = readFileSync(new URL(`../legacy/${guscio}`, import.meta.url), "utf8");
+  const corpo = /function edSaveGeneral\(\)\{[\s\S]*?\} (?=function editorRenderVisib)/.exec(testo)[0];
+  const deposito = new Map();
+  if (branding) deposito.set("cd_branding", JSON.stringify(branding));
+  if (collegamento) deposito.set("cd_connection", JSON.stringify(collegamento));
+  const campi = { "ed-gen-title": "Casa", "ed-gen-sub": "", "ed-gen-admin": casella };
+  const finti = {
+    document: { getElementById: (id) => ({ value: campi[id] ?? "" }) },
+    localStorage: {
+      getItem: (k) => deposito.get(k) ?? null,
+      setItem: (k, v) => deposito.set(k, String(v)),
+    },
+    cdCfg: (k) => (deposito.has(k) ? JSON.parse(deposito.get(k)) : {}),
+    cdMarkDirty() {},
+    cdSyncPush() {},
+    edToast() {},
+    setTimeout() {},
+    location: { reload() {} },
+  };
+  const esegui = new Function(...Object.keys(finti), `${corpo}; edSaveGeneral();`);
+  esegui(...Object.values(finti));
+  return {
+    branding: JSON.parse(deposito.get("cd_branding") || "null"),
+    collegamento: JSON.parse(deposito.get("cd_connection") || "null"),
+  };
+}
+
+for (const guscio of ["dashboard-runtime-it.js", "dashboard-runtime-en.js"]) {
+  test(`${guscio}: «Salva generali» con la casella vuota che era vuota non scrive la casella`, () => {
+    /* Il vetro che il nome non lo conosce: salvare il titolo non lo cancella
+     * a tutti. Senza la chiave, il ponte tiene quello salvato. */
+    const ignaro = salvaIGenerali(guscio, { casella: "", branding: { title: "Vecchio" } });
+    assert.equal(ignaro.branding.title, "Casa");
+    assert.equal("admin_users" in ignaro.branding, false);
+    /* Chi la vedeva piena e la svuota, la svuota davvero. */
+    const svuotata = salvaIGenerali(guscio, {
+      casella: "",
+      branding: { admin_users: ["Persona Titolare"] },
+    });
+    assert.deepEqual(svuotata.branding.admin_users, []);
+    /* E anche il nome rimasto nel cd_connection di questo vetro. */
+    const dalVetro = salvaIGenerali(guscio, {
+      casella: "",
+      branding: {},
+      collegamento: { token: "t", admin_users: ["Persona Titolare"] },
+    });
+    assert.deepEqual(dalVetro.branding.admin_users, []);
+    assert.equal("admin_users" in dalVetro.collegamento, false);
+    assert.equal(dalVetro.collegamento.token, "t");
+    /* Scritto un nome, va in cd_branding. */
+    const scritta = salvaIGenerali(guscio, { casella: " Persona Titolare ", branding: {} });
+    assert.deepEqual(scritta.branding.admin_users, ["Persona Titolare"]);
+  });
+
+  test(`${guscio}: la casella mostra il nome anche quando cd_branding ha un elenco vuoto`, () => {
+    const testo = readFileSync(new URL(`../legacy/${guscio}`, import.meta.url), "utf8");
+    assert.match(
+      testo,
+      /var adm=\(Array\.isArray\(br\.admin_users\)&&br\.admin_users\[0\]\)\|\|\(cn2\.admin_users&&cn2\.admin_users\[0\]\)\|\|'';/,
+    );
+  });
+}
+
+test("il nome si travasa anche da un vetro gia' in pari con la configurazione", () => {
+  const persistenza = readFileSync(
+    new URL("../src/sections/config-persistence-section.js", import.meta.url),
+    "utf8",
+  );
+  const lettura = /async function hydrateRemote[\s\S]*?\n\}/.exec(persistenza)[0];
+  assert.match(lettura, /dashboardmodern:persistence-hydrated/);
+  const sorgente = readFileSync(
+    new URL("../src/sections/la-config-e-di-chi-la-amministra-section.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(sorgente, /"dashboardmodern:persistence-hydrated"/);
+});

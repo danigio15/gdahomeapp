@@ -5485,4 +5485,12 @@ export default Object.freeze({
   "On the rest screen: how charged it is and whether it is plugged in": "在待机屏幕上显示电量以及是否接通电源",
   "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "例如 Home Assistant 应用的电池传感器。留空：使用平板浏览器提供的数值",
   "Optional: the “is charging” sensor or the battery state": "可选：“正在充电”传感器或电池状态",
+  "Thermostat": "恒温器",
+  "Thermostats": "恒温器",
+  "No thermostat configured": "未配置恒温器",
+  "Thermostats out of season": "非当季的恒温器",
+  "Lower the heating": "调低制热",
+  "Raise the heating": "调高制热",
+  "Lower the cooling": "调低制冷",
+  "Raise the cooling": "调高制冷",
 });

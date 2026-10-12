@@ -21,6 +21,7 @@ import { join } from "node:path";
 
 import {
   amministratoriDellaPlancia,
+  conservaGliAmministratori,
   nomiPuliti,
   puoConfigurare,
   stessaPersona,
@@ -414,3 +415,56 @@ async function attendi(condizione, { entro = 3000 } = {}) {
     await new Promise((ok) => setTimeout(ok, 10));
   }
 }
+
+/* ─── Un salvataggio che la casella non la nomina non la svuota ──────────── */
+
+test("un cd_branding senza la casella non cancella il nome salvato", () => {
+  const salvati = { cd_branding: '{"title":"Casa","admin_users":["Persona Titolare"]}' };
+  const senza = conservaGliAmministratori({ cd_branding: '{"title":"Nuovo"}', x: "1" }, salvati);
+  assert.deepEqual(JSON.parse(senza.cd_branding), {
+    title: "Nuovo",
+    admin_users: ["Persona Titolare"],
+  });
+  assert.equal(senza.x, "1");
+  /* Svuotarla si puo', ma lo si dice. */
+  const vuota = { cd_branding: '{"title":"Casa","admin_users":[]}' };
+  assert.equal(conservaGliAmministratori(vuota, salvati), vuota);
+  /* L'azzeramento non ha cd_branding, e resta com'e'. */
+  const azzerata = { cd_stanze: "[]" };
+  assert.equal(conservaGliAmministratori(azzerata, salvati), azzerata);
+  /* Senza nome salvato non c'e' niente da rimettere. */
+  const prima = { cd_branding: '{"title":"Casa"}' };
+  assert.equal(conservaGliAmministratori(prima, { cd_branding: '{"title":"x"}' }), prima);
+});
+
+test("l'amministratore salva i Generali da un vetro che il nome non lo sa: il nome resta", async () => {
+  const casa = unaCasa({ admin: ["Persona Titolare"] });
+  try {
+    /* Lo scatto di una plancia di ieri, o di un vetro non ancora riletto:
+     * cd_branding c'e', la casella no. */
+    const ignaro = {
+      id: 7,
+      type: "dashboardmodern/config/set",
+      snapshot: {
+        values: { cd_branding: '{"title":"Nuovo"}', cd_stanze: "[1]" },
+        keys_revision: 1,
+      },
+    };
+    const risposta = await casa.commissioni.rispondi(ignaro, {
+      chiChiede: TITOLARE,
+      puoAmministrare: true,
+    });
+    assert.equal(risposta.result.status, "saved");
+    const salvato = JSON.parse(casa.configurazione.leggi("primary").snapshot.values.cd_branding);
+    assert.equal(salvato.title, "Nuovo");
+    assert.deepEqual(salvato.admin_users, ["Persona Titolare"]);
+    /* E la restrizione vale ancora. */
+    const altro = await casa.commissioni.rispondi(casa.salva({ cd_stanze: "[2]" }), {
+      chiChiede: ALTRO_ADMIN,
+      puoAmministrare: true,
+    });
+    assert.equal(altro.error?.code, "unauthorized");
+  } finally {
+    casa.via();
+  }
+});

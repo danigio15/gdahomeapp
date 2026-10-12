@@ -18,6 +18,7 @@
  */
 
 import { posizioneSecondoVerso, statoSecondoVerso } from "./verso-aperture.js";
+import { obiettiviDelClima, obiettivoMostrato } from "./i-due-obiettivi-del-clima.js";
 
 const clean = (value) => String(value ?? "").trim();
 
@@ -124,7 +125,12 @@ export function climaDellaStanza(entita = [], states = {}) {
     entity: scelta,
     modo: stato,
     acceso: ACCESO.test(stato),
-    obiettivo: numero(attributi.temperature),
+    /* Il termostato col caldo e il freddo non ha `temperature`: la testata
+     * prende l'estremo che la modalita' rende vero (il basso in caldo, l'alto
+     * in freddo). In automatico i numeri sono due, e in un posto da uno solo
+     * non se ne sceglie uno a caso: non si scrive. */
+    obiettivo:
+      numero(attributi.temperature) ?? obiettivoMostrato(obiettiviDelClima(attributi, stato)),
     ambiente: numero(attributi.current_temperature),
   };
 }

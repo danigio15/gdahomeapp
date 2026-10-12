@@ -5579,4 +5579,12 @@ export default Object.freeze({
   "On the rest screen: how charged it is and whether it is plugged in": "待機画面に残量と充電中かどうかを表示します",
   "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "例：Home Assistant アプリのバッテリーセンサー。空欄：タブレットのブラウザーが提供する値",
   "Optional: the “is charging” sensor or the battery state": "任意：「充電中」センサーまたはバッテリーの状態",
+  "Thermostat": "サーモスタット",
+  "Thermostats": "サーモスタット",
+  "No thermostat configured": "サーモスタットが設定されていません",
+  "Thermostats out of season": "季節外のサーモスタット",
+  "Lower the heating": "暖房を下げる",
+  "Raise the heating": "暖房を上げる",
+  "Lower the cooling": "冷房を下げる",
+  "Raise the cooling": "冷房を上げる",
 });

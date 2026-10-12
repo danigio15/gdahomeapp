@@ -5603,4 +5603,12 @@ export default Object.freeze({
   "On the rest screen: how charged it is and whether it is plugged in": "Op het rustscherm: hoe vol hij is en of hij aan de lader hangt",
   "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "Bijvoorbeeld de batterijsensor van de Home Assistant-app. Leeg: die van de browser van de tablet",
   "Optional: the “is charging” sensor or the battery state": "Optioneel: de sensor ‘wordt opgeladen’ of de batterijstatus",
+  "Thermostat": "Thermostaat",
+  "Thermostats": "Thermostaten",
+  "No thermostat configured": "Geen thermostaat ingesteld",
+  "Thermostats out of season": "Thermostaten buiten het seizoen",
+  "Lower the heating": "Verwarming lager",
+  "Raise the heating": "Verwarming hoger",
+  "Lower the cooling": "Koeling lager",
+  "Raise the cooling": "Koeling hoger",
 });
