@@ -578,6 +578,37 @@ test("col codice di prova entrano al massimo cinque telefoni", async () => {
   }
 });
 
+test("col codice di prova, chi entra non spende un tentativo", async () => {
+  /* Cinque telefoni dallo stesso indirizzo, tutti col codice giusto: se
+   * l'abbinamento riuscito tenesse il suo tentativo, il sesto si sentirebbe
+   * dire «troppi tentativi». Si sente dire invece che i telefoni di prova
+   * sono finiti — e anche quello, avendo il codice in mano, non si conta. */
+  const c = unPortiere();
+  try {
+    const { codice } = c.casaDiProva.nuova({ utente: REVISIONE });
+    for (let i = 0; i < TELEFONI_DI_PROVA; i += 1) {
+      const presa = presaFinta();
+      c.portiere.accogli(presa, { da: "centralino 17.0.0.1" });
+      const telefono = unTelefonoCheSiAbbina(presa, codice, { nome: `telefono ${i}` });
+      await giro();
+      assert.equal(telefono.lette()[0].t, "ecco");
+    }
+    assert.equal(c.abbinamento.stato().tentativiSbagliati, 0);
+    for (let i = 0; i < 3; i += 1) {
+      const presa = presaFinta();
+      c.portiere.accogli(presa, { da: "centralino 17.0.0.1" });
+      const ancora = unTelefonoCheSiAbbina(presa, codice);
+      await giro();
+      assert.ok(ancora.pronto, "la stretta di mano parte");
+      assert.equal(ancora.lette()[0].motivo, "telefoni");
+    }
+    assert.equal(c.abbinamento.stato().tentativiSbagliati, 0);
+    assert.equal(c.abbinamento.bloccato("centralino 17.0.0.1"), null);
+  } finally {
+    c.via();
+  }
+});
+
 test("la presa cifrata prova le altre chiavi solo sulla prima busta", () => {
   const prima = Buffer.alloc(32, 1);
   const seconda = Buffer.alloc(32, 2);

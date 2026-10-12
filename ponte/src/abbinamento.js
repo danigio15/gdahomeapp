@@ -78,6 +78,9 @@ export class Abbinamento {
     /* Quando, tutti insieme; e quando, per chi. */
     this._sbagliati = [];
     this._perChi = new Map();
+    /* Quante volte i conti si sono azzerati: un tentativo cominciato prima
+     * non ha piu' niente da restituire dopo. */
+    this._azzerati = 0;
   }
 
   /* Fabbrica un codice nuovo e spegne quello di prima.
@@ -115,6 +118,7 @@ export class Abbinamento {
      * guardando lo schermo, e non deve pagare per chi ha bussato prima. */
     this._sbagliati = [];
     this._perChi.clear();
+    this._azzerati += 1;
     return { codice, scadeIl: this._codice.scadeIl, utente: this._codice.utente };
   }
 
@@ -181,12 +185,53 @@ export class Abbinamento {
     this._codice = null;
     this._sbagliati = [];
     this._perChi.clear();
+    this._azzerati += 1;
     return { utente };
   }
 
-  /* Un tentativo andato male che non e' passato da `consuma`: e' la stretta
-   * di mano dell'abbinamento, dove il codice non viaggia e un codice
-   * sbagliato si vede da una busta che non si apre. Conta uguale. */
+  /* Un tentativo che comincia: la stretta di mano dell'abbinamento, prima
+   * che si guardi nessun segreto.
+   *
+   * Si conta **adesso**, e non quando si vede che e' andato male. Contarlo
+   * alla fine voleva dire che il tetto si guardava all'inizio e si riempiva
+   * solo alla fine: chi apriva venti strette di mano insieme dallo stesso
+   * indirizzo le vedeva passare tutte e venti, prima che la prima si
+   * contasse. Cosi' guardare e contare sono un passo solo, e la sesta di una
+   * raffica si sente dire di no come la sesta di una fila.
+   *
+   * Solleva `TroppiTentativi` se `da` deve aspettare, e altrimenti torna il
+   * tentativo: chi lo ha in mano lo restituisce con `restituisci` quando il
+   * telefono ha dimostrato di avere il codice. Quello che non torna resta
+   * contato — una busta che non si apre, una conferma sbagliata, una stretta
+   * lasciata a meta' — e non si conta una seconda volta. */
+  comincia(da = "?") {
+    const bloccatoFinoA = this.bloccato(da);
+    if (bloccatoFinoA) throw new TroppiTentativi("troppi tentativi", bloccatoFinoA);
+    const quando = this.sbagliato(da);
+    return { chi: gruppoDellIndirizzo(da), quando, azzerati: this._azzerati, restituito: false };
+  }
+
+  /* Il tentativo torna indietro: il telefono ha aperto la porta col codice
+   * giusto, e non deve pagare per averlo fatto. Una volta sola; e se nel
+   * frattempo i conti si sono azzerati — un codice nuovo, uno speso — non
+   * c'e' piu' niente da togliere. */
+  restituisci(tentativo) {
+    if (!tentativo || tentativo.restituito) return;
+    tentativo.restituito = true;
+    if (tentativo.azzerati !== this._azzerati) return;
+    const tutti = this._sbagliati.lastIndexOf(tentativo.quando);
+    if (tutti >= 0) this._sbagliati.splice(tutti, 1);
+    const suoi = this._perChi.get(tentativo.chi);
+    if (!suoi) return;
+    const suo = suoi.lastIndexOf(tentativo.quando);
+    if (suo >= 0) suoi.splice(suo, 1);
+    /* Chi non ha piu' niente di contato e' di nuovo uno che non ha mai
+     * sbagliato: il tetto di tutti insieme, per lui, non vale. */
+    if (!suoi.length) this._perChi.delete(tentativo.chi);
+  }
+
+  /* Un tentativo andato male che non e' passato da `consuma`, ne' da
+   * `comincia`. Conta uguale. Torna quando, per `comincia`. */
   sbagliato(da = "?") {
     const ora = this.adesso();
     this._sbagliati.push(ora);
@@ -210,6 +255,7 @@ export class Abbinamento {
     while (this._perChi.size > CHI_RICORDATI) {
       this._perChi.delete(this._perChi.keys().next().value);
     }
+    return ora;
   }
 
   /* Fino a quando `da` deve aspettare, o `null` se puo' provare.
