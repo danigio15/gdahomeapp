@@ -10,6 +10,25 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.10
+
+**La Configurazione è davvero di chi la amministra.** Il nome scritto in
+«Utente admin» restava sul dispositivo dove lo si scriveva, e altrove la
+Configurazione si apriva a tutti. Adesso il nome vale per tutta la casa: gli
+altri non vedono la Configurazione, e l'add-on rifiuta i salvataggi, i
+ripristini e il «Reset totale» di chiunque non sia quell'utente. Il nome va
+scritto intero, come in Home Assistant. Dopo l'aggiornamento riapri una volta
+la Configurazione sul dispositivo dove l'avevi scritto, o salvalo di nuovo.
+
+**Una plancia cancellata non torna più.** Rifacendo una plancia con lo stesso
+nome di una cancellata, il telefono le rimetteva dentro la configurazione di
+quella vecchia — anche «a muro». Adesso ogni plancia nuova parte pulita.
+
+**Da fuori casa, una licenza vecchia non chiude più fuori.** Un telefono o un
+browser abbinato quando la casa era Base restava sulla pagina Premium anche
+dopo che la casa era diventata Premium. Adesso ogni tanto chiede di nuovo la
+licenza, ed entra.
+
 ## 1.11.9
 
 **App su iPhone: niente più fasce bianche attorno alla plancia.** Con l'iPhone
