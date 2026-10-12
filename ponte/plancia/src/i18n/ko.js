@@ -5160,8 +5160,11 @@ export default Object.freeze({
   "Pack saved": "팩 저장됨",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "설정의 에너지 아래 배터리 탭에서 추가하면 팩이 여기에 표시됩니다: 충전 상태, 전압, 셀.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "충전 시 양수, 방전 시 음수. JK, JBD, Daly가 쓰는 방식 그대로입니다.",
+  "Current sign": "전류 부호",
+  "Positive when charging (JK, JBD, Daly)": "충전 시 양수 (JK, JBD, Daly)",
+  "Negative when charging": "충전 시 음수",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "BMS가 쓰는 부호 그대로: 충전 중에 음수로 쓴다면 「전류 부호」에서 그것을 선택하세요.",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "배터리가 충전 중인데 페이지가 「방전 중」이라고 하면 BMS가 전류를 반대로 씁니다: 「충전 시 음수」를 선택하세요.",
   "Remaining energy": "남은 에너지",
   "Save pack": "팩 저장",
   "State of charge (SoC)": "충전 상태 (SoC)",

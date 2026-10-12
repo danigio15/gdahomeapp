@@ -5190,8 +5190,11 @@ export default Object.freeze({
   "Pack saved": "Pakiet zapisany",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "Pakiety pojawią się tutaj, gdy dodasz je w karcie Baterie w sekcji Energia ustawień: poziom naładowania, napięcia, ogniwa.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "Dodatni podczas ładowania i ujemny podczas rozładowania, tak jak zapisują go JK, JBD i Daly.",
+  "Current sign": "Znak prądu",
+  "Positive when charging (JK, JBD, Daly)": "Dodatni przy ładowaniu (JK, JBD, Daly)",
+  "Negative when charging": "Ujemny przy ładowaniu",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "Ze znakiem, którego używa BMS: jeśli zapisuje prąd ujemny podczas ładowania, wybierz to w „Znak prądu”.",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "Jeśli strona pokazuje „Rozładowanie”, gdy bateria się ładuje, twój BMS zapisuje prąd odwrotnie: wybierz „Ujemny przy ładowaniu”.",
   "Remaining energy": "Pozostała energia",
   "Save pack": "Zapisz pakiet",
   "State of charge (SoC)": "Poziom naładowania (SoC)",

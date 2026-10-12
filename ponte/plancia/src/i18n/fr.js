@@ -5217,8 +5217,11 @@ export default Object.freeze({
   "Pack saved": "Bloc enregistré",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "Les blocs apparaissent ici dès que vous les ajoutez dans l'onglet Batteries, sous Énergie, des paramètres : état de charge, tensions, cellules.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "Positive en charge et négative en décharge, comme l'écrivent JK, JBD et Daly.",
+  "Current sign": "Signe du courant",
+  "Positive when charging (JK, JBD, Daly)": "Positif en charge (JK, JBD, Daly)",
+  "Negative when charging": "Négatif en charge",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "Avec le signe utilisé par le BMS : s'il l'écrit négatif en charge, choisissez-le dans « Signe du courant ».",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "Si la page indique « En décharge » alors que la batterie se charge, votre BMS écrit le courant à l'envers : choisissez « Négatif en charge ».",
   "Remaining energy": "Énergie restante",
   "Save pack": "Enregistrer le bloc",
   "State of charge (SoC)": "État de charge (SoC)",

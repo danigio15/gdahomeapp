@@ -5193,8 +5193,11 @@ export default Object.freeze({
   "Pack saved": "Pakket opgeslagen",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "Pakketten verschijnen hier zodra je ze toevoegt in het tabblad Batterijen onder Energie in de instellingen: laadtoestand, spanningen, cellen.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "Positief bij laden en negatief bij ontladen, zoals JK, JBD en Daly het schrijven.",
+  "Current sign": "Teken van de stroom",
+  "Positive when charging (JK, JBD, Daly)": "Positief bij laden (JK, JBD, Daly)",
+  "Negative when charging": "Negatief bij laden",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "Met het teken dat het BMS gebruikt: schrijft het de stroom negatief bij laden, kies dat bij „Teken van de stroom”.",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "Als de pagina „Ontladen” zegt terwijl de batterij laadt, schrijft je BMS de stroom andersom: kies „Negatief bij laden”.",
   "Remaining energy": "Resterende energie",
   "Save pack": "Pakket opslaan",
   "State of charge (SoC)": "Laadtoestand (SoC)",

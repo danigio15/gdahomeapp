@@ -5162,8 +5162,11 @@ export default Object.freeze({
   "Pack saved": "पैक सहेजा गया",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "पैक यहाँ तब दिखते हैं जब आप उन्हें सेटिंग्स में ऊर्जा के अंतर्गत बैटरियाँ टैब में जोड़ते हैं: चार्ज की स्थिति, वोल्टेज, सेल।",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "चार्ज होते समय धनात्मक और डिस्चार्ज होते समय ऋणात्मक, जैसे JK, JBD और Daly लिखते हैं।",
+  "Current sign": "करंट का चिह्न",
+  "Positive when charging (JK, JBD, Daly)": "चार्ज होते समय धनात्मक (JK, JBD, Daly)",
+  "Negative when charging": "चार्ज होते समय ऋणात्मक",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "BMS जिस चिह्न का उपयोग करता है उसके साथ: अगर चार्ज होते समय वह इसे ऋणात्मक लिखता है, तो «करंट का चिह्न» में वह चुनें।",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "अगर बैटरी चार्ज होते समय पेज «डिस्चार्ज हो रही है» दिखाता है, तो आपका BMS करंट उल्टा लिखता है: «चार्ज होते समय ऋणात्मक» चुनें।",
   "Remaining energy": "बची हुई ऊर्जा",
   "Save pack": "पैक सहेजें",
   "State of charge (SoC)": "चार्ज की स्थिति (SoC)",

@@ -5142,8 +5142,11 @@ export default Object.freeze({
   "Pack saved": "تم حفظ الحزمة",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "تظهر الحزم هنا عندما تضيفها في تبويب البطاريات ضمن الطاقة في الإعدادات: حالة الشحن، الجهود، الخلايا.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "موجب عند الشحن وسالب عند التفريغ، كما تكتبه JK وJBD وDaly.",
+  "Current sign": "إشارة التيار",
+  "Positive when charging (JK, JBD, Daly)": "موجب أثناء الشحن (JK وJBD وDaly)",
+  "Negative when charging": "سالب أثناء الشحن",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "بالإشارة التي يستخدمها نظام إدارة البطارية: إذا كتبه سالبًا أثناء الشحن فاختر ذلك في «إشارة التيار».",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "إذا عرضت الصفحة «تفريغ» بينما البطارية تُشحن، فإن نظام إدارة البطارية يكتب التيار بالعكس: اختر «سالب أثناء الشحن».",
   "Remaining energy": "الطاقة المتبقية",
   "Save pack": "حفظ الحزمة",
   "State of charge (SoC)": "حالة الشحن (SoC)",

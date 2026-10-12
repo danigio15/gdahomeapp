@@ -5189,8 +5189,11 @@ export default Object.freeze({
   "Pack saved": "Блок сохранён",
   "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
     "Блоки появятся здесь, когда вы добавите их на вкладке «Батареи» в группе «Энергия» настроек: уровень заряда, напряжения, ячейки.",
-  "Positive when charging and negative when discharging, as JK, JBD and Daly write it.":
-    "Положительный при заряде и отрицательный при разряде — так, как его пишут JK, JBD и Daly.",
+  "Current sign": "Знак тока",
+  "Positive when charging (JK, JBD, Daly)": "Положительный при зарядке (JK, JBD, Daly)",
+  "Negative when charging": "Отрицательный при зарядке",
+  "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.": "Со знаком, который использует BMS: если при зарядке он пишет ток отрицательным, выберите это в «Знак тока».",
+  "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.": "Если страница показывает «Разряд», когда батарея заряжается, ваш BMS пишет ток наоборот: выберите «Отрицательный при зарядке».",
   "Remaining energy": "Оставшаяся энергия",
   "Save pack": "Сохранить блок",
   "State of charge (SoC)": "Уровень заряда (SoC)",
