@@ -204,6 +204,17 @@ class ArchivioDelleCase {
     );
   }
 
+  /// Questa casa la chiave del filo l'ha legata, e una busta aperta l'ha
+  /// provato (`CasaConosciuta.legata`): da qui in poi lo si pretende, anche
+  /// alla prossima apertura dell'app.
+  ///
+  /// Si scrive una volta sola: gia' segnata non si riscrive.
+  Future<void> segnaIlLegame(String id) async {
+    final casa = quella(id);
+    if (casa == null || casa.legata) return;
+    await _cambia(id, (vecchia) => vecchia.con(legata: true));
+  }
+
   Future<void> _cambia(
     String id,
     CasaConosciuta Function(CasaConosciuta) come,

@@ -163,8 +163,9 @@ class Filo {
   bool _legameVisto;
 
   /// Chi va avvisato la prima volta che questa casa si vede legare: e' chi
-  /// se lo vorra' scrivere, per la prossima volta che l'app si apre. Oggi
-  /// non lo passa nessuno, e il ricordo vive quanto il filo.
+  /// se lo scrive, per la prossima volta che l'app si apre: il collegamento
+  /// lo segna nell'archivio delle case (`CasaConosciuta.legata`), e alla
+  /// prossima apertura torna qui come `legameGiaVisto`.
   final void Function()? quandoLega;
 
   /// Se questa casa il legame l'ha gia' ripetuto, con una busta aperta a

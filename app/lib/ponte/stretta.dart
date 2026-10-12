@@ -64,11 +64,10 @@
 /// — un `da_casa` girato, un `gzip` tolto — fa si' che la prima busta non si
 /// apra. Un ponte di prima non lo ripete, e si va come sempre; ma una casa
 /// che l'ha ripetuto una volta deve ripeterlo sempre ([LegameMancato]): se
-/// lo ricorda il filo di quella casa (`filo.dart`), finche' l'app resta
-/// aperta. Ricordarselo anche fra un'apertura e l'altra vorrebbe dire
-/// scriverlo nell'archivio delle case, e il filo e' gia' pronto a farlo
-/// (`legameGiaVisto`, `quandoLega`): manca solo chi glielo passi. Vedi
-/// `cifra.dart`.
+/// lo ricorda il filo di quella casa (`filo.dart`) finche' l'app resta
+/// aperta, e l'archivio delle case fra un'apertura e l'altra
+/// (`CasaConosciuta.legata`, scritto da `casa/collegamento.dart` con
+/// `quandoLega` e riletto come `legameGiaVisto`). Vedi `cifra.dart`.
 ///
 /// `app` e' il numero di costruzione di quest'app (`costruzioneDiQuestApp`):
 /// la casa lo confronta con la versione minima del giorno dei pagamenti, e a

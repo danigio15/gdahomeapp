@@ -280,6 +280,44 @@ void main() {
       throwsA(isA<Exception>()),
     );
   });
+
+  test(
+    'il legame si ricorda, si scrive una volta, e va via con la casa',
+    () async {
+      final casa = await archivio.aggiungi(nome: 'Casa', segno: 'segno-uno');
+      expect(casa.legata, isFalse);
+
+      await archivio.segnaIlLegame(casa.id);
+      final scritte = cassaforte.scritture;
+      await archivio.segnaIlLegame(casa.id);
+      expect(cassaforte.scritture, scritte, reason: 'gia\' segnato');
+
+      /* Resta anche cambiando il resto della casa. */
+      await archivio.rinomina(casa.id, 'Al mare');
+      final riaperto = ArchivioDelleCase(cassaforte);
+      await riaperto.apri();
+      expect(riaperto.quella(casa.id)!.legata, isTrue);
+
+      await riaperto.togli(casa.id);
+      final dopo = ArchivioDelleCase(cassaforte);
+      await dopo.apri();
+      expect(dopo.quella(casa.id), isNull);
+    },
+  );
+
+  test('un archivio di prima del legame si legge come «mai legata»', () {
+    final letta = CasaConosciuta.daJson({
+      'id': 'a',
+      'nome': 'Casa',
+      'segno': 'segno-uno',
+    })!;
+    expect(letta.legata, isFalse);
+    expect(letta.inJson().containsKey('legata'), isFalse);
+    expect(
+      CasaConosciuta.daJson(letta.con(legata: true).inJson())!.legata,
+      isTrue,
+    );
+  });
 }
 
 /// Una cassaforte che legge e non scrive: il browser su una pagina non sicura.
