@@ -1410,7 +1410,7 @@ class TelefonoCollegato {
       chiaveDelFilo: chiaveBuona,
       stretta: lega ? await improntaDellaStretta(testo, pronto) : null,
     );
-    _mandaIlPronto(pronto);
+    if (!_mandaIlPronto(pronto)) return;
     /* Come il ponte vero: si comprime verso chi ha detto di saper aprire. */
     _busta = Busta(
       chiave,
@@ -1438,8 +1438,20 @@ class TelefonoCollegato {
   bool _legaCon(Map<String, dynamic> detto) =>
       _ponte.conosceIlLegame && detto['lega'] == versioneDelLegame;
 
-  void _mandaIlPronto(String pronto) =>
+  /* Con la stessa guardia di `manda`: fra la domanda e il pronto c'e' il
+   * conto della chiave, e su una macchina lenta il telefono che non ha avuto
+   * risposta in tempo ha gia' chiuso per riprovare. Il ponte vero quel pronto
+   * lo perde e basta; qui senza guardia faceva cadere la prova. Torna se il
+   * pronto e' partito. */
+  bool _mandaIlPronto(String pronto) {
+    if (_presa.readyState != WebSocket.open) return false;
+    try {
       _presa.add(_ponte.perStradaIlPronto?.call(pronto) ?? pronto);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   bool _abbinando = false;
   String _telefono = '';

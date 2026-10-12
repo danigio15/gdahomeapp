@@ -509,9 +509,45 @@ function exposeConnector(node, active) {
   }
 }
 
+/* Il binario sotto la linea.
+ *
+ * La linea accesa adesso e' fatta di puntini che scorrono: belli, ma da soli
+ * non dicono dove vanno — fra un puntino e l'altro c'e' il vuoto. Sotto ci va
+ * il suo binario, la stessa strada in tinta tenue e continua: si vede il
+ * percorso intero, e i puntini ci corrono sopra. E' una copia della linea —
+ * stessa forma, stesso colore — che sta un gradino sotto di lei e non si
+ * tocca. Si rifa' la forma solo se la linea l'ha cambiata. */
+const FORME = ["d", "x1", "y1", "x2", "y2", "points"];
+
+function binario(node, color, active) {
+  const madre = node.parentNode;
+  if (!madre || !/^(path|line|polyline)$/i.test(node.tagName)) return;
+  let sotto = node.__dmBinario;
+  if (!sotto || sotto.parentNode !== madre) {
+    sotto = doc.createElementNS(SVG_NS, node.tagName.toLowerCase());
+    sotto.classList.add("dm-flow-binario");
+    sotto.setAttribute("aria-hidden", "true");
+    madre.insertBefore(sotto, node);
+    node.__dmBinario = sotto;
+  }
+  /* La scia di luce si misura in centesimi del percorso, qualunque sia la sua
+   * lunghezza: una linea corta e una lunga hanno la stessa cometa. */
+  if (node.getAttribute("pathLength") !== "100") node.setAttribute("pathLength", "100");
+  for (const nome of FORME) {
+    const valore = node.getAttribute(nome);
+    if (valore === null) continue;
+    if (sotto.getAttribute(nome) !== valore) sotto.setAttribute(nome, valore);
+  }
+  setStyleProperty(sotto, "--dm-flow-color", color);
+  const larghezza = node.style?.getPropertyValue?.("--dm-flow-width");
+  if (larghezza) setStyleProperty(sotto, "--dm-flow-width", larghezza);
+  scriviDatoSeCambia(sotto, "acceso", active ? "true" : "false");
+}
+
 function colorNode(node, color, active) {
   if (!node) return;
   exposeConnector(node, active);
+  binario(node, color, active);
   node.classList.toggle("active", active);
   node.classList.toggle("dm-energy-flow-active", active);
   node.classList.toggle("dm-energy-flow-idle", !active);
@@ -615,7 +651,7 @@ function bindNodeClick(element, node, period) {
  * dai bordi anche coi puntini. Il nome va su due righe se serve, e la scritta
  * scende di mezzo pixel alla volta finche' non entra — non sotto i 6 px. Si
  * rifa' solo quando cambiano il nome o la misura del cerchio. */
-const NOME_PIU_PICCOLO = 6;
+const NOME_PIU_PICCOLO = 8;
 
 function adattaIlNome(cerchio, nome) {
   const largo = cerchio?.clientWidth || 0;
@@ -715,7 +751,7 @@ function pruneStale(stage, keep) {
  * quel passo ci deve stare una bolla piu' un dito d'aria. Qui si guarda la
  * larghezza vera e si stringe quel tanto che basta. Non si ingrandisce mai:
  * il conto del modello resta il tetto. */
-const ARIA_FRA_BOLLE = 10;
+const ARIA_FRA_BOLLE = 16;
 const QUANTO_STRETTE_AL_MASSIMO = 0.55;
 
 /* Com'e' messa la scena adesso: quanto misura una bolla a riposo e se le bolle
@@ -727,8 +763,8 @@ const QUANTO_STRETTE_AL_MASSIMO = 0.55;
  * una terza soglia — vorrebbe dire due risposte alla stessa domanda, che e'
  * il difetto che questa passata e' venuta a togliere. */
 const SOGLIE = Object.freeze([
-  { quando: "(max-width: 480px)", bolla: 75, stretto: true },
-  { quando: "(max-width: 768px)", bolla: 85, stretto: true },
+  { quando: "(max-width: 480px)", bolla: 96, stretto: true },
+  { quando: "(max-width: 768px)", bolla: 104, stretto: true },
 ]);
 
 function comeSiamoMessi() {
@@ -737,7 +773,7 @@ function comeSiamoMessi() {
       if (root.matchMedia?.(soglia.quando)?.matches) return soglia;
     } catch (_errore) {}
   }
-  return { bolla: 115, stretto: false };
+  return { bolla: 130, stretto: false };
 }
 
 /* Quante bolle stanno nella fila piu' affollata. Sul largo e' una riga sola;
@@ -753,14 +789,42 @@ function quanteInFila(nodes, stretto) {
   return perFila.size ? Math.max(...perFila.values()) : 1;
 }
 
+/* Il passo piu' stretto fra due bolle della stessa fila, in centesimi del
+ * palco: lo dice il disegno, che sul telefono spartisce la larghezza in un
+ * modo e sul largo in un altro. Chiederlo a lui invece di rifare il conto qui
+ * vuol dire una regola sola. */
+function passoPiuStretto(nodes, stretto) {
+  const perFila = new Map();
+  for (const nodo of nodes) {
+    const dove = stretto ? nodo.mobile : nodo.desktop;
+    if (!dove) continue;
+    const fila = perFila.get(dove.top) || [];
+    fila.push(Number(dove.left));
+    perFila.set(dove.top, fila);
+  }
+  let passo = 0;
+  for (const fila of perFila.values()) {
+    fila.sort((a, b) => a - b);
+    for (let i = 1; i < fila.length; i += 1) {
+      const qui = fila[i] - fila[i - 1];
+      if (qui > 0 && (!passo || qui < passo)) passo = qui;
+    }
+  }
+  return passo;
+}
+
 function quantoCiStaNelPalco(stage, model, scala) {
   const largo = stage?.getBoundingClientRect?.().width || 0;
   const { bolla, stretto } = comeSiamoMessi();
   const inFila = quanteInFila(model.nodes, stretto);
   if (!largo || inFila <= 1) return scala;
-  const passo = largo / (inFila + 1);
+  const passo = (largo * passoPiuStretto(model.nodes, stretto)) / 100 || largo / (inFila + 1);
   const ciSta = Math.max(0, passo - ARIA_FRA_BOLLE) / bolla;
-  return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(scala, Number(ciSta.toFixed(3))));
+  /* Sul telefono comanda solo lo spazio vero: il rimpicciolimento del modello
+   * per «tante bolle» e' pensato per una fila sola, e su due file lo si
+   * pagava due volte. */
+  const tetto = stretto ? 1 : scala;
+  return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(tetto, Number(ciSta.toFixed(3))));
 }
 
 /* Recovered from the Beta 22 dynamic renderer and adapted: it now replaces the
@@ -1151,7 +1215,61 @@ export function refreshEnergyFlows() {
   /* Per ultimo, quando i numeri sono tutti scritti: prima non ci sarebbe
    * niente da misurare. */
   adattaINumeriDelleBolle(doc);
+  riempiGliAnelli(doc);
   return touched;
+}
+
+/* ── L'anello intorno al cerchio ─────────────────────────────────────────
+ *
+ * «Voglio qualcosa di moderno, ma che ci siano i flussi.» Ogni cerchio porta
+ * intorno un anello che si riempie quanto pesa il suo numero: la batteria
+ * quanto e' carica, gli altri quanto valgono rispetto al piu' grosso della
+ * scena. Cosi' a colpo d'occhio si vede chi tira, senza leggere un numero.
+ *
+ * Il numero si rilegge dal testo della bolla — quello che chi guarda vede —
+ * e non dagli stati: la scena ha tre viste (istante, giorno, mese) e ognuna
+ * scrive i suoi numeri a modo suo, e il testo e' il solo posto dove stanno
+ * tutti nella stessa forma. */
+const SCALE_DEL_NUMERO = { w: 1, kw: 1e3, mw: 1e6, wh: 1, kwh: 1e3, mwh: 1e6 };
+
+/** Il numero di una bolla in unita' base (W o Wh); `null` se non ce n'e'. */
+export function numeroDellaBolla(testo) {
+  const scritto = String(testo ?? "");
+  const trovato = scritto.match(/(\d[\d.,]*)\s*(mwh|kwh|wh|mw|kw|w)\b/i);
+  if (!trovato) return null;
+  let cifre = trovato[1];
+  /* «1.234,5»: il punto separa le migliaia. «5.10» senza virgola: decimale. */
+  if (cifre.includes(",")) cifre = cifre.replace(/\./g, "").replace(",", ".");
+  const valore = Number.parseFloat(cifre);
+  if (!Number.isFinite(valore)) return null;
+  return valore * SCALE_DEL_NUMERO[trovato[2].toLowerCase()];
+}
+
+/** Quanto si riempie l'anello: da 0 a 1, con un filo visibile se c'e' qualcosa. */
+export function quotaDellAnello(valore, riferimento) {
+  if (!(valore > 0) || !(riferimento > 0)) return 0;
+  return Math.min(1, Math.max(0.04, valore / riferimento));
+}
+
+function riempiGliAnelli(targetDocument = doc) {
+  for (const palco of targetDocument?.querySelectorAll?.("#page-energy .flow-stage") || []) {
+    const bolle = [...palco.querySelectorAll(".node")];
+    const valori = new Map();
+    let massimo = 0;
+    for (const bolla of bolle) {
+      const valore = numeroDellaBolla(bolla.querySelector("span")?.textContent);
+      valori.set(bolla, valore);
+      if (valore > massimo) massimo = valore;
+    }
+    for (const bolla of bolle) {
+      let quota = quotaDellAnello(valori.get(bolla), massimo);
+      const carica = /n-battery/.test(bolla.id || "")
+        ? Number.parseFloat(bolla.querySelector("#v-battery-soc,.dm-battery-soc")?.textContent)
+        : Number.NaN;
+      if (Number.isFinite(carica)) quota = Math.min(1, Math.max(0, carica / 100));
+      setStyleProperty(bolla, "--dm-quota", String(Math.round(quota * 1000) / 1000));
+    }
+  }
 }
 
 /* ── Il numero della bolla sta su una riga ───────────────────────────────
@@ -1419,8 +1537,33 @@ function installStyles() {
        nostra riga di stile non deve poter cancellare il disegno di chi c'era
        prima: se non stiamo guidando noi, si vede quello che dice il guscio. */
     [data-dm-energy-flows] .flow-line:not(.active):not(.dm-energy-flow-active){opacity:0!important}
-    .flow-line.dm-energy-flow-active,path.dm-energy-flow-active,line.dm-energy-flow-active,polyline.dm-energy-flow-active{stroke:var(--dm-flow-color)!important;stroke-dasharray:12 9!important;stroke-linecap:round!important;animation-name:dmEnergyFlowDash!important;animation-duration:.8s!important;animation-timing-function:linear!important;animation-iteration-count:infinite!important;animation-play-state:running!important;will-change:stroke-dashoffset!important}
-    @keyframes dmEnergyFlowDash{from{stroke-dashoffset:0}to{stroke-dashoffset:-42}}
+    /* La scia di luce: una cometa per tratto, che corre sul binario tenue
+       della sua strada. Il percorso e' lungo cento (\`pathLength\`, vedi
+       \`binario\`): una scia di quattordici, e il vuoto per il resto. */
+    .flow-line.dm-energy-flow-active,path.dm-energy-flow-active,line.dm-energy-flow-active,polyline.dm-energy-flow-active{stroke:var(--dm-flow-color)!important;stroke-dasharray:14 86!important;stroke-linecap:round!important;animation-name:dmEnergyFlowDash!important;animation-duration:1.6s!important;animation-timing-function:linear!important;animation-iteration-count:infinite!important;animation-play-state:running!important;will-change:stroke-dashoffset!important}
+    @keyframes dmEnergyFlowDash{from{stroke-dashoffset:0}to{stroke-dashoffset:-100}}
+    .dm-flow-binario{fill:none!important;stroke:var(--dm-flow-color)!important;stroke-opacity:.2!important;stroke-width:var(--dm-flow-width,3px)!important;stroke-linecap:round!important;stroke-dasharray:none!important;animation:none!important;filter:none!important;pointer-events:none!important;opacity:1!important}
+    .dm-flow-binario[data-acceso="false"]{display:none!important}
+    #page-energy .flow-line.dm-energy-flow-active,#page-energy path.dm-energy-flow-active{stroke-width:calc(var(--dm-flow-width,3px) + 1.5px)!important;filter:drop-shadow(0 0 5px var(--dm-flow-color))!important}
+    .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:calc(var(--dm-flow-duration,.8s) * 2)!important}
+    /* I cerchi come le tessere della plancia: la stessa carta, lo stesso
+       bordo sottile, la stessa ombra morbida. Il colore non sta piu' nel
+       bordo pieno ma nell'anello che gira intorno e si riempie quanto pesa
+       il numero (\`riempiGliAnelli\`): la batteria quanto e' carica, gli
+       altri rispetto al piu' grosso della scena. */
+    #page-energy .flow-stage .node{
+      background:var(--card-bg,#fff)!important;
+      border:1px solid var(--card-border,rgba(148,163,184,.25))!important;
+      box-shadow:0 4px 14px rgba(15,23,42,.08)!important}
+    #page-energy .flow-stage .node::before{content:""!important;position:absolute!important;inset:-7px!important;border-radius:50%!important;z-index:-1!important;pointer-events:none!important;
+      background:conic-gradient(var(--n-color,#64748b) calc(var(--dm-quota,0) * 1turn),color-mix(in srgb,var(--n-color,#64748b) 16%,transparent) 0)!important;
+      -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))!important;
+      mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))!important;
+      transition:background .4s ease!important}
+    #page-energy .flow-stage .node::after{display:none!important}
+    #page-energy .flow-stage .node.active,#page-energy .flow-stage .node.dm-flow-node[data-dm-flow-active="true"]{
+      box-shadow:0 4px 14px rgba(15,23,42,.08),0 0 22px color-mix(in srgb,var(--n-color,#3b82f6) 30%,transparent)!important}
+    #page-energy .flow-stage .n-home{--n-color:#3b82f6!important}
     /* Nessuna eccezione per "riduci movimento": il tratteggio che scorre non e'
        una decorazione ma l'unico segnale che l'energia sta passando, e la
        plancia deve mostrare le stesse linee su ogni schermo. Quella preferenza
@@ -1441,7 +1584,6 @@ function installStyles() {
     .flow-stage .node.dm-flow-node .node-label{width:72%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
     .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
     .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
-    .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:var(--dm-flow-duration,.8s)!important}
     /* La soglia e' quella del guscio, 768, e non una nostra.
      *
      * Qui c'era 820. Sembra un dettaglio e non lo e': il guscio cambia TUTTO a
@@ -1461,6 +1603,37 @@ function installStyles() {
      * prima o poi non vanno d'accordo. */
     @media(max-width:768px){
       .flow-stage .node.dm-flow-node{left:var(--dm-flow-mobile-left,50%)!important;top:var(--dm-flow-mobile-top,83%)!important}
+    }
+    /* I cerchi sotto la Casa, che si leggono.
+     *
+     * «I dati dentro entrano a mala pena e sono troppo piccoli, il testo
+     * ancora tagliato.» Le stanze e i carichi erano i cerchi piu' piccoli del
+     * palco — 75 punti sul telefono — e per farci stare il nome il guscio lo
+     * portava a 7 pixel: «LOCALE TECNICO» toccava il bordo. Crescono solo
+     * loro, coi loro nomi e numeri; Solare, Rete, Batteria e Casa restano come
+     * sono. Le misure sono le stesse che legge \`comeSiamoMessi\`, cosi' il
+     * conto di quante bolle stanno in fila resta giusto: sul telefono tre per
+     * fila si prendono tutto lo spazio che c'e', e non di piu'. */
+    #page-energy .n-load{width:130px!important;height:130px!important}
+    /* E la Casa un poco piu' piccola: «riesci a fare un po' piu' piccolo
+     * quello della casa». Resta il cerchio piu' grande, ma non schiaccia piu'
+     * la fila di sotto. */
+    #page-energy .n-home{width:145px!important;height:145px!important}
+    #page-energy .n-load .node-label{font-size:11.5px!important;letter-spacing:0!important}
+    #page-energy #view-ist .n-load span{font-size:20px!important}
+    #page-energy .n-load .node-icon{font-size:26px!important}
+    @media(max-width:768px){
+      #page-energy .flow-stage{height:800px!important}
+      #page-energy .n-home{width:110px!important;height:110px!important}
+      #page-energy .n-load{width:104px!important;height:104px!important}
+      #page-energy .n-load .node-label{font-size:10.5px!important;letter-spacing:0!important}
+      #page-energy #view-ist .n-load span{font-size:18px!important}
+      #page-energy .n-load .node-icon{font-size:23px!important}
+    }
+    @media(max-width:480px){
+      #page-energy .flow-stage{height:720px!important}
+      #page-energy .n-home{width:96px!important;height:96px!important}
+      #page-energy .n-load{width:96px!important;height:96px!important}
     }
   `,
   );

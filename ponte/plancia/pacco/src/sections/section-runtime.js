@@ -27856,7 +27856,7 @@ function leggiTreni(voce2, stati) {
   const partenza = pulito22(
     attributo(principale, ["partenza", "origin", "departure", "from", "stazione_partenza"])
   );
-  const binario = pulito22(attributo(principale, ["binario", "platform", "track"]));
+  const binario2 = pulito22(attributo(principale, ["binario", "platform", "track"]));
   const orario2 = pulito22(
     attributo(principale, ["orario", "time", "scheduled", "orario_partenza", "departure_time"])
   );
@@ -27868,7 +27868,7 @@ function leggiTreni(voce2, stati) {
     else if (ritardo >= RITARDO_ATTENZIONE) livello = "attenzione";
     else if (ritardo >= RITARDO_NOTA) livello = "nota";
   }
-  return { livello, ritardo, soppresso, treno, destinazione, partenza, binario, orario: orario2, stazione };
+  return { livello, ritardo, soppresso, treno, destinazione, partenza, binario: binario2, orario: orario2, stazione };
 }
 var LETTORI = Object.freeze({
   terremoti: leggiTerremoti,
@@ -63486,6 +63486,11 @@ function sfalsata(width, primaFila, size, column) {
   const inizio = Math.floor((varchi - size) / 2);
   return passo * (inizio + column + 0.5);
 }
+function nelVarco(width, primaFila, size, column) {
+  const passo = width / primaFila;
+  const inizio = Math.floor((primaFila - 1 - size) / 2) + 1;
+  return passo * (inizio + column);
+}
 function comandoOltreLaFila(variant, x, y, rowY) {
   const salto = y - variant.homeY;
   const fino = rowY - variant.homeY;
@@ -63505,10 +63510,13 @@ function flowStageLayout(count, variant = "desktop") {
   const positions = [];
   const primaFila = sizes[0] || 0;
   const righe2 = sizes.length > 1 && geometry.dueFile ? geometry.dueFile : geometry;
+  const mobile = variant === "mobile";
+  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 4;
+  const piena = mobile && (sizes.length === 1 || sizes[1] < primaFila || uguali);
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
-      const x = rowIndex === 0 ? geometry.width * (column + 1) / (size + 1) : sfalsata(geometry.width, primaFila, size, column);
-      const oltre = rowIndex === 0 ? null : righe2.rowY[rowIndex - 1];
+      const x = piena ? rowIndex === 0 || uguali ? geometry.width * (column + 0.5) / size : nelVarco(geometry.width, primaFila, size, column) : rowIndex === 0 ? geometry.width * (column + 1) / (size + 1) : sfalsata(geometry.width, primaFila, size, column);
+      const oltre = rowIndex === 0 || uguali ? null : righe2.rowY[rowIndex - 1];
       positions.push({
         index: positions.length,
         row: rowIndex,
@@ -64291,9 +64299,33 @@ function exposeConnector(node, active) {
     scriviDatoSeCambia(node, "dmFlowForcedVisible", "false");
   }
 }
+var FORME2 = ["d", "x1", "y1", "x2", "y2", "points"];
+function binario(node, color, active) {
+  const madre = node.parentNode;
+  if (!madre || !/^(path|line|polyline)$/i.test(node.tagName)) return;
+  let sotto = node.__dmBinario;
+  if (!sotto || sotto.parentNode !== madre) {
+    sotto = doc.createElementNS(SVG_NS, node.tagName.toLowerCase());
+    sotto.classList.add("dm-flow-binario");
+    sotto.setAttribute("aria-hidden", "true");
+    madre.insertBefore(sotto, node);
+    node.__dmBinario = sotto;
+  }
+  if (node.getAttribute("pathLength") !== "100") node.setAttribute("pathLength", "100");
+  for (const nome of FORME2) {
+    const valore3 = node.getAttribute(nome);
+    if (valore3 === null) continue;
+    if (sotto.getAttribute(nome) !== valore3) sotto.setAttribute(nome, valore3);
+  }
+  setStyleProperty(sotto, "--dm-flow-color", color);
+  const larghezza = node.style?.getPropertyValue?.("--dm-flow-width");
+  if (larghezza) setStyleProperty(sotto, "--dm-flow-width", larghezza);
+  scriviDatoSeCambia(sotto, "acceso", active ? "true" : "false");
+}
 function colorNode(node, color, active) {
   if (!node) return;
   exposeConnector(node, active);
+  binario(node, color, active);
   node.classList.toggle("active", active);
   node.classList.toggle("dm-energy-flow-active", active);
   node.classList.toggle("dm-energy-flow-idle", !active);
@@ -64355,7 +64387,7 @@ function bindNodeClick(element5, node, period) {
   } : null;
   if (click) element5.dataset.dmFlowClickPeriod = period;
 }
-var NOME_PIU_PICCOLO = 6;
+var NOME_PIU_PICCOLO = 8;
 function adattaIlNome(cerchio, nome) {
   const largo = cerchio?.clientWidth || 0;
   if (!nome || !largo) return;
@@ -64433,11 +64465,11 @@ function pruneStale(stage, keep) {
     if (!keep.has(id)) node.remove();
   });
 }
-var ARIA_FRA_BOLLE = 10;
+var ARIA_FRA_BOLLE = 16;
 var QUANTO_STRETTE_AL_MASSIMO = 0.55;
 var SOGLIE = Object.freeze([
-  { quando: "(max-width: 480px)", bolla: 75, stretto: true },
-  { quando: "(max-width: 768px)", bolla: 85, stretto: true }
+  { quando: "(max-width: 480px)", bolla: 96, stretto: true },
+  { quando: "(max-width: 768px)", bolla: 104, stretto: true }
 ]);
 function comeSiamoMessi() {
   for (const soglia2 of SOGLIE) {
@@ -64446,7 +64478,7 @@ function comeSiamoMessi() {
     } catch (_errore) {
     }
   }
-  return { bolla: 115, stretto: false };
+  return { bolla: 130, stretto: false };
 }
 function quanteInFila(nodes, stretto) {
   const perFila = /* @__PURE__ */ new Map();
@@ -64456,14 +64488,34 @@ function quanteInFila(nodes, stretto) {
   }
   return perFila.size ? Math.max(...perFila.values()) : 1;
 }
+function passoPiuStretto(nodes, stretto) {
+  const perFila = /* @__PURE__ */ new Map();
+  for (const nodo2 of nodes) {
+    const dove = stretto ? nodo2.mobile : nodo2.desktop;
+    if (!dove) continue;
+    const fila2 = perFila.get(dove.top) || [];
+    fila2.push(Number(dove.left));
+    perFila.set(dove.top, fila2);
+  }
+  let passo = 0;
+  for (const fila2 of perFila.values()) {
+    fila2.sort((a, b) => a - b);
+    for (let i = 1; i < fila2.length; i += 1) {
+      const qui = fila2[i] - fila2[i - 1];
+      if (qui > 0 && (!passo || qui < passo)) passo = qui;
+    }
+  }
+  return passo;
+}
 function quantoCiStaNelPalco(stage, model2, scala2) {
   const largo = stage?.getBoundingClientRect?.().width || 0;
   const { bolla, stretto } = comeSiamoMessi();
   const inFila = quanteInFila(model2.nodes, stretto);
   if (!largo || inFila <= 1) return scala2;
-  const passo = largo / (inFila + 1);
+  const passo = largo * passoPiuStretto(model2.nodes, stretto) / 100 || largo / (inFila + 1);
   const ciSta = Math.max(0, passo - ARIA_FRA_BOLLE) / bolla;
-  return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(scala2, Number(ciSta.toFixed(3))));
+  const tetto = stretto ? 1 : scala2;
+  return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(tetto, Number(ciSta.toFixed(3))));
 }
 function renderDynamicFlowLoads(period, model2 = stageModel(period)) {
   const view = FLOW_VIEWS.find((entry) => entry.period === period);
@@ -64718,7 +64770,41 @@ function refreshEnergyFlows() {
   renderBatterySoc(doc, impianto, allStates());
   mostraBolleDellImpianto(impianto);
   adattaINumeriDelleBolle(doc);
+  riempiGliAnelli(doc);
   return touched;
+}
+var SCALE_DEL_NUMERO = { w: 1, kw: 1e3, mw: 1e6, wh: 1, kwh: 1e3, mwh: 1e6 };
+function numeroDellaBolla(testo2) {
+  const scritto = String(testo2 ?? "");
+  const trovato = scritto.match(/(\d[\d.,]*)\s*(mwh|kwh|wh|mw|kw|w)\b/i);
+  if (!trovato) return null;
+  let cifre2 = trovato[1];
+  if (cifre2.includes(",")) cifre2 = cifre2.replace(/\./g, "").replace(",", ".");
+  const valore3 = Number.parseFloat(cifre2);
+  if (!Number.isFinite(valore3)) return null;
+  return valore3 * SCALE_DEL_NUMERO[trovato[2].toLowerCase()];
+}
+function quotaDellAnello(valore3, riferimento) {
+  if (!(valore3 > 0) || !(riferimento > 0)) return 0;
+  return Math.min(1, Math.max(0.04, valore3 / riferimento));
+}
+function riempiGliAnelli(targetDocument = doc) {
+  for (const palco of targetDocument?.querySelectorAll?.("#page-energy .flow-stage") || []) {
+    const bolle = [...palco.querySelectorAll(".node")];
+    const valori = /* @__PURE__ */ new Map();
+    let massimo = 0;
+    for (const bolla of bolle) {
+      const valore3 = numeroDellaBolla(bolla.querySelector("span")?.textContent);
+      valori.set(bolla, valore3);
+      if (valore3 > massimo) massimo = valore3;
+    }
+    for (const bolla of bolle) {
+      let quota = quotaDellAnello(valori.get(bolla), massimo);
+      const carica = /n-battery/.test(bolla.id || "") ? Number.parseFloat(bolla.querySelector("#v-battery-soc,.dm-battery-soc")?.textContent) : Number.NaN;
+      if (Number.isFinite(carica)) quota = Math.min(1, Math.max(0, carica / 100));
+      setStyleProperty(bolla, "--dm-quota", String(Math.round(quota * 1e3) / 1e3));
+    }
+  }
 }
 var QUANTO_AL_PIU_SI_STRINGE = 0.62;
 var FIRMA_DELLA_STRETTA = "__dmStretta";
@@ -64860,8 +64946,33 @@ function installStyles24() {
        nostra riga di stile non deve poter cancellare il disegno di chi c'era
        prima: se non stiamo guidando noi, si vede quello che dice il guscio. */
     [data-dm-energy-flows] .flow-line:not(.active):not(.dm-energy-flow-active){opacity:0!important}
-    .flow-line.dm-energy-flow-active,path.dm-energy-flow-active,line.dm-energy-flow-active,polyline.dm-energy-flow-active{stroke:var(--dm-flow-color)!important;stroke-dasharray:12 9!important;stroke-linecap:round!important;animation-name:dmEnergyFlowDash!important;animation-duration:.8s!important;animation-timing-function:linear!important;animation-iteration-count:infinite!important;animation-play-state:running!important;will-change:stroke-dashoffset!important}
-    @keyframes dmEnergyFlowDash{from{stroke-dashoffset:0}to{stroke-dashoffset:-42}}
+    /* La scia di luce: una cometa per tratto, che corre sul binario tenue
+       della sua strada. Il percorso e' lungo cento (\`pathLength\`, vedi
+       \`binario\`): una scia di quattordici, e il vuoto per il resto. */
+    .flow-line.dm-energy-flow-active,path.dm-energy-flow-active,line.dm-energy-flow-active,polyline.dm-energy-flow-active{stroke:var(--dm-flow-color)!important;stroke-dasharray:14 86!important;stroke-linecap:round!important;animation-name:dmEnergyFlowDash!important;animation-duration:1.6s!important;animation-timing-function:linear!important;animation-iteration-count:infinite!important;animation-play-state:running!important;will-change:stroke-dashoffset!important}
+    @keyframes dmEnergyFlowDash{from{stroke-dashoffset:0}to{stroke-dashoffset:-100}}
+    .dm-flow-binario{fill:none!important;stroke:var(--dm-flow-color)!important;stroke-opacity:.2!important;stroke-width:var(--dm-flow-width,3px)!important;stroke-linecap:round!important;stroke-dasharray:none!important;animation:none!important;filter:none!important;pointer-events:none!important;opacity:1!important}
+    .dm-flow-binario[data-acceso="false"]{display:none!important}
+    #page-energy .flow-line.dm-energy-flow-active,#page-energy path.dm-energy-flow-active{stroke-width:calc(var(--dm-flow-width,3px) + 1.5px)!important;filter:drop-shadow(0 0 5px var(--dm-flow-color))!important}
+    .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:calc(var(--dm-flow-duration,.8s) * 2)!important}
+    /* I cerchi come le tessere della plancia: la stessa carta, lo stesso
+       bordo sottile, la stessa ombra morbida. Il colore non sta piu' nel
+       bordo pieno ma nell'anello che gira intorno e si riempie quanto pesa
+       il numero (\`riempiGliAnelli\`): la batteria quanto e' carica, gli
+       altri rispetto al piu' grosso della scena. */
+    #page-energy .flow-stage .node{
+      background:var(--card-bg,#fff)!important;
+      border:1px solid var(--card-border,rgba(148,163,184,.25))!important;
+      box-shadow:0 4px 14px rgba(15,23,42,.08)!important}
+    #page-energy .flow-stage .node::before{content:""!important;position:absolute!important;inset:-7px!important;border-radius:50%!important;z-index:-1!important;pointer-events:none!important;
+      background:conic-gradient(var(--n-color,#64748b) calc(var(--dm-quota,0) * 1turn),color-mix(in srgb,var(--n-color,#64748b) 16%,transparent) 0)!important;
+      -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))!important;
+      mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))!important;
+      transition:background .4s ease!important}
+    #page-energy .flow-stage .node::after{display:none!important}
+    #page-energy .flow-stage .node.active,#page-energy .flow-stage .node.dm-flow-node[data-dm-flow-active="true"]{
+      box-shadow:0 4px 14px rgba(15,23,42,.08),0 0 22px color-mix(in srgb,var(--n-color,#3b82f6) 30%,transparent)!important}
+    #page-energy .flow-stage .n-home{--n-color:#3b82f6!important}
     /* Nessuna eccezione per "riduci movimento": il tratteggio che scorre non e'
        una decorazione ma l'unico segnale che l'energia sta passando, e la
        plancia deve mostrare le stesse linee su ogni schermo. Quella preferenza
@@ -64882,7 +64993,6 @@ function installStyles24() {
     .flow-stage .node.dm-flow-node .node-label{width:72%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
     .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
     .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
-    .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:var(--dm-flow-duration,.8s)!important}
     /* La soglia e' quella del guscio, 768, e non una nostra.
      *
      * Qui c'era 820. Sembra un dettaglio e non lo e': il guscio cambia TUTTO a
@@ -64902,6 +65012,37 @@ function installStyles24() {
      * prima o poi non vanno d'accordo. */
     @media(max-width:768px){
       .flow-stage .node.dm-flow-node{left:var(--dm-flow-mobile-left,50%)!important;top:var(--dm-flow-mobile-top,83%)!important}
+    }
+    /* I cerchi sotto la Casa, che si leggono.
+     *
+     * «I dati dentro entrano a mala pena e sono troppo piccoli, il testo
+     * ancora tagliato.» Le stanze e i carichi erano i cerchi piu' piccoli del
+     * palco — 75 punti sul telefono — e per farci stare il nome il guscio lo
+     * portava a 7 pixel: «LOCALE TECNICO» toccava il bordo. Crescono solo
+     * loro, coi loro nomi e numeri; Solare, Rete, Batteria e Casa restano come
+     * sono. Le misure sono le stesse che legge \`comeSiamoMessi\`, cosi' il
+     * conto di quante bolle stanno in fila resta giusto: sul telefono tre per
+     * fila si prendono tutto lo spazio che c'e', e non di piu'. */
+    #page-energy .n-load{width:130px!important;height:130px!important}
+    /* E la Casa un poco piu' piccola: «riesci a fare un po' piu' piccolo
+     * quello della casa». Resta il cerchio piu' grande, ma non schiaccia piu'
+     * la fila di sotto. */
+    #page-energy .n-home{width:145px!important;height:145px!important}
+    #page-energy .n-load .node-label{font-size:11.5px!important;letter-spacing:0!important}
+    #page-energy #view-ist .n-load span{font-size:20px!important}
+    #page-energy .n-load .node-icon{font-size:26px!important}
+    @media(max-width:768px){
+      #page-energy .flow-stage{height:800px!important}
+      #page-energy .n-home{width:110px!important;height:110px!important}
+      #page-energy .n-load{width:104px!important;height:104px!important}
+      #page-energy .n-load .node-label{font-size:10.5px!important;letter-spacing:0!important}
+      #page-energy #view-ist .n-load span{font-size:18px!important}
+      #page-energy .n-load .node-icon{font-size:23px!important}
+    }
+    @media(max-width:480px){
+      #page-energy .flow-stage{height:720px!important}
+      #page-energy .n-home{width:96px!important;height:96px!important}
+      #page-energy .n-load{width:96px!important;height:96px!important}
     }
   `
   );

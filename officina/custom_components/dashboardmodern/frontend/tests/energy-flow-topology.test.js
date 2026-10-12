@@ -151,6 +151,10 @@ test("sul telefono nessuna linea attraversa la bolla di un altro carico (#118)",
     const bolle = flowStageLayout(quanti, "mobile");
     const raggio = raggioDellaBolla(quanti);
     for (const bolla of bolle) {
+      /* Con otto le file sono due da quattro, una sotto l'altra, e la linea
+       * di sotto passa DIETRO il cerchio di sopra: scelto, per avere cerchi
+       * che si leggono («4+4 grandi, linee dietro»). Lo dice la prova sotto. */
+      if (quanti === 8 && bolla.row > 0) continue;
       for (const punto of puntiDelConnettore(bolla.path)) {
         for (const altra of bolle) {
           if (altra === bolla) continue;
@@ -260,15 +264,28 @@ test("le file si sfalsano come i mattoni, e non si incolonnano (#118)", () => {
     sei.map(({ x }) => x),
     [250, 500, 750, 125, 375, 625],
   );
-  /* Con sette la fila di sotto sta giusto nei varchi di quella di sopra. */
+  /* Con sette la fila di sopra si prende tutta la larghezza — ogni bolla al
+   * centro della sua parte, perche' «sono troppo attaccati» — e quella di
+   * sotto sta giusto nei varchi fra le bolle di sopra. */
   assert.deepEqual(
     flowStageLayout(7, "mobile").map(({ x }) => x),
-    [200, 400, 600, 800, 300, 500, 700],
+    [125, 375, 625, 875, 250, 500, 750],
   );
-  /* E una fila sola non si sfalsa con niente: resta dov'era. */
+  /* Con cinque, che e' il caso di chi ha quattro stanze e la wallbox. */
+  assert.deepEqual(
+    flowStageLayout(5, "mobile").map(({ x }) => x),
+    [166.7, 500, 833.3, 333.3, 666.7],
+  );
+  /* Con otto, due file da quattro una sotto l'altra: sfalsate le bolle
+   * scendevano a cinquantotto punti. Le linee di sotto passano dietro. */
+  assert.deepEqual(
+    flowStageLayout(8, "mobile").map(({ x }) => x),
+    [125, 375, 625, 875, 125, 375, 625, 875],
+  );
+  /* E una fila sola non si sfalsa con niente: si allarga e basta. */
   assert.deepEqual(
     flowStageLayout(4, "mobile").map(({ x }) => x),
-    [200, 400, 600, 800],
+    [125, 375, 625, 875],
   );
 });
 
@@ -283,7 +300,9 @@ test("il disegno largo non e' cambiato: li' la fila e' una sola (#118)", () => {
     );
     assert.deepEqual(
       fila.map(({ x }) => x),
-      Array.from({ length: quanti }, (_, i) => Number(((1000 * (i + 1)) / (quanti + 1)).toFixed(1))),
+      Array.from({ length: quanti }, (_, i) =>
+        Number(((1000 * (i + 1)) / (quanti + 1)).toFixed(1)),
+      ),
     );
   }
 });
@@ -1190,9 +1209,21 @@ test("un contatore che dice meno dei suoi figli non sta misurando il gruppo", ()
     monthly_energy_entity: "sensor.gruppo_mese",
   };
   const figli = [
-    { id: "cond", daily_energy_entity: "sensor.cond_oggi", monthly_energy_entity: "sensor.cond_mese" },
-    { id: "lavast", daily_energy_entity: "sensor.lavast_oggi", monthly_energy_entity: "sensor.lavast_mese" },
-    { id: "frigo", daily_energy_entity: "sensor.frigo_oggi", monthly_energy_entity: "sensor.frigo_mese" },
+    {
+      id: "cond",
+      daily_energy_entity: "sensor.cond_oggi",
+      monthly_energy_entity: "sensor.cond_mese",
+    },
+    {
+      id: "lavast",
+      daily_energy_entity: "sensor.lavast_oggi",
+      monthly_energy_entity: "sensor.lavast_mese",
+    },
+    {
+      id: "frigo",
+      daily_energy_entity: "sensor.frigo_oggi",
+      monthly_energy_entity: "sensor.frigo_mese",
+    },
   ];
   const kwh = (valore) => ({ state: String(valore), attributes: { unit_of_measurement: "kWh" } });
   const stati = {
