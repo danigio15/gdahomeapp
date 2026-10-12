@@ -64788,13 +64788,16 @@ function quotaDellAnello(valore3, riferimento) {
   if (!(valore3 > 0) || !(riferimento > 0)) return 0;
   return Math.min(1, Math.max(0.04, valore3 / riferimento));
 }
+function numeroScrittoNellaBolla(bolla) {
+  return bolla?.querySelector?.(".dm-flow-value") || [...bolla?.children || []].find((figlio) => figlio.tagName === "SPAN") || null;
+}
 function riempiGliAnelli(targetDocument = doc) {
   for (const palco of targetDocument?.querySelectorAll?.("#page-energy .flow-stage") || []) {
     const bolle = [...palco.querySelectorAll(".node")];
     const valori = /* @__PURE__ */ new Map();
     let massimo = 0;
     for (const bolla of bolle) {
-      const valore3 = numeroDellaBolla(bolla.querySelector("span")?.textContent);
+      const valore3 = numeroDellaBolla(numeroScrittoNellaBolla(bolla)?.textContent);
       valori.set(bolla, valore3);
       if (valore3 > massimo) massimo = valore3;
     }

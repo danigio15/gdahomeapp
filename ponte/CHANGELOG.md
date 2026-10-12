@@ -10,6 +10,12 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.8
+
+**Energia: gli anelli dei carichi si riempiono.** Sotto la Casa l'anello dei
+carichi con l'icona di una stanza o di un elettrodomestico restava vuoto: ora
+si riempie quanto pesa il suo numero, come quello degli altri cerchi.
+
 ## 1.11.7
 
 **Energia: cerchi nuovi, flussi che si vedono.** I cerchi del flusso hanno la
