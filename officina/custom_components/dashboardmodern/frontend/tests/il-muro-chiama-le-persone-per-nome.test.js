@@ -80,3 +80,47 @@ test("senza persone in elenco il muro prende tutte le person.* col loro nome", (
   assert.equal(muro.tutte, 4);
   assert.deepEqual(muro.nomi, ["Account Uno", "Account Due", "person.senza_nome"]);
 });
+
+/* Le strade che restavano fuori dalla regola comune: la persona spenta in
+ * Home che il tablet mostra lo stesso in una pagina, e la persona tenuta per
+ * il telefono (`device_tracker.*`) che il tablet mostra per la `person.*`. */
+test("una persona spenta in Home tiene il suo nome di casa sulla card del tablet", () => {
+  const fonte = fonteDaiValori({
+    cd_people: JSON.stringify([
+      CD_PEOPLE[0],
+      { entity: "person.ospite", name: "Zio", nascosta: true },
+    ]),
+  });
+  assert.equal(nomeDellaPersonaDelMuro("person.ospite", fonte, STATI), "Zio");
+  assert.deepEqual(personeDelMuro(fonte, STATI).entita, ["person.account_uno"]);
+});
+
+test("una scheda Persone con tutti spenti non riempie il muro di account", () => {
+  const fonte = fonteDaiValori({
+    cd_people: JSON.stringify([{ ...CD_PEOPLE[0], nascosta: true }]),
+  });
+  const muro = personeDelMuro(fonte, STATI);
+  assert.equal(muro.tutte, 0);
+  assert.deepEqual(muro.nomi, []);
+});
+
+test("persona e telefono si riconoscono: il nome di casa vale per tutti e due", () => {
+  const stati = {
+    ...STATI,
+    "person.account_uno": {
+      state: "home",
+      attributes: {
+        friendly_name: "Account Uno",
+        device_trackers: ["device_tracker.telefono_uno"],
+      },
+    },
+    "device_tracker.telefono_uno": { state: "home", attributes: { friendly_name: "Telefono" } },
+  };
+  const daTelefono = fonteDaiValori({
+    cd_people: JSON.stringify([{ entity: "device_tracker.telefono_uno", name: "Mamma" }]),
+  });
+  assert.equal(nomeDellaPersonaDelMuro("person.account_uno", daTelefono, stati), "Mamma");
+  const daPersona = fonteDaiValori({ cd_people: JSON.stringify([CD_PEOPLE[0]]) });
+  assert.equal(nomeDellaPersonaDelMuro("device_tracker.telefono_uno", daPersona, stati), "Mamma");
+  assert.equal(nomeDellaPersonaDelMuro("device_tracker.altro", daPersona, stati), "");
+});

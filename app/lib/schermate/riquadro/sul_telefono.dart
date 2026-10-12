@@ -19,6 +19,7 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../../casa/fuori.dart';
 import '../../casa/lo_schermo.dart';
+import '../../plancia/il_fondo.dart';
 import '../../plancia/premesse.dart' show ilMenuDalTelefono, laPlanciaSiVede;
 import '../../parole.dart';
 import 'biglietto.dart';
@@ -171,6 +172,18 @@ WebViewController costruisciIlControllore({
           }
           if (detto == laPlanciaSiVede) {
             quandoSiVede?.call();
+            return;
+          }
+          /* Il fondo della plancia: lo prende il WebView, che sotto la
+           * pagina non mostri piu' quello del tema del telefono, e lo prende
+           * l'app per le fasce attorno (`plancia/il_fondo.dart`). */
+          if (detto.startsWith(ilFondoDellaPlanciaDice)) {
+            final colore = coloreDalCss(
+              detto.substring(ilFondoDellaPlanciaDice.length),
+            );
+            if (colore == null) return;
+            ilFondoDellaPlancia.value = colore;
+            unawaited(controllore.setBackgroundColor(colore));
             return;
           }
           quandoCambiaPagina?.call(detto);

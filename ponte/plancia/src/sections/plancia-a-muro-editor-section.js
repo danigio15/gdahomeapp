@@ -27,6 +27,7 @@ import {
   eUnaScena,
   tipoDellEntita,
   muroPulito,
+  nomeDellaPersonaDelMuro,
   nuovaPagina,
 } from "../core/plancia-a-muro.js";
 import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
@@ -130,6 +131,8 @@ const nomeDi = (id) =>
       ...(state.fonte?.tapparelle || []),
     ].find((d) => d.entity === id)?.name,
   ) ||
+  /* Una persona col nome della scheda Persone, come sul tablet. */
+  nomeDellaPersonaDelMuro(id, state.fonte || {}, allStates() || {}) ||
   clean(allStates()?.[id]?.attributes?.friendly_name) ||
   id;
 
@@ -608,6 +611,34 @@ function corpoMarkup() {
       ),
       `${cerca("risveglio.entita", m.risveglio.entita, { domini: "binary_sensor" })}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}`,
     )}
+    ${riga(
+      t("Batteria del tablet", "Tablet battery"),
+      t(
+        "Sul riposo: quanto è carica e se è attaccata alla corrente",
+        "On the rest screen: how charged it is and whether it is plugged in",
+      ),
+      interruttore("batteria.attiva", m.batteria.attiva, "batteria"),
+    )}
+    ${
+      m.batteria.attiva
+        ? `${riga(
+            t("Livello della batteria", "Battery level"),
+            t(
+              "Per esempio il sensore della batteria dell'app di Home Assistant. Vuoto: quella che dà il browser del tablet",
+              "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives",
+            ),
+            cerca("batteria.livello", m.batteria.livello, { domini: "sensor" }),
+          )}
+    ${riga(
+      t("In carica", "Charging"),
+      t(
+        "Facoltativo: il sensore «in carica» o lo stato della batteria",
+        "Optional: the “is charging” sensor or the battery state",
+      ),
+      cerca("batteria.carica", m.batteria.carica, { domini: "binary_sensor,sensor" }),
+    )}`
+        : ""
+    }
     ${riga(t("Blocca il tablet", "Lock the tablet"), t("Per uscire dal pannello serve il PIN, da 4 a 8 cifre", "Leaving the panel needs the PIN, 4 to 8 digits"), `${campo("blocco.pin", m.blocco.pin, "PIN", "password")}${interruttore("blocco.attivo", m.blocco.attivo, "blocco")}`)}
     ${riga(t("Antifurto e serrature chiedono il codice", "Alarm and locks ask for the code"), t("Sempre, quando la centrale ne ha uno", "Always, when the panel has one"), `<span class="mu-ed-int fermo" aria-checked="true"><i></i></span>`)}
   </div>`
@@ -728,8 +759,18 @@ function metti(via, valore) {
         (_, n) => p[lista][n] || { tipo: "vuoto" },
       );
       const ora = posti[k];
-      const aspetto = { nome: ora.nome || "", sotto: ora.sotto || "", disegno: ora.disegno || "" };
       const scritto = clean(valore);
+      /* Il nome scritto a mano era di quello che c'era prima: con un'altra
+       * entita' o un'altra azione nel posto, il nome torna il suo — quello
+       * della scheda Persone per una persona, non quello di chi c'era. */
+      const cambiato =
+        (campo === "entita" && scritto !== clean(ora.entita)) ||
+        (campo === "azione" && scritto !== clean(ora.azione));
+      const aspetto = {
+        nome: cambiato ? "" : ora.nome || "",
+        sotto: ora.sotto || "",
+        disegno: ora.disegno || "",
+      };
       if (campo === "entita")
         posti[k] = scritto
           ? {

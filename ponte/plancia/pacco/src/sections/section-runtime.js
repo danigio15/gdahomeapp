@@ -2498,6 +2498,7 @@ var SOURCE_INDEX = Object.freeze({
   "Batteria caricata · Mese": "Battery charged · Month",
   "Batteria caricata · Oggi": "Battery charged · Today",
   "Batteria del collare": "Collar battery",
+  "Batteria del tablet": "Tablet battery",
   "Batteria di accumulo": "Storage battery",
   "Batteria di servizio 12 V (% o V)": "Service battery 12 V (% or V)",
   "Batteria nuova": "New battery",
@@ -3358,6 +3359,7 @@ var SOURCE_INDEX = Object.freeze({
   "Facoltativa: sostituisce il calcolo del giorno.": "Optional: overrides the daily calculation.",
   "Facoltativa: sostituisce il calcolo del mese corrente.": "Optional: overrides the current-month calculation.",
   "Facoltativo": "Optional",
+  "Facoltativo: il sensore «in carica» o lo stato della batteria": "Optional: the “is charging” sensor or the battery state",
   "Facoltativo: interruttore, es. switch.lavatrice": "Optional: switch, e.g. switch.lavatrice",
   "Facoltativo: potenza in W, es. sensor.lavatrice_potenza": "Optional: power in W, e.g. sensor.lavatrice_potenza",
   "Facoltativo: se il BMS non lo pubblica, lo squilibrio si calcola dalle celle.": "Optional: if the BMS does not publish it, the imbalance is worked out from the cells.",
@@ -4174,6 +4176,7 @@ var SOURCE_INDEX = Object.freeze({
   "Livello del pellet, secondo serbatoio": "Pellet level, second hopper",
   "Livello del serbatoio": "Reservoir level",
   "Livello dell'acqua": "Water level",
+  "Livello della batteria": "Battery level",
   "Livello immissione": "Supply level",
   "Livello ripresa": "Return level",
   "Lo scaldabagno elettrico, per chi l'acqua calda non la fa col sole: la tessera dice a che punto è l'acqua e quanto manca all'obiettivo. Con un water_heater di Home Assistant basta la prima casella.": "The electric water heater, for whoever does not make hot water with the sun: the tile says where the water is and how far it is from the target. With a Home Assistant water_heater the first field is enough.",
@@ -4767,6 +4770,7 @@ var SOURCE_INDEX = Object.freeze({
   "per accenderla o spegnerla manualmente.": "to switch it on or off manually.",
   "Per chi ha due serbatoi: in pagina compaiono affiancati, Pellet 1 e Pellet 2, con la stessa soglia del primo.": "For whoever has two hoppers: the page shows them side by side, Pellet 1 and Pellet 2, with the same threshold as the first.",
   "Per dividere i calendari fra le persone servono le persone di Home Assistant, ognuna legata al suo utente.": "To split calendars between people you need Home Assistant persons, each linked to its own user.",
+  "Per esempio il sensore della batteria dell'app di Home Assistant. Vuoto: quella che dà il browser del tablet": "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives",
   "Per esempio: apri cancello": "For example: open the gate",
   "Per esempio: apri porta": "For example: open the door",
   "Per frigo e congelatore: mostra la barra temperatura al posto della potenza.": "For fridge and freezer: shows the temperature strip instead of the power bar.",
@@ -5815,6 +5819,7 @@ var SOURCE_INDEX = Object.freeze({
   "Suggerisci di arieggiare sopra il (%), di serie": "Suggest airing above (%), by default",
   "Suggerite": "Suggested",
   "Suggerito: ha una potenza mappata": "Suggested: it has a mapped power sensor",
+  "Sul riposo: quanto è carica e se è attaccata alla corrente": "On the rest screen: how charged it is and whether it is plugged in",
   "sul tablet": "on the tablet",
   "Suona": "Ringing",
   "Suona insieme a": "Plays together with",
@@ -35487,9 +35492,9 @@ function misuraMarkup({ lettura: lettura3, verdetto }) {
 }
 function livelloMarkup({ lettura: lettura3, basso, giorni }) {
   const stato3 = lettura3.muto ? "muta" : basso ? "basso" : "bene";
-  const percento5 = !lettura3.binario && lettura3.valore !== null && /%/.test(lettura3.unita) ? Math.max(0, Math.min(100, lettura3.valore)) : null;
+  const percento6 = !lettura3.binario && lettura3.valore !== null && /%/.test(lettura3.unita) ? Math.max(0, Math.min(100, lettura3.valore)) : null;
   const destra = lettura3.muto ? t("Non risponde", "Not answering") : basso ? t("da rabboccare", "to top up") : giorni !== null ? rabboccoInParole(giorni) : lettura3.binario ? t("nella norma", "in range") : valoreInParole(lettura3);
-  const sotto = percento5 !== null ? `<span class="dm-acq-livello-barra"><i style="width:${esc(String(percento5))}%"></i></span>` : !lettura3.binario && !lettura3.muto && giorni !== null ? `<small>${esc(valoreInParole(lettura3))}</small>` : "";
+  const sotto = percento6 !== null ? `<span class="dm-acq-livello-barra"><i style="width:${esc(String(percento6))}%"></i></span>` : !lettura3.binario && !lettura3.muto && giorni !== null ? `<small>${esc(valoreInParole(lettura3))}</small>` : "";
   return `<div class="dm-acq-livello" data-stato="${esc(stato3)}">
     <span class="dm-acq-livello-ic" aria-hidden="true">${disegnoDiCasa(lettura3.icon, { misura: 26, ripiego: "water" })}</span>
     <div class="dm-acq-livello-testo"><strong>${esc(lettura3.name)}</strong>${sotto}</div>
@@ -40296,7 +40301,7 @@ function volumeMarkup(riga3) {
   const aPassi = riga3.puo.passiVolume && !riga3.puo.volume && !riga3.spento && !riga3.muto;
   const aTocchi = riga3.puo.volume && !riga3.spento;
   if (!riga3.puo.volume && !riga3.puo.muto && !aPassi) return "";
-  const percento5 = Math.round((riga3.volume ?? 0) * 100);
+  const percento6 = Math.round((riga3.volume ?? 0) * 100);
   return `<div class="dm-mp-volume">
     ${aPassi || aTocchi ? tastoMarkup2(riga3, "abbassa", t("Abbassa il volume", "Volume down"), GLIFI.abbassa) : ""}
     ${riga3.puo.muto ? tastoMarkup2(
@@ -40308,9 +40313,9 @@ function volumeMarkup(riga3) {
   ) : ""}
     ${aPassi ? tastoMarkup2(riga3, "alza", t("Alza il volume", "Volume up"), GLIFI.alza) : ""}
     ${riga3.puo.volume ? `<input type="range" class="dm-mp-slider" min="0" max="100" step="1"
-             value="${percento5}" data-dm-mp-volume="${esc(riga3.entity)}"
+             value="${percento6}" data-dm-mp-volume="${esc(riga3.entity)}"
              aria-label="${esc(t("Volume", "Volume"))}">
-           <span class="dm-mp-percento" data-dm-mp-percento>${percento5}%</span>` : ""}
+           <span class="dm-mp-percento" data-dm-mp-percento>${percento6}%</span>` : ""}
     ${aTocchi ? tastoMarkup2(riga3, "alza", t("Alza il volume", "Volume up"), GLIFI.alza) : ""}
   </div>`;
 }
@@ -40897,12 +40902,12 @@ function toccaIlVolume(entity2, riga3, verso2) {
 function onInput(event) {
   const cursore = event.target?.closest?.("[data-dm-mp-volume]");
   if (!cursore) return;
-  const percento5 = Math.min(100, Math.max(0, Number(cursore.value) || 0));
+  const percento6 = Math.min(100, Math.max(0, Number(cursore.value) || 0));
   const scritta = cursore.parentElement?.querySelector("[data-dm-mp-percento]");
-  if (scritta) scritta.textContent = `${percento5}%`;
+  if (scritta) scritta.textContent = `${percento6}%`;
   chiamaHa("media_player", "volume_set", {
     entity_id: clean(cursore.dataset.dmMpVolume),
-    volume_level: percento5 / 100
+    volume_level: percento6 / 100
   });
 }
 function onChange3(event) {
@@ -46972,7 +46977,7 @@ function eroeMedia(riga3) {
   const sotto = [riga3.artista, riga3.album].filter(Boolean).join(" · ");
   const punto2 = posizioneOra(riga3);
   const centro2 = ilTastoCentrale(riga3);
-  const percento5 = Math.round((riga3.volume ?? 0) * 100);
+  const percento6 = Math.round((riga3.volume ?? 0) * 100);
   return `<div class="dm-f-media-eroe">
     <div class="dm-f-media-testa">
       ${riga3.copertina ? `<img class="dm-f-media-arte" src="${esc(riga3.copertina)}" alt="" aria-hidden="true">` : `<span class="dm-f-media-arte" aria-hidden="true">${riga3.icona ? esc(riga3.icona) : "🎵"}</span>`}
@@ -46990,9 +46995,9 @@ function eroeMedia(riga3) {
       ${riga3.puo?.successivo ? tastoMp(riga3, "successivo", t("Brano successivo", "Next track"), GLIFI_MP.successivo) : ""}
     </div>
     ${riga3.puo?.volume ? `<label class="dm-f-media-volume"><span aria-hidden="true">${GLIFI_MP.voce}</span>
-            <input type="range" min="0" max="100" step="1" value="${percento5}" style="--v:${percento5}%" data-dm-mp-volume="${esc(riga3.entity)}"
+            <input type="range" min="0" max="100" step="1" value="${percento6}" style="--v:${percento6}%" data-dm-mp-volume="${esc(riga3.entity)}"
               aria-label="${esc(t("Volume", "Volume"))}">
-            <b class="dm-f-num" data-dm-mp-percento>${percento5}%</b></label>` : ""}
+            <b class="dm-f-num" data-dm-mp-percento>${percento6}%</b></label>` : ""}
   </div>`;
 }
 function cassaMarkup(riga3) {
@@ -47959,11 +47964,11 @@ function disegnaFumo(widget, states) {
     const segno = voce2.classe === "carbon_monoxide" ? "♨️" : voce2.classe === "gas" ? "🔥" : "💨";
     const come = voce2.on ? t("Allarme", "Alarm") : voce2.muto ? t("Non risponde", "Not answering") : t("Tranquillo", "Quiet");
     const dove = voce2.stanza && !voce2.name.toLocaleLowerCase().includes(voce2.stanza.toLocaleLowerCase()) ? voce2.stanza : "";
-    const pila = voce2.pila == null ? "" : `<span class="dm-f-${k}-pila"${voce2.pila <= 20 ? ' data-bassa="true"' : ""}>${voce2.pila <= 20 ? "🪫" : "🔋"} ${voce2.pila}%</span>`;
+    const pila2 = voce2.pila == null ? "" : `<span class="dm-f-${k}-pila"${voce2.pila <= 20 ? ' data-bassa="true"' : ""}>${voce2.pila <= 20 ? "🪫" : "🔋"} ${voce2.pila}%</span>`;
     return `<div class="dm-f-${k}-ril" data-come="${voce2.on ? "allarme" : voce2.muto ? "muto" : "quiete"}">
         <span class="dm-f-${k}-ic" aria-hidden="true">${segno}</span>
         <div class="dm-f-${k}-nome"><b>${esc(voce2.name)}</b><span>${esc(come)}${dove ? ` · ${esc(dove)}` : ""}</span></div>
-        ${pila}
+        ${pila2}
       </div>`;
   };
   const fumo = righe2.filter((voce2) => !GAS.has(voce2.classe));
@@ -48344,7 +48349,7 @@ function disegnaBatterie(widget, states = {}) {
       <div><span class="dm-f-${k}-num">${giu.length || righe2.length}</span><b>${esc(parole4)}</b><span class="dm-f-${k}-sotto">${esc(sotto)}</span></div>
     </div>`;
   const bollino = (tono) => tono === "carica" ? `<i class="dm-f-${k}-bollino" data-ok="true">${SPUNTA2}</i>` : `<i class="dm-f-${k}-bollino">!</i>`;
-  const pila = (riga3) => {
+  const pila2 = (riga3) => {
     const colore = COLORE_DELLA_PILA[riga3.tono];
     const parola = riga3.tipo.tipo === "batteria" ? "" : parolaDelSensore(riga3.tipo.tipo);
     const sottoRiga = sottoConStanza(k, parola, riga3.posto);
@@ -48359,7 +48364,7 @@ function disegnaBatterie(widget, states = {}) {
   return `<div class="dm-f-${k}">
       ${eroe}
       ${titolo2(k, t("Dalla più scarica", "Most drained first"))}
-      <div class="dm-f-${k}-griglia">${righe2.map(pila).join("")}</div>
+      <div class="dm-f-${k}-griglia">${righe2.map(pila2).join("")}</div>
     </div>`;
 }
 var STILE_BATTERIE = `${stileComune("batterie")}
@@ -60212,13 +60217,13 @@ function gradoDalPunto(presa, clientX) {
 }
 function dipingiPresa(presa) {
   const [low, high] = scalaDellaPresa(presa).scala;
-  const percento5 = ((presa.grado - low) / (high - low || 1) * 100).toFixed(1);
+  const percento6 = ((presa.grado - low) / (high - low || 1) * 100).toFixed(1);
   const fill = presa.card.querySelector("[data-dm-cl-fill]");
   const knob = presa.card.querySelector("[data-dm-cl-knob]");
-  if (fill) fill.style.width = `${percento5}%`;
+  if (fill) fill.style.width = `${percento6}%`;
   if (knob) {
     knob.hidden = false;
-    knob.style.left = `${percento5}%`;
+    knob.style.left = `${percento6}%`;
   }
   if (!cartaInvertita()) {
     const target = presa.card.querySelector("[data-dm-cl-target]");
@@ -85365,6 +85370,7 @@ var MURO_VUOTO = Object.freeze({
   avvisiGrandi: true,
   risveglio: { attivo: false, entita: "" },
   blocco: { attivo: false, pin: "" },
+  batteria: { attiva: false, livello: "", carica: "" },
   pagine: []
 });
 function muroPulito(input) {
@@ -85381,6 +85387,7 @@ function muroPulito(input) {
   const notte = dentro3.notte && typeof dentro3.notte === "object" ? dentro3.notte : {};
   const risveglio = dentro3.risveglio && typeof dentro3.risveglio === "object" ? dentro3.risveglio : {};
   const blocco3 = dentro3.blocco && typeof dentro3.blocco === "object" ? dentro3.blocco : {};
+  const batteria = dentro3.batteria && typeof dentro3.batteria === "object" ? dentro3.batteria : {};
   const minuti = Number(riposo2.minuti);
   const pin = pinPulito(blocco3.pin);
   const visti = /* @__PURE__ */ new Set();
@@ -85420,6 +85427,13 @@ function muroPulito(input) {
     /* Senza PIN il blocco non c'e': un tablet bloccato senza la chiave per
      * uscire e' un tablet da smontare dal muro. */
     blocco: { attivo: vero2(blocco3.attivo, false) && Boolean(pin), pin },
+    /* La batteria del tablet sul riposo: spenta finche' qualcuno non la
+     * accende. Le due entita' sono facoltative: vuote, la dice il browser. */
+    batteria: {
+      attiva: vero2(batteria.attiva, false),
+      livello: entita2(batteria.livello),
+      carica: entita2(batteria.carica)
+    },
     pagine
   };
 }
@@ -85533,7 +85547,13 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
      * come lo legge la plancia: «il meteo non ridice con quello che e' messo
      * nella config». Vuoto, il tablet fa come la plancia senza scelta. */
     meteo: entita2(overrides2["dm.home_meteo"]) || entita2(overrides2["dm.core_055"]),
-    persone: elenco5(altro.persone).filter((p) => p && entita2(p.entity) && p.nascosta !== true).map((p) => ({ entity: entita2(p.entity), name: testo(p.name) })),
+    /* Anche quelle spente in Home: non si contano fra chi e' in casa, ma il
+     * loro nome di casa serve lo stesso a una card del tablet che le mostra. */
+    persone: elenco5(altro.persone).filter((p) => p && entita2(p.entity)).map((p) => ({
+      entity: entita2(p.entity),
+      name: testo(p.name),
+      ...p.nascosta === true ? { nascosta: true } : {}
+    })),
     centrali: centrali2,
     aree: centrali2.map((id) => ({ entita: id, nome: nomiDelleAree.get(id) || "" })),
     /* L'antifurto come lo ha messo a posto la plancia di origine: «stato e
@@ -85567,7 +85587,7 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
 }
 function personeDelMuro(fonte = {}, stati = {}) {
   const configurate2 = elenco5(fonte?.persone).filter((p) => p && entita2(p.entity));
-  const elencoDelMuro = configurate2.length ? configurate2 : Object.keys(stati || {}).filter((id) => id.startsWith("person.")).map((entity2) => ({ entity: entity2, name: "" }));
+  const elencoDelMuro = configurate2.length ? configurate2.filter((p) => p.nascosta !== true) : Object.keys(stati || {}).filter((id) => id.startsWith("person.")).map((entity2) => ({ entity: entity2, name: "" }));
   const inCasa = elencoDelMuro.map((p) => personViewModel(p, stati, 0)).filter((vista2) => vista2.presence === "home");
   return {
     entita: elencoDelMuro.map((p) => p.entity),
@@ -85577,7 +85597,11 @@ function personeDelMuro(fonte = {}, stati = {}) {
   };
 }
 function nomeDellaPersonaDelMuro(id, fonte = {}, stati = {}) {
-  const persona = elenco5(fonte?.persone).find((p) => p && p.entity === id);
+  const chi = entita2(id);
+  if (!chi) return "";
+  const persone3 = elenco5(fonte?.persone).filter((p) => p && p.entity);
+  const tracciati = (persona2) => elenco5(stati?.[persona2]?.attributes?.device_trackers);
+  const persona = persone3.find((p) => p.entity === chi) || persone3.find((p) => tracciati(chi).includes(p.entity)) || persone3.find((p) => tracciati(p.entity).includes(chi));
   return persona ? nomeDellaPersona(persona, stati) : "";
 }
 var ACCESI4 = /* @__PURE__ */ new Set(["on", "open", "opening", "unlocked", "detected", "wet", "home", "true"]);
@@ -85723,6 +85747,58 @@ function scala(versoScelto, larghezza, altezza) {
   const s = Math.min(Number(larghezza) / base.larghezza, Number(altezza) / base.altezza);
   return Number.isFinite(s) && s > 0 ? Math.max(0.45, Math.min(s, 1.6)) : 1;
 }
+var SCARICA3 = /* @__PURE__ */ new Set(["discharging", "not_charging", "unplugged", "off", "false"]);
+var IGNOTI = /* @__PURE__ */ new Set(["", "unknown", "unavailable", "none"]);
+var BATTERIA_BASSA2 = 20;
+function inCaricaDaStato(valore3) {
+  const s = String(valore3 ?? "").trim().toLowerCase().replace(/\s+/g, "_");
+  if (IGNOTI.has(s)) return null;
+  if (s === "on" || s === "true" || isCharging(s)) return true;
+  if (SCARICA3.has(s)) return false;
+  return null;
+}
+var percento5 = (valore3) => {
+  if (valore3 === null || valore3 === void 0 || String(valore3).trim() === "") return null;
+  const n = Number(valore3);
+  return Number.isFinite(n) ? Math.round(Math.max(0, Math.min(100, n))) : null;
+};
+function batteriaDalBrowser(manager) {
+  if (!manager || typeof manager !== "object") return null;
+  const livello = Number(manager.level);
+  if (!Number.isFinite(livello)) return null;
+  return {
+    livello: percento5(livello * 100),
+    inCarica: typeof manager.charging === "boolean" ? manager.charging : null
+  };
+}
+function batteriaDelTablet(muro, stati = {}, browser = null) {
+  const scelta3 = muro?.batteria;
+  if (!scelta3?.attiva) return null;
+  const sensore = scelta3.livello ? stati?.[scelta3.livello] : null;
+  const daEntita2 = percento5(sensore?.state);
+  const caricaScelta = scelta3.carica ? inCaricaDaStato(stati?.[scelta3.carica]?.state) : null;
+  if (daEntita2 !== null) {
+    const attr = sensore?.attributes || {};
+    const daAttributi = typeof attr.is_charging === "boolean" ? attr.is_charging : typeof attr.charging === "boolean" ? attr.charging : null;
+    const inCarica = caricaScelta ?? daAttributi;
+    return {
+      livello: daEntita2,
+      inCarica,
+      bassa: daEntita2 <= BATTERIA_BASSA2 && inCarica !== true,
+      fonte: "entita"
+    };
+  }
+  if (browser && browser.livello !== null && browser.livello !== void 0) {
+    const inCarica = caricaScelta ?? browser.inCarica ?? null;
+    return {
+      livello: browser.livello,
+      inCarica,
+      bassa: browser.livello <= BATTERIA_BASSA2 && inCarica !== true,
+      fonte: "browser"
+    };
+  }
+  return null;
+}
 function pinGiusto(muro, scritto) {
   if (!muro?.blocco?.attivo) return true;
   return String(scritto ?? "") === muro.blocco.pin;
@@ -85747,7 +85823,9 @@ var state109 = root[KEY113] ||= {
   trascina: null,
   inAttesa: {},
   pressione: null,
-  swipe: null
+  swipe: null,
+  /* Quello che il browser del tablet dice della sua batteria, se lo dice. */
+  batteria: null
 };
 var MEZZ_ORA = 30 * 60 * 1e3;
 var RICORDO = "dm_muro_ricordo";
@@ -87104,7 +87182,7 @@ function riposo(muro) {
   return `<div class="mu-riposo" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
-    <div class="mu-et mu-data">${esc(o.lungo)}</div>
+    <div class="mu-et mu-data">${esc(o.lungo)}${pilaDelRiposo(muro)}</div>
     <div class="mu-riposo-riga">
       ${m && numero44(m.temperatura) !== null ? `<span>${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>` : ""}
       ${dentro3 ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro3} ${esc(t("in casa", "inside"))}</span>` : ""}
@@ -87114,6 +87192,37 @@ function riposo(muro) {
     </div>
     ${rigaDelleAree}
     <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div></div>`;
+}
+var pilaChiesta = false;
+function ascoltaLaBatteria() {
+  if (pilaChiesta) return;
+  const chiedi5 = root.navigator?.getBattery;
+  if (typeof chiedi5 !== "function") return;
+  pilaChiesta = true;
+  Promise.resolve().then(() => chiedi5.call(root.navigator)).then((manager) => {
+    const leggi2 = () => {
+      state109.batteria = batteriaDalBrowser(manager);
+      if (state109.riposo && state109.muro?.batteria?.attiva) disegna5();
+    };
+    for (const evento of ["levelchange", "chargingchange"])
+      manager?.addEventListener?.(evento, leggi2);
+    leggi2();
+  }).catch(() => {
+  });
+}
+function pila(b) {
+  const pieno = Math.max(b.livello > 0 ? 1.5 : 0, b.livello / 100 * 17);
+  return `<svg class="mu-pila-g" width="34" height="18" viewBox="0 0 26 14" aria-hidden="true"><rect x="1" y="1" width="21" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="23.2" y="4.5" width="2" height="5" rx="1" fill="currentColor"/><rect class="mu-pila-pieno" x="3" y="3" width="${pieno.toFixed(1)}" height="8" rx="1.5"/>${b.inCarica ? '<path class="mu-pila-fulmine" d="M12.8 1.6 8.4 7.6h3.2l-1.2 4.8 4.6-6.2h-3.2z"/>' : ""}</svg>`;
+}
+function pilaDelRiposo(muro) {
+  if (!muro?.batteria?.attiva) return "";
+  if (muro.batteria.livello) segna(muro.batteria.livello);
+  if (muro.batteria.carica) segna(muro.batteria.carica);
+  ascoltaLaBatteria();
+  const b = batteriaDelTablet(muro, allStates() || {}, state109.batteria);
+  if (!b) return "";
+  const parole4 = `${t("Batteria", "Battery")} ${b.livello}%${b.inCarica ? ` · ${t("in carica", "charging")}` : ""}`;
+  return `<span class="mu-pila${b.inCarica ? " carica" : ""}${b.bassa ? " bassa" : ""}" data-mu-riposo="batteria" title="${esc(parole4)}" aria-label="${esc(parole4)}">${pila(b)}<b>${b.livello}%</b></span>`;
 }
 function areeSulRiposo(aree2) {
   const lette = aree2.map((a, i) => ({
@@ -88348,7 +88457,14 @@ ${MURO} .mu-deriva .mu-avvisi{position:static;padding:0;margin-bottom:10px}
 ${MURO} .mu-deriva .mu-tocca{position:static;margin-top:14px}
 ${MURO} .mu-riposo-riga .mu-attenzione{color:#fbbf24}
 ${MURO} .mu-orologione{font-size:240px;line-height:.9}
-${MURO} .mu-data{font-size:18px;letter-spacing:.2em}
+${MURO} .mu-data{font-size:18px;letter-spacing:.2em;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 18px}
+${MURO} .mu-pila{display:inline-flex;align-items:center;gap:7px;letter-spacing:.04em;color:#92a4c2;font-variant-numeric:tabular-nums}
+${MURO} .mu-pila b{font-weight:800}
+${MURO} .mu-pila-g{flex:none;display:block}
+${MURO} .mu-pila-pieno{fill:currentColor;opacity:.85}
+${MURO} .mu-pila-fulmine{fill:#fde68a;stroke:#05080f;stroke-width:.9;stroke-linejoin:round}
+${MURO} .mu-pila.carica{color:#6ee7b7}
+${MURO} .mu-pila.bassa{color:#fbbf24}
 ${MURO} .mu-riposo-riga{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
 ${MURO} .mu-riposo-riga span{display:flex;align-items:center;gap:10px}
 ${MURO} .mu-tocca{position:absolute;bottom:28px;opacity:.6}
@@ -88410,6 +88526,7 @@ ${MURO}[data-compatto="1"] .mu-tasti .mu-tondo{width:64px;height:64px;font-size:
 ${MURO}[data-compatto="1"] .mu-video-fin{flex:none;height:200px}
 ${MURO}[data-compatto="1"] .mu-orologione{font-size:110px}
 ${MURO}[data-compatto="1"] .mu-data{font-size:13px}
+${MURO}[data-compatto="1"] .mu-pila-g{width:28px;height:15px}
 ${MURO}[data-compatto="1"] .mu-riposo-riga{flex-direction:column;gap:10px;align-items:center;font-size:15px}
 ${MURO}[data-compatto="1"] .mu-avviso{font-size:13px}
 ${MURO}[data-verso="verticale"] .mu-testa{flex-wrap:wrap}
@@ -88598,7 +88715,8 @@ var nomeDi8 = (id) => clean(
     ...state110.fonte?.clima || [],
     ...state110.fonte?.tapparelle || []
   ].find((d) => d.entity === id)?.name
-) || clean(allStates()?.[id]?.attributes?.friendly_name) || id;
+) || /* Una persona col nome della scheda Persone, come sul tablet. */
+nomeDellaPersonaDelMuro(id, state110.fonte || {}, allStates() || {}) || clean(allStates()?.[id]?.attributes?.friendly_name) || id;
 var campiCerca = 0;
 function cerca(via, valore3, { domini: domini2 = "", segnaposto = "" } = {}) {
   const id = `mu-ed-cerca-${campiCerca++}`;
@@ -88964,6 +89082,30 @@ function corpoMarkup7() {
     ),
     `${cerca("risveglio.entita", m.risveglio.entita, { domini: "binary_sensor" })}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}`
   )}
+    ${riga2(
+    t("Batteria del tablet", "Tablet battery"),
+    t(
+      "Sul riposo: quanto è carica e se è attaccata alla corrente",
+      "On the rest screen: how charged it is and whether it is plugged in"
+    ),
+    interruttore("batteria.attiva", m.batteria.attiva, "batteria")
+  )}
+    ${m.batteria.attiva ? `${riga2(
+    t("Livello della batteria", "Battery level"),
+    t(
+      "Per esempio il sensore della batteria dell'app di Home Assistant. Vuoto: quella che dà il browser del tablet",
+      "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives"
+    ),
+    cerca("batteria.livello", m.batteria.livello, { domini: "sensor" })
+  )}
+    ${riga2(
+    t("In carica", "Charging"),
+    t(
+      "Facoltativo: il sensore «in carica» o lo stato della batteria",
+      "Optional: the “is charging” sensor or the battery state"
+    ),
+    cerca("batteria.carica", m.batteria.carica, { domini: "binary_sensor,sensor" })
+  )}` : ""}
     ${riga2(t("Blocca il tablet", "Lock the tablet"), t("Per uscire dal pannello serve il PIN, da 4 a 8 cifre", "Leaving the panel needs the PIN, 4 to 8 digits"), `${campo3("blocco.pin", m.blocco.pin, "PIN", "password")}${interruttore("blocco.attivo", m.blocco.attivo, "blocco")}`)}
     ${riga2(t("Antifurto e serrature chiedono il codice", "Alarm and locks ask for the code"), t("Sempre, quando la centrale ne ha uno", "Always, when the panel has one"), `<span class="mu-ed-int fermo" aria-checked="true"><i></i></span>`)}
   </div>` : ""}
@@ -89055,8 +89197,13 @@ function metti3(via, valore3) {
         (_, n) => p[lista5][n] || { tipo: "vuoto" }
       );
       const ora3 = posti[k];
-      const aspetto = { nome: ora3.nome || "", sotto: ora3.sotto || "", disegno: ora3.disegno || "" };
       const scritto = clean(valore3);
+      const cambiato = campo5 === "entita" && scritto !== clean(ora3.entita) || campo5 === "azione" && scritto !== clean(ora3.azione);
+      const aspetto = {
+        nome: cambiato ? "" : ora3.nome || "",
+        sotto: ora3.sotto || "",
+        disegno: ora3.disegno || ""
+      };
       if (campo5 === "entita")
         posti[k] = scritto ? {
           ...aspetto,

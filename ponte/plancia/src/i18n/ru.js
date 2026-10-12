@@ -5593,4 +5593,8 @@ export default Object.freeze({
   "Someone at the door": "Звонят в дверь",
   "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Когда срабатывает оповещение или сигнализация, панель просыпается и показывает его крупно, пока кто-нибудь не нажмёт «Понятно»",
   "When it rings, the panel wakes up and opens the intercom by itself": "Когда звонят, панель просыпается и сама открывает домофон",
+  "Tablet battery": "Батарея планшета",
+  "On the rest screen: how charged it is and whether it is plugged in": "На экране покоя: уровень заряда и подключено ли питание",
+  "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "Например, датчик батареи приложения Home Assistant. Пусто: данные браузера планшета",
+  "Optional: the “is charging” sensor or the battery state": "Необязательно: датчик «заряжается» или состояние батареи",
 });

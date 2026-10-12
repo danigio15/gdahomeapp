@@ -5559,4 +5559,8 @@ export default Object.freeze({
   "Someone at the door": "दरवाज़े पर कोई है",
   "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "जब कोई चेतावनी चालू हो या अलार्म बजे, पैनल जाग जाता है और उसे बड़ा दिखाता है जब तक कोई «देख लिया» न दबाए",
   "When it rings, the panel wakes up and opens the intercom by itself": "घंटी बजने पर पैनल जाग जाता है और इंटरकॉम अपने आप खोल देता है",
+  "Tablet battery": "टैबलेट की बैटरी",
+  "On the rest screen: how charged it is and whether it is plugged in": "विश्राम स्क्रीन पर: कितनी चार्ज है और चार्जर से जुड़ी है या नहीं",
+  "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "उदाहरण के लिए Home Assistant ऐप का बैटरी सेंसर। खाली: टैबलेट का ब्राउज़र जो बताता है",
+  "Optional: the “is charging” sensor or the battery state": "वैकल्पिक: “चार्ज हो रही है” सेंसर या बैटरी की स्थिति",
 });

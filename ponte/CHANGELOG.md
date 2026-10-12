@@ -10,6 +10,26 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.9
+
+**App su iPhone: niente più fasce bianche attorno alla plancia.** Con l'iPhone
+in modo chiaro e la plancia scura, sotto l'orologio e sotto la barra in fondo
+restavano due fasce chiare. Adesso hanno il colore del fondo della plancia:
+la barra in basso si chiude sopra la barretta di casa, e in cima l'ora e la
+batteria sono chiare sullo scuro. Nella Configurazione i testi non scorrono più sotto l'orologio.
+
+**Pannello a muro: la batteria del tablet sul riposo.** In «A muro», sotto
+«Altre impostazioni», si accende «Batteria del tablet»: sullo schermo di
+riposo, accanto alla data, compaiono la carica e il fulmine quando è attaccato
+alla corrente. Il valore lo dà il browser del tablet, oppure un sensore di
+Home Assistant scelto a mano (per esempio quello dell'app del tablet).
+
+**Pannello a muro: le persone col loro nome.** Le persone nascoste nella Home,
+o messe nell'elenco col telefono invece che con la persona, sul pannello
+prendevano il nome dell'account di Home Assistant invece di quello scritto
+nella plancia. Adesso il nome è sempre quello della plancia, anche nel
+configuratore del pannello.
+
 ## 1.11.8
 
 **Elettrodomestici: il sensore totale non sparisce più.** All'avvio, se il

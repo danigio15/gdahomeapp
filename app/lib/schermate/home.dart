@@ -28,7 +28,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemNavigator;
+import 'package:flutter/services.dart'
+    show SystemNavigator, SystemUiOverlayStyle;
 
 import '../casa/aggiornamenti.dart';
 import '../casa/collegamento.dart';
@@ -38,6 +39,7 @@ import '../casa/impostazioni.dart';
 import '../casa/la_guardia.dart';
 import '../casa/zigbee.dart';
 import '../misure/lavori.dart';
+import '../plancia/il_fondo.dart';
 import '../parole.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
@@ -567,8 +569,35 @@ class _HomeState extends State<Home> {
              * fino ai lati dello schermo. Sotto ci sta comunque il fondo
              * vivo, che si rivede appena si esce dalla plancia. */
             if (sullaPlancia)
+              /* Il grigio e' quello della **plancia**, non del tema
+               * dell'app: il tema segue il telefono, la plancia no, e con un
+               * telefono in modo chiaro sotto una plancia scura queste bande
+               * erano bianche — «quella barra bianca su iPhone»
+               * (`plancia/il_fondo.dart`). Finche' la pagina non l'ha detto,
+               * quello dell'app. Anche l'orologio e la batteria del telefono
+               * si colorano su quel fondo, chiari sullo scuro. */
               Positioned.fill(
-                child: ColoredBox(color: Theme.of(context).colorScheme.surface),
+                child: ValueListenableBuilder<Color?>(
+                  valueListenable: ilFondoDellaPlancia,
+                  builder: (contesto, fondo, _) {
+                    final colore =
+                        fondo ?? Theme.of(contesto).colorScheme.surface;
+                    final scuro =
+                        ThemeData.estimateBrightnessForColor(colore) ==
+                        Brightness.dark;
+                    return AnnotatedRegion<SystemUiOverlayStyle>(
+                      value:
+                          (scuro
+                                  ? SystemUiOverlayStyle.light
+                                  : SystemUiOverlayStyle.dark)
+                              .copyWith(
+                                statusBarColor: Colors.transparent,
+                                systemNavigationBarColor: Colors.transparent,
+                              ),
+                      child: ColoredBox(color: colore),
+                    );
+                  },
+                ),
               ),
             /* Senza barra del titolo la pagina comincia sotto l'orologio del
              * telefono: l'aria in cima gliela lascia questo, e solo dove la

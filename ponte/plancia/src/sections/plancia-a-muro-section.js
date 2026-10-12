@@ -58,6 +58,8 @@ import {
   CHIAVE_MURO,
   avvisiAccesi,
   derivaDelRiposo,
+  batteriaDalBrowser,
+  batteriaDelTablet,
   comandiDellaPagina,
   eCompatto,
   eNotte,
@@ -119,6 +121,8 @@ const state = (root[KEY] ||= {
   inAttesa: {},
   pressione: null,
   swipe: null,
+  /* Quello che il browser del tablet dice della sua batteria, se lo dice. */
+  batteria: null,
 });
 
 /* ── Premium e fonte, chiesti al ponte ───────────────────────────────────── */
@@ -1952,7 +1956,7 @@ function riposo(muro) {
   return `<div class="mu-riposo" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
-    <div class="mu-et mu-data">${esc(o.lungo)}</div>
+    <div class="mu-et mu-data">${esc(o.lungo)}${pilaDelRiposo(muro)}</div>
     <div class="mu-riposo-riga">
       ${m && numero(m.temperatura) !== null ? `<span>${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>` : ""}
       ${dentro ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro} ${esc(t("in casa", "inside"))}</span>` : ""}
@@ -1962,6 +1966,48 @@ function riposo(muro) {
     </div>
     ${rigaDelleAree}
     <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div></div>`;
+}
+
+/* ── la batteria del tablet, sul riposo ─────────────────────────────────── */
+
+/* Il browser la dice una volta sola per pagina: si chiede alla prima volta
+ * che serve, e poi si ascolta. Il riposo si ridisegna quando cambia. */
+let pilaChiesta = false;
+function ascoltaLaBatteria() {
+  if (pilaChiesta) return;
+  const chiedi = root.navigator?.getBattery;
+  if (typeof chiedi !== "function") return;
+  pilaChiesta = true;
+  Promise.resolve()
+    .then(() => chiedi.call(root.navigator))
+    .then((manager) => {
+      const leggi = () => {
+        state.batteria = batteriaDalBrowser(manager);
+        if (state.riposo && state.muro?.batteria?.attiva) disegna();
+      };
+      for (const evento of ["levelchange", "chargingchange"])
+        manager?.addEventListener?.(evento, leggi);
+      leggi();
+    })
+    .catch(() => {});
+}
+
+/* Una pila disegnata: il guscio, il pieno fino a dove arriva, e il fulmine
+ * sopra quando e' attaccata alla corrente. */
+function pila(b) {
+  const pieno = Math.max(b.livello > 0 ? 1.5 : 0, (b.livello / 100) * 17);
+  return `<svg class="mu-pila-g" width="34" height="18" viewBox="0 0 26 14" aria-hidden="true"><rect x="1" y="1" width="21" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="23.2" y="4.5" width="2" height="5" rx="1" fill="currentColor"/><rect class="mu-pila-pieno" x="3" y="3" width="${pieno.toFixed(1)}" height="8" rx="1.5"/>${b.inCarica ? '<path class="mu-pila-fulmine" d="M12.8 1.6 8.4 7.6h3.2l-1.2 4.8 4.6-6.2h-3.2z"/>' : ""}</svg>`;
+}
+
+function pilaDelRiposo(muro) {
+  if (!muro?.batteria?.attiva) return "";
+  if (muro.batteria.livello) segna(muro.batteria.livello);
+  if (muro.batteria.carica) segna(muro.batteria.carica);
+  ascoltaLaBatteria();
+  const b = batteriaDelTablet(muro, allStates() || {}, state.batteria);
+  if (!b) return "";
+  const parole = `${t("Batteria", "Battery")} ${b.livello}%${b.inCarica ? ` · ${t("in carica", "charging")}` : ""}`;
+  return `<span class="mu-pila${b.inCarica ? " carica" : ""}${b.bassa ? " bassa" : ""}" data-mu-riposo="batteria" title="${esc(parole)}" aria-label="${esc(parole)}">${pila(b)}<b>${b.livello}%</b></span>`;
 }
 
 function areeSulRiposo(aree) {
@@ -3442,7 +3488,14 @@ ${MURO} .mu-deriva .mu-avvisi{position:static;padding:0;margin-bottom:10px}
 ${MURO} .mu-deriva .mu-tocca{position:static;margin-top:14px}
 ${MURO} .mu-riposo-riga .mu-attenzione{color:#fbbf24}
 ${MURO} .mu-orologione{font-size:240px;line-height:.9}
-${MURO} .mu-data{font-size:18px;letter-spacing:.2em}
+${MURO} .mu-data{font-size:18px;letter-spacing:.2em;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 18px}
+${MURO} .mu-pila{display:inline-flex;align-items:center;gap:7px;letter-spacing:.04em;color:#92a4c2;font-variant-numeric:tabular-nums}
+${MURO} .mu-pila b{font-weight:800}
+${MURO} .mu-pila-g{flex:none;display:block}
+${MURO} .mu-pila-pieno{fill:currentColor;opacity:.85}
+${MURO} .mu-pila-fulmine{fill:#fde68a;stroke:#05080f;stroke-width:.9;stroke-linejoin:round}
+${MURO} .mu-pila.carica{color:#6ee7b7}
+${MURO} .mu-pila.bassa{color:#fbbf24}
 ${MURO} .mu-riposo-riga{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 40px;margin-top:22px;color:#92a4c2;font-weight:700;font-size:20px}
 ${MURO} .mu-riposo-riga span{display:flex;align-items:center;gap:10px}
 ${MURO} .mu-tocca{position:absolute;bottom:28px;opacity:.6}
@@ -3504,6 +3557,7 @@ ${MURO}[data-compatto="1"] .mu-tasti .mu-tondo{width:64px;height:64px;font-size:
 ${MURO}[data-compatto="1"] .mu-video-fin{flex:none;height:200px}
 ${MURO}[data-compatto="1"] .mu-orologione{font-size:110px}
 ${MURO}[data-compatto="1"] .mu-data{font-size:13px}
+${MURO}[data-compatto="1"] .mu-pila-g{width:28px;height:15px}
 ${MURO}[data-compatto="1"] .mu-riposo-riga{flex-direction:column;gap:10px;align-items:center;font-size:15px}
 ${MURO}[data-compatto="1"] .mu-avviso{font-size:13px}
 ${MURO}[data-verso="verticale"] .mu-testa{flex-wrap:wrap}

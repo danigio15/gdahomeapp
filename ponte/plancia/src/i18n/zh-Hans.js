@@ -5479,4 +5479,8 @@ export default Object.freeze({
   "Someone at the door": "有人在门口",
   "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "当提醒触发或警报响起时，面板会唤醒并放大显示，直到有人点按“知道了”",
   "When it rings, the panel wakes up and opens the intercom by itself": "门铃响起时，面板会唤醒并自动打开对讲",
+  "Tablet battery": "平板电池",
+  "On the rest screen: how charged it is and whether it is plugged in": "在待机屏幕上显示电量以及是否接通电源",
+  "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "例如 Home Assistant 应用的电池传感器。留空：使用平板浏览器提供的数值",
+  "Optional: the “is charging” sensor or the battery state": "可选：“正在充电”传感器或电池状态",
 });

@@ -5573,4 +5573,8 @@ export default Object.freeze({
   "Someone at the door": "玄関で呼び出しがあります",
   "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "アラートがオンになるか警報が鳴ると、パネルが起動し、誰かが「確認しました」をタップするまで大きく表示します",
   "When it rings, the panel wakes up and opens the intercom by itself": "呼び出しがあると、パネルが起動してインターホンを自動で開きます",
+  "Tablet battery": "タブレットのバッテリー",
+  "On the rest screen: how charged it is and whether it is plugged in": "待機画面に残量と充電中かどうかを表示します",
+  "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "例：Home Assistant アプリのバッテリーセンサー。空欄：タブレットのブラウザーが提供する値",
+  "Optional: the “is charging” sensor or the battery state": "任意：「充電中」センサーまたはバッテリーの状態",
 });

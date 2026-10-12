@@ -5551,4 +5551,8 @@ export default Object.freeze({
   "Someone at the door": "누군가 문 앞에 있어요",
   "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "알림이 켜지거나 경보가 울리면 패널이 깨어나 누군가 「확인」을 누를 때까지 크게 보여 줍니다",
   "When it rings, the panel wakes up and opens the intercom by itself": "초인종이 울리면 패널이 깨어나 인터폰을 자동으로 엽니다",
+  "Tablet battery": "태블릿 배터리",
+  "On the rest screen: how charged it is and whether it is plugged in": "대기 화면에 충전량과 전원 연결 여부를 표시합니다",
+  "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "예: Home Assistant 앱의 배터리 센서. 비워 두면 태블릿 브라우저가 제공하는 값",
+  "Optional: the “is charging” sensor or the battery state": "선택 사항: ‘충전 중’ 센서 또는 배터리 상태",
 });

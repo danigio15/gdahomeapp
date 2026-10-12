@@ -22,6 +22,7 @@ library;
 
 import 'dart:convert';
 
+import 'il_fondo.dart';
 import 'pannello.dart';
 
 /// Come la pagina chiede il menu dell'app, sul telefono.
@@ -858,6 +859,45 @@ class Premesse {
       'else dico();'
       '})();';
 
+  /// La pagina dice all'app il colore del suo fondo, e lo ridice quando
+  /// cambia.
+  ///
+  /// Attorno alla plancia — sotto l'orologio del telefono, sotto la barra dei
+  /// gesti — l'app dipinge un fondo suo, e prima era quello del tema del
+  /// telefono: con un iPhone in modo chiaro e la plancia scura, due fasce
+  /// bianche sopra e sotto una pagina blu notte. Il tema lo sceglie la
+  /// plancia; allora il colore lo dice lei (`plancia/il_fondo.dart`).
+  ///
+  /// Si legge il fondo calcolato del corpo, e se il corpo e' trasparente
+  /// quello del documento. Si ridice quando cambia il tema — un attributo o
+  /// una classe sul documento o sul corpo, il telefono che passa al buio
+  /// con la plancia su «Auto» — e solo se e' davvero cambiato. Nel browser
+  /// non dice niente: `gdahomeDice` li' non c'e'.
+  static const String ilFondoAllApp =
+      '<script>(function(){'
+      'var detto="";'
+      'var vuoto=function(c){return !c||c==="transparent"||'
+      '/rgba\\([^)]*,\\s*0\\s*\\)/.test(c);};'
+      'var dici=function(){try{'
+      'if(!(window.gdahomeDice&&window.gdahomeDice.postMessage))return;'
+      'var c=document.body?getComputedStyle(document.body).backgroundColor:"";'
+      'if(vuoto(c))c=getComputedStyle(document.documentElement).backgroundColor;'
+      'if(vuoto(c)||c===detto)return;'
+      'detto=c;'
+      'window.gdahomeDice.postMessage("$ilFondoDellaPlanciaDice"+c);'
+      '}catch(male){}};'
+      'var poi=function(){setTimeout(dici,0);};'
+      'var guarda=function(){try{var o=new MutationObserver(poi);'
+      'var cosa={attributes:true,attributeFilter:["class","data-theme","style"]};'
+      'o.observe(document.documentElement,cosa);'
+      'if(document.body)o.observe(document.body,cosa);}catch(male){}};'
+      'if(document.body){dici();guarda();}'
+      'else document.addEventListener("DOMContentLoaded",function(){dici();guarda();});'
+      'window.addEventListener("load",dici);'
+      'try{matchMedia("(prefers-color-scheme: dark)")'
+      '.addEventListener("change",poi);}catch(male){}'
+      '})();</script>';
+
   /* Il tema, la tavolozza e la barra qui non si scrivono, e non e' una
    * dimenticanza. Sono tre comandi della pagina Config della plancia — «su
    * questo dispositivo», lo dice lei — e la pagina se li tiene nel deposito
@@ -987,7 +1027,7 @@ class Premesse {
         '${leggera ? stileLeggero : ''}'
         '$stileDelleMisure$leMisureNellaSuaVariabile$laConfigFuoriDallaPlancia'
         '$iTreTrattiniApronoIlMenuDellApp$laTendaSiAlzaComunque'
-        '$lAvvisoAspettaLaConfigurazione';
+        '$lAvvisoAspettaLaConfigurazione$ilFondoAllApp';
     final fine = RegExp(
       r'</body\s*>',
       caseSensitive: false,
