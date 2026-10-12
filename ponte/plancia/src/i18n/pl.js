@@ -5589,4 +5589,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Dotknij odtwarzacza, aby dodać go do grupy lub usunąć",
   "Ungroup all": "Rozwiąż grupę",
+  "Full-screen alerts": "Alerty na pełnym ekranie",
+  "Press": "Naciśnij",
+  "Someone at the door": "Ktoś dzwoni do drzwi",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Gdy włączy się alert lub zadziała alarm, panel się budzi i pokazuje go w dużym rozmiarze, dopóki ktoś nie dotknie „Widzę”",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Gdy dzwoni, panel się budzi i sam otwiera domofon",
 });

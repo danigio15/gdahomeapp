@@ -5546,4 +5546,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "플레이어를 탭해 그룹에 추가하거나 제거하세요",
   "Ungroup all": "그룹 해제",
+  "Full-screen alerts": "전체 화면 알림",
+  "Press": "누르기",
+  "Someone at the door": "누군가 문 앞에 있어요",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "알림이 켜지거나 경보가 울리면 패널이 깨어나 누군가 「확인」을 누를 때까지 크게 보여 줍니다",
+  "When it rings, the panel wakes up and opens the intercom by itself": "초인종이 울리면 패널이 깨어나 인터폰을 자동으로 엽니다",
 });

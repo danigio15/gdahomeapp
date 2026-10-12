@@ -5533,4 +5533,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "المس مشغّلاً لإضافته إلى المجموعة أو إزالته منها",
   "Ungroup all": "فك المجموعة",
+  "Full-screen alerts": "تنبيهات بملء الشاشة",
+  "Press": "اضغط",
+  "Someone at the door": "هناك من يطرق الباب",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "عندما يُفعَّل تنبيه أو ينطلق الإنذار، تستيقظ اللوحة وتعرضه كبيرًا حتى يضغط أحد «رأيت»",
+  "When it rings, the panel wakes up and opens the intercom by itself": "عندما يرن الجرس، تستيقظ اللوحة وتفتح الإنتركم تلقائيًا",
 });

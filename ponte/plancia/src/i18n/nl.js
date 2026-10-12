@@ -5592,4 +5592,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Tik op een speler om hem aan de groep toe te voegen of eruit te halen",
   "Ungroup all": "Groep opheffen",
+  "Full-screen alerts": "Meldingen op volledig scherm",
+  "Press": "Indrukken",
+  "Someone at the door": "Er wordt aangebeld",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Als een melding aangaat of het alarm afgaat, wordt het paneel wakker en toont het groot tot iemand op „Gezien” tikt",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Als er wordt gebeld, wordt het paneel wakker en opent het de intercom vanzelf",
 });

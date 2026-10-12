@@ -5588,4 +5588,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Коснитесь плеера, чтобы добавить его в группу или убрать из неё",
   "Ungroup all": "Распустить группу",
+  "Full-screen alerts": "Оповещения на весь экран",
+  "Press": "Нажать",
+  "Someone at the door": "Звонят в дверь",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Когда срабатывает оповещение или сигнализация, панель просыпается и показывает его крупно, пока кто-нибудь не нажмёт «Понятно»",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Когда звонят, панель просыпается и сама открывает домофон",
 });

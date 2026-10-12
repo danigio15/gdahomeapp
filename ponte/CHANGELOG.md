@@ -12,6 +12,17 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.11.8
 
+**Pannello a muro: cancelli, citofono e avvisi.**
+- Un cancello o una porta del garage ha il suo riquadro: il suo disegno,
+  «Aperto» o «Chiuso», e un tasto grande che apre, chiude o ferma.
+- Sul pannello da 4 pollici il termostato ha il meno e il più sul riquadro.
+- Pulsanti e interruttori in una pagina Personale hanno la stessa forma delle
+  luci, e un titolo lungo si stringe invece di essere tagliato.
+- Nella pagina Ingresso si sceglie il campanello: quando suona, il pannello si
+  sveglia e apre da solo il citofono con la telecamera e i tasti per aprire.
+- Un avviso che si accende o l'antifurto che suona prendono tutto lo schermo
+  finché qualcuno tocca «Ho visto». Si spegne in «Avvisi a tutto schermo».
+
 **Batterie: il BMS che scrive la corrente al contrario.** Nella scheda della
 batteria di accumulo c'è «Segno della corrente»: chi ha un BMS che in carica
 la scrive negativa sceglie «Negativa in carica», e la pagina smette di dire

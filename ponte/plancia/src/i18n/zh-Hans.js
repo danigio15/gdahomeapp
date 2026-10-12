@@ -5474,4 +5474,9 @@ export default Object.freeze({
   "Plays together with": "一起播放：",
   "Tap a player to add it to or remove it from the group": "轻点播放器以加入或移出分组",
   "Ungroup all": "解散分组",
+  "Full-screen alerts": "全屏提醒",
+  "Press": "按下",
+  "Someone at the door": "有人在门口",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "当提醒触发或警报响起时，面板会唤醒并放大显示，直到有人点按“知道了”",
+  "When it rings, the panel wakes up and opens the intercom by itself": "门铃响起时，面板会唤醒并自动打开对讲",
 });

@@ -471,6 +471,102 @@ test.describe("la plancia a muro", () => {
       .toBe("heat");
   });
 
+  /* Il cambio di stato come lo manda la plancia: lo stato nuovo, e l'evento. */
+  const cambia = (page, id, valore) =>
+    page.evaluate(
+      ([id, valore]) => {
+        eval("_RAW_STATES")[id] = { entity_id: id, state: valore, attributes: {} };
+        window.dispatchEvent(
+          new CustomEvent("dashboardmodern:state-changed", { detail: { entity_ids: [id] } }),
+        );
+      },
+      [id, valore],
+    );
+
+  /* «Il cancello sembra una tapparella.» Un cancello ha il suo riquadro: il
+   * suo stato in parole giuste e un tasto solo, che apre se e' chiuso. */
+  test("un cancello ha il suo riquadro, e il tasto grande lo apre", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: {
+        attiva: true,
+        pagine: [
+          {
+            id: "p1",
+            modello: "personale",
+            comandi: [{ tipo: "tapparella", entita: "cover.cancello" }],
+          },
+        ],
+      },
+      stati: {
+        ...STATI_A_MURO,
+        "cover.cancello": {
+          state: "closed",
+          attributes: { friendly_name: "Cancello", device_class: "gate" },
+        },
+      },
+    });
+    const carta = muro(page).locator('.mu-varco[data-mu-entita="cover.cancello"]');
+    await expect(carta).toContainText("Chiuso");
+    await carta.locator(".mu-varco-tasto").click();
+    await expect
+      .poll(async () => (await servizi(page)).map((s) => s.service), { timeout: 5000 })
+      .toEqual(["open_cover"]);
+  });
+
+  /* «Quando suona il campanello il pannello si sveglia e mostra la
+   * telecamera.» Anche dal riposo, e sulla pagina Ingresso giusta. */
+  test("il campanello sveglia il pannello e apre il citofono", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: {
+        ...MURO_DI_PROVA,
+        pagine: MURO_DI_PROVA.pagine.map((p) =>
+          p.modello === "ingresso"
+            ? { ...p, ingresso: { ...p.ingresso, campanello: "binary_sensor.campanello" } }
+            : p,
+        ),
+      },
+      stati: { ...STATI_A_MURO, "binary_sensor.campanello": { state: "off", attributes: {} } },
+    });
+    await expect(muro(page).locator(".mu-testa")).toBeVisible();
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect(muro(page).locator(".mu-riposo")).toBeVisible();
+    await cambia(page, "binary_sensor.campanello", "on");
+    const finestra = muro(page).locator(".mu-finestra");
+    await expect(finestra).toContainText("Suonano alla porta");
+    await expect(finestra.locator('[data-mu-telecamera="camera.cancello"]')).toHaveCount(1);
+    await expect(muro(page).locator('[data-mu-pagina="2"]')).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  /* «Allagamento, fumo, allarme a tutto schermo con un tasto Ho visto.» */
+  test("un avviso che si accende prende tutto lo schermo finche' si tocca Ho visto", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: MURO_DI_PROVA,
+      stati: { ...STATI_A_MURO, "binary_sensor.acqua": { state: "off", attributes: {} } },
+      caselle: {
+        cd_avvisi_custom: [
+          { name: "Allagamento in lavanderia", entity: "binary_sensor.acqua", cond: "on" },
+        ],
+      },
+    });
+    const grande = muro(page).locator(".mu-avviso-grande");
+    await expect(muro(page).locator(".mu-testa")).toBeVisible();
+    await expect(grande).toHaveCount(0);
+    await page.evaluate(() => window.dmMuro.riposa());
+    await cambia(page, "binary_sensor.acqua", "on");
+    await expect(grande).toContainText("Allagamento in lavanderia");
+    await grande.locator('[data-mu-fa="avviso-visto"]').click();
+    await expect(grande).toHaveCount(0);
+    /* Spento e riacceso, torna a farsi vedere. */
+    await cambia(page, "binary_sensor.acqua", "off");
+    await cambia(page, "binary_sensor.acqua", "on");
+    await expect(grande).toHaveCount(1);
+  });
+
   test("le pagine si cambiano solo dalle linguette, e il clima ha caldo e freddo dentro", async ({
     page,
   }, testInfo) => {

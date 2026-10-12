@@ -5568,4 +5568,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "プレーヤーをタップしてグループに追加または削除",
   "Ungroup all": "グループを解除",
+  "Full-screen alerts": "全画面アラート",
+  "Press": "押す",
+  "Someone at the door": "玄関で呼び出しがあります",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "アラートがオンになるか警報が鳴ると、パネルが起動し、誰かが「確認しました」をタップするまで大きく表示します",
+  "When it rings, the panel wakes up and opens the intercom by itself": "呼び出しがあると、パネルが起動してインターホンを自動で開きます",
 });

@@ -5566,4 +5566,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Gruba eklemek veya çıkarmak için bir oynatıcıya dokun",
   "Ungroup all": "Grubu dağıt",
+  "Full-screen alerts": "Tam ekran uyarılar",
+  "Press": "Bas",
+  "Someone at the door": "Kapı çalıyor",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Bir uyarı açıldığında veya alarm çaldığında panel uyanır ve biri «Gördüm» düğmesine dokunana kadar büyük gösterir",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Zil çaldığında panel uyanır ve diafonu kendiliğinden açar",
 });

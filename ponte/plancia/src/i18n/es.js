@@ -5603,4 +5603,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Toca un reproductor para añadirlo o quitarlo del grupo",
   "Ungroup all": "Deshacer el grupo",
+  "Full-screen alerts": "Avisos a pantalla completa",
+  "Press": "Pulsar",
+  "Someone at the door": "Llaman a la puerta",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Cuando se activa un aviso o salta la alarma, el panel se despierta y lo muestra en grande hasta que alguien toca «Visto»",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Cuando suena, el panel se despierta y abre el portero solo",
 });

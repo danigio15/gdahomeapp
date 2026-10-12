@@ -5592,4 +5592,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Toca num leitor para o adicionar ou remover do grupo",
   "Ungroup all": "Desfazer o grupo",
+  "Full-screen alerts": "Alertas em ecrã inteiro",
+  "Press": "Premir",
+  "Someone at the door": "Tocam à porta",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Quando um alerta se ativa ou o alarme dispara, o painel acorda e mostra-o em grande até alguém tocar em «Visto»",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Quando toca, o painel acorda e abre o intercomunicador sozinho",
 });

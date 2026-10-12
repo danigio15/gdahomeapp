@@ -2315,6 +2315,7 @@ var SOURCE_INDEX = Object.freeze({
   "Apparecchi e impianti": "Appliances and plants",
   "Applica": "Apply",
   "Appunti non disponibili qui": "Clipboard unavailable here",
+  "Apri": "Unlock",
   "Apri (come prima)": "Open (as before)",
   "Apri Assist": "Open Assist",
   "Apri Cancello": "Open gate",
@@ -2452,6 +2453,7 @@ var SOURCE_INDEX = Object.freeze({
   "Avvisami di nuovo per questo": "Warn me about this again",
   "avvisi": "warnings",
   "Avvisi": "Alerts",
+  "Avvisi a tutto schermo": "Full-screen alerts",
   "Avvisi personalizzati": "Custom alerts",
   "Avvisi personalizzati a finestra": "Custom alerts as a popup",
   "Avvisi sul riposo": "Alerts while resting",
@@ -2518,7 +2520,6 @@ var SOURCE_INDEX = Object.freeze({
   "binary_sensor di problema: accende il contatore Allarme.": "Problem binary_sensor: feeds the Alarm counter.",
   "Biondo": "Blonde",
   "Blitzortung espone il conteggio e, a parte, la distanza dell'ultimo fulmine in km.": "Blitzortung exposes the count and, separately, the distance of the last strike in km.",
-  "Blocca": "Lock",
   "Blocca il tablet": "Lock the tablet",
   "Bloccato": "Locked",
   "Boiler": "Storage boiler",
@@ -4969,6 +4970,7 @@ var SOURCE_INDEX = Object.freeze({
   "Prelevata dalla rete · Oggi": "Taken from the grid · Today",
   "Prelevata oggi": "Imported today",
   "Prelievo AC Tot.": "Total AC draw",
+  "Premi": "Press",
   "Prende le cose da": "Takes things from",
   "Prendi anche ${voci.length} sensori che stanno fuori dal dispositivo": "Also take ${voci.length} sensors that live outside the device",
   "Prendi anche 1 sensore che sta fuori dal dispositivo": "Also take 1 sensor that lives outside the device",
@@ -5086,7 +5088,9 @@ var SOURCE_INDEX = Object.freeze({
   "Quando la lettiera è stata pulita l'ultima volta: una data, o i minuti passati. Oltre le ore indicate qui sotto la scheda lo dice.": "When the litter box was last cleaned: a date, or the minutes gone by. Past the hours set below the card says so.",
   "Quando la terra è asciutta ma il meteo di casa prevede pioggia nelle prossime ore, la pianta aspetta invece di chiedere acqua. Solo per chi la pioggia la prende davvero.": "When the soil is dry but the home weather forecasts rain in the next hours, the plant waits instead of asking for water. Only for those the rain really reaches.",
   "Quando questo sensore si accende (per esempio una presenza)": "When this sensor turns on (for example a presence sensor)",
+  "Quando suona, il pannello si sveglia e apre il citofono da solo": "When it rings, the panel wakes up and opens the intercom by itself",
   "Quando un avviso personalizzato si accende, la plancia lo apre da sola. Solo quando si accende, e mai sopra una finestra gia' aperta.": "When a custom alert turns on, the dashboard opens it by itself. Only when it turns on, and never on top of a window that is already open.",
+  "Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»": "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”",
   "Quante card a schermo; le altre scorrono": "How many cards on screen; the rest scroll",
   "Quante fasce": "How many bands",
   "Quanti giorni restano prima di sostituirlo. Sotto la soglia la scheda lo dice, e il tasto qui sotto azzera il conto una volta cambiato.": "How many days are left before replacing it. Below the threshold the card says so, and the button below resets the count once you have changed it.",
@@ -5813,6 +5817,7 @@ var SOURCE_INDEX = Object.freeze({
   "sul tablet": "on the tablet",
   "Suona": "Ringing",
   "Suona insieme a": "Plays together with",
+  "Suonano alla porta": "Someone at the door",
   "Supercattivo": "Supervillain",
   "Supereroe": "Superhero",
   "Svuota i campi di periodo": "Clear the period fields",
@@ -85162,6 +85167,7 @@ var INGRESSO_VUOTO = Object.freeze({
   nomeApri2: "",
   esco: "",
   rientro: "",
+  campanello: "",
   persone: true,
   finestre: true
 });
@@ -85178,6 +85184,10 @@ function ingressoPulito(input = {}) {
     nomeApri2: testo(dentro3.nomeApri2, 32),
     esco: testo(dentro3.esco, 80),
     rientro: testo(dentro3.rientro, 80),
+    /* Il campanello: quando suona, il pannello si sveglia e apre il citofono
+     * da solo, col video e i tasti per aprire. Un sensore che si accende, o
+     * un evento di Home Assistant che scatta. */
+    campanello: entita2(dentro3.campanello),
     persone: vero2(dentro3.persone, INGRESSO_VUOTO.persone),
     finestre: vero2(dentro3.finestre, INGRESSO_VUOTO.finestre)
   };
@@ -85258,6 +85268,7 @@ var MURO_VUOTO = Object.freeze({
   riposo: { attivo: true, minuti: 2, torna: true, sensore: "" },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
+  avvisiGrandi: true,
   risveglio: { attivo: false, entita: "" },
   blocco: { attivo: false, pin: "" },
   pagine: []
@@ -85305,6 +85316,9 @@ function muroPulito(input) {
       a: ora2(notte.a, "06:30")
     },
     avvisi: vero2(dentro3.avvisi, true),
+    /* Un avviso che si accende — l'allagamento, il fumo, l'antifurto che
+     * suona — prende tutto lo schermo finche' qualcuno tocca «Ho visto». */
+    avvisiGrandi: vero2(dentro3.avvisiGrandi, true),
     risveglio: {
       attivo: vero2(risveglio.attivo, false) && Boolean(entita2(risveglio.entita)),
       entita: entita2(risveglio.entita)
@@ -86029,6 +86043,11 @@ var PAROLE_DEL_METEO = () => ({
   "lightning-rainy": t("temporale", "storm"),
   windy: t("vento", "windy")
 });
+function titoloLungo(titolo3) {
+  if (!state109.compatto) return "";
+  const lettere = String(titolo3 || "").length;
+  return lettere > 12 ? " mu-tit-xl" : lettere > 8 ? " mu-tit-l" : "";
+}
 function testa(pagina2, muro) {
   const o = orologio3();
   const m = pagina2.riga?.meteo !== false ? meteo() : null;
@@ -86039,7 +86058,7 @@ function testa(pagina2, muro) {
   ).join("")}</div>` : "";
   return `<div class="mu-carta mu-testa" style="--acc:${accento}">
     <button type="button" class="mu-menu" data-mu-fa="menu" aria-label="${esc(t("Apri il menu", "Open the menu"))}"><span></span><span></span><span></span></button>
-    <div class="mu-titolo"><div class="mu-tit">${esc(titoloDi(pagina2))}</div><div class="mu-et mu-sot">${esc(SOTTO()[pagina2.modello])}</div></div>
+    <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina2))}">${esc(titoloDi(pagina2))}</div><div class="mu-et mu-sot">${esc(SOTTO()[pagina2.modello])}</div></div>
     ${linguette3}
     <div class="mu-ora" data-mu-orologio>${m && numero44(m.temperatura) !== null ? `<div class="mu-meteo">${disegno("meteo", 44, "testa-meteo")}<div><b>${decimale(m.temperatura, 0)}°</b><div class="mu-et">${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</div></div></div><span class="mu-sep"></span>` : ""}<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
   </div>`;
@@ -86257,6 +86276,11 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
   const on = typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
   const azione = a.hvac_action ? AZIONI_DEL_CLIMA()[a.hvac_action] : on ? PAROLE_DEL_CLIMA()[s] : t("Spento", "Off");
   const target = obiettivo(id);
+  if (state109.compatto)
+    return `<div class="mu-carta mu-card mu-clima-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
+    <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><span class="mu-mini-t">${target === null ? "—" : `${decimale(target)}°`}</span></div>
+    <div class="mu-nome"><div class="mu-n">${esc(nomeDi7(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div>
+    <div class="mu-mini-tasti"><button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button><button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button></div></div>`;
   const rapido = rapidoDi(id, zona);
   return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}${rapido ? " mu-col-rapido" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno(faccia.chiave, 26, `clima-${i}`)}</span>
@@ -86271,8 +86295,31 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
       ${rapido ? pastigliaRapida(id, rapido, on) : `<button type="button" class="mu-tondo ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>`}
     </div></div>`;
 }
+var DISEGNO_DEL_VARCO = Object.freeze({ gate: "gate", garage: "garage-door" });
+function eUnVarco2(attributiDellaCover = {}) {
+  return Boolean(DISEGNO_DEL_VARCO[String(attributiDellaCover?.device_class || "")]);
+}
+function cardVarco(c, i) {
+  const id = c.entita;
+  const s = String(stato2(id)?.state || "");
+  const muove = s === "opening" || s === "closing";
+  const aperto2 = s === "open";
+  const parola = {
+    open: t("Aperto", "Open"),
+    closed: t("Chiuso", "Closed"),
+    opening: t("Si apre…", "Opening…"),
+    closing: t("Si chiude…", "Closing…")
+  }[s] || s || "—";
+  const [fa, tasto2] = muove ? ["ferma", t("Ferma", "Stop")] : aperto2 ? ["giu", t("Chiudi", "Close")] : ["su", t("Apri", "Open")];
+  const acc = "#22c55e";
+  return `<div class="mu-carta mu-card mu-varco ${aperto2 || muove ? "mu-accesa" : ""}" style="--acc:${acc}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
+    <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegnoDelCatalogo(DISEGNO_DEL_VARCO[attributi(id).device_class], 32)}</span>
+      <div class="mu-nome"><div class="mu-n">${esc(nomeDi7(id, c.nome))}</div><div class="mu-stato ${aperto2 || muove ? "" : "spento"}">${esc(parola)}</div></div></div>
+    <button type="button" class="mu-btn ${muove ? "" : "pieno"} mu-varco-tasto" style="--acc:${acc}" data-mu-fa="${fa}" data-mu-entita="${esc(id)}">${esc(tasto2)}</button></div>`;
+}
 function cardTapparella(c, i) {
   const id = c.entita;
+  if (eUnVarco2(attributi(id))) return cardVarco(c, i);
   const a = attributi(id);
   const s = String(stato2(id)?.state || "");
   const pos = numero44(a.current_position);
@@ -86307,6 +86354,7 @@ function cardAzione(c, i, grande = false) {
     dove: `az-${i}-${grande ? "g" : "p"}`
   });
 }
+var INTERRUTTORI2 = Object.freeze(["switch", "input_boolean", "fan", "siren", "humidifier"]);
 function cardEntita(c, i, grande = false) {
   const id = c.entita;
   const s = stato2(id);
@@ -86317,6 +86365,16 @@ function cardEntita(c, i, grande = false) {
   }
   const on = acceso4(id) || ["unlocked", "playing", "cleaning"].includes(String(s?.state));
   const parole4 = statoInParole2(id);
+  if (servizio && !grande) {
+    const dom = dominio2(id);
+    const interruttore3 = INTERRUTTORI2.includes(dom);
+    const verbo = dom === "lock" ? String(s?.state) === "unlocked" ? t("Chiudi", "Lock") : t("Apri", "Unlock") : dom === "script" || dom === "scene" || dom === "automation" ? t("Avvia", "Run") : t("Premi", "Press");
+    return `<button type="button" class="mu-carta mu-card mu-comando ${on ? "mu-accesa" : ""}" style="--acc:${on ? ACCENTI.luce : ACCENTI.azione}" data-mu-fa="entita" data-mu-entita="${esc(id)}">
+    <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegno(clean(c.disegno) || disegnoDellEntita(id), 32, `en-${i}-p`)}</span>
+      <div class="mu-nome"><div class="mu-n">${esc(nomeDi7(id, c.nome))}</div><div class="mu-stato ${on ? "" : "spento"}">${esc(clean(c.sotto) || parole4)}</div></div>
+      ${interruttore3 ? `<span class="mu-inter ${on ? "on" : ""}" aria-hidden="true"><i></i></span>` : ""}</div>
+    ${interruttore3 ? "" : `<span class="mu-btn mu-comando-tasto" aria-hidden="true">${esc(verbo)}</span>`}</button>`;
+  }
   return tessera({
     chiave: clean(c.disegno) || disegnoDellEntita(id),
     accento: on ? ACCENTI.luce : ACCENTI.azione,
@@ -86869,9 +86927,10 @@ function finestra4() {
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore3] || valore3)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div></div>`;
   } else if (f.tipo === "citofono") {
-    const ing = state109.muro?.pagine?.[state109.pagina]?.ingresso || {};
+    const ing = state109.muro?.pagine?.[f.pagina ?? state109.pagina]?.ingresso || {};
+    const squillo = f.suonato ? `<span class="mu-chip mu-acc" style="--c:52px">${disegnoDelCatalogo("bell", 30)}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(t("Suonano alla porta", "Someone at the door"))}</div><div class="mu-sotto">${esc(orologio3(new Date(f.suonato)).ora)}${ing.telecamera ? ` · ${esc(nomeDi7(ing.telecamera))}` : ""}</div></div>` : `<div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi7(ing.telecamera))}</div></div>`;
     dentro3 = `<div class="mu-fin-clima">
-      <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi7(ing.telecamera))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-riga1">${squillo}<button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(ing.telecamera)}" alt=""></div>
       ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${esc(nomeDi7(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${esc(nomeDi7(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}</div>`;
   } else if (f.tipo === "gruppo") {
@@ -87270,6 +87329,7 @@ function disegna5() {
     return;
   }
   if (!state109.fonte) return;
+  ricordaICampanelli();
   const nodo2 = tela();
   lasciaIlVelo();
   avviaIlBattito();
@@ -87285,6 +87345,7 @@ function disegna5() {
     corpo2 = state109.riposo ? riposo(muro) : `<div class="mu-pagina mu-pag-${pagina2.modello}">${testa(pagina2, muro)}${corpoDellaPagina(
       pagina2
     )}</div>${finestra4()}`;
+    corpo2 += avvisoGrande2();
     segna(centraleDelMuro(muro.pagine[0]));
     inVista2 = raccolta;
   } finally {
@@ -87588,6 +87649,14 @@ function onClick24(event) {
     case "finestra-antifurto":
       apriFinestra({ tipo: "antifurto" });
       return;
+    case "avviso-visto":
+      (state109.avvisiVisti ||= /* @__PURE__ */ new Set()).add(bersaglio.dataset.muAvviso);
+      disegna5();
+      return;
+    case "avviso-antifurto":
+      (state109.avvisiVisti ||= /* @__PURE__ */ new Set()).add(bersaglio.dataset.muAvviso);
+      apriFinestra({ tipo: "antifurto" });
+      return;
     case "finestra-citofono":
       apriFinestra({ tipo: "citofono" });
       return;
@@ -87782,6 +87851,77 @@ function battito() {
     if (muro.riposo.torna !== false) state109.pagina = 0;
   }
   disegna5();
+}
+function campanelloSuona(id, prima, ora3) {
+  if (prima === void 0 || !ora3 || ora3 === prima) return false;
+  if (ora3 === "unavailable" || ora3 === "unknown") return false;
+  return dominio2(id) === "event" ? true : ora3 === "on";
+}
+function campanelliDelMuro(muro = state109.muro) {
+  const visti = /* @__PURE__ */ new Set();
+  const fuori = [];
+  (muro?.pagine || []).forEach((pagina2, indice) => {
+    const id = pagina2.modello === "ingresso" ? pagina2.ingresso?.campanello || "" : "";
+    if (!id || visti.has(id)) return;
+    visti.add(id);
+    fuori.push({ indice, id });
+  });
+  return fuori;
+}
+function ricordaICampanelli() {
+  const visti = state109.campanelli ||= {};
+  for (const { id } of campanelliDelMuro())
+    if (!(id in visti)) visti[id] = String(stato2(id)?.state ?? "");
+}
+function suonaIlCampanello(event) {
+  if (!state109.muro?.attiva || !state109.premium) return;
+  const ids = event?.detail?.entity_ids || (event?.detail?.entity_id ? [event.detail.entity_id] : []);
+  const visti = state109.campanelli ||= {};
+  for (const { indice, id } of campanelliDelMuro()) {
+    if (ids.length && !ids.includes(id)) continue;
+    const ora3 = String(stato2(id)?.state ?? "");
+    const prima = visti[id];
+    visti[id] = ora3;
+    if (!campanelloSuona(id, prima, ora3)) continue;
+    state109.riposo = false;
+    state109.pagina = indice;
+    tocco();
+    apriFinestra({ tipo: "citofono", pagina: indice, suonato: Date.now() });
+    return;
+  }
+}
+function avvisiDaMostrare() {
+  const muro = state109.muro;
+  if (!muro?.avvisiGrandi || !state109.fonte) return [];
+  const accesi = avvisiAccesi(state109.fonte, allStates() || {}, centraleDelMuro(muro.pagine[0]));
+  const visti = state109.avvisiVisti ||= /* @__PURE__ */ new Set();
+  const ancora2 = new Set(accesi.map((a) => a.chiave));
+  for (const chiave2 of [...visti]) if (!ancora2.has(chiave2)) visti.delete(chiave2);
+  return accesi.filter((a) => !visti.has(a.chiave));
+}
+function guardaGliAvvisi() {
+  if (!state109.riposo || !state109.premium) return;
+  if (avvisiDaMostrare().length) {
+    state109.riposo = false;
+    tocco();
+  }
+}
+function avvisoGrande2() {
+  const muro = state109.muro;
+  if (!muro?.avvisiGrandi) return "";
+  for (const a2 of state109.fonte?.avvisi || []) a2.entita.forEach(segna);
+  for (const id of state109.fonte?.centrali || []) segna(id);
+  const [a] = avvisiDaMostrare();
+  if (!a) return "";
+  const disegnoDellAvviso = a.grave ? disegnoDelCatalogo("allarme", 84) || disegno("sicurezza", 84, "grande-allarme") : disegnoDelCatalogo(a.icon, 84) || disegno("avvisi", 84, `grande-${esc(a.chiave)}`);
+  const titolo3 = a.grave ? t("Allarme in corso", "Alarm going off") : a.testo;
+  const tasti = a.grave ? `<button type="button" class="mu-avg-tasto pieno" data-mu-fa="avviso-antifurto" data-mu-avviso="${esc(a.chiave)}">${esc(t("Antifurto", "Alarm"))}</button>` : "";
+  return `<div class="mu-avviso-grande ${a.grave ? "grave" : ""}" role="alertdialog" aria-label="${esc(titolo3)}">
+    <div class="mu-avg-disco">${disegnoDellAvviso}</div>
+    <div class="mu-avg-et">${esc(t("Attenzione", "Warning"))}</div>
+    <div class="mu-avg-tit">${esc(titolo3)}</div>
+    <div class="mu-avg-tasti">${tasti}<button type="button" class="mu-avg-tasto" data-mu-fa="avviso-visto" data-mu-avviso="${esc(a.chiave)}">${esc(t("Ho visto", "Got it"))}</button></div>
+  </div>`;
 }
 function svegliaSeServe(event) {
   const muro = state109.muro;
@@ -88041,6 +88181,37 @@ ${MURO} .mu-seg{display:flex;padding:6px;gap:6px;border-radius:20px;margin-top:a
 ${MURO} .mu-seg>button{flex:1;height:64px;border-radius:15px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:17px;color:var(--text-dim);text-align:center}
 ${MURO} .mu-seg>button.si{background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));color:color-mix(in srgb,var(--acc) 80%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent),0 8px 18px -10px var(--acc)}
 ${MURO} .mu-btn{height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:12px;font-weight:800;font-size:19px;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
+${MURO} .mu-varco,${MURO} .mu-comando,${MURO} .mu-clima-mini{display:flex;flex-direction:column;text-align:left}
+${MURO} .mu-varco-tasto,${MURO} .mu-comando-tasto{margin-top:auto;width:100%}
+${MURO} .mu-varco-tasto.pieno{color:#052e16}
+${MURO} .mu-comando .mu-riga1{width:100%}
+${MURO} .mu-comando .mu-inter{margin-left:auto;pointer-events:none}
+${MURO} .mu-mini-alto{display:flex;align-items:center;justify-content:space-between;gap:6px}
+${MURO} .mu-mini-t{font-family:Oswald,Inter,sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--acc);white-space:nowrap}
+${MURO} .mu-mini-tasti{display:flex;gap:8px;margin-top:auto}
+${MURO} .mu-mini-tasti .mu-tondo{flex:1;width:auto;height:40px;border-radius:12px;font-size:22px}
+${MURO}[data-compatto="1"] .mu-varco-tasto{height:44px;font-size:16px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-mini-t{font-size:26px}
+${MURO}[data-compatto="1"] .mu-mini-tasti .mu-tondo{height:34px;font-size:20px}
+${MURO}[data-compatto="1"] .mu-clima-mini{gap:6px}
+${MURO}[data-compatto="1"] .mu-comando-tasto{display:none}
+${MURO} .mu-avviso-grande{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;color:#fff;background:radial-gradient(circle at 50% 35%,#0e7490,#062a33 72%)}
+${MURO} .mu-avviso-grande.grave{background:radial-gradient(circle at 50% 35%,#7f1d1d,#2a0a0a 72%)}
+${MURO} .mu-avg-disco{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:0 0 0 18px rgba(255,255,255,.08),0 0 60px rgba(255,255,255,.18);animation:muAvgBatte 1.6s ease-in-out infinite}
+${MURO} .mu-avviso-grande.grave .mu-avg-disco{box-shadow:0 0 0 18px rgba(239,68,68,.25),0 0 60px rgba(239,68,68,.6)}
+${MURO} .mu-avg-disco .dm-oggetto,${MURO} .mu-avg-disco svg{width:84px!important;height:84px!important}
+${MURO} .mu-avg-et{font:700 16px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+${MURO} .mu-avg-tit{font:700 56px/1.05 Oswald,Inter,sans-serif;max-width:90%}
+${MURO} .mu-avg-tasti{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+${MURO} .mu-avg-tasto{padding:18px 34px;border-radius:18px;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;font:700 22px Inter,sans-serif}
+${MURO} .mu-avg-tasto.pieno{background:#fff;color:#7f1d1d;border-color:#fff}
+@keyframes muAvgBatte{50%{transform:scale(1.06)}}
+${MURO}[data-compatto="1"] .mu-avviso-grande{gap:10px;padding:14px}
+${MURO}[data-compatto="1"] .mu-avg-disco{width:92px;height:92px;box-shadow:0 0 0 10px rgba(255,255,255,.08)}
+${MURO}[data-compatto="1"] .mu-avg-disco .dm-oggetto,${MURO}[data-compatto="1"] .mu-avg-disco svg{width:54px!important;height:54px!important}
+${MURO}[data-compatto="1"] .mu-avg-tit{font-size:30px}
+${MURO}[data-compatto="1"] .mu-avg-et{font-size:13px}
+${MURO}[data-compatto="1"] .mu-avg-tasto{padding:12px 20px;font-size:16px;border-radius:14px}
 ${MURO} .mu-btn.pieno{--acc:#0ea5e9;background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 90%,#fff),var(--acc));color:#fff;box-shadow:0 12px 26px -10px var(--acc),inset 0 1px 0 rgba(255,255,255,.3)}
 ${MURO} .mu-due{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 ${MURO} .mu-ingresso{display:grid;grid-template-columns:1fr 1.1fr;grid-template-rows:1fr auto;gap:16px;min-height:0}
@@ -88100,6 +88271,8 @@ ${MURO}[data-compatto="1"] .mu-pag-clima{grid-template-rows:auto auto 1fr}
 ${MURO}[data-compatto="1"] .mu-zone button{padding:8px 14px;font-size:14px}
 ${MURO}[data-compatto="1"] .mu-testa{padding:10px 14px;gap:10px;flex-wrap:nowrap}
 ${MURO}[data-compatto="1"] .mu-tit{font-size:26px;max-width:150px}
+${MURO}[data-compatto="1"] .mu-tit.mu-tit-l{font-size:21px;max-width:190px}
+${MURO}[data-compatto="1"] .mu-tit.mu-tit-xl{font-size:17px;max-width:200px}
 ${MURO}[data-compatto="1"] .mu-sot,${MURO}[data-compatto="1"] .mu-meteo,${MURO}[data-compatto="1"] .mu-sep,${MURO}[data-compatto="1"] .mu-pillole,${MURO}[data-compatto="1"] .mu-d{display:none}
 ${MURO}[data-compatto="1"] .mu-h{font-size:32px}
 ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;padding:3px;gap:3px}
@@ -88225,6 +88398,8 @@ function installPlanciaAMuro() {
   root[IN_VISTA_KEY] = eInVista;
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
     controllaLOrecchio();
+    suonaIlCampanello(event);
+    guardaGliAvvisi(event);
     svegliaSeServe(event);
     confermaLeAttese(event);
     const ids = event?.detail?.entity_ids || [];
@@ -88553,6 +88728,7 @@ function paginaMarkup(p, i, tutte) {
     dentro3 = `${riga2(t("Centrale dell'antifurto", "Alarm panel"), t("I modi sono quelli che la centrale accetta", "The modes are the ones the panel accepts"), cerca(`${via}.ingresso.centrale`, ing.centrale, { domini: "alarm_control_panel" }))}
     ${riga2(t("Avvisa se restano finestre aperte", "Warn about open windows"), "", interruttore(`${via}.ingresso.finestre`, ing.finestre, "finestre"))}
     ${riga2(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
+    ${riga2(t("Campanello", "Doorbell"), t("Quando suona, il pannello si sveglia e apre il citofono da solo", "When it rings, the panel wakes up and opens the intercom by itself"), cerca(`${via}.ingresso.campanello`, ing.campanello, { domini: "binary_sensor,event,input_boolean,switch" }))}
     ${riga2(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga2(t("Nome del tasto grande", "Big button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo3(`${via}.ingresso.nomeApri`, ing.nomeApri, ing.apri ? nomeDi8(ing.apri) : t("Cancello", "Gate")))}
     ${riga2(t("Secondo tasto", "Second button"), t("Per esempio: apri porta", "For example: open the door"), cerca(`${via}.ingresso.apri2`, ing.apri2, { domini: "button,lock,cover,switch,script,input_button" }))}
@@ -88685,6 +88861,7 @@ function corpoMarkup7() {
     ${riga2(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor" }))}
     ${riga2(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo3("notte.da", m.notte.da, "23:00", "time")}${campo3("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
     ${riga2(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
+    ${riga2(t("Avvisi a tutto schermo", "Full-screen alerts"), t("Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»", "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”"), interruttore("avvisiGrandi", m.avvisiGrandi, "avvisi-grandi"))}
     ${riga2(
     t("Si sveglia da solo", "Wakes up by itself"),
     t(

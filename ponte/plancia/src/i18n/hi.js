@@ -5554,4 +5554,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "किसी प्लेयर को समूह में जोड़ने या हटाने के लिए टैप करें",
   "Ungroup all": "समूह तोड़ें",
+  "Full-screen alerts": "पूरी स्क्रीन पर चेतावनियाँ",
+  "Press": "दबाएँ",
+  "Someone at the door": "दरवाज़े पर कोई है",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "जब कोई चेतावनी चालू हो या अलार्म बजे, पैनल जाग जाता है और उसे बड़ा दिखाता है जब तक कोई «देख लिया» न दबाए",
+  "When it rings, the panel wakes up and opens the intercom by itself": "घंटी बजने पर पैनल जाग जाता है और इंटरकॉम अपने आप खोल देता है",
 });

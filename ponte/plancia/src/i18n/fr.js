@@ -5620,4 +5620,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Touche un lecteur pour l'ajouter au groupe ou l'en retirer",
   "Ungroup all": "Dissoudre le groupe",
+  "Full-screen alerts": "Alertes plein écran",
+  "Press": "Appuyer",
+  "Someone at the door": "On sonne à la porte",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Quand une alerte s'active ou que l'alarme se déclenche, le panneau se réveille et l'affiche en grand jusqu'à ce que quelqu'un touche « Vu »",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Quand ça sonne, le panneau se réveille et ouvre l'interphone tout seul",
 });

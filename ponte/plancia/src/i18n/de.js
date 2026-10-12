@@ -5609,4 +5609,9 @@ export default Object.freeze({
   "Tap a player to add it to or remove it from the group":
     "Tippe auf einen Player, um ihn zur Gruppe hinzuzufügen oder zu entfernen",
   "Ungroup all": "Gruppe auflösen",
+  "Full-screen alerts": "Vollbild-Warnungen",
+  "Press": "Drücken",
+  "Someone at the door": "Es klingelt an der Tür",
+  "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Wenn eine Warnung aktiv wird oder der Alarm ausgelöst wird, wacht das Panel auf und zeigt sie groß an, bis jemand auf „Gesehen“ tippt",
+  "When it rings, the panel wakes up and opens the intercom by itself": "Wenn es klingelt, wacht das Panel auf und öffnet die Gegensprechanlage von selbst",
 });
