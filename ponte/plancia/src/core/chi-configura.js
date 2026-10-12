@@ -52,20 +52,28 @@ export function nomiPuliti(elenco) {
 /**
  * I nomi della casella, dalle chiavi che li hanno tenuti.
  *
- * `cd_branding.admin_users` e' dove stanno adesso, ed e' quello che vale anche
- * quando e' un elenco vuoto: vuol dire che qualcuno ha svuotato la casella.
- * Se non c'e' affatto si guarda dove stavano prima — `cd_connection`, e il
- * `config.js` di chi la plancia la serviva da solo — perche' su quel
- * dispositivo la casella era piena, e svuotarla senza che nessuno l'abbia
- * chiesto vorrebbe dire aprire la Config per un aggiornamento.
+ * `cd_branding.admin_users` e' dove stanno adesso. Se li' non c'e' nessun
+ * nome si guarda dove stavano prima — `cd_connection`, e il `config.js` di chi
+ * la plancia la serviva da solo — perche' su quel dispositivo la casella era
+ * piena, e svuotarla senza che nessuno l'abbia chiesto vorrebbe dire aprire la
+ * Config per un aggiornamento.
+ *
+ * Anche quando in `cd_branding` c'e' un elenco **vuoto**. Nella 1.11.10 si
+ * leggeva come «qualcuno l'ha svuotata», ma la 1.11.10 l'elenco vuoto lo
+ * scriveva anche quando nessuno aveva toccato niente: bastava salvare i
+ * «Generali» dall'app, che il nome non lo conosceva ancora. Un vetro che il
+ * nome ce l'ha non lo butta per quello; chi la casella la svuota davvero la
+ * svuota anche nel suo `cd_connection` (`edSaveGeneral`).
  */
 export function amministratoriScritti({
   branding = null,
   collegamento = null,
   config = null,
 } = {}) {
-  if (branding && typeof branding === "object" && Array.isArray(branding.admin_users))
-    return nomiPuliti(branding.admin_users);
+  const scritti = nomiPuliti(
+    branding && typeof branding === "object" ? branding.admin_users : null,
+  );
+  if (scritti.length) return scritti;
   if (collegamento && typeof collegamento === "object" && Array.isArray(collegamento.admin_users))
     return nomiPuliti(collegamento.admin_users);
   if (config && typeof config === "object" && Array.isArray(config.admin_users))

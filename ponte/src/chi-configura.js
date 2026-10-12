@@ -138,3 +138,36 @@ export function puoConfigurare({
   /* Non e' di nessuno: resta a chi amministra, come con la casella vuota. */
   return puoAmministrare === true;
 }
+
+/* Un salvataggio che la casella non la nomina non la svuota.
+ *
+ * La pagina manda lo scatto intero, e `cd_branding` dentro c'e' sempre. Ma chi
+ * lo scrive non sempre sa che c'e' un nome: una plancia di ieri, che
+ * `admin_users` in `cd_branding` non l'ha mai messo, o un vetro che la
+ * configurazione condivisa non l'ha ancora riletta. Salvando il titolo, quei
+ * vetri rimandavano un `cd_branding` senza la casella — e il nome spariva per
+ * tutti, senza che nessuno l'avesse chiesto.
+ *
+ * Allora: se nello scatto arrivato `cd_branding` c'e' ma `admin_users` no, si
+ * rimette quello salvato. Svuotare la casella resta possibile, ma si deve
+ * dire: `admin_users: []`, che e' quello che scrive la pagina quando chi la
+ * vede piena la cancella. Uno scatto senza `cd_branding` — l'azzeramento —
+ * resta com'e'. Torna i valori da salvare, uguali a quelli arrivati se non
+ * c'e' niente da rimettere. */
+export function conservaGliAmministratori(nuovi, salvati) {
+  if (!nuovi || typeof nuovi !== "object" || typeof nuovi.cd_branding !== "string") return nuovi;
+  const daTenere = amministratoriDellaPlancia(salvati);
+  if (!daTenere.length) return nuovi;
+  let arrivato;
+  try {
+    arrivato = JSON.parse(nuovi.cd_branding);
+  } catch (_errore) {
+    return nuovi;
+  }
+  if (!arrivato || typeof arrivato !== "object" || Array.isArray(arrivato)) return nuovi;
+  if (Array.isArray(arrivato.admin_users)) return nuovi;
+  return {
+    ...nuovi,
+    cd_branding: JSON.stringify({ ...arrivato, admin_users: daTenere }),
+  };
+}

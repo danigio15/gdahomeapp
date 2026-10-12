@@ -505,7 +505,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ZUIFO4VK.js";
+} from "../../chunk-RHTS3V3X.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -111116,8 +111116,10 @@ function amministratoriScritti({
   collegamento: collegamento2 = null,
   config = null
 } = {}) {
-  if (branding && typeof branding === "object" && Array.isArray(branding.admin_users))
-    return nomiPuliti(branding.admin_users);
+  const scritti = nomiPuliti(
+    branding && typeof branding === "object" ? branding.admin_users : null
+  );
+  if (scritti.length) return scritti;
   if (collegamento2 && typeof collegamento2 === "object" && Array.isArray(collegamento2.admin_users))
     return nomiPuliti(collegamento2.admin_users);
   if (config && typeof config === "object" && Array.isArray(config.admin_users))
@@ -111294,7 +111296,7 @@ function applica2() {
 function travasa() {
   if (state158.travasato) return;
   const branding = readJson("cd_branding", null);
-  if (branding && typeof branding === "object" && Array.isArray(branding.admin_users)) {
+  if (nomiPuliti(branding?.admin_users).length) {
     state158.travasato = true;
     return;
   }
@@ -111345,13 +111347,15 @@ function installLaConfigEDiChiLaAmministra() {
   };
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:states-ready", "pageshow"])
     root.addEventListener?.(evento, ancora2);
-  root.addEventListener?.("dashboardmodern:persistence-restored", () => {
+  const configurazioneArrivata = () => {
     state158.ripristinata = true;
     chiudiLePorte();
     travasa();
     chiediChiSono({ ancora: true });
     applica2();
-  });
+  };
+  for (const evento of ["dashboardmodern:persistence-restored", "dashboardmodern:persistence-hydrated"])
+    root.addEventListener?.(evento, configurazioneArrivata);
   if (doc.readyState === "loading") doc.addEventListener("DOMContentLoaded", ancora2, { once: true });
   else ancora2();
   return true;

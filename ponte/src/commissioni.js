@@ -73,7 +73,11 @@ import { LicenzaNo } from "./licenze.js";
 import { perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
 import { iFili, iRami, laMappaDisegnata } from "./mappa-zigbee.js";
 import { comeSiPresenta } from "./zigbee.js";
-import { amministratoriDellaPlancia, puoConfigurare } from "./chi-configura.js";
+import {
+  amministratoriDellaPlancia,
+  conservaGliAmministratori,
+  puoConfigurare,
+} from "./chi-configura.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -1540,13 +1544,19 @@ export class Commissioni {
       return si(
         id,
         this._eCambiata(
-          cassetta.scrivi(profilo, scatto.values, {
-            keys_revision: scatto.keys_revision ?? 0,
-            writer_generation: scatto.writer_generation ?? 0,
-            updated_at: scatto.updated_at ?? 0,
-            expected_revision: detto.expected_revision ?? null,
-            reset: detto.reset === true,
-          }),
+          /* Un `cd_branding` senza la casella non la svuota: vedi
+           * `conservaGliAmministratori`. */
+          cassetta.scrivi(
+            profilo,
+            conservaGliAmministratori(scatto.values, cassetta.leggi(profilo)?.snapshot?.values),
+            {
+              keys_revision: scatto.keys_revision ?? 0,
+              writer_generation: scatto.writer_generation ?? 0,
+              updated_at: scatto.updated_at ?? 0,
+              expected_revision: detto.expected_revision ?? null,
+              reset: detto.reset === true,
+            },
+          ),
         ),
       );
     } catch (errore) {
