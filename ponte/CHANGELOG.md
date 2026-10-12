@@ -12,6 +12,12 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.11.8
 
+**Sicurezza, tre rifiniture.** I tentativi di abbinamento si contano appena
+cominciano, anche se ne arrivano tanti insieme dallo stesso indirizzo. L'app
+ricorda casa per casa che la stretta di mano è già stata legata, anche dopo
+averla chiusa. Nel centralino una casa rimasta in silenzio a lungo tiene la sua
+identità, e quando torna rientra solo lei.
+
 **Pannello a muro: cancelli, citofono e avvisi.**
 - Un cancello o una porta del garage ha il suo riquadro: il suo disegno,
   «Aperto» o «Chiuso», e un tasto grande che apre, chiude o ferma.
