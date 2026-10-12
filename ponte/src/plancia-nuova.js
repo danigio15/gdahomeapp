@@ -63,6 +63,21 @@ export function aggiungiUnaPlancia(
   { titolo = "", modello = "classica", utenti = null } = {},
 ) {
   let quale = plance.aggiungi(titolo);
+  /* Una plancia nuova nasce col cassetto vuoto, sempre. Il profilo si ricava
+   * dal titolo, e il cassetto di una plancia tolta con lo stesso titolo
+   * dovrebbe essere gia' vuoto (`togli` lo svuota). Ma prima di oggi una
+   * pagina rimasta aperta su quella plancia poteva riempirlo di nuovo dopo
+   * che era stata tolta, e quel cassetto e' ancora li' ad aspettare: senza
+   * questa riga la plancia rifatta se lo ritroverebbe — a muro, se la morta
+   * era a muro. Quello che c'e' qui dentro non e' di nessuna plancia che
+   * esiste, quindi non e' il lavoro di nessuno. */
+  try {
+    configurazione?.dimentica?.(quale.profilo);
+  } catch (errore) {
+    registro?.attenzione?.(
+      `la plancia «${quale.titolo}» poteva ritrovarsi una configurazione di prima: ${errore?.message || errore}`,
+    );
+  }
   if (Array.isArray(utenti) && utenti.length) quale = plance.chiLaVede(quale.profilo, utenti);
   if (modelloPulito(modello) === "muro" && configurazione) {
     try {

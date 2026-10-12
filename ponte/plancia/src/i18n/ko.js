@@ -149,6 +149,8 @@ export default Object.freeze({
     "어느 시간에도 비용이 들지 않으며, 위의 금액은 계통에서 가져온 분만 해당합니다.",
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.":
     "있다는 것을 알 수 있도록 여기 남습니다. 아직 응답이 없다면 종으로 알림에 되돌릴 수 있습니다.",
+  "This dashboard's configuration is reserved for its administrator.":
+    "이 대시보드의 구성은 관리자만 사용할 수 있습니다.",
   "This entity is not present in this home.": "이 엔티티는 이 집에 없습니다.",
   "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.":
     "이것은 전력량계(kWh)입니다. 지금 얼마나 쓰는지가 아니라 전체로 얼마나 썼는지를 알려줍니다. 여기서는 무시됩니다 — 「기록과 보고서에 쓰는 누적 전력량」 칸에 넣으세요.",

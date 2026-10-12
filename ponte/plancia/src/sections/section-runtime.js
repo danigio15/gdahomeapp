@@ -178,6 +178,7 @@ import { installNodiSection } from "./nodi-section.js";
 import { installNodiEditor } from "./nodi-editor-section.js";
 import { installAgendaEditorSection } from "./agenda-editor-section.js";
 import { installLinguaSection } from "./lingua-section.js";
+import { installLaConfigEDiChiLaAmministra } from "./la-config-e-di-chi-la-amministra-section.js";
 import { installSostieniIlProgetto } from "./sostieni-il-progetto-section.js";
 import { installSezioniMie } from "./sezioni-mie-section.js";
 import { installSezioniMieEditor } from "./sezioni-mie-editor-section.js";
@@ -1117,6 +1118,10 @@ export function installSectionRuntime() {
      * l'altro, cosi' la sua scheda trova il pannello gia' in piedi. */
     senzaCadere(installLaSogliaDellaPotenza);
     senzaCadere(installEditorEntrySection);
+    /* La Config e' di chi la casella «Utente admin» nomina: la linguetta,
+     * l'ingranaggio appena messo e le porte del guscio si chiudono a chi non
+     * e' lui. Dopo l'ingranaggio, che deve gia' esserci per sparire. */
+    senzaCadere(installLaConfigEDiChiLaAmministra);
     senzaCadere(installMediaPickerSection);
     /* Le persone leggono `cd_people` e basta; il loro editor usa il selettore
      * foto, quindi si installano dopo di lui. */

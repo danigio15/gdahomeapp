@@ -321,7 +321,10 @@ test("ogni plancia apre il suo cassetto, e quella che non c'e' non si apre", asy
 
     const pagina = await (await fetch(`${b.consolle}/plancia/casa-al-mare/`)).text();
     assert.match(pagina, /window\.__DASHBOARDMODERN_PROFILE__="casa-al-mare";/);
-    assert.match(pagina, /window\.__DASHBOARDMODERN_INSTANCE__="gdahome-casa-al-mare";/);
+    assert.match(
+      pagina,
+      /window\.__DASHBOARDMODERN_INSTANCE__="gdahome-casa-al-mare-[a-f0-9]{8}";/,
+    );
     assert.match(pagina, /window\.__DASHBOARDMODERN_PRIMARY__=false;/);
 
     /* Senza la barra in fondo si rimanda, sempre in relativo. */

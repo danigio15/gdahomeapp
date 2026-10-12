@@ -145,6 +145,8 @@ export default Object.freeze({
     "它们在任何时段都不花钱，上面的金额只算从电网买的那部分。",
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.":
     "它们留在这里，好让你知道它们存在。如果还在沉默，铃铛会把它们放回提醒里。",
+  "This dashboard's configuration is reserved for its administrator.":
+    "此仪表板的配置仅限其管理员使用。",
   "This entity is not present in this home.": "这个实体在这个家里不存在。",
   "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.":
     "这是电量计（kWh）：它显示一共用了多少，而不是此刻用多少。这里会被忽略——它该放在「用于历史和报表的总电量」一栏。",

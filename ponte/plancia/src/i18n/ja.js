@@ -149,6 +149,8 @@ export default Object.freeze({
     "どの時間でも費用はかからず、上の金額は系統から買った分だけです。",
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.":
     "あることが分かるように、ここには残ります。まだ黙ったままなら、ベルで通知に戻せます。",
+  "This dashboard's configuration is reserved for its administrator.":
+    "このダッシュボードの設定は管理者のみが変更できます。",
   "This entity is not present in this home.": "このエンティティはこの家にありません。",
   "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.":
     "これは積算電力量計 (kWh) です。合計でどれだけ消費したかを示すもので、今どれだけ消費しているかではありません。ここでは無視されます。「履歴とレポートに使う積算電力量」の欄に入れてください。",

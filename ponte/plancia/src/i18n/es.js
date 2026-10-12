@@ -148,6 +148,8 @@ export default Object.freeze({
     "No cuestan nada a ninguna hora, y los euros de arriba son solo sobre lo que tomó de la red.",
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.":
     "Se quedan escritos aquí para que sepas que existen. La campana los devuelve al aviso, si siguen mudos.",
+  "This dashboard's configuration is reserved for its administrator.":
+    "La configuración de este panel está reservada a su administrador.",
   "This entity is not present in this home.": "Esta entidad no existe en esta casa.",
   "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.":
     "Esto es un contador de energía (kWh): dice cuánto ha consumido en total, no cuánto está consumiendo ahora. Aquí se ignora: va en el campo «Energía total para el historial y el informe».",

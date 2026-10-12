@@ -642,7 +642,7 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
     assert.equal(aggiunta.status, 201);
     const { quale } = await aggiunta.json();
     assert.equal(quale.profilo, "casa-al-mare");
-    assert.equal(quale.istanza, "gdahome-casa-al-mare");
+    assert.match(quale.istanza, /^gdahome-casa-al-mare-[a-f0-9]{8}$/);
     assert.equal(quale.primaria, false);
 
     /* Rinominare cambia il titolo e non il cassetto: se no rinominare una

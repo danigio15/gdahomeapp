@@ -148,6 +148,8 @@ export default Object.freeze({
     "Hiçbir saatte bir şey tutmazlar; yukarıdaki tutarlar yalnızca şebekeden alınanı kapsar.",
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.":
     "Var olduklarını bilesin diye burada yazılı kalırlar. Hâlâ sessizlerse zil onları uyarıya geri koyar.",
+  "This dashboard's configuration is reserved for its administrator.":
+    "Bu panonun yapılandırması yöneticisine ayrılmıştır.",
   "This entity is not present in this home.": "Bu varlık bu evde yok.",
   "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.":
     "Bu bir enerji sayacı (kWh): toplamda ne kadar tükettiğini söyler, şu anda ne kadar çektiğini değil. Burada yok sayılır — yeri «Geçmiş ve rapor için toplam enerji» alanıdır.",

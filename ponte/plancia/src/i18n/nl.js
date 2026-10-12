@@ -148,6 +148,8 @@ export default Object.freeze({
     "Ze kosten op geen enkel uur iets, en de bedragen hierboven gaan alleen over wat van het net kwam.",
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.":
     "Ze blijven hier staan zodat je weet dat ze er zijn. De bel zet ze terug in de waarschuwing, als ze nog stil zijn.",
+  "This dashboard's configuration is reserved for its administrator.":
+    "De configuratie van dit dashboard is voorbehouden aan de beheerder.",
   "This entity is not present in this home.": "Deze entiteit bestaat niet in dit huis.",
   "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.":
     "Dit is een energiemeter (kWh): hij zegt hoeveel er in totaal is verbruikt, niet hoeveel er nu wordt getrokken. Hier wordt hij genegeerd — hij hoort in het veld ‘Totale energie voor de geschiedenis en het rapport’.",

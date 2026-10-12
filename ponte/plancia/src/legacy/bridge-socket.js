@@ -66,6 +66,11 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "dashboardmodern/config/get",
   "dashboardmodern/config/set",
   "dashboardmodern/config/restore",
+  // Chi sta guardando: la Config si apre solo a chi la casella «Utente
+  // admin» nomina (`la-config-e-di-chi-la-amministra-section.js`). Dentro il
+  // pannello la risposta la da' Home Assistant con la sessione di chi guarda,
+  // che e' proprio la persona giusta; legge e non cambia niente.
+  "auth/current_user",
   // Sfogliare le cartelle per la foto dell'auto. La finestra «Scegli la foto»
   // chiede questi tre e basta: senza, nel pannello di Home Assistant rispondeva
   // «Message type not permitted through the bridge» e non apriva niente,

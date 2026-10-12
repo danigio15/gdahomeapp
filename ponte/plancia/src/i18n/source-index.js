@@ -2422,6 +2422,7 @@ export const SOURCE_INDEX = Object.freeze({
   "La coda da lavorare": "The queue to work on",
   "La colonnina è della casa, non di una macchina: si collega una volta e vale per tutte le vetture. Porta quello che misura: potenza, energia, tensione, temperatura, il cavo.": "The charger belongs to the house, not to one car: connect it once and it counts for every vehicle. It brings what it measures: power, energy, voltage, temperature, the cable.",
   "La colonnina e evcc": "The wallbox and evcc",
+  "La configurazione di questa plancia è riservata al suo amministratore.": "This dashboard's configuration is reserved for its administrator.",
   "La configurazione è salvata": "Configuration is saved",
   "La cottura compare quando fra gli elettrodomestici c'è una friggitrice, un forno, un microonde, un piano cottura o una cappa.": "Cooking shows up once the appliances include an air fryer, an oven, a microwave, a cooktop or a hood.",
   "La data non è valida.": "That date is not valid.",

@@ -147,6 +147,8 @@ export default Object.freeze({
     "لا تكلّف شيئًا في أيّ ساعة، والمبالغ أعلاه تخصّ ما أُخذ من الشبكة فقط.",
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.":
     "تبقى مكتوبة هنا لتعرف أنها موجودة. والجرس يعيدها إلى التنبيه، إن كانت لا تزال صامتة.",
+  "This dashboard's configuration is reserved for its administrator.":
+    "إعدادات هذه اللوحة مخصّصة لمسؤولها.",
   "This entity is not present in this home.": "هذا الكيان غير موجود في هذا المنزل.",
   "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.":
     "هذا عدّاد طاقة (kWh): يقول كم استهلك إجمالًا، لا كم يسحب الآن. يُتجاهل هنا — مكانه حقل «الطاقة الإجمالية للسجل والتقرير».",

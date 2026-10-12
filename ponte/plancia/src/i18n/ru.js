@@ -149,6 +149,8 @@ export default Object.freeze({
     "Они ничего не стоят ни в какой час, а суммы выше касаются только того, что взято из сети.",
   "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.":
     "Они остаются записанными здесь, чтобы было видно, что они есть. Колокольчик вернёт их в предупреждение, если они всё ещё молчат.",
+  "This dashboard's configuration is reserved for its administrator.":
+    "Настройки этой панели доступны только её администратору.",
   "This entity is not present in this home.": "Этой сущности нет в этом доме.",
   "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.":
     "Это счётчик энергии (kWh): он говорит, сколько потрачено всего, а не сколько потребляется сейчас. Здесь он не учитывается — его место в поле «Полная энергия для истории и отчёта».",

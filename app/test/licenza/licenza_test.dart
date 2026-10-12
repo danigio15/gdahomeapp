@@ -903,7 +903,12 @@ void main() {
       expect(collegamento.licenza.premiumQui.value, isTrue);
     });
 
-    test('senza Premium, da fuori non si bussa al centralino', () async {
+    test('senza Premium, da fuori il centralino si prova una volta sola, '
+        'per chiedere la licenza', () async {
+      /* Prima non lo si provava mai: una casa creduta Base restava Base per
+       * sempre, anche diventata Premium (`collegamento.dart`, la prova da
+       * fuori). Adesso lo si prova una volta, e se non risponde si torna a
+       * bussare solo in casa. */
       final bussate = <Uri>[];
       final centralino = IndirizzoDelCentralino.leggi(
         'wss://centralino.esempio.it',
@@ -930,6 +935,18 @@ void main() {
       expect(collegamento.comeVa, ComeVa.irraggiungibile);
       expect(collegamento.fuoriCasaSenzaPremium, isTrue);
       expect(collegamento.perche, contains('Premium'));
+      expect(
+        bussate.where((una) => una.host == 'centralino.esempio.it'),
+        hasLength(1),
+        reason: 'la prova da fuori, una volta: $bussate',
+      );
+
+      /* Riaperta subito — il risveglio, il gesto di aggiornare — il
+       * centralino non si riprova: una casa Base non ci fa bussare a ogni
+       * giro. */
+      bussate.clear();
+      await collegamento.apri(forza: true);
+      expect(collegamento.fuoriCasaSenzaPremium, isTrue);
       expect(bussate, isNotEmpty);
       expect(
         bussate.every((una) => una.host == '192.168.1.50'),

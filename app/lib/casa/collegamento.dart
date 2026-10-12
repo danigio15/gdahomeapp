@@ -79,6 +79,7 @@ class Collegamento {
     GestoreLicenza? licenza,
     this.attesaPerLaRicevuta = const Duration(seconds: 20),
     this.ogniQuantoLaLicenza = const Duration(hours: 6),
+    this.ogniQuantoSiRiprovaDaFuori = const Duration(minutes: 10),
     this.consegnaAlCentralino,
   }) : _sonda = sonda ?? Sonda(),
        licenza = licenza ?? GestoreLicenza(),
@@ -96,6 +97,11 @@ class Collegamento {
   /// Ogni quanto si richiede la licenza alla casa mentre il filo resta su:
   /// ogni sei ore, come la casa la richiede al quadro.
   final Duration ogniQuantoLaLicenza;
+
+  /// Ogni quanto, al massimo, una casa che l'app crede Base si riprova da
+  /// fuori per sentire se nel frattempo e' diventata Premium: vedi
+  /// [_ProvaDaFuori].
+  final Duration ogniQuantoSiRiprovaDaFuori;
 
   /// Chi consegna al centralino la ricevuta di chi compra fuori casa: di
   /// serie una POST vera (`ricevuta_da_fuori.dart`), nelle prove una finta.
@@ -232,7 +238,17 @@ class Collegamento {
   String? get perche => _perche;
   CasaConosciuta? get casa => _casa;
   StatoDellaCasa? get stato => _stato;
-  Filo? get filo => _filo;
+
+  /// Il filo verso la casa, per chi ci deve parlare: la plancia, la console,
+  /// le segnalazioni.
+  ///
+  /// **Nessuno, finche' la casa non ha detto la sua licenza** quando si e'
+  /// entrati da fuori solo per chiedergliela ([_ProvaDaFuori]). La plancia
+  /// che resta nel riquadro — dopo un riposo la pagina non si butta — si
+  /// ricollega da se' appena trova un filo dentro (`plancia/cucitura.dart`),
+  /// e lo troverebbe proprio quello: una casa Base, da fuori, servita per il
+  /// tempo di una risposta. Qui non lo trova, e aspetta il verdetto.
+  Filo? get filo => _licenzaDaSentire ? null : _filo;
 
   /// Il pannello di DashboardModern in questa casa: dove stanno i file della
   /// plancia vera. `null` finche' non si e' chiesto, o per sempre se
@@ -256,7 +272,7 @@ class Collegamento {
   /// Da dove si sta passando adesso: serve a scrivere «in casa» o «da fuori».
   DaDove? get daDove => _daDove;
 
-  bool get dentro => _filo?.dentro ?? false;
+  bool get dentro => filo?.dentro ?? false;
 
   /// `true` da quando [apri] e' stata chiamata almeno una volta.
   ///
@@ -330,6 +346,11 @@ class Collegamento {
 
     _vai(ComeVa.inCammino);
 
+    /* Una casa che l'app crede Base puo' non esserlo piu': si prova da fuori,
+     * una volta, per chiederglielo. Vedi [_ProvaDaFuori]. */
+    final prova = _laProvaDaFuori(casa);
+    _prova = prova;
+
     final filo = Filo(
       approdo: () => _trova(casa),
       segno: casa.segno,
@@ -399,8 +420,14 @@ class Collegamento {
     });
 
     try {
-      await filo.apri();
+      /* Con la prova da fuori in corso si aspetta il primo esito, non i
+       * venticinque secondi di [Filo.apri]: se la prima bussata non va, il
+       * filo ribussa da solo dalle strade di casa, e [_trova] lo dice. */
+      await (prova == null
+          ? filo.apri()
+          : Future.any([filo.apri(), prova.fallita.future]));
     } on SegnoRifiutato catch (errore) {
+      _prova = null;
       _perche = errore.spiegazione;
       _vai(ComeVa.segnoScaduto);
       return;
@@ -408,7 +435,23 @@ class Collegamento {
       /* I tentativi vanno avanti da soli: quando il telefono rientra sotto una
        * rete che vede la casa, il filo si apre e lo stato si sistema. */
       _perche = errore.spiegazione;
-      _fuoriSenzaPremium = errore is PremiumRichiesto;
+      /* La prova da fuori non e' andata — il centralino non risponde, la casa
+       * non gli e' attaccata, o e' lui a dire 4402 — e allora vale quello che
+       * si sapeva: la casa e' Base, e da fuori serve Premium. E' la stessa
+       * pagina che si sarebbe vista senza provare. */
+      final dallaProva = prova != null && prova.usata;
+      if (_prova == prova) _prova = null;
+      _fuoriSenzaPremium =
+          errore is PremiumRichiesto ||
+          (dallaProva && (archivio.quella(casa.id) ?? casa).haStradeDaFuori);
+      /* E il perche' e' quello: un «casa non collegata» del centralino,
+       * sotto la pagina Premium, direbbe due cose diverse. */
+      if (dallaProva &&
+          _fuoriSenzaPremium &&
+          errore is! PremiumRichiesto &&
+          errore is! AddonDaAggiornare) {
+        _perche = fuoriCasaServePremium;
+      }
       /* Il centralino sa che l'add-on di questa casa e' vecchio: ce lo si
        * ricorda come se l'avesse detto lei, cosi' da fuori non si bussa piu'
        * e la pagina Premium dice di aggiornarlo. */
@@ -423,7 +466,118 @@ class Collegamento {
       return;
     }
 
+    if (!await _laLicenzaPrimaDiEntrare(filo)) return;
     await _leggiLaCasa(filo);
+  }
+
+  /* ─── La prova da fuori, per una casa creduta Base ───────────────────── */
+
+  /* La prova in corso, se ce n'e' una: vedi [_ProvaDaFuori]. */
+  _ProvaDaFuori? _prova;
+
+  /* Quando si e' provato da fuori l'ultima volta, per casa. In memoria e
+   * basta: un'app che riparte riprova una volta, ed e' giusto cosi'. */
+  final Map<String, DateTime> _provataDaFuoriIl = {};
+
+  /* La casa che ha appena detto di essere Base, da fuori: la riapertura che
+   * segue non la riprova, qualunque sia [ogniQuantoSiRiprovaDaFuori]. Senza,
+   * con un intervallo corto, verdetto e riapertura si rincorrerebbero. */
+  String? _appenaDettaBase;
+
+  /* La casa ha risposto alla prova, e ha detto che non e' Premium: serve a
+   * «Controlla di nuovo», che deve sapere se la casa ha risposto. */
+  bool _laProvaHaDettoBase = false;
+
+  /* Se il filo c'e' ma e' entrato da fuori solo per chiedere la licenza, e
+   * la casa non l'ha ancora detta: finche' e' cosi' il filo non si da' a
+   * nessuno ([filo]). */
+  bool get _licenzaDaSentire => _prova?.usata ?? false;
+
+  /// Se questa volta si prova da fuori una casa che l'app crede Base.
+  ///
+  /// «Licenza: Premium per sempre · regalo» nella console della casa, e nel
+  /// browser «Fuori casa serve gdahome Premium». Il browser aveva abbinato
+  /// la casa quando era Base, e si era tenuto il suo gettone vuoto: per
+  /// [GestoreLicenza.stradeDaFuoriPer] era Base, si bussava solo alle strade
+  /// di casa, da fuori non rispondevano, e la licenza — che si chiede alla
+  /// casa sul filo — non si richiedeva mai. Fermi per sempre, con la casa
+  /// che intanto era diventata Premium. Lo stesso per un gettone di
+  /// un abbonamento finito e poi rinnovato, o per un add-on vecchio poi
+  /// aggiornato.
+  ///
+  /// Allora una casa creduta Base, che ha strade di fuori, si prova anche da
+  /// li' — ma **solo per chiederle la licenza**: finche' non risponde il
+  /// filo non si da' a nessuno e la plancia non si apre
+  /// ([_laLicenzaPrimaDiEntrare]). Non piu' di una volta ogni
+  /// [ogniQuantoSiRiprovaDaFuori] per casa: una casa Base davvero non deve
+  /// far bussare al centralino a ogni ribussata del filo.
+  ///
+  /// Il cancello resta: col centralino che impone (`MODO_LICENZE`) la casa
+  /// Base la chiude lui, `4402`; con le licenze spente lui lascia passare, e
+  /// a dire di no e' la risposta della casa, qui.
+  _ProvaDaFuori? _laProvaDaFuori(CasaConosciuta casa) {
+    final adesso = archivio.quella(casa.id) ?? casa;
+    if (!licenza.controlliAccesi || licenza.forza != null) return null;
+    if (licenza.stradeDaFuoriPer(adesso)) return null;
+    final come = licenza.comeSta(adesso);
+    if (come != ComeStaLaLicenza.base &&
+        come != ComeStaLaLicenza.casaSenzaLicenze) {
+      return null;
+    }
+    if (!adesso.haStradeDaFuori) return null;
+    if (_appenaDettaBase == casa.id) {
+      _appenaDettaBase = null;
+      return null;
+    }
+    final ora = DateTime.now();
+    final ultima = _provataDaFuoriIl[casa.id];
+    if (ultima != null && ora.difference(ultima) < ogniQuantoSiRiprovaDaFuori) {
+      return null;
+    }
+    _provataDaFuoriIl[casa.id] = ora;
+    return _ProvaDaFuori(casa.id);
+  }
+
+  /// Entrati da fuori per la prova: prima di tutto la licenza.
+  ///
+  /// Torna `true` se si puo' entrare: la prova non c'era, si e' in casa, o la
+  /// casa ha detto di essere Premium (e il gettone nuovo e' gia'
+  /// nell'archivio, cosi' da qui in poi le strade di fuori si prendono da
+  /// sole). Se invece e' Base davvero, o non ha risposto, il filo si chiude
+  /// senza aver mostrato niente e si riparte dalle strade di casa: fuori,
+  /// la pagina Premium.
+  Future<bool> _laLicenzaPrimaDiEntrare(Filo filo) async {
+    final prova = _prova;
+    if (prova == null || !prova.usata) return true;
+    final casa = _casa;
+    if (casa == null) return false;
+    var adesso = archivio.quella(casa.id) ?? casa;
+    if (!_entratiDaCasa(filo)) {
+      final rispose = await licenza.chiedi(filo, adesso, archivio);
+      if (_filo != filo) return false;
+      if (_prova != prova) {
+        /* Il filo e' caduto mentre si chiedeva, e ribussa gia' dalle strade
+         * di casa ([_trova]): vale quello che si sapeva, come per una prova
+         * che non e' andata, e se il filo torna su — da casa — si entra. */
+        _fuoriSenzaPremium = adesso.haStradeDaFuori;
+        _perche = fuoriCasaServePremium;
+        _vai(ComeVa.irraggiungibile);
+        _riprendiQuandoTorna(filo);
+        return false;
+      }
+      adesso = archivio.quella(casa.id) ?? casa;
+      _casa = adesso;
+      _laProvaHaDettoBase = rispose && !licenza.stradeDaFuoriPer(adesso);
+    }
+    _prova = null;
+    if (_entratiDaCasa(filo) || licenza.stradeDaFuoriPer(adesso)) {
+      _avvisa();
+      return true;
+    }
+    /* Base davvero: si riparte, e questa volta la prova non c'e'. */
+    _appenaDettaBase = casa.id;
+    await apri(forza: true);
+    return false;
   }
 
   Future<void> _leggiLaCasa(Filo filo) async {
@@ -476,6 +630,10 @@ class Collegamento {
     final adesso = archivio.quella(casa.id) ?? casa;
     _casa = adesso;
     if (!_entratiDaCasa(filo) && !licenza.stradeDaFuoriPer(adesso)) {
+      /* La casa l'ha appena detto, e da fuori: la prova da fuori
+       * ([_laProvaDaFuori]) non serve a richiederglielo subito. */
+      _provataDaFuoriIl[casa.id] = DateTime.now();
+      _appenaDettaBase = casa.id;
       await apri(forza: true);
       return true;
     }
@@ -510,10 +668,18 @@ class Collegamento {
   /// dentro la licenza la si chiede comunque. Torna `true` se la casa ha
   /// risposto: `false` vuol dire che adesso non si raggiunge, e chi guarda lo
   /// deve sapere invece di vedere un tasto che non fa niente.
+  ///
+  /// E' una richiesta di chi guarda, non un ribussare del filo: la prova da
+  /// fuori ([_ProvaDaFuori]) si rifa' anche se ne era appena passata una. Se
+  /// la casa risponde da li' e dice ancora Base, ha risposto: `true`, e la
+  /// pagina resta quella.
   Future<bool> ricontrollaLaLicenza() async {
     if (!_pronta) {
+      final casa = _casa ?? archivio.attiva;
+      if (casa != null) _provataDaFuoriIl.remove(casa.id);
+      _laProvaHaDettoBase = false;
       await apri(forza: true);
-      if (!_pronta) return false;
+      if (!_pronta) return _laProvaHaDettoBase;
     }
     return _chiediLaLicenza(_filo!);
   }
@@ -721,7 +887,8 @@ class Collegamento {
   }
 
   /* Se c'e' una casa aperta a cui dire qualcosa adesso. */
-  bool get _pronta => _filo != null && _filo!.dentro && _casa != null;
+  bool get _pronta =>
+      !_licenzaDaSentire && _filo != null && _filo!.dentro && _casa != null;
 
   /* Aspetta che la casa sia aperta, al massimo [quanto]: `true` se c'e'. */
   Future<bool> _aspettaLaCasa(Duration quanto) async {
@@ -978,7 +1145,12 @@ class Collegamento {
     _guardaIlFilo = filo.stato.listen((stato) {
       if (stato != StatoDelFilo.dentro) return;
       if (_stato != null) return;
-      unawaited(_leggiLaCasa(filo));
+      unawaited(() async {
+        /* Anche qui, se si e' entrati per la prova, prima la licenza. */
+        if (!await _laLicenzaPrimaDiEntrare(filo)) return;
+        if (_filo != filo || _stato != null) return;
+        await _leggiLaCasa(filo);
+      }());
     });
   }
 
@@ -990,12 +1162,24 @@ class Collegamento {
      * non e' compreso. */
     final adesso = archivio.quella(casa.id) ?? casa;
     final daFuori = licenza.stradeDaFuoriPer(adesso);
+    /* La prova da fuori ([_ProvaDaFuori]) vale per **una** bussata. Se il
+     * filo torna qui con la prova gia' usata e senza verdetto, la bussata non
+     * e' andata: lo si dice a chi aspetta in [apri], e da qui in poi si bussa
+     * come a una casa Base. */
+    final prova = _prova;
+    final perLaLicenza =
+        !daFuori && prova != null && prova.casa == casa.id && !prova.usata;
+    if (prova != null && prova.usata) {
+      _prova = null;
+      prova.nonEAndata();
+    }
     final Approdo approdo;
     try {
       /* Senza Premium si bussa solo alle strade dirette, e vale quella da cui
        * la casa dice di vederci arrivare da casa sua: anche l'indirizzo
        * pubblico, quando dal divano si e' aperta la web app con quello. */
-      approdo = daFuori
+      if (perLaLicenza) prova.usata = true;
+      approdo = daFuori || perLaLicenza
           ? await _sonda.dove(adesso)
           : await _sonda.dove(_conLaPagina(adesso), soloDaCasa: true);
     } on PremiumRichiesto {
@@ -1004,7 +1188,7 @@ class Collegamento {
       _fuoriSenzaPremium = true;
       rethrow;
     } on PonteIrraggiungibile {
-      if (daFuori || !adesso.haStradeDaFuori) rethrow;
+      if (daFuori || perLaLicenza || !adesso.haStradeDaFuori) rethrow;
       _fuoriSenzaPremium = true;
       throw PremiumRichiesto(fuoriCasaServePremium);
     }
@@ -1050,6 +1234,7 @@ class Collegamento {
   /// Chiude il filo. Con [tieniLaPlancia] si tiene quello che si sapeva della
   /// plancia di questa casa: vedi [riposa] e [apri].
   Future<void> _chiudiIlFilo({bool tieniLaPlancia = false}) async {
+    _prova = null;
     _rileggiLaLicenza?.cancel();
     _rileggiLaLicenza = null;
     await _guardaIlFilo?.cancel();
@@ -1089,5 +1274,35 @@ class Collegamento {
 
   void _avvisa() {
     if (!_cambiamenti.isClosed) _cambiamenti.add(null);
+  }
+}
+
+/// Una casa creduta Base, provata da fuori per chiederle la licenza.
+///
+/// Vive per un'apertura sola ([Collegamento.apri]) e per una bussata sola
+/// ([Collegamento._trova]): o si entra e la casa dice la sua licenza, o la
+/// bussata non va e si torna a quello che si sapeva. Vedi
+/// [Collegamento._laProvaDaFuori].
+class _ProvaDaFuori {
+  _ProvaDaFuori(this.casa) {
+    /* Chi aspetta e' uno solo, e puo' aver gia' smesso di aspettare: un no
+     * arrivato dopo non e' un errore di nessuno. */
+    fallita.future.ignore();
+  }
+
+  /// Di quale casa: una prova non passa a un'altra.
+  final String casa;
+
+  /// Se la bussata da fuori e' gia' partita.
+  bool usata = false;
+
+  /// Si chiude con un errore quando la bussata da fuori non e' andata: chi
+  /// aspetta in [Collegamento.apri] smette di aspettare e mostra la pagina
+  /// Premium, invece dei venticinque secondi del filo.
+  final fallita = Completer<void>();
+
+  void nonEAndata() {
+    if (fallita.isCompleted) return;
+    fallita.completeError(PremiumRichiesto(fuoriCasaServePremium));
   }
 }
