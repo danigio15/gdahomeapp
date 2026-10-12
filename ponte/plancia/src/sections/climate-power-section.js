@@ -131,6 +131,9 @@ function modalitaDiZona(zona) {
   const dove = clean(zona).toLowerCase();
   if (dove === "caldo") return "heat";
   if (dove === "freddo") return "cool";
+  /* La linguetta Termostato: chi ci sta scalda e raffresca dentro la sua
+   * coppia, e si accende in automatico — se l'automatico ce l'ha. */
+  if (dove === "termostato") return "heat_cool";
   return "";
 }
 

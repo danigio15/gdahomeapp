@@ -35,7 +35,18 @@ import {
   passoDellUnita,
   quotaNellaScala,
   scalaDellaZona,
+  scalaDichiarata,
 } from "../core/scala-clima.js";
+import {
+  coppiaDelTermostato,
+  coppiaSpostata,
+  eUnTermostatoACoppia,
+  estremoDiPartenza,
+  obiettiviDelClima,
+  obiettiviScritti,
+  obiettivoDaMuovere,
+  obiettivoMostrato,
+} from "../core/i-due-obiettivi-del-clima.js";
 import { climateIsOff } from "../core/climate-power.js";
 import { accesoPerIlConsumo, wattDellUnita } from "../core/consumo-del-clima.js";
 import { chiamataDelModo, letturaDelModo, prossimoModo } from "../core/modo-del-clima.js";
@@ -121,6 +132,9 @@ const state = (root[KEY] ||= {
    * stagione le vede fino a quando la pagina non si ricarica. La stagione
    * scritta in configurazione resta quella. */
   mostraFuoriStagione: false,
+  /* La coppia appena mandata a un termostato a coppia, per entita', finche'
+   * Home Assistant non la conferma (vedi `coppiaDellaCard`). */
+  coppieInAttesa: new Map(),
 });
 
 /* Scale of the rail. Cooling units are set between 16° and 30°, radiators
@@ -167,7 +181,18 @@ const copy = () => ({
   title: t("Sistema climatico", "Climate system"),
   cold: t("Freddo", "Cooling"),
   warm: t("Caldo", "Heating"),
-  onLabel: t("Accesi", "Running"),
+  /* La terza linguetta: i termostati a coppia, col caldo e il freddo insieme. */
+  thermostat: t("Termostato", "Thermostat"),
+  thermostats: t("Termostati", "Thermostats"),
+  emptyThermostat: t("Nessun termostato configurato", "No thermostat configured"),
+  thermostatOutOfSeason: t("Termostati fuori stagione", "Thermostats out of season"),
+  /* I due meno e i due piu' della card del termostato: chi non vede deve
+   * sapere QUALE dei due numeri sta muovendo. */
+  warmDown: t("Abbassa il caldo", "Lower the heating"),
+  warmUp: t("Alza il caldo", "Raise the heating"),
+  coldDown: t("Abbassa il freddo", "Lower the cooling"),
+  coldUp: t("Alza il freddo", "Raise the cooling"),
+  onLabel:t("Accesi", "Running"),
   ambient: t("Ambiente medio", "Average room"),
   allOn: t("Accendi tutto", "Turn all on"),
   allOff: t("Spegni tutto", "Turn all off"),
@@ -219,8 +244,20 @@ export function climateZone(unit) {
 /* Le zone in cui l'unita' vive. Un condizionatore sta in Freddo, un
  * termosifone in Caldo; la pompa di calore (#195) raffresca e riscalda, quindi
  * compare in tutte e due — stessa entita', due card, e il tab Caldo la accende
- * per scaldare. */
-export function climateZones(unit) {
+ * per scaldare.
+ *
+ * Il termostato a coppia sta in una zona sua, «Termostato», e in nessun'altra:
+ * scalda sotto un numero e raffresca sopra un altro, e messo in Caldo o in
+ * Freddo costringeva a scegliere quale dei due muovere. Lo si riconosce dagli
+ * attributi che pubblica (la regola e' del nucleo, `eUnTermostatoACoppia`),
+ * non dal tipo scritto in configurazione: chi l'ha messo come «termosifone»
+ * o come «pompa» prima che la linguetta esistesse lo ritrova li' lo stesso.
+ * Senza attributi — chi chiede soltanto «dove va questo tipo?», come il Clima
+ * rapido della Home — la risposta e' quella di sempre. */
+export const ZONE_DEL_CLIMA = Object.freeze(["freddo", "caldo", "termostato"]);
+
+export function climateZones(unit, attributi = null) {
+  if (attributi && eUnTermostatoACoppia(attributi)) return ["termostato"];
   const type = canonicalClimateType(unit?.type);
   if (type === "termo") return ["caldo"];
   if (type === "pompa") return ["freddo", "caldo"];
@@ -248,6 +285,12 @@ export function climateUnits() {
   try {
     rooms = root.cdRoomList?.() || [];
   } catch (_error) {}
+  /* Gli stati servono a una cosa sola: sapere chi e' un termostato a coppia,
+   * che va nella sua linguetta. Si leggono una volta per tutto l'elenco. */
+  let states = {};
+  try {
+    states = allStates() || {};
+  } catch (_error) {}
   return values
     .flatMap((unit, index) => {
       const entity = clean(unit?.entity || unit?.entity_id || unit?.entities?.[0]);
@@ -260,7 +303,8 @@ export function climateUnits() {
       // La prima zona tiene l'id storico `card-<entity>`: il runtime legacy
       // (`cdAutoHide`) lo cerca per nome. La card gemella della pompa di
       // calore, nell'altra zona, prende un suffisso per non duplicare l'id.
-      return climateZones(unit).map((zone, extra) => ({
+      const attributi = resolvedState(entity, states)?.attributes || null;
+      return climateZones(unit, attributi).map((zone, extra) => ({
         entity,
         name: clean(unit?.name) || entity,
         room: unitRoom(unit, rooms),
@@ -341,6 +385,10 @@ export function climateReading(entity, states = allStates(), unita = unitaDellEn
   const raw = clean(entry?.state).toLowerCase();
   const attributes = entry?.attributes || {};
   const daiWatt = accesoPerIlConsumo(unita, states);
+  /* Uno o due obiettivi: il termostato col caldo e il freddo (la coppia
+   * `target_temp_low` / `target_temp_high`) non ha un `temperature`, e la
+   * card scriveva «--°» sopra un meno e un piu' che non facevano niente. */
+  const obiettivi = obiettiviDelClima(attributes, raw);
   return {
     known: Boolean(entry),
     on: daiWatt === null ? Boolean(entry) && !OFF_STATES.has(raw) : daiWatt,
@@ -349,7 +397,12 @@ export function climateReading(entity, states = allStates(), unita = unitaDellEn
     watt: wattDellUnita(unita, states),
     mode: raw,
     action: clean(attributes.hvac_action).toLowerCase(),
-    target: finiteOrNull(attributes.temperature),
+    /* Per chi ha un obiettivo solo e' quello di sempre. Per chi ne ha due e'
+     * quello che la modalita' rende vero — il basso in caldo, l'alto in
+     * freddo — e `null` in automatico, dove di numeri ce ne sono due e li
+     * porta `obiettivi`. */
+    target: obiettivi.doppio ? obiettivoMostrato(obiettivi) : finiteOrNull(attributes.temperature),
+    obiettivi,
     ambient: finiteOrNull(attributes.current_temperature),
     fan: clean(attributes.fan_mode).toLowerCase(),
     /* Quello che l'unita' dichiara di se': fin dove arriva e di quanto si
@@ -372,6 +425,13 @@ function stateLabel(reading, zone, labels) {
   if (reading.mode === "fan_only") return t("Ventilazione", "Fan only");
   if (reading.mode === "dry") return t("Deumidifica", "Drying");
   if (reading.action === "idle") return t("In pausa", "Idle");
+  /* Il termostato a coppia non sta da una parte: dice quello che sta facendo
+   * adesso, e se non lo dice la modalita' (in automatico, «Auto»). */
+  if (zone === "termostato") {
+    if (reading.action === "heating") return t("Riscalda", "Heating");
+    if (reading.action === "cooling") return t("Raffresca", "Cooling");
+    return MODE_LABELS[reading.mode]?.() || t("Acceso", "On");
+  }
   // La modalita' viva comanda: la card gemella della pompa di calore nel tab
   // Caldo non deve dire «Riscalda» mentre l'unita' sta raffrescando.
   if (reading.mode === "cool") return t("Raffresca", "Cooling");
@@ -428,13 +488,22 @@ export function filoFraMinimoEMassimo(series, { width, height, pad } = SPARK) {
 
 /* ── markup ───────────────────────────────────────────────────────────── */
 
+/* Il disegno e il nome di ogni zona, in un posto solo: la linguetta, la card
+ * vuota e quella fuori stagione li chiedono qui. */
+function facciaDellaZona(zone, labels) {
+  if (zone === "caldo") return { icona: ICONS.flame, nome: labels.warm };
+  if (zone === "termostato") return { icona: ICONS.thermo, nome: labels.thermostat };
+  return { icona: ICONS.snow, nome: labels.cold };
+}
+
 function zoneButton(zone, labels) {
   const cold = zone === "freddo";
+  const faccia = facciaDellaZona(zone, labels);
   return `<button type="button" class="clima-page-mode-btn dm-cl-tab${cold ? " active-freddo" : ""}"
-      id="clima-page-mode-${cold ? "freddo" : "caldo"}" data-dm-cl-zone="${esc(zone)}"
+      id="clima-page-mode-${esc(zone)}" data-dm-cl-zone="${esc(zone)}"
       aria-pressed="${cold ? "true" : "false"}" onclick="setClimaPageMode(${jsArg(zone)})">
-      <span class="icon dm-cl-tab-ic">${cold ? ICONS.snow : ICONS.flame}</span>
-      <span class="dm-cl-tab-tx">${esc(cold ? labels.cold : labels.warm)}</span>
+      <span class="icon dm-cl-tab-ic">${faccia.icona}</span>
+      <span class="dm-cl-tab-tx">${esc(faccia.nome)}</span>
       <span class="dm-cl-tab-count" data-dm-cl-count="${zone}">0</span>
     </button>`;
 }
@@ -472,6 +541,7 @@ function skeletonMarkup(labels) {
   <div class="clima-page-mode-switch dm-cl-switch">
     ${zoneButton("freddo", labels)}
     ${zoneButton("caldo", labels)}
+    ${zoneButton("termostato", labels)}
   </div>
 
   <div class="clima-zone clima-zone-freddo show">
@@ -479,6 +549,12 @@ function skeletonMarkup(labels) {
   </div>
   <div class="clima-zone clima-zone-caldo">
     <div class="dm-cl-grid" id="clima-grid-caldo"></div>
+  </div>
+  <!-- La terza zona: i termostati a coppia, col caldo e il freddo insieme.
+       Il guscio non la conosce — il suo setClimaPageMode() accetta solo
+       freddo e caldo — e la accende installaLaTerzaLinguetta, qui sotto. -->
+  <div class="clima-zone clima-zone-termostato">
+    <div class="dm-cl-grid dm-cl-grid-termostato" id="clima-grid-termostato"></div>
   </div>
 
   <!-- La ventilazione meccanica (#371): sta sotto le due zone e fuori da
@@ -493,9 +569,11 @@ function skeletonMarkup(labels) {
 }
 
 function emptyMarkup(zone, labels) {
+  const vuota =
+    zone === "caldo" ? labels.emptyWarm : zone === "termostato" ? labels.emptyThermostat : labels.emptyCold;
   return `<div class="dm-cl-empty">
-      <span class="dm-cl-empty-ic" aria-hidden="true">${zone === "caldo" ? ICONS.flame : ICONS.snow}</span>
-      <strong>${esc(zone === "caldo" ? labels.emptyWarm : labels.emptyCold)}</strong>
+      <span class="dm-cl-empty-ic" aria-hidden="true">${facciaDellaZona(zone, labels).icona}</span>
+      <strong>${esc(vuota)}</strong>
       <p>${esc(labels.emptyHint)}</p>
     </div>`;
 }
@@ -515,15 +593,89 @@ export function seasonEmptyMarkup(zone, fuori, labels = copy()) {
   const [periodo] = periodi;
   const scritto = activeLocale() === "it" ? periodo.toLowerCase() : periodo;
   const hint = periodi.size === 1 ? labels.seasonHint(scritto) : labels.seasonHintMixed;
+  const titolo =
+    zone === "caldo"
+      ? labels.warmOutOfSeason
+      : zone === "termostato"
+        ? labels.thermostatOutOfSeason
+        : labels.coldOutOfSeason;
   return `<div class="dm-cl-empty" data-dm-cl-fuori-stagione="${fuori.length}">
-      <span class="dm-cl-empty-ic" aria-hidden="true">${zone === "caldo" ? ICONS.flame : ICONS.snow}</span>
-      <strong>${esc(zone === "caldo" ? labels.warmOutOfSeason : labels.coldOutOfSeason)} · ${fuori.length}</strong>
+      <span class="dm-cl-empty-ic" aria-hidden="true">${facciaDellaZona(zone, labels).icona}</span>
+      <strong>${esc(titolo)} · ${fuori.length}</strong>
       <p>${esc(hint)}</p>
       <button type="button" class="dm-cl-empty-btn" data-dm-cl-mostra-fuori>${esc(labels.showAnyway)}</button>
     </div>`;
 }
 
+/* La card della linguetta «Termostato»: i due numeri insieme, ognuno col suo
+ * meno e il suo piu'.
+ *
+ * «Caldo 22°» col colore del caldo, «Freddo 40°» col colore del freddo, e
+ * accanto a ciascuno i suoi due tasti: niente da scegliere prima di toccare,
+ * il meno sotto il caldo abbassa il caldo. Sotto, la temperatura della stanza;
+ * in fondo le modalita' (che aprono la finestra) e l'interruttore, come su
+ * ogni altra card del Clima. La barra no: con due numeri e due coppie di tasti
+ * dice la stessa cosa una terza volta, e sul telefono e' l'altezza che manca.
+ *
+ * I tasti non hanno `onclick` scritto sopra: li ascolta `suiPastiglie`, in
+ * discesa, prima che il tocco arrivi alla card e apra la finestra. */
+function estremoMarkup(unit, estremo, labels) {
+  const caldo = estremo === "basso";
+  const nome = caldo ? labels.warm : labels.cold;
+  const tasto = (verso, parola, icona) =>
+    `<button type="button" class="dm-cl-step" data-dm-cl-passo="${estremo}" data-dm-cl-verso="${verso}"
+          data-dm-cl-ent="${esc(unit.entity)}" aria-label="${esc(`${parola} · ${unit.name}`)}">${icona}</button>`;
+  return `<div class="dm-cl-estremo" data-dm-cl-estremo="${estremo}">
+          <span class="dm-cl-estremo-ic" aria-hidden="true">${caldo ? ICONS.flame : ICONS.snow}</span>
+          <span class="dm-cl-estremo-nome">${esc(nome)}</span>
+          <b class="dm-cl-estremo-val" data-dm-cl-estremo-val>--<span class="dm-cl-deg">°</span></b>
+          <span class="dm-cl-estremo-tasti">
+            ${tasto(-1, caldo ? labels.warmDown : labels.coldDown, ICONS.minus)}
+            ${tasto(1, caldo ? labels.warmUp : labels.coldUp, ICONS.plus)}
+          </span>
+        </div>`;
+}
+
+function cardDelTermostato(unit, labels) {
+  const entity = jsArg(unit.entity);
+  const zona = jsArg(unit.zone);
+  const meta = unit.room;
+  return `<article class="dm-cl-card dm-cl-card-termostato" id="${esc(unit.cardId)}" data-dm-cl="${esc(unit.entity)}"
+      data-dm-cl-zone="termostato" onclick="apriClimaPopup(${entity}, event)">
+      <div class="dm-cl-head">
+        <span class="dm-cl-ic" aria-hidden="true">${ICONS.thermo}</span>
+        <div class="dm-cl-txt">
+          <div class="dm-cl-name">${esc(unit.name)}</div>
+          ${meta ? `<div class="dm-cl-meta">${esc(meta)}</div>` : ""}
+        </div>
+        <span class="dm-cl-state"><i aria-hidden="true"></i><span data-dm-cl-state>${esc(labels.off)}</span></span>
+      </div>
+      <div class="dm-cl-estremi">
+        ${estremoMarkup(unit, "basso", labels)}
+        ${estremoMarkup(unit, "alto", labels)}
+      </div>
+      <div class="dm-cl-legend dm-cl-legend-termostato">
+        <span>${esc(labels.room)} <b data-dm-cl-ambient>--°</b></span>
+      </div>
+      <div class="dm-cl-pills">
+        <button type="button" class="dm-cl-modo" data-dm-cl-modo hidden><span data-dm-cl-modo-glifo aria-hidden="true"></span><span data-dm-cl-modo-nome></span></button>
+        <button type="button" class="dm-cl-timer" data-dm-cl-timer><span aria-hidden="true">⏱</span><span data-dm-cl-timer-testo></span></button>
+      </div>
+      <div class="dm-cl-foot">
+        <button type="button" class="dm-cl-modes" data-dm-cl-modes aria-label="${esc(labels.modesAria)}"
+          onclick="event.stopPropagation(); apriClimaPopup(${entity})">
+          ${ICONS.sliders}<span data-dm-cl-mode-cap>${esc(labels.modes)}</span>
+        </button>
+        <div class="dm-cl-actions">
+          <button type="button" class="dm-cl-pwr" data-dm-cl-pwr aria-label="${esc(labels.power)}"
+            onclick="event.stopPropagation(); toggleClima(${entity}, ${zona})">${ICONS.power}</button>
+        </div>
+      </div>
+    </article>`;
+}
+
 function cardMarkup(unit, labels) {
+  if (unit.zone === "termostato") return cardDelTermostato(unit, labels);
   /* I due estremi si scrivono qui la prima volta e poi li riscrive
    * `paintCard`: un'unita' che risponde tardi — o che cambia scala passando in
    * Fahrenheit — deve poter correggere la legenda senza rifare la card. */
@@ -581,9 +733,9 @@ function cardMarkup(unit, labels) {
         </button>
         <div class="dm-cl-actions">
           <button type="button" class="dm-cl-step" aria-label="${esc(labels.cooler)}"
-            onclick="event.stopPropagation(); setTemp(${entity}, 'down')">${ICONS.minus}</button>
+            onclick="event.stopPropagation(); setTemp(${entity}, 'down', ${zona})">${ICONS.minus}</button>
           <button type="button" class="dm-cl-step" aria-label="${esc(labels.warmer)}"
-            onclick="event.stopPropagation(); setTemp(${entity}, 'up')">${ICONS.plus}</button>
+            onclick="event.stopPropagation(); setTemp(${entity}, 'up', ${zona})">${ICONS.plus}</button>
           <button type="button" class="dm-cl-pwr" data-dm-cl-pwr aria-label="${esc(labels.power)}"
             onclick="event.stopPropagation(); toggleClima(${entity}, ${zona})">${ICONS.power}</button>
         </div>
@@ -827,6 +979,7 @@ function syncGrid(grid, units, labels, fuori = []) {
 }
 
 function visibleZone() {
+  if (doc?.querySelector(".clima-zone-termostato.show")) return "termostato";
   return doc?.querySelector(".clima-zone-caldo.show") ? "caldo" : "freddo";
 }
 
@@ -855,6 +1008,11 @@ function paintCard(card, unit, reading, labels) {
     const parola = stateLabel(reading, zone, labels);
     stateChip.textContent =
       reading.watt === null ? parola : `${parola} · ${laPotenzaInParole(reading.watt)}`;
+  }
+
+  if (zone === "termostato") {
+    paintTermostato(card, unit, reading, labels);
+    return;
   }
 
   /* Col flag acceso il numero grande e' l'ambiente e la riga piccola il
@@ -911,6 +1069,222 @@ function paintCard(card, unit, reading, labels) {
   paintModo(card, unit);
   paintTimer(card, unit, reading, labels);
   paintSpark(card, unit, reading);
+}
+
+/* ── il termostato a coppia: il caldo e il freddo, insieme ─────────────── */
+
+/* La coppia appena mandata e non ancora confermata, per entita'.
+ *
+ * Chi tocca tre volte il piu' del caldo vuole tre mezzi gradi: senza memoria
+ * ogni tocco ripartiva dal numero che Home Assistant non aveva ancora
+ * aggiornato, e i tre tocchi mandavano tre volte lo stesso 22,5. Qui la coppia
+ * mandata vale finche' Home Assistant non dice la stessa cosa — o per qualche
+ * secondo, se non lo dice mai: un comando rifiutato non deve lasciare sulla
+ * card un numero che il termostato non ha. Lo stesso fa il muro con la sua
+ * attesa. */
+const ATTESA_DELLA_COPPIA = 4000;
+const coppieInAttesa = (state.coppieInAttesa ||= new Map());
+
+/**
+ * La coppia di un termostato come la card la deve mostrare: quella che Home
+ * Assistant pubblica, o quella appena mandata se non e' ancora arrivata.
+ *
+ * `null` se i due numeri non ci sono: un termostato che dichiara la coppia e
+ * non la pubblica (spesso nei primi secondi dopo l'avvio) mostra «--» e i
+ * suoi tasti non mandano niente.
+ */
+export function coppiaDellaCard(entity, attributi, adesso = Date.now()) {
+  const vera = coppiaDelTermostato(attributi);
+  const chiave = clean(entity);
+  const attesa = coppieInAttesa.get(chiave);
+  if (!attesa) return vera;
+  const confermata =
+    vera &&
+    Math.abs(vera.basso - attesa.basso) < 0.05 &&
+    Math.abs(vera.alto - attesa.alto) < 0.05;
+  if (confermata || adesso > attesa.scade || !vera) {
+    coppieInAttesa.delete(chiave);
+    return vera;
+  }
+  return Object.freeze({ ...vera, basso: attesa.basso, alto: attesa.alto });
+}
+
+/* I due numeri, l'ambiente e le modalita' della card del termostato. I tasti
+ * a fine corsa si spengono: il piu' del caldo quando il caldo ha raggiunto il
+ * freddo (Home Assistant rifiuta un basso sopra l'alto) o il massimo
+ * dichiarato, e cosi' via. */
+function paintTermostato(card, unit, reading, labels) {
+  const coppia = coppiaDellaCard(unit.entity, reading.attributi);
+  const scala = scalaDichiarata(reading.attributi);
+  card.dataset.dmClObiettivi = coppia ? "entrambi" : "nessuno";
+  for (const riga of card.querySelectorAll("[data-dm-cl-estremo]")) {
+    const estremo = riga.dataset.dmClEstremo;
+    const valore = coppia ? coppia[estremo] : null;
+    scriviSeCambia(
+      riga.querySelector("[data-dm-cl-estremo-val]"),
+      `${valore === null ? "--" : gradoScritto(valore)}<span class="dm-cl-deg">°</span>`,
+    );
+    for (const tasto of riga.querySelectorAll("[data-dm-cl-passo]")) {
+      const fermo =
+        !coppia ||
+        !coppiaSpostata(coppia, estremo, Number(tasto.dataset.dmClVerso), {
+          passo: reading.passo,
+          scala,
+        });
+      if (tasto.disabled !== fermo) tasto.disabled = fermo;
+    }
+  }
+  const ambient = card.querySelector("[data-dm-cl-ambient]");
+  if (ambient) ambient.textContent = reading.ambient === null ? "--°" : `${reading.ambient.toFixed(1)}°`;
+  const caption = card.querySelector("[data-dm-cl-mode-cap]");
+  if (caption) caption.textContent = modeCaption(reading, labels);
+  paintModo(card, unit);
+  paintTimer(card, unit, reading, labels);
+}
+
+/**
+ * Un passo del meno o del piu' di UNO dei due numeri della card del
+ * termostato: `estremo` e' «basso» (il caldo) o «alto» (il freddo).
+ *
+ * Parte sempre la coppia intera — Home Assistant, a chi lavora coi due numeri,
+ * rifiuta una chiamata che ne porta uno solo — col passo dell'unita', dentro
+ * il suo minimo e il suo massimo, e senza che il caldo scavalchi il freddo.
+ * A fine corsa non parte niente. Torna i dati mandati, o `null`.
+ */
+export function muoviLEstremo(entity, estremo, verso) {
+  const chiave = clean(entity);
+  if (!chiave || (estremo !== "basso" && estremo !== "alto")) return null;
+  const reading = climateReading(chiave);
+  const coppia = coppiaDellaCard(chiave, reading.attributi);
+  const dati = coppia
+    ? coppiaSpostata(coppia, estremo, verso, {
+        passo: reading.passo,
+        scala: scalaDichiarata(reading.attributi),
+      })
+    : null;
+  if (!dati) return null;
+  root.navigator?.vibrate?.(10);
+  coppieInAttesa.set(chiave, {
+    basso: dati.target_temp_low,
+    alto: dati.target_temp_high,
+    scade: Date.now() + ATTESA_DELLA_COPPIA,
+  });
+  chiamaClima(chiave, "set_temperature", dati);
+  ridipingiIlTermostato(chiave);
+  return dati;
+}
+
+/* Il numero nuovo si vede subito, dovunque ci sia la card di quell'entita':
+ * nella pagina Clima e nella pagina di una stanza. */
+function ridipingiIlTermostato(entita) {
+  try {
+    const carte = doc?.querySelectorAll?.("[data-dm-cl]") || [];
+    const dove = new Set();
+    for (const card of carte) if (card.dataset.dmCl === entita) dove.add(card.parentElement);
+    for (const genitore of dove) dipingiLeCardDelClima(genitore);
+  } catch (_error) {}
+}
+
+/* Il tocco su uno dei quattro tasti della card del termostato. Si ascolta in
+ * discesa come le pastiglie, perche' la card intera apre la finestra. */
+function passoDelTermostato(event) {
+  const tasto = event.target?.closest?.("[data-dm-cl-passo]");
+  if (!tasto) return false;
+  event.preventDefault();
+  event.stopPropagation();
+  if (tasto.disabled) return true;
+  const entita = clean(tasto.dataset.dmClEnt || tasto.closest("[data-dm-cl]")?.dataset?.dmCl);
+  muoviLEstremo(entita, tasto.dataset.dmClPasso, Number(tasto.dataset.dmClVerso) || 0);
+  return true;
+}
+
+/* ── i due obiettivi fuori dalla card: il passo storico e la finestra ───── */
+
+/* La zona da cui si guarda un'entita' quando chi chiama non la dice: la
+ * finestra del Clima e il passo storico non sanno da che card arrivano. Sulla
+ * pagina Clima e' la zona in vista; altrove quella dell'unita' accesa, come
+ * sceglie `laCardDelClima`, o la prima. */
+function zonaDiPartenza(entity) {
+  if (climaInVista()) return visibleZone();
+  try {
+    const unita = climateUnits().filter((voce) => voce.entity === clean(entity));
+    const states = allStates();
+    return (unita.find((voce) => climateReading(voce.entity, states).on) || unita[0])?.zone || "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+/* Quale obiettivo muove un meno o un piu' che non dice quale: quello che la
+ * modalita' rende vero, o in automatico quello di partenza. */
+function estremoDellaCard(reading, zone) {
+  return obiettivoDaMuovere(
+    reading?.obiettivi,
+    "",
+    estremoDiPartenza({ azione: reading?.action, zona: zone }),
+  );
+}
+
+/**
+ * Un passo del meno o del piu' che non dice quale dei due numeri muovere —
+ * il `setTemp()` del guscio, il `cpSetTemp()` della finestra — su un
+ * termostato coi due obiettivi.
+ *
+ * La card del termostato non passa di qui: ha un meno e un piu' per numero.
+ * Ma `setTemp()` e `cpSetTemp()` li chiama anche chi c'era prima (il runtime
+ * storico, le scorciatoie), e il loro passo, che conosce solo `temperature`,
+ * mandato a uno di questi termostati e' proprio l'errore da non fare.
+ *
+ * Torna `false` per chi ne ha uno solo — e allora il passo resta quello di
+ * sempre — e `true` per chi ne ha due, anche quando a fine corsa non parte
+ * niente. Partono sempre tutti e due i numeri.
+ */
+export function muoviIlClimaDoppio(entity, verso, zona = "") {
+  const chiave = clean(entity);
+  if (!chiave) return false;
+  const reading = climateReading(chiave);
+  if (!reading.obiettivi?.doppio) return false;
+  const quale = estremoDellaCard(reading, clean(zona) || zonaDiPartenza(chiave));
+  root.navigator?.vibrate?.(10);
+  const dati = coppiaSpostata(reading.obiettivi, quale, verso, {
+    passo: reading.passo,
+    scala: scalaDichiarata(reading.attributi),
+  });
+  if (dati) chiamaClima(chiave, "set_temperature", dati);
+  return true;
+}
+
+/* I gradi in cima alla finestra del Clima, per chi ne ha due.
+ *
+ * Il guscio scrive `temperature` e basta: a un termostato col caldo e il
+ * freddo dava «--°». Qui si scrivono i due numeri, coi loro colori, e il meno
+ * e il piu' del guscio accanto si tolgono: sotto, nel pannello della
+ * finestra, il caldo e il freddo hanno ciascuno i suoi, e un terzo paio che
+ * non dice quale numero muove confonderebbe. Per chi ne ha uno solo non si
+ * tocca niente: il guscio lo scrive gia' come si deve. */
+function gradiNellaFinestra(entity) {
+  const casella = doc?.getElementById?.("cp-temp-val");
+  if (!casella || !clean(entity)) return false;
+  const reading = climateReading(entity);
+  const coppia = coppiaDelTermostato(reading.attributi);
+  const finestra = casella.closest?.(".clima-popup");
+  if (!coppia) {
+    if (casella.dataset.dmClDoppio) delete casella.dataset.dmClDoppio;
+    if (finestra?.dataset?.dmClDoppio) delete finestra.dataset.dmClDoppio;
+    return false;
+  }
+  casella.dataset.dmClDoppio = "entrambi";
+  if (finestra) finestra.dataset.dmClDoppio = "entrambi";
+  const labels = copy();
+  const numero = (estremo) =>
+    `<span class="dm-cl-cp-obj" data-dm-cl-obj="${estremo}" aria-label="${esc(
+      `${estremo === "basso" ? labels.warm : labels.cold} ${gradoScritto(coppia[estremo])}°`,
+    )}">${gradoScritto(coppia[estremo])}°</span>`;
+  scriviSeCambia(
+    casella,
+    `${numero("basso")}<span class="dm-cl-cp-tra" aria-hidden="true">–</span>${numero("alto")}`,
+  );
+  return true;
 }
 
 /* La modalita' del riscaldamento (#362): la pastiglia, e il tocco se si puo'.
@@ -1085,7 +1459,8 @@ function paintSummary(shell, units, states, labels) {
   }
   const subtitle = shell.querySelector("[data-dm-cl-sub]");
   if (subtitle) {
-    const family = zone === "caldo" ? labels.radiators : labels.coolers;
+    const family =
+      zone === "caldo" ? labels.radiators : zone === "termostato" ? labels.thermostats : labels.coolers;
     const count = inZone.length === 1 ? labels.unitsOne : labels.units(inZone.length);
     subtitle.textContent = inZone.length ? `${family} · ${count}` : family;
   }
@@ -1143,8 +1518,11 @@ function paintZoneTabs(shell, units) {
  * found the other tab. */
 function zoneWithUnits(units, current) {
   if (units.some((unit) => unit.zone === current)) return current;
-  const other = current === "caldo" ? "freddo" : "caldo";
-  return units.some((unit) => unit.zone === other) ? other : current;
+  /* La linguetta ricordata non c'e' piu' — la «Termostato» se ne va con
+   * l'ultimo termostato a coppia, e una zona resta vuota quando la stagione
+   * la svuota: si va sulla prima che ha qualcosa, nell'ordine delle
+   * linguette, e se non ne ha nessuna si resta dove si era. */
+  return ZONE_DEL_CLIMA.find((zone) => units.some((unit) => unit.zone === zone)) || current;
 }
 
 /* La pagina Clima si dipinge quando si vede.
@@ -1203,7 +1581,7 @@ export function renderClimate({ rebuild = false, force = false } = {}) {
    * esiste, e le card non spariscono — la prova sta in
    * `e2e/il-clima-non-si-svuota-cambiando-linguetta.spec.js`. */
   paintZoneTabs(shell, units);
-  for (const zone of ["freddo", "caldo"]) {
+  for (const zone of ZONE_DEL_CLIMA) {
     const grid = doc.getElementById(`clima-grid-${zone}`);
     if (!grid) continue;
     grid.dataset.dmClZone = zone;
@@ -1292,7 +1670,7 @@ function bulkSwitch(wantsOn) {
  * Uno `stopPropagation` scritto sul tasto non sarebbe bastato: avrebbe fermato
  * anche il gestore del documento, cioe' proprio questo. */
 function suiPastiglie(event) {
-  cambiaModo(event) || apriIlTimer(event);
+  passoDelTermostato(event) || cambiaModo(event) || apriIlTimer(event);
 }
 
 function onClick(event) {
@@ -1560,15 +1938,77 @@ function installRailDrag() {
 }
 
 function installTemperatureStep() {
+  installPassoDellaCard();
   const current = root.cpSetTemp;
   if (typeof current !== "function" || current.__dmClimateThermal) return;
   function cpSetTempThermal(delta) {
+    /* Coi due obiettivi il passo e' nostro: quello del guscio leggerebbe
+     * `temperature`, che non c'e', e partirebbe da venti gradi. */
+    const aperta = clean(state.climaAperta || lexicalGlobal("cpCurrentEntity"));
+    if (muoviIlClimaDoppio(aperta, Number(delta) < 0 ? -1 : 1)) return undefined;
     const shown = parseFloat(clean(doc?.getElementById("cp-temp-val")?.textContent));
     return current.call(this, wholeDegreeDelta(shown, delta));
   }
   cpSetTempThermal.__dmClimateThermal = true;
   cpSetTempThermal.__dmPrevious = current;
   root.cpSetTemp = cpSetTempThermal;
+}
+
+/* La linguetta «Termostato», che il guscio non conosce.
+ *
+ * `setClimaPageMode()` del runtime storico accetta «freddo» e «caldo» e
+ * nient'altro: a «termostato» tornava senza fare niente. Qui la si avvolge.
+ * Per la terza zona si fa qui quello che il guscio fa per le sue due — la
+ * classe `show` sulla zona, la classe `active-<zona>` sul tasto — e per le
+ * altre due si lascia fare a lui, togliendo poi la terza di mezzo: altrimenti
+ * dal Termostato si tornava al Freddo con due griglie accese insieme.
+ *
+ * La zona scelta si ricorda come le altre due: nella pagina stessa, che resta
+ * quella finche' non si ricarica. Se la linguetta poi sparisce — l'ultimo
+ * termostato a coppia tolto dalla configurazione — `zoneWithUnits` riporta
+ * la pagina sulla prima zona che ha qualcosa. */
+function accendiLaZona(zona) {
+  for (const voce of ZONE_DEL_CLIMA) {
+    doc?.getElementById?.(`clima-page-mode-${voce}`)?.classList.toggle(`active-${voce}`, voce === zona);
+    doc?.querySelector?.(`.clima-zone-${voce}`)?.classList.toggle("show", voce === zona);
+  }
+}
+
+function installaLaTerzaLinguetta() {
+  const current = root.setClimaPageMode;
+  if (typeof current !== "function" || current.__dmClimaTermostato) return;
+  function setClimaPageModeConTermostato(mode, silent) {
+    const zona = clean(mode).toLowerCase();
+    if (zona === "termostato") {
+      if (!silent) root.navigator?.vibrate?.(8);
+      accendiLaZona("termostato");
+      root.queueMicrotask?.(() => renderClimate());
+      return undefined;
+    }
+    const esito = current.apply(this, arguments);
+    if (zona === "freddo" || zona === "caldo") accendiLaZona(zona);
+    return esito;
+  }
+  Object.assign(setClimaPageModeConTermostato, current);
+  setClimaPageModeConTermostato.__dmClimaTermostato = true;
+  setClimaPageModeConTermostato.__dmPrevious = current;
+  root.setClimaPageMode = setClimaPageModeConTermostato;
+}
+
+/* Il meno e il piu' della card chiamano `setTemp()` del guscio, che conosce
+ * solo `temperature`: su un termostato coi due obiettivi tornava subito,
+ * senza fare niente. Chi ne ha due passa da qui; chi ne ha uno resta li',
+ * esattamente com'era. */
+function installPassoDellaCard() {
+  const current = root.setTemp;
+  if (typeof current !== "function" || current.__dmClimateThermal) return;
+  function setTempThermal(entity, direction, zona) {
+    if (muoviIlClimaDoppio(entity, direction === "up" ? 1 : -1, zona)) return undefined;
+    return current.call(this, entity, direction);
+  }
+  setTempThermal.__dmClimateThermal = true;
+  setTempThermal.__dmPrevious = current;
+  root.setTemp = setTempThermal;
 }
 
 /**
@@ -1598,6 +2038,7 @@ function installOverrides() {
   installTemperatureStep();
   // Switching zone changes what the readout summarises.
   wrapFunction("setClimaPageMode", "__dmClimateThermalMode", () => renderClimate());
+  installaLaTerzaLinguetta();
   installPannelloDellaFinestra();
   installClimaRapido();
 }
@@ -1730,7 +2171,12 @@ function tastoRapido(unita, states) {
   if (freddo && stato) {
     const obiettivo = stato.attributes?.temperature;
     const ambiente = stato.attributes?.current_temperature;
-    if (acceso && obiettivo !== undefined) gradi = `${obiettivo}°`;
+    /* Il termostato coi due obiettivi non ha `temperature`: il tasto
+     * scriveva «null°». Scrive la coppia, o quello che la modalita' rende
+     * vero. Chi ne ha uno solo resta com'era. */
+    const obiettivi = obiettiviDelClima(stato.attributes, grezzo);
+    if (acceso && obiettivi.doppio) gradi = obiettiviScritti(obiettivi);
+    else if (acceso && obiettivo !== undefined && obiettivo !== null) gradi = `${obiettivo}°`;
     else if (ambiente !== undefined) gradi = `${Math.round(ambiente)}°`;
   }
   const tasto = doc.createElement("button");
@@ -1803,6 +2249,7 @@ function installClimaRapido() {
 function pannelloNellaFinestra(entity) {
   const finestra = doc?.querySelector?.("#clima-popup-overlay .clima-popup");
   if (!finestra) return false;
+  gradiNellaFinestra(entity);
   const modalita = doc.getElementById("cp-mode-section");
   const ventola = doc.getElementById("cp-fan-section");
   const markup = climatePanelMarkup(entity);
@@ -2031,7 +2478,7 @@ function climateCss() {
    li troverebbe: un var() senza ripiego non vale bianco, non vale niente, e la
    card si disegnerebbe trasparente sopra la pagina. */
 .dm-cl-shell,.dm-cl-card{
-  --dm-cl-cold:14,165,233;--dm-cl-warm:234,88,12;--dm-cl-off:148,163,184;
+  --dm-cl-cold:14,165,233;--dm-cl-warm:234,88,12;--dm-cl-off:148,163,184;--dm-cl-thermo:124,58,237;
   --dm-cl-card:var(--card-bg,#fff);--dm-cl-line:var(--card-border,#e6ecf3);
   --dm-cl-text:var(--text,#0f172a);--dm-cl-dim:var(--text-dim,#64748b);
   --dm-cl-soft:var(--surface-2,#f7f9fc);--dm-cl-sunk:var(--surface-3,#eef2f8);
@@ -2043,6 +2490,7 @@ function climateCss() {
   display:flex;flex-direction:column;gap:18px;width:100%;max-width:1250px;margin:0 auto
 }
 .dm-cl-shell[data-dm-cl-zone="caldo"]{--dm-cl-zone:var(--dm-cl-warm)}
+.dm-cl-shell[data-dm-cl-zone="termostato"]{--dm-cl-zone:var(--dm-cl-thermo)}
 .dm-cl-shell button,.dm-cl-card button{font:inherit;color:inherit}
 
 /* ── masthead ─────────────────────────────────────────────────────────── */
@@ -2086,7 +2534,8 @@ function climateCss() {
 
 /* ── Freddo / Caldo switch (ids and classes kept for setClimaPageMode) ── */
 #page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch{
-  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important;
+  display:grid!important;grid-template-columns:none!important;grid-auto-flow:column!important;
+  grid-auto-columns:minmax(0,1fr)!important;gap:4px!important;
   width:100%!important;max-width:none!important;margin:0!important;padding:5px!important;
   border:1px solid var(--dm-cl-line)!important;border-radius:20px!important;
   background:var(--dm-cl-card)!important;box-shadow:var(--dm-cl-shadow)!important;overflow:hidden!important
@@ -2102,8 +2551,13 @@ function climateCss() {
   display:inline-flex!important;align-items:center!important;font-size:0!important;line-height:0!important
 }
 /* A zone nobody configured has no tab, and a page with one zone has no switch:
-   the buttons stay in the document for setClimaPageMode(), out of sight. */
-#page-clima .dm-cl-shell .clima-page-mode-btn[data-dm-cl-empty="true"]{display:none!important}
+   the buttons stay in the document for setClimaPageMode(), out of sight.
+   La seconda riga e' scritta per esteso perche' la regola che mette i tasti
+   in fila (display:flex, qui sopra) e' piu' specifica: con due zone non si
+   vedeva, perche' con una sola se ne va tutto il commutatore; con tre — una
+   vuota in mezzo a due piene — il tasto vuoto restava li'. */
+#page-clima .dm-cl-shell .clima-page-mode-btn[data-dm-cl-empty="true"],
+#page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn[data-dm-cl-empty="true"]{display:none!important}
 #page-clima .dm-cl-shell[data-dm-cl-zones="1"] .clima-page-mode-switch,
 #page-clima .dm-cl-shell[data-dm-cl-zones="0"] .clima-page-mode-switch{display:none!important}
 .dm-cl-tab-count{
@@ -2118,8 +2572,15 @@ function climateCss() {
   background:linear-gradient(135deg,rgb(var(--dm-cl-warm)),rgba(var(--dm-cl-warm),.78))!important;color:#fff!important;
   box-shadow:0 8px 20px rgba(var(--dm-cl-warm),.34)!important
 }
+/* La terza linguetta, i termostati a coppia: il caldo che sfuma nel freddo,
+   perche' quello fanno — tutti e due. */
+#page-clima .dm-cl-shell #clima-page-mode-termostato.active-termostato{
+  background:linear-gradient(120deg,rgb(var(--dm-cl-warm)),rgb(var(--dm-cl-cold)))!important;color:#fff!important;
+  box-shadow:0 8px 20px rgba(var(--dm-cl-thermo),.3)!important
+}
 #page-clima .dm-cl-shell .clima-page-mode-btn.active-freddo .dm-cl-tab-count,
-#page-clima .dm-cl-shell .clima-page-mode-btn.active-caldo .dm-cl-tab-count{background:rgba(255,255,255,.24);color:#fff}
+#page-clima .dm-cl-shell .clima-page-mode-btn.active-caldo .dm-cl-tab-count,
+#page-clima .dm-cl-shell .clima-page-mode-btn.active-termostato .dm-cl-tab-count{background:rgba(255,255,255,.24);color:#fff}
 
 /* ── grids ────────────────────────────────────────────────────────────── */
 .dm-cl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
@@ -2189,11 +2650,11 @@ function climateCss() {
 
 .dm-cl-main{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .dm-cl-target{display:flex;align-items:baseline;gap:9px;min-width:0}
-.dm-cl-target b{
+.dm-cl-target>b{
   font-size:44px;font-weight:800;line-height:.92;letter-spacing:-1.6px;font-variant-numeric:tabular-nums;
   color:var(--dm-cl-dim);transition:color .4s ease
 }
-.dm-cl-card.is-on .dm-cl-target b{color:rgb(var(--dm-cl-u))}
+.dm-cl-card.is-on .dm-cl-target>b{color:rgb(var(--dm-cl-u))}
 .dm-cl-deg{font-size:.62em;font-weight:700;letter-spacing:0}
 .dm-cl-cap{font-size:9px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--dm-cl-dim)}
 .dm-cl-spark{width:132px;height:42px;flex:0 0 auto;overflow:visible}
@@ -2294,9 +2755,43 @@ function climateCss() {
 .dm-cl-pwr:active{transform:scale(.95)}
 .dm-cl-card.is-on .dm-cl-pwr{background:rgb(var(--dm-cl-u));color:#fff;box-shadow:0 6px 16px rgba(var(--dm-cl-u),.34)}
 
+/* ── la card del termostato a coppia ──────────────────────────────────────
+   Due righe, una per numero: il caldo arancio sopra, il freddo azzurro sotto,
+   come le due mezze lune del termostato di Home Assistant. Ogni riga ha il
+   suo nome, il suo numero e il suo meno e piu': si legge da sola, e il tasto
+   che si preme dice gia' quale numero muove. */
+.dm-cl-card[data-dm-cl-zone="termostato"].is-on{--dm-cl-u:var(--dm-cl-thermo)}
+.dm-cl-estremi{display:grid;gap:7px}
+.dm-cl-estremo{
+  --dm-cl-o:var(--dm-cl-warm);
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:9px;
+  padding:7px 7px 7px 12px;border-radius:16px;
+  border:1px solid rgba(var(--dm-cl-o),.24);background:rgba(var(--dm-cl-o),.07)
+}
+.dm-cl-estremo[data-dm-cl-estremo="alto"]{--dm-cl-o:var(--dm-cl-cold)}
+/* Il colore sta sui figli e sui tasti scritti per esteso: \`.dm-cl-card
+   button\` rimette \`color:inherit\`, e a parita' vincerebbe lui. */
+.dm-cl-estremo-ic{display:inline-flex;color:rgb(var(--dm-cl-o))}
+.dm-cl-estremo-nome{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:10.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:rgb(var(--dm-cl-o))
+}
+.dm-cl-estremo-val{
+  font-size:30px;font-weight:800;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums;
+  color:rgb(var(--dm-cl-o));white-space:nowrap
+}
+.dm-cl-estremo-tasti{display:flex;gap:6px}
+.dm-cl-card .dm-cl-estremo .dm-cl-step{
+  border-color:rgba(var(--dm-cl-o),.32);background:var(--dm-cl-card);color:rgb(var(--dm-cl-o))
+}
+.dm-cl-card .dm-cl-estremo .dm-cl-step:hover:not(:disabled){background:rgba(var(--dm-cl-o),.12)}
+.dm-cl-card .dm-cl-estremo .dm-cl-step:disabled{opacity:.35;cursor:default;transform:none}
+.dm-cl-legend-termostato{margin-top:0;justify-content:flex-start}
+.dm-cl-legend-termostato>span{font-size:12.5px}
+
 /* ── dark theme ───────────────────────────────────────────────────────── */
 html[data-theme="dark"] .dm-cl-shell{
-  --dm-cl-cold:56,189,248;--dm-cl-warm:251,146,60;--dm-cl-off:100,116,139;
+  --dm-cl-cold:56,189,248;--dm-cl-warm:251,146,60;--dm-cl-off:100,116,139;--dm-cl-thermo:167,139,250;
   --dm-cl-shadow:0 4px 20px rgba(0,0,0,.38),0 1px 4px rgba(0,0,0,.26)
 }
 html[data-theme="dark"] .dm-cl-card:hover{box-shadow:0 16px 38px rgba(0,0,0,.5)}
@@ -2310,11 +2805,19 @@ html[data-theme="dark"] .dm-cl-knob{box-shadow:0 3px 8px rgba(0,0,0,.45)}
      stessa card vive anche nella pagina di una stanza (#11), e sul telefono
      deve rimpicciolirsi li' come qui. */
   .dm-cl-card{padding:13px 14px 14px!important;gap:9px!important;border-radius:20px!important}
-  .dm-cl-card .dm-cl-target b{font-size:34px!important}
+  .dm-cl-card .dm-cl-target>b{font-size:34px!important}
   .dm-cl-card .dm-cl-spark{display:none!important}
   .dm-cl-card .dm-cl-rail{height:18px!important}
   .dm-cl-card .dm-cl-step,.dm-cl-card .dm-cl-pwr{width:34px!important;height:34px!important}
+  .dm-cl-card .dm-cl-estremo-val{font-size:26px}
+  .dm-cl-card .dm-cl-estremo{gap:8px;padding:5px 6px 5px 10px}
   #page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn{padding:11px 8px!important;font-size:12px!important;letter-spacing:1px!important}
+  /* Tre linguette su un telefono: «Termostato» col disegno e il conto non ci
+     sta, e finiva sopra il conto del Caldo. Il disegno se ne va — il nome
+     basta — e le lettere si stringono un poco. */
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn{padding:11px 4px!important;gap:5px!important;font-size:10.5px!important;letter-spacing:.3px!important;min-width:0!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn .dm-cl-tab-ic{display:none!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .dm-cl-tab-count{padding:1px 6px}
   .dm-cl-summary{width:100%}
   .dm-cl-bulk{flex:1 1 auto}
   .dm-cl-bulk button{flex:1 1 auto;justify-content:center;padding:11px 10px}
@@ -2323,6 +2826,18 @@ html[data-theme="dark"] .dm-cl-knob{box-shadow:0 3px 8px rgba(0,0,0,.45)}
 @media(prefers-reduced-motion:reduce){
   .dm-cl-shell *,.dm-cl-card *{transition:none!important;animation:none!important}
 }
+
+/* I due obiettivi in cima alla finestra del Clima: i due numeri coi colori
+   del caldo e del freddo, al posto del «--°» che il guscio scriveva. Il meno
+   e il piu' del guscio accanto se ne vanno: il caldo e il freddo hanno i loro,
+   nel pannello sotto. */
+#cp-temp-val[data-dm-cl-doppio="entrambi"]{display:flex;align-items:center;justify-content:center;gap:6px}
+#cp-temp-val .dm-cl-cp-obj{font:inherit;font-size:.82em;line-height:1;color:#ea580c}
+#cp-temp-val .dm-cl-cp-obj[data-dm-cl-obj="alto"]{color:#0284c7}
+html[data-theme="dark"] #cp-temp-val .dm-cl-cp-obj{color:#fb923c}
+html[data-theme="dark"] #cp-temp-val .dm-cl-cp-obj[data-dm-cl-obj="alto"]{color:#38bdf8}
+#cp-temp-val .dm-cl-cp-tra{font-size:.6em;color:var(--text-dim,#64748b)}
+.clima-popup[data-dm-cl-doppio="entrambi"] .clima-temp-btn{visibility:hidden;pointer-events:none}
 
 /* La ventilazione meccanica vive in questa pagina, quindi il suo vestito entra
  * nello stesso foglio: due fogli per una pagina sola sarebbero due posti in cui

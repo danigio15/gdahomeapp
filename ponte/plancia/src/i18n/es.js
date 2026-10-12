@@ -5614,4 +5614,12 @@ export default Object.freeze({
   "On the rest screen: how charged it is and whether it is plugged in": "En la pantalla de reposo: cuánta carga tiene y si está enchufada",
   "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "Por ejemplo, el sensor de batería de la app de Home Assistant. Vacío: la que da el navegador de la tableta",
   "Optional: the “is charging” sensor or the battery state": "Opcional: el sensor «cargando» o el estado de la batería",
+  "Thermostat": "Termostato",
+  "Thermostats": "Termostatos",
+  "No thermostat configured": "Ningún termostato configurado",
+  "Thermostats out of season": "Termostatos fuera de temporada",
+  "Lower the heating": "Bajar la calefacción",
+  "Raise the heating": "Subir la calefacción",
+  "Lower the cooling": "Bajar la refrigeración",
+  "Raise the cooling": "Subir la refrigeración",
 });

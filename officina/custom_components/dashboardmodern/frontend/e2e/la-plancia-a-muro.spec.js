@@ -599,6 +599,124 @@ test.describe("la plancia a muro", () => {
       "aria-selected",
       "true",
     );
+    /* Senza termostati a coppia la terza linguetta non c'e'. */
+    await expect(muro(page).locator('[data-mu-zona="termostato"]')).toHaveCount(0);
+  });
+
+  /* «Il termostato di Home Assistant mi vede le due mezze lune, da una parte
+   * caldo e dall'altra freddo»: i termostati a coppia (`target_temp_low` e
+   * `target_temp_high`, senza `temperature`) sul muro scrivevano «—», e il
+   * meno e il piu' mandavano `temperature`, che Home Assistant a loro
+   * rifiuta. Ora stanno in una terza linguetta, «Termostato», e non in Caldo
+   * o in Freddo: la card ha due righe — «Caldo 22°» e «Freddo 26°» — ognuna
+   * col suo meno e il suo piu', che mandano sempre la coppia intera. Un clima
+   * a obiettivo solo, accanto, resta com'era. */
+  test("un termostato a coppia sta nella linguetta Termostato, con un meno e un piu' per numero", async ({
+    page,
+  }, testInfo) => {
+    const seme = structuredClone(SEME_A_MURO);
+    seme.sections.climate.push({
+      id: "c2",
+      name: "Termostato",
+      entity: "climate.termostato",
+      type: "pompa",
+      room_id: "soggiorno",
+      room: "Soggiorno",
+    });
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      muro: { attiva: true, pagine: [{ id: "p1", modello: "clima", zona: "caldo" }] },
+      stati: {
+        ...STATI_A_MURO,
+        "climate.soggiorno": {
+          ...STATI_A_MURO["climate.soggiorno"],
+          attributes: { ...STATI_A_MURO["climate.soggiorno"].attributes },
+        },
+        "climate.termostato": {
+          state: "heat_cool",
+          attributes: {
+            friendly_name: "Termostato",
+            hvac_modes: ["off", "heat", "cool", "heat_cool"],
+            hvac_action: "idle",
+            current_temperature: 21.4,
+            temperature: null,
+            target_temp_low: 22,
+            target_temp_high: 26,
+            min_temp: 4,
+            max_temp: 40,
+            target_temp_step: 0.5,
+          },
+        },
+      },
+    });
+    const zona = (z) => muro(page).locator(`[data-mu-zona="${z}"]`);
+    const carta = muro(page).locator('.mu-card[data-mu-entita="climate.termostato"]');
+    /* Tre linguette, nell'ordine; dal Caldo il termostato non si vede. */
+    await expect(muro(page).locator("[data-mu-zona]")).toHaveCount(3);
+    expect(
+      await muro(page)
+        .locator("[data-mu-zona]")
+        .evaluateAll((tasti) => tasti.map((t) => t.dataset.muZona)),
+    ).toEqual(["freddo", "caldo", "termostato"]);
+    await expect(zona("caldo")).toHaveAttribute("aria-selected", "true");
+    await expect(carta).toHaveCount(0);
+    await zona("freddo").click();
+    await expect(carta).toHaveCount(0);
+    await expect(muro(page).locator('.mu-card[data-mu-entita="climate.soggiorno"]')).toBeVisible();
+
+    await zona("termostato").click();
+    await expect(zona("termostato")).toHaveAttribute("aria-selected", "true");
+    await expect(carta).toBeVisible();
+    await expect(muro(page).locator('.mu-card[data-mu-entita="climate.soggiorno"]')).toHaveCount(0);
+    const caldo = carta.locator('.mu-est[data-mu-estremo="basso"]');
+    const freddo = carta.locator('.mu-est[data-mu-estremo="alto"]');
+    await expect(caldo.locator(".mu-est-v")).toHaveText("22°");
+    await expect(freddo.locator(".mu-est-v")).toHaveText("26°");
+
+    await caldo.locator('[data-mu-fa="piu"]').click();
+    await expect(caldo.locator(".mu-est-v")).toHaveText("22,5°");
+    await expect.poll(async () => (await servizi(page)).length).toBe(1);
+    expect((await servizi(page))[0]).toEqual({
+      domain: "climate",
+      service: "set_temperature",
+      data: { entity_id: "climate.termostato", target_temp_low: 22.5, target_temp_high: 26 },
+    });
+
+    /* Il meno del freddo muove il freddo, e il caldo resta quello appena
+     * mandato. */
+    await freddo.locator('[data-mu-fa="meno"]').click();
+    await expect(freddo.locator(".mu-est-v")).toHaveText("25,5°");
+    await expect.poll(async () => (await servizi(page)).length).toBe(2);
+    expect((await servizi(page))[1].data).toEqual({
+      entity_id: "climate.termostato",
+      target_temp_low: 22.5,
+      target_temp_high: 25.5,
+    });
+
+    /* Nella finestra le stesse due righe, grandi, coi loro tasti. */
+    await carta.locator(".mu-nome").click();
+    const finestra = muro(page).locator(".mu-fin-clima");
+    await expect(finestra.locator(".mu-est")).toHaveCount(2);
+    await finestra.locator('.mu-est[data-mu-estremo="basso"] [data-mu-fa="meno"]').click();
+    await expect.poll(async () => (await servizi(page)).length).toBe(3);
+    expect((await servizi(page))[2].data).toEqual({
+      entity_id: "climate.termostato",
+      target_temp_low: 22,
+      target_temp_high: 25.5,
+    });
+    await finestra.locator('[data-mu-fa="chiudi"]').first().click();
+
+    /* Il clima a obiettivo solo, nella linguetta Freddo, manda `temperature`
+     * come sempre. */
+    await zona("freddo").click();
+    await muro(page)
+      .locator('.mu-card[data-mu-entita="climate.soggiorno"] [data-mu-fa="piu"]')
+      .click();
+    await expect.poll(async () => (await servizi(page)).length).toBe(4);
+    expect((await servizi(page))[3].data).toEqual({
+      entity_id: "climate.soggiorno",
+      temperature: 22,
+    });
   });
 
   test("nella pagina Luci una presa ha la stessa card delle luci, e si comanda", async ({
@@ -992,6 +1110,21 @@ test.describe("la plancia a muro", () => {
         },
       };
     });
+    /* Lo studio ha un termostato a coppia, coi decimali: sta nella linguetta
+     * Termostato, con le due righe e i quattro tasti, e non deve uscire. */
+    stati["climate.studio"] = {
+      state: "heat_cool",
+      attributes: {
+        friendly_name: "Studio",
+        current_temperature: 20.4,
+        temperature: null,
+        target_temp_low: 21.5,
+        target_temp_high: 24.5,
+        hvac_modes: ["off", "heat", "cool", "heat_cool"],
+        hvac_action: "idle",
+        target_temp_step: 0.5,
+      },
+    };
     for (const n of ["cancello", "garage_1", "portoncino"])
       stati[`switch.${n}`] = { state: "off", attributes: { friendly_name: n } };
     stati["binary_sensor.garage_1"] = {
@@ -1076,6 +1209,16 @@ test.describe("la plancia a muro", () => {
         await expect(muro(page).locator(".mu-card").first()).toBeVisible();
         expect(await fuoriDalRiquadro(page), `pagina ${indice}`).toEqual([]);
       }
+      /* La linguetta Termostato della pagina Clima: le due righe coi loro
+       * quattro tasti stanno nel riquadro anche sul pannello piccolo. */
+      await muro(page).locator('[data-mu-pagina="3"]').click();
+      await muro(page).locator('[data-mu-zona="termostato"]').click();
+      const termostato = muro(page).locator('.mu-card[data-mu-entita="climate.studio"]');
+      await expect(termostato).toBeVisible();
+      await expect(termostato.locator(".mu-est-t")).toHaveCount(4);
+      for (const tasto of await termostato.locator(".mu-est-t").all())
+        await expect(tasto).toBeVisible();
+      expect(await fuoriDalRiquadro(page), "linguetta Termostato").toEqual([]);
     });
 
   test("su uno schermo piccolo l'interruttore e il sensore hanno la stessa forma, col nome grande in fondo", async ({

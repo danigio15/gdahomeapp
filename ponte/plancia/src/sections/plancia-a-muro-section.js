@@ -21,6 +21,13 @@
  * solo se il ponte dice che gdahome e' Premium. Con Base la plancia resta
  * quella di sempre, e il config a muro resta scritto per il giorno dopo. */
 import { quickClimatePresetOf, quickClimateSteps } from "../core/quick-climate.js";
+import {
+  coppiaDelTermostato,
+  coppiaSpostata,
+  eUnTermostatoACoppia,
+  obiettiviDelClima,
+  obiettivoDaMuovere,
+} from "../core/i-due-obiettivi-del-clima.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import {
   ALARM_DISARM,
@@ -834,10 +841,115 @@ const AZIONI_DEL_CLIMA = () => ({
   off: t("Spento", "Off"),
 });
 
-function obiettivo(id) {
-  if (state.inAttesa[id]?.temperatura !== undefined) return state.inAttesa[id].temperatura;
-  return numero(attributi(id).temperature);
+/* Gli obiettivi di un'unita' del clima come li vede il muro: uno solo, o la
+ * coppia caldo-freddo dei termostati che Home Assistant mostra con due numeri
+ * (22 e 40: sotto il primo scalda, sopra il secondo raffresca). La regola e'
+ * quella del nucleo (core/i-due-obiettivi-del-clima.js), la stessa della
+ * pagina Clima e della Home; qui ci si mette sopra soltanto la coppia appena
+ * toccata e non ancora confermata, come il numero solo ha `temperatura`: il
+ * tablet la mostra subito, e non torna indietro mentre il comando viaggia. */
+function obiettiviDelMuro(id) {
+  const lettura = obiettiviDelClima(attributi(id), stato(id)?.state);
+  const attesa = state.inAttesa[id]?.coppia;
+  if (!lettura.doppio || !attesa) return lettura;
+  return Object.freeze({ ...lettura, basso: attesa.target_temp_low, alto: attesa.target_temp_high });
 }
+
+/* E' un termostato a coppia? Allora sta nella linguetta «Termostato» e ha la
+ * sua card, coi due numeri insieme. La regola e' del nucleo. */
+const aCoppia = (id) => eUnTermostatoACoppia(attributi(id));
+
+/* I due numeri di un termostato a coppia, qualunque sia la modalita' — la
+ * card della linguetta Termostato li mostra sempre tutti e due — con sopra la
+ * coppia appena toccata e non ancora confermata. `null` se Home Assistant non
+ * li pubblica tutti e due. */
+function coppiaDelMuro(id) {
+  const vera = coppiaDelTermostato(attributi(id));
+  const attesa = state.inAttesa[id]?.coppia;
+  if (!vera || !attesa) return vera;
+  return Object.freeze({ ...vera, basso: attesa.target_temp_low, alto: attesa.target_temp_high });
+}
+
+/* Quale dei due estremi muove un meno o un piu' che non dice quale. Sulla
+ * card e nella finestra del termostato ogni tasto lo dice (`data-mu-estremo`);
+ * questo resta per chi non lo dice: in caldo e in freddo quello della
+ * modalita', altrimenti quello della linguetta da cui si guarda. */
+function estremoDelMuro(id, lettura, zona = zonaDiQui(id)) {
+  return obiettivoDaMuovere(lettura, "", zona === "caldo" ? "basso" : "alto");
+}
+
+/* Il numero che il meno e il piu' muovono: il solo, o l'estremo scelto. */
+function obiettivo(id, zona) {
+  if (state.inAttesa[id]?.temperatura !== undefined) return state.inAttesa[id].temperatura;
+  const lettura = obiettiviDelMuro(id);
+  if (!lettura.doppio) return lettura.singolo;
+  const quale = estremoDelMuro(id, lettura, zona);
+  return quale ? lettura[quale] : null;
+}
+
+/* I gradi voluti scritti sulla card del clima. */
+function gradiVoluti(id, zona) {
+  const gradi = obiettivo(id, zona);
+  return gradi === null ? "—" : `${esc(decimale(gradi))}°`;
+}
+
+/* Il segno di ciascuna riga: la fiamma per il caldo, il fiocco per il
+ * freddo. Piccoli e a tratto, nel colore della riga: i disegni del catalogo
+ * sono pannelli interi, e accanto a un numero sarebbero rumore. */
+const SEGNI_DEL_TERMOSTATO = Object.freeze({
+  basso:
+    '<svg class="mu-est-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5c3.2 3 4.8 5.6 4.8 8a4.8 4.8 0 0 1-9.6 0c0-1.3.5-2.5 1.4-3.6.3 1.4 1 2.2 2 2.4-.4-2.4.1-4.7 1.4-6.8Z"/><path d="M6.4 13.5A6.6 6.6 0 0 0 12 21.5a6.6 6.6 0 0 0 5.6-8"/></svg>',
+  alto: '<svg class="mu-est-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v20M4.2 7l15.6 10M19.8 7 4.2 17"/><path d="M12 6.2 9.6 4M12 6.2 14.4 4M12 17.8 9.6 20M12 17.8l2.4 2.2"/></svg>',
+});
+
+/* Le due righe del termostato a coppia: «Caldo 22°» col suo meno e il suo
+ * piu', «Freddo 40°» coi suoi. Servono alla card e alla finestra, che le
+ * vogliono uguali: cambia solo la misura, e la decide il foglio di stile. */
+function righeDelTermostato(id) {
+  const coppia = coppiaDelMuro(id);
+  const a = attributi(id);
+  const passo = numero(a.target_temp_step) || 0.5;
+  const scala = [numero(a.min_temp) ?? 7, numero(a.max_temp) ?? 35];
+  return [
+    ["basso", t("Caldo", "Heating"), "#f97316", SEGNI_DEL_TERMOSTATO.basso, t("Abbassa il caldo", "Lower the heating"), t("Alza il caldo", "Raise the heating")],
+    ["alto", t("Freddo", "Cooling"), "#0ea5e9", SEGNI_DEL_TERMOSTATO.alto, t("Abbassa il freddo", "Lower the cooling"), t("Alza il freddo", "Raise the cooling")],
+  ]
+    .map(([estremo, parola, acc, icona, giu, su]) => {
+      const valore = coppia ? coppia[estremo] : null;
+      /* A fine corsa il tasto si spegne: il caldo non sale oltre il freddo
+       * (Home Assistant lo rifiuta), ne' oltre gli estremi dell'unita'. */
+      const fermo = (verso) =>
+        !coppia || !coppiaSpostata(coppia, estremo, verso, { passo, scala }) ? " disabled" : "";
+      return `<div class="mu-est" data-mu-estremo="${estremo}" style="--est:${acc}"><span class="mu-est-n">${icona}<span class="mu-est-p">${esc(parola)}</span></span><b class="mu-est-v">${valore === null ? "—" : `${esc(decimale(valore))}°`}</b><button type="button" class="mu-tondo mu-est-t" data-mu-fa="meno" data-mu-estremo="${estremo}" data-mu-entita="${esc(id)}" aria-label="${esc(giu)}"${fermo(-1)}>−</button><button type="button" class="mu-tondo mu-est-t" data-mu-fa="piu" data-mu-estremo="${estremo}" data-mu-entita="${esc(id)}" aria-label="${esc(su)}"${fermo(1)}>+</button></div>`;
+    })
+    .join("");
+}
+
+/* La card del termostato a coppia, sul muro.
+ *
+ * In cima il disegno, il nome con la temperatura della stanza, la modalita'
+ * (che apre la finestra coi modi) e l'interruttore; sotto le due righe, una
+ * per numero, ognuna col suo meno e il suo piu'. Niente da scegliere prima di
+ * toccare. Sulle celle piccole la forma si stringe da sola — prima se ne va il
+ * disegno, poi la parola accanto all'icona, poi la riga del nome — e le due
+ * righe coi tasti restano: sono quello per cui la card c'e'. */
+function cardTermostato(c, i) {
+  const id = c.entita;
+  const a = attributi(id);
+  const s = String(stato(id)?.state || "");
+  const atteso = state.inAttesa[id]?.acceso;
+  const on =
+    typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
+  const modo = on ? PAROLE_DEL_CLIMA()[s] || s : t("Spento", "Off");
+  return `<div class="mu-carta mu-card mu-termostato ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTO_DEL_TERMOSTATO}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="termostato">
+    <div class="mu-ter-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno("temperatura", 24, `ter-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div><button type="button" class="mu-pasti mu-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(modo)}</button><button type="button" class="mu-tondo mu-ter-acceso ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button></div>
+    <div class="mu-ter-righe">${righeDelTermostato(id)}</div>
+  </div>`;
+}
+
+/* Il colore della linguetta e della card del termostato: ne' l'arancio del
+ * caldo ne' l'azzurro del freddo, perche' e' tutti e due. */
+const ACCENTO_DEL_TERMOSTATO = "#8b5cf6";
 
 /* Da che parte sta un'unita' del clima: «se e' inserita nel caldo, il
  * simbolo caldo e non il ghiaccio». `zona` e' la pagina in cui si trova
@@ -855,7 +967,18 @@ const facciaDelClima = (id, zona) =>
 /* La linguetta aperta di una pagina Clima: quella toccata, o quella scelta
  * nel config. */
 function zonaDellaPagina(pagina) {
-  return (state.zone ||= {})[pagina.id] || pagina.zona || "freddo";
+  const scelta = (state.zone ||= {})[pagina.id] || pagina.zona || "freddo";
+  /* La linguetta «Termostato» c'e' solo finche' c'e' un termostato a coppia:
+   * se quella ricordata se n'e' andata, si torna a quella del config. */
+  if (scelta === "termostato" && !ciSonoTermostati())
+    return pagina.zona && pagina.zona !== "termostato" ? pagina.zona : "freddo";
+  return scelta;
+}
+
+/* Almeno un'unita' del clima e' un termostato a coppia: la terza linguetta
+ * ha qualcosa da mostrare. */
+function ciSonoTermostati() {
+  return (state.fonte?.clima || []).some((d) => d?.entity && aCoppia(d.entity));
 }
 
 /* Da che parte sta un'unita' fuori dalla pagina Clima, dove non c'e' una
@@ -935,6 +1058,10 @@ function pastigliaRapida(id, preset, on) {
 
 function cardClima(c, i, zonaDellaLinguetta = "") {
   const id = c.entita;
+  /* Il termostato a coppia ha la sua card dovunque stia — nella linguetta
+   * Termostato, ma anche in una pagina Personale o in quella di una stanza:
+   * i due numeri vanno insieme, ognuno coi suoi tasti. */
+  if (aCoppia(id)) return cardTermostato(c, i);
   const zona = zonaDellaLinguetta || zonaDellUnita(id);
   const a = attributi(id);
   const faccia = facciaDelClima(id, zona);
@@ -947,7 +1074,7 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
     : on
       ? PAROLE_DEL_CLIMA()[s]
       : t("Spento", "Off");
-  const target = obiettivo(id);
+  const gradi = gradiVoluti(id, zona);
   /* Sul pannello piccolo il meno e il piu' restano sul riquadro: «il clima
    * comodo sul 4 pollici». La temperatura voluta in alto, grande, accanto
    * al disegno; il resto — i modi, l'accensione — nella finestra, col tocco.
@@ -956,14 +1083,14 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
    * per tre sotto le linguette il meno e il piu' finivano fuori dal riquadro. */
   if (state.compatto)
     return `<div class="mu-carta mu-card mu-clima-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
-    <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div><span class="mu-mini-t">${target === null ? "—" : `${decimale(target)}°`}</span></div>
+    <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div><span class="mu-mini-t">${gradi}</span></div>
     <div class="mu-mini-tasti"><button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button><button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button></div></div>`;
   const rapido = rapidoDi(id, zona);
   return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}${rapido ? " mu-col-rapido" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno(faccia.chiave, 26, `clima-${i}`)}</span>
       <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div>
-      ${azione ? `<span class="mu-pasti">${esc(azione)}</span>` : ""}<span class="mu-t-alto" aria-hidden="true">${target === null ? "—" : `${decimale(target)}°`}</span></div>
-    <div class="mu-target"><span class="mu-grande">${target === null ? "—" : `${decimale(target)}°`}</span><span class="mu-et">Target</span></div>
+      ${azione ? `<span class="mu-pasti">${esc(azione)}</span>` : ""}<span class="mu-t-alto" aria-hidden="true">${gradi}</span></div>
+    <div class="mu-target"><span class="mu-grande">${gradi}</span><span class="mu-et">Target</span></div>
     <div class="mu-comandi">
       ${on ? `<button type="button" class="mu-pasti mu-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}
       <span class="mu-spazio"></span>
@@ -1196,14 +1323,18 @@ const vuoto = (i, perche = "") =>
 
 function paginaStanza(pagina) {
   const zona = pagina.modello === "clima" ? zonaDellaPagina(pagina) : "";
-  const comandi = comandiDellaPagina(pagina, state.fonte, zona);
+  const comandi = comandiDellaPagina(pagina, state.fonte, zona, { aCoppia });
   const elenco = MODELLI_ELENCO.includes(pagina.modello);
-  /* La pagina Clima: le due linguette in cima, come nella sezione Clima. */
+  /* La pagina Clima: le linguette in cima, come nella sezione Clima — Freddo,
+   * Caldo e, se in casa c'e' un termostato a coppia, Termostato. */
   const linguette =
     pagina.modello === "clima"
       ? `<div class="mu-zone" role="tablist">${[
           ["freddo", "clima", t("Freddo", "Cooling"), "#0ea5e9"],
           ["caldo", "caldo", t("Caldo", "Heating"), "#f97316"],
+          ...(ciSonoTermostati()
+            ? [["termostato", "temperatura", t("Termostato", "Thermostat"), ACCENTO_DEL_TERMOSTATO]]
+            : []),
         ]
           .map(
             ([z, d, parola, acc]) =>
@@ -1874,7 +2005,11 @@ function finestra() {
     const s = String(stato(id)?.state || "");
     dentro = `<div class="mu-fin-clima">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno(facciaDelClima(id, f.zona).chiave, 30, "fin-clima")}</span><div class="mu-nome"><div class="mu-n" style="font-size:26px">${esc(nomeDi(id))}</div><div class="mu-sotto">${esc(t("Ambiente", "Room"))} ${decimale(attributi(id).current_temperature)}°</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-fin-temp"><button type="button" class="mu-tondo grande" data-mu-fa="meno" data-mu-entita="${esc(id)}">−</button><span class="mu-grande" style="font-size:96px">${obiettivo(id) === null ? "—" : `${decimale(obiettivo(id))}°`}</span><button type="button" class="mu-tondo grande" data-mu-fa="piu" data-mu-entita="${esc(id)}">+</button></div>
+      ${
+        aCoppia(id)
+          ? `<div class="mu-ter-righe mu-fin-ter">${righeDelTermostato(id)}</div>`
+          : `<div class="mu-fin-temp"><button type="button" class="mu-tondo grande" data-mu-fa="meno" data-mu-entita="${esc(id)}">−</button><span class="mu-grande" style="font-size:96px">${obiettivo(id, f.zona) === null ? "—" : `${decimale(obiettivo(id, f.zona))}°`}</span><button type="button" class="mu-tondo grande" data-mu-fa="piu" data-mu-entita="${esc(id)}">+</button></div>`
+      }
       <div class="mu-seg">${modi
         .map(
           (m) =>
@@ -2619,7 +2754,7 @@ function alterna(id, domain, service, data = { entity_id: id }) {
 
 /* Quando Home Assistant dice lo stesso che il tablet aspettava, l'attesa
  * finisce subito: niente quattro secondi in cui il tablet non ascolta. */
-const ATTESE = ["acceso", "luminosita", "temperatura", "volume", "suona", "gruppo"];
+const ATTESE = ["acceso", "luminosita", "temperatura", "coppia", "volume", "suona", "gruppo"];
 export function attesaConfermata(cosa, atteso, reale) {
   if (cosa === "acceso") return reale.acceso === atteso;
   if (cosa === "suona") return reale.suona === atteso;
@@ -2630,6 +2765,13 @@ export function attesaConfermata(cosa, atteso, reale) {
     return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
   if (cosa === "temperatura")
     return reale.temperatura !== null && Math.abs(reale.temperatura - atteso) < 0.05;
+  if (cosa === "coppia")
+    return (
+      reale.coppia?.basso != null &&
+      reale.coppia?.alto != null &&
+      Math.abs(reale.coppia.basso - atteso.target_temp_low) < 0.05 &&
+      Math.abs(reale.coppia.alto - atteso.target_temp_high) < 0.05
+    );
   return false;
 }
 
@@ -2648,6 +2790,7 @@ function confermaLeAttese(event) {
           ? null
           : Math.max(1, Math.round((b / 255) * 100)),
       temperatura: numero(attributi(id).temperature),
+      coppia: coppiaDelTermostato(attributi(id)),
       volume:
         numero(attributi(id).volume_level) === null
           ? null
@@ -2668,8 +2811,30 @@ function confermaLeAttese(event) {
 }
 
 let timerClima = null;
-function cambiaTemperatura(id, verso) {
+function cambiaTemperatura(id, verso, estremo = "") {
   const a = attributi(id);
+  /* La coppia parte intera: Home Assistant, a chi lavora con i due numeri,
+   * rifiuta `temperature` da solo e rifiuta un estremo solo. Il passo e la
+   * scala sono quelli dell'unita', e il basso non scavalca l'alto. Il tasto
+   * della card del termostato dice quale dei due muove; chi non lo dice
+   * muove quello della modalita', o della linguetta. */
+  const coppiaVista = estremo === "basso" || estremo === "alto" ? coppiaDelMuro(id) : null;
+  const lettura = coppiaVista || obiettiviDelMuro(id);
+  if (lettura.doppio) {
+    const quale = coppiaVista ? estremo : estremoDelMuro(id, lettura);
+    const passo = numero(a.target_temp_step) || 0.5;
+    const scala = [numero(a.min_temp) ?? 7, numero(a.max_temp) ?? 35];
+    const coppia = quale ? coppiaSpostata(lettura, quale, verso, { passo, scala }) : null;
+    if (!coppia) return;
+    attendi(id, "coppia", coppia);
+    disegna();
+    root.clearTimeout?.(timerClima);
+    timerClima = root.setTimeout?.(
+      () => comanda("climate", "set_temperature", { entity_id: id, ...coppia }),
+      700,
+    );
+    return;
+  }
   const passo = numero(a.target_temp_step) || 0.5;
   const min = numero(a.min_temp) ?? 7;
   const max = numero(a.max_temp) ?? 35;
@@ -2836,10 +3001,10 @@ function onClick(event) {
       return;
     }
     case "meno":
-      cambiaTemperatura(id, -1);
+      cambiaTemperatura(id, -1, bersaglio.dataset.muEstremo || "");
       return;
     case "piu":
-      cambiaTemperatura(id, 1);
+      cambiaTemperatura(id, 1, bersaglio.dataset.muEstremo || "");
       return;
     case "clima-acceso": {
       const s = String(stato(id)?.state || "off");
@@ -2850,7 +3015,7 @@ function onClick(event) {
          * temperatura mandata a un condizionatore ancora spento cade nel
          * vuoto. */
         attendi(id, "acceso", true);
-        quickClimateSteps(rapido).forEach((passo, indice) => {
+        quickClimateSteps(rapido, attributi(id), { zona: zonaDiQui(id) }).forEach((passo, indice) => {
           const manda = () => comanda("climate", passo.service, { entity_id: id, ...passo.data });
           if (indice === 0) manda();
           else root.setTimeout?.(manda, indice * 700);
@@ -3482,6 +3647,37 @@ ${MURO} .mu-varco,${MURO} .mu-comando,${MURO} .mu-clima-mini{display:flex;flex-d
 ${MURO} .mu-varco-tasto.pieno{color:#052e16}
 ${MURO} .mu-comando .mu-inter{margin-left:auto;pointer-events:none}
 ${MURO} .mu-mini-alto{display:flex;align-items:center;justify-content:space-between;gap:6px}
+/* Il termostato a coppia: in cima il nome, la modalita' e l'interruttore;
+ * sotto due righe, il caldo arancio e il freddo azzurro, ognuna col nome, il
+ * numero e il suo meno e piu'. Le righe si dividono l'altezza che resta, e
+ * dentro la griglia ogni misura segue la casella (vedi piu' giu'): sul 4
+ * pollici i tasti calano, non escono. */
+${MURO} .mu-card.mu-termostato{display:flex;flex-direction:column;text-align:left}
+${MURO} .mu-ter-alto{display:flex;align-items:center;gap:10px;min-width:0;flex:none}
+${MURO} .mu-ter-alto>.mu-nome{flex:1 1 auto;min-width:0}
+${MURO} .mu-card.mu-termostato .mu-ter-alto .mu-n{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-card.mu-termostato .mu-ter-alto .mu-sotto{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-ter-alto>.mu-pasti{flex:none}
+${MURO} .mu-ter-alto>.mu-ter-acceso{width:48px;height:48px;flex:none}
+${MURO} .mu-ter-alto>.mu-ter-acceso svg{width:52%;height:52%}
+${MURO} .mu-ter-righe{flex:1 1 auto;min-height:0;display:grid;grid-template-rows:repeat(2,minmax(0,1fr));gap:8px}
+${MURO} .mu-est{display:flex;align-items:center;gap:10px;min-width:0;min-height:0;padding:4px 6px 4px 12px;border-radius:16px;
+  background:color-mix(in srgb,var(--est) 10%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--est) 32%,transparent)}
+${MURO} .mu-est-n{display:inline-flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap;color:var(--est);font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+${MURO} .mu-est-s{width:18px;height:18px;flex:none}
+${MURO} .mu-est-v{margin-left:auto;font-family:Oswald,Inter,sans-serif;font-weight:700;font-size:34px;line-height:1;color:var(--est);white-space:nowrap}
+${MURO} .mu-est>.mu-est-t{width:48px;height:48px;font-size:24px;flex:none;color:var(--est)}
+${MURO} .mu-est>.mu-est-t:disabled{opacity:.35;cursor:default}
+/* Nella finestra le stesse due righe, grandi: si toccano col dito da lontano. */
+${MURO} .mu-fin-ter{gap:14px}
+${MURO} .mu-fin-ter .mu-est{height:92px;padding:0 12px 0 20px;border-radius:22px}
+${MURO} .mu-fin-ter .mu-est-n{font-size:16px}
+${MURO} .mu-fin-ter .mu-est-s{width:24px;height:24px}
+${MURO} .mu-fin-ter .mu-est-v{font-size:60px}
+${MURO} .mu-fin-ter .mu-est>.mu-est-t{width:68px;height:68px;font-size:30px}
+${MURO}[data-compatto="1"] .mu-fin-ter .mu-est{height:64px}
+${MURO}[data-compatto="1"] .mu-fin-ter .mu-est-v{font-size:40px}
+${MURO}[data-compatto="1"] .mu-fin-ter .mu-est>.mu-est-t{width:52px;height:52px;font-size:24px}
 ${MURO} .mu-mini-t{font-family:Oswald,Inter,sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--acc);white-space:nowrap}
 ${MURO} .mu-mini-tasti{display:flex;gap:8px;margin-top:auto}
 ${MURO} .mu-mini-tasti .mu-tondo{flex:1;width:auto;height:40px;border-radius:12px;font-size:22px}
@@ -3703,6 +3899,13 @@ ${MURO} .mu-g6>.mu-card .mu-t-alto{font-size:clamp(20px,18cqh,40px)}
 ${MURO} .mu-g6>.mu-clima-mini .mu-mini-alto>.mu-chip{--c:clamp(26px,26cqh,40px)!important}
 ${MURO} .mu-g6>.mu-clima-mini .mu-mini-t{font-size:clamp(18px,24cqh,30px)}
 ${MURO} .mu-g6>.mu-clima-mini .mu-mini-tasti .mu-tondo{height:clamp(26px,28cqh,40px);font-size:clamp(16px,16cqh,22px)}
+${MURO} .mu-g6>.mu-card.mu-termostato{gap:clamp(4px,4cqh,12px)}
+${MURO} .mu-g6>.mu-card.mu-termostato .mu-ter-alto>.mu-chip{--c:clamp(26px,22cqh,40px)!important}
+${MURO} .mu-g6>.mu-card.mu-termostato .mu-ter-alto>.mu-ter-acceso{width:clamp(28px,min(22cqh,16cqw),48px);height:clamp(28px,min(22cqh,16cqw),48px)}
+${MURO} .mu-g6>.mu-card.mu-termostato .mu-ter-righe{gap:clamp(3px,3cqh,8px)}
+${MURO} .mu-g6>.mu-card.mu-termostato .mu-est{gap:clamp(4px,3cqw,10px);padding:2px clamp(3px,2cqw,6px) 2px clamp(6px,4cqw,12px);border-radius:clamp(10px,8cqh,16px)}
+${MURO} .mu-g6>.mu-card.mu-termostato .mu-est-v{font-size:clamp(15px,min(17cqh,12cqw),38px)}
+${MURO} .mu-g6>.mu-card.mu-termostato .mu-est>.mu-est-t{width:clamp(22px,min(19cqh,15cqw),52px);height:clamp(22px,min(19cqh,15cqw),52px);font-size:clamp(14px,10cqh,24px)}
 /* Le righe di contorno se ne vanno prima del nome. */
 @container (max-height:129px){
   ${MURO} .mu-card.mu-fam>.mu-sotto,${MURO} .mu-dato-s,${MURO} .mu-umido{display:none}
@@ -3727,6 +3930,29 @@ ${MURO} .mu-g6>.mu-clima-mini .mu-mini-tasti .mu-tondo{height:clamp(26px,28cqh,4
 }
 @container (max-height:109px){
   ${MURO} .mu-clima-mini .mu-mini-alto>.mu-chip{display:none}
+}
+/* Il termostato a coppia nelle celle piccole: se ne vanno, in quest'ordine,
+ * la riga sotto il nome, il disegno e la modalita' (che restano nella
+ * finestra), l'interruttore, la parola accanto all'icona e infine la riga del
+ * nome. Le due righe coi loro tasti restano sempre. */
+@container (max-height:219px){
+  ${MURO} .mu-card.mu-termostato .mu-ter-alto .mu-sotto{display:none}
+}
+@container (max-height:169px){
+  ${MURO} .mu-card.mu-termostato .mu-ter-alto>.mu-chip,${MURO} .mu-card.mu-termostato .mu-ter-alto>.mu-pasti{display:none}
+  ${MURO} .mu-card.mu-termostato .mu-ter-alto .mu-n{font-size:15px}
+}
+@container (max-height:109px){
+  ${MURO} .mu-card.mu-termostato .mu-ter-alto{display:none}
+}
+@container (max-width:319px){
+  ${MURO} .mu-card.mu-termostato .mu-ter-alto>.mu-pasti{display:none}
+}
+@container (max-width:239px){
+  ${MURO} .mu-card.mu-termostato .mu-est-p{display:none}
+}
+@container (max-width:149px){
+  ${MURO} .mu-card.mu-termostato .mu-est-n{display:none}
 }
 /* Stretto: la pastiglia del comando rapido tiene i gradi e il tasto, e lascia
  * la ventola alla finestra, invece di mostrarla tagliata a meta'. */

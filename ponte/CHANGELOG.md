@@ -10,6 +10,28 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.11
+
+**Clima: i termostati col caldo e col freddo hanno la loro linguetta.** I
+termostati che tengono due temperature — una per scaldare e una per
+raffrescare, come i Vimar Zigbee — mostravano solo la temperatura della
+stanza, e − e + non facevano niente. Adesso stanno in una linguetta nuova,
+«Termostato», accanto a Freddo e Caldo: ogni card mostra «Caldo» e «Freddo»
+con i loro − e +, e Home Assistant riceve sempre le due temperature insieme.
+Vale nella plancia, nel pannello a muro e nel Clima rapido. I termostati con
+una temperatura sola restano dove erano.
+
+**Pannello a muro: card tutte uguali, e niente scritte tagliate.**
+Interruttori, sensori, cancelli, luci, tapparelle e stanze hanno la stessa
+forma: icona e stato in alto, nome grande in basso. Sugli schermi piccoli e
+nella griglia 3×3 le card si adattano allo spazio: le righe secondarie si
+tolgono prima, il nome e lo stato non si tagliano più.
+
+**Utente admin: il nome arriva su tutti i dispositivi.** Il nome scritto prima
+della 1.11.10 restava solo nel computer dove lo si era scritto, e nell'app il
+campo era vuoto. Apri una volta la plancia su quel computer: da lì il nome
+vale ovunque. Salvare i Generali con il campo vuoto non toglie più il limite.
+
 ## 1.11.10
 
 **La Configurazione è davvero di chi la amministra.** Il nome scritto in

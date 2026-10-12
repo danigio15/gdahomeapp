@@ -231,6 +231,9 @@ const LOCALE_IDENTITIES = {
     "Animal",
   ]),
   fr: new Set([
+    /* La terza linguetta del Clima: il termostato si scrive come in inglese. */
+    "Thermostat",
+    "Thermostats",
     /* L'aquarium et ses litres (#127) s'écrivent pareil des deux côtés. */
     "Aquarium",
     /* Le terrarium aussi, et les pluriels : le même mot latin. */
@@ -305,6 +308,8 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   de: new Set([
+    /* La terza linguetta del Clima: il termostato si scrive come in inglese. */
+    "Thermostat",
     /* L'acquario (#127) in tedesco si chiama Aquarium: la stessa parola
      * latina, non una traduzione dimenticata. */
     "Aquarium",

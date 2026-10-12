@@ -5557,4 +5557,12 @@ export default Object.freeze({
   "On the rest screen: how charged it is and whether it is plugged in": "대기 화면에 충전량과 전원 연결 여부를 표시합니다",
   "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "예: Home Assistant 앱의 배터리 센서. 비워 두면 태블릿 브라우저가 제공하는 값",
   "Optional: the “is charging” sensor or the battery state": "선택 사항: ‘충전 중’ 센서 또는 배터리 상태",
+  "Thermostat": "온도 조절기",
+  "Thermostats": "온도 조절기",
+  "No thermostat configured": "설정된 온도 조절기가 없습니다",
+  "Thermostats out of season": "계절이 아닌 온도 조절기",
+  "Lower the heating": "난방 낮추기",
+  "Raise the heating": "난방 올리기",
+  "Lower the cooling": "냉방 낮추기",
+  "Raise the cooling": "냉방 올리기",
 });

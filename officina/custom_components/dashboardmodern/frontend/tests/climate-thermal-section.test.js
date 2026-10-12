@@ -116,7 +116,11 @@ test("the page keeps every hook the legacy climate runtime writes into", () => {
   for (const hook of [
     'id="clima-grid-freddo"',
     'id="clima-grid-caldo"',
-    'id="clima-page-mode-${cold ? "freddo" : "caldo"}"',
+    // L'id del tasto viene dalla zona: clima-page-mode-freddo, -caldo e la
+    // terza, -termostato, che il guscio non conosce (la accende la sezione).
+    'id="clima-page-mode-${esc(zone)}"',
+    'id="clima-grid-termostato"',
+    "clima-zone clima-zone-termostato",
     "clima-page-mode-switch",
     "clima-page-mode-btn",
     "clima-zone clima-zone-freddo show",
@@ -129,8 +133,10 @@ test("the page keeps every hook the legacy climate runtime writes into", () => {
   // apostrophe turned into &#39; would be decoded before the handler runs.
   assert.match(source, /const entity = jsArg\(unit\.entity\)/);
   assert.match(source, /setClimaPageMode\(\$\{jsArg\(zone\)\}\)/);
-  assert.match(source, /setTemp\(\$\{entity\}, 'down'\)/);
-  assert.match(source, /setTemp\(\$\{entity\}, 'up'\)/);
+  // Il passo porta anche la zona della card: al termostato col caldo e il
+  // freddo serve per sapere quale dei due muovere, quello storico la ignora.
+  assert.match(source, /setTemp\(\$\{entity\}, 'down', \$\{zona\}\)/);
+  assert.match(source, /setTemp\(\$\{entity\}, 'up', \$\{zona\}\)/);
   // The card also says which tab it lives in, so a heat pump switched on from
   // the Caldo tab starts heating instead of resuming its last mode.
   assert.match(source, /toggleClima\(\$\{entity\}, \$\{zona\}\)/);

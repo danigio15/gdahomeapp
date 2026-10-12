@@ -5577,4 +5577,12 @@ export default Object.freeze({
   "On the rest screen: how charged it is and whether it is plugged in": "Dinlenme ekranında: ne kadar dolu olduğu ve şarja takılı olup olmadığı",
   "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "Örneğin Home Assistant uygulamasının pil sensörü. Boş: tabletin tarayıcısının verdiği değer",
   "Optional: the “is charging” sensor or the battery state": "İsteğe bağlı: “şarj oluyor” sensörü veya pil durumu",
+  "Thermostat": "Termostat",
+  "Thermostats": "Termostatlar",
+  "No thermostat configured": "Yapılandırılmış termostat yok",
+  "Thermostats out of season": "Sezon dışı termostatlar",
+  "Lower the heating": "Isıtmayı düşür",
+  "Raise the heating": "Isıtmayı yükselt",
+  "Lower the cooling": "Soğutmayı düşür",
+  "Raise the cooling": "Soğutmayı yükselt",
 });
