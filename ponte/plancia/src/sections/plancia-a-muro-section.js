@@ -842,10 +842,41 @@ function zonaDellaPagina(pagina) {
   return (state.zone ||= {})[pagina.id] || pagina.zona || "freddo";
 }
 
-/* La zona del clima in cui si e', se si e' in una pagina Clima. */
-function zonaDiQui() {
+/* Da che parte sta un'unita' fuori dalla pagina Clima, dove non c'e' una
+ * linguetta a dirlo. «Se metto i comandi clima non funziona bene come la
+ * pagina»: in una pagina Personale la zona restava vuota, e il comando rapido
+ * ripiegava sul freddo — un termostato acceso dal suo tasto partiva a
+ * raffrescare, e la pastiglia diceva «Freddo» sotto un «Riscalda». Qui la
+ * zona la dice l'unita' stessa: un termostato scalda sempre, un clima o una
+ * pompa stanno dalla parte di quello che fanno adesso, e da spenti dalla
+ * parte del loro tipo. */
+function zonaDellUnita(id, adesso = new Date()) {
+  const tipo = (state.fonte?.clima || []).find((d) => d.entity === id)?.tipo || "clima";
+  if (tipo === "termo") return "caldo";
+  /* Prima di tutto quello che l'unita' sa fare. Un riscaldamento o un
+   * boiler messi in casa come «clima» non raffrescano: i loro modi lo
+   * dicono, e il tasto non deve proporre il freddo a chi non ce l'ha. */
+  const modi = (attributi(id).hvac_modes || []).map((m) => String(m).toLowerCase());
+  const raffresca = modi.some((m) => ["cool", "dry", "fan_only", "heat_cool"].includes(m));
+  const riscalda = modi.some((m) => ["heat", "heat_cool"].includes(m));
+  if (modi.length && !raffresca) return "caldo";
+  if (modi.length && !riscalda) return "freddo";
+  /* Chi fa tutt'e due: da acceso, quello che sta facendo. */
+  const s = String(stato(id)?.state || "off");
+  if (s !== "off" && s !== "unavailable") return scalda(id) ? "caldo" : "freddo";
+  /* Da spento non lo sa dire nessuno: «sull'aria condizionata non posso
+   * scegliere il caldo». Fa la stagione — da ottobre ad aprile il caldo,
+   * d'estate il freddo — e l'altra parte resta a un tocco, nella finestra. */
+  const mese = adesso.getMonth();
+  return mese >= 9 || mese <= 3 ? "caldo" : "freddo";
+}
+
+/* La zona del clima in cui si e': la linguetta della pagina Clima, o fuori di
+ * li' quella dell'unita'. */
+function zonaDiQui(id = "") {
   const pagina = state.muro?.pagine?.[state.pagina];
-  return pagina?.modello === "clima" ? zonaDellaPagina(pagina) : "";
+  if (pagina?.modello === "clima") return zonaDellaPagina(pagina);
+  return id ? zonaDellUnita(id) : "";
 }
 
 /* Il comando rapido di questa unita', se la pagina accende con quello. */
@@ -853,7 +884,16 @@ function rapidoDi(id, zona) {
   const pagina = state.muro?.pagine?.[state.pagina];
   if (pagina?.modello === "clima" && pagina.accensione === "ultima") return null;
   const r = state.fonte?.rapido || {};
-  return quickClimatePresetOf(id, zona || zonaDiQui(), r.perUnita || {}, r.globale);
+  const dove = zona || zonaDiQui(id);
+  const preset = quickClimatePresetOf(id, dove, r.perUnita || {}, r.globale);
+  /* Un comando rapido che chiede un modo che l'unita' non ha non accende
+   * niente: Home Assistant rifiuta il «cool» a un riscaldamento, e il tasto
+   * sembrava morto. Si ripiega sul modo della sua parte, se ce l'ha, o sul
+   * primo che ha. */
+  const modi = (attributi(id).hvac_modes || []).filter((m) => m && m !== "off");
+  if (!preset?.mode || !modi.length || modi.includes(preset.mode)) return preset;
+  const voluto = dove === "caldo" ? "heat" : "cool";
+  return { ...preset, mode: modi.includes(voluto) ? voluto : modi[0] };
 }
 
 /* La pastiglia del comando rapido (#muro): «fai qualcosa più bello». Il
@@ -877,8 +917,9 @@ function pastigliaRapida(id, preset, on) {
   )}"><span class="mu-rap-lampo" aria-hidden="true">⚡</span>${pezzi.join('<i aria-hidden="true"></i>')}<span class="mu-rap-tasto" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></span></button>`;
 }
 
-function cardClima(c, i, zona = "") {
+function cardClima(c, i, zonaDellaLinguetta = "") {
   const id = c.entita;
+  const zona = zonaDellaLinguetta || zonaDellUnita(id);
   const a = attributi(id);
   const faccia = facciaDelClima(id, zona);
   const s = String(stato(id)?.state || "");
@@ -2552,7 +2593,7 @@ function onClick(event) {
        * la accende e la spegne. */
       comanda(dominio(entita), "toggle", { entity_id: entita });
     else if (entita && dominio(entita) === "climate")
-      apriFinestra({ tipo: "clima", entita, zona: zonaDiQui() });
+      apriFinestra({ tipo: "clima", entita, zona: zonaDiQui(entita) });
     else if (entita && dominio(entita) === "cover") apriFinestra({ tipo: "tapparella", entita });
     return;
   }
@@ -2610,7 +2651,7 @@ function onClick(event) {
       return;
     case "clima-acceso": {
       const s = String(stato(id)?.state || "off");
-      const rapido = rapidoDi(id, zonaDiQui());
+      const rapido = rapidoDi(id, zonaDiQui(id));
       if (s !== "off") alterna(id, "climate", "turn_off");
       else if (rapido) {
         /* I passi del comando rapido, distanziati come nella plancia: la
@@ -2632,7 +2673,7 @@ function onClick(event) {
       return;
     }
     case "modo":
-      apriFinestra({ tipo: "clima", entita: id, zona: zonaDiQui() });
+      apriFinestra({ tipo: "clima", entita: id, zona: zonaDiQui(id) });
       return;
     case "finestra-antifurto":
       apriFinestra({ tipo: "antifurto" });

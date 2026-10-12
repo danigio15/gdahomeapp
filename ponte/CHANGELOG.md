@@ -16,6 +16,15 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 carichi con l'icona di una stanza o di un elettrodomestico restava vuoto: ora
 si riempie quanto pesa il suo numero, come quello degli altri cerchi.
 
+**Pannello a muro: il clima in una pagina Personale funziona come nella
+pagina Clima.** Fuori dalla pagina Clima mancava la linguetta Caldo/Freddo, e
+il comando rapido ripiegava sul freddo: un termostato si accendeva a
+raffrescare, e su un riscaldamento o un boiler che il freddo non ce l'hanno il
+tasto non accendeva niente. Adesso la parte la dice l'unità stessa: chi sa
+solo scaldare scalda, chi fa tutt'e due segue quello che sta facendo, e da
+spento la stagione. Un comando rapido con un modo che l'unità non ha ripiega
+su uno che ha.
+
 ## 1.11.7
 
 **Energia: cerchi nuovi, flussi che si vedono.** I cerchi del flusso hanno la

@@ -395,6 +395,82 @@ test.describe("la plancia a muro", () => {
       await page.screenshot({ path: `${process.env.DM_FOTO}/fatta-muro-clima.png` });
   });
 
+  /* «Se metto i comandi clima non funziona bene come la pagina.» In una pagina
+   * Personale non c'e' la linguetta Caldo/Freddo, e il comando rapido
+   * ripiegava sul freddo: un termostato spento si accendeva a raffrescare.
+   * Fuori dalla pagina Clima la zona la dice l'unita'. */
+  test("in una pagina Personale il termostato si accende a scaldare, come nella pagina Clima", async ({
+    page,
+  }, testInfo) => {
+    const seme = JSON.parse(JSON.stringify(SEME_A_MURO));
+    seme.sections.climate[0].type = "termo";
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      muro: {
+        attiva: true,
+        pagine: [
+          {
+            id: "p1",
+            modello: "personale",
+            comandi: [{ tipo: "clima", entita: "climate.soggiorno" }],
+          },
+        ],
+      },
+      stati: {
+        ...STATI_A_MURO,
+        "climate.soggiorno": {
+          ...STATI_A_MURO["climate.soggiorno"],
+          state: "off",
+          attributes: { ...STATI_A_MURO["climate.soggiorno"].attributes, hvac_action: "off" },
+        },
+      },
+    });
+    const pastiglia = muro(page).locator('.mu-rapido[data-mu-entita="climate.soggiorno"]');
+    await expect(pastiglia).toContainText(/Caldo/i);
+    await pastiglia.click();
+    await expect
+      .poll(async () => (await servizi(page))[0]?.data?.hvac_mode, { timeout: 5000 })
+      .toBe("heat");
+  });
+
+  /* «Il tasto di accensione no, a parte che scrive freddo ed invece sono
+   * caldo.» Un riscaldamento messo in casa come clima qualunque: non e'
+   * dichiarato termostato, ma i suoi modi dicono che non raffresca. Il tasto
+   * propone il caldo e accende col caldo. */
+  test("un riscaldamento che non raffresca si accende col caldo anche senza essere dichiarato termostato", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: {
+        attiva: true,
+        pagine: [
+          {
+            id: "p1",
+            modello: "personale",
+            comandi: [{ tipo: "clima", entita: "climate.soggiorno" }],
+          },
+        ],
+      },
+      stati: {
+        ...STATI_A_MURO,
+        "climate.soggiorno": {
+          state: "off",
+          attributes: {
+            ...STATI_A_MURO["climate.soggiorno"].attributes,
+            hvac_action: "off",
+            hvac_modes: ["off", "heat"],
+          },
+        },
+      },
+    });
+    const pastiglia = muro(page).locator('.mu-rapido[data-mu-entita="climate.soggiorno"]');
+    await expect(pastiglia).toContainText(/Caldo/i);
+    await pastiglia.click();
+    await expect
+      .poll(async () => (await servizi(page))[0]?.data?.hvac_mode, { timeout: 5000 })
+      .toBe("heat");
+  });
+
   test("le pagine si cambiano solo dalle linguette, e il clima ha caldo e freddo dentro", async ({
     page,
   }, testInfo) => {

@@ -86189,15 +86189,34 @@ var facciaDelClima = (id, zona) => scalda(id, zona) ? { chiave: "caldo", accento
 function zonaDellaPagina(pagina2) {
   return (state109.zone ||= {})[pagina2.id] || pagina2.zona || "freddo";
 }
-function zonaDiQui() {
+function zonaDellUnita(id, adesso = /* @__PURE__ */ new Date()) {
+  const tipo = (state109.fonte?.clima || []).find((d) => d.entity === id)?.tipo || "clima";
+  if (tipo === "termo") return "caldo";
+  const modi = (attributi(id).hvac_modes || []).map((m) => String(m).toLowerCase());
+  const raffresca = modi.some((m) => ["cool", "dry", "fan_only", "heat_cool"].includes(m));
+  const riscalda = modi.some((m) => ["heat", "heat_cool"].includes(m));
+  if (modi.length && !raffresca) return "caldo";
+  if (modi.length && !riscalda) return "freddo";
+  const s = String(stato2(id)?.state || "off");
+  if (s !== "off" && s !== "unavailable") return scalda(id) ? "caldo" : "freddo";
+  const mese = adesso.getMonth();
+  return mese >= 9 || mese <= 3 ? "caldo" : "freddo";
+}
+function zonaDiQui(id = "") {
   const pagina2 = state109.muro?.pagine?.[state109.pagina];
-  return pagina2?.modello === "clima" ? zonaDellaPagina(pagina2) : "";
+  if (pagina2?.modello === "clima") return zonaDellaPagina(pagina2);
+  return id ? zonaDellUnita(id) : "";
 }
 function rapidoDi(id, zona) {
   const pagina2 = state109.muro?.pagine?.[state109.pagina];
   if (pagina2?.modello === "clima" && pagina2.accensione === "ultima") return null;
   const r = state109.fonte?.rapido || {};
-  return quickClimatePresetOf(id, zona || zonaDiQui(), r.perUnita || {}, r.globale);
+  const dove = zona || zonaDiQui(id);
+  const preset = quickClimatePresetOf(id, dove, r.perUnita || {}, r.globale);
+  const modi = (attributi(id).hvac_modes || []).filter((m) => m && m !== "off");
+  if (!preset?.mode || !modi.length || modi.includes(preset.mode)) return preset;
+  const voluto = dove === "caldo" ? "heat" : "cool";
+  return { ...preset, mode: modi.includes(voluto) ? voluto : modi[0] };
 }
 function pastigliaRapida(id, preset, on) {
   const ventola2 = PAROLE_DELLA_VENTOLA()[clean(preset.fan).toLowerCase()] || clean(preset.fan);
@@ -86211,8 +86230,9 @@ function pastigliaRapida(id, preset, on) {
     on ? t("Spegni", "Turn off") : t("Comando rapido", "Quick command")
   )}"><span class="mu-rap-lampo" aria-hidden="true">⚡</span>${pezzi.join('<i aria-hidden="true"></i>')}<span class="mu-rap-tasto" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></span></button>`;
 }
-function cardClima(c, i, zona = "") {
+function cardClima(c, i, zonaDellaLinguetta = "") {
   const id = c.entita;
+  const zona = zonaDellaLinguetta || zonaDellUnita(id);
   const a = attributi(id);
   const faccia = facciaDelClima(id, zona);
   const s = String(stato2(id)?.state || "");
@@ -87473,7 +87493,7 @@ function onClick24(event) {
     } else if (entita3 && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
       comanda2(dominio2(entita3), "toggle", { entity_id: entita3 });
     else if (entita3 && dominio2(entita3) === "climate")
-      apriFinestra({ tipo: "clima", entita: entita3, zona: zonaDiQui() });
+      apriFinestra({ tipo: "clima", entita: entita3, zona: zonaDiQui(entita3) });
     else if (entita3 && dominio2(entita3) === "cover") apriFinestra({ tipo: "tapparella", entita: entita3 });
     return;
   }
@@ -87527,7 +87547,7 @@ function onClick24(event) {
       return;
     case "clima-acceso": {
       const s = String(stato2(id)?.state || "off");
-      const rapido = rapidoDi(id, zonaDiQui());
+      const rapido = rapidoDi(id, zonaDiQui(id));
       if (s !== "off") alterna(id, "climate", "turn_off");
       else if (rapido) {
         attendi(id, "acceso", true);
@@ -87546,7 +87566,7 @@ function onClick24(event) {
       return;
     }
     case "modo":
-      apriFinestra({ tipo: "clima", entita: id, zona: zonaDiQui() });
+      apriFinestra({ tipo: "clima", entita: id, zona: zonaDiQui(id) });
       return;
     case "finestra-antifurto":
       apriFinestra({ tipo: "antifurto" });
