@@ -14,10 +14,9 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 **App su iPhone: niente più fasce bianche attorno alla plancia.** Con l'iPhone
 in modo chiaro e la plancia scura, sotto l'orologio e sotto la barra in fondo
-restavano due fasce chiare. Adesso hanno il colore della plancia: in fondo
-quello della barra, che arriva fino al bordo dello schermo come nell'app di
-Home Assistant, e in cima quello del fondo, con l'ora e la batteria chiare
-sullo scuro. Nella Configurazione i testi non scorrono più sotto l'orologio.
+restavano due fasce chiare. Adesso hanno il colore del fondo della plancia:
+la barra in basso si chiude sopra la barretta di casa, e in cima l'ora e la
+batteria sono chiare sullo scuro. Nella Configurazione i testi non scorrono più sotto l'orologio.
 
 **Pannello a muro: la batteria del tablet sul riposo.** In «A muro», sotto
 «Altre impostazioni», si accende «Batteria del tablet»: sullo schermo di

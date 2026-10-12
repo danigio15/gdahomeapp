@@ -186,13 +186,6 @@ WebViewController costruisciIlControllore({
             unawaited(controllore.setBackgroundColor(colore));
             return;
           }
-          if (detto.startsWith(ilFondoInBassoDice)) {
-            final colore = coloreDalCss(
-              detto.substring(ilFondoInBassoDice.length),
-            );
-            if (colore != null) ilFondoInBasso.value = colore;
-            return;
-          }
           quandoCambiaPagina?.call(detto);
         },
       ),

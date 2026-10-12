@@ -8,9 +8,9 @@
 /// sull'altro no. Il tema della plancia lo sceglie la plancia, non il
 /// telefono: il colore lo deve dire lei.
 ///
-/// La pagina lo dice sul canale del telefono ([ilFondoDellaPlanciaDice] e
-/// [ilFondoInBassoDice] davanti al colore, vedi `premesse.dart`) a ogni
-/// cambio; l'app lo tiene qui, e chi disegna attorno alla plancia lo legge.
+/// La pagina lo dice sul canale del telefono ([ilFondoDellaPlanciaDice]
+/// davanti al colore, vedi `premesse.dart`) a ogni cambio di tema; l'app lo
+/// tiene qui, e chi disegna attorno alla plancia lo legge.
 library;
 
 import 'package:flutter/foundation.dart' show ValueNotifier;
@@ -21,19 +21,8 @@ import 'package:flutter/painting.dart' show Color;
 /// pagine non hanno i due punti.
 const String ilFondoDellaPlanciaDice = 'gdahome:fondo:';
 
-/// Quello che la pagina mette davanti al colore della sua ultima riga di
-/// punti, quella che tocca la barra dei gesti del telefono.
-const String ilFondoInBassoDice = 'gdahome:fondo-basso:';
-
-/// Il fondo della plancia aperta — quello del corpo, che sta anche sotto
-/// l'orologio — o `null` finche' non l'ha detto.
+/// Il fondo della plancia aperta, o `null` finche' non l'ha detto.
 final ValueNotifier<Color?> ilFondoDellaPlancia = ValueNotifier<Color?>(null);
-
-/// Il colore in fondo alla plancia: la barra, se e' attaccata in basso, se
-/// no il corpo. E' quello della fascia sotto il riquadro, che cosi' continua
-/// la barra fino al bordo del vetro. `null` finche' la pagina non l'ha
-/// detto.
-final ValueNotifier<Color?> ilFondoInBasso = ValueNotifier<Color?>(null);
 
 /// Un colore come lo scrive `getComputedStyle`: `rgb(11, 18, 32)` o
 /// `rgba(11, 18, 32, 0.5)`. Un fondo trasparente, anche solo in parte, non e'
