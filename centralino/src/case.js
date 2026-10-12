@@ -5,10 +5,17 @@
  * resta solo l'impronta: chi legge questo file non entra in casa di nessuno.
  *
  * La prima che si presenta con un identificativo se lo prende, e da li' in poi
- * quell'identificativo e' suo. Senza questa regola chiunque potrebbe
- * presentarsi come una casa altrui e raccogliere i segni dei telefoni che
- * bussano: e' l'unica cosa che il centralino deve davvero difendere, perche'
- * tutto il resto lo verifica il ponte per conto suo.
+ * quell'identificativo e' suo. Chi se lo prendesse al posto suo non ci
+ * guadagnerebbe chiavi ne' segni: tra telefono e casa tutto viaggia cifrato da
+ * un capo all'altro, e il centralino passa byte che non sa leggere. Quello che
+ * otterrebbe e' di **sbarrare la strada**: i telefoni che bussano finirebbero
+ * da lui, dove non concludono niente, e la casa vera verrebbe rifiutata come
+ * un'impostora. Non e' un furto, e' una casa irraggiungibile da fuori — ed e'
+ * questo che il centralino deve difendere, perche' tutto il resto lo verifica
+ * il ponte per conto suo.
+ *
+ * Per lo stesso motivo un identificativo, una volta preso, non torna libero:
+ * nemmeno quando la casa tace da mesi (vedi `potatura`).
  */
 
 import { join } from "node:path";
@@ -33,9 +40,16 @@ const SCRITTURA_AL_PIU_OGNI = 2_000;
 /* Quante case possono **nascere** in un'ora, da uno stesso indirizzo e in
  * tutto. Una casa nasce una volta nella vita — quando si installa l'add-on —
  * quindi i numeri sono larghi per chi installa davvero e stretti per chi se
- * le fabbrica: ogni casa nuova e' una riga in piu' sul disco per sei mesi. */
+ * le fabbrica: ogni casa nuova e' una riga in piu' sul disco, e una volta nata
+ * il suo identificativo non torna libero da solo (`potatura`). */
 export const CASE_NUOVE_PER_INDIRIZZO = 20;
 export const CASE_NUOVE_IN_TUTTO = 500;
+
+/* Quante case addormentate si ricordano al piu'. Una, sul disco, e' sui
+ * duecento byte, quindi duecentomila stanno in una quarantina di mega:
+ * abbastanza per tutte le installazioni vere, e un tetto per chi le fabbrica
+ * apposta. */
+export const ADDORMENTATE_AL_PIU = 200_000;
 
 export const CASA_VALIDA = /^casa_[0-9a-f]{32}$/;
 
@@ -47,10 +61,12 @@ export class Case {
     nuovePerIndirizzo = CASE_NUOVE_PER_INDIRIZZO,
     nuoveInTutto = CASE_NUOVE_IN_TUTTO,
     scritturaAlPiuOgni = SCRITTURA_AL_PIU_OGNI,
+    addormentateAlPiu = ADDORMENTATE_AL_PIU,
   } = {}) {
     this.giorniDiSilenzio = giorniDiSilenzio;
+    this.addormentateAlPiu = addormentateAlPiu;
     this.adesso = adesso;
-    this.archivio = new Archivio(join(cartella, "case.json"), { case: [] });
+    this.archivio = new Archivio(join(cartella, "case.json"), { case: [], addormentate: [] });
     this._visitaSalvataIl = this.adesso();
     this._scrittaIl = 0;
     this._daScrivere = null;
@@ -64,20 +80,36 @@ export class Case {
     return this.archivio.dati.case;
   }
 
-  /* Un indice per identificativo, di fianco all'elenco: l'elenco e' quello
-   * che va sul disco, l'indice e' per trovarle senza scorrerle tutte a ogni
-   * casa che bussa. */
+  /* Le case potate: tacciono da troppo per contarle, ma il loro
+   * identificativo resta loro. Un file scritto prima che ci fossero non ha
+   * questa voce, e la si fa nascere vuota. */
+  get addormentate() {
+    if (!Array.isArray(this.archivio.dati.addormentate)) this.archivio.dati.addormentate = [];
+    return this.archivio.dati.addormentate;
+  }
+
+  /* Un indice per identificativo, di fianco a ciascun elenco: gli elenchi
+   * sono quello che va sul disco, gli indici sono per trovarle senza
+   * scorrerle tutte a ogni casa che bussa. Se per qualche motivo una casa
+   * sta in tutti e due gli elenchi, vale quella sveglia. */
   _indice() {
     this._perId = new Map();
     for (const una of this.lista) this._perId.set(una.id, una);
+    this._dormono = new Map();
+    for (const una of this.addormentate) {
+      if (!this._perId.has(una.id)) this._dormono.set(una.id, una);
+    }
   }
 
+  /* Quante case vive: quelle addormentate non si contano. */
   quante() {
     return this.lista.length;
   }
 
+  /* La casa con quell'identificativo, sveglia o addormentata: per chi chiede
+   * «e' di qualcuno?» la risposta e' la stessa. */
   quella(id) {
-    return this._perId.get(id) ?? null;
+    return this._perId.get(id) ?? this._dormono.get(id) ?? null;
   }
 
   /* Riconosce una casa, e la apre la prima volta che si presenta.
@@ -97,7 +129,14 @@ export class Case {
     if (!CASA_VALIDA.test(String(id ?? ""))) return "no";
     if (typeof segreto !== "string" || segreto.length < 32) return "no";
 
-    const esistente = this.quella(id);
+    const addormentata = this._dormono.get(id);
+    if (addormentata) {
+      if (!stessoSegreto(addormentata.impronta, impronta(segreto))) return "no";
+      this._sveglia(addormentata);
+      return "entra";
+    }
+
+    const esistente = this._perId.get(id);
     if (!esistente) {
       if (!this.nuove.concedi(da)) return "troppe";
       const nuova = {
@@ -132,19 +171,69 @@ export class Case {
     return stessoSegreto(esistente.impronta, impronta(segreto));
   }
 
-  /* Via le case sparite da troppo tempo: un'installazione spenta per sempre
-   * non deve restare a occupare il suo identificativo in eterno. */
+  /* Una casa addormentata che torna col suo segreto: di nuovo tra le vive,
+   * con la data di nascita di sempre. Non e' una casa nuova, e il freno delle
+   * nascite non la riguarda. */
+  _sveglia(una) {
+    this.archivio.dati.addormentate = this.addormentate.filter((altra) => altra.id !== una.id);
+    this._dormono.delete(una.id);
+    const sveglia = {
+      id: una.id,
+      impronta: una.impronta,
+      natoIl: una.natoIl,
+      vistoIl: this.adesso(),
+    };
+    this.lista.push(sveglia);
+    this._perId.set(una.id, sveglia);
+    this._salvaPresto();
+  }
+
+  /* Le case sparite da troppo tempo smettono di contare, ma non smettono di
+   * essere loro.
+   *
+   * Una casa che tace da `giorniDiSilenzio` esce dall'elenco delle vive — non
+   * e' piu' un'installazione «in giro» — e passa tra le addormentate, dove di
+   * lei resta l'essenziale: identificativo, impronta del segreto, quando e'
+   * nata e quando si e' vista l'ultima volta. Se l'identificativo tornasse
+   * libero, chiunque lo conosca — e non e' un segreto, viaggia negli
+   * indirizzi — potrebbe prenderselo, e la casa vera al suo ritorno verrebbe
+   * rifiutata. Cosi' invece torna quando vuole, e un altro resta fuori.
+   *
+   * Le addormentate non scadono col tempo. Hanno solo un tetto,
+   * `addormentateAlPiu`, che c'e' per chi le fabbricasse a raffica: oltre quel
+   * numero si dimenticano per prime quelle vissute meno — nate e sparite nel
+   * giro di poco, com'e' una casa fabbricata — e a parita' quelle sparite da
+   * piu' tempo. Una casa vera, rimasta accesa per mesi, e' l'ultima ad
+   * andarsene; il tetto e' largo abbastanza che, finche' nessuno ne fabbrica
+   * a centinaia di migliaia, non se ne va nessuna. */
   potatura() {
     if (!this.giorniDiSilenzio) return 0;
     const limite = this.adesso() - this.giorniDiSilenzio * GIORNO;
-    const prima = this.lista.length;
-    this.archivio.dati.case = this.lista.filter((una) => (una.vistoIl || 0) >= limite);
-    const andate = prima - this.lista.length;
-    if (andate) {
+    const vive = [];
+    const andate = [];
+    for (const una of this.lista) ((una.vistoIl || 0) >= limite ? vive : andate).push(una);
+    const dimenticate = this._dimentica(andate);
+    if (andate.length || dimenticate) {
+      this.archivio.dati.case = vive;
       this._indice();
       this._salva();
     }
-    return andate;
+    return andate.length;
+  }
+
+  /* Mette le appena potate tra le addormentate, e se si passa il tetto
+   * dimentica quelle che lo meritano di piu'. Torna quante ne ha dimenticate. */
+  _dimentica(andate) {
+    const tutte = this.addormentate;
+    for (const una of andate) {
+      tutte.push({ id: una.id, impronta: una.impronta, natoIl: una.natoIl, vistoIl: una.vistoIl });
+    }
+    const troppe = tutte.length - this.addormentateAlPiu;
+    if (troppe <= 0) return 0;
+    const vissuta = (una) => (una.vistoIl || 0) - (una.natoIl || 0);
+    tutte.sort((a, b) => vissuta(b) - vissuta(a) || (b.vistoIl || 0) - (a.vistoIl || 0));
+    tutte.length = this.addormentateAlPiu;
+    return troppe;
   }
 
   _forseSalva() {

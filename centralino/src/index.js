@@ -237,7 +237,7 @@ export async function alzaIlCentralino({
 
   const giro = setInterval(() => {
     const andate = case_.potatura();
-    if (andate) registro.info(`${andate} case tolte perche' sparite da troppo tempo`);
+    if (andate) registro.info(`${andate} case addormentate perche' sparite da troppo tempo`);
     const chiuse = chat.archivio.potatura();
     if (chiuse) registro.info(`${chiuse} conversazioni chiuse perche' ferme da sei mesi`);
   }, POTATURA);

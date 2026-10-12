@@ -12,7 +12,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash, randomBytes } from "node:crypto";
@@ -27,9 +27,9 @@ const unSegreto = () => randomBytes(32).toString("hex");
 
 /* ─── Il banco ───────────────────────────────────────────────────────────── */
 
-async function banco({ giorniDiSilenzio = 180 } = {}) {
+async function banco({ giorniDiSilenzio = 180, adesso = () => Date.now() } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "centralino-"));
-  const case_ = new Case({ cartella, giorniDiSilenzio });
+  const case_ = new Case({ cartella, giorniDiSilenzio, adesso });
   /* Qui si prova il centralino, non la licenza: senza chiave, come oggi,
    * qualunque sia quella scritta nel codice (`docs/LICENZE.md`). */
   const centralino = new Centralino({ case: case_, chiaveLicenze: "" });
@@ -158,6 +158,153 @@ test("chi si ripresenta con lo stesso identificativo e un altro segreto resta fu
     /* E la vera e' ancora dentro: nessuno l'ha buttata fuori. */
     assert.equal(b.centralino.quanteCase(), 1);
     vera.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* ─── Le case che tacciono da mesi ────────────────────────────────────────── */
+
+const GIORNO = 24 * 60 * 60 * 1000;
+
+test("una casa potata resta sua: un altro segreto resta fuori, il suo torna dentro", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "centralino-"));
+  let tra = 0;
+  const case_ = new Case({ cartella, adesso: () => Date.now() + tra });
+  try {
+    const id = unaCasaNuova();
+    const segreto = unSegreto();
+    assert.equal(case_.esito(id, segreto), "entra");
+
+    tra = 200 * GIORNO;
+    assert.equal(case_.potatura(), 1);
+    assert.equal(case_.quante(), 0);
+
+    /* Chi conosce l'identificativo non se lo prende: ne' dal filo ne' dallo
+     * sportello, e nemmeno dopo che il centralino si e' riacceso. */
+    assert.equal(case_.esito(id, unSegreto()), "no");
+    assert.equal(case_.verifica(id, unSegreto()), false);
+    case_.chiudi();
+    const riacceso = new Case({ cartella, adesso: () => Date.now() + tra });
+    assert.equal(riacceso.esito(id, unSegreto()), "no");
+    assert.equal(riacceso.quante(), 0);
+
+    /* La casa vera invece torna, e torna a contare. */
+    assert.equal(riacceso.esito(id, segreto), "entra");
+    assert.equal(riacceso.quante(), 1);
+    assert.equal(riacceso.verifica(id, segreto), true);
+    riacceso.chiudi();
+    const scritto = JSON.parse(readFileSync(join(cartella, "case.json"), "utf8"));
+    assert.deepEqual(
+      scritto.case.map((una) => una.id),
+      [id],
+    );
+    assert.deepEqual(scritto.addormentate, []);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("un case.json scritto prima delle addormentate si legge, e la potatura lo aggiorna", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "centralino-"));
+  try {
+    const ora = Date.now();
+    const viva = { id: unaCasaNuova(), segreto: unSegreto() };
+    const zitta = { id: unaCasaNuova(), segreto: unSegreto() };
+    /* Il formato di prima: solo `case`, nient'altro. */
+    writeFileSync(
+      join(cartella, "case.json"),
+      JSON.stringify({
+        case: [
+          { id: viva.id, impronta: impronta(viva.segreto), natoIl: ora - GIORNO, vistoIl: ora },
+          {
+            id: zitta.id,
+            impronta: impronta(zitta.segreto),
+            natoIl: ora - 400 * GIORNO,
+            vistoIl: ora - 200 * GIORNO,
+          },
+        ],
+      }),
+    );
+
+    /* Accendendosi pota: la zitta si addormenta, ma resta sua. */
+    const case_ = new Case({ cartella });
+    assert.equal(case_.quante(), 1);
+    assert.equal(case_.esito(viva.id, viva.segreto), "entra");
+    assert.equal(case_.esito(viva.id, unSegreto()), "no");
+    assert.equal(case_.esito(zitta.id, unSegreto()), "no");
+    assert.equal(case_.quella(zitta.id).natoIl, ora - 400 * GIORNO);
+
+    const scritto = JSON.parse(readFileSync(join(cartella, "case.json"), "utf8"));
+    assert.deepEqual(
+      scritto.addormentate.map((una) => una.id),
+      [zitta.id],
+    );
+    assert.equal(case_.esito(zitta.id, zitta.segreto), "entra");
+    assert.equal(case_.quante(), 2);
+    case_.chiudi();
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("oltre il tetto delle addormentate si dimenticano prima quelle vissute meno", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "centralino-"));
+  try {
+    const ora = Date.now();
+    const zitta = (vissuta) => ({
+      id: unaCasaNuova(),
+      impronta: impronta(unSegreto()),
+      natoIl: ora - 200 * GIORNO - vissuta * GIORNO,
+      vistoIl: ora - 200 * GIORNO,
+    });
+    const vera = zitta(300);
+    const fabbricate = [zitta(0), zitta(0), zitta(1)];
+    writeFileSync(join(cartella, "case.json"), JSON.stringify({ case: [...fabbricate, vera] }));
+
+    const case_ = new Case({ cartella, addormentateAlPiu: 2 });
+    assert.equal(case_.addormentate.length, 2);
+    assert.ok(case_.quella(vera.id));
+    assert.ok(case_.quella(fabbricate[2].id));
+    case_.chiudi();
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("dopo la potatura chi conosce l'identificativo non si prende i telefoni della casa", async () => {
+  let tra = 0;
+  const b = await banco({ adesso: () => Date.now() + tra });
+  try {
+    const vera = unaCasa(b.dove);
+    assert.equal((await vera.entra()).t, "bene");
+    vera.chiudi();
+    await vera.chiusa;
+    await attendi(() => b.centralino.quanteCase() === 0);
+
+    /* Sei mesi e passa di silenzio: la casa vera viene potata. */
+    tra = 200 * GIORNO;
+    assert.equal(b.case.potatura(), 1);
+
+    /* Un'altra installazione si presenta col suo identificativo e un segreto
+     * suo: resta fuori, e il telefono che bussa non arriva a lei. */
+    const finta = unaCasa(b.dove, { id: vera.id, segreto: unSegreto() });
+    assert.equal((await finta.entra()).t, "no");
+    await finta.chiusa;
+    assert.equal(b.centralino.quanteCase(), 0);
+
+    const bussa = unTelefono(b.dove, `/telefono/${vera.id}`);
+    await bussa.chiusa;
+    assert.deepEqual(finta.canali(), []);
+
+    /* La casa vera torna, entra, e il telefono arriva a lei. */
+    const tornata = unaCasa(b.dove, { id: vera.id, segreto: vera.segreto });
+    assert.equal((await tornata.entra()).t, "bene");
+    const telefono = unTelefono(b.dove, `/telefono/${vera.id}`);
+    await telefono.aperta;
+    await attendi(() => tornata.canali().length === 1);
+    telefono.chiudi();
+    tornata.chiudi();
   } finally {
     await b.spegni();
   }
