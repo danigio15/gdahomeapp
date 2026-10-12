@@ -5538,4 +5538,8 @@ export default Object.freeze({
   "Someone at the door": "هناك من يطرق الباب",
   "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "عندما يُفعَّل تنبيه أو ينطلق الإنذار، تستيقظ اللوحة وتعرضه كبيرًا حتى يضغط أحد «رأيت»",
   "When it rings, the panel wakes up and opens the intercom by itself": "عندما يرن الجرس، تستيقظ اللوحة وتفتح الإنتركم تلقائيًا",
+  "Tablet battery": "بطارية الجهاز اللوحي",
+  "On the rest screen: how charged it is and whether it is plugged in": "على شاشة الراحة: مستوى الشحن وما إذا كان موصولًا بالكهرباء",
+  "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "مثلًا مستشعر البطارية في تطبيق Home Assistant. فارغ: القيمة التي يعطيها متصفح الجهاز اللوحي",
+  "Optional: the “is charging” sensor or the battery state": "اختياري: مستشعر «قيد الشحن» أو حالة البطارية",
 });

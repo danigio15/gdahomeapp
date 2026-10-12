@@ -575,15 +575,22 @@ class _HomeState extends State<Home> {
                * erano bianche — «quella barra bianca su iPhone»
                * (`plancia/il_fondo.dart`). Finche' la pagina non l'ha detto,
                * quello dell'app. Anche l'orologio e la batteria del telefono
-               * si colorano su quel fondo, chiari sullo scuro. */
+               * si colorano sul fondo della cima, chiari sullo scuro. */
               Positioned.fill(
-                child: ValueListenableBuilder<Color?>(
-                  valueListenable: ilFondoDellaPlancia,
-                  builder: (contesto, fondo, _) {
-                    final colore =
-                        fondo ?? Theme.of(contesto).colorScheme.surface;
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([
+                    ilFondoDellaPlancia,
+                    ilFondoInBasso,
+                  ]),
+                  builder: (contesto, _) {
+                    final tema = Theme.of(contesto).colorScheme.surface;
+                    final cima = ilFondoDellaPlancia.value ?? tema;
+                    /* Qui sotto si vede solo la fascia in fondo, sotto il
+                     * riquadro: ha il colore dell'ultima riga della pagina,
+                     * la barra se e' attaccata, e la barra arriva al bordo. */
+                    final sotto = ilFondoInBasso.value ?? cima;
                     final scuro =
-                        ThemeData.estimateBrightnessForColor(colore) ==
+                        ThemeData.estimateBrightnessForColor(cima) ==
                         Brightness.dark;
                     return AnnotatedRegion<SystemUiOverlayStyle>(
                       value:
@@ -594,7 +601,7 @@ class _HomeState extends State<Home> {
                                 statusBarColor: Colors.transparent,
                                 systemNavigationBarColor: Colors.transparent,
                               ),
-                      child: ColoredBox(color: colore),
+                      child: ColoredBox(color: sotto),
                     );
                   },
                 ),

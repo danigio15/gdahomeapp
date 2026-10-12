@@ -22,7 +22,7 @@ import { alarmHiddenModes, centraliAllarme, entitaDellaCentrale } from "./alarm-
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
 import { lettoriConfigurati } from "./media-player.js";
-import { nomeDellaPersona, personViewModel } from "./person-model.js";
+import { isCharging, nomeDellaPersona, personViewModel } from "./person-model.js";
 
 export const CHIAVE_MURO = "cd_muro";
 
@@ -364,6 +364,7 @@ export const MURO_VUOTO = Object.freeze({
   avvisiGrandi: true,
   risveglio: { attivo: false, entita: "" },
   blocco: { attivo: false, pin: "" },
+  batteria: { attiva: false, livello: "", carica: "" },
   pagine: [],
 });
 
@@ -383,6 +384,7 @@ export function muroPulito(input) {
   const risveglio =
     dentro.risveglio && typeof dentro.risveglio === "object" ? dentro.risveglio : {};
   const blocco = dentro.blocco && typeof dentro.blocco === "object" ? dentro.blocco : {};
+  const batteria = dentro.batteria && typeof dentro.batteria === "object" ? dentro.batteria : {};
   const minuti = Number(riposo.minuti);
   const pin = pinPulito(blocco.pin);
   const visti = new Set();
@@ -425,6 +427,13 @@ export function muroPulito(input) {
     /* Senza PIN il blocco non c'e': un tablet bloccato senza la chiave per
      * uscire e' un tablet da smontare dal muro. */
     blocco: { attivo: vero(blocco.attivo, false) && Boolean(pin), pin },
+    /* La batteria del tablet sul riposo: spenta finche' qualcuno non la
+     * accende. Le due entita' sono facoltative: vuote, la dice il browser. */
+    batteria: {
+      attiva: vero(batteria.attiva, false),
+      livello: entita(batteria.livello),
+      carica: entita(batteria.carica),
+    },
     pagine,
   };
 }
@@ -596,9 +605,15 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
      * come lo legge la plancia: «il meteo non ridice con quello che e' messo
      * nella config». Vuoto, il tablet fa come la plancia senza scelta. */
     meteo: entita(overrides["dm.home_meteo"]) || entita(overrides["dm.core_055"]),
+    /* Anche quelle spente in Home: non si contano fra chi e' in casa, ma il
+     * loro nome di casa serve lo stesso a una card del tablet che le mostra. */
     persone: elenco(altro.persone)
-      .filter((p) => p && entita(p.entity) && p.nascosta !== true)
-      .map((p) => ({ entity: entita(p.entity), name: testo(p.name) })),
+      .filter((p) => p && entita(p.entity))
+      .map((p) => ({
+        entity: entita(p.entity),
+        name: testo(p.name),
+        ...(p.nascosta === true ? { nascosta: true } : {}),
+      })),
     centrali,
     aree: centrali.map((id) => ({ entita: id, nome: nomiDelleAree.get(id) || "" })),
     /* L'antifurto come lo ha messo a posto la plancia di origine: «stato e
@@ -653,8 +668,11 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
  */
 export function personeDelMuro(fonte = {}, stati = {}) {
   const configurate = elenco(fonte?.persone).filter((p) => p && entita(p.entity));
+  /* Chi e' spento in Home non conta nemmeno qui; ma una scheda Persone fatta
+   * solo di persone spente resta una scelta, non un elenco vuoto da riempire
+   * con tutte le `person.*`. */
   const elencoDelMuro = configurate.length
-    ? configurate
+    ? configurate.filter((p) => p.nascosta !== true)
     : Object.keys(stati || {})
         .filter((id) => id.startsWith("person."))
         .map((entity) => ({ entity, name: "" }));
@@ -669,9 +687,24 @@ export function personeDelMuro(fonte = {}, stati = {}) {
   };
 }
 
-/** Il nome di casa di una persona della plancia di origine, se e' in elenco. */
+/**
+ * Il nome di casa di una persona della plancia di origine, se e' in elenco.
+ *
+ * La scheda Persone puo' tenere la persona per la `person.*` o per il
+ * `device_tracker.*` del suo telefono, e il tablet puo' mostrarla per l'altra
+ * delle due: si riconosce dai `device_trackers` che Home Assistant scrive
+ * sulla persona. Senza, una card della `person.*` diceva il nome dell'account
+ * e la Home quello di casa.
+ */
 export function nomeDellaPersonaDelMuro(id, fonte = {}, stati = {}) {
-  const persona = elenco(fonte?.persone).find((p) => p && p.entity === id);
+  const chi = entita(id);
+  if (!chi) return "";
+  const persone = elenco(fonte?.persone).filter((p) => p && p.entity);
+  const tracciati = (persona) => elenco(stati?.[persona]?.attributes?.device_trackers);
+  const persona =
+    persone.find((p) => p.entity === chi) ||
+    persone.find((p) => tracciati(chi).includes(p.entity)) ||
+    persone.find((p) => tracciati(p.entity).includes(chi));
   return persona ? nomeDellaPersona(persona, stati) : "";
 }
 
@@ -924,6 +957,100 @@ export function scala(versoScelto, larghezza, altezza) {
   const base = MISURA[versoScelto] || MISURA.orizzontale;
   const s = Math.min(Number(larghezza) / base.larghezza, Number(altezza) / base.altezza);
   return Number.isFinite(s) && s > 0 ? Math.max(0.45, Math.min(s, 1.6)) : 1;
+}
+
+/* ── la batteria del tablet ──────────────────────────────────────────────
+ *
+ * «Nella schermata idle della plancia a muro mettere la possibilita' di
+ * visualizzare la % di carica della batteria e/o se e' sotto carica o no.»
+ * Un tablet a muro vive attaccato al caricatore, e quando il caricatore si
+ * stacca lo si scopre a tablet spento. Il riposo lo dice, piccolo, accanto
+ * alla data.
+ *
+ * Da dove si legge, in ordine:
+ * - le entita' scelte nel config — il `sensor.<tablet>_battery_level` e il
+ *   `binary_sensor.<tablet>_is_charging` (o il `sensor.<tablet>_battery_state`)
+ *   della Companion App: sono quelle che chi ha scelto vuole vedere;
+ * - il browser del tablet (`navigator.getBattery`), che la WebView di Android
+ *   e Chrome danno da soli, senza configurare niente.
+ * Senza un numero non si mostra niente: un'icona vuota non dice nulla. */
+
+/* Gli stati che vogliono dire «staccato»: la Companion App li scrive cosi' su
+ * Android, con lo spazio su iOS. */
+const SCARICA = new Set(["discharging", "not_charging", "unplugged", "off", "false"]);
+const IGNOTI = new Set(["", "unknown", "unavailable", "none"]);
+export const BATTERIA_BASSA = 20;
+
+/** In carica? `true`, `false`, o `null` quando lo stato non lo dice. */
+export function inCaricaDaStato(valore) {
+  const s = String(valore ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  if (IGNOTI.has(s)) return null;
+  if (s === "on" || s === "true" || isCharging(s)) return true;
+  if (SCARICA.has(s)) return false;
+  return null;
+}
+
+const percento = (valore) => {
+  if (valore === null || valore === undefined || String(valore).trim() === "") return null;
+  const n = Number(valore);
+  return Number.isFinite(n) ? Math.round(Math.max(0, Math.min(100, n))) : null;
+};
+
+/** Quello che dice il browser (`BatteryManager`): livello da 0 a 1. */
+export function batteriaDalBrowser(manager) {
+  if (!manager || typeof manager !== "object") return null;
+  const livello = Number(manager.level);
+  if (!Number.isFinite(livello)) return null;
+  return {
+    livello: percento(livello * 100),
+    inCarica: typeof manager.charging === "boolean" ? manager.charging : null,
+  };
+}
+
+/**
+ * La batteria da mostrare sul riposo, o `null` se non c'e' niente da dire.
+ *
+ * `browser` e' quello che `batteriaDalBrowser` ha letto (o `null`). Se
+ * l'entita' scelta ha un numero vince lei; la carica viene dall'entita' della
+ * carica, poi dagli attributi del sensore del livello, e — solo se anche il
+ * livello e' del browser — dal browser: mescolare il livello di un tablet con
+ * la spina di un altro schermo che fa l'anteprima sarebbe peggio di niente.
+ */
+export function batteriaDelTablet(muro, stati = {}, browser = null) {
+  const scelta = muro?.batteria;
+  if (!scelta?.attiva) return null;
+  const sensore = scelta.livello ? stati?.[scelta.livello] : null;
+  const daEntita = percento(sensore?.state);
+  const caricaScelta = scelta.carica ? inCaricaDaStato(stati?.[scelta.carica]?.state) : null;
+  if (daEntita !== null) {
+    const attr = sensore?.attributes || {};
+    const daAttributi =
+      typeof attr.is_charging === "boolean"
+        ? attr.is_charging
+        : typeof attr.charging === "boolean"
+          ? attr.charging
+          : null;
+    const inCarica = caricaScelta ?? daAttributi;
+    return {
+      livello: daEntita,
+      inCarica,
+      bassa: daEntita <= BATTERIA_BASSA && inCarica !== true,
+      fonte: "entita",
+    };
+  }
+  if (browser && browser.livello !== null && browser.livello !== undefined) {
+    const inCarica = caricaScelta ?? browser.inCarica ?? null;
+    return {
+      livello: browser.livello,
+      inCarica,
+      bassa: browser.livello <= BATTERIA_BASSA && inCarica !== true,
+      fonte: "browser",
+    };
+  }
+  return null;
 }
 
 /** Il PIN scritto e' quello giusto? Un muro senza blocco si apre sempre. */

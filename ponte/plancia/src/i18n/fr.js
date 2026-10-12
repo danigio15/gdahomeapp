@@ -5625,4 +5625,8 @@ export default Object.freeze({
   "Someone at the door": "On sonne à la porte",
   "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Quand une alerte s'active ou que l'alarme se déclenche, le panneau se réveille et l'affiche en grand jusqu'à ce que quelqu'un touche « Vu »",
   "When it rings, the panel wakes up and opens the intercom by itself": "Quand ça sonne, le panneau se réveille et ouvre l'interphone tout seul",
+  "Tablet battery": "Batterie de la tablette",
+  "On the rest screen: how charged it is and whether it is plugged in": "Sur l'écran de repos : son niveau de charge et si elle est branchée",
+  "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "Par exemple le capteur de batterie de l'application Home Assistant. Vide : celle que donne le navigateur de la tablette",
+  "Optional: the “is charging” sensor or the battery state": "Facultatif : le capteur « en charge » ou l'état de la batterie",
 });

@@ -859,43 +859,74 @@ class Premesse {
       'else dico();'
       '})();';
 
-  /// La pagina dice all'app il colore del suo fondo, e lo ridice quando
-  /// cambia.
+  /// La pagina dice all'app i colori dei suoi bordi, e li ridice quando
+  /// cambiano.
   ///
   /// Attorno alla plancia — sotto l'orologio del telefono, sotto la barra dei
   /// gesti — l'app dipinge un fondo suo, e prima era quello del tema del
   /// telefono: con un iPhone in modo chiaro e la plancia scura, due fasce
   /// bianche sopra e sotto una pagina blu notte. Il tema lo sceglie la
-  /// plancia; allora il colore lo dice lei (`plancia/il_fondo.dart`).
+  /// plancia; allora i colori li dice lei (`plancia/il_fondo.dart`).
   ///
-  /// Si legge il fondo calcolato del corpo, e se il corpo e' trasparente
-  /// quello del documento. Si ridice quando cambia il tema — un attributo o
-  /// una classe sul documento o sul corpo, il telefono che passa al buio
-  /// con la plancia su «Auto» — e solo se e' davvero cambiato. Nel browser
-  /// non dice niente: `gdahomeDice` li' non c'e'.
+  /// Due colori, non uno. In cima quello del corpo: li' c'e' il margine che
+  /// la pagina si tiene sotto l'orologio. In fondo **quello che c'e'
+  /// sull'ultima riga di punti**: con la barra attaccata in basso e' la
+  /// barra, e la fascia sotto, dello stesso colore, la fa arrivare fino al
+  /// bordo del vetro come nell'app di Home Assistant; con la barra sospesa e'
+  /// di nuovo il corpo. Una barra di vetro — mezza trasparente — si compone
+  /// sul fondo che ha sotto, come la vede l'occhio.
+  ///
+  /// Si ridicono quando cambia il tema — un attributo o una classe sul
+  /// documento o sul corpo — e ogni secondo e mezzo con la pagina in vista,
+  /// perche' la barra si nasconde, si attacca, si stacca, e una finestra
+  /// aperta copre il fondo: sono due letture di un punto, e si mandano solo
+  /// se sono cambiate. Nel browser non dice niente: `gdahomeDice` li' non
+  /// c'e'.
   static const String ilFondoAllApp =
       '<script>(function(){'
-      'var detto="";'
-      'var vuoto=function(c){return !c||c==="transparent"||'
-      '/rgba\\([^)]*,\\s*0\\s*\\)/.test(c);};'
+      'var detto="",dettoSotto="";'
+      'var leggi=function(c){var m=/rgba?\\(([^)]*)\\)/.exec(c||"");'
+      'if(!m)return null;var p=m[1].split(",").map(parseFloat);'
+      'if(p.length<3)return null;'
+      'return [p[0],p[1],p[2],p.length>3?p[3]:1];};'
+      'var scrivi=function(c){return "rgb("+Math.round(c[0])+", "'
+      '+Math.round(c[1])+", "+Math.round(c[2])+")";};'
+      'var delCorpo=function(){'
+      'var c=document.body?leggi(getComputedStyle(document.body).backgroundColor):null;'
+      'if(!c||c[3]<1)c=leggi(getComputedStyle(document.documentElement).backgroundColor);'
+      'return c&&c[3]>=1?c:null;};'
+      'var inFondo=function(base){'
+      'var el=document.elementFromPoint(innerWidth/2,innerHeight-1),strati=[];'
+      'while(el&&el.nodeType===1&&el!==document.body&&el!==document.documentElement){'
+      'var c=leggi(getComputedStyle(el).backgroundColor);'
+      'if(c&&c[3]>0){strati.push(c);if(c[3]>=1)break;}'
+      'el=el.parentElement;}'
+      'var r=base.slice(0,3);'
+      'for(var i=strati.length-1;i>=0;i-=1){var s=strati[i],a=Math.min(1,s[3]);'
+      'r=[s[0]*a+r[0]*(1-a),s[1]*a+r[1]*(1-a),s[2]*a+r[2]*(1-a)];}'
+      'return r;};'
       'var dici=function(){try{'
       'if(!(window.gdahomeDice&&window.gdahomeDice.postMessage))return;'
-      'var c=document.body?getComputedStyle(document.body).backgroundColor:"";'
-      'if(vuoto(c))c=getComputedStyle(document.documentElement).backgroundColor;'
-      'if(vuoto(c)||c===detto)return;'
-      'detto=c;'
-      'window.gdahomeDice.postMessage("$ilFondoDellaPlanciaDice"+c);'
+      'if(document.hidden)return;'
+      'var corpo=delCorpo();if(!corpo)return;'
+      'var c=scrivi(corpo);'
+      'if(c!==detto){detto=c;'
+      'window.gdahomeDice.postMessage("$ilFondoDellaPlanciaDice"+c);}'
+      'var sotto=scrivi(inFondo(corpo));'
+      'if(sotto!==dettoSotto){dettoSotto=sotto;'
+      'window.gdahomeDice.postMessage("$ilFondoInBassoDice"+sotto);}'
       '}catch(male){}};'
       'var poi=function(){setTimeout(dici,0);};'
       'var guarda=function(){try{var o=new MutationObserver(poi);'
       'var cosa={attributes:true,attributeFilter:["class","data-theme","style"]};'
       'o.observe(document.documentElement,cosa);'
-      'if(document.body)o.observe(document.body,cosa);}catch(male){}};'
+      'if(document.body)o.observe(document.body,cosa);}catch(male){}'
+      'setInterval(dici,1500);};'
       'if(document.body){dici();guarda();}'
       'else document.addEventListener("DOMContentLoaded",function(){dici();guarda();});'
       'window.addEventListener("load",dici);'
-      'try{matchMedia("(prefers-color-scheme: dark)")'
-      '.addEventListener("change",poi);}catch(male){}'
+      'window.addEventListener("resize",poi);'
+      'document.addEventListener("visibilitychange",poi);'
       '})();</script>';
 
   /* Il tema, la tavolozza e la barra qui non si scrivono, e non e' una

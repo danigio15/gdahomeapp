@@ -5597,4 +5597,8 @@ export default Object.freeze({
   "Someone at the door": "Er wordt aangebeld",
   "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Als een melding aangaat of het alarm afgaat, wordt het paneel wakker en toont het groot tot iemand op „Gezien” tikt",
   "When it rings, the panel wakes up and opens the intercom by itself": "Als er wordt gebeld, wordt het paneel wakker en opent het de intercom vanzelf",
+  "Tablet battery": "Tabletbatterij",
+  "On the rest screen: how charged it is and whether it is plugged in": "Op het rustscherm: hoe vol hij is en of hij aan de lader hangt",
+  "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "Bijvoorbeeld de batterijsensor van de Home Assistant-app. Leeg: die van de browser van de tablet",
+  "Optional: the “is charging” sensor or the battery state": "Optioneel: de sensor ‘wordt opgeladen’ of de batterijstatus",
 });

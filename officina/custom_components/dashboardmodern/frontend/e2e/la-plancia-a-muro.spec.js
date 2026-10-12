@@ -789,4 +789,149 @@ test.describe("la plancia a muro", () => {
     await expect(muro(page)).toBeVisible();
     await expect(muro(page).locator(".mu-fin-codice")).toHaveCount(0);
   });
+
+  /* «Sul muro le persone non prendono il nome corretto.» Il nome di casa,
+   * quello della scheda Persone, e non quello dell'account di Home Assistant:
+   * nell'Ingresso, sul riposo, e sulla card di una persona spenta in Home. */
+  test("le persone sul muro hanno il nome della scheda Persone", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: {
+        ...MURO_DI_PROVA,
+        pagine: [
+          ...MURO_DI_PROVA.pagine,
+          {
+            id: "p4",
+            modello: "personale",
+            comandi: [{ tipo: "entita", entita: "person.luca" }],
+          },
+        ],
+      },
+      caselle: {
+        cd_people: [
+          { entity: "person.anna", name: "Mamma" },
+          { entity: "person.marco", name: "Papà" },
+          { entity: "person.luca", name: "Zio", nascosta: true },
+        ],
+      },
+    });
+    await muro(page).locator('[data-mu-pagina="2"]').click();
+    await expect(muro(page).locator('[data-mu-dove="persone"], .mu-piede')).toContainText(
+      "Mamma, Papà",
+    );
+    await muro(page).locator('[data-mu-pagina="3"]').click();
+    await expect(muro(page).locator('[data-mu-entita="person.luca"]')).toContainText("Zio");
+    await expect(muro(page).locator('[data-mu-entita="person.luca"]')).not.toContainText("Luca");
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect(muro(page).locator('[data-mu-riposo="persone"]')).toHaveText(/Mamma · Papà/);
+  });
+
+  /* «Nella schermata idle mettere la possibilita' di visualizzare la % di
+   * carica della batteria e/o se e' sotto carica o no.» */
+  const pilaFinta = (page, livello, inCarica) =>
+    page.addInitScript(
+      ({ livello, inCarica }) => {
+        const ascolti = {};
+        const pila = {
+          level: livello,
+          charging: inCarica,
+          addEventListener: (nome, fn) => (ascolti[nome] ||= []).push(fn),
+        };
+        window.__PILA__ = (l, c) => {
+          pila.level = l;
+          pila.charging = c;
+          for (const fn of [...(ascolti.levelchange || []), ...(ascolti.chargingchange || [])])
+            fn();
+        };
+        Object.defineProperty(Navigator.prototype, "getBattery", {
+          configurable: true,
+          value: () => Promise.resolve(pila),
+        });
+      },
+      { livello, inCarica },
+    );
+  const batteria = (page) => muro(page).locator('[data-mu-riposo="batteria"]');
+
+  test("di serie il riposo non dice la batteria", async ({ page }, testInfo) => {
+    await pilaFinta(page, 0.8, true);
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect(muro(page).locator(".mu-orologione")).toBeVisible();
+    await expect(batteria(page)).toHaveCount(0);
+  });
+
+  test("accesa, la batteria del browser va sul riposo, col fulmine quando carica", async ({
+    page,
+  }, testInfo) => {
+    await pilaFinta(page, 0.82, true);
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: { ...MURO_DI_PROVA, batteria: { attiva: true } },
+    });
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect(batteria(page)).toHaveText("82%");
+    await expect(batteria(page)).toHaveClass(/carica/);
+    await expect(batteria(page).locator(".mu-pila-fulmine")).toHaveCount(1);
+    /* Staccata e quasi scarica: niente fulmine, e il colore dell'attenzione. */
+    await page.evaluate(() => window.__PILA__(0.15, false));
+    await expect(batteria(page)).toHaveText("15%");
+    await expect(batteria(page)).toHaveClass(/bassa/);
+    await expect(batteria(page).locator(".mu-pila-fulmine")).toHaveCount(0);
+  });
+
+  test("l'entita' scelta vince sul browser", async ({ page }, testInfo) => {
+    await pilaFinta(page, 0.9, true);
+    await apriLaCasaAMuro(page, testInfo, {
+      stati: {
+        ...STATI_A_MURO,
+        "sensor.tablet_battery_level": { state: "47", attributes: { unit_of_measurement: "%" } },
+        "sensor.tablet_battery_state": { state: "discharging", attributes: {} },
+      },
+      muro: {
+        ...MURO_DI_PROVA,
+        batteria: {
+          attiva: true,
+          livello: "sensor.tablet_battery_level",
+          carica: "sensor.tablet_battery_state",
+        },
+      },
+    });
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect(batteria(page)).toHaveText("47%");
+    await expect(batteria(page).locator(".mu-pila-fulmine")).toHaveCount(0);
+  });
+
+  test("nel config la batteria del tablet si accende e si sceglie l'entita'", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      stati: {
+        ...STATI_A_MURO,
+        "sensor.tablet_battery_level": {
+          state: "47",
+          attributes: { friendly_name: "Tablet batteria", unit_of_measurement: "%" },
+        },
+      },
+      muro: MURO_DI_PROVA,
+    });
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.locator('.ed-tab[data-tab="muro"]').click();
+    const body = page.locator("#ed-body");
+    await body.locator("[data-mu-ed-altro]").click();
+    const riga = (campo) => body.locator(`.mu-ed-riga:has([data-mu-ed-campo="${campo}"])`);
+    await expect(riga("batteria.livello")).toHaveCount(0);
+    await body.locator('[data-mu-ed-alterna="batteria.attiva"]').click();
+    await expect(riga("batteria.livello")).toBeVisible();
+    await expect(riga("batteria.carica")).toBeVisible();
+    /* L'entita' si sceglie con la stessa ricerca del resto del config. */
+    await riga("batteria.livello").locator("[data-mu-ed-pick]").first().click();
+    await expect(page.locator("#cd-entpick")).toBeVisible();
+    await page.locator("#cd-ep-search").fill("sensor.tablet_battery_level");
+    await page.locator("#cd-entpick").getByText("sensor.tablet_battery_level").first().click();
+    await expect(body.locator('[data-mu-ed-campo="batteria.livello"]')).toHaveValue(
+      "sensor.tablet_battery_level",
+    );
+    await body.locator("[data-dm-save-all]").click();
+    await expect
+      .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("cd_muro")).batteria))
+      .toEqual({ attiva: true, livello: "sensor.tablet_battery_level", carica: "" });
+  });
 });

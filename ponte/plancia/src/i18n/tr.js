@@ -5571,4 +5571,8 @@ export default Object.freeze({
   "Someone at the door": "Kapı çalıyor",
   "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”": "Bir uyarı açıldığında veya alarm çaldığında panel uyanır ve biri «Gördüm» düğmesine dokunana kadar büyük gösterir",
   "When it rings, the panel wakes up and opens the intercom by itself": "Zil çaldığında panel uyanır ve diafonu kendiliğinden açar",
+  "Tablet battery": "Tablet pili",
+  "On the rest screen: how charged it is and whether it is plugged in": "Dinlenme ekranında: ne kadar dolu olduğu ve şarja takılı olup olmadığı",
+  "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives": "Örneğin Home Assistant uygulamasının pil sensörü. Boş: tabletin tarayıcısının verdiği değer",
+  "Optional: the “is charging” sensor or the battery state": "İsteğe bağlı: “şarj oluyor” sensörü veya pil durumu",
 });
