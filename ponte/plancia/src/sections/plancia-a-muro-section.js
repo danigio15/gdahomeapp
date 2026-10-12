@@ -790,13 +790,17 @@ function cardLuce(c, i) {
   const pct = luminosita(id);
   const dimmer = dimmerabile(id);
   const manca = !stato(id);
-  return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
-    <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span>
-      <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-stato-riga"><span class="mu-stato ${on ? "" : "spento"}">${esc(manca ? t("Non trovata", "Not found") : on ? (dimmer ? `${t("Accesa", "On")} · ${pct}%` : t("Accesa", "On")) : t("Spenta", "Off"))}</span>${dimmer ? `<span class="mu-tag">DIMMER</span>` : ""}</div></div>
+  /* La luce nella forma della famiglia (`tessera`): il disco e lo stato in
+   * alto, l'interruttore in alto a destra, il nome grande in fondo. La barra
+   * della luminosita' viene sotto il nome, e se la casella e' bassa se ne va
+   * prima del nome (`@container` negli stili). */
+  return `<div class="mu-carta mu-card mu-fam mu-luce ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
+    <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span><span class="mu-stato ${on ? "" : "spento"}">${esc(manca ? t("Non trovata", "Not found") : on ? (dimmer ? `${t("Accesa", "On")} · ${pct}%` : t("Accesa", "On")) : t("Spenta", "Off"))}</span>
       <button type="button" class="mu-inter ${on ? "on" : ""}" data-mu-fa="interruttore" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(nomeDi(id, c.nome))}"><i></i></button></div>
+    <div class="mu-osw mu-fam-nome mu-n">${esc(nomeDi(id, c.nome))}</div>
     ${
       dimmer
-        ? `<div class="mu-giu"><div class="mu-giu-et"><span class="mu-et">${esc(t("Luminosità", "Brightness"))}</span><span class="mu-stato ${on ? "" : "spento"}">${on ? `${pct}%` : "—"}</span></div>
+        ? `<div class="mu-giu"><div class="mu-giu-et"><span class="mu-et">${esc(t("Luminosità", "Brightness"))} <span class="mu-tag">DIMMER</span></span><span class="mu-stato ${on ? "" : "spento"}">${on ? `${pct}%` : "—"}</span></div>
       <div class="mu-bar" data-mu-cursore="luce" data-mu-entita="${esc(id)}"><i style="width:${pct}%"></i>${on ? `<u style="left:${pct}%"></u>` : ""}</div></div>`
         : ""
     }</div>`;
@@ -946,17 +950,19 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
   const target = obiettivo(id);
   /* Sul pannello piccolo il meno e il piu' restano sul riquadro: «il clima
    * comodo sul 4 pollici». La temperatura voluta in alto, grande, accanto
-   * al disegno; il resto — i modi, l'accensione — nella finestra, col tocco. */
+   * al disegno; il resto — i modi, l'accensione — nella finestra, col tocco.
+   * Due righe sole: il disegno, il nome e i gradi voluti sulla prima, il meno
+   * e il piu' sotto. Con il nome su una riga sua in mezzo, nella griglia tre
+   * per tre sotto le linguette il meno e il piu' finivano fuori dal riquadro. */
   if (state.compatto)
     return `<div class="mu-carta mu-card mu-clima-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
-    <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><span class="mu-mini-t">${target === null ? "—" : `${decimale(target)}°`}</span></div>
-    <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div>
+    <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div><span class="mu-mini-t">${target === null ? "—" : `${decimale(target)}°`}</span></div>
     <div class="mu-mini-tasti"><button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button><button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button></div></div>`;
   const rapido = rapidoDi(id, zona);
   return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}${rapido ? " mu-col-rapido" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno(faccia.chiave, 26, `clima-${i}`)}</span>
       <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div>
-      ${azione ? `<span class="mu-pasti">${esc(azione)}</span>` : ""}</div>
+      ${azione ? `<span class="mu-pasti">${esc(azione)}</span>` : ""}<span class="mu-t-alto" aria-hidden="true">${target === null ? "—" : `${decimale(target)}°`}</span></div>
     <div class="mu-target"><span class="mu-grande">${target === null ? "—" : `${decimale(target)}°`}</span><span class="mu-et">Target</span></div>
     <div class="mu-comandi">
       ${on ? `<button type="button" class="mu-pasti mu-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}
@@ -1000,10 +1006,14 @@ function cardVarco(c, i) {
       ? ["giu", t("Chiudi", "Close")]
       : ["su", t("Apri", "Open")];
   const acc = "#22c55e";
-  return `<div class="mu-carta mu-card mu-varco ${aperto || muove ? "mu-accesa" : ""}" style="--acc:${acc}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
-    <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegnoDelCatalogo(DISEGNO_DEL_VARCO[attributi(id).device_class], 32)}</span>
-      <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-stato ${aperto || muove ? "" : "spento"}">${esc(parola)}</div></div></div>
-    <button type="button" class="mu-btn ${muove ? "" : "pieno"} mu-varco-tasto" style="--acc:${acc}" data-mu-fa="${fa}" data-mu-entita="${esc(id)}">${esc(tasto)}</button></div>`;
+  /* Nella forma della famiglia: il disegno e «Aperto»/«Chiuso» in alto, il
+   * tasto in alto a destra dove gli altri hanno l'interruttore, il nome
+   * grande in fondo. Il tasto largo in fondo, sotto il nome, su un pannello
+   * piccolo tagliava il nome a meta'. */
+  return `<div class="mu-carta mu-card mu-fam mu-varco ${aperto || muove ? "mu-accesa" : ""}" style="--acc:${acc}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
+    <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegnoDelCatalogo(DISEGNO_DEL_VARCO[attributi(id).device_class], 32)}</span><span class="mu-stato ${aperto || muove ? "" : "spento"}">${esc(parola)}</span>
+      <button type="button" class="mu-btn ${muove ? "" : "pieno"} mu-varco-tasto" style="--acc:${acc}" data-mu-fa="${fa}" data-mu-entita="${esc(id)}">${esc(tasto)}</button></div>
+    <div class="mu-osw mu-fam-nome">${esc(nomeDi(id, c.nome))}</div></div>`;
 }
 
 function cardTapparella(c, i) {
@@ -1024,9 +1034,12 @@ function cardTapparella(c, i) {
           : s === "closing"
             ? t("Si chiude…", "Closing…")
             : s || "—";
-  return `<div class="mu-carta mu-card ${s && s !== "closed" ? "mu-accesa" : ""}" style="--acc:${ACCENTI.tapparella}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
-    <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegno("tapparelle", 32, `tapp-${i}`)}</span>
-      <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-stato">${esc(parola)}</div></div></div>
+  /* Nella forma della famiglia: il disegno e lo stato in alto, il nome
+   * grande, poi la barra e i tre tasti — che se la casella e' bassa lasciano
+   * il posto al nome, e restano nella finestra che si apre col tocco. */
+  return `<div class="mu-carta mu-card mu-fam mu-tapparella ${s && s !== "closed" ? "mu-accesa" : ""}" style="--acc:${ACCENTI.tapparella}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
+    <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegno("tapparelle", 32, `tapp-${i}`)}</span><span class="mu-stato">${esc(parola)}</span></div>
+    <div class="mu-osw mu-fam-nome">${esc(nomeDi(id, c.nome))}</div>
     ${pos !== null ? `<div class="mu-bar"><i style="width:${pos}%"></i></div>` : ""}
     <div class="mu-seg">
       <button type="button" data-mu-fa="su" data-mu-entita="${esc(id)}">▲ ${esc(t("Su", "Up"))}</button>
@@ -1035,10 +1048,37 @@ function cardTapparella(c, i) {
     </div></div>`;
 }
 
-function tessera({ chiave, accento, etichetta, titolo, sotto, attiva, grande, dati = "", dove }) {
-  return `<button type="button" class="mu-carta mu-card mu-tessera ${attiva ? "mu-accesa" : ""} ${grande ? "grande" : ""}" style="--acc:${accento}" ${dati}>
-    <div class="mu-riga1"><span class="mu-chip" style="--c:${grande ? 84 : 54}px">${disegno(chiave, grande ? 50 : 32, dove)}</span><span class="mu-et">${esc(etichetta)}</span>${attiva ? `<span class="mu-pasti">${esc(t("attiva", "active"))}</span>` : ""}</div>
-    <div class="mu-osw">${esc(titolo)}</div><div class="mu-sotto">${esc(sotto)}</div></button>`;
+/* La tessera: il disegno in alto a sinistra con la parola piccola accanto, il
+ * nome grande in fondo, sotto la riga scelta. «Forse meglio la seconda,
+ * soprattutto quando lo schermo diventa piccolo»: e' la forma di tutta la
+ * famiglia dei posti (`mu-fam`) — le scene, i sensori, gli interruttori, le
+ * luci, i cancelli. Chi ha un comando suo lo mette in alto a destra
+ * (`destra`: l'interruttore, la parola del gesto), al posto della pastiglia
+ * «attiva»; il tocco resta su tutto il riquadro. */
+function tessera({
+  chiave,
+  accento,
+  etichetta,
+  titolo,
+  sotto,
+  attiva,
+  grande,
+  dati = "",
+  dove,
+  classi = "",
+  destra = "",
+  conStato = false,
+  statoAcceso = false,
+}) {
+  /* Chi dice uno stato (acceso, aperto) lo scrive come le luci, col colore
+   * quando e' acceso; una scena o un gesto hanno la loro etichetta grigia. */
+  const parola = destra || conStato
+    ? `<span class="mu-stato ${statoAcceso ? "" : "spento"}">${esc(etichetta)}</span>`
+    : `<span class="mu-et">${esc(etichetta)}</span>`;
+  const pastiglia = !destra && !conStato && attiva ? `<span class="mu-pasti">${esc(t("attiva", "active"))}</span>` : "";
+  return `<button type="button" class="mu-carta mu-card mu-fam mu-tessera ${classi} ${attiva ? "mu-accesa" : ""} ${grande ? "grande" : ""}" style="--acc:${accento}" ${dati}>
+    <div class="mu-riga1"><span class="mu-chip" style="--c:${grande ? 84 : 54}px">${disegno(chiave, grande ? 50 : 32, dove)}</span>${parola}${pastiglia}${destra}</div>
+    <div class="mu-osw mu-fam-nome">${esc(titolo)}</div><div class="mu-sotto">${esc(sotto)}</div></button>`;
 }
 
 function cardAzione(c, i, grande = false) {
@@ -1074,9 +1114,16 @@ function cardEntita(c, i, grande = false) {
   const on = acceso(id) || ["unlocked", "playing", "cleaning"].includes(String(s?.state));
   const parole = statoInParole(id);
   /* «Posti tutti uguali»: in una griglia un interruttore o un pulsante ha la
-   * stessa forma di una luce — il disegno, il nome, lo stato, e a destra
-   * l'interruttore o in basso il tasto. Il tocco resta quello di sempre, su
-   * tutto il riquadro. Le tessere grandi delle Scene restano tessere. */
+   * stessa forma di un sensore e di una luce — «come vedi la grafica dei due
+   * sensori e' diversa, con il nome grande sotto: forse meglio la seconda».
+   * Il disegno e lo stato in alto, il nome grande in fondo e sotto la riga
+   * scelta; in alto a destra l'interruttore, o la parola del gesto («Apri»,
+   * «Avvia») per chi non si accende e non si spegne. Prima il nome stava
+   * piccolo in alto accanto al disegno, e la riga scelta prendeva il posto
+   * dello stato: nella stessa pagina «Garage 1» era una riga piccola sopra
+   * un riquadro vuoto accanto al «Garage 1» grande del sensore. Il tocco
+   * resta quello di sempre, su tutto il riquadro. Le tessere grandi delle
+   * Scene restano tessere. */
   if (servizio && !grande) {
     const dom = dominio(id);
     const interruttore = INTERRUTTORI.includes(dom);
@@ -1088,11 +1135,21 @@ function cardEntita(c, i, grande = false) {
         : dom === "script" || dom === "scene" || dom === "automation"
           ? t("Avvia", "Run")
           : t("Premi", "Press");
-    return `<button type="button" class="mu-carta mu-card mu-comando ${on ? "mu-accesa" : ""}" style="--acc:${on ? ACCENTI.luce : ACCENTI.azione}" data-mu-fa="entita" data-mu-entita="${esc(id)}">
-    <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegno(clean(c.disegno) || disegnoDellEntita(id), 32, `en-${i}-p`)}</span>
-      <div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-stato ${on ? "" : "spento"}">${esc(clean(c.sotto) || parole)}</div></div>
-      ${interruttore ? `<span class="mu-inter ${on ? "on" : ""}" aria-hidden="true"><i></i></span>` : ""}</div>
-    ${interruttore ? "" : `<span class="mu-btn mu-comando-tasto" aria-hidden="true">${esc(verbo)}</span>`}</button>`;
+    return tessera({
+      chiave: clean(c.disegno) || disegnoDellEntita(id),
+      accento: on ? ACCENTI.luce : ACCENTI.azione,
+      etichetta: parole,
+      titolo: nomeDi(id, c.nome),
+      sotto: clean(c.sotto),
+      attiva: on,
+      statoAcceso: on,
+      classi: "mu-comando",
+      destra: interruttore
+        ? `<span class="mu-inter ${on ? "on" : ""}" aria-hidden="true"><i></i></span>`
+        : `<span class="mu-verbo" aria-hidden="true">${esc(verbo)}</span>`,
+      dati: `data-mu-fa="entita" data-mu-entita="${esc(id)}"`,
+      dove: `en-${i}-p`,
+    });
   }
   return tessera({
     chiave: clean(c.disegno) || disegnoDellEntita(id),
@@ -1103,6 +1160,8 @@ function cardEntita(c, i, grande = false) {
     titolo: nomeDi(id, c.nome),
     sotto: clean(c.sotto) || (grande ? parole : ""),
     attiva: on,
+    conStato: !grande,
+    statoAcceso: on,
     grande,
     dati: servizio
       ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"`
@@ -1215,15 +1274,19 @@ function paginaAmbienti(pagina) {
     const umid = stanza.hum ? numero(stato(stanza.hum)?.state) : null;
     const accese = luci.filter((id) => acceso(id)).length;
     const accento = accese ? ACCENTI.luce : "#ef4444";
-    return `<div class="mu-carta mu-card mu-ambiente ${accese ? "mu-accesa" : ""}" style="--acc:${accento}" data-mu-card="${i}">
-      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno("stanze", 26, `amb-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(stanza.name)}</div>${luci.length ? `<div class="mu-stato ${accese ? "" : "spento"}">${esc(accese ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}` : t("Luci spente", "Lights off"))}</div>` : ""}</div></div>
-      <div class="mu-target">${
+    /* Nella forma della famiglia: il disegno e le luci in alto, in fondo il
+     * nome grande e accanto, a destra, la temperatura. Prima la temperatura
+     * stava su una riga sua sotto il nome, e sul pannello piccolo restava
+     * tagliata a meta' («22.0°» visto per meta'). */
+    return `<div class="mu-carta mu-card mu-fam mu-ambiente ${accese ? "mu-accesa" : ""}" style="--acc:${accento}" data-mu-card="${i}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno("stanze", 26, `amb-${i}`)}</span>${luci.length ? `<span class="mu-stato ${accese ? "" : "spento"}">${esc(accese ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}` : t("Luci spente", "Lights off"))}</span>` : ""}</div>
+      <div class="mu-fam-fondo"><div class="mu-osw mu-fam-nome">${esc(stanza.name)}</div><div class="mu-target">${
         stanza.temp
           ? `<span class="mu-grande">${temp === null ? "—" : `${decimale(temp)}°`}</span>`
           : luci.length
             ? `<span class="mu-grande">${accese}/${luci.length}</span><span class="mu-et">${esc(t("luci", "lights"))}</span>`
             : ""
-      }${umid === null ? "" : `<span class="mu-et">${decimale(umid, 0)}% ${esc(t("umidità", "humidity"))}</span>`}</div></div>`;
+      }${umid === null ? "" : `<span class="mu-et mu-umido">${decimale(umid, 0)}% ${esc(t("umidità", "humidity"))}</span>`}</div></div></div>`;
   });
   return griglia(pagina, carte);
 }
@@ -3354,7 +3417,7 @@ ${MURO}.mu-anteprima .mu-pagina{height:100%}
 ${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
 /* Sul telefono i riquadri non si allungano a riempire lo schermo: «li trovo
    troppo grandi». Hanno un'altezza loro, e la pagina scorre se servono. */
-${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:minmax(0,var(--mu-alto,150px))!important;align-content:start;overflow-y:auto;scrollbar-width:none}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:var(--mu-alto,150px)!important;align-content:start;overflow-y:auto;scrollbar-width:none}
 ${MURO} .mu-card{padding:22px;display:flex;flex-direction:column;gap:14px;min-height:0;width:100%}
 ${MURO} .mu-tessera{text-align:left}
 ${MURO} .mu-tessera .mu-osw{margin-top:auto}
@@ -3416,9 +3479,7 @@ ${MURO} .mu-seg>button{flex:1;height:64px;border-radius:15px;display:flex;align-
 ${MURO} .mu-seg>button.si{background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));color:color-mix(in srgb,var(--acc) 80%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent),0 8px 18px -10px var(--acc)}
 ${MURO} .mu-btn{height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:12px;font-weight:800;font-size:19px;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
 ${MURO} .mu-varco,${MURO} .mu-comando,${MURO} .mu-clima-mini{display:flex;flex-direction:column;text-align:left}
-${MURO} .mu-varco-tasto,${MURO} .mu-comando-tasto{margin-top:auto;width:100%}
 ${MURO} .mu-varco-tasto.pieno{color:#052e16}
-${MURO} .mu-comando .mu-riga1{width:100%}
 ${MURO} .mu-comando .mu-inter{margin-left:auto;pointer-events:none}
 ${MURO} .mu-mini-alto{display:flex;align-items:center;justify-content:space-between;gap:6px}
 ${MURO} .mu-mini-t{font-family:Oswald,Inter,sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--acc);white-space:nowrap}
@@ -3428,7 +3489,6 @@ ${MURO}[data-compatto="1"] .mu-varco-tasto{height:44px;font-size:16px;border-rad
 ${MURO}[data-compatto="1"] .mu-mini-t{font-size:26px}
 ${MURO}[data-compatto="1"] .mu-mini-tasti .mu-tondo{height:34px;font-size:20px}
 ${MURO}[data-compatto="1"] .mu-clima-mini{gap:6px}
-${MURO}[data-compatto="1"] .mu-comando-tasto{display:none}
 ${MURO} .mu-avviso-grande{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;color:#fff;background:radial-gradient(circle at 50% 35%,#0e7490,#062a33 72%)}
 ${MURO} .mu-avviso-grande.grave{background:radial-gradient(circle at 50% 35%,#7f1d1d,#2a0a0a 72%)}
 ${MURO} .mu-avg-disco{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:0 0 0 18px rgba(255,255,255,.08),0 0 60px rgba(255,255,255,.18);animation:muAvgBatte 1.6s ease-in-out infinite}
@@ -3509,7 +3569,9 @@ ${MURO} .mu-avviso{display:flex;align-items:center;gap:12px;padding:12px 20px 12
 ${MURO} .mu-avviso.grave b{color:#fda4af}
 ${MURO}[data-compatto="1"] .mu-pagina{padding:10px;gap:10px;grid-template-rows:auto 1fr}
 ${MURO}[data-compatto="1"] .mu-pag-clima{grid-template-rows:auto auto 1fr}
-${MURO}[data-compatto="1"] .mu-zone button{padding:8px 14px;font-size:14px}
+${MURO}[data-compatto="1"] .mu-zone{padding:3px;gap:4px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-zone button{padding:5px 12px;font-size:14px;gap:8px;border-radius:11px}
+${MURO}[data-compatto="1"] .mu-zone .dm-oggetto{width:18px!important;height:18px!important}
 ${MURO}[data-compatto="1"] .mu-testa{padding:10px 14px;gap:10px;flex-wrap:nowrap}
 ${MURO}[data-compatto="1"] .mu-tit{font-size:26px;max-width:150px}
 ${MURO}[data-compatto="1"] .mu-tit.mu-tit-l{font-size:21px;max-width:190px}
@@ -3571,6 +3633,110 @@ ${MURO}[data-verso="verticale"] .mu-fin-luce{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-colonna{height:300px}
 ${MURO}[data-verso="verticale"] .mu-orologione{font-size:180px}
 ${MURO}[data-verso="verticale"] .mu-riposo-riga{flex-direction:column;gap:14px;align-items:center}
+/* ── La famiglia dei posti, e i posti che si misurano da soli ─────────────
+ *
+ * «Schermi piccoli e griglia 3x3: le scritte sotto sono tagliate», «anche
+ * quando resta in 4x3 in questo widget la parte sotto e' tagliata». Le misure
+ * delle card erano scritte per il tablet da 1280x800 con la griglia di sei:
+ * nella griglia di dodici, o di nove sul pannello piccolo (dove l'altezza
+ * vera e' 420 pixel, la testa compresa), la casella e' alta meno della somma
+ * di disegno, nome, stato e tasti, e l'ultima riga finiva sotto il bordo.
+ *
+ * Ora ogni posto della griglia e' un contenitore (\`container-type:size\`): la
+ * sua altezza e la sua larghezza le decide la griglia, e quello che c'e'
+ * dentro si misura su di loro (\`cqh\`, \`cqw\`, \`@container\`). Il disegno e il
+ * nome crescono e calano con la casella, fino alle misure di prima; quando lo
+ * spazio non basta se ne vanno prima le righe di contorno — la riga scelta
+ * sotto il nome, l'umidita', la barra della luminosita', i tasti delle
+ * tapparelle (che restano nella finestra, col tocco) — e mai il nome o lo
+ * stato. Nel pannello verticale piccolo le righe hanno un'altezza fissa
+ * (\`--mu-alto\`), cosi' anche li' il posto non dipende da quello che contiene.
+ *
+ * La famiglia (\`mu-fam\`): la forma della tessera — «il nome grande sotto».
+ * Il disegno in alto a sinistra con lo stato piccolo accanto, il comando in
+ * alto a destra (l'interruttore, la parola del gesto, il tasto del
+ * cancello), il nome grande in fondo, sotto la sua riga se c'e'. */
+${MURO} .mu-g6>.mu-card{container-type:size}
+${MURO} .mu-card.mu-fam{display:flex;flex-direction:column;gap:0;text-align:left}
+${MURO} .mu-card.mu-fam .mu-riga1{flex-wrap:nowrap;align-items:center;gap:12px;width:100%;min-width:0}
+${MURO} .mu-card.mu-fam .mu-riga1>.mu-stato,${MURO} .mu-card.mu-fam .mu-riga1>.mu-et{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${MURO} .mu-card.mu-fam .mu-riga1>.mu-inter,${MURO} .mu-card.mu-fam .mu-riga1>.mu-verbo,${MURO} .mu-card.mu-fam .mu-riga1>.mu-varco-tasto,${MURO} .mu-card.mu-fam .mu-riga1>.mu-pasti{margin-left:auto;flex:none}
+${MURO} .mu-card.mu-fam .mu-riga1>.mu-inter{display:block}
+${MURO} .mu-card.mu-fam .mu-fam-nome.mu-osw{margin-top:auto;padding-top:8px;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15;display:block;-webkit-line-clamp:unset;font-weight:500}
+${MURO} .mu-card.mu-fam>.mu-sotto{margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+${MURO} .mu-card.mu-fam>.mu-sotto:empty{display:none}
+${MURO} .mu-card.mu-fam>.mu-giu{margin-top:12px}
+${MURO} .mu-card.mu-fam>.mu-giu .mu-giu-et{margin-bottom:4px;align-items:center}
+${MURO} .mu-card.mu-fam>.mu-bar{margin-top:12px;flex:none}
+${MURO} .mu-card.mu-fam>.mu-seg{margin-top:12px}
+${MURO} .mu-verbo{display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;
+  background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
+${MURO} .mu-card.mu-fam .mu-riga1>.mu-varco-tasto{width:auto;height:48px;padding:0 22px;border-radius:16px;font-size:17px}
+${MURO} .mu-fam-fondo{margin-top:auto;display:flex;align-items:flex-end;gap:10px;min-width:0}
+${MURO} .mu-fam-fondo>.mu-fam-nome.mu-osw{margin-top:0;flex:1 1 auto}
+${MURO} .mu-card.mu-fam .mu-fam-fondo>.mu-target{margin-top:0;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-wrap:nowrap}
+${MURO} .mu-fam-fondo .mu-grande{white-space:nowrap}
+${MURO} .mu-t-alto{display:none;margin-left:auto;flex:none;font-family:Oswald,Inter,sans-serif;font-weight:700;line-height:1;color:var(--acc);white-space:nowrap}
+${MURO} .mu-clima-mini .mu-mini-alto{justify-content:flex-start;gap:8px;min-width:0}
+${MURO} .mu-clima-mini .mu-mini-alto>.mu-nome{flex:1 1 auto;min-width:0}
+${MURO} .mu-card.mu-clima-mini .mu-mini-alto .mu-n{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-clima-mini .mu-sotto{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Le misure che seguono la casella: solo dentro la griglia, dove la casella
+ * ha un'altezza sua. */
+${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1{gap:clamp(6px,4cqw,14px)}
+${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1>.mu-chip,${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1>.mu-disco{--fam-c:clamp(28px,min(32cqh,24cqw),var(--c,70px));width:var(--fam-c);height:var(--fam-c);border-radius:calc(var(--fam-c)*.36)}
+${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1>.mu-disco{border-radius:50%}
+${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1>.mu-chip>*,${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1>.mu-disco>svg{width:58%!important;height:58%!important}
+${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1>.mu-chip>span{display:block}
+${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1>.mu-chip>span>svg{display:block;width:100%;height:100%}
+${MURO} .mu-g6>.mu-card.mu-fam .mu-fam-nome.mu-osw{--fam-n:38px;font-size:clamp(16px,min(26cqh,12cqw),var(--fam-n))}
+${MURO} .mu-g6>.mu-card.mu-tessera.grande .mu-fam-nome.mu-osw{--fam-n:46px}
+${MURO} .mu-g6>.mu-card.mu-fam .mu-fam-fondo .mu-grande{font-size:clamp(18px,min(26cqh,13cqw),66px)}
+${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1>.mu-varco-tasto,${MURO} .mu-g6>.mu-card.mu-fam .mu-riga1>.mu-verbo{height:clamp(30px,min(30cqh,48px),48px);font-size:clamp(13px,8cqh,17px);padding:0 clamp(10px,5cqw,22px)}
+${MURO} .mu-g6>.mu-card.mu-fam>.mu-seg>button{height:clamp(40px,22cqh,64px)}
+${MURO} .mu-g6>.mu-dato .mu-dato-v{font-size:clamp(20px,min(40cqh,22cqw),96px)}
+${MURO} .mu-g6>.mu-card .mu-comandi .mu-tondo{width:clamp(34px,min(26cqh,18cqw),68px);height:clamp(34px,min(26cqh,18cqw),68px);font-size:clamp(18px,13cqh,30px)}
+${MURO} .mu-g6>.mu-card .mu-comandi .mu-tondo svg{width:60%;height:60%}
+${MURO} .mu-g6>.mu-card .mu-rapido{height:clamp(34px,24cqh,52px)}
+${MURO} .mu-g6>.mu-card .mu-rapido .mu-rap-tasto{width:clamp(26px,19cqh,40px);height:clamp(26px,19cqh,40px);flex-basis:clamp(26px,19cqh,40px)}
+${MURO} .mu-g6>.mu-card .mu-t-alto{font-size:clamp(20px,18cqh,40px)}
+${MURO} .mu-g6>.mu-clima-mini .mu-mini-alto>.mu-chip{--c:clamp(26px,26cqh,40px)!important}
+${MURO} .mu-g6>.mu-clima-mini .mu-mini-t{font-size:clamp(18px,24cqh,30px)}
+${MURO} .mu-g6>.mu-clima-mini .mu-mini-tasti .mu-tondo{height:clamp(26px,28cqh,40px);font-size:clamp(16px,16cqh,22px)}
+/* Le righe di contorno se ne vanno prima del nome. */
+@container (max-height:129px){
+  ${MURO} .mu-card.mu-fam>.mu-sotto,${MURO} .mu-dato-s,${MURO} .mu-umido{display:none}
+  ${MURO} .mu-card.mu-fam .mu-fam-nome.mu-osw{padding-top:4px}
+}
+@container (max-height:219px){
+  ${MURO} .mu-card.mu-fam>.mu-giu{display:none}
+  ${MURO} .mu-card.mu-clima-mini .mu-sotto{display:none}
+}
+@container (max-height:199px){
+  ${MURO} .mu-card.mu-fam>.mu-seg{display:none}
+}
+@container (max-height:129px){
+  ${MURO} .mu-card.mu-fam>.mu-bar{display:none}
+}
+/* Il clima basso: i gradi voluti salgono accanto al nome, al posto della
+ * pastiglia di quello che sta facendo, e la riga «− + ⏻» resta intera. */
+@container (max-height:239px){
+  ${MURO} .mu-card .mu-riga1>.mu-t-alto{display:block}
+  ${MURO} .mu-card .mu-riga1:has(>.mu-t-alto)>.mu-pasti,${MURO} .mu-card:has(.mu-t-alto)>.mu-target{display:none}
+  ${MURO} .mu-card:has(.mu-t-alto)>.mu-comandi{margin-top:auto}
+}
+@container (max-height:109px){
+  ${MURO} .mu-clima-mini .mu-mini-alto>.mu-chip{display:none}
+}
+/* Stretto: la pastiglia del comando rapido tiene i gradi e il tasto, e lascia
+ * la ventola alla finestra, invece di mostrarla tagliata a meta'. */
+@container (max-width:339px){
+  ${MURO} .mu-rapido>i,${MURO} .mu-rapido>.mu-rap-val~.mu-rap-val,${MURO} .mu-rapido>.mu-rap-lampo{display:none}
+  ${MURO} .mu-rapido{padding-left:10px;justify-content:space-between}
+}
+@container (max-width:179px){
+  ${MURO} .mu-card.mu-fam .mu-riga1>.mu-stato{display:none}
+}
 `,
   );
 }

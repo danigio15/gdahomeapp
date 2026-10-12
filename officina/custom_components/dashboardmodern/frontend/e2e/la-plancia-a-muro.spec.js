@@ -934,4 +934,189 @@ test.describe("la plancia a muro", () => {
       .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("cd_muro")).batteria))
       .toEqual({ attiva: true, livello: "sensor.tablet_battery_level", carica: "" });
   });
+
+  /* «Schermi piccoli e griglia 3x3: le scritte sotto sono tagliate», «anche
+   * quando resta in 4x3 in questo widget la parte sotto e' tagliata», e «la
+   * grafica dei due sensori e' diversa, con il nome grande sotto: forse meglio
+   * la seconda». Su ogni misura nessuna riga esce dal suo riquadro, e un
+   * interruttore e un sensore nella stessa pagina hanno la stessa forma. */
+  const UNITA = [
+    "Soggiorno",
+    "Cucina",
+    "Studio",
+    "Camera",
+    "Cameretta",
+    "Bagno",
+    "Corridoio",
+    "Taverna",
+    "Lavanderia",
+    "Ospiti",
+  ];
+  const chiave = (n) => n.toLowerCase();
+  function casaFitta() {
+    const seme = structuredClone(SEME_A_MURO);
+    const stati = structuredClone(STATI_A_MURO);
+    seme.sections.rooms = UNITA.map((n) => ({
+      id: chiave(n),
+      name: n,
+      temp: `sensor.t_${chiave(n)}`,
+    }));
+    seme.sections.lights = UNITA.map((n) => ({
+      id: `l-${chiave(n)}`,
+      name: n,
+      entity: `light.${chiave(n)}`,
+      room_id: chiave(n),
+      room: n,
+    }));
+    seme.sections.climate = UNITA.map((n) => ({
+      id: `c-${chiave(n)}`,
+      name: n,
+      entity: `climate.${chiave(n)}`,
+      room_id: chiave(n),
+      room: n,
+    }));
+    UNITA.forEach((n, i) => {
+      stati[`sensor.t_${chiave(n)}`] = { state: "21.5", attributes: { unit_of_measurement: "°C" } };
+      stati[`light.${chiave(n)}`] = {
+        state: i ? "off" : "on",
+        attributes: { friendly_name: n, brightness: 120, supported_color_modes: ["brightness"] },
+      };
+      stati[`climate.${chiave(n)}`] = {
+        state: "heat",
+        attributes: {
+          friendly_name: n,
+          current_temperature: 20.4,
+          temperature: 21,
+          hvac_modes: ["off", "heat"],
+          hvac_action: "heating",
+        },
+      };
+    });
+    for (const n of ["cancello", "garage_1", "portoncino"])
+      stati[`switch.${n}`] = { state: "off", attributes: { friendly_name: n } };
+    stati["binary_sensor.garage_1"] = {
+      state: "on",
+      attributes: { friendly_name: "Garage 1", device_class: "garage_door" },
+    };
+    stati["cover.carraio"] = {
+      state: "closed",
+      attributes: { friendly_name: "Carraio", device_class: "gate" },
+    };
+    const caselle = {
+      cd_clima_units: UNITA.map((n) => ({
+        entity: `climate.${chiave(n)}`,
+        type: "termo",
+        name: n,
+      })),
+      cd_clima_rapido_unita: Object.fromEntries(
+        UNITA.map((n) => [`climate.${chiave(n)}`, { mode: "heat", temperature: 26, fan: "auto" }]),
+      ),
+    };
+    const muroFitto = {
+      attiva: true,
+      pagine: [
+        {
+          id: "p1",
+          modello: "personale",
+          titolo: "Esterno",
+          griglia: 12,
+          comandi: [
+            { tipo: "entita", entita: "switch.cancello", nome: "Cancello", disegno: "varchi" },
+            { tipo: "entita", entita: "switch.garage_1", nome: "Garage 1", sotto: "Apre/chiude" },
+            { tipo: "entita", entita: "switch.portoncino", nome: "Portoncino" },
+            { tipo: "entita", entita: "binary_sensor.garage_1", nome: "Garage 1", sotto: "Aperto" },
+            { tipo: "tapparella", entita: "cover.carraio", nome: "Carraio" },
+            { tipo: "entita", entita: "lock.porta", nome: "Porta" },
+          ],
+        },
+        { id: "p2", modello: "luci", griglia: 12 },
+        { id: "p3", modello: "ambienti", griglia: 12 },
+        { id: "p4", modello: "clima", zona: "caldo", griglia: 12 },
+        MURO_DI_PROVA.pagine[2],
+      ],
+    };
+    return { seme, stati, caselle, muro: muroFitto };
+  }
+  /* Ogni pezzo visibile di ogni riquadro sta dentro il riquadro. */
+  const fuoriDalRiquadro = (page) =>
+    page.evaluate(() => {
+      const fuori = [];
+      for (const card of document.querySelectorAll("#dm-muro .mu-card")) {
+        const r = card.getBoundingClientRect();
+        for (const el of card.querySelectorAll("*")) {
+          if (el.closest("svg") && el.tagName.toLowerCase() !== "svg") continue;
+          const s = getComputedStyle(el);
+          if (s.display === "none" || s.visibility === "hidden") continue;
+          const b = el.getBoundingClientRect();
+          if (!b.width || !b.height) continue;
+          if (b.bottom > r.bottom + 0.5 || b.top < r.top - 0.5 || b.right > r.right + 0.5) {
+            fuori.push(
+              `${card.dataset.muEntita || card.className}: ${(el.textContent || el.className).toString().trim().slice(0, 24)}`,
+            );
+            break;
+          }
+        }
+      }
+      return fuori;
+    });
+
+  for (const [larghezza, altezza] of [
+    [1280, 800],
+    [1024, 600],
+    [800, 480],
+    [844, 390],
+  ])
+    test(`a ${larghezza}x${altezza} nessuna scritta esce dal suo riquadro`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize({ width: larghezza, height: altezza });
+      await apriLaCasaAMuro(page, testInfo, casaFitta());
+      for (const indice of [0, 1, 2, 3, 4]) {
+        if (indice) await muro(page).locator(`[data-mu-pagina="${indice}"]`).click();
+        await expect(muro(page).locator(".mu-card").first()).toBeVisible();
+        expect(await fuoriDalRiquadro(page), `pagina ${indice}`).toEqual([]);
+      }
+    });
+
+  test("su uno schermo piccolo l'interruttore e il sensore hanno la stessa forma, col nome grande in fondo", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 800, height: 480 });
+    await apriLaCasaAMuro(page, testInfo, casaFitta());
+    await expect(muro(page)).toHaveAttribute("data-compatto", "1");
+    const interruttore = muro(page).locator('.mu-card[data-mu-entita="switch.garage_1"]');
+    const sensore = muro(page).locator('.mu-card[data-mu-entita="binary_sensor.garage_1"]');
+    const carraio = muro(page).locator('.mu-card[data-mu-entita="cover.carraio"]');
+    const forma = (carta) =>
+      carta.evaluate((c) => {
+        const nome = c.querySelector(".mu-fam-nome");
+        const r = c.getBoundingClientRect();
+        const n = nome.getBoundingClientRect();
+        return {
+          famiglia: c.classList.contains("mu-fam"),
+          inAlto: [...c.querySelector(".mu-riga1").children]
+            .slice(0, 2)
+            .map((x) =>
+              [...x.classList].find((k) => ["mu-chip", "mu-disco", "mu-stato"].includes(k)),
+            ),
+          nomeInFondo: r.bottom - n.bottom < r.height * 0.3,
+          corpo: getComputedStyle(nome).fontSize,
+        };
+      });
+    const a = await forma(interruttore);
+    const b = await forma(sensore);
+    expect(a.famiglia && b.famiglia).toBe(true);
+    expect(a.inAlto).toEqual(["mu-chip", "mu-stato"]);
+    expect(b.inAlto).toEqual(["mu-chip", "mu-stato"]);
+    expect(a.nomeInFondo && b.nomeInFondo).toBe(true);
+    expect(a.corpo).toBe(b.corpo);
+    expect((await forma(carraio)).inAlto).toEqual(["mu-chip", "mu-stato"]);
+    /* L'interruttore si vede anche qui, e il tocco su tutto il riquadro
+     * resta quello di sempre. */
+    await expect(interruttore.locator(".mu-inter")).toBeVisible();
+    await interruttore.click();
+    expect(await servizi(page)).toEqual([
+      { domain: "homeassistant", service: "toggle", data: { entity_id: "switch.garage_1" } },
+    ]);
+  });
 });
