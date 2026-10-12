@@ -622,6 +622,47 @@ export function isCumulativeEnergyEntity(entityId, states = {}, resolver = (valu
   return PAROLE_DA_CONTATORE.test(testo);
 }
 
+/* Un contatore scelto a mano che in questo momento non si lascia leggere.
+ *
+ * «Ho impostato un sensore totale ma all'improvviso il valore sparisce.»
+ * `isCumulativeEnergyEntity` giudica dagli attributi dello stato, ed e' giusto
+ * quando lo stato c'e'. Ma prima che gli stati arrivino, mentre
+ * un'integrazione si ricarica, o con il sensore irraggiungibile, lo stato non
+ * c'e' o non dice niente — e un contatore che non si chiama «total» passava
+ * per «non cumulativo». Da li' l'apparecchio perdeva il piano del giorno e
+ * del mese, e la passata dei contratti cancellava la casella dalla
+ * configurazione, per sempre.
+ *
+ * Non sapere non e' sapere di no. Questa dice «non si sa» — niente stato, o
+ * irraggiungibile, o sconosciuto — e lo dice solo se quel poco che si legge
+ * non lo smentisce: i watt, un'unita' che non e' energia, una state_class che
+ * dichiara una misura restano prove contrarie anche su un sensore spento. Va
+ * chiesta soltanto per le caselle che una persona ha riempito: non serve a
+ * indovinare, serve a non buttare via una scelta.
+ */
+const STATI_SENZA_LETTURA = new Set(["unavailable", "unknown", ""]);
+export function contatoreCheNonSiLegge(entityId, states = {}, resolver = (value) => value) {
+  const original = String(entityId || "").trim();
+  if (!original) return false;
+  const resolved = resolveEntity(original, resolver);
+  const state = states?.[resolved] || states?.[original] || null;
+  if (!state) return true;
+  const lettura = String(state.state ?? "")
+    .trim()
+    .toLowerCase();
+  if (!STATI_SENZA_LETTURA.has(lettura)) return false;
+  const attributes = state.attributes || {};
+  const unita = String(attributes.unit_of_measurement || "")
+    .trim()
+    .toLowerCase();
+  if (unita && !UNITA_DI_ENERGIA.test(unita)) return false;
+  const stateClass = String(attributes.state_class || "")
+    .trim()
+    .toLowerCase();
+  if (stateClass && stateClass !== "total" && stateClass !== "total_increasing") return false;
+  return true;
+}
+
 export function sourcePlans(
   energy = {},
   kind = "month",

@@ -1,7 +1,7 @@
 // DM-FIX-20260812B
 import { getDeviceVisual } from "./device-model.js";
 import { plantLoads } from "./energy-plants.js";
-import { isCumulativeEnergyEntity } from "./period-service.js";
+import { contatoreCheNonSiLegge, isCumulativeEnergyEntity } from "./period-service.js";
 
 /* La scheda Temperature di Energia: inverter, batteria e ventola. Vive fuori
  * dai gruppi di impianto — la pagina che la legge e' una sola — e si configura
@@ -298,6 +298,10 @@ export function reportEntityForDevice(item = {}, states = globalThis.STATES || {
 
   const explicitTotal = configured(item.total_energy_entity);
   if (isCumulativeEnergyEntity(explicitTotal, states)) return explicitTotal;
+  /* Il contatore scelto a mano resta lui anche quando, per un momento, il suo
+   * stato non si legge (vedi `contatoreCheNonSiLegge`): pescare un'altra
+   * entita' dal nome vorrebbe dire cambiare apparecchio a ogni riavvio. */
+  if (contatoreCheNonSiLegge(explicitTotal, states)) return explicitTotal;
 
   if (isCumulativeEnergyEntity(configuredReport, states)) return configuredReport;
 
@@ -331,6 +335,17 @@ export function reportEntityForDevice(item = {}, states = globalThis.STATES || {
 }
 
 function lifetimeHistoryForDevice(item = {}, entity = "", states = globalThis.STATES || {}) {
+  /* Il contatore di vita scelto a mano vale anche quando, per un momento, il
+   * suo stato non si legge (vedi `contatoreCheNonSiLegge`): senza, quel giro
+   * l'apparecchio restava senza il piano del giorno e del mese, e il suo
+   * numero spariva dalla Giornaliera e dalla Mensile. Prima pero' chi si
+   * legge ed e' davvero cumulativo: `history_entity` puo' essere scritta
+   * apposta, e vince come ha sempre vinto. */
+  const storico = configured(item.history_entity);
+  if (isCumulativeEnergyEntity(storico, states)) return storico;
+  const totale = configured(item.total_energy_entity);
+  if (isCumulativeEnergyEntity(totale, states) || contatoreCheNonSiLegge(totale, states))
+    return totale;
   const candidates = [
     item.history_entity,
     item.total_energy_entity,

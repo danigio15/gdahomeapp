@@ -12,6 +12,14 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.11.8
 
+**Elettrodomestici: il sensore totale non sparisce più.** All'avvio, se il
+sensore totale di un elettrodomestico non si leggeva ancora, la plancia lo
+toglieva dalla configurazione, e Giornaliera, Mensile e la tessera di oggi
+restavano senza numero per sempre. Adesso un sensore che per un momento non
+risponde resta dov'è, e un valore già letto resta finché ne arriva uno nuovo,
+nello stesso giorno o nello stesso mese. Chi ha già la casella vuota la
+ricollega una volta.
+
 **Home su iPhone e iPad: il menu e l'ingranaggio non spariscono più.** Entrando
 e uscendo da Luci o da Porte e cancelli, Safari poteva lasciare larga zero la
 fila in alto con il menu, il nome della casa e il tasto per configurare. Adesso

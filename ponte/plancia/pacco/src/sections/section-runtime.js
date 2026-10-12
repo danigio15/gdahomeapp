@@ -155,6 +155,7 @@ import {
   consumoDellaPresa,
   contaIVarchi,
   contactEntity,
+  contatoreCheNonSiLegge,
   contattiDichiaratiNelleFinestre,
   contenutoNoto,
   contoDeiVarchi,
@@ -504,7 +505,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-KPZSFPVF.js";
+} from "../../chunk-ZUIFO4VK.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -7615,7 +7616,8 @@ function isLifetimeEnergyEntity(entity2) {
   const attributes = stateAttributes(id);
   const stateClass = clean(attributes.state_class).toLowerCase();
   if (stateClass === "total" || stateClass === "total_increasing") return true;
-  return TOTAL_NAME.test(`${id} ${clean(attributes.friendly_name)}`);
+  if (TOTAL_NAME.test(`${id} ${clean(attributes.friendly_name)}`)) return true;
+  return !POWER_NAME.test(id) && contatoreCheNonSiLegge(id, allStates());
 }
 function candidateEntities(device, parole4, altrui) {
   const explicit = uniqueEntities(device).filter(
@@ -7641,7 +7643,7 @@ function inferApplianceContract(device = {}, sezione2 = []) {
   const monthly = clean(device.monthly_energy_entity) || find(MONTHLY_NAME, energySensors);
   const energy = clean(device.energy_entity) || energySensors.find(
     (id) => !DAILY_NAME.test(id) && !MONTHLY_NAME.test(id) && !TOTAL_NAME.test(id)
-  ) || energySensors[0] || "";
+  ) || energySensors.find((id) => id !== daily && id !== monthly) || "";
   const explicitTotal = clean(device.total_energy_entity);
   const namedTotal = find(TOTAL_NAME, energySensors);
   const total = isLifetimeEnergyEntity(explicitTotal) && explicitTotal || isLifetimeEnergyEntity(namedTotal) && namedTotal || "";
@@ -8577,11 +8579,30 @@ async function loadAtomicEnergyBundle(period = selectedPeriod(), alPasso = () =>
     sources[kind] = arrivato || !precedente ? record2[kind] : precedente;
   }
   if (!Object.values(letti).some(Boolean) && caduti.length && !state6.bundle) throw caduti[0].errore;
-  const paniere = (chiaveDelPaniere, lettura3, piani) => {
+  const stessoPeriodo = (kind) => {
+    const prima = state6.bundle;
+    if (!prima?.period) return false;
+    if (Number(prima.period.year) !== Number(period?.year)) return false;
+    if (Number(prima.period.month) !== Number(period?.month)) return false;
+    return kind !== "day" || prima.giorno === today.toDateString();
+  };
+  const paniere = (chiaveDelPaniere, lettura3, piani, kind) => {
     const caduta = cadutaLa(lettura3);
     const values = caduta ? /* @__PURE__ */ new Map() : valoriPerEntita(piani.plans, lettura3.valori);
     const precedente = state6.bundle?.[chiaveDelPaniere];
     if (caduta && precedente?.values?.size) return precedente;
+    if (precedente?.values?.size && stessoPeriodo(kind)) {
+      const ancoraQui = new Set(
+        [
+          ...piani.plans.flatMap((plan) => [plan.entity, plan.source]),
+          ...piani.devices.flatMap((device) => [device.entity, device.history])
+        ].map(clean).filter(Boolean)
+      );
+      for (const entita3 of ancoraQui) {
+        if (!values.has(entita3) && precedente.values.has(entita3))
+          values.set(entita3, precedente.values.get(entita3));
+      }
+    }
     return { devices: piani.devices, values };
   };
   return reconcileEnergyBundle(
@@ -8595,14 +8616,17 @@ async function loadAtomicEnergyBundle(period = selectedPeriod(), alPasso = () =>
       letti: Object.freeze(letti),
       mancanti,
       caduta: caduti.length ? clean(caduti[0]?.errore?.message || caduti[0]?.errore) : "",
-      deviceDay: paniere("deviceDay", letture2.dispDay, dispositivi.day),
-      deviceMonth: paniere("deviceMonth", letture2.dispMonth, dispositivi.month),
+      /* Il giorno su cui sono stati tagliati gli archi: il paniere del giorno
+       * si tiene solo dentro lo stesso giorno. */
+      giorno: today.toDateString(),
+      deviceDay: paniere("deviceDay", letture2.dispDay, dispositivi.day, "day"),
+      deviceMonth: paniere("deviceMonth", letture2.dispMonth, dispositivi.month, "month"),
       deviceMonthDays: giorniPerEntita(
         dispositivi.month.plans,
         giorniRicavati,
         letture2.dispMonth.prefisso
       ),
-      deviceYear: paniere("deviceYear", letture2.dispYear, dispositivi.year),
+      deviceYear: paniere("deviceYear", letture2.dispYear, dispositivi.year, "year"),
       /* Quanto manca all'anno di ogni dispositivo perche' le sue statistiche
        * cominciano dopo il contatore: la card lo scrive, invece di lasciare un
        * numero corto senza una parola. */
@@ -17698,11 +17722,16 @@ function applianceDailySource(device = {}, states = {}) {
     ...device.entities || []
   ].map(configuredEntity).filter(Boolean);
   const seen = /* @__PURE__ */ new Set();
+  const dichiarati = new Set(
+    [device.total_energy_entity, device.history_entity].map(configuredEntity).filter(Boolean)
+  );
   const cumulative = cumulativeCandidates.find((entity2) => {
     if (seen.has(entity2)) return false;
     seen.add(entity2);
     return eUnContatoreDiSempre(entity2, states);
-  });
+  }) || [...dichiarati].find(
+    (entity2) => contatoreCheNonSiLegge(entity2, states, (value) => resolveEntity(value))
+  );
   if (!cumulative) return null;
   return {
     entity: resolvedEntity(cumulative),
@@ -17711,15 +17740,31 @@ function applianceDailySource(device = {}, states = {}) {
     reason: "cumulative-recorder"
   };
 }
-async function buildApplianceDailyBreakdown(applianceList = [], states = {}, broker2 = root.DashboardModernEnergyService?.broker, selected = /* @__PURE__ */ new Date()) {
+function giornoDi(data) {
+  const giorno = new Date(data);
+  return Number.isFinite(giorno.getTime()) ? giorno.toDateString() : "";
+}
+function lettiDiOggi(precedente, giorno) {
+  if (!giorno || precedente?.giorno !== giorno) return /* @__PURE__ */ new Map();
+  const letti = precedente?.letti;
+  return letti instanceof Map ? letti : /* @__PURE__ */ new Map();
+}
+async function buildApplianceDailyBreakdown(applianceList = [], states = {}, broker2 = root.DashboardModernEnergyService?.broker, selected = /* @__PURE__ */ new Date(), precedente = null) {
   const rows = [];
   const plans = [];
   const planRows = /* @__PURE__ */ new Map();
+  const giorno = giornoDi(selected);
+  const giaLetti = lettiDiOggi(precedente, giorno);
   applianceList.forEach((device, index) => {
+    const id = clean(device.id) || `appliance-${index}`;
     const source = applianceDailySource(device, states);
-    if (!source) return;
+    if (!source) {
+      const tenuto = giaLetti.get(id);
+      if (tenuto) rows.push({ ...tenuto, name: clean(device.name) || tenuto.name, tenuto: true });
+      return;
+    }
     const row = {
-      id: clean(device.id) || `appliance-${index}`,
+      id,
       name: clean(device.name) || t("Elettrodomestico", "Appliance"),
       entity: source.entity,
       source: source.source,
@@ -17754,11 +17799,24 @@ async function buildApplianceDailyBreakdown(applianceList = [], states = {}, bro
       root.console?.warn?.("[DashboardModern] appliance daily Recorder lookup failed", error);
     }
   }
+  const letti = /* @__PURE__ */ new Map();
+  rows.forEach((row) => {
+    if (!Number.isFinite(row.value)) {
+      const tenuto = giaLetti.get(row.id);
+      if (tenuto) {
+        row.value = tenuto.value;
+        row.tenuto = true;
+      }
+    }
+    if (Number.isFinite(row.value)) letti.set(row.id, Object.freeze({ ...row }));
+  });
   const consumed = rows.filter((row) => Number.isFinite(row.value) && row.value > 5e-4).sort((left, right) => right.value - left.value);
   const total = consumed.reduce((sum, row) => sum + row.value, 0);
   return Object.freeze({
     total: Math.round(total * 1e3) / 1e3,
-    rows: Object.freeze(consumed.map((row) => Object.freeze({ ...row })))
+    rows: Object.freeze(consumed.map((row) => Object.freeze({ ...row }))),
+    giorno,
+    letti
   });
 }
 function devices() {
@@ -17988,6 +18046,16 @@ function ilContoDiOggiRiposa({ aggiornatoIl = 0, adesso = Date.now(), force = fa
   if (force || !aggiornatoIl) return false;
   return adesso - aggiornatoIl < DAILY_REFRESH_MS;
 }
+function mancaUnGiornalieroCheSiLegge(breakdown, applianceList = [], states = {}) {
+  const letti = breakdown?.letti;
+  if (!(letti instanceof Map)) return false;
+  return applianceList.some((device, index) => {
+    const id = clean(device?.id) || `appliance-${index}`;
+    if (letti.has(id)) return false;
+    const source = applianceDailySource(device, states);
+    return Boolean(source?.direct);
+  });
+}
 async function refreshApplianceDailyKpi({ force = false, openPopup = false } = {}) {
   const card2 = dailyCard();
   if (!card2) return state16.dailyBreakdown;
@@ -17999,7 +18067,8 @@ async function refreshApplianceDailyKpi({ force = false, openPopup = false } = {
       renderDailyPopup(state16.dailyBreakdown, { loading: true });
     }
   }
-  if (ilContoDiOggiRiposa({ aggiornatoIl: state16.dailyUpdatedAt, force })) {
+  const subito = force || mancaUnGiornalieroCheSiLegge(state16.dailyBreakdown, devices(), allStates());
+  if (ilContoDiOggiRiposa({ aggiornatoIl: state16.dailyUpdatedAt, force: subito })) {
     applyDailyKpi(state16.dailyBreakdown);
     if (openPopup) renderDailyPopup(state16.dailyBreakdown);
     return state16.dailyBreakdown;
@@ -18009,7 +18078,13 @@ async function refreshApplianceDailyKpi({ force = false, openPopup = false } = {
   const applianceList = devices();
   const states = allStates();
   const broker2 = root.DashboardModernEnergyService?.broker;
-  state16.dailyPromise = buildApplianceDailyBreakdown(applianceList, states, broker2).then((breakdown) => {
+  state16.dailyPromise = buildApplianceDailyBreakdown(
+    applianceList,
+    states,
+    broker2,
+    /* @__PURE__ */ new Date(),
+    state16.dailyBreakdown
+  ).then((breakdown) => {
     if (generation !== state16.dailyGeneration) return state16.dailyBreakdown;
     state16.dailyBreakdown = breakdown;
     state16.dailyUpdatedAt = Date.now();
@@ -68804,7 +68879,7 @@ function kwhPerOra(righe2) {
   }
   return fuori;
 }
-function giornoDi(quando4) {
+function giornoDi2(quando4) {
   const istante4 = new Date(quando4);
   if (Number.isNaN(istante4.getTime())) return "";
   const mese = String(istante4.getMonth() + 1).padStart(2, "0");
@@ -68834,7 +68909,7 @@ function reportDelleFasce(righe2, fasceSalvate, { prezzoUnico = 0, totale = null
     if (quale < 0) continue;
     kwhPerFascia[quale] += ora3.kwh;
     spiegati += ora3.kwh;
-    const giorno = giornoDi(ora3.quando);
+    const giorno = giornoDi2(ora3.quando);
     if (!perGiorno.has(giorno)) perGiorno.set(giorno, vuoto(quante2));
     perGiorno.get(giorno)[quale] += ora3.kwh;
     const casella5 = perOra[quando4.getHours()];
@@ -94376,7 +94451,7 @@ function genereDellaRiga(riga3, tipo, states = allStates()) {
   const letto = genereDelSensore(riga3?.entity, states?.[riga3?.entity], tipo);
   return generi.includes(letto) ? letto : generi[0];
 }
-function giornoDi2(valore3) {
+function giornoDi3(valore3) {
   const quando4 = Date.parse(clean(valore3));
   if (!Number.isFinite(quando4)) return "";
   const giorno = new Date(quando4);
@@ -94406,7 +94481,7 @@ function vascaInTestaMarkup(animale, indice) {
         "Optional: left empty, the terrarium reminds nobody to clean it. With a number the card says when it is due."
       )
     })}
-      ${campoDellaVasca(indice, "pulizia", t("Ultima pulizia", "Last cleaning"), giornoDi2(animale.pulizia), "", {
+      ${campoDellaVasca(indice, "pulizia", t("Ultima pulizia", "Last cleaning"), giornoDi3(animale.pulizia), "", {
       tipo: "date",
       aiuto: t(
         "Si segna dalla pagina con «Fatto oggi»; qui si corregge.",
@@ -94431,7 +94506,7 @@ function vascaInTestaMarkup(animale, indice) {
       )
     }
   )}
-    ${campoDellaVasca(indice, "cambio", t("Ultimo cambio d'acqua", "Last water change"), giornoDi2(animale.cambio), "", {
+    ${campoDellaVasca(indice, "cambio", t("Ultimo cambio d'acqua", "Last water change"), giornoDi3(animale.cambio), "", {
     tipo: "date",
     aiuto: t(
       "Si segna dalla pagina con «Fatto oggi»; qui si corregge.",

@@ -15,6 +15,7 @@ import {
   paroleDellApparecchio,
 } from "../core/entita-di-questo-apparecchio.js";
 import { CAMPI_SCELTI } from "../core/energy-loads-config.js";
+import { contatoreCheNonSiLegge } from "../core/period-service.js";
 
 const KEY = "__DASHBOARDMODERN_DATA_CONTRACTS_SECTION__";
 const state = (root[KEY] ||= {
@@ -139,13 +140,28 @@ function isEnergyEntity(entity) {
   );
 }
 
+/* «Ho impostato un sensore totale ma all'improvviso il valore sparisce.»
+ *
+ * Questa domanda decide se il contatore scritto nella casella resta in
+ * configurazione, e la risposta si salva: un «no» qui e' la casella svuotata
+ * per sempre. Si chiedeva agli attributi dello stato, e alla prima passata —
+ * che parte all'avvio, quando gli stati spesso non sono ancora arrivati — o
+ * con il sensore irraggiungibile, gli attributi non c'erano: un contatore che
+ * non si chiama «total» veniva cancellato, e con lui il giorno e il mese
+ * dell'elettrodomestico.
+ *
+ * Un contatore che adesso non si legge si tiene (`contatoreCheNonSiLegge`):
+ * lo si giudica quando si legge, alla passata dopo. Resta fuori chi ha i watt
+ * nel nome, perche' quello non e' mai un contatore di energia, e chi si legge
+ * e dichiara di essere una misura, come prima. */
 export function isLifetimeEnergyEntity(entity) {
   const id = clean(entity);
   if (!id) return false;
   const attributes = stateAttributes(id);
   const stateClass = clean(attributes.state_class).toLowerCase();
   if (stateClass === "total" || stateClass === "total_increasing") return true;
-  return TOTAL_NAME.test(`${id} ${clean(attributes.friendly_name)}`);
+  if (TOTAL_NAME.test(`${id} ${clean(attributes.friendly_name)}`)) return true;
+  return !POWER_NAME.test(id) && contatoreCheNonSiLegge(id, allStates());
 }
 
 /* Quello che l'apparecchio dichiara, meno quello che porta il nome di un altro,
@@ -201,12 +217,15 @@ function inferApplianceContract(device = {}, sezione = []) {
   const power = clean(device.power_entity) || sensors.find(isPowerEntity) || find(POWER_NAME);
   const daily = clean(device.daily_energy_entity) || find(DAILY_NAME, energySensors);
   const monthly = clean(device.monthly_energy_entity) || find(MONTHLY_NAME, energySensors);
+  /* L'energia «generica» non e' mai il giornaliero o il mensile gia' scelti:
+   * da qui finiva anche nel report, e un giornaliero scritto nel report passa
+   * per il contatore di vita copiato (vedi `eIlTotaleTravestito`). */
   const energy =
     clean(device.energy_entity) ||
     energySensors.find(
       (id) => !DAILY_NAME.test(id) && !MONTHLY_NAME.test(id) && !TOTAL_NAME.test(id),
     ) ||
-    energySensors[0] ||
+    energySensors.find((id) => id !== daily && id !== monthly) ||
     "";
 
   const explicitTotal = clean(device.total_energy_entity);

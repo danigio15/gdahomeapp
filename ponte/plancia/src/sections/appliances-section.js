@@ -3,7 +3,11 @@ import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwor
 import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-view-model.js";
 import { entitaDegliApparecchi } from "../core/le-entita-dellapparecchio.js";
 import { eIlTotaleTravestito } from "../core/appliance-card-view-model.js";
-import { isCumulativeEnergyEntity, resolveEntity } from "../core/period-service.js";
+import {
+  contatoreCheNonSiLegge,
+  isCumulativeEnergyEntity,
+  resolveEntity,
+} from "../core/period-service.js";
 import { runtimeMetrics } from "../core/runtime-metrics.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 import {
@@ -156,11 +160,23 @@ export function applianceDailySource(device = {}, states = {}) {
     .map(configuredEntity)
     .filter(Boolean);
   const seen = new Set();
-  const cumulative = cumulativeCandidates.find((entity) => {
-    if (seen.has(entity)) return false;
-    seen.add(entity);
-    return eUnContatoreDiSempre(entity, states);
-  });
+  /* Il contatore scritto nelle caselle del totale resta lui anche quando,
+   * per un momento, non si lascia leggere: le sue statistiche stanno nel
+   * Recorder, e il delta di oggi si ricava lo stesso. Prima un sensore
+   * irraggiungibile, o non ancora arrivato, faceva sparire l'apparecchio dal
+   * conto di oggi. */
+  const dichiarati = new Set(
+    [device.total_energy_entity, device.history_entity].map(configuredEntity).filter(Boolean),
+  );
+  const cumulative =
+    cumulativeCandidates.find((entity) => {
+      if (seen.has(entity)) return false;
+      seen.add(entity);
+      return eUnContatoreDiSempre(entity, states);
+    }) ||
+    [...dichiarati].find((entity) =>
+      contatoreCheNonSiLegge(entity, states, (value) => resolveEntity(value)),
+    );
   if (!cumulative) return null;
   return {
     entity: resolvedEntity(cumulative),
@@ -170,21 +186,55 @@ export function applianceDailySource(device = {}, states = {}) {
   };
 }
 
+/* Il giorno di un conto: i kWh di ieri non sono quelli di oggi. */
+function giornoDi(data) {
+  const giorno = new Date(data);
+  return Number.isFinite(giorno.getTime()) ? giorno.toDateString() : "";
+}
+
+/* I numeri buoni di oggi, apparecchio per apparecchio.
+ *
+ * «Ho impostato un sensore totale ma all'improvviso il valore sparisce.» Il
+ * conto si rifa' ogni minuto, e ogni volta si ricominciava da capo: una
+ * domanda al Recorder scaduta, una risposta vuota mentre l'add-on riparte, il
+ * sensore giornaliero irraggiungibile per un attimo — e quell'apparecchio
+ * usciva dal conto, la tessera scendeva o tornava a zero, e al giro dopo
+ * ricompariva. Un consumo gia' letto oggi resta vero finche' non ne arriva
+ * uno nuovo: si tiene quello.
+ *
+ * Solo dentro lo stesso giorno, e solo al posto di un numero che MANCA. Uno
+ * zero che arriva e' una risposta — il contatore giornaliero azzerato, il
+ * frigorifero spento — e si mostra com'e'. */
+function lettiDiOggi(precedente, giorno) {
+  if (!giorno || precedente?.giorno !== giorno) return new Map();
+  const letti = precedente?.letti;
+  return letti instanceof Map ? letti : new Map();
+}
+
 export async function buildApplianceDailyBreakdown(
   applianceList = [],
   states = {},
   broker = root.DashboardModernEnergyService?.broker,
   selected = new Date(),
+  precedente = null,
 ) {
   const rows = [];
   const plans = [];
   const planRows = new Map();
+  const giorno = giornoDi(selected);
+  const giaLetti = lettiDiOggi(precedente, giorno);
 
   applianceList.forEach((device, index) => {
+    const id = clean(device.id) || `appliance-${index}`;
     const source = applianceDailySource(device, states);
-    if (!source) return;
+    if (!source) {
+      /* Senza una fonte adesso, ma con un numero letto oggi: resta quello. */
+      const tenuto = giaLetti.get(id);
+      if (tenuto) rows.push({ ...tenuto, name: clean(device.name) || tenuto.name, tenuto: true });
+      return;
+    }
     const row = {
-      id: clean(device.id) || `appliance-${index}`,
+      id,
       name: clean(device.name) || t("Elettrodomestico", "Appliance"),
       entity: source.entity,
       source: source.source,
@@ -221,6 +271,18 @@ export async function buildApplianceDailyBreakdown(
     }
   }
 
+  const letti = new Map();
+  rows.forEach((row) => {
+    if (!Number.isFinite(row.value)) {
+      const tenuto = giaLetti.get(row.id);
+      if (tenuto) {
+        row.value = tenuto.value;
+        row.tenuto = true;
+      }
+    }
+    if (Number.isFinite(row.value)) letti.set(row.id, Object.freeze({ ...row }));
+  });
+
   const consumed = rows
     .filter((row) => Number.isFinite(row.value) && row.value > 0.0005)
     .sort((left, right) => right.value - left.value);
@@ -228,6 +290,8 @@ export async function buildApplianceDailyBreakdown(
   return Object.freeze({
     total: Math.round(total * 1000) / 1000,
     rows: Object.freeze(consumed.map((row) => Object.freeze({ ...row }))),
+    giorno,
+    letti,
   });
 }
 
@@ -515,6 +579,26 @@ export function ilContoDiOggiRiposa({ aggiornatoIl = 0, adesso = Date.now(), for
   return adesso - aggiornatoIl < DAILY_REFRESH_MS;
 }
 
+/* Se nel conto in mano manca un sensore giornaliero che adesso si legge.
+ *
+ * Il primo conto parte spesso prima che gli stati siano arrivati tutti: il
+ * sensore giornaliero del frigorifero non c'era ancora, e il frigorifero
+ * restava fuori dalla tessera per tutto il minuto di riposo. Un sensore
+ * giornaliero si legge dallo stato, non costa niente al Recorder: appena c'e'
+ * e nel conto non c'e', il conto si rifa'. Chi passa dal Recorder resta col
+ * suo passo — rifarlo a ogni giro sarebbe proprio il martello che il riposo
+ * esiste per evitare. */
+export function mancaUnGiornalieroCheSiLegge(breakdown, applianceList = [], states = {}) {
+  const letti = breakdown?.letti;
+  if (!(letti instanceof Map)) return false;
+  return applianceList.some((device, index) => {
+    const id = clean(device?.id) || `appliance-${index}`;
+    if (letti.has(id)) return false;
+    const source = applianceDailySource(device, states);
+    return Boolean(source?.direct);
+  });
+}
+
 async function refreshApplianceDailyKpi({ force = false, openPopup = false } = {}) {
   const card = dailyCard();
   if (!card) return state.dailyBreakdown;
@@ -526,7 +610,9 @@ async function refreshApplianceDailyKpi({ force = false, openPopup = false } = {
       renderDailyPopup(state.dailyBreakdown, { loading: true });
     }
   }
-  if (ilContoDiOggiRiposa({ aggiornatoIl: state.dailyUpdatedAt, force })) {
+  const subito =
+    force || mancaUnGiornalieroCheSiLegge(state.dailyBreakdown, devices(), allStates());
+  if (ilContoDiOggiRiposa({ aggiornatoIl: state.dailyUpdatedAt, force: subito })) {
     applyDailyKpi(state.dailyBreakdown);
     if (openPopup) renderDailyPopup(state.dailyBreakdown);
     return state.dailyBreakdown;
@@ -536,7 +622,13 @@ async function refreshApplianceDailyKpi({ force = false, openPopup = false } = {
   const applianceList = devices();
   const states = allStates();
   const broker = root.DashboardModernEnergyService?.broker;
-  state.dailyPromise = buildApplianceDailyBreakdown(applianceList, states, broker)
+  state.dailyPromise = buildApplianceDailyBreakdown(
+    applianceList,
+    states,
+    broker,
+    new Date(),
+    state.dailyBreakdown,
+  )
     .then((breakdown) => {
       if (generation !== state.dailyGeneration) return state.dailyBreakdown;
       state.dailyBreakdown = breakdown;
