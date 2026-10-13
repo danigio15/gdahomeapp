@@ -54,6 +54,13 @@ export const MODELLI = Object.freeze([
   "telecamere",
   "energia",
   "musica",
+  /* «Cerca di creare una cosa del genere per wall»: le pagine di una regia —
+   * un pannello da sala riunioni, da auditorium, da chiesa — dove a muro non
+   * si accendono le luci ma si alzano i microfoni, si gira la telecamera e si
+   * avvia la sala. Vedi «la regia» piu' sotto. */
+  "mixer",
+  "telecamera",
+  "comandi",
 ]);
 
 /** Le pagine che si riempiono da sole con un intero gruppo della casa. */
@@ -138,6 +145,47 @@ const CARTE_DEDICATE = Object.freeze({ light: "luce", climate: "clima", cover: "
 export function tipoDellEntita(id) {
   return CARTE_DEDICATE[String(id || "").split(".")[0]] || "entita";
 }
+
+/* I tasti di una tapparella, sulla sua card e nella sua finestra.
+ *
+ * «Sulla personalizzata la modifica che hai fatto del clima serve anche sulle
+ * tapparelle, per far comparire i pulsanti diretti senza entrarci dentro.» I
+ * tasti ▲ ■ ▼ ora stanno sempre sulla card; ma non tutte le coperture sanno
+ * fare tutto: una tenda che si apre e si chiude soltanto non ha il «ferma», e
+ * un tasto che manda un servizio che Home Assistant rifiuta e' peggio di un
+ * tasto che non c'e'. Lo dicono i `supported_features` della cover: 1 apre,
+ * 2 chiude, 8 ferma (4 e' la posizione, che vive nella finestra). Senza il
+ * numero — un'entita' vecchia, o finta — i tasti sono tutti e tre, come prima.
+ * Restituisce le chiavi dei tasti nell'ordine in cui si vedono: «su» (▲),
+ * «ferma» (■), «giu» (▼). */
+const APRE = 1;
+const CHIUDE = 2;
+const FERMA = 8;
+export function tastiDellaTapparella(attributi = {}) {
+  const f = Number(attributi?.supported_features);
+  if (
+    attributi?.supported_features === undefined ||
+    attributi?.supported_features === null ||
+    !Number.isFinite(f)
+  )
+    return ["su", "ferma", "giu"];
+  return [
+    ...(f & APRE ? ["su"] : []),
+    ...(f & FERMA ? ["ferma"] : []),
+    ...(f & CHIUDE ? ["giu"] : []),
+  ];
+}
+
+/* Quale temperatura il tablet mostra dove c'e' il meteo — in alto accanto
+ * all'ora e sul riposo. «Il meteo lo possiamo scegliere, ma la temperatura no,
+ * perche' e' quella geolocalizzata del weather: potresti mettere la scelta di
+ * un sensore interno, come la barra della Home.»
+ * - `meteo`: quella di fuori, dell'entita' meteo (com'era sempre);
+ * - `casa`: quella del sensore «in casa» — lo stesso campo che il riposo usava
+ *   gia' (`riposo.sensore`), vuoto vuol dire la stanza della prima pagina. Un
+ *   sensore solo per le due cose: due caselle che potevano dire due numeri
+ *   diversi per la stessa «temperatura in casa» avrebbero solo confuso. */
+export const TEMPERATURE_MOSTRATE = Object.freeze(["meteo", "casa"]);
 
 /* Un posto lasciato vuoto apposta in mezzo agli altri: «il quinto lo voglio
  * libero». Senza, i posti dopo scivolerebbero avanti. */
@@ -324,7 +372,332 @@ export function paginaPulita(input, indice = 0) {
       .filter((id) => id.startsWith("media_player."))
       .slice(0, LETTORI_AL_MASSIMO),
     confermaUscita: vero(dentro.confermaUscita, false),
+    /* Le tre pagine della regia: ognuna legge solo il suo pezzo. */
+    mixer: mixerPulito(dentro.mixer),
+    telecamera: telecameraPulita(dentro.telecamera),
+    pulsanti: (Array.isArray(dentro.pulsanti) ? dentro.pulsanti : [])
+      .slice(0, PULSANTI_AL_MASSIMO)
+      .map(pulsantePulito)
+      .filter(Boolean),
+    fermaTutto: {
+      attivo: vero(dentro.fermaTutto?.attivo, false),
+      entita: entitaDi(dentro.fermaTutto?.entita, DOMINI_DA_PREMERE),
+    },
   };
+}
+
+/* ── la regia: mixer, telecamera, comandi ────────────────────────────────
+ *
+ * «Cerca di creare una cosa del genere per wall»: un tablet da dieci pollici,
+ * scuro, coi tasti grandi a sinistra e tre pagine — l'audio coi suoi cursori
+ * in piedi, la telecamera con le frecce e i preset, i comandi d'avvio della
+ * sala. Niente di tutto questo viene dalla plancia di origine: una regia non
+ * ha stanze. Si scrive qui, entita' per entita'.
+ *
+ * Il mixer. Un canale e' un'entita' che ha un livello: un lettore
+ * (`media_player`, il suo volume da 0 a 1) o un numero (`number`,
+ * `input_number`, coi suoi min, max e passo — i dB di un mixer digitale). Il
+ * muto e' quello del lettore, se lo sa fare, o un interruttore scelto a
+ * parte, acceso vuol dire muto. Un canale senza ne' l'uno ne' l'altro non ha
+ * il tasto: un tasto che non fa niente e' peggio di un tasto che non c'e'.
+ *
+ * La telecamera. Le frecce, lo stop, lo zoom e i preset sono entita' da
+ * premere — un `button`, uno `script`, una `scene` — che chi installa ha gia'
+ * in Home Assistant: le telecamere PTZ le espongono cosi', e dove non lo
+ * fanno uno script con `onvif.ptz` dentro fa lo stesso. Lo zoom puo' essere
+ * anche un numero, e allora e' un cursore.
+ *
+ * I comandi. Ognuno ha un tasto d'avvio e, se vuole, uno di stop: «AVVIO» e
+ * «SPEGNIMENTO» sono due comandi di un tasto solo, le cinque sale sono cinque
+ * comandi coi due tasti. Acceso lo dice l'entita' di stato scelta, o quella
+ * dell'avvio quando sa dirlo (un interruttore, uno script che sta girando). */
+export const GRUPPI_AL_MASSIMO = 4;
+export const CANALI_PER_GRUPPO = 8;
+export const PRESET_AL_MASSIMO = 8;
+export const PULSANTI_AL_MASSIMO = 8;
+/* Il colore di un gruppo che nessuno ha scelto: il primo giallo, poi
+ * l'azzurro e il verde, come sui banchi. */
+export const COLORI_DEI_GRUPPI = Object.freeze(["#f59e0b", "#0ea5e9", "#10b981", "#ec4899"]);
+export const DOMINI_DEL_FADER = Object.freeze(["media_player", "number", "input_number"]);
+export const DOMINI_DEL_MUTO = Object.freeze(["switch", "input_boolean"]);
+export const DOMINI_DA_PREMERE = Object.freeze([
+  "button",
+  "input_button",
+  "script",
+  "scene",
+  "switch",
+  "input_boolean",
+  "automation",
+  "light",
+  "fan",
+]);
+/* Chi si accende e si spegne: per loro «stop» vuol dire spegnere. */
+const SI_SPENGONO = new Set(["switch", "input_boolean", "light", "fan", "automation"]);
+const DIREZIONI = Object.freeze(["su", "giu", "sinistra", "destra", "stop"]);
+
+const dominioDi = (id) => String(id || "").split(".")[0];
+function entitaDi(valore, domini) {
+  const id = entita(valore);
+  return id && domini.includes(dominioDi(id)) ? id : "";
+}
+const colorePulito = (valore) =>
+  COLORI_DELLE_PAGINE.includes(String(valore || "").toLowerCase())
+    ? String(valore).toLowerCase()
+    : "";
+
+/** Un canale del mixer: l'entita' col livello, il nome, l'interruttore del muto. */
+export function canalePulito(input) {
+  const dentro = typeof input === "string" ? { entita: input } : input;
+  if (!dentro || typeof dentro !== "object") return null;
+  const id = entitaDi(dentro.entita, DOMINI_DEL_FADER);
+  if (!id) return null;
+  return { entita: id, nome: testo(dentro.nome, 24), muto: entitaDi(dentro.muto, DOMINI_DEL_MUTO) };
+}
+
+function mixerPulito(input) {
+  const dentro = input && typeof input === "object" ? input : {};
+  /* Un gruppo resta anche vuoto: e' appena nato nel config, e i canali
+   * arrivano dopo. Sul tablet un gruppo senza canali non si disegna. */
+  const gruppi = (Array.isArray(dentro.gruppi) ? dentro.gruppi : [])
+    .slice(0, GRUPPI_AL_MASSIMO)
+    .map((g) => (g && typeof g === "object" ? g : {}))
+    .map((g) => ({
+      nome: testo(g.nome, 24),
+      colore: colorePulito(g.colore),
+      canali: (Array.isArray(g.canali) ? g.canali : [])
+        .map(canalePulito)
+        .filter(Boolean)
+        .slice(0, CANALI_PER_GRUPPO),
+    }));
+  const master = canalePulito(dentro.master) || { entita: "", nome: "", muto: "" };
+  return { gruppi, master };
+}
+
+/** Il colore di un gruppo: quello scelto, o quello del suo posto. */
+export function coloreDelGruppo(gruppo, indice = 0) {
+  return gruppo?.colore || COLORI_DEI_GRUPPI[indice % COLORI_DEI_GRUPPI.length];
+}
+
+function telecameraPulita(input) {
+  const dentro = input && typeof input === "object" ? input : {};
+  const fuori = { entita: entitaDi(dentro.entita, ["camera"]) };
+  for (const d of DIREZIONI) fuori[d] = entitaDi(dentro[d], DOMINI_DA_PREMERE);
+  fuori.zoom = entitaDi(dentro.zoom, ["number", "input_number"]);
+  fuori.zoomPiu = entitaDi(dentro.zoomPiu, DOMINI_DA_PREMERE);
+  fuori.zoomMeno = entitaDi(dentro.zoomMeno, DOMINI_DA_PREMERE);
+  fuori.preset = (Array.isArray(dentro.preset) ? dentro.preset : [])
+    .map((p) => (p && typeof p === "object" ? p : {}))
+    .map((p) => ({ entita: entitaDi(p.entita, DOMINI_DA_PREMERE), nome: testo(p.nome, 24) }))
+    .filter((p) => p.entita)
+    .slice(0, PRESET_AL_MASSIMO);
+  return fuori;
+}
+
+/* Un comando della pagina Comandi. Resta anche col solo nome: nel config si
+ * scrive prima il nome e poi si sceglie l'entita'. Sul tablet uno senza
+ * entita' non si disegna. */
+function pulsantePulito(input) {
+  if (!input || typeof input !== "object") return null;
+  const fuori = {
+    nome: testo(input.nome, 32),
+    disegno: testo(input.disegno, 32),
+    colore: colorePulito(input.colore),
+    avvio: entitaDi(input.avvio, DOMINI_DA_PREMERE),
+    stop: entitaDi(input.stop, DOMINI_DA_PREMERE),
+    stato: entita(input.stato),
+  };
+  return fuori.nome || fuori.avvio || fuori.stop ? fuori : null;
+}
+
+/** I comandi che il tablet sa davvero premere. */
+export function pulsantiDellaPagina(pagina) {
+  return (pagina?.pulsanti || []).filter((p) => p.avvio || p.stop);
+}
+
+/** I gruppi del mixer che hanno almeno un canale. */
+export function gruppiDelMixer(pagina) {
+  return (pagina?.mixer?.gruppi || [])
+    .map((g, i) => ({ ...g, colore: coloreDelGruppo(g, i) }))
+    .filter((g) => g.canali.length);
+}
+
+const IGNOTO = new Set(["", "unavailable", "unknown"]);
+const VOLUME_SET = 4;
+const VOLUME_MUTE = 8;
+const arrotonda = (n) => Number(Number(n).toFixed(6));
+const tra = (n, min, max) => Math.min(max, Math.max(min, n));
+
+/** La posizione di un valore fra min e max, da 0 (in fondo) a 1 (in cima). */
+export function posizioneDelValore(valore, min = 0, max = 1) {
+  const v = Number(valore);
+  if (!Number.isFinite(v) || !(Number(max) > Number(min))) return 0;
+  return tra((v - min) / (max - min), 0, 1);
+}
+
+/**
+ * Quello che si sa di un canale adesso, per il cursore e il muto.
+ *
+ * `posizione` va da 0 a 1 ed e' dove sta il cursore; `valore` e' il numero
+ * vero (il volume da 0 a 1 di un lettore, i dB di un numero), con `unita`.
+ * `muove` dice se il cursore si puo' toccare, `puoMuto` se c'e' il tasto.
+ */
+export function letturaDelCanale(canale, stati = {}) {
+  const id = canale?.entita || "";
+  const s = stati?.[id];
+  const a = s?.attributes || {};
+  const muto = canale?.muto || "";
+  const statoMuto = muto ? String(stati?.[muto]?.state ?? "") : "";
+  const base = {
+    entita: id,
+    tipo: dominioDi(id) === "media_player" ? "volume" : "numero",
+    disponibile: Boolean(s) && !IGNOTO.has(String(s.state ?? "")),
+    valore: null,
+    min: 0,
+    max: 1,
+    passo: 0.01,
+    unita: "",
+    posizione: 0,
+    muove: false,
+    puoMuto: Boolean(muto),
+    mutato: muto ? statoMuto === "on" : false,
+  };
+  if (!base.disponibile) return { ...base, puoMuto: false };
+  if (base.tipo === "volume") {
+    const f = Number(a.supported_features);
+    const tutto = a.supported_features === undefined || !Number.isFinite(f);
+    const volume = Number(a.volume_level);
+    const ce = a.volume_level !== undefined && a.volume_level !== null && Number.isFinite(volume);
+    return {
+      ...base,
+      valore: ce ? tra(volume, 0, 1) : null,
+      unita: "%",
+      posizione: ce ? tra(volume, 0, 1) : 0,
+      muove: ce && (tutto || Boolean(f & VOLUME_SET)),
+      puoMuto: Boolean(muto) || tutto || Boolean(f & VOLUME_MUTE),
+      mutato: muto ? base.mutato : a.is_volume_muted === true,
+    };
+  }
+  const min = Number.isFinite(Number(a.min)) ? Number(a.min) : 0;
+  const max = Number.isFinite(Number(a.max)) && Number(a.max) > min ? Number(a.max) : min + 100;
+  const passo = Number(a.step) > 0 ? Number(a.step) : 1;
+  const valore = Number(s.state);
+  const ce = String(s.state).trim() !== "" && Number.isFinite(valore);
+  return {
+    ...base,
+    valore: ce ? valore : null,
+    min,
+    max,
+    passo,
+    unita: testo(a.unit_of_measurement, 12),
+    posizione: ce ? posizioneDelValore(valore, min, max) : 0,
+    muove: ce,
+  };
+}
+
+/** Il valore che vuol dire una posizione del cursore, sul passo del canale. */
+export function valoreDallaPosizione(posizione, lettura) {
+  const p = tra(Number(posizione) || 0, 0, 1);
+  if (lettura?.tipo === "volume") return arrotonda(Math.round(p * 100) / 100);
+  const min = Number(lettura?.min) || 0;
+  const max = Number(lettura?.max) > min ? Number(lettura.max) : min + 100;
+  const passo = Number(lettura?.passo) > 0 ? Number(lettura.passo) : 1;
+  const grezzo = min + p * (max - min);
+  return arrotonda(tra(min + Math.round((grezzo - min) / passo) * passo, min, max));
+}
+
+/** Il servizio che porta il canale a quella posizione. */
+export function servizioDelFader(canale, posizione, lettura) {
+  const id = canale?.entita || lettura?.entita || "";
+  const d = dominioDi(id);
+  if (!id || !DOMINI_DEL_FADER.includes(d)) return null;
+  const valore = valoreDallaPosizione(posizione, lettura);
+  if (d === "media_player")
+    return { domain: d, service: "volume_set", data: { entity_id: id, volume_level: valore } };
+  return { domain: d, service: "set_value", data: { entity_id: id, value: valore } };
+}
+
+/** Il servizio del tasto muto: l'interruttore scelto, o il muto del lettore. */
+export function servizioDelMuto(canale, lettura) {
+  if (!lettura?.puoMuto) return null;
+  if (canale?.muto)
+    return {
+      domain: dominioDi(canale.muto),
+      service: lettura.mutato ? "turn_off" : "turn_on",
+      data: { entity_id: canale.muto },
+    };
+  if (dominioDi(canale?.entita) !== "media_player") return null;
+  return {
+    domain: "media_player",
+    service: "volume_mute",
+    data: { entity_id: canale.entita, is_volume_muted: !lettura.mutato },
+  };
+}
+
+/** Premere un'entita': il tasto, lo script, la scena, l'interruttore. */
+export function servizioDaPremere(id) {
+  const d = dominioDi(id);
+  if (!id || !DOMINI_DA_PREMERE.includes(d)) return null;
+  if (d === "button" || d === "input_button")
+    return { domain: d, service: "press", data: { entity_id: id } };
+  if (d === "automation") return { domain: d, service: "trigger", data: { entity_id: id } };
+  return { domain: d, service: "turn_on", data: { entity_id: id } };
+}
+
+/** Il servizio di una freccia, dello stop o di un tasto dello zoom. */
+export function servizioDellaTelecamera(telecamera, tasto) {
+  return servizioDaPremere(telecamera?.[tasto] || "");
+}
+
+const ACCESI_DEI_PULSANTI = new Set(["on", "playing", "open", "home", "true"]);
+
+/** Il comando e' acceso? Lo dice l'entita' di stato, o quella dell'avvio. */
+export function pulsanteAcceso(pulsante, stati = {}) {
+  const id = pulsante?.stato || pulsante?.avvio || "";
+  if (!id) return false;
+  const d = dominioDi(id);
+  if (["button", "input_button", "scene"].includes(d)) return false;
+  return ACCESI_DEI_PULSANTI.has(String(stati?.[id]?.state ?? "").toLowerCase());
+}
+
+/**
+ * Il servizio di un tasto di un comando: «avvio» o «stop».
+ *
+ * Un interruttore senza tasto di stop e' un tasto solo che accende e spegne;
+ * con lo stop scritto uguale all'avvio, lo stop lo spegne. Tutto il resto si
+ * preme: lo script d'avvio, quello di spegnimento.
+ */
+export function servizioDelPulsante(pulsante, verso = "avvio", stati = {}) {
+  const avvio = pulsante?.avvio || "";
+  const stop = pulsante?.stop || "";
+  const spegni = (id) => ({
+    domain: dominioDi(id),
+    service: "turn_off",
+    data: { entity_id: id },
+  });
+  if (verso === "stop") {
+    if (stop && stop !== avvio) return servizioDaPremere(stop);
+    if (avvio && SI_SPENGONO.has(dominioDi(avvio))) return spegni(avvio);
+    return null;
+  }
+  if (!avvio) return null;
+  if (!stop && SI_SPENGONO.has(dominioDi(avvio)) && pulsanteAcceso({ avvio }, stati))
+    return spegni(avvio);
+  return servizioDaPremere(avvio);
+}
+
+/** «Ferma tutto»: l'entita' scelta, o lo stop di ogni comando che ne ha uno. */
+export function chiamateDelFermaTutto(pagina, stati = {}) {
+  if (!pagina?.fermaTutto?.attivo) return [];
+  if (pagina.fermaTutto.entita) return [servizioDaPremere(pagina.fermaTutto.entita)];
+  return pulsantiDellaPagina(pagina)
+    .filter((p) => p.stop || SI_SPENGONO.has(dominioDi(p.avvio)))
+    .map((p) => servizioDelPulsante(p, "stop", stati))
+    .filter(Boolean);
+}
+
+/** Il menu di lato si vede solo in orizzontale e sul tablet vero. */
+export function menuDiLato(muro, versoScelto = "orizzontale", compatto = false) {
+  return Boolean(muro?.menuDiLato) && versoScelto === "orizzontale" && !compatto;
 }
 
 export const LETTORI_AL_MASSIMO = 8;
@@ -358,6 +731,8 @@ export const MURO_VUOTO = Object.freeze({
   orientamento: "auto",
   tema: "plancia",
   meteo: "",
+  temperatura: "meteo",
+  menuDiLato: false,
   riposo: { attivo: true, minuti: 2, torna: true, sensore: "" },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
@@ -403,12 +778,21 @@ export function muroPulito(input) {
     tema: scelta(dentro.tema, TEMI, "plancia"),
     /* Il meteo in alto e sul riposo: vuoto, il primo che Home Assistant ha. */
     meteo: entita(dentro.meteo),
+    /* La temperatura accanto al disegno del meteo: quella del meteo o quella
+     * del sensore in casa (`riposo.sensore`). */
+    temperatura: scelta(dentro.temperatura, TEMPERATURE_MOSTRATE, "meteo"),
+    /* «Menu di lato»: le pagine in una colonna di tasti grandi a sinistra,
+     * come sui pannelli di regia, invece che nelle linguette in alto. Vale
+     * solo in orizzontale sul tablet vero (`menuDiLato()`): in verticale e sul
+     * pannello piccolo restano le linguette. */
+    menuDiLato: vero(dentro.menuDiLato, false),
     riposo: {
       attivo: vero(riposo.attivo, true),
       minuti: MINUTI_DI_RIPOSO.includes(minuti) ? minuti : 2,
       /* Al riposo il tablet torna alla prima pagina, o resta dov'era. */
       torna: vero(riposo.torna, true),
-      /* La temperatura «in casa» del riposo: vuoto, quella della prima stanza. */
+      /* La temperatura «in casa» del riposo, e quella in alto quando si
+       * sceglie `temperatura: "casa"`: vuoto, quella della prima stanza. */
       sensore: entita(riposo.sensore),
     },
     notte: {
@@ -464,6 +848,11 @@ export function nuovaPagina(modello, fonte = {}, indice = 0) {
   if (pagina.modello === "ingresso") pagina.ingresso = ingressoProposto(fonte);
   /* La pagina personale nasce coi sei posti vuoti: li riempie chi la fa. */
   if (pagina.modello === "personale") pagina.scelti = true;
+  /* Il mixer nasce con un gruppo da riempire, la telecamera con la prima
+   * della plancia di origine. */
+  if (pagina.modello === "mixer") pagina.mixer.gruppi = [{ nome: "", colore: "", canali: [] }];
+  if (pagina.modello === "telecamera")
+    pagina.telecamera.entita = entitaDi(elenco(fonte.telecamere)[0]?.entity, ["camera"]);
   return pagina;
 }
 
