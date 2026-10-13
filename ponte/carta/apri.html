@@ -1,0 +1,378 @@
+<!doctype html>
+<!--
+  La pagina che apre la plancia dentro le «Plance» di Home Assistant.
+
+  Sta in `www/gdahome/` e Home Assistant la serve da `/local/gdahome/apri.html`:
+  la Plancia che gdahome si fabbrica ha dentro una tessera «pagina web» di Home
+  Assistant (`iframe`) che apre questo indirizzo. Nessuna tessera nostra, quindi
+  nessuna risorsa di Lovelace da dichiarare, e nessuna pagina da ricaricare
+  perche' quella risorsa arrivi. Il perche' intero sta in testa a
+  `ponte/carta/accompagna.js`, che il ponte copia qui dentro al posto del segno
+  qui sotto quando scrive questo file.
+
+  Cosa fa, nell'ordine:
+
+   1. trova `hass` di chi guarda, nella pagina di Home Assistant che la contiene
+      (stesso indirizzo: si legge);
+   2. se la plancia non e' per lui — un elenco di utenti, «solo gli
+      amministratori» — lo dice, e si ferma;
+   3. chiede **insieme** dov'e' l'add-on e una sessione dell'ingress, e mette il
+      biscotto;
+   4. toglie la barra della dashboard e la cornice della tessera;
+   5. si sposta sulla plancia servita dall'add-on, nello stesso riquadro.
+
+  Se qualcosa non va lo dice, e **riprova da sola**: nessuna frase qui dentro
+  chiede di ricaricare niente.
+
+  L'indirizzo porta `v=` con la versione dell'add-on: Home Assistant i file di
+  `/local/` li fa tenere al browser per un mese, e il numero cambiato e' quello
+  che glielo fa riprendere. Lo scrive l'add-on nella configurazione della
+  Plancia a ogni aggiornamento, e Home Assistant quella configurazione la
+  applica alle pagine aperte da se'.
+-->
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="referrer" content="same-origin" />
+    <!-- Il segno con cui l'add-on riconosce questa pagina quando chiede a
+         Home Assistant se la serve: una risposta «200» da sola non basta. -->
+    <meta name="gdahome" content="apri" />
+    <title>gdahome</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--gdahome-sfondo, transparent);
+        color: var(--gdahome-testo, #212121);
+        font-family: var(
+          --gdahome-carattere,
+          Roboto,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif
+        );
+        -webkit-text-size-adjust: 100%;
+      }
+      main {
+        box-sizing: border-box;
+        min-height: 100%;
+        display: grid;
+        place-items: center;
+        padding: calc(24px + env(safe-area-inset-top, 0px)) 24px
+          calc(24px + env(safe-area-inset-bottom, 0px));
+        text-align: center;
+        line-height: 1.55;
+      }
+      main[hidden] {
+        display: none;
+      }
+      .dentro {
+        max-width: 26rem;
+      }
+      b {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 1.15rem;
+      }
+      span {
+        display: block;
+        color: var(--gdahome-testo-piano, #5b6471);
+      }
+      button {
+        margin-top: 16px;
+        padding: 10px 18px;
+        border: 0;
+        border-radius: 999px;
+        font: inherit;
+        cursor: pointer;
+        background: var(--gdahome-accento, #03a9f4);
+        color: var(--gdahome-su-accento, #fff);
+      }
+      button[hidden] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="messaggio" hidden aria-live="polite">
+      <div class="dentro">
+        <b id="titolo"></b>
+        <span id="spiega"></span>
+        <button id="riprova" type="button" hidden></button>
+      </div>
+    </main>
+    <script>
+      /*@accompagna@*/
+    </script>
+    <script>
+      (function () {
+        var A = window.__gdahomeAccompagna;
+
+        /* Quello che la Plancia ci ha scritto nell'indirizzo. Non c'e' niente
+         * di segreto: sono le stesse cose che stavano nella configurazione
+         * della tessera, e quella configurazione la legge chiunque veda la
+         * Plancia. */
+        var detti = new URLSearchParams(location.search);
+        var config = {
+          addon: String(detti.get("addon") || "").trim(),
+          ingresso: String(detti.get("ingresso") || "").trim(),
+          profilo: String(detti.get("profilo") || "").trim(),
+          utenti: String(detti.get("utenti") || "")
+            .split(",")
+            .map(function (uno) {
+              return uno.trim();
+            })
+            .filter(Boolean),
+          soloAdmin: detti.get("solo_admin") === "1",
+          titolo: String(detti.get("titolo") || "").trim(),
+        };
+
+        /* La lingua di chi guarda, da Home Assistant: l'italiano a chi parla
+         * italiano, l'inglese a tutti gli altri. */
+        var italiano = true;
+        function due(it, en) {
+          return italiano ? it : en;
+        }
+
+        function scrivi(titolo, spiega, tasto) {
+          document.getElementById("titolo").textContent = titolo;
+          document.getElementById("spiega").textContent = spiega || "";
+          var bottone = document.getElementById("riprova");
+          bottone.hidden = !tasto;
+          bottone.textContent = tasto || "";
+          document.getElementById("messaggio").hidden = false;
+        }
+
+        /* I colori e il carattere di Home Assistant, presi dalla sua pagina:
+         * questa e' un pezzo di Home Assistant, e chi la vede per un secondo
+         * deve vedere il suo tema — chiaro o scuro — e non un lampo bianco. */
+        function ilTema() {
+          try {
+            var su = window.parent.document.documentElement;
+            var stile = window.parent.getComputedStyle(su);
+            var prendi = function (nome) {
+              return String(stile.getPropertyValue(nome) || "").trim();
+            };
+            var mio = document.documentElement.style;
+            var coppie = [
+              ["--gdahome-sfondo", "--primary-background-color"],
+              ["--gdahome-testo", "--primary-text-color"],
+              ["--gdahome-testo-piano", "--secondary-text-color"],
+              ["--gdahome-accento", "--primary-color"],
+              ["--gdahome-su-accento", "--text-primary-color"],
+              ["--gdahome-carattere", "--ha-font-family-body"],
+            ];
+            for (var i = 0; i < coppie.length; i += 1) {
+              var valore = prendi(coppie[i][1]);
+              if (valore) mio.setProperty(coppie[i][0], valore);
+            }
+            if (!prendi("--ha-font-family-body")) {
+              var vecchio = prendi("--paper-font-body1_-_font-family");
+              if (vecchio) mio.setProperty("--gdahome-carattere", vecchio);
+            }
+          } catch (_e) {
+            /* Senza tema si vede coi colori di serie: meglio che niente. */
+          }
+        }
+
+        /* Se questa plancia si apre a chi la sta guardando. Non e' questo il
+         * cancello — quello sta nell'add-on, che guarda chi bussa e a chi non
+         * e' abilitato non serve la pagina — e' cosa si legge invece di un
+         * riquadro bianco, e serve a non chiedere una sessione per una pagina
+         * che non arrivera'. */
+        function laVede(hass) {
+          var io = String((hass.user && hass.user.id) || "");
+          if (config.utenti.length && config.utenti.indexOf(io) < 0) return "utenti";
+          if (config.soloAdmin && !(hass.user && hass.user.is_admin === true)) return "admin";
+          return "";
+        }
+
+        function nonPerTe(perche) {
+          var titolo = config.titolo || due("Questa plancia", "This dashboard");
+          scrivi(
+            due(titolo + " non è abilitata per te", titolo + " is not enabled for you"),
+            (perche === "admin"
+              ? due(
+                  "In questa casa questa plancia la vedono solo gli amministratori.",
+                  "In this home only administrators see this dashboard.",
+                )
+              : due(
+                  "In questa casa questa plancia la vedono solo alcuni utenti.",
+                  "In this home only some users see this dashboard.",
+                )) +
+              " " +
+              due(
+                "Chi amministra la casa può cambiarlo dalla pagina di gdahome, alla voce «Le plance».",
+                "Whoever runs the home can change it from the gdahome page, under “Dashboards”.",
+              ),
+          );
+        }
+
+        /* Dov'e' l'add-on, adesso, chiesto al Supervisor come fa il frontend
+         * di Home Assistant: l'indirizzo dell'ingress porta dentro un gettone
+         * che Home Assistant puo' rifare, e scritto nella Plancia invecchierebbe.
+         * Quello che ci ha scritto l'add-on (`ingresso`) e' il ripiego. */
+        function doveSta(hass) {
+          if (!config.addon) {
+            var senza = new Error(
+              due(
+                "questa Plancia non sa quale add-on aprire",
+                "this dashboard does not know which add-on to open",
+              ),
+            );
+            senza.tipo = "config";
+            return Promise.reject(senza);
+          }
+          return hass
+            .callWS({
+              type: "supervisor/api",
+              endpoint: "/addons/" + config.addon + "/info",
+              method: "get",
+            })
+            .then(
+              function (detto) {
+                var dati = (detto && detto.data) || detto || {};
+                /* L'add-on fermo: e' il solo guasto che chi guarda puo' far
+                 * aggiustare, e si dice per nome. */
+                if (dati.state && dati.state !== "started") {
+                  var fermo = new Error("add-on " + dati.state);
+                  fermo.tipo = "fermo";
+                  throw fermo;
+                }
+                var dove = String(dati.ingress_url || config.ingresso || "");
+                if (!dove) {
+                  var senzaIngresso = new Error(
+                    due("l'add-on non ha un ingresso", "the add-on has no ingress"),
+                  );
+                  throw senzaIngresso;
+                }
+                return dove;
+              },
+              function (errore) {
+                if (config.ingresso) return config.ingresso;
+                throw errore;
+              },
+            )
+            .then(function (dove) {
+              /* Con la barra in fondo o senza a seconda delle versioni: si
+               * normalizza qui invece di fidarsi. */
+              var radice = String(dove).replace(/\/+$/, "");
+              return radice + "/plancia/" + (config.profilo ? config.profilo + "/" : "");
+            });
+        }
+
+        /* Si va. Prima si toglie al riquadro la gabbia che Home Assistant
+         * mette a ogni pagina web: la plancia girava libera dentro la tessera
+         * di prima — scarica i salvataggi, apre i collegamenti — e deve
+         * continuare a farlo. Lo si puo' fare perche' questa pagina e' di Home
+         * Assistant stesso; vale dalla prossima navigazione, che e' quella qui
+         * sotto. Poi il segno, perche' la plancia sappia che il riquadro e'
+         * nostro, e `replace` perche' «indietro» non torni a questa pagina. */
+        function vai(dove) {
+          var riquadro = A.ilRiquadro();
+          if (riquadro) {
+            try {
+              riquadro.setAttribute(A.SEGNO, A.NOSTRO);
+              riquadro.removeAttribute("sandbox");
+            } catch (_e) {
+              /* Se non si lascia toccare, la plancia si apre lo stesso. */
+            }
+          }
+          location.replace(dove);
+        }
+
+        /* I tentativi: a distanza crescente, e per sempre. Una pagina appesa
+         * al muro deve tornare da sola quando l'add-on riparte, non aspettare
+         * che qualcuno la tocchi. */
+        var ATTESE = [3000, 5000, 10000, 20000, 30000, 60000];
+        var tentativi = 0;
+        var prossimo = 0;
+
+        function riprova(subito) {
+          if (prossimo) clearTimeout(prossimo);
+          var attesa = subito ? 0 : ATTESE[Math.min(tentativi, ATTESE.length - 1)];
+          tentativi += 1;
+          prossimo = setTimeout(parti, attesa);
+        }
+
+        function male(errore) {
+          var tasto = due("Riprova adesso", "Try again now");
+          if (errore && errore.tipo === "fermo") {
+            scrivi(
+              due("gdahome non è in funzione", "gdahome isn’t running"),
+              due(
+                "La plancia si apre da sola appena l’add-on riparte. Se non riparte, chi amministra la casa lo avvia da Impostazioni → Componenti aggiuntivi → gdahome.",
+                "The dashboard opens by itself as soon as the add-on is running again. If it doesn’t restart, whoever runs the home starts it from Settings → Add-ons → gdahome.",
+              ),
+              tasto,
+            );
+          } else if (errore && errore.tipo === "casa") {
+            scrivi(
+              due("Aspetto Home Assistant…", "Waiting for Home Assistant…"),
+              due(
+                "La plancia si apre appena Home Assistant risponde.",
+                "The dashboard opens as soon as Home Assistant answers.",
+              ),
+              tasto,
+            );
+          } else {
+            scrivi(
+              due("La plancia non si è ancora aperta", "The dashboard hasn’t opened yet"),
+              due(
+                "Riprovo da sola fra qualche secondo. (" + A.perche(errore) + ")",
+                "I’ll try again by myself in a few seconds. (" + A.perche(errore) + ")",
+              ),
+              tasto,
+            );
+          }
+          riprova(false);
+        }
+
+        function parti() {
+          prossimo = 0;
+          ilTema();
+          /* La barra va via **subito**, prima di chiedere qualunque cosa:
+           * sotto c'e' la plancia, e vederla saltare mezzo secondo dopo e'
+           * peggio che non vederla mai. */
+          var riquadro = A.ilRiquadro();
+          if (riquadro) {
+            A.laBarra(riquadro);
+            A.laCornice(riquadro);
+          }
+          A.aspettaLaCasa(15000)
+            .then(function (hass) {
+              var lingua = String(
+                (hass.locale && hass.locale.language) || hass.language || "it",
+              ).toLowerCase();
+              italiano = lingua.indexOf("it") === 0;
+              document.documentElement.lang = italiano ? "it" : "en";
+              var no = laVede(hass);
+              if (no) {
+                nonPerTe(no);
+                return null;
+              }
+              /* Le due domande **insieme**: dov'e' l'add-on e una sessione per
+               * entrarci non si servono a vicenda, e in fila si aspetterebbe la
+               * somma dei due invece del piu' lento. */
+              return Promise.all([doveSta(hass), A.laSessione(hass, document)]).then(
+                function (fatto) {
+                  vai(fatto[0]);
+                  return null;
+                },
+              );
+            })
+            .then(null, male);
+        }
+
+        document.getElementById("riprova").addEventListener("click", function () {
+          riprova(true);
+        });
+
+        parti();
+      })();
+    </script>
+  </body>
+</html>

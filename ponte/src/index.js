@@ -268,6 +268,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     plance,
     www: opzioni.wwwDiCasa,
     versione: opzioni.versione,
+    /* Le voci di chi installa, qui sotto, hanno dentro la tessera
+     * `gdahome-riquadro`: finche' sono accese la risorsa della cartina
+     * serve. La plancia invece non ne ha bisogno (`plance-in-casa.js`). */
+    tessere: Boolean(opzioni.installatore || opzioni.gestore),
     registro,
   });
   plance.quandoCambia = () => planceInCasa.sistema();
