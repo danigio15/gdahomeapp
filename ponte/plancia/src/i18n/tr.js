@@ -11,6 +11,8 @@
  */
 
 export default Object.freeze({
+  "No sensor linked: pick one in Settings › Loads or Appliances.": "Bağlı sensör yok: Ayarlar › Yükler veya Ev aletleri bölümünden birini seçin.",
+  "Reading consumption from Home Assistant…": "Tüketim Home Assistant'tan okunuyor…",
   " — configured": " — yapılandırıldı",
   "${alzate} shutters up": "${alzate} kepenk açık",
   "${righe.length} things are not answering: Home Assistant has them but cannot reach them.":
@@ -721,7 +723,6 @@ export default Object.freeze({
   Boiler: "Boyler",
   "Boiler body": "Kazan gövdesi",
   "Boiler element power (W)": "Kombi rezistansının gücü (W)",
-  "Boiler heater power (W)": "Boyler rezistans gücü (W)",
   "Boiler power": "Boyler gücü",
   "Boiler state": "Kazan durumu",
   "Boiler temperature": "Kazan sıcaklığı",
@@ -2203,31 +2204,6 @@ export default Object.freeze({
   "Save and continue": "Kaydet ve devam et",
   "Leave without saving": "Kaydetmeden çık",
   "Stay here": "Burada kal",
-  "🌡️ Readings": "🌡️ Ölçümler",
-  "🎛️ Buttons": "🎛️ Düğmeler",
-  "Says whether the pump is running: lights the SOLAR PUMP button and makes the pipes flow in the drawing. If the command above already says on or off, use the same entity.":
-    "Pompanın çalışıp çalışmadığını söyler: GÜNEŞ POMPASI düğmesini yakar ve çizimdeki boruları akıtır. Yukarıdaki komut zaten açık/kapalı diyorsa aynı varlığı kullanın.",
-  "Solar pump — command": "Güneş pompası — komut",
-  "Solar pump — running": "Güneş pompası — çalışıyor",
-  "Solar valve (key)": "Güneş vanası (anahtar)",
-  "The BOILER button.": "BOYLER düğmesi.",
-  "The BOILER POWER box.": "BOYLER GÜCÜ kutusu.",
-  "The BOTTOM box next to the tank.": "Deponun yanındaki ALT kutusu.",
-  "The collector temperature, next to the panels in the drawing.":
-    "Kolektör sıcaklığı, çizimde panellerin yanında.",
-  "The CONTROLLER button.": "KONTROL ÜNİTESİ düğmesi.",
-  "The PRESSURE box.": "BASINÇ kutusu.",
-  "The SAFETY V. button: open when its position is above zero.":
-    "EMN. VANASI düğmesi: konumu sıfırın üstündeyse açık.",
-  "The SOLAR CTRL button; when it is on, the panel lights up in the drawing.":
-    "GÜNEŞ KONT. düğmesi; açıkken çizimdeki panel yanar.",
-  "The SOLAR PUMP button: tapping it switches this entity on or off.":
-    "GÜNEŞ POMPASI düğmesi: dokununca bu varlık açılır veya kapanır.",
-  "The SOLAR ΔT box: the gap between collector and tank.":
-    "GÜNEŞ ΔT kutusu: kolektör ile depo arasındaki fark.",
-  "The TOP box next to the tank.": "Deponun yanındaki ÜST kutusu.",
-  "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.":
-    "Çizimdeki VANA düğmesi ve GÜNEŞ ANAHTARI: açık ya da kapalı. Boş kalırsa valve.chiave_solare_termico olur.",
   "Nobody home": "Evde kimse yok",
   "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.":
     "Büyük düğmeler: panodan bir eylem veya herhangi bir varlık (bir sahne, bir betik, bir düğme). Her biri için tabletteki ad, alttaki satır ve çizim.",
@@ -2918,7 +2894,6 @@ export default Object.freeze({
     "Çizim yerine cihazının gerçek fotoğrafı gösterilir.",
   "Rear left": "Arka sol",
   "Rear right": "Arka sağ",
-  "Recirc.": "Sirk.",
   Recirculation: "Sirkülasyon",
   "Recirculation running": "Sirkülasyon çalışıyor",
   "Recirculation solenoid valve": "Sirkülasyon selenoid vanası",
@@ -3041,7 +3016,6 @@ export default Object.freeze({
   SSW: "GGB",
   STANDBY: "BEKLEMEDE",
   "Safety limit": "Güvenlik sınırı",
-  "Safety valve (cover)": "Emniyet vanası (cover)",
   Sand: "Kum",
   Sanitize: "Hijyen",
   Saturation: "Doygunluk",
@@ -3224,10 +3198,7 @@ export default Object.freeze({
   "Soil moisture sensor": "Toprak nemi sensörü",
   Solar: "Güneş",
   "Solar PV and consumption": "Güneş panelleri ve tüketim",
-  "Solar Pump": "Güneş pompası",
-  "Solar Valve": "Güneş vanası",
   "Solar charging": "Güneşle şarj",
-  "Solar collector probe (°C)": "Güneş kolektörü probu (°C)",
   "Solar control": "Güneş kontrolü",
   "Solar panel": "Güneş paneli",
   "Solar power (W)": "Güneş panellerinin gücü (W)",
@@ -3352,8 +3323,6 @@ export default Object.freeze({
   "Taken.": "Üstlenildi artık.",
   Tan: "Bal rengi",
   Tank: "Boyler",
-  "Tank bottom probe (°C)": "Depo alt probu (°C)",
-  "Tank top probe (°C)": "Depo üst probu (°C)",
   "Tap a room: each unit starts with its own steps":
     "Bir odaya dokunun: her ünite kendi adımlarıyla açılır",
   "Tap a sensor": "Bir sensöre dokun",
@@ -3380,7 +3349,6 @@ export default Object.freeze({
   "Temperature 1": "Sıcaklık 1",
   "Temperature 2": "Sıcaklık 2",
   "Temperature and humidity": "Sıcaklık ve nem",
-  "Temperature delta (°C)": "Sıcaklık farkı (°C)",
   "Temperature entity": "Sıcaklık varlığı",
   "Temperature name": "Sıcaklık adı",
   "Temperature rooms": "Sıcaklıklı odalar",
@@ -3941,7 +3909,6 @@ export default Object.freeze({
   "Water leak": "Su kaçağı",
   "Water level": "Su seviyesi",
   "Water now": "Su şimdi",
-  "Water pressure (bar)": "Su basıncı (bar)",
   "Water quality": "Su kalitesi",
   "Water quality · Filtration · Heating": "Su kalitesi · Filtrasyon · Isıtma",
   "Water ready": "Su hazır",
@@ -5629,4 +5596,19 @@ export default Object.freeze({
   "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "Canlı görüntü solda, oklar ve yakınlaştırma sağda, ön ayarlar altta. Her düğme Home Assistant'ta zaten olan bir varlığa basar: kameranın bir düğmesi ya da onvif.ptz içeren bir betik. Varlığı olmayan düğme kapalı kalır.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "Sayfalar solda büyük düğmelerden oluşan bir sütunda, kontrol odası panellerindeki gibi. Yalnızca yatay: dikeyde ve küçük ekranlarda üstteki sekmeler kalır",
   "Zoom": "Yakınlaştırma",
+  "☀️ Panel": "☀️ Kolektör",
+  "🎛️ Controls": "🎛️ Kontroller",
+  "🔁 Circuit": "🔁 Devre",
+  "🛢️ Tank": "🛢️ Boyler",
+  "Power sensor (sensor, W)": "Güç sensörü (sensor, W)",
+  "Pressure sensor (sensor, bar)": "Basınç sensörü (sensor, bar)",
+  "Solar pump (state)": "Güneş pompası (durum)",
+  "Switch to turn on and off (switch or input_boolean)": "Açıp kapatmak için anahtar (switch veya input_boolean)",
+  "Tank bottom": "Boyler alt",
+  "Tank top": "Boyler üst",
+  "Tells whether the pump runs (binary_sensor or switch): makes the light flow in the pipes": "Pompanın çalışıp çalışmadığını söyler (binary_sensor veya switch): borularda ışığı akıtır",
+  "Temperature sensor (sensor, °C)": "Sıcaklık sensörü (sensor, °C)",
+  "Temperature sensor (sensor, °C): panel minus tank": "Sıcaklık sensörü (sensor, °C): kolektör eksi boyler",
+  "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "Vana (valve) veya anahtar (switch); boşsa valve.chiave_solare_termico kullanılır",
+  "Valve with a position (cover): open above zero": "Konumlu vana (cover): sıfırın üstünde açık",
 });

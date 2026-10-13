@@ -64,6 +64,24 @@ test("dentro Home Assistant l'hamburger non apre più il menu della plancia", ()
     assert.match(corpo, /if \(!pDoc\) \{ cdOpenAppMenu\(\); return; \}/, nome);
     /* E il cassetto si chiama come lo chiama Home Assistant. */
     assert.match(corpo, /'hass-toggle-menu'/, nome);
-    assert.match(corpo, /haElement\.dispatchEvent\(toggleEvent\);/, nome);
+    assert.match(corpo, /\(main \|\| haElement\)\.dispatchEvent\(toggleEvent\);/, nome);
+  }
+});
+
+/* «Su Chrome col chiosco i tre trattini non vanno; dall'iPhone si'.» Il
+ * comando partiva due volte — a `home-assistant` e a `home-assistant-main` —
+ * e il chiosco, che a ogni comando si fa da parte o torna sopra, faceva tutte
+ * e due le cose nello stesso istante. */
+test("l'hamburger manda un comando solo, e col chiosco lo chiede aperto", () => {
+  for (const nome of gusci) {
+    const sorgente = leggi(nome);
+    const corpo = sorgente.slice(
+      sorgente.indexOf("function apriMenuLaterale"),
+      sorgente.indexOf("function cdOpenAppMenu"),
+    );
+    const spediti = corpo.match(/\.dispatchEvent\(/g) || [];
+    assert.equal(spediti.length, 1, `${nome}: un tocco, un comando`);
+    assert.match(corpo, /getAttribute\('data-dm-ios-kiosk'\) === 'true'/, nome);
+    assert.match(corpo, /detail: \{ open: true \}/, nome);
   }
 });

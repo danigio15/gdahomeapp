@@ -7,6 +7,7 @@ import {
   isIosDevice,
   kioskHostStyles,
   retrazioneDopo,
+  eUnGestoNuovo,
   kioskValueFromLocation,
   readStoredKiosk,
   isTouchDevice,
@@ -154,6 +155,25 @@ test("l'hamburger fa scendere la plancia e ripremerlo la rimanda su", () => {
   assert.equal(retrazioneDopo(true, "hamburger"), false);
 });
 
+test("il menu chiesto aperto fa scendere la plancia e ce la lascia", () => {
+  /* Col chiosco la plancia chiede il menu aperto: un secondo comando uguale
+   * non deve rimetterla sopra la barra appena scoperta. */
+  assert.equal(retrazioneDopo(false, "hamburger", { apri: true }), true);
+  assert.equal(retrazioneDopo(true, "hamburger", { apri: true }), true);
+});
+
+test("due comandi del menu a un soffio l'uno dall'altro sono un gesto solo", () => {
+  /* «Su Chrome col chiosco i tre trattini non vanno.» Il ☰ mandava due
+   * `hass-toggle-menu` di fila, e il chiosco scendeva e risaliva insieme. */
+  assert.equal(eUnGestoNuovo(0, 1000), true);
+  assert.equal(eUnGestoNuovo(1000, 1001), false);
+  assert.equal(eUnGestoNuovo(1000, 1349), false);
+  assert.equal(eUnGestoNuovo(1000, 1350), true);
+  assert.equal(eUnGestoNuovo(1000, 5000), true);
+  /* Un orologio che torna indietro non deve bloccare il menu per sempre. */
+  assert.equal(eUnGestoNuovo(5000, 1000), true);
+});
+
 test("un tocco sulla plancia la rimanda a tutto schermo", () => {
   assert.equal(retrazioneDopo(true, "plancia"), false);
   assert.equal(retrazioneDopo(false, "plancia"), false);
@@ -233,12 +253,12 @@ test("l'interruttore del chiosco sta in ⚙️ Impostazioni, al suo posto in fil
   const condivise = readFileSync(new URL("../src/sections/shared.js", import.meta.url), "utf8");
   /* Fra la lingua e Assist: l'ordine è un numero che la riga si porta addosso,
    * così chi arriva primo o ultimo non cambia quello che si legge. */
-  assert.match(
-    condivise,
-    /chiosco: 15,/,
-  );
+  assert.match(condivise, /chiosco: 15,/);
   assert.match(chiosco, /const SCHEDA = "visib";/);
-  assert.match(chiosco, /inserisciInOrdine\(corpo, riga, ORDINE_IMPOSTAZIONI\.chiosco, dopoIGenerali\)/);
+  assert.match(
+    chiosco,
+    /inserisciInOrdine\(corpo, riga, ORDINE_IMPOSTAZIONI\.chiosco, dopoIGenerali\)/,
+  );
 });
 
 test("non è un secondo chiosco: è lo stesso, visto da un posto dove si arriva", () => {

@@ -3723,6 +3723,9 @@ const CD_SLOTS = {
         { ref: 'dm.boiler_sonda_temperatura_1', lbl: 'Sonda temperatura 1 (°C)' },
         { ref: 'dm.boiler_sonda_temperatura_2', lbl: 'Sonda temperatura 2 (°C)' },
         { ref: 'dm.boiler_sonda_temperatura_3', lbl: 'Sonda temperatura 3 (°C)' },
+        { ref: 'dm.core_051', lbl: 'Ricircolo' },
+        { ref: 'dm.core_050', lbl: 'PdC' },
+        { ref: 'dm.core_048', lbl: 'Boost' },
     ]},
     security: { label: '🛡️ Sicurezza', slots: [
         { ref: 'dm.security_centrale_allarme', lbl: 'Centrale allarme' },
@@ -4328,10 +4331,20 @@ function apriMenuLaterale() {
     try {
         const vista = pDoc.defaultView || window;
         const HaCustomEvent = vista.CustomEvent || CustomEvent;
-        const toggleEvent = new HaCustomEvent('hass-toggle-menu', { bubbles: true, composed: true });
+        /* Un comando solo, a chi lo ascolta: `home-assistant-main`.
+           Prima partiva due volte — a `home-assistant` e poi a lui — e il
+           chiosco, che conta i comandi del menu per farsi da parte, scendeva
+           e risaliva nello stesso istante: su uno schermo largo la barra
+           laterale restava coperta e i tre trattini non facevano niente.
+           Col chiosco il menu si chiede APERTO: largo, Home Assistant lo
+           allarga invece di stringerlo; stretto apre il cassetto lo stesso. */
+        const chiosco = document.documentElement.getAttribute('data-dm-ios-kiosk') === 'true';
+        const toggleEvent = new HaCustomEvent('hass-toggle-menu', chiosco
+            ? { bubbles: true, composed: true, detail: { open: true } }
+            : { bubbles: true, composed: true });
         const haElement = pDoc.querySelector('home-assistant');
-        haElement.dispatchEvent(toggleEvent);
-        if (haElement.shadowRoot) { const main = haElement.shadowRoot.querySelector('home-assistant-main'); if (main) main.dispatchEvent(toggleEvent); }
+        const main = haElement.shadowRoot ? haElement.shadowRoot.querySelector('home-assistant-main') : null;
+        (main || haElement).dispatchEvent(toggleEvent);
     } catch(err) {
         cdOpenAppMenu();       // qualcosa non si lascia toccare -> menu DM
     }

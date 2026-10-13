@@ -11,6 +11,8 @@
  */
 
 export default Object.freeze({
+  "No sensor linked: pick one in Settings › Loads or Appliances.": "Датчик не привязан: выберите его в Настройки › Нагрузки или Бытовая техника.",
+  "Reading consumption from Home Assistant…": "Читаю потребление из Home Assistant…",
   " — configured": " — настроена",
   "${alzate} shutters up": "Поднято ставен: ${alzate}",
   "${righe.length} things are not answering: Home Assistant has them but cannot reach them.":
@@ -722,7 +724,6 @@ export default Object.freeze({
   Boiler: "Бойлер",
   "Boiler body": "Корпус котла",
   "Boiler element power (W)": "Мощность ТЭНа бойлера (Вт)",
-  "Boiler heater power (W)": "Мощность ТЭНа бойлера (Вт)",
   "Boiler power": "Мощность бойлера",
   "Boiler state": "Состояние котла",
   "Boiler temperature": "Температура котла",
@@ -2210,31 +2211,6 @@ export default Object.freeze({
   "Save and continue": "Сохранить и продолжить",
   "Leave without saving": "Выйти без сохранения",
   "Stay here": "Остаться",
-  "🌡️ Readings": "🌡️ Показания",
-  "🎛️ Buttons": "🎛️ Кнопки",
-  "Says whether the pump is running: lights the SOLAR PUMP button and makes the pipes flow in the drawing. If the command above already says on or off, use the same entity.":
-    "Показывает, работает ли насос: подсвечивает кнопку СОЛ. НАСОС и запускает поток в трубах на схеме. Если команда выше уже показывает вкл. или выкл., укажите ту же сущность.",
-  "Solar pump — command": "Солнечный насос — команда",
-  "Solar pump — running": "Солнечный насос — работает",
-  "Solar valve (key)": "Солнечный клапан (ключ)",
-  "The BOILER button.": "Кнопка БОЙЛЕР.",
-  "The BOILER POWER box.": "Поле МОЩНОСТЬ БОЙЛЕРА.",
-  "The BOTTOM box next to the tank.": "Поле НИЗ рядом с баком.",
-  "The collector temperature, next to the panels in the drawing.":
-    "Температура коллектора, рядом с панелями на схеме.",
-  "The CONTROLLER button.": "Кнопка КОНТРОЛЛЕР.",
-  "The PRESSURE box.": "Поле ДАВЛЕНИЕ.",
-  "The SAFETY V. button: open when its position is above zero.":
-    "Кнопка ПРЕДОХР. КЛ.: открыт, когда положение больше нуля.",
-  "The SOLAR CTRL button; when it is on, the panel lights up in the drawing.":
-    "Кнопка УПР. СОЛНЦЕМ; когда она включена, панель на схеме светится.",
-  "The SOLAR PUMP button: tapping it switches this entity on or off.":
-    "Кнопка СОЛ. НАСОС: нажатие включает или выключает эту сущность.",
-  "The SOLAR ΔT box: the gap between collector and tank.":
-    "Поле СОЛНЕЧНАЯ ΔT: разница между коллектором и баком.",
-  "The TOP box next to the tank.": "Поле ВЕРХ рядом с баком.",
-  "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.":
-    "Кнопка КЛАПАН и СОЛНЕЧНЫЙ КЛЮЧ на схеме: открыт или закрыт. Если пусто — остаётся valve.chiave_solare_termico.",
   "Nobody home": "Никого нет дома",
   "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.":
     "Большие кнопки: действие панели или любая сущность (сцена, скрипт, кнопка). Для каждой — название на планшете, строка снизу и рисунок.",
@@ -2925,7 +2901,6 @@ export default Object.freeze({
     "Реальное фото вашего прибора вместо иллюстрации.",
   "Rear left": "Задний левый",
   "Rear right": "Задний правый",
-  "Recirc.": "Рецирк.",
   Recirculation: "Рециркуляция",
   "Recirculation running": "Рециркуляция работает",
   "Recirculation solenoid valve": "Электроклапан рециркуляции",
@@ -3048,7 +3023,6 @@ export default Object.freeze({
   SSW: "ЮЮЗ",
   STANDBY: "ОЖИДАНИЕ",
   "Safety limit": "Предел безопасности",
-  "Safety valve (cover)": "Предохранительный клапан (cover)",
   Sand: "Песок",
   Sanitize: "Гигиена",
   Saturation: "Насыщенность",
@@ -3232,10 +3206,7 @@ export default Object.freeze({
   "Soil moisture sensor": "Датчик влажности почвы",
   Solar: "Солнце",
   "Solar PV and consumption": "Солнечные панели и потребление",
-  "Solar Pump": "Солнечный насос",
-  "Solar Valve": "Солнечный клапан",
   "Solar charging": "Зарядка от солнца",
-  "Solar collector probe (°C)": "Датчик солнечного коллектора (°C)",
   "Solar control": "Управление солнечным контуром",
   "Solar panel": "Солнечная панель",
   "Solar power (W)": "Мощность солнечных панелей (Вт)",
@@ -3360,8 +3331,6 @@ export default Object.freeze({
   "Taken.": "Взято в работу.",
   Tan: "Смуглый",
   Tank: "Бак",
-  "Tank bottom probe (°C)": "Датчик низа бака (°C)",
-  "Tank top probe (°C)": "Датчик верха бака (°C)",
   "Tap a room: each unit starts with its own steps":
     "Коснитесь комнаты: каждый блок включается своими шагами",
   "Tap a sensor": "Нажмите на датчик",
@@ -3389,7 +3358,6 @@ export default Object.freeze({
   "Temperature 1": "Температура 1",
   "Temperature 2": "Температура 2",
   "Temperature and humidity": "Температура и влажность",
-  "Temperature delta (°C)": "Разница температур (°C)",
   "Temperature entity": "Сущность температуры",
   "Temperature name": "Название температуры",
   "Temperature rooms": "Комнаты с температурой",
@@ -3954,7 +3922,6 @@ export default Object.freeze({
   "Water leak": "Протечка воды",
   "Water level": "Уровень воды",
   "Water now": "Вода сейчас",
-  "Water pressure (bar)": "Давление воды (бар)",
   "Water quality": "Качество воды",
   "Water quality · Filtration · Heating": "Качество воды · Фильтрация · Подогрев",
   "Water ready": "Вода готова",
@@ -5651,4 +5618,19 @@ export default Object.freeze({
   "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "Живое изображение слева, стрелки и зум справа, пресеты снизу. Каждая кнопка нажимает сущность, которая уже есть в Home Assistant: кнопку камеры или скрипт с onvif.ptz. Кнопка без сущности остаётся неактивной.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "Страницы в колонке больших кнопок слева, как на пультах режиссёра. Только в альбомной ориентации: в книжной и на маленьких экранах остаются вкладки сверху",
   "Zoom": "Зум",
+  "☀️ Panel": "☀️ Коллектор",
+  "🎛️ Controls": "🎛️ Управление",
+  "🔁 Circuit": "🔁 Контур",
+  "🛢️ Tank": "🛢️ Бак",
+  "Power sensor (sensor, W)": "Датчик мощности (sensor, W)",
+  "Pressure sensor (sensor, bar)": "Датчик давления (sensor, bar)",
+  "Solar pump (state)": "Солнечный насос (состояние)",
+  "Switch to turn on and off (switch or input_boolean)": "Выключатель для включения и выключения (switch или input_boolean)",
+  "Tank bottom": "Бак, низ",
+  "Tank top": "Бак, верх",
+  "Tells whether the pump runs (binary_sensor or switch): makes the light flow in the pipes": "Показывает, работает ли насос (binary_sensor или switch): пускает свет по трубам",
+  "Temperature sensor (sensor, °C)": "Датчик температуры (sensor, °C)",
+  "Temperature sensor (sensor, °C): panel minus tank": "Датчик температуры (sensor, °C): коллектор минус бак",
+  "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "Клапан (valve) или выключатель (switch); пусто — valve.chiave_solare_termico",
+  "Valve with a position (cover): open above zero": "Клапан с положением (cover): открыт выше нуля",
 });

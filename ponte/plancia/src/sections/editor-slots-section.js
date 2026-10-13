@@ -384,46 +384,35 @@ export function clarifyEntityPlaceholders(scope = doc) {
  * alimenta la lettura del pannello, la seconda il fondo dell'accumulo, la terza
  * la cima. Il riferimento resta quello che e', cambia solo cio' che si legge.
  */
+/* Il solare termico porta i nomi della pagina: ogni casella si chiama come il
+ * riquadro o la pillola che riempie. Qui si guarda il nome di fabbrica, quello
+ * che il guscio stampa da se'; gli altri nomi vecchi li rimette in riga chi
+ * ordina le caselle del solare. Sono gli stessi nomi di `CASELLE_SOLARE`. */
 const SLOT_LABELS = Object.freeze({
-  "dm.boiler_sonda_temperatura_1": [
-    "Sonda pannello solare (°C)",
-    "Solar collector probe (°C)",
-    "Sonda temperatura 1 (°C)",
+  "dm.boiler_sonda_temperatura_1": ["Pannello solare", "Solar panel", "Sonda temperatura 1 (°C)"],
+  "dm.boiler_stato_pompa_solare": ["Pompa solare (stato)", "Solar pump (state)", "Stato pompa solare"],
+  "dm.boiler_delta_temperatura": ["ΔT Solare", "Solar ΔT", "Delta temperatura (°C)"],
+  "dm.boiler_pressione_acqua": ["Pressione", "Pressure", "Pressione acqua (bar)"],
+  "dm.boiler_sonda_temperatura_3": ["Accumulo alto", "Tank top", "Sonda temperatura 3 (°C)"],
+  "dm.boiler_sonda_temperatura_2": ["Accumulo basso", "Tank bottom", "Sonda temperatura 2 (°C)"],
+  "dm.boiler_potenza_resistenza_boiler": [
+    "Potenza Boiler",
+    "Boiler power",
+    "Potenza resistenza boiler (W)",
   ],
-  "dm.boiler_sonda_temperatura_2": [
-    "Sonda accumulo basso (°C)",
-    "Tank bottom probe (°C)",
-    "Sonda temperatura 2 (°C)",
-  ],
-  "dm.boiler_sonda_temperatura_3": [
-    "Sonda accumulo alto (°C)",
-    "Tank top probe (°C)",
-    "Sonda temperatura 3 (°C)",
-  ],
-  /* E i tasti del solare, col nome del tasto che comandano in pagina: «Ctrl
-   * Solare» si chiamava «Interruttore solare termico», e chi guardava la
-   * pagina non poteva sapere che erano la stessa cosa. */
-  "dm.boiler_pompa_solare": [
-    "Pompa solare — comando",
-    "Solar pump — command",
-    "Pompa solare (manuale)",
-  ],
-  "dm.boiler_stato_pompa_solare": [
-    "Pompa solare — se gira",
-    "Solar pump — running",
-    "Stato pompa solare",
-  ],
+  "dm.boiler_pompa_solare": ["Pompa solare", "Solar pump", "Pompa solare (manuale)"],
+  "dm.boiler_centralina_solare_termico": ["Centralina", "Controller", "Centralina solare termico"],
   "dm.boiler_interruttore_solare_termico": [
     "Ctrl Solare",
     "Solar control",
     "Interruttore solare termico",
   ],
-  "dm.boiler_centralina_solare_termico": ["Centralina", "Controller", "Centralina solare termico"],
+  "dm.boiler_chiave_solare": ["Chiave solare", "Solar valve", "Valvola solare (chiave)"],
   "dm.boiler_interruttore_boiler": ["Boiler", "Boiler", "Interruttore boiler"],
-  "dm.boiler_chiave_solare": [
-    "Valvola solare (chiave)",
-    "Solar valve (key)",
-    "Valvola solare (chiave)",
+  "dm.boiler_valvola_di_sicurezza": [
+    "V. sicurezza",
+    "Safety valve",
+    "Valvola di sicurezza (cover)",
   ],
 });
 
