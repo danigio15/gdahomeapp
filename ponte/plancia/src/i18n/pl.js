@@ -3957,8 +3957,6 @@ export default Object.freeze({
   "What it can do": "Co potrafi",
   "What it shows": "Co pokazuje",
   "What the Instant view shows.": "Co pokazuje widok Chwilowe.",
-  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.":
-    "To, co integracja publikuje obok odtwarzacza — wyłącznik telewizora, lista źródeł, scena: encje button.*, select.*, switch.* (oraz input_*, script.*, scene.*). Pojawiają się na kafelku pod przyciskami odtwarzania.",
   "What the tap does": "Co robi dotknięcie",
   "What this unit's button does in the Home climate popup. Empty = leave alone.":
     "Co robi przycisk tej jednostki w oknie Klimat na stronie głównej. Puste = nie ruszać.",
@@ -5038,8 +5036,6 @@ export default Object.freeze({
   "Arrow up": "Strzałka w górę",
   "Asking Home Assistant which integration it is…":
     "Pytam Home Assistant, z której integracji pochodzi…",
-  "Home Assistant doesn't say which integration this remote belongs to: it won't show.":
-    "Home Assistant nie podaje, z której integracji jest ten pilot: nie pojawi się.",
   "Next channel": "Następny kanał",
   "Previous channel": "Poprzedni kanał",
   "Remote control": "Pilot",
@@ -5047,8 +5043,6 @@ export default Object.freeze({
   "TV menu": "Menu telewizora",
   "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.":
     "Strzałki, OK, wstecz, ekran główny i kanały telewizora, pod jego kartą i tylko gdy jest włączony. Potrzebna jest encja remote.* telewizora: Samsung (integracja Samsung Smart TV), Sony Bravia, Philips, Android TV i Google TV, Apple TV, Roku. Telewizory LG webOS jej nie potrzebują.",
-  "The dashboard doesn't know the keys of ${nome}: the remote won't show.":
-    "Panel nie zna przycisków ${nome}: pilot się nie pojawi.",
   "These are in the house — one tap picks it:": "Te są w domu — jedno dotknięcie go wybiera:",
   "Volume down": "Ciszej",
   "Volume up": "Głośniej",
@@ -5591,7 +5585,6 @@ export default Object.freeze({
   "Choose the channels in the config": "Wybierz kanały w konfiguracji",
   "Choose the commands in the config": "Wybierz polecenia w konfiguracji",
   "Control buttons": "Przyciski sterowania",
-  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.": "Każdy kanał to pionowy suwak z wyciszeniem: głośność odtwarzacza albo liczba (number, input_number), jak dB miksera. Wyciszenie to wyciszenie odtwarzacza albo wybrany tu przełącznik: włączony oznacza wyciszony.",
   "Empty: presses every command's stop": "Puste: naciska zatrzymanie każdego polecenia",
   "For example: Microphones": "Na przykład: Mikrofony",
   "For example: Preset 1": "Na przykład: Preset 1",
@@ -5616,7 +5609,6 @@ export default Object.freeze({
   "Side menu": "Menu boczne",
   "Start and shutdown": "Start i wyłączenie",
   "Stop (optional)": "Zatrzymanie (opcjonalnie)",
-  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "Obraz na żywo po lewej, strzałki i zoom po prawej, presety pod spodem. Każdy przycisk naciska encję, która już jest w Home Assistant: przycisk kamery albo skrypt z onvif.ptz. Przycisk bez encji pozostaje nieaktywny.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "Strony w kolumnie dużych przycisków po lewej, jak na pulpitach reżyserskich. Tylko w poziomie: w pionie i na małych ekranach zostają zakładki u góry",
   "Zoom": "Zoom",
   "☀️ Panel": "☀️ Kolektor",
@@ -5634,4 +5626,25 @@ export default Object.freeze({
   "Temperature sensor (sensor, °C): panel minus tank": "Czujnik temperatury (sensor, °C): kolektor minus zasobnik",
   "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "Zawór (valve) lub przełącznik (switch); pusty używa valve.chiave_solare_termico",
   "Valve with a position (cover): open above zero": "Zawór z pozycją (cover): otwarty powyżej zera",
+  "Command": "Polecenie",
+  "▲ command": "Polecenie ▲",
+  "▼ command": "Polecenie ▼",
+  "Start command": "Polecenie startu",
+  "Mute command": "Polecenie wyciszenia",
+  "Stop command": "Polecenie zatrzymania",
+  "The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "Panel nie zna strzałek ${nome}: pilot pojawia się wśród poleceń jako przycisk wł./wył. Jego polecenia dodaje się w «Inne polecenia», jako remote.name:command.",
+  "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "Home Assistant nie mówi, do jakiej integracji należy ten pilot: pojawia się wśród poleceń jako przycisk wł./wył. Jego polecenia dodaje się w «Inne polecenia», jako remote.name:command.",
+  "Device (optional)": "Urządzenie (opcjonalnie)",
+  "Remote device": "Urządzenie pilota",
+  "Optional: the «device» of remote.send_command": "Opcjonalnie: «device» dla remote.send_command",
+  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.": "Obraz na żywo po lewej, strzałki i zoom po prawej, presety pod spodem. Każdy przycisk naciska encję, która już jest w Home Assistant: przycisk kamery, skrypt z onvif.ptz albo pilota (remote) z poleceniem do wysłania. Przycisk bez encji pozostaje wyłączony.",
+  "Read level (optional)": "Odczytany poziom (opcjonalnie)",
+  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.": "Każdy kanał to pionowy suwak z wyciszeniem: głośność odtwarzacza albo liczba (number, input_number) jak dB miksera. Czujnik staje się miernikiem do oglądania; pilot (remote) ma ▲ / ▼ i wyciszenie, każde z własnym poleceniem (remote.send_command). Wyciszenie to wyciszenie odtwarzacza, przełącznik (włączony znaczy wyciszony), pilot albo przycisk do naciśnięcia.",
+  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.": "To, co integracja publikuje obok odtwarzacza — włącznik zasilania telewizora, lista źródeł, scena: encje button.*, select.*, switch.* (oraz input_*, script.*, scene.*). Pilot remote.* włącza się i wyłącza; zapisany jako remote.name:command (na przykład remote.amp:volume_up) wysyła to polecenie. Pojawiają się na karcie pod przyciskami odtwarzania.",
+  "Scale: to": "Skala: do",
+  "Scale: from": "Skala: od",
+  "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.": "Wymagana jest encja button.*, select.*, switch.* lub remote.* (także remote.name:command) — albo input_button, input_select, input_boolean, script, scene.",
+  "A sensor with the level": "Czujnik z poziomem",
+  "Empty: turns on": "Puste: włącza",
+  "Empty: turns off": "Puste: wyłącza",
 });

@@ -499,17 +499,38 @@ const togli = (via, etichetta) =>
 const voce = (etichetta, dentro, entitaQui = false) =>
   `<label class="mu-ed-voce"${entitaQui ? " data-entity-field" : ""}><span${entitaQui ? ' class="ed-slot-lbl"' : ""}>${esc(etichetta)}</span>${dentro}</label>`;
 
-/* Le righe di un canale: dentro un gruppo o il volume totale. */
+/* Le righe di un canale: dentro un gruppo o il volume totale. Un sensore e'
+ * uno strumento (si guarda), un telecomando ha ▲ / ▼ col loro comando; un
+ * canale che si muove puo' avere un sensore che legge il livello vero. */
+const DOMINI_DEL_CANALE = "media_player,number,input_number,sensor,remote";
+const DOMINI_DEL_MUTO = "switch,input_boolean,remote,button,input_button,script";
+const telecomando = (id) => String(id || "").startsWith("remote.");
 function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
   const pieno = Boolean(c?.entita);
+  const sensore = String(c?.entita || "").startsWith("sensor.");
+  const conComandi = pieno && (telecomando(c.entita) || telecomando(c.muto));
+  const comando = (chiave, etichetta, ripiego) =>
+    voce(etichetta, campo(`${via}.${chiave}`, c[chiave] || "", ripiego));
   return `<div class="mu-ed-posto${pieno ? " pieno" : ""}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? `${nomeDi(c.entita)} · ${c.entita}` : t("Nuovo canale", "New channel"))}</b>${pieno && togliVia ? togli(togliVia, t("Togli il canale", "Remove the channel")) : ""}</div>
     <div class="mu-ed-posto-corpo">
-      ${voce(t("Livello", "Level"), cerca(`${via}.entita`, c?.entita || "", { domini: "media_player,number,input_number" }), true)}
+      ${voce(t("Livello", "Level"), cerca(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEL_CANALE }), true)}
       ${
         pieno
           ? `${voce(t("Nome sul tablet", "Name on the tablet"), campo(`${via}.nome`, c.nome || "", nomeDi(c.entita)))}
-      ${voce(t("Muto (facoltativo)", "Mute (optional)"), cerca(`${via}.muto`, c.muto || "", { domini: "switch,input_boolean", segnaposto: t("Acceso = muto", "On = muted") }), true)}`
+      ${
+        telecomando(c.entita)
+          ? `<div class="mu-ed-comandi" data-mu-ed-comandi>${comando("suComando", t("Comando ▲", "▲ command"), "volume_up")}${comando("giuComando", t("Comando ▼", "▼ command"), "volume_down")}</div>`
+          : ""
+      }
+      ${sensore ? "" : voce(t("Livello letto (facoltativo)", "Read level (optional)"), cerca(`${via}.letto`, c.letto || "", { domini: "sensor", segnaposto: t("Un sensore col livello", "A sensor with the level") }), true)}
+      ${sensore || c.letto ? `<div class="mu-ed-comandi">${voce(t("Scala: da", "Scale: from"), campo(`${via}.min`, c.min ?? "", t("Automatica", "Automatic"), "number"))}${voce(t("Scala: a", "Scale: to"), campo(`${via}.max`, c.max ?? "", t("Automatica", "Automatic"), "number"))}</div>` : ""}
+      ${voce(t("Muto (facoltativo)", "Mute (optional)"), cerca(`${via}.muto`, c.muto || "", { domini: DOMINI_DEL_MUTO, segnaposto: t("Acceso = muto", "On = muted") }), true)}
+      ${
+        conComandi
+          ? `<div class="mu-ed-comandi">${comando("mutoComando", t("Comando del muto", "Mute command"), "mute")}${comando("dispositivo", t("Dispositivo (facoltativo)", "Device (optional)"), "")}</div>`
+          : ""
+      }`
           : ""
       }
     </div></div>`;
@@ -536,8 +557,8 @@ function mixerMarkup(p, i) {
     .join("");
   return `<div class="mu-ed-nota">${esc(
     t(
-      "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Il muto è quello del lettore, o un interruttore scelto qui: acceso vuol dire muto.",
-      "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.",
+      "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Un sensore (sensor) diventa uno strumento che si guarda; un telecomando (remote) ha ▲ / ▼ e il muto, ognuno col suo comando (remote.send_command). Il muto è quello del lettore, un interruttore (acceso vuol dire muto), un telecomando o un tasto da premere.",
+      "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.",
     ),
   )}</div>${blocchi}
   ${gruppi.length < GRUPPI_AL_MASSIMO ? `<button type="button" class="ed-btn-add mu-ed-piu" data-mu-ed-aggiungi-voce="${via}.gruppi">＋ ${esc(t("Aggiungi un gruppo", "Add a group"))}</button>` : ""}
@@ -545,21 +566,34 @@ function mixerMarkup(p, i) {
   <div class="mu-ed-posti">${canaleMarkup(`${via}.master`, p.mixer.master, 0)}</div>`;
 }
 
+/* Un tasto da premere che e' un telecomando porta accanto il comando da
+ * mandare: il campo compare quando si sceglie un remote. */
+const DA_PREMERE_O_TELECOMANDO = `${DA_PREMERE},remote`;
+const campoComando = (via, valore, ripiego = "") =>
+  `<span class="mu-ed-comando">${campo(via, valore, ripiego || t("Comando", "Command"))}</span>`;
+
 function telecameraMarkup(p, i) {
   const via = `pagine.${i}.telecamera`;
   const tc = p.telecamera;
-  const tasto = (chiave, titolo, domini = DA_PREMERE) =>
-    riga(titolo, "", cerca(`${via}.${chiave}`, tc[chiave], { domini }));
+  const tasto = (chiave, titolo, domini = DA_PREMERE_O_TELECOMANDO) =>
+    riga(
+      titolo,
+      "",
+      `${cerca(`${via}.${chiave}`, tc[chiave], { domini })}${telecomando(tc[chiave]) ? campoComando(`${via}.${chiave}Comando`, tc[`${chiave}Comando`] || "") : ""}`,
+    );
   const preset = Array.from({ length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) }, (_, k) => {
     const v = tc.preset[k];
     const pieno = Boolean(v?.entita);
     return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? v.nome || nomeDi(v.entita) : t("Nuovo preset", "New preset"))}</b>${pieno ? togli(`${via}.preset.${k}`, t("Togli il preset", "Remove the preset")) : ""}</div>
-      <div class="mu-ed-posto-corpo">${voce(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE }), true)}${pieno ? voce(t("Nome sul tablet", "Name on the tablet"), campo(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
+      <div class="mu-ed-posto-corpo">${voce(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE_O_TELECOMANDO }), true)}${pieno && telecomando(v.entita) ? voce(t("Comando", "Command"), campo(`${via}.preset.${k}.comando`, v.comando || "", `preset_${k + 1}`)) : ""}${pieno ? voce(t("Nome sul tablet", "Name on the tablet"), campo(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
   }).join("");
+  const conTelecomando =
+    ["su", "giu", "sinistra", "destra", "stop", "zoomPiu", "zoomMeno"].some((k) => telecomando(tc[k])) ||
+    tc.preset.some((x) => telecomando(x.entita));
   return `<div class="mu-ed-nota">${esc(
     t(
-      "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera o uno script con onvif.ptz. Un tasto senza entità resta spento.",
-      "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.",
+      "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera, uno script con onvif.ptz, o un telecomando (remote) col comando da mandare. Un tasto senza entità resta spento.",
+      "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.",
     ),
   )}</div>
   ${riga(t("Telecamera", "Camera"), "", cerca(`${via}.entita`, tc.entita, { domini: "camera" }))}
@@ -571,6 +605,7 @@ function telecameraMarkup(p, i) {
   ${riga(t("Zoom", "Zoom"), t("Un numero: diventa un cursore", "A number: it becomes a fader"), cerca(`${via}.zoom`, tc.zoom, { domini: "number,input_number" }))}
   ${tasto("zoomPiu", t("Zoom avanti", "Zoom in"))}
   ${tasto("zoomMeno", t("Zoom indietro", "Zoom out"))}
+  ${conTelecomando ? riga(t("Dispositivo del telecomando", "Remote device"), t("Facoltativo: il «device» di remote.send_command", "Optional: the «device» of remote.send_command"), campo(`${via}.dispositivo`, tc.dispositivo || "", "")) : ""}
   <div class="mu-ed-sotto-titolo">${esc(t("Preset", "Presets"))}</div>
   <div class="mu-ed-posti">${preset}</div>`;
 }
@@ -586,10 +621,13 @@ function comandiMarkup(p, i) {
       return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? c.nome || nomeDi(c.avvio || c.stop) : t("Nuovo comando", "New command"))}</b>${pieno ? togli(v, t("Togli il comando", "Remove the command")) : ""}</div>
       <div class="mu-ed-posto-corpo">
         ${voce(t("Nome sul tablet", "Name on the tablet"), campo(`${v}.nome`, c?.nome || "", t("Per esempio: Avvio", "For example: Start")))}
-        ${voce(t("Avvio", "Start"), cerca(`${v}.avvio`, c?.avvio || "", { domini: `${DA_PREMERE},switch,input_boolean` }), true)}
+        ${voce(t("Avvio", "Start"), cerca(`${v}.avvio`, c?.avvio || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
+        ${pieno && telecomando(c.avvio) ? voce(t("Comando d'avvio", "Start command"), campo(`${v}.avvioComando`, c.avvioComando || "", t("Vuoto: accende", "Empty: turns on"))) : ""}
         ${
           pieno
-            ? `${voce(t("Stop (facoltativo)", "Stop (optional)"), cerca(`${v}.stop`, c.stop || "", { domini: `${DA_PREMERE},switch,input_boolean` }), true)}
+            ? `${voce(t("Stop (facoltativo)", "Stop (optional)"), cerca(`${v}.stop`, c.stop || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
+        ${telecomando(c.stop) ? voce(t("Comando di stop", "Stop command"), campo(`${v}.stopComando`, c.stopComando || "", t("Vuoto: spegne", "Empty: turns off"))) : ""}
+        ${telecomando(c.avvio) || telecomando(c.stop) ? voce(t("Dispositivo (facoltativo)", "Device (optional)"), campo(`${v}.dispositivo`, c.dispositivo || "", "")) : ""}
         ${voce(t("Stato (facoltativo)", "State (optional)"), cerca(`${v}.stato`, c.stato || "", { domini: "switch,input_boolean,binary_sensor,script,media_player", segnaposto: t("Acceso quando è acceso", "On when it's on") }), true)}
         ${voce(t("Disegno", "Drawing"), tendina(`${v}.disegno`, c.disegno || "", DISEGNI(), null))}
         ${voce(t("Colore", "Colour"), colori(`${v}.colore`, c.colore))}`
@@ -604,7 +642,7 @@ function comandiMarkup(p, i) {
       "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.",
     ),
   )}</div><div class="mu-ed-posti">${voci}</div>
-  ${riga(t("Tasto «Ferma tutto»", "«Stop all» button"), t("Vuoto: preme lo stop di ogni comando", "Empty: presses every command's stop"), `${p.fermaTutto.attivo ? cerca(`${via}.fermaTutto.entita`, p.fermaTutto.entita, { domini: DA_PREMERE }) : ""}${interruttore(`${via}.fermaTutto.attivo`, p.fermaTutto.attivo, "ferma-tutto")}`)}`;
+  ${riga(t("Tasto «Ferma tutto»", "«Stop all» button"), t("Vuoto: preme lo stop di ogni comando", "Empty: presses every command's stop"), `${p.fermaTutto.attivo ? cerca(`${via}.fermaTutto.entita`, p.fermaTutto.entita, { domini: DA_PREMERE_O_TELECOMANDO }) : ""}${p.fermaTutto.attivo && telecomando(p.fermaTutto.entita) ? campoComando(`${via}.fermaTutto.comando`, p.fermaTutto.comando || "", t("Vuoto: spegne", "Empty: turns off")) : ""}${interruttore(`${via}.fermaTutto.attivo`, p.fermaTutto.attivo, "ferma-tutto")}`)}`;
 }
 
 /* Le pagine che la griglia non la scelgono: l'ingresso ha la sua forma,
@@ -1002,7 +1040,9 @@ function metti(via, valore) {
   });
   if (!dove) return;
   const ultimo = pezzi.at(-1);
-  dove[ultimo] = typeof dove[ultimo] === "number" ? Number(valore) : valore;
+  /* Un numero svuotato resta vuoto (la scala «automatica»), non diventa zero. */
+  dove[ultimo] =
+    typeof dove[ultimo] === "number" && String(valore).trim() !== "" ? Number(valore) : valore;
   /* Un sensore scelto per il risveglio lo accende; il PIN scritto, il blocco. */
   if (via === "risveglio.entita" && valore) m.risveglio.attivo = true;
   if (via === "fonte") state.fonte = null;
@@ -1158,7 +1198,8 @@ function onChange(event) {
   if (event.type === "change" && !SCRITTE.test(via)) ridisegna();
   else dopoUnaScritta();
 }
-const SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin)$/;
+const SCRITTE =
+  /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin|Comando|\.comando|\.dispositivo|\.min|\.max)$/;
 
 /* Le scritte non ridisegnano la scheda, ma l'anteprima e l'avviso «non
  * salvate» si': sono fuori dai campi, e non rubano il tocco a nessuno. */
@@ -1252,6 +1293,9 @@ html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}
 #ed-body .mu-ed-voce{display:grid;gap:4px;min-width:0}
 #ed-body .mu-ed-voce>span{font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
 #ed-body .mu-ed-voce .ed-input{margin:0;width:100%;max-width:none;min-width:0}
+#ed-body .mu-ed-comandi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px 12px;min-width:0}
+#ed-body .mu-ed-comando{display:block;margin-top:6px}
+#ed-body .mu-ed-comando .ed-input{margin:0;width:100%;max-width:none}
 #ed-body .mu-ed-cerca{display:flex;gap:6px;align-items:center;min-width:0}
 #ed-body .mu-ed-cerca .ed-input{flex:1;min-width:0;margin:0}
 #ed-body .mu-ed-dx .mu-ed-cerca{min-width:220px;max-width:340px;flex:1}

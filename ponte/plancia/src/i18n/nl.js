@@ -3962,8 +3962,6 @@ export default Object.freeze({
   "What it can do": "Wat hij kan",
   "What it shows": "Wat hij toont",
   "What the Instant view shows.": "Wat de weergave Momenteel toont.",
-  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.":
-    "Wat de integratie naast de speler publiceert — de aan-uitschakelaar van een tv, de bronkeuze, een scène: entiteiten button.*, select.*, switch.* (plus input_*, script.*, scene.*). Ze verschijnen op de tegel onder de afspeelknoppen.",
   "What the tap does": "Wat de tik doet",
   "What this unit's button does in the Home climate popup. Empty = leave alone.":
     "Wat de knop van deze unit doet in de Klimaat-popup van Home. Leeg = niet aanraken.",
@@ -5041,8 +5039,6 @@ export default Object.freeze({
   "Arrow up": "Pijl omhoog",
   "Asking Home Assistant which integration it is…":
     "Ik vraag Home Assistant van welke integratie het is…",
-  "Home Assistant doesn't say which integration this remote belongs to: it won't show.":
-    "Home Assistant zegt niet bij welke integratie deze afstandsbediening hoort: hij verschijnt niet.",
   "Next channel": "Volgende zender",
   "Previous channel": "Vorige zender",
   "Remote control": "Afstandsbediening",
@@ -5050,8 +5046,6 @@ export default Object.freeze({
   "TV menu": "Tv-menu",
   "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.":
     "De pijltjes, OK, terug, het startscherm en de zenders van de tv, onder zijn kaart en alleen als de tv aan staat. Er is de remote.*-entiteit van de tv voor nodig: Samsung (integratie Samsung Smart TV), Sony Bravia, Philips, Android TV en Google TV, Apple TV, Roku. LG webOS-tv's hebben hem niet nodig.",
-  "The dashboard doesn't know the keys of ${nome}: the remote won't show.":
-    "Het dashboard kent de toetsen van ${nome} niet: de afstandsbediening verschijnt niet.",
   "These are in the house — one tap picks it:": "Deze zijn er in huis — één tik kiest hem:",
   "Volume down": "Zachter",
   "Volume up": "Harder",
@@ -5594,7 +5588,6 @@ export default Object.freeze({
   "Choose the channels in the config": "Kies de kanalen in de configuratie",
   "Choose the commands in the config": "Kies de opdrachten in de configuratie",
   "Control buttons": "Bedieningsknoppen",
-  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.": "Elk kanaal is een staande fader met zijn demping: het volume van een speler, of een getal (number, input_number) zoals de dB van een mengpaneel. Dempen is dat van de speler, of een hier gekozen schakelaar: aan betekent gedempt.",
   "Empty: presses every command's stop": "Leeg: drukt de stop van elke opdracht",
   "For example: Microphones": "Bijvoorbeeld: Microfoons",
   "For example: Preset 1": "Bijvoorbeeld: Preset 1",
@@ -5619,7 +5612,6 @@ export default Object.freeze({
   "Side menu": "Zijmenu",
   "Start and shutdown": "Start en afsluiten",
   "Stop (optional)": "Stop (optioneel)",
-  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "Het live beeld links, pijlen en zoom rechts, presets eronder. Elke knop drukt een entiteit die al in Home Assistant staat: een cameraknop of een script met onvif.ptz. Een knop zonder entiteit blijft uit.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "De pagina's in een kolom met grote knoppen links, zoals op regiepanelen. Alleen liggend: staand en op kleine schermen blijven de tabbladen bovenaan",
   "Zoom": "Zoom",
   "☀️ Panel": "☀️ Paneel",
@@ -5637,4 +5629,25 @@ export default Object.freeze({
   "Temperature sensor (sensor, °C): panel minus tank": "Temperatuursensor (sensor, °C): paneel min boilervat",
   "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "Klep (valve) of schakelaar (switch); leeg gebruikt valve.chiave_solare_termico",
   "Valve with a position (cover): open above zero": "Klep met positie (cover): open boven nul",
+  "Command": "Commando",
+  "▲ command": "▲-commando",
+  "▼ command": "▼-commando",
+  "Start command": "Startcommando",
+  "Mute command": "Dempcommando",
+  "Stop command": "Stopcommando",
+  "The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "Het dashboard kent de pijlen van ${nome} niet: de afstandsbediening verschijnt bij de commando's als aan/uit-knop. Haar commando's voeg je toe bij «Andere commando's», als remote.name:command.",
+  "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "Home Assistant zegt niet bij welke integratie deze afstandsbediening hoort: ze verschijnt bij de commando's als aan/uit-knop. Haar commando's voeg je toe bij «Andere commando's», als remote.name:command.",
+  "Device (optional)": "Apparaat (optioneel)",
+  "Remote device": "Apparaat van de afstandsbediening",
+  "Optional: the «device» of remote.send_command": "Optioneel: het «device» van remote.send_command",
+  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.": "Het livebeeld links, de pijlen en zoom rechts, de presets eronder. Elke knop drukt op een entiteit die al in Home Assistant bestaat: een knop van de camera, een script met onvif.ptz, of een afstandsbediening (remote) met het commando om te sturen. Een knop zonder entiteit blijft uit.",
+  "Read level (optional)": "Gelezen niveau (optioneel)",
+  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.": "Elk kanaal is een staande fader met zijn demping: het volume van een speler, of een getal (number, input_number) zoals de dB van een mengpaneel. Een sensor wordt een meter om af te lezen; een afstandsbediening (remote) krijgt ▲ / ▼ en dempen, elk met een eigen commando (remote.send_command). Dempen is dat van de speler, een schakelaar (aan betekent gedempt), een afstandsbediening of een knop om in te drukken.",
+  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.": "Wat de integratie naast de speler publiceert — de aan/uit-schakelaar van een tv, de bronkeuze, een scène: entiteiten button.*, select.*, switch.* (plus input_*, script.*, scene.*). Een afstandsbediening remote.* gaat aan en uit; geschreven als remote.name:command (bijvoorbeeld remote.amp:volume_up) stuurt ze dat commando. Ze verschijnen op de kaart onder de afspeelknoppen.",
+  "Scale: to": "Schaal: tot",
+  "Scale: from": "Schaal: van",
+  "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.": "Een entiteit button.*, select.*, switch.* of remote.* is nodig (ook remote.name:command) — of input_button, input_select, input_boolean, script, scene.",
+  "A sensor with the level": "Een sensor met het niveau",
+  "Empty: turns on": "Leeg: zet aan",
+  "Empty: turns off": "Leeg: zet uit",
 });

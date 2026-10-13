@@ -3916,8 +3916,6 @@ export default Object.freeze({
   "What it can do": "ما يستطيع فعله",
   "What it shows": "ما تعرضه",
   "What the Instant view shows.": "ما يعرضه العرض اللحظي.",
-  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.":
-    "ما ينشره التكامل بجانب المشغّل — مفتاح تشغيل التلفاز، قائمة المصدر، مشهد: كيانات button.* وselect.* وswitch.* (وكذلك input_* وscript.* وscene.*). تظهر في البطاقة تحت أزرار التشغيل.",
   "What the tap does": "ما الذي تفعله اللمسة",
   "What this unit's button does in the Home climate popup. Empty = leave alone.":
     "ما يفعله زر هذه الوحدة في نافذة المناخ بالصفحة الرئيسية. فارغ = لا تلمس.",
@@ -4990,8 +4988,6 @@ export default Object.freeze({
   "Arrow up": "سهم لأعلى",
   "Asking Home Assistant which integration it is…":
     "أسأل Home Assistant عن التكامل الذي ينتمي إليه…",
-  "Home Assistant doesn't say which integration this remote belongs to: it won't show.":
-    "لا يذكر Home Assistant التكامل الذي ينتمي إليه جهاز التحكم هذا: لن يظهر.",
   "Next channel": "القناة التالية",
   "Previous channel": "القناة السابقة",
   "Remote control": "جهاز التحكم عن بُعد",
@@ -4999,8 +4995,6 @@ export default Object.freeze({
   "TV menu": "قائمة التلفاز",
   "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.":
     "أسهم التلفاز وOK والرجوع والشاشة الرئيسية والقنوات، أسفل بطاقته وفقط عندما يكون قيد التشغيل. يلزم كيان remote.* الخاص بالتلفاز: Samsung (تكامل Samsung Smart TV) وSony Bravia وPhilips وAndroid TV وGoogle TV وApple TV وRoku. أجهزة LG webOS لا تحتاج إليه.",
-  "The dashboard doesn't know the keys of ${nome}: the remote won't show.":
-    "لا تعرف اللوحة أزرار ${nome}: لن يظهر جهاز التحكم.",
   "These are in the house — one tap picks it:": "هذه موجودة في المنزل — لمسة واحدة تختاره:",
   "Volume down": "خفض الصوت",
   "Volume up": "رفع الصوت",
@@ -5535,7 +5529,6 @@ export default Object.freeze({
   "Choose the channels in the config": "اختر القنوات في الإعدادات",
   "Choose the commands in the config": "اختر الأوامر في الإعدادات",
   "Control buttons": "أزرار التحكم",
-  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.": "كل قناة منزلق عمودي مع كتم الصوت: مستوى صوت مشغّل، أو رقم (number، input_number) مثل الديسيبل في المازج. الكتم هو كتم المشغّل نفسه، أو مفتاح يُختار هنا: التشغيل يعني الكتم.",
   "Empty: presses every command's stop": "فارغ: يضغط إيقاف كل أمر",
   "For example: Microphones": "مثلًا: الميكروفونات",
   "For example: Preset 1": "مثلًا: الإعداد المسبق 1",
@@ -5560,7 +5553,6 @@ export default Object.freeze({
   "Side menu": "قائمة جانبية",
   "Start and shutdown": "التشغيل والإطفاء",
   "Stop (optional)": "إيقاف (اختياري)",
-  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "الصورة المباشرة على اليسار، والأسهم والتكبير على اليمين، والإعدادات المسبقة في الأسفل. كل زر يضغط كيانًا موجودًا بالفعل في Home Assistant: زر الكاميرا أو سكربت يحتوي على onvif.ptz. الزر بلا كيان يبقى معطّلًا.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "الصفحات في عمود من الأزرار الكبيرة على اليسار، كما في لوحات غرف التحكم. في الوضع الأفقي فقط: في الوضع العمودي وعلى الشاشات الصغيرة تبقى علامات التبويب في الأعلى",
   "Zoom": "تكبير",
   "☀️ Panel": "☀️ اللوح",
@@ -5578,4 +5570,25 @@ export default Object.freeze({
   "Temperature sensor (sensor, °C): panel minus tank": "حساس الحرارة (sensor، °C): اللوح ناقص الخزّان",
   "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "صمام (valve) أو مفتاح (switch)؛ إن تُرك فارغًا يُستخدم valve.chiave_solare_termico",
   "Valve with a position (cover): open above zero": "صمام بموضع (cover): مفتوح فوق الصفر",
+  "Command": "أمر",
+  "▲ command": "أمر ▲",
+  "▼ command": "أمر ▼",
+  "Start command": "أمر التشغيل",
+  "Mute command": "أمر الكتم",
+  "Stop command": "أمر الإيقاف",
+  "The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "لا تعرف اللوحة أسهم ${nome}: يظهر جهاز التحكم بين الأوامر كزر تشغيل/إيقاف. تُضاف أوامره في «أوامر أخرى» بصيغة remote.name:command.",
+  "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "لا يذكر Home Assistant إلى أي تكامل ينتمي جهاز التحكم هذا: يظهر بين الأوامر كزر تشغيل/إيقاف. تُضاف أوامره في «أوامر أخرى» بصيغة remote.name:command.",
+  "Device (optional)": "الجهاز (اختياري)",
+  "Remote device": "جهاز التحكم",
+  "Optional: the «device» of remote.send_command": "اختياري: «device» الخاص بـ remote.send_command",
+  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.": "الصورة المباشرة على اليسار، والأسهم والتكبير على اليمين، والإعدادات المسبقة في الأسفل. كل زر يضغط كيانًا موجودًا في Home Assistant: زر الكاميرا، أو سكربت مع onvif.ptz، أو جهاز تحكم (remote) مع الأمر المراد إرساله. الزر بلا كيان يبقى معطّلًا.",
+  "Read level (optional)": "المستوى المقروء (اختياري)",
+  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.": "كل قناة منزلق عمودي مع كتمه: مستوى صوت مشغّل، أو رقم (number, input_number) مثل ديسيبل جهاز المزج. يصبح المستشعر مقياسًا يُنظر إليه؛ وجهاز التحكم (remote) له ▲ / ▼ والكتم، ولكل منها أمره (remote.send_command). الكتم هو كتم المشغّل، أو مفتاح (التشغيل يعني الكتم)، أو جهاز تحكم، أو زر يُضغط.",
+  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.": "ما ينشره التكامل بجانب المشغّل — مفتاح تشغيل التلفاز، قائمة المصادر، مشهد: كيانات button.* وselect.* وswitch.* (إضافة إلى input_* وscript.* وscene.*). جهاز التحكم remote.* يُشغَّل ويُطفأ؛ وإذا كُتب remote.name:command (مثل remote.amp:volume_up) يرسل ذلك الأمر. تظهر على البطاقة تحت أزرار التشغيل.",
+  "Scale: to": "المقياس: إلى",
+  "Scale: from": "المقياس: من",
+  "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.": "يلزم كيان button.* أو select.* أو switch.* أو remote.* (وأيضًا remote.name:command) — أو input_button أو input_select أو input_boolean أو script أو scene.",
+  "A sensor with the level": "مستشعر يقرأ المستوى",
+  "Empty: turns on": "فارغ: يُشغّل",
+  "Empty: turns off": "فارغ: يُطفئ",
 });

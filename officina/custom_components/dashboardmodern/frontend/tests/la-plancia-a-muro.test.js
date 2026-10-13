@@ -528,13 +528,32 @@ test("la pagina Musica prende i lettori della plancia, o quelli scelti", async (
     ...VALORI,
     cd_media_player: JSON.stringify([
       { entity: "media_player.sonos_cucina", nome: "Cucina" },
-      { entity: "media_player.tv_sala" },
+      {
+        entity: "media_player.tv_sala",
+        telecomando: "remote.tv_sala",
+        comandi: ["remote.ampli", "remote.ampli:volume_up", "sensor.non_e_un_comando"],
+        letture: ["sensor.tv_sala_canale", "button.non_e_una_lettura"],
+      },
       { nome: "senza entita'" },
     ]),
   });
+  /* Le altre letture, il telecomando e i comandi dei telecomandi arrivano al
+   * tablet: «i remote. e i sensor. li aggiungi nel config, ma non compaiono». */
   assert.deepEqual(fonte.lettori, [
-    { entity: "media_player.sonos_cucina", nome: "Cucina", comandi: [] },
-    { entity: "media_player.tv_sala", nome: "", comandi: [] },
+    {
+      entity: "media_player.sonos_cucina",
+      nome: "Cucina",
+      comandi: [],
+      letture: [],
+      telecomando: "",
+    },
+    {
+      entity: "media_player.tv_sala",
+      nome: "",
+      comandi: ["remote.ampli", "remote.ampli:volume_up"],
+      letture: ["sensor.tv_sala_canale"],
+      telecomando: "remote.tv_sala",
+    },
   ]);
   const pagina = muroPulito({ pagine: [{ modello: "musica" }] }).pagine[0];
   assert.deepEqual(
@@ -655,8 +674,12 @@ test("la temperatura mostrata e' quella del meteo, o quella di casa", () => {
 
 /* ── la regia: mixer, telecamera, comandi ───────────────────────────────── */
 import {
+  CANALE_VUOTO,
   chiamateDelFermaTutto,
+  comandoAlTelecomando,
   gruppiDelMixer,
+  pulsanteDiceLoStato,
+  servizioDelPasso,
   letturaDelCanale,
   menuDiLato,
   paginaPulita,
@@ -690,18 +713,19 @@ test("il mixer tiene solo canali con un livello, e i muti che sono interruttori"
         },
         { nome: "Vuoto" },
       ],
-      master: "sensor.non_va",
+      master: "camera.non_va",
     },
   });
   assert.equal(p.modello, "mixer");
+  const c = (fuori) => ({ ...CANALE_VUOTO, ...fuori });
   assert.deepEqual(p.mixer.gruppi[0].canali, [
-    { entita: "number.mic_1", nome: "", muto: "" },
-    { entita: "media_player.sala", nome: "Sala", muto: "" },
-    { entita: "input_number.aux", nome: "", muto: "switch.aux_muto" },
+    c({ entita: "number.mic_1" }),
+    c({ entita: "media_player.sala", nome: "Sala" }),
+    c({ entita: "input_number.aux", muto: "switch.aux_muto" }),
   ]);
   assert.equal(p.mixer.gruppi[0].colore, "", "un colore sbagliato torna quello del posto");
   assert.equal(p.mixer.gruppi.length, 2, "un gruppo appena nato resta nel config");
-  assert.deepEqual(p.mixer.master, { entita: "", nome: "", muto: "" });
+  assert.deepEqual(p.mixer.master, CANALE_VUOTO);
   /* Sul tablet il gruppo vuoto non c'e', e i colori seguono il posto. */
   const g = gruppiDelMixer(p);
   assert.equal(g.length, 1);
@@ -799,6 +823,10 @@ test("la telecamera preme le entita' scelte, e un tasto senza entita' non fa nie
       su: "button.ptz_su",
       sinistra: "script.ptz_sinistra",
       giu: "sensor.non_si_preme",
+      destra: "remote.ptz",
+      destraComando: "pan_right",
+      stop: "remote.ptz",
+      dispositivo: "Telecamera sala",
       zoom: "number.zoom",
       zoomPiu: "scene.no_zoom",
       preset: [{ entita: "button.home", nome: "HOME" }, { entita: "" }, "x"],
@@ -806,7 +834,7 @@ test("la telecamera preme le entita' scelte, e un tasto senza entita' non fa nie
   });
   assert.equal(p.telecamera.giu, "");
   assert.equal(p.telecamera.zoom, "number.zoom");
-  assert.deepEqual(p.telecamera.preset, [{ entita: "button.home", nome: "HOME" }]);
+  assert.deepEqual(p.telecamera.preset, [{ entita: "button.home", nome: "HOME", comando: "" }]);
   assert.deepEqual(servizioDellaTelecamera(p.telecamera, "su"), {
     domain: "button",
     service: "press",
@@ -814,6 +842,13 @@ test("la telecamera preme le entita' scelte, e un tasto senza entita' non fa nie
   });
   assert.equal(servizioDellaTelecamera(p.telecamera, "sinistra").service, "turn_on");
   assert.equal(servizioDellaTelecamera(p.telecamera, "giu"), null);
+  /* Un telecomando manda il comando scritto, o quello di sempre. */
+  assert.deepEqual(servizioDellaTelecamera(p.telecamera, "destra"), {
+    domain: "remote",
+    service: "send_command",
+    data: { entity_id: "remote.ptz", command: "pan_right", device: "Telecamera sala" },
+  });
+  assert.equal(servizioDellaTelecamera(p.telecamera, "stop").data.command, "stop");
   assert.equal(servizioDaPremere("automation.x").service, "trigger");
   assert.equal(
     nuovaPagina("telecamera", { telecamere: [{ entity: "camera.cancello" }] }).telecamera.entita,
@@ -878,4 +913,120 @@ test("il menu di lato c'e' solo in orizzontale sul tablet vero", () => {
   assert.equal(menuDiLato(muro, "verticale", false), false);
   assert.equal(menuDiLato(muro, "orizzontale", true), false);
   assert.equal(menuDiLato(muroPulito({}), "orizzontale", false), false);
+});
+
+test("il mixer prende anche i sensori (si guardano) e i telecomandi (▲ ▼ e muto)", () => {
+  const p = paginaPulita({
+    modello: "mixer",
+    mixer: {
+      gruppi: [
+        {
+          canali: [
+            { entita: "sensor.uscita_sala", muto: "switch.sala_muto", letto: "sensor.altro" },
+            { entita: "remote.amplificatore", suComando: "VOL+", dispositivo: "Ampli" },
+            { entita: "number.mic_1", letto: "sensor.mic_1_livello", muto: "button.mic_1_muto" },
+            { entita: "media_player.sala", muto: "remote.sala_ir", mutoComando: "" },
+          ],
+        },
+      ],
+      master: { entita: "remote.amplificatore", min: "-80", max: "x" },
+    },
+  });
+  const [uscita, ampli, mic, sala] = p.mixer.gruppi[0].canali;
+  assert.equal(uscita.letto, "", "un sensore e' gia' il suo livello");
+  assert.equal(uscita.muto, "switch.sala_muto");
+  assert.deepEqual(
+    [ampli.suComando, ampli.giuComando, ampli.mutoComando, ampli.dispositivo],
+    ["VOL+", "volume_down", "mute", "Ampli"],
+  );
+  assert.equal(mic.letto, "sensor.mic_1_livello");
+  assert.equal(mic.muto, "button.mic_1_muto");
+  assert.equal(sala.mutoComando, "mute", "il muto che e' un telecomando ha il suo comando");
+  assert.equal(p.mixer.master.entita, "remote.amplificatore");
+  assert.equal(p.mixer.master.min, null, "la scala vale solo per i sensori");
+  assert.deepEqual(paginaPulita(JSON.parse(JSON.stringify(p))), p, "si rilegge uguale");
+
+  const stati = {
+    "sensor.uscita_sala": { state: "-18", attributes: { unit_of_measurement: "dB" } },
+    "switch.sala_muto": { state: "on" },
+    "remote.amplificatore": { state: "on" },
+    "number.mic_1": { state: "-10", attributes: DB },
+    "sensor.mic_1_livello": { state: "-24.5", attributes: { unit_of_measurement: "dB" } },
+    "media_player.sala": { state: "on", attributes: { volume_level: 0.5 } },
+  };
+  /* Il sensore: si guarda, da -60 a +12 dB, e il cursore non si tocca. */
+  const lu = letturaDelCanale(uscita, stati);
+  assert.equal(lu.tipo, "misura");
+  assert.equal(lu.muove, false);
+  assert.equal(lu.valore, -18);
+  assert.ok(Math.abs(lu.posizione - 42 / 72) < 1e-9);
+  assert.equal(lu.mutato, true);
+  assert.equal(servizioDelFader(uscita, 0.5, lu), null, "un sensore non si muove");
+  assert.equal(servizioDelMuto(uscita, lu).service, "turn_off");
+  /* Una scala scritta nel config vince su quella dell'unita'. */
+  assert.equal(letturaDelCanale({ ...uscita, min: -40, max: 0 }, stati).posizione, 22 / 40);
+
+  /* Il telecomando: ▲ ▼ e il muto mandano il loro comando. */
+  const la = letturaDelCanale(ampli, stati);
+  assert.equal(la.tipo, "telecomando");
+  assert.equal(la.passi, true);
+  assert.equal(la.puoMuto, true);
+  assert.equal(la.mutoSaDire, false, "un comando non dice se e' muto");
+  assert.deepEqual(servizioDelPasso(ampli, "su"), {
+    domain: "remote",
+    service: "send_command",
+    data: { entity_id: "remote.amplificatore", command: "VOL+", device: "Ampli" },
+  });
+  assert.equal(servizioDelPasso(ampli, "giu").data.command, "volume_down");
+  assert.equal(servizioDelMuto(ampli, la).data.command, "mute");
+  assert.equal(servizioDelPasso(mic, "su"), null);
+
+  /* Il numero col suo sensore: si muove lui, e sotto c'e' quello che legge. */
+  const lm = letturaDelCanale(mic, stati);
+  assert.equal(lm.muove, true);
+  assert.equal(lm.misura.valore, -24.5);
+  assert.equal(lm.misura.min, -60, "nella stessa unita' ha la scala del numero");
+  assert.equal(lm.misura.max, 10);
+  assert.deepEqual(servizioDelMuto(mic, lm), {
+    domain: "button",
+    service: "press",
+    data: { entity_id: "button.mic_1_muto" },
+  });
+  /* Il lettore col muto di un telecomando IR. */
+  const ls = letturaDelCanale(sala, stati);
+  assert.deepEqual(servizioDelMuto(sala, ls), {
+    domain: "remote",
+    service: "send_command",
+    data: { entity_id: "remote.sala_ir", command: "mute" },
+  });
+  assert.equal(comandoAlTelecomando("switch.no", "x"), null);
+});
+
+test("i comandi prendono anche un telecomando: col comando lo manda, senza si accende e si spegne", () => {
+  const p = paginaPulita({
+    modello: "comandi",
+    pulsanti: [
+      { nome: "AV", avvio: "remote.sala", avvioComando: "power_on", stop: "remote.sala", stopComando: "power_off", dispositivo: "TV" },
+      { nome: "Ampli", avvio: "remote.ampli" },
+      { nome: "Muro", avvio: "remote.muro", avvioComando: "PLAY", stop: "remote.muro" },
+    ],
+    fermaTutto: { attivo: true, entita: "remote.tutto" },
+  });
+  const [av, ampli, muro] = pulsantiDellaPagina(p);
+  assert.deepEqual(servizioDelPulsante(av, "avvio", {}), {
+    domain: "remote",
+    service: "send_command",
+    data: { entity_id: "remote.sala", command: "power_on", device: "TV" },
+  });
+  assert.equal(servizioDelPulsante(av, "stop", {}).data.command, "power_off");
+  const stati = { "remote.ampli": { state: "on" }, "remote.muro": { state: "on" } };
+  assert.equal(servizioDelPulsante(ampli, "avvio", stati).service, "turn_off", "si alterna");
+  assert.equal(servizioDelPulsante(ampli, "avvio", {}).service, "turn_on");
+  assert.equal(pulsanteDiceLoStato(ampli), true);
+  assert.equal(pulsanteDiceLoStato(av), false);
+  assert.equal(pulsanteAcceso(muro, stati), false, "un comando mandato non resta acceso");
+  assert.equal(servizioDelPulsante(muro, "stop", {}).service, "turn_off");
+  assert.deepEqual(chiamateDelFermaTutto(p), [
+    { domain: "remote", service: "turn_off", data: { entity_id: "remote.tutto" } },
+  ]);
 });

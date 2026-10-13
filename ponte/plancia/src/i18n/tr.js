@@ -3945,8 +3945,6 @@ export default Object.freeze({
   "What it can do": "Neler yapabilir",
   "What it shows": "Ne gösterir",
   "What the Instant view shows.": "Anlık görünümünün gösterdiği.",
-  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.":
-    "Entegrasyonun oynatıcının yanında yayımladıkları — bir televizyonun güç düğmesi, kaynak listesi, bir sahne: button.*, select.*, switch.* varlıkları (ve input_*, script.*, scene.*). Kartta oynatma tuşlarının altında görünürler.",
   "What the tap does": "Dokunuş ne yapıyor",
   "What this unit's button does in the Home climate popup. Empty = leave alone.":
     "Bu ünitenin düğmesinin Ana sayfa İklim penceresinde yaptığı şey. Boş = dokunma.",
@@ -5021,8 +5019,6 @@ export default Object.freeze({
   "Arrow up": "Yukarı ok",
   "Asking Home Assistant which integration it is…":
     "Hangi entegrasyona ait olduğunu Home Assistant'a soruyorum…",
-  "Home Assistant doesn't say which integration this remote belongs to: it won't show.":
-    "Home Assistant bu kumandanın hangi entegrasyona ait olduğunu söylemiyor: görünmeyecek.",
   "Next channel": "Sonraki kanal",
   "Previous channel": "Önceki kanal",
   "Remote control": "Uzaktan kumanda",
@@ -5030,8 +5026,6 @@ export default Object.freeze({
   "TV menu": "TV menüsü",
   "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.":
     "TV'nin okları, OK, geri, ana ekran ve kanalları; kartının altında ve yalnızca TV açıkken. TV'nin remote.* varlığı gerekir: Samsung (Samsung Smart TV entegrasyonu), Sony Bravia, Philips, Android TV ve Google TV, Apple TV, Roku. LG webOS TV'lerin buna ihtiyacı yok.",
-  "The dashboard doesn't know the keys of ${nome}: the remote won't show.":
-    "Pano ${nome} tuşlarını bilmiyor: kumanda görünmeyecek.",
   "These are in the house — one tap picks it:": "Evde bunlar var — bir dokunuşla seçilir:",
   "Volume down": "Sesi azalt",
   "Volume up": "Sesi artır",
@@ -5568,7 +5562,6 @@ export default Object.freeze({
   "Choose the channels in the config": "Kanalları yapılandırmada seç",
   "Choose the commands in the config": "Komutları yapılandırmada seç",
   "Control buttons": "Kontrol düğmeleri",
-  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.": "Her kanal sesini kapatma düğmesiyle dikey bir kaydırıcıdır: bir oynatıcının ses düzeyi ya da bir mikserin dB değeri gibi bir sayı (number, input_number). Sessiz, oynatıcının kendisi ya da burada seçilen bir anahtardır: açık sessiz demektir.",
   "Empty: presses every command's stop": "Boş: her komutun durdurmasına basar",
   "For example: Microphones": "Örneğin: Mikrofonlar",
   "For example: Preset 1": "Örneğin: Ön ayar 1",
@@ -5593,7 +5586,6 @@ export default Object.freeze({
   "Side menu": "Yan menü",
   "Start and shutdown": "Başlatma ve kapatma",
   "Stop (optional)": "Durdur (isteğe bağlı)",
-  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "Canlı görüntü solda, oklar ve yakınlaştırma sağda, ön ayarlar altta. Her düğme Home Assistant'ta zaten olan bir varlığa basar: kameranın bir düğmesi ya da onvif.ptz içeren bir betik. Varlığı olmayan düğme kapalı kalır.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "Sayfalar solda büyük düğmelerden oluşan bir sütunda, kontrol odası panellerindeki gibi. Yalnızca yatay: dikeyde ve küçük ekranlarda üstteki sekmeler kalır",
   "Zoom": "Yakınlaştırma",
   "☀️ Panel": "☀️ Kolektör",
@@ -5611,4 +5603,25 @@ export default Object.freeze({
   "Temperature sensor (sensor, °C): panel minus tank": "Sıcaklık sensörü (sensor, °C): kolektör eksi boyler",
   "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "Vana (valve) veya anahtar (switch); boşsa valve.chiave_solare_termico kullanılır",
   "Valve with a position (cover): open above zero": "Konumlu vana (cover): sıfırın üstünde açık",
+  "Command": "Komut",
+  "▲ command": "▲ komutu",
+  "▼ command": "▼ komutu",
+  "Start command": "Başlatma komutu",
+  "Mute command": "Sessiz komutu",
+  "Stop command": "Durdurma komutu",
+  "The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "Pano ${nome} için okları bilmiyor: kumanda, komutlar arasında aç/kapat düğmesi olarak görünür. Komutları «Diğer komutlar» içine remote.name:command biçiminde eklenir.",
+  "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "Home Assistant bu kumandanın hangi entegrasyona ait olduğunu söylemiyor: komutlar arasında aç/kapat düğmesi olarak görünür. Komutları «Diğer komutlar» içine remote.name:command biçiminde eklenir.",
+  "Device (optional)": "Cihaz (isteğe bağlı)",
+  "Remote device": "Kumanda cihazı",
+  "Optional: the «device» of remote.send_command": "İsteğe bağlı: remote.send_command için «device»",
+  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.": "Canlı görüntü solda, oklar ve yakınlaştırma sağda, ön ayarlar altta. Her düğme Home Assistant'ta zaten bulunan bir varlığa basar: kameranın bir düğmesi, onvif.ptz içeren bir script ya da gönderilecek komutuyla bir kumanda (remote). Varlığı olmayan düğme kapalı kalır.",
+  "Read level (optional)": "Okunan seviye (isteğe bağlı)",
+  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.": "Her kanal, sessiz düğmesiyle dik bir fader'dır: bir oynatıcının sesi ya da bir mikserin dB'si gibi bir sayı (number, input_number). Bir sensör izlenen bir göstergeye dönüşür; bir kumanda (remote) ▲ / ▼ ve sessiz alır, her biri kendi komutuyla (remote.send_command). Sessiz, oynatıcının kendisininki, bir anahtar (açık sessiz demektir), bir kumanda ya da basılacak bir düğmedir.",
+  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.": "Entegrasyonun oynatıcının yanında yayımladıkları — bir televizyonun güç anahtarı, kaynak listesi, bir sahne: button.*, select.*, switch.* varlıkları (ve input_*, script.*, scene.*). Bir remote.* kumanda açılır ve kapanır; remote.name:command biçiminde yazılınca (örneğin remote.amp:volume_up) o komutu gönderir. Kartta çalma düğmelerinin altında görünürler.",
+  "Scale: to": "Ölçek: bitiş",
+  "Scale: from": "Ölçek: başlangıç",
+  "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.": "Bir button.*, select.*, switch.* ya da remote.* varlığı gerekir (remote.name:command da olur) — ya da input_button, input_select, input_boolean, script, scene.",
+  "A sensor with the level": "Seviyeyi veren bir sensör",
+  "Empty: turns on": "Boş: açar",
+  "Empty: turns off": "Boş: kapatır",
 });

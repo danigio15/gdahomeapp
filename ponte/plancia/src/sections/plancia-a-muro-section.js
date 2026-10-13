@@ -69,9 +69,11 @@ import {
   letturaDelCanale,
   menuDiLato,
   pulsanteAcceso,
+  pulsanteDiceLoStato,
   pulsantiDellaPagina,
   servizioDelFader,
   servizioDelMuto,
+  servizioDelPasso,
   servizioDelPulsante,
   servizioDellaTelecamera,
   valoreDallaPosizione,
@@ -101,6 +103,9 @@ import {
   verso,
 } from "../core/plancia-a-muro.js";
 import { kioskAttivo, setKioskMode } from "./beta12-room-color-lock-section.js";
+import { comandoDelDispositivo, partiDelComando } from "../core/comandi-accanto.js";
+import { comandoDelTelecomando, tastiDelTelecomando } from "../core/telecomando.js";
+import { piattaformeConosciute } from "./di-chi-e-unentita-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import { loadCameraFrame } from "./live-ui-section.js";
 import {
@@ -1555,9 +1560,25 @@ const glifo = (nome, misura = 30) =>
   `<svg width="${misura}" height="${misura}" viewBox="0 0 24 24" fill="${["suona"].includes(nome) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${GLIFI_MUSICA[nome]}</svg>`;
 
 /* La lettura di un lettore, con quello che il tocco sul tablet aspetta. */
+/* La voce del lettore scritta nella sezione Musica: i suoi «Altri comandi»,
+ * le «Altre letture», il «Telecomando». La pagina Musica a muro li mostra
+ * come la plancia; prima leggeva solo il lettore, e quello che si aggiungeva
+ * accanto — un sensore, un telecomando — nel config c'era e qui no. */
+const voceDellaMusica = (entity) =>
+  (state.fonte?.lettori || []).find((l) => l.entity === entity) || {};
+
 function lettoreOra(voce) {
   segna(voce.entita);
-  const lettura = letturaDelLettore({ entity: voce.entita, nome: voce.nome }, allStates() || {});
+  const scritta = voceDellaMusica(voce.entita);
+  const lettura = letturaDelLettore(
+    { ...scritta, entity: voce.entita, nome: voce.nome },
+    allStates() || {},
+    (v) => v,
+    piattaformeConosciute(),
+  );
+  for (const c of lettura.comandi || []) segna(c.entita || c.entity);
+  for (const l of lettura.letture || []) segna(l.entity);
+  if (scritta.telecomando) segna(scritta.telecomando);
   const attesa = state.inAttesa[voce.entita] || {};
   if (typeof attesa.suona === "boolean") {
     lettura.suona = attesa.suona;
@@ -1650,24 +1671,70 @@ function lettoreGrande(l) {
             .join("")}</div>`
         : ""
     }
-    ${comandiDelLettore(l.entity)}
+    ${comandiDelLettore(l)}
+    ${lettureDelLettore(l)}
+    ${telecomandoDelLettoreMuro(l)}
   </div>`;
 }
 
 /* Gli «altri comandi» del lettore, quelli scelti nella sezione Musica: le
  * stesse pastiglie della plancia, col loro stato, e il tocco che fa il gesto
- * del loro dominio. */
-function comandiDelLettore(entity) {
-  const voce = (state.fonte?.lettori || []).find((l) => l.entity === entity);
-  const comandi = (voce?.comandi || []).filter((id) => stato(id));
+ * del loro dominio. Un telecomando si accende e si spegne, o manda il comando
+ * scritto accanto (`remote.sala:volume_up`). */
+function comandiDelLettore(l) {
+  const comandi = (l?.comandi || []).filter((c) => c.comando || stato(c.entita || c.entity));
   if (!comandi.length) return "";
   return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi
-    .map((id) => {
+    .map((c) => {
+      const id = c.entita || c.entity;
+      if (dominio(id) === "remote") {
+        const premuto = c.comando ? "" : ` aria-pressed="${acceso(id)}"`;
+        const parole = c.comando ? "" : statoInParole(id);
+        return `<button type="button" class="${!c.comando && acceso(id) ? "si" : ""}" data-mu-fa="mp-accanto" data-mu-entita="${esc(l.entity)}" data-mu-voce="${esc(c.entity)}"${premuto}${c.available ? "" : " disabled"}>${esc(c.comando ? `${nomeDi(id)} · ${c.comando}` : nomeDi(id))}${parole ? ` <small>${esc(parole)}</small>` : ""}</button>`;
+      }
       const s = stato(id);
       const servizio = servizioDellEntita(id, String(s?.state || ""));
       const parole = statoInParole(id);
       return `<button type="button" class="${acceso(id) ? "si" : ""}" ${servizio ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`}>${esc(nomeDi(id))}${parole ? ` <small>${esc(parole)}</small>` : ""}</button>`;
     })
+    .join("")}</div>`;
+}
+
+/* Le «altre letture»: si guardano e basta — il nome e il numero con la sua
+ * unita', come sulla plancia. */
+function lettureDelLettore(l) {
+  const letture = l?.letture || [];
+  if (!letture.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-letture">${letture
+    .map(
+      (x) =>
+        `<span class="mu-mp-lettura" data-mu-mp-lettura="${esc(x.entity)}">${esc(nomeDi(x.entity))} <b>${esc(x.testo)}</b></span>`,
+    )
+    .join("")}</div>`;
+}
+
+/* Le frecce del telecomando di una TV che la plancia conosce: le stesse
+ * della scheda Musica, in una fila. */
+const SEGNI_DEL_TELECOMANDO = Object.freeze({
+  su: "▲",
+  giu: "▼",
+  sinistra: "◀",
+  destra: "▶",
+  ok: "OK",
+  indietro: "↩",
+  home: "⌂",
+  menu: "☰",
+  canale_meno: "CH−",
+  canale_piu: "CH+",
+});
+function telecomandoDelLettoreMuro(l) {
+  const tasti = tastiDelTelecomando(l?.telecomando);
+  if (!tasti.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-tele">${tasti
+    .map(
+      (tasto) =>
+        `<button type="button" data-mu-fa="mp-tele" data-mu-tasto="${esc(tasto)}" data-mu-entita="${esc(l.entity)}">${esc(SEGNI_DEL_TELECOMANDO[tasto] || tasto)}</button>`,
+    )
     .join("")}</div>`;
 }
 
@@ -2019,43 +2086,99 @@ function paginaIngresso(pagina) {
 function canaleOra(canale) {
   segna(canale.entita);
   if (canale.muto) segna(canale.muto);
+  if (canale.letto) segna(canale.letto);
   const lettura = letturaDelCanale(canale, allStates() || {});
   const attesa = state.inAttesa[canale.entita] || {};
-  if (attesa.posizione !== undefined) {
+  if (attesa.posizione !== undefined && lettura.muove) {
     lettura.posizione = attesa.posizione;
     lettura.valore = valoreDallaPosizione(attesa.posizione, lettura);
   }
   const muto = canale.muto ? state.inAttesa[canale.muto]?.acceso : attesa.mutato;
-  if (typeof muto === "boolean") lettura.mutato = muto;
+  if (lettura.mutoSaDire && typeof muto === "boolean") lettura.mutato = muto;
   return lettura;
 }
 
+/* Il numero di un sensore di livello: «-18,5 dB», «42 %». */
+function testoDellaMisura(m) {
+  if (!m) return "—";
+  const cifre = Number.isInteger(m.valore) || Math.abs(m.valore) >= 100 ? 0 : 1;
+  return `${decimale(m.valore, cifre)}${m.unita ? ` ${m.unita}` : ""}`;
+}
+
 /* Il numero sopra il cursore: «62%» per un lettore, «-12,5 dB» per un numero,
- * coi decimali che il suo passo chiede. */
+ * coi decimali che il suo passo chiede. Un sensore dice il suo numero; un
+ * telecomando quello del sensore che lo legge, o niente: non ha un livello. */
 function testoDelCanale(lettura, posizione = lettura.posizione) {
+  if (lettura.tipo === "telecomando")
+    return lettura.misura && lettura.disponibile ? testoDellaMisura(lettura.misura) : "";
   if (!lettura.disponibile || lettura.valore === null) return "—";
+  if (lettura.tipo === "misura") return testoDellaMisura(lettura);
   const valore = valoreDallaPosizione(posizione, lettura);
   if (lettura.tipo === "volume") return `${Math.round(valore * 100)}%`;
   const cifre = lettura.passo >= 1 ? 0 : lettura.passo >= 0.1 ? 1 : 2;
   return `${decimale(valore, cifre)}${lettura.unita ? ` ${lettura.unita}` : ""}`;
 }
 
+/* Il livello letto da un sensore accanto al cursore: una striscia sottile
+ * che si riempie, verde, gialla in cima, rossa in fondo alla scala. */
+const strisciaLetta = (m) =>
+  m
+    ? `<span class="mu-fad-letto" style="--l:${m.posizione.toFixed(4)}" title="${esc(testoDellaMisura(m))}"><i></i></span>`
+    : "";
+
 /* Il cursore: una traccia che si riempie del colore del gruppo, e la manopola
  * sopra. In piedi per i canali, sdraiato per il volume totale. */
 function fader(canale, lettura, { sdraiato = false } = {}) {
-  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura))}"><span class="mu-fad-traccia"><i></i></span><u></u></div>`;
+  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura))}"><span class="mu-fad-traccia"><i></i></span>${strisciaLetta(lettura.misura)}<u></u></div>`;
 }
 
-function tastoMuto(canale, lettura) {
-  if (!lettura.puoMuto) return `<span class="mu-can-muto vuoto" aria-hidden="true"></span>`;
-  return `<button type="button" class="mu-can-muto${lettura.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}" aria-pressed="${lettura.mutato}" aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi(canale.entita, canale.nome))}">${glifo(lettura.mutato ? "muto" : "voce", 24)}</button>`;
+/* Lo strumento: lo stesso cursore, senza manopola e senza dito — un VU che
+ * si riempie fin dove dice il sensore. */
+function metro(canale, posizione, testo, { sdraiato = false } = {}) {
+  return `<div class="mu-fader mu-metro${sdraiato ? " sdraiato" : ""}" data-mu-metro="${esc(canale.entita)}" style="--p:${posizione.toFixed(4)}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(posizione * 100)}" aria-label="${esc(nomeDi(canale.entita, canale.nome))}" aria-valuetext="${esc(testo)}"><span class="mu-fad-traccia"><i></i></span></div>`;
 }
+
+/* I tasti ▲ / ▼ di un telecomando; in mezzo lo strumento, se un sensore
+ * legge il livello. Sdraiati, ▼ a sinistra e ▲ a destra. */
+function passi(canale, lettura, { sdraiato = false } = {}) {
+  const nome = nomeDi(canale.entita, canale.nome);
+  /* Sdraiato e' il volume totale: lo stesso telecomando puo' stare anche fra
+   * i canali, coi suoi comandi. */
+  const tasto = (verso, segno, etichetta) =>
+    `<button type="button" class="mu-passo" data-mu-fa="passo" data-mu-verso="${verso}" data-mu-entita="${esc(canale.entita)}"${sdraiato ? ' data-mu-master="1"' : ""} aria-label="${esc(etichetta)} ${esc(nome)}"${lettura.disponibile ? "" : " disabled"}>${segno}</button>`;
+  const su = tasto("su", "▲", t("Alza", "Volume up"));
+  const giu = tasto("giu", "▼", t("Abbassa", "Volume down"));
+  const mezzo = lettura.misura
+    ? metro(canale, lettura.misura.posizione, testoDellaMisura(lettura.misura), { sdraiato })
+    : '<span class="mu-passi-spazio"></span>';
+  return `<div class="mu-passi${sdraiato ? " sdraiato" : ""}">${sdraiato ? `${giu}${mezzo}${su}` : `${su}${mezzo}${giu}`}</div>`;
+}
+
+/* Il pezzo in mezzo a un canale: il cursore, lo strumento o i tasti. */
+function comandoDelCanale(canale, l, opzioni = {}) {
+  if (l.tipo === "misura") return metro(canale, l.posizione, testoDelCanale(l), opzioni);
+  if (l.tipo === "telecomando") return passi(canale, l, opzioni);
+  return fader(canale, l, opzioni);
+}
+
+function tastoMuto(canale, lettura, master = false) {
+  if (!lettura.puoMuto) return `<span class="mu-can-muto vuoto" aria-hidden="true"></span>`;
+  /* Un muto che non dice com'e' (un comando, un tasto) e' un tasto e basta. */
+  const premuto = lettura.mutoSaDire ? ` aria-pressed="${lettura.mutato}"` : "";
+  return `<button type="button" class="mu-can-muto${lettura.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}"${master ? ' data-mu-master="1"' : ""}${premuto} aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi(canale.entita, canale.nome))}">${glifo(lettura.mutato ? "muto" : "voce", 24)}</button>`;
+}
+
+/* Sotto il numero di un canale che si muove, quello che legge il sensore. */
+const lettoSotto = (l) =>
+  l.misura && l.tipo !== "telecomando"
+    ? `<small class="mu-can-l" data-mu-letto>${esc(testoDellaMisura(l.misura))}</small>`
+    : "";
 
 function canaleDelMixer(canale) {
   const l = canaleOra(canale);
-  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"}" data-mu-canale="${esc(canale.entita)}">
-    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>
-    ${fader(canale, l)}
+  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"} mu-can-${l.tipo}" data-mu-canale="${esc(canale.entita)}">
+    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>${lettoSotto(l)}
+    ${comandoDelCanale(canale, l)}
     <span class="mu-can-n">${esc(nomeDi(canale.entita, canale.nome))}</span>
     ${tastoMuto(canale, l)}</div>`;
 }
@@ -2079,13 +2202,24 @@ function paginaMixer(pagina) {
   let totale = "";
   if (master?.entita) {
     const l = canaleOra(master);
-    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
+    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""} mu-can-${l.tipo}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
       <span class="mu-mix-tit">${esc(master.nome || t("Volume totale", "Master volume"))}</span>
-      ${tastoMuto(master, l)}
-      ${fader(master, l, { sdraiato: true })}
+      ${tastoMuto(master, l, true)}
+      ${comandoDelCanale(master, l, { sdraiato: true })}
       <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b></div>`;
   }
   return `<div class="mu-mixer${banchi ? "" : " solo-totale"}">${banchi}${totale}</div>`;
+}
+
+/* Il canale scritto nel config, coi suoi comandi: quello della pagina aperta
+ * con questa entita' (un gruppo o il volume totale). */
+function canaleDellaPagina(id, muto = "", master = false) {
+  const mixer = state.muro?.pagine?.[state.pagina]?.mixer;
+  if (master && mixer?.master?.entita === id) return mixer.master;
+  const tutti = [...(mixer?.gruppi || []).flatMap((g) => g.canali || []), mixer?.master];
+  return (
+    tutti.find((c) => c?.entita === id && (!muto || c.muto === muto)) || { entita: id, muto }
+  );
 }
 
 /* Le frecce della telecamera: i segni dentro i tasti del pad. */
@@ -2157,9 +2291,7 @@ function comandoAcceso(p) {
 /* Chi sa dire se e' acceso: l'entita' di stato scelta, o un avvio che si
  * accende e si spegne. Uno script d'avvio finisce in un attimo, e «Spento»
  * sotto «Spegnimento» direbbe solo una cosa strana. */
-const diceLoStato = (p) =>
-  Boolean(p.stato) ||
-  ["switch", "input_boolean", "light", "fan", "automation"].includes(dominio(p.avvio));
+const diceLoStato = pulsanteDiceLoStato;
 
 function paginaComandi(pagina) {
   const tutti = pulsantiDellaPagina(pagina).map((p, k) => ({ p, k }));
@@ -3488,18 +3620,45 @@ function onClick(event) {
     case "cifra":
       cifra(bersaglio.dataset.muCifra);
       return;
+    case "mp-accanto": {
+      /* Un comando accanto al lettore che e' un telecomando: si accende e si
+       * spegne, o manda il suo comando. */
+      const l = lettoreOra({ entita: id, nome: "" });
+      const voce = (l.comandi || []).find((c) => c.entity === bersaglio.dataset.muVoce);
+      const servizio = voce ? comandoDelDispositivo(voce) : null;
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(voce.entita, "remote", "toggle");
+      else comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "mp-tele": {
+      const l = lettoreOra({ entita: id, nome: "" });
+      const servizio = comandoDelTelecomando(l.telecomando, bersaglio.dataset.muTasto);
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
     case "muto": {
-      /* Il muto di un canale: l'interruttore scelto, o quello del lettore. Si
-       * vede subito, e la risposta vera lo conferma. */
+      /* Il muto di un canale: l'interruttore scelto, il comando del
+       * telecomando, il tasto da premere o il muto del lettore. Quello che
+       * sa dire com'e' si vede subito, e la risposta vera lo conferma. */
       const muto = bersaglio.dataset.muMuto || "";
-      const canale = { entita: id, muto };
+      const canale = canaleDellaPagina(id, muto, Boolean(bersaglio.dataset.muMaster));
       const lettura = canaleOra(canale);
       const servizio = servizioDelMuto(canale, lettura);
       if (!servizio) return;
-      if (muto) attendi(muto, "acceso", !lettura.mutato);
-      else attendi(id, "mutato", !lettura.mutato);
+      if (lettura.mutoSaDire) {
+        if (muto) attendi(muto, "acceso", !lettura.mutato);
+        else attendi(id, "mutato", !lettura.mutato);
+      }
       comanda(servizio.domain, servizio.service, servizio.data);
       disegna();
+      return;
+    }
+    case "passo": {
+      /* ▲ / ▼ di un telecomando: il suo comando, una volta per tocco. */
+      const canale = canaleDellaPagina(id, "", Boolean(bersaglio.dataset.muMaster));
+      const servizio = servizioDelPasso(canale, bersaglio.dataset.muVerso);
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
       return;
     }
     case "ptz": {
@@ -3511,7 +3670,9 @@ function onClick(event) {
     case "preset": {
       const pagina = state.muro?.pagine?.[state.pagina];
       const voce = pagina?.telecamera?.preset?.[Number(bersaglio.dataset.muIndice)];
-      const servizio = voce ? servizioDellaTelecamera(voce, "entita") : null;
+      const servizio = voce
+        ? servizioDellaTelecamera(voce, "entita", pagina.telecamera.dispositivo)
+        : null;
       if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
       return;
     }
@@ -3980,6 +4141,9 @@ ${MURO} .mu-mp-cursore{flex:1}
 ${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 ${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
 ${MURO} .mu-mp-comandi button small{margin-left:4px;font-weight:700;opacity:.75}
+${MURO} .mu-mp-lettura{padding:8px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 3%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+${MURO} .mu-mp-lettura b{margin-left:4px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums}
+${MURO} .mu-mp-tele button{min-width:52px;text-align:center}
 ${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
 ${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}
@@ -4517,6 +4681,29 @@ ${MURO} .mu-fader.fermo{cursor:default;opacity:.4}
 ${MURO} .mu-muto .mu-fad-traccia i{filter:grayscale(1);opacity:.3;box-shadow:none}
 ${MURO} .mu-muto .mu-can-v{color:var(--text-dim);text-decoration:line-through}
 ${MURO} .mu-spento{opacity:.5}
+${MURO} .mu-can-v{min-height:1em}
+${MURO} .mu-can-l{margin-top:-4px;font-size:12px;font-weight:700;color:var(--text-dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+${MURO} .mu-fad-letto{position:absolute;top:24px;bottom:24px;left:calc(50% - 22px);width:6px;border-radius:3px;background:color-mix(in srgb,var(--text) 8%,#000 18%);overflow:hidden}
+${MURO} .mu-fad-letto i{position:absolute;left:0;right:0;bottom:0;height:calc(var(--l) * 100%);background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--l),.001));background-position:bottom}
+${MURO} .mu-metro{cursor:default}
+${MURO} .mu-metro .mu-fad-traccia{width:18px;margin-left:-9px;border-radius:5px}
+${MURO} .mu-metro .mu-fad-traccia i{border-radius:4px;box-shadow:none;background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--p),.001));background-position:bottom;
+  -webkit-mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia{height:18px;margin:-9px 0 0}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia i{background:linear-gradient(90deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:calc(100% / max(var(--p),.001)) 100%;background-position:left;
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-passi{flex:1 1 auto;min-height:90px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+${MURO} .mu-passi>.mu-metro{flex:1 1 auto;min-height:40px}
+${MURO} .mu-passi>.mu-metro .mu-fad-traccia{top:6px;bottom:6px}
+${MURO} .mu-passi-spazio{flex:1 1 auto}
+${MURO} .mu-passo{flex:none;width:100%;max-width:72px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:24px;color:var(--acc);
+  background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 35%,transparent),0 6px 14px -8px rgba(0,0,0,.6)}
+${MURO} .mu-passo:active:not(:disabled){background:color-mix(in srgb,var(--acc) 30%,var(--card-bg))}
+${MURO} .mu-passo:disabled{opacity:.4}
+${MURO} .mu-passi.sdraiato{flex-direction:row;min-height:0;height:64px}
+${MURO} .mu-passi.sdraiato>.mu-metro{height:100%;min-height:0}
+${MURO} .mu-passi.sdraiato>.mu-metro .mu-fad-traccia{left:10px;right:10px}
+${MURO} .mu-passi.sdraiato .mu-passo{width:72px;height:56px}
 ${MURO} .mu-mix-master{display:flex;align-items:center;gap:18px;padding:12px 22px;min-width:0}
 ${MURO} .mu-mix-master>.mu-mix-tit{flex:none;max-width:220px;text-align:left;font-size:15px}
 ${MURO} .mu-mix-master>.mu-can-muto{width:64px;max-width:none;height:56px}
@@ -4586,6 +4773,11 @@ ${MURO}[data-compatto="1"] .mu-fader.sdraiato{height:44px;min-height:0}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato .mu-fad-traccia{top:50%;bottom:auto;left:20px;right:20px}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato::before{top:auto;bottom:2px;left:20px;right:20px}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato u{bottom:auto;left:calc(20px + var(--p) * (100% - 40px));width:30px;height:40px}
+${MURO}[data-compatto="1"] .mu-passo{height:40px;font-size:16px;border-radius:10px}
+${MURO}[data-compatto="1"] .mu-passi{min-height:60px;gap:4px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato{height:44px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato .mu-passo{width:44px;height:40px}
+${MURO}[data-compatto="1"] .mu-fad-letto{top:16px;bottom:16px}
 ${MURO}[data-compatto="1"] .mu-mix-master{padding:6px 12px;gap:10px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-mix-master>.mu-mix-tit{max-width:110px;font-size:11px}
 ${MURO}[data-compatto="1"] .mu-mix-master>.mu-can-muto{width:44px;height:38px}

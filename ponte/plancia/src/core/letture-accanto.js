@@ -35,7 +35,13 @@ export const DOMINI_LETTURA = Object.freeze([
   "number",
   "input_number",
   "input_text",
+  /* Una tendina si puo' anche solo guardare: la sorgente scelta, il preset
+   * dell'equalizzatore. Si scelgono a mano; da sole si propongono fra i
+   * comandi, dove si toccano. */
+  "select",
+  "input_select",
 ]);
+const SI_PROPONGONO = new Set(["sensor", "binary_sensor", "number", "input_number", "input_text"]);
 
 /** Se quell'entita' e' una cosa che si legge. */
 export function eUnaLettura(entity) {
@@ -280,6 +286,7 @@ export function lettureVicine(dispositivo = {}, states = {}, candidate = null) {
     for (const grezzo of candidate) {
       const id = clean(grezzo);
       if (!id || gia.has(id) || usate.has(id) || !eUnaLettura(id)) continue;
+      if (!SI_PROPONGONO.has(id.split(".")[0])) continue;
       trovate.push(id);
     }
   } else {
@@ -288,6 +295,7 @@ export function lettureVicine(dispositivo = {}, states = {}, candidate = null) {
     const nome = clean(states?.[entity]?.attributes?.friendly_name).toLowerCase();
     for (const [id, corrente] of Object.entries(states || {})) {
       if (gia.has(id) || usate.has(id) || !eUnaLettura(id)) continue;
+      if (!SI_PROPONGONO.has(id.split(".")[0])) continue;
       const oggetto = id.split(".")[1] || "";
       const suoNome = clean(corrente?.attributes?.friendly_name).toLowerCase();
       if (!oggetto.startsWith(`${radice}_`) && !(nome && suoNome.startsWith(`${nome} `))) continue;

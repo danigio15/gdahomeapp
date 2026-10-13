@@ -3935,8 +3935,6 @@ export default Object.freeze({
   "What it can do": "할 수 있는 일",
   "What it shows": "표시할 내용",
   "What the Instant view shows.": "실시간 보기에 나오는 내용입니다.",
-  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.":
-    "통합이 플레이어 옆에 내보내는 것들 — TV 전원 스위치, 입력 선택, 씬: button.*, select.*, switch.* 엔티티(그리고 input_*, script.*, scene.*)입니다. 카드의 재생 버튼 아래에 나옵니다.",
   "What the tap does": "누르면 하는 일",
   "What this unit's button does in the Home climate popup. Empty = leave alone.":
     "홈 기후 팝업에서 이 유닛 버튼이 하는 동작. 비움 = 건드리지 않음.",
@@ -5010,8 +5008,6 @@ export default Object.freeze({
   "Arrow up": "위쪽 화살표",
   "Asking Home Assistant which integration it is…":
     "어느 통합구성요소인지 Home Assistant에 확인하는 중…",
-  "Home Assistant doesn't say which integration this remote belongs to: it won't show.":
-    "Home Assistant가 이 리모컨이 어느 통합구성요소인지 알려주지 않아 표시되지 않습니다.",
   "Next channel": "다음 채널",
   "Previous channel": "이전 채널",
   "Remote control": "리모컨",
@@ -5019,8 +5015,6 @@ export default Object.freeze({
   "TV menu": "TV 메뉴",
   "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.":
     "TV의 화살표, OK, 뒤로, 홈 화면, 채널을 카드 아래에, TV가 켜져 있을 때만 표시합니다. TV의 remote.* 엔티티가 필요합니다: Samsung(Samsung Smart TV 통합), Sony Bravia, Philips, Android TV 및 Google TV, Apple TV, Roku. LG webOS TV는 필요 없습니다.",
-  "The dashboard doesn't know the keys of ${nome}: the remote won't show.":
-    "대시보드가 ${nome}의 버튼을 알지 못해 리모컨이 표시되지 않습니다.",
   "These are in the house — one tap picks it:": "집에 있는 항목 — 탭하여 선택:",
   "Volume down": "볼륨 낮추기",
   "Volume up": "볼륨 높이기",
@@ -5550,7 +5544,6 @@ export default Object.freeze({
   "Choose the channels in the config": "설정에서 채널을 선택하세요",
   "Choose the commands in the config": "설정에서 명령을 선택하세요",
   "Control buttons": "제어 버튼",
-  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.": "각 채널은 음소거가 있는 세로 페이더입니다: 플레이어의 볼륨, 또는 믹서의 dB 같은 숫자(number, input_number). 음소거는 플레이어 자체의 것이거나 여기서 고른 스위치입니다: 켜짐은 음소거를 뜻합니다.",
   "Empty: presses every command's stop": "비어 있으면: 모든 명령의 정지를 누릅니다",
   "For example: Microphones": "예: 마이크",
   "For example: Preset 1": "예: 프리셋 1",
@@ -5575,7 +5568,6 @@ export default Object.freeze({
   "Side menu": "사이드 메뉴",
   "Start and shutdown": "시작과 종료",
   "Stop (optional)": "정지(선택)",
-  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "왼쪽에 실시간 화면, 오른쪽에 화살표와 줌, 아래에 프리셋. 각 버튼은 Home Assistant에 이미 있는 엔터티를 누릅니다: 카메라 버튼 또는 onvif.ptz가 들어 있는 스크립트. 엔터티가 없는 버튼은 꺼진 채로 있습니다.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "페이지를 왼쪽의 큰 버튼 열에 표시합니다(조정실 패널처럼). 가로 모드에서만: 세로 모드와 작은 화면에서는 위쪽 탭이 그대로입니다",
   "Zoom": "줌",
   "☀️ Panel": "☀️ 집열판",
@@ -5593,4 +5585,25 @@ export default Object.freeze({
   "Temperature sensor (sensor, °C): panel minus tank": "온도 센서 (sensor, °C): 집열판 빼기 저탕조",
   "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "밸브 (valve) 또는 스위치 (switch); 비우면 valve.chiave_solare_termico 사용",
   "Valve with a position (cover): open above zero": "위치가 있는 밸브 (cover): 0보다 크면 열림",
+  "Command": "명령",
+  "▲ command": "▲ 명령",
+  "▼ command": "▼ 명령",
+  "Start command": "시작 명령",
+  "Mute command": "음소거 명령",
+  "Stop command": "정지 명령",
+  "The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "대시보드는 ${nome}의 화살표 키를 모릅니다: 리모컨은 명령 사이에 켜기/끄기 버튼으로 나타납니다. 명령은 «기타 명령»에 remote.name:command 형식으로 추가합니다.",
+  "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "Home Assistant가 이 리모컨이 어느 통합에 속하는지 알려주지 않습니다: 명령 사이에 켜기/끄기 버튼으로 나타납니다. 명령은 «기타 명령»에 remote.name:command 형식으로 추가합니다.",
+  "Device (optional)": "장치(선택)",
+  "Remote device": "리모컨 장치",
+  "Optional: the «device» of remote.send_command": "선택: remote.send_command의 «device»",
+  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.": "왼쪽에 실시간 화면, 오른쪽에 화살표와 줌, 아래에 프리셋. 각 버튼은 Home Assistant에 이미 있는 엔티티를 누릅니다: 카메라 버튼, onvif.ptz를 쓰는 스크립트, 또는 보낼 명령이 있는 리모컨(remote). 엔티티가 없는 버튼은 꺼진 채로 있습니다.",
+  "Read level (optional)": "읽은 레벨(선택)",
+  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.": "각 채널은 음소거가 있는 세로 페이더입니다: 플레이어의 볼륨, 또는 믹서의 dB 같은 숫자(number, input_number). 센서는 보기만 하는 미터가 되고, 리모컨(remote)은 ▲ / ▼와 음소거를 가지며 각각 자기 명령을 보냅니다(remote.send_command). 음소거는 플레이어 자체의 것, 스위치(켜짐이 음소거), 리모컨 또는 누르는 버튼입니다.",
+  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.": "통합이 플레이어 옆에 게시하는 것 — TV 전원 스위치, 입력 선택, 장면: button.*, select.*, switch.* 엔티티(및 input_*, script.*, scene.*). 리모컨 remote.*는 켜지고 꺼지며, remote.name:command로 쓰면(예: remote.amp:volume_up) 그 명령을 보냅니다. 카드의 재생 버튼 아래에 나타납니다.",
+  "Scale: to": "범위: 까지",
+  "Scale: from": "범위: 부터",
+  "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.": "button.*, select.*, switch.* 또는 remote.* 엔티티가 필요합니다(remote.name:command도 가능) — 또는 input_button, input_select, input_boolean, script, scene.",
+  "A sensor with the level": "레벨을 알려주는 센서",
+  "Empty: turns on": "비움: 켜기",
+  "Empty: turns off": "비움: 끄기",
 });

@@ -3972,8 +3972,6 @@ export default Object.freeze({
   "What it can do": "Was es kann",
   "What it shows": "Was sie zeigt",
   "What the Instant view shows.": "Was die Ansicht Momentan zeigt.",
-  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.":
-    "Was die Integration neben dem Player veröffentlicht — der Netzschalter eines Fernsehers, die Eingangsauswahl, eine Szene: Entitäten button.*, select.*, switch.* (plus input_*, script.*, scene.*). Sie erscheinen auf der Kachel unter den Wiedergabetasten.",
   "What the tap does": "Was der Tipp bewirkt",
   "What this unit's button does in the Home climate popup. Empty = leave alone.":
     "Was die Taste dieses Geräts im Klima-Popup der Startseite macht. Leer = nicht anfassen.",
@@ -5055,8 +5053,6 @@ export default Object.freeze({
   "Arrow up": "Pfeil nach oben",
   "Asking Home Assistant which integration it is…":
     "Ich frage Home Assistant, zu welcher Integration es gehört…",
-  "Home Assistant doesn't say which integration this remote belongs to: it won't show.":
-    "Home Assistant sagt nicht, zu welcher Integration diese Fernbedienung gehört: Sie wird nicht angezeigt.",
   "Next channel": "Nächster Sender",
   "Previous channel": "Vorheriger Sender",
   "Remote control": "Fernbedienung",
@@ -5064,8 +5060,6 @@ export default Object.freeze({
   "TV menu": "Fernsehermenü",
   "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.":
     "Pfeiltasten, OK, Zurück, Startbildschirm und Sender des Fernsehers, unter seiner Karte und nur, solange er an ist. Dafür braucht es die remote.*-Entität des Fernsehers: Samsung (Integration Samsung Smart TV), Sony Bravia, Philips, Android TV und Google TV, Apple TV, Roku. LG-webOS-Fernseher brauchen sie nicht.",
-  "The dashboard doesn't know the keys of ${nome}: the remote won't show.":
-    "Das Dashboard kennt die Tasten von ${nome} nicht: Die Fernbedienung wird nicht angezeigt.",
   "These are in the house — one tap picks it:": "Diese gibt es im Haus — ein Tippen wählt sie aus:",
   "Volume down": "Leiser",
   "Volume up": "Lauter",
@@ -5611,7 +5605,6 @@ export default Object.freeze({
   "Choose the channels in the config": "Wähle die Kanäle in der Konfiguration",
   "Choose the commands in the config": "Wähle die Befehle in der Konfiguration",
   "Control buttons": "Steuertasten",
-  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.": "Jeder Kanal ist ein stehender Fader mit Stummschaltung: die Lautstärke eines Players oder eine Zahl (number, input_number) wie die dB eines Mischpults. Stumm ist die des Players oder ein hier gewählter Schalter: an heißt stumm.",
   "Empty: presses every command's stop": "Leer: drückt den Stopp jedes Befehls",
   "For example: Microphones": "Zum Beispiel: Mikrofone",
   "For example: Preset 1": "Zum Beispiel: Preset 1",
@@ -5636,7 +5629,6 @@ export default Object.freeze({
   "Side menu": "Seitenmenü",
   "Start and shutdown": "Start und Herunterfahren",
   "Stop (optional)": "Stopp (optional)",
-  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "Das Live-Bild links, Pfeile und Zoom rechts, Presets darunter. Jede Taste drückt eine Entität, die es in Home Assistant schon gibt: eine Kamerataste oder ein Skript mit onvif.ptz. Eine Taste ohne Entität bleibt aus.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "Die Seiten in einer Spalte großer Tasten links, wie bei Regiepulten. Nur im Querformat: im Hochformat und auf kleinen Bildschirmen bleiben die Reiter oben",
   "Zoom": "Zoom",
   "☀️ Panel": "☀️ Kollektor",
@@ -5654,4 +5646,25 @@ export default Object.freeze({
   "Temperature sensor (sensor, °C): panel minus tank": "Temperatursensor (sensor, °C): Kollektor minus Speicher",
   "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "Ventil (valve) oder Schalter (switch); leer wird valve.chiave_solare_termico verwendet",
   "Valve with a position (cover): open above zero": "Ventil mit Stellung (cover): offen über null",
+  "Command": "Befehl",
+  "▲ command": "▲-Befehl",
+  "▼ command": "▼-Befehl",
+  "Start command": "Startbefehl",
+  "Mute command": "Stumm-Befehl",
+  "Stop command": "Stoppbefehl",
+  "The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "Das Dashboard kennt die Pfeile von ${nome} nicht: Die Fernbedienung erscheint bei den Befehlen als Ein/Aus-Taste. Ihre Befehle kommen unter «Weitere Befehle», als remote.name:command.",
+  "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.": "Home Assistant sagt nicht, zu welcher Integration diese Fernbedienung gehört: Sie erscheint bei den Befehlen als Ein/Aus-Taste. Ihre Befehle kommen unter «Weitere Befehle», als remote.name:command.",
+  "Device (optional)": "Gerät (optional)",
+  "Remote device": "Gerät der Fernbedienung",
+  "Optional: the «device» of remote.send_command": "Optional: das «device» von remote.send_command",
+  "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.": "Das Live-Bild links, Pfeile und Zoom rechts, Presets darunter. Jede Taste drückt eine Entität, die es in Home Assistant schon gibt: eine Kamerataste, ein Skript mit onvif.ptz oder eine Fernbedienung (remote) mit dem zu sendenden Befehl. Eine Taste ohne Entität bleibt aus.",
+  "Read level (optional)": "Gelesener Pegel (optional)",
+  "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.": "Jeder Kanal ist ein stehender Fader mit Stummschaltung: die Lautstärke eines Players oder eine Zahl (number, input_number) wie die dB eines Mischpults. Ein Sensor wird zu einer Anzeige zum Ablesen; eine Fernbedienung (remote) bekommt ▲ / ▼ und Stumm, jeweils mit eigenem Befehl (remote.send_command). Stumm ist die des Players, ein Schalter (an heißt stumm), eine Fernbedienung oder eine Taste zum Drücken.",
+  "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.": "Was die Integration neben dem Player veröffentlicht — der Netzschalter eines Fernsehers, die Eingangsauswahl, eine Szene: Entitäten button.*, select.*, switch.* (plus input_*, script.*, scene.*). Eine Fernbedienung remote.* schaltet ein und aus; als remote.name:command geschrieben (zum Beispiel remote.amp:volume_up) sendet sie diesen Befehl. Sie erscheinen auf der Kachel unter den Wiedergabetasten.",
+  "Scale: to": "Skala: bis",
+  "Scale: from": "Skala: von",
+  "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.": "Es wird eine Entität button.*, select.*, switch.* oder remote.* benötigt (auch remote.name:command) — oder input_button, input_select, input_boolean, script, scene.",
+  "A sensor with the level": "Ein Sensor mit dem Pegel",
+  "Empty: turns on": "Leer: schaltet ein",
+  "Empty: turns off": "Leer: schaltet aus",
 });

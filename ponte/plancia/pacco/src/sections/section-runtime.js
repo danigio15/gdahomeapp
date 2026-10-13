@@ -355,6 +355,7 @@ import {
   paroleDelleRisposte,
   parseDurationSeconds,
   parseTimestampMs,
+  partiDelComando,
   passoDellUnita,
   pelletScarso,
   periodConsumption,
@@ -506,7 +507,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-TZ4DHYDY.js";
+} from "../../chunk-HHBPPQJW.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2821,6 +2822,12 @@ var SOURCE_INDEX = Object.freeze({
   "Comandi di regia": "Control buttons",
   "Comandi e categorie": "Commands and categories",
   "comando": "control",
+  "Comando": "Command",
+  "Comando ▲": "▲ command",
+  "Comando ▼": "▼ command",
+  "Comando d'avvio": "Start command",
+  "Comando del muto": "Mute command",
+  "Comando di stop": "Stop command",
   "Comando inviato…": "Command sent…",
   "Comando ON/OFF": "On/off control",
   "Comando rapido": "Quick command",
@@ -3102,7 +3109,7 @@ var SOURCE_INDEX = Object.freeze({
   "Deumidificatori salvati": "Dehumidifiers saved",
   "Deve essere un contatore cumulativo kWh con state_class total o total_increasing. Non usare qui il sensore mensile: questo campo serve per ricostruire anche i mesi precedenti.": "This must be a cumulative kWh meter with state_class total or total_increasing. Do not use the monthly sensor here: this field is required to reconstruct previous months.",
   "di ${minuti} min": "of ${minuti} min",
-  "Di ${nome} la plancia non conosce i tasti: il telecomando non compare.": "The dashboard doesn't know the keys of ${nome}: the remote won't show.",
+  "Di ${nome} la plancia non conosce le frecce: il telecomando compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.": "The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.",
   "di autonomia": "of range",
   "Di chi è": "Whose it is",
   "di Home Assistant. Se i valori restano a zero, verifica che le entità abbiano": ". If values stay at zero, make sure the entities have",
@@ -3111,7 +3118,7 @@ var SOURCE_INDEX = Object.freeze({
   "di quello che può reggere: è al limite": "of what it can take: at the limit",
   "di quello che può reggere: sta salendo": "of what it can take: getting up there",
   "Di questo c'è una lettura sola: il Recorder non ne ha ancora una storia da disegnare.": "There is a single reading for this: the Recorder has no history to draw yet.",
-  "Di questo telecomando Home Assistant non dice l'integrazione: non compare.": "Home Assistant doesn't say which integration this remote belongs to: it won't show.",
+  "Di questo telecomando Home Assistant non dice l'integrazione: compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.": "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.",
   "di rete": "network",
   "Di serie la pioggia arriva da RainViewer e la mappa da OpenStreetMap: basta scegliere dove. Puoi cambiare servizio dalla tendina, oppure «Un indirizzo mio» e scrivere quello che pubblica il servizio che vuoi usare, con {z}/{x}/{y} al posto dei numeri del quadratino. Il tasto Prova ne scarica uno e ti dice se arriva.": "Out of the box the rain comes from RainViewer and the map from OpenStreetMap: just pick where. You can change the service from the list, or «An address of mine» and write the one your service publishes, with {z}/{x}/{y} standing in for the tile numbers. Test downloads one and tells you whether it arrives.",
   "di umidità": "moisture",
@@ -3141,8 +3148,10 @@ var SOURCE_INDEX = Object.freeze({
   "dispositivi muti": "silent devices",
   "Dispositivi non connessi": "Disconnected devices",
   "Dispositivo": "Device",
+  "Dispositivo (facoltativo)": "Device (optional)",
   "Dispositivo aggiunto": "Appliance added",
   "Dispositivo collegato": "Linked device",
+  "Dispositivo del telecomando": "Remote device",
   "dispositivo muto": "silent device",
   "Distanza": "Distance",
   "Distanza da casa": "Distance from home",
@@ -3375,6 +3384,7 @@ var SOURCE_INDEX = Object.freeze({
   "Facoltativa: sostituisce il calcolo del giorno.": "Optional: overrides the daily calculation.",
   "Facoltativa: sostituisce il calcolo del mese corrente.": "Optional: overrides the current-month calculation.",
   "Facoltativo": "Optional",
+  "Facoltativo: il «device» di remote.send_command": "Optional: the «device» of remote.send_command",
   "Facoltativo: il sensore «in carica» o lo stato della batteria": "Optional: the “is charging” sensor or the battery state",
   "Facoltativo: interruttore, es. switch.lavatrice": "Optional: switch, e.g. switch.lavatrice",
   "Facoltativo: potenza in W, es. sensor.lavatrice_potenza": "Optional: power in W, e.g. sensor.lavatrice_potenza",
@@ -3948,7 +3958,7 @@ var SOURCE_INDEX = Object.freeze({
   "L’hai scelta tu": "Your choice",
   "L'ho presa": "Got it",
   "L’icona è personalizzabile anche per le azioni integrate e viene mostrata nella Home.": "The icon is customizable for built-in actions too and is shown on Home.",
-  "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera o uno script con onvif.ptz. Un tasto senza entità resta spento.": "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.",
+  "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera, uno script con onvif.ptz, o un telecomando (remote) col comando da mandare. Un tasto senza entità resta spento.": "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.",
   "L'impegno finisce prima di cominciare.": "The event ends before it starts.",
   "L'impianto": "The system",
   "L'impianto sta prendendo calore: il salto è quello giusto.": "The system is taking the heat: the drop is right.",
@@ -4187,6 +4197,7 @@ var SOURCE_INDEX = Object.freeze({
   "Livello dell'acqua": "Water level",
   "Livello della batteria": "Battery level",
   "Livello immissione": "Supply level",
+  "Livello letto (facoltativo)": "Read level (optional)",
   "Livello ripresa": "Return level",
   "Lo scaldabagno elettrico, per chi l'acqua calda non la fa col sole: la tessera dice a che punto è l'acqua e quanto manca all'obiettivo. Con un water_heater di Home Assistant basta la prima casella.": "The electric water heater, for whoever does not make hot water with the sun: the tile says where the water is and how far it is from the target. With a Home Assistant water_heater the first field is enough.",
   "Lo script, la scena, il pulsante, l'interruttore o l'elenco che inserisce: il servizio giusto lo sceglie la plancia dal dominio dell'entità.": "The script, scene, button, switch or select that arms it: the dashboard picks the right service from the entity domain.",
@@ -4716,7 +4727,7 @@ var SOURCE_INDEX = Object.freeze({
   "Oggi sciopero: ${adesso.settore}": "Strike today: ${adesso.settore}",
   "ogni ${ogni} giorni": "every ${ogni} days",
   "Ogni area è una centrale di Home Assistant, con i suoi inserimenti. Quella segnata «in pagina adesso» è quella che il quadrante e il tastierino stanno comandando: l'occhio accanto a un'altra la porta a schermo al posto suo.": "Every area is a Home Assistant panel of its own, with its own arming modes. The one marked “on the page now” is what the dial and the keypad are commanding: the eye beside another one brings it on screen in its place.",
-  "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Il muto è quello del lettore, o un interruttore scelto qui: acceso vuol dire muto.": "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.",
+  "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Un sensore (sensor) diventa uno strumento che si guarda; un telecomando (remote) ha ▲ / ▼ e il muto, ognuno col suo comando (remote.send_command). Il muto è quello del lettore, un interruttore (acceso vuol dire muto), un telecomando o un tasto da premere.": "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.",
   "Ogni carico qui sotto è un cerchio del flusso Energia, sotto Casa, nell'ordine di questa lista. Quello che scrivi qui è quello che vedi nel flusso, e i dispositivi che gli assegni sono quelli che compaiono toccando il cerchio.": "Every load below is a circle of the Energy flow, under Home, in the order of this list. What you write here is what the flow shows, and the devices you file under it are the ones that appear when you tap the circle.",
   "Ogni casella compilata deve essere un'entità cover.* o switch.*.": "Every filled box must be a cover.* or switch.* entity.",
   "Ogni cosa col suo comando, in una griglia": "Everything with its own control, in a grid",
@@ -5135,7 +5146,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quella del sensore in casa, in alto e sul riposo, con il tempo del meteo accanto. Vuoto: quella della stanza della prima pagina": "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room",
   "Quella di fuori, del meteo scelto qui sopra": "The outdoor one, from the weather chosen above",
   "Quelli scelti qui, in quest'ordine": "The ones chosen here, in this order",
-  "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Compaiono sulla scheda sotto i comandi del brano.": "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.",
+  "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Un telecomando remote.* si accende e si spegne; scritto remote.nome:comando (per esempio remote.ampli:volume_up) manda quel comando. Compaiono sulla scheda sotto i comandi del brano.": "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.",
   "Quello che la voce «Cottura» degli Elettrodomestici legge e preme. Un comando è un'entità (button, switch, number, script) oppure un servizio con i suoi parametri: philips_airfryer.adjust_time time=60 method=add. Si mostra solo il tasto che ha la sua casella, e solo se risponde.": "What the “Cooking” entry of Appliances reads and presses. A control is an entity (button, switch, number, script) or a service with its parameters: philips_airfryer.adjust_time time=60 method=add. A button only shows up when its field is filled in, and only if it answers.",
   "Quello che scrivi qui arriva a chi mantiene la plancia, e a nessun altro. Non passa da GitHub e non diventa pubblico. Insieme al messaggio partono solo la versione della plancia, quella di Home Assistant e la lingua. Puoi cancellare la conversazione quando vuoi.": "What you write here reaches whoever maintains the dashboard, and nobody else. It does not go through GitHub and does not become public. Along with the message only the dashboard version, the Home Assistant version and the language are sent. You can delete the conversation whenever you want.",
   "Quello della bolletta: trasforma il mese in euro. Lascialo vuoto e la pagina dice solo i metri cubi.": "The one on the bill: it turns the month into euros. Leave it empty and the page shows only cubic metres.",
@@ -5397,6 +5408,8 @@ var SOURCE_INDEX = Object.freeze({
   "Sbloccato": "Unlocked",
   "Scadenza": "Schedule",
   "Scala della barra Potenza attuale. Vuoto = valore tipico per il tipo.": "Scale of the current power bar. Empty = typical value for the type.",
+  "Scala: a": "Scale: to",
+  "Scala: da": "Scale: from",
   "scalda da": "heating for",
   "Scalda verso ${meta}°": "Heating to ${meta}°",
   "Scaldabagno": "Water heater",
@@ -5592,6 +5605,7 @@ var SOURCE_INDEX = Object.freeze({
   "Serve un titolo.": "A title is required.",
   "Serve un'entità alarm_control_panel.* valida.": "A valid alarm_control_panel.* entity is required.",
   "Serve un'entità button.*, select.* o switch.* — oppure input_button, input_select, input_boolean, script, scene.": "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene.",
+  "Serve un'entità button.*, select.*, switch.* o remote.* (anche remote.nome:comando) — oppure input_button, input_select, input_boolean, script, scene.": "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.",
   "Serve un'entità calendar.* valida.": "A valid calendar.* entity is required.",
   "Serve un'entità camera.* o image.*.": "A camera.* or image.* entity is required.",
   "Serve un'entità che sappia aprire: ${domini}.": "An entity that can open is required: ${domini}.",
@@ -6182,6 +6196,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un po' afoso": "Somewhat muggy",
   "Un po' di disagio": "Some discomfort",
   "Un sensore che Home Assistant non ha etichettato — un template fatto in casa — non viene trovato: qui gli si dice che misura è.": "A sensor Home Assistant has not labelled — a template of your own — is not found: here you say which measure it is.",
+  "Un sensore col livello": "A sensor with the level",
   "Un sensore col numero degli scioperi e l'elenco negli attributi — settore, regione, data d'inizio: le integrazioni italiane degli scioperi lo pubblicano cosi'.": "A sensor with the number of strikes and the list in its attributes — sector, region, start date: the Italian strike integrations publish it that way.",
   "Un sensore col ritardo in minuti nello stato o negli attributi, e accanto il numero del treno, la destinazione e il binario. Un treno soppresso diventa un allarme.": "A sensor with the delay in minutes in its state or attributes, and next to it the train number, the destination and the platform. A cancelled train becomes an alarm.",
   "Un sensore col testo dell'allarme o un binary_sensor: quando scatta, in pagina compare la fascia rossa con le sue parole.": "A sensor with the alarm text or a binary_sensor: when it trips, the page shows the red banner with its words.",
@@ -6330,11 +6345,13 @@ var SOURCE_INDEX = Object.freeze({
   "Vuoto = tariffa della sezione Energia.": "Empty = tariff from the Energy section.",
   "Vuoto vale il valore di serie scritto nel campo.": "Empty means the default shown in the field.",
   "Vuoto vuol dire «on». Senza questo il tasto funziona lo stesso: semplicemente non resta acceso.": "Empty means “on”. Without it the button still works: it simply does not stay lit.",
+  "Vuoto: accende": "Empty: turns on",
   "Vuoto: il nome dell'entità": "Empty: the entity name",
   "Vuoto: le iniziali del nome": "Empty: the initials of the name",
   "Vuoto: preme lo stop di ogni comando": "Empty: presses every command's stop",
   "Vuoto: quella della stanza della prima pagina": "Empty: the one of the first page's room",
   "Vuoto: quelli della sezione Musica della plancia": "Empty: the ones from the dashboard's Music section",
+  "Vuoto: spegne": "Empty: turns off",
   "WebRTC: il nome stream go2rtc funziona solo aprendo la plancia fuori da Home Assistant — qui dentro la telecamera passa dalla sua entità": "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity",
   "WebRTC: provato per primo col suo tempo intero, il video non è arrivato": "WebRTC: tried first with its full time, the video did not arrive",
   "WebRTC: saltato — compila «Nome stream go2rtc» nella scheda Telecamere (il nome della telecamera non c’entra)": "WebRTC: skipped — fill in “go2rtc stream name” in the Cameras tab (the camera name is not the lever)",
@@ -14856,9 +14873,9 @@ function coppiaSpostata(lettura3, quale, verso2, { passo = 1, scala: scala2 = nu
   const ora3 = lettura3[quale];
   const salto = Number(passo) > 0 ? Number(passo) : 1;
   const origine = numero3(Array.isArray(scala2) ? scala2[0] : null) ?? 0;
-  const passi = (ora3 - origine) / salto;
-  const sullaGriglia = Math.abs(passi - Math.round(passi)) < 1e-6;
-  const prossimo = sullaGriglia ? Math.round(passi) + direzione : direzione > 0 ? Math.ceil(passi) : Math.floor(passi);
+  const passi2 = (ora3 - origine) / salto;
+  const sullaGriglia = Math.abs(passi2 - Math.round(passi2)) < 1e-6;
+  const prossimo = sullaGriglia ? Math.round(passi2) + direzione : direzione > 0 ? Math.ceil(passi2) : Math.floor(passi2);
   return coppiaCon(lettura3, quale, origine + prossimo * salto, { scala: scala2 });
 }
 
@@ -25892,8 +25909,8 @@ function senzaZeriInCoda(scritto) {
 }
 function primoScalino(min, suo2, max, mio) {
   const quanti2 = Math.round(mio / suo2);
-  for (let passi = 0; passi < quanti2; passi += 1) {
-    const valore3 = min + passi * suo2;
+  for (let passi2 = 0; passi2 < quanti2; passi2 += 1) {
+    const valore3 = min + passi2 * suo2;
     if (valore3 > max + 1e-9) break;
     if (Math.abs(valore3 / mio - Math.round(valore3 / mio)) < 1e-9) return valore3;
   }
@@ -40182,22 +40199,22 @@ function ilFiloDallaRadice(titolo3 = "") {
   return [{ id: "", tipo: "", titolo: pulito33(titolo3) }];
 }
 function ilFiloDopo(filo, voce3) {
-  const passi = Array.isArray(filo) ? filo : [];
+  const passi2 = Array.isArray(filo) ? filo : [];
   const passo = { id: pulito33(voce3?.id), tipo: pulito33(voce3?.tipo), titolo: pulito33(voce3?.titolo) };
-  if (!passo.id) return passi.length ? passi : ilFiloDallaRadice();
-  const gia = passi.findIndex((riga3) => pulito33(riga3?.id) === passo.id);
-  if (gia >= 0) return passi.slice(0, gia + 1);
-  return [...passi, passo];
+  if (!passo.id) return passi2.length ? passi2 : ilFiloDallaRadice();
+  const gia = passi2.findIndex((riga3) => pulito33(riga3?.id) === passo.id);
+  if (gia >= 0) return passi2.slice(0, gia + 1);
+  return [...passi2, passo];
 }
 function ilFiloFinoA(filo, indice) {
-  const passi = Array.isArray(filo) ? filo : [];
+  const passi2 = Array.isArray(filo) ? filo : [];
   const dove = Number(indice);
-  if (!Number.isInteger(dove) || dove < 0 || dove >= passi.length) return passi;
-  return passi.slice(0, dove + 1);
+  if (!Number.isInteger(dove) || dove < 0 || dove >= passi2.length) return passi2;
+  return passi2.slice(0, dove + 1);
 }
 function ilPassoDiAdesso(filo) {
-  const passi = Array.isArray(filo) ? filo : [];
-  return passi.length ? passi[passi.length - 1] : { id: "", tipo: "", titolo: "" };
+  const passi2 = Array.isArray(filo) ? filo : [];
+  return passi2.length ? passi2[passi2.length - 1] : { id: "", tipo: "", titolo: "" };
 }
 
 // src/sections/di-chi-e-unentita-section.js
@@ -48711,14 +48728,14 @@ function unoScaldabagno(lettura3, piuDiUno, states, prezzo) {
       })
     );
   if (obiettivo2 != null) {
-    const passi = passiDellObiettivo(lettura3, states);
+    const passi2 = passiDellObiettivo(lettura3, states);
     comandi.push(
       schedaComando({
         chiave: "obiettivo",
         icona: "🎯",
         titolo: t("Obiettivo", "Target"),
         sotto: t("temperatura dell'acqua", "water temperature"),
-        comando: passi || `<b class="dm-f-imp-num dm-f-imp-valore">${esc(gradiUtili(obiettivo2))}</b>`
+        comando: passi2 || `<b class="dm-f-imp-num dm-f-imp-valore">${esc(gradiUtili(obiettivo2))}</b>`
       })
     );
   }
@@ -60843,15 +60860,15 @@ function toccoCaldoTermostato(entity2) {
   if (climaAccesoDaiWatt(entity2) ?? (Boolean(stato3) && !climateIsOff(stato3))) {
     commutaClima(entity2, false, "caldo");
   } else {
-    let passi = null;
+    let passi2 = null;
     try {
-      passi = root.dmQuickClimateSteps?.(entity2, "caldo");
+      passi2 = root.dmQuickClimateSteps?.(entity2, "caldo");
     } catch (_error) {
-      passi = null;
+      passi2 = null;
     }
-    if (!Array.isArray(passi) || !passi.length)
-      passi = [{ service: "set_hvac_mode", data: { hvac_mode: "heat" } }];
-    passi.forEach((passo, indice) => {
+    if (!Array.isArray(passi2) || !passi2.length)
+      passi2 = [{ service: "set_hvac_mode", data: { hvac_mode: "heat" } }];
+    passi2.forEach((passo, indice) => {
       const manda = () => chiamaClima(entity2, passo.service, passo.data);
       if (indice === 0) manda();
       else root.setTimeout?.(manda, indice * 700);
@@ -70638,8 +70655,8 @@ function altezzeDelleCode(altezze, { cima, fondo }) {
 function tacche(min, max) {
   const ampiezza = max - min;
   if (!Number.isFinite(ampiezza) || ampiezza <= 0) return [];
-  const passi = [0.5, 1, 2, 5, 10, 20];
-  const passo = passi.find((valore3) => ampiezza / valore3 <= 7) || passi[passi.length - 1];
+  const passi2 = [0.5, 1, 2, 5, 10, 20];
+  const passo = passi2.find((valore3) => ampiezza / valore3 <= 7) || passi2[passi2.length - 1];
   const valori = [];
   const primo = Math.ceil(min / passo) * passo;
   for (let valore3 = primo; valore3 < max - 1e-9; valore3 += passo) {
@@ -75274,13 +75291,13 @@ function quickClimatePresetForZone(preset, zona) {
 }
 function quickClimateSteps(preset, attributi2 = null, { zona = "" } = {}) {
   const scelta3 = normalizeQuickClimate(preset);
-  const passi = [{ service: "set_hvac_mode", data: { hvac_mode: scelta3.mode } }];
+  const passi2 = [{ service: "set_hvac_mode", data: { hvac_mode: scelta3.mode } }];
   if (scelta3.temperature != null) {
     const temperatura = temperaturaDelPreset(scelta3, attributi2, zona);
-    if (temperatura) passi.push({ service: "set_temperature", data: temperatura });
+    if (temperatura) passi2.push({ service: "set_temperature", data: temperatura });
   }
-  if (scelta3.fan) passi.push({ service: "set_fan_mode", data: { fan_mode: scelta3.fan } });
-  return passi;
+  if (scelta3.fan) passi2.push({ service: "set_fan_mode", data: { fan_mode: scelta3.fan } });
+  return passi2;
 }
 var RAFFRESCANO = /* @__PURE__ */ new Set(["cool", "dry", "fan_only"]);
 var gradi7 = (valore3) => {
@@ -86218,10 +86235,7 @@ function paginaPulita(input, indice = 0) {
     mixer: mixerPulito(dentro3.mixer),
     telecamera: telecameraPulita(dentro3.telecamera),
     pulsanti: (Array.isArray(dentro3.pulsanti) ? dentro3.pulsanti : []).slice(0, PULSANTI_AL_MASSIMO).map(pulsantePulito).filter(Boolean),
-    fermaTutto: {
-      attivo: vero2(dentro3.fermaTutto?.attivo, false),
-      entita: entitaDi3(dentro3.fermaTutto?.entita, DOMINI_DA_PREMERE)
-    }
+    fermaTutto: fermaTuttoPulito(dentro3.fermaTutto)
   };
 }
 var GRUPPI_AL_MASSIMO = 4;
@@ -86230,7 +86244,29 @@ var PRESET_AL_MASSIMO = 8;
 var PULSANTI_AL_MASSIMO = 8;
 var COLORI_DEI_GRUPPI = Object.freeze(["#f59e0b", "#0ea5e9", "#10b981", "#ec4899"]);
 var DOMINI_DEL_FADER = Object.freeze(["media_player", "number", "input_number"]);
-var DOMINI_DEL_MUTO = Object.freeze(["switch", "input_boolean"]);
+var DOMINI_DEL_CANALE = Object.freeze([...DOMINI_DEL_FADER, "sensor", "remote"]);
+var DOMINI_DEL_MUTO = Object.freeze([
+  "switch",
+  "input_boolean",
+  "remote",
+  "button",
+  "input_button",
+  "script"
+]);
+var COMANDI_DEL_CANALE = Object.freeze({
+  su: "volume_up",
+  giu: "volume_down",
+  muto: "mute"
+});
+var COMANDI_DELLA_TELECAMERA = Object.freeze({
+  su: "up",
+  giu: "down",
+  sinistra: "left",
+  destra: "right",
+  stop: "stop",
+  zoomPiu: "zoom_in",
+  zoomMeno: "zoom_out"
+});
 var DOMINI_DA_PREMERE = Object.freeze([
   "button",
   "input_button",
@@ -86240,9 +86276,11 @@ var DOMINI_DA_PREMERE = Object.freeze([
   "input_boolean",
   "automation",
   "light",
-  "fan"
+  "fan",
+  "remote"
 ]);
 var SI_SPENGONO3 = /* @__PURE__ */ new Set(["switch", "input_boolean", "light", "fan", "automation"]);
+var siSpegne = (id, comando = "") => SI_SPENGONO3.has(dominioDi7(id)) || dominioDi7(id) === "remote" && !comando;
 var DIREZIONI = Object.freeze(["su", "giu", "sinistra", "destra", "stop"]);
 var dominioDi7 = (id) => String(id || "").split(".")[0];
 function entitaDi3(valore3, domini2) {
@@ -86250,13 +86288,44 @@ function entitaDi3(valore3, domini2) {
   return id && domini2.includes(dominioDi7(id)) ? id : "";
 }
 var colorePulito = (valore3) => COLORI_DELLE_PAGINE.includes(String(valore3 || "").toLowerCase()) ? String(valore3).toLowerCase() : "";
+var parolaDelComando2 = (valore3) => testo(valore3, 64);
+var numeroOVuoto = (valore3) => valore3 === null || valore3 === void 0 || String(valore3).trim() === "" || !Number.isFinite(Number(valore3)) ? null : Number(valore3);
 function canalePulito(input) {
   const dentro3 = typeof input === "string" ? { entita: input } : input;
   if (!dentro3 || typeof dentro3 !== "object") return null;
-  const id = entitaDi3(dentro3.entita, DOMINI_DEL_FADER);
+  const id = entitaDi3(dentro3.entita, DOMINI_DEL_CANALE);
   if (!id) return null;
-  return { entita: id, nome: testo(dentro3.nome, 24), muto: entitaDi3(dentro3.muto, DOMINI_DEL_MUTO) };
+  const d = dominioDi7(id);
+  const muto2 = entitaDi3(dentro3.muto, DOMINI_DEL_MUTO);
+  const letto = d === "sensor" ? "" : entitaDi3(dentro3.letto, ["sensor"]);
+  const telecomando2 = d === "remote";
+  const mutoDaComando = telecomando2 || dominioDi7(muto2) === "remote";
+  const conScala = d === "sensor" || Boolean(letto);
+  return {
+    entita: id,
+    nome: testo(dentro3.nome, 24),
+    muto: muto2,
+    letto,
+    suComando: telecomando2 ? parolaDelComando2(dentro3.suComando) || COMANDI_DEL_CANALE.su : "",
+    giuComando: telecomando2 ? parolaDelComando2(dentro3.giuComando) || COMANDI_DEL_CANALE.giu : "",
+    mutoComando: mutoDaComando ? parolaDelComando2(dentro3.mutoComando) || COMANDI_DEL_CANALE.muto : "",
+    dispositivo: mutoDaComando ? testo(dentro3.dispositivo, 64) : "",
+    min: conScala ? numeroOVuoto(dentro3.min) : null,
+    max: conScala ? numeroOVuoto(dentro3.max) : null
+  };
 }
+var CANALE_VUOTO = Object.freeze({
+  entita: "",
+  nome: "",
+  muto: "",
+  letto: "",
+  suComando: "",
+  giuComando: "",
+  mutoComando: "",
+  dispositivo: "",
+  min: null,
+  max: null
+});
 function mixerPulito(input) {
   const dentro3 = input && typeof input === "object" ? input : {};
   const gruppi2 = (Array.isArray(dentro3.gruppi) ? dentro3.gruppi : []).slice(0, GRUPPI_AL_MASSIMO).map((g) => g && typeof g === "object" ? g : {}).map((g) => ({
@@ -86264,7 +86333,7 @@ function mixerPulito(input) {
     colore: colorePulito(g.colore),
     canali: (Array.isArray(g.canali) ? g.canali : []).map(canalePulito).filter(Boolean).slice(0, CANALI_PER_GRUPPO)
   }));
-  const master = canalePulito(dentro3.master) || { entita: "", nome: "", muto: "" };
+  const master = canalePulito(dentro3.master) || { ...CANALE_VUOTO };
   return { gruppi: gruppi2, master };
 }
 function coloreDelGruppo(gruppo, indice = 0) {
@@ -86273,13 +86342,29 @@ function coloreDelGruppo(gruppo, indice = 0) {
 function telecameraPulita(input) {
   const dentro3 = input && typeof input === "object" ? input : {};
   const fuori = { entita: entitaDi3(dentro3.entita, ["camera"]) };
-  for (const d of DIREZIONI) fuori[d] = entitaDi3(dentro3[d], DOMINI_DA_PREMERE);
+  const tasto2 = (chiave2) => {
+    fuori[chiave2] = entitaDi3(dentro3[chiave2], DOMINI_DA_PREMERE);
+    fuori[`${chiave2}Comando`] = dominioDi7(fuori[chiave2]) === "remote" ? parolaDelComando2(dentro3[`${chiave2}Comando`]) || COMANDI_DELLA_TELECAMERA[chiave2] : "";
+  };
+  for (const d of DIREZIONI) tasto2(d);
   fuori.zoom = entitaDi3(dentro3.zoom, ["number", "input_number"]);
-  fuori.zoomPiu = entitaDi3(dentro3.zoomPiu, DOMINI_DA_PREMERE);
-  fuori.zoomMeno = entitaDi3(dentro3.zoomMeno, DOMINI_DA_PREMERE);
-  fuori.preset = (Array.isArray(dentro3.preset) ? dentro3.preset : []).map((p) => p && typeof p === "object" ? p : {}).map((p) => ({ entita: entitaDi3(p.entita, DOMINI_DA_PREMERE), nome: testo(p.nome, 24) })).filter((p) => p.entita).slice(0, PRESET_AL_MASSIMO);
+  tasto2("zoomPiu");
+  tasto2("zoomMeno");
+  fuori.preset = (Array.isArray(dentro3.preset) ? dentro3.preset : []).map((p) => p && typeof p === "object" ? p : {}).map((p) => {
+    const id = entitaDi3(p.entita, DOMINI_DA_PREMERE);
+    return {
+      entita: id,
+      nome: testo(p.nome, 24),
+      comando: dominioDi7(id) === "remote" ? parolaDelComando2(p.comando) : ""
+    };
+  }).filter((p) => p.entita).slice(0, PRESET_AL_MASSIMO);
+  fuori.preset.forEach((p, k) => {
+    if (dominioDi7(p.entita) === "remote" && !p.comando) p.comando = `preset_${k + 1}`;
+  });
+  fuori.dispositivo = telecomandiDellaTelecamera(fuori) ? testo(dentro3.dispositivo, 64) : "";
   return fuori;
 }
+var telecomandiDellaTelecamera = (tc) => [...DIREZIONI, "zoomPiu", "zoomMeno"].some((k) => dominioDi7(tc[k]) === "remote") || tc.preset.some((p) => dominioDi7(p.entita) === "remote");
 function pulsantePulito(input) {
   if (!input || typeof input !== "object") return null;
   const fuori = {
@@ -86290,7 +86375,21 @@ function pulsantePulito(input) {
     stop: entitaDi3(input.stop, DOMINI_DA_PREMERE),
     stato: entita2(input.stato)
   };
+  fuori.avvioComando = dominioDi7(fuori.avvio) === "remote" ? parolaDelComando2(input.avvioComando) : "";
+  fuori.stopComando = dominioDi7(fuori.stop) === "remote" ? parolaDelComando2(input.stopComando) : "";
+  fuori.dispositivo = dominioDi7(fuori.avvio) === "remote" || dominioDi7(fuori.stop) === "remote" ? testo(input.dispositivo, 64) : "";
   return fuori.nome || fuori.avvio || fuori.stop ? fuori : null;
+}
+function fermaTuttoPulito(input) {
+  const dentro3 = input && typeof input === "object" ? input : {};
+  const id = entitaDi3(dentro3.entita, DOMINI_DA_PREMERE);
+  const telecomando2 = dominioDi7(id) === "remote";
+  return {
+    attivo: vero2(dentro3.attivo, false),
+    entita: id,
+    comando: telecomando2 ? parolaDelComando2(dentro3.comando) : "",
+    dispositivo: telecomando2 ? testo(dentro3.dispositivo, 64) : ""
+  };
 }
 function pulsantiDellaPagina(pagina2) {
   return (pagina2?.pulsanti || []).filter((p) => p.avvio || p.stop);
@@ -86308,15 +86407,42 @@ function posizioneDelValore(valore3, min = 0, max = 1) {
   if (!Number.isFinite(v) || !(Number(max) > Number(min))) return 0;
   return tra2((v - min) / (max - min), 0, 1);
 }
+function scalaDellaMisura(canale, a, unita2, accanto = null) {
+  const dichiarata = (k) => Number.isFinite(Number(a?.[k])) && a?.[k] !== "" && a?.[k] !== null ? Number(a[k]) : null;
+  let min = numeroOVuoto(canale?.min) ?? dichiarata("min");
+  let max = numeroOVuoto(canale?.max) ?? dichiarata("max");
+  if (min === null && max === null && accanto && accanto.unita === unita2) {
+    min = accanto.min;
+    max = accanto.max;
+  }
+  const db = /db/i.test(unita2);
+  if (min === null) min = db ? -60 : 0;
+  if (max === null) max = db ? 12 : 100;
+  if (!(max > min)) max = min + 100;
+  return { min, max };
+}
+function misuraDelSensore(id, canale, stati, accanto = null) {
+  const s = stati?.[id];
+  if (!s || IGNOTO2.has(String(s.state ?? ""))) return null;
+  const valore3 = Number(s.state);
+  if (String(s.state).trim() === "" || !Number.isFinite(valore3)) return null;
+  const a = s.attributes || {};
+  const unita2 = testo(a.unit_of_measurement, 12);
+  const { min, max } = scalaDellaMisura(canale, a, unita2, accanto);
+  return { entita: id, valore: valore3, unita: unita2, min, max, posizione: posizioneDelValore(valore3, min, max) };
+}
 function letturaDelCanale(canale, stati = {}) {
   const id = canale?.entita || "";
+  const d = dominioDi7(id);
   const s = stati?.[id];
   const a = s?.attributes || {};
   const muto2 = canale?.muto || "";
+  const mutoInterruttore = ["switch", "input_boolean"].includes(dominioDi7(muto2));
   const statoMuto = muto2 ? String(stati?.[muto2]?.state ?? "") : "";
+  const tipo = d === "media_player" ? "volume" : d === "sensor" ? "misura" : d === "remote" ? "telecomando" : "numero";
   const base = {
     entita: id,
-    tipo: dominioDi7(id) === "media_player" ? "volume" : "numero",
+    tipo,
     disponibile: Boolean(s) && !IGNOTO2.has(String(s.state ?? "")),
     valore: null,
     min: 0,
@@ -86325,31 +86451,65 @@ function letturaDelCanale(canale, stati = {}) {
     unita: "",
     posizione: 0,
     muove: false,
+    passi: false,
+    misura: null,
     puoMuto: Boolean(muto2),
-    mutato: muto2 ? statoMuto === "on" : false
+    mutoSaDire: mutoInterruttore,
+    mutato: mutoInterruttore ? statoMuto === "on" : false
   };
   if (!base.disponibile) return { ...base, puoMuto: false };
-  if (base.tipo === "volume") {
+  if (tipo === "misura") {
+    const m = misuraDelSensore(id, canale, stati);
+    return {
+      ...base,
+      valore: m ? m.valore : null,
+      min: m ? m.min : 0,
+      max: m ? m.max : 100,
+      passo: 0,
+      unita: m ? m.unita : testo(a.unit_of_measurement, 12),
+      posizione: m ? m.posizione : 0
+    };
+  }
+  if (tipo === "telecomando") {
+    const m = canale?.letto ? misuraDelSensore(canale.letto, canale, stati) : null;
+    return {
+      ...base,
+      valore: m ? m.valore : null,
+      min: m ? m.min : 0,
+      max: m ? m.max : 100,
+      passo: 0,
+      unita: m ? m.unita : "",
+      posizione: m ? m.posizione : 0,
+      passi: true,
+      misura: m,
+      puoMuto: true
+    };
+  }
+  if (tipo === "volume") {
     const f = Number(a.supported_features);
     const tutto = a.supported_features === void 0 || !Number.isFinite(f);
     const volume = Number(a.volume_level);
     const ce2 = a.volume_level !== void 0 && a.volume_level !== null && Number.isFinite(volume);
-    return {
+    const proprio = !muto2 && (tutto || Boolean(f & VOLUME_MUTE));
+    const lettura4 = {
       ...base,
       valore: ce2 ? tra2(volume, 0, 1) : null,
       unita: "%",
       posizione: ce2 ? tra2(volume, 0, 1) : 0,
       muove: ce2 && (tutto || Boolean(f & VOLUME_SET)),
       puoMuto: Boolean(muto2) || tutto || Boolean(f & VOLUME_MUTE),
+      mutoSaDire: mutoInterruttore || proprio,
       mutato: muto2 ? base.mutato : a.is_volume_muted === true
     };
+    lettura4.misura = canale?.letto ? misuraDelSensore(canale.letto, canale, stati) : null;
+    return lettura4;
   }
   const min = Number.isFinite(Number(a.min)) ? Number(a.min) : 0;
   const max = Number.isFinite(Number(a.max)) && Number(a.max) > min ? Number(a.max) : min + 100;
   const passo = Number(a.step) > 0 ? Number(a.step) : 1;
   const valore3 = Number(s.state);
   const ce = String(s.state).trim() !== "" && Number.isFinite(valore3);
-  return {
+  const lettura3 = {
     ...base,
     valore: ce ? valore3 : null,
     min,
@@ -86359,6 +86519,8 @@ function letturaDelCanale(canale, stati = {}) {
     posizione: ce ? posizioneDelValore(valore3, min, max) : 0,
     muove: ce
   };
+  lettura3.misura = canale?.letto ? misuraDelSensore(canale.letto, canale, stati, { unita: lettura3.unita, min, max }) : null;
+  return lettura3;
 }
 function valoreDallaPosizione(posizione, lettura3) {
   const p = tra2(Number(posizione) || 0, 0, 1);
@@ -86378,14 +86540,37 @@ function servizioDelFader(canale, posizione, lettura3) {
     return { domain: d, service: "volume_set", data: { entity_id: id, volume_level: valore3 } };
   return { domain: d, service: "set_value", data: { entity_id: id, value: valore3 } };
 }
+function comandoAlTelecomando(id, comando, dispositivo = "") {
+  if (dominioDi7(id) !== "remote" || !comando) return null;
+  const data = { entity_id: id, command: comando };
+  if (dispositivo) data.device = dispositivo;
+  return { domain: "remote", service: "send_command", data };
+}
 function servizioDelMuto(canale, lettura3) {
   if (!lettura3?.puoMuto) return null;
-  if (canale?.muto)
-    return {
-      domain: dominioDi7(canale.muto),
-      service: lettura3.mutato ? "turn_off" : "turn_on",
-      data: { entity_id: canale.muto }
-    };
+  const muto2 = canale?.muto || "";
+  if (muto2) {
+    const d = dominioDi7(muto2);
+    if (d === "switch" || d === "input_boolean")
+      return {
+        domain: d,
+        service: lettura3.mutato ? "turn_off" : "turn_on",
+        data: { entity_id: muto2 }
+      };
+    if (d === "remote")
+      return comandoAlTelecomando(
+        muto2,
+        canale.mutoComando || COMANDI_DEL_CANALE.muto,
+        canale.dispositivo
+      );
+    return servizioDaPremere(muto2);
+  }
+  if (dominioDi7(canale?.entita) === "remote")
+    return comandoAlTelecomando(
+      canale.entita,
+      canale.mutoComando || COMANDI_DEL_CANALE.muto,
+      canale.dispositivo
+    );
   if (dominioDi7(canale?.entita) !== "media_player") return null;
   return {
     domain: "media_player",
@@ -86393,16 +86578,27 @@ function servizioDelMuto(canale, lettura3) {
     data: { entity_id: canale.entita, is_volume_muted: !lettura3.mutato }
   };
 }
-function servizioDaPremere(id) {
+function servizioDelPasso(canale, verso2 = "su") {
+  if (dominioDi7(canale?.entita) !== "remote") return null;
+  const comando = verso2 === "giu" ? canale.giuComando || COMANDI_DEL_CANALE.giu : canale.suComando || COMANDI_DEL_CANALE.su;
+  return comandoAlTelecomando(canale.entita, comando, canale.dispositivo);
+}
+function servizioDaPremere(id, comando = "", dispositivo = "") {
   const d = dominioDi7(id);
   if (!id || !DOMINI_DA_PREMERE.includes(d)) return null;
+  if (d === "remote" && comando) return comandoAlTelecomando(id, comando, dispositivo);
   if (d === "button" || d === "input_button")
     return { domain: d, service: "press", data: { entity_id: id } };
   if (d === "automation") return { domain: d, service: "trigger", data: { entity_id: id } };
   return { domain: d, service: "turn_on", data: { entity_id: id } };
 }
-function servizioDellaTelecamera(telecamera, tasto2) {
-  return servizioDaPremere(telecamera?.[tasto2] || "");
+function servizioDellaTelecamera(telecamera, tasto2, dispositivo = "") {
+  const comando = tasto2 === "entita" ? telecamera?.comando : telecamera?.[`${tasto2}Comando`];
+  return servizioDaPremere(
+    telecamera?.[tasto2] || "",
+    comando || "",
+    dispositivo || telecamera?.dispositivo || ""
+  );
 }
 var ACCESI_DEI_PULSANTI = /* @__PURE__ */ new Set(["on", "playing", "open", "home", "true"]);
 function pulsanteAcceso(pulsante, stati = {}) {
@@ -86410,30 +86606,42 @@ function pulsanteAcceso(pulsante, stati = {}) {
   if (!id) return false;
   const d = dominioDi7(id);
   if (["button", "input_button", "scene"].includes(d)) return false;
+  if (!pulsante?.stato && d === "remote" && pulsante?.avvioComando) return false;
   return ACCESI_DEI_PULSANTI.has(String(stati?.[id]?.state ?? "").toLowerCase());
+}
+function pulsanteDiceLoStato(pulsante) {
+  return Boolean(pulsante?.stato) || siSpegne(pulsante?.avvio, pulsante?.avvioComando);
 }
 function servizioDelPulsante(pulsante, verso2 = "avvio", stati = {}) {
   const avvio = pulsante?.avvio || "";
   const stop = pulsante?.stop || "";
+  const dispositivo = pulsante?.dispositivo || "";
   const spegni2 = (id) => ({
     domain: dominioDi7(id),
     service: "turn_off",
     data: { entity_id: id }
   });
   if (verso2 === "stop") {
+    if (dominioDi7(stop) === "remote")
+      return pulsante?.stopComando ? comandoAlTelecomando(stop, pulsante.stopComando, dispositivo) : spegni2(stop);
     if (stop && stop !== avvio) return servizioDaPremere(stop);
-    if (avvio && SI_SPENGONO3.has(dominioDi7(avvio))) return spegni2(avvio);
+    if (avvio && siSpegne(avvio, pulsante?.avvioComando)) return spegni2(avvio);
     return null;
   }
   if (!avvio) return null;
-  if (!stop && SI_SPENGONO3.has(dominioDi7(avvio)) && pulsanteAcceso({ avvio }, stati))
+  if (!stop && siSpegne(avvio, pulsante?.avvioComando) && pulsanteAcceso({ avvio }, stati))
     return spegni2(avvio);
-  return servizioDaPremere(avvio);
+  return servizioDaPremere(avvio, pulsante?.avvioComando, dispositivo);
 }
 function chiamateDelFermaTutto(pagina2, stati = {}) {
-  if (!pagina2?.fermaTutto?.attivo) return [];
-  if (pagina2.fermaTutto.entita) return [servizioDaPremere(pagina2.fermaTutto.entita)];
-  return pulsantiDellaPagina(pagina2).filter((p) => p.stop || SI_SPENGONO3.has(dominioDi7(p.avvio))).map((p) => servizioDelPulsante(p, "stop", stati)).filter(Boolean);
+  const ferma3 = pagina2?.fermaTutto;
+  if (!ferma3?.attivo) return [];
+  if (ferma3.entita) {
+    if (dominioDi7(ferma3.entita) === "remote" && !ferma3.comando)
+      return [{ domain: "remote", service: "turn_off", data: { entity_id: ferma3.entita } }];
+    return [servizioDaPremere(ferma3.entita, ferma3.comando, ferma3.dispositivo)];
+  }
+  return pulsantiDellaPagina(pagina2).filter((p) => p.stop || siSpegne(p.avvio, p.avvioComando)).map((p) => servizioDelPulsante(p, "stop", stati)).filter(Boolean);
 }
 function menuDiLato(muro, versoScelto = "orizzontale", compatto = false) {
   return Boolean(muro?.menuDiLato) && versoScelto === "orizzontale" && !compatto;
@@ -86631,7 +86839,9 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
     lettori: lettoriConfigurati(elenco5(altro.lettori)).filter((l) => entita2(l.entity)).map((l) => ({
       entity: entita2(l.entity),
       nome: testo(l.nome),
-      comandi: elenco5(l.comandi).map(entita2).filter(Boolean)
+      comandi: l.comandi,
+      letture: l.letture.map(entita2).filter(Boolean),
+      telecomando: entita2(l.telecomando)
     })),
     stanze: elenco5(sezioni2.rooms).filter((s) => s && testo(s.name)).map((s) => ({
       id: testo(s.id, 80),
@@ -87903,9 +88113,19 @@ var GLIFI_MUSICA = {
   gruppo: '<rect x="2.5" y="6" width="8" height="13" rx="2"/><rect x="13.5" y="6" width="8" height="13" rx="2"/><circle cx="6.5" cy="14.5" r="2"/><circle cx="17.5" cy="14.5" r="2"/><path d="M6.5 9.5h.01M17.5 9.5h.01"/>'
 };
 var glifo = (nome, misura7 = 30) => `<svg width="${misura7}" height="${misura7}" viewBox="0 0 24 24" fill="${["suona"].includes(nome) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${GLIFI_MUSICA[nome]}</svg>`;
+var voceDellaMusica = (entity2) => (state109.fonte?.lettori || []).find((l) => l.entity === entity2) || {};
 function lettoreOra(voce3) {
   segna(voce3.entita);
-  const lettura3 = letturaDelLettore({ entity: voce3.entita, nome: voce3.nome }, allStates() || {});
+  const scritta = voceDellaMusica(voce3.entita);
+  const lettura3 = letturaDelLettore(
+    { ...scritta, entity: voce3.entita, nome: voce3.nome },
+    allStates() || {},
+    (v) => v,
+    piattaformeConosciute()
+  );
+  for (const c of lettura3.comandi || []) segna(c.entita || c.entity);
+  for (const l of lettura3.letture || []) segna(l.entity);
+  if (scritta.telecomando) segna(scritta.telecomando);
   const attesa = state109.inAttesa[voce3.entita] || {};
   if (typeof attesa.suona === "boolean") {
     lettura3.suona = attesa.suona;
@@ -87958,19 +88178,52 @@ function lettoreGrande(l) {
     ${l.puo.sorgente && l.sorgenti.length && !l.spento ? `<div class="mu-mp-sorgenti">${l.sorgenti.slice(0, 8).map(
     (sorgente) => `<button type="button" class="${sorgente === l.sorgente ? "si" : ""}" data-mu-fa="mp-sorgente" data-mu-sorgente="${esc(sorgente)}" data-mu-entita="${esc(l.entity)}">${esc(sorgente)}</button>`
   ).join("")}</div>` : ""}
-    ${comandiDelLettore(l.entity)}
+    ${comandiDelLettore(l)}
+    ${lettureDelLettore(l)}
+    ${telecomandoDelLettoreMuro(l)}
   </div>`;
 }
-function comandiDelLettore(entity2) {
-  const voce3 = (state109.fonte?.lettori || []).find((l) => l.entity === entity2);
-  const comandi = (voce3?.comandi || []).filter((id) => stato2(id));
+function comandiDelLettore(l) {
+  const comandi = (l?.comandi || []).filter((c) => c.comando || stato2(c.entita || c.entity));
   if (!comandi.length) return "";
-  return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi.map((id) => {
+  return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi.map((c) => {
+    const id = c.entita || c.entity;
+    if (dominio2(id) === "remote") {
+      const premuto = c.comando ? "" : ` aria-pressed="${acceso4(id)}"`;
+      const parole5 = c.comando ? "" : statoInParole2(id);
+      return `<button type="button" class="${!c.comando && acceso4(id) ? "si" : ""}" data-mu-fa="mp-accanto" data-mu-entita="${esc(l.entity)}" data-mu-voce="${esc(c.entity)}"${premuto}${c.available ? "" : " disabled"}>${esc(c.comando ? `${nomeDi7(id)} · ${c.comando}` : nomeDi7(id))}${parole5 ? ` <small>${esc(parole5)}</small>` : ""}</button>`;
+    }
     const s = stato2(id);
     const servizio = servizioDellEntita(id, String(s?.state || ""));
     const parole4 = statoInParole2(id);
     return `<button type="button" class="${acceso4(id) ? "si" : ""}" ${servizio ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`}>${esc(nomeDi7(id))}${parole4 ? ` <small>${esc(parole4)}</small>` : ""}</button>`;
   }).join("")}</div>`;
+}
+function lettureDelLettore(l) {
+  const letture2 = l?.letture || [];
+  if (!letture2.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-letture">${letture2.map(
+    (x) => `<span class="mu-mp-lettura" data-mu-mp-lettura="${esc(x.entity)}">${esc(nomeDi7(x.entity))} <b>${esc(x.testo)}</b></span>`
+  ).join("")}</div>`;
+}
+var SEGNI_DEL_TELECOMANDO = Object.freeze({
+  su: "▲",
+  giu: "▼",
+  sinistra: "◀",
+  destra: "▶",
+  ok: "OK",
+  indietro: "↩",
+  home: "⌂",
+  menu: "☰",
+  canale_meno: "CH−",
+  canale_piu: "CH+"
+});
+function telecomandoDelLettoreMuro(l) {
+  const tasti = tastiDelTelecomando(l?.telecomando);
+  if (!tasti.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-tele">${tasti.map(
+    (tasto2) => `<button type="button" data-mu-fa="mp-tele" data-mu-tasto="${esc(tasto2)}" data-mu-entita="${esc(l.entity)}">${esc(SEGNI_DEL_TELECOMANDO[tasto2] || tasto2)}</button>`
+  ).join("")}</div>`;
 }
 var lettoriDiQui = [];
 function bottoneDelGruppo(l) {
@@ -88238,35 +88491,63 @@ function paginaIngresso(pagina2) {
 function canaleOra(canale) {
   segna(canale.entita);
   if (canale.muto) segna(canale.muto);
+  if (canale.letto) segna(canale.letto);
   const lettura3 = letturaDelCanale(canale, allStates() || {});
   const attesa = state109.inAttesa[canale.entita] || {};
-  if (attesa.posizione !== void 0) {
+  if (attesa.posizione !== void 0 && lettura3.muove) {
     lettura3.posizione = attesa.posizione;
     lettura3.valore = valoreDallaPosizione(attesa.posizione, lettura3);
   }
   const muto2 = canale.muto ? state109.inAttesa[canale.muto]?.acceso : attesa.mutato;
-  if (typeof muto2 === "boolean") lettura3.mutato = muto2;
+  if (lettura3.mutoSaDire && typeof muto2 === "boolean") lettura3.mutato = muto2;
   return lettura3;
 }
+function testoDellaMisura(m) {
+  if (!m) return "—";
+  const cifre2 = Number.isInteger(m.valore) || Math.abs(m.valore) >= 100 ? 0 : 1;
+  return `${decimale(m.valore, cifre2)}${m.unita ? ` ${m.unita}` : ""}`;
+}
 function testoDelCanale(lettura3, posizione = lettura3.posizione) {
+  if (lettura3.tipo === "telecomando")
+    return lettura3.misura && lettura3.disponibile ? testoDellaMisura(lettura3.misura) : "";
   if (!lettura3.disponibile || lettura3.valore === null) return "—";
+  if (lettura3.tipo === "misura") return testoDellaMisura(lettura3);
   const valore3 = valoreDallaPosizione(posizione, lettura3);
   if (lettura3.tipo === "volume") return `${Math.round(valore3 * 100)}%`;
   const cifre2 = lettura3.passo >= 1 ? 0 : lettura3.passo >= 0.1 ? 1 : 2;
   return `${decimale(valore3, cifre2)}${lettura3.unita ? ` ${lettura3.unita}` : ""}`;
 }
+var strisciaLetta = (m) => m ? `<span class="mu-fad-letto" style="--l:${m.posizione.toFixed(4)}" title="${esc(testoDellaMisura(m))}"><i></i></span>` : "";
 function fader(canale, lettura3, { sdraiato = false } = {}) {
-  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura3.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura3.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi7(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura3))}"><span class="mu-fad-traccia"><i></i></span><u></u></div>`;
+  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura3.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura3.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi7(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura3))}"><span class="mu-fad-traccia"><i></i></span>${strisciaLetta(lettura3.misura)}<u></u></div>`;
 }
-function tastoMuto(canale, lettura3) {
+function metro(canale, posizione, testo2, { sdraiato = false } = {}) {
+  return `<div class="mu-fader mu-metro${sdraiato ? " sdraiato" : ""}" data-mu-metro="${esc(canale.entita)}" style="--p:${posizione.toFixed(4)}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(posizione * 100)}" aria-label="${esc(nomeDi7(canale.entita, canale.nome))}" aria-valuetext="${esc(testo2)}"><span class="mu-fad-traccia"><i></i></span></div>`;
+}
+function passi(canale, lettura3, { sdraiato = false } = {}) {
+  const nome = nomeDi7(canale.entita, canale.nome);
+  const tasto2 = (verso2, segno2, etichetta3) => `<button type="button" class="mu-passo" data-mu-fa="passo" data-mu-verso="${verso2}" data-mu-entita="${esc(canale.entita)}"${sdraiato ? ' data-mu-master="1"' : ""} aria-label="${esc(etichetta3)} ${esc(nome)}"${lettura3.disponibile ? "" : " disabled"}>${segno2}</button>`;
+  const su = tasto2("su", "▲", t("Alza", "Volume up"));
+  const giu = tasto2("giu", "▼", t("Abbassa", "Volume down"));
+  const mezzo = lettura3.misura ? metro(canale, lettura3.misura.posizione, testoDellaMisura(lettura3.misura), { sdraiato }) : '<span class="mu-passi-spazio"></span>';
+  return `<div class="mu-passi${sdraiato ? " sdraiato" : ""}">${sdraiato ? `${giu}${mezzo}${su}` : `${su}${mezzo}${giu}`}</div>`;
+}
+function comandoDelCanale(canale, l, opzioni = {}) {
+  if (l.tipo === "misura") return metro(canale, l.posizione, testoDelCanale(l), opzioni);
+  if (l.tipo === "telecomando") return passi(canale, l, opzioni);
+  return fader(canale, l, opzioni);
+}
+function tastoMuto(canale, lettura3, master = false) {
   if (!lettura3.puoMuto) return `<span class="mu-can-muto vuoto" aria-hidden="true"></span>`;
-  return `<button type="button" class="mu-can-muto${lettura3.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}" aria-pressed="${lettura3.mutato}" aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi7(canale.entita, canale.nome))}">${glifo(lettura3.mutato ? "muto" : "voce", 24)}</button>`;
+  const premuto = lettura3.mutoSaDire ? ` aria-pressed="${lettura3.mutato}"` : "";
+  return `<button type="button" class="mu-can-muto${lettura3.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}"${master ? ' data-mu-master="1"' : ""}${premuto} aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi7(canale.entita, canale.nome))}">${glifo(lettura3.mutato ? "muto" : "voce", 24)}</button>`;
 }
+var lettoSotto = (l) => l.misura && l.tipo !== "telecomando" ? `<small class="mu-can-l" data-mu-letto>${esc(testoDellaMisura(l.misura))}</small>` : "";
 function canaleDelMixer(canale) {
   const l = canaleOra(canale);
-  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"}" data-mu-canale="${esc(canale.entita)}">
-    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>
-    ${fader(canale, l)}
+  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"} mu-can-${l.tipo}" data-mu-canale="${esc(canale.entita)}">
+    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>${lettoSotto(l)}
+    ${comandoDelCanale(canale, l)}
     <span class="mu-can-n">${esc(nomeDi7(canale.entita, canale.nome))}</span>
     ${tastoMuto(canale, l)}</div>`;
 }
@@ -88284,13 +88565,19 @@ function paginaMixer(pagina2) {
   let totale = "";
   if (master?.entita) {
     const l = canaleOra(master);
-    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
+    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""} mu-can-${l.tipo}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
       <span class="mu-mix-tit">${esc(master.nome || t("Volume totale", "Master volume"))}</span>
-      ${tastoMuto(master, l)}
-      ${fader(master, l, { sdraiato: true })}
+      ${tastoMuto(master, l, true)}
+      ${comandoDelCanale(master, l, { sdraiato: true })}
       <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b></div>`;
   }
   return `<div class="mu-mixer${banchi ? "" : " solo-totale"}">${banchi}${totale}</div>`;
+}
+function canaleDellaPagina(id, muto2 = "", master = false) {
+  const mixer = state109.muro?.pagine?.[state109.pagina]?.mixer;
+  if (master && mixer?.master?.entita === id) return mixer.master;
+  const tutti = [...(mixer?.gruppi || []).flatMap((g) => g.canali || []), mixer?.master];
+  return tutti.find((c) => c?.entita === id && (!muto2 || c.muto === muto2)) || { entita: id, muto: muto2 };
 }
 var FRECCE = Object.freeze({
   su: '<path d="M6 15l6-6 6 6"/>',
@@ -88340,7 +88627,7 @@ function comandoAcceso(p) {
   const atteso = state109.inAttesa[id]?.acceso;
   return typeof atteso === "boolean" ? atteso : pulsanteAcceso(p, allStates() || {});
 }
-var diceLoStato = (p) => Boolean(p.stato) || ["switch", "input_boolean", "light", "fan", "automation"].includes(dominio2(p.avvio));
+var diceLoStato = pulsanteDiceLoStato;
 function paginaComandi(pagina2) {
   const tutti = pulsantiDellaPagina(pagina2).map((p, k) => ({ p, k }));
   if (!tutti.length)
@@ -89379,16 +89666,39 @@ function onClick24(event) {
     case "cifra":
       cifra(bersaglio.dataset.muCifra);
       return;
+    case "mp-accanto": {
+      const l = lettoreOra({ entita: id, nome: "" });
+      const voce3 = (l.comandi || []).find((c) => c.entity === bersaglio.dataset.muVoce);
+      const servizio = voce3 ? comandoDelDispositivo(voce3) : null;
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(voce3.entita, "remote", "toggle");
+      else comanda2(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "mp-tele": {
+      const l = lettoreOra({ entita: id, nome: "" });
+      const servizio = comandoDelTelecomando(l.telecomando, bersaglio.dataset.muTasto);
+      if (servizio) comanda2(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
     case "muto": {
       const muto2 = bersaglio.dataset.muMuto || "";
-      const canale = { entita: id, muto: muto2 };
+      const canale = canaleDellaPagina(id, muto2, Boolean(bersaglio.dataset.muMaster));
       const lettura3 = canaleOra(canale);
       const servizio = servizioDelMuto(canale, lettura3);
       if (!servizio) return;
-      if (muto2) attendi(muto2, "acceso", !lettura3.mutato);
-      else attendi(id, "mutato", !lettura3.mutato);
+      if (lettura3.mutoSaDire) {
+        if (muto2) attendi(muto2, "acceso", !lettura3.mutato);
+        else attendi(id, "mutato", !lettura3.mutato);
+      }
       comanda2(servizio.domain, servizio.service, servizio.data);
       disegna5();
+      return;
+    }
+    case "passo": {
+      const canale = canaleDellaPagina(id, "", Boolean(bersaglio.dataset.muMaster));
+      const servizio = servizioDelPasso(canale, bersaglio.dataset.muVerso);
+      if (servizio) comanda2(servizio.domain, servizio.service, servizio.data);
       return;
     }
     case "ptz": {
@@ -89400,7 +89710,7 @@ function onClick24(event) {
     case "preset": {
       const pagina2 = state109.muro?.pagine?.[state109.pagina];
       const voce3 = pagina2?.telecamera?.preset?.[Number(bersaglio.dataset.muIndice)];
-      const servizio = voce3 ? servizioDellaTelecamera(voce3, "entita") : null;
+      const servizio = voce3 ? servizioDellaTelecamera(voce3, "entita", pagina2.telecamera.dispositivo) : null;
       if (servizio) comanda2(servizio.domain, servizio.service, servizio.data);
       return;
     }
@@ -89784,6 +90094,9 @@ ${MURO} .mu-mp-cursore{flex:1}
 ${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 ${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
 ${MURO} .mu-mp-comandi button small{margin-left:4px;font-weight:700;opacity:.75}
+${MURO} .mu-mp-lettura{padding:8px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 3%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+${MURO} .mu-mp-lettura b{margin-left:4px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums}
+${MURO} .mu-mp-tele button{min-width:52px;text-align:center}
 ${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
 ${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}
@@ -90321,6 +90634,29 @@ ${MURO} .mu-fader.fermo{cursor:default;opacity:.4}
 ${MURO} .mu-muto .mu-fad-traccia i{filter:grayscale(1);opacity:.3;box-shadow:none}
 ${MURO} .mu-muto .mu-can-v{color:var(--text-dim);text-decoration:line-through}
 ${MURO} .mu-spento{opacity:.5}
+${MURO} .mu-can-v{min-height:1em}
+${MURO} .mu-can-l{margin-top:-4px;font-size:12px;font-weight:700;color:var(--text-dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+${MURO} .mu-fad-letto{position:absolute;top:24px;bottom:24px;left:calc(50% - 22px);width:6px;border-radius:3px;background:color-mix(in srgb,var(--text) 8%,#000 18%);overflow:hidden}
+${MURO} .mu-fad-letto i{position:absolute;left:0;right:0;bottom:0;height:calc(var(--l) * 100%);background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--l),.001));background-position:bottom}
+${MURO} .mu-metro{cursor:default}
+${MURO} .mu-metro .mu-fad-traccia{width:18px;margin-left:-9px;border-radius:5px}
+${MURO} .mu-metro .mu-fad-traccia i{border-radius:4px;box-shadow:none;background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--p),.001));background-position:bottom;
+  -webkit-mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia{height:18px;margin:-9px 0 0}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia i{background:linear-gradient(90deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:calc(100% / max(var(--p),.001)) 100%;background-position:left;
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-passi{flex:1 1 auto;min-height:90px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+${MURO} .mu-passi>.mu-metro{flex:1 1 auto;min-height:40px}
+${MURO} .mu-passi>.mu-metro .mu-fad-traccia{top:6px;bottom:6px}
+${MURO} .mu-passi-spazio{flex:1 1 auto}
+${MURO} .mu-passo{flex:none;width:100%;max-width:72px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:24px;color:var(--acc);
+  background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 35%,transparent),0 6px 14px -8px rgba(0,0,0,.6)}
+${MURO} .mu-passo:active:not(:disabled){background:color-mix(in srgb,var(--acc) 30%,var(--card-bg))}
+${MURO} .mu-passo:disabled{opacity:.4}
+${MURO} .mu-passi.sdraiato{flex-direction:row;min-height:0;height:64px}
+${MURO} .mu-passi.sdraiato>.mu-metro{height:100%;min-height:0}
+${MURO} .mu-passi.sdraiato>.mu-metro .mu-fad-traccia{left:10px;right:10px}
+${MURO} .mu-passi.sdraiato .mu-passo{width:72px;height:56px}
 ${MURO} .mu-mix-master{display:flex;align-items:center;gap:18px;padding:12px 22px;min-width:0}
 ${MURO} .mu-mix-master>.mu-mix-tit{flex:none;max-width:220px;text-align:left;font-size:15px}
 ${MURO} .mu-mix-master>.mu-can-muto{width:64px;max-width:none;height:56px}
@@ -90390,6 +90726,11 @@ ${MURO}[data-compatto="1"] .mu-fader.sdraiato{height:44px;min-height:0}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato .mu-fad-traccia{top:50%;bottom:auto;left:20px;right:20px}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato::before{top:auto;bottom:2px;left:20px;right:20px}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato u{bottom:auto;left:calc(20px + var(--p) * (100% - 40px));width:30px;height:40px}
+${MURO}[data-compatto="1"] .mu-passo{height:40px;font-size:16px;border-radius:10px}
+${MURO}[data-compatto="1"] .mu-passi{min-height:60px;gap:4px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato{height:44px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato .mu-passo{width:44px;height:40px}
+${MURO}[data-compatto="1"] .mu-fad-letto{top:16px;bottom:16px}
 ${MURO}[data-compatto="1"] .mu-mix-master{padding:6px 12px;gap:10px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-mix-master>.mu-mix-tit{max-width:110px;font-size:11px}
 ${MURO}[data-compatto="1"] .mu-mix-master>.mu-can-muto{width:44px;height:38px}
@@ -90869,14 +91210,24 @@ function paginaMarkup(p, i, tutte) {
 var DA_PREMERE = "button,input_button,script,scene";
 var togli = (via, etichetta3) => `<button type="button" class="mu-ed-svuota" data-mu-ed-togli-voce="${esc(via)}" aria-label="${esc(etichetta3)}">✕</button>`;
 var voce2 = (etichetta3, dentro3, entitaQui = false) => `<label class="mu-ed-voce"${entitaQui ? " data-entity-field" : ""}><span${entitaQui ? ' class="ed-slot-lbl"' : ""}>${esc(etichetta3)}</span>${dentro3}</label>`;
+var DOMINI_DEL_CANALE2 = "media_player,number,input_number,sensor,remote";
+var DOMINI_DEL_MUTO2 = "switch,input_boolean,remote,button,input_button,script";
+var telecomando = (id) => String(id || "").startsWith("remote.");
 function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
   const pieno = Boolean(c?.entita);
+  const sensore = String(c?.entita || "").startsWith("sensor.");
+  const conComandi = pieno && (telecomando(c.entita) || telecomando(c.muto));
+  const comando = (chiave2, etichetta3, ripiego) => voce2(etichetta3, campo3(`${via}.${chiave2}`, c[chiave2] || "", ripiego));
   return `<div class="mu-ed-posto${pieno ? " pieno" : ""}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? `${nomeDi8(c.entita)} · ${c.entita}` : t("Nuovo canale", "New channel"))}</b>${pieno && togliVia ? togli(togliVia, t("Togli il canale", "Remove the channel")) : ""}</div>
     <div class="mu-ed-posto-corpo">
-      ${voce2(t("Livello", "Level"), cerca(`${via}.entita`, c?.entita || "", { domini: "media_player,number,input_number" }), true)}
+      ${voce2(t("Livello", "Level"), cerca(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEL_CANALE2 }), true)}
       ${pieno ? `${voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.nome`, c.nome || "", nomeDi8(c.entita)))}
-      ${voce2(t("Muto (facoltativo)", "Mute (optional)"), cerca(`${via}.muto`, c.muto || "", { domini: "switch,input_boolean", segnaposto: t("Acceso = muto", "On = muted") }), true)}` : ""}
+      ${telecomando(c.entita) ? `<div class="mu-ed-comandi" data-mu-ed-comandi>${comando("suComando", t("Comando ▲", "▲ command"), "volume_up")}${comando("giuComando", t("Comando ▼", "▼ command"), "volume_down")}</div>` : ""}
+      ${sensore ? "" : voce2(t("Livello letto (facoltativo)", "Read level (optional)"), cerca(`${via}.letto`, c.letto || "", { domini: "sensor", segnaposto: t("Un sensore col livello", "A sensor with the level") }), true)}
+      ${sensore || c.letto ? `<div class="mu-ed-comandi">${voce2(t("Scala: da", "Scale: from"), campo3(`${via}.min`, c.min ?? "", t("Automatica", "Automatic"), "number"))}${voce2(t("Scala: a", "Scale: to"), campo3(`${via}.max`, c.max ?? "", t("Automatica", "Automatic"), "number"))}</div>` : ""}
+      ${voce2(t("Muto (facoltativo)", "Mute (optional)"), cerca(`${via}.muto`, c.muto || "", { domini: DOMINI_DEL_MUTO2, segnaposto: t("Acceso = muto", "On = muted") }), true)}
+      ${conComandi ? `<div class="mu-ed-comandi">${comando("mutoComando", t("Comando del muto", "Mute command"), "mute")}${comando("dispositivo", t("Dispositivo (facoltativo)", "Device (optional)"), "")}</div>` : ""}` : ""}
     </div></div>`;
 }
 function mixerMarkup(p, i) {
@@ -90897,28 +91248,35 @@ function mixerMarkup(p, i) {
   }).join("");
   return `<div class="mu-ed-nota">${esc(
     t(
-      "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Il muto è quello del lettore, o un interruttore scelto qui: acceso vuol dire muto.",
-      "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted."
+      "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Un sensore (sensor) diventa uno strumento che si guarda; un telecomando (remote) ha ▲ / ▼ e il muto, ognuno col suo comando (remote.send_command). Il muto è quello del lettore, un interruttore (acceso vuol dire muto), un telecomando o un tasto da premere.",
+      "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press."
     )
   )}</div>${blocchi}
   ${gruppi2.length < GRUPPI_AL_MASSIMO ? `<button type="button" class="ed-btn-add mu-ed-piu" data-mu-ed-aggiungi-voce="${via}.gruppi">＋ ${esc(t("Aggiungi un gruppo", "Add a group"))}</button>` : ""}
   <div class="mu-ed-sotto-titolo">${esc(t("Volume totale", "Master volume"))}</div>
   <div class="mu-ed-posti">${canaleMarkup(`${via}.master`, p.mixer.master, 0)}</div>`;
 }
+var DA_PREMERE_O_TELECOMANDO = `${DA_PREMERE},remote`;
+var campoComando = (via, valore3, ripiego = "") => `<span class="mu-ed-comando">${campo3(via, valore3, ripiego || t("Comando", "Command"))}</span>`;
 function telecameraMarkup(p, i) {
   const via = `pagine.${i}.telecamera`;
   const tc = p.telecamera;
-  const tasto2 = (chiave2, titolo3, domini2 = DA_PREMERE) => riga2(titolo3, "", cerca(`${via}.${chiave2}`, tc[chiave2], { domini: domini2 }));
+  const tasto2 = (chiave2, titolo3, domini2 = DA_PREMERE_O_TELECOMANDO) => riga2(
+    titolo3,
+    "",
+    `${cerca(`${via}.${chiave2}`, tc[chiave2], { domini: domini2 })}${telecomando(tc[chiave2]) ? campoComando(`${via}.${chiave2}Comando`, tc[`${chiave2}Comando`] || "") : ""}`
+  );
   const preset = Array.from({ length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) }, (_, k) => {
     const v = tc.preset[k];
     const pieno = Boolean(v?.entita);
     return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? v.nome || nomeDi8(v.entita) : t("Nuovo preset", "New preset"))}</b>${pieno ? togli(`${via}.preset.${k}`, t("Togli il preset", "Remove the preset")) : ""}</div>
-      <div class="mu-ed-posto-corpo">${voce2(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE }), true)}${pieno ? voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
+      <div class="mu-ed-posto-corpo">${voce2(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE_O_TELECOMANDO }), true)}${pieno && telecomando(v.entita) ? voce2(t("Comando", "Command"), campo3(`${via}.preset.${k}.comando`, v.comando || "", `preset_${k + 1}`)) : ""}${pieno ? voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
   }).join("");
+  const conTelecomando = ["su", "giu", "sinistra", "destra", "stop", "zoomPiu", "zoomMeno"].some((k) => telecomando(tc[k])) || tc.preset.some((x) => telecomando(x.entita));
   return `<div class="mu-ed-nota">${esc(
     t(
-      "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera o uno script con onvif.ptz. Un tasto senza entità resta spento.",
-      "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off."
+      "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera, uno script con onvif.ptz, o un telecomando (remote) col comando da mandare. Un tasto senza entità resta spento.",
+      "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off."
     )
   )}</div>
   ${riga2(t("Telecamera", "Camera"), "", cerca(`${via}.entita`, tc.entita, { domini: "camera" }))}
@@ -90930,6 +91288,7 @@ function telecameraMarkup(p, i) {
   ${riga2(t("Zoom", "Zoom"), t("Un numero: diventa un cursore", "A number: it becomes a fader"), cerca(`${via}.zoom`, tc.zoom, { domini: "number,input_number" }))}
   ${tasto2("zoomPiu", t("Zoom avanti", "Zoom in"))}
   ${tasto2("zoomMeno", t("Zoom indietro", "Zoom out"))}
+  ${conTelecomando ? riga2(t("Dispositivo del telecomando", "Remote device"), t("Facoltativo: il «device» di remote.send_command", "Optional: the «device» of remote.send_command"), campo3(`${via}.dispositivo`, tc.dispositivo || "", "")) : ""}
   <div class="mu-ed-sotto-titolo">${esc(t("Preset", "Presets"))}</div>
   <div class="mu-ed-posti">${preset}</div>`;
 }
@@ -90944,8 +91303,11 @@ function comandiMarkup2(p, i) {
       return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? c.nome || nomeDi8(c.avvio || c.stop) : t("Nuovo comando", "New command"))}</b>${pieno ? togli(v, t("Togli il comando", "Remove the command")) : ""}</div>
       <div class="mu-ed-posto-corpo">
         ${voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${v}.nome`, c?.nome || "", t("Per esempio: Avvio", "For example: Start")))}
-        ${voce2(t("Avvio", "Start"), cerca(`${v}.avvio`, c?.avvio || "", { domini: `${DA_PREMERE},switch,input_boolean` }), true)}
-        ${pieno ? `${voce2(t("Stop (facoltativo)", "Stop (optional)"), cerca(`${v}.stop`, c.stop || "", { domini: `${DA_PREMERE},switch,input_boolean` }), true)}
+        ${voce2(t("Avvio", "Start"), cerca(`${v}.avvio`, c?.avvio || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
+        ${pieno && telecomando(c.avvio) ? voce2(t("Comando d'avvio", "Start command"), campo3(`${v}.avvioComando`, c.avvioComando || "", t("Vuoto: accende", "Empty: turns on"))) : ""}
+        ${pieno ? `${voce2(t("Stop (facoltativo)", "Stop (optional)"), cerca(`${v}.stop`, c.stop || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
+        ${telecomando(c.stop) ? voce2(t("Comando di stop", "Stop command"), campo3(`${v}.stopComando`, c.stopComando || "", t("Vuoto: spegne", "Empty: turns off"))) : ""}
+        ${telecomando(c.avvio) || telecomando(c.stop) ? voce2(t("Dispositivo (facoltativo)", "Device (optional)"), campo3(`${v}.dispositivo`, c.dispositivo || "", "")) : ""}
         ${voce2(t("Stato (facoltativo)", "State (optional)"), cerca(`${v}.stato`, c.stato || "", { domini: "switch,input_boolean,binary_sensor,script,media_player", segnaposto: t("Acceso quando è acceso", "On when it's on") }), true)}
         ${voce2(t("Disegno", "Drawing"), tendina2(`${v}.disegno`, c.disegno || "", DISEGNI2(), null))}
         ${voce2(t("Colore", "Colour"), colori(`${v}.colore`, c.colore))}` : ""}
@@ -90958,7 +91320,7 @@ function comandiMarkup2(p, i) {
       "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell."
     )
   )}</div><div class="mu-ed-posti">${voci3}</div>
-  ${riga2(t("Tasto «Ferma tutto»", "«Stop all» button"), t("Vuoto: preme lo stop di ogni comando", "Empty: presses every command's stop"), `${p.fermaTutto.attivo ? cerca(`${via}.fermaTutto.entita`, p.fermaTutto.entita, { domini: DA_PREMERE }) : ""}${interruttore(`${via}.fermaTutto.attivo`, p.fermaTutto.attivo, "ferma-tutto")}`)}`;
+  ${riga2(t("Tasto «Ferma tutto»", "«Stop all» button"), t("Vuoto: preme lo stop di ogni comando", "Empty: presses every command's stop"), `${p.fermaTutto.attivo ? cerca(`${via}.fermaTutto.entita`, p.fermaTutto.entita, { domini: DA_PREMERE_O_TELECOMANDO }) : ""}${p.fermaTutto.attivo && telecomando(p.fermaTutto.entita) ? campoComando(`${via}.fermaTutto.comando`, p.fermaTutto.comando || "", t("Vuoto: spegne", "Empty: turns off")) : ""}${interruttore(`${via}.fermaTutto.attivo`, p.fermaTutto.attivo, "ferma-tutto")}`)}`;
 }
 var SENZA_GRIGLIA = ["ingresso", "energia", "musica", "mixer", "telecamera", "comandi"];
 var GRIGLIE_SCRITTE = () => Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
@@ -91262,7 +91624,7 @@ function metti3(via, valore3) {
   });
   if (!dove) return;
   const ultimo = pezzi.at(-1);
-  dove[ultimo] = typeof dove[ultimo] === "number" ? Number(valore3) : valore3;
+  dove[ultimo] = typeof dove[ultimo] === "number" && String(valore3).trim() !== "" ? Number(valore3) : valore3;
   if (via === "risveglio.entita" && valore3) m.risveglio.attivo = true;
   if (via === "fonte") state110.fonte = null;
   state110.bozza = muroPulito(m);
@@ -91394,7 +91756,7 @@ function onChange7(event) {
   if (event.type === "change" && !SCRITTE.test(via)) ridisegna8();
   else dopoUnaScritta();
 }
-var SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin)$/;
+var SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin|Comando|\.comando|\.dispositivo|\.min|\.max)$/;
 function dopoUnaScritta() {
   rinfrescaLAnteprima();
   const avviso = doc?.querySelector?.("#ed-body .mu-ed-sporca");
@@ -91480,6 +91842,9 @@ html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}
 #ed-body .mu-ed-voce{display:grid;gap:4px;min-width:0}
 #ed-body .mu-ed-voce>span{font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
 #ed-body .mu-ed-voce .ed-input{margin:0;width:100%;max-width:none;min-width:0}
+#ed-body .mu-ed-comandi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px 12px;min-width:0}
+#ed-body .mu-ed-comando{display:block;margin-top:6px}
+#ed-body .mu-ed-comando .ed-input{margin:0;width:100%;max-width:none}
 #ed-body .mu-ed-cerca{display:flex;gap:6px;align-items:center;min-width:0}
 #ed-body .mu-ed-cerca .ed-input{flex:1;min-width:0;margin:0}
 #ed-body .mu-ed-dx .mu-ed-cerca{min-width:220px;max-width:340px;flex:1}
@@ -114631,8 +114996,8 @@ var LISTE3 = Object.freeze({
       "No extra command: the card carries the player's own buttons and nothing else."
     ),
     aiuto: () => t(
-      "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Compaiono sulla scheda sotto i comandi del brano.",
-      "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls."
+      "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Un telecomando remote.* si accende e si spegne; scritto remote.nome:comando (per esempio remote.ampli:volume_up) manda quel comando. Compaiono sulla scheda sotto i comandi del brano.",
+      "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls."
     )
   },
   letture: {
@@ -114665,12 +115030,14 @@ function spiegazione2(esito2, tipo) {
     "Serve un'entità sensor.*, binary_sensor.* o number.* — oppure input_number, input_text.",
     "A sensor.*, binary_sensor.* or number.* entity is required — or input_number, input_text."
   ) : t(
-    "Serve un'entità button.*, select.* o switch.* — oppure input_button, input_select, input_boolean, script, scene.",
-    "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene."
+    "Serve un'entità button.*, select.*, switch.* o remote.* (anche remote.nome:comando) — oppure input_button, input_select, input_boolean, script, scene.",
+    "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene."
   );
 }
 function pastigliaMarkup3(entity2, tipo, azione, segno2, voce3, states) {
-  return `<button type="button" class="dm-mp-chip" data-mp-chip-${esc(azione)}="${esc(entity2)}" data-mp-chip-tipo="${esc(tipo)}" data-genere="${esc(genereDelComando(entity2) || "lettura")}" title="${esc(entity2)}"><span>${esc(nomeAccantoAlDispositivo(entity2, voce3, states))}</span><i aria-hidden="true">${segno2}</i></button>`;
+  const { entity: id, comando } = tipo === "comandi" ? partiDelComando(entity2) : { entity: entity2 };
+  const nome = nomeAccantoAlDispositivo(id, voce3, states);
+  return `<button type="button" class="dm-mp-chip" data-mp-chip-${esc(azione)}="${esc(entity2)}" data-mp-chip-tipo="${esc(tipo)}" data-genere="${esc(genereDelComando(entity2) || "lettura")}" title="${esc(entity2)}"><span>${esc(comando ? `${nome} · ${comando}` : nome)}</span><i aria-hidden="true">${segno2}</i></button>`;
 }
 function listaMarkup2(tipo, voce3, indice) {
   const states = allStates();
@@ -114706,11 +115073,11 @@ function testoDelTelecomando(voce3) {
     );
   if (esito2 === "sconosciuto")
     return nome ? t(
-      `Di ${nome} la plancia non conosce i tasti: il telecomando non compare.`,
-      `The dashboard doesn't know the keys of ${nome}: the remote won't show.`
+      `Di ${nome} la plancia non conosce le frecce: il telecomando compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.`,
+      `The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.`
     ) : t(
-      "Di questo telecomando Home Assistant non dice l'integrazione: non compare.",
-      "Home Assistant doesn't say which integration this remote belongs to: it won't show."
+      "Di questo telecomando Home Assistant non dice l'integrazione: compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.",
+      "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command."
     );
   if (esito2 === "attesa")
     return t(
@@ -114975,11 +115342,11 @@ function onClick53(event) {
     ridisegna26();
     return;
   }
-  const telecomando = event.target.closest("[data-mp-tele-sug]");
-  if (telecomando) {
+  const telecomando2 = event.target.closest("[data-mp-tele-sug]");
+  if (telecomando2) {
     event.preventDefault();
     const lista5 = righeDalDocumento2(body);
-    lista5[indice] = { ...leggiLaRiga5(riga3), telecomando: clean(telecomando.dataset.mpTeleSug) };
+    lista5[indice] = { ...leggiLaRiga5(riga3), telecomando: clean(telecomando2.dataset.mpTeleSug) };
     salva28(lista5);
     ridisegna26();
     return;
