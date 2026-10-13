@@ -10,6 +10,35 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.12
+
+**La plancia in Home Assistant non chiede più «ricarica questa pagina».**
+Dopo un aggiornamento dell'add-on l'app di Home Assistant mostrava «Manca un
+passaggio solo… ricarica questa pagina». Adesso la plancia si apre da una
+pagina fissa dentro una scheda di Home Assistant, e un aggiornamento non
+chiede niente. Se una volta serve davvero riavviare Home Assistant, lo
+dicono la plancia, una notifica di Home Assistant e la Panoramica della
+console.
+
+**Pannello a muro come una regia.** Tre pagine nuove:
+- **Mixer**: gruppi colorati di cursori verticali con il muto sotto ogni
+  canale e il «Volume totale» in fondo (lettori multimediali e numeri di
+  Home Assistant).
+- **Telecamera**: immagine dal vivo, zoom, frecce, stop e preset.
+- **Comandi**: avvio e spegnimento, la fila delle sale con avvio e stop, e
+  «Ferma tutto».
+
+E un'opzione nuova, «Menu di lato»: sul tablet in orizzontale le pagine
+diventano grandi icone in colonna a sinistra.
+
+**Tapparelle sul muro: i tasti ▲ ■ ▼ si vedono sempre**, anche sul pannello
+piccolo, nelle pagine personali e in quelle delle stanze.
+
+**Temperatura di casa al posto di quella del meteo.** Nel config «A muro»,
+«Temperatura mostrata»: dal meteo o da un sensore in casa.
+
+**CarPlay: scegliere una destinazione non riporta più alla pagina iniziale.**
+
 ## 1.11.11
 
 **Clima: i termostati col caldo e col freddo hanno la loro linguetta.** I

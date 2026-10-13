@@ -209,3 +209,131 @@ export const MURO_DI_PROVA = {
     },
   ],
 };
+
+/* ── una regia: microfoni, sorgenti, una telecamera, cinque sale ──────────
+ *
+ * Le entita' di un pannello da sala: i canali del mixer (numeri in dB coi
+ * loro interruttori del muto, lettori col loro volume), una telecamera coi
+ * tasti delle frecce, dello zoom e dei preset, e i comandi d'avvio. */
+const DB = { min: -60, max: 10, step: 0.5, unit_of_measurement: "dB" };
+const VOLUME = 4 + 8;
+export const STATI_DELLA_REGIA = {
+  ...STATI_A_MURO,
+  "number.mic_1": { state: "-6", attributes: { friendly_name: "Mic 1", ...DB } },
+  "number.mic_2": { state: "-12.5", attributes: { friendly_name: "Mic 2", ...DB } },
+  "number.mic_3": { state: "-20", attributes: { friendly_name: "Mic 3", ...DB } },
+  "number.mic_4": { state: "-35", attributes: { friendly_name: "Mic 4", ...DB } },
+  "switch.mic_1_muto": { state: "off", attributes: { friendly_name: "Mic 1 muto" } },
+  "switch.mic_2_muto": { state: "off", attributes: { friendly_name: "Mic 2 muto" } },
+  "switch.mic_3_muto": { state: "on", attributes: { friendly_name: "Mic 3 muto" } },
+  "switch.mic_4_muto": { state: "off", attributes: { friendly_name: "Mic 4 muto" } },
+  "media_player.ingresso_pc": {
+    state: "on",
+    attributes: { friendly_name: "Ingresso PC", volume_level: 0.62, supported_features: VOLUME },
+  },
+  "media_player.ingresso_hdmi": {
+    state: "on",
+    attributes: { friendly_name: "Ingresso HDMI", volume_level: 0.4, supported_features: VOLUME },
+  },
+  "media_player.uscita_sala": {
+    state: "on",
+    attributes: { friendly_name: "Uscita sala", volume_level: 0.75, supported_features: VOLUME },
+  },
+  "media_player.uscita_regia": {
+    state: "on",
+    attributes: {
+      friendly_name: "Uscita regia",
+      volume_level: 0.3,
+      is_volume_muted: true,
+      supported_features: VOLUME,
+    },
+  },
+  "media_player.volume_totale": {
+    state: "on",
+    attributes: { friendly_name: "Volume totale", volume_level: 0.68, supported_features: VOLUME },
+  },
+  "camera.sala": { state: "idle", attributes: { friendly_name: "Telecamera sala" } },
+  "number.zoom_sala": {
+    state: "30",
+    attributes: { friendly_name: "Zoom", min: 0, max: 100, step: 1 },
+  },
+  ...Object.fromEntries(
+    ["su", "giu", "sinistra", "destra", "stop", "home", "1", "2", "3", "4", "5", "6"].map((k) => [
+      `button.ptz_${k}`,
+      { state: "unknown", attributes: { friendly_name: `PTZ ${k}` } },
+    ]),
+  ),
+  "script.avvio": { state: "off", attributes: { friendly_name: "Avvio" } },
+  "script.spegnimento": { state: "off", attributes: { friendly_name: "Spegnimento" } },
+  "binary_sensor.sala_accesa": { state: "on", attributes: { friendly_name: "Sala accesa" } },
+  "script.ferma_tutto": { state: "off", attributes: { friendly_name: "Ferma tutto" } },
+  ...Object.fromEntries(
+    [1, 2, 3, 4, 5].map((n) => [
+      `switch.sala_${n}`,
+      { state: n === 2 ? "on" : "off", attributes: { friendly_name: `Sala ${n}` } },
+    ]),
+  ),
+};
+
+const mic = (n) => ({ entita: `number.mic_${n}`, nome: `Mic ${n}`, muto: `switch.mic_${n}_muto` });
+export const PAGINA_MIXER = {
+  id: "audio",
+  modello: "mixer",
+  mixer: {
+    gruppi: [
+      { nome: "Microfoni", canali: [mic(1), mic(2), mic(3), mic(4)] },
+      {
+        nome: "Sorgenti in",
+        canali: ["media_player.ingresso_pc", "media_player.ingresso_hdmi"],
+      },
+      {
+        nome: "Sorgenti out",
+        canali: ["media_player.uscita_sala", "media_player.uscita_regia"],
+      },
+    ],
+    master: { entita: "media_player.volume_totale", nome: "Volume totale" },
+  },
+};
+export const PAGINA_TELECAMERA = {
+  id: "ptz",
+  modello: "telecamera",
+  telecamera: {
+    entita: "camera.sala",
+    su: "button.ptz_su",
+    giu: "button.ptz_giu",
+    sinistra: "button.ptz_sinistra",
+    destra: "button.ptz_destra",
+    stop: "button.ptz_stop",
+    zoom: "number.zoom_sala",
+    preset: [
+      { entita: "button.ptz_home", nome: "Preset HOME" },
+      ...[1, 2, 3, 4, 5, 6].map((n) => ({ entita: `button.ptz_${n}`, nome: `Preset ${n}` })),
+    ],
+  },
+};
+export const PAGINA_AVVIO = {
+  id: "avvio",
+  modello: "comandi",
+  titolo: "Avvio",
+  pulsanti: [
+    { nome: "Avvio", avvio: "script.avvio", stato: "binary_sensor.sala_accesa" },
+    { nome: "Spegnimento", avvio: "script.spegnimento", colore: "#ef4444" },
+  ],
+};
+export const PAGINA_SALE = {
+  id: "sale",
+  modello: "comandi",
+  titolo: "Sale",
+  pulsanti: [1, 2, 3, 4, 5].map((n) => ({
+    nome: `Sala ${n}`,
+    avvio: `switch.sala_${n}`,
+    stop: `switch.sala_${n}`,
+  })),
+  fermaTutto: { attivo: true, entita: "" },
+};
+export const MURO_DELLA_REGIA = {
+  attiva: true,
+  tema: "scuro",
+  menuDiLato: true,
+  pagine: [PAGINA_MIXER, PAGINA_TELECAMERA, PAGINA_AVVIO, PAGINA_SALE, MURO_DI_PROVA.pagine[0]],
+};

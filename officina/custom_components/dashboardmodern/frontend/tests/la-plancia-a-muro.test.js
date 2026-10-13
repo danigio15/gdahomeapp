@@ -26,6 +26,7 @@ import {
   pinGiusto,
   POSTI,
   scala,
+  tastiDellaTapparella,
   temaDelMomento,
   verso,
 } from "../src/core/plancia-a-muro.js";
@@ -618,4 +619,263 @@ test("il gruppo dei lettori: chi c'e', e il servizio per entrare e uscire", asyn
   );
   assert.equal(solo.puo.gruppo, false);
   assert.deepEqual(compagniDelGruppo(solo), []);
+});
+
+/* «Pulsanti diretti sulle tapparelle, senza entrarci dentro»: i tasti della
+ * card sono quelli che la cover dichiara di saper fare (1 apre, 2 chiude,
+ * 8 ferma); senza il numero sono tutti e tre, come prima. */
+test("una tapparella ha sulla card i tasti che sa usare", () => {
+  assert.deepEqual(tastiDellaTapparella({}), ["su", "ferma", "giu"]);
+  assert.deepEqual(tastiDellaTapparella(undefined), ["su", "ferma", "giu"]);
+  assert.deepEqual(tastiDellaTapparella({ supported_features: "rotto" }), ["su", "ferma", "giu"]);
+  assert.deepEqual(tastiDellaTapparella({ supported_features: 15 }), ["su", "ferma", "giu"]);
+  assert.deepEqual(tastiDellaTapparella({ supported_features: 11 }), ["su", "ferma", "giu"]);
+  /* Una tenda che apre e chiude soltanto: niente ■. */
+  assert.deepEqual(tastiDellaTapparella({ supported_features: 3 }), ["su", "giu"]);
+  assert.deepEqual(tastiDellaTapparella({ supported_features: "3" }), ["su", "giu"]);
+  /* Solo la posizione: i tasti non servono, resta la finestra. */
+  assert.deepEqual(tastiDellaTapparella({ supported_features: 4 }), []);
+});
+
+/* «Il meteo lo possiamo scegliere, ma la temperatura no.» La temperatura
+ * accanto al meteo e' quella del meteo, o quella del sensore in casa — lo
+ * stesso campo del riposo, non un secondo. */
+test("la temperatura mostrata e' quella del meteo, o quella di casa", () => {
+  assert.equal(muroPulito({}).temperatura, "meteo");
+  assert.equal(muroPulito({ temperatura: "fuori" }).temperatura, "meteo");
+  const casa = muroPulito({ temperatura: "casa", riposo: { sensore: "sensor.corridoio_t" } });
+  assert.equal(casa.temperatura, "casa");
+  assert.equal(casa.riposo.sensore, "sensor.corridoio_t");
+  /* Un config di prima, col sensore del riposo gia' scelto, resta com'era. */
+  const prima = muroPulito({ riposo: { sensore: "sensor.corridoio_t" } });
+  assert.equal(prima.temperatura, "meteo");
+  assert.equal(prima.riposo.sensore, "sensor.corridoio_t");
+  assert.deepEqual(muroPulito(prima), prima);
+});
+
+/* ── la regia: mixer, telecamera, comandi ───────────────────────────────── */
+import {
+  chiamateDelFermaTutto,
+  gruppiDelMixer,
+  letturaDelCanale,
+  menuDiLato,
+  paginaPulita,
+  posizioneDelValore,
+  pulsanteAcceso,
+  pulsantiDellaPagina,
+  servizioDaPremere,
+  servizioDelFader,
+  servizioDelMuto,
+  servizioDelPulsante,
+  servizioDellaTelecamera,
+  valoreDallaPosizione,
+} from "../src/core/plancia-a-muro.js";
+
+const DB = { min: -60, max: 10, step: 0.5, unit_of_measurement: "dB" };
+
+test("il mixer tiene solo canali con un livello, e i muti che sono interruttori", () => {
+  const p = paginaPulita({
+    modello: "mixer",
+    mixer: {
+      gruppi: [
+        {
+          nome: "Microfoni",
+          colore: "#ZZZ",
+          canali: [
+            "number.mic_1",
+            { entita: "media_player.sala", nome: "Sala", muto: "light.no" },
+            "light.non_e_un_canale",
+            { entita: "input_number.aux", muto: "switch.aux_muto" },
+          ],
+        },
+        { nome: "Vuoto" },
+      ],
+      master: "sensor.non_va",
+    },
+  });
+  assert.equal(p.modello, "mixer");
+  assert.deepEqual(p.mixer.gruppi[0].canali, [
+    { entita: "number.mic_1", nome: "", muto: "" },
+    { entita: "media_player.sala", nome: "Sala", muto: "" },
+    { entita: "input_number.aux", nome: "", muto: "switch.aux_muto" },
+  ]);
+  assert.equal(p.mixer.gruppi[0].colore, "", "un colore sbagliato torna quello del posto");
+  assert.equal(p.mixer.gruppi.length, 2, "un gruppo appena nato resta nel config");
+  assert.deepEqual(p.mixer.master, { entita: "", nome: "", muto: "" });
+  /* Sul tablet il gruppo vuoto non c'e', e i colori seguono il posto. */
+  const g = gruppiDelMixer(p);
+  assert.equal(g.length, 1);
+  assert.equal(g[0].colore, "#f59e0b");
+  assert.deepEqual(paginaPulita(JSON.parse(JSON.stringify(p))), p, "si rilegge uguale");
+});
+
+test("un config di prima non cambia: le pagine vecchie hanno la regia vuota", () => {
+  const vecchio = muroPulito({ attiva: true, pagine: [{ id: "p1", modello: "stanza" }] });
+  assert.equal(vecchio.menuDiLato, false);
+  assert.equal(vecchio.pagine[0].modello, "stanza");
+  assert.deepEqual(vecchio.pagine[0].pulsanti, []);
+  assert.deepEqual(vecchio.pagine[0].mixer.gruppi, []);
+  assert.equal(muroPulito({ menuDiLato: true }).menuDiLato, true);
+});
+
+test("il cursore va dalla posizione al valore sul passo del canale, e ritorno", () => {
+  const stati = {
+    "number.mic": { state: "-12.5", attributes: DB },
+    "media_player.sala": {
+      state: "on",
+      attributes: { volume_level: 0.4, supported_features: 4 + 8, is_volume_muted: true },
+    },
+  };
+  const mic = letturaDelCanale({ entita: "number.mic" }, stati);
+  assert.equal(mic.tipo, "numero");
+  assert.equal(mic.valore, -12.5);
+  assert.ok(Math.abs(mic.posizione - 47.5 / 70) < 1e-9);
+  assert.equal(mic.puoMuto, false, "un numero senza interruttore non ha il muto");
+  assert.equal(valoreDallaPosizione(0, mic), -60);
+  assert.equal(valoreDallaPosizione(1, mic), 10);
+  assert.equal(valoreDallaPosizione(0.5, mic), -25);
+  assert.equal(valoreDallaPosizione(0.501, mic), -25, "sul passo da mezzo dB");
+  assert.equal(valoreDallaPosizione(2, mic), 10, "mai oltre il massimo");
+  assert.equal(posizioneDelValore(-60, -60, 10), 0);
+  assert.equal(posizioneDelValore(5, 0, 0), 0, "una scala rotta e' in fondo");
+  assert.deepEqual(servizioDelFader({ entita: "number.mic" }, 0.75, mic), {
+    domain: "number",
+    service: "set_value",
+    data: { entity_id: "number.mic", value: -7.5 },
+  });
+  const sala = letturaDelCanale({ entita: "media_player.sala" }, stati);
+  assert.equal(sala.posizione, 0.4);
+  assert.equal(sala.mutato, true);
+  assert.deepEqual(servizioDelFader({ entita: "media_player.sala" }, 0.623, sala), {
+    domain: "media_player",
+    service: "volume_set",
+    data: { entity_id: "media_player.sala", volume_level: 0.62 },
+  });
+  assert.deepEqual(servizioDelMuto({ entita: "media_player.sala" }, sala), {
+    domain: "media_player",
+    service: "volume_mute",
+    data: { entity_id: "media_player.sala", is_volume_muted: false },
+  });
+  const input = letturaDelCanale(
+    { entita: "input_number.aux" },
+    { "input_number.aux": { state: "3", attributes: { min: 0, max: 10, step: 1 } } },
+  );
+  assert.equal(servizioDelFader({ entita: "input_number.aux" }, 0.26, input).data.value, 3);
+});
+
+test("il muto e il cursore ci sono solo se il lettore li sa fare", () => {
+  const stati = {
+    "media_player.tv": { state: "on", attributes: { volume_level: 0.2, supported_features: 1 } },
+    "media_player.spento": { state: "off", attributes: { supported_features: 12 } },
+    "number.mic": { state: "unavailable", attributes: DB },
+    "switch.mic_muto": { state: "on" },
+  };
+  const tv = letturaDelCanale({ entita: "media_player.tv" }, stati);
+  assert.equal(tv.muove, false);
+  assert.equal(tv.puoMuto, false);
+  assert.equal(servizioDelMuto({ entita: "media_player.tv" }, tv), null);
+  assert.equal(letturaDelCanale({ entita: "media_player.spento" }, stati).muove, false);
+  const giu = letturaDelCanale({ entita: "number.mic", muto: "switch.mic_muto" }, stati);
+  assert.equal(giu.disponibile, false);
+  assert.equal(giu.muove, false);
+  /* Un interruttore del muto: acceso e' muto, il tocco lo spegne. */
+  const conMuto = letturaDelCanale({ entita: "media_player.tv", muto: "switch.mic_muto" }, stati);
+  assert.equal(conMuto.mutato, true);
+  assert.deepEqual(
+    servizioDelMuto({ entita: "media_player.tv", muto: "switch.mic_muto" }, conMuto),
+    {
+      domain: "switch",
+      service: "turn_off",
+      data: { entity_id: "switch.mic_muto" },
+    },
+  );
+});
+
+test("la telecamera preme le entita' scelte, e un tasto senza entita' non fa niente", () => {
+  const p = paginaPulita({
+    modello: "telecamera",
+    telecamera: {
+      entita: "camera.sala",
+      su: "button.ptz_su",
+      sinistra: "script.ptz_sinistra",
+      giu: "sensor.non_si_preme",
+      zoom: "number.zoom",
+      zoomPiu: "scene.no_zoom",
+      preset: [{ entita: "button.home", nome: "HOME" }, { entita: "" }, "x"],
+    },
+  });
+  assert.equal(p.telecamera.giu, "");
+  assert.equal(p.telecamera.zoom, "number.zoom");
+  assert.deepEqual(p.telecamera.preset, [{ entita: "button.home", nome: "HOME" }]);
+  assert.deepEqual(servizioDellaTelecamera(p.telecamera, "su"), {
+    domain: "button",
+    service: "press",
+    data: { entity_id: "button.ptz_su" },
+  });
+  assert.equal(servizioDellaTelecamera(p.telecamera, "sinistra").service, "turn_on");
+  assert.equal(servizioDellaTelecamera(p.telecamera, "giu"), null);
+  assert.equal(servizioDaPremere("automation.x").service, "trigger");
+  assert.equal(
+    nuovaPagina("telecamera", { telecamere: [{ entity: "camera.cancello" }] }).telecamera.entita,
+    "camera.cancello",
+  );
+});
+
+test("i comandi: avvio, stop, lo stato acceso, e il ferma tutto", () => {
+  const p = paginaPulita({
+    modello: "comandi",
+    pulsanti: [
+      { nome: "Avvio", avvio: "script.avvio", stato: "binary_sensor.sala" },
+      { nome: "Spegnimento", avvio: "script.spegnimento", colore: "#ef4444" },
+      { nome: "Sala 1", avvio: "switch.sala_1", stop: "switch.sala_1" },
+      { nome: "Proiettore", avvio: "script.pro_on", stop: "script.pro_off" },
+      { nome: "Solo nome" },
+      { avvio: "sensor.non_va" },
+    ],
+    fermaTutto: { attivo: true },
+  });
+  assert.equal(p.pulsanti.length, 5, "il solo nome resta, per il config");
+  assert.equal(pulsantiDellaPagina(p).length, 4, "sul tablet solo chi ha un'entita'");
+  const stati = {
+    "binary_sensor.sala": { state: "on" },
+    "switch.sala_1": { state: "on" },
+    "script.pro_on": { state: "off" },
+  };
+  const [avvio, spegni, sala, pro] = pulsantiDellaPagina(p);
+  assert.equal(pulsanteAcceso(avvio, stati), true);
+  assert.equal(pulsanteAcceso(spegni, stati), false);
+  assert.deepEqual(servizioDelPulsante(avvio, "avvio", stati), {
+    domain: "script",
+    service: "turn_on",
+    data: { entity_id: "script.avvio" },
+  });
+  assert.equal(servizioDelPulsante(avvio, "stop", stati), null, "uno script senza stop non ferma");
+  assert.deepEqual(servizioDelPulsante(sala, "stop", stati), {
+    domain: "switch",
+    service: "turn_off",
+    data: { entity_id: "switch.sala_1" },
+  });
+  assert.equal(servizioDelPulsante(sala, "avvio", stati).service, "turn_on");
+  assert.equal(servizioDelPulsante(pro, "stop", stati).data.entity_id, "script.pro_off");
+  /* Un interruttore con un tasto solo si alterna. */
+  const solo = { avvio: "switch.sala_1", stop: "" };
+  assert.equal(servizioDelPulsante(solo, "avvio", stati).service, "turn_off");
+  assert.equal(servizioDelPulsante(solo, "avvio", {}).service, "turn_on");
+  assert.deepEqual(
+    chiamateDelFermaTutto(p, stati).map((s) => s.data.entity_id),
+    ["switch.sala_1", "script.pro_off"],
+  );
+  assert.deepEqual(
+    chiamateDelFermaTutto({ ...p, fermaTutto: { attivo: true, entita: "script.tutto" } }),
+    [{ domain: "script", service: "turn_on", data: { entity_id: "script.tutto" } }],
+  );
+  assert.deepEqual(chiamateDelFermaTutto({ ...p, fermaTutto: { attivo: false, entita: "" } }), []);
+});
+
+test("il menu di lato c'e' solo in orizzontale sul tablet vero", () => {
+  const muro = muroPulito({ menuDiLato: true });
+  assert.equal(menuDiLato(muro, "orizzontale", false), true);
+  assert.equal(menuDiLato(muro, "verticale", false), false);
+  assert.equal(menuDiLato(muro, "orizzontale", true), false);
+  assert.equal(menuDiLato(muroPulito({}), "orizzontale", false), false);
 });

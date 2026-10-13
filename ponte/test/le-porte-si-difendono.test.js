@@ -174,7 +174,9 @@ test("nelle premesse della plancia un `</script>` resta una stringa", () => {
     doveIlWebSocket: "/plancia/api/websocket</script>",
     vesti: { velo: "</script>", testata: "Casa </script>" },
   });
-  assert.equal((pagina.match(/<script/gi) || []).length, 2, "gli script sono i nostri due");
+  /* Tre: le premesse, l'avviso che aspetta la configurazione, e
+   * l'accompagnatore (`ponte/carta/accompagna.js`). */
+  assert.equal((pagina.match(/<script/gi) || []).length, 3, "gli script sono i nostri tre");
   assert.ok(!pagina.includes('"><script>y()'));
 });
 

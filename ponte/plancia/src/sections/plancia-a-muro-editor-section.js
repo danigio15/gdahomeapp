@@ -10,8 +10,13 @@
  * apre. Quello che c'era scritto resta, e torna buono il giorno che la casa e'
  * Premium. */
 import {
+  CANALI_PER_GRUPPO,
   CHIAVE_MURO,
   COLORI_DELLE_PAGINE,
+  GRUPPI_AL_MASSIMO,
+  PRESET_AL_MASSIMO,
+  PULSANTI_AL_MASSIMO,
+  coloreDelGruppo,
   GRIGLIE,
   MINUTI_DI_RIPOSO,
   PAGINE_AL_MASSIMO,
@@ -225,6 +230,9 @@ const MODELLI = () => [
   ["telecamere", t("Telecamere", "Cameras")],
   ["energia", t("Energia", "Energy")],
   ["musica", t("Musica", "Music")],
+  ["mixer", t("Mixer audio", "Audio mixer")],
+  ["telecamera", t("Telecamera con comandi", "Camera with controls")],
+  ["comandi", t("Comandi di regia", "Control buttons")],
 ];
 const DISEGNO_DI_SERIE = {
   stanza: "stanze",
@@ -238,6 +246,9 @@ const DISEGNO_DI_SERIE = {
   telecamere: "telecamere",
   energia: "energia",
   musica: "media",
+  mixer: "media",
+  telecamera: "telecamere",
+  comandi: "azioni",
 };
 const NOME_DEL_MODELLO = (modello) => MODELLI().find(([v]) => v === modello)?.[1] || "";
 
@@ -402,6 +413,12 @@ function paginaMarkup(p, i, tutte) {
         cerca(`${via}.lettori.${k}`, p.lettori[k] || "", { domini: "media_player" }),
       ).join("")}</span>`,
     )}`;
+  } else if (p.modello === "mixer") {
+    dentro = mixerMarkup(p, i);
+  } else if (p.modello === "telecamera") {
+    dentro = telecameraMarkup(p, i);
+  } else if (p.modello === "comandi") {
+    dentro = comandiMarkup(p, i);
   } else if (p.modello === "personale") {
     dentro = `<div class="mu-ed-nota">${esc(
       t(
@@ -466,19 +483,138 @@ function paginaMarkup(p, i, tutte) {
             scelte(`${via}.griglia`, p.griglia, GRIGLIE_SCRITTE()),
           )
     }
-    ${riga(t("Colore", "Colour"), t("Della linguetta e del titolo", "Of the tab and the title"), colori(`${via}.colore`, p.colore, p.modello))}
+    ${riga(t("Colore", "Colour"), t("Della linguetta e del titolo", "Of the tab and the title"), colori(`${via}.colore`, p.colore))}
     <div class="mu-ed-anteprima-box"><div class="mu-ed-sotto-titolo">${esc(t("Anteprima dal vivo", "Live preview"))}</div><div class="mu-ed-anteprima" data-mu-ed-anteprima="${i}"></div></div>
     ${dentro}</div>`;
 }
 
+/* ── la regia: i campi del mixer, della telecamera e dei comandi ─────────
+ *
+ * Come i posti delle altre pagine: una riga per voce, la lente per
+ * l'entita', il nome e il resto solo quando l'entita' c'e'. In fondo a ogni
+ * elenco una riga vuota: scriverci dentro aggiunge una voce. */
+const DA_PREMERE = "button,input_button,script,scene";
+const togli = (via, etichetta) =>
+  `<button type="button" class="mu-ed-svuota" data-mu-ed-togli-voce="${esc(via)}" aria-label="${esc(etichetta)}">✕</button>`;
+const voce = (etichetta, dentro, entitaQui = false) =>
+  `<label class="mu-ed-voce"${entitaQui ? " data-entity-field" : ""}><span${entitaQui ? ' class="ed-slot-lbl"' : ""}>${esc(etichetta)}</span>${dentro}</label>`;
+
+/* Le righe di un canale: dentro un gruppo o il volume totale. */
+function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
+  const pieno = Boolean(c?.entita);
+  return `<div class="mu-ed-posto${pieno ? " pieno" : ""}">
+    <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? `${nomeDi(c.entita)} · ${c.entita}` : t("Nuovo canale", "New channel"))}</b>${pieno && togliVia ? togli(togliVia, t("Togli il canale", "Remove the channel")) : ""}</div>
+    <div class="mu-ed-posto-corpo">
+      ${voce(t("Livello", "Level"), cerca(`${via}.entita`, c?.entita || "", { domini: "media_player,number,input_number" }), true)}
+      ${
+        pieno
+          ? `${voce(t("Nome sul tablet", "Name on the tablet"), campo(`${via}.nome`, c.nome || "", nomeDi(c.entita)))}
+      ${voce(t("Muto (facoltativo)", "Mute (optional)"), cerca(`${via}.muto`, c.muto || "", { domini: "switch,input_boolean", segnaposto: t("Acceso = muto", "On = muted") }), true)}`
+          : ""
+      }
+    </div></div>`;
+}
+
+function mixerMarkup(p, i) {
+  const via = `pagine.${i}.mixer`;
+  const gruppi = p.mixer.gruppi;
+  const blocchi = gruppi
+    .map((g, gi) => {
+      const canali = Array.from(
+        { length: Math.min(g.canali.length + 1, CANALI_PER_GRUPPO) },
+        (_, k) =>
+          canaleMarkup(`${via}.gruppi.${gi}.canali.${k}`, g.canali[k], k, {
+            togliVia: `${via}.gruppi.${gi}.canali.${k}`,
+          }),
+      ).join("");
+      return `<div class="mu-ed-gruppo" style="--c:${coloreDelGruppo(g, gi)}">
+      <div class="mu-ed-posto-testa"><span class="mu-ed-num">${gi + 1}</span><b class="mu-ed-cosa">${esc(g.nome || `${t("Gruppo", "Group")} ${gi + 1}`)}</b>${togli(`${via}.gruppi.${gi}`, t("Togli il gruppo", "Remove the group"))}</div>
+      ${riga(t("Nome del gruppo", "Group name"), "", campo(`${via}.gruppi.${gi}.nome`, g.nome, t("Per esempio: Microfoni", "For example: Microphones")))}
+      ${riga(t("Colore", "Colour"), "", colori(`${via}.gruppi.${gi}.colore`, g.colore))}
+      <div class="mu-ed-posti">${canali}</div></div>`;
+    })
+    .join("");
+  return `<div class="mu-ed-nota">${esc(
+    t(
+      "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Il muto è quello del lettore, o un interruttore scelto qui: acceso vuol dire muto.",
+      "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.",
+    ),
+  )}</div>${blocchi}
+  ${gruppi.length < GRUPPI_AL_MASSIMO ? `<button type="button" class="ed-btn-add mu-ed-piu" data-mu-ed-aggiungi-voce="${via}.gruppi">＋ ${esc(t("Aggiungi un gruppo", "Add a group"))}</button>` : ""}
+  <div class="mu-ed-sotto-titolo">${esc(t("Volume totale", "Master volume"))}</div>
+  <div class="mu-ed-posti">${canaleMarkup(`${via}.master`, p.mixer.master, 0)}</div>`;
+}
+
+function telecameraMarkup(p, i) {
+  const via = `pagine.${i}.telecamera`;
+  const tc = p.telecamera;
+  const tasto = (chiave, titolo, domini = DA_PREMERE) =>
+    riga(titolo, "", cerca(`${via}.${chiave}`, tc[chiave], { domini }));
+  const preset = Array.from({ length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) }, (_, k) => {
+    const v = tc.preset[k];
+    const pieno = Boolean(v?.entita);
+    return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? v.nome || nomeDi(v.entita) : t("Nuovo preset", "New preset"))}</b>${pieno ? togli(`${via}.preset.${k}`, t("Togli il preset", "Remove the preset")) : ""}</div>
+      <div class="mu-ed-posto-corpo">${voce(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE }), true)}${pieno ? voce(t("Nome sul tablet", "Name on the tablet"), campo(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
+  }).join("");
+  return `<div class="mu-ed-nota">${esc(
+    t(
+      "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera o uno script con onvif.ptz. Un tasto senza entità resta spento.",
+      "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.",
+    ),
+  )}</div>
+  ${riga(t("Telecamera", "Camera"), "", cerca(`${via}.entita`, tc.entita, { domini: "camera" }))}
+  ${tasto("su", t("Su", "Up"))}
+  ${tasto("giu", t("Giù", "Down"))}
+  ${tasto("sinistra", t("Sinistra", "Left"))}
+  ${tasto("destra", t("Destra", "Right"))}
+  ${tasto("stop", t("Stop", "Stop"))}
+  ${riga(t("Zoom", "Zoom"), t("Un numero: diventa un cursore", "A number: it becomes a fader"), cerca(`${via}.zoom`, tc.zoom, { domini: "number,input_number" }))}
+  ${tasto("zoomPiu", t("Zoom avanti", "Zoom in"))}
+  ${tasto("zoomMeno", t("Zoom indietro", "Zoom out"))}
+  <div class="mu-ed-sotto-titolo">${esc(t("Preset", "Presets"))}</div>
+  <div class="mu-ed-posti">${preset}</div>`;
+}
+
+function comandiMarkup(p, i) {
+  const via = `pagine.${i}`;
+  const voci = Array.from(
+    { length: Math.min(p.pulsanti.length + 1, PULSANTI_AL_MASSIMO) },
+    (_, k) => {
+      const c = p.pulsanti[k];
+      const v = `${via}.pulsanti.${k}`;
+      const pieno = Boolean(c);
+      return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? c.nome || nomeDi(c.avvio || c.stop) : t("Nuovo comando", "New command"))}</b>${pieno ? togli(v, t("Togli il comando", "Remove the command")) : ""}</div>
+      <div class="mu-ed-posto-corpo">
+        ${voce(t("Nome sul tablet", "Name on the tablet"), campo(`${v}.nome`, c?.nome || "", t("Per esempio: Avvio", "For example: Start")))}
+        ${voce(t("Avvio", "Start"), cerca(`${v}.avvio`, c?.avvio || "", { domini: `${DA_PREMERE},switch,input_boolean` }), true)}
+        ${
+          pieno
+            ? `${voce(t("Stop (facoltativo)", "Stop (optional)"), cerca(`${v}.stop`, c.stop || "", { domini: `${DA_PREMERE},switch,input_boolean` }), true)}
+        ${voce(t("Stato (facoltativo)", "State (optional)"), cerca(`${v}.stato`, c.stato || "", { domini: "switch,input_boolean,binary_sensor,script,media_player", segnaposto: t("Acceso quando è acceso", "On when it's on") }), true)}
+        ${voce(t("Disegno", "Drawing"), tendina(`${v}.disegno`, c.disegno || "", DISEGNI(), null))}
+        ${voce(t("Colore", "Colour"), colori(`${v}.colore`, c.colore))}`
+            : ""
+        }
+      </div></div>`;
+    },
+  ).join("");
+  return `<div class="mu-ed-nota">${esc(
+    t(
+      "Un comando con il solo avvio è una tessera grande (per esempio «Avvio», «Spegnimento»); con anche lo stop diventa una colonna con i due tasti (per esempio una sala). Acceso lo dice l'entità di stato, o quella dell'avvio quando sa dirlo.",
+      "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.",
+    ),
+  )}</div><div class="mu-ed-posti">${voci}</div>
+  ${riga(t("Tasto «Ferma tutto»", "«Stop all» button"), t("Vuoto: preme lo stop di ogni comando", "Empty: presses every command's stop"), `${p.fermaTutto.attivo ? cerca(`${via}.fermaTutto.entita`, p.fermaTutto.entita, { domini: DA_PREMERE }) : ""}${interruttore(`${via}.fermaTutto.attivo`, p.fermaTutto.attivo, "ferma-tutto")}`)}`;
+}
+
 /* Le pagine che la griglia non la scelgono: l'ingresso ha la sua forma,
  * l'energia le sue quattro tessere. */
-const SENZA_GRIGLIA = ["ingresso", "energia", "musica"];
+const SENZA_GRIGLIA = ["ingresso", "energia", "musica", "mixer", "telecamera", "comandi"];
 const GRIGLIE_SCRITTE = () =>
   Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
 
 /* Il colore di una pagina: un pallino per ognuno, e «come il tipo». */
-function colori(via, valore, modello) {
+function colori(via, valore) {
   const pallini = [["", ""], ...COLORI_DELLE_PAGINE.map((c) => [c, c])];
   return `<span class="mu-ed-colori">${pallini
     .map(
@@ -565,6 +701,14 @@ function corpoMarkup() {
       ]),
     )}
     ${riga(
+      t("Menu di lato", "Side menu"),
+      t(
+        "Le pagine in una colonna di tasti grandi a sinistra, come sui pannelli di regia. Solo in orizzontale: in verticale e sugli schermi piccoli restano le linguette in alto",
+        "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay",
+      ),
+      interruttore("menuDiLato", m.menuDiLato, "menu-di-lato"),
+    )}
+    ${riga(
       t("Tema", "Theme"),
       t(
         "Con l'orario: chiaro di giorno, scuro la sera",
@@ -585,6 +729,39 @@ function corpoMarkup() {
       ),
       cerca("meteo", m.meteo, { domini: "weather" }),
     )}
+    ${
+      /* «Il meteo lo possiamo scegliere, ma la temperatura no.» Accanto al
+       * disegno del meteo, in alto e sul riposo, la temperatura del meteo
+       * (fuori) o quella di un sensore in casa. Il sensore e' lo stesso campo
+       * della riga «Temperatura sul riposo» (`riposo.sensore`): scelto «da
+       * un sensore», sale qui e la riga sotto non si ripete; due caselle per
+       * la stessa «temperatura in casa» potevano dire due numeri diversi. Il
+       * segnaposto parla di temperatura, e la ricerca propone per primi i
+       * sensori di temperatura (`fieldHints`). */
+      riga(
+        t("Temperatura mostrata", "Temperature shown"),
+        m.temperatura === "casa"
+          ? t(
+              "Quella del sensore in casa, in alto e sul riposo, con il tempo del meteo accanto. Vuoto: quella della stanza della prima pagina",
+              "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room",
+            )
+          : t(
+              "Quella di fuori, del meteo scelto qui sopra",
+              "The outdoor one, from the weather chosen above",
+            ),
+        `${scelte("temperatura", m.temperatura, [
+          ["meteo", t("Dal meteo", "From the weather")],
+          ["casa", t("Da un sensore in casa", "From an indoor sensor")],
+        ])}${
+          m.temperatura === "casa"
+            ? cerca("riposo.sensore", m.riposo.sensore, {
+                domini: "sensor",
+                segnaposto: t("Sensore della temperatura", "Temperature sensor"),
+              })
+            : ""
+        }`,
+      )
+    }
     ${riga(
       t("Riposo", "Rest"),
       t(
@@ -599,7 +776,7 @@ function corpoMarkup() {
       )}${interruttore("riposo.attivo", m.riposo.attivo, "riposo")}`,
     )}
     ${riga(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
-    ${riga(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor" }))}
+    ${m.temperatura === "casa" ? "" : riga(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}
     ${riga(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo("notte.da", m.notte.da, "23:00", "time")}${campo("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
     ${riga(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga(t("Avvisi a tutto schermo", "Full-screen alerts"), t("Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»", "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”"), interruttore("avvisiGrandi", m.avvisiGrandi, "avvisi-grandi"))}
@@ -814,7 +991,15 @@ function metti(via, valore) {
     }
   }
   let dove = m;
-  for (const pezzo of pezzi.slice(0, -1)) dove = dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo];
+  /* Nella regia una voce nuova nasce scrivendoci dentro: il canale, il
+   * preset o il comando della riga vuota in fondo all'elenco. */
+  const crea = REGIA.test(via);
+  pezzi.slice(0, -1).forEach((pezzo, n) => {
+    const chiave = Number.isInteger(+pezzo) ? +pezzo : pezzo;
+    if (crea && dove && dove[chiave] == null)
+      dove[chiave] = Number.isInteger(+pezzi[n + 1]) ? [] : {};
+    dove = dove?.[chiave];
+  });
   if (!dove) return;
   const ultimo = pezzi.at(-1);
   dove[ultimo] = typeof dove[ultimo] === "number" ? Number(valore) : valore;
@@ -823,6 +1008,28 @@ function metti(via, valore) {
   if (via === "fonte") state.fonte = null;
   state.bozza = muroPulito(m);
   if (via === "fonte") chiediAlPonte();
+}
+
+const REGIA = /^pagine\.\d+\.(mixer|telecamera|pulsanti|fermaTutto)\./;
+
+/* Togliere una voce di un elenco della regia, o aggiungerne una vuota. */
+function togliVoce(via) {
+  const pezzi = via.split(".");
+  const indice = Number(pezzi.pop());
+  const m = structuredClone(bozza());
+  const elenco = pezzi.reduce((dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo], m);
+  if (!Array.isArray(elenco) || !Number.isInteger(indice)) return;
+  elenco.splice(indice, 1);
+  state.bozza = muroPulito(m);
+}
+function aggiungiVoce(via) {
+  const m = structuredClone(bozza());
+  const elenco = via
+    .split(".")
+    .reduce((dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo], m);
+  if (!Array.isArray(elenco)) return;
+  elenco.push({ nome: "", colore: "", canali: [] });
+  state.bozza = muroPulito(m);
 }
 
 function leggiDalPercorso(via) {
@@ -843,7 +1050,7 @@ function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const el = event.target.closest(
-    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia]",
+    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia],[data-mu-ed-togli-voce],[data-mu-ed-aggiungi-voce]",
   );
   if (!el || body.querySelector(".mu-ed-chiuso")) return;
   event.preventDefault();
@@ -868,6 +1075,16 @@ function onClick(event) {
   }
   if (d.muEdSvuota) {
     metti(`${d.muEdSvuota}.svuota`, "");
+    ridisegna();
+    return;
+  }
+  if (d.muEdTogliVoce) {
+    togliVoce(d.muEdTogliVoce);
+    ridisegna();
+    return;
+  }
+  if (d.muEdAggiungiVoce) {
+    aggiungiVoce(d.muEdAggiungiVoce);
     ridisegna();
     return;
   }
@@ -1053,6 +1270,9 @@ html[data-theme="dark"] #ed-body .mu-ed-sporca{color:#fde68a;background:#78350f5
 #ed-body .mu-ed-colori button.auto{background:conic-gradient(#f59e0b,#ef4444,#8b5cf6,#0ea5e9,#10b981,#f59e0b);color:#fff}
 #ed-body .mu-ed-colori button.si{border-color:var(--text,#0f172a);box-shadow:0 0 0 2px var(--card-background-color,#fff) inset}
 #ed-body .mu-ed-anteprima-box{margin-top:10px}
+#ed-body .mu-ed-gruppo{margin-top:12px;padding:10px 12px 12px;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee);border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 5%,transparent)}
+#ed-body .mu-ed-gruppo>.mu-ed-posto-testa .mu-ed-cosa{font-size:14px}
+#ed-body .mu-ed-piu{width:auto;margin:12px 0 0;padding:10px 16px}
 #ed-body .mu-ed-lettori{display:grid;gap:8px;min-width:240px;flex:1}
 #ed-body .mu-ed-anteprima{margin-top:8px;width:100%;max-width:720px;overflow:hidden;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee)}
 #ed-body .mu-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}

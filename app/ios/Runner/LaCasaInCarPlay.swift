@@ -165,14 +165,32 @@ enum LaCasaInCarPlay {
           controllore?.dismissTemplate(animated: true) { _, _ in premi(c.id, c.nome, subito: true) }
         },
         CPAlertAction(title: "No", style: .cancel) { [weak controllore] _ in
-          controllore?.dismissTemplate(animated: true, completion: nil)
+          controllore?.dismissTemplate(animated: true, completion: finito("dismiss"))
         },
       ]
     )
-    controllore.presentTemplate(conferma, animated: true, completion: nil)
+    controllore.presentTemplate(conferma, animated: true, completion: finito("present"))
   }
 
   // MARK: - Gli schermi
+
+  /* Ogni passo fra gli schermi col suo blocco di fine, mai `completion: nil`.
+   *
+   * Dal campo, su iPhone in CarPlay: «scelgo un indirizzo, lo confermo, lo
+   * schermo sfarfalla e resta sulla pagina iniziale del navigatore». CarPlay,
+   * se un push, un present o un dismiss non riesce e non gli si e' dato il
+   * blocco di fine, lancia un'eccezione: l'app si chiude e CarPlay riparte
+   * dalla mappa, che e' proprio lo sfarfallio. La strada che lo faceva era
+   * in gdanav (`SchermiCarPlay.swift`, «I passi fra gli schermi»), ma questi
+   * schermi stanno sulla stessa pila: la conferma di una serratura aperta
+   * sopra l'avviso del Premium di gdanav, o un tocco su «Dispositivi» a meta'
+   * di un passaggio, erano lo stesso rischio. Se CarPlay dice di no, si
+   * scrive nel registro e l'app resta in piedi. */
+  private static func finito(_ passo: String) -> (Bool, Error?) -> Void {
+    return { ok, errore in
+      if !ok { NSLog("gdahome CarPlay: \(passo) non riuscito: \(errore?.localizedDescription ?? "senza motivo")") }
+    }
+  }
 
   /// Il disegno di un comando, per genere.
   static func segno(_ genere: String) -> UIImage {
@@ -201,7 +219,7 @@ enum LaCasaInCarPlay {
       t.trailingNavigationBarButtons = [
         CPBarButton(title: "Dispositivi") { [weak controllore] _ in
           guard let controllore else { return }
-          controllore.pushTemplate(dispositivi(controllore), animated: true, completion: nil)
+          controllore.pushTemplate(dispositivi(controllore), animated: true, completion: finito("push"))
         }
       ]
       return t
@@ -217,7 +235,7 @@ enum LaCasaInCarPlay {
     griglia.trailingNavigationBarButtons = [
       CPBarButton(title: "Dispositivi") { [weak controllore] _ in
         guard let controllore else { return }
-        controllore.pushTemplate(dispositivi(controllore), animated: true, completion: nil)
+        controllore.pushTemplate(dispositivi(controllore), animated: true, completion: finito("push"))
       }
     ]
     return griglia
@@ -237,11 +255,11 @@ enum LaCasaInCarPlay {
     let barra = [
       CPBarButton(title: "Azioni") { [weak controllore] _ in
         guard let controllore else { return }
-        controllore.pushTemplate(azioni(), animated: true, completion: nil)
+        controllore.pushTemplate(azioni(), animated: true, completion: finito("push"))
       },
       CPBarButton(title: "Casa") { [weak controllore] _ in
         guard let controllore else { return }
-        controllore.pushTemplate(comeStaLaCasa(), animated: true, completion: nil)
+        controllore.pushTemplate(comeStaLaCasa(), animated: true, completion: finito("push"))
       },
     ]
     if elenco.isEmpty {

@@ -64,6 +64,17 @@ import {
 import {
   CHIAVE_MURO,
   avvisiAccesi,
+  chiamateDelFermaTutto,
+  gruppiDelMixer,
+  letturaDelCanale,
+  menuDiLato,
+  pulsanteAcceso,
+  pulsantiDellaPagina,
+  servizioDelFader,
+  servizioDelMuto,
+  servizioDelPulsante,
+  servizioDellaTelecamera,
+  valoreDallaPosizione,
   derivaDelRiposo,
   batteriaDalBrowser,
   batteriaDelTablet,
@@ -85,6 +96,7 @@ import {
   personeDelMuro,
   pinGiusto,
   scala,
+  tastiDellaTapparella,
   temaDelMomento,
   verso,
 } from "../core/plancia-a-muro.js";
@@ -534,6 +546,9 @@ const MODELLI_SCRITTI = () => ({
   telecamere: t("Telecamere", "Cameras"),
   energia: t("Energia", "Energy"),
   musica: t("Musica", "Music"),
+  mixer: t("Audio", "Audio"),
+  telecamera: t("Telecamera", "Camera"),
+  comandi: t("Comandi", "Controls"),
 });
 const SOTTO = () => ({
   stanza: t("Luci · Clima · Tapparelle · Scene", "Lights · Climate · Blinds · Scenes"),
@@ -547,6 +562,9 @@ const SOTTO = () => ({
   telecamere: t("Le immagini dal vivo", "Live pictures"),
   energia: t("Adesso, in casa", "Right now, at home"),
   musica: t("Cosa suona in casa", "What's playing at home"),
+  mixer: t("Livelli e muto di ogni canale", "Level and mute for every channel"),
+  telecamera: t("Movimento · Zoom · Preset", "Pan · Zoom · Presets"),
+  comandi: t("Avvio e spegnimento", "Start and shutdown"),
 });
 const DISEGNO_DEL_MODELLO = {
   stanza: "stanze",
@@ -560,6 +578,9 @@ const DISEGNO_DEL_MODELLO = {
   telecamere: "telecamere",
   energia: "energia",
   musica: "media",
+  mixer: "media",
+  telecamera: "telecamere",
+  comandi: "azioni",
 };
 const ACCENTO_DEL_MODELLO = {
   stanza: "#f59e0b",
@@ -573,6 +594,9 @@ const ACCENTO_DEL_MODELLO = {
   telecamere: "#2563eb",
   energia: "#10b981",
   musica: "#ec4899",
+  mixer: "#f59e0b",
+  telecamera: "#0ea5e9",
+  comandi: "#10b981",
 };
 const accentoDi = (pagina) => clean(pagina?.colore) || ACCENTO_DEL_MODELLO[pagina?.modello];
 
@@ -608,6 +632,21 @@ function meteo() {
   return { temperatura: s?.attributes?.temperature, condizione: s?.state };
 }
 
+/* La temperatura «in casa» del tablet: il sensore scelto (`riposo.sensore`),
+ * o quello della stanza della prima pagina. E' la stessa che il riposo
+ * mostrava gia' accanto al meteo; con «Temperatura mostrata: da un sensore in
+ * casa» (`muro.temperatura === "casa"`) prende anche il posto della
+ * temperatura del meteo, in alto accanto all'ora. Un numero solo, da un posto
+ * solo: in alto e sul riposo non possono dire due «in casa» diversi. */
+function temperaturaInCasa(muro) {
+  const pagina = muro?.pagine?.[0];
+  const stanza = (state.fonte?.stanze || []).find((s) => s.name === pagina?.stanza);
+  const sonda = clean(muro?.riposo?.sensore) || stanza?.temp || "";
+  if (sonda) segna(sonda);
+  const n = sonda ? numero(stato(sonda)?.state) : null;
+  return n === null ? "" : `${decimale(n)}°`;
+}
+
 const PAROLE_DEL_METEO = () => ({
   sunny: t("sereno", "sunny"),
   "clear-night": t("sereno", "clear"),
@@ -633,12 +672,27 @@ function titoloLungo(titolo) {
 function testa(pagina, muro) {
   const o = orologio();
   const m = pagina.riga?.meteo !== false ? meteo() : null;
+  /* «Temperatura mostrata»: quella del meteo, o quella di casa. Con quella di
+   * casa il disegno e la parola del meteo restano (dicono che tempo fa fuori),
+   * e sotto il numero c'e' scritto «in casa», perche' nessuno lo scambi per
+   * quella di fuori. */
+  const inCasa =
+    pagina.riga?.meteo !== false && muro.temperatura === "casa" ? temperaturaInCasa(muro) : "";
+  const parolaDelMeteo = m ? PAROLE_DEL_METEO()[m.condizione] || "" : "";
+  const chipDelMeteo = inCasa
+    ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<div><b>${esc(inCasa)}</b><div class="mu-et">${esc([t("in casa", "inside"), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div></div><span class="mu-sep"></span>`
+    : m && numero(m.temperatura) !== null
+      ? `<div class="mu-meteo" data-mu-temperatura="meteo">${disegno("meteo", 44, "testa-meteo")}<div><b>${decimale(m.temperatura, 0)}°</b><div class="mu-et">${esc(parolaDelMeteo)}</div></div></div><span class="mu-sep"></span>`
+      : "";
   const accento = accentoDi(pagina);
   /* Con piu' di quattro pagine le linguette tengono il disegno, e il nome
    * solo quella aperta: otto nomi interi non ci stanno accanto all'ora. */
   const molte = muro.pagine.length > 4 ? " mu-molte" : "";
+  /* Col menu di lato le pagine stanno nella colonna a sinistra, e il ☰ con
+   * loro: la testa resta col titolo, il meteo e l'ora. */
+  const lato = menuDiLato(muro, state.verso, state.compatto);
   const linguette =
-    muro.pagine.length > 1
+    !lato && muro.pagine.length > 1
       ? `<div class="mu-pagine${molte}" role="tablist">${muro.pagine
           .map(
             (p, i) =>
@@ -646,16 +700,34 @@ function testa(pagina, muro) {
           )
           .join("")}</div>`
       : "";
-  return `<div class="mu-carta mu-testa" style="--acc:${accento}">
-    <button type="button" class="mu-menu" data-mu-fa="menu" aria-label="${esc(t("Apri il menu", "Open the menu"))}"><span></span><span></span><span></span></button>
+  return `<div class="mu-carta mu-testa${lato ? " mu-testa-lato" : ""}" style="--acc:${accento}">
+    ${lato ? "" : tastoDelMenu()}
     <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina))}">${esc(titoloDi(pagina))}</div><div class="mu-et mu-sot">${esc(SOTTO()[pagina.modello])}</div></div>
     ${linguette}
-    <div class="mu-ora" data-mu-orologio>${
-      m && numero(m.temperatura) !== null
-        ? `<div class="mu-meteo">${disegno("meteo", 44, "testa-meteo")}<div><b>${decimale(m.temperatura, 0)}°</b><div class="mu-et">${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</div></div></div><span class="mu-sep"></span>`
-        : ""
-    }<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
+    <div class="mu-ora" data-mu-orologio>${chipDelMeteo}<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
   </div>`;
+}
+
+const tastoDelMenu = () =>
+  `<button type="button" class="mu-menu" data-mu-fa="menu" aria-label="${esc(t("Apri il menu", "Open the menu"))}"><span></span><span></span><span></span></button>`;
+
+/* Il menu di lato: «una colonna di tasti grandi a sinistra, come sui
+ * pannelli di regia». Ogni pagina e' un tasto col suo disegno e il suo nome,
+ * quella aperta e' accesa nel suo colore; in cima il ☰. */
+function menuLaterale(muro) {
+  return `<nav class="mu-lato" role="tablist">${tastoDelMenu()}${muro.pagine
+    .map(
+      (p, i) =>
+        `<button type="button" role="tab" class="mu-lato-tasto${i === state.pagina ? " si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 46, `lato-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`,
+    )
+    .join("")}</nav>`;
+}
+
+/* La pagina intera, col menu di lato se c'e': la usano il pannello e la sua
+ * anteprima nel config. */
+function paginaIntera(pagina, muro) {
+  const lato = menuDiLato(muro, state.verso, state.compatto);
+  return `<div class="mu-pagina mu-pag-${pagina.modello}${lato ? " mu-con-lato" : ""}">${lato ? menuLaterale(muro) : ""}${testa(pagina, muro)}${corpoDellaPagina(pagina)}</div>`;
 }
 
 const STATI_DELL_ALLARME = () => ({
@@ -1162,17 +1234,42 @@ function cardTapparella(c, i) {
             ? t("Si chiude…", "Closing…")
             : s || "—";
   /* Nella forma della famiglia: il disegno e lo stato in alto, il nome
-   * grande, poi la barra e i tre tasti — che se la casella e' bassa lasciano
-   * il posto al nome, e restano nella finestra che si apre col tocco. */
+   * grande, poi la barra e i tasti.
+   *
+   * «Sulla personalizzata la modifica che hai fatto del clima serve anche
+   * sulle tapparelle: i pulsanti diretti, senza entrarci dentro.» Prima i tre
+   * tasti erano la prima cosa a sparire quando la casella era bassa — nella
+   * griglia di otto e di dodici, e su tutto il pannello piccolo, non c'erano
+   * mai — e per muovere una serranda bisognava aprirne la finestra. Ora sono
+   * l'ultima: se lo spazio manca se ne vanno prima la barra della posizione,
+   * poi il disegno, poi la riga in alto (e la parola dello stato scende,
+   * piccola, accanto al nome: `mu-tap-stato`, dove «Aperta · 22%» diventa
+   * «22%»), e il nome si stringe; i tasti
+   * restano, alti almeno quanto un dito (vedi gli stili della famiglia). Sono
+   * quelli che la cover sa fare (`tastiDellaTapparella`): una tenda che
+   * apre e chiude soltanto ha ▲ e ▼, senza ■. Il tocco fuori dai tasti apre
+   * la finestra, come sempre. La parola accanto al segno («Su», «Stop»,
+   * «Giu'») si vede solo dove la casella e' larga. */
+  const tasti = tastiDellaTapparella(a);
+  const TASTI = {
+    su: ["▲", t("Su", "Up")],
+    ferma: ["■", t("Stop", "Stop")],
+    giu: ["▼", t("Giù", "Down")],
+  };
   return `<div class="mu-carta mu-card mu-fam mu-tapparella ${s && s !== "closed" ? "mu-accesa" : ""}" style="--acc:${ACCENTI.tapparella}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
     <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegno("tapparelle", 32, `tapp-${i}`)}</span><span class="mu-stato">${esc(parola)}</span></div>
-    <div class="mu-osw mu-fam-nome">${esc(nomeDi(id, c.nome))}</div>
+    <div class="mu-fam-fondo"><div class="mu-osw mu-fam-nome">${esc(nomeDi(id, c.nome))}</div><span class="mu-tap-stato" aria-hidden="true">${esc(s === "open" && pos !== null && pos < 100 ? `${pos}%` : parola)}</span></div>
     ${pos !== null ? `<div class="mu-bar"><i style="width:${pos}%"></i></div>` : ""}
-    <div class="mu-seg">
-      <button type="button" data-mu-fa="su" data-mu-entita="${esc(id)}">▲ ${esc(t("Su", "Up"))}</button>
-      <button type="button" data-mu-fa="ferma" data-mu-entita="${esc(id)}">■ ${esc(t("Stop", "Stop"))}</button>
-      <button type="button" data-mu-fa="giu" data-mu-entita="${esc(id)}">▼ ${esc(t("Giù", "Down"))}</button>
-    </div></div>`;
+    ${
+      tasti.length
+        ? `<div class="mu-seg mu-tap-tasti">${tasti
+            .map(
+              (k) =>
+                `<button type="button" data-mu-fa="${k}" data-mu-entita="${esc(id)}" aria-label="${esc(TASTI[k][1])}"><b aria-hidden="true">${TASTI[k][0]}</b><span>${esc(TASTI[k][1])}</span></button>`,
+            )
+            .join("")}</div>`
+        : ""
+    }</div>`;
 }
 
 /* La tessera: il disegno in alto a sinistra con la parola piccola accanto, il
@@ -1909,6 +2006,204 @@ function paginaIngresso(pagina) {
   </div>`;
 }
 
+/* ── la regia: mixer, telecamera, comandi ──────────────────────────────────
+ *
+ * «Cerca di creare una cosa del genere per wall»: le tre pagine di un
+ * pannello da regia. Le regole — cosa vuol dire un canale, quale servizio
+ * manda un tasto — stanno nel nucleo (`core/plancia-a-muro.js`); qui c'e' il
+ * disegno e il dito. */
+
+/* Il canale come lo si vede: quello che dice Home Assistant, con sopra il
+ * cursore appena lasciato e il muto appena toccato, finche' non arriva la
+ * conferma. */
+function canaleOra(canale) {
+  segna(canale.entita);
+  if (canale.muto) segna(canale.muto);
+  const lettura = letturaDelCanale(canale, allStates() || {});
+  const attesa = state.inAttesa[canale.entita] || {};
+  if (attesa.posizione !== undefined) {
+    lettura.posizione = attesa.posizione;
+    lettura.valore = valoreDallaPosizione(attesa.posizione, lettura);
+  }
+  const muto = canale.muto ? state.inAttesa[canale.muto]?.acceso : attesa.mutato;
+  if (typeof muto === "boolean") lettura.mutato = muto;
+  return lettura;
+}
+
+/* Il numero sopra il cursore: «62%» per un lettore, «-12,5 dB» per un numero,
+ * coi decimali che il suo passo chiede. */
+function testoDelCanale(lettura, posizione = lettura.posizione) {
+  if (!lettura.disponibile || lettura.valore === null) return "—";
+  const valore = valoreDallaPosizione(posizione, lettura);
+  if (lettura.tipo === "volume") return `${Math.round(valore * 100)}%`;
+  const cifre = lettura.passo >= 1 ? 0 : lettura.passo >= 0.1 ? 1 : 2;
+  return `${decimale(valore, cifre)}${lettura.unita ? ` ${lettura.unita}` : ""}`;
+}
+
+/* Il cursore: una traccia che si riempie del colore del gruppo, e la manopola
+ * sopra. In piedi per i canali, sdraiato per il volume totale. */
+function fader(canale, lettura, { sdraiato = false } = {}) {
+  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura))}"><span class="mu-fad-traccia"><i></i></span><u></u></div>`;
+}
+
+function tastoMuto(canale, lettura) {
+  if (!lettura.puoMuto) return `<span class="mu-can-muto vuoto" aria-hidden="true"></span>`;
+  return `<button type="button" class="mu-can-muto${lettura.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}" aria-pressed="${lettura.mutato}" aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi(canale.entita, canale.nome))}">${glifo(lettura.mutato ? "muto" : "voce", 24)}</button>`;
+}
+
+function canaleDelMixer(canale) {
+  const l = canaleOra(canale);
+  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"}" data-mu-canale="${esc(canale.entita)}">
+    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>
+    ${fader(canale, l)}
+    <span class="mu-can-n">${esc(nomeDi(canale.entita, canale.nome))}</span>
+    ${tastoMuto(canale, l)}</div>`;
+}
+
+function paginaMixer(pagina) {
+  const gruppi = gruppiDelMixer(pagina);
+  const master = pagina.mixer?.master;
+  if (!gruppi.length && !master?.entita)
+    return griglia({ ...pagina, griglia: 4 }, [
+      vuoto(0, t("Scegli i canali nel config", "Choose the channels in the config")),
+    ]);
+  const quanti = gruppi.map((g) => `minmax(0,${g.canali.length}fr)`).join(" ");
+  const banchi = gruppi.length
+    ? `<div class="mu-mix-gruppi" style="grid-template-columns:${quanti}">${gruppi
+        .map(
+          (g) =>
+            `<div class="mu-carta mu-mix-gruppo" style="--acc:${g.colore}"><div class="mu-mix-tit">${esc(g.nome || t("Canali", "Channels"))}</div><div class="mu-mix-canali">${g.canali.map(canaleDelMixer).join("")}</div></div>`,
+        )
+        .join("")}</div>`
+    : "";
+  let totale = "";
+  if (master?.entita) {
+    const l = canaleOra(master);
+    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
+      <span class="mu-mix-tit">${esc(master.nome || t("Volume totale", "Master volume"))}</span>
+      ${tastoMuto(master, l)}
+      ${fader(master, l, { sdraiato: true })}
+      <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b></div>`;
+  }
+  return `<div class="mu-mixer${banchi ? "" : " solo-totale"}">${banchi}${totale}</div>`;
+}
+
+/* Le frecce della telecamera: i segni dentro i tasti del pad. */
+const FRECCE = Object.freeze({
+  su: '<path d="M6 15l6-6 6 6"/>',
+  giu: '<path d="M6 9l6 6 6-6"/>',
+  sinistra: '<path d="M15 6l-6 6 6 6"/>',
+  destra: '<path d="M9 6l6 6-6 6"/>',
+});
+const freccia = (verso) =>
+  `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${FRECCE[verso]}</svg>`;
+
+function tastoPtz(tc, tasto, dentro, etichetta, classe = "") {
+  const id = tc[tasto];
+  return `<button type="button" class="mu-ptz-t ${classe}" data-mu-fa="ptz" data-mu-tasto="${tasto}" aria-label="${esc(etichetta)}"${id ? "" : " disabled"}>${dentro}</button>`;
+}
+
+function paginaTelecamera(pagina) {
+  const tc = pagina.telecamera || {};
+  const nome = tc.entita ? nomeDi(tc.entita) : t("Nessuna telecamera", "No camera");
+  const pad = `<div class="mu-ptz-pad">
+    <span></span>${tastoPtz(tc, "su", freccia("su"), t("Su", "Up"))}<span></span>
+    ${tastoPtz(tc, "sinistra", freccia("sinistra"), t("Sinistra", "Left"))}${tastoPtz(tc, "stop", `<b>${esc(t("Stop", "Stop"))}</b>`, t("Stop", "Stop"), "mu-ptz-stop")}${tastoPtz(tc, "destra", freccia("destra"), t("Destra", "Right"))}
+    <span></span>${tastoPtz(tc, "giu", freccia("giu"), t("Giù", "Down"))}<span></span></div>`;
+  /* Lo zoom: un cursore se e' un numero, i due tasti se sono tasti, le due
+   * cose insieme se ci sono tutte e due. */
+  const conZoom = tc.zoom || tc.zoomPiu || tc.zoomMeno;
+  let zoom = "";
+  if (conZoom) {
+    const l = tc.zoom ? canaleOra({ entita: tc.zoom }) : null;
+    zoom = `<div class="mu-ptz-zoom"><span class="mu-et">${esc(t("Zoom", "Zoom"))}</span>
+      ${tc.zoomPiu ? tastoPtz(tc, "zoomPiu", "+", t("Zoom avanti", "Zoom in"), "mu-ptz-pm") : ""}
+      ${l ? fader({ entita: tc.zoom, nome: t("Zoom", "Zoom") }, l) : '<span class="mu-spazio"></span>'}
+      ${tc.zoomMeno ? tastoPtz(tc, "zoomMeno", "−", t("Zoom indietro", "Zoom out"), "mu-ptz-pm") : ""}</div>`;
+  }
+  const preset = (tc.preset || [])
+    .map(
+      (p, k) =>
+        `<button type="button" class="mu-carta mu-ptz-preset-t" data-mu-fa="preset" data-mu-indice="${k}"><span>${esc(p.nome || nomeDi(p.entita))}</span></button>`,
+    )
+    .join("");
+  return `<div class="mu-ptz${preset ? "" : " senza-preset"}">
+    <div class="mu-carta mu-ptz-video"><div class="mu-video">${
+      tc.entita && !anteprimaInCorso
+        ? `<img data-mu-telecamera="${esc(tc.entita)}" alt="">`
+        : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "ptz-vuota")}</div>`
+    }<span class="mu-live">${esc(nome)}</span></div></div>
+    <div class="mu-carta mu-ptz-comandi${conZoom ? "" : " senza-zoom"}">${zoom}${pad}</div>
+    ${preset ? `<div class="mu-ptz-preset">${preset}</div>` : ""}
+  </div>`;
+}
+
+/* Il segno dei tasti dei comandi: l'accensione, il play, lo stop. */
+const SEGNI_DEI_COMANDI = Object.freeze({
+  accendi: '<path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/>',
+  avvia: '<path d="M8 5v14l11-7z" fill="currentColor"/>',
+  ferma: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+});
+const segno = (nome, misura = 30) =>
+  `<svg width="${misura}" height="${misura}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEGNI_DEI_COMANDI[nome]}</svg>`;
+
+/* Acceso come lo si vede: il tocco cambia il tasto subito. */
+function comandoAcceso(p) {
+  const id = p.stato || p.avvio;
+  if (id) segna(id);
+  const atteso = state.inAttesa[id]?.acceso;
+  return typeof atteso === "boolean" ? atteso : pulsanteAcceso(p, allStates() || {});
+}
+/* Chi sa dire se e' acceso: l'entita' di stato scelta, o un avvio che si
+ * accende e si spegne. Uno script d'avvio finisce in un attimo, e «Spento»
+ * sotto «Spegnimento» direbbe solo una cosa strana. */
+const diceLoStato = (p) =>
+  Boolean(p.stato) ||
+  ["switch", "input_boolean", "light", "fan", "automation"].includes(dominio(p.avvio));
+
+function paginaComandi(pagina) {
+  const tutti = pulsantiDellaPagina(pagina).map((p, k) => ({ p, k }));
+  if (!tutti.length)
+    return griglia({ ...pagina, griglia: 4 }, [
+      vuoto(0, t("Scegli i comandi nel config", "Choose the commands in the config")),
+    ]);
+  const parola = (p, on) =>
+    diceLoStato(p)
+      ? `<span class="mu-stato ${on ? "" : "spento"}">${esc(on ? t("Acceso", "On") : t("Spento", "Off"))}</span>`
+      : "";
+  const icona = (p, k, misura) =>
+    clean(p.disegno)
+      ? disegno(p.disegno, misura, `reg-${misura}-${k}`)
+      : segno("accendi", Math.round(misura * 0.7));
+  /* Un tasto solo: una tessera grande, «AVVIO», «SPEGNIMENTO». */
+  const grandi = tutti
+    .filter(({ p }) => !p.stop)
+    .map(({ p, k }) => {
+      const on = comandoAcceso(p);
+      return `<button type="button" class="mu-carta mu-reg-tasto${on ? " mu-accesa" : ""}" style="--acc:${p.colore || "#22c55e"}" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio" aria-pressed="${on}"><span class="mu-reg-icona">${icona(p, k, 56)}</span><span class="mu-osw mu-reg-nome">${esc(p.nome || nomeDi(p.avvio))}</span>${parola(p, on)}</button>`;
+    });
+  /* Avvio e stop: una colonna per comando, il nome in cima e i due tasti. */
+  const coppie = tutti
+    .filter(({ p }) => p.stop)
+    .map(({ p, k }) => {
+      const on = comandoAcceso(p);
+      return `<div class="mu-carta mu-reg-coppia${on ? " mu-accesa" : ""}" style="--acc:${p.colore || "#22c55e"}"><div class="mu-reg-testa"><span class="mu-reg-icona">${icona(p, k, 34)}</span><span class="mu-reg-nome">${esc(p.nome || nomeDi(p.avvio || p.stop))}</span>${parola(p, on)}</div>
+        ${p.avvio ? `<button type="button" class="mu-reg-avvio${on ? " si" : ""}" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio">${segno("avvia", 34)}<span>${esc(t("Avvio", "Start"))}</span></button>` : ""}
+        <button type="button" class="mu-reg-stop" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="stop">${segno("ferma", 30)}<span>${esc(t("Stop", "Stop"))}</span></button></div>`;
+    });
+  const colonne = (n) => `grid-template-columns:repeat(${Math.min(n, 4)},minmax(0,1fr))`;
+  const ferma = pagina.fermaTutto?.attivo
+    ? `<button type="button" class="mu-carta mu-reg-ferma" data-mu-fa="ferma-tutto">${segno("ferma", 26)}<span>${esc(t("Ferma tutto", "Stop all"))}</span></button>`
+    : "";
+  const righe = [grandi.length ? "minmax(0,1fr)" : "", coppie.length ? "minmax(0,1fr)" : "", ferma ? "auto" : ""]
+    .filter(Boolean)
+    .join(" ");
+  return `<div class="mu-regia" style="grid-template-rows:${righe}">
+    ${grandi.length ? `<div class="mu-reg-grandi" style="${colonne(grandi.length)}">${grandi.join("")}</div>` : ""}
+    ${coppie.length ? `<div class="mu-reg-coppie" style="grid-template-columns:repeat(${coppie.length},minmax(0,1fr))">${coppie.join("")}</div>` : ""}
+    ${ferma}</div>`;
+}
+
 function corpoDellaPagina(pagina) {
   if (pagina.modello === "scene") return paginaScene(pagina);
   if (pagina.modello === "ingresso") return paginaIngresso(pagina);
@@ -1916,6 +2211,9 @@ function corpoDellaPagina(pagina) {
   if (pagina.modello === "telecamere") return paginaTelecamere(pagina);
   if (pagina.modello === "energia") return paginaEnergia(pagina);
   if (pagina.modello === "musica") return paginaMusica(pagina);
+  if (pagina.modello === "mixer") return paginaMixer(pagina);
+  if (pagina.modello === "telecamera") return paginaTelecamera(pagina);
+  if (pagina.modello === "comandi") return paginaComandi(pagina);
   return paginaStanza(pagina);
 }
 
@@ -1949,7 +2247,7 @@ export function anteprimaDellaPagina(muro, indice = 0, fonte = state.fonte) {
       compatto: false,
       verso: muro.orientamento === "verticale" ? "verticale" : "orizzontale",
     });
-    return `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${corpoDellaPagina(pagina)}</div>`;
+    return paginaIntera(pagina, muro);
   } finally {
     Object.assign(state, prima);
     raccolta = raccoltaPrima;
@@ -2022,7 +2320,12 @@ function finestra() {
     dentro = `<div class="mu-fin-clima" style="--acc:${ACCENTI.tapparella}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("tapparelle", 30, "fin-tapp")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(nomeDi(id))}</div><div class="mu-stato">${pos === null ? esc(String(stato(id)?.state || "")) : `${pos}%`}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       ${pos !== null ? `<div class="mu-bar"><i style="width:${pos}%"></i></div>` : ""}
-      <div class="mu-seg mu-seg-alto"><button type="button" data-mu-fa="su" data-mu-entita="${esc(id)}">▲ ${esc(t("Su", "Up"))}</button><button type="button" data-mu-fa="ferma" data-mu-entita="${esc(id)}">■ ${esc(t("Stop", "Stop"))}</button><button type="button" data-mu-fa="giu" data-mu-entita="${esc(id)}">▼ ${esc(t("Giù", "Down"))}</button></div></div>`;
+      <div class="mu-seg mu-seg-alto">${tastiDellaTapparella(attributi(id))
+        .map(
+          (k) =>
+            `<button type="button" data-mu-fa="${k}" data-mu-entita="${esc(id)}">${{ su: `▲ ${esc(t("Su", "Up"))}`, ferma: `■ ${esc(t("Stop", "Stop"))}`, giu: `▼ ${esc(t("Giù", "Down"))}` }[k]}</button>`,
+        )
+        .join("")}</div></div>`;
   } else if (f.tipo === "antifurto") {
     const pagina = state.muro?.pagine?.[state.pagina];
     const centrale = centraleDelMuro(pagina);
@@ -2137,10 +2440,11 @@ function riposo(muro) {
   const allarme =
     !aree && centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
   const rigaDelleAree = aree ? areeSulRiposo(aree) : "";
-  const stanza = (state.fonte?.stanze || []).find((s) => s.name === pagina?.stanza);
-  const sonda = clean(muro.riposo?.sensore) || stanza?.temp || "";
-  const dentro =
-    sonda && numero(stato(sonda)?.state) !== null ? `${decimale(stato(sonda).state)}°` : "";
+  const dentro = temperaturaInCasa(muro);
+  /* Con «Temperatura mostrata: da un sensore in casa» il meteo resta come
+   * disegno e parola, senza i gradi di fuori: la temperatura e' quella di
+   * casa, una volta sola, accanto. */
+  const soloCasa = muro.temperatura === "casa" && Boolean(dentro);
   /* Quello che si vuole sapere passando davanti, senza toccare: fuori, dentro,
    * chi c'e', cosa e' rimasto aperto, l'antifurto. Ognuna solo se c'e'. */
   const persone = personeInCasa();
@@ -2156,7 +2460,13 @@ function riposo(muro) {
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
     <div class="mu-et mu-data">${esc(o.lungo)}${pilaDelRiposo(muro)}</div>
     <div class="mu-riposo-riga">
-      ${m && numero(m.temperatura) !== null ? `<span>${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>` : ""}
+      ${
+        m && soloCasa && PAROLE_DEL_METEO()[m.condizione]
+          ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${esc(PAROLE_DEL_METEO()[m.condizione])}</span>`
+          : m && !soloCasa && numero(m.temperatura) !== null
+            ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>`
+            : ""
+      }
       ${dentro ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro} ${esc(t("in casa", "inside"))}</span>` : ""}
       ${persone.tutte ? `<span data-mu-riposo="persone">${disegno("persone", 30, "rip-persone")}${esc(chi)}</span>` : ""}
       ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
@@ -2648,9 +2958,7 @@ export function disegna() {
   try {
     corpo = state.riposo
       ? riposo(muro)
-      : `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${corpoDellaPagina(
-          pagina,
-        )}</div>${finestra()}`;
+      : `${paginaIntera(pagina, muro)}${finestra()}`;
     corpo += avvisoGrande();
     /* Il riposo si sveglia per l'antifurto anche quando non lo mostra. */
     segna(centraleDelMuro(muro.pagine[0]));
@@ -2754,13 +3062,26 @@ function alterna(id, domain, service, data = { entity_id: id }) {
 
 /* Quando Home Assistant dice lo stesso che il tablet aspettava, l'attesa
  * finisce subito: niente quattro secondi in cui il tablet non ascolta. */
-const ATTESE = ["acceso", "luminosita", "temperatura", "coppia", "volume", "suona", "gruppo"];
+const ATTESE = [
+  "acceso",
+  "luminosita",
+  "temperatura",
+  "coppia",
+  "volume",
+  "suona",
+  "gruppo",
+  "posizione",
+  "mutato",
+];
 export function attesaConfermata(cosa, atteso, reale) {
   if (cosa === "acceso") return reale.acceso === atteso;
   if (cosa === "suona") return reale.suona === atteso;
   if (cosa === "gruppo")
     return reale.gruppo === (Array.isArray(atteso) ? atteso : []).slice(1).sort().join(",");
   if (cosa === "volume") return reale.volume !== null && Math.abs(reale.volume - atteso) <= 1;
+  if (cosa === "posizione")
+    return reale.posizione !== null && Math.abs(reale.posizione - atteso) <= 0.015;
+  if (cosa === "mutato") return reale.mutato === atteso;
   if (cosa === "luminosita")
     return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
   if (cosa === "temperatura")
@@ -2796,6 +3117,8 @@ function confermaLeAttese(event) {
           ? null
           : Math.round(numero(attributi(id).volume_level) * 100),
       suona: ["playing", "buffering"].includes(String(stato(id)?.state)),
+      posizione: posizioneDelCanale(id),
+      mutato: attributi(id).is_volume_muted === true,
       gruppo: (attributi(id).group_members || [])
         .filter((x) => x !== id)
         .sort()
@@ -2808,6 +3131,13 @@ function confermaLeAttese(event) {
       delete state.inAttesa[id];
     }
   }
+}
+
+/* Dove sta il cursore di un canale per Home Assistant, o `null`. */
+function posizioneDelCanale(id) {
+  if (!["media_player", "number", "input_number"].includes(dominio(id))) return null;
+  const l = letturaDelCanale({ entita: id }, allStates() || {});
+  return l.valore === null ? null : l.posizione;
 }
 
 let timerClima = null;
@@ -3158,6 +3488,61 @@ function onClick(event) {
     case "cifra":
       cifra(bersaglio.dataset.muCifra);
       return;
+    case "muto": {
+      /* Il muto di un canale: l'interruttore scelto, o quello del lettore. Si
+       * vede subito, e la risposta vera lo conferma. */
+      const muto = bersaglio.dataset.muMuto || "";
+      const canale = { entita: id, muto };
+      const lettura = canaleOra(canale);
+      const servizio = servizioDelMuto(canale, lettura);
+      if (!servizio) return;
+      if (muto) attendi(muto, "acceso", !lettura.mutato);
+      else attendi(id, "mutato", !lettura.mutato);
+      comanda(servizio.domain, servizio.service, servizio.data);
+      disegna();
+      return;
+    }
+    case "ptz": {
+      const pagina = state.muro?.pagine?.[state.pagina];
+      const servizio = servizioDellaTelecamera(pagina?.telecamera, bersaglio.dataset.muTasto);
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "preset": {
+      const pagina = state.muro?.pagine?.[state.pagina];
+      const voce = pagina?.telecamera?.preset?.[Number(bersaglio.dataset.muIndice)];
+      const servizio = voce ? servizioDellaTelecamera(voce, "entita") : null;
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "pulsante": {
+      const pagina = state.muro?.pagine?.[state.pagina];
+      const p = pulsantiDellaPagina(pagina)[Number(bersaglio.dataset.muIndice)];
+      if (!p) return;
+      const verso = bersaglio.dataset.muVerso === "stop" ? "stop" : "avvio";
+      const servizio = servizioDelPulsante(p, verso, allStates() || {});
+      if (!servizio) return;
+      /* Chi dice il suo stato lo cambia subito: acceso dopo l'avvio, spento
+       * dopo lo stop, e il tasto solo di un interruttore si alterna. */
+      if (diceLoStato(p))
+        attendi(
+          p.stato || p.avvio,
+          "acceso",
+          verso === "stop" ? false : servizio.service === "turn_off" ? false : true,
+        );
+      comanda(servizio.domain, servizio.service, servizio.data);
+      disegna();
+      return;
+    }
+    case "ferma-tutto": {
+      const pagina = state.muro?.pagine?.[state.pagina];
+      for (const servizio of chiamateDelFermaTutto(pagina, allStates() || {}))
+        if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      for (const p of pulsantiDellaPagina(pagina))
+        if (diceLoStato(p) && (p.stop || p.stato)) attendi(p.stato || p.avvio, "acceso", false);
+      disegna();
+      return;
+    }
     default:
   }
 }
@@ -3178,6 +3563,25 @@ function onPointerDown(event) {
    * tapparella non si aprivano. */
   state.tenuto = false;
   const barra = event.target?.closest?.("[data-mu-cursore]");
+  if (barra?.dataset.muCursore === "fader") {
+    /* Il cursore di un canale: si trascina tutto, e intanto il comando parte
+     * al massimo quattro volte al secondo — chi alza un microfono vuole
+     * sentirlo salire, non solo dove l'ha lasciato. */
+    if (barra.classList.contains("fermo")) return;
+    const id = barra.dataset.muEntita;
+    state.trascina = {
+      barra,
+      id,
+      fader: true,
+      sdraiato: barra.classList.contains("sdraiato"),
+      lettura: letturaDelCanale({ entita: id }, allStates() || {}),
+      ultimo: 0,
+      mandato: null,
+    };
+    barra.setPointerCapture?.(event.pointerId);
+    onPointerMove(event);
+    return;
+  }
   if (barra) {
     const verticale = barra.dataset.muCursore === "luce-alta";
     state.trascina = {
@@ -3212,9 +3616,51 @@ function onPointerDown(event) {
   }
 }
 
+/* Da 0 a 1, dove sta il dito lungo la traccia del cursore. */
+export function posizioneDalDito(punto, riquadro, sdraiato = false) {
+  const p = sdraiato
+    ? (punto.x - riquadro.left) / (riquadro.width || 1)
+    : 1 - (punto.y - riquadro.top) / (riquadro.height || 1);
+  return Math.max(0, Math.min(1, p));
+}
+const FADER_OGNI = 250;
+
+function mandaIlFader(t, posizione) {
+  const servizio = servizioDelFader({ entita: t.id }, posizione, t.lettura);
+  if (!servizio) return;
+  const valore = servizio.data.volume_level ?? servizio.data.value;
+  if (valore === t.mandato) return;
+  t.mandato = valore;
+  t.ultimo = Date.now();
+  comanda(servizio.domain, servizio.service, servizio.data);
+}
+
+function muoviIlFader(t, event) {
+  const traccia = t.barra.querySelector(".mu-fad-traccia") || t.barra;
+  const r = traccia.getBoundingClientRect();
+  /* Sul passo del canale: la manopola scatta dove il valore vero puo' stare. */
+  const grezza = posizioneDalDito({ x: event.clientX, y: event.clientY }, r, t.sdraiato);
+  const valore = valoreDallaPosizione(grezza, t.lettura);
+  const p =
+    t.lettura.tipo === "volume"
+      ? valore
+      : (valore - t.lettura.min) / (t.lettura.max - t.lettura.min || 1);
+  t.valore = p;
+  t.barra.style.setProperty("--p", p.toFixed(4));
+  const scritta = t.barra
+    .closest("[data-mu-canale]")
+    ?.querySelector("[data-mu-fader-testo]");
+  if (scritta) scritta.textContent = testoDelCanale(t.lettura, p);
+  if (Date.now() - t.ultimo >= FADER_OGNI) mandaIlFader(t, p);
+}
+
 function onPointerMove(event) {
   const t = state.trascina;
   if (!t) return;
+  if (t.fader) {
+    muoviIlFader(t, event);
+    return;
+  }
   const p = percentualeDalDito(event, t.barra, t.verticale, t.volume ? 0 : 1);
   t.valore = p;
   const riempi = t.barra.querySelector("i");
@@ -3229,6 +3675,15 @@ function onPointerUp(event) {
   root.clearTimeout?.(state.pressione);
   state.pressione = null;
   const t = state.trascina;
+  if (t?.fader) {
+    state.trascina = null;
+    if (t.valore !== undefined) {
+      mandaIlFader(t, t.valore);
+      attendi(t.id, "posizione", t.valore);
+    }
+    disegna();
+    return;
+  }
   if (t) {
     state.trascina = null;
     if (t.volume && t.valore !== undefined) {
@@ -3915,11 +4370,50 @@ ${MURO} .mu-g6>.mu-card.mu-termostato .mu-est>.mu-est-t{width:clamp(22px,min(19c
   ${MURO} .mu-card.mu-fam>.mu-giu{display:none}
   ${MURO} .mu-card.mu-clima-mini .mu-sotto{display:none}
 }
-@container (max-height:199px){
-  ${MURO} .mu-card.mu-fam>.mu-seg{display:none}
-}
 @container (max-height:129px){
   ${MURO} .mu-card.mu-fam>.mu-bar{display:none}
+}
+/* La tapparella coi tasti sempre sulla card.
+ *
+ * «Anche se attivo una stanza riprendendo le stanze della plancia principale,
+ * anche qui va fatto quello che hai fatto sul clima.» Le priorita' si
+ * rovesciano rispetto a prima: i tasti ▲ ■ ▼ restano in ogni casella, su
+ * ogni schermo, e a far posto sono gli altri. In quest'ordine, man mano che
+ * la casella si abbassa: la barra della posizione (la percentuale resta nella
+ * parola dello stato, e la barra nella finestra), il disegno (la riga in alto
+ * diventa la sola parola, piccola), e nelle caselle piu' basse anche la
+ * parola: restano il nome, che si stringe ma non sparisce, e i tasti. Il
+ * disegno se ne va prima della parola perche' e' lui a fare alta la riga: la
+ * parola da sola costa un terzo, e dice se la serranda e' aperta.
+ *
+ * I tasti crescono con la casella, fra 40 e 64 pixel del disegno (il pannello
+ * piu' rimpicciolito, a 0,75, li porta a 30 pixel veri: mai meno). In una
+ * casella stretta resta il segno senza la parola; il segno ha il colore della
+ * tapparella. Sul pannello piccolo (\`data-compatto\`) le righe di contorno
+ * delle card sono spente tutte, i tasti delle tapparelle no. */
+${MURO} .mu-g6>.mu-card.mu-tapparella>.mu-tap-tasti{display:flex;flex:none;margin-top:clamp(6px,5cqh,12px);padding:clamp(3px,2cqh,6px);gap:clamp(4px,2cqw,6px);border-radius:clamp(12px,9cqh,20px)}
+${MURO} .mu-g6>.mu-card.mu-tapparella>.mu-tap-tasti>button{height:clamp(40px,28cqh,64px);min-width:0;padding:0 4px;gap:8px;font-size:clamp(14px,9cqh,17px);border-radius:clamp(10px,7cqh,15px);color:var(--text);background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+${MURO} .mu-g6>.mu-card.mu-tapparella>.mu-tap-tasti>button:active{background:color-mix(in srgb,var(--acc) 22%,var(--card-bg))}
+${MURO} .mu-tap-tasti>button>b{font-size:1.2em;line-height:1;color:var(--acc);font-weight:800}
+${MURO} .mu-tap-tasti>button>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+${MURO} .mu-g6>.mu-card.mu-tapparella .mu-fam-nome.mu-osw{font-size:clamp(15px,min(19cqh,11cqw),38px)}
+@container (max-width:359px){
+  ${MURO} .mu-card.mu-tapparella .mu-tap-tasti>button>span{display:none}
+}
+@container (max-height:229px){
+  ${MURO} .mu-card.mu-tapparella>.mu-bar{display:none}
+}
+${MURO} .mu-card.mu-tapparella .mu-tap-stato{display:none;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-bottom:.3em;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+${MURO} .mu-card.mu-tapparella:not(.mu-accesa) .mu-tap-stato{color:var(--text-dim)}
+/* Le soglie sono sull'altezza dentro la casella, senza il suo bordo. */
+@container (max-height:134px){
+  ${MURO} .mu-card.mu-tapparella .mu-riga1>.mu-chip{display:none}
+  ${MURO} .mu-card.mu-tapparella .mu-riga1>.mu-stato{font-size:11px}
+  ${MURO} .mu-card.mu-tapparella .mu-fam-nome.mu-osw{padding-top:2px}
+}
+@container (max-height:99px){
+  ${MURO} .mu-card.mu-tapparella>.mu-riga1{display:none}
+  ${MURO} .mu-card.mu-tapparella .mu-tap-stato{display:block}
 }
 /* Il clima basso: i gradi voluti salgono accanto al nome, al posto della
  * pastiglia di quello che sta facendo, e la riga «− + ⏻» resta intera. */
@@ -3963,6 +4457,162 @@ ${MURO} .mu-g6>.mu-card.mu-termostato .mu-est>.mu-est-t{width:clamp(22px,min(19c
 @container (max-width:179px){
   ${MURO} .mu-card.mu-fam .mu-riga1>.mu-stato{display:none}
 }
+/* ── Il menu di lato ─────────────────────────────────────────────────────
+ *
+ * «Come sui pannelli di regia»: una colonna di tasti grandi a sinistra, il
+ * disegno sopra e il nome sotto, quello aperto acceso nel suo colore. La
+ * testa perde il ☰ e le linguette, e si fa piu' bassa. */
+${MURO} .mu-pagina.mu-con-lato{grid-template-columns:116px minmax(0,1fr);column-gap:18px}
+${MURO} .mu-con-lato>.mu-lato{grid-column:1;grid-row:1/-1}
+${MURO} .mu-con-lato>:not(.mu-lato){grid-column:2;min-width:0}
+${MURO} .mu-lato{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden}
+${MURO} .mu-lato>.mu-menu{width:100%;height:58px;flex:none;border-radius:20px}
+${MURO} .mu-lato-tasto{flex:1 1 0;min-height:0;max-height:112px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px 6px;border-radius:24px;text-align:center;
+  color:var(--text-dim);font-size:12px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;
+  background:${FONDO_DELLA_CARTA};box-shadow:${OMBRA_DELLA_CARTA}}
+${MURO} .mu-lato-tasto>span{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-lato-tasto .dm-oggetto{flex:none}
+${MURO} .mu-lato-tasto.si{color:var(--text);background:linear-gradient(160deg,color-mix(in srgb,var(--acc) 30%,var(--card-bg)),color-mix(in srgb,var(--acc) 12%,var(--card-bg)));
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--acc) 85%,transparent),0 12px 28px -12px var(--acc)}
+${MURO} .mu-testa-lato{padding:12px 24px}
+${MURO} .mu-testa-lato .mu-tit{font-size:34px}
+${MURO} .mu-testa-lato .mu-h{font-size:48px}
+/* ── La regia: il mixer ──────────────────────────────────────────────────
+ *
+ * Ogni gruppo una carta col suo colore; dentro, i canali in piedi: il numero
+ * in cima, il cursore lungo quanto si puo', il nome e il muto in fondo. Sotto,
+ * largo, il volume totale. Il cursore e' una traccia che si accende del
+ * colore del gruppo e una manopola da banco. */
+${MURO} .mu-pag-mixer,${MURO} .mu-pag-telecamera,${MURO} .mu-pag-comandi{grid-template-rows:auto 1fr}
+${MURO} .mu-mixer{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:16px;min-height:0}
+${MURO} .mu-mixer.solo-totale{grid-template-rows:auto;align-content:center}
+${MURO} .mu-mix-gruppi{display:grid;gap:16px;min-height:0}
+${MURO} .mu-mix-gruppo{display:flex;flex-direction:column;gap:12px;padding:14px 12px 12px;min-height:0;min-width:0;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 30%,transparent),${OMBRA_DELLA_CARTA}}
+${MURO} .mu-mix-tit{font-size:14px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mix-canali{flex:1;min-height:0;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+${MURO} .mu-canale{flex:1 1 0;min-width:76px;min-height:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 6px;border-radius:18px;
+  background:color-mix(in srgb,var(--text) 4%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 7%,transparent)}
+${MURO} .mu-can-v{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:22px;line-height:1;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}
+${MURO} .mu-can-n{max-width:100%;font-size:14px;font-weight:800;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-can-muto{flex:none;width:100%;max-width:72px;height:48px;border-radius:14px;display:grid;place-items:center;color:var(--text-dim);
+  background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
+${MURO} .mu-can-muto.vuoto{visibility:hidden}
+${MURO} .mu-can-muto.si{color:#fff;background:linear-gradient(180deg,#f43f5e,#be123c);box-shadow:0 0 18px -2px #f43f5ecc,inset 0 1px 0 rgba(255,255,255,.25)}
+${MURO} .mu-fader{--p:0;position:relative;flex:1 1 auto;min-height:90px;width:100%;touch-action:none;cursor:pointer}
+${MURO} .mu-fader::before{content:"";position:absolute;top:24px;bottom:24px;left:calc(50% + 16px);width:9px;opacity:.55;
+  background:repeating-linear-gradient(180deg,color-mix(in srgb,var(--text) 45%,transparent) 0 1px,transparent 1px 10%)}
+${MURO} .mu-fad-traccia{position:absolute;top:24px;bottom:24px;left:50%;width:12px;margin-left:-6px;border-radius:6px;background:color-mix(in srgb,var(--text) 10%,#000 20%);box-shadow:inset 0 1px 3px rgba(0,0,0,.45)}
+${MURO} .mu-fad-traccia i{position:absolute;left:0;right:0;bottom:0;height:calc(var(--p) * 100%);border-radius:6px;
+  background:linear-gradient(0deg,color-mix(in srgb,var(--acc) 45%,transparent),var(--acc));box-shadow:0 0 16px color-mix(in srgb,var(--acc) 75%,transparent)}
+${MURO} .mu-fader u{position:absolute;left:50%;bottom:calc(24px + var(--p) * (100% - 48px));width:min(60px,86%);height:40px;transform:translate(-50%,50%);border-radius:11px;
+  background:linear-gradient(180deg,#f8fafc,#cbd5e1 55%,#94a3b8);box-shadow:0 6px 12px rgba(0,0,0,.5),inset 0 1px 0 #fff}
+${MURO} .mu-fader u::after{content:"";position:absolute;left:16%;right:16%;top:50%;height:4px;margin-top:-2px;border-radius:2px;background:var(--acc);box-shadow:0 0 8px var(--acc)}
+${MURO} .mu-fader.sdraiato{flex:1 1 auto;min-height:0;height:64px}
+${MURO} .mu-fader.sdraiato::before{top:auto;bottom:4px;left:30px;right:30px;width:auto;height:8px;background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--text) 45%,transparent) 0 1px,transparent 1px 5%)}
+${MURO} .mu-fader.sdraiato .mu-fad-traccia{top:50%;bottom:auto;left:30px;right:30px;width:auto;height:12px;margin:-6px 0 0}
+${MURO} .mu-fader.sdraiato .mu-fad-traccia i{top:0;bottom:0;height:auto;width:calc(var(--p) * 100%);background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 45%,transparent),var(--acc))}
+${MURO} .mu-fader.sdraiato u{bottom:auto;top:50%;left:calc(30px + var(--p) * (100% - 60px));width:40px;height:56px;transform:translate(-50%,-50%)}
+${MURO} .mu-fader.sdraiato u::after{left:50%;right:auto;top:16%;bottom:16%;width:4px;height:auto;margin:0 0 0 -2px}
+${MURO} .mu-fader.fermo{cursor:default;opacity:.4}
+${MURO} .mu-muto .mu-fad-traccia i{filter:grayscale(1);opacity:.3;box-shadow:none}
+${MURO} .mu-muto .mu-can-v{color:var(--text-dim);text-decoration:line-through}
+${MURO} .mu-spento{opacity:.5}
+${MURO} .mu-mix-master{display:flex;align-items:center;gap:18px;padding:12px 22px;min-width:0}
+${MURO} .mu-mix-master>.mu-mix-tit{flex:none;max-width:220px;text-align:left;font-size:15px}
+${MURO} .mu-mix-master>.mu-can-muto{width:64px;max-width:none;height:56px}
+${MURO} .mu-mix-master>.mu-can-v{flex:none;min-width:84px;text-align:right;font-size:30px}
+/* ── La regia: la telecamera ─────────────────────────────────────────── */
+${MURO} .mu-ptz{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(min(340px,100%),1fr);grid-template-rows:minmax(0,1fr) auto;gap:16px;min-height:0}
+${MURO} .mu-ptz.senza-preset{grid-template-rows:minmax(0,1fr)}
+${MURO} .mu-ptz-video{padding:10px;display:flex;min-height:0}
+${MURO} .mu-ptz-video .mu-video{flex:1;min-height:0}
+${MURO} .mu-ptz-comandi{display:flex;align-items:center;gap:18px;padding:20px;min-height:0}
+${MURO} .mu-ptz-zoom{align-self:stretch;flex:none;width:68px;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:0;--acc:#0ea5e9}
+${MURO} .mu-ptz-zoom .mu-fader{min-height:60px}
+${MURO} .mu-ptz-pad{flex:1 1 auto;width:100%;min-width:0;max-width:440px;max-height:100%;aspect-ratio:1;margin:auto;display:grid;grid-template:repeat(3,minmax(0,1fr))/repeat(3,minmax(0,1fr));gap:10px}
+${MURO} .mu-ptz-t{display:grid;place-items:center;border-radius:20px;color:var(--text);font-weight:900;font-size:30px;
+  background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent),0 6px 14px -8px rgba(0,0,0,.6)}
+${MURO} .mu-ptz-t:active:not(:disabled){background:color-mix(in srgb,#0ea5e9 30%,var(--card-bg))}
+${MURO} .mu-ptz-t:disabled{opacity:.3;cursor:default}
+${MURO} .mu-ptz-stop{color:#fff;font-size:15px;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(180deg,#f43f5e,#be123c);box-shadow:0 0 18px -4px #f43f5ecc}
+${MURO} .mu-ptz-pm{flex:none;width:64px;height:56px;font-size:32px}
+${MURO} .mu-ptz-preset{grid-column:1/-1;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:12px}
+${MURO} .mu-ptz-preset-t{height:72px;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 10px;font-weight:800;font-size:16px;min-width:0}
+${MURO} .mu-ptz-preset-t>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-ptz-preset-t:active{box-shadow:inset 0 0 0 2px #0ea5e9}
+/* ── La regia: i comandi ─────────────────────────────────────────────── */
+${MURO} .mu-regia{display:grid;gap:16px;min-height:0}
+${MURO} .mu-reg-grandi{display:grid;grid-auto-rows:minmax(0,1fr);gap:16px;min-height:0}
+${MURO} .mu-reg-tasto{container-type:size;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,4cqh,22px);padding:18px;min-height:0;min-width:0;text-align:center;
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--acc) 65%,transparent),${OMBRA_DELLA_CARTA}}
+${MURO} .mu-reg-icona{flex:none;display:grid;place-items:center;color:var(--text-dim)}
+${MURO} .mu-reg-tasto:not(.mu-accesa) .mu-reg-icona{color:color-mix(in srgb,var(--acc) 55%,var(--text-dim))}
+${MURO} .mu-reg-tasto .mu-reg-icona{--ic:clamp(48px,min(36cqh,34cqw),168px);width:var(--ic);height:var(--ic);border-radius:calc(var(--ic) * .3);background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
+${MURO} .mu-accesa .mu-reg-icona{color:var(--acc)}
+${MURO} .mu-reg-tasto.mu-accesa .mu-reg-icona{background:color-mix(in srgb,var(--acc) 22%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 60%,transparent),0 0 30px -6px var(--acc)}
+${MURO} .mu-reg-nome{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-reg-tasto .mu-reg-icona>*{width:56%!important;height:56%!important}
+${MURO} .mu-reg-tasto .mu-reg-nome{font-size:clamp(18px,min(12cqh,9cqw),60px);text-transform:uppercase;letter-spacing:.04em}
+${MURO} .mu-reg-tasto .mu-stato{font-size:clamp(11px,4cqh,16px)}
+${MURO} .mu-reg-tasto:active{transform:scale(.985)}
+${MURO} .mu-reg-coppie{display:grid;gap:14px;min-height:0}
+${MURO} .mu-reg-coppia{display:flex;flex-direction:column;gap:10px;padding:14px;min-height:0;min-width:0}
+${MURO} .mu-reg-testa{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;text-align:center}
+${MURO} .mu-reg-testa .mu-reg-nome{font-size:19px;font-weight:800}
+${MURO} .mu-reg-coppia .mu-reg-icona{width:52px;height:52px;border-radius:16px;background:color-mix(in srgb,var(--text) 6%,var(--card-bg))}
+${MURO} .mu-reg-coppia.mu-accesa .mu-reg-icona{background:color-mix(in srgb,var(--acc) 22%,var(--card-bg));box-shadow:0 0 22px -6px var(--acc)}
+${MURO} .mu-reg-avvio,${MURO} .mu-reg-stop{flex:1 1 0;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:18px;font-weight:900;font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+${MURO} .mu-reg-avvio{color:#22c55e;background:color-mix(in srgb,#22c55e 8%,var(--card-bg));box-shadow:inset 0 0 0 2px color-mix(in srgb,#22c55e 60%,transparent)}
+${MURO} .mu-reg-avvio.si{color:#052e16;background:linear-gradient(180deg,#4ade80,#16a34a);box-shadow:0 0 22px -4px #22c55ecc}
+${MURO} .mu-reg-stop{color:#f43f5e;background:color-mix(in srgb,#f43f5e 8%,var(--card-bg));box-shadow:inset 0 0 0 2px color-mix(in srgb,#f43f5e 60%,transparent)}
+${MURO} .mu-reg-avvio:active,${MURO} .mu-reg-stop:active{transform:scale(.97)}
+${MURO} .mu-reg-ferma{height:72px;display:flex;align-items:center;justify-content:center;gap:14px;color:#fff;font-weight:900;font-size:18px;letter-spacing:.12em;text-transform:uppercase;
+  background:linear-gradient(180deg,#e11d48,#9f1239);box-shadow:0 14px 30px -14px #f43f5e,inset 0 1px 0 rgba(255,255,255,.2)}
+/* Sul pannello piccolo tutto si stringe: i canali, la telecamera in colonna,
+ * i tasti piu' bassi. */
+${MURO}[data-compatto="1"] .mu-mixer,${MURO}[data-compatto="1"] .mu-mix-gruppi,${MURO}[data-compatto="1"] .mu-regia,${MURO}[data-compatto="1"] .mu-reg-grandi,${MURO}[data-compatto="1"] .mu-reg-coppie{gap:8px}
+${MURO}[data-compatto="1"] .mu-mix-gruppo{padding:8px 6px 6px;gap:6px;border-radius:18px}
+${MURO}[data-compatto="1"] .mu-mix-tit{font-size:11px;letter-spacing:.1em}
+${MURO}[data-compatto="1"] .mu-mix-canali{gap:6px}
+${MURO}[data-compatto="1"] .mu-canale{min-width:54px;padding:6px 3px;gap:4px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-can-v{font-size:15px}
+${MURO}[data-compatto="1"] .mu-can-n{font-size:11px}
+${MURO}[data-compatto="1"] .mu-can-muto{height:34px;border-radius:10px}
+${MURO}[data-compatto="1"] .mu-can-muto svg{width:18px;height:18px}
+${MURO}[data-compatto="1"] .mu-fader{min-height:60px}
+${MURO}[data-compatto="1"] .mu-fader::before,${MURO}[data-compatto="1"] .mu-fad-traccia{top:16px;bottom:16px}
+${MURO}[data-compatto="1"] .mu-fader u{bottom:calc(16px + var(--p) * (100% - 32px));height:30px;width:min(44px,86%);border-radius:9px}
+${MURO}[data-compatto="1"] .mu-fader.sdraiato{height:44px;min-height:0}
+${MURO}[data-compatto="1"] .mu-fader.sdraiato .mu-fad-traccia{top:50%;bottom:auto;left:20px;right:20px}
+${MURO}[data-compatto="1"] .mu-fader.sdraiato::before{top:auto;bottom:2px;left:20px;right:20px}
+${MURO}[data-compatto="1"] .mu-fader.sdraiato u{bottom:auto;left:calc(20px + var(--p) * (100% - 40px));width:30px;height:40px}
+${MURO}[data-compatto="1"] .mu-mix-master{padding:6px 12px;gap:10px;border-radius:18px}
+${MURO}[data-compatto="1"] .mu-mix-master>.mu-mix-tit{max-width:110px;font-size:11px}
+${MURO}[data-compatto="1"] .mu-mix-master>.mu-can-muto{width:44px;height:38px}
+${MURO}[data-compatto="1"] .mu-mix-master>.mu-can-v{min-width:56px;font-size:20px}
+${MURO}[data-compatto="1"] .mu-ptz{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:8px}
+${MURO}[data-compatto="1"] .mu-ptz-comandi{padding:10px;gap:8px}
+${MURO}[data-compatto="1"] .mu-ptz-zoom{width:56px;gap:6px}
+${MURO}[data-compatto="1"] .mu-ptz-pad{gap:6px}
+${MURO}[data-compatto="1"] .mu-ptz-t{border-radius:14px;font-size:22px}
+${MURO}[data-compatto="1"] .mu-ptz-t svg{width:28px;height:28px}
+${MURO}[data-compatto="1"] .mu-ptz-stop{font-size:11px}
+${MURO}[data-compatto="1"] .mu-ptz-pm{width:46px;height:40px;font-size:24px}
+${MURO}[data-compatto="1"] .mu-ptz-preset{gap:6px}
+${MURO}[data-compatto="1"] .mu-ptz-preset-t{height:46px;font-size:13px;border-radius:14px;gap:6px}
+${MURO}[data-compatto="1"] .mu-reg-tasto{gap:8px;padding:10px;border-radius:18px}
+${MURO}[data-compatto="1"] .mu-reg-coppia{padding:8px;gap:6px;border-radius:16px}
+${MURO}[data-compatto="1"] .mu-reg-coppia .mu-reg-icona{display:none}
+${MURO}[data-compatto="1"] .mu-reg-testa .mu-reg-nome{font-size:13px}
+${MURO}[data-compatto="1"] .mu-reg-avvio,${MURO}[data-compatto="1"] .mu-reg-stop{min-height:34px;border-radius:12px;font-size:10px;gap:2px}
+${MURO}[data-compatto="1"] .mu-reg-avvio svg,${MURO}[data-compatto="1"] .mu-reg-stop svg{width:18px;height:18px}
+${MURO}[data-compatto="1"] .mu-reg-ferma{height:46px;font-size:14px;border-radius:16px}
+/* In verticale la telecamera sta sopra e i comandi sotto. */
+${MURO}[data-verso="verticale"] .mu-ptz{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1.2fr) minmax(0,1fr) auto}
+${MURO}[data-verso="verticale"] .mu-ptz-video{grid-column:1/-1}
+${MURO}[data-verso="verticale"] .mu-ptz-comandi{grid-column:1/-1;justify-content:center}
+${MURO}[data-verso="verticale"] .mu-ptz.senza-preset{grid-template-rows:minmax(0,1.2fr) minmax(0,1fr)}
+${MURO}[data-verso="verticale"] .mu-reg-coppie{grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))!important;grid-auto-rows:minmax(0,1fr)}
 `,
   );
 }
