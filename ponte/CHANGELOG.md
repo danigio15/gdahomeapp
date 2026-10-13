@@ -10,6 +10,31 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.13
+
+**Solare termico ridisegnato.** Il disegno era troppo grande e non entrava
+nella pagina. Adesso è compatto e su computer e tablet sta tutto in una
+schermata. Ci sono il pannello in vetro col sole, l'accumulo con l'acqua
+calda in alto e fredda in basso, e tubi in cui la luce scorre solo quando
+la pompa gira. I comandi stanno in una fila di pillole dentro lo stesso
+riquadro.
+
+**Config del solare termico con gli stessi nomi della pagina.** Ogni cosa
+che si vede sulla pagina ha il suo campo con lo stesso nome, nello stesso
+ordine e con scritto che entità ci va. Boost, PdC e Ricircolo prima non si
+potevano proprio scegliere. Le entità già messe restano dove sono.
+
+**Flusso energia: niente più «—» sotto la Casa.** Una stanza o un
+elettrodomestico con solo il sensore di potenza, un contatore senza
+statistiche o un sensore non disponibile al riavvio lasciavano il trattino
+nel giornaliero e nel mensile. Adesso i kWh si calcolano dalla storia di
+Home Assistant, mentre si carica si vede «…», e l'ultimo valore del giorno
+resta.
+
+**Modo chiosco: i tre trattini riportano in Home Assistant anche nel
+browser.** Su Chrome e Safari, a schermo largo, il ☰ col chiosco acceso non
+faceva niente. Adesso apre la barra di Home Assistant.
+
 ## 1.11.12
 
 **La plancia in Home Assistant non chiede più «ricarica questa pagina».**

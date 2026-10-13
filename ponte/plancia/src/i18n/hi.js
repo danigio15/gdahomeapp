@@ -11,6 +11,8 @@
  */
 
 export default Object.freeze({
+  "No sensor linked: pick one in Settings › Loads or Appliances.": "कोई सेंसर नहीं जुड़ा: सेटिंग्स › लोड या उपकरण में से एक चुनें।",
+  "Reading consumption from Home Assistant…": "Home Assistant से खपत पढ़ी जा रही है…",
   " — configured": " — कॉन्फ़िगर किया गया",
   "${alzate} shutters up": "${alzate} शटर ऊपर",
   "${righe.length} things are not answering: Home Assistant has them but cannot reach them.":
@@ -717,7 +719,6 @@ export default Object.freeze({
   Boiler: "बॉयलर",
   "Boiler body": "बॉयलर बॉडी",
   "Boiler element power (W)": "बॉयलर की छड़ की पावर (W)",
-  "Boiler heater power (W)": "बॉयलर हीटर की पावर (W)",
   "Boiler power": "बॉयलर की शक्ति",
   "Boiler state": "बॉयलर की स्थिति",
   "Boiler temperature": "बॉयलर का तापमान",
@@ -2193,31 +2194,6 @@ export default Object.freeze({
   "Save and continue": "सहेजें और जारी रखें",
   "Leave without saving": "बिना सहेजे बाहर जाएँ",
   "Stay here": "यहीं रहें",
-  "🌡️ Readings": "🌡️ माप",
-  "🎛️ Buttons": "🎛️ बटन",
-  "Says whether the pump is running: lights the SOLAR PUMP button and makes the pipes flow in the drawing. If the command above already says on or off, use the same entity.":
-    "बताता है कि पंप चल रहा है या नहीं: सोलर पंप बटन जलाता है और चित्र में पाइपों में बहाव दिखाता है। अगर ऊपर का कमांड पहले से चालू/बंद बताता है, तो वही एंटिटी डालें।",
-  "Solar pump — command": "सोलर पंप — कमांड",
-  "Solar pump — running": "सोलर पंप — चल रहा है",
-  "Solar valve (key)": "सोलर वाल्व (चाबी)",
-  "The BOILER button.": "बॉयलर बटन।",
-  "The BOILER POWER box.": "बॉयलर पावर बॉक्स।",
-  "The BOTTOM box next to the tank.": "टंकी के पास नीचे वाला बॉक्स।",
-  "The collector temperature, next to the panels in the drawing.":
-    "कलेक्टर का तापमान, चित्र में पैनलों के पास।",
-  "The CONTROLLER button.": "कंट्रोलर बटन।",
-  "The PRESSURE box.": "दबाव बॉक्स।",
-  "The SAFETY V. button: open when its position is above zero.":
-    "सुरक्षा वाल्व बटन: स्थिति शून्य से ऊपर होने पर खुला।",
-  "The SOLAR CTRL button; when it is on, the panel lights up in the drawing.":
-    "सोलर कंट्रोल बटन; चालू होने पर चित्र में पैनल चमकता है।",
-  "The SOLAR PUMP button: tapping it switches this entity on or off.":
-    "सोलर पंप बटन: छूने पर यह एंटिटी चालू या बंद होती है।",
-  "The SOLAR ΔT box: the gap between collector and tank.":
-    "सोलर ΔT बॉक्स: कलेक्टर और टंकी का अंतर।",
-  "The TOP box next to the tank.": "टंकी के पास ऊपर वाला बॉक्स।",
-  "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.":
-    "चित्र में वाल्व बटन और सोलर चाबी: खुली या बंद। खाली छोड़ें तो valve.chiave_solare_termico रहता है।",
   "Nobody home": "घर पर कोई नहीं",
   "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.":
     "बड़े बटन: डैशबोर्ड की कोई क्रिया या कोई भी इकाई (दृश्य, स्क्रिप्ट, बटन)। हर एक के लिए टैबलेट पर नाम, नीचे की पंक्ति और चित्र।",
@@ -2905,7 +2881,6 @@ export default Object.freeze({
     "चित्र के बजाय आपके उपकरण की असली तस्वीर दिखती है।",
   "Rear left": "पीछे बायाँ",
   "Rear right": "पीछे दायाँ",
-  "Recirc.": "पुनःसंचरण",
   Recirculation: "पुनःसंचरण",
   "Recirculation running": "पुनःसंचरण चालू",
   "Recirculation solenoid valve": "पुनःपरिसंचरण सोलेनॉइड वाल्व",
@@ -3027,7 +3002,6 @@ export default Object.freeze({
   SSW: "द-द-प",
   STANDBY: "स्टैंडबाय",
   "Safety limit": "सुरक्षा सीमा",
-  "Safety valve (cover)": "सुरक्षा वाल्व (cover)",
   Sand: "रेत",
   Sanitize: "सैनिटाइज़",
   Saturation: "संतृप्ति",
@@ -3210,10 +3184,7 @@ export default Object.freeze({
   "Soil moisture sensor": "मिट्टी की नमी का सेंसर",
   Solar: "सौर",
   "Solar PV and consumption": "सौर पैनल और खपत",
-  "Solar Pump": "सौर पंप",
-  "Solar Valve": "सौर वाल्व",
   "Solar charging": "सौर से चार्जिंग",
-  "Solar collector probe (°C)": "सौर कलेक्टर प्रोब (°C)",
   "Solar control": "सौर नियंत्रण",
   "Solar panel": "सौर पैनल",
   "Solar power (W)": "सौर पैनलों की पावर (W)",
@@ -3338,8 +3309,6 @@ export default Object.freeze({
   "Taken.": "संभाल ली।",
   Tan: "गेहुँआ",
   Tank: "टंकी",
-  "Tank bottom probe (°C)": "टैंक के नीचे का प्रोब (°C)",
-  "Tank top probe (°C)": "टैंक के ऊपर का प्रोब (°C)",
   "Tap a room: each unit starts with its own steps":
     "किसी कमरे को छुएँ: हर इकाई अपने चरणों से चालू होती है",
   "Tap a sensor": "किसी सेंसर पर टैप करें",
@@ -3366,7 +3335,6 @@ export default Object.freeze({
   "Temperature 1": "तापमान 1",
   "Temperature 2": "तापमान 2",
   "Temperature and humidity": "तापमान और आर्द्रता",
-  "Temperature delta (°C)": "तापमान अंतर (°C)",
   "Temperature entity": "तापमान इकाई",
   "Temperature name": "तापमान का नाम",
   "Temperature rooms": "तापमान वाले कमरे",
@@ -3927,7 +3895,6 @@ export default Object.freeze({
   "Water leak": "पानी का रिसाव",
   "Water level": "पानी का स्तर",
   "Water now": "अभी पानी",
-  "Water pressure (bar)": "पानी का दबाव (bar)",
   "Water quality": "पानी की गुणवत्ता",
   "Water quality · Filtration · Heating": "पानी की गुणवत्ता · फ़िल्टरेशन · तापन",
   "Water ready": "पानी तैयार",
@@ -5617,4 +5584,19 @@ export default Object.freeze({
   "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "बाईं ओर लाइव तस्वीर, दाईं ओर तीर और ज़ूम, नीचे प्रीसेट। हर बटन Home Assistant में पहले से मौजूद एंटिटी दबाता है: कैमरे का बटन या onvif.ptz वाली स्क्रिप्ट। बिना एंटिटी वाला बटन बंद रहता है।",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "पेज बाईं ओर बड़े बटनों के एक कॉलम में, जैसे कंट्रोल रूम पैनलों में। केवल लैंडस्केप में: पोर्ट्रेट में और छोटी स्क्रीन पर ऊपर के टैब ही रहते हैं",
   "Zoom": "ज़ूम",
+  "☀️ Panel": "☀️ पैनल",
+  "🎛️ Controls": "🎛️ नियंत्रण",
+  "🔁 Circuit": "🔁 सर्किट",
+  "🛢️ Tank": "🛢️ टंकी",
+  "Power sensor (sensor, W)": "पावर सेंसर (sensor, W)",
+  "Pressure sensor (sensor, bar)": "दबाव सेंसर (sensor, bar)",
+  "Solar pump (state)": "सोलर पंप (स्थिति)",
+  "Switch to turn on and off (switch or input_boolean)": "चालू और बंद करने का स्विच (switch या input_boolean)",
+  "Tank bottom": "टंकी नीचे",
+  "Tank top": "टंकी ऊपर",
+  "Tells whether the pump runs (binary_sensor or switch): makes the light flow in the pipes": "बताता है कि पंप चल रहा है या नहीं (binary_sensor या switch): पाइपों में रोशनी बहाता है",
+  "Temperature sensor (sensor, °C)": "तापमान सेंसर (sensor, °C)",
+  "Temperature sensor (sensor, °C): panel minus tank": "तापमान सेंसर (sensor, °C): पैनल घटा टंकी",
+  "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "वाल्व (valve) या स्विच (switch); खाली छोड़ने पर valve.chiave_solare_termico",
+  "Valve with a position (cover): open above zero": "स्थिति वाला वाल्व (cover): शून्य से ऊपर खुला",
 });

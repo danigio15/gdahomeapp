@@ -11,6 +11,8 @@
  */
 
 export default Object.freeze({
+  "No sensor linked: pick one in Settings › Loads or Appliances.": "Geen sensor gekoppeld: kies er een in Instellingen › Verbruikers of Apparaten.",
+  "Reading consumption from Home Assistant…": "Verbruik wordt gelezen uit Home Assistant…",
   " — configured": " — geconfigureerd",
   "${alzate} shutters up": "${alzate} rolluiken omhoog",
   "${righe.length} things are not answering: Home Assistant has them but cannot reach them.":
@@ -725,7 +727,6 @@ export default Object.freeze({
   Boiler: "Boiler",
   "Boiler body": "Ketellichaam",
   "Boiler element power (W)": "Vermogen van het boilerelement (W)",
-  "Boiler heater power (W)": "Vermogen boilerweerstand (W)",
   "Boiler power": "Boilervermogen",
   "Boiler state": "Toestand van de ketel",
   "Boiler temperature": "Keteltemperatuur",
@@ -2211,31 +2212,6 @@ export default Object.freeze({
   "Save and continue": "Opslaan en doorgaan",
   "Leave without saving": "Verlaten zonder opslaan",
   "Stay here": "Hier blijven",
-  "🌡️ Readings": "🌡️ Metingen",
-  "🎛️ Buttons": "🎛️ Knoppen",
-  "Says whether the pump is running: lights the SOLAR PUMP button and makes the pipes flow in the drawing. If the command above already says on or off, use the same entity.":
-    "Zegt of de pomp draait: laat de knop ZONNEPOMP oplichten en de leidingen in de tekening stromen. Zegt de bediening hierboven al aan of uit, gebruik dan dezelfde entiteit.",
-  "Solar pump — command": "Zonnepomp — bediening",
-  "Solar pump — running": "Zonnepomp — draait",
-  "Solar valve (key)": "Zonneklep (sleutel)",
-  "The BOILER button.": "De knop BOILER.",
-  "The BOILER POWER box.": "Het vak BOILERVERMOGEN.",
-  "The BOTTOM box next to the tank.": "Het vak ONDER naast het vat.",
-  "The collector temperature, next to the panels in the drawing.":
-    "De collectortemperatuur, naast de panelen in de tekening.",
-  "The CONTROLLER button.": "De knop REGELAAR.",
-  "The PRESSURE box.": "Het vak DRUK.",
-  "The SAFETY V. button: open when its position is above zero.":
-    "De knop V. VEILIGHEID: open als de stand boven nul is.",
-  "The SOLAR CTRL button; when it is on, the panel lights up in the drawing.":
-    "De knop ZON-REG; staat hij aan, dan licht het paneel in de tekening op.",
-  "The SOLAR PUMP button: tapping it switches this entity on or off.":
-    "De knop ZONNEPOMP: aantikken zet deze entiteit aan of uit.",
-  "The SOLAR ΔT box: the gap between collector and tank.":
-    "Het vak ZON-ΔT: het verschil tussen collector en vat.",
-  "The TOP box next to the tank.": "Het vak BOVEN naast het vat.",
-  "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.":
-    "De knop KLEP en de ZONNESLEUTEL in de tekening: open of dicht. Leeg blijft het valve.chiave_solare_termico.",
   "Nobody home": "Niemand thuis",
   "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.":
     "Grote knoppen: een actie van het dashboard of een willekeurige entiteit (een scène, een script, een knop). Voor elk de naam op de tablet, de regel eronder en de tekening.",
@@ -2928,7 +2904,6 @@ export default Object.freeze({
     "Echte foto van je apparaat in plaats van de illustratie.",
   "Rear left": "Linksachter",
   "Rear right": "Rechtsachter",
-  "Recirc.": "Circ.",
   Recirculation: "Circulatie",
   "Recirculation running": "Circulatie draait",
   "Recirculation solenoid valve": "Circulatiemagneetklep",
@@ -3051,7 +3026,6 @@ export default Object.freeze({
   SSW: "ZZW",
   STANDBY: "STAND-BY",
   "Safety limit": "Veiligheidsgrens",
-  "Safety valve (cover)": "Veiligheidsventiel (cover)",
   Sand: "Zand",
   Sanitize: "Hygiëne",
   Saturation: "Verzadiging",
@@ -3235,10 +3209,7 @@ export default Object.freeze({
   "Soil moisture sensor": "Bodemvochtsensor",
   Solar: "Zon",
   "Solar PV and consumption": "Zonnepanelen en verbruik",
-  "Solar Pump": "Zonnepomp",
-  "Solar Valve": "Zonneklep",
   "Solar charging": "Laden op zonne-energie",
-  "Solar collector probe (°C)": "Sonde zonnecollector (°C)",
   "Solar control": "Zonneregeling",
   "Solar panel": "Zonnepaneel",
   "Solar power (W)": "Vermogen van de zonnepanelen (W)",
@@ -3364,8 +3335,6 @@ export default Object.freeze({
   "Taken.": "Opgepakt.",
   Tan: "Gebruind",
   Tank: "Boilervat",
-  "Tank bottom probe (°C)": "Sonde onderin de boiler (°C)",
-  "Tank top probe (°C)": "Sonde bovenin de boiler (°C)",
   "Tap a room: each unit starts with its own steps":
     "Tik op een kamer: elke unit start met zijn eigen stappen",
   "Tap a sensor": "Tik op een sensor",
@@ -3393,7 +3362,6 @@ export default Object.freeze({
   "Temperature 1": "Temperatuur 1",
   "Temperature 2": "Temperatuur 2",
   "Temperature and humidity": "Temperatuur en vochtigheid",
-  "Temperature delta (°C)": "Temperatuurverschil (°C)",
   "Temperature entity": "Temperatuurentiteit",
   "Temperature name": "Naam van de temperatuur",
   "Temperature rooms": "Kamers met temperatuur",
@@ -3958,7 +3926,6 @@ export default Object.freeze({
   "Water leak": "Waterlek",
   "Water level": "Waterniveau",
   "Water now": "Water nu",
-  "Water pressure (bar)": "Waterdruk (bar)",
   "Water quality": "Waterkwaliteit",
   "Water quality · Filtration · Heating": "Waterkwaliteit · Filtratie · Verwarming",
   "Water ready": "Water klaar",
@@ -5655,4 +5622,19 @@ export default Object.freeze({
   "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "Het live beeld links, pijlen en zoom rechts, presets eronder. Elke knop drukt een entiteit die al in Home Assistant staat: een cameraknop of een script met onvif.ptz. Een knop zonder entiteit blijft uit.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "De pagina's in een kolom met grote knoppen links, zoals op regiepanelen. Alleen liggend: staand en op kleine schermen blijven de tabbladen bovenaan",
   "Zoom": "Zoom",
+  "☀️ Panel": "☀️ Paneel",
+  "🎛️ Controls": "🎛️ Bediening",
+  "🔁 Circuit": "🔁 Zonnecircuit",
+  "🛢️ Tank": "🛢️ Boilervat",
+  "Power sensor (sensor, W)": "Vermogenssensor (sensor, W)",
+  "Pressure sensor (sensor, bar)": "Druksensor (sensor, bar)",
+  "Solar pump (state)": "Zonnepomp (status)",
+  "Switch to turn on and off (switch or input_boolean)": "Schakelaar om aan en uit te zetten (switch of input_boolean)",
+  "Tank bottom": "Boilervat onder",
+  "Tank top": "Boilervat boven",
+  "Tells whether the pump runs (binary_sensor or switch): makes the light flow in the pipes": "Geeft aan of de pomp draait (binary_sensor of switch): laat het licht door de leidingen lopen",
+  "Temperature sensor (sensor, °C)": "Temperatuursensor (sensor, °C)",
+  "Temperature sensor (sensor, °C): panel minus tank": "Temperatuursensor (sensor, °C): paneel min boilervat",
+  "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "Klep (valve) of schakelaar (switch); leeg gebruikt valve.chiave_solare_termico",
+  "Valve with a position (cover): open above zero": "Klep met positie (cover): open boven nul",
 });

@@ -11,6 +11,8 @@
  */
 
 export default Object.freeze({
+  "No sensor linked: pick one in Settings › Loads or Appliances.": "Aucun capteur lié : choisissez-en un dans Réglages › Charges ou Électroménager.",
+  "Reading consumption from Home Assistant…": "Lecture de la consommation depuis Home Assistant…",
   " — configured": " — configurée",
   "${alzate} shutters up": "${alzate} volets ouverts",
   "${righe.length} things are not answering: Home Assistant has them but cannot reach them.":
@@ -727,7 +729,6 @@ export default Object.freeze({
   Boiler: "Ballon",
   "Boiler body": "Corps de chaudière",
   "Boiler element power (W)": "Puissance de la résistance du chauffe-eau (W)",
-  "Boiler heater power (W)": "Puissance de la résistance du ballon (W)",
   "Boiler power": "Puissance du ballon",
   "Boiler state": "État de la chaudière",
   "Boiler temperature": "Température de la chaudière",
@@ -2221,31 +2222,6 @@ export default Object.freeze({
   "Save and continue": "Enregistrer et continuer",
   "Leave without saving": "Quitter sans enregistrer",
   "Stay here": "Rester ici",
-  "🌡️ Readings": "🌡️ Mesures",
-  "🎛️ Buttons": "🎛️ Boutons",
-  "Says whether the pump is running: lights the SOLAR PUMP button and makes the pipes flow in the drawing. If the command above already says on or off, use the same entity.":
-    "Indique si la pompe tourne : elle allume le bouton POMPE SOL. et fait circuler les tuyaux du dessin. Si la commande ci-dessus indique déjà marche ou arrêt, mettez la même entité.",
-  "Solar pump — command": "Pompe solaire — commande",
-  "Solar pump — running": "Pompe solaire — en marche",
-  "Solar valve (key)": "Vanne solaire (clé)",
-  "The BOILER button.": "Le bouton BALLON.",
-  "The BOILER POWER box.": "La case PUISSANCE BALLON.",
-  "The BOTTOM box next to the tank.": "La case BAS à côté du ballon.",
-  "The collector temperature, next to the panels in the drawing.":
-    "La température du capteur, à côté des panneaux dans le dessin.",
-  "The CONTROLLER button.": "Le bouton RÉGULATEUR.",
-  "The PRESSURE box.": "La case PRESSION.",
-  "The SAFETY V. button: open when its position is above zero.":
-    "Le bouton V. SÉCURITÉ : ouverte quand sa position est au-dessus de zéro.",
-  "The SOLAR CTRL button; when it is on, the panel lights up in the drawing.":
-    "Le bouton CTRL SOLAIRE ; quand il est allumé, le panneau s'éclaire dans le dessin.",
-  "The SOLAR PUMP button: tapping it switches this entity on or off.":
-    "Le bouton POMPE SOL. : le toucher allume ou éteint cette entité.",
-  "The SOLAR ΔT box: the gap between collector and tank.":
-    "La case ΔT SOLAIRE : l'écart entre capteur et ballon.",
-  "The TOP box next to the tank.": "La case HAUT à côté du ballon.",
-  "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.":
-    "Le bouton VANNE et la CLÉ SOLAIRE du dessin : ouverte ou fermée. Vide, c'est valve.chiave_solare_termico.",
   "Nobody home": "Personne à la maison",
   "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.":
     "Grands boutons : une action du tableau de bord ou n'importe quelle entité (une scène, un script, un bouton). Pour chacun, le nom sur la tablette, la ligne du dessous et le dessin.",
@@ -2940,7 +2916,6 @@ export default Object.freeze({
     "Photo réelle de ton appareil affichée à la place de l'illustration.",
   "Rear left": "Arrière gauche",
   "Rear right": "Arrière droit",
-  "Recirc.": "Recirc.",
   Recirculation: "Recirculation",
   "Recirculation running": "Recirculation en marche",
   "Recirculation solenoid valve": "Électrovanne de recirculation",
@@ -3064,7 +3039,6 @@ export default Object.freeze({
   SSW: "SSO",
   STANDBY: "VEILLE",
   "Safety limit": "Limite de sécurité",
-  "Safety valve (cover)": "Vanne de sécurité (cover)",
   Sand: "Sable",
   Sanitize: "Hygiène",
   Saturation: "Saturation",
@@ -3249,10 +3223,7 @@ export default Object.freeze({
   "Soil moisture sensor": "Capteur d'humidité du sol",
   Solar: "Solaire",
   "Solar PV and consumption": "Photovoltaïque et consommation",
-  "Solar Pump": "Pompe solaire",
-  "Solar Valve": "Vanne solaire",
   "Solar charging": "Charge solaire",
-  "Solar collector probe (°C)": "Sonde du capteur solaire (°C)",
   "Solar control": "Régulation solaire",
   "Solar panel": "Panneau solaire",
   "Solar power (W)": "Puissance photovoltaïque (W)",
@@ -3378,8 +3349,6 @@ export default Object.freeze({
   "Taken.": "Pris en charge.",
   Tan: "Hâlé",
   Tank: "Ballon",
-  "Tank bottom probe (°C)": "Sonde bas du ballon (°C)",
-  "Tank top probe (°C)": "Sonde haut du ballon (°C)",
   "Tap a room: each unit starts with its own steps":
     "Touchez une pièce : chaque unité démarre avec ses propres réglages",
   "Tap a sensor": "Touche un capteur",
@@ -3407,7 +3376,6 @@ export default Object.freeze({
   "Temperature 1": "Température 1",
   "Temperature 2": "Température 2",
   "Temperature and humidity": "Température et humidité",
-  "Temperature delta (°C)": "Delta de température (°C)",
   "Temperature entity": "Entité de température",
   "Temperature name": "Nom de la température",
   "Temperature rooms": "Pièces avec température",
@@ -3972,7 +3940,6 @@ export default Object.freeze({
   "Water leak": "Fuite d'eau",
   "Water level": "Niveau d'eau",
   "Water now": "Eau maintenant",
-  "Water pressure (bar)": "Pression d'eau (bar)",
   "Water quality": "Qualité de l'eau",
   "Water quality · Filtration · Heating": "Qualité de l'eau · Filtration · Chauffage",
   "Water ready": "Eau prête",
@@ -5683,4 +5650,19 @@ export default Object.freeze({
   "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.": "L'image en direct à gauche, les flèches et le zoom à droite, les presets en dessous. Chaque bouton appuie sur une entité déjà présente dans Home Assistant : un bouton de la caméra ou un script avec onvif.ptz. Un bouton sans entité reste éteint.",
   "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay": "Les pages dans une colonne de grands boutons à gauche, comme sur les pupitres de régie. Seulement en paysage : en portrait et sur les petits écrans, les onglets restent en haut",
   "Zoom": "Zoom",
+  "☀️ Panel": "☀️ Capteur",
+  "🎛️ Controls": "🎛️ Commandes",
+  "🔁 Circuit": "🔁 Circuit solaire",
+  "🛢️ Tank": "🛢️ Ballon",
+  "Power sensor (sensor, W)": "Capteur de puissance (sensor, W)",
+  "Pressure sensor (sensor, bar)": "Capteur de pression (sensor, bar)",
+  "Solar pump (state)": "Pompe solaire (état)",
+  "Switch to turn on and off (switch or input_boolean)": "Interrupteur à allumer et éteindre (switch ou input_boolean)",
+  "Tank bottom": "Bas du ballon",
+  "Tank top": "Haut du ballon",
+  "Tells whether the pump runs (binary_sensor or switch): makes the light flow in the pipes": "Indique si la pompe tourne (binary_sensor ou switch) : fait courir la lumière dans les tuyaux",
+  "Temperature sensor (sensor, °C)": "Capteur de température (sensor, °C)",
+  "Temperature sensor (sensor, °C): panel minus tank": "Capteur de température (sensor, °C) : capteur moins ballon",
+  "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico": "Vanne (valve) ou interrupteur (switch) ; vide, utilise valve.chiave_solare_termico",
+  "Valve with a position (cover): open above zero": "Vanne avec position (cover) : ouverte au-dessus de zéro",
 });

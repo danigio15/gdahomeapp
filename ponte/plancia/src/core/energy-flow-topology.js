@@ -362,6 +362,20 @@ function stateNumber(states, entity) {
   return finiteOrNull(source?.state ?? source);
 }
 
+/* Lo stato di un contatore del periodo, in kilowattora.
+ *
+ * Il cerchio scrive «kWh» sotto ogni numero, e un giornaliero che conta in
+ * wattora — 1234 Wh — si leggeva 1234 kWh. Senza unita' vale il kilowattora,
+ * come nel resto della plancia. */
+function stateKwh(states, entity) {
+  const value = stateNumber(states, entity);
+  if (value === null) return null;
+  const unit = clean(states?.[entity]?.attributes?.unit_of_measurement).toLowerCase();
+  if (unit === "wh") return value / 1000;
+  if (unit === "mwh") return value * 1000;
+  return value;
+}
+
 /* I watt dell'istantanea li conta chi guarda anche l'unita': la wallbox che
  * scrive «1.61» con unita' kW finiva in bolla come «2 W» — si leggeva lo
  * stato grezzo e basta, mentre il popup dell'auto diceva 1.61 kW. Senza
@@ -464,8 +478,60 @@ function periodValue(load, period, states, recorderValues, { implicita = true } 
   }
   return {
     entity,
-    value: period === "instant" ? stateWatts(states, entity) : stateNumber(states, entity),
+    value: period === "instant" ? stateWatts(states, entity) : stateKwh(states, entity),
   };
+}
+
+/* ── da dove si ricava un numero quando il contatore tace ──────────────────
+ *
+ * «Continua a dare problema, esce ancora il —.» Un elettrodomestico ha un
+ * contatore del periodo che all'avvio e' «unavailable», o un totale di vita
+ * senza statistiche a lungo termine, o un `energy_entity` dei modelli vecchi
+ * che nessuna casella del periodo legge: e il suo cerchio restava a «—» anche
+ * se la sua potenza o la sua storia dicevano tutto. Qui si sceglie da dove
+ * ricavarlo: prima un contatore di energia (la sua crescita nel periodo,
+ * dalla storia), poi la potenza (le medie orarie, o la storia dei watt). */
+const ENTITA = /^[a-z_]+\.[a-z0-9_]+$/i;
+const CONTATORI_DI_RIPIEGO = Object.freeze({
+  day: ["daily_energy_entity", "daily", "total_energy_entity", "history_entity", "energy_entity"],
+  month: [
+    "monthly_energy_entity",
+    "monthly",
+    "total_energy_entity",
+    "history_entity",
+    "energy_entity",
+  ],
+});
+const UNITA_DI_POTENZA = /^(w|kw|mw|watt|watts)$/;
+
+/**
+ * La fonte di ripiego di una voce nel Giorno o nel Mese: `{ kind, entity }`,
+ * con `kind` «contatore» (energia: si conta la crescita) o «potenza» (watt:
+ * si integrano), o `null` se la voce non ha niente da leggere.
+ */
+export function fonteDiRipiego(load = {}, period = "day", states = null) {
+  if (period !== "day" && period !== "month") return null;
+  for (const campo of CONTATORI_DI_RIPIEGO[period]) {
+    const id = clean(load?.[campo]);
+    if (!ENTITA.test(id)) continue;
+    const unit = clean(states?.[id]?.attributes?.unit_of_measurement).toLowerCase();
+    /* Una casella d'energia che punta a un sensore in watt e' un errore di
+     * configurazione, ma i watt si sanno contare lo stesso. */
+    if (UNITA_DI_POTENZA.test(unit)) return { kind: "potenza", entity: id };
+    return { kind: "contatore", entity: id };
+  }
+  const potenza = campoDiPotenza(load, states) || potenzaImplicita(load, states);
+  return potenza ? { kind: "potenza", entity: potenza } : null;
+}
+
+/** Se una voce ha almeno un sensore da cui leggere qualcosa. */
+export function haUnSensore(load = {}) {
+  if (campoDiPotenza(load)) return true;
+  for (const campi of Object.values(CONTATORI_DI_RIPIEGO))
+    if (campi.some((campo) => ENTITA.test(clean(load?.[campo])))) return true;
+  return (Array.isArray(load?.entities) ? load.entities : []).some((voce) =>
+    ENTITA.test(clean(typeof voce === "string" ? voce : voce?.entity || voce?.entity_id)),
+  );
 }
 
 /* Everything filed under a circle: the appliances created inside it from the
@@ -671,7 +737,22 @@ export function flowStageModel(options = {}) {
     recorderValues = null,
     locale = "it-IT",
     wallbox = null,
+    /* Le voci (per id, o nome) il cui numero del periodo e' ancora in
+     * viaggio: il loro cerchio dice «…», non «—». */
+    inAttesa = null,
+    /* L'ultimo numero gia' letto per ogni cerchio, nello stesso giorno o
+     * mese: un giro senza lettura non lo cancella. */
+    ricordati = null,
   } = options;
+  const attende = (voce) => {
+    const chiave = clean(voce?.id) || clean(voce?.name);
+    if (!chiave || !inAttesa) return false;
+    return typeof inAttesa.has === "function" ? inAttesa.has(chiave) : Boolean(inAttesa[chiave]);
+  };
+  const ricordato = (id) => {
+    if (period === "instant" || !ricordati || !id) return null;
+    return finiteOrNull(typeof ricordati.get === "function" ? ricordati.get(id) : ricordati[id]);
+  };
 
   const eligible = flowStageLoads(loads);
   const visible = [];
@@ -685,14 +766,23 @@ export function flowStageModel(options = {}) {
   const desktop = flowStageLayout(visible.length, "desktop");
   const mobile = flowStageLayout(visible.length, "mobile");
   const threshold = period === "instant" ? INSTANT_THRESHOLD : ENERGY_THRESHOLD;
-  const readings = visible.map(({ load }) =>
-    readingFor(load, subloadsOf(load, loads, appliances), period, states, recorderValues),
-  );
+  const readings = visible.map(({ load, slotKey }, index) => {
+    const figli = subloadsOf(load, loads, appliances);
+    const reading = readingFor(load, figli, period, states, recorderValues);
+    const id = clean(load.id) || `${slotKey || "flow-load"}-${index}`;
+    const sensore = haUnSensore(load) || figli.some(haUnSensore);
+    if (reading.value !== null) return { ...reading, sensore, attesa: false };
+    /* Un numero gia' letto oggi resta finche' non ne arriva uno nuovo. */
+    const prima = ricordato(id);
+    if (prima !== null) return { ...reading, value: prima, sensore, attesa: false };
+    const attesa = period !== "instant" && sensore && [load, ...figli].some(attende);
+    return { ...reading, sensore, attesa };
+  });
   const peak = readings.reduce((top, item) => Math.max(top, Math.abs(item.value ?? 0)), 0);
 
   const nodes = visible.map(({ load, slotKey, override, order }, index) => {
     const name = clean(override?.name) || clean(load.name) || "Carico";
-    const { entity, value, source, children } = readings[index];
+    const { entity, value, source, children, sensore, attesa } = readings[index];
     const active = value !== null && Math.abs(value) > threshold;
     return {
       id: clean(load.id) || `${slotKey || "flow-load"}-${index}`,
@@ -708,7 +798,11 @@ export function flowStageModel(options = {}) {
       // than a sensor of its own; the popup and the editor both say so.
       source,
       children,
-      text: formatFlowValue(value, period, locale),
+      text: attesa ? "…" : formatFlowValue(value, period, locale),
+      /* «…»: il numero sta arrivando. «—» con `sensore: false`: niente da
+       * leggere, e la finestra lo dice. */
+      waiting: attesa,
+      sensore,
       active,
       intensity: flowIntensity(active ? value : 0, peak),
       desktop: desktop[index],
