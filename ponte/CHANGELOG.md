@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.12.2
+
+**Android: il campanello senza lo schermo intero automatico.** Per ora, sui
+telefoni Android, il campanello arriva come notifica urgente in cima, che
+suona, con «Apri» e «Ignora»; toccata, apre la telecamera a tutto schermo.
+Non accende più da solo lo schermo col telefono bloccato: per farlo Google
+Play chiede una dichiarazione apposta, che arriverà in una prossima
+versione. Tutto il resto è come nella 1.12.1.
+
 ## 1.12.1
 
 **App: all'avvio il marchio di gdahome.** Il caricamento dell'app mostrava

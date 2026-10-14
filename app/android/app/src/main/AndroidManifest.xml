@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- La fotocamera serve a una cosa sola: inquadrare il codice a quadretti
          che collega l'app alla casa. Lo dichiara gia' il lettore di quadretti,
          e ridirlo qui non cambia niente al sistema — cambia a chi legge questo
@@ -41,11 +42,13 @@
          plugin delle notifiche, e da Android 13 si chiede a chi usa il
          telefono, dopo avergli detto perche' (`lib/notifiche/postino.dart`).
 
-         `USE_FULL_SCREEN_INTENT` e' per una cosa sola: il campanello, che col
-         telefono bloccato si apre a tutto schermo come una chiamata. Da
-         Android 14 lo decide chi usa il telefono; se dice di no, il
-         campanello resta una notifica urgente che suona e si vede in cima. -->
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+         `USE_FULL_SCREEN_INTENT` per ora no: Google Play vuole una
+         dichiarazione per chi lo usa, e mandarla adesso faceva ripartire da
+         capo una revisione in corso. Il campanello e' una notifica urgente
+         che suona e si vede in cima, con «Apri» e «Ignora»; toccata, apre la
+         telecamera a tutto schermo. Se un pacchetto lo porta da se', qui lo
+         si toglie. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" tools:node="remove" />
     <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
 
     <!-- La plancia vera dentro l'app passa da un server locale, su
