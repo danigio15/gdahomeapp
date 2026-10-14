@@ -38,6 +38,28 @@ propone domande vicine e lascia la parola ad Assist.
 per stare nello schermo, i riquadri si stringono, e le icone di rotonde,
 inversioni e curve strette sono disegnate apposta.
 
+**Navigatore: gli avvisi uno per uno.** Nel menu del navigatore, «Avvisi
+in guida»: ogni avviso — autovelox, Tutor, polizia, incidenti, pericoli,
+lavori, strade chiuse, traffico, ZTL, limite — si sceglie a voce, solo a
+schermo o spento. Vale anche su CarPlay e Android Auto.
+
+**Navigatore: autovelox e Tutor.** I Tutor si annunciano e, dentro il
+tratto, il riquadro mostra la tua media («rallenta» se è sopra il limite);
+all'uscita dice com'è andata. Gli autovelox si avvisano prima quando si va
+forte, dicono «rallenta» se si è sopra il limite, e avvisano anche guidando
+senza percorso. L'archivio è rifatto: in Italia 7.791 autovelox, 3.670 dei
+quali sanno in che direzione guardano (meno avvisi per l'altra carreggiata).
+
+**Navigatore: niente più scatti.** In guida l'auto e la mappa scorrono
+insieme, invece di saltare a ogni lettura del GPS; anche sugli schermi
+dell'auto.
+
+**In auto, Premium resta Premium.** A volte Android Auto, aprendo i comandi
+rapidi della casa, diceva «La casa in auto è compresa in gdahome Premium» a
+chi Premium l'aveva: all'apertura dell'app due scritture del permesso per
+l'auto si sovrapponevano, e poteva restare quella sbagliata. Adesso si
+scrive una volta sola, nell'ordine giusto.
+
 ## 1.12.0
 
 **L'Assistente di casa.** Accanto alle persone, nella Home, la casa ti dice
