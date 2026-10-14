@@ -19,6 +19,11 @@ Non accende più da solo lo schermo col telefono bloccato: per farlo Google
 Play chiede una dichiarazione apposta, che arriverà in una prossima
 versione. Tutto il resto è come nella 1.12.1.
 
+**CarPlay: col telefono bloccato la posizione va avanti.** Su CarPlay, con
+l'iPhone bloccato, il segnaposto restava fermo e ripartiva solo alzando il
+telefono: si muoveva al ritmo dello schermo del telefono, che bloccato è
+spento. Adesso segue lo schermo dell'auto.
+
 **App: mai più il logo DashboardModern all'avvio.** Al posto della schermata
 di caricamento col vecchio logo c'è il marchio di gdahome (dalla 1.12.1), e
 anche il velo con cui parte la plancia, quando arriva direttamente da Home
