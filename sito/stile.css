@@ -1318,9 +1318,11 @@ main > section:not(.fascia) .nota-privacy {
   gap: 16px;
 }
 
+/* Le colonne sono fisse, uguali in tutte le voci: ogni voce e' una griglia
+   sua, e con le colonne a frazione i bordi ballavano di qualche pixel. */
 .scarico {
   display: grid;
-  grid-template-columns: 52px minmax(0, 3fr) minmax(0, 8fr) auto;
+  grid-template-columns: 52px 220px minmax(0, 1fr) 160px;
   gap: 8px 24px;
   align-items: start;
   padding: 22px 24px;
@@ -1392,6 +1394,7 @@ a.scarico:hover {
 
 .scarico .come {
   white-space: nowrap;
+  justify-self: end;
   color: var(--blu);
   font-weight: 700;
   padding-top: 10px;
