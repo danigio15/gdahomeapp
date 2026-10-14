@@ -55,6 +55,12 @@ typography:
     fontWeight: 500
     lineHeight: 1
     letterSpacing: "0"
+  code:
+    fontFamily: "ui-monospace, SF Mono, Menlo, Consolas, monospace"
+    fontSize: "0.88em"
+    fontWeight: 400
+    lineHeight: 1.55
+    letterSpacing: "0"
 rounded:
   none: "0px"
 spacing:

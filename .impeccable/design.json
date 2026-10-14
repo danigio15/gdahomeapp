@@ -1,50 +1,275 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-14T00:00:00Z",
+  "generatedAt": "2026-10-14T16:58:38Z",
   "title": "Design System: gdahome.org",
   "extensions": {
     "colorMeta": {
-      "carta": { "role": "neutral", "displayName": "Carta", "canonical": "#ffffff", "tonalRamp": ["oklch(15% 0 90)", "oklch(25% 0 90)", "oklch(38% 0 90)", "oklch(50% 0 90)", "oklch(62% 0 90)", "oklch(75% 0 90)", "oklch(87% 0 90)", "oklch(95% 0 90)"] },
-      "campo": { "role": "neutral", "displayName": "Campo", "canonical": "#eef0f3", "tonalRamp": ["oklch(15% 0.005 258)", "oklch(25% 0.005 258)", "oklch(38% 0.005 258)", "oklch(50% 0.005 258)", "oklch(62% 0.005 258)", "oklch(75% 0.005 258)", "oklch(87% 0.005 258)", "oklch(95% 0.005 258)"] },
-      "inchiostro": { "role": "neutral", "displayName": "Inchiostro", "canonical": "#0b1220", "tonalRamp": ["oklch(15% 0.031 263)", "oklch(25% 0.031 263)", "oklch(38% 0.031 263)", "oklch(50% 0.031 263)", "oklch(62% 0.031 263)", "oklch(75% 0.031 263)", "oklch(87% 0.031 263)", "oklch(95% 0.031 263)"] },
-      "inchiostro-lieve": { "role": "neutral", "displayName": "Inchiostro lieve", "canonical": "#4b5563", "tonalRamp": ["oklch(15% 0.026 257)", "oklch(25% 0.026 257)", "oklch(38% 0.026 257)", "oklch(50% 0.026 257)", "oklch(62% 0.026 257)", "oklch(75% 0.026 257)", "oklch(87% 0.026 257)", "oklch(95% 0.026 257)"] },
-      "blu": { "role": "primary", "displayName": "Blu del catalogo", "canonical": "#1d4ed8", "tonalRamp": ["oklch(15% 0.217 264)", "oklch(25% 0.217 264)", "oklch(38% 0.217 264)", "oklch(50% 0.217 264)", "oklch(62% 0.217 264)", "oklch(75% 0.217 264)", "oklch(87% 0.217 264)", "oklch(95% 0.217 264)"] },
-      "blu-scuro": { "role": "primary", "displayName": "Blu scuro", "canonical": "#1e3a8a", "tonalRamp": ["oklch(15% 0.138 266)", "oklch(25% 0.138 266)", "oklch(38% 0.138 266)", "oklch(50% 0.138 266)", "oklch(62% 0.138 266)", "oklch(75% 0.138 266)", "oklch(87% 0.138 266)", "oklch(95% 0.138 266)"] },
-      "ambra": { "role": "secondary", "displayName": "Ambra, la luce accesa", "canonical": "#f59e0b", "tonalRamp": ["oklch(15% 0.165 70)", "oklch(25% 0.165 70)", "oklch(38% 0.165 70)", "oklch(50% 0.165 70)", "oklch(62% 0.165 70)", "oklch(75% 0.165 70)", "oklch(87% 0.165 70)", "oklch(95% 0.165 70)"] },
-      "ambra-inchiostro": { "role": "secondary", "displayName": "Ambra d'inchiostro", "canonical": "#9a5b00", "tonalRamp": ["oklch(15% 0.119 65)", "oklch(25% 0.119 65)", "oklch(38% 0.119 65)", "oklch(50% 0.119 65)", "oklch(62% 0.119 65)", "oklch(75% 0.119 65)", "oklch(87% 0.119 65)", "oklch(95% 0.119 65)"] },
-      "male": { "role": "tertiary", "displayName": "Rosso, il male", "canonical": "#b91c1c", "tonalRamp": ["oklch(15% 0.19 28)", "oklch(25% 0.19 28)", "oklch(38% 0.19 28)", "oklch(50% 0.19 28)", "oklch(62% 0.19 28)", "oklch(75% 0.19 28)", "oklch(87% 0.19 28)", "oklch(95% 0.19 28)"] },
-      "filo": { "role": "neutral", "displayName": "Filo", "canonical": "#c9ced6", "tonalRamp": ["oklch(15% 0.012 260)", "oklch(25% 0.012 260)", "oklch(38% 0.012 260)", "oklch(50% 0.012 260)", "oklch(62% 0.012 260)", "oklch(75% 0.012 260)", "oklch(87% 0.012 260)", "oklch(95% 0.012 260)"] },
-      "filo-tenue": { "role": "neutral", "displayName": "Filo tenue", "canonical": "#e3e6eb", "tonalRamp": ["oklch(15% 0.008 261)", "oklch(25% 0.008 261)", "oklch(38% 0.008 261)", "oklch(50% 0.008 261)", "oklch(62% 0.008 261)", "oklch(75% 0.008 261)", "oklch(87% 0.008 261)", "oklch(95% 0.008 261)"] }
+      "carta": {
+        "role": "neutral",
+        "displayName": "Carta",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0 90)",
+          "oklch(25% 0 90)",
+          "oklch(38% 0 90)",
+          "oklch(50% 0 90)",
+          "oklch(62% 0 90)",
+          "oklch(75% 0 90)",
+          "oklch(87% 0 90)",
+          "oklch(95% 0 90)"
+        ]
+      },
+      "campo": {
+        "role": "neutral",
+        "displayName": "Campo",
+        "canonical": "#eef0f3",
+        "tonalRamp": [
+          "oklch(15% 0.005 258)",
+          "oklch(25% 0.005 258)",
+          "oklch(38% 0.005 258)",
+          "oklch(50% 0.005 258)",
+          "oklch(62% 0.005 258)",
+          "oklch(75% 0.005 258)",
+          "oklch(87% 0.005 258)",
+          "oklch(95% 0.005 258)"
+        ]
+      },
+      "inchiostro": {
+        "role": "neutral",
+        "displayName": "Inchiostro",
+        "canonical": "#0b1220",
+        "tonalRamp": [
+          "oklch(15% 0.031 263)",
+          "oklch(25% 0.031 263)",
+          "oklch(38% 0.031 263)",
+          "oklch(50% 0.031 263)",
+          "oklch(62% 0.031 263)",
+          "oklch(75% 0.031 263)",
+          "oklch(87% 0.031 263)",
+          "oklch(95% 0.031 263)"
+        ]
+      },
+      "inchiostro-lieve": {
+        "role": "neutral",
+        "displayName": "Inchiostro lieve",
+        "canonical": "#4b5563",
+        "tonalRamp": [
+          "oklch(15% 0.026 257)",
+          "oklch(25% 0.026 257)",
+          "oklch(38% 0.026 257)",
+          "oklch(50% 0.026 257)",
+          "oklch(62% 0.026 257)",
+          "oklch(75% 0.026 257)",
+          "oklch(87% 0.026 257)",
+          "oklch(95% 0.026 257)"
+        ]
+      },
+      "blu": {
+        "role": "primary",
+        "displayName": "Blu del catalogo",
+        "canonical": "#1d4ed8",
+        "tonalRamp": [
+          "oklch(15% 0.217 264)",
+          "oklch(25% 0.217 264)",
+          "oklch(38% 0.217 264)",
+          "oklch(50% 0.217 264)",
+          "oklch(62% 0.217 264)",
+          "oklch(75% 0.217 264)",
+          "oklch(87% 0.217 264)",
+          "oklch(95% 0.217 264)"
+        ]
+      },
+      "blu-scuro": {
+        "role": "primary",
+        "displayName": "Blu scuro",
+        "canonical": "#1e3a8a",
+        "tonalRamp": [
+          "oklch(15% 0.138 266)",
+          "oklch(25% 0.138 266)",
+          "oklch(38% 0.138 266)",
+          "oklch(50% 0.138 266)",
+          "oklch(62% 0.138 266)",
+          "oklch(75% 0.138 266)",
+          "oklch(87% 0.138 266)",
+          "oklch(95% 0.138 266)"
+        ]
+      },
+      "ambra": {
+        "role": "secondary",
+        "displayName": "Ambra, la luce accesa",
+        "canonical": "#f59e0b",
+        "tonalRamp": [
+          "oklch(15% 0.165 70)",
+          "oklch(25% 0.165 70)",
+          "oklch(38% 0.165 70)",
+          "oklch(50% 0.165 70)",
+          "oklch(62% 0.165 70)",
+          "oklch(75% 0.165 70)",
+          "oklch(87% 0.165 70)",
+          "oklch(95% 0.165 70)"
+        ]
+      },
+      "ambra-inchiostro": {
+        "role": "secondary",
+        "displayName": "Ambra d'inchiostro",
+        "canonical": "#9a5b00",
+        "tonalRamp": [
+          "oklch(15% 0.119 65)",
+          "oklch(25% 0.119 65)",
+          "oklch(38% 0.119 65)",
+          "oklch(50% 0.119 65)",
+          "oklch(62% 0.119 65)",
+          "oklch(75% 0.119 65)",
+          "oklch(87% 0.119 65)",
+          "oklch(95% 0.119 65)"
+        ]
+      },
+      "male": {
+        "role": "tertiary",
+        "displayName": "Rosso, il male",
+        "canonical": "#b91c1c",
+        "tonalRamp": [
+          "oklch(15% 0.19 28)",
+          "oklch(25% 0.19 28)",
+          "oklch(38% 0.19 28)",
+          "oklch(50% 0.19 28)",
+          "oklch(62% 0.19 28)",
+          "oklch(75% 0.19 28)",
+          "oklch(87% 0.19 28)",
+          "oklch(95% 0.19 28)"
+        ]
+      },
+      "filo": {
+        "role": "neutral",
+        "displayName": "Filo",
+        "canonical": "#c9ced6",
+        "tonalRamp": [
+          "oklch(15% 0.012 260)",
+          "oklch(25% 0.012 260)",
+          "oklch(38% 0.012 260)",
+          "oklch(50% 0.012 260)",
+          "oklch(62% 0.012 260)",
+          "oklch(75% 0.012 260)",
+          "oklch(87% 0.012 260)",
+          "oklch(95% 0.012 260)"
+        ]
+      },
+      "filo-tenue": {
+        "role": "neutral",
+        "displayName": "Filo tenue",
+        "canonical": "#e3e6eb",
+        "tonalRamp": [
+          "oklch(15% 0.008 261)",
+          "oklch(25% 0.008 261)",
+          "oklch(38% 0.008 261)",
+          "oklch(50% 0.008 261)",
+          "oklch(62% 0.008 261)",
+          "oklch(75% 0.008 261)",
+          "oklch(87% 0.008 261)",
+          "oklch(95% 0.008 261)"
+        ]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "Il titolo di apertura, uno per pagina. Archivo 800, wdth 120." },
-      "headline": { "displayName": "Headline", "purpose": "Il titolo di ogni sezione, nella testa a due colonne. Archivo 800, wdth 118." },
-      "title": { "displayName": "Title", "purpose": "Sottotitoli, titoli di scheda, passi, nome del piano, marchio. Archivo 800, wdth 110-112." },
-      "body": { "displayName": "Body", "purpose": "Il testo. Archivo 400, wdth 100, guide fra 48ch e 64ch." },
-      "label": { "displayName": "Riga tecnica", "purpose": "Didascalie, voci del menu, etichette, intestazioni di tabella. Archivo 600, wdth 80, maiuscolo, 0.08em." },
-      "numeral": { "displayName": "Numeri", "purpose": "Prezzi, passi e «Fig. n». Oswald 500, tabular-nums. Mai su parole." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "Il titolo di apertura, uno per pagina. Archivo 800, wdth 120."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Il titolo di ogni sezione, nella testa a due colonne. Archivo 800, wdth 118."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sottotitoli, titoli di scheda, passi, nome del piano, marchio. Archivo 800, wdth 110-112."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Il testo. Archivo 400, wdth 100, guide fra 48ch e 64ch."
+      },
+      "label": {
+        "displayName": "Riga tecnica",
+        "purpose": "Didascalie, voci del menu, etichette, intestazioni di tabella. Archivo 600, wdth 80, maiuscolo, 0.08em."
+      },
+      "numeral": {
+        "displayName": "Numeri",
+        "purpose": "Prezzi, passi e «Fig. n». Oswald 500, tabular-nums. Mai su parole."
+      },
+      "code": {
+        "displayName": "Codice",
+        "purpose": "Quello che si copia tale e quale: il codice regalo GDA-XXXX-XXXX-XXXX, l'indirizzo dell'archivio. Monospazio di sistema su campo grigio, mai per dare un'aria tecnica al testo."
+      }
     },
     "fonts": [
-      { "family": "Archivo", "file": "sito/caratteri/archivo-variabile.woff2", "axes": { "wght": "100 900", "wdth": "62% 125%" } },
-      { "family": "Oswald", "file": "sito/statico/font/oswald-latin-500-normal.woff2", "weight": 500 }
+      {
+        "family": "Archivo",
+        "file": "sito/caratteri/archivo-variabile.woff2",
+        "axes": {
+          "wght": "100 900",
+          "wdth": "62% 125%"
+        }
+      },
+      {
+        "family": "Oswald",
+        "file": "sito/statico/font/oswald-latin-500-normal.woff2",
+        "weight": 500
+      }
     ],
     "shadows": [],
     "underlines": [
-      { "name": "campo-attivo", "value": "box-shadow: 0 2px 0 var(--blu)", "purpose": "La riga sotto il campo di modulo attivo. È una sottolineatura, non un'elevazione: l'unico box-shadow del foglio di stile." }
+      {
+        "name": "campo-attivo",
+        "value": "box-shadow: 0 2px 0 var(--blu)",
+        "purpose": "La riga sotto il campo di modulo attivo. È una sottolineatura, non un'elevazione: l'unico box-shadow del foglio di stile."
+      }
     ],
     "motion": [
-      { "name": "stato", "value": "120ms ease-out", "purpose": "Transizione di sfondo, colore e bordo su tasti, voci del menu, icone di serie, titoli dei passi." },
-      { "name": "spia", "value": "background-color 260ms ease-out", "purpose": "Il riempimento d'ambra della spia nella prima tavola." },
-      { "name": "spia-ritardo", "value": "600ms", "purpose": "L'attesa dopo il caricamento prima che la spia si accenda; zero con prefers-reduced-motion." },
-      { "name": "scorrimento", "value": "scroll-behavior: smooth", "purpose": "Lo scorrimento alle sezioni dal menu; auto con prefers-reduced-motion." }
+      {
+        "name": "stato",
+        "value": "120ms ease-out",
+        "purpose": "Transizione di sfondo, colore e bordo su tasti, voci del menu, icone di serie, titoli dei passi."
+      },
+      {
+        "name": "spia",
+        "value": "background-color 260ms ease-out",
+        "purpose": "Il riempimento d'ambra della spia nella prima tavola."
+      },
+      {
+        "name": "spia-ritardo",
+        "value": "600ms",
+        "purpose": "L'attesa dopo il caricamento prima che la spia si accenda; zero con prefers-reduced-motion."
+      },
+      {
+        "name": "scorrimento",
+        "value": "scroll-behavior: smooth",
+        "purpose": "Lo scorrimento alle sezioni dal menu; auto con prefers-reduced-motion."
+      }
     ],
     "breakpoints": [
-      { "name": "indice", "value": "min-width: 1480px" },
-      { "name": "telefono", "value": "max-width: 940px" },
-      { "name": "testa-sezione", "value": "max-width: 760px" },
-      { "name": "scheda", "value": "max-width: 600px" },
-      { "name": "tavole", "value": "max-width: 520px" },
-      { "name": "listino", "value": "max-width: 480px" }
+      {
+        "name": "indice",
+        "value": "min-width: 1480px"
+      },
+      {
+        "name": "telefono",
+        "value": "max-width: 940px"
+      },
+      {
+        "name": "testa-sezione",
+        "value": "max-width: 760px"
+      },
+      {
+        "name": "scheda",
+        "value": "max-width: 600px"
+      },
+      {
+        "name": "tavole",
+        "value": "max-width: 520px"
+      },
+      {
+        "name": "listino",
+        "value": "max-width: 480px"
+      }
     ],
     "layout": {
       "largo": "1280px",
@@ -140,11 +365,31 @@
       "Nessuna ombra, nessuna sfocatura, nessun raggio, nessun movimento d'ingresso."
     ],
     "rules": [
-      { "name": "La regola della luce sola", "body": "L'ambra segna una cosa sola per volta: in copertina la spia della prima tavola, scorrendo la voce del menu (e dell'indice sul bordo) della sezione corrente. Due elementi ambra sullo stesso schermo sono un errore.", "section": "colors" },
-      { "name": "La regola dell'inchiostro e del filo", "body": "Le righe che aprono (sezione, tabella, scheda, modulo, piede) sono d'inchiostro; le righe che separano dentro sono di filo. Una riga non è mai più spessa di 1px, tranne i 2px della voce accesa e della sottolineatura della lingua scelta.", "section": "colors" },
-      { "name": "La regola della larghezza", "body": "La gerarchia si fa con l'asse `wdth` di Archivo, non con un secondo carattere: 120 il titolo di apertura, 118 i titoli di sezione, 110–112 i titoli minori e il marchio, 100 il testo, 80 la riga tecnica. I titoli sono sempre 800 con interlinea 1.02 e -0.02em.", "section": "typography" },
-      { "name": "La regola dei numeri", "body": "Oswald compare solo su numeri: prezzi, passi, numeri di figura. Una parola in Oswald è un errore.", "section": "typography" },
-      { "name": "La regola della carta piatta", "body": "Niente `box-shadow` di elevazione, niente `filter: blur`, niente `backdrop-filter`, niente gradienti di sfondo, in nessuno stato. Se serve staccare un blocco, si usa un filo di 1px o lo sfondo `campo`.", "section": "elevation" }
+      {
+        "name": "La regola della luce sola",
+        "body": "L'ambra segna una cosa sola per volta: in copertina la spia della prima tavola, scorrendo la voce del menu (e dell'indice sul bordo) della sezione corrente. Due elementi ambra sullo stesso schermo sono un errore.",
+        "section": "colors"
+      },
+      {
+        "name": "La regola dell'inchiostro e del filo",
+        "body": "Le righe che aprono (sezione, tabella, scheda, modulo, piede) sono d'inchiostro; le righe che separano dentro sono di filo. Una riga non è mai più spessa di 1px, tranne i 2px della voce accesa e della sottolineatura della lingua scelta.",
+        "section": "colors"
+      },
+      {
+        "name": "La regola della larghezza",
+        "body": "La gerarchia si fa con l'asse `wdth` di Archivo, non con un secondo carattere: 120 il titolo di apertura, 118 i titoli di sezione, 110–112 i titoli minori e il marchio, 100 il testo, 80 la riga tecnica. I titoli sono sempre 800 con interlinea 1.02 e -0.02em.",
+        "section": "typography"
+      },
+      {
+        "name": "La regola dei numeri",
+        "body": "Oswald compare solo su numeri: prezzi, passi, numeri di figura. Una parola in Oswald è un errore.",
+        "section": "typography"
+      },
+      {
+        "name": "La regola della carta piatta",
+        "body": "Niente `box-shadow` di elevazione, niente `filter: blur`, niente `backdrop-filter`, niente gradienti di sfondo, in nessuno stato. Se serve staccare un blocco, si usa un filo di 1px o lo sfondo `campo`.",
+        "section": "elevation"
+      }
     ],
     "dos": [
       "Do aprire ogni blocco strutturale (sezione, tabella, scheda, modulo, piede) con una riga di 1px d'inchiostro e separare le righe interne con 1px di filo.",
