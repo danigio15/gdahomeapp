@@ -330,8 +330,10 @@ class Collegamento {
     _siRiconnette = false;
     /* Le licenze che si sanno gia', dall'archivio: servono prima di bussare,
      * perche' decidono da dove. */
-    await licenza.conosci(archivio.tutte);
+    /* Prima la casa in uso, poi le licenze: cosi' la prima risposta su
+     * Premium e' gia' quella della casa giusta, e non un «no» di passaggio. */
     licenza.inUso(casa?.id);
+    await licenza.conosci(archivio.tutte);
 
     if (casa == null) {
       _vai(ComeVa.nessunaCasa);

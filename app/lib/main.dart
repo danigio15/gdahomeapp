@@ -356,14 +356,25 @@ Collegamento ilFiloConLaCasa() => _filoDiCasa ??= _conIlBigliettoPerLAuto(
 Collegamento _conIlBigliettoPerLAuto(Collegamento filo) {
   final licenza = filo.licenza;
   ({bool premium, DateTime? fino})? scritto;
+  /* Uno alla volta, nell'ordine. All'apertura si scriveva «non Premium» (la
+   * casa in uso non si sapeva ancora) e subito dopo «Premium»: due scritture
+   * insieme sullo stesso file di passaggio, e a volte restava la prima. Da li'
+   * in poi l'auto diceva «serve Premium» a chi l'aveva, finche' la licenza
+   * non cambiava. */
+  var coda = Future<void>.value();
   void scrivi() {
     if (!licenza.conosciute) return;
     final adesso = licenza.premiumPerLAuto;
     if (adesso == scritto) return;
     scritto = adesso;
-    unawaited(
-      al_lauto.diciLaLicenzaAllAuto(premium: adesso.premium, fino: adesso.fino),
-    );
+    coda = coda.then((_) async {
+      final ok = await al_lauto.diciLaLicenzaAllAuto(
+        premium: adesso.premium,
+        fino: adesso.fino,
+      );
+      // Non scritto: alla prossima novita' della licenza si riprova.
+      if (!ok && scritto == adesso) scritto = null;
+    });
   }
 
   licenza.addListener(scrivi);

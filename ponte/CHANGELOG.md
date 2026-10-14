@@ -38,6 +38,12 @@ propone domande vicine e lascia la parola ad Assist.
 per stare nello schermo, i riquadri si stringono, e le icone di rotonde,
 inversioni e curve strette sono disegnate apposta.
 
+**In auto, Premium resta Premium.** A volte Android Auto, aprendo i comandi
+rapidi della casa, diceva «La casa in auto è compresa in gdahome Premium» a
+chi Premium l'aveva: all'apertura dell'app due scritture del permesso per
+l'auto si sovrapponevano, e poteva restare quella sbagliata. Adesso si
+scrive una volta sola, nell'ordine giusto.
+
 ## 1.12.0
 
 **L'Assistente di casa.** Accanto alle persone, nella Home, la casa ti dice
