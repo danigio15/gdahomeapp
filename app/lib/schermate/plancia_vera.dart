@@ -414,6 +414,30 @@ class PlanciaVeraState extends State<PlanciaVera> {
                     'gdahome page in Home Assistant.',
               ),
         );
+      case ComeVa.irraggiungibile when collegamento.siRiconnette:
+        /* La casa non si trova, ed era Premium fino a poco fa: quasi sempre
+         * e' l'add-on che si aggiorna. Non e' «da fuori serve Premium», e non
+         * c'e' niente da fare: si riprova da soli, anche da fuori, e appena la
+         * casa torna si entra. */
+        return _Stato(
+          collegamento: collegamento,
+          vaiAlleCase: widget.vaiAlleCase,
+          inCima: inCima,
+          icona: Icons.sync_rounded,
+          titolo: inLingua(it: 'Riconnessione…', en: 'Reconnecting…'),
+          sotto: inLingua(
+            it:
+                '«${collegamento.casa?.nome ?? 'Casa'}» non risponde ancora. '
+                'Succede per qualche minuto quando l\'add-on gdahome si '
+                'aggiorna o Home Assistant si riavvia: riprovo da solo, e '
+                'appena torna si apre.',
+            en:
+                '“${collegamento.casa?.nome ?? 'Home'}” isn\'t answering yet. '
+                'This happens for a few minutes while the gdahome add-on '
+                'updates or Home Assistant restarts: I keep trying, and it '
+                'opens as soon as it\'s back.',
+          ),
+        );
       case ComeVa.irraggiungibile
           when collegamento.fuoriCasaSenzaPremium &&
               collegamento.licenza.comeSta(collegamento.casa) ==

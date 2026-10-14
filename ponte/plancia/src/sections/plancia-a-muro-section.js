@@ -32,6 +32,7 @@ import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import {
   ALARM_DISARM,
   ALARM_MODES,
+  alarmActiveMode,
   alarmActiveModeWithCustom,
   alarmCodeNeeded,
   alarmVisibleModes,
@@ -63,15 +64,19 @@ import {
 } from "../core/media-player.js";
 import {
   CHIAVE_MURO,
+  areeDellIngresso,
   avvisiAccesi,
+  lettureDellIngresso,
   chiamateDelFermaTutto,
   gruppiDelMixer,
   letturaDelCanale,
   menuDiLato,
   pulsanteAcceso,
+  pulsanteDiceLoStato,
   pulsantiDellaPagina,
   servizioDelFader,
   servizioDelMuto,
+  servizioDelPasso,
   servizioDelPulsante,
   servizioDellaTelecamera,
   valoreDallaPosizione,
@@ -101,6 +106,13 @@ import {
   verso,
 } from "../core/plancia-a-muro.js";
 import { kioskAttivo, setKioskMode } from "./beta12-room-color-lock-section.js";
+import {
+  comandoDelDispositivo,
+  genereDelComando,
+  partiDelComando,
+} from "../core/comandi-accanto.js";
+import { comandoDelTelecomando, tastiDelTelecomando } from "../core/telecomando.js";
+import { piattaformeConosciute } from "./di-chi-e-unentita-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import { loadCameraFrame } from "./live-ui-section.js";
 import {
@@ -675,14 +687,17 @@ function testa(pagina, muro) {
   /* «Temperatura mostrata»: quella del meteo, o quella di casa. Con quella di
    * casa il disegno e la parola del meteo restano (dicono che tempo fa fuori),
    * e sotto il numero c'e' scritto «in casa», perche' nessuno lo scambi per
-   * quella di fuori. */
+   * quella di fuori. Il disegno sta sulla riga del numero, attaccato: se stesse
+   * accanto alla colonna, una scritta lunga («in casa · poco nuvoloso») la
+   * allargherebbe e lo staccherebbe dal numero. La scritta sta su una riga
+   * sola, e quando non c'e' posto finisce coi puntini. */
   const inCasa =
     pagina.riga?.meteo !== false && muro.temperatura === "casa" ? temperaturaInCasa(muro) : "";
   const parolaDelMeteo = m ? PAROLE_DEL_METEO()[m.condizione] || "" : "";
   const chipDelMeteo = inCasa
-    ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<div><b>${esc(inCasa)}</b><div class="mu-et">${esc([t("in casa", "inside"), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div></div><span class="mu-sep"></span>`
+    ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([t("in casa", "inside"), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>`
     : m && numero(m.temperatura) !== null
-      ? `<div class="mu-meteo" data-mu-temperatura="meteo">${disegno("meteo", 44, "testa-meteo")}<div><b>${decimale(m.temperatura, 0)}°</b><div class="mu-et">${esc(parolaDelMeteo)}</div></div></div><span class="mu-sep"></span>`
+      ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>`
       : "";
   const accento = accentoDi(pagina);
   /* Con piu' di quattro pagine le linguette tengono il disegno, e il nome
@@ -782,8 +797,132 @@ function modoSuMisura(id) {
   );
 }
 
+/* Le aree dell'antifurto di una pagina: quelle scelte nell'Ingresso, o la
+ * centrale scritta come prima, o tutte quelle della plancia di origine
+ * (`areeDellIngresso`). */
+function areeDellaPagina(pagina) {
+  return areeDellIngresso(pagina, state.fonte || {});
+}
+
 function centraleDelMuro(pagina) {
-  return clean(pagina?.ingresso?.centrale) || state.fonte?.centrali?.[0] || "";
+  return areeDellaPagina(pagina)[0]?.entita || state.fonte?.centrali?.[0] || "";
+}
+
+/* Il nome di un'area: quello della sezione Sicurezza, o quello che le da'
+ * Home Assistant, o «Area 2». */
+const nomeDellArea = (area, i = 0) =>
+  clean(area?.nome) ||
+  clean(stato(area?.entita)?.attributes?.friendly_name) ||
+  `${t("Area", "Area")} ${i + 1}`;
+
+/* Il colore di uno stato dell'antifurto: verde spento, rosso che suona,
+ * ambra mentre cambia, indaco inserito. */
+function accentoDellAllarme(valore) {
+  if (valore === "triggered") return ACCENTI.allarme;
+  if (valore === "disarmed") return "#10b981";
+  if (["arming", "pending", "disarming"].includes(valore)) return "#f59e0b";
+  if (!valore || valore === "unavailable" || valore === "unknown") return "#64748b";
+  return "#6366f1";
+}
+
+/* Le parole di uno stato dell'antifurto, anche quando la centrale non c'e'. */
+const parolaDellAllarme = (valore) =>
+  !valore || valore === "unavailable" || valore === "unknown"
+    ? t("Non disponibile", "Unavailable")
+    : STATI_DELL_ALLARME()[valore] || valore;
+
+/* I tasti di un'area quando le aree sono piu' d'una: quelli che la sua
+ * centrale accetta, meno quelli tolti in configurazione. I tasti scritti a
+ * mano non sono di un'area: stanno in una fila loro, sotto. */
+function tastiDellArea(s) {
+  const a = state.fonte?.antifurto || {};
+  return alarmVisibleModes(s || null, a.tolte || [], []).map((voce) => ({
+    ...voce,
+    label: PAROLE_DEI_MODI()[voce.mode] || voce.mode,
+  }));
+}
+
+const quanteInserite = (inserite, tutte) =>
+  t(`${inserite} di ${tutte} inserite`, `${inserite} of ${tutte} armed`);
+const quanteAree = (quante) => t(`Antifurto · ${quante} aree`, `Alarm · ${quante} areas`);
+
+/* Le aree tutte insieme, in una parola: «Disattivo», «Fuori» se sono tutte
+ * fuori, «ALLARME» se ne suona una, «2 di 3 inserite» altrimenti. */
+function riassuntoDelleAree(aree) {
+  const valori = aree.map((a) => String(stato(a.entita)?.state || ""));
+  const suona = aree.filter((_a, i) => valori[i] === "triggered");
+  if (suona.length)
+    return { valore: "triggered", testo: STATI_DELL_ALLARME().triggered, suona };
+  const lette = valori.filter((v) => v && v !== "unavailable" && v !== "unknown");
+  if (!lette.length) return { valore: "", testo: parolaDellAllarme(""), suona };
+  if (lette.every((v) => v === lette[0]) && lette.length === valori.length)
+    return { valore: lette[0], testo: parolaDellAllarme(lette[0]), suona };
+  const inserite = lette.filter((v) => v.startsWith("armed_")).length;
+  const cambia = lette.find((v) => ["arming", "pending", "disarming"].includes(v));
+  if (cambia && !inserite) return { valore: cambia, testo: parolaDellAllarme(cambia), suona };
+  return {
+    valore: inserite ? "armed_custom_bypass" : "disarmed",
+    testo: inserite ? quanteInserite(inserite, valori.length) : parolaDellAllarme("disarmed"),
+    suona,
+  };
+}
+
+/* Un'area nella card dell'antifurto: il suo nome e il suo stato a sinistra,
+ * i suoi tasti a destra. Ogni tasto dice a quale area va. */
+function rigaDellArea(area, i) {
+  const s = stato(area.entita);
+  const valore = String(s?.state || "");
+  const modi = tastiDellArea(s);
+  const attivo = alarmActiveMode(valore, modi.map((m) => m.mode));
+  return `<div class="mu-area${valore === "triggered" ? " grave" : ""}" style="--acc:${accentoDellAllarme(valore)}" data-mu-area="${esc(area.entita)}">
+    <div class="mu-area-dice"><b class="mu-area-nome">${esc(nomeDellArea(area, i))}</b><span class="mu-area-stato"><i></i>${esc(parolaDellAllarme(valore))}</span></div>
+    ${
+      s
+        ? `<div class="mu-seg mu-modi mu-modi-area">${modi
+            .map(
+              (m) =>
+                `<button type="button" class="${m.mode === attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}" data-mu-area="${esc(area.entita)}">${esc(m.label)}</button>`,
+            )
+            .join("")}</div>`
+        : ""
+    }
+  </div>`;
+}
+
+/* I tasti scritti a mano (antifurto-su-misura.js), quando le aree sono piu'
+ * d'una: non sono di nessuna, e stanno in una fila loro. */
+function tastiSuMisuraMarkup() {
+  const miei = alarmVisibleModes(
+    null,
+    [],
+    state.fonte?.antifurto?.suMisura || [],
+  ).filter((voce) => voce.suMisura);
+  if (!miei.length) return "";
+  const acceso = alarmActiveModeWithCustom(
+    null,
+    miei.map((m) => m.mode),
+    state.fonte?.antifurto?.suMisura || [],
+    allStates() || {},
+  );
+  return `<div class="mu-seg mu-modi mu-modi-area mu-modi-miei">${miei
+    .map(
+      (m) =>
+        `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`,
+    )
+    .join("")}</div>`;
+}
+
+/* Le aree una sotto l'altra, per la card e per la sua finestra. */
+function areeMarkup(aree) {
+  const codice = aree.some((a) => {
+    const s = stato(a.entita);
+    return s && alarmCodeNeeded(s, "alarm_arm_away");
+  });
+  return `<div class="mu-aree" data-quante="${Math.min(aree.length, 4)}">${aree.map(rigaDellArea).join("")}${tastiSuMisuraMarkup()}</div>${
+    codice
+      ? `<div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>`
+      : ""
+  }`;
 }
 
 function pillole(pagina) {
@@ -1555,9 +1694,25 @@ const glifo = (nome, misura = 30) =>
   `<svg width="${misura}" height="${misura}" viewBox="0 0 24 24" fill="${["suona"].includes(nome) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${GLIFI_MUSICA[nome]}</svg>`;
 
 /* La lettura di un lettore, con quello che il tocco sul tablet aspetta. */
+/* La voce del lettore scritta nella sezione Musica: i suoi «Altri comandi»,
+ * le «Altre letture», il «Telecomando». La pagina Musica a muro li mostra
+ * come la plancia; prima leggeva solo il lettore, e quello che si aggiungeva
+ * accanto — un sensore, un telecomando — nel config c'era e qui no. */
+const voceDellaMusica = (entity) =>
+  (state.fonte?.lettori || []).find((l) => l.entity === entity) || {};
+
 function lettoreOra(voce) {
   segna(voce.entita);
-  const lettura = letturaDelLettore({ entity: voce.entita, nome: voce.nome }, allStates() || {});
+  const scritta = voceDellaMusica(voce.entita);
+  const lettura = letturaDelLettore(
+    { ...scritta, entity: voce.entita, nome: voce.nome },
+    allStates() || {},
+    (v) => v,
+    piattaformeConosciute(),
+  );
+  for (const c of lettura.comandi || []) segna(c.entita || c.entity);
+  for (const l of lettura.letture || []) segna(l.entity);
+  if (scritta.telecomando) segna(scritta.telecomando);
   const attesa = state.inAttesa[voce.entita] || {};
   if (typeof attesa.suona === "boolean") {
     lettura.suona = attesa.suona;
@@ -1650,24 +1805,70 @@ function lettoreGrande(l) {
             .join("")}</div>`
         : ""
     }
-    ${comandiDelLettore(l.entity)}
+    ${comandiDelLettore(l)}
+    ${lettureDelLettore(l)}
+    ${telecomandoDelLettoreMuro(l)}
   </div>`;
 }
 
 /* Gli «altri comandi» del lettore, quelli scelti nella sezione Musica: le
  * stesse pastiglie della plancia, col loro stato, e il tocco che fa il gesto
- * del loro dominio. */
-function comandiDelLettore(entity) {
-  const voce = (state.fonte?.lettori || []).find((l) => l.entity === entity);
-  const comandi = (voce?.comandi || []).filter((id) => stato(id));
+ * del loro dominio. Un telecomando si accende e si spegne, o manda il comando
+ * scritto accanto (`remote.sala:volume_up`). */
+function comandiDelLettore(l) {
+  const comandi = (l?.comandi || []).filter((c) => c.comando || stato(c.entita || c.entity));
   if (!comandi.length) return "";
   return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi
-    .map((id) => {
+    .map((c) => {
+      const id = c.entita || c.entity;
+      if (dominio(id) === "remote") {
+        const premuto = c.comando ? "" : ` aria-pressed="${acceso(id)}"`;
+        const parole = c.comando ? "" : statoInParole(id);
+        return `<button type="button" class="${!c.comando && acceso(id) ? "si" : ""}" data-mu-fa="mp-accanto" data-mu-entita="${esc(l.entity)}" data-mu-voce="${esc(c.entity)}"${premuto}${c.available ? "" : " disabled"}>${esc(c.comando ? `${nomeDi(id)} · ${c.comando}` : nomeDi(id))}${parole ? ` <small>${esc(parole)}</small>` : ""}</button>`;
+      }
       const s = stato(id);
       const servizio = servizioDellEntita(id, String(s?.state || ""));
       const parole = statoInParole(id);
       return `<button type="button" class="${acceso(id) ? "si" : ""}" ${servizio ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`}>${esc(nomeDi(id))}${parole ? ` <small>${esc(parole)}</small>` : ""}</button>`;
     })
+    .join("")}</div>`;
+}
+
+/* Le «altre letture»: si guardano e basta — il nome e il numero con la sua
+ * unita', come sulla plancia. */
+function lettureDelLettore(l) {
+  const letture = l?.letture || [];
+  if (!letture.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-letture">${letture
+    .map(
+      (x) =>
+        `<span class="mu-mp-lettura" data-mu-mp-lettura="${esc(x.entity)}">${esc(nomeDi(x.entity))} <b>${esc(x.testo)}</b></span>`,
+    )
+    .join("")}</div>`;
+}
+
+/* Le frecce del telecomando di una TV che la plancia conosce: le stesse
+ * della scheda Musica, in una fila. */
+const SEGNI_DEL_TELECOMANDO = Object.freeze({
+  su: "▲",
+  giu: "▼",
+  sinistra: "◀",
+  destra: "▶",
+  ok: "OK",
+  indietro: "↩",
+  home: "⌂",
+  menu: "☰",
+  canale_meno: "CH−",
+  canale_piu: "CH+",
+});
+function telecomandoDelLettoreMuro(l) {
+  const tasti = tastiDelTelecomando(l?.telecomando);
+  if (!tasti.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-tele">${tasti
+    .map(
+      (tasto) =>
+        `<button type="button" data-mu-fa="mp-tele" data-mu-tasto="${esc(tasto)}" data-mu-entita="${esc(l.entity)}">${esc(SEGNI_DEL_TELECOMANDO[tasto] || tasto)}</button>`,
+    )
     .join("")}</div>`;
 }
 
@@ -1843,29 +2044,206 @@ function finestreAperte() {
   const fonte = state.fonte || {};
   const stati = allStates() || {};
   const righe = varchiDiCasa(stati, fonte.varchi || {}, fonte.invertiti || [], (id) => nomeDi(id));
-  const centrale = centraleDelMuro(state.muro?.pagine?.[state.pagina]);
-  const dichiarati = fonte.antifurto?.ingressi?.[centrale] || [];
+  /* Con piu' aree contano gli ingressi di tutte quelle della pagina. */
+  const dichiarati = [
+    ...new Set(
+      areeDellaPagina(state.muro?.pagine?.[state.pagina]).flatMap(
+        (a) => fonte.antifurto?.ingressi?.[a.entita] || [],
+      ),
+    ),
+  ];
   const quali = dichiarati.length ? ingressiDellaCentrale(righe, { ingressi: dichiarati }) : righe;
   return quali.filter((riga) => riga.stato === "aperto").map((riga) => riga.name);
+}
+
+/* ── le «Altre letture» e gli «Altri comandi» dell'ingresso ───────────────
+ *
+ * «Dentro la pagina dell'antifurto ci metterei la possibilita' di riprendere
+ * altri dati, tipo se ci sono finestre aperte. Magari allo stesso modo come
+ * sull'audio.» Le stesse pastiglie della Musica: le letture col loro valore,
+ * le porte e le finestre in un conto solo, i comandi col loro stato. Ogni
+ * lettura si tocca e dice di piu'. */
+
+/* Come si chiama il conto delle aperture. */
+const parolaDelGruppo = (tipo) =>
+  ({
+    finestre: t("Finestre aperte", "Open windows"),
+    porte: t("Porte aperte", "Open doors"),
+  })[tipo] || t("Aperture aperte", "Open doors and windows");
+const parolaDelGruppoChiuso = (tipo) =>
+  ({
+    finestre: t("Finestre chiuse", "Windows closed"),
+    porte: t("Porte chiuse", "Doors closed"),
+  })[tipo] || t("Tutto chiuso", "All closed");
+
+const CLASSI_CHE_SI_APRONO = new Set(["window", "door", "garage_door", "opening"]);
+
+/* Il valore di una lettura in parole: una finestra e' aperta o chiusa, non
+ * accesa; un movimento c'e' o no. Il resto come lo dice il tablet. */
+function parolaDellaLettura(id) {
+  const s = stato(id);
+  if (!s) return t("Non trovata", "Not found");
+  const v = String(s.state);
+  if (dominio(id) === "binary_sensor" && (v === "on" || v === "off")) {
+    const classe = String(s.attributes?.device_class || "");
+    const on = v === "on";
+    if (CLASSI_CHE_SI_APRONO.has(classe)) return on ? t("Aperta", "Open") : t("Chiusa", "Closed");
+    if (["motion", "occupancy", "presence"].includes(classe))
+      return on ? t("Movimento", "Motion") : t("Nessuno", "Clear");
+    if (classe === "moisture") return on ? t("Acqua!", "Water!") : t("Asciutto", "Dry");
+    if (["smoke", "gas", "carbon_monoxide", "safety", "problem"].includes(classe))
+      return on ? t("Attenzione", "Alert") : t("Tutto bene", "All clear");
+  }
+  if (dominio(id) === "cover") {
+    const pos = numero(s.attributes?.current_position);
+    if (v === "open" && pos !== null && pos > 0 && pos < 100) return `${pos}%`;
+  }
+  return statoInParole(id);
+}
+
+/* Una lettura da guardare con attenzione: una porta aperta, una serratura
+ * aperta, un sensore che dice «attenzione». */
+function letturaDaGuardare(id) {
+  const s = stato(id);
+  const v = String(s?.state || "");
+  if (dominio(id) === "binary_sensor") {
+    const classe = String(s?.attributes?.device_class || "");
+    return (
+      v === "on" &&
+      (CLASSI_CHE_SI_APRONO.has(classe) ||
+        ["moisture", "smoke", "gas", "carbon_monoxide", "safety", "problem"].includes(classe))
+    );
+  }
+  if (dominio(id) === "lock") return v === "unlocked" || v === "open";
+  return false;
+}
+
+/* Le letture dell'ingresso: il conto delle aperture e le altre una per una. */
+function lettureDellIngressoMarkup(ing) {
+  const { gruppo, singole: tutte } = lettureDellIngresso(ing?.letture || [], allStates() || {});
+  /* Una serratura scelta sia da leggere sia da toccare e' un tasto solo,
+   * che dice anche com'e'. */
+  const comandi = new Set((ing?.comandi || []).map((v) => partiDelComando(v).entity));
+  const singole = tutte.filter((id) => !comandi.has(id));
+  if (!gruppo && !singole.length) return "";
+  const pastiglie = [];
+  if (gruppo) {
+    gruppo.tutte.forEach(segna);
+    const n = gruppo.aperte.length;
+    pastiglie.push(
+      `<button type="button" class="mu-ing-lettura mu-ing-conto${n ? " guarda" : " tutto-bene"}" data-mu-fa="ing-lettura" data-mu-gruppo="1">${disegno(gruppo.tipo === "porte" ? "aperture" : "finestra", 22, "ing-conto")}${
+        n
+          ? `${esc(parolaDelGruppo(gruppo.tipo))}: <b>${n}</b>`
+          : `${esc(parolaDelGruppoChiuso(gruppo.tipo))} <b>${gruppo.tutte.length}/${gruppo.tutte.length}</b>`
+      }</button>`,
+    );
+  }
+  for (const id of singole)
+    pastiglie.push(
+      `<button type="button" class="mu-ing-lettura${letturaDaGuardare(id) ? " guarda" : ""}" data-mu-fa="ing-lettura" data-mu-entita="${esc(id)}">${esc(nomeDi(id))} <b>${esc(parolaDellaLettura(id))}</b></button>`,
+    );
+  return `<div class="mu-ing-letture">${pastiglie.join("")}</div>`;
+}
+
+/* Il servizio di un comando dell'ingresso: un telecomando manda il suo
+ * comando, una serratura si chiude o si apre, una tapparella va su o giu',
+ * il resto come i comandi accanto al lettore della Musica. */
+export function servizioDelComandoDIngresso(voce, statoAttuale = "") {
+  const { entity: id, comando } = partiDelComando(voce);
+  if (!id) return null;
+  if (comando)
+    return { domain: "remote", service: "send_command", data: { entity_id: id, command: comando } };
+  if (genereDelComando(id) && genereDelComando(id) !== "tendina")
+    return comandoDelDispositivo({ entity: id });
+  const servizio = servizioDellEntita(id, statoAttuale);
+  return servizio ? { ...servizio, data: { entity_id: id } } : null;
+}
+
+const SI_PREMONO = new Set(["button", "input_button", "script", "scene", "automation"]);
+
+/* I comandi dell'ingresso: le pastiglie della Musica, col loro stato. */
+function comandiDellIngressoMarkup(ing) {
+  const comandi = ing?.comandi || [];
+  if (!comandi.length) return "";
+  return `<div class="mu-ing-comandi">${comandi
+    .map((voce) => {
+      const { entity: id, comando } = partiDelComando(voce);
+      const s = stato(id);
+      const premuto = !comando && !SI_PREMONO.has(dominio(id));
+      const parole = premuto ? parolaDellaLettura(id) : "";
+      const si =
+        premuto && (dominio(id) === "lock" ? letturaDaGuardare(id) : acceso(id)) ? " si" : "";
+      return `<button type="button" class="mu-ing-comando${si}" data-mu-fa="ing-comando" data-mu-voce="${esc(voce)}"${s || comando ? "" : " disabled"}>${esc(comando ? `${nomeDi(id)} · ${comando}` : nomeDi(id))}${parole ? ` <small>${esc(parole)}</small>` : ""}</button>`;
+    })
+    .join("")}</div>`;
+}
+
+/* Le letture e i comandi sotto l'antifurto, se ce ne sono. */
+function altroDellIngresso(ing) {
+  const dentro = `${lettureDellIngressoMarkup(ing)}${comandiDellIngressoMarkup(ing)}`;
+  return dentro ? `<div class="mu-ing-altro">${dentro}</div>` : "";
+}
+
+/* La finestra di una lettura: il conto delle aperture, una per riga, o una
+ * lettura sola col suo valore grande; per una serratura o una tapparella
+ * anche il suo tasto. */
+function finestraDellaLettura(f) {
+  const pagina = state.muro?.pagine?.[f.pagina ?? state.pagina];
+  const ing = pagina?.ingresso || {};
+  const { gruppo } = lettureDellIngresso(ing.letture || [], allStates() || {});
+  const ids = f.gruppo ? gruppo?.tutte || [] : [f.entita];
+  const titolo = f.gruppo
+    ? gruppo?.aperte.length
+      ? `${parolaDelGruppo(gruppo.tipo)}: ${gruppo.aperte.length}`
+      : parolaDelGruppoChiuso(gruppo?.tipo)
+    : nomeDi(f.entita);
+  const quando = (id) => {
+    const cambio = Date.parse(stato(id)?.last_changed || "");
+    if (!Number.isFinite(cambio)) return "";
+    const ora = orologio(new Date(cambio)).ora;
+    return t(`dalle ${ora}`, `since ${ora}`);
+  };
+  /* Prima quelle da guardare: in cima quello che e' rimasto aperto. */
+  const ordinate = [...ids].sort((a, b) => letturaDaGuardare(b) - letturaDaGuardare(a));
+  const righe = ordinate
+    .map((id) => {
+      const tocca = ["lock", "cover"].includes(dominio(id));
+      const verbo =
+        dominio(id) === "lock"
+          ? String(stato(id)?.state) === "locked"
+            ? t("Apri", "Unlock")
+            : t("Chiudi", "Lock")
+          : String(stato(id)?.state) === "closed"
+            ? t("Apri", "Open")
+            : t("Chiudi", "Close");
+      return `<div class="mu-ing-riga${letturaDaGuardare(id) ? " guarda" : ""}" data-mu-lettura="${esc(id)}"><i></i><div class="mu-nome"><div class="mu-n">${esc(nomeDi(id))}</div>${quando(id) ? `<div class="mu-sotto">${esc(quando(id))}</div>` : ""}</div><b>${esc(parolaDellaLettura(id))}</b>${tocca ? `<button type="button" class="mu-btn" data-mu-fa="ing-comando" data-mu-voce="${esc(id)}">${esc(verbo)}</button>` : ""}</div>`;
+    })
+    .join("");
+  return `<div class="mu-fin-clima">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno(f.gruppo ? "finestra" : disegnoDellEntita(f.entita), 30, "fin-lettura")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(titolo)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-ing-righe">${righe || `<div class="mu-sotto">${esc(t("Niente da mostrare qui", "Nothing to show here"))}</div>`}</div></div>`;
 }
 
 /* L'ingresso su un pannello piccolo: sei tessere, ognuna un gesto. Lo stato
  * dell'antifurto e il citofono aprono la loro finestra; «apri» apre. */
 function paginaIngressoCompatta(pagina) {
   const ing = pagina.ingresso;
+  const aree = areeDellaPagina(pagina);
   const centrale = centraleDelMuro(pagina);
-  const s = stato(centrale);
-  const valore = String(s?.state || "");
+  const s = aree.length > 1 ? null : stato(centrale);
+  const riassunto = aree.length > 1 ? riassuntoDelleAree(aree) : null;
+  const valore = riassunto ? riassunto.valore : String(s?.state || "");
   const spento = valore === "disarmed";
+  const letture = lettureDellIngresso(ing.letture, allStates() || {});
   const uscita = azioneDi(spento ? ing.esco : ing.rientro || ing.esco);
   const persone = personeInCasa();
   const tessere = [
-    s
+    s || riassunto
       ? tessera({
           chiave: "sicurezza",
           accento: valore === "triggered" ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1",
-          etichetta: t("Antifurto", "Alarm"),
-          titolo: STATI_DELL_ALLARME()[valore] || valore,
+          etichetta: riassunto ? quanteAree(aree.length) : t("Antifurto", "Alarm"),
+          titolo: riassunto ? riassunto.testo : STATI_DELL_ALLARME()[valore] || valore,
           sotto: "",
           attiva: true,
           dati: `data-mu-fa="finestra-antifurto"`,
@@ -1926,13 +2304,48 @@ function paginaIngressoCompatta(pagina) {
           dove: "c-persone",
         })
       : "",
-  ].filter(Boolean);
+    /* Le porte e le finestre scelte fra le «Altre letture»: il loro conto,
+     * e il tocco le elenca. */
+    letture.gruppo
+      ? tessera({
+          chiave: "finestra",
+          accento: letture.gruppo.aperte.length ? "#f59e0b" : "#10b981",
+          etichetta: parolaDelGruppo(letture.gruppo.tipo),
+          titolo: String(letture.gruppo.aperte.length),
+          sotto: "",
+          dati: `data-mu-fa="ing-lettura" data-mu-gruppo="1"`,
+          dove: "c-letture",
+        })
+      : "",
+  ]
+    .filter(Boolean)
+    .slice(0, 6);
   return `<div class="mu-g6">${tessere.join("")}</div>`;
 }
 
 function paginaIngresso(pagina) {
   if (state.compatto) return paginaIngressoCompatta(pagina);
   const ing = pagina.ingresso;
+  const aree = areeDellaPagina(pagina);
+  /* Chi ha scelto le sue porte e finestre fra le letture le vede nel loro
+   * conto, sotto: l'avviso di sempre lo ripeterebbe. */
+  const contoProprio = Boolean(lettureDellIngresso(ing.letture, allStates() || {}).gruppo);
+  const aperte = ing.finestre && !contoProprio ? finestreAperte() : [];
+  const avvisoFinestre = aperte.length
+    ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>`
+    : "";
+  /* Piu' aree: una riga per area, ognuna coi suoi tasti; in cima le aree
+   * tutte insieme in una parola. Una sola: la card di sempre. */
+  if (aree.length > 1) {
+    const riassunto = riassuntoDelleAree(aree);
+    const carta = `<div class="mu-carta mu-accesa mu-allarme mu-allarme-aree" style="--acc:${accentoDellAllarme(riassunto.valore)}">
+      <div class="mu-riga1"><span class="mu-chip" style="--c:72px">${disegno("sicurezza", 44, "allarme")}</span>
+        <div class="mu-allarme-dice"><span class="mu-et">${esc(quanteAree(aree.length))}</span><div class="mu-osw mu-stato-allarme">${esc(riassunto.testo)}${riassunto.suona.length ? ` · ${esc(riassunto.suona.map((a) => nomeDellArea(a, aree.indexOf(a))).join(", "))}` : ""}</div>
+        ${avvisoFinestre}</div></div>
+      ${areeMarkup(aree)}
+    </div>`;
+    return restoDellIngresso(pagina, carta, riassunto.valore === "disarmed");
+  }
   const centrale = centraleDelMuro(pagina);
   const s = stato(centrale);
   const valore = String(s?.state || "");
@@ -1941,16 +2354,10 @@ function paginaIngresso(pagina) {
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
   const modi = tastiDellAntifurto(s);
   const acceso = tastoAcceso(s, modi);
-  const aperte = ing.finestre ? finestreAperte() : [];
-  const persone = personeInCasa();
-  const uscita = spento ? ing.esco : ing.rientro || ing.esco;
-  const azioneUscita = azioneDi(uscita);
-  const telecamera = clean(ing.telecamera);
-  return `<div class="mu-ingresso">
-    <div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
+  const carta = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
         <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? STATI_DELL_ALLARME()[valore] || valore : modi.find((m) => m.mode === acceso)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
-        ${aperte.length ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>` : ""}</div></div>
+        ${avvisoFinestre}</div></div>
       ${
         modi.length
           ? `<div class="mu-seg mu-modi">${modi
@@ -1963,7 +2370,22 @@ function paginaIngresso(pagina) {
               )}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>`
           : ""
       }
-    </div>
+    </div>`;
+  return restoDellIngresso(pagina, carta, spento);
+}
+
+/* Il citofono, l'uscita e chi c'e': uguali con un'area o con tante. */
+function restoDellIngresso(pagina, carta, spento) {
+  const ing = pagina.ingresso;
+  const persone = personeInCasa();
+  const uscita = spento ? ing.esco : ing.rientro || ing.esco;
+  const azioneUscita = azioneDi(uscita);
+  const telecamera = clean(ing.telecamera);
+  /* Le altre letture e gli altri comandi: una striscia sotto l'antifurto e
+   * il citofono, larga quanto la pagina. */
+  const altro = altroDellIngresso(ing);
+  return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}">
+    ${carta}
     <div class="mu-carta mu-citofono">
       <div class="mu-video">${telecamera ? `<img data-mu-telecamera="${esc(telecamera)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera ? nomeDi(telecamera) : t("Nessuna telecamera", "No camera"))}</span></div>
       ${
@@ -1972,6 +2394,7 @@ function paginaIngresso(pagina) {
           : ""
       }
     </div>
+    ${altro ? `<div class="mu-carta mu-ing-striscia">${altro}</div>` : ""}
     <div class="mu-piede">
       ${
         azioneUscita
@@ -2019,43 +2442,99 @@ function paginaIngresso(pagina) {
 function canaleOra(canale) {
   segna(canale.entita);
   if (canale.muto) segna(canale.muto);
+  if (canale.letto) segna(canale.letto);
   const lettura = letturaDelCanale(canale, allStates() || {});
   const attesa = state.inAttesa[canale.entita] || {};
-  if (attesa.posizione !== undefined) {
+  if (attesa.posizione !== undefined && lettura.muove) {
     lettura.posizione = attesa.posizione;
     lettura.valore = valoreDallaPosizione(attesa.posizione, lettura);
   }
   const muto = canale.muto ? state.inAttesa[canale.muto]?.acceso : attesa.mutato;
-  if (typeof muto === "boolean") lettura.mutato = muto;
+  if (lettura.mutoSaDire && typeof muto === "boolean") lettura.mutato = muto;
   return lettura;
 }
 
+/* Il numero di un sensore di livello: «-18,5 dB», «42 %». */
+function testoDellaMisura(m) {
+  if (!m) return "—";
+  const cifre = Number.isInteger(m.valore) || Math.abs(m.valore) >= 100 ? 0 : 1;
+  return `${decimale(m.valore, cifre)}${m.unita ? ` ${m.unita}` : ""}`;
+}
+
 /* Il numero sopra il cursore: «62%» per un lettore, «-12,5 dB» per un numero,
- * coi decimali che il suo passo chiede. */
+ * coi decimali che il suo passo chiede. Un sensore dice il suo numero; un
+ * telecomando quello del sensore che lo legge, o niente: non ha un livello. */
 function testoDelCanale(lettura, posizione = lettura.posizione) {
+  if (lettura.tipo === "telecomando")
+    return lettura.misura && lettura.disponibile ? testoDellaMisura(lettura.misura) : "";
   if (!lettura.disponibile || lettura.valore === null) return "—";
+  if (lettura.tipo === "misura") return testoDellaMisura(lettura);
   const valore = valoreDallaPosizione(posizione, lettura);
   if (lettura.tipo === "volume") return `${Math.round(valore * 100)}%`;
   const cifre = lettura.passo >= 1 ? 0 : lettura.passo >= 0.1 ? 1 : 2;
   return `${decimale(valore, cifre)}${lettura.unita ? ` ${lettura.unita}` : ""}`;
 }
 
+/* Il livello letto da un sensore accanto al cursore: una striscia sottile
+ * che si riempie, verde, gialla in cima, rossa in fondo alla scala. */
+const strisciaLetta = (m) =>
+  m
+    ? `<span class="mu-fad-letto" style="--l:${m.posizione.toFixed(4)}" title="${esc(testoDellaMisura(m))}"><i></i></span>`
+    : "";
+
 /* Il cursore: una traccia che si riempie del colore del gruppo, e la manopola
  * sopra. In piedi per i canali, sdraiato per il volume totale. */
 function fader(canale, lettura, { sdraiato = false } = {}) {
-  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura))}"><span class="mu-fad-traccia"><i></i></span><u></u></div>`;
+  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura))}"><span class="mu-fad-traccia"><i></i></span>${strisciaLetta(lettura.misura)}<u></u></div>`;
 }
 
-function tastoMuto(canale, lettura) {
-  if (!lettura.puoMuto) return `<span class="mu-can-muto vuoto" aria-hidden="true"></span>`;
-  return `<button type="button" class="mu-can-muto${lettura.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}" aria-pressed="${lettura.mutato}" aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi(canale.entita, canale.nome))}">${glifo(lettura.mutato ? "muto" : "voce", 24)}</button>`;
+/* Lo strumento: lo stesso cursore, senza manopola e senza dito — un VU che
+ * si riempie fin dove dice il sensore. */
+function metro(canale, posizione, testo, { sdraiato = false } = {}) {
+  return `<div class="mu-fader mu-metro${sdraiato ? " sdraiato" : ""}" data-mu-metro="${esc(canale.entita)}" style="--p:${posizione.toFixed(4)}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(posizione * 100)}" aria-label="${esc(nomeDi(canale.entita, canale.nome))}" aria-valuetext="${esc(testo)}"><span class="mu-fad-traccia"><i></i></span></div>`;
 }
+
+/* I tasti ▲ / ▼ di un telecomando; in mezzo lo strumento, se un sensore
+ * legge il livello. Sdraiati, ▼ a sinistra e ▲ a destra. */
+function passi(canale, lettura, { sdraiato = false } = {}) {
+  const nome = nomeDi(canale.entita, canale.nome);
+  /* Sdraiato e' il volume totale: lo stesso telecomando puo' stare anche fra
+   * i canali, coi suoi comandi. */
+  const tasto = (verso, segno, etichetta) =>
+    `<button type="button" class="mu-passo" data-mu-fa="passo" data-mu-verso="${verso}" data-mu-entita="${esc(canale.entita)}"${sdraiato ? ' data-mu-master="1"' : ""} aria-label="${esc(etichetta)} ${esc(nome)}"${lettura.disponibile ? "" : " disabled"}>${segno}</button>`;
+  const su = tasto("su", "▲", t("Alza", "Volume up"));
+  const giu = tasto("giu", "▼", t("Abbassa", "Volume down"));
+  const mezzo = lettura.misura
+    ? metro(canale, lettura.misura.posizione, testoDellaMisura(lettura.misura), { sdraiato })
+    : '<span class="mu-passi-spazio"></span>';
+  return `<div class="mu-passi${sdraiato ? " sdraiato" : ""}">${sdraiato ? `${giu}${mezzo}${su}` : `${su}${mezzo}${giu}`}</div>`;
+}
+
+/* Il pezzo in mezzo a un canale: il cursore, lo strumento o i tasti. */
+function comandoDelCanale(canale, l, opzioni = {}) {
+  if (l.tipo === "misura") return metro(canale, l.posizione, testoDelCanale(l), opzioni);
+  if (l.tipo === "telecomando") return passi(canale, l, opzioni);
+  return fader(canale, l, opzioni);
+}
+
+function tastoMuto(canale, lettura, master = false) {
+  if (!lettura.puoMuto) return `<span class="mu-can-muto vuoto" aria-hidden="true"></span>`;
+  /* Un muto che non dice com'e' (un comando, un tasto) e' un tasto e basta. */
+  const premuto = lettura.mutoSaDire ? ` aria-pressed="${lettura.mutato}"` : "";
+  return `<button type="button" class="mu-can-muto${lettura.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}"${master ? ' data-mu-master="1"' : ""}${premuto} aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi(canale.entita, canale.nome))}">${glifo(lettura.mutato ? "muto" : "voce", 24)}</button>`;
+}
+
+/* Sotto il numero di un canale che si muove, quello che legge il sensore. */
+const lettoSotto = (l) =>
+  l.misura && l.tipo !== "telecomando"
+    ? `<small class="mu-can-l" data-mu-letto>${esc(testoDellaMisura(l.misura))}</small>`
+    : "";
 
 function canaleDelMixer(canale) {
   const l = canaleOra(canale);
-  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"}" data-mu-canale="${esc(canale.entita)}">
-    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>
-    ${fader(canale, l)}
+  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"} mu-can-${l.tipo}" data-mu-canale="${esc(canale.entita)}">
+    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>${lettoSotto(l)}
+    ${comandoDelCanale(canale, l)}
     <span class="mu-can-n">${esc(nomeDi(canale.entita, canale.nome))}</span>
     ${tastoMuto(canale, l)}</div>`;
 }
@@ -2079,13 +2558,24 @@ function paginaMixer(pagina) {
   let totale = "";
   if (master?.entita) {
     const l = canaleOra(master);
-    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
+    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""} mu-can-${l.tipo}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
       <span class="mu-mix-tit">${esc(master.nome || t("Volume totale", "Master volume"))}</span>
-      ${tastoMuto(master, l)}
-      ${fader(master, l, { sdraiato: true })}
+      ${tastoMuto(master, l, true)}
+      ${comandoDelCanale(master, l, { sdraiato: true })}
       <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b></div>`;
   }
   return `<div class="mu-mixer${banchi ? "" : " solo-totale"}">${banchi}${totale}</div>`;
+}
+
+/* Il canale scritto nel config, coi suoi comandi: quello della pagina aperta
+ * con questa entita' (un gruppo o il volume totale). */
+function canaleDellaPagina(id, muto = "", master = false) {
+  const mixer = state.muro?.pagine?.[state.pagina]?.mixer;
+  if (master && mixer?.master?.entita === id) return mixer.master;
+  const tutti = [...(mixer?.gruppi || []).flatMap((g) => g.canali || []), mixer?.master];
+  return (
+    tutti.find((c) => c?.entita === id && (!muto || c.muto === muto)) || { entita: id, muto }
+  );
 }
 
 /* Le frecce della telecamera: i segni dentro i tasti del pad. */
@@ -2157,9 +2647,7 @@ function comandoAcceso(p) {
 /* Chi sa dire se e' acceso: l'entita' di stato scelta, o un avvio che si
  * accende e si spegne. Uno script d'avvio finisce in un attimo, e «Spento»
  * sotto «Spegnimento» direbbe solo una cosa strana. */
-const diceLoStato = (p) =>
-  Boolean(p.stato) ||
-  ["switch", "input_boolean", "light", "fan", "automation"].includes(dominio(p.avvio));
+const diceLoStato = pulsanteDiceLoStato;
 
 function paginaComandi(pagina) {
   const tutti = pulsantiDellaPagina(pagina).map((p, k) => ({ p, k }));
@@ -2326,6 +2814,17 @@ function finestra() {
             `<button type="button" data-mu-fa="${k}" data-mu-entita="${esc(id)}">${{ su: `▲ ${esc(t("Su", "Up"))}`, ferma: `■ ${esc(t("Stop", "Stop"))}`, giu: `▼ ${esc(t("Giù", "Down"))}` }[k]}</button>`,
         )
         .join("")}</div></div>`;
+  } else if (f.tipo === "antifurto" && areeDellaPagina(state.muro?.pagine?.[state.pagina]).length > 1) {
+    /* Piu' aree: nella finestra ci stanno tutte, coi loro tasti, e sotto
+     * le letture e i comandi dell'ingresso. */
+    const pagina = state.muro?.pagine?.[state.pagina];
+    const aree = areeDellaPagina(pagina);
+    const riassunto = riassuntoDelleAree(aree);
+    dentro = `<div class="mu-fin-clima mu-fin-aree" style="--acc:${accentoDellAllarme(riassunto.valore)}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(riassunto.testo)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      ${areeMarkup(aree)}${altroDellIngresso(pagina?.ingresso)}</div>`;
+  } else if (f.tipo === "lettura") {
+    dentro = finestraDellaLettura(f);
   } else if (f.tipo === "antifurto") {
     const pagina = state.muro?.pagine?.[state.pagina];
     const centrale = centraleDelMuro(pagina);
@@ -2336,7 +2835,7 @@ function finestra() {
     const aperte = pagina?.ingresso?.finestre ? finestreAperte() : [];
     dentro = `<div class="mu-fin-clima" style="--acc:${valore === "disarmed" ? "#10b981" : "#6366f1"}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore] || valore)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div></div>`;
+      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina?.ingresso)}</div>`;
   } else if (f.tipo === "citofono") {
     const ing = state.muro?.pagine?.[f.pagina ?? state.pagina]?.ingresso || {};
     /* Aperta dal campanello: lo dice in cima, con l'ora dello squillo. */
@@ -2391,6 +2890,7 @@ function finestra() {
       codice: "#6366f1",
       tapparella: ACCENTI.tapparella,
       antifurto: "#10b981",
+      lettura: "#f59e0b",
       citofono: "#2563eb",
       telecamera: "#2563eb",
       gruppo: "#ec4899",
@@ -3179,9 +3679,12 @@ function cambiaTemperatura(id, verso, estremo = "") {
   );
 }
 
-function allarme(modo, codice = "") {
+function allarme(modo, codice = "", area = "") {
   const pagina = state.muro?.pagine?.[state.pagina];
-  const centrale = centraleDelMuro(pagina);
+  /* Con piu' aree il tasto dice la sua; un'area che la pagina non mostra
+   * non si comanda da qui. */
+  const sue = areeDellaPagina(pagina).map((a) => a.entita);
+  const centrale = area && sue.includes(area) ? area : centraleDelMuro(pagina);
   const s = stato(centrale);
   /* Un tasto scritto a mano chiama la sua entita', col suo codice se ne ha
    * uno: lo stesso giro della plancia (antifurto-su-misura.js). */
@@ -3209,7 +3712,7 @@ function allarme(modo, codice = "") {
   const voce = modo === "disarm" ? ALARM_DISARM : ALARM_MODES.find((m) => m.mode === modo);
   if (!voce) return;
   if (alarmCodeNeeded(s, voce.service) && !codice) {
-    apriFinestra({ tipo: "codice", scopo: "allarme", modo, scritto: "" });
+    apriFinestra({ tipo: "codice", scopo: "allarme", modo, area: centrale, scritto: "" });
     return;
   }
   chiudiFinestra();
@@ -3236,7 +3739,7 @@ function cifra(k) {
         f.errore = true;
         f.scritto = "";
       }
-    } else allarme(f.modo, f.scritto);
+    } else allarme(f.modo, f.scritto, f.area || "");
   } else if ((f.scritto || "").length < 12) {
     f.scritto = (f.scritto || "") + k;
     f.errore = false;
@@ -3469,8 +3972,26 @@ function onClick(event) {
         });
       return;
     case "allarme":
-      allarme(bersaglio.dataset.muModo);
+      allarme(bersaglio.dataset.muModo, "", bersaglio.dataset.muArea || "");
       return;
+    case "ing-lettura":
+      apriFinestra({
+        tipo: "lettura",
+        pagina: state.pagina,
+        gruppo: Boolean(bersaglio.dataset.muGruppo),
+        entita: bersaglio.dataset.muEntita || "",
+      });
+      return;
+    case "ing-comando": {
+      const voce = bersaglio.dataset.muVoce || "";
+      const { entity: chi } = partiDelComando(voce);
+      const servizio = servizioDelComandoDIngresso(voce, String(stato(chi)?.state || ""));
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(chi, servizio.domain, "toggle", servizio.data);
+      else comanda(servizio.domain, servizio.service, servizio.data);
+      if (state.finestra?.tipo === "lettura") disegna();
+      return;
+    }
     case "entita": {
       const servizio = servizioDellEntita(id, String(stato(id)?.state || ""));
       if (!servizio) return;
@@ -3488,18 +4009,45 @@ function onClick(event) {
     case "cifra":
       cifra(bersaglio.dataset.muCifra);
       return;
+    case "mp-accanto": {
+      /* Un comando accanto al lettore che e' un telecomando: si accende e si
+       * spegne, o manda il suo comando. */
+      const l = lettoreOra({ entita: id, nome: "" });
+      const voce = (l.comandi || []).find((c) => c.entity === bersaglio.dataset.muVoce);
+      const servizio = voce ? comandoDelDispositivo(voce) : null;
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(voce.entita, "remote", "toggle");
+      else comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "mp-tele": {
+      const l = lettoreOra({ entita: id, nome: "" });
+      const servizio = comandoDelTelecomando(l.telecomando, bersaglio.dataset.muTasto);
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
     case "muto": {
-      /* Il muto di un canale: l'interruttore scelto, o quello del lettore. Si
-       * vede subito, e la risposta vera lo conferma. */
+      /* Il muto di un canale: l'interruttore scelto, il comando del
+       * telecomando, il tasto da premere o il muto del lettore. Quello che
+       * sa dire com'e' si vede subito, e la risposta vera lo conferma. */
       const muto = bersaglio.dataset.muMuto || "";
-      const canale = { entita: id, muto };
+      const canale = canaleDellaPagina(id, muto, Boolean(bersaglio.dataset.muMaster));
       const lettura = canaleOra(canale);
       const servizio = servizioDelMuto(canale, lettura);
       if (!servizio) return;
-      if (muto) attendi(muto, "acceso", !lettura.mutato);
-      else attendi(id, "mutato", !lettura.mutato);
+      if (lettura.mutoSaDire) {
+        if (muto) attendi(muto, "acceso", !lettura.mutato);
+        else attendi(id, "mutato", !lettura.mutato);
+      }
       comanda(servizio.domain, servizio.service, servizio.data);
       disegna();
+      return;
+    }
+    case "passo": {
+      /* ▲ / ▼ di un telecomando: il suo comando, una volta per tocco. */
+      const canale = canaleDellaPagina(id, "", Boolean(bersaglio.dataset.muMaster));
+      const servizio = servizioDelPasso(canale, bersaglio.dataset.muVerso);
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
       return;
     }
     case "ptz": {
@@ -3511,7 +4059,9 @@ function onClick(event) {
     case "preset": {
       const pagina = state.muro?.pagine?.[state.pagina];
       const voce = pagina?.telecamera?.preset?.[Number(bersaglio.dataset.muIndice)];
-      const servizio = voce ? servizioDellaTelecamera(voce, "entita") : null;
+      const servizio = voce
+        ? servizioDellaTelecamera(voce, "entita", pagina.telecamera.dispositivo)
+        : null;
       if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
       return;
     }
@@ -3943,9 +4493,12 @@ ${MURO} .mu-pagine+.mu-ora{margin-left:24px}
 ${MURO} .mu-h{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:58px;line-height:.9}
 ${MURO} .mu-d{font-size:12px;font-weight:900;letter-spacing:.11em;color:var(--text-dim);margin-top:6px}
 ${MURO} .mu-sep{width:1px;align-self:stretch;background:color-mix(in srgb,var(--text) 12%,transparent)}
-${MURO} .mu-meteo{display:flex;align-items:center;gap:10px}
-${MURO} .mu-meteo b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:34px}
-${MURO} .mu-meteo .mu-et{font-size:10px}
+${MURO} .mu-ora{min-width:0;flex-shrink:.2}
+${MURO} .mu-meteo{display:flex;flex-direction:column;align-items:flex-end;min-width:0;max-width:240px}
+${MURO} .mu-meteo-su{display:flex;align-items:center;gap:8px}
+${MURO} .mu-meteo-su>*{flex:0 0 auto}
+${MURO} .mu-meteo b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:34px;line-height:1.1}
+${MURO} .mu-meteo .mu-et{font-size:10px;letter-spacing:.08em;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-pillole{display:flex;gap:26px;padding:14px 22px;align-items:center;flex-wrap:wrap;row-gap:12px}
 ${MURO} .mu-pill{display:flex;align-items:center;gap:12px}
 ${MURO} .mu-pill .mu-chip{--c:38px}
@@ -3980,6 +4533,9 @@ ${MURO} .mu-mp-cursore{flex:1}
 ${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 ${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
 ${MURO} .mu-mp-comandi button small{margin-left:4px;font-weight:700;opacity:.75}
+${MURO} .mu-mp-lettura{padding:8px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 3%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+${MURO} .mu-mp-lettura b{margin-left:4px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums}
+${MURO} .mu-mp-tele button{min-width:52px;text-align:center}
 ${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
 ${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}
@@ -4165,6 +4721,65 @@ ${MURO} .mu-stato-allarme{font-size:52px;color:var(--acc);margin-top:6px}
 ${MURO} .mu-avviso-finestre{display:flex;align-items:center;gap:8px;margin-top:8px}
 ${MURO} .mu-modi{--acc:#e11d48}
 ${MURO} .mu-nota{font-size:10.5px;text-align:center}
+/* Piu' aree: la card dell'antifurto si fa elenco. In cima le aree tutte
+ * insieme, sotto una riga per area — il nome e lo stato a sinistra, i tasti a
+ * destra — e le righe si dividono l'altezza che c'e'. Da una a quattro ci
+ * stanno senza scorrere; oltre, l'elenco scorre. */
+${MURO} .mu-allarme-aree{padding:18px 20px;gap:12px;min-height:0}
+${MURO} .mu-allarme-aree .mu-riga1{gap:14px}
+${MURO} .mu-allarme-aree .mu-stato-allarme{font-size:34px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-allarme-dice{min-width:0;flex:1}
+${MURO} .mu-allarme-aree .mu-avviso-finestre{margin-top:4px}
+${MURO} .mu-aree{display:flex;flex-direction:column;gap:8px;min-height:0;flex:1 1 auto;overflow-y:auto;scrollbar-width:none}
+${MURO} .mu-area{display:flex;align-items:center;gap:12px;padding:8px 8px 8px 16px;border-radius:18px;flex:0 0 auto;
+  background:color-mix(in srgb,var(--acc) 7%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 26%,transparent)}
+${MURO} .mu-area.grave{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));box-shadow:inset 0 0 0 2px var(--acc),0 0 24px -8px var(--acc)}
+${MURO} .mu-area-dice{display:flex;flex-direction:column;gap:3px;min-width:0;flex:0 1 30%}
+${MURO} .mu-area-nome{font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-area-stato{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:color-mix(in srgb,var(--acc) 85%,var(--text));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-area-stato i{flex:0 0 9px;width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+${MURO} .mu-area.grave .mu-area-stato i{animation:mu-batti 1s ease-in-out infinite}
+@keyframes mu-batti{50%{transform:scale(1.5);opacity:.6}}
+${MURO} .mu-modi-area{flex:1 1 auto;margin:0;padding:4px;gap:4px;border-radius:14px;min-width:0}
+${MURO} .mu-modi-area>button{height:46px;border-radius:11px;font-size:15px;padding:0 6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-modi-miei{flex:0 0 auto}
+${MURO} .mu-aree[data-quante="2"] .mu-area{padding-top:12px;padding-bottom:12px}
+${MURO} .mu-aree[data-quante="2"] .mu-modi-area>button{height:56px;font-size:16px}
+${MURO} .mu-aree[data-quante="4"]{gap:6px}
+${MURO} .mu-aree[data-quante="4"] .mu-area{padding-top:5px;padding-bottom:5px}
+${MURO} .mu-aree[data-quante="4"] .mu-modi-area>button{height:40px;font-size:14px}
+${MURO} .mu-aree[data-quante="4"] .mu-area-nome{font-size:16px}
+/* Le letture e i comandi dell'ingresso: le pastiglie della Musica. */
+${MURO} .mu-ing-altro{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:0}
+${MURO} .mu-ing-letture,${MURO} .mu-ing-comandi{display:flex;flex-wrap:wrap;gap:8px}
+${MURO} .mu-ingresso.mu-con-striscia{grid-template-rows:minmax(0,1fr) auto auto}
+${MURO} .mu-ing-striscia{grid-column:1/-1;padding:10px 12px;min-width:0}
+${MURO} .mu-ing-striscia .mu-ing-altro{flex-direction:row;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
+${MURO} .mu-ing-striscia .mu-ing-letture,${MURO} .mu-ing-striscia .mu-ing-comandi{flex-wrap:nowrap;flex:0 0 auto}
+${MURO} .mu-ing-striscia .mu-ing-comandi{margin-left:auto;padding-left:12px;border-left:1px solid color-mix(in srgb,var(--text) 10%,transparent)}
+${MURO} .mu-ing-striscia .mu-ing-lettura,${MURO} .mu-ing-striscia .mu-ing-comando{white-space:nowrap}
+${MURO} .mu-con-striscia .mu-piede .mu-card{padding:12px 20px}
+${MURO} .mu-con-striscia .mu-piede .mu-tessera .mu-osw{font-size:34px}
+${MURO} .mu-con-striscia .mu-piede .mu-chip{--c:44px!important}
+${MURO} .mu-ing-lettura{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 4%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent)}
+${MURO} .mu-ing-lettura b{margin-left:2px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums}
+${MURO} .mu-ing-lettura .dm-oggetto{margin:-4px 0}
+${MURO} .mu-ing-lettura.guarda{color:color-mix(in srgb,#f59e0b 80%,var(--text));background:color-mix(in srgb,#f59e0b 13%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,#f59e0b 50%,transparent)}
+${MURO} .mu-ing-lettura.guarda b{color:inherit}
+${MURO} .mu-ing-lettura.tutto-bene b{color:#10b981}
+${MURO} .mu-ing-comando{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 11%,transparent)}
+${MURO} .mu-ing-comando small{margin-left:4px;font-weight:700;opacity:.75}
+${MURO} .mu-ing-comando.si{--acc:#0ea5e9;color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
+${MURO} .mu-ing-comando:disabled{opacity:.45}
+${MURO} .mu-ing-righe{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto}
+${MURO} .mu-ing-riga{--acc:#10b981;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--text) 4%,var(--card-bg))}
+${MURO} .mu-ing-riga.guarda{--acc:#f59e0b;background:color-mix(in srgb,var(--acc) 12%,var(--card-bg))}
+${MURO} .mu-ing-riga>i{flex:0 0 12px;width:12px;height:12px;border-radius:50%;background:var(--acc)}
+${MURO} .mu-ing-riga>b{font-size:17px;font-weight:900;color:color-mix(in srgb,var(--acc) 80%,var(--text))}
+${MURO} .mu-ing-riga .mu-btn{height:48px;padding:0 18px;font-size:16px;border-radius:14px}
+${MURO} .mu-fin-aree .mu-aree{overflow:visible}
+${MURO} .mu-finestra{max-height:94%;overflow-y:auto;scrollbar-width:none}
+${MURO} .mu-fin-aree{display:flex;flex-direction:column;gap:12px}
 ${MURO} .mu-citofono{padding:18px;display:flex;flex-direction:column;gap:14px}
 ${MURO} .mu-video{flex:1;border-radius:16px;position:relative;overflow:hidden;min-height:120px;background:radial-gradient(120% 90% at 30% 20%,#2a3550,#0b1020)}
 ${MURO} .mu-video img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -4279,6 +4894,7 @@ ${MURO}[data-verso="verticale"] .mu-pagine button{flex:1;justify-content:center}
 ${MURO}[data-verso="verticale"] .mu-meteo,${MURO}[data-verso="verticale"] .mu-sep{display:none}
 ${MURO}[data-verso="verticale"] .mu-ora{margin-left:auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+${MURO}[data-verso="verticale"] .mu-ingresso.mu-con-striscia{grid-template-rows:auto minmax(0,1fr) auto auto}
 ${MURO}[data-verso="verticale"] .mu-piede{grid-template-columns:1fr 1fr}
 ${MURO}[data-verso="verticale"] .mu-fin-luce{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-colonna{height:300px}
@@ -4517,6 +5133,29 @@ ${MURO} .mu-fader.fermo{cursor:default;opacity:.4}
 ${MURO} .mu-muto .mu-fad-traccia i{filter:grayscale(1);opacity:.3;box-shadow:none}
 ${MURO} .mu-muto .mu-can-v{color:var(--text-dim);text-decoration:line-through}
 ${MURO} .mu-spento{opacity:.5}
+${MURO} .mu-can-v{min-height:1em}
+${MURO} .mu-can-l{margin-top:-4px;font-size:12px;font-weight:700;color:var(--text-dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+${MURO} .mu-fad-letto{position:absolute;top:24px;bottom:24px;left:calc(50% - 22px);width:6px;border-radius:3px;background:color-mix(in srgb,var(--text) 8%,#000 18%);overflow:hidden}
+${MURO} .mu-fad-letto i{position:absolute;left:0;right:0;bottom:0;height:calc(var(--l) * 100%);background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--l),.001));background-position:bottom}
+${MURO} .mu-metro{cursor:default}
+${MURO} .mu-metro .mu-fad-traccia{width:18px;margin-left:-9px;border-radius:5px}
+${MURO} .mu-metro .mu-fad-traccia i{border-radius:4px;box-shadow:none;background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--p),.001));background-position:bottom;
+  -webkit-mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia{height:18px;margin:-9px 0 0}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia i{background:linear-gradient(90deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:calc(100% / max(var(--p),.001)) 100%;background-position:left;
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-passi{flex:1 1 auto;min-height:90px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+${MURO} .mu-passi>.mu-metro{flex:1 1 auto;min-height:40px}
+${MURO} .mu-passi>.mu-metro .mu-fad-traccia{top:6px;bottom:6px}
+${MURO} .mu-passi-spazio{flex:1 1 auto}
+${MURO} .mu-passo{flex:none;width:100%;max-width:72px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:24px;color:var(--acc);
+  background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 35%,transparent),0 6px 14px -8px rgba(0,0,0,.6)}
+${MURO} .mu-passo:active:not(:disabled){background:color-mix(in srgb,var(--acc) 30%,var(--card-bg))}
+${MURO} .mu-passo:disabled{opacity:.4}
+${MURO} .mu-passi.sdraiato{flex-direction:row;min-height:0;height:64px}
+${MURO} .mu-passi.sdraiato>.mu-metro{height:100%;min-height:0}
+${MURO} .mu-passi.sdraiato>.mu-metro .mu-fad-traccia{left:10px;right:10px}
+${MURO} .mu-passi.sdraiato .mu-passo{width:72px;height:56px}
 ${MURO} .mu-mix-master{display:flex;align-items:center;gap:18px;padding:12px 22px;min-width:0}
 ${MURO} .mu-mix-master>.mu-mix-tit{flex:none;max-width:220px;text-align:left;font-size:15px}
 ${MURO} .mu-mix-master>.mu-can-muto{width:64px;max-width:none;height:56px}
@@ -4586,6 +5225,11 @@ ${MURO}[data-compatto="1"] .mu-fader.sdraiato{height:44px;min-height:0}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato .mu-fad-traccia{top:50%;bottom:auto;left:20px;right:20px}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato::before{top:auto;bottom:2px;left:20px;right:20px}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato u{bottom:auto;left:calc(20px + var(--p) * (100% - 40px));width:30px;height:40px}
+${MURO}[data-compatto="1"] .mu-passo{height:40px;font-size:16px;border-radius:10px}
+${MURO}[data-compatto="1"] .mu-passi{min-height:60px;gap:4px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato{height:44px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato .mu-passo{width:44px;height:40px}
+${MURO}[data-compatto="1"] .mu-fad-letto{top:16px;bottom:16px}
 ${MURO}[data-compatto="1"] .mu-mix-master{padding:6px 12px;gap:10px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-mix-master>.mu-mix-tit{max-width:110px;font-size:11px}
 ${MURO}[data-compatto="1"] .mu-mix-master>.mu-can-muto{width:44px;height:38px}

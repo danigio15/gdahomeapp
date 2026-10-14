@@ -355,6 +355,7 @@ import {
   paroleDelleRisposte,
   parseDurationSeconds,
   parseTimestampMs,
+  partiDelComando,
   passoDellUnita,
   pelletScarso,
   periodConsumption,
@@ -506,7 +507,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-TZ4DHYDY.js";
+} from "../../chunk-HHBPPQJW.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1900,6 +1901,7 @@ var SOURCE_INDEX = Object.freeze({
   "${formatNumber(lettura.ritardo, 0)} minuti di ritardo": "${formatNumber(lettura.ritardo, 0)} minutes late",
   "${giorni} giorni": "${giorni} days",
   "${infissi} finestre aperte": "${infissi} windows open",
+  "${inserite} di ${tutte} inserite": "${inserite} of ${tutte} armed",
   "${letti.length} gruppi in rete": "${letti.length} units on mains",
   "${letto.celle.length} celle": "${letto.celle.length} cells",
   "${lettura.conteggio} eventi recenti": "${lettura.conteggio} recent events",
@@ -2098,6 +2100,7 @@ var SOURCE_INDEX = Object.freeze({
   "Acqua quasi finita: riempi la fontanella.": "Water almost gone: refill the fountain.",
   "Acqua troppo calda": "Water too warm",
   "Acqua troppo fredda": "Water too cold",
+  "Acqua!": "Water!",
   "Acquari": "Aquariums",
   "Acquari e terrari": "Aquariums and terrariums",
   "Acquario": "Aquarium",
@@ -2177,6 +2180,7 @@ var SOURCE_INDEX = Object.freeze({
   "Aggiungi temperatura": "Add temperature",
   "Aggiungi un animale da un'integrazione": "Add a pet from an integration",
   "Aggiungi un citofono da un'integrazione": "Add an intercom from an integration",
+  "Aggiungi un comando": "Add a command",
   "Aggiungi un deumidificatore": "Add a dehumidifier",
   "Aggiungi un gruppo": "Add a group",
   "Aggiungi un lettore da un'integrazione": "Add a player from an integration",
@@ -2191,7 +2195,9 @@ var SOURCE_INDEX = Object.freeze({
   "Aggiungi un'entità": "Add an entity",
   "Aggiungi una cassetta da un'integrazione": "Add a mailbox from an integration",
   "Aggiungi una cosa da fare…": "Add something to do…",
+  "Aggiungi una lettura": "Add a reading",
   "Aggiungi una pagina": "Add a page",
+  "Aggiungi una partizione": "Add a partition",
   "Aggiungi una risposta": "Add a reply",
   "Aggiungi una seconda area d'allarme": "Add a second alarm area",
   "Aggiungi una telecamera Generica in Home Assistant con questo indirizzo, poi incolla nel campo dell'entità quella che ne esce.": "Add a Generic camera in Home Assistant with this address, then paste the entity it creates into the entity field.",
@@ -2301,6 +2307,7 @@ var SOURCE_INDEX = Object.freeze({
   "Anteriore sinistro": "Front left",
   "antifurto": "alarm",
   "Antifurto": "Alarm",
+  "Antifurto · ${quante} aree": "Alarm · ${quante} areas",
   "Antifurto · Citofono · Uscita": "Alarm · Intercom · Leaving",
   "Antifurto · Telecamere": "Alarm · Cameras",
   "Antifurto · Total": "Alarm · Total",
@@ -2325,6 +2332,7 @@ var SOURCE_INDEX = Object.freeze({
   "aperture": "openings",
   "Aperture": "Openings",
   "Aperture (porte/finestre) e batterie monitorate nella Home. Con": "Openings (doors/windows) and batteries monitored on Home. With",
+  "Aperture aperte": "Open doors and windows",
   "Apparecchi e impianti": "Appliances and plants",
   "Applica": "Apply",
   "Appunti non disponibili qui": "Clipboard unavailable here",
@@ -2767,6 +2775,7 @@ var SOURCE_INDEX = Object.freeze({
   "Circuito primario · Boiler · Ricircolo sanitario": "Primary loop · Tank · Recirculation",
   "citofoni": "intercoms",
   "Citofono": "Intercom",
+  "Citofono / telecamera": "Intercom / camera",
   "Citofono e posta": "Intercom and mail",
   "Citofono nuovo": "New intercom",
   "Clima": "Climate",
@@ -2821,6 +2830,12 @@ var SOURCE_INDEX = Object.freeze({
   "Comandi di regia": "Control buttons",
   "Comandi e categorie": "Commands and categories",
   "comando": "control",
+  "Comando": "Command",
+  "Comando ▲": "▲ command",
+  "Comando ▼": "▼ command",
+  "Comando d'avvio": "Start command",
+  "Comando del muto": "Mute command",
+  "Comando di stop": "Stop command",
   "Comando inviato…": "Command sent…",
   "Comando ON/OFF": "On/off control",
   "Comando rapido": "Quick command",
@@ -3076,6 +3091,7 @@ var SOURCE_INDEX = Object.freeze({
   "dalla plancia": "from a dashboard",
   "dalla rete": "from grid",
   "dalle": "since",
+  "dalle ${ora}": "since ${ora}",
   "Dashboard Energia": "Energy dashboard",
   "Dashboard Energy": "Energy dashboard",
   "DashboardModern è indipendente e open source, fatta nel tempo libero: niente sponsor, niente abbonamenti, niente dati raccolti. Una donazione tiene vive le correzioni, le risposte alle segnalazioni e le prove sui dispositivi veri.": "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.",
@@ -3102,7 +3118,7 @@ var SOURCE_INDEX = Object.freeze({
   "Deumidificatori salvati": "Dehumidifiers saved",
   "Deve essere un contatore cumulativo kWh con state_class total o total_increasing. Non usare qui il sensore mensile: questo campo serve per ricostruire anche i mesi precedenti.": "This must be a cumulative kWh meter with state_class total or total_increasing. Do not use the monthly sensor here: this field is required to reconstruct previous months.",
   "di ${minuti} min": "of ${minuti} min",
-  "Di ${nome} la plancia non conosce i tasti: il telecomando non compare.": "The dashboard doesn't know the keys of ${nome}: the remote won't show.",
+  "Di ${nome} la plancia non conosce le frecce: il telecomando compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.": "The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.",
   "di autonomia": "of range",
   "Di chi è": "Whose it is",
   "di Home Assistant. Se i valori restano a zero, verifica che le entità abbiano": ". If values stay at zero, make sure the entities have",
@@ -3111,7 +3127,7 @@ var SOURCE_INDEX = Object.freeze({
   "di quello che può reggere: è al limite": "of what it can take: at the limit",
   "di quello che può reggere: sta salendo": "of what it can take: getting up there",
   "Di questo c'è una lettura sola: il Recorder non ne ha ancora una storia da disegnare.": "There is a single reading for this: the Recorder has no history to draw yet.",
-  "Di questo telecomando Home Assistant non dice l'integrazione: non compare.": "Home Assistant doesn't say which integration this remote belongs to: it won't show.",
+  "Di questo telecomando Home Assistant non dice l'integrazione: compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.": "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.",
   "di rete": "network",
   "Di serie la pioggia arriva da RainViewer e la mappa da OpenStreetMap: basta scegliere dove. Puoi cambiare servizio dalla tendina, oppure «Un indirizzo mio» e scrivere quello che pubblica il servizio che vuoi usare, con {z}/{x}/{y} al posto dei numeri del quadratino. Il tasto Prova ne scarica uno e ti dice se arriva.": "Out of the box the rain comes from RainViewer and the map from OpenStreetMap: just pick where. You can change the service from the list, or «An address of mine» and write the one your service publishes, with {z}/{x}/{y} standing in for the tile numbers. Test downloads one and tells you whether it arrives.",
   "di umidità": "moisture",
@@ -3141,8 +3157,10 @@ var SOURCE_INDEX = Object.freeze({
   "dispositivi muti": "silent devices",
   "Dispositivi non connessi": "Disconnected devices",
   "Dispositivo": "Device",
+  "Dispositivo (facoltativo)": "Device (optional)",
   "Dispositivo aggiunto": "Appliance added",
   "Dispositivo collegato": "Linked device",
+  "Dispositivo del telecomando": "Remote device",
   "dispositivo muto": "silent device",
   "Distanza": "Distance",
   "Distanza da casa": "Distance from home",
@@ -3375,6 +3393,7 @@ var SOURCE_INDEX = Object.freeze({
   "Facoltativa: sostituisce il calcolo del giorno.": "Optional: overrides the daily calculation.",
   "Facoltativa: sostituisce il calcolo del mese corrente.": "Optional: overrides the current-month calculation.",
   "Facoltativo": "Optional",
+  "Facoltativo: il «device» di remote.send_command": "Optional: the «device» of remote.send_command",
   "Facoltativo: il sensore «in carica» o lo stato della batteria": "Optional: the “is charging” sensor or the battery state",
   "Facoltativo: interruttore, es. switch.lavatrice": "Optional: switch, e.g. switch.lavatrice",
   "Facoltativo: potenza in W, es. sensor.lavatrice_potenza": "Optional: power in W, e.g. sensor.lavatrice_potenza",
@@ -3524,6 +3543,7 @@ var SOURCE_INDEX = Object.freeze({
   "Gli elettrodomestici non hanno un campo impianto: si possono scegliere solo per i carichi dell'impianto principale.": "Appliances carry no plant field: they can only be picked for the loads of the main plant.",
   "Gli eventi": "The events",
   "Gli impegni e le cose da fare, nella stessa pagina: qui si dice quali calendari e quali liste guardare. Se la tessera in Home si vede o no si sceglie nella scheda Widget.": "Appointments and to-do items, on the same page: here you choose which calendars and which lists to watch. Whether the Home tile shows is chosen in the Widgets tab.",
+  "Gli ingressi dichiarati nella sezione Sicurezza": "The entries declared in the Security section",
   "Gradi": "Degrees",
   "Grafico non disponibile: Chart.js non è caricato.": "Chart unavailable: Chart.js is not loaded.",
   "Grafite": "Graphite",
@@ -3598,7 +3618,6 @@ var SOURCE_INDEX = Object.freeze({
   "ℹ️ Il Report legge le": "ℹ️ The Report reads Home Assistant",
   "I lettori che dichiari qui hanno una scheda tutta loro, e come sfondo la copertina di quello che stanno suonando. I tasti che compaiono sono quelli che il lettore sa eseguire davvero: se non ha il brano successivo, quel tasto non viene disegnato. Puoi anche metterli fra le Azioni rapide della Home: lì il tasto prende la copertina come sfondo, e premerlo mette in pausa o fa ripartire.": "The players you declare here get a page of their own, with the artwork of whatever they are playing as the background. The buttons that show up are the ones the player can really do: no next track, no next-track button. You can also put them among the Home quick actions: there the tile takes the artwork as its background, and tapping it pauses or resumes.",
   "I livelli e gli avvisi": "The levels and the warnings",
-  "I modi sono quelli che la centrale accetta": "The modes are the ones the panel accepts",
   "I numeri qui sotto sono quelli dell'ultima lettura riuscita.": "The numbers below are from the last successful read.",
   "I pacchi": "The packs",
   "I pacchi compaiono qui quando li aggiungi nella scheda Batterie della famiglia Energia, in configurazione: lo stato di carica, le tensioni, le celle.": "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.",
@@ -3948,7 +3967,7 @@ var SOURCE_INDEX = Object.freeze({
   "L’hai scelta tu": "Your choice",
   "L'ho presa": "Got it",
   "L’icona è personalizzabile anche per le azioni integrate e viene mostrata nella Home.": "The icon is customizable for built-in actions too and is shown on Home.",
-  "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera o uno script con onvif.ptz. Un tasto senza entità resta spento.": "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off.",
+  "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera, uno script con onvif.ptz, o un telecomando (remote) col comando da mandare. Un tasto senza entità resta spento.": "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.",
   "L'impegno finisce prima di cominciare.": "The event ends before it starts.",
   "L'impianto": "The system",
   "L'impianto sta prendendo calore: il salto è quello giusto.": "The system is taking the heat: the drop is right.",
@@ -4187,6 +4206,7 @@ var SOURCE_INDEX = Object.freeze({
   "Livello dell'acqua": "Water level",
   "Livello della batteria": "Battery level",
   "Livello immissione": "Supply level",
+  "Livello letto (facoltativo)": "Read level (optional)",
   "Livello ripresa": "Return level",
   "Lo scaldabagno elettrico, per chi l'acqua calda non la fa col sole: la tessera dice a che punto è l'acqua e quanto manca all'obiettivo. Con un water_heater di Home Assistant basta la prima casella.": "The electric water heater, for whoever does not make hot water with the sun: the tile says where the water is and how far it is from the target. With a Home Assistant water_heater the first field is enough.",
   "Lo script, la scena, il pulsante, l'interruttore o l'elenco che inserisce: il servizio giusto lo sceglie la plancia dal dominio dell'entità.": "The script, scene, button, switch or select that arms it: the dashboard picks the right service from the entity domain.",
@@ -4716,7 +4736,7 @@ var SOURCE_INDEX = Object.freeze({
   "Oggi sciopero: ${adesso.settore}": "Strike today: ${adesso.settore}",
   "ogni ${ogni} giorni": "every ${ogni} days",
   "Ogni area è una centrale di Home Assistant, con i suoi inserimenti. Quella segnata «in pagina adesso» è quella che il quadrante e il tastierino stanno comandando: l'occhio accanto a un'altra la porta a schermo al posto suo.": "Every area is a Home Assistant panel of its own, with its own arming modes. The one marked “on the page now” is what the dial and the keypad are commanding: the eye beside another one brings it on screen in its place.",
-  "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Il muto è quello del lettore, o un interruttore scelto qui: acceso vuol dire muto.": "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted.",
+  "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Un sensore (sensor) diventa uno strumento che si guarda; un telecomando (remote) ha ▲ / ▼ e il muto, ognuno col suo comando (remote.send_command). Il muto è quello del lettore, un interruttore (acceso vuol dire muto), un telecomando o un tasto da premere.": "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.",
   "Ogni carico qui sotto è un cerchio del flusso Energia, sotto Casa, nell'ordine di questa lista. Quello che scrivi qui è quello che vedi nel flusso, e i dispositivi che gli assegni sono quelli che compaiono toccando il cerchio.": "Every load below is a circle of the Energy flow, under Home, in the order of this list. What you write here is what the flow shows, and the devices you file under it are the ones that appear when you tap the circle.",
   "Ogni casella compilata deve essere un'entità cover.* o switch.*.": "Every filled box must be a cover.* or switch.* entity.",
   "Ogni cosa col suo comando, in una griglia": "Everything with its own control, in a grid",
@@ -4777,6 +4797,7 @@ var SOURCE_INDEX = Object.freeze({
   "Panoramica": "Overview",
   "Parla": "Speak",
   "Partenza": "Departure",
+  "Partizioni dell'antifurto": "Alarm partitions",
   "Parziale": "Partial",
   "Passato": "Past",
   "Pastiglia senza nome": "Unnamed pill",
@@ -4915,6 +4936,7 @@ var SOURCE_INDEX = Object.freeze({
   "Porte": "Doors",
   "Porte · Finestre · Aperti e chiusi": "Doors · Windows · Open and closed",
   "porte aperte": "doors open",
+  "Porte aperte": "Open doors",
   "Porte e cancelli": "Doors and gates",
   "Portiere (bloccate/aperte)": "Doors (locked/open)",
   "Portiere aperte": "Doors open",
@@ -5134,8 +5156,9 @@ var SOURCE_INDEX = Object.freeze({
   "Quella che si guarda: Thermal Comfort la espone come parola («comfortable», «quite_uncomfortable»…). Se il sensore la scrive in italiano, la plancia scrive quello che c'è scritto.": "The one you look at: Thermal Comfort exposes it as a word (comfortable, quite_uncomfortable…). When the sensor writes it in your own language, the dashboard writes what it says.",
   "Quella del sensore in casa, in alto e sul riposo, con il tempo del meteo accanto. Vuoto: quella della stanza della prima pagina": "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room",
   "Quella di fuori, del meteo scelto qui sopra": "The outdoor one, from the weather chosen above",
+  "Quelle scelte qui, in quest'ordine: ognuna col suo stato e i suoi tasti, quelli che la sua centrale accetta": "The ones chosen here, in this order: each with its state and its buttons, the ones its panel accepts",
   "Quelli scelti qui, in quest'ordine": "The ones chosen here, in this order",
-  "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Compaiono sulla scheda sotto i comandi del brano.": "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.",
+  "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Un telecomando remote.* si accende e si spegne; scritto remote.nome:comando (per esempio remote.ampli:volume_up) manda quel comando. Compaiono sulla scheda sotto i comandi del brano.": "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.",
   "Quello che la voce «Cottura» degli Elettrodomestici legge e preme. Un comando è un'entità (button, switch, number, script) oppure un servizio con i suoi parametri: philips_airfryer.adjust_time time=60 method=add. Si mostra solo il tasto che ha la sua casella, e solo se risponde.": "What the “Cooking” entry of Appliances reads and presses. A control is an entity (button, switch, number, script) or a service with its parameters: philips_airfryer.adjust_time time=60 method=add. A button only shows up when its field is filled in, and only if it answers.",
   "Quello che scrivi qui arriva a chi mantiene la plancia, e a nessun altro. Non passa da GitHub e non diventa pubblico. Insieme al messaggio partono solo la versione della plancia, quella di Home Assistant e la lingua. Puoi cancellare la conversazione quando vuoi.": "What you write here reaches whoever maintains the dashboard, and nobody else. It does not go through GitHub and does not become public. Along with the message only the dashboard version, the Home Assistant version and the language are sent. You can delete the conversation whenever you want.",
   "Quello della bolletta: trasforma il mese in euro. Lascialo vuoto e la pagina dice solo i metri cubi.": "The one on the bill: it turns the month into euros. Leave it empty and the page shows only cubic metres.",
@@ -5397,6 +5420,8 @@ var SOURCE_INDEX = Object.freeze({
   "Sbloccato": "Unlocked",
   "Scadenza": "Schedule",
   "Scala della barra Potenza attuale. Vuoto = valore tipico per il tipo.": "Scale of the current power bar. Empty = typical value for the type.",
+  "Scala: a": "Scale: to",
+  "Scala: da": "Scale: from",
   "scalda da": "heating for",
   "Scalda verso ${meta}°": "Heating to ${meta}°",
   "Scaldabagno": "Water heater",
@@ -5592,6 +5617,7 @@ var SOURCE_INDEX = Object.freeze({
   "Serve un titolo.": "A title is required.",
   "Serve un'entità alarm_control_panel.* valida.": "A valid alarm_control_panel.* entity is required.",
   "Serve un'entità button.*, select.* o switch.* — oppure input_button, input_select, input_boolean, script, scene.": "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene.",
+  "Serve un'entità button.*, select.*, switch.* o remote.* (anche remote.nome:comando) — oppure input_button, input_select, input_boolean, script, scene.": "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.",
   "Serve un'entità calendar.* valida.": "A valid calendar.* entity is required.",
   "Serve un'entità camera.* o image.*.": "A camera.* or image.* entity is required.",
   "Serve un'entità che sappia aprire: ${domini}.": "An entity that can open is required: ${domini}.",
@@ -5706,6 +5732,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sostituisci il servizio qui sotto con quello del tuo telefono.": "Replace the service below with your phone's.",
   "Sostituzioni, carichi, avvisi, testi, sezioni ed esportazione HTML": "Replacements, loads, alerts, texts, sections and HTML export",
   "Sotto il meteo porte e finestre aperte sono due pastiglie. Di serie lo decide la classe che Home Assistant dà al contatto; scegli qui quando non è quella giusta.": "Under the weather, open doors and open windows are two pills. By default the class Home Assistant gives the contact decides; pick here when it is not the right one.",
+  "Sotto l'antifurto, ognuna col suo valore: porte e finestre (binary_sensor), sensori, serrature, tapparelle. Due o più porte o finestre diventano un conto solo, «Finestre aperte: 2»; un tocco le elenca.": "Under the alarm, each with its value: doors and windows (binary_sensor), sensors, locks, blinds. Two or more doors or windows become a single count, «Open windows: 2»; a tap lists them.",
   "sotto l'obiettivo di": "below the target of",
   "Sotto la soglia In funzione e sopra questa = Standby.": "Below the running threshold and above this = Standby.",
   "Sotto protezione": "Protected load",
@@ -5871,6 +5898,7 @@ var SOURCE_INDEX = Object.freeze({
   "TARGET RAGGIUNTO": "TARGET REACHED",
   "Target Ricarica (SoC)": "Charge target (SoC)",
   "Tariffe usate dal Report Energia.": "Rates used by the Energy Report.",
+  "Tasti accanto alle letture: serrature (chiude e apre), script, button, scene, switch, tapparelle. Un telecomando si accende e si spegne; scritto remote.nome:comando manda quel comando.": "Buttons next to the readings: locks (lock and unlock), scripts, buttons, scenes, switches, blinds. A remote turns on and off; written remote.name:command it sends that command.",
   "Tasti d'inserimento su misura": "Custom arming buttons",
   "Tasti grandi: un'azione della plancia o un'entità qualunque (una scena, uno script, un tasto). Per ognuno il nome sul tablet, la riga sotto e il disegno.": "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.",
   "Tasti nella Cottura": "Buttons in Cooking",
@@ -6090,6 +6118,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tutti i giorni": "All days",
   "Tutti in": "All in",
   "Tutto asciutto": "All dry",
+  "Tutto bene": "All clear",
   "tutto chiuso": "all closed",
   "Tutto chiuso": "All closed",
   "Tutto chiuso · ${conto.chiusi}": "All closed · ${conto.chiusi}",
@@ -6182,6 +6211,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un po' afoso": "Somewhat muggy",
   "Un po' di disagio": "Some discomfort",
   "Un sensore che Home Assistant non ha etichettato — un template fatto in casa — non viene trovato: qui gli si dice che misura è.": "A sensor Home Assistant has not labelled — a template of your own — is not found: here you say which measure it is.",
+  "Un sensore col livello": "A sensor with the level",
   "Un sensore col numero degli scioperi e l'elenco negli attributi — settore, regione, data d'inizio: le integrazioni italiane degli scioperi lo pubblicano cosi'.": "A sensor with the number of strikes and the list in its attributes — sector, region, start date: the Italian strike integrations publish it that way.",
   "Un sensore col ritardo in minuti nello stato o negli attributi, e accanto il numero del treno, la destinazione e il binario. Un treno soppresso diventa un allarme.": "A sensor with the delay in minutes in its state or attributes, and next to it the train number, the destination and the platform. A cancelled train becomes an alarm.",
   "Un sensore col testo dell'allarme o un binary_sensor: quando scatta, in pagina compare la fascia rossa con le sue parole.": "A sensor with the alarm text or a binary_sensor: when it trips, the page shows the red banner with its words.",
@@ -6240,6 +6270,7 @@ var SOURCE_INDEX = Object.freeze({
   "Usa lo stesso catalogo e la stessa icona azzurra della prima configurazione.": "Uses the same catalog and blue icon as the first configuration.",
   "Usa questa plancia a muro": "Use this dashboard on the wall",
   "Usa questo dispositivo": "Use this device",
+  "Uscita e chi c'è": "Leaving and who is home",
   "V. sicurezza": "Safety valve",
   "V. Sicurezza": "Security V.",
   "Va a batteria": "On battery",
@@ -6330,11 +6361,14 @@ var SOURCE_INDEX = Object.freeze({
   "Vuoto = tariffa della sezione Energia.": "Empty = tariff from the Energy section.",
   "Vuoto vale il valore di serie scritto nel campo.": "Empty means the default shown in the field.",
   "Vuoto vuol dire «on». Senza questo il tasto funziona lo stesso: semplicemente non resta acceso.": "Empty means “on”. Without it the button still works: it simply does not stay lit.",
+  "Vuoto: accende": "Empty: turns on",
   "Vuoto: il nome dell'entità": "Empty: the entity name",
   "Vuoto: le iniziali del nome": "Empty: the initials of the name",
   "Vuoto: preme lo stop di ogni comando": "Empty: presses every command's stop",
   "Vuoto: quella della stanza della prima pagina": "Empty: the one of the first page's room",
   "Vuoto: quelli della sezione Musica della plancia": "Empty: the ones from the dashboard's Music section",
+  "Vuoto: spegne": "Empty: turns off",
+  "Vuoto: tutte quelle della sezione Sicurezza della plancia": "Empty: all the ones from the dashboard's Security section",
   "WebRTC: il nome stream go2rtc funziona solo aprendo la plancia fuori da Home Assistant — qui dentro la telecamera passa dalla sua entità": "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity",
   "WebRTC: provato per primo col suo tempo intero, il video non è arrivato": "WebRTC: tried first with its full time, the video did not arrive",
   "WebRTC: saltato — compila «Nome stream go2rtc» nella scheda Telecamere (il nome della telecamera non c’entra)": "WebRTC: skipped — fill in “go2rtc stream name” in the Cameras tab (the camera name is not the lever)",
@@ -14856,9 +14890,9 @@ function coppiaSpostata(lettura3, quale, verso2, { passo = 1, scala: scala2 = nu
   const ora3 = lettura3[quale];
   const salto = Number(passo) > 0 ? Number(passo) : 1;
   const origine = numero3(Array.isArray(scala2) ? scala2[0] : null) ?? 0;
-  const passi = (ora3 - origine) / salto;
-  const sullaGriglia = Math.abs(passi - Math.round(passi)) < 1e-6;
-  const prossimo = sullaGriglia ? Math.round(passi) + direzione : direzione > 0 ? Math.ceil(passi) : Math.floor(passi);
+  const passi2 = (ora3 - origine) / salto;
+  const sullaGriglia = Math.abs(passi2 - Math.round(passi2)) < 1e-6;
+  const prossimo = sullaGriglia ? Math.round(passi2) + direzione : direzione > 0 ? Math.ceil(passi2) : Math.floor(passi2);
   return coppiaCon(lettura3, quale, origine + prossimo * salto, { scala: scala2 });
 }
 
@@ -15221,8 +15255,8 @@ function datiPerEntita(entity2, azione = null) {
 function vociDelMenu(entity2, states = {}) {
   const id = clean(entity2);
   const stato3 = states?.[id] || null;
-  const voci3 = Array.isArray(stato3?.attributes?.options) ? stato3.attributes.options.map(clean).filter(Boolean) : [];
-  return { nome: clean(stato3?.attributes?.friendly_name) || id, attuale: clean(stato3?.state), voci: voci3 };
+  const voci4 = Array.isArray(stato3?.attributes?.options) ? stato3.attributes.options.map(clean).filter(Boolean) : [];
+  return { nome: clean(stato3?.attributes?.friendly_name) || id, attuale: clean(stato3?.state), voci: voci4 };
 }
 var POPUP = "dm-qa-popup";
 var STILE_DEL_POPUP = "dm-qa-popup-style";
@@ -15263,7 +15297,7 @@ function finestra() {
 function apriIlMenu(entity2, azione = null) {
   const nodo2 = finestra();
   if (!nodo2) return false;
-  const { nome, attuale, voci: voci3 } = vociDelMenu(entity2, allStates());
+  const { nome, attuale, voci: voci4 } = vociDelMenu(entity2, allStates());
   aperto = { entity: entity2, azione };
   const titolo3 = nodo2.querySelector("[data-dm-qa-titolo]");
   const sotto = nodo2.querySelector("[data-dm-qa-sotto]");
@@ -15271,10 +15305,10 @@ function apriIlMenu(entity2, azione = null) {
   const corpo2 = nodo2.querySelector("[data-dm-qa-voci]");
   if (titolo3) titolo3.textContent = clean(azione?.name) || nome;
   if (sotto)
-    sotto.textContent = voci3.length ? t("tocca la voce da mettere", "tap the option to set") : t("questo menu non dice le sue voci", "this menu does not list its options");
+    sotto.textContent = voci4.length ? t("tocca la voce da mettere", "tap the option to set") : t("questo menu non dice le sue voci", "this menu does not list its options");
   if (faccia) writeIconGlyph(faccia, azione?.icon, { size: 22, fallback: "🎚️" });
   if (corpo2)
-    corpo2.innerHTML = voci3.length ? voci3.map(
+    corpo2.innerHTML = voci4.length ? voci4.map(
       (voce3) => `<button type="button" class="dm-qa-voce" data-dm-qa-voce="${esc(voce3)}" data-attuale="${voce3 === attuale}">${esc(voce3)}${voce3 === attuale ? '<span class="dm-qa-spunta" aria-hidden="true">✓</span>' : ""}</button>`
     ).join("") : `<p class="dm-qa-vuoto">${esc(nome)}</p>`;
   nodo2.querySelector("[data-dm-qa-scheda]")?.style?.setProperty(
@@ -16316,12 +16350,12 @@ function letturaVmc(unita2 = {}, states = {}) {
   };
 }
 function vmcParla(lettura3) {
-  const voci3 = [
+  const voci4 = [
     ...Object.values(lettura3?.temperature || {}),
     ...Object.values(lettura3?.interruttori || {}),
     ...Object.values(lettura3?.numeri || {})
   ];
-  return voci3.some((voce3) => voce3 && !voce3.muto);
+  return voci4.some((voce3) => voce3 && !voce3.muto);
 }
 
 // src/sections/vmc-section.js
@@ -16394,16 +16428,16 @@ function flussoMarkup(lettura3, verso2) {
   </div>`;
 }
 function pastiglieMarkup(lettura3) {
-  const voci3 = Object.values(lettura3.interruttori).filter((voce3) => voce3 && !voce3.muto);
-  if (!voci3.length) return "";
-  return `<div class="dm-vmc-pastiglie">${voci3.map(
+  const voci4 = Object.values(lettura3.interruttori).filter((voce3) => voce3 && !voce3.muto);
+  if (!voci4.length) return "";
+  return `<div class="dm-vmc-pastiglie">${voci4.map(
     (voce3) => `<span class="dm-vmc-pastiglia" data-dm-vmc-int="${esc(voce3.chiave)}" data-acceso="${voce3.acceso === true}" data-avvisa="${voce3.avvisa === true && voce3.acceso === true}"><span aria-hidden="true">${esc(voce3.glifo)}</span>${esc(parolaInterruttore(voce3))}</span>`
   ).join("")}</div>`;
 }
 function numeriMarkup(lettura3) {
-  const voci3 = Object.values(lettura3.numeri).filter((voce3) => voce3 && !voce3.muto);
-  if (!voci3.length) return "";
-  return `<div class="dm-vmc-numeri">${voci3.map(
+  const voci4 = Object.values(lettura3.numeri).filter((voce3) => voce3 && !voce3.muto);
+  if (!voci4.length) return "";
+  return `<div class="dm-vmc-numeri">${voci4.map(
     (voce3) => `<span class="dm-vmc-numero" data-dm-vmc-n="${esc(voce3.chiave)}"><small>${esc(parolaNumero(voce3.chiave))}</small><b>${esc(numeroScritto(voce3))}</b></span>`
   ).join("")}</div>`;
 }
@@ -16917,8 +16951,8 @@ function statoInParole(lettura3) {
 var percento = (valore3) => valore3 === null || valore3 === void 0 ? "--%" : `${Math.round(valore3)}%`;
 var gradi2 = (valore3) => valore3 === null ? "" : `${Math.round(valore3 * 10) / 10}°`;
 var watt = (valore3) => valore3 === null ? "" : `${Math.round(valore3)} W`;
-function pastiglieMarkup2(voci3, scelta3, azione, parola, disabilitate) {
-  return voci3.map(
+function pastiglieMarkup2(voci4, scelta3, azione, parola, disabilitate) {
+  return voci4.map(
     (voce3) => `<button type="button" class="dm-deum-pill" data-dm-deum-azione="${esc(azione)}" data-dm-deum-valore="${esc(voce3)}" aria-pressed="${voce3 === scelta3}"${disabilitate ? " disabled" : ""}>${esc(parola(voce3))}</button>`
   ).join("");
 }
@@ -17172,9 +17206,9 @@ function disegnaPannello() {
   const pannello = doc?.getElementById?.("ns-thermal-panel");
   if (!pannello) return false;
   if (!laFinestraDelClimaSiVede()) return false;
-  const voci3 = vociAttuali();
-  pannello.replaceChildren(...voci3.map(riga));
-  pannello.style.display = voci3.length ? "" : "none";
+  const voci4 = vociAttuali();
+  pannello.replaceChildren(...voci4.map(riga));
+  pannello.style.display = voci4.length ? "" : "none";
   return true;
 }
 function comeSta(nome, entity2) {
@@ -17234,15 +17268,15 @@ function spiegaLaCasellaCaldaia(corpo2) {
   riquadro.append(riga3);
   return true;
 }
-function conLaCaldaia(voci3, entita3) {
+function conLaCaldaia(voci4, entita3) {
   const scelta3 = clean(entita3);
-  const elenco9 = Array.isArray(voci3) ? voci3 : [];
+  const elenco9 = Array.isArray(voci4) ? voci4 : [];
   if (!scelta3.includes(".")) return elenco9;
   if (elenco9.some((voce3) => clean(voce3?.entity) === scelta3)) return elenco9;
   return [{ name: t("Caldaia", "Boiler"), entity: scelta3, icon: "🔥" }, ...elenco9];
 }
-function caldaiaDelleVoci(voci3) {
-  const voce3 = voci3.find((una) => REGEX_CALDAIA.test(clean(una?.name))) || voci3.find((una) => clean(una?.entity) === "switch.caldaia");
+function caldaiaDelleVoci(voci4) {
+  const voce3 = voci4.find((una) => REGEX_CALDAIA.test(clean(una?.name))) || voci4.find((una) => clean(una?.entity) === "switch.caldaia");
   return clean(voce3?.entity);
 }
 function laCaldaiaEntraFraLeVoci(evento) {
@@ -17295,7 +17329,7 @@ function montaEditor() {
   const carta = doc.createElement("div");
   carta.className = "ed-form dm-termico-carta";
   carta.dataset.dmTermicoCaldo = "";
-  const voci3 = vociTermiche(
+  const voci4 = vociTermiche(
     leggiConfig(),
     allStates() || {},
     root.cdCfg?.("cd_entity_overrides") || {}
@@ -17305,7 +17339,7 @@ function montaEditor() {
     "The entities on the heating side you want to know are on or off: boiler, pumps, fans — whatever you need. Every row says on or off in the Heat popup, under the rooms. With no rows the panel does not appear."
   )}</div><div class="dm-termico-righe"></div><button type="button" class="ed-btn-add dm-termico-aggiungi">＋ ${t("Aggiungi voce", "Add row")}</button>`;
   const righe2 = carta.querySelector(".dm-termico-righe");
-  voci3.forEach((voce3, indice) => righe2.append(rigaEditor(voce3, indice)));
+  voci4.forEach((voce3, indice) => righe2.append(rigaEditor(voce3, indice)));
   const salva30 = () => scriviConfig(raccogli(carta));
   carta.addEventListener("change", salva30);
   carta.addEventListener("click", (evento) => {
@@ -18855,8 +18889,8 @@ var RANGO = Object.freeze({
   pronta: 4,
   spenta: 5
 });
-function laCucina(voci3 = []) {
-  const aTempo = voci3.filter((voce3) => voce3.lettura.aTempo);
+function laCucina(voci4 = []) {
+  const aTempo = voci4.filter((voce3) => voce3.lettura.aTempo);
   let grandi = aTempo.filter((voce3) => voce3.lettura.fase !== "spenta");
   if (!grandi.length) {
     const primo = aTempo.find((voce3) => !voce3.lettura.muta) || aTempo[0];
@@ -18866,8 +18900,8 @@ function laCucina(voci3 = []) {
     (a, b) => RANGO[a.lettura.fase] - RANGO[b.lettura.fase] || (a.lettura.rimasti ?? Infinity) - (b.lettura.rimasti ?? Infinity)
   );
   const scelti = new Set(grandi);
-  const altri = voci3.filter((voce3) => !scelti.has(voce3));
-  const vive = voci3.filter((voce3) => voce3.lettura.fase !== "spenta");
+  const altri = voci4.filter((voce3) => !scelti.has(voce3));
+  const vive = voci4.filter((voce3) => voce3.lettura.fase !== "spenta");
   return {
     grandi,
     altri,
@@ -18960,12 +18994,12 @@ var SERVIZI_PHILIPS_AIRFRYER = Object.freeze({
   cottura_meno_caldo: "philips_airfryer.adjust_temp temp=5 method=subtract"
 });
 function proponiLaCottura(entita3 = [], states = {}, { integrazione = "" } = {}) {
-  const voci3 = (Array.isArray(entita3) ? entita3 : []).filter((voce3) => pulito14(voce3?.entity_id ?? voce3).includes(".")).filter((voce3) => !voce3?.disabled);
+  const voci4 = (Array.isArray(entita3) ? entita3 : []).filter((voce3) => pulito14(voce3?.entity_id ?? voce3).includes(".")).filter((voce3) => !voce3?.disabled);
   const prese = /* @__PURE__ */ new Set();
   const proposta = {};
   for (const regola of PROPOSTE) {
     let meglio = null;
-    for (const voce3 of voci3) {
+    for (const voce3 of voci4) {
       const id = pulito14(voce3?.entity_id ?? voce3);
       if (prese.has(id) || !regola.domini.includes(dominioDi(id))) continue;
       const punti = regola.punti(indizi(voce3, states), voce3, states);
@@ -18977,7 +19011,7 @@ function proponiLaCottura(entita3 = [], states = {}, { integrazione = "" } = {})
     prese.add(meglio.id);
     proposta[regola.casella] = meglio.id;
   }
-  const philips = minuscolo(integrazione) === "philips_airfryer" || voci3.some((voce3) => /^[a-z_]+\.philips_airfryer_/.test(pulito14(voce3?.entity_id ?? voce3)));
+  const philips = minuscolo(integrazione) === "philips_airfryer" || voci4.some((voce3) => /^[a-z_]+\.philips_airfryer_/.test(pulito14(voce3?.entity_id ?? voce3)));
   if (philips) {
     for (const [casella5, servizio] of Object.entries(SERVIZI_PHILIPS_AIRFRYER))
       if (!proposta[casella5]) proposta[casella5] = servizio;
@@ -19013,7 +19047,7 @@ function ceLaCucina() {
 }
 function vistaDellaCucina(states = allStates(), adesso = Date.now()) {
   const luoghi = stanze();
-  const voci3 = apparecchi().map((apparecchio, indice) => ({ apparecchio, indice })).filter(({ apparecchio }) => apparecchio?.enabled !== false && tipoDellaCucina(apparecchio)).map(({ apparecchio, indice }) => {
+  const voci4 = apparecchi().map((apparecchio, indice) => ({ apparecchio, indice })).filter(({ apparecchio }) => apparecchio?.enabled !== false && tipoDellaCucina(apparecchio)).map(({ apparecchio, indice }) => {
     const chiave2 = clean(apparecchio.id) || `cucina-${indice}`;
     const modello = createApplianceViewModel(apparecchio, states, [], activeLocale(), {
       now: adesso
@@ -19037,7 +19071,7 @@ function vistaDellaCucina(states = allStates(), adesso = Date.now()) {
       watt: modello.watts
     };
   });
-  return { voci: voci3, ...laCucina(voci3), adesso };
+  return { voci: voci4, ...laCucina(voci4), adesso };
 }
 var suo = (lettura3, femminile, maschile) => lettura3?.femminile ? femminile : maschile;
 function parolaDellaFase(lettura3) {
@@ -22775,17 +22809,17 @@ function eFuori(elenco9, chiave2, entita3) {
 }
 function togliDallaTessera(elenco9, chiave2, entita3) {
   const id = pulito18(entita3);
-  const voci3 = (Array.isArray(elenco9) ? elenco9 : []).map(pulito18).filter(Boolean);
-  if (!id) return voci3;
-  if (eFuori(voci3, chiave2, id)) return voci3;
-  return [...voci3, scriviLaVoce(chiave2, id)];
+  const voci4 = (Array.isArray(elenco9) ? elenco9 : []).map(pulito18).filter(Boolean);
+  if (!id) return voci4;
+  if (eFuori(voci4, chiave2, id)) return voci4;
+  return [...voci4, scriviLaVoce(chiave2, id)];
 }
 function rimettiNellaTessera(elenco9, chiave2, entita3) {
   const id = pulito18(entita3);
   const tessera2 = pulito18(chiave2);
-  const voci3 = (Array.isArray(elenco9) ? elenco9 : []).map(pulito18).filter(Boolean);
-  if (!id) return voci3;
-  return voci3.filter((voce3) => {
+  const voci4 = (Array.isArray(elenco9) ? elenco9 : []).map(pulito18).filter(Boolean);
+  if (!id) return voci4;
+  return voci4.filter((voce3) => {
     const letta = leggiLaVoce(voce3);
     if (!letta || letta.entita !== id) return true;
     if (!tessera2) return false;
@@ -24981,9 +25015,9 @@ function unaSolaPaginaAperta() {
   if (!scelta3) return false;
   for (const pagina2 of pagine) pagina2.classList.toggle("active", pagina2 === scelta3);
   const nome = scelta3.id.replace(/^page-/, "");
-  const voci3 = [...doc.querySelectorAll?.(".tab") || []];
-  const voce3 = voci3.find((nodo2) => clean(nodo2.dataset?.tab) === nome);
-  if (voce3) for (const nodo2 of voci3) nodo2.classList.toggle("active", nodo2 === voce3);
+  const voci4 = [...doc.querySelectorAll?.(".tab") || []];
+  const voce3 = voci4.find((nodo2) => clean(nodo2.dataset?.tab) === nome);
+  if (voce3) for (const nodo2 of voci4) nodo2.classList.toggle("active", nodo2 === voce3);
   return true;
 }
 function renderPageMastheads() {
@@ -25892,8 +25926,8 @@ function senzaZeriInCoda(scritto) {
 }
 function primoScalino(min, suo2, max, mio) {
   const quanti2 = Math.round(mio / suo2);
-  for (let passi = 0; passi < quanti2; passi += 1) {
-    const valore3 = min + passi * suo2;
+  for (let passi2 = 0; passi2 < quanti2; passi2 += 1) {
+    const valore3 = min + passi2 * suo2;
     if (valore3 > max + 1e-9) break;
     if (Math.abs(valore3 / mio - Math.round(valore3 / mio)) < 1e-9) return valore3;
   }
@@ -25911,43 +25945,43 @@ function vociDaiNumeri(attributi2) {
     if ((max - min) / mio <= QUANTE_AL_MASSIMO) break;
   }
   const cifre2 = Math.max(...[suo2, min, max].map(quanteCifre));
-  const voci3 = [];
+  const voci4 = [];
   const aggiungi4 = (valore3) => {
     const scritto = senzaZeriInCoda(valore3.toFixed(cifre2));
-    if (voci3.some((voce3) => voce3.valore === scritto)) return;
-    voci3.push({ valore: scritto, testo: `${scritto}%` });
+    if (voci4.some((voce3) => voce3.valore === scritto)) return;
+    voci4.push({ valore: scritto, testo: `${scritto}%` });
   };
   aggiungi4(min);
   for (let valore3 = primoScalino(min, suo2, max, mio); valore3 <= max + 1e-9; valore3 += mio)
     aggiungi4(valore3);
   aggiungi4(max);
-  return voci3.sort((uno, due2) => Number.parseFloat(uno.valore) - Number.parseFloat(due2.valore));
+  return voci4.sort((uno, due2) => Number.parseFloat(uno.valore) - Number.parseFloat(due2.valore));
 }
 function vociDelTarget(stato3) {
   const opzioni = stato3?.attributes?.options;
   if (Array.isArray(opzioni) && opzioni.length) {
-    const voci4 = opzioni.map(vocePerOpzione).filter(Boolean);
-    if (voci4.length) return { voci: voci4, padrone: true };
+    const voci5 = opzioni.map(vocePerOpzione).filter(Boolean);
+    if (voci5.length) return { voci: voci5, padrone: true };
   }
-  const voci3 = conQuellaDiAdesso(vociDaiNumeri(stato3?.attributes), stato3);
-  if (voci3.length) return { voci: voci3, padrone: true };
+  const voci4 = conQuellaDiAdesso(vociDaiNumeri(stato3?.attributes), stato3);
+  if (voci4.length) return { voci: voci4, padrone: true };
   return { voci: [], padrone: false };
 }
-function conQuellaDiAdesso(voci3, stato3) {
-  if (!voci3.length || voceDiAdesso(voci3, stato3?.state)) return voci3;
+function conQuellaDiAdesso(voci4, stato3) {
+  if (!voci4.length || voceDiAdesso(voci4, stato3?.state)) return voci4;
   const scritto = clean9(stato3?.state).replace(",", ".");
   const adesso = Number.parseFloat(scritto);
-  if (!Number.isFinite(adesso)) return voci3;
+  if (!Number.isFinite(adesso)) return voci4;
   const min = numero14(stato3?.attributes?.min);
   const max = numero14(stato3?.attributes?.max);
-  if (min !== null && adesso < min || max !== null && adesso > max) return voci3;
+  if (min !== null && adesso < min || max !== null && adesso > max) return voci4;
   const suo2 = { valore: scritto, testo: `${scritto}%` };
-  return [...voci3, suo2].sort(
+  return [...voci4, suo2].sort(
     (uno, due2) => Number.parseFloat(uno.valore) - Number.parseFloat(due2.valore)
   );
 }
-function voceDiAdesso(voci3, stato3) {
-  const elenco9 = Array.isArray(voci3) ? voci3 : [];
+function voceDiAdesso(voci4, stato3) {
+  const elenco9 = Array.isArray(voci4) ? voci4 : [];
   const grezzo = clean9(stato3);
   if (!grezzo) return "";
   const esatta = elenco9.find((voce3) => voce3.valore === grezzo);
@@ -26054,13 +26088,13 @@ function senzaLettura(stato3) {
   return !valore3 || MUTO2.test(valore3);
 }
 function assicuraLeVoci(select, stato3) {
-  const { voci: voci3, padrone } = vociDelTarget(stato3);
+  const { voci: voci4, padrone } = vociDelTarget(stato3);
   if (!padrone) return;
-  const volute = voci3.map((voce3) => voce3.valore);
+  const volute = voci4.map((voce3) => voce3.valore);
   const presenti = [...select.options].map((voce3) => voce3.value);
   if (presenti.join("\0") !== volute.join("\0")) {
     select.replaceChildren(
-      ...voci3.map((voce3) => {
+      ...voci4.map((voce3) => {
         const opzione = doc.createElement("option");
         opzione.value = voce3.valore;
         opzione.textContent = voce3.testo;
@@ -26073,7 +26107,7 @@ function assicuraLeVoci(select, stato3) {
     if (select.selectedIndex !== -1) select.selectedIndex = -1;
     return;
   }
-  const scelta3 = voceDiAdesso(voci3, clean(stato3?.state));
+  const scelta3 = voceDiAdesso(voci4, clean(stato3?.state));
   if (scelta3 && select.value !== scelta3) select.value = scelta3;
 }
 function paintTarget() {
@@ -27736,8 +27770,8 @@ var CATEGORIE = Object.freeze([
   Object.freeze({ chiave: "scioperi", caselle: ["entity"] }),
   Object.freeze({ chiave: "treni", caselle: ["entity", "stazione"] })
 ]);
-function laPiuGrave(voci3 = []) {
-  return (Array.isArray(voci3) ? voci3 : []).reduce(
+function laPiuGrave(voci4 = []) {
+  return (Array.isArray(voci4) ? voci4 : []).reduce(
     (piuAlta, voce3) => !piuAlta || (PESO[voce3?.livello] ?? -1) > (PESO[piuAlta?.livello] ?? -1) ? voce3 : piuAlta,
     null
   );
@@ -27919,10 +27953,10 @@ function leggiPollini(voce3, stati) {
     const parola = grezzo || minuscolo4(attributo(principale, ["level", "level_text", "livello"]));
     livello = livelloDellaParola(parola) || "quiete";
   }
-  const voci3 = POLLINI_SINGOLI.map((chiave2) => leggiUnPolline(chiave2, stati[chiave2])).filter(
+  const voci4 = POLLINI_SINGOLI.map((chiave2) => leggiUnPolline(chiave2, stati[chiave2])).filter(
     Boolean
   );
-  const massimo = laPiuGrave([{ livello }, ...voci3])?.livello || livello;
+  const massimo = laPiuGrave([{ livello }, ...voci4])?.livello || livello;
   return {
     livello: massimo,
     indice,
@@ -27933,7 +27967,7 @@ function leggiPollini(voce3, stati) {
     categoria: pulito23(attributo(principale, ["Category", "category"])),
     consiglio: pulito23(attributo(principale, ["Advice", "advice", "consiglio"])),
     descrizione: pulito23(attributo(principale, ["Description", "description", "descrizione"])),
-    voci: voci3
+    voci: voci4
   };
 }
 var PAROLE_COMFORT = Object.freeze([
@@ -28011,18 +28045,18 @@ function leggiComfort(voce3, stati) {
     gradi: null,
     unita: ""
   };
-  const voci3 = INDICI_DEL_DISAGIO.map((chiave2) => {
+  const voci4 = INDICI_DEL_DISAGIO.map((chiave2) => {
     const letto = leggiUnDisagio(stati[chiave2]);
     return letto ? { chiave: chiave2, ...letto } : null;
   }).filter(Boolean);
-  const massimo = laPiuGrave([percepito, ...voci3])?.livello || percepito.livello;
+  const massimo = laPiuGrave([percepito, ...voci4])?.livello || percepito.livello;
   return {
     livello: massimo,
     codice: percepito.codice,
     scritto: percepito.scritto,
     gradi: percepito.gradi,
     unita: percepito.unita,
-    voci: voci3
+    voci: voci4
   };
 }
 var VOLI_MOSTRATI = 5;
@@ -28033,7 +28067,7 @@ function leggiVoli(voce3, stati) {
   const principale = stati.entity;
   const elenco9 = Array.isArray(principale?.attributes?.flights) ? principale.attributes.flights : [];
   const conteggio = numero20(principale?.state) ?? elenco9.length;
-  const voci3 = elenco9.slice(0, VOLI_MOSTRATI).map((volo) => ({
+  const voci4 = elenco9.slice(0, VOLI_MOSTRATI).map((volo) => ({
     numero: pulito23(volo?.flight_number || volo?.callsign || volo?.id),
     compagnia: pulito23(volo?.airline_short || volo?.airline || volo?.airline_iata),
     aereo: pulito23(volo?.aircraft_model || volo?.aircraft_code),
@@ -28044,7 +28078,7 @@ function leggiVoli(voce3, stati) {
     da: luogoDelVolo(volo, "origin"),
     a: luogoDelVolo(volo, "destination")
   }));
-  return { livello: conteggio > 0 ? "nota" : "quiete", conteggio, voci: voci3 };
+  return { livello: conteggio > 0 ? "nota" : "quiete", conteggio, voci: voci4 };
 }
 var SCIOPERI_MOSTRATI = 5;
 function leggiScioperi(voce3, stati, adesso) {
@@ -28052,7 +28086,7 @@ function leggiScioperi(voce3, stati, adesso) {
   const elenco9 = Array.isArray(attributo(principale, ["strikes", "scioperi", "events"])) ? attributo(principale, ["strikes", "scioperi", "events"]) : [];
   const conteggio = numero20(principale?.state) ?? elenco9.length;
   const oggi = new Date(adesso);
-  const voci3 = elenco9.slice(0, SCIOPERI_MOSTRATI).map((sciopero) => {
+  const voci4 = elenco9.slice(0, SCIOPERI_MOSTRATI).map((sciopero) => {
     const quando4 = Date.parse(
       pulito23(
         sciopero?.start_date || sciopero?.start_date_str || sciopero?.data || sciopero?.inizio
@@ -28075,8 +28109,8 @@ function leggiScioperi(voce3, stati, adesso) {
     };
   });
   let livello = conteggio > 0 ? "nota" : "quiete";
-  if (voci3.some((v) => v.oggi) || voci3.some((v) => v.vicino)) livello = "attenzione";
-  return { livello, conteggio, voci: voci3 };
+  if (voci4.some((v) => v.oggi) || voci4.some((v) => v.vicino)) livello = "attenzione";
+  return { livello, conteggio, voci: voci4 };
 }
 var RITARDO_NOTA = 5;
 var RITARDO_ATTENZIONE = 15;
@@ -28207,7 +28241,7 @@ function eUnIstante(valore3) {
 }
 function vociDelDettaglio(attributi2 = {}, salta = RUMORE) {
   if (!attributi2 || typeof attributi2 !== "object") return [];
-  const voci3 = [];
+  const voci4 = [];
   for (const [chiave2, grezzo] of Object.entries(attributi2)) {
     if (salta.has(chiave2)) continue;
     const valore3 = comeSiLegge(grezzo);
@@ -28215,7 +28249,7 @@ function vociDelDettaglio(attributi2 = {}, salta = RUMORE) {
     const titolo3 = titoloDellaVoce(chiave2);
     if (!titolo3) continue;
     const istante5 = eUnIstante(valore3);
-    voci3.push(
+    voci4.push(
       Object.freeze({
         chiave: chiave2,
         titolo: titolo3,
@@ -28226,7 +28260,7 @@ function vociDelDettaglio(attributi2 = {}, salta = RUMORE) {
       })
     );
   }
-  return voci3;
+  return voci4;
 }
 function valeLaPenaAprirla(lettura3 = {}, attributi2 = {}) {
   if (vociDelDettaglio(attributi2).length) return true;
@@ -28249,7 +28283,7 @@ function lettureAllerte() {
   return letturaAllerte(configurazione(), allStates(), root.resolveEntity || ((value) => value));
 }
 function categoriaDelleAllerte(chiave2) {
-  const voci3 = {
+  const voci4 = {
     terremoti: {
       icona: "🌍",
       disegno: "globe",
@@ -28299,7 +28333,7 @@ function categoriaDelleAllerte(chiave2) {
       quiete: t("In orario", "On time")
     }
   };
-  return voci3[chiave2] || { icona: "•", disegno: "warning", nome: clean(chiave2), quiete: "" };
+  return voci4[chiave2] || { icona: "•", disegno: "warning", nome: clean(chiave2), quiete: "" };
 }
 function parolaDelLivello(livello) {
   if (livello === "quiete") return t("Tranquillo", "Calm");
@@ -28309,7 +28343,7 @@ function parolaDelLivello(livello) {
   return t("Non risponde", "Not answering");
 }
 function parolaDelComfort(codice, scritto = "") {
-  const voci3 = {
+  const voci4 = {
     /* Le parole che dicono «c'e' disagio» e prima non venivano lette (#355):
      * la zona del simmer index, il conto dell'humidex, e il contatto di chi
      * il sensore se l'e' scritto in casa. */
@@ -28347,7 +28381,7 @@ function parolaDelComfort(codice, scritto = "") {
     probable: t("Gelo probabile", "Frost probable"),
     high: t("Rischio di gelo alto", "High frost risk")
   };
-  const conosciuta = voci3[clean(codice)];
+  const conosciuta = voci4[clean(codice)];
   if (conosciuta) return conosciuta;
   const suo2 = clean(scritto);
   if (suo2) return suo2;
@@ -28681,10 +28715,10 @@ function corpoDelDettaglio(lettura3) {
   const righe2 = righeDellAllerta(lettura3);
   if (righe2.length)
     pezzi.push(`<ul class="dm-allerta-righe">${righe2.map(rigaDellaListaMarkup).join("")}</ul>`);
-  const voci3 = vociDelDettaglio(attributiDi(lettura3.entity));
-  if (voci3.length)
+  const voci4 = vociDelDettaglio(attributiDi(lettura3.entity));
+  if (voci4.length)
     pezzi.push(
-      `<dl class="dm-allerta-voci">${voci3.map(
+      `<dl class="dm-allerta-voci">${voci4.map(
         (voce3) => `<div class="dm-allerta-voce${voce3.lungo ? " dm-allerta-voce-lunga" : ""}"><dt>${esc(voce3.titolo)}</dt><dd>${esc(voce3.istante ? giornoEOraDi(voce3.valore) : voce3.valore)}</dd></div>`
       ).join("")}</dl>`
     );
@@ -29214,16 +29248,16 @@ function elencoGrezzo(attributi2) {
   for (const nome of nomi) {
     const valore3 = attributi2[nome];
     if (Array.isArray(valore3)) {
-      const voci3 = valore3.map(voceDellElenco).filter(Boolean);
-      if (voci3.length) return voci3;
+      const voci4 = valore3.map(voceDellElenco).filter(Boolean);
+      if (voci4.length) return voci4;
       continue;
     }
     if (valore3 && typeof valore3 === "object") {
-      const voci3 = Object.entries(valore3).map(([chiave2, quando4]) => {
+      const voci4 = Object.entries(valore3).map(([chiave2, quando4]) => {
         const data = leggiData(quando4);
         return data ? { data, frazioni: frazioniDi(chiave2) } : null;
       }).filter(Boolean);
-      if (voci3.length) return voci3;
+      if (voci4.length) return voci4;
     }
   }
   return [];
@@ -29471,8 +29505,8 @@ function letturaRifiuti(config, states = {}, resolve = (value) => value, adesso 
   for (const riga3 of conEntita) {
     const stato3 = leggi2(riga3.entity);
     if (!risponde2(stato3) || dataDelRitiro(stato3, adesso)) continue;
-    const voci3 = ritiriDaUnElenco(stato3, adesso);
-    if (voci3.length) elenchiDelleRighe.set(riga3.entity, voci3);
+    const voci4 = ritiriDaUnElenco(stato3, adesso);
+    if (voci4.length) elenchiDelleRighe.set(riga3.entity, voci4);
   }
   const dalleRighe = [...elenchiDelleRighe.values()].flat();
   const daiSensori = new Set(
@@ -30284,7 +30318,7 @@ function letturaDeiRifiuti(adesso = Date.now()) {
   );
 }
 function nomeDelMateriale(chiave2) {
-  const voci3 = {
+  const voci4 = {
     plastica: t("Plastica", "Plastic"),
     carta: t("Carta e cartone", "Paper and cardboard"),
     vetro: t("Vetro", "Glass"),
@@ -30297,7 +30331,7 @@ function nomeDelMateriale(chiave2) {
     pannolini: t("Pannolini", "Nappies"),
     altro: t("Altro", "Other")
   };
-  return voci3[clean(chiave2)] || voci3.altro;
+  return voci4[clean(chiave2)] || voci4.altro;
 }
 function nomeDellaRiga(riga3) {
   return clean(riga3?.nome) || nomeDelMateriale(riga3?.materiale);
@@ -32043,13 +32077,13 @@ function finestreAperteDellaCasa(varchi, finestre) {
 function normalizzaBarra(salvato2) {
   const dato = salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
   const scelte4 = dato.voci && typeof dato.voci === "object" ? dato.voci : {};
-  const voci3 = {};
+  const voci4 = {};
   for (const voce3 of VOCI_DELLA_BARRA) {
     const scelta3 = scelte4[voce3.chiave] ?? scelte4[EREDITATE[voce3.chiave]];
-    voci3[voce3.chiave] = scelta3 !== false;
+    voci4[voce3.chiave] = scelta3 !== false;
   }
   return {
-    voci: voci3,
+    voci: voci4,
     posta: pulito29(dato.posta),
     /* I due sensori scelti a mano. Vuoti di serie: una misura che nessuno ha
      * indicato non si indovina, e senza la pastiglia non c'e'. */
@@ -32833,7 +32867,7 @@ function disegnaLElenco() {
   const nodo2 = doc?.getElementById?.(POPUP2);
   if (!nodo2 || nodo2.hidden) return false;
   const pastiglia2 = pastigliaDiChiave(chiave2);
-  const voci3 = vociDellaPastiglia(pastiglia2);
+  const voci4 = vociDellaPastiglia(pastiglia2);
   const titolo3 = nodo2.querySelector("[data-dm-casa-titolo]");
   const elenco9 = nodo2.querySelector("[data-dm-casa-elenco]");
   const faccia = nodo2.querySelector("[data-dm-casa-faccia]");
@@ -32851,15 +32885,15 @@ function disegnaLElenco() {
   const parole4 = `${testa2} ${coda}`.trim().toUpperCase();
   if (titolo3.textContent !== parole4) titolo3.textContent = parole4;
   const states = allStates() || {};
-  if (!voci3.length) {
+  if (!voci4.length) {
     chiudiLElenco();
     return false;
   }
   if (sotto) {
-    const briciola = briciolaDellElenco(chiave2, voci3.length);
+    const briciola = briciolaDellElenco(chiave2, voci4.length);
     if (sotto.textContent !== briciola) sotto.textContent = briciola;
   }
-  const disegno4 = voci3.map((voce3) => rigaDellElenco(voce3, states, chiave2)).join("");
+  const disegno4 = voci4.map((voce3) => rigaDellElenco(voce3, states, chiave2)).join("");
   if (elenco9.innerHTML !== disegno4) elenco9.innerHTML = disegno4;
   return true;
 }
@@ -33184,9 +33218,9 @@ function ensurePannelloDellaBarra(body = doc?.getElementById?.("ed-body")) {
   return true;
 }
 function quelloCheDiceIlPannello(pannello) {
-  const voci3 = {};
+  const voci4 = {};
   for (const casella5 of pannello.querySelectorAll("[data-dm-casa-voce]"))
-    voci3[clean(casella5.dataset.dmCasaVoce)] = casella5.checked;
+    voci4[clean(casella5.dataset.dmCasaVoce)] = casella5.checked;
   const misure = {};
   for (const casella5 of pannello.querySelectorAll("[data-dm-casa-misura]"))
     misure[clean(casella5.dataset.dmCasaMisura)] = clean(casella5.value);
@@ -33198,7 +33232,7 @@ function quelloCheDiceIlPannello(pannello) {
     mie.push(mia);
   }
   return {
-    voci: voci3,
+    voci: voci4,
     posta: clean(pannello.querySelector("[data-dm-casa-posta]")?.value),
     rifiutiDalleOre: clean(pannello.querySelector("[data-dm-casa-ritiro]")?.value),
     mie,
@@ -36046,13 +36080,13 @@ function parolaFiltro(filtro) {
       return t("Tutti", "All");
   }
 }
-function filtriPresenti(voci3 = []) {
+function filtriPresenti(voci4 = []) {
   const conto = /* @__PURE__ */ new Map();
-  for (const voce3 of voci3) conto.set(voce3.specie, (conto.get(voce3.specie) || 0) + 1);
+  for (const voce3 of voci4) conto.set(voce3.specie, (conto.get(voce3.specie) || 0) + 1);
   const tipi = FILTRI.filter((filtro) => conto.has(filtro));
   if (tipi.length < 2) return [];
   return [
-    { filtro: "tutti", quante: voci3.length },
+    { filtro: "tutti", quante: voci4.length },
     ...tipi.map((filtro) => ({ filtro, quante: conto.get(filtro) }))
   ];
 }
@@ -36252,12 +36286,12 @@ function azioneMarkup(azione) {
     title="${esc(parola)}"><span aria-hidden="true">${esc(azione.glifo)}</span><span>${esc(scelta3 ? `${parola}…` : parola)}</span></button>`;
 }
 function lettureMarkup(vista2) {
-  const voci3 = Object.values(vista2.letture).filter((voce3) => voce3 && !voce3.muto);
+  const voci4 = Object.values(vista2.letture).filter((voce3) => voce3 && !voce3.muto);
   const azioni2 = vista2.azioni || [];
-  if (!voci3.length && !azioni2.length)
+  if (!voci4.length && !azioni2.length)
     return `<p class="dm-animale-nulla">${esc(t("Nessuna entità collegata: apri la configurazione e scegli il dispositivo.", "No entity linked yet: open the settings and pick the device."))}</p>`;
   const fasce = ORDINE_GRUPPI.map((gruppo) => {
-    const sue = voci3.filter((voce3) => voce3.gruppo === gruppo);
+    const sue = voci4.filter((voce3) => voce3.gruppo === gruppo);
     const suoi2 = azioni2.filter((azione) => azione.gruppo === gruppo);
     if (!sue.length && !suoi2.length) return "";
     return `<section class="dm-animale-gruppo" data-dm-animale-gruppo="${esc(gruppo)}">
@@ -36372,8 +36406,8 @@ function renderAnimali() {
   if (!pagina2.classList.contains("active")) return true;
   const states = allStates();
   const adesso = Date.now();
-  const voci3 = animaliConfigurati();
-  const viste2 = voci3.map(
+  const voci4 = animaliConfigurati();
+  const viste2 = voci4.map(
     (animale) => eUnaVasca(animale) ? { ...vistaDellaVasca(animale, states, { adesso }), vasca: true } : vistaAnimale(animale, states, adesso)
   );
   if (!viste2.length) {
@@ -36383,10 +36417,10 @@ function renderAnimali() {
     }
     return true;
   }
-  const filtri = filtriPresenti(voci3);
+  const filtri = filtriPresenti(voci4);
   if (!filtri.some((voce3) => voce3.filtro === state32.filtro)) state32.filtro = "tutti";
   const mostrate = viste2.filter(
-    (_vista, posto) => state32.filtro === "tutti" || voci3[posto].specie === state32.filtro
+    (_vista, posto) => state32.filtro === "tutti" || voci4[posto].specie === state32.filtro
   );
   const firma2 = `${state32.filtro}#${filtri.map((voce3) => `${voce3.filtro}:${voce3.quante}`).join(",")}#${firmaDi(mostrate)}`;
   if (state32.firma !== firma2 || !wrap.querySelector("[data-dm-animale]")) {
@@ -36904,7 +36938,7 @@ function consumiDelGenere(letture2, consumi, genere) {
   const suoi2 = letture2.filter((lettura3) => lettura3.genere === genere);
   if (!suoi2.length) return null;
   const perUnita = genere === "gas" ? 1e3 : 1;
-  const voci3 = suoi2.map((lettura3) => {
+  const voci4 = suoi2.map((lettura3) => {
     const dati = consumi?.[lettura3.entity];
     const litriPer = litriPerUnita(lettura3.unita);
     if (!dati || litriPer === null) return null;
@@ -36925,13 +36959,13 @@ function consumiDelGenere(letture2, consumi, genere) {
       kwhMese: genere === "gas" ? kwhDelGas(metriCubiMese, lettura3.coefficiente) : null
     };
   }).filter(Boolean);
-  const campo5 = (nome) => somma(voci3.map((voce3) => voce3[nome]));
+  const campo5 = (nome) => somma(voci4.map((voce3) => voce3[nome]));
   return {
     letture: suoi2,
     /* Ogni contatore anche da solo: il semaforo ha una riga per contatore, e
      * scriverci il totale di tutti vorrebbe dire lo stesso numero due volte. */
-    perContatore: Object.fromEntries(voci3.map((voce3) => [voce3.entity, voce3])),
-    letto: voci3.length > 0,
+    perContatore: Object.fromEntries(voci4.map((voce3) => [voce3.entity, voce3])),
+    letto: voci4.length > 0,
     oggi: campo5("oggi"),
     ieri: campo5("ieri"),
     mese: campo5("mese"),
@@ -37496,7 +37530,7 @@ function schedaDelGas(come) {
   return schedaMarkup5("gas", "flame", t("Gas", "Gas"), dentro3);
 }
 function semaforoMarkup(come, adesso) {
-  const voci3 = [];
+  const voci4 = [];
   const voce3 = ({ stato: stato3, icona: icona2, nome, sotto, valore: valore3 }) => `<article class="dm-cont-voce" data-stato="${esc(stato3)}">
       <span class="dm-cont-voce-ic" aria-hidden="true">${disegnoDiCasa(icona2, { misura: 30, ripiego: "meter" })}</span>
       <div class="dm-cont-voce-testo"><strong>${esc(nome)}</strong>${sotto ? `<small>${esc(sotto)}</small>` : ""}</div>
@@ -37505,7 +37539,7 @@ function semaforoMarkup(come, adesso) {
   const perdita = come.perdita;
   for (const lettura3 of come.acqua?.letture || []) {
     const colpevole = perdita?.tipo === "contatore" && perdita.lettura.entity === lettura3.entity;
-    voci3.push(
+    voci4.push(
       voce3({
         stato: colpevole ? "allarme" : "bene",
         icona: lettura3.icon,
@@ -37516,7 +37550,7 @@ function semaforoMarkup(come, adesso) {
     );
   }
   for (const una of come.portate)
-    voci3.push(
+    voci4.push(
       voce3({
         stato: una.lettura.muto ? "muto" : una.perdita?.perdita ? "allarme" : "bene",
         icona: una.lettura.icon,
@@ -37526,7 +37560,7 @@ function semaforoMarkup(come, adesso) {
       })
     );
   for (const una of come.pressioni)
-    voci3.push(
+    voci4.push(
       voce3({
         stato: una.bar === null ? "muto" : una.verdetto === "ok" ? "bene" : "attenzione",
         icona: una.lettura.icon,
@@ -37536,7 +37570,7 @@ function semaforoMarkup(come, adesso) {
       })
     );
   for (const una of come.sali)
-    voci3.push(
+    voci4.push(
       voce3({
         stato: una.lettura.muto ? "muto" : una.basso ? "attenzione" : "bene",
         icona: una.lettura.icon,
@@ -37546,7 +37580,7 @@ function semaforoMarkup(come, adesso) {
       })
     );
   for (const lettura3 of come.gas?.letture || [])
-    voci3.push(
+    voci4.push(
       voce3({
         stato: "bene",
         icona: lettura3.icon,
@@ -37555,7 +37589,7 @@ function semaforoMarkup(come, adesso) {
         valore: metriCubiInParole(come.gas.perContatore[lettura3.entity]?.oggi ?? null)
       })
     );
-  return `<div class="dm-cont-elenco">${voci3.join("")}</div>`;
+  return `<div class="dm-cont-elenco">${voci4.join("")}</div>`;
 }
 function testaMarkup4(testa2) {
   return `<div class="dm-cont-testa" data-stato="${esc(testa2.stato)}">
@@ -37954,21 +37988,21 @@ function previsioniDallaRisposta(risposta, entita3) {
 var PROBABILITA_CHE_CONTA = 40;
 function pioggiaInArrivo(previsioni, { adesso, ore = ORE_DI_PIOGGIA, unita: unita2 = "mm" } = {}) {
   const ora3 = Number(adesso);
-  const voci3 = (Array.isArray(previsioni) ? previsioni : []).map((voce3) => ({
+  const voci4 = (Array.isArray(previsioni) ? previsioni : []).map((voce3) => ({
     quando: Date.parse(pulito31(voce3?.datetime)),
     mm: inMillimetri(voce3?.precipitation, unita2),
     probabilita: numero30(voce3?.precipitation_probability)
   })).filter((voce3) => Number.isFinite(voce3.quando)).sort((a, b) => a.quando - b.quando);
-  if (!voci3.length) return null;
+  if (!voci4.length) return null;
   const conta2 = (voce3) => voce3.mm !== null && voce3.mm > 0 && (voce3.probabilita === null || voce3.probabilita >= PROBABILITA_CHE_CONTA);
-  const passo = voci3.length > 1 ? voci3[1].quando - voci3[0].quando : 24 * H4;
+  const passo = voci4.length > 1 ? voci4[1].quando - voci4[0].quando : 24 * H4;
   if (passo >= 20 * H4) {
     const oggi = new Date(ora3).toDateString();
-    const sua = voci3.find((voce3) => new Date(voce3.quando).toDateString() === oggi);
+    const sua = voci4.find((voce3) => new Date(voce3.quando).toDateString() === oggi);
     if (!sua || !conta2(sua)) return null;
     return { mm: sua.mm, fra: null, giornaliera: true };
   }
-  const dentro3 = voci3.filter((voce3) => voce3.quando >= ora3 - H4 && voce3.quando <= ora3 + ore * H4);
+  const dentro3 = voci4.filter((voce3) => voce3.quando >= ora3 - H4 && voce3.quando <= ora3 + ore * H4);
   const piovose = dentro3.filter(conta2);
   if (!piovose.length) return null;
   const mm = piovose.reduce((somma2, voce3) => somma2 + voce3.mm, 0);
@@ -38656,9 +38690,9 @@ function misureInPiu(riquadro) {
   const pressione2 = misura2(meteo2?.attributes?.pressure);
   const unita2 = clean(meteo2?.attributes?.pressure_unit) || "hPa";
   const tramonto = Date.parse(clean(states["sun.sun"]?.attributes?.next_setting));
-  const voci3 = [];
+  const voci4 = [];
   if (pressione2 !== null)
-    voci3.push(["pressione", "🧭", t("Pressione", "Pressure"), `${Math.round(pressione2)} ${unita2}`]);
+    voci4.push(["pressione", "🧭", t("Pressione", "Pressure"), `${Math.round(pressione2)} ${unita2}`]);
   if (Number.isFinite(tramonto)) {
     let ora3 = "";
     try {
@@ -38667,12 +38701,12 @@ function misureInPiu(riquadro) {
       );
     } catch (_errore) {
     }
-    if (ora3) voci3.push(["tramonto", "🌅", t("Tramonto", "Sunset"), ora3]);
+    if (ora3) voci4.push(["tramonto", "🌅", t("Tramonto", "Sunset"), ora3]);
   }
-  const vive = new Set(voci3.map(([chiave2]) => chiave2));
+  const vive = new Set(voci4.map(([chiave2]) => chiave2));
   for (const nodo2 of destra.querySelectorAll(":scope > [data-dm-meteo-extra]"))
     if (!vive.has(nodo2.dataset.dmMeteoExtra)) nodo2.remove();
-  for (const [chiave2, segno2, etichetta3, valore3] of voci3) {
+  for (const [chiave2, segno2, etichetta3, valore3] of voci4) {
     let nodo2 = destra.querySelector(`:scope > [data-dm-meteo-extra="${chiave2}"]`);
     if (!nodo2) {
       nodo2 = doc.createElement("div");
@@ -40157,9 +40191,9 @@ function unaVoceDaSfogliare(grezza) {
 }
 function laCartella(risposta) {
   const figli = Array.isArray(risposta?.children) ? risposta.children : [];
-  const voci3 = figli.map(unaVoceDaSfogliare).filter(Boolean);
-  const cartelle = voci3.filter((voce3) => voce3.sfogliabile);
-  const brani = voci3.filter((voce3) => !voce3.sfogliabile);
+  const voci4 = figli.map(unaVoceDaSfogliare).filter(Boolean);
+  const cartelle = voci4.filter((voce3) => voce3.sfogliabile);
+  const brani = voci4.filter((voce3) => !voce3.sfogliabile);
   const suoi2 = Number(risposta?.not_shown);
   return {
     id: pulito33(risposta?.media_content_id),
@@ -40167,7 +40201,7 @@ function laCartella(risposta) {
     classe: pulito33(risposta?.media_class),
     titolo: pulito33(risposta?.title),
     voci: [...cartelle, ...brani],
-    nonMostrate: (Number.isFinite(suoi2) && suoi2 > 0 ? suoi2 : 0) + (figli.length - voci3.length)
+    nonMostrate: (Number.isFinite(suoi2) && suoi2 > 0 ? suoi2 : 0) + (figli.length - voci4.length)
   };
 }
 function ilComandoPerSuonare(entity2, voce3, come = "subito") {
@@ -40182,22 +40216,22 @@ function ilFiloDallaRadice(titolo3 = "") {
   return [{ id: "", tipo: "", titolo: pulito33(titolo3) }];
 }
 function ilFiloDopo(filo, voce3) {
-  const passi = Array.isArray(filo) ? filo : [];
+  const passi2 = Array.isArray(filo) ? filo : [];
   const passo = { id: pulito33(voce3?.id), tipo: pulito33(voce3?.tipo), titolo: pulito33(voce3?.titolo) };
-  if (!passo.id) return passi.length ? passi : ilFiloDallaRadice();
-  const gia = passi.findIndex((riga3) => pulito33(riga3?.id) === passo.id);
-  if (gia >= 0) return passi.slice(0, gia + 1);
-  return [...passi, passo];
+  if (!passo.id) return passi2.length ? passi2 : ilFiloDallaRadice();
+  const gia = passi2.findIndex((riga3) => pulito33(riga3?.id) === passo.id);
+  if (gia >= 0) return passi2.slice(0, gia + 1);
+  return [...passi2, passo];
 }
 function ilFiloFinoA(filo, indice) {
-  const passi = Array.isArray(filo) ? filo : [];
+  const passi2 = Array.isArray(filo) ? filo : [];
   const dove = Number(indice);
-  if (!Number.isInteger(dove) || dove < 0 || dove >= passi.length) return passi;
-  return passi.slice(0, dove + 1);
+  if (!Number.isInteger(dove) || dove < 0 || dove >= passi2.length) return passi2;
+  return passi2.slice(0, dove + 1);
 }
 function ilPassoDiAdesso(filo) {
-  const passi = Array.isArray(filo) ? filo : [];
-  return passi.length ? passi[passi.length - 1] : { id: "", tipo: "", titolo: "" };
+  const passi2 = Array.isArray(filo) ? filo : [];
+  return passi2.length ? passi2[passi2.length - 1] : { id: "", tipo: "", titolo: "" };
 }
 
 // src/sections/di-chi-e-unentita-section.js
@@ -40279,7 +40313,7 @@ function letture() {
   );
 }
 var RICHIEDI_DOPO_MS = 60 * 1e3;
-function imparaLeTv(voci3) {
+function imparaLeTv(voci4) {
   const chieste = state38.chieste ||= /* @__PURE__ */ new Map();
   const conosciute = piattaformeConosciute();
   const states = allStates();
@@ -40291,7 +40325,7 @@ function imparaLeTv(voci3) {
       return clean(valore3);
     }
   };
-  const risolte = voci3.map((voce3) => ({
+  const risolte = voci4.map((voce3) => ({
     entity: risolvi2(voce3?.entity),
     telecomando: voce3?.telecomando ? risolvi2(voce3.telecomando) : ""
   }));
@@ -40480,23 +40514,23 @@ function sorgenteMarkup(riga3) {
   ).join("")}</select></label>`;
 }
 function comandiAccantoMarkup(riga3) {
-  const voci3 = Array.isArray(riga3.comandi) ? riga3.comandi : [];
-  if (!voci3.length) return "";
-  const tendine = voci3.filter((voce3) => voce3.genere === "tendina" && voce3.opzioni.length).map(
+  const voci4 = Array.isArray(riga3.comandi) ? riga3.comandi : [];
+  if (!voci4.length) return "";
+  const tendine = voci4.filter((voce3) => voce3.genere === "tendina" && voce3.opzioni.length).map(
     (voce3) => `<label class="dm-mp-sorgente"><span>${esc(voce3.name)}</span>
       <select data-dm-mp-tendina="${esc(voce3.entity)}"${voce3.available ? "" : " disabled"}>${voce3.opzioni.map(
       (opzione) => `<option value="${esc(opzione)}"${opzione === voce3.scelta ? " selected" : ""}>${esc(opzione)}</option>`
     ).join("")}</select></label>`
   ).join("");
-  const tasti = voci3.filter((voce3) => voce3.genere !== "tendina").map(
+  const tasti = voci4.filter((voce3) => voce3.genere !== "tendina").map(
     (voce3) => `<button type="button" class="dm-mp-cmd" data-dm-mp-cmd="${esc(voce3.entity)}"${voce3.genere === "interruttore" ? ` aria-pressed="${voce3.acceso === true}"` : ""}${voce3.available ? "" : " disabled"}>${esc(voce3.name)}</button>`
   ).join("");
   return `${tendine}${tasti ? `<div class="dm-mp-cmds">${tasti}</div>` : ""}`;
 }
 function lettureAccantoMarkup(riga3) {
-  const voci3 = Array.isArray(riga3.letture) ? riga3.letture : [];
-  if (!voci3.length) return "";
-  return `<div class="dm-mp-letture">${voci3.map(
+  const voci4 = Array.isArray(riga3.letture) ? riga3.letture : [];
+  if (!voci4.length) return "";
+  return `<div class="dm-mp-letture">${voci4.map(
     (lettura3) => `<span class="dm-mp-lettura" data-dm-mp-lettura="${esc(lettura3.entity)}" title="${esc(lettura3.entity)}">
       ${lettura3.disegno ? `<i aria-hidden="true">${disegnoDelCatalogo(lettura3.disegno, 20)}</i>` : ""}
       <small>${esc(lettura3.name)}</small><b>${esc(lettura3.testo)}</b>
@@ -42590,12 +42624,12 @@ function sensoriDellaTelecamera(camera, states = {}) {
 function normalizzaRilevamenti(stored) {
   const grezzo = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
   const pulita = {};
-  for (const [camera, voci3] of Object.entries(grezzo)) {
+  for (const [camera, voci4] of Object.entries(grezzo)) {
     const id = pulito36(camera);
     if (!id.includes(".")) continue;
     const sua = {};
     for (const tipo of TIPI_RILEVAMENTO) {
-      const entity2 = pulito36(voci3?.[tipo]);
+      const entity2 = pulito36(voci4?.[tipo]);
       if (entity2.includes(".")) sua[tipo] = entity2;
     }
     if (Object.keys(sua).length) pulita[id] = sua;
@@ -42615,9 +42649,9 @@ function rilevamentiAccesi(config, states = {}, telecamere3 = [], locale3 = "it"
     (Array.isArray(telecamere3) ? telecamere3 : []).map((camera) => [pulito36(camera?.entity), pulito36(camera?.name)]).filter(([entity2]) => entity2)
   );
   const righe2 = [];
-  for (const [camera, voci3] of Object.entries(scelte4)) {
+  for (const [camera, voci4] of Object.entries(scelte4)) {
     for (const tipo of TIPI_RILEVAMENTO) {
-      const entity2 = voci3[tipo];
+      const entity2 = voci4[tipo];
       if (!entity2) continue;
       const stato3 = states?.[entity2];
       if (!acceso2(stato3)) continue;
@@ -43810,13 +43844,13 @@ function anteprimaEntita(entities) {
   return `<div class="dm-integ-chips">${nomi}${altre}</div>${nota}`;
 }
 function anteprimaFuori(fuori) {
-  const voci3 = Object.values(fuori);
-  if (!voci3.length) return "";
-  const elenco9 = voci3.map((record2) => `<code>${esc(record2.entity_id)}</code>`).join('<span aria-hidden="true"> · </span>');
+  const voci4 = Object.values(fuori);
+  if (!voci4.length) return "";
+  const elenco9 = voci4.map((record2) => `<code>${esc(record2.entity_id)}</code>`).join('<span aria-hidden="true"> · </span>');
   return `<label class="dm-integ-fuori">
     <input type="checkbox" data-outside checked>
     <span>
-      <b>${voci3.length === 1 ? t("Prendi anche 1 sensore che sta fuori dal dispositivo", "Also take 1 sensor that lives outside the device") : t(`Prendi anche ${voci3.length} sensori che stanno fuori dal dispositivo`, `Also take ${voci3.length} sensors that live outside the device`)}</b>
+      <b>${voci4.length === 1 ? t("Prendi anche 1 sensore che sta fuori dal dispositivo", "Also take 1 sensor that lives outside the device") : t(`Prendi anche ${voci4.length} sensori che stanno fuori dal dispositivo`, `Also take ${voci4.length} sensors that live outside the device`)}</b>
       <small>${t("Portano il nome di questo apparecchio ma appartengono a un'altra voce del registro: quasi sempre la presa smart sotto la macchina, o un sensore che ti sei costruito.", "They carry this appliance's name but belong to another registry entry: almost always the smart plug under the machine, or a sensor you built yourself.")}</small>
       <small class="dm-integ-fuori-ids">${elenco9}</small>
     </span>
@@ -43896,10 +43930,10 @@ function apriMenuIntegrazioni({
   let dispositivo = null;
   const disegnaDispositivi = () => {
     const filtro = clean(ricerca.value).toLowerCase();
-    const voci3 = (scelta3?.devices || []).filter(
+    const voci4 = (scelta3?.devices || []).filter(
       (device) => !filtro || [device.name, device.manufacturer, device.model, device.area].map(clean).join(" ").toLowerCase().includes(filtro)
     );
-    elenco9.innerHTML = voci3.length ? voci3.map(rigaDispositivo).join("") : `<div class="dm-integ-empty">${t("Nessun dispositivo con questo nome.", "No device by that name.")}</div>`;
+    elenco9.innerHTML = voci4.length ? voci4.map(rigaDispositivo).join("") : `<div class="dm-integ-empty">${t("Nessun dispositivo con questo nome.", "No device by that name.")}</div>`;
     for (const button of elenco9.querySelectorAll("[data-device-id]"))
       button.setAttribute("aria-pressed", String(button.dataset.deviceId === dispositivo?.id));
   };
@@ -46864,9 +46898,9 @@ function frecce(riga3) {
 function posizioneScelta(riga3) {
   if (!riga3.settable) return "";
   const invito = t("Scegli la posizione", "Choose the position");
-  const voci3 = [0, 25, 50, 75, 100].map((valore3) => `<option value="${valore3}">${valore3}%</option>`).join("");
+  const voci4 = [0, 25, 50, 75, 100].map((valore3) => `<option value="${valore3}">${valore3}%</option>`).join("");
   return `<select class="dm-f-tapparelle-pos" data-dm-w-position="${esc(riga3.entity)}"
-    data-dm-w-verso="${riga3.invertita ? "1" : ""}" aria-label="${esc(invito)}" title="${esc(invito)}"><option value="">↕</option>${voci3}</select>`;
+    data-dm-w-verso="${riga3.invertita ? "1" : ""}" aria-label="${esc(invito)}" title="${esc(invito)}"><option value="">↕</option>${voci4}</select>`;
 }
 function disegnoDellaStanza(nome, misura7) {
   const chi = clean(nome).toLowerCase();
@@ -47848,10 +47882,10 @@ function ultimiRilevamenti(states) {
     scelte4 = {};
   }
   const ultimi = /* @__PURE__ */ new Map();
-  for (const [camera, voci3] of Object.entries(scelte4)) {
+  for (const [camera, voci4] of Object.entries(scelte4)) {
     let migliore = null;
     for (const tipo of TIPI_RILEVAMENTO) {
-      const stato3 = statoDi3(states, voci3[tipo]);
+      const stato3 = statoDi3(states, voci4[tipo]);
       if (!stato3 || tace(stato3)) continue;
       const quando4 = Date.parse(clean(stato3.last_changed) || clean(stato3.last_updated) || "");
       if (!Number.isFinite(quando4)) continue;
@@ -48711,14 +48745,14 @@ function unoScaldabagno(lettura3, piuDiUno, states, prezzo) {
       })
     );
   if (obiettivo2 != null) {
-    const passi = passiDellObiettivo(lettura3, states);
+    const passi2 = passiDellObiettivo(lettura3, states);
     comandi.push(
       schedaComando({
         chiave: "obiettivo",
         icona: "🎯",
         titolo: t("Obiettivo", "Target"),
         sotto: t("temperatura dell'acqua", "water temperature"),
-        comando: passi || `<b class="dm-f-imp-num dm-f-imp-valore">${esc(gradiUtili(obiettivo2))}</b>`
+        comando: passi2 || `<b class="dm-f-imp-num dm-f-imp-valore">${esc(gradiUtili(obiettivo2))}</b>`
       })
     );
   }
@@ -49250,9 +49284,9 @@ function selettoreDellaVelocita(clima, states) {
   if (!stato3) return "";
   const attributi2 = stato3.attributes || {};
   const dominio4 = entity2.split(".")[0];
-  let voci3 = [];
+  let voci4 = [];
   if (dominio4 === "climate" && Array.isArray(attributi2.fan_modes))
-    voci3 = attributi2.fan_modes.map((modo) => ({
+    voci4 = attributi2.fan_modes.map((modo) => ({
       modo,
       acceso: clean(attributi2.fan_mode) === clean(modo),
       comando: {
@@ -49262,7 +49296,7 @@ function selettoreDellaVelocita(clima, states) {
       }
     }));
   else if (dominio4 === "fan" && Array.isArray(attributi2.preset_modes) && attributi2.preset_modes.length)
-    voci3 = attributi2.preset_modes.map((modo) => ({
+    voci4 = attributi2.preset_modes.map((modo) => ({
       modo,
       acceso: clean(attributi2.preset_mode) === clean(modo),
       comando: {
@@ -49273,7 +49307,7 @@ function selettoreDellaVelocita(clima, states) {
     }));
   else if (dominio4 === "fan" && attributi2.percentage !== void 0) {
     const adesso = num3(attributi2.percentage);
-    voci3 = [
+    voci4 = [
       ["low", 33],
       ["medium", 66],
       ["high", 100]
@@ -49287,7 +49321,7 @@ function selettoreDellaVelocita(clima, states) {
       }
     }));
   } else if ((dominio4 === "select" || dominio4 === "input_select") && Array.isArray(attributi2.options))
-    voci3 = attributi2.options.map((modo) => ({
+    voci4 = attributi2.options.map((modo) => ({
       modo,
       acceso: clean(stato3.state) === clean(modo),
       comando: {
@@ -49296,9 +49330,9 @@ function selettoreDellaVelocita(clima, states) {
         data: { entity_id: entity2, option: modo }
       }
     }));
-  voci3 = voci3.slice(0, 5);
-  if (voci3.length < 2) return "";
-  return `${titoletto2(t("Velocità", "Speed"))}<div class="dm-f-vmc-velocita" style="--quante:${voci3.length}">${voci3.map((voce3) => {
+  voci4 = voci4.slice(0, 5);
+  if (voci4.length < 2) return "";
+  return `${titoletto2(t("Velocità", "Speed"))}<div class="dm-f-vmc-velocita" style="--quante:${voci4.length}">${voci4.map((voce3) => {
     const parola = parolaDellaVelocita(voce3.modo);
     return tastoServizio(voce3.comando, {
       classe: "dm-f-vmc-modo",
@@ -53178,13 +53212,13 @@ function comandiDiEvcc(states) {
   };
   const modo = viva("dm.ev_modalita_ricarica_evcc");
   if (!modo) return null;
-  const voci3 = iModiDiEvcc(modo.stato);
-  const acceso6 = ilModoAcceso(modo.stato, voci3);
+  const voci4 = iModiDiEvcc(modo.stato);
+  const acceso6 = ilModoAcceso(modo.stato, voci4);
   const sempre = viva("dm.ev_ricarica_sempre_evcc");
   const valori = sempre && laFilaDelSempreServe(sempre.stato) ? iValoriDelSempre(sempre.stato) : [];
   return {
     entity: modo.entity,
-    voci: voci3,
+    voci: voci4,
     acceso: acceso6,
     sempre: valori.length ? {
       entity: sempre.entity,
@@ -54729,10 +54763,10 @@ function rigaInEvidenza(states, voce3, fuori) {
 }
 var eUnaTesseraSola = (voce3) => voce3?.sola === true || voce3?.sola === "true" || voce3?.sola === 1 || voce3?.sola === "1";
 function evidenzaModel(states) {
-  const voci3 = readJson(EVIDENZA_CONFIG_KEY, []);
-  if (!Array.isArray(voci3)) return null;
+  const voci4 = readJson(EVIDENZA_CONFIG_KEY, []);
+  if (!Array.isArray(voci4)) return null;
   const fuori = widgetExcludedEntities("evidenza");
-  const rows = voci3.filter((voce3) => !eUnaTesseraSola(voce3)).map((voce3) => rigaInEvidenza(states, voce3, fuori)).filter(Boolean);
+  const rows = voci4.filter((voce3) => !eUnaTesseraSola(voce3)).map((voce3) => rigaInEvidenza(states, voce3, fuori)).filter(Boolean);
   if (!rows.length) return null;
   return {
     key: "evidenza",
@@ -54751,8 +54785,8 @@ function evidenzaModel(states) {
   };
 }
 function evidenzeSingole(states) {
-  const voci3 = readJson(EVIDENZA_CONFIG_KEY, []);
-  if (!Array.isArray(voci3)) return [];
+  const voci4 = readJson(EVIDENZA_CONFIG_KEY, []);
+  if (!Array.isArray(voci4)) return [];
   const elenco9 = widgetPreferences().excluded;
   let stanze3 = [];
   try {
@@ -54760,7 +54794,7 @@ function evidenzeSingole(states) {
   } catch (_error) {
     stanze3 = [];
   }
-  return voci3.map((voce3, index) => {
+  return voci4.map((voce3, index) => {
     if (!eUnaTesseraSola(voce3)) return null;
     const riga3 = rigaInEvidenza(states, voce3, escluseDellaTessera(elenco9, `evidenza-${index}`));
     if (!riga3) return null;
@@ -55879,9 +55913,9 @@ function climatePanel(row, solo = false) {
   ).join("")}</div>
       </div>` : "";
   const dueAssi = Boolean(row.alette?.length && row.aletteOrizzontali?.length);
-  const rigaDelleAlette = (voci3, scelta3, etichetta3, campo5) => voci3?.length ? `<div class="dm-w-panel-row">
+  const rigaDelleAlette = (voci4, scelta3, etichetta3, campo5) => voci4?.length ? `<div class="dm-w-panel-row">
         <span class="dm-w-panel-lbl">${esc(etichetta3)}</span>
-        <div class="dm-w-chips">${voci3.map(
+        <div class="dm-w-chips">${voci4.map(
     (voce3) => `<button type="button" class="dm-w-chip" ${campo5}="${esc(voce3)}"
                  data-dm-w-target="${esc(row.entity)}" data-on="${voce3 === scelta3}">${esc(
       voce3
@@ -55995,13 +56029,13 @@ function climateDetail(widget) {
 function positionSelectMarkup(row) {
   if (!row.settable) return "";
   const invito = t("Scegli la posizione", "Choose the position");
-  const voci3 = coverPositionChoices(row.preset).map((value) => {
+  const voci4 = coverPositionChoices(row.preset).map((value) => {
     const coda = value === 100 ? t("Aperta", "Open") : value === 0 ? t("Chiusa", "Closed") : "";
     return `<option value="${value}">${value === row.preset ? "⭐ " : ""}${value}%${coda ? ` · ${esc(coda)}` : ""}</option>`;
   }).join("");
   return `<select class="dm-w-position" data-dm-w-position="${esc(row.entity)}"
       data-dm-w-verso="${row.invertita ? "1" : ""}"
-      aria-label="${esc(invito)}" title="${esc(invito)}"><option value="">↕</option>${voci3}</select>`;
+      aria-label="${esc(invito)}" title="${esc(invito)}"><option value="">↕</option>${voci4}</select>`;
 }
 function comandoTapparella(row, servizio, glifo2, parola) {
   const invito = `${parola}: ${row.name}`;
@@ -56237,15 +56271,15 @@ function summaryChips(widget) {
 }
 function pilloleDelloStato(widget) {
   const righe2 = Array.isArray(widget.rows) ? widget.rows : [];
-  const voci3 = righe2.filter((riga3) => typeof riga3?.on === "boolean" && clean(riga3?.name));
-  if (!voci3.length) return "";
+  const voci4 = righe2.filter((riga3) => typeof riga3?.on === "boolean" && clean(riga3?.name));
+  if (!voci4.length) return "";
   const chiave2 = chiaveDellElenco(widget, "stato");
   const tutte = misureAperte().has(chiave2);
-  const oltre = Math.max(0, voci3.length - MISURE_IN_VISTA);
+  const oltre = Math.max(0, voci4.length - MISURE_IN_VISTA);
   return `<h4 class="dm-w-titoletto">${esc(t("Lo stato", "The state"))}</h4>
-    <div class="dm-w-pillole">${voci3.map(
+    <div class="dm-w-pillole">${voci4.map(
     (riga3, indice) => `<span class="dm-w-pillola" data-acceso="${riga3.on ? "true" : "false"}"${clean(riga3.tono) ? ` data-tono="${esc(clean(riga3.tono))}"` : ""}${!tutte && indice >= MISURE_IN_VISTA ? " hidden" : ""}>${riga3.glyph ? `<span class="dm-w-pillola-ic" aria-hidden="true">${riga3.glyph}</span>` : ""}<span class="dm-w-pillola-nome">${esc(clean(riga3.name))}</span>${clean(riga3.value) ? `<b>${esc(clean(riga3.value))}</b>` : ""}</span>`
-  ).join("")}</div>${oltre ? tastoMostraTutte(chiave2, voci3.length, tutte) : ""}`;
+  ).join("")}</div>${oltre ? tastoMostraTutte(chiave2, voci4.length, tutte) : ""}`;
 }
 var CHIAVI_A_CARTE = /* @__PURE__ */ new Set([
   "evidenza",
@@ -56377,18 +56411,18 @@ function tastoMostraTutte(chiave2, quante2, tutte) {
   )}</button>`;
 }
 function caselleDelleMisure(widget) {
-  const voci3 = [
+  const voci4 = [
     ...summaryChips(widget).map(([etichetta3, valore3]) => ({ glyph: "", valore: valore3, etichetta: etichetta3 })),
     ...carteDalleRighe(widget)
   ];
-  if (!voci3.length) return "";
+  if (!voci4.length) return "";
   const chiave2 = chiaveDellElenco(widget, "misure");
   const tutte = misureAperte().has(chiave2);
-  const oltre = Math.max(0, voci3.length - MISURE_IN_VISTA);
+  const oltre = Math.max(0, voci4.length - MISURE_IN_VISTA);
   return `<h4 class="dm-w-titoletto">${esc(t("Le misure", "The readings"))}</h4>
-    <div class="dm-w-caselle">${voci3.map(
+    <div class="dm-w-caselle">${voci4.map(
     (voce3, indice) => `<div class="dm-w-casella"${!tutte && indice >= MISURE_IN_VISTA ? " hidden" : ""}>${voce3.glyph ? `<span class="dm-w-casella-ic" aria-hidden="true">${voce3.glyph}</span>` : ""}<b>${esc(voce3.valore)}</b>${voce3.sotto ? `<i class="dm-w-casella-sotto">${esc(voce3.sotto)}</i>` : ""}<span>${esc(voce3.etichetta)}</span></div>`
-  ).join("")}</div>${oltre ? tastoMostraTutte(chiave2, voci3.length, tutte) : ""}`;
+  ).join("")}</div>${oltre ? tastoMostraTutte(chiave2, voci4.length, tutte) : ""}`;
 }
 var CORSA_ORE = 3;
 var CORSA_FRESCA_PER = 4 * 60 * 1e3;
@@ -60843,15 +60877,15 @@ function toccoCaldoTermostato(entity2) {
   if (climaAccesoDaiWatt(entity2) ?? (Boolean(stato3) && !climateIsOff(stato3))) {
     commutaClima(entity2, false, "caldo");
   } else {
-    let passi = null;
+    let passi2 = null;
     try {
-      passi = root.dmQuickClimateSteps?.(entity2, "caldo");
+      passi2 = root.dmQuickClimateSteps?.(entity2, "caldo");
     } catch (_error) {
-      passi = null;
+      passi2 = null;
     }
-    if (!Array.isArray(passi) || !passi.length)
-      passi = [{ service: "set_hvac_mode", data: { hvac_mode: "heat" } }];
-    passi.forEach((passo, indice) => {
+    if (!Array.isArray(passi2) || !passi2.length)
+      passi2 = [{ service: "set_hvac_mode", data: { hvac_mode: "heat" } }];
+    passi2.forEach((passo, indice) => {
       const manda = () => chiamaClima(entity2, passo.service, passo.data);
       if (indice === 0) manda();
       else root.setTimeout?.(manda, indice * 700);
@@ -65074,8 +65108,8 @@ async function ricavaIKwh(broker2, periodo, daChiedere, adesso) {
   }
   return trovati;
 }
-function kwhDelPeriodo(voci3, periodo) {
-  return recorderValuesFor(voci3 || [], periodo) || {};
+function kwhDelPeriodo(voci4, periodo) {
+  return recorderValuesFor(voci4 || [], periodo) || {};
 }
 var ULTIMI_NUMERI_KEY = "dm_flusso_ultimi_numeri";
 function chiaveDeiRicordati(periodo) {
@@ -65188,9 +65222,9 @@ function stageModel(period) {
   ricordaINumeri(period, model2);
   return model2;
 }
-function letturePerLaScena(voci3, period) {
+function letturePerLaScena(voci4, period) {
   if (period === "instant") return { recorderValues: null };
-  const { valori, attese } = lettureDelPeriodo(voci3, period);
+  const { valori, attese } = lettureDelPeriodo(voci4, period);
   return {
     recorderValues: Object.keys(valori).length ? valori : null,
     inAttesa: attese,
@@ -68059,18 +68093,18 @@ function tastoDelComandoExtra(voce3) {
   return tasto2;
 }
 function aggiungiAltreLetture(lista5, appliance, titoletto4) {
-  const voci3 = soloQuelleViste(
+  const voci4 = soloQuelleViste(
     lettureDelDispositivo(
       { ...apparecchioDeiComandi(appliance), letture: appliance?.letture },
       allStates()
     ),
     appliance
   );
-  if (!voci3.length) return false;
+  if (!voci4.length) return false;
   lista5.append(titoletto4(t("Altre letture", "Other readings")));
   const griglia3 = doc.createElement("div");
   griglia3.className = "dm-apde-caselle";
-  for (const voce3 of voci3) {
+  for (const voce3 of voci4) {
     const casella5 = doc.createElement("button");
     casella5.type = "button";
     casella5.className = "dm-apde-casella hist-clickable";
@@ -68083,13 +68117,13 @@ function aggiungiAltreLetture(lista5, appliance, titoletto4) {
   return true;
 }
 function aggiungiAltriComandi(lista5, appliance, titoletto4) {
-  const voci3 = soloQuelleViste(
+  const voci4 = soloQuelleViste(
     comandiDelDispositivo(apparecchioDeiComandi(appliance), allStates()),
     appliance
   );
-  if (!voci3.length) return false;
+  if (!voci4.length) return false;
   lista5.append(titoletto4(t("Altri comandi", "Other commands")));
-  for (const voce3 of voci3) {
+  for (const voce3 of voci4) {
     const riga3 = doc.createElement("div");
     riga3.className = "dm-apde-comando dm-apde-comando-extra";
     riga3.dataset.dmApdeEntity = voce3.entity;
@@ -68185,7 +68219,7 @@ function vesteIntegrazione(lista5, appliance, giaMostrate, titoletto4) {
     locale: activeLocale(),
     readOnly: false
   });
-  const nuove = (voci3) => voci3.filter((voce3) => !voce3.mapped);
+  const nuove = (voci4) => voci4.filter((voce3) => !voce3.mapped);
   const stato3 = soloQuelleViste(nuove(gruppi2.state), appliance);
   const scelti = new Set(elencoComandi(appliance?.comandi));
   const scelteDaLeggere = new Set(elencoLetture(appliance?.letture));
@@ -68802,14 +68836,14 @@ function puoDecidere(voce3 = {}) {
   return !RACCONTA_DI_SE.has(classeDi4(voce3));
 }
 function entitaPrincipale(entita3 = []) {
-  const voci3 = (Array.isArray(entita3) ? entita3 : [entita3]).map((voce3) => typeof voce3 === "string" ? { entity: voce3 } : voce3 || {}).filter((voce3) => pulito42(voce3.entity ?? voce3.entita));
-  const candidate = voci3.filter(puoDecidere);
+  const voci4 = (Array.isArray(entita3) ? entita3 : [entita3]).map((voce3) => typeof voce3 === "string" ? { entity: voce3 } : voce3 || {}).filter((voce3) => pulito42(voce3.entity ?? voce3.entita));
+  const candidate = voci4.filter(puoDecidere);
   const scala2 = (voce3) => {
     const posto = CHI_DECIDE.indexOf(dominioDi6(voce3.entity ?? voce3.entita));
     return posto < 0 ? CHI_DECIDE.length : posto;
   };
   const scelta3 = candidate.slice().sort((una, altra) => scala2(una) - scala2(altra))[0];
-  return scelta3 || voci3[0] || null;
+  return scelta3 || voci4[0] || null;
 }
 var TAPPARELLE = /* @__PURE__ */ new Set(["shutter", "blind", "curtain", "awning", "shade", "window"]);
 var PRESE = /* @__PURE__ */ new Set(["outlet", "socket"]);
@@ -68847,12 +68881,12 @@ function laSezioneGiusta(voce3 = {}) {
 function cosaAltroPorta(voce3 = {}, principale = "") {
   const tutte = Array.isArray(voce3?.entities ?? voce3?.entita) ? voce3.entities ?? voce3.entita : [];
   const scelta3 = pulito42(principale);
-  const voci3 = tutte.map((una) => typeof una === "string" ? { entity: una } : una || {}).filter((una) => pulito42(una.entity) && pulito42(una.entity) !== scelta3);
+  const voci4 = tutte.map((una) => typeof una === "string" ? { entity: una } : una || {}).filter((una) => pulito42(una.entity) && pulito42(una.entity) !== scelta3);
   return {
-    quante: voci3.length,
+    quante: voci4.length,
     /* Quelle che potrebbero avere un posto loro: la temperatura di un sensore
      * di presenza, la potenza di una presa. Il resto e' batteria e segnale. */
-    daMettere: voci3.filter((una) => puoDecidere(una) && laSezioneGiusta(una)).map((una) => pulito42(una.entity))
+    daMettere: voci4.filter((una) => puoDecidere(una) && laSezioneGiusta(una)).map((una) => pulito42(una.entity))
   };
 }
 function comeLoScrivo(quale, voce3 = {}) {
@@ -69912,8 +69946,8 @@ function quandoLaPanoramicaSiVede(fai) {
   const vista2 = doc?.getElementById("view-panoramica");
   if (!vista2 || typeof root.IntersectionObserver !== "function") return;
   if (state60.sentinella) return;
-  state60.sentinella = new root.IntersectionObserver((voci3) => {
-    if (!voci3.some((una) => una.isIntersecting)) return;
+  state60.sentinella = new root.IntersectionObserver((voci4) => {
+    if (!voci4.some((una) => una.isIntersecting)) return;
     state60.sentinella?.disconnect();
     state60.sentinella = null;
     fai();
@@ -70638,8 +70672,8 @@ function altezzeDelleCode(altezze, { cima, fondo }) {
 function tacche(min, max) {
   const ampiezza = max - min;
   if (!Number.isFinite(ampiezza) || ampiezza <= 0) return [];
-  const passi = [0.5, 1, 2, 5, 10, 20];
-  const passo = passi.find((valore3) => ampiezza / valore3 <= 7) || passi[passi.length - 1];
+  const passi2 = [0.5, 1, 2, 5, 10, 20];
+  const passo = passi2.find((valore3) => ampiezza / valore3 <= 7) || passi2[passi2.length - 1];
   const valori = [];
   const primo = Math.ceil(min / passo) * passo;
   for (let valore3 = primo; valore3 < max - 1e-9; valore3 += passo) {
@@ -71954,11 +71988,11 @@ function disegnaColorano(modal, form) {
   const states = allStates();
   const values = Object.fromEntries(new FormData(form).entries());
   const scelte4 = new Set(elencoColorano(values.colorano));
-  const voci3 = vociDellApparecchio(values);
+  const voci4 = vociDellApparecchio(values);
   const apparecchio = apparecchioDelleLetture(values, elencoLetture(values.letture));
   const cassetto = blocco3.querySelector("[data-appl-colorano-voci]");
   if (!cassetto) return;
-  cassetto.innerHTML = voci3.length ? voci3.map((entity2) => {
+  cassetto.innerHTML = voci4.length ? voci4.map((entity2) => {
     const accende = scelte4.has(entity2);
     return `<button type="button" class="dm-appl-cmd-chip dm-appl-colora" data-appl-colora="${esc(entity2)}"
             data-on="${accende ? "true" : "false"}" aria-pressed="${accende ? "true" : "false"}"
@@ -71988,11 +72022,11 @@ function disegnaNascoste(modal, form) {
   const states = allStates();
   const values = Object.fromEntries(new FormData(form).entries());
   const nascoste = new Set(elencoNascoste(values.nascoste));
-  const voci3 = vociDellApparecchio(values);
+  const voci4 = vociDellApparecchio(values);
   const apparecchio = apparecchioDelleLetture(values, elencoLetture(values.letture));
   const cassetto = blocco3.querySelector("[data-appl-nascoste-voci]");
   if (!cassetto) return;
-  cassetto.innerHTML = voci3.length ? voci3.map((entity2) => {
+  cassetto.innerHTML = voci4.length ? voci4.map((entity2) => {
     const spenta = nascoste.has(entity2);
     return `<button type="button" class="dm-appl-cmd-chip dm-appl-nascosta" data-appl-nascosta="${esc(entity2)}"
             data-on="${spenta ? "false" : "true"}" aria-pressed="${spenta ? "false" : "true"}"
@@ -74310,9 +74344,9 @@ function telecamere() {
 function propostaDi(camera, tipo, trovati) {
   return clean(trovati?.[tipo]);
 }
-function rigaMarkup6(camera, voci3, trovati) {
+function rigaMarkup6(camera, voci4, trovati) {
   const caselle2 = TIPI_RILEVAMENTO.map((tipo) => {
-    const scritto = clean(voci3?.[tipo]);
+    const scritto = clean(voci4?.[tipo]);
     const proposta = propostaDi(camera.entity, tipo, trovati);
     const id = `dm-ril-${camera.entity.replaceAll(".", "-")}-${tipo}`;
     return `<label class="ed-slot dm-ril-slot">
@@ -74327,8 +74361,8 @@ function rigaMarkup6(camera, voci3, trovati) {
         aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
     </label>`;
   }).join("");
-  const quanti2 = TIPI_RILEVAMENTO.filter((tipo) => clean(voci3?.[tipo])).length;
-  const proposti = TIPI_RILEVAMENTO.filter((tipo) => trovati?.[tipo] && !clean(voci3?.[tipo]));
+  const quanti2 = TIPI_RILEVAMENTO.filter((tipo) => clean(voci4?.[tipo])).length;
+  const proposti = TIPI_RILEVAMENTO.filter((tipo) => trovati?.[tipo] && !clean(voci4?.[tipo]));
   return `<article class="ed-row dm-ril-row" data-dm-ril-riga="${esc(camera.entity)}">
     <div class="dm-ril-head">
       <strong class="ed-row-new">${esc(camera.name)}</strong>
@@ -75274,13 +75308,13 @@ function quickClimatePresetForZone(preset, zona) {
 }
 function quickClimateSteps(preset, attributi2 = null, { zona = "" } = {}) {
   const scelta3 = normalizeQuickClimate(preset);
-  const passi = [{ service: "set_hvac_mode", data: { hvac_mode: scelta3.mode } }];
+  const passi2 = [{ service: "set_hvac_mode", data: { hvac_mode: scelta3.mode } }];
   if (scelta3.temperature != null) {
     const temperatura = temperaturaDelPreset(scelta3, attributi2, zona);
-    if (temperatura) passi.push({ service: "set_temperature", data: temperatura });
+    if (temperatura) passi2.push({ service: "set_temperature", data: temperatura });
   }
-  if (scelta3.fan) passi.push({ service: "set_fan_mode", data: { fan_mode: scelta3.fan } });
-  return passi;
+  if (scelta3.fan) passi2.push({ service: "set_fan_mode", data: { fan_mode: scelta3.fan } });
+  return passi2;
 }
 var RAFFRESCANO = /* @__PURE__ */ new Set(["cool", "dry", "fan_only"]);
 var gradi7 = (valore3) => {
@@ -76671,13 +76705,13 @@ function gestoMarkup(door, index) {
   if (!entity2.toLowerCase().startsWith("lock.")) return "";
   if (!serraturaSaAprire(allStates()[entity2])) return "";
   const scelto = gestoDellaPorta(door);
-  const voci3 = [
+  const voci4 = [
     ["", t("Apri (come prima)", "Open (as before)")],
     ["sblocca", t("Solo sblocca", "Unlock only")],
     ["entrambi", t("Tutti e due i tasti", "Both buttons")]
   ];
   return `<label class="ed-slot dm-door-ed-field"><span class="ed-slot-lbl">${t("Cosa fa il tocco", "What the tap does")}</span>
-    <span class="ed-form-row"><select id="dm-door-${index}-gesto" class="ed-input" data-door-field="gesto">${voci3.map(
+    <span class="ed-form-row"><select id="dm-door-${index}-gesto" class="ed-input" data-door-field="gesto">${voci4.map(
     ([valore3, parola]) => `<option value="${esc(valore3)}"${scelto === valore3 || valore3 === "" && scelto === "apri" ? " selected" : ""}>${esc(parola)}</option>`
   ).join("")}</select></span>
     <small>${t(
@@ -77972,11 +78006,11 @@ function tasto(voce3) {
 function disegnaProgrammi() {
   const griglia3 = doc?.querySelector?.("#lavatrice-modal .lav-preset-grid");
   if (!griglia3) return false;
-  const voci3 = programmiAttuali();
-  griglia3.replaceChildren(...voci3.map(tasto));
+  const voci4 = programmiAttuali();
+  griglia3.replaceChildren(...voci4.map(tasto));
   const titolo3 = griglia3.previousElementSibling;
-  griglia3.style.display = voci3.length ? "" : "none";
-  if (titolo3?.tagName === "H4") titolo3.style.display = voci3.length ? "" : "none";
+  griglia3.style.display = voci4.length ? "" : "none";
+  if (titolo3?.tagName === "H4") titolo3.style.display = voci4.length ? "" : "none";
   return true;
 }
 function immagineDellaSezione() {
@@ -79091,10 +79125,10 @@ function applicaLaVisibilita() {
   }
 }
 function firmaDellaBarra() {
-  const voci3 = doc?.querySelectorAll?.("nav.tabs .tab");
-  if (!voci3) return "";
+  const voci4 = doc?.querySelectorAll?.("nav.tabs .tab");
+  if (!voci4) return "";
   const dentro3 = [];
-  for (const voce3 of voci3) if (voce3.offsetWidth > 0) dentro3.push(clean(voce3.dataset.tab));
+  for (const voce3 of voci4) if (voce3.offsetWidth > 0) dentro3.push(clean(voce3.dataset.tab));
   return dentro3.join(",");
 }
 var ATTESA_IN_PIU_SE_LA_FORMA_CAMBIA = 1500;
@@ -79575,13 +79609,13 @@ function openActionEditor(item, index) {
 }
 function durateOpzioni(scelto) {
   const attuale = normalizzaIMinuti(scelto);
-  const voci3 = [
+  const voci4 = [
     `<option value="0"${attuale ? "" : " selected"}>— ${esc(t("Mai: resta accesa", "Never: it stays on"))} —</option>`,
     ...FERMI_DELLO_SLIDER.map(
       (minuti) => `<option value="${minuti}"${minuti === attuale ? " selected" : ""}>${esc(durataScritta(minuti, activeLocale()))}</option>`
     )
   ];
-  return voci3.join("");
+  return voci4.join("");
 }
 function mesiMarkup(mesi) {
   const accesi = new Set(normalizzaIMesi(mesi));
@@ -79789,10 +79823,10 @@ function tendinaDeiPiani(scelto) {
     (piano) => piano.nome
   );
   if (suo2 && !nomi.includes(suo2)) nomi.push(suo2);
-  const voci3 = nomi.map(
+  const voci4 = nomi.map(
     (nome) => `<option value="${esc(nome)}"${nome === suo2 ? " selected" : ""}>${esc(nome)}</option>`
   ).join("");
-  return `<select class="ed-input" name="floor"><option value=""${suo2 ? "" : " selected"}>— ${esc(t("Senza piano", "No floor"))} —</option>${voci3}</select>`;
+  return `<select class="ed-input" name="floor"><option value=""${suo2 ? "" : " selected"}>— ${esc(t("Senza piano", "No floor"))} —</option>${voci4}</select>`;
 }
 function openRoomEditor(item, index) {
   const initialIcon = clean(item.icon) || "mdi:home";
@@ -86141,8 +86175,43 @@ var INGRESSO_VUOTO = Object.freeze({
   rientro: "",
   campanello: "",
   persone: true,
-  finestre: true
+  finestre: true,
+  aree: [],
+  letture: [],
+  comandi: []
 });
+var AREE_AL_MASSIMO = 6;
+var LETTURE_DELL_INGRESSO_AL_MASSIMO = 12;
+var COMANDI_DELL_INGRESSO_AL_MASSIMO = 8;
+var DOMINI_DA_LEGGERE = Object.freeze([
+  "binary_sensor",
+  "sensor",
+  "lock",
+  "cover",
+  "number",
+  "input_number",
+  "input_text",
+  "input_select",
+  "select",
+  "input_boolean",
+  "switch",
+  "valve",
+  "device_tracker",
+  "person"
+]);
+var DOMINI_DA_TOCCARE = Object.freeze(["lock", "cover"]);
+function eLetturaDellIngresso(id) {
+  return DOMINI_DA_LEGGERE.includes(dominioDi7(entita2(id)));
+}
+function eComandoDellIngresso(voce3) {
+  const { entity: entity2, comando } = partiDelComando(voce3);
+  if (!entita2(entity2)) return false;
+  if (comando) return true;
+  const genere = genereDelComando(entity2);
+  return genere && genere !== "tendina" || DOMINI_DA_TOCCARE.includes(dominioDi7(entity2));
+}
+var unici = (voci4) => [...new Set(voci4.filter(Boolean))];
+var voci = (valore3) => Array.isArray(valore3) ? valore3 : [];
 function ingressoPulito(input = {}) {
   const dentro3 = input && typeof input === "object" ? input : {};
   return {
@@ -86161,7 +86230,50 @@ function ingressoPulito(input = {}) {
      * un evento di Home Assistant che scatta. */
     campanello: entita2(dentro3.campanello),
     persone: vero2(dentro3.persone, INGRESSO_VUOTO.persone),
-    finestre: vero2(dentro3.finestre, INGRESSO_VUOTO.finestre)
+    finestre: vero2(dentro3.finestre, INGRESSO_VUOTO.finestre),
+    aree: unici(
+      voci(dentro3.aree).map(entita2).filter((id) => id.startsWith("alarm_control_panel."))
+    ).slice(0, AREE_AL_MASSIMO),
+    letture: unici(voci(dentro3.letture).map(entita2).filter(eLetturaDellIngresso)).slice(
+      0,
+      LETTURE_DELL_INGRESSO_AL_MASSIMO
+    ),
+    comandi: unici(
+      voci(dentro3.comandi).map((voce3) => {
+        const { entity: entity2, comando } = partiDelComando(testo(voce3, 160));
+        const id = entita2(entity2);
+        return id && comando ? `${id}:${comando}` : id;
+      }).filter(eComandoDellIngresso)
+    ).slice(0, COMANDI_DELL_INGRESSO_AL_MASSIMO)
+  };
+}
+function areeDellIngresso(pagina2, fonte = {}) {
+  const ing = pagina2?.ingresso || {};
+  const nomi = new Map(elenco5(fonte.aree).map((a) => [a.entita, testo(a.nome, 40)]));
+  const scelte4 = elenco5(ing.aree).map(entita2).filter(Boolean);
+  const vecchia = entita2(ing.centrale);
+  const ids = scelte4.length ? scelte4 : vecchia ? [vecchia] : elenco5(fonte.centrali).map(entita2).filter(Boolean);
+  return unici(ids).slice(0, AREE_AL_MASSIMO).map((id) => ({ entita: id, nome: nomi.get(id) || "" }));
+}
+var CLASSI_DELLE_APERTURE = Object.freeze({
+  window: "finestre",
+  door: "porte",
+  garage_door: "porte",
+  opening: "aperture"
+});
+function lettureDellIngresso2(letture2 = [], stati = {}) {
+  const ids = elenco5(letture2).map(entita2).filter(Boolean);
+  const classe2 = (id) => dominioDi7(id) === "binary_sensor" ? CLASSI_DELLE_APERTURE[String(stati?.[id]?.attributes?.device_class || "")] || "" : "";
+  const aperture = ids.filter((id) => classe2(id));
+  if (aperture.length < 2) return { gruppo: null, singole: ids };
+  const tipi = unici(aperture.map(classe2));
+  return {
+    gruppo: {
+      tipo: tipi.length === 1 ? tipi[0] : "aperture",
+      tutte: aperture,
+      aperte: aperture.filter((id) => String(stati?.[id]?.state) === "on")
+    },
+    singole: ids.filter((id) => !aperture.includes(id))
   };
 }
 var RIGA_PIENA = Object.freeze({ clima: true, antifurto: true, persone: true, meteo: true });
@@ -86218,10 +86330,7 @@ function paginaPulita(input, indice = 0) {
     mixer: mixerPulito(dentro3.mixer),
     telecamera: telecameraPulita(dentro3.telecamera),
     pulsanti: (Array.isArray(dentro3.pulsanti) ? dentro3.pulsanti : []).slice(0, PULSANTI_AL_MASSIMO).map(pulsantePulito).filter(Boolean),
-    fermaTutto: {
-      attivo: vero2(dentro3.fermaTutto?.attivo, false),
-      entita: entitaDi3(dentro3.fermaTutto?.entita, DOMINI_DA_PREMERE)
-    }
+    fermaTutto: fermaTuttoPulito(dentro3.fermaTutto)
   };
 }
 var GRUPPI_AL_MASSIMO = 4;
@@ -86230,7 +86339,29 @@ var PRESET_AL_MASSIMO = 8;
 var PULSANTI_AL_MASSIMO = 8;
 var COLORI_DEI_GRUPPI = Object.freeze(["#f59e0b", "#0ea5e9", "#10b981", "#ec4899"]);
 var DOMINI_DEL_FADER = Object.freeze(["media_player", "number", "input_number"]);
-var DOMINI_DEL_MUTO = Object.freeze(["switch", "input_boolean"]);
+var DOMINI_DEL_CANALE = Object.freeze([...DOMINI_DEL_FADER, "sensor", "remote"]);
+var DOMINI_DEL_MUTO = Object.freeze([
+  "switch",
+  "input_boolean",
+  "remote",
+  "button",
+  "input_button",
+  "script"
+]);
+var COMANDI_DEL_CANALE = Object.freeze({
+  su: "volume_up",
+  giu: "volume_down",
+  muto: "mute"
+});
+var COMANDI_DELLA_TELECAMERA = Object.freeze({
+  su: "up",
+  giu: "down",
+  sinistra: "left",
+  destra: "right",
+  stop: "stop",
+  zoomPiu: "zoom_in",
+  zoomMeno: "zoom_out"
+});
 var DOMINI_DA_PREMERE = Object.freeze([
   "button",
   "input_button",
@@ -86240,9 +86371,11 @@ var DOMINI_DA_PREMERE = Object.freeze([
   "input_boolean",
   "automation",
   "light",
-  "fan"
+  "fan",
+  "remote"
 ]);
 var SI_SPENGONO3 = /* @__PURE__ */ new Set(["switch", "input_boolean", "light", "fan", "automation"]);
+var siSpegne = (id, comando = "") => SI_SPENGONO3.has(dominioDi7(id)) || dominioDi7(id) === "remote" && !comando;
 var DIREZIONI = Object.freeze(["su", "giu", "sinistra", "destra", "stop"]);
 var dominioDi7 = (id) => String(id || "").split(".")[0];
 function entitaDi3(valore3, domini2) {
@@ -86250,13 +86383,44 @@ function entitaDi3(valore3, domini2) {
   return id && domini2.includes(dominioDi7(id)) ? id : "";
 }
 var colorePulito = (valore3) => COLORI_DELLE_PAGINE.includes(String(valore3 || "").toLowerCase()) ? String(valore3).toLowerCase() : "";
+var parolaDelComando2 = (valore3) => testo(valore3, 64);
+var numeroOVuoto = (valore3) => valore3 === null || valore3 === void 0 || String(valore3).trim() === "" || !Number.isFinite(Number(valore3)) ? null : Number(valore3);
 function canalePulito(input) {
   const dentro3 = typeof input === "string" ? { entita: input } : input;
   if (!dentro3 || typeof dentro3 !== "object") return null;
-  const id = entitaDi3(dentro3.entita, DOMINI_DEL_FADER);
+  const id = entitaDi3(dentro3.entita, DOMINI_DEL_CANALE);
   if (!id) return null;
-  return { entita: id, nome: testo(dentro3.nome, 24), muto: entitaDi3(dentro3.muto, DOMINI_DEL_MUTO) };
+  const d = dominioDi7(id);
+  const muto2 = entitaDi3(dentro3.muto, DOMINI_DEL_MUTO);
+  const letto = d === "sensor" ? "" : entitaDi3(dentro3.letto, ["sensor"]);
+  const telecomando2 = d === "remote";
+  const mutoDaComando = telecomando2 || dominioDi7(muto2) === "remote";
+  const conScala = d === "sensor" || Boolean(letto);
+  return {
+    entita: id,
+    nome: testo(dentro3.nome, 24),
+    muto: muto2,
+    letto,
+    suComando: telecomando2 ? parolaDelComando2(dentro3.suComando) || COMANDI_DEL_CANALE.su : "",
+    giuComando: telecomando2 ? parolaDelComando2(dentro3.giuComando) || COMANDI_DEL_CANALE.giu : "",
+    mutoComando: mutoDaComando ? parolaDelComando2(dentro3.mutoComando) || COMANDI_DEL_CANALE.muto : "",
+    dispositivo: mutoDaComando ? testo(dentro3.dispositivo, 64) : "",
+    min: conScala ? numeroOVuoto(dentro3.min) : null,
+    max: conScala ? numeroOVuoto(dentro3.max) : null
+  };
 }
+var CANALE_VUOTO = Object.freeze({
+  entita: "",
+  nome: "",
+  muto: "",
+  letto: "",
+  suComando: "",
+  giuComando: "",
+  mutoComando: "",
+  dispositivo: "",
+  min: null,
+  max: null
+});
 function mixerPulito(input) {
   const dentro3 = input && typeof input === "object" ? input : {};
   const gruppi2 = (Array.isArray(dentro3.gruppi) ? dentro3.gruppi : []).slice(0, GRUPPI_AL_MASSIMO).map((g) => g && typeof g === "object" ? g : {}).map((g) => ({
@@ -86264,7 +86428,7 @@ function mixerPulito(input) {
     colore: colorePulito(g.colore),
     canali: (Array.isArray(g.canali) ? g.canali : []).map(canalePulito).filter(Boolean).slice(0, CANALI_PER_GRUPPO)
   }));
-  const master = canalePulito(dentro3.master) || { entita: "", nome: "", muto: "" };
+  const master = canalePulito(dentro3.master) || { ...CANALE_VUOTO };
   return { gruppi: gruppi2, master };
 }
 function coloreDelGruppo(gruppo, indice = 0) {
@@ -86273,13 +86437,29 @@ function coloreDelGruppo(gruppo, indice = 0) {
 function telecameraPulita(input) {
   const dentro3 = input && typeof input === "object" ? input : {};
   const fuori = { entita: entitaDi3(dentro3.entita, ["camera"]) };
-  for (const d of DIREZIONI) fuori[d] = entitaDi3(dentro3[d], DOMINI_DA_PREMERE);
+  const tasto2 = (chiave2) => {
+    fuori[chiave2] = entitaDi3(dentro3[chiave2], DOMINI_DA_PREMERE);
+    fuori[`${chiave2}Comando`] = dominioDi7(fuori[chiave2]) === "remote" ? parolaDelComando2(dentro3[`${chiave2}Comando`]) || COMANDI_DELLA_TELECAMERA[chiave2] : "";
+  };
+  for (const d of DIREZIONI) tasto2(d);
   fuori.zoom = entitaDi3(dentro3.zoom, ["number", "input_number"]);
-  fuori.zoomPiu = entitaDi3(dentro3.zoomPiu, DOMINI_DA_PREMERE);
-  fuori.zoomMeno = entitaDi3(dentro3.zoomMeno, DOMINI_DA_PREMERE);
-  fuori.preset = (Array.isArray(dentro3.preset) ? dentro3.preset : []).map((p) => p && typeof p === "object" ? p : {}).map((p) => ({ entita: entitaDi3(p.entita, DOMINI_DA_PREMERE), nome: testo(p.nome, 24) })).filter((p) => p.entita).slice(0, PRESET_AL_MASSIMO);
+  tasto2("zoomPiu");
+  tasto2("zoomMeno");
+  fuori.preset = (Array.isArray(dentro3.preset) ? dentro3.preset : []).map((p) => p && typeof p === "object" ? p : {}).map((p) => {
+    const id = entitaDi3(p.entita, DOMINI_DA_PREMERE);
+    return {
+      entita: id,
+      nome: testo(p.nome, 24),
+      comando: dominioDi7(id) === "remote" ? parolaDelComando2(p.comando) : ""
+    };
+  }).filter((p) => p.entita).slice(0, PRESET_AL_MASSIMO);
+  fuori.preset.forEach((p, k) => {
+    if (dominioDi7(p.entita) === "remote" && !p.comando) p.comando = `preset_${k + 1}`;
+  });
+  fuori.dispositivo = telecomandiDellaTelecamera(fuori) ? testo(dentro3.dispositivo, 64) : "";
   return fuori;
 }
+var telecomandiDellaTelecamera = (tc) => [...DIREZIONI, "zoomPiu", "zoomMeno"].some((k) => dominioDi7(tc[k]) === "remote") || tc.preset.some((p) => dominioDi7(p.entita) === "remote");
 function pulsantePulito(input) {
   if (!input || typeof input !== "object") return null;
   const fuori = {
@@ -86290,7 +86470,21 @@ function pulsantePulito(input) {
     stop: entitaDi3(input.stop, DOMINI_DA_PREMERE),
     stato: entita2(input.stato)
   };
+  fuori.avvioComando = dominioDi7(fuori.avvio) === "remote" ? parolaDelComando2(input.avvioComando) : "";
+  fuori.stopComando = dominioDi7(fuori.stop) === "remote" ? parolaDelComando2(input.stopComando) : "";
+  fuori.dispositivo = dominioDi7(fuori.avvio) === "remote" || dominioDi7(fuori.stop) === "remote" ? testo(input.dispositivo, 64) : "";
   return fuori.nome || fuori.avvio || fuori.stop ? fuori : null;
+}
+function fermaTuttoPulito(input) {
+  const dentro3 = input && typeof input === "object" ? input : {};
+  const id = entitaDi3(dentro3.entita, DOMINI_DA_PREMERE);
+  const telecomando2 = dominioDi7(id) === "remote";
+  return {
+    attivo: vero2(dentro3.attivo, false),
+    entita: id,
+    comando: telecomando2 ? parolaDelComando2(dentro3.comando) : "",
+    dispositivo: telecomando2 ? testo(dentro3.dispositivo, 64) : ""
+  };
 }
 function pulsantiDellaPagina(pagina2) {
   return (pagina2?.pulsanti || []).filter((p) => p.avvio || p.stop);
@@ -86308,15 +86502,42 @@ function posizioneDelValore(valore3, min = 0, max = 1) {
   if (!Number.isFinite(v) || !(Number(max) > Number(min))) return 0;
   return tra2((v - min) / (max - min), 0, 1);
 }
+function scalaDellaMisura(canale, a, unita2, accanto = null) {
+  const dichiarata = (k) => Number.isFinite(Number(a?.[k])) && a?.[k] !== "" && a?.[k] !== null ? Number(a[k]) : null;
+  let min = numeroOVuoto(canale?.min) ?? dichiarata("min");
+  let max = numeroOVuoto(canale?.max) ?? dichiarata("max");
+  if (min === null && max === null && accanto && accanto.unita === unita2) {
+    min = accanto.min;
+    max = accanto.max;
+  }
+  const db = /db/i.test(unita2);
+  if (min === null) min = db ? -60 : 0;
+  if (max === null) max = db ? 12 : 100;
+  if (!(max > min)) max = min + 100;
+  return { min, max };
+}
+function misuraDelSensore(id, canale, stati, accanto = null) {
+  const s = stati?.[id];
+  if (!s || IGNOTO2.has(String(s.state ?? ""))) return null;
+  const valore3 = Number(s.state);
+  if (String(s.state).trim() === "" || !Number.isFinite(valore3)) return null;
+  const a = s.attributes || {};
+  const unita2 = testo(a.unit_of_measurement, 12);
+  const { min, max } = scalaDellaMisura(canale, a, unita2, accanto);
+  return { entita: id, valore: valore3, unita: unita2, min, max, posizione: posizioneDelValore(valore3, min, max) };
+}
 function letturaDelCanale(canale, stati = {}) {
   const id = canale?.entita || "";
+  const d = dominioDi7(id);
   const s = stati?.[id];
   const a = s?.attributes || {};
   const muto2 = canale?.muto || "";
+  const mutoInterruttore = ["switch", "input_boolean"].includes(dominioDi7(muto2));
   const statoMuto = muto2 ? String(stati?.[muto2]?.state ?? "") : "";
+  const tipo = d === "media_player" ? "volume" : d === "sensor" ? "misura" : d === "remote" ? "telecomando" : "numero";
   const base = {
     entita: id,
-    tipo: dominioDi7(id) === "media_player" ? "volume" : "numero",
+    tipo,
     disponibile: Boolean(s) && !IGNOTO2.has(String(s.state ?? "")),
     valore: null,
     min: 0,
@@ -86325,31 +86546,65 @@ function letturaDelCanale(canale, stati = {}) {
     unita: "",
     posizione: 0,
     muove: false,
+    passi: false,
+    misura: null,
     puoMuto: Boolean(muto2),
-    mutato: muto2 ? statoMuto === "on" : false
+    mutoSaDire: mutoInterruttore,
+    mutato: mutoInterruttore ? statoMuto === "on" : false
   };
   if (!base.disponibile) return { ...base, puoMuto: false };
-  if (base.tipo === "volume") {
+  if (tipo === "misura") {
+    const m = misuraDelSensore(id, canale, stati);
+    return {
+      ...base,
+      valore: m ? m.valore : null,
+      min: m ? m.min : 0,
+      max: m ? m.max : 100,
+      passo: 0,
+      unita: m ? m.unita : testo(a.unit_of_measurement, 12),
+      posizione: m ? m.posizione : 0
+    };
+  }
+  if (tipo === "telecomando") {
+    const m = canale?.letto ? misuraDelSensore(canale.letto, canale, stati) : null;
+    return {
+      ...base,
+      valore: m ? m.valore : null,
+      min: m ? m.min : 0,
+      max: m ? m.max : 100,
+      passo: 0,
+      unita: m ? m.unita : "",
+      posizione: m ? m.posizione : 0,
+      passi: true,
+      misura: m,
+      puoMuto: true
+    };
+  }
+  if (tipo === "volume") {
     const f = Number(a.supported_features);
     const tutto = a.supported_features === void 0 || !Number.isFinite(f);
     const volume = Number(a.volume_level);
     const ce2 = a.volume_level !== void 0 && a.volume_level !== null && Number.isFinite(volume);
-    return {
+    const proprio = !muto2 && (tutto || Boolean(f & VOLUME_MUTE));
+    const lettura4 = {
       ...base,
       valore: ce2 ? tra2(volume, 0, 1) : null,
       unita: "%",
       posizione: ce2 ? tra2(volume, 0, 1) : 0,
       muove: ce2 && (tutto || Boolean(f & VOLUME_SET)),
       puoMuto: Boolean(muto2) || tutto || Boolean(f & VOLUME_MUTE),
+      mutoSaDire: mutoInterruttore || proprio,
       mutato: muto2 ? base.mutato : a.is_volume_muted === true
     };
+    lettura4.misura = canale?.letto ? misuraDelSensore(canale.letto, canale, stati) : null;
+    return lettura4;
   }
   const min = Number.isFinite(Number(a.min)) ? Number(a.min) : 0;
   const max = Number.isFinite(Number(a.max)) && Number(a.max) > min ? Number(a.max) : min + 100;
   const passo = Number(a.step) > 0 ? Number(a.step) : 1;
   const valore3 = Number(s.state);
   const ce = String(s.state).trim() !== "" && Number.isFinite(valore3);
-  return {
+  const lettura3 = {
     ...base,
     valore: ce ? valore3 : null,
     min,
@@ -86359,6 +86614,8 @@ function letturaDelCanale(canale, stati = {}) {
     posizione: ce ? posizioneDelValore(valore3, min, max) : 0,
     muove: ce
   };
+  lettura3.misura = canale?.letto ? misuraDelSensore(canale.letto, canale, stati, { unita: lettura3.unita, min, max }) : null;
+  return lettura3;
 }
 function valoreDallaPosizione(posizione, lettura3) {
   const p = tra2(Number(posizione) || 0, 0, 1);
@@ -86378,14 +86635,37 @@ function servizioDelFader(canale, posizione, lettura3) {
     return { domain: d, service: "volume_set", data: { entity_id: id, volume_level: valore3 } };
   return { domain: d, service: "set_value", data: { entity_id: id, value: valore3 } };
 }
+function comandoAlTelecomando(id, comando, dispositivo = "") {
+  if (dominioDi7(id) !== "remote" || !comando) return null;
+  const data = { entity_id: id, command: comando };
+  if (dispositivo) data.device = dispositivo;
+  return { domain: "remote", service: "send_command", data };
+}
 function servizioDelMuto(canale, lettura3) {
   if (!lettura3?.puoMuto) return null;
-  if (canale?.muto)
-    return {
-      domain: dominioDi7(canale.muto),
-      service: lettura3.mutato ? "turn_off" : "turn_on",
-      data: { entity_id: canale.muto }
-    };
+  const muto2 = canale?.muto || "";
+  if (muto2) {
+    const d = dominioDi7(muto2);
+    if (d === "switch" || d === "input_boolean")
+      return {
+        domain: d,
+        service: lettura3.mutato ? "turn_off" : "turn_on",
+        data: { entity_id: muto2 }
+      };
+    if (d === "remote")
+      return comandoAlTelecomando(
+        muto2,
+        canale.mutoComando || COMANDI_DEL_CANALE.muto,
+        canale.dispositivo
+      );
+    return servizioDaPremere(muto2);
+  }
+  if (dominioDi7(canale?.entita) === "remote")
+    return comandoAlTelecomando(
+      canale.entita,
+      canale.mutoComando || COMANDI_DEL_CANALE.muto,
+      canale.dispositivo
+    );
   if (dominioDi7(canale?.entita) !== "media_player") return null;
   return {
     domain: "media_player",
@@ -86393,16 +86673,27 @@ function servizioDelMuto(canale, lettura3) {
     data: { entity_id: canale.entita, is_volume_muted: !lettura3.mutato }
   };
 }
-function servizioDaPremere(id) {
+function servizioDelPasso(canale, verso2 = "su") {
+  if (dominioDi7(canale?.entita) !== "remote") return null;
+  const comando = verso2 === "giu" ? canale.giuComando || COMANDI_DEL_CANALE.giu : canale.suComando || COMANDI_DEL_CANALE.su;
+  return comandoAlTelecomando(canale.entita, comando, canale.dispositivo);
+}
+function servizioDaPremere(id, comando = "", dispositivo = "") {
   const d = dominioDi7(id);
   if (!id || !DOMINI_DA_PREMERE.includes(d)) return null;
+  if (d === "remote" && comando) return comandoAlTelecomando(id, comando, dispositivo);
   if (d === "button" || d === "input_button")
     return { domain: d, service: "press", data: { entity_id: id } };
   if (d === "automation") return { domain: d, service: "trigger", data: { entity_id: id } };
   return { domain: d, service: "turn_on", data: { entity_id: id } };
 }
-function servizioDellaTelecamera(telecamera, tasto2) {
-  return servizioDaPremere(telecamera?.[tasto2] || "");
+function servizioDellaTelecamera(telecamera, tasto2, dispositivo = "") {
+  const comando = tasto2 === "entita" ? telecamera?.comando : telecamera?.[`${tasto2}Comando`];
+  return servizioDaPremere(
+    telecamera?.[tasto2] || "",
+    comando || "",
+    dispositivo || telecamera?.dispositivo || ""
+  );
 }
 var ACCESI_DEI_PULSANTI = /* @__PURE__ */ new Set(["on", "playing", "open", "home", "true"]);
 function pulsanteAcceso(pulsante, stati = {}) {
@@ -86410,30 +86701,42 @@ function pulsanteAcceso(pulsante, stati = {}) {
   if (!id) return false;
   const d = dominioDi7(id);
   if (["button", "input_button", "scene"].includes(d)) return false;
+  if (!pulsante?.stato && d === "remote" && pulsante?.avvioComando) return false;
   return ACCESI_DEI_PULSANTI.has(String(stati?.[id]?.state ?? "").toLowerCase());
+}
+function pulsanteDiceLoStato(pulsante) {
+  return Boolean(pulsante?.stato) || siSpegne(pulsante?.avvio, pulsante?.avvioComando);
 }
 function servizioDelPulsante(pulsante, verso2 = "avvio", stati = {}) {
   const avvio = pulsante?.avvio || "";
   const stop = pulsante?.stop || "";
+  const dispositivo = pulsante?.dispositivo || "";
   const spegni2 = (id) => ({
     domain: dominioDi7(id),
     service: "turn_off",
     data: { entity_id: id }
   });
   if (verso2 === "stop") {
+    if (dominioDi7(stop) === "remote")
+      return pulsante?.stopComando ? comandoAlTelecomando(stop, pulsante.stopComando, dispositivo) : spegni2(stop);
     if (stop && stop !== avvio) return servizioDaPremere(stop);
-    if (avvio && SI_SPENGONO3.has(dominioDi7(avvio))) return spegni2(avvio);
+    if (avvio && siSpegne(avvio, pulsante?.avvioComando)) return spegni2(avvio);
     return null;
   }
   if (!avvio) return null;
-  if (!stop && SI_SPENGONO3.has(dominioDi7(avvio)) && pulsanteAcceso({ avvio }, stati))
+  if (!stop && siSpegne(avvio, pulsante?.avvioComando) && pulsanteAcceso({ avvio }, stati))
     return spegni2(avvio);
-  return servizioDaPremere(avvio);
+  return servizioDaPremere(avvio, pulsante?.avvioComando, dispositivo);
 }
 function chiamateDelFermaTutto(pagina2, stati = {}) {
-  if (!pagina2?.fermaTutto?.attivo) return [];
-  if (pagina2.fermaTutto.entita) return [servizioDaPremere(pagina2.fermaTutto.entita)];
-  return pulsantiDellaPagina(pagina2).filter((p) => p.stop || SI_SPENGONO3.has(dominioDi7(p.avvio))).map((p) => servizioDelPulsante(p, "stop", stati)).filter(Boolean);
+  const ferma3 = pagina2?.fermaTutto;
+  if (!ferma3?.attivo) return [];
+  if (ferma3.entita) {
+    if (dominioDi7(ferma3.entita) === "remote" && !ferma3.comando)
+      return [{ domain: "remote", service: "turn_off", data: { entity_id: ferma3.entita } }];
+    return [servizioDaPremere(ferma3.entita, ferma3.comando, ferma3.dispositivo)];
+  }
+  return pulsantiDellaPagina(pagina2).filter((p) => p.stop || siSpegne(p.avvio, p.avvioComando)).map((p) => servizioDelPulsante(p, "stop", stati)).filter(Boolean);
 }
 function menuDiLato(muro, versoScelto = "orizzontale", compatto = false) {
   return Boolean(muro?.menuDiLato) && versoScelto === "orizzontale" && !compatto;
@@ -86631,7 +86934,9 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
     lettori: lettoriConfigurati(elenco5(altro.lettori)).filter((l) => entita2(l.entity)).map((l) => ({
       entity: entita2(l.entity),
       nome: testo(l.nome),
-      comandi: elenco5(l.comandi).map(entita2).filter(Boolean)
+      comandi: l.comandi,
+      letture: l.letture.map(entita2).filter(Boolean),
+      telecomando: entita2(l.telecomando)
     })),
     stanze: elenco5(sezioni2.rooms).filter((s) => s && testo(s.name)).map((s) => ({
       id: testo(s.id, 80),
@@ -86809,8 +87114,9 @@ function telecamereDellaFonte(fonte = {}) {
   return elenco5(fonte.telecamere).map((d) => ({ entita: d.entity, nome: testo(d.name) }));
 }
 function ingressoProposto(fonte = {}) {
+  const centrali2 = elenco5(fonte.centrali);
   return ingressoPulito({
-    centrale: elenco5(fonte.centrali)[0] || "",
+    centrale: centrali2.length === 1 ? centrali2[0] : "",
     telecamera: elenco5(fonte.telecamere)[0]?.entity || "",
     esco: cercaAzione(fonte, "esco", "uscita", "leave", "away"),
     rientro: cercaAzione(fonte, "rientro", "arrivo", "torno", "home")
@@ -87358,7 +87664,7 @@ function testa(pagina2, muro) {
   const m = pagina2.riga?.meteo !== false ? meteo() : null;
   const inCasa = pagina2.riga?.meteo !== false && muro.temperatura === "casa" ? temperaturaInCasa(muro) : "";
   const parolaDelMeteo = m ? PAROLE_DEL_METEO()[m.condizione] || "" : "";
-  const chipDelMeteo = inCasa ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<div><b>${esc(inCasa)}</b><div class="mu-et">${esc([t("in casa", "inside"), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div></div><span class="mu-sep"></span>` : m && numero45(m.temperatura) !== null ? `<div class="mu-meteo" data-mu-temperatura="meteo">${disegno("meteo", 44, "testa-meteo")}<div><b>${decimale(m.temperatura, 0)}°</b><div class="mu-et">${esc(parolaDelMeteo)}</div></div></div><span class="mu-sep"></span>` : "";
+  const chipDelMeteo = inCasa ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([t("in casa", "inside"), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>` : m && numero45(m.temperatura) !== null ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>` : "";
   const accento = accentoDi(pagina2);
   const molte = muro.pagine.length > 4 ? " mu-molte" : "";
   const lato = menuDiLato(muro, state109.verso, state109.compatto);
@@ -87422,31 +87728,106 @@ function tastoAcceso(s, tasti) {
 function modoSuMisura(id) {
   return normalizzaModiSuMisura(state109.fonte?.antifurto?.suMisura || []).find((m) => m.id === id) || null;
 }
+function areeDellaPagina(pagina2) {
+  return areeDellIngresso(pagina2, state109.fonte || {});
+}
 function centraleDelMuro(pagina2) {
-  return clean(pagina2?.ingresso?.centrale) || state109.fonte?.centrali?.[0] || "";
+  return areeDellaPagina(pagina2)[0]?.entita || state109.fonte?.centrali?.[0] || "";
+}
+var nomeDellArea = (area, i = 0) => clean(area?.nome) || clean(stato2(area?.entita)?.attributes?.friendly_name) || `${t("Area", "Area")} ${i + 1}`;
+function accentoDellAllarme(valore3) {
+  if (valore3 === "triggered") return ACCENTI.allarme;
+  if (valore3 === "disarmed") return "#10b981";
+  if (["arming", "pending", "disarming"].includes(valore3)) return "#f59e0b";
+  if (!valore3 || valore3 === "unavailable" || valore3 === "unknown") return "#64748b";
+  return "#6366f1";
+}
+var parolaDellAllarme2 = (valore3) => !valore3 || valore3 === "unavailable" || valore3 === "unknown" ? t("Non disponibile", "Unavailable") : STATI_DELL_ALLARME()[valore3] || valore3;
+function tastiDellArea(s) {
+  const a = state109.fonte?.antifurto || {};
+  return alarmVisibleModes(s || null, a.tolte || [], []).map((voce3) => ({
+    ...voce3,
+    label: PAROLE_DEI_MODI()[voce3.mode] || voce3.mode
+  }));
+}
+var quanteInserite = (inserite, tutte) => t(`${inserite} di ${tutte} inserite`, `${inserite} of ${tutte} armed`);
+var quanteAree = (quante2) => t(`Antifurto · ${quante2} aree`, `Alarm · ${quante2} areas`);
+function riassuntoDelleAree(aree2) {
+  const valori = aree2.map((a) => String(stato2(a.entita)?.state || ""));
+  const suona = aree2.filter((_a, i) => valori[i] === "triggered");
+  if (suona.length)
+    return { valore: "triggered", testo: STATI_DELL_ALLARME().triggered, suona };
+  const lette = valori.filter((v) => v && v !== "unavailable" && v !== "unknown");
+  if (!lette.length) return { valore: "", testo: parolaDellAllarme2(""), suona };
+  if (lette.every((v) => v === lette[0]) && lette.length === valori.length)
+    return { valore: lette[0], testo: parolaDellAllarme2(lette[0]), suona };
+  const inserite = lette.filter((v) => v.startsWith("armed_")).length;
+  const cambia = lette.find((v) => ["arming", "pending", "disarming"].includes(v));
+  if (cambia && !inserite) return { valore: cambia, testo: parolaDellAllarme2(cambia), suona };
+  return {
+    valore: inserite ? "armed_custom_bypass" : "disarmed",
+    testo: inserite ? quanteInserite(inserite, valori.length) : parolaDellAllarme2("disarmed"),
+    suona
+  };
+}
+function rigaDellArea(area, i) {
+  const s = stato2(area.entita);
+  const valore3 = String(s?.state || "");
+  const modi = tastiDellArea(s);
+  const attivo = alarmActiveMode(valore3, modi.map((m) => m.mode));
+  return `<div class="mu-area${valore3 === "triggered" ? " grave" : ""}" style="--acc:${accentoDellAllarme(valore3)}" data-mu-area="${esc(area.entita)}">
+    <div class="mu-area-dice"><b class="mu-area-nome">${esc(nomeDellArea(area, i))}</b><span class="mu-area-stato"><i></i>${esc(parolaDellAllarme2(valore3))}</span></div>
+    ${s ? `<div class="mu-seg mu-modi mu-modi-area">${modi.map(
+    (m) => `<button type="button" class="${m.mode === attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}" data-mu-area="${esc(area.entita)}">${esc(m.label)}</button>`
+  ).join("")}</div>` : ""}
+  </div>`;
+}
+function tastiSuMisuraMarkup() {
+  const miei = alarmVisibleModes(
+    null,
+    [],
+    state109.fonte?.antifurto?.suMisura || []
+  ).filter((voce3) => voce3.suMisura);
+  if (!miei.length) return "";
+  const acceso6 = alarmActiveModeWithCustom(
+    null,
+    miei.map((m) => m.mode),
+    state109.fonte?.antifurto?.suMisura || [],
+    allStates() || {}
+  );
+  return `<div class="mu-seg mu-modi mu-modi-area mu-modi-miei">${miei.map(
+    (m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`
+  ).join("")}</div>`;
+}
+function areeMarkup(aree2) {
+  const codice = aree2.some((a) => {
+    const s = stato2(a.entita);
+    return s && alarmCodeNeeded(s, "alarm_arm_away");
+  });
+  return `<div class="mu-aree" data-quante="${Math.min(aree2.length, 4)}">${aree2.map(rigaDellArea).join("")}${tastiSuMisuraMarkup()}</div>${codice ? `<div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>` : ""}`;
 }
 function pillole(pagina2) {
   const riga3 = pagina2.riga || {};
-  const voci3 = [];
+  const voci4 = [];
   const stanza2 = (state109.fonte?.stanze || []).find((s) => s.name === pagina2.stanza);
   const luci = comandiDellaPagina(pagina2, state109.fonte).filter((c) => c.tipo === "luce");
   const accese = luci.filter((c) => acceso4(c.entita)).length;
   if (luci.length)
-    voci3.push([
+    voci4.push([
       "luci",
       "#f59e0b",
       String(accese),
       accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")
     ]);
   if (riga3.clima !== false && stanza2?.temp && numero45(stato2(stanza2.temp)?.state) !== null)
-    voci3.push([
+    voci4.push([
       "temperatura",
       "#ef4444",
       `${decimale(stato2(stanza2.temp).state)}°`,
       t("in stanza", "in the room")
     ]);
   if (riga3.clima !== false && stanza2?.hum && numero45(stato2(stanza2.hum)?.state) !== null)
-    voci3.push([
+    voci4.push([
       "umidita",
       "#0ea5e9",
       `${decimale(stato2(stanza2.hum).state, 0)}%`,
@@ -87455,7 +87836,7 @@ function pillole(pagina2) {
   const centrale = centraleDelMuro(pagina2);
   if (riga3.antifurto !== false && centrale && stato2(centrale)) {
     const s = String(stato2(centrale).state);
-    voci3.push([
+    voci4.push([
       "sicurezza",
       s === "triggered" ? ACCENTI.allarme : s === "disarmed" ? "#10b981" : "#6366f1",
       STATI_DELL_ALLARME()[s] || s,
@@ -87465,10 +87846,10 @@ function pillole(pagina2) {
   if (riga3.persone !== false) {
     const persone3 = personeInCasa();
     if (persone3.tutte)
-      voci3.push(["persone", "#2563eb", String(persone3.inCasa), t("in casa", "at home")]);
+      voci4.push(["persone", "#2563eb", String(persone3.inCasa), t("in casa", "at home")]);
   }
-  if (!voci3.length) return "";
-  return `<div class="mu-carta mu-pillole">${voci3.map(
+  if (!voci4.length) return "";
+  return `<div class="mu-carta mu-pillole">${voci4.map(
     ([k, acc, v, l], i) => `<div class="mu-pill" style="--acc:${acc}"><span class="mu-chip mu-acc">${disegno(k, 22, `pill-${i}-${k}`)}</span><div><b>${esc(v)}</b><span class="mu-et">${esc(l)}</span></div></div>`
   ).join("")}</div>`;
 }
@@ -87903,9 +88284,19 @@ var GLIFI_MUSICA = {
   gruppo: '<rect x="2.5" y="6" width="8" height="13" rx="2"/><rect x="13.5" y="6" width="8" height="13" rx="2"/><circle cx="6.5" cy="14.5" r="2"/><circle cx="17.5" cy="14.5" r="2"/><path d="M6.5 9.5h.01M17.5 9.5h.01"/>'
 };
 var glifo = (nome, misura7 = 30) => `<svg width="${misura7}" height="${misura7}" viewBox="0 0 24 24" fill="${["suona"].includes(nome) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${GLIFI_MUSICA[nome]}</svg>`;
+var voceDellaMusica = (entity2) => (state109.fonte?.lettori || []).find((l) => l.entity === entity2) || {};
 function lettoreOra(voce3) {
   segna(voce3.entita);
-  const lettura3 = letturaDelLettore({ entity: voce3.entita, nome: voce3.nome }, allStates() || {});
+  const scritta = voceDellaMusica(voce3.entita);
+  const lettura3 = letturaDelLettore(
+    { ...scritta, entity: voce3.entita, nome: voce3.nome },
+    allStates() || {},
+    (v) => v,
+    piattaformeConosciute()
+  );
+  for (const c of lettura3.comandi || []) segna(c.entita || c.entity);
+  for (const l of lettura3.letture || []) segna(l.entity);
+  if (scritta.telecomando) segna(scritta.telecomando);
   const attesa = state109.inAttesa[voce3.entita] || {};
   if (typeof attesa.suona === "boolean") {
     lettura3.suona = attesa.suona;
@@ -87958,19 +88349,52 @@ function lettoreGrande(l) {
     ${l.puo.sorgente && l.sorgenti.length && !l.spento ? `<div class="mu-mp-sorgenti">${l.sorgenti.slice(0, 8).map(
     (sorgente) => `<button type="button" class="${sorgente === l.sorgente ? "si" : ""}" data-mu-fa="mp-sorgente" data-mu-sorgente="${esc(sorgente)}" data-mu-entita="${esc(l.entity)}">${esc(sorgente)}</button>`
   ).join("")}</div>` : ""}
-    ${comandiDelLettore(l.entity)}
+    ${comandiDelLettore(l)}
+    ${lettureDelLettore(l)}
+    ${telecomandoDelLettoreMuro(l)}
   </div>`;
 }
-function comandiDelLettore(entity2) {
-  const voce3 = (state109.fonte?.lettori || []).find((l) => l.entity === entity2);
-  const comandi = (voce3?.comandi || []).filter((id) => stato2(id));
+function comandiDelLettore(l) {
+  const comandi = (l?.comandi || []).filter((c) => c.comando || stato2(c.entita || c.entity));
   if (!comandi.length) return "";
-  return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi.map((id) => {
+  return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi.map((c) => {
+    const id = c.entita || c.entity;
+    if (dominio2(id) === "remote") {
+      const premuto = c.comando ? "" : ` aria-pressed="${acceso4(id)}"`;
+      const parole5 = c.comando ? "" : statoInParole2(id);
+      return `<button type="button" class="${!c.comando && acceso4(id) ? "si" : ""}" data-mu-fa="mp-accanto" data-mu-entita="${esc(l.entity)}" data-mu-voce="${esc(c.entity)}"${premuto}${c.available ? "" : " disabled"}>${esc(c.comando ? `${nomeDi7(id)} · ${c.comando}` : nomeDi7(id))}${parole5 ? ` <small>${esc(parole5)}</small>` : ""}</button>`;
+    }
     const s = stato2(id);
     const servizio = servizioDellEntita(id, String(s?.state || ""));
     const parole4 = statoInParole2(id);
     return `<button type="button" class="${acceso4(id) ? "si" : ""}" ${servizio ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`}>${esc(nomeDi7(id))}${parole4 ? ` <small>${esc(parole4)}</small>` : ""}</button>`;
   }).join("")}</div>`;
+}
+function lettureDelLettore(l) {
+  const letture2 = l?.letture || [];
+  if (!letture2.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-letture">${letture2.map(
+    (x) => `<span class="mu-mp-lettura" data-mu-mp-lettura="${esc(x.entity)}">${esc(nomeDi7(x.entity))} <b>${esc(x.testo)}</b></span>`
+  ).join("")}</div>`;
+}
+var SEGNI_DEL_TELECOMANDO = Object.freeze({
+  su: "▲",
+  giu: "▼",
+  sinistra: "◀",
+  destra: "▶",
+  ok: "OK",
+  indietro: "↩",
+  home: "⌂",
+  menu: "☰",
+  canale_meno: "CH−",
+  canale_piu: "CH+"
+});
+function telecomandoDelLettoreMuro(l) {
+  const tasti = tastiDelTelecomando(l?.telecomando);
+  if (!tasti.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-tele">${tasti.map(
+    (tasto2) => `<button type="button" data-mu-fa="mp-tele" data-mu-tasto="${esc(tasto2)}" data-mu-entita="${esc(l.entity)}">${esc(SEGNI_DEL_TELECOMANDO[tasto2] || tasto2)}</button>`
+  ).join("")}</div>`;
 }
 var lettoriDiQui = [];
 function bottoneDelGruppo(l) {
@@ -87991,8 +88415,8 @@ function rigaDelLettore(l, scelto) {
   </div>`;
 }
 function paginaMusica(pagina2) {
-  const voci3 = lettoriDellaPagina(pagina2, state109.fonte || {});
-  if (!voci3.length)
+  const voci4 = lettoriDellaPagina(pagina2, state109.fonte || {});
+  if (!voci4.length)
     return griglia2(pagina2, [
       vuoto2(
         0,
@@ -88002,7 +88426,7 @@ function paginaMusica(pagina2) {
         )
       )
     ]);
-  const letture2 = voci3.map(lettoreOra);
+  const letture2 = voci4.map(lettoreOra);
   lettoriDiQui = letture2;
   const grande = lettoreScelto(pagina2, letture2);
   const altri = letture2.length > 1;
@@ -88110,25 +88534,140 @@ function finestreAperte() {
   const fonte = state109.fonte || {};
   const stati = allStates() || {};
   const righe2 = varchiDiCasa(stati, fonte.varchi || {}, fonte.invertiti || [], (id) => nomeDi7(id));
-  const centrale = centraleDelMuro(state109.muro?.pagine?.[state109.pagina]);
-  const dichiarati = fonte.antifurto?.ingressi?.[centrale] || [];
+  const dichiarati = [
+    ...new Set(
+      areeDellaPagina(state109.muro?.pagine?.[state109.pagina]).flatMap(
+        (a) => fonte.antifurto?.ingressi?.[a.entita] || []
+      )
+    )
+  ];
   const quali = dichiarati.length ? ingressiDellaCentrale(righe2, { ingressi: dichiarati }) : righe2;
   return quali.filter((riga3) => riga3.stato === "aperto").map((riga3) => riga3.name);
 }
+var parolaDelGruppo = (tipo) => ({
+  finestre: t("Finestre aperte", "Open windows"),
+  porte: t("Porte aperte", "Open doors")
+})[tipo] || t("Aperture aperte", "Open doors and windows");
+var parolaDelGruppoChiuso = (tipo) => ({
+  finestre: t("Finestre chiuse", "Windows closed"),
+  porte: t("Porte chiuse", "Doors closed")
+})[tipo] || t("Tutto chiuso", "All closed");
+var CLASSI_CHE_SI_APRONO = /* @__PURE__ */ new Set(["window", "door", "garage_door", "opening"]);
+function parolaDellaLettura(id) {
+  const s = stato2(id);
+  if (!s) return t("Non trovata", "Not found");
+  const v = String(s.state);
+  if (dominio2(id) === "binary_sensor" && (v === "on" || v === "off")) {
+    const classe2 = String(s.attributes?.device_class || "");
+    const on = v === "on";
+    if (CLASSI_CHE_SI_APRONO.has(classe2)) return on ? t("Aperta", "Open") : t("Chiusa", "Closed");
+    if (["motion", "occupancy", "presence"].includes(classe2))
+      return on ? t("Movimento", "Motion") : t("Nessuno", "Clear");
+    if (classe2 === "moisture") return on ? t("Acqua!", "Water!") : t("Asciutto", "Dry");
+    if (["smoke", "gas", "carbon_monoxide", "safety", "problem"].includes(classe2))
+      return on ? t("Attenzione", "Alert") : t("Tutto bene", "All clear");
+  }
+  if (dominio2(id) === "cover") {
+    const pos = numero45(s.attributes?.current_position);
+    if (v === "open" && pos !== null && pos > 0 && pos < 100) return `${pos}%`;
+  }
+  return statoInParole2(id);
+}
+function letturaDaGuardare(id) {
+  const s = stato2(id);
+  const v = String(s?.state || "");
+  if (dominio2(id) === "binary_sensor") {
+    const classe2 = String(s?.attributes?.device_class || "");
+    return v === "on" && (CLASSI_CHE_SI_APRONO.has(classe2) || ["moisture", "smoke", "gas", "carbon_monoxide", "safety", "problem"].includes(classe2));
+  }
+  if (dominio2(id) === "lock") return v === "unlocked" || v === "open";
+  return false;
+}
+function lettureDellIngressoMarkup(ing) {
+  const { gruppo, singole: tutte } = lettureDellIngresso2(ing?.letture || [], allStates() || {});
+  const comandi = new Set((ing?.comandi || []).map((v) => partiDelComando(v).entity));
+  const singole = tutte.filter((id) => !comandi.has(id));
+  if (!gruppo && !singole.length) return "";
+  const pastiglie = [];
+  if (gruppo) {
+    gruppo.tutte.forEach(segna);
+    const n = gruppo.aperte.length;
+    pastiglie.push(
+      `<button type="button" class="mu-ing-lettura mu-ing-conto${n ? " guarda" : " tutto-bene"}" data-mu-fa="ing-lettura" data-mu-gruppo="1">${disegno(gruppo.tipo === "porte" ? "aperture" : "finestra", 22, "ing-conto")}${n ? `${esc(parolaDelGruppo(gruppo.tipo))}: <b>${n}</b>` : `${esc(parolaDelGruppoChiuso(gruppo.tipo))} <b>${gruppo.tutte.length}/${gruppo.tutte.length}</b>`}</button>`
+    );
+  }
+  for (const id of singole)
+    pastiglie.push(
+      `<button type="button" class="mu-ing-lettura${letturaDaGuardare(id) ? " guarda" : ""}" data-mu-fa="ing-lettura" data-mu-entita="${esc(id)}">${esc(nomeDi7(id))} <b>${esc(parolaDellaLettura(id))}</b></button>`
+    );
+  return `<div class="mu-ing-letture">${pastiglie.join("")}</div>`;
+}
+function servizioDelComandoDIngresso(voce3, statoAttuale = "") {
+  const { entity: id, comando } = partiDelComando(voce3);
+  if (!id) return null;
+  if (comando)
+    return { domain: "remote", service: "send_command", data: { entity_id: id, command: comando } };
+  if (genereDelComando(id) && genereDelComando(id) !== "tendina")
+    return comandoDelDispositivo({ entity: id });
+  const servizio = servizioDellEntita(id, statoAttuale);
+  return servizio ? { ...servizio, data: { entity_id: id } } : null;
+}
+var SI_PREMONO = /* @__PURE__ */ new Set(["button", "input_button", "script", "scene", "automation"]);
+function comandiDellIngressoMarkup(ing) {
+  const comandi = ing?.comandi || [];
+  if (!comandi.length) return "";
+  return `<div class="mu-ing-comandi">${comandi.map((voce3) => {
+    const { entity: id, comando } = partiDelComando(voce3);
+    const s = stato2(id);
+    const premuto = !comando && !SI_PREMONO.has(dominio2(id));
+    const parole4 = premuto ? parolaDellaLettura(id) : "";
+    const si = premuto && (dominio2(id) === "lock" ? letturaDaGuardare(id) : acceso4(id)) ? " si" : "";
+    return `<button type="button" class="mu-ing-comando${si}" data-mu-fa="ing-comando" data-mu-voce="${esc(voce3)}"${s || comando ? "" : " disabled"}>${esc(comando ? `${nomeDi7(id)} · ${comando}` : nomeDi7(id))}${parole4 ? ` <small>${esc(parole4)}</small>` : ""}</button>`;
+  }).join("")}</div>`;
+}
+function altroDellIngresso(ing) {
+  const dentro3 = `${lettureDellIngressoMarkup(ing)}${comandiDellIngressoMarkup(ing)}`;
+  return dentro3 ? `<div class="mu-ing-altro">${dentro3}</div>` : "";
+}
+function finestraDellaLettura(f) {
+  const pagina2 = state109.muro?.pagine?.[f.pagina ?? state109.pagina];
+  const ing = pagina2?.ingresso || {};
+  const { gruppo } = lettureDellIngresso2(ing.letture || [], allStates() || {});
+  const ids = f.gruppo ? gruppo?.tutte || [] : [f.entita];
+  const titolo3 = f.gruppo ? gruppo?.aperte.length ? `${parolaDelGruppo(gruppo.tipo)}: ${gruppo.aperte.length}` : parolaDelGruppoChiuso(gruppo?.tipo) : nomeDi7(f.entita);
+  const quando4 = (id) => {
+    const cambio = Date.parse(stato2(id)?.last_changed || "");
+    if (!Number.isFinite(cambio)) return "";
+    const ora3 = orologio3(new Date(cambio)).ora;
+    return t(`dalle ${ora3}`, `since ${ora3}`);
+  };
+  const ordinate2 = [...ids].sort((a, b) => letturaDaGuardare(b) - letturaDaGuardare(a));
+  const righe2 = ordinate2.map((id) => {
+    const tocca2 = ["lock", "cover"].includes(dominio2(id));
+    const verbo = dominio2(id) === "lock" ? String(stato2(id)?.state) === "locked" ? t("Apri", "Unlock") : t("Chiudi", "Lock") : String(stato2(id)?.state) === "closed" ? t("Apri", "Open") : t("Chiudi", "Close");
+    return `<div class="mu-ing-riga${letturaDaGuardare(id) ? " guarda" : ""}" data-mu-lettura="${esc(id)}"><i></i><div class="mu-nome"><div class="mu-n">${esc(nomeDi7(id))}</div>${quando4(id) ? `<div class="mu-sotto">${esc(quando4(id))}</div>` : ""}</div><b>${esc(parolaDellaLettura(id))}</b>${tocca2 ? `<button type="button" class="mu-btn" data-mu-fa="ing-comando" data-mu-voce="${esc(id)}">${esc(verbo)}</button>` : ""}</div>`;
+  }).join("");
+  return `<div class="mu-fin-clima">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno(f.gruppo ? "finestra" : disegnoDellEntita(f.entita), 30, "fin-lettura")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(titolo3)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-ing-righe">${righe2 || `<div class="mu-sotto">${esc(t("Niente da mostrare qui", "Nothing to show here"))}</div>`}</div></div>`;
+}
 function paginaIngressoCompatta(pagina2) {
   const ing = pagina2.ingresso;
+  const aree2 = areeDellaPagina(pagina2);
   const centrale = centraleDelMuro(pagina2);
-  const s = stato2(centrale);
-  const valore3 = String(s?.state || "");
+  const s = aree2.length > 1 ? null : stato2(centrale);
+  const riassunto2 = aree2.length > 1 ? riassuntoDelleAree(aree2) : null;
+  const valore3 = riassunto2 ? riassunto2.valore : String(s?.state || "");
   const spento = valore3 === "disarmed";
+  const letture2 = lettureDellIngresso2(ing.letture, allStates() || {});
   const uscita = azioneDi(spento ? ing.esco : ing.rientro || ing.esco);
   const persone3 = personeInCasa();
   const tessere = [
-    s ? tessera({
+    s || riassunto2 ? tessera({
       chiave: "sicurezza",
       accento: valore3 === "triggered" ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1",
-      etichetta: t("Antifurto", "Alarm"),
-      titolo: STATI_DELL_ALLARME()[valore3] || valore3,
+      etichetta: riassunto2 ? quanteAree(aree2.length) : t("Antifurto", "Alarm"),
+      titolo: riassunto2 ? riassunto2.testo : STATI_DELL_ALLARME()[valore3] || valore3,
       sotto: "",
       attiva: true,
       dati: `data-mu-fa="finestra-antifurto"`,
@@ -88177,13 +88716,38 @@ function paginaIngressoCompatta(pagina2) {
       titolo: String(persone3.inCasa),
       sotto: "",
       dove: "c-persone"
+    }) : "",
+    /* Le porte e le finestre scelte fra le «Altre letture»: il loro conto,
+     * e il tocco le elenca. */
+    letture2.gruppo ? tessera({
+      chiave: "finestra",
+      accento: letture2.gruppo.aperte.length ? "#f59e0b" : "#10b981",
+      etichetta: parolaDelGruppo(letture2.gruppo.tipo),
+      titolo: String(letture2.gruppo.aperte.length),
+      sotto: "",
+      dati: `data-mu-fa="ing-lettura" data-mu-gruppo="1"`,
+      dove: "c-letture"
     }) : ""
-  ].filter(Boolean);
+  ].filter(Boolean).slice(0, 6);
   return `<div class="mu-g6">${tessere.join("")}</div>`;
 }
 function paginaIngresso(pagina2) {
   if (state109.compatto) return paginaIngressoCompatta(pagina2);
   const ing = pagina2.ingresso;
+  const aree2 = areeDellaPagina(pagina2);
+  const contoProprio = Boolean(lettureDellIngresso2(ing.letture, allStates() || {}).gruppo);
+  const aperte = ing.finestre && !contoProprio ? finestreAperte() : [];
+  const avvisoFinestre = aperte.length ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>` : "";
+  if (aree2.length > 1) {
+    const riassunto2 = riassuntoDelleAree(aree2);
+    const carta2 = `<div class="mu-carta mu-accesa mu-allarme mu-allarme-aree" style="--acc:${accentoDellAllarme(riassunto2.valore)}">
+      <div class="mu-riga1"><span class="mu-chip" style="--c:72px">${disegno("sicurezza", 44, "allarme")}</span>
+        <div class="mu-allarme-dice"><span class="mu-et">${esc(quanteAree(aree2.length))}</span><div class="mu-osw mu-stato-allarme">${esc(riassunto2.testo)}${riassunto2.suona.length ? ` · ${esc(riassunto2.suona.map((a) => nomeDellArea(a, aree2.indexOf(a))).join(", "))}` : ""}</div>
+        ${avvisoFinestre}</div></div>
+      ${areeMarkup(aree2)}
+    </div>`;
+    return restoDellIngresso(pagina2, carta2, riassunto2.valore === "disarmed");
+  }
   const centrale = centraleDelMuro(pagina2);
   const s = stato2(centrale);
   const valore3 = String(s?.state || "");
@@ -88192,27 +88756,33 @@ function paginaIngresso(pagina2) {
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
   const modi = tastiDellAntifurto(s);
   const acceso6 = tastoAcceso(s, modi);
-  const aperte = ing.finestre ? finestreAperte() : [];
-  const persone3 = personeInCasa();
-  const uscita = spento ? ing.esco : ing.rientro || ing.esco;
-  const azioneUscita = azioneDi(uscita);
-  const telecamera = clean(ing.telecamera);
-  return `<div class="mu-ingresso">
-    <div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
+  const carta = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
         <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? STATI_DELL_ALLARME()[valore3] || valore3 : modi.find((m) => m.mode === acceso6)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
-        ${aperte.length ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>` : ""}</div></div>
+        ${avvisoFinestre}</div></div>
       ${modi.length ? `<div class="mu-seg mu-modi">${modi.map((m) => {
     const attivo = m.mode === acceso6;
     return `<button type="button" class="${attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`;
   }).join(
     ""
   )}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>` : ""}
-    </div>
+    </div>`;
+  return restoDellIngresso(pagina2, carta, spento);
+}
+function restoDellIngresso(pagina2, carta, spento) {
+  const ing = pagina2.ingresso;
+  const persone3 = personeInCasa();
+  const uscita = spento ? ing.esco : ing.rientro || ing.esco;
+  const azioneUscita = azioneDi(uscita);
+  const telecamera = clean(ing.telecamera);
+  const altro = altroDellIngresso(ing);
+  return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}">
+    ${carta}
     <div class="mu-carta mu-citofono">
       <div class="mu-video">${telecamera ? `<img data-mu-telecamera="${esc(telecamera)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera ? nomeDi7(telecamera) : t("Nessuna telecamera", "No camera"))}</span></div>
       ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${disegno("varchi", 26, "apri1")}${esc(nomeDi7(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${disegno("aperture", 26, "apri2")}${esc(nomeDi7(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}
     </div>
+    ${altro ? `<div class="mu-carta mu-ing-striscia">${altro}</div>` : ""}
     <div class="mu-piede">
       ${azioneUscita ? tessera({
     chiave: spento ? "aperture" : "home",
@@ -88238,35 +88808,63 @@ function paginaIngresso(pagina2) {
 function canaleOra(canale) {
   segna(canale.entita);
   if (canale.muto) segna(canale.muto);
+  if (canale.letto) segna(canale.letto);
   const lettura3 = letturaDelCanale(canale, allStates() || {});
   const attesa = state109.inAttesa[canale.entita] || {};
-  if (attesa.posizione !== void 0) {
+  if (attesa.posizione !== void 0 && lettura3.muove) {
     lettura3.posizione = attesa.posizione;
     lettura3.valore = valoreDallaPosizione(attesa.posizione, lettura3);
   }
   const muto2 = canale.muto ? state109.inAttesa[canale.muto]?.acceso : attesa.mutato;
-  if (typeof muto2 === "boolean") lettura3.mutato = muto2;
+  if (lettura3.mutoSaDire && typeof muto2 === "boolean") lettura3.mutato = muto2;
   return lettura3;
 }
+function testoDellaMisura(m) {
+  if (!m) return "—";
+  const cifre2 = Number.isInteger(m.valore) || Math.abs(m.valore) >= 100 ? 0 : 1;
+  return `${decimale(m.valore, cifre2)}${m.unita ? ` ${m.unita}` : ""}`;
+}
 function testoDelCanale(lettura3, posizione = lettura3.posizione) {
+  if (lettura3.tipo === "telecomando")
+    return lettura3.misura && lettura3.disponibile ? testoDellaMisura(lettura3.misura) : "";
   if (!lettura3.disponibile || lettura3.valore === null) return "—";
+  if (lettura3.tipo === "misura") return testoDellaMisura(lettura3);
   const valore3 = valoreDallaPosizione(posizione, lettura3);
   if (lettura3.tipo === "volume") return `${Math.round(valore3 * 100)}%`;
   const cifre2 = lettura3.passo >= 1 ? 0 : lettura3.passo >= 0.1 ? 1 : 2;
   return `${decimale(valore3, cifre2)}${lettura3.unita ? ` ${lettura3.unita}` : ""}`;
 }
+var strisciaLetta = (m) => m ? `<span class="mu-fad-letto" style="--l:${m.posizione.toFixed(4)}" title="${esc(testoDellaMisura(m))}"><i></i></span>` : "";
 function fader(canale, lettura3, { sdraiato = false } = {}) {
-  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura3.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura3.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi7(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura3))}"><span class="mu-fad-traccia"><i></i></span><u></u></div>`;
+  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura3.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura3.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi7(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura3))}"><span class="mu-fad-traccia"><i></i></span>${strisciaLetta(lettura3.misura)}<u></u></div>`;
 }
-function tastoMuto(canale, lettura3) {
+function metro(canale, posizione, testo2, { sdraiato = false } = {}) {
+  return `<div class="mu-fader mu-metro${sdraiato ? " sdraiato" : ""}" data-mu-metro="${esc(canale.entita)}" style="--p:${posizione.toFixed(4)}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(posizione * 100)}" aria-label="${esc(nomeDi7(canale.entita, canale.nome))}" aria-valuetext="${esc(testo2)}"><span class="mu-fad-traccia"><i></i></span></div>`;
+}
+function passi(canale, lettura3, { sdraiato = false } = {}) {
+  const nome = nomeDi7(canale.entita, canale.nome);
+  const tasto2 = (verso2, segno2, etichetta3) => `<button type="button" class="mu-passo" data-mu-fa="passo" data-mu-verso="${verso2}" data-mu-entita="${esc(canale.entita)}"${sdraiato ? ' data-mu-master="1"' : ""} aria-label="${esc(etichetta3)} ${esc(nome)}"${lettura3.disponibile ? "" : " disabled"}>${segno2}</button>`;
+  const su = tasto2("su", "▲", t("Alza", "Volume up"));
+  const giu = tasto2("giu", "▼", t("Abbassa", "Volume down"));
+  const mezzo = lettura3.misura ? metro(canale, lettura3.misura.posizione, testoDellaMisura(lettura3.misura), { sdraiato }) : '<span class="mu-passi-spazio"></span>';
+  return `<div class="mu-passi${sdraiato ? " sdraiato" : ""}">${sdraiato ? `${giu}${mezzo}${su}` : `${su}${mezzo}${giu}`}</div>`;
+}
+function comandoDelCanale(canale, l, opzioni = {}) {
+  if (l.tipo === "misura") return metro(canale, l.posizione, testoDelCanale(l), opzioni);
+  if (l.tipo === "telecomando") return passi(canale, l, opzioni);
+  return fader(canale, l, opzioni);
+}
+function tastoMuto(canale, lettura3, master = false) {
   if (!lettura3.puoMuto) return `<span class="mu-can-muto vuoto" aria-hidden="true"></span>`;
-  return `<button type="button" class="mu-can-muto${lettura3.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}" aria-pressed="${lettura3.mutato}" aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi7(canale.entita, canale.nome))}">${glifo(lettura3.mutato ? "muto" : "voce", 24)}</button>`;
+  const premuto = lettura3.mutoSaDire ? ` aria-pressed="${lettura3.mutato}"` : "";
+  return `<button type="button" class="mu-can-muto${lettura3.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}"${master ? ' data-mu-master="1"' : ""}${premuto} aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi7(canale.entita, canale.nome))}">${glifo(lettura3.mutato ? "muto" : "voce", 24)}</button>`;
 }
+var lettoSotto = (l) => l.misura && l.tipo !== "telecomando" ? `<small class="mu-can-l" data-mu-letto>${esc(testoDellaMisura(l.misura))}</small>` : "";
 function canaleDelMixer(canale) {
   const l = canaleOra(canale);
-  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"}" data-mu-canale="${esc(canale.entita)}">
-    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>
-    ${fader(canale, l)}
+  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"} mu-can-${l.tipo}" data-mu-canale="${esc(canale.entita)}">
+    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>${lettoSotto(l)}
+    ${comandoDelCanale(canale, l)}
     <span class="mu-can-n">${esc(nomeDi7(canale.entita, canale.nome))}</span>
     ${tastoMuto(canale, l)}</div>`;
 }
@@ -88284,13 +88882,19 @@ function paginaMixer(pagina2) {
   let totale = "";
   if (master?.entita) {
     const l = canaleOra(master);
-    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
+    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""} mu-can-${l.tipo}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
       <span class="mu-mix-tit">${esc(master.nome || t("Volume totale", "Master volume"))}</span>
-      ${tastoMuto(master, l)}
-      ${fader(master, l, { sdraiato: true })}
+      ${tastoMuto(master, l, true)}
+      ${comandoDelCanale(master, l, { sdraiato: true })}
       <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b></div>`;
   }
   return `<div class="mu-mixer${banchi ? "" : " solo-totale"}">${banchi}${totale}</div>`;
+}
+function canaleDellaPagina(id, muto2 = "", master = false) {
+  const mixer = state109.muro?.pagine?.[state109.pagina]?.mixer;
+  if (master && mixer?.master?.entita === id) return mixer.master;
+  const tutti = [...(mixer?.gruppi || []).flatMap((g) => g.canali || []), mixer?.master];
+  return tutti.find((c) => c?.entita === id && (!muto2 || c.muto === muto2)) || { entita: id, muto: muto2 };
 }
 var FRECCE = Object.freeze({
   su: '<path d="M6 15l6-6 6 6"/>',
@@ -88340,7 +88944,7 @@ function comandoAcceso(p) {
   const atteso = state109.inAttesa[id]?.acceso;
   return typeof atteso === "boolean" ? atteso : pulsanteAcceso(p, allStates() || {});
 }
-var diceLoStato = (p) => Boolean(p.stato) || ["switch", "input_boolean", "light", "fan", "automation"].includes(dominio2(p.avvio));
+var diceLoStato = pulsanteDiceLoStato;
 function paginaComandi(pagina2) {
   const tutti = pulsantiDellaPagina(pagina2).map((p, k) => ({ p, k }));
   if (!tutti.length)
@@ -88462,6 +89066,15 @@ function finestra4() {
       <div class="mu-seg mu-seg-alto">${tastiDellaTapparella(attributi(id)).map(
       (k) => `<button type="button" data-mu-fa="${k}" data-mu-entita="${esc(id)}">${{ su: `▲ ${esc(t("Su", "Up"))}`, ferma: `■ ${esc(t("Stop", "Stop"))}`, giu: `▼ ${esc(t("Giù", "Down"))}` }[k]}</button>`
     ).join("")}</div></div>`;
+  } else if (f.tipo === "antifurto" && areeDellaPagina(state109.muro?.pagine?.[state109.pagina]).length > 1) {
+    const pagina2 = state109.muro?.pagine?.[state109.pagina];
+    const aree2 = areeDellaPagina(pagina2);
+    const riassunto2 = riassuntoDelleAree(aree2);
+    dentro3 = `<div class="mu-fin-clima mu-fin-aree" style="--acc:${accentoDellAllarme(riassunto2.valore)}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(riassunto2.testo)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      ${areeMarkup(aree2)}${altroDellIngresso(pagina2?.ingresso)}</div>`;
+  } else if (f.tipo === "lettura") {
+    dentro3 = finestraDellaLettura(f);
   } else if (f.tipo === "antifurto") {
     const pagina2 = state109.muro?.pagine?.[state109.pagina];
     const centrale = centraleDelMuro(pagina2);
@@ -88472,7 +89085,7 @@ function finestra4() {
     const aperte = pagina2?.ingresso?.finestre ? finestreAperte() : [];
     dentro3 = `<div class="mu-fin-clima" style="--acc:${valore3 === "disarmed" ? "#10b981" : "#6366f1"}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore3] || valore3)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div></div>`;
+      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina2?.ingresso)}</div>`;
   } else if (f.tipo === "citofono") {
     const ing = state109.muro?.pagine?.[f.pagina ?? state109.pagina]?.ingresso || {};
     const squillo = f.suonato ? `<span class="mu-chip mu-acc" style="--c:52px">${disegnoDelCatalogo("bell", 30)}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(t("Suonano alla porta", "Someone at the door"))}</div><div class="mu-sotto">${esc(orologio3(new Date(f.suonato)).ora)}${ing.telecamera ? ` · ${esc(nomeDi7(ing.telecamera))}` : ""}</div></div>` : `<div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi7(ing.telecamera))}</div></div>`;
@@ -88515,6 +89128,7 @@ function finestra4() {
     codice: "#6366f1",
     tapparella: ACCENTI.tapparella,
     antifurto: "#10b981",
+    lettura: "#f59e0b",
     citofono: "#2563eb",
     telecamera: "#2563eb",
     gruppo: "#ec4899"
@@ -89094,9 +89708,10 @@ function cambiaTemperatura(id, verso2, estremo = "") {
     700
   );
 }
-function allarme(modo, codice = "") {
+function allarme(modo, codice = "", area = "") {
   const pagina2 = state109.muro?.pagine?.[state109.pagina];
-  const centrale = centraleDelMuro(pagina2);
+  const sue = areeDellaPagina(pagina2).map((a) => a.entita);
+  const centrale = area && sue.includes(area) ? area : centraleDelMuro(pagina2);
   const s = stato2(centrale);
   const mio = modoSuMisura(modo);
   if (mio) {
@@ -89122,7 +89737,7 @@ function allarme(modo, codice = "") {
   const voce3 = modo === "disarm" ? ALARM_DISARM : ALARM_MODES.find((m) => m.mode === modo);
   if (!voce3) return;
   if (alarmCodeNeeded(s, voce3.service) && !codice) {
-    apriFinestra({ tipo: "codice", scopo: "allarme", modo, scritto: "" });
+    apriFinestra({ tipo: "codice", scopo: "allarme", modo, area: centrale, scritto: "" });
     return;
   }
   chiudiFinestra();
@@ -89148,7 +89763,7 @@ function cifra(k) {
         f.errore = true;
         f.scritto = "";
       }
-    } else allarme(f.modo, f.scritto);
+    } else allarme(f.modo, f.scritto, f.area || "");
   } else if ((f.scritto || "").length < 12) {
     f.scritto = (f.scritto || "") + k;
     f.errore = false;
@@ -89362,8 +89977,26 @@ function onClick24(event) {
         });
       return;
     case "allarme":
-      allarme(bersaglio.dataset.muModo);
+      allarme(bersaglio.dataset.muModo, "", bersaglio.dataset.muArea || "");
       return;
+    case "ing-lettura":
+      apriFinestra({
+        tipo: "lettura",
+        pagina: state109.pagina,
+        gruppo: Boolean(bersaglio.dataset.muGruppo),
+        entita: bersaglio.dataset.muEntita || ""
+      });
+      return;
+    case "ing-comando": {
+      const voce3 = bersaglio.dataset.muVoce || "";
+      const { entity: chi } = partiDelComando(voce3);
+      const servizio = servizioDelComandoDIngresso(voce3, String(stato2(chi)?.state || ""));
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(chi, servizio.domain, "toggle", servizio.data);
+      else comanda2(servizio.domain, servizio.service, servizio.data);
+      if (state109.finestra?.tipo === "lettura") disegna5();
+      return;
+    }
     case "entita": {
       const servizio = servizioDellEntita(id, String(stato2(id)?.state || ""));
       if (!servizio) return;
@@ -89379,16 +90012,39 @@ function onClick24(event) {
     case "cifra":
       cifra(bersaglio.dataset.muCifra);
       return;
+    case "mp-accanto": {
+      const l = lettoreOra({ entita: id, nome: "" });
+      const voce3 = (l.comandi || []).find((c) => c.entity === bersaglio.dataset.muVoce);
+      const servizio = voce3 ? comandoDelDispositivo(voce3) : null;
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(voce3.entita, "remote", "toggle");
+      else comanda2(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "mp-tele": {
+      const l = lettoreOra({ entita: id, nome: "" });
+      const servizio = comandoDelTelecomando(l.telecomando, bersaglio.dataset.muTasto);
+      if (servizio) comanda2(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
     case "muto": {
       const muto2 = bersaglio.dataset.muMuto || "";
-      const canale = { entita: id, muto: muto2 };
+      const canale = canaleDellaPagina(id, muto2, Boolean(bersaglio.dataset.muMaster));
       const lettura3 = canaleOra(canale);
       const servizio = servizioDelMuto(canale, lettura3);
       if (!servizio) return;
-      if (muto2) attendi(muto2, "acceso", !lettura3.mutato);
-      else attendi(id, "mutato", !lettura3.mutato);
+      if (lettura3.mutoSaDire) {
+        if (muto2) attendi(muto2, "acceso", !lettura3.mutato);
+        else attendi(id, "mutato", !lettura3.mutato);
+      }
       comanda2(servizio.domain, servizio.service, servizio.data);
       disegna5();
+      return;
+    }
+    case "passo": {
+      const canale = canaleDellaPagina(id, "", Boolean(bersaglio.dataset.muMaster));
+      const servizio = servizioDelPasso(canale, bersaglio.dataset.muVerso);
+      if (servizio) comanda2(servizio.domain, servizio.service, servizio.data);
       return;
     }
     case "ptz": {
@@ -89400,7 +90056,7 @@ function onClick24(event) {
     case "preset": {
       const pagina2 = state109.muro?.pagine?.[state109.pagina];
       const voce3 = pagina2?.telecamera?.preset?.[Number(bersaglio.dataset.muIndice)];
-      const servizio = voce3 ? servizioDellaTelecamera(voce3, "entita") : null;
+      const servizio = voce3 ? servizioDellaTelecamera(voce3, "entita", pagina2.telecamera.dispositivo) : null;
       if (servizio) comanda2(servizio.domain, servizio.service, servizio.data);
       return;
     }
@@ -89747,9 +90403,12 @@ ${MURO} .mu-pagine+.mu-ora{margin-left:24px}
 ${MURO} .mu-h{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:58px;line-height:.9}
 ${MURO} .mu-d{font-size:12px;font-weight:900;letter-spacing:.11em;color:var(--text-dim);margin-top:6px}
 ${MURO} .mu-sep{width:1px;align-self:stretch;background:color-mix(in srgb,var(--text) 12%,transparent)}
-${MURO} .mu-meteo{display:flex;align-items:center;gap:10px}
-${MURO} .mu-meteo b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:34px}
-${MURO} .mu-meteo .mu-et{font-size:10px}
+${MURO} .mu-ora{min-width:0;flex-shrink:.2}
+${MURO} .mu-meteo{display:flex;flex-direction:column;align-items:flex-end;min-width:0;max-width:240px}
+${MURO} .mu-meteo-su{display:flex;align-items:center;gap:8px}
+${MURO} .mu-meteo-su>*{flex:0 0 auto}
+${MURO} .mu-meteo b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:34px;line-height:1.1}
+${MURO} .mu-meteo .mu-et{font-size:10px;letter-spacing:.08em;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-pillole{display:flex;gap:26px;padding:14px 22px;align-items:center;flex-wrap:wrap;row-gap:12px}
 ${MURO} .mu-pill{display:flex;align-items:center;gap:12px}
 ${MURO} .mu-pill .mu-chip{--c:38px}
@@ -89784,6 +90443,9 @@ ${MURO} .mu-mp-cursore{flex:1}
 ${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 ${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
 ${MURO} .mu-mp-comandi button small{margin-left:4px;font-weight:700;opacity:.75}
+${MURO} .mu-mp-lettura{padding:8px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 3%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+${MURO} .mu-mp-lettura b{margin-left:4px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums}
+${MURO} .mu-mp-tele button{min-width:52px;text-align:center}
 ${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
 ${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}
@@ -89969,6 +90631,65 @@ ${MURO} .mu-stato-allarme{font-size:52px;color:var(--acc);margin-top:6px}
 ${MURO} .mu-avviso-finestre{display:flex;align-items:center;gap:8px;margin-top:8px}
 ${MURO} .mu-modi{--acc:#e11d48}
 ${MURO} .mu-nota{font-size:10.5px;text-align:center}
+/* Piu' aree: la card dell'antifurto si fa elenco. In cima le aree tutte
+ * insieme, sotto una riga per area — il nome e lo stato a sinistra, i tasti a
+ * destra — e le righe si dividono l'altezza che c'e'. Da una a quattro ci
+ * stanno senza scorrere; oltre, l'elenco scorre. */
+${MURO} .mu-allarme-aree{padding:18px 20px;gap:12px;min-height:0}
+${MURO} .mu-allarme-aree .mu-riga1{gap:14px}
+${MURO} .mu-allarme-aree .mu-stato-allarme{font-size:34px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-allarme-dice{min-width:0;flex:1}
+${MURO} .mu-allarme-aree .mu-avviso-finestre{margin-top:4px}
+${MURO} .mu-aree{display:flex;flex-direction:column;gap:8px;min-height:0;flex:1 1 auto;overflow-y:auto;scrollbar-width:none}
+${MURO} .mu-area{display:flex;align-items:center;gap:12px;padding:8px 8px 8px 16px;border-radius:18px;flex:0 0 auto;
+  background:color-mix(in srgb,var(--acc) 7%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 26%,transparent)}
+${MURO} .mu-area.grave{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));box-shadow:inset 0 0 0 2px var(--acc),0 0 24px -8px var(--acc)}
+${MURO} .mu-area-dice{display:flex;flex-direction:column;gap:3px;min-width:0;flex:0 1 30%}
+${MURO} .mu-area-nome{font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-area-stato{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:color-mix(in srgb,var(--acc) 85%,var(--text));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-area-stato i{flex:0 0 9px;width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+${MURO} .mu-area.grave .mu-area-stato i{animation:mu-batti 1s ease-in-out infinite}
+@keyframes mu-batti{50%{transform:scale(1.5);opacity:.6}}
+${MURO} .mu-modi-area{flex:1 1 auto;margin:0;padding:4px;gap:4px;border-radius:14px;min-width:0}
+${MURO} .mu-modi-area>button{height:46px;border-radius:11px;font-size:15px;padding:0 6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-modi-miei{flex:0 0 auto}
+${MURO} .mu-aree[data-quante="2"] .mu-area{padding-top:12px;padding-bottom:12px}
+${MURO} .mu-aree[data-quante="2"] .mu-modi-area>button{height:56px;font-size:16px}
+${MURO} .mu-aree[data-quante="4"]{gap:6px}
+${MURO} .mu-aree[data-quante="4"] .mu-area{padding-top:5px;padding-bottom:5px}
+${MURO} .mu-aree[data-quante="4"] .mu-modi-area>button{height:40px;font-size:14px}
+${MURO} .mu-aree[data-quante="4"] .mu-area-nome{font-size:16px}
+/* Le letture e i comandi dell'ingresso: le pastiglie della Musica. */
+${MURO} .mu-ing-altro{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:0}
+${MURO} .mu-ing-letture,${MURO} .mu-ing-comandi{display:flex;flex-wrap:wrap;gap:8px}
+${MURO} .mu-ingresso.mu-con-striscia{grid-template-rows:minmax(0,1fr) auto auto}
+${MURO} .mu-ing-striscia{grid-column:1/-1;padding:10px 12px;min-width:0}
+${MURO} .mu-ing-striscia .mu-ing-altro{flex-direction:row;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
+${MURO} .mu-ing-striscia .mu-ing-letture,${MURO} .mu-ing-striscia .mu-ing-comandi{flex-wrap:nowrap;flex:0 0 auto}
+${MURO} .mu-ing-striscia .mu-ing-comandi{margin-left:auto;padding-left:12px;border-left:1px solid color-mix(in srgb,var(--text) 10%,transparent)}
+${MURO} .mu-ing-striscia .mu-ing-lettura,${MURO} .mu-ing-striscia .mu-ing-comando{white-space:nowrap}
+${MURO} .mu-con-striscia .mu-piede .mu-card{padding:12px 20px}
+${MURO} .mu-con-striscia .mu-piede .mu-tessera .mu-osw{font-size:34px}
+${MURO} .mu-con-striscia .mu-piede .mu-chip{--c:44px!important}
+${MURO} .mu-ing-lettura{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 4%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent)}
+${MURO} .mu-ing-lettura b{margin-left:2px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums}
+${MURO} .mu-ing-lettura .dm-oggetto{margin:-4px 0}
+${MURO} .mu-ing-lettura.guarda{color:color-mix(in srgb,#f59e0b 80%,var(--text));background:color-mix(in srgb,#f59e0b 13%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,#f59e0b 50%,transparent)}
+${MURO} .mu-ing-lettura.guarda b{color:inherit}
+${MURO} .mu-ing-lettura.tutto-bene b{color:#10b981}
+${MURO} .mu-ing-comando{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 11%,transparent)}
+${MURO} .mu-ing-comando small{margin-left:4px;font-weight:700;opacity:.75}
+${MURO} .mu-ing-comando.si{--acc:#0ea5e9;color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
+${MURO} .mu-ing-comando:disabled{opacity:.45}
+${MURO} .mu-ing-righe{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto}
+${MURO} .mu-ing-riga{--acc:#10b981;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--text) 4%,var(--card-bg))}
+${MURO} .mu-ing-riga.guarda{--acc:#f59e0b;background:color-mix(in srgb,var(--acc) 12%,var(--card-bg))}
+${MURO} .mu-ing-riga>i{flex:0 0 12px;width:12px;height:12px;border-radius:50%;background:var(--acc)}
+${MURO} .mu-ing-riga>b{font-size:17px;font-weight:900;color:color-mix(in srgb,var(--acc) 80%,var(--text))}
+${MURO} .mu-ing-riga .mu-btn{height:48px;padding:0 18px;font-size:16px;border-radius:14px}
+${MURO} .mu-fin-aree .mu-aree{overflow:visible}
+${MURO} .mu-finestra{max-height:94%;overflow-y:auto;scrollbar-width:none}
+${MURO} .mu-fin-aree{display:flex;flex-direction:column;gap:12px}
 ${MURO} .mu-citofono{padding:18px;display:flex;flex-direction:column;gap:14px}
 ${MURO} .mu-video{flex:1;border-radius:16px;position:relative;overflow:hidden;min-height:120px;background:radial-gradient(120% 90% at 30% 20%,#2a3550,#0b1020)}
 ${MURO} .mu-video img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -90083,6 +90804,7 @@ ${MURO}[data-verso="verticale"] .mu-pagine button{flex:1;justify-content:center}
 ${MURO}[data-verso="verticale"] .mu-meteo,${MURO}[data-verso="verticale"] .mu-sep{display:none}
 ${MURO}[data-verso="verticale"] .mu-ora{margin-left:auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+${MURO}[data-verso="verticale"] .mu-ingresso.mu-con-striscia{grid-template-rows:auto minmax(0,1fr) auto auto}
 ${MURO}[data-verso="verticale"] .mu-piede{grid-template-columns:1fr 1fr}
 ${MURO}[data-verso="verticale"] .mu-fin-luce{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-colonna{height:300px}
@@ -90321,6 +91043,29 @@ ${MURO} .mu-fader.fermo{cursor:default;opacity:.4}
 ${MURO} .mu-muto .mu-fad-traccia i{filter:grayscale(1);opacity:.3;box-shadow:none}
 ${MURO} .mu-muto .mu-can-v{color:var(--text-dim);text-decoration:line-through}
 ${MURO} .mu-spento{opacity:.5}
+${MURO} .mu-can-v{min-height:1em}
+${MURO} .mu-can-l{margin-top:-4px;font-size:12px;font-weight:700;color:var(--text-dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+${MURO} .mu-fad-letto{position:absolute;top:24px;bottom:24px;left:calc(50% - 22px);width:6px;border-radius:3px;background:color-mix(in srgb,var(--text) 8%,#000 18%);overflow:hidden}
+${MURO} .mu-fad-letto i{position:absolute;left:0;right:0;bottom:0;height:calc(var(--l) * 100%);background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--l),.001));background-position:bottom}
+${MURO} .mu-metro{cursor:default}
+${MURO} .mu-metro .mu-fad-traccia{width:18px;margin-left:-9px;border-radius:5px}
+${MURO} .mu-metro .mu-fad-traccia i{border-radius:4px;box-shadow:none;background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--p),.001));background-position:bottom;
+  -webkit-mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia{height:18px;margin:-9px 0 0}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia i{background:linear-gradient(90deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:calc(100% / max(var(--p),.001)) 100%;background-position:left;
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-passi{flex:1 1 auto;min-height:90px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+${MURO} .mu-passi>.mu-metro{flex:1 1 auto;min-height:40px}
+${MURO} .mu-passi>.mu-metro .mu-fad-traccia{top:6px;bottom:6px}
+${MURO} .mu-passi-spazio{flex:1 1 auto}
+${MURO} .mu-passo{flex:none;width:100%;max-width:72px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:24px;color:var(--acc);
+  background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 35%,transparent),0 6px 14px -8px rgba(0,0,0,.6)}
+${MURO} .mu-passo:active:not(:disabled){background:color-mix(in srgb,var(--acc) 30%,var(--card-bg))}
+${MURO} .mu-passo:disabled{opacity:.4}
+${MURO} .mu-passi.sdraiato{flex-direction:row;min-height:0;height:64px}
+${MURO} .mu-passi.sdraiato>.mu-metro{height:100%;min-height:0}
+${MURO} .mu-passi.sdraiato>.mu-metro .mu-fad-traccia{left:10px;right:10px}
+${MURO} .mu-passi.sdraiato .mu-passo{width:72px;height:56px}
 ${MURO} .mu-mix-master{display:flex;align-items:center;gap:18px;padding:12px 22px;min-width:0}
 ${MURO} .mu-mix-master>.mu-mix-tit{flex:none;max-width:220px;text-align:left;font-size:15px}
 ${MURO} .mu-mix-master>.mu-can-muto{width:64px;max-width:none;height:56px}
@@ -90390,6 +91135,11 @@ ${MURO}[data-compatto="1"] .mu-fader.sdraiato{height:44px;min-height:0}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato .mu-fad-traccia{top:50%;bottom:auto;left:20px;right:20px}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato::before{top:auto;bottom:2px;left:20px;right:20px}
 ${MURO}[data-compatto="1"] .mu-fader.sdraiato u{bottom:auto;left:calc(20px + var(--p) * (100% - 40px));width:30px;height:40px}
+${MURO}[data-compatto="1"] .mu-passo{height:40px;font-size:16px;border-radius:10px}
+${MURO}[data-compatto="1"] .mu-passi{min-height:60px;gap:4px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato{height:44px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato .mu-passo{width:44px;height:40px}
+${MURO}[data-compatto="1"] .mu-fad-letto{top:16px;bottom:16px}
 ${MURO}[data-compatto="1"] .mu-mix-master{padding:6px 12px;gap:10px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-mix-master>.mu-mix-tit{max-width:110px;font-size:11px}
 ${MURO}[data-compatto="1"] .mu-mix-master>.mu-can-muto{width:44px;height:38px}
@@ -90576,14 +91326,14 @@ async function chiediAlPonte() {
   }
 }
 var interruttore = (via, acceso6, etichetta3) => `<button type="button" class="mu-ed-int" role="switch" aria-checked="${acceso6}" data-mu-ed-alterna="${esc(via)}" aria-label="${esc(etichetta3)}"><i></i></button>`;
-var scelte3 = (via, valore3, voci3) => `<span class="mu-ed-seg">${voci3.map(
+var scelte3 = (via, valore3, voci4) => `<span class="mu-ed-seg">${voci4.map(
   ([v, testo2]) => `<button type="button" class="${String(v) === String(valore3) ? "si" : ""}" data-mu-ed-metti="${esc(via)}" data-mu-ed-valore="${esc(v)}">${esc(testo2)}</button>`
 ).join("")}</span>`;
-var tendina2 = (via, valore3, voci3, vuota = "") => `<select class="ed-input mu-ed-sel" data-mu-ed-campo="${esc(via)}">${vuota !== null ? `<option value="">${esc(vuota || "—")}</option>` : ""}${voci3.map(
+var tendina2 = (via, valore3, voci4, vuota = "") => `<select class="ed-input mu-ed-sel" data-mu-ed-campo="${esc(via)}">${vuota !== null ? `<option value="">${esc(vuota || "—")}</option>` : ""}${voci4.map(
   ([v, testo2]) => `<option value="${esc(v)}"${String(v) === String(valore3) ? " selected" : ""}>${esc(testo2)}</option>`
 ).join(
   ""
-)}${valore3 && !voci3.some(([v]) => String(v) === String(valore3)) ? `<option value="${esc(valore3)}" selected>${esc(valore3)}</option>` : ""}</select>`;
+)}${valore3 && !voci4.some(([v]) => String(v) === String(valore3)) ? `<option value="${esc(valore3)}" selected>${esc(valore3)}</option>` : ""}</select>`;
 var campo3 = (via, valore3, segnaposto = "", tipo = "text") => `<input class="ed-input${tipo === "text" ? " mono" : ""} mu-ed-campo" type="${tipo}" data-mu-ed-campo="${esc(via)}" value="${esc(valore3)}" placeholder="${esc(segnaposto)}" autocomplete="off" spellcheck="false"${tipo === "password" ? ' inputmode="numeric"' : ""}>`;
 var riga2 = (titolo3, nota, destra) => `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(titolo3)}</b>${nota ? `<small>${esc(nota)}</small>` : ""}</div><div class="mu-ed-dx">${destra}</div></div>`;
 var nomeDi8 = (id) => clean(
@@ -90707,6 +91457,35 @@ function elencoMarkup(p, i) {
   ) : ""}
     <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${nomi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
 }
+var ELENCHI_DELL_INGRESSO = ["aree", "letture", "comandi"];
+function valoriDellElenco(p, chiave2) {
+  const ing = p?.ingresso || {};
+  const voci4 = Array.isArray(ing[chiave2]) ? ing[chiave2].slice() : [];
+  if (chiave2 === "aree" && !voci4.length && clean(ing.centrale)) return [clean(ing.centrale)];
+  return voci4;
+}
+function elencoDiEntita2(i, chiave2, valori, { domini: domini2, massimo, segnaposto }) {
+  const via = `pagine.${i}.ingresso.${chiave2}`;
+  const campi = Math.min(valori.length + 1, massimo);
+  return `<span class="mu-ed-lettori mu-ed-elenco" data-mu-ed-elenco="${esc(chiave2)}">${Array.from(
+    { length: campi },
+    (_, k) => {
+      const pieno = Boolean(valori[k]);
+      return `<span class="mu-ed-elenco-voce">${cerca(`${via}.${k}`, valori[k] || "", { domini: domini2, segnaposto: pieno ? "" : segnaposto })}${pieno ? `<span class="mu-ed-frecce"><button type="button" data-mu-ed-sposta="${esc(via)}" data-mu-ed-da="${k}" data-mu-ed-verso="-1"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-sposta="${esc(via)}" data-mu-ed-da="${k}" data-mu-ed-verso="1"${k === valori.length - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>` : ""}</span>`;
+    }
+  ).join("")}</span>`;
+}
+function cambiaElenco(via, cambia) {
+  const [, n, , chiave2] = via.split(".");
+  if (!ELENCHI_DELL_INGRESSO.includes(chiave2)) return false;
+  const m = structuredClone(bozza());
+  const p = m.pagine[Number(n)];
+  if (!p?.ingresso) return false;
+  p.ingresso[chiave2] = cambia(valoriDellElenco(p, chiave2)).map(clean).filter(Boolean);
+  if (chiave2 === "aree") p.ingresso.centrale = "";
+  state110.bozza = muroPulito(m);
+  return true;
+}
 function paginaMarkup(p, i, tutte) {
   const f = state110.fonte || {};
   const via = `pagine.${i}`;
@@ -90826,14 +91605,56 @@ function paginaMarkup(p, i, tutte) {
   } else {
     const ing = p.ingresso;
     const azioni2 = (f.azioni || []).filter(eUnaScena).map((a) => [a.name, a.name]);
-    dentro3 = `${riga2(t("Centrale dell'antifurto", "Alarm panel"), t("I modi sono quelli che la centrale accetta", "The modes are the ones the panel accepts"), cerca(`${via}.ingresso.centrale`, ing.centrale, { domini: "alarm_control_panel" }))}
-    ${riga2(t("Avvisa se restano finestre aperte", "Warn about open windows"), "", interruttore(`${via}.ingresso.finestre`, ing.finestre, "finestre"))}
+    const sue = (f.aree || []).map(
+      (a, k) => clean(a.nome) || nomeDi8(a.entita) || `${t("Area", "Area")} ${k + 1}`
+    );
+    const scelte4 = valoriDellElenco(p, "aree");
+    dentro3 = `<div class="mu-ed-sotto-titolo">${esc(t("Antifurto", "Alarm"))}</div>
+    ${riga2(
+      t("Partizioni dell'antifurto", "Alarm partitions"),
+      scelte4.length ? t(
+        "Quelle scelte qui, in quest'ordine: ognuna col suo stato e i suoi tasti, quelli che la sua centrale accetta",
+        "The ones chosen here, in this order: each with its state and its buttons, the ones its panel accepts"
+      ) : `${t("Vuoto: tutte quelle della sezione Sicurezza della plancia", "Empty: all the ones from the dashboard's Security section")}${sue.length ? ` — ${sue.join(", ")}` : ""}`,
+      elencoDiEntita2(i, "aree", scelte4, {
+        domini: "alarm_control_panel",
+        massimo: AREE_AL_MASSIMO,
+        segnaposto: t("Aggiungi una partizione", "Add a partition")
+      })
+    )}
+    ${riga2(t("Avvisa se restano finestre aperte", "Warn about open windows"), t("Gli ingressi dichiarati nella sezione Sicurezza", "The entries declared in the Security section"), interruttore(`${via}.ingresso.finestre`, ing.finestre, "finestre"))}
+    ${riga2(
+      t("Altre letture", "Other readings"),
+      t(
+        "Sotto l'antifurto, ognuna col suo valore: porte e finestre (binary_sensor), sensori, serrature, tapparelle. Due o più porte o finestre diventano un conto solo, «Finestre aperte: 2»; un tocco le elenca.",
+        "Under the alarm, each with its value: doors and windows (binary_sensor), sensors, locks, blinds. Two or more doors or windows become a single count, «Open windows: 2»; a tap lists them."
+      ),
+      elencoDiEntita2(i, "letture", ing.letture, {
+        domini: "binary_sensor,sensor,lock,cover,number,input_number,input_boolean,switch,input_select,select",
+        massimo: LETTURE_DELL_INGRESSO_AL_MASSIMO,
+        segnaposto: t("Aggiungi una lettura", "Add a reading")
+      })
+    )}
+    ${riga2(
+      t("Altri comandi", "Other commands"),
+      t(
+        "Tasti accanto alle letture: serrature (chiude e apre), script, button, scene, switch, tapparelle. Un telecomando si accende e si spegne; scritto remote.nome:comando manda quel comando.",
+        "Buttons next to the readings: locks (lock and unlock), scripts, buttons, scenes, switches, blinds. A remote turns on and off; written remote.name:command it sends that command."
+      ),
+      elencoDiEntita2(i, "comandi", ing.comandi, {
+        domini: "lock,script,button,input_button,scene,switch,input_boolean,remote,cover,automation",
+        massimo: COMANDI_DELL_INGRESSO_AL_MASSIMO,
+        segnaposto: t("Aggiungi un comando", "Add a command")
+      })
+    )}
+    <div class="mu-ed-sotto-titolo">${esc(t("Citofono / telecamera", "Intercom / camera"))}</div>
     ${riga2(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
     ${riga2(t("Campanello", "Doorbell"), t("Quando suona, il pannello si sveglia e apre il citofono da solo", "When it rings, the panel wakes up and opens the intercom by itself"), cerca(`${via}.ingresso.campanello`, ing.campanello, { domini: "binary_sensor,event,input_boolean,switch" }))}
     ${riga2(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga2(t("Nome del tasto grande", "Big button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo3(`${via}.ingresso.nomeApri`, ing.nomeApri, ing.apri ? nomeDi8(ing.apri) : t("Cancello", "Gate")))}
     ${riga2(t("Secondo tasto", "Second button"), t("Per esempio: apri porta", "For example: open the door"), cerca(`${via}.ingresso.apri2`, ing.apri2, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga2(t("Nome del secondo tasto", "Second button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo3(`${via}.ingresso.nomeApri2`, ing.nomeApri2, ing.apri2 ? nomeDi8(ing.apri2) : t("Portoncino", "Front door")))}
+    <div class="mu-ed-sotto-titolo">${esc(t("Uscita e chi c'è", "Leaving and who is home"))}</div>
     ${riga2(t("Esco", "Leaving"), t("L'azione del tasto in basso quando l'antifurto è spento", "The bottom button's action when the alarm is off"), tendina2(`${via}.ingresso.esco`, ing.esco, azioni2))}
     ${riga2(t("Rientro", "I'm home"), t("Al posto di «Esco» quando l'antifurto è inserito", "Instead of «Leaving» when the alarm is armed"), tendina2(`${via}.ingresso.rientro`, ing.rientro, azioni2))}
     ${riga2(t("Chiedi conferma prima di «Esco» e «Rientro»", "Confirm before «Leaving» and «I'm home»"), "", interruttore(`${via}.confermaUscita`, p.confermaUscita, "conferma"))}
@@ -90869,14 +91690,24 @@ function paginaMarkup(p, i, tutte) {
 var DA_PREMERE = "button,input_button,script,scene";
 var togli = (via, etichetta3) => `<button type="button" class="mu-ed-svuota" data-mu-ed-togli-voce="${esc(via)}" aria-label="${esc(etichetta3)}">✕</button>`;
 var voce2 = (etichetta3, dentro3, entitaQui = false) => `<label class="mu-ed-voce"${entitaQui ? " data-entity-field" : ""}><span${entitaQui ? ' class="ed-slot-lbl"' : ""}>${esc(etichetta3)}</span>${dentro3}</label>`;
+var DOMINI_DEL_CANALE2 = "media_player,number,input_number,sensor,remote";
+var DOMINI_DEL_MUTO2 = "switch,input_boolean,remote,button,input_button,script";
+var telecomando = (id) => String(id || "").startsWith("remote.");
 function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
   const pieno = Boolean(c?.entita);
+  const sensore = String(c?.entita || "").startsWith("sensor.");
+  const conComandi = pieno && (telecomando(c.entita) || telecomando(c.muto));
+  const comando = (chiave2, etichetta3, ripiego) => voce2(etichetta3, campo3(`${via}.${chiave2}`, c[chiave2] || "", ripiego));
   return `<div class="mu-ed-posto${pieno ? " pieno" : ""}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? `${nomeDi8(c.entita)} · ${c.entita}` : t("Nuovo canale", "New channel"))}</b>${pieno && togliVia ? togli(togliVia, t("Togli il canale", "Remove the channel")) : ""}</div>
     <div class="mu-ed-posto-corpo">
-      ${voce2(t("Livello", "Level"), cerca(`${via}.entita`, c?.entita || "", { domini: "media_player,number,input_number" }), true)}
+      ${voce2(t("Livello", "Level"), cerca(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEL_CANALE2 }), true)}
       ${pieno ? `${voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.nome`, c.nome || "", nomeDi8(c.entita)))}
-      ${voce2(t("Muto (facoltativo)", "Mute (optional)"), cerca(`${via}.muto`, c.muto || "", { domini: "switch,input_boolean", segnaposto: t("Acceso = muto", "On = muted") }), true)}` : ""}
+      ${telecomando(c.entita) ? `<div class="mu-ed-comandi" data-mu-ed-comandi>${comando("suComando", t("Comando ▲", "▲ command"), "volume_up")}${comando("giuComando", t("Comando ▼", "▼ command"), "volume_down")}</div>` : ""}
+      ${sensore ? "" : voce2(t("Livello letto (facoltativo)", "Read level (optional)"), cerca(`${via}.letto`, c.letto || "", { domini: "sensor", segnaposto: t("Un sensore col livello", "A sensor with the level") }), true)}
+      ${sensore || c.letto ? `<div class="mu-ed-comandi">${voce2(t("Scala: da", "Scale: from"), campo3(`${via}.min`, c.min ?? "", t("Automatica", "Automatic"), "number"))}${voce2(t("Scala: a", "Scale: to"), campo3(`${via}.max`, c.max ?? "", t("Automatica", "Automatic"), "number"))}</div>` : ""}
+      ${voce2(t("Muto (facoltativo)", "Mute (optional)"), cerca(`${via}.muto`, c.muto || "", { domini: DOMINI_DEL_MUTO2, segnaposto: t("Acceso = muto", "On = muted") }), true)}
+      ${conComandi ? `<div class="mu-ed-comandi">${comando("mutoComando", t("Comando del muto", "Mute command"), "mute")}${comando("dispositivo", t("Dispositivo (facoltativo)", "Device (optional)"), "")}</div>` : ""}` : ""}
     </div></div>`;
 }
 function mixerMarkup(p, i) {
@@ -90897,28 +91728,35 @@ function mixerMarkup(p, i) {
   }).join("");
   return `<div class="mu-ed-nota">${esc(
     t(
-      "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Il muto è quello del lettore, o un interruttore scelto qui: acceso vuol dire muto.",
-      "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. Mute is the player's own, or a switch chosen here: on means muted."
+      "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Un sensore (sensor) diventa uno strumento che si guarda; un telecomando (remote) ha ▲ / ▼ e il muto, ognuno col suo comando (remote.send_command). Il muto è quello del lettore, un interruttore (acceso vuol dire muto), un telecomando o un tasto da premere.",
+      "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press."
     )
   )}</div>${blocchi}
   ${gruppi2.length < GRUPPI_AL_MASSIMO ? `<button type="button" class="ed-btn-add mu-ed-piu" data-mu-ed-aggiungi-voce="${via}.gruppi">＋ ${esc(t("Aggiungi un gruppo", "Add a group"))}</button>` : ""}
   <div class="mu-ed-sotto-titolo">${esc(t("Volume totale", "Master volume"))}</div>
   <div class="mu-ed-posti">${canaleMarkup(`${via}.master`, p.mixer.master, 0)}</div>`;
 }
+var DA_PREMERE_O_TELECOMANDO = `${DA_PREMERE},remote`;
+var campoComando = (via, valore3, ripiego = "") => `<span class="mu-ed-comando">${campo3(via, valore3, ripiego || t("Comando", "Command"))}</span>`;
 function telecameraMarkup(p, i) {
   const via = `pagine.${i}.telecamera`;
   const tc = p.telecamera;
-  const tasto2 = (chiave2, titolo3, domini2 = DA_PREMERE) => riga2(titolo3, "", cerca(`${via}.${chiave2}`, tc[chiave2], { domini: domini2 }));
+  const tasto2 = (chiave2, titolo3, domini2 = DA_PREMERE_O_TELECOMANDO) => riga2(
+    titolo3,
+    "",
+    `${cerca(`${via}.${chiave2}`, tc[chiave2], { domini: domini2 })}${telecomando(tc[chiave2]) ? campoComando(`${via}.${chiave2}Comando`, tc[`${chiave2}Comando`] || "") : ""}`
+  );
   const preset = Array.from({ length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) }, (_, k) => {
     const v = tc.preset[k];
     const pieno = Boolean(v?.entita);
     return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? v.nome || nomeDi8(v.entita) : t("Nuovo preset", "New preset"))}</b>${pieno ? togli(`${via}.preset.${k}`, t("Togli il preset", "Remove the preset")) : ""}</div>
-      <div class="mu-ed-posto-corpo">${voce2(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE }), true)}${pieno ? voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
+      <div class="mu-ed-posto-corpo">${voce2(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE_O_TELECOMANDO }), true)}${pieno && telecomando(v.entita) ? voce2(t("Comando", "Command"), campo3(`${via}.preset.${k}.comando`, v.comando || "", `preset_${k + 1}`)) : ""}${pieno ? voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
   }).join("");
+  const conTelecomando = ["su", "giu", "sinistra", "destra", "stop", "zoomPiu", "zoomMeno"].some((k) => telecomando(tc[k])) || tc.preset.some((x) => telecomando(x.entita));
   return `<div class="mu-ed-nota">${esc(
     t(
-      "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera o uno script con onvif.ptz. Un tasto senza entità resta spento.",
-      "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button or a script with onvif.ptz. A button without an entity stays off."
+      "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera, uno script con onvif.ptz, o un telecomando (remote) col comando da mandare. Un tasto senza entità resta spento.",
+      "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off."
     )
   )}</div>
   ${riga2(t("Telecamera", "Camera"), "", cerca(`${via}.entita`, tc.entita, { domini: "camera" }))}
@@ -90930,12 +91768,13 @@ function telecameraMarkup(p, i) {
   ${riga2(t("Zoom", "Zoom"), t("Un numero: diventa un cursore", "A number: it becomes a fader"), cerca(`${via}.zoom`, tc.zoom, { domini: "number,input_number" }))}
   ${tasto2("zoomPiu", t("Zoom avanti", "Zoom in"))}
   ${tasto2("zoomMeno", t("Zoom indietro", "Zoom out"))}
+  ${conTelecomando ? riga2(t("Dispositivo del telecomando", "Remote device"), t("Facoltativo: il «device» di remote.send_command", "Optional: the «device» of remote.send_command"), campo3(`${via}.dispositivo`, tc.dispositivo || "", "")) : ""}
   <div class="mu-ed-sotto-titolo">${esc(t("Preset", "Presets"))}</div>
   <div class="mu-ed-posti">${preset}</div>`;
 }
 function comandiMarkup2(p, i) {
   const via = `pagine.${i}`;
-  const voci3 = Array.from(
+  const voci4 = Array.from(
     { length: Math.min(p.pulsanti.length + 1, PULSANTI_AL_MASSIMO) },
     (_, k) => {
       const c = p.pulsanti[k];
@@ -90944,8 +91783,11 @@ function comandiMarkup2(p, i) {
       return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? c.nome || nomeDi8(c.avvio || c.stop) : t("Nuovo comando", "New command"))}</b>${pieno ? togli(v, t("Togli il comando", "Remove the command")) : ""}</div>
       <div class="mu-ed-posto-corpo">
         ${voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${v}.nome`, c?.nome || "", t("Per esempio: Avvio", "For example: Start")))}
-        ${voce2(t("Avvio", "Start"), cerca(`${v}.avvio`, c?.avvio || "", { domini: `${DA_PREMERE},switch,input_boolean` }), true)}
-        ${pieno ? `${voce2(t("Stop (facoltativo)", "Stop (optional)"), cerca(`${v}.stop`, c.stop || "", { domini: `${DA_PREMERE},switch,input_boolean` }), true)}
+        ${voce2(t("Avvio", "Start"), cerca(`${v}.avvio`, c?.avvio || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
+        ${pieno && telecomando(c.avvio) ? voce2(t("Comando d'avvio", "Start command"), campo3(`${v}.avvioComando`, c.avvioComando || "", t("Vuoto: accende", "Empty: turns on"))) : ""}
+        ${pieno ? `${voce2(t("Stop (facoltativo)", "Stop (optional)"), cerca(`${v}.stop`, c.stop || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
+        ${telecomando(c.stop) ? voce2(t("Comando di stop", "Stop command"), campo3(`${v}.stopComando`, c.stopComando || "", t("Vuoto: spegne", "Empty: turns off"))) : ""}
+        ${telecomando(c.avvio) || telecomando(c.stop) ? voce2(t("Dispositivo (facoltativo)", "Device (optional)"), campo3(`${v}.dispositivo`, c.dispositivo || "", "")) : ""}
         ${voce2(t("Stato (facoltativo)", "State (optional)"), cerca(`${v}.stato`, c.stato || "", { domini: "switch,input_boolean,binary_sensor,script,media_player", segnaposto: t("Acceso quando è acceso", "On when it's on") }), true)}
         ${voce2(t("Disegno", "Drawing"), tendina2(`${v}.disegno`, c.disegno || "", DISEGNI2(), null))}
         ${voce2(t("Colore", "Colour"), colori(`${v}.colore`, c.colore))}` : ""}
@@ -90957,8 +91799,8 @@ function comandiMarkup2(p, i) {
       "Un comando con il solo avvio è una tessera grande (per esempio «Avvio», «Spegnimento»); con anche lo stop diventa una colonna con i due tasti (per esempio una sala). Acceso lo dice l'entità di stato, o quella dell'avvio quando sa dirlo.",
       "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell."
     )
-  )}</div><div class="mu-ed-posti">${voci3}</div>
-  ${riga2(t("Tasto «Ferma tutto»", "«Stop all» button"), t("Vuoto: preme lo stop di ogni comando", "Empty: presses every command's stop"), `${p.fermaTutto.attivo ? cerca(`${via}.fermaTutto.entita`, p.fermaTutto.entita, { domini: DA_PREMERE }) : ""}${interruttore(`${via}.fermaTutto.attivo`, p.fermaTutto.attivo, "ferma-tutto")}`)}`;
+  )}</div><div class="mu-ed-posti">${voci4}</div>
+  ${riga2(t("Tasto «Ferma tutto»", "«Stop all» button"), t("Vuoto: preme lo stop di ogni comando", "Empty: presses every command's stop"), `${p.fermaTutto.attivo ? cerca(`${via}.fermaTutto.entita`, p.fermaTutto.entita, { domini: DA_PREMERE_O_TELECOMANDO }) : ""}${p.fermaTutto.attivo && telecomando(p.fermaTutto.entita) ? campoComando(`${via}.fermaTutto.comando`, p.fermaTutto.comando || "", t("Vuoto: spegne", "Empty: turns off")) : ""}${interruttore(`${via}.fermaTutto.attivo`, p.fermaTutto.attivo, "ferma-tutto")}`)}`;
 }
 var SENZA_GRIGLIA = ["ingresso", "energia", "musica", "mixer", "telecamera", "comandi"];
 var GRIGLIE_SCRITTE = () => Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
@@ -91198,6 +92040,14 @@ function metti3(via, valore3) {
     const i = Number(pezzi[1]);
     const p = m.pagine[i];
     if (!p) return;
+    if (pezzi[2] === "ingresso" && ELENCHI_DELL_INGRESSO.includes(pezzi[3]) && pezzi.length === 5) {
+      const k = Number(pezzi[4]);
+      cambiaElenco(via, (voci4) => {
+        voci4[k] = clean(valore3);
+        return voci4;
+      });
+      return;
+    }
     if (pezzi[2] === "segue") {
       p.scelti = !valore3;
       if (p.scelti && !p.comandi.length) p.comandi = comandiProposti2(state110.fonte || {}, p.stanza);
@@ -91262,7 +92112,7 @@ function metti3(via, valore3) {
   });
   if (!dove) return;
   const ultimo = pezzi.at(-1);
-  dove[ultimo] = typeof dove[ultimo] === "number" ? Number(valore3) : valore3;
+  dove[ultimo] = typeof dove[ultimo] === "number" && String(valore3).trim() !== "" ? Number(valore3) : valore3;
   if (via === "risveglio.entita" && valore3) m.risveglio.attivo = true;
   if (via === "fonte") state110.fonte = null;
   state110.bozza = muroPulito(m);
@@ -91299,7 +92149,7 @@ function onClick25(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva6() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const el = event.target.closest(
-    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia],[data-mu-ed-togli-voce],[data-mu-ed-aggiungi-voce]"
+    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia],[data-mu-ed-togli-voce],[data-mu-ed-aggiungi-voce],[data-mu-ed-sposta]"
   );
   if (!el || body.querySelector(".mu-ed-chiuso")) return;
   event.preventDefault();
@@ -91322,6 +92172,12 @@ function onClick25(event) {
   }
   if (d.muEdSvuota) {
     metti3(`${d.muEdSvuota}.svuota`, "");
+    ridisegna8();
+    return;
+  }
+  if (d.muEdSposta) {
+    const da = Number(d.muEdDa);
+    cambiaElenco(`${d.muEdSposta}.0`, (voci4) => sposta2(voci4, da, da + Number(d.muEdVerso)));
     ridisegna8();
     return;
   }
@@ -91394,7 +92250,7 @@ function onChange7(event) {
   if (event.type === "change" && !SCRITTE.test(via)) ridisegna8();
   else dopoUnaScritta();
 }
-var SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin)$/;
+var SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin|Comando|\.comando|\.dispositivo|\.min|\.max)$/;
 function dopoUnaScritta() {
   rinfrescaLAnteprima();
   const avviso = doc?.querySelector?.("#ed-body .mu-ed-sporca");
@@ -91480,6 +92336,9 @@ html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}
 #ed-body .mu-ed-voce{display:grid;gap:4px;min-width:0}
 #ed-body .mu-ed-voce>span{font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
 #ed-body .mu-ed-voce .ed-input{margin:0;width:100%;max-width:none;min-width:0}
+#ed-body .mu-ed-comandi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px 12px;min-width:0}
+#ed-body .mu-ed-comando{display:block;margin-top:6px}
+#ed-body .mu-ed-comando .ed-input{margin:0;width:100%;max-width:none}
 #ed-body .mu-ed-cerca{display:flex;gap:6px;align-items:center;min-width:0}
 #ed-body .mu-ed-cerca .ed-input{flex:1;min-width:0;margin:0}
 #ed-body .mu-ed-dx .mu-ed-cerca{min-width:220px;max-width:340px;flex:1}
@@ -91502,6 +92361,9 @@ html[data-theme="dark"] #ed-body .mu-ed-sporca{color:#fde68a;background:#78350f5
 #ed-body .mu-ed-gruppo>.mu-ed-posto-testa .mu-ed-cosa{font-size:14px}
 #ed-body .mu-ed-piu{width:auto;margin:12px 0 0;padding:10px 16px}
 #ed-body .mu-ed-lettori{display:grid;gap:8px;min-width:240px;flex:1}
+#ed-body .mu-ed-elenco-voce{display:flex;align-items:center;gap:6px;min-width:0}
+#ed-body .mu-ed-elenco-voce>.mu-ed-cerca{flex:1;min-width:0}
+#ed-body .mu-ed-elenco-voce>.mu-ed-frecce{margin-left:0}
 #ed-body .mu-ed-anteprima{margin-top:8px;width:100%;max-width:720px;overflow:hidden;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee)}
 #ed-body .mu-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}
@@ -91725,8 +92587,8 @@ function normalizzata3(voce3, indice) {
   };
 }
 function normalizzaRicariche(grezzo) {
-  const voci3 = Array.isArray(grezzo) ? grezzo.filter(Boolean) : [];
-  return voci3.map((voce3, indice) => normalizzata3(voce3, indice)).filter((riga3) => eBatteriaDiRicarica(riga3.battery)).filter((riga3) => eSogliaDiRicarica(riga3.bassa) || eSogliaDiRicarica(riga3.alta));
+  const voci4 = Array.isArray(grezzo) ? grezzo.filter(Boolean) : [];
+  return voci4.map((voce3, indice) => normalizzata3(voce3, indice)).filter((riga3) => eBatteriaDiRicarica(riga3.battery)).filter((riga3) => eSogliaDiRicarica(riga3.bassa) || eSogliaDiRicarica(riga3.alta));
 }
 function ricaricaDellaBatteria(entity2, righe2 = []) {
   const chiave2 = pulito51(entity2).toLowerCase();
@@ -93979,9 +94841,9 @@ function fanMarkup(view) {
     <select data-dm-robot-fan aria-label="${esc(t("Potenza di aspirazione", "Suction power"))}">${options}</select></label>`;
 }
 function comandiTastiMarkup(view) {
-  const voci3 = (view.comandi || []).filter((voce3) => voce3.genere !== "tendina");
-  if (!voci3.length) return "";
-  return voci3.map((voce3) => {
+  const voci4 = (view.comandi || []).filter((voce3) => voce3.genere !== "tendina");
+  if (!voci4.length) return "";
+  return voci4.map((voce3) => {
     const interruttore3 = voce3.genere === "interruttore";
     const premuto = interruttore3 ? ` aria-pressed="${voce3.acceso === true}"` : "";
     const glifo2 = interruttore3 ? "⏻" : "✦";
@@ -93991,8 +94853,8 @@ function comandiTastiMarkup(view) {
   }).join("");
 }
 function comandiTendineMarkup(view) {
-  const voci3 = (view.comandi || []).filter((voce3) => voce3.genere === "tendina");
-  return voci3.map((voce3) => {
+  const voci4 = (view.comandi || []).filter((voce3) => voce3.genere === "tendina");
+  return voci4.map((voce3) => {
     const opzioni = voce3.opzioni.length ? voce3.opzioni : voce3.scelta ? [voce3.scelta] : [];
     if (!opzioni.length) return "";
     const options = opzioni.map(
@@ -95781,11 +96643,11 @@ var TAB = "sez2";
 var attiva = () => clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab) === TAB;
 function anteprimaAuto({ device, entities }) {
   const { mappa, tipo } = legaLAutoAlDispositivo({ entities, states: allStates() });
-  const voci3 = Object.entries(mappa);
+  const voci4 = Object.entries(mappa);
   const riga3 = (etichetta3, valore3) => `<div class="dm-integ-casella"><span>${esc(etichetta3)}</span><b class="mono">${esc(valore3) || "—"}</b></div>`;
   const PRIME = ["dm.ev_batteria_auto", "dm.ev_carburante", "dm.ev_autonomia", "dm.ev_odometro"];
   const inTesta = PRIME.filter((ref) => mappa[ref]);
-  const restanti = voci3.filter(([ref]) => !PRIME.includes(ref));
+  const restanti = voci4.filter(([ref]) => !PRIME.includes(ref));
   return {
     etichetta: tipo === "termica" ? t("Auto a benzina", "Petrol car") : tipo === "ibrida" ? t("Auto ibrida", "Hybrid car") : t("Auto elettrica", "Electric car"),
     corpo: `<div class="dm-integ-caselle">
@@ -100858,7 +101720,7 @@ function scriviPreferenze(pezzo) {
 }
 function compattoMarkup() {
   const scelto = widgetPreferences().compatto;
-  const voci3 = [
+  const voci4 = [
     ["mai", t("Mai", "Never")],
     ["auto", t("Auto", "Auto")],
     ["sempre", t("Sempre", "Always")]
@@ -100868,17 +101730,17 @@ function compattoMarkup() {
     "Con Auto si stringono solo sugli schermi stretti",
     "With Auto they shrink on narrow screens only"
   )}</small></span>
-    <div class="dm-widget-compatto" role="group" aria-label="${t("Tessere compatte", "Compact tiles")}">${voci3.map(
+    <div class="dm-widget-compatto" role="group" aria-label="${t("Tessere compatte", "Compact tiles")}">${voci4.map(
     ([valore3, parola]) => `<button type="button" data-widget-compatto="${valore3}" data-on="${valore3 === scelto}">${parola}</button>`
   ).join("")}</div>
   </div>`;
 }
 function sorgenteMarkup2(key) {
-  let voci3 = [];
+  let voci4 = [];
   let media2 = "";
   if (key === "temperatura") {
     const stanze3 = readJson("cd_stanze", []);
-    voci3 = (Array.isArray(stanze3) ? stanze3 : []).filter((room) => clean(room?.temp)).map((room) => [clean(room.temp), clean(room.name) || clean(room.id)]);
+    voci4 = (Array.isArray(stanze3) ? stanze3 : []).filter((room) => clean(room?.temp)).map((room) => [clean(room.temp), clean(room.name) || clean(room.id)]);
     media2 = t("Media di tutte le stanze", "Average of all rooms");
   } else if (key === "clima") {
     let unita2 = [];
@@ -100887,16 +101749,16 @@ function sorgenteMarkup2(key) {
     } catch (_error) {
       unita2 = [];
     }
-    voci3 = (Array.isArray(unita2) ? unita2 : []).filter((unit) => clean(unit?.entity)).map((unit) => [clean(unit.entity), clean(unit.name) || clean(unit.entity)]);
+    voci4 = (Array.isArray(unita2) ? unita2 : []).filter((unit) => clean(unit?.entity)).map((unit) => [clean(unit.entity), clean(unit.name) || clean(unit.entity)]);
     media2 = t("Media di tutte le unità", "Average of all units");
   } else return "";
-  if (!voci3.length) return "";
+  if (!voci4.length) return "";
   const stored = readJson(WIDGETS_CONFIG_KEY, {});
   const scelta3 = clean(stored?.sorgenti?.[key]);
   return `<label class="dm-widget-sorgente"><span>${esc(t("Cosa mostra", "What it shows"))}</span>
     <select class="ed-input" data-widget-sorgente="${esc(key)}">
       <option value=""${scelta3 ? "" : " selected"}>${esc(media2)}</option>
-      ${voci3.map(([entity2, nome]) => `<option value="${esc(entity2)}"${entity2 === scelta3 ? " selected" : ""}>${esc(nome)}</option>`).join("")}
+      ${voci4.map(([entity2, nome]) => `<option value="${esc(entity2)}"${entity2 === scelta3 ? " selected" : ""}>${esc(nome)}</option>`).join("")}
     </select></label>`;
 }
 function avvisiInPopupMarkup() {
@@ -100931,8 +101793,8 @@ function evidenze() {
   const stored = readJson(EVIDENZA_CONFIG_KEY, []);
   return Array.isArray(stored) ? stored : [];
 }
-function salvaEvidenze(voci3) {
-  writeJsonIfChanged(EVIDENZA_CONFIG_KEY, voci3);
+function salvaEvidenze(voci4) {
+  writeJsonIfChanged(EVIDENZA_CONFIG_KEY, voci4);
   try {
     renderHomeWidgets();
   } catch (_error) {
@@ -100955,11 +101817,11 @@ function leggiEvidenza(riga3, voce3) {
   }
   return letta;
 }
-function evidenzeDalDocumento(body, voci3) {
+function evidenzeDalDocumento(body, voci4) {
   return righeDelDocumento(
     body,
     "data-evid-index",
-    voci3,
+    voci4,
     leggiEvidenza,
     (bozza3, voce3) => ENTITA_INTERA2.test(bozza3.entity) || !clean(voce3.entity)
   );
@@ -100993,7 +101855,7 @@ function rigaEvidenzaMarkup(voce3, index) {
   </article>`;
 }
 function evidenzaMarkup() {
-  const voci3 = evidenze();
+  const voci4 = evidenze();
   return `<div class="ed-sec-title dm-widget-ed-sep">⭐ ${esc(
     t("In evidenza · le tue tessere", "Highlights · your own tiles")
   )}</div>
@@ -101001,7 +101863,7 @@ function evidenzaMarkup() {
     "Una tessera in Home per un'entità qualsiasi, anche di una sezione che non c'è: il livello del sale dell'addolcitore, la sonda del rack, la pompa del pozzo. Messe insieme, la tessera «In evidenza» le riassume in una riga e, aperta, le mostra a caselle; con «Tessera a sé» ognuna ha la sua, col nome e il disegno che le dai tu.",
     "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it."
   )}</div>
-  <div class="ed-list dm-todo-ed-list dm-evid-list">${voci3.length ? voci3.map((voce3, index) => rigaEvidenzaMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessuna entità in evidenza", "No highlighted entity")}</div>`}</div>
+  <div class="ed-list dm-todo-ed-list dm-evid-list">${voci4.length ? voci4.map((voce3, index) => rigaEvidenzaMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessuna entità in evidenza", "No highlighted entity")}</div>`}</div>
   <button type="button" class="ed-btn-add" data-evid-add>＋ ${t("Aggiungi entità", "Add entity")}</button>`;
 }
 function bodyMarkup6() {
@@ -101130,9 +101992,9 @@ function onClick36(event) {
   }
   if (event.target.closest("[data-evid-add]")) {
     event.preventDefault();
-    const voci3 = evidenze();
-    state133.evidAperto = voci3.length;
-    salvaEvidenze([...voci3, { name: "", icon: "", entity: "", room_id: "" }]);
+    const voci4 = evidenze();
+    state133.evidAperto = voci4.length;
+    salvaEvidenze([...voci4, { name: "", icon: "", entity: "", room_id: "" }]);
     ridisegna15();
     return;
   }
@@ -101145,30 +102007,30 @@ function onClick36(event) {
   }
   const rigaEvid = event.target.closest("[data-evid-index]");
   if (rigaEvid) {
-    const voci3 = evidenze();
+    const voci4 = evidenze();
     const index = Number(rigaEvid.dataset.evidIndex);
-    if (!Number.isFinite(index) || !voci3[index]) return;
+    if (!Number.isFinite(index) || !voci4[index]) return;
     if (event.target.closest("[data-evid-edit]")) {
       event.preventDefault();
-      salvaEvidenze(evidenzeDalDocumento(body, voci3));
+      salvaEvidenze(evidenzeDalDocumento(body, voci4));
       state133.evidAperto = state133.evidAperto === index ? -1 : index;
       ridisegna15();
       return;
     }
     if (event.target.closest("[data-evid-del]")) {
       event.preventDefault();
-      const nome = clean(voci3[index]?.name) || clean(voci3[index]?.entity) || `${index + 1}`;
+      const nome = clean(voci4[index]?.name) || clean(voci4[index]?.entity) || `${index + 1}`;
       const domanda = t(`Tolgo "${nome}" dalle evidenze?`, `Remove "${nome}" from highlights?`);
       if (root.confirm && !root.confirm(domanda)) return;
       state133.evidAperto = -1;
-      salvaEvidenze(voci3.filter((_voce, position) => position !== index));
+      salvaEvidenze(voci4.filter((_voce, position) => position !== index));
       ridisegna15();
       return;
     }
     if (event.target.closest("[data-evid-save]")) {
       event.preventDefault();
-      const next = evidenzeDalDocumento(body, voci3);
-      const letta = leggiEvidenza(rigaEvid, voci3[index]);
+      const next = evidenzeDalDocumento(body, voci4);
+      const letta = leggiEvidenza(rigaEvid, voci4[index]);
       const errore = rigaEvid.querySelector("[data-evid-error]");
       if (!ENTITA_INTERA2.test(letta.entity)) {
         if (errore)
@@ -105828,8 +106690,8 @@ function caldaie() {
   if (Array.isArray(stored)) return stored;
   return stored && typeof stored === "object" && Object.keys(stored).length ? [stored] : [];
 }
-function salvaCaldaie(voci3) {
-  writeJsonIfChanged(CHIAVE_CALDAIA, voci3);
+function salvaCaldaie(voci4) {
+  writeJsonIfChanged(CHIAVE_CALDAIA, voci4);
   try {
     renderImpiantiTermici();
   } catch (_error) {
@@ -106005,7 +106867,7 @@ function rigaCaldaiaMarkup(voce3, index) {
   </article>`;
 }
 function caldaiaMarkup() {
-  const voci3 = caldaie();
+  const voci4 = caldaie();
   return `<div class="ed-sec-title dm-it-ed-sep">🔥 ${esc(t("Caldaia", "Boiler"))}</div>
   <div class="ed-intro">${esc(
     t(
@@ -106013,7 +106875,7 @@ function caldaiaMarkup() {
       "The gap between flow and return says whether the circuit is really giving off heat; pressure is the one thing that occasionally needs topping up by hand. No field is required: with just the state the card shows the boiler on or off, without numbers it does not have. With more than one — one per zone — add them here and the page grows a row to switch between them."
     )
   )}</div>
-  <div class="ed-list dm-todo-ed-list dm-caldaia-list">${voci3.length ? voci3.map((voce3, index) => rigaCaldaiaMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessuna caldaia configurata", "No boiler configured")}</div>`}</div>
+  <div class="ed-list dm-todo-ed-list dm-caldaia-list">${voci4.length ? voci4.map((voce3, index) => rigaCaldaiaMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessuna caldaia configurata", "No boiler configured")}</div>`}</div>
   <button type="button" class="ed-btn-add" data-caldaia-add>＋ ${t("Aggiungi caldaia", "Add boiler")}</button>`;
 }
 var CAMPI_STUFA = Object.freeze({
@@ -106082,8 +106944,8 @@ function stufe() {
   if (Array.isArray(stored)) return stored;
   return stored && typeof stored === "object" && Object.keys(stored).length ? [stored] : [];
 }
-function salvaStufe(voci3) {
-  writeJsonIfChanged(CHIAVE_STUFE, voci3);
+function salvaStufe(voci4) {
+  writeJsonIfChanged(CHIAVE_STUFE, voci4);
   try {
     renderImpiantiTermici();
   } catch (_error) {
@@ -106119,7 +106981,7 @@ function rigaStufaMarkup(voce3, index) {
   </article>`;
 }
 function stufaMarkup() {
-  const voci3 = stufe();
+  const voci4 = stufe();
   return `<div class="ed-sec-title dm-it-ed-sep">🪵 ${esc(t("Stufa a pellet", "Pellet stove"))}</div>
   <div class="ed-intro">${esc(
     t(
@@ -106127,15 +106989,15 @@ function stufaMarkup() {
       "The stove heats the room it stands in: the page draws the flame, the power, the fan, the flue and the hopper, and gives you the buttons for on and off, the target, the power and the fan. No field is required: with just the thermostat the page already has almost everything. With more than one, add them here and the page grows a row to switch between them."
     )
   )}</div>
-  <div class="ed-list dm-todo-ed-list dm-stufa-list">${voci3.length ? voci3.map((voce3, index) => rigaStufaMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessuna stufa configurata", "No stove configured")}</div>`}</div>
+  <div class="ed-list dm-todo-ed-list dm-stufa-list">${voci4.length ? voci4.map((voce3, index) => rigaStufaMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessuna stufa configurata", "No stove configured")}</div>`}</div>
   <button type="button" class="ed-btn-add" data-stufa-add>＋ ${t("Aggiungi stufa", "Add stove")}</button>`;
 }
 function scaldabagni() {
   const stored = readJson(SCALDABAGNI_KEY, []);
   return Array.isArray(stored) ? stored : [];
 }
-function salvaScaldabagni(voci3) {
-  writeJsonIfChanged(SCALDABAGNI_KEY, voci3);
+function salvaScaldabagni(voci4) {
+  writeJsonIfChanged(SCALDABAGNI_KEY, voci4);
   try {
     renderHomeWidgets();
   } catch (_error) {
@@ -106212,13 +107074,13 @@ function rigaScaldabagnoMarkup(voce3, index) {
   </article>`;
 }
 function scaldabagnoMarkup() {
-  const voci3 = scaldabagni();
+  const voci4 = scaldabagni();
   return `<div class="ed-sec-title dm-widget-ed-sep">🚿 ${esc(t("Scaldabagno", "Water heater"))}</div>
   <div class="ed-intro">${t(
     "Lo scaldabagno elettrico, per chi l'acqua calda non la fa col sole: la tessera dice a che punto è l'acqua e quanto manca all'obiettivo. Con un water_heater di Home Assistant basta la prima casella.",
     "The electric water heater, for whoever does not make hot water with the sun: the tile says where the water is and how far it is from the target. With a Home Assistant water_heater the first field is enough."
   )}</div>
-  <div class="ed-list dm-todo-ed-list dm-scald-list">${voci3.length ? voci3.map((voce3, index) => rigaScaldabagnoMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessuno scaldabagno configurato", "No water heater configured")}</div>`}</div>
+  <div class="ed-list dm-todo-ed-list dm-scald-list">${voci4.length ? voci4.map((voce3, index) => rigaScaldabagnoMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessuno scaldabagno configurato", "No water heater configured")}</div>`}</div>
   <button type="button" class="ed-btn-add" data-scald-add>＋ ${t("Aggiungi scaldabagno", "Add water heater")}</button>
   <button type="button" class="ed-btn-add" data-scald-detect>🪄 ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
 }
@@ -106578,22 +107440,22 @@ function onClick40(event) {
   }
   if (event.target.closest("[data-scald-add]")) {
     event.preventDefault();
-    const voci3 = scaldabagni();
-    state141.aperto = voci3.length;
-    salvaScaldabagni([...voci3, { name: "", entity: "" }]);
+    const voci4 = scaldabagni();
+    state141.aperto = voci4.length;
+    salvaScaldabagni([...voci4, { name: "", entity: "" }]);
     ridisegna16();
     return;
   }
   if (event.target.closest("[data-scald-detect]")) {
     event.preventDefault();
-    const voci3 = scaldabagni();
-    const trovati = suggerisciScaldabagni(allStates(), voci3);
+    const voci4 = scaldabagni();
+    const trovati = suggerisciScaldabagni(allStates(), voci4);
     if (!trovati.length) {
       root.edToast?.(t("Nessuno scaldabagno nuovo", "No new water heater"));
       return;
     }
     salvaScaldabagni([
-      ...voci3,
+      ...voci4,
       ...trovati.map((trovato) => ({ name: trovato.name, entity: trovato.entity }))
     ]);
     ridisegna16();
@@ -106609,9 +107471,9 @@ function onClick40(event) {
   }
   const rigaScald = event.target.closest("[data-scald-index]");
   if (rigaScald) {
-    const voci3 = scaldabagni();
+    const voci4 = scaldabagni();
     const index = Number(rigaScald.dataset.scaldIndex);
-    if (!Number.isFinite(index) || !voci3[index]) return;
+    if (!Number.isFinite(index) || !voci4[index]) return;
     if (event.target.closest("[data-scald-edit]")) {
       event.preventDefault();
       state141.aperto = state141.aperto === index ? -1 : index;
@@ -106620,18 +107482,18 @@ function onClick40(event) {
     }
     if (event.target.closest("[data-scald-del]")) {
       event.preventDefault();
-      const nome = clean(voci3[index]?.name) || clean(voci3[index]?.entity) || `${index + 1}`;
+      const nome = clean(voci4[index]?.name) || clean(voci4[index]?.entity) || `${index + 1}`;
       const domanda = t(`Tolgo "${nome}"?`, `Remove "${nome}"?`);
       if (root.confirm && !root.confirm(domanda)) return;
       state141.aperto = -1;
-      salvaScaldabagni(voci3.filter((_voce, position) => position !== index));
+      salvaScaldabagni(voci4.filter((_voce, position) => position !== index));
       ridisegna16();
       return;
     }
     if (event.target.closest("[data-scald-save]")) {
       event.preventDefault();
-      const next = righeDelDocumento(body, "data-scald-index", voci3, leggiScaldabagno);
-      const letta = leggiScaldabagno(rigaScald, voci3[index]);
+      const next = righeDelDocumento(body, "data-scald-index", voci4, leggiScaldabagno);
+      const letta = leggiScaldabagno(rigaScald, voci4[index]);
       const errore = rigaScald.querySelector("[data-scald-error]");
       const caselle2 = ["entity", "interruttore", "temperatura", "obiettivo", "potenza", "energia"];
       if (!caselle2.some((campo5) => clean(letta[campo5]))) {
@@ -108026,7 +108888,7 @@ function schedaAttiva11() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 function caselleDi(chiave2) {
-  const voci3 = {
+  const voci4 = {
     terremoti: [
       [
         "entity",
@@ -108170,7 +109032,7 @@ function caselleDi(chiave2) {
       ]
     ]
   };
-  return voci3[chiave2] || [];
+  return voci4[chiave2] || [];
 }
 function configurazione13() {
   return normalizzaAllerte(readJson(CHIAVE_ALLERTE, {}));
@@ -111790,12 +112652,12 @@ function integrazioniMarkup() {
 }
 function campoDellaFamiglia(riga3, indice) {
   const scelta3 = FAMIGLIE2[riga3.famiglia] ? riga3.famiglia : "macchine";
-  const voci3 = [
+  const voci4 = [
     ["macchine", t("Macchina o container", "Machine or container")],
     ["rete", t("Pezzo di rete", "Network piece")]
   ];
   return `<label class="ed-slot dm-dich-campo"><span class="ed-slot-lbl">${esc(t("In quale fascia", "Which band"))}</span>
-    <span class="ed-form-row"><select class="ed-input" data-dm-dich-campo="famiglia" data-dm-dich-riga="${indice}">${voci3.map(
+    <span class="ed-form-row"><select class="ed-input" data-dm-dich-campo="famiglia" data-dm-dich-riga="${indice}">${voci4.map(
     ([valore3, parola]) => `<option value="${esc(valore3)}"${valore3 === scelta3 ? " selected" : ""}>${esc(parola)}</option>`
   ).join("")}</select></span>
     <small>${esc(
@@ -112503,12 +113365,12 @@ function listeGrezze() {
   const stored = readJson(CONFIG_TODO, []);
   return Array.isArray(stored) ? stored : [];
 }
-function salvaCalendari(voci3) {
-  writeJsonIfChanged(CALENDARI_KEY, voci3);
+function salvaCalendari(voci4) {
+  writeJsonIfChanged(CALENDARI_KEY, voci4);
   avvisaChiDisegna();
 }
-function salvaListe(voci3) {
-  writeJsonIfChanged(CONFIG_TODO, voci3);
+function salvaListe(voci4) {
+  writeJsonIfChanged(CONFIG_TODO, voci4);
   avvisaChiDisegna();
 }
 function avvisaChiDisegna() {
@@ -112585,13 +113447,13 @@ function rigaCalendarioMarkup(voce3, index) {
   </article>`;
 }
 function calendariMarkup() {
-  const voci3 = calendariGrezzi();
+  const voci4 = calendariGrezzi();
   return `<div class="ed-sec-title">📅 ${esc(t("Calendario", "Calendar"))}</div>
   <div class="ed-intro">${t(
     "I calendari che hai già in Home Assistant: la tessera in Home mostra i prossimi due impegni, e aprendola c'è l'elenco giorno per giorno. La sezione «Agenda» compare nella barra appena ne scegli uno.",
     "The calendars you already have in Home Assistant: the Home tile shows the next two appointments, and opening it gives the day-by-day list. The «Agenda» section appears in the bar as soon as you pick one."
   )}</div>
-  <div class="ed-list dm-todo-ed-list dm-cal-ed-list">${voci3.length ? voci3.map((voce3, index) => rigaCalendarioMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessun calendario configurato", "No calendar configured")}</div>`}</div>
+  <div class="ed-list dm-todo-ed-list dm-cal-ed-list">${voci4.length ? voci4.map((voce3, index) => rigaCalendarioMarkup(voce3, index)).join("") : `<div class="ed-empty">${t("Nessun calendario configurato", "No calendar configured")}</div>`}</div>
   <button type="button" class="ed-btn-add" data-cal-add>＋ ${t("Aggiungi calendario", "Add calendar")}</button>
   <button type="button" class="ed-btn-add" data-cal-detect>🪄 ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
 }
@@ -112615,13 +113477,13 @@ function rigaListaMarkup(list, index) {
   </article>`;
 }
 function listeMarkup() {
-  const voci3 = listeGrezze();
+  const voci4 = listeGrezze();
   return `<div class="ed-sec-title dm-agenda-ed-sep">✅ ${esc(t("Cose da fare", "To-do"))}</div>
   <div class="ed-intro">${t(
     "Le liste ToDo di Home Assistant: si spuntano dalla tessera in Home e dalla sezione Agenda, e quelle con una scadenza compaiono nel giorno in cui scadono.",
     "Home Assistant to-do lists: tick them off from the Home tile and from the Agenda section, and the ones with a due date show up on the day they are due."
   )}</div>
-  <div class="ed-list dm-todo-ed-list">${voci3.length ? voci3.map((list, index) => rigaListaMarkup(list, index)).join("") : `<div class="ed-empty">${t("Nessuna lista configurata", "No list configured")}</div>`}</div>
+  <div class="ed-list dm-todo-ed-list">${voci4.length ? voci4.map((list, index) => rigaListaMarkup(list, index)).join("") : `<div class="ed-empty">${t("Nessuna lista configurata", "No list configured")}</div>`}</div>
   <button type="button" class="ed-btn-add" data-todo-add>＋ ${t("Aggiungi lista", "Add list")}</button>
   <button type="button" class="ed-btn-add" data-todo-detect>🪄 ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
 }
@@ -113861,15 +114723,15 @@ function rigaVoceMarkup(voce3, sezione2, riga3) {
 }
 function rigaSezioneMarkup(sezione2, indice) {
   const aperta = state161.aperta === indice;
-  const voci3 = vociDi(sezione2);
+  const voci4 = vociDi(sezione2);
   const titolo3 = clean(sezione2?.titolo) || `${t("Sezione", "Section")} ${indice + 1}`;
   return `<article class="ed-row dm-todo-ed-row dm-mia-ed-riga" data-mia-sezione="${indice}" data-open="${aperta}">
     <div class="dm-todo-ed-head">
       <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(sezione2?.icona) || "⭐")}</span>
       <span class="ed-row-main">
         <strong class="ed-row-new">${esc(titolo3)}</strong>
-        <small class="ed-row-old">${voci3.length} ${esc(
-    voci3.length === 1 ? t("entità", "entity") : t("entità", "entities")
+        <small class="ed-row-old">${voci4.length} ${esc(
+    voci4.length === 1 ? t("entità", "entity") : t("entità", "entities")
   )}${sezione2?.mostra === false ? ` · ${esc(t("fuori dalla barra", "off the bar"))}` : ""}</small>
       </span>
       <button type="button" class="ed-del dm-todo-ed-edit" data-mia-edit
@@ -113891,7 +114753,7 @@ function rigaSezioneMarkup(sezione2, indice) {
       </label>
       ${formatoMarkup(sezione2)}
       <div class="dm-mia-ed-titolo-voci">${esc(t("Le entità", "The entities"))}</div>
-      <div class="dm-mia-ed-voci">${voci3.map((voce3, riga3) => rigaVoceMarkup(voce3, indice, riga3)).join("")}</div>
+      <div class="dm-mia-ed-voci">${voci4.map((voce3, riga3) => rigaVoceMarkup(voce3, indice, riga3)).join("")}</div>
       <button type="button" class="ed-btn-add" data-mia-voce-add>＋ ${esc(
     t("Aggiungi entità", "Add entity")
   )}</button>
@@ -114141,7 +115003,7 @@ function installSezioniMieEditor() {
 var KEY166 = "__DASHBOARDMODERN_ENTITA_MIE__";
 var STYLE_ID32 = "dm-entita-mie-style";
 var state162 = root[KEY166] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
-var voci = () => readJson(CHIAVE_ENTITA_MIE, []);
+var voci2 = () => readJson(CHIAVE_ENTITA_MIE, []);
 function valoreMarkup(riga3) {
   if (riga3.muto) return `<b class="dm-mie-muta">${esc(t("Non risponde", "Not reporting"))}</b>`;
   if (riga3.numero !== null)
@@ -114192,7 +115054,7 @@ function blocco(pagina2) {
 }
 function renderEntitaMie() {
   if (!doc) return false;
-  const stored = voci();
+  const stored = voci2();
   const conVoci = new Set(sezioniConEntita(stored));
   for (const nodo2 of doc.querySelectorAll(".dm-mie-ent")) {
     const pagina2 = nodo2.closest(".page");
@@ -114346,7 +115208,7 @@ var ENTITA_MIE_EDITOR_TAB = "entita";
 function schedaAttiva16() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
-function voci2() {
+function voci3() {
   const grezzo = readJson(CHIAVE_ENTITA_MIE, []);
   return Array.isArray(grezzo) ? grezzo : [];
 }
@@ -114447,7 +115309,7 @@ function oltreIlTetto(lista5) {
   return troppe;
 }
 function corpoMarkup15() {
-  const lista5 = voci2();
+  const lista5 = voci3();
   const sezioni2 = sezioniDisponibili();
   const troppe = oltreIlTetto(lista5);
   return `<div class="dm-mia-ent-ed">
@@ -114475,7 +115337,7 @@ function corpoMarkup15() {
 function ensureEntitaMieEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva16() !== ENTITA_MIE_EDITOR_TAB) return false;
-  const firma2 = `${JSON.stringify(voci2())}|${state163.aperta}|${sezioniDisponibili().map((sezione2) => sezione2.tab).join(",")}`;
+  const firma2 = `${JSON.stringify(voci3())}|${state163.aperta}|${sezioniDisponibili().map((sezione2) => sezione2.tab).join(",")}`;
   if (body.dataset.dmEntitaMie === firma2 && body.querySelector(".dm-mia-ent-ed")) return true;
   body.dataset.dmEntitaMie = firma2;
   body.innerHTML = corpoMarkup15();
@@ -114488,21 +115350,21 @@ function ridisegna25() {
   ensureEntitaMieEditor();
 }
 function leggiLaRiga4(riga3) {
-  const letto = { ...voci2()[Number(riga3.dataset.miaEnt)] || {} };
+  const letto = { ...voci3()[Number(riga3.dataset.miaEnt)] || {} };
   for (const campo5 of riga3.querySelectorAll("[data-mia-ent-campo]"))
     letto[clean(campo5.dataset.miaEntCampo)] = clean(campo5.value);
   if (!clean(letto.id)) letto.id = `mia-${Date.now().toString(36)}`;
   return letto;
 }
 function righeDalDocumento(body) {
-  return righeDelDocumento(body, "data-mia-ent", voci2(), (riga3) => leggiLaRiga4(riga3));
+  return righeDelDocumento(body, "data-mia-ent", voci3(), (riga3) => leggiLaRiga4(riga3));
 }
 function onClick52(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva16() !== ENTITA_MIE_EDITOR_TAB || !body.contains(event.target)) return;
   if (event.target.closest("[data-mia-ent-add]")) {
     event.preventDefault();
-    const lista5 = voci2().slice();
+    const lista5 = voci3().slice();
     const dove = clean(doc?.querySelector?.(".page.active")?.id).replace(/^page-/, "");
     lista5.push({
       id: `mia-${Date.now().toString(36)}`,
@@ -114535,7 +115397,7 @@ function onClick52(event) {
   }
   if (event.target.closest("[data-mia-ent-del]")) {
     event.preventDefault();
-    const lista5 = voci2().slice();
+    const lista5 = voci3().slice();
     lista5.splice(indice, 1);
     state163.aperta = -1;
     salva27(lista5);
@@ -114631,8 +115493,8 @@ var LISTE3 = Object.freeze({
       "No extra command: the card carries the player's own buttons and nothing else."
     ),
     aiuto: () => t(
-      "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Compaiono sulla scheda sotto i comandi del brano.",
-      "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls."
+      "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Un telecomando remote.* si accende e si spegne; scritto remote.nome:comando (per esempio remote.ampli:volume_up) manda quel comando. Compaiono sulla scheda sotto i comandi del brano.",
+      "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls."
     )
   },
   letture: {
@@ -114665,12 +115527,14 @@ function spiegazione2(esito2, tipo) {
     "Serve un'entità sensor.*, binary_sensor.* o number.* — oppure input_number, input_text.",
     "A sensor.*, binary_sensor.* or number.* entity is required — or input_number, input_text."
   ) : t(
-    "Serve un'entità button.*, select.* o switch.* — oppure input_button, input_select, input_boolean, script, scene.",
-    "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene."
+    "Serve un'entità button.*, select.*, switch.* o remote.* (anche remote.nome:comando) — oppure input_button, input_select, input_boolean, script, scene.",
+    "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene."
   );
 }
 function pastigliaMarkup3(entity2, tipo, azione, segno2, voce3, states) {
-  return `<button type="button" class="dm-mp-chip" data-mp-chip-${esc(azione)}="${esc(entity2)}" data-mp-chip-tipo="${esc(tipo)}" data-genere="${esc(genereDelComando(entity2) || "lettura")}" title="${esc(entity2)}"><span>${esc(nomeAccantoAlDispositivo(entity2, voce3, states))}</span><i aria-hidden="true">${segno2}</i></button>`;
+  const { entity: id, comando } = tipo === "comandi" ? partiDelComando(entity2) : { entity: entity2 };
+  const nome = nomeAccantoAlDispositivo(id, voce3, states);
+  return `<button type="button" class="dm-mp-chip" data-mp-chip-${esc(azione)}="${esc(entity2)}" data-mp-chip-tipo="${esc(tipo)}" data-genere="${esc(genereDelComando(entity2) || "lettura")}" title="${esc(entity2)}"><span>${esc(comando ? `${nome} · ${comando}` : nome)}</span><i aria-hidden="true">${segno2}</i></button>`;
 }
 function listaMarkup2(tipo, voce3, indice) {
   const states = allStates();
@@ -114706,11 +115570,11 @@ function testoDelTelecomando(voce3) {
     );
   if (esito2 === "sconosciuto")
     return nome ? t(
-      `Di ${nome} la plancia non conosce i tasti: il telecomando non compare.`,
-      `The dashboard doesn't know the keys of ${nome}: the remote won't show.`
+      `Di ${nome} la plancia non conosce le frecce: il telecomando compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.`,
+      `The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.`
     ) : t(
-      "Di questo telecomando Home Assistant non dice l'integrazione: non compare.",
-      "Home Assistant doesn't say which integration this remote belongs to: it won't show."
+      "Di questo telecomando Home Assistant non dice l'integrazione: compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.",
+      "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command."
     );
   if (esito2 === "attesa")
     return t(
@@ -114894,7 +115758,7 @@ function anteprimaLettore({ device, entities }) {
   const states = allStates();
   const nato = bindLettoreToDevice({ device, entities, states });
   const casella5 = (etichetta3, valore3) => `<div class="dm-integ-casella"><span>${esc(etichetta3)}</span><b class="mono">${esc(valore3) || "—"}</b></div>`;
-  const nomi = (voci3) => voci3.length ? `${voci3.length} — ${voci3.map((voce3) => nomeAccantoAlDispositivo(voce3, nato, states)).join(", ")}` : "";
+  const nomi = (voci4) => voci4.length ? `${voci4.length} — ${voci4.map((voce3) => nomeAccantoAlDispositivo(voce3, nato, states)).join(", ")}` : "";
   return {
     etichetta: t("Lettore", "Player"),
     corpo: `<div class="dm-integ-caselle">
@@ -114975,11 +115839,11 @@ function onClick53(event) {
     ridisegna26();
     return;
   }
-  const telecomando = event.target.closest("[data-mp-tele-sug]");
-  if (telecomando) {
+  const telecomando2 = event.target.closest("[data-mp-tele-sug]");
+  if (telecomando2) {
     event.preventDefault();
     const lista5 = righeDalDocumento2(body);
-    lista5[indice] = { ...leggiLaRiga5(riga3), telecomando: clean(telecomando.dataset.mpTeleSug) };
+    lista5[indice] = { ...leggiLaRiga5(riga3), telecomando: clean(telecomando2.dataset.mpTeleSug) };
     salva28(lista5);
     ridisegna26();
     return;
@@ -115567,12 +116431,12 @@ function rispostaDalleStatistiche(risultato, entityIds = [], period = "hour", ad
   const durata4 = DURATA_PERIODO[period] || DURATA_PERIODO.hour;
   const fuori = [];
   for (const entity2 of entityIds.length ? entityIds : Object.keys(perEntita)) {
-    const voci3 = (Array.isArray(perEntita[entity2]) ? perEntita[entity2] : []).map((voce3) => ({
+    const voci4 = (Array.isArray(perEntita[entity2]) ? perEntita[entity2] : []).map((voce3) => ({
       inizio: inizioMs(voce3?.start),
       valore: numeroOMeno(voce3?.state) ?? numeroOMeno(voce3?.mean)
     })).filter((voce3) => voce3.inizio !== null && voce3.valore !== null).sort((a, b) => a.inizio - b.inizio);
-    const righe2 = voci3.map((voce3, indice) => {
-      const fine = Math.min(voci3[indice + 1]?.inizio ?? voce3.inizio + durata4, adesso);
+    const righe2 = voci4.map((voce3, indice) => {
+      const fine = Math.min(voci4[indice + 1]?.inizio ?? voce3.inizio + durata4, adesso);
       return rigaComeRest({ s: String(voce3.valore), lu: fine / 1e3 }, entity2);
     }).filter(Boolean);
     if (righe2.length) fuori.push(righe2);
@@ -116403,7 +117267,7 @@ function provaLIndirizzo(modello, luogo, raggio = RAGGIO_DI_SERIE, tetto = null)
 }
 function zoneMarkup3(scelta3) {
   const zone = zoneDisponibili(allStates());
-  const voci3 = [
+  const voci4 = [
     `<option value=""${scelta3 ? "" : " selected"}>${esc(t("Casa", "Home"))}</option>`,
     ...zone.map(
       (zona) => `<option value="${esc(zona.entity)}"${zona.entity === scelta3 ? " selected" : ""}>${esc(
@@ -116411,7 +117275,7 @@ function zoneMarkup3(scelta3) {
       )}</option>`
     )
   ];
-  return voci3.join("");
+  return voci4.join("");
 }
 function numeroScritto2(valore3) {
   const testo2 = clean(valore3);
@@ -116494,7 +117358,7 @@ var FRASE_DI_SERIE = () => t(
   "Out of the box the rain comes from RainViewer and the map from OpenStreetMap: just pick where. You can change the service from the list, or «An address of mine» and write the one your service publishes, with {z}/{x}/{y} standing in for the tile numbers. Test downloads one and tells you whether it arrives."
 );
 function serviziMarkup(scelta3) {
-  const voci3 = [
+  const voci4 = [
     `<option value="nessuno"${scelta3 ? "" : " selected"}>${esc(t("— Nessuno —", "— None —"))}</option>`,
     ...Object.entries(SERVIZI_RADAR).map(
       ([chiave2, servizio]) => `<option value="${esc(chiave2)}"${chiave2 === scelta3 ? " selected" : ""}>${esc(servizio.nome)}</option>`
@@ -116503,7 +117367,7 @@ function serviziMarkup(scelta3) {
       t("Un indirizzo mio ({z}/{x}/{y})", "An address of mine ({z}/{x}/{y})")
     )}</option>`
   ];
-  return voci3.join("");
+  return voci4.join("");
 }
 function fondoScelto(config) {
   const fondo = clean(config.fondo);
@@ -116518,7 +117382,7 @@ function fondoMio(config) {
   return clean(config.fondoModello) || (/\{[zxy]\}/.test(fondo) ? fondo : "");
 }
 function fondiMarkup(scelta3) {
-  const voci3 = [
+  const voci4 = [
     `<option value="nessuna"${scelta3 ? "" : " selected"}>${esc(t("Nessuna", "None"))}</option>`,
     ...Object.entries(FONDI_MAPPA).map(
       ([chiave2, fondo]) => `<option value="${esc(chiave2)}"${chiave2 === scelta3 ? " selected" : ""}>${esc(fondo.nome)}</option>`
@@ -116527,7 +117391,7 @@ function fondiMarkup(scelta3) {
       t("Un indirizzo mio ({z}/{x}/{y})", "An address of mine ({z}/{x}/{y})")
     )}</option>`
   ];
-  return voci3.join("");
+  return voci4.join("");
 }
 function aggiornaVisibilita(dentro3) {
   const servizio = clean(dentro3?.querySelector?.('[data-dm-radar-campo="servizio"]')?.value);

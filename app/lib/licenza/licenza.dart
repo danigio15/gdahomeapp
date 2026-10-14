@@ -140,6 +140,10 @@ class GestoreLicenza extends ChangeNotifier {
    * ne e' letto. Si ricontrolla la firma solo quando il testo cambia. */
   final Map<String, String> _grezzi = {};
   final Map<String, Gettone?> _letti = {};
+  /* E gli ultimi gettoni Premium, per casa (`CasaConosciuta.gettonePremium`):
+   * come sopra, il testo e quello che se ne e' letto. */
+  final Map<String, String> _ricordatiGrezzi = {};
+  final Map<String, Gettone?> _ricordati = {};
   final Map<String, CasaConosciuta> _case = {};
   String? _inUso;
   Timer? _allaScadenza;
@@ -185,13 +189,27 @@ class GestoreLicenza extends ChangeNotifier {
       ..addEntries(tutte.map((una) => MapEntry(una.id, una)));
     _grezzi.removeWhere((id, _) => !_case.containsKey(id));
     _letti.removeWhere((id, _) => !_case.containsKey(id));
+    _ricordatiGrezzi.removeWhere((id, _) => !_case.containsKey(id));
+    _ricordati.removeWhere((id, _) => !_case.containsKey(id));
     _diProva.removeWhere((id) => !_case.containsKey(id));
     for (final casa in _case.values) {
       final grezzo = casa.gettone ?? '';
-      if (_grezzi[casa.id] == grezzo && _letti.containsKey(casa.id)) continue;
-      final letto = await leggiIlGettone(grezzo, chiave: chiave);
-      _grezzi[casa.id] = grezzo;
-      _letti[casa.id] = letto;
+      if (_grezzi[casa.id] != grezzo || !_letti.containsKey(casa.id)) {
+        final letto = await leggiIlGettone(grezzo, chiave: chiave);
+        _grezzi[casa.id] = grezzo;
+        _letti[casa.id] = letto;
+      }
+      final ricordato = casa.gettonePremium ?? '';
+      if (_ricordatiGrezzi[casa.id] != ricordato ||
+          !_ricordati.containsKey(casa.id)) {
+        /* Quasi sempre e' lo stesso testo del gettone: non si ricontrolla
+         * una firma appena controllata. */
+        final letto = ricordato == _grezzi[casa.id]
+            ? _letti[casa.id]
+            : await leggiIlGettone(ricordato, chiave: chiave);
+        _ricordatiGrezzi[casa.id] = ricordato;
+        _ricordati[casa.id] = letto;
+      }
     }
     _ricalcola();
   }
@@ -297,6 +315,27 @@ class GestoreLicenza extends ChangeNotifier {
     final scade = letto.scade;
     if (scade != null && !scade.isAfter(_orologio())) return false;
     return letto.vale(soggetto: casa.casaAlCentralino, adesso: letto.emesso);
+  }
+
+  /// Se questa casa e' stata gdahome Premium **da poco**: ha adesso un
+  /// gettone che vale, o ne ha avuto uno — firmato, suo — che non e' ancora
+  /// scaduto ([eraPremium], `CasaConosciuta.gettonePremium`).
+  ///
+  /// Non apre niente: e' la domanda di chi non trova la casa. Una casa che
+  /// non risponde, e che fino a poco fa era Premium, e' quasi sempre un
+  /// add-on che si sta aggiornando — non una casa per cui «da fuori serve
+  /// Premium». Allora si dice «riconnessione», e si continua a cercarla anche
+  /// da fuori (`casa/collegamento.dart`): li' entrando la licenza la dice lei,
+  /// prima di dare il filo a chiunque. Un gettone vale al massimo otto giorni
+  /// dalla firma: oltre, questa risposta e' no.
+  bool premiumDiRecente(CasaConosciuta casa) {
+    if (_forza != null) return _forza!;
+    if (!controlliAccesi) return true;
+    if (premiumDi(casa) || eraPremium(casa)) return true;
+    final ricordato = _ricordati[casa.id];
+    if (ricordato == null) return false;
+    if (_ricordatiGrezzi[casa.id] != (casa.gettonePremium ?? '')) return false;
+    return ricordato.vale(soggetto: casa.casaAlCentralino, adesso: _orologio());
   }
 
   /* ─── Quello che si chiede alla casa ──────────────────────────────────── */
@@ -436,10 +475,40 @@ class GestoreLicenza extends ChangeNotifier {
     if (detto is! Map) return;
     final gettoni = detto['gettoni'];
     if (gettoni is! Map) return;
-    /* `segnaIlGettone` toglie anche il «senza licenze»: una casa che da'
-     * gettoni, vuoti o no, le licenze le sa tenere. */
     final gettone = gettoni['gdahome'];
-    await archivio.segnaIlGettone(casa.id, gettone is String ? gettone : '');
+    final grezzo = gettone is String ? gettone : '';
+    /* Prima si controlla, e poi si scrive.
+     *
+     * Al contrario, fra la scrittura e il controllo c'era un attimo — quello
+     * che il portachiavi ci mette a scrivere — in cui l'archivio aveva il
+     * gettone nuovo e qui c'era ancora quello vecchio: per [gettoneDi] i due
+     * non combaciavano, e la casa sembrava Base. Chi bussava in
+     * quell'attimo, e succede proprio quando l'add-on si riavvia e il filo
+     * cade e torna, bussava solo alle strade di casa. E se il portachiavi
+     * non scriveva affatto, l'attimo restava fino alla riapertura. */
+    final letto = await leggiIlGettone(grezzo, chiave: chiave);
+    final vale =
+        letto != null &&
+        letto.vale(soggetto: casa.casaAlCentralino, adesso: _orologio());
+    _grezzi[casa.id] = grezzo;
+    _letti[casa.id] = letto;
+    if (vale) {
+      _ricordatiGrezzi[casa.id] = grezzo;
+      _ricordati[casa.id] = letto;
+    }
+    try {
+      /* `segnaIlGettone` toglie anche il «senza licenze»: una casa che da'
+       * gettoni, vuoti o no, le licenze le sa tenere. La casa in memoria
+       * cambia subito; se il portachiavi non scrive, quello che si sa adesso
+       * resta giusto, e si riscrive alla prossima risposta. */
+      await archivio.segnaIlGettone(
+        casa.id,
+        grezzo,
+        premium: vale ? grezzo : null,
+      );
+    } catch (_) {
+      /* Vedi sopra: la memoria e' gia' a posto. */
+    }
     await conosci(archivio.tutte);
   }
 

@@ -10,6 +10,36 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.14
+
+**Musica: i telecomandi e i sensori aggiunti nel config si vedono.** Le
+«Altre letture» (per esempio un livello in dB) e i telecomandi in «Altri
+comandi» e «Telecomando» ora compaiono nella schermata Musica, sul telefono e
+sul pannello a muro. Un telecomando si accende e spegne, oppure manda il
+comando scritto dopo i due punti (`remote.amplificatore:volume_up`).
+
+**Pannello a muro come una regia, più completo.** Il Mixer accetta canali da
+sensore (solo lettura) e da telecomando (▲ ▼ e muto); Telecamera e Comandi
+accettano telecomandi con il loro comando.
+
+**Pagina Ingresso del muro con tutte le partizioni dell'antifurto.** Ogni
+partizione col suo stato, i suoi tasti e il codice dove serve; sotto,
+«Finestre aperte: 2», le altre letture e gli altri comandi scelti nel config.
+
+**Meteo in alto sul muro: l'icona resta attaccata alla temperatura,** anche
+con la temperatura di casa.
+
+**App: niente più casa da riabbinare dopo un aggiornamento dell'add-on.** Una
+casa Premium che per un momento non risponde mostra «Riconnessione…» e l'app
+riprova da sola, anche da fuori.
+
+**Navigatore:**
+- pedaggi stile Waze, con il prezzo stimato sulle strade, nel riepilogo e
+  accanto ai km che restano (anche su Android Auto; su CarPlay accanto);
+- senza auto elettrica configurata propone l'auto termica e ricalcola;
+- batteria all'arrivo più vicina al vero (come ABRP), dati dell'auto riletti
+  ogni minuto in guida e temperature riconosciute meglio.
+
 ## 1.11.13
 
 **Solare termico ridisegnato.** Il disegno era troppo grande e non entrava

@@ -18,6 +18,15 @@ import {
 
 const muro = (page) => page.locator("#dm-muro");
 const servizi = (page) => page.evaluate(() => window.__SERVIZI__.slice());
+/* Quanto c'e' fra il disegno del meteo, in alto, e il numero accanto. */
+const distanzaDalNumero = (page) =>
+  muro(page)
+    .locator(".mu-meteo")
+    .evaluate((m) => {
+      const disegno = m.querySelector(".mu-meteo-su > :first-child").getBoundingClientRect();
+      const numero = m.querySelector("b").getBoundingClientRect();
+      return numero.left - disegno.right;
+    });
 
 test.describe("la plancia a muro", () => {
   test.beforeEach(async ({ page }) => {
@@ -1435,6 +1444,11 @@ test.describe("la plancia a muro", () => {
     await apriLaCasaAMuro(page, testInfo, { stati, muro: MURO_DI_PROVA });
     await expect(muro(page).locator(".mu-meteo b")).toHaveText("17°");
     await expect(muro(page).locator(".mu-meteo .mu-et")).toHaveText(/poco nuvoloso/i);
+    /* Il disegno sta attaccato al numero, con ogni temperatura: una scritta
+     * lunga sotto non deve allargare la colonna e staccarlo. */
+    const fra = await distanzaDalNumero(page);
+    expect(fra).toBeGreaterThanOrEqual(0);
+    expect(fra).toBeLessThanOrEqual(16);
 
     await apriLaCasaAMuro(page, testInfo, {
       stati,
@@ -1446,6 +1460,17 @@ test.describe("la plancia a muro", () => {
     });
     await expect(muro(page).locator(".mu-meteo b")).toHaveText("23,4°");
     await expect(muro(page).locator(".mu-meteo .mu-et")).toHaveText(/in casa · poco nuvoloso/i);
+    const fraInCasa = await distanzaDalNumero(page);
+    expect(fraInCasa).toBeGreaterThanOrEqual(0);
+    expect(fraInCasa).toBeLessThanOrEqual(16);
+    /* La scritta sta su una riga sola, accanto all'ora. */
+    const et = await muro(page)
+      .locator(".mu-meteo .mu-et")
+      .evaluate((e) => ({
+        alta: e.getBoundingClientRect().height,
+        lettera: parseFloat(getComputedStyle(e).fontSize),
+      }));
+    expect(et.alta).toBeLessThan(et.lettera * 2);
     await page.evaluate(() => window.dmMuro.riposa());
     const riga = muro(page).locator(".mu-riposo-riga");
     await expect(riga).toContainText("23,4° in casa");

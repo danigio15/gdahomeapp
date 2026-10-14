@@ -178,14 +178,33 @@ class ArchivioDelleCase {
   ///
   /// Come per l'approdo, si scrive solo quando cambia: la casa lo rinnova ogni
   /// sei ore, e si chiede a ogni collegamento.
-  Future<void> segnaIlGettone(String id, String gettone) async {
+  ///
+  /// [premium] e' lo stesso gettone quando valeva, gia' controllato da chi
+  /// chiama: si ricorda a parte (`CasaConosciuta.gettonePremium`), e un
+  /// gettone vuoto detto dopo non lo cancella.
+  ///
+  /// La casa in memoria cambia **subito**, prima di aspettare il
+  /// portachiavi: chi chiama sa gia' cosa c'e' scritto, e se il portachiavi
+  /// non scrive, quello che si sa resta giusto fino alla prossima volta.
+  Future<void> segnaIlGettone(
+    String id,
+    String gettone, {
+    String? premium,
+  }) async {
     final casa = quella(id);
-    if (casa == null || (casa.gettone == gettone && !casa.senzaLicenze)) {
+    if (casa == null ||
+        (casa.gettone == gettone &&
+            !casa.senzaLicenze &&
+            (premium == null || casa.gettonePremium == premium))) {
       return;
     }
     await _cambia(
       id,
-      (vecchia) => vecchia.con(gettone: gettone, senzaLicenze: false),
+      (vecchia) => vecchia.con(
+        gettone: gettone,
+        gettonePremium: premium,
+        senzaLicenze: false,
+      ),
     );
   }
 

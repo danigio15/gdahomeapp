@@ -21,6 +21,7 @@
 import { alarmHiddenModes, centraliAllarme, entitaDellaCentrale } from "./alarm-panel.js";
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
+import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { lettoriConfigurati } from "./media-player.js";
 import { isCharging, nomeDellaPersona, personViewModel } from "./person-model.js";
 
@@ -286,7 +287,63 @@ const INGRESSO_VUOTO = Object.freeze({
   campanello: "",
   persone: true,
   finestre: true,
+  aree: [],
+  letture: [],
+  comandi: [],
 });
+
+/* «L'antifurto non gestisce piu' partizioni come abbiamo fatto sul telefono»:
+ * sul telefono la sezione Sicurezza ha le sue aree (`cd_centrali`), e
+ * l'Ingresso del tablet ne mostrava una sola. Qui si scrive quali aree e in
+ * che ordine; vuoto, tutte quelle della plancia di origine. Sei al massimo:
+ * oltre, un pannello a muro non e' piu' un colpo d'occhio. */
+export const AREE_AL_MASSIMO = 6;
+
+/* «Dentro la pagina dell'antifurto ci metterei la possibilita' di riprendere
+ * altri dati, tipo se ci sono finestre aperte. Magari allo stesso modo come
+ * sull'audio.» Come le «Altre letture» e gli «Altri comandi» della Musica:
+ * un elenco di entita' da guardare — sensori, porte e finestre, serrature,
+ * tapparelle — e uno da toccare. */
+export const LETTURE_DELL_INGRESSO_AL_MASSIMO = 12;
+export const COMANDI_DELL_INGRESSO_AL_MASSIMO = 8;
+const DOMINI_DA_LEGGERE = Object.freeze([
+  "binary_sensor",
+  "sensor",
+  "lock",
+  "cover",
+  "number",
+  "input_number",
+  "input_text",
+  "input_select",
+  "select",
+  "input_boolean",
+  "switch",
+  "valve",
+  "device_tracker",
+  "person",
+]);
+/* I comandi: quelli che la Musica gia' accetta (`comandi-accanto.js`), piu'
+ * la serratura e la tapparella, che accanto all'antifurto sono di casa. Un
+ * telecomando col suo comando si scrive `remote.nome:comando`. */
+const DOMINI_DA_TOCCARE = Object.freeze(["lock", "cover"]);
+
+/** Se quell'entita' si puo' guardare fra le «Altre letture» dell'ingresso. */
+export function eLetturaDellIngresso(id) {
+  return DOMINI_DA_LEGGERE.includes(dominioDi(entita(id)));
+}
+
+/** Se quella voce si puo' toccare fra gli «Altri comandi» dell'ingresso. */
+export function eComandoDellIngresso(voce) {
+  const { entity, comando } = partiDelComando(voce);
+  if (!entita(entity)) return false;
+  if (comando) return true;
+  /* Una tendina si sceglie, non si tocca: fra le letture si guarda. */
+  const genere = genereDelComando(entity);
+  return (genere && genere !== "tendina") || DOMINI_DA_TOCCARE.includes(dominioDi(entity));
+}
+
+const unici = (voci) => [...new Set(voci.filter(Boolean))];
+const voci = (valore) => (Array.isArray(valore) ? valore : []);
 
 function ingressoPulito(input = {}) {
   const dentro = input && typeof input === "object" ? input : {};
@@ -307,6 +364,84 @@ function ingressoPulito(input = {}) {
     campanello: entita(dentro.campanello),
     persone: vero(dentro.persone, INGRESSO_VUOTO.persone),
     finestre: vero(dentro.finestre, INGRESSO_VUOTO.finestre),
+    aree: unici(
+      voci(dentro.aree)
+        .map(entita)
+        .filter((id) => id.startsWith("alarm_control_panel.")),
+    ).slice(0, AREE_AL_MASSIMO),
+    letture: unici(voci(dentro.letture).map(entita).filter(eLetturaDellIngresso)).slice(
+      0,
+      LETTURE_DELL_INGRESSO_AL_MASSIMO,
+    ),
+    comandi: unici(
+      voci(dentro.comandi)
+        .map((voce) => {
+          const { entity, comando } = partiDelComando(testo(voce, 160));
+          const id = entita(entity);
+          return id && comando ? `${id}:${comando}` : id;
+        })
+        .filter(eComandoDellIngresso),
+    ).slice(0, COMANDI_DELL_INGRESSO_AL_MASSIMO),
+  };
+}
+
+/**
+ * Le aree dell'antifurto dell'Ingresso, ognuna col suo nome.
+ *
+ * Quelle scelte nella pagina, nel loro ordine; senza scelta, la centrale
+ * scritta come si faceva prima (una sola, come prima); senza nemmeno quella,
+ * tutte le aree della plancia di origine. Il nome e' quello che l'area ha
+ * nella sezione Sicurezza, vuoto se non ne ha uno.
+ */
+export function areeDellIngresso(pagina, fonte = {}) {
+  const ing = pagina?.ingresso || {};
+  const nomi = new Map(elenco(fonte.aree).map((a) => [a.entita, testo(a.nome, 40)]));
+  const scelte = elenco(ing.aree).map(entita).filter(Boolean);
+  const vecchia = entita(ing.centrale);
+  const ids = scelte.length
+    ? scelte
+    : vecchia
+      ? [vecchia]
+      : elenco(fonte.centrali).map(entita).filter(Boolean);
+  return unici(ids)
+    .slice(0, AREE_AL_MASSIMO)
+    .map((id) => ({ entita: id, nome: nomi.get(id) || "" }));
+}
+
+/* Le porte e le finestre si contano insieme: «Finestre aperte: 2» dice di
+ * piu' di due etichette «Aperta». */
+const CLASSI_DELLE_APERTURE = Object.freeze({
+  window: "finestre",
+  door: "porte",
+  garage_door: "porte",
+  opening: "aperture",
+});
+
+/**
+ * Le «Altre letture» dell'ingresso, come si mostrano: i sensori di porte e
+ * finestre messi insieme in un conto — quando sono almeno due — e le altre
+ * una per una.
+ *
+ * `gruppo` e' `null` o `{ tipo, tutte, aperte }`: `tipo` dice come chiamarlo
+ * («finestre» se sono tutte finestre, «porte» se sono tutte porte,
+ * «aperture» se sono di piu' tipi), `aperte` sono quelle aperte adesso.
+ */
+export function lettureDellIngresso(letture = [], stati = {}) {
+  const ids = elenco(letture).map(entita).filter(Boolean);
+  const classe = (id) =>
+    dominioDi(id) === "binary_sensor"
+      ? CLASSI_DELLE_APERTURE[String(stati?.[id]?.attributes?.device_class || "")] || ""
+      : "";
+  const aperture = ids.filter((id) => classe(id));
+  if (aperture.length < 2) return { gruppo: null, singole: ids };
+  const tipi = unici(aperture.map(classe));
+  return {
+    gruppo: {
+      tipo: tipi.length === 1 ? tipi[0] : "aperture",
+      tutte: aperture,
+      aperte: aperture.filter((id) => String(stati?.[id]?.state) === "on"),
+    },
+    singole: ids.filter((id) => !aperture.includes(id)),
   };
 }
 
@@ -379,10 +514,7 @@ export function paginaPulita(input, indice = 0) {
       .slice(0, PULSANTI_AL_MASSIMO)
       .map(pulsantePulito)
       .filter(Boolean),
-    fermaTutto: {
-      attivo: vero(dentro.fermaTutto?.attivo, false),
-      entita: entitaDi(dentro.fermaTutto?.entita, DOMINI_DA_PREMERE),
-    },
+    fermaTutto: fermaTuttoPulito(dentro.fermaTutto),
   };
 }
 
@@ -401,16 +533,29 @@ export function paginaPulita(input, indice = 0) {
  * parte, acceso vuol dire muto. Un canale senza ne' l'uno ne' l'altro non ha
  * il tasto: un tasto che non fa niente e' peggio di un tasto che non c'e'.
  *
+ * «Perche' non prende i sensor. e i remote.?»: chi installa l'audio di una
+ * sala ha anche questi. Un `sensor` col livello (dB, %) e' un canale da
+ * guardare: lo stesso cursore in piedi, senza manopola, come un VU. Un
+ * `remote` non ha un livello: si comanda con `remote.send_command`, e il
+ * canale diventa ▲ / ▼ e il muto, ognuno col suo comando scritto nel config.
+ * Un canale che si muove (un numero, un lettore, un telecomando) puo' avere
+ * anche un sensore a parte che legge il livello vero («Livello letto»). Il
+ * muto, oltre all'interruttore, puo' essere un telecomando (il suo comando) o
+ * un tasto o uno script da premere: questi non dicono se e' muto.
+ *
  * La telecamera. Le frecce, lo stop, lo zoom e i preset sono entita' da
  * premere — un `button`, uno `script`, una `scene` — che chi installa ha gia'
  * in Home Assistant: le telecamere PTZ le espongono cosi', e dove non lo
  * fanno uno script con `onvif.ptz` dentro fa lo stesso. Lo zoom puo' essere
- * anche un numero, e allora e' un cursore.
+ * anche un numero, e allora e' un cursore. Ogni tasto puo' essere anche un
+ * `remote`, col comando da mandare scritto accanto.
  *
  * I comandi. Ognuno ha un tasto d'avvio e, se vuole, uno di stop: «AVVIO» e
  * «SPEGNIMENTO» sono due comandi di un tasto solo, le cinque sale sono cinque
  * comandi coi due tasti. Acceso lo dice l'entita' di stato scelta, o quella
- * dell'avvio quando sa dirlo (un interruttore, uno script che sta girando). */
+ * dell'avvio quando sa dirlo (un interruttore, uno script che sta girando).
+ * Un telecomando (`remote`) col comando scritto lo manda; senza comando si
+ * accende e si spegne, come un interruttore. */
 export const GRUPPI_AL_MASSIMO = 4;
 export const CANALI_PER_GRUPPO = 8;
 export const PRESET_AL_MASSIMO = 8;
@@ -418,8 +563,36 @@ export const PULSANTI_AL_MASSIMO = 8;
 /* Il colore di un gruppo che nessuno ha scelto: il primo giallo, poi
  * l'azzurro e il verde, come sui banchi. */
 export const COLORI_DEI_GRUPPI = Object.freeze(["#f59e0b", "#0ea5e9", "#10b981", "#ec4899"]);
+/* I canali che si trascinano. */
 export const DOMINI_DEL_FADER = Object.freeze(["media_player", "number", "input_number"]);
-export const DOMINI_DEL_MUTO = Object.freeze(["switch", "input_boolean"]);
+/* Tutti i canali: quelli che si trascinano, quelli da guardare (`sensor`) e
+ * quelli coi tasti ▲ / ▼ (`remote`). */
+export const DOMINI_DEL_CANALE = Object.freeze([...DOMINI_DEL_FADER, "sensor", "remote"]);
+/* Il muto: un interruttore (acceso vuol dire muto), un telecomando col suo
+ * comando, o qualcosa da premere. */
+export const DOMINI_DEL_MUTO = Object.freeze([
+  "switch",
+  "input_boolean",
+  "remote",
+  "button",
+  "input_button",
+  "script",
+]);
+/* I comandi di un telecomando che nessuno ha scritto: i nomi piu' comuni. */
+export const COMANDI_DEL_CANALE = Object.freeze({
+  su: "volume_up",
+  giu: "volume_down",
+  muto: "mute",
+});
+export const COMANDI_DELLA_TELECAMERA = Object.freeze({
+  su: "up",
+  giu: "down",
+  sinistra: "left",
+  destra: "right",
+  stop: "stop",
+  zoomPiu: "zoom_in",
+  zoomMeno: "zoom_out",
+});
 export const DOMINI_DA_PREMERE = Object.freeze([
   "button",
   "input_button",
@@ -430,9 +603,13 @@ export const DOMINI_DA_PREMERE = Object.freeze([
   "automation",
   "light",
   "fan",
+  "remote",
 ]);
-/* Chi si accende e si spegne: per loro «stop» vuol dire spegnere. */
+/* Chi si accende e si spegne: per loro «stop» vuol dire spegnere. Un
+ * telecomando lo e' solo senza un comando da mandare. */
 const SI_SPENGONO = new Set(["switch", "input_boolean", "light", "fan", "automation"]);
+const siSpegne = (id, comando = "") =>
+  SI_SPENGONO.has(dominioDi(id)) || (dominioDi(id) === "remote" && !comando);
 const DIREZIONI = Object.freeze(["su", "giu", "sinistra", "destra", "stop"]);
 
 const dominioDi = (id) => String(id || "").split(".")[0];
@@ -444,15 +621,62 @@ const colorePulito = (valore) =>
   COLORI_DELLE_PAGINE.includes(String(valore || "").toLowerCase())
     ? String(valore).toLowerCase()
     : "";
+/* Il comando di un telecomando, come Home Assistant lo vuole: una parola. */
+const parolaDelComando = (valore) => testo(valore, 64);
+/* Un numero scritto, o niente: la scala di un sensore. */
+const numeroOVuoto = (valore) =>
+  valore === null ||
+  valore === undefined ||
+  String(valore).trim() === "" ||
+  !Number.isFinite(Number(valore))
+    ? null
+    : Number(valore);
 
-/** Un canale del mixer: l'entita' col livello, il nome, l'interruttore del muto. */
+/**
+ * Un canale del mixer: l'entita' col livello, il nome, il muto; per un
+ * telecomando i suoi comandi, per un sensore la sua scala, e il sensore che
+ * legge il livello vero di un canale che si muove.
+ */
 export function canalePulito(input) {
   const dentro = typeof input === "string" ? { entita: input } : input;
   if (!dentro || typeof dentro !== "object") return null;
-  const id = entitaDi(dentro.entita, DOMINI_DEL_FADER);
+  const id = entitaDi(dentro.entita, DOMINI_DEL_CANALE);
   if (!id) return null;
-  return { entita: id, nome: testo(dentro.nome, 24), muto: entitaDi(dentro.muto, DOMINI_DEL_MUTO) };
+  const d = dominioDi(id);
+  const muto = entitaDi(dentro.muto, DOMINI_DEL_MUTO);
+  const letto = d === "sensor" ? "" : entitaDi(dentro.letto, ["sensor"]);
+  const telecomando = d === "remote";
+  const mutoDaComando = telecomando || dominioDi(muto) === "remote";
+  const conScala = d === "sensor" || Boolean(letto);
+  return {
+    entita: id,
+    nome: testo(dentro.nome, 24),
+    muto,
+    letto,
+    suComando: telecomando ? parolaDelComando(dentro.suComando) || COMANDI_DEL_CANALE.su : "",
+    giuComando: telecomando ? parolaDelComando(dentro.giuComando) || COMANDI_DEL_CANALE.giu : "",
+    mutoComando: mutoDaComando
+      ? parolaDelComando(dentro.mutoComando) || COMANDI_DEL_CANALE.muto
+      : "",
+    dispositivo: mutoDaComando ? testo(dentro.dispositivo, 64) : "",
+    min: conScala ? numeroOVuoto(dentro.min) : null,
+    max: conScala ? numeroOVuoto(dentro.max) : null,
+  };
 }
+
+/** Il canale vuoto: il volume totale che nessuno ha scelto. */
+export const CANALE_VUOTO = Object.freeze({
+  entita: "",
+  nome: "",
+  muto: "",
+  letto: "",
+  suComando: "",
+  giuComando: "",
+  mutoComando: "",
+  dispositivo: "",
+  min: null,
+  max: null,
+});
 
 function mixerPulito(input) {
   const dentro = input && typeof input === "object" ? input : {};
@@ -469,7 +693,7 @@ function mixerPulito(input) {
         .filter(Boolean)
         .slice(0, CANALI_PER_GRUPPO),
     }));
-  const master = canalePulito(dentro.master) || { entita: "", nome: "", muto: "" };
+  const master = canalePulito(dentro.master) || { ...CANALE_VUOTO };
   return { gruppi, master };
 }
 
@@ -481,17 +705,42 @@ export function coloreDelGruppo(gruppo, indice = 0) {
 function telecameraPulita(input) {
   const dentro = input && typeof input === "object" ? input : {};
   const fuori = { entita: entitaDi(dentro.entita, ["camera"]) };
-  for (const d of DIREZIONI) fuori[d] = entitaDi(dentro[d], DOMINI_DA_PREMERE);
+  /* Un tasto che e' un telecomando porta il suo comando accanto
+   * (`suComando`, `zoomPiuComando`…): vuoto, il nome piu' comune. */
+  const tasto = (chiave) => {
+    fuori[chiave] = entitaDi(dentro[chiave], DOMINI_DA_PREMERE);
+    fuori[`${chiave}Comando`] =
+      dominioDi(fuori[chiave]) === "remote"
+        ? parolaDelComando(dentro[`${chiave}Comando`]) || COMANDI_DELLA_TELECAMERA[chiave]
+        : "";
+  };
+  for (const d of DIREZIONI) tasto(d);
   fuori.zoom = entitaDi(dentro.zoom, ["number", "input_number"]);
-  fuori.zoomPiu = entitaDi(dentro.zoomPiu, DOMINI_DA_PREMERE);
-  fuori.zoomMeno = entitaDi(dentro.zoomMeno, DOMINI_DA_PREMERE);
+  tasto("zoomPiu");
+  tasto("zoomMeno");
   fuori.preset = (Array.isArray(dentro.preset) ? dentro.preset : [])
     .map((p) => (p && typeof p === "object" ? p : {}))
-    .map((p) => ({ entita: entitaDi(p.entita, DOMINI_DA_PREMERE), nome: testo(p.nome, 24) }))
+    .map((p) => {
+      const id = entitaDi(p.entita, DOMINI_DA_PREMERE);
+      return {
+        entita: id,
+        nome: testo(p.nome, 24),
+        comando: dominioDi(id) === "remote" ? parolaDelComando(p.comando) : "",
+      };
+    })
     .filter((p) => p.entita)
     .slice(0, PRESET_AL_MASSIMO);
+  /* Il preset di un telecomando senza comando: il suo numero. */
+  fuori.preset.forEach((p, k) => {
+    if (dominioDi(p.entita) === "remote" && !p.comando) p.comando = `preset_${k + 1}`;
+  });
+  fuori.dispositivo = telecomandiDellaTelecamera(fuori) ? testo(dentro.dispositivo, 64) : "";
   return fuori;
 }
+
+const telecomandiDellaTelecamera = (tc) =>
+  [...DIREZIONI, "zoomPiu", "zoomMeno"].some((k) => dominioDi(tc[k]) === "remote") ||
+  tc.preset.some((p) => dominioDi(p.entita) === "remote");
 
 /* Un comando della pagina Comandi. Resta anche col solo nome: nel config si
  * scrive prima il nome e poi si sceglie l'entita'. Sul tablet uno senza
@@ -506,7 +755,29 @@ function pulsantePulito(input) {
     stop: entitaDi(input.stop, DOMINI_DA_PREMERE),
     stato: entita(input.stato),
   };
+  /* Un telecomando manda il comando scritto; senza, si accende e si spegne. */
+  fuori.avvioComando =
+    dominioDi(fuori.avvio) === "remote" ? parolaDelComando(input.avvioComando) : "";
+  fuori.stopComando = dominioDi(fuori.stop) === "remote" ? parolaDelComando(input.stopComando) : "";
+  fuori.dispositivo =
+    dominioDi(fuori.avvio) === "remote" || dominioDi(fuori.stop) === "remote"
+      ? testo(input.dispositivo, 64)
+      : "";
   return fuori.nome || fuori.avvio || fuori.stop ? fuori : null;
+}
+
+/* «Ferma tutto»: un'entita' sola, o lo stop di ogni comando. Un telecomando
+ * manda il suo comando, o senza si spegne. */
+function fermaTuttoPulito(input) {
+  const dentro = input && typeof input === "object" ? input : {};
+  const id = entitaDi(dentro.entita, DOMINI_DA_PREMERE);
+  const telecomando = dominioDi(id) === "remote";
+  return {
+    attivo: vero(dentro.attivo, false),
+    entita: id,
+    comando: telecomando ? parolaDelComando(dentro.comando) : "",
+    dispositivo: telecomando ? testo(dentro.dispositivo, 64) : "",
+  };
 }
 
 /** I comandi che il tablet sa davvero premere. */
@@ -534,22 +805,69 @@ export function posizioneDelValore(valore, min = 0, max = 1) {
   return tra((v - min) / (max - min), 0, 1);
 }
 
+/* La scala di un sensore: quella scritta nel config, quella che dichiara, o
+ * quella del canale che legge (un numero in dB letto in dB); se no dalla sua
+ * unita': da 0 a 100 per i %, da -60 a +12 per i dB, come sui banchi. */
+function scalaDellaMisura(canale, a, unita, accanto = null) {
+  const dichiarata = (k) =>
+    Number.isFinite(Number(a?.[k])) && a?.[k] !== "" && a?.[k] !== null ? Number(a[k]) : null;
+  let min = numeroOVuoto(canale?.min) ?? dichiarata("min");
+  let max = numeroOVuoto(canale?.max) ?? dichiarata("max");
+  if (min === null && max === null && accanto && accanto.unita === unita) {
+    min = accanto.min;
+    max = accanto.max;
+  }
+  const db = /db/i.test(unita);
+  if (min === null) min = db ? -60 : 0;
+  if (max === null) max = db ? 12 : 100;
+  if (!(max > min)) max = min + 100;
+  return { min, max };
+}
+
+/* Quello che dice un sensore di livello: il numero, la sua unita', dove sta. */
+function misuraDelSensore(id, canale, stati, accanto = null) {
+  const s = stati?.[id];
+  if (!s || IGNOTO.has(String(s.state ?? ""))) return null;
+  const valore = Number(s.state);
+  if (String(s.state).trim() === "" || !Number.isFinite(valore)) return null;
+  const a = s.attributes || {};
+  const unita = testo(a.unit_of_measurement, 12);
+  const { min, max } = scalaDellaMisura(canale, a, unita, accanto);
+  return { entita: id, valore, unita, min, max, posizione: posizioneDelValore(valore, min, max) };
+}
+
 /**
  * Quello che si sa di un canale adesso, per il cursore e il muto.
  *
  * `posizione` va da 0 a 1 ed e' dove sta il cursore; `valore` e' il numero
  * vero (il volume da 0 a 1 di un lettore, i dB di un numero), con `unita`.
- * `muove` dice se il cursore si puo' toccare, `puoMuto` se c'e' il tasto.
+ * `muove` dice se il cursore si puo' toccare, `puoMuto` se c'e' il tasto,
+ * `mutoSaDire` se il muto dice com'e' (un interruttore, il muto del lettore:
+ * un tasto da premere o un comando del telecomando non lo dicono).
+ *
+ * `tipo` e' «volume» (un lettore), «numero», «misura» (un sensore: si guarda
+ * e basta) o «telecomando» (i tasti ▲ / ▼, `passi`). `misura` e' quello che
+ * legge il sensore «Livello letto» di un canale che si muove, o `null`.
  */
 export function letturaDelCanale(canale, stati = {}) {
   const id = canale?.entita || "";
+  const d = dominioDi(id);
   const s = stati?.[id];
   const a = s?.attributes || {};
   const muto = canale?.muto || "";
+  const mutoInterruttore = ["switch", "input_boolean"].includes(dominioDi(muto));
   const statoMuto = muto ? String(stati?.[muto]?.state ?? "") : "";
+  const tipo =
+    d === "media_player"
+      ? "volume"
+      : d === "sensor"
+        ? "misura"
+        : d === "remote"
+          ? "telecomando"
+          : "numero";
   const base = {
     entita: id,
-    tipo: dominioDi(id) === "media_player" ? "volume" : "numero",
+    tipo,
     disponibile: Boolean(s) && !IGNOTO.has(String(s.state ?? "")),
     valore: null,
     min: 0,
@@ -558,31 +876,66 @@ export function letturaDelCanale(canale, stati = {}) {
     unita: "",
     posizione: 0,
     muove: false,
+    passi: false,
+    misura: null,
     puoMuto: Boolean(muto),
-    mutato: muto ? statoMuto === "on" : false,
+    mutoSaDire: mutoInterruttore,
+    mutato: mutoInterruttore ? statoMuto === "on" : false,
   };
   if (!base.disponibile) return { ...base, puoMuto: false };
-  if (base.tipo === "volume") {
+  if (tipo === "misura") {
+    const m = misuraDelSensore(id, canale, stati);
+    return {
+      ...base,
+      valore: m ? m.valore : null,
+      min: m ? m.min : 0,
+      max: m ? m.max : 100,
+      passo: 0,
+      unita: m ? m.unita : testo(a.unit_of_measurement, 12),
+      posizione: m ? m.posizione : 0,
+    };
+  }
+  if (tipo === "telecomando") {
+    /* Un telecomando non dice il livello: se c'e', lo legge il sensore. */
+    const m = canale?.letto ? misuraDelSensore(canale.letto, canale, stati) : null;
+    return {
+      ...base,
+      valore: m ? m.valore : null,
+      min: m ? m.min : 0,
+      max: m ? m.max : 100,
+      passo: 0,
+      unita: m ? m.unita : "",
+      posizione: m ? m.posizione : 0,
+      passi: true,
+      misura: m,
+      puoMuto: true,
+    };
+  }
+  if (tipo === "volume") {
     const f = Number(a.supported_features);
     const tutto = a.supported_features === undefined || !Number.isFinite(f);
     const volume = Number(a.volume_level);
     const ce = a.volume_level !== undefined && a.volume_level !== null && Number.isFinite(volume);
-    return {
+    const proprio = !muto && (tutto || Boolean(f & VOLUME_MUTE));
+    const lettura = {
       ...base,
       valore: ce ? tra(volume, 0, 1) : null,
       unita: "%",
       posizione: ce ? tra(volume, 0, 1) : 0,
       muove: ce && (tutto || Boolean(f & VOLUME_SET)),
       puoMuto: Boolean(muto) || tutto || Boolean(f & VOLUME_MUTE),
+      mutoSaDire: mutoInterruttore || proprio,
       mutato: muto ? base.mutato : a.is_volume_muted === true,
     };
+    lettura.misura = canale?.letto ? misuraDelSensore(canale.letto, canale, stati) : null;
+    return lettura;
   }
   const min = Number.isFinite(Number(a.min)) ? Number(a.min) : 0;
   const max = Number.isFinite(Number(a.max)) && Number(a.max) > min ? Number(a.max) : min + 100;
   const passo = Number(a.step) > 0 ? Number(a.step) : 1;
   const valore = Number(s.state);
   const ce = String(s.state).trim() !== "" && Number.isFinite(valore);
-  return {
+  const lettura = {
     ...base,
     valore: ce ? valore : null,
     min,
@@ -592,6 +945,11 @@ export function letturaDelCanale(canale, stati = {}) {
     posizione: ce ? posizioneDelValore(valore, min, max) : 0,
     muove: ce,
   };
+  /* Il sensore che legge un numero: nella sua stessa unita' ha la sua scala. */
+  lettura.misura = canale?.letto
+    ? misuraDelSensore(canale.letto, canale, stati, { unita: lettura.unita, min, max })
+    : null;
+  return lettura;
 }
 
 /** Il valore che vuol dire una posizione del cursore, sul passo del canale. */
@@ -616,15 +974,41 @@ export function servizioDelFader(canale, posizione, lettura) {
   return { domain: d, service: "set_value", data: { entity_id: id, value: valore } };
 }
 
-/** Il servizio del tasto muto: l'interruttore scelto, o il muto del lettore. */
+/** Un comando a un telecomando: `remote.send_command`, col dispositivo se c'e'. */
+export function comandoAlTelecomando(id, comando, dispositivo = "") {
+  if (dominioDi(id) !== "remote" || !comando) return null;
+  const data = { entity_id: id, command: comando };
+  if (dispositivo) data.device = dispositivo;
+  return { domain: "remote", service: "send_command", data };
+}
+
+/** Il servizio del tasto muto: l'interruttore scelto, il comando del
+ * telecomando, il tasto da premere, o il muto del lettore. */
 export function servizioDelMuto(canale, lettura) {
   if (!lettura?.puoMuto) return null;
-  if (canale?.muto)
-    return {
-      domain: dominioDi(canale.muto),
-      service: lettura.mutato ? "turn_off" : "turn_on",
-      data: { entity_id: canale.muto },
-    };
+  const muto = canale?.muto || "";
+  if (muto) {
+    const d = dominioDi(muto);
+    if (d === "switch" || d === "input_boolean")
+      return {
+        domain: d,
+        service: lettura.mutato ? "turn_off" : "turn_on",
+        data: { entity_id: muto },
+      };
+    if (d === "remote")
+      return comandoAlTelecomando(
+        muto,
+        canale.mutoComando || COMANDI_DEL_CANALE.muto,
+        canale.dispositivo,
+      );
+    return servizioDaPremere(muto);
+  }
+  if (dominioDi(canale?.entita) === "remote")
+    return comandoAlTelecomando(
+      canale.entita,
+      canale.mutoComando || COMANDI_DEL_CANALE.muto,
+      canale.dispositivo,
+    );
   if (dominioDi(canale?.entita) !== "media_player") return null;
   return {
     domain: "media_player",
@@ -633,19 +1017,37 @@ export function servizioDelMuto(canale, lettura) {
   };
 }
 
-/** Premere un'entita': il tasto, lo script, la scena, l'interruttore. */
-export function servizioDaPremere(id) {
+/** I tasti ▲ / ▼ di un canale telecomando: il comando del verso. */
+export function servizioDelPasso(canale, verso = "su") {
+  if (dominioDi(canale?.entita) !== "remote") return null;
+  const comando =
+    verso === "giu"
+      ? canale.giuComando || COMANDI_DEL_CANALE.giu
+      : canale.suComando || COMANDI_DEL_CANALE.su;
+  return comandoAlTelecomando(canale.entita, comando, canale.dispositivo);
+}
+
+/** Premere un'entita': il tasto, lo script, la scena, l'interruttore, il
+ * comando di un telecomando (senza comando, il telecomando si accende). */
+export function servizioDaPremere(id, comando = "", dispositivo = "") {
   const d = dominioDi(id);
   if (!id || !DOMINI_DA_PREMERE.includes(d)) return null;
+  if (d === "remote" && comando) return comandoAlTelecomando(id, comando, dispositivo);
   if (d === "button" || d === "input_button")
     return { domain: d, service: "press", data: { entity_id: id } };
   if (d === "automation") return { domain: d, service: "trigger", data: { entity_id: id } };
   return { domain: d, service: "turn_on", data: { entity_id: id } };
 }
 
-/** Il servizio di una freccia, dello stop o di un tasto dello zoom. */
-export function servizioDellaTelecamera(telecamera, tasto) {
-  return servizioDaPremere(telecamera?.[tasto] || "");
+/** Il servizio di una freccia, dello stop, di un tasto dello zoom o di un
+ * preset (`tasto` «entita'» su una voce dei preset). */
+export function servizioDellaTelecamera(telecamera, tasto, dispositivo = "") {
+  const comando = tasto === "entita" ? telecamera?.comando : telecamera?.[`${tasto}Comando`];
+  return servizioDaPremere(
+    telecamera?.[tasto] || "",
+    comando || "",
+    dispositivo || telecamera?.dispositivo || "",
+  );
 }
 
 const ACCESI_DEI_PULSANTI = new Set(["on", "playing", "open", "home", "true"]);
@@ -656,7 +1058,15 @@ export function pulsanteAcceso(pulsante, stati = {}) {
   if (!id) return false;
   const d = dominioDi(id);
   if (["button", "input_button", "scene"].includes(d)) return false;
+  /* Un telecomando che manda un comando non dice se quel comando e' acceso. */
+  if (!pulsante?.stato && d === "remote" && pulsante?.avvioComando) return false;
   return ACCESI_DEI_PULSANTI.has(String(stati?.[id]?.state ?? "").toLowerCase());
+}
+
+/** Chi dice se un comando e' acceso: l'entita' di stato, o un avvio che si
+ * accende e si spegne. */
+export function pulsanteDiceLoStato(pulsante) {
+  return Boolean(pulsante?.stato) || siSpegne(pulsante?.avvio, pulsante?.avvioComando);
 }
 
 /**
@@ -664,33 +1074,45 @@ export function pulsanteAcceso(pulsante, stati = {}) {
  *
  * Un interruttore senza tasto di stop e' un tasto solo che accende e spegne;
  * con lo stop scritto uguale all'avvio, lo stop lo spegne. Tutto il resto si
- * preme: lo script d'avvio, quello di spegnimento.
+ * preme: lo script d'avvio, quello di spegnimento, il comando del telecomando.
  */
 export function servizioDelPulsante(pulsante, verso = "avvio", stati = {}) {
   const avvio = pulsante?.avvio || "";
   const stop = pulsante?.stop || "";
+  const dispositivo = pulsante?.dispositivo || "";
   const spegni = (id) => ({
     domain: dominioDi(id),
     service: "turn_off",
     data: { entity_id: id },
   });
   if (verso === "stop") {
+    /* Lo stop che e' un telecomando manda il suo comando, o lo spegne. */
+    if (dominioDi(stop) === "remote")
+      return pulsante?.stopComando
+        ? comandoAlTelecomando(stop, pulsante.stopComando, dispositivo)
+        : spegni(stop);
     if (stop && stop !== avvio) return servizioDaPremere(stop);
-    if (avvio && SI_SPENGONO.has(dominioDi(avvio))) return spegni(avvio);
+    if (avvio && siSpegne(avvio, pulsante?.avvioComando)) return spegni(avvio);
     return null;
   }
   if (!avvio) return null;
-  if (!stop && SI_SPENGONO.has(dominioDi(avvio)) && pulsanteAcceso({ avvio }, stati))
+  if (!stop && siSpegne(avvio, pulsante?.avvioComando) && pulsanteAcceso({ avvio }, stati))
     return spegni(avvio);
-  return servizioDaPremere(avvio);
+  return servizioDaPremere(avvio, pulsante?.avvioComando, dispositivo);
 }
 
 /** «Ferma tutto»: l'entita' scelta, o lo stop di ogni comando che ne ha uno. */
 export function chiamateDelFermaTutto(pagina, stati = {}) {
-  if (!pagina?.fermaTutto?.attivo) return [];
-  if (pagina.fermaTutto.entita) return [servizioDaPremere(pagina.fermaTutto.entita)];
+  const ferma = pagina?.fermaTutto;
+  if (!ferma?.attivo) return [];
+  if (ferma.entita) {
+    /* Un telecomando senza comando, per fermare tutto, si spegne. */
+    if (dominioDi(ferma.entita) === "remote" && !ferma.comando)
+      return [{ domain: "remote", service: "turn_off", data: { entity_id: ferma.entita } }];
+    return [servizioDaPremere(ferma.entita, ferma.comando, ferma.dispositivo)];
+  }
   return pulsantiDellaPagina(pagina)
-    .filter((p) => p.stop || SI_SPENGONO.has(dominioDi(p.avvio)))
+    .filter((p) => p.stop || siSpegne(p.avvio, p.avvioComando))
     .map((p) => servizioDelPulsante(p, "stop", stati))
     .filter(Boolean);
 }
@@ -961,11 +1383,18 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
     lettori: lettoriConfigurati(elenco(altro.lettori))
       .filter((l) => entita(l.entity))
       /* Con gli «altri comandi» scelti accanto al lettore: «quelli che ho
-       * abilitato nella plancia li vedo, nel pannello no». */
+       * abilitato nella plancia li vedo, nel pannello no». E con le «altre
+       * letture» e il «telecomando»: «i remote. e i sensor. li aggiungi nel
+       * config, ma non compaiono» — qui si tenevano solo i comandi, e una
+       * lettura o un telecomando non arrivavano mai al tablet. I comandi
+       * restano come li pulisce la sezione Musica: `remote.sala:volume_up`
+       * non e' un'entita' sola, e un filtro da entita' lo buttava. */
       .map((l) => ({
         entity: entita(l.entity),
         nome: testo(l.nome),
-        comandi: elenco(l.comandi).map(entita).filter(Boolean),
+        comandi: l.comandi,
+        letture: l.letture.map(entita).filter(Boolean),
+        telecomando: entita(l.telecomando),
       })),
     stanze: elenco(sezioni.rooms)
       .filter((s) => s && testo(s.name))
@@ -1288,8 +1717,11 @@ export function telecamereDellaFonte(fonte = {}) {
 }
 
 export function ingressoProposto(fonte = {}) {
+  /* Con piu' aree la pagina nuova non ne sceglie una: le mostra tutte, e
+   * un'area aggiunta poi nella sezione Sicurezza compare da sola. */
+  const centrali = elenco(fonte.centrali);
   return ingressoPulito({
-    centrale: elenco(fonte.centrali)[0] || "",
+    centrale: centrali.length === 1 ? centrali[0] : "",
     telecamera: elenco(fonte.telecamere)[0]?.entity || "",
     esco: cercaAzione(fonte, "esco", "uscita", "leave", "away"),
     rientro: cercaAzione(fonte, "rientro", "arrivo", "torno", "home"),

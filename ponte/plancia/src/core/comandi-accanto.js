@@ -37,14 +37,37 @@ export const DOMINI_COMANDO = Object.freeze({
   input_boolean: "interruttore",
   select: "tendina",
   input_select: "tendina",
+  /* Un telecomando (`remote`) da solo si accende e si spegne; con un comando
+   * scritto accanto — `remote.sala:volume_up` — e' un tasto che lo manda
+   * (`remote.send_command`). «I remote li aggiungi nel config, ma non
+   * compaiono»: non erano fra questi, e l'elenco li lasciava cadere. */
+  remote: "interruttore",
 });
+
+/* Il comando di un telecomando si scrive dopo i due punti, una parola sola:
+ * e' quello che Home Assistant manda cosi' com'e'. */
+const CON_COMANDO = /^(remote\.[a-z0-9_]+):([^\s,;:]{1,64})$/i;
+
+/**
+ * Le due parti di una voce dei comandi: l'entita' e, per un telecomando, il
+ * comando da mandare. `remote.sala:volume_up` → `remote.sala` e `volume_up`.
+ */
+export function partiDelComando(voce) {
+  const testo = clean(voce && typeof voce === "object" ? voce.entity : voce);
+  const m = CON_COMANDO.exec(testo);
+  return m ? { entity: m[1], comando: m[2] } : { entity: testo, comando: "" };
+}
 
 /* Dodici: una scheda e' una scheda, non la pagina delle impostazioni. */
 export const COMANDI_MASSIMI = 12;
 
 /** Che genere di comando e' quell'entita': tasto, tendina, interruttore — o niente. */
 export function genereDelComando(entity) {
-  return DOMINI_COMANDO[clean(entity).split(".")[0]] || "";
+  const { entity: id, comando } = partiDelComando(entity);
+  if (comando) return "tasto";
+  /* Un id con dentro i due punti che non sono un comando non e' un'entita'. */
+  if (id.includes(":")) return "";
+  return DOMINI_COMANDO[id.split(".")[0]] || "";
 }
 
 /** L'elenco pulito: solo entita' comandabili, una volta sola, non piu' di dodici. */
@@ -70,13 +93,20 @@ export function elencoComandi(input) {
 export function comandiDelDispositivo(dispositivo = {}, states = {}) {
   return elencoComandi(dispositivo?.comandi).map((entity) => {
     const genere = genereDelComando(entity);
-    const corrente = states?.[entity];
+    /* `entity` resta la voce come e' scritta (un telecomando col suo comando
+     * e' una voce sua); lo stato e il nome sono quelli dell'entita'. */
+    const { entity: id, comando } = partiDelComando(entity);
+    const corrente = states?.[id];
     const attributi = corrente?.attributes || {};
     const stato = clean(corrente?.state).toLowerCase();
     return {
       entity,
       genere,
-      name: nomeAccantoAlDispositivo(entity, dispositivo, states),
+      name: comando
+        ? `${nomeAccantoAlDispositivo(id, dispositivo, states)} · ${comando}`
+        : nomeAccantoAlDispositivo(id, dispositivo, states),
+      entita: id,
+      comando,
       /* Un tasto mai premuto sta su «unknown», ed e' un tasto che funziona:
        * non raggiungibile e' solo chi lo dice. */
       available: Boolean(corrente) && stato !== "unavailable",
@@ -99,10 +129,16 @@ export function comandiDelDispositivo(dispositivo = {}, states = {}) {
  * per quelle entita'.
  */
 export function comandoDelDispositivo(voce = {}, valore = "") {
-  const entity = clean(voce?.entity);
+  const { entity, comando } = partiDelComando(voce?.entity);
   const dominio = entity.split(".")[0];
-  const genere = genereDelComando(entity);
+  const genere = genereDelComando(voce?.entity);
   if (!genere) return null;
+  if (comando)
+    return {
+      domain: "remote",
+      service: "send_command",
+      data: { entity_id: entity, command: comando },
+    };
   if (genere === "tendina") {
     const opzione = clean(valore);
     if (!opzione) return null;

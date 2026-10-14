@@ -392,3 +392,59 @@ test("la lettura della finestra dice cosa suona, e quando non suona lo dice", as
   /* E senza lettori non si inventa una frase su una casa senza casse. */
   assert.equal(analisiDellaSezione(tessera([]), en).frase, "No player set up.");
 });
+
+/* «I remote. e i sensor. li aggiungi nel config, ma non compaiono.» */
+test("i telecomandi e le letture accanto al lettore arrivano sulla scheda", async () => {
+  const { letturaDelLettore, normalizzaLettore, entitaDeiLettori } = await import(
+    "../src/core/media-player.js"
+  );
+  const { comandoDelDispositivo } = await import("../src/core/comandi-accanto.js");
+  const { conLaVoce, ESITI_ELENCO } = await import("../src/core/robot-model.js");
+  const voce = normalizzaLettore({
+    entity: "media_player.sala",
+    telecomando: "remote.ampli",
+    comandi: ["remote.ampli:volume_up", "remote.ir", "sensor.non_e_un_comando"],
+    letture: ["sensor.uscita", "select.eq", "button.non_e_una_lettura"],
+  });
+  assert.deepEqual(voce.comandi, ["remote.ampli:volume_up", "remote.ir"]);
+  assert.deepEqual(voce.letture, ["sensor.uscita", "select.eq"]);
+  assert.deepEqual(entitaDeiLettori([voce]).sort(), [
+    "media_player.sala",
+    "remote.ampli",
+    "remote.ir",
+    "select.eq",
+    "sensor.uscita",
+  ]);
+  const stati = {
+    "media_player.sala": { state: "on", attributes: { friendly_name: "Sala" } },
+    "remote.ampli": { state: "on", attributes: { friendly_name: "Ampli" } },
+    "remote.ir": { state: "off", attributes: { friendly_name: "IR" } },
+    "sensor.uscita": { state: "-18.5", attributes: { unit_of_measurement: "dB" } },
+    "select.eq": { state: "Voce", attributes: { options: ["Voce"] } },
+  };
+  /* Il telecomando scelto che non porta frecce conosciute: un tasto acceso/spento. */
+  const riga = letturaDelLettore(voce, stati, (v) => v, { "remote.ampli": "denon" });
+  assert.deepEqual(
+    riga.comandi.map((c) => [c.entity, c.genere, c.acceso]),
+    [
+      ["remote.ampli", "interruttore", true],
+      ["remote.ampli:volume_up", "tasto", null],
+      ["remote.ir", "interruttore", false],
+    ],
+  );
+  assert.deepEqual(comandoDelDispositivo(riga.comandi[1]), {
+    domain: "remote",
+    service: "send_command",
+    data: { entity_id: "remote.ampli", command: "volume_up" },
+  });
+  assert.match(riga.letture[0].testo, /^-18[.,]5 dB$/);
+  assert.equal(riga.letture[1].testo, "Voce");
+  /* Una TV che i tasti li prende da se' (LG webOS): il telecomando scelto non
+   * si ripete fra i comandi. */
+  const tv = letturaDelLettore(voce, stati, (v) => v, { "media_player.sala": "webostv" });
+  assert.equal(tv.comandi[0].entity, "remote.ampli:volume_up");
+  /* Nel config si aggiungono come le altre voci. */
+  assert.equal(conLaVoce([], "remote.ampli:mute", "comandi").esito, ESITI_ELENCO.aggiunto);
+  assert.equal(conLaVoce([], "remote.ampli", "comandi").esito, ESITI_ELENCO.aggiunto);
+  assert.equal(conLaVoce([], "sensor.uscita", "letture").esito, ESITI_ELENCO.aggiunto);
+});
