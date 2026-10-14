@@ -16,6 +16,28 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 per un attimo il vecchio logo «DASHBOARDMODERN»: adesso c'è quello di
 gdahome, con la rotella e «Caricamento…».
 
+**Notifiche push nell'app.** Nel menu dell'app, sul telefono, c'è
+«Notifiche»: antifurto, allagamento, fumo e gas, campanello (a tutto schermo,
+con la telecamera e «Apri»), porte e garage aperti, elettrodomestico finito,
+freezer, pioggia con finestre aperte, arrivi e uscite, i consigli
+dell'Assistente di casa, un riepilogo serale, e notifiche tue su qualsiasi
+entità. Ore di silenzio, con le urgenti che passano comunque. Le notifiche
+partono cifrate dalla casa e si aprono solo sul telefono: Google, Apple e il
+tramite non possono leggerle. Arrivano solo ai telefoni abbinati a un utente
+attivo di Home Assistant; i telefoni abbinati prima vanno abbinati di nuovo.
+Sull'iPhone, a telefono bloccato, si legge «gdahome: nuova notifica» finché
+non la apri.
+
+**Chiedi alla casa capisce le domande.** «Fa freddo in camera?», «le luci
+sono accese?», «chi c'è in casa?», «la lavatrice ha finito?», «quanto sto
+consumando?», «domani piove?»: si capiscono in tanti modi di dirle. Le azioni
+chiedono sempre conferma, i codici non si ripetono mai; quando non capisce
+propone domande vicine e lascia la parola ad Assist.
+
+**CarPlay e Android Auto su schermi piccoli.** Le indicazioni si accorciano
+per stare nello schermo, i riquadri si stringono, e le icone di rotonde,
+inversioni e curve strette sono disegnate apposta.
+
 ## 1.12.0
 
 **L'Assistente di casa.** Accanto alle persone, nella Home, la casa ti dice
