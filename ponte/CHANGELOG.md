@@ -19,6 +19,11 @@ Non accende più da solo lo schermo col telefono bloccato: per farlo Google
 Play chiede una dichiarazione apposta, che arriverà in una prossima
 versione. Tutto il resto è come nella 1.12.1.
 
+**App: mai più il logo DashboardModern all'avvio.** Al posto della schermata
+di caricamento col vecchio logo c'è il marchio di gdahome (dalla 1.12.1), e
+anche il velo con cui parte la plancia, quando arriva direttamente da Home
+Assistant, mostra il logo di gdahome invece di quello di serie.
+
 ## 1.12.1
 
 **App: all'avvio il marchio di gdahome.** Il caricamento dell'app mostrava
