@@ -1145,9 +1145,35 @@ export function lettoriDellaPagina(pagina, fonte = {}) {
 /* La pagina Energia: quattro misure, ognuna un'entita'. Vuote, le prende la
  * plancia di origine dalla sua sezione Energia. */
 const ENERGIA_VUOTA = Object.freeze({ casa: "", solare: "", rete: "", batteria: "" });
+
+/* «L'Energia propone quattro scelte soltanto: darei modo di aumentare le
+ * entità a scelta.» Oltre alle quattro misure fisse, altre a piacere — una
+ * presa, la pompa di calore, l'auto in carica, i kWh di oggi — fino a
+ * dodici tessere in tutto. */
+export const ALTRE_MISURE_AL_MASSIMO = 8;
+
 function energiaPulita(input) {
   const dentro = input && typeof input === "object" ? input : {};
-  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, entita(dentro[k])]));
+  const fisse = Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, entita(dentro[k])]));
+  const viste = new Set();
+  const altre = (Array.isArray(dentro.altre) ? dentro.altre : [])
+    .map(entita)
+    .filter((e) => e && !viste.has(e) && viste.add(e))
+    .slice(0, ALTRE_MISURE_AL_MASSIMO);
+  return { ...fisse, altre };
+}
+
+/** Le misure in più della pagina Energia, nell'ordine scelto. */
+export function altreMisureDellaPagina(pagina) {
+  return Array.isArray(pagina?.energia?.altre) ? pagina.energia.altre.filter(Boolean) : [];
+}
+
+/** La griglia piu' piccola in cui stanno [quante] tessere. */
+export function grigliaPer(quante) {
+  const misure = Object.keys(GRIGLIE)
+    .map(Number)
+    .sort((a, b) => a - b);
+  return misure.find((n) => n >= quante) || misure.at(-1);
 }
 
 /** Le misure dell'energia: quelle scelte, e le altre dalla plancia di origine. */

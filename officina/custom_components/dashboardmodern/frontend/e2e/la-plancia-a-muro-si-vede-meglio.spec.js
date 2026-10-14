@@ -105,6 +105,77 @@ test.describe("la plancia a muro si vede meglio", () => {
       .toEqual(["cover.close_cover"]);
   });
 
+  test("l'energia con le misure in più: si scelgono nel config e la griglia si allarga", async ({
+    page,
+  }, testInfo) => {
+    const stati = {
+      ...STATI,
+      "sensor.presa_lavatrice_w": {
+        state: "1840",
+        attributes: { unit_of_measurement: "W", friendly_name: "Presa lavatrice" },
+      },
+      "sensor.pompa_di_calore_kw": {
+        state: "1.35",
+        attributes: { unit_of_measurement: "kW", friendly_name: "Pompa di calore" },
+      },
+      "sensor.energia_oggi": {
+        state: "12.4",
+        attributes: { unit_of_measurement: "kWh", friendly_name: "Consumo di oggi" },
+      },
+      "sensor.wallbox_w": {
+        state: "7200",
+        attributes: { unit_of_measurement: "W", friendly_name: "Auto in carica" },
+      },
+    };
+    const energia = MURO.pagine.find((p) => p.modello === "energia");
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: {
+        attiva: true,
+        pagine: [
+          {
+            ...energia,
+            energia: {
+              ...energia.energia,
+              altre: [
+                "sensor.presa_lavatrice_w",
+                "sensor.pompa_di_calore_kw",
+                "sensor.energia_oggi",
+              ],
+            },
+          },
+        ],
+      },
+      stati,
+    });
+    await expect(muro(page)).toBeVisible();
+    const g = muro(page).locator(".mu-g6");
+    await expect(g.locator(".mu-energia")).toHaveCount(7);
+    /* Sette tessere: la griglia da otto, quattro per due, senza scorrere. */
+    await expect(g).toHaveAttribute("style", /--mu-col:4;--mu-righe:2/);
+    await expect(muro(page).locator('[data-mu-misura="altra-0"]')).toContainText("1,8 kW");
+    await expect(muro(page).locator('[data-mu-misura="altra-0"]')).toContainText("Presa lavatrice");
+    await expect(muro(page).locator('[data-mu-misura="altra-1"]')).toContainText("1,4 kW");
+    await expect(muro(page).locator('[data-mu-misura="altra-2"]')).toContainText("12 kWh");
+    if (process.env.DM_FOTO)
+      await page.screenshot({ path: `${process.env.DM_FOTO}/muro-energia-di-piu.png` });
+
+    /* Nel config: le quattro fisse, e sotto le altre, con un posto vuoto per
+     * aggiungerne un'altra. */
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.locator('.ed-tab[data-tab="muro"]').click();
+    const body = page.locator("#ed-body");
+    await expect(body.locator('[data-mu-ed-campo="pagine.0.energia.altre.3"]')).toHaveCount(1);
+    await scriviLEntita(body, "pagine.0.energia.altre.3", "sensor.wallbox_w");
+    await expect(body.locator('[data-mu-ed-campo="pagine.0.energia.altre.4"]')).toHaveCount(1);
+    const anteprima = body.locator(".mu-ed-anteprima .mu-anteprima");
+    await expect(anteprima.locator(".mu-energia")).toHaveCount(8);
+    if (process.env.DM_FOTO) {
+      await body.getByText("Altre misure").scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `${process.env.DM_FOTO}/muro-energia-config.png` });
+    }
+  });
+
   test("il config: anteprima dal vivo, griglia, bozza che resta, pagina duplicata", async ({
     page,
   }, testInfo) => {

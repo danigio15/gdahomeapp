@@ -178,7 +178,8 @@ function personeDellaCasa(states, fonti, adesso) {
         nome: p.nome,
         entity: p.entity,
         stato,
-        inCasa: stato === "home",
+        // Anche una zona fatta apposta per la casa, che si chiama «Casa».
+        inCasa: stato === "home" || /^(?:a\s+)?(?:casa|home)(?:\s+\S+)?$/i.test(zona),
         noto: Boolean(stato) && !MUTI.has(stato),
         zona,
         daQuando: daQuando(s, adesso),

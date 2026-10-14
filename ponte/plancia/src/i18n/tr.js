@@ -11,6 +11,8 @@
  */
 
 export default Object.freeze({
+  "More readings": "Diğer ölçümler",
+  "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "8 taneye kadar daha: bir priz, ısı pompası, şarj olan araç, bugünün kWh değeri",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "Bağlı sensör yok: Ayarlar › Yükler veya Ev aletleri bölümünden birini seçin.",
   "Reading consumption from Home Assistant…": "Tüketim Home Assistant'tan okunuyor…",
   " — configured": " — yapılandırıldı",

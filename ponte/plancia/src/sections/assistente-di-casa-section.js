@@ -33,6 +33,7 @@ import {
 } from "../core/accanto-alle-persone.js";
 import {
   CHIAVE_ASSISTENTE,
+  chiEInCasa,
   conIFiniti,
   conLaRisposta,
   finoA,
@@ -152,17 +153,17 @@ function daQuando(states, entity, adesso) {
 
 function persone(states, adesso) {
   const tutte = normalizePeople(readJson("cd_people", [])).filter((p) => p?.nascosta !== true);
-  let inCasa = 0;
+  const viste = tutte.map((persona) => ({
+    ...personViewModel(persona, states, adesso),
+    entita: clean(persona.entity),
+  }));
+  const { totale, inCasa, incerte, fuori } = chiEInCasa(viste);
   let ultimaUscita = 0;
-  for (const persona of tutte) {
-    const vista = personViewModel(persona, states, adesso);
-    if (vista.presence === "home") inCasa += 1;
-    else {
-      const uscita = Date.parse(states?.[clean(persona.entity)]?.last_changed || "");
-      if (Number.isFinite(uscita)) ultimaUscita = Math.max(ultimaUscita, uscita);
-    }
+  for (const vista of fuori) {
+    const uscita = Date.parse(states?.[vista.entita]?.last_changed || "");
+    if (Number.isFinite(uscita)) ultimaUscita = Math.max(ultimaUscita, uscita);
   }
-  return { totale: tutte.length, inCasa, ultimaUscita: inCasa ? 0 : ultimaUscita };
+  return { totale, inCasa, incerte, ultimaUscita: inCasa || incerte ? 0 : ultimaUscita };
 }
 
 /* Il comando che fa partire un apparecchio, fra i suoi «Altri comandi»: un
@@ -278,7 +279,9 @@ function meteo(states, adesso) {
   const condizione = clean(states?.[entita]?.state);
   const prossime = state.previsioni.filter((voce) => {
     const quando = Date.parse(voce?.datetime || "");
-    return Number.isFinite(quando) && quando >= adesso - 3_600_000 && quando <= adesso + 3 * 3_600_000;
+    return (
+      Number.isFinite(quando) && quando >= adesso - 3_600_000 && quando <= adesso + 3 * 3_600_000
+    );
   });
   return {
     pioggiaFra: pioggiaFra(state.previsioni, adesso, condizione),
@@ -629,7 +632,9 @@ function testaMarkup(quanti) {
     ${
       quanti
         ? `<button type="button" class="dm-ass-conto" data-ass-fa="apri">${esc(
-            quanti === 1 ? t("1 cosa da fare", "1 thing to do") : t(`${quanti} cose da fare`, `${quanti} things to do`),
+            quanti === 1
+              ? t("1 cosa da fare", "1 thing to do")
+              : t(`${quanti} cose da fare`, `${quanti} things to do`),
           )}</button>`
         : ""
     }
@@ -739,7 +744,9 @@ function chatMarkup() {
           : "";
       return fumetto + tasti;
     })
-    .join("")}${state.inVolo ? `<p class="dm-ass-battuta" data-chi="casa" data-attesa="true"><i></i><i></i><i></i></p>` : ""}</div>`;
+    .join(
+      "",
+    )}${state.inVolo ? `<p class="dm-ass-battuta" data-chi="casa" data-attesa="true"><i></i><i></i><i></i></p>` : ""}</div>`;
 }
 
 function foglioMarkup() {
@@ -929,7 +936,10 @@ function apriLaTelecamera(entity) {
     const riga = lista[indice];
     state.aperto = false;
     disegnaIlFoglio();
-    root.apriCamera(root.camSlug(riga, indice), (clean(riga?.name) || clean(entity).split(".")[1]).toUpperCase());
+    root.apriCamera(
+      root.camSlug(riga, indice),
+      (clean(riga?.name) || clean(entity).split(".")[1]).toUpperCase(),
+    );
     return true;
   } catch (_errore) {
     return false;

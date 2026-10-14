@@ -11,6 +11,8 @@
  */
 
 export default Object.freeze({
+  "More readings": "Więcej odczytów",
+  "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "Do 8 więcej: gniazdko, pompa ciepła, ładujący się samochód, dzisiejsze kWh",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "Brak powiązanego czujnika: wybierz go w Ustawienia › Obciążenia lub Urządzenia AGD.",
   "Reading consumption from Home Assistant…": "Odczytuję zużycie z Home Assistant…",
   " — configured": " — skonfigurowana",

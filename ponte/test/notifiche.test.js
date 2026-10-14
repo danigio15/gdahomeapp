@@ -20,7 +20,7 @@ import {
   Notifiche,
   personalizzataPulita,
 } from "../src/notifiche.js";
-import { condizioneVera, Sentinella } from "../src/sentinella.js";
+import { categoriaDi, condizioneVera, Sentinella } from "../src/sentinella.js";
 import { apriLaSpinta, chiudiLaSpinta, SpintaGuasta } from "../src/spinta.js";
 
 const MINUTO = 60 * 1000;
@@ -167,6 +167,51 @@ test("l'ultimo che esce con l'antifurto spento, e il movimento con la casa vuota
     stato("binary_sensor.pir_sala", "on", { device_class: "motion" }),
   );
   assert.equal(dette.at(-1).tipo, "movimento");
+});
+
+test("l'antifurto inserito in ogni modo, e disinserito: si dice a ogni cambio vero", () => {
+  const { sentinella, dette } = unaSentinella([
+    stato("alarm_control_panel.casa", "disarmed", { friendly_name: "Antifurto" }),
+  ]);
+  const passa = (cosa, attributi = {}) =>
+    sentinella.cambia(
+      "alarm_control_panel.casa",
+      stato("alarm_control_panel.casa", cosa, { friendly_name: "Antifurto", ...attributi }),
+    );
+  passa("arming");
+  assert.equal(dette.length, 0, "l'attesa prima di inserirsi non e' una notizia");
+  passa("armed_night", { changed_by: "Programma notte" });
+  passa("armed_night");
+  passa("armed_home");
+  passa("armed_away");
+  passa("armed_vacation");
+  passa("armed_custom_bypass");
+  passa("disarmed");
+  passa("unavailable");
+  passa("disarmed");
+  const inserimenti = dette.filter((e) => e.tipo === "inserimenti");
+  assert.deepEqual(
+    inserimenti.map((e) => e.parole.it.titolo),
+    [
+      "🌙 Antifurto · Inserito notte",
+      "🏠 Antifurto · Inserito parziale (casa)",
+      "🔒 Antifurto · Inserito totale",
+      "🧳 Antifurto · Inserito vacanza",
+      "🛡️ Antifurto · Inserito personalizzato",
+      "🔓 Antifurto · Disinserito",
+    ],
+    "una volta per cambio, e niente tornando da non disponibile",
+  );
+  assert.equal(inserimenti[0].parole.it.testo, "Antifurto · da Programma notte");
+  assert.equal(inserimenti[0].urgenza, "normale");
+  assert.equal(categoriaDi("inserimenti"), "sicurezza");
+  /* Scattato resta la sua notifica urgente, e disinserito dopo si dice. */
+  passa("triggered");
+  passa("disarmed");
+  assert.deepEqual(
+    dette.slice(-2).map((e) => e.tipo),
+    ["antifurto", "inserimenti"],
+  );
 });
 
 test("una porta aperta di notte si dice dopo dieci minuti, una volta", () => {

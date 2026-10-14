@@ -14,7 +14,7 @@ library;
 /// `CATEGORIE` in `ponte/src/sentinella.js`.
 const Map<String, List<String>> categorieDelleNotifiche = {
   'urgenti': ['antifurto', 'allarmi', 'campanello'],
-  'sicurezza': ['uscito', 'aperture', 'movimento'],
+  'sicurezza': ['inserimenti', 'uscito', 'aperture', 'movimento'],
   'casa': ['elettrodomestici', 'frigo', 'pioggia'],
   'persone': ['arrivi'],
   'assistente': ['suggerimenti'],

@@ -160,10 +160,44 @@ function eNotte(c, o) {
 }
 
 /* Nessuno in casa: lo si dice solo quando le persone ci sono e si sa dove
- * sono. Una casa senza persone configurate non e' una casa vuota. */
+ * sono **tutte**. Una casa senza persone configurate non e' una casa vuota,
+ * e nemmeno una con qualcuno di cui non si sa niente («Sconosciuto»): li'
+ * l'assistente tace, invece di proporre di spegnere le luci a chi e' in
+ * salotto. */
 function casaVuota(c) {
   const p = c.persone || {};
-  return (numero(p.totale) || 0) > 0 && (numero(p.inCasa) || 0) === 0;
+  return (
+    (numero(p.totale) || 0) > 0 && (numero(p.inCasa) || 0) === 0 && (numero(p.incerte) || 0) === 0
+  );
+}
+
+/* Il nome di una zona che e' la casa: «Casa», «Home», «Casa mia»… Chi ha
+ * fatto in Home Assistant una zona sua per la casa, accanto a quella di
+ * serie, la vede scritta «Casa» sulla scheda: per l'assistente e' casa. */
+const ZONA_DI_CASA = /^(?:a\s+)?(?:casa|home)(?:\s+(?:mia|nostra|\S+))?$/i;
+
+/* Chi e' in casa, da come si vedono le persone (`personViewModel`): a
+ * casa, in una zona che si chiama casa, o collegato alla stessa rete Wi‑Fi
+ * di qualcuno che e' a casa. Chi non si sa dove sia e' «incerto». */
+export function chiEInCasa(viste) {
+  const aCasa = (v) =>
+    v?.presence === "home" ||
+    (v?.presence === "zone" && ZONA_DI_CASA.test(String(v.zone || "").trim()));
+  const reti = new Set(
+    viste
+      .filter(aCasa)
+      .map((v) => String(v?.wifi || "").trim())
+      .filter(Boolean),
+  );
+  let inCasa = 0;
+  let incerte = 0;
+  const fuori = [];
+  for (const v of viste) {
+    if (aCasa(v) || (v?.wifi && reti.has(String(v.wifi).trim()))) inCasa += 1;
+    else if (!v?.known) incerte += 1;
+    else fuori.push(v);
+  }
+  return { totale: viste.length, inCasa, incerte, fuori };
 }
 
 function daQuandoVuota(c) {

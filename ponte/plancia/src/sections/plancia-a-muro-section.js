@@ -89,7 +89,9 @@ import {
   eUnaScena,
   MODELLI_ELENCO,
   ambientiDellaFonte,
+  altreMisureDellaPagina,
   energiaDellaPagina,
+  grigliaPer,
   fonteDaiValori,
   grigliaDellaPagina,
   lettoriDellaPagina,
@@ -2060,6 +2062,20 @@ function paginaEnergia(pagina) {
       nomeDi(e.batteria),
     ]);
   }
+  /* Le misure in più: il nome dell'entità sopra, il valore grande. Una
+   * potenza si scrive come le altre (W o kW); il resto col suo numero e la
+   * sua unità. */
+  altreMisureDellaPagina(pagina).forEach((id, n) => {
+    const s = stato(id);
+    const unita = clean(s?.attributes?.unit_of_measurement);
+    const v = numero(s?.state);
+    const valore = /^k?w$/i.test(unita)
+      ? potenza(id).testo
+      : v === null
+        ? clean(s?.state) || "—"
+        : `${decimale(v, Math.abs(v) < 10 && v % 1 ? 1 : 0)}${unita ? ` ${unita}` : ""}`;
+    tessere.push([`altra-${n}`, "energia", "#64748b", nomeDi(id), valore, ""]);
+  });
   if (!tessere.length)
     return griglia(pagina, [
       vuoto(0, t("Scegli le misure nel config", "Choose the readings in the config")),
@@ -2070,7 +2086,12 @@ function paginaEnergia(pagina) {
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta)}</span></div>
       <div class="mu-grande">${esc(valore)}</div><div class="mu-sotto">${esc(sotto)}</div></div>`,
   );
-  return griglia({ ...pagina, griglia: carte.length <= 4 ? 4 : pagina.griglia }, carte);
+  /* Le tessere stanno tutte nella griglia: con le misure in più si allarga
+   * da sola (6, 8, 12), senza scorrere. */
+  return griglia(
+    { ...pagina, griglia: Math.max(grigliaPer(carte.length), carte.length <= 4 ? 4 : 0) },
+    carte,
+  );
 }
 
 function finestreAperte() {

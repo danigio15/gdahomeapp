@@ -57,6 +57,17 @@ import 'notifica_personalizzata.dart';
       en: 'With the door photo and «Open gate»',
     ),
   ),
+  'inserimenti' => (
+    disegno: 'sicurezza',
+    titolo: inLingua(
+      it: 'Antifurto inserito o disinserito',
+      en: 'Alarm armed or disarmed',
+    ),
+    sotto: inLingua(
+      it: 'Totale, notte, parziale, vacanza, disinserito',
+      en: 'Away, night, home, vacation, disarmed',
+    ),
+  ),
   'uscito' => (
     disegno: 'aperture',
     titolo: inLingua(
