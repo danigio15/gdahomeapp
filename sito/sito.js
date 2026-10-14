@@ -1,9 +1,9 @@
 /* Le poche cose che il sito fa da sé.
  *
  * Sono poche, e nessuna è indispensabile: la pagina si legge tutta anche
- * senza JavaScript. La lingua, il menu del telefono che si richiude, l'ombra
- * sotto la barra quando si scende, le schede che compaiono salendo, e il
- * modulo dei contatti che resta sulla pagina invece di andarsene.
+ * senza JavaScript. La lingua, il menu del telefono che si richiude, la cosa
+ * accesa che segue lo scorrimento, e il modulo dei contatti che resta sulla
+ * pagina invece di andarsene.
  */
 
 (function () {
@@ -152,16 +152,6 @@
     document.addEventListener("keydown", function (evento) {
       if (evento.key === "Escape") menu.removeAttribute("open");
     });
-  }
-
-  /* ── L'ombra sotto la barra ───────────────────────────────────────────── */
-  var cappello = document.getElementById("cappello");
-  if (cappello) {
-    var guarda = function () {
-      cappello.classList.toggle("giu", window.scrollY > 8);
-    };
-    guarda();
-    window.addEventListener("scroll", guarda, { passive: true });
   }
 
   /* ── Una cosa accesa alla volta ───────────────────────────────────────

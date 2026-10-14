@@ -237,15 +237,13 @@ figcaption,
   color: var(--carta);
 }
 
-.bottone-pieno,
-.bottone-ambra {
+.bottone-pieno {
   background: var(--blu);
   border-color: var(--blu);
   color: var(--carta);
 }
 
-.bottone-pieno:hover,
-.bottone-ambra:hover {
+.bottone-pieno:hover {
   background: var(--blu-scuro);
   border-color: var(--blu-scuro);
   color: var(--carta);
@@ -1011,14 +1009,21 @@ main > section.apertura {
   color: var(--inchiostro);
 }
 
-.elenco.contro li::before {
+/* Il segno di quello che non si vede: una crocetta, due righe da un pixel. */
+.elenco.contro li::before,
+.elenco.contro li::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: 1.05em;
   width: 10px;
-  height: 10px;
-  top: 0.78em;
-  background: none;
-  border: 1px solid var(--male);
-  transform: rotate(45deg) scale(0.8);
-  background: linear-gradient(var(--male), var(--male)) center / 1px 100% no-repeat;
+  height: 1px;
+  background: var(--male);
+  transform: rotate(45deg);
+}
+
+.elenco.contro li::after {
+  transform: rotate(-45deg);
 }
 
 .elenco.in-arrivo li::before {
