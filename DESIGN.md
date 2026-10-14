@@ -1,292 +1,428 @@
 ---
 name: gdahome.org
-description: "Il catalogo delle placche: carta bianca, righe sottili, le schermate vere come tavole numerate."
+description: "Un sito di prodotto come quelli delle app: blu pieno a fasce, le schermate dentro un telefono con un'ombra vera, tasti e schede arrotondati, aria intorno."
 colors:
   carta: "#ffffff"
-  campo: "#eef0f3"
-  inchiostro: "#0b1220"
-  inchiostro-lieve: "#4b5563"
+  campo: "#eef3ff"
+  campo-premium: "#f7f9ff"
+  notte: "#0f172a"
   blu: "#1d4ed8"
   blu-scuro: "#1e3a8a"
+  blu-chiaro: "#dbe4ff"
+  inchiostro: "#0f172a"
+  inchiostro-lieve: "#475569"
+  su-blu: "#c7d2fe"
   ambra: "#f59e0b"
-  ambra-inchiostro: "#9a5b00"
+  bene: "#16a34a"
   male: "#b91c1c"
-  filo: "#c9ced6"
-  filo-tenue: "#e3e6eb"
+  filo: "#d7dde8"
+  filo-tenue: "#e8edf5"
 typography:
   display:
     fontFamily: "Archivo, Helvetica Neue, Arial, sans-serif"
-    fontSize: "clamp(2.3rem, 5.6vw, 4.7rem)"
-    fontWeight: 800
-    lineHeight: 1.02
-    letterSpacing: "-0.02em"
-    fontVariation: "'wdth' 120"
+    fontSize: "clamp(2.4rem, 5vw, 4.2rem)"
+    fontWeight: 700
+    lineHeight: 1.08
+    letterSpacing: "-0.025em"
   headline:
     fontFamily: "Archivo, Helvetica Neue, Arial, sans-serif"
-    fontSize: "clamp(1.9rem, 4vw, 3.2rem)"
-    fontWeight: 800
-    lineHeight: 1.02
-    letterSpacing: "-0.02em"
-    fontVariation: "'wdth' 118"
+    fontSize: "clamp(2rem, 4.2vw, 3.2rem)"
+    fontWeight: 700
+    lineHeight: 1.08
+    letterSpacing: "-0.025em"
   title:
     fontFamily: "Archivo, Helvetica Neue, Arial, sans-serif"
-    fontSize: "1.2rem"
-    fontWeight: 800
-    lineHeight: 1.02
-    letterSpacing: "-0.02em"
-    fontVariation: "'wdth' 110"
+    fontSize: "1.3rem"
+    fontWeight: 700
+    lineHeight: 1.08
+    letterSpacing: "-0.025em"
   body:
     fontFamily: "Archivo, Helvetica Neue, Arial, sans-serif"
     fontSize: "1.0625rem"
     fontWeight: 400
-    lineHeight: 1.55
+    lineHeight: 1.6
     letterSpacing: "normal"
-    fontVariation: "'wdth' 100"
   label:
     fontFamily: "Archivo, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.74rem"
+    fontSize: "0.92rem"
     fontWeight: 600
     lineHeight: 1.3
-    letterSpacing: "0.08em"
-    fontVariation: "'wdth' 80"
+    letterSpacing: "normal"
+  pastiglia:
+    fontFamily: "Archivo, Helvetica Neue, Arial, sans-serif"
+    fontSize: "0.82rem"
+    fontWeight: 700
+    lineHeight: 1.3
+    letterSpacing: "normal"
   numeral:
     fontFamily: "Oswald, Archivo, sans-serif"
-    fontSize: "2rem"
+    fontSize: "2.2rem"
     fontWeight: 500
     lineHeight: 1
-    letterSpacing: "0"
+    letterSpacing: "normal"
   code:
     fontFamily: "ui-monospace, SF Mono, Menlo, Consolas, monospace"
     fontSize: "0.88em"
     fontWeight: 400
-    lineHeight: 1.55
-    letterSpacing: "0"
+    lineHeight: 1.6
+    letterSpacing: "normal"
 rounded:
-  none: "0px"
+  codice: "6px"
+  marchio: "9px"
+  piccolo: "12px"
+  schermo: "16px"
+  raggio: "20px"
+  orologio: "24px"
+  telefono: "38px"
+  pastiglia: "999px"
 spacing:
-  xs: "6px"
-  sm: "8px"
-  md: "14px"
+  xs: "8px"
+  sm: "12px"
+  md: "16px"
   lg: "24px"
-  xl: "32px"
-  xxl: "48px"
+  xl: "28px"
+  xxl: "32px"
+  colonna: "48px"
   bordo-pagina: "clamp(16px, 4vw, 48px)"
-  sezione: "clamp(40px, 6vw, 84px)"
+  blocco: "clamp(40px, 6vw, 72px)"
+  sezione: "clamp(56px, 8vw, 112px)"
 components:
   bottone:
     backgroundColor: "{colors.carta}"
     textColor: "{colors.inchiostro}"
-    rounded: "{rounded.none}"
-    padding: "0 20px"
-    height: "46px"
+    rounded: "{rounded.piccolo}"
+    padding: "0 24px"
+    height: "50px"
   bottone-hover:
     backgroundColor: "{colors.inchiostro}"
     textColor: "{colors.carta}"
   bottone-pieno:
     backgroundColor: "{colors.blu}"
     textColor: "{colors.carta}"
-    rounded: "{rounded.none}"
-    padding: "0 20px"
-    height: "46px"
+    rounded: "{rounded.piccolo}"
+    padding: "0 24px"
+    height: "50px"
   bottone-pieno-hover:
     backgroundColor: "{colors.blu-scuro}"
     textColor: "{colors.carta}"
+  bottone-pieno-su-blu:
+    backgroundColor: "{colors.carta}"
+    textColor: "{colors.blu-scuro}"
+    rounded: "{rounded.piccolo}"
+    padding: "0 24px"
+    height: "50px"
+  bottone-pieno-su-blu-hover:
+    backgroundColor: "{colors.ambra}"
+    textColor: "{colors.notte}"
+  bottone-contorno-su-blu:
+    backgroundColor: "transparent"
+    textColor: "{colors.carta}"
+    rounded: "{rounded.piccolo}"
+    padding: "0 24px"
+    height: "50px"
+  bottone-testata:
+    backgroundColor: "{colors.blu}"
+    textColor: "{colors.carta}"
+    rounded: "{rounded.piccolo}"
+    padding: "0 18px"
+    height: "42px"
   voce-navigazione:
     textColor: "{colors.inchiostro-lieve}"
     typography: "{typography.label}"
-    padding: "0 14px"
+    rounded: "{rounded.pastiglia}"
+    padding: "8px 10px"
+  voce-navigazione-hover:
+    backgroundColor: "{colors.campo}"
+    textColor: "{colors.inchiostro}"
   voce-navigazione-accesa:
     textColor: "{colors.inchiostro}"
     typography: "{typography.label}"
-    padding: "0 14px"
-  tavola:
-    backgroundColor: "{colors.carta}"
-    textColor: "{colors.inchiostro-lieve}"
-    rounded: "{rounded.none}"
-  campo:
-    backgroundColor: "transparent"
-    textColor: "{colors.inchiostro}"
-    rounded: "{rounded.none}"
-    padding: "10px 0"
-  piano-prova:
-    backgroundColor: "{colors.carta}"
-    textColor: "{colors.blu}"
-    rounded: "{rounded.none}"
-    padding: "3px 8px"
-  nota-campo:
+    padding: "8px 10px"
+  lingua:
     backgroundColor: "{colors.campo}"
     textColor: "{colors.inchiostro-lieve}"
-    rounded: "{rounded.none}"
-    padding: "18px 20px"
+    typography: "{typography.pastiglia}"
+    rounded: "{rounded.pastiglia}"
+    padding: "6px 12px"
+  lingua-scelta:
+    backgroundColor: "{colors.carta}"
+    textColor: "{colors.inchiostro}"
+  pastiglia-sezione:
+    backgroundColor: "{colors.campo}"
+    textColor: "{colors.inchiostro}"
+    rounded: "{rounded.pastiglia}"
+    padding: "8px 14px 8px 10px"
+  pastiglia-sezione-hover:
+    backgroundColor: "{colors.blu-chiaro}"
+    textColor: "{colors.inchiostro}"
+  spia:
+    backgroundColor: "{colors.carta}"
+    textColor: "{colors.inchiostro-lieve}"
+    typography: "{typography.pastiglia}"
+    rounded: "{rounded.pastiglia}"
+    padding: "7px 14px"
+  spia-accesa:
+    backgroundColor: "{colors.carta}"
+    textColor: "{colors.inchiostro}"
+  piano-prova:
+    backgroundColor: "{colors.ambra}"
+    textColor: "{colors.notte}"
+    rounded: "{rounded.pastiglia}"
+    padding: "5px 11px"
+  sottotitolo-informativa:
+    backgroundColor: "{colors.blu-chiaro}"
+    textColor: "{colors.blu-scuro}"
+    rounded: "{rounded.pastiglia}"
+    padding: "6px 14px"
+  scheda-su-campo:
+    backgroundColor: "{colors.carta}"
+    textColor: "{colors.inchiostro}"
+    rounded: "{rounded.raggio}"
+    padding: "28px"
+  scheda-su-carta:
+    backgroundColor: "{colors.campo}"
+    textColor: "{colors.inchiostro}"
+    rounded: "{rounded.raggio}"
+    padding: "28px"
+  nota:
+    backgroundColor: "{colors.carta}"
+    textColor: "{colors.inchiostro-lieve}"
+    rounded: "{rounded.raggio}"
+    padding: "22px 26px"
+  passo-di-scarico:
+    backgroundColor: "{colors.campo}"
+    textColor: "{colors.inchiostro}"
+    rounded: "{rounded.raggio}"
+    padding: "22px 24px"
+  numero-del-passo:
+    backgroundColor: "{colors.blu}"
+    textColor: "{colors.carta}"
+    rounded: "{rounded.pastiglia}"
+    size: "44px"
+  telefono:
+    backgroundColor: "{colors.notte}"
+    rounded: "{rounded.telefono}"
+  schermo:
+    backgroundColor: "{colors.carta}"
+    rounded: "{rounded.schermo}"
+  modulo:
+    backgroundColor: "{colors.campo}"
+    textColor: "{colors.inchiostro}"
+    rounded: "{rounded.raggio}"
+    padding: "28px"
+  campo-di-modulo:
+    backgroundColor: "{colors.carta}"
+    textColor: "{colors.inchiostro}"
+    rounded: "{rounded.piccolo}"
+    padding: "13px 16px"
+  listino:
+    backgroundColor: "{colors.carta}"
+    textColor: "{colors.inchiostro-lieve}"
+    rounded: "{rounded.raggio}"
+    padding: "16px 20px"
+  listino-premium:
+    backgroundColor: "{colors.blu-scuro}"
+    textColor: "{colors.carta}"
+    padding: "24px 20px 20px"
+  piede:
+    backgroundColor: "{colors.notte}"
+    textColor: "{colors.su-blu}"
 ---
 
 # Design System: gdahome.org
 
-Questo documento descrive il sito pubblico in `sito/` (`index.html`, `privacy.html`, `stile.css`, `privacy.css`, `sito.js`). L'app Flutter (`app/lib/vestito/tema.dart`) e le console degli add-on (`ponte/console`, `quadro/console`, `quadro/gestore`) hanno sistemi propri e separati, e non sono descritti qui.
+Questo documento descrive il sito pubblico in `sito/` (`index.html`, `privacy.html`, `stile.css`, `privacy.css`, `sito.js`); il sistema sta tutto in `stile.css`, e `privacy.css` ne prende i colori, i caratteri e i tasti. L'app Flutter (`app/lib/vestito/tema.dart`) e le console degli add-on (`ponte/console`, `quadro/console`, `quadro/gestore`) hanno sistemi propri e separati, e non sono descritti qui.
 
 ## Overview
 
-**Creative North Star: "Il catalogo delle placche"**
+**Creative North Star: "Il sito dell'app"**
 
-Il sito è impaginato come il catalogo di placche e interruttori di un elettricista: carta bianca, una griglia di righe sottili, e le schermate vere dell'app messe dritte sulla pagina come tavole, ognuna con il suo numero («Fig. n»), la sua didascalia e la sua riga d'articolo. Non c'è un telefono disegnato intorno alle schermate, non ci sono fondi, aloni o schede: una tavola è un'immagine con un filo di 1px intorno, e il resto della pagina sta zitto.
+Il sito è fatto come i siti delle app che chi arriva qui già conosce, e fatto con cura: il blu di gdahome è un colore vero, che si prende tutta la copertina, la colonna Premium del listino e il piede; le sezioni si alternano fra bianco e un campo azzurrino, così lo scorrimento ha un ritmo; le schermate vere dell'app stanno dentro un telefono disegnato in CSS, con una cornice scura e un'ombra che le stacca dalla pagina; i tasti e le schede sono arrotondati e intorno c'è aria.
 
-La struttura è fatta quasi solo di righe orizzontali: una riga d'inchiostro apre ogni sezione, una riga grigia separa ogni voce di scheda, di listino, di elenco. I colori sono quattro e ognuno fa una cosa sola; l'ambra, in particolare, è una luce accesa, e nella pagina ne è accesa una sola per volta. Il sistema è chiaro soltanto (`color-scheme: light only`): è una copertina, e una copertina si presenta sempre allo stesso modo.
+Il colore è pieno e piatto. Non ci sono fondi a sfumature, vetro sfocato, aloni, testo sfumato: sono il vestito di mille siti usciti uguali nello stesso anno, e il sito li rifiuta per scelta. L'ombra è una sola famiglia, morbida e spostata in basso come la fa la luce, in tre pesi. Il sistema è chiaro soltanto (`color-scheme: light only`): è una copertina, e una copertina si presenta sempre allo stesso modo.
 
 **Key Characteristics:**
 
-- Carta bianca e righe di 1px: la griglia è fatta di bordi, non di spazi colorati.
-- Tavole piatte con filo di 1px, numerate in Oswald («Fig. n»), con didascalia in maiuscoletto stretto.
-- Archivo variabile per tutto il testo, con l'asse della larghezza come gerarchia (120 → 80).
-- Un elemento acceso d'ambra per volta; blu per i collegamenti e l'unico tasto pieno.
-- Nessuna ombra, nessuna sfocatura, nessun raggio, nessun movimento d'ingresso.
+- Blu pieno a fasce: la copertina, la colonna Premium e il piede sono campi di colore, non bordi.
+- Sezioni che si alternano fra carta bianca e campo azzurrino; nessuna riga di separazione fra l'una e l'altra.
+- Le schermate dentro un telefono: cornice di 9px color notte, angoli a 38px, ombra forte.
+- Archivo variabile a larghezza normale, 700 i titoli, 400 il testo, 600–700 le etichette in minuscolo; Oswald solo per i prezzi.
+- Un'ambra sola, come una luce accesa: la spia, la voce del menu corrente, il segno di Premium.
 
 ## Colors
 
-Undici valori in `:root` di `stile.css`, con nomi italiani; quattro ruoli veri (inchiostro, blu, ambra, carta) e le loro varianti.
+Quindici valori in `:root` di `stile.css`, con nomi italiani; tre famiglie vere (il blu, l'inchiostro con i suoi fili, l'ambra) più i due colori dei segni.
 
 ### Primary
 
-- **Blu del catalogo** (`blu`): i collegamenti nel testo, il titolo di un passo di «Scaricala» quando ci si passa sopra, il bordo e il testo della targhetta «primi 14 giorni gratis», l'anello di fuoco (`outline: 2px solid`), la sottolineatura del campo attivo, e lo sfondo dell'unico tasto pieno («Installa l'add-on»).
-- **Blu scuro** (`blu-scuro`): lo stato hover dei collegamenti e del tasto pieno. Non compare a riposo.
+- **Blu di gdahome** (`blu`): i collegamenti nel testo, il tasto pieno su carta («Installa l'add-on» in testata, «Manda» nel modulo), il bordo di 2px sopra ogni voce di scheda tecnica e di «tre strade», il cerchio numerato dei passi, la parola «come» nei passi, il bordo del campo di modulo a fuoco, la selezione del testo.
+- **Blu scuro** (`blu-scuro`): il fondo della copertina e della colonna Premium del listino; lo stato hover dei collegamenti e del tasto pieno; il testo del tasto bianco sulla copertina e della pastiglia «Ultimo aggiornamento» nell'informativa.
+- **Blu chiaro** (`blu-chiaro`): il fondo delle pastiglie di serie sotto il puntatore e della pastiglia nell'informativa. Un blu che si tocca, non che si legge.
+- **Su blu** (`su-blu`): il testo di secondo livello quando sta sul blu scuro o sulla notte: la guida della copertina, la nota sotto i tasti, il periodo del prezzo Premium, tutto il piede.
 
 ### Secondary
 
-- **Ambra, la luce accesa** (`ambra`): la riga sotto la voce del menu della sezione in cui si sta leggendo (2px), la riga a sinistra della voce accesa nell'indice sul bordo, il bordo dell'icona di serie sotto il puntatore, il quadratino della spia «accesa» nella prima tavola. È sempre un bordo o un riempimento di 10px: mai uno sfondo di testo, mai un testo.
-- **Ambra d'inchiostro** (`ambra-inchiostro`): la parola «accesa» accanto alla spia quando è accesa; l'unico testo color ambra, scurito per restare leggibile su carta.
+- **Ambra, la luce accesa** (`ambra`): il pallino della spia quando è accesa, la riga di 2px sotto la voce del menu della sezione corrente, il fondo della pastiglia «primi 14 giorni gratis» nel listino, l'anello di fuoco (`outline: 3px`), il tasto bianco della copertina e i collegamenti del piede sotto il puntatore. Sta sempre su una cosa piccola: mai un fondo di sezione, mai un testo corrente, mai un collegamento a riposo.
 
 ### Tertiary
 
-- **Rosso, il male** (`male`): il segno davanti alle voci dell'elenco «contro» e il bordo e il testo dell'esito del modulo quando l'invio fallisce. Non ha altri usi.
+- **Verde, il sì** (`bene`): la spunta davanti alle voci degli elenchi e il bordo dell'esito del modulo quando il messaggio è partito. Nient'altro.
+- **Rosso, il no** (`male`): la croce davanti alle voci dell'elenco «contro» e il bordo e il testo dell'esito del modulo quando l'invio fallisce. Nient'altro.
 
 ### Neutral
 
-- **Carta** (`carta`): lo sfondo della pagina, della testata appiccicata e di ogni tavola; il testo sui tasti pieni e sul tasto a filo quando è in hover.
-- **Campo** (`campo`): il grigio su cui si appoggia una tavola o una nota: la striscia della serie, la nota sulla privacy nel listino, lo sfondo del `code` in linea.
-- **Inchiostro** (`inchiostro`): tutto il testo che si legge per primo, i titoli, le righe d'apertura delle sezioni e delle tabelle (1px), il bordo dei tasti, la selezione del testo.
-- **Inchiostro lieve** (`inchiostro-lieve`): il testo di secondo livello: le guide sotto i titoli, le celle dei listini, le didascalie, le voci del menu a riposo, il segnaposto nei campi. Il `<b>` dentro questo testo torna all'inchiostro pieno.
-- **Filo** (`filo`): la riga di 1px che fa la griglia: il bordo delle tavole, il separatore delle righe di scheda, listino e campo, i bordi laterali del gruppo lingua e del marchio, le quote della prima tavola.
-- **Filo tenue** (`filo-tenue`): la riga più chiara fra le voci degli elenchi col trattino e fra le voci del menu del telefono.
+- **Carta** (`carta`): la pagina, la testata appiccicata, le sezioni pari, le schede e le note quando stanno sul campo, i campi di modulo, il tasto a contorno, il tasto pieno sulla copertina.
+- **Campo** (`campo`): l'azzurrino delle sezioni dispari (`fascia`) e dell'informativa; dentro una sezione bianca è il fondo di schede, note, passi e modulo; il fondo delle pastiglie di serie, del gruppo lingua, del `code` in linea, della voce del menu sotto il puntatore; l'intestazione del listino.
+- **Campo Premium** (`campo-premium`): il velo ancora più chiaro delle celle della colonna Premium nel listino, sotto la sua testa blu scuro.
+- **Notte** (`notte`): la cornice del telefono, il fondo del piede, il testo sull'ambra.
+- **Inchiostro** (`inchiostro`): tutto il testo che si legge per primo, i titoli, il bordo del tasto a contorno e il suo fondo in hover. Ha lo stesso valore della notte: è lo stesso colore con due mestieri.
+- **Inchiostro lieve** (`inchiostro-lieve`): il testo di secondo livello: le guide sotto i titoli, le celle dei listini, i testi delle schede, le voci del menu a riposo, le didascalie d'esempio, le note. Il `<b>` dentro questo testo torna all'inchiostro pieno.
+- **Filo** (`filo`): il pallino della spia spenta e i segni «no» del listino.
+- **Filo tenue** (`filo-tenue`): la riga di 1px sotto la testata, fra le righe del listino, fra le voci degli elenchi, sotto il disegno tecnico.
 
 ### Named Rules
 
-**La regola della luce sola.** L'ambra segna una cosa sola per volta: in copertina la spia della prima tavola, scorrendo la voce del menu (e dell'indice sul bordo) della sezione corrente. Due elementi ambra sullo stesso schermo sono un errore.
+**La regola del colore pieno.** Ogni fondo è un colore solo: niente `linear-gradient`, `radial-gradient`, `backdrop-filter`, `filter: blur`, aloni colorati o testo con `background-clip: text`. Se un blocco deve staccarsi, cambia campo (carta ↔ campo) o prende un'ombra.
 
-**La regola dell'inchiostro e del filo.** Le righe che aprono (sezione, tabella, scheda, modulo, piede) sono d'inchiostro; le righe che separano dentro sono di filo. Una riga non è mai più spessa di 1px, tranne i 2px della voce accesa e della sottolineatura della lingua scelta.
+**La regola della luce sola.** L'ambra è una luce: sta accesa su una cosa per volta mentre si scorre (la spia della copertina, poi la voce del menu della sezione corrente), e in più segna la prova gratuita di Premium nel listino. Non è mai un fondo di sezione, un collegamento a riposo o un testo corrente.
+
+**La regola dei segni.** Verde e rosso sono i colori di un segno (spunta, croce, bordo dell'esito) e di niente altro: non diventano tasti, fondi o titoli.
 
 ## Typography
 
-**Display Font:** Archivo variabile (wght 100–900, wdth 62–125%), servito da `sito/caratteri/archivo-variabile.woff2` (ripiego: Helvetica Neue, Arial, sans-serif)
+**Display Font:** Archivo variabile (wght 100–900, wdth 62–125%, usato a larghezza normale), servito da `sito/caratteri/archivo-variabile.woff2` (ripiego: Helvetica Neue, Arial, sans-serif)
 **Body Font:** Archivo variabile, lo stesso file
-**Label/Mono Font:** Oswald 500 per i numeri (`sito/statico/font/`); `ui-monospace` per il `code` in linea
+**Label/Mono Font:** Oswald 500 per i prezzi (`sito/statico/font/`); `ui-monospace` per il `code` in linea
 
-**Character:** una sola famiglia che cambia larghezza come voce: larga e nera per i titoli di serie, normale per il testo, stretta e in maiuscoletto per le didascalie e le righe tecniche. Oswald è il carattere dei numeri della plancia e resta ai numeri: i prezzi, i passi, i «Fig. n».
+**Character:** una sola famiglia a larghezza normale, che fa la gerarchia con il peso e il corpo: 700 stretto e serrato per i titoli, 400 largo e arioso per il testo, 600–700 in minuscolo per le etichette. Non c'è maiuscoletto, non c'è spaziatura allargata: le etichette sono parole scritte come si scrivono. Oswald è il carattere dei numeri della plancia e resta ai prezzi.
 
 ### Hierarchy
 
-- **Display** (800, `clamp(2.3rem, 5.6vw, 4.7rem)`, 1.02, wdth 120, -0.02em): il titolo di apertura, uno solo per pagina. Nell'informativa scende a `clamp(2.2rem, 5vw, 3.6rem)` con wdth 118.
-- **Headline** (800, `clamp(1.9rem, 4vw, 3.2rem)`, 1.02, wdth 118): il titolo di ogni sezione, nella testa a due colonne con la guida accanto. Nell'informativa i capitoli stanno a `clamp(1.3rem, 2.6vw, 1.7rem)`, wdth 112.
-- **Title** (800, 1.15–1.35rem, 1.02, wdth 110–112): i sottotitoli dentro una sezione (1.35rem, con una riga di filo sopra), i titoli delle schede (1.2rem), i passi di «Scaricala» (1.15rem), il nome del piano nel listino (1.25rem, wdth 112), il marchio in testata (1.1rem, 700, wdth 112).
-- **Body** (400, 1.0625rem, 1.55, wdth 100): il testo. Le guide stanno fra 48ch e 64ch; la nota sotto i tasti a 56ch; il testo di apertura a 1.12rem e 52ch; le note e il piede a 0.92–0.95rem.
-- **Label** (600, 0.74rem, 1.3, wdth 80, 0.08em, maiuscolo): la riga tecnica: didascalie, voci del menu e dell'indice, tasti lingua, nomi di riga delle schede, intestazioni dei listini, etichette dei campi, collegamenti del piede. I nomi `gdahome` e `gdanav` restano minuscoli anche qui.
-- **Numeral** (Oswald 500, tabular-nums): i prezzi nel listino (2rem, 1.6rem sotto 760px, 1.5rem sotto 480px), i numeri dei passi (2rem), i «Fig. n» nelle didascalie (0.86rem).
+- **Display** (700, `clamp(2.4rem, 5vw, 4.2rem)`, 1.08, -0.025em): il titolo della copertina, bianco sul blu scuro, uno per pagina. Nell'informativa è `clamp(2.2rem, 5vw, 3.4rem)` d'inchiostro.
+- **Headline** (700, `clamp(2rem, 4.2vw, 3.2rem)`, 1.08, -0.025em): il titolo di ogni sezione, con la guida sotto a 1.12rem grigio lieve, in una testa larga al massimo 64ch. Nell'informativa i capitoli stanno a `clamp(1.4rem, 2.6vw, 1.8rem)`.
+- **Title** (700, 1.12–1.6rem, 1.08, -0.025em): i sottotitoli dentro una sezione (1.6rem), il titolo della serie (1.4rem), i titoli delle schede e il nome del piano (1.3rem), il marchio in testata (1.2rem), i passi di «Scaricala» (1.15rem), i nomi delle voci di scheda tecnica (1.12rem).
+- **Body** (400, 1.0625rem, 1.6): il testo. Le guide stanno a 64ch (50ch sulla copertina, a 1.15rem); la nota sotto i tasti a 56ch e 0.95rem; le note, le didascalie e il piede a 0.92–0.97rem.
+- **Label** (600, 0.92rem, minuscolo): le voci del menu, i collegamenti del piede, le didascalie delle tavole (0.95rem), le pastiglie di serie (0.9rem), la riga tecnica (0.82rem). Sempre in frase, mai in maiuscolo.
+- **Pastiglia** (700, 0.82rem): il testo dentro una pastiglia a 999px: la spia, i tasti lingua, la prova gratuita (0.78rem), il sottotitolo dell'informativa (0.85rem), le etichette dei campi (0.9rem).
+- **Numeral** (Oswald 500, 2.2rem, 1, tabular-nums): i prezzi nel listino (1.7rem sotto 760px, 1.5rem sotto 480px), col periodo accanto in Archivo 400 a 1rem.
+- **Code** (monospazio di sistema, 0.88em, su campo a 6px): quello che si copia tale e quale: il codice regalo `GDA-XXXX-XXXX-XXXX`, l'indirizzo dell'archivio, i domini nell'informativa. Mai per dare un'aria tecnica al testo.
 
 ### Named Rules
 
-**La regola della larghezza.** La gerarchia si fa con l'asse `wdth` di Archivo, non con un secondo carattere: 120 il titolo di apertura, 118 i titoli di sezione, 110–112 i titoli minori e il marchio, 100 il testo, 80 la riga tecnica. I titoli sono sempre 800 con interlinea 1.02 e -0.02em.
+**La regola della frase.** Le etichette sono in minuscolo e senza spaziatura allargata: nessun `text-transform: uppercase`, nessun `letter-spacing` positivo, nessun occhiello sopra un titolo. Il peso (600 o 700) e il corpo bastano a dire che è un'etichetta.
 
-**La regola dei numeri.** Oswald compare solo su numeri: prezzi, passi, numeri di figura. Una parola in Oswald è un errore.
+**La regola dei numeri.** Oswald compare solo sui prezzi. Una parola in Oswald è un errore.
 
 ## Layout
 
-La pagina sta in una colonna di 1280px (`--largo`) centrata, con un bordo laterale `clamp(16px, 4vw, 48px)` (`--bordo-pagina`). L'informativa usa una colonna di 760px con lo stesso bordo. La testata (`--cappello-alto`: 60px) è appiccicata in alto con una riga d'inchiostro sotto; `scroll-padding-top` ne tiene conto (60px + 24px).
+La pagina sta in una colonna di 1180px (`--largo`) centrata, con un bordo laterale `clamp(16px, 4vw, 48px)` (`--bordo-pagina`). L'informativa usa una colonna di 820px con lo stesso bordo, e il suo foglio bianco a 20px di raggio sta sul campo azzurrino. La testata (`--cappello-alto`: 64px) è appiccicata in alto, bianca, con un filo tenue sotto; `scroll-padding-top` ne tiene conto (64px + 16px).
 
-Ogni sezione principale apre con una riga d'inchiostro a tutta larghezza e respira `clamp(40px, 6vw, 84px)` sopra e `clamp(48px, 7vw, 96px)` sotto; la testa di sezione è una griglia 8/12 + 4/12 con titolo e guida allineati in basso, 48px di colonna. L'apertura è una griglia 6/12 + 6/12 (56px di colonna) con il testo a sinistra e la prima tavola a destra (massimo 400px), con le quote disegnate a sinistra e sotto. Le tavole stanno in file di 3 (o 4, o 2) con 32px fra le righe e 24px fra le colonne; «tavola e testo» è 7/12 + 5/12. Le schede nome–valore sono griglie 4/12 + 8/12 con righe da 14px di padding. Il listino è una tabella con righe di 14px e la prima colonna al 30%.
+Le sezioni sono fasce a tutta larghezza che si alternano fra carta e campo (`fascia`), ognuna con `clamp(56px, 8vw, 112px)` sopra e sotto e nessuna riga fra l'una e l'altra; fra un blocco e l'altro dentro una sezione c'è `clamp(40px, 6vw, 72px)`. La copertina è blu scuro, con una griglia 6/12 + 6/12 (48px di colonna): testo a sinistra, telefono a destra (340px) che scende di 96px nel bianco della sezione sotto. La serie, su carta, è una griglia 3/12 + 9/12 con il titolo a sinistra e le pastiglie a destra. Le tavole stanno in file di 3 (o 4, o 2) con 40px fra le righe e 32px fra le colonne; «tavola e testo» è 7/12 + 5/12 (56px di colonna). Le schede tecniche sono tre colonne di testo (28px × 40px), il listino una tabella con la prima colonna al 26%; i passi di «Scaricala» sono righe a quattro colonne fisse (52px, 220px, resto, 160px). Il piede è notte, 7/12 + 5/12.
 
-Punti di rottura, tutti con `max-width` tranne il primo:
+Punti di rottura, tutti con `max-width`:
 
-- **1480px e oltre**: compare l'indice sul bordo destro, fissato a metà altezza, con una riga di filo a sinistra.
-- **940px**: la testata si ripiega (marchio + menu `<details>` + lingua), le voci del menu diventano una colonna separata da filo tenue; l'apertura si impila nell'ordine titolo, tavola (320px), tasti, testo; le file di tavole passano a 2 colonne; la striscia della serie scorre di lato a passi di 76px.
-- **760px**: la testa di sezione, le tre strade e il piede vanno a una colonna; i prezzi scendono a 1.6rem.
-- **600px**: le righe di scheda e le righe del modulo vanno a una colonna.
-- **520px**: le tavole vanno a una colonna, larghe al massimo 320px.
+- **1180px**: le voci del menu si stringono (0.86rem, 8px di padding).
+- **940px**: la testata si ripiega (marchio + IT/EN + menu `<details>`); le voci diventano una colonna di righe a 12px di raggio; la copertina si impila (testo, poi telefono a 280px); le file di tavole passano a 2 colonne; la serie scorre di lato; le schede, le tavole con testo, i passi, il modulo e le due colonne di testo vanno a una colonna.
+- **760px**: le tre strade e il piede vanno a una colonna; i prezzi scendono a 1.7rem.
+- **600px**: le righe del modulo vanno a una colonna.
+- **520px**: le tavole vanno a una colonna, larghe al massimo 300px.
 - **480px**: il listino diventa una griglia a due colonne per riga.
 
-La scala degli spazi osservata è 6 / 8 / 10 / 12 / 14 / 16 / 18 / 20 / 24 / 28 / 32 / 48 / 56px: i gap fra colonne sono 24 o 48, le righe interne 14, i distacchi fra blocchi `clamp(32px, 5vw, 56px)`.
+La scala degli spazi osservata è 8 / 10 / 12 / 14 / 16 / 18 / 20 / 24 / 28 / 32 / 40 / 48 / 56px: i gap fra colonne sono 24, 32, 48 o 56; il padding interno delle schede è 28; i distacchi fra blocchi `clamp(32px, 5vw, 56px)` o `clamp(40px, 6vw, 72px)`.
 
 ## Elevation & Depth
 
-Nessuna ombra, nessuna sfocatura, nessun gradiente, nessuna stratificazione tonale: la profondità non esiste e non è simulata. Una tavola sta sulla carta con un filo di 1px; una nota o la striscia della serie si appoggiano sul grigio `campo` con lo stesso filo intorno. La testata appiccicata si separa dalla pagina con la sua riga d'inchiostro, non con un'ombra. L'unico `box-shadow` del foglio di stile è `0 2px 0 blu` sotto il campo di modulo attivo: è una sottolineatura, non un'elevazione, e va letto come tale.
+Il sistema è a strati: i fondi fanno il grosso (carta, campo, blu scuro, notte), e le ombre staccano quello che sta sopra un fondo. Le ombre sono tutte dello stesso tipo: tinta d'inchiostro, spostate in basso, morbide; una vicina e una lontana sommate, come fa la luce dall'alto. Non ci sono aloni colorati intorno a niente, né sfocature del fondo. La testata prende un'ombra solo quando la pagina ha scorso (`giu`, dopo 8px): in cima non ha niente sotto.
+
+### Shadow Vocabulary
+
+- **Ombra** (`--ombra`: `0 12px 32px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.06)`): le schede, le note, il listino e il disegno tecnico quando stanno sul campo azzurrino; la spia; i passi di «Scaricala» sotto il puntatore.
+- **Ombra alta** (`--ombra-alta`: `0 20px 48px rgba(15, 23, 42, 0.16), 0 4px 10px rgba(15, 23, 42, 0.08)`): le schermate larghe (`schermo`: tablet a muro, scheda dell'add-on, cruscotto) e gli orologi.
+- **Ombra del telefono** (`--ombra-telefono`: `0 30px 60px rgba(15, 23, 42, 0.3), 0 10px 20px rgba(15, 23, 42, 0.14)`): ogni schermata dentro un telefono.
+- **Ombra del tasto pieno** (`0 8px 20px rgba(29, 78, 216, 0.28)`; sulla copertina `0 10px 24px rgba(0, 0, 0, 0.22)`): sotto il tasto pieno, dello stesso blu del tasto. È un'ombra spostata in basso, non un alone intorno.
+- **Ombra della testata** (`0 6px 24px rgba(15, 23, 42, 0.08)`): sotto la barra appiccicata, solo dopo lo scorrimento.
+- **Rilievo della lingua** (`0 1px 3px rgba(15, 23, 42, 0.12)`): il tasto IT/EN scelto, che sta sopra il gruppo.
 
 ### Named Rules
 
-**La regola della carta piatta.** Niente `box-shadow` di elevazione, niente `filter: blur`, niente `backdrop-filter`, niente gradienti di sfondo, in nessuno stato. Se serve staccare un blocco, si usa un filo di 1px o lo sfondo `campo`.
+**La regola dell'ombra sul campo.** Una scheda ha l'ombra solo quando sta sul campo azzurrino; nella sezione bianca la stessa scheda diventa campo e perde l'ombra. I telefoni e gli schermi hanno sempre la loro ombra, su qualunque fondo.
+
+**La regola della luce dall'alto.** Ogni ombra ha x = 0 e y > 0, tinta d'inchiostro (o del colore del tasto che la fa). Niente ombre centrate, niente `inset` di elevazione, niente bagliori.
 
 ## Shapes
 
-Tutto ha gli angoli vivi: nessun `border-radius` in nessuna regola, tasti e targhette compresi. Le forme sono rettangoli con bordo di 1px (tavole, tasti a filo, targhetta di prova, esito del modulo, nota) o rettangoli senza bordo con una riga sopra e sotto (sezioni, tabelle, schede, modulo, piede). Le icone in linea sono tratti SVG a `stroke-linecap: square` e 1.8 di spessore; i segni degli elenchi sono una lineetta di 12×1px d'inchiostro, un quadratino ruotato di 10px col bordo rosso per i «contro», una lineetta tratteggiata per «in arrivo»; la spia è un quadrato di 10px con bordo d'inchiostro che si riempie d'ambra. Le quote della prima tavola sono parentesi sottili di filo con i segni alle estremità.
+Tre raggi fanno tutto: 20px per le scatole (schede, note, passi, modulo, listino, disegno tecnico, foglio dell'informativa), 12px per quello che si tocca (tasti, campi di modulo, esito, voci del menu sul telefono) e 999px per le pastiglie (voci del menu, tasti lingua, pastiglie di serie, spia, prova gratuita, sottotitolo dell'informativa) e per il cerchio dei passi. Il telefono è un'immagine con 9px di bordo color notte e 38px di raggio; le schermate larghe hanno 16px senza bordo, gli orologi 24px senza bordo; il marchio ha 9px, il `code` 6px, l'anello di fuoco 6px.
+
+I bordi sono rari e spessi quando ci sono: 2px d'inchiostro sul tasto a contorno, 2px di blu sopra le voci di scheda tecnica, 2px trasparenti sul campo di modulo che diventano blu a fuoco, 2px verdi o rossi sull'esito. Il resto si separa con un filo tenue di 1px o cambiando campo. I segni sono tratti: una spunta verde di 12×7px a 2.5px, una croce rossa, un cerchietto tratteggiato per «in arrivo»; le icone del menu sono tratti SVG a 1.8px con `stroke-linecap: square`.
 
 ## Components
 
 ### Buttons
 
-- **Shape:** rettangolo ad angoli vivi (0px), altezza minima 46px, padding `0 20px`, testo 600 a 0.98rem con -0.005em.
-- **Tasto a filo** (`bottone`): carta con bordo di 1px d'inchiostro e testo d'inchiostro; in hover si inverte (sfondo inchiostro, testo carta). È il tasto normale: «Guarda la plancia», «Scrivici».
-- **Tasto pieno** (`bottone-pieno`): sfondo e bordo blu, testo carta; in hover blu scuro. Uno per schermata: «Installa l'add-on» in testata e nell'apertura, «Manda» nel modulo.
-- **Hover / Focus:** transizioni di 120ms ease-out su sfondo, colore e bordo; il fuoco è l'anello globale blu di 2px con 2px di distacco. Occupato o disabilitato: opacità 0.55 e cursore `progress`.
-- **In testata:** la stessa classe senza altezza minima, 0.9rem, padding `0 16px`, nascosta sotto 940px.
+- **Shape:** arrotondato (12px), altezza minima 50px, padding `0 24px`, Archivo 700 a 1rem, bordo di 2px.
+- **Tasto a contorno** (`bottone`): carta con bordo e testo d'inchiostro; in hover si inverte (fondo inchiostro, testo carta) e sale di 2px. È il tasto secondario: «Guarda la plancia», «Scrivici».
+- **Tasto pieno** (`bottone-pieno`): fondo e bordo blu, testo bianco, ombra blu sotto; in hover blu scuro. Uno per schermata: «Installa l'add-on» in testata, «Manda» nel modulo.
+- **Sulla copertina:** il tasto pieno diventa bianco con testo blu scuro e ombra nera morbida, e in hover si accende d'ambra con testo notte; il tasto a contorno è trasparente con bordo bianco al 60% e testo bianco, in hover bianco al 12%.
+- **In testata:** la stessa classe a 42px, padding `0 18px`, 0.92rem, senza bordo né ombra; nascosta sotto 940px.
+- **Hover / Focus:** transizioni di 160ms ease-out su trasformazione, sfondo, colore, bordo e ombra; `translateY(-2px)` in hover, nessuno con `prefers-reduced-motion`. Il fuoco è l'anello globale ambra di 3px con 3px di distacco. Occupato o disabilitato: opacità 0.55, cursore `progress`, nessun sollevamento.
 
 ### Chips
 
-- **Targhetta di prova** (`piano-prova`): testo in riga tecnica (0.72rem, 0.08em, maiuscolo) blu con bordo blu di 1px, padding `3px 8px`, su carta. Compare solo sotto il prezzo Premium per «primi 14 giorni gratis». Nessuna variante selezionata.
-- **Tasti lingua** (`lingua`): due tasti testo IT/EN in riga tecnica, grigio lieve a riposo; quello scelto (`aria-pressed="true"`) è d'inchiostro con sottolineatura di 2px a 0.35em.
+- **Pastiglie di serie** (`sezioni li`): icona di 24px più nome in 600 a 0.9rem, su campo, padding `8px 14px 8px 10px`, 999px; in hover blu chiaro e sollevamento di 2px. Non sono collegamenti: sono un elenco.
+- **Spia** (`spia`): pastiglia bianca con ombra, un pallino di 10px e la parola «accesa» in 700 a 0.82rem; a riposo pallino filo e testo lieve, accesa pallino ambra e testo inchiostro (transizione 260ms). Sta sopra il telefono della copertina, a 18px dal fondo.
+- **Prova gratuita** (`piano-prova`): ambra con testo notte, 700 a 0.78rem, padding `5px 11px`. Solo sotto il prezzo Premium.
+- **Tasti lingua** (`lingua`): due tasti IT/EN in 700 a 0.82rem dentro un gruppo su campo a 999px con 3px di padding; quello scelto (`aria-pressed="true"`) è bianco con rilievo e testo inchiostro.
+- **Sottotitolo dell'informativa** (`sottotitolo-informativa`): blu chiaro con testo blu scuro, 700 a 0.85rem, sotto il titolo.
 
 ### Cards / Containers
 
-- **Tavola** (`tavola`): l'immagine a piena larghezza con bordo di 1px di filo su carta, nessun raggio, nessuna ombra; sotto, a 10px, la didascalia in riga tecnica grigio lieve con «Fig. n» in Oswald d'inchiostro a sinistra e, a destra, la spia o il titolo; eventualmente una riga d'articolo («GDA · Luci · sezione 3 di 30») a 6px. La prima tavola porta le quote (parentesi di filo a -18px a sinistra e sotto) e una didascalia a 28px.
-- **Disegno tecnico** (`strada`): un SVG dentro un bordo di 1px di filo, con la didascalia sotto una riga di filo, in testo normale a 0.95rem con padding `14px 18px 16px`.
-- **Nota** (`nota-privacy`): un blocco su `campo` con bordo di filo, padding `18px 20px`, titolo in grassetto d'inchiostro e testo grigio lieve, largo al massimo 76ch.
-- **Serie** (`serie`): striscia a tutta larghezza su `campo` con filo sopra e sotto; dentro, 10 icone di 28px per riga con il nome sotto a 0.74rem wdth 84; sotto il puntatore la voce prende bordo ambra, sfondo carta e testo d'inchiostro.
-- **Scheda tecnica** (`scheda`): righe nome–valore separate da filo, aperte da inchiostro; il nome in riga tecnica d'inchiostro, il valore grigio lieve.
-- **Listino** (`listino`): tabella aperta da inchiostro; intestazioni con nome del piano (1.25rem, 800, wdth 112), prezzo in Oswald a 2rem con il periodo in Archivo 400 a 1rem grigio lieve, e la targhetta di prova; celle `si` d'inchiostro, `no` grigio lieve.
-- **Passo di scarico** (`scarico`): riga-collegamento a quattro colonne (56px numero in Oswald 2rem, titolo, testo, «come» in blu 600) separata da filo; in hover il titolo diventa blu.
+- **Telefono** (`tavola`): l'immagine a piena larghezza con 9px di bordo notte, 38px di raggio e l'ombra del telefono; sotto, a 16px, la didascalia in 600 a 0.95rem d'inchiostro, con l'eventuale esempio in 500 a 0.85rem grigio lieve. In copertina 340px, nelle file 300px al massimo sotto 520px.
+- **Schermo** (`tavola schermo`) e **orologio** (`tavola orologio`): l'immagine senza bordo, 16px (o 24px) di raggio, ombra alta.
+- **Scheda** (`schede > div`): 20px di raggio, padding 28px, titolo in 700 a 1.3rem; su campo è carta con ombra, su carta è campo senza ombra. Due per riga.
+- **Scheda tecnica** (`scheda`): niente riquadro: tre colonne di testo, ogni voce con un bordo blu di 2px sopra e 14px di padding, nome in 700 a 1.12rem e testo grigio lieve. Sei scatole uguali in fila sono la pagina che fanno tutti, e qui non ci sono.
+- **Disegno tecnico** (`strada`): un SVG dentro una scatola bianca a 20px con ombra, con la didascalia sotto un filo tenue a 0.97rem e padding `18px 24px 22px`.
+- **Nota** (`nota-privacy`): scatola a 20px, padding `22px 26px`, titolo in grassetto d'inchiostro, testo grigio lieve, al massimo 76ch; carta con ombra sul campo, campo senza ombra sulla carta.
+- **Listino** (`listino`): tabella dentro una scatola bianca a 20px con ombra; intestazione su campo con il nome del piano (700, 1.3rem), il prezzo in Oswald e la pastiglia di prova; la colonna Premium ha la testa blu scuro con testo bianco e periodo su-blu, e le celle sul campo Premium. Righe da `16px 20px` separate da filo tenue; «sì» grigio lieve, «no» filo.
+- **Passo di scarico** (`scarico`): scatola su campo a 20px, padding `22px 24px`, a quattro colonne: cerchio blu di 44px con il numero bianco, titolo (700, 1.15rem), testo lieve, «come» in blu 700 a destra. Se è un collegamento, in hover si solleva e prende l'ombra.
 
 ### Inputs / Fields
 
-- **Style:** nessun riquadro. L'etichetta in riga tecnica sopra (6px), il campo trasparente senza bordo con padding `10px 0`, e una riga di filo sotto l'intero blocco (`campo`, padding `14px 0`). Le righe stanno in griglie a due colonne con 24px di colonna.
-- **Focus:** l'anello globale si spegne e al suo posto la riga sotto diventa blu di 2px (`box-shadow: 0 2px 0 blu`).
-- **Error / Disabled:** l'esito (`modulo-esito`) è un blocco con bordo di 1px d'inchiostro, padding `12px 14px`, 0.95rem; in errore bordo e testo rossi (`male`). Il modulo occupato porta `aria-busy` e il tasto scende a 0.55 di opacità. Segnaposto in grigio lieve.
+- **Style:** il modulo è una scatola su campo (20px, 28px di padding); ogni campo ha l'etichetta in 700 a 0.9rem sopra (8px) e il campo bianco a 12px di raggio, padding `13px 16px`, bordo di 2px trasparente. Le righe a due colonne hanno 20px di colonna.
+- **Focus:** l'anello globale si spegne e il bordo diventa blu (transizione 160ms).
+- **Error / Disabled:** l'esito (`modulo-esito`) è bianco a 12px, padding `12px 16px`, 0.95rem, con bordo verde di 2px; in errore bordo e testo rossi. Il modulo occupato porta `aria-busy` e il tasto scende a 0.55 di opacità.
 
 ### Navigation
 
-- **Testata** (`cappello`): appiccicata, carta, riga d'inchiostro sotto, 60px; marchio 28px + nome in Archivo 700 wdth 112 con bordo di filo a destra; voci in riga tecnica grigio lieve, padding `0 14px`, con una riga di 2px trasparente sotto; in hover d'inchiostro; la voce della sezione corrente (`acceso`, `aria-current`) è d'inchiostro con la riga ambra. Il gruppo lingua ha filo a sinistra e a destra; poi il tasto pieno.
-- **Telefono (≤940px):** il marchio perde il bordo; un `<details>` con icona a tre righe/croce (22px) apre la stessa lista come colonna, voci a 0.9rem con padding `11px 0` e filo tenue fra loro; la voce accesa tiene la riga ambra.
-- **Indice sul bordo (≥1480px):** la stessa lista, fissa a destra a metà altezza, 0.72rem, padding `7px 22px 7px 14px`, riga di filo a sinistra; la voce accesa porta 2px d'ambra a sinistra.
-- **Collegamenti nel testo:** blu, sottolineati di 1px a 0.18em (3px nell'informativa); in hover blu scuro. Nel piede i collegamenti sono in riga tecnica grigio lieve, senza sottolineatura, d'inchiostro in hover.
-- **Ritorno (informativa):** `indietro`: marchio 28px + nome in Archivo 700 wdth 112, d'inchiostro, blu in hover.
+- **Testata** (`cappello`): appiccicata, bianca, filo tenue sotto, 64px; marchio di 32px a 9px di raggio più il nome in 700 a 1.2rem; voci in 600 a 0.92rem grigio lieve dentro pastiglie a 999px (`8px 10px`), in hover inchiostro su campo; la voce della sezione corrente (`acceso`, `aria-current`) è d'inchiostro con una riga ambra di 2px sotto (`box-shadow: inset 0 -2px 0`) e angoli vivi. Poi il gruppo lingua e il tasto pieno.
+- **Telefono (≤940px):** il tasto pieno sparisce; un `<details>` con icona a tre righe/croce (22px in un cerchio di 44px) apre la stessa lista come colonna, voci a 1rem con padding `12px 14px` e 12px di raggio; la voce accesa è su campo, senza riga ambra. Il menu si richiude scegliendo una voce o con Esc.
+- **Collegamenti nel testo:** blu, sottolineati di 1px a 0.2em (3px nell'informativa); in hover blu scuro. Nel piede sono bianchi in 600 a 0.92rem senza sottolineatura, ambra in hover; nell'informativa il piede è grigio lieve, blu in hover.
+- **Ritorno (informativa):** `indietro`: marchio 32px più il nome in 700 a 1.2rem, d'inchiostro, blu in hover.
 
-### La spia
+### Il piede
 
-Il quadratino di 10px nella didascalia della prima tavola (`spia`): bordo d'inchiostro su carta a riposo, riempito d'ambra con la parola «accesa» in ambra d'inchiostro quando è acceso. Si accende 600ms dopo il caricamento (subito con `prefers-reduced-motion`), con una transizione di 260ms, e si spegne quando si scorre via dalla copertina, perché a quel punto la luce passa alla voce del menu. È l'unico movimento autoriale della pagina.
+Fascia notte con testo su-blu a 0.95rem: a sinistra la frase e sotto, oltre un filo bianco al 14%, il colofone a 0.88rem con la ragione sociale in bianco; a destra i collegamenti allineati a fine riga.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** aprire ogni blocco strutturale (sezione, tabella, scheda, modulo, piede) con una riga di 1px d'inchiostro e separare le righe interne con 1px di filo.
-- **Do** mostrare le schermate come tavole: immagine dritta, bordo di 1px di filo, «Fig. n» in Oswald e didascalia in riga tecnica sotto.
-- **Do** fare la gerarchia dei titoli con l'asse `wdth` di Archivo (120 / 118 / 110 / 100 / 80), peso 800, interlinea 1.02, -0.02em.
-- **Do** tenere l'ambra su un elemento solo per volta, come bordo o riempimento di 10px, mai come testo pieno (il testo accanto usa `ambra-inchiostro`).
-- **Do** usare un tasto pieno blu per schermata e il tasto a filo d'inchiostro per tutto il resto.
+- **Do** alternare le sezioni fra carta e campo (`fascia`) e lasciare che il cambio di fondo faccia da separatore: nessuna riga fra una sezione e l'altra.
+- **Do** mostrare le schermate del telefono dentro il telefono (9px di bordo notte, 38px di raggio, `--ombra-telefono`) e le schermate larghe come schermi a 16px con `--ombra-alta`.
+- **Do** dare l'ombra a una scheda solo sul campo azzurrino e renderla campo senza ombra sulla carta.
+- **Do** usare i tre raggi: 20px per le scatole, 12px per quello che si tocca, 999px per le pastiglie.
+- **Do** fare i titoli in Archivo 700 a larghezza normale, interlinea 1.08, -0.025em, e le etichette in 600–700 in minuscolo.
+- **Do** tenere un tasto pieno blu per schermata e il tasto a contorno d'inchiostro per tutto il resto; sulla copertina il tasto pieno è bianco.
+- **Do** tenere le transizioni a 160ms ease-out, i sollevamenti a 2px, e spegnerli con `prefers-reduced-motion`.
 - **Do** servire ogni carattere e ogni immagine da `sito/`: niente da domini esterni.
-- **Do** tenere le transizioni a 120ms ease-out e solo sugli stati (sfondo, colore, bordo), senza animazioni d'ingresso.
 
 ### Don't:
 
-- **Don't** usare `box-shadow` di elevazione, `filter: blur`, `backdrop-filter` o gradienti di sfondo, in nessuno stato.
-- **Don't** usare `border-radius`: tasti, targhette, tavole e campi hanno gli angoli vivi.
-- **Don't** disegnare un telefono intorno alle schermate, né mettere le tavole su fondi colorati o sfocati.
-- **Don't** usare Oswald su parole: solo prezzi, passi e numeri di figura.
-- **Don't** accendere due elementi d'ambra insieme, né usare l'ambra per collegamenti o tasti.
+- **Don't** usare gradienti di sfondo, `backdrop-filter`, `filter: blur`, aloni colorati o testo sfumato, in nessuno stato.
+- **Don't** usare ombre centrate, bagliori o ombre colorate intorno a un blocco: le ombre sono d'inchiostro e vanno verso il basso.
+- **Don't** mettere l'ambra su un fondo di sezione, su un collegamento a riposo o su un testo corrente: è la luce di una cosa piccola.
+- **Don't** usare verde e rosso fuori dai segni (spunta, croce, bordo dell'esito).
+- **Don't** usare Oswald su parole: solo i prezzi.
+- **Don't** scrivere etichette in maiuscolo o con spaziatura allargata, né mettere occhielli o righe introduttive sopra un titolo.
+- **Don't** fare griglie di scatole uguali con icona, titolo e testo: le voci sono colonne di testo con un bordo blu sopra.
 - **Don't** aggiungere un tema scuro: il sito è `color-scheme: light only`.
-- **Don't** scrivere `gdahome` e `gdanav` in maiuscolo, nemmeno dove tutto il resto è in riga tecnica maiuscola.
-- **Don't** mettere occhielli o righe introduttive sopra i titoli: la riga tecnica sta sotto le tavole e nelle schede, non sopra un titolo.
+- **Don't** scrivere `gdahome` e `gdanav` in maiuscolo.
