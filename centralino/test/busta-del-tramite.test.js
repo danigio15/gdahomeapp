@@ -25,7 +25,7 @@ const CONTO = JSON.stringify({
   type: "service_account",
   project_id: "gdahome-prova",
   client_email: "invio@gdahome-prova.iam.gserviceaccount.com",
-  private_key: "-----BEGIN PRIVATE KEY-----\nfinta\n-----END PRIVATE KEY-----\n",
+  private_key: "finta",
 });
 
 function unaMacchina() {
