@@ -23,25 +23,46 @@ vere e di schede di testo. Le fotografie stanno nella repository, dentro
 perché lo script li infila ancora nella plancia che porta (vedi «Quello che non
 si ribatte a mano»), ma la pagina non li usa più.
 
-## Una luce sola, e il prodotto in faccia
+## Un catalogo, non una vetrina
 
-Due scelte che valgono più di tutto il resto, e che si possono disfare per
-distrazione.
+Il sito è fatto come il catalogo delle placche di un elettricista: carta
+bianca, una griglia di righe sottili, le fotografie dell'app messe dritte
+come tavole numerate («Fig. 1», «Fig. 2»…) con la loro didascalia, i fatti
+in tabelle e listini. Prima c'era quello che hanno tutti i siti disegnati da
+un modello — il fondo a macchie di luce, il telefono disegnato che galleggia,
+i quattro numeroni, le tre schede uguali con icona, titolo e testo, l'occhiello
+sopra ogni titolo — e si vedeva che era un modello. Le scelte che tengono in
+piedi il catalogo, e che si possono disfare per distrazione:
+
+**Una cosa accesa alla volta.** L'ambra è il colore di una luce accesa, e
+nella pagina ne è accesa una sola: la voce del menu della sezione in cui si
+sta leggendo (e sul computer largo anche l'indice sul bordo destro), oppure,
+sulla copertina, la spia sotto la prima tavola. Due cose ambra insieme sono un
+errore. Il blu fa i collegamenti e l'unico tasto pieno; l'inchiostro fa il
+resto.
+
+**Niente ombre, niente sfocature, niente angoli.** Una tavola è una
+fotografia con un filo intorno. Le righe sottili fanno la griglia. Una scheda
+con l'ombra morbida e l'angolo largo è la cosa che fa dire «l'ha fatto un
+modello», e qui non ce n'è una.
+
+**I caratteri.** Archivo, un grottesco da catalogo con l'asse della
+larghezza, in `caratteri/` (licenza OFL, nel file accanto): largo e nero per
+i titoli, normale per il testo, stretto in maiuscoletto per le didascalie.
+Oswald, il carattere dei numeri della plancia, resta per i prezzi e i numeri
+delle figure. Tutti e due si servono da qui, mai da Google.
 
 **Niente tema scuro.** C'era, e seguiva quello del sistema. Chi apriva
 gdahome.org con un telefono in tema scuro si trovava una pagina quasi nera —
-cioè una pagina diversa da quella che gli era stata mostrata — e le schermate
-dell'app, che sono chiare, ci galleggiavano sopra come ritagli. Una copertina
+cioè una pagina diversa da quella che gli era stata mostrata. Una copertina
 si presenta sempre allo stesso modo. Dentro l'app il chiaro e scuro c'è, e lì
-ha senso: quella si guarda di notte, in corridoio, con una mano sola.
+ha senso.
 
 **Le schermate vere, in cima.** Sono `docs/immagini/`, le stesse del README e
-del negozio: fotografie dell'app, non dei mockup disegnati. Prima la copertina
-raccontava l'app a parole e chiedeva di fidarsi; adesso la fa vedere nella
-prima schermata. La fotografia di copertina è quella delle **luci** e non
-quella della plancia: la seconda mostra una casa non ancora configurata, col
-riquadro «La dashboard è quasi pronta», che è la schermata giusta per il
-manuale e la peggiore possibile per una copertina.
+del negozio: fotografie dell'app, non dei mockup disegnati. La copertina
+mostra le **luci** e non la plancia: la seconda mostra una casa non ancora
+configurata, col riquadro «La dashboard è quasi pronta», che è la schermata
+giusta per il manuale e la peggiore possibile per una copertina.
 
 ## Per chi installa, e dove scrivere
 
@@ -83,7 +104,7 @@ Poi `http://127.0.0.1:8099/`.
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `index.html`                      | la pagina: il colpo d'occhio, la plancia, come funziona, l'app gdahome, gdanav, quanto costa, per chi installa, scaricala, sostegno, contatti                                             |
 | `privacy.html`                    | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                                                                                        |
-| `stile.css`                       | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, le file di fotografie                                                                         |
+| `stile.css`                       | il catalogo: i quattro colori, i caratteri, la griglia di righe sottili, le tavole, le schede tecniche, i listini                                                                         |
 | `privacy.css`                     | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                                                                                              |
 | `casa-in-pagina.js`               | la Home Assistant finta della plancia di prima: la pagina non la usa più                                                                                                                  |
 | `sito.js`                         | la lingua, l'ombra sotto la barra, le schede che compaiono, il modulo dei contatti — lo caricano tutte e due le pagine                                                                    |
@@ -103,8 +124,10 @@ plancia intera: li porta uno script, dalle cartelle dove stanno per davvero.
 node strumenti/porta-nel-sito.mjs
 ```
 
-Rifà `statico/oggetti/`, `statico/font/` e `statico/schermate/`, e basta:
-`statico/app/` e `statico/gdanav/` sono fatte a mano e restano come sono. Prima
+Rifà `statico/oggetti/`, `statico/font/` (solo Oswald) e `statico/schermate/`
+(le fotografie di `docs/immagini/` che le pagine chiamano), e basta:
+`statico/app/`, `statico/gdanav/` e `caratteri/` sono fatte a mano e restano
+come sono. Prima
 lo script buttava via tutta `statico/`, e sul server — dove gira prima di ogni
 scambio — le fotografie delle app sarebbero sparite a ogni versione.
 

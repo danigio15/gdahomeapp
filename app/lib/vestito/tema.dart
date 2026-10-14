@@ -35,9 +35,10 @@
 ///  - **Inter** per quello che si legge e **Oswald** per i numeri grandi: sono
 ///    i caratteri della plancia, e la plancia e' una pagina web che quei
 ///    caratteri se li porta dietro;
-///  - il **fondo vivo** con le due macchie che si muovono piano: gdanav sotto
-///    ha una mappa, qui sotto non c'e' niente, e un grigio piatto e' la cosa
-///    che fa sembrare vecchia un'app.
+///  - il **fondo** di un colore solo, appena azzurrino: gdanav sotto ha una
+///    mappa, qui sotto non c'e' niente. C'erano due macchie di luce che si
+///    muovevano piano, e sono andate via: erano il fondo di mille app disegnate
+///    da un modello, e sotto una lista di interruttori non dicevano niente.
 ///
 /// Tutto il resto lo ricava il tema da qui. Nessuna schermata mette un colore
 /// di suo: se lo fa, e' un errore da correggere qui e non li'.
@@ -86,19 +87,12 @@ abstract final class Colori {
     ),
   ];
 
-  /// Il fondo scolpito, e le due macchie che ci galleggiano sopra.
-  ///
-  /// Un grigio piatto e' la cosa che fa sembrare vecchia un'app: non e' un
-  /// colore, e' l'assenza di una scelta. Qui sotto invece c'e' un fondo appena
-  /// azzurrino con due aloni sfocati che si muovono pianissimo — verde da una
-  /// parte, celeste dall'altra — e le schede bianche ci galleggiano sopra.
+  /// Il fondo: un grigio appena azzurrino, lo stesso della plancia, e le
+  /// schede bianche ci si appoggiano con la loro ombra. E' un colore scelto,
+  /// non un grigio di difetto, e non ha bisogno di macchie di luce sopra.
   static const fondo = Color(0xFFF0F4F8);
-  static const alone1 = Color(0xFFDCFCE7);
-  static const alone2 = Color(0xFFE0F2FE);
 
   static const fondoScuro = Color(0xFF080F1C);
-  static const aloneScuro1 = Color(0xFF10321F);
-  static const aloneScuro2 = Color(0xFF0C2B44);
 }
 
 /// Il carattere dei numeri: Oswald, stretto e alto.
@@ -202,8 +196,8 @@ ThemeData _tema(Brightness luce) {
     colorScheme: colori,
     brightness: luce,
     fontFamily: 'Inter',
-    /* Il fondo lo dipinge `SfondoVivo`, sotto tutto: le schermate ci
-     * galleggiano sopra, e non c'e' un grigio piatto da nessuna parte. */
+    /* Il fondo lo dipinge `SfondoVivo`, sotto tutto, una volta sola: le
+     * schermate sono trasparenti e ci stanno sopra. */
     scaffoldBackgroundColor: Colors.transparent,
   );
 
@@ -238,7 +232,7 @@ ThemeData _tema(Brightness luce) {
   return base.copyWith(
     textTheme: testi,
     appBarTheme: AppBarTheme(
-      /* Trasparente come il resto: sotto ci passa il fondo vivo. */
+      /* Trasparente come il resto: sotto c'e' il fondo dell'app. */
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       elevation: 0,

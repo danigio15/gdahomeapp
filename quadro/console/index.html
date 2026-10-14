@@ -69,11 +69,15 @@
     -->
     <style>
       /* ═══════════════════════════════════════════════════════════════════
-         AURORA.
+         CARTA.
 
-         Luminoso, morbido, leggibile. Vetro smerigliato su un cielo che
-         sfuma, angoli larghi, un carattere solo — Manrope, servito da questo
-         quadro — in cinque pesi, e nessuna scritta in maiuscolo. Un colore
+         Chiaro, piano, leggibile. Era «Aurora»: vetro smerigliato su un cielo
+         che sfumava, aloni colorati sulle carte, angoli larghi. Tutto questo
+         non diceva niente a chi deve leggere quattro impianti in fila, e si
+         vedeva che era un modello. Adesso: un fondo di un colore, schede
+         bianche con un filo intorno e un'ombra corta, angoli stretti, un
+         carattere solo — Manrope, servito da questo quadro — in cinque pesi,
+         e nessuna scritta in maiuscolo. Un colore
          non sta mai da solo: accanto a un pallino verde c'e' sempre la
          parola, perche' un pallino da solo non dice niente a nessuno.
          ═══════════════════════════════════════════════════════════════════ */
@@ -111,9 +115,9 @@
         --cielo-b: #e8dcff;
         --cielo-c: #d4f3e8;
 
-        --vetro: rgba(255, 255, 255, 0.64);
-        --vetro-pieno: rgba(255, 255, 255, 0.9);
-        --vetro-bordo: rgba(255, 255, 255, 0.9);
+        --vetro: #ffffff;
+        --vetro-pieno: #ffffff;
+        --vetro-bordo: rgba(23, 26, 43, 0.12);
         --linea: rgba(23, 26, 43, 0.08);
         --linea-forte: rgba(23, 26, 43, 0.14);
 
@@ -136,12 +140,12 @@
         --ambra-luce: rgba(217, 138, 15, 0.3);
         --rosso-luce: rgba(228, 64, 95, 0.28);
 
-        --ombra: 0 1px 2px rgba(23, 26, 43, 0.04), 0 10px 30px rgba(23, 26, 43, 0.07);
-        --ombra-alta: 0 4px 10px rgba(23, 26, 43, 0.06), 0 30px 70px rgba(23, 26, 43, 0.16);
+        --ombra: 0 1px 2px rgba(23, 26, 43, 0.08);
+        --ombra-alta: 0 2px 8px rgba(23, 26, 43, 0.14);
 
-        --r-grande: 26px;
-        --r: 20px;
-        --r-piccolo: 14px;
+        --r-grande: 12px;
+        --r: 10px;
+        --r-piccolo: 8px;
         --molla: cubic-bezier(0.22, 1, 0.36, 1);
         --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
       }
@@ -154,9 +158,9 @@
           --cielo-b: #2a1f5a;
           --cielo-c: #0f3a3d;
 
-          --vetro: rgba(255, 255, 255, 0.055);
-          --vetro-pieno: rgba(24, 28, 46, 0.92);
-          --vetro-bordo: rgba(255, 255, 255, 0.1);
+          --vetro: #171b2c;
+          --vetro-pieno: #171b2c;
+          --vetro-bordo: rgba(255, 255, 255, 0.14);
           --linea: rgba(255, 255, 255, 0.08);
           --linea-forte: rgba(255, 255, 255, 0.16);
 
@@ -177,8 +181,8 @@
           --ambra-luce: rgba(189, 133, 26, 0.42);
           --rosso-luce: rgba(224, 70, 106, 0.4);
 
-          --ombra: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 34px rgba(0, 0, 0, 0.35);
-          --ombra-alta: 0 4px 10px rgba(0, 0, 0, 0.4), 0 34px 80px rgba(0, 0, 0, 0.55);
+          --ombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+          --ombra-alta: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
       }
 
@@ -189,9 +193,9 @@
         --cielo-b: #2a1f5a;
         --cielo-c: #0f3a3d;
 
-        --vetro: rgba(255, 255, 255, 0.055);
-        --vetro-pieno: rgba(24, 28, 46, 0.92);
-        --vetro-bordo: rgba(255, 255, 255, 0.1);
+        --vetro: #171b2c;
+        --vetro-pieno: #171b2c;
+        --vetro-bordo: rgba(255, 255, 255, 0.14);
         --linea: rgba(255, 255, 255, 0.08);
         --linea-forte: rgba(255, 255, 255, 0.16);
 
@@ -212,8 +216,8 @@
         --ambra-luce: rgba(189, 133, 26, 0.42);
         --rosso-luce: rgba(224, 70, 106, 0.4);
 
-        --ombra: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 34px rgba(0, 0, 0, 0.35);
-        --ombra-alta: 0 4px 10px rgba(0, 0, 0, 0.4), 0 34px 80px rgba(0, 0, 0, 0.55);
+        --ombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --ombra-alta: 0 2px 8px rgba(0, 0, 0, 0.5);
       }
 
       * {
@@ -245,16 +249,13 @@
         overflow: hidden;
       }
 
-      /* Il cielo: tre macchie di luce che sfumano, ferme dietro tutto. */
+      /* Il cielo non c'e' piu': il fondo e' un colore, e le schede ci stanno sopra con un filo. Il contenitore resta per chi lo cerca. */
       .cielo {
         position: fixed;
         inset: 0;
         z-index: 0;
         pointer-events: none;
-        background:
-          radial-gradient(60% 42% at 12% -6%, var(--cielo-a), transparent 70%),
-          radial-gradient(52% 40% at 96% 8%, var(--cielo-b), transparent 70%),
-          radial-gradient(48% 34% at 60% 108%, var(--cielo-c), transparent 70%);
+        background: none;
       }
 
       .pagina {
@@ -306,14 +307,14 @@
         height: 44px;
         flex: none;
         border-radius: 50%;
-        background: linear-gradient(140deg, var(--accento), #8b7cf6);
+        background: var(--accento);
         color: #fff;
         font-weight: 800;
         font-size: 0.95rem;
         letter-spacing: -0.02em;
         display: grid;
         place-items: center;
-        box-shadow: 0 6px 18px rgba(47, 124, 246, 0.35);
+        box-shadow: none;
         overflow: hidden;
       }
 
@@ -364,7 +365,7 @@
         align-items: center;
         gap: 7px;
         padding: 7px 12px;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         background: var(--vetro);
         border: 1px solid var(--vetro-bordo);
         box-shadow: var(--ombra);
@@ -415,12 +416,10 @@
         gap: 4px;
         padding: 5px;
         margin: 0 0 14px;
-        border-radius: 999px;
+        border-radius: var(--r);
         background: var(--vetro-pieno);
         border: 1px solid var(--vetro-bordo);
         box-shadow: var(--ombra);
-        backdrop-filter: blur(28px) saturate(1.6);
-        -webkit-backdrop-filter: blur(28px) saturate(1.6);
       }
 
       .barra:empty {
@@ -455,7 +454,7 @@
         color: var(--ink-2);
         background: none;
         border: 0;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         padding: 10px 10px;
         cursor: pointer;
         display: flex;
@@ -482,7 +481,7 @@
       .barra .quanti {
         min-width: 18px;
         padding: 1px 6px;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         background: var(--ambra-soft);
         color: var(--ink);
         font-size: 0.7rem;
@@ -496,8 +495,6 @@
         border: 1px solid var(--vetro-bordo);
         border-radius: var(--r);
         box-shadow: var(--ombra);
-        backdrop-filter: blur(22px) saturate(1.5);
-        -webkit-backdrop-filter: blur(22px) saturate(1.5);
       }
 
       /* Il riquadro e' il vetro con dentro un capitolo della scheda. Senza
@@ -632,7 +629,7 @@
         align-items: center;
         gap: 6px;
         padding: 4px 10px;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         background: var(--linea);
         color: var(--ink-2);
         font-size: 0.76rem;
@@ -674,7 +671,7 @@
         color: var(--ink);
         background: var(--vetro-pieno);
         border: 1px solid var(--linea-forte);
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         padding: 9px 16px;
         cursor: pointer;
         white-space: nowrap;
@@ -693,10 +690,10 @@
       }
 
       .tasto.forte {
-        background: linear-gradient(140deg, var(--accento), #6f8cff);
+        background: var(--accento);
         border-color: transparent;
         color: #fff;
-        box-shadow: 0 8px 20px rgba(47, 124, 246, 0.32);
+        box-shadow: none;
       }
 
       .tasto.male {
@@ -1063,17 +1060,9 @@
         box-shadow: var(--ombra-alta);
       }
 
-      /* La luce: una macchia morbida del colore dello stato, in alto a destra. */
+      /* La luce della carta non c'e' piu': lo stato lo dice la parola colorata, e basta. */
       .carta::before {
-        content: "";
-        position: absolute;
-        top: -70px;
-        right: -60px;
-        width: 220px;
-        height: 220px;
-        border-radius: 50%;
-        background: radial-gradient(circle, var(--tinta-luce), transparent 65%);
-        pointer-events: none;
+        content: none;
       }
 
       .carta .stato,
@@ -1090,7 +1079,7 @@
 
       .carta .stato {
         padding: 5px 11px 5px 9px;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         background: var(--tinta-soft);
       }
 
@@ -1285,8 +1274,6 @@
         inset: 0;
         z-index: 50;
         background: rgba(14, 17, 32, 0.45);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
         opacity: 0;
         transition: opacity 0.3s;
       }
@@ -1329,7 +1316,7 @@
       .presa i {
         width: 40px;
         height: 5px;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         background: var(--linea-forte);
       }
 
@@ -2088,7 +2075,7 @@
 
       /* Il bollo di gdahome: tre barrette, disegnate qui e mai scaricate. */
       .bollo {
-        background: linear-gradient(140deg, var(--accento), #8b7cf6);
+        background: var(--accento);
         gap: 3px;
         display: flex;
         align-items: center;
@@ -2346,7 +2333,7 @@
         align-items: center;
         gap: 7px;
         padding: 6px 11px 6px 9px;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         background: var(--verde-soft);
         font-size: 0.82rem;
         font-weight: 600;
@@ -2473,7 +2460,7 @@
       .nomiGiu span,
       .giu span {
         padding: 6px 11px;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         background: var(--rosso-soft);
         color: var(--ink);
         font-size: 0.82rem;
@@ -2726,7 +2713,7 @@
         transform: translate(-50%, 30px);
         z-index: 60;
         padding: 11px 18px;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         background: var(--ink);
         color: var(--ground);
         font-weight: 700;
@@ -2926,7 +2913,7 @@
 
       .pacchetto .metro {
         height: 7px;
-        border-radius: 999px;
+        border-radius: var(--r-piccolo);
         background: var(--linea);
         overflow: hidden;
       }
@@ -2934,8 +2921,8 @@
       .pacchetto .metro i {
         display: block;
         height: 100%;
-        border-radius: 999px;
-        background: linear-gradient(90deg, var(--accento), #8b7cf6);
+        border-radius: var(--r-piccolo);
+        background: var(--accento);
       }
 
       .pacchetto .pezzo[data-finito="sì"] .metro i {

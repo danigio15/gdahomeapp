@@ -1,97 +1,116 @@
 /* Il vestito dell'informativa.
  *
- * L'indice e l'informativa sono due pagine diverse: una racconta, e ha la sua
- * barra in cima, le sue schede, la plancia dentro un riquadro; l'altra e' un
- * testo da leggere e basta, che qualcuno apre dal Play Store per sapere dove
- * finiscono i suoi dati. Fargli addosso lo stesso impianto dell'indice
- * vorrebbe dire dargli una pagina che non e' fatta per lui.
+ * L'indice e l'informativa sono due pagine diverse: una è il catalogo, con le
+ * sue tavole; l'altra è un testo da leggere e basta, che qualcuno apre dal
+ * Play Store per sapere dove finiscono i suoi dati. Fargli addosso lo stesso
+ * impianto dell'indice vorrebbe dire dargli una pagina che non è fatta per lui.
  *
- * Quindi qui c'e' solo quello che serve a un testo lungo: una colonna stretta,
- * righe che si leggono, e il resto — i colori, i caratteri, il fondo vivo,
- * chiaro e scuro — preso da `stile.css`, che la pagina carica prima di questo.
- * Un colore cambiato di la' cambia tutte e due le pagine, che e' l'unico modo
- * perche' restino la stessa cosa.
+ * Quindi qui c'è solo quello che serve a un testo lungo: una colonna stretta,
+ * righe che si leggono, e il resto — i colori, i caratteri, le righe sottili —
+ * preso da `stile.css`, che la pagina carica prima di questo. Un colore
+ * cambiato di là cambia tutte e due le pagine, che è l'unico modo perché
+ * restino la stessa cosa.
  */
 
-/* La colonna. Piu' stretta di quella dell'indice apposta: una riga di testo
- * che passa i settanta caratteri si rilegge male, e questa e' una pagina che
+/* La colonna. Più stretta di quella dell'indice apposta: una riga di testo
+ * che passa i settanta caratteri si rilegge male, e questa è una pagina che
  * si legge davvero, non si guarda. */
 .dentro {
   width: 100%;
   max-width: 760px;
   margin-inline: auto;
-  padding-inline: 22px;
+  padding-inline: var(--bordo-pagina);
 }
 
 /* ── La testa ──────────────────────────────────────────────────────────── */
 
 header.stretta {
-  padding: 48px 0 8px;
-  text-align: left;
+  padding: 0 0 20px;
+  border-bottom: 1px solid var(--inchiostro);
+}
+
+.riga-di-testa {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  min-height: var(--cappello-alto);
+  border-bottom: 1px solid var(--inchiostro);
+  margin-bottom: clamp(32px, 6vw, 64px);
 }
 
 header.stretta h1 {
-  margin: 22px 0 6px;
-  font-size: clamp(2rem, 4.4vw, 2.8rem);
+  margin: 0 0 10px;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-variation-settings: "wdth" 118;
 }
 
 /* La strada per tornare indietro sta in cima e si vede subito: chi arriva qui
- * da un negozio non sa ancora cos'e' gdahome, e questo e' l'unico posto da cui
- * puo' andarlo a vedere. */
+ * da un negozio non sa ancora cos'è gdahome, e questo è l'unico posto da cui
+ * può andarlo a vedere. */
 .indietro {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--testo-lieve);
+  color: var(--inchiostro);
   text-decoration: none;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  font-variation-settings: "wdth" 112;
+  letter-spacing: -0.02em;
+  font-size: 1.1rem;
 }
 
 .indietro img {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
+  width: 28px;
+  height: 28px;
 }
 
-.indietro:hover {
-  color: var(--testo);
+.dentro .indietro {
+  color: var(--inchiostro);
 }
 
-.sottotitolo {
+.dentro .indietro:hover {
+  color: var(--blu);
+}
+
+.sottotitolo-informativa {
   margin: 0;
-  color: var(--testo-lieve);
-  font-size: 1.05rem;
+  color: var(--inchiostro-lieve);
+  font-variation-settings: "wdth" 80;
+  font-weight: 600;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 /* ── Il testo ──────────────────────────────────────────────────────────── */
 
-/* Le sezioni dell'indice respirano (`clamp(56px, 8vw, 104px)`): li' ognuna e'
- * una schermata. Qui sono i capitoli di un documento, e uno spazio da
- * schermata fra un capitolo e l'altro obbligherebbe a scorrere per capire se
- * il testo e' finito. */
+/* Le sezioni dell'indice respirano: lì ognuna è una schermata. Qui sono i
+ * capitoli di un documento, e uno spazio da schermata fra un capitolo e
+ * l'altro obbligherebbe a scorrere per capire se il testo è finito. */
 .dentro section {
-  padding-block: 30px 4px;
-  border-top: 1px solid var(--bordo);
+  padding-block: 28px 8px;
+  border-top: 1px solid var(--filo);
 }
 
 .dentro section:first-of-type {
   border-top: 0;
+  padding-top: 32px;
 }
 
 .dentro section h2 {
-  font-size: clamp(1.3rem, 2.6vw, 1.6rem);
-  margin-bottom: 12px;
+  font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+  font-variation-settings: "wdth" 112;
+  margin-bottom: 14px;
 }
 
 .dentro p,
 .dentro li {
-  color: var(--testo-lieve);
+  color: var(--inchiostro-lieve);
 }
 
 .dentro p strong,
 .dentro li strong {
-  color: var(--testo);
+  color: var(--inchiostro);
 }
 
 .dentro ol,
@@ -105,10 +124,9 @@ header.stretta h1 {
 }
 
 /* I collegamenti qui si devono vedere: in mezzo a un testo di legge, un link
- * dello stesso colore del testo e' un link che nessuno trova. Sull'indice no —
- * li' sono bottoni e schede, e si riconoscono dalla forma. */
+ * dello stesso colore del testo è un link che nessuno trova. */
 .dentro a {
-  color: var(--azzurro);
+  color: var(--blu);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
@@ -119,22 +137,13 @@ header.stretta h1 {
   text-decoration: none;
 }
 
-.dentro code {
-  background: var(--carta-alta);
-  border: 1px solid var(--bordo);
-  border-radius: 7px;
-  padding: 2px 7px;
-  font-size: 0.86em;
-  overflow-wrap: anywhere;
-}
-
 /* ── Il fondo ──────────────────────────────────────────────────────────── */
 
 .dentro footer {
   margin-top: 36px;
-  padding: 28px 0 72px;
-  border-top: 1px solid var(--bordo);
-  color: var(--testo-lieve);
+  padding: 24px 0 72px;
+  border-top: 1px solid var(--inchiostro);
+  color: var(--inchiostro-lieve);
   font-size: 0.92rem;
 }
 
@@ -143,9 +152,9 @@ header.stretta h1 {
 }
 
 .dentro footer a {
-  color: var(--testo-lieve);
+  color: var(--inchiostro-lieve);
 }
 
 .dentro footer a:hover {
-  color: var(--testo);
+  color: var(--inchiostro);
 }

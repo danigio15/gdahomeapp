@@ -1,86 +1,51 @@
 /* Il vestito del sito.
  *
- * I colori non sono scelti qui: sono quelli dell'app, presi da
- * `app/lib/vestito/tema.dart` — blu notte come colore primo, ambra come
- * accento perché è il colore di una luce accesa, l'azzurro della plancia per
- * dire «premi qui». I caratteri sono quelli della plancia, Inter e Oswald,
- * serviti da qui dentro: un sito che racconta che la casa non parla con
- * nessuno e poi va a prendersi i caratteri da Google si smentisce da solo.
+ * Il sito è fatto come il catalogo delle placche di un elettricista: carta
+ * bianca, una griglia di righe sottili, le fotografie dell'app messe dritte
+ * come tavole con la loro didascalia, i fatti in tabelle. Niente fondi
+ * sfocati, niente ombre, niente schede arrotondate: quello che c'è da far
+ * vedere sono le schermate vere, e il resto sta zitto.
  *
- * Il fondo è lo stesso dell'app: non un grigio piatto — che è l'assenza di
- * una scelta — ma un azzurrino con due aloni sfocati che si muovono
- * pianissimo, verde da una parte e celeste dall'altra, e le schede bianche
- * che ci galleggiano sopra.
+ * ## I colori
+ *
+ * Quattro, e ognuno fa una cosa sola:
+ *
+ *  - l'inchiostro, un blu notte quasi nero, per tutto quello che si legge;
+ *  - il blu del catalogo — lo stesso «premi qui» dell'app
+ *    (`app/lib/vestito/tema.dart`) — per i titoli di sezione, i collegamenti
+ *    e l'unico tasto pieno;
+ *  - l'ambra, il colore di una luce accesa, per **una cosa sola alla volta**:
+ *    la voce del menu della sezione in cui si sta leggendo, la spia nella
+ *    prima tavola, l'icona della serie sotto il dito. Due cose ambra insieme
+ *    sono un errore;
+ *  - il grigio carta, per i campi dove una tavola si appoggia.
+ *
+ * ## I caratteri
+ *
+ * Archivo, un grottesco da catalogo con l'asse della larghezza: largo e nero
+ * per i titoli di serie, normale per il testo, stretto in maiuscoletto per le
+ * didascalie e le righe tecniche. Sta in `caratteri/`, servito da qui: un
+ * sito che racconta che la casa non parla con nessuno e poi va a prendersi i
+ * caratteri da Google si smentisce da solo. Oswald, il carattere dei numeri
+ * della plancia, resta per i prezzi e i numeri grandi: sono gli stessi numeri
+ * che si vedono sulle tessere.
  *
  * ## Una luce sola, e chiara
  *
- * C'era un tema scuro, e seguiva quello del sistema. Non c'è più, ed è una
- * scelta: questa è la copertina di gdahome — l'indirizzo che si scrive su un
- * negozio o su un biglietto — e una copertina si presenta sempre allo stesso
- * modo. Chi apriva il sito con un telefono in tema scuro se lo trovava quasi
- * nero, cioè una pagina diversa da quella che gli era stata mostrata, e le
- * schermate dell'app che ci stanno dentro sono chiare comunque: sopra un
- * fondo nero galleggiavano come ritagli.
- *
- * Dentro l'app il chiaro e scuro c'è, e lì ha senso: quella si guarda di
- * notte, in corridoio, con una mano sola.
+ * Non c'è un tema scuro, ed è una scelta: questa è la copertina di gdahome, e
+ * una copertina si presenta sempre allo stesso modo. Dentro l'app il chiaro e
+ * scuro c'è, e lì ha senso.
  */
 
 /* ── I caratteri ────────────────────────────────────────────────────────── */
 
 @font-face {
-  font-family: "Inter";
+  font-family: "Archivo";
   font-style: normal;
-  font-weight: 300;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
   font-display: swap;
-  src: url("statico/font/inter-latin-300-normal.woff2") format("woff2");
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
-    U+2193, U+2212, U+2215;
-}
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("statico/font/inter-latin-400-normal.woff2") format("woff2");
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
-    U+2193, U+2212, U+2215;
-}
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("statico/font/inter-latin-700-normal.woff2") format("woff2");
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
-    U+2193, U+2212, U+2215;
-}
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 300;
-  font-display: swap;
-  src: url("statico/font/inter-latin-ext-300-normal.woff2") format("woff2");
-  unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF;
-}
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("statico/font/inter-latin-ext-400-normal.woff2") format("woff2");
-  unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF;
-}
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("statico/font/inter-latin-ext-700-normal.woff2") format("woff2");
-  unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF;
+  src: url("caratteri/archivo-variabile.woff2") format("woff2");
 }
 @font-face {
   font-family: "Oswald";
@@ -101,33 +66,29 @@
   unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF;
 }
 
-/* ── I colori ───────────────────────────────────────────────────────────── */
+/* ── I colori e le misure ───────────────────────────────────────────────── */
 
 :root {
-  --notte: #0f172a;
-  --notte-chiara: #1e293b;
-  --azzurro: #0ea5e9;
-  --azzurro-cupo: #075985;
-  --ambra: #f59e0b;
-  --ambra-scura: #b45309;
-  --bene: #16a34a;
-  --male: #e11d48;
-
-  --fondo: #f0f4f8;
-  --alone-1: #dcfce7;
-  --alone-2: #e0f2fe;
   --carta: #ffffff;
-  --carta-alta: #f8fafc;
-  --bordo: #e2e8f0;
-  --bordo-tenue: #eef2f7;
-  --testo: #0f172a;
-  --testo-lieve: #64748b;
-  --ombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
-  --ombra-alta: 0 2px 6px rgba(15, 23, 42, 0.06), 0 24px 60px rgba(15, 23, 42, 0.12);
+  --campo: #eef0f3;
+  --inchiostro: #0b1220;
+  --inchiostro-lieve: #4b5563;
+  --blu: #1d4ed8;
+  --blu-scuro: #1e3a8a;
+  --ambra: #f59e0b;
+  --ambra-inchiostro: #9a5b00;
+  --male: #b91c1c;
+  --filo: #c9ced6;
+  --filo-tenue: #e3e6eb;
 
-  --largo: 1180px;
-  --raggio: 20px;
-  --raggio-piccolo: 14px;
+  --testo: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --numeri: "Oswald", "Archivo", sans-serif;
+
+  --largo: 1280px;
+  --bordo-pagina: clamp(16px, 4vw, 48px);
+  --cappello-alto: 60px;
+
+  color-scheme: light only;
 }
 
 /* ── Le basi ────────────────────────────────────────────────────────────── */
@@ -140,1350 +101,1420 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 88px;
+  scroll-padding-top: calc(var(--cappello-alto) + 24px);
   -webkit-text-size-adjust: 100%;
 }
 
-body {
-  margin: 0;
-  background: var(--fondo);
-  color: var(--testo);
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    sans-serif;
-  font-size: 17px;
-  line-height: 1.62;
-  font-weight: 400;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Il fondo vivo: due aloni sfocati che si muovono pianissimo, come nell'app.
- * Stanno dietro tutto e non prendono clic. */
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  z-index: -1;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.85;
-  pointer-events: none;
-}
-body::before {
-  width: 46vw;
-  height: 46vw;
-  min-width: 320px;
-  min-height: 320px;
-  background: var(--alone-1);
-  top: -12vw;
-  left: -10vw;
-  animation: vaga1 34s ease-in-out infinite alternate;
-}
-body::after {
-  width: 52vw;
-  height: 52vw;
-  min-width: 340px;
-  min-height: 340px;
-  background: var(--alone-2);
-  top: 24vh;
-  right: -16vw;
-  animation: vaga2 41s ease-in-out infinite alternate;
-}
-@keyframes vaga1 {
-  to {
-    transform: translate3d(8vw, 12vh, 0) scale(1.15);
-  }
-}
-@keyframes vaga2 {
-  to {
-    transform: translate3d(-10vw, -8vh, 0) scale(1.1);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  body::before,
-  body::after {
-    animation: none;
-  }
   html {
     scroll-behavior: auto;
   }
 }
 
+body {
+  margin: 0;
+  background: var(--carta);
+  color: var(--inchiostro);
+  font-family: var(--testo);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  font-variation-settings: "wdth" 100;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--inchiostro);
+  color: var(--carta);
+}
+
+:focus-visible {
+  outline: 2px solid var(--blu);
+  outline-offset: 2px;
+}
+
 img {
+  display: block;
   max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--blu);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--blu-scuro);
+}
+
+b,
+strong {
+  font-weight: 700;
+}
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--campo);
+  padding: 0.1em 0.4em;
+  overflow-wrap: anywhere;
+}
+
+p {
+  margin: 0 0 1em;
 }
 
 h1,
 h2,
-h3,
-h4 {
-  line-height: 1.15;
-  letter-spacing: -0.022em;
-  font-weight: 700;
-  margin: 0 0 0.5em;
-  text-wrap: balance;
-}
-h1 {
-  font-size: clamp(2.1rem, 5.4vw, 3.6rem);
-  letter-spacing: -0.032em;
-}
-h2 {
-  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
-  letter-spacing: -0.028em;
-}
 h3 {
-  font-size: 1.16rem;
-}
-p {
-  margin: 0 0 1em;
-  text-wrap: pretty;
-}
-a {
-  color: inherit;
+  margin: 0;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .limite {
   width: 100%;
   max-width: var(--largo);
   margin-inline: auto;
-  padding-inline: 22px;
+  padding-inline: var(--bordo-pagina);
 }
 
-section {
-  padding-block: clamp(56px, 8vw, 104px);
-}
-
-.occhiello {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+/* La riga tecnica: maiuscoletto stretto, come la riga sotto una tavola. */
+.riga-tecnica,
+figcaption,
+.navigazione a,
+.indice a,
+.lingua,
+.scheda dt,
+.listino th,
+.tabella-prezzi th {
+  font-variation-settings: "wdth" 80;
+  font-weight: 600;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ambra-scura);
-  margin-bottom: 14px;
-}
-.occhiello {
-  color: var(--ambra-scura);
-}
-.occhiello::before {
-  content: "";
-  width: 22px;
-  height: 2px;
-  background: currentColor;
-  border-radius: 2px;
+  line-height: 1.3;
 }
 
-.guida {
-  font-size: 1.08rem;
-  color: var(--testo-lieve);
-  max-width: 62ch;
+.numero {
+  font-family: var(--numeri);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
-/* ── I bottoni ──────────────────────────────────────────────────────────── */
+/* ── I tasti ────────────────────────────────────────────────────────────── */
 
 .bottone {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 13px 22px;
-  border-radius: var(--raggio-piccolo);
-  border: 1px solid transparent;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 20px;
+  border: 1px solid var(--inchiostro);
+  background: var(--carta);
+  color: var(--inchiostro);
   font: inherit;
-  font-weight: 700;
-  font-size: 0.97rem;
+  font-weight: 600;
+  font-size: 0.98rem;
+  letter-spacing: -0.005em;
   text-decoration: none;
   cursor: pointer;
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease,
-    border-color 0.15s ease;
+    background-color 120ms ease-out,
+    color 120ms ease-out,
+    border-color 120ms ease-out;
 }
+
 .bottone:hover {
-  transform: translateY(-1px);
+  background: var(--inchiostro);
+  color: var(--carta);
 }
-.bottone:active {
-  transform: translateY(0);
-}
-.bottone-pieno {
-  background: var(--notte);
-  color: #fff;
-  box-shadow: var(--ombra);
-}
-.bottone-pieno:hover {
-  background: var(--notte-chiara);
-  box-shadow: var(--ombra-alta);
-}
-.bottone-vuoto {
-  background: var(--carta);
-  color: var(--testo);
-  border-color: var(--bordo);
-}
-.bottone-vuoto:hover {
-  border-color: var(--azzurro);
-}
+
+.bottone-pieno,
 .bottone-ambra {
-  background: var(--ambra);
-  color: #3b2800;
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+  background: var(--blu);
+  border-color: var(--blu);
+  color: var(--carta);
 }
+
+.bottone-pieno:hover,
 .bottone-ambra:hover {
-  background: #fbbf24;
+  background: var(--blu-scuro);
+  border-color: var(--blu-scuro);
+  color: var(--carta);
 }
 
-:where(a, button, input, textarea, summary):focus-visible {
-  outline: 2.5px solid var(--azzurro);
-  outline-offset: 2px;
-  border-radius: 6px;
+.bottone[aria-busy="true"],
+.bottone:disabled {
+  opacity: 0.55;
+  cursor: progress;
 }
 
-/* ── La barra in cima ───────────────────────────────────────────────────── */
+.bottoni {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.sottobottoni {
+  margin: 14px 0 0;
+  max-width: 56ch;
+  color: var(--inchiostro-lieve);
+  font-size: 0.95rem;
+}
+
+/* ── La testata ─────────────────────────────────────────────────────────── */
 
 .cappello {
   position: sticky;
   top: 0;
-  z-index: 40;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  background: color-mix(in srgb, var(--fondo) 82%, transparent);
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease;
+  z-index: 20;
+  background: var(--carta);
+  border-bottom: 1px solid var(--inchiostro);
 }
-.cappello.giu {
-  border-bottom-color: var(--bordo);
-}
+
 .cappello .limite {
   display: flex;
-  align-items: center;
-  gap: 18px;
-  height: 68px;
+  align-items: stretch;
+  gap: 0;
+  min-height: var(--cappello-alto);
 }
+
 .marchio {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
+  padding-right: 20px;
+  color: var(--inchiostro);
   text-decoration: none;
   font-weight: 700;
+  font-variation-settings: "wdth" 112;
   letter-spacing: -0.02em;
-  flex-shrink: 0;
+  font-size: 1.1rem;
+  border-right: 1px solid var(--filo);
 }
+
 .marchio img {
-  border-radius: 9px;
-  display: block;
+  width: 28px;
+  height: 28px;
 }
+
 .navigazione {
   display: flex;
-  gap: 4px;
-  margin-left: auto;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+
+.navigazione::-webkit-scrollbar {
+  display: none;
+}
+
 .navigazione a {
-  padding: 8px 10px;
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--inchiostro-lieve);
   text-decoration: none;
-  font-size: 0.93rem;
-  font-weight: 400;
-  color: var(--testo-lieve);
   white-space: nowrap;
+  transition:
+    color 120ms ease-out,
+    border-color 120ms ease-out;
 }
+
 .navigazione a:hover {
-  color: var(--testo);
-  background: var(--carta);
+  color: var(--inchiostro);
 }
+
+.navigazione a.acceso {
+  color: var(--inchiostro);
+  border-bottom-color: var(--ambra);
+}
+
+/* I nomi delle due app si scrivono minuscoli, anche dove tutto il resto
+   e' in maiuscoletto. */
+.navigazione a[href="#gdanav"],
+.indice a[href="#gdanav"],
+.fondo-pagina nav a[href="#gdanav"] {
+  text-transform: none;
+}
+
 .attrezzi {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
   margin-left: auto;
 }
-.navigazione + .attrezzi {
-  margin-left: 0;
-}
-.interruttore-tema {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  border: 1px solid var(--bordo);
-  background: var(--carta);
-  color: var(--testo);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.interruttore-tema:hover {
-  border-color: var(--azzurro);
-}
 
-/* ── La lingua ───────────────────────────────────────────────────────────
- *
- * Due tasti attaccati, dentro una cornice sola: si legge come un
- * interruttore a due posizioni, e quella accesa dice in che lingua si sta
- * leggendo. Non e' un menu: le lingue sono due, e per due voci un menu e'
- * un clic in piu' per niente.
- *
- * Il tasto acceso lo dice `aria-pressed`, che e' la stessa cosa che legge
- * chi usa un lettore di schermo: lo stato sta in un posto solo, e il colore
- * lo segue. */
 .lingue {
   display: flex;
-  padding: 2px;
-  gap: 2px;
-  border: 1px solid var(--bordo);
-  border-radius: 11px;
-  background: var(--carta);
-  flex-shrink: 0;
-}
-.lingua {
-  min-width: 34px;
-  padding: 5px 8px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--testo-lieve);
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 650;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-}
-.lingua:hover {
-  color: var(--testo);
-}
-.lingua[aria-pressed="true"] {
-  background: var(--azzurro);
-  color: #fff;
-}
-.lingua:focus-visible {
-  outline: 2px solid var(--azzurro);
-  outline-offset: 2px;
+  align-items: center;
+  border-left: 1px solid var(--filo);
+  border-right: 1px solid var(--filo);
 }
 
-/* Nell'informativa la barra non c'e': il marchio a sinistra e la lingua a
-   destra, sulla stessa riga. */
-.riga-di-testa {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+.lingua {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0 12px;
+  height: 100%;
+  min-height: 44px;
+  color: var(--inchiostro-lieve);
+  cursor: pointer;
 }
-/* ── Il menu sul telefono ─────────────────────────────────────────────────
- *
- * Sul computer il tasto non c'e' e le voci stanno in fila nella barra. Sotto
- * i 940 pixel le voci non spariscono piu' — sparivano, e dal telefono non si
- * arrivava a nessuna sezione se non scorrendo tutto — ma stanno dietro un
- * tasto in fondo alla barra, e si aprono una sotto l'altra, sotto la barra.
- * E' un <details>: l'attributo `open` lo mette il browser, senza script, e
- * le voci sono quelle di sempre — `.menu[open] ~ .navigazione` — non una
- * seconda copia. */
+
+.lingua[aria-pressed="true"] {
+  color: var(--inchiostro);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.35em;
+  text-decoration-color: var(--inchiostro);
+}
+
+.lingua:hover {
+  color: var(--inchiostro);
+}
+
+.attrezzi .bottone {
+  min-height: 0;
+  margin: 10px 0 10px 14px;
+  padding: 0 16px;
+  font-size: 0.9rem;
+}
+
+/* Il menu sul telefono: un <details>, che si apre e chiude da solo. */
 .menu {
   display: none;
 }
+
 .menu > summary {
   list-style: none;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--bordo);
-  border-radius: 11px;
-  background: var(--carta);
-  color: var(--testo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 100%;
+  min-height: 44px;
   cursor: pointer;
+  color: var(--inchiostro);
 }
+
 .menu > summary::-webkit-details-marker {
   display: none;
 }
+
 .menu .menu-aperto,
 .menu[open] .menu-chiuso {
   display: none;
 }
+
 .menu[open] .menu-aperto {
   display: block;
 }
+
 @media (max-width: 940px) {
+  .cappello .limite {
+    flex-wrap: wrap;
+  }
+
+  .marchio {
+    border-right: 0;
+    padding-right: 0;
+  }
+
   .menu {
     display: block;
     order: 3;
-    flex-shrink: 0;
+    margin-left: 6px;
   }
+
   .attrezzi {
     order: 2;
-    margin-left: auto;
   }
+
+  .attrezzi .bottone {
+    display: none;
+  }
+
   .navigazione {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
+    order: 4;
+    flex-basis: 100%;
     flex-direction: column;
-    gap: 2px;
-    margin: 0;
-    padding: 10px 14px 14px;
-    background: var(--carta);
-    border-bottom: 1px solid var(--bordo);
-    box-shadow: var(--ombra-alta);
+    overflow: visible;
+    border-top: 1px solid var(--filo);
+    padding: 6px 0 10px;
   }
+
   .menu[open] ~ .navigazione {
     display: flex;
   }
+
   .navigazione a {
-    padding: 12px 10px;
-    font-size: 1rem;
-    color: var(--testo);
+    padding: 11px 0;
+    border-bottom: 1px solid var(--filo-tenue);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .navigazione a.acceso {
+    border-bottom-color: var(--ambra);
   }
 }
 
-/* Con sette voci nella barra — «Installatori» e «Contatti» sono arrivate dopo
- * — fra i 940 e i 1120 pixel il tasto «Installa l'add-on» non ci sta piu' di
- * fianco al menu. Va via lui e non il menu: lo stesso tasto sta due centimetri
- * sotto, nella copertina, e il menu e' l'unico modo di arrivare in fondo alla
- * pagina senza scorrerla tutta. */
-@media (max-width: 1120px) {
-  .cappello .attrezzi .bottone {
-    display: none;
-  }
+/* ── L'indice sul bordo (solo da computer) ──────────────────────────────── */
+
+.indice {
+  display: none;
 }
-/* Con otto voci — «L'app» e «gdanav» sono arrivate dopo — appena sopra i 940
- * pixel la barra in inglese sforava di qualche pixel: le voci si stringono un
- * po' invece di spingere la lingua fuori dallo schermo. */
-@media (min-width: 941px) and (max-width: 1060px) {
-  .navigazione a {
-    padding-inline: 7px;
+
+@media (min-width: 1480px) {
+  .indice {
+    display: block;
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--filo);
+  }
+
+  .indice li {
+    margin: 0;
+  }
+
+  .indice a {
+    display: block;
+    padding: 7px 22px 7px 14px;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: var(--inchiostro-lieve);
+    text-decoration: none;
+    font-size: 0.72rem;
+    transition:
+      color 120ms ease-out,
+      border-color 120ms ease-out;
+  }
+
+  .indice a:hover {
+    color: var(--inchiostro);
+  }
+
+  .indice a.acceso {
+    color: var(--inchiostro);
+    border-left-color: var(--ambra);
   }
 }
 
-/* Sul telefono in cima restano il marchio e la lingua.
- *
- * «Installa l'add-on» in quattrocento pixel si spezza in due righe e fa
- * crescere la barra, che sta fissa e ruba schermo a tutto il resto. Non e' un
- * tasto perduto: lo stesso sta due centimetri sotto, nella copertina, dove
- * chiunque arrivi guarda per primo. */
-@media (max-width: 560px) {
-  .cappello .attrezzi .bottone {
-    display: none;
+/* ── Le sezioni ─────────────────────────────────────────────────────────── */
+
+main > section {
+  border-top: 1px solid var(--inchiostro);
+  padding: clamp(40px, 6vw, 84px) 0 clamp(48px, 7vw, 96px);
+}
+
+main > section.apertura {
+  border-top: 0;
+}
+
+.testa-sezione {
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  gap: 24px 48px;
+  align-items: end;
+  margin-bottom: clamp(28px, 4vw, 56px);
+}
+
+.testa-sezione h2 {
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+  hyphens: manual;
+  overflow-wrap: normal;
+  font-variation-settings: "wdth" 118;
+  color: var(--inchiostro);
+}
+
+.testa-sezione .guida {
+  margin: 0;
+  max-width: 48ch;
+  color: var(--inchiostro-lieve);
+  font-size: 1.05rem;
+}
+
+@media (max-width: 760px) {
+  .testa-sezione {
+    grid-template-columns: 1fr;
   }
 }
 
-/* ── Il colpo d'occhio ──────────────────────────────────────────────────── */
+.sottotitolo {
+  font-size: 1.35rem;
+  font-variation-settings: "wdth" 110;
+  margin: clamp(40px, 6vw, 72px) 0 16px;
+  padding-top: 18px;
+  border-top: 1px solid var(--filo);
+}
 
-/* ── La copertina ───────────────────────────────────────────────────────
- *
- * Due colonne: a sinistra quello che si dice, a destra quello che si vede.
- * Prima era una colonna sola, centrata, e la prima schermata finiva con un
- * mucchio di vuoto sotto: chi arrivava leggeva quattro righe su un'app senza
- * averla mai vista in faccia. */
+.sottotitolo + .guida {
+  max-width: 64ch;
+  color: var(--inchiostro-lieve);
+  margin-bottom: 24px;
+}
+
+.guida {
+  max-width: 64ch;
+}
+
+/* ── L'apertura ─────────────────────────────────────────────────────────── */
+
 .apertura {
-  padding-top: clamp(36px, 5.5vw, 68px);
-  padding-bottom: clamp(28px, 4vw, 52px);
+  padding-top: clamp(28px, 5vw, 64px) !important;
 }
+
 .apertura-dentro {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: clamp(28px, 5vw, 64px);
-  align-items: center;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: 32px 56px;
+  align-items: start;
 }
-/* Il titolo della copertina sta in una colonna, non in tutta la pagina: un
- * po' piu' piccolo di quello generico, se no si spezza in quattro righe
- * corte e non si legge come una frase. */
+
 .apertura h1 {
-  font-size: clamp(2rem, 3.5vw, 3.1rem);
-  margin-bottom: 0.42em;
+  font-size: clamp(2.3rem, 5.6vw, 4.7rem);
+  font-variation-settings: "wdth" 120;
+  margin-top: 0;
 }
-/* Le parole in risalto: un colore solo, e del marchio.
- *
- * C'era una sfumatura da azzurro ad ambra. Anche interpolata in oklch, in
- * mezzo passava per un giallo-verde spento — su un titolo grande sembrava un
- * errore di stampa, ed era la prima cosa che si vedeva della pagina. Un blu
- * fondo non fa nessun effetto speciale, e per questo funziona. */
-.apertura h1 .filo {
-  color: var(--azzurro-cupo);
-}
+
 .apertura .guida {
-  font-size: clamp(1.02rem, 1.5vw, 1.16rem);
-  max-width: 34em;
-  margin-bottom: 1.7em;
-}
-.bottoni {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.sottobottoni {
-  margin-top: 16px;
-  font-size: 0.88rem;
-  color: var(--testo-lieve);
-  max-width: 36em;
+  margin-top: 26px;
+  font-size: 1.12rem;
+  max-width: 52ch;
 }
 
-/* ── Il telefono ────────────────────────────────────────────────────────
- *
- * Una cornice sobria intorno alla fotografia: il bordo scuro del telefono e
- * un'ombra. Non un mockup disegnato con riflessi e mani — quelli invecchiano
- * male e si vede che sono finti. */
-.telefono {
-  position: relative;
-  margin-inline: auto;
-  width: min(300px, 100%);
-  padding: 9px;
-  background: linear-gradient(160deg, #2b3a55, #0f172a 60%);
-  border-radius: 38px;
-  box-shadow: var(--ombra-alta);
-}
-.telefono img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 30px;
-  background: var(--carta);
-}
-.apertura-telefono {
-  display: flex;
-  justify-content: center;
+.apertura-detto {
+  padding-top: clamp(8px, 2vw, 40px);
 }
 
-/* ── La fila delle schermate ────────────────────────────────────────────── */
-.fila-schermate {
-  --spazio: clamp(14px, 2.4vw, 28px);
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--spazio);
-  margin-top: clamp(30px, 4vw, 46px);
-}
-.fila-schermate figure {
+/* La tavola: la fotografia dell'app, dritta, con un filo intorno e la
+   didascalia sotto. Non un telefono disegnato: la schermata. */
+.tavola {
   margin: 0;
 }
-.telefono-piccolo {
+
+.tavola img {
   width: 100%;
-  padding: 6px;
-  border-radius: 26px;
-}
-.telefono-piccolo img {
-  border-radius: 21px;
-}
-.fila-schermate figcaption {
-  margin-top: 12px;
-  text-align: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--testo-lieve);
+  border: 1px solid var(--filo);
+  background: var(--carta);
 }
 
-@media (max-width: 900px) {
+.tavola figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  color: var(--inchiostro-lieve);
+}
+
+.tavola figcaption .numero {
+  font-size: 0.86rem;
+  color: var(--inchiostro);
+}
+
+.apertura-tavola {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 24px;
+  align-items: end;
+}
+
+.apertura-tavola .tavola {
+  max-width: 400px;
+  justify-self: end;
+}
+
+/* La prima tavola porta le quote, come su una tavola di catalogo: una
+   parentesi sottile a sinistra e una sotto, coi segni alle estremita'. */
+.tavola-prima {
+  position: relative;
+}
+
+.tavola-prima::before,
+.tavola-prima::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.tavola-prima::before {
+  left: -18px;
+  top: 0;
+  width: 8px;
+  bottom: 58px;
+  border-left: 1px solid var(--filo);
+  border-top: 1px solid var(--filo);
+  border-bottom: 1px solid var(--filo);
+}
+
+.tavola-prima::after {
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  height: 8px;
+  border-bottom: 1px solid var(--filo);
+  border-left: 1px solid var(--filo);
+  border-right: 1px solid var(--filo);
+}
+
+.tavola-prima img {
+  margin-bottom: 0;
+}
+
+.tavola-prima figcaption {
+  margin-top: 28px;
+}
+
+.articolo {
+  margin: 6px 0 0;
+  color: var(--inchiostro-lieve);
+}
+
+.esempio {
+  color: var(--inchiostro-lieve);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.spia {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--inchiostro-lieve);
+}
+
+.spia::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--inchiostro);
+  background: var(--carta);
+  transition: background-color 260ms ease-out;
+}
+
+.spia.acceso {
+  color: var(--ambra-inchiostro);
+}
+
+.spia.acceso::before {
+  background: var(--ambra);
+  border-color: var(--ambra);
+}
+
+@media (max-width: 940px) {
   .apertura-dentro {
-    grid-template-columns: minmax(0, 1fr);
-    text-align: center;
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
-  .apertura .guida,
-  .sottobottoni {
-    margin-inline: auto;
+
+  /* Prima la fotografia, poi la frase: il titolo, la tavola, i tasti, il
+     testo. Il contenitore del testo sparisce dalla griglia e i suoi figli
+     si mettono in fila con la tavola. */
+  .apertura-detto {
+    display: contents;
   }
-  .bottoni {
-    justify-content: center;
+
+  .apertura h1 {
+    order: 1;
   }
-  /* Su una colonna sola il telefono va **sotto**, non sopra. Sopra si mangia
-   * tutta la prima schermata, e chi arriva vede una fotografia senza ancora
-   * sapere di cosa: prima si dice cos'e' e come si prende, poi si fa vedere. */
-  .apertura-telefono {
-    margin-top: 30px;
+
+  .apertura-tavola {
+    order: 2;
+    padding-left: 18px;
   }
-  .telefono {
-    width: min(238px, 66%);
+
+  .apertura .bottoni {
+    order: 3;
+    margin-top: 0;
   }
-  .fila-schermate {
+
+  .apertura .guida {
+    order: 4;
+    margin-top: 0;
+  }
+
+  .apertura .sottobottoni {
+    order: 5;
+    margin-top: -8px;
+  }
+
+  .apertura-tavola .tavola {
+    justify-self: start;
+    max-width: 320px;
+  }
+}
+
+/* ── La serie: le sezioni della plancia, in fila ────────────────────────── */
+
+.serie {
+  margin-top: clamp(40px, 6vw, 72px);
+  background: var(--campo);
+  border-top: 1px solid var(--filo);
+  border-bottom: 1px solid var(--filo);
+}
+
+.serie .limite {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 10fr);
+  gap: 24px;
+  align-items: start;
+  padding-block: 22px;
+}
+
+.serie-titolo {
+  margin: 0;
+  color: var(--inchiostro);
+  padding-top: 6px;
+}
+
+.serie-titolo span {
+  display: block;
+  margin-top: 6px;
+  color: var(--inchiostro-lieve);
+  font-variation-settings: "wdth" 100;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+}
+
+.sezioni {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 6px 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sezioni li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 2px 6px;
+  border: 1px solid transparent;
+  text-align: center;
+  color: var(--inchiostro-lieve);
+  font-size: 0.74rem;
+  line-height: 1.2;
+  font-variation-settings: "wdth" 84;
+  font-weight: 500;
+  transition:
+    border-color 120ms ease-out,
+    color 120ms ease-out,
+    background-color 120ms ease-out;
+}
+
+.sezioni img {
+  width: 28px;
+  height: 28px;
+}
+
+.sezioni li:hover {
+  border-color: var(--ambra);
+  background: var(--carta);
+  color: var(--inchiostro);
+}
+
+@media (max-width: 940px) {
+  .serie .limite {
+    grid-template-columns: 1fr;
+  }
+
+  .sezioni {
+    grid-auto-flow: column;
+    grid-auto-columns: 76px;
+    grid-template-columns: none;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-inline: calc(-1 * var(--bordo-pagina));
+    padding-inline: var(--bordo-pagina);
+    scrollbar-width: thin;
+  }
+}
+
+/* ── Le file di tavole ──────────────────────────────────────────────────── */
+
+.tavole {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px 24px;
+  margin: 0;
+}
+
+.tavole-quattro {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tavole-due {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 940px) {
+  .tavole,
+  .tavole-quattro {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-/* Sul telefono restano due per riga: una per riga, le sezioni con sette
- * fotografie diventavano lunghe cinque schermate. */
-@media (max-width: 460px) {
-  .fila-schermate {
-    --spazio: 12px;
+
+@media (max-width: 520px) {
+  .tavole,
+  .tavole-quattro,
+  .tavole-due {
+    grid-template-columns: 1fr;
   }
-  .telefono-piccolo {
-    padding: 4px;
-    border-radius: 20px;
-  }
-  .telefono-piccolo img {
-    border-radius: 16px;
-  }
-  .fila-schermate figcaption {
-    font-size: 0.82rem;
-    line-height: 1.35;
+
+  .tavole .tavola {
+    max-width: 320px;
   }
 }
 
-.numeroni {
+/* Una tavola larga di fianco a un testo. */
+.tavola-e-testo {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-  gap: 10px;
-  margin-top: clamp(30px, 4.5vw, 52px);
-  text-align: center;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 32px 48px;
+  align-items: start;
 }
-.numerone {
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio-piccolo);
-  padding: 18px 14px;
-  box-shadow: var(--ombra);
+
+.tavola-e-testo.al-contrario {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
 }
-.numerone b {
-  display: block;
-  font-family: "Oswald", "Inter", sans-serif;
-  font-weight: 500;
-  font-size: 2.1rem;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  font-feature-settings: "tnum";
+
+.tavola-e-testo.al-contrario .tavola {
+  order: 2;
 }
-.numerone span {
-  display: block;
-  font-size: 0.84rem;
-  color: var(--testo-lieve);
+
+@media (max-width: 940px) {
+  .tavola-e-testo,
+  .tavola-e-testo.al-contrario {
+    grid-template-columns: 1fr;
+  }
+
+  .tavola-e-testo.al-contrario .tavola {
+    order: 0;
+  }
+}
+
+/* ── La scheda tecnica: righe nome–valore ───────────────────────────────── */
+
+.scheda {
+  margin: 0;
+  border-top: 1px solid var(--inchiostro);
+}
+
+.scheda > div {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  gap: 8px 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--filo);
+}
+
+.scheda dt {
+  color: var(--inchiostro);
+  padding-top: 4px;
+}
+
+.scheda dd {
+  margin: 0;
+  color: var(--inchiostro-lieve);
+}
+
+.scheda dd b {
+  color: var(--inchiostro);
+}
+
+.scheda dd p {
+  margin: 0;
+}
+
+.scheda dd p + p {
   margin-top: 6px;
-  line-height: 1.35;
 }
 
-/* ── Le schede ──────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .scheda > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
 
-.carte {
+/* Due schede affiancate. */
+.schede {
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  margin-top: 34px;
-}
-.carta {
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio);
-  padding: 26px;
-  box-shadow: var(--ombra);
-}
-.carta h3 {
-  margin-bottom: 0.4em;
-}
-.carta p:last-child {
-  margin-bottom: 0;
-}
-.carta p {
-  color: var(--testo-lieve);
-  font-size: 0.97rem;
-  margin-bottom: 0.6em;
-}
-.carta .segno {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: var(--carta-alta);
-  margin-bottom: 16px;
-}
-.carta .segno img {
-  display: block;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 48px;
+  margin-top: clamp(32px, 5vw, 56px);
 }
 
-/* ── Come ci si arriva: il disegno ──────────────────────────────────────── */
+.schede h3 {
+  font-size: 1.2rem;
+  font-variation-settings: "wdth" 110;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 940px) {
+  .schede {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+/* Un elenco con un trattino davanti, da scheda tecnica. */
+.elenco {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.elenco li {
+  position: relative;
+  padding: 8px 0 8px 22px;
+  border-bottom: 1px solid var(--filo-tenue);
+  color: var(--inchiostro-lieve);
+}
+
+.elenco li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1.05em;
+  width: 12px;
+  height: 1px;
+  background: var(--inchiostro);
+}
+
+.elenco li b {
+  color: var(--inchiostro);
+}
+
+.elenco.contro li::before {
+  width: 10px;
+  height: 10px;
+  top: 0.78em;
+  background: none;
+  border: 1px solid var(--male);
+  transform: rotate(45deg) scale(0.8);
+  background: linear-gradient(var(--male), var(--male)) center / 1px 100% no-repeat;
+}
+
+.elenco.in-arrivo li::before {
+  background: none;
+  border-top: 1px dashed var(--inchiostro-lieve);
+}
+
+/* ── Il disegno tecnico: come funziona ──────────────────────────────────── */
 
 .strada {
-  margin-top: 34px;
+  margin: 0;
+  border: 1px solid var(--filo);
   background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio);
-  padding: clamp(20px, 3.4vw, 34px);
-  box-shadow: var(--ombra);
-  overflow-x: auto;
 }
+
 .strada svg {
   display: block;
   width: 100%;
-  min-width: 560px;
   height: auto;
+  font-family: var(--testo);
 }
+
 .strada figcaption {
-  margin-top: 18px;
-  font-size: 0.92rem;
-  color: var(--testo-lieve);
-  min-width: 0;
+  padding: 14px 18px 16px;
+  border-top: 1px solid var(--filo);
+  text-transform: none;
+  letter-spacing: 0;
+  font-variation-settings: "wdth" 100;
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: var(--inchiostro-lieve);
+  display: block;
+}
+
+.strada figcaption b {
+  color: var(--inchiostro);
 }
 
 .tre-strade {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  margin-top: 20px;
-  list-style: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 32px;
+  margin: 32px 0 0;
   padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--inchiostro);
 }
+
 .tre-strade li {
-  background: var(--carta-alta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio-piccolo);
-  padding: 16px 18px;
-  font-size: 0.93rem;
+  padding: 16px 0 8px;
+  border-bottom: 1px solid var(--filo);
+  color: var(--inchiostro-lieve);
 }
+
 .tre-strade b {
   display: block;
-  margin-bottom: 4px;
-}
-.tre-strade span {
-  color: var(--testo-lieve);
-}
-
-/* ── Le sezioni con le fotografie ───────────────────────────────────────
- *
- * La plancia, l'app e gdanav si raccontano allo stesso modo: una fila di
- * fotografie vere e, sotto, le schede con le parole. Nessuna riproduzione
- * disegnata a mano e niente che giri nella pagina: sono fotografie, e ci sono
- * sempre. */
-
-/* Tre fotografie invece di quattro: piu' strette della pagina, se no ognuna
- * diventa alta come uno schermo intero. */
-.fila-tre {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  max-width: 880px;
-  margin-inline: auto;
-}
-/* La plancia a muro e gli orologi: il tablet largo, e accanto i due polsi.
- * Le cornici sono come quella del telefono — il bordo scuro e un'ombra — e
- * Wear OS e' tondo perche' l'orologio e' tondo. */
-.fila-dispositivi {
-  display: grid;
-  grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(14px, 2.4vw, 28px);
-  align-items: center;
-  margin-top: clamp(24px, 3vw, 36px);
-}
-.fila-dispositivi figure {
-  margin: 0;
-}
-.fila-dispositivi figcaption {
-  margin-top: 12px;
-  text-align: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--testo-lieve);
-}
-.tablet,
-.orologio {
-  padding: 10px;
-  background: linear-gradient(160deg, #2b3a55, #0f172a 60%);
-  box-shadow: var(--ombra-alta);
-}
-.tablet {
-  border-radius: 26px;
-}
-.orologio {
-  border-radius: 34%/28%;
-}
-.orologio-tondo {
-  border-radius: 50%;
-}
-.tablet img,
-.orologio img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.tablet img {
-  border-radius: 14px;
-}
-.orologio img {
-  border-radius: 28%/22%;
-}
-.orologio-tondo img {
-  border-radius: 50%;
-}
-@media (max-width: 760px) {
-  .fila-dispositivi {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-  .dispositivo-muro {
-    grid-column: 1 / -1;
-  }
-}
-
-.fila-schermate + .carte,
-.carte + .fila-schermate {
-  margin-top: clamp(30px, 4vw, 46px);
-}
-
-/* Una scheda con accanto una fotografia: le parole a sinistra, quello che si
- * vede a destra. Sul telefono la fotografia va sotto. */
-.vetrina {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
-  gap: clamp(20px, 4vw, 48px);
-  align-items: center;
-  margin-top: 16px;
-  border-left: 4px solid var(--ambra);
-}
-.vetrina-sola {
-  grid-template-columns: minmax(0, 1fr);
-  margin-top: clamp(30px, 4vw, 46px);
-}
-.vetrina-detto {
-  max-width: 44em;
-}
-.vetrina-detto .bottone {
-  margin-top: 8px;
-}
-.vetrina-foto {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  align-items: start;
-  width: 100%;
-}
-.vetrina-foto img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: var(--raggio-piccolo);
-  border: 1px solid var(--bordo);
-}
-
-.carte-strette {
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-}
-
-@media (max-width: 900px) {
-  .fila-tre {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  /* La terza, da sola sulla sua riga, sta in mezzo e non a sinistra. */
-  .fila-tre > figure:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-    justify-self: center;
-    width: calc((100% - var(--spazio)) / 2);
-  }
-}
-@media (max-width: 760px) {
-  .vetrina {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .vetrina-foto {
-    justify-self: center;
-    max-width: 420px;
-  }
-}
-
-/* ── Le funzioni ────────────────────────────────────────────────────────── */
-
-.elenco-segni {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 10px;
-}
-.elenco-segni li {
-  display: flex;
-  gap: 11px;
-  align-items: flex-start;
-  font-size: 0.97rem;
-}
-/* Una parola in grassetto dentro una voce non e' una colonna: la voce e' un
- * flex per mettere il segno di fianco al testo, e senza questa riga il `<b>`
- * diventerebbe un pezzo a se', col resto della frase incolonnato accanto. */
-.elenco-segni li > b {
-  display: contents;
-}
-.elenco-segni li::before {
-  content: "";
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--bene) 16%, transparent);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316a34a' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
-  background-size: 13px;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-.elenco-segni.in-arrivo li::before {
-  background: color-mix(in srgb, var(--ambra) 18%, transparent);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b45309' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M12 7v5.5l3.5 2'/%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3C/svg%3E");
-  background-size: 14px;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.fasi {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  margin-top: 30px;
-  counter-reset: fase;
-}
-.fase {
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio-piccolo);
-  padding: 18px;
-  position: relative;
-}
-.fase.fatta {
-  border-color: color-mix(in srgb, var(--bene) 40%, transparent);
-  background: color-mix(in srgb, var(--bene) 7%, var(--carta));
-}
-.fase b {
-  display: block;
-  font-size: 0.75rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--testo-lieve);
+  color: var(--inchiostro);
   margin-bottom: 6px;
 }
-.fase p {
-  margin: 0;
-  font-size: 0.95rem;
-}
-.fase .stato {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: var(--carta-alta);
-  color: var(--testo-lieve);
-}
-.fase.fatta .stato {
-  background: color-mix(in srgb, var(--bene) 18%, transparent);
-  color: var(--bene);
-}
 
-/* ── I download ─────────────────────────────────────────────────────────── */
-
-.scarichi {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  margin-top: 34px;
-}
-.scarico code {
-  overflow-wrap: anywhere;
-  font-size: 0.86em;
-}
-.scarico {
-  display: flex;
-  flex-direction: column;
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio);
-  padding: 24px;
-  box-shadow: var(--ombra);
-  text-decoration: none;
-  transition:
-    transform 0.16s ease,
-    border-color 0.16s ease,
-    box-shadow 0.16s ease;
-}
-a.scarico:hover {
-  transform: translateY(-2px);
-  border-color: var(--azzurro);
-  box-shadow: var(--ombra-alta);
-}
-.scarico .segno {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: var(--carta-alta);
-  margin-bottom: 16px;
-  color: var(--testo);
-}
-.scarico h3 {
-  margin-bottom: 0.25em;
-}
-.scarico p {
-  color: var(--testo-lieve);
-  font-size: 0.93rem;
-  margin-bottom: 0.7em;
-}
-.scarico .come {
-  margin-top: auto;
-  font-size: 0.87rem;
-  font-weight: 700;
-  color: var(--azzurro-cupo);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.scarico.spento {
-  opacity: 0.62;
-}
-.scarico .fra-poco {
-  align-self: flex-start;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--carta-alta);
-  color: var(--testo-lieve);
-  margin-bottom: 12px;
-}
-
-/* ── I documenti ────────────────────────────────────────────────────────── */
-
-.documenti {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  margin-top: 30px;
-}
-.documento {
-  display: block;
-  padding: 16px 18px;
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio-piccolo);
-  text-decoration: none;
-  transition: border-color 0.15s ease;
-}
-.documento:hover {
-  border-color: var(--azzurro);
-}
-.documento b {
-  display: block;
-  margin-bottom: 3px;
-  font-size: 0.97rem;
-}
-.documento span {
-  font-size: 0.87rem;
-  color: var(--testo-lieve);
-}
-
-/* ── Il fondo ───────────────────────────────────────────────────────────── */
-
-.fondo-pagina {
-  border-top: 1px solid var(--bordo);
-  padding-block: 40px 52px;
-  margin-top: 40px;
-  font-size: 0.9rem;
-  color: var(--testo-lieve);
-}
-.fondo-pagina .limite {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px 32px;
-  align-items: flex-start;
-}
-.fondo-pagina p {
-  margin: 0;
-  max-width: 46ch;
-}
-.fondo-pagina nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 20px;
-  margin-left: auto;
-}
-.fondo-pagina a {
-  color: var(--testo-lieve);
-  text-decoration: none;
-}
-.fondo-pagina a:hover {
-  color: var(--testo);
-  text-decoration: underline;
-}
-
-/* ── Comparire salendo ─────────────────────────────────────────────────── */
-
-.appare {
-  opacity: 0;
-  transform: translateY(14px);
-  transition:
-    opacity 0.55s ease,
-    transform 0.55s ease;
-}
-.appare.qui {
-  opacity: 1;
-  transform: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .appare {
-    opacity: 1;
-    transform: none;
-    transition: none;
+@media (max-width: 760px) {
+  .tre-strade {
+    grid-template-columns: 1fr;
   }
 }
 
-/* ── Sostieni ───────────────────────────────────────────────────────────── */
+/* ── Il listino ─────────────────────────────────────────────────────────── */
 
-.bottoni-mezzo {
-  justify-content: center;
-  margin-top: clamp(26px, 4vw, 40px);
-}
-.sottobottoni-mezzo {
-  text-align: center;
-  margin-inline: auto;
+.listino {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 1px solid var(--inchiostro);
+  margin: 0;
 }
 
-/* ── Per chi installa ───────────────────────────────────────────────────── */
-
-/* La stessa lista con le spunte, ma per le cose che il cruscotto NON vede: una
- * croce, e il rosso del progetto. */
-.elenco-segni.contro li::before {
-  background-color: color-mix(in srgb, var(--male) 14%, transparent);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
-  background-size: 11px;
-}
-.carta .elenco-segni + p {
-  margin-top: 16px;
+.listino th,
+.listino td {
+  text-align: left;
+  vertical-align: top;
+  padding: 14px 16px 14px 0;
+  border-bottom: 1px solid var(--filo);
 }
 
-/* ── Contatti ───────────────────────────────────────────────────────────── */
+.listino th {
+  color: var(--inchiostro);
+  width: 30%;
+}
 
-/* Il modulo a sinistra, largo, e di fianco la scheda che dice a chi serve.
- * Sul telefono la scheda scende sotto. */
+.listino td {
+  color: var(--inchiostro-lieve);
+}
+
+.listino td b {
+  color: var(--inchiostro);
+}
+
+.listino thead th {
+  padding-top: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--inchiostro);
+  vertical-align: bottom;
+}
+
+.listino thead th .piano-nome {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-variation-settings: "wdth" 112;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  margin-bottom: 8px;
+}
+
+.listino thead th .prezzo {
+  display: block;
+  font-family: var(--numeri);
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0 0 6px;
+}
+
+.listino thead th .prezzo span {
+  font-size: 1rem;
+  color: var(--inchiostro-lieve);
+  font-family: var(--testo);
+  font-weight: 400;
+  font-variation-settings: "wdth" 100;
+}
+
+.listino thead th .piano-prova {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid var(--blu);
+  color: var(--blu);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.listino .si {
+  color: var(--inchiostro);
+}
+
+.listino .no {
+  color: var(--inchiostro-lieve);
+}
+
+@media (max-width: 760px) {
+  .listino thead th .prezzo {
+    font-size: 1.6rem;
+  }
+
+  .listino th,
+  .listino td {
+    padding: 10px 10px 10px 0;
+    font-size: 0.92rem;
+  }
+
+  .listino th[scope="row"] {
+    width: 24%;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .listino,
+  .listino tbody,
+  .listino thead {
+    display: block;
+  }
+
+  .listino tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+    border-bottom: 1px solid var(--filo);
+  }
+
+  .listino thead tr {
+    border-bottom: 1px solid var(--inchiostro);
+  }
+
+  .listino thead th {
+    border-bottom: 0;
+  }
+
+  .listino th,
+  .listino td {
+    width: auto;
+    border-bottom: 0;
+    padding: 8px 0;
+  }
+
+  .listino th[scope="row"],
+  .listino thead th:first-child {
+    grid-column: 1 / -1;
+    width: auto;
+    padding: 12px 0 2px;
+  }
+
+  .listino thead th:first-child {
+    display: none;
+  }
+
+  .listino thead th .prezzo {
+    font-size: 1.5rem;
+  }
+
+  .listino thead th .prezzo span {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.86rem;
+  }
+
+  .listino thead th .piano-prova {
+    font-size: 0.62rem;
+    padding: 2px 6px;
+  }
+}
+
+.nota-privacy {
+  margin-top: clamp(32px, 5vw, 56px);
+  padding: 18px 20px;
+  background: var(--campo);
+  border: 1px solid var(--filo);
+  color: var(--inchiostro-lieve);
+  max-width: 76ch;
+}
+
+.nota-privacy b {
+  display: block;
+  color: var(--inchiostro);
+  margin-bottom: 6px;
+}
+
+.nota-privacy p {
+  margin: 0;
+}
+
+/* ── Scaricala: le voci numerate ────────────────────────────────────────── */
+
+.scarichi {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--inchiostro);
+}
+
+.tavola-larga {
+  margin-bottom: clamp(32px, 5vw, 56px);
+}
+
+.tavola-larga img {
+  max-width: 880px;
+}
+
+.scarico {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 3fr) minmax(0, 8fr) auto;
+  gap: 12px 24px;
+  align-items: start;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--filo);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.scarico:hover h3 {
+  color: var(--blu);
+}
+
+.scarico .passo {
+  font-family: var(--numeri);
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--inchiostro);
+  padding-top: 2px;
+}
+
+.scarico h3 {
+  font-size: 1.15rem;
+  font-variation-settings: "wdth" 110;
+  transition: color 120ms ease-out;
+}
+
+.scarico p {
+  margin: 0;
+  color: var(--inchiostro-lieve);
+}
+
+.scarico p + p {
+  margin-top: 8px;
+}
+
+.scarico .serve b {
+  color: var(--inchiostro);
+}
+
+.scarico .come {
+  white-space: nowrap;
+  color: var(--blu);
+  font-weight: 600;
+  padding-top: 4px;
+}
+
+@media (max-width: 940px) {
+  .scarico {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .scarico .passo {
+    font-size: 1.6rem;
+  }
+
+  .scarico > div,
+  .scarico .come {
+    grid-column: 2;
+  }
+}
+
+/* ── Il modulo dei contatti ─────────────────────────────────────────────── */
+
 .contatto {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 40px 64px;
   align-items: start;
-  margin-top: 34px;
 }
-.modulo {
-  position: relative;
-  display: grid;
-  gap: 16px;
-  background: var(--carta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: var(--raggio);
-  padding: 26px;
-  box-shadow: var(--ombra);
-}
-.modulo-riga {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-}
-.campo {
-  display: grid;
-  gap: 6px;
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-.campo input,
-.campo textarea {
-  width: 100%;
-  min-width: 0;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 400;
-  color: var(--testo);
-  background: var(--carta-alta);
-  border: 1px solid var(--bordo);
-  border-radius: var(--raggio-piccolo);
-  padding: 12px 14px;
-  resize: vertical;
-}
-.campo input:focus-visible,
-.campo textarea:focus-visible {
-  outline-offset: 1px;
-  border-radius: var(--raggio-piccolo);
-}
-/* La trappola per i programmi: fuori dallo schermo, non nascosta con
- * `display: none` — che i programmi sanno leggere — e fuori dal giro del
- * tabulatore, che una persona non ci deve mai finire. */
-.miele {
-  position: absolute;
-  left: -10000px;
-  top: auto;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-.modulo-piede {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px 18px;
-}
-.modulo-nota {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--testo-lieve);
-  max-width: 40ch;
-}
-.modulo-esito {
-  margin: 0;
-  padding: 12px 14px;
-  border-radius: var(--raggio-piccolo);
-  font-size: 0.95rem;
-  background: color-mix(in srgb, var(--bene) 12%, var(--carta));
-  border: 1px solid color-mix(in srgb, var(--bene) 30%, transparent);
-}
-.modulo-esito.male {
-  background: color-mix(in srgb, var(--male) 9%, var(--carta));
-  border-color: color-mix(in srgb, var(--male) 30%, transparent);
-}
-.modulo[aria-busy="true"] .bottone {
-  opacity: 0.6;
-  pointer-events: none;
-}
-.contatto-a-fianco b {
-  display: block;
-  margin-bottom: 4px;
-}
-.contatto-a-fianco p {
-  margin-bottom: 18px;
-}
-.contatto-a-fianco p:last-child {
-  margin-bottom: 0;
-}
-@media (max-width: 900px) {
+
+@media (max-width: 940px) {
   .contatto {
     grid-template-columns: 1fr;
   }
 }
 
-/* ── Quanto costa ───────────────────────────────────────────────────────
- *
- * Due piani di fianco, Base e Premium, e sotto le tre strade per avere
- * Premium. Premium ha il bordo ambra — il colore di una luce accesa — e non
- * un'altra forma: sono la stessa app, una con qualcosa in piu'. */
-.piani {
+.modulo {
+  border-top: 1px solid var(--inchiostro);
+  padding-top: 8px;
+}
+
+.modulo-riga {
   display: grid;
-  gap: 16px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 34px;
+  gap: 0 24px;
 }
-.piano {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-.piano-premium {
-  border: 2px solid color-mix(in srgb, var(--ambra) 70%, transparent);
-  box-shadow: var(--ombra-alta);
-}
-.piano-prova {
-  position: absolute;
-  top: 22px;
-  right: 22px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--ambra) 18%, var(--carta));
-  color: var(--ambra-scura);
-}
-.piano h3 {
-  padding-right: 170px;
-}
-.carta .prezzo {
-  color: var(--testo);
-  font-size: 1rem;
-  margin: 2px 0 18px;
-}
-.prezzo b {
-  font-family: "Oswald", "Inter", sans-serif;
-  font-weight: 500;
-  font-size: 2rem;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
-}
-.prezzo span {
-  color: var(--testo-lieve);
-}
-.prezzo span b {
-  font-size: 1.25rem;
-  color: var(--testo);
-}
-.sottotitolo {
-  font-size: clamp(1.3rem, 2.4vw, 1.6rem);
-  margin-top: clamp(40px, 6vw, 64px);
-}
-.carte-tre {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 20px;
-}
-.carte-due {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.carta code,
-.scarico code {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  background: var(--carta-alta);
-  border: 1px solid var(--bordo-tenue);
-  border-radius: 6px;
-  padding: 1px 5px;
-  white-space: nowrap;
-}
-.scarico code {
-  display: block;
-  width: fit-content;
-  max-width: 100%;
-  margin: 6px 0;
-  white-space: normal;
-}
-.nota-privacy {
-  margin-top: clamp(30px, 4vw, 44px);
-  border-left: 4px solid var(--azzurro);
-}
-.nota-privacy b {
-  display: block;
-  margin-bottom: 6px;
-}
-.nota-privacy a {
-  color: var(--azzurro-cupo);
-  font-weight: 700;
-}
-@media (max-width: 900px) {
-  .carte-tre {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-@media (max-width: 760px) {
-  .piani,
-  .carte-due {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-@media (max-width: 460px) {
-  .piano-prova {
-    position: static;
-    align-self: flex-start;
-    margin-bottom: 12px;
-  }
-  .piano h3 {
-    padding-right: 0;
+
+@media (max-width: 600px) {
+  .modulo-riga {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Le funzioni: la scheda dell'app e' lunga, e sta da sola su tutta la riga,
- * con la lista in due colonne; sotto, di fianco, l'auto e quello che arriva. */
-.carte-funzioni {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.campo {
+  display: block;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--filo);
 }
-.carta-larga {
-  grid-column: 1 / -1;
+
+.campo span {
+  display: block;
+  margin-bottom: 6px;
+  font-variation-settings: "wdth" 80;
+  font-weight: 600;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.elenco-due {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 28px;
+
+.campo input,
+.campo textarea {
+  display: block;
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  color: var(--inchiostro);
+  font: inherit;
+  resize: vertical;
 }
+
+.campo input:focus-visible,
+.campo textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 2px 0 var(--blu);
+}
+
+.campo input::placeholder,
+.campo textarea::placeholder {
+  color: var(--inchiostro-lieve);
+}
+
+.miele {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.modulo-piede {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+  margin-top: 22px;
+}
+
+.modulo-nota {
+  margin: 0;
+  color: var(--inchiostro-lieve);
+  font-size: 0.92rem;
+  max-width: 44ch;
+}
+
+.modulo-esito {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--inchiostro);
+  font-size: 0.95rem;
+}
+
+.modulo-esito.male {
+  border-color: var(--male);
+  color: var(--male);
+}
+
+.contatto-a-fianco {
+  border-top: 1px solid var(--inchiostro);
+}
+
+.contatto-a-fianco b {
+  display: block;
+  padding-top: 14px;
+  margin-top: 0;
+}
+
+.contatto-a-fianco p {
+  color: var(--inchiostro-lieve);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--filo);
+}
+
+.contatto-a-fianco p:last-child {
+  border-bottom: 0;
+}
+
+/* ── Il piede ───────────────────────────────────────────────────────────── */
+
+.fondo-pagina {
+  border-top: 1px solid var(--inchiostro);
+  padding: 32px 0 56px;
+  color: var(--inchiostro-lieve);
+  font-size: 0.92rem;
+}
+
+.fondo-pagina .limite {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: 24px 48px;
+}
+
+.fondo-pagina p {
+  margin: 0;
+  max-width: 52ch;
+}
+
+.fondo-pagina nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  justify-content: flex-end;
+  align-content: start;
+}
+
+.fondo-pagina nav a {
+  color: var(--inchiostro-lieve);
+  text-decoration: none;
+  font-variation-settings: "wdth" 80;
+  font-weight: 600;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fondo-pagina nav a:hover {
+  color: var(--inchiostro);
+}
+
 @media (max-width: 760px) {
-  .carte-funzioni,
-  .elenco-due {
-    grid-template-columns: minmax(0, 1fr);
+  .fondo-pagina .limite {
+    grid-template-columns: 1fr;
+  }
+
+  .fondo-pagina nav {
+    justify-content: flex-start;
   }
 }
