@@ -17,7 +17,10 @@ void main() {
   });
 
   test('con la parola scelta da chi ha montato l\'impianto, quella', () {
-    expect(colVeloDiGdahome(diSerie, velo: 'Casa <Rossi>'), contains('<b>Casa Rossi</b>'));
+    expect(
+      colVeloDiGdahome(diSerie, velo: 'Casa <Rossi>'),
+      contains('<b>Casa Rossi</b>'),
+    );
   });
 
   test('una pagina gia\' rivestita dal ponte resta com\'e\', col suo logo', () {
@@ -30,7 +33,10 @@ void main() {
     final delPonte = File('../ponte/marchio/gdahome-velo.webp');
     if (!delPonte.existsSync()) return;
     expect(logoDelVelo, isNotEmpty);
-    expect(Uri.parse('data:image/webp;base64,$logoDelVelo').data!.contentAsBytes(), delPonte.readAsBytesSync());
+    expect(
+      Uri.parse('data:image/webp;base64,$logoDelVelo').data!.contentAsBytes(),
+      delPonte.readAsBytesSync(),
+    );
   });
 
   test('la pagina della plancia ha ancora il velo come lo si cerca qui', () {
@@ -38,6 +44,11 @@ void main() {
     if (!pagina.existsSync()) return;
     final fatto = colVeloDiGdahome(pagina.readAsStringSync());
     expect(fatto, isNot(contains('<b>DashboardModern</b>')));
-    expect(fatto, contains('<div id="cd-boot-overlay"><img src="data:image/webp;base64,$logoDelVelo"'));
+    expect(
+      fatto,
+      contains(
+        '<div id="cd-boot-overlay"><img src="data:image/webp;base64,$logoDelVelo"',
+      ),
+    );
   });
 }

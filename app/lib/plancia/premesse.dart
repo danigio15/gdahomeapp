@@ -20,7 +20,6 @@
 /// l'unica cosa che si passa da fuori.
 library;
 
-
 import 'dart:convert';
 
 import 'il_fondo.dart';
