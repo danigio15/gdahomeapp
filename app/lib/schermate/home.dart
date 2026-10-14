@@ -325,19 +325,13 @@ class _HomeState extends State<Home> {
   }
 
   void _vai(Sezione dove) {
+    /* In macchina la mappa sta sull'auto: dal telefono si aprono le sue
+     * impostazioni e quelle dell'auto, in una pagina senza mappa. */
     if (dove == Sezione.navigatore && inMacchina.value) {
-      ScaffoldMessenger.maybeOf(context)
-        ?..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              inLingua(
-                it: 'Il navigatore è sullo schermo dell\'auto',
-                en: 'The navigator is on the car screen',
-              ),
-            ),
-          ),
-        );
+      _menuDiGdanav.value = false;
+      unawaited(
+        apriLeImpostazioniInAuto(context, collegamento: widget.collegamento),
+      );
       return;
     }
     /* La pagina Premium non e' una sezione della fila: si apre sopra. E ci

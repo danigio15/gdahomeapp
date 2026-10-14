@@ -10,6 +10,25 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.11.15
+
+**Navigatore: i pedaggi veri.** La Tangenziale di Napoli costa 1,05 € a
+passaggio, non «~1,00 €»: le strade a prezzo fisso hanno il loro listino. Con
+la chiave HERE (segreto `GDANAV_HERE_CHIAVE`) il pedaggio è quello vero,
+casello per casello, anche sulle autostrade a km e all'estero; senza, resta
+la stima.
+
+**In auto, le impostazioni del navigatore e dell'auto dall'app.** Con Android
+Auto acceso, toccando «Navigatore» si apre la pagina «Navigatore e auto»,
+senza mappa: la tua auto, i comandi rapidi, il percorso, la ricarica, la
+fonte dei dati. Quello che cambi lo vede subito l'auto.
+
+**Navigatore: niente più ricalcoli improvvisi sulla strada giusta.** Le
+posizioni che il GPS stesso dichiara imprecise, e quelle arrivate in ritardo
+quando il GPS dell'auto e quello del telefono si danno il cambio, non fanno
+più dire «Ricalcolo il percorso». Uscire davvero di strada ricalcola come
+prima.
+
 ## 1.11.14
 
 **Musica: i telecomandi e i sensori aggiunti nel config si vedono.** Le

@@ -405,6 +405,63 @@ class _IlNavigatoreState extends State<IlNavigatore>
   }
 }
 
+/// Le impostazioni del navigatore e dell'auto, quando il navigatore e' sullo
+/// schermo dell'auto: una pagina sola, senza la mappa.
+///
+/// «Da app dammi la possibilita' di entrare nelle impostazioni del navigatore
+/// e auto.» In macchina la sezione del navigatore non si apre (due mappe
+/// accese insieme scaldavano il telefono nel supporto, `home.dart`): le sue
+/// impostazioni pero' si', ed e' lo stesso gdanav che sta guidando sull'auto
+/// — quello che si cambia qui, l'auto lo vede subito.
+Future<void> apriLeImpostazioniInAuto(
+  BuildContext context, {
+  Collegamento? collegamento,
+}) async {
+  final app = await accendiIlNavigatore();
+  if (!context.mounted) return;
+  final navigatore = GlobalKey<NavigatorState>();
+  await Navigator.of(context, rootNavigator: true).push(
+    MaterialPageRoute<void>(
+      builder: (pagina) => PopScope(
+        canPop: false,
+        /* Indietro chiude prima le schermate di gdanav aperte sopra (La tua
+         * auto, Percorso...), poi la pagina. */
+        onPopInvokedWithResult: (fatto, _) async {
+          if (fatto) return;
+          final dentro = navigatore.currentState;
+          if (dentro != null && await dentro.maybePop()) return;
+          if (pagina.mounted) Navigator.of(pagina).pop();
+        },
+        child: GdanavDentro(
+          app: app,
+          navigatore: navigatore,
+          soloImpostazioni: true,
+          chiudiImpostazioni: () => Navigator.of(pagina).pop(),
+          vociOspite: [
+            if (collegamento != null)
+              VoceOspite(
+                icona: Icons.bolt_rounded,
+                titolo: inLingua(
+                  it: 'Comandi rapidi in auto',
+                  en: 'Quick commands in car',
+                ),
+                sotto: inLingua(
+                  it: 'Crea e scegli i tasti di casa da usare in auto',
+                  en: 'Create and pick home buttons for the car',
+                ),
+                apri: () => Navigator.of(pagina, rootNavigator: true).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ComandiInAuto(collegamento: collegamento),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 /// Porta a Casa (o al Lavoro), dalla tessera della barra: accende gdanav se
 /// non c'e', e se il posto e' stato scelto calcola il viaggio. Se non e'
 /// stato scelto, basta aprire il navigatore: li' lo si imposta.
