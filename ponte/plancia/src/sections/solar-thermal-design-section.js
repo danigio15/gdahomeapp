@@ -37,7 +37,24 @@
 //
 // Every DOM change is idempotent and additive, and every moved node keeps its
 // id, its onclick and its classes.
+//
+// And it moves («il solare termico e' statico»). The water runs in the pipes
+// as liquid with particles in it, faster the larger the ΔT; the pump's rotor
+// turns at the same pace; the glass glows with the panel temperature, a sweep
+// of light crosses it and heat shimmers above it while it charges; heat
+// pulses run down the coil and the tank's stratification breathes; the valve
+// says open or closed; when the boiler's element draws power it glows, the
+// tank steams and the tap drips. All of it is CSS keyframes on transforms,
+// opacity and dash offsets — no timers, nothing running on a hidden page —
+// driven by the classes the runtime toggles plus three numbers read here from
+// the real readings (`core/il-solare-in-movimento.js`): the only HA state this
+// module reads.
+//
+// Reduced motion turns the decoration off and slows the state down; it never
+// stops the state («a movimento ridotto si spegne la decorazione, non lo
+// stato» — a pump that runs must look like it runs).
 import {
+  allStates,
   doc,
   installStyle,
   restyleOnLocaleChange,
@@ -47,6 +64,7 @@ import {
   wrapFunction,
 } from "./shared.js";
 import { PRESSIONE_NORMA, comeStaLaPressione } from "./finestre/la-pressione.js";
+import { ilMotoDelSolare, lettureDelMoto } from "../core/il-solare-in-movimento.js";
 
 const KEY = "__DASHBOARDMODERN_SOLAR_THERMAL_DESIGN__";
 const STYLE_ID = "dm-solar-thermal-design";
@@ -115,7 +133,9 @@ const PLACES = Object.freeze({
     valve: [520, 120],
     rpump: [1040, 250],
     collectorHit: [110, 110, 288, 190],
-    tankNode: [735, 42],
+    /* The safety valve, on the tank's left wall near the top: the right
+     * wall carries the hot water line and the «Accumulo alto» chip. */
+    tankNode: [625, 76],
     chipCollector: [285, 12],
     chipAlto: [818, 152],
     chipBasso: [818, 266],
@@ -129,7 +149,9 @@ const PLACES = Object.freeze({
     valve: [352, 150],
     rpump: [374, 366],
     collectorHit: [24, 64, 208, 136],
-    tankNode: [244, 240],
+    /* Upright, the left wall has the probe chips: the right wall, above the
+     * recirculation line. */
+    tankNode: [274, 264],
     chipCollector: [254, 6],
     chipAlto: [28, 268],
     chipBasso: [28, 352],
@@ -182,7 +204,7 @@ function placeRules(layout) {
 }
 
 function stylesheet() {
-  const idle = t("Impianto in attesa", "System idle");
+  const idle = t("Impianto spento", "System off");
   const recirculating = t("Ricircolo attivo", "Recirculation running");
   const charging = t("Carico solare attivo", "Solar charging");
   const safety = t("Limite di sicurezza", "Safety limit");
@@ -453,9 +475,16 @@ function stylesheet() {
   /* The tank is drawn too; its node only carries the safety valve. */
   #page-boiler .dm-st-node-tank { width:0; height:0; }
   #page-boiler .dm-st-node-tank .syn-tank { display:none; }
+  /* The safety valve hangs on the tank's side wall, like a real one: the
+     flange on the wall, the body pointing out, the drain going down. It was
+     drawn floating on the lid. Its own drawing points right; on the left wall
+     it is mirrored.
+     (The scale that used to sit here, scale(var(--k) * .85), never applied:
+     --k is a length, and scale() wants a number, so the whole transform was
+     dropped. The valve has always been drawn at its own size.) */
   #page-boiler .dm-st-node-tank .sv-wrap {
     left:0; top:0;
-    transform:scale(calc(var(--k) * .85));
+    transform:scaleX(-1);
     transform-origin:0 0;
   }
   #page-boiler .tank-probes { display:contents; }
@@ -844,6 +873,9 @@ function stylesheet() {
     #page-boiler .dm-st-scene { height:auto; aspect-ratio:${PORTRAIT.w} / ${PORTRAIT.h}; }
     #page-boiler .dm-st-live { left:12px; right:12px; top:auto; bottom:12px; justify-content:center; font-size:9.5px; padding:7px 12px 7px 10px; }
     #page-boiler .dm-st-plant > .dm-st-tap-tag { display:none; }
+    /* Upright there is less wall: on the right side, smaller, above the
+       recirculation line. */
+    #page-boiler .dm-st-node-tank .sv-wrap { transform:none; zoom:.55; }
     ${placeRules(PORTRAIT)}
     #page-boiler .dm-st-plant > .syn-solar-content,
     #page-boiler .dm-st-plant .probe { min-width:calc(var(--k) * 98); min-height:calc(var(--k) * 46); }
@@ -864,14 +896,176 @@ function stylesheet() {
     #page-boiler .b-btn .state { font-size:8px; padding:1px 6px; }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    #page-boiler .syn-flow.active,
-    #page-boiler .syn-pump.active .anim-icon,
-    #page-boiler .dm-st-scene > .syn-safety-alert.active,
-    #page-boiler .dm-st-live::before,
-    #page-boiler .b-btn.active .spin-active,
-    #page-boiler .b-btn.active .blink-active { animation:none !important; }
+  ${motoCss()}
+  `;
+}
+
+/* ───────── the motion ─────────
+ *
+ * Every period divides 4 s, so every loop meets the others at its start and a
+ * recording of four seconds loops without a seam. */
+function motoCss() {
+  return `
+  #page-boiler {
+    --dmx-cycle:1s; --dmx-rotor:.5s; --dmx-heat:.5;
+    --dmx-hot:#f97316; --dmx-hot-hi:#ffd28a; --dmx-cold:#3b82f6; --dmx-cold-hi:#bfe3ff;
+    --dmx-idle-pipe:#d5dbe3;
   }
+  html[data-theme="dark"] #page-boiler {
+    --dmx-hot:#fb923c; --dmx-hot-hi:#ffe2b0; --dmx-cold:#60a5fa; --dmx-cold-hi:#dbeeff;
+    --dmx-idle-pipe:#334155;
+  }
+  #page-boiler .dmx-pipe path { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  /* The single dash of light becomes liquid on the two solar runs. The path
+     keeps its class and its animation: it is the runtime's, and its state. */
+  #page-boiler .syn-flow.dm-st-run-hot.active,
+  #page-boiler .syn-flow.dm-st-run-cold.active { opacity:0; }
+
+  /* Liquid in the pipe, soft current bands, and particles: a dash of zero
+     length with a round cap is a dot. */
+  #page-boiler .dmx-fill { stroke-width:9; opacity:0; transition:opacity .5s ease; }
+  #page-boiler .dmx-hot .dmx-fill { stroke:var(--dmx-hot); }
+  #page-boiler .dmx-cold .dmx-fill { stroke:var(--dmx-cold); }
+  #page-boiler .dmx-current { stroke-width:11; stroke-dasharray:40 60; opacity:0; filter:url(#dmx-blur); }
+  #page-boiler .dmx-hot .dmx-current { stroke:var(--dmx-hot-hi); }
+  #page-boiler .dmx-cold .dmx-current { stroke:var(--dmx-cold-hi); }
+  #page-boiler .dmx-dots { stroke-width:6; stroke-dasharray:0 25; opacity:0; }
+  #page-boiler .dmx-dots2 { stroke-width:3.5; stroke-dasharray:0 50; stroke-dashoffset:12; }
+  #page-boiler .dmx-hot .dmx-dots { stroke:#fff3e0; }
+  #page-boiler .dmx-cold .dmx-dots { stroke:#eff8ff; }
+  #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-fill,
+  #page-boiler:has(#flow-sol-cold.active) .dmx-cold .dmx-fill { opacity:.55; }
+  #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-dots,
+  #page-boiler:has(#flow-sol-cold.active) .dmx-cold .dmx-dots { opacity:1; animation:dmxRun25 calc(var(--dmx-cycle) / 2) linear infinite; }
+  #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-dots2,
+  #page-boiler:has(#flow-sol-cold.active) .dmx-cold .dmx-dots2 { animation:dmxRun50b var(--dmx-cycle) linear infinite; }
+  #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-current,
+  #page-boiler:has(#flow-sol-cold.active) .dmx-cold .dmx-current { opacity:.7; animation:dmxRun100 calc(var(--dmx-cycle) * 2) linear infinite; }
+  @keyframes dmxRun100 { from { stroke-dashoffset:0; } to { stroke-dashoffset:-100; } }
+  @keyframes dmxRun25 { from { stroke-dashoffset:0; } to { stroke-dashoffset:-25; } }
+  @keyframes dmxRun50b { from { stroke-dashoffset:12; } to { stroke-dashoffset:-38; } }
+
+  /* Pump off: the solar loop goes grey and still. */
+  #page-boiler:not(:has(#syn-p-solare.active)) .syn-pipe-inner:is(.dm-st-run-hot,.dm-st-run-cold) { stroke:var(--dmx-idle-pipe); transition:stroke .6s ease; }
+  #page-boiler:not(:has(#syn-p-solare.active)) .dm-st-pipe-hi:is(.dm-st-run-hot,.dm-st-run-cold) { opacity:.35; }
+
+  /* The pump: rotor at the pace of the water, a warm halo while it turns. */
+  #page-boiler #syn-p-solare.active .dm-st-rotor { animation:spinAnim var(--dmx-rotor) linear infinite; }
+  #page-boiler #syn-p-solare .icon { position:relative; }
+  #page-boiler .dmx-halo { position:absolute; inset:-22%; border-radius:50%; opacity:0; pointer-events:none;
+    background:conic-gradient(from 0deg, rgba(249,115,22,0) 0 60%, rgba(249,115,22,.55) 85%, rgba(255,214,150,.9) 100%);
+    -webkit-mask:radial-gradient(circle, transparent 0 62%, #000 64% 70%, transparent 72%);
+    mask:radial-gradient(circle, transparent 0 62%, #000 64% 70%, transparent 72%); }
+  #page-boiler #syn-p-solare.active .dmx-halo { opacity:1; animation:spinAnim var(--dmx-cycle) linear infinite; }
+
+  /* The collector: a glow with the panel temperature, a sweep of light and a
+     shimmer above it, sun rays and beams — only while it charges. */
+  #page-boiler .dmx-panel-heat { fill:#fb923c; opacity:calc(var(--dmx-heat) * .08); }
+  #page-boiler:has(#syn-p-solare.active) .dmx-panel-heat { animation:dmxPanelGlow 4s ease-in-out infinite; }
+  @keyframes dmxPanelGlow { 0%,100% { opacity:calc(var(--dmx-heat) * .05); } 50% { opacity:calc(var(--dmx-heat) * .2); } }
+  /* Its own box: 200% is two widths of the sweep, from before the glass to
+     past it, whatever the layout. */
+  #page-boiler .dmx-sweep { opacity:0; transform-box:fill-box; }
+  #page-boiler:has(#syn-p-solare.active) .dmx-sweep { opacity:calc(.35 + var(--dmx-heat) * .5); animation:dmxSweep 4s cubic-bezier(.45,0,.55,1) infinite; }
+  @keyframes dmxSweep { 0% { transform:translateX(0); } 70%,100% { transform:translateX(200%); } }
+  #page-boiler:has(#syn-p-solare.active) .dm-st-riser { animation:dmxRiser 2s ease-in-out infinite; }
+  #page-boiler .dm-st-riser:nth-of-type(odd) { animation-delay:-1s; }
+  @keyframes dmxRiser { 0%,100% { stroke-opacity:.45; } 50% { stroke-opacity:1; stroke:#fdba74; } }
+  #page-boiler .dmx-wave { fill:none; stroke:#fbbf24; stroke-width:2.2; stroke-linecap:round; opacity:0; }
+  html[data-theme="dark"] #page-boiler .dmx-wave { stroke:#fcd34d; }
+  #page-boiler:has(#syn-p-solare.active) .dmx-wave { animation:dmxRise 4s ease-in-out infinite; }
+  @keyframes dmxRise { 0% { transform:translateY(6px); opacity:0; } 35% { opacity:calc(var(--dmx-heat) * .85); } 100% { transform:translateY(-30px); opacity:0; } }
+  #page-boiler .dmx-beam { fill:url(#dmx-beam); opacity:0; }
+  #page-boiler .dmx-rays, #page-boiler .dmx-suncore { opacity:0; }
+  #page-boiler .dmx-ray { stroke:#f59e0b; stroke-width:3; stroke-linecap:round; }
+  #page-boiler .dmx-suncore { fill:#fde68a; }
+  #page-boiler:has(#syn-p-solare.active) .dmx-beam { animation:dmxBeam 4s ease-in-out infinite; }
+  @keyframes dmxBeam { 0%,100% { opacity:.08; } 50% { opacity:.32; } }
+  #page-boiler:has(#syn-p-solare.active) .dmx-rays { opacity:.55; animation:dmxRays 4s ease-in-out infinite; }
+  @keyframes dmxRays { 0% { transform:rotate(0) scale(.94); opacity:.35; } 50% { transform:rotate(15deg) scale(1.06); opacity:.7; } 100% { transform:rotate(30deg) scale(.94); opacity:.35; } }
+  #page-boiler:has(#syn-p-solare.active) .dmx-suncore { opacity:.85; }
+  html[data-theme="dark"] #page-boiler:has(#syn-p-solare.active) .dmx-rays { opacity:.4; }
+  html[data-theme="dark"] #page-boiler:has(#syn-p-solare.active) .dmx-suncore { opacity:.55; }
+  #page-boiler:has(#syn-p-solare.active) .dm-st-sun { transform-box:fill-box; transform-origin:center; animation:dmxSun 4s ease-in-out infinite; }
+  @keyframes dmxSun { 0%,100% { transform:scale(.96); } 50% { transform:scale(1.06); } }
+
+  /* The tank: stratification that breathes, a coil that carries the heat
+     down, convection rising from it. */
+  #page-boiler .dmx-warm, #page-boiler .dmx-cline { opacity:.55; }
+  #page-boiler:has(#syn-p-solare.active) .dmx-warm { animation:dmxWarm 4s ease-in-out infinite; }
+  @keyframes dmxWarm { 0%,100% { opacity:.4; } 50% { opacity:.8; } }
+  #page-boiler:has(#syn-p-solare.active) .dmx-cline { animation:dmxCline 4s ease-in-out infinite; }
+  @keyframes dmxCline { 0%,100% { transform:translateY(-7px); } 50% { transform:translateY(7px); } }
+  #page-boiler .dmx-wisp { fill:#fff; opacity:0; filter:url(#dmx-blur); }
+  #page-boiler:has(#syn-p-solare.active) .dmx-wisp { animation:dmxWisp 4s ease-in infinite; }
+  @keyframes dmxWisp { 0% { transform:translateY(0) scale(.6); opacity:0; } 25% { opacity:.45; } 100% { transform:translateY(-120px) scale(1.4); opacity:0; } }
+  #page-boiler .dmx-coil path { fill:none; stroke-linecap:round; }
+  #page-boiler .dmx-coil-warm { stroke:#9a3412; stroke-width:2.8; opacity:0; transition:opacity .5s; }
+  #page-boiler .dmx-coil-pulse { stroke:#fff7ed; stroke-width:4; stroke-dasharray:34 86; opacity:0; filter:url(#dm-st-glow); }
+  #page-boiler .dmx-coil-pulse2 { stroke:#fdba74; stroke-width:3; stroke-dasharray:14 106; stroke-dashoffset:-60; }
+  #page-boiler:has(#syn-p-solare.active) .dmx-coil-warm { opacity:.6; }
+  #page-boiler:has(#syn-p-solare.active) .dmx-coil-pulse { opacity:1; animation:dmxCoil var(--dmx-cycle) linear infinite; }
+  #page-boiler:has(#syn-p-solare.active) .dmx-coil-pulse2 { animation:dmxCoil2 var(--dmx-cycle) linear infinite; }
+  @keyframes dmxCoil { from { stroke-dashoffset:0; } to { stroke-dashoffset:-120; } }
+  @keyframes dmxCoil2 { from { stroke-dashoffset:-60; } to { stroke-dashoffset:-180; } }
+
+  /* The boiler's element drawing power: it glows, the tank steams, the hot
+     water tap drips. Never on the safety valve, which has its own banner. */
+  #page-boiler .dmx-element { fill:#94a3b8; opacity:0; }
+  #page-boiler[data-dmx-boiler="on"] .dmx-element { opacity:1; fill:#ef4444; filter:url(#dm-st-glow); animation:dmxElement 1s ease-in-out infinite; }
+  @keyframes dmxElement { 0%,100% { fill:#dc2626; } 50% { fill:#fca5a5; } }
+  #page-boiler .dmx-steam-w { fill:none; stroke:#94a3b8; stroke-width:3; stroke-linecap:round; opacity:0; filter:url(#dmx-blur); }
+  html[data-theme="dark"] #page-boiler .dmx-steam-w { stroke:#e2e8f0; }
+  #page-boiler .dmx-steam-small { stroke-width:2.2; }
+  #page-boiler[data-dmx-boiler="on"] .dmx-steam-w { animation:dmxSteam 2s ease-out infinite; }
+  @keyframes dmxSteam { 0% { transform:translateY(4px) scaleX(.8); opacity:0; } 30% { opacity:.75; } 100% { transform:translateY(-26px) scaleX(1.3); opacity:0; } }
+  #page-boiler .dmx-drop { fill:#60a5fa; opacity:0; }
+  #page-boiler[data-dmx-boiler="on"] .dmx-drop { animation:dmxDrop 2s cubic-bezier(.5,0,1,1) infinite; }
+  #page-boiler[data-dmx-boiler="on"] .dmx-drop2 { animation-delay:-1s; }
+  @keyframes dmxDrop { 0% { transform:translateY(-4px) scale(.3); opacity:0; } 20% { transform:translateY(0) scale(1); opacity:1; }
+    70% { transform:translateY(34px) scale(1); opacity:1; } 80%,100% { transform:translateY(40px) scale(1.4,.4); opacity:0; } }
+
+  /* The valve: open says so with a green ping and chevrons crossing it,
+     closed with a dashed red ring and the handle across. */
+  #page-boiler #syn-v-chiave .icon { position:relative; }
+  #page-boiler .dmx-ring { position:absolute; inset:-4px; border-radius:50%; border:2px solid #16a34a; opacity:0; pointer-events:none; }
+  #page-boiler:has(#syn-p-solare.active) #syn-v-chiave.active .dmx-ring { animation:dmxPing 2s ease-out infinite; }
+  @keyframes dmxPing { 0% { transform:scale(1); opacity:.7; } 100% { transform:scale(1.75); opacity:0; } }
+  #page-boiler #syn-v-chiave:not(.active) .dmx-ring { opacity:1; border-color:#ef4444; border-style:dashed; }
+  #page-boiler .dmx-chev { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:2px; opacity:0; pointer-events:none; overflow:hidden; border-radius:50%; }
+  #page-boiler .dmx-chev i { width:5px; height:5px; border-top:2px solid #16a34a; border-right:2px solid #16a34a; transform:rotate(45deg); }
+  #page-boiler:has(#syn-p-solare.active) #syn-v-chiave.active .dmx-chev { opacity:1; animation:dmxChev var(--dmx-cycle) linear infinite; }
+  @keyframes dmxChev { from { transform:translateX(-6px); } to { transform:translateX(6px); } }
+  #page-boiler #syn-v-chiave .valve-open-shape { transform-box:fill-box; transform-origin:center; transition:transform .6s cubic-bezier(.3,1.6,.5,1), opacity .4s; }
+  #page-boiler #syn-v-chiave:not(.active) .valve-open-shape { transform:rotate(90deg); }
+  #page-boiler:has(#syn-p-solare.active) #syn-v-chiave.active .valve-svg { opacity:.35; }
+
+  #page-boiler .dmx-wave, #page-boiler .dmx-wisp, #page-boiler .dmx-steam-w, #page-boiler .dmx-cline,
+  #page-boiler .dmx-drip path { transform-box:fill-box; transform-origin:center; }
+  /* The live pill breathes in 2 s, a divisor of the 4 s loop. */
+  #page-boiler:has(#syn-p-solare.active) .dm-st-live::before { animation-duration:2s; }
+
+  /* Reduced motion: the decoration stops; the state keeps moving, slower
+     (particles at half speed, the rotor at a quarter). */
+  @media (prefers-reduced-motion: reduce) {
+    #page-boiler :is(.dmx-sweep,.dmx-wave,.dmx-beam,.dmx-rays,.dm-st-sun,.dmx-wisp,.dmx-cline,.dmx-warm,.dmx-panel-heat,.dm-st-riser,.dmx-halo,.dmx-ring,.dmx-steam-w,.dmx-current) { animation:none !important; }
+    #page-boiler .dmx-wave, #page-boiler .dmx-wisp { opacity:0 !important; }
+    html body #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-dots,
+    html body #page-boiler:has(#flow-sol-cold.active) .dmx-cold .dmx-dots { animation:dmxRun25 var(--dmx-cycle) linear infinite !important; }
+    html body #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-dots2,
+    html body #page-boiler:has(#flow-sol-cold.active) .dmx-cold .dmx-dots2 { animation:dmxRun50b calc(var(--dmx-cycle) * 2) linear infinite !important; }
+    html body #page-boiler #syn-p-solare.active .dm-st-rotor { animation:spinAnim calc(var(--dmx-rotor) * 4) linear infinite !important; }
+    html body #page-boiler .syn-flow.active { animation-duration:2.8s !important; }
+  }
+
+  /* «Plancia leggera» in the app stops every loop after one round
+     (animation-iteration-count:1 on every element, three ids strong). The
+     state is the exception: the particles and the rotor are one path and one
+     transform each, and a pump that runs keeps looking like it runs. */
+  html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d):has(#flow-sol-hot.active) .dmx-hot .dmx-dots,
+  html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d):has(#flow-sol-cold.active) .dmx-cold .dmx-dots,
+  html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d) #syn-p-solare.active .dm-st-rotor,
+  html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d) .syn-flow.active { animation-iteration-count:infinite !important; }
   `;
 }
 
@@ -889,15 +1083,16 @@ function defsMarkup() {
   <linearGradient id="dm-st-sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".35" stop-color="#fff" stop-opacity=".06"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset=".78" stop-color="#fff" stop-opacity=".14"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
   <linearGradient id="dm-st-jacket" x1="0" x2="1"><stop offset="0" style="stop-color:var(--st-j0)"/><stop offset=".28" style="stop-color:var(--st-j1)"/><stop offset=".6" style="stop-color:var(--st-j2)"/><stop offset="1" style="stop-color:var(--st-j3)"/></linearGradient>
   <linearGradient id="dm-st-strat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--tank-top, #ef4444)"/><stop offset=".5" style="stop-color:color-mix(in srgb, var(--tank-top, #ef4444), var(--tank-bottom, #3b82f6))"/><stop offset="1" style="stop-color:var(--tank-bottom, #3b82f6)"/></linearGradient>
+  <linearGradient id="dmx-sweep" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fde68a" stop-opacity="0"/><stop offset=".5" stop-color="#fff7d6" stop-opacity=".55"/><stop offset=".55" stop-color="#fde68a" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <radialGradient id="dmx-beam" cx="0" cy="0" r="1" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#fde68a" stop-opacity=".9"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
+  <linearGradient id="dmx-warmtop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1c2" stop-opacity=".75"/><stop offset=".35" stop-color="#fb923c" stop-opacity=".25"/><stop offset=".6" stop-color="#fb923c" stop-opacity="0"/></linearGradient>
+  <linearGradient id="dmx-cline" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <filter id="dmx-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4"/></filter>
   <linearGradient id="dm-st-win" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".22"/><stop offset=".3" stop-color="#fff" stop-opacity=".28"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>`;
 }
 
-function backMarkup(L) {
-  const [x, y, r] = L.sun;
-  return `<circle class="dm-st-sun" cx="${x}" cy="${y}" r="${r}" fill="url(#dm-st-sun)"/>`;
-}
-
-function frontMarkup(L) {
+/* The collector's four corners, and the glass inside them. */
+function panelCorners(L) {
   const P = L.panel;
   const TL = [P.x, P.y + P.s];
   const TR = [P.x + P.w, P.y];
@@ -905,7 +1100,42 @@ function frontMarkup(L) {
   const BL = [P.x + P.d, P.y + P.h + P.s];
   const centre = [(TL[0] + BR[0]) / 2, (TL[1] + BR[1]) / 2];
   const inset = L.name === "portrait" ? 0.07 : 0.06;
-  const [iTL, iTR, iBR, iBL] = [TL, TR, BR, BL].map((p) => lerp(p, centre, inset));
+  const glass = [TL, TR, BR, BL].map((p) => lerp(p, centre, inset));
+  return { TL, TR, BR, BL, glass };
+}
+
+const f1 = (n) => n.toFixed(1);
+
+function backMarkup(L) {
+  const [x, y, r] = L.sun;
+  let out = `<circle class="dm-st-sun" cx="${x}" cy="${y}" r="${r}" fill="url(#dm-st-sun)"/>`;
+  /* While it charges, beams fall from the sun on the glass and rays turn
+   * slowly around it. */
+  const [gTL, gTR, gBR, gBL] = panelCorners(L).glass;
+  out += `<g class="dmx dmx-beams">`;
+  [
+    [gTL, gBL],
+    [gTL, gTR],
+    [gTR, gBR],
+  ].forEach(([a, b], i) => {
+    const p = lerp(a, b, 0.25);
+    const q = lerp(a, b, 0.75);
+    out += `<polygon class="dmx-beam" points="${x},${y} ${f1(p[0])},${f1(p[1])} ${f1(q[0])},${f1(q[1])}" style="animation-delay:${((-i * 4) / 3).toFixed(3)}s"/>`;
+  });
+  const r0 = r * 0.23;
+  out += `<g class="dmx-rays" style="transform-origin:${x}px ${y}px">`;
+  for (let i = 0; i < 12; i += 1) {
+    const a = (i / 12) * Math.PI * 2;
+    const r1 = r * (i % 2 ? 0.36 : 0.44);
+    out += `<line class="dmx-ray" x1="${f1(x + Math.cos(a) * r0)}" y1="${f1(y + Math.sin(a) * r0)}" x2="${f1(x + Math.cos(a) * r1)}" y2="${f1(y + Math.sin(a) * r1)}"/>`;
+  }
+  out += `</g><circle class="dmx-suncore" cx="${x}" cy="${y}" r="${f1(r * 0.17)}"/></g>`;
+  return out;
+}
+
+function frontMarkup(L) {
+  const { TL, TR, BR, BL, glass } = panelCorners(L);
+  const [iTL, iTR, iBR, iBL] = glass;
   const legs = L.name === "portrait" ? [20, 24] : [34, 40];
   const a = lerp(BL, BR, 0.2);
   const b = lerp(BL, BR, 0.8);
@@ -923,8 +1153,22 @@ function frontMarkup(L) {
     const right = lerp(iTR, iBR, k);
     collector += `<line class="dm-st-manifold" x1="${left[0].toFixed(1)}" y1="${left[1].toFixed(1)}" x2="${right[0].toFixed(1)}" y2="${right[1].toFixed(1)}"/>`;
   }
+  /* The glass warms with the panel and a sweep of light crosses it. */
+  const xs = glass.map((p) => p[0]);
+  const ys = glass.map((p) => p[1]);
+  const [gx0, gx1, gy0, gy1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  collector += `<clipPath id="dmx-panel-clip"><polygon points="${poly(glass)}"/></clipPath>`;
+  collector += `<g class="dmx dmx-panel" clip-path="url(#dmx-panel-clip)"><polygon class="dmx-panel-heat" points="${poly(glass)}"/>`;
+  collector += `<rect class="dmx-sweep" x="${f1(gx0 - (gx1 - gx0))}" y="${f1(gy0 - 20)}" width="${f1(gx1 - gx0)}" height="${f1(gy1 - gy0 + 40)}" fill="url(#dmx-sweep)"/></g>`;
   collector += `<polygon points="${poly([iTL, iTR, iBR, iBL])}" fill="url(#dm-st-sheen)"/>`;
-  collector += `<polygon class="dm-st-rim" points="${poly([iTL, iTR, iBR, iBL])}"/></g>`;
+  collector += `<polygon class="dm-st-rim" points="${poly([iTL, iTR, iBR, iBL])}"/>`;
+  /* Heat shimmering above the top edge. */
+  collector += `<g class="dmx dmx-shimmer">`;
+  for (let i = 0; i < 5; i += 1) {
+    const [bx, by] = lerp(TL, TR, 0.12 + i * 0.19);
+    collector += `<path class="dmx-wave" d="M ${f1(bx)} ${f1(by - 10)} c -6 -8, 6 -14, 0 -22 c -6 -8, 6 -14, 0 -22" style="animation-delay:${(-i * 0.8).toFixed(2)}s"/>`;
+  }
+  collector += `</g></g>`;
 
   const T = L.tank;
   const tx = T.cx - T.w / 2;
@@ -945,13 +1189,40 @@ function frontMarkup(L) {
     const y = wy + wh * (0.4 + i * 0.1);
     coil += ` Q ${T.cx} ${y + wh * 0.05}, ${wx + ww - 8} ${y} Q ${T.cx} ${y + wh * 0.055}, ${wx + 8} ${y + wh * 0.1}`;
   }
+  /* Inside the window: the warm top that breathes, the line between hot and
+   * cold that sways, convection rising from the coil, and the electric
+   * element at the bottom. */
+  tank += `<clipPath id="dmx-win-clip"><rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${ww / 2}"/></clipPath>`;
+  tank += `<g class="dmx dmx-tank" clip-path="url(#dmx-win-clip)">`;
+  tank += `<rect class="dmx-warm" x="${wx}" y="${wy}" width="${ww}" height="${wh}" fill="url(#dmx-warmtop)"/>`;
+  tank += `<rect class="dmx-cline" x="${wx}" y="${f1(wy + wh * 0.36)}" width="${ww}" height="${f1(wh * 0.16)}" fill="url(#dmx-cline)"/>`;
+  for (let i = 0; i < 6; i += 1) {
+    const cx = wx + ww * (0.25 + (i % 3) * 0.25);
+    tank += `<ellipse class="dmx-wisp" cx="${f1(cx)}" cy="${f1(wy + wh * 0.62)}" rx="${5 + (i % 2) * 2}" ry="${9 + (i % 2) * 3}" style="animation-delay:${((-i * 4) / 6).toFixed(3)}s"/>`;
+  }
+  tank += `<rect class="dmx-element" x="${f1(wx + ww * 0.18)}" y="${f1(wy + wh * 0.9)}" width="${f1(ww * 0.64)}" height="6" rx="3"/></g>`;
   tank += `<path class="dm-st-coil" d="${coil}"/>`;
+  tank += `<g class="dmx dmx-coil"><path class="dmx-coil-warm" d="${coil}"/><path class="dmx-coil-pulse" d="${coil}"/><path class="dmx-coil-pulse dmx-coil-pulse2" d="${coil}"/></g>`;
   tank += `<rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${ww / 2}" fill="url(#dm-st-win)"/></g>`;
+  /* Steam above the cap while the boiler draws power. */
+  tank += `<g class="dmx dmx-steam">`;
+  for (let i = 0; i < 4; i += 1) {
+    const bx = T.cx - 30 + i * 18;
+    tank += `<path class="dmx-steam-w" d="M ${bx} ${f1(T.top - ry + 2)} c -7 -9, 7 -15, 0 -24 c -7 -9, 7 -15, 0 -24" style="animation-delay:${(-i * 0.5 - (i % 2) * 1).toFixed(2)}s"/>`;
+  }
+  tank += `</g>`;
 
   let tap = "";
   if (L.tap) {
     const [x, y] = L.tap;
     tap = `<g data-dm-st-art="tap" filter="url(#dm-st-drop)"><circle class="dm-st-tap-disc" cx="${x}" cy="${y}" r="24"/><text x="${x}" y="${y + 7}" text-anchor="middle" font-size="20">🚿</text></g>`;
+    /* Hot water at the tap: a drip and a breath of steam. */
+    const drop = `M ${x - 4} ${y + 30} q 4 -8 8 0 a 4 4 0 1 1 -8 0 z`;
+    tap += `<g class="dmx dmx-drip"><path class="dmx-drop" d="${drop}"/><path class="dmx-drop dmx-drop2" d="${drop}"/>`;
+    for (let i = 0; i < 3; i += 1) {
+      tap += `<path class="dmx-steam-w dmx-steam-small" d="M ${x - 12 + i * 12} ${y - 26} c -5 -7, 5 -12, 0 -19 c -5 -7, 5 -12, 0 -19" style="animation-delay:${(-i * 0.66).toFixed(2)}s"/>`;
+    }
+    tap += `</g>`;
   }
 
   let leads = "";
@@ -1063,17 +1334,52 @@ function buildStage() {
 function buildPumps() {
   for (const [id, label] of PUMP_LABELS) {
     const pump = doc.getElementById(id);
-    if (!pump || pump.querySelector(".icon")) continue;
-    const icon = element("div", "icon");
-    icon.append(element("span", "anim-icon dm-st-rotor"));
-    pump.append(icon, element("div", "lbl", label()));
+    if (!pump) continue;
+    if (!pump.querySelector(".icon")) {
+      const icon = element("div", "icon");
+      icon.append(element("span", "anim-icon dm-st-rotor"));
+      pump.append(icon, element("div", "lbl", label()));
+    }
   }
+  /* The solar pump's warm halo, turning with the water. */
+  const icon = doc.querySelector("#syn-p-solare .icon");
+  if (icon && !icon.querySelector(".dmx-halo")) icon.prepend(element("span", "dmx dmx-halo"));
 }
 
 function nameValve() {
   const valve = doc.getElementById("syn-v-chiave");
-  if (!valve || valve.querySelector(".lbl")) return;
-  valve.append(element("div", "lbl", t("Chiave solare", "Solar valve")));
+  if (!valve) return;
+  if (!valve.querySelector(".lbl"))
+    valve.append(element("div", "lbl", t("Chiave solare", "Solar valve")));
+  /* Open or closed at a glance: a ring, and chevrons crossing it. */
+  const icon = valve.querySelector(".icon");
+  if (icon && !icon.querySelector(".dmx-ring")) {
+    const chev = element("span", "dmx dmx-chev");
+    chev.innerHTML = "<i></i><i></i><i></i>";
+    icon.append(element("span", "dmx dmx-ring"), chev);
+  }
+}
+
+/* The three numbers of the motion, from the real readings — written only
+ * when they change, so a state burst does not restyle the page. */
+function setMotion() {
+  const page = doc.getElementById("page-boiler");
+  if (!page) return;
+  let moto;
+  try {
+    moto = ilMotoDelSolare(
+      lettureDelMoto(allStates() || {}, (rif) => root.resolveEntity?.(rif) ?? rif),
+    );
+  } catch (_errore) {
+    return;
+  }
+  for (const [nome, valore] of [
+    ["--dmx-cycle", moto.ciclo],
+    ["--dmx-rotor", moto.rotore],
+    ["--dmx-heat", moto.calore],
+  ])
+    if (page.style.getPropertyValue(nome) !== valore) page.style.setProperty(nome, valore);
+  if (page.dataset.dmxBoiler !== moto.boiler) page.dataset.dmxBoiler = moto.boiler;
 }
 
 function captionProbes() {
@@ -1101,11 +1407,15 @@ function pressureGauge() {
   const text = doc.getElementById("syn-v-press")?.textContent || "";
   const bar = Number.parseFloat(text.replace(",", "."));
   const known = Number.isFinite(bar);
-  const turn = known ? (240 * Math.max(0, Math.min(PRESSIONE_NORMA.fondo, bar))) / PRESSIONE_NORMA.fondo : 0;
+  const turn = known
+    ? (240 * Math.max(0, Math.min(PRESSIONE_NORMA.fondo, bar))) / PRESSIONE_NORMA.fondo
+    : 0;
   const colour = comeStaLaPressione(known ? bar : null) === "norma" ? "#22c55e" : "#ef4444";
   const angle = `${turn.toFixed(1)}deg`;
-  if (card.style.getPropertyValue("--dm-st-press") !== angle) card.style.setProperty("--dm-st-press", angle);
-  if (card.style.getPropertyValue("--dm-st-gauge") !== colour) card.style.setProperty("--dm-st-gauge", colour);
+  if (card.style.getPropertyValue("--dm-st-press") !== angle)
+    card.style.setProperty("--dm-st-press", angle);
+  if (card.style.getPropertyValue("--dm-st-gauge") !== colour)
+    card.style.setProperty("--dm-st-gauge", colour);
 }
 
 function routePipes(layout) {
@@ -1113,7 +1423,8 @@ function routePipes(layout) {
   if (!svg) return;
   const box = `0 0 ${layout.w} ${layout.h}`;
   if (svg.getAttribute("viewBox") !== box) svg.setAttribute("viewBox", box);
-  if (svg.getAttribute("preserveAspectRatio") !== "none") svg.setAttribute("preserveAspectRatio", "none");
+  if (svg.getAttribute("preserveAspectRatio") !== "none")
+    svg.setAttribute("preserveAspectRatio", "none");
   drawArt(svg, layout);
 
   for (const [id, route] of Object.entries(layout.routes)) {
@@ -1146,7 +1457,26 @@ function routePipes(layout) {
       if (!path.classList.contains(tag)) path.classList.add(tag);
       if (path.hasAttribute("vector-effect")) path.removeAttribute("vector-effect");
     }
+    if (RUNS[id] === "hot" || RUNS[id] === "cold") liquid(flow, RUNS[id], route);
   }
+}
+
+/* The water in a solar run: liquid, a soft current and particles, on the
+ * same route and in the water's direction, right after the runtime's light. */
+function liquid(flow, kind, route) {
+  let group = flow.nextElementSibling;
+  if (!group?.classList?.contains("dmx-pipe")) {
+    group = doc.createElementNS(SVG_NS, "g");
+    group.setAttribute("class", `dmx dmx-pipe dmx-${kind}`);
+    for (const cls of ["dmx-fill", "dmx-current", "dmx-dots", "dmx-dots dmx-dots2"]) {
+      const path = doc.createElementNS(SVG_NS, "path");
+      path.setAttribute("class", cls);
+      group.append(path);
+    }
+    flow.after(group);
+  }
+  for (const path of group.children)
+    if (path.getAttribute("d") !== route) path.setAttribute("d", route);
 }
 
 function nameButtons() {
@@ -1212,6 +1542,7 @@ function decorate() {
   routePipes(currentLayout());
   nameButtons();
   mirrorRuntimeVisibility();
+  setMotion();
   return true;
 }
 

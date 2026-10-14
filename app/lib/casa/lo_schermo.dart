@@ -15,6 +15,11 @@
 ///   nessuno. Adesso le nasconde come il pannello a muro.
 /// - `spento:si` / `spento:no`: di notte la luminosita' della finestra va al
 ///   minimo; al risveglio torna quella del sistema.
+/// - `acceso:si` / `acceso:no`: col campanello a muro lo schermo non si
+///   spegne da solo (di notte resta al minimo). Vale solo col pannello
+///   acceso: spento il pannello, lo spegnimento torna del sistema.
+/// - `sveglia`: suona il campanello. La luce torna piena e, su Android, uno
+///   schermo spento si riaccende sopra il blocco — solo col pannello acceso.
 ///
 /// Android rimette le barre da solo — tornando nell'app, dopo un dialogo del
 /// sistema, aprendo e chiudendo un pieghevole — e [loSchermoRimetti] le
@@ -32,6 +37,8 @@ const canaleDelloSchermo = 'gdahomeSchermo';
 bool _aMuro = false;
 bool _chiosco = false;
 bool _spento = false;
+bool _accesoChiesto = false;
+bool _accesoDetto = false;
 
 /// Quello che la plancia ha detto. Non solleva mai: un telefono che non sa
 /// farlo resta com'era.
@@ -43,6 +50,13 @@ Future<void> loSchermoDice(String detto) async {
       _aMuro = detto == 'muro:si';
       if (barreNascoste != prima) await _applica();
       if (!_aMuro && _spento) await _luminosita(false);
+      await _tieniAcceso();
+    case 'acceso:si':
+    case 'acceso:no':
+      _accesoChiesto = detto == 'acceso:si';
+      await _tieniAcceso();
+    case 'sveglia':
+      await _sveglia();
     case 'chiosco:si':
     case 'chiosco:no':
       final prima = barreNascoste;
@@ -85,5 +99,42 @@ Future<void> _luminosita(bool spento) async {
     );
   } catch (_) {
     /* Un pacchetto di prima: resta il nero della plancia. */
+  }
+}
+
+/// Se adesso lo schermo deve restare acceso: lo chiede il pannello, e solo
+/// mentre il pannello c'e'.
+bool get schermoTenutoAcceso => _aMuro && _accesoChiesto;
+
+/* Lo schermo che non si spegne: su Android la finestra lo dichiara
+ * (`FLAG_KEEP_SCREEN_ON`), sull'iPhone si ferma il timer del riposo. Si
+ * chiede solo quando cambia. */
+Future<void> _tieniAcceso() async {
+  final voluto = schermoTenutoAcceso;
+  if (voluto == _accesoDetto) return;
+  _accesoDetto = voluto;
+  if (kIsWeb) return;
+  if (defaultTargetPlatform != TargetPlatform.android &&
+      defaultTargetPlatform != TargetPlatform.iOS) {
+    return;
+  }
+  try {
+    await canaleDellaFinestra.invokeMethod<void>('acceso', voluto);
+  } catch (_) {
+    /* Un pacchetto di prima: lo schermo fa come gli dice il sistema. */
+  }
+}
+
+/* Suona il campanello: la luce piena subito, e su Android lo schermo spento
+ * si riaccende e passa sopra il blocco. Fuori dal pannello a muro no: un
+ * telefono in tasca non si accende per un campanello. */
+Future<void> _sveglia() async {
+  if (!_aMuro) return;
+  await _luminosita(false);
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+  try {
+    await canaleDellaFinestra.invokeMethod<void>('sveglia');
+  } catch (_) {
+    /* Un pacchetto di prima: si sveglia la pagina, lo schermo no. */
   }
 }

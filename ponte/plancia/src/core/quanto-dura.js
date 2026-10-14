@@ -33,6 +33,9 @@ const pulito = (valore) => String(valore ?? "").trim();
 export const ORE = Object.freeze(["h", "hr", "hrs", "ore", "hours", "hour", "ora"]);
 export const MINUTI = Object.freeze(["min", "mins", "minuti", "minutes", "minute"]);
 export const SECONDI = Object.freeze(["s", "sec", "secs", "secondi", "seconds", "second"]);
+/* I giorni (#177): da quanto e' acceso un router o un NAS lo si scrive in
+ * giorni, e un sensore che dichiara «d» era un numero senza misura. */
+export const GIORNI = Object.freeze(["d", "day", "days", "giorni", "giorno"]);
 
 /**
  * Il valore riportato a minuti, o `null` se quell'unità non è un tempo.
@@ -48,5 +51,6 @@ export function inMinuti(valore, unita) {
   if (MINUTI.includes(misura)) return quanto;
   if (SECONDI.includes(misura)) return quanto / 60;
   if (ORE.includes(misura)) return quanto * 60;
+  if (GIORNI.includes(misura)) return quanto * 1440;
   return null;
 }

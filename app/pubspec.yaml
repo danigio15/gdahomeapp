@@ -13,7 +13,7 @@ publish_to: "none"
 # sempre**. Si ricava dalla versione invece di batterlo a mano:
 # 1.4.24 → 1 × 10000 + 4 × 100 + 24 = 10424. Finche' il minore e la patch
 # stanno sotto cento, cresce insieme alla versione e non si sbaglia.
-version: 1.11.14+1111400
+version: 1.12.0+1120000
 
 environment:
   sdk: ^3.13.0
@@ -137,6 +137,10 @@ flutter:
     # Il marchio: la stessa immagine che fa da icona dell'app. Ce n'e' una
     # sola, e sta in un posto solo.
     - assets/marchio/gda.png
+    # Il marchio della plancia, quello del suo velo d'avvio: l'app lo mostra
+    # mentre la plancia arriva, cosi' l'attesa e' una sola dall'inizio alla
+    # fine (vedi `schermate/caricamento.dart`).
+    - assets/marchio/plancia.png
     # Gli oggetti delle sezioni: gli stessi disegni della plancia, uno per
     # sezione. Non sono simboli a contorno ne' emoji di sistema — sono i
     # disegni di DashboardModern, presi da li' e non rifatti a somiglianza,

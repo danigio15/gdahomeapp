@@ -48,6 +48,12 @@
  */
 
 import { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga } from "./elenco-dichiarato.js";
+import {
+  eUnaLettura,
+  elencoLetture,
+  lettureDelDispositivo,
+  lettureVicine,
+} from "./letture-accanto.js";
 
 const clean = (valore) => String(valore ?? "").trim();
 
@@ -365,8 +371,67 @@ export function macchineDeiDispositivi({
  */
 export { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga };
 
-/** Il campo in piu' che le righe delle macchine si portano dietro. */
-export const CAMPI_IN_PIU = Object.freeze(["famiglia"]);
+/** I campi in piu' che le righe delle macchine si portano dietro.
+ *
+ * `letture` sono le «Altre letture» della riga (#177): «ho un sistema di ping
+ * esterno che per ogni apparecchio mi da' online, latenza, uptime, pacchetti
+ * persi, ultima volta visto». L'entita' della riga dice solo se c'e' o non
+ * c'e'; il resto sta in altri sensori accanto, e chi configura li sceglie uno
+ * per uno, come per il robot, la TV e gli elettrodomestici. Passano da qui per
+ * nome, come `famiglia`: un campo che non sta in questo elenco non arriva al
+ * salvataggio, e le letture scelte sparirebbero alla prima riapertura. */
+export const CAMPI_IN_PIU = Object.freeze(["famiglia", "letture"]);
+
+/** Le letture di una riga, ripulite: la regola e' quella di tutte le schede. */
+export function lettureDellaRiga(riga) {
+  return elencoLetture(riga?.letture);
+}
+
+/* Le code che dicono «e' su» invece di dire di chi si parla.
+ *
+ * `binary_sensor.nas_online` e `sensor.nas_latenza` sono lo stesso NAS, ma il
+ * primo porta in coda la domanda a cui risponde. Per riconoscere i sensori
+ * accanto si confronta la parte che resta, che e' il nome dell'apparecchio. */
+const CODA_DELLO_STATO =
+  /_(status|state|running|online|connection|connectivity|connesso|ping|reachable|raggiungibile|acceso)$/i;
+const PAROLE_DELLO_STATO =
+  /\s+(status|state|running|online|connection|connectivity|connesso|ping|reachable|raggiungibile|acceso)$/i;
+
+/**
+ * Le letture da proporre per una riga: i sensori che stanno accanto alla sua
+ * entita'.
+ *
+ * Un sistema di ping chiama le sue entita' tutte allo stesso modo —
+ * `binary_sensor.router_online`, `sensor.router_latency`,
+ * `sensor.router_packet_loss` — e Proxmox fa lo stesso con la CPU e la memoria
+ * di un container. Si propone quello che comincia come l'entita' della riga
+ * senza la sua coda di stato, oppure il cui nome comincia col nome della riga.
+ * L'ordine e quello che non si ripropone (le gia' scelte, l'entita' stessa) lo
+ * decide `lettureVicine`, che e' la regola di tutte le «Altre letture».
+ */
+export function lettureProposteDellaMacchina(riga = {}, states = {}) {
+  const entity = clean(riga?.entity);
+  const radice = oggetto(entity).replace(CODA_DELLO_STATO, "");
+  const nomi = [
+    clean(riga?.name),
+    clean(states?.[entity]?.attributes?.friendly_name).replace(PAROLE_DELLO_STATO, ""),
+  ]
+    .map((nome) => nome.toLowerCase())
+    .filter((nome) => nome.length >= 2);
+  if (!radice && !nomi.length) return [];
+  const candidate = [];
+  for (const [id, stato] of Object.entries(states || {})) {
+    if (id === entity || !eUnaLettura(id)) continue;
+    const suo = oggetto(id);
+    const suoNome = clean(stato?.attributes?.friendly_name).toLowerCase();
+    if (
+      (radice && suo.startsWith(`${radice}_`)) ||
+      nomi.some((nome) => suoNome.startsWith(`${nome} `))
+    )
+      candidate.push(id);
+  }
+  return lettureVicine({ entity, name: riga?.name, letture: riga?.letture }, states, candidate);
+}
 
 /** La configurazione senza le righe: e' quella su cui gira il rilevamento. */
 function senzaLeRighe(config) {
@@ -423,13 +488,23 @@ export function macchineERete(
      * sarebbe una macchina inventata. */
     for (const riga of dichiarate.filter((voce) => voce.entity)) {
       const famiglia = FAMIGLIE[riga.famiglia] ? riga.famiglia : "macchine";
+      const name = clean(riga.name) || clean(nomeDi(riga.entity)) || riga.entity;
+      const letture = lettureDellaRiga(riga);
       elenchi[famiglia].push({
         entity: riga.entity,
         famiglia,
-        name: clean(riga.name) || clean(nomeDi(riga.entity)) || riga.entity,
+        name,
         glifo: clean(riga.icon) || FAMIGLIE[famiglia].glifo,
         stato: comeSta(states?.[riga.entity]),
         comandi: famiglia === "macchine" ? comandiDellaMacchina(riga.entity, states) : null,
+        /* Le altre letture, gia' scritte (#177): il nome senza quello della
+         * riga davanti — «NAS Latenza» sotto «NAS» e' «Latenza» — e il valore
+         * con la sua unita'. Le scrive la stessa regola delle altre schede,
+         * cosi' 12 ms e 3 giorni si leggono uguali dappertutto. */
+        letture,
+        valori: letture.length
+          ? lettureDelDispositivo({ entity: riga.entity, name, letture }, states)
+          : [],
       });
     }
     const peso = (riga) => (riga.stato === "giu" ? 0 : riga.stato === "" ? 1 : 2);

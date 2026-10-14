@@ -539,16 +539,46 @@ test.describe("la plancia a muro", () => {
       stati: { ...STATI_A_MURO, "binary_sensor.campanello": { state: "off", attributes: {} } },
     });
     await expect(muro(page).locator(".mu-testa")).toBeVisible();
-    await page.evaluate(() => window.dmMuro.riposa());
+    /* Il canale dello schermo dell'app, per finta: si annota quello che dice. */
+    await page.evaluate(() => {
+      window.__SCHERMO__ = [];
+      window.gdahomeSchermo = { postMessage: (detto) => window.__SCHERMO__.push(detto) };
+      window.dmMuro.riposa();
+    });
     await expect(muro(page).locator(".mu-riposo")).toBeVisible();
     await cambia(page, "binary_sensor.campanello", "on");
-    const finestra = muro(page).locator(".mu-finestra");
-    await expect(finestra).toContainText("Suonano alla porta");
-    await expect(finestra.locator('[data-mu-telecamera="camera.cancello"]')).toHaveCount(1);
+    /* Come una chiamata: a tutto schermo, col video e i tasti. */
+    const squillo = muro(page).locator(".mu-squillo");
+    await expect(squillo).toContainText("Suona il campanello");
+    await expect(squillo).toHaveClass(/squilla/);
+    await expect(squillo.locator('[data-mu-telecamera="camera.cancello"]')).toHaveCount(1);
+    await expect(squillo).toContainText(/Squilla da 0:0\d/);
+    await expect(squillo.locator('[data-mu-fa="citofono-silenzia"]')).toBeVisible();
+    /* «Parla» si accende a mano: di serie non c'e'. */
+    await expect(squillo.locator('[data-mu-fa="citofono-parla"]')).toHaveCount(0);
     await expect(muro(page).locator('[data-mu-pagina="2"]')).toHaveAttribute(
       "aria-selected",
       "true",
     );
+    /* L'app ha saputo: lo schermo resta acceso, e lo squillo l'ha svegliato. */
+    const detto = await page.evaluate(() => window.__SCHERMO__.slice());
+    expect(detto).toContain("acceso:si");
+    expect(detto).toContain("sveglia");
+    /* «Silenzia»: lo squillo finisce, la finestra dice quando ha suonato e
+     * tiene «Apri» e «Chiudi». */
+    await squillo.locator('[data-mu-fa="citofono-silenzia"]').click();
+    await expect(squillo).toContainText("Ha suonato alle");
+    await expect(squillo).not.toHaveClass(/squilla/);
+    await expect(squillo.locator('[data-mu-fa="citofono-silenzia"]')).toHaveCount(0);
+    await expect(squillo.locator(".mu-sq-squillo")).toHaveCount(1);
+    await squillo.locator('[data-mu-fa="apri"][data-mu-entita="button.apri_cancello"]').click();
+    await expect
+      .poll(() => servizi(page))
+      .toEqual([
+        { domain: "button", service: "press", data: { entity_id: "button.apri_cancello" } },
+      ]);
+    await squillo.locator('[data-mu-fa="chiudi"]').click();
+    await expect(muro(page).locator(".mu-squillo")).toHaveCount(0);
   });
 
   /* «Allagamento, fumo, allarme a tutto schermo con un tasto Ho visto.» */
@@ -952,6 +982,31 @@ test.describe("la plancia a muro", () => {
     await expect(muro(page).locator('[data-mu-entita="person.luca"]')).not.toContainText("Luca");
     await page.evaluate(() => window.dmMuro.riposa());
     await expect(muro(page).locator('[data-mu-riposo="persone"]')).toHaveText(/Mamma · Papà/);
+  });
+
+  /* L'assistente di casa (#175) e' sempre vivo anche sul tablet a muro: il
+   * riposo dice in una riga la cosa piu' importante da fare, col punto del
+   * suo colore. Qui la casa e' vuota e le luci del soggiorno sono accese. */
+  test("il riposo dice il consiglio dell'assistente di casa", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: MURO_DI_PROVA,
+      stati: {
+        ...STATI_A_MURO,
+        "person.anna": { state: "not_home", attributes: { friendly_name: "Anna" } },
+        "person.marco": { state: "not_home", attributes: { friendly_name: "Marco" } },
+      },
+    });
+    await page.waitForTimeout(1500);
+    await page.evaluate(() => window.dmMuro.riposa());
+    const consiglio = muro(page).locator('[data-mu-riposo="assistente"]');
+    await expect(consiglio).toContainText("Non c'è nessuno in casa", { timeout: 20000 });
+    await expect(consiglio).toHaveAttribute("data-urgenza", "oggi");
+    /* Spento in Config › Persone, sul riposo non c'e' piu'. */
+    await page.evaluate(() => {
+      localStorage.setItem("cd_people_accanto", JSON.stringify({ mostra: "niente" }));
+      window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
+    });
+    await expect(consiglio).toHaveCount(0, { timeout: 20000 });
   });
 
   /* «Nella schermata idle mettere la possibilita' di visualizzare la % di

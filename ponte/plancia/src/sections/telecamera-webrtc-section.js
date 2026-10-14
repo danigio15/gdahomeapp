@@ -205,7 +205,7 @@ function offertaVecchia(entity, pc, sdp) {
 export async function avviaWebRtcNativo(
   entity,
   video,
-  { attesa = 15000, conAudio = false, quandoSiPuoChiudere = null } = {},
+  { attesa = 15000, conAudio = false, quandoSiPuoChiudere = null, microfono = null } = {},
 ) {
   if (typeof root.RTCPeerConnection !== "function") throw new Error("browser-senza-webrtc");
   presa();
@@ -247,7 +247,12 @@ export async function avviaWebRtcNativo(
       pc.createDataChannel(ice.canaleDati);
     } catch (_error) {}
   }
-  pc.addTransceiver("audio", { direction: "recvonly" });
+  /* «Parla» del citofono a muro: con un microfono l'audio va nei due versi.
+   * Lo accetta chi sa l'audio di ritorno — go2rtc, molti citofoni — e chi non
+   * lo sa risponde lo stesso col suo video: la voce semplicemente non arriva. */
+  const voce = microfono?.getAudioTracks?.()?.[0];
+  if (voce) pc.addTransceiver(voce, { direction: "sendrecv", streams: [microfono] });
+  else pc.addTransceiver("audio", { direction: "recvonly" });
   pc.addTransceiver("video", { direction: "recvonly" });
   const offerta = await pc.createOffer();
   await pc.setLocalDescription(offerta);

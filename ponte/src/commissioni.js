@@ -70,7 +70,7 @@ import {
 } from "./plance.js";
 import { aggiungiUnaPlancia } from "./plancia-nuova.js";
 import { LicenzaNo } from "./licenze.js";
-import { perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
+import { eUnaViaDelleTelecamere, perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
 import { iFili, iRami, laMappaDisegnata } from "./mappa-zigbee.js";
 import { comeSiPresenta } from "./zigbee.js";
 import {
@@ -1233,7 +1233,10 @@ export class Commissioni {
           continue;
         }
         const testo = valori ? JSON.stringify(valori) : "";
-        for (const id of testo.match(/\bcamera\.[a-z0-9_]+/gi) || []) trovate.add(id.toLowerCase());
+        /* Anche le `image.*`: «Ultimo scatto Cancello» mostra quello che
+         * mostra la telecamera. */
+        for (const id of testo.match(/\b(?:camera|image)\.[a-z0-9_]+/gi) || [])
+          trovate.add(id.toLowerCase());
       }
       return trovate;
     };
@@ -2219,6 +2222,48 @@ export class Commissioni {
       return no(id, "not_allowed", "di qui passano solo /api/, /dashboardmodern_static/ e /local/");
     }
 
+    /* Le telecamere: quattro promesse, e dove si mantengono.
+     *
+     * 1. **Solo a chi e' entrato.** Un fotogramma si serve solo a una persona
+     *    che Home Assistant conosce ed e' attiva adesso: il telefono abbinato
+     *    e intestato a un utente vivo, sul filo cifrato (`ponte.js`), o chi ha
+     *    aperto la plancia da Home Assistant, con la sua sessione (l'ingress
+     *    scrive chi e', `server.js`; la pagina non lo puo' cambiare). Chi non
+     *    si sa chi sia — un telefono abbinato prima che i telefoni si
+     *    intestassero a qualcuno, l'ingress che non ha detto niente — una
+     *    telecamera non la vede: «non si sa» non e' un si'. Un utente tolto o
+     *    spento in Home Assistant non la vede dal momento in cui l'elenco
+     *    degli utenti lo dice (`_vedeLeTelecamere`), anche col filo ancora
+     *    aperto. E se Home Assistant non sa dire chi c'e', si dice di no.
+     *
+     * 2. **Il ponte non tiene niente.** I byte arrivano da Home Assistant e
+     *    ripartono verso chi li ha chiesti, dentro questa risposta e basta: non
+     *    si scrivono sul disco, non si tengono in memoria per il giro dopo,
+     *    non finiscono nei registri, nel rapporto, nella console o nel
+     *    cruscotto. Nemmeno l'indirizzo intero: dentro c'e' il gettone della
+     *    telecamera, e nei registri va solo la via (`viaDaScrivere`).
+     *
+     * 3. **Le plance riservate restano riservate.** Una telecamera (o la sua
+     *    immagine `image.*`) che sta solo in una plancia che chi chiede non
+     *    vede gli resta chiusa (`telecamereChiuse`, `dogana.js`): qui, sul
+     *    filo del telefono e — da adesso — anche dentro Home Assistant
+     *    (`cucitura.js`). Chi amministra Home Assistant le vede tutte, come in
+     *    Home Assistant.
+     *
+     * 4. **Nessun lasciapassare lungo.** Dal telefono le vie delle telecamere
+     *    non si fanno firmare: il ponte risponde col percorso nudo, e ogni
+     *    fotogramma ripassa da qui, dove queste regole si riguardano a ogni
+     *    domanda. Dentro Home Assistant una firma serve e si fa, ma vale al
+     *    massimo dieci minuti (`FIRMA_MASSIMA_S`, `dogana.js`). Il gettone
+     *    che Home Assistant mette in `entity_picture` e' suo, e lo cambia lui
+     *    ogni cinque minuti.
+     *
+     * Il 501 del flusso MJPEG viene dopo tutto questo: prima si guarda chi
+     * chiede, poi cosa. */
+    if (eUnaViaDelleTelecamere(percorso) && !(await this._vedeLeTelecamere(chiChiede))) {
+      return no(id, "unauthorized", "le telecamere si mostrano solo a chi e' entrato in casa");
+    }
+
     /* Le vie REST di Home Assistant passano dalla stessa dogana dei messaggi
      * sul filo: il segno che le apre e' quello del Supervisor. */
     if (percorso.startsWith("/api/")) {
@@ -2230,6 +2275,25 @@ export class Commissioni {
           puoAmministrare === true ? null : this.telecamereChiuse(chiChiede, amministra),
       });
       if (vietata) return no(id, "unauthorized", vietata);
+    }
+
+    /* Il flusso MJPEG di una telecamera non passa di qui.
+     *
+     * `ponte/http` porta una risposta intera, dentro una risposta sola; un
+     * MJPEG e' una risposta che non finisce. Andarlo a prendere voleva dire
+     * tenere occupato uno degli otto posti delle commissioni finche' il flusso
+     * non arrivava al limite — mezzo minuto o piu' — mentre le istantanee
+     * delle altre telecamere aspettavano in fila dietro di lui. Si dice di no
+     * subito, con un 501 che la plancia legge come «flusso non disponibile» e
+     * le fa tornare alle istantanee. (La dogana ha gia' guardato chi chiede:
+     * questo no vale per tutti, anche per chi la telecamera la puo' vedere.) */
+    if (/^\/api\/camera_proxy_stream\//i.test(percorso)) {
+      return si(
+        id,
+        impacchetta(501, "text/plain; charset=utf-8", Buffer.from("il flusso non passa dal filo"), {
+          senzaGzip,
+        }),
+      );
     }
 
     const intestazioni = { ...dove.intestazioni, "accept-encoding": "identity" };
@@ -2254,11 +2318,25 @@ export class Commissioni {
       return si(id, impacchetta(stato, tipo, ricevuto, { senzaGzip }));
     } catch (errore) {
       this.registro.attenzione(
-        `commissione fallita (${metodo} ${percorso}): ${errore?.message || errore}`,
+        `commissione fallita (${metodo} ${viaDaScrivere(percorso)}): ${errore?.message || errore}`,
       );
       return no(id, "ponte_http", String(errore?.message || "non ha funzionato"));
     } finally {
       this._finito();
+    }
+  }
+
+  /* Se chi chiede puo' vedere una telecamera: una persona di Home Assistant,
+   * attiva adesso (la regola 1 qui sopra, in `_http`). L'elenco degli utenti
+   * lo tiene `utenti.js` per un po', quindi non e' una domanda a Home
+   * Assistant per ogni fotogramma. */
+  async _vedeLeTelecamere(chiChiede) {
+    const chi = String(chiChiede || "").trim();
+    if (!chi || typeof this.utenti?.eVivo !== "function") return false;
+    try {
+      return (await this.utenti.eVivo(chi)) === true;
+    } catch (_errore) {
+      return false;
     }
   }
 
@@ -2330,6 +2408,13 @@ export function dentroLaVia(base, percorso, sotto) {
  * modo lungo. Sulla rete di casa qualche byte in piu' non si sente; fuori casa
  * e' il prezzo di poter guardare la casa da un browser. Chi non lo chiede —
  * cioe' ogni telefono — riceve quello che riceveva prima. */
+/* Un percorso come si scrive nei registri: la via e basta. Dopo il `?` ci
+ * sono il gettone di una telecamera, una firma, a volte il nome di qualcuno —
+ * cose che in un registro non devono stare. */
+export function viaDaScrivere(percorso) {
+  return String(percorso || "").split("?")[0];
+}
+
 export function impacchetta(stato, tipo, corpo, { senzaGzip = false } = {}) {
   const dati = Buffer.isBuffer(corpo) ? corpo : Buffer.from(corpo ?? "");
   const tipoPulito = String(tipo || "application/octet-stream");

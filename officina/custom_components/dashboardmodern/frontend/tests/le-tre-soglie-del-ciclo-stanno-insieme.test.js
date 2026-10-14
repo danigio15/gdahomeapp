@@ -82,5 +82,11 @@ test("il valore di serie dello standby resta quello dei metadati", () => {
    * vuota, e continua a nascere da lì: spostare un campo non è cambiarlo. */
   const soglie = SORGENTE.slice(SORGENTE.indexOf("function soglieMarkup"));
   assert.match(soglie, /device\.metadata\?\.threshold_standby \?\? ""/);
-  assert.match(soglie, /device\.threshold_run \?\? device\.metadata\?\.threshold_run \?\? 5/);
+  /* E quella in funzione pure — tranne per le macchine a ciclo, che lasciate
+   * vuote usano i valori consigliati per il loro tipo (#26) e li mostrano in
+   * grigio invece di un 5 scritto d'ufficio. */
+  assert.match(
+    soglie,
+    /device\.threshold_run \?\? device\.metadata\?\.threshold_run \?\? \(consigliati \? "" : 5\)/,
+  );
 });

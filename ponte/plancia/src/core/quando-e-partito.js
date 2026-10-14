@@ -46,9 +46,18 @@
 /** Quanto indietro si guarda: oltre un giorno non è più questo ciclo. */
 export const ORE_DI_STORIA = 24;
 
-/* La stessa sosta che il contatore dei cicli lascia passare senza chiudere il
- * ciclo (#26). Sta scritta in due posti perché i due moduli non si conoscono,
- * e una prova tiene insieme i due numeri. */
+/* Quanto puo' stare ferma una macchina senza che il ciclo sia finito (#26).
+ *
+ * Venti minuti, e la scelta e' fra due errori. Troppo corto rimette i mini
+ * cicli; troppo lungo unisce due bucati veri in uno. Venti sta largo su
+ * qualunque pausa di programma e stretto sul tempo che ci vuole a svuotare il
+ * cestello e rifare un carico: fra due lavaggi veri ci passa sempre di piu'.
+ *
+ * E' scritto QUI e da nessun'altra parte: lo leggono la storia (sotto), il
+ * contatore dei cicli e la card, attraverso `il-ciclo-di-un-elettrodomestico`.
+ * Prima stava in due posti, e una prova teneva insieme i due numeri; ma la
+ * card ne aveva un terzo — il ritardo scritto, cinque minuti — e i mini cicli
+ * venivano da li'. Un numero solo non puo' andare per conto suo. */
 export const PAUSA_DENTRO_UN_CICLO_MS = 20 * 60 * 1000;
 
 const numero = (valore) => {

@@ -312,6 +312,7 @@ jobs:
           CORSA: ${{ github.run_number }}
           TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
           OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
+          HERE: ${{ secrets.GDANAV_HERE_CHIAVE }}
         run: |
           # Su un'etichetta il numero e' quello del rilascio, e non «37-a0566bd»:
           # chi ha installato una release deve poter dire quale ha, con le stesse
@@ -330,6 +331,8 @@ jobs:
             echo "::warning::Manca il segreto GDANAV_TOMTOM_CHIAVE: il navigatore esce senza traffico, in auto e sul telefono."
           fi
           if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
+          # I pedaggi veri, casello per casello (HERE). Senza, il navigatore li stima.
+          if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
           flutter build apk --release "${definizioni[@]}"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -354,6 +357,7 @@ jobs:
           CORSA: ${{ github.run_number }}
           TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
           OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
+          HERE: ${{ secrets.GDANAV_HERE_CHIAVE }}
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             VERSIONE="${GITHUB_REF_NAME#v}"
@@ -364,6 +368,8 @@ jobs:
           if [ -n "$CENTRALINO" ]; then definizioni+=(--dart-define=CENTRALINO="$CENTRALINO"); fi
           if [ -n "$TOMTOM" ]; then definizioni+=(--dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM"); fi
           if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
+          # I pedaggi veri, casello per casello (HERE). Senza, il navigatore li stima.
+          if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
           flutter build appbundle --release "${definizioni[@]}"
           {
             echo "### Il pacchetto per il Play Store"
@@ -584,6 +590,7 @@ jobs:
           CORSA: ${{ github.run_number }}
           TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
           OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
+          HERE: ${{ secrets.GDANAV_HERE_CHIAVE }}
         run: |
           # Su un'etichetta il numero e' quello del rilascio, come su Android.
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
@@ -599,6 +606,8 @@ jobs:
             echo "::warning::Manca il segreto GDANAV_TOMTOM_CHIAVE: il navigatore esce senza traffico, in CarPlay e sul telefono."
           fi
           if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
+          # I pedaggi veri, casello per casello (HERE). Senza, il navigatore li stima.
+          if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
           flutter build ios --release --no-codesign --build-number="$CORSA" "${definizioni[@]}"
 
       # Da qui in giu' si va avanti solo se su GitHub ci sono le chiavi di

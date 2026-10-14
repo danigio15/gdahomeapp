@@ -18,6 +18,7 @@
  * principale la rinomina anche sul tablet, e una luce tolta lascia il suo
  * posto vuoto invece di comandare un'entita' che non c'e' piu'. */
 
+import { opzioniDelCampanello } from "./il-campanello-a-muro.js";
 import { alarmHiddenModes, centraliAllarme, entitaDellaCentrale } from "./alarm-panel.js";
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
@@ -285,6 +286,12 @@ const INGRESSO_VUOTO = Object.freeze({
   esco: "",
   rientro: "",
   campanello: "",
+  /* Le scelte del campanello (`il-campanello-a-muro.js`). */
+  suono: "dindon",
+  volume: 70,
+  accendiSchermo: true,
+  tieniAcceso: true,
+  parla: false,
   persone: true,
   finestre: true,
   aree: [],
@@ -362,6 +369,9 @@ function ingressoPulito(input = {}) {
      * da solo, col video e i tasti per aprire. Un sensore che si accende, o
      * un evento di Home Assistant che scatta. */
     campanello: entita(dentro.campanello),
+    /* E come suona: il suono e il suo volume, se lo schermo si accende quando
+     * suona, se resta acceso (di notte al minimo) e se c'e' «Parla». */
+    ...opzioniDelCampanello(dentro),
     persone: vero(dentro.persone, INGRESSO_VUOTO.persone),
     finestre: vero(dentro.finestre, INGRESSO_VUOTO.finestre),
     aree: unici(

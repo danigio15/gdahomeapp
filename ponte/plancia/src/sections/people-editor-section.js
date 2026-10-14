@@ -40,6 +40,16 @@ import {
   suggestPeople,
 } from "../core/person-model.js";
 import { spostaNellElenco } from "../core/ordine-a-mano.js";
+import { CHIAVE_ACCANTO, COSE_ACCANTO } from "../core/accanto-alle-persone.js";
+import {
+  CATEGORIE,
+  CHIAVE_ASSISTENTE,
+  SENSIBILITA,
+  memoriaPulita,
+  opzioniDellAssistente,
+} from "../core/assistente-di-casa.js";
+import { cosaAccanto, ricalcola as ricalcolaLAssistente } from "./assistente-di-casa-section.js";
+import { renderHomeWidgets } from "./home-widgets-section.js";
 import { pickMediaImage } from "./media-picker-section.js";
 import { installAvatar3dStyle, ritrattoFermo, ritrattoVivo } from "./person-avatar-section.js";
 import {
@@ -536,7 +546,106 @@ function bodyMarkup(people) {
     <div class="ed-form-row dm-people-actions">
       <button type="button" class="ed-btn-add" data-person-add>＋ ${t("Aggiungi persona", "Add person")}</button>
       <button type="button" class="ed-btn-add dm-people-import" data-person-import>⤵️ ${t("Importa da Home Assistant", "Import from Home Assistant")}</button>
-    </div>`;
+    </div>
+    ${accantoMarkup()}`;
+}
+
+/* Cosa sta accanto alle persone (#175): l'assistente di casa, o niente.
+ *
+ * Due scelte, una sola valida: i tasti stanno in fila come quelli che
+ * scelgono fra ritratto e foto, perche' e' lo stesso gesto. Sotto, se c'e'
+ * l'assistente, le sue regolazioni: di cosa parla, quando comincia la notte,
+ * quanto parla, e il tasto per fargli dimenticare quello che ha imparato.
+ * Tutto si salva al tocco: sono preferenze della casa, non righe da
+ * confermare col 💾. */
+function nomeDellaCosaAccanto(cosa) {
+  if (cosa === "assistente") return t("Assistente di casa", "House assistant");
+  return t("Niente", "Nothing");
+}
+
+function nomeDellaCategoria(categoria) {
+  return (
+    {
+      sicurezza: t("Sicurezza", "Safety"),
+      risparmio: t("Risparmio", "Savings"),
+      elettrodomestici: t("Elettrodomestici", "Appliances"),
+      comfort: t("Comfort", "Comfort"),
+      promemoria: t("Promemoria", "Reminders"),
+      manutenzione: t("Manutenzione", "Maintenance"),
+    }[categoria] || categoria
+  );
+}
+
+function nomeDellaSensibilita(livello) {
+  if (livello === "poco") return t("Solo l'importante", "Only what matters");
+  if (livello === "tutto") return t("Proprio tutto", "Everything");
+  return t("Normale", "Normal");
+}
+
+function assistenteSalvato() {
+  const dato = readJson(CHIAVE_ASSISTENTE, {});
+  return dato && typeof dato === "object" && !Array.isArray(dato) ? dato : {};
+}
+
+function assistenteMarkup() {
+  const salvato = assistenteSalvato();
+  const opzioni = opzioniDellAssistente(salvato.opzioni);
+  const memoria = memoriaPulita(salvato.memoria);
+  const imparato = Object.keys(memoria.tipi).length + Object.keys(memoria.istanze).length > 0;
+  const ore = [18, 19, 20, 21, 22, 23];
+  return `<div class="dm-people-assistente-ed" data-person-assistente>
+    <span class="ed-slot-lbl">${esc(t("Di cosa parla", "What it talks about"))}</span>
+    <div class="dm-face-modes dm-people-accanto-scelte dm-people-ass-categorie" role="group" aria-label="${esc(t("Di cosa parla", "What it talks about"))}">${CATEGORIE.map(
+      (categoria) =>
+        `<button type="button" class="dm-face-mode${opzioni.categorie[categoria] ? " on" : ""}" data-person-ass-categoria="${esc(categoria)}" aria-pressed="${opzioni.categorie[categoria]}">${esc(nomeDellaCategoria(categoria))}</button>`,
+    ).join("")}</div>
+    <span class="ed-slot-lbl">${esc(t("Quanto parla", "How much it says"))}</span>
+    <div class="dm-face-modes dm-people-accanto-scelte" role="radiogroup" aria-label="${esc(t("Quanto parla", "How much it says"))}">${SENSIBILITA.map(
+      (livello) =>
+        `<button type="button" role="radio" class="dm-face-mode${livello === opzioni.sensibilita ? " on" : ""}" data-person-ass-sensibilita="${esc(livello)}" aria-checked="${livello === opzioni.sensibilita}">${esc(nomeDellaSensibilita(livello))}</button>`,
+    ).join("")}</div>
+    <label class="dm-people-ass-notte"><span class="ed-slot-lbl">${esc(t("La notte comincia alle", "Night starts at"))}</span>
+      <select class="ed-input" data-person-ass-notte>${ore
+        .map((ora) => `<option value="${ora}"${ora === opzioni.notteDalle ? " selected" : ""}>${ora}:00</option>`)
+        .join("")}</select></label>
+    <button type="button" class="ed-btn-add dm-people-ass-scorda" data-person-ass-scorda${imparato ? "" : " disabled"}>${esc(
+      t("Dimentica quello che ha imparato", "Forget what it has learned"),
+    )}</button>
+  </div>`;
+}
+
+function accantoMarkup() {
+  const scelta = cosaAccanto();
+  return `<div class="ed-slot dm-people-field dm-people-accanto-ed">
+    <span class="ed-slot-lbl">${esc(t("Accanto alle persone", "Next to the people"))}</span>
+    <div class="dm-face-modes dm-people-accanto-scelte" role="radiogroup" aria-label="${esc(t("Accanto alle persone", "Next to the people"))}">${COSE_ACCANTO.map(
+      (cosa) =>
+        `<button type="button" role="radio" class="dm-face-mode${cosa === scelta ? " on" : ""}" data-person-accanto="${esc(cosa)}" aria-checked="${cosa === scelta}">${esc(nomeDellaCosaAccanto(cosa))}</button>`,
+    ).join("")}</div>
+    <small>${esc(
+      t(
+        "L'assistente di casa guarda la casa al posto tuo e ti dice la cosa più importante da fare adesso: luci accese con la casa vuota, una finestra aperta col riscaldamento acceso, la pioggia in arrivo, il bucato finito, il sole che avanza. Impara da quello che scarti, e lo ricorda per tutta la casa. Sul computer e sul tablet sta a destra delle persone, sul telefono sotto.",
+        "The house assistant watches the house for you and tells you the most important thing to do right now: lights left on in an empty house, a window open with the heating on, rain on its way, the laundry done, spare solar power. It learns from what you dismiss, and remembers it for the whole household. On a computer or tablet it sits to the right of the people, on a phone below them.",
+      ),
+    )}</small>
+    ${scelta === "assistente" ? assistenteMarkup() : ""}
+  </div>`;
+}
+
+/* Le regolazioni dell'assistente si scrivono accanto a quello che ha
+ * imparato, senza toccarlo; «Dimentica» fa il contrario. */
+function scriviAssistente(cambia) {
+  const salvato = assistenteSalvato();
+  const prossimo = cambia({
+    opzioni: opzioniDellAssistente(salvato.opzioni),
+    memoria: memoriaPulita(salvato.memoria),
+  });
+  writeJsonIfChanged(CHIAVE_ASSISTENTE, { ...salvato, ...prossimo });
+  ridisegna();
+  /* La Home si rifa' subito: chi ha appena scelto vuole vederlo. */
+  try {
+    ricalcolaLAssistente();
+  } catch (_errore) {}
 }
 
 /* Quello che c'e' scritto adesso in TUTTE le righe.
@@ -586,6 +695,9 @@ export function ensurePeopleEditor() {
   const people = lista();
   const firma = [
     state.aperto,
+    cosaAccanto(),
+    JSON.stringify(readJson(CHIAVE_ASSISTENTE, {})?.opzioni || {}),
+    JSON.stringify(memoriaPulita(readJson(CHIAVE_ASSISTENTE, {})?.memoria)) !== '{"tipi":{},"istanze":{}}',
     ...people.map(
       (person) =>
         `${person.id}~${person.nascosta ? "off" : "on"}~${person.name}~${person.entity}~${person.photo}~${person.avatar.emoji}~${person.avatar.color}~${JSON.stringify(person.avatar.face)}~${person.battery}~${person.batteryState}~${person.watch}~${person.distance}~${person.travel}~${person.address}~${person.activity}~${person.wifi}~${person.direction}`,
@@ -797,6 +909,45 @@ async function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || activeTab() !== PEOPLE_EDITOR_TAB || !body.contains(event.target)) return;
   const people = lista();
+
+  const accanto = event.target.closest("[data-person-accanto]");
+  if (accanto) {
+    event.preventDefault();
+    const cosa = clean(accanto.dataset.personAccanto);
+    if (!COSE_ACCANTO.includes(cosa)) return;
+    writeJsonIfChanged(CHIAVE_ACCANTO, { mostra: cosa });
+    ridisegna();
+    /* La Home si rifa' subito: chi ha appena scelto vuole vederlo, non
+     * aspettare il prossimo cambio di stato. */
+    try {
+      renderHomeWidgets();
+    } catch (_errore) {}
+    return;
+  }
+
+  const categoria = event.target.closest("[data-person-ass-categoria]");
+  if (categoria) {
+    event.preventDefault();
+    const quale = clean(categoria.dataset.personAssCategoria);
+    if (!CATEGORIE.includes(quale)) return;
+    scriviAssistente(({ opzioni }) => ({
+      opzioni: { ...opzioni, categorie: { ...opzioni.categorie, [quale]: !opzioni.categorie[quale] } },
+    }));
+    return;
+  }
+  const sensibilita = event.target.closest("[data-person-ass-sensibilita]");
+  if (sensibilita) {
+    event.preventDefault();
+    const livello = clean(sensibilita.dataset.personAssSensibilita);
+    if (!SENSIBILITA.includes(livello)) return;
+    scriviAssistente(({ opzioni }) => ({ opzioni: { ...opzioni, sensibilita: livello } }));
+    return;
+  }
+  if (event.target.closest("[data-person-ass-scorda]")) {
+    event.preventDefault();
+    scriviAssistente(() => ({ memoria: memoriaPulita({}) }));
+    return;
+  }
 
   if (event.target.closest("[data-person-add]")) {
     event.preventDefault();
@@ -1030,6 +1181,11 @@ async function onClick(event) {
 function onChange(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || activeTab() !== PEOPLE_EDITOR_TAB || !body.contains(event.target)) return;
+  if (event.target?.matches?.("[data-person-ass-notte]")) {
+    const ora = Number(event.target.value);
+    scriviAssistente(({ opzioni }) => ({ opzioni: opzioniDellAssistente({ ...opzioni, notteDalle: ora }) }));
+    return;
+  }
   if (!event.target?.matches?.("[data-person-field]")) return;
   const riga = event.target.closest("[data-person-index]");
   const index = Number(riga?.dataset?.personIndex);
@@ -1167,6 +1323,23 @@ function installStyles() {
       #ed-body .dm-people-actions{display:flex;gap:8px;flex-wrap:wrap}
       #ed-body .dm-people-actions .ed-btn-add{flex:1 1 auto;margin:0}
       #ed-body .dm-people-error:not(:empty){color:var(--error-color,#dc2626);font-size:12px;font-weight:800}
+      /* Accanto alle persone (#175): i tasti vanno a capo su un telefono
+         stretto invece di schiacciarsi, e l'aiuto sta sotto come in ogni campo. */
+      #ed-body .dm-people-accanto-ed{margin-top:14px;padding-top:12px;border-top:1px solid var(--card-border,#e2e8f0)}
+      #ed-body .dm-people-accanto-scelte{flex-wrap:wrap;border-radius:18px}
+      @media(max-width:520px){
+        #ed-body .dm-people-accanto-scelte{display:grid;grid-template-columns:1fr;justify-self:stretch}
+        #ed-body .dm-people-accanto-scelte .dm-face-mode{justify-content:center;padding:8px 13px}
+        /* Sei famiglie una sotto l'altra sono una colonna lunga: due per riga. */
+        #ed-body .dm-people-ass-categorie{grid-template-columns:1fr 1fr}
+      }
+      #ed-body .dm-people-accanto-ed>small{color:var(--secondary-text-color,#64748b);font-size:11.5px;line-height:1.45}
+      #ed-body .dm-people-assistente-ed{display:grid;gap:8px;margin-top:6px;padding:12px;border-radius:16px;
+        border:1px solid color-mix(in srgb,#8b5cf6 26%,var(--card-border,#e2e8f0));background:color-mix(in srgb,#8b5cf6 5%,transparent)}
+      #ed-body .dm-people-ass-notte{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+      #ed-body .dm-people-ass-notte .ed-input{width:auto;min-width:96px}
+      #ed-body .dm-people-ass-scorda{justify-self:start;margin:2px 0 0}
+      #ed-body .dm-people-ass-scorda[disabled]{opacity:.5;cursor:default}
     `,
   );
 }

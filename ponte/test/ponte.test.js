@@ -1007,3 +1007,44 @@ test("un telefono staccato mentre entra non riceve il suo «auth_ok»", async ()
     await b.spegni();
   }
 });
+
+test("dal telefono la firma di una telecamera non la fa Home Assistant: torna il percorso nudo", async () => {
+  /* Il perche' sta in `dogana.js` (`firmaIlPonte`): nell'app ogni fotogramma
+   * ripassa da `ponte/http`, e un indirizzo firmato col segno del ponte
+   * sarebbe un lasciapassare che vale anche senza il ponte. */
+  const b = await banco();
+  try {
+    const { segno } = b.dispositivi.abbina({ nome: "telefono di prova" });
+    const t = telefono(b.indirizzo);
+    await t.aperta;
+    await t.aspetta("auth_required");
+    t.manda({ type: "auth", access_token: segno });
+    await t.aspetta("auth_ok");
+
+    t.manda({
+      id: 11,
+      type: "auth/sign_path",
+      path: "/api/camera_proxy/camera.cancello",
+      expires: 4 * 60 * 60,
+    });
+    const firmata = await attendi(() => t.detti.find((uno) => uno.id === 11));
+    assert.deepEqual(firmata, {
+      id: 11,
+      type: "result",
+      success: true,
+      result: { path: "/api/camera_proxy/camera.cancello" },
+    });
+
+    /* Il calendario si firma come prima, da Home Assistant. */
+    t.manda({ id: 12, type: "auth/sign_path", path: "/api/calendars/calendar.casa", expires: 30 });
+    await attendi(() => b.ha.arrivati.length === 1);
+    assert.deepEqual(
+      b.ha.arrivati.map((detto) => [detto.id, detto.path]),
+      [[12, "/api/calendars/calendar.casa"]],
+      "la firma della telecamera a Home Assistant non e' arrivata",
+    );
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});

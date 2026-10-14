@@ -10,6 +10,8 @@
 /// `runAsync`: il ponte finto e il filo vogliono il tempo vero.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
@@ -21,9 +23,15 @@ import 'package:gdahome/plancia/pannello.dart';
 import 'package:gdahome/plancia/servitore_qui/qui.dart';
 import 'package:gdahome/ponte/filo.dart';
 import 'package:gdahome/ponte/sonda.dart';
+import 'package:gdahome/schermate/caricamento.dart';
 import 'package:gdahome/schermate/plancia_vera.dart';
 
 import 'ponte/ponte_finto.dart';
+
+/// L'attesa della plancia in quella fase (`schermate/caricamento.dart`).
+Finder laFase(FaseDelCaricamento fase) => find.byWidgetPredicate(
+  (w) => w is CaricamentoDellaPlancia && w.fase == fase,
+);
 
 /// La plancia vera, senza WebView: un servitore che non serve niente e un
 /// riquadro che si conta.
@@ -91,6 +99,17 @@ class _ServitoreFinto implements ServitoreDiQuestoSistema {
 
   @override
   set margini(({double alto, double basso}) quanto) {}
+}
+
+/// Un servitore che si accende quando lo dice la prova.
+class _PlanciaLenta extends _PlanciaFinta {
+  final acceso = Completer<ServitoreDiQuestoSistema?>();
+
+  @override
+  Future<ServitoreDiQuestoSistema?> servitore(
+    Filo? Function() filo, {
+    String lingua = 'it',
+  }) => acceso.future;
 }
 
 /// Si dice caricato al primo fotogramma, come una pagina che arriva.
@@ -212,7 +231,7 @@ void main() {
 
     await tester.runAsync(collegamento.riposa);
     await tester.pump();
-    expect(find.textContaining('Cerco la plancia'), findsNothing);
+    expect(laFase(FaseDelCaricamento.cerco), findsNothing);
     expect(find.textContaining('LA PLANCIA'), findsOneWidget);
     /* La riga che dice «sto ricollegando»: la pagina resta, coi suoi dati. */
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
@@ -242,7 +261,9 @@ void main() {
    * piedi. Adesso la pagina dice quando si vede; il `load` resta il ripiego,
    * e sotto a tutti e due c'e' una scadenza. */
 
-  Finder ilVelo() => find.text('Apro la plancia…');
+  /* Il velo e' l'attesa della plancia, nella sua fase «apro»: non si scrive
+   * piu' «Apro la plancia…», si mostra lo stesso velo della pagina. */
+  Finder ilVelo() => laFase(FaseDelCaricamento.apro);
 
   testWidgets('il velo se ne va appena la pagina si vede, senza aspettare '
       'che sia finita', (tester) async {
@@ -327,6 +348,48 @@ void main() {
     await tester.pump();
     expect(ilVelo(), findsNothing);
 
+    await chiudiLaCasa(tester);
+  });
+
+  testWidgets('mentre la plancia si accende si aspetta: niente «Non riesco» '
+      'per un attimo all\'avvio', (tester) async {
+    /* Dal video dell'avvio: spinner, poi per un fotogramma «Non riesco ad
+     * accendere la plancia», poi la plancia. Bastava un ridisegno qualunque
+     * mentre il servitore si accendeva. */
+    await apriLaCasa(tester);
+    final lenta = _PlanciaLenta();
+    await tester.pumpWidget(_laSchermata(collegamento, lenta, impostazioni));
+    await tester.pump();
+    // Un ridisegno mentre si accende: la casa che cambia, la licenza.
+    await tester.pumpWidget(_laSchermata(collegamento, lenta, impostazioni));
+    await tester.pump();
+    expect(find.text('Non riesco ad accendere la plancia'), findsNothing);
+    expect(laFase(FaseDelCaricamento.accendo), findsOneWidget);
+    /* E l'attesa e' quella della plancia: niente «Casa · da fuori». */
+    expect(find.textContaining('da fuori'), findsNothing);
+
+    lenta.acceso.complete(_ServitoreFinto());
+    await tester.pump();
+    await tester.pump();
+    expect(find.textContaining('LA PLANCIA'), findsOneWidget);
+    expect(find.text('Non riesco ad accendere la plancia'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    await chiudiLaCasa(tester);
+  });
+
+  testWidgets('se il servitore proprio non si accende, allora lo si dice', (
+    tester,
+  ) async {
+    await apriLaCasa(tester);
+    final lenta = _PlanciaLenta();
+    await tester.pumpWidget(_laSchermata(collegamento, lenta, impostazioni));
+    await tester.pump();
+    lenta.acceso.complete(null);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Non riesco ad accendere la plancia'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
     await chiudiLaCasa(tester);
   });
 }

@@ -98,6 +98,8 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_robot: "robot",
   cd_prese: "prese",
   cd_people: "people",
+  cd_people_accanto: "people",
+  cd_assistente: "people",
   cd_todo: "todo",
   cd_ups: "ups",
   cd_calendari: "agenda",

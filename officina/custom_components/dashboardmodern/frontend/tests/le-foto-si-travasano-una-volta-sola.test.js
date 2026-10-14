@@ -59,9 +59,8 @@ test("la casella del travaso resta di questo dispositivo", async () => {
  * nell'elenco.
  */
 test("togliere una chiave non alza la revisione", async () => {
-  const { CONFIG_KEYS, CONFIG_KEYS_REVISION, mergeLegacyMissingConfig } = await import(
-    "../src/sections/config-persistence-section.js"
-  );
+  const { CONFIG_KEYS, CONFIG_KEYS_REVISION, mergeLegacyMissingConfig } =
+    await import("../src/sections/config-persistence-section.js");
   /* La 5 non smentisce questa prova: aggiunge una chiave (`cd_people`), e per
    * una chiave aggiunta la revisione si alza apposta. La 6 fa lo stesso con
    * le aperture (`cd_security_doors`) e le liste ToDo (`cd_todo`), la 7 con
@@ -258,7 +257,18 @@ test("togliere una chiave non alza la revisione", async () => {
    * deve dirlo il tablet in cucina come lo dice il computer. */
   /* E la 62 con la plancia a muro (`cd_muro`): il config del tablet scritto
    * dal computer deve arrivare al tablet. */
-  assert.equal(CONFIG_KEYS_REVISION, 62);
+  /* E la 63 con l'assistente di casa accanto alle persone (#175): la stessa
+   * card nello stesso posto su ogni vetro (`cd_people_accanto`), e quello che
+   * ha imparato vale per tutta la casa (`cd_assistente`). */
+  assert.equal(CONFIG_KEYS_REVISION, 63);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_people_accanto"),
+    "la card accanto alle persone deve essere la stessa su ogni vetro",
+  );
+  assert.ok(
+    CONFIG_KEYS.includes("cd_assistente"),
+    "un suggerimento scartato dal telefono non deve ripresentarsi sul tablet",
+  );
   assert.ok(CONFIG_KEYS.includes("cd_muro"), "il config a muro deve arrivare al tablet");
   assert.ok(
     CONFIG_KEYS.includes("cd_stufe"),
@@ -362,9 +372,8 @@ test("togliere una chiave non alza la revisione", async () => {
 });
 
 test("un salvataggio davvero piu' vecchio si riempie ancora, ma solo di chiavi vive", async () => {
-  const { mergeLegacyMissingConfig } = await import(
-    "../src/sections/config-persistence-section.js"
-  );
+  const { mergeLegacyMissingConfig } =
+    await import("../src/sections/config-persistence-section.js");
   const merged = mergeLegacyMissingConfig(
     { keys_revision: 2, values: { cd_ev_cars: "[]" } },
     { cd_robot: '[{"name":"Rosetta"}]', cd_ev_image: '"/local/vecchia.png"' },
@@ -403,10 +412,7 @@ test("chi arriva dal formato vecchio con la sola image la conserva", () => {
 test("senza `img`, un'image vuota non spegne la image_url piena", () => {
   /* La riga legacy: `img` mai esistita, `image` vuota, `image_url` piena.
    * L'autorita' del campo vuoto vale solo per `img` presente davvero. */
-  const auto = normalizeDevice(
-    { name: "B10", image: "", image_url: "/local/b10.png" },
-    "ev",
-  );
+  const auto = normalizeDevice({ name: "B10", image: "", image_url: "/local/b10.png" }, "ev");
   assert.equal(auto.img, "/local/b10.png", "l'unica foto rimasta e' stata scartata");
 });
 
@@ -421,9 +427,8 @@ test("senza `img`, un'image vuota non spegne la image_url piena", () => {
  * qui si tiene il male che si puo' disfare a mano.
  */
 test("uno scatto piu' vecchio riceve tutto quello che questo dispositivo ha", async () => {
-  const { mergeLegacyMissingConfig } = await import(
-    "../src/sections/config-persistence-section.js"
-  );
+  const { mergeLegacyMissingConfig } =
+    await import("../src/sections/config-persistence-section.js");
   const locale = {
     cd_widgets: '{"hidden":["luci"]}',
     cd_tapparelle: '[{"entity":"cover.salone"}]',

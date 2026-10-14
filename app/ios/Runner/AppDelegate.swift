@@ -38,6 +38,11 @@ import gdanav_app
       if chiamata.method == "riservata" {
         SceneDelegate.riservata = (chiamata.arguments as? Bool) == true
         risposta(nil)
+      } else if chiamata.method == "acceso" {
+        /* Il campanello del tablet a muro (`lib/casa/lo_schermo.dart`): lo
+         * schermo non si spegne da solo finche' il pannello lo chiede. */
+        UIApplication.shared.isIdleTimerDisabled = (chiamata.arguments as? Bool) == true
+        risposta(nil)
       } else {
         risposta(FlutterMethodNotImplemented)
       }

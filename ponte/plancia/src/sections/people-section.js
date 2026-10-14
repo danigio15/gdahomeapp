@@ -15,6 +15,7 @@ import { VELO_DELLE_FINESTRE, tokenDelVelo } from "../core/il-velo-delle-finestr
 import { fermaRitrattiPersi, installAvatar3dStyle, ritrattoVivo } from "./person-avatar-section.js";
 import { normalizePeople, personViewModel } from "../core/person-model.js";
 import { apriLaSchedaDellEntita } from "./la-scheda-di-home-assistant.js";
+import { sistemaIlPostoAccanto } from "./assistente-di-casa-section.js";
 import {
   cIlNavigatore,
   laPersonaPerIlNavigatore,
@@ -440,7 +441,11 @@ export function openPersonPopup(id) {
  * fuori, invece, ognuno tiene la sua altezza.
  *
  * Il compagno e' anche al riparo dal ridisegno: qui sotto si riscrive la
- * griglia, non la fila, quindi chi sta accanto non se ne accorge nemmeno. */
+ * griglia, non la fila, quindi chi sta accanto non se ne accorge nemmeno.
+ *
+ * Il flusso se n'e' andato nella 1.4.20 e la corsia era rimasta vuota: adesso
+ * ci sta l'assistente di casa (#175), se Config › Persone non dice
+ * «niente»: vive in `assistente-di-casa-section.js`. */
 function ensureHost() {
   const page = doc?.getElementById?.("page-home");
   if (!page) return null;
@@ -494,6 +499,8 @@ export function renderPeopleSection() {
     ritrattoVivo(host, persona.avatar.face, espressione);
   }
   if (state.popupId) paintPersonPopup();
+  /* Una persona in piu' o in meno puo' aprire o chiudere il buco accanto. */
+  sistemaIlPostoAccanto();
   return true;
 }
 

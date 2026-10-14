@@ -43,6 +43,14 @@ import {
 } from "./appliance-integration-section.js";
 import { CAMPI_SCELTI } from "../core/energy-loads-config.js";
 import {
+  SOGLIA_IN_FUNZIONE_DI_SERIE,
+  SOGLIA_STANDBY_DI_SERIE,
+  problemiDelCiclo,
+  scritto,
+  tipoACiclo,
+  valoriConsigliati,
+} from "../core/il-ciclo-di-un-elettrodomestico.js";
+import {
   CASELLA_DEL_BERSAGLIO,
   CASELLE_DELLA_COTTURA,
   COMANDI_DELLA_COTTURA,
@@ -340,10 +348,121 @@ function soglieMarkup(device = {}) {
     device.threshold_standby == null || device.threshold_standby === ""
       ? (device.metadata?.threshold_standby ?? "")
       : device.threshold_standby;
+  /* Una macchina a ciclo lasciata vuota usa i valori consigliati per il suo
+   * tipo, e la casella li mostra in grigio: il 5 scritto d'ufficio sembrava
+   * una scelta di chi configura, e non lo era. Per gli altri resta il 5. */
+  const consigliati = valoriConsigliati(tipoACiclo(device));
+  const run = device.threshold_run ?? device.metadata?.threshold_run ?? (consigliati ? "" : 5);
   return `
-        <label class="ed-slot"><span class="ed-slot-lbl">${t("Soglia in funzione", "Running threshold")}</span><input class="ed-input" type="number" step="0.1" min="0" name="threshold_run" value="${esc(device.threshold_run ?? device.metadata?.threshold_run ?? 5)}"><small>${t("Potenza in watt oltre la quale la card risulta accesa.", "Power in watts above which the card is shown as running.")}</small></label>
-        ${numberField("threshold_standby", t("Soglia standby (W)", "Standby threshold (W)"), standby, t("Sotto la soglia In funzione e sopra questa = Standby.", "Below the running threshold and above this = Standby."), { step: "0.1", placeholder: "1" })}
-        ${numberField("off_delay_minutes", t("Ritardo fine ciclo (minuti)", "End-of-cycle delay (minutes)"), device.off_delay_minutes ?? "", t("La card resta In funzione per questi minuti dopo l'ultima potenza sopra soglia: copre l'asciugatura a 0 W della lavastoviglie e le pause del ciclo.", "The card stays Running for these minutes after the last power reading above the threshold: it covers the dishwasher's 0 W drying phase and mid-cycle pauses."), { step: "1", placeholder: "es. 30" })}`;
+        <label class="ed-slot"><span class="ed-slot-lbl">${t("Soglia in funzione", "Running threshold")}</span><input class="ed-input" type="number" step="0.1" min="0" name="threshold_run" value="${esc(run)}" placeholder="${esc(consigliati?.inFunzione ?? SOGLIA_IN_FUNZIONE_DI_SERIE)}"><small>${t("Potenza in watt oltre la quale la card risulta accesa.", "Power in watts above which the card is shown as running.")}</small></label>
+        ${numberField("threshold_standby", t("Soglia standby (W)", "Standby threshold (W)"), standby, t("Sotto la soglia In funzione e sopra questa = Standby.", "Below the running threshold and above this = Standby."), { step: "0.1", placeholder: String(consigliati?.standby ?? SOGLIA_STANDBY_DI_SERIE) })}
+        ${numberField("off_delay_minutes", t("Ritardo fine ciclo (minuti)", "End-of-cycle delay (minutes)"), device.off_delay_minutes ?? "", t("La card resta In funzione per questi minuti dopo l'ultima potenza sopra soglia: copre l'asciugatura a 0 W della lavastoviglie e le pause del ciclo.", "The card stays Running for these minutes after the last power reading above the threshold: it covers the dishwasher's 0 W drying phase and mid-cycle pauses."), { step: "1", placeholder: consigliati ? String(consigliati.ritardo) : t("es. 30", "e.g. 30") })}
+        <div class="dm-appl-ciclo-avviso" data-appl-ciclo-avviso role="status" hidden></div>`;
+}
+
+/* ── l'avviso dei mini cicli (#26) ─────────────────────────────────────────
+ *
+ * «La lavatrice fa tanti mini cicli»: in funzione 0,1 W, standby 0,1 W,
+ * ritardo 5 minuti. Ognuno dei tre numeri bastava a spezzare un bucato. Per
+ * le macchine a ciclo la scheda lo dice accanto alle caselle, mentre si
+ * scrive, e propone i valori consigliati con un tocco. Non corregge niente da
+ * sola: un numero scritto e' una scelta, e si avvisa e basta. */
+function tipoDellaScheda(form) {
+  return tipoACiclo({
+    visual_key: clean(form?.elements?.icon?.value),
+    name: clean(form?.elements?.name?.value),
+  });
+}
+
+function valoriDellaScheda(form) {
+  const e = form?.elements || {};
+  return {
+    threshold_run: e.threshold_run?.value ?? "",
+    threshold_standby: e.threshold_standby?.value ?? "",
+    off_delay_minutes: e.off_delay_minutes?.value ?? "",
+  };
+}
+
+export function avvisoDelCicloMarkup(tipo, valori) {
+  const consigliati = valoriConsigliati(tipo);
+  const problemi = problemiDelCiclo(tipo, valori);
+  if (!consigliati || !problemi.length) return "";
+  const minuti = consigliati.ritardo;
+  const righe = {
+    ritardo: t(
+      `Ritardo fine ciclo sotto i ${minuti} minuti: le pause a 0 W a metà programma sembrano la fine del ciclo.`,
+      `End-of-cycle delay under ${minuti} minutes: 0 W pauses mid-programme look like the end of the cycle.`,
+    ),
+    inFunzione: t(
+      "Soglia in funzione sotto 1 W: basta il display acceso per risultare In funzione.",
+      "Running threshold under 1 W: a lit display is enough to show Running.",
+    ),
+    standby: t(
+      "Soglia standby uguale o sopra quella in funzione: lo standby non può mai comparire.",
+      "Standby threshold at or above the running one: standby can never show.",
+    ),
+  };
+  const a = consigliati.inFunzione;
+  const b = consigliati.standby;
+  return `<strong>⚠️ ${esc(t("Con questi valori un ciclo solo può diventare tanti mini cicli.", "With these values one cycle can turn into many mini-cycles."))}</strong>
+    <ul>${problemi.map((p) => `<li data-problema="${p}">${esc(righe[p])}</li>`).join("")}</ul>
+    <span class="dm-appl-ciclo-consiglio">${esc(t(`Consigliati: in funzione ${a} W, standby ${b} W, ritardo ${minuti} min.`, `Recommended: running ${a} W, standby ${b} W, delay ${minuti} min.`))}</span>
+    <button type="button" class="dm-appl-ciclo-usa" data-appl-ciclo-consigliati>${esc(t("Usa i valori consigliati", "Use the recommended values"))}</button>`;
+}
+
+function ridiLAvvisoDelCiclo(modal, form) {
+  const box = modal?.querySelector?.("[data-appl-ciclo-avviso]");
+  if (!box || !form) return;
+  const tipo = tipoDellaScheda(form);
+  const consigliati = valoriConsigliati(tipo);
+  /* I suggerimenti grigi seguono il tipo: si cambia in lavastoviglie e il
+   * ritardo proposto diventa trenta. */
+  const e = form.elements;
+  if (e.threshold_run)
+    e.threshold_run.placeholder = String(consigliati?.inFunzione ?? SOGLIA_IN_FUNZIONE_DI_SERIE);
+  if (e.threshold_standby)
+    e.threshold_standby.placeholder = String(consigliati?.standby ?? SOGLIA_STANDBY_DI_SERIE);
+  if (e.off_delay_minutes)
+    e.off_delay_minutes.placeholder = consigliati
+      ? String(consigliati.ritardo)
+      : t("es. 30", "e.g. 30");
+  const markup = avvisoDelCicloMarkup(tipo, valoriDellaScheda(form));
+  if (box.dataset.firma !== markup) {
+    box.dataset.firma = markup;
+    box.innerHTML = markup;
+  }
+  box.hidden = !markup;
+}
+
+function usaIValoriConsigliati(modal, form) {
+  const consigliati = valoriConsigliati(tipoDellaScheda(form));
+  if (!consigliati) return false;
+  const e = form.elements;
+  for (const [campo, valore] of [
+    ["threshold_run", consigliati.inFunzione],
+    ["threshold_standby", consigliati.standby],
+    ["off_delay_minutes", consigliati.ritardo],
+  ]) {
+    if (!e[campo]) continue;
+    e[campo].value = String(valore);
+    e[campo].dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  ridiLAvvisoDelCiclo(modal, form);
+  return true;
+}
+
+function wireAvvisoDelCiclo(modal, form) {
+  const ridi = () => ridiLAvvisoDelCiclo(modal, form);
+  for (const campo of ["threshold_run", "threshold_standby", "off_delay_minutes", "name"]) {
+    form.elements[campo]?.addEventListener("input", ridi);
+    form.elements[campo]?.addEventListener("change", ridi);
+  }
+  modal.querySelector("[data-appl-ciclo-avviso]")?.addEventListener("click", (event) => {
+    if (!event.target?.closest?.("[data-appl-ciclo-consigliati]")) return;
+    event.preventDefault();
+    usaIValoriConsigliati(modal, form);
+  });
+  ridi();
 }
 
 const CARD_FIELD_KEYS = [
@@ -737,6 +856,8 @@ function updateEditType(modal, key) {
     preview.dataset.dmPreviewSource = "canonical-picker";
     preview.setAttribute("aria-label", typeLabel(canonical));
   }
+  /* Il tipo cambia i valori consigliati: l'avviso si rifa'. */
+  ridiLAvvisoDelCiclo(modal, modal.querySelector("[data-form]"));
   if (trigger) {
     trigger.dataset.applianceType = canonical;
     trigger.innerHTML = `<span class="dm-appliance-type-trigger-icon">${typeIconMarkup(canonical, 30)}</span><span class="dm-appliance-type-trigger-label">${esc(typeLabel(canonical))}</span><span class="dm-appliance-type-chevron" aria-hidden="true">⌄</span>`;
@@ -789,13 +910,49 @@ function casellaDellaCottura(casella, valore, aiuto = "", segnaposto = "") {
 function cotturaMarkup(device = {}, tipo = "") {
   const valore = (casella) => device[casella] ?? "";
   const letture = [
-    ["cottura_stato", t("Vuota: usa l'«Entità stato programma».", "Empty: uses the “Program state entity”."), "sensor.philips_airfryer_status"],
+    [
+      "cottura_stato",
+      t("Vuota: usa l'«Entità stato programma».", "Empty: uses the “Program state entity”."),
+      "sensor.philips_airfryer_status",
+    ],
     ["cottura_programma", "", "sensor.friggitrice_programma"],
-    ["cottura_temperatura", t("Il sensore dei gradi.", "The temperature sensor."), "sensor.philips_airfryer_temp"],
-    ["cottura_temperatura_voluta", t("Un number o input_number: il − e il + lo spostano di un passo.", "A number or input_number: − and + move it by one step."), "number.friggitrice_set_temperature"],
-    ["cottura_tempo_totale", t("Secondi, minuti o hh:mm. Vuota: usa la «Durata programma».", "Seconds, minutes or hh:mm. Empty: uses the “Program duration”."), "sensor.philips_airfryer_total_time"],
-    ["cottura_tempo_rimanente", t("Secondi, minuti, hh:mm o l'ora di fine. Vuota: usa il «Tempo rimanente».", "Seconds, minutes, hh:mm or the end time. Empty: uses the “Remaining time”."), "sensor.philips_airfryer_time_remaining"],
-    ["cottura_cassetto", t("binary_sensor aperto/chiuso. Vuota: usa l'«Entità porta».", "Open/closed binary_sensor. Empty: uses the “Door entity”."), "binary_sensor.philips_airfryer_drawer_open"],
+    [
+      "cottura_temperatura",
+      t("Il sensore dei gradi.", "The temperature sensor."),
+      "sensor.philips_airfryer_temp",
+    ],
+    [
+      "cottura_temperatura_voluta",
+      t(
+        "Un number o input_number: il − e il + lo spostano di un passo.",
+        "A number or input_number: − and + move it by one step.",
+      ),
+      "number.friggitrice_set_temperature",
+    ],
+    [
+      "cottura_tempo_totale",
+      t(
+        "Secondi, minuti o hh:mm. Vuota: usa la «Durata programma».",
+        "Seconds, minutes or hh:mm. Empty: uses the “Program duration”.",
+      ),
+      "sensor.philips_airfryer_total_time",
+    ],
+    [
+      "cottura_tempo_rimanente",
+      t(
+        "Secondi, minuti, hh:mm o l'ora di fine. Vuota: usa il «Tempo rimanente».",
+        "Seconds, minutes, hh:mm or the end time. Empty: uses the “Remaining time”.",
+      ),
+      "sensor.philips_airfryer_time_remaining",
+    ],
+    [
+      "cottura_cassetto",
+      t(
+        "binary_sensor aperto/chiuso. Vuota: usa l'«Entità porta».",
+        "Open/closed binary_sensor. Empty: uses the “Door entity”.",
+      ),
+      "binary_sensor.philips_airfryer_drawer_open",
+    ],
   ];
   const segnaposti = {
     cottura_pausa: "button.friggitrice_pause",
@@ -988,8 +1145,7 @@ function vociDellApparecchio(values) {
    * nascondere era quella appena arrivata, e per farla comparire qui bisognava
    * scollegare e ricollegare il dispositivo. Le due liste si uniscono, e lo
    * scatto resta perche' il catalogo vivo puo' non essere ancora arrivato. */
-  for (const voce of entitaDelDispositivo(clean(values.device_id)) || [])
-    aggiungi(voce?.entity_id);
+  for (const voce of entitaDelDispositivo(clean(values.device_id)) || []) aggiungi(voce?.entity_id);
   for (const entity of bindingSnapshot(values)) aggiungi(entity);
   return elenco;
 }
@@ -1403,6 +1559,7 @@ export function openApplianceEditor(index) {
   wireNascoste(modal, form);
   wireColorano(modal, form);
   wireCottura(modal, form);
+  wireAvvisoDelCiclo(modal, form);
   modal.querySelector("[data-type-trigger]")?.addEventListener("click", () => {
     openTypePicker({
       selected: form.elements.icon.value,
@@ -1474,9 +1631,10 @@ export function openApplianceEditor(index) {
       visual_type: "asset",
       room_id: clean(values.room_id),
       metadata: { ...(device.metadata || {}), beta27_subload_group: clean(values.flow_group) },
-      threshold_run: Number.isFinite(Number(values.threshold_run))
-        ? Number(values.threshold_run)
-        : 5,
+      /* Vuota resta vuota: vuol dire «i valori consigliati per il suo tipo»
+       * (o i 5 W di sempre), e non uno zero che accende la card a ogni
+       * display. */
+      threshold_run: scritto(values.threshold_run) ?? "",
       control_entity: clean(values.control_entity),
       /* Una casella non spuntata non entra nel FormData: qui il silenzio
        * significa «tasto abilitato», che e' il comportamento di sempre. */
@@ -1553,6 +1711,14 @@ export function openApplianceEditor(index) {
       else delete next[casella];
     }
     if (next.threshold_standby === "") delete next.threshold_standby;
+    if (next.threshold_run === "") {
+      delete next.threshold_run;
+      /* E il valore vecchio nascosto nei metadati non deve tornare su. */
+      if (next.metadata && "threshold_run" in next.metadata) {
+        next.metadata = { ...next.metadata };
+        delete next.metadata.threshold_run;
+      }
+    }
     for (const key of [
       "cycle_minutes",
       "off_delay_minutes",
@@ -1643,6 +1809,18 @@ function installStyles() {
     .dm-appliance-flow-suggestion[hidden]{display:none!important}
     .dm-appliance-power-warning{display:block!important;margin-top:3px!important;color:#b45309!important;font-weight:750!important;line-height:1.45!important}
     .dm-appliance-power-warning[hidden]{display:none!important}
+    /* L'avviso dei mini cicli: sta sotto le tre caselle, largo quanto loro. */
+    .dm-appl-ciclo-avviso{grid-column:1/-1!important;display:grid!important;gap:6px!important;padding:12px 14px!important;border-radius:14px!important;
+      border:1px solid color-mix(in srgb,#f59e0b 55%,transparent)!important;background:color-mix(in srgb,#f59e0b 11%,var(--card-background-color,#fff))!important;
+      color:var(--text,#0f172a)!important;font-size:12.5px!important;line-height:1.45!important}
+    .dm-appl-ciclo-avviso[hidden]{display:none!important}
+    .dm-appl-ciclo-avviso strong{font-weight:850!important;color:#92400e!important}
+    html[data-theme="dark"] .dm-appl-ciclo-avviso strong{color:#fcd34d!important}
+    .dm-appl-ciclo-avviso ul{margin:0!important;padding-left:18px!important;display:grid!important;gap:3px!important}
+    .dm-appl-ciclo-avviso li{font-weight:650!important}
+    .dm-appl-ciclo-consiglio{font-weight:750!important;color:var(--secondary-text-color,#475569)!important}
+    .dm-appl-ciclo-usa{justify-self:start!important;padding:7px 14px!important;border:none!important;border-radius:999px!important;cursor:pointer!important;
+      background:linear-gradient(135deg,#f59e0b,#d97706)!important;color:#fff!important;font:inherit!important;font-size:12.5px!important;font-weight:850!important}
     .dm-appliance-card-fields,.dm-appliance-cottura{margin-top:14px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:16px!important;background:color-mix(in srgb,var(--secondary-background-color,#f1f5f9) 45%,transparent)!important;overflow:hidden!important}
     .dm-appliance-card-fields>summary,.dm-appliance-cottura>summary{padding:13px 16px!important;font-size:13px!important;font-weight:850!important;cursor:pointer!important;list-style:none!important;user-select:none!important}
     .dm-appliance-card-fields>summary::-webkit-details-marker,.dm-appliance-cottura>summary::-webkit-details-marker{display:none!important}

@@ -50,3 +50,9 @@ Widget? laTesseraDelNavigatore({
 /// Nel browser il navigatore non c'e', e la pagina non lo chiede nemmeno:
 /// il canale `gdahomeNavigatore` lo registra solo l'app sul telefono.
 Future<bool> portamiDallaPersona(String detto) async => false;
+
+/// Nel browser in macchina non ci si va: non c'e' niente da aprire.
+Future<void> apriLeImpostazioniInAuto(
+  BuildContext context, {
+  Collegamento? collegamento,
+}) async {}
