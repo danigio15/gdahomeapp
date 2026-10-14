@@ -240,9 +240,17 @@ function chiaveImmagine(image, entity) {
  * Un `<img>` non puo' portare un'intestazione `Authorization`, quindi il
  * gettone deve stare nell'indirizzo: o e' quello che la foto si porta gia'
  * dietro, o lo mette Home Assistant firmando il percorso. Le firme si tengono
- * finche' valgono, che sono quattro ore: rifarle a ogni giro del cronometro
- * sarebbe un messaggio sul socket ogni quattro secondi per telecamera. */
-const FIRMA_DURA_MS = 3 * 60 * 60 * 1000;
+ * per un po': rifarle a ogni giro del cronometro sarebbe un messaggio sul
+ * socket ogni quattro secondi per telecamera.
+ *
+ * Un po', non quattro ore. Un indirizzo firmato apre quella telecamera a
+ * chiunque lo abbia in mano, finche' la firma vale: si chiede per dieci
+ * minuti — piu' di cosi' il ponte non la lascia fare (`FIRMA_MASSIMA_S`,
+ * `dogana.js`) — e la si rifa' dopo otto, prima che scada. Un flusso gia'
+ * partito non si ferma quando la firma scade: Home Assistant la guarda solo
+ * all'inizio. */
+const FIRMA_CHIESTA_S = 10 * 60;
+const FIRMA_DURA_MS = 8 * 60 * 1000;
 
 async function percorsoFirmato(chiave, percorso) {
   if (!percorso) return "";
@@ -253,7 +261,7 @@ async function percorsoFirmato(chiave, percorso) {
     const risposta = await chiediAHomeAssistant({
       type: "auth/sign_path",
       path: percorso,
-      expires: 4 * 60 * 60,
+      expires: FIRMA_CHIESTA_S,
     });
     const url = clean(risposta?.path);
     if (url) state.firme.set(chiave, { url, quando: Date.now() });
@@ -396,8 +404,36 @@ export async function loadCameraFrame(camera, image, registry = state.cameraUrls
   return caricaIstantanea(camera, image, registry, istantanea);
 }
 
+/* Le istantanee in viaggio, una per immagine (le telecamere nere nell'app).
+ *
+ * «Nell'app le telecamere sono tutte nere, a casa e fuori.» La finestra delle
+ * telecamere chiede i fotogrammi a ogni ridisegno della Home, e la Home si
+ * ridisegna a ogni cambio di stato: in una casa vera, piu' volte al secondo.
+ * Ogni richiesta metteva nell'immagine un indirizzo nuovo (`dm_t`), e un
+ * indirizzo nuovo **interrompe** quello che l'immagine stava scaricando.
+ * Dentro Home Assistant una foto arriva in qualche decimo e il gioco non si
+ * vedeva; nell'app passa dal ponte, dal Supervisor e dal filo — secondi, per
+ * una telecamera RTSP — e non ne arrivava nessuna: settantaquattro richieste
+ * in dodici secondi, quattro risposte, nessun fotogramma a schermo. Il nero
+ * e' l'immagine «non pronta», a opacita' zero.
+ *
+ * Adesso un'istantanea che sta viaggiando non si interrompe: chi la richiede
+ * nel frattempo trova il viaggio in corso e aspetta quello. Oltre mezzo
+ * minuto un viaggio si da' per perso e se ne parte un altro. */
+const inViaggio = new WeakMap();
+const VIAGGIO_MASSIMO_MS = 30_000;
+
+/** Se per quell'immagine c'e' gia' un'istantanea in viaggio. */
+export function istantaneaInViaggio(image, adesso = Date.now()) {
+  const viaggio = image ? inViaggio.get(image) : null;
+  return Boolean(viaggio && adesso - viaggio.dal < VIAGGIO_MASSIMO_MS);
+}
+
 /* Un fotogramma, preso dal proxy di Home Assistant e messo nell'immagine. */
 async function caricaIstantanea(camera, image, registry, picture) {
+  const adesso = Date.now();
+  const gia = inViaggio.get(image);
+  if (gia && gia.entity === camera.entity && adesso - gia.dal < VIAGGIO_MASSIMO_MS) return true;
   const url = cacheBusted(picture);
   const chiave = chiaveImmagine(image, camera.entity);
   ripulisciChiaviMorte(registry);
@@ -413,31 +449,67 @@ async function caricaIstantanea(camera, image, registry, picture) {
   if (!stessaTelecamera || image.dataset.dmCameraState !== "ready")
     image.dataset.dmCameraState = "loading";
 
-  // entity_picture normally carries its own camera token. Use the current
-  // dashboard origin instead of the legacy HA_HTTP_URL so hosted/Nabu Casa
-  // dashboards cannot accidentally request a different host.
+  const viaggio = { entity: camera.entity, dal: adesso };
+  inViaggio.set(image, viaggio);
+  const arrivato = () => {
+    if (inViaggio.get(image) === viaggio) inViaggio.delete(image);
+  };
+
+  /* La foto si scarica a parte e si posa solo quando e' arrivata tutta: il
+   * fotogramma di prima resta a schermo, e un altro giro non la interrompe.
+   *
+   * Con un gettone vero lo si mette nell'intestazione; senza — la plancia
+   * ospitata, dentro Home Assistant o dentro l'app — la domanda parte com'e',
+   * dallo stesso indirizzo della pagina: `entity_picture` ha gia' il suo
+   * gettone, e un percorso firmato la sua firma. Mandare il gettone finto
+   * come `Bearer` vorrebbe dire farsi rispondere 401. */
   const token = gettoneDiAccesso();
-  if (typeof root.fetch === "function" && token) {
+  if (typeof root.fetch === "function") {
     try {
       const response = await root.fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
         cache: "no-store",
+        credentials: "same-origin",
       });
       if (response.ok) {
         const blob = await response.blob();
         const objectUrl = root.URL?.createObjectURL?.(blob);
         if (objectUrl) {
+          arrivato();
+          /* Nel frattempo e' partito un flusso: la foto non gli passa sopra. */
+          if (image.dataset.dmCameraStream) {
+            try {
+              root.URL?.revokeObjectURL?.(objectUrl);
+            } catch (_error) {}
+            return true;
+          }
           replaceCameraObjectUrl(chiave, objectUrl, registry);
+          image.onload = null;
+          image.onerror = null;
           image.src = objectUrl;
           segnaFotogramma(image);
           return true;
         }
+      } else {
+        /* La casa ha detto no (una telecamera che non e' tua, un gettone
+         * scaduto) o non ha risposto: l'immagine non ci riproverebbe meglio,
+         * e la prossima domanda arriva col prossimo giro. */
+        arrivato();
+        if (image.dataset.dmCameraState !== "ready") image.dataset.dmCameraState = "unavailable";
+        return false;
       }
-    } catch (_error) {}
+    } catch (_error) {
+      /* Una domanda che il browser non lascia fare (un'altra origine): resta
+       * la strada dell'immagine, qui sotto. */
+    }
   }
 
-  image.onload = () => segnaFotogramma(image);
+  image.onload = () => {
+    arrivato();
+    segnaFotogramma(image);
+  };
   image.onerror = () => {
+    arrivato();
     image.dataset.dmCameraState = "unavailable";
   };
   replaceCameraObjectUrl(chiave, url, registry);

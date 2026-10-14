@@ -23,6 +23,7 @@
  * mostra poi tutte le entita' del dispositivo: e' in
  * `appliance-detail-popup-section.js`, che legge di qui il catalogo.
  */
+import { tipoACiclo } from "../core/il-ciclo-di-un-elettrodomestico.js";
 import {
   bindApplianceToDevice,
   cercaFuoriDalDispositivo,
@@ -120,10 +121,19 @@ function prenotaEntita(id) {
         const tutti = [...ids];
         const richieste = [];
         for (let da = 0; da < tutti.length; da += MAX_IDS_PER_RICHIESTA)
-          richieste.push(chiediAlCatalogo({ type: TIPO_CATALOGO, device_ids: tutti.slice(da, da + MAX_IDS_PER_RICHIESTA) }));
+          richieste.push(
+            chiediAlCatalogo({
+              type: TIPO_CATALOGO,
+              device_ids: tutti.slice(da, da + MAX_IDS_PER_RICHIESTA),
+            }),
+          );
         Promise.all(richieste).then(
           (risposte) =>
-            resolve(risposte.flatMap((result) => (Array.isArray(result?.entities) ? result.entities : []))),
+            resolve(
+              risposte.flatMap((result) =>
+                Array.isArray(result?.entities) ? result.entities : [],
+              ),
+            ),
           reject,
         );
       };
@@ -501,6 +511,13 @@ async function creaDaDispositivo({ integration, device, entities, outside }) {
     },
     { integration, device, entities, outside, states: allStates(), rooms },
   );
+  /* Una macchina a ciclo nasce con le caselle vuote: valgono i valori
+   * consigliati per il suo tipo (#26), non i 5 W e 1 W di tutti — con cui una
+   * lavatrice spezza il bucato in mini cicli. */
+  if (tipoACiclo(appliance)) {
+    delete appliance.threshold_run;
+    delete appliance.threshold_standby;
+  }
   const store = dashboardStore();
   let indice = -1;
   if (store?.addItem) {

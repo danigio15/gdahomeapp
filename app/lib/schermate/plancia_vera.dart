@@ -34,6 +34,7 @@ import '../plancia/servitore_qui/qui.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
 import 'barra.dart' show nomeDelleCase;
+import 'caricamento.dart';
 import 'da_dove.dart';
 import 'premium.dart';
 import 'riquadro/qui.dart' as riquadro;
@@ -153,6 +154,14 @@ class PlanciaVeraState extends State<PlanciaVera> {
   ServitoreDiQuestoSistema? _servitore;
   bool _servitoreChiesto = false;
 
+  /* Chiesto e non ancora arrivato: si aspetta, non si dice che non va.
+   *
+   * Senza, il primo ridisegno arrivato mentre il servitore si accendeva —
+   * il filo che si apre, la licenza che risponde — trovava «chiesto» e
+   * niente servitore, e per un attimo all'avvio compariva «Non riesco ad
+   * accendere la plancia» prima della plancia vera. */
+  bool _accendendo = false;
+
   /// La pagina che si sta mostrando, e come sta: `null` finche' non se ne
   /// apre una.
   Uri? _pagina;
@@ -234,6 +243,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
 
   Future<void> _accendi() async {
     _servitoreChiesto = true;
+    _accendendo = true;
     /* In che lingua servire la plancia: la stessa dell'app.
      *
      * La plancia ce le ha tutte e due dentro — `dashboard.html` e
@@ -244,10 +254,15 @@ class PlanciaVeraState extends State<PlanciaVera> {
      * Si decide quando il servitore si accende, cioe' una volta: cambiando la
      * lingua del telefono l'app si rifa' subito e la plancia alla prima
      * ricarica (vedi `main.dart`). */
-    final servitore = await widget.fabbrica.servitore(
-      () => widget.collegamento.filo,
-      lingua: laLingua.codice,
-    );
+    final ServitoreDiQuestoSistema? servitore;
+    try {
+      servitore = await widget.fabbrica.servitore(
+        () => widget.collegamento.filo,
+        lingua: laLingua.codice,
+      );
+    } finally {
+      _accendendo = false;
+    }
     if (!mounted) return;
     servitore?.leggera = widget.impostazioni.planciaLeggera;
     setState(() => _servitore = servitore);
@@ -548,12 +563,11 @@ class PlanciaVeraState extends State<PlanciaVera> {
     }
 
     if (!collegamento.pannelloLetto) {
-      return _Attesa(
-        collegamento: collegamento,
-        cosa: inLingua(
-          it: 'Cerco la plancia…',
-          en: 'Looking for the dashboard…',
-        ),
+      /* L'attesa e' quella della plancia, la stessa che la pagina mostrera'
+       * dentro di se': all'avvio se ne vede una sola (caricamento.dart). */
+      return CaricamentoDellaPlancia(
+        fase: FaseDelCaricamento.cerco,
+        inFondo: inFondo,
       );
     }
     final pannello = collegamento.pannello;
@@ -613,14 +627,11 @@ class PlanciaVeraState extends State<PlanciaVera> {
 
     final servitore = _servitore;
     if (servitore == null) {
-      if (!_servitoreChiesto) {
-        unawaited(_accendi());
-        return _Attesa(
-          collegamento: collegamento,
-          cosa: inLingua(
-            it: 'Accendo la plancia…',
-            en: 'Starting the dashboard…',
-          ),
+      if (!_servitoreChiesto || _accendendo) {
+        if (!_servitoreChiesto) unawaited(_accendi());
+        return CaricamentoDellaPlancia(
+          fase: FaseDelCaricamento.accendo,
+          inFondo: inFondo,
         );
       }
       /* Chiesto e non arrivato. Sul telefono non succede; nel browser si', e
@@ -795,14 +806,12 @@ class PlanciaVeraState extends State<PlanciaVera> {
             ),
           )
         else if (!_caricata && !_siVede)
-          _Velo(
-            child: _Attesa(
-              collegamento: collegamento,
-              cosa: inLingua(
-                it: 'Apro la plancia…',
-                en: 'Opening the dashboard…',
-              ),
-            ),
+          /* Il velo della pagina, disegnato dall'app finche' la pagina non
+           * mette il suo: sono lo stesso disegno, nello stesso punto, e il
+           * passaggio non si vede. */
+          CaricamentoDellaPlancia(
+            fase: FaseDelCaricamento.apro,
+            inFondo: inFondo,
           ),
         /* Una riga sottile che dice «sto ricollegando»: la plancia resta a
          * schermo coi suoi dati, e si vede che stanno per cambiare. */
@@ -1135,44 +1144,6 @@ class _Velo extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       ColoredBox(color: Theme.of(context).colorScheme.surface, child: child);
-}
-
-/// Il nome della casa, da dove si passa, e una rotella.
-class _Attesa extends StatelessWidget {
-  const _Attesa({required this.collegamento, required this.cosa});
-  final Collegamento collegamento;
-  final String cosa;
-
-  @override
-  Widget build(BuildContext context) {
-    final testi = Theme.of(context).textTheme;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            collegamento.casa?.nome ?? inLingua(it: 'Casa', en: 'Home'),
-            style: testi.titleLarge,
-          ),
-          const SizedBox(height: 6),
-          DaDoveSiPassa(collegamento),
-          const SizedBox(height: 22),
-          const SizedBox(
-            width: 28,
-            height: 28,
-            child: CircularProgressIndicator(strokeWidth: 3),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            cosa,
-            style: testi.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Quello che si dice quando la plancia non si puo' aprire: la casa e da dove

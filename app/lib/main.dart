@@ -27,6 +27,7 @@ import 'casa/la_guardia.dart';
 import 'parole.dart';
 import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
+import 'schermate/caricamento.dart';
 import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
@@ -819,7 +820,14 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (!_pronto) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      /* La prima attesa e' gia' quella della plancia: lo stesso velo che
+       * verra' dopo, nello stesso punto, invece di una rotella sola su un
+       * fondo di un altro colore (schermate/caricamento.dart). */
+      return Scaffold(
+        body: CaricamentoDellaPlancia(
+          inFondo: MediaQuery.viewPaddingOf(context).bottom,
+        ),
+      );
     }
     /* Il velo sta **sopra** tutto, e non dentro una schermata: sotto non ci
      * deve essere niente da vedere — non l'elenco delle case, non il nome

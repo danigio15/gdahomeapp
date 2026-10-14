@@ -2,6 +2,7 @@
 import { ultimoPezzo } from "./appliance-program.js";
 import { pick } from "./i18n.js";
 import { getDeviceDisplayName, getDeviceVisual } from "./device-model.js";
+import { regoleDelLavoro, scritto, trattenutaInMinuti } from "./il-ciclo-di-un-elettrodomestico.js";
 import { modoDelLettore } from "./media-player.js";
 
 const clean = (value) => String(value || "").trim();
@@ -90,21 +91,24 @@ function pianificaScadenza(quando, now) {
   );
 }
 
+/* Torna il modo, e se IN FUNZIONE lo dice il ritardo invece dei watt: chi
+ * conta i cicli chiude il ciclo all'ultimo lavoro vero, non alla fine
+ * dell'attesa. */
 function applyRunHold({ key, mode, delayMinutes, explicitOff, now, holds }) {
-  if (!key) return mode;
+  if (!key) return { mode, trattenuto: false, lavoratoIl: null };
   if (mode === "running") {
     holds.set(key, now);
-    return mode;
+    return { mode, trattenuto: false, lavoratoIl: now };
   }
-  if (mode === "unavailable") return mode;
+  if (mode === "unavailable") return { mode, trattenuto: false, lavoratoIl: null };
   const lastRun = holds.get(key);
-  if (lastRun == null) return mode;
+  if (lastRun == null) return { mode, trattenuto: false, lavoratoIl: null };
   if (explicitOff || !(delayMinutes > 0) || now - lastRun > delayMinutes * 60000) {
     holds.delete(key);
-    return mode;
+    return { mode, trattenuto: false, lavoratoIl: lastRun };
   }
   pianificaScadenza(lastRun + delayMinutes * 60000, now);
-  return "running";
+  return { mode: "running", trattenuto: true, lavoratoIl: lastRun };
 }
 
 /* Le parole con cui un elettrodomestico dice cosa sta facendo.
@@ -470,10 +474,11 @@ export function createApplianceViewModel(
   const unavailable = [powerEntity, controlEntity, stateEntity]
     .filter(Boolean)
     .some((id) => ["unknown", "unavailable"].includes(clean(states?.[id]?.state).toLowerCase()));
-  const run = Number.isFinite(Number(device.threshold_run)) ? Number(device.threshold_run) : 5;
-  const standby = Number.isFinite(Number(device.threshold_standby))
-    ? Number(device.threshold_standby)
-    : 1;
+  /* Le soglie scritte, e per le caselle vuote quelle consigliate per il suo
+   * tipo: una lavatrice lasciata vuota lavora sopra 10 W, non sopra 5. */
+  const regole = regoleDelLavoro(device);
+  const run = regole.inFunzione;
+  const standby = regole.standby;
 
   const activityBinary =
     /^binary_sensor\./.test(stateEntity) &&
@@ -532,14 +537,20 @@ export function createApplianceViewModel(
             explicitWaiting || genericOn || (watts != null && watts >= standby)
             ? "standby"
             : "off";
-  const mode = applyRunHold({
+  /* Il ritardo di fine ciclo, e per una macchina a ciclo letta dai watt mai
+   * meno della sosta che il contatore dei cicli lascia passare: la card e il
+   * contatore devono raccontare lo stesso bucato (#26). Quando a dire «sta
+   * lavorando» e' la parola dello stato, la pausa la conosce gia' lei. */
+  const daiWatt = Boolean(powerEntity) && !dettoDalloStato && !activityBinary;
+  const trattenuta = applyRunHold({
     key: clean(device.id) || powerEntity || controlEntity || stateEntity,
     mode: sampledMode,
-    delayMinutes: Number(device.off_delay_minutes),
+    delayMinutes: trattenutaInMinuti(device, { daiWatt }),
     explicitOff: explicitlyOff || (Boolean(controlEntity) && controlState === "off"),
     now: Number.isFinite(options.now) ? options.now : Date.now(),
     holds: options.holds instanceof Map ? options.holds : runHolds,
   });
+  const mode = trattenuta.mode;
   /* Da quando e' in funzione, quando la casa lo sa (#65).
    *
    * Solo da un interruttore di attivita' — `binary_sensor.…_running`, «sta
@@ -579,6 +590,18 @@ export function createApplianceViewModel(
     watts,
     /* Da quando, se la casa lo sa dire: lo legge il contatore dei cicli. */
     iniziatoIl,
+    /* IN FUNZIONE detto dal ritardo e non dai watt, e l'ultimo istante in cui
+     * lavorava davvero: il contatore chiude il ciclo li', non alla fine
+     * dell'attesa. */
+    trattenuto: trattenuta.trattenuto,
+    lavoratoIl: trattenuta.lavoratoIl,
+    /* Dove finirebbe il ciclo se non ripartisse piu': l'ultimo lavoro vero
+     * piu' il ritardo che chi configura ha SCRITTO — l'asciugatura della sua
+     * lavastoviglie e' parte del ciclo — ma non l'attesa in piu' che la card
+     * tiene per non spezzare il bucato: quella e' prudenza, non lavaggio. */
+    fineProbabile: trattenuta.trattenuto
+      ? trattenuta.lavoratoIl + Math.max(0, scritto(device.off_delay_minutes) ?? 0) * 60000
+      : null,
     /* Da quale entita' si legge «sta lavorando», e con quale regola.
      *
      * E' la stessa scala con cui qui sopra si decide IN FUNZIONE, ma scritta

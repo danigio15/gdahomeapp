@@ -194,6 +194,26 @@ function segnoMarkup(riga) {
   return disegnoDelCatalogo(riga.glifo, 22) || esc(riga.glifo);
 }
 
+/* Le altre letture della riga (#177): la latenza, i pacchetti persi, da
+ * quanto e' su, l'ultima volta che si e' fatto vedere.
+ *
+ * Stanno sotto, a tutta larghezza, come pastiglie piccole col nome sopra e il
+ * valore sotto: in riga col nome lo spingerebbero fuori — e su un telefono il
+ * nome e' la sola cosa che serve leggere per intero, come per i tasti. Vanno a
+ * capo quante sono, invece di scorrere: sei letture si leggono in due righe,
+ * una striscia che scorre ne nasconde quattro. Una che non risponde dice «—»,
+ * che e' la verita': uno zero sarebbe una latenza inventata. */
+function lettureMarkup(riga) {
+  const valori = Array.isArray(riga.valori) ? riga.valori : [];
+  if (!valori.length) return "";
+  return `<dl class="dm-macchina-letture">${valori
+    .map(
+      (voce) => `<div class="dm-macchina-lettura" data-muta="${voce.available === false}" title="${esc(`${voce.name} · ${voce.testo}`)}">
+        <dt>${esc(voce.name)}</dt><dd>${esc(voce.testo)}</dd></div>`,
+    )
+    .join("")}</dl>`;
+}
+
 function rigaMarkup(riga) {
   return `<article class="dm-macchina" data-stato="${esc(riga.stato || "muto")}">
     <span class="dm-macchina-ic" aria-hidden="true">${segnoMarkup(riga)}</span>
@@ -201,6 +221,7 @@ function rigaMarkup(riga) {
       <strong>${esc(riga.name)}</strong>
     </div>
     <b class="dm-macchina-stato">${esc(parolaDelloStato(riga))}</b>
+    ${lettureMarkup(riga)}
     ${comandiMarkup(riga)}
   </article>`;
 }
@@ -329,8 +350,11 @@ function installStyles() {
     ${P} .dm-macchine-fascia[data-giu="true"] .dm-macchine-testa span{color:#dc2626}
     ${P} .dm-macchine-elenco{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}
 
+    /* In cima e non distribuite: in una fila di card alte quanto la piu' lunga
+       — quella con le letture — le righe di una card corta si allargavano per
+       riempirla, e il nome scendeva a meta'. */
     ${P} .dm-macchina{
-      display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:10px;
+      display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;align-content:start;gap:10px;
       padding:12px 14px;border-radius:16px;
       border:1px solid color-mix(in srgb,var(--dm-macchina,#94a3b8) 40%,transparent);
       background:color-mix(in srgb,var(--dm-macchina,#94a3b8) 9%,var(--card-bg,#fff))}
@@ -359,6 +383,23 @@ function installStyles() {
       font:inherit;font-size:11.5px;font-weight:900;cursor:pointer}
     ${P} .dm-macchina-tasto:hover{border-color:var(--primary-color,#0ea5e9)}
     ${P} .dm-macchina-tasto-ferma:hover{border-color:#dc2626;color:#dc2626}
+    /* Le letture: una griglia di pastiglie che va a capo, ognuna larga quanto
+       serve ma mai meno di un numero con la sua unita'. Il nome si accorcia coi
+       puntini prima del valore, perche' il valore e' la cosa che si cerca. */
+    ${P} .dm-macchina-letture{
+      grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));
+      gap:6px;margin:2px 0 0;padding:0}
+    ${P} .dm-macchina-lettura{
+      display:grid;gap:1px;min-width:0;padding:6px 9px;border-radius:11px;
+      background:color-mix(in srgb,var(--card-bg,#fff) 72%,transparent);
+      border:1px solid color-mix(in srgb,var(--dm-macchina,#94a3b8) 18%,var(--card-border,#e2e8f0))}
+    ${P} .dm-macchina-lettura dt{
+      margin:0;font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+      color:var(--text-dim,#64748b);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    ${P} .dm-macchina-lettura dd{
+      margin:0;font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;
+      color:var(--text,#0f172a);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    ${P} .dm-macchina-lettura[data-muta="true"] dd{color:var(--text-dim,#64748b)}
     @media(max-width:520px){${P} .dm-macchine-elenco{grid-template-columns:1fr}}
     `,
   );

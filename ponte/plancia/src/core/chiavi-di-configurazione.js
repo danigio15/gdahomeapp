@@ -313,7 +313,12 @@
  * le sue pagine e le funzioni a muro. E' della plancia, non del vetro: il
  * tablet in cucina e chi lo configura dal computer devono leggere la stessa
  * cosa, e il config scritto dal computer deve arrivare al tablet. */
-export const CONFIG_KEYS_REVISION = 62;
+/* La revisione 63 aggiunge l'assistente di casa accanto alle persone in Home
+ * (#175): se c'e' (`cd_people_accanto`), e le sue regolazioni con quello che
+ * ha imparato (`cd_assistente`). Sono della casa: il tablet in cucina e il
+ * computer devono mostrare la stessa card nello stesso posto, e un
+ * suggerimento scartato dal telefono non deve ripresentarsi sul tablet. */
+export const CONFIG_KEYS_REVISION = 63;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -338,6 +343,10 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_loads",
   "cd_devices",
   "cd_people",
+  // Cosa sta accanto alle persone in Home (#175): una scelta della Home.
+  "cd_people_accanto",
+  // L'assistente di casa: le regolazioni e quello che ha imparato, per tutti.
+  "cd_assistente",
   "cd_security_doors",
   // Quali modalita' della centrale si e' scelto di non vedere.
   "cd_antifurto_modi",

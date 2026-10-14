@@ -18,6 +18,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../../casa/fuori.dart';
+import '../../casa/la_finestra.dart' show permessoDelMicrofono;
 import '../../casa/lo_schermo.dart';
 import '../../plancia/il_fondo.dart';
 import '../../plancia/premesse.dart' show ilMenuDalTelefono, laPlanciaSiVede;
@@ -220,6 +221,24 @@ WebViewController costruisciIlControllore({
      * pagina come se l'avesse scelto un browser. Sull'iPhone il WebView ce
      * l'ha gia'. */
     unawaited(piattaforma.setOnShowFileSelector(_scegli));
+    /* «Parla» del citofono a muro: la pagina chiede il microfono per mandare
+     * la voce al campanello. Un WebView Android non risponde da solo — senza
+     * questo dice sempre no. Si da' il microfono e nient'altro, e solo dopo
+     * che il sistema l'ha permesso all'app. */
+    unawaited(
+      piattaforma.setOnPlatformPermissionRequest((richiesta) async {
+        final soloLaVoce =
+            richiesta.types.isNotEmpty &&
+            richiesta.types.every(
+              (tipo) => tipo == WebViewPermissionResourceType.microphone,
+            );
+        if (soloLaVoce && await permessoDelMicrofono()) {
+          await richiesta.grant();
+        } else {
+          await richiesta.deny();
+        }
+      }),
+    );
   }
   /* I tre dialoghi della pagina: `alert`, `confirm`, `prompt`.
    *

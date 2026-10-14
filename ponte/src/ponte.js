@@ -293,14 +293,21 @@ class Collegamento {
        * si chiedono solo se il messaggio parla di telecamere, e solo per chi
        * non amministra. */
       const telecamereChiuse =
-        !amministra && testo.includes("camera")
+        !amministra && (testo.includes("camera") || testo.includes("image"))
           ? (this.ponte.commissioni?.telecamereChiuse?.(
               this.dispositivo.utente || "",
               this.ponte.utenti?.amministratoreSubito?.(this.dispositivo.utente || "") ?? null,
             ) ?? null)
           : null;
-      const { passa, rifiuti } = passaLaDogana(testo, { amministra, telecamereChiuse });
+      /* `firmaIlPonte`: le vie delle telecamere dal telefono non si fanno
+       * firmare da Home Assistant (il perche' sta in `dogana.js`). */
+      const { passa, rifiuti, risposte } = passaLaDogana(testo, {
+        amministra,
+        telecamereChiuse,
+        firmaIlPonte: true,
+      });
       for (const no of rifiuti) this.presa.manda(JSON.stringify(no));
+      for (const detta of risposte) this.presa.manda(JSON.stringify(detta));
       for (const uno of passa) {
         if (!this.filo?.manda(uno)) {
           this.chiudi(1011, "il filo con la casa e' caduto");

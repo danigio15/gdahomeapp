@@ -20,6 +20,7 @@
 import { getLocale, pick } from "./i18n.js";
 import { nomeAccantoAlDispositivo } from "./nome-accanto-al-dispositivo.js";
 import { inMinuti } from "./quanto-dura.js";
+import { quantoTempoInParole } from "./da-quanto.js";
 import { numero } from "./racconto-tessera.js";
 
 const clean = (value) => String(value ?? "").trim();
@@ -161,7 +162,17 @@ export function durataLeggibile(valore, unita, lingua = getLocale()) {
   if (Math.abs(minuti) < 120)
     return `${numero(minuti, Number.isInteger(minuti) ? 0 : 1, lingua)} ${pick("min", "min", lingua)}`;
   const ore = minuti / 60;
-  return `${numero(ore, Math.abs(ore) >= 100 ? 0 : 1, lingua)} ${pick("h", "h", lingua)}`;
+  /* Oltre la settimana i giorni (#177): un filtro da 135 ore si pensa in ore,
+   * ma un router acceso da 552 ore e' acceso da 23 giorni, ed e' cosi' che lo
+   * si dice. Sotto la settimana le ore restano, come prima. */
+  if (Math.abs(ore) >= 24 * 7) {
+    const giorni = ore / 24;
+    const cifre = Math.abs(giorni) >= 10 || Number.isInteger(giorni) ? 0 : 1;
+    return `${numero(giorni, cifre, lingua)} ${pick("giorni", "days", lingua)}`;
+  }
+  /* Un numero tondo di ore resta tondo: «72 h», non «72,0 h». */
+  const cifre = Math.abs(ore) >= 100 || Number.isInteger(ore) ? 0 : 1;
+  return `${numero(ore, cifre, lingua)} ${pick("h", "h", lingua)}`;
 }
 
 /* Quanti decimali vuole un numero.
@@ -189,7 +200,36 @@ const SPENTO = new Set(["unavailable", "unknown", "none", ""]);
  * per chi volesse farci altro. Un sensore che non risponde non scrive uno
  * zero: scrive il trattino, che e' la verita'.
  */
-export function letturaDelDispositivo(entity, dispositivo = {}, states = {}, lingua = getLocale()) {
+/* Una data scritta da Home Assistant: quella che dichiara di esserlo, oppure
+ * una stringa che comincia come una data con l'ora. Una data senza ora no:
+ * «2026-10-14» puo' essere il nome di un file, e di un giorno intero non si
+ * dice «3 ore fa». */
+const DATA_CON_ORA = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/;
+
+/* Quanto e' lontano un istante, corto come una pastiglia: «5 min», «3 h»,
+ * «4 giorni». Le ore fino a due giorni — «1 giorni» non si dice, e «30 h» si
+ * legge meglio di «1,3 giorni». */
+function distanzaBreve(minuti, lingua) {
+  if (minuti < 60) return `${Math.max(1, Math.round(minuti))} ${pick("min", "min", lingua)}`;
+  const ore = Math.floor(minuti / 60);
+  if (ore < 48) return `${ore} ${pick("h", "h", lingua)}`;
+  return `${Math.floor(ore / 24)} ${pick("giorni", "days", lingua)}`;
+}
+
+function istanteDellaLettura(grezzo, attributi = {}) {
+  const testo = clean(grezzo);
+  if (clean(attributi?.device_class) !== "timestamp" && !DATA_CON_ORA.test(testo)) return null;
+  const istante = Date.parse(testo);
+  return Number.isFinite(istante) ? istante : null;
+}
+
+export function letturaDelDispositivo(
+  entity,
+  dispositivo = {},
+  states = {},
+  lingua = getLocale(),
+  adesso = Date.now(),
+) {
   const voce = clean(entity);
   const corrente = states?.[voce];
   const grezzo = clean(corrente?.state);
@@ -229,18 +269,45 @@ export function letturaDelDispositivo(entity, dispositivo = {}, states = {}, lin
       testo: acceso ? pick("Sì", "Yes", lingua) : pick("No", "No", lingua),
     };
   }
+  /* Un istante non e' un numero (#177).
+   *
+   * «Ultima volta visto», «acceso dalle»: Home Assistant li scrive come una
+   * data — `2026-10-14T08:12:00+00:00` — e `parseFloat` di quella data e' il
+   * suo anno. Sulla scheda di un router si leggeva «Ultima volta visto 2.026».
+   * Una data si dice per quanto e' lontana, che e' la domanda che uno si fa
+   * guardando un apparecchio di rete: da quanto non risponde, da quanto e' su. */
+  const istante = istanteDellaLettura(grezzo, attributi);
+  if (istante !== null) {
+    const minuti = (adesso - istante) / 60000;
+    const quanto = distanzaBreve(Math.abs(minuti), lingua);
+    const testo =
+      Math.abs(minuti) < 1
+        ? quantoTempoInParole(0)
+        : minuti > 0
+          ? `${quanto} ${pick("fa", "ago", lingua)}`
+          : `${pick("fra", "in", lingua)} ${quanto}`;
+    return { ...base, available: true, valore: null, istante, testo };
+  }
   const valore = Number.parseFloat(grezzo.replace(",", "."));
   if (!Number.isFinite(valore)) return { ...base, available: true, valore: null, testo: grezzo };
   const tempo = durataLeggibile(valore, unita, lingua);
   if (tempo) return { ...base, available: true, valore, testo: tempo };
-  const scritto = numero(valore, decimaliPer(valore), lingua);
+  /* Non piu' cifre di quelle che il sensore ha scritto: «3.2» ms resta
+   * «3,2 ms», non «3,20 ms» — lo zero in coda e' una precisione inventata. */
+  const scritte = (grezzo.split(/[.,]/)[1] || "").length;
+  const scritto = numero(valore, Math.min(decimaliPer(valore), scritte), lingua);
   return { ...base, available: true, valore, testo: unita ? `${scritto} ${unita}` : scritto };
 }
 
 /** Le letture di un dispositivo adesso, nell'ordine in cui sono state scelte. */
-export function lettureDelDispositivo(dispositivo = {}, states = {}, lingua = getLocale()) {
+export function lettureDelDispositivo(
+  dispositivo = {},
+  states = {},
+  lingua = getLocale(),
+  adesso = Date.now(),
+) {
   return elencoLetture(dispositivo?.letture).map((entity) =>
-    letturaDelDispositivo(entity, dispositivo, states, lingua),
+    letturaDelDispositivo(entity, dispositivo, states, lingua, adesso),
   );
 }
 

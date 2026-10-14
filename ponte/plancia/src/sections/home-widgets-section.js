@@ -339,7 +339,7 @@ import {
   smokeEntities,
   smokeIsAlarm,
 } from "./smoke-alerts-section.js";
-import { loadCameraFrame } from "./live-ui-section.js";
+import { istantaneaInViaggio, loadCameraFrame } from "./live-ui-section.js";
 import { hasConfiguredData } from "../core/dashboard-store.js";
 import {
   activeLocale,
@@ -367,6 +367,10 @@ import {
   senzaCadere,
 } from "./shared.js";
 import { disegnaComeStaLaCasa } from "./come-sta-la-casa-section.js";
+import {
+  disegnaAccantoAllePersone,
+  registraLeFontiDellAssistente,
+} from "./assistente-di-casa-section.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { laMisuraDallUnita, lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 import { importRateEntity, resolveRate } from "../core/energy-calculations.js";
@@ -477,6 +481,10 @@ const state = (root[KEY] ||= {
   calendari: new Map(), // entity -> { eventi, fetchedAt, inflight, inVoloDa, failedAt }
   cameraTimer: 0,
   cameraUrls: new Map(), // entity -> object URL della tessera, MAI quelli del muro
+  /* Quando si e' chiesta l'ultima foto di ogni miniatura: il freno di
+   * `aggiornaTelecamere`. Una WeakMap: una miniatura buttata via se ne va con
+   * la sua riga. */
+  cameraChieste: new WeakMap(),
   /* Quali righe hanno il pannello della rotella aperto. Sta qui e non nel
    * documento perche' il corpo della finestra si ridisegna a ogni giro di
    * stati: se lo stato dell'apertura stesse solo nel documento, il pannello si
@@ -9121,6 +9129,17 @@ export function renderHomeWidgets() {
   } catch (error) {
     root.console?.warn?.("[DashboardModern] barra di casa", error);
   }
+  /* L'assistente di casa accanto alle persone (#175) ragiona sugli stessi
+   * modelli e per la stessa ragione: TUTTI, perche' chi ha tolto la tessera
+   * delle luci dalla Home vuole sapere lo stesso che sono rimaste accese
+   * nella casa vuota. Le letture dell'energia si fanno solo se le chiede. */
+  try {
+    disegnaAccantoAllePersone(tutti, {
+      energia: () => lettureDiCasa(states),
+    });
+  } catch (error) {
+    root.console?.warn?.("[DashboardModern] assistente di casa", error);
+  }
   apriGliAvvisiAppenaAccesi(models);
   const host = doc?.getElementById?.("dm-widgets");
   if (!models.length) {
@@ -9749,6 +9768,8 @@ function schedule() {
  * Sicurezza, che di secondi ne usa quattro perche' li' le telecamere sono la
  * pagina intera. */
 const CAMERA_WIDGET_REFRESH_MS = 10000;
+/* Ogni quanto si riprova una miniatura che il suo fotogramma non ce l'ha. */
+const CAMERA_RIPROVA_MS = 2000;
 
 function homeVisible() {
   return Boolean(doc?.getElementById?.("page-home")?.classList?.contains("active"));
@@ -9795,7 +9816,30 @@ async function aggiornaTelecamere() {
    * flussi RTSP aperti insieme, e la finestra restava nera finche' l'ultima
    * non rispondeva. A due per volta la prima immagine arriva subito e le
    * altre la seguono — la stessa attesa totale, ma vista riempirsi. */
-  const coda = [...figures];
+  /* Non piu' di una foto per giro del timer, per telecamera.
+   *
+   * Questa funzione la chiama anche ogni ridisegno della Home, e la Home si
+   * ridisegna a ogni cambio di stato: senza un freno ogni telecamera veniva
+   * richiesta piu' volte al secondo — nell'app, dove una foto passa dal ponte
+   * e dal filo, settantaquattro richieste in dodici secondi per due
+   * telecamere. Una telecamera che ha gia' il suo fotogramma aspetta il suo
+   * turno; una che non ce l'ha ancora (la finestra appena aperta) si chiede
+   * subito, e se sta gia' arrivando si aspetta quella. Una a cui la casa ha
+   * detto di no — una telecamera che non e' per te, Home Assistant che non
+   * risponde — si richiede ogni due secondi, non a ogni cambio di stato. */
+  const adesso = Date.now();
+  const coda = [...figures].filter((figure) => {
+    const image = figure.querySelector("img");
+    if (!image) return false;
+    if (istantaneaInViaggio(image, adesso)) return false;
+    const chieste = (state.cameraChieste ||= new WeakMap());
+    const ultima = chieste.get(image) || 0;
+    const freno =
+      image.dataset.dmCameraState === "ready" ? CAMERA_WIDGET_REFRESH_MS - 500 : CAMERA_RIPROVA_MS;
+    if (adesso - ultima < freno) return false;
+    chieste.set(image, adesso);
+    return true;
+  });
   const IN_VOLO = 2;
   const tira = async () => {
     while (coda.length) {
@@ -12045,6 +12089,13 @@ export function installHomeWidgetsSection() {
    * prese, e chiunque altro abbia un tasto che deve mostrare quello che una
    * tessera mostra gia'. */
   root.dmApriTessera = apriLaTessera;
+  /* L'assistente di casa e' sempre vivo, anche quando la Home non si vede:
+   * sul tablet a muro, o mentre si guarda un'altra pagina. I modelli e
+   * l'energia glieli diamo noi, che sappiamo farli. */
+  registraLeFontiDellAssistente({
+    modelli: () => modelliDelleTessere(allStates()),
+    energia: () => lettureDiCasa(allStates()),
+  });
   /* Tornando in primo piano, quello che era per aria si da' per perso.
    *
    * Su iOS l'app di Home Assistant sospende la pagina quando va dietro, e le

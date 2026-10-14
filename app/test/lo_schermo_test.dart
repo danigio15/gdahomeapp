@@ -75,4 +75,54 @@ void main() {
     await loSchermoRimetti();
     expect(modi().length, dopo);
   });
+
+  test(
+    'col campanello lo schermo resta acceso, e quando suona si sveglia',
+    () async {
+      final finestra = <MethodCall>[];
+      final messaggero =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messaggero.setMockMethodCallHandler(canaleDellaFinestra, (c) async {
+        finestra.add(c);
+        return null;
+      });
+      messaggero.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (c) async => null,
+      );
+      List<Object?> acceso() => [
+        for (final c in finestra)
+          if (c.method == 'acceso') c.arguments,
+      ];
+
+      /* Senza pannello a muro non si tiene acceso niente, e non si sveglia
+       * niente: un telefono in tasca non si accende per un campanello. */
+      await loSchermoDice('acceso:si');
+      await loSchermoDice('sveglia');
+      expect(acceso(), isEmpty);
+      expect(finestra.where((c) => c.method == 'sveglia'), isEmpty);
+      expect(schermoTenutoAcceso, isFalse);
+
+      /* Col pannello si': una volta sola, finche' non cambia. */
+      await loSchermoDice('muro:si');
+      await loSchermoDice('acceso:si');
+      expect(acceso(), [true]);
+      expect(schermoTenutoAcceso, isTrue);
+
+      /* Di notte la luce va al minimo; lo squillo la rimette piena e chiede
+       * all'app di riaccendere lo schermo. */
+      await loSchermoDice('spento:si');
+      await loSchermoDice('sveglia');
+      final dopo = finestra.map((c) => c.method).toList();
+      expect(dopo.sublist(dopo.length - 2), ['luminosita', 'sveglia']);
+      expect(finestra[finestra.length - 2].arguments, -1.0);
+
+      /* Spento il pannello, lo schermo torna del sistema. */
+      await loSchermoDice('muro:no');
+      expect(acceso(), [true, false]);
+      expect(schermoTenutoAcceso, isFalse);
+      await loSchermoDice('acceso:no');
+      expect(acceso(), [true, false]);
+    },
+  );
 }

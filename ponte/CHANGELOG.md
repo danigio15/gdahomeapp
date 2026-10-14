@@ -10,7 +10,53 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
-## 1.11.15
+## 1.12.0
+
+**L'Assistente di casa.** Accanto alle persone, nella Home, la casa ti dice
+la cosa più importante da fare adesso, con il tasto per farla: «Nessuno in
+casa e la luce della cucina è accesa da 2 ore» → Spegni; «Tra un'ora piove e
+la finestra della camera è aperta»; «Il fotovoltaico basta fino alle 15» →
+Avvia la lavastoviglie. Venticinque regole su sicurezza, sprechi, elettrodomestici,
+meteo, persone e manutenzione; impara da quello che scarti, si aggiorna da
+solo a ogni cambiamento e ogni minuto, anche sul tablet a muro. «Vedi tutti»
+apre l'elenco per urgenza, con «Chiedi alla casa» (l'assistente di Home
+Assistant). Si regola in Config › Persone.
+
+**Il campanello sul tablet a muro, come un videocitofono.** Quando suona il
+pannello si sveglia, suona (Din don, Classico o Ding, col volume) e mostra la
+telecamera a tutto schermo come una chiamata, con Apri, Parla, Silenzia e
+Chiudi; dopo, gli ultimi squilli con la foto. Nell'app, in modalità muro, lo
+schermo resta acceso (di notte al minimo) e si riaccende quando suona.
+
+**Solare termico animato.** Il liquido scorre nei tubi alla velocità del
+ΔT, la pompa gira, il pannello scalda, la serpentina pulsa e il boiler fa
+vapore quando consuma. Le animazioni dello stato restano anche con «riduci
+movimento» del telefono o di Windows (prima era tutto fermo). Con la pompa
+spenta si legge «Impianto spento», e la valvola di sicurezza sta sul fianco
+del boiler.
+
+**Elettrodomestici: niente più «mini cicli».** Un lavaggio con le pause resta
+un ciclo solo, sulla card e nel contatore. Nel config un avviso propone i
+valori consigliati per lavatrice, lavastoviglie e asciugatrice.
+
+**MiniPC: le altre letture delle macchine di rete** (latenza, uptime,
+pacchetti persi, ultima volta visto) sulla riga di ogni macchina.
+
+**Telecamere nell'app: niente più riquadri neri.** Un'immagine già in
+arrivo non viene più annullata a ogni cambiamento in casa; si aggiorna ogni
+10 secondi. **Sicurezza più forte:** le telecamere arrivano solo a un utente
+di Home Assistant attivo (telefono abbinato o sessione di Home Assistant), le
+plance riservate restano riservate anche per le immagini, il ponte non
+conserva né scrive nei registri nessuna immagine, e i link firmati durano al
+massimo 10 minuti. I telefoni abbinati prima che l'abbinamento fosse legato
+a un utente di Home Assistant vanno riabbinati una volta per vedere le
+telecamere.
+
+**App.** All'avvio un solo caricamento, senza il lampo «Non riesco ad
+accendere la plancia»; su una plancia a muro «Configurazione» apre il config
+del muro.
+
+### Anche, da 1.11.15
 
 **Navigatore: i pedaggi veri.** La Tangenziale di Napoli costa 1,05 € a
 passaggio, non «~1,00 €»: le strade a prezzo fisso hanno il loro listino. Con

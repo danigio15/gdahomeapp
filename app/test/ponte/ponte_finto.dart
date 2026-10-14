@@ -1071,8 +1071,14 @@ class PonteFinto {
   };
 
   /// I file che il ponte finto sa servire con `ponte/http`: il percorso, il
-  /// tipo e i byte. Sotto `/api/` si risponde con l'eco della richiesta.
+  /// tipo e i byte. Sotto `/api/` si risponde con l'eco della richiesta,
+  /// a meno che il percorso non stia qui: e' cosi' che una prova mette una
+  /// telecamera finta, con la sua istantanea.
   final Map<String, (String, List<int>)> file = {};
+
+  /// I percorsi che la dogana del ponte chiude a chi chiede: una telecamera
+  /// che sta solo in una plancia che questa utenza non vede.
+  final Set<String> chiusi = {};
 
   /// Le domande arrivate su questa strada, in ordine.
   ///
@@ -1103,6 +1109,17 @@ class PonteFinto {
 
   Map<String, dynamic> _commissione(Map<String, dynamic> detto) {
     commissioni.add(detto);
+    final soloIlPercorso = '${detto['percorso'] ?? ''}'.split('?').first;
+    if (chiusi.contains(soloIlPercorso)) {
+      return {
+        'type': 'result',
+        'success': false,
+        'error': {
+          'code': 'unauthorized',
+          'message': 'questa telecamera non e\' per la tua utenza',
+        },
+      };
+    }
     return _unFile(detto);
   }
 
@@ -1111,6 +1128,18 @@ class PonteFinto {
   Map<String, dynamic> _unFile(Map<String, dynamic> detto) {
     final percorso = detto['percorso'] as String? ?? '';
     final soloIlPercorso = percorso.split('?').first;
+    /* Come il ponte vero: il flusso MJPEG non passa dal filo. */
+    if (soloIlPercorso.startsWith('/api/camera_proxy_stream/')) {
+      return _pacchetto(
+        501,
+        'text/plain; charset=utf-8',
+        utf8.encode('il flusso non passa dal filo'),
+      );
+    }
+    final unaCosaDiCasa = file[soloIlPercorso];
+    if (percorso.startsWith('/api/') && unaCosaDiCasa != null) {
+      return _pacchetto(200, unaCosaDiCasa.$1, unaCosaDiCasa.$2);
+    }
     if (percorso.startsWith('/api/')) {
       final corpo = detto['corpo'];
       final eco = jsonEncode({

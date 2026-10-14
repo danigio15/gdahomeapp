@@ -20,10 +20,14 @@ import {
   FAMIGLIE,
   candidateDaChiedere,
   integrazioniDaScegliere,
+  lettureDellaRiga,
+  lettureProposteDellaMacchina,
   macchineDaImportare,
   macchineERete,
   normalizzaMacchine,
 } from "../core/macchine-e-rete.js";
+import { ESITI_ELENCO, conLaVoce, tettoDellElenco } from "../core/robot-model.js";
+import { nomeAccantoAlDispositivo } from "../core/nome-accanto-al-dispositivo.js";
 import { MARCHIO_TESSERA } from "../core/fuori-dai-widget.js";
 import {
   EVENTO_PIATTAFORME,
@@ -41,6 +45,7 @@ import {
   serverPerDispositivo,
 } from "./macchine-e-rete-section.js";
 import { costruisciSchedaDichiarata } from "./scheda-dichiarata-section.js";
+import { conLaRiga } from "../core/elenco-dichiarato.js";
 import { allStates, clean, doc, esc, readJson, root, t, writeJsonIfChanged, senzaCadere } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
 
@@ -150,6 +155,76 @@ function campoDellaFamiglia(riga, indice) {
     )}</small></label>`;
 }
 
+/* ── le altre letture, il secondo campo in più (#177) ──────────────────── */
+
+/* «Ho un sistema di ping esterno che per ogni apparecchio mi dà online,
+ * latenza, uptime, pacchetti persi, ultima volta visto: vorrei vederli.»
+ *
+ * Sono le «Altre letture» di tutta la plancia — del robot, della TV, degli
+ * elettrodomestici — e si scelgono allo stesso modo: la lente del selettore, la
+ * casella per chi l'entità la sa a memoria, e sotto le proposte trovate accanto
+ * all'entità della riga, che un tocco aggiunge. La regola di cosa può essere
+ * una lettura e di quante ce ne stanno non è scritta qui: è quella di
+ * `letture-accanto.js`, passata dallo stesso sportello (`conLaVoce`) perché il
+ * tetto si dica invece di tacerlo. */
+function pastigliaDellaLettura(entity, azione, segno, riga, states) {
+  const nome = nomeAccantoAlDispositivo(entity, riga, states);
+  return `<button type="button" class="dm-macchina-ed-chip" data-dm-macchina-lettura-${esc(azione)}="${esc(entity)}" title="${esc(entity)}"><span>${esc(nome)}</span><i aria-hidden="true">${segno}</i></button>`;
+}
+
+/* La casella resta una casella con la lente accanto, non la pastiglia che
+ * l'editor mette sui campi da UN'entita' (`data-dm-entity-optional`): questa
+ * non tiene un valore, ne aggiunge uno all'elenco — e scelta dalla lente la
+ * lettura entra subito e la casella torna vuota. */
+function campoDelleLetture(riga, indice) {
+  const states = allStates();
+  const scelte = lettureDellaRiga(riga);
+  const tetto = tettoDellElenco("letture");
+  const proposte = lettureProposteDellaMacchina(riga, states).slice(0, 12);
+  const id = `dm-macchina-ed-${indice}-lettura`;
+  return `<div class="ed-slot dm-dich-campo dm-macchina-ed-letture" data-dm-macchina-letture="${indice}">
+    <span class="ed-slot-lbl">${esc(t("Altre letture", "Other readings"))} <b class="dm-macchina-ed-quante"${scelte.length >= tetto ? ' data-pieno="true"' : ""}>${esc(String(scelte.length))}/${esc(String(tetto))}</b></span>
+    <input type="hidden" data-dm-dich-campo="letture" data-dm-dich-riga="${indice}" value="${esc(scelte.join(","))}">
+    <div class="dm-macchina-ed-chips">${
+      scelte.length
+        ? scelte.map((entity) => pastigliaDellaLettura(entity, "via", "✕", riga, states)).join("")
+        : `<small class="dm-macchina-ed-vuoto">${esc(
+            t(
+              "Nessuna lettura in più: la riga dice se è su o giù, e basta.",
+              "No extra reading: the row says whether it is up or down, nothing else.",
+            ),
+          )}</small>`
+    }</div>
+    <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-dm-macchina-lettura-nuova="${indice}" data-dm-entity-optional="true" placeholder="sensor.router_latenza" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-macchina-lettura-lente="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button><button type="button" class="dm-entity-picker dm-macchina-ed-aggiungi" data-dm-macchina-lettura-aggiungi="${indice}" aria-label="${esc(t("Aggiungi", "Add"))}" title="${esc(t("Aggiungi", "Add"))}">＋</button></span>
+    <small class="dm-macchina-ed-errore" data-dm-macchina-lettura-errore="${indice}" role="status"></small>
+    ${
+      proposte.length
+        ? `<small>${esc(t("Trovate accanto all'apparecchio — un tocco le aggiunge:", "Found next to the appliance — one tap adds them:"))}</small>
+    <div class="dm-macchina-ed-chips dm-macchina-ed-proposte">${proposte.map((entity) => pastigliaDellaLettura(entity, "proposta", "＋", riga, states)).join("")}</div>`
+        : ""
+    }
+    <small>${esc(
+      t(
+        "I sensori che raccontano questo apparecchio oltre a «su» e «giù» — la latenza del ping, i pacchetti persi, da quanto è acceso, l'ultima volta che si è fatto vedere: entità sensor.*, binary_sensor.*, number.*. Compaiono sotto la sua riga nella pagina MiniPC, col loro nome e la loro unità.",
+        "The sensors that tell more about this device than “up” and “down” — ping latency, packet loss, uptime, the last time it was seen: sensor.*, binary_sensor.*, number.* entities. They show under its row on the MiniPC page, with their own name and unit.",
+      ),
+    )}</small>
+  </div>`;
+}
+
+function spiegazioneDellaLettura(esito) {
+  if (esito === ESITI_ELENCO.gia) return t("Questa lettura c'è già.", "That reading is already there.");
+  if (esito === ESITI_ELENCO.pieno)
+    return t(
+      "La scheda tiene dieci letture, e ci sono tutte: togline una per farci stare questa.",
+      "The card holds ten readings and they are all taken: remove one to make room.",
+    );
+  return t(
+    "Serve un'entità sensor.*, binary_sensor.* o number.* — oppure input_number, input_text.",
+    "A sensor.*, binary_sensor.* or number.* entity is required — or input_number, input_text.",
+  );
+}
+
 /* ── la scheda ────────────────────────────────────────────────────────── */
 
 const scheda = costruisciSchedaDichiarata({
@@ -220,16 +295,21 @@ const scheda = costruisciSchedaDichiarata({
   },
 
   inTesta: integrazioniMarkup,
-  campiInPiu: campoDellaFamiglia,
+  campiInPiu: (riga, indice) => `${campoDellaFamiglia(riga, indice)}${campoDelleLetture(riga, indice)}`,
 
-  /* La fascia si legge dalla tendina: e' l'unico campo in piu' che sta nel
-   * documento, e la scheda condivisa non sa dove la sezione l'ha messo. */
+  /* La fascia si legge dalla tendina e le letture dalla loro casella nascosta:
+   * sono i due campi in piu' che stanno nel documento, e la scheda condivisa
+   * non sa dove la sezione li ha messi. */
   bozzaInPiu(bozza, body, indice) {
-    const tendina = body.querySelector(
-      `[data-dm-dich-campo="famiglia"][data-dm-dich-riga="${indice}"]`,
-    );
-    const scelta = clean(tendina?.value);
-    return { ...bozza, famiglia: FAMIGLIE[scelta] ? scelta : bozza.famiglia || "macchine" };
+    const campo = (quale) =>
+      body.querySelector(`[data-dm-dich-campo="${quale}"][data-dm-dich-riga="${indice}"]`);
+    const scelta = clean(campo("famiglia")?.value);
+    const letture = campo("letture");
+    return {
+      ...bozza,
+      famiglia: FAMIGLIE[scelta] ? scelta : bozza.famiglia || "macchine",
+      letture: lettureDellaRiga(letture ? { letture: letture.value } : bozza),
+    };
   },
 
   leggi(elenco) {
@@ -267,7 +347,75 @@ const scheda = costruisciSchedaDichiarata({
   /* Le spunte delle integrazioni si salvano da sé: sono la configurazione di
    * COSA PROPORRE, non di una riga, e aspettare il 💾 di una riga vorrebbe
    * dire un tasto che salva una cosa che non ha davanti. */
-  inPiuAllInstallazione(documento, { ridisegna }) {
+  inPiuAllInstallazione(documento, { ridisegna, configurazione: config, salva, bozza, inPiu }) {
+    /* Una lettura aggiunta o tolta si salva subito, con quello che c'e' scritto
+     * nelle altre caselle della riga: e' il gesto delle pastiglie in tutta la
+     * plancia, e la pagina MiniPC cambia mentre si guarda. La riga resta
+     * aperta — chi aggiunge la latenza aggiunge subito dopo i pacchetti persi. */
+    const cambiaLeLetture = (casella, indice, cambia) => {
+      const body = doc.getElementById(ANCORA);
+      if (!body || !Number.isInteger(indice)) return false;
+      const prima = bozza(body, indice);
+      const esito = cambia(lettureDellaRiga(prima));
+      const errore = casella?.querySelector?.("[data-dm-macchina-lettura-errore]");
+      if (esito.esito && esito.esito !== ESITI_ELENCO.aggiunto) {
+        if (errore) errore.textContent = spiegazioneDellaLettura(esito.esito);
+        return false;
+      }
+      salva(conLaRiga(config(), indice, { ...prima, letture: esito.elenco }, inPiu));
+      ridisegna();
+      return true;
+    };
+    const aggiungi = (casella, indice, nuova) =>
+      cambiaLeLetture(casella, indice, (elenco) => conLaVoce(elenco, nuova, "letture"));
+
+    documento.addEventListener("click", (evento) => {
+      const dentro = doc.getElementById(ANCORA);
+      if (!dentro?.contains(evento.target)) return;
+      const lente = evento.target?.closest?.("[data-dm-macchina-lettura-lente]");
+      if (lente) {
+        evento.preventDefault();
+        const campo = dentro.querySelector(`#${CSS.escape(clean(lente.dataset.dmMacchinaLetturaLente))}`);
+        if (campo) root.wzPickEntity?.(campo);
+        return;
+      }
+      const casella = evento.target?.closest?.("[data-dm-macchina-letture]");
+      if (!casella) return;
+      const indice = Number(casella.dataset.dmMacchinaLetture);
+      const via = evento.target.closest("[data-dm-macchina-lettura-via]");
+      if (via) {
+        evento.preventDefault();
+        const togli = clean(via.dataset.dmMacchinaLetturaVia);
+        cambiaLeLetture(casella, indice, (elenco) => ({
+          elenco: elenco.filter((entity) => entity !== togli),
+        }));
+        return;
+      }
+      const proposta = evento.target.closest("[data-dm-macchina-lettura-proposta]");
+      if (proposta) {
+        evento.preventDefault();
+        aggiungi(casella, indice, clean(proposta.dataset.dmMacchinaLetturaProposta));
+        return;
+      }
+      if (evento.target.closest("[data-dm-macchina-lettura-aggiungi]")) {
+        evento.preventDefault();
+        const scritta = casella.querySelector("[data-dm-macchina-lettura-nuova]");
+        aggiungi(casella, indice, clean(scritta?.value));
+      }
+    });
+    /* Il selettore delle entita' scrive nella casella e annuncia il cambio:
+     * scelta dalla lente, la lettura entra senza dover premere anche «＋». */
+    documento.addEventListener("change", (evento) => {
+      const scritta = evento.target?.closest?.("[data-dm-macchina-lettura-nuova]");
+      if (!scritta || !doc.getElementById(ANCORA)?.contains(scritta)) return;
+      const valore = clean(scritta.value);
+      if (!valore) return;
+      aggiungi(
+        scritta.closest("[data-dm-macchina-letture]"),
+        Number(scritta.dataset.dmMacchinaLetturaNuova),
+        valore,
+      );
+    });
     documento.addEventListener("click", (evento) => {
       const spunta = evento.target?.closest?.("[data-dm-macchina-integrazione]");
       if (!spunta || !doc.getElementById(ANCORA)?.contains(spunta)) return;

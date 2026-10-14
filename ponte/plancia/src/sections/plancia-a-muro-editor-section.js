@@ -42,6 +42,8 @@ import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import { anteprimaDellaPagina, fonteDelMuro, premiumDellaCasa } from "./plancia-a-muro-section.js";
+import { opzioniDelCampanello } from "../core/il-campanello-a-muro.js";
+import { suonaIlCampanello } from "./il-suono-del-campanello.js";
 import {
   allStates,
   clean,
@@ -130,6 +132,60 @@ const campo = (via, valore, segnaposto = "", tipo = "text") =>
   `<input class="ed-input${tipo === "text" ? " mono" : ""} mu-ed-campo" type="${tipo}" data-mu-ed-campo="${esc(via)}" value="${esc(valore)}" placeholder="${esc(segnaposto)}" autocomplete="off" spellcheck="false"${tipo === "password" ? ' inputmode="numeric"' : ""}>`;
 const riga = (titolo, nota, destra) =>
   `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(titolo)}</b>${nota ? `<small>${esc(nota)}</small>` : ""}</div><div class="mu-ed-dx">${destra}</div></div>`;
+
+/* Come suona il campanello sul tablet (`core/il-campanello-a-muro.js`): il
+ * suono con la sua prova, il volume, lo schermo che si accende e che resta
+ * acceso, e «Parla» per chi ha un citofono con l'audio nei due versi. */
+const SUONI = () => [
+  ["dindon", t("Din don", "Ding dong")],
+  ["classico", t("Campanello classico", "Classic bell")],
+  ["ding", t("Ding", "Ding")],
+  ["nessuno", t("Nessuno", "None")],
+];
+
+function campanelloMarkup(i, via, ing) {
+  const o = opzioniDelCampanello(ing);
+  return `${riga(
+    t("Suono", "Sound"),
+    t(
+      "Il suono che fa il tablet quando suona il campanello. Nessuno: solo lo schermo.",
+      "The sound the tablet makes when the doorbell rings. None: just the screen.",
+    ),
+    `<span class="mu-ed-suono">${tendina(`${via}.ingresso.suono`, o.suono, SUONI(), null)}<button type="button" class="mu-ed-prova" data-mu-ed-prova="${i}"${o.suono === "nessuno" ? " disabled" : ""}>▶ ${esc(t("Prova", "Test"))}</button></span>`,
+  )}
+    ${riga(
+      t("Volume", "Volume"),
+      t(
+        "Solo per il campanello: non cambia il volume del tablet.",
+        "Only for the doorbell: it does not change the tablet's volume.",
+      ),
+      `<span class="mu-ed-volume"><input type="range" min="0" max="100" step="5" data-mu-ed-campo="${esc(`${via}.ingresso.volume`)}" value="${o.volume}" aria-label="${esc(t("Volume", "Volume"))}"><b data-mu-ed-volume>${o.volume}%</b></span>`,
+    )}
+    ${riga(
+      t("Accendi lo schermo quando suona", "Turn the screen on when it rings"),
+      t(
+        "Anche a schermo spento: si accende al massimo e il citofono prende tutto lo schermo, come una chiamata.",
+        "Even with the screen off: it turns on at full brightness and the intercom takes the whole screen, like a call.",
+      ),
+      interruttore(`${via}.ingresso.accendiSchermo`, o.accendiSchermo, "accendi"),
+    )}
+    ${riga(
+      t("Tieni lo schermo acceso (di notte al minimo)", "Keep the screen on (dimmed at night)"),
+      t(
+        "Il tablet non si spegne mai; nella fascia di notte resta acceso al minimo.",
+        "The tablet never turns off; during the night hours it stays on at minimum brightness.",
+      ),
+      interruttore(`${via}.ingresso.tieniAcceso`, o.tieniAcceso, "acceso"),
+    )}
+    ${riga(
+      t("Parla con il citofono (se lo supporta)", "Talk through the intercom (if supported)"),
+      t(
+        "Il tasto «Parla» c'è solo se il campanello ha l'audio nei due versi.",
+        "The «Talk» button only works if the doorbell has two-way audio.",
+      ),
+      interruttore(`${via}.ingresso.parla`, o.parla, "parla"),
+    )}`;
+}
 
 const nomeDi = (id) =>
   clean(
@@ -535,6 +591,7 @@ function paginaMarkup(p, i, tutte) {
     <div class="mu-ed-sotto-titolo">${esc(t("Citofono / telecamera", "Intercom / camera"))}</div>
     ${riga(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
     ${riga(t("Campanello", "Doorbell"), t("Quando suona, il pannello si sveglia e apre il citofono da solo", "When it rings, the panel wakes up and opens the intercom by itself"), cerca(`${via}.ingresso.campanello`, ing.campanello, { domini: "binary_sensor,event,input_boolean,switch" }))}
+    ${campanelloMarkup(i, via, ing)}
     ${riga(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga(t("Nome del tasto grande", "Big button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo(`${via}.ingresso.nomeApri`, ing.nomeApri, ing.apri ? nomeDi(ing.apri) : t("Cancello", "Gate")))}
     ${riga(t("Secondo tasto", "Second button"), t("Per esempio: apri porta", "For example: open the door"), cerca(`${via}.ingresso.apri2`, ing.apri2, { domini: "button,lock,cover,switch,script,input_button" }))}
@@ -1191,6 +1248,14 @@ function sposta(elenco, da, a) {
 function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
+  /* «▶ Prova»: il suono scelto, una volta, al volume scelto. */
+  const prova = event.target.closest("[data-mu-ed-prova]");
+  if (prova) {
+    event.preventDefault();
+    const o = opzioniDelCampanello(bozza().pagine?.[Number(prova.dataset.muEdProva)]?.ingresso);
+    suonaIlCampanello(o.suono, o.volume, { ripeti: false });
+    return;
+  }
   const el = event.target.closest(
     "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia],[data-mu-ed-togli-voce],[data-mu-ed-aggiungi-voce],[data-mu-ed-sposta]",
   );
@@ -1374,6 +1439,14 @@ function stili() {
 #ed-body .mu-ed-seg button{border:0;padding:8px 12px;border-radius:9px;background:none;color:var(--text-dim,#64748b);font-weight:800;font-size:12.5px;cursor:pointer}
 #ed-body .mu-ed-seg button.si{background:color-mix(in srgb,#0ea5e9 18%,transparent);color:#0369a1;box-shadow:inset 0 0 0 1px #0ea5e999}
 html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}
+#ed-body .mu-ed-suono{display:flex;gap:8px;align-items:center}
+#ed-body .mu-ed-suono .mu-ed-sel{min-width:190px}
+#ed-body .mu-ed-prova{border:1px solid color-mix(in srgb,#0ea5e9 45%,transparent);background:color-mix(in srgb,#0ea5e9 12%,transparent);color:#0369a1;border-radius:10px;padding:8px 12px;font-weight:800;font-size:12.5px;white-space:nowrap;cursor:pointer}
+#ed-body .mu-ed-prova[disabled]{opacity:.4;cursor:default}
+html[data-theme="dark"] #ed-body .mu-ed-prova{color:#7dd3fc}
+#ed-body .mu-ed-volume{display:flex;gap:10px;align-items:center}
+#ed-body .mu-ed-volume input{width:190px;accent-color:#0ea5e9}
+#ed-body .mu-ed-volume b{font-size:13px;font-variant-numeric:tabular-nums;min-width:40px}
 #ed-body .mu-ed-pagina-testa{display:flex;align-items:center;gap:10px;font-size:14px}
 #ed-body .mu-ed-pagina.chiusa{padding:8px 12px}
 #ed-body .mu-ed-apri{flex:1;min-width:0;display:flex;align-items:center;gap:12px;border:0;background:none;padding:4px 0;text-align:left;color:inherit;cursor:pointer}
@@ -1445,6 +1518,12 @@ export function installPlanciaAMuroEditor() {
   doc.addEventListener("click", onClick);
   doc.addEventListener("change", onChange);
   doc.addEventListener("input", (event) => {
+    /* Il volume si legge mentre il dito scorre; si scrive al rilascio. */
+    if (event.target?.dataset?.muEdCampo?.endsWith(".ingresso.volume")) {
+      const scritta = event.target.parentElement?.querySelector?.("[data-mu-ed-volume]");
+      if (scritta) scritta.textContent = `${event.target.value}%`;
+      return;
+    }
     if (
       event.target?.type === "password" ||
       event.target?.dataset?.muEdCampo?.includes(".nome") ||

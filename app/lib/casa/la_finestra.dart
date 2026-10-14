@@ -33,3 +33,15 @@ Future<void> finestraRiservata(bool riservata) async {
     /* Un pacchetto di prima, o un sistema che dice no: resta il velo. */
   }
 }
+
+/// Il permesso del microfono, chiesto al sistema: lo vuole «Parla» del
+/// citofono sul tablet a muro, quando la pagina chiede la voce. Torna `false`
+/// se il sistema dice no o non sa rispondere — la pagina lo dice da se'.
+Future<bool> permessoDelMicrofono() async {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return false;
+  try {
+    return await canaleDellaFinestra.invokeMethod<bool>('microfono') ?? false;
+  } catch (_) {
+    return false;
+  }
+}

@@ -16,6 +16,12 @@
          permesso quella chiamata non fa niente e non dice niente: la plancia
          nel browser vibrava, nell'app no, e non si capiva perche'. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Il campanello del tablet a muro: lo schermo spento si riaccende quando
+         suona (un wake lock di pochi secondi, `MainActivity.sveglia`), e
+         «Parla» manda la voce al citofono dal microfono del tablet. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <!-- Il volto e l'impronta davanti all'app (#54): il lucchetto che si
          accende da Sicurezza.

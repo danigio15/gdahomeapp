@@ -132,6 +132,8 @@ test("no translation is left as its English source", async () => {
 /* Strings that legitimately read the same in every language we ship. */
 const SHARED_ACROSS_LANGUAGES = new Set([
   ".",
+  /* Il suono «Ding» del campanello a muro: e' il suono, non una parola. */
+  "Ding",
   "24 h",
   /* I minuti e le ore della Cottura (#71): «min» e «h» sono i simboli delle
    * unita', e mezza Europa li scrive cosi'. Dove non e' vero — tedesco, russo,
@@ -316,6 +318,8 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   de: new Set([
+    /* «Ingresso · live» sopra il video del citofono: la parola e' quella. */
+    "live",
     /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
      * cursore o accanto a una telecamera nessuno ne usa un'altra. */
     "Audio",
@@ -410,6 +414,8 @@ const LOCALE_IDENTITIES = {
     "Volume",
   ]),
   nl: new Set([
+    /* «Ingresso · live» sopra il video del citofono: la parola e' quella. */
+    "live",
     /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
      * cursore o accanto a una telecamera nessuno ne usa un'altra. */
     "Audio",
