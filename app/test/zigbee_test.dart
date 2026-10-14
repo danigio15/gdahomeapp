@@ -90,15 +90,17 @@ void main() {
        * l'impronta nel browser non ci sono. Era il catenaccio in cima a «Le
        * tue case», che infatti si disegnava solo `if (sulTelefono)`. */
     expect(nelBrowser, isNot(contains(Sezione.impostazioniDellApp)));
-    /* E il resto c'è tutto: si tolgono cinque voci, non si fa un'altra
+    /* E le notifiche: nel browser una notifica ad app chiusa non arriva. */
+    expect(nelBrowser, isNot(contains(Sezione.notifiche)));
+    /* E il resto c'è tutto: si tolgono sei voci, non si fa un'altra
        * app. */
     expect(nelBrowser, contains(Sezione.plancia));
     expect(nelBrowser, contains(Sezione.dispositivi));
     expect(nelBrowser, contains(Sezione.configurazione));
     expect(
       vociDellaBarra(conZigbee: true).length - nelBrowser.length,
-      5,
-      reason: 'nella webapp mancano esattamente quelle cinque',
+      6,
+      reason: 'nella webapp mancano esattamente quelle sei',
     );
   });
 
@@ -111,6 +113,7 @@ void main() {
       Sezione.aiutanti,
       Sezione.automazioni,
       Sezione.impostazioniDellApp,
+      Sezione.notifiche,
     });
   });
 

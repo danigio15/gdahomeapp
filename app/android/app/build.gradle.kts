@@ -6,6 +6,16 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Le notifiche: Firebase si accende solo se c'e' `google-services.json`.
+//
+// Il file non sta nella repository: lo scrive il workflow dal segreto
+// `GDAHOME_FIREBASE_ANDROID` prima di costruire (`.github/workflows/app.yml`).
+// Senza, il pacchetto si costruisce lo stesso e l'app gira senza notifiche:
+// all'avvio Firebase non si accende, e la pagina «Notifiche» lo dice.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 // La chiave vera, se c'e'.
 //
 // Sta in `android/chiave.properties`, che non entra nella repository (lo dice
@@ -86,6 +96,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Le notifiche locali (`flutter_local_notifications`) usano le date
+        // di Java 8 anche sui telefoni piu' vecchi: le porta il desugaring.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -164,6 +177,7 @@ flutter {
  * schermo della macchina comandato dal telefono. Senza la seconda il servizio
  * si compila e in auto non compare. */
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.car.app:app:1.4.0")
     implementation("androidx.car.app:app-projected:1.4.0")
 

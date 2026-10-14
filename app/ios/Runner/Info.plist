@@ -69,6 +69,9 @@
 	<array>
 		<string>audio</string>
 		<string>location</string>
+		<!-- Le notifiche della casa, che arrivano da Firebase: senza, il
+		     gettone dell'iPhone non si rinnova ad app chiusa. -->
+		<string>remote-notification</string>
 	</array>
 	<!-- La cifratura e' quella standard (X25519, HKDF, AES-GCM, e HTTPS):
 	     esente, e TestFlight non si ferma a chiederlo a ogni versione. -->

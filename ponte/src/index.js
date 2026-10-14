@@ -46,6 +46,7 @@ import { Installatore } from "./installatore.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp, PROXY_DELL_INGRESS } from "./server.js";
 import { Registri } from "./registri.js";
+import { Notifiche } from "./notifiche.js";
 
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
@@ -430,6 +431,24 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   portiere.chiamata = chiamata;
+  /* Le notifiche sul telefono: le regole guardano la casa, e le buste —
+   * chiuse per ogni telefono con la sua chiave — partono da questo filo
+   * verso il centralino, che le porta a Firebase. Con `da_fuori_casa`
+   * spento la chiamata non parte, e le notifiche non hanno strada: l'app lo
+   * dice nella sua pagina. */
+  const notifiche = new Notifiche({
+    cartella: opzioni.cartella,
+    dispositivi,
+    utenti,
+    casa,
+    commissioni,
+    plance,
+    registri,
+    postino: chiamata,
+    registro,
+  });
+  chiamata.alGettoneMorto = (telefono) => notifiche.gettoneMorto(telefono);
+  ponte.notifiche = notifiche;
   /* Una casa di prova fatta prima di un riavvio vale ancora: al centralino
    * la si ridice appena il filo e' su. */
   const provaViva = casaDiProva.viva();
@@ -578,6 +597,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   registro.info(`${dispositivi.quanti()} dispositivi abbinati`);
 
   chiamata.avvia();
+  void notifiche.parti();
   postino.parti();
   /* Separata dal rapporto, e non per caso: il rapporto resta spento di serie,
    * e le licenze non ne hanno bisogno. Manda solo chi e' la casa. */
@@ -659,6 +679,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     clearInterval(giro);
     clearInterval(spazzino);
     chiamata.spegni();
+    notifiche.ferma();
     postino.ferma();
     licenze.ferma();
     versioneMinima.ferma();
@@ -678,6 +699,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     casa,
     identita,
     chiamata,
+    notifiche,
     ritorno,
     registro,
     postino,

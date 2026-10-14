@@ -36,6 +36,16 @@
          Senza, il Play Store nasconderebbe l'app a chi ha un telefono senza
          lettore. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <!-- Le notifiche della casa. `POST_NOTIFICATIONS` lo dichiara gia' il
+         plugin delle notifiche, e da Android 13 si chiede a chi usa il
+         telefono, dopo avergli detto perche' (`lib/notifiche/postino.dart`).
+
+         `USE_FULL_SCREEN_INTENT` e' per una cosa sola: il campanello, che col
+         telefono bloccato si apre a tutto schermo come una chiamata. Da
+         Android 14 lo decide chi usa il telefono; se dice di no, il
+         campanello resta una notifica urgente che suona e si vede in cima. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
 
     <!-- La plancia vera dentro l'app passa da un server locale, su
@@ -79,6 +89,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- I tasti sotto le notifiche («Spegni», «Apri cancello», «Più
+             tardi»): li riceve il plugin, e li passa all'app che li porta alla
+             casa sul suo filo. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
+        <!-- Il canale di serie per quello che Firebase mostrasse da se'. Le
+             notifiche di gdahome arrivano chiuse e le mostra l'app, ognuna sul
+             suo canale: questo e' solo il posto dove finirebbe il resto. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="gdahome_normali" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -123,6 +123,17 @@ fuori casa** in cima alla pagina, e se non ci arriva dice anche perché.
 Spegnendo `da_fuori_casa` la casa non chiama nessuno e l'app funziona solo sotto
 il Wi-Fi di casa. Per chi la guarda dal divano va benissimo.
 
+## Le notifiche
+
+La casa avvisa i telefoni anche ad app chiusa: antifurto, allagamento, fumo,
+gas, campanello, porte aperte di notte, la lavatrice che ha finito, chi arriva
+e chi esce, e le notifiche personalizzate. Le regole girano qui, nell'add-on;
+cosa ricevere lo sceglie ogni telefono nella pagina «Notifiche» dell'app.
+Ogni notifica parte già cifrata per quel telefono e passa dal centralino:
+serve `da_fuori_casa` acceso. Ricevono solo i telefoni intestati a un utente
+attivo, e le foto delle telecamere le chiede l'app dopo, con le regole della
+plancia. Tutto in `docs/NOTIFICHE.md`.
+
 ## La casa di prova
 
 Prima di pubblicare l'app, Apple e Google la provano con una casa vera: da

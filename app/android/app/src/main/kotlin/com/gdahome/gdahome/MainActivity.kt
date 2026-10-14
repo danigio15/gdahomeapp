@@ -1,6 +1,7 @@
 package com.gdahome.gdahome
 
 import android.Manifest
+import android.app.KeyguardManager
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -102,6 +103,27 @@ class MainActivity : FlutterFragmentActivity() {
                     "sveglia" -> {
                         sveglia()
                         risposta.success(null)
+                    }
+                    /* «Apri» dal campanello di una notifica: col telefono
+                     * bloccato si chiede prima di sbloccarlo. Il campanello
+                     * si mostra sopra il blocco, il cancello no: chi trova
+                     * il telefono sul tavolo non apre casa. */
+                    "sblocca" -> {
+                        val guardia = getSystemService(KEYGUARD_SERVICE) as? KeyguardManager
+                        if (guardia == null || !guardia.isKeyguardLocked) {
+                            risposta.success(true)
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            guardia.requestDismissKeyguard(
+                                this,
+                                object : KeyguardManager.KeyguardDismissCallback() {
+                                    override fun onDismissSucceeded() = risposta.success(true)
+                                    override fun onDismissCancelled() = risposta.success(false)
+                                    override fun onDismissError() = risposta.success(false)
+                                },
+                            )
+                        } else {
+                            risposta.success(false)
+                        }
                     }
                     /* «Parla» del citofono: il microfono, chiesto al sistema
                      * la prima volta. La risposta arriva dopo, nel

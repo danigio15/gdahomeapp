@@ -115,6 +115,8 @@ export class Ponte {
      * Assistant: vedi `commissioni.js`. Senza, un `ponte/…` riceve un rifiuto
      * invece di finire in Home Assistant, che non saprebbe cosa farsene. */
     this.commissioni = commissioni;
+    /* Le notifiche dei telefoni (`notifiche.js`): le mette `index.js`. */
+    this.notifiche = null;
     this.collegamenti = new Set();
     /* Chi parla di piu' in questa casa. Serve a una domanda sola, e non c'e'
      * altro posto da cui rispondere: un telefono che riceve seicento eventi
@@ -341,6 +343,19 @@ class Collegamento {
   }
 
   _commissione(detto) {
+    /* Le notifiche di questo telefono (`notifiche.js`): le sue impostazioni,
+     * il suo gettone, i tasti sotto le sue notifiche. Chi chiede e' il
+     * telefono di questo filo, e nessun altro: il segno l'ha gia' detto. */
+    const notifiche = this.ponte.notifiche;
+    if (notifiche?.riconosce?.(detto.type)) {
+      notifiche
+        .rispondi(detto, { dispositivo: this.dispositivo, amministra: this._amministra() })
+        .catch(() => no(detto.id ?? null, "ponte_notifiche", "non ha funzionato"))
+        .then((detta) => {
+          if (!this.chiuso) this.presa.manda(JSON.stringify(detta));
+        });
+      return;
+    }
     const commissioni = this.ponte.commissioni;
     /* Chi chiede: il telefono che ha aperto questo filo, cioe' l'utente di
      * Home Assistant a cui e' intestato. Serve alle plance riservate — senza,

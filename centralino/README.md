@@ -85,7 +85,19 @@ centralino → casa   {c: 3, t: "chiudi"}            se n'e' andato
 casa → centralino   {c: 3, t: "d", m: "…"}         la risposta
 casa → centralino   {c: 3, t: "chiudi"}            chiudilo
 casa → centralino   {t: "apri-abbinamento", impronta: "…"}
+casa → centralino   {t: "spinta-elenco", telefoni: [{telefono, gettone}]}
+casa → centralino   {t: "spinta", n, telefono, busta, urgente}
+centralino → casa   {t: "spinta-morta", telefono}
 ```
+
+Le ultime tre sono le **notifiche** (`src/spinte.js`, `docs/NOTIFICHE.md`):
+la casa dice l'elenco dei gettoni di Firebase dei suoi telefoni — il centralino
+lo tiene in `spinte.json`, a 600, e nient'altro — e manda buste gia' chiuse per
+un telefono, che il centralino porta a Firebase senza aprirle. Un gettone che
+Firebase non conosce piu' si toglie, e si dice alla casa. La chiave di Firebase
+arriva come credenziale di systemd (`firebase-invio`), chiusa per la macchina
+dal bottone «Il tramite»; `FIREBASE_INVIO` dice un altro percorso, per chi lo
+fa girare a mano. Senza, le notifiche sono spente.
 
 Dalla parte del telefono non c'e' nessun involucro: quello che manda arriva
 alla casa cosi' com'e'. Vuol dire che il codice dell'app che parla con Home
