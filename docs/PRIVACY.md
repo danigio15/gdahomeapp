@@ -1,6 +1,6 @@
 # Privacy di gdahome
 
-Ultimo aggiornamento: 6 ottobre 2026.
+Ultimo aggiornamento: 14 ottobre 2026.
 
 gdahome è l'app che apre la plancia di Home Assistant sul telefono. Questa
 pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di
@@ -161,3 +161,8 @@ gdahome è mantenuta da danigio15 — <https://github.com/danigio15/gdahomeapp>.
 Per qualunque cosa su questa pagina, si apre una segnalazione dall'app o una
 issue sulla repository. Per una cosa che non vuoi rendere pubblica, scrivi
 nella chat di assistenza o ad assistenza@gdahome.org.
+
+Il titolare del trattamento è **CRV Immobiliare S.r.l.**, Viale della Libertà
+24, 81031 Aversa (CE), P. IVA e C.F. 03719610614, PEC crvimmobiliare@pec.it.
+Le richieste sui tuoi dati (accesso, correzione, cancellazione) vanno ad
+assistenza@gdahome.org o a quella PEC.

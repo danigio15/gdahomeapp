@@ -1492,6 +1492,23 @@ a.scarico:hover h3 {
   max-width: 52ch;
 }
 
+/* La società, in fondo alla pagina: una riga per dato, come su una carta
+   intestata. */
+.colofone {
+  display: grid;
+  gap: 4px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--filo);
+  font-style: normal;
+  font-size: 0.86rem;
+  max-width: 60ch;
+}
+
+.colofone b {
+  color: var(--inchiostro);
+}
+
 .fondo-pagina nav {
   display: flex;
   flex-wrap: wrap;
