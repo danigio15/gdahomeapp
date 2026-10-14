@@ -10,6 +10,12 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.12.1
+
+**App: all'avvio il marchio di gdahome.** Il caricamento dell'app mostrava
+per un attimo il vecchio logo «DASHBOARDMODERN»: adesso c'è quello di
+gdahome, con la rotella e «Caricamento…».
+
 ## 1.12.0
 
 **L'Assistente di casa.** Accanto alle persone, nella Home, la casa ti dice
