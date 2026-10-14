@@ -18,10 +18,12 @@
  *  - **il marchio**, da `app/assets/marchio/gda.png`;
  *  - **le icone**, da `app/assets/oggetti/` — le stesse che l'app mette sulle
  *    sue voci;
- *  - **i caratteri**, da `ponte/plancia/legacy/vendor/fonts/` — Inter e
- *    Oswald, quelli della plancia. Stanno qui dentro: un sito che racconta che
+ *  - **i caratteri**, da `ponte/plancia/legacy/vendor/fonts/` — Oswald,
+ *    quello dei numeri della plancia. Sta qui dentro: un sito che racconta che
  *    la casa non parla con nessuno e poi va a prendersi i caratteri da Google
- *    si smentisce da solo.
+ *    si smentisce da solo. Archivo, il carattere del testo, non viene dalla
+ *    plancia: sta in `sito/caratteri/`, salvato in git, e questo script non
+ *    lo tocca.
  *
  * ## Le due meta', e perche' una sola sta nella repository
  *
@@ -79,16 +81,7 @@ const PLANCIA_NEL_SITO = join(SITO, "dashboardmodern_static");
  * vietnamita — e sono megabyte. Qui la pagina e' una e in italiano: latin per
  * quello che si scrive, latin-ext per le poche parole che escono dal latino
  * base. I pesi sono quelli che lo stile usa davvero, e non uno di piu'. */
-const CARATTERI = [
-  "inter-latin-300-normal.woff2",
-  "inter-latin-400-normal.woff2",
-  "inter-latin-700-normal.woff2",
-  "inter-latin-ext-300-normal.woff2",
-  "inter-latin-ext-400-normal.woff2",
-  "inter-latin-ext-700-normal.woff2",
-  "oswald-latin-500-normal.woff2",
-  "oswald-latin-ext-500-normal.woff2",
-];
+const CARATTERI = ["oswald-latin-500-normal.woff2", "oswald-latin-ext-500-normal.woff2"];
 
 /* Dove si infilano i due script: subito prima del preludio della plancia, che
  * e' il primo codice suo che gira. */

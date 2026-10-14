@@ -203,7 +203,7 @@ class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      /* Il fondo vivo sta qui, sotto tutte le schermate e una volta sola: se
+      /* Il fondo sta qui, sotto tutte le schermate e una volta sola: se
        * lo mettesse ogni pagina, gli aloni ripartirebbero da capo a ogni
        * cambio di pagina, e sarebbe un lampo invece di un cielo. */
       builder: (context, schermata) => AggiornamentoObbligatorio(

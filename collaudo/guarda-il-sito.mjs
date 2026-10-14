@@ -487,7 +487,7 @@ await prova("l'informativa e' vestita come il sito", async () => {
   });
   /* I caratteri del sito, non quelli di sistema: se `stile.css` non fosse
    * arrivato, qui ci sarebbe il Times del browser. */
-  if (!com_e.carattere.includes("Inter"))
+  if (!com_e.carattere.includes("Archivo"))
     throw new Error(`l'informativa non ha i caratteri del sito: ${com_e.carattere}`);
   /* E il fondo del sito, non il bianco di una pagina senza vestito. */
   if (com_e.fondo === "rgba(0, 0, 0, 0)" || com_e.fondo === "rgb(255, 255, 255)")

@@ -200,7 +200,7 @@ difendere, e quelle sono della casella. Chi ha scritto sta nel `Reply-To`, cosi'
 | `POSTA_SICUREZZA`                | `starttls`, `tls` o `nessuna`; si ricava dalla porta, e `nessuna` vale solo verso `127.0.0.1` |
 | `POSTA_UTENTE`, `POSTA_PASSWORD` | la casella con cui si entra                                                                   |
 | `POSTA_DA`                       | il mittente, che di norma e' la casella stessa. Difetto: `POSTA_UTENTE`                       |
-| `POSTA_A`                        | a chi arriva: `assistenza@gdahome.org`                                                        |
+| `POSTA_A`                        | a chi arriva: `domotica@crvgroup.it`                                                          |
 
 `accendi.sh` li chiede, e si possono lasciare vuoti: il modulo allora **non fa
 finta** — risponde che non e' configurato e dice a chi scrive l'indirizzo a cui

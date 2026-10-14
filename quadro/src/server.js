@@ -168,7 +168,7 @@ const RAPPORTO_MASSIMA = 256 * 1024;
  * Sta scritto qui e non nella pagina perche' e' una cosa di questo quadro, non
  * del disegno: chi un domani mettesse su un quadro suo cambia una riga, e non
  * va a cercarla dentro un foglio di stile. */
-export const DOVE_SCRIVERE = "assistenza@gdahome.org";
+export const DOVE_SCRIVERE = "domotica@crvgroup.it";
 
 /* Quanto si tiene aperta una richiesta di `/attesa` prima di rispondere a mani
  * vuote.

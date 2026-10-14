@@ -1,9 +1,9 @@
 /* Le poche cose che il sito fa da sé.
  *
  * Sono poche, e nessuna è indispensabile: la pagina si legge tutta anche
- * senza JavaScript. La lingua, il menu del telefono che si richiude, l'ombra
- * sotto la barra quando si scende, le schede che compaiono salendo, e il
- * modulo dei contatti che resta sulla pagina invece di andarsene.
+ * senza JavaScript. La lingua, il menu del telefono che si richiude, la cosa
+ * accesa che segue lo scorrimento, e il modulo dei contatti che resta sulla
+ * pagina invece di andarsene.
  */
 
 (function () {
@@ -154,38 +154,67 @@
     });
   }
 
-  /* ── L'ombra sotto la barra ───────────────────────────────────────────── */
+  /* ── L'ombra sotto la barra ───────────────────────────────────────────
+   *
+   * Quando la pagina scorre, la barra in cima prende un'ombra che la stacca
+   * da quello che le passa sotto. In cima non ce l'ha: non c'è niente sotto. */
   var cappello = document.getElementById("cappello");
   if (cappello) {
-    var guarda = function () {
+    var guardaLaBarra = function () {
       cappello.classList.toggle("giu", window.scrollY > 8);
     };
-    guarda();
-    window.addEventListener("scroll", guarda, { passive: true });
+    guardaLaBarra();
+    window.addEventListener("scroll", guardaLaBarra, { passive: true });
   }
 
-  /* ── Comparire salendo ────────────────────────────────────────────────
+  /* ── Una cosa accesa alla volta ───────────────────────────────────────
    *
-   * Se il browser non ha l'osservatore, o se chi guarda ha chiesto meno
-   * movimento, le schede sono già al loro posto: la classe si toglie e
-   * finisce lì. */
-  var daMostrare = document.querySelectorAll(".appare");
+   * L'ambra è il colore di una luce accesa, e nella pagina ne è accesa una
+   * sola: la voce del menu — e dell'indice sul bordo — della sezione in cui
+   * si sta leggendo. Sulla copertina non c'è nessuna sezione da segnare, e
+   * allora si accende la spia della prima tavola: la luce della schermata,
+   * che si accende un attimo dopo che la pagina è arrivata. È l'unico
+   * movimento della pagina, e chi ha chiesto meno movimento la trova già
+   * accesa. */
+  var sezioni = document.querySelectorAll("main > section[id]");
+  var voci = document.querySelectorAll(".navigazione a[href^='#']");
+  var spia = document.getElementById("spia");
   var fermi = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (!window.IntersectionObserver || fermi) {
-    for (var i = 0; i < daMostrare.length; i++) daMostrare[i].classList.add("qui");
-  } else {
-    var occhio = new IntersectionObserver(
-      function (visti) {
-        visti.forEach(function (v) {
-          if (!v.isIntersecting) return;
-          v.target.classList.add("qui");
-          occhio.unobserve(v.target);
-        });
-      },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.06 },
-    );
-    for (var k = 0; k < daMostrare.length; k++) occhio.observe(daMostrare[k]);
+  function accendi(id) {
+    for (var v = 0; v < voci.length; v += 1) {
+      var sua = voci[v].getAttribute("href") === "#" + id;
+      voci[v].classList.toggle("acceso", sua && id !== "inizio");
+      if (sua && id !== "inizio") voci[v].setAttribute("aria-current", "true");
+      else voci[v].removeAttribute("aria-current");
+    }
+    if (spia) spia.classList.toggle("acceso", id === "inizio");
+  }
+
+  if (sezioni.length) {
+    var corrente = sezioni[0].id;
+    var guardaDove = function () {
+      var soglia = window.innerHeight * 0.38;
+      var trovata = sezioni[0].id;
+      for (var s = 0; s < sezioni.length; s += 1) {
+        if (sezioni[s].getBoundingClientRect().top <= soglia) trovata = sezioni[s].id;
+      }
+      if (trovata !== corrente) {
+        corrente = trovata;
+        accendi(corrente);
+      }
+    };
+    window.addEventListener("scroll", guardaDove, { passive: true });
+    window.addEventListener("resize", guardaDove);
+    guardaDove();
+    if (spia && corrente === "inizio") {
+      spia.classList.remove("acceso");
+      if (fermi) spia.classList.add("acceso");
+      else
+        window.setTimeout(function () {
+          if (corrente === "inizio") spia.classList.add("acceso");
+        }, 600);
+    }
   }
 
   /* ── Il modulo dei contatti ───────────────────────────────────────────
