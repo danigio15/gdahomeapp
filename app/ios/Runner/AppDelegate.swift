@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import UserNotifications
 import gdanav_app
 
 /// Un motore Flutter solo, acceso all'avvio: lo usano la schermata del
@@ -25,6 +26,10 @@ import gdanav_app
     fuoriDalleCopie()
     /* L'Apple Watch: la fotografia al polso, e i tocchi da li'. */
     LOrologio.shared.accendi(motore: motore)
+    /* Le notifiche della casa (`lib/notifiche/postino.dart`): il centro delle
+     * notifiche parla con questa classe, che le gira ai plugin — quello di
+     * Firebase e quello che mostra le notifiche gia' aperte, coi loro tasti. */
+    UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

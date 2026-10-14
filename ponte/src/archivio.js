@@ -11,9 +11,14 @@ import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 export class Archivio {
-  constructor(percorso, difetto = {}) {
+  /* `modo`: i permessi del file, per chi ci tiene dentro roba che solo il
+   * processo deve leggere — i gettoni delle notifiche, per esempio. Senza,
+   * quelli di sempre. Il file di fianco nasce gia' con quei permessi, e la
+   * rinomina se li porta dietro: non c'e' un istante in cui stia aperto. */
+  constructor(percorso, difetto = {}, { modo = undefined } = {}) {
     this.percorso = percorso;
     this.difetto = difetto;
+    this.modo = modo;
     this.dati = this._leggi();
   }
 
@@ -39,7 +44,10 @@ export class Archivio {
       /* C'e' gia'. */
     }
     const diFianco = join(cartella, `.${Date.now()}.parziale`);
-    writeFileSync(diFianco, JSON.stringify(this.dati, null, 2), "utf8");
+    writeFileSync(diFianco, JSON.stringify(this.dati, null, 2), {
+      encoding: "utf8",
+      ...(this.modo === undefined ? {} : { mode: this.modo }),
+    });
     renameSync(diFianco, this.percorso);
   }
 }

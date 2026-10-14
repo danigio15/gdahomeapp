@@ -125,6 +125,17 @@ dependencies:
       # «Aggiorna gdanav».
       ref: main
 
+  # Le notifiche della casa (`lib/notifiche/`, `docs/NOTIFICHE.md`).
+  #
+  # Firebase Cloud Messaging per tutti e due i telefoni, e nient'altro di
+  # Firebase: niente Analytics, niente Crashlytics. Arriva una busta chiusa
+  # dalla casa, e la apre l'app; la mostra `flutter_local_notifications`, sul
+  # suo canale e coi suoi tasti. Senza i file del progetto Firebase (che non
+  # stanno nella repository) l'app gira uguale, senza notifiche.
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
+  flutter_local_notifications: ^22.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
