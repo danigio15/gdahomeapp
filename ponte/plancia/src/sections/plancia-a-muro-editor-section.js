@@ -26,6 +26,7 @@ import {
   MODELLI_ELENCO,
   ambientiDellaFonte,
   comandiDellaPagina,
+  ALTRE_MISURE_AL_MASSIMO,
   energiaDellaPagina,
   LETTORI_AL_MASSIMO,
   lettoriDellaPagina,
@@ -497,7 +498,21 @@ function paginaMarkup(p, i, tutte) {
     ${misura("casa", t("Consumo della casa", "House consumption"), t("Potenza, in W o kW", "Power, in W or kW"))}
     ${misura("solare", t("Produzione solare", "Solar production"), t("Potenza, in W o kW", "Power, in W or kW"))}
     ${misura("rete", t("Scambio con la rete", "Grid exchange"), t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in"))}
-    ${misura("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}`;
+    ${misura("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}
+    ${riga(
+      t("Altre misure", "More readings"),
+      t(
+        "Fino a 8 in più: una presa, la pompa di calore, l'auto in carica, i kWh di oggi",
+        "Up to 8 more: a socket, the heat pump, the car charging, today's kWh",
+      ),
+      `<span class="mu-ed-lettori">${Array.from(
+        { length: Math.min((p.energia.altre || []).length + 1, ALTRE_MISURE_AL_MASSIMO) },
+        (_, k) =>
+          cerca(`${via}.energia.altre.${k}`, (p.energia.altre || [])[k] || "", {
+            domini: "sensor",
+          }),
+      ).join("")}</span>`,
+    )}`;
   } else if (p.modello === "musica") {
     const sue = lettoriDellaPagina({}, f);
     /* Un campo per lettore scelto, e uno vuoto per aggiungerne un altro. */
@@ -571,7 +586,8 @@ function paginaMarkup(p, i, tutte) {
         "Under the alarm, each with its value: doors and windows (binary_sensor), sensors, locks, blinds. Two or more doors or windows become a single count, «Open windows: 2»; a tap lists them.",
       ),
       elencoDiEntita(i, "letture", ing.letture, {
-        domini: "binary_sensor,sensor,lock,cover,number,input_number,input_boolean,switch,input_select,select",
+        domini:
+          "binary_sensor,sensor,lock,cover,number,input_number,input_boolean,switch,input_select,select",
         massimo: LETTURE_DELL_INGRESSO_AL_MASSIMO,
         segnaposto: t("Aggiungi una lettura", "Add a reading"),
       }),
@@ -583,7 +599,8 @@ function paginaMarkup(p, i, tutte) {
         "Buttons next to the readings: locks (lock and unlock), scripts, buttons, scenes, switches, blinds. A remote turns on and off; written remote.name:command it sends that command.",
       ),
       elencoDiEntita(i, "comandi", ing.comandi, {
-        domini: "lock,script,button,input_button,scene,switch,input_boolean,remote,cover,automation",
+        domini:
+          "lock,script,button,input_button,scene,switch,input_boolean,remote,cover,automation",
         massimo: COMANDI_DELL_INGRESSO_AL_MASSIMO,
         segnaposto: t("Aggiungi un comando", "Add a command"),
       }),
@@ -732,15 +749,19 @@ function telecameraMarkup(p, i) {
       "",
       `${cerca(`${via}.${chiave}`, tc[chiave], { domini })}${telecomando(tc[chiave]) ? campoComando(`${via}.${chiave}Comando`, tc[`${chiave}Comando`] || "") : ""}`,
     );
-  const preset = Array.from({ length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) }, (_, k) => {
-    const v = tc.preset[k];
-    const pieno = Boolean(v?.entita);
-    return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? v.nome || nomeDi(v.entita) : t("Nuovo preset", "New preset"))}</b>${pieno ? togli(`${via}.preset.${k}`, t("Togli il preset", "Remove the preset")) : ""}</div>
+  const preset = Array.from(
+    { length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) },
+    (_, k) => {
+      const v = tc.preset[k];
+      const pieno = Boolean(v?.entita);
+      return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? v.nome || nomeDi(v.entita) : t("Nuovo preset", "New preset"))}</b>${pieno ? togli(`${via}.preset.${k}`, t("Togli il preset", "Remove the preset")) : ""}</div>
       <div class="mu-ed-posto-corpo">${voce(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE_O_TELECOMANDO }), true)}${pieno && telecomando(v.entita) ? voce(t("Comando", "Command"), campo(`${via}.preset.${k}.comando`, v.comando || "", `preset_${k + 1}`)) : ""}${pieno ? voce(t("Nome sul tablet", "Name on the tablet"), campo(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
-  }).join("");
+    },
+  ).join("");
   const conTelecomando =
-    ["su", "giu", "sinistra", "destra", "stop", "zoomPiu", "zoomMeno"].some((k) => telecomando(tc[k])) ||
-    tc.preset.some((x) => telecomando(x.entita));
+    ["su", "giu", "sinistra", "destra", "stop", "zoomPiu", "zoomMeno"].some((k) =>
+      telecomando(tc[k]),
+    ) || tc.preset.some((x) => telecomando(x.entita));
   return `<div class="mu-ed-nota">${esc(
     t(
       "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera, uno script con onvif.ptz, o un telecomando (remote) col comando da mandare. Un tasto senza entità resta spento.",
@@ -1216,7 +1237,10 @@ function togliVoce(via) {
   const pezzi = via.split(".");
   const indice = Number(pezzi.pop());
   const m = structuredClone(bozza());
-  const elenco = pezzi.reduce((dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo], m);
+  const elenco = pezzi.reduce(
+    (dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo],
+    m,
+  );
   if (!Array.isArray(elenco) || !Number.isInteger(indice)) return;
   elenco.splice(indice, 1);
   state.bozza = muroPulito(m);

@@ -10,6 +10,39 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.12.2
+
+**Android: il campanello senza lo schermo intero automatico.** Per ora, sui
+telefoni Android, il campanello arriva come notifica urgente in cima, che
+suona, con «Apri» e «Ignora»; toccata, apre la telecamera a tutto schermo.
+Non accende più da solo lo schermo col telefono bloccato: per farlo Google
+Play chiede una dichiarazione apposta, che arriverà in una prossima
+versione. Tutto il resto è come nella 1.12.1.
+
+**Notifiche: l'antifurto inserito e disinserito.** In Notifiche › Sicurezza
+c'è «Antifurto inserito o disinserito»: una notifica a ogni cambio vero —
+totale, notte, parziale (casa), vacanza, personalizzato, disinserito — con
+chi l'ha cambiato, se l'antifurto lo dice.
+
+**Assistente di casa: chi è in casa.** Conta in casa anche chi è in una zona
+di Home Assistant che si chiama «Casa», e chi è sulla stessa rete Wi‑Fi di
+qualcuno che è a casa; e con qualcuno di cui non si sa dove sia non dice
+più «non c'è nessuno in casa».
+
+**A muro: l'Energia con più misure.** Oltre a casa, solare, rete e batteria,
+fino a 8 misure in più a scelta (una presa, la pompa di calore, l'auto in
+carica, i kWh di oggi); la griglia si allarga da sola.
+
+**CarPlay: col telefono bloccato la posizione va avanti.** Su CarPlay, con
+l'iPhone bloccato, il segnaposto restava fermo e ripartiva solo alzando il
+telefono: si muoveva al ritmo dello schermo del telefono, che bloccato è
+spento. Adesso segue lo schermo dell'auto.
+
+**App: mai più il logo DashboardModern all'avvio.** Al posto della schermata
+di caricamento col vecchio logo c'è il marchio di gdahome (dalla 1.12.1), e
+anche il velo con cui parte la plancia, quando arriva direttamente da Home
+Assistant, mostra il logo di gdahome invece di quello di serie.
+
 ## 1.12.1
 
 **App: all'avvio il marchio di gdahome.** Il caricamento dell'app mostrava

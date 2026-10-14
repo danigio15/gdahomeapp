@@ -31,7 +31,7 @@ export const URGENZE = Object.freeze(["bassa", "normale", "urgente"]);
  * di un telefono (`notifiche.js`). */
 export const CATEGORIE = Object.freeze({
   urgenti: ["antifurto", "allarmi", "campanello"],
-  sicurezza: ["uscito", "aperture", "movimento"],
+  sicurezza: ["inserimenti", "uscito", "aperture", "movimento"],
   casa: ["elettrodomestici", "frigo", "pioggia"],
   persone: ["arrivi"],
   assistente: ["suggerimenti"],
@@ -54,6 +54,18 @@ const ALLARMI = Object.freeze({
   smoke: { it: "Fumo", en: "Smoke", emoji: "🔥" },
   gas: { it: "Gas", en: "Gas", emoji: "⚠️" },
   carbon_monoxide: { it: "Monossido di carbonio", en: "Carbon monoxide", emoji: "⚠️" },
+});
+
+/* Gli stati dell'antifurto che si dicono quando cambiano: ogni modo di
+ * inserirlo, e il disinserito. Non i passaggi («arming», «pending») ne'
+ * lo scattato, che ha la sua notifica urgente. */
+const MODI_DELL_ANTIFURTO = Object.freeze({
+  armed_away: { it: "Inserito totale", en: "Armed away", emoji: "🔒" },
+  armed_home: { it: "Inserito parziale (casa)", en: "Armed home", emoji: "🏠" },
+  armed_night: { it: "Inserito notte", en: "Armed night", emoji: "🌙" },
+  armed_vacation: { it: "Inserito vacanza", en: "Armed vacation", emoji: "🧳" },
+  armed_custom_bypass: { it: "Inserito personalizzato", en: "Armed custom", emoji: "🛡️" },
+  disarmed: { it: "Disinserito", en: "Disarmed", emoji: "🔓" },
 });
 
 const APERTURE = new Set(["door", "garage_door", "opening"]);
@@ -287,6 +299,42 @@ export class Sentinella {
               : "Sirena accesa",
           },
           en: { titolo: `🚨 Alarm triggered · ${nome}`, testo: "Siren on" },
+        },
+        azioni: [{ id: "guarda", parole: duePassi("Guarda", "View"), apre: true }],
+      });
+      return;
+    }
+
+    /* L'antifurto inserito, in uno dei suoi modi, o disinserito. Solo un
+     * cambio vero: non al primo stato che si legge, non tornando da
+     * «non disponibile», non fra due letture uguali. */
+    const modo = MODI_DELL_ANTIFURTO[dopo.state];
+    if (
+      dominio === "alarm_control_panel" &&
+      modo &&
+      prima &&
+      era !== dopo.state &&
+      era !== "unavailable" &&
+      era !== "unknown"
+    ) {
+      const chi = dopo.attributes?.changed_by
+        ? String(dopo.attributes.changed_by).slice(0, 40)
+        : "";
+      this._dici({
+        tipo: "inserimenti",
+        urgenza: "normale",
+        chiave: `inserimenti:${id}`,
+        pausa: 0,
+        entita: id,
+        parole: {
+          it: {
+            titolo: `${modo.emoji} Antifurto · ${modo.it}`,
+            testo: chi ? `${nome} · da ${chi}` : nome,
+          },
+          en: {
+            titolo: `${modo.emoji} Alarm · ${modo.en}`,
+            testo: chi ? `${nome} · by ${chi}` : nome,
+          },
         },
         azioni: [{ id: "guarda", parole: duePassi("Guarda", "View"), apre: true }],
       });

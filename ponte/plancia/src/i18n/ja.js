@@ -11,6 +11,8 @@
  */
 
 export default Object.freeze({
+  "More readings": "その他の計測値",
+  "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "最大8件追加：コンセント、ヒートポンプ、充電中の車、今日のkWh",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "センサーが未設定です：設定 › 負荷 または 家電 で選んでください。",
   "Reading consumption from Home Assistant…": "Home Assistant から消費量を読み込み中…",
   " — configured": " — 設定済み",

@@ -11,6 +11,8 @@
  */
 
 export default Object.freeze({
+  "More readings": "और रीडिंग",
+  "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "8 तक और: एक सॉकेट, हीट पंप, चार्ज होती कार, आज के kWh",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "कोई सेंसर नहीं जुड़ा: सेटिंग्स › लोड या उपकरण में से एक चुनें।",
   "Reading consumption from Home Assistant…": "Home Assistant से खपत पढ़ी जा रही है…",
   " — configured": " — कॉन्फ़िगर किया गया",

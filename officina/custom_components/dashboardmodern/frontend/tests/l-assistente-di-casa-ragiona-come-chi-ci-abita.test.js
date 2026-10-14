@@ -16,6 +16,7 @@ import {
   CATEGORIE,
   CHIAVE_ASSISTENTE,
   TIPI_DI_SUGGERIMENTO,
+  chiEInCasa,
   conIFiniti,
   conLaRisposta,
   finoA,
@@ -153,6 +154,36 @@ test("una casa senza persone configurate non e' una casa vuota", () => {
     }),
   );
   assert.equal(fuori.length, 0);
+});
+
+test("chi e' in una zona «Casa», o sulla rete di casa, e' in casa; con qualcuno sconosciuto la casa non e' vuota", () => {
+  /* Una zona fatta per la casa, accanto a quella di serie, e una persona di
+   * cui non si sa niente ma collegata alla stessa rete Wi-Fi. */
+  assert.deepEqual(
+    chiEInCasa([
+      { presence: "zone", zone: "Casa", known: true, wifi: "retedicasa" },
+      { presence: "away", known: false, wifi: "retedicasa" },
+    ]),
+    { totale: 2, inCasa: 2, incerte: 0, fuori: [] },
+  );
+  /* Una zona che si chiama «Ufficio» resta fuori; chi non si sa dov'e' e'
+   * incerto, e allora la casa non e' vuota. */
+  const { inCasa, incerte } = chiEInCasa([
+    { presence: "zone", zone: "Ufficio", known: true },
+    { presence: "away", known: false },
+  ]);
+  assert.deepEqual([inCasa, incerte], [0, 1]);
+  const niente = suggerimentiDellaCasa(
+    casa(14, {
+      persone: { totale: 2, inCasa: 0, incerte: 1, ultimaUscita: 0 },
+      luci: [{ entity: "light.cucina", name: "Cucina", on: true }],
+    }),
+  );
+  assert.equal(
+    niente.filter((s) => s.tipo.startsWith("vuota")).length,
+    0,
+    "con qualcuno che non si sa dov'e' non si dice «non c'e' nessuno»",
+  );
 });
 
 test("la casa vuota: clima, musica, antifurto, finestre", () => {

@@ -2302,6 +2302,7 @@ var SOURCE_INDEX = Object.freeze({
   "Altre caselle riconosciute": "Other fields recognised",
   "Altre impostazioni": "More settings",
   "Altre letture": "Other readings",
+  "Altre misure": "More readings",
   "Altre piscine": "Other pools",
   "altre voci": "more items",
   "Altre zone": "Other areas",
@@ -3543,6 +3544,7 @@ var SOURCE_INDEX = Object.freeze({
   "finisce": "ends",
   "finisce fra": "done in",
   "Finita": "Finished",
+  "Fino a 8 in più: una presa, la pompa di calore, l'auto in carica, i kWh di oggi": "Up to 8 more: a socket, the heat pump, the car charging, today's kWh",
   "Fino a: buona": "Up to: good",
   "Fino a: discreta": "Up to: fair",
   "Fino a: scarsa": "Up to: poor",
@@ -46151,7 +46153,23 @@ function eNotte(c, o) {
 }
 function casaVuota(c) {
   const p = c.persone || {};
-  return (numero36(p.totale) || 0) > 0 && (numero36(p.inCasa) || 0) === 0;
+  return (numero36(p.totale) || 0) > 0 && (numero36(p.inCasa) || 0) === 0 && (numero36(p.incerte) || 0) === 0;
+}
+var ZONA_DI_CASA = /^(?:a\s+)?(?:casa|home)(?:\s+(?:mia|nostra|\S+))?$/i;
+function chiEInCasa(viste2) {
+  const aCasa = (v) => v?.presence === "home" || v?.presence === "zone" && ZONA_DI_CASA.test(String(v.zone || "").trim());
+  const reti = new Set(
+    viste2.filter(aCasa).map((v) => String(v?.wifi || "").trim()).filter(Boolean)
+  );
+  let inCasa = 0;
+  let incerte = 0;
+  const fuori = [];
+  for (const v of viste2) {
+    if (aCasa(v) || v?.wifi && reti.has(String(v.wifi).trim())) inCasa += 1;
+    else if (!v?.known) incerte += 1;
+    else fuori.push(v);
+  }
+  return { totale: viste2.length, inCasa, incerte, fuori };
 }
 function daQuandoVuota(c) {
   const uscita = numero36(c.persone?.ultimaUscita);
@@ -47933,7 +47951,8 @@ function personeDellaCasa(states, fonti, adesso) {
       nome: p.nome,
       entity: p.entity,
       stato: stato3,
-      inCasa: stato3 === "home",
+      // Anche una zona fatta apposta per la casa, che si chiama «Casa».
+      inCasa: stato3 === "home" || /^(?:a\s+)?(?:casa|home)(?:\s+\S+)?$/i.test(zona),
       noto: Boolean(stato3) && !MUTI12.has(stato3),
       zona,
       daQuando: daQuando2(s, adesso)
@@ -50347,17 +50366,17 @@ function daQuando3(states, entity2, adesso) {
 }
 function persone2(states, adesso) {
   const tutte = normalizePeople(readJson("cd_people", [])).filter((p) => p?.nascosta !== true);
-  let inCasa = 0;
+  const viste2 = tutte.map((persona) => ({
+    ...personViewModel(persona, states, adesso),
+    entita: clean(persona.entity)
+  }));
+  const { totale, inCasa, incerte, fuori } = chiEInCasa(viste2);
   let ultimaUscita = 0;
-  for (const persona of tutte) {
-    const vista2 = personViewModel(persona, states, adesso);
-    if (vista2.presence === "home") inCasa += 1;
-    else {
-      const uscita = Date.parse(states?.[clean(persona.entity)]?.last_changed || "");
-      if (Number.isFinite(uscita)) ultimaUscita = Math.max(ultimaUscita, uscita);
-    }
+  for (const vista2 of fuori) {
+    const uscita = Date.parse(states?.[vista2.entita]?.last_changed || "");
+    if (Number.isFinite(uscita)) ultimaUscita = Math.max(ultimaUscita, uscita);
   }
-  return { totale: tutte.length, inCasa, ultimaUscita: inCasa ? 0 : ultimaUscita };
+  return { totale, inCasa, incerte, ultimaUscita: inCasa || incerte ? 0 : ultimaUscita };
 }
 var PARTENZA = /(start|avvi|inizia|run|play)/i;
 var FERMATA = /(stop|ferma|pausa|pause|off|spegni)/i;
@@ -50811,7 +50830,9 @@ function chatMarkup() {
     const fumetto = `<p class="dm-ass-battuta" data-chi="${esc(b.chi)}"${b.errore ? ' data-errore="true"' : ""}>${esc(b.testo)}</p>`;
     const tasti = i === ultima && b.chi === "casa" && b.chips?.length ? `<div class="dm-ass-chips" data-ass-tasti>${b.chips.map(tastoMarkup3).join("")}</div>` : "";
     return fumetto + tasti;
-  }).join("")}${state47.inVolo ? `<p class="dm-ass-battuta" data-chi="casa" data-attesa="true"><i></i><i></i><i></i></p>` : ""}</div>`;
+  }).join(
+    ""
+  )}${state47.inVolo ? `<p class="dm-ass-battuta" data-chi="casa" data-attesa="true"><i></i><i></i><i></i></p>` : ""}</div>`;
 }
 function foglioMarkup() {
   const tutti = state47.suggerimenti;
@@ -50959,7 +50980,10 @@ function apriLaTelecamera(entity2) {
     const riga3 = lista5[indice];
     state47.aperto = false;
     disegnaIlFoglio();
-    root.apriCamera(root.camSlug(riga3, indice), (clean(riga3?.name) || clean(entity2).split(".")[1]).toUpperCase());
+    root.apriCamera(
+      root.camSlug(riga3, indice),
+      (clean(riga3?.name) || clean(entity2).split(".")[1]).toUpperCase()
+    );
     return true;
   } catch (_errore) {
     return false;
@@ -92448,9 +92472,20 @@ function lettoriDellaPagina(pagina2, fonte = {}) {
   return elenco10(fonte.lettori).slice(0, LETTORI_AL_MASSIMO).map((l) => ({ entita: l.entity, nome: l.nome || "" }));
 }
 var ENERGIA_VUOTA = Object.freeze({ casa: "", solare: "", rete: "", batteria: "" });
+var ALTRE_MISURE_AL_MASSIMO = 8;
 function energiaPulita(input) {
   const dentro3 = input && typeof input === "object" ? input : {};
-  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, entita2(dentro3[k])]));
+  const fisse = Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, entita2(dentro3[k])]));
+  const viste2 = /* @__PURE__ */ new Set();
+  const altre = (Array.isArray(dentro3.altre) ? dentro3.altre : []).map(entita2).filter((e) => e && !viste2.has(e) && viste2.add(e)).slice(0, ALTRE_MISURE_AL_MASSIMO);
+  return { ...fisse, altre };
+}
+function altreMisureDellaPagina(pagina2) {
+  return Array.isArray(pagina2?.energia?.altre) ? pagina2.energia.altre.filter(Boolean) : [];
+}
+function grigliaPer(quante3) {
+  const misure = Object.keys(GRIGLIE).map(Number).sort((a, b) => a - b);
+  return misure.find((n) => n >= quante3) || misure.at(-1);
 }
 function energiaDellaPagina(pagina2, fonte = {}) {
   const scelte5 = pagina2?.energia || {};
@@ -94329,6 +94364,13 @@ function paginaEnergia(pagina2) {
       nomeDi8(e.batteria)
     ]);
   }
+  altreMisureDellaPagina(pagina2).forEach((id, n) => {
+    const s = stato2(id);
+    const unita2 = clean(s?.attributes?.unit_of_measurement);
+    const v = numero47(s?.state);
+    const valore3 = /^k?w$/i.test(unita2) ? potenza2(id).testo : v === null ? clean(s?.state) || "—" : `${decimale2(v, Math.abs(v) < 10 && v % 1 ? 1 : 0)}${unita2 ? ` ${unita2}` : ""}`;
+    tessere.push([`altra-${n}`, "energia", "#64748b", nomeDi8(id), valore3, ""]);
+  });
   if (!tessere.length)
     return griglia2(pagina2, [
       vuoto2(0, t("Scegli le misure nel config", "Choose the readings in the config"))
@@ -94338,7 +94380,10 @@ function paginaEnergia(pagina2) {
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta3)}</span></div>
       <div class="mu-grande">${esc(valore3)}</div><div class="mu-sotto">${esc(sotto)}</div></div>`
   );
-  return griglia2({ ...pagina2, griglia: carte.length <= 4 ? 4 : pagina2.griglia }, carte);
+  return griglia2(
+    { ...pagina2, griglia: Math.max(grigliaPer(carte.length), carte.length <= 4 ? 4 : 0) },
+    carte
+  );
 }
 function finestreAperte() {
   segnaDominio("binary_sensor");
@@ -97876,7 +97921,20 @@ function paginaMarkup(p, i, tutte) {
     ${misura7("casa", t("Consumo della casa", "House consumption"), t("Potenza, in W o kW", "Power, in W or kW"))}
     ${misura7("solare", t("Produzione solare", "Solar production"), t("Potenza, in W o kW", "Power, in W or kW"))}
     ${misura7("rete", t("Scambio con la rete", "Grid exchange"), t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in"))}
-    ${misura7("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}`;
+    ${misura7("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}
+    ${riga2(
+      t("Altre misure", "More readings"),
+      t(
+        "Fino a 8 in più: una presa, la pompa di calore, l'auto in carica, i kWh di oggi",
+        "Up to 8 more: a socket, the heat pump, the car charging, today's kWh"
+      ),
+      `<span class="mu-ed-lettori">${Array.from(
+        { length: Math.min((p.energia.altre || []).length + 1, ALTRE_MISURE_AL_MASSIMO) },
+        (_, k) => cerca(`${via}.energia.altre.${k}`, (p.energia.altre || [])[k] || "", {
+          domini: "sensor"
+        })
+      ).join("")}</span>`
+    )}`;
   } else if (p.modello === "musica") {
     const sue = lettoriDellaPagina({}, f);
     const campi = Math.min(p.lettori.length + 1, LETTORI_AL_MASSIMO);
@@ -98061,13 +98119,18 @@ function telecameraMarkup(p, i) {
     "",
     `${cerca(`${via}.${chiave2}`, tc[chiave2], { domini: domini2 })}${telecomando(tc[chiave2]) ? campoComando(`${via}.${chiave2}Comando`, tc[`${chiave2}Comando`] || "") : ""}`
   );
-  const preset = Array.from({ length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) }, (_, k) => {
-    const v = tc.preset[k];
-    const pieno = Boolean(v?.entita);
-    return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? v.nome || nomeDi9(v.entita) : t("Nuovo preset", "New preset"))}</b>${pieno ? togli(`${via}.preset.${k}`, t("Togli il preset", "Remove the preset")) : ""}</div>
+  const preset = Array.from(
+    { length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) },
+    (_, k) => {
+      const v = tc.preset[k];
+      const pieno = Boolean(v?.entita);
+      return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? v.nome || nomeDi9(v.entita) : t("Nuovo preset", "New preset"))}</b>${pieno ? togli(`${via}.preset.${k}`, t("Togli il preset", "Remove the preset")) : ""}</div>
       <div class="mu-ed-posto-corpo">${voce2(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE_O_TELECOMANDO }), true)}${pieno && telecomando(v.entita) ? voce2(t("Comando", "Command"), campo3(`${via}.preset.${k}.comando`, v.comando || "", `preset_${k + 1}`)) : ""}${pieno ? voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
-  }).join("");
-  const conTelecomando = ["su", "giu", "sinistra", "destra", "stop", "zoomPiu", "zoomMeno"].some((k) => telecomando(tc[k])) || tc.preset.some((x) => telecomando(x.entita));
+    }
+  ).join("");
+  const conTelecomando = ["su", "giu", "sinistra", "destra", "stop", "zoomPiu", "zoomMeno"].some(
+    (k) => telecomando(tc[k])
+  ) || tc.preset.some((x) => telecomando(x.entita));
   return `<div class="mu-ed-nota">${esc(
     t(
       "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera, uno script con onvif.ptz, o un telecomando (remote) col comando da mandare. Un tasto senza entità resta spento.",
@@ -98438,7 +98501,10 @@ function togliVoce(via) {
   const pezzi = via.split(".");
   const indice = Number(pezzi.pop());
   const m = structuredClone(bozza());
-  const elenco14 = pezzi.reduce((dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo], m);
+  const elenco14 = pezzi.reduce(
+    (dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo],
+    m
+  );
   if (!Array.isArray(elenco14) || !Number.isInteger(indice)) return;
   elenco14.splice(indice, 1);
   state112.bozza = muroPulito(m);

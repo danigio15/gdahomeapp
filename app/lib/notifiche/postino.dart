@@ -192,15 +192,15 @@ Future<void> mostra(NotificaDaMostrare quale) async {
         subText: quale.casa.nome,
         groupKey: 'gdahome_${quale.casa.id}',
         when: notifica.quando.millisecondsSinceEpoch,
-        /* Il campanello come una chiamata: a schermo intero col telefono
-         * bloccato, se Android lo lascia fare (da Android 14 lo decide chi
-         * usa il telefono); se no resta una notifica che suona e si vede in
-         * cima, che e' il ripiego giusto. Dura un minuto: un campanello di
-         * dieci minuti fa non e' piu' un campanello. */
+        /* Il campanello come una chiamata: una notifica che suona e si vede
+         * in cima, e toccata apre la telecamera a tutto schermo. A schermo
+         * intero da solo, col telefono bloccato, no: serve il permesso
+         * `USE_FULL_SCREEN_INTENT`, che per ora l'app non chiede
+         * (`AndroidManifest.xml`). Dura un minuto: un campanello di dieci
+         * minuti fa non e' piu' un campanello. */
         category: notifica.chiamata
             ? AndroidNotificationCategory.call
             : (notifica.urgente ? AndroidNotificationCategory.alarm : null),
-        fullScreenIntent: notifica.chiamata,
         timeoutAfter: notifica.chiamata ? 60 * 1000 : null,
         styleInformation: BigTextStyleInformation(notifica.testo),
         actions: [
