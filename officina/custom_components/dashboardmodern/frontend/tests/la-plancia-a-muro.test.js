@@ -10,15 +10,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { climaScalda } from "../src/core/device-model.js";
 import {
+  areeDellIngresso,
   comandiDellElenco,
   comandiDellaPagina,
   comandoPulito,
   comandiProposti,
   derivaDelRiposo,
+  eComandoDellIngresso,
+  eLetturaDellIngresso,
   GRIGLIE,
   eNotte,
   fonteDaiValori,
   ingressoProposto,
+  lettureDellIngresso,
   muroDiPartenza,
   muroPulito,
   nuovaPagina,
@@ -1029,4 +1033,95 @@ test("i comandi prendono anche un telecomando: col comando lo manda, senza si ac
   assert.deepEqual(chiamateDelFermaTutto(p), [
     { domain: "remote", service: "turn_off", data: { entity_id: "remote.tutto" } },
   ]);
+});
+
+/* «L'antifurto non gestisce piu' partizioni come abbiamo fatto sul telefono» e
+ * «dentro la pagina dell'antifurto ci metterei la possibilita' di riprendere
+ * altri dati, tipo se ci sono finestre aperte». L'Ingresso tiene le sue aree,
+ * le sue letture e i suoi comandi; una pagina di prima resta com'era. */
+test("l'ingresso tiene le aree, le altre letture e gli altri comandi", () => {
+  const p = paginaPulita({
+    modello: "ingresso",
+    ingresso: {
+      aree: [
+        "alarm_control_panel.perimetrale",
+        "ALARM_CONTROL_PANEL.Interno",
+        "light.non_e_un_area",
+        "alarm_control_panel.perimetrale",
+      ],
+      letture: ["binary_sensor.finestra_cucina", "lock.porta_ingresso", "button.no", "cover.garage"],
+      comandi: ["lock.porta_ingresso", "remote.cancello:apri", "select.non_si_tocca", "script.luce", "sensor.no"],
+    },
+  });
+  assert.deepEqual(p.ingresso.aree, ["alarm_control_panel.perimetrale", "alarm_control_panel.interno"]);
+  assert.deepEqual(p.ingresso.letture, ["binary_sensor.finestra_cucina", "lock.porta_ingresso", "cover.garage"]);
+  assert.deepEqual(p.ingresso.comandi, ["lock.porta_ingresso", "remote.cancello:apri", "script.luce"]);
+  assert.equal(eLetturaDellIngresso("sensor.temperatura"), true);
+  assert.equal(eLetturaDellIngresso("script.luce"), false);
+  assert.equal(eComandoDellIngresso("cover.garage"), true);
+  assert.equal(eComandoDellIngresso("select.modo"), false);
+  /* Una pagina di prima: niente di nuovo, e gli elenchi vuoti. */
+  const vecchia = paginaPulita({ modello: "ingresso", ingresso: { centrale: "alarm_control_panel.casa" } });
+  assert.deepEqual(vecchia.ingresso.aree, []);
+  assert.deepEqual(vecchia.ingresso.letture, []);
+  assert.deepEqual(vecchia.ingresso.comandi, []);
+});
+
+test("le aree dell'ingresso: quelle scelte, o la centrale di prima, o tutte quelle della plancia", () => {
+  const fonte = fonteDaiValori({
+    ...VALORI,
+    cd_centrali: JSON.stringify([
+      { id: "a1", nome: "Perimetrale", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.perimetrale" } },
+      { id: "a2", nome: "Interno", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.interno" } },
+      { id: "a3", nome: "Garage", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.garage" } },
+    ]),
+    cd_entity_overrides: JSON.stringify({
+      "dm.security_centrale_allarme": "alarm_control_panel.perimetrale",
+    }),
+  });
+  const tutte = areeDellIngresso(paginaPulita({ modello: "ingresso" }), fonte);
+  assert.deepEqual(
+    tutte.map((a) => [a.entita, a.nome]),
+    [
+      ["alarm_control_panel.perimetrale", "Perimetrale"],
+      ["alarm_control_panel.interno", "Interno"],
+      ["alarm_control_panel.garage", "Garage"],
+    ],
+  );
+  /* La pagina di prima con la sua centrale: quella sola, come prima. */
+  const vecchia = paginaPulita({ modello: "ingresso", ingresso: { centrale: "alarm_control_panel.interno" } });
+  assert.deepEqual(areeDellIngresso(vecchia, fonte).map((a) => a.entita), ["alarm_control_panel.interno"]);
+  /* Scelte: in quell'ordine, e vincono sulla centrale. */
+  const scelte = paginaPulita({
+    modello: "ingresso",
+    ingresso: { centrale: "alarm_control_panel.interno", aree: ["alarm_control_panel.garage", "alarm_control_panel.perimetrale"] },
+  });
+  assert.deepEqual(areeDellIngresso(scelte, fonte).map((a) => a.nome), ["Garage", "Perimetrale"]);
+  /* Una pagina nuova con piu' aree non ne fissa una: le segue tutte. */
+  assert.equal(ingressoProposto(fonte).centrale, "");
+  assert.equal(nuovaPagina("ingresso", fonte).ingresso.centrale, "");
+});
+
+test("le porte e le finestre fra le letture si contano insieme: «Finestre aperte: 2»", () => {
+  const stati = {
+    "binary_sensor.finestra_cucina": { state: "on", attributes: { device_class: "window" } },
+    "binary_sensor.finestra_bagno": { state: "on", attributes: { device_class: "window" } },
+    "binary_sensor.finestra_camera": { state: "off", attributes: { device_class: "window" } },
+    "binary_sensor.porta_ingresso": { state: "off", attributes: { device_class: "door" } },
+    "binary_sensor.movimento": { state: "on", attributes: { device_class: "motion" } },
+  };
+  const finestre = ["binary_sensor.finestra_cucina", "binary_sensor.finestra_bagno", "binary_sensor.finestra_camera"];
+  const sole = lettureDellIngresso([...finestre, "sensor.temperatura", "binary_sensor.movimento"], stati);
+  assert.deepEqual(sole.gruppo, {
+    tipo: "finestre",
+    tutte: finestre,
+    aperte: ["binary_sensor.finestra_cucina", "binary_sensor.finestra_bagno"],
+  });
+  assert.deepEqual(sole.singole, ["sensor.temperatura", "binary_sensor.movimento"]);
+  const miste = lettureDellIngresso([...finestre, "binary_sensor.porta_ingresso"], stati);
+  assert.equal(miste.gruppo.tipo, "aperture");
+  /* Una finestra sola non e' un conto: resta una lettura. */
+  const una = lettureDellIngresso(["binary_sensor.finestra_cucina", "sensor.temperatura"], stati);
+  assert.equal(una.gruppo, null);
+  assert.deepEqual(una.singole, ["binary_sensor.finestra_cucina", "sensor.temperatura"]);
 });

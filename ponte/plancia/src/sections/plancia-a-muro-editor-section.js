@@ -10,8 +10,11 @@
  * apre. Quello che c'era scritto resta, e torna buono il giorno che la casa e'
  * Premium. */
 import {
+  AREE_AL_MASSIMO,
   CANALI_PER_GRUPPO,
   CHIAVE_MURO,
+  COMANDI_DELL_INGRESSO_AL_MASSIMO,
+  LETTURE_DELL_INGRESSO_AL_MASSIMO,
   COLORI_DELLE_PAGINE,
   GRUPPI_AL_MASSIMO,
   PRESET_AL_MASSIMO,
@@ -310,6 +313,51 @@ function elencoMarkup(p, i) {
     <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${nomi.length} ${esc(t("sul tablet", "on the tablet"))}</b><small>${esc(nomi.slice(0, 8).join(", ") + (nomi.length > 8 ? ` +${nomi.length - 8}` : "") || t("Per ora nessuna", "None yet"))}</small></div></div>`;
 }
 
+/* Gli elenchi dell'Ingresso: le partizioni, le altre letture, gli altri
+ * comandi. Un campo per voce, ognuno con ▲ ▼ (lo toglie il suo «Elimina»),
+ * e uno vuoto in fondo per aggiungerne un'altra. */
+const ELENCHI_DELL_INGRESSO = ["aree", "letture", "comandi"];
+
+/* Le voci di un elenco come le vede chi configura: per le partizioni, una
+ * pagina di prima che aveva la sola «Centrale» la mostra come prima voce. */
+function valoriDellElenco(p, chiave) {
+  const ing = p?.ingresso || {};
+  const voci = Array.isArray(ing[chiave]) ? ing[chiave].slice() : [];
+  if (chiave === "aree" && !voci.length && clean(ing.centrale)) return [clean(ing.centrale)];
+  return voci;
+}
+
+function elencoDiEntita(i, chiave, valori, { domini, massimo, segnaposto }) {
+  const via = `pagine.${i}.ingresso.${chiave}`;
+  const campi = Math.min(valori.length + 1, massimo);
+  return `<span class="mu-ed-lettori mu-ed-elenco" data-mu-ed-elenco="${esc(chiave)}">${Array.from(
+    { length: campi },
+    (_, k) => {
+      const pieno = Boolean(valori[k]);
+      return `<span class="mu-ed-elenco-voce">${cerca(`${via}.${k}`, valori[k] || "", { domini, segnaposto: pieno ? "" : segnaposto })}${
+        pieno
+          ? `<span class="mu-ed-frecce"><button type="button" data-mu-ed-sposta="${esc(via)}" data-mu-ed-da="${k}" data-mu-ed-verso="-1"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-sposta="${esc(via)}" data-mu-ed-da="${k}" data-mu-ed-verso="1"${k === valori.length - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>`
+          : ""
+      }</span>`;
+    },
+  ).join("")}</span>`;
+}
+
+/* Cambiare un elenco dell'Ingresso: si parte da quello che si vede, si
+ * cambia, e si riscrive tutto. Scrivere le partizioni toglie la vecchia
+ * «Centrale»: da li' in poi decide l'elenco, e vuoto vuol dire tutte. */
+function cambiaElenco(via, cambia) {
+  const [, n, , chiave] = via.split(".");
+  if (!ELENCHI_DELL_INGRESSO.includes(chiave)) return false;
+  const m = structuredClone(bozza());
+  const p = m.pagine[Number(n)];
+  if (!p?.ingresso) return false;
+  p.ingresso[chiave] = cambia(valoriDellElenco(p, chiave)).map(clean).filter(Boolean);
+  if (chiave === "aree") p.ingresso.centrale = "";
+  state.bozza = muroPulito(m);
+  return true;
+}
+
 function paginaMarkup(p, i, tutte) {
   const f = state.fonte || {};
   const via = `pagine.${i}`;
@@ -438,14 +486,60 @@ function paginaMarkup(p, i, tutte) {
   } else {
     const ing = p.ingresso;
     const azioni = (f.azioni || []).filter(eUnaScena).map((a) => [a.name, a.name]);
-    dentro = `${riga(t("Centrale dell'antifurto", "Alarm panel"), t("I modi sono quelli che la centrale accetta", "The modes are the ones the panel accepts"), cerca(`${via}.ingresso.centrale`, ing.centrale, { domini: "alarm_control_panel" }))}
-    ${riga(t("Avvisa se restano finestre aperte", "Warn about open windows"), "", interruttore(`${via}.ingresso.finestre`, ing.finestre, "finestre"))}
+    /* Le aree della sezione Sicurezza, col loro nome, per dire cosa vuol
+     * dire «vuoto». */
+    const sue = (f.aree || []).map(
+      (a, k) => clean(a.nome) || nomeDi(a.entita) || `${t("Area", "Area")} ${k + 1}`,
+    );
+    const scelte = valoriDellElenco(p, "aree");
+    dentro = `<div class="mu-ed-sotto-titolo">${esc(t("Antifurto", "Alarm"))}</div>
+    ${riga(
+      t("Partizioni dell'antifurto", "Alarm partitions"),
+      scelte.length
+        ? t(
+            "Quelle scelte qui, in quest'ordine: ognuna col suo stato e i suoi tasti, quelli che la sua centrale accetta",
+            "The ones chosen here, in this order: each with its state and its buttons, the ones its panel accepts",
+          )
+        : `${t("Vuoto: tutte quelle della sezione Sicurezza della plancia", "Empty: all the ones from the dashboard's Security section")}${sue.length ? ` — ${sue.join(", ")}` : ""}`,
+      elencoDiEntita(i, "aree", scelte, {
+        domini: "alarm_control_panel",
+        massimo: AREE_AL_MASSIMO,
+        segnaposto: t("Aggiungi una partizione", "Add a partition"),
+      }),
+    )}
+    ${riga(t("Avvisa se restano finestre aperte", "Warn about open windows"), t("Gli ingressi dichiarati nella sezione Sicurezza", "The entries declared in the Security section"), interruttore(`${via}.ingresso.finestre`, ing.finestre, "finestre"))}
+    ${riga(
+      t("Altre letture", "Other readings"),
+      t(
+        "Sotto l'antifurto, ognuna col suo valore: porte e finestre (binary_sensor), sensori, serrature, tapparelle. Due o più porte o finestre diventano un conto solo, «Finestre aperte: 2»; un tocco le elenca.",
+        "Under the alarm, each with its value: doors and windows (binary_sensor), sensors, locks, blinds. Two or more doors or windows become a single count, «Open windows: 2»; a tap lists them.",
+      ),
+      elencoDiEntita(i, "letture", ing.letture, {
+        domini: "binary_sensor,sensor,lock,cover,number,input_number,input_boolean,switch,input_select,select",
+        massimo: LETTURE_DELL_INGRESSO_AL_MASSIMO,
+        segnaposto: t("Aggiungi una lettura", "Add a reading"),
+      }),
+    )}
+    ${riga(
+      t("Altri comandi", "Other commands"),
+      t(
+        "Tasti accanto alle letture: serrature (chiude e apre), script, button, scene, switch, tapparelle. Un telecomando si accende e si spegne; scritto remote.nome:comando manda quel comando.",
+        "Buttons next to the readings: locks (lock and unlock), scripts, buttons, scenes, switches, blinds. A remote turns on and off; written remote.name:command it sends that command.",
+      ),
+      elencoDiEntita(i, "comandi", ing.comandi, {
+        domini: "lock,script,button,input_button,scene,switch,input_boolean,remote,cover,automation",
+        massimo: COMANDI_DELL_INGRESSO_AL_MASSIMO,
+        segnaposto: t("Aggiungi un comando", "Add a command"),
+      }),
+    )}
+    <div class="mu-ed-sotto-titolo">${esc(t("Citofono / telecamera", "Intercom / camera"))}</div>
     ${riga(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
     ${riga(t("Campanello", "Doorbell"), t("Quando suona, il pannello si sveglia e apre il citofono da solo", "When it rings, the panel wakes up and opens the intercom by itself"), cerca(`${via}.ingresso.campanello`, ing.campanello, { domini: "binary_sensor,event,input_boolean,switch" }))}
     ${riga(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga(t("Nome del tasto grande", "Big button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo(`${via}.ingresso.nomeApri`, ing.nomeApri, ing.apri ? nomeDi(ing.apri) : t("Cancello", "Gate")))}
     ${riga(t("Secondo tasto", "Second button"), t("Per esempio: apri porta", "For example: open the door"), cerca(`${via}.ingresso.apri2`, ing.apri2, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga(t("Nome del secondo tasto", "Second button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo(`${via}.ingresso.nomeApri2`, ing.nomeApri2, ing.apri2 ? nomeDi(ing.apri2) : t("Portoncino", "Front door")))}
+    <div class="mu-ed-sotto-titolo">${esc(t("Uscita e chi c'è", "Leaving and who is home"))}</div>
     ${riga(t("Esco", "Leaving"), t("L'azione del tasto in basso quando l'antifurto è spento", "The bottom button's action when the alarm is off"), tendina(`${via}.ingresso.esco`, ing.esco, azioni))}
     ${riga(t("Rientro", "I'm home"), t("Al posto di «Esco» quando l'antifurto è inserito", "Instead of «Leaving» when the alarm is armed"), tendina(`${via}.ingresso.rientro`, ing.rientro, azioni))}
     ${riga(t("Chiedi conferma prima di «Esco» e «Rientro»", "Confirm before «Leaving» and «I'm home»"), "", interruttore(`${via}.confermaUscita`, p.confermaUscita, "conferma"))}
@@ -956,6 +1050,14 @@ function metti(via, valore) {
     const i = Number(pezzi[1]);
     const p = m.pagine[i];
     if (!p) return;
+    if (pezzi[2] === "ingresso" && ELENCHI_DELL_INGRESSO.includes(pezzi[3]) && pezzi.length === 5) {
+      const k = Number(pezzi[4]);
+      cambiaElenco(via, (voci) => {
+        voci[k] = clean(valore);
+        return voci;
+      });
+      return;
+    }
     if (pezzi[2] === "segue") {
       p.scelti = !valore;
       if (p.scelti && !p.comandi.length) p.comandi = comandiProposti(state.fonte || {}, p.stanza);
@@ -1090,7 +1192,7 @@ function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const el = event.target.closest(
-    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia],[data-mu-ed-togli-voce],[data-mu-ed-aggiungi-voce]",
+    "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia],[data-mu-ed-togli-voce],[data-mu-ed-aggiungi-voce],[data-mu-ed-sposta]",
   );
   if (!el || body.querySelector(".mu-ed-chiuso")) return;
   event.preventDefault();
@@ -1115,6 +1217,12 @@ function onClick(event) {
   }
   if (d.muEdSvuota) {
     metti(`${d.muEdSvuota}.svuota`, "");
+    ridisegna();
+    return;
+  }
+  if (d.muEdSposta) {
+    const da = Number(d.muEdDa);
+    cambiaElenco(`${d.muEdSposta}.0`, (voci) => sposta(voci, da, da + Number(d.muEdVerso)));
     ridisegna();
     return;
   }
@@ -1318,6 +1426,9 @@ html[data-theme="dark"] #ed-body .mu-ed-sporca{color:#fde68a;background:#78350f5
 #ed-body .mu-ed-gruppo>.mu-ed-posto-testa .mu-ed-cosa{font-size:14px}
 #ed-body .mu-ed-piu{width:auto;margin:12px 0 0;padding:10px 16px}
 #ed-body .mu-ed-lettori{display:grid;gap:8px;min-width:240px;flex:1}
+#ed-body .mu-ed-elenco-voce{display:flex;align-items:center;gap:6px;min-width:0}
+#ed-body .mu-ed-elenco-voce>.mu-ed-cerca{flex:1;min-width:0}
+#ed-body .mu-ed-elenco-voce>.mu-ed-frecce{margin-left:0}
 #ed-body .mu-ed-anteprima{margin-top:8px;width:100%;max-width:720px;overflow:hidden;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee)}
 #ed-body .mu-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}

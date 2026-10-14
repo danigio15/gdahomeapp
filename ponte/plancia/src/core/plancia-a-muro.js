@@ -21,6 +21,7 @@
 import { alarmHiddenModes, centraliAllarme, entitaDellaCentrale } from "./alarm-panel.js";
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
+import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { lettoriConfigurati } from "./media-player.js";
 import { isCharging, nomeDellaPersona, personViewModel } from "./person-model.js";
 
@@ -286,7 +287,63 @@ const INGRESSO_VUOTO = Object.freeze({
   campanello: "",
   persone: true,
   finestre: true,
+  aree: [],
+  letture: [],
+  comandi: [],
 });
+
+/* «L'antifurto non gestisce piu' partizioni come abbiamo fatto sul telefono»:
+ * sul telefono la sezione Sicurezza ha le sue aree (`cd_centrali`), e
+ * l'Ingresso del tablet ne mostrava una sola. Qui si scrive quali aree e in
+ * che ordine; vuoto, tutte quelle della plancia di origine. Sei al massimo:
+ * oltre, un pannello a muro non e' piu' un colpo d'occhio. */
+export const AREE_AL_MASSIMO = 6;
+
+/* «Dentro la pagina dell'antifurto ci metterei la possibilita' di riprendere
+ * altri dati, tipo se ci sono finestre aperte. Magari allo stesso modo come
+ * sull'audio.» Come le «Altre letture» e gli «Altri comandi» della Musica:
+ * un elenco di entita' da guardare — sensori, porte e finestre, serrature,
+ * tapparelle — e uno da toccare. */
+export const LETTURE_DELL_INGRESSO_AL_MASSIMO = 12;
+export const COMANDI_DELL_INGRESSO_AL_MASSIMO = 8;
+const DOMINI_DA_LEGGERE = Object.freeze([
+  "binary_sensor",
+  "sensor",
+  "lock",
+  "cover",
+  "number",
+  "input_number",
+  "input_text",
+  "input_select",
+  "select",
+  "input_boolean",
+  "switch",
+  "valve",
+  "device_tracker",
+  "person",
+]);
+/* I comandi: quelli che la Musica gia' accetta (`comandi-accanto.js`), piu'
+ * la serratura e la tapparella, che accanto all'antifurto sono di casa. Un
+ * telecomando col suo comando si scrive `remote.nome:comando`. */
+const DOMINI_DA_TOCCARE = Object.freeze(["lock", "cover"]);
+
+/** Se quell'entita' si puo' guardare fra le «Altre letture» dell'ingresso. */
+export function eLetturaDellIngresso(id) {
+  return DOMINI_DA_LEGGERE.includes(dominioDi(entita(id)));
+}
+
+/** Se quella voce si puo' toccare fra gli «Altri comandi» dell'ingresso. */
+export function eComandoDellIngresso(voce) {
+  const { entity, comando } = partiDelComando(voce);
+  if (!entita(entity)) return false;
+  if (comando) return true;
+  /* Una tendina si sceglie, non si tocca: fra le letture si guarda. */
+  const genere = genereDelComando(entity);
+  return (genere && genere !== "tendina") || DOMINI_DA_TOCCARE.includes(dominioDi(entity));
+}
+
+const unici = (voci) => [...new Set(voci.filter(Boolean))];
+const voci = (valore) => (Array.isArray(valore) ? valore : []);
 
 function ingressoPulito(input = {}) {
   const dentro = input && typeof input === "object" ? input : {};
@@ -307,6 +364,84 @@ function ingressoPulito(input = {}) {
     campanello: entita(dentro.campanello),
     persone: vero(dentro.persone, INGRESSO_VUOTO.persone),
     finestre: vero(dentro.finestre, INGRESSO_VUOTO.finestre),
+    aree: unici(
+      voci(dentro.aree)
+        .map(entita)
+        .filter((id) => id.startsWith("alarm_control_panel.")),
+    ).slice(0, AREE_AL_MASSIMO),
+    letture: unici(voci(dentro.letture).map(entita).filter(eLetturaDellIngresso)).slice(
+      0,
+      LETTURE_DELL_INGRESSO_AL_MASSIMO,
+    ),
+    comandi: unici(
+      voci(dentro.comandi)
+        .map((voce) => {
+          const { entity, comando } = partiDelComando(testo(voce, 160));
+          const id = entita(entity);
+          return id && comando ? `${id}:${comando}` : id;
+        })
+        .filter(eComandoDellIngresso),
+    ).slice(0, COMANDI_DELL_INGRESSO_AL_MASSIMO),
+  };
+}
+
+/**
+ * Le aree dell'antifurto dell'Ingresso, ognuna col suo nome.
+ *
+ * Quelle scelte nella pagina, nel loro ordine; senza scelta, la centrale
+ * scritta come si faceva prima (una sola, come prima); senza nemmeno quella,
+ * tutte le aree della plancia di origine. Il nome e' quello che l'area ha
+ * nella sezione Sicurezza, vuoto se non ne ha uno.
+ */
+export function areeDellIngresso(pagina, fonte = {}) {
+  const ing = pagina?.ingresso || {};
+  const nomi = new Map(elenco(fonte.aree).map((a) => [a.entita, testo(a.nome, 40)]));
+  const scelte = elenco(ing.aree).map(entita).filter(Boolean);
+  const vecchia = entita(ing.centrale);
+  const ids = scelte.length
+    ? scelte
+    : vecchia
+      ? [vecchia]
+      : elenco(fonte.centrali).map(entita).filter(Boolean);
+  return unici(ids)
+    .slice(0, AREE_AL_MASSIMO)
+    .map((id) => ({ entita: id, nome: nomi.get(id) || "" }));
+}
+
+/* Le porte e le finestre si contano insieme: «Finestre aperte: 2» dice di
+ * piu' di due etichette «Aperta». */
+const CLASSI_DELLE_APERTURE = Object.freeze({
+  window: "finestre",
+  door: "porte",
+  garage_door: "porte",
+  opening: "aperture",
+});
+
+/**
+ * Le «Altre letture» dell'ingresso, come si mostrano: i sensori di porte e
+ * finestre messi insieme in un conto — quando sono almeno due — e le altre
+ * una per una.
+ *
+ * `gruppo` e' `null` o `{ tipo, tutte, aperte }`: `tipo` dice come chiamarlo
+ * («finestre» se sono tutte finestre, «porte» se sono tutte porte,
+ * «aperture» se sono di piu' tipi), `aperte` sono quelle aperte adesso.
+ */
+export function lettureDellIngresso(letture = [], stati = {}) {
+  const ids = elenco(letture).map(entita).filter(Boolean);
+  const classe = (id) =>
+    dominioDi(id) === "binary_sensor"
+      ? CLASSI_DELLE_APERTURE[String(stati?.[id]?.attributes?.device_class || "")] || ""
+      : "";
+  const aperture = ids.filter((id) => classe(id));
+  if (aperture.length < 2) return { gruppo: null, singole: ids };
+  const tipi = unici(aperture.map(classe));
+  return {
+    gruppo: {
+      tipo: tipi.length === 1 ? tipi[0] : "aperture",
+      tutte: aperture,
+      aperte: aperture.filter((id) => String(stati?.[id]?.state) === "on"),
+    },
+    singole: ids.filter((id) => !aperture.includes(id)),
   };
 }
 
@@ -1582,8 +1717,11 @@ export function telecamereDellaFonte(fonte = {}) {
 }
 
 export function ingressoProposto(fonte = {}) {
+  /* Con piu' aree la pagina nuova non ne sceglie una: le mostra tutte, e
+   * un'area aggiunta poi nella sezione Sicurezza compare da sola. */
+  const centrali = elenco(fonte.centrali);
   return ingressoPulito({
-    centrale: elenco(fonte.centrali)[0] || "",
+    centrale: centrali.length === 1 ? centrali[0] : "",
     telecamera: elenco(fonte.telecamere)[0]?.entity || "",
     esco: cercaAzione(fonte, "esco", "uscita", "leave", "away"),
     rientro: cercaAzione(fonte, "rientro", "arrivo", "torno", "home"),
