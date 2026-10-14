@@ -137,10 +137,6 @@ flutter:
     # Il marchio: la stessa immagine che fa da icona dell'app. Ce n'e' una
     # sola, e sta in un posto solo.
     - assets/marchio/gda.png
-    # Il marchio della plancia, quello del suo velo d'avvio: l'app lo mostra
-    # mentre la plancia arriva, cosi' l'attesa e' una sola dall'inizio alla
-    # fine (vedi `schermate/caricamento.dart`).
-    - assets/marchio/plancia.png
     # Gli oggetti delle sezioni: gli stessi disegni della plancia, uno per
     # sezione. Non sono simboli a contorno ne' emoji di sistema — sono i
     # disegni di DashboardModern, presi da li' e non rifatti a somiglianza,

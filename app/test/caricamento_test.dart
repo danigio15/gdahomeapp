@@ -7,12 +7,12 @@
 /// delle due, il passaggio torna a vedersi.
 library;
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/schermate/caricamento.dart';
+import 'package:gdahome/vestito/marchio.dart';
 
 Widget _dentro(Widget figlio, {Brightness luce = Brightness.light}) =>
     MaterialApp(
@@ -21,12 +21,15 @@ Widget _dentro(Widget figlio, {Brightness luce = Brightness.light}) =>
     );
 
 void main() {
-  testWidgets('il velo dell\'app e\' quello della plancia: marchio, nome, '
-      'rotella, «Caricamento…», e niente «da fuori»', (tester) async {
+  testWidgets('l\'attesa dell\'app ha il marchio di gdahome, la rotella e '
+      '«Caricamento…»: niente «DASHBOARDMODERN», niente «da fuori»', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _dentro(const CaricamentoDellaPlancia(fase: FaseDelCaricamento.apro)),
     );
-    expect(find.text('DASHBOARDMODERN'), findsOneWidget);
+    expect(find.text('DASHBOARDMODERN'), findsNothing);
+    expect(find.byType(Marchio), findsOneWidget);
     expect(find.text('Caricamento…'), findsOneWidget);
     expect(find.byType(RotellaDellaPlancia), findsOneWidget);
     expect(find.byType(Image), findsOneWidget);
@@ -107,20 +110,5 @@ void main() {
       ),
     );
     expect(testo, contains('gap:14px'));
-    expect(
-      testo,
-      contains(
-        '<b>DashboardModern</b><div class="s"></div><small>Caricamento…',
-      ),
-    );
-    /* E il marchio e' proprio quello: gli stessi byte. */
-    final marchio = RegExp(
-      r'<div id="cd-boot-overlay"><img src="data:image/png;base64,([^"]+)"',
-    ).firstMatch(testo);
-    expect(marchio, isNotNull);
-    expect(
-      base64Decode(marchio!.group(1)!),
-      File('assets/marchio/plancia.png').readAsBytesSync(),
-    );
   });
 }
