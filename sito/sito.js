@@ -154,6 +154,19 @@
     });
   }
 
+  /* ── L'ombra sotto la barra ───────────────────────────────────────────
+   *
+   * Quando la pagina scorre, la barra in cima prende un'ombra che la stacca
+   * da quello che le passa sotto. In cima non ce l'ha: non c'è niente sotto. */
+  var cappello = document.getElementById("cappello");
+  if (cappello) {
+    var guardaLaBarra = function () {
+      cappello.classList.toggle("giu", window.scrollY > 8);
+    };
+    guardaLaBarra();
+    window.addEventListener("scroll", guardaLaBarra, { passive: true });
+  }
+
   /* ── Una cosa accesa alla volta ───────────────────────────────────────
    *
    * L'ambra è il colore di una luce accesa, e nella pagina ne è accesa una
@@ -164,7 +177,7 @@
    * movimento della pagina, e chi ha chiesto meno movimento la trova già
    * accesa. */
   var sezioni = document.querySelectorAll("main > section[id]");
-  var voci = document.querySelectorAll(".navigazione a[href^='#'], .indice a[href^='#']");
+  var voci = document.querySelectorAll(".navigazione a[href^='#']");
   var spia = document.getElementById("spia");
   var fermi = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 

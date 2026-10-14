@@ -1,40 +1,37 @@
 /* Il vestito del sito.
  *
- * Il sito è fatto come il catalogo delle placche di un elettricista: carta
- * bianca, una griglia di righe sottili, le fotografie dell'app messe dritte
- * come tavole con la loro didascalia, i fatti in tabelle. Niente fondi
- * sfocati, niente ombre, niente schede arrotondate: quello che c'è da far
- * vedere sono le schermate vere, e il resto sta zitto.
+ * Un sito di prodotto come quelli delle app: il blu di gdahome come colore
+ * vero, che si prende la copertina, la scheda Premium e il piede; le sezioni
+ * che si alternano fra bianco e un azzurrino, così lo scorrimento ha un
+ * ritmo; le schermate vere dentro un telefono con un'ombra che le stacca
+ * dalla pagina; tasti e schede arrotondati, aria intorno.
+ *
+ * Quello che NON c'è, ed è una scelta: fondi a sfumature, vetro sfocato,
+ * aloni colorati, testo sfumato. Sono il vestito di mille siti usciti uguali
+ * nello stesso anno. Qui il colore è pieno e piatto, e l'ombra è una sola,
+ * morbida e spostata in basso, come la fa la luce.
  *
  * ## I colori
  *
- * Quattro, e ognuno fa una cosa sola:
- *
- *  - l'inchiostro, un blu notte quasi nero, per tutto quello che si legge;
- *  - il blu del catalogo — lo stesso «premi qui» dell'app
- *    (`app/lib/vestito/tema.dart`) — per i titoli di sezione, i collegamenti
- *    e l'unico tasto pieno;
- *  - l'ambra, il colore di una luce accesa, per **una cosa sola alla volta**:
- *    la voce del menu della sezione in cui si sta leggendo, la spia nella
- *    prima tavola, l'icona della serie sotto il dito. Due cose ambra insieme
- *    sono un errore;
- *  - il grigio carta, per i campi dove una tavola si appoggia.
+ *  - il blu notte e il blu di gdahome (`app/lib/vestito/tema.dart`): la
+ *    copertina, la scheda Premium, il piede, i collegamenti, i tasti pieni;
+ *  - il campo azzurrino, per le sezioni che si alternano al bianco;
+ *  - l'inchiostro, per quello che si legge;
+ *  - l'ambra, il colore di una luce accesa: la spia della prima schermata,
+ *    la voce del menu della sezione in cui si legge, il segno di Premium;
+ *  - il verde per i «sì» del listino, e basta.
  *
  * ## I caratteri
  *
- * Archivo, un grottesco da catalogo con l'asse della larghezza: largo e nero
- * per i titoli di serie, normale per il testo, stretto in maiuscoletto per le
- * didascalie e le righe tecniche. Sta in `caratteri/`, servito da qui: un
- * sito che racconta che la casa non parla con nessuno e poi va a prendersi i
- * caratteri da Google si smentisce da solo. Oswald, il carattere dei numeri
- * della plancia, resta per i prezzi e i numeri grandi: sono gli stessi numeri
- * che si vedono sulle tessere.
+ * Archivo, in `caratteri/`, servito da qui: un sito che racconta che la casa
+ * non parla con nessuno e poi va a prendersi i caratteri da Google si
+ * smentisce da solo. Oswald, il carattere dei numeri della plancia, resta per
+ * i prezzi.
  *
  * ## Una luce sola, e chiara
  *
  * Non c'è un tema scuro, ed è una scelta: questa è la copertina di gdahome, e
- * una copertina si presenta sempre allo stesso modo. Dentro l'app il chiaro e
- * scuro c'è, e lì ha senso.
+ * una copertina si presenta sempre allo stesso modo.
  */
 
 /* ── I caratteri ────────────────────────────────────────────────────────── */
@@ -70,23 +67,36 @@
 
 :root {
   --carta: #ffffff;
-  --campo: #eef0f3;
-  --inchiostro: #0b1220;
-  --inchiostro-lieve: #4b5563;
+  --campo: #eef3ff;
+  --campo-scuro: #e2e9fb;
+  --notte: #0f172a;
   --blu: #1d4ed8;
   --blu-scuro: #1e3a8a;
+  --blu-chiaro: #dbe4ff;
+  --inchiostro: #0f172a;
+  --inchiostro-lieve: #475569;
+  --su-blu: #c7d2fe;
   --ambra: #f59e0b;
   --ambra-inchiostro: #9a5b00;
+  --bene: #16a34a;
   --male: #b91c1c;
-  --filo: #c9ced6;
-  --filo-tenue: #e3e6eb;
+  --filo: #d7dde8;
+  --filo-tenue: #e8edf5;
+
+  --ombra: 0 12px 32px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.06);
+  --ombra-alta: 0 20px 48px rgba(15, 23, 42, 0.16), 0 4px 10px rgba(15, 23, 42, 0.08);
+  --ombra-telefono: 0 30px 60px rgba(15, 23, 42, 0.3), 0 10px 20px rgba(15, 23, 42, 0.14);
+
+  --raggio: 20px;
+  --raggio-piccolo: 12px;
+  --raggio-telefono: 38px;
 
   --testo: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --numeri: "Oswald", "Archivo", sans-serif;
 
-  --largo: 1280px;
+  --largo: 1180px;
   --bordo-pagina: clamp(16px, 4vw, 48px);
-  --cappello-alto: 60px;
+  --cappello-alto: 64px;
 
   color-scheme: light only;
 }
@@ -101,7 +111,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: calc(var(--cappello-alto) + 24px);
+  scroll-padding-top: calc(var(--cappello-alto) + 16px);
   -webkit-text-size-adjust: 100%;
 }
 
@@ -117,20 +127,20 @@ body {
   color: var(--inchiostro);
   font-family: var(--testo);
   font-size: 1.0625rem;
-  line-height: 1.55;
-  font-variation-settings: "wdth" 100;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: var(--inchiostro);
-  color: var(--carta);
+  background: var(--blu);
+  color: #fff;
 }
 
 :focus-visible {
-  outline: 2px solid var(--blu);
-  outline-offset: 2px;
+  outline: 3px solid var(--ambra);
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 
 img {
@@ -143,7 +153,7 @@ a {
   color: var(--blu);
   text-decoration: underline;
   text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
+  text-underline-offset: 0.2em;
 }
 
 a:hover {
@@ -159,7 +169,8 @@ code {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.88em;
   background: var(--campo);
-  padding: 0.1em 0.4em;
+  border-radius: 6px;
+  padding: 0.1em 0.45em;
   overflow-wrap: anywhere;
 }
 
@@ -171,9 +182,9 @@ h1,
 h2,
 h3 {
   margin: 0;
-  font-weight: 800;
-  line-height: 1.02;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 
@@ -184,28 +195,16 @@ h3 {
   padding-inline: var(--bordo-pagina);
 }
 
-/* La riga tecnica: maiuscoletto stretto, come la riga sotto una tavola. */
-.riga-tecnica,
-figcaption,
-.navigazione a,
-.indice a,
-.lingua,
-.scheda dt,
-.listino th,
-.tabella-prezzi th {
-  font-variation-settings: "wdth" 80;
+.riga-tecnica {
   font-weight: 600;
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  line-height: 1.3;
+  font-size: 0.82rem;
+  color: var(--inchiostro-lieve);
 }
 
 .numero {
   font-family: var(--numeri);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
 }
 
 /* ── I tasti ────────────────────────────────────────────────────────────── */
@@ -215,24 +214,27 @@ figcaption,
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 46px;
-  padding: 0 20px;
-  border: 1px solid var(--inchiostro);
+  min-height: 50px;
+  padding: 0 24px;
+  border: 2px solid var(--inchiostro);
+  border-radius: var(--raggio-piccolo);
   background: var(--carta);
   color: var(--inchiostro);
   font: inherit;
-  font-weight: 600;
-  font-size: 0.98rem;
-  letter-spacing: -0.005em;
+  font-weight: 700;
+  font-size: 1rem;
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color 120ms ease-out,
-    color 120ms ease-out,
-    border-color 120ms ease-out;
+    transform 160ms ease-out,
+    background-color 160ms ease-out,
+    color 160ms ease-out,
+    border-color 160ms ease-out,
+    box-shadow 160ms ease-out;
 }
 
 .bottone:hover {
+  transform: translateY(-2px);
   background: var(--inchiostro);
   color: var(--carta);
 }
@@ -240,30 +242,38 @@ figcaption,
 .bottone-pieno {
   background: var(--blu);
   border-color: var(--blu);
-  color: var(--carta);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(29, 78, 216, 0.28);
 }
 
 .bottone-pieno:hover {
   background: var(--blu-scuro);
   border-color: var(--blu-scuro);
-  color: var(--carta);
+  color: #fff;
 }
 
 .bottone[aria-busy="true"],
 .bottone:disabled {
   opacity: 0.55;
   cursor: progress;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottone:hover {
+    transform: none;
+  }
 }
 
 .bottoni {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   margin-top: 28px;
 }
 
 .sottobottoni {
-  margin: 14px 0 0;
+  margin: 16px 0 0;
   max-width: 56ch;
   color: var(--inchiostro-lieve);
   font-size: 0.95rem;
@@ -276,13 +286,18 @@ figcaption,
   top: 0;
   z-index: 20;
   background: var(--carta);
-  border-bottom: 1px solid var(--inchiostro);
+  border-bottom: 1px solid var(--filo-tenue);
+  transition: box-shadow 160ms ease-out;
+}
+
+.cappello.giu {
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
 }
 
 .cappello .limite {
   display: flex;
-  align-items: stretch;
-  gap: 0;
+  align-items: center;
+  gap: 8px;
   min-height: var(--cappello-alto);
 }
 
@@ -290,24 +305,24 @@ figcaption,
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding-right: 20px;
+  margin-right: 12px;
   color: var(--inchiostro);
   text-decoration: none;
   font-weight: 700;
-  font-variation-settings: "wdth" 112;
+  font-size: 1.2rem;
   letter-spacing: -0.02em;
-  font-size: 1.1rem;
-  border-right: 1px solid var(--filo);
 }
 
 .marchio img {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
 }
 
 .navigazione {
   display: flex;
-  align-items: stretch;
+  align-items: center;
+  gap: 2px;
   flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
@@ -321,64 +336,61 @@ figcaption,
 .navigazione a {
   display: inline-flex;
   align-items: center;
-  padding: 0 14px;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  padding: 8px 10px;
+  border-radius: 999px;
   color: var(--inchiostro-lieve);
+  font-weight: 600;
+  font-size: 0.92rem;
   text-decoration: none;
   white-space: nowrap;
   transition:
-    color 120ms ease-out,
-    border-color 120ms ease-out;
+    color 160ms ease-out,
+    background-color 160ms ease-out;
 }
 
 .navigazione a:hover {
   color: var(--inchiostro);
+  background: var(--campo);
 }
 
 .navigazione a.acceso {
   color: var(--inchiostro);
-  border-bottom-color: var(--ambra);
-}
-
-/* I nomi delle due app si scrivono minuscoli, anche dove tutto il resto
-   e' in maiuscoletto. */
-.navigazione a[href="#gdanav"],
-.indice a[href="#gdanav"],
-.fondo-pagina nav a[href="#gdanav"] {
-  text-transform: none;
+  box-shadow: inset 0 -2px 0 var(--ambra);
+  border-radius: 0;
 }
 
 .attrezzi {
   display: flex;
-  align-items: stretch;
+  align-items: center;
+  gap: 10px;
   margin-left: auto;
 }
 
 .lingue {
   display: flex;
   align-items: center;
-  border-left: 1px solid var(--filo);
-  border-right: 1px solid var(--filo);
+  background: var(--campo);
+  border-radius: 999px;
+  padding: 3px;
 }
 
 .lingua {
   appearance: none;
   border: 0;
   background: none;
-  padding: 0 12px;
-  height: 100%;
-  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 999px;
   color: var(--inchiostro-lieve);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.82rem;
   cursor: pointer;
 }
 
 .lingua[aria-pressed="true"] {
+  background: var(--carta);
   color: var(--inchiostro);
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.35em;
-  text-decoration-color: var(--inchiostro);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
 }
 
 .lingua:hover {
@@ -386,10 +398,19 @@ figcaption,
 }
 
 .attrezzi .bottone {
-  min-height: 0;
-  margin: 10px 0 10px 14px;
-  padding: 0 16px;
-  font-size: 0.9rem;
+  min-height: 42px;
+  padding: 0 18px;
+  font-size: 0.92rem;
+  border-width: 0;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  .navigazione a {
+    font-size: 0.86rem;
+    padding: 8px 8px;
+  }
 }
 
 /* Il menu sul telefono: un <details>, che si apre e chiude da solo. */
@@ -403,10 +424,14 @@ figcaption,
   align-items: center;
   justify-content: center;
   width: 44px;
-  height: 100%;
-  min-height: 44px;
+  height: 44px;
+  border-radius: 999px;
   cursor: pointer;
   color: var(--inchiostro);
+}
+
+.menu > summary:hover {
+  background: var(--campo);
 }
 
 .menu > summary::-webkit-details-marker {
@@ -427,15 +452,9 @@ figcaption,
     flex-wrap: wrap;
   }
 
-  .marchio {
-    border-right: 0;
-    padding-right: 0;
-  }
-
   .menu {
     display: block;
     order: 3;
-    margin-left: 6px;
   }
 
   .attrezzi {
@@ -451,9 +470,10 @@ figcaption,
     order: 4;
     flex-basis: 100%;
     flex-direction: column;
+    align-items: stretch;
     overflow: visible;
-    border-top: 1px solid var(--filo);
-    padding: 6px 0 10px;
+    padding: 8px 0 12px;
+    gap: 2px;
   }
 
   .menu[open] ~ .navigazione {
@@ -461,409 +481,267 @@ figcaption,
   }
 
   .navigazione a {
-    padding: 11px 0;
-    border-bottom: 1px solid var(--filo-tenue);
-    margin: 0;
-    font-size: 0.9rem;
+    padding: 12px 14px;
+    border-radius: var(--raggio-piccolo);
+    font-size: 1rem;
   }
 
   .navigazione a.acceso {
-    border-bottom-color: var(--ambra);
-  }
-}
-
-/* ── L'indice sul bordo (solo da computer) ──────────────────────────────── */
-
-.indice {
-  display: none;
-}
-
-@media (min-width: 1480px) {
-  .indice {
-    display: block;
-    position: fixed;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border-left: 1px solid var(--filo);
-  }
-
-  .indice li {
-    margin: 0;
-  }
-
-  .indice a {
-    display: block;
-    padding: 7px 22px 7px 14px;
-    margin-left: -1px;
-    border-left: 2px solid transparent;
-    color: var(--inchiostro-lieve);
-    text-decoration: none;
-    font-size: 0.72rem;
-    transition:
-      color 120ms ease-out,
-      border-color 120ms ease-out;
-  }
-
-  .indice a:hover {
-    color: var(--inchiostro);
-  }
-
-  .indice a.acceso {
-    color: var(--inchiostro);
-    border-left-color: var(--ambra);
+    border-radius: var(--raggio-piccolo);
+    box-shadow: none;
+    background: var(--campo);
   }
 }
 
 /* ── Le sezioni ─────────────────────────────────────────────────────────── */
 
 main > section {
-  border-top: 1px solid var(--inchiostro);
-  padding: clamp(40px, 6vw, 84px) 0 clamp(48px, 7vw, 96px);
+  padding: clamp(56px, 8vw, 112px) 0;
 }
 
-main > section.apertura {
-  border-top: 0;
+main > section.fascia {
+  background: var(--campo);
 }
 
 .testa-sezione {
-  display: grid;
-  grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
-  gap: 24px 48px;
-  align-items: end;
-  margin-bottom: clamp(28px, 4vw, 56px);
+  max-width: 64ch;
+  margin-bottom: clamp(32px, 5vw, 56px);
 }
 
 .testa-sezione h2 {
-  font-size: clamp(1.9rem, 4vw, 3.2rem);
-  hyphens: manual;
-  overflow-wrap: normal;
-  font-variation-settings: "wdth" 118;
-  color: var(--inchiostro);
+  font-size: clamp(2rem, 4.2vw, 3.2rem);
+  margin-bottom: 18px;
 }
 
 .testa-sezione .guida {
   margin: 0;
-  max-width: 48ch;
   color: var(--inchiostro-lieve);
-  font-size: 1.05rem;
-}
-
-@media (max-width: 760px) {
-  .testa-sezione {
-    grid-template-columns: 1fr;
-  }
+  font-size: 1.12rem;
 }
 
 .sottotitolo {
-  font-size: 1.35rem;
-  font-variation-settings: "wdth" 110;
-  margin: clamp(40px, 6vw, 72px) 0 16px;
-  padding-top: 18px;
-  border-top: 1px solid var(--filo);
+  font-size: 1.6rem;
+  margin: clamp(48px, 7vw, 88px) 0 14px;
 }
 
 .sottotitolo + .guida {
   max-width: 64ch;
   color: var(--inchiostro-lieve);
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .guida {
   max-width: 64ch;
 }
 
-/* ── L'apertura ─────────────────────────────────────────────────────────── */
+/* ── La copertina ───────────────────────────────────────────────────────── */
 
 .apertura {
-  padding-top: clamp(28px, 5vw, 64px) !important;
+  background: var(--blu-scuro);
+  color: #fff;
+  padding-top: clamp(40px, 6vw, 88px) !important;
+  padding-bottom: 0 !important;
 }
 
 .apertura-dentro {
   display: grid;
   grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
-  gap: 32px 56px;
-  align-items: start;
-}
-
-.apertura h1 {
-  font-size: clamp(2.3rem, 5.6vw, 4.7rem);
-  font-variation-settings: "wdth" 120;
-  margin-top: 0;
-}
-
-.apertura .guida {
-  margin-top: 26px;
-  font-size: 1.12rem;
-  max-width: 52ch;
+  gap: 32px 48px;
+  align-items: center;
 }
 
 .apertura-detto {
-  padding-top: clamp(8px, 2vw, 40px);
+  padding-bottom: clamp(48px, 7vw, 96px);
 }
 
-/* La tavola: la fotografia dell'app, dritta, con un filo intorno e la
-   didascalia sotto. Non un telefono disegnato: la schermata. */
-.tavola {
-  margin: 0;
+.apertura h1 {
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  color: #fff;
 }
 
-.tavola img {
-  width: 100%;
-  border: 1px solid var(--filo);
-  background: var(--carta);
+.apertura .guida {
+  margin-top: 24px;
+  font-size: 1.15rem;
+  color: var(--su-blu);
+  max-width: 50ch;
 }
 
-.tavola figcaption {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 10px;
-  color: var(--inchiostro-lieve);
+.apertura .bottoni .bottone-pieno {
+  background: #fff;
+  border-color: #fff;
+  color: var(--blu-scuro);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
-.tavola figcaption .numero {
-  font-size: 0.86rem;
-  color: var(--inchiostro);
+.apertura .bottoni .bottone-pieno:hover {
+  background: var(--ambra);
+  border-color: var(--ambra);
+  color: var(--notte);
 }
 
+.apertura .bottoni .bottone:not(.bottone-pieno) {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #fff;
+}
+
+.apertura .bottoni .bottone:not(.bottone-pieno):hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #fff;
+}
+
+.apertura .sottobottoni {
+  color: var(--su-blu);
+}
+
+/* Il telefono della copertina scende nel bianco della sezione sotto. */
 .apertura-tavola {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0 24px;
-  align-items: end;
+  display: flex;
+  justify-content: center;
+  align-self: end;
 }
 
 .apertura-tavola .tavola {
-  max-width: 400px;
-  justify-self: end;
+  width: min(100%, 340px);
+  margin-bottom: -96px;
 }
 
-/* La prima tavola porta le quote, come su una tavola di catalogo: una
-   parentesi sottile a sinistra e una sotto, coi segni alle estremita'. */
-.tavola-prima {
-  position: relative;
+.apertura-tavola figcaption {
+  justify-content: center;
+  color: #fff;
 }
 
-.tavola-prima::before,
-.tavola-prima::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
+.apertura-tavola figcaption > span:first-child {
+  display: none;
 }
 
-.tavola-prima::before {
-  left: -18px;
-  top: 0;
-  width: 8px;
-  bottom: 58px;
-  border-left: 1px solid var(--filo);
-  border-top: 1px solid var(--filo);
-  border-bottom: 1px solid var(--filo);
-}
-
-.tavola-prima::after {
-  left: 0;
-  right: 0;
-  bottom: 40px;
-  height: 8px;
-  border-bottom: 1px solid var(--filo);
-  border-left: 1px solid var(--filo);
-  border-right: 1px solid var(--filo);
-}
-
-.tavola-prima img {
-  margin-bottom: 0;
-}
-
-.tavola-prima figcaption {
-  margin-top: 28px;
-}
-
-.articolo {
-  margin: 6px 0 0;
-  color: var(--inchiostro-lieve);
-}
-
-.esempio {
-  color: var(--inchiostro-lieve);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-}
-
+/* La spia: una pastiglia bianca con il pallino, che si accende ambra. */
 .spia {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #fff;
   color: var(--inchiostro-lieve);
+  font-weight: 700;
+  font-size: 0.82rem;
+  box-shadow: var(--ombra);
 }
 
 .spia::before {
   content: "";
   width: 10px;
   height: 10px;
-  border: 1px solid var(--inchiostro);
-  background: var(--carta);
+  border-radius: 50%;
+  background: var(--filo);
   transition: background-color 260ms ease-out;
 }
 
 .spia.acceso {
-  color: var(--ambra-inchiostro);
+  color: var(--inchiostro);
 }
 
 .spia.acceso::before {
   background: var(--ambra);
-  border-color: var(--ambra);
+}
+
+.apertura-tavola .tavola .spia {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.apertura-tavola .tavola {
+  position: relative;
+}
+
+.articolo {
+  display: none;
 }
 
 @media (max-width: 940px) {
   .apertura-dentro {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 16px;
   }
 
-  /* Prima la fotografia, poi la frase: il titolo, la tavola, i tasti, il
-     testo. Il contenitore del testo sparisce dalla griglia e i suoi figli
-     si mettono in fila con la tavola. */
   .apertura-detto {
-    display: contents;
-  }
-
-  .apertura h1 {
-    order: 1;
-  }
-
-  .apertura-tavola {
-    order: 2;
-    padding-left: 18px;
-  }
-
-  .apertura .bottoni {
-    order: 3;
-    margin-top: 0;
-  }
-
-  .apertura .guida {
-    order: 4;
-    margin-top: 0;
-  }
-
-  .apertura .sottobottoni {
-    order: 5;
-    margin-top: -8px;
+    padding-bottom: 8px;
   }
 
   .apertura-tavola .tavola {
-    justify-self: start;
-    max-width: 320px;
+    width: min(100%, 280px);
+    margin-bottom: -72px;
   }
 }
 
-/* ── La serie: le sezioni della plancia, in fila ────────────────────────── */
+/* ── Le schermate: dentro un telefono ───────────────────────────────────── */
 
-.serie {
-  margin-top: clamp(40px, 6vw, 72px);
-  background: var(--campo);
-  border-top: 1px solid var(--filo);
-  border-bottom: 1px solid var(--filo);
-}
-
-.serie .limite {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 10fr);
-  gap: 24px;
-  align-items: start;
-  padding-block: 22px;
-}
-
-.serie-titolo {
+.tavola {
   margin: 0;
-  color: var(--inchiostro);
-  padding-top: 6px;
+  min-width: 0;
 }
 
-.serie-titolo span {
-  display: block;
-  margin-top: 6px;
-  color: var(--inchiostro-lieve);
-  font-variation-settings: "wdth" 100;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: 0.9rem;
+.tavola img {
+  width: 100%;
+  border: 9px solid var(--notte);
+  border-radius: var(--raggio-telefono);
+  background: var(--notte);
+  box-shadow: var(--ombra-telefono);
 }
 
-.sezioni {
-  display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
-  gap: 6px 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.sezioni li {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 2px 6px;
-  border: 1px solid transparent;
-  text-align: center;
-  color: var(--inchiostro-lieve);
-  font-size: 0.74rem;
-  line-height: 1.2;
-  font-variation-settings: "wdth" 84;
-  font-weight: 500;
-  transition:
-    border-color 120ms ease-out,
-    color 120ms ease-out,
-    background-color 120ms ease-out;
-}
-
-.sezioni img {
-  width: 28px;
-  height: 28px;
-}
-
-.sezioni li:hover {
-  border-color: var(--ambra);
+/* Le schermate larghe (il tablet a muro, la scheda dell'add-on, il
+   cruscotto) non stanno in un telefono: sono uno schermo con l'angolo
+   tondo e la stessa ombra. */
+.tavola.schermo img {
+  border: 0;
+  border-radius: 16px;
   background: var(--carta);
+  box-shadow: var(--ombra-alta);
+}
+
+.tavola.orologio img {
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+  box-shadow: var(--ombra-alta);
+}
+
+.tavola figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+  margin-top: 16px;
+  font-weight: 600;
+  font-size: 0.95rem;
   color: var(--inchiostro);
 }
 
-@media (max-width: 940px) {
-  .serie .limite {
-    grid-template-columns: 1fr;
-  }
-
-  .sezioni {
-    grid-auto-flow: column;
-    grid-auto-columns: 76px;
-    grid-template-columns: none;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    margin-inline: calc(-1 * var(--bordo-pagina));
-    padding-inline: var(--bordo-pagina);
-    scrollbar-width: thin;
-  }
+.tavola figcaption .numero {
+  display: none;
 }
 
-/* ── Le file di tavole ──────────────────────────────────────────────────── */
+.tavola figcaption .esempio {
+  font-weight: 500;
+  color: var(--inchiostro-lieve);
+  font-size: 0.85rem;
+}
 
 .tavole {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px 24px;
+  gap: 40px 32px;
   margin: 0;
+  padding: 0 clamp(0px, 2vw, 24px);
 }
 
 .tavole-quattro {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px 24px;
 }
 
 .tavole-due {
@@ -882,23 +760,25 @@ main > section.apertura {
   .tavole-quattro,
   .tavole-due {
     grid-template-columns: 1fr;
+    justify-items: center;
   }
 
   .tavole .tavola {
-    max-width: 320px;
+    width: min(100%, 300px);
   }
 }
 
-/* Una tavola larga di fianco a un testo. */
+/* Una schermata larga di fianco a un testo. */
 .tavola-e-testo {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: 32px 48px;
-  align-items: start;
+  gap: 40px 56px;
+  align-items: center;
 }
 
 .tavola-e-testo.al-contrario {
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: start;
 }
 
 .tavola-e-testo.al-contrario .tavola {
@@ -916,24 +796,125 @@ main > section.apertura {
   }
 }
 
-/* ── La scheda tecnica: righe nome–valore ───────────────────────────────── */
+.tavola-larga {
+  margin-bottom: clamp(40px, 6vw, 64px);
+}
+
+/* ── La serie: le sezioni della plancia, come pastiglie ─────────────────── */
+
+.serie {
+  padding: 120px 0 clamp(40px, 6vw, 72px);
+}
+
+.serie .limite {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
+  gap: 24px 48px;
+  align-items: start;
+}
+
+.serie-titolo {
+  margin: 0;
+}
+
+.serie-titolo > span:first-child {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--inchiostro);
+}
+
+.serie-titolo span + span {
+  display: block;
+  margin-top: 8px;
+  color: var(--inchiostro-lieve);
+  font-weight: 400;
+  font-size: 1rem;
+}
+
+.sezioni {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sezioni li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  background: var(--campo);
+  color: var(--inchiostro);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition:
+    background-color 160ms ease-out,
+    transform 160ms ease-out;
+}
+
+.sezioni li:hover {
+  background: var(--blu-chiaro);
+  transform: translateY(-2px);
+}
+
+.sezioni img {
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 940px) {
+  .serie {
+    padding-top: 100px;
+  }
+
+  .serie .limite {
+    grid-template-columns: 1fr;
+  }
+
+  .sezioni {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-inline: calc(-1 * var(--bordo-pagina));
+    padding-inline: var(--bordo-pagina);
+    scrollbar-width: thin;
+  }
+
+  .sezioni li {
+    flex: 0 0 auto;
+  }
+}
+
+/* ── Le schede: righe nome–testo, su una carta ──────────────────────────── */
 
 .scheda {
   margin: 0;
-  border-top: 1px solid var(--inchiostro);
+  display: grid;
+  gap: 16px;
 }
 
 .scheda > div {
-  display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-  gap: 8px 24px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--filo);
+  background: var(--carta);
+  border-radius: var(--raggio);
+  padding: 22px 24px;
+  box-shadow: var(--ombra);
+}
+
+main > section:not(.fascia) .scheda > div {
+  background: var(--campo);
+  box-shadow: none;
 }
 
 .scheda dt {
-  color: var(--inchiostro);
-  padding-top: 4px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
 }
 
 .scheda dd {
@@ -953,35 +934,60 @@ main > section.apertura {
   margin-top: 6px;
 }
 
-@media (max-width: 600px) {
-  .scheda > div {
+/* Tre schede in fila, quando ce n'è tre o sei. */
+.schede-sotto,
+#gdanav .scheda,
+#prezzi .scheda,
+#sostieni .scheda {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#sostieni .scheda {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 940px) {
+  .schede-sotto,
+  #gdanav .scheda,
+  #prezzi .scheda,
+  #sostieni .scheda {
     grid-template-columns: 1fr;
-    gap: 4px;
   }
 }
 
-/* Due schede affiancate. */
+/* Due colonne di testo. */
 .schede {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 48px;
-  margin-top: clamp(32px, 5vw, 56px);
+  gap: 32px 48px;
+  margin-top: clamp(40px, 6vw, 72px);
+}
+
+.schede > div {
+  background: var(--carta);
+  border-radius: var(--raggio);
+  padding: 28px;
+  box-shadow: var(--ombra);
+}
+
+main > section:not(.fascia) .schede > div {
+  background: var(--campo);
+  box-shadow: none;
 }
 
 .schede h3 {
-  font-size: 1.2rem;
-  font-variation-settings: "wdth" 110;
-  margin-bottom: 12px;
+  font-size: 1.3rem;
+  margin-bottom: 14px;
 }
 
 @media (max-width: 940px) {
   .schede {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 24px;
   }
 }
 
-/* Un elenco con un trattino davanti, da scheda tecnica. */
+/* Un elenco con il segno davanti. */
 .elenco {
   margin: 0;
   padding: 0;
@@ -990,34 +996,39 @@ main > section.apertura {
 
 .elenco li {
   position: relative;
-  padding: 8px 0 8px 22px;
-  border-bottom: 1px solid var(--filo-tenue);
+  padding: 9px 0 9px 30px;
   color: var(--inchiostro-lieve);
+}
+
+.elenco li + li {
+  border-top: 1px solid var(--filo-tenue);
 }
 
 .elenco li::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 1.05em;
+  left: 2px;
+  top: 0.95em;
   width: 12px;
-  height: 1px;
-  background: var(--inchiostro);
+  height: 7px;
+  border-left: 2.5px solid var(--bene);
+  border-bottom: 2.5px solid var(--bene);
+  transform: rotate(-45deg);
 }
 
 .elenco li b {
   color: var(--inchiostro);
 }
 
-/* Il segno di quello che non si vede: una crocetta, due righe da un pixel. */
 .elenco.contro li::before,
 .elenco.contro li::after {
   content: "";
   position: absolute;
-  left: 1px;
+  left: 3px;
   top: 1.05em;
-  width: 10px;
-  height: 1px;
+  width: 12px;
+  height: 2.5px;
+  border: 0;
   background: var(--male);
   transform: rotate(45deg);
 }
@@ -1027,16 +1038,22 @@ main > section.apertura {
 }
 
 .elenco.in-arrivo li::before {
-  background: none;
-  border-top: 1px dashed var(--inchiostro-lieve);
+  width: 10px;
+  height: 10px;
+  border: 2px dashed var(--inchiostro-lieve);
+  border-radius: 50%;
+  transform: none;
+  top: 0.85em;
 }
 
 /* ── Il disegno tecnico: come funziona ──────────────────────────────────── */
 
 .strada {
   margin: 0;
-  border: 1px solid var(--filo);
   background: var(--carta);
+  border-radius: var(--raggio);
+  box-shadow: var(--ombra);
+  overflow: hidden;
 }
 
 .strada svg {
@@ -1047,41 +1064,38 @@ main > section.apertura {
 }
 
 .strada figcaption {
-  padding: 14px 18px 16px;
-  border-top: 1px solid var(--filo);
-  text-transform: none;
-  letter-spacing: 0;
-  font-variation-settings: "wdth" 100;
-  font-weight: 400;
-  font-size: 0.95rem;
+  padding: 18px 24px 22px;
+  border-top: 1px solid var(--filo-tenue);
+  font-size: 0.97rem;
   color: var(--inchiostro-lieve);
-  display: block;
 }
 
 .strada figcaption b {
-  color: var(--inchiostro);
+  display: none;
 }
 
 .tre-strade {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0 32px;
-  margin: 32px 0 0;
+  gap: 20px;
+  margin: 28px 0 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--inchiostro);
 }
 
 .tre-strade li {
-  padding: 16px 0 8px;
-  border-bottom: 1px solid var(--filo);
+  background: var(--carta);
+  border-radius: var(--raggio);
+  padding: 22px 24px;
+  box-shadow: var(--ombra);
   color: var(--inchiostro-lieve);
 }
 
 .tre-strade b {
   display: block;
   color: var(--inchiostro);
-  margin-bottom: 6px;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
 }
 
 @media (max-width: 760px) {
@@ -1090,12 +1104,16 @@ main > section.apertura {
   }
 }
 
-/* ── Il listino ─────────────────────────────────────────────────────────── */
+/* ── Il listino: due piani, come due carte ──────────────────────────────── */
 
 .listino {
   width: 100%;
-  border-collapse: collapse;
-  border-top: 1px solid var(--inchiostro);
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--carta);
+  border-radius: var(--raggio);
+  box-shadow: var(--ombra);
+  overflow: hidden;
   margin: 0;
 }
 
@@ -1103,13 +1121,19 @@ main > section.apertura {
 .listino td {
   text-align: left;
   vertical-align: top;
-  padding: 14px 16px 14px 0;
-  border-bottom: 1px solid var(--filo);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--filo-tenue);
+}
+
+.listino tbody tr:last-child th,
+.listino tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .listino th {
+  font-weight: 700;
   color: var(--inchiostro);
-  width: 30%;
+  width: 26%;
 }
 
 .listino td {
@@ -1121,72 +1145,87 @@ main > section.apertura {
 }
 
 .listino thead th {
-  padding-top: 18px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--inchiostro);
+  padding: 24px 20px 20px;
   vertical-align: bottom;
+  background: var(--campo);
+  border-bottom: 0;
+}
+
+.listino thead th:first-child span {
+  font-weight: 700;
+  color: var(--inchiostro-lieve);
+}
+
+.listino thead th:last-child,
+.listino thead th:last-child .piano-nome,
+.listino thead th:last-child .prezzo {
+  background: var(--blu-scuro);
+  color: #fff;
 }
 
 .listino thead th .piano-nome {
   display: block;
-  font-size: 1.25rem;
-  font-weight: 800;
-  font-variation-settings: "wdth" 112;
+  font-size: 1.3rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  text-transform: none;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .listino thead th .prezzo {
   display: block;
   font-family: var(--numeri);
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 500;
   line-height: 1;
-  letter-spacing: 0;
-  text-transform: none;
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 
 .listino thead th .prezzo span {
   font-size: 1rem;
-  color: var(--inchiostro-lieve);
   font-family: var(--testo);
   font-weight: 400;
-  font-variation-settings: "wdth" 100;
+  color: var(--inchiostro-lieve);
+}
+
+.listino thead th:last-child .prezzo span {
+  color: var(--su-blu);
 }
 
 .listino thead th .piano-prova {
   display: inline-block;
-  padding: 3px 8px;
-  border: 1px solid var(--blu);
-  color: var(--blu);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--ambra);
+  color: var(--notte);
+  font-weight: 700;
+  font-size: 0.78rem;
 }
 
 .listino .si {
-  color: var(--inchiostro);
-}
-
-.listino .no {
   color: var(--inchiostro-lieve);
 }
 
-@media (max-width: 760px) {
-  .listino thead th .prezzo {
-    font-size: 1.6rem;
-  }
+.listino .no {
+  color: var(--filo);
+}
 
+.listino td:last-child {
+  background: #f7f9ff;
+}
+
+@media (max-width: 760px) {
   .listino th,
   .listino td {
-    padding: 10px 10px 10px 0;
-    font-size: 0.92rem;
+    padding: 12px 14px;
+    font-size: 0.94rem;
   }
 
-  .listino th[scope="row"] {
+  .listino th {
     width: 24%;
-    font-size: 0.7rem;
+  }
+
+  .listino thead th .prezzo {
+    font-size: 1.7rem;
   }
 }
 
@@ -1200,34 +1239,31 @@ main > section.apertura {
   .listino tr {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 16px;
-    border-bottom: 1px solid var(--filo);
-  }
-
-  .listino thead tr {
-    border-bottom: 1px solid var(--inchiostro);
-  }
-
-  .listino thead th {
-    border-bottom: 0;
   }
 
   .listino th,
   .listino td {
     width: auto;
     border-bottom: 0;
-    padding: 8px 0;
+    padding: 8px 14px;
   }
 
-  .listino th[scope="row"],
-  .listino thead th:first-child {
+  .listino tbody tr {
+    border-bottom: 1px solid var(--filo-tenue);
+    padding-bottom: 8px;
+  }
+
+  .listino th[scope="row"] {
     grid-column: 1 / -1;
-    width: auto;
-    padding: 12px 0 2px;
+    padding: 14px 14px 2px;
   }
 
   .listino thead th:first-child {
     display: none;
+  }
+
+  .listino thead th {
+    padding: 18px 14px;
   }
 
   .listino thead th .prezzo {
@@ -1241,18 +1277,24 @@ main > section.apertura {
   }
 
   .listino thead th .piano-prova {
-    font-size: 0.62rem;
-    padding: 2px 6px;
+    font-size: 0.74rem;
+    padding: 3px 8px;
   }
 }
 
 .nota-privacy {
   margin-top: clamp(32px, 5vw, 56px);
-  padding: 18px 20px;
-  background: var(--campo);
-  border: 1px solid var(--filo);
+  padding: 22px 26px;
+  background: var(--carta);
+  border-radius: var(--raggio);
+  box-shadow: var(--ombra);
   color: var(--inchiostro-lieve);
   max-width: 76ch;
+}
+
+main > section:not(.fascia) .nota-privacy {
+  background: var(--campo);
+  box-shadow: none;
 }
 
 .nota-privacy b {
@@ -1265,59 +1307,74 @@ main > section.apertura {
   margin: 0;
 }
 
-/* ── Scaricala: le voci numerate ────────────────────────────────────────── */
+/* ── Scaricala: i passi ─────────────────────────────────────────────────── */
 
 .scarichi {
   margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--inchiostro);
-}
-
-.tavola-larga {
-  margin-bottom: clamp(32px, 5vw, 56px);
-}
-
-.tavola-larga img {
-  max-width: 880px;
+  display: grid;
+  gap: 16px;
 }
 
 .scarico {
   display: grid;
-  grid-template-columns: 56px minmax(0, 3fr) minmax(0, 8fr) auto;
-  gap: 12px 24px;
+  grid-template-columns: 52px minmax(0, 3fr) minmax(0, 8fr) auto;
+  gap: 8px 24px;
   align-items: start;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--filo);
+  padding: 22px 24px;
+  background: var(--campo);
+  border-radius: var(--raggio);
   color: inherit;
   text-decoration: none;
+  transition:
+    transform 160ms ease-out,
+    box-shadow 160ms ease-out;
 }
 
-a.scarico:hover h3 {
-  color: var(--blu);
+a.scarico:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ombra);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.scarico:hover,
+  .bottone:hover,
+  .sezioni li:hover {
+    transform: none;
+  }
 }
 
 .scarico .passo {
-  font-family: var(--numeri);
-  font-size: 2rem;
-  line-height: 1;
-  color: var(--inchiostro);
-  padding-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--blu);
+  color: #fff;
+  font-size: 1.3rem;
+}
+
+.scarico .passo:empty {
+  background: var(--blu-chiaro);
 }
 
 .scarico h3 {
   font-size: 1.15rem;
-  font-variation-settings: "wdth" 110;
-  transition: color 120ms ease-out;
+  padding-top: 8px;
 }
 
 .scarico p {
   margin: 0;
   color: var(--inchiostro-lieve);
+  padding-top: 8px;
 }
 
 .scarico p + p {
   margin-top: 8px;
+  padding-top: 0;
 }
 
 .scarico .serve b {
@@ -1327,22 +1384,22 @@ a.scarico:hover h3 {
 .scarico .come {
   white-space: nowrap;
   color: var(--blu);
-  font-weight: 600;
-  padding-top: 4px;
+  font-weight: 700;
+  padding-top: 10px;
 }
 
 @media (max-width: 940px) {
   .scarico {
-    grid-template-columns: 48px minmax(0, 1fr);
-  }
-
-  .scarico .passo {
-    font-size: 1.6rem;
+    grid-template-columns: 44px minmax(0, 1fr);
   }
 
   .scarico > div,
   .scarico .come {
     grid-column: 2;
+  }
+
+  .scarico > div p:first-child {
+    padding-top: 0;
   }
 }
 
@@ -1351,7 +1408,7 @@ a.scarico:hover h3 {
 .contatto {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: 40px 64px;
+  gap: 40px 56px;
   align-items: start;
 }
 
@@ -1362,14 +1419,15 @@ a.scarico:hover h3 {
 }
 
 .modulo {
-  border-top: 1px solid var(--inchiostro);
-  padding-top: 8px;
+  background: var(--campo);
+  border-radius: var(--raggio);
+  padding: 28px;
 }
 
 .modulo-riga {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 24px;
+  gap: 0 20px;
 }
 
 @media (max-width: 600px) {
@@ -1380,41 +1438,34 @@ a.scarico:hover h3 {
 
 .campo {
   display: block;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--filo);
+  margin-bottom: 18px;
 }
 
 .campo span {
   display: block;
-  margin-bottom: 6px;
-  font-variation-settings: "wdth" 80;
-  font-weight: 600;
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .campo input,
 .campo textarea {
   display: block;
   width: 100%;
-  padding: 10px 0;
-  border: 0;
-  background: transparent;
+  padding: 13px 16px;
+  border: 2px solid transparent;
+  border-radius: var(--raggio-piccolo);
+  background: var(--carta);
   color: var(--inchiostro);
   font: inherit;
   resize: vertical;
+  transition: border-color 160ms ease-out;
 }
 
 .campo input:focus-visible,
 .campo textarea:focus-visible {
   outline: none;
-  box-shadow: 0 2px 0 var(--blu);
-}
-
-.campo input::placeholder,
-.campo textarea::placeholder {
-  color: var(--inchiostro-lieve);
+  border-color: var(--blu);
 }
 
 .miele {
@@ -1430,7 +1481,7 @@ a.scarico:hover h3 {
   flex-wrap: wrap;
   align-items: center;
   gap: 16px 24px;
-  margin-top: 22px;
+  margin-top: 8px;
 }
 
 .modulo-nota {
@@ -1442,8 +1493,10 @@ a.scarico:hover h3 {
 
 .modulo-esito {
   margin: 16px 0 0;
-  padding: 12px 14px;
-  border: 1px solid var(--inchiostro);
+  padding: 12px 16px;
+  border-radius: var(--raggio-piccolo);
+  background: var(--carta);
+  border: 2px solid var(--bene);
   font-size: 0.95rem;
 }
 
@@ -1453,82 +1506,78 @@ a.scarico:hover h3 {
 }
 
 .contatto-a-fianco {
-  border-top: 1px solid var(--inchiostro);
+  display: grid;
+  gap: 4px;
 }
 
 .contatto-a-fianco b {
   display: block;
-  padding-top: 14px;
+  font-size: 1.05rem;
+  margin-top: 14px;
+}
+
+.contatto-a-fianco b:first-child {
   margin-top: 0;
 }
 
 .contatto-a-fianco p {
   color: var(--inchiostro-lieve);
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--filo);
-}
-
-.contatto-a-fianco p:last-child {
-  border-bottom: 0;
+  margin: 0 0 6px;
 }
 
 /* ── Il piede ───────────────────────────────────────────────────────────── */
 
 .fondo-pagina {
-  border-top: 1px solid var(--inchiostro);
-  padding: 32px 0 56px;
-  color: var(--inchiostro-lieve);
-  font-size: 0.92rem;
+  background: var(--notte);
+  color: var(--su-blu);
+  padding: clamp(48px, 6vw, 72px) 0 56px;
+  font-size: 0.95rem;
 }
 
 .fondo-pagina .limite {
   display: grid;
-  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
-  gap: 24px 48px;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 32px 48px;
 }
 
 .fondo-pagina p {
   margin: 0;
-  max-width: 52ch;
-}
-
-/* La società, in fondo alla pagina: una riga per dato, come su una carta
-   intestata. */
-.colofone {
-  display: grid;
-  gap: 4px;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--filo);
-  font-style: normal;
-  font-size: 0.86rem;
-  max-width: 60ch;
-}
-
-.colofone b {
-  color: var(--inchiostro);
+  max-width: 56ch;
 }
 
 .fondo-pagina nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 20px;
+  gap: 10px 22px;
   justify-content: flex-end;
   align-content: start;
 }
 
 .fondo-pagina nav a {
-  color: var(--inchiostro-lieve);
+  color: #fff;
   text-decoration: none;
-  font-variation-settings: "wdth" 80;
   font-weight: 600;
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.92rem;
 }
 
 .fondo-pagina nav a:hover {
-  color: var(--inchiostro);
+  color: var(--ambra);
+}
+
+.colofone {
+  display: grid;
+  gap: 4px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  font-style: normal;
+  font-size: 0.88rem;
+  max-width: 64ch;
+}
+
+.colofone b {
+  color: #fff;
+  font-size: 1rem;
 }
 
 @media (max-width: 760px) {

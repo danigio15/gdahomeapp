@@ -23,34 +23,34 @@ vere e di schede di testo. Le fotografie stanno nella repository, dentro
 perché lo script li infila ancora nella plancia che porta (vedi «Quello che non
 si ribatte a mano»), ma la pagina non li usa più.
 
-## Un catalogo, non una vetrina
+## Un sito di prodotto, come quelli delle app
 
-Il sito è fatto come il catalogo delle placche di un elettricista: carta
-bianca, una griglia di righe sottili, le fotografie dell'app messe dritte
-come tavole numerate («Fig. 1», «Fig. 2»…) con la loro didascalia, i fatti
-in tabelle e listini. Prima c'era quello che hanno tutti i siti disegnati da
-un modello — il fondo a macchie di luce, il telefono disegnato che galleggia,
-i quattro numeroni, le tre schede uguali con icona, titolo e testo, l'occhiello
-sopra ogni titolo — e si vedeva che era un modello. Le scelte che tengono in
-piedi il catalogo, e che si possono disfare per distrazione:
+Il sito è fatto come i siti delle app che si conoscono: il blu di gdahome come
+colore vero, che si prende la copertina, la scheda Premium e il piede; le
+sezioni che si alternano fra bianco e un azzurrino, così lo scorrimento ha un
+ritmo; le schermate vere dentro un telefono disegnato, con un'ombra che le
+stacca dalla pagina; tasti e schede arrotondati, aria intorno. Prima c'era
+quello che hanno tutti i siti disegnati da un modello — il fondo a macchie di
+luce, il telefono che galleggia su una sfumatura, i quattro numeroni, le tre
+schede uguali con icona, titolo e testo — e si vedeva che era un modello. Le
+scelte che tengono in piedi la pagina, e che si possono disfare per
+distrazione:
 
-**Una cosa accesa alla volta.** L'ambra è il colore di una luce accesa, e
-nella pagina ne è accesa una sola: la voce del menu della sezione in cui si
-sta leggendo (e sul computer largo anche l'indice sul bordo destro), oppure,
-sulla copertina, la spia sotto la prima tavola. Due cose ambra insieme sono un
-errore. Il blu fa i collegamenti e l'unico tasto pieno; l'inchiostro fa il
-resto.
+**Colore pieno, mai sfumato.** Il blu è un campo piatto, l'azzurrino è un
+campo piatto. Niente sfumature, niente vetro sfocato, niente aloni: sono il
+vestito di mille siti usciti uguali nello stesso anno.
 
-**Niente ombre, niente sfocature, niente angoli.** Una tavola è una
-fotografia con un filo intorno. Le righe sottili fanno la griglia. Una scheda
-con l'ombra morbida e l'angolo largo è la cosa che fa dire «l'ha fatto un
-modello», e qui non ce n'è una.
+**Un'ombra sola, come la fa la luce.** Morbida e spostata in basso, la stessa
+su tutte le schede; più forte sotto i telefoni, perché sono oggetti. Un bagliore
+colorato intorno a una cosa non è un'ombra.
 
-**I caratteri.** Archivo, un grottesco da catalogo con l'asse della
-larghezza, in `caratteri/` (licenza OFL, nel file accanto): largo e nero per
-i titoli, normale per il testo, stretto in maiuscoletto per le didascalie.
-Oswald, il carattere dei numeri della plancia, resta per i prezzi e i numeri
-delle figure. Tutti e due si servono da qui, mai da Google.
+**Una cosa accesa alla volta.** L'ambra è il colore di una luce accesa: la
+voce del menu della sezione in cui si legge, la spia sotto il primo telefono,
+il segno «primi 14 giorni gratis» su Premium. Non fa altro.
+
+**I caratteri.** Archivo, in `caratteri/` (licenza OFL, nel file accanto),
+servito da qui; Oswald, il carattere dei numeri della plancia, resta per i
+prezzi. Tutti e due dal sito, mai da Google.
 
 **Niente tema scuro.** C'era, e seguiva quello del sistema. Chi apriva
 gdahome.org con un telefono in tema scuro si trovava una pagina quasi nera —

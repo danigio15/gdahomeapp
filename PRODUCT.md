@@ -51,6 +51,7 @@ gdahome porta la plancia di Home Assistant sul telefono (Android, iPhone, browse
 - Colori dell'app (`app/lib/vestito/tema.dart`): blu `#2563EB`/`#1D4ED8` come «premi qui», ambra `#F59E0B` come luce accesa, notte `#0F172A`. Non sono pinnati per il sito; sono un fatto dell'app da cui il sito può partire.
 - Caratteri: non pinnati. Il sito di oggi usa Inter e Oswald (quelli della plancia), serviti da `statico/font/`. Qualunque carattere nuovo va servito dal sito, mai da Google.
 - Voce: italiana, piana, senza gergo da marketing; le frasi dicono cosa succede davvero. Le parole «plancia», «add-on», «centralino», «ponte», «quadro» sono i nomi di casa.
+- Preferenza dichiarata dall'utente (14 ottobre 2026) sul sito: **moderno e colorato, da app**. Il primo rifacimento «a catalogo» (carta bianca, righe sottili, tavole numerate) gli è sembrato «troppo bianco e vuoto». Vuole il blu di gdahome come colore vero, fondi colorati a sezioni, le schermate dentro un telefono con un'ombra vera, tasti arrotondati, più aria: un sito di prodotto come quelli delle app che conosce, fatto con cura. Restano esclusi gli effetti da modello: fondi a sfumature, vetro sfocato, aloni, testo sfumato.
 - Vincolo esplicito dell'utente: **eliminare l'effetto «AI slop»** dal sito, dall'app e dagli add-on: niente fondi a nuvole sfocate, aloni, vetro sfocato decorativo, testo sfumato, griglie di schede tutte uguali con icona+titolo+testo, numeroni da vetrina, occhielli sopra i titoli.
 
 ## Evidence on Hand
