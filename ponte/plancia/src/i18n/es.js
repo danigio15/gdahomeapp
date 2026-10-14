@@ -651,7 +651,7 @@ export default Object.freeze({
   "Asking Home Assistant which integration these entities come from.":
     "Preguntando a Home Assistant de qué integración son estas entidades.",
   "Assign the report to yourself on GitHub": "Asigna el informe a ti mismo en GitHub",
-  "Assistant (empty = the default one)": "Asistente (vacío = el de serie)",
+  "Assistant (empty = automatic: a language model if there is one, otherwise the default)": "Asistente (vacío = automático: un modelo de lenguaje si lo hay, si no el predeterminado)",
   Astronaut: "Astronauta",
   "At home": "En casa",
   "At least a name is needed, or an entity in one of the fields.":
@@ -3780,6 +3780,7 @@ export default Object.freeze({
   Tree: "Árboles",
   "Tree (optional)": "Árboles (opcional)",
   Trend: "Evolución",
+  "Try asking": "Prueba a preguntar",
   "Try again from «Mine».": "Vuelve a intentarlo desde «Las mías».",
   "Try the controls": "Prueba los mandos",
   "Tumble dryer": "Secadora",
@@ -3808,6 +3809,7 @@ export default Object.freeze({
   "Type / artwork": "Tipo / ilustración",
   "Type at least two letters: it searches every tab at once.":
     "Escribe al menos dos letras: busca en todas las pestañas a la vez.",
+  "Type the code…": "Escribe el código…",
   "Type your question…": "Escribe tu pregunta…",
   "Tyre pressure": "Presión de los neumáticos",
   Tyres: "Neumáticos",

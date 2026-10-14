@@ -1536,8 +1536,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // motore delle regole e la sezione) e il
   // campanello a muro come un videocitofono: il nucleo
   // `core/il-campanello-a-muro.js` e il suono `sections/il-suono-del-campanello.js`.
+  // 453 con «Chiedi alla casa…» che capisce le domande prima di Assist: i tre
+  // nuclei puri `core/capire-le-domande.js`, `core/sapere-della-casa.js` e
+  // `core/rispondere-alle-domande.js`.
   assert.ok(
-    relative.length <= 450,
+    relative.length <= 453,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

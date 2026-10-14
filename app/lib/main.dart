@@ -24,6 +24,7 @@ import 'casa/il_lucchetto.dart';
 import 'casa/impostazioni.dart';
 import 'casa/la_finestra.dart';
 import 'casa/la_guardia.dart';
+import 'notifiche/postino.dart';
 import 'parole.dart';
 import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
@@ -468,6 +469,12 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
         (widget.cassaforte != null
             ? Collegamento(archivio: ArchivioDelleCase(widget.cassaforte!))
             : ilFiloConLaCasa());
+    /* Le notifiche della casa: solo sul telefono vero, e non nelle prove
+     * (che passano la cassaforte da fuori). Senza i file di Firebase non si
+     * accende niente, e l'app va come sempre. */
+    if (!kIsWeb && widget.cassaforte == null && Postino.istanza == null) {
+      unawaited(Postino(collegamento: _collegamento).accendi());
+    }
     _accendi();
   }
 

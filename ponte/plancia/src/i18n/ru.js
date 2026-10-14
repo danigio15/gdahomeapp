@@ -651,7 +651,7 @@ export default Object.freeze({
   "Asking Home Assistant which integration these entities come from.":
     "Спрашиваем у Home Assistant, из какой интеграции эти сущности.",
   "Assign the report to yourself on GitHub": "Назначить обращение себе на GitHub",
-  "Assistant (empty = the default one)": "Ассистент (пусто — тот, что по умолчанию)",
+  "Assistant (empty = automatic: a language model if there is one, otherwise the default)": "Ассистент (пусто = автоматически: языковая модель, если есть, иначе стандартный)",
   Astronaut: "Космонавт",
   "At home": "Дома",
   "At least a name is needed, or an entity in one of the fields.":
@@ -3775,6 +3775,7 @@ export default Object.freeze({
   Tree: "Деревья",
   "Tree (optional)": "Деревья (необязательно)",
   Trend: "Динамика",
+  "Try asking": "Попробуйте спросить",
   "Try again from «Mine».": "Попробуй снова из «Мои».",
   "Try the controls": "Попробуйте управление",
   "Tumble dryer": "Сушильная машина",
@@ -3803,6 +3804,7 @@ export default Object.freeze({
   "Type / artwork": "Тип / иллюстрация",
   "Type at least two letters: it searches every tab at once.":
     "Введите хотя бы две буквы: поиск идёт сразу по всем вкладкам.",
+  "Type the code…": "Введите код…",
   "Type your question…": "Напишите свой вопрос…",
   "Tyre pressure": "Давление в шинах",
   Tyres: "Шины",

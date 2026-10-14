@@ -14,11 +14,17 @@
  * stessa del guscio, con la stessa chiave — la casella di prima e' sparita,
  * perche' due modi di dire la stessa cosa sono due modi di tenerli allineati.
  */
-import { CHIAVE_ASSIST, SEZIONE_ASSIST, normalizzaAssist } from "../core/assist-model.js";
+import {
+  CHIAVE_ASSIST,
+  SEZIONE_ASSIST,
+  agenteDaUsare,
+  normalizzaAssist,
+} from "../core/assist-model.js";
 import { siPuoParlare } from "./assist-section.js";
 import {
   NOTA_DI_SCHEDA,
   ORDINE_IMPOSTAZIONI,
+  allStates,
   clean,
   doc,
   dopoIGenerali,
@@ -91,9 +97,14 @@ function rigaMarkup() {
       <span>${esc(t("Leggi la risposta ad alta voce", "Read the answer out loud"))}</span>
     </label>
     <label class="dm-assist-ed-campo">
-      <span>${esc(t("Assistente (vuoto = quello di serie)", "Assistant (empty = the default one)"))}</span>
+      <span>${esc(
+        t(
+          "Assistente (vuoto = automatico: un modello linguistico se c'è, se no quello di serie)",
+          "Assistant (empty = automatic: a language model if there is one, otherwise the default)",
+        ),
+      )}</span>
       <span class="ed-form-row dm-editor-entity-row">
-        <input id="dm-assist-agente" class="ed-input mono" data-dm-assist-agente value="${esc(config.agente)}" placeholder="conversation.home_assistant" autocomplete="off" spellcheck="false">
+        <input id="dm-assist-agente" class="ed-input mono" data-dm-assist-agente value="${esc(config.agente)}" placeholder="${esc(agenteDaUsare("", allStates() || {}) || "conversation.home_assistant")}" autocomplete="off" spellcheck="false">
         <button type="button" class="dm-entity-picker" data-dm-assist-pick="dm-assist-agente" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button>
       </span>
     </label>

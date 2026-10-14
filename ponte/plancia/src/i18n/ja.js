@@ -650,7 +650,7 @@ export default Object.freeze({
   "Asking Home Assistant which integration these entities come from.":
     "これらのエンティティがどの統合のものか、Home Assistant に問い合わせています。",
   "Assign the report to yourself on GitHub": "GitHub で報告を自分に割り当てる",
-  "Assistant (empty = the default one)": "アシスタント（空欄なら既定のもの）",
+  "Assistant (empty = automatic: a language model if there is one, otherwise the default)": "アシスタント（空欄 = 自動：言語モデルがあればそれ、なければ標準）",
   Astronaut: "宇宙飛行士",
   "At home": "自宅",
   "At least a name is needed, or an entity in one of the fields.":
@@ -3764,6 +3764,7 @@ export default Object.freeze({
   Tree: "樹木",
   "Tree (optional)": "樹木（任意）",
   Trend: "推移",
+  "Try asking": "たとえばこう聞いてみて",
   "Try again from «Mine».": "「自分の」からやり直してください。",
   "Try the controls": "操作を試す",
   "Tumble dryer": "衣類乾燥機",
@@ -3792,6 +3793,7 @@ export default Object.freeze({
   "Type / artwork": "種類 / イラスト",
   "Type at least two letters: it searches every tab at once.":
     "2文字以上入力してください。すべてのタブをまとめて検索します。",
+  "Type the code…": "コードを入力…",
   "Type your question…": "質問を入力…",
   "Tyre pressure": "タイヤ空気圧",
   Tyres: "タイヤ",

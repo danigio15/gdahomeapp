@@ -5,11 +5,10 @@
 /// WebView, col suo marchio e «Caricamento…». Tre disegni diversi per la
 /// stessa cosa — la plancia che arriva — e ogni cambio sembrava un intoppo.
 ///
-/// Adesso l'app disegna lo stesso velo della plancia, al pixel dove si
-/// riesce: lo stesso fondo, il marchio al centro con gli stessi angoli, la
-/// stessa scritta, la stessa rotella che gira allo stesso passo, la stessa
-/// riga sotto. Quando la pagina si accende sotto, il suo velo e' gia' al suo
-/// posto e il passaggio non si vede.
+/// Adesso l'app disegna la stessa attesa dall'inizio alla fine: il marchio
+/// di gdahome al centro, la rotella della plancia che gira allo stesso passo,
+/// la stessa riga sotto, sullo stesso fondo. Niente scritte d'altri: il nome
+/// «DASHBOARDMODERN» del velo di serie della plancia non e' il nome dell'app.
 ///
 /// Le misure sono quelle di `#cd-boot-overlay` in `dashboard.html`: chi
 /// cambia una delle due deve cambiare l'altra (lo tiene d'occhio
@@ -24,6 +23,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../parole.dart';
+import '../vestito/marchio.dart';
 
 /// A che punto e' l'attesa. Non si scrive — l'attesa e' una sola — ma lo
 /// sanno le prove, e chi legge lo schermo lo sente.
@@ -46,8 +46,6 @@ enum FaseDelCaricamento {
 /// l'azzurro `#0ea5e9` della rotella con la sua traccia al 22%.
 const fondoDelCaricamentoChiaro = Color(0xFFE8EDF3);
 const fondoDelCaricamentoScuro = Color(0xFF0B1220);
-const _scrittaChiara = Color(0xFF0F172A);
-const _scrittaScura = Color(0xFFE2E8F0);
 const _rigaSotto = Color(0xFF64748B);
 const _azzurro = Color(0xFF0EA5E9);
 const _traccia = Color(0x380EA5E9);
@@ -129,26 +127,11 @@ class CaricamentoDellaPlancia extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(
-                      'assets/marchio/plancia.png',
-                      width: 76,
-                      height: 76,
-                      filterQuality: FilterQuality.medium,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'DASHBOARDMODERN',
-                    style: stile(
-                      15,
-                      FontWeight.w900,
-                      scuro ? _scrittaScura : _scrittaChiara,
-                      spazio: 15 * 0.09,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
+                  /* Il marchio dell'app, gdahome: e' l'app che si apre, e il
+                   * logo e' il suo. Il velo della plancia, dopo, porta quello
+                   * di chi ha montato l'impianto. */
+                  const Marchio(lato: 76),
+                  const SizedBox(height: 18),
                   const RotellaDellaPlancia(),
                   const SizedBox(height: 14),
                   Text(

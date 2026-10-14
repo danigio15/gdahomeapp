@@ -654,7 +654,7 @@ export default Object.freeze({
   "Asking Home Assistant which integration these entities come from.":
     "Home Assistant wordt gevraagd uit welke integratie deze entiteiten komen.",
   "Assign the report to yourself on GitHub": "Wijs de melding op GitHub aan jezelf toe",
-  "Assistant (empty = the default one)": "Assistent (leeg = de standaard)",
+  "Assistant (empty = automatic: a language model if there is one, otherwise the default)": "Assistent (leeg = automatisch: een taalmodel als dat er is, anders de standaard)",
   Astronaut: "Ruimtevaarder",
   "At home": "Thuis",
   "At least a name is needed, or an entity in one of the fields.":
@@ -3778,6 +3778,7 @@ export default Object.freeze({
   Tree: "Bomen",
   "Tree (optional)": "Bomen (optioneel)",
   Trend: "Verloop",
+  "Try asking": "Vraag bijvoorbeeld",
   "Try again from «Mine».": "Probeer het opnieuw via «Mijne».",
   "Try the controls": "Probeer de bediening",
   "Tumble dryer": "Wasdroger",
@@ -3806,6 +3807,7 @@ export default Object.freeze({
   "Type / artwork": "Type / illustratie",
   "Type at least two letters: it searches every tab at once.":
     "Typ minstens twee letters: er wordt in alle tabbladen tegelijk gezocht.",
+  "Type the code…": "Typ de code…",
   "Type your question…": "Typ je vraag…",
   "Tyre pressure": "Bandenspanning",
   Tyres: "Banden",

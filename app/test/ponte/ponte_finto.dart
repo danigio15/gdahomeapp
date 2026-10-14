@@ -210,6 +210,19 @@ class PonteFinto {
       });
       return;
     }
+    /* Le notifiche di questo telefono (`ponte/src/notifiche.js`): qui sono
+     * una mappa in memoria, e ogni domanda si segna in [chieste]. */
+    if (detto['type'] case final String t
+        when t.startsWith('ponte/notifiche/')) {
+      chieste.add(detto);
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': _notifiche(t, detto),
+      });
+      return;
+    }
     /* Le segnalazioni e la chat: quello che il ponte vero porta al
      * centralino, qui sta in memoria. */
     final tipo = detto['type'];
@@ -431,6 +444,53 @@ class PonteFinto {
         _ => null,
       },
     });
+  }
+
+  /// Quello che il ponte sa delle notifiche di questo telefono: la risposta
+  /// a `ponte/notifiche/stato`.
+  final Map<String, dynamic> notifiche = {
+    'impostazioni': <String, dynamic>{'acceso': true, 'eventi': {}},
+    'registrato': false,
+    'intestato': true,
+    'centralino': true,
+    'persone': [
+      {'id': 'person.uno', 'nome': 'Persona 1'},
+      {'id': 'person.due', 'nome': 'Persona 2'},
+    ],
+    'utenti': [
+      {'id': 'a' * 32, 'nome': 'Persona 1'},
+      {'id': 'b' * 32, 'nome': 'Persona 2'},
+    ],
+    'personalizzate': <Map<String, dynamic>>[],
+    'io': 'a' * 32,
+    'amministra': true,
+  };
+
+  Object? _notifiche(String tipo, Map<String, dynamic> detto) {
+    switch (tipo) {
+      case 'ponte/notifiche/stato':
+        return notifiche;
+      case 'ponte/notifiche/registra':
+        notifiche['registrato'] = true;
+        return notifiche;
+      case 'ponte/notifiche/imposta':
+        notifiche['impostazioni'] = {
+          ...notifiche['impostazioni'] as Map<String, dynamic>,
+          ...detto['impostazioni'] as Map<String, dynamic>,
+        };
+        return {'impostazioni': notifiche['impostazioni']};
+      case 'ponte/notifiche/personalizzata/salva':
+        final regola = {
+          ...detto['regola'] as Map<String, dynamic>,
+          'id': (detto['regola'] as Map)['id'] ?? 'p_000000000001',
+        };
+        final elenco = notifiche['personalizzate'] as List;
+        elenco.removeWhere((una) => (una as Map)['id'] == regola['id']);
+        elenco.add(regola);
+        return {'regola': regola};
+      default:
+        return {'fatto': true};
+    }
   }
 
   /// Quello che risponde `ponte/licenza/stato`, come il ponte vero:

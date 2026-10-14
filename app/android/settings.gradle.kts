@@ -21,6 +21,9 @@ plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "9.1.0" apply false
     id("org.jetbrains.kotlin.android") version "2.4.0" apply false
+    // Firebase, per le notifiche: si dichiara qui e si accende in `app/`
+    // solo se c'e' `google-services.json`, che non sta nella repository.
+    id("com.google.gms.google-services") version "4.4.4" apply false
 }
 
 include(":app")

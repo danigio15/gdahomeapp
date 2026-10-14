@@ -150,6 +150,59 @@ export class Chiamata {
     this._licenza = null;
     /* Chi risponde alle ricevute girate dal centralino: `index.js`. */
     this.alRicevere = null;
+    /* I gettoni delle notifiche dei telefoni, per il centralino: `null` vuol
+     * dire «nessuno ha mai detto niente», e allora non si manda niente. */
+    this._gettoni = null;
+    this._spinte = 0;
+    /* Chi sente che un gettone non vale piu': `notifiche.js`. */
+    this.alGettoneMorto = null;
+  }
+
+  /* ─── Le notifiche ─────────────────────────────────────────────────────
+   *
+   * Il centralino tiene, per ogni casa, il gettone di Firebase di ogni suo
+   * telefono che le notifiche le vuole: e' l'unica cosa che gli serve per
+   * consegnarle. La casa gli dice l'elenco intero — appena entrata, e ogni
+   * volta che cambia — e lui tiene quello: un telefono staccato esce
+   * dall'elenco, e quindi anche dal centralino, senza un messaggio a parte
+   * che si possa perdere.
+   *
+   *     casa → centralino   {t: "spinta-elenco", telefoni: [{telefono, gettone}]}
+   *     casa → centralino   {t: "spinta", n, telefono, busta, urgente}
+   *     centralino → casa   {t: "spinta-morta", telefono}     Firebase non lo conosce
+   *
+   * La busta e' chiusa con la chiave del telefono (`spinta.js`): il
+   * centralino la porta e non la apre. */
+  diIGettoni(elenco) {
+    this._gettoni = (Array.isArray(elenco) ? elenco : []).map(({ telefono, gettone }) => ({
+      telefono,
+      gettone,
+    }));
+    if (this.dentro) this._mandaIGettoni();
+  }
+
+  _mandaIGettoni() {
+    if (this._gettoni === null) return;
+    this._manda({ t: "spinta-elenco", telefoni: this._gettoni });
+  }
+
+  /* Una notifica, gia' chiusa. `false` se il filo non c'e': senza centralino
+   * una notifica non ha strada, e chi chiama lo deve sapere. */
+  spingi({ telefono, busta, urgente = false }) {
+    if (!this.dentro) return false;
+    this._spinte += 1;
+    return this._manda({
+      t: "spinta",
+      n: this._spinte,
+      telefono,
+      busta,
+      urgente: urgente === true,
+    });
+  }
+
+  /* Se le notifiche hanno una strada adesso. */
+  get pronto() {
+    return this.dentro;
   }
 
   /* La casa ha un gettone nuovo (o non ne ha piu': stringa vuota). Si dice
@@ -304,6 +357,9 @@ export class Chiamata {
       /* E la casa di prova, che al centralino vive in memoria: un centralino
        * che si riavvia la dimentica, e la casa gliela ridice qui. */
       this._mandaLaProva();
+      /* E i gettoni delle notifiche: un centralino che si riavvia li ha sul
+       * disco, ma un telefono staccato mentre il filo era giu' no. */
+      this._mandaIGettoni();
       return;
     }
     if (detto.t === "no") {
@@ -330,6 +386,11 @@ export class Chiamata {
 
     if (detto.t === "ricevuta") {
       void this._laRicevuta(detto);
+      return;
+    }
+
+    if (detto.t === "spinta-morta") {
+      if (typeof detto.telefono === "string") this.alGettoneMorto?.(detto.telefono);
       return;
     }
 

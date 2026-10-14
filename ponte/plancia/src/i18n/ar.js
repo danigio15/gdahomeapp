@@ -643,7 +643,7 @@ export default Object.freeze({
   "Asking Home Assistant which integration these entities come from.":
     "نسأل Home Assistant عن التكامل الذي تنتمي إليه هذه الكيانات.",
   "Assign the report to yourself on GitHub": "أسنِد البلاغ إلى نفسك على GitHub",
-  "Assistant (empty = the default one)": "المساعد (فارغ = الافتراضي)",
+  "Assistant (empty = automatic: a language model if there is one, otherwise the default)": "المساعد (فارغ = تلقائي: نموذج لغوي إن وُجد، وإلا الافتراضي)",
   Astronaut: "رائد فضاء",
   "At home": "في المنزل",
   "At least a name is needed, or an entity in one of the fields.":
@@ -3734,6 +3734,7 @@ export default Object.freeze({
   Tree: "الأشجار",
   "Tree (optional)": "الأشجار (اختياري)",
   Trend: "المنحنى",
+  "Try asking": "جرّب أن تسأل",
   "Try again from «Mine».": "أعد المحاولة من «بلاغاتي».",
   "Try the controls": "جرّب عناصر التحكم",
   "Tumble dryer": "مجفف الملابس",
@@ -3762,6 +3763,7 @@ export default Object.freeze({
   "Type / artwork": "النوع / الرسم",
   "Type at least two letters: it searches every tab at once.":
     "اكتب حرفين على الأقل: يبحث في كل التبويبات معًا.",
+  "Type the code…": "اكتب الرمز…",
   "Type your question…": "اكتب سؤالك…",
   "Tyre pressure": "ضغط الإطارات",
   Tyres: "الإطارات",

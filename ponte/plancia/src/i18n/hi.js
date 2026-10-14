@@ -646,7 +646,7 @@ export default Object.freeze({
   "Asking Home Assistant which integration these entities come from.":
     "Home Assistant से पूछा जा रहा है कि ये एंटिटी किस इंटीग्रेशन की हैं।",
   "Assign the report to yourself on GitHub": "GitHub पर रिपोर्ट खुद को सौंपें",
-  "Assistant (empty = the default one)": "सहायक (खाली = डिफ़ॉल्ट वाला)",
+  "Assistant (empty = automatic: a language model if there is one, otherwise the default)": "सहायक (खाली = स्वचालित: अगर कोई भाषा मॉडल है तो वह, नहीं तो डिफ़ॉल्ट)",
   Astronaut: "अंतरिक्ष यात्री",
   "At home": "घर पर",
   "At least a name is needed, or an entity in one of the fields.":
@@ -3748,6 +3748,7 @@ export default Object.freeze({
   Tree: "वृक्ष",
   "Tree (optional)": "वृक्ष (वैकल्पिक)",
   Trend: "रुझान",
+  "Try asking": "पूछकर देखें",
   "Try again from «Mine».": "«मेरी» से दोबारा कोशिश करें।",
   "Try the controls": "नियंत्रण आज़माएँ",
   "Tumble dryer": "कपड़े सुखाने की मशीन",
@@ -3776,6 +3777,7 @@ export default Object.freeze({
   "Type / artwork": "प्रकार / चित्र",
   "Type at least two letters: it searches every tab at once.":
     "कम से कम दो अक्षर लिखें: यह सभी टैब में एक साथ खोजता है।",
+  "Type the code…": "कोड लिखें…",
   "Type your question…": "अपना सवाल लिखें…",
   "Tyre pressure": "टायर का दबाव",
   Tyres: "टायर",

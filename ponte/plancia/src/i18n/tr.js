@@ -651,7 +651,7 @@ export default Object.freeze({
   "Asking Home Assistant which integration these entities come from.":
     "Bu varlıkların hangi entegrasyondan geldiği Home Assistant'a soruluyor.",
   "Assign the report to yourself on GitHub": "Bildirimi GitHub'da kendine ata",
-  "Assistant (empty = the default one)": "Asistan (boş = varsayılan olan)",
+  "Assistant (empty = automatic: a language model if there is one, otherwise the default)": "Asistan (boş = otomatik: varsa bir dil modeli, yoksa varsayılan)",
   Astronaut: "Astronot",
   "At home": "Evde",
   "At least a name is needed, or an entity in one of the fields.":
@@ -3762,6 +3762,7 @@ export default Object.freeze({
   Tree: "Ağaç",
   "Tree (optional)": "Ağaç (isteğe bağlı)",
   Trend: "Seyir",
+  "Try asking": "Şöyle sorabilirsin",
   "Try again from «Mine».": "«Benimkiler»den yeniden dene.",
   "Try the controls": "Kumandaları dene",
   "Tumble dryer": "Kurutma makinesi",
@@ -3790,6 +3791,7 @@ export default Object.freeze({
   "Type / artwork": "Tür / çizim",
   "Type at least two letters: it searches every tab at once.":
     "En az iki harf yaz: tüm sekmelerde birden arar.",
+  "Type the code…": "Kodu yazın…",
   "Type your question…": "Sorunu yaz…",
   "Tyre pressure": "Lastik basıncı",
   Tyres: "Lastikler",

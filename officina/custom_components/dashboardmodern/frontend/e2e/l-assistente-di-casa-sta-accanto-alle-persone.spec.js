@@ -137,16 +137,19 @@ test("«vedi tutti» apre l'elenco con «Chiedi alla casa»", async ({ page }, t
     "placeholder",
     "Chiedi alla casa…",
   );
-  /* Senza Home Assistant collegata la domanda non resta appesa: la casa
-   * dice che non ha risposto. */
-  await foglio.locator("[data-ass-testo]").fill("Accendi la luce in sala");
+  /* Con la conversazione vuota, le domande da provare. */
+  await expect(foglio.locator(".dm-ass-prova .dm-ass-chip").first()).toBeVisible();
+  /* Una domanda che la casa non sa, senza Home Assistant collegata: non resta
+   * appesa, la casa lo dice e propone cosa chiedere. */
+  await foglio.locator("[data-ass-testo]").fill("Raccontami una barzelletta");
   await foglio.locator(".dm-ass-manda").click();
   await expect(foglio.locator('.dm-ass-battuta[data-chi="io"]')).toHaveText(
-    "Accendi la luce in sala",
+    "Raccontami una barzelletta",
   );
   await expect(foglio.locator('.dm-ass-battuta[data-chi="casa"][data-errore="true"]')).toBeVisible({
     timeout: 25000,
   });
+  await expect(foglio.locator("[data-ass-tasti] .dm-ass-chip").first()).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator("#dm-ass-velo")).toHaveCount(0);
 });
@@ -184,4 +187,157 @@ test("in Config › Persone si spegne, e si regola", async ({ page }, testInfo) 
     JSON.stringify({ mostra: "niente" }),
   );
   await expect(card(page)).toHaveCount(0);
+});
+
+/* «Chiedi alla casa…» capisce le domande prima di Assist.
+ *
+ * «Che temperatura è presente in casa», all'agente di serie di Home
+ * Assistant, tornava «non conosco nessuna area chiamata è presente in casa».
+ * Qui la risponde la casa, con i termometri delle stanze, senza chiedere
+ * niente a Home Assistant; e «spegni la luce della cucina» si propone e parte
+ * solo col «Sì».
+ */
+async function bootConLeStanze(page, testInfo) {
+  test.setTimeout(150_000);
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, {
+    ...SEME,
+    sections: {
+      ...SEME.sections,
+      rooms: [
+        { id: "room-sala", name: "Sala", icon: "🛋️", temp: "sensor.temp_sala" },
+        { id: "room-camera", name: "Camera", icon: "🛏️", temp: "sensor.temp_camera" },
+      ],
+    },
+  });
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60000,
+  });
+  await page.evaluate((persone) => {
+    window.localStorage.setItem("cd_people", JSON.stringify(persone));
+    const stati = eval("_RAW_STATES");
+    const metti = (id, state, attributes) =>
+      (stati[id] = { entity_id: id, state, attributes, last_changed: new Date().toISOString() });
+    metti("person.persona_1", "home", { friendly_name: "Persona 1" });
+    metti("person.persona_2", "not_home", { friendly_name: "Persona 2" });
+    metti("light.sala", "on", { friendly_name: "Sala" });
+    metti("light.cucina", "on", { friendly_name: "Cucina" });
+    metti("sensor.temp_sala", "22", {
+      friendly_name: "Temperatura sala",
+      device_class: "temperature",
+      unit_of_measurement: "°C",
+    });
+    metti("sensor.temp_camera", "20", {
+      friendly_name: "Temperatura camera",
+      device_class: "temperature",
+      unit_of_measurement: "°C",
+    });
+    metti("conversation.home_assistant", "unknown", { friendly_name: "Home Assistant" });
+    metti("conversation.openai_conversation", "unknown", { friendly_name: "OpenAI" });
+    /* Le aree, come le tiene il registro del guscio. */
+    window.eval(`
+      WIZ.entReg = Object.assign(WIZ.entReg || {}, {
+        "light.sala": { a: "sala" },
+        "light.cucina": { a: "cucina" },
+      });
+      WIZ.areaNames = Object.assign(WIZ.areaNames || {}, { sala: "Sala", cucina: "Cucina" });
+    `);
+    window.__comandi = [];
+    window.dmCallHaService = (dominio, servizio, dati) => {
+      window.__comandi.push(`${dominio}.${servizio} ${[].concat(dati?.entity_id || []).join(",")}`);
+      return Promise.resolve(true);
+    };
+    /* La presa con Home Assistant raccoglie quello che arriva ad Assist, e
+     * risponde come l'agente di serie quando non capisce. */
+    window.__CHIESTO__ = [];
+    window.eval(`
+      ws = {
+        readyState: 1,
+        send(grezzo) {
+          const messaggio = JSON.parse(grezzo);
+          if (messaggio.type !== "conversation/process") return;
+          window.__CHIESTO__.push(messaggio);
+          setTimeout(() => {
+            const torna = pendingWsCallbacks[messaggio.id];
+            delete pendingWsCallbacks[messaggio.id];
+            torna && torna({
+              id: messaggio.id,
+              success: true,
+              result: {
+                conversation_id: "filo-1",
+                response: {
+                  response_type: "error",
+                  speech: { plain: { speech: "Mi dispiace, non conosco nessuna area chiamata " + messaggio.text } },
+                },
+              },
+            });
+          }, 20);
+        },
+      };
+    `);
+    window.applyStates?.();
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
+  }, PERSONE);
+  await expect(page.locator("#dm-people .dm-person-card")).toHaveCount(2);
+  await expect(card(page)).toBeVisible();
+  await card(page).locator('[data-ass-fa="apri"]').first().click();
+  const foglio = page.locator("#dm-ass-velo .dm-ass-foglio");
+  await expect(foglio).toBeVisible();
+  return foglio;
+}
+
+async function chiedi(foglio, frase) {
+  await foglio.locator("[data-ass-testo]").fill(frase);
+  await foglio.locator(".dm-ass-manda").click();
+}
+
+const ultimaRisposta = (foglio) => foglio.locator('.dm-ass-battuta[data-chi="casa"]').last();
+
+test("«Che temperatura è presente in casa» la risponde la casa, senza Assist", async ({
+  page,
+}, testInfo) => {
+  const foglio = await bootConLeStanze(page, testInfo);
+  await chiedi(foglio, "Che temperatura è presente in casa");
+  await expect(ultimaRisposta(foglio)).toHaveText(
+    "In casa ci sono in media 21 °C: da 20° in Camera a 22° in Sala.",
+  );
+  /* E le stanze sotto, da toccare. */
+  await foglio.locator("[data-ass-tasti] .dm-ass-chip", { hasText: "Camera" }).click();
+  await expect(ultimaRisposta(foglio)).toHaveText("In Camera ci sono 20 °C.");
+  await chiedi(foglio, "c'è qualcuno in casa?");
+  await expect(ultimaRisposta(foglio)).toContainText("in casa c'è Persona 1");
+  await chiedi(foglio, "quante luci sono accese");
+  await expect(ultimaRisposta(foglio)).toHaveText("Sono accese 2 luci: Sala e Cucina.");
+  expect(await page.evaluate(() => window.__CHIESTO__.length)).toBe(0);
+});
+
+test("«spegni la luce della cucina» si propone, e parte solo col «Sì»", async ({
+  page,
+}, testInfo) => {
+  const foglio = await bootConLeStanze(page, testInfo);
+  await chiedi(foglio, "spegni la luce della cucina");
+  await expect(ultimaRisposta(foglio)).toHaveText("Spengo la luce Cucina?");
+  expect(await page.evaluate(() => window.__comandi)).toEqual([]);
+  await foglio.locator('[data-ass-tasti] .dm-ass-chip[data-tipo="fai"]').click();
+  await expect(ultimaRisposta(foglio)).toHaveText("Fatto: ho spento la luce Cucina.");
+  expect(await page.evaluate(() => window.__comandi)).toEqual(["light.turn_off light.cucina"]);
+  /* Il tasto non resta: un «Sì» vecchio non riparte. */
+  await expect(foglio.locator('.dm-ass-chip[data-tipo="fai"]')).toHaveCount(0);
+});
+
+test("quello che la casa non sa va al modello linguistico; se non capisce, si propone cosa chiedere", async ({
+  page,
+}, testInfo) => {
+  const foglio = await bootConLeStanze(page, testInfo);
+  await chiedi(foglio, "raccontami una barzelletta");
+  await expect(ultimaRisposta(foglio)).toContainText("Non ho capito bene.");
+  const chiesto = await page.evaluate(() => window.__CHIESTO__[0]);
+  expect(chiesto.text).toBe("raccontami una barzelletta");
+  expect(chiesto.agent_id).toBe("conversation.openai_conversation");
+  expect(chiesto.language).toBe("it");
+  await expect(foglio.locator("[data-ass-tasti] .dm-ass-chip")).not.toHaveCount(0);
+  await foglio.locator("[data-ass-tasti] .dm-ass-chip").first().click();
+  await expect(ultimaRisposta(foglio)).toContainText("In casa ci sono in media 21 °C");
 });
