@@ -75,7 +75,7 @@ e Premium, come si ha Premium e gdanav, coi prezzi e le regole di
 perché non sblocca niente.
 
 E c'è un posto dove **scrivere** (`#contatti`): un modulo con nome, email e
-messaggio, che arriva per posta a `assistenza@gdahome.org`. È l'unica cosa
+messaggio, che arriva per posta a `domotica@crvgroup.it`. È l'unica cosa
 della pagina che non è un file. Manda un `POST /contatto`, che Caddy passa al
 tramite sulla stessa macchina, e il tramite lo consegna al server di posta
 della casella che risponde (`centralino/src/posta.js`, e il perché sta lì).

@@ -43,10 +43,10 @@
 
 gdahome sono **due pezzi che lavorano insieme**:
 
-| | | |
-| :---: | --- | --- |
-| 🏠 | **L'add-on**, dentro Home Assistant | Si installa come ogni altro add-on. Porta dentro la plancia, abbina i telefoni e tiene il segreto di Home Assistant: quello non esce mai da lì. |
-| 📱 | **L'app**, sul telefono | Per Android e iPhone, e anche dal browser senza installare niente. Si abbina **inquadrando un QR code**: nessun indirizzo da scrivere, nessuna password di Home Assistant, nessun token da copiare. |
+|     |                                     |                                                                                                                                                                                                     |
+| :-: | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🏠  | **L'add-on**, dentro Home Assistant | Si installa come ogni altro add-on. Porta dentro la plancia, abbina i telefoni e tiene il segreto di Home Assistant: quello non esce mai da lì.                                                     |
+| 📱  | **L'app**, sul telefono             | Per Android e iPhone, e anche dal browser senza installare niente. Si abbina **inquadrando un QR code**: nessun indirizzo da scrivere, nessuna password di Home Assistant, nessun token da copiare. |
 
 Nell'app c'è **la plancia**: una pagina sola con quello che in Home Assistant
 sta in dieci pagine diverse. In alto la temperatura, l'antifurto e chi è in
@@ -203,17 +203,17 @@ Assistant non esce mai dall'add-on.
 
 ## Quanto costa
 
-|                                         | **Base**<br>gratis, per sempre     | **Premium**<br>4,99 € al mese · 49,99 € all'anno                |
-| --------------------------------------- | :--------------------------------: | :-------------------------------------------------------------: |
-| L'add-on e la plancia in Home Assistant | ✅                                  | ✅                                                               |
-| Plance                                  | una, la principale                 | fino a **8** per casa                                           |
-| Case nell'app                           | una                                | fino a **10**                                                   |
-| Dove funziona                           | sulla rete di casa                 | **anche da fuori casa**, cifrato, senza aprire porte            |
-| Configurare la plancia dal telefono     | —                                  | ✅                                                               |
-| Aggiungere dispositivi Zigbee dall'app  | —                                  | ✅ con «Dove lo metto?»                                          |
-| gdanav, il navigatore                   | la versione gratis                 | **gdanav Premium compreso**                                     |
-| Segnalazioni e chat di assistenza       | ✅                                  | ✅                                                               |
-| Account da fare                         | nessuno                            | nessuno                                                         |
+|                                         | **Base**<br>gratis, per sempre |   **Premium**<br>4,99 € al mese · 49,99 € all'anno   |
+| --------------------------------------- | :----------------------------: | :--------------------------------------------------: |
+| L'add-on e la plancia in Home Assistant |               ✅               |                          ✅                          |
+| Plance                                  |       una, la principale       |                fino a **8** per casa                 |
+| Case nell'app                           |              una               |                    fino a **10**                     |
+| Dove funziona                           |       sulla rete di casa       | **anche da fuori casa**, cifrato, senza aprire porte |
+| Configurare la plancia dal telefono     |               —                |                          ✅                          |
+| Aggiungere dispositivi Zigbee dall'app  |               —                |               ✅ con «Dove lo metto?»                |
+| gdanav, il navigatore                   |       la versione gratis       |             **gdanav Premium compreso**              |
+| Segnalazioni e chat di assistenza       |               ✅               |                          ✅                          |
+| Account da fare                         |            nessuno             |                       nessuno                        |
 
 > **I primi 14 giorni di Premium sono gratis**, la prima volta: si prova
 > tutto, e se non serve si disdice dal Play Store o dall'App Store prima che
@@ -276,13 +276,13 @@ plance in più restano salvate dove sono — si rivedono appena Premium torna.
 
 ### gdanav da solo
 
-|                            | **gdanav**<br>gratis                                   | **gdanav Premium**<br>2,99 € al mese · 29,99 € all'anno         |
-| -------------------------- | :----------------------------------------------------: | :-------------------------------------------------------------: |
-| Auto a benzina o gasolio   | completa: percorso, distributori, prezzi               | completa                                                        |
-| Auto elettrica             | batteria scritta a mano, percorso senza soste          | batteria **letta dall'auto**, **soste alle colonnine** in tempo reale |
-| Traffico, autovelox, meteo | ✅                                                      | ✅                                                               |
-| Home Assistant             | —                                                      | ✅                                                               |
-| Android Auto e CarPlay     | —                                                      | ✅                                                               |
+|                            |             **gdanav**<br>gratis              |        **gdanav Premium**<br>2,99 € al mese · 29,99 € all'anno        |
+| -------------------------- | :-------------------------------------------: | :-------------------------------------------------------------------: |
+| Auto a benzina o gasolio   |   completa: percorso, distributori, prezzi    |                               completa                                |
+| Auto elettrica             | batteria scritta a mano, percorso senza soste | batteria **letta dall'auto**, **soste alle colonnine** in tempo reale |
+| Traffico, autovelox, meteo |                      ✅                       |                                  ✅                                   |
+| Home Assistant             |                       —                       |                                  ✅                                   |
+| Android Auto e CarPlay     |                       —                       |                                  ✅                                   |
 
 Anche gdanav Premium ha **i primi 14 giorni gratis**. E con **gdahome Premium
 è già compreso**: la casa Premium sblocca tutto anche nel navigatore, senza un
@@ -365,12 +365,12 @@ No, e non dipende da gdahome: su **Home Assistant Container** (l'immagine
 Docker da sola) e su **Home Assistant Core** il negozio degli add-on non
 esiste, e nessun add-on si installa. Serve il Supervisor.
 
-| Home Assistant | gdahome |
-| --- | :---: |
-| **OS** — il sistema completo, su Raspberry, mini PC o macchina virtuale | ✅ |
-| **Supervised** — Debian con l'installatore ufficiale | ✅ |
-| **Container** — l'immagine Docker da sola | ❌ nessun add-on, di nessuno |
-| **Core** — in un ambiente Python | ❌ idem |
+| Home Assistant                                                          |           gdahome            |
+| ----------------------------------------------------------------------- | :--------------------------: |
+| **OS** — il sistema completo, su Raspberry, mini PC o macchina virtuale |              ✅              |
+| **Supervised** — Debian con l'installatore ufficiale                    |              ✅              |
+| **Container** — l'immagine Docker da sola                               | ❌ nessun add-on, di nessuno |
+| **Core** — in un ambiente Python                                        |           ❌ idem            |
 
 Chi ha Container può passare a **Supervised** sulla stessa macchina: Docker ce
 l'ha già.
@@ -420,6 +420,17 @@ E due modi di aiutare che non costano niente: una ⭐ a questa repository, e una
 [segnalazione scritta bene](https://github.com/danigio15/gdahomeapp/issues) —
 cosa stavi facendo, cosa ti aspettavi, cosa è successo. Il resto sta in
 [`docs/SOSTEGNO.md`](docs/SOSTEGNO.md).
+
+## Chi c'è dietro
+
+gdahome la fa **CRV Immobiliare S.r.l.**, impresa di impianti elettrici e
+tecnologici di Aversa (CE), abilitata agli impianti ai sensi del D.M. 37/2008
+(lettere A–G). Sede legale in Viale della Libertà 24, 81031 Aversa (CE);
+P. IVA e C.F. 03719610614; REA CE-266848; PEC crvimmobiliare@pec.it.
+
+- Il sito della società: **[www.crvgroup.it](https://www.crvgroup.it/)**
+- Per scrivere: **domotica@crvgroup.it**, oppure il modulo su
+  [gdahome.org/#contatti](https://gdahome.org/#contatti)
 
 ## Licenza
 

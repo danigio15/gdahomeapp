@@ -1581,10 +1581,10 @@
 
           <figure class="tavola schermo">
             <img
-              src="statico/schermate/cruscotto-installatore-licenze.png"
+              src="statico/schermate/cruscotto-licenze.png"
               alt="Il cruscotto per installatori, pagina Licenze: il pacchetto diviso per durata, le licenze assegnate alle case, i codici regalo da consegnare."
-              width="960"
-              height="732"
+              width="870"
+              height="420"
               loading="lazy"
               data-en-alt="The installer panel, Licences page: the package split by duration, the licences assigned to homes, the gift codes to hand over."
             />
@@ -1822,8 +1822,11 @@
               </div>
             </li>
             <li>
-              <a class="scarico" href="https://webapp.gdahome.org" rel="noopener">
-                <span class="passo numero"></span>
+              <a
+                class="scarico scarico-senza-numero"
+                href="https://webapp.gdahome.org"
+                rel="noopener"
+              >
                 <h3 data-en="Or from a browser">Oppure dal browser</h3>
                 <div>
                   <p
@@ -1839,11 +1842,10 @@
             </li>
             <li>
               <a
-                class="scarico"
+                class="scarico scarico-senza-numero"
                 href="https://github.com/danigio15/gdahomeapp/blob/main/centralino/README.md"
                 rel="noopener"
               >
-                <span class="passo numero"></span>
                 <h3 data-en="The relay">Il centralino</h3>
                 <div>
                   <p
@@ -1859,8 +1861,11 @@
               </a>
             </li>
             <li>
-              <a class="scarico" href="https://github.com/danigio15/gdahomeapp" rel="noopener">
-                <span class="passo numero"></span>
+              <a
+                class="scarico scarico-senza-numero"
+                href="https://github.com/danigio15/gdahomeapp"
+                rel="noopener"
+              >
                 <h3 data-en="The repository">La repository</h3>
                 <div>
                   <p
@@ -1959,12 +1964,12 @@
             <h2 data-en="Write to us. A person answers.">Scrivici. Risponde una persona.</h2>
             <p
               class="guida"
-              data-en="If gdahome is already in your home, the shortest way is the support chat inside the app: it arrives with the version and the state of the connection, and it is answered from there. For everything else — the installer panel, a question before you start, a collaboration — there is this form. It reaches &lt;b&gt;assistenza@gdahome.org&lt;/b&gt;."
+              data-en="If gdahome is already in your home, the shortest way is the support chat inside the app: it arrives with the version and the state of the connection, and it is answered from there. For everything else — the installer panel, a question before you start, a collaboration — there is this form. It reaches &lt;b&gt;domotica@crvgroup.it&lt;/b&gt;."
             >
               Se gdahome è già in casa tua, la strada più corta è la chat di assistenza dentro
               l'app: arriva con la versione e con lo stato del collegamento, e si risponde da lì.
               Per tutto il resto — il cruscotto per chi installa, una domanda prima di cominciare,
-              una collaborazione — c'è questo modulo. Arriva a <b>assistenza@gdahome.org</b>.
+              una collaborazione — c'è questo modulo. Arriva a <b>domotica@crvgroup.it</b>.
             </p>
           </div>
 
@@ -1974,7 +1979,7 @@
               id="modulo-contatti"
               method="post"
               action="/contatto"
-              data-scrivi="assistenza@gdahome.org"
+              data-scrivi="domotica@crvgroup.it"
             >
               <div class="modulo-riga">
                 <label class="campo">
@@ -2015,11 +2020,11 @@
             <aside class="contatto-a-fianco">
               <b data-en="Who is behind it">Chi c'è dietro</b>
               <p
-                data-en="gdahome is made by &lt;b&gt;CRV Immobiliare S.r.l.&lt;/b&gt;, an installer of electrical and building systems in Aversa (CE), licensed under Ministerial Decree 37/2008. The dashboards it builds for its customers are the same ones you find in the app."
+                data-en='gdahome is made by &lt;b&gt;CRV Immobiliare S.r.l.&lt;/b&gt;, an installer of electrical and building systems in Aversa (CE), licensed under Ministerial Decree 37/2008. The company site: &lt;a href="https://www.crvgroup.it/" rel="noopener"&gt;crvgroup.it&lt;/a&gt;.'
               >
                 gdahome la fa <b>CRV Immobiliare S.r.l.</b>, impresa di impianti elettrici e
-                tecnologici di Aversa (CE), abilitata ai sensi del D.M. 37/2008. Le plance che mette
-                nelle case dei suoi clienti sono le stesse che trovi nell'app.
+                tecnologici di Aversa (CE), abilitata ai sensi del D.M. 37/2008. Il sito della
+                società: <a href="https://www.crvgroup.it/" rel="noopener">crvgroup.it</a>.
               </p>
               <b data-en="If you install for others">Se installi per gli altri</b>
               <p
@@ -2031,7 +2036,7 @@
               <b data-en="If you would rather write directly"
                 >Se preferisci scrivere direttamente</b
               >
-              <p><a href="mailto:assistenza@gdahome.org">assistenza@gdahome.org</a></p>
+              <p><a href="mailto:domotica@crvgroup.it">domotica@crvgroup.it</a></p>
               <b data-en="If something is wrong in the app">Se qualcosa non va nell'app</b>
               <p
                 data-en="The support chat and the reports are inside the app, in Base too, and they arrive with what it takes to understand the problem."
@@ -2065,8 +2070,13 @@
             data-en="VAT and tax code 03719610614 · REA CE-266848 · share capital €10,000.00, fully paid"
             >P. IVA e C.F. 03719610614 · REA CE-266848 · capitale sociale 10.000,00 € i.v.</span
           >
-          <span data-en="Certified e-mail (PEC): crvimmobiliare@pec.it"
-            >PEC: crvimmobiliare@pec.it</span
+          <span
+            data-en="Certified e-mail (PEC): crvimmobiliare@pec.it · e-mail: domotica@crvgroup.it"
+            >PEC: crvimmobiliare@pec.it · e-mail: domotica@crvgroup.it</span
+          >
+          <span
+            data-en='Website: &lt;a href="https://www.crvgroup.it/" rel="noopener"&gt;www.crvgroup.it&lt;/a&gt;'
+            >Sito: <a href="https://www.crvgroup.it/" rel="noopener">www.crvgroup.it</a></span
           >
           <span
             data-en="Installer licensed under Italian Ministerial Decree 37/2008, letters A to G: electrical, electronic, heating and air conditioning, plumbing, gas, lifts, fire protection systems"

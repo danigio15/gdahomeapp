@@ -358,7 +358,7 @@ else
     POSTA_DA="${POSTA_DA:-$POSTA_UTENTE}"
     printf '  a chi arriva [assistenza@%s]: ' "$NOME_DEL_SITO" >&2
     IFS= read -r POSTA_A </dev/tty || true
-    POSTA_A="${POSTA_A:-assistenza@$NOME_DEL_SITO}"
+    POSTA_A="${POSTA_A:-domotica@crvgroup.it}"
   fi
 fi
 

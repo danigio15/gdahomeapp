@@ -67,7 +67,7 @@ scrivi, non parte niente.
 
 Su gdahome.org c'è un modulo per scrivere a chi mantiene gdahome. Quello che ci
 scrivi — il nome, l'indirizzo email e il messaggio — parte come una mail verso
-assistenza@gdahome.org, e serve a una cosa sola: risponderti. Sulla macchina
+domotica@crvgroup.it, e serve a una cosa sola: risponderti. Sulla macchina
 che lo spedisce non resta niente del messaggio; resta, per un'ora e solo in
 memoria, il conto di quante volte un indirizzo di rete ha usato il modulo, che
 serve a non farlo usare a raffica. Se non scrivi, non parte niente.
@@ -160,9 +160,10 @@ le loro foto e i video, si cancellano chiedendolo dalla chat di assistenza.
 gdahome è mantenuta da danigio15 — <https://github.com/danigio15/gdahomeapp>.
 Per qualunque cosa su questa pagina, si apre una segnalazione dall'app o una
 issue sulla repository. Per una cosa che non vuoi rendere pubblica, scrivi
-nella chat di assistenza o ad assistenza@gdahome.org.
+nella chat di assistenza o ad domotica@crvgroup.it.
 
 Il titolare del trattamento è **CRV Immobiliare S.r.l.**, Viale della Libertà
-24, 81031 Aversa (CE), P. IVA e C.F. 03719610614, PEC crvimmobiliare@pec.it.
+24, 81031 Aversa (CE), P. IVA e C.F. 03719610614, PEC crvimmobiliare@pec.it,
+sito www.crvgroup.it.
 Le richieste sui tuoi dati (accesso, correzione, cancellazione) vanno ad
-assistenza@gdahome.org o a quella PEC.
+domotica@crvgroup.it o a quella PEC.
