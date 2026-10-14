@@ -20,6 +20,7 @@
  */
 import {
   CHIAVE_ASSIST,
+  agenteDaUsare,
   assistAcceso,
   domandaPerHomeAssistant,
   filoDaMandare,
@@ -29,6 +30,7 @@ import {
 } from "../core/assist-model.js";
 import {
   activeLocale,
+  allStates,
   chiediAHomeAssistant,
   clean,
   doc,
@@ -107,7 +109,8 @@ export async function chiedi(testo) {
   const richiesta = domandaPerHomeAssistant({
     testo: frase,
     lingua: config.lingua || activeLocale(),
-    agente: config.agente,
+    /* Vuoto vuol dire «scegli tu»: il modello linguistico, se in casa c'e'. */
+    agente: agenteDaUsare(config.agente, allStates() || {}),
     conversazione: filoDaMandare(state.filo, state.ultimo, adesso),
   });
   if (!richiesta) return false;

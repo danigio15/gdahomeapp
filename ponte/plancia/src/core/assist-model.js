@@ -86,6 +86,40 @@ export function assistAcceso(sezioni, config) {
   return normalizzaAssist(config).tasto;
 }
 
+/** L'agente di serie di Home Assistant: capisce solo le frasi che ha imparato. */
+export const AGENTE_DI_SERIE = "conversation.home_assistant";
+
+/* I nomi degli agenti che sono modelli linguistici: si preferiscono, a pari
+ * condizioni, a un agente qualsiasi che non e' quello di serie. */
+const MODELLI_LINGUISTICI =
+  /(openai|chatgpt|gpt|google|gemini|generative|anthropic|claude|ollama|llama|mistral|groq|openrouter|azure|llm|deepseek|perplexity|local_?ai|extended_openai)/i;
+
+/**
+ * L'agente a cui mandare la frase.
+ *
+ * «L'assistente non e' intelligente a capire le domande.» L'agente di serie
+ * di Home Assistant capisce le frasi del suo elenco e nient'altro; se in casa
+ * c'e' un modello linguistico (OpenAI, Google, Anthropic, Ollama…), capisce
+ * quasi tutto — e chi l'ha installato l'ha installato per questo.
+ *
+ * `scelto` e' quello scritto nella scheda Assist: se c'e', vale quello
+ * (anche `conversation.home_assistant`, per chi vuole proprio quello di
+ * serie). Vuoto, o «auto», vuol dire «scegli tu»: il primo modello linguistico
+ * fra le entita' `conversation.*`, se no un altro agente che non sia quello di
+ * serie, se no `""` — che per Home Assistant e' quello di serie.
+ */
+export function agenteDaUsare(scelto, states = {}) {
+  const voce = pulito(scelto);
+  if (voce && voce.toLowerCase() !== "auto") return voce;
+  const agenti = Object.keys(states || {})
+    .filter((id) => id.startsWith("conversation.") && id !== AGENTE_DI_SERIE)
+    /* «unknown» e' lo stato di un agente mai usato: c'e', e va benissimo. */
+    .filter((id) => pulito(states[id]?.state) !== "unavailable")
+    .sort();
+  const testo = (id) => `${id} ${pulito(states[id]?.attributes?.friendly_name)}`;
+  return agenti.find((id) => MODELLI_LINGUISTICI.test(testo(id))) || agenti[0] || "";
+}
+
 /**
  * La domanda, nella forma che Home Assistant si aspetta.
  *

@@ -3,8 +3,15 @@
  * «Lo voglio molto molto intelligente, e sempre vivo.» La card dice la cosa
  * piu' importante da fare adesso come un messaggio della casa — con il tasto
  * che la fa, «Più tardi» e ✕ — e «vedi tutti» apre l'elenco intero in ordine
- * di urgenza, con in fondo «Chiedi alla casa…», che parla con Assist di Home
- * Assistant (e col suo agente, se e' un modello linguistico).
+ * di urgenza, con in fondo «Chiedi alla casa…».
+ *
+ * «Chiedi alla casa…» risponde PRIMA da qui, con quello che la plancia sa
+ * (`core/capire-le-domande.js`, `core/sapere-della-casa.js`,
+ * `core/rispondere-alle-domande.js`): «Che temperatura è presente in casa»
+ * mandato all'agente di serie di Home Assistant tornava «non conosco nessuna
+ * area chiamata è presente in casa». Solo quello che qui non si capisce va ad
+ * Assist — al modello linguistico, se in casa ce n'e' uno — e se anche Assist
+ * non capisce, la casa lo dice gentilmente e propone cosa chiedere.
  *
  * Qui c'e' quello che sta fuori dal nucleo (`core/assistente-di-casa.js`):
  * mettere insieme il contesto con quello che la plancia sa gia' — le tessere
@@ -38,18 +45,28 @@ import {
 import { alarmCodeNeeded } from "../core/alarm-panel.js";
 import {
   CHIAVE_ASSIST,
+  CONVERSAZIONE_MS,
+  agenteDaUsare,
   domandaPerHomeAssistant,
   filoDaMandare,
   linguaPerIlMicrofono,
   normalizzaAssist,
   rispostaDi,
 } from "../core/assist-model.js";
+import {
+  esempi,
+  nonHoCapito,
+  rispondiDaCasa,
+  rispostaAllAnnullo,
+  rispostaCheNonRisponde,
+} from "../core/rispondere-alle-domande.js";
+import { sapereDellaCasa } from "../core/sapere-della-casa.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { comandoDelDispositivo, elencoComandi } from "../core/comandi-accanto.js";
 import { SOGLIA_POTENZA_KEY, sogliaDellaPotenza } from "../core/la-soglia-della-potenza.js";
 import { normalizePeople, personViewModel } from "../core/person-model.js";
 import { VELO_DELLE_FINESTRE, tokenDelVelo } from "../core/il-velo-delle-finestre.js";
-import { entitaDelMeteo } from "./la-card-del-meteo-section.js";
+import { entitaDelMeteo, previsioniDeiGiorni } from "./la-card-del-meteo-section.js";
 import {
   activeLocale,
   allStates,
@@ -58,9 +75,11 @@ import {
   doc,
   esc,
   installStyle,
+  lexicalGlobal,
   readJson,
   root,
   section,
+  siComanda,
   stanzaDiHomeAssistant,
   t,
   writeJsonIfChanged,
@@ -86,6 +105,12 @@ const state = (root[KEY] ||= {
   inVolo: false,
   filo: "",
   filoIl: 0,
+  /* La conversazione con la casa: di cosa si parlava, l'azione in attesa. */
+  memoria: {},
+  memoriaIl: 0,
+  /* Le previsioni dei giorni, quando la card del meteo non le ha ancora. */
+  giorni: [],
+  giorniIl: 0,
   ascolto: null,
   osservatore: null,
   osservata: null,
@@ -680,6 +705,43 @@ function rigaMarkup(s) {
   </li>`;
 }
 
+function tastoMarkup(tasto, indice) {
+  return `<button type="button" class="dm-ass-chip" data-tipo="${esc(tasto.tipo)}"${tasto.pericolo ? ' data-pericolo="true"' : ""} data-ass-fa="chip" data-ass-chip="${indice}">${esc(tasto.etichetta)}</button>`;
+}
+
+/* Le domande da provare, quando la conversazione e' ancora vuota: chi apre il
+ * foglio per la prima volta non sa cosa la casa capisce. */
+function provaMarkup() {
+  let domande = [];
+  try {
+    domande = esempi(sapereDiAdesso(), linguaDellaPlancia(), 4);
+  } catch (_errore) {
+    domande = [];
+  }
+  if (!domande.length) return "";
+  return `<div class="dm-ass-prova"><small>${esc(t("Prova a chiedere", "Try asking"))}</small><div class="dm-ass-chips">${domande
+    .map(
+      (d) =>
+        `<button type="button" class="dm-ass-chip" data-tipo="chiedi" data-ass-fa="esempio" data-ass-testo-esempio="${esc(d)}">${esc(d)}</button>`,
+    )
+    .join("")}</div></div>`;
+}
+
+function chatMarkup() {
+  if (!state.battute.length && !state.inVolo) return provaMarkup();
+  const ultima = state.battute.length - 1;
+  return `<div class="dm-ass-chat" aria-live="polite">${state.battute
+    .map((b, i) => {
+      const fumetto = `<p class="dm-ass-battuta" data-chi="${esc(b.chi)}"${b.errore ? ' data-errore="true"' : ""}>${esc(b.testo)}</p>`;
+      const tasti =
+        i === ultima && b.chi === "casa" && b.chips?.length
+          ? `<div class="dm-ass-chips" data-ass-tasti>${b.chips.map(tastoMarkup).join("")}</div>`
+          : "";
+      return fumetto + tasti;
+    })
+    .join("")}${state.inVolo ? `<p class="dm-ass-battuta" data-chi="casa" data-attesa="true"><i></i><i></i><i></i></p>` : ""}</div>`;
+}
+
 function foglioMarkup() {
   const tutti = state.suggerimenti;
   const u = URGENZE();
@@ -696,16 +758,16 @@ function foglioMarkup() {
         ? `<ul class="dm-ass-elenco">${tutti.map(rigaMarkup).join("")}</ul>`
         : `<p class="dm-ass-vuoto">${esc(t("In casa è tutto in ordine.", "Everything is fine at home."))}</p>`
     }
-    <div class="dm-ass-chat">${state.battute
-      .map(
-        (b) =>
-          `<p class="dm-ass-battuta" data-chi="${esc(b.chi)}"${b.errore ? ' data-errore="true"' : ""}>${esc(b.testo)}</p>`,
-      )
-      .join("")}${state.inVolo ? `<p class="dm-ass-battuta" data-chi="casa">…</p>` : ""}</div>
+    ${chatMarkup()}
     <form class="dm-ass-chiedi" data-ass-chiedi>
-      <input type="text" data-ass-testo autocomplete="off" placeholder="${esc(t("Chiedi alla casa…", "Ask the house…"))}" aria-label="${esc(t("Chiedi alla casa…", "Ask the house…"))}">
       ${
-        parlare
+        state.memoria?.inAttesa?.codice
+          ? `<input type="password" inputmode="numeric" data-ass-testo data-ass-codice autocomplete="off" placeholder="${esc(t("Scrivi il codice…", "Type the code…"))}" aria-label="${esc(t("Scrivi il codice…", "Type the code…"))}">`
+          : `<input type="text" data-ass-testo autocomplete="off" enterkeyhint="send" placeholder="${esc(t("Chiedi alla casa…", "Ask the house…"))}" aria-label="${esc(t("Chiedi alla casa…", "Ask the house…"))}">`
+      }
+      ${
+        /* Il codice non si detta ad alta voce. */
+        parlare && !state.memoria?.inAttesa?.codice
           ? `<button type="button" class="dm-ass-mic${state.ascolto ? " si" : ""}" data-ass-fa="ascolta" aria-label="${esc(t("Parla", "Talk"))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>`
           : ""
       }
@@ -740,43 +802,232 @@ function disegnaIlFoglio() {
   if (chat) chat.scrollTop = chat.scrollHeight;
 }
 
-/* «Chiedi alla casa»: la frase va ad Assist di Home Assistant, con l'agente
- * scelto nella scheda Assist (un modello linguistico, se c'e'), e la risposta
- * torna qui sotto. Una domanda alla volta. */
+/* ── «Chiedi alla casa…» ──────────────────────────────────────────────── */
+
+/* Le aree di Home Assistant, dal registro che il guscio tiene gia'. */
+function areeDiHomeAssistant() {
+  try {
+    const nomi = lexicalGlobal("WIZ")?.areaNames;
+    return nomi && typeof nomi === "object" ? Object.values(nomi).map(clean).filter(Boolean) : [];
+  } catch (_errore) {
+    return [];
+  }
+}
+
+const seCe = (valore) => (Array.isArray(valore) ? valore : undefined);
+
+/**
+ * Tutto quello che la casa sa adesso, per rispondere: gli stati di Home
+ * Assistant, e sopra quello che la plancia ha scelto — i termometri delle
+ * stanze, le persone, le telecamere, l'energia, le previsioni.
+ */
+export function sapereDiAdesso(states = allStates() || {}, adesso = Date.now()) {
+  rinfrescaIModelli(adesso);
+  const persone = normalizePeople(readJson("cd_people", []))
+    .filter((p) => p?.nascosta !== true && clean(p?.entity))
+    .map((p) => ({ name: clean(p.name) || clean(p.entity), entity: clean(p.entity) }));
+  let telecamere;
+  try {
+    const scelte = root.getCameras?.();
+    if (Array.isArray(scelte) && scelte.length)
+      telecamere = scelte.map((c) => ({ entity: clean(c?.entity), name: clean(c?.name) }));
+  } catch (_errore) {}
+  let centrale = "";
+  try {
+    centrale = clean(root.resolveEntity?.("dm.security_centrale_allarme"));
+  } catch (_errore) {}
+  return sapereDellaCasa({
+    states,
+    adesso,
+    lingua: activeLocale(),
+    areaDi: stanzaDiHomeAssistant,
+    aree: areeDiHomeAssistant(),
+    stanze: seCe(root.getStanze?.()) || readJson("cd_stanze", []),
+    temperature: seCe(modello("temperatura")?.rows),
+    persone,
+    meteo: entitaDelMeteo(states),
+    previsioni: {
+      giorni: previsioniDeiGiorni().length ? previsioniDeiGiorni() : state.giorni,
+      ore: state.previsioni,
+    },
+    energia: state.energia || {},
+    elettrodomestici: seCe(modello("elettrodomestici")?.rows),
+    auto: seCe(modello("ev")?.vetture),
+    telecamere,
+    eventi: seCe(modello("agenda")?.eventi),
+    rifiuti: seCe(modello("rifiuti")?.rows),
+    batterieBasse: seCe(modello("batterie")?.low),
+    nonRispondono: seCe(modello("nonrisponde")?.rows),
+    aggiornamenti: seCe(modello("aggiornamenti")?.aggiornamenti),
+    antifurto: centrale,
+    comandabile: (entity) => siComanda(entity),
+  });
+}
+
+/* Le previsioni dei giorni, chieste qui quando la card del meteo non le ha
+ * ancora: «com'è il tempo domani» non aspetta il suo giro. Cinque secondi al
+ * massimo, poi si risponde con quello che c'e'. */
+async function previsioniPerRispondere() {
+  if (previsioniDeiGiorni().length) return;
+  if (state.giorni.length && Date.now() - state.giorniIl < MEZZ_ORA) return;
+  const entita = entitaDelMeteo();
+  if (!entita) return;
+  try {
+    const risposta = await chiediAHomeAssistant(
+      {
+        type: "call_service",
+        domain: "weather",
+        service: "get_forecasts",
+        service_data: { type: "daily" },
+        target: { entity_id: entita },
+        return_response: true,
+      },
+      5000,
+    );
+    const giorni = risposta?.response?.[entita]?.forecast;
+    state.giorni = Array.isArray(giorni) ? giorni : [];
+    state.giorniIl = Date.now();
+  } catch (_errore) {
+    /* Senza previsioni la casa dice che non le ha. */
+  }
+}
+
+/* La lingua delle risposte della casa: quella della domanda, se e' italiano o
+ * inglese; per Assist, quella della plancia se la domanda non e' in nessuna
+ * delle due. */
+const linguaDellaPlancia = () => (/^en/i.test(activeLocale()) ? "en" : "it");
+
+function aggiungi(battuta) {
+  /* I tasti valgono solo sotto l'ultima risposta: quelli di prima non sono
+   * piu' attuali, e un «Sì, spegni» di tre domande fa non deve partire. */
+  state.battute = [...state.battute.map((b) => ({ ...b, chips: [] })), battuta].slice(-24);
+}
+
+/* La risposta letta ad alta voce, se la scheda Assist lo chiede. */
+function leggi(testo, lingua) {
+  if (!normalizzaAssist(readJson(CHIAVE_ASSIST, {})).voce || !testo) return;
+  try {
+    const voce = new root.SpeechSynthesisUtterance(testo);
+    voce.lang = linguaPerIlMicrofono(lingua || activeLocale());
+    root.speechSynthesis?.cancel?.();
+    root.speechSynthesis?.speak?.(voce);
+  } catch (_errore) {}
+}
+
+function esegui(servizi) {
+  for (const s of Array.isArray(servizi) ? servizi : []) chiama({ servizio: s });
+}
+
+/* Una telecamera si apre con la finestra del guscio, come dalle Stanze: il
+ * foglio si chiude, la conversazione resta. */
+function apriLaTelecamera(entity) {
+  if (typeof root.apriCamera !== "function" || typeof root.camSlug !== "function") return false;
+  try {
+    const lista = root.getCameras?.() || [];
+    const indice = lista.findIndex((c) => clean(c?.entity) === clean(entity));
+    if (indice < 0) return false;
+    const riga = lista[indice];
+    state.aperto = false;
+    disegnaIlFoglio();
+    root.apriCamera(root.camSlug(riga, indice), (clean(riga?.name) || clean(entity).split(".")[1]).toUpperCase());
+    return true;
+  } catch (_errore) {
+    return false;
+  }
+}
+
+/**
+ * «Chiedi alla casa»: prima risponde la casa, con quello che sa; quello che
+ * qui non si capisce va ad Assist di Home Assistant, all'agente scelto nella
+ * scheda Assist o — se non se n'e' scelto uno — al modello linguistico che c'e'
+ * in casa. Una domanda alla volta.
+ */
 export async function chiediAllaCasa(testo) {
   const frase = clean(testo);
   if (!frase || state.inVolo) return false;
+  const adesso = Date.now();
+  if (state.memoriaIl && adesso - state.memoriaIl > CONVERSAZIONE_MS) state.memoria = {};
+  const inCodice = Boolean(state.memoria?.inAttesa?.codice);
+  let sapere = null;
+  let locale = null;
+  const rispondi = () => {
+    try {
+      sapere = sapereDiAdesso(allStates() || {}, Date.now());
+      locale = rispondiDaCasa(frase, sapere, state.memoria, { lingua: linguaDellaPlancia() });
+    } catch (errore) {
+      root.console?.warn?.("[DashboardModern] chiedi alla casa", errore);
+    }
+  };
+  rispondi();
+  /* Il codice dell'antifurto non resta scritto nella conversazione. */
+  const nascosta = inCodice || locale?.nascondiDomanda;
+  aggiungi({ chi: "io", testo: nascosta ? "••••" : frase });
+  /* Una domanda sul tempo senza previsioni: le si chiede, e si risponde. */
+  if (
+    locale?.capita &&
+    ["meteo", "temperatura_fuori"].includes(locale.intento) &&
+    !sapere?.previsioni?.giorni?.length &&
+    sapere?.fuori?.meteo
+  ) {
+    state.inVolo = true;
+    disegnaIlFoglio();
+    await previsioniPerRispondere();
+    state.inVolo = false;
+    rispondi();
+  }
+  if (locale?.capita) {
+    state.memoria = locale.memoria || {};
+    state.memoriaIl = adesso;
+    aggiungi({ chi: "casa", testo: locale.testo, chips: locale.chips || [] });
+    esegui(locale.esegui);
+    disegnaIlFoglio();
+    leggi(locale.testo, locale.lingua);
+    if (locale.telecamera) apriLaTelecamera(locale.telecamera);
+    if (locale.esegui?.length) raccogli();
+    return true;
+  }
+  /* Un codice che la casa non ha preso non va ad Assist. */
+  if (inCodice) {
+    state.memoria = { ...state.memoria, inAttesa: null };
+    disegnaIlFoglio();
+    return false;
+  }
+  return chiediAdAssist(frase, sapere, locale?.lingua);
+}
+
+async function chiediAdAssist(frase, sapere, linguaRilevata) {
   const config = normalizzaAssist(readJson(CHIAVE_ASSIST, {}));
+  const plancia = clean(activeLocale()).toLowerCase();
+  const lingua =
+    config.lingua || (/^(it|en)/.test(plancia) ? linguaRilevata || plancia : plancia) || "it";
   const richiesta = domandaPerHomeAssistant({
     testo: frase,
-    lingua: config.lingua || activeLocale(),
-    agente: config.agente,
+    lingua,
+    agente: agenteDaUsare(config.agente, allStates() || {}),
     /* Lo stesso filo di prima, se e' fresco: «e quella della cucina?» vuol
      * dire qualcosa solo dopo la domanda di prima. */
     conversazione: filoDaMandare(state.filo, state.filoIl, Date.now()),
   });
   if (!richiesta) return false;
-  state.battute = [...state.battute, { chi: "io", testo: frase }].slice(-8);
+  const lingueDellaCasa = /^en/.test(lingua) ? "en" : "it";
   state.inVolo = true;
   disegnaIlFoglio();
   try {
     const risposta = rispostaDi(await chiediAHomeAssistant(richiesta, 20000));
     state.filo = risposta.conversazione || state.filo;
     state.filoIl = Date.now();
-    state.battute = [
-      ...state.battute,
-      { chi: "casa", testo: risposta.muta ? t("Fatto.", "Done.") : risposta.testo, errore: risposta.errore },
-    ].slice(-8);
-    return !risposta.errore;
-  } catch (errore) {
-    state.battute = [
-      ...state.battute,
-      {
-        chi: "casa",
-        testo: clean(errore?.message) || t("La casa non ha risposto.", "The house did not answer."),
-        errore: true,
-      },
-    ].slice(-8);
+    if (rispostaCheNonRisponde(risposta)) {
+      const gentile = nonHoCapito(sapere || {}, lingueDellaCasa);
+      aggiungi({ chi: "casa", testo: gentile.testo, chips: gentile.chips });
+      return false;
+    }
+    const parola = risposta.muta ? t("Fatto.", "Done.") : risposta.testo;
+    aggiungi({ chi: "casa", testo: parola, chips: [] });
+    leggi(parola, lingua);
+    return true;
+  } catch (_errore) {
+    const gentile = nonHoCapito(sapere || {}, lingueDellaCasa, { senzaRisposta: true });
+    aggiungi({ chi: "casa", testo: gentile.testo, chips: gentile.chips, errore: true });
     return false;
   } finally {
     state.inVolo = false;
@@ -784,6 +1035,34 @@ export async function chiediAllaCasa(testo) {
     /* Quello che si e' chiesto puo' aver cambiato la casa. */
     raccogli();
   }
+}
+
+/* Un tasto sotto la risposta: un'altra domanda, la conferma di un'azione,
+ * «Annulla», una telecamera. */
+function toccaIlTasto(indice) {
+  const ultima = state.battute[state.battute.length - 1];
+  const tasto = ultima?.chi === "casa" ? ultima.chips?.[indice] : null;
+  if (!tasto) return;
+  if (tasto.tipo === "chiedi") {
+    chiediAllaCasa(tasto.testo || tasto.etichetta);
+    return;
+  }
+  if (tasto.tipo === "telecamera") {
+    apriLaTelecamera(tasto.entity);
+    return;
+  }
+  const lingua = state.memoria?.lingua || linguaDellaPlancia();
+  aggiungi({ chi: "io", testo: tasto.etichetta });
+  state.memoria = { ...state.memoria, inAttesa: null };
+  if (tasto.tipo === "fai") {
+    esegui(tasto.servizi);
+    aggiungi({ chi: "casa", testo: tasto.fatto || t("Fatto.", "Done."), chips: [] });
+    leggi(tasto.fatto, lingua);
+    raccogli();
+  } else if (tasto.tipo === "annulla") {
+    aggiungi({ chi: "casa", testo: rispostaAllAnnullo(lingua), chips: [] });
+  }
+  disegnaIlFoglio();
 }
 
 function ascolta() {
@@ -874,6 +1153,14 @@ function onClick(evento) {
   }
   if (fa === "ascolta") {
     ascolta();
+    return;
+  }
+  if (fa === "chip") {
+    toccaIlTasto(Number(tocco.dataset.assChip) || 0);
+    return;
+  }
+  if (fa === "esempio") {
+    chiediAllaCasa(tocco.dataset.assTestoEsempio);
     return;
   }
   if (fa === "tardi") {
@@ -1002,12 +1289,34 @@ function installStyles() {
     .dm-ass-tasto.piccolo{padding:5px 11px;font-size:11.5px}
     .dm-ass-riga .dm-ass-x{margin-left:0}
     .dm-ass-vuoto{margin:0;font-size:13px;font-weight:700;color:var(--text-dim,#64748b)}
-    .dm-ass-chat{display:grid;gap:6px;max-height:160px;overflow:auto}
+    .dm-ass-chat{display:flex;flex-direction:column;gap:7px;min-height:0;max-height:min(46dvh,420px);overflow:auto;overscroll-behavior:contain;padding:10px 2px 4px;
+      -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14px);mask-image:linear-gradient(to bottom,transparent 0,#000 14px)}
     .dm-ass-chat:empty{display:none}
-    .dm-ass-battuta{margin:0;max-width:85%;padding:8px 12px;border-radius:14px;font-size:13px;font-weight:600;line-height:1.4}
+    .dm-ass-battuta{margin:0;max-width:86%;padding:8px 12px;border-radius:16px;font-size:13.5px;font-weight:600;line-height:1.42;overflow-wrap:anywhere}
+    .dm-ass-battuta[data-chi="io"]{align-self:flex-end}
+    .dm-ass-battuta[data-chi="casa"]{align-self:flex-start}
+    .dm-ass-battuta[data-attesa="true"]{display:flex;gap:4px;padding:11px 14px}
+    .dm-ass-battuta[data-attesa="true"] i{width:6px;height:6px;border-radius:50%;background:#8b5cf6;animation:dm-ass-pensa 1s infinite ease-in-out}
+    .dm-ass-battuta[data-attesa="true"] i:nth-child(2){animation-delay:.15s}
+    .dm-ass-battuta[data-attesa="true"] i:nth-child(3){animation-delay:.3s}
+    @keyframes dm-ass-pensa{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+    @media (prefers-reduced-motion:reduce){.dm-ass-battuta[data-attesa="true"] i{animation:none}}
+    .dm-ass-chips{display:flex;flex-wrap:wrap;gap:6px;align-self:flex-start;max-width:100%}
+    .dm-ass-chip{min-height:30px;padding:5px 12px;border-radius:999px;border:1px solid color-mix(in srgb,#8b5cf6 38%,transparent);background:var(--card-bg,#fff);
+      color:#6d28d9;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;text-align:left;line-height:1.25;max-width:100%}
+    .dm-ass-chip[data-tipo="fai"]{background:linear-gradient(135deg,#7c3aed,#6d28d9);border-color:transparent;color:#fff;box-shadow:0 6px 14px -8px #7c3aed}
+    .dm-ass-chip[data-tipo="fai"][data-pericolo="true"]{background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 6px 14px -8px #dc2626}
+    .dm-ass-chip[data-tipo="annulla"]{color:var(--text-dim,#64748b);border-color:var(--card-border,#e2e8f0)}
+    .dm-ass-chip[data-tipo="telecamera"]::before{content:"";display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#dc2626;vertical-align:1px}
+    html[data-theme="dark"] .dm-ass-chip:not([data-tipo="fai"]){color:#c4b5fd;background:transparent}
+    html[data-theme="dark"] .dm-ass-chip[data-tipo="annulla"]{color:var(--text-dim,#94a3b8)}
+    .dm-ass-prova{display:grid;gap:7px}
+    .dm-ass-prova small{font-size:11px;font-weight:850;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim,#64748b)}
     .dm-ass-battuta[data-chi="io"]{justify-self:end;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-bottom-right-radius:4px}
     .dm-ass-battuta[data-chi="casa"]{justify-self:start;background:color-mix(in srgb,#8b5cf6 9%,var(--card-bg,#fff));border:1px solid color-mix(in srgb,#8b5cf6 22%,transparent);border-bottom-left-radius:4px}
-    .dm-ass-battuta[data-errore="true"]{border-color:#dc262655;color:#b91c1c}
+    .dm-ass-battuta[data-errore="true"]{border-color:#dc262655}
+    .dm-ass-chiedi input[data-ass-codice]{letter-spacing:.3em}
+    .dm-ass-chiedi input[data-ass-codice]::placeholder{letter-spacing:normal}
     .dm-ass-chiedi{display:flex;gap:8px;align-items:center}
     .dm-ass-chiedi input{flex:1;min-width:0;height:42px;padding:0 14px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);
       background:color-mix(in srgb,var(--text,#0f172a) 3%,var(--card-bg,#fff));color:var(--text,#0f172a);font:inherit;font-size:14px}
@@ -1015,7 +1324,8 @@ function installStyles() {
       background:linear-gradient(135deg,#8b5cf6,#2563eb);font:inherit;font-size:16px}
     .dm-ass-mic svg{width:20px;height:20px}
     .dm-ass-mic.si{background:#dc2626}
-    @media(max-width:520px){.dm-ass-velo{place-items:end center;padding:8px 8px max(8px,env(safe-area-inset-bottom))}.dm-ass-foglio{border-radius:24px 24px 18px 18px}.dm-ass-legenda{display:none}}
+    @media(max-width:520px){.dm-ass-velo{place-items:end center;padding:8px 8px max(8px,env(safe-area-inset-bottom))}.dm-ass-foglio{border-radius:24px 24px 18px 18px}.dm-ass-legenda{display:none}
+      .dm-ass-chat{max-height:min(60dvh,560px)}}
     `,
   );
 }

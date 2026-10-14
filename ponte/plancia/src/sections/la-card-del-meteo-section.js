@@ -84,6 +84,12 @@ export function entitaDelMeteo(states = allStates()) {
 
 /* ── le previsioni ───────────────────────────────────────────────────────── */
 
+/** Le previsioni dei giorni che la card ha gia' chiesto: le legge anche
+ * «Chiedi alla casa…», per «com'è il tempo domani» senza chiederle due volte. */
+export function previsioniDeiGiorni() {
+  return Array.isArray(state.previsioni) ? state.previsioni : [];
+}
+
 function chiediLePrevisioni() {
   if (state.inVolo) return;
   const entita = entitaDelMeteo();

@@ -647,7 +647,7 @@ export default Object.freeze({
   "Asking Home Assistant which integration these entities come from.":
     "이 엔티티들이 어느 통합의 것인지 Home Assistant에 묻고 있습니다.",
   "Assign the report to yourself on GitHub": "GitHub에서 이 제보를 본인에게 배정",
-  "Assistant (empty = the default one)": "어시스턴트 (비우면 기본값)",
+  "Assistant (empty = automatic: a language model if there is one, otherwise the default)": "어시스턴트 (비워 두면 자동: 언어 모델이 있으면 그것, 없으면 기본값)",
   Astronaut: "우주비행사",
   "At home": "집",
   "At least a name is needed, or an entity in one of the fields.":
@@ -3753,6 +3753,7 @@ export default Object.freeze({
   Tree: "수목",
   "Tree (optional)": "수목(선택)",
   Trend: "추이",
+  "Try asking": "이렇게 물어보세요",
   "Try again from «Mine».": "「내 것」에서 다시 시도하세요.",
   "Try the controls": "조작해 보세요",
   "Tumble dryer": "의류 건조기",
@@ -3781,6 +3782,7 @@ export default Object.freeze({
   "Type / artwork": "종류 / 그림",
   "Type at least two letters: it searches every tab at once.":
     "두 글자 이상 입력하세요. 모든 탭을 한꺼번에 찾습니다.",
+  "Type the code…": "코드를 입력하세요…",
   "Type your question…": "질문을 입력하세요…",
   "Tyre pressure": "타이어 공기압",
   Tyres: "타이어",

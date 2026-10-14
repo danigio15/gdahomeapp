@@ -639,7 +639,7 @@ export default Object.freeze({
   "Asking Home Assistant which integration these entities come from.":
     "正在向 Home Assistant 询问这些实体来自哪个集成。",
   "Assign the report to yourself on GitHub": "在 GitHub 上把该反馈指派给自己",
-  "Assistant (empty = the default one)": "助手（留空则用默认的）",
+  "Assistant (empty = automatic: a language model if there is one, otherwise the default)": "助手（留空 = 自动：有语言模型就用它，否则用默认助手）",
   Astronaut: "宇航员",
   "At home": "在家",
   "At least a name is needed, or an entity in one of the fields.":
@@ -3698,6 +3698,7 @@ export default Object.freeze({
   Tree: "树木",
   "Tree (optional)": "树木（可选）",
   Trend: "趋势",
+  "Try asking": "试着这样问",
   "Try again from «Mine».": "从「我的」再试一次。",
   "Try the controls": "试试这些控件",
   "Tumble dryer": "干衣机",
@@ -3726,6 +3727,7 @@ export default Object.freeze({
   "Type / artwork": "类型 / 插画",
   "Type at least two letters: it searches every tab at once.":
     "请输入至少两个字符：一次搜索所有标签页。",
+  "Type the code…": "输入密码…",
   "Type your question…": "输入你的问题…",
   "Tyre pressure": "胎压",
   Tyres: "轮胎",
