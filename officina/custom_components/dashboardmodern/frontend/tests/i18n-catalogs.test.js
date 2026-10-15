@@ -162,6 +162,8 @@ const SHARED_ACROSS_LANGUAGES = new Set([
   /* Il nome della rete di casa: dove non si scrive in un altro alfabeto si
    * scrive cosi' e basta. */
   "Wi-Fi",
+  /* Il nome del navigatore: e' un marchio, si scrive cosi' in ogni lingua. */
+  "gdanav",
   /* Le due parole della rete: mezza Europa le scrive cosi', e dove non e' vero
    * — russo, turco, arabo, hindi, giapponese, coreano, cinese — il catalogo di
    * quella lingua le traduce lo stesso: questa riga permette, non impone. */

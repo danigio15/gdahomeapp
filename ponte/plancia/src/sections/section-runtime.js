@@ -116,6 +116,7 @@ import { installPoolIrrigationSceneSection } from "./pool-irrigation-scene-secti
 import { installPoolExtraSection } from "./pool-extra-section.js";
 import { installPoolEditorSection } from "./pool-editor-section.js";
 import { installRobotSection } from "./robot-section.js";
+import { installGdanavSection } from "./gdanav-section.js";
 import { installAnimaliSection } from "./animali-section.js";
 import { installPreseSection } from "./prese-section.js";
 import { installEnergyPlantsSection } from "./energy-plants-section.js";
@@ -1094,6 +1095,7 @@ export function installSectionRuntime() {
     senzaCadere(installPoolExtraSection);
     senzaCadere(installPoolEditorSection);
     senzaCadere(installRobotSection);
+    senzaCadere(installGdanavSection);
     senzaCadere(installPreseSection);
     senzaCadere(installRobotEditorSection);
     senzaCadere(installAutoIntegrazione);
