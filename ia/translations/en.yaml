@@ -1,0 +1,4 @@
+configuration:
+  modello:
+    name: Model
+    description: "The Ollama model to use. Default qwen2.5:1.5b: small (about 1 GB) and understands Italian. Bigger means more memory and slower."
