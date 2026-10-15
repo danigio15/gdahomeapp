@@ -24,6 +24,7 @@ import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
 import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { lettoriConfigurati } from "./media-player.js";
+import { isDerivedEntity, powerPairSource, signedSource } from "./signed-energy.js";
 import { isCharging, nomeDellaPersona, personViewModel } from "./person-model.js";
 
 export const CHIAVE_MURO = "cd_muro";
@@ -1143,8 +1144,30 @@ export function lettoriDellaPagina(pagina, fonte = {}) {
 }
 
 /* La pagina Energia: quattro misure, ognuna un'entita'. Vuote, le prende la
- * plancia di origine dalla sua sezione Energia. */
-const ENERGIA_VUOTA = Object.freeze({ casa: "", solare: "", rete: "", batteria: "" });
+ * plancia di origine dalla sua sezione Energia.
+ *
+ * «Preleva dalla rete» quando cedeva: dal campo, con un FoxESS. La rete e la
+ * batteria si misurano in due modi — un sensore col segno, o due sensori
+ * sempre positivi (prelievo e immissione, carica e scarica) — e il segno non
+ * e' uguale per tutti gli inverter. La plancia lo sa gia' dalla sua scheda
+ * Energia: il tablet adesso lo legge da li', e chi vuole lo cambia qui.
+ *
+ * - `rete`: col segno, positivo si preleva; oppure `prelievo` e `immissione`;
+ * - `batteria`: la carica in %; `potenzaBatteria` col segno, positivo si
+ *   scarica; oppure `carica` e `scarica`;
+ * - `invertiRete`, `invertiBatteria`: per i sensori che scrivono al contrario. */
+const ENERGIA_VUOTA = Object.freeze({
+  casa: "",
+  solare: "",
+  rete: "",
+  prelievo: "",
+  immissione: "",
+  batteria: "",
+  potenzaBatteria: "",
+  carica: "",
+  scarica: "",
+});
+const VERSI_DELL_ENERGIA = Object.freeze(["invertiRete", "invertiBatteria"]);
 
 /* «L'Energia propone quattro scelte soltanto: darei modo di aumentare le
  * entità a scelta.» Oltre alle quattro misure fisse, altre a piacere — una
@@ -1160,7 +1183,8 @@ function energiaPulita(input) {
     .map(entita)
     .filter((e) => e && !viste.has(e) && viste.add(e))
     .slice(0, ALTRE_MISURE_AL_MASSIMO);
-  return { ...fisse, altre };
+  const versi = Object.fromEntries(VERSI_DELL_ENERGIA.map((k) => [k, dentro[k] === true]));
+  return { ...fisse, ...versi, altre };
 }
 
 /** Le misure in più della pagina Energia, nell'ordine scelto. */
@@ -1180,7 +1204,86 @@ export function grigliaPer(quante) {
 export function energiaDellaPagina(pagina, fonte = {}) {
   const scelte = pagina?.energia || {};
   const sue = fonte?.energia || {};
-  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, scelte[k] || sue[k] || ""]));
+  const una = (k) => scelte[k] || sue[k] || "";
+  /* La rete e la potenza della batteria vanno a gruppi: chi ne sceglie una
+   * parte qui sceglie tutto il gruppo, e la plancia non ci mette del suo —
+   * un prelievo scritto qui con un'immissione presa da li' sarebbe un conto
+   * fatto con due misure di due persone diverse. */
+  const gruppo = (chiavi, girataDiLa, inverti) => {
+    const qui = chiavi.some((k) => scelte[k]);
+    const da = qui ? scelte : sue;
+    return {
+      ...Object.fromEntries(chiavi.map((k) => [k, entita(da[k])])),
+      girata: (qui ? false : sue[girataDiLa] === true) !== (scelte[inverti] === true),
+    };
+  };
+  const rete = gruppo(["rete", "prelievo", "immissione"], "reteGirata", "invertiRete");
+  const batteria = gruppo(
+    ["potenzaBatteria", "carica", "scarica"],
+    "batteriaGirata",
+    "invertiBatteria",
+  );
+  return {
+    casa: una("casa"),
+    solare: una("solare"),
+    batteria: una("batteria"),
+    rete: rete.rete,
+    prelievo: rete.prelievo,
+    immissione: rete.immissione,
+    reteGirata: rete.girata,
+    potenzaBatteria: batteria.potenzaBatteria,
+    carica: batteria.carica,
+    scarica: batteria.scarica,
+    batteriaGirata: batteria.girata,
+  };
+}
+
+/**
+ * Un numero di watt col segno da una misura: positivo si preleva dalla rete
+ * (o si scarica la batteria). Con due sensori e' la differenza; con uno solo
+ * e' lui, girato se scrive al contrario. `null` se non si sa.
+ *
+ * `watt(id)` legge un'entita' in watt (o `null`).
+ */
+export function potenzaConIlSegno({ segno, positivo, negativo, girata }, watt) {
+  if (positivo || negativo) {
+    const piu = positivo ? watt(positivo) : 0;
+    const meno = negativo ? watt(negativo) : 0;
+    if (piu === null && meno === null) return null;
+    return (piu ?? 0) - (meno ?? 0);
+  }
+  if (!segno) return null;
+  const v = watt(segno);
+  return v === null ? null : girata ? -v : v;
+}
+
+/* Come la plancia legge rete e batteria dalla sua scheda Energia: il sensore
+ * col segno e il suo verso, o la coppia di sensori. Le letture ricavate
+ * (`dm_derived.*`) sul tablet non ci sono: si risale ai sensori veri. */
+function versiDellaPlancia(energy) {
+  const modello = energy && typeof energy === "object" ? energy : {};
+  const fuori = {};
+  const rete = powerPairSource(modello, "grid");
+  if (rete) {
+    fuori.prelievo = entita(rete.main);
+    fuori.immissione = entita(rete.opposite);
+  } else {
+    const fonte = signedSource(modello, "grid");
+    fuori.rete = entita(fonte?.entities?.power || modello.grid?.power);
+    fuori.reteGirata = fonte?.inverted === true;
+  }
+  const batteria = powerPairSource(modello, "battery");
+  if (batteria) {
+    fuori.carica = entita(batteria.main);
+    fuori.scarica = entita(batteria.opposite);
+  } else {
+    const fonte = signedSource(modello, "battery");
+    fuori.potenzaBatteria = entita(fonte?.entities?.power || modello.battery?.power);
+    fuori.batteriaGirata = fonte?.inverted === true;
+  }
+  for (const [k, v] of Object.entries(fuori))
+    if (typeof v === "string" && isDerivedEntity(v)) fuori[k] = "";
+  return fuori;
 }
 
 export const MURO_VUOTO = Object.freeze({
@@ -1406,14 +1509,26 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
       ])
       .filter(([id]) => id),
   );
-  const misura = (chiave) => entita(overrides[`dm.energy_${chiave}`]);
+  const misura = (chiave) => {
+    const id = entita(overrides[`dm.energy_${chiave}`]);
+    return isDerivedEntity(id) ? "" : id;
+  };
+  const versi = versiDellaPlancia(sezioni.energy);
+  const conVersi = Object.values(versi).some((v) => typeof v === "string" && v);
   return {
-    /* Le misure dell'energia che la plancia di origine ha gia' scelto. */
+    /* Le misure dell'energia che la plancia di origine ha gia' scelto: rete
+     * e batteria col verso della sua scheda Energia. Una plancia senza il
+     * modello (le piu' vecchie) dice solo gli alias. */
     energia: {
       casa: misura("potenza_consumo_casa"),
       solare: misura("potenza_fotovoltaico"),
-      rete: misura("potenza_scambio_rete"),
       batteria: misura("stato_carica_batteria"),
+      ...(conVersi
+        ? versi
+        : {
+            rete: misura("potenza_scambio_rete"),
+            potenzaBatteria: misura("potenza_batteria"),
+          }),
     },
     /* I lettori della sezione Musica, per la pagina Musica. */
     lettori: lettoriConfigurati(elenco(altro.lettori))

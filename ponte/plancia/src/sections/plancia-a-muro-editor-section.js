@@ -489,16 +489,67 @@ function paginaMarkup(p, i, tutte) {
           segnaposto: sue[chiave] || t("Entità", "Entity"),
         }),
       );
+    /* La rete e la potenza della batteria: un sensore col segno, o due. Il
+     * modo si legge da quello che c'e' scritto (qui o nella plancia), e si
+     * cambia col bottone: scegliendo l'altro si svuota il primo. */
+    const due = (chiavi, [a, b]) => {
+      const da = chiavi.some((c) => p.energia[c]) ? p.energia : sue;
+      return Boolean(da[a] || da[b]);
+    };
+    const reteDue =
+      state.reteDue?.[via] ?? due(["rete", "prelievo", "immissione"], ["prelievo", "immissione"]);
+    const batteriaDue =
+      state.batteriaDue?.[via] ??
+      due(["potenzaBatteria", "carica", "scarica"], ["carica", "scarica"]);
+    const modo = (chi, acceso) =>
+      `<span class="mu-ed-seg">${[
+        [false, t("Uno col segno", "One, signed")],
+        [true, t("Due sensori", "Two sensors")],
+      ]
+        .map(
+          ([v, testo]) =>
+            `<button type="button" class="${v === acceso ? "si" : ""}" data-mu-ed-modo-energia="${esc(chi)}" data-mu-ed-via="${esc(via)}" data-mu-ed-valore="${v}">${esc(testo)}</button>`,
+        )
+        .join("")}</span>`;
     dentro = `<div class="mu-ed-nota">${esc(
       t(
-        "Quattro numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine.",
-        "Four big live numbers. Left empty, they come from the source dashboard's Energy section.",
+        "Numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine, col verso che ha lì.",
+        "Big live numbers. Left empty, they come from the source dashboard's Energy section, with its direction.",
       ),
     )}</div>
     ${misura("casa", t("Consumo della casa", "House consumption"), t("Potenza, in W o kW", "Power, in W or kW"))}
     ${misura("solare", t("Produzione solare", "Solar production"), t("Potenza, in W o kW", "Power, in W or kW"))}
-    ${misura("rete", t("Scambio con la rete", "Grid exchange"), t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in"))}
-    ${misura("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}
+    ${riga(t("Rete: come la misuri", "Grid: how you measure it"), t("Un sensore col segno, o due separati", "One signed sensor, or two separate ones"), modo("rete", reteDue))}
+    ${
+      reteDue
+        ? `${misura("prelievo", t("Prelievo dalla rete", "Drawn from the grid"), t("Potenza presa dalla rete", "Power taken from the grid"))}
+    ${misura("immissione", t("Immissione in rete", "Fed into the grid"), t("Potenza ceduta alla rete", "Power fed into the grid"))}`
+        : misura(
+            "rete",
+            t("Scambio con la rete", "Grid exchange"),
+            t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in"),
+          )
+    }
+    ${misura("batteria", t("Batteria: carica", "Battery: charge"), t("In %", "In %"))}
+    ${riga(t("Batteria: potenza", "Battery: power"), t("Un sensore col segno, o due separati", "One signed sensor, or two separate ones"), modo("batteria", batteriaDue))}
+    ${
+      batteriaDue
+        ? `${misura("carica", t("Potenza in carica", "Charging power"), t("Quanto entra nella batteria", "What goes into the battery"))}
+    ${misura("scarica", t("Potenza in scarica", "Discharging power"), t("Quanto esce dalla batteria", "What comes out of the battery"))}`
+        : misura(
+            "potenzaBatteria",
+            t("Potenza della batteria", "Battery power"),
+            t("Positivo si scarica, negativo si carica", "Positive discharges, negative charges"),
+          )
+    }
+    ${riga(
+      t("Inverti il segno", "Flip the sign"),
+      t(
+        "Se il tuo inverter li scrive al contrario: la rete positiva quando cede, la batteria positiva quando carica",
+        "If your inverter writes them the other way round: grid positive when feeding in, battery positive when charging",
+      ),
+      `<span class="mu-ed-versi">${esc(t("Rete", "Grid"))} ${interruttore(`${via}.energia.invertiRete`, p.energia.invertiRete === true, "inverti-rete")} ${esc(t("Batteria", "Battery"))} ${interruttore(`${via}.energia.invertiBatteria`, p.energia.invertiBatteria === true, "inverti-batteria")}</span>`,
+    )}
     ${riga(
       t("Altre misure", "More readings"),
       t(
@@ -1280,6 +1331,27 @@ function onClick(event) {
     suonaIlCampanello(o.suono, o.volume, { ripeti: false });
     return;
   }
+  const modo = event.target.closest("[data-mu-ed-modo-energia]");
+  if (modo) {
+    /* Un sensore col segno o due: cambiando modo si svuotano le caselle
+     * dell'altro, che altrimenti continuerebbero a valere. */
+    event.preventDefault();
+    const { muEdModoEnergia: chi, muEdVia: via, muEdValore: valore } = modo.dataset;
+    const due = valore === "true";
+    const chiave = chi === "rete" ? "reteDue" : "batteriaDue";
+    state[chiave] = { ...(state[chiave] || {}), [via]: due };
+    const togli =
+      chi === "rete"
+        ? due
+          ? ["rete"]
+          : ["prelievo", "immissione"]
+        : due
+          ? ["potenzaBatteria"]
+          : ["carica", "scarica"];
+    for (const k of togli) metti(`${via}.energia.${k}`, "");
+    ridisegna();
+    return;
+  }
   const el = event.target.closest(
     "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia],[data-mu-ed-togli-voce],[data-mu-ed-aggiungi-voce],[data-mu-ed-sposta]",
   );
@@ -1460,6 +1532,7 @@ function stili() {
 #ed-body .mu-ed-int i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .18s ease}
 #ed-body .mu-ed-int[aria-checked="true"] i{transform:translateX(18px)}
 #ed-body .mu-ed-seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:12px;border:1px solid var(--divider-color,#dbe4ee)}
+#ed-body .mu-ed-versi{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
 #ed-body .mu-ed-seg button{border:0;padding:8px 12px;border-radius:9px;background:none;color:var(--text-dim,#64748b);font-weight:800;font-size:12.5px;cursor:pointer}
 #ed-body .mu-ed-seg button.si{background:color-mix(in srgb,#0ea5e9 18%,transparent);color:#0369a1;box-shadow:inset 0 0 0 1px #0ea5e999}
 html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}

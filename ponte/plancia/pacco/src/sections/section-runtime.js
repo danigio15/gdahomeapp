@@ -292,6 +292,7 @@ import {
   installTemperatureSection,
   intlLocale,
   isCumulativeEnergyEntity,
+  isDerivedEntity,
   isHostedDashboard,
   isLifetimeMeter,
   isRelayEntity,
@@ -387,6 +388,7 @@ import {
   plantModel,
   posizioneOra,
   posizioneSecondoVerso,
+  powerPairSource,
   presenzaConfigurata,
   presenzaDiCasa,
   prezzoDellaFascia,
@@ -472,6 +474,7 @@ import {
   siPuoDireLAutosufficienza,
   siPuoScegliere,
   siRicarica,
+  signedSource,
   signedSourceEntities,
   smistaIPiani,
   sogliaDellaCopertura,
@@ -525,7 +528,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-Z6WXSNG5.js";
+} from "../../chunk-TBEETDD5.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2587,6 +2590,8 @@ var SOURCE_INDEX = Object.freeze({
   "Batteria senza nome": "Unnamed battery",
   "Batteria telefono": "Phone battery",
   "batteria, carica": "battery, charged",
+  "Batteria: carica": "Battery: charge",
+  "Batteria: potenza": "Battery: power",
   "batterie": "batteries",
   "Batterie": "Batteries",
   "batterie, tutte cariche": "batteries, all charged",
@@ -2688,7 +2693,6 @@ var SOURCE_INDEX = Object.freeze({
   "Carica ${auto} col sole": "Charge ${auto} on solar",
   "Carica anche senza sole": "Charge even without sun",
   "CARICA COMPLETA": "FULLY CHARGED",
-  "Carica in %": "Charge in %",
   "carica più bassa": "lowest charge",
   "CARICAMENTO": "LOADING",
   "Caricamento dati Energia…": "Loading Energy data…",
@@ -3269,6 +3273,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dove vai?": "Where to?",
   "Due fasce": "Two bands",
   "Due scatti della stessa auto: la plancia mostra quello con il cavo attaccato mentre è in ricarica e l'altro nel resto del tempo. Basta la prima: senza la seconda resta sempre quella.": "Two shots of the same car: the dashboard shows the plugged-in one while it charges and the other one the rest of the time. The first is enough — without the second it simply stays.",
+  "Due sensori": "Two sensors",
   "Due settimane che si ripetono, scritte a mano: tocca un giorno e scegli cosa esce. Non serve nessun sensore e nessun calendario di Home Assistant — la pagina e la tessera in Home leggono questo esattamente come leggerebbero un'integrazione. Un materiale che ha già il suo sensore qui sopra non si ripete: comanda il sensore.": "Two weeks that repeat, written by hand: tap a day and pick what goes out. No sensor and no Home Assistant calendar needed — the page and the Home tile read this exactly as they would read an integration. A material that already has its own sensor above is not repeated: the sensor wins.",
   "Due tocchi per aprire": "Two taps to open",
   "Duplica": "Duplicate",
@@ -3880,6 +3885,7 @@ var SOURCE_INDEX = Object.freeze({
   "Immessa oggi": "Exported today",
   "Immissione": "Supply",
   "Immissione (in casa)": "Supply (into the house)",
+  "Immissione in rete": "Fed into the grid",
   "Impegni": "Appointments",
   "Impegni · Da fare · Prossimi giorni": "Appointments · To-do · Coming days",
   "impegni oggi": "appointments today",
@@ -4045,6 +4051,7 @@ var SOURCE_INDEX = Object.freeze({
   "Invece di stare nel riassunto «In evidenza», questa entità ha la sua tessera in Home, che al tocco si apre su di lei.": "Instead of sitting in the “Highlights” summary, this entity gets its own tile on Home, which opens on it when tapped.",
   "Inverno": "Winter",
   "Inverter Fotovoltaico": "PV inverter",
+  "Inverti il segno": "Flip the sign",
   "Inverti il verso (ON = chiusa)": "Flip the direction (ON = closed)",
   "Inverti le percentuali (100 = chiusa)": "Flip the percentages (100 = closed)",
   "Invia": "Upload",
@@ -4853,6 +4860,7 @@ var SOURCE_INDEX = Object.freeze({
   "Notte / Riposo": "Night / Rest",
   "Notte blu": "Blue night",
   "Novembre": "November",
+  "Numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine, col verso che ha lì.": "Big live numbers. Left empty, they come from the source dashboard's Energy section, with its direction.",
   "Numero": "Number",
   "nuova": "new",
   "Nuova cosa da fare": "New to-do",
@@ -5105,6 +5113,7 @@ var SOURCE_INDEX = Object.freeze({
   "Porzioni oggi": "Portions today",
   "Positiva in carica (JK, JBD, Daly)": "Positive when charging (JK, JBD, Daly)",
   "Positivo si preleva, negativo si cede": "Positive is drawn, negative is fed in",
+  "Positivo si scarica, negativo si carica": "Positive discharges, negative charges",
   "Posizione": "Location",
   "Posizione (device_tracker)": "Location (device_tracker)",
   "Posizione (indirizzo)": "Location (address)",
@@ -5133,11 +5142,15 @@ var SOURCE_INDEX = Object.freeze({
   "Potenza Boiler": "Boiler power",
   "Potenza carichi — nodo 1/Lavanderia (W)": "Load power — node 1/Laundry (W)",
   "Potenza carichi — nodo 2/Cucina (W)": "Load power — node 2/Kitchen (W)",
+  "Potenza ceduta alla rete": "Power fed into the grid",
   "Potenza condizionatori (W)": "Air conditioner power (W)",
   "Potenza consumo casa (W)": "Home consumption power (W)",
+  "Potenza della batteria": "Battery power",
   "Potenza di aspirazione": "Suction power",
   "potenza di casa": "home power",
   "Potenza fotovoltaico (W)": "Solar power (W)",
+  "Potenza in carica": "Charging power",
+  "Potenza in scarica": "Discharging power",
   "Potenza in watt oltre la quale la card risulta accesa.": "Power in watts above which the card is shown as running.",
   "Potenza istantanea": "Instant power",
   "Potenza istantanea (W)": "Instant power (W)",
@@ -5145,6 +5158,7 @@ var SOURCE_INDEX = Object.freeze({
   "Potenza misurata": "Measured power",
   "potenza ora": "power now",
   "Potenza presa (W) — sopra 5 W la lavatrice risulta in funzione": "Socket power (W) — above 5 W the washer counts as running",
+  "Potenza presa dalla rete": "Power taken from the grid",
   "Potenza Raspberry/server (W)": "Raspberry/server power (W)",
   "Potenza resistenza boiler (W)": "Boiler element power (W)",
   "Potenza scambio rete (W)": "Grid exchange power (W)",
@@ -5174,6 +5188,7 @@ var SOURCE_INDEX = Object.freeze({
   "Prelevata dalla rete · Oggi": "Taken from the grid · Today",
   "Prelevata oggi": "Imported today",
   "Prelievo AC Tot.": "Total AC draw",
+  "Prelievo dalla rete": "Drawn from the grid",
   "Premi": "Press",
   "Prende le cose da": "Takes things from",
   "Prendi anche ${voci.length} sensori che stanno fuori dal dispositivo": "Also take ${voci.length} sensors that live outside the device",
@@ -5305,13 +5320,14 @@ var SOURCE_INDEX = Object.freeze({
   "Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano": "How many slots, and how big. In portrait columns and rows swap",
   "Quanto cibo resta nel distributore. In percentuale la scheda ne fa una barra; chi scrive «Low» o «Empty» vale lo stesso, e sotto soglia la scheda avvisa.": "How much food is left in the feeder. As a percentage the card draws a bar; a sensor saying “Low” or “Empty” counts the same, and below the threshold the card warns.",
   "Quanto è pieno": "How full",
+  "Quanto entra nella batteria": "What goes into the battery",
+  "Quanto esce dalla batteria": "What comes out of the battery",
   "Quanto gli chiedi": "How much you ask of it",
   "Quanto parla": "How much it says",
   "Quanto resta accesa": "How long it stays on",
   "Quanto resta accesa dal momento dell'accensione. Il conto alla rovescia lo tiene Home Assistant, non questa pagina: si può chiudere la plancia e l'unità si spegne lo stesso. Sulla card resta modificabile ogni volta.": "How long it stays on from the moment you switch it on. Home Assistant keeps the countdown, not this page: you can close the dashboard and the unit still switches off. On the card you can change it every time.",
   "Quanto sta passando dal contatore. È la soglia di chi teme il distacco: il limite del contratto sta qui. L'energia immessa in rete non conta mai come sovraccarico.": "How much is going through the meter. This is the threshold for those worried about a cut-off: the contract limit lives here. Energy exported to the grid never counts as an overload.",
   "Quanto stanno consumando gli apparecchi, da qualunque parte arrivi la corrente. È la soglia di chi ha il fotovoltaico e vuole sapere quanto tira la casa.": "How much the appliances are drawing, wherever the power comes from. This is the threshold for those with solar who want to know what the house is pulling.",
-  "Quattro numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine.": "Four big live numbers. Left empty, they come from the source dashboard's Energy section.",
   "Quattro sensori scelti da te: quelli che leggi per decidere, non una media della casa. Il tipico è quello fuori, con cui ci si regola per i clima interni. L'unità la dice Home Assistant, e un sensore che non indichi è una pastiglia che non compare.": "Four sensors of your choosing: the ones you actually read to decide, not a house average. The typical one is outdoors, the one you go by for the indoor units. The unit comes from Home Assistant, and a sensor you do not name is a pill that does not show up.",
   "Quella che dice pronta, in stampa o ferma — la crea l'integrazione della stampante col suo nome.": "The one that says ready, printing or stopped — the printer integration creates it with its name.",
   "Quella che si guarda: Thermal Comfort la espone come parola («comfortable», «quite_uncomfortable»…). Se il sensore la scrive in italiano, la plancia scrive quello che c'è scritto.": "The one you look at: Thermal Comfort exposes it as a word (comfortable, quite_uncomfortable…). When the sensor writes it in your own language, the dashboard writes what it says.",
@@ -5412,6 +5428,7 @@ var SOURCE_INDEX = Object.freeze({
   "Rete presente, batteria scarica": "Mains on, battery low",
   "Rete raggiungibile": "Network reachable",
   "Rete WiFi": "WiFi network",
+  "Rete: come la misuri": "Grid: how you measure it",
   "Riapri il Setup Wizard (connessione · nome · sezioni · luci)": "Reopen the Setup Wizard (connection · name · sections · lights)",
   "Riattiva l'audio": "Unmute",
   "Riavvia": "Restart",
@@ -5680,6 +5697,7 @@ var SOURCE_INDEX = Object.freeze({
   "Se fuori l'aria è peggio, tieni chiuse le finestre.": "If the air outside is worse, keep the windows shut.",
   "Se hai due impianti solari — due tetti, due accumuli — aggiungi il secondo qui: quello che hai adesso passa in elenco così com'è, e in pagina compare la fila per passare dall'uno all'altro.": "If you have two solar plants — two roofs, two tanks — add the second one here: the one you have now moves into the list exactly as it is, and the page grows a row to switch between them.",
   "Se i ritiri stanno in un posto solo, mettilo qui: un calendar.* con un evento per ritiro, oppure un sensor.* che porta l'elenco dei prossimi ritiri negli attributi. Ogni voce diventa una riga, col materiale indovinato dal nome.": "If the collections live in one place, put it here: a calendar.* with one event per collection, or a sensor.* carrying the list of upcoming collections in its attributes. Each entry becomes a row, with the material guessed from its name.",
+  "Se il tuo inverter li scrive al contrario: la rete positiva quando cede, la batteria positiva quando carica": "If your inverter writes them the other way round: grid positive when feeding in, battery positive when charging",
   "Se la centrale spezza la casa in aree — zona giorno e zona notte, casa e capannone — aggiungi qui la seconda: quella che hai adesso passa in elenco così com'è, e in pagina compare la fila per passare dall'una all'altra, con lo stato di ognuna.": "If the panel splits the house into areas — day zone and night zone, house and workshop — add the second one here: the one you have now moves into the list exactly as it is, and the page grows a row to switch between them, each with its own state.",
   "Se la pagina dice «In scarica» mentre la batteria si sta caricando, il tuo BMS scrive la corrente al contrario: scegli «Negativa in carica».": "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.",
   "Se la telecamera ha già la sua integrazione in Home Assistant — Reolink, Tapo, Hikvision — l'entità c'è già: sceglila nel campo qui sopra, e il video passa da lì.": "If the camera already has its own integration in Home Assistant — Reolink, Tapo, Hikvision — the entity is already there: pick it in the field above, and the video goes through it.",
@@ -6411,6 +6429,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un sensore col livello": "A sensor with the level",
   "Un sensore col numero degli scioperi e l'elenco negli attributi — settore, regione, data d'inizio: le integrazioni italiane degli scioperi lo pubblicano cosi'.": "A sensor with the number of strikes and the list in its attributes — sector, region, start date: the Italian strike integrations publish it that way.",
   "Un sensore col ritardo in minuti nello stato o negli attributi, e accanto il numero del treno, la destinazione e il binario. Un treno soppresso diventa un allarme.": "A sensor with the delay in minutes in its state or attributes, and next to it the train number, the destination and the platform. A cancelled train becomes an alarm.",
+  "Un sensore col segno, o due separati": "One signed sensor, or two separate ones",
   "Un sensore col testo dell'allarme o un binary_sensor: quando scatta, in pagina compare la fascia rossa con le sue parole.": "A sensor with the alarm text or a binary_sensor: when it trips, the page shows the red banner with its words.",
   "Un sensore con la prossima data (nello stato o negli attributi), o un calendar.* con un evento per ritiro.": "A sensor with the next date (in its state or attributes), or a calendar.* with one event per collection.",
   "Un sensore di movimento o di presenza lo dichiara Home Assistant da sé e compare qui senza configurare niente. Se il tuo non viene trovato, aggiungilo dalla scheda Presenza della configurazione.": "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.",
@@ -6457,6 +6476,7 @@ var SOURCE_INDEX = Object.freeze({
   "Unità clima": "Climate units",
   "Unità clima aggiunta": "Climate unit added",
   "Unità della capacità scritta a mano": "Unit of a hand-written capacity",
+  "Uno col segno": "One, signed",
   "uno dei due l'ha preso dall'altro, e da qui non si può sapere quale.": "one of the two took it from the other, and from here there is no way to know which.",
   "Uno scaldabagno elettrico, anche alimentato dal fotovoltaico.": "An electric water heater, fed by the PV plant or not.",
   "Uomo": "Man",
@@ -92657,14 +92677,26 @@ function lettoriDellaPagina(pagina2, fonte = {}) {
   if (pagina2?.lettori?.length) return pagina2.lettori.map((id) => ({ entita: id, nome: "" }));
   return elenco10(fonte.lettori).slice(0, LETTORI_AL_MASSIMO).map((l) => ({ entita: l.entity, nome: l.nome || "" }));
 }
-var ENERGIA_VUOTA = Object.freeze({ casa: "", solare: "", rete: "", batteria: "" });
+var ENERGIA_VUOTA = Object.freeze({
+  casa: "",
+  solare: "",
+  rete: "",
+  prelievo: "",
+  immissione: "",
+  batteria: "",
+  potenzaBatteria: "",
+  carica: "",
+  scarica: ""
+});
+var VERSI_DELL_ENERGIA = Object.freeze(["invertiRete", "invertiBatteria"]);
 var ALTRE_MISURE_AL_MASSIMO = 8;
 function energiaPulita(input) {
   const dentro3 = input && typeof input === "object" ? input : {};
   const fisse = Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, entita2(dentro3[k])]));
   const viste2 = /* @__PURE__ */ new Set();
   const altre = (Array.isArray(dentro3.altre) ? dentro3.altre : []).map(entita2).filter((e) => e && !viste2.has(e) && viste2.add(e)).slice(0, ALTRE_MISURE_AL_MASSIMO);
-  return { ...fisse, altre };
+  const versi = Object.fromEntries(VERSI_DELL_ENERGIA.map((k) => [k, dentro3[k] === true]));
+  return { ...fisse, ...versi, altre };
 }
 function altreMisureDellaPagina(pagina2) {
   return Array.isArray(pagina2?.energia?.altre) ? pagina2.energia.altre.filter(Boolean) : [];
@@ -92676,7 +92708,70 @@ function grigliaPer(quante3) {
 function energiaDellaPagina(pagina2, fonte = {}) {
   const scelte5 = pagina2?.energia || {};
   const sue = fonte?.energia || {};
-  return Object.fromEntries(Object.keys(ENERGIA_VUOTA).map((k) => [k, scelte5[k] || sue[k] || ""]));
+  const una = (k) => scelte5[k] || sue[k] || "";
+  const gruppo = (chiavi2, girataDiLa, inverti2) => {
+    const qui = chiavi2.some((k) => scelte5[k]);
+    const da = qui ? scelte5 : sue;
+    return {
+      ...Object.fromEntries(chiavi2.map((k) => [k, entita2(da[k])])),
+      girata: (qui ? false : sue[girataDiLa] === true) !== (scelte5[inverti2] === true)
+    };
+  };
+  const rete = gruppo(["rete", "prelievo", "immissione"], "reteGirata", "invertiRete");
+  const batteria = gruppo(
+    ["potenzaBatteria", "carica", "scarica"],
+    "batteriaGirata",
+    "invertiBatteria"
+  );
+  return {
+    casa: una("casa"),
+    solare: una("solare"),
+    batteria: una("batteria"),
+    rete: rete.rete,
+    prelievo: rete.prelievo,
+    immissione: rete.immissione,
+    reteGirata: rete.girata,
+    potenzaBatteria: batteria.potenzaBatteria,
+    carica: batteria.carica,
+    scarica: batteria.scarica,
+    batteriaGirata: batteria.girata
+  };
+}
+function potenzaConIlSegno({ segno: segno2, positivo: positivo3, negativo, girata }, watt5) {
+  if (positivo3 || negativo) {
+    const piu = positivo3 ? watt5(positivo3) : 0;
+    const meno = negativo ? watt5(negativo) : 0;
+    if (piu === null && meno === null) return null;
+    return (piu ?? 0) - (meno ?? 0);
+  }
+  if (!segno2) return null;
+  const v = watt5(segno2);
+  return v === null ? null : girata ? -v : v;
+}
+function versiDellaPlancia(energy) {
+  const modello2 = energy && typeof energy === "object" ? energy : {};
+  const fuori = {};
+  const rete = powerPairSource(modello2, "grid");
+  if (rete) {
+    fuori.prelievo = entita2(rete.main);
+    fuori.immissione = entita2(rete.opposite);
+  } else {
+    const fonte = signedSource(modello2, "grid");
+    fuori.rete = entita2(fonte?.entities?.power || modello2.grid?.power);
+    fuori.reteGirata = fonte?.inverted === true;
+  }
+  const batteria = powerPairSource(modello2, "battery");
+  if (batteria) {
+    fuori.carica = entita2(batteria.main);
+    fuori.scarica = entita2(batteria.opposite);
+  } else {
+    const fonte = signedSource(modello2, "battery");
+    fuori.potenzaBatteria = entita2(fonte?.entities?.power || modello2.battery?.power);
+    fuori.batteriaGirata = fonte?.inverted === true;
+  }
+  for (const [k, v] of Object.entries(fuori))
+    if (typeof v === "string" && isDerivedEntity(v)) fuori[k] = "";
+  return fuori;
 }
 var MURO_VUOTO = Object.freeze({
   attiva: false,
@@ -92843,14 +92938,24 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
       testo(c?.nome || c?.name, 40)
     ]).filter(([id]) => id)
   );
-  const misura7 = (chiave2) => entita2(overrides2[`dm.energy_${chiave2}`]);
+  const misura7 = (chiave2) => {
+    const id = entita2(overrides2[`dm.energy_${chiave2}`]);
+    return isDerivedEntity(id) ? "" : id;
+  };
+  const versi = versiDellaPlancia(sezioni2.energy);
+  const conVersi = Object.values(versi).some((v) => typeof v === "string" && v);
   return {
-    /* Le misure dell'energia che la plancia di origine ha gia' scelto. */
+    /* Le misure dell'energia che la plancia di origine ha gia' scelto: rete
+     * e batteria col verso della sua scheda Energia. Una plancia senza il
+     * modello (le piu' vecchie) dice solo gli alias. */
     energia: {
       casa: misura7("potenza_consumo_casa"),
       solare: misura7("potenza_fotovoltaico"),
-      rete: misura7("potenza_scambio_rete"),
-      batteria: misura7("stato_carica_batteria")
+      batteria: misura7("stato_carica_batteria"),
+      ...conVersi ? versi : {
+        rete: misura7("potenza_scambio_rete"),
+        potenzaBatteria: misura7("potenza_batteria")
+      }
     },
     /* I lettori della sezione Musica, per la pagina Musica. */
     lettori: lettoriConfigurati(elenco10(altro.lettori)).filter((l) => entita2(l.entity)).map((l) => ({
@@ -93337,7 +93442,8 @@ function fonteDiQui() {
       lights: section("lights", []),
       climate: section("climate", []),
       covers: section("covers", []),
-      cameras: section("cameras", [])
+      cameras: section("cameras", []),
+      energy: section("energy", {})
     },
     {
       azioni: readJson("cd_quick_actions", []),
@@ -94502,6 +94608,7 @@ function potenza2(id) {
     testo: quanto >= 1e3 ? `${decimale2(quanto / 1e3, 1)} kW` : `${decimale2(quanto, 0)} W`
   };
 }
+var potenzaScritta = (watt5) => Math.abs(watt5) >= 1e3 ? `${decimale2(Math.abs(watt5) / 1e3, 1)} kW` : `${decimale2(Math.abs(watt5), 0)} W`;
 function paginaEnergia(pagina2) {
   const e = energiaDellaPagina(pagina2, state111.fonte || {});
   const tessere = [];
@@ -94513,7 +94620,8 @@ function paginaEnergia(pagina2) {
       "#0ea5e9",
       t("Consuma la casa", "House uses"),
       p.testo,
-      nomeDi8(e.casa)
+      nomeDi8(e.casa),
+      ""
     ]);
   }
   if (e.solare) {
@@ -94524,30 +94632,59 @@ function paginaEnergia(pagina2) {
       "#f59e0b",
       t("Produce il solare", "Solar makes"),
       p.testo,
-      nomeDi8(e.solare)
+      nomeDi8(e.solare),
+      ""
     ]);
   }
-  if (e.rete) {
-    const p = potenza2(e.rete);
-    const parola = p.valore === null ? t("Rete", "Grid") : p.valore < 0 ? t("Cede alla rete", "To the grid") : t("Preleva dalla rete", "From the grid");
+  const watt5 = (id) => potenza2(id).valore;
+  const scambio = potenzaConIlSegno(
+    { segno: e.rete, positivo: e.prelievo, negativo: e.immissione, girata: e.reteGirata },
+    watt5
+  );
+  if (e.rete || e.prelievo || e.immissione) {
+    const cede = scambio !== null && scambio < 0;
+    const parola = scambio === null ? t("Rete", "Grid") : cede ? t("Cede alla rete", "To the grid") : t("Preleva dalla rete", "From the grid");
     tessere.push([
       "rete",
       "energia",
-      p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6",
+      cede ? "#10b981" : "#8b5cf6",
       parola,
-      p.testo,
-      nomeDi8(e.rete)
+      scambio === null ? "—" : potenzaScritta(Math.abs(scambio)),
+      nomeDi8((cede ? e.immissione : e.prelievo) || e.rete || e.prelievo || e.immissione),
+      ""
     ]);
   }
+  const flusso = potenzaConIlSegno(
+    { segno: e.potenzaBatteria, positivo: e.scarica, negativo: e.carica, girata: e.batteriaGirata },
+    watt5
+  );
+  const cosaFa = flusso === null || Math.abs(flusso) < 30 ? flusso === null ? null : { testo: t("Ferma", "Idle"), colore: "#94a3b8" } : flusso > 0 ? {
+    testo: `${t("In scarica", "Discharging")} · ${potenzaScritta(flusso)}`,
+    colore: "#f97316"
+  } : {
+    testo: `${t("In carica", "Charging")} · ${potenzaScritta(-flusso)}`,
+    colore: "#10b981"
+  };
   if (e.batteria) {
     const v = numero47(stato2(e.batteria)?.state);
     tessere.push([
       "batteria",
       "batterie",
-      "#10b981",
+      cosaFa?.colore === "#f97316" ? "#f97316" : "#10b981",
       t("Batteria", "Battery"),
       v === null ? "—" : `${decimale2(v, 0)}%`,
-      nomeDi8(e.batteria)
+      nomeDi8(e.batteria),
+      cosaFa ? `<div class="mu-cosa-fa" style="color:${cosaFa.colore}">${esc(cosaFa.testo)}</div>` : ""
+    ]);
+  } else if (cosaFa) {
+    tessere.push([
+      "batteria",
+      "batterie",
+      cosaFa.colore,
+      t("Batteria", "Battery"),
+      flusso !== null && Math.abs(flusso) >= 30 ? potenzaScritta(Math.abs(flusso)) : cosaFa.testo,
+      nomeDi8(e.potenzaBatteria || e.scarica || e.carica),
+      flusso !== null && Math.abs(flusso) >= 30 ? `<div class="mu-cosa-fa" style="color:${cosaFa.colore}">${esc(flusso > 0 ? t("In scarica", "Discharging") : t("In carica", "Charging"))}</div>` : ""
     ]);
   }
   altreMisureDellaPagina(pagina2).forEach((id, n) => {
@@ -94555,16 +94692,16 @@ function paginaEnergia(pagina2) {
     const unita2 = clean(s?.attributes?.unit_of_measurement);
     const v = numero47(s?.state);
     const valore3 = /^k?w$/i.test(unita2) ? potenza2(id).testo : v === null ? clean(s?.state) || "—" : `${decimale2(v, Math.abs(v) < 10 && v % 1 ? 1 : 0)}${unita2 ? ` ${unita2}` : ""}`;
-    tessere.push([`altra-${n}`, "energia", "#64748b", nomeDi8(id), valore3, ""]);
+    tessere.push([`altra-${n}`, "energia", "#64748b", nomeDi8(id), valore3, "", ""]);
   });
   if (!tessere.length)
     return griglia2(pagina2, [
       vuoto2(0, t("Scegli le misure nel config", "Choose the readings in the config"))
     ]);
   const carte = tessere.map(
-    ([k, d, acc, etichetta3, valore3, sotto], i) => `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
+    ([k, d, acc, etichetta3, valore3, sotto, extra], i) => `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta3)}</span></div>
-      <div class="mu-grande">${esc(valore3)}</div><div class="mu-sotto">${esc(sotto)}</div></div>`
+      <div class="mu-grande">${esc(valore3)}</div>${extra || ""}<div class="mu-sotto">${esc(sotto)}</div></div>`
   );
   return griglia2(
     { ...pagina2, griglia: Math.max(grigliaPer(carte.length), carte.length <= 4 ? 4 : 0) },
@@ -96903,6 +97040,7 @@ ${MURO} .mu-ambiente .mu-target{margin-top:auto;flex-wrap:wrap}
 ${MURO} .mu-cam{padding:8px}
 ${MURO} .mu-cam .mu-video{height:100%;min-height:0}
 ${MURO} .mu-energia .mu-grande{margin-top:auto;font-size:72px}
+${MURO} .mu-energia .mu-cosa-fa{font-size:22px;font-weight:600;margin-top:4px}
 ${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}
@@ -98098,16 +98236,49 @@ function paginaMarkup(p, i, tutte) {
         segnaposto: sue[chiave2] || t("Entità", "Entity")
       })
     );
+    const due3 = (chiavi2, [a, b]) => {
+      const da = chiavi2.some((c) => p.energia[c]) ? p.energia : sue;
+      return Boolean(da[a] || da[b]);
+    };
+    const reteDue = state112.reteDue?.[via] ?? due3(["rete", "prelievo", "immissione"], ["prelievo", "immissione"]);
+    const batteriaDue = state112.batteriaDue?.[via] ?? due3(["potenzaBatteria", "carica", "scarica"], ["carica", "scarica"]);
+    const modo = (chi, acceso6) => `<span class="mu-ed-seg">${[
+      [false, t("Uno col segno", "One, signed")],
+      [true, t("Due sensori", "Two sensors")]
+    ].map(
+      ([v, testo2]) => `<button type="button" class="${v === acceso6 ? "si" : ""}" data-mu-ed-modo-energia="${esc(chi)}" data-mu-ed-via="${esc(via)}" data-mu-ed-valore="${v}">${esc(testo2)}</button>`
+    ).join("")}</span>`;
     dentro3 = `<div class="mu-ed-nota">${esc(
       t(
-        "Quattro numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine.",
-        "Four big live numbers. Left empty, they come from the source dashboard's Energy section."
+        "Numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine, col verso che ha lì.",
+        "Big live numbers. Left empty, they come from the source dashboard's Energy section, with its direction."
       )
     )}</div>
     ${misura7("casa", t("Consumo della casa", "House consumption"), t("Potenza, in W o kW", "Power, in W or kW"))}
     ${misura7("solare", t("Produzione solare", "Solar production"), t("Potenza, in W o kW", "Power, in W or kW"))}
-    ${misura7("rete", t("Scambio con la rete", "Grid exchange"), t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in"))}
-    ${misura7("batteria", t("Batteria", "Battery"), t("Carica in %", "Charge in %"))}
+    ${riga2(t("Rete: come la misuri", "Grid: how you measure it"), t("Un sensore col segno, o due separati", "One signed sensor, or two separate ones"), modo("rete", reteDue))}
+    ${reteDue ? `${misura7("prelievo", t("Prelievo dalla rete", "Drawn from the grid"), t("Potenza presa dalla rete", "Power taken from the grid"))}
+    ${misura7("immissione", t("Immissione in rete", "Fed into the grid"), t("Potenza ceduta alla rete", "Power fed into the grid"))}` : misura7(
+      "rete",
+      t("Scambio con la rete", "Grid exchange"),
+      t("Positivo si preleva, negativo si cede", "Positive is drawn, negative is fed in")
+    )}
+    ${misura7("batteria", t("Batteria: carica", "Battery: charge"), t("In %", "In %"))}
+    ${riga2(t("Batteria: potenza", "Battery: power"), t("Un sensore col segno, o due separati", "One signed sensor, or two separate ones"), modo("batteria", batteriaDue))}
+    ${batteriaDue ? `${misura7("carica", t("Potenza in carica", "Charging power"), t("Quanto entra nella batteria", "What goes into the battery"))}
+    ${misura7("scarica", t("Potenza in scarica", "Discharging power"), t("Quanto esce dalla batteria", "What comes out of the battery"))}` : misura7(
+      "potenzaBatteria",
+      t("Potenza della batteria", "Battery power"),
+      t("Positivo si scarica, negativo si carica", "Positive discharges, negative charges")
+    )}
+    ${riga2(
+      t("Inverti il segno", "Flip the sign"),
+      t(
+        "Se il tuo inverter li scrive al contrario: la rete positiva quando cede, la batteria positiva quando carica",
+        "If your inverter writes them the other way round: grid positive when feeding in, battery positive when charging"
+      ),
+      `<span class="mu-ed-versi">${esc(t("Rete", "Grid"))} ${interruttore(`${via}.energia.invertiRete`, p.energia.invertiRete === true, "inverti-rete")} ${esc(t("Batteria", "Battery"))} ${interruttore(`${via}.energia.invertiBatteria`, p.energia.invertiBatteria === true, "inverti-batteria")}</span>`
+    )}
     ${riga2(
       t("Altre misure", "More readings"),
       t(
@@ -98722,6 +98893,18 @@ function onClick26(event) {
     suonaIlCampanello(o.suono, o.volume, { ripeti: false });
     return;
   }
+  const modo = event.target.closest("[data-mu-ed-modo-energia]");
+  if (modo) {
+    event.preventDefault();
+    const { muEdModoEnergia: chi, muEdVia: via, muEdValore: valore3 } = modo.dataset;
+    const due3 = valore3 === "true";
+    const chiave2 = chi === "rete" ? "reteDue" : "batteriaDue";
+    state112[chiave2] = { ...state112[chiave2] || {}, [via]: due3 };
+    const togli2 = chi === "rete" ? due3 ? ["rete"] : ["prelievo", "immissione"] : due3 ? ["potenzaBatteria"] : ["carica", "scarica"];
+    for (const k of togli2) metti3(`${via}.energia.${k}`, "");
+    ridisegna8();
+    return;
+  }
   const el = event.target.closest(
     "[data-mu-ed-alterna],[data-mu-ed-metti],[data-mu-ed-nuova],[data-mu-ed-togli],[data-mu-ed-pagina-su],[data-mu-ed-pagina-giu],[data-mu-ed-posto-su],[data-mu-ed-posto-giu],[data-mu-ed-salva],[data-mu-ed-pick],[data-mu-ed-svuota],[data-mu-ed-apri],[data-mu-ed-altro],[data-mu-ed-copia],[data-mu-ed-togli-voce],[data-mu-ed-aggiungi-voce],[data-mu-ed-sposta]"
   );
@@ -98880,6 +99063,7 @@ function stili2() {
 #ed-body .mu-ed-int i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .18s ease}
 #ed-body .mu-ed-int[aria-checked="true"] i{transform:translateX(18px)}
 #ed-body .mu-ed-seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:12px;border:1px solid var(--divider-color,#dbe4ee)}
+#ed-body .mu-ed-versi{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
 #ed-body .mu-ed-seg button{border:0;padding:8px 12px;border-radius:9px;background:none;color:var(--text-dim,#64748b);font-weight:800;font-size:12.5px;cursor:pointer}
 #ed-body .mu-ed-seg button.si{background:color-mix(in srgb,#0ea5e9 18%,transparent);color:#0369a1;box-shadow:inset 0 0 0 1px #0ea5e999}
 html[data-theme="dark"] #ed-body .mu-ed-seg button.si{color:#7dd3fc}

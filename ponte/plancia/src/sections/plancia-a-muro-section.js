@@ -91,6 +91,7 @@ import {
   ambientiDellaFonte,
   altreMisureDellaPagina,
   energiaDellaPagina,
+  potenzaConIlSegno,
   grigliaPer,
   fonteDaiValori,
   grigliaDellaPagina,
@@ -293,6 +294,7 @@ function fonteDiQui() {
       climate: section("climate", []),
       covers: section("covers", []),
       cameras: section("cameras", []),
+      energy: section("energy", {}),
     },
     {
       azioni: readJson("cd_quick_actions", []),
@@ -2008,6 +2010,11 @@ function potenza(id) {
   };
 }
 
+const potenzaScritta = (watt) =>
+  Math.abs(watt) >= 1000
+    ? `${decimale(Math.abs(watt) / 1000, 1)} kW`
+    : `${decimale(Math.abs(watt), 0)} W`;
+
 function paginaEnergia(pagina) {
   const e = energiaDellaPagina(pagina, state.fonte || {});
   const tessere = [];
@@ -2020,6 +2027,7 @@ function paginaEnergia(pagina) {
       t("Consuma la casa", "House uses"),
       p.testo,
       nomeDi(e.casa),
+      "",
     ]);
   }
   if (e.solare) {
@@ -2031,35 +2039,79 @@ function paginaEnergia(pagina) {
       t("Produce il solare", "Solar makes"),
       p.testo,
       nomeDi(e.solare),
+      "",
     ]);
   }
-  if (e.rete) {
-    const p = potenza(e.rete);
-    /* Il segno lo decide chi misura: positivo si preleva, negativo si cede. */
+  /* La rete e la batteria col loro verso (`potenzaConIlSegno`): con un
+   * sensore col segno, o con due sensori sempre positivi. */
+  const watt = (id) => potenza(id).valore;
+  const scambio = potenzaConIlSegno(
+    { segno: e.rete, positivo: e.prelievo, negativo: e.immissione, girata: e.reteGirata },
+    watt,
+  );
+  if (e.rete || e.prelievo || e.immissione) {
+    const cede = scambio !== null && scambio < 0;
     const parola =
-      p.valore === null
+      scambio === null
         ? t("Rete", "Grid")
-        : p.valore < 0
+        : cede
           ? t("Cede alla rete", "To the grid")
           : t("Preleva dalla rete", "From the grid");
     tessere.push([
       "rete",
       "energia",
-      p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6",
+      cede ? "#10b981" : "#8b5cf6",
       parola,
-      p.testo,
-      nomeDi(e.rete),
+      scambio === null ? "—" : potenzaScritta(Math.abs(scambio)),
+      nomeDi((cede ? e.immissione : e.prelievo) || e.rete || e.prelievo || e.immissione),
+      "",
     ]);
   }
+  const flusso = potenzaConIlSegno(
+    { segno: e.potenzaBatteria, positivo: e.scarica, negativo: e.carica, girata: e.batteriaGirata },
+    watt,
+  );
+  /* Sotto i 30 W la batteria e' ferma: l'inverter che la tiene in pari non
+   * e' una carica. */
+  const cosaFa =
+    flusso === null || Math.abs(flusso) < 30
+      ? flusso === null
+        ? null
+        : { testo: t("Ferma", "Idle"), colore: "#94a3b8" }
+      : flusso > 0
+        ? {
+            testo: `${t("In scarica", "Discharging")} · ${potenzaScritta(flusso)}`,
+            colore: "#f97316",
+          }
+        : {
+            testo: `${t("In carica", "Charging")} · ${potenzaScritta(-flusso)}`,
+            colore: "#10b981",
+          };
   if (e.batteria) {
     const v = numero(stato(e.batteria)?.state);
     tessere.push([
       "batteria",
       "batterie",
-      "#10b981",
+      cosaFa?.colore === "#f97316" ? "#f97316" : "#10b981",
       t("Batteria", "Battery"),
       v === null ? "—" : `${decimale(v, 0)}%`,
       nomeDi(e.batteria),
+      cosaFa
+        ? `<div class="mu-cosa-fa" style="color:${cosaFa.colore}">${esc(cosaFa.testo)}</div>`
+        : "",
+    ]);
+  } else if (cosaFa) {
+    /* Senza la carica in % resta la potenza: la tessera dice cosa fa. */
+    tessere.push([
+      "batteria",
+      "batterie",
+      cosaFa.colore,
+      t("Batteria", "Battery"),
+      flusso !== null && Math.abs(flusso) >= 30 ? potenzaScritta(Math.abs(flusso)) : cosaFa.testo,
+      nomeDi(e.potenzaBatteria || e.scarica || e.carica),
+      flusso !== null && Math.abs(flusso) >= 30
+        ? `<div class="mu-cosa-fa" style="color:${cosaFa.colore}">${esc(flusso > 0 ? t("In scarica", "Discharging") : t("In carica", "Charging"))}</div>`
+        : "",
     ]);
   }
   /* Le misure in più: il nome dell'entità sopra, il valore grande. Una
@@ -2074,17 +2126,17 @@ function paginaEnergia(pagina) {
       : v === null
         ? clean(s?.state) || "—"
         : `${decimale(v, Math.abs(v) < 10 && v % 1 ? 1 : 0)}${unita ? ` ${unita}` : ""}`;
-    tessere.push([`altra-${n}`, "energia", "#64748b", nomeDi(id), valore, ""]);
+    tessere.push([`altra-${n}`, "energia", "#64748b", nomeDi(id), valore, "", ""]);
   });
   if (!tessere.length)
     return griglia(pagina, [
       vuoto(0, t("Scegli le misure nel config", "Choose the readings in the config")),
     ]);
   const carte = tessere.map(
-    ([k, d, acc, etichetta, valore, sotto], i) =>
+    ([k, d, acc, etichetta, valore, sotto, extra], i) =>
       `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta)}</span></div>
-      <div class="mu-grande">${esc(valore)}</div><div class="mu-sotto">${esc(sotto)}</div></div>`,
+      <div class="mu-grande">${esc(valore)}</div>${extra || ""}<div class="mu-sotto">${esc(sotto)}</div></div>`,
   );
   /* Le tessere stanno tutte nella griglia: con le misure in più si allarga
    * da sola (6, 8, 12), senza scorrere. */
@@ -5160,6 +5212,7 @@ ${MURO} .mu-ambiente .mu-target{margin-top:auto;flex-wrap:wrap}
 ${MURO} .mu-cam{padding:8px}
 ${MURO} .mu-cam .mu-video{height:100%;min-height:0}
 ${MURO} .mu-energia .mu-grande{margin-top:auto;font-size:72px}
+${MURO} .mu-energia .mu-cosa-fa{font-size:22px;font-weight:600;margin-top:4px}
 ${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}
