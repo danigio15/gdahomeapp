@@ -38577,24 +38577,43 @@ function ripara() {
   if (!header2) return;
   unaSolaPaginaAperta();
   const attiva2 = doc?.querySelector?.(".page.active");
+  const tornata = attiva2?.id === "page-home" && Boolean(state34.ultima) && state34.ultima !== "page-home";
+  if (attiva2?.id) state34.ultima = attiva2.id;
   if (attiva2?.id === "page-home" && header2.style.display === "none") {
     header2.style.display = "";
   }
   riparaIlBloccoASinistra(header2);
   sposta();
-  rifaiLaFila(header2);
+  rifaiLaFila(header2, { sempre: tornata });
   root.requestAnimationFrame?.(() => rifaiLaFila(header2));
+  if (tornata) root.setTimeout?.(() => rifaiLaFila(header2, { sempre: true }), 350);
 }
-function rifaiLaFila(header2) {
+function primaFilaStorta(header2) {
+  const riquadro = header2?.getBoundingClientRect?.();
+  if (!riquadro || riquadro.width < 1) return false;
+  for (const pezzo of header2.querySelectorAll?.(
+    ":scope > .header-left-wrap, :scope > .header-left-wrap .brand-text, :scope > .dm-editor-entry"
+  ) || []) {
+    const r = pezzo.getBoundingClientRect?.();
+    if (!r) continue;
+    if (r.width < 1 || r.height < 1) return true;
+    if (r.bottom <= riquadro.top + 1 || r.top >= riquadro.bottom - 1) return true;
+  }
+  return false;
+}
+function rifaiLaFila(header2, { sempre = false } = {}) {
   if (!header2 || doc?.querySelector?.(".page.active")?.id !== "page-home") return false;
   const sinistra = header2.querySelector?.(":scope > .header-left-wrap");
   if (!sinistra) return false;
   const larga = header2.getBoundingClientRect?.().width || 0;
-  if (larga < 1 || (sinistra.getBoundingClientRect?.().width || 0) >= 1) return false;
-  const prima = header2.style.display;
-  header2.style.display = "none";
+  if (larga < 1) return false;
+  if (!sempre && !primaFilaStorta(header2)) return false;
+  const valore3 = header2.style.getPropertyValue("display");
+  const peso = header2.style.getPropertyPriority("display");
+  header2.style.setProperty("display", "none", "important");
   void header2.offsetWidth;
-  header2.style.display = prima;
+  if (valore3) header2.style.setProperty("display", valore3, peso);
+  else header2.style.removeProperty("display");
   void header2.offsetWidth;
   return true;
 }
