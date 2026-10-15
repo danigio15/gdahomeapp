@@ -523,6 +523,7 @@ class IlFiloDellaVettura {
 
   void avvia() {
     _chiediDa(chiediAllaCasa);
+    _comandiDa(comandoAllaCasa);
     _ascolti
       ..add(collegamento.cambiamenti.listen((_) => _comeVa()))
       ..add(collegamento.entitaCambiate.listen((_) => _aggiorna()))
@@ -542,6 +543,38 @@ class IlFiloDellaVettura {
     _abbonamento = null;
     fonte.collegamento(false);
     _chiediDa(null);
+    _comandiDa(null);
+  }
+
+  /// Un comando di gdanav per la casa (i viaggi pianificati,
+  /// `ponte/viaggi/…`), sul filo di adesso. La casa sa chi chiede: ognuno
+  /// legge e scrive solo i suoi viaggi. Senza filo, un errore che gdanav
+  /// dice in parole.
+  Future<Object?> comandoAllaCasa(Map<String, Object?> comando) async {
+    final filo = collegamento.filo;
+    final tipo = comando['type'];
+    // Solo i viaggi: gdanav non manda altro alla casa da qui.
+    if (tipo is! String || !tipo.startsWith('ponte/viaggi/')) {
+      throw ArgumentError.value(
+        tipo,
+        'type',
+        'gdanav chiede alla casa solo i viaggi',
+      );
+    }
+    if (filo == null || !collegamento.dentro || _spento) {
+      throw StateError('la casa non è collegata');
+    }
+    return filo.risultato(Map<String, dynamic>.of(comando));
+  }
+
+  /// Dice a gdanav come mandare un comando alla casa
+  /// (`SorgenteGdahome.chiedi`): per nome, come [_chiediDa].
+  void _comandiDa(Future<Object?> Function(Map<String, Object?>)? come) {
+    try {
+      (fonte as dynamic).chiedi = come;
+    } on NoSuchMethodError {
+      /* gdanav di prima: niente pianificatore nella casa. */
+    }
   }
 
   /// Dice a gdanav come chiedere dati freschi (`SorgenteGdahome.aggiorna`).

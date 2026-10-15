@@ -19,6 +19,7 @@ const Map<String, List<String>> categorieDelleNotifiche = {
   'persone': ['arrivi'],
   'assistente': ['suggerimenti'],
   'manutenzione': ['riepilogo'],
+  'viaggi': ['viaggi'],
 };
 
 final RegExp _orario = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
