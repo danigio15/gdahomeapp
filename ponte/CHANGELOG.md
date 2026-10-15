@@ -23,6 +23,25 @@ aprendo «Cerca», prima di scrivere ci sono le ultime ricerche.
 **Navigatore: niente ABRP.** In «La tua auto» non c'è più «Ho il consumo di
 ABRP»: il consumo lo impara il navigatore guidando.
 
+**Navigatore: con Android Auto la guida non compare sul telefono.** Con il
+navigatore sullo schermo dell'auto la notifica della guida non c'è; con
+un'altra app davanti resta per l'auto, e sul telefono sta in fondo, senza
+icona e senza suono.
+
+**Navigatore: un avviso spento sparisce anche dalla mappa.** Sul telefono e
+in auto: scelto «Spento», l'avviso non si dice, non si mostra e non si vede
+più sulla mappa.
+
+**Assistente: le luci con i nomi della plancia.** «Quante luci sono accese?»
+risponde con i nomi e le stanze scelti nella plancia, non con quelli dei
+dispositivi («switch_0»); con tante luci le conta per stanza, e si può
+spegnere una stanza sola. Le luci collegate a un interruttore contano anche
+loro.
+
+**Assistente: un suggerimento scartato torna dopo un'ora.** Con la ✕, o
+segnato «Fatto», dopo un'ora la casa riguarda: se la cosa c'è ancora, lo
+ridice.
+
 ## 1.12.2
 
 **Android: il campanello senza lo schermo intero automatico.** Per ora, sui
@@ -195,6 +214,7 @@ casa Premium che per un momento non risponde mostra «Riconnessione…» e l'app
 riprova da sola, anche da fuori.
 
 **Navigatore:**
+
 - pedaggi stile Waze, con il prezzo stimato sulle strade, nel riepilogo e
   accanto ai km che restano (anche su Android Auto; su CarPlay accanto);
 - senza auto elettrica configurata propone l'auto termica e ricalcola;
@@ -237,6 +257,7 @@ dicono la plancia, una notifica di Home Assistant e la Panoramica della
 console.
 
 **Pannello a muro come una regia.** Tre pagine nuove:
+
 - **Mixer**: gruppi colorati di cursori verticali con il muto sotto ogni
   canale e il «Volume totale» in fondo (lettori multimediali e numeri di
   Home Assistant).
@@ -338,6 +359,7 @@ averla chiusa. Nel centralino una casa rimasta in silenzio a lungo tiene la sua
 identità, e quando torna rientra solo lei.
 
 **Pannello a muro: cancelli, citofono e avvisi.**
+
 - Un cancello o una porta del garage ha il suo riquadro: il suo disegno,
   «Aperto» o «Chiuso», e un tasto grande che apre, chiude o ferma.
 - Sul pannello da 4 pollici il termostato ha il meno e il più sul riquadro.

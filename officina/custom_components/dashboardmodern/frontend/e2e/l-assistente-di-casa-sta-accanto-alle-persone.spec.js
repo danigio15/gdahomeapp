@@ -327,6 +327,65 @@ test("«spegni la luce della cucina» si propone, e parte solo col «Sì»", asy
   await expect(foglio.locator('.dm-ass-chip[data-tipo="fai"]')).toHaveCount(0);
 });
 
+test("le luci si chiamano come nella plancia, non come i dispositivi", async ({
+  page,
+}, testInfo) => {
+  const foglio = await bootConLeStanze(page, testInfo);
+  await page.evaluate(() => {
+    const stati = eval("_RAW_STATES");
+    const metti = (id, friendly_name) =>
+      (stati[id] = {
+        entity_id: id,
+        state: "on",
+        attributes: { friendly_name },
+        last_changed: new Date().toISOString(),
+      });
+    metti("light.shelly_a_0", "Luce Camera switch_0");
+    metti("light.shelly_a_1", "Luce Camera switch_1");
+    metti("switch.shelly_b_0", "Shelly ingresso switch_0");
+    metti("light.led_1", "Led Sala");
+    metti("light.led_2", "Led Sala");
+    localStorage.setItem(
+      "cd_luci",
+      JSON.stringify({
+        "light.shelly_a_0": "Plafoniera",
+        "light.shelly_a_1": "Abat-jour",
+        "switch.shelly_b_0": "Applique",
+        "light.led_1": "Striscia",
+        "light.led_2": "Striscia",
+        "light.sala": "Lampadario",
+        "light.cucina": "Pensili",
+      }),
+    );
+    localStorage.setItem(
+      "cd_luci_rooms",
+      JSON.stringify({
+        "light.shelly_a_0": "Camera",
+        "light.shelly_a_1": "Camera",
+        "light.led_1": "Sala",
+        "light.led_2": "Sala",
+        "light.sala": "Sala",
+      }),
+    );
+  });
+  await chiedi(foglio, "Quante luci sono accese?");
+  const risposta = ultimaRisposta(foglio);
+  await expect(risposta).toContainText("Sono accese 7 luci");
+  await expect(risposta).toContainText("2 in Camera");
+  await expect(risposta).toContainText("3 in Sala");
+  await expect(risposta).not.toContainText("switch_");
+  await expect(
+    foglio.locator("[data-ass-tasti] .dm-ass-chip", { hasText: "Spegni in Camera" }),
+  ).toBeVisible();
+  if (process.env.DM_FOTO)
+    await page.screenshot({ path: `${process.env.DM_FOTO}/luci-per-nome.png` });
+  await foglio.locator("[data-ass-tasti] .dm-ass-chip", { hasText: "Spegni in Camera" }).click();
+  await expect(ultimaRisposta(foglio)).toHaveText("Fatto: luci spente in Camera.");
+  expect(await page.evaluate(() => window.__comandi)).toEqual([
+    "light.turn_off light.shelly_a_0,light.shelly_a_1",
+  ]);
+});
+
 test("quello che la casa non sa va al modello linguistico; se non capisce, si propone cosa chiedere", async ({
   page,
 }, testInfo) => {

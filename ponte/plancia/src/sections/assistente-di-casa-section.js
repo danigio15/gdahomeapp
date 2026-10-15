@@ -68,6 +68,7 @@ import { SOGLIA_POTENZA_KEY, sogliaDellaPotenza } from "../core/la-soglia-della-
 import { normalizePeople, personViewModel } from "../core/person-model.js";
 import { VELO_DELLE_FINESTRE, tokenDelVelo } from "../core/il-velo-delle-finestre.js";
 import { entitaDelMeteo, previsioniDeiGiorni } from "./la-card-del-meteo-section.js";
+import { configuredLightGroups } from "./lights-alerts-section.js";
 import {
   activeLocale,
   allStates,
@@ -828,6 +829,24 @@ const seCe = (valore) => (Array.isArray(valore) ? valore : undefined);
  * Assistant, e sopra quello che la plancia ha scelto — i termometri delle
  * stanze, le persone, le telecamere, l'energia, le previsioni.
  */
+/* Le luci come le ha chiamate chi usa la plancia, ognuna nella sua stanza.
+ * Una luce senza stanza scelta resta senza: la stanza la dira' Home
+ * Assistant, non «Altre zone». */
+function luciDellaPlancia() {
+  try {
+    const stanze = readJson("cd_luci_rooms", {}) || {};
+    return configuredLightGroups().flatMap((gruppo) =>
+      gruppo.entities.map((entity) => ({
+        entity,
+        nome: clean(gruppo.lights?.[entity]),
+        stanza: clean(stanze[entity]) ? clean(gruppo.room) : "",
+      })),
+    );
+  } catch (_errore) {
+    return [];
+  }
+}
+
 export function sapereDiAdesso(states = allStates() || {}, adesso = Date.now()) {
   rinfrescaIModelli(adesso);
   const persone = normalizePeople(readJson("cd_people", []))
@@ -851,6 +870,7 @@ export function sapereDiAdesso(states = allStates() || {}, adesso = Date.now()) 
     aree: areeDiHomeAssistant(),
     stanze: seCe(root.getStanze?.()) || readJson("cd_stanze", []),
     temperature: seCe(modello("temperatura")?.rows),
+    luci: luciDellaPlancia(),
     persone,
     meteo: entitaDelMeteo(states),
     previsioni: {

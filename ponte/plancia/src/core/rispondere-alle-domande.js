@@ -238,7 +238,7 @@ function servizi(voci) {
 export function esempi(sapere = {}, lingua = "it", quanti = 6) {
   const fuori = [];
   const l = lingua;
-  const luci = elenco(sapere.entita).filter((e) => e.dominio === "light" && !e.gruppo);
+  const luci = luciDellaCasa(sapere);
   const stanzaConLuci = luci.find((e) => e.area)?.area;
   if (elenco(sapere.dentro).length)
     fuori.push(dire(l, "Che temperatura c'è in casa?", "What's the temperature inside?"));
@@ -938,8 +938,49 @@ RISPOSTE.quando_uscito = (c, s) => {
 
 const ACCESO = (e) => !["off", "unavailable", "unknown", "standby", "idle", ""].includes(e.stato);
 
+/* Le luci sono quelle scelte nella plancia, quando ce ne sono: con i loro
+ * nomi, e senza i led dei dispositivi che Home Assistant chiama luci. */
 function luciDellaCasa(s) {
-  return elenco(s.entita).filter((e) => e.dominio === "light" && !e.gruppo);
+  const tutte = elenco(s.entita);
+  const scelte = tutte.filter((e) => e.luce);
+  return scelte.length ? scelte : tutte.filter((e) => e.dominio === "light" && !e.gruppo);
+}
+
+/* Le luci accese dette come le direbbe chi abita la casa. Poche si chiamano
+ * per nome; tante si contano per stanza, che e' quello che serve sapere:
+ * «2 in Camera da letto, il Lampadario in Cucina e 3 in Soggiorno». Le luci
+ * con lo stesso nome nella stessa stanza si contano, non si ripetono. */
+function luciDette(accese, l, inUnaStanza) {
+  const perStanza = new Map();
+  for (const e of accese) {
+    const stanza = inUnaStanza ? "" : pulito(e.area);
+    if (!perStanza.has(stanza)) perStanza.set(stanza, []);
+    perStanza.get(stanza).push(pulito(e.nome) || e.entity);
+  }
+  const stanze = [...perStanza.keys()].filter(Boolean);
+  const perNome = (nomi) => {
+    const quanti = new Map();
+    for (const n of nomi) quanti.set(n, (quanti.get(n) || 0) + 1);
+    return [...quanti].map(([n, q]) => (q > 1 ? `${n} (${q})` : n));
+  };
+  if (accese.length <= 4 || stanze.length === 0)
+    return elencoNomi(perNome(accese.map((e) => pulito(e.nome) || e.entity)), l, 5);
+  const pezzi = [];
+  for (const [stanza, nomi] of perStanza) {
+    if (!stanza) {
+      pezzi.push(...perNome(nomi));
+      continue;
+    }
+    const giaDetta = nomi.length === 1 && nomi[0].toLowerCase().includes(stanza.toLowerCase());
+    pezzi.push(
+      giaDetta
+        ? nomi[0]
+        : nomi.length === 1
+          ? dire(l, `${nomi[0]} in ${stanza}`, `${nomi[0]} in ${stanza}`)
+          : dire(l, `${nomi.length} in ${stanza}`, `${nomi.length} in ${stanza}`),
+    );
+  }
+  return elencoNomi(pezzi, l, 6);
 }
 
 RISPOSTE.luci = (c, s) => {
@@ -988,11 +1029,7 @@ RISPOSTE.luci = (c, s) => {
         : dire(l, "Tutte le luci sono spente.", "All the lights are off."),
       soggetto: luci.map((e) => e.entity),
     };
-  const nomi = elencoNomi(
-    accese.map((e) => e.nome),
-    l,
-    5,
-  );
+  const nomi = luciDette(accese, l, Boolean(c.stanza));
   const testo =
     accese.length === 1
       ? dire(
@@ -1006,6 +1043,27 @@ RISPOSTE.luci = (c, s) => {
           `${accese.length} lights are on${dove}: ${nomi}.`,
         );
   const comandabili = accese.filter((e) => e.comandabile);
+  /* Con le luci accese in piu' stanze, si spegne anche una stanza sola. */
+  const stanzeAccese = c.stanza
+    ? []
+    : [...new Set(comandabili.map((e) => pulito(e.area)).filter(Boolean))];
+  const perStanza =
+    stanzeAccese.length > 1
+      ? stanzeAccese.slice(0, 3).map((stanza) => {
+          const qui = comandabili.filter((e) => pulito(e.area) === stanza);
+          return fai(
+            dire(l, `Spegni in ${stanza}`, `Turn off in ${stanza}`),
+            servizi(
+              qui.map((e) => ({
+                dominio: e.dominio,
+                servizio: "turn_off",
+                dati: { entity: e.entity },
+              })),
+            ),
+            dire(l, `Fatto: luci spente in ${stanza}.`, `Done: lights off in ${stanza}.`),
+          );
+        })
+      : [];
   return {
     testo,
     soggetto: accese.map((e) => e.entity),
@@ -1017,7 +1075,7 @@ RISPOSTE.luci = (c, s) => {
               : dire(l, "Spegnile tutte", "Turn them all off"),
             servizi(
               comandabili.map((e) => ({
-                dominio: "light",
+                dominio: e.dominio,
                 servizio: "turn_off",
                 dati: { entity: e.entity },
               })),
@@ -1030,6 +1088,7 @@ RISPOSTE.luci = (c, s) => {
                   `Done: ${comandabili.length} lights off.`,
                 ),
           ),
+          ...perStanza,
         ]
       : [],
   };

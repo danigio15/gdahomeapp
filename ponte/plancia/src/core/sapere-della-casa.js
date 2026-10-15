@@ -294,6 +294,7 @@ function eventiDelCalendario(states, fonti) {
  *   elettrodomestici, auto, telecamere, eventi, rifiuti, batterieBasse,
  *   nonRispondono, aggiornamenti: le righe che la plancia ha gia';
  *   antifurto     l'entita' della centrale scelta;
+ *   luci          le luci scelte nella plancia: `{ entity, nome, stanza }`;
  *   comandabile   chi si puo' comandare (le entita' messe in sola lettura
  *                 no).
  */
@@ -320,6 +321,23 @@ export function sapereDellaCasa(fonti = {}) {
         comandabile: DOMINI_COMANDABILI.includes(dominio) && comandabile(id) !== false,
       };
     });
+
+  /* Le luci della plancia: il nome e la stanza che ci ha dato chi la usa
+   * battono quelli di Home Assistant, che spesso sono del dispositivo
+   * («Luce Camera da letto switch_0»). E una luce scelta e' una luce anche
+   * quando in Home Assistant e' un interruttore. */
+  const scelte = new Map();
+  for (const voce of elenco(fonti.luci)) {
+    const id = pulito(voce?.entity);
+    if (id.includes(".")) scelte.set(id, voce);
+  }
+  for (const e of entita) {
+    const voce = scelte.get(e.entity);
+    if (!voce) continue;
+    e.luce = true;
+    e.nome = pulito(voce.nome || voce.name) || e.nome;
+    e.area = pulito(voce.stanza) || e.area;
+  }
 
   const aree = new Set();
   for (const a of elenco(fonti.aree))
