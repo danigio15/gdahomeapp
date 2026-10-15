@@ -93786,9 +93786,8 @@ function testa(pagina2, muro) {
   const parolaDelMeteo = m ? PAROLE_DEL_METEO()[m.condizione] || "" : "";
   const chipDelMeteo = inCasa ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([t("in casa", "inside"), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>` : m && numero47(m.temperatura) !== null ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale2(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>` : "";
   const accento = accentoDi(pagina2);
-  const molte = muro.pagine.length > 4 ? " mu-molte" : "";
   const lato = menuDiLato(muro, state111.verso, state111.compatto);
-  const linguette3 = !lato && muro.pagine.length > 1 ? `<div class="mu-pagine${molte}" role="tablist">${muro.pagine.map(
+  const linguette3 = !lato && muro.pagine.length > 1 ? `<div class="mu-pagine" role="tablist">${muro.pagine.map(
     (p, i) => `<button type="button" role="tab" class="${i === state111.pagina ? "si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state111.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`
   ).join("")}</div>` : "";
   return `<div class="mu-carta mu-testa${lato ? " mu-testa-lato" : ""}" style="--acc:${accento}">
@@ -95837,6 +95836,24 @@ function misura4(nodo2, muro) {
   dentro3.style.width = `${larghezza / s}px`;
   dentro3.style.height = `${altezza / s}px`;
 }
+var GRADINI_DELLE_LINGUETTE = ["", "mu-molte", "mu-icone"];
+function adattaLeLinguette(nodo2) {
+  const fila2 = nodo2.querySelector(".mu-testa .mu-pagine");
+  if (!fila2) return;
+  const testa2 = fila2.parentElement;
+  const titolo3 = testa2.querySelector(".mu-titolo");
+  const nome = titolo3?.querySelector(".mu-tit");
+  if (nome) {
+    const massimo = Number.parseFloat(getComputedStyle(nome).maxWidth);
+    const pieno = Number.isFinite(massimo) ? Math.min(nome.scrollWidth, massimo) : nome.scrollWidth;
+    titolo3.style.setProperty("--mu-tit-min", `${Math.ceil(pieno)}px`);
+  }
+  for (const gradino of GRADINI_DELLE_LINGUETTE) {
+    fila2.classList.remove(...GRADINI_DELLE_LINGUETTE.filter(Boolean));
+    if (gradino) fila2.classList.add(gradino);
+    if (testa2.scrollWidth <= testa2.clientWidth + 1) return;
+  }
+}
 function disegna5() {
   if (!doc?.body) return;
   const muro = state111.muro;
@@ -95890,6 +95907,7 @@ function disegna5() {
       if (prima && prima !== img) img.replaceWith(prima);
     }
   }
+  adattaLeLinguette(nodo2);
   battitoDellaMusica();
   rimettiLaVoce(nodo2);
   if (state111.riposo) posizionaIlRiposo(nodo2);
@@ -96938,11 +96956,13 @@ ${MURO}[data-compatto="1"] .mu-menu{width:40px;height:40px;border-radius:13px}
 ${MURO} .mu-testa::after{content:"";position:absolute;left:24px;right:24px;bottom:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--acc),#0ea5e9 60%,transparent)}
 ${MURO} .mu-tit{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:40px;line-height:1;letter-spacing:.02em;color:var(--acc);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
 ${MURO} .mu-sot{margin-top:8px}
-${MURO} .mu-pagine{display:flex;gap:6px;padding:5px;border-radius:16px;margin-left:auto;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent)}
+${MURO} .mu-pagine{display:flex;flex:none;gap:6px;padding:5px;border-radius:16px;margin-left:auto;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent)}
 ${MURO} .mu-pagine button{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:800;font-size:15px;color:var(--text-dim)}
 ${MURO} .mu-pagine button.si{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));color:color-mix(in srgb,var(--acc) 85%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-ora{margin-left:auto;display:flex;align-items:center;gap:22px;text-align:right}
 ${MURO} .mu-pagine+.mu-ora{margin-left:24px}
+${MURO} .mu-testa>.mu-titolo{flex:0 1 auto;min-width:var(--mu-tit-min,0)}
+${MURO} .mu-testa>.mu-titolo .mu-sot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-h{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:58px;line-height:.9}
 ${MURO} .mu-d{font-size:12px;font-weight:900;letter-spacing:.11em;color:var(--text-dim);margin-top:6px}
 ${MURO} .mu-sep{width:1px;align-self:stretch;background:color-mix(in srgb,var(--text) 12%,transparent)}
@@ -96959,7 +96979,7 @@ ${MURO} .mu-pill b{font-size:20px;font-weight:800;display:block;line-height:1}
 ${MURO} .mu-pill .mu-et{font-size:10.5px}
 ${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;--mu-alto:150px;display:grid;grid-template-columns:repeat(var(--mu-col),minmax(0,1fr));grid-template-rows:repeat(var(--mu-righe),minmax(0,1fr));gap:var(--mu-gap);min-height:0}
 ${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
-${MURO} .mu-pagine.mu-molte button:not(.si) span{display:none}
+${MURO} .mu-pagine.mu-molte button:not(.si) span,${MURO} .mu-pagine.mu-icone button span{display:none}
 ${MURO} .mu-pag-musica{grid-template-rows:auto 1fr}
 ${MURO} .mu-musica{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;min-height:0}
 ${MURO} .mu-musica.solo{grid-template-columns:1fr}
@@ -97388,7 +97408,6 @@ ${MURO}[data-compatto="1"] .mu-sot,${MURO}[data-compatto="1"] .mu-meteo,${MURO}[
 ${MURO}[data-compatto="1"] .mu-h{font-size:32px}
 ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;padding:3px;gap:3px}
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
-${MURO}[data-compatto="1"] .mu-pagine button span{display:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
 ${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}
