@@ -651,9 +651,16 @@ const PAROLE_DEL_FINITO = {
   asciugatrice: ["Togli i panni dall'asciugatrice", "Empty the dryer"],
   lavastoviglie: ["Svuota la lavastoviglie", "Empty the dishwasher"],
 };
+/* Il frigo, il congelatore, il clima, il boiler non «finiscono»: vanno sempre,
+ * e si fermano e ripartono da soli. Che il compressore si sia fermato non e'
+ * una cosa da fare. */
+const SEMPRE_ACCESI =
+  /(frig|fridge|refriger|freez|congel|cantinett|wine|cooler|air-conditioner|condizion|clima|fan|ventil|boiler|scaldabagn|pompa di calore|heat ?pump|deumid|dehumid|acquari|router|server|\bnas\b)/i;
+const eUnCiclo = (f) => !SEMPRE_ACCESI.test(`${f.tipo || ""} ${f.name || ""} ${f.id || ""}`);
+
 rilevatore("finito", "elettrodomestici", (c, o, l) =>
   elenco(c.finiti)
-    .filter((f) => c.adesso - f.finitoIl < 6 * ORA)
+    .filter((f) => c.adesso - f.finitoIl < 6 * ORA && eUnCiclo(f))
     .map((f) => {
       const parole = PAROLE_DEL_FINITO[f.tipo];
       const da = c.adesso - f.finitoIl;
@@ -663,11 +670,14 @@ rilevatore("finito", "elettrodomestici", (c, o, l) =>
         titolo: parole
           ? pick(parole[0], parole[1], l)
           : pick(`${f.name} ha finito`, `${f.name} is done`, l),
-        motivo: pick(
-          `${f.name} ha finito ${durata(da, l)} fa.`,
-          `${f.name} finished ${durata(da, l)} ago.`,
-          l,
-        ),
+        /* Il titolo col nome lo dice gia': sotto basta quando. */
+        motivo: parole
+          ? pick(
+              `${f.name} ha finito ${durata(da, l)} fa.`,
+              `${f.name} finished ${durata(da, l)} ago.`,
+              l,
+            )
+          : pick(`Finito ${durata(da, l)} fa.`, `Finished ${durata(da, l)} ago.`, l),
         azioni: [fatto(l)],
         entita: [f.entity || f.id],
       };
@@ -970,7 +980,16 @@ export const TIPI_DI_SUGGERIMENTO = Object.freeze(RILEVATORI.map((r) => r.tipo))
 
 /* Uno ✕ pesa per due settimane, poi si dimentica piano. */
 const DIMENTICA_IN = 14 * GIORNO;
-const NASCOSTO_DOPO_UN_NO = 4 * ORA;
+/* Scartato con la ✕ tace un'ora, poi la casa riguarda: se la cosa c'e'
+ * ancora, la ridice. */
+const NASCOSTO_DOPO_UN_NO = ORA;
+/* Un tipo scartato spesso tace, ma non per sempre: un'ora dopo l'ultimo ✕
+ * la casa torna a guardare, e se la cosa c'e' ancora lo ridice. Scartarlo di
+ * nuovo lo fa tacere un'altra ora. */
+const TIPO_TACE_PER = ORA;
+/* Un «Fatto» copre la cosa finche' c'e', ma non oltre un'ora: se dopo un'ora
+ * e' ancora li', non era fatto davvero. */
+const FATTO_VALE_PER = ORA;
 /* L'urgente — l'acqua, il fumo, la porta aperta con la casa vuota — non si
  * rimanda e non si impara a tacerlo: uno ✕ lo toglie dalla vista per un quarto
  * d'ora, il tempo di andare a vedere, e poi torna se la cosa c'e' ancora. */
@@ -1036,7 +1055,7 @@ export function conLaRisposta(memoria, suggerimento, risposta, adesso, fino = 0)
     m.istanze[id] = { fino: Math.max(adesso + MINUTO, numero(fino) || adesso + ORA), fatto: false };
   } else if (risposta === "fatto" || risposta === "si") {
     m.tipi[tipo] = { ...voce, si: voce.si + 1, ultimo: adesso };
-    m.istanze[id] = { fino: 0, fatto: true };
+    m.istanze[id] = { fino: adesso + FATTO_VALE_PER, fatto: true };
   }
   if (!TIPI_DI_SUGGERIMENTO.includes(tipo)) delete m.tipi[tipo];
   return memoriaPulita(m);
@@ -1073,6 +1092,7 @@ export function memoriaDopo(memoria, idPresenti, adesso) {
   const presenti = new Set(idPresenti);
   for (const [id, voce] of Object.entries(m.istanze)) {
     if (voce.fatto && !presenti.has(id)) delete m.istanze[id];
+    else if (voce.fino > 0 && voce.fino <= adesso) delete m.istanze[id];
     else if (!voce.fatto && voce.fino <= adesso) delete m.istanze[id];
   }
   return m;
@@ -1126,7 +1146,7 @@ export function suggerimentiDellaCasa(
   }
   const visibili = tutti.filter((s) => {
     const istanza = m.istanze[s.id];
-    if (istanza?.fatto) return false;
+    if (istanza?.fatto && !(istanza.fino > 0 && istanza.fino <= c.adesso)) return false;
     if (istanza && istanza.fino > c.adesso) return false;
     if (s.scade && s.scade < c.adesso) return false;
     if (o.sensibilita === "poco" && s.urgenza === "idea") return false;
@@ -1137,9 +1157,13 @@ export function suggerimentiDellaCasa(
     return { ...s, peso, punti: PESO_URGENZA[s.urgenza] * 100 + peso * 50 };
   });
   /* Un tipo scartato quasi sempre tace — l'urgente no, mai — a meno che non
-   * si sia chiesto di vedere tutto. */
+   * si sia chiesto di vedere tutto, o che sia passata un'ora dall'ultimo ✕. */
   const ascoltati = conPunti.filter(
-    (s) => s.urgenza === "urgente" || o.sensibilita === "tutto" || s.peso >= 0.3,
+    (s) =>
+      s.urgenza === "urgente" ||
+      o.sensibilita === "tutto" ||
+      s.peso >= 0.3 ||
+      c.adesso - (m.tipi[s.tipo]?.ultimo || 0) >= TIPO_TACE_PER,
   );
   ascoltati.sort((a, b) => b.punti - a.punti || a.titolo.localeCompare(b.titolo));
   /* Una cosa, un suggerimento: la luce che e' accesa con la casa vuota non si

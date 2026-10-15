@@ -1749,6 +1749,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Fine dust PM2.5",
   "Fine, but humid",
   "Finished",
+  "Finished ${durata(da, l)} ago.",
   "Fire",
   "Fire / Heat",
   "Firefighter",

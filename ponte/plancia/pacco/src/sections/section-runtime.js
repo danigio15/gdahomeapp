@@ -3544,6 +3544,7 @@ var SOURCE_INDEX = Object.freeze({
   "finisce": "ends",
   "finisce fra": "done in",
   "Finita": "Finished",
+  "Finito ${durata(da, l)} fa.": "Finished ${durata(da, l)} ago.",
   "Fino a 8 in più: una presa, la pompa di calore, l'auto in carica, i kWh di oggi": "Up to 8 more: a socket, the heat pump, the car charging, today's kWh",
   "Fino a: buona": "Up to: good",
   "Fino a: discreta": "Up to: fair",
@@ -46556,21 +46557,24 @@ var PAROLE_DEL_FINITO = {
   asciugatrice: ["Togli i panni dall'asciugatrice", "Empty the dryer"],
   lavastoviglie: ["Svuota la lavastoviglie", "Empty the dishwasher"]
 };
+var SEMPRE_ACCESI = /(frig|fridge|refriger|freez|congel|cantinett|wine|cooler|air-conditioner|condizion|clima|fan|ventil|boiler|scaldabagn|pompa di calore|heat ?pump|deumid|dehumid|acquari|router|server|\bnas\b)/i;
+var eUnCiclo = (f) => !SEMPRE_ACCESI.test(`${f.tipo || ""} ${f.name || ""} ${f.id || ""}`);
 rilevatore(
   "finito",
   "elettrodomestici",
-  (c, o, l) => elenco5(c.finiti).filter((f) => c.adesso - f.finitoIl < 6 * ORA4).map((f) => {
+  (c, o, l) => elenco5(c.finiti).filter((f) => c.adesso - f.finitoIl < 6 * ORA4 && eUnCiclo(f)).map((f) => {
     const parole4 = PAROLE_DEL_FINITO[f.tipo];
     const da = c.adesso - f.finitoIl;
     return {
       urgenza: da > 45 * MINUTO2 ? "oggi" : "idea",
       disegno: "check",
       titolo: parole4 ? pick(parole4[0], parole4[1], l) : pick(`${f.name} ha finito`, `${f.name} is done`, l),
-      motivo: pick(
+      /* Il titolo col nome lo dice gia': sotto basta quando. */
+      motivo: parole4 ? pick(
         `${f.name} ha finito ${durata2(da, l)} fa.`,
         `${f.name} finished ${durata2(da, l)} ago.`,
         l
-      ),
+      ) : pick(`Finito ${durata2(da, l)} fa.`, `Finished ${durata2(da, l)} ago.`, l),
       azioni: [fatto(l)],
       entita: [f.entity || f.id]
     };
@@ -46803,7 +46807,9 @@ rilevatore("aggiornamenti", "manutenzione", (c, o, l) => {
 });
 var TIPI_DI_SUGGERIMENTO = Object.freeze(RILEVATORI.map((r) => r.tipo));
 var DIMENTICA_IN = 14 * GIORNO;
-var NASCOSTO_DOPO_UN_NO = 4 * ORA4;
+var NASCOSTO_DOPO_UN_NO = ORA4;
+var TIPO_TACE_PER = ORA4;
+var FATTO_VALE_PER = ORA4;
 var URGENTE_TACE_PER = 15 * MINUTO2;
 var ISTANZE_MASSIME = 60;
 function memoriaPulita(salvata) {
@@ -46852,7 +46858,7 @@ function conLaRisposta(memoria, suggerimento, risposta, adesso, fino = 0) {
     m.istanze[id] = { fino: Math.max(adesso + MINUTO2, numero36(fino) || adesso + ORA4), fatto: false };
   } else if (risposta === "fatto" || risposta === "si") {
     m.tipi[tipo] = { ...voce3, si: voce3.si + 1, ultimo: adesso };
-    m.istanze[id] = { fino: 0, fatto: true };
+    m.istanze[id] = { fino: adesso + FATTO_VALE_PER, fatto: true };
   }
   if (!TIPI_DI_SUGGERIMENTO.includes(tipo)) delete m.tipi[tipo];
   return memoriaPulita(m);
@@ -46877,6 +46883,7 @@ function memoriaDopo(memoria, idPresenti, adesso) {
   const presenti = new Set(idPresenti);
   for (const [id, voce3] of Object.entries(m.istanze)) {
     if (voce3.fatto && !presenti.has(id)) delete m.istanze[id];
+    else if (voce3.fino > 0 && voce3.fino <= adesso) delete m.istanze[id];
     else if (!voce3.fatto && voce3.fino <= adesso) delete m.istanze[id];
   }
   return m;
@@ -46911,7 +46918,7 @@ function suggerimentiDellaCasa(contesto2 = {}, memoria = {}, opzioni = {}, lingu
   }
   const visibili = tutti.filter((s) => {
     const istanza = m.istanze[s.id];
-    if (istanza?.fatto) return false;
+    if (istanza?.fatto && !(istanza.fino > 0 && istanza.fino <= c.adesso)) return false;
     if (istanza && istanza.fino > c.adesso) return false;
     if (s.scade && s.scade < c.adesso) return false;
     if (o.sensibilita === "poco" && s.urgenza === "idea") return false;
@@ -46922,7 +46929,7 @@ function suggerimentiDellaCasa(contesto2 = {}, memoria = {}, opzioni = {}, lingu
     return { ...s, peso, punti: PESO_URGENZA[s.urgenza] * 100 + peso * 50 };
   });
   const ascoltati = conPunti.filter(
-    (s) => s.urgenza === "urgente" || o.sensibilita === "tutto" || s.peso >= 0.3
+    (s) => s.urgenza === "urgente" || o.sensibilita === "tutto" || s.peso >= 0.3 || c.adesso - (m.tipi[s.tipo]?.ultimo || 0) >= TIPO_TACE_PER
   );
   ascoltati.sort((a, b) => b.punti - a.punti || a.titolo.localeCompare(b.titolo));
   const viste2 = /* @__PURE__ */ new Set();
@@ -48047,6 +48054,35 @@ function sapereDellaCasa(fonti = {}) {
       comandabile: DOMINI_COMANDABILI.includes(dominio4) && comandabile(id) !== false
     };
   });
+  const scelte5 = /* @__PURE__ */ new Map();
+  for (const voce3 of elenco7(fonti.luci)) {
+    const id = pulito43(voce3?.entity);
+    if (id.includes(".")) scelte5.set(id, voce3);
+  }
+  for (const e of entita3) {
+    const voce3 = scelte5.get(e.entity);
+    if (!voce3) continue;
+    e.luce = true;
+    e.nome = pulito43(voce3.nome || voce3.name) || e.nome;
+    e.area = pulito43(voce3.stanza) || e.area;
+  }
+  const varchi = /* @__PURE__ */ new Map();
+  for (const voce3 of elenco7(fonti.varchi)) {
+    const id = pulito43(voce3?.entity);
+    if (id.includes(".")) varchi.set(id, voce3);
+  }
+  for (const e of entita3) {
+    const voce3 = varchi.get(e.entity);
+    if (!voce3) continue;
+    e.varco = true;
+    e.nome = pulito43(voce3.nome || voce3.name) || e.nome;
+    if (voce3.tipo === "finestra") e.classe = "window";
+    else if (voce3.tipo === "porta" && e.classe === "window") e.classe = "door";
+    else if (!["window", "door", "opening", "garage_door"].includes(e.classe)) e.classe = "door";
+    if (voce3.stato === "aperto") e.stato = "on";
+    else if (voce3.stato === "chiuso") e.stato = "off";
+    else e.stato = "unavailable";
+  }
   const aree2 = /* @__PURE__ */ new Set();
   for (const a of elenco7(fonti.aree))
     aree2.add(pulito43(typeof a === "object" ? a.name || a.nome : a));
@@ -48136,6 +48172,8 @@ function sapereDellaCasa(fonti = {}) {
   };
 }
 function contattiDellaCasa(sapere) {
+  const dellaPlancia = elenco7(sapere?.entita).filter((e) => e.varco);
+  if (dellaPlancia.length) return dellaPlancia;
   return elenco7(sapere?.entita).filter(
     (e) => e.dominio === "binary_sensor" && ["window", "door", "opening", "garage_door"].includes(e.classe) && !/(frig|freez|congel)/i.test(`${e.entity} ${e.nome}`)
   );
@@ -48299,7 +48337,7 @@ function servizi(voci4) {
 function esempi(sapere = {}, lingua2 = "it", quanti2 = 6) {
   const fuori = [];
   const l = lingua2;
-  const luci = elenco8(sapere.entita).filter((e2) => e2.dominio === "light" && !e2.gruppo);
+  const luci = luciDellaCasa(sapere);
   const stanzaConLuci = luci.find((e2) => e2.area)?.area;
   if (elenco8(sapere.dentro).length)
     fuori.push(dire(l, "Che temperatura c'è in casa?", "What's the temperature inside?"));
@@ -48878,7 +48916,37 @@ RISPOSTE.quando_uscito = (c, s) => {
 };
 var ACCESO3 = (e) => !["off", "unavailable", "unknown", "standby", "idle", ""].includes(e.stato);
 function luciDellaCasa(s) {
-  return elenco8(s.entita).filter((e) => e.dominio === "light" && !e.gruppo);
+  const tutte = elenco8(s.entita);
+  const scelte5 = tutte.filter((e) => e.luce);
+  return scelte5.length ? scelte5 : tutte.filter((e) => e.dominio === "light" && !e.gruppo);
+}
+function luciDette(accese, l, inUnaStanza) {
+  const perStanza = /* @__PURE__ */ new Map();
+  for (const e of accese) {
+    const stanza2 = inUnaStanza ? "" : pulito44(e.area);
+    if (!perStanza.has(stanza2)) perStanza.set(stanza2, []);
+    perStanza.get(stanza2).push(pulito44(e.nome) || e.entity);
+  }
+  const stanze4 = [...perStanza.keys()].filter(Boolean);
+  const perNome2 = (nomi2) => {
+    const quanti2 = /* @__PURE__ */ new Map();
+    for (const n of nomi2) quanti2.set(n, (quanti2.get(n) || 0) + 1);
+    return [...quanti2].map(([n, q]) => q > 1 ? `${n} (${q})` : n);
+  };
+  if (accese.length <= 4 || stanze4.length === 0)
+    return elencoNomi(perNome2(accese.map((e) => pulito44(e.nome) || e.entity)), l, 5);
+  const pezzi = [];
+  for (const [stanza2, nomi2] of perStanza) {
+    if (!stanza2) {
+      pezzi.push(...perNome2(nomi2));
+      continue;
+    }
+    const giaDetta = nomi2.length === 1 && nomi2[0].toLowerCase().includes(stanza2.toLowerCase());
+    pezzi.push(
+      giaDetta ? nomi2[0] : nomi2.length === 1 ? dire(l, `${nomi2[0]} in ${stanza2}`, `${nomi2[0]} in ${stanza2}`) : dire(l, `${nomi2.length} in ${stanza2}`, `${nomi2.length} in ${stanza2}`)
+    );
+  }
+  return elencoNomi(pezzi, l, 6);
 }
 RISPOSTE.luci = (c, s) => {
   const l = c.lingua;
@@ -48919,11 +48987,7 @@ RISPOSTE.luci = (c, s) => {
       testo: c.stanza ? dire(l, `In ${c.stanza} le luci sono spente.`, `The lights in ${c.stanza} are off.`) : dire(l, "Tutte le luci sono spente.", "All the lights are off."),
       soggetto: luci.map((e) => e.entity)
     };
-  const nomi2 = elencoNomi(
-    accese.map((e) => e.nome),
-    l,
-    5
-  );
+  const nomi2 = luciDette(accese, l, Boolean(c.stanza));
   const testo2 = accese.length === 1 ? dire(
     l,
     `${c.stanza ? `In ${c.stanza} è` : "È"} accesa una luce: ${nomi2}.`,
@@ -48934,6 +48998,21 @@ RISPOSTE.luci = (c, s) => {
     `${accese.length} lights are on${dove}: ${nomi2}.`
   );
   const comandabili = accese.filter((e) => e.comandabile);
+  const stanzeAccese = c.stanza ? [] : [...new Set(comandabili.map((e) => pulito44(e.area)).filter(Boolean))];
+  const perStanza = stanzeAccese.length > 1 ? stanzeAccese.slice(0, 3).map((stanza2) => {
+    const qui = comandabili.filter((e) => pulito44(e.area) === stanza2);
+    return fai(
+      dire(l, `Spegni in ${stanza2}`, `Turn off in ${stanza2}`),
+      servizi(
+        qui.map((e) => ({
+          dominio: e.dominio,
+          servizio: "turn_off",
+          dati: { entity: e.entity }
+        }))
+      ),
+      dire(l, `Fatto: luci spente in ${stanza2}.`, `Done: lights off in ${stanza2}.`)
+    );
+  }) : [];
   return {
     testo: testo2,
     soggetto: accese.map((e) => e.entity),
@@ -48942,7 +49021,7 @@ RISPOSTE.luci = (c, s) => {
         accese.length === 1 ? dire(l, "Spegnila", "Turn it off") : dire(l, "Spegnile tutte", "Turn them all off"),
         servizi(
           comandabili.map((e) => ({
-            dominio: "light",
+            dominio: e.dominio,
             servizio: "turn_off",
             dati: { entity: e.entity }
           }))
@@ -48952,7 +49031,8 @@ RISPOSTE.luci = (c, s) => {
           `Fatto: ho spento ${comandabili.length} luci.`,
           `Done: ${comandabili.length} lights off.`
         )
-      )
+      ),
+      ...perStanza
     ] : []
   };
 };
@@ -49040,6 +49120,18 @@ RISPOSTE.aperture = (c, s) => {
       chips: cancelliAperti.filter((e) => e.comandabile).slice(0, 2).map((e) => chiedi4(dire(l, `Chiudi ${e.nome}`, `Close ${e.nome}`)))
     };
   }
+  if (!contatti.length && c.stanza && contattiDellaCasa(s).length)
+    return {
+      testo: vuoleFinestre ? dire(
+        l,
+        `In ${c.stanza} non conosco finestre col sensore.`,
+        `I don't know any window sensor in ${c.stanza}.`
+      ) : dire(
+        l,
+        `In ${c.stanza} non conosco porte o finestre col sensore.`,
+        `I don't know any door or window sensor in ${c.stanza}.`
+      )
+    };
   if (!contatti.length && !cancelli.length)
     return {
       testo: dire(
@@ -50889,6 +50981,20 @@ function areeDiHomeAssistant() {
   }
 }
 var seCe = (valore3) => Array.isArray(valore3) ? valore3 : void 0;
+function luciDellaPlancia() {
+  try {
+    const stanze4 = readJson("cd_luci_rooms", {}) || {};
+    return configuredLightGroups().flatMap(
+      (gruppo) => gruppo.entities.map((entity2) => ({
+        entity: entity2,
+        nome: clean(gruppo.lights?.[entity2]),
+        stanza: clean(stanze4[entity2]) ? clean(gruppo.room) : ""
+      }))
+    );
+  } catch (_errore) {
+    return [];
+  }
+}
 function sapereDiAdesso(states = allStates() || {}, adesso = Date.now()) {
   rinfrescaIModelli(adesso);
   const persone4 = normalizePeople(readJson("cd_people", [])).filter((p) => p?.nascosta !== true && clean(p?.entity)).map((p) => ({ name: clean(p.name) || clean(p.entity), entity: clean(p.entity) }));
@@ -50912,6 +51018,13 @@ function sapereDiAdesso(states = allStates() || {}, adesso = Date.now()) {
     aree: areeDiHomeAssistant(),
     stanze: seCe(root.getStanze?.()) || readJson("cd_stanze", []),
     temperature: seCe(modello("temperatura")?.rows),
+    luci: luciDellaPlancia(),
+    varchi: elenco9(modello("varchi")?.rows).map((r) => ({
+      entity: clean(r.entity),
+      nome: clean(r.name),
+      tipo: clean(r.tipo),
+      stato: clean(r.stato)
+    })),
     persone: persone4,
     meteo: entitaDelMeteo(states),
     previsioni: {

@@ -418,6 +418,26 @@ test("il bucato finito: si ricorda chi lavorava, e chi smette ha finito", () => 
   assert.equal(bucato.motivo, "Lavatrice ha finito 1 h fa.");
   assert.equal(bucato.urgenza, "oggi");
   assert.equal(bucato.azioni[0].fatto, true);
+
+  /* Il frigo non «finisce»: il compressore si ferma e riparte da solo. Un
+   * forno si', e sotto il titolo col nome basta dire quando. */
+  const fermi = suggerimentiDellaCasa(
+    casa(11, {
+      finiti: [
+        { id: "frigo", name: "Frigo", tipo: "fridge", finitoIl: adesso - MINUTO },
+        { id: "cantina", name: "Cantinetta vini", tipo: "", finitoIl: adesso - MINUTO },
+        { id: "forno", name: "Forno", tipo: "oven", finitoIl: adesso - 2 * MINUTO },
+      ],
+    }),
+    {},
+    {},
+    "it",
+  );
+  assert.deepEqual(
+    fermi.map((s) => s.titolo),
+    ["Forno ha finito"],
+  );
+  assert.equal(fermi[0].motivo, "Finito 2 min fa.");
 });
 
 test("il sole che avanza: la lavatrice da avviare e l'auto da caricare", () => {
@@ -607,34 +627,48 @@ test("le categorie spente tacciono, e «poco» toglie le idee", () => {
   ]);
 });
 
-test("✕ nasconde per un po' e pesa sul tipo; tante ✕ e il tipo tace", () => {
+test("✕ nasconde per un'ora e pesa sul tipo; dopo un'ora la casa riguarda", () => {
   const adesso = alle(10);
   const situazione = casa(10, { aggiornamenti: [{ entity: "update.a" }] });
+  const fra = (ore) => ({ ...situazione, adesso: adesso + ore * ORA });
   const [s] = suggerimentiDellaCasa(situazione);
   let memoria = conLaRisposta({}, s, "no", adesso);
   assert.equal(memoria.tipi.aggiornamenti.no, 1);
-  assert.equal(memoria.istanze[s.id].fino, adesso + 4 * ORA);
-  assert.equal(suggerimentiDellaCasa(situazione, memoria).length, 0, "nascosto per quattro ore");
-  /* Dopo quattro ore torna, ma pesa meno. */
-  const dopo = { ...situazione, adesso: adesso + 5 * ORA };
-  const [ancora] = suggerimentiDellaCasa(dopo, memoria);
+  assert.equal(memoria.istanze[s.id].fino, adesso + ORA);
+  assert.equal(suggerimentiDellaCasa(fra(0.5), memoria).length, 0, "nascosto per un'ora");
+  /* Dopo un'ora torna, ma pesa meno. */
+  const [ancora] = suggerimentiDellaCasa(fra(1.5), memoria);
   assert.ok(ancora.peso < 1);
-  /* Scartato tre volte di fila: il tipo smette di farsi vedere. */
-  memoria = conLaRisposta(memoria, s, "no", adesso + 5 * ORA);
-  memoria = conLaRisposta(memoria, s, "no", adesso + 10 * ORA);
-  const tardi = { ...situazione, adesso: adesso + 15 * ORA };
-  assert.ok(pesoDelTipo(memoria, "aggiornamenti", tardi.adesso) < 0.3);
-  assert.equal(suggerimentiDellaCasa(tardi, memoria).length, 0);
-  /* «Proprio tutto» lo fa vedere lo stesso. */
-  assert.equal(suggerimentiDellaCasa(tardi, memoria, { sensibilita: "tutto" }).length, 1);
+  /* Scartato tre volte di fila: il tipo pesa poco e tace per un'ora... */
+  memoria = conLaRisposta(memoria, s, "no", adesso + 2 * ORA);
+  memoria = conLaRisposta(memoria, s, "no", adesso + 4 * ORA);
+  assert.ok(pesoDelTipo(memoria, "aggiornamenti", adesso + 4.5 * ORA) < 0.3);
+  assert.equal(suggerimentiDellaCasa(fra(4.5), memoria).length, 0);
+  /* ...ma non per sempre: un'ora dopo l'ultimo ✕ la casa riguarda, e se la
+   * cosa c'e' ancora la ridice. */
+  assert.ok(pesoDelTipo(memoria, "aggiornamenti", adesso + 5.5 * ORA) < 0.3);
+  assert.equal(suggerimentiDellaCasa(fra(5.5), memoria).length, 1, "dopo un'ora torna");
   /* E col tempo la casa dimentica: dopo due mesi pesa di nuovo quasi pieno. */
   assert.ok(pesoDelTipo(memoria, "aggiornamenti", adesso + 60 * GIORNO) > 0.85);
   /* Usarlo lo rialza. */
-  const usato = conLaRisposta(memoria, s, "si", tardi.adesso);
+  const usato = conLaRisposta(memoria, s, "si", adesso + 5 * ORA);
   assert.ok(
-    pesoDelTipo(usato, "aggiornamenti", tardi.adesso) >
-      pesoDelTipo(memoria, "aggiornamenti", tardi.adesso),
+    pesoDelTipo(usato, "aggiornamenti", adesso + 5 * ORA) >
+      pesoDelTipo(memoria, "aggiornamenti", adesso + 5 * ORA),
   );
+});
+
+test("un «Fatto» vale finche' la cosa c'e', ma dopo un'ora la casa riguarda", () => {
+  const adesso = alle(10);
+  const situazione = casa(10, { aggiornamenti: [{ entity: "update.a" }] });
+  const [s] = suggerimentiDellaCasa(situazione);
+  const memoria = conLaRisposta({}, s, "fatto", adesso);
+  const fra = (ore) => ({ ...situazione, adesso: adesso + ore * ORA });
+  assert.equal(suggerimentiDellaCasa(fra(0.5), memoria).length, 0);
+  assert.equal(suggerimentiDellaCasa(fra(1.5), memoria).length, 1, "ancora li': torna");
+  /* E la memoria lo dimentica, come un rinvio scaduto. */
+  assert.equal(memoriaDopo(memoria, [s.id], adesso + 1.5 * ORA).istanze[s.id], undefined);
+  assert.ok(memoriaDopo(memoria, [s.id], adesso + 0.5 * ORA).istanze[s.id]?.fatto);
 });
 
 test("l'urgente non si impara a tacerlo: ✕ lo toglie solo per un quarto d'ora", () => {

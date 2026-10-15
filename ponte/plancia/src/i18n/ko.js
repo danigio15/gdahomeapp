@@ -11,6 +11,7 @@
  */
 
 export default Object.freeze({
+  "Finished ${durata(da, l)} ago.": "${durata(da, l)} 전에 끝났습니다.",
   "More readings": "추가 측정값",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "최대 8개 추가: 콘센트, 히트펌프, 충전 중인 차, 오늘의 kWh",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "연결된 센서가 없습니다: 설정 › 부하 또는 가전에서 선택하세요.",

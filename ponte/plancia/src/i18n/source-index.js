@@ -1976,6 +1976,7 @@ export const SOURCE_INDEX = Object.freeze({
   "finisce": "ends",
   "finisce fra": "done in",
   "Finita": "Finished",
+  "Finito ${durata(da, l)} fa.": "Finished ${durata(da, l)} ago.",
   "Fino a 8 in più: una presa, la pompa di calore, l'auto in carica, i kWh di oggi": "Up to 8 more: a socket, the heat pump, the car charging, today's kWh",
   "Fino a: buona": "Up to: good",
   "Fino a: discreta": "Up to: fair",

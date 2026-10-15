@@ -301,11 +301,7 @@ const FRASI = [
   ["che tempo fa nei prossimi giorni", "meteo", "Domani: pioggia, tra 8° e 13°, probabilità 80%."],
   ["meteo", "meteo", "Adesso è nuvoloso"],
   ["nevica domani?", "meteo", "No, domani non è prevista neve"],
-  [
-    "what's the weather tomorrow",
-    "meteo",
-    "Tomorrow: rain, between 8° and 13°, 80% chance.",
-  ],
+  ["what's the weather tomorrow", "meteo", "Tomorrow: rain, between 8° and 13°, 80% chance."],
   ["will it rain tomorrow?", "meteo", "Yes, rain is expected tomorrow (80%)."],
 
   /* Chi c'e'. */
@@ -832,4 +828,98 @@ test("l'agente: quello scelto, se no un modello linguistico, se no quello di ser
   assert.equal(agenteDaUsare("", { "conversation.home_assistant": { state: "x" } }), "");
   assert.equal(agenteDaUsare("", { "conversation.ollama": { state: "unavailable" } }), "");
   assert.equal(agenteDaUsare("", { "conversation.mio": { state: "x" } }), "conversation.mio");
+});
+
+test("le luci si chiamano come nella plancia, e tante si contano per stanza", () => {
+  const acceso = (entity, friendly_name) => [
+    entity,
+    { state: "on", attributes: { friendly_name } },
+  ];
+  const states = Object.fromEntries([
+    acceso("light.shelly_a_0", "Luce Camera da letto switch_0"),
+    acceso("light.shelly_a_1", "Luce Camera da letto switch_1"),
+    acceso("switch.shelly_b_0", "Shelly corridoio switch_0"),
+    acceso("light.cucina_1", "Lampadario Cucina"),
+    acceso("light.led_1", "Led Soggiorno"),
+    acceso("light.led_2", "Led Soggiorno"),
+    acceso("light.spia_del_router", "Router LED"),
+  ]);
+  const luci = [
+    { entity: "light.shelly_a_0", nome: "Plafoniera", stanza: "Camera da letto" },
+    { entity: "light.shelly_a_1", nome: "Abat-jour", stanza: "Camera da letto" },
+    { entity: "switch.shelly_b_0", nome: "Luci corridoio", stanza: "Corridoio" },
+    { entity: "light.cucina_1", nome: "Lampadario Cucina", stanza: "Cucina" },
+    { entity: "light.led_1", nome: "Striscia", stanza: "Soggiorno" },
+    { entity: "light.led_2", nome: "Striscia", stanza: "Soggiorno" },
+  ];
+  const s = sapereDellaCasa({ states, adesso: ADESSO, luci });
+  const r = rispondiDaCasa("quante luci sono accese", s, {});
+  /* Il led del router non e' una luce della plancia; l'interruttore del
+   * corridoio si'. Nessun «switch_0». */
+  assert.equal(
+    r.testo,
+    "Sono accese 6 luci: 2 in Camera da letto, Luci corridoio, Lampadario Cucina e 2 in Soggiorno.",
+  );
+  assert.doesNotMatch(r.testo, /switch_|shelly/i);
+  assert.equal(r.chips[0].etichetta, "Spegnile tutte");
+  assert.deepEqual(
+    r.chips.slice(1).map((c) => c.etichetta),
+    ["Spegni in Camera da letto", "Spegni in Corridoio", "Spegni in Cucina"],
+  );
+  /* L'interruttore si spegne da interruttore. */
+  assert.ok(JSON.stringify(r.chips[0]).includes('"dominio":"switch"'));
+
+  /* Poche luci si dicono per nome, e due uguali si contano. */
+  const poche = sapereDellaCasa({ states, adesso: ADESSO, luci: luci.slice(3) });
+  assert.equal(
+    rispondiDaCasa("quante luci sono accese", poche, {}).testo,
+    "Sono accese 3 luci: Lampadario Cucina e Striscia (2).",
+  );
+  /* Il nome della plancia si usa anche per comandare. */
+  const comando = rispondiDaCasa("spegni la plafoniera", s, {});
+  assert.match(comando.testo, /Plafoniera/i);
+});
+
+test("le finestre sono quelle della plancia, anche senza classe in Home Assistant", () => {
+  const stato = (state, friendly_name) => ({ state, attributes: { friendly_name } });
+  const states = {
+    "binary_sensor.contatto_1": stato("on", "Contatto 1"),
+    "binary_sensor.contatto_2": stato("off", "Contatto 2"),
+    "binary_sensor.contatto_3": stato("off", "Contatto 3"),
+  };
+  const areaDi = {
+    "binary_sensor.contatto_1": "Camera da letto",
+    "binary_sensor.contatto_2": "Camera da letto",
+    "binary_sensor.contatto_3": "Cucina",
+  };
+  const varchi = [
+    {
+      entity: "binary_sensor.contatto_1",
+      nome: "Finestra letto",
+      tipo: "finestra",
+      stato: "aperto",
+    },
+    { entity: "binary_sensor.contatto_2", nome: "Balcone", tipo: "finestra", stato: "chiuso" },
+    /* Girato: Home Assistant dice chiuso, la plancia sa che e' aperto. */
+    { entity: "binary_sensor.contatto_3", nome: "Porta cucina", tipo: "porta", stato: "aperto" },
+  ];
+  const s = sapereDellaCasa({
+    states,
+    adesso: ADESSO,
+    areaDi,
+    aree: ["Camera da letto", "Cucina", "Bagno"],
+    varchi,
+  });
+  assert.equal(
+    rispondiDaCasa("la finestra in camera da letto è aperta?", s, {}).testo,
+    "C'è 1 finestra aperta in Camera da letto: Finestra letto.",
+  );
+  assert.equal(
+    rispondiDaCasa("ci sono porte aperte?", s, {}).testo,
+    "C'è 1 porta aperta: Porta cucina.",
+  );
+  assert.equal(
+    rispondiDaCasa("le finestre in bagno sono aperte?", s, {}).testo,
+    "In Bagno non conosco finestre col sensore.",
+  );
 });

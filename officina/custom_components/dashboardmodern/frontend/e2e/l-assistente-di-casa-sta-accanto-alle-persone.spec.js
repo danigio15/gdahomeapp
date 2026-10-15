@@ -327,6 +327,105 @@ test("«spegni la luce della cucina» si propone, e parte solo col «Sì»", asy
   await expect(foglio.locator('.dm-ass-chip[data-tipo="fai"]')).toHaveCount(0);
 });
 
+test("le luci si chiamano come nella plancia, non come i dispositivi", async ({
+  page,
+}, testInfo) => {
+  const foglio = await bootConLeStanze(page, testInfo);
+  await page.evaluate(() => {
+    const stati = eval("_RAW_STATES");
+    const metti = (id, friendly_name) =>
+      (stati[id] = {
+        entity_id: id,
+        state: "on",
+        attributes: { friendly_name },
+        last_changed: new Date().toISOString(),
+      });
+    metti("light.shelly_a_0", "Luce Camera switch_0");
+    metti("light.shelly_a_1", "Luce Camera switch_1");
+    metti("switch.shelly_b_0", "Shelly ingresso switch_0");
+    metti("light.led_1", "Led Sala");
+    metti("light.led_2", "Led Sala");
+    localStorage.setItem(
+      "cd_luci",
+      JSON.stringify({
+        "light.shelly_a_0": "Plafoniera",
+        "light.shelly_a_1": "Abat-jour",
+        "switch.shelly_b_0": "Applique",
+        "light.led_1": "Striscia",
+        "light.led_2": "Striscia",
+        "light.sala": "Lampadario",
+        "light.cucina": "Pensili",
+      }),
+    );
+    localStorage.setItem(
+      "cd_luci_rooms",
+      JSON.stringify({
+        "light.shelly_a_0": "Camera",
+        "light.shelly_a_1": "Camera",
+        "light.led_1": "Sala",
+        "light.led_2": "Sala",
+        "light.sala": "Sala",
+      }),
+    );
+  });
+  await chiedi(foglio, "Quante luci sono accese?");
+  const risposta = ultimaRisposta(foglio);
+  await expect(risposta).toContainText("Sono accese 7 luci");
+  await expect(risposta).toContainText("2 in Camera");
+  await expect(risposta).toContainText("3 in Sala");
+  await expect(risposta).not.toContainText("switch_");
+  await expect(
+    foglio.locator("[data-ass-tasti] .dm-ass-chip", { hasText: "Spegni in Camera" }),
+  ).toBeVisible();
+  if (process.env.DM_FOTO)
+    await page.screenshot({ path: `${process.env.DM_FOTO}/luci-per-nome.png` });
+  await foglio.locator("[data-ass-tasti] .dm-ass-chip", { hasText: "Spegni in Camera" }).click();
+  await expect(ultimaRisposta(foglio)).toHaveText("Fatto: luci spente in Camera.");
+  expect(await page.evaluate(() => window.__comandi)).toEqual([
+    "light.turn_off light.shelly_a_0,light.shelly_a_1",
+  ]);
+});
+
+test("le finestre sono quelle della plancia, anche senza classe in Home Assistant", async ({
+  page,
+}, testInfo) => {
+  const foglio = await bootConLeStanze(page, testInfo);
+  await page.evaluate(() => {
+    const stati = eval("_RAW_STATES");
+    const metti = (id, state, attributes) =>
+      (stati[id] = { entity_id: id, state, attributes, last_changed: new Date().toISOString() });
+    /* Contatti senza classe: Home Assistant non dice che sono finestre. */
+    metti("binary_sensor.contatto_1", "on", { friendly_name: "Contatto 1" });
+    metti("binary_sensor.contatto_2", "off", { friendly_name: "Contatto 2" });
+    localStorage.setItem(
+      "cd_varchi",
+      JSON.stringify({
+        righe: [
+          { entity: "binary_sensor.contatto_1", name: "Finestra camera", tipo: "finestra" },
+          { entity: "binary_sensor.contatto_2", name: "Balcone sala", tipo: "finestra" },
+        ],
+      }),
+    );
+    window.eval(`
+      WIZ.entReg = Object.assign(WIZ.entReg || {}, {
+        "binary_sensor.contatto_1": { a: "camera" },
+        "binary_sensor.contatto_2": { a: "sala" },
+      });
+      WIZ.areaNames = Object.assign(WIZ.areaNames || {}, { camera: "Camera" });
+    `);
+    window.applyStates?.();
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
+  });
+  await chiedi(foglio, "La finestra in camera è aperta?");
+  await expect(ultimaRisposta(foglio)).toHaveText(
+    "C'è 1 finestra aperta in Camera: Finestra camera.",
+  );
+  await chiedi(foglio, "Ci sono finestre aperte?");
+  await expect(ultimaRisposta(foglio)).toHaveText("C'è 1 finestra aperta: Finestra camera.");
+  if (process.env.DM_FOTO)
+    await page.screenshot({ path: `${process.env.DM_FOTO}/finestre-della-plancia.png` });
+});
+
 test("quello che la casa non sa va al modello linguistico; se non capisce, si propone cosa chiedere", async ({
   page,
 }, testInfo) => {
