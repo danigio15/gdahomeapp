@@ -225,6 +225,16 @@ test.describe("l'ingresso ha le partizioni e le altre letture", () => {
     ).toContainText("19,4 °C");
     /* Chi ha scelto le sue finestre le vede nel conto, non due volte. */
     await expect(muro(page).locator(".mu-avviso-finestre")).toHaveCount(0);
+    /* «Ricordati di mettere le finestre sul riquadro antifurto»: le letture
+     * stanno dentro la sua card, non nella striscia in fondo. */
+    await expect(muro(page).locator(".mu-allarme .mu-allarme-letture .mu-ing-lettura")).toHaveCount(
+      2,
+    );
+    await expect(muro(page).locator(".mu-ing-striscia .mu-ing-lettura")).toHaveCount(0);
+    if (process.env.DM_FOTO)
+      await page.screenshot({
+        path: `${process.env.DM_FOTO}/ingresso-finestre-nell-antifurto.png`,
+      });
     await conto.click();
     const righe = muro(page).locator(".mu-ing-riga");
     await expect(righe).toHaveCount(3);

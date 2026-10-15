@@ -2293,8 +2293,8 @@ function comandiDellIngressoMarkup(ing) {
 }
 
 /* Le letture e i comandi sotto l'antifurto, se ce ne sono. */
-function altroDellIngresso(ing) {
-  const dentro = `${lettureDellIngressoMarkup(ing)}${comandiDellIngressoMarkup(ing)}`;
+function altroDellIngresso(ing, { conLeLetture = false } = {}) {
+  const dentro = `${conLeLetture ? lettureDellIngressoMarkup(ing) : ""}${comandiDellIngressoMarkup(ing)}`;
   return dentro ? `<div class="mu-ing-altro">${dentro}</div>` : "";
 }
 
@@ -2457,6 +2457,7 @@ function paginaIngresso(pagina) {
         <div class="mu-allarme-dice"><span class="mu-et">${esc(quanteAree(aree.length))}</span><div class="mu-osw mu-stato-allarme">${esc(riassunto.testo)}${riassunto.suona.length ? ` · ${esc(riassunto.suona.map((a) => nomeDellArea(a, aree.indexOf(a))).join(", "))}` : ""}</div>
         ${avvisoFinestre}</div></div>
       ${areeMarkup(aree)}
+      ${lettureNellAntifurto(ing)}
     </div>`;
     return restoDellIngresso(pagina, carta, riassunto.valore === "disarmed");
   }
@@ -2484,8 +2485,19 @@ function paginaIngresso(pagina) {
               )}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>`
           : ""
       }
+      ${lettureNellAntifurto(ing)}
     </div>`;
   return restoDellIngresso(pagina, carta, spento);
+}
+
+/* Le porte e le finestre scelte fra le letture, dentro la card
+ * dell'antifurto: «ricordati di mettere le finestre sul riquadro
+ * antifurto». Stavano in una striscia in fondo alla pagina, mentre sotto le
+ * aree restava mezza card vuota; li' si leggono accanto a quello che
+ * proteggono. */
+function lettureNellAntifurto(ing) {
+  const letture = lettureDellIngressoMarkup(ing);
+  return letture ? `<div class="mu-allarme-letture">${letture}</div>` : "";
 }
 
 /* Il citofono, l'uscita e chi c'e': uguali con un'area o con tante. */
@@ -2941,7 +2953,7 @@ function finestra() {
     const riassunto = riassuntoDelleAree(aree);
     dentro = `<div class="mu-fin-clima mu-fin-aree" style="--acc:${accentoDellAllarme(riassunto.valore)}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(riassunto.testo)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      ${areeMarkup(aree)}${altroDellIngresso(pagina?.ingresso)}</div>`;
+      ${areeMarkup(aree)}${altroDellIngresso(pagina?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "lettura") {
     dentro = finestraDellaLettura(f);
   } else if (f.tipo === "antifurto") {
@@ -2954,7 +2966,7 @@ function finestra() {
     const aperte = pagina?.ingresso?.finestre ? finestreAperte() : [];
     dentro = `<div class="mu-fin-clima" style="--acc:${valore === "disarmed" ? "#10b981" : "#6366f1"}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore] || valore)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina?.ingresso)}</div>`;
+      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "citofono" && f.suonato) {
     /* Aperta dal campanello: non una finestra, una chiamata (#citofono). */
     return squilloMarkup(f);
@@ -5452,6 +5464,10 @@ ${MURO} .mu-btn.pieno{--acc:#0ea5e9;background:linear-gradient(180deg,color-mix(
 ${MURO} .mu-due{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 ${MURO} .mu-ingresso{display:grid;grid-template-columns:1fr 1.1fr;grid-template-rows:1fr auto;gap:16px;min-height:0}
 ${MURO} .mu-allarme{padding:24px;display:flex;flex-direction:column;gap:18px}
+${MURO} .mu-allarme-letture{margin-top:auto;min-height:0;overflow:auto;scrollbar-width:none}
+${MURO} .mu-allarme-letture .mu-ing-letture{display:flex;flex-wrap:wrap;gap:8px}
+${MURO} .mu-allarme-letture .mu-ing-lettura{white-space:nowrap}
+${MURO} .mu-ing-striscia .mu-ing-comandi:first-child{margin-left:0;padding-left:0;border-left:0}
 ${MURO} .mu-stato-allarme{font-size:52px;color:var(--acc);margin-top:6px}
 ${MURO} .mu-avviso-finestre{display:flex;align-items:center;gap:8px;margin-top:8px}
 ${MURO} .mu-modi{--acc:#e11d48}

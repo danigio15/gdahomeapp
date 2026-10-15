@@ -94803,8 +94803,8 @@ function comandiDellIngressoMarkup(ing) {
     return `<button type="button" class="mu-ing-comando${si}" data-mu-fa="ing-comando" data-mu-voce="${esc(voce3)}"${s || comando ? "" : " disabled"}>${esc(comando ? `${nomeDi8(id)} · ${comando}` : nomeDi8(id))}${parole4 ? ` <small>${esc(parole4)}</small>` : ""}</button>`;
   }).join("")}</div>`;
 }
-function altroDellIngresso(ing) {
-  const dentro3 = `${lettureDellIngressoMarkup(ing)}${comandiDellIngressoMarkup(ing)}`;
+function altroDellIngresso(ing, { conLeLetture = false } = {}) {
+  const dentro3 = `${conLeLetture ? lettureDellIngressoMarkup(ing) : ""}${comandiDellIngressoMarkup(ing)}`;
   return dentro3 ? `<div class="mu-ing-altro">${dentro3}</div>` : "";
 }
 function finestraDellaLettura(f) {
@@ -94923,6 +94923,7 @@ function paginaIngresso(pagina2) {
         <div class="mu-allarme-dice"><span class="mu-et">${esc(quanteAree(aree2.length))}</span><div class="mu-osw mu-stato-allarme">${esc(riassunto2.testo)}${riassunto2.suona.length ? ` · ${esc(riassunto2.suona.map((a) => nomeDellArea(a, aree2.indexOf(a))).join(", "))}` : ""}</div>
         ${avvisoFinestre}</div></div>
       ${areeMarkup(aree2)}
+      ${lettureNellAntifurto(ing)}
     </div>`;
     return restoDellIngresso(pagina2, carta2, riassunto2.valore === "disarmed");
   }
@@ -94944,8 +94945,13 @@ function paginaIngresso(pagina2) {
   }).join(
     ""
   )}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>` : ""}
+      ${lettureNellAntifurto(ing)}
     </div>`;
   return restoDellIngresso(pagina2, carta, spento);
+}
+function lettureNellAntifurto(ing) {
+  const letture2 = lettureDellIngressoMarkup(ing);
+  return letture2 ? `<div class="mu-allarme-letture">${letture2}</div>` : "";
 }
 function restoDellIngresso(pagina2, carta, spento) {
   const ing = pagina2.ingresso;
@@ -95254,7 +95260,7 @@ function finestra4() {
     const riassunto2 = riassuntoDelleAree(aree2);
     dentro3 = `<div class="mu-fin-clima mu-fin-aree" style="--acc:${accentoDellAllarme(riassunto2.valore)}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(riassunto2.testo)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      ${areeMarkup(aree2)}${altroDellIngresso(pagina2?.ingresso)}</div>`;
+      ${areeMarkup(aree2)}${altroDellIngresso(pagina2?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "lettura") {
     dentro3 = finestraDellaLettura(f);
   } else if (f.tipo === "antifurto") {
@@ -95267,7 +95273,7 @@ function finestra4() {
     const aperte = pagina2?.ingresso?.finestre ? finestreAperte() : [];
     dentro3 = `<div class="mu-fin-clima" style="--acc:${valore3 === "disarmed" ? "#10b981" : "#6366f1"}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore3] || valore3)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina2?.ingresso)}</div>`;
+      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina2?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "citofono" && f.suonato) {
     return squilloMarkup(f);
   } else if (f.tipo === "citofono") {
@@ -97267,6 +97273,10 @@ ${MURO} .mu-btn.pieno{--acc:#0ea5e9;background:linear-gradient(180deg,color-mix(
 ${MURO} .mu-due{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 ${MURO} .mu-ingresso{display:grid;grid-template-columns:1fr 1.1fr;grid-template-rows:1fr auto;gap:16px;min-height:0}
 ${MURO} .mu-allarme{padding:24px;display:flex;flex-direction:column;gap:18px}
+${MURO} .mu-allarme-letture{margin-top:auto;min-height:0;overflow:auto;scrollbar-width:none}
+${MURO} .mu-allarme-letture .mu-ing-letture{display:flex;flex-wrap:wrap;gap:8px}
+${MURO} .mu-allarme-letture .mu-ing-lettura{white-space:nowrap}
+${MURO} .mu-ing-striscia .mu-ing-comandi:first-child{margin-left:0;padding-left:0;border-left:0}
 ${MURO} .mu-stato-allarme{font-size:52px;color:var(--acc);margin-top:6px}
 ${MURO} .mu-avviso-finestre{display:flex;align-items:center;gap:8px;margin-top:8px}
 ${MURO} .mu-modi{--acc:#e11d48}
