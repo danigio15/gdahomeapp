@@ -64,6 +64,9 @@ enum Busta {
     "gdahome_inserisci": ["inserisci", "piu-tardi"],
     "gdahome_campanello": ["apri", "ignora"],
     "gdahome_chiudi": ["chiudi"],
+    "gdahome_luci": ["spegni", "resta", "piu-tardi"],
+    "gdahome_va_bene": ["va-bene", "piu-tardi"],
+    "gdahome_chiudi_va_bene": ["chiudi", "va-bene", "piu-tardi"],
   ]
 
   static func categoria(per tasti: [String]) -> String? {

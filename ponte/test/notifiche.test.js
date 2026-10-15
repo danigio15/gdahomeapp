@@ -231,11 +231,108 @@ test("una porta aperta di notte si dice dopo dieci minuti, una volta", () => {
   );
   sentinella.battito();
   assert.equal(dette.length, 0);
+  /* Aperta da undici minuti ma la casa non dorme ancora da venti: zitta. */
   orologio.ora += 11 * MINUTO;
+  sentinella.battito();
+  assert.equal(dette.length, 0);
+  orologio.ora += 10 * MINUTO;
   sentinella.battito();
   sentinella.battito();
   assert.equal(dette.length, 1);
   assert.equal(dette[0].tipo, "aperture");
+  assert.match(dette[0].parole.it.titolo, /Garage: la porta del garage è ancora aperta/);
+  assert.deepEqual(
+    dette[0].azioni.map((a) => a.id),
+    ["va-bene", "piu-tardi"],
+  );
+});
+
+test("porta aperta di notte con la casa sveglia: niente; e il nome si legge", () => {
+  const notte = new Date(2026, 9, 14, 22, 0, 0).getTime();
+  const porta = (s) =>
+    stato("binary_sensor.sensore_porta_finestra_cucina_porta", s, {
+      device_class: "door",
+      friendly_name: "Sensore Porta/Finestra Cucina Porta",
+    });
+  const { sentinella, dette, orologio } = unaSentinella(
+    [porta("on"), stato("light.soggiorno", "on", { friendly_name: "Soggiorno" })],
+    { adesso: notte },
+  );
+  /* Le dieci in punto, la luce del soggiorno accesa: si e' svegli. */
+  for (let i = 0; i < 6; i += 1) {
+    sentinella.battito();
+    orologio.ora += 10 * MINUTO;
+  }
+  assert.equal(dette.length, 0, "con la casa sveglia una porta aperta non e' una notizia");
+  /* Si spegne tutto e si va a dormire: venti minuti dopo, una volta, col
+   * nome che si legge. */
+  sentinella.cambia(
+    "light.soggiorno",
+    stato("light.soggiorno", "off", { friendly_name: "Soggiorno" }),
+  );
+  orologio.ora += 25 * MINUTO;
+  sentinella.battito();
+  assert.equal(dette.length, 1);
+  assert.equal(dette[0].parole.it.titolo, "🚪 Cucina: la porta è ancora aperta");
+  /* «Va bene stanotte»: fino al mattino tace. */
+  sentinella.capire.vaBeneStanotte("binary_sensor.sensore_porta_finestra_cucina_porta");
+  assert.deepEqual(
+    sentinella.capire.lasciaStare("binary_sensor.sensore_porta_finestra_cucina_porta", "", {
+      tipo: "porta",
+    }),
+    { perche: "stanotte" },
+  );
+  /* Una porta di camera, di notte con la gente in casa, non e' una notizia. */
+  sentinella.cambia(
+    "binary_sensor.porta_camera",
+    stato("binary_sensor.porta_camera", "on", {
+      device_class: "door",
+      friendly_name: "Porta camera",
+    }),
+  );
+  orologio.ora += 11 * MINUTO;
+  sentinella.battito();
+  assert.equal(dette.length, 1);
+});
+
+test("luci con la casa vuota: l'acquario resta, «Spegni» spegne solo le altre, «Restano così» impara", () => {
+  const { sentinella, dette, orologio } = unaSentinella([
+    stato("person.uno", "not_home", { friendly_name: "Persona 1" }),
+    stato("light.luce_acquario_blu", "on", { friendly_name: "Luce acquario blu" }),
+    stato("light.cucina", "on", { friendly_name: "Cucina" }),
+    stato("light.bagno", "on", { friendly_name: "Bagno" }),
+  ]);
+  orologio.ora += 31 * MINUTO;
+  sentinella.battito();
+  const luci = () => dette.filter((d) => d.chiave === "suggerimenti:luci");
+  assert.equal(luci().length, 1);
+  const detta = luci()[0];
+  assert.match(detta.parole.it.testo, /Accese: Cucina, Bagno\. Restano accese Luce acquario blu\./);
+  const spegni = detta.azioni.find((a) => a.id === "spegni");
+  assert.deepEqual(spegni.servizio.entita, ["light.cucina", "light.bagno"]);
+  const resta = detta.azioni.find((a) => a.id === "resta");
+  assert.deepEqual(resta.resta, ["light.cucina", "light.bagno"]);
+  /* «Restano così»: la volta dopo non si propongono piu'. */
+  sentinella.capire.resta(resta.resta);
+  sentinella.cambia("person.uno", stato("person.uno", "home", { friendly_name: "Persona 1" }));
+  sentinella.battito();
+  sentinella.cambia("person.uno", stato("person.uno", "not_home", { friendly_name: "Persona 1" }));
+  orologio.ora += 40 * MINUTO;
+  sentinella.battito();
+  assert.equal(luci().length, 1);
+});
+
+test("una luce accesa con la casa vuota quasi tutti i giorni e' a orario: l'assistente la impara", async () => {
+  const { CapireLaCasa } = await import("../src/capire-la-casa.js");
+  let ora = new Date(2026, 9, 1, 12, 0, 0).getTime();
+  const capire = new CapireLaCasa({ adesso: () => ora, memoria: {} });
+  for (let giorno = 0; giorno < 5; giorno += 1) {
+    capire.luceAccesaConLaCasaVuota("light.mensola", 45, ora);
+    ora += 24 * 60 * MINUTO;
+  }
+  assert.deepEqual(capire.lasciaStare("light.mensola", "Mensola"), { perche: "abitudine" });
+  assert.equal(capire.lasciaStare("light.cucina", "Cucina"), null);
+  assert.deepEqual(capire.lasciaStare("light.vasca_pesci", "Vasca pesci"), { perche: "acquario" });
 });
 
 test("il freezer troppo caldo per un quarto d'ora", () => {

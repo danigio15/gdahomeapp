@@ -76,6 +76,22 @@ const _categorieDellIphone = <String, List<(String, String, String)>>{
     ('ignora', 'Ignora', 'Ignore'),
   ],
   'gdahome_chiudi': [('chiudi', 'Chiudi', 'Close')],
+  /* L'assistente che impara: «Restano così» non le propone piu', «Va bene»
+   * tace una porta fino al mattino (`capire-la-casa.js` sul ponte). */
+  'gdahome_luci': [
+    ('spegni', 'Spegni', 'Turn off'),
+    ('resta', 'Restano così', 'Leave them on'),
+    ('piu-tardi', 'Più tardi', 'Later'),
+  ],
+  'gdahome_va_bene': [
+    ('va-bene', 'Va bene così', "That's fine"),
+    ('piu-tardi', 'Più tardi', 'Later'),
+  ],
+  'gdahome_chiudi_va_bene': [
+    ('chiudi', 'Chiudi', 'Close'),
+    ('va-bene', 'Va bene così', "That's fine"),
+    ('piu-tardi', 'Più tardi', 'Later'),
+  ],
 };
 
 String? _categoriaPer(List<TastoDellaNotifica> tasti) {

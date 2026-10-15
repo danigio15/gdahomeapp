@@ -46339,9 +46339,15 @@ rilevatore(
     entita: [f.entity]
   }))
 );
+var LUCE_CHE_RESTA = /acquari|aquari|vasca\s*pesci|fish\s*tank|terrari|rettil|paludari|vivari|notturn|night\s*light|segnapasso|luce\s*(di\s*)?cortesia|\bnotte\b|giardin|esterno|esterne|esterni|outdoor|garden|vialett|cortil|crepuscol/i;
+function luceDaLasciare(luce, c = {}) {
+  const id = pulito40(luce?.entity);
+  if (elenco5(c.lasciate).includes(id)) return true;
+  return LUCE_CHE_RESTA.test(`${id.replace(/[._]/g, " ")} ${pulito40(luce?.name)}`);
+}
 rilevatore("vuota-luci", "risparmio", (c, o, l) => {
   if (!casaVuota(c)) return [];
-  const accese = elenco5(c.luci).filter((x) => x.on);
+  const accese = elenco5(c.luci).filter((x) => x.on && !luceDaLasciare(x, c));
   if (!accese.length) return [];
   const da = daQuandoVuota(c);
   return [
@@ -46614,7 +46620,7 @@ rilevatore("notte-luci", "risparmio", (c, o, l) => {
   const occupate = new Set(elenco5(c.stanzeOccupate).map((s) => pulito40(s).toLowerCase()));
   const sapere = Boolean(c.ciSonoPresenze);
   const accese = elenco5(c.luci).filter(
-    (x) => x.on && (sapere ? x.stanza && !occupate.has(pulito40(x.stanza).toLowerCase()) : (numero36(x.daMs) || 0) >= ORA4)
+    (x) => x.on && !luceDaLasciare(x, c) && (sapere ? x.stanza && !occupate.has(pulito40(x.stanza).toLowerCase()) : (numero36(x.daMs) || 0) >= ORA4)
   );
   if (!accese.length) return [];
   return [
@@ -50680,6 +50686,13 @@ function contestoDellaCasa(states = allStates(), adesso = Date.now()) {
     adesso,
     ora: new Date(adesso).getHours(),
     persone: persone2(states, adesso),
+    /* Le luci delle sezioni che le possiedono (Animali: l'acquario, il
+     * terrario): restano accese per conto loro. */
+    lasciate: [
+      ...new Set(
+        JSON.stringify(readJson("cd_animali", []) || []).match(/\b(light|switch)\.[a-z0-9_]+/g) || []
+      )
+    ],
     luci: elenco9(modello("luci")?.rows).map((r) => ({
       entity: clean(r.entity),
       name: clean(r.name),

@@ -42,6 +42,7 @@ import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 
 import { Archivio } from "./archivio.js";
+import { CapireLaCasa } from "./capire-la-casa.js";
 import { CATEGORIE, EVENTI, Sentinella, URGENZE, categoriaDi } from "./sentinella.js";
 import { chiudiLaSpinta, CONTENUTO_MASSIMO } from "./spinta.js";
 import { vedeQualcosa } from "./plance.js";
@@ -223,6 +224,7 @@ export class Notifiche {
     this.sentinella = new Sentinella({
       adesso,
       registro: this.registro,
+      capire: new CapireLaCasa({ cartella, adesso }),
       quando: (evento) => {
         void this.consegna(evento);
       },
@@ -590,6 +592,8 @@ export class Notifiche {
     for (const una of evento.azioni || []) {
       if (una.servizio) azioni[una.id] = { servizio: una.servizio };
       else if (una.piuTardi) azioni[una.id] = { piuTardi: true, chiave: evento.chiave };
+      else if (Array.isArray(una.resta)) azioni[una.id] = { resta: una.resta.slice(0, 40) };
+      else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
     }
     if (!Object.keys(azioni).length) return;
     this._tasti.set(id, { telefono, azioni, scade: this.adesso() + VITA_DEI_TASTI });
@@ -810,6 +814,19 @@ export class Notifiche {
     delete tasti.azioni[String(detto.azione)];
     if (azione.piuTardi) {
       this._rimandati.set(`${telefono}|${azione.chiave}`, this.adesso() + ORA);
+      return si({ fatto: true });
+    }
+    /* «Restano così» e «Va bene stanotte»: l'assistente lo ricorda per
+     * tutta la casa (`capire-la-casa.js`). Non toccano niente in Home
+     * Assistant: dicono solo cosa non proporre piu'. */
+    if (azione.resta) {
+      this.sentinella.capire.resta(azione.resta);
+      this.sentinella.capire.scrivi();
+      return si({ fatto: true });
+    }
+    if (azione.vaBene) {
+      for (const id of azione.vaBene) this.sentinella.capire.vaBeneStanotte(id);
+      this.sentinella.capire.scrivi();
       return si({ fatto: true });
     }
     if (!utente || (this.utenti && !(await this.utenti.eVivo(utente).catch(() => false))))
