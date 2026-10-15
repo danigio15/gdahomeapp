@@ -185,6 +185,13 @@ export class Dispositivi {
     return this._vivi.length;
   }
 
+  /* Quelli della casa, senza i telefoni di prova: sono loro a stare nei
+   * dieci (`dispositivi_massimi`). Chi rivede l'app per i negozi non toglie
+   * il posto a chi in casa ci abita. */
+  quantiDiCasa() {
+    return this._vivi.filter((uno) => !Number.isFinite(uno.finoA)).length;
+  }
+
   /* Quanti telefoni sono entrati con la casa di prova, e valgono ancora. */
   quantiDiProva() {
     return this._vivi.filter((uno) => Number.isFinite(uno.finoA)).length;
@@ -195,7 +202,7 @@ export class Dispositivi {
    * Il segno esce da qui una volta sola, adesso. Chi lo perde riabbina: non
    * c'e' nessuna strada per rileggerlo, ed e' voluto. */
   abbina({ nome, sistema, utente = "", finoA = null } = {}) {
-    if (this._vivi.length >= this.massimi) {
+    if (!Number.isFinite(finoA) && this.quantiDiCasa() >= this.massimi) {
       throw new TroppiDispositivi(`sono gia' abbinati ${this.massimi} dispositivi`);
     }
     const segno = segnoNuovo();
