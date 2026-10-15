@@ -685,8 +685,10 @@ void main() {
       throwsStateError,
     );
     filo.avvia();
+    // gdanav sa come chiedere alla casa i suoi viaggi.
+    expect(fonte.chiedi, isNotNull);
     await collegamento.apri();
-    final elenco = await filo.comandoAllaCasa({'type': 'ponte/viaggi/elenco'});
+    final elenco = await fonte.chiedi!({'type': 'ponte/viaggi/elenco'});
     expect(elenco, {
       'sbloccato': true,
       'viaggi': [
@@ -698,5 +700,7 @@ void main() {
       filo.comandoAllaCasa({'type': 'call_service', 'domain': 'lock'}),
       throwsArgumentError,
     );
+    filo.ferma();
+    expect(fonte.chiedi, isNull);
   });
 }
