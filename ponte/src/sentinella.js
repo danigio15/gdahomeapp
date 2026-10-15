@@ -937,8 +937,15 @@ export class Sentinella {
    * un riepilogo vuoto non si manda. */
   riepilogo() {
     const batterie = [];
-    let spenti = 0;
     let aggiornamenti = 0;
+    /* «Non ci sono 65 dispositivi non connessi»: qui si contavano le entita'
+     * mute che hanno un dispositivo, non i dispositivi. Adesso la regola e'
+     * quella del cruscotto di chi installa (`salute.js`) e della pagina «Non
+     * connessi» della plancia: un dispositivo e' giu' quando NESSUNA delle sue
+     * entita' risponde, e conta una volta. Un canale non usato di uno switch
+     * acceso, il blocco bambini di un'asciugatrice spenta, non lo fanno giu'. */
+    const muti = new Set();
+    const vivi = new Set();
     for (const [id, stato] of this.stati) {
       const dominio = dominioDi(id);
       if (dominio === "sensor" && stato.attributes?.device_class === "battery") {
@@ -946,13 +953,12 @@ export class Sentinella {
         if (n !== null && n <= 15) batterie.push(nomeDi(stato, id));
       }
       if (dominio === "update" && stato.state === "on") aggiornamenti += 1;
-      if (
-        stato.state === "unavailable" &&
-        this.dispositivoDi?.[id] &&
-        ["sensor", "binary_sensor", "light", "switch"].includes(dominio)
-      )
-        spenti += 1;
+      const suo = this.dispositivoDi?.[id];
+      if (!suo) continue;
+      if (stato.state === "unavailable") muti.add(suo);
+      else vivi.add(suo);
     }
+    const spenti = [...muti].filter((suo) => !vivi.has(suo)).length;
     if (!batterie.length && !spenti && !aggiornamenti) return null;
     const pezziIt = [];
     const pezziEn = [];

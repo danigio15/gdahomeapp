@@ -725,3 +725,35 @@ test("le personalizzate: chi non amministra le fa solo per se'", async () => {
     banco.spegni();
   }
 });
+
+/* «Non ci sono 65 dispositivi non connessi.» Il riepilogo della sera contava
+ * le ENTITA' mute che hanno un dispositivo, non i dispositivi: una presa
+ * spenta con quattro sensori faceva quattro, e il canale non usato di uno
+ * switch acceso faceva uno. Adesso la regola e' quella del cruscotto di chi
+ * installa (`salute.js`) e della pagina «Non connessi»: un dispositivo e' giu'
+ * quando NESSUNA delle sue entita' risponde, e conta una volta sola. */
+test("il riepilogo conta i dispositivi giu', non le entita' mute", () => {
+  const { sentinella } = unaSentinella([
+    // Una presa irraggiungibile: tutte e quattro mute → 1 dispositivo.
+    stato("switch.presa_giardino", "unavailable"),
+    stato("sensor.presa_giardino_potenza", "unavailable"),
+    stato("sensor.presa_giardino_energia", "unavailable"),
+    stato("sensor.presa_giardino_tensione", "unavailable"),
+    // Uno switch acceso col canale non usato muto: non e' giu'.
+    stato("switch.unifi_porta_1", "unavailable"),
+    stato("sensor.unifi_cpu", "6"),
+    // Un'entita' senza dispositivo: non e' un dispositivo non connesso.
+    stato("sensor.template_rotto", "unavailable"),
+  ]);
+  sentinella.dispositivoDi = {
+    "switch.presa_giardino": "presa",
+    "sensor.presa_giardino_potenza": "presa",
+    "sensor.presa_giardino_energia": "presa",
+    "sensor.presa_giardino_tensione": "presa",
+    "switch.unifi_porta_1": "unifi",
+    "sensor.unifi_cpu": "unifi",
+  };
+  const r = sentinella.riepilogo();
+  assert.ok(r, "c'e' un dispositivo giu'");
+  assert.match(r.parole.it.testo, /^1 dispositivo non connesso$/);
+});
