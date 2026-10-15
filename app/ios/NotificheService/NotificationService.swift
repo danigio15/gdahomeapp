@@ -33,6 +33,9 @@ final class NotificationService: UNNotificationServiceExtension {
     nuova.title = aperta.titolo
     nuova.body = aperta.testo
     if let casa = aperta.casa { nuova.threadIdentifier = "gdahome_\(casa)" }
+    /* I tasti: le stesse categorie che l'app dichiara all'avvio
+     * (`_categorieDellIphone` in `lib/notifiche/postino.dart`). */
+    if let categoria = Busta.categoria(per: aperta.tasti) { nuova.categoryIdentifier = categoria }
     contentHandler(nuova)
   }
 
@@ -51,6 +54,25 @@ enum Busta {
     let titolo: String
     let testo: String
     let casa: String?
+    let tasti: [String]
+  }
+
+  /// Come `_categoriaPer` dell'app: la categoria che ha esattamente quei tasti.
+  static let categorie: [String: Set<String>] = [
+    "gdahome_guarda": ["guarda"],
+    "gdahome_spegni": ["spegni", "piu-tardi"],
+    "gdahome_inserisci": ["inserisci", "piu-tardi"],
+    "gdahome_campanello": ["apri", "ignora"],
+    "gdahome_chiudi": ["chiudi"],
+  ]
+
+  static func categoria(per tasti: [String]) -> String? {
+    let quali = Set(tasti)
+    if quali.isEmpty { return nil }
+    if let esatta = categorie.first(where: { $0.value == quali })?.key { return esatta }
+    if quali.contains("apri") { return "gdahome_campanello" }
+    if quali.contains("guarda") { return "gdahome_guarda" }
+    return nil
   }
 
   static func apri(_ dati: [AnyHashable: Any]) -> Aperta? {
@@ -81,7 +103,13 @@ enum Busta {
         let titolo = dentro["titolo"] as? String, !titolo.isEmpty
       else { return nil }
       let testo = (dentro["testo"] as? String) ?? ""
-      return Aperta(titolo: titolo, testo: testo.isEmpty ? (voce["n"] ?? "") : testo, casa: voce["c"])
+      let tasti = ((dentro["azioni"] as? [[String: Any]]) ?? []).compactMap { $0["id"] as? String }
+      return Aperta(
+        titolo: titolo,
+        testo: testo.isEmpty ? (voce["n"] ?? "") : testo,
+        casa: voce["c"],
+        tasti: tasti
+      )
     } catch {
       return nil
     }

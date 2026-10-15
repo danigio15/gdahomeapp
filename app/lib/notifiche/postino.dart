@@ -267,9 +267,26 @@ Future<void> quandoArrivaDaChiusa(RemoteMessage messaggio) async {
   } catch (_) {
     /* Gia' acceso, o non c'e': la busta si apre lo stesso. */
   }
+  /* Sull'iPhone la notifica la mostra gia' il sistema, aperta dall'estensione
+   * (`ios/NotificheService`): mostrarne un'altra qui era la doppia. */
+  if (!mostraLaCopiaLocale(defaultTargetPlatform, inPrimoPiano: false)) return;
   await _locali.initialize(settings: _impostazioniLocali());
   await apriEMostra(messaggio.data, const CassaforteDelSistema());
 }
+
+/// Se l'app deve mostrare lei la notifica arrivata.
+///
+/// «Le notifiche sempre a doppio»: sull'iPhone la notifica la mostra il
+/// sistema — col testo vero, da quando l'estensione apre la busta — e l'app ne
+/// mostrava una seconda copia ogni volta che era sveglia in sottofondo (il
+/// navigatore, la posizione). Sull'iPhone l'app la mostra solo in primo piano,
+/// dove il sistema la tace (`setForegroundNotificationPresentationOptions`).
+/// Su Android il sistema non mostra niente: la mostra sempre l'app.
+@visibleForTesting
+bool mostraLaCopiaLocale(
+  TargetPlatform piattaforma, {
+  required bool inPrimoPiano,
+}) => piattaforma != TargetPlatform.iOS || inPrimoPiano;
 
 /// Il postino dell'app aperta.
 class Postino extends ChangeNotifier {
@@ -486,6 +503,14 @@ class Postino extends ChangeNotifier {
   }
 
   Future<void> _arrivataAdAppAperta(RemoteMessage messaggio) async {
+    final inPrimoPiano =
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    if (!mostraLaCopiaLocale(
+      defaultTargetPlatform,
+      inPrimoPiano: inPrimoPiano,
+    )) {
+      return;
+    }
     final aperta = await apriEMostra(messaggio.data, cassaforte);
     /* Il campanello ad app aperta non aspetta un tocco: si apre subito. */
     if (aperta != null && aperta.notifica.chiamata && !aperta.scaduta) {
@@ -501,7 +526,16 @@ class Postino extends ChangeNotifier {
     await archivio.apri();
     final aperta = await apriQuellaArrivata(messaggio.data, archivio.tutte);
     if (aperta == null) return;
-    _tocca(ToccoDellaNotifica(casa: aperta.casa.id, notifica: aperta.notifica));
+    /* Toccato un tasto (Spegni, Inserisci…) e non la notifica: lo sa
+     * `AppDelegate.swift`, e il tasto va alla casa come dall'Android. */
+    final tasto = await tastoPremutoSullIphone(messaggio.data['b'] as String?);
+    _tocca(
+      ToccoDellaNotifica(
+        casa: aperta.casa.id,
+        notifica: aperta.notifica,
+        tasto: tasto,
+      ),
+    );
   }
 
   /// Un tasto premuto: si porta alla casa di quella notifica, sul suo filo.

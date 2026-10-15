@@ -65,3 +65,15 @@ Future<Map<String, Map<String, String>>> chiaviPerLEstensione(
   }
   return chiavi;
 }
+
+/// Il tasto premuto sulla notifica che ha mostrato l'iPhone, per questa busta
+/// (`AppDelegate.swift`): `null` per un tocco sulla notifica, o fuori
+/// dall'iPhone. Si dice una volta sola.
+Future<String?> tastoPremutoSullIphone(String? busta) async {
+  if (defaultTargetPlatform != TargetPlatform.iOS || busta == null) return null;
+  try {
+    return await _canale.invokeMethod<String>('tasto', busta);
+  } catch (_) {
+    return null;
+  }
+}
