@@ -10,6 +10,19 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.12.3
+
+**Navigatore: la Tangenziale di Napoli a 1,05 €, sempre.** Su certi percorsi
+il chilometro della barriera stava sotto un'altra strada e il pedaggio
+restava «~1,00 € stimato». Dentro Napoli un tratto a pagamento è la
+Tangenziale: 1,05 €.
+
+**Navigatore: le ultime ricerche anche in auto.** Su CarPlay e Android Auto,
+aprendo «Cerca», prima di scrivere ci sono le ultime ricerche.
+
+**Navigatore: niente ABRP.** In «La tua auto» non c'è più «Ho il consumo di
+ABRP»: il consumo lo impara il navigatore guidando.
+
 ## 1.12.2
 
 **Android: il campanello senza lo schermo intero automatico.** Per ora, sui
