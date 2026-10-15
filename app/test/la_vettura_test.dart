@@ -648,4 +648,59 @@ void main() {
       expect(riscritta.aggiornataIl, DateTime.utc(2026, 9, 7, 7, 3, 20));
     });
   });
+
+  test('gdanav manda alla casa solo i comandi dei viaggi, e solo col filo '
+      'aperto', () async {
+    final ponte = await PonteFinto.alza();
+    ponte.configurazione = {
+      'profile': 'primary',
+      'snapshot': {'values': <String, dynamic>{}},
+    };
+    ponte.viaggi = [
+      {'id': 'v_1', 'tipo': 'una'},
+    ];
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    final collegamento = Collegamento(
+      archivio: archivio,
+      sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+    );
+    final fonte = SorgenteGdahome();
+    final filo = IlFiloDellaVettura(collegamento, fonte);
+    addTearDown(() async {
+      filo.ferma();
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+
+    // Prima del filo: un errore, non un'attesa.
+    await expectLater(
+      filo.comandoAllaCasa({'type': 'ponte/viaggi/elenco'}),
+      throwsStateError,
+    );
+    filo.avvia();
+    // gdanav sa come chiedere alla casa i suoi viaggi.
+    expect(fonte.chiedi, isNotNull);
+    await collegamento.apri();
+    final elenco = await fonte.chiedi!({'type': 'ponte/viaggi/elenco'});
+    expect(elenco, {
+      'sbloccato': true,
+      'viaggi': [
+        {'id': 'v_1', 'tipo': 'una'},
+      ],
+    });
+    // Nient'altro passa da qui: la casa non si comanda dal navigatore.
+    await expectLater(
+      filo.comandoAllaCasa({'type': 'call_service', 'domain': 'lock'}),
+      throwsArgumentError,
+    );
+    filo.ferma();
+    expect(fonte.chiedi, isNull);
+  });
 }

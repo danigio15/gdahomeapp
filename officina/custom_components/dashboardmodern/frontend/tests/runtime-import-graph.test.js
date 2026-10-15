@@ -1539,8 +1539,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 453 con «Chiedi alla casa…» che capisce le domande prima di Assist: i tre
   // nuclei puri `core/capire-le-domande.js`, `core/sapere-della-casa.js` e
   // `core/rispondere-alle-domande.js`.
+  // 455 con la pagina gdanav dei viaggi pianificati: `sections/gdanav-section.js`
+  // e il suo nucleo puro `core/i-viaggi.js`.
   assert.ok(
-    relative.length <= 453,
+    relative.length <= 455,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

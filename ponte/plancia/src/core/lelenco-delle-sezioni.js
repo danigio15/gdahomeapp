@@ -45,6 +45,10 @@ export const SEZIONI = Object.freeze(
     { scheda: "sez0", chiave: "home", glifo: "🏠", it: "Home", en: "Home" },
     { scheda: "sez1", chiave: "energy", glifo: "⚡", it: "Energia", en: "Energy" },
     { scheda: "sez2", chiave: "ev", glifo: "🚗", it: "Auto elettrica", en: "Electric car" },
+    /* gdanav: i viaggi pianificati da PC, che si ritrovano nel navigatore. La
+     * scheda e' la sua pagina: non c'e' niente da configurare, solo da
+     * accendere o spegnere. */
+    { scheda: "gdanav", chiave: "gdanav", glifo: "🧭", it: "gdanav", en: "gdanav" },
     /* Il nome non si riscrive qui: e' quello che il modulo degli impianti
      * termici mette sulla linguetta al posto di «Solare», e scriverne un altro
      * vorrebbe dire un elenco che chiama una scheda in un modo e la scheda che

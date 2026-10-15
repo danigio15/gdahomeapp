@@ -69,7 +69,7 @@ dal segreto `GDAHOME_FIREBASE_ANDROID`, e solo per il pacchetto vero
 ## iPhone
 
 Apple consegna sempre una frase da mostrare: è quella di riserva, «gdahome:
-nuova notifica», con la busta accanto. Dalla 1.12.4 la apre la **Notification
+nuova notifica», con la busta accanto. Dalla 1.13.0 la apre la **Notification
 Service Extension** (`app/ios/NotificheService`) mentre la notifica arriva, e
 sull'iPhone si legge il titolo e il testo veri.
 

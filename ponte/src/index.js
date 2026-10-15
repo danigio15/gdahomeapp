@@ -47,6 +47,7 @@ import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp, PROXY_DELL_INGRESS } from "./server.js";
 import { Registri } from "./registri.js";
 import { Notifiche } from "./notifiche.js";
+import { Viaggi } from "./viaggi.js";
 
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
@@ -449,6 +450,16 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   });
   chiamata.alGettoneMorto = (telefono) => notifiche.gettoneMorto(telefono);
   ponte.notifiche = notifiche;
+  /* I viaggi pianificati di gdanav: stanno qui, e la casa avvisa e accende il
+   * clima dell'auto all'ora giusta anche col telefono spento. */
+  const viaggi = new Viaggi({
+    cartella: opzioni.cartella,
+    casa,
+    notifiche,
+    licenze,
+    registro,
+  });
+  commissioni.viaggi = viaggi;
   /* Una casa di prova fatta prima di un riavvio vale ancora: al centralino
    * la si ridice appena il filo e' su. */
   const provaViva = casaDiProva.viva();
@@ -598,6 +609,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
 
   chiamata.avvia();
   void notifiche.parti();
+  viaggi.parti();
   postino.parti();
   /* Separata dal rapporto, e non per caso: il rapporto resta spento di serie,
    * e le licenze non ne hanno bisogno. Manda solo chi e' la casa. */
@@ -680,6 +692,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     clearInterval(spazzino);
     chiamata.spegni();
     notifiche.ferma();
+    viaggi.ferma();
     postino.ferma();
     licenze.ferma();
     versioneMinima.ferma();
@@ -700,6 +713,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     identita,
     chiamata,
     notifiche,
+    viaggi,
     ritorno,
     registro,
     postino,

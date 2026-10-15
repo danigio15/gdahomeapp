@@ -24,7 +24,20 @@
 const OMBRA = (cx, cy, rx) =>
   `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="1.8" fill="#0b1220" opacity=".14"/>`;
 
+/* Il logo di gdanav sta coi marchi, fuori dalla versione (vedi
+ * `personalization-catalog.js`, «Dove stanno i file»): e' il solo disegno che
+ * e' una fotografia, perche' gdanav ha la sua faccia e non un oggetto di casa. */
+function logoDiGdanav() {
+  const qui = import.meta.url;
+  const taglio = qui.indexOf("/dashboardmodern_static/");
+  const cartella =
+    taglio < 0 ? "../../brands/" : `${qui.slice(0, taglio)}/dashboardmodern_static/brands/`;
+  return `${cartella}gdanav.webp`;
+}
+
 const OGGETTI = Object.freeze({
+  /* gdanav: il suo logo, nell'angolo tondo delle altre icone. */
+  gdanav: `<image href="${logoDiGdanav()}" x="1" y="1" width="30" height="30" preserveAspectRatio="xMidYMid slice"/>`,
   /* La lampadina: bulbo caldo, ghiera di metallo, il riflesso del vetro. */
   luci: `<defs>
       <radialGradient id="dmoLuceB" cx=".4" cy=".33" r=".75">

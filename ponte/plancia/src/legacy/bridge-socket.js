@@ -157,6 +157,13 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "dashboardmodern/clima/timer/list",
   "dashboardmodern/clima/timer/set",
   "dashboardmodern/clima/timer/clear",
+  // I viaggi di gdanav, pianificati dalla pagina gdanav (ponte/src/viaggi.js).
+  "ponte/viaggi/elenco",
+  "ponte/viaggi/salva",
+  "ponte/viaggi/togli",
+  "ponte/viaggi/stima",
+  "ponte/viaggi/cerca",
+  "ponte/viaggi/strada",
   "auth/sign_path",
 ]);
 

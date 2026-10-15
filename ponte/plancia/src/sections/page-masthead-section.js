@@ -82,6 +82,12 @@ const PAGES = Object.freeze([
     it: ["Finestre", "Tapparelle · Tende · Sensori di apertura"],
     en: ["Windows", "Shutters · Curtains · Contact sensors"],
   },
+  {
+    id: "page-gdanav",
+    tint: ["37,99,235", "96,165,250"],
+    it: ["gdanav", "Viaggi pianificati"],
+    en: ["gdanav", "Planned trips"],
+  },
   /* La pagina ospita aspirapolvere e tagliaerba insieme: il nome e il
    * sottotitolo non nominano una specie sola, o mentirebbero a quella che
    * resta fuori. */

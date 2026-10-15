@@ -152,6 +152,18 @@ import 'notifica_personalizzata.dart';
           'updates',
     ),
   ),
+  'viaggi' => (
+    disegno: 'ev',
+    titolo: inLingua(it: 'Quando partire', en: 'When to leave'),
+    sotto: inLingua(
+      it:
+          'I viaggi pianificati in gdanav, col traffico: arriva anche '
+          'nelle ore di silenzio',
+      en:
+          'Trips planned in gdanav, with traffic: it comes even during '
+          'quiet hours',
+    ),
+  ),
   _ => (disegno: 'avvisi', titolo: evento, sotto: ''),
 };
 
@@ -177,6 +189,10 @@ import 'notifica_personalizzata.dart';
       'manutenzione' => (
         disegno: 'batterie',
         titolo: inLingua(it: 'Manutenzione', en: 'Maintenance'),
+      ),
+      'viaggi' => (
+        disegno: 'agenda',
+        titolo: inLingua(it: 'Viaggi', en: 'Trips'),
       ),
       _ => (disegno: 'avvisi', titolo: categoria),
     };

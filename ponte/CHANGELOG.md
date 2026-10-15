@@ -10,7 +10,27 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
-## 1.12.4
+## 1.13.0
+
+**gdanav: il Pianificatore.** Tre modi di pianificare un viaggio: per un
+giorno («arrivo entro le 9:00 a Caserta, domani»), ogni settimana («Casa –
+Lavoro, dal lunedì al venerdì») e un giro a tappe con le soste. Si dice
+dove e a che ora arrivare, e il navigatore dice a che ora partire, col
+traffico. È Premium.
+
+- **Dal telefono e da PC.** I viaggi stanno nella casa: si scrivono nel
+  navigatore dell'app o nella nuova pagina **gdanav** della plancia, dal
+  computer, e sono gli stessi. Ognuno vede solo i suoi: la casa li tiene per
+  chi li ha scritti, e nel ponte da fuori non si vede nulla.
+- **L'avviso quando partire.** Dieci minuti prima (o quanto si sceglie)
+  arriva la notifica «Parti fra 10 minuti», anche nelle ore di silenzio; si
+  spegne in Notifiche → Viaggi. Prima di partire il navigatore ricalcola la
+  strada col traffico, così l'ora è giusta.
+- **L'auto pronta.** Dalla pagina gdanav si può scegliere il clima dell'auto
+  da accendere prima e il garage: nell'avviso c'è il tasto per aprirlo, e si
+  apre solo se lo si preme.
+- **In auto.** Su CarPlay e Android Auto i viaggi salvati sono in cima a
+  «Dove andiamo?»: si tocca e si parte, con tutte le tappe.
 
 **iPhone: le notifiche col testo vero.** Sull'iPhone le notifiche della casa
 dicevano solo «gdahome: nuova notifica», e il testo si leggeva toccandole.

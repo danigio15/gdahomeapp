@@ -439,6 +439,8 @@ class PonteFinto {
                 },
         'get_states' => entita,
         'get_panels' => pannelli ?? const <String, dynamic>{},
+        // I viaggi pianificati di gdanav (`ponte/src/viaggi.js`).
+        'ponte/viaggi/elenco' => {'sbloccato': true, 'viaggi': viaggi},
         'dashboardmodern/config/get' =>
           configurazione ?? {'profile': 'primary', 'snapshot': null},
         _ => null,
@@ -1109,6 +1111,9 @@ class PonteFinto {
         return no('unknown_command', 'non conosco ${detto['type']}');
     }
   }
+
+  /// I viaggi pianificati che risponde `ponte/viaggi/elenco`.
+  List<Map<String, dynamic>> viaggi = [];
 
   /// I pannelli che risponde `get_panels`. `null` e' una casa senza
   /// DashboardModern: risponde lo stesso, ma senza quel pannello.

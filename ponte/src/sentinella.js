@@ -37,6 +37,8 @@ export const CATEGORIE = Object.freeze({
   assistente: ["suggerimenti"],
   manutenzione: ["riepilogo"],
   personalizzate: ["personalizzata"],
+  /* I viaggi pianificati di gdanav (`viaggi.js`): «parti fra 10 minuti». */
+  viaggi: ["viaggi"],
 });
 
 export const EVENTI = Object.freeze(Object.values(CATEGORIE).flat());
