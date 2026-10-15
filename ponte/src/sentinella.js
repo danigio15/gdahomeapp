@@ -80,6 +80,31 @@ const NOME_DELLA_PIOGGIA = /pioggia|piove|rain/i;
 const NOME_ELETTRODOMESTICO =
   /lavatric|lavastovigl|asciugatric|washer|washing|dishwasher|dryer|lavasciug/i;
 const NOME_DEL_FREEZER = /freezer|congelator/i;
+
+/* Il genere di un elettrodomestico, per non dirlo due volte. La lavastoviglie
+ * prima della lavatrice: «dishwasher» contiene «washer». */
+const GENERI_DI_ELETTRODOMESTICO = [
+  ["lavastoviglie", /lavastovigl|dishwasher/i],
+  ["lavasciuga", /lavasciug|washer.?dryer/i],
+  ["asciugatrice", /asciugatric|dryer/i],
+  ["lavatrice", /lavatric|washer|washing/i],
+];
+export function genereDiElettrodomestico(testo) {
+  for (const [genere, forma] of GENERI_DI_ELETTRODOMESTICO) if (forma.test(testo)) return genere;
+  return String(testo);
+}
+const STESSO_ELETTRODOMESTICO = 15 * 60 * 1000;
+
+/* Il nome senza quello che dice la presa: «asciugatrice W», «Lavatrice
+ * potenza», «Lavastoviglie kW» sono l'elettrodomestico, con la maiuscola. */
+export function nomeDellElettrodomestico(nome) {
+  const pulito = String(nome)
+    .replace(/\b(potenza|power|consumo|watt|k?w)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!pulito) return String(nome);
+  return pulito.charAt(0).toUpperCase() + pulito.slice(1);
+}
 const NOME_DEL_FRIGO = /frigo|fridge|refrigerat/i;
 
 const PIOVE = new Set(["rainy", "pouring", "lightning-rainy", "hail", "snowy-rainy"]);
@@ -515,7 +540,19 @@ export class Sentinella {
     this._memoria.set(chiave, memoria);
   }
 
+  /* Lo stesso elettrodomestico lo dice spesso da due parti: dal suo stato
+   * («finished») e dalla presa che ne misura la potenza. «Perché arriva due
+   * volte la notifica»: «Asciugatrice: finito» e «asciugatrice W: finito» alla
+   * stessa ora. Di un genere (lavatrice, asciugatrice, lavastoviglie…) si dice
+   * una volta sola per quarto d'ora, da qualunque parte arrivi. */
   _elettrodomesticoFinito(id, nome) {
+    const genere = genereDiElettrodomestico(`${id} ${nome}`);
+    const chiave = `finito:${genere}`;
+    const ora = this.adesso();
+    const ultimo = this._memoria.get(chiave);
+    if (ultimo != null && ora - ultimo < STESSO_ELETTRODOMESTICO) return;
+    this._memoria.set(chiave, ora);
+    nome = nomeDellElettrodomestico(nome);
     this._dici({
       tipo: "elettrodomestici",
       urgenza: "normale",
@@ -749,10 +786,7 @@ export class Sentinella {
           ora - memoria.fermoDal >= ELETTRODOMESTICO_FERMO_DA
         ) {
           this._memoria.delete(`potenza:${id}`);
-          this._elettrodomesticoFinito(
-            id,
-            nome.replace(/\s*(potenza|power|consumo)\s*/gi, " ").trim(),
-          );
+          this._elettrodomesticoFinito(id, nome);
         } else if (
           memoria?.giraDal != null &&
           memoria.fermoDal != null &&

@@ -280,6 +280,56 @@ test("la lavatrice che ha finito: la potenza scende e resta giu'", () => {
   assert.equal(dette[0].tipo, "elettrodomestici");
 });
 
+/* «Perché arriva due volte la notifica»: «Asciugatrice: finito» e
+ * «asciugatrice W: finito» alla stessa ora. La stessa asciugatrice lo diceva
+ * da due parti: dal suo stato («finished») e dalla presa che ne misura la
+ * potenza. Uno solo, col nome dell'elettrodomestico; una lavatrice che finisce
+ * nello stesso momento si dice lo stesso. */
+for (const primaLoStato of [true, false]) {
+  test(`un elettrodomestico che finisce si dice una volta sola (${primaLoStato ? "prima lo stato" : "prima la potenza"})`, () => {
+    const { sentinella, dette, orologio } = unaSentinella([
+      stato("sensor.asciugatrice_stato", "run", { friendly_name: "Asciugatrice" }),
+      stato("sensor.asciugatrice_w", "0", {
+        unit_of_measurement: "W",
+        friendly_name: "asciugatrice W",
+      }),
+      stato("sensor.lavatrice_stato", "run", { friendly_name: "Lavatrice" }),
+    ]);
+    sentinella.cambia(
+      "sensor.asciugatrice_w",
+      stato("sensor.asciugatrice_w", "800", {
+        unit_of_measurement: "W",
+        friendly_name: "asciugatrice W",
+      }),
+    );
+    orologio.ora += 60 * MINUTO;
+    sentinella.cambia(
+      "sensor.asciugatrice_w",
+      stato("sensor.asciugatrice_w", "1", {
+        unit_of_measurement: "W",
+        friendly_name: "asciugatrice W",
+      }),
+    );
+    const loStato = () =>
+      sentinella.cambia(
+        "sensor.asciugatrice_stato",
+        stato("sensor.asciugatrice_stato", "finished", { friendly_name: "Asciugatrice" }),
+      );
+    if (primaLoStato) loStato();
+    orologio.ora += 6 * MINUTO;
+    sentinella.battito();
+    if (!primaLoStato) loStato();
+    sentinella.cambia(
+      "sensor.lavatrice_stato",
+      stato("sensor.lavatrice_stato", "finished", { friendly_name: "Lavatrice" }),
+    );
+    const titoli = dette.map((d) => d.parole.it.titolo);
+    assert.equal(titoli.filter((t) => /asciugatrice/i.test(t)).length, 1, titoli.join(" | "));
+    assert.ok(titoli.includes("🧺 Lavatrice: finito"), titoli.join(" | "));
+    assert.ok(!titoli.some((t) => / W: /.test(t)), titoli.join(" | "));
+  });
+}
+
 test("una personalizzata: condizione, durata, e non ripetere", () => {
   const { sentinella, dette, orologio } = unaSentinella([
     stato("sensor.temperatura_freezer", "-18", {
