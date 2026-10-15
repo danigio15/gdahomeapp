@@ -463,7 +463,14 @@ export class Notifiche {
       return false;
     if (evento.tipo === "arrivi" && !imp.persone.includes(evento.persona)) return false;
     if (evento.solo?.length && !evento.solo.includes(utente)) return false;
-    if (evento.urgenza !== "urgente" && inSilenzio(imp, new Date(this.adesso()))) return false;
+    /* Un viaggio pianificato l'ha messo chi lo riceve, a quell'ora: passa le
+     * ore di silenzio come le urgenti (la sveglia per partire alle sei). */
+    if (
+      evento.urgenza !== "urgente" &&
+      !evento.oltreIlSilenzio &&
+      inSilenzio(imp, new Date(this.adesso()))
+    )
+      return false;
     const categoria = categoriaDi(evento.tipo);
     if (imp.soloFuori && (categoria === "casa" || categoria === "assistente")) {
       if (this.sentinella.aCasa(utente) === true) return false;

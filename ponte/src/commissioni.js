@@ -489,6 +489,9 @@ export class Commissioni {
      * `_ilQuadro` — e il perche' sta li'. */
     utenti = null,
     spegnimento = null,
+    /* I viaggi pianificati di gdanav (`viaggi.js`). Si mettono anche dopo:
+     * hanno bisogno delle notifiche, che nascono dopo le commissioni. */
+    viaggi = null,
     /* La rete Zigbee di questa casa. Che poi una rete ci sia o no lo dice lui,
      * rispondendo `quale: ""`: i comandi `ponte/zigbee/` sono di questo ponte
      * comunque — sono nel suo nome — e non si mandano a Home Assistant, che
@@ -551,6 +554,7 @@ export class Commissioni {
     /* Il conto alla rovescia del clima, che nell'integrazione sta in Home
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
+    this.viaggi = viaggi;
     this.zigbee = zigbee;
     this.registri = registri;
     /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
@@ -650,6 +654,11 @@ export class Commissioni {
     if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra, puoAmministrare);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
+    /* I viaggi di gdanav: dalla plancia e dal telefono, ognuno coi suoi. */
+    if (typeof tipo === "string" && tipo.startsWith("ponte/viaggi/")) {
+      if (!this.viaggi) return no(id, "unknown_command", `non conosco ${tipo}`);
+      return this.viaggi.rispondi(detto, { utente: chiChiede });
+    }
     /* Prima del giro `ponte/zigbee/`, perche' questo non e' un comando
      * alla rete: si chiama cosi' per chi sta dall'altra parte, ma legge
      * i registri e basta. Dentro `_zigbee` un ponte senza rete Zigbee

@@ -182,6 +182,11 @@ export class Licenze extends EventEmitter {
     return Boolean(this._valido("gdahome"));
   }
 
+  /** Questa casa ha gdanav Premium adesso: il suo, o quello di gdahome. */
+  get gdanav() {
+    return Boolean(this._valido("gdanav"));
+  }
+
   /* Se questa casa sta nei limiti di Base: mai.
    *
    * E' la domanda che fanno le plance, il portiere e le commissioni, e la
