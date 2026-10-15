@@ -23,6 +23,7 @@ import gdanav_app
     GeneratedPluginRegistrant.register(with: motore)
     collegaIlNavigatore()
     collegaLaFinestra()
+    collegaLeChiaviDelleNotifiche()
     fuoriDalleCopie()
     /* L'Apple Watch: la fotografia al polso, e i tocchi da li'. */
     LOrologio.shared.accendi(motore: motore)
@@ -50,6 +51,21 @@ import gdanav_app
         risposta(nil)
       } else {
         risposta(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  /* Le chiavi delle notifiche per l'estensione che apre le buste
+   * (`lib/notifiche/chiavi_per_l_iphone.dart`, `ios/NotificheService`). */
+  private func collegaLeChiaviDelleNotifiche() {
+    let canale = FlutterMethodChannel(name: "gdahome/notifiche-iphone", binaryMessenger: motore.binaryMessenger)
+    canale.setMethodCallHandler { chiamata, risposta in
+      guard chiamata.method == "chiavi" else { return risposta(FlutterMethodNotImplemented) }
+      let chiavi = chiamata.arguments as? [String: [String: String]] ?? [:]
+      if ChiaviDelleNotifiche.scrivi(chiavi) {
+        risposta(nil)
+      } else {
+        risposta(FlutterError(code: "portachiavi", message: "le chiavi non si scrivono", details: nil))
       }
     }
   }

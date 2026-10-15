@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.12.4
+
+**iPhone: le notifiche col testo vero.** Sull'iPhone le notifiche della casa
+dicevano solo «gdahome: nuova notifica», e il testo si leggeva toccandole.
+Adesso un pezzo nuovo dell'app apre la notifica mentre arriva e mostra subito
+cosa è successo. La notifica resta cifrata fino al telefono, come prima: al
+pezzo nuovo l'app lascia solo la chiave che apre le notifiche, non quella
+della casa.
+
 ## 1.12.3
 
 **Navigatore: la Tangenziale di Napoli a 1,05 €, sempre.** Su certi percorsi

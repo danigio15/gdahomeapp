@@ -44,6 +44,7 @@ import '../casa/archivio_delle_case.dart';
 import '../casa/cassaforte.dart';
 import '../casa/collegamento.dart';
 import '../parole.dart';
+import 'chiavi_per_l_iphone.dart';
 import 'consegna.dart';
 import 'firebase_qui.dart';
 import 'modello.dart';
@@ -377,9 +378,31 @@ class Postino extends ChangeNotifier {
     });
     _permesso = (await messaggi.getNotificationSettings()).authorizationStatus;
     if (permesse) await _prendiIlGettone();
-    _ascolto = collegamento.cambiamenti.listen((_) => diloAllaCasa());
+    _ascolto = collegamento.cambiamenti.listen((_) {
+      unawaited(diloAllaCasa());
+      /* Le chiavi solo quando cambia la casa, non a ogni luce che si accende. */
+      final casa =
+          '${collegamento.casa?.id}|${collegamento.casa?.identificativo}';
+      if (casa != _casaDelleChiavi) {
+        _casaDelleChiavi = casa;
+        unawaited(_chiaviAllEstensione());
+      }
+    });
     notifyListeners();
     unawaited(diloAllaCasa());
+    unawaited(_chiaviAllEstensione());
+  }
+
+  String? _casaDelleChiavi;
+
+  /// Sull'iPhone: le chiavi delle notifiche all'estensione che apre le buste
+  /// prima che si vedano (`chiavi_per_l_iphone.dart`). Si rifa' quando
+  /// cambiano le case: una abbinata adesso, una tolta.
+  Future<void> _chiaviAllEstensione() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
+    final archivio = ArchivioDelleCase(cassaforte);
+    await archivio.apri();
+    await lasciaLeChiaviAllEstensione(archivio.tutte);
   }
 
   Future<void> _prendiIlGettone() async {

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0BB2F6772814B7E97CF58F38 /* LOrologio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B937187AEC39599A39E373 /* LOrologio.swift */; };
+		A1C0DE0000000000000000B1 /* ChiaviDelleNotifiche.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE0000000000000000F1 /* ChiaviDelleNotifiche.swift */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		1B8B934215EDB134622096E5 /* LaCasaInCarPlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0C29BC5F6994C3AF6C1AE5 /* LaCasaInCarPlay.swift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
@@ -51,6 +52,7 @@
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		17B937187AEC39599A39E373 /* LOrologio.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LOrologio.swift; sourceTree = "<group>"; };
+		A1C0DE0000000000000000F1 /* ChiaviDelleNotifiche.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChiaviDelleNotifiche.swift; sourceTree = "<group>"; };
 		1AF3E9B7BF38F958CD09EB96 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -144,6 +146,7 @@
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				17B937187AEC39599A39E373 /* LOrologio.swift */,
+				A1C0DE0000000000000000F1 /* ChiaviDelleNotifiche.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -311,6 +314,7 @@
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
 				0BB2F6772814B7E97CF58F38 /* LOrologio.swift in Sources */,
+				A1C0DE0000000000000000B1 /* ChiaviDelleNotifiche.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

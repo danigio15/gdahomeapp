@@ -726,12 +726,27 @@ jobs:
         working-directory: app
         env:
           URGENTI: ${{ vars.GDAHOME_NOTIFICHE_URGENTI }}
+          SQUADRA: ${{ secrets.APPLE_SQUADRA }}
         run: |
           permessi=ios/Runner/Runner.entitlements
           /usr/libexec/PlistBuddy -c "Add :aps-environment string production" "$permessi" 2>/dev/null ||
             /usr/libexec/PlistBuddy -c "Set :aps-environment production" "$permessi"
           if [ "$URGENTI" = "si" ]; then
             /usr/libexec/PlistBuddy -c "Add :com.apple.developer.usernotifications.time-sensitive bool true" "$permessi" 2>/dev/null || true
+          fi
+          # Il portachiavi diviso con l'estensione delle notifiche: li' l'app
+          # lascia le sole chiavi delle notifiche (`ChiaviDelleNotifiche.swift`).
+          # Il primo gruppo resta quello dell'app, dove il portachiavi scrive
+          # da se': i segni delle case restano dove sono sempre stati.
+          if [ -n "$SQUADRA" ]; then
+            /usr/libexec/PlistBuddy -c "Delete :keychain-access-groups" "$permessi" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups array" "$permessi"
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups:0 string $SQUADRA.com.gdahome.gdahome" "$permessi"
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups:1 string $SQUADRA.com.gdahome.gdahome.chiavi-notifiche" "$permessi"
+            estensione=ios/NotificheService/NotificheService.entitlements
+            rm -f "$estensione"
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups array" "$estensione"
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups:0 string $SQUADRA.com.gdahome.gdahome.chiavi-notifiche" "$estensione"
           fi
           cat "$permessi"
 
@@ -742,6 +757,14 @@ jobs:
       - name: L'Apple Watch
         if: vars.GDAHOME_OROLOGIO == 'si'
         run: ruby strumenti/orologio-in-xcode.rb
+
+      # L'estensione delle notifiche: apre la busta mentre la notifica arriva,
+      # e sull'iPhone si legge il testo vero e non «gdahome: nuova notifica»
+      # (docs/NOTIFICHE.md). Solo con le notifiche e con le chiavi di Apple:
+      # senza, non avrebbe niente da aprire ne' una firma.
+      - name: L'estensione delle notifiche
+        if: steps.firebase.outputs.c-e == 'si' && steps.chiavi.outputs.ci-sono == 'si'
+        run: ruby strumenti/notifiche-in-xcode.rb
 
       - name: L'archivio firmato
         if: steps.chiavi.outputs.ci-sono == 'si'
@@ -790,25 +813,37 @@ jobs:
         run: |
           app=$(echo build/gdahome.xcarchive/Products/Applications/*.app)
           codesign --force --deep --sign - "$app"
+          # L'estensione delle notifiche col suo portachiavi, prima dell'app
+          # che la contiene: la firma di fuori copre quella di dentro.
+          appex="$app/PlugIns/NotificheService.appex"
+          if [ -d "$appex" ]; then
+            codesign --force --sign - --entitlements ios/NotificheService/NotificheService.entitlements "$appex"
+            codesign -d --entitlements - "$appex" | tee build/permessi-estensione.txt
+            grep -q chiavi-notifiche build/permessi-estensione.txt
+          fi
           codesign --force --sign - --entitlements ios/Runner/Runner.entitlements "$app"
           codesign -d --entitlements - "$app" | tee build/permessi.txt
           if [ "$CARPLAY" = "si" ]; then grep -q com.apple.developer.carplay-maps build/permessi.txt; fi
           if [ "$NOTIFICHE" = "si" ]; then grep -q aps-environment build/permessi.txt; fi
 
       # Su TestFlight si va come nel Play Store: quando lo si chiede. A ogni
-      # etichetta, o lanciando a mano con «testflight» spuntato; con «prova
-      # del negozio» si fa l'archivio firmato e ci si ferma.
+      # etichetta, o lanciando a mano con «testflight» spuntato. Con «prova
+      # del negozio» si firma per davvero — Apple crea i profili, anche quello
+      # dell'estensione delle notifiche — e il pacchetto resta qui, senza
+      # andare su TestFlight: e' la prova che la firma passa prima di
+      # spenderci un'etichetta.
       - name: Il pacchetto, e su TestFlight
         if: >-
           steps.chiavi.outputs.ci-sono == 'si' &&
-          !inputs.prova_del_negozio &&
-          (github.ref_type == 'tag' || inputs.testflight)
+          (inputs.prova_del_negozio || github.ref_type == 'tag' || inputs.testflight)
         working-directory: app
         env:
           CHIAVE_ID: ${{ secrets.APPLE_CHIAVE_ID }}
           EMITTENTE: ${{ secrets.APPLE_EMITTENTE }}
           SQUADRA: ${{ secrets.APPLE_SQUADRA }}
+          PROVA: ${{ inputs.prova_del_negozio }}
         run: |
+          if [ "$PROVA" = "true" ]; then destinazione=export; else destinazione=upload; fi
           cat > build/esporta.plist <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -817,7 +852,7 @@ jobs:
             <key>teamID</key><string>$SQUADRA</string>
             <key>signingStyle</key><string>automatic</string>
             <key>uploadSymbols</key><true/>
-            <key>destination</key><string>upload</string>
+            <key>destination</key><string>$destinazione</string>
           </dict></plist>
           PLIST
           xcodebuild -exportArchive \
@@ -828,6 +863,14 @@ jobs:
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_$CHIAVE_ID.p8 \
             -authenticationKeyID "$CHIAVE_ID" \
             -authenticationKeyIssuerID "$EMITTENTE"
+          if [ "$PROVA" = "true" ]; then
+            {
+              echo "### Prova del negozio: la firma per l'App Store passa"
+              echo ""
+              echo "Il pacchetto e' firmato e resta qui: su TestFlight non e' andato niente."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           {
             echo "### Su TestFlight"
             echo ""
