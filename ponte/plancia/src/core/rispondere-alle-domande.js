@@ -1189,6 +1189,20 @@ RISPOSTE.aperture = (c, s) => {
         .map((e) => chiedi(dire(l, `Chiudi ${e.nome}`, `Close ${e.nome}`))),
     };
   }
+  if (!contatti.length && c.stanza && contattiDellaCasa(s).length)
+    return {
+      testo: vuoleFinestre
+        ? dire(
+            l,
+            `In ${c.stanza} non conosco finestre col sensore.`,
+            `I don't know any window sensor in ${c.stanza}.`,
+          )
+        : dire(
+            l,
+            `In ${c.stanza} non conosco porte o finestre col sensore.`,
+            `I don't know any door or window sensor in ${c.stanza}.`,
+          ),
+    };
   if (!contatti.length && !cancelli.length)
     return {
       testo: dire(

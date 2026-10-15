@@ -295,6 +295,9 @@ function eventiDelCalendario(states, fonti) {
  *   nonRispondono, aggiornamenti: le righe che la plancia ha gia';
  *   antifurto     l'entita' della centrale scelta;
  *   luci          le luci scelte nella plancia: `{ entity, nome, stanza }`;
+ *   varchi        le porte e finestre della plancia: `{ entity, nome, tipo,
+ *                 stato }`, con `tipo` porta|finestra e `stato`
+ *                 aperto|chiuso;
  *   comandabile   chi si puo' comandare (le entita' messe in sola lettura
  *                 no).
  */
@@ -337,6 +340,29 @@ export function sapereDellaCasa(fonti = {}) {
     e.luce = true;
     e.nome = pulito(voce.nome || voce.name) || e.nome;
     e.area = pulito(voce.stanza) || e.area;
+  }
+
+  /* Le porte e le finestre della plancia (la sezione Varchi, con i contatti
+   * scritti nelle Finestre): sono quelle che conta la tessera «finestre
+   * aperte», con i loro nomi, porta o finestra come detto li', e aperte o
+   * chiuse col verso giusto anche per i contatti girati. Un contatto senza
+   * classe in Home Assistant c'e' lo stesso. */
+  const varchi = new Map();
+  for (const voce of elenco(fonti.varchi)) {
+    const id = pulito(voce?.entity);
+    if (id.includes(".")) varchi.set(id, voce);
+  }
+  for (const e of entita) {
+    const voce = varchi.get(e.entity);
+    if (!voce) continue;
+    e.varco = true;
+    e.nome = pulito(voce.nome || voce.name) || e.nome;
+    if (voce.tipo === "finestra") e.classe = "window";
+    else if (voce.tipo === "porta" && e.classe === "window") e.classe = "door";
+    else if (!["window", "door", "opening", "garage_door"].includes(e.classe)) e.classe = "door";
+    if (voce.stato === "aperto") e.stato = "on";
+    else if (voce.stato === "chiuso") e.stato = "off";
+    else e.stato = "unavailable";
   }
 
   const aree = new Set();
@@ -476,6 +502,8 @@ export function sapereDellaCasa(fonti = {}) {
 
 /** Le finestre e le porte, coi contatti di Home Assistant. */
 export function contattiDellaCasa(sapere) {
+  const dellaPlancia = elenco(sapere?.entita).filter((e) => e.varco);
+  if (dellaPlancia.length) return dellaPlancia;
   return elenco(sapere?.entita).filter(
     (e) =>
       e.dominio === "binary_sensor" &&

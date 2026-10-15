@@ -651,9 +651,16 @@ const PAROLE_DEL_FINITO = {
   asciugatrice: ["Togli i panni dall'asciugatrice", "Empty the dryer"],
   lavastoviglie: ["Svuota la lavastoviglie", "Empty the dishwasher"],
 };
+/* Il frigo, il congelatore, il clima, il boiler non «finiscono»: vanno sempre,
+ * e si fermano e ripartono da soli. Che il compressore si sia fermato non e'
+ * una cosa da fare. */
+const SEMPRE_ACCESI =
+  /(frig|fridge|refriger|freez|congel|cantinett|wine|cooler|air-conditioner|condizion|clima|fan|ventil|boiler|scaldabagn|pompa di calore|heat ?pump|deumid|dehumid|acquari|router|server|\bnas\b)/i;
+const eUnCiclo = (f) => !SEMPRE_ACCESI.test(`${f.tipo || ""} ${f.name || ""} ${f.id || ""}`);
+
 rilevatore("finito", "elettrodomestici", (c, o, l) =>
   elenco(c.finiti)
-    .filter((f) => c.adesso - f.finitoIl < 6 * ORA)
+    .filter((f) => c.adesso - f.finitoIl < 6 * ORA && eUnCiclo(f))
     .map((f) => {
       const parole = PAROLE_DEL_FINITO[f.tipo];
       const da = c.adesso - f.finitoIl;
@@ -663,11 +670,14 @@ rilevatore("finito", "elettrodomestici", (c, o, l) =>
         titolo: parole
           ? pick(parole[0], parole[1], l)
           : pick(`${f.name} ha finito`, `${f.name} is done`, l),
-        motivo: pick(
-          `${f.name} ha finito ${durata(da, l)} fa.`,
-          `${f.name} finished ${durata(da, l)} ago.`,
-          l,
-        ),
+        /* Il titolo col nome lo dice gia': sotto basta quando. */
+        motivo: parole
+          ? pick(
+              `${f.name} ha finito ${durata(da, l)} fa.`,
+              `${f.name} finished ${durata(da, l)} ago.`,
+              l,
+            )
+          : pick(`Finito ${durata(da, l)} fa.`, `Finished ${durata(da, l)} ago.`, l),
         azioni: [fatto(l)],
         entita: [f.entity || f.id],
       };

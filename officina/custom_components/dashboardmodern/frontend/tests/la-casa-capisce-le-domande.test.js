@@ -879,3 +879,47 @@ test("le luci si chiamano come nella plancia, e tante si contano per stanza", ()
   const comando = rispondiDaCasa("spegni la plafoniera", s, {});
   assert.match(comando.testo, /Plafoniera/i);
 });
+
+test("le finestre sono quelle della plancia, anche senza classe in Home Assistant", () => {
+  const stato = (state, friendly_name) => ({ state, attributes: { friendly_name } });
+  const states = {
+    "binary_sensor.contatto_1": stato("on", "Contatto 1"),
+    "binary_sensor.contatto_2": stato("off", "Contatto 2"),
+    "binary_sensor.contatto_3": stato("off", "Contatto 3"),
+  };
+  const areaDi = {
+    "binary_sensor.contatto_1": "Camera da letto",
+    "binary_sensor.contatto_2": "Camera da letto",
+    "binary_sensor.contatto_3": "Cucina",
+  };
+  const varchi = [
+    {
+      entity: "binary_sensor.contatto_1",
+      nome: "Finestra letto",
+      tipo: "finestra",
+      stato: "aperto",
+    },
+    { entity: "binary_sensor.contatto_2", nome: "Balcone", tipo: "finestra", stato: "chiuso" },
+    /* Girato: Home Assistant dice chiuso, la plancia sa che e' aperto. */
+    { entity: "binary_sensor.contatto_3", nome: "Porta cucina", tipo: "porta", stato: "aperto" },
+  ];
+  const s = sapereDellaCasa({
+    states,
+    adesso: ADESSO,
+    areaDi,
+    aree: ["Camera da letto", "Cucina", "Bagno"],
+    varchi,
+  });
+  assert.equal(
+    rispondiDaCasa("la finestra in camera da letto è aperta?", s, {}).testo,
+    "C'è 1 finestra aperta in Camera da letto: Finestra letto.",
+  );
+  assert.equal(
+    rispondiDaCasa("ci sono porte aperte?", s, {}).testo,
+    "C'è 1 porta aperta: Porta cucina.",
+  );
+  assert.equal(
+    rispondiDaCasa("le finestre in bagno sono aperte?", s, {}).testo,
+    "In Bagno non conosco finestre col sensore.",
+  );
+});

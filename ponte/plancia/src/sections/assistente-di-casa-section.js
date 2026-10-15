@@ -871,6 +871,12 @@ export function sapereDiAdesso(states = allStates() || {}, adesso = Date.now()) 
     stanze: seCe(root.getStanze?.()) || readJson("cd_stanze", []),
     temperature: seCe(modello("temperatura")?.rows),
     luci: luciDellaPlancia(),
+    varchi: elenco(modello("varchi")?.rows).map((r) => ({
+      entity: clean(r.entity),
+      nome: clean(r.name),
+      tipo: clean(r.tipo),
+      stato: clean(r.stato),
+    })),
     persone,
     meteo: entitaDelMeteo(states),
     previsioni: {

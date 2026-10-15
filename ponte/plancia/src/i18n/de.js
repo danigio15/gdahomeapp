@@ -11,6 +11,7 @@
  */
 
 export default Object.freeze({
+  "Finished ${durata(da, l)} ago.": "Seit ${durata(da, l)} fertig.",
   "More readings": "Weitere Messwerte",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "Bis zu 8 weitere: eine Steckdose, die Wärmepumpe, das Auto beim Laden, die kWh von heute",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "Kein Sensor verknüpft: wähle einen unter Einstellungen › Lasten oder Haushaltsgeräte.",

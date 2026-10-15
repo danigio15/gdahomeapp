@@ -11,6 +11,7 @@
  */
 
 export default Object.freeze({
+  "Finished ${durata(da, l)} ago.": "${durata(da, l)} geleden klaar.",
   "More readings": "Meer metingen",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "Tot 8 extra: een stopcontact, de warmtepomp, de auto die laadt, de kWh van vandaag",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "Geen sensor gekoppeld: kies er een in Instellingen › Verbruikers of Apparaten.",

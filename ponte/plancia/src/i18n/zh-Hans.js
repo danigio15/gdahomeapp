@@ -11,6 +11,7 @@
  */
 
 export default Object.freeze({
+  "Finished ${durata(da, l)} ago.": "已在${durata(da, l)}前结束。",
   "More readings": "更多读数",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "最多再加 8 个：一个插座、热泵、正在充电的汽车、今天的 kWh",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "未关联传感器：请在 设置 › 负载 或 家电 中选择一个。",

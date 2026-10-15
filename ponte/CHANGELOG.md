@@ -42,6 +42,15 @@ loro.
 segnato «Fatto», dopo un'ora la casa riguarda: se la cosa c'è ancora, lo
 ridice.
 
+**Assistente: le finestre sono quelle della plancia.** «La finestra in camera
+è aperta?» guarda le porte e le finestre della sezione Varchi (e i contatti
+scritti nelle Finestre), coi loro nomi, anche quando Home Assistant non dice
+che sono finestre. In una stanza senza sensori lo dice per quella stanza.
+
+**Assistente: il frigo non «ha finito».** Frigo, congelatore, clima, boiler e
+simili si fermano e ripartono da soli: «ha finito» vale solo per le macchine
+a ciclo, come lavatrice, lavastoviglie e forno.
+
 ## 1.12.2
 
 **Android: il campanello senza lo schermo intero automatico.** Per ora, sui

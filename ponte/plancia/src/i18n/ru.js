@@ -11,6 +11,7 @@
  */
 
 export default Object.freeze({
+  "Finished ${durata(da, l)} ago.": "Закончено ${durata(da, l)} назад.",
   "More readings": "Другие показания",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "До 8 дополнительно: розетка, тепловой насос, заряжающийся автомобиль, кВт·ч за сегодня",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "Датчик не привязан: выберите его в Настройки › Нагрузки или Бытовая техника.",

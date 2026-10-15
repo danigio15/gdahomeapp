@@ -11,6 +11,7 @@
  */
 
 export default Object.freeze({
+  "Finished ${durata(da, l)} ago.": "${durata(da, l)} पहले पूरा हुआ।",
   "More readings": "और रीडिंग",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh": "8 तक और: एक सॉकेट, हीट पंप, चार्ज होती कार, आज के kWh",
   "No sensor linked: pick one in Settings › Loads or Appliances.": "कोई सेंसर नहीं जुड़ा: सेटिंग्स › लोड या उपकरण में से एक चुनें।",

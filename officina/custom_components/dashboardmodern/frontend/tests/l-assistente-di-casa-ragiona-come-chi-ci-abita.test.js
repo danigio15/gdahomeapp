@@ -418,6 +418,26 @@ test("il bucato finito: si ricorda chi lavorava, e chi smette ha finito", () => 
   assert.equal(bucato.motivo, "Lavatrice ha finito 1 h fa.");
   assert.equal(bucato.urgenza, "oggi");
   assert.equal(bucato.azioni[0].fatto, true);
+
+  /* Il frigo non «finisce»: il compressore si ferma e riparte da solo. Un
+   * forno si', e sotto il titolo col nome basta dire quando. */
+  const fermi = suggerimentiDellaCasa(
+    casa(11, {
+      finiti: [
+        { id: "frigo", name: "Frigo", tipo: "fridge", finitoIl: adesso - MINUTO },
+        { id: "cantina", name: "Cantinetta vini", tipo: "", finitoIl: adesso - MINUTO },
+        { id: "forno", name: "Forno", tipo: "oven", finitoIl: adesso - 2 * MINUTO },
+      ],
+    }),
+    {},
+    {},
+    "it",
+  );
+  assert.deepEqual(
+    fermi.map((s) => s.titolo),
+    ["Forno ha finito"],
+  );
+  assert.equal(fermi[0].motivo, "Finito 2 min fa.");
 });
 
 test("il sole che avanza: la lavatrice da avviare e l'auto da caricare", () => {

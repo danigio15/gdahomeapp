@@ -386,6 +386,46 @@ test("le luci si chiamano come nella plancia, non come i dispositivi", async ({
   ]);
 });
 
+test("le finestre sono quelle della plancia, anche senza classe in Home Assistant", async ({
+  page,
+}, testInfo) => {
+  const foglio = await bootConLeStanze(page, testInfo);
+  await page.evaluate(() => {
+    const stati = eval("_RAW_STATES");
+    const metti = (id, state, attributes) =>
+      (stati[id] = { entity_id: id, state, attributes, last_changed: new Date().toISOString() });
+    /* Contatti senza classe: Home Assistant non dice che sono finestre. */
+    metti("binary_sensor.contatto_1", "on", { friendly_name: "Contatto 1" });
+    metti("binary_sensor.contatto_2", "off", { friendly_name: "Contatto 2" });
+    localStorage.setItem(
+      "cd_varchi",
+      JSON.stringify({
+        righe: [
+          { entity: "binary_sensor.contatto_1", name: "Finestra camera", tipo: "finestra" },
+          { entity: "binary_sensor.contatto_2", name: "Balcone sala", tipo: "finestra" },
+        ],
+      }),
+    );
+    window.eval(`
+      WIZ.entReg = Object.assign(WIZ.entReg || {}, {
+        "binary_sensor.contatto_1": { a: "camera" },
+        "binary_sensor.contatto_2": { a: "sala" },
+      });
+      WIZ.areaNames = Object.assign(WIZ.areaNames || {}, { camera: "Camera" });
+    `);
+    window.applyStates?.();
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
+  });
+  await chiedi(foglio, "La finestra in camera è aperta?");
+  await expect(ultimaRisposta(foglio)).toHaveText(
+    "C'è 1 finestra aperta in Camera: Finestra camera.",
+  );
+  await chiedi(foglio, "Ci sono finestre aperte?");
+  await expect(ultimaRisposta(foglio)).toHaveText("C'è 1 finestra aperta: Finestra camera.");
+  if (process.env.DM_FOTO)
+    await page.screenshot({ path: `${process.env.DM_FOTO}/finestre-della-plancia.png` });
+});
+
 test("quello che la casa non sa va al modello linguistico; se non capisce, si propone cosa chiedere", async ({
   page,
 }, testInfo) => {
