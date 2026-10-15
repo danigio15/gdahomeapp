@@ -68,21 +68,22 @@ dal segreto `GDAHOME_FIREBASE_ANDROID`, e solo per il pacchetto vero
 
 ## iPhone
 
-**Oggi l'iPhone mostra «gdahome: nuova notifica»**, e il testo vero quando si
-tocca la notifica (o subito, se l'app è aperta). Per mostrare il testo prima di
-toccarla serve una **Notification Service Extension**: un secondo pezzo
-dell'app, nativo, che apre la busta mentre la notifica arriva. Non c'è, per
-due ragioni:
+Apple consegna sempre una frase da mostrare: è quella di riserva, «gdahome:
+nuova notifica», con la busta accanto. Dalla 1.12.4 la apre la **Notification
+Service Extension** (`app/ios/NotificheService`) mentre la notifica arriva, e
+sull'iPhone si legge il titolo e il testo veri.
 
-- va aggiunta come target nel progetto di Xcode (`project.pbxproj`) e firmata
-  con un suo profilo; il workflow firma senza un Mac, con la firma automatica,
-  e un target in più è un pezzo che può fermare TestFlight;
-- la chiave del filo sta nel portachiavi dell'app: l'estensione la potrebbe
-  leggere solo con un gruppo di portachiavi condiviso, cioè spostando i segni
-  di tutte le case già abbinate.
-
-Il centralino manda già `mutable-content: 1`: il giorno che l'estensione c'è,
-non cambia niente dalla parte della casa.
+- L'estensione non legge il portachiavi dell'app. L'app le lascia **solo la
+  chiave delle notifiche** di ogni casa (`lib/notifiche/chiavi_per_l_iphone.dart`,
+  `Runner/ChiaviDelleNotifiche.swift`), in un gruppo di portachiavi diviso solo
+  con lei, leggibile dopo il primo sblocco e solo su quel telefono. La chiave
+  del filo, che apre la casa, resta dov'era: nessuna casa va riabbinata.
+- Se qualcosa non va — una casa tolta, una busta toccata, il tempo che finisce
+  — la notifica resta con la frase di riserva: mai una notifica persa.
+- Il target si aggiunge al progetto nel workflow (`strumenti/notifiche-in-xcode.rb`),
+  come l'orologio, e si firma con la firma automatica: Apple crea da sé
+  l'identificativo `com.gdahome.gdahome.NotificheService` e il suo profilo. La
+  «prova del negozio» firma per davvero senza andare su TestFlight.
 
 Le urgenti sono «sensibili al tempo» (`interruption-level`), ma il sistema le
 tratta così solo con il permesso `com.apple.developer.usernotifications.time-sensitive`,
