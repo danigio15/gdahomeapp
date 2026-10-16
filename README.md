@@ -432,9 +432,13 @@ ogni abbonamento.
 
 ## Licenza
 
-Il codice di gdahome è in questa repository, con la sua licenza
-([`LICENSE`](LICENSE)): si legge e si controlla cosa fa, ma non è open source.
-La plancia è DashboardModern, con la sua licenza.
+Il codice di gdahome è pubblico, ma non è open source: vale la **Licenza d'uso
+di gdahome** ([`LICENSE`](LICENSE)), in italiano con la traduzione inglese. In
+breve: si legge e si controlla cosa fa, si installa e si usa a casa propria o
+nella propria attività; non si ripubblica, non si rivende e non si aggira
+Premium. Chi installa per i clienti lo fa con l'autorizzazione di CRV
+Immobiliare S.r.l. La stessa licenza vale anche per la plancia, che prima si
+chiamava DashboardModern.
 
 ---
 
