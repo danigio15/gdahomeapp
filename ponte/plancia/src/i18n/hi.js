@@ -5922,4 +5922,10 @@ export default Object.freeze({
     "सहायक ने लाइट, सॉकेट और दरवाज़ों के बारे में क्या समझा: नाम, कमरे, ब्रांड, ऑटोमेशन और आदतों से। गलत हो तो एक टैप से सुधारें।",
   "What's in the house": "घर में क्या है",
   "You said so": "आपने ऐसा कहा",
+  "${scelti} of ${tutti}": "${tutti} में से ${scelti}",
+  "Attributes to show": "दिखाने के लिए एट्रिब्यूट",
+  "Name to show": "दिखाने के लिए नाम",
+  "not there right now": "अभी मौजूद नहीं",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "ये वे हैं जो एंटिटी के पास अभी हैं। ये सेक्शन में इसी क्रम में दिखते हैं, उस नाम के साथ जो आप यहाँ लिखते हैं; नाम के बिना एट्रिब्यूट का अपना नाम इस्तेमाल होता है।",
+  "This entity has no attributes to show right now.": "इस एंटिटी के पास अभी दिखाने के लिए कोई एट्रिब्यूट नहीं है।",
 });

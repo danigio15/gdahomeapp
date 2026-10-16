@@ -5935,4 +5935,10 @@ export default Object.freeze({
     "Asistanın ışıklar, prizler ve kapılar hakkında anladıkları: addan, odadan, markadan, otomasyonlardan ve alışkanlıklardan. Yanılıyorsa tek dokunuşla düzelt.",
   "What's in the house": "Evde neler var",
   "You said so": "Sen öyle dedin",
+  "${scelti} of ${tutti}": "${tutti} içinden ${scelti}",
+  "Attributes to show": "Gösterilecek nitelikler",
+  "Name to show": "Gösterilecek ad",
+  "not there right now": "şu an yok",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "Bunlar varlığın şu an sahip olduğu niteliklerdir. Bölümde bu sırayla, burada yazdığın adla görünürler; ad yoksa niteliğin kendi adı kullanılır.",
+  "This entity has no attributes to show right now.": "Bu varlığın şu an gösterilecek niteliği yok.",
 });

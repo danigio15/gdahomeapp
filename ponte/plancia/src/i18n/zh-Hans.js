@@ -5829,4 +5829,10 @@ export default Object.freeze({
     "助手对灯、插座和门的理解：来自名称、房间、品牌、自动化和习惯。如有错误，轻点即可更正。",
   "What's in the house": "家里有什么",
   "You said so": "你指定的",
+  "${scelti} of ${tutti}": "${scelti}/${tutti}",
+  "Attributes to show": "要显示的属性",
+  "Name to show": "显示名称",
+  "not there right now": "当前不存在",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "这些是实体当前拥有的属性。它们会按此顺序显示在分区中，使用你在这里填写的名称；没有名称时使用属性本身的名称。",
+  "This entity has no attributes to show right now.": "该实体当前没有可显示的属性。",
 });

@@ -5918,4 +5918,10 @@ export default Object.freeze({
     "조명, 콘센트, 문에 대해 어시스턴트가 이해한 것: 이름, 방, 브랜드, 자동화, 습관으로. 틀리면 한 번 탭해서 고치세요.",
   "What's in the house": "집에 있는 것",
   "You said so": "직접 지정함",
+  "${scelti} of ${tutti}": "${tutti}개 중 ${scelti}개",
+  "Attributes to show": "표시할 속성",
+  "Name to show": "표시할 이름",
+  "not there right now": "지금은 없음",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "엔티티가 지금 가지고 있는 속성입니다. 섹션에는 이 순서대로, 여기에 쓴 이름으로 표시됩니다. 이름이 없으면 속성 이름이 사용됩니다.",
+  "This entity has no attributes to show right now.": "이 엔티티에는 지금 표시할 속성이 없습니다.",
 });

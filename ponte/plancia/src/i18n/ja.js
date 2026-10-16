@@ -5939,4 +5939,10 @@ export default Object.freeze({
     "照明・コンセント・ドアについてアシスタントが理解したこと：名前、部屋、メーカー、オートメーション、習慣から。間違っていたらタップで修正。",
   "What's in the house": "家にあるもの",
   "You said so": "あなたが指定",
+  "${scelti} of ${tutti}": "${tutti}件中${scelti}件",
+  "Attributes to show": "表示する属性",
+  "Name to show": "表示名",
+  "not there right now": "現在ありません",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "エンティティが現在持っている属性です。セクションにはこの順番で、ここに書いた名前で表示されます。名前がなければ属性名が使われます。",
+  "This entity has no attributes to show right now.": "このエンティティには現在表示できる属性がありません。",
 });

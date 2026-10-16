@@ -15,15 +15,20 @@
 import {
   FORMATI_SEZIONE,
   MASSIMO_SEZIONI,
+  attributiDisponibili,
   formatoDellaSezione,
+  nomeLeggibile,
+  normalizzaAttributi,
   normalizzaSezioni,
 } from "../core/sezioni-mie.js";
 import { CHIAVE_SEZIONI_MIE, ridisegnaSezioniMie, SEZIONI_MIE_TAB } from "./sezioni-mie-section.js";
 import {
+  allStates,
   clean,
   doc,
   esc,
   installStyle,
+  NOTA_DI_SCHEDA,
   onEditorRedraw,
   righeDelDocumento,
   readJson,
@@ -35,6 +40,9 @@ import {
 
 const KEY = "__DASHBOARDMODERN_SEZIONI_MIE_EDITOR__";
 const state = (root[KEY] ||= { installed: false, aperta: 0 });
+/* I blocchi degli attributi aperti, per sezione e voce: sopravvivono al
+ * ridisegno, che altrimenti li richiuderebbe a ogni tasto premuto. */
+state.attributiAperti ||= new Set();
 
 export const SEZIONI_MIE_EDITOR_TAB = "mie";
 
@@ -124,6 +132,166 @@ function formatoMarkup(sezione) {
   </div>`;
 }
 
+/* ── gli attributi di una voce (#256) ─────────────────────────────────────
+ *
+ * Sotto il campo dell'entita', un blocco che si apre e si chiude: dentro gli
+ * attributi che l'entita' ha ADESSO, ognuno col suo valore di adesso accanto
+ * — «ultimo_voto» da solo non dice se e' quello che si cerca, «adesso: 8,5»
+ * si'. Una spunta per sceglierlo, e spuntato compare il nome con cui si
+ * legge nella sezione, gia' scritto: la chiave resa leggibile, da cambiare
+ * solo se non va.
+ *
+ * Nasce chiuso: chi ha dieci entita' non deve scorrere dieci elenchi per
+ * arrivare al tasto Salva. Aperto resta aperto, anche quando la scheda si
+ * ridisegna. */
+function statoDellEntita(entity) {
+  const resolve = root.resolveEntity || ((valore) => valore);
+  const vera = resolve(entity) || entity;
+  return allStates()?.[vera];
+}
+
+function nomeDellaChiave(chiave) {
+  return nomeLeggibile(chiave) || chiave;
+}
+
+/* Le righe dell'elenco: quelle che l'entita' ha adesso, nel suo ordine, e in
+ * fondo quelle gia' scelte che adesso non ha. Queste non si buttano: un
+ * sensore che per un minuto non manda un attributo non deve far perdere la
+ * scelta a chi salva proprio in quel minuto. */
+function righeDegliAttributi(entity, scelti) {
+  const disponibili = clean(entity).includes(".")
+    ? attributiDisponibili(statoDellEntita(clean(entity)))
+    : [];
+  const presenti = new Set(disponibili.map((attributo) => attributo.chiave));
+  const perChiave = new Map(scelti.map((scelto) => [scelto.chiave, scelto]));
+  return [
+    ...disponibili.map((attributo) => ({
+      ...attributo,
+      presente: true,
+      scelto: perChiave.get(attributo.chiave) || null,
+    })),
+    ...scelti
+      .filter((scelto) => !presenti.has(scelto.chiave))
+      .map((scelto) => ({ chiave: scelto.chiave, anteprima: "", presente: false, scelto })),
+  ];
+}
+
+function rigaAttributoMarkup(attributo) {
+  const scelto = Boolean(attributo.scelto);
+  const nome = scelto ? clean(attributo.scelto.nome) : "";
+  const adesso = attributo.presente
+    ? `${t("adesso", "now")}: ${attributo.anteprima}`
+    : t("adesso non c'è", "not there right now");
+  return `<div class="dm-mia-ed-attr-riga" data-mia-attr="${esc(attributo.chiave)}" data-scelto="${scelto}">
+      <label class="dm-mia-ed-attr-chi">
+        <input type="checkbox" data-mia-attr-spunta${scelto ? " checked" : ""}>
+        <span><code>${esc(attributo.chiave)}</code><small>${esc(adesso)}</small></span>
+      </label>
+      <input class="ed-input dm-mia-ed-attr-nome" data-mia-attr-nome value="${esc(
+        scelto ? nome || nomeDellaChiave(attributo.chiave) : "",
+      )}" placeholder="${esc(t("Nome da mostrare", "Name to show"))}"
+        aria-label="${esc(t("Nome da mostrare", "Name to show"))} — ${esc(attributo.chiave)}"${
+          scelto ? "" : " hidden"
+        }>
+    </div>`;
+}
+
+function contoAttributi(scelti, tutti) {
+  return t(`${scelti} di ${tutti}`, `${scelti} of ${tutti}`);
+}
+
+function corpoAttributiMarkup(righe) {
+  if (!righe.length)
+    return `<p class="dm-mia-ed-attr-nota">${esc(
+      t(
+        "Questa entità adesso non ha attributi da mostrare.",
+        "This entity has no attributes to show right now.",
+      ),
+    )}</p>`;
+  return `${righe.map(rigaAttributoMarkup).join("")}<p class="dm-mia-ed-attr-nota">${esc(
+    t(
+      "Sono quelli che l'entità ha adesso. Si vedono nella sezione in quest'ordine, col nome che scrivi qui; senza nome si usa quello dell'attributo.",
+      "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.",
+    ),
+  )}</p>`;
+}
+
+function attributiMarkup(voce, chiaveBlocco) {
+  const scelti = normalizzaAttributi(voce?.attributi);
+  const righe = righeDegliAttributi(voce?.entity, scelti);
+  const aperto = state.attributiAperti.has(chiaveBlocco);
+  return `<div class="dm-mia-ed-attr" data-mia-attr-blocco="${esc(chiaveBlocco)}" data-open="${aperto}"
+    data-mia-attr-entita="${esc(clean(voce?.entity))}">
+    <button type="button" class="dm-mia-ed-attr-testa" data-mia-attr-apri aria-expanded="${aperto}">
+      <span aria-hidden="true">🏷️</span>
+      <span class="dm-mia-ed-attr-titolo">${esc(t("Attributi da mostrare", "Attributes to show"))}</span>
+      <b data-mia-attr-conto>${esc(contoAttributi(scelti.length, righe.length))}</b>
+      <i aria-hidden="true">▾</i>
+    </button>
+    <div class="dm-mia-ed-attr-corpo"${aperto ? "" : " hidden"}>${corpoAttributiMarkup(righe)}</div>
+  </div>`;
+}
+
+/* Quello che e' spuntato adesso nel blocco, nell'ordine dell'elenco. */
+function attributiDalBlocco(blocco) {
+  return [...(blocco?.querySelectorAll("[data-mia-attr]") || [])]
+    .filter((riga) => riga.querySelector("[data-mia-attr-spunta]")?.checked)
+    .map((riga) => ({
+      chiave: clean(riga.dataset.miaAttr),
+      nome: clean(riga.querySelector("[data-mia-attr-nome]")?.value),
+    }));
+}
+
+function aggiornaIlConto(blocco) {
+  const conto = blocco?.querySelector("[data-mia-attr-conto]");
+  if (!conto) return;
+  const tutte = blocco.querySelectorAll("[data-mia-attr]").length;
+  conto.textContent = contoAttributi(attributiDalBlocco(blocco).length, tutte);
+}
+
+/* L'entita' della voce e' cambiata — scelta dal catalogo o scritta a mano —
+ * e l'elenco va rifatto sul posto con i suoi attributi. Delle scelte fatte
+ * restano quelle che la nuova entita' ha anche lei: le altre erano
+ * dell'entita' di prima. */
+function rifaiIlBlocco(voce) {
+  const blocco = voce?.querySelector("[data-mia-attr-blocco]");
+  const corpo = blocco?.querySelector(".dm-mia-ed-attr-corpo");
+  if (!corpo) return;
+  const entity = clean(voce.querySelector('[data-mia-campo="entity"]')?.value);
+  if (entity === clean(blocco.dataset.miaAttrEntita)) return;
+  blocco.dataset.miaAttrEntita = entity;
+  const disponibili = righeDegliAttributi(entity, []);
+  const presenti = new Set(disponibili.map((attributo) => attributo.chiave));
+  const scelti = attributiDalBlocco(blocco).filter((scelto) => presenti.has(scelto.chiave));
+  corpo.innerHTML = corpoAttributiMarkup(righeDegliAttributi(entity, scelti));
+  aggiornaIlConto(blocco);
+}
+
+/* Una spunta: compare o sparisce il nome, gia' scritto la prima volta. */
+function cambiaLaSpunta(spunta) {
+  const riga = spunta.closest("[data-mia-attr]");
+  if (!riga) return;
+  riga.dataset.scelto = String(spunta.checked);
+  const nome = riga.querySelector("[data-mia-attr-nome]");
+  if (nome) {
+    nome.hidden = !spunta.checked;
+    if (spunta.checked && !clean(nome.value)) nome.value = nomeDellaChiave(riga.dataset.miaAttr);
+  }
+  aggiornaIlConto(riga.closest("[data-mia-attr-blocco]"));
+}
+
+function onChange(event) {
+  const body = doc?.getElementById("ed-body");
+  if (!body || schedaAttiva() !== SEZIONI_MIE_EDITOR_TAB || !body.contains(event.target)) return;
+  const spunta = event.target.closest?.("[data-mia-attr-spunta]");
+  if (spunta) {
+    cambiaLaSpunta(spunta);
+    return;
+  }
+  if (event.target.matches?.('[data-mia-campo="entity"]'))
+    rifaiIlBlocco(event.target.closest("[data-mia-voce]"));
+}
+
 function rigaVoceMarkup(voce, sezione, riga) {
   const id = `dm-mia-${sezione}-${riga}`;
   return `<div class="dm-mia-ed-voce" data-mia-voce="${riga}">
@@ -142,6 +310,7 @@ function rigaVoceMarkup(voce, sezione, riga) {
         spellcheck="false"><button type="button" class="dm-entity-picker" data-mia-pick="${id}"
         aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
     </label>
+    ${attributiMarkup(voce, `${sezione}-${riga}`)}
   </div>`;
 }
 
@@ -221,7 +390,13 @@ function corpoMarkup() {
 export function ensureSezioniMieEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== SEZIONI_MIE_EDITOR_TAB) return false;
-  const firma = `${JSON.stringify(sezioni())}|${state.aperta}|${sezioneNascosta()}`;
+  /* Nella firma anche QUALI attributi hanno le entita' (non i loro valori):
+   * se la scheda si e' disegnata prima che arrivassero gli stati, al giro
+   * dopo l'elenco si riempie da se'. */
+  const quali = sezioni()
+    .flatMap((sezione) => vociDi(sezione))
+    .map((voce) => Object.keys(statoDellEntita(clean(voce?.entity))?.attributes || {}).join(","));
+  const firma = `${JSON.stringify(sezioni())}|${state.aperta}|${sezioneNascosta()}|${quali.join(";")}`;
   if (body.dataset.dmMieEditor === firma && body.querySelector(".dm-mia-ed")) return true;
   body.dataset.dmMieEditor = firma;
   body.innerHTML = corpoMarkup();
@@ -251,6 +426,10 @@ function leggiLaRiga(riga) {
     const voce = {};
     for (const campo of nodo.querySelectorAll("[data-mia-campo]"))
       voce[clean(campo.dataset.miaCampo)] = clean(campo.value);
+    /* Gli attributi solo se ce n'e' qualcuno: una voce che non ne ha scelti
+     * resta scritta com'era prima che esistessero. */
+    const attributi = attributiDalBlocco(nodo.querySelector("[data-mia-attr-blocco]"));
+    if (attributi.length) voce.attributi = attributi;
     return voce;
   });
   return letto;
@@ -303,6 +482,23 @@ function onClick(event) {
     event.preventDefault();
     const input = body.querySelector(`#${CSS.escape(clean(pick.dataset.miaPick))}`);
     if (input) root.wzPickEntity?.(input);
+    return;
+  }
+
+  /* Il blocco degli attributi si apre e si chiude sul posto: ridisegnare la
+   * scheda per questo butterebbe quello che c'e' scritto nelle altre caselle. */
+  const apriAttributi = event.target.closest("[data-mia-attr-apri]");
+  if (apriAttributi) {
+    event.preventDefault();
+    const blocco = apriAttributi.closest("[data-mia-attr-blocco]");
+    const chiave = clean(blocco?.dataset?.miaAttrBlocco);
+    const aperto = !state.attributiAperti.has(chiave);
+    if (aperto) state.attributiAperti.add(chiave);
+    else state.attributiAperti.delete(chiave);
+    blocco.dataset.open = String(aperto);
+    apriAttributi.setAttribute("aria-expanded", String(aperto));
+    const corpo = blocco.querySelector(".dm-mia-ed-attr-corpo");
+    if (corpo) corpo.hidden = !aperto;
     return;
   }
 
@@ -429,8 +625,48 @@ function installStyles() {
       #ed-body .dm-mia-ed-riga .ed-row-new,
       #ed-body .dm-mia-ed-riga .ed-row-old{display:block;overflow:hidden;text-overflow:ellipsis}
       #ed-body .dm-mia-ed-riga .ed-row-old{margin-top:3px;color:var(--text-dim,#64748b)}
+      /* Gli attributi della voce (#256): un riquadro bianco dentro il
+         blocchetto grigio della voce, che si apre dalla sua testata. Il conto
+         sta a destra e si legge anche da chiuso: «3 di 6» dice che qualcosa
+         e' scelto senza doverlo aprire. */
+      #ed-body .dm-mia-ed-attr{
+        border-radius:12px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0)}
+      #ed-body .dm-mia-ed-attr-testa{
+        display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:0;
+        background:transparent;cursor:pointer;text-align:start;font:inherit;color:var(--text,#0f172a)}
+      #ed-body .dm-mia-ed-attr-titolo{flex:1 1 auto;min-width:0;font-size:12.5px;font-weight:800}
+      #ed-body .dm-mia-ed-attr-testa b{font-size:11.5px;font-weight:900;color:#ea580c;white-space:nowrap}
+      #ed-body .dm-mia-ed-attr-testa i{
+        font-style:normal;font-size:11px;color:var(--text-dim,#64748b);transition:transform .2s ease}
+      #ed-body .dm-mia-ed-attr[data-open="false"] .dm-mia-ed-attr-testa i{transform:rotate(-90deg)}
+      #ed-body .dm-mia-ed-attr-corpo{display:grid;gap:6px;padding:0 10px 10px}
+      #ed-body .dm-mia-ed-attr-corpo[hidden]{display:none}
+      #ed-body .dm-mia-ed-attr-riga{
+        display:grid;grid-template-columns:minmax(0,1fr) minmax(0,230px);align-items:center;gap:8px;
+        padding:7px 9px;border-radius:10px;background:var(--bg-sculpted,#f0f4f8)}
+      #ed-body .dm-mia-ed-attr-chi{display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer}
+      #ed-body .dm-mia-ed-attr-chi input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin:0}
+      #ed-body .dm-mia-ed-attr-chi span{display:grid;min-width:0}
+      #ed-body .dm-mia-ed-attr-chi code{
+        font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;font-weight:800;
+        color:var(--text,#0f172a);overflow-wrap:anywhere}
+      #ed-body .dm-mia-ed-attr-chi small{
+        font-size:11px;font-weight:700;color:var(--text-dim,#64748b);
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      /* Quelli non scelti restano leggibili ma si fanno da parte. */
+      #ed-body .dm-mia-ed-attr-riga[data-scelto="false"] .dm-mia-ed-attr-chi span{opacity:.6}
+      #ed-body .dm-mia-ed-attr-nome{margin:0;min-width:0}
+      #ed-body .dm-mia-ed-attr-nome[hidden]{display:none}
+      #ed-body .dm-mia-ed-attr-nota{margin:4px 2px 0;${NOTA_DI_SCHEDA};font-weight:700}
       @media(max-width:560px){
         #ed-body .dm-mia-ed-voce-testa{grid-template-columns:48px minmax(0,1fr) 38px;gap:6px}
+        /* Sul telefono il nome va sotto la chiave, allineato al testo e non
+           alla spunta: accanto, a 300 px, non ci starebbe nessuno dei due. */
+        #ed-body .dm-mia-ed-attr-riga{grid-template-columns:minmax(0,1fr)}
+        #ed-body .dm-mia-ed-attr-nome{
+          box-sizing:border-box;margin-left:28px;width:calc(100% - 28px);max-width:none}
+        #ed-body .dm-mia-ed-attr-testa{gap:6px;padding:10px}
+        #ed-body .dm-mia-ed-attr-titolo{font-size:12px}
       }
     `,
   );
@@ -441,6 +677,7 @@ export function installSezioniMieEditor() {
   state.installed = true;
   installStyles();
   doc.addEventListener("click", onClick);
+  doc.addEventListener("change", onChange);
   /* La linguetta si mette appena il pannello nasce, non al primo ridisegno:
    * chi apre la configurazione e chiede subito questa scheda la troverebbe
    * altrimenti assente. */
