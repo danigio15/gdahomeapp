@@ -457,8 +457,6 @@ export default Object.freeze({
   "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.":
     "Een contact op de brievenbus: als de postbode de klep opent verschijnt de postpil, beweegt om op te vallen en blijft daar tot iemand hem aantikt. Post komt aan terwijl niemand kijkt, dus een flits van twee seconden heeft geen zin.",
   "A control that does not respond": "Een knop die niet reageert",
-  "A donation is any amount you like and unlocks nothing: the dashboard stays the same for everyone. It is a thank-you, and a way of saying «keep going».":
-    "Een donatie is een bedrag naar keuze en ontgrendelt niets: het dashboard blijft voor iedereen hetzelfde. Het is een bedankje, en een manier om «ga door» te zeggen.",
   "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.":
     "Een koelkast met vriesvak is twee compartimenten: het tweede komt hier. Zijn beide vakjes gevuld, dan tekent de kaart twee balken.",
   "A group with this name already exists": "Er bestaat al een groep met deze naam",
@@ -1102,8 +1100,6 @@ export default Object.freeze({
   "Dashboard language": "Taal van het dashboard",
   "Dashboard not connected.": "Dashboard niet verbonden.",
   "Dashboard version": "Dashboardversie",
-  "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.":
-    "DashboardModern is onafhankelijk en open source, gemaakt in de vrije tijd: geen sponsors, geen abonnementen, geen gegevens verzameld. Een donatie houdt de fixes, de antwoorden op meldingen en de tests op echte apparaten gaande.",
   "Date not found": "Datum niet gevonden",
   Day: "Dag",
   "Day / Month / Year": "Dag / Maand / Jaar",
@@ -1180,7 +1176,6 @@ export default Object.freeze({
   Doctor: "Dokter",
   Dog: "Hond",
   "Domestic hot water": "Warm tapwater",
-  "Donate with PayPal": "Doneren met PayPal",
   Done: "Klaar",
   "Done.": "Gedaan.",
   Door: "Deur",
@@ -1336,8 +1331,6 @@ export default Object.freeze({
     "Elke installatie heeft een eigen meter, eigen zonnepanelen, een eigen accu en eigen verbruikers. De velden hieronder horen bij de gekozen installatie: er een toevoegen begint bij nul en laat wat je al hebt ingesteld met rust.",
   "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.":
     "Elke installatie heeft haar eigen dertien velden. Die met “nu op de pagina” is wat de pagina Zonneboiler en de tegel op Home laten zien: het oog naast een andere haalt die in haar plaats op het scherm.",
-  "Every release brings new sections, fixes seen in the field and tests on phones, tablets and wall screens. The time to do it is what donations help keep free.":
-    "Elke versie brengt nieuwe secties, fixes uit de praktijk en tests op telefoons, tablets en wandschermen. De tijd daarvoor is wat donaties helpen vrij te houden.",
   "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.":
     "Alles is er: de kaart van het raam toont de luchtvochtigheid van zijn kamer en zegt te openen zodra die de drempel overschrijdt.",
   "Everything off": "Alles uit",
@@ -2794,8 +2787,6 @@ export default Object.freeze({
   "Paste your token here (starts with eyJ...)": "Plak hier je token (begint met eyJ...)",
   Pause: "Pauze",
   Paused: "Gepauzeerd",
-  "Payment happens on PayPal, in a new tab.":
-    "De betaling gebeurt op PayPal, in een nieuw tabblad.",
   Peak: "Piek",
   Pellet: "Pellets",
   "Pellet level": "Pelletniveau",
@@ -3375,7 +3366,6 @@ export default Object.freeze({
   "Supply fan (rpm)": "Toevoerventilator (tpm)",
   "Supply level": "Toevoerstand",
   Support: "Ondersteuning",
-  "Support the project": "Steun het project",
   Sweltering: "Drukkend heet",
   Swing: "Lamellen",
   "Switch (turns it on and off)": "Schakelaar (zet aan en uit)",
@@ -3520,8 +3510,6 @@ export default Object.freeze({
     "De rekensom van het ongemak door hitte en vocht. Het niveau van de sectie is het hoogste van de vier: een index die schreeuwt blijft niet verborgen achter een rustig gevoel.",
   "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.":
     "Het dashboard schermvullend, over de zijbalk van Home Assistant heen. Geldt alleen voor dit dashboard en alleen op dit apparaat: op een telefoon gaat het vanzelf aan.",
-  "The dashboard is independent and subscription-free: here is how to give it a hand":
-    "Het dashboard is onafhankelijk en zonder abonnement: zo geef je het een handje",
   "The dashboard sections": "De secties van het dashboard",
   "The data it shows": "De gegevens die het toont",
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
@@ -4076,7 +4064,6 @@ export default Object.freeze({
   "Who this is, by their home name": "Wie dit is, met de naam van thuis",
   "Whole house": "Hele huis",
   "Whose it is": "Van wie hij is",
-  "Why, and how": "Waarom, en hoe",
   "Wi-Fi": "Wi-Fi",
   "WiFi network": "WiFi-netwerk",
   Widgets: "Widgets",

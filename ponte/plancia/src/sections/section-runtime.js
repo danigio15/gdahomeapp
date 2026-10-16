@@ -180,7 +180,6 @@ import { installNodiEditor } from "./nodi-editor-section.js";
 import { installAgendaEditorSection } from "./agenda-editor-section.js";
 import { installLinguaSection } from "./lingua-section.js";
 import { installLaConfigEDiChiLaAmministra } from "./la-config-e-di-chi-la-amministra-section.js";
-import { installSostieniIlProgetto } from "./sostieni-il-progetto-section.js";
 import { installSezioniMie } from "./sezioni-mie-section.js";
 import { installSezioniMieEditor } from "./sezioni-mie-editor-section.js";
 import { installEntitaMie } from "./entita-mie-section.js";
@@ -1224,9 +1223,6 @@ export function installSectionRuntime() {
     /* La lingua si sceglie fra le Impostazioni (#263): il motore c'era gia',
      * mancava la riga da cui dirlo. */
     senzaCadere(installLinguaSection);
-    /* «Sostieni il progetto»: la pastiglia PayPal nella colonna delle schede e
-     * la card in Impostazioni. Un canale solo, quello del README. */
-    senzaCadere(installSostieniIlProgetto);
     /* Le sezioni che si fa l'utente: la pagina prima della sua scheda, come
      * per la Continuita' — la scheda chiama la pagina per ridisegnarla. */
     senzaCadere(installSezioniMie);
@@ -1325,7 +1321,6 @@ export function installSectionRuntime() {
         "telecamera-webrtc",
         "storico-connettivita",
         "trv-editor",
-        "sostieni-il-progetto",
         "auto-termica",
         "solar-thermal-design",
         "minipc-showcase",

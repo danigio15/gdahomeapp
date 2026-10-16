@@ -456,8 +456,6 @@ export default Object.freeze({
   "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.":
     "Um contacto na caixa do correio: quando o carteiro abre a tampa surge a pastilha do correio, mexe-se para se fazer notar e fica ali até alguém lhe tocar. O correio chega enquanto ninguém está a olhar, por isso um clarão de dois segundos não serve de nada.",
   "A control that does not respond": "Um comando que não responde",
-  "A donation is any amount you like and unlocks nothing: the dashboard stays the same for everyone. It is a thank-you, and a way of saying «keep going».":
-    "Uma doação é do valor que quiseres e não desbloqueia nada: o painel continua igual para todos. É um obrigado, e uma forma de dizer «continua».",
   "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.":
     "Um frigorífico com congelador são dois compartimentos: o segundo vai aqui. Com as duas caixas preenchidas o cartão desenha duas barras.",
   "A group with this name already exists": "Já existe um grupo com este nome",
@@ -1099,8 +1097,6 @@ export default Object.freeze({
   "Dashboard language": "Idioma do painel",
   "Dashboard not connected.": "Painel não ligado.",
   "Dashboard version": "Versão do painel",
-  "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.":
-    "O DashboardModern é independente e open source, feito nos tempos livres: sem patrocinadores, sem subscrições, sem recolha de dados. Uma doação mantém as correções, as respostas aos relatos e os testes em dispositivos reais.",
   "Date not found": "Data não encontrada",
   Day: "Dia",
   "Day / Month / Year": "Dia / Mês / Ano",
@@ -1177,7 +1173,6 @@ export default Object.freeze({
   Doctor: "Médico",
   Dog: "Cão",
   "Domestic hot water": "Água quente sanitária",
-  "Donate with PayPal": "Doar com PayPal",
   Done: "Concluído",
   "Done.": "Feito.",
   Door: "Porta",
@@ -1334,8 +1329,6 @@ export default Object.freeze({
     "Cada instalação tem o seu contador, o seu solar, a sua bateria e as suas cargas. Os campos abaixo são os da instalação escolhida: acrescentar uma começa do zero e não mexe no que já configuraste.",
   "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.":
     "Cada instalação tem os seus treze campos. A marcada «no ecrã agora» é o que a página Solar térmico e o cartão do Início estão a mostrar: o olho ao lado de outra traz essa para o ecrã no lugar dela.",
-  "Every release brings new sections, fixes seen in the field and tests on phones, tablets and wall screens. The time to do it is what donations help keep free.":
-    "Cada versão traz secções novas, correções vistas no terreno e testes em telemóveis, tablets e ecrãs de parede. O tempo para o fazer é o que as doações ajudam a manter livre.",
   "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.":
     "Está tudo: o cartão da janela mostra a humidade da sua divisão e diz para abrir assim que ultrapassa o limiar.",
   "Everything off": "Tudo desligado",
@@ -2797,7 +2790,6 @@ export default Object.freeze({
   "Paste your token here (starts with eyJ...)": "Cola aqui o teu token (começa por eyJ...)",
   Pause: "Pausa",
   Paused: "Em pausa",
-  "Payment happens on PayPal, in a new tab.": "O pagamento é feito no PayPal, num separador novo.",
   Peak: "Pico",
   Pellet: "Pellets",
   "Pellet level": "Nível de pellets",
@@ -3377,7 +3369,6 @@ export default Object.freeze({
   "Supply fan (rpm)": "Ventilador de insuflação (rpm)",
   "Supply level": "Nível de insuflação",
   Support: "Apoio",
-  "Support the project": "Apoia o projeto",
   Sweltering: "Sufocante",
   Swing: "Lâminas",
   "Switch (turns it on and off)": "Interruptor (liga e desliga)",
@@ -3522,8 +3513,6 @@ export default Object.freeze({
     "A conta do desconforto por calor e humidade. O nível da secção é o mais alto dos quatro: um índice que grita não fica escondido atrás de uma perceção tranquila.",
   "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.":
     "O painel em ecrã inteiro, por cima da barra lateral do Home Assistant. Vale só para este painel e só neste aparelho: no telemóvel liga-se sozinho.",
-  "The dashboard is independent and subscription-free: here is how to give it a hand":
-    "O painel é independente e sem assinaturas: aqui está como dar-lhe uma ajuda",
   "The dashboard sections": "As secções do painel",
   "The data it shows": "Os dados que mostra",
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
@@ -4077,7 +4066,6 @@ export default Object.freeze({
   "Who this is, by their home name": "Quem é, com o nome lá de casa",
   "Whole house": "Toda a casa",
   "Whose it is": "De quem é",
-  "Why, and how": "Porquê, e como",
   "Wi-Fi": "Wi-Fi",
   "WiFi network": "Rede WiFi",
   Widgets: "Widgets",

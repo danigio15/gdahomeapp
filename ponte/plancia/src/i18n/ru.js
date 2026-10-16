@@ -456,8 +456,6 @@ export default Object.freeze({
   "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.":
     "Датчик открытия на почтовом ящике: когда почтальон открывает крышку, появляется плашка почты, двигается, чтобы её заметили, и остаётся там, пока кто-нибудь её не коснётся. Почта приходит, когда никто не смотрит, поэтому вспышка на две секунды бесполезна.",
   "A control that does not respond": "Кнопка, которая не отвечает",
-  "A donation is any amount you like and unlocks nothing: the dashboard stays the same for everyone. It is a thank-you, and a way of saying «keep going».":
-    "Пожертвование — любая сумма на ваш выбор, и оно ничего не открывает: панель остаётся одинаковой для всех. Это спасибо и способ сказать «продолжай».",
   "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.":
     "Холодильник с морозильной камерой — это два отделения: второе указывается здесь. Когда заполнены оба поля, карточка рисует две полосы.",
   "A group with this name already exists": "Группа с таким именем уже есть",
@@ -1097,8 +1095,6 @@ export default Object.freeze({
   "Dashboard language": "Язык панели",
   "Dashboard not connected.": "Панель не подключена.",
   "Dashboard version": "Версия панели",
-  "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.":
-    "DashboardModern — независимый проект с открытым кодом, сделанный в свободное время: без спонсоров, без подписок, без сбора данных. Пожертвование поддерживает исправления, ответы на обращения и тесты на реальных устройствах.",
   "Date not found": "Дата не найдена",
   Day: "День",
   "Day / Month / Year": "День / Месяц / Год",
@@ -1175,7 +1171,6 @@ export default Object.freeze({
   Doctor: "Врач",
   Dog: "Собака",
   "Domestic hot water": "Горячая вода",
-  "Donate with PayPal": "Пожертвовать через PayPal",
   Done: "Готово",
   "Done.": "Готово.",
   Door: "Дверь",
@@ -1333,8 +1328,6 @@ export default Object.freeze({
     "У каждого объекта свой счётчик, своя солнечная станция, свой накопитель и свои нагрузки. Поля ниже относятся к выбранному объекту: добавление нового начинается с нуля и не трогает уже настроенное.",
   "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.":
     "У каждой установки свои тринадцать полей. Та, что помечена «сейчас на странице», — это то, что показывают страница «Солнечный коллектор» и плитка на главной: глаз рядом с другой выводит её на экран вместо неё.",
-  "Every release brings new sections, fixes seen in the field and tests on phones, tablets and wall screens. The time to do it is what donations help keep free.":
-    "Каждый выпуск приносит новые разделы, исправления из практики и тесты на телефонах, планшетах и настенных экранах. Время на это и помогают сохранить пожертвования.",
   "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.":
     "Всё на месте: карточка окна показывает влажность своей комнаты и советует открыть, как только она превысит порог.",
   "Everything off": "Всё выключено",
@@ -2792,7 +2785,6 @@ export default Object.freeze({
   "Paste your token here (starts with eyJ...)": "Вставьте сюда свой токен (начинается с eyJ...)",
   Pause: "Пауза",
   Paused: "На паузе",
-  "Payment happens on PayPal, in a new tab.": "Оплата проходит на PayPal, в новой вкладке.",
   Peak: "Пик",
   Pellet: "Пеллеты",
   "Pellet level": "Уровень пеллет",
@@ -3371,7 +3363,6 @@ export default Object.freeze({
   "Supply fan (rpm)": "Вентилятор притока (об/мин)",
   "Supply level": "Ступень притока",
   Support: "Поддержка",
-  "Support the project": "Поддержать проект",
   Sweltering: "Изнуряющая жара",
   Swing: "Жалюзи",
   "Switch (turns it on and off)": "Выключатель (включает и выключает)",
@@ -3516,8 +3507,6 @@ export default Object.freeze({
     "Расчёт дискомфорта от жары и влажности. Уровень раздела — наибольший из четырёх: индекс, который кричит, не останется спрятанным за спокойным ощущением.",
   "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.":
     "Панель во весь экран, поверх боковой панели Home Assistant. Действует только для этой панели и только на этом устройстве: на телефоне включается сама.",
-  "The dashboard is independent and subscription-free: here is how to give it a hand":
-    "Панель независима и без подписок: здесь написано, как ей помочь",
   "The dashboard sections": "Разделы панели",
   "The data it shows": "Показанные данные",
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
@@ -4073,7 +4062,6 @@ export default Object.freeze({
   "Who this is, by their home name": "Кто это, домашним именем",
   "Whole house": "Весь дом",
   "Whose it is": "Чей он",
-  "Why, and how": "Зачем и как",
   "Wi-Fi": "Wi-Fi",
   "WiFi network": "Сеть WiFi",
   Widgets: "Виджеты",

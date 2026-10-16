@@ -457,8 +457,6 @@ export default Object.freeze({
   "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.":
     "Posta kutusuna takılı bir kontak: postacı kapağı açtığında posta hapı belirir, fark edilmek için kıpırdar ve biri ona dokunana kadar orada kalır. Posta kimse bakmazken gelir, bu yüzden iki saniyelik bir parıltı işe yaramaz.",
   "A control that does not respond": "Yanıt vermeyen bir kumanda",
-  "A donation is any amount you like and unlocks nothing: the dashboard stays the same for everyone. It is a thank-you, and a way of saying «keep going».":
-    "Bağış istediğiniz miktarda olur ve hiçbir şeyin kilidini açmaz: pano herkes için aynı kalır. Bir teşekkür ve «devam et» demenin bir yoludur.",
   "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.":
     "Dondurucusu olan bir buzdolabı iki bölmedir: ikincisi buraya. Her iki kutu doluyken kart iki çubuk çizer.",
   "A group with this name already exists": "Bu adda bir grup zaten var",
@@ -1094,8 +1092,6 @@ export default Object.freeze({
   "Dashboard language": "Panonun dili",
   "Dashboard not connected.": "Pano bağlı değil.",
   "Dashboard version": "Pano sürümü",
-  "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.":
-    "DashboardModern bağımsız ve açık kaynaklıdır, boş zamanlarda yapılır: sponsor yok, abonelik yok, veri toplama yok. Bir bağış düzeltmeleri, bildirimlere yanıtları ve gerçek cihazlardaki testleri sürdürür.",
   "Date not found": "Tarih bulunamadı",
   Day: "Gün",
   "Day / Month / Year": "Gün / Ay / Yıl",
@@ -1172,7 +1168,6 @@ export default Object.freeze({
   Doctor: "Doktor",
   Dog: "Köpek",
   "Domestic hot water": "Kullanım sıcak suyu",
-  "Donate with PayPal": "PayPal ile bağış yap",
   Done: "Tamam",
   "Done.": "Tamam.",
   Door: "Kapı",
@@ -1329,8 +1324,6 @@ export default Object.freeze({
     "Her tesisin kendi sayacı, kendi güneş panelleri, kendi bataryası ve kendi yükleri vardır. Aşağıdaki alanlar seçili tesise aittir: yeni bir tane eklemek sıfırdan başlar ve daha önce ayarladıklarına dokunmaz.",
   "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.":
     "Her tesisin kendi on üç alanı var. «şu an sayfada» yazan, Güneş Enerjisi sayfasının ve Ana ekrandaki karonun gösterdiğidir: bir başkasının yanındaki göz onu onun yerine ekrana getirir.",
-  "Every release brings new sections, fixes seen in the field and tests on phones, tablets and wall screens. The time to do it is what donations help keep free.":
-    "Her sürüm yeni bölümler, sahada görülen düzeltmeler ve telefon, tablet ve duvar ekranlarında testler getirir. Bunun için gereken zamanı boş tutmaya bağışlar yardımcı olur.",
   "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.":
     "Her şey tamam: pencerenin kartı odasının nemini gösterir ve eşiği aşar aşmaz açmayı söyler.",
   "Everything off": "Hepsi kapalı",
@@ -2784,7 +2777,6 @@ export default Object.freeze({
   "Paste your token here (starts with eyJ...)": "Jetonunuzu buraya yapıştırın (eyJ... ile başlar)",
   Pause: "Duraklat",
   Paused: "Duraklatıldı",
-  "Payment happens on PayPal, in a new tab.": "Ödeme yeni bir sekmede PayPal üzerinden yapılır.",
   Peak: "Tepe",
   Pellet: "Pelet",
   "Pellet level": "Pelet seviyesi",
@@ -3362,7 +3354,6 @@ export default Object.freeze({
   "Supply fan (rpm)": "Üfleme fanı (dev/dk)",
   "Supply level": "Üfleme kademesi",
   Support: "Destek",
-  "Support the project": "Projeyi destekle",
   Sweltering: "Bunaltıcı sıcak",
   Swing: "Kanatlar",
   "Switch (turns it on and off)": "Anahtar (açar ve kapatır)",
@@ -3505,8 +3496,6 @@ export default Object.freeze({
     "Sıcak ve nemin yarattığı rahatsızlığın hesabı. Bölümün seviyesi dördünün en yükseğidir: bağıran bir indeks, sakin bir algının arkasında saklı kalmaz.",
   "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.":
     "Pano tam ekran, Home Assistant'ın kenar çubuğunun üzerinde. Yalnızca bu pano için ve yalnızca bu cihazda geçerlidir: telefonda kendiliğinden açılır.",
-  "The dashboard is independent and subscription-free: here is how to give it a hand":
-    "Panel bağımsız ve aboneliksiz: ona nasıl destek olabileceğin burada",
   "The dashboard sections": "Panonun bölümleri",
   "The data it shows": "Gösterdiği veriler",
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
@@ -4058,7 +4047,6 @@ export default Object.freeze({
   "Who this is, by their home name": "Bu kim, evdeki adıyla",
   "Whole house": "Tüm ev",
   "Whose it is": "Kimin olduğu",
-  "Why, and how": "Neden ve nasıl",
   "Wi-Fi": "Wi-Fi",
   "WiFi network": "WiFi ağı",
   Widgets: "Widget'lar",

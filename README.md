@@ -130,6 +130,14 @@ sezione e nella stanza giusta della plancia.
 **⚙️ La configurazione dal telefono** _(Premium)_. La plancia si cambia
 dall'app: sezioni, stanze, cosa si vede e dove.
 
+**🖼️ La plancia a muro** _(Premium)_. Un tablet fisso o un NSPanel con una
+schermata sola e comandi grandi, fino a 8 pagine: stanze, luci, clima e
+antifurto li prende da un'altra plancia della casa.
+
+**⌚ Al polso** _(Premium)_. Su Apple Watch e Wear OS: i comandi rapidi, i
+dispositivi, le azioni della plancia, com'è la casa, e la prossima manovra
+del navigatore.
+
 **🔄 Gli aggiornamenti di casa.** Nel menu compaiono quelli di Home Assistant,
 degli add-on, di gdahome e dei firmware: si installano da lì, e da lì si
 riavvia la casa.
@@ -206,11 +214,14 @@ Assistant non esce mai dall'add-on.
 |                                         | **Base**<br>gratis, per sempre |   **Premium**<br>4,99 € al mese · 49,99 € all'anno   |
 | --------------------------------------- | :----------------------------: | :--------------------------------------------------: |
 | L'add-on e la plancia in Home Assistant |               ✅               |                          ✅                          |
-| Plance                                  |       una, la principale       |                fino a **8** per casa                 |
+| Plance                                  |       una, la principale       |                fino a **30** per casa                |
 | Case nell'app                           |              una               |                    fino a **10**                     |
 | Dove funziona                           |       sulla rete di casa       | **anche da fuori casa**, cifrato, senza aprire porte |
 | Configurare la plancia dal telefono     |               —                |                          ✅                          |
 | Aggiungere dispositivi Zigbee dall'app  |               —                |               ✅ con «Dove lo metto?»                |
+| La plancia a muro (tablet, NSPanel)     |               —                |                          ✅                          |
+| Al polso (Apple Watch, Wear OS)         |               —                |                          ✅                          |
+| In auto (Android Auto, CarPlay)         |               —                |                          ✅                          |
 | gdanav, il navigatore                   |       la versione gratis       |             **gdanav Premium compreso**              |
 | Segnalazioni e chat di assistenza       |               ✅               |                          ✅                          |
 | Account da fare                         |            nessuno             |                       nessuno                        |
@@ -404,29 +415,16 @@ si scrivono dall'app — **Segnalazioni** nel menu, con foto e video — senza
 bisogno di un account GitHub. Per chiedere aiuto c'è **Assistenza**, una
 conversazione privata che non finisce su nessuna pagina pubblica.
 
-## Sostieni il progetto
-
-Il sostegno è **separato da Premium**: non sblocca niente e non diventa uno
-sconto. Serve a far crescere gdahome e a tenere gratis la versione Base per
-tutti.
-
-<p align="center">
-  <a href="https://github.com/sponsors/danigio15"><img src="https://img.shields.io/badge/GITHUB-SPONSORS-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white&labelColor=555555" alt="Sostieni il progetto su GitHub Sponsors"></a>
-  &nbsp;
-  <a href="https://www.paypal.com/paypalme/giovannidaniello15"><img src="https://img.shields.io/badge/PAYPAL-ME-1f8fdd?style=for-the-badge&logo=paypal&logoColor=white&labelColor=555555" alt="Sostieni il progetto con PayPal"></a>
-</p>
-
-E due modi di aiutare che non costano niente: una ⭐ a questa repository, e una
-[segnalazione scritta bene](https://github.com/danigio15/gdahomeapp/issues) —
-cosa stavi facendo, cosa ti aspettavi, cosa è successo. Il resto sta in
-[`docs/SOSTEGNO.md`](docs/SOSTEGNO.md).
-
 ## Chi c'è dietro
 
 gdahome la fa **CRV Immobiliare S.r.l.**, impresa di impianti elettrici e
 tecnologici di Aversa (CE), abilitata agli impianti ai sensi del D.M. 37/2008
 (lettere A–G). Sede legale in Viale della Libertà 24, 81031 Aversa (CE);
 P. IVA e C.F. 03719610614; REA CE-266848; PEC crvimmobiliare@pec.it.
+
+Premium, per gdahome e per gdanav, lo vende CRV Immobiliare S.r.l. attraverso
+l'App Store e Google Play: le ricevute arrivano da Apple o da Google, come per
+ogni abbonamento.
 
 - Il sito della società: **[www.crvgroup.it](https://www.crvgroup.it/)**
 - Per scrivere: **domotica@crvgroup.it**, oppure il modulo su

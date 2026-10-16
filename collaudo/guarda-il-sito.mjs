@@ -393,27 +393,6 @@ await prova("il modulo dei contatti c'e', e manda al tramite", async () => {
     throw new Error("la sezione per chi installa non c'e', o dal menu non ci si arriva");
 });
 
-/* Il bottone che raccoglie le donazioni. E' l'unico posto della pagina dove
- * un errore costa dei soldi a qualcuno: un indirizzo sbagliato manda a una
- * persona che non c'entra, e uno vuoto manda a nessuno — e in tutti e due i
- * casi la pagina si apre benissimo e non lo dice a nessuno.
- *
- * Deve restare lo stesso a cui manda il «Sostieni il progetto» dentro la
- * plancia: uno solo, cosi' non si sparpaglia e non si contraddice. */
-await prova("il bottone delle donazioni porta dove deve", async () => {
-  const dove = await pagina.evaluate(() => {
-    const bottone = document.querySelector("#sostieni a.bottone");
-    return bottone ? bottone.getAttribute("href") : null;
-  });
-  if (!dove) throw new Error("nella sezione «sostieni» non c'e' nessun bottone");
-  const nellaPlancia = readFileSync(
-    join(RADICE, "ponte", "plancia", "src", "sections", "sostieni-il-progetto-section.js"),
-    "utf8",
-  );
-  if (!nellaPlancia.includes(dove))
-    throw new Error(`il sito manda a ${dove}, che nella plancia non c'e': i due si sono divisi`);
-});
-
 /* Tutte le immagini della pagina, non solo quelle delle tre sezioni: la
  * fotografia in copertina, il marchio, le icone delle schede. Un'immagine che
  * non arriva non fa nessun rumore — lascia un buco, e la pagina intorno sta in
