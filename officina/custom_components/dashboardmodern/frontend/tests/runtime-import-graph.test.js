@@ -1541,8 +1541,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/rispondere-alle-domande.js`.
   // 455 con la pagina gdanav dei viaggi pianificati: `sections/gdanav-section.js`
   // e il suo nucleo puro `core/i-viaggi.js`.
+  // 458 con la pagina Meteo (#206): il nucleo puro `core/la-pagina-meteo.js`
+  // con la tendenza della pressione, il punto di rugiada e la frase sulle
+  // prossime ore, la pagina `sections/meteo-section.js` e la sua scheda
+  // `sections/meteo-editor-section.js`.
   assert.ok(
-    relative.length <= 455,
+    relative.length <= 458,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -147,6 +147,21 @@ const SHARED_ACROSS_LANGUAGES = new Set([
    * inventarne uno che nessuno cerca. */
   "Humidex",
   "Humidex (optional)",
+  /* La pagina Meteo (#206): le sigle della rosa dei venti, «Min» e «max»
+   * accanto ai gradi, e «Radar». Dove la lingua ha lettere sue — l'est che in
+   * tedesco e' «O», il sud russo «Ю» — il catalogo le traduce; dove sono le
+   * stesse, sono le stesse. */
+  "N",
+  "NE",
+  "E",
+  "SE",
+  "S",
+  "SW",
+  "W",
+  "NW",
+  "Min",
+  "max",
+  "Radar",
   "Auto",
   /* La velocita' «Turbo» del condizionatore: e' il nome che le danno i
    * telecomandi, e in mezza Europa non si traduce. */

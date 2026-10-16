@@ -170,6 +170,8 @@ import { installContatori } from "./contatori-section.js";
 import { installContatoriEditor } from "./contatori-editor-section.js";
 import { installPiante } from "./piante-section.js";
 import { installPianteEditor } from "./piante-editor-section.js";
+import { installMeteo } from "./meteo-section.js";
+import { installMeteoEditor } from "./meteo-editor-section.js";
 import { installAcquario } from "./acquario-section.js";
 import { installAccumuloInEnergia } from "./accumulo-in-energia-section.js";
 import { installAccumuloEditor } from "./accumulo-editor-section.js";
@@ -1203,6 +1205,11 @@ export function installSectionRuntime() {
     /* Le piante (#159): la pagina e la sua scheda, nello stesso ordine. */
     senzaCadere(installPiante);
     senzaCadere(installPianteEditor);
+    /* La pagina Meteo (#206): la pagina e la sua scheda, nello stesso ordine.
+     * Il radar della pagina e' quello della finestra delle previsioni, che si
+     * installa piu' giu' e la trova gia' pronta. */
+    senzaCadere(installMeteo);
+    senzaCadere(installMeteoEditor);
     /* Le vasche (#127): la storia del livello, i comandi, il cambio d'acqua e
      * il travaso di `cd_acquario` negli Animali. La pagina e la scheda sono
      * quelle degli Animali. */
@@ -1340,6 +1347,8 @@ export function installSectionRuntime() {
         "contatori-editor",
         "piante",
         "piante-editor",
+        "meteo",
+        "meteo-editor",
         "acquario",
         "accumulo",
         "accumulo-editor",
