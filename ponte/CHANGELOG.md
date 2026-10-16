@@ -10,6 +10,42 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.0
+
+**L'assistente capisce cosa c'è in casa.** Non propone più di spegnere la
+luce dell'acquario, del terrario, le notturne, quelle del giardino o una
+presa che deve restare accesa. Lo capisce dal nome, dalla stanza (area) di
+Home Assistant, dalla marca del dispositivo, dalle automazioni a orario e
+dalle abitudini delle ultime due settimane; e impara dalle risposte.
+
+- **Notifiche più sensate.** Le luci con la casa vuota dicono quali restano
+  accese e perché; «Spegni» spegne solo le altre, e c'è «Restano così». Una
+  porta aperta di notte, con la gente in casa, si dice solo quando la casa
+  dorme e se di solito è chiusa, col nome che si legge («Cucina: la porta è
+  ancora aperta») e «Va bene stanotte».
+- **Cosa c'è in casa.** In Config › Persone, l'elenco di quello che
+  l'assistente ha capito, da correggere con un tocco: «Decide lui», «Resta
+  così», «Avvisa». Nessuna domanda esce di casa.
+- **iPhone:** una notifica sola, coi tasti sotto (Spegni, Più tardi, Restano
+  così, Va bene così).
+- **Casa di prova:** col codice entrano quanti telefoni servono, e non
+  tolgono posto a quelli di casa.
+- **Plancia a muro:** l'Energia legge rete e batteria col verso giusto, anche
+  con due sensori (prelievo e immissione, carica e scarica), e si può
+  invertire il segno; la batteria dice «In carica» o «In scarica». Le
+  linguette delle pagine tengono il nome finché ci sta. Nell'Ingresso le
+  finestre stanno nel riquadro dell'antifurto.
+- **La scheda Runtime** del config dice la versione di gdahome, sempre in
+  pari.
+- **Android Auto e CarPlay:** niente «fallo dal telefono»; il navigatore in
+  auto resta Premium. Cerca e Casa anche fra i tasti di lato su CarPlay.
+- **gdanav:** l'auto ibrida (anche e-Power), e dentro gdahome niente
+  abbinamento a Home Assistant col QR (la casa ce l'ha già).
+- **Correzioni:** la testata della pagina gdanav non lampeggia più; la prima
+  fila della testata su iPad torna dopo l'Energia; il riepilogo della sera
+  conta i dispositivi e non le entità; un elettrodomestico finito si dice
+  una volta.
+
 ## 1.13.0
 
 **gdanav: il Pianificatore.** Tre modi di pianificare un viaggio: per un
