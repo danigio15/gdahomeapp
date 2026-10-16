@@ -5615,10 +5615,7 @@ export default Object.freeze({
   "Raise the cooling": "冷房を上げる",
   "Temperature shown": "表示する温度",
   "From the weather": "天気から",
-  "From an indoor sensor": "室内センサーから",
   "The outdoor one, from the weather chosen above": "屋外の温度（上で選んだ天気から）",
-  "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room":
-    "室内センサーの温度。上部と待機画面に、天気と並べて表示。空欄：最初のページの部屋の温度",
   "«Stop all» button": "「すべて停止」ボタン",
   "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.":
     "開始だけのコマンドは大きなタイルになります（例：「開始」「シャットダウン」）。停止もあると2つのボタンの列になります（例：部屋）。オンかどうかは状態エンティティ、またはわかる場合は開始エンティティが示します。",
@@ -6122,4 +6119,10 @@ export default Object.freeze({
   "State from (optional)": "状態の取得元(任意)",
   "Two buttons": "2つのボタン",
   "Two buttons: ON and OFF": "2つのボタン:ONとOFF",
+  "From a sensor": "センサーから",
+  "The sensor is": "センサーの場所",
+  "What to write next to the number": "数値の横に表示する語",
+  "Indoors": "屋内",
+  "Outside": "屋外",
+  "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room": "選んだセンサーの値。上部と待機画面に天気と並べて表示。空欄: 最初のページの部屋の値",
 });

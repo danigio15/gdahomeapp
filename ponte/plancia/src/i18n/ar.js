@@ -5578,10 +5578,7 @@ export default Object.freeze({
   "Raise the cooling": "رفع التبريد",
   "Temperature shown": "درجة الحرارة المعروضة",
   "From the weather": "من الطقس",
-  "From an indoor sensor": "من مستشعر داخلي",
   "The outdoor one, from the weather chosen above": "درجة الحرارة الخارجية، من الطقس المختار أعلاه",
-  "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room":
-    "درجة حرارة المستشعر الداخلي، في الأعلى وعلى شاشة الراحة، مع الطقس بجانبها. فارغ: درجة حرارة غرفة الصفحة الأولى",
   "«Stop all» button": "زر «إيقاف الكل»",
   "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.":
     "الأمر الذي له تشغيل فقط هو بلاطة كبيرة (مثل «تشغيل»، «إطفاء»)؛ ومع الإيقاف يصبح عمودًا بزرين (مثل قاعة). تُعرف حالة التشغيل من كيان الحالة، أو من كيان التشغيل إن كان يعرفها.",
@@ -6080,4 +6077,10 @@ export default Object.freeze({
   "State from (optional)": "الحالة من (اختياري)",
   "Two buttons": "زران",
   "Two buttons: ON and OFF": "زران: ON و OFF",
+  "From a sensor": "من مستشعر",
+  "The sensor is": "المستشعر موجود",
+  "What to write next to the number": "ما يُكتب بجانب الرقم",
+  "Indoors": "في الداخل",
+  "Outside": "في الخارج",
+  "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room": "قراءة المستشعر المختار، في الأعلى وعلى شاشة الراحة، مع الطقس بجانبها. فارغ: قراءة غرفة الصفحة الأولى",
 });

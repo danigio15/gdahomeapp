@@ -5518,10 +5518,7 @@ export default Object.freeze({
   "Raise the cooling": "调高制冷",
   "Temperature shown": "显示的温度",
   "From the weather": "来自天气",
-  "From an indoor sensor": "来自室内传感器",
   "The outdoor one, from the weather chosen above": "室外温度，来自上面选择的天气",
-  "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room":
-    "室内传感器的温度，显示在顶部和待机屏幕上，旁边是天气。留空：第一页房间的温度",
   "«Stop all» button": "“全部停止”按钮",
   "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.":
     "只有启动实体的命令是一个大磁贴（例如“启动”“关机”）；如果还有停止，就变成带两个按钮的一列（例如一个会议室）。是否开启由状态实体显示，或在启动实体能说明时由它显示。",
@@ -6012,4 +6009,10 @@ export default Object.freeze({
   "State from (optional)": "状态来源(可选)",
   "Two buttons": "两个按钮",
   "Two buttons: ON and OFF": "两个按钮:ON 和 OFF",
+  "From a sensor": "来自传感器",
+  "The sensor is": "传感器位于",
+  "What to write next to the number": "数字旁显示的文字",
+  "Indoors": "室内",
+  "Outside": "室外",
+  "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room": "所选传感器的温度，显示在顶部和待机屏幕，旁边是天气。留空：第一页房间的温度",
 });

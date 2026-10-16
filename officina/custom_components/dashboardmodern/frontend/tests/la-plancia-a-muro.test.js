@@ -711,6 +711,7 @@ test("meteo e riposo si scelgono, e di serie il riposo torna alla prima pagina",
     minuti: 5,
     torna: false,
     sensore: "sensor.salotto_t",
+    dove: "casa",
   });
 });
 
@@ -1379,63 +1380,41 @@ test("le porte e le finestre fra le letture si contano insieme: «Finestre apert
   assert.deepEqual(una.singole, ["binary_sensor.finestra_cucina", "sensor.temperatura"]);
 });
 
-test("la temperatura del muro: la sonda di una stanza all'aperto e' «fuori», non «in casa»", () => {
-  /* «Il muro scrive "X° in casa", ma quel sensore e' esterno.» Le stanze
-   * all'aperto (#251) arrivano al tablet con le loro sonde. */
-  const fonte = fonteDaiValori({
-    dm_dashboard_state: JSON.stringify({
-      schema_version: 4,
-      sections: {
-        rooms: [
-          {
-            id: "terrazzo",
-            name: "Terrazzo",
-            outdoor: true,
-            temp: "sensor.terrazzo_t",
-            metadata: { temperature_entries: [{ id: "x", temp: "sensor.terrazzo_ombra" }] },
-          },
-          { id: "cantina", name: "Cantina" },
-          { id: "soggiorno", name: "Soggiorno", temp: "sensor.soggiorno_t" },
-        ],
-      },
-    }),
-  });
-  const terrazzo = fonte.stanze.find((s) => s.name === "Terrazzo");
-  assert.equal(terrazzo.outdoor, true);
-  assert.deepEqual(terrazzo.sonde, ["sensor.terrazzo_t", "sensor.terrazzo_ombra"]);
-  assert.equal(fonte.stanze.find((s) => s.name === "Soggiorno").outdoor, false);
-
-  const muro = (pagina, sensore = "") => ({
+test("la temperatura del muro: «in casa» o «fuori» lo decide chi configura", () => {
+  /* «La stanza non va bene, devi far decidere se e' esterno o interno.» */
+  const fonte = {
+    stanze: [
+      { name: "Terrazzo", outdoor: true, temp: "sensor.terrazzo_t" },
+      { name: "Soggiorno", temp: "sensor.soggiorno_t" },
+    ],
+  };
+  const muro = (pagina, sensore = "", dove) => ({
     pagine: [{ modello: "stanza", stanza: pagina }],
-    riposo: { sensore },
+    riposo: { sensore, ...(dove ? { dove } : {}) },
   });
-  /* Il sensore scelto e' del terrazzo, anche la seconda sonda: «fuori». */
+  assert.equal(muroPulito({}).riposo.dove, "casa");
+  assert.equal(muroPulito({ riposo: { dove: "fuori" } }).riposo.dove, "fuori");
+  assert.equal(muroPulito({ riposo: { dove: "giardino" } }).riposo.dove, "casa");
+  /* Il sensore scelto, con la parola scelta. */
+  assert.deepEqual(temperaturaDelMuro(muro("Soggiorno", "sensor.esterna", "fuori"), fonte), {
+    sonda: "sensor.esterna",
+    fuori: true,
+  });
+  assert.deepEqual(temperaturaDelMuro(muro("Soggiorno", "sensor.esterna"), fonte), {
+    sonda: "sensor.esterna",
+    fuori: false,
+  });
+  /* La stanza all'aperto non decide piu' niente. */
   assert.deepEqual(temperaturaDelMuro(muro("Soggiorno", "sensor.terrazzo_t"), fonte), {
     sonda: "sensor.terrazzo_t",
-    fuori: true,
-  });
-  assert.deepEqual(temperaturaDelMuro(muro("Soggiorno", "sensor.terrazzo_ombra"), fonte), {
-    sonda: "sensor.terrazzo_ombra",
-    fuori: true,
-  });
-  assert.deepEqual(temperaturaDelMuro(muro("Terrazzo", "sensor.corridoio"), fonte), {
-    sonda: "sensor.corridoio",
     fuori: false,
   });
-  /* Senza sensore: la stanza della prima pagina, se e' al chiuso. */
-  assert.deepEqual(temperaturaDelMuro(muro("Soggiorno"), fonte), {
-    sonda: "sensor.soggiorno_t",
-    fuori: false,
-  });
-  /* La prima pagina e' il terrazzo: per «in casa» la prima stanza al chiuso
-   * con una sonda (la cantina non ne ha). */
+  /* Senza sensore: la sonda della stanza della prima pagina, qualunque sia. */
   assert.deepEqual(temperaturaDelMuro(muro("Terrazzo"), fonte), {
-    sonda: "sensor.soggiorno_t",
+    sonda: "sensor.terrazzo_t",
     fuori: false,
   });
-  /* Nessuna stanza al chiuso con una sonda: quella del terrazzo, «fuori». */
-  const soloFuori = { stanze: fonte.stanze.filter((s) => s.name !== "Soggiorno") };
-  assert.deepEqual(temperaturaDelMuro(muro("Terrazzo"), soloFuori), {
+  assert.deepEqual(temperaturaDelMuro(muro("Terrazzo", "", "fuori"), fonte), {
     sonda: "sensor.terrazzo_t",
     fuori: true,
   });

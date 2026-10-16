@@ -5638,11 +5638,8 @@ export default Object.freeze({
   "Raise the cooling": "Koeling hoger",
   "Temperature shown": "Getoonde temperatuur",
   "From the weather": "Van het weer",
-  "From an indoor sensor": "Van een binnensensor",
   "The outdoor one, from the weather chosen above":
     "De buitentemperatuur, van het hierboven gekozen weer",
-  "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room":
-    "Die van de binnensensor, bovenaan en op het rustscherm, met het weer ernaast. Leeg: die van de kamer van de eerste pagina",
   "«Stop all» button": "Knop «Alles stoppen»",
   "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.":
     "Een opdracht met alleen een start is een grote tegel (bijvoorbeeld «Start», «Afsluiten»); met ook een stop wordt het een kolom met beide knoppen (bijvoorbeeld een zaal). Aan zegt de statusentiteit, of de startentiteit als die het weet.",
@@ -6145,4 +6142,10 @@ export default Object.freeze({
   "State from (optional)": "Status van (optioneel)",
   "Two buttons": "Twee knoppen",
   "Two buttons: ON and OFF": "Twee knoppen: ON en OFF",
+  "From a sensor": "Van een sensor",
+  "The sensor is": "De sensor is",
+  "What to write next to the number": "Wat naast het getal staat",
+  "Indoors": "Binnen",
+  "Outside": "Buiten",
+  "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room": "Die van de gekozen sensor, bovenaan en in rust, met het weer ernaast. Leeg: die van de kamer van de eerste pagina",
 });

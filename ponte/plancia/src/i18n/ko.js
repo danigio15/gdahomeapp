@@ -5594,10 +5594,7 @@ export default Object.freeze({
   "Raise the cooling": "냉방 올리기",
   "Temperature shown": "표시할 온도",
   "From the weather": "날씨에서",
-  "From an indoor sensor": "실내 센서에서",
   "The outdoor one, from the weather chosen above": "바깥 온도, 위에서 고른 날씨에서",
-  "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room":
-    "실내 센서의 온도, 위쪽과 대기 화면에 날씨와 함께. 비워 두면: 첫 페이지 방의 온도",
   "«Stop all» button": "«모두 정지» 버튼",
   "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.":
     "시작만 있는 명령은 큰 타일입니다(예: «시작», «종료»). 정지도 있으면 두 버튼이 있는 열이 됩니다(예: 회의실). 켜짐 여부는 상태 엔터티가, 알 수 있다면 시작 엔터티가 알려 줍니다.",
@@ -6101,4 +6098,10 @@ export default Object.freeze({
   "State from (optional)": "상태 가져올 곳 (선택)",
   "Two buttons": "버튼 두 개",
   "Two buttons: ON and OFF": "버튼 두 개: ON과 OFF",
+  "From a sensor": "센서에서",
+  "The sensor is": "센서 위치",
+  "What to write next to the number": "숫자 옆에 쓸 말",
+  "Indoors": "실내",
+  "Outside": "실외",
+  "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room": "선택한 센서의 값, 상단과 대기 화면에 날씨와 함께. 비우면: 첫 페이지 방의 값",
 });
