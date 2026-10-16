@@ -485,6 +485,7 @@ import {
   sommarioConsole,
   sorgenteDichiarata,
   sourcePlans,
+  stanzaAllAperto,
   stanzaDalRiferimento,
   stanzaDiHomeAssistant,
   statoDellaChat,
@@ -528,7 +529,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-XOTOFMNF.js";
+} from "../../chunk-YSQO6K5Y.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1609,6 +1610,7 @@ var SOURCE_INDEX = Object.freeze({
   "«Motion 3C» non dice quale stanza è.": "“Motion 3C” does not say which room it is.",
   "«pve_qemu_103» non dice cos'è.": "“pve_qemu_103” does not say what it is.",
   "«Sensore Porta/finestra Camera Batteria» non lo capisce nessuno: qui gli dai il nome vero.": "“Door/window sensor Bedroom Battery” means nothing to anyone: here you give it its real name.",
+  "«unavailable» e «unknown» restano sempre «Non risponde»: se è Home Assistant a non sapere, la plancia non dice che l'apparecchio è giù.": "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.",
   "(attiva il raggruppamento automatico).": "(enables automatic room grouping).",
   "(con HACS sopravvive agli aggiornamenti).": "(with HACS it survives updates).",
   "(entità cover). Compaiono nella pagina 🪟 Finestre, raggruppate per piano e stanza.": "(cover entities). They appear on the 🪟 Windows page, grouped by floor and room.",
@@ -2159,6 +2161,7 @@ var SOURCE_INDEX = Object.freeze({
   "ADESSO": "NOW",
   "Adesso avanzano ${kw} kW dal fotovoltaico.": "${kw} kW of solar to spare right now.",
   "Adesso è spento: scrivi una quota fra 30 e 95 per accenderlo, zero lo rispegne.": "Right now it is off: write a level between 30 and 95 to turn it on, zero turns it back off.",
+  "Adesso l'attributo": "Now the attribute",
   "adesso non c'è": "not there right now",
   "Adesso non c'è una lettura per questo carico.": "There is no reading for this load right now.",
   "Adesso risponde tutto. Se qualcosa smette di farlo compare qui, e in Home compare la sua tessera.": "Everything is answering right now. If something stops, it shows up here, and its card shows up on Home.",
@@ -2277,6 +2280,7 @@ var SOURCE_INDEX = Object.freeze({
   "Alette verticali": "Vertical swing",
   "Alimentazione": "Power supply",
   "all'aperto": "outdoors",
+  "All'aperto": "Outdoors",
   "All'aperto: se sta per piovere, aspetta": "Outdoors: if rain is coming, wait",
   "All'indirizzo manca un segnaposto: servono tutti e tre — {z} per l'ingrandimento, {x} e {y} per il quadratino. Con uno solo si chiederebbe sempre lo stesso pezzo di mondo.": "The address is missing a placeholder: all three are needed — {z} for the zoom, {x} and {y} for the tile. With only one it would always ask for the same piece of the world.",
   "All'uscita c'è": "At the outlet there is",
@@ -2488,6 +2492,7 @@ var SOURCE_INDEX = Object.freeze({
   "Attività": "Activity",
   "Attivo": "Active",
   "Attributi da mostrare": "Attributes to show",
+  "Attributo": "Attribute",
   "Aut. Prevista": "Expected range",
   "Auth WebRTC rifiutata": "WebRTC auth rejected",
   "Auto": "Car",
@@ -2499,6 +2504,7 @@ var SOURCE_INDEX = Object.freeze({
   "Automatico": "Automatic",
   "Automatico caldo/freddo": "Heat/cool",
   "Automatico segue come è montato il tablet": "Automatic follows how the tablet is mounted",
+  "Automatico: acceso, connesso, online, up e simili vogliono dire «in linea» — com'è oggi, con in più online e up. Scegli tu quando il tuo sistema di controllo usa parole sue, o mette lo stato in un attributo.": "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.",
   "Automazioni": "Automations",
   "Autonomia": "Range",
   "Autonomia al target": "Range at target",
@@ -2564,6 +2570,7 @@ var SOURCE_INDEX = Object.freeze({
   "Bagno": "Bathroom",
   "Bagno grande": "Main bathroom",
   "Balcone": "Balcony",
+  "Balcone, terrazzo, giardino. Temperatura e umidità si vedono come sempre, ma l'assistente non propone di scaldare, rinfrescare o arieggiare, e la stanza non entra nella media della casa.": "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.",
   "Bambino": "Baby",
   "Barba": "Beard",
   "Barbecue": "Grill",
@@ -3056,6 +3063,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cosa esce questo giorno": "What goes out this day",
   "Cosa fa il tasto di questa unità nel popup Clima della Home. Vuoto = non toccare.": "What this unit's button does in the Home climate popup. Empty = leave alone.",
   "Cosa fa il tocco": "What the tap does",
+  "Cosa guardare": "What to look at",
   "Cosa hai fatto, cosa ti aspettavi, cosa e' successo invece.": "What you did, what you expected, what happened instead.",
   "Cosa misura": "What it measures",
   "Cosa mostra": "What it shows",
@@ -3305,6 +3313,7 @@ var SOURCE_INDEX = Object.freeze({
   "È attaccata e avanzano ${kw} kW.": "It's plugged in and ${kw} kW are spare.",
   "e icona a scelta. Col ✏️ puoi": "and a chosen icon. Use ✏️ to",
   "e in casa non c'è nessuno": "and nobody is home",
+  "È in linea quando vale": "It is online when it reads",
   "È l'acqua dentro la caldaia, non quella che parte verso i termosifoni.": "The water inside the boiler itself, not the one leaving towards the radiators.",
   "È l'entità calendar.* di Home Assistant: la tessera mostra i prossimi due impegni, la sezione l'agenda giorno per giorno.": "The calendar.* entity from Home Assistant: the tile shows the next two appointments, the section the day-by-day agenda.",
   "È l'entità person.* di Home Assistant, oppure un device_tracker.*.": "The person.* entity from Home Assistant, or a device_tracker.*.",
@@ -3852,7 +3861,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il salto è piccolo: l'acqua gira ma cede poco calore.": "The drop is small: the water is flowing but giving off little heat.",
   "Il sensore che dice aperto o chiuso: binary_sensor.*, oppure un cover.* se l'infisso è motorizzato.": "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.",
   "Il sensore che dice se c'è qualcuno: binary_sensor.* di classe motion, occupancy o presence.": "The sensor that says whether someone is there: a binary_sensor.* of class motion, occupancy or presence.",
-  "Il sensore che dice se è accesa o raggiungibile: binary_sensor.* di classe running o connectivity.": "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.",
+  "Il sensore che dice se è su o giù: un binary_sensor.* (running, connectivity) oppure un sensor.* con parole come online, offline, up, down.": "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.",
   "Il sensore dei gradi.": "The temperature sensor.",
   "Il sensore del terreno lo vedi qui sopra. Aggiungi le zone di irrigazione dall'editor per vedere anche il prato.": "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.",
   "Il sensore della stazione, se l'integrazione ne espone uno: da' il nome da scrivere accanto al treno.": "The station sensor, when the integration exposes one: it gives the name written next to the train.",
@@ -4360,6 +4369,8 @@ var SOURCE_INDEX = Object.freeze({
   "Lo spengo finché non torna qualcuno?": "Turn it off until someone is back?",
   "Lo stato": "The state",
   "Lo stato del dispositivo": "The device state",
+  "Lo stato dell'entità": "The entity state",
+  "Lo stato viene da": "The state comes from",
   "lo storico dei consumi non è ancora arrivato": "the usage history has not arrived yet",
   "Lo trovi subito in gdanav, sul telefono e in auto.": "You find it right away in gdanav, on the phone and in the car.",
   "Locale tecnico": "Utility room",
@@ -4812,6 +4823,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non arriva. Controlla l'indirizzo, e che il servizio si lasci leggere da qui.": "It does not arrive. Check the address, and that the service lets this page read it.",
   "non avvisa più": "no longer warns",
   "Non avvisarmi più per questo": "Stop warning me about this",
+  "non c'è in Home Assistant": "is not in Home Assistant",
   "Non c'è in Home Assistant": "Not in Home Assistant",
   "Non c'è nessuno in casa, ma ${accese.length} luci sono accese": "Nobody is home, but ${accese.length} lights are on",
   "Non c'è nessuno in casa, ma ${accese[0].name} è accesa": "Nobody is home, but ${accese[0].name} is on",
@@ -5409,6 +5421,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ragazza": "Girl",
   "Ragazzo": "Boy",
   "Raggio (km)": "Radius (km)",
+  "raggiungibile": "reachable",
   "Rallenta il ventilatore": "Slow the fan down",
   "Rame": "Copper",
   "Rapido": "Quick wash",
@@ -5678,6 +5691,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scegli una meta: qui compare la strada.": "Pick a destination: the route shows here.",
   "Scegli una sezione": "Pick a section",
   "Scegli una stanza": "Choose a room",
+  "Scelgo io": "I choose",
   "Scena": "Scene",
   "Scene": "Scenes",
   "Scene della stanza": "Room scenes",
@@ -5723,6 +5737,7 @@ var SOURCE_INDEX = Object.freeze({
   "Se uno suona, la sua riga sale in cima in rosso e la tessera in Home lampeggia.": "If one goes off, its row moves to the top in red and the Home tile flashes.",
   "Se usi go2rtc o Frigate, metti questa riga sotto «streams:» nel loro file:": "If you run go2rtc or Frigate, put this line under “streams:” in their file:",
   "Se va via la luce, regge": "If the power goes, it lasts",
+  "Se vale altro": "If it reads anything else",
   "Secco": "Dry",
   "Seconda elettrovalvola": "Second solenoid valve",
   "seconda temperatura": "second temperature",
@@ -5866,6 +5881,7 @@ var SOURCE_INDEX = Object.freeze({
   "Si chiude…": "Closing…",
   "Si ferma sopra il": "Stops above",
   "Si legge sulla linguetta in alto": "Shown on the tab at the top",
+  "Si leggono e basta: non contano nella media della casa": "Read-only: they do not count in the home average",
   "Si riempie da sola con il clima della plancia di origine, diviso nelle due linguette Freddo e Caldo come nella sezione Clima: i condizionatori nel freddo, termosifoni e termostati nel caldo, le pompe di calore in tutte e due.": "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both.",
   "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.": "It fills itself with every light of the source dashboard: a light added there shows up here too.",
   "Si riempie da sola con tutte le tapparelle della plancia di origine: su, stop e giù per ognuna.": "It fills itself with every blind of the source dashboard: up, stop and down for each one.",
@@ -6517,6 +6533,7 @@ var SOURCE_INDEX = Object.freeze({
   "Va bene stanotte": "Fine tonight",
   "Va bene una percentuale di comando o un interruttore: quale sia lo capisce da sé.": "A command percentage or a switch: it works out which on its own.",
   "Vacanza": "Vacation",
+  "vale": "is",
   "Vale per tutte: sotto questa percentuale la batteria entra nel conto di quelle da cambiare.": "It applies to all of them: below this percentage a battery joins the count of those to replace.",
   "Vale solo in Intelligente: qui non conta": "Only applies in Smart: not here",
   "Vale su ogni tablet che apre questa plancia": "Applies to every tablet that opens this dashboard",
@@ -43381,7 +43398,19 @@ var FAMIGLIE2 = Object.freeze({
   rete: { classe: "connectivity", glifo: "router" }
 });
 var MUTI11 = /* @__PURE__ */ new Set(["unavailable", "unknown", "none", ""]);
-var ACCESI2 = /* @__PURE__ */ new Set(["on", "true", "home", "connected", "running", "open"]);
+var ACCESI2 = /* @__PURE__ */ new Set([
+  "on",
+  "true",
+  "home",
+  "connected",
+  "running",
+  "open",
+  "online",
+  "up",
+  "connesso",
+  "reachable",
+  "raggiungibile"
+]);
 function normalizzaMacchine(stored) {
   const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
   const integrazioni = (Array.isArray(dato.integrazioni) ? dato.integrazioni : []).map(clean20).filter(Boolean);
@@ -43460,10 +43489,45 @@ function integrazioniDaScegliere(states = {}, piattaforme, config, nomi2 = {}, d
     scelta: scelte5.integrazioni.includes(riga3.dominio)
   })).sort((a, b) => b.totale - a.totale || a.nome.localeCompare(b.nome));
 }
-function comeSta2(stato3) {
-  const grezzo = clean20(stato3?.state).toLowerCase();
-  if (MUTI11.has(grezzo)) return "";
-  return ACCESI2.has(grezzo) ? "su" : "giu";
+var MODI_DELLO_STATO = Object.freeze(["auto", "mio"]);
+var ALTRIMENTI_DELLO_STATO = Object.freeze(["giu", "muto"]);
+var parolaPulita = (valore3) => clean20(valore3).toLowerCase();
+function regolaDelloStato(grezza) {
+  const dato = grezza && typeof grezza === "object" && !Array.isArray(grezza) ? grezza : {};
+  const parole4 = (Array.isArray(dato.inLinea) ? dato.inLinea : []).map(parolaPulita).filter((parola) => parola && !MUTI11.has(parola));
+  return {
+    modo: dato.modo === "mio" ? "mio" : "auto",
+    attributo: clean20(dato.attributo),
+    inLinea: [...new Set(parole4)],
+    altrimenti: dato.altrimenti === "muto" ? "muto" : "giu"
+  };
+}
+function regolaScritta(grezza) {
+  const regola = regolaDelloStato(grezza);
+  return regola.modo === "mio" || regola.attributo || regola.inLinea.length ? regola : null;
+}
+function paroleDiPartenza(stato3) {
+  const adesso = parolaPulita(stato3?.state);
+  const prime = ACCESI2.has(adesso) ? [adesso] : [];
+  return [.../* @__PURE__ */ new Set([...prime, "online", "on", "up"])];
+}
+function valoreDelloStato(stato3, grezza) {
+  if (!stato3) return null;
+  const dello = parolaPulita(stato3.state);
+  if (MUTI11.has(dello)) return { valore: dello, muto: true };
+  const regola = regolaDelloStato(grezza);
+  if (regola.modo !== "mio" || !regola.attributo) return { valore: dello, muto: false };
+  const attributo2 = stato3.attributes?.[regola.attributo];
+  const valore3 = attributo2 === null || attributo2 === void 0 || typeof attributo2 === "object" ? "" : parolaPulita(attributo2);
+  return { valore: valore3, muto: MUTI11.has(valore3) };
+}
+function comeSta2(stato3, grezza) {
+  const letto = valoreDelloStato(stato3, grezza);
+  if (!letto || letto.muto) return "";
+  const regola = regolaDelloStato(grezza);
+  if (regola.modo !== "mio") return ACCESI2.has(letto.valore) ? "su" : "giu";
+  if (regola.inLinea.includes(letto.valore)) return "su";
+  return regola.altrimenti === "muto" ? "" : "giu";
 }
 var oggetto2 = (entity2) => clean20(entity2).split(".").slice(1).join(".");
 function comandiDellaMacchina(entity2, states = {}) {
@@ -43523,7 +43587,7 @@ function macchineDeiDispositivi({
   }
   return righe2;
 }
-var CAMPI_IN_PIU6 = Object.freeze(["famiglia", "letture"]);
+var CAMPI_IN_PIU6 = Object.freeze(["famiglia", "letture", "stato"]);
 function lettureDellaRiga(riga3) {
   return elencoLetture(riga3?.letture);
 }
@@ -43575,7 +43639,7 @@ function macchineERete(states = {}, config, nomeDi15 = (entity2) => entity2, pia
         famiglia,
         name,
         glifo: clean20(riga3.icon) || FAMIGLIE2[famiglia].glifo,
-        stato: comeSta2(states?.[riga3.entity]),
+        stato: comeSta2(states?.[riga3.entity], riga3.stato),
         comandi: famiglia === "macchine" ? comandiDellaMacchina(riga3.entity, states) : null,
         /* Le altre letture, gia' scritte (#177): il nome senza quello della
          * riga davanti — «NAS Latenza» sotto «NAS» e' «Latenza» — e il valore
@@ -46518,6 +46582,7 @@ function casaVuota(c) {
   const p = c.persone || {};
   return (numero36(p.totale) || 0) > 0 && (numero36(p.inCasa) || 0) === 0 && (numero36(p.incerte) || 0) === 0;
 }
+var stanzeDiCasa = (c) => elenco5(c.stanze).filter((s) => s.fuori !== true);
 var ZONA_DI_CASA = /^(?:a\s+)?(?:casa|home)(?:\s+(?:mia|nostra|\S+))?$/i;
 function chiEInCasa(viste2) {
   const aCasa = (v) => v?.presence === "home" || v?.presence === "zone" && ZONA_DI_CASA.test(String(v.zone || "").trim());
@@ -47063,7 +47128,7 @@ rilevatore(
 );
 rilevatore("comfort", "comfort", (c, o, l) => {
   if (casaVuota(c)) return [];
-  return elenco5(c.stanze).filter((s) => {
+  return stanzeDiCasa(c).filter((s) => {
     const t2 = numero36(s.temperatura);
     return t2 !== null && (t2 < 17 || t2 > 28);
   }).slice(0, 1).map((s) => {
@@ -47083,7 +47148,7 @@ rilevatore("comfort", "comfort", (c, o, l) => {
 rilevatore("aria", "comfort", (c, o, l) => {
   if (casaVuota(c)) return [];
   const fuori = [];
-  const co2 = elenco5(c.stanze).find((s) => (numero36(s.co2) || 0) >= 1200);
+  const co2 = stanzeDiCasa(c).find((s) => (numero36(s.co2) || 0) >= 1200);
   const ppm = co2 ? Math.round(co2.co2) : 0;
   if (co2)
     fuori.push({
@@ -47098,7 +47163,7 @@ rilevatore("aria", "comfort", (c, o, l) => {
       azioni: [fatto(l)],
       entita: [co2.entityCo2 || `co2:${pulito40(co2.name)}`]
     });
-  const umida = elenco5(c.stanze).find((s) => (numero36(s.umidita) || 0) >= 70);
+  const umida = stanzeDiCasa(c).find((s) => (numero36(s.umidita) || 0) >= 70);
   const percento6 = umida ? Math.round(umida.umidita) : 0;
   if (umida)
     fuori.push({
@@ -48462,7 +48527,11 @@ function sapereDellaCasa(fonti = {}) {
     stanza: pulito43(r.name || r.nome || r.stanza),
     entity: pulito43(r.entity),
     temperatura: numero37(r.temperature ?? r.temperatura),
-    umidita: numero37(r.humidity ?? r.umidita)
+    umidita: numero37(r.humidity ?? r.umidita),
+    /* Il balcone segnato «All'aperto» (#251) resta fra le stanze — «quanti
+     * gradi ci sono sul balcone?» ha una risposta — ma chi fa la media della
+     * casa lo salta. La chiave c'e' solo quando e' vera. */
+    ...r.fuori === true ? { fuori: true } : {}
   })).filter((r) => r.stanza && (r.temperatura !== null || r.umidita !== null));
   const dentro3 = configurate2.length ? configurate2 : stanzeDaHomeAssistant(entita3);
   const unitaTemperatura = pulito43(states[dentro3[0]?.entity]?.attributes?.unit_of_measurement) === "°F" ? "°F" : "°C";
@@ -48876,7 +48945,8 @@ function termostatoDellaStanza(s, stanza2) {
 RISPOSTE.temperatura_dentro = (c, s) => {
   const l = c.lingua;
   const u = s.unitaTemperatura || "°C";
-  const righe2 = elenco8(s.dentro).filter((r) => r.temperatura !== null);
+  const tutte = elenco8(s.dentro).filter((r) => r.temperatura !== null);
+  const righe2 = tutte.filter((r) => r.fuori !== true);
   const chiesto = /\b(caldo|calda|freddo|fredda|fresco|fresca|hot|cold|warm|chilly)\b/.test(
     c.testo
   );
@@ -48884,7 +48954,7 @@ RISPOSTE.temperatura_dentro = (c, s) => {
   if (c.stanza) {
     const riga3 = rigaDellaStanza(s, c.stanza) || termostatoDellaStanza(s, c.stanza);
     if (!riga3 || riga3.temperatura === null) {
-      const altre = righe2.slice(0, 4);
+      const altre = tutte.slice(0, 4);
       return {
         testo: altre.length ? dire(
           l,
@@ -48998,9 +49068,10 @@ RISPOSTE.umidita = (c, s) => {
       )
     };
   }
-  const righe2 = elenco8(s.dentro).filter((r) => r.umidita !== null && r.umidita !== void 0);
+  const tutte = elenco8(s.dentro).filter((r) => r.umidita !== null && r.umidita !== void 0);
+  const righe2 = tutte.filter((r) => r.fuori !== true);
   if (c.stanza) {
-    const riga3 = righe2.find((r) => stessaStanza2(r.stanza, c.stanza));
+    const riga3 = tutte.find((r) => stessaStanza2(r.stanza, c.stanza));
     if (!riga3)
       return {
         testo: dire(
@@ -49009,7 +49080,7 @@ RISPOSTE.umidita = (c, s) => {
           `I don't have a humidity sensor in ${c.stanza}.`
         )
       };
-    const nota = riga3.umidita >= 65 ? dire(l, ": è alta, arieggia un po'", ": that's high, let some air in") : riga3.umidita <= 35 ? dire(l, ": è secca", ": that's dry") : "";
+    const nota = riga3.fuori === true ? "" : riga3.umidita >= 65 ? dire(l, ": è alta, arieggia un po'", ": that's high, let some air in") : riga3.umidita <= 35 ? dire(l, ": è secca", ": that's dry") : "";
     return {
       testo: dire(
         l,
@@ -50896,7 +50967,10 @@ function stanze2(states) {
     name: clean(r.name),
     entity: clean(r.entity),
     temperatura: r.temperature,
-    umidita: r.humidity
+    umidita: r.humidity,
+    /* All'aperto (#251): il nucleo la legge, ma non propone di scaldarla,
+     * rinfrescarla o arieggiarla. */
+    fuori: r.fuori === true
   }));
   for (const riga3 of elenco9(modello("aria")?.rows)) {
     const stato3 = states?.[clean(riga3.entity)];
@@ -52179,24 +52253,26 @@ function coloreDeiGradi(valore3, fahrenheit = false) {
 function disegnaTemperatura(widget) {
   const stanze4 = (Array.isArray(widget?.rows) ? widget.rows : []).filter((riga3) => numero40(riga3?.temperature) != null).map((riga3) => ({ ...riga3, temperature: Number(riga3.temperature) })).sort((a, b) => b.temperature - a.temperature);
   if (!stanze4.length) return `<p class="dm-w-empty">${esc(t("Nessuna lettura", "No reading"))}</p>`;
-  const media3 = stanze4.reduce((somma2, riga3) => somma2 + riga3.temperature, 0) / stanze4.length;
-  const calda = stanze4[0];
-  const fredda = stanze4[stanze4.length - 1];
+  const diCasa = stanze4.filter((riga3) => !riga3.fuori);
+  const misurate = diCasa.length ? diCasa : stanze4.slice(0, 1);
+  const media3 = misurate.reduce((somma2, riga3) => somma2 + riga3.temperature, 0) / misurate.length;
+  const calda = misurate[0];
+  const fredda = misurate[misurate.length - 1];
   const fahrenheit = media3 > 45;
   const ampiezza = calda.temperature - fredda.temperature;
-  const scala2 = stanze4.length > 1 && ampiezza > 0 ? `<div class="dm-f-temperatura-scala">
+  const scala2 = misurate.length > 1 && ampiezza > 0 ? `<div class="dm-f-temperatura-scala">
           <i aria-hidden="true"></i>
           <span><b>${esc(gradi6(fredda.temperature))} ${esc(fredda.name)}</b><b>${esc(
     gradi6(calda.temperature)
   )} ${esc(calda.name)}</b></span>
         </div>` : "";
   const eroe = `<section class="dm-f-temperatura-eroe">
-      <div><small>${esc(stanze4.length > 1 ? t("In casa", "At home") : stanze4[0].name)}</small>
+      <div><small>${esc(misurate.length > 1 ? t("In casa", "At home") : misurate[0].name)}</small>
         <span class="dm-f-num">${esc(gradi6(media3))}</span></div>
       ${scala2}
     </section>`;
-  const elenco15 = stanze4.map((riga3) => {
-    const larga = ampiezza > 0 ? 10 + 90 * (riga3.temperature - fredda.temperature) / ampiezza : 60;
+  const elenco15 = [...diCasa, ...stanze4.filter((riga3) => riga3.fuori)].map((riga3) => {
+    const larga = ampiezza > 0 ? Math.min(100, Math.max(10, 10 + 90 * (riga3.temperature - fredda.temperature) / ampiezza)) : 60;
     const umidita = numero40(riga3.humidity);
     return `<div class="dm-f-temperatura-stanza">
         <span class="dm-f-temperatura-ic" aria-hidden="true">${esc(roomGlyph(riga3.icon || riga3.name))}</span>
@@ -58333,12 +58409,12 @@ function coversModel(states) {
   }).filter(Boolean).sort((a, b) => Number(b.open) - Number(a.open));
   if (!rows.length) return null;
   const { alzate, aperte, soloMotori, miste, insieme: insieme3, contate, tutte } = contoDelleAperture(rows);
-  const stanzeDiCasa4 = root.getStanze?.() || readJson("cd_stanze", []);
+  const stanzeDiCasa5 = root.getStanze?.() || readJson("cd_stanze", []);
   const sogliaDiCasa3 = readJson(CHIAVE_SOGLIA_UMIDITA, null);
   const umiditaFuori = stateOf(states, "dm.home_meteo_umidita")?.state ?? null;
   const daArieggiare = finestreDaArieggiare(
     rows.map((riga3) => {
-      const stanza2 = stanzaDiUnaFinestra(riga3.config, stanzeDiCasa4);
+      const stanza2 = stanzaDiUnaFinestra(riga3.config, stanzeDiCasa5);
       return {
         nome: riga3.name,
         stanza: clean(stanza2?.name),
@@ -58915,12 +58991,17 @@ function temperatureModel(states) {
        * pagina delle stanze. */
       icon: clean(room.icon),
       temperature,
-      humidity: humidity2
+      humidity: humidity2,
+      /* All'aperto (#251): il balcone si legge, ma la casa non e' lui. La
+       * riga resta — la finestra la mostra e lo storico la chiede — e chi
+       * fa la media, qui e nell'assistente, sa che deve saltarla. */
+      fuori: stanzaAllAperto(room)
     };
   }).filter((row) => row.temperature != null);
   if (!rows.length) return null;
-  const average = rows.reduce((sum, row) => sum + row.temperature, 0) / rows.length;
-  const humidities = rows.map((row) => row.humidity).filter((value) => value != null);
+  const dentro3 = rows.filter((row) => !row.fuori);
+  const average = dentro3.length ? dentro3.reduce((sum, row) => sum + row.temperature, 0) / dentro3.length : null;
+  const humidities = dentro3.map((row) => row.humidity).filter((value) => value != null);
   const humidity = humidities.length ? Math.round(humidities.reduce((sum, value) => sum + value, 0) / humidities.length) : null;
   const scelta3 = sorgenteDelWidget("temperatura");
   const sola = scelta3 ? rows.find((row) => row.entity === scelta3) : null;
@@ -58929,7 +59010,9 @@ function temperatureModel(states) {
     accent: "#ef4444",
     icon: "🌡️",
     label: t("Temperatura", "Temperature"),
-    value: `${formatNumber(sola ? sola.temperature : average, 1)}°`,
+    /* Solo stanze all'aperto e nessuna scelta: una media della casa non
+     * c'e', e il trattino lo dice meglio di un balcone spacciato per casa. */
+    value: sola || average != null ? `${formatNumber(sola ? sola.temperature : average, 1)}°` : "—",
     caption: sola ? [
       sola.name,
       sola.humidity == null ? "" : `${t("Umidità", "Humidity")} ${Math.round(sola.humidity)}%`
@@ -62275,8 +62358,8 @@ function summaryChips(widget) {
     ];
   }
   if (widget.key === "temperatura") {
-    const gradi9 = numeri("temperature");
-    if (!gradi9.length) return [];
+    const gradi9 = righe2.filter((riga3) => !riga3?.fuori).map((riga3) => Number(riga3?.temperature)).filter((valore3) => Number.isFinite(valore3));
+    if (gradi9.length < 2) return [];
     return [
       [t("media", "average"), `${formatNumber(media3(gradi9), 1)}°`],
       [t("la più fredda", "coldest"), `${formatNumber(Math.min(...gradi9), 1)}°`],
@@ -62539,8 +62622,10 @@ function entitaDelRacconto(widget) {
       return clean(energia?.battery?.soc) || "dm.energy_stato_carica_batteria";
     return clean(energia?.house?.power) || "dm.energy_potenza_consumo_casa";
   }
-  if (widget?.key === "temperatura")
-    return (widget?.rows?.length || 0) === 1 ? clean(widget?.rows?.[0]?.entity) : "";
+  if (widget?.key === "temperatura") {
+    const dentro3 = (Array.isArray(widget?.rows) ? widget.rows : []).filter((riga3) => !riga3?.fuori);
+    return dentro3.length === 1 ? clean(dentro3[0]?.entity) : "";
+  }
   if (widget?.key === "ev") return clean(widget?.rows?.[0]?.batteria || widget?.rows?.[0]?.entity);
   if (["solare", "piscina", "robot", "irrigazione"].includes(widget?.key))
     return clean(widget?.rows?.[0]?.entity);
@@ -69752,7 +69837,7 @@ function pastiglieMarkup4() {
     <label class="dm-blocco-switch"><input type="checkbox" data-dm-pastiglie${accese ? " checked" : ""}><span></span></label>
   </div>`;
 }
-function stanzeDiCasa() {
+function stanzeDiCasa2() {
   try {
     const lette = root.getStanze?.();
     if (Array.isArray(lette)) return lette;
@@ -69762,7 +69847,7 @@ function stanzeDiCasa() {
   return Array.isArray(salvate) ? salvate : [];
 }
 function stanzeMarkup() {
-  const stanze4 = stanzeDiCasa();
+  const stanze4 = stanzeDiCasa2();
   if (!stanze4.length) return "";
   const scelte5 = stanzeScelte();
   const righe2 = stanze4.map((stanza2) => {
@@ -69823,7 +69908,7 @@ function onClickFreccia(event) {
   const stanza2 = event.target?.closest?.("[data-dm-home-blocchi] [data-dm-stanza-plancia-scelta]");
   if (stanza2) {
     const id = clean(stanza2.getAttribute("data-dm-stanza-plancia-scelta"));
-    const prossime = conLaStanza(stanzeScelte(), { id }, stanza2.checked, stanzeDiCasa());
+    const prossime = conLaStanza(stanzeScelte(), { id }, stanza2.checked, stanzeDiCasa2());
     writeJsonIfChanged(CHIAVE_STANZE_IN_PLANCIA, prossime);
     if (stanza2.checked && !prossime.includes(id)) stanza2.checked = false;
     ridisegnaStanzeInPlancia();
@@ -72408,7 +72493,7 @@ async function impostaStanzaDelCerchio(load, roomId) {
   root.dmRefreshEnergyFlows?.();
   return true;
 }
-function stanzeDiCasa2() {
+function stanzeDiCasa3() {
   const stored = section("rooms", null);
   const lista5 = Array.isArray(stored) && stored.length ? stored : readJson("cd_stanze", []);
   return (Array.isArray(lista5) ? lista5 : []).filter((voce3) => clean(voce3?.name));
@@ -72692,7 +72777,7 @@ function loadCard(panel2, load, index, total) {
   card2.append(head);
   const body = element("div", "ed-acc-body");
   const identity = element("section", "dm-loads-identity");
-  const stanze4 = stanzeDiCasa2();
+  const stanze4 = stanzeDiCasa3();
   const nameField = element("label", "ed-slot dm-loads-field");
   nameField.append(element("span", "ed-slot-lbl", t("Nome del carico", "Load name")));
   const name = doc.createElement("input");
@@ -75506,6 +75591,13 @@ function intitolaIGruppi(corpo3, stanze4, piani, ripetuti) {
     if (intitolare) riga3.querySelector(".ed-row-old")?.remove();
     const dove = riga3.querySelector(".ed-row-main") || riga3;
     dove.querySelector(".dm-piano-doppio")?.remove();
+    dove.querySelector(".dm-stanza-fuori")?.remove();
+    if (stanza2 && stanzaAllAperto(stanza2)) {
+      const fuori = doc.createElement("span");
+      fuori.className = "dm-stanza-fuori";
+      fuori.textContent = `🌿 ${t("All'aperto", "Outdoors")}`;
+      dove.append(fuori);
+    }
     if (!stanza2 || !ripetuti.has(clean(stanza2.name).toLowerCase())) return;
     const avviso = doc.createElement("span");
     avviso.className = "dm-piano-doppio";
@@ -75731,6 +75823,12 @@ function foglio2() {
       .dm-piani-nota{font-size:11px!important;line-height:1.5!important;color:var(--secondary-text-color,#64748b)!important}
       .dm-piano-titolo-lista{display:flex!important;align-items:center!important;gap:8px!important;margin:16px 0 6px!important;font-size:12px!important;font-weight:900!important;letter-spacing:.04em!important;text-transform:uppercase!important;color:var(--secondary-text-color,#64748b)!important}
       .dm-piano-titolo-lista::after{content:""!important;flex:1!important;height:1px!important;background:var(--divider-color,#e2e8f0)!important}
+      .dm-stanza-fuori{display:inline-flex!important;align-items:center!important;gap:4px!important;margin-left:8px!important;padding:2px 8px!important;border-radius:999px!important;border:1px solid color-mix(in srgb,var(--success-color,#10b981) 34%,transparent)!important;background:color-mix(in srgb,var(--success-color,#10b981) 12%,transparent)!important;color:#047857!important;font-size:10.5px!important;font-weight:900!important;line-height:1.4!important;vertical-align:middle!important;white-space:nowrap!important}
+      /* Il nome della riga e' un blocco: l'etichetta gli sta accanto solo se
+       * il riquadro che li tiene li mette in fila. Il cartellino del piano,
+       * quando c'e', resta sotto. */
+      #ed-body .ed-row>.ed-row-main:has(>.dm-stanza-fuori){display:flex!important;flex-wrap:wrap!important;align-items:center!important}
+      #ed-body .ed-row>.ed-row-main:has(>.dm-stanza-fuori)>.ed-row-old{flex-basis:100%!important}
       .dm-piano-doppio{display:inline-flex!important;align-items:center!important;gap:4px!important;margin-left:7px!important;padding:2px 7px!important;border-radius:999px!important;background:color-mix(in srgb,var(--warning-color,#f59e0b) 22%,transparent)!important;color:#92400e!important;font-size:10px!important;font-weight:900!important;vertical-align:middle!important;white-space:nowrap!important}
       @media (max-width:620px){
         .dm-piano{grid-template-columns:28px 40px minmax(0,1fr)!important;gap:8px!important;row-gap:8px!important}
@@ -75741,6 +75839,8 @@ function foglio2() {
         .dm-piano-nuovo .ed-input{flex:1 1 100%!important}
         .dm-piano-nuovo .ed-btn-add{flex:1 1 auto!important}
         .dm-piano-doppio{display:flex!important;margin:4px 0 0!important;white-space:normal!important}
+        #ed-body .ed-row>.ed-row-main:has(>.dm-stanza-fuori){display:block!important}
+        .dm-stanza-fuori{display:flex!important;width:max-content!important;margin:6px 0 0!important}
       }
     `
   );
@@ -85941,7 +86041,8 @@ function openRoomEditor(item, index) {
     t("Modifica stanza", "Edit room"),
     `<label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(item.name)}" required></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="dm-unified-icon-row"><span class="dm-unified-icon-preview" data-room-icon-preview aria-hidden="true">${iconMarkup(initialIcon, "🏠", 36)}</span><input class="ed-input" name="icon" value="${esc(initialIcon)}"></span><small>${t("L’anteprima usa lo stesso renderer dell’icona stanza nella dashboard.", "The preview uses the same room-icon renderer as the dashboard.")}</small></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Piano", "Floor")}</span>${tendinaDeiPiani(item.floor)}<small>${t("I piani si creano e si ordinano qui sopra, nella scheda Stanze.", "Floors are created and ordered above, in the Rooms tab.")}</small></label>`,
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Piano", "Floor")}</span>${tendinaDeiPiani(item.floor)}<small>${t("I piani si creano e si ordinano qui sopra, nella scheda Stanze.", "Floors are created and ordered above, in the Rooms tab.")}</small></label>
+     <div class="ed-slot"><span class="ed-slot-lbl">${t("All'aperto", "Outdoors")}</span><label class="dm-stanza-aperto"><input type="checkbox" name="outdoor"${stanzaAllAperto(item) ? " checked" : ""}><span>${t("Balcone, terrazzo, giardino. Temperatura e umidità si vedono come sempre, ma l'assistente non propone di scaldare, rinfrescare o arieggiare, e la stanza non entra nella media della casa.", "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.")}</span></label></div>`,
     "🏠"
   );
   const preview2 = form.querySelector("[data-room-icon-preview]");
@@ -85963,6 +86064,8 @@ function openRoomEditor(item, index) {
       return;
     }
     if (!list[index].floor) delete list[index].floor;
+    if (form.elements.outdoor?.checked) list[index].outdoor = true;
+    else delete list[index].outdoor;
     persist2("room", list);
     close();
     root.editorSwitch?.(currentTab("room"));
@@ -85988,7 +86091,13 @@ function installStyles41() {
 .dm-mesi{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:6px!important;margin-top:8px!important}
 .dm-mese{padding:9px 0!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:11px!important;background:var(--card-background-color,#fff)!important;color:var(--secondary-text-color,#64748b)!important;font-size:12px!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:.3px!important;cursor:pointer!important}
 .dm-mese[aria-pressed="true"]{border-color:transparent!important;background:linear-gradient(135deg,#0ea5e9,#0369a1)!important;color:#fff!important;box-shadow:0 6px 14px rgba(2,132,199,.2)!important}
-.dm-mese:focus-visible{outline:3px solid color-mix(in srgb,var(--primary-color,#0ea5e9) 32%,transparent)!important;outline-offset:2px!important}`;
+.dm-mese:focus-visible{outline:3px solid color-mix(in srgb,var(--primary-color,#0ea5e9) 32%,transparent)!important;outline-offset:2px!important}
+/* La spunta «All'aperto» (#251): la casella e la frase che dice cosa cambia
+ * stanno nello stesso riquadro, che si accende di verde quando e' scelta. */
+.dm-stanza-aperto{display:flex!important;align-items:flex-start!important;gap:11px!important;margin-top:6px!important;padding:11px 14px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:14px!important;background:var(--secondary-background-color,#f6f8fb)!important;cursor:pointer!important}
+.dm-stanza-aperto:has(input:checked){border-color:color-mix(in srgb,var(--success-color,#10b981) 38%,transparent)!important;background:color-mix(in srgb,var(--success-color,#10b981) 8%,var(--card-background-color,#fff))!important}
+.dm-stanza-aperto input{flex:0 0 auto!important;width:20px!important;height:20px!important;margin:1px 0 0!important;accent-color:#059669!important;cursor:pointer!important}
+.dm-stanza-aperto span{font-size:11.5px!important;font-weight:700!important;line-height:1.45!important;color:var(--secondary-text-color,#64748b)!important}`;
   doc.head.append(style);
 }
 function openUnifiedEditor(kind, index) {
@@ -100459,6 +100568,44 @@ function installaStile() {
       font-variant-numeric:tabular-nums!important}
     #ed-body .dm-macchina-ed-quante[data-pieno="true"]{opacity:1!important;color:var(--warning-color,#f59e0b)!important}
     #ed-body .dm-macchina-ed-aggiungi{background:linear-gradient(135deg,#10b981,#047857)!important}
+    /* Da dove viene lo stato di una macchina (#177): le due scelte come i
+       bottoni a segmenti del Muro, e la prova dal vivo colorata come la riga
+       nella pagina — verde in linea, rosso assente, grigio non risponde. */
+    #ed-body .dm-macchina-ed-stato{display:grid!important;gap:8px!important}
+    #ed-body .dm-macchina-ed-seg{
+      display:inline-flex!important;flex-wrap:wrap!important;gap:4px!important;justify-self:start!important;
+      padding:4px!important;border-radius:12px!important;border:1px solid var(--divider-color,#dbe4ee)!important}
+    #ed-body .dm-macchina-ed-seg button{
+      border:0!important;padding:8px 12px!important;border-radius:9px!important;background:none!important;
+      color:var(--text-dim,#64748b)!important;font:inherit!important;font-weight:800!important;font-size:12.5px!important;
+      cursor:pointer!important}
+    #ed-body .dm-macchina-ed-seg button.si{
+      background:color-mix(in srgb,#0ea5e9 18%,transparent)!important;color:#0369a1!important;
+      box-shadow:inset 0 0 0 1px #0ea5e999!important}
+    #editor-modal[data-dm-editor-theme="dark"] #ed-body .dm-macchina-ed-seg button.si,
+    html[data-theme="dark"] #ed-body .dm-macchina-ed-seg button.si{color:#7dd3fc!important}
+    /* Il «＋» delle parole ha la faccia della lente ma non ne ha il nome: con
+       quello la guardia dei campi entita' prenderebbe la casella accanto per
+       un'entita' e la nasconderebbe dietro una pastiglia. */
+    #ed-body .dm-macchina-ed-piu{
+      display:inline-grid!important;place-items:center!important;flex:0 0 50px!important;width:50px!important;
+      height:50px!important;padding:0!important;border:0!important;border-radius:13px!important;
+      background:linear-gradient(145deg,#12aee4,#047faf)!important;color:#fff!important;font-size:16px!important;
+      cursor:pointer!important;box-shadow:0 7px 16px rgba(2,132,199,.17)!important}
+    @media(max-width:600px){#ed-body .dm-macchina-ed-piu{flex-basis:46px!important;width:46px!important;height:46px!important}}
+    #ed-body .dm-macchina-ed-prova{
+      --dm-prova:#16a34a;display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+      justify-content:space-between!important;gap:6px 10px!important;padding:9px 12px!important;
+      border-radius:12px!important;border:1px solid color-mix(in srgb,var(--dm-prova) 45%,transparent)!important;
+      background:color-mix(in srgb,var(--dm-prova) 10%,transparent)!important;font-size:12.5px!important;line-height:1.4!important}
+    #ed-body .dm-macchina-ed-prova[data-dm-macchina-stato-prova="giu"]{--dm-prova:#dc2626}
+    #ed-body .dm-macchina-ed-prova[data-dm-macchina-stato-prova="muto"]{--dm-prova:#94a3b8}
+    #ed-body .dm-macchina-ed-prova>span{min-width:0!important;overflow-wrap:anywhere!important}
+    #ed-body .dm-macchina-ed-prova code{font-weight:800!important;font-size:12px!important;background:none!important;padding:0!important}
+    #ed-body .dm-macchina-ed-prova>b{
+      flex:0 0 auto!important;padding:2px 9px!important;border-radius:999px!important;font-size:10.5px!important;
+      font-weight:900!important;letter-spacing:.04em!important;text-transform:uppercase!important;
+      color:var(--dm-prova)!important;background:color-mix(in srgb,var(--dm-prova) 16%,transparent)!important}
     #ed-body .dm-macchina-ed-errore:empty{display:none!important}
     #ed-body .dm-macchina-ed-letture .dm-macchina-ed-errore{color:var(--error-color,#dc2626)!important;font-weight:800!important}
     `
@@ -109894,7 +110041,7 @@ function salvaEvidenze(voci4) {
   } catch (_error) {
   }
 }
-function stanzeDiCasa3() {
+function stanzeDiCasa4() {
   try {
     const rooms2 = root.getStanze?.() || readJson("cd_stanze", []);
     return (Array.isArray(rooms2) ? rooms2 : []).map((room) => ({ id: clean(room?.id), name: clean(room?.name) || clean(room?.id) })).filter((room) => room.id);
@@ -109923,7 +110070,7 @@ function evidenzeDalDocumento(body, voci4) {
 function rigaEvidenzaMarkup(voce3, index) {
   const aperto2 = state136.evidAperto === index;
   const nome = clean(voce3?.name) || clean(voce3?.entity) || `${t("Entità", "Entity")} ${index + 1}`;
-  const stanze4 = stanzeDiCasa3();
+  const stanze4 = stanzeDiCasa4();
   const scelta3 = clean(voce3?.room_id);
   return `<article class="ed-row dm-todo-ed-row dm-evid-row" data-evid-index="${index}" data-open="${aperto2}">
     <div class="dm-todo-ed-head">
@@ -121121,6 +121268,89 @@ function campoDellaFamiglia(riga3, indice) {
     )
   )}</small></label>`;
 }
+var NON_ATTRIBUTI = /* @__PURE__ */ new Set(["friendly_name", "icon", "entity_picture"]);
+function leggiLaRegola(testo2) {
+  try {
+    return clean(testo2) ? JSON.parse(testo2) : null;
+  } catch {
+    return null;
+  }
+}
+function attributiDaGuardare(entity2, states, scelto) {
+  const attributi2 = Object.keys(states?.[entity2]?.attributes || {}).filter(
+    (nome) => !NON_ATTRIBUTI.has(nome)
+  );
+  if (scelto && !attributi2.includes(scelto)) attributi2.unshift(scelto);
+  return attributi2;
+}
+function scelteMarkup(via, indice, valore3, voci4) {
+  return `<span class="dm-macchina-ed-seg" role="group">${voci4.map(
+    ([v, testo2]) => `<button type="button" class="${v === valore3 ? "si" : ""}" aria-pressed="${v === valore3}" data-dm-macchina-stato-${via}="${esc(v)}" data-dm-macchina-stato-riga="${indice}">${esc(testo2)}</button>`
+  ).join("")}</span>`;
+}
+function provaDelloStato(riga3, states) {
+  const entity2 = clean(riga3.entity);
+  if (!entity2) return "";
+  const regola = regolaDelloStato(riga3.stato);
+  const letto = valoreDelloStato(states?.[entity2], regola);
+  const esito2 = comeSta2(states?.[entity2], regola);
+  const parola = esito2 === "su" ? t("In linea", "Online") : esito2 === "giu" ? t("Assente", "Down") : t("Non risponde", "Not answering");
+  const codice = (testo2) => `<code>${esc(testo2)}</code>`;
+  const detto2 = !letto ? `${codice(entity2)} ${esc(t("non c'è in Home Assistant", "is not in Home Assistant"))}` : regola.modo === "mio" && regola.attributo && !letto.muto ? `${esc(t("Adesso l'attributo", "Now the attribute"))} ${codice(regola.attributo)} ${esc(t("vale", "is"))} ${codice(letto.valore || "—")}` : `${esc(t("Adesso", "Now"))} ${codice(entity2)} ${esc(t("vale", "is"))} ${codice(letto.valore || "—")}`;
+  return `<div class="dm-macchina-ed-prova" data-dm-macchina-stato-prova="${esc(esito2 || "muto")}" role="status">
+      <span>${detto2}</span><b>${esc(parola)}</b>
+    </div>
+    <small>${esc(
+    t(
+      "«unavailable» e «unknown» restano sempre «Non risponde»: se è Home Assistant a non sapere, la plancia non dice che l'apparecchio è giù.",
+      "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down."
+    )
+  )}</small>`;
+}
+function campoDelloStato(riga3, indice) {
+  const states = allStates();
+  const regola = regolaDelloStato(riga3.stato);
+  const scritta = regolaScritta(regola);
+  const etichetta3 = (testo2) => `<span class="ed-slot-lbl">${esc(testo2)}</span>`;
+  const mio = regola.modo === "mio" ? `<label class="ed-slot dm-dich-campo">${etichetta3(t("Cosa guardare", "What to look at"))}
+      <span class="ed-form-row"><select class="ed-input" data-dm-macchina-stato-attributo="${indice}">
+        <option value=""${regola.attributo ? "" : " selected"}>${esc(t("Lo stato dell'entità", "The entity state"))}</option>${attributiDaGuardare(
+    riga3.entity,
+    states,
+    regola.attributo
+  ).map(
+    (nome) => `<option value="${esc(nome)}"${nome === regola.attributo ? " selected" : ""}>${esc(t("Attributo", "Attribute"))}: ${esc(nome)}</option>`
+  ).join("")}</select></span></label>
+    <div class="ed-slot dm-dich-campo" data-dm-macchina-stato-parole="${indice}">${etichetta3(t("È in linea quando vale", "It is online when it reads"))}
+      <div class="dm-macchina-ed-chips">${regola.inLinea.map(
+    (parola) => `<button type="button" class="dm-macchina-ed-chip" data-dm-macchina-stato-via="${esc(parola)}" data-dm-macchina-stato-riga="${indice}" title="${esc(t("Togli", "Remove"))}"><span>${esc(parola)}</span><i aria-hidden="true">✕</i></button>`
+  ).join("")}</div>
+      <span class="ed-form-row"><input class="ed-input mono" data-dm-macchina-stato-nuova="${indice}" placeholder="${esc(t("raggiungibile", "reachable"))}" autocomplete="off" spellcheck="false"><button type="button" class="dm-macchina-ed-piu" data-dm-macchina-stato-aggiungi="${indice}" aria-label="${esc(t("Aggiungi", "Add"))}" title="${esc(t("Aggiungi", "Add"))}">＋</button></span>
+    </div>
+    <div class="ed-slot dm-dich-campo">${etichetta3(t("Se vale altro", "If it reads anything else"))}
+      ${scelteMarkup("altrimenti", indice, regola.altrimenti, [
+    ["giu", t("Assente", "Down")],
+    ["muto", t("Non risponde", "Not answering")]
+  ])}
+    </div>` : "";
+  return `<div class="dm-macchina-ed-stato">
+    <div class="ed-slot dm-dich-campo">${etichetta3(t("Lo stato viene da", "The state comes from"))}
+      <input type="hidden" data-dm-dich-campo="stato" data-dm-dich-riga="${indice}" value="${esc(scritta ? JSON.stringify(scritta) : "")}">
+      ${scelteMarkup("modo", indice, regola.modo, [
+    ["auto", t("Automatico", "Automatic")],
+    ["mio", t("Scelgo io", "I choose")]
+  ])}
+      <small>${esc(
+    t(
+      "Automatico: acceso, connesso, online, up e simili vogliono dire «in linea» — com'è oggi, con in più online e up. Scegli tu quando il tuo sistema di controllo usa parole sue, o mette lo stato in un attributo.",
+      "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute."
+    )
+  )}</small>
+    </div>
+    ${mio}
+    ${provaDelloStato(riga3, states)}
+  </div>`;
+}
 function pastigliaDellaLettura(entity2, azione, segno2, riga3, states) {
   const nome = nomeAccantoAlDispositivo(entity2, riga3, states);
   return `<button type="button" class="dm-macchina-ed-chip" data-dm-macchina-lettura-${esc(azione)}="${esc(entity2)}" title="${esc(entity2)}"><span>${esc(nome)}</span><i aria-hidden="true">${segno2}</i></button>`;
@@ -121206,9 +121436,12 @@ var scheda7 = costruisciSchedaDichiarata({
     salvato: `🖥️ ${t("Macchina salvata", "Machine saved")}`,
     etichettaEntita: t("Entità della macchina", "Machine entity"),
     segnaposto: "binary_sensor.pve_qemu_103_running",
+    /* Non solo i `binary_sensor` (#177): un sensore qualunque che scrive
+     * online o offline, up o down va bene uguale — l'automatico lo capisce, e
+     * per le parole che non capisce c'è «Lo stato viene da». */
     aiutoEntita: t(
-      "Il sensore che dice se è accesa o raggiungibile: binary_sensor.* di classe running o connectivity.",
-      "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity."
+      "Il sensore che dice se è su o giù: un binary_sensor.* (running, connectivity) oppure un sensor.* con parole come online, offline, up, down.",
+      "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down."
     ),
     /* Un nome proprio non si traduce, e passarlo da `t()` vorrebbe dire
      * chiedere a tredici cataloghi di ripetere la stessa parola. */
@@ -121229,19 +121462,24 @@ var scheda7 = costruisciSchedaDichiarata({
     )
   },
   inTesta: integrazioniMarkup,
-  campiInPiu: (riga3, indice) => `${campoDellaFamiglia(riga3, indice)}${campoDelleLetture(riga3, indice)}`,
-  /* La fascia si legge dalla tendina e le letture dalla loro casella nascosta:
-   * sono i due campi in piu' che stanno nel documento, e la scheda condivisa
-   * non sa dove la sezione li ha messi. */
+  campiInPiu: (riga3, indice) => `${campoDellaFamiglia(riga3, indice)}${campoDelloStato(riga3, indice)}${campoDelleLetture(riga3, indice)}`,
+  /* La fascia si legge dalla tendina, le letture e la regola dello stato dalle
+   * loro caselle nascoste: sono i campi in piu' che stanno nel documento, e la
+   * scheda condivisa non sa dove la sezione li ha messi. */
   bozzaInPiu(bozza3, body, indice) {
     const campo5 = (quale) => body.querySelector(`[data-dm-dich-campo="${quale}"][data-dm-dich-riga="${indice}"]`);
     const scelta3 = clean(campo5("famiglia")?.value);
     const letture2 = campo5("letture");
-    return {
+    const fuori = {
       ...bozza3,
       famiglia: FAMIGLIE2[scelta3] ? scelta3 : bozza3.famiglia || "macchine",
       letture: lettureDellaRiga(letture2 ? { letture: letture2.value } : bozza3)
     };
+    const casella5 = campo5("stato");
+    const regola = regolaScritta(casella5 ? leggiLaRegola(casella5.value) : bozza3.stato);
+    if (regola) fuori.stato = regola;
+    else delete fuori.stato;
+    return fuori;
   },
   leggi(elenco15) {
     const states = allStates();
@@ -121285,6 +121523,73 @@ var scheda7 = costruisciSchedaDichiarata({
       return true;
     };
     const aggiungi5 = (casella5, indice, nuova) => cambiaLeLetture(casella5, indice, (elenco15) => conLaVoce(elenco15, nuova, "letture"));
+    const cambiaLaRegola = (indice, cambia) => {
+      const body = doc.getElementById(ANCORA3);
+      if (!body || !Number.isInteger(indice) || indice < 0) return false;
+      const prima = bozza3(body, indice);
+      const regola = cambia(regolaDelloStato(prima.stato), prima);
+      salva31(
+        conLaRiga(config(), indice, { ...prima, stato: regolaScritta(regola) || void 0 }, inPiu)
+      );
+      ridisegna27();
+      return true;
+    };
+    const aggiungiLaParola = (indice) => {
+      const scritta = doc.getElementById(ANCORA3)?.querySelector(`[data-dm-macchina-stato-nuova="${indice}"]`);
+      const parola = clean(scritta?.value).toLowerCase();
+      if (!parola) return false;
+      return cambiaLaRegola(indice, (regola) => ({
+        ...regola,
+        inLinea: [...regola.inLinea, parola]
+      }));
+    };
+    documento.addEventListener("click", (evento) => {
+      const dentro3 = doc.getElementById(ANCORA3);
+      const tasto2 = evento.target?.closest?.("[data-dm-macchina-stato-riga]");
+      if (!tasto2 || !dentro3?.contains(tasto2)) return;
+      evento.preventDefault();
+      const indice = Number(tasto2.dataset.dmMacchinaStatoRiga);
+      const dati = tasto2.dataset;
+      if (dati.dmMacchinaStatoModo !== void 0)
+        cambiaLaRegola(indice, (regola, riga3) => ({
+          ...regola,
+          modo: dati.dmMacchinaStatoModo === "mio" ? "mio" : "auto",
+          /* Chi passa a «Scelgo io» parte da parole che danno lo stesso
+           * esito di adesso, non da un elenco vuoto. */
+          inLinea: dati.dmMacchinaStatoModo === "mio" && !regola.inLinea.length ? paroleDiPartenza(allStates()[riga3.entity]) : regola.inLinea
+        }));
+      else if (dati.dmMacchinaStatoAltrimenti !== void 0)
+        cambiaLaRegola(indice, (regola) => ({
+          ...regola,
+          altrimenti: dati.dmMacchinaStatoAltrimenti
+        }));
+      else if (dati.dmMacchinaStatoVia !== void 0)
+        cambiaLaRegola(indice, (regola) => ({
+          ...regola,
+          inLinea: regola.inLinea.filter((parola) => parola !== dati.dmMacchinaStatoVia)
+        }));
+    });
+    documento.addEventListener("click", (evento) => {
+      const tasto2 = evento.target?.closest?.("[data-dm-macchina-stato-aggiungi]");
+      if (!tasto2 || !doc.getElementById(ANCORA3)?.contains(tasto2)) return;
+      evento.preventDefault();
+      aggiungiLaParola(Number(tasto2.dataset.dmMacchinaStatoAggiungi));
+    });
+    documento.addEventListener("keydown", (evento) => {
+      const scritta = evento.target?.closest?.("[data-dm-macchina-stato-nuova]");
+      if (evento.key !== "Enter" || !scritta || !doc.getElementById(ANCORA3)?.contains(scritta))
+        return;
+      evento.preventDefault();
+      aggiungiLaParola(Number(scritta.dataset.dmMacchinaStatoNuova));
+    });
+    documento.addEventListener("change", (evento) => {
+      const tendina4 = evento.target?.closest?.("[data-dm-macchina-stato-attributo]");
+      if (!tendina4 || !doc.getElementById(ANCORA3)?.contains(tendina4)) return;
+      cambiaLaRegola(Number(tendina4.dataset.dmMacchinaStatoAttributo), (regola) => ({
+        ...regola,
+        attributo: clean(tendina4.value)
+      }));
+    });
     documento.addEventListener("click", (evento) => {
       const dentro3 = doc.getElementById(ANCORA3);
       if (!dentro3?.contains(evento.target)) return;
