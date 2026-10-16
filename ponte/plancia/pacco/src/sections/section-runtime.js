@@ -528,7 +528,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-CCI2EVEH.js";
+} from "../../chunk-HYPVTRE5.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -114684,6 +114684,37 @@ function installStyles68() {
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-accendi:not([data-on="true"]){
       background:#1b2439;border-color:#2c3a55;color:#cbd5e1}
 
+    /* ── tablet in piedi: la scena e' piu' stretta di quanto la disegna il
+       computer ──────────────────────────────────────────────────────────
+       Sotto i 1100 pixel il quadro dei comandi della stufa, largo 336, finiva
+       sopra la targhetta della stanza, e i due serbatoi della caldaia sopra
+       quella dell'acqua calda: le posizioni sono in percentuale, i pezzi in
+       pixel, e stringendo il palco si vengono addosso. Qui la scena prende la
+       disposizione del telefono — i comandi sotto, le letture in colonna, i
+       due serbatoi sulla mensola — e tiene le misure del computer. Il
+       telefono, sotto, cambia solo le misure. */
+    @media (max-width:1100px){
+      /* La mensola del tablet: i serbatoi hanno la misura del computer, piu'
+         alti di quelli del telefono, e lo stato con la leva ci sta sotto. */
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"]{height:750px}
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"]>.dm-it-scena{bottom:150px}
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"] .dm-it-nodo-serbatoi{
+        left:50%!important;top:calc(100% + 30px)!important}
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"] .dm-it-comandi-caldaia{bottom:-136px}
+      #${PAGINA} .dm-it-stage[data-dm-it-serbatoi="2"] .dm-it-allarme{bottom:-136px}
+      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]{height:auto;min-height:220px}
+      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]>.dm-it-scena{position:relative;inset:auto;height:420px}
+      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]>.dm-it-vuoto{position:relative;inset:auto;min-height:220px}
+      #${PAGINA} .dm-it-aria-computer{display:none}
+      #${PAGINA} .dm-it-aria-telefono{display:inline}
+      #${PAGINA} .dm-it-nodo-fumi{left:75%!important;top:12%!important}
+      #${PAGINA} .dm-it-nodo-stanza{left:75%!important;top:38%!important}
+      #${PAGINA} .dm-it-nodo-pellet-stufa{left:75%!important;top:70%!important}
+      #${PAGINA} .dm-it-stufa-pannello{
+        position:static;transform:none;width:auto;margin:0 12px 14px}
+      #${PAGINA} .dm-it-stufa-allarme{position:static;margin:14px 12px 0}
+    }
+
     /* ── telefono: il palco si accorcia e le targhette rientrano ────────── */
     @media (max-width:768px){
       #${PAGINA} .dm-it-stage{height:470px;border-radius:24px}
@@ -114736,24 +114767,15 @@ function installStyles68() {
       /* La stufa (#183): il palco si allunga quanto serve, perche' sotto la
          scena viene il quadro dei comandi; la scena resta un'altezza sua, e
          le letture fanno colonna a destra della stufa. */
-      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]{height:auto;min-height:220px}
-      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]>.dm-it-scena{position:relative;inset:auto;height:336px}
-      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]>.dm-it-vuoto{position:relative;inset:auto;min-height:220px}
+      #${PAGINA} .dm-it-stage[data-dm-it-tipo="stufa"]>.dm-it-scena{height:336px}
       #${PAGINA} .dm-it-stufa{width:128px;height:182px;border-radius:22px 22px 11px 11px}
       #${PAGINA} .dm-it-stufa-piano{padding:0 8px;border-radius:9px}
       #${PAGINA} .dm-it-stufa-display{font-size:9px;padding:2px 4px}
       #${PAGINA} .dm-it-stufa-porta{border-radius:12px}
-      #${PAGINA} .dm-it-aria-computer{display:none}
-      #${PAGINA} .dm-it-aria-telefono{display:inline}
-      #${PAGINA} .dm-it-nodo-fumi{left:75%!important;top:12%!important}
-      #${PAGINA} .dm-it-nodo-stanza{left:75%!important;top:38%!important}
-      #${PAGINA} .dm-it-nodo-pellet-stufa{left:75%!important;top:70%!important}
       #${PAGINA} .dm-it-nodo-pellet-stufa .dm-it-nome{font-size:9.5px;padding:4px 10px}
-      #${PAGINA} .dm-it-stufa-pannello{
-        position:static;transform:none;width:auto;margin:0 12px 14px;padding:12px;border-radius:20px}
+      #${PAGINA} .dm-it-stufa-pannello{padding:12px;border-radius:20px}
       #${PAGINA} .dm-it-stufa-passo{width:48px;height:48px;border-radius:15px}
       #${PAGINA} .dm-it-stufa-val{min-width:84px}
-      #${PAGINA} .dm-it-stufa-allarme{position:static;margin:14px 12px 0}
     }
     @media (prefers-reduced-motion:reduce){
       #${PAGINA} .dm-it-flusso,#${PAGINA} .dm-it-fiamma,#${PAGINA} .dm-it-plate{animation:none!important}

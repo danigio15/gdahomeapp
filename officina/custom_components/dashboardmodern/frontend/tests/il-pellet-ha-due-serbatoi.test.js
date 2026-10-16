@@ -131,6 +131,21 @@ test("sul telefono i due serbatoi stanno su una mensola, e la scena resta com'er
     /\[data-dm-it-serbatoi="2"\] \.dm-it-nodo-serbatoi\{\s*left:50%!important;top:calc\(100% \+ \d+px\)!important\}/,
   );
   assert.match(telefono, /\[data-dm-it-serbatoi="2"\] \.dm-it-comandi-caldaia\{bottom:-\d+px\}/);
+  /* Sul tablet in piedi i due serbatoi coprivano l'acqua calda: anche li'
+   * vanno sulla mensola, e la scena resta alta quanto il palco del computer. */
+  const tablet = scena.slice(
+    scena.indexOf("@media (max-width:1100px){"),
+    scena.indexOf("@media (max-width:768px){"),
+  );
+  const computer = Number(
+    /\.dm-it-stage\{\s*position:relative;width:100%;height:(\d+)px/.exec(scena)?.[1],
+  );
+  const lungoTablet = Number(/\[data-dm-it-serbatoi="2"\]\{height:(\d+)px\}/.exec(tablet)?.[1]);
+  const liberoTablet = Number(
+    /\[data-dm-it-serbatoi="2"\]>\.dm-it-scena\{bottom:(\d+)px\}/.exec(tablet)?.[1],
+  );
+  assert.ok(computer > 0 && liberoTablet > 0);
+  assert.equal(lungoTablet - liberoTablet, computer);
 });
 
 test("la scheda ha la casella del secondo serbatoio, con le sue parole", () => {
