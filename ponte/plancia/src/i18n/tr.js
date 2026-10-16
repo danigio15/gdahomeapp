@@ -4898,8 +4898,6 @@ export default Object.freeze({
     "Makineler ve ağ. Her satır bir makinedir — varlık, istediğiniz ad, çizim ve iki şeritten hangisinde durduğu — ve MiniPC sayfası bunları açık ve kapalı olarak gösterir.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "MiniPC sayfasının iki şeridi vardır: makineler ve ağ. Bu satır burada seçtiğinize gider.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "Çalışıyor mu ya da erişilebilir mi söyleyen sensör: running ya da connectivity sınıfından bir binary_sensor.*.",
   "Unnamed machine": "Adsız makine",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "Varlığı seçmediğiniz sürece bu makine hiçbir yerde yoktur: ne sayfada, ne de kaç tanesinin düştüğü sayısında.",
@@ -5935,4 +5933,22 @@ export default Object.freeze({
     "Asistanın ışıklar, prizler ve kapılar hakkında anladıkları: addan, odadan, markadan, otomasyonlardan ve alışkanlıklardan. Yanılıyorsa tek dokunuşla düzelt.",
   "What's in the house": "Evde neler var",
   "You said so": "Sen öyle dedin",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "Açık mı kapalı mı olduğunu söyleyen sensör: bir binary_sensor.* (running, connectivity) ya da online, offline, up, down gibi kelimeler kullanan bir sensor.*.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "“unavailable” ve “unknown” her zaman “Yanıt vermiyor” olarak kalır: bilmeyen Home Assistant ise, pano cihazın kapalı olduğunu söylemez.",
+  Attribute: "Öznitelik",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "Otomatik: açık, bağlı, online, up ve benzerleri “çevrimiçi” demektir — bugünkü gibi, ayrıca online ve up. İzleme sisteminiz kendi kelimelerini kullanıyorsa ya da durumu bir özniteliğe yazıyorsa kendiniz seçin.",
+  "I choose": "Ben seçerim",
+  "If it reads anything else": "Başka bir değer olursa",
+  is: "değeri:",
+  "is not in Home Assistant": "Home Assistant'ta yok",
+  "It is online when it reads": "Şu değerde çevrimiçi",
+  "Now the attribute": "Şimdi öznitelik",
+  Online: "Çevrimiçi",
+  reachable: "erişilebilir",
+  "The entity state": "Varlığın durumu",
+  "The state comes from": "Durum nereden gelir",
+  "What to look at": "Neye bakılsın",
 });

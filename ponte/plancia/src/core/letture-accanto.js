@@ -193,6 +193,11 @@ const APERTURE = new Set(["door", "garage_door", "window", "opening"]);
 
 const SPENTO = new Set(["unavailable", "unknown", "none", ""]);
 
+/* Un numero scritto per intero: il segno, le cifre, al piu' una virgola o un
+ * punto decimale, al piu' un esponente. «12», «-3,5», «0.25», «1e3» si';
+ * «192.168.1.20», «2.4.1», «12 ms» no. */
+const NUMERO_PURO = /^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:e[+-]?\d+)?$/i;
+
 /**
  * Una lettura, come si legge adesso.
  *
@@ -288,7 +293,14 @@ export function letturaDelDispositivo(
           : `${pick("fra", "in", lingua)} ${quanto}`;
     return { ...base, available: true, valore: null, istante, testo };
   }
-  const valore = Number.parseFloat(grezzo.replace(",", "."));
+  /* Un numero e' un numero solo se e' tutto numero (#177).
+   *
+   * `parseFloat` si ferma al primo carattere che non capisce e tiene quello che
+   * ha letto fin li': di «192.168.1.20» teneva 192.168, e sulla scheda del
+   * router l'indirizzo IP si leggeva «192». Lo stesso per una versione —
+   * «2.4.1» diventava «2,4». Quello che non e' numero dall'inizio alla fine si
+   * mostra com'e' scritto, che e' come lo si riconosce. */
+  const valore = NUMERO_PURO.test(grezzo) ? Number(grezzo.replace(",", ".")) : Number.NaN;
   if (!Number.isFinite(valore)) return { ...base, available: true, valore: null, testo: grezzo };
   const tempo = durataLeggibile(valore, unita, lingua);
   if (tempo) return { ...base, available: true, valore, testo: tempo };

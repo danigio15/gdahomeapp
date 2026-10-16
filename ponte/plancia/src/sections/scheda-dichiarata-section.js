@@ -507,6 +507,44 @@ export function installaStile() {
       font-variant-numeric:tabular-nums!important}
     #ed-body .dm-macchina-ed-quante[data-pieno="true"]{opacity:1!important;color:var(--warning-color,#f59e0b)!important}
     #ed-body .dm-macchina-ed-aggiungi{background:linear-gradient(135deg,#10b981,#047857)!important}
+    /* Da dove viene lo stato di una macchina (#177): le due scelte come i
+       bottoni a segmenti del Muro, e la prova dal vivo colorata come la riga
+       nella pagina — verde in linea, rosso assente, grigio non risponde. */
+    #ed-body .dm-macchina-ed-stato{display:grid!important;gap:8px!important}
+    #ed-body .dm-macchina-ed-seg{
+      display:inline-flex!important;flex-wrap:wrap!important;gap:4px!important;justify-self:start!important;
+      padding:4px!important;border-radius:12px!important;border:1px solid var(--divider-color,#dbe4ee)!important}
+    #ed-body .dm-macchina-ed-seg button{
+      border:0!important;padding:8px 12px!important;border-radius:9px!important;background:none!important;
+      color:var(--text-dim,#64748b)!important;font:inherit!important;font-weight:800!important;font-size:12.5px!important;
+      cursor:pointer!important}
+    #ed-body .dm-macchina-ed-seg button.si{
+      background:color-mix(in srgb,#0ea5e9 18%,transparent)!important;color:#0369a1!important;
+      box-shadow:inset 0 0 0 1px #0ea5e999!important}
+    #editor-modal[data-dm-editor-theme="dark"] #ed-body .dm-macchina-ed-seg button.si,
+    html[data-theme="dark"] #ed-body .dm-macchina-ed-seg button.si{color:#7dd3fc!important}
+    /* Il «＋» delle parole ha la faccia della lente ma non ne ha il nome: con
+       quello la guardia dei campi entita' prenderebbe la casella accanto per
+       un'entita' e la nasconderebbe dietro una pastiglia. */
+    #ed-body .dm-macchina-ed-piu{
+      display:inline-grid!important;place-items:center!important;flex:0 0 50px!important;width:50px!important;
+      height:50px!important;padding:0!important;border:0!important;border-radius:13px!important;
+      background:linear-gradient(145deg,#12aee4,#047faf)!important;color:#fff!important;font-size:16px!important;
+      cursor:pointer!important;box-shadow:0 7px 16px rgba(2,132,199,.17)!important}
+    @media(max-width:600px){#ed-body .dm-macchina-ed-piu{flex-basis:46px!important;width:46px!important;height:46px!important}}
+    #ed-body .dm-macchina-ed-prova{
+      --dm-prova:#16a34a;display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+      justify-content:space-between!important;gap:6px 10px!important;padding:9px 12px!important;
+      border-radius:12px!important;border:1px solid color-mix(in srgb,var(--dm-prova) 45%,transparent)!important;
+      background:color-mix(in srgb,var(--dm-prova) 10%,transparent)!important;font-size:12.5px!important;line-height:1.4!important}
+    #ed-body .dm-macchina-ed-prova[data-dm-macchina-stato-prova="giu"]{--dm-prova:#dc2626}
+    #ed-body .dm-macchina-ed-prova[data-dm-macchina-stato-prova="muto"]{--dm-prova:#94a3b8}
+    #ed-body .dm-macchina-ed-prova>span{min-width:0!important;overflow-wrap:anywhere!important}
+    #ed-body .dm-macchina-ed-prova code{font-weight:800!important;font-size:12px!important;background:none!important;padding:0!important}
+    #ed-body .dm-macchina-ed-prova>b{
+      flex:0 0 auto!important;padding:2px 9px!important;border-radius:999px!important;font-size:10.5px!important;
+      font-weight:900!important;letter-spacing:.04em!important;text-transform:uppercase!important;
+      color:var(--dm-prova)!important;background:color-mix(in srgb,var(--dm-prova) 16%,transparent)!important}
     #ed-body .dm-macchina-ed-errore:empty{display:none!important}
     #ed-body .dm-macchina-ed-letture .dm-macchina-ed-errore{color:var(--error-color,#dc2626)!important;font-weight:800!important}
     `,

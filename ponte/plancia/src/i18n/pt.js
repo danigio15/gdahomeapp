@@ -4918,8 +4918,6 @@ export default Object.freeze({
     "As máquinas e a rede. Cada linha é uma máquina — a entidade, o nome que quiser, o desenho, e em qual das duas faixas está — e a página MiniPC mostra estas, ligadas e desligadas.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "A página MiniPC tem duas faixas: máquinas e rede. Esta linha vai para a que escolher aqui.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "O sensor que diz se está ligada ou alcançável: um binary_sensor.* de classe running ou connectivity.",
   "Unnamed machine": "Máquina sem nome",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "Enquanto não escolher a entidade esta máquina não está em lado nenhum: nem na página, nem na conta de quantas estão em baixo.",
@@ -5962,4 +5960,22 @@ export default Object.freeze({
     "O que o assistente percebeu de luzes, tomadas e portas: pelo nome, divisão, marca, automações e hábitos. Se errar, corrige com um toque.",
   "What's in the house": "O que há em casa",
   "You said so": "Foste tu que disseste",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "O sensor que diz se está ligado ou não: um binary_sensor.* (running, connectivity) ou um sensor.* com palavras como online, offline, up, down.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "“unavailable” e “unknown” ficam sempre como “Não responde”: quando é o Home Assistant que não sabe, o painel não diz que o aparelho está em baixo.",
+  Attribute: "Atributo",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "Automático: ligado, conectado, online, up e semelhantes significam “online” — como hoje, e ainda online e up. Escolhe tu quando o teu sistema de monitorização usa palavras próprias, ou põe o estado num atributo.",
+  "I choose": "Escolho eu",
+  "If it reads anything else": "Se valer outra coisa",
+  is: "vale",
+  "is not in Home Assistant": "não está no Home Assistant",
+  "It is online when it reads": "Está online quando vale",
+  "Now the attribute": "Agora o atributo",
+  Online: "Em linha",
+  reachable: "acessível",
+  "The entity state": "O estado da entidade",
+  "The state comes from": "O estado vem de",
+  "What to look at": "O que observar",
 });

@@ -4886,8 +4886,6 @@ export default Object.freeze({
     "मशीनें और नेटवर्क। हर पंक्ति एक मशीन है — एंटिटी, आपका दिया नाम, चित्र, और वह दोनों में से किस पट्टी में है — और MiniPC पेज इन्हीं को दिखाता है, चालू और बंद।",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "MiniPC पेज में दो पट्टियाँ हैं: मशीनें और नेटवर्क। यह पंक्ति उसी में जाएगी जो आप यहाँ चुनते हैं।",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "वह सेंसर जो बताता है कि यह चल रही है या पहुँच में है: running या connectivity क्लास का binary_sensor.*।",
   "Unnamed machine": "बिना नाम की मशीन",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "जब तक एंटिटी नहीं चुनते, यह मशीन कहीं नहीं है: न पेज पर, न कितनी बंद हैं इसकी गिनती में।",
@@ -5922,4 +5920,22 @@ export default Object.freeze({
     "सहायक ने लाइट, सॉकेट और दरवाज़ों के बारे में क्या समझा: नाम, कमरे, ब्रांड, ऑटोमेशन और आदतों से। गलत हो तो एक टैप से सुधारें।",
   "What's in the house": "घर में क्या है",
   "You said so": "आपने ऐसा कहा",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "वह सेंसर जो बताता है कि यह चालू है या बंद: एक binary_sensor.* (running, connectivity) या online, offline, up, down जैसे शब्दों वाला sensor.*।",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "“unavailable” और “unknown” हमेशा “जवाब नहीं दे रहा” ही रहते हैं: जब Home Assistant को ही पता नहीं, तो डैशबोर्ड यह नहीं कहता कि उपकरण बंद है।",
+  Attribute: "एट्रिब्यूट",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "स्वचालित: चालू, कनेक्टेड, online, up और ऐसे शब्दों का मतलब “ऑनलाइन” है — जैसा आज है, साथ में online और up भी। जब आपका निगरानी सिस्टम अपने शब्द इस्तेमाल करे, या स्थिति को किसी एट्रिब्यूट में रखे, तो खुद चुनें।",
+  "I choose": "मैं चुनूँगा",
+  "If it reads anything else": "अगर मान कुछ और हो",
+  is: "का मान",
+  "is not in Home Assistant": "Home Assistant में नहीं है",
+  "It is online when it reads": "ऑनलाइन तब, जब मान हो",
+  "Now the attribute": "अभी एट्रिब्यूट",
+  Online: "ऑनलाइन",
+  reachable: "पहुँच योग्य",
+  "The entity state": "एंटिटी की स्थिति",
+  "The state comes from": "स्थिति कहाँ से आती है",
+  "What to look at": "क्या देखना है",
 });

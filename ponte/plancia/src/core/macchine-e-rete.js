@@ -72,7 +72,27 @@ export const FAMIGLIE = Object.freeze({
 });
 
 const MUTI = new Set(["unavailable", "unknown", "none", ""]);
-const ACCESI = new Set(["on", "true", "home", "connected", "running", "open"]);
+/* Le parole che vogliono dire «in linea» quando la regola e' quella di tutti.
+ *
+ * Le prime sei sono quelle di sempre, e parlano la lingua dei `binary_sensor`.
+ * Le altre sono quelle di un sensore qualunque che fa da sorvegliante (#177):
+ * «ho un sistema di ping esterno» scrive `online` e `offline`, oppure `up` e
+ * `down`, in un `sensor.*` — e con le sole sei la riga diceva «Assente» di un
+ * apparecchio che rispondeva. Sono le stesse che gli «Altri nodi» capivano
+ * gia': la stessa parola non vuol dire due cose in due schede. */
+const ACCESI = new Set([
+  "on",
+  "true",
+  "home",
+  "connected",
+  "running",
+  "open",
+  "online",
+  "up",
+  "connesso",
+  "reachable",
+  "raggiungibile",
+]);
 
 /**
  * La configurazione, ripulita: integrazioni scelte, escluse, aggiunte, nomi.
@@ -215,13 +235,101 @@ export function integrazioniDaScegliere(
     .sort((a, b) => b.totale - a.totale || a.nome.localeCompare(b.nome));
 }
 
+/* ── DA DOVE VIENE LO STATO (#177) ────────────────────────────────────────
+ *
+ * «Lo stato di ogni apparecchio me lo da' un sensore del mio sistema di ping.»
+ * La regola di tutti — le parole di `ACCESI` — basta quasi sempre. Quando non
+ * basta e' perche' quel sistema parla una lingua sua (`attivo`, `ok`, `200`)
+ * oppure mette lo stato in un attributo e lascia nello stato qualcos'altro: e
+ * allora lo dice chi configura, riga per riga. La regola sta nella riga, nel
+ * campo `stato`:
+ *
+ *   · `modo` — `"auto"` (la regola di tutti) o `"mio"` (quella scritta qui);
+ *   · `attributo` — cosa guardare: vuoto e' lo stato dell'entita', altrimenti
+ *     il nome di uno dei suoi attributi;
+ *   · `inLinea` — le parole che vogliono dire «in linea»;
+ *   · `altrimenti` — cosa vuol dire tutto il resto: `"giu"` (assente) o
+ *     `"muto"` (non risponde).
+ *
+ * `unavailable` e `unknown` restano muti in tutt'e due i modi: e' Home
+ * Assistant a non sapere, e una regola scritta a mano non lo fa sapere di
+ * piu'. Una riga senza il campo e' in automatico: chi aveva gia' configurato
+ * non deve fare niente. */
+export const MODI_DELLO_STATO = Object.freeze(["auto", "mio"]);
+export const ALTRIMENTI_DELLO_STATO = Object.freeze(["giu", "muto"]);
+
+/* Le parole si confrontano senza maiuscole e senza spazi intorno: «Online» e
+ * «online » sono la stessa risposta. */
+const parolaPulita = (valore) => clean(valore).toLowerCase();
+
+/** La regola di una riga, ripulita. Senza niente di scritto e' l'automatico. */
+export function regolaDelloStato(grezza) {
+  const dato = grezza && typeof grezza === "object" && !Array.isArray(grezza) ? grezza : {};
+  const parole = (Array.isArray(dato.inLinea) ? dato.inLinea : [])
+    .map(parolaPulita)
+    .filter((parola) => parola && !MUTI.has(parola));
+  return {
+    modo: dato.modo === "mio" ? "mio" : "auto",
+    attributo: clean(dato.attributo),
+    inLinea: [...new Set(parole)],
+    altrimenti: dato.altrimenti === "muto" ? "muto" : "giu",
+  };
+}
+
+/** La regola da scrivere nella riga, o `null` per l'automatico che nessuno ha
+ * mai toccato: un campo vuoto nel salvataggio sarebbe rumore. */
+export function regolaScritta(grezza) {
+  const regola = regolaDelloStato(grezza);
+  return regola.modo === "mio" || regola.attributo || regola.inLinea.length ? regola : null;
+}
+
+/* Le parole da cui parte chi passa a «Scelgo io»: quella che il sensore dice
+ * adesso, se l'automatico la capisce gia', e poi le piu' comuni. Si parte da
+ * una regola che da' lo stesso esito di prima, non da una vuota che dipinge
+ * tutto di rosso al primo tocco. */
+export function paroleDiPartenza(stato) {
+  const adesso = parolaPulita(stato?.state);
+  const prime = ACCESI.has(adesso) ? [adesso] : [];
+  return [...new Set([...prime, "online", "on", "up"])];
+}
+
+/**
+ * Il valore che la regola guarda adesso, scritto come si confronta.
+ *
+ * `null` quando l'entita' non c'e' fra gli stati. `muto` quando e' Home
+ * Assistant a non sapere (`unavailable`, `unknown`): in quel caso nemmeno un
+ * attributo si guarda, perche' quello che resta scritto li' e' l'ultima cosa
+ * saputa, non quella di adesso.
+ */
+export function valoreDelloStato(stato, grezza) {
+  if (!stato) return null;
+  const dello = parolaPulita(stato.state);
+  if (MUTI.has(dello)) return { valore: dello, muto: true };
+  const regola = regolaDelloStato(grezza);
+  if (regola.modo !== "mio" || !regola.attributo) return { valore: dello, muto: false };
+  const attributo = stato.attributes?.[regola.attributo];
+  const valore =
+    attributo === null || attributo === undefined || typeof attributo === "object"
+      ? ""
+      : parolaPulita(attributo);
+  return { valore, muto: MUTI.has(valore) };
+}
+
 /* Come sta: `"su"`, `"giu"` o `""` quando non risponde. Un container che non
  * risponde non è un container fermo — potrebbe essere il server a essere giù,
- * e dire «fermo» sarebbe una diagnosi inventata. */
-export function comeSta(stato) {
-  const grezzo = clean(stato?.state).toLowerCase();
-  if (MUTI.has(grezzo)) return "";
-  return ACCESI.has(grezzo) ? "su" : "giu";
+ * e dire «fermo» sarebbe una diagnosi inventata.
+ *
+ * Senza regola, o con la regola in automatico, e' quello di sempre con le
+ * parole in piu' di `ACCESI`. Con la regola scritta (#177) contano le sue
+ * parole, e quello che non e' fra quelle dice quello che ha scelto chi
+ * configura. */
+export function comeSta(stato, grezza) {
+  const letto = valoreDelloStato(stato, grezza);
+  if (!letto || letto.muto) return "";
+  const regola = regolaDelloStato(grezza);
+  if (regola.modo !== "mio") return ACCESI.has(letto.valore) ? "su" : "giu";
+  if (regola.inLinea.includes(letto.valore)) return "su";
+  return regola.altrimenti === "muto" ? "" : "giu";
 }
 
 /* Il nome dell'oggetto dentro l'entity_id, senza il suo dominio. */
@@ -379,8 +487,12 @@ export { conLaRiga, conLeRighe, righeDichiarate, senzaLaRiga };
  * c'e'; il resto sta in altri sensori accanto, e chi configura li sceglie uno
  * per uno, come per il robot, la TV e gli elettrodomestici. Passano da qui per
  * nome, come `famiglia`: un campo che non sta in questo elenco non arriva al
- * salvataggio, e le letture scelte sparirebbero alla prima riapertura. */
-export const CAMPI_IN_PIU = Object.freeze(["famiglia", "letture"]);
+ * salvataggio, e le letture scelte sparirebbero alla prima riapertura.
+ *
+ * `stato` e' la regola che dice da dove vengono il «su» e il «giu» della riga
+ * (#177): vedi `regolaDelloStato` qui sopra. Una riga che non ce l'ha e' in
+ * automatico. */
+export const CAMPI_IN_PIU = Object.freeze(["famiglia", "letture", "stato"]);
 
 /** Le letture di una riga, ripulite: la regola e' quella di tutte le schede. */
 export function lettureDellaRiga(riga) {
@@ -495,7 +607,7 @@ export function macchineERete(
         famiglia,
         name,
         glifo: clean(riga.icon) || FAMIGLIE[famiglia].glifo,
-        stato: comeSta(states?.[riga.entity]),
+        stato: comeSta(states?.[riga.entity], riga.stato),
         comandi: famiglia === "macchine" ? comandiDellaMacchina(riga.entity, states) : null,
         /* Le altre letture, gia' scritte (#177): il nome senza quello della
          * riga davanti — «NAS Latenza» sotto «NAS» e' «Latenza» — e il valore

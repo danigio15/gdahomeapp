@@ -4819,8 +4819,6 @@ export default Object.freeze({
     "机器和网络。每一行是一台机器——实体、你想要的名字、图，以及它属于两条带中的哪一条——「MiniPC」页面显示的正是这些，开着的和关着的。",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "「MiniPC」页面有两条带：机器和网络。这一行会进入你在这里选的那一条。",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "报告它是否在运行或是否可达的传感器：类别为 running 或 connectivity 的 binary_sensor.*。",
   "Unnamed machine": "未命名的机器",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "在你选定实体之前，这台机器哪里都不在：页面上没有，掉线的数量里也没有。",
@@ -5829,4 +5827,22 @@ export default Object.freeze({
     "助手对灯、插座和门的理解：来自名称、房间、品牌、自动化和习惯。如有错误，轻点即可更正。",
   "What's in the house": "家里有什么",
   "You said so": "你指定的",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "说明设备是否在运行的传感器：binary_sensor.*（running、connectivity），或使用 online、offline、up、down 等词的 sensor.*。",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "“unavailable”和“unknown”始终显示为“没有响应”：当是 Home Assistant 自己不知道时，仪表板不会说设备已离线。",
+  Attribute: "属性",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "自动：开、已连接、online、up 等表示“在线”——和现在一样，另外加上 online 和 up。如果你的监控系统使用自己的词，或把状态放在属性里，请自己选择。",
+  "I choose": "我来选",
+  "If it reads anything else": "如果是其他值",
+  is: "的值为",
+  "is not in Home Assistant": "不在 Home Assistant 中",
+  "It is online when it reads": "值为以下时在线",
+  "Now the attribute": "现在属性",
+  Online: "在线",
+  reachable: "可达",
+  "The entity state": "实体状态",
+  "The state comes from": "状态来自",
+  "What to look at": "查看什么",
 });
