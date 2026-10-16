@@ -264,6 +264,36 @@ async function chiedi(prendi, dove, { metodo = "GET", gettone, corpo, tipo } = {
   }
 }
 
+/* Consegna la modifica.
+ *
+ * Dopo un rifiuto di Google, o con una revisione gia' in corso, il negozio non
+ * accetta piu' che una modifica parta da sola verso la revisione: risponde 400,
+ * «Changes cannot be sent for review automatically», e chiede
+ * `changesNotSentForReview=true`. Successo con la 1.14.0: pacchetto caricato,
+ * messo sulla pista, e poi buttato per quella riga. Adesso si riconsegna la
+ * stessa modifica cosi' come chiede: la versione va sulla pista, e la
+ * revisione si manda dal Play Console, col tasto «Invia per revisione». Detto
+ * nel registro, perche' senza quel tasto non arriva a nessuno. */
+export const DA_MANDARE_A_MANO = /changesNotSentForReview/;
+
+async function consegna(prendi, quale, gettone, dillo = () => {}) {
+  try {
+    await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
+    return { aMano: false };
+  } catch (errore) {
+    if (!DA_MANDARE_A_MANO.test(errore?.message || "")) throw errore;
+  }
+  await chiedi(prendi, perApp(`/edits/${quale}:commit?changesNotSentForReview=true`), {
+    metodo: "POST",
+    gettone,
+  });
+  dillo(
+    "ATTENZIONE: il negozio non manda da solo in revisione: la modifica e' consegnata, " +
+      "la revisione si invia dal Play Console (Panoramica della pubblicazione → Invia per revisione)",
+  );
+  return { aMano: true };
+}
+
 /** Il gettone che vale un'ora, in cambio del biglietto firmato. */
 export async function ilGettone(credenziale, prendi = globalThis.fetch) {
   const risposta = await prendi(credenziale.dove, {
@@ -379,7 +409,7 @@ export async function promuovi({
       await dentroUnaModifica({ gettone, prendi, dillo }, async (quale) => {
         await sullaPista({ quale, pista, numero, novita, gettone, prendi });
         await chiedi(prendi, perApp(`/edits/${quale}:validate`), { metodo: "POST", gettone });
-        await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
+        await consegna(prendi, quale, gettone, dillo);
       });
     } catch (errore) {
       const perche = errore?.message || String(errore);
@@ -474,7 +504,7 @@ export async function porta({
       return quanto;
     }
 
-    await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
+    await consegna(prendi, quale, gettone, dillo);
     dillo(`pubblicato: la ${quanto} e' sulle piste ${subito.map((una) => `«${una}»`).join(", ")}`);
     return quanto;
   });

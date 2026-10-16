@@ -10,6 +10,14 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.1
+
+Le stesse novità della 1.14.0, che sul Play Store non era arrivata: il
+negozio, dopo una revisione respinta, vuole che la revisione si mandi a
+mano, e il caricamento si fermava lì. Adesso la versione arriva sulla pista
+e il registro dice di mandarla in revisione dal Play Console. Dentro c'è
+anche il navigatore all'ultima versione.
+
 ## 1.14.0
 
 **L'assistente capisce cosa c'è in casa.** Non propone più di spegnere la

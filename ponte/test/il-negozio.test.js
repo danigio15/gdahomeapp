@@ -190,7 +190,13 @@ test("il peso si dice come lo direbbe uno", () => {
 /* Un Play Console finto: tiene in fila le chiamate che gli arrivano — perche'
  * metà di questa prova e' **quali** chiamate partono, e in che ordine — e sa
  * fallire su una di esse, per vedere cosa succede alla modifica aperta. */
-function negozioFinto({ rompiti = "", piste = null, sullaPista = null, rompiLaPista = "" } = {}) {
+function negozioFinto({
+  rompiti = "",
+  piste = null,
+  sullaPista = null,
+  rompiLaPista = "",
+  revisioneAMano = false,
+} = {}) {
   const fatte = [];
   const prendi = async (dove, opzioni = {}) => {
     const via = String(dove);
@@ -225,6 +231,15 @@ function negozioFinto({ rompiti = "", piste = null, sullaPista = null, rompiLaPi
       return risposta(200, {
         track: via.split("/").pop(),
         releases: sullaPista ?? [{ status: "completed", versionCodes: ["104322"] }],
+      });
+    /* Com'e' andata la 1.14.0: dopo un rifiuto il negozio non manda piu' da
+     * solo in revisione, e lo dice cosi'. */
+    if (revisioneAMano && via.endsWith(":commit"))
+      return risposta(400, {
+        error: {
+          message:
+            "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true.",
+        },
       });
     if (via.includes("/bundles?uploadType=media")) return risposta(200, { versionCode: 104322 });
     if (via.endsWith("/edits") && metodo === "POST") return risposta(200, { id: "modifica-1" });
@@ -598,4 +613,34 @@ test("le app non si pubblicano su GitHub: vanno solo nei negozi", () => {
       `${nome} non deve scrivere release`,
     );
   }
+});
+
+test("quando il negozio non manda da solo in revisione, si consegna lo stesso e lo si dice", async (t) => {
+  const negozio = negozioFinto({ revisioneAMano: true });
+  const detto = [];
+  const esito = await porta({
+    pacco: unPacco(t),
+    piste: ["internal"],
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    dillo: (riga) => detto.push(riga),
+    aspetta: async () => {},
+  });
+  assert.equal(esito.pubblicato, true);
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  assert.ok(negozio.fatte.includes(`POST ${app}/edits/modifica-1:commit`));
+  assert.ok(
+    negozio.fatte.includes(`POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`),
+    "la stessa modifica si riconsegna senza mandarla in revisione",
+  );
+  /* Il primo cestino viene dopo la consegna: quella e' la riguardata. */
+  const consegnata = negozio.fatte.indexOf(
+    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
+  );
+  assert.ok(negozio.fatte.indexOf(`DELETE ${app}/edits/modifica-1`) > consegnata);
+  assert.ok(
+    detto.some((riga) => /Invia per revisione/.test(riga)),
+    "il registro dice che la revisione va mandata dal Play Console",
+  );
 });
