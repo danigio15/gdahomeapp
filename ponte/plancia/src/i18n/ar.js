@@ -5888,4 +5888,10 @@ export default Object.freeze({
     "ما فهمه المساعد عن الأضواء والمقابس والأبواب: من الاسم والغرفة والعلامة التجارية والأتمتة والعادات. إن أخطأ، صحّحه بلمسة.",
   "What's in the house": "ما الموجود في المنزل",
   "You said so": "أنت قلت ذلك",
+  "${scelti} of ${tutti}": "${scelti} من ${tutti}",
+  "Attributes to show": "السمات المعروضة",
+  "Name to show": "الاسم المعروض",
+  "not there right now": "غير موجودة الآن",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "هذه هي السمات الموجودة في الكيان الآن. تظهر في القسم بهذا الترتيب، بالاسم الذي تكتبه هنا؛ وبدون اسم يُستخدم اسم السمة نفسها.",
+  "This entity has no attributes to show right now.": "لا يملك هذا الكيان الآن سمات لعرضها.",
 });

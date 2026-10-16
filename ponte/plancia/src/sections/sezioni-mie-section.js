@@ -172,6 +172,9 @@ function toglieteLeVecchie(vive) {
 
 /* ── il disegno ───────────────────────────────────────────────────────── */
 
+/* Lo stato, a destra: un numero con la sua unita', o la parola di stato.
+ * Un interruttore non ce l'ha — lo dice la sua leva, e dirlo due volte
+ * stringerebbe il nome per niente. */
 function valoreMarkup(riga) {
   if (riga.muto) return `<b class="dm-mia-muta">${esc(t("Non risponde", "Not reporting"))}</b>`;
   if (riga.numero !== null)
@@ -220,25 +223,73 @@ function codaMarkup(riga) {
        aria-label="${esc(riga.nome)}"><i></i></button>`;
 }
 
-function rigaMarkup(riga) {
+/* Gli attributi scelti, sotto lo stato (#256).
+ *
+ * Etichetta e valore, uno per riga, dopo una riga tratteggiata: lo stato resta
+ * la cosa grande in alto a destra, e questi sono il dettaglio. Tutto quello che
+ * si scrive qui arriva da Home Assistant, quindi passa tutto da `esc`.
+ *
+ * Nelle tessere piccole ci stanno i primi due, e ognuno su una riga sola: una
+ * lista di compiti in una tessera da 150 px sarebbe una tessera alta il
+ * triplo, cioe' l'opposto di «piccole». */
+const ATTRIBUTI_NELLE_PICCOLE = 2;
+
+function valoreAttributoMarkup(valore) {
+  const pezzo = ({ testa, resto }) =>
+    `<b>${esc(testa)}</b>${resto.length ? `<span> · ${esc(resto.join(" · "))}</span>` : ""}`;
+  if (!valore.lista) return pezzo(valore.pezzi[0]);
+  return (
+    `<ul class="dm-mia-attr-lista">${valore.pezzi.map((p) => `<li>${pezzo(p)}</li>`).join("")}</ul>` +
+    (valore.altri ? `<em class="dm-mia-attr-altri">${esc(valore.altriTesto)}</em>` : "")
+  );
+}
+
+function attributiMarkup(riga, formato) {
+  const piccole = formato === "piccole";
+  const righe = piccole ? riga.attributi.slice(0, ATTRIBUTI_NELLE_PICCOLE) : riga.attributi;
+  if (!righe.length) return "";
+  return `<dl class="dm-mia-attr">${righe
+    .map((attributo) => attributoMarkup(attributo, piccole))
+    .join("")}</dl>`;
+}
+
+function attributoMarkup(attributo, piccole) {
+  const lista = !piccole && attributo.valore.lista;
+  const valore = piccole ? esc(attributo.valore.testo) : valoreAttributoMarkup(attributo.valore);
+  return `<div class="dm-mia-attr-riga" data-lista="${lista}">
+      <dt>${esc(attributo.etichetta)}</dt>
+      <dd>${valore}</dd>
+    </div>`;
+}
+
+function rigaMarkup(riga, formato) {
   const icona = riga.icona || (riga.comandabile ? "💡" : "📈");
   return `<article class="dm-mia-riga" data-on="${riga.acceso}" data-muta="${riga.muto}">
     <span class="dm-mia-ic" aria-hidden="true">${esc(icona)}</span>
     <span class="dm-mia-nome">
       <strong>${esc(riga.nome)}</strong>
     </span>
+    <span class="dm-mia-val">${riga.comandabile && !riga.muto ? "" : valoreMarkup(riga)}</span>
     <span class="dm-mia-coda">${codaMarkup(riga)}</span>
+    ${attributiMarkup(riga, formato)}
   </article>`;
 }
 
 /* Il sottotitolo dell'intestazione: quante rispondono e quante sono accese.
  * Il titolo e' quello che ha scritto l'utente, e non si traduce — sono parole
- * sue, non nostre. */
+ * sue, non nostre.
+ *
+ * Dove non c'e' niente da accendere la domanda «quante accese» non ha senso:
+ * una sezione di soli sensori diceva «0 accese su 4», che si legge come un
+ * guasto (#256). Li' si dice quante sono, e basta. */
 function sottotitolo(letture) {
   const conto = contoDellaSezione(letture);
-  const vive = conto.vive
-    ? `${conto.accese} ${t("accese su", "on out of")} ${conto.vive}`
-    : t("Nessuna risponde", "None reporting");
+  const quante = `${conto.quante} ${conto.quante === 1 ? t("entità", "entity") : t("entità", "entities")}`;
+  const vive = !conto.vive
+    ? t("Nessuna risponde", "None reporting")
+    : conto.comandabili
+      ? `${conto.accese} ${t("accese su", "on out of")} ${conto.vive}`
+      : quante;
   return conto.mute ? `${vive} · ${conto.mute} ${t("mute", "silent")}` : vive;
 }
 
@@ -261,7 +312,7 @@ function annunciaLaPagina(sezione, indice, letture) {
  * stessa voce sarebbero due disegni da tenere allineati. */
 function paginaMarkup(letture, formato) {
   return `<div class="dm-mia-lista" data-formato="${esc(formato)}">${letture
-    .map(rigaMarkup)
+    .map((riga) => rigaMarkup(riga, formato))
     .join("")}</div>`;
 }
 
@@ -444,6 +495,40 @@ function installStyles() {
         box-shadow:0 2px 6px rgba(15,23,42,.25);transition:transform .25s cubic-bezier(.16,1,.3,1)}
       .dm-mia-riga[data-on="true"] .dm-mia-lev{background:linear-gradient(135deg,#fb923c,#ea580c)}
       .dm-mia-riga[data-on="true"] .dm-mia-lev i{transform:translateX(20px)}
+      /* Gli attributi (#256): una riga in piu' della griglia, sotto il nome e
+       * lunga fino in fondo, staccata da una riga tratteggiata. Sul desktop
+       * due colonne — l'etichetta e il valore — cosi' i valori di tutte le
+       * schede partono dallo stesso punto e si leggono in colonna. */
+      .dm-mia-attr{
+        grid-column:2 / -1;display:grid;gap:6px;margin:0;padding:10px 0 2px;
+        border-top:1px dashed var(--card-border,#e2e8f0)}
+      .dm-mia-attr-riga{
+        display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr);column-gap:8px;align-items:baseline}
+      .dm-mia-attr dt{
+        font-size:12px;font-weight:700;color:var(--text-dim,#64748b);overflow-wrap:anywhere}
+      .dm-mia-attr dd{
+        margin:0;min-width:0;font-size:13px;line-height:1.45;color:var(--text,#0f172a);overflow-wrap:anywhere}
+      .dm-mia-attr dd b{font-weight:800}
+      .dm-mia-attr dd span{font-weight:600;color:var(--text-dim,#64748b)}
+      .dm-mia-attr-lista{display:grid;gap:3px;margin:0;padding:0;list-style:none}
+      .dm-mia-attr-lista li{position:relative;padding-left:12px}
+      .dm-mia-attr-lista li::before{
+        content:"";position:absolute;left:1px;top:.62em;width:4px;height:4px;border-radius:50%;
+        background:var(--text-dim,#64748b)}
+      .dm-mia-attr-altri{
+        display:block;margin-top:3px;padding-left:12px;font-style:normal;font-size:12px;font-weight:800;color:#ea580c}
+      @media(max-width:560px){
+        /* Sul telefono la riga si allarga fino al bordo della scheda, e
+         * l'etichetta sta a sinistra col valore a destra: due colonne fisse
+         * in 330 px lascerebbero al valore meta' riga. Una lista non ci sta
+         * a destra, e scende sotto la sua etichetta. */
+        .dm-mia-attr{grid-column:1 / -1}
+        .dm-mia-attr-riga{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+        .dm-mia-attr-riga dd{text-align:right}
+        .dm-mia-attr-riga[data-lista="true"]{display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+        .dm-mia-attr-riga[data-lista="true"] dd{text-align:start}
+        .dm-mia-attr-altri{padding-left:12px}
+      }
       @media(max-width:560px){
         /* La coda si misura su quello che contiene: da quando un'automazione
          * porta anche il tasto «fai partire», 46 px fissi le stavano stretti. */
@@ -491,6 +576,17 @@ function installStyles() {
       .dm-mia-lista[data-formato="piccole"] .dm-mia-coda{gap:6px}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-parti{width:26px;height:26px;font-size:10px}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-scegli{font-size:15px}
+      /* Nelle piccole gli attributi sono al massimo due, e ognuno sta su una
+       * riga sola: etichetta a sinistra, valore a destra, e i puntini dove
+       * non ci sta. */
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-attr{grid-column:1 / -1;gap:2px;padding-top:6px}
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-attr-riga{
+        display:flex;justify-content:space-between;align-items:baseline;gap:8px;min-width:0}
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-attr dt{
+        flex:0 1 auto;max-width:55%;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-attr dd{
+        flex:1 1 0;font-size:11.5px;font-weight:800;text-align:right;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       @media(max-width:560px){
         .dm-mia-lista[data-formato="piccole"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
         .dm-mia-lista[data-formato="piccole"] .dm-mia-riga{

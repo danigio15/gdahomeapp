@@ -5952,4 +5952,10 @@ export default Object.freeze({
     "Wat de assistent begreep over lampen, stopcontacten en deuren: uit de naam, de ruimte, het merk, de automatiseringen en de gewoonten. Klopt het niet, corrigeer met één tik.",
   "What's in the house": "Wat er in huis is",
   "You said so": "Dat zei jij",
+  "${scelti} of ${tutti}": "${scelti} van ${tutti}",
+  "Attributes to show": "Te tonen attributen",
+  "Name to show": "Te tonen naam",
+  "not there right now": "nu niet aanwezig",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "Dit zijn de attributen die de entiteit nu heeft. Ze verschijnen in de sectie in deze volgorde, met de naam die je hier schrijft; zonder naam wordt die van het attribuut gebruikt.",
+  "This entity has no attributes to show right now.": "Deze entiteit heeft nu geen attributen om te tonen.",
 });

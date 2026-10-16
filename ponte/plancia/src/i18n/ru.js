@@ -5945,4 +5945,10 @@ export default Object.freeze({
     "Что ассистент понял о светильниках, розетках и дверях: по названию, комнате, марке, автоматизациям и привычкам. Если ошибся — исправьте одним касанием.",
   "What's in the house": "Что есть в доме",
   "You said so": "Вы так сказали",
+  "${scelti} of ${tutti}": "${scelti} из ${tutti}",
+  "Attributes to show": "Показываемые атрибуты",
+  "Name to show": "Отображаемое имя",
+  "not there right now": "сейчас отсутствует",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "Это атрибуты, которые есть у объекта сейчас. В разделе они показываются в этом порядке и с именем, которое вы здесь напишете; без имени используется имя атрибута.",
+  "This entity has no attributes to show right now.": "У этого объекта сейчас нет атрибутов для показа.",
 });

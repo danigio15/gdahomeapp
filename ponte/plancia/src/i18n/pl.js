@@ -5948,4 +5948,10 @@ export default Object.freeze({
     "Co asystent zrozumiał o światłach, gniazdkach i drzwiach: z nazwy, pomieszczenia, marki, automatyzacji i nawyków. Jeśli się myli, popraw jednym dotknięciem.",
   "What's in the house": "Co jest w domu",
   "You said so": "Sam tak powiedziałeś",
+  "${scelti} of ${tutti}": "${scelti} z ${tutti}",
+  "Attributes to show": "Atrybuty do pokazania",
+  "Name to show": "Nazwa do pokazania",
+  "not there right now": "teraz go nie ma",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "To te, które encja ma teraz. Pojawiają się w sekcji w tej kolejności, z nazwą, którą tu wpiszesz; bez nazwy używana jest nazwa atrybutu.",
+  "This entity has no attributes to show right now.": "Ta encja nie ma teraz atrybutów do pokazania.",
 });
