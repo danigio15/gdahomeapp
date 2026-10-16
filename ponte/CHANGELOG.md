@@ -10,6 +10,17 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.5
+
+- **Pannello a muro, temperatura:** nel config «A muro» c'è «Il sensore sta:
+  In casa / Fuori». Lo decidi tu: con «Fuori» il pannello scrive «12,6°
+  fuori» e non ripete i gradi del meteo. La casella «All'aperto» delle stanze
+  non decide più niente. La riga «Temperatura mostrata» non si schiaccia più.
+- **Pannello a muro sul telefono:** tenendo premuta l'ora il config si apre e
+  resta aperto (prima si richiudeva da solo alzando il dito).
+- **Luci:** nella finestra delle luci il nome delle luci accese si legge
+  anche col tema scuro.
+
 ## 1.14.4
 
 - **Plance per chi non amministra:** si aprono di nuovo, la plancia di sempre
