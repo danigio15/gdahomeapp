@@ -103,14 +103,22 @@ test("the comfort pill carries a short unavailable label and keeps the full word
    * ritirato — era il secondo padrone di `buildTempCards`, e la guerra fra i
    * due faceva sparire le sonde oltre la prima. Le card le disegna solo il
    * padrone canonico; beta25 tiene l'editor delle associazioni. */
+  /* Il cartellino lo scrive una funzione sola, `scriviIlCartellino` del
+   * padrone canonico: da quando una stanza puo' essere all'aperto (#251) le
+   * regole sono due, e due copie avrebbero rimesso «Freddo» sul balcone alla
+   * prima lettura nuova. beta26 la chiama invece di riscriverla. */
+  const canonico = await readFile(new URL("../src/sections/temperature-section.js", import.meta.url), "utf8");
+  assert.match(canonico, /export function scriviIlCartellino\(badge, room, temperature\)/);
+  assert.match(canonico, /badge\.textContent = comfortBadgeText\(label\)/);
+  assert.match(canonico, /badge\.title = label/);
+  assert.match(canonico, /label\.toLowerCase\(\)\.replaceAll\(" ", "-"\)/);
   for (const name of [
     "temperature-section.js",
     "beta26-real-device-stability-section.js",
   ]) {
     const source = await readFile(new URL(`../src/sections/${name}`, import.meta.url), "utf8");
-    assert.match(source, /comfort\.textContent = comfortBadgeText\(label\)/, name);
-    assert.match(source, /comfort\.title = label/, name);
-    assert.match(source, /comfort\.dataset\.comfort = label\.toLowerCase\(\)/, name);
+    assert.match(source, /scriviIlCartellino\(comfort, (record\.)?room, (value|temperature)\)/, name);
+    assert.doesNotMatch(source, /comfort\.textContent =/, name);
   }
 });
 

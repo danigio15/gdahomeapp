@@ -258,7 +258,7 @@ import {
   stanzaDiUnaFinestra,
 } from "../core/arieggiare.js";
 import { azioniDellaPorta } from "../core/security-door-model.js";
-import { humidityEntry } from "../core/room-overview.js";
+import { humidityEntry, stanzaAllAperto } from "../core/room-overview.js";
 import {
   CHIAVE_VARCHI,
   contattiDichiaratiNelleFinestre,
@@ -2343,7 +2343,7 @@ function appliancesModel(states) {
   };
 }
 
-function temperatureModel(states) {
+export function temperatureModel(states) {
   const rooms = root.getStanze?.() || readJson("cd_stanze", []);
   if (!Array.isArray(rooms)) return null;
   const fuori = widgetExcludedEntities("temperatura");
@@ -2367,12 +2367,19 @@ function temperatureModel(states) {
         icon: clean(room.icon),
         temperature,
         humidity,
+        /* All'aperto (#251): il balcone si legge, ma la casa non e' lui. La
+         * riga resta — la finestra la mostra e lo storico la chiede — e chi
+         * fa la media, qui e nell'assistente, sa che deve saltarla. */
+        fuori: stanzaAllAperto(room),
       };
     })
     .filter((row) => row.temperature != null);
   if (!rows.length) return null;
-  const average = rows.reduce((sum, row) => sum + row.temperature, 0) / rows.length;
-  const humidities = rows.map((row) => row.humidity).filter((value) => value != null);
+  const dentro = rows.filter((row) => !row.fuori);
+  const average = dentro.length
+    ? dentro.reduce((sum, row) => sum + row.temperature, 0) / dentro.length
+    : null;
+  const humidities = dentro.map((row) => row.humidity).filter((value) => value != null);
   const humidity = humidities.length
     ? Math.round(humidities.reduce((sum, value) => sum + value, 0) / humidities.length)
     : null;
@@ -2385,7 +2392,9 @@ function temperatureModel(states) {
     accent: "#ef4444",
     icon: "🌡️",
     label: t("Temperatura", "Temperature"),
-    value: `${formatNumber(sola ? sola.temperature : average, 1)}°`,
+    /* Solo stanze all'aperto e nessuna scelta: una media della casa non
+     * c'e', e il trattino lo dice meglio di un balcone spacciato per casa. */
+    value: sola || average != null ? `${formatNumber(sola ? sola.temperature : average, 1)}°` : "—",
     caption: sola
       ? [
           sola.name,
@@ -7906,8 +7915,13 @@ function summaryChips(widget) {
     ];
   }
   if (widget.key === "temperatura") {
-    const gradi = numeri("temperature");
-    if (!gradi.length) return [];
+    /* La media, la piu' fredda e la piu' calda sono della casa: il balcone
+     * all'aperto (#251) non e' la stanza piu' fredda di casa. */
+    const gradi = righe
+      .filter((riga) => !riga?.fuori)
+      .map((riga) => Number(riga?.temperature))
+      .filter((valore) => Number.isFinite(valore));
+    if (gradi.length < 2) return [];
     return [
       [t("media", "average"), `${formatNumber(media(gradi), 1)}°`],
       [t("la più fredda", "coldest"), `${formatNumber(Math.min(...gradi), 1)}°`],
@@ -8381,8 +8395,13 @@ function entitaDelRacconto(widget) {
    * prima e la si confrontava con la media di tutte — «piu' alto del solito»
    * detto su un numero diverso da quello scritto sopra. Meglio nessuna lettura
    * nel tempo che una che parla di un'altra cosa. */
-  if (widget?.key === "temperatura")
-    return (widget?.rows?.length || 0) === 1 ? clean(widget?.rows?.[0]?.entity) : "";
+  if (widget?.key === "temperatura") {
+    /* Le stanze all'aperto (#251) nella media non ci sono, e quindi nemmeno
+     * qui: con una sola stanza di casa e un balcone, la storia e' della
+     * stanza. */
+    const dentro = (Array.isArray(widget?.rows) ? widget.rows : []).filter((riga) => !riga?.fuori);
+    return dentro.length === 1 ? clean(dentro[0]?.entity) : "";
+  }
   if (widget?.key === "ev") return clean(widget?.rows?.[0]?.batteria || widget?.rows?.[0]?.entity);
   if (["solare", "piscina", "robot", "irrigazione"].includes(widget?.key))
     return clean(widget?.rows?.[0]?.entity);

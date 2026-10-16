@@ -59,7 +59,9 @@ test("la sorgente di una tessera si legge da cd_widgets, ripulita", () => {
 test("la temperatura e il clima mostrano la stanza o l'unita' scelta al posto della media", () => {
   const home = leggi("sections/home-widgets-section.js");
   assert.match(home, /const scelta = sorgenteDelWidget\("temperatura"\);\s*const sola = scelta \? rows\.find\(\(row\) => row\.entity === scelta\) : null;/);
-  assert.match(home, /value: `\$\{formatNumber\(sola \? sola\.temperature : average, 1\)\}°`,/);
+  /* Con le sole stanze all'aperto (#251) una media della casa non c'e', e la
+   * tessera lo dice col trattino. */
+  assert.match(home, /value: sola \|\| average != null \? `\$\{formatNumber\(sola \? sola\.temperature : average, 1\)\}°` : "—",/);
   assert.match(home, /const scelta = sorgenteDelWidget\("clima"\);/);
 });
 

@@ -171,6 +171,12 @@ function casaVuota(c) {
   );
 }
 
+/* Le stanze da tenere comode: quelle di casa. Il balcone, il terrazzo, il
+ * giardino segnati «All'aperto» (#251) si leggono, ma non si scaldano, non si
+ * rinfrescano e non si arieggiano — e a sei gradi d'inverno sono soltanto
+ * fuori. */
+const stanzeDiCasa = (c) => elenco(c.stanze).filter((s) => s.fuori !== true);
+
 /* Il nome di una zona che e' la casa: «Casa», «Home», «Casa mia»… Chi ha
  * fatto in Home Assistant una zona sua per la casa, accanto a quella di
  * serie, la vede scritta «Casa» sulla scheda: per l'assistente e' casa. */
@@ -856,7 +862,7 @@ rilevatore("evento", "promemoria", (c, o, l) =>
 /* 21. Stanze troppo calde o troppo fredde, con qualcuno in casa. */
 rilevatore("comfort", "comfort", (c, o, l) => {
   if (casaVuota(c)) return [];
-  return elenco(c.stanze)
+  return stanzeDiCasa(c)
     .filter((s) => {
       const t = numero(s.temperatura);
       return t !== null && (t < 17 || t > 28);
@@ -883,7 +889,7 @@ rilevatore("comfort", "comfort", (c, o, l) => {
 rilevatore("aria", "comfort", (c, o, l) => {
   if (casaVuota(c)) return [];
   const fuori = [];
-  const co2 = elenco(c.stanze).find((s) => (numero(s.co2) || 0) >= 1200);
+  const co2 = stanzeDiCasa(c).find((s) => (numero(s.co2) || 0) >= 1200);
   const ppm = co2 ? Math.round(co2.co2) : 0;
   if (co2)
     fuori.push({
@@ -898,7 +904,7 @@ rilevatore("aria", "comfort", (c, o, l) => {
       azioni: [fatto(l)],
       entita: [co2.entityCo2 || `co2:${pulito(co2.name)}`],
     });
-  const umida = elenco(c.stanze).find((s) => (numero(s.umidita) || 0) >= 70);
+  const umida = stanzeDiCasa(c).find((s) => (numero(s.umidita) || 0) >= 70);
   const percento = umida ? Math.round(umida.umidita) : 0;
   if (umida)
     fuori.push({

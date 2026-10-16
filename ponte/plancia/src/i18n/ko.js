@@ -15,6 +15,8 @@ export default Object.freeze({
     "알림 속 버튼으로 열기: 저절로 열리지 않음",
   "Add a stop…": "경유지 추가…",
   "Arrive by": "도착 시간",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "발코니, 테라스, 정원. 온도와 습도는 평소처럼 보이지만, 어시스턴트가 난방·냉방·환기를 제안하지 않으며 이 공간은 집 평균에 포함되지 않습니다.",
   "Car climate": "차량 공조",
   "Change destination…": "목적지 변경…",
   "Could not delete it.": "삭제하지 못했습니다.",
@@ -46,6 +48,7 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "여기에서 여정을 계획하세요: gdanav의 휴대폰, CarPlay, Android Auto에서 볼 수 있습니다.",
   "Planned trips": "계획된 여정",
+  "Read-only: they do not count in the home average": "읽기 전용: 집 평균에 포함되지 않습니다",
   "Remind me": "알림 받기",
   "Save trip": "여정 저장",
   "The destination is missing.": "목적지가 없습니다.",

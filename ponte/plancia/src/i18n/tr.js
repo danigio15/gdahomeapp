@@ -15,6 +15,8 @@ export default Object.freeze({
     "Açmak için hatırlatmada bir düğme: asla kendiliğinden değil",
   "Add a stop…": "Durak ekle…",
   "Arrive by": "Varış en geç",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "Balkon, teras, bahçe. Sıcaklık ve nem her zamanki gibi görünür, ancak asistan ısıtmayı, serinletmeyi veya havalandırmayı önermez ve oda evin ortalamasına girmez.",
   "Car climate": "Araç kliması",
   "Change destination…": "Hedefi değiştir…",
   "Could not delete it.": "Silinemedi.",
@@ -46,6 +48,8 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Yolculukları buradan planla: gdanav'da telefonda, CarPlay ve Android Auto'da bulursun.",
   "Planned trips": "Planlanmış yolculuklar",
+  "Read-only: they do not count in the home average":
+    "Yalnızca okunur: evin ortalamasına dahil edilmez",
   "Remind me": "Hatırlat",
   "Save trip": "Yolculuğu kaydet",
   "The destination is missing.": "Hedef eksik.",
