@@ -4892,8 +4892,6 @@ export default Object.freeze({
     "マシンとネットワークです。一行が一台で、エンティティ、好きな名前、絵、そして二つの帯のどちらに入るかを持ちます。MiniPC ページはこれらを、起動中と停止中で表示します。",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "MiniPC ページには二つの帯があります。マシンとネットワークです。この行はここで選んだほうに入ります。",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "起動中か到達できるかを伝えるセンサーです。クラスが running または connectivity の binary_sensor.* です。",
   "Unnamed machine": "名前のないマシン",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "エンティティを選ぶまで、このマシンはどこにもありません。ページにも、停止中の数にも入りません。",
@@ -5936,4 +5934,22 @@ export default Object.freeze({
   "not there right now": "現在ありません",
   "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "エンティティが現在持っている属性です。セクションにはこの順番で、ここに書いた名前で表示されます。名前がなければ属性名が使われます。",
   "This entity has no attributes to show right now.": "このエンティティには現在表示できる属性がありません。",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "動いているかどうかを伝えるセンサー：binary_sensor.*（running、connectivity）、または online、offline、up、down などの語を返す sensor.*。",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "「unavailable」と「unknown」は常に「応答がありません」のままです：Home Assistant 自身が分からないとき、ダッシュボードは機器が停止しているとは言いません。",
+  Attribute: "属性",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "自動：オン、接続済み、online、up などは「オンライン」を意味します — これまでどおりで、online と up が加わりました。監視システムが独自の語を使う場合や、状態を属性に入れる場合は自分で選んでください。",
+  "I choose": "自分で選ぶ",
+  "If it reads anything else": "それ以外の値のとき",
+  is: "の値：",
+  "is not in Home Assistant": "は Home Assistant にありません",
+  "It is online when it reads": "この値のときオンライン",
+  "Now the attribute": "現在、属性",
+  Online: "オンライン",
+  reachable: "到達可能",
+  "The entity state": "エンティティの状態",
+  "The state comes from": "状態の取得元",
+  "What to look at": "何を見るか",
 });

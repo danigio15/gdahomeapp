@@ -4857,8 +4857,6 @@ export default Object.freeze({
     "الأجهزة والشبكة. كل صفّ جهاز — الكِيان، والاسم الذي تريده، والرسم، وفي أيّ الشريطين يقع — وصفحة MiniPC تعرض هذه، مُشغَّلة ومُطفأة.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "صفحة MiniPC فيها شريطان: الأجهزة والشبكة. هذا الصفّ يذهب إلى الذي تختاره هنا.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "المستشعر الذي يقول إن كان يعمل أو يمكن الوصول إليه: ‎binary_sensor.*‎ من صنف running أو connectivity.",
   "Unnamed machine": "جهاز بلا اسم",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "ما دمت لم تختر الكِيان فهذا الجهاز ليس في أي مكان: لا في الصفحة ولا في عدد المتوقِّفة.",
@@ -5894,4 +5892,22 @@ export default Object.freeze({
   "not there right now": "غير موجودة الآن",
   "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "هذه هي السمات الموجودة في الكيان الآن. تظهر في القسم بهذا الترتيب، بالاسم الذي تكتبه هنا؛ وبدون اسم يُستخدم اسم السمة نفسها.",
   "This entity has no attributes to show right now.": "لا يملك هذا الكيان الآن سمات لعرضها.",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "المستشعر الذي يقول إن كان الجهاز يعمل أم لا: binary_sensor.* ‏(running، connectivity) أو sensor.* بكلمات مثل online وoffline وup وdown.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "«unavailable» و«unknown» تبقى دائمًا «لا يستجيب»: عندما يكون Home Assistant هو الذي لا يعرف، لا تقول اللوحة إن الجهاز متوقف.",
+  Attribute: "السمة",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "تلقائي: يعمل، متصل، online، up وما شابهها تعني «متصل» — كما هو الآن، مع إضافة online وup. اختر بنفسك عندما يستخدم نظام المراقبة كلماته الخاصة، أو يضع الحالة في سمة.",
+  "I choose": "أختار بنفسي",
+  "If it reads anything else": "إذا كانت القيمة غير ذلك",
+  is: "قيمته",
+  "is not in Home Assistant": "غير موجود في Home Assistant",
+  "It is online when it reads": "يكون متصلًا عندما تكون القيمة",
+  "Now the attribute": "الآن السمة",
+  Online: "متصل",
+  reachable: "يمكن الوصول إليه",
+  "The entity state": "حالة الكيان",
+  "The state comes from": "تأتي الحالة من",
+  "What to look at": "ما الذي يُراقَب",
 });

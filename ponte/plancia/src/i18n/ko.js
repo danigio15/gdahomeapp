@@ -4877,8 +4877,6 @@ export default Object.freeze({
     "머신과 네트워크입니다. 한 줄이 머신 하나이고, 엔티티와 원하는 이름과 그림, 그리고 두 띠 중 어디에 들어가는지를 가집니다. MiniPC 페이지는 이것들을 켜짐과 꺼짐으로 보여 줍니다.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "MiniPC 페이지에는 머신과 네트워크, 두 개의 띠가 있습니다. 이 줄은 여기에서 고른 쪽으로 들어갑니다.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "돌아가고 있는지 또는 닿는지 알려 주는 센서입니다. running 또는 connectivity 클래스의 binary_sensor.* 입니다.",
   "Unnamed machine": "이름 없는 머신",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "엔티티를 고르기 전까지 이 머신은 어디에도 없습니다. 페이지에도, 내려간 개수에도 들어가지 않습니다.",
@@ -5915,4 +5913,22 @@ export default Object.freeze({
   "not there right now": "지금은 없음",
   "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "엔티티가 지금 가지고 있는 속성입니다. 섹션에는 이 순서대로, 여기에 쓴 이름으로 표시됩니다. 이름이 없으면 속성 이름이 사용됩니다.",
   "This entity has no attributes to show right now.": "이 엔티티에는 지금 표시할 속성이 없습니다.",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "켜져 있는지 꺼져 있는지 알려 주는 센서: binary_sensor.*(running, connectivity) 또는 online, offline, up, down 같은 값을 내는 sensor.*.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "“unavailable”과 “unknown”은 항상 “응답 없음”으로 남습니다: Home Assistant가 모르는 경우, 대시보드는 기기가 꺼졌다고 말하지 않습니다.",
+  Attribute: "속성",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "자동: 켜짐, 연결됨, online, up 같은 값은 “온라인”을 뜻합니다 — 지금과 같고, online과 up이 더해졌습니다. 모니터링 시스템이 자체 단어를 쓰거나 상태를 속성에 넣는다면 직접 선택하세요.",
+  "I choose": "직접 선택",
+  "If it reads anything else": "다른 값일 때",
+  is: "값:",
+  "is not in Home Assistant": "은(는) Home Assistant에 없습니다",
+  "It is online when it reads": "이 값이면 온라인",
+  "Now the attribute": "지금 속성",
+  Online: "온라인",
+  reachable: "연결 가능",
+  "The entity state": "엔티티 상태",
+  "The state comes from": "상태를 가져올 곳",
+  "What to look at": "무엇을 볼지",
 });
