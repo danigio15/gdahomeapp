@@ -246,8 +246,9 @@ Future<void> mostra(NotificaDaMostrare quale) async {
 }
 
 /// Apre e mostra quello che e' arrivato. Se e' nostro ma non si apre — una
-/// casa tolta, una chiave cambiata — si mostra la frase di riserva: meglio
-/// «qualcosa e' successo» che niente.
+/// chiave cambiata — si mostra la frase di riserva: meglio «qualcosa e'
+/// successo» che niente. Una casa tolta da questo telefono invece tace
+/// ([eDiUnaCasaConosciuta]): non e' piu' sua.
 Future<NotificaDaMostrare?> apriEMostra(
   Map<String, dynamic> dati,
   Cassaforte cassaforte,
@@ -257,6 +258,7 @@ Future<NotificaDaMostrare?> apriEMostra(
   await archivio.apri();
   final aperta = await apriQuellaArrivata(dati, archivio.tutte);
   if (aperta == null) {
+    if (!eDiUnaCasaConosciuta(dati, archivio.tutte)) return null;
     await _locali.show(
       id: (dati['b'] as String).hashCode & 0x7fffffff,
       title: fraseDiRiserva,

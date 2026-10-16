@@ -663,6 +663,72 @@ void main() {
     await due.spegni();
   });
 
+  bool smesso(PonteFinto ponte) =>
+      ponte.chieste.any((una) => una['type'] == 'ponte/notifiche/togli');
+
+  test('dimenticata, la casa aperta smette di mandare notifiche', () async {
+    /* «Non ho più la casa associata su app ma mi arrivano notifiche»: il
+     * telefono dimenticava la casa e la casa non lo sapeva. */
+    final ponte = await PonteFinto.alza();
+    final casa = await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    expect(collegamento.comeVa, ComeVa.aperta);
+
+    await collegamento.dimentica(casa.id);
+    expect(smesso(ponte), isTrue);
+    expect(archivio.tutte, isEmpty);
+
+    await ponte.spegni();
+  });
+
+  test(
+    'dimenticata una casa che non e\' quella aperta, la si saluta da lontano',
+    () async {
+      final mia = await PonteFinto.alza();
+      final altra = await PonteFinto.alza();
+      final casaMia = await archivio.aggiungi(
+        nome: 'Casa mia',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: mia.indirizzo,
+      );
+      final casaAltra = await archivio.aggiungi(
+        nome: 'Al mare',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: altra.indirizzo,
+      );
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({mia.indirizzo, altra.indirizzo}),
+      );
+      await collegamento.cambiaCasa(casaMia.id);
+
+      await collegamento.dimentica(casaAltra.id);
+      /* Tolta subito dall'elenco: il saluto non fa aspettare la pagina. */
+      expect(archivio.tutte.map((una) => una.id), [casaMia.id]);
+      await _finoA(() => smesso(altra), entro: const Duration(seconds: 10));
+      /* La casa aperta resta com'era, e a lei non si e' detto niente. */
+      expect(collegamento.casa!.id, casaMia.id);
+      expect(smesso(mia), isFalse);
+
+      await mia.spegni();
+      await altra.spegni();
+    },
+  );
+
   test(
     'una casa senza nessuna strada si fa riabbinare, e non si bussa a vuoto',
     () async {

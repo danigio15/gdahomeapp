@@ -94,6 +94,24 @@ void main() {
     expect(await apriQuellaArrivata({'altro': 'x'}, [_casa]), isNull);
   });
 
+  test('di una casa tolta dal telefono non si mostra niente', () {
+    /* «Non ho più la casa associata su app ma mi arrivano notifiche»: la
+     * frase di riserva e' per una casa che c'e' e la cui busta non si apre,
+     * non per una che questo telefono ha tolto. */
+    final dati = {'g': '1', 'd': _telefono, 'b': _busta};
+    final altra = CasaConosciuta(
+      id: 'casa-2',
+      nome: 'Al mare',
+      segno: 's',
+      identificativo: 'dm_aaaaaaaaaaaaaaaa',
+      chiave: _chiave,
+    );
+    expect(eDiUnaCasaConosciuta(dati, [altra, _casa]), isTrue);
+    expect(eDiUnaCasaConosciuta(dati, [altra]), isFalse);
+    expect(eDiUnaCasaConosciuta(dati, []), isFalse);
+    expect(eDiUnaCasaConosciuta({'altro': 'x'}, [_casa]), isFalse);
+  });
+
   test('arrivata tardi: si mostra, ma senza tasti', () async {
     final tardi = await apriQuellaArrivata(
       {'g': '1', 'd': _telefono, 'b': _busta},

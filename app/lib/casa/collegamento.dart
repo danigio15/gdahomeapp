@@ -21,6 +21,7 @@ library;
 import 'dart:async';
 
 import '../licenza/licenza.dart';
+import '../notifiche/notifiche.dart';
 import '../licenza/ricevuta_da_fuori.dart';
 import '../parole.dart';
 import '../plancia/pannello.dart';
@@ -1296,11 +1297,71 @@ class Collegamento {
   }
 
   /// Toglie una casa. Se era quella aperta, apre quella che resta.
+  ///
+  /// Prima le dice di non mandare piu' notifiche a questo telefono.
+  ///
+  /// «Non ho più la casa associata sull'app ma mi arrivano notifiche»: il
+  /// telefono dimenticava la casa, e la casa non lo sapeva. Il gettone di
+  /// Firebase restava nel ponte, e le buste continuavano ad arrivare a un
+  /// telefono che non aveva piu' la chiave per aprirle — sull'iPhone, una
+  /// «nuova notifica» senza niente dentro. Il comando c'era da sempre
+  /// (`ponte/notifiche/togli`), e non lo chiamava nessuno.
+  ///
+  /// Col filo aperto e' un attimo, e si aspetta. Una casa che non e' quella
+  /// aperta si saluta da lontano dopo averla tolta, senza far aspettare la
+  /// pagina: se non risponde — spenta, fuori casa senza Premium — resta in
+  /// elenco nel ponte, e lo si toglie da li' come diceva gia' la finestra.
   Future<void> dimentica(String id) async {
     final eraQuesta = _casa?.id == id;
+    final casa = archivio.quella(id);
+    final aperto = eraQuesta ? _filo : null;
+    if (aperto != null && aperto.dentro) {
+      await _niente(Notifiche(aperto).togli());
+    } else if (casa != null) {
+      unawaited(_salutaDaLontano(casa));
+    }
     await archivio.togli(id);
     if (eraQuesta) await apri();
     _avvisa();
+  }
+
+  /// Quanto si aspetta il ponte prima di lasciarlo stare.
+  static const _attesaDelSaluto = Duration(seconds: 5);
+
+  Future<void> _niente(Future<void> fatto) async {
+    try {
+      await fatto.timeout(_attesaDelSaluto);
+    } catch (_) {
+      /* Non ha risposto: la casa si toglie lo stesso. */
+    }
+  }
+
+  /// Un filo apposta, solo per dire alla casa «non mandarmi piu' notifiche»,
+  /// e poi chiuso. Non passa da [_trova]: quella e' la strada della casa
+  /// aperta, con la sua prova da fuori, e non va consumata per un'altra.
+  Future<void> _salutaDaLontano(CasaConosciuta casa) async {
+    final chi = casa.identificativo;
+    final chiave = casa.chiave;
+    if (chi == null || chiave == null) return;
+    if (casa.daRiabbinare || !casa.raggiungibile) return;
+    final filo = Filo(
+      approdo: () => licenza.stradeDaFuoriPer(casa)
+          ? _sonda.dove(casa)
+          : _sonda.dove(casa, soloDaCasa: true),
+      segno: casa.segno,
+      chi: chi,
+      chiave: chiave,
+      apri: apriLaPresa,
+      legameGiaVisto: casa.legata,
+    );
+    try {
+      await filo.apri(entro: const Duration(seconds: 15));
+      await _niente(Notifiche(filo).togli());
+    } catch (_) {
+      /* Non raggiungibile adesso: resta in elenco nel ponte. */
+    } finally {
+      await filo.chiudi();
+    }
   }
 
   /// Chiude il filo. Con [tieniLaPlancia] si tiene quello che si sapeva della
