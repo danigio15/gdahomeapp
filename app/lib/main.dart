@@ -24,9 +24,11 @@ import 'casa/il_lucchetto.dart';
 import 'casa/impostazioni.dart';
 import 'casa/la_finestra.dart';
 import 'casa/la_guardia.dart';
+import 'notifiche/postino.dart';
 import 'parole.dart';
 import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
+import 'schermate/caricamento.dart';
 import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
@@ -201,7 +203,7 @@ class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      /* Il fondo vivo sta qui, sotto tutte le schermate e una volta sola: se
+      /* Il fondo sta qui, sotto tutte le schermate e una volta sola: se
        * lo mettesse ogni pagina, gli aloni ripartirebbero da capo a ogni
        * cambio di pagina, e sarebbe un lampo invece di un cielo. */
       builder: (context, schermata) => AggiornamentoObbligatorio(
@@ -354,14 +356,25 @@ Collegamento ilFiloConLaCasa() => _filoDiCasa ??= _conIlBigliettoPerLAuto(
 Collegamento _conIlBigliettoPerLAuto(Collegamento filo) {
   final licenza = filo.licenza;
   ({bool premium, DateTime? fino})? scritto;
+  /* Uno alla volta, nell'ordine. All'apertura si scriveva «non Premium» (la
+   * casa in uso non si sapeva ancora) e subito dopo «Premium»: due scritture
+   * insieme sullo stesso file di passaggio, e a volte restava la prima. Da li'
+   * in poi l'auto diceva «serve Premium» a chi l'aveva, finche' la licenza
+   * non cambiava. */
+  var coda = Future<void>.value();
   void scrivi() {
     if (!licenza.conosciute) return;
     final adesso = licenza.premiumPerLAuto;
     if (adesso == scritto) return;
     scritto = adesso;
-    unawaited(
-      al_lauto.diciLaLicenzaAllAuto(premium: adesso.premium, fino: adesso.fino),
-    );
+    coda = coda.then((_) async {
+      final ok = await al_lauto.diciLaLicenzaAllAuto(
+        premium: adesso.premium,
+        fino: adesso.fino,
+      );
+      // Non scritto: alla prossima novita' della licenza si riprova.
+      if (!ok && scritto == adesso) scritto = null;
+    });
   }
 
   licenza.addListener(scrivi);
@@ -467,6 +480,12 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
         (widget.cassaforte != null
             ? Collegamento(archivio: ArchivioDelleCase(widget.cassaforte!))
             : ilFiloConLaCasa());
+    /* Le notifiche della casa: solo sul telefono vero, e non nelle prove
+     * (che passano la cassaforte da fuori). Senza i file di Firebase non si
+     * accende niente, e l'app va come sempre. */
+    if (!kIsWeb && widget.cassaforte == null && Postino.istanza == null) {
+      unawaited(Postino(collegamento: _collegamento).accendi());
+    }
     _accendi();
   }
 
@@ -819,7 +838,14 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (!_pronto) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      /* La prima attesa e' gia' quella della plancia: lo stesso velo che
+       * verra' dopo, nello stesso punto, invece di una rotella sola su un
+       * fondo di un altro colore (schermate/caricamento.dart). */
+      return Scaffold(
+        body: CaricamentoDellaPlancia(
+          inFondo: MediaQuery.viewPaddingOf(context).bottom,
+        ),
+      );
     }
     /* Il velo sta **sopra** tutto, e non dentro una schermata: sotto non ci
      * deve essere niente da vedere — non l'elenco delle case, non il nome

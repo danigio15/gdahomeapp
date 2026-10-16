@@ -132,6 +132,8 @@ test("no translation is left as its English source", async () => {
 /* Strings that legitimately read the same in every language we ship. */
 const SHARED_ACROSS_LANGUAGES = new Set([
   ".",
+  /* Il suono «Ding» del campanello a muro: e' il suono, non una parola. */
+  "Ding",
   "24 h",
   /* I minuti e le ore della Cottura (#71): «min» e «h» sono i simboli delle
    * unita', e mezza Europa li scrive cosi'. Dove non e' vero — tedesco, russo,
@@ -160,6 +162,8 @@ const SHARED_ACROSS_LANGUAGES = new Set([
   /* Il nome della rete di casa: dove non si scrive in un altro alfabeto si
    * scrive cosi' e basta. */
   "Wi-Fi",
+  /* Il nome del navigatore: e' un marchio, si scrive cosi' in ogni lingua. */
+  "gdanav",
   /* Le due parole della rete: mezza Europa le scrive cosi', e dove non e' vero
    * — russo, turco, arabo, hindi, giapponese, coreano, cinese — il catalogo di
    * quella lingua le traduce lo stesso: questa riga permette, non impone. */
@@ -208,6 +212,10 @@ const SHARED_ACROSS_LANGUAGES = new Set([
  */
 const LOCALE_IDENTITIES = {
   es: new Set([
+    /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
+     * cursore o accanto a una telecamera nessuno ne usa un'altra. */
+    "Audio",
+    "Zoom",
     /* In spagnolo il no e' «no», uguale all'inglese. Il sì invece e' «sí»,
      * quindi la coppia non e' sospetta: e' una parola sola che coincide. */
     "no",
@@ -231,6 +239,10 @@ const LOCALE_IDENTITIES = {
     "Animal",
   ]),
   fr: new Set([
+    /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
+     * cursore o accanto a una telecamera nessuno ne usa un'altra. */
+    "Audio",
+    "Zoom",
     /* La terza linguetta del Clima: il termostato si scrive come in inglese. */
     "Thermostat",
     "Thermostats",
@@ -308,6 +320,12 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   de: new Set([
+    /* «Ingresso · live» sopra il video del citofono: la parola e' quella. */
+    "live",
+    /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
+     * cursore o accanto a una telecamera nessuno ne usa un'altra. */
+    "Audio",
+    "Zoom",
     /* La terza linguetta del Clima: il termostato si scrive come in inglese. */
     "Thermostat",
     /* L'acquario (#127) in tedesco si chiama Aquarium: la stessa parola
@@ -377,6 +395,9 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   pt: new Set([
+    /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
+     * cursore o accanto a una telecamera nessuno ne usa un'altra. */
+    "Zoom",
     /* Le coordinate si scrivono cosi' anche in portoghese. */
     "Latitude",
     "Longitude",
@@ -395,6 +416,12 @@ const LOCALE_IDENTITIES = {
     "Volume",
   ]),
   nl: new Set([
+    /* «Ingresso · live» sopra il video del citofono: la parola e' quella. */
+    "live",
+    /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
+     * cursore o accanto a una telecamera nessuno ne usa un'altra. */
+    "Audio",
+    "Zoom",
     /* Een aquarium (#127) heet in het Nederlands ook zo. */
     "Aquarium",
     /* En een terrarium ook. */
@@ -479,6 +506,10 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   pl: new Set([
+    /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
+     * cursore o accanto a una telecamera nessuno ne usa un'altra. */
+    "Audio",
+    "Zoom",
     /* Terrarium po polsku pisze się tak samo. */
     "Terrarium",
     "Polo",

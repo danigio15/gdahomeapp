@@ -32,6 +32,7 @@ import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import {
   ALARM_DISARM,
   ALARM_MODES,
+  alarmActiveMode,
   alarmActiveModeWithCustom,
   alarmCodeNeeded,
   alarmVisibleModes,
@@ -63,7 +64,22 @@ import {
 } from "../core/media-player.js";
 import {
   CHIAVE_MURO,
+  areeDellIngresso,
   avvisiAccesi,
+  lettureDellIngresso,
+  chiamateDelFermaTutto,
+  gruppiDelMixer,
+  letturaDelCanale,
+  menuDiLato,
+  pulsanteAcceso,
+  pulsanteDiceLoStato,
+  pulsantiDellaPagina,
+  servizioDelFader,
+  servizioDelMuto,
+  servizioDelPasso,
+  servizioDelPulsante,
+  servizioDellaTelecamera,
+  valoreDallaPosizione,
   derivaDelRiposo,
   batteriaDalBrowser,
   batteriaDelTablet,
@@ -73,7 +89,10 @@ import {
   eUnaScena,
   MODELLI_ELENCO,
   ambientiDellaFonte,
+  altreMisureDellaPagina,
   energiaDellaPagina,
+  potenzaConIlSegno,
+  grigliaPer,
   fonteDaiValori,
   grigliaDellaPagina,
   lettoriDellaPagina,
@@ -85,12 +104,39 @@ import {
   personeDelMuro,
   pinGiusto,
   scala,
+  tastiDellaTapparella,
   temaDelMomento,
   verso,
 } from "../core/plancia-a-muro.js";
 import { kioskAttivo, setKioskMode } from "./beta12-room-color-lock-section.js";
+import {
+  comandoDelDispositivo,
+  genereDelComando,
+  partiDelComando,
+} from "../core/comandi-accanto.js";
+import { comandoDelTelecomando, tastiDelTelecomando } from "../core/telecomando.js";
+import { piattaformeConosciute } from "./di-chi-e-unentita-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import { loadCameraFrame } from "./live-ui-section.js";
+import {
+  conLaFoto,
+  conLoSquillo,
+  durataScritta,
+  faseDelloSquillo,
+  opzioniDelCampanello,
+  quantoFa,
+  schermoSempreAcceso,
+  storiaPulita,
+} from "../core/il-campanello-a-muro.js";
+import {
+  ascoltaIlPrimoTocco,
+  fermaIlCampanello,
+  suonaIlCampanello as suonaIlSuono,
+  suonoBloccato,
+} from "./il-suono-del-campanello.js";
+import { avviaWebRtcNativo } from "./telecamera-webrtc-section.js";
+import { consiglioInCima } from "./assistente-di-casa-section.js";
+import { apriLoSfoglio } from "./media-player-section.js";
 import {
   allStates,
   chiamaServizio,
@@ -105,6 +151,7 @@ import {
   scriviSeCambia,
   section,
   wrapFunction,
+  writeJsonIfChanged,
   senzaCadere,
   t,
 } from "./shared.js";
@@ -248,6 +295,7 @@ function fonteDiQui() {
       climate: section("climate", []),
       covers: section("covers", []),
       cameras: section("cameras", []),
+      energy: section("energy", {}),
     },
     {
       azioni: readJson("cd_quick_actions", []),
@@ -534,6 +582,9 @@ const MODELLI_SCRITTI = () => ({
   telecamere: t("Telecamere", "Cameras"),
   energia: t("Energia", "Energy"),
   musica: t("Musica", "Music"),
+  mixer: t("Audio", "Audio"),
+  telecamera: t("Telecamera", "Camera"),
+  comandi: t("Comandi", "Controls"),
 });
 const SOTTO = () => ({
   stanza: t("Luci · Clima · Tapparelle · Scene", "Lights · Climate · Blinds · Scenes"),
@@ -547,6 +598,9 @@ const SOTTO = () => ({
   telecamere: t("Le immagini dal vivo", "Live pictures"),
   energia: t("Adesso, in casa", "Right now, at home"),
   musica: t("Cosa suona in casa", "What's playing at home"),
+  mixer: t("Livelli e muto di ogni canale", "Level and mute for every channel"),
+  telecamera: t("Movimento · Zoom · Preset", "Pan · Zoom · Presets"),
+  comandi: t("Avvio e spegnimento", "Start and shutdown"),
 });
 const DISEGNO_DEL_MODELLO = {
   stanza: "stanze",
@@ -560,6 +614,9 @@ const DISEGNO_DEL_MODELLO = {
   telecamere: "telecamere",
   energia: "energia",
   musica: "media",
+  mixer: "media",
+  telecamera: "telecamere",
+  comandi: "azioni",
 };
 const ACCENTO_DEL_MODELLO = {
   stanza: "#f59e0b",
@@ -573,6 +630,9 @@ const ACCENTO_DEL_MODELLO = {
   telecamere: "#2563eb",
   energia: "#10b981",
   musica: "#ec4899",
+  mixer: "#f59e0b",
+  telecamera: "#0ea5e9",
+  comandi: "#10b981",
 };
 const accentoDi = (pagina) => clean(pagina?.colore) || ACCENTO_DEL_MODELLO[pagina?.modello];
 
@@ -608,6 +668,21 @@ function meteo() {
   return { temperatura: s?.attributes?.temperature, condizione: s?.state };
 }
 
+/* La temperatura «in casa» del tablet: il sensore scelto (`riposo.sensore`),
+ * o quello della stanza della prima pagina. E' la stessa che il riposo
+ * mostrava gia' accanto al meteo; con «Temperatura mostrata: da un sensore in
+ * casa» (`muro.temperatura === "casa"`) prende anche il posto della
+ * temperatura del meteo, in alto accanto all'ora. Un numero solo, da un posto
+ * solo: in alto e sul riposo non possono dire due «in casa» diversi. */
+function temperaturaInCasa(muro) {
+  const pagina = muro?.pagine?.[0];
+  const stanza = (state.fonte?.stanze || []).find((s) => s.name === pagina?.stanza);
+  const sonda = clean(muro?.riposo?.sensore) || stanza?.temp || "";
+  if (sonda) segna(sonda);
+  const n = sonda ? numero(stato(sonda)?.state) : null;
+  return n === null ? "" : `${decimale(n)}°`;
+}
+
 const PAROLE_DEL_METEO = () => ({
   sunny: t("sereno", "sunny"),
   "clear-night": t("sereno", "clear"),
@@ -633,29 +708,65 @@ function titoloLungo(titolo) {
 function testa(pagina, muro) {
   const o = orologio();
   const m = pagina.riga?.meteo !== false ? meteo() : null;
+  /* «Temperatura mostrata»: quella del meteo, o quella di casa. Con quella di
+   * casa il disegno e la parola del meteo restano (dicono che tempo fa fuori),
+   * e sotto il numero c'e' scritto «in casa», perche' nessuno lo scambi per
+   * quella di fuori. Il disegno sta sulla riga del numero, attaccato: se stesse
+   * accanto alla colonna, una scritta lunga («in casa · poco nuvoloso») la
+   * allargherebbe e lo staccherebbe dal numero. La scritta sta su una riga
+   * sola, e quando non c'e' posto finisce coi puntini. */
+  const inCasa =
+    pagina.riga?.meteo !== false && muro.temperatura === "casa" ? temperaturaInCasa(muro) : "";
+  const parolaDelMeteo = m ? PAROLE_DEL_METEO()[m.condizione] || "" : "";
+  const chipDelMeteo = inCasa
+    ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([t("in casa", "inside"), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>`
+    : m && numero(m.temperatura) !== null
+      ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>`
+      : "";
   const accento = accentoDi(pagina);
-  /* Con piu' di quattro pagine le linguette tengono il disegno, e il nome
-   * solo quella aperta: otto nomi interi non ci stanno accanto all'ora. */
-  const molte = muro.pagine.length > 4 ? " mu-molte" : "";
+  /* Le linguette col nome finche' ci stanno: da un 4 pollici a un 15 lo
+   * spazio cambia di tanto, e su uno grande cinque pagine non sono troppe.
+   * Lo decide `adattaLeLinguette`, che le misura dopo il disegno. */
+  /* Col menu di lato le pagine stanno nella colonna a sinistra, e il ☰ con
+   * loro: la testa resta col titolo, il meteo e l'ora. */
+  const lato = menuDiLato(muro, state.verso, state.compatto);
   const linguette =
-    muro.pagine.length > 1
-      ? `<div class="mu-pagine${molte}" role="tablist">${muro.pagine
+    !lato && muro.pagine.length > 1
+      ? `<div class="mu-pagine" role="tablist">${muro.pagine
           .map(
             (p, i) =>
               `<button type="button" role="tab" class="${i === state.pagina ? "si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`,
           )
           .join("")}</div>`
       : "";
-  return `<div class="mu-carta mu-testa" style="--acc:${accento}">
-    <button type="button" class="mu-menu" data-mu-fa="menu" aria-label="${esc(t("Apri il menu", "Open the menu"))}"><span></span><span></span><span></span></button>
+  return `<div class="mu-carta mu-testa${lato ? " mu-testa-lato" : ""}" style="--acc:${accento}">
+    ${lato ? "" : tastoDelMenu()}
     <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina))}">${esc(titoloDi(pagina))}</div><div class="mu-et mu-sot">${esc(SOTTO()[pagina.modello])}</div></div>
     ${linguette}
-    <div class="mu-ora" data-mu-orologio>${
-      m && numero(m.temperatura) !== null
-        ? `<div class="mu-meteo">${disegno("meteo", 44, "testa-meteo")}<div><b>${decimale(m.temperatura, 0)}°</b><div class="mu-et">${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</div></div></div><span class="mu-sep"></span>`
-        : ""
-    }<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
+    <div class="mu-ora" data-mu-orologio>${chipDelMeteo}<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
   </div>`;
+}
+
+const tastoDelMenu = () =>
+  `<button type="button" class="mu-menu" data-mu-fa="menu" aria-label="${esc(t("Apri il menu", "Open the menu"))}"><span></span><span></span><span></span></button>`;
+
+/* Il menu di lato: «una colonna di tasti grandi a sinistra, come sui
+ * pannelli di regia». Ogni pagina e' un tasto col suo disegno e il suo nome,
+ * quella aperta e' accesa nel suo colore; in cima il ☰. */
+function menuLaterale(muro) {
+  return `<nav class="mu-lato" role="tablist">${tastoDelMenu()}${muro.pagine
+    .map(
+      (p, i) =>
+        `<button type="button" role="tab" class="mu-lato-tasto${i === state.pagina ? " si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 46, `lato-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`,
+    )
+    .join("")}</nav>`;
+}
+
+/* La pagina intera, col menu di lato se c'e': la usano il pannello e la sua
+ * anteprima nel config. */
+function paginaIntera(pagina, muro) {
+  const lato = menuDiLato(muro, state.verso, state.compatto);
+  return `<div class="mu-pagina mu-pag-${pagina.modello}${lato ? " mu-con-lato" : ""}">${lato ? menuLaterale(muro) : ""}${testa(pagina, muro)}${corpoDellaPagina(pagina)}</div>`;
 }
 
 const STATI_DELL_ALLARME = () => ({
@@ -710,8 +821,132 @@ function modoSuMisura(id) {
   );
 }
 
+/* Le aree dell'antifurto di una pagina: quelle scelte nell'Ingresso, o la
+ * centrale scritta come prima, o tutte quelle della plancia di origine
+ * (`areeDellIngresso`). */
+function areeDellaPagina(pagina) {
+  return areeDellIngresso(pagina, state.fonte || {});
+}
+
 function centraleDelMuro(pagina) {
-  return clean(pagina?.ingresso?.centrale) || state.fonte?.centrali?.[0] || "";
+  return areeDellaPagina(pagina)[0]?.entita || state.fonte?.centrali?.[0] || "";
+}
+
+/* Il nome di un'area: quello della sezione Sicurezza, o quello che le da'
+ * Home Assistant, o «Area 2». */
+const nomeDellArea = (area, i = 0) =>
+  clean(area?.nome) ||
+  clean(stato(area?.entita)?.attributes?.friendly_name) ||
+  `${t("Area", "Area")} ${i + 1}`;
+
+/* Il colore di uno stato dell'antifurto: verde spento, rosso che suona,
+ * ambra mentre cambia, indaco inserito. */
+function accentoDellAllarme(valore) {
+  if (valore === "triggered") return ACCENTI.allarme;
+  if (valore === "disarmed") return "#10b981";
+  if (["arming", "pending", "disarming"].includes(valore)) return "#f59e0b";
+  if (!valore || valore === "unavailable" || valore === "unknown") return "#64748b";
+  return "#6366f1";
+}
+
+/* Le parole di uno stato dell'antifurto, anche quando la centrale non c'e'. */
+const parolaDellAllarme = (valore) =>
+  !valore || valore === "unavailable" || valore === "unknown"
+    ? t("Non disponibile", "Unavailable")
+    : STATI_DELL_ALLARME()[valore] || valore;
+
+/* I tasti di un'area quando le aree sono piu' d'una: quelli che la sua
+ * centrale accetta, meno quelli tolti in configurazione. I tasti scritti a
+ * mano non sono di un'area: stanno in una fila loro, sotto. */
+function tastiDellArea(s) {
+  const a = state.fonte?.antifurto || {};
+  return alarmVisibleModes(s || null, a.tolte || [], []).map((voce) => ({
+    ...voce,
+    label: PAROLE_DEI_MODI()[voce.mode] || voce.mode,
+  }));
+}
+
+const quanteInserite = (inserite, tutte) =>
+  t(`${inserite} di ${tutte} inserite`, `${inserite} of ${tutte} armed`);
+const quanteAree = (quante) => t(`Antifurto · ${quante} aree`, `Alarm · ${quante} areas`);
+
+/* Le aree tutte insieme, in una parola: «Disattivo», «Fuori» se sono tutte
+ * fuori, «ALLARME» se ne suona una, «2 di 3 inserite» altrimenti. */
+function riassuntoDelleAree(aree) {
+  const valori = aree.map((a) => String(stato(a.entita)?.state || ""));
+  const suona = aree.filter((_a, i) => valori[i] === "triggered");
+  if (suona.length) return { valore: "triggered", testo: STATI_DELL_ALLARME().triggered, suona };
+  const lette = valori.filter((v) => v && v !== "unavailable" && v !== "unknown");
+  if (!lette.length) return { valore: "", testo: parolaDellAllarme(""), suona };
+  if (lette.every((v) => v === lette[0]) && lette.length === valori.length)
+    return { valore: lette[0], testo: parolaDellAllarme(lette[0]), suona };
+  const inserite = lette.filter((v) => v.startsWith("armed_")).length;
+  const cambia = lette.find((v) => ["arming", "pending", "disarming"].includes(v));
+  if (cambia && !inserite) return { valore: cambia, testo: parolaDellAllarme(cambia), suona };
+  return {
+    valore: inserite ? "armed_custom_bypass" : "disarmed",
+    testo: inserite ? quanteInserite(inserite, valori.length) : parolaDellAllarme("disarmed"),
+    suona,
+  };
+}
+
+/* Un'area nella card dell'antifurto: il suo nome e il suo stato a sinistra,
+ * i suoi tasti a destra. Ogni tasto dice a quale area va. */
+function rigaDellArea(area, i) {
+  const s = stato(area.entita);
+  const valore = String(s?.state || "");
+  const modi = tastiDellArea(s);
+  const attivo = alarmActiveMode(
+    valore,
+    modi.map((m) => m.mode),
+  );
+  return `<div class="mu-area${valore === "triggered" ? " grave" : ""}" style="--acc:${accentoDellAllarme(valore)}" data-mu-area="${esc(area.entita)}">
+    <div class="mu-area-dice"><b class="mu-area-nome">${esc(nomeDellArea(area, i))}</b><span class="mu-area-stato"><i></i>${esc(parolaDellAllarme(valore))}</span></div>
+    ${
+      s
+        ? `<div class="mu-seg mu-modi mu-modi-area">${modi
+            .map(
+              (m) =>
+                `<button type="button" class="${m.mode === attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}" data-mu-area="${esc(area.entita)}">${esc(m.label)}</button>`,
+            )
+            .join("")}</div>`
+        : ""
+    }
+  </div>`;
+}
+
+/* I tasti scritti a mano (antifurto-su-misura.js), quando le aree sono piu'
+ * d'una: non sono di nessuna, e stanno in una fila loro. */
+function tastiSuMisuraMarkup() {
+  const miei = alarmVisibleModes(null, [], state.fonte?.antifurto?.suMisura || []).filter(
+    (voce) => voce.suMisura,
+  );
+  if (!miei.length) return "";
+  const acceso = alarmActiveModeWithCustom(
+    null,
+    miei.map((m) => m.mode),
+    state.fonte?.antifurto?.suMisura || [],
+    allStates() || {},
+  );
+  return `<div class="mu-seg mu-modi mu-modi-area mu-modi-miei">${miei
+    .map(
+      (m) =>
+        `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`,
+    )
+    .join("")}</div>`;
+}
+
+/* Le aree una sotto l'altra, per la card e per la sua finestra. */
+function areeMarkup(aree) {
+  const codice = aree.some((a) => {
+    const s = stato(a.entita);
+    return s && alarmCodeNeeded(s, "alarm_arm_away");
+  });
+  return `<div class="mu-aree" data-quante="${Math.min(aree.length, 4)}">${aree.map(rigaDellArea).join("")}${tastiSuMisuraMarkup()}</div>${
+    codice
+      ? `<div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>`
+      : ""
+  }`;
 }
 
 function pillole(pagina) {
@@ -852,7 +1087,11 @@ function obiettiviDelMuro(id) {
   const lettura = obiettiviDelClima(attributi(id), stato(id)?.state);
   const attesa = state.inAttesa[id]?.coppia;
   if (!lettura.doppio || !attesa) return lettura;
-  return Object.freeze({ ...lettura, basso: attesa.target_temp_low, alto: attesa.target_temp_high });
+  return Object.freeze({
+    ...lettura,
+    basso: attesa.target_temp_low,
+    alto: attesa.target_temp_high,
+  });
 }
 
 /* E' un termostato a coppia? Allora sta nella linguetta «Termostato» e ha la
@@ -911,8 +1150,22 @@ function righeDelTermostato(id) {
   const passo = numero(a.target_temp_step) || 0.5;
   const scala = [numero(a.min_temp) ?? 7, numero(a.max_temp) ?? 35];
   return [
-    ["basso", t("Caldo", "Heating"), "#f97316", SEGNI_DEL_TERMOSTATO.basso, t("Abbassa il caldo", "Lower the heating"), t("Alza il caldo", "Raise the heating")],
-    ["alto", t("Freddo", "Cooling"), "#0ea5e9", SEGNI_DEL_TERMOSTATO.alto, t("Abbassa il freddo", "Lower the cooling"), t("Alza il freddo", "Raise the cooling")],
+    [
+      "basso",
+      t("Caldo", "Heating"),
+      "#f97316",
+      SEGNI_DEL_TERMOSTATO.basso,
+      t("Abbassa il caldo", "Lower the heating"),
+      t("Alza il caldo", "Raise the heating"),
+    ],
+    [
+      "alto",
+      t("Freddo", "Cooling"),
+      "#0ea5e9",
+      SEGNI_DEL_TERMOSTATO.alto,
+      t("Abbassa il freddo", "Lower the cooling"),
+      t("Alza il freddo", "Raise the cooling"),
+    ],
   ]
     .map(([estremo, parola, acc, icona, giu, su]) => {
       const valore = coppia ? coppia[estremo] : null;
@@ -1162,17 +1415,42 @@ function cardTapparella(c, i) {
             ? t("Si chiude…", "Closing…")
             : s || "—";
   /* Nella forma della famiglia: il disegno e lo stato in alto, il nome
-   * grande, poi la barra e i tre tasti — che se la casella e' bassa lasciano
-   * il posto al nome, e restano nella finestra che si apre col tocco. */
+   * grande, poi la barra e i tasti.
+   *
+   * «Sulla personalizzata la modifica che hai fatto del clima serve anche
+   * sulle tapparelle: i pulsanti diretti, senza entrarci dentro.» Prima i tre
+   * tasti erano la prima cosa a sparire quando la casella era bassa — nella
+   * griglia di otto e di dodici, e su tutto il pannello piccolo, non c'erano
+   * mai — e per muovere una serranda bisognava aprirne la finestra. Ora sono
+   * l'ultima: se lo spazio manca se ne vanno prima la barra della posizione,
+   * poi il disegno, poi la riga in alto (e la parola dello stato scende,
+   * piccola, accanto al nome: `mu-tap-stato`, dove «Aperta · 22%» diventa
+   * «22%»), e il nome si stringe; i tasti
+   * restano, alti almeno quanto un dito (vedi gli stili della famiglia). Sono
+   * quelli che la cover sa fare (`tastiDellaTapparella`): una tenda che
+   * apre e chiude soltanto ha ▲ e ▼, senza ■. Il tocco fuori dai tasti apre
+   * la finestra, come sempre. La parola accanto al segno («Su», «Stop»,
+   * «Giu'») si vede solo dove la casella e' larga. */
+  const tasti = tastiDellaTapparella(a);
+  const TASTI = {
+    su: ["▲", t("Su", "Up")],
+    ferma: ["■", t("Stop", "Stop")],
+    giu: ["▼", t("Giù", "Down")],
+  };
   return `<div class="mu-carta mu-card mu-fam mu-tapparella ${s && s !== "closed" ? "mu-accesa" : ""}" style="--acc:${ACCENTI.tapparella}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
     <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegno("tapparelle", 32, `tapp-${i}`)}</span><span class="mu-stato">${esc(parola)}</span></div>
-    <div class="mu-osw mu-fam-nome">${esc(nomeDi(id, c.nome))}</div>
+    <div class="mu-fam-fondo"><div class="mu-osw mu-fam-nome">${esc(nomeDi(id, c.nome))}</div><span class="mu-tap-stato" aria-hidden="true">${esc(s === "open" && pos !== null && pos < 100 ? `${pos}%` : parola)}</span></div>
     ${pos !== null ? `<div class="mu-bar"><i style="width:${pos}%"></i></div>` : ""}
-    <div class="mu-seg">
-      <button type="button" data-mu-fa="su" data-mu-entita="${esc(id)}">▲ ${esc(t("Su", "Up"))}</button>
-      <button type="button" data-mu-fa="ferma" data-mu-entita="${esc(id)}">■ ${esc(t("Stop", "Stop"))}</button>
-      <button type="button" data-mu-fa="giu" data-mu-entita="${esc(id)}">▼ ${esc(t("Giù", "Down"))}</button>
-    </div></div>`;
+    ${
+      tasti.length
+        ? `<div class="mu-seg mu-tap-tasti">${tasti
+            .map(
+              (k) =>
+                `<button type="button" data-mu-fa="${k}" data-mu-entita="${esc(id)}" aria-label="${esc(TASTI[k][1])}"><b aria-hidden="true">${TASTI[k][0]}</b><span>${esc(TASTI[k][1])}</span></button>`,
+            )
+            .join("")}</div>`
+        : ""
+    }</div>`;
 }
 
 /* La tessera: il disegno in alto a sinistra con la parola piccola accanto, il
@@ -1199,10 +1477,14 @@ function tessera({
 }) {
   /* Chi dice uno stato (acceso, aperto) lo scrive come le luci, col colore
    * quando e' acceso; una scena o un gesto hanno la loro etichetta grigia. */
-  const parola = destra || conStato
-    ? `<span class="mu-stato ${statoAcceso ? "" : "spento"}">${esc(etichetta)}</span>`
-    : `<span class="mu-et">${esc(etichetta)}</span>`;
-  const pastiglia = !destra && !conStato && attiva ? `<span class="mu-pasti">${esc(t("attiva", "active"))}</span>` : "";
+  const parola =
+    destra || conStato
+      ? `<span class="mu-stato ${statoAcceso ? "" : "spento"}">${esc(etichetta)}</span>`
+      : `<span class="mu-et">${esc(etichetta)}</span>`;
+  const pastiglia =
+    !destra && !conStato && attiva
+      ? `<span class="mu-pasti">${esc(t("attiva", "active"))}</span>`
+      : "";
   return `<button type="button" class="mu-carta mu-card mu-fam mu-tessera ${classi} ${attiva ? "mu-accesa" : ""} ${grande ? "grande" : ""}" style="--acc:${accento}" ${dati}>
     <div class="mu-riga1"><span class="mu-chip" style="--c:${grande ? 84 : 54}px">${disegno(chiave, grande ? 50 : 32, dove)}</span>${parola}${pastiglia}${destra}</div>
     <div class="mu-osw mu-fam-nome">${esc(titolo)}</div><div class="mu-sotto">${esc(sotto)}</div></button>`;
@@ -1458,9 +1740,25 @@ const glifo = (nome, misura = 30) =>
   `<svg width="${misura}" height="${misura}" viewBox="0 0 24 24" fill="${["suona"].includes(nome) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${GLIFI_MUSICA[nome]}</svg>`;
 
 /* La lettura di un lettore, con quello che il tocco sul tablet aspetta. */
+/* La voce del lettore scritta nella sezione Musica: i suoi «Altri comandi»,
+ * le «Altre letture», il «Telecomando». La pagina Musica a muro li mostra
+ * come la plancia; prima leggeva solo il lettore, e quello che si aggiungeva
+ * accanto — un sensore, un telecomando — nel config c'era e qui no. */
+const voceDellaMusica = (entity) =>
+  (state.fonte?.lettori || []).find((l) => l.entity === entity) || {};
+
 function lettoreOra(voce) {
   segna(voce.entita);
-  const lettura = letturaDelLettore({ entity: voce.entita, nome: voce.nome }, allStates() || {});
+  const scritta = voceDellaMusica(voce.entita);
+  const lettura = letturaDelLettore(
+    { ...scritta, entity: voce.entita, nome: voce.nome },
+    allStates() || {},
+    (v) => v,
+    piattaformeConosciute(),
+  );
+  for (const c of lettura.comandi || []) segna(c.entita || c.entity);
+  for (const l of lettura.letture || []) segna(l.entity);
+  if (scritta.telecomando) segna(scritta.telecomando);
   const attesa = state.inAttesa[voce.entita] || {};
   if (typeof attesa.suona === "boolean") {
     lettura.suona = attesa.suona;
@@ -1515,6 +1813,7 @@ function lettoreGrande(l) {
         <div class="mu-osw mu-mp-titolo">${esc(titolo)}</div>
         ${sotto ? `<div class="mu-sotto">${esc(sotto)}</div>` : ""}
       </div>
+      ${bottoneDaScegliere(l)}
       ${bottoneDelGruppo(l)}
       ${l.puo.spegni && !l.spento ? tastoMusica(l, "spegni", "accendi", { etichetta: t("Spegni", "Turn off") }) : ""}
     </div>
@@ -1553,19 +1852,27 @@ function lettoreGrande(l) {
             .join("")}</div>`
         : ""
     }
-    ${comandiDelLettore(l.entity)}
+    ${comandiDelLettore(l)}
+    ${lettureDelLettore(l)}
+    ${telecomandoDelLettoreMuro(l)}
   </div>`;
 }
 
 /* Gli «altri comandi» del lettore, quelli scelti nella sezione Musica: le
  * stesse pastiglie della plancia, col loro stato, e il tocco che fa il gesto
- * del loro dominio. */
-function comandiDelLettore(entity) {
-  const voce = (state.fonte?.lettori || []).find((l) => l.entity === entity);
-  const comandi = (voce?.comandi || []).filter((id) => stato(id));
+ * del loro dominio. Un telecomando si accende e si spegne, o manda il comando
+ * scritto accanto (`remote.sala:volume_up`). */
+function comandiDelLettore(l) {
+  const comandi = (l?.comandi || []).filter((c) => c.comando || stato(c.entita || c.entity));
   if (!comandi.length) return "";
   return `<div class="mu-mp-sorgenti mu-mp-comandi">${comandi
-    .map((id) => {
+    .map((c) => {
+      const id = c.entita || c.entity;
+      if (dominio(id) === "remote") {
+        const premuto = c.comando ? "" : ` aria-pressed="${acceso(id)}"`;
+        const parole = c.comando ? "" : statoInParole(id);
+        return `<button type="button" class="${!c.comando && acceso(id) ? "si" : ""}" data-mu-fa="mp-accanto" data-mu-entita="${esc(l.entity)}" data-mu-voce="${esc(c.entity)}"${premuto}${c.available ? "" : " disabled"}>${esc(c.comando ? `${nomeDi(id)} · ${c.comando}` : nomeDi(id))}${parole ? ` <small>${esc(parole)}</small>` : ""}</button>`;
+      }
       const s = stato(id);
       const servizio = servizioDellEntita(id, String(s?.state || ""));
       const parole = statoInParole(id);
@@ -1574,8 +1881,55 @@ function comandiDelLettore(entity) {
     .join("")}</div>`;
 }
 
+/* Le «altre letture»: si guardano e basta — il nome e il numero con la sua
+ * unita', come sulla plancia. */
+function lettureDelLettore(l) {
+  const letture = l?.letture || [];
+  if (!letture.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-letture">${letture
+    .map(
+      (x) =>
+        `<span class="mu-mp-lettura" data-mu-mp-lettura="${esc(x.entity)}">${esc(nomeDi(x.entity))} <b>${esc(x.testo)}</b></span>`,
+    )
+    .join("")}</div>`;
+}
+
+/* Le frecce del telecomando di una TV che la plancia conosce: le stesse
+ * della scheda Musica, in una fila. */
+const SEGNI_DEL_TELECOMANDO = Object.freeze({
+  su: "▲",
+  giu: "▼",
+  sinistra: "◀",
+  destra: "▶",
+  ok: "OK",
+  indietro: "↩",
+  home: "⌂",
+  menu: "☰",
+  canale_meno: "CH−",
+  canale_piu: "CH+",
+});
+function telecomandoDelLettoreMuro(l) {
+  const tasti = tastiDelTelecomando(l?.telecomando);
+  if (!tasti.length) return "";
+  return `<div class="mu-mp-sorgenti mu-mp-tele">${tasti
+    .map(
+      (tasto) =>
+        `<button type="button" data-mu-fa="mp-tele" data-mu-tasto="${esc(tasto)}" data-mu-entita="${esc(l.entity)}">${esc(SEGNI_DEL_TELECOMANDO[tasto] || tasto)}</button>`,
+    )
+    .join("")}</div>`;
+}
+
 /* I lettori della pagina che sanno mettersi in gruppo, letti adesso. */
 let lettoriDiQui = [];
+/* «Scegli cosa suonare»: la stessa finestra della scheda Musica — i preferiti
+ * di Sonos con le playlist di Deezer, le cartelle della libreria, la ricerca
+ * di Music Assistant — aperta sopra il pannello. Dal muro prima si poteva
+ * solo comandare quello che qualcuno aveva fatto partire da un'altra parte. */
+function bottoneDaScegliere(l) {
+  if (!l.puo.sfoglia || l.muto) return "";
+  return `<button type="button" class="mu-mp-gruppo mu-mp-scegli" data-mu-fa="mp-scegli-musica" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Scegli cosa suonare", "Choose what to play"))}"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 6.6h11.2M4.4 11h11.2M4.4 15.4h6.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19.4 8.6v7.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17.5" cy="16.4" r="2" fill="currentColor"/></svg><span>${esc(t("Scegli", "Choose"))}</span></button>`;
+}
+
 function bottoneDelGruppo(l) {
   if (!l.puo.gruppo || l.spento) return "";
   const altri = lettoriDiQui.filter((x) => x.entity !== l.entity && x.puo.gruppo);
@@ -1667,6 +2021,11 @@ function potenza(id) {
   };
 }
 
+const potenzaScritta = (watt) =>
+  Math.abs(watt) >= 1000
+    ? `${decimale(Math.abs(watt) / 1000, 1)} kW`
+    : `${decimale(Math.abs(watt), 0)} W`;
+
 function paginaEnergia(pagina) {
   const e = energiaDellaPagina(pagina, state.fonte || {});
   const tessere = [];
@@ -1679,6 +2038,7 @@ function paginaEnergia(pagina) {
       t("Consuma la casa", "House uses"),
       p.testo,
       nomeDi(e.casa),
+      "",
     ]);
   }
   if (e.solare) {
@@ -1690,48 +2050,111 @@ function paginaEnergia(pagina) {
       t("Produce il solare", "Solar makes"),
       p.testo,
       nomeDi(e.solare),
+      "",
     ]);
   }
-  if (e.rete) {
-    const p = potenza(e.rete);
-    /* Il segno lo decide chi misura: positivo si preleva, negativo si cede. */
+  /* La rete e la batteria col loro verso (`potenzaConIlSegno`): con un
+   * sensore col segno, o con due sensori sempre positivi. */
+  const watt = (id) => potenza(id).valore;
+  const scambio = potenzaConIlSegno(
+    { segno: e.rete, positivo: e.prelievo, negativo: e.immissione, girata: e.reteGirata },
+    watt,
+  );
+  if (e.rete || e.prelievo || e.immissione) {
+    const cede = scambio !== null && scambio < 0;
     const parola =
-      p.valore === null
+      scambio === null
         ? t("Rete", "Grid")
-        : p.valore < 0
+        : cede
           ? t("Cede alla rete", "To the grid")
           : t("Preleva dalla rete", "From the grid");
     tessere.push([
       "rete",
       "energia",
-      p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6",
+      cede ? "#10b981" : "#8b5cf6",
       parola,
-      p.testo,
-      nomeDi(e.rete),
+      scambio === null ? "—" : potenzaScritta(Math.abs(scambio)),
+      nomeDi((cede ? e.immissione : e.prelievo) || e.rete || e.prelievo || e.immissione),
+      "",
     ]);
   }
+  const flusso = potenzaConIlSegno(
+    { segno: e.potenzaBatteria, positivo: e.scarica, negativo: e.carica, girata: e.batteriaGirata },
+    watt,
+  );
+  /* Sotto i 30 W la batteria e' ferma: l'inverter che la tiene in pari non
+   * e' una carica. */
+  const cosaFa =
+    flusso === null || Math.abs(flusso) < 30
+      ? flusso === null
+        ? null
+        : { testo: t("Ferma", "Idle"), colore: "#94a3b8" }
+      : flusso > 0
+        ? {
+            testo: `${t("In scarica", "Discharging")} · ${potenzaScritta(flusso)}`,
+            colore: "#f97316",
+          }
+        : {
+            testo: `${t("In carica", "Charging")} · ${potenzaScritta(-flusso)}`,
+            colore: "#10b981",
+          };
   if (e.batteria) {
     const v = numero(stato(e.batteria)?.state);
     tessere.push([
       "batteria",
       "batterie",
-      "#10b981",
+      cosaFa?.colore === "#f97316" ? "#f97316" : "#10b981",
       t("Batteria", "Battery"),
       v === null ? "—" : `${decimale(v, 0)}%`,
       nomeDi(e.batteria),
+      cosaFa
+        ? `<div class="mu-cosa-fa" style="color:${cosaFa.colore}">${esc(cosaFa.testo)}</div>`
+        : "",
+    ]);
+  } else if (cosaFa) {
+    /* Senza la carica in % resta la potenza: la tessera dice cosa fa. */
+    tessere.push([
+      "batteria",
+      "batterie",
+      cosaFa.colore,
+      t("Batteria", "Battery"),
+      flusso !== null && Math.abs(flusso) >= 30 ? potenzaScritta(Math.abs(flusso)) : cosaFa.testo,
+      nomeDi(e.potenzaBatteria || e.scarica || e.carica),
+      flusso !== null && Math.abs(flusso) >= 30
+        ? `<div class="mu-cosa-fa" style="color:${cosaFa.colore}">${esc(flusso > 0 ? t("In scarica", "Discharging") : t("In carica", "Charging"))}</div>`
+        : "",
     ]);
   }
+  /* Le misure in più: il nome dell'entità sopra, il valore grande. Una
+   * potenza si scrive come le altre (W o kW); il resto col suo numero e la
+   * sua unità. */
+  altreMisureDellaPagina(pagina).forEach((id, n) => {
+    const s = stato(id);
+    const unita = clean(s?.attributes?.unit_of_measurement);
+    const v = numero(s?.state);
+    const valore = /^k?w$/i.test(unita)
+      ? potenza(id).testo
+      : v === null
+        ? clean(s?.state) || "—"
+        : `${decimale(v, Math.abs(v) < 10 && v % 1 ? 1 : 0)}${unita ? ` ${unita}` : ""}`;
+    tessere.push([`altra-${n}`, "energia", "#64748b", nomeDi(id), valore, "", ""]);
+  });
   if (!tessere.length)
     return griglia(pagina, [
       vuoto(0, t("Scegli le misure nel config", "Choose the readings in the config")),
     ]);
   const carte = tessere.map(
-    ([k, d, acc, etichetta, valore, sotto], i) =>
+    ([k, d, acc, etichetta, valore, sotto, extra], i) =>
       `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta)}</span></div>
-      <div class="mu-grande">${esc(valore)}</div><div class="mu-sotto">${esc(sotto)}</div></div>`,
+      <div class="mu-grande">${esc(valore)}</div>${extra || ""}<div class="mu-sotto">${esc(sotto)}</div></div>`,
   );
-  return griglia({ ...pagina, griglia: carte.length <= 4 ? 4 : pagina.griglia }, carte);
+  /* Le tessere stanno tutte nella griglia: con le misure in più si allarga
+   * da sola (6, 8, 12), senza scorrere. */
+  return griglia(
+    { ...pagina, griglia: Math.max(grigliaPer(carte.length), carte.length <= 4 ? 4 : 0) },
+    carte,
+  );
 }
 
 function finestreAperte() {
@@ -1746,29 +2169,206 @@ function finestreAperte() {
   const fonte = state.fonte || {};
   const stati = allStates() || {};
   const righe = varchiDiCasa(stati, fonte.varchi || {}, fonte.invertiti || [], (id) => nomeDi(id));
-  const centrale = centraleDelMuro(state.muro?.pagine?.[state.pagina]);
-  const dichiarati = fonte.antifurto?.ingressi?.[centrale] || [];
+  /* Con piu' aree contano gli ingressi di tutte quelle della pagina. */
+  const dichiarati = [
+    ...new Set(
+      areeDellaPagina(state.muro?.pagine?.[state.pagina]).flatMap(
+        (a) => fonte.antifurto?.ingressi?.[a.entita] || [],
+      ),
+    ),
+  ];
   const quali = dichiarati.length ? ingressiDellaCentrale(righe, { ingressi: dichiarati }) : righe;
   return quali.filter((riga) => riga.stato === "aperto").map((riga) => riga.name);
+}
+
+/* ── le «Altre letture» e gli «Altri comandi» dell'ingresso ───────────────
+ *
+ * «Dentro la pagina dell'antifurto ci metterei la possibilita' di riprendere
+ * altri dati, tipo se ci sono finestre aperte. Magari allo stesso modo come
+ * sull'audio.» Le stesse pastiglie della Musica: le letture col loro valore,
+ * le porte e le finestre in un conto solo, i comandi col loro stato. Ogni
+ * lettura si tocca e dice di piu'. */
+
+/* Come si chiama il conto delle aperture. */
+const parolaDelGruppo = (tipo) =>
+  ({
+    finestre: t("Finestre aperte", "Open windows"),
+    porte: t("Porte aperte", "Open doors"),
+  })[tipo] || t("Aperture aperte", "Open doors and windows");
+const parolaDelGruppoChiuso = (tipo) =>
+  ({
+    finestre: t("Finestre chiuse", "Windows closed"),
+    porte: t("Porte chiuse", "Doors closed"),
+  })[tipo] || t("Tutto chiuso", "All closed");
+
+const CLASSI_CHE_SI_APRONO = new Set(["window", "door", "garage_door", "opening"]);
+
+/* Il valore di una lettura in parole: una finestra e' aperta o chiusa, non
+ * accesa; un movimento c'e' o no. Il resto come lo dice il tablet. */
+function parolaDellaLettura(id) {
+  const s = stato(id);
+  if (!s) return t("Non trovata", "Not found");
+  const v = String(s.state);
+  if (dominio(id) === "binary_sensor" && (v === "on" || v === "off")) {
+    const classe = String(s.attributes?.device_class || "");
+    const on = v === "on";
+    if (CLASSI_CHE_SI_APRONO.has(classe)) return on ? t("Aperta", "Open") : t("Chiusa", "Closed");
+    if (["motion", "occupancy", "presence"].includes(classe))
+      return on ? t("Movimento", "Motion") : t("Nessuno", "Clear");
+    if (classe === "moisture") return on ? t("Acqua!", "Water!") : t("Asciutto", "Dry");
+    if (["smoke", "gas", "carbon_monoxide", "safety", "problem"].includes(classe))
+      return on ? t("Attenzione", "Alert") : t("Tutto bene", "All clear");
+  }
+  if (dominio(id) === "cover") {
+    const pos = numero(s.attributes?.current_position);
+    if (v === "open" && pos !== null && pos > 0 && pos < 100) return `${pos}%`;
+  }
+  return statoInParole(id);
+}
+
+/* Una lettura da guardare con attenzione: una porta aperta, una serratura
+ * aperta, un sensore che dice «attenzione». */
+function letturaDaGuardare(id) {
+  const s = stato(id);
+  const v = String(s?.state || "");
+  if (dominio(id) === "binary_sensor") {
+    const classe = String(s?.attributes?.device_class || "");
+    return (
+      v === "on" &&
+      (CLASSI_CHE_SI_APRONO.has(classe) ||
+        ["moisture", "smoke", "gas", "carbon_monoxide", "safety", "problem"].includes(classe))
+    );
+  }
+  if (dominio(id) === "lock") return v === "unlocked" || v === "open";
+  return false;
+}
+
+/* Le letture dell'ingresso: il conto delle aperture e le altre una per una. */
+function lettureDellIngressoMarkup(ing) {
+  const { gruppo, singole: tutte } = lettureDellIngresso(ing?.letture || [], allStates() || {});
+  /* Una serratura scelta sia da leggere sia da toccare e' un tasto solo,
+   * che dice anche com'e'. */
+  const comandi = new Set((ing?.comandi || []).map((v) => partiDelComando(v).entity));
+  const singole = tutte.filter((id) => !comandi.has(id));
+  if (!gruppo && !singole.length) return "";
+  const pastiglie = [];
+  if (gruppo) {
+    gruppo.tutte.forEach(segna);
+    const n = gruppo.aperte.length;
+    pastiglie.push(
+      `<button type="button" class="mu-ing-lettura mu-ing-conto${n ? " guarda" : " tutto-bene"}" data-mu-fa="ing-lettura" data-mu-gruppo="1">${disegno(gruppo.tipo === "porte" ? "aperture" : "finestra", 22, "ing-conto")}${
+        n
+          ? `${esc(parolaDelGruppo(gruppo.tipo))}: <b>${n}</b>`
+          : `${esc(parolaDelGruppoChiuso(gruppo.tipo))} <b>${gruppo.tutte.length}/${gruppo.tutte.length}</b>`
+      }</button>`,
+    );
+  }
+  for (const id of singole)
+    pastiglie.push(
+      `<button type="button" class="mu-ing-lettura${letturaDaGuardare(id) ? " guarda" : ""}" data-mu-fa="ing-lettura" data-mu-entita="${esc(id)}">${esc(nomeDi(id))} <b>${esc(parolaDellaLettura(id))}</b></button>`,
+    );
+  return `<div class="mu-ing-letture">${pastiglie.join("")}</div>`;
+}
+
+/* Il servizio di un comando dell'ingresso: un telecomando manda il suo
+ * comando, una serratura si chiude o si apre, una tapparella va su o giu',
+ * il resto come i comandi accanto al lettore della Musica. */
+export function servizioDelComandoDIngresso(voce, statoAttuale = "") {
+  const { entity: id, comando } = partiDelComando(voce);
+  if (!id) return null;
+  if (comando)
+    return { domain: "remote", service: "send_command", data: { entity_id: id, command: comando } };
+  if (genereDelComando(id) && genereDelComando(id) !== "tendina")
+    return comandoDelDispositivo({ entity: id });
+  const servizio = servizioDellEntita(id, statoAttuale);
+  return servizio ? { ...servizio, data: { entity_id: id } } : null;
+}
+
+const SI_PREMONO = new Set(["button", "input_button", "script", "scene", "automation"]);
+
+/* I comandi dell'ingresso: le pastiglie della Musica, col loro stato. */
+function comandiDellIngressoMarkup(ing) {
+  const comandi = ing?.comandi || [];
+  if (!comandi.length) return "";
+  return `<div class="mu-ing-comandi">${comandi
+    .map((voce) => {
+      const { entity: id, comando } = partiDelComando(voce);
+      const s = stato(id);
+      const premuto = !comando && !SI_PREMONO.has(dominio(id));
+      const parole = premuto ? parolaDellaLettura(id) : "";
+      const si =
+        premuto && (dominio(id) === "lock" ? letturaDaGuardare(id) : acceso(id)) ? " si" : "";
+      return `<button type="button" class="mu-ing-comando${si}" data-mu-fa="ing-comando" data-mu-voce="${esc(voce)}"${s || comando ? "" : " disabled"}>${esc(comando ? `${nomeDi(id)} · ${comando}` : nomeDi(id))}${parole ? ` <small>${esc(parole)}</small>` : ""}</button>`;
+    })
+    .join("")}</div>`;
+}
+
+/* Le letture e i comandi sotto l'antifurto, se ce ne sono. */
+function altroDellIngresso(ing, { conLeLetture = false } = {}) {
+  const dentro = `${conLeLetture ? lettureDellIngressoMarkup(ing) : ""}${comandiDellIngressoMarkup(ing)}`;
+  return dentro ? `<div class="mu-ing-altro">${dentro}</div>` : "";
+}
+
+/* La finestra di una lettura: il conto delle aperture, una per riga, o una
+ * lettura sola col suo valore grande; per una serratura o una tapparella
+ * anche il suo tasto. */
+function finestraDellaLettura(f) {
+  const pagina = state.muro?.pagine?.[f.pagina ?? state.pagina];
+  const ing = pagina?.ingresso || {};
+  const { gruppo } = lettureDellIngresso(ing.letture || [], allStates() || {});
+  const ids = f.gruppo ? gruppo?.tutte || [] : [f.entita];
+  const titolo = f.gruppo
+    ? gruppo?.aperte.length
+      ? `${parolaDelGruppo(gruppo.tipo)}: ${gruppo.aperte.length}`
+      : parolaDelGruppoChiuso(gruppo?.tipo)
+    : nomeDi(f.entita);
+  const quando = (id) => {
+    const cambio = Date.parse(stato(id)?.last_changed || "");
+    if (!Number.isFinite(cambio)) return "";
+    const ora = orologio(new Date(cambio)).ora;
+    return t(`dalle ${ora}`, `since ${ora}`);
+  };
+  /* Prima quelle da guardare: in cima quello che e' rimasto aperto. */
+  const ordinate = [...ids].sort((a, b) => letturaDaGuardare(b) - letturaDaGuardare(a));
+  const righe = ordinate
+    .map((id) => {
+      const tocca = ["lock", "cover"].includes(dominio(id));
+      const verbo =
+        dominio(id) === "lock"
+          ? String(stato(id)?.state) === "locked"
+            ? t("Apri", "Unlock")
+            : t("Chiudi", "Lock")
+          : String(stato(id)?.state) === "closed"
+            ? t("Apri", "Open")
+            : t("Chiudi", "Close");
+      return `<div class="mu-ing-riga${letturaDaGuardare(id) ? " guarda" : ""}" data-mu-lettura="${esc(id)}"><i></i><div class="mu-nome"><div class="mu-n">${esc(nomeDi(id))}</div>${quando(id) ? `<div class="mu-sotto">${esc(quando(id))}</div>` : ""}</div><b>${esc(parolaDellaLettura(id))}</b>${tocca ? `<button type="button" class="mu-btn" data-mu-fa="ing-comando" data-mu-voce="${esc(id)}">${esc(verbo)}</button>` : ""}</div>`;
+    })
+    .join("");
+  return `<div class="mu-fin-clima">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno(f.gruppo ? "finestra" : disegnoDellEntita(f.entita), 30, "fin-lettura")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(titolo)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-ing-righe">${righe || `<div class="mu-sotto">${esc(t("Niente da mostrare qui", "Nothing to show here"))}</div>`}</div></div>`;
 }
 
 /* L'ingresso su un pannello piccolo: sei tessere, ognuna un gesto. Lo stato
  * dell'antifurto e il citofono aprono la loro finestra; «apri» apre. */
 function paginaIngressoCompatta(pagina) {
   const ing = pagina.ingresso;
+  const aree = areeDellaPagina(pagina);
   const centrale = centraleDelMuro(pagina);
-  const s = stato(centrale);
-  const valore = String(s?.state || "");
+  const s = aree.length > 1 ? null : stato(centrale);
+  const riassunto = aree.length > 1 ? riassuntoDelleAree(aree) : null;
+  const valore = riassunto ? riassunto.valore : String(s?.state || "");
   const spento = valore === "disarmed";
+  const letture = lettureDellIngresso(ing.letture, allStates() || {});
   const uscita = azioneDi(spento ? ing.esco : ing.rientro || ing.esco);
   const persone = personeInCasa();
   const tessere = [
-    s
+    s || riassunto
       ? tessera({
           chiave: "sicurezza",
           accento: valore === "triggered" ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1",
-          etichetta: t("Antifurto", "Alarm"),
-          titolo: STATI_DELL_ALLARME()[valore] || valore,
+          etichetta: riassunto ? quanteAree(aree.length) : t("Antifurto", "Alarm"),
+          titolo: riassunto ? riassunto.testo : STATI_DELL_ALLARME()[valore] || valore,
           sotto: "",
           attiva: true,
           dati: `data-mu-fa="finestra-antifurto"`,
@@ -1829,13 +2429,49 @@ function paginaIngressoCompatta(pagina) {
           dove: "c-persone",
         })
       : "",
-  ].filter(Boolean);
+    /* Le porte e le finestre scelte fra le «Altre letture»: il loro conto,
+     * e il tocco le elenca. */
+    letture.gruppo
+      ? tessera({
+          chiave: "finestra",
+          accento: letture.gruppo.aperte.length ? "#f59e0b" : "#10b981",
+          etichetta: parolaDelGruppo(letture.gruppo.tipo),
+          titolo: String(letture.gruppo.aperte.length),
+          sotto: "",
+          dati: `data-mu-fa="ing-lettura" data-mu-gruppo="1"`,
+          dove: "c-letture",
+        })
+      : "",
+  ]
+    .filter(Boolean)
+    .slice(0, 6);
   return `<div class="mu-g6">${tessere.join("")}</div>`;
 }
 
 function paginaIngresso(pagina) {
   if (state.compatto) return paginaIngressoCompatta(pagina);
   const ing = pagina.ingresso;
+  const aree = areeDellaPagina(pagina);
+  /* Chi ha scelto le sue porte e finestre fra le letture le vede nel loro
+   * conto, sotto: l'avviso di sempre lo ripeterebbe. */
+  const contoProprio = Boolean(lettureDellIngresso(ing.letture, allStates() || {}).gruppo);
+  const aperte = ing.finestre && !contoProprio ? finestreAperte() : [];
+  const avvisoFinestre = aperte.length
+    ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>`
+    : "";
+  /* Piu' aree: una riga per area, ognuna coi suoi tasti; in cima le aree
+   * tutte insieme in una parola. Una sola: la card di sempre. */
+  if (aree.length > 1) {
+    const riassunto = riassuntoDelleAree(aree);
+    const carta = `<div class="mu-carta mu-accesa mu-allarme mu-allarme-aree" style="--acc:${accentoDellAllarme(riassunto.valore)}">
+      <div class="mu-riga1"><span class="mu-chip" style="--c:72px">${disegno("sicurezza", 44, "allarme")}</span>
+        <div class="mu-allarme-dice"><span class="mu-et">${esc(quanteAree(aree.length))}</span><div class="mu-osw mu-stato-allarme">${esc(riassunto.testo)}${riassunto.suona.length ? ` · ${esc(riassunto.suona.map((a) => nomeDellArea(a, aree.indexOf(a))).join(", "))}` : ""}</div>
+        ${avvisoFinestre}</div></div>
+      ${areeMarkup(aree)}
+      ${lettureNellAntifurto(ing)}
+    </div>`;
+    return restoDellIngresso(pagina, carta, riassunto.valore === "disarmed");
+  }
   const centrale = centraleDelMuro(pagina);
   const s = stato(centrale);
   const valore = String(s?.state || "");
@@ -1844,16 +2480,10 @@ function paginaIngresso(pagina) {
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
   const modi = tastiDellAntifurto(s);
   const acceso = tastoAcceso(s, modi);
-  const aperte = ing.finestre ? finestreAperte() : [];
-  const persone = personeInCasa();
-  const uscita = spento ? ing.esco : ing.rientro || ing.esco;
-  const azioneUscita = azioneDi(uscita);
-  const telecamera = clean(ing.telecamera);
-  return `<div class="mu-ingresso">
-    <div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
+  const carta = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
         <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? STATI_DELL_ALLARME()[valore] || valore : modi.find((m) => m.mode === acceso)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
-        ${aperte.length ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>` : ""}</div></div>
+        ${avvisoFinestre}</div></div>
       ${
         modi.length
           ? `<div class="mu-seg mu-modi">${modi
@@ -1866,7 +2496,33 @@ function paginaIngresso(pagina) {
               )}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>`
           : ""
       }
-    </div>
+      ${lettureNellAntifurto(ing)}
+    </div>`;
+  return restoDellIngresso(pagina, carta, spento);
+}
+
+/* Le porte e le finestre scelte fra le letture, dentro la card
+ * dell'antifurto: «ricordati di mettere le finestre sul riquadro
+ * antifurto». Stavano in una striscia in fondo alla pagina, mentre sotto le
+ * aree restava mezza card vuota; li' si leggono accanto a quello che
+ * proteggono. */
+function lettureNellAntifurto(ing) {
+  const letture = lettureDellIngressoMarkup(ing);
+  return letture ? `<div class="mu-allarme-letture">${letture}</div>` : "";
+}
+
+/* Il citofono, l'uscita e chi c'e': uguali con un'area o con tante. */
+function restoDellIngresso(pagina, carta, spento) {
+  const ing = pagina.ingresso;
+  const persone = personeInCasa();
+  const uscita = spento ? ing.esco : ing.rientro || ing.esco;
+  const azioneUscita = azioneDi(uscita);
+  const telecamera = clean(ing.telecamera);
+  /* Le altre letture e gli altri comandi: una striscia sotto l'antifurto e
+   * il citofono, larga quanto la pagina. */
+  const altro = altroDellIngresso(ing);
+  return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}">
+    ${carta}
     <div class="mu-carta mu-citofono">
       <div class="mu-video">${telecamera ? `<img data-mu-telecamera="${esc(telecamera)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera ? nomeDi(telecamera) : t("Nessuna telecamera", "No camera"))}</span></div>
       ${
@@ -1875,6 +2531,7 @@ function paginaIngresso(pagina) {
           : ""
       }
     </div>
+    ${altro ? `<div class="mu-carta mu-ing-striscia">${altro}</div>` : ""}
     <div class="mu-piede">
       ${
         azioneUscita
@@ -1909,6 +2566,271 @@ function paginaIngresso(pagina) {
   </div>`;
 }
 
+/* ── la regia: mixer, telecamera, comandi ──────────────────────────────────
+ *
+ * «Cerca di creare una cosa del genere per wall»: le tre pagine di un
+ * pannello da regia. Le regole — cosa vuol dire un canale, quale servizio
+ * manda un tasto — stanno nel nucleo (`core/plancia-a-muro.js`); qui c'e' il
+ * disegno e il dito. */
+
+/* Il canale come lo si vede: quello che dice Home Assistant, con sopra il
+ * cursore appena lasciato e il muto appena toccato, finche' non arriva la
+ * conferma. */
+function canaleOra(canale) {
+  segna(canale.entita);
+  if (canale.muto) segna(canale.muto);
+  if (canale.letto) segna(canale.letto);
+  const lettura = letturaDelCanale(canale, allStates() || {});
+  const attesa = state.inAttesa[canale.entita] || {};
+  if (attesa.posizione !== undefined && lettura.muove) {
+    lettura.posizione = attesa.posizione;
+    lettura.valore = valoreDallaPosizione(attesa.posizione, lettura);
+  }
+  const muto = canale.muto ? state.inAttesa[canale.muto]?.acceso : attesa.mutato;
+  if (lettura.mutoSaDire && typeof muto === "boolean") lettura.mutato = muto;
+  return lettura;
+}
+
+/* Il numero di un sensore di livello: «-18,5 dB», «42 %». */
+function testoDellaMisura(m) {
+  if (!m) return "—";
+  const cifre = Number.isInteger(m.valore) || Math.abs(m.valore) >= 100 ? 0 : 1;
+  return `${decimale(m.valore, cifre)}${m.unita ? ` ${m.unita}` : ""}`;
+}
+
+/* Il numero sopra il cursore: «62%» per un lettore, «-12,5 dB» per un numero,
+ * coi decimali che il suo passo chiede. Un sensore dice il suo numero; un
+ * telecomando quello del sensore che lo legge, o niente: non ha un livello. */
+function testoDelCanale(lettura, posizione = lettura.posizione) {
+  if (lettura.tipo === "telecomando")
+    return lettura.misura && lettura.disponibile ? testoDellaMisura(lettura.misura) : "";
+  if (!lettura.disponibile || lettura.valore === null) return "—";
+  if (lettura.tipo === "misura") return testoDellaMisura(lettura);
+  const valore = valoreDallaPosizione(posizione, lettura);
+  if (lettura.tipo === "volume") return `${Math.round(valore * 100)}%`;
+  const cifre = lettura.passo >= 1 ? 0 : lettura.passo >= 0.1 ? 1 : 2;
+  return `${decimale(valore, cifre)}${lettura.unita ? ` ${lettura.unita}` : ""}`;
+}
+
+/* Il livello letto da un sensore accanto al cursore: una striscia sottile
+ * che si riempie, verde, gialla in cima, rossa in fondo alla scala. */
+const strisciaLetta = (m) =>
+  m
+    ? `<span class="mu-fad-letto" style="--l:${m.posizione.toFixed(4)}" title="${esc(testoDellaMisura(m))}"><i></i></span>`
+    : "";
+
+/* Il cursore: una traccia che si riempie del colore del gruppo, e la manopola
+ * sopra. In piedi per i canali, sdraiato per il volume totale. */
+function fader(canale, lettura, { sdraiato = false } = {}) {
+  return `<div class="mu-fader${sdraiato ? " sdraiato" : ""}${lettura.muove ? "" : " fermo"}" data-mu-cursore="fader" data-mu-entita="${esc(canale.entita)}" style="--p:${lettura.posizione.toFixed(4)}" role="slider" aria-label="${esc(nomeDi(canale.entita, canale.nome))}" aria-valuetext="${esc(testoDelCanale(lettura))}"><span class="mu-fad-traccia"><i></i></span>${strisciaLetta(lettura.misura)}<u></u></div>`;
+}
+
+/* Lo strumento: lo stesso cursore, senza manopola e senza dito — un VU che
+ * si riempie fin dove dice il sensore. */
+function metro(canale, posizione, testo, { sdraiato = false } = {}) {
+  return `<div class="mu-fader mu-metro${sdraiato ? " sdraiato" : ""}" data-mu-metro="${esc(canale.entita)}" style="--p:${posizione.toFixed(4)}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(posizione * 100)}" aria-label="${esc(nomeDi(canale.entita, canale.nome))}" aria-valuetext="${esc(testo)}"><span class="mu-fad-traccia"><i></i></span></div>`;
+}
+
+/* I tasti ▲ / ▼ di un telecomando; in mezzo lo strumento, se un sensore
+ * legge il livello. Sdraiati, ▼ a sinistra e ▲ a destra. */
+function passi(canale, lettura, { sdraiato = false } = {}) {
+  const nome = nomeDi(canale.entita, canale.nome);
+  /* Sdraiato e' il volume totale: lo stesso telecomando puo' stare anche fra
+   * i canali, coi suoi comandi. */
+  const tasto = (verso, segno, etichetta) =>
+    `<button type="button" class="mu-passo" data-mu-fa="passo" data-mu-verso="${verso}" data-mu-entita="${esc(canale.entita)}"${sdraiato ? ' data-mu-master="1"' : ""} aria-label="${esc(etichetta)} ${esc(nome)}"${lettura.disponibile ? "" : " disabled"}>${segno}</button>`;
+  const su = tasto("su", "▲", t("Alza", "Volume up"));
+  const giu = tasto("giu", "▼", t("Abbassa", "Volume down"));
+  const mezzo = lettura.misura
+    ? metro(canale, lettura.misura.posizione, testoDellaMisura(lettura.misura), { sdraiato })
+    : '<span class="mu-passi-spazio"></span>';
+  return `<div class="mu-passi${sdraiato ? " sdraiato" : ""}">${sdraiato ? `${giu}${mezzo}${su}` : `${su}${mezzo}${giu}`}</div>`;
+}
+
+/* Il pezzo in mezzo a un canale: il cursore, lo strumento o i tasti. */
+function comandoDelCanale(canale, l, opzioni = {}) {
+  if (l.tipo === "misura") return metro(canale, l.posizione, testoDelCanale(l), opzioni);
+  if (l.tipo === "telecomando") return passi(canale, l, opzioni);
+  return fader(canale, l, opzioni);
+}
+
+function tastoMuto(canale, lettura, master = false) {
+  if (!lettura.puoMuto) return `<span class="mu-can-muto vuoto" aria-hidden="true"></span>`;
+  /* Un muto che non dice com'e' (un comando, un tasto) e' un tasto e basta. */
+  const premuto = lettura.mutoSaDire ? ` aria-pressed="${lettura.mutato}"` : "";
+  return `<button type="button" class="mu-can-muto${lettura.mutato ? " si" : ""}" data-mu-fa="muto" data-mu-entita="${esc(canale.entita)}" data-mu-muto="${esc(canale.muto)}"${master ? ' data-mu-master="1"' : ""}${premuto} aria-label="${esc(t("Muto", "Mute"))} ${esc(nomeDi(canale.entita, canale.nome))}">${glifo(lettura.mutato ? "muto" : "voce", 24)}</button>`;
+}
+
+/* Sotto il numero di un canale che si muove, quello che legge il sensore. */
+const lettoSotto = (l) =>
+  l.misura && l.tipo !== "telecomando"
+    ? `<small class="mu-can-l" data-mu-letto>${esc(testoDellaMisura(l.misura))}</small>`
+    : "";
+
+function canaleDelMixer(canale) {
+  const l = canaleOra(canale);
+  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"} mu-can-${l.tipo}" data-mu-canale="${esc(canale.entita)}">
+    <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>${lettoSotto(l)}
+    ${comandoDelCanale(canale, l)}
+    <span class="mu-can-n">${esc(nomeDi(canale.entita, canale.nome))}</span>
+    ${tastoMuto(canale, l)}</div>`;
+}
+
+function paginaMixer(pagina) {
+  const gruppi = gruppiDelMixer(pagina);
+  const master = pagina.mixer?.master;
+  if (!gruppi.length && !master?.entita)
+    return griglia({ ...pagina, griglia: 4 }, [
+      vuoto(0, t("Scegli i canali nel config", "Choose the channels in the config")),
+    ]);
+  const quanti = gruppi.map((g) => `minmax(0,${g.canali.length}fr)`).join(" ");
+  const banchi = gruppi.length
+    ? `<div class="mu-mix-gruppi" style="grid-template-columns:${quanti}">${gruppi
+        .map(
+          (g) =>
+            `<div class="mu-carta mu-mix-gruppo" style="--acc:${g.colore}"><div class="mu-mix-tit">${esc(g.nome || t("Canali", "Channels"))}</div><div class="mu-mix-canali">${g.canali.map(canaleDelMixer).join("")}</div></div>`,
+        )
+        .join("")}</div>`
+    : "";
+  let totale = "";
+  if (master?.entita) {
+    const l = canaleOra(master);
+    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""} mu-can-${l.tipo}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
+      <span class="mu-mix-tit">${esc(master.nome || t("Volume totale", "Master volume"))}</span>
+      ${tastoMuto(master, l, true)}
+      ${comandoDelCanale(master, l, { sdraiato: true })}
+      <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b></div>`;
+  }
+  return `<div class="mu-mixer${banchi ? "" : " solo-totale"}">${banchi}${totale}</div>`;
+}
+
+/* Il canale scritto nel config, coi suoi comandi: quello della pagina aperta
+ * con questa entita' (un gruppo o il volume totale). */
+function canaleDellaPagina(id, muto = "", master = false) {
+  const mixer = state.muro?.pagine?.[state.pagina]?.mixer;
+  if (master && mixer?.master?.entita === id) return mixer.master;
+  const tutti = [...(mixer?.gruppi || []).flatMap((g) => g.canali || []), mixer?.master];
+  return tutti.find((c) => c?.entita === id && (!muto || c.muto === muto)) || { entita: id, muto };
+}
+
+/* Le frecce della telecamera: i segni dentro i tasti del pad. */
+const FRECCE = Object.freeze({
+  su: '<path d="M6 15l6-6 6 6"/>',
+  giu: '<path d="M6 9l6 6 6-6"/>',
+  sinistra: '<path d="M15 6l-6 6 6 6"/>',
+  destra: '<path d="M9 6l6 6-6 6"/>',
+});
+const freccia = (verso) =>
+  `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${FRECCE[verso]}</svg>`;
+
+function tastoPtz(tc, tasto, dentro, etichetta, classe = "") {
+  const id = tc[tasto];
+  return `<button type="button" class="mu-ptz-t ${classe}" data-mu-fa="ptz" data-mu-tasto="${tasto}" aria-label="${esc(etichetta)}"${id ? "" : " disabled"}>${dentro}</button>`;
+}
+
+function paginaTelecamera(pagina) {
+  const tc = pagina.telecamera || {};
+  const nome = tc.entita ? nomeDi(tc.entita) : t("Nessuna telecamera", "No camera");
+  const pad = `<div class="mu-ptz-pad">
+    <span></span>${tastoPtz(tc, "su", freccia("su"), t("Su", "Up"))}<span></span>
+    ${tastoPtz(tc, "sinistra", freccia("sinistra"), t("Sinistra", "Left"))}${tastoPtz(tc, "stop", `<b>${esc(t("Stop", "Stop"))}</b>`, t("Stop", "Stop"), "mu-ptz-stop")}${tastoPtz(tc, "destra", freccia("destra"), t("Destra", "Right"))}
+    <span></span>${tastoPtz(tc, "giu", freccia("giu"), t("Giù", "Down"))}<span></span></div>`;
+  /* Lo zoom: un cursore se e' un numero, i due tasti se sono tasti, le due
+   * cose insieme se ci sono tutte e due. */
+  const conZoom = tc.zoom || tc.zoomPiu || tc.zoomMeno;
+  let zoom = "";
+  if (conZoom) {
+    const l = tc.zoom ? canaleOra({ entita: tc.zoom }) : null;
+    zoom = `<div class="mu-ptz-zoom"><span class="mu-et">${esc(t("Zoom", "Zoom"))}</span>
+      ${tc.zoomPiu ? tastoPtz(tc, "zoomPiu", "+", t("Zoom avanti", "Zoom in"), "mu-ptz-pm") : ""}
+      ${l ? fader({ entita: tc.zoom, nome: t("Zoom", "Zoom") }, l) : '<span class="mu-spazio"></span>'}
+      ${tc.zoomMeno ? tastoPtz(tc, "zoomMeno", "−", t("Zoom indietro", "Zoom out"), "mu-ptz-pm") : ""}</div>`;
+  }
+  const preset = (tc.preset || [])
+    .map(
+      (p, k) =>
+        `<button type="button" class="mu-carta mu-ptz-preset-t" data-mu-fa="preset" data-mu-indice="${k}"><span>${esc(p.nome || nomeDi(p.entita))}</span></button>`,
+    )
+    .join("");
+  return `<div class="mu-ptz${preset ? "" : " senza-preset"}">
+    <div class="mu-carta mu-ptz-video"><div class="mu-video">${
+      tc.entita && !anteprimaInCorso
+        ? `<img data-mu-telecamera="${esc(tc.entita)}" alt="">`
+        : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "ptz-vuota")}</div>`
+    }<span class="mu-live">${esc(nome)}</span></div></div>
+    <div class="mu-carta mu-ptz-comandi${conZoom ? "" : " senza-zoom"}">${zoom}${pad}</div>
+    ${preset ? `<div class="mu-ptz-preset">${preset}</div>` : ""}
+  </div>`;
+}
+
+/* Il segno dei tasti dei comandi: l'accensione, il play, lo stop. */
+const SEGNI_DEI_COMANDI = Object.freeze({
+  accendi: '<path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/>',
+  avvia: '<path d="M8 5v14l11-7z" fill="currentColor"/>',
+  ferma: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+});
+const segno = (nome, misura = 30) =>
+  `<svg width="${misura}" height="${misura}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEGNI_DEI_COMANDI[nome]}</svg>`;
+
+/* Acceso come lo si vede: il tocco cambia il tasto subito. */
+function comandoAcceso(p) {
+  const id = p.stato || p.avvio;
+  if (id) segna(id);
+  const atteso = state.inAttesa[id]?.acceso;
+  return typeof atteso === "boolean" ? atteso : pulsanteAcceso(p, allStates() || {});
+}
+/* Chi sa dire se e' acceso: l'entita' di stato scelta, o un avvio che si
+ * accende e si spegne. Uno script d'avvio finisce in un attimo, e «Spento»
+ * sotto «Spegnimento» direbbe solo una cosa strana. */
+const diceLoStato = pulsanteDiceLoStato;
+
+function paginaComandi(pagina) {
+  const tutti = pulsantiDellaPagina(pagina).map((p, k) => ({ p, k }));
+  if (!tutti.length)
+    return griglia({ ...pagina, griglia: 4 }, [
+      vuoto(0, t("Scegli i comandi nel config", "Choose the commands in the config")),
+    ]);
+  const parola = (p, on) =>
+    diceLoStato(p)
+      ? `<span class="mu-stato ${on ? "" : "spento"}">${esc(on ? t("Acceso", "On") : t("Spento", "Off"))}</span>`
+      : "";
+  const icona = (p, k, misura) =>
+    clean(p.disegno)
+      ? disegno(p.disegno, misura, `reg-${misura}-${k}`)
+      : segno("accendi", Math.round(misura * 0.7));
+  /* Un tasto solo: una tessera grande, «AVVIO», «SPEGNIMENTO». */
+  const grandi = tutti
+    .filter(({ p }) => !p.stop)
+    .map(({ p, k }) => {
+      const on = comandoAcceso(p);
+      return `<button type="button" class="mu-carta mu-reg-tasto${on ? " mu-accesa" : ""}" style="--acc:${p.colore || "#22c55e"}" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio" aria-pressed="${on}"><span class="mu-reg-icona">${icona(p, k, 56)}</span><span class="mu-osw mu-reg-nome">${esc(p.nome || nomeDi(p.avvio))}</span>${parola(p, on)}</button>`;
+    });
+  /* Avvio e stop: una colonna per comando, il nome in cima e i due tasti. */
+  const coppie = tutti
+    .filter(({ p }) => p.stop)
+    .map(({ p, k }) => {
+      const on = comandoAcceso(p);
+      return `<div class="mu-carta mu-reg-coppia${on ? " mu-accesa" : ""}" style="--acc:${p.colore || "#22c55e"}"><div class="mu-reg-testa"><span class="mu-reg-icona">${icona(p, k, 34)}</span><span class="mu-reg-nome">${esc(p.nome || nomeDi(p.avvio || p.stop))}</span>${parola(p, on)}</div>
+        ${p.avvio ? `<button type="button" class="mu-reg-avvio${on ? " si" : ""}" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio">${segno("avvia", 34)}<span>${esc(t("Avvio", "Start"))}</span></button>` : ""}
+        <button type="button" class="mu-reg-stop" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="stop">${segno("ferma", 30)}<span>${esc(t("Stop", "Stop"))}</span></button></div>`;
+    });
+  const colonne = (n) => `grid-template-columns:repeat(${Math.min(n, 4)},minmax(0,1fr))`;
+  const ferma = pagina.fermaTutto?.attivo
+    ? `<button type="button" class="mu-carta mu-reg-ferma" data-mu-fa="ferma-tutto">${segno("ferma", 26)}<span>${esc(t("Ferma tutto", "Stop all"))}</span></button>`
+    : "";
+  const righe = [
+    grandi.length ? "minmax(0,1fr)" : "",
+    coppie.length ? "minmax(0,1fr)" : "",
+    ferma ? "auto" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return `<div class="mu-regia" style="grid-template-rows:${righe}">
+    ${grandi.length ? `<div class="mu-reg-grandi" style="${colonne(grandi.length)}">${grandi.join("")}</div>` : ""}
+    ${coppie.length ? `<div class="mu-reg-coppie" style="grid-template-columns:repeat(${coppie.length},minmax(0,1fr))">${coppie.join("")}</div>` : ""}
+    ${ferma}</div>`;
+}
+
 function corpoDellaPagina(pagina) {
   if (pagina.modello === "scene") return paginaScene(pagina);
   if (pagina.modello === "ingresso") return paginaIngresso(pagina);
@@ -1916,6 +2838,9 @@ function corpoDellaPagina(pagina) {
   if (pagina.modello === "telecamere") return paginaTelecamere(pagina);
   if (pagina.modello === "energia") return paginaEnergia(pagina);
   if (pagina.modello === "musica") return paginaMusica(pagina);
+  if (pagina.modello === "mixer") return paginaMixer(pagina);
+  if (pagina.modello === "telecamera") return paginaTelecamera(pagina);
+  if (pagina.modello === "comandi") return paginaComandi(pagina);
   return paginaStanza(pagina);
 }
 
@@ -1949,7 +2874,7 @@ export function anteprimaDellaPagina(muro, indice = 0, fonte = state.fonte) {
       compatto: false,
       verso: muro.orientamento === "verticale" ? "verticale" : "orizzontale",
     });
-    return `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${corpoDellaPagina(pagina)}</div>`;
+    return paginaIntera(pagina, muro);
   } finally {
     Object.assign(state, prima);
     raccolta = raccoltaPrima;
@@ -2022,7 +2947,26 @@ function finestra() {
     dentro = `<div class="mu-fin-clima" style="--acc:${ACCENTI.tapparella}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("tapparelle", 30, "fin-tapp")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(nomeDi(id))}</div><div class="mu-stato">${pos === null ? esc(String(stato(id)?.state || "")) : `${pos}%`}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       ${pos !== null ? `<div class="mu-bar"><i style="width:${pos}%"></i></div>` : ""}
-      <div class="mu-seg mu-seg-alto"><button type="button" data-mu-fa="su" data-mu-entita="${esc(id)}">▲ ${esc(t("Su", "Up"))}</button><button type="button" data-mu-fa="ferma" data-mu-entita="${esc(id)}">■ ${esc(t("Stop", "Stop"))}</button><button type="button" data-mu-fa="giu" data-mu-entita="${esc(id)}">▼ ${esc(t("Giù", "Down"))}</button></div></div>`;
+      <div class="mu-seg mu-seg-alto">${tastiDellaTapparella(attributi(id))
+        .map(
+          (k) =>
+            `<button type="button" data-mu-fa="${k}" data-mu-entita="${esc(id)}">${{ su: `▲ ${esc(t("Su", "Up"))}`, ferma: `■ ${esc(t("Stop", "Stop"))}`, giu: `▼ ${esc(t("Giù", "Down"))}` }[k]}</button>`,
+        )
+        .join("")}</div></div>`;
+  } else if (
+    f.tipo === "antifurto" &&
+    areeDellaPagina(state.muro?.pagine?.[state.pagina]).length > 1
+  ) {
+    /* Piu' aree: nella finestra ci stanno tutte, coi loro tasti, e sotto
+     * le letture e i comandi dell'ingresso. */
+    const pagina = state.muro?.pagine?.[state.pagina];
+    const aree = areeDellaPagina(pagina);
+    const riassunto = riassuntoDelleAree(aree);
+    dentro = `<div class="mu-fin-clima mu-fin-aree" style="--acc:${accentoDellAllarme(riassunto.valore)}">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(riassunto.testo)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      ${areeMarkup(aree)}${altroDellIngresso(pagina?.ingresso, { conLeLetture: true })}</div>`;
+  } else if (f.tipo === "lettura") {
+    dentro = finestraDellaLettura(f);
   } else if (f.tipo === "antifurto") {
     const pagina = state.muro?.pagine?.[state.pagina];
     const centrale = centraleDelMuro(pagina);
@@ -2033,7 +2977,10 @@ function finestra() {
     const aperte = pagina?.ingresso?.finestre ? finestreAperte() : [];
     dentro = `<div class="mu-fin-clima" style="--acc:${valore === "disarmed" ? "#10b981" : "#6366f1"}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore] || valore)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div></div>`;
+      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina?.ingresso, { conLeLetture: true })}</div>`;
+  } else if (f.tipo === "citofono" && f.suonato) {
+    /* Aperta dal campanello: non una finestra, una chiamata (#citofono). */
+    return squilloMarkup(f);
   } else if (f.tipo === "citofono") {
     const ing = state.muro?.pagine?.[f.pagina ?? state.pagina]?.ingresso || {};
     /* Aperta dal campanello: lo dice in cima, con l'ora dello squillo. */
@@ -2088,6 +3035,7 @@ function finestra() {
       codice: "#6366f1",
       tapparella: ACCENTI.tapparella,
       antifurto: "#10b981",
+      lettura: "#f59e0b",
       citofono: "#2563eb",
       telecamera: "#2563eb",
       gruppo: "#ec4899",
@@ -2101,6 +3049,7 @@ function apriFinestra(f) {
 }
 function chiudiFinestra() {
   if (!state.finestra) return;
+  if (state.finestra.tipo === "citofono") smettiDiSquillare();
   state.finestra = null;
   disegna();
 }
@@ -2126,7 +3075,10 @@ function riposo(muro) {
    * nello stesso punto, nemmeno gli avvisi o la scritta in fondo. */
   const d = derivaDelRiposo(Date.now());
   const deriva = `style="--dx:${d.x.toFixed(3)};--dy:${d.y.toFixed(3)}"`;
-  if (notte)
+  /* Di notte il riposo e' nero: lo schermo si spegne. Con un campanello che
+   * tiene lo schermo acceso (al minimo) il riposo resta quello di giorno,
+   * fioco: un nero acceso tutta la notte sembra un tablet rotto. */
+  if (notte && !schermoSempreAcceso(muro))
     return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-deriva" ${deriva}><div class="mu-avvisi">${chip}</div></div>` : ""}</div>`;
   const m = meteo();
   const centrale = centraleDelMuro(pagina);
@@ -2137,10 +3089,11 @@ function riposo(muro) {
   const allarme =
     !aree && centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
   const rigaDelleAree = aree ? areeSulRiposo(aree) : "";
-  const stanza = (state.fonte?.stanze || []).find((s) => s.name === pagina?.stanza);
-  const sonda = clean(muro.riposo?.sensore) || stanza?.temp || "";
-  const dentro =
-    sonda && numero(stato(sonda)?.state) !== null ? `${decimale(stato(sonda).state)}°` : "";
+  const dentro = temperaturaInCasa(muro);
+  /* Con «Temperatura mostrata: da un sensore in casa» il meteo resta come
+   * disegno e parola, senza i gradi di fuori: la temperatura e' quella di
+   * casa, una volta sola, accanto. */
+  const soloCasa = muro.temperatura === "casa" && Boolean(dentro);
   /* Quello che si vuole sapere passando davanti, senza toccare: fuori, dentro,
    * chi c'e', cosa e' rimasto aperto, l'antifurto. Ognuna solo se c'e'. */
   const persone = personeInCasa();
@@ -2151,19 +3104,43 @@ function riposo(muro) {
         ? persone.nomi.join(" · ")
         : `${persone.inCasa} ${t("in casa", "at home")}`;
   const aperte = finestreAperte().length;
-  return `<div class="mu-riposo" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
+  return `<div class="mu-riposo${notte ? " fioco" : ""}" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
     <div class="mu-et mu-data">${esc(o.lungo)}${pilaDelRiposo(muro)}</div>
     <div class="mu-riposo-riga">
-      ${m && numero(m.temperatura) !== null ? `<span>${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>` : ""}
+      ${
+        m && soloCasa && PAROLE_DEL_METEO()[m.condizione]
+          ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${esc(PAROLE_DEL_METEO()[m.condizione])}</span>`
+          : m && !soloCasa && numero(m.temperatura) !== null
+            ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>`
+            : ""
+      }
       ${dentro ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro} ${esc(t("in casa", "inside"))}</span>` : ""}
       ${persone.tutte ? `<span data-mu-riposo="persone">${disegno("persone", 30, "rip-persone")}${esc(chi)}</span>` : ""}
       ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
       ${allarme ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme)}</span>` : ""}
     </div>
     ${rigaDelleAree}
+    ${consiglioSulRiposo()}
     <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div></div>`;
+}
+
+/* ── l'assistente di casa, sul riposo ───────────────────────────────────── */
+
+/* Il tablet a muro e' quello che si guarda passando: la cosa piu' importante
+ * che l'assistente di casa ha da dire (#175) sta qui, in una riga, col punto
+ * del suo colore. Il calcolo e' dell'assistente, che gira da solo ogni minuto
+ * anche col riposo davanti; qui si legge e basta, a ogni giro del riposo. */
+function consiglioSulRiposo() {
+  let primo = null;
+  try {
+    primo = consiglioInCima();
+  } catch (_errore) {
+    primo = null;
+  }
+  if (!primo?.titolo) return "";
+  return `<div class="mu-riposo-consiglio" data-mu-riposo="assistente" data-urgenza="${esc(primo.urgenza)}"><i aria-hidden="true"></i><span>${esc(primo.titolo)}</span></div>`;
 }
 
 /* ── la batteria del tablet, sul riposo ─────────────────────────────────── */
@@ -2258,6 +3235,12 @@ function configAperto() {
     }
     guardaIlConfig = 0;
     doc?.documentElement?.classList?.remove(SOLO_MURO);
+    /* Chiuso con la sua ✕ dopo averlo aperto dal menu dell'app: l'app lo
+     * deve sapere, se no il menu resta su «Configurazione». */
+    if (state.configDaFuori) {
+      state.configDaFuori = false;
+      diciAllApp("home");
+    }
     state.uscito = false;
     state.riposo = false;
     tocco();
@@ -2462,6 +3445,168 @@ function tastoTuttoIlConfig() {
   metti();
 }
 
+/* ── il config chiesto da fuori: dall'app (#bug del tablet a muro) ─────────
+ *
+ * «Sul tablet, dal menu dell'app tocco Configurazione e torno al pannello: il
+ * config del muro non si apre.» L'app apre la Configurazione con tre porte —
+ * la funzione `gdahomeApriLaConfig` che il suo servitore mette nella pagina
+ * (il telefono la chiama dal WebView), il messaggio `apri-la-config` (il
+ * browser, da fuori del riquadro), e `#gdahome-config` nell'indirizzo (la
+ * pagina appena nata) — e tutte e tre toccano la linguetta «config» della
+ * plancia. Che c'e', ma sta sotto il pannello a tutto schermo: la Config si
+ * apriva dove nessuno la vede, e il pannello restava li'.
+ *
+ * Mentre il pannello e' in scena le tre porte le prende lui: si apre il config
+ * del muro, lo stesso della pressione lunga, con «Tutto il config» per chi
+ * vuole il resto; e «Plancia» dal menu lo chiude e torna al pannello. Le prende
+ * dalla pagina e non dall'app, cosi' vale anche per le app gia' installate.
+ * E all'app si dice dove si e', come fa la sua maniglia: il menu segna
+ * «Configurazione» mentre il config e' aperto, e torna alla plancia dopo. */
+function muroInScena() {
+  const muro = state.muro;
+  return Boolean(muro?.attiva && muro.pagine?.length && state.premium === true && !state.uscito);
+}
+
+/* Dove si e', detto all'app: sul telefono il canale del WebView, nel browser
+ * chi ospita il riquadro. Le stesse due strade della sua maniglia. */
+function diciAllApp(quale) {
+  try {
+    if (root.gdahomeDice?.postMessage) root.gdahomeDice.postMessage(quale);
+  } catch (_errore) {}
+  try {
+    if (root.parent && root.parent !== root)
+      root.parent.postMessage({ gdahome: "pagina", dove: quale }, "*");
+  } catch (_errore) {}
+}
+
+function linguetta(quale) {
+  return [...(doc?.querySelectorAll?.(".tab") || [])].find(
+    (voce) => voce.getAttribute("data-tab") === quale,
+  );
+}
+
+export function apriIlConfigDaFuori() {
+  state.configDaFuori = true;
+  /* Una porta vecchia puo' aver gia' aperto la Config della plancia sotto il
+   * pannello (l'indirizzo lo legge la pagina prima di questa sezione): la
+   * plancia sotto torna alla sua Home, che e' quella da cui il pannello
+   * riparte. */
+  if (doc.getElementById("page-config")?.classList?.contains("active")) {
+    try {
+      linguetta("home")?.click();
+    } catch (_errore) {}
+  }
+  if (!editorAperto()) apriIlConfigDelMuro();
+  /* Dopo il giro: chi guarda le linguette per conto dell'app dice la sua
+   * col giro dopo un tocco, e l'ultima parola deve essere questa. */
+  diciAllApp("config");
+  root.setTimeout?.(() => {
+    if (state.configDaFuori) diciAllApp("config");
+  }, 0);
+  return true;
+}
+
+export function tornaDalConfigDaFuori() {
+  state.configDaFuori = false;
+  state.tornatoIl = Date.now();
+  if (editorAperto()) {
+    const chiudi = doc.querySelector("#editor-modal .ed-head-close");
+    if (chiudi) chiudi.click();
+    doc.getElementById("editor-modal")?.remove();
+  }
+  doc?.documentElement?.classList?.remove(SOLO_MURO);
+  /* Se una porta vecchia ha fatto in tempo ad aprire la Config della plancia
+   * sotto il pannello, la plancia sotto torna alla sua Home: se no all'app
+   * si direbbe «config» anche a pannello tornato. */
+  if (doc.getElementById("page-config")?.classList?.contains("active")) {
+    try {
+      linguetta("home")?.click();
+    } catch (_errore) {}
+  }
+  doc.body?.classList?.remove("gdahome-in-config");
+  state.uscito = false;
+  state.riposo = false;
+  tocco();
+  disegna();
+  const attiva = doc.querySelector(".tab.active")?.getAttribute("data-tab") || "home";
+  diciAllApp(attiva === "config" ? "home" : attiva);
+  return true;
+}
+
+/* Le due maniglie dell'app: si tengono quelle che il servitore ha messo (o
+ * mettera': il suo script puo' arrivare dopo), e davanti si mette la nostra,
+ * che decide solo se il pannello e' in scena. */
+function prendiLaManiglia(nome, nostra) {
+  const descritta = Object.getOwnPropertyDescriptor(root, nome);
+  if (descritta?.get?.__dmMuro) return;
+  let loro = descritta?.value;
+  const leggi = () =>
+    function () {
+      if (muroInScena()) return nostra();
+      return typeof loro === "function" ? loro.apply(this, arguments) : undefined;
+    };
+  leggi.__dmMuro = true;
+  try {
+    Object.defineProperty(root, nome, {
+      configurable: true,
+      enumerable: true,
+      get: leggi,
+      set: (valore) => {
+        loro = valore;
+      },
+    });
+  } catch (_errore) {}
+}
+
+function prendiLePorteDelConfig() {
+  prendiLaManiglia("gdahomeApriLaConfig", apriIlConfigDaFuori);
+  prendiLaManiglia("gdahomeTornaDallaConfig", tornaDalConfigDaFuori);
+  /* Il messaggio: lo stesso ascolto della pagina servita, ma prima di lui
+   * (in cattura) e solo a pannello in scena. Si accetta solo da chi ospita. */
+  root.addEventListener?.(
+    "message",
+    (evento) => {
+      const detto = evento?.data;
+      if (!detto || typeof detto !== "object" || !muroInScena()) return;
+      if (evento.source !== root.parent) return;
+      if (detto.gdahome !== "apri-la-config" && detto.gdahome !== "torna-dalla-config") return;
+      evento.stopImmediatePropagation?.();
+      if (detto.gdahome === "apri-la-config") apriIlConfigDaFuori();
+      else tornaDalConfigDaFuori();
+    },
+    true,
+  );
+  /* E la linguetta: chi la tocca a pannello in scena non e' un dito — il
+   * pannello la copre — ma una porta dell'app, anche una che non conosciamo.
+   * La Config della plancia sotto il pannello non serve a nessuno: si apre
+   * quella del muro. */
+  doc.addEventListener(
+    "click",
+    (evento) => {
+      if (!muroInScena()) return;
+      const voce = evento.target?.closest?.(".tab");
+      if (!voce || voce.getAttribute("data-tab") !== "config") return;
+      evento.preventDefault();
+      evento.stopImmediatePropagation();
+      /* La porta dell'app riprova per qualche secondo finche' non vede la
+       * Config della plancia — che qui non vedra' mai. I suoi tocchi dopo il
+       * primo, e quelli arrivati appena tornati al pannello, sono l'eco della
+       * stessa richiesta: si fermano e basta. */
+      if (editorAperto() || Date.now() - (state.tornatoIl || 0) < 8000) return;
+      apriIlConfigDaFuori();
+    },
+    true,
+  );
+  /* `#gdahome-config`: lo script del servitore lo legge e lo cancella prima
+   * che questa sezione nasca, ma la richiesta con cui la pagina e' stata
+   * aperta resta scritta nella sua navigazione. Si esegue quando il pannello
+   * entra in scena, una volta. */
+  try {
+    const nata = root.performance?.getEntriesByType?.("navigation")?.[0]?.name || "";
+    if (/#gdahome-config\b/.test(nata)) state.configAllAvvio = true;
+  } catch (_errore) {}
+}
+
 function agganciaIlConfig() {
   wrapFunction("apriConfigEntita", "__dmMuroConfig", () => {
     if (editorAperto()) configAperto();
@@ -2582,7 +3727,7 @@ export async function guardaLeRevisioni() {
  * e la luminosita' le comanda l'app (`app/lib/casa/lo_schermo.dart`): le si
  * dice se il pannello c'e' e se e' notte, solo quando cambia. Fuori dall'app
  * il canale non c'e' e non succede niente. */
-const detto = { muro: "", spento: "" };
+const detto = { muro: "", spento: "", acceso: "" };
 function diciAlloSchermo(chiave, si) {
   const canale = root.gdahomeSchermo;
   const valore = si ? "si" : "no";
@@ -2593,7 +3738,19 @@ function diciAlloSchermo(chiave, si) {
   } catch (_errore) {}
 }
 
+/* «Accendi lo schermo quando suona»: la luce torna piena e, nell'app, lo
+ * schermo spento si riaccende sopra il blocco (`lo_schermo.dart`). Non si
+ * tiene a mente come gli altri: ogni squillo lo ridice. */
+function svegliaLoSchermo() {
+  diciAlloSchermo("spento", false);
+  try {
+    root.gdahomeSchermo?.postMessage?.("sveglia");
+  } catch (_errore) {}
+}
+
 function togliLaTela() {
+  smettiDiSquillare();
+  diciAlloSchermo("acceso", false);
   diciAlloSchermo("spento", false);
   diciAlloSchermo("muro", false);
   fermaIlBattito();
@@ -2618,6 +3775,36 @@ function misura(nodo, muro) {
   dentro.style.height = `${altezza / s}px`;
 }
 
+/* Le linguette delle pagine, col nome scritto fin dove si puo'.
+ *
+ * «Sfrutta al massimo lo spazio che c'e' a sinistra: da un 4 pollici a un 15
+ * gli spazi aumentano di tanto. Mantieni il nome scritto fin dove possibile,
+ * poi diventano icone.» Tre gradini, dal piu' largo: tutti i nomi; il nome
+ * solo della pagina aperta (`mu-molte`); solo i disegni (`mu-icone`). Si
+ * prova dal primo e ci si ferma al primo che ci sta: la fila si stringe nello
+ * spazio fra il titolo e l'ora, e se il contenuto e' piu' largo di lei non ci
+ * sta. */
+const GRADINI_DELLE_LINGUETTE = ["", "mu-molte", "mu-icone"];
+function adattaLeLinguette(nodo) {
+  const fila = nodo.querySelector(".mu-testa .mu-pagine");
+  if (!fila) return;
+  const testa = fila.parentElement;
+  /* Il titolo cede la riga sotto («LUCI · CLIMA · TAPPARE…») prima che le
+   * linguette perdano i nomi; il nome della pagina invece resta intero. */
+  const titolo = testa.querySelector(".mu-titolo");
+  const nome = titolo?.querySelector(".mu-tit");
+  if (nome) {
+    const massimo = Number.parseFloat(getComputedStyle(nome).maxWidth);
+    const pieno = Number.isFinite(massimo) ? Math.min(nome.scrollWidth, massimo) : nome.scrollWidth;
+    titolo.style.setProperty("--mu-tit-min", `${Math.ceil(pieno)}px`);
+  }
+  for (const gradino of GRADINI_DELLE_LINGUETTE) {
+    fila.classList.remove(...GRADINI_DELLE_LINGUETTE.filter(Boolean));
+    if (gradino) fila.classList.add(gradino);
+    if (testa.scrollWidth <= testa.clientWidth + 1) return;
+  }
+}
+
 /** Ridisegna il tablet: o lo spegne, se non deve esserci. */
 export function disegna() {
   if (!doc?.body) return;
@@ -2633,6 +3820,11 @@ export function disegna() {
     return;
   }
   if (!state.fonte) return;
+  if (state.configAllAvvio) {
+    state.configAllAvvio = false;
+    apriIlConfigDaFuori();
+    return;
+  }
   ricordaICampanelli();
   const nodo = tela();
   lasciaIlVelo();
@@ -2646,11 +3838,7 @@ export function disegna() {
   raccolta = { ids: new Set(), domini: new Set() };
   let corpo = "";
   try {
-    corpo = state.riposo
-      ? riposo(muro)
-      : `<div class="mu-pagina mu-pag-${pagina.modello}">${testa(pagina, muro)}${corpoDellaPagina(
-          pagina,
-        )}</div>${finestra()}`;
+    corpo = state.riposo ? riposo(muro) : `${paginaIntera(pagina, muro)}${finestra()}`;
     corpo += avvisoGrande();
     /* Il riposo si sveglia per l'antifurto anche quando non lo mostra. */
     segna(centraleDelMuro(muro.pagine[0]));
@@ -2683,9 +3871,14 @@ export function disegna() {
       if (prima && prima !== img) img.replaceWith(prima);
     }
   }
+  adattaLeLinguette(nodo);
   battitoDellaMusica();
+  rimettiLaVoce(nodo);
   if (state.riposo) posizionaIlRiposo(nodo);
   diciAlloSchermo("muro", true);
+  /* «Tieni lo schermo acceso»: con un campanello che puo' suonare, lo schermo
+   * non si spegne da solo — di notte resta al minimo. */
+  diciAlloSchermo("acceso", schermoSempreAcceso(muro));
   diciAlloSchermo("spento", Boolean(state.riposo && eNotte(muro)));
 }
 
@@ -2754,13 +3947,26 @@ function alterna(id, domain, service, data = { entity_id: id }) {
 
 /* Quando Home Assistant dice lo stesso che il tablet aspettava, l'attesa
  * finisce subito: niente quattro secondi in cui il tablet non ascolta. */
-const ATTESE = ["acceso", "luminosita", "temperatura", "coppia", "volume", "suona", "gruppo"];
+const ATTESE = [
+  "acceso",
+  "luminosita",
+  "temperatura",
+  "coppia",
+  "volume",
+  "suona",
+  "gruppo",
+  "posizione",
+  "mutato",
+];
 export function attesaConfermata(cosa, atteso, reale) {
   if (cosa === "acceso") return reale.acceso === atteso;
   if (cosa === "suona") return reale.suona === atteso;
   if (cosa === "gruppo")
     return reale.gruppo === (Array.isArray(atteso) ? atteso : []).slice(1).sort().join(",");
   if (cosa === "volume") return reale.volume !== null && Math.abs(reale.volume - atteso) <= 1;
+  if (cosa === "posizione")
+    return reale.posizione !== null && Math.abs(reale.posizione - atteso) <= 0.015;
+  if (cosa === "mutato") return reale.mutato === atteso;
   if (cosa === "luminosita")
     return reale.luminosita !== null && Math.abs(reale.luminosita - atteso) <= 2;
   if (cosa === "temperatura")
@@ -2796,6 +4002,8 @@ function confermaLeAttese(event) {
           ? null
           : Math.round(numero(attributi(id).volume_level) * 100),
       suona: ["playing", "buffering"].includes(String(stato(id)?.state)),
+      posizione: posizioneDelCanale(id),
+      mutato: attributi(id).is_volume_muted === true,
       gruppo: (attributi(id).group_members || [])
         .filter((x) => x !== id)
         .sort()
@@ -2808,6 +4016,13 @@ function confermaLeAttese(event) {
       delete state.inAttesa[id];
     }
   }
+}
+
+/* Dove sta il cursore di un canale per Home Assistant, o `null`. */
+function posizioneDelCanale(id) {
+  if (!["media_player", "number", "input_number"].includes(dominio(id))) return null;
+  const l = letturaDelCanale({ entita: id }, allStates() || {});
+  return l.valore === null ? null : l.posizione;
 }
 
 let timerClima = null;
@@ -2849,9 +4064,12 @@ function cambiaTemperatura(id, verso, estremo = "") {
   );
 }
 
-function allarme(modo, codice = "") {
+function allarme(modo, codice = "", area = "") {
   const pagina = state.muro?.pagine?.[state.pagina];
-  const centrale = centraleDelMuro(pagina);
+  /* Con piu' aree il tasto dice la sua; un'area che la pagina non mostra
+   * non si comanda da qui. */
+  const sue = areeDellaPagina(pagina).map((a) => a.entita);
+  const centrale = area && sue.includes(area) ? area : centraleDelMuro(pagina);
   const s = stato(centrale);
   /* Un tasto scritto a mano chiama la sua entita', col suo codice se ne ha
    * uno: lo stesso giro della plancia (antifurto-su-misura.js). */
@@ -2879,7 +4097,7 @@ function allarme(modo, codice = "") {
   const voce = modo === "disarm" ? ALARM_DISARM : ALARM_MODES.find((m) => m.mode === modo);
   if (!voce) return;
   if (alarmCodeNeeded(s, voce.service) && !codice) {
-    apriFinestra({ tipo: "codice", scopo: "allarme", modo, scritto: "" });
+    apriFinestra({ tipo: "codice", scopo: "allarme", modo, area: centrale, scritto: "" });
     return;
   }
   chiudiFinestra();
@@ -2906,7 +4124,7 @@ function cifra(k) {
         f.errore = true;
         f.scritto = "";
       }
-    } else allarme(f.modo, f.scritto);
+    } else allarme(f.modo, f.scritto, f.area || "");
   } else if ((f.scritto || "").length < 12) {
     f.scritto = (f.scritto || "") + k;
     f.errore = false;
@@ -2972,6 +4190,12 @@ function onClick(event) {
     case "chiudi":
       chiudiFinestra();
       return;
+    case "citofono-silenzia":
+      silenzia();
+      return;
+    case "citofono-parla":
+      parla().catch(() => {});
+      return;
     case "interruttore":
       /* Nella card della luce puo' esserci anche una presa: ognuno col suo
        * dominio, `light.toggle` su uno `switch` non fa niente. */
@@ -3015,11 +4239,13 @@ function onClick(event) {
          * temperatura mandata a un condizionatore ancora spento cade nel
          * vuoto. */
         attendi(id, "acceso", true);
-        quickClimateSteps(rapido, attributi(id), { zona: zonaDiQui(id) }).forEach((passo, indice) => {
-          const manda = () => comanda("climate", passo.service, { entity_id: id, ...passo.data });
-          if (indice === 0) manda();
-          else root.setTimeout?.(manda, indice * 700);
-        });
+        quickClimateSteps(rapido, attributi(id), { zona: zonaDiQui(id) }).forEach(
+          (passo, indice) => {
+            const manda = () => comanda("climate", passo.service, { entity_id: id, ...passo.data });
+            if (indice === 0) manda();
+            else root.setTimeout?.(manda, indice * 700);
+          },
+        );
         disegna();
       } else {
         const modi = (attributi(id).hvac_modes || []).filter((m) => m !== "off");
@@ -3098,6 +4324,9 @@ function onClick(event) {
       disegna();
       return;
     }
+    case "mp-scegli-musica":
+      apriLoSfoglio(id);
+      return;
     case "mp-sorgente":
       comanda("media_player", "select_source", {
         entity_id: id,
@@ -3139,8 +4368,26 @@ function onClick(event) {
         });
       return;
     case "allarme":
-      allarme(bersaglio.dataset.muModo);
+      allarme(bersaglio.dataset.muModo, "", bersaglio.dataset.muArea || "");
       return;
+    case "ing-lettura":
+      apriFinestra({
+        tipo: "lettura",
+        pagina: state.pagina,
+        gruppo: Boolean(bersaglio.dataset.muGruppo),
+        entita: bersaglio.dataset.muEntita || "",
+      });
+      return;
+    case "ing-comando": {
+      const voce = bersaglio.dataset.muVoce || "";
+      const { entity: chi } = partiDelComando(voce);
+      const servizio = servizioDelComandoDIngresso(voce, String(stato(chi)?.state || ""));
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(chi, servizio.domain, "toggle", servizio.data);
+      else comanda(servizio.domain, servizio.service, servizio.data);
+      if (state.finestra?.tipo === "lettura") disegna();
+      return;
+    }
     case "entita": {
       const servizio = servizioDellEntita(id, String(stato(id)?.state || ""));
       if (!servizio) return;
@@ -3153,11 +4400,97 @@ function onClick(event) {
     case "apri": {
       const s = servizioDiApertura(id);
       comanda(s.domain, s.service, { entity_id: id });
+      /* Aprire e' rispondere: il campanello smette di suonare. */
+      if (state.finestra?.tipo === "citofono" && state.finestra.suonato) silenzia();
       return;
     }
     case "cifra":
       cifra(bersaglio.dataset.muCifra);
       return;
+    case "mp-accanto": {
+      /* Un comando accanto al lettore che e' un telecomando: si accende e si
+       * spegne, o manda il suo comando. */
+      const l = lettoreOra({ entita: id, nome: "" });
+      const voce = (l.comandi || []).find((c) => c.entity === bersaglio.dataset.muVoce);
+      const servizio = voce ? comandoDelDispositivo(voce) : null;
+      if (!servizio) return;
+      if (servizio.service === "toggle") alterna(voce.entita, "remote", "toggle");
+      else comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "mp-tele": {
+      const l = lettoreOra({ entita: id, nome: "" });
+      const servizio = comandoDelTelecomando(l.telecomando, bersaglio.dataset.muTasto);
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "muto": {
+      /* Il muto di un canale: l'interruttore scelto, il comando del
+       * telecomando, il tasto da premere o il muto del lettore. Quello che
+       * sa dire com'e' si vede subito, e la risposta vera lo conferma. */
+      const muto = bersaglio.dataset.muMuto || "";
+      const canale = canaleDellaPagina(id, muto, Boolean(bersaglio.dataset.muMaster));
+      const lettura = canaleOra(canale);
+      const servizio = servizioDelMuto(canale, lettura);
+      if (!servizio) return;
+      if (lettura.mutoSaDire) {
+        if (muto) attendi(muto, "acceso", !lettura.mutato);
+        else attendi(id, "mutato", !lettura.mutato);
+      }
+      comanda(servizio.domain, servizio.service, servizio.data);
+      disegna();
+      return;
+    }
+    case "passo": {
+      /* ▲ / ▼ di un telecomando: il suo comando, una volta per tocco. */
+      const canale = canaleDellaPagina(id, "", Boolean(bersaglio.dataset.muMaster));
+      const servizio = servizioDelPasso(canale, bersaglio.dataset.muVerso);
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "ptz": {
+      const pagina = state.muro?.pagine?.[state.pagina];
+      const servizio = servizioDellaTelecamera(pagina?.telecamera, bersaglio.dataset.muTasto);
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "preset": {
+      const pagina = state.muro?.pagine?.[state.pagina];
+      const voce = pagina?.telecamera?.preset?.[Number(bersaglio.dataset.muIndice)];
+      const servizio = voce
+        ? servizioDellaTelecamera(voce, "entita", pagina.telecamera.dispositivo)
+        : null;
+      if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      return;
+    }
+    case "pulsante": {
+      const pagina = state.muro?.pagine?.[state.pagina];
+      const p = pulsantiDellaPagina(pagina)[Number(bersaglio.dataset.muIndice)];
+      if (!p) return;
+      const verso = bersaglio.dataset.muVerso === "stop" ? "stop" : "avvio";
+      const servizio = servizioDelPulsante(p, verso, allStates() || {});
+      if (!servizio) return;
+      /* Chi dice il suo stato lo cambia subito: acceso dopo l'avvio, spento
+       * dopo lo stop, e il tasto solo di un interruttore si alterna. */
+      if (diceLoStato(p))
+        attendi(
+          p.stato || p.avvio,
+          "acceso",
+          verso === "stop" ? false : servizio.service === "turn_off" ? false : true,
+        );
+      comanda(servizio.domain, servizio.service, servizio.data);
+      disegna();
+      return;
+    }
+    case "ferma-tutto": {
+      const pagina = state.muro?.pagine?.[state.pagina];
+      for (const servizio of chiamateDelFermaTutto(pagina, allStates() || {}))
+        if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+      for (const p of pulsantiDellaPagina(pagina))
+        if (diceLoStato(p) && (p.stop || p.stato)) attendi(p.stato || p.avvio, "acceso", false);
+      disegna();
+      return;
+    }
     default:
   }
 }
@@ -3178,6 +4511,25 @@ function onPointerDown(event) {
    * tapparella non si aprivano. */
   state.tenuto = false;
   const barra = event.target?.closest?.("[data-mu-cursore]");
+  if (barra?.dataset.muCursore === "fader") {
+    /* Il cursore di un canale: si trascina tutto, e intanto il comando parte
+     * al massimo quattro volte al secondo — chi alza un microfono vuole
+     * sentirlo salire, non solo dove l'ha lasciato. */
+    if (barra.classList.contains("fermo")) return;
+    const id = barra.dataset.muEntita;
+    state.trascina = {
+      barra,
+      id,
+      fader: true,
+      sdraiato: barra.classList.contains("sdraiato"),
+      lettura: letturaDelCanale({ entita: id }, allStates() || {}),
+      ultimo: 0,
+      mandato: null,
+    };
+    barra.setPointerCapture?.(event.pointerId);
+    onPointerMove(event);
+    return;
+  }
   if (barra) {
     const verticale = barra.dataset.muCursore === "luce-alta";
     state.trascina = {
@@ -3212,9 +4564,49 @@ function onPointerDown(event) {
   }
 }
 
+/* Da 0 a 1, dove sta il dito lungo la traccia del cursore. */
+export function posizioneDalDito(punto, riquadro, sdraiato = false) {
+  const p = sdraiato
+    ? (punto.x - riquadro.left) / (riquadro.width || 1)
+    : 1 - (punto.y - riquadro.top) / (riquadro.height || 1);
+  return Math.max(0, Math.min(1, p));
+}
+const FADER_OGNI = 250;
+
+function mandaIlFader(t, posizione) {
+  const servizio = servizioDelFader({ entita: t.id }, posizione, t.lettura);
+  if (!servizio) return;
+  const valore = servizio.data.volume_level ?? servizio.data.value;
+  if (valore === t.mandato) return;
+  t.mandato = valore;
+  t.ultimo = Date.now();
+  comanda(servizio.domain, servizio.service, servizio.data);
+}
+
+function muoviIlFader(t, event) {
+  const traccia = t.barra.querySelector(".mu-fad-traccia") || t.barra;
+  const r = traccia.getBoundingClientRect();
+  /* Sul passo del canale: la manopola scatta dove il valore vero puo' stare. */
+  const grezza = posizioneDalDito({ x: event.clientX, y: event.clientY }, r, t.sdraiato);
+  const valore = valoreDallaPosizione(grezza, t.lettura);
+  const p =
+    t.lettura.tipo === "volume"
+      ? valore
+      : (valore - t.lettura.min) / (t.lettura.max - t.lettura.min || 1);
+  t.valore = p;
+  t.barra.style.setProperty("--p", p.toFixed(4));
+  const scritta = t.barra.closest("[data-mu-canale]")?.querySelector("[data-mu-fader-testo]");
+  if (scritta) scritta.textContent = testoDelCanale(t.lettura, p);
+  if (Date.now() - t.ultimo >= FADER_OGNI) mandaIlFader(t, p);
+}
+
 function onPointerMove(event) {
   const t = state.trascina;
   if (!t) return;
+  if (t.fader) {
+    muoviIlFader(t, event);
+    return;
+  }
   const p = percentualeDalDito(event, t.barra, t.verticale, t.volume ? 0 : 1);
   t.valore = p;
   const riempi = t.barra.querySelector("i");
@@ -3229,6 +4621,15 @@ function onPointerUp(event) {
   root.clearTimeout?.(state.pressione);
   state.pressione = null;
   const t = state.trascina;
+  if (t?.fader) {
+    state.trascina = null;
+    if (t.valore !== undefined) {
+      mandaIlFader(t, t.valore);
+      attendi(t.id, "posizione", t.valore);
+    }
+    disegna();
+    return;
+  }
   if (t) {
     state.trascina = null;
     if (t.volume && t.valore !== undefined) {
@@ -3310,9 +4711,295 @@ function suonaIlCampanello(event) {
     state.riposo = false;
     state.pagina = indice;
     tocco();
-    apriFinestra({ tipo: "citofono", pagina: indice, suonato: Date.now() });
+    squilla(indice, id);
     return;
   }
+}
+
+/* ── lo squillo, come una chiamata ────────────────────────────────────────
+ *
+ * «Col Ring il tablet a muro deve fare come un videocitofono: si accende,
+ * suona, e mi fa vedere chi c'e' a tutto schermo come una chiamata.» Lo
+ * squillo prende tutto lo schermo — la telecamera grande, «Apri», «Silenzia»,
+ * «Chiudi», e «Parla» per chi l'ha acceso — e suona finche' qualcuno non
+ * risponde o finche' non passano trenta secondi. Poi la stessa finestra dice
+ * quando ha suonato, e gli ultimi squilli con la loro istantanea.
+ *
+ * Le regole — le fasi, i tempi, la storia — stanno in
+ * `core/il-campanello-a-muro.js`; il suono in `il-suono-del-campanello.js`. */
+
+/* Gli ultimi squilli restano su questo tablet: sono quello che ha visto lui,
+ * e un'istantanea pesa troppo per viaggiare con la configurazione. */
+const CHIAVE_SQUILLI = "cd_campanello_squilli";
+
+function squilliRicordati() {
+  return storiaPulita(readJson(CHIAVE_SQUILLI, []));
+}
+
+function ricordaGliSquilli(storia) {
+  writeJsonIfChanged(CHIAVE_SQUILLI, storiaPulita(storia), { sync: false });
+}
+
+function ingressoDi(indice) {
+  return state.muro?.pagine?.[indice]?.ingresso || {};
+}
+
+/* L'istantanea di adesso, come indirizzo: quella che il campanello porta con
+ * se' (un evento che dichiara la sua immagine) o la foto della telecamera. Il
+ * proxy di Home Assistant da' sempre l'ultima foto, quindi appena il video
+ * c'e' se ne fa una copia piccola (`fotografaLoSquillo`), che resta quella. */
+function fotoDiAdesso(campanello, telecamera, quando) {
+  const foto =
+    clean(stato(campanello)?.attributes?.entity_picture) ||
+    clean(stato(telecamera)?.attributes?.entity_picture);
+  if (!foto) return "";
+  return `${foto}${foto.includes("?") ? "&" : "?"}squillo=${quando}`;
+}
+
+function squilla(indice, campanello) {
+  const quando = Date.now();
+  const ing = ingressoDi(indice);
+  const opzioni = opzioniDelCampanello(ing);
+  smettiDiSquillare();
+  ricordaGliSquilli(
+    conLoSquillo(squilliRicordati(), {
+      quando,
+      entita: campanello,
+      pagina: indice,
+      immagine: fotoDiAdesso(campanello, ing.telecamera, quando),
+    }),
+  );
+  if (opzioni.accendiSchermo) svegliaLoSchermo();
+  apriFinestra({ tipo: "citofono", pagina: indice, suonato: quando, silenziato: false });
+  if (opzioni.suono !== "nessuno") suonaIlSuono(opzioni.suono, opzioni.volume);
+  state.sveglia = root.setInterval?.(scandisciLoSquillo, 1000) || 0;
+  state.scatto = root.setTimeout?.(() => fotografaLoSquillo(quando), 2500) || 0;
+}
+
+/* Una volta al secondo: il conto «Squilla da 0:08» e «30 s fa» si riscrivono
+ * nel loro posto, senza ridisegnare il video; al cambio di fase si ridisegna. */
+function scandisciLoSquillo() {
+  const f = state.finestra;
+  if (f?.tipo !== "citofono" || !f.suonato) {
+    smettiDiSquillare();
+    return;
+  }
+  const { fase, trascorsi } = faseDelloSquillo(
+    { quando: f.suonato, silenziato: f.silenziato },
+    Date.now(),
+  );
+  if (fase !== state.faseDelloSquillo) {
+    if (fase === "dopo") fermaIlCampanello();
+    disegna();
+    return;
+  }
+  const nodo = doc?.getElementById(ID);
+  for (const tempo of nodo?.querySelectorAll?.("[data-mu-squillo-tempo]") || [])
+    tempo.textContent = tempoDelloSquillo(fase, trascorsi);
+}
+
+function tempoDelloSquillo(fase, trascorsi) {
+  if (fase === "squilla") return `${t("Squilla da", "Ringing for")} ${durataScritta(trascorsi)}`;
+  return quantoFaScritto(trascorsi);
+}
+
+function quantoFaScritto(ms) {
+  const { numero, unita } = quantoFa(ms);
+  const misura =
+    unita === "giorni"
+      ? t("giorni", "days")
+      : unita === "h"
+        ? t("h", "h")
+        : unita === "min"
+          ? t("min", "min")
+          : "s";
+  return `${numero} ${misura} ${t("fa", "ago")}`;
+}
+
+function silenzia() {
+  fermaIlCampanello();
+  const f = state.finestra;
+  if (f?.tipo === "citofono" && f.suonato && !f.silenziato) {
+    f.silenziato = true;
+    disegna();
+  }
+}
+
+function smettiDiSquillare() {
+  fermaIlCampanello();
+  if (state.sveglia) root.clearInterval?.(state.sveglia);
+  if (state.scatto) root.clearTimeout?.(state.scatto);
+  state.sveglia = 0;
+  state.scatto = 0;
+  smettiDiParlare();
+}
+
+/* La copia piccola del fotogramma di quel momento. Se il browser non la lascia
+ * fare — una telecamera servita da un'altra origine — resta l'indirizzo. */
+function fotografaLoSquillo(quando) {
+  state.scatto = 0;
+  const img = doc?.querySelector?.(`#${ID} .mu-sq-video img[data-mu-telecamera]`);
+  const video = doc?.querySelector?.(`#${ID} .mu-sq-video video`);
+  const sorgente =
+    video?.videoWidth > 0 ? video : img?.complete && img.naturalWidth > 0 ? img : null;
+  if (!sorgente) return;
+  try {
+    const tela = doc.createElement("canvas");
+    tela.width = 192;
+    tela.height = 120;
+    tela.getContext("2d").drawImage(sorgente, 0, 0, tela.width, tela.height);
+    const foto = tela.toDataURL("image/jpeg", 0.7);
+    ricordaGliSquilli(conLaFoto(squilliRicordati(), quando, foto));
+  } catch (_errore) {
+    /* Un'immagine di un'altra origine: resta l'indirizzo. */
+  }
+}
+
+/* «Parla»: il microfono del tablet va al citofono, sulla stessa strada WebRTC
+ * del video, con l'audio nei due versi. Il tasto c'e' solo per chi l'ha
+ * acceso nella scheda: dallo stato di Home Assistant non si sa chi l'audio di
+ * ritorno ce l'ha. Un secondo tocco chiude. */
+async function parla() {
+  if (state.parla) {
+    smettiDiParlare();
+    disegna();
+    return;
+  }
+  const f = state.finestra;
+  const telecamera = clean(ingressoDi(f?.pagina ?? state.pagina).telecamera);
+  if (!telecamera || !root.navigator?.mediaDevices?.getUserMedia) {
+    state.parlaErrore = true;
+    disegna();
+    return;
+  }
+  fermaIlCampanello();
+  if (f && !f.silenziato) f.silenziato = true;
+  const video = doc.createElement("video");
+  video.className = "mu-sq-voce";
+  video.autoplay = true;
+  video.playsInline = true;
+  state.parla = { video, chiudi: null, microfono: null };
+  state.parlaErrore = false;
+  disegna();
+  try {
+    const microfono = await root.navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true },
+    });
+    if (!state.parla) {
+      for (const traccia of microfono.getTracks()) traccia.stop();
+      return;
+    }
+    state.parla.microfono = microfono;
+    const sessione = await avviaWebRtcNativo(telecamera, video, {
+      conAudio: true,
+      microfono,
+      quandoSiPuoChiudere: (chiudi) => {
+        if (state.parla) state.parla.chiudi = chiudi;
+      },
+    });
+    if (state.parla) state.parla.chiudi = sessione.chiudi;
+    else sessione.chiudi();
+  } catch (_errore) {
+    smettiDiParlare();
+    state.parlaErrore = true;
+    disegna();
+  }
+}
+
+function smettiDiParlare() {
+  const voce = state.parla;
+  state.parla = null;
+  if (!voce) return;
+  try {
+    voce.chiudi?.();
+  } catch (_errore) {}
+  for (const traccia of voce.microfono?.getTracks?.() || []) traccia.stop();
+  voce.video?.remove();
+}
+
+/* Il video della conversazione non e' scritto nel disegno: un ridisegno lo
+ * toglierebbe, e la voce cadrebbe. Si rimette al suo posto dopo ogni giro. */
+function rimettiLaVoce(nodo) {
+  const video = state.parla?.video;
+  const posto = nodo.querySelector(".mu-sq-video");
+  if (video && posto && video.parentElement !== posto) posto.append(video);
+}
+
+const ICONE_DELLO_SQUILLO = Object.freeze({
+  apri: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 7.6-1.7"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg>`,
+  parla: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>`,
+  muto: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 9.5-4.9M18 11v5l1.5 2H8.5M10 21h4M3 3l18 18"/></svg>`,
+  chiudi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+});
+
+function squilloMarkup(f) {
+  const indice = f.pagina ?? state.pagina;
+  const pagina = state.muro?.pagine?.[indice] || {};
+  const ing = pagina.ingresso || {};
+  const opzioni = opzioniDelCampanello(ing);
+  const { fase, trascorsi } = faseDelloSquillo(
+    { quando: f.suonato, silenziato: f.silenziato },
+    Date.now(),
+  );
+  state.faseDelloSquillo = fase;
+  const squilla = fase === "squilla";
+  const nomePagina = titoloDi(pagina) || t("Ingresso", "Entrance");
+  const ora = orologio(new Date(f.suonato)).ora;
+  const accento = squilla ? "#16a34a" : "#2563eb";
+  const campana = `<span class="mu-chip mu-acc mu-sq-campana">${squilla ? `<i class="onda o2"></i><i class="onda o1"></i>` : ""}${disegnoDelCatalogo("bell", 36)}</span>`;
+  const testa = squilla
+    ? `<div class="mu-nome"><div class="mu-n">${esc(t("Suona il campanello", "The doorbell is ringing"))}</div><div class="mu-sotto">${esc(nomePagina)}${ing.telecamera ? ` · ${esc(nomeDi(ing.telecamera))}` : ""}</div></div>`
+    : `<div class="mu-nome"><div class="mu-n">${esc(t("Ha suonato alle", "It rang at"))} ${esc(ora)}</div><div class="mu-sotto"><span data-mu-squillo-tempo>${esc(quantoFaScritto(trascorsi))}</span> · ${esc(nomePagina)}</div></div>`;
+  const destra = squilla
+    ? `<div class="mu-sq-ora"><div class="mu-osw">${esc(ora)}</div><span class="mu-stato" data-mu-squillo-tempo>${esc(tempoDelloSquillo(fase, trascorsi))}</span></div>`
+    : `<div class="mu-sq-ora finito"><div class="mu-osw">${esc(ora)}</div><span class="mu-stato">${esc(t("Squillo finito", "Ring over"))}</span></div>`;
+  const storia = squilliRicordati().slice(0, 3);
+  const mini = (voce) =>
+    voce.immagine
+      ? `<img src="${esc(voce.immagine)}" alt="" loading="lazy">`
+      : `<span class="mu-sq-senza">${disegno("telecamere", 28, `sq-${voce.quando}`)}</span>`;
+  const quandoEra = (voce) => {
+    const giorno = new Date(voce.quando).toDateString() === new Date().toDateString();
+    return giorno
+      ? voce.quando === f.suonato
+        ? `${t("Oggi", "Today")} · ${quantoFaScritto(Date.now() - voce.quando)}`
+        : t("Oggi", "Today")
+      : orologio(new Date(voce.quando)).giorno;
+  };
+  const video = ing.telecamera
+    ? `<img data-mu-telecamera="${esc(ing.telecamera)}" alt="">`
+    : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "sq-vuota")}</div>`;
+  const apri = (grande) =>
+    [
+      ing.apri
+        ? `<button type="button" class="mu-btn pieno${grande ? " grande" : ""}" style="--acc:#16a34a" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${ICONE_DELLO_SQUILLO.apri}${esc(nomeDi(ing.apri, ing.nomeApri))}</button>`
+        : "",
+      ing.apri2
+        ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${ICONE_DELLO_SQUILLO.apri}${esc(nomeDi(ing.apri2, ing.nomeApri2))}</button>`
+        : "",
+    ].join("");
+  const chiudi = `<button type="button" class="mu-btn rosso" data-mu-fa="chiudi">${ICONE_DELLO_SQUILLO.chiudi}${esc(t("Chiudi", "Close"))}</button>`;
+  const parlaTasto =
+    opzioni.parla && ing.telecamera
+      ? `<button type="button" class="mu-btn mu-sq-parla${state.parla ? " si" : ""}" data-mu-fa="citofono-parla" aria-pressed="${Boolean(state.parla)}">${ICONE_DELLO_SQUILLO.parla}${esc(state.parla ? t("In linea", "Talking") : t("Parla", "Talk"))}${state.parlaErrore ? `<small>${esc(t("Il citofono non accetta la voce", "The intercom does not take audio"))}</small>` : ""}</button>`
+      : "";
+  const tasti = squilla
+    ? `<div class="mu-sq-tasti">${apri(true)}${parlaTasto}<button type="button" class="mu-btn" data-mu-fa="citofono-silenzia">${ICONE_DELLO_SQUILLO.muto}${esc(t("Silenzia", "Silence"))}</button>${chiudi}</div>`
+    : `<div class="mu-sq-tasti dopo"><div class="mu-sq-due">${apri(false)}${state.parla ? parlaTasto : ""}${chiudi}</div>
+      ${storia.length ? `<div class="mu-carta mu-sq-storia"><span class="mu-stato">${esc(t("Ultimi squilli", "Last rings"))}</span><div class="mu-sq-righe">${storia.map((voce) => `<div class="mu-sq-squillo${voce.quando === f.suonato ? " ora" : ""}">${mini(voce)}<div><b>${esc(orologio(new Date(voce.quando)).ora)}</b><small>${esc(quandoEra(voce))}</small></div></div>`).join("")}</div></div>` : ""}</div>`;
+  const avviso =
+    squilla && suonoBloccato() && opzioni.suono !== "nessuno"
+      ? `<div class="mu-sq-avviso">${esc(t("Tocca lo schermo una volta: il browser fa suonare il campanello solo dopo un tocco", "Tap the screen once: the browser plays the doorbell only after a tap"))}</div>`
+      : "";
+  return `<div class="mu-squillo${squilla ? " squilla" : ""}" style="--acc:${accento}" role="alertdialog" aria-label="${esc(squilla ? t("Suona il campanello", "The doorbell is ringing") : `${t("Ha suonato alle", "It rang at")} ${ora}`)}">
+    <div class="mu-carta${squilla ? " mu-accesa" : ""} mu-sq-testa" style="--acc:${accento}">${campana}${testa}${destra}</div>
+    <div class="mu-video mu-sq-video">${video}<span class="mu-live"><i></i>${esc(nomePagina)} · ${esc(t("dal vivo", "live"))}</span>${
+      !squilla && storia.length
+        ? `<div class="mu-sq-mini">${storia.map((voce) => `<span>${mini(voce)}${esc(orologio(new Date(voce.quando)).ora)}</span>`).join("")}</div>`
+        : ""
+    }${avviso}</div>
+    ${tasti}
+  </div>`;
 }
 
 /* ── gli avvisi a tutto schermo ───────────────────────────────────────────
@@ -3480,17 +5167,22 @@ ${MURO}[data-compatto="1"] .mu-menu{width:40px;height:40px;border-radius:13px}
 ${MURO} .mu-testa::after{content:"";position:absolute;left:24px;right:24px;bottom:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--acc),#0ea5e9 60%,transparent)}
 ${MURO} .mu-tit{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:40px;line-height:1;letter-spacing:.02em;color:var(--acc);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
 ${MURO} .mu-sot{margin-top:8px}
-${MURO} .mu-pagine{display:flex;gap:6px;padding:5px;border-radius:16px;margin-left:auto;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent)}
+${MURO} .mu-pagine{display:flex;flex:none;gap:6px;padding:5px;border-radius:16px;margin-left:auto;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent)}
 ${MURO} .mu-pagine button{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:800;font-size:15px;color:var(--text-dim)}
 ${MURO} .mu-pagine button.si{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));color:color-mix(in srgb,var(--acc) 85%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-ora{margin-left:auto;display:flex;align-items:center;gap:22px;text-align:right}
 ${MURO} .mu-pagine+.mu-ora{margin-left:24px}
+${MURO} .mu-testa>.mu-titolo{flex:0 1 auto;min-width:var(--mu-tit-min,0)}
+${MURO} .mu-testa>.mu-titolo .mu-sot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-h{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:58px;line-height:.9}
 ${MURO} .mu-d{font-size:12px;font-weight:900;letter-spacing:.11em;color:var(--text-dim);margin-top:6px}
 ${MURO} .mu-sep{width:1px;align-self:stretch;background:color-mix(in srgb,var(--text) 12%,transparent)}
-${MURO} .mu-meteo{display:flex;align-items:center;gap:10px}
-${MURO} .mu-meteo b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:34px}
-${MURO} .mu-meteo .mu-et{font-size:10px}
+${MURO} .mu-ora{min-width:0;flex-shrink:.2}
+${MURO} .mu-meteo{display:flex;flex-direction:column;align-items:flex-end;min-width:0;max-width:240px}
+${MURO} .mu-meteo-su{display:flex;align-items:center;gap:8px}
+${MURO} .mu-meteo-su>*{flex:0 0 auto}
+${MURO} .mu-meteo b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:34px;line-height:1.1}
+${MURO} .mu-meteo .mu-et{font-size:10px;letter-spacing:.08em;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-pillole{display:flex;gap:26px;padding:14px 22px;align-items:center;flex-wrap:wrap;row-gap:12px}
 ${MURO} .mu-pill{display:flex;align-items:center;gap:12px}
 ${MURO} .mu-pill .mu-chip{--c:38px}
@@ -3498,7 +5190,7 @@ ${MURO} .mu-pill b{font-size:20px;font-weight:800;display:block;line-height:1}
 ${MURO} .mu-pill .mu-et{font-size:10.5px}
 ${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;--mu-alto:150px;display:grid;grid-template-columns:repeat(var(--mu-col),minmax(0,1fr));grid-template-rows:repeat(var(--mu-righe),minmax(0,1fr));gap:var(--mu-gap);min-height:0}
 ${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
-${MURO} .mu-pagine.mu-molte button:not(.si) span{display:none}
+${MURO} .mu-pagine.mu-molte button:not(.si) span,${MURO} .mu-pagine.mu-icone button span{display:none}
 ${MURO} .mu-pag-musica{grid-template-rows:auto 1fr}
 ${MURO} .mu-musica{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;min-height:0}
 ${MURO} .mu-musica.solo{grid-template-columns:1fr}
@@ -3512,6 +5204,9 @@ ${MURO} .mu-mp-titolo{font-size:40px;white-space:nowrap;overflow:hidden;text-ove
 ${MURO} .mu-mp-dici .mu-sotto{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-mp-testa>.mu-tondo{align-self:flex-start}
 ${MURO} .mu-mp-gruppo{align-self:flex-start;display:flex;align-items:center;gap:8px;height:56px;padding:0 18px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
+${MURO} .mu-mp-scegli{color:#fff;background:#a238ff;box-shadow:0 10px 24px -12px #a238ff}
+${MURO}[data-compatto="1"] .mu-mp-scegli>span{display:none}
+${MURO}[data-compatto="1"] .mu-mp-scegli{padding:0 16px}
 ${MURO} .mu-mp-gruppo.si{color:#fff;background:var(--acc);box-shadow:0 10px 24px -10px var(--acc)}
 ${MURO} .mu-mp-gruppo-elenco{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto}
 ${MURO} .mu-mp-gruppo-elenco .mu-mp-riga{text-align:left;width:100%}
@@ -3525,6 +5220,9 @@ ${MURO} .mu-mp-cursore{flex:1}
 ${MURO} .mu-mp-pct{min-width:52px;text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 ${MURO} .mu-mp-sorgenti{display:flex;gap:8px;flex-wrap:wrap}
 ${MURO} .mu-mp-comandi button small{margin-left:4px;font-weight:700;opacity:.75}
+${MURO} .mu-mp-lettura{padding:8px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 3%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+${MURO} .mu-mp-lettura b{margin-left:4px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums}
+${MURO} .mu-mp-tele button{min-width:52px;text-align:center}
 ${MURO} .mu-mp-sorgenti button{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
 ${MURO} .mu-mp-sorgenti button.si{color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-mp-elenco{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;scrollbar-width:none}
@@ -3576,6 +5274,7 @@ ${MURO} .mu-ambiente .mu-target{margin-top:auto;flex-wrap:wrap}
 ${MURO} .mu-cam{padding:8px}
 ${MURO} .mu-cam .mu-video{height:100%;min-height:0}
 ${MURO} .mu-energia .mu-grande{margin-top:auto;font-size:72px}
+${MURO} .mu-energia .mu-cosa-fa{font-size:22px;font-weight:600;margin-top:4px}
 ${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}
@@ -3696,6 +5395,82 @@ ${MURO} .mu-avg-tasti{display:flex;gap:14px;flex-wrap:wrap;justify-content:cente
 ${MURO} .mu-avg-tasto{padding:18px 34px;border-radius:18px;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;font:700 22px Inter,sans-serif}
 ${MURO} .mu-avg-tasto.pieno{background:#fff;color:#7f1d1d;border-color:#fff}
 @keyframes muAvgBatte{50%{transform:scale(1.06)}}
+/* ── lo squillo del campanello, come una chiamata ─────────────────────────
+ * A tutto schermo sopra la pagina: in alto chi suona e da quanto, a sinistra
+ * il video grande, a destra i tasti uno sopra l'altro. Sul pannello piccolo
+ * il video sta in mezzo e i tasti in fila sotto. */
+${MURO} .mu-squillo{position:absolute;inset:0;z-index:55;display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto minmax(0,1fr);gap:18px;padding:22px;
+  background:radial-gradient(90% 70% at 30% 0%,color-mix(in srgb,var(--acc) 16%,transparent),transparent 70%),var(--bg-sculpted)}
+${MURO} .mu-sq-testa{grid-column:1/-1;display:flex;align-items:center;gap:26px;padding:16px 22px 16px 34px;overflow:visible}
+${MURO} .mu-sq-campana{position:relative;--c:64px}
+${MURO} .mu-sq-campana svg,${MURO} .mu-sq-campana .dm-oggetto{width:36px!important;height:36px!important}
+${MURO} .mu-sq-campana .onda{position:absolute;inset:0;border-radius:inherit;border:3px solid var(--acc);pointer-events:none;animation:muSqOnda 1.4s ease-out infinite}
+${MURO} .mu-sq-campana .onda.o1{inset:-10px;border-radius:30px;opacity:.55}
+${MURO} .mu-sq-campana .onda.o2{inset:-22px;border-radius:38px;opacity:.25;animation-delay:.35s}
+@keyframes muSqOnda{0%{transform:scale(.92)}60%{transform:scale(1.04)}100%{transform:scale(.92)}}
+${MURO} .mu-squillo.squilla .mu-sq-campana>svg,${MURO} .mu-squillo.squilla .mu-sq-campana>.dm-oggetto{animation:muSqDondola 1.2s ease-in-out infinite;transform-origin:50% 15%}
+@keyframes muSqDondola{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(7deg)}80%{transform:rotate(-4deg)}}
+${MURO} .mu-sq-testa .mu-n{font-size:30px}
+${MURO} .mu-sq-testa .mu-sotto{font-size:17px;margin-top:2px}
+${MURO} .mu-sq-ora{margin-left:auto;text-align:right;flex:none}
+${MURO} .mu-sq-ora .mu-osw{font-size:44px}
+${MURO} .mu-sq-ora .mu-stato{display:block;margin-top:4px}
+${MURO} .mu-sq-ora.finito .mu-osw,${MURO} .mu-sq-ora.finito .mu-stato{color:var(--text-dim)}
+${MURO} .mu-sq-video{min-height:0;height:100%;border-radius:24px}
+${MURO} .mu-sq-video .mu-live{display:flex;align-items:center;gap:7px;z-index:1}
+${MURO} .mu-sq-video .mu-live i{width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 4px #ef444455}
+${MURO} .mu-sq-video video.mu-sq-voce{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+${MURO} .mu-sq-avviso{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:2;max-width:90%;padding:10px 16px;border-radius:14px;background:#000b;color:#fff;font-size:14px;font-weight:800;text-align:center}
+${MURO} .mu-sq-tasti{display:flex;flex-direction:column;gap:14px;min-height:0}
+${MURO} .mu-sq-tasti .mu-btn{height:auto;flex:1 1 0;min-height:0;flex-direction:column;gap:6px;font-size:21px;border-radius:22px;text-align:center}
+${MURO} .mu-sq-tasti .mu-btn svg{width:30px;height:30px;flex:none}
+${MURO} .mu-sq-tasti .mu-btn small{font-size:12px;font-weight:700;opacity:.75}
+${MURO} .mu-sq-tasti .mu-btn.grande{flex:1.6 1 0;font-size:26px}
+${MURO} .mu-sq-tasti .mu-btn.grande svg{width:40px;height:40px}
+${MURO} .mu-sq-tasti .mu-btn.rosso{color:#dc2626}
+${MURO}[data-tema="dark"] .mu-sq-tasti .mu-btn.rosso{color:#f87171}
+${MURO} .mu-sq-tasti .mu-sq-parla.si{--acc:#16a34a;color:#fff;background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 90%,#fff),var(--acc))}
+${MURO} .mu-sq-due{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:0 0 auto}
+${MURO} .mu-sq-due .mu-btn{height:190px;flex:none;font-size:24px}
+${MURO} .mu-sq-due .mu-btn svg{width:36px;height:36px}
+${MURO} .mu-sq-due>:last-child:nth-child(odd){grid-column:1/-1}
+${MURO} .mu-sq-due:has(>:nth-child(3)) .mu-btn{height:120px}
+${MURO} .mu-sq-storia{flex:1 1 auto;min-height:0;padding:16px;display:flex;flex-direction:column;gap:10px}
+${MURO} .mu-sq-storia>.mu-stato{color:var(--text-dim)}
+${MURO} .mu-sq-righe{flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:10px;min-height:0}
+${MURO} .mu-sq-squillo{display:flex;align-items:center;gap:12px;min-width:0}
+${MURO} .mu-sq-squillo>img,${MURO} .mu-sq-squillo>.mu-sq-senza{width:120px;height:72px;border-radius:10px;object-fit:cover;flex:none;box-shadow:0 0 0 1px color-mix(in srgb,var(--text) 14%,transparent)}
+${MURO} .mu-sq-senza{display:grid;place-items:center;background:color-mix(in srgb,var(--text) 6%,var(--card-bg))}
+${MURO} .mu-sq-squillo b{display:block;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+${MURO} .mu-sq-squillo small{display:block;font-size:13px;font-weight:700;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-sq-squillo.ora b{color:#2563eb}
+${MURO}[data-tema="dark"] .mu-sq-squillo.ora b{color:#60a5fa}
+${MURO}:not([data-compatto="1"]) .mu-sq-mini{display:none}
+${MURO}[data-compatto="1"] .mu-squillo{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto;gap:10px;padding:12px}
+${MURO}[data-compatto="1"] .mu-sq-testa{padding:10px 12px 10px 24px;gap:20px;border-radius:18px}
+${MURO}[data-compatto="1"] .mu-sq-campana{--c:44px}
+${MURO}[data-compatto="1"] .mu-sq-campana svg,${MURO}[data-compatto="1"] .mu-sq-campana .dm-oggetto{width:26px!important;height:26px!important}
+${MURO}[data-compatto="1"] .mu-sq-campana .onda.o1{inset:-6px;border-radius:22px}
+${MURO}[data-compatto="1"] .mu-sq-campana .onda.o2{inset:-12px;border-radius:26px}
+${MURO}[data-compatto="1"] .mu-sq-testa .mu-n{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO}[data-compatto="1"] .mu-sq-testa .mu-sotto{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO}[data-compatto="1"] .mu-sq-ora .mu-osw{font-size:26px}
+${MURO}[data-compatto="1"] .mu-sq-ora .mu-stato{display:none}
+${MURO}[data-compatto="1"] .mu-sq-video{border-radius:16px}
+${MURO}[data-compatto="1"] .mu-sq-tasti{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+${MURO}[data-compatto="1"] .mu-sq-tasti .mu-btn{height:76px;font-size:14px;gap:4px;border-radius:16px;padding:0 4px}
+${MURO}[data-compatto="1"] .mu-sq-tasti .mu-btn svg,${MURO}[data-compatto="1"] .mu-sq-tasti .mu-btn.grande svg{width:24px;height:24px}
+${MURO}[data-compatto="1"] .mu-sq-tasti .mu-btn small{display:none}
+${MURO}[data-compatto="1"] .mu-sq-tasti .mu-btn.grande{font-size:15px}
+${MURO}[data-compatto="1"] .mu-sq-tasti.dopo{display:block}
+${MURO}[data-compatto="1"] .mu-sq-tasti.dopo .mu-sq-due{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-columns:none;gap:8px}
+${MURO}[data-compatto="1"] .mu-sq-tasti.dopo .mu-btn{height:64px;flex-direction:row;font-size:17px;gap:8px}
+${MURO}[data-compatto="1"] .mu-sq-due>:last-child:nth-child(odd){grid-column:auto}
+${MURO}[data-compatto="1"] .mu-sq-tasti.dopo .mu-sq-storia{display:none}
+${MURO}[data-compatto="1"] .mu-sq-mini{position:absolute;right:8px;bottom:8px;display:flex;gap:6px;z-index:1}
+${MURO}[data-compatto="1"] .mu-sq-mini span{display:grid;justify-items:center;gap:2px;padding:3px;border-radius:9px;background:#000a;color:#fff;font:800 10px Inter,sans-serif}
+${MURO}[data-compatto="1"] .mu-sq-mini img,${MURO}[data-compatto="1"] .mu-sq-mini .mu-sq-senza{position:static;width:52px;height:32px;border-radius:6px;object-fit:cover}
+@media (prefers-reduced-motion:reduce){${MURO} .mu-sq-campana .onda,${MURO} .mu-squillo.squilla .mu-sq-campana>svg{animation:none}}
 ${MURO}[data-compatto="1"] .mu-avviso-grande{gap:10px;padding:14px}
 ${MURO}[data-compatto="1"] .mu-avg-disco{width:92px;height:92px;box-shadow:0 0 0 10px rgba(255,255,255,.08)}
 ${MURO}[data-compatto="1"] .mu-avg-disco .dm-oggetto,${MURO}[data-compatto="1"] .mu-avg-disco svg{width:54px!important;height:54px!important}
@@ -3706,10 +5481,73 @@ ${MURO} .mu-btn.pieno{--acc:#0ea5e9;background:linear-gradient(180deg,color-mix(
 ${MURO} .mu-due{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 ${MURO} .mu-ingresso{display:grid;grid-template-columns:1fr 1.1fr;grid-template-rows:1fr auto;gap:16px;min-height:0}
 ${MURO} .mu-allarme{padding:24px;display:flex;flex-direction:column;gap:18px}
+${MURO} .mu-allarme-letture{margin-top:auto;min-height:0;overflow:auto;scrollbar-width:none}
+${MURO} .mu-allarme-letture .mu-ing-letture{display:flex;flex-wrap:wrap;gap:8px}
+${MURO} .mu-allarme-letture .mu-ing-lettura{white-space:nowrap}
+${MURO} .mu-ing-striscia .mu-ing-comandi:first-child{margin-left:0;padding-left:0;border-left:0}
 ${MURO} .mu-stato-allarme{font-size:52px;color:var(--acc);margin-top:6px}
 ${MURO} .mu-avviso-finestre{display:flex;align-items:center;gap:8px;margin-top:8px}
 ${MURO} .mu-modi{--acc:#e11d48}
 ${MURO} .mu-nota{font-size:10.5px;text-align:center}
+/* Piu' aree: la card dell'antifurto si fa elenco. In cima le aree tutte
+ * insieme, sotto una riga per area — il nome e lo stato a sinistra, i tasti a
+ * destra — e le righe si dividono l'altezza che c'e'. Da una a quattro ci
+ * stanno senza scorrere; oltre, l'elenco scorre. */
+${MURO} .mu-allarme-aree{padding:18px 20px;gap:12px;min-height:0}
+${MURO} .mu-allarme-aree .mu-riga1{gap:14px}
+${MURO} .mu-allarme-aree .mu-stato-allarme{font-size:34px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-allarme-dice{min-width:0;flex:1}
+${MURO} .mu-allarme-aree .mu-avviso-finestre{margin-top:4px}
+${MURO} .mu-aree{display:flex;flex-direction:column;gap:8px;min-height:0;flex:1 1 auto;overflow-y:auto;scrollbar-width:none}
+${MURO} .mu-area{display:flex;align-items:center;gap:12px;padding:8px 8px 8px 16px;border-radius:18px;flex:0 0 auto;
+  background:color-mix(in srgb,var(--acc) 7%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 26%,transparent)}
+${MURO} .mu-area.grave{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));box-shadow:inset 0 0 0 2px var(--acc),0 0 24px -8px var(--acc)}
+${MURO} .mu-area-dice{display:flex;flex-direction:column;gap:3px;min-width:0;flex:0 1 30%}
+${MURO} .mu-area-nome{font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-area-stato{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:color-mix(in srgb,var(--acc) 85%,var(--text));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-area-stato i{flex:0 0 9px;width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+${MURO} .mu-area.grave .mu-area-stato i{animation:mu-batti 1s ease-in-out infinite}
+@keyframes mu-batti{50%{transform:scale(1.5);opacity:.6}}
+${MURO} .mu-modi-area{flex:1 1 auto;margin:0;padding:4px;gap:4px;border-radius:14px;min-width:0}
+${MURO} .mu-modi-area>button{height:46px;border-radius:11px;font-size:15px;padding:0 6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-modi-miei{flex:0 0 auto}
+${MURO} .mu-aree[data-quante="2"] .mu-area{padding-top:12px;padding-bottom:12px}
+${MURO} .mu-aree[data-quante="2"] .mu-modi-area>button{height:56px;font-size:16px}
+${MURO} .mu-aree[data-quante="4"]{gap:6px}
+${MURO} .mu-aree[data-quante="4"] .mu-area{padding-top:5px;padding-bottom:5px}
+${MURO} .mu-aree[data-quante="4"] .mu-modi-area>button{height:40px;font-size:14px}
+${MURO} .mu-aree[data-quante="4"] .mu-area-nome{font-size:16px}
+/* Le letture e i comandi dell'ingresso: le pastiglie della Musica. */
+${MURO} .mu-ing-altro{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:0}
+${MURO} .mu-ing-letture,${MURO} .mu-ing-comandi{display:flex;flex-wrap:wrap;gap:8px}
+${MURO} .mu-ingresso.mu-con-striscia{grid-template-rows:minmax(0,1fr) auto auto}
+${MURO} .mu-ing-striscia{grid-column:1/-1;padding:10px 12px;min-width:0}
+${MURO} .mu-ing-striscia .mu-ing-altro{flex-direction:row;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
+${MURO} .mu-ing-striscia .mu-ing-letture,${MURO} .mu-ing-striscia .mu-ing-comandi{flex-wrap:nowrap;flex:0 0 auto}
+${MURO} .mu-ing-striscia .mu-ing-comandi{margin-left:auto;padding-left:12px;border-left:1px solid color-mix(in srgb,var(--text) 10%,transparent)}
+${MURO} .mu-ing-striscia .mu-ing-lettura,${MURO} .mu-ing-striscia .mu-ing-comando{white-space:nowrap}
+${MURO} .mu-con-striscia .mu-piede .mu-card{padding:12px 20px}
+${MURO} .mu-con-striscia .mu-piede .mu-tessera .mu-osw{font-size:34px}
+${MURO} .mu-con-striscia .mu-piede .mu-chip{--c:44px!important}
+${MURO} .mu-ing-lettura{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 4%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent)}
+${MURO} .mu-ing-lettura b{margin-left:2px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums}
+${MURO} .mu-ing-lettura .dm-oggetto{margin:-4px 0}
+${MURO} .mu-ing-lettura.guarda{color:color-mix(in srgb,#f59e0b 80%,var(--text));background:color-mix(in srgb,#f59e0b 13%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,#f59e0b 50%,transparent)}
+${MURO} .mu-ing-lettura.guarda b{color:inherit}
+${MURO} .mu-ing-lettura.tutto-bene b{color:#10b981}
+${MURO} .mu-ing-comando{padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:var(--text-dim);background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 11%,transparent)}
+${MURO} .mu-ing-comando small{margin-left:4px;font-weight:700;opacity:.75}
+${MURO} .mu-ing-comando.si{--acc:#0ea5e9;color:color-mix(in srgb,var(--acc) 85%,var(--text));background:color-mix(in srgb,var(--acc) 16%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
+${MURO} .mu-ing-comando:disabled{opacity:.45}
+${MURO} .mu-ing-righe{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto}
+${MURO} .mu-ing-riga{--acc:#10b981;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--text) 4%,var(--card-bg))}
+${MURO} .mu-ing-riga.guarda{--acc:#f59e0b;background:color-mix(in srgb,var(--acc) 12%,var(--card-bg))}
+${MURO} .mu-ing-riga>i{flex:0 0 12px;width:12px;height:12px;border-radius:50%;background:var(--acc)}
+${MURO} .mu-ing-riga>b{font-size:17px;font-weight:900;color:color-mix(in srgb,var(--acc) 80%,var(--text))}
+${MURO} .mu-ing-riga .mu-btn{height:48px;padding:0 18px;font-size:16px;border-radius:14px}
+${MURO} .mu-fin-aree .mu-aree{overflow:visible}
+${MURO} .mu-finestra{max-height:94%;overflow-y:auto;scrollbar-width:none}
+${MURO} .mu-fin-aree{display:flex;flex-direction:column;gap:12px}
 ${MURO} .mu-citofono{padding:18px;display:flex;flex-direction:column;gap:14px}
 ${MURO} .mu-video{flex:1;border-radius:16px;position:relative;overflow:hidden;min-height:120px;background:radial-gradient(120% 90% at 30% 20%,#2a3550,#0b1020)}
 ${MURO} .mu-video img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -3737,6 +5575,10 @@ ${MURO} .mu-tasti{display:grid;grid-template-columns:repeat(3,96px);gap:16px;jus
 ${MURO} .mu-tasti .mu-tondo{width:96px;height:96px;font-size:32px;font-weight:700}
 ${MURO} .mu-riposo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#05080f;color:#dbe4f3}
 ${MURO} .mu-riposo.notte{background:#000}
+/* Di notte, con lo schermo tenuto acceso dal campanello: lo stesso riposo,
+ * fioco. La luce dello schermo la abbassa l'app; questo vale anche fuori. */
+${MURO} .mu-riposo.fioco{background:#000}
+${MURO} .mu-riposo.fioco>*{filter:brightness(.55)}
 ${MURO} .mu-deriva{position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--sx,0px)),calc(-50% + var(--sy,0px)));display:flex;flex-direction:column;align-items:center;gap:14px;width:max-content;max-width:96%;animation:mu-appari 1.8s ease both}
 @keyframes mu-appari{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){${MURO} .mu-deriva{animation:none}}
@@ -3759,6 +5601,14 @@ ${MURO} .mu-riposo-aree{display:flex;align-items:center;justify-content:center;f
 ${MURO} .mu-riposo-aree b{color:#dbe4f3;font-weight:800}
 ${MURO} .mu-riposo-aree .grave,${MURO} .mu-riposo-aree .grave b{color:#fda4af}
 ${MURO} .mu-riposo-aree i{font-style:normal;opacity:.6}
+${MURO} .mu-riposo-consiglio{display:flex;align-items:center;gap:12px;max-width:min(860px,90%);margin-top:18px;padding:10px 20px;border-radius:999px;
+  background:rgba(139,92,246,.14);border:1px solid rgba(167,139,250,.32);color:#e4dcff;font-weight:750;font-size:20px;line-height:1.3}
+${MURO} .mu-riposo-consiglio span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${MURO} .mu-riposo-consiglio i{flex:none;width:11px;height:11px;border-radius:50%;background:#60a5fa;box-shadow:0 0 0 4px rgba(96,165,250,.22)}
+${MURO} .mu-riposo-consiglio[data-urgenza="oggi"] i{background:#fbbf24;box-shadow:0 0 0 4px rgba(251,191,36,.22)}
+${MURO} .mu-riposo-consiglio[data-urgenza="urgente"]{background:rgba(220,38,38,.18);border-color:rgba(248,113,113,.45);color:#fecaca}
+${MURO} .mu-riposo-consiglio[data-urgenza="urgente"] i{background:#f87171;box-shadow:0 0 0 4px rgba(248,113,113,.25)}
+${MURO}[data-compatto="1"] .mu-riposo-consiglio{font-size:15px;padding:7px 14px;margin-top:12px}
 ${MURO}[data-compatto="1"] .mu-riposo-aree{font-size:15px;gap:6px}
 ${MURO} .mu-avvisi{position:absolute;top:28px;left:0;right:0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 20px}
 ${MURO} .mu-avviso{display:flex;align-items:center;gap:12px;padding:12px 20px 12px 12px;border-radius:999px;font-size:16px}
@@ -3776,7 +5626,6 @@ ${MURO}[data-compatto="1"] .mu-sot,${MURO}[data-compatto="1"] .mu-meteo,${MURO}[
 ${MURO}[data-compatto="1"] .mu-h{font-size:32px}
 ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;padding:3px;gap:3px}
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
-${MURO}[data-compatto="1"] .mu-pagine button span{display:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
 ${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}
@@ -3824,6 +5673,7 @@ ${MURO}[data-verso="verticale"] .mu-pagine button{flex:1;justify-content:center}
 ${MURO}[data-verso="verticale"] .mu-meteo,${MURO}[data-verso="verticale"] .mu-sep{display:none}
 ${MURO}[data-verso="verticale"] .mu-ora{margin-left:auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+${MURO}[data-verso="verticale"] .mu-ingresso.mu-con-striscia{grid-template-rows:auto minmax(0,1fr) auto auto}
 ${MURO}[data-verso="verticale"] .mu-piede{grid-template-columns:1fr 1fr}
 ${MURO}[data-verso="verticale"] .mu-fin-luce{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-colonna{height:300px}
@@ -3915,11 +5765,50 @@ ${MURO} .mu-g6>.mu-card.mu-termostato .mu-est>.mu-est-t{width:clamp(22px,min(19c
   ${MURO} .mu-card.mu-fam>.mu-giu{display:none}
   ${MURO} .mu-card.mu-clima-mini .mu-sotto{display:none}
 }
-@container (max-height:199px){
-  ${MURO} .mu-card.mu-fam>.mu-seg{display:none}
-}
 @container (max-height:129px){
   ${MURO} .mu-card.mu-fam>.mu-bar{display:none}
+}
+/* La tapparella coi tasti sempre sulla card.
+ *
+ * «Anche se attivo una stanza riprendendo le stanze della plancia principale,
+ * anche qui va fatto quello che hai fatto sul clima.» Le priorita' si
+ * rovesciano rispetto a prima: i tasti ▲ ■ ▼ restano in ogni casella, su
+ * ogni schermo, e a far posto sono gli altri. In quest'ordine, man mano che
+ * la casella si abbassa: la barra della posizione (la percentuale resta nella
+ * parola dello stato, e la barra nella finestra), il disegno (la riga in alto
+ * diventa la sola parola, piccola), e nelle caselle piu' basse anche la
+ * parola: restano il nome, che si stringe ma non sparisce, e i tasti. Il
+ * disegno se ne va prima della parola perche' e' lui a fare alta la riga: la
+ * parola da sola costa un terzo, e dice se la serranda e' aperta.
+ *
+ * I tasti crescono con la casella, fra 40 e 64 pixel del disegno (il pannello
+ * piu' rimpicciolito, a 0,75, li porta a 30 pixel veri: mai meno). In una
+ * casella stretta resta il segno senza la parola; il segno ha il colore della
+ * tapparella. Sul pannello piccolo (\`data-compatto\`) le righe di contorno
+ * delle card sono spente tutte, i tasti delle tapparelle no. */
+${MURO} .mu-g6>.mu-card.mu-tapparella>.mu-tap-tasti{display:flex;flex:none;margin-top:clamp(6px,5cqh,12px);padding:clamp(3px,2cqh,6px);gap:clamp(4px,2cqw,6px);border-radius:clamp(12px,9cqh,20px)}
+${MURO} .mu-g6>.mu-card.mu-tapparella>.mu-tap-tasti>button{height:clamp(40px,28cqh,64px);min-width:0;padding:0 4px;gap:8px;font-size:clamp(14px,9cqh,17px);border-radius:clamp(10px,7cqh,15px);color:var(--text);background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+${MURO} .mu-g6>.mu-card.mu-tapparella>.mu-tap-tasti>button:active{background:color-mix(in srgb,var(--acc) 22%,var(--card-bg))}
+${MURO} .mu-tap-tasti>button>b{font-size:1.2em;line-height:1;color:var(--acc);font-weight:800}
+${MURO} .mu-tap-tasti>button>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+${MURO} .mu-g6>.mu-card.mu-tapparella .mu-fam-nome.mu-osw{font-size:clamp(15px,min(19cqh,11cqw),38px)}
+@container (max-width:359px){
+  ${MURO} .mu-card.mu-tapparella .mu-tap-tasti>button>span{display:none}
+}
+@container (max-height:229px){
+  ${MURO} .mu-card.mu-tapparella>.mu-bar{display:none}
+}
+${MURO} .mu-card.mu-tapparella .mu-tap-stato{display:none;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-bottom:.3em;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+${MURO} .mu-card.mu-tapparella:not(.mu-accesa) .mu-tap-stato{color:var(--text-dim)}
+/* Le soglie sono sull'altezza dentro la casella, senza il suo bordo. */
+@container (max-height:134px){
+  ${MURO} .mu-card.mu-tapparella .mu-riga1>.mu-chip{display:none}
+  ${MURO} .mu-card.mu-tapparella .mu-riga1>.mu-stato{font-size:11px}
+  ${MURO} .mu-card.mu-tapparella .mu-fam-nome.mu-osw{padding-top:2px}
+}
+@container (max-height:99px){
+  ${MURO} .mu-card.mu-tapparella>.mu-riga1{display:none}
+  ${MURO} .mu-card.mu-tapparella .mu-tap-stato{display:block}
 }
 /* Il clima basso: i gradi voluti salgono accanto al nome, al posto della
  * pastiglia di quello che sta facendo, e la riga «− + ⏻» resta intera. */
@@ -3963,6 +5852,190 @@ ${MURO} .mu-g6>.mu-card.mu-termostato .mu-est>.mu-est-t{width:clamp(22px,min(19c
 @container (max-width:179px){
   ${MURO} .mu-card.mu-fam .mu-riga1>.mu-stato{display:none}
 }
+/* ── Il menu di lato ─────────────────────────────────────────────────────
+ *
+ * «Come sui pannelli di regia»: una colonna di tasti grandi a sinistra, il
+ * disegno sopra e il nome sotto, quello aperto acceso nel suo colore. La
+ * testa perde il ☰ e le linguette, e si fa piu' bassa. */
+${MURO} .mu-pagina.mu-con-lato{grid-template-columns:116px minmax(0,1fr);column-gap:18px}
+${MURO} .mu-con-lato>.mu-lato{grid-column:1;grid-row:1/-1}
+${MURO} .mu-con-lato>:not(.mu-lato){grid-column:2;min-width:0}
+${MURO} .mu-lato{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden}
+${MURO} .mu-lato>.mu-menu{width:100%;height:58px;flex:none;border-radius:20px}
+${MURO} .mu-lato-tasto{flex:1 1 0;min-height:0;max-height:112px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px 6px;border-radius:24px;text-align:center;
+  color:var(--text-dim);font-size:12px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;
+  background:${FONDO_DELLA_CARTA};box-shadow:${OMBRA_DELLA_CARTA}}
+${MURO} .mu-lato-tasto>span{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-lato-tasto .dm-oggetto{flex:none}
+${MURO} .mu-lato-tasto.si{color:var(--text);background:linear-gradient(160deg,color-mix(in srgb,var(--acc) 30%,var(--card-bg)),color-mix(in srgb,var(--acc) 12%,var(--card-bg)));
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--acc) 85%,transparent),0 12px 28px -12px var(--acc)}
+${MURO} .mu-testa-lato{padding:12px 24px}
+${MURO} .mu-testa-lato .mu-tit{font-size:34px}
+${MURO} .mu-testa-lato .mu-h{font-size:48px}
+/* ── La regia: il mixer ──────────────────────────────────────────────────
+ *
+ * Ogni gruppo una carta col suo colore; dentro, i canali in piedi: il numero
+ * in cima, il cursore lungo quanto si puo', il nome e il muto in fondo. Sotto,
+ * largo, il volume totale. Il cursore e' una traccia che si accende del
+ * colore del gruppo e una manopola da banco. */
+${MURO} .mu-pag-mixer,${MURO} .mu-pag-telecamera,${MURO} .mu-pag-comandi{grid-template-rows:auto 1fr}
+${MURO} .mu-mixer{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:16px;min-height:0}
+${MURO} .mu-mixer.solo-totale{grid-template-rows:auto;align-content:center}
+${MURO} .mu-mix-gruppi{display:grid;gap:16px;min-height:0}
+${MURO} .mu-mix-gruppo{display:flex;flex-direction:column;gap:12px;padding:14px 12px 12px;min-height:0;min-width:0;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 30%,transparent),${OMBRA_DELLA_CARTA}}
+${MURO} .mu-mix-tit{font-size:14px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mix-canali{flex:1;min-height:0;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+${MURO} .mu-canale{flex:1 1 0;min-width:76px;min-height:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 6px;border-radius:18px;
+  background:color-mix(in srgb,var(--text) 4%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 7%,transparent)}
+${MURO} .mu-can-v{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:22px;line-height:1;color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}
+${MURO} .mu-can-n{max-width:100%;font-size:14px;font-weight:800;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-can-muto{flex:none;width:100%;max-width:72px;height:48px;border-radius:14px;display:grid;place-items:center;color:var(--text-dim);
+  background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
+${MURO} .mu-can-muto.vuoto{visibility:hidden}
+${MURO} .mu-can-muto.si{color:#fff;background:linear-gradient(180deg,#f43f5e,#be123c);box-shadow:0 0 18px -2px #f43f5ecc,inset 0 1px 0 rgba(255,255,255,.25)}
+${MURO} .mu-fader{--p:0;position:relative;flex:1 1 auto;min-height:90px;width:100%;touch-action:none;cursor:pointer}
+${MURO} .mu-fader::before{content:"";position:absolute;top:24px;bottom:24px;left:calc(50% + 16px);width:9px;opacity:.55;
+  background:repeating-linear-gradient(180deg,color-mix(in srgb,var(--text) 45%,transparent) 0 1px,transparent 1px 10%)}
+${MURO} .mu-fad-traccia{position:absolute;top:24px;bottom:24px;left:50%;width:12px;margin-left:-6px;border-radius:6px;background:color-mix(in srgb,var(--text) 10%,#000 20%);box-shadow:inset 0 1px 3px rgba(0,0,0,.45)}
+${MURO} .mu-fad-traccia i{position:absolute;left:0;right:0;bottom:0;height:calc(var(--p) * 100%);border-radius:6px;
+  background:linear-gradient(0deg,color-mix(in srgb,var(--acc) 45%,transparent),var(--acc));box-shadow:0 0 16px color-mix(in srgb,var(--acc) 75%,transparent)}
+${MURO} .mu-fader u{position:absolute;left:50%;bottom:calc(24px + var(--p) * (100% - 48px));width:min(60px,86%);height:40px;transform:translate(-50%,50%);border-radius:11px;
+  background:linear-gradient(180deg,#f8fafc,#cbd5e1 55%,#94a3b8);box-shadow:0 6px 12px rgba(0,0,0,.5),inset 0 1px 0 #fff}
+${MURO} .mu-fader u::after{content:"";position:absolute;left:16%;right:16%;top:50%;height:4px;margin-top:-2px;border-radius:2px;background:var(--acc);box-shadow:0 0 8px var(--acc)}
+${MURO} .mu-fader.sdraiato{flex:1 1 auto;min-height:0;height:64px}
+${MURO} .mu-fader.sdraiato::before{top:auto;bottom:4px;left:30px;right:30px;width:auto;height:8px;background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--text) 45%,transparent) 0 1px,transparent 1px 5%)}
+${MURO} .mu-fader.sdraiato .mu-fad-traccia{top:50%;bottom:auto;left:30px;right:30px;width:auto;height:12px;margin:-6px 0 0}
+${MURO} .mu-fader.sdraiato .mu-fad-traccia i{top:0;bottom:0;height:auto;width:calc(var(--p) * 100%);background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 45%,transparent),var(--acc))}
+${MURO} .mu-fader.sdraiato u{bottom:auto;top:50%;left:calc(30px + var(--p) * (100% - 60px));width:40px;height:56px;transform:translate(-50%,-50%)}
+${MURO} .mu-fader.sdraiato u::after{left:50%;right:auto;top:16%;bottom:16%;width:4px;height:auto;margin:0 0 0 -2px}
+${MURO} .mu-fader.fermo{cursor:default;opacity:.4}
+${MURO} .mu-muto .mu-fad-traccia i{filter:grayscale(1);opacity:.3;box-shadow:none}
+${MURO} .mu-muto .mu-can-v{color:var(--text-dim);text-decoration:line-through}
+${MURO} .mu-spento{opacity:.5}
+${MURO} .mu-can-v{min-height:1em}
+${MURO} .mu-can-l{margin-top:-4px;font-size:12px;font-weight:700;color:var(--text-dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+${MURO} .mu-fad-letto{position:absolute;top:24px;bottom:24px;left:calc(50% - 22px);width:6px;border-radius:3px;background:color-mix(in srgb,var(--text) 8%,#000 18%);overflow:hidden}
+${MURO} .mu-fad-letto i{position:absolute;left:0;right:0;bottom:0;height:calc(var(--l) * 100%);background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--l),.001));background-position:bottom}
+${MURO} .mu-metro{cursor:default}
+${MURO} .mu-metro .mu-fad-traccia{width:18px;margin-left:-9px;border-radius:5px}
+${MURO} .mu-metro .mu-fad-traccia i{border-radius:4px;box-shadow:none;background:linear-gradient(0deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:100% calc(100% / max(var(--p),.001));background-position:bottom;
+  -webkit-mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(0deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia{height:18px;margin:-9px 0 0}
+${MURO} .mu-metro.sdraiato .mu-fad-traccia i{background:linear-gradient(90deg,#22c55e 0 60%,#eab308 60% 85%,#ef4444 85%);background-size:calc(100% / max(var(--p),.001)) 100%;background-position:left;
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px)}
+${MURO} .mu-passi{flex:1 1 auto;min-height:90px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+${MURO} .mu-passi>.mu-metro{flex:1 1 auto;min-height:40px}
+${MURO} .mu-passi>.mu-metro .mu-fad-traccia{top:6px;bottom:6px}
+${MURO} .mu-passi-spazio{flex:1 1 auto}
+${MURO} .mu-passo{flex:none;width:100%;max-width:72px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:24px;color:var(--acc);
+  background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 35%,transparent),0 6px 14px -8px rgba(0,0,0,.6)}
+${MURO} .mu-passo:active:not(:disabled){background:color-mix(in srgb,var(--acc) 30%,var(--card-bg))}
+${MURO} .mu-passo:disabled{opacity:.4}
+${MURO} .mu-passi.sdraiato{flex-direction:row;min-height:0;height:64px}
+${MURO} .mu-passi.sdraiato>.mu-metro{height:100%;min-height:0}
+${MURO} .mu-passi.sdraiato>.mu-metro .mu-fad-traccia{left:10px;right:10px}
+${MURO} .mu-passi.sdraiato .mu-passo{width:72px;height:56px}
+${MURO} .mu-mix-master{display:flex;align-items:center;gap:18px;padding:12px 22px;min-width:0}
+${MURO} .mu-mix-master>.mu-mix-tit{flex:none;max-width:220px;text-align:left;font-size:15px}
+${MURO} .mu-mix-master>.mu-can-muto{width:64px;max-width:none;height:56px}
+${MURO} .mu-mix-master>.mu-can-v{flex:none;min-width:84px;text-align:right;font-size:30px}
+/* ── La regia: la telecamera ─────────────────────────────────────────── */
+${MURO} .mu-ptz{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(min(340px,100%),1fr);grid-template-rows:minmax(0,1fr) auto;gap:16px;min-height:0}
+${MURO} .mu-ptz.senza-preset{grid-template-rows:minmax(0,1fr)}
+${MURO} .mu-ptz-video{padding:10px;display:flex;min-height:0}
+${MURO} .mu-ptz-video .mu-video{flex:1;min-height:0}
+${MURO} .mu-ptz-comandi{display:flex;align-items:center;gap:18px;padding:20px;min-height:0}
+${MURO} .mu-ptz-zoom{align-self:stretch;flex:none;width:68px;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:0;--acc:#0ea5e9}
+${MURO} .mu-ptz-zoom .mu-fader{min-height:60px}
+${MURO} .mu-ptz-pad{flex:1 1 auto;width:100%;min-width:0;max-width:440px;max-height:100%;aspect-ratio:1;margin:auto;display:grid;grid-template:repeat(3,minmax(0,1fr))/repeat(3,minmax(0,1fr));gap:10px}
+${MURO} .mu-ptz-t{display:grid;place-items:center;border-radius:20px;color:var(--text);font-weight:900;font-size:30px;
+  background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent),0 6px 14px -8px rgba(0,0,0,.6)}
+${MURO} .mu-ptz-t:active:not(:disabled){background:color-mix(in srgb,#0ea5e9 30%,var(--card-bg))}
+${MURO} .mu-ptz-t:disabled{opacity:.3;cursor:default}
+${MURO} .mu-ptz-stop{color:#fff;font-size:15px;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(180deg,#f43f5e,#be123c);box-shadow:0 0 18px -4px #f43f5ecc}
+${MURO} .mu-ptz-pm{flex:none;width:64px;height:56px;font-size:32px}
+${MURO} .mu-ptz-preset{grid-column:1/-1;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:12px}
+${MURO} .mu-ptz-preset-t{height:72px;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 10px;font-weight:800;font-size:16px;min-width:0}
+${MURO} .mu-ptz-preset-t>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-ptz-preset-t:active{box-shadow:inset 0 0 0 2px #0ea5e9}
+/* ── La regia: i comandi ─────────────────────────────────────────────── */
+${MURO} .mu-regia{display:grid;gap:16px;min-height:0}
+${MURO} .mu-reg-grandi{display:grid;grid-auto-rows:minmax(0,1fr);gap:16px;min-height:0}
+${MURO} .mu-reg-tasto{container-type:size;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,4cqh,22px);padding:18px;min-height:0;min-width:0;text-align:center;
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--acc) 65%,transparent),${OMBRA_DELLA_CARTA}}
+${MURO} .mu-reg-icona{flex:none;display:grid;place-items:center;color:var(--text-dim)}
+${MURO} .mu-reg-tasto:not(.mu-accesa) .mu-reg-icona{color:color-mix(in srgb,var(--acc) 55%,var(--text-dim))}
+${MURO} .mu-reg-tasto .mu-reg-icona{--ic:clamp(48px,min(36cqh,34cqw),168px);width:var(--ic);height:var(--ic);border-radius:calc(var(--ic) * .3);background:color-mix(in srgb,var(--text) 6%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 10%,transparent)}
+${MURO} .mu-accesa .mu-reg-icona{color:var(--acc)}
+${MURO} .mu-reg-tasto.mu-accesa .mu-reg-icona{background:color-mix(in srgb,var(--acc) 22%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 60%,transparent),0 0 30px -6px var(--acc)}
+${MURO} .mu-reg-nome{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-reg-tasto .mu-reg-icona>*{width:56%!important;height:56%!important}
+${MURO} .mu-reg-tasto .mu-reg-nome{font-size:clamp(18px,min(12cqh,9cqw),60px);text-transform:uppercase;letter-spacing:.04em}
+${MURO} .mu-reg-tasto .mu-stato{font-size:clamp(11px,4cqh,16px)}
+${MURO} .mu-reg-tasto:active{transform:scale(.985)}
+${MURO} .mu-reg-coppie{display:grid;gap:14px;min-height:0}
+${MURO} .mu-reg-coppia{display:flex;flex-direction:column;gap:10px;padding:14px;min-height:0;min-width:0}
+${MURO} .mu-reg-testa{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;text-align:center}
+${MURO} .mu-reg-testa .mu-reg-nome{font-size:19px;font-weight:800}
+${MURO} .mu-reg-coppia .mu-reg-icona{width:52px;height:52px;border-radius:16px;background:color-mix(in srgb,var(--text) 6%,var(--card-bg))}
+${MURO} .mu-reg-coppia.mu-accesa .mu-reg-icona{background:color-mix(in srgb,var(--acc) 22%,var(--card-bg));box-shadow:0 0 22px -6px var(--acc)}
+${MURO} .mu-reg-avvio,${MURO} .mu-reg-stop{flex:1 1 0;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:18px;font-weight:900;font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+${MURO} .mu-reg-avvio{color:#22c55e;background:color-mix(in srgb,#22c55e 8%,var(--card-bg));box-shadow:inset 0 0 0 2px color-mix(in srgb,#22c55e 60%,transparent)}
+${MURO} .mu-reg-avvio.si{color:#052e16;background:linear-gradient(180deg,#4ade80,#16a34a);box-shadow:0 0 22px -4px #22c55ecc}
+${MURO} .mu-reg-stop{color:#f43f5e;background:color-mix(in srgb,#f43f5e 8%,var(--card-bg));box-shadow:inset 0 0 0 2px color-mix(in srgb,#f43f5e 60%,transparent)}
+${MURO} .mu-reg-avvio:active,${MURO} .mu-reg-stop:active{transform:scale(.97)}
+${MURO} .mu-reg-ferma{height:72px;display:flex;align-items:center;justify-content:center;gap:14px;color:#fff;font-weight:900;font-size:18px;letter-spacing:.12em;text-transform:uppercase;
+  background:linear-gradient(180deg,#e11d48,#9f1239);box-shadow:0 14px 30px -14px #f43f5e,inset 0 1px 0 rgba(255,255,255,.2)}
+/* Sul pannello piccolo tutto si stringe: i canali, la telecamera in colonna,
+ * i tasti piu' bassi. */
+${MURO}[data-compatto="1"] .mu-mixer,${MURO}[data-compatto="1"] .mu-mix-gruppi,${MURO}[data-compatto="1"] .mu-regia,${MURO}[data-compatto="1"] .mu-reg-grandi,${MURO}[data-compatto="1"] .mu-reg-coppie{gap:8px}
+${MURO}[data-compatto="1"] .mu-mix-gruppo{padding:8px 6px 6px;gap:6px;border-radius:18px}
+${MURO}[data-compatto="1"] .mu-mix-tit{font-size:11px;letter-spacing:.1em}
+${MURO}[data-compatto="1"] .mu-mix-canali{gap:6px}
+${MURO}[data-compatto="1"] .mu-canale{min-width:54px;padding:6px 3px;gap:4px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-can-v{font-size:15px}
+${MURO}[data-compatto="1"] .mu-can-n{font-size:11px}
+${MURO}[data-compatto="1"] .mu-can-muto{height:34px;border-radius:10px}
+${MURO}[data-compatto="1"] .mu-can-muto svg{width:18px;height:18px}
+${MURO}[data-compatto="1"] .mu-fader{min-height:60px}
+${MURO}[data-compatto="1"] .mu-fader::before,${MURO}[data-compatto="1"] .mu-fad-traccia{top:16px;bottom:16px}
+${MURO}[data-compatto="1"] .mu-fader u{bottom:calc(16px + var(--p) * (100% - 32px));height:30px;width:min(44px,86%);border-radius:9px}
+${MURO}[data-compatto="1"] .mu-fader.sdraiato{height:44px;min-height:0}
+${MURO}[data-compatto="1"] .mu-fader.sdraiato .mu-fad-traccia{top:50%;bottom:auto;left:20px;right:20px}
+${MURO}[data-compatto="1"] .mu-fader.sdraiato::before{top:auto;bottom:2px;left:20px;right:20px}
+${MURO}[data-compatto="1"] .mu-fader.sdraiato u{bottom:auto;left:calc(20px + var(--p) * (100% - 40px));width:30px;height:40px}
+${MURO}[data-compatto="1"] .mu-passo{height:40px;font-size:16px;border-radius:10px}
+${MURO}[data-compatto="1"] .mu-passi{min-height:60px;gap:4px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato{height:44px}
+${MURO}[data-compatto="1"] .mu-passi.sdraiato .mu-passo{width:44px;height:40px}
+${MURO}[data-compatto="1"] .mu-fad-letto{top:16px;bottom:16px}
+${MURO}[data-compatto="1"] .mu-mix-master{padding:6px 12px;gap:10px;border-radius:18px}
+${MURO}[data-compatto="1"] .mu-mix-master>.mu-mix-tit{max-width:110px;font-size:11px}
+${MURO}[data-compatto="1"] .mu-mix-master>.mu-can-muto{width:44px;height:38px}
+${MURO}[data-compatto="1"] .mu-mix-master>.mu-can-v{min-width:56px;font-size:20px}
+${MURO}[data-compatto="1"] .mu-ptz{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:8px}
+${MURO}[data-compatto="1"] .mu-ptz-comandi{padding:10px;gap:8px}
+${MURO}[data-compatto="1"] .mu-ptz-zoom{width:56px;gap:6px}
+${MURO}[data-compatto="1"] .mu-ptz-pad{gap:6px}
+${MURO}[data-compatto="1"] .mu-ptz-t{border-radius:14px;font-size:22px}
+${MURO}[data-compatto="1"] .mu-ptz-t svg{width:28px;height:28px}
+${MURO}[data-compatto="1"] .mu-ptz-stop{font-size:11px}
+${MURO}[data-compatto="1"] .mu-ptz-pm{width:46px;height:40px;font-size:24px}
+${MURO}[data-compatto="1"] .mu-ptz-preset{gap:6px}
+${MURO}[data-compatto="1"] .mu-ptz-preset-t{height:46px;font-size:13px;border-radius:14px;gap:6px}
+${MURO}[data-compatto="1"] .mu-reg-tasto{gap:8px;padding:10px;border-radius:18px}
+${MURO}[data-compatto="1"] .mu-reg-coppia{padding:8px;gap:6px;border-radius:16px}
+${MURO}[data-compatto="1"] .mu-reg-coppia .mu-reg-icona{display:none}
+${MURO}[data-compatto="1"] .mu-reg-testa .mu-reg-nome{font-size:13px}
+${MURO}[data-compatto="1"] .mu-reg-avvio,${MURO}[data-compatto="1"] .mu-reg-stop{min-height:34px;border-radius:12px;font-size:10px;gap:2px}
+${MURO}[data-compatto="1"] .mu-reg-avvio svg,${MURO}[data-compatto="1"] .mu-reg-stop svg{width:18px;height:18px}
+${MURO}[data-compatto="1"] .mu-reg-ferma{height:46px;font-size:14px;border-radius:16px}
+/* In verticale la telecamera sta sopra e i comandi sotto. */
+${MURO}[data-verso="verticale"] .mu-ptz{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1.2fr) minmax(0,1fr) auto}
+${MURO}[data-verso="verticale"] .mu-ptz-video{grid-column:1/-1}
+${MURO}[data-verso="verticale"] .mu-ptz-comandi{grid-column:1/-1;justify-content:center}
+${MURO}[data-verso="verticale"] .mu-ptz.senza-preset{grid-template-rows:minmax(0,1.2fr) minmax(0,1fr)}
+${MURO}[data-verso="verticale"] .mu-reg-coppie{grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))!important;grid-auto-rows:minmax(0,1fr)}
 `,
   );
 }
@@ -4033,8 +6106,12 @@ export function installPlanciaAMuro() {
   if (!doc || state.installed) return false;
   state.installed = true;
   stili();
+  /* Il suono del campanello, in un browser, parte solo dopo un tocco: il
+   * primo tocco sul pannello lo sblocca per sempre. */
+  ascoltaIlPrimoTocco();
   trattieniIlVelo();
   agganciaIlConfig();
+  prendiLePorteDelConfig();
   const ancora = () => rileggi().catch(() => {});
   root.addEventListener?.("dashboardmodern:legacy-ready", agganciaIlConfig);
   for (const evento of [

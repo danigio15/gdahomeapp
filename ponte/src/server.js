@@ -28,7 +28,7 @@ import { aggiungiUnaPlancia, conIlModello } from "./plancia-nuova.js";
 import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
 import { qrInPng, qrInSvg } from "./qr.js";
 import { impronta } from "./segreti.js";
-import { InUso, NonCe, TELEFONI_DI_PROVA } from "./casa-di-prova.js";
+import { InUso, NonCe } from "./casa-di-prova.js";
 
 /* Un corpo piu' grande di cosi' non e' una richiesta della console. */
 const CORPO_MASSIMO = 4 * 1024;
@@ -1324,7 +1324,7 @@ async function api({
   }
 
   if (via === "/api/codice" && metodo === "POST") {
-    if (dispositivi.quanti() >= opzioni.dispositiviMassimi) {
+    if (dispositivi.quantiDiCasa() >= opzioni.dispositiviMassimi) {
       male(risposta, 409, `sono gia' abbinati ${opzioni.dispositiviMassimi} dispositivi`);
       return;
     }
@@ -1644,7 +1644,6 @@ function laProvaPerLaConsole(casaDiProva, dispositivi) {
     scadeIl: viva.scadeIl,
     utente: viva.utente,
     telefoni: dispositivi?.quantiDiProva?.() ?? 0,
-    telefoniMassimi: TELEFONI_DI_PROVA,
   };
 }
 

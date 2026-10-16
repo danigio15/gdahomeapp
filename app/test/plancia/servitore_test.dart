@@ -571,6 +571,97 @@ void main() {
     expect(ponte.commissioni.single.containsKey('intestazioni'), isFalse);
   });
 
+  group('le telecamere', () {
+    /* Un JPEG piccolo ma vero: FF D8 in testa, FF D9 in fondo, e dentro
+     * nessuno. */
+    final jpeg = <int>[
+      0xff, 0xd8, 0xff, 0xe0, //
+      ...utf8.encode('istantanea di prova'),
+      0xff, 0xd9,
+    ];
+
+    setUp(() {
+      ponte.file['/api/camera_proxy/camera.cancello'] = ('image/jpeg', jpeg);
+      ponte.file['/api/image_proxy/image.cancello_ultimo_scatto'] = (
+        'image/jpeg',
+        jpeg,
+      );
+    });
+
+    test('l\'istantanea arriva intera, e il WebView non la tiene', () async {
+      for (final percorso in [
+        '/api/camera_proxy/camera.cancello',
+        '/api/image_proxy/image.cancello_ultimo_scatto',
+      ]) {
+        final richiesta = await cliente.getUrl(
+          servitore.radice.replace(path: percorso, query: 'dm_t=1700000000'),
+        );
+        richiesta.cookies.add(Cookie('gdahome', servitore.chiave));
+        final risposta = await richiesta.close();
+        final byte = await risposta.fold<List<int>>(
+          [],
+          (tutti, pezzo) => tutti..addAll(pezzo),
+        );
+        expect(risposta.statusCode, 200, reason: percorso);
+        expect(risposta.headers.contentType?.mimeType, 'image/jpeg');
+        expect(byte, jpeg, reason: percorso);
+        /* Un fotogramma vecchio servito dalla cache e' una telecamera ferma. */
+        expect(
+          risposta.headers.value(HttpHeaders.cacheControlHeader),
+          'no-store',
+        );
+      }
+      expect(ponte.commissioni.map((c) => c['percorso']), [
+        '/api/camera_proxy/camera.cancello?dm_t=1700000000',
+        '/api/image_proxy/image.cancello_ultimo_scatto?dm_t=1700000000',
+      ]);
+    });
+
+    test(
+      'il flusso MJPEG torna subito con un no, e non resta appeso',
+      () async {
+        final partito = DateTime.now();
+        final (stato, _, _) = await prendi(
+          '/api/camera_proxy_stream/camera.cancello',
+        );
+        expect(stato, 501);
+        expect(
+          DateTime.now().difference(partito),
+          lessThan(const Duration(seconds: 2)),
+        );
+        /* E dopo, l'istantanea passa come prima. */
+        final (dopo, _, byte) = await prendi(
+          '/api/camera_proxy/camera.cancello',
+        );
+        expect(dopo, 200);
+        expect(byte, jpeg);
+      },
+    );
+
+    test('una telecamera chiusa dal ponte non diventa un\'immagine', () async {
+      ponte.chiusi.add('/api/camera_proxy/camera.camera_da_letto');
+      ponte.file['/api/camera_proxy/camera.camera_da_letto'] = (
+        'image/jpeg',
+        jpeg,
+      );
+      final (stato, tipo, byte) = await prendi(
+        '/api/camera_proxy/camera.camera_da_letto',
+      );
+      expect(stato, isNot(200));
+      expect(tipo, isNot(startsWith('image/')));
+      expect(byte, isNot(jpeg));
+
+      /* E senza la chiave della porta, al ponte non si chiede nemmeno. */
+      final quante = ponte.commissioni.length;
+      final (senza, _, _) = await prendi(
+        '/api/camera_proxy/camera.cancello',
+        senzaChiave: true,
+      );
+      expect(senza, 403);
+      expect(ponte.commissioni.length, quante);
+    });
+  });
+
   group('il WebSocket della pagina', () {
     Future<WebSocket> apri({Servitore? di}) => WebSocket.connect(
       'ws://127.0.0.1:${(di ?? servitore).porta}/api/websocket',

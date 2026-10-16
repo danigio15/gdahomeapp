@@ -72,9 +72,10 @@
  *    tessera degli aggiornamenti della plancia preme da se';
  *  - `auth/sign_path` sulle vie delle telecamere (anche `/api/webrtc/ws`),
  *    delle immagini e del calendario;
- *  - REST, da `ponte/http`: `/api/camera_proxy/` e `/api/camera_proxy_stream/`,
- *    `/api/calendars/`, `/api/image/serve/`, `POST /api/image/upload`,
- *    `/api/history/period/`.
+ *  - REST, da `ponte/http`: `/api/camera_proxy/` e `/api/image_proxy/` (solo
+ *    a una persona di Home Assistant attiva, `commissioni.js`; il flusso
+ *    `/api/camera_proxy_stream/` risponde 501), `/api/calendars/`,
+ *    `/api/image/serve/`, `POST /api/image/upload`, `/api/history/period/`.
  *
  * Altre cose da amministratore non passano di qui, perche' le fa il ponte coi
  * suoi comandi e sul filo suo, con le sue regole su chi amministra
@@ -209,6 +210,10 @@ const PER_TUTTI = new Set([
    * cambia niente, come le altre di questo elenco: quello che poi si suona
    * passa per «call_service», che qui c'e' gia'. */
   "media_player/browse_media",
+  /* La ricerca dentro il lettore (Music Assistant, e con lui Deezer): come la
+   * domanda qui sopra legge e basta, e quello che si sceglie passa per
+   * «call_service». */
+  "media_player/search_media",
   "frontend/get_user_data",
   "frontend/set_user_data",
   "frontend/get_translations",
@@ -438,7 +443,36 @@ export function servizioVietato(dominio, servizio, { amministra = false } = {}) 
  */
 /* ─── Le telecamere delle plance riservate ─────────────────────────────── */
 
-const TELECAMERA = /\bcamera\.[a-z0-9_]+/gi;
+/* Una telecamera, o l'immagine di una telecamera: «Ultimo scatto Cancello» e'
+ * un'entita' `image.*`, e mostra la stessa cosa che mostra la telecamera. */
+const TELECAMERA = /\b(?:camera|image)\.[a-z0-9_]+/gi;
+
+/* Le vie dove passano i fotogrammi: l'istantanea, il flusso MJPEG, l'immagine
+ * di un'entita' `image.*`, e il WebRTC (che la telecamera la nomina dentro). */
+const VIE_DELLE_TELECAMERE = Object.freeze([
+  "/api/camera_proxy/",
+  "/api/camera_proxy_stream/",
+  "/api/image_proxy/",
+]);
+
+/** Se questo percorso porta i fotogrammi di una telecamera. */
+export function eUnaViaDelleTelecamere(percorso) {
+  const via = String(percorso || "")
+    .split("?")[0]
+    .toLowerCase();
+  return VIE_DELLE_TELECAMERE.some((una) => via.startsWith(una));
+}
+
+/* Quanto vale al massimo una firma di una via delle telecamere: dieci minuti.
+ *
+ * Una firma di `auth/sign_path` e' un lasciapassare: chi ha l'indirizzo
+ * firmato apre quella telecamera senza nessun altro segno, finche' la firma
+ * vale. Chiesta da qui, la firma la fa Home Assistant col segno del ponte, non
+ * con quello della persona: non si puo' legare a chi l'ha chiesta, e allora
+ * almeno dura poco. La plancia ne chiedeva per quattro ore; un `<img>` la usa
+ * nel momento in cui parte, e un flusso gia' partito non si interrompe quando
+ * la firma scade. */
+export const FIRMA_MASSIMA_S = 10 * 60;
 
 /* Le telecamere che un messaggio nomina, se e' un messaggio che ne apre una:
  * il flusso, l'istantanea, la firma del suo indirizzo, un servizio delle
@@ -519,9 +553,10 @@ export function unNo(id, messaggio) {
 /**
  * Un testo arrivato dal client, passato alla dogana.
  *
- * Torna `{passa, rifiuti}`: `passa` e' l'elenco dei testi da girare a Home
- * Assistant (vuoto se non passa niente), `rifiuti` le risposte da rimandare a
- * chi ha chiesto. Home Assistant accetta anche piu' messaggi in un elenco
+ * Torna `{passa, rifiuti, risposte}`: `passa` e' l'elenco dei testi da girare
+ * a Home Assistant (vuoto se non passa niente), `rifiuti` i no da rimandare a
+ * chi ha chiesto, `risposte` i si' che il ponte da' da se' (le firme delle
+ * telecamere chieste dal telefono, con `firmaIlPonte`). Home Assistant accetta anche piu' messaggi in un elenco
  * solo: si guardano uno per uno, e passano da soli quelli buoni.
  *
  * Un `auth` si lascia cadere senza risposta: il filo e' gia' autenticato, e
@@ -530,16 +565,20 @@ export function unNo(id, messaggio) {
  * @param {string} testo
  * @param {{amministra: boolean}} chi
  */
-export function passaLaDogana(testo, { amministra = false, telecamereChiuse = null } = {}) {
+export function passaLaDogana(
+  testo,
+  { amministra = false, telecamereChiuse = null, firmaIlPonte = false } = {},
+) {
   let letto;
   try {
     letto = JSON.parse(testo);
   } catch (_errore) {
-    return { passa: [], rifiuti: [] };
+    return { passa: [], rifiuti: [], risposte: [] };
   }
   const elenco = Array.isArray(letto) ? letto : [letto];
   const passa = [];
   const rifiuti = [];
+  const risposte = [];
   for (const uno of elenco) {
     if (uno && typeof uno === "object" && uno.type === "auth") continue;
     /* In un elenco un comando della plancia o del ponte non e' passato dal
@@ -555,9 +594,35 @@ export function passaLaDogana(testo, { amministra = false, telecamereChiuse = nu
       rifiuti.push(unNo(id, no));
       continue;
     }
+    /* La firma di una via delle telecamere (`FIRMA_MASSIMA_S`). */
+    if (tipo === "auth/sign_path" && eUnaViaDelleTelecamere(uno.path)) {
+      /* Dal telefono la firma non serve, e non si fa: nell'app ogni
+       * fotogramma passa dal servitore (che vuole la sua chiave) e da
+       * `ponte/http` (che a ogni domanda riguarda chi chiede e quali
+       * telecamere vede). Un indirizzo firmato da Home Assistant col segno del
+       * ponte sarebbe un lasciapassare che vale anche senza il ponte, e che
+       * con la persona non ha niente a che fare. Si risponde col percorso
+       * com'e': senza firma non apre niente, da nessuna parte. */
+      if (firmaIlPonte) {
+        risposte.push({
+          id: uno.id ?? null,
+          type: "result",
+          success: true,
+          result: { path: uno.path },
+        });
+        continue;
+      }
+      /* Dentro Home Assistant la firma serve — il browser chiede la foto a
+       * Home Assistant da se' — ma dura poco. */
+      const quanto = Number(uno.expires);
+      if (!(quanto > 0 && quanto <= FIRMA_MASSIMA_S)) {
+        passa.push(JSON.stringify({ ...uno, expires: FIRMA_MASSIMA_S }));
+        continue;
+      }
+    }
     passa.push(Array.isArray(letto) ? JSON.stringify(uno) : testo);
   }
-  return { passa, rifiuti };
+  return { passa, rifiuti, risposte };
 }
 
 /* ─── La strada REST ───────────────────────────────────────────────────── */
@@ -654,7 +719,9 @@ export function perLaVia({
   if (verbo !== "GET" && VIE_DA_NON_SCRIVERE.some((una) => sottoLaVia(via, una)))
     return `${verbo} ${via} non passa dal ponte`;
   if (admin) return null;
-  const dellaTelecamera = /^\/api\/camera_proxy(?:_stream)?\/(camera\.[a-z0-9_]+)/.exec(via);
+  const dellaTelecamera =
+    /^\/api\/camera_proxy(?:_stream)?\/(camera\.[a-z0-9_]+)/.exec(via) ||
+    /^\/api\/image_proxy\/(image\.[a-z0-9_]+)/.exec(via);
   if (dellaTelecamera && apreUnaChiusa(new Set([dellaTelecamera[1]]), telecamereChiuse))
     return LA_TELECAMERA_E_CHIUSA;
   /* `GET /api/states` e `/api/config` da soli sono letture che un utente

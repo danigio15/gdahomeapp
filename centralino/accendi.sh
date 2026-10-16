@@ -358,7 +358,7 @@ else
     POSTA_DA="${POSTA_DA:-$POSTA_UTENTE}"
     printf '  a chi arriva [assistenza@%s]: ' "$NOME_DEL_SITO" >&2
     IFS= read -r POSTA_A </dev/tty || true
-    POSTA_A="${POSTA_A:-assistenza@$NOME_DEL_SITO}"
+    POSTA_A="${POSTA_A:-domotica@crvgroup.it}"
   fi
 fi
 
@@ -620,6 +620,25 @@ if [ -d "$radice/sito" ]; then
     echo "la plancia non e' entrata nel sito: lascio quello di prima" >&2
   fi
 fi
+# La busta delle notifiche: la chiave di Firebase, chiusa per questa macchina
+# dal bottone «Il tramite» e lasciata nel messaggio del segno
+# (`strumenti/busta-del-tramite.mjs`). Qui si prende e basta: aprirla puo'
+# solo `tramite-apri-la-busta`, che ha la chiave. Un segno senza messaggio —
+# o un messaggio senza busta — vuol dire che non c'e' niente di nuovo.
+annotato="$(curl -fsS --max-time 20 \
+  --config <(printf 'header = "Authorization: Bearer %s"\n' "$GETTONE_LETTURA") \
+  -H "Accept: application/vnd.github+json" \
+  "https://api.github.com/repos/$REPO/git/ref/tags/$SEGNO" 2>/dev/null |
+  node -e 'let t="";process.stdin.on("data",(p)=>(t+=p)).on("end",()=>{try{const o=JSON.parse(t).object;if(o&&o.type==="tag"&&/^[0-9a-f]{40}$/.test(o.sha))process.stdout.write(o.sha)}catch{}})' || true)"
+if [ -n "$annotato" ]; then
+  curl -fsS --max-time 20 \
+    --config <(printf 'header = "Authorization: Bearer %s"\n' "$GETTONE_LETTURA") \
+    -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/$REPO/git/tags/$annotato" 2>/dev/null |
+    node -e 'let t="";process.stdin.on("data",(p)=>(t+=p)).on("end",()=>{try{const m=/-----BEGIN GDAHOME BUSTA-----[\s\S]*?-----END GDAHOME BUSTA-----/.exec(JSON.parse(t).message||"");if(m)process.stdout.write(m[0]+"\n")}catch{}})' \
+    >"$nuovo/firebase-invio.busta" || true
+  [ -s "$nuovo/firebase-invio.busta" ] || rm -f "$nuovo/firebase-invio.busta"
+fi
 printf '%s' "$adesso" >"$nuovo/versione"
 rm -rf "$USCITA/pronto"
 mv "$nuovo" "$USCITA/pronto"
@@ -678,6 +697,11 @@ mv "$arrivo/app" "$DOVE/app"
 if [ -d "$arrivo/sito" ]; then
   [ -d "$DOVE/sito" ] && mv "$DOVE/sito" "$DOVE/sito.via"
   mv "$arrivo/sito" "$DOVE/sito"
+fi
+# La busta delle notifiche viaggia com'e': chiusa, e la apre un altro
+# servizio (`tramite-apri-la-busta`). Qui si sposta e basta.
+if [ -f "$arrivo/firebase-invio.busta" ] && [ ! -L "$arrivo/firebase-invio.busta" ]; then
+  mv "$arrivo/firebase-invio.busta" "$DOVE/firebase-invio.busta"
 fi
 printf '%s' "$SHA" >"$DOVE/versione"
 rm -rf "$DOVE/centralino.via" "$DOVE/app.via" "$DOVE/sito.via" "$arrivo"
@@ -748,6 +772,119 @@ VERSIONE="$(cat "$DOVE/versione" 2>/dev/null || true)"
 
 bene "tramite scaricato e provato, versione ${VERSIONE:0:8}"
 
+# ─── 4½. La busta delle notifiche ───────────────────────────────────────────
+#
+# Il tramite manda le notifiche dei telefoni passando da Firebase, e per farlo
+# gli serve il conto di servizio del progetto: un JSON con una chiave privata
+# dentro. Sta fra i segreti di GitHub (`GDAHOME_FIREBASE_INVIO`), e da li' a
+# questa macchina non c'e' una strada diretta: nessuno entra qui, e' la
+# macchina che va a guardare.
+#
+# Allora la macchina ha una chiave sua, X25519, fatta qui la prima volta e che
+# da qui non esce. La meta' pubblica si mette in GitHub (la variabile
+# `TRAMITE_CHIAVE_DELLA_BUSTA`), e il bottone «Il tramite» chiude il segreto
+# per lei e lo lascia nel messaggio del segno; `prepara.sh` lo prende,
+# `scambia.sh` lo porta dentro, e `tramite-apri-la-busta` — un servizio che
+# non va in rete e scrive in una cartella sola — lo apre con la chiave e lo
+# lascia in /etc/tramite/firebase, da dove systemd lo passa al tramite.
+#
+# Senza busta, le notifiche sono spente e il resto va come sempre.
+CHIAVE_DELLA_BUSTA="$CONFIGURAZIONE/chiave-della-busta.pem"
+if [[ ! -s "$CHIAVE_DELLA_BUSTA" ]]; then
+  (umask 077 && openssl genpkey -algorithm X25519 -out "$CHIAVE_DELLA_BUSTA" 2>/dev/null)
+fi
+chmod 600 "$CHIAVE_DELLA_BUSTA"
+PUBBLICA_DELLA_BUSTA="$(openssl pkey -in "$CHIAVE_DELLA_BUSTA" -pubout -outform DER 2>/dev/null | tail -c 32 | base64 -w0)"
+install -d -m 700 "$CONFIGURAZIONE/firebase"
+# Il file c'e' sempre, anche vuoto: systemd non accende un servizio con una
+# credenziale che manca, e il tramite un `{}` lo legge come «spente».
+if [[ ! -s "$CONFIGURAZIONE/firebase/firebase-invio.json" ]]; then
+  (umask 077 && printf '{}\n' >"$CONFIGURAZIONE/firebase/firebase-invio.json")
+fi
+chmod 600 "$CONFIGURAZIONE/firebase/firebase-invio.json"
+
+# Chi apre la busta. Lo scrive questo script, non arriva con la versione: e'
+# l'unico pezzo che tocca la chiave della macchina, e non cambia senza che
+# qualcuno rilanci `accendi.sh`. Non dice mai cosa c'e' dentro.
+cat >"$DOVE/apri-la-busta.mjs" <<'FINE'
+import { createDecipheriv, createPrivateKey, createPublicKey, diffieHellman, hkdfSync } from "node:crypto";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+
+const ETICHETTA = "gdahome/busta-del-tramite/v1";
+const VESTITO = Buffer.from("302a300506032b656e032100", "hex");
+const [, , daDove, aDove] = process.argv;
+
+function esci(detto, codice) {
+  process.stdout.write(`${detto}\n`);
+  process.exit(codice);
+}
+
+if (!daDove || !aDove) esci("si usa: apri-la-busta.mjs <busta> <dove>", 2);
+if (!existsSync(daDove)) esci("nessuna busta: le notifiche restano come sono", 0);
+const blocco = /-----BEGIN GDAHOME BUSTA-----([\s\S]*?)-----END GDAHOME BUSTA-----/.exec(readFileSync(daDove, "utf8"));
+if (!blocco) esci("nessuna busta: le notifiche restano come sono", 0);
+
+let chiaro;
+try {
+  const dentro = JSON.parse(Buffer.from(blocco[1].replace(/\s+/g, ""), "base64").toString("utf8"));
+  const credenziali = process.env.CREDENTIALS_DIRECTORY || "";
+  const privata = createPrivateKey(readFileSync(join(credenziali, "chiave")));
+  const mia = createPublicKey(privata).export({ format: "der", type: "spki" }).subarray(VESTITO.length);
+  const effimera = Buffer.from(String(dentro.eff), "base64");
+  if (dentro.v !== 1 || effimera.length !== 32) throw new Error("busta sconosciuta");
+  const comune = diffieHellman({
+    privateKey: privata,
+    publicKey: createPublicKey({ key: Buffer.concat([VESTITO, effimera]), format: "der", type: "spki" }),
+  });
+  const chiave = Buffer.from(hkdfSync("sha256", comune, Buffer.concat([effimera, mia]), ETICHETTA, 32));
+  const dato = Buffer.from(String(dentro.dato), "base64");
+  const decifratore = createDecipheriv("aes-256-gcm", chiave, Buffer.from(String(dentro.nonce), "base64"));
+  decifratore.setAAD(Buffer.from(ETICHETTA));
+  decifratore.setAuthTag(dato.subarray(dato.length - 16));
+  chiaro = Buffer.concat([decifratore.update(dato.subarray(0, dato.length - 16)), decifratore.final()]);
+  const conto = JSON.parse(chiaro.toString("utf8"));
+  if (typeof conto?.project_id !== "string" || typeof conto?.private_key !== "string")
+    throw new Error("non e' un conto di servizio");
+} catch (_errore) {
+  esci("la busta non si apre con la chiave di questa macchina: le notifiche restano come sono", 1);
+}
+const diFianco = join(dirname(aDove), `.${process.pid}.parziale`);
+writeFileSync(diFianco, chiaro, { mode: 0o600 });
+renameSync(diFianco, aDove);
+esci("la chiave delle notifiche e' al suo posto", 0);
+FINE
+chmod 644 "$DOVE/apri-la-busta.mjs"
+
+cat >/etc/systemd/system/tramite-apri-la-busta.service <<FINE
+[Unit]
+Description=Apre la busta delle notifiche del tramite
+
+[Service]
+Type=oneshot
+LoadCredential=chiave:$CHIAVE_DELLA_BUSTA
+ExecStart=/usr/bin/node $DOVE/apri-la-busta.mjs $DOVE/firebase-invio.busta $CONFIGURAZIONE/firebase/firebase-invio.json
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=$CONFIGURAZIONE/firebase
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+LockPersonality=yes
+FINE
+systemctl daemon-reload
+if systemctl start tramite-apri-la-busta.service; then
+  bene "la busta delle notifiche: guardata"
+else
+  nota "la busta delle notifiche non si apre: journalctl -u tramite-apri-la-busta -n 20 --no-pager"
+fi
+
 # ─── 5. Il servizio ──────────────────────────────────────────────────────────
 
 passo "Accendo il servizio"
@@ -791,6 +928,10 @@ User=$UTENTE
 Group=$UTENTE
 WorkingDirectory=$DOVE/centralino
 EnvironmentFile=$CONFIGURAZIONE/ambiente
+# La chiave di Firebase, per le notifiche: la legge il tramite da
+# \$CREDENTIALS_DIRECTORY, e non sta nell'ambiente — l'ambiente di un processo
+# lo legge chi lo guarda.
+LoadCredential=firebase-invio:$CONFIGURAZIONE/firebase/firebase-invio.json
 ExecStart=/usr/bin/node $DOVE/centralino/src/index.js
 Restart=always
 RestartSec=2
@@ -1009,6 +1150,10 @@ qui="$(cat "$DOVE/versione" 2>/dev/null || true)"
 
 echo "si passa da ${qui:0:8} a ${pronta:0:8}"
 "$DOVE/scambia.sh" "$LAVORO/uscita" "$DOVE"
+# La busta delle notifiche, se e' arrivata con la versione: la apre il suo
+# servizio, che non va in rete. Se non si apre il tramite parte lo stesso.
+systemctl start tramite-apri-la-busta.service ||
+  echo "la busta delle notifiche non si apre: journalctl -u tramite-apri-la-busta"
 systemctl restart tramite
 echo "acceso sulla ${pronta:0:8}"
 FINE
@@ -1128,6 +1273,14 @@ cat <<FINE
       tramite-chiave            la dice
       tramite-chiave --nuova    ne fa una nuova
       tramite-chiave <la tua>   mette quella che scegli tu
+
+  Le notifiche dei telefoni passano da Firebase, e la sua chiave arriva qui
+  chiusa per questa macchina. Perche' arrivi, in GitHub → Settings → Secrets
+  and variables → Actions → Variables, metti TRAMITE_CHIAVE_DELLA_BUSTA a:
+
+      $PUBBLICA_DELLA_BUSTA
+
+  e premi «Il tramite». (Non e' un segreto: e' la meta' pubblica.)
 
   E il gettone con cui si aprono le segnalazioni su GitHub scade da se', un
   giorno, senza dirlo a nessuno. Questo lo chiede a GitHub:

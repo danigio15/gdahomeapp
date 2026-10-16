@@ -99,13 +99,6 @@ jobs:
       - run: flutter pub get
         working-directory: app
       # Firmato con la chiave di prova, e quindi `com.gdahome.gdahome.prova`:
-      # si parla col telefono di prova, quello degli artefatti di «L'app da
-      # provare» costruita senza chiave vera.
+      # solo per sapere che compila, su GitHub non resta niente.
       - name: Compila
         run: strumenti/gradle-orologio.sh :orologio:assembleRelease
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: gdahome-wear-os-prova
-          path: app/build/orologio/outputs/apk/release/*.apk
-          if-no-files-found: error
-          retention-days: 30

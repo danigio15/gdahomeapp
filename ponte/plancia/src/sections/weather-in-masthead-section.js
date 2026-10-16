@@ -15,7 +15,7 @@
 import { onLocaleChange } from "../core/i18n.js";
 import { translateSource } from "../core/i18n-dom.js";
 import { CHIAVE_ORDINE_BLOCCHI, ilMeteoStaInTestata } from "../core/ordine-dei-blocchi.js";
-import { unaSolaPaginaAperta } from "./page-masthead-section.js";
+import { quandoCambiaLaPaginaAperta, unaSolaPaginaAperta } from "./page-masthead-section.js";
 import { clean, doc, installStyle, quandoSiCambiaPagina, readJson, root, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_WEATHER_MASTHEAD__";
@@ -434,14 +434,37 @@ function ripara() {
    * e da li' in poi la domanda ha di nuovo una risposta. */
   unaSolaPaginaAperta();
   const attiva = doc?.querySelector?.(".page.active");
+  /* Si torna alla Home da un'altra pagina: e' il passaggio in cui WebKit
+   * lascia la prima fila coi conti vecchi (vedi [rifaiLaFila]). */
+  const tornata =
+    attiva?.id === "page-home" && Boolean(state.ultima) && state.ultima !== "page-home";
+  if (attiva?.id) state.ultima = attiva.id;
   if (attiva?.id === "page-home" && header.style.display === "none") {
     header.style.display = "";
   }
   riparaIlBloccoASinistra(header);
   sposta();
-  rifaiLaFila(header);
-  /* Safari rifa' i conti un fotogramma dopo: si guarda anche li'. */
+  rifaiLaFila(header, { sempre: tornata });
+  /* Safari rifa' i conti un fotogramma dopo: si guarda anche li'. E dopo il
+   * ritorno ancora una volta, quando le animazioni della pagina sono finite. */
   root.requestAnimationFrame?.(() => rifaiLaFila(header));
+  if (tornata) root.setTimeout?.(() => rifaiLaFila(header, { sempre: true }), 350);
+}
+
+/* La prima fila (menu e nome, ingranaggio) messa in fila male: larga o alta
+ * zero, o fuori dal riquadro dell'intestazione. */
+export function primaFilaStorta(header) {
+  const riquadro = header?.getBoundingClientRect?.();
+  if (!riquadro || riquadro.width < 1) return false;
+  for (const pezzo of header.querySelectorAll?.(
+    ":scope > .header-left-wrap, :scope > .header-left-wrap .brand-text, :scope > .dm-editor-entry",
+  ) || []) {
+    const r = pezzo.getBoundingClientRect?.();
+    if (!r) continue;
+    if (r.width < 1 || r.height < 1) return true;
+    if (r.bottom <= riquadro.top + 1 || r.top >= riquadro.bottom - 1) return true;
+  }
+  return false;
 }
 
 /* La fila in alto che Safari lascia larga zero (#228).
@@ -460,18 +483,81 @@ function ripara() {
  * spenta e riaccesa nello stesso giro, che e' il modo in cui WebKit butta via
  * i conti vecchi di un contenitore flessibile. Quando e' tutto a posto —
  * sempre, fuori da Safari — sono due misure e via. */
-function rifaiLaFila(header) {
+/* «Ancora: scompare l'intestazione» (iPad, dentro Home Assistant, tornando
+ * dall'Energia). Lo spegni-e-riaccendi qui sotto non faceva piu' niente: da
+ * quando sulla Home la fascia e' accesa da una regola con `!important` (il
+ * segno sul corpo, `page-masthead-section.js`), uno stile in linea senza peso
+ * non la spegne, e WebKit non aveva niente da rifare. Adesso si spegne col
+ * peso giusto (`important` anche in linea), e al ritorno sulla Home lo si fa
+ * comunque una volta, senza aspettare di vedere la fila storta: i conti
+ * sbagliati di WebKit non sempre si vedono da qui. */
+export function rifaiLaFila(header, { sempre = false } = {}) {
   if (!header || doc?.querySelector?.(".page.active")?.id !== "page-home") return false;
   const sinistra = header.querySelector?.(":scope > .header-left-wrap");
   if (!sinistra) return false;
   const larga = header.getBoundingClientRect?.().width || 0;
-  if (larga < 1 || (sinistra.getBoundingClientRect?.().width || 0) >= 1) return false;
-  const prima = header.style.display;
-  header.style.display = "none";
+  if (larga < 1) return false;
+  if (!sempre && !primaFilaStorta(header)) return false;
+  const valore = header.style.getPropertyValue("display");
+  const peso = header.style.getPropertyPriority("display");
+  header.style.setProperty("display", "none", "important");
   void header.offsetWidth;
-  header.style.display = prima;
+  if (valore) header.style.setProperty("display", valore, peso);
+  else header.style.removeProperty("display");
   void header.offsetWidth;
   return true;
+}
+
+/* Tornati sulla Home, la Home comincia dall'alto (#228, «se vado su Luci e
+ * Porte sparisce la parte sopra»).
+ *
+ * Nel chiosco dell'iPhone html e corpo sono alti quanto lo schermo, e a
+ * scorrere non e' la finestra: e' il corpo. Il gestore delle voci del guscio
+ * lo rimette in cima a ogni cambio di pagina; quelli di Luci e di Porte, nati
+ * dopo, no — Luci non toccava niente, Porte solo la finestra. La Home si
+ * riapriva spostata in su quanto bastava a far finire la prima fila (menu,
+ * nome, ingranaggio) sotto l'orologio del telefono: restava il meteo, che e'
+ * proprio quello che si vede nelle foto.
+ *
+ * Qui non si rincorre chi ha aperto la pagina: lo dice chi scrive il segno
+ * della pagina sul corpo (`data-dm-pagina`), che cambia qualunque strada si
+ * prenda, e al ritorno sulla Home si rimette in cima tutto quello che puo'
+ * scorrere. */
+export function inCima() {
+  root.scrollTo?.({ top: 0, left: 0, behavior: "instant" });
+  for (const nodo of [doc?.scrollingElement, doc?.documentElement, doc?.body]) {
+    if (nodo && nodo.scrollTop) nodo.scrollTop = 0;
+  }
+}
+
+/* E la prima fila rimessa nel documento: WebKit, rimettendo un nodo, rifa' da
+ * capo il suo disegno, che e' piu' di quanto faccia lo spegni-e-riaccendi
+ * della fascia. Stessi nodi, stessi ascolti: cambia solo il disegno. */
+export function rimettiLaPrimaFila(header) {
+  if (!header) return 0;
+  let rimessi = 0;
+  for (const nodo of header.querySelectorAll?.(":scope > .header-left-wrap, :scope > .dm-editor-entry") ||
+    []) {
+    const dopo = nodo.nextSibling;
+    header.insertBefore(nodo, dopo);
+    rimessi += 1;
+  }
+  return rimessi;
+}
+
+function tornatiSullaHome() {
+  inCima();
+  const header = testata();
+  if (!header) return;
+  rimettiLaPrimaFila(header);
+  rifaiLaFila(header, { sempre: true });
+  /* Safari scorre e impagina un fotogramma dopo: si ripete li', e quando le
+   * animazioni della pagina sono finite. */
+  root.requestAnimationFrame?.(() => inCima());
+  root.setTimeout?.(() => {
+    inCima();
+    rifaiLaFila(header);
+  }, 350);
 }
 
 /* La mappatura del meteo, sfoltita: «non mostrare tutte le entita'; un flag
@@ -572,6 +658,9 @@ export function installWeatherInMasthead() {
    * che cambia, nessuno che scorre — fra un cambio di pagina e il battito
    * dopo possono passare minuti. */
   quandoSiCambiaPagina(ripara);
+  quandoCambiaLaPaginaAperta((adesso) => {
+    if (adesso === "page-home") tornatiSullaHome();
+  });
   /* La lingua puo' arrivare dopo: il catalogo si scarica, e quando e' pronto
    * le parole del meteo vanno rifatte dal loro originale. */
   for (const eventoEditor of ["dashboardmodern:editor-rendered", "dashboardmodern:legacy-ready"])

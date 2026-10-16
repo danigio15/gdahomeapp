@@ -63,3 +63,9 @@ quadro/plancia/
 google-services.json
 GoogleService-Info.plist
 *service-account*.json
+
+# Impeccable: le fotografie di revisione, la cache del gancio e i tiri non si salvano
+.impeccable/review/
+.impeccable/hook.cache.json
+.impeccable/questions/
+.impeccable/mocks/

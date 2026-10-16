@@ -94,11 +94,15 @@ class _SenzaPlancia extends FabbricaDellaPlancia {
   }) async => null;
 }
 
-Widget _lApp(Widget home, {Locale lingua = const Locale('it')}) => MaterialApp(
+Widget _lApp(
+  Widget home, {
+  Locale lingua = const Locale('it'),
+  bool scuro = false,
+}) => MaterialApp(
   debugShowCheckedModeBanner: false,
   theme: temaChiaro(),
   darkTheme: temaScuro(),
-  themeMode: ThemeMode.light,
+  themeMode: scuro ? ThemeMode.dark : ThemeMode.light,
   locale: lingua,
   supportedLocales: const [Locale('it'), Locale('en')],
   localizationsDelegates: const [
@@ -458,6 +462,72 @@ void main() {
     await passa(tester);
     await scatta(tester, 'fuori-casa-serve-premium', _sistema);
   }, variant: _sistemi);
+
+  /* La casa Premium che non risponde — l'add-on che si aggiorna — non e'
+   * «fuori casa serve Premium»: e' «Riconnessione…». Chiara e scura. */
+  for (final scuro in [false, true]) {
+    testWidgets('riconnessione, ${scuro ? 'scura' : 'chiara'}', (tester) async {
+      quantoGrande(tester);
+      late Collegamento collegamento;
+      await tester.runAsync(() async {
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        final casa = await archivio.aggiungi(
+          nome: 'Casa al lago',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          casaAlCentralino: casaDiProva,
+          centralino: IndirizzoDelCentralino.leggi(
+            'wss://centralino.esempio.it',
+          ),
+          inCasa: IndirizzoDelPonte.leggi('192.168.1.50'),
+        );
+        await archivio.segnaIlGettone(
+          casa.id,
+          await firmaUnGettone(origine: 'regalo', perSempre: true),
+        );
+        collegamento = Collegamento(
+          archivio: archivio,
+          /* Nessuno risponde: l'add-on si sta aggiornando. */
+          sonda: Sonda(
+            attesa: const Duration(milliseconds: 100),
+            bussa: (_) async => false,
+          ),
+          licenza: GestoreLicenza(chiave: chiaveDiProva),
+        );
+        await collegamento.apri();
+      });
+      addTearDown(() => tester.runAsync(collegamento.chiudi));
+      expect(collegamento.siRiconnette, isTrue);
+      expect(collegamento.fuoriCasaSenzaPremium, isFalse);
+      await tester.pumpWidget(
+        _lApp(
+          scuro: scuro,
+          Scaffold(
+            body: SafeArea(
+              child: PlanciaVera(
+                collegamento: collegamento,
+                fabbrica: _SenzaPlancia(),
+                impostazioni: Impostazioni(
+                  sulTelefono: true,
+                  android: !_iPhone,
+                  dispensa: DispensaInMemoria(),
+                ),
+                vaiAlleCase: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await passa(tester);
+      await scatta(
+        tester,
+        'riconnessione-${scuro ? 'scura' : 'chiara'}',
+        _sistema,
+      );
+    }, variant: _sistemi);
+  }
 
   testWidgets('il menu coi lucchetti, e le plance col lucchetto', (
     tester,

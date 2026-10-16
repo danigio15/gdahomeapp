@@ -387,9 +387,9 @@ function caselleSolare(index, voce) {
     (gruppo) =>
       `<div class="ed-sec-title dm-solare-gruppo">${esc(t(gruppo.it, gruppo.en))}</div>` +
       CASELLE_SOLARE.filter((riga) => riga.gruppo === gruppo.id)
-        .map(({ ref, it, en, aiutoIt, aiutoEn }) => {
+        .map(({ ref, icona, it, en, aiutoIt, aiutoEn }) => {
           const id = `dm-solare-${index}-${ref.replace(/\W+/g, "_")}`;
-          return `<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t(it, en))}</span>
+          return `<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl"><span class="dm-solare-icona" aria-hidden="true">${esc(icona)}</span>${esc(t(it, en))}</span>
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-solare-field="${esc(ref)}"
         value="${esc(clean(voce?.caselle?.[ref]))}" placeholder="sensor.qualcosa" autocomplete="off"
         spellcheck="false"><button type="button" class="dm-entity-picker" data-solare-pick="${id}"
@@ -1041,13 +1041,28 @@ function ordinaLeCaselleDelSolare(caselle) {
       const nuovo = t(riga.it, riga.en);
       if (nome && nome.value !== nuovo && (riga.fabbrica || []).includes(clean(nome.value)))
         nome.value = nuovo;
-      if (!nodo.querySelector("[data-dm-solare-aiuto]")) {
-        const aiuto = doc.createElement("div");
+      /* L'icona e' quella del tasto o del riquadro in pagina: sta sull'etichetta
+       * come attributo, cosi' il nome resta esattamente quello della pagina. */
+      const etichetta = nodo.querySelector(".ed-slot-lbl");
+      if (etichetta) {
+        let icona = etichetta.querySelector(":scope > .dm-solare-icona");
+        if (!icona) {
+          icona = doc.createElement("span");
+          icona.className = "dm-solare-icona";
+          icona.setAttribute("aria-hidden", "true");
+          etichetta.prepend(icona);
+        }
+        if (icona.textContent !== riga.icona) icona.textContent = riga.icona;
+      }
+      let aiuto = nodo.querySelector("[data-dm-solare-aiuto]");
+      if (!aiuto) {
+        aiuto = doc.createElement("div");
         aiuto.className = "ed-hint dm-solare-aiuto";
         aiuto.dataset.dmSolareAiuto = "";
-        aiuto.textContent = t(riga.aiutoIt, riga.aiutoEn);
         nodo.append(aiuto);
       }
+      const attesa = t(riga.aiutoIt, riga.aiutoEn);
+      if (aiuto.textContent !== attesa) aiuto.textContent = attesa;
       voluti.push(nodo);
     }
   }
@@ -1400,10 +1415,12 @@ function installStyles() {
   installStyle(
     "dm-impianti-termici-editor-style",
     `
-      /* I due gruppi del solare e la riga che dice cosa muove ogni casella:
-         la voce di una nota, piccola e smorzata, come la spiegazione della
-         casella caldaia. */
+      /* I gruppi del solare e la riga che dice che entita' si aspetta ogni
+         casella: la voce di una nota, piccola e smorzata, come la spiegazione
+         della casella caldaia. L'icona e' quella della pagina. */
       #ed-body .dm-solare-gruppo{margin:18px 0 6px}
+      #ed-body .dm-solare-icona{display:inline-block;flex:none;margin-right:3px;font-size:15px;
+        line-height:1;vertical-align:-2px}
       #ed-body .dm-solare-aiuto{display:block;margin:4px 0 2px;font-size:12px;line-height:1.4;
         color:var(--secondary-text-color,#64748b)}
       #ed-body .dm-it-ed-sep{margin-top:24px;padding-top:16px;

@@ -8,14 +8,25 @@
  * serve il PIN; in verticale la griglia diventa di due colonne. */
 import { expect, test } from "@playwright/test";
 import {
+  MURO_DELLA_REGIA,
   MURO_DI_PROVA,
   SEME_A_MURO,
   STATI_A_MURO,
+  STATI_DELLA_REGIA,
   apriLaCasaAMuro,
 } from "./helpers/casa-a-muro.js";
 
 const muro = (page) => page.locator("#dm-muro");
 const servizi = (page) => page.evaluate(() => window.__SERVIZI__.slice());
+/* Quanto c'e' fra il disegno del meteo, in alto, e il numero accanto. */
+const distanzaDalNumero = (page) =>
+  muro(page)
+    .locator(".mu-meteo")
+    .evaluate((m) => {
+      const disegno = m.querySelector(".mu-meteo-su > :first-child").getBoundingClientRect();
+      const numero = m.querySelector("b").getBoundingClientRect();
+      return numero.left - disegno.right;
+    });
 
 test.describe("la plancia a muro", () => {
   test.beforeEach(async ({ page }) => {
@@ -528,16 +539,46 @@ test.describe("la plancia a muro", () => {
       stati: { ...STATI_A_MURO, "binary_sensor.campanello": { state: "off", attributes: {} } },
     });
     await expect(muro(page).locator(".mu-testa")).toBeVisible();
-    await page.evaluate(() => window.dmMuro.riposa());
+    /* Il canale dello schermo dell'app, per finta: si annota quello che dice. */
+    await page.evaluate(() => {
+      window.__SCHERMO__ = [];
+      window.gdahomeSchermo = { postMessage: (detto) => window.__SCHERMO__.push(detto) };
+      window.dmMuro.riposa();
+    });
     await expect(muro(page).locator(".mu-riposo")).toBeVisible();
     await cambia(page, "binary_sensor.campanello", "on");
-    const finestra = muro(page).locator(".mu-finestra");
-    await expect(finestra).toContainText("Suonano alla porta");
-    await expect(finestra.locator('[data-mu-telecamera="camera.cancello"]')).toHaveCount(1);
+    /* Come una chiamata: a tutto schermo, col video e i tasti. */
+    const squillo = muro(page).locator(".mu-squillo");
+    await expect(squillo).toContainText("Suona il campanello");
+    await expect(squillo).toHaveClass(/squilla/);
+    await expect(squillo.locator('[data-mu-telecamera="camera.cancello"]')).toHaveCount(1);
+    await expect(squillo).toContainText(/Squilla da 0:0\d/);
+    await expect(squillo.locator('[data-mu-fa="citofono-silenzia"]')).toBeVisible();
+    /* «Parla» si accende a mano: di serie non c'e'. */
+    await expect(squillo.locator('[data-mu-fa="citofono-parla"]')).toHaveCount(0);
     await expect(muro(page).locator('[data-mu-pagina="2"]')).toHaveAttribute(
       "aria-selected",
       "true",
     );
+    /* L'app ha saputo: lo schermo resta acceso, e lo squillo l'ha svegliato. */
+    const detto = await page.evaluate(() => window.__SCHERMO__.slice());
+    expect(detto).toContain("acceso:si");
+    expect(detto).toContain("sveglia");
+    /* «Silenzia»: lo squillo finisce, la finestra dice quando ha suonato e
+     * tiene «Apri» e «Chiudi». */
+    await squillo.locator('[data-mu-fa="citofono-silenzia"]').click();
+    await expect(squillo).toContainText("Ha suonato alle");
+    await expect(squillo).not.toHaveClass(/squilla/);
+    await expect(squillo.locator('[data-mu-fa="citofono-silenzia"]')).toHaveCount(0);
+    await expect(squillo.locator(".mu-sq-squillo")).toHaveCount(1);
+    await squillo.locator('[data-mu-fa="apri"][data-mu-entita="button.apri_cancello"]').click();
+    await expect
+      .poll(() => servizi(page))
+      .toEqual([
+        { domain: "button", service: "press", data: { entity_id: "button.apri_cancello" } },
+      ]);
+    await squillo.locator('[data-mu-fa="chiudi"]').click();
+    await expect(muro(page).locator(".mu-squillo")).toHaveCount(0);
   });
 
   /* «Allagamento, fumo, allarme a tutto schermo con un tasto Ho visto.» */
@@ -943,6 +984,31 @@ test.describe("la plancia a muro", () => {
     await expect(muro(page).locator('[data-mu-riposo="persone"]')).toHaveText(/Mamma · Papà/);
   });
 
+  /* L'assistente di casa (#175) e' sempre vivo anche sul tablet a muro: il
+   * riposo dice in una riga la cosa piu' importante da fare, col punto del
+   * suo colore. Qui la casa e' vuota e le luci del soggiorno sono accese. */
+  test("il riposo dice il consiglio dell'assistente di casa", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: MURO_DI_PROVA,
+      stati: {
+        ...STATI_A_MURO,
+        "person.anna": { state: "not_home", attributes: { friendly_name: "Anna" } },
+        "person.marco": { state: "not_home", attributes: { friendly_name: "Marco" } },
+      },
+    });
+    await page.waitForTimeout(1500);
+    await page.evaluate(() => window.dmMuro.riposa());
+    const consiglio = muro(page).locator('[data-mu-riposo="assistente"]');
+    await expect(consiglio).toContainText("Non c'è nessuno in casa", { timeout: 20000 });
+    await expect(consiglio).toHaveAttribute("data-urgenza", "oggi");
+    /* Spento in Config › Persone, sul riposo non c'e' piu'. */
+    await page.evaluate(() => {
+      localStorage.setItem("cd_people_accanto", JSON.stringify({ mostra: "niente" }));
+      window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
+    });
+    await expect(consiglio).toHaveCount(0, { timeout: 20000 });
+  });
+
   /* «Nella schermata idle mettere la possibilita' di visualizzare la % di
    * carica della batteria e/o se e' sotto carica o no.» */
   const pilaFinta = (page, livello, inCarica) =>
@@ -1261,5 +1327,500 @@ test.describe("la plancia a muro", () => {
     expect(await servizi(page)).toEqual([
       { domain: "homeassistant", service: "toggle", data: { entity_id: "switch.garage_1" } },
     ]);
+  });
+
+  /* «Sulla personalizzata la modifica del clima serve anche sulle tapparelle,
+   * per far comparire i pulsanti diretti senza entrarci dentro», e lo stesso
+   * nelle pagine di una stanza. I tasti ▲ ■ ▼ stanno su ogni card di una
+   * tapparella, a ogni misura e in ogni griglia, dentro il riquadro e grandi
+   * quanto un dito; una tenda che sa solo aprire e chiudere ha ▲ e ▼. */
+  function casaDelleTapparelle() {
+    const seme = structuredClone(SEME_A_MURO);
+    const stati = structuredClone(STATI_A_MURO);
+    const tapparelle = [
+      /* id, stato, posizione, supported_features */
+      ["serranda_piccola", "closed", 0, 15],
+      ["serranda_grande", "open", 60, 15],
+      ["tenda_scale", "open", null, 3],
+      ["schermo_video", "closed", null, 11],
+    ];
+    for (const [id, s, pos, f] of tapparelle) {
+      const nome = id.replace("_", " ").replace(/^./, (x) => x.toUpperCase());
+      seme.sections.covers.push({
+        id,
+        name: nome,
+        entity: `cover.${id}`,
+        room_id: "soggiorno",
+        room: "Soggiorno",
+      });
+      stati[`cover.${id}`] = {
+        state: s,
+        attributes: {
+          friendly_name: nome,
+          supported_features: f,
+          ...(pos === null ? {} : { current_position: pos }),
+        },
+      };
+    }
+    const posti = [
+      ...tapparelle.map(([id]) => ({ tipo: "tapparella", entita: `cover.${id}` })),
+      { tipo: "luce", entita: "light.tavolo" },
+      { tipo: "azione", azione: "Cinema", nome: "Luci cinema" },
+    ];
+    const muroDelleTapparelle = {
+      attiva: true,
+      pagine: [
+        { id: "p6", modello: "personale", titolo: "Sei", griglia: 6, comandi: posti },
+        {
+          id: "p8",
+          modello: "stanza",
+          stanza: "Soggiorno",
+          griglia: 8,
+          scelti: true,
+          comandi: posti,
+        },
+        { id: "p12", modello: "personale", titolo: "Dodici", griglia: 12, comandi: posti },
+      ],
+    };
+    return { seme, stati, muro: muroDelleTapparelle };
+  }
+  const TASTI_ATTESI = {
+    "cover.serranda_piccola": ["su", "ferma", "giu"],
+    "cover.serranda_grande": ["su", "ferma", "giu"],
+    "cover.tenda_scale": ["su", "giu"],
+    "cover.schermo_video": ["su", "ferma", "giu"],
+  };
+  /* I tasti di ogni tapparella a schermo: quali sono, se si vedono, se
+   * stanno nella card e quanto sono alti in pixel veri (lo zoom del
+   * pannello compreso). */
+  const tastiDelleTapparelle = (page) =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("#dm-muro .mu-card.mu-tapparella")].map((card) => {
+        const r = card.getBoundingClientRect();
+        const tasti = [...card.querySelectorAll(".mu-tap-tasti>button")];
+        return {
+          entita: card.dataset.muEntita,
+          tasti: tasti.map((b) => b.dataset.muFa),
+          visibili: tasti.every((b) => {
+            const s = getComputedStyle(b);
+            const box = b.getBoundingClientRect();
+            return s.display !== "none" && s.visibility !== "hidden" && box.width > 0;
+          }),
+          dentro: tasti.every((b) => {
+            const box = b.getBoundingClientRect();
+            return (
+              box.top >= r.top - 0.5 &&
+              box.bottom <= r.bottom + 0.5 &&
+              box.left >= r.left - 0.5 &&
+              box.right <= r.right + 0.5
+            );
+          }),
+          alti: Math.min(...tasti.map((b) => b.getBoundingClientRect().height)),
+          larghi: Math.min(...tasti.map((b) => b.getBoundingClientRect().width)),
+          nome: getComputedStyle(card.querySelector(".mu-fam-nome")).display !== "none",
+        };
+      }),
+    );
+
+  for (const [larghezza, altezza] of [
+    [1280, 800],
+    [1024, 600],
+    [960, 540],
+    [800, 480],
+    [844, 390],
+    [600, 960],
+  ])
+    test(`a ${larghezza}x${altezza} le tapparelle hanno ▲ ■ ▼ sulla card, in ogni griglia`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize({ width: larghezza, height: altezza });
+      await apriLaCasaAMuro(page, testInfo, casaDelleTapparelle());
+      for (const indice of [0, 1, 2]) {
+        if (indice) await muro(page).locator(`[data-mu-pagina="${indice}"]`).click();
+        await expect(muro(page).locator(".mu-card.mu-tapparella").first()).toBeVisible();
+        const carte = await tastiDelleTapparelle(page);
+        expect(carte.length, `pagina ${indice}`).toBe(4);
+        for (const c of carte) {
+          const dove = `pagina ${indice}, ${c.entita}`;
+          expect(c.tasti, dove).toEqual(TASTI_ATTESI[c.entita]);
+          expect(c.visibili, dove).toBe(true);
+          expect(c.dentro, dove).toBe(true);
+          expect(c.nome, dove).toBe(true);
+          /* Un dito: mai sotto i trenta pixel veri. */
+          expect(c.alti, dove).toBeGreaterThanOrEqual(29.5);
+          expect(c.larghi, dove).toBeGreaterThanOrEqual(29.5);
+        }
+        expect(await fuoriDalRiquadro(page), `pagina ${indice}`).toEqual([]);
+      }
+    });
+
+  test("i tasti della card della tapparella comandano, e il tocco sulla card apre la finestra", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 800, height: 480 });
+    await apriLaCasaAMuro(page, testInfo, casaDelleTapparelle());
+    await muro(page).locator('[data-mu-pagina="2"]').click();
+    const carta = muro(page).locator('.mu-card[data-mu-entita="cover.serranda_piccola"]');
+    for (const fa of ["su", "ferma", "giu"])
+      await carta.locator(`.mu-tap-tasti [data-mu-fa="${fa}"]`).click();
+    expect(await servizi(page)).toEqual(
+      ["open_cover", "stop_cover", "close_cover"].map((service) => ({
+        domain: "cover",
+        service,
+        data: { entity_id: "cover.serranda_piccola" },
+      })),
+    );
+    await expect(muro(page).locator(".mu-finestra")).toHaveCount(0);
+    /* Fuori dai tasti, il tocco apre la finestra con la barra e i tasti. */
+    await carta.locator(".mu-fam-nome").click();
+    await expect(muro(page).locator(".mu-finestra .mu-seg-alto")).toBeVisible();
+    /* La tenda che sa solo aprire e chiudere: nella finestra niente ■. */
+    await muro(page).locator('[data-mu-fa="chiudi"]').first().click();
+    await muro(page).locator('.mu-card[data-mu-entita="cover.tenda_scale"] .mu-fam-nome').click();
+    await expect(muro(page).locator(".mu-finestra .mu-seg-alto [data-mu-fa]")).toHaveCount(2);
+    expect((await servizi(page)).length).toBe(3);
+  });
+
+  /* «Il meteo lo possiamo scegliere, ma la temperatura no, perche' e' quella
+   * geolocalizzata del weather.» Con «Temperatura mostrata: da un sensore in
+   * casa» in alto c'e' quella del sensore, con «in casa» e la parola del
+   * meteo accanto; sul riposo il meteo resta come disegno e parola, e la
+   * temperatura di casa una volta sola. */
+  test("la temperatura in alto e sul riposo puo' essere quella di un sensore in casa", async ({
+    page,
+  }, testInfo) => {
+    const stati = {
+      ...STATI_A_MURO,
+      "sensor.corridoio_t": {
+        state: "23.4",
+        attributes: { unit_of_measurement: "°C", device_class: "temperature" },
+      },
+    };
+    await apriLaCasaAMuro(page, testInfo, { stati, muro: MURO_DI_PROVA });
+    await expect(muro(page).locator(".mu-meteo b")).toHaveText("17°");
+    await expect(muro(page).locator(".mu-meteo .mu-et")).toHaveText(/poco nuvoloso/i);
+    /* Il disegno sta attaccato al numero, con ogni temperatura: una scritta
+     * lunga sotto non deve allargare la colonna e staccarlo. */
+    const fra = await distanzaDalNumero(page);
+    expect(fra).toBeGreaterThanOrEqual(0);
+    expect(fra).toBeLessThanOrEqual(16);
+
+    await apriLaCasaAMuro(page, testInfo, {
+      stati,
+      muro: {
+        ...MURO_DI_PROVA,
+        temperatura: "casa",
+        riposo: { attivo: true, minuti: 2, torna: true, sensore: "sensor.corridoio_t" },
+      },
+    });
+    await expect(muro(page).locator(".mu-meteo b")).toHaveText("23,4°");
+    await expect(muro(page).locator(".mu-meteo .mu-et")).toHaveText(/in casa · poco nuvoloso/i);
+    const fraInCasa = await distanzaDalNumero(page);
+    expect(fraInCasa).toBeGreaterThanOrEqual(0);
+    expect(fraInCasa).toBeLessThanOrEqual(16);
+    /* La scritta sta su una riga sola, accanto all'ora. */
+    const et = await muro(page)
+      .locator(".mu-meteo .mu-et")
+      .evaluate((e) => ({
+        alta: e.getBoundingClientRect().height,
+        lettera: parseFloat(getComputedStyle(e).fontSize),
+      }));
+    expect(et.alta).toBeLessThan(et.lettera * 2);
+    await page.evaluate(() => window.dmMuro.riposa());
+    const riga = muro(page).locator(".mu-riposo-riga");
+    await expect(riga).toContainText("23,4° in casa");
+    await expect(riga).toContainText(/poco nuvoloso/i);
+    await expect(riga).not.toContainText("17°");
+
+    /* Senza sensore scelto: quella della stanza della prima pagina. */
+    await apriLaCasaAMuro(page, testInfo, {
+      stati,
+      muro: { ...MURO_DI_PROVA, temperatura: "casa" },
+    });
+    await expect(muro(page).locator(".mu-meteo b")).toHaveText("21,2°");
+  });
+
+  test("nel config «Temperatura mostrata» sceglie fra il meteo e un sensore in casa", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.locator('.ed-tab[data-tab="muro"]').click();
+    const body = page.locator("#ed-body");
+    await body.locator("[data-mu-ed-altro]").click();
+    const scelta = body.locator('.mu-ed-riga:has([data-mu-ed-metti="temperatura"])');
+    await expect(scelta).toContainText("Temperatura mostrata");
+    await expect(scelta.locator('[data-mu-ed-valore="meteo"]')).toHaveClass(/si/);
+    /* Dal meteo: il sensore e' quello del riposo, nella sua riga. */
+    await expect(scelta.locator('[data-mu-ed-campo="riposo.sensore"]')).toHaveCount(0);
+    await expect(body.locator('[data-mu-ed-campo="riposo.sensore"]')).toHaveCount(1);
+    await scelta.locator('[data-mu-ed-valore="casa"]').click();
+    /* Da un sensore: lo stesso campo sale nella riga, e quella del riposo
+     * non si ripete. */
+    const ora = body.locator('.mu-ed-riga:has([data-mu-ed-metti="temperatura"])');
+    await expect(ora.locator('[data-mu-ed-campo="riposo.sensore"]')).toHaveCount(1);
+    await expect(body.locator('[data-mu-ed-campo="riposo.sensore"]')).toHaveCount(1);
+    /* Il sensore si sceglie con la stessa ricerca del resto del config. */
+    await ora.locator("[data-mu-ed-pick]").first().click();
+    await expect(page.locator("#cd-entpick")).toBeVisible();
+    await page.locator("#cd-ep-search").fill("sensor.soggiorno_temperatura");
+    await page.locator("#cd-entpick").getByText("sensor.soggiorno_temperatura").first().click();
+    await expect(body.locator('[data-mu-ed-campo="riposo.sensore"]')).toHaveValue(
+      "sensor.soggiorno_temperatura",
+    );
+    await body.locator("[data-dm-save-all]").click();
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const m = JSON.parse(localStorage.getItem("cd_muro"));
+          return [m.temperatura, m.riposo.sensore];
+        }),
+      )
+      .toEqual(["casa", "sensor.soggiorno_temperatura"]);
+  });
+
+  /* ── la regia ─────────────────────────────────────────────────────────
+   *
+   * «Cerca di creare una cosa del genere per wall»: il mixer coi cursori in
+   * piedi, la telecamera con le frecce e i preset, i comandi d'avvio, e le
+   * pagine in una colonna di tasti a sinistra. */
+  const regia = (page, testInfo, muroScelto = MURO_DELLA_REGIA) =>
+    apriLaCasaAMuro(page, testInfo, { muro: muroScelto, stati: STATI_DELLA_REGIA });
+  /* Trascina il cursore di un canale fino a una quota (0 in fondo, 1 in cima). */
+  async function trascina(page, cursore, quota, sdraiato = false) {
+    const traccia = await cursore.locator(".mu-fad-traccia").boundingBox();
+    const x0 = traccia.x + traccia.width / 2;
+    const y0 = traccia.y + traccia.height / 2;
+    await page.mouse.move(x0, y0);
+    await page.mouse.down();
+    const x = sdraiato ? traccia.x + traccia.width * quota : x0;
+    const y = sdraiato ? y0 : traccia.y + traccia.height * (1 - quota);
+    await page.mouse.move(x, y, { steps: 6 });
+    await page.mouse.up();
+  }
+
+  test("il mixer: i cursori mandano il livello, e il muto si accende e si spegne", async ({
+    page,
+  }, testInfo) => {
+    await regia(page, testInfo);
+    await expect(muro(page).locator(".mu-mix-gruppo")).toHaveCount(3);
+    await expect(muro(page).locator(".mu-mix-tit").first()).toHaveText(/Microfoni/i);
+    const mic2 = muro(page).locator('[data-mu-canale="number.mic_2"]');
+    await expect(mic2.locator(".mu-can-v")).toHaveText("-12,5 dB");
+    /* Mic 3 e' muto: il suo tasto e' acceso. */
+    await expect(
+      muro(page).locator('[data-mu-canale="number.mic_3"] .mu-can-muto'),
+    ).toHaveAttribute("aria-pressed", "true");
+    await trascina(page, mic2.locator(".mu-fader"), 1);
+    await expect(mic2.locator(".mu-can-v")).toHaveText("10 dB");
+    await expect
+      .poll(async () => (await servizi(page)).at(-1))
+      .toEqual({
+        domain: "number",
+        service: "set_value",
+        data: { entity_id: "number.mic_2", value: 10 },
+      });
+    /* Mentre si trascina parte, ma al massimo quattro volte al secondo. */
+    expect((await servizi(page)).length).toBeLessThanOrEqual(3);
+    await page.evaluate(() => (window.__SERVIZI__.length = 0));
+    await muro(page).locator('[data-mu-canale="number.mic_3"] .mu-can-muto').click();
+    await muro(page).locator('[data-mu-canale="media_player.ingresso_pc"] .mu-can-muto').click();
+    await expect(muro(page).locator('[data-mu-canale="media_player.ingresso_pc"]')).toHaveClass(
+      /mu-muto/,
+    );
+    const master = muro(page).locator(".mu-mix-master");
+    await trascina(page, master.locator(".mu-fader"), 0.5, true);
+    await expect(master.locator(".mu-can-v")).toHaveText("50%");
+    await expect
+      .poll(async () => (await servizi(page)).map((x) => `${x.domain}.${x.service}`))
+      .toEqual(["switch.turn_off", "media_player.volume_mute", "media_player.volume_set"]);
+    const fatti = await servizi(page);
+    expect(fatti[0].data).toEqual({ entity_id: "switch.mic_3_muto" });
+    expect(fatti[1].data).toEqual({ entity_id: "media_player.ingresso_pc", is_volume_muted: true });
+    expect(fatti[2].data).toEqual({ entity_id: "media_player.volume_totale", volume_level: 0.5 });
+  });
+
+  test("la telecamera: le frecce, lo stop, lo zoom e i preset premono le loro entita'", async ({
+    page,
+  }, testInfo) => {
+    await regia(page, testInfo);
+    await muro(page).locator('.mu-lato [data-mu-pagina="1"]').click();
+    await expect(muro(page).locator(".mu-ptz img[data-mu-telecamera]")).toHaveCount(1);
+    for (const tasto of ["su", "sinistra", "stop"])
+      await muro(page).locator(`[data-mu-tasto="${tasto}"]`).click();
+    await muro(page).locator('[data-mu-fa="preset"]').first().click();
+    await trascina(page, muro(page).locator(".mu-ptz-zoom .mu-fader"), 1);
+    /* Lo zoom parte mentre si trascina e quando si lascia: l'ultimo e' in cima. */
+    await expect.poll(async () => (await servizi(page)).at(-1)?.data?.value).toBe(100);
+    const fatti = (await servizi(page)).map((x) => `${x.domain}.${x.service}:${x.data.entity_id}`);
+    expect(fatti.slice(0, 4)).toEqual([
+      "button.press:button.ptz_su",
+      "button.press:button.ptz_sinistra",
+      "button.press:button.ptz_stop",
+      "button.press:button.ptz_home",
+    ]);
+    expect(new Set(fatti.slice(4))).toEqual(new Set(["number.set_value:number.zoom_sala"]));
+    expect((await servizi(page)).at(-1).data.value).toBe(100);
+    /* Un tasto senza entita' resta spento. */
+    await expect(muro(page).locator('[data-mu-tasto="zoomPiu"]')).toHaveCount(0);
+  });
+
+  test("i comandi: la tessera avvia, la sala si ferma, e ferma tutto ferma tutte", async ({
+    page,
+  }, testInfo) => {
+    await regia(page, testInfo);
+    await muro(page).locator('.mu-lato [data-mu-pagina="2"]').click();
+    const tessere = muro(page).locator(".mu-reg-tasto");
+    await expect(tessere).toHaveCount(2);
+    /* «Avvio» e' acceso: lo dice il suo sensore di stato. */
+    await expect(tessere.first()).toHaveClass(/mu-accesa/);
+    await tessere.nth(1).click();
+    await muro(page).locator('.mu-lato [data-mu-pagina="3"]').click();
+    const sale = muro(page).locator(".mu-reg-coppia");
+    await expect(sale).toHaveCount(5);
+    await expect(sale.nth(1)).toHaveClass(/mu-accesa/);
+    await sale.nth(0).locator(".mu-reg-avvio").click();
+    await expect(sale.nth(0)).toHaveClass(/mu-accesa/);
+    await sale.nth(1).locator(".mu-reg-stop").click();
+    await expect(sale.nth(1)).not.toHaveClass(/mu-accesa/);
+    await muro(page).locator('[data-mu-fa="ferma-tutto"]').click();
+    const fatti = (await servizi(page)).map((x) => `${x.domain}.${x.service}:${x.data.entity_id}`);
+    expect(fatti.slice(0, 3)).toEqual([
+      "script.turn_on:script.spegnimento",
+      "switch.turn_on:switch.sala_1",
+      "switch.turn_off:switch.sala_2",
+    ]);
+    expect(fatti.slice(3)).toEqual([1, 2, 3, 4, 5].map((n) => `switch.turn_off:switch.sala_${n}`));
+  });
+
+  test("il menu di lato: i tasti a sinistra cambiano pagina, e in verticale tornano le linguette", async ({
+    page,
+  }, testInfo) => {
+    await regia(page, testInfo);
+    const lato = muro(page).locator(".mu-lato");
+    await expect(lato).toBeVisible();
+    await expect(muro(page).locator(".mu-pagine")).toHaveCount(0);
+    await expect(lato.locator(".mu-lato-tasto")).toHaveCount(5);
+    await expect(lato.locator(".mu-lato-tasto.si")).toHaveText(/Audio/i);
+    await lato.locator('[data-mu-pagina="4"]').click();
+    await expect(muro(page).locator(".mu-tit")).toHaveText(/Soggiorno/i);
+    await expect(lato.locator(".mu-lato-tasto.si")).toHaveText(/Soggiorno/i);
+    /* Il ☰ sta in cima alla colonna. */
+    await expect(lato.locator('[data-mu-fa="menu"]')).toBeVisible();
+    await page.setViewportSize({ width: 800, height: 1280 });
+    await expect(muro(page)).toHaveAttribute("data-verso", "verticale");
+    await expect(muro(page).locator(".mu-lato")).toHaveCount(0);
+    await expect(muro(page).locator(".mu-pagine")).toBeVisible();
+    /* Spento, il pannello e' quello di sempre. */
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.evaluate(() => {
+      const m = JSON.parse(localStorage.getItem("cd_muro"));
+      localStorage.setItem("cd_muro", JSON.stringify({ ...m, menuDiLato: false }));
+      window.dispatchEvent(new CustomEvent("dashboardmodern:muro"));
+    });
+    await expect(muro(page).locator(".mu-lato")).toHaveCount(0);
+    await expect(muro(page).locator(".mu-pagine")).toBeVisible();
+  });
+
+  /* Niente esce dal suo riquadro ne' dallo schermo, su ogni misura. */
+  const fuoriDallaRegia = (page) =>
+    page.evaluate(() => {
+      const fuori = [];
+      const vista = { w: innerWidth, h: innerHeight };
+      for (const carta of document.querySelectorAll(
+        "#dm-muro .mu-carta, #dm-muro .mu-lato, #dm-muro .mu-canale",
+      )) {
+        const r = carta.getBoundingClientRect();
+        if (r.right > vista.w + 0.5 || r.bottom > vista.h + 0.5 || r.left < -0.5 || r.top < -0.5)
+          fuori.push(`schermo: ${carta.className}`);
+        for (const el of carta.querySelectorAll("*")) {
+          if (el.closest("svg") && el.tagName.toLowerCase() !== "svg") continue;
+          const s = getComputedStyle(el);
+          if (s.display === "none" || s.visibility === "hidden") continue;
+          const b = el.getBoundingClientRect();
+          if (!b.width || !b.height) continue;
+          if (
+            b.bottom > r.bottom + 0.5 ||
+            b.top < r.top - 0.5 ||
+            b.right > r.right + 0.5 ||
+            b.left < r.left - 0.5
+          ) {
+            fuori.push(
+              `${carta.className}: ${(el.textContent || el.className).toString().trim().slice(0, 24)}`,
+            );
+            break;
+          }
+        }
+      }
+      return fuori;
+    });
+
+  for (const [larghezza, altezza] of [
+    [1280, 800],
+    [1024, 600],
+    [800, 480],
+  ])
+    test(`a ${larghezza}x${altezza} la regia sta nei suoi riquadri`, async ({ page }, testInfo) => {
+      await page.setViewportSize({ width: larghezza, height: altezza });
+      await regia(page, testInfo);
+      for (const indice of [0, 1, 2, 3, 4]) {
+        await muro(page).locator(`[data-mu-pagina="${indice}"]`).first().click();
+        await expect(muro(page).locator(".mu-pagina")).toBeVisible();
+        await page.waitForTimeout(150);
+        expect(await fuoriDallaRegia(page), `pagina ${indice}`).toEqual([]);
+      }
+    });
+
+  test("nel config si aggiungono le pagine della regia, coi loro canali e comandi", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA, stati: STATI_DELLA_REGIA });
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.locator('.ed-tab[data-tab="muro"]').click();
+    const body = page.locator("#ed-body");
+    await body.locator('[data-mu-ed-nuova="mixer"]').click();
+    const campo = (via) => body.locator(`[data-mu-ed-campo="${via}"]`);
+    /* L'entita' si sceglie con la ricerca del config, come ovunque. */
+    const scegli = async (via, id) => {
+      await body.locator(`.mu-ed-cerca:has([data-mu-ed-campo="${via}"]) [data-mu-ed-pick]`).click();
+      await page.locator("#cd-ep-search").fill(id);
+      await page.locator("#cd-entpick").getByText(id).first().click();
+      await expect(campo(via)).toHaveValue(id);
+    };
+    await campo("pagine.3.mixer.gruppi.0.nome").fill("Microfoni");
+    await scegli("pagine.3.mixer.gruppi.0.canali.0.entita", "number.mic_1");
+    await scegli("pagine.3.mixer.gruppi.0.canali.0.muto", "switch.mic_1_muto");
+    await body.locator('[data-mu-ed-aggiungi-voce="pagine.3.mixer.gruppi"]').click();
+    await expect(campo("pagine.3.mixer.gruppi.1.nome")).toBeVisible();
+    await body.locator('[data-mu-ed-nuova="comandi"]').click();
+    await scegli("pagine.4.pulsanti.0.avvio", "script.avvio");
+    await campo("pagine.4.pulsanti.0.nome").fill("Avvio");
+    await campo("pagine.4.pulsanti.0.nome").dispatchEvent("change");
+    await body.locator("[data-mu-ed-altro]").click();
+    await body.locator('[data-mu-ed-alterna="menuDiLato"]').click();
+    await body.locator("[data-dm-save-all]").click();
+    await expect
+      .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("cd_muro"))))
+      .toMatchObject({
+        menuDiLato: true,
+        pagine: [
+          {},
+          {},
+          {},
+          {
+            modello: "mixer",
+            mixer: {
+              gruppi: [
+                {
+                  nome: "Microfoni",
+                  canali: [{ entita: "number.mic_1", nome: "", muto: "switch.mic_1_muto" }],
+                },
+                { nome: "", canali: [] },
+              ],
+            },
+          },
+          { modello: "comandi", pulsanti: [{ nome: "Avvio", avvio: "script.avvio" }] },
+        ],
+      });
   });
 });

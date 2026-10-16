@@ -29,6 +29,7 @@ import {
 } from "../core/appliance-card-view-model.js";
 import { createApplianceViewModel, letturaDelloStato } from "../core/appliance-view-model.js";
 import { createCycleTracker } from "../core/appliance-cycle-tracker.js";
+import { pausaDentroUnCiclo } from "../core/il-ciclo-di-un-elettrodomestico.js";
 import {
   avvioDallaStoria,
   daiWatt,
@@ -263,6 +264,11 @@ export function campionaICicli() {
        * ciclo, e senza di lui il contatore puo' solo dire «da quando
        * guardo» (#65). */
       iniziatoIl: model.iniziatoIl,
+      /* La stessa sosta della card (#26): quella di tutti, o il ritardo
+       * scritto se e' piu' lungo. E dove finirebbe il ciclo se la card lo
+       * tiene acceso solo per prudenza. */
+      pausaMs: pausaDentroUnCiclo(device),
+      fineProbabile: model.fineProbabile,
       dailyKwh: dailyEnergyKwh(device, states),
       remainingSeconds: remainingInfo(device, states, now, cycles.record(id))?.seconds,
     })),
@@ -335,6 +341,7 @@ async function cercaGliAvviiIncerti(letti, cycles, adesso) {
       const trovato = avvioDallaStoria(righeDellaStoria(risposta, regola.entita), {
         inFunzione,
         adesso,
+        pausaMs: pausaDentroUnCiclo(model.device),
         da: finestraDellAvvio(adesso).da,
       });
       if (trovato) cycles.correggiLAvvio(id, trovato.quando, { certo: trovato.certo });
@@ -546,7 +553,8 @@ function portaMarkup(model) {
 function programMarkup(model) {
   const program = model.program;
   const porta = portaMarkup(model);
-  if (!program?.phase && !program?.chips?.length) return porta ? `<div class="dm-ap-program">${porta}</div>` : "";
+  if (!program?.phase && !program?.chips?.length)
+    return porta ? `<div class="dm-ap-program">${porta}</div>` : "";
   const fase = program.phase
     ? `<span class="dm-ap-phase"><i aria-hidden="true">${program.phase.glifo}</i>${esc(program.phase.label)}</span>`
     : "";

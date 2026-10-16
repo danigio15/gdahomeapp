@@ -126,6 +126,37 @@ test.describe("la scheda a muro", () => {
     });
   });
 
+  /* Il campanello come un videocitofono: sotto «Campanello» il suono con la
+   * sua prova, il volume, e le tre scelte dello schermo e della voce. */
+  test("il campanello si sceglie: suono, volume, schermo e «Parla»", async ({ page }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
+    await apriLaScheda(page);
+    const body = page.locator("#ed-body");
+    await body.locator('[data-mu-ed-apri="2"]').click();
+    const suono = body.locator('[data-mu-ed-campo="pagine.2.ingresso.suono"]');
+    await expect(suono).toHaveValue("dindon");
+    await expect(body.locator('[data-mu-ed-prova="2"]')).toBeVisible();
+    await expect(
+      body.locator('[data-mu-ed-alterna="pagine.2.ingresso.accendiSchermo"]'),
+    ).toHaveAttribute("aria-checked", "true");
+    await expect(body.locator('[data-mu-ed-alterna="pagine.2.ingresso.parla"]')).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    await suono.selectOption("ding");
+    await body.locator('[data-mu-ed-campo="pagine.2.ingresso.volume"]').fill("40");
+    await body.locator('[data-mu-ed-alterna="pagine.2.ingresso.parla"]').click();
+    await body.locator('[data-mu-ed-alterna="pagine.2.ingresso.tieniAcceso"]').click();
+    await body.locator("[data-dm-save-all]").click();
+    expect((await salvato(page)).pagine[2].ingresso).toMatchObject({
+      suono: "ding",
+      volume: 40,
+      parla: true,
+      tieniAcceso: false,
+      accendiSchermo: true,
+    });
+  });
+
   test("con Base la scheda e' chiusa e non salva", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, { premium: false, muro: MURO_DI_PROVA });
     await apriLaScheda(page);

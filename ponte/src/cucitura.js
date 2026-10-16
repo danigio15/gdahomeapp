@@ -140,8 +140,21 @@ export class Cucitura {
         return;
       }
     }
-    const { passa, rifiuti } = passaLaDogana(testo, { amministra: this._amministra() });
+    /* Le telecamere delle plance riservate a un altro restano chiuse anche
+     * qui, come sul filo di un telefono (`ponte.js`): prima dentro Home
+     * Assistant la dogana non le guardava, e chi non vede una plancia ne
+     * chiedeva il flusso o la firma lo stesso. */
+    const amministra = this._amministra();
+    const telecamereChiuse =
+      !amministra && (testo.includes("camera") || testo.includes("image"))
+        ? (this.commissioni?.telecamereChiuse?.(
+            this.chiGuarda || "",
+            this.utenti?.amministratoreSubito?.(this.chiGuarda || "") ?? null,
+          ) ?? null)
+        : null;
+    const { passa, rifiuti, risposte } = passaLaDogana(testo, { amministra, telecamereChiuse });
     for (const no of rifiuti) this._manda(no);
+    for (const detta of risposte) this._manda(detta);
     for (const uno of passa) {
       if (!this.filo?.manda(uno)) {
         this.chiudi(1011, "il filo con la casa e' caduto");

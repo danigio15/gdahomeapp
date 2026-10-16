@@ -137,6 +137,7 @@ export const SCHEDE = Object.freeze({
   /* ── ⚡ Energia ─────────────────────────────────────────────────────── */
   sez1: { famiglia: "energia", posizione: 10 }, // Contatori, fasce, tariffe
   sez2: { famiglia: "energia", posizione: 20 }, // Auto elettrica, colonnina, evcc
+  gdanav: { famiglia: "energia", posizione: 25 }, // I viaggi pianificati di gdanav
   ups: { famiglia: "energia", posizione: 30 }, // UPS (#390)
   /* Le batterie di accumulo (#117): i pacchi e i loro BMS. Stanno con
    * l'Energia e non con le Batterie di Casa — quelle sono le pile dei

@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- La fotocamera serve a una cosa sola: inquadrare il codice a quadretti
          che collega l'app alla casa. Lo dichiara gia' il lettore di quadretti,
          e ridirlo qui non cambia niente al sistema — cambia a chi legge questo
@@ -16,6 +17,12 @@
          permesso quella chiamata non fa niente e non dice niente: la plancia
          nel browser vibrava, nell'app no, e non si capiva perche'. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Il campanello del tablet a muro: lo schermo spento si riaccende quando
+         suona (un wake lock di pochi secondi, `MainActivity.sveglia`), e
+         «Parla» manda la voce al citofono dal microfono del tablet. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <!-- Il volto e l'impronta davanti all'app (#54): il lucchetto che si
          accende da Sicurezza.
@@ -30,6 +37,18 @@
          Senza, il Play Store nasconderebbe l'app a chi ha un telefono senza
          lettore. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <!-- Le notifiche della casa. `POST_NOTIFICATIONS` lo dichiara gia' il
+         plugin delle notifiche, e da Android 13 si chiede a chi usa il
+         telefono, dopo avergli detto perche' (`lib/notifiche/postino.dart`).
+
+         `USE_FULL_SCREEN_INTENT` per ora no: Google Play vuole una
+         dichiarazione per chi lo usa, e mandarla adesso faceva ripartire da
+         capo una revisione in corso. Il campanello e' una notifica urgente
+         che suona e si vede in cima, con «Apri» e «Ignora»; toccata, apre la
+         telecamera a tutto schermo. Se un pacchetto lo porta da se', qui lo
+         si toglie. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" tools:node="remove" />
     <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
 
     <!-- La plancia vera dentro l'app passa da un server locale, su
@@ -73,6 +92,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- I tasti sotto le notifiche («Spegni», «Apri cancello», «Più
+             tardi»): li riceve il plugin, e li passa all'app che li porta alla
+             casa sul suo filo. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
+        <!-- Il canale di serie per quello che Firebase mostrasse da se'. Le
+             notifiche di gdahome arrivano chiuse e le mostra l'app, ognuna sul
+             suo canale: questo e' solo il posto dove finirebbe il resto. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="gdahome_normali" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

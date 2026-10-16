@@ -42,6 +42,10 @@ const SOLO_DI_QUESTO_DISPOSITIVO = Object.freeze({
   cd_irr_lastrun: "quando ha girato l'irrigazione su questo dispositivo",
   cd_posta_stato:
     "cosa sa questo dispositivo della cassetta: com'era l'ultima volta che l'ha guardata, e se chi guarda ha gia' visto la posta. Lo scatto di prima e' quello che permette di accorgersi di un'apertura avvenuta mentre non si guardava, e condividerlo vorrebbe dire che il tablet acceso in cucina se ne accorge per primo e al telefono non resta piu' niente da confrontare",
+  cd_campanello_squilli:
+    "gli ultimi squilli che il tablet a muro ha visto, con l'istantanea di quel momento: sono la memoria di questo schermo — un altro tablet ha visto i suoi — e un'istantanea pesa troppo per viaggiare con la configurazione",
+  dm_assistente_finiti:
+    "quando questo dispositivo ha visto finire la lavatrice e le altre: lo sa solo chi le ha viste lavorare, e un altro schermo che guardava la casa da spento non ha niente da aggiungere",
   cd_cam_strade:
     "quale strada — WebRTC, HLS, MJPEG, istantanee — ha aperto ogni telecamera da QUI. Non e' una proprieta' della telecamera, e' una proprieta' della strada di rete fra chi guarda e la telecamera: dal divano si passa in HLS, dal telefono fuori casa magari no, e scrivere la scelta di uno sull'altro vorrebbe dire far sbagliare strada a tutti e due",
   cd_pool_run: "il conteggio della pompa in corso qui",
@@ -52,6 +56,8 @@ const SOLO_DI_QUESTO_DISPOSITIVO = Object.freeze({
   cd_sync_ts: "orologio della vecchia sincronizzazione, disinnescata",
   cd_sync_dirty: "segno della vecchia sincronizzazione, disinnescata",
   dm_fresh_start: "segno che la plancia e' appena stata svuotata",
+  dm_flusso_ultimi_numeri:
+    "l'ultimo numero del giorno e del mese che i cerchi del flusso hanno letto QUI, perche' alla riapertura non tornino a «—» mentre il Recorder risponde. E' una copia di quello che Home Assistant sa gia', non una scelta",
   dm_testa_fissa:
     "l'intestazione ferma su questo vetro: il tablet al muro la vuole, il telefono no",
   dm_persistence_meta: "cosa sa questo dispositivo dell'ultimo salvataggio",

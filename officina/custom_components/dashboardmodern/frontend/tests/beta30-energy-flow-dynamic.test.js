@@ -504,8 +504,10 @@ test("a load metered only by its lifetime counter reads today and this month fro
 
   configure({ loads: [lifetime], states });
   assert.equal(textOf(bubbles(views.instant)[0], ".dm-flow-value"), "1,50 kW");
-  assert.equal(textOf(bubbles(views.day)[0], ".dm-flow-value"), "—");
-  assert.equal(textOf(bubbles(views.month)[0], ".dm-flow-value"), "—");
+  // Before the first Recorder bundle the bubble says it is waiting for it:
+  // «…», never the running total and never a dash that looks like a fault.
+  assert.equal(textOf(bubbles(views.day)[0], ".dm-flow-value"), "…");
+  assert.equal(textOf(bubbles(views.month)[0], ".dm-flow-value"), "…");
 
   configure({
     loads: [lifetime],

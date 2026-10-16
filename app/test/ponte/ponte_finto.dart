@@ -210,6 +210,19 @@ class PonteFinto {
       });
       return;
     }
+    /* Le notifiche di questo telefono (`ponte/src/notifiche.js`): qui sono
+     * una mappa in memoria, e ogni domanda si segna in [chieste]. */
+    if (detto['type'] case final String t
+        when t.startsWith('ponte/notifiche/')) {
+      chieste.add(detto);
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': _notifiche(t, detto),
+      });
+      return;
+    }
     /* Le segnalazioni e la chat: quello che il ponte vero porta al
      * centralino, qui sta in memoria. */
     final tipo = detto['type'];
@@ -426,11 +439,60 @@ class PonteFinto {
                 },
         'get_states' => entita,
         'get_panels' => pannelli ?? const <String, dynamic>{},
+        // I viaggi pianificati di gdanav (`ponte/src/viaggi.js`).
+        'ponte/viaggi/elenco' => {'sbloccato': true, 'viaggi': viaggi},
         'dashboardmodern/config/get' =>
           configurazione ?? {'profile': 'primary', 'snapshot': null},
         _ => null,
       },
     });
+  }
+
+  /// Quello che il ponte sa delle notifiche di questo telefono: la risposta
+  /// a `ponte/notifiche/stato`.
+  final Map<String, dynamic> notifiche = {
+    'impostazioni': <String, dynamic>{'acceso': true, 'eventi': {}},
+    'registrato': false,
+    'intestato': true,
+    'centralino': true,
+    'persone': [
+      {'id': 'person.uno', 'nome': 'Persona 1'},
+      {'id': 'person.due', 'nome': 'Persona 2'},
+    ],
+    'utenti': [
+      {'id': 'a' * 32, 'nome': 'Persona 1'},
+      {'id': 'b' * 32, 'nome': 'Persona 2'},
+    ],
+    'personalizzate': <Map<String, dynamic>>[],
+    'io': 'a' * 32,
+    'amministra': true,
+  };
+
+  Object? _notifiche(String tipo, Map<String, dynamic> detto) {
+    switch (tipo) {
+      case 'ponte/notifiche/stato':
+        return notifiche;
+      case 'ponte/notifiche/registra':
+        notifiche['registrato'] = true;
+        return notifiche;
+      case 'ponte/notifiche/imposta':
+        notifiche['impostazioni'] = {
+          ...notifiche['impostazioni'] as Map<String, dynamic>,
+          ...detto['impostazioni'] as Map<String, dynamic>,
+        };
+        return {'impostazioni': notifiche['impostazioni']};
+      case 'ponte/notifiche/personalizzata/salva':
+        final regola = {
+          ...detto['regola'] as Map<String, dynamic>,
+          'id': (detto['regola'] as Map)['id'] ?? 'p_000000000001',
+        };
+        final elenco = notifiche['personalizzate'] as List;
+        elenco.removeWhere((una) => (una as Map)['id'] == regola['id']);
+        elenco.add(regola);
+        return {'regola': regola};
+      default:
+        return {'fatto': true};
+    }
   }
 
   /// Quello che risponde `ponte/licenza/stato`, come il ponte vero:
@@ -1050,6 +1112,9 @@ class PonteFinto {
     }
   }
 
+  /// I viaggi pianificati che risponde `ponte/viaggi/elenco`.
+  List<Map<String, dynamic>> viaggi = [];
+
   /// I pannelli che risponde `get_panels`. `null` e' una casa senza
   /// DashboardModern: risponde lo stesso, ma senza quel pannello.
   Map<String, dynamic>? pannelli = pannelliConLaPlancia();
@@ -1071,8 +1136,14 @@ class PonteFinto {
   };
 
   /// I file che il ponte finto sa servire con `ponte/http`: il percorso, il
-  /// tipo e i byte. Sotto `/api/` si risponde con l'eco della richiesta.
+  /// tipo e i byte. Sotto `/api/` si risponde con l'eco della richiesta,
+  /// a meno che il percorso non stia qui: e' cosi' che una prova mette una
+  /// telecamera finta, con la sua istantanea.
   final Map<String, (String, List<int>)> file = {};
+
+  /// I percorsi che la dogana del ponte chiude a chi chiede: una telecamera
+  /// che sta solo in una plancia che questa utenza non vede.
+  final Set<String> chiusi = {};
 
   /// Le domande arrivate su questa strada, in ordine.
   ///
@@ -1103,6 +1174,17 @@ class PonteFinto {
 
   Map<String, dynamic> _commissione(Map<String, dynamic> detto) {
     commissioni.add(detto);
+    final soloIlPercorso = '${detto['percorso'] ?? ''}'.split('?').first;
+    if (chiusi.contains(soloIlPercorso)) {
+      return {
+        'type': 'result',
+        'success': false,
+        'error': {
+          'code': 'unauthorized',
+          'message': 'questa telecamera non e\' per la tua utenza',
+        },
+      };
+    }
     return _unFile(detto);
   }
 
@@ -1111,6 +1193,18 @@ class PonteFinto {
   Map<String, dynamic> _unFile(Map<String, dynamic> detto) {
     final percorso = detto['percorso'] as String? ?? '';
     final soloIlPercorso = percorso.split('?').first;
+    /* Come il ponte vero: il flusso MJPEG non passa dal filo. */
+    if (soloIlPercorso.startsWith('/api/camera_proxy_stream/')) {
+      return _pacchetto(
+        501,
+        'text/plain; charset=utf-8',
+        utf8.encode('il flusso non passa dal filo'),
+      );
+    }
+    final unaCosaDiCasa = file[soloIlPercorso];
+    if (percorso.startsWith('/api/') && unaCosaDiCasa != null) {
+      return _pacchetto(200, unaCosaDiCasa.$1, unaCosaDiCasa.$2);
+    }
     if (percorso.startsWith('/api/')) {
       final corpo = detto['corpo'];
       final eco = jsonEncode({

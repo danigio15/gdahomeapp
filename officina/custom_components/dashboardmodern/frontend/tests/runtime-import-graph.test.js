@@ -1532,8 +1532,17 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 430 con i deumidificatori nel Clima (#205): il nucleo
   // `core/deumidificatori.js`, la fascia `sections/deumidificatori-section.js`
   // che dipinge il padrone della pagina, e la sua scheda nel config.
+  // 450 con l'assistente di casa accanto alle persone (#175: il posto, il
+  // motore delle regole e la sezione) e il
+  // campanello a muro come un videocitofono: il nucleo
+  // `core/il-campanello-a-muro.js` e il suono `sections/il-suono-del-campanello.js`.
+  // 453 con «Chiedi alla casa…» che capisce le domande prima di Assist: i tre
+  // nuclei puri `core/capire-le-domande.js`, `core/sapere-della-casa.js` e
+  // `core/rispondere-alle-domande.js`.
+  // 455 con la pagina gdanav dei viaggi pianificati: `sections/gdanav-section.js`
+  // e il suo nucleo puro `core/i-viaggi.js`.
   assert.ok(
-    relative.length <= 446,
+    relative.length <= 455,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1643,7 +1652,21 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
    * rinfrescare il fotogramma del citofono: nessun evento di Home Assistant
    * lo dice. Un battito ogni quindici secondi, uno solo, che parte quando il
    * pannello compare e si ferma quando se ne va: su una plancia che non e' a
-   * muro non c'e'.
+   * muro non c'e'. Lo stesso modulo tiene il battito dello squillo del
+   * campanello: un secondo, solo mentre la finestra dello squillo e' aperta.
+   *
+   * Il quindicesimo e' il suono del campanello a muro: il giro del din don
+   * ricomincia finche' qualcuno non risponde, e mai oltre i trenta secondi
+   * dello squillo — chi apre, silenzia o chiude lo ferma.
+   *
+   * Il sedicesimo e' l'assistente di casa accanto alle persone (#175). Si
+   * ricalcola a ogni cambio della casa, ma il tempo che passa non lo dice
+   * nessun evento: la casa vuota «da due ore», il bucato finito «da un'ora»,
+   * il rifiuto da portare fuori dopo le cinque, la notte che comincia. Un giro
+   * al minuto, uno solo, che non si ferma col riposo: sul tablet a muro lo
+   * schermo resta acceso per ore e nessuno lo tocca, ed e' proprio li' che il
+   * consiglio deve essere quello di adesso. Il giro e' un calcolo puro, e
+   * riscrive la card solo se il messaggio e' cambiato.
    *
    * These are the intervals production is allowed, and they are named here so
    * another one cannot arrive unnoticed. */
@@ -1653,11 +1676,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   assert.deepEqual(
     intervals.map(([file]) => path.relative(frontendRoot, file).replaceAll("\\", "/")).sort(),
     [
+      "src/sections/assistente-di-casa-section.js",
       "src/sections/assistenza-section.js",
       "src/sections/cottura-section.js",
       "src/sections/english-runtime-strings-section.js",
       "src/sections/home-widgets-section.js",
       "src/sections/il-guscio-disegna-quando-serve-section.js",
+      "src/sections/il-suono-del-campanello.js",
       "src/sections/la-foto-va-in-auto-section.js",
       "src/sections/live-ui-section.js",
       "src/sections/media-player-section.js",

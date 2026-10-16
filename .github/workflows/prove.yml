@@ -199,6 +199,19 @@ jobs:
       - name: Il pacchetto (senza firma)
         working-directory: app
         run: flutter build ios --release --no-codesign
+      # L'estensione delle notifiche, aggiunta con lo stesso script del
+      # rilascio, e l'archivio come lo fa lui: se l'estensione non compila o
+      # non finisce dentro l'app, lo si sa qui e non al momento di TestFlight.
+      - name: L'archivio, con l'estensione delle notifiche dentro
+        working-directory: app
+        run: |
+          gem list -i xcodeproj > /dev/null || sudo gem install xcodeproj --no-document
+          ruby ../strumenti/notifiche-in-xcode.rb
+          xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner \
+            -configuration Release -sdk iphoneos \
+            -archivePath build/prova.xcarchive archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+          ls -d build/prova.xcarchive/Products/Applications/*.app/PlugIns/NotificheService.appex
 
   pacchetto:
     name: L'app per Android, costruita

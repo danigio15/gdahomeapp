@@ -175,6 +175,10 @@ export function ensureVarchiTab() {
     const testata = doc.querySelector("header");
     if (testata) testata.style.display = "none";
     root.scrollTo?.({ top: 0, behavior: "instant" });
+    /* Anche il corpo, come fa il guscio: nel chiosco dell'iPhone e' lui che
+     * scorre (#228). */
+    if (doc.documentElement) doc.documentElement.scrollTop = 0;
+    if (doc.body) doc.body.scrollTop = 0;
     if (root.navigator?.vibrate) root.navigator.vibrate(5);
     schedule();
   });

@@ -123,6 +123,17 @@ fuori casa** in cima alla pagina, e se non ci arriva dice anche perché.
 Spegnendo `da_fuori_casa` la casa non chiama nessuno e l'app funziona solo sotto
 il Wi-Fi di casa. Per chi la guarda dal divano va benissimo.
 
+## Le notifiche
+
+La casa avvisa i telefoni anche ad app chiusa: antifurto, allagamento, fumo,
+gas, campanello, porte aperte di notte, la lavatrice che ha finito, chi arriva
+e chi esce, e le notifiche personalizzate. Le regole girano qui, nell'add-on;
+cosa ricevere lo sceglie ogni telefono nella pagina «Notifiche» dell'app.
+Ogni notifica parte già cifrata per quel telefono e passa dal centralino:
+serve `da_fuori_casa` acceso. Ricevono solo i telefoni intestati a un utente
+attivo, e le foto delle telecamere le chiede l'app dopo, con le regole della
+plancia. Tutto in `docs/NOTIFICHE.md`.
+
 ## La casa di prova
 
 Prima di pubblicare l'app, Apple e Google la provano con una casa vera: da
@@ -136,8 +147,9 @@ sola, e su tutte le altre sarebbe una porta in più. Da ogni altra casa l'add-on
 rifiuta di farla anche se qualcuno la chiede a mano. Una casa di prova già
 fatta invece si vede dappertutto, finché non scade o non si revoca.
 
-- il codice vale **fino a 7 giorni** e per **più telefoni** (al massimo
-  cinque), e si può usare anche da fuori casa;
+- il codice vale **fino a 7 giorni** e per **quanti telefoni servono** (lo
+  usano Apple, Google e chi lo prova prima), e si può usare anche da fuori
+  casa; i telefoni di prova non tolgono posto ai dieci della casa;
 - chi entra con lui entra come **un utente di Home Assistant che non
   amministra**, scelto nella scheda: vede le plance che vede lui e fa solo
   quello che può fare lui. Un amministratore la scheda non lo propone, e
@@ -194,13 +206,13 @@ Chi si tiene una copia privata dell'add-on lo passa dall'ambiente.
 
 ## Se qualcosa non torna
 
-| cosa vedi                                          | cos'è, e cosa si fa                                                                                                                                                                                                                                                                                                                                                         |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| la plancia esce con **«Errore di configurazione»** | Home Assistant non ha ancora la cartina della plancia. Nella pagina, in «Se qualcosa non torna», c'è scritto quale dei tre passaggi manca e il bottone **Carica la cartina adesso**. Se dice di riavviare Home Assistant, riavvialo una volta: la cartella `www` l'ha creata l'add-on, e i file che stanno lì dentro Home Assistant li serve solo se c'era quando è partito |
-| **da fuori casa non entra**                        | guarda la riga «Da fuori casa» nella Panoramica: sotto c'è il perché. Se dice che il nome non si risolve (`getaddrinfo`), è il DNS di casa, non l'add-on. Se dice che il centralino rifiuta la casa, il motivo è scritto lì                                                                                                                                                 |
-| **l'app va a scatti**                              | apri «Chi parla di più» (c'è solo per chi risponde alle segnalazioni): nomina le entità che mandano più eventi. A quelle due o tre si mette un filtro in Home Assistant, e il traffico cala di dieci volte                                                                                                                                                                  |
-| la plancia **nel browser non si disegna**          | Home Assistant è aperta su un indirizzo `http`. La plancia nel browser ha bisogno di `https` — è una regola dei browser, non nostra. Sul telefono si vede comunque                                                                                                                                                                                                          |
-| il codice **non funziona più**                     | vale cinque minuti e una volta sola: fanne un altro                                                                                                                                                                                                                                                                                                                         |
+| cosa vedi                                                                  | cos'è, e cosa si fa                                                                                                                                                                                                                                                                     |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| nella Plancia c'è il foglietto **«Home Assistant va riavviato una volta»** | la cartella `www` l'ha creata l'add-on, e i file che stanno lì dentro Home Assistant li serve solo se c'era quando è partito. Riavvialo una volta: la plancia compare da sola entro un minuto, su tutti i dispositivi. Nella pagina, in «Se qualcosa non torna», c'è scritto cosa manca |
+| **da fuori casa non entra**                                                | guarda la riga «Da fuori casa» nella Panoramica: sotto c'è il perché. Se dice che il nome non si risolve (`getaddrinfo`), è il DNS di casa, non l'add-on. Se dice che il centralino rifiuta la casa, il motivo è scritto lì                                                             |
+| **l'app va a scatti**                                                      | apri «Chi parla di più» (c'è solo per chi risponde alle segnalazioni): nomina le entità che mandano più eventi. A quelle due o tre si mette un filtro in Home Assistant, e il traffico cala di dieci volte                                                                              |
+| la plancia **nel browser non si disegna**                                  | Home Assistant è aperta su un indirizzo `http`. La plancia nel browser ha bisogno di `https` — è una regola dei browser, non nostra. Sul telefono si vede comunque                                                                                                                      |
+| il codice **non funziona più**                                             | vale cinque minuti e una volta sola: fanne un altro                                                                                                                                                                                                                                     |
 
 ## Come si mette su
 
@@ -295,13 +307,16 @@ plancia di questa casa. Nell'app la stessa regola passa dal telefono: il codice
 di abbinamento porta con sé l'utente (`abbinamento.js`), il telefono lo eredita
 (`dispositivi.js`, campo `utente`), e `commissioni.js` filtra l'elenco con la
 stessa `laVede`. Un telefono senza utente — abbinato prima, o con un codice
-fatto fuori dall'ingress — vede tutto, come prima. La cartina si porta dietro le stesse due cose per un
+fatto fuori dall'ingress — vede tutto, come prima. La pagina che apre la plancia si porta dietro le stesse due cose per un
 motivo solo: dire subito «non è abilitata per te» invece di lasciare un riquadro
 bianco. La prima c'è sempre, tiene il profilo `primary` e non si toglie; le
 altre si aggiungono, si rinominano e si tolgono dalla pagina o dall'app. Ogni
 plancia ha la sua voce fra le «Plance» di Home Assistant, e ce la mette l'add-on
-(`src/plance-in-casa.js`) scrivendo la cartina in `www/gdahome/` — l'unica cosa
-che scrive nella cartella di Home Assistant.
+(`src/plance-in-casa.js`) scrivendo in `www/gdahome/` la pagina che la apre
+(`apri.html`) — l'unica cosa che scrive nella cartella di Home Assistant. Nella
+Plancia c'è solo la tessera «pagina web» di Home Assistant, nessuna tessera
+nostra e nessuna risorsa di Lovelace: per questo né la prima installazione né
+un aggiornamento chiedono di ricaricare la pagina, nemmeno nell'app sul telefono.
 
 ### Le foto: due cartelle
 
@@ -318,9 +333,9 @@ che si carica dall'app finisce nella cartella dell'add-on.
 
 Il manifesto, però, la cartella di Home Assistant la monta **in scrittura**
 (`homeassistant_config:rw`), e va detto chiaro: Home Assistant non sa montarne
-un pezzo solo, e la cartina delle «Plance» deve stare lì dentro. L'add-on ci
-scrive una cartella sola, `www/gdahome/` — la cartina e un `LEGGIMI.txt` che
-dice di chi è — e una prova tiene fermo che non scriva altrove. Disinstallando
+un pezzo solo, e la pagina che apre le «Plance» deve stare lì dentro. L'add-on ci
+scrive una cartella sola, `www/gdahome/` — quella pagina, la cartina per chi usa
+le tessere di gdahome nelle sue dashboard, e un `LEGGIMI.txt` che dice di chi è — e una prova tiene fermo che non scriva altrove. Disinstallando
 l'add-on quella cartella resta: si cancella a mano, e non rompe niente.
 
 ### Cosa finisce sul disco

@@ -1,11 +1,18 @@
 package com.gdahome.gdahome
 
+import android.Manifest
+import android.app.KeyguardManager
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.view.WindowManager
 import com.gdahome.gdahome.auto.IlNavigatoreInAuto
 import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodChannel
 
 /*
@@ -78,9 +85,119 @@ class MainActivity : FlutterFragmentActivity() {
                         window.attributes = attributi
                         risposta.success(null)
                     }
+                    /* Il campanello a muro (`lib/casa/lo_schermo.dart`): lo
+                     * schermo che non si spegne mentre il pannello lo chiede.
+                     * Spento il pannello torna del sistema, e l'app smette
+                     * anche di passare sopra il blocco. */
+                    "acceso" -> {
+                        if (chiamata.arguments == true) {
+                            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        } else {
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            sopraIlBlocco(false)
+                        }
+                        risposta.success(null)
+                    }
+                    /* Suona il campanello: luce piena, e uno schermo spento si
+                     * riaccende sopra il blocco, come una chiamata. */
+                    "sveglia" -> {
+                        sveglia()
+                        risposta.success(null)
+                    }
+                    /* «Apri» dal campanello di una notifica: col telefono
+                     * bloccato si chiede prima di sbloccarlo. Il campanello
+                     * si mostra sopra il blocco, il cancello no: chi trova
+                     * il telefono sul tavolo non apre casa. */
+                    "sblocca" -> {
+                        val guardia = getSystemService(KEYGUARD_SERVICE) as? KeyguardManager
+                        if (guardia == null || !guardia.isKeyguardLocked) {
+                            risposta.success(true)
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            guardia.requestDismissKeyguard(
+                                this,
+                                object : KeyguardManager.KeyguardDismissCallback() {
+                                    override fun onDismissSucceeded() = risposta.success(true)
+                                    override fun onDismissCancelled() = risposta.success(false)
+                                    override fun onDismissError() = risposta.success(false)
+                                },
+                            )
+                        } else {
+                            risposta.success(false)
+                        }
+                    }
+                    /* «Parla» del citofono: il microfono, chiesto al sistema
+                     * la prima volta. La risposta arriva dopo, nel
+                     * `onRequestPermissionsResult` qui sotto. */
+                    "microfono" -> {
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
+                            PackageManager.PERMISSION_GRANTED
+                        ) {
+                            risposta.success(true)
+                        } else {
+                            microfonoInAttesa?.success(false)
+                            microfonoInAttesa = risposta
+                            ActivityCompat.requestPermissions(
+                                this,
+                                arrayOf(Manifest.permission.RECORD_AUDIO),
+                                MICROFONO,
+                            )
+                        }
+                    }
                     else -> risposta.notImplemented()
                 }
             }
+    }
+
+    private var microfonoInAttesa: MethodChannel.Result? = null
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != MICROFONO) return
+        microfonoInAttesa?.success(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
+        microfonoInAttesa = null
+    }
+
+    private fun sopraIlBlocco(si: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(si)
+            setTurnScreenOn(si)
+        } else {
+            @Suppress("DEPRECATION")
+            val bandiere = WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            if (si) window.addFlags(bandiere) else window.clearFlags(bandiere)
+        }
+    }
+
+    /*
+     * Lo schermo si accende davvero solo con un wake lock che lo chiede
+     * (`ACQUIRE_CAUSES_WAKEUP`): `setTurnScreenOn` vale per quando l'activity
+     * torna davanti, non per un'activity che e' gia' li' a schermo spento. Il
+     * lock dura pochi secondi — poi lo schermo resta acceso per
+     * `FLAG_KEEP_SCREEN_ON`, o si rispegne come vuole il sistema.
+     */
+    private fun sveglia() {
+        sopraIlBlocco(true)
+        val attributi = window.attributes
+        attributi.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+        window.attributes = attributi
+        val energia = getSystemService(POWER_SERVICE) as? PowerManager ?: return
+        if (energia.isInteractive) return
+        try {
+            @Suppress("DEPRECATION")
+            energia.newWakeLock(
+                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                    PowerManager.ON_AFTER_RELEASE,
+                "gdahome:campanello",
+            ).acquire(10_000L)
+        } catch (_: SecurityException) {
+            /* Senza il permesso: la pagina suona, lo schermo resta com'e'. */
+        }
     }
 
     /* Il motore puo' restare acceso dopo l'activity: la finestra invece e'
@@ -92,5 +209,6 @@ class MainActivity : FlutterFragmentActivity() {
 
     private companion object {
         const val FINESTRA = "gdahome/finestra"
+        const val MICROFONO = 4201
     }
 }

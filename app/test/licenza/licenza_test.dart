@@ -903,12 +903,15 @@ void main() {
       expect(collegamento.licenza.premiumQui.value, isTrue);
     });
 
-    test('senza Premium, da fuori il centralino si prova una volta sola, '
-        'per chiedere la licenza', () async {
+    test('senza Premium, da fuori il centralino si prova per chiedere la '
+        'licenza, e finche\' nessuno risponde si riprova', () async {
       /* Prima non lo si provava mai: una casa creduta Base restava Base per
        * sempre, anche diventata Premium (`collegamento.dart`, la prova da
-       * fuori). Adesso lo si prova una volta, e se non risponde si torna a
-       * bussare solo in casa. */
+       * fuori). Poi lo si provava una volta, e se quella bussata non
+       * arrivava a nessuno — l'add-on che si aggiorna — per dieci minuti si
+       * bussava solo in casa, anche tirando giu' per aggiornare. Adesso il
+       * tetto lo spende solo un verdetto: la casa, o il centralino, che
+       * dicono Base. */
       final bussate = <Uri>[];
       final centralino = IndirizzoDelCentralino.leggi(
         'wss://centralino.esempio.it',
@@ -927,7 +930,7 @@ void main() {
       await archivio.segnaIlGettone(casa.id, '');
       collegamento = Collegamento(
         archivio: archivio,
-        /* Nessuno risponde: si e' fuori casa. */
+        /* Nessuno risponde: si e' fuori casa, e il centralino non c'e'. */
         sonda: sondaChe({}, bussate: bussate),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
       );
@@ -937,21 +940,19 @@ void main() {
       expect(collegamento.perche, contains('Premium'));
       expect(
         bussate.where((una) => una.host == 'centralino.esempio.it'),
-        hasLength(1),
-        reason: 'la prova da fuori, una volta: $bussate',
+        isNotEmpty,
+        reason: 'la prova da fuori: $bussate',
       );
 
-      /* Riaperta subito — il risveglio, il gesto di aggiornare — il
-       * centralino non si riprova: una casa Base non ci fa bussare a ogni
-       * giro. */
+      /* Riaperta subito — il gesto di aggiornare — il centralino si
+       * riprova: non ha risposto nessuno, e non c'e' niente da sapere. */
       bussate.clear();
       await collegamento.apri(forza: true);
       expect(collegamento.fuoriCasaSenzaPremium, isTrue);
-      expect(bussate, isNotEmpty);
       expect(
-        bussate.every((una) => una.host == '192.168.1.50'),
-        isTrue,
-        reason: 'si è bussato altrove: $bussate',
+        bussate.where((una) => una.host == 'centralino.esempio.it'),
+        isNotEmpty,
+        reason: 'una bussata a vuoto ha speso i dieci minuti: $bussate',
       );
     });
 

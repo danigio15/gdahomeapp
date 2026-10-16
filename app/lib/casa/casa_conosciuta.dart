@@ -36,6 +36,7 @@ class CasaConosciuta {
     this.ultimoApprodo,
     this.plancia,
     this.gettone,
+    this.gettonePremium,
     this.senzaLicenze = false,
     this.legata = false,
   });
@@ -100,6 +101,18 @@ class CasaConosciuta {
   /// controllare — la firma la guarda `licenza/gettone.dart`, non questa
   /// classe.
   final String? gettone;
+
+  /// L'ultimo gettone gdahome **che valeva** quando la casa l'ha dato.
+  ///
+  /// Non apre niente: Premium lo dice [gettone], cioe' l'ultima cosa che la
+  /// casa ha detto. Questo serve a una domanda sola — «questa casa e' stata
+  /// Premium da poco?» — quando la casa non si trova: un add-on che si
+  /// aggiorna sta via qualche minuto, e una casa vista Premium fino a ieri
+  /// non e' una casa che «da fuori serve Premium», e' una casa da ritrovare
+  /// (`casa/collegamento.dart`, la riconnessione). Vale quanto vale il
+  /// gettone, al massimo otto giorni dalla firma, e poi non conta piu'
+  /// niente: lo guarda `licenza/licenza.dart`, firma compresa.
+  final String? gettonePremium;
 
   /// `true` quando questa casa ha detto di non saper tenere una licenza: il
   /// suo add-on e' di prima delle licenze, o le ha spente.
@@ -202,6 +215,7 @@ class CasaConosciuta {
     DaDove? ultimoApprodo,
     String? plancia,
     String? gettone,
+    String? gettonePremium,
     bool? senzaLicenze,
     bool? legata,
     bool togliInCasa = false,
@@ -226,6 +240,7 @@ class CasaConosciuta {
     /* `togliIlGettone`, come per la plancia: tornare a «mai chiesto» e' una
      * cosa da poter dire, e `gettone: null` vuol gia' dire «com'era». */
     gettone: togliIlGettone ? null : (gettone ?? this.gettone),
+    gettonePremium: gettonePremium ?? this.gettonePremium,
     senzaLicenze: senzaLicenze ?? this.senzaLicenze,
     legata: legata ?? this.legata,
   );
@@ -245,6 +260,7 @@ class CasaConosciuta {
     ultimoApprodo: ultimoApprodo == DaDove.daDentro ? ultimoApprodo : null,
     plancia: plancia,
     gettone: gettone,
+    gettonePremium: gettonePremium,
     senzaLicenze: senzaLicenze,
     legata: legata,
   );
@@ -268,6 +284,7 @@ class CasaConosciuta {
     if (ultimoApprodo != null) 'ultimo_approdo': ultimoApprodo!.name,
     if (plancia != null && plancia!.isNotEmpty) 'plancia': plancia,
     if (gettone != null) 'gettone': gettone,
+    if (gettonePremium != null) 'gettone_premium': gettonePremium,
     if (senzaLicenze) 'senza_licenze': true,
     if (legata) 'legata': true,
   };
@@ -305,6 +322,12 @@ class CasaConosciuta {
        * «mai chiesto», che e' la verita'. */
       gettone: switch (grezza['gettone']) {
         final String s => s,
+        _ => null,
+      },
+      /* Un archivio scritto prima della riconnessione non ce l'ha: `null`,
+       * e si riempie alla prima risposta Premium della casa. */
+      gettonePremium: switch (grezza['gettone_premium']) {
+        final String s when s.isNotEmpty => s,
         _ => null,
       },
       senzaLicenze: grezza['senza_licenze'] == true,

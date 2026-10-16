@@ -575,142 +575,168 @@ export function verdettoPressione(bar) {
 export const CHIAVE_SOLARI = "cd_solari";
 export const CHIAVE_SOLARE_SCELTO = "cd_solare_scelto";
 
-/* Le tredici caselle del solare, in due gruppi, ognuna col suo posto in pagina.
+/* Le caselle del solare, coi nomi della pagina e nell'ordine della pagina.
  *
  * «Vedo un sacco di volte entità solare termico da configurare e non riesco a
  * capire cosa va: non si capisce nulla in questa sezione.» Le caselle avevano
  * il nome del dato e non quello del tasto: tre di fila parlavano della pompa
  * — comando, stato, sensore — e chi configurava ci metteva la stessa entità
- * tre volte senza sapere perché. Adesso ognuna dice, sotto, cosa muove nella
- * pagina; stanno in due gruppi — le misure e i tasti — nell'ordine in cui la
- * pagina le mostra.
+ * tre volte senza sapere perché.
  *
- * Il «Sensore pompa solare» non c'è più: nessuno lo leggeva. Al suo posto la
- * «Valvola solare (chiave)», che prima era scritta fissa su
- * `valve.chiave_solare_termico` e non si poteva scegliere. */
+ * Poi: «Adeguami nel config i nomi dove vanno inserite le entità, ad esempio
+ * non trovo Boost ed altro.» Boost, PdC e Ricircolo erano tasti della pagina
+ * senza una casella: si accendevano solo per chi aveva le entità coi nomi di
+ * fabbrica. Adesso ogni cosa che la pagina mostra ha la sua casella, col nome
+ * scritto esattamente come in pagina e la stessa icona, nei gruppi in cui la
+ * pagina la mostra — il pannello, il circuito, l'accumulo e la fila dei
+ * comandi, questi ultimi nell'ordine della fila — e sotto ognuna che entità
+ * si aspetta. I riferimenti non cambiano: chi aveva già mappato non perde
+ * niente.
+ *
+ * Il «Sensore pompa solare» non c'è più: nessuno lo leggeva. */
 export const GRUPPI_DEL_SOLARE = Object.freeze([
-  { id: "misure", it: "🌡️ Le misure", en: "🌡️ Readings" },
-  { id: "tasti", it: "🎛️ I tasti", en: "🎛️ Buttons" },
+  { id: "pannello", it: "☀️ Pannello", en: "☀️ Panel" },
+  { id: "circuito", it: "🔁 Circuito", en: "🔁 Circuit" },
+  { id: "accumulo", it: "🛢️ Accumulo", en: "🛢️ Tank" },
+  { id: "comandi", it: "🎛️ Comandi", en: "🎛️ Controls" },
 ]);
 
+/* Che entità si aspetta ogni casella: poche frasi, riusate. */
+const ATTESA = Object.freeze({
+  temperatura: ["Sensore di temperatura (sensor, °C)", "Temperature sensor (sensor, °C)"],
+  delta: [
+    "Sensore di temperatura (sensor, °C): pannello meno accumulo",
+    "Temperature sensor (sensor, °C): panel minus tank",
+  ],
+  pressione: ["Sensore di pressione (sensor, bar)", "Pressure sensor (sensor, bar)"],
+  potenza: ["Sensore di potenza (sensor, W)", "Power sensor (sensor, W)"],
+  gira: [
+    "Dice se la pompa gira (binary_sensor o switch): fa scorrere la luce nei tubi",
+    "Tells whether the pump runs (binary_sensor or switch): makes the light flow in the pipes",
+  ],
+  interruttore: [
+    "Interruttore da accendere e spegnere (switch o input_boolean)",
+    "Switch to turn on and off (switch or input_boolean)",
+  ],
+  valvola: [
+    "Valvola (valve) o interruttore (switch); vuota usa valve.chiave_solare_termico",
+    "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico",
+  ],
+  sicurezza: [
+    "Valvola con posizione (cover): aperta sopra lo zero",
+    "Valve with a position (cover): open above zero",
+  ],
+});
+
+function riga(ref, gruppo, icona, it, en, attesa, fabbrica = []) {
+  return Object.freeze({
+    ref,
+    gruppo,
+    icona,
+    it,
+    en,
+    aiutoIt: ATTESA[attesa][0],
+    aiutoEn: ATTESA[attesa][1],
+    fabbrica: Object.freeze(fabbrica),
+  });
+}
+
 export const CASELLE_SOLARE = Object.freeze([
-  {
-    ref: "dm.boiler_sonda_temperatura_1",
-    fabbrica: ["Sonda temperatura 1 (°C)"],
-    gruppo: "misure",
-    it: "Sonda pannello solare (°C)",
-    en: "Solar collector probe (°C)",
-    aiutoIt: "La temperatura del pannello, nel disegno accanto ai collettori.",
-    aiutoEn: "The collector temperature, next to the panels in the drawing.",
-  },
-  {
-    ref: "dm.boiler_sonda_temperatura_3",
-    fabbrica: ["Sonda temperatura 3 (°C)"],
-    gruppo: "misure",
-    it: "Sonda accumulo alto (°C)",
-    en: "Tank top probe (°C)",
-    aiutoIt: "Il riquadro ALTO accanto all'accumulo.",
-    aiutoEn: "The TOP box next to the tank.",
-  },
-  {
-    ref: "dm.boiler_sonda_temperatura_2",
-    fabbrica: ["Sonda temperatura 2 (°C)"],
-    gruppo: "misure",
-    it: "Sonda accumulo basso (°C)",
-    en: "Tank bottom probe (°C)",
-    aiutoIt: "Il riquadro BASSO accanto all'accumulo.",
-    aiutoEn: "The BOTTOM box next to the tank.",
-  },
-  {
-    ref: "dm.boiler_delta_temperatura",
-    gruppo: "misure",
-    it: "Delta temperatura (°C)",
-    en: "Temperature delta (°C)",
-    aiutoIt: "Il riquadro ΔT SOLARE: la differenza fra pannello e accumulo.",
-    aiutoEn: "The SOLAR ΔT box: the gap between collector and tank.",
-  },
-  {
-    ref: "dm.boiler_pressione_acqua",
-    gruppo: "misure",
-    it: "Pressione acqua (bar)",
-    en: "Water pressure (bar)",
-    aiutoIt: "Il riquadro PRESSIONE.",
-    aiutoEn: "The PRESSURE box.",
-  },
-  {
-    ref: "dm.boiler_potenza_resistenza_boiler",
-    fabbrica: ["Power resistenza boiler (W)"],
-    gruppo: "misure",
-    it: "Potenza resistenza boiler (W)",
-    en: "Boiler heater power (W)",
-    aiutoIt: "Il riquadro POTENZA BOILER.",
-    aiutoEn: "The BOILER POWER box.",
-  },
-  {
-    ref: "dm.boiler_pompa_solare",
-    fabbrica: ["Pompa solare (manuale)"],
-    gruppo: "tasti",
-    it: "Pompa solare — comando",
-    en: "Solar pump — command",
-    aiutoIt: "Il tasto POMPA SOL.: toccandolo si accende o si spegne questa entità.",
-    aiutoEn: "The SOLAR PUMP button: tapping it switches this entity on or off.",
-  },
-  {
-    ref: "dm.boiler_stato_pompa_solare",
-    fabbrica: ["Stato pompa solare"],
-    gruppo: "tasti",
-    it: "Pompa solare — se gira",
-    en: "Solar pump — running",
-    aiutoIt:
-      "Dice se la pompa sta girando: accende il tasto POMPA SOL. e fa scorrere i tubi nel disegno. Se il comando qui sopra dice già acceso o spento, metti la stessa entità.",
-    aiutoEn:
-      "Says whether the pump is running: lights the SOLAR PUMP button and makes the pipes flow in the drawing. If the command above already says on or off, use the same entity.",
-  },
-  {
-    ref: "dm.boiler_interruttore_solare_termico",
-    fabbrica: ["Interruttore solare termico"],
-    gruppo: "tasti",
-    it: "Ctrl Solare",
-    en: "Solar control",
-    aiutoIt: "Il tasto CTRL SOLARE; quando è acceso, nel disegno il pannello si illumina.",
-    aiutoEn: "The SOLAR CTRL button; when it is on, the panel lights up in the drawing.",
-  },
-  {
-    ref: "dm.boiler_centralina_solare_termico",
-    fabbrica: ["Centralina solare termico"],
-    gruppo: "tasti",
-    it: "Centralina",
-    en: "Controller",
-    aiutoIt: "Il tasto CENTRALINA.",
-    aiutoEn: "The CONTROLLER button.",
-  },
-  {
-    ref: "dm.boiler_chiave_solare",
-    gruppo: "tasti",
-    it: "Valvola solare (chiave)",
-    en: "Solar valve (key)",
-    aiutoIt:
-      "Il tasto VALVOLA e la CHIAVE SOLARE nel disegno: aperta o chiusa. Vuota, resta valve.chiave_solare_termico.",
-    aiutoEn:
-      "The VALVE button and the SOLAR KEY in the drawing: open or closed. Left empty, it stays valve.chiave_solare_termico.",
-  },
-  {
-    ref: "dm.boiler_interruttore_boiler",
-    fabbrica: ["Interruttore boiler"],
-    gruppo: "tasti",
-    it: "Boiler",
-    en: "Boiler",
-    aiutoIt: "Il tasto BOILER.",
-    aiutoEn: "The BOILER button.",
-  },
-  {
-    ref: "dm.boiler_valvola_di_sicurezza",
-    gruppo: "tasti",
-    it: "Valvola di sicurezza (cover)",
-    en: "Safety valve (cover)",
-    aiutoIt: "Il tasto V. SICUREZZA: aperta quando la posizione è sopra zero.",
-    aiutoEn: "The SAFETY V. button: open when its position is above zero.",
-  },
+  riga(
+    "dm.boiler_sonda_temperatura_1",
+    "pannello",
+    "☀️",
+    "Pannello solare",
+    "Solar panel",
+    "temperatura",
+    ["Sonda temperatura 1 (°C)", "Sonda pannello solare (°C)", "Solar collector probe (°C)"],
+  ),
+  riga(
+    "dm.boiler_stato_pompa_solare",
+    "circuito",
+    "🔄",
+    "Pompa solare (stato)",
+    "Solar pump (state)",
+    "gira",
+    ["Stato pompa solare", "Pompa solare — se gira", "Solar pump — running"],
+  ),
+  riga("dm.boiler_delta_temperatura", "circuito", "🌡️", "ΔT Solare", "Solar ΔT", "delta", [
+    "Delta temperatura (°C)",
+    "Temperature delta (°C)",
+  ]),
+  riga("dm.boiler_pressione_acqua", "circuito", "💧", "Pressione", "Pressure", "pressione", [
+    "Pressione acqua (bar)",
+    "Water pressure (bar)",
+  ]),
+  riga(
+    "dm.boiler_sonda_temperatura_3",
+    "accumulo",
+    "🔺",
+    "Accumulo alto",
+    "Tank top",
+    "temperatura",
+    ["Sonda temperatura 3 (°C)", "Sonda accumulo alto (°C)", "Tank top probe (°C)"],
+  ),
+  riga(
+    "dm.boiler_sonda_temperatura_2",
+    "accumulo",
+    "🔻",
+    "Accumulo basso",
+    "Tank bottom",
+    "temperatura",
+    ["Sonda temperatura 2 (°C)", "Sonda accumulo basso (°C)", "Tank bottom probe (°C)"],
+  ),
+  riga(
+    "dm.boiler_potenza_resistenza_boiler",
+    "accumulo",
+    "⚡",
+    "Potenza Boiler",
+    "Boiler power",
+    "potenza",
+    ["Potenza resistenza boiler (W)", "Power resistenza boiler (W)", "Boiler heater power (W)"],
+  ),
+  riga("dm.boiler_pompa_solare", "comandi", "🔄", "Pompa solare", "Solar pump", "interruttore", [
+    "Pompa solare (manuale)",
+    "Pompa solare — comando",
+    "Solar pump — command",
+  ]),
+  riga("dm.core_051", "comandi", "🔁", "Ricircolo", "Recirculation", "interruttore", ["Ricircolo"]),
+  riga(
+    "dm.boiler_centralina_solare_termico",
+    "comandi",
+    "⚙️",
+    "Centralina",
+    "Controller",
+    "interruttore",
+    ["Centralina solare termico"],
+  ),
+  riga(
+    "dm.boiler_interruttore_solare_termico",
+    "comandi",
+    "♨️",
+    "Ctrl Solare",
+    "Solar control",
+    "interruttore",
+    ["Interruttore solare termico"],
+  ),
+  riga("dm.boiler_chiave_solare", "comandi", "🎛️", "Chiave solare", "Solar valve", "valvola", [
+    "Valvola solare (chiave)",
+    "Solar valve (key)",
+  ]),
+  riga("dm.boiler_interruttore_boiler", "comandi", "🌊", "Boiler", "Boiler", "interruttore", [
+    "Interruttore boiler",
+  ]),
+  riga("dm.core_050", "comandi", "🌬️", "PdC", "Heat pump", "interruttore", ["PdC"]),
+  riga("dm.core_048", "comandi", "🚀", "Boost", "Boost", "interruttore", ["Boost"]),
+  riga(
+    "dm.boiler_valvola_di_sicurezza",
+    "comandi",
+    "🔒",
+    "V. sicurezza",
+    "Safety valve",
+    "sicurezza",
+    ["Valvola di sicurezza (cover)", "Safety valve (cover)"],
+  ),
 ]);
 
 /* `fabbrica`: i nomi con cui il guscio stampa la casella, nelle due copie. Si
@@ -722,7 +748,7 @@ export function casellaDelSolare(ref) {
   return CASELLE_SOLARE.find((riga) => riga.ref === ref) || null;
 }
 
-/* I riferimenti delle tredici caselle, per la regola comune. */
+/* I riferimenti delle caselle, per la regola comune. */
 const REFS_SOLARE = Object.freeze(CASELLE_SOLARE.map((riga) => riga.ref));
 
 /** Le mappature `dm.boiler_*` di un elenco di override, ripulite. */

@@ -21,6 +21,8 @@
  * plancia deve sapere: quelle si', identiche, e una prova le guarda.
  */
 
+import { readFileSync } from "node:fs";
+
 /* Il nome del prodotto, da una parte sola: e' l'istanza della prima plancia,
  * cioe' il nome sotto cui la pagina tiene le proprie cose nel deposito del
  * browser. */
@@ -230,6 +232,47 @@ export const AVVISO_ASPETTA_LA_CONFIGURAZIONE =
   'else document.addEventListener("DOMContentLoaded",parti);' +
   "})();</script>";
 
+/* L'accompagnatore: la sessione dell'ingress tenuta viva e la barra della
+ * dashboard tolta e rimessa, quando la plancia sta dentro una Plancia di Home
+ * Assistant.
+ *
+ * Prima lo faceva la tessera nostra (`ponte/carta/plancia.js`), che girava
+ * nella pagina di Home Assistant e ci restava finche' la plancia era a
+ * schermo. Adesso nella Plancia c'e' una tessera «pagina web» di Home
+ * Assistant, e la pagina che apre (`apri.html`) prepara tutto e poi lascia il
+ * posto alla plancia: quello che va fatto **mentre** la plancia e' a schermo
+ * — rinnovare la sessione ogni mezzo minuto, rimettere la barra in modifica e
+ * quando si va via — lo fa la plancia stessa, con questo pezzo cucito in
+ * testa. Il perche' intero sta in `ponte/carta/accompagna.js`.
+ *
+ * Fuori da quella Plancia non fa niente: parte solo se il riquadro che la
+ * contiene porta il segno che ci lascia `apri.html`. Aperta dalla scheda
+ * dell'add-on, nell'app o in un browser da sola, la plancia non se ne accorge.
+ *
+ * Un `</script>` dentro il file chiuderebbe lo script: non ce n'e', e se un
+ * giorno ci finisse in un commento si scrive `<\/`, che per il JavaScript e'
+ * la stessa cosa. */
+const DOV_E_L_ACCOMPAGNATORE = new URL("../carta/accompagna.js", import.meta.url);
+
+let accompagnatore = null;
+export function lAccompagnatore() {
+  if (accompagnatore !== null) return accompagnatore;
+  try {
+    const testo = readFileSync(DOV_E_L_ACCOMPAGNATORE, "utf8").replace(/<\/(script)/gi, "<\\/$1");
+    accompagnatore =
+      "<script>" +
+      testo +
+      "\n;try{window.__gdahomeAccompagna&&window.__gdahomeAccompagna.accompagna();}catch(_e){}" +
+      "</script>";
+  } catch (_errore) {
+    /* Senza il file la plancia si apre lo stesso: la sessione la rinnova
+     * ogni richiesta che passa dall'ingress, e la barra resta quella tolta da
+     * `apri.html`. Si perde il rinnovo a pagina ferma, non la plancia. */
+    accompagnatore = "";
+  }
+  return accompagnatore;
+}
+
 /* Le vesti di questa plancia, se chi installa le ha scelte: la parola del
  * velo e la scritta della testata, in due pezzi. La pagina le legge al
  * momento di disegnare (vedi `marchio.js`: il velo e il runtime le cercano
@@ -268,7 +311,8 @@ export function conLePremesse(
       ? `window.__GDAHOME_CONFIGURATA__=${configurata ? "true" : "false"};`
       : "") +
     "</script>" +
-    AVVISO_ASPETTA_LA_CONFIGURAZIONE;
+    AVVISO_ASPETTA_LA_CONFIGURAZIONE +
+    lAccompagnatore();
   const testa = /<head[^>]*>/i.exec(pagina);
   if (!testa) return `${premessa}${pagina}`;
   const dove = testa.index + testa[0].length;

@@ -106,8 +106,9 @@ export const PROVE_PER_INDIRIZZO = 3;
 export const PROVE_NUOVE_PER_CASA_AL_GIORNO = 10;
 const GIORNO = 24 * 60 * 60 * 1000;
 
-/* E quanti canali insieme dalla porta dell'abbinamento, per casa. Il ponte
- * stesso ne lascia passare cinque col codice di prova. */
+/* E quanti canali insieme dalla porta dell'abbinamento, per casa: insieme,
+ * non in tutto. Col codice di prova entrano quanti telefoni servono, uno
+ * dopo l'altro. */
 export const ABBINAMENTI_INSIEME_PER_CASA = 5;
 
 /* Chi bussa alla porta dell'abbinamento e non si abbina. 1008 e' «non per la
@@ -211,8 +212,12 @@ export class Centralino {
     revoche = null,
     vitaDelCanaleDiAbbinamento = VITA_DEL_CANALE_DI_ABBINAMENTO,
     attesaDellaRicevuta = ATTESA_DELLA_RICEVUTA,
+    /* Le notifiche delle case verso i loro telefoni (`spinte.js`). Senza, le
+     * buste che le case mandano si lasciano cadere. */
+    spinte = null,
   } = {}) {
     this.case = case_;
+    this.spinte = spinte;
     this.chiaveLicenze = String(chiaveLicenze || "");
     this.revoche = revoche;
     this.vitaDelCanaleDiAbbinamento = vitaDelCanaleDiAbbinamento;
@@ -736,6 +741,15 @@ class CasaCollegata {
       case "ricevuta":
         this._laRispostaAllaRicevuta(detto);
         return;
+      /* Le notifiche (`spinte.js`): l'elenco dei gettoni dei telefoni di
+       * questa casa, e una busta chiusa per uno di loro. Dentro la busta non
+       * si guarda: si porta a Firebase. */
+      case "spinta-elenco":
+        this.centralino.spinte?.elenco(this.id, detto.telefoni);
+        return;
+      case "spinta":
+        void this._unaSpinta(detto);
+        return;
       default:
         /* Il contratto chiama il campo `tipo`: una casa scritta leggendo solo
          * quello manda `tipo` e basta, e va capita lo stesso. */
@@ -908,6 +922,24 @@ class CasaCollegata {
   _chiudiLeProve() {
     for (const [impronta, attesa] of [...this.centralino.abbinamenti]) {
       if (attesa.casa === this.id && attesa.prova) this.centralino.abbinamenti.delete(impronta);
+    }
+  }
+
+  /* ─── Le notifiche ───────────────────────────────────────────────────── */
+
+  /* Una busta per un telefono di questa casa. Se Firebase dice che quel
+   * telefono non c'e' piu', il gettone e' gia' stato tolto, e lo si dice alla
+   * casa: che lo tolga anche lei, e smetta di mandare. */
+  async _unaSpinta(detto) {
+    const spinte = this.centralino.spinte;
+    if (!spinte || !this.id) return;
+    const esito = await spinte.spingi(this.id, {
+      telefono: detto.telefono,
+      busta: detto.busta,
+      urgente: detto.urgente === true,
+    });
+    if (esito === "morta" && !this.chiusa) {
+      this._manda(JSON.stringify({ t: "spinta-morta", telefono: detto.telefono }));
     }
   }
 

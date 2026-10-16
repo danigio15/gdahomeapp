@@ -54,6 +54,8 @@ state.drawerFrame ||= null;
 state.drawerBound ||= false;
 /* Se la plancia sta in basso per far vedere Home Assistant. */
 state.retratta ||= false;
+/* Quando e' passato l'ultimo comando del menu: due di fila sono un gesto solo. */
+state.ultimoMenu ||= 0;
 
 export function isIosDevice(nav = root.navigator) {
   const ua = clean(nav?.userAgent);
@@ -462,14 +464,40 @@ function applyDrawerRetraction(open) {
  *
  * @param {boolean} prima com'era
  * @param {"hamburger"|"plancia"|"cassetto"} gesto cos'e' successo
- * @param {{visto?: boolean, aperto?: boolean}} cassetto cosa dice il cassetto
+ * @param {{visto?: boolean, aperto?: boolean, apri?: boolean}} cassetto cosa dice il
+ *   cassetto, e se il menu e' stato chiesto aperto
  * @returns {boolean} se la plancia deve stare in basso
  */
-export function retrazioneDopo(prima, gesto, { visto = false, aperto = false } = {}) {
-  if (gesto === "hamburger") return !prima;
+export function retrazioneDopo(prima, gesto, { visto = false, aperto = false, apri = false } = {}) {
+  /* Un menu chiesto APERTO (`detail.open`) apre e basta: e' cosi' che lo
+   * chiede la plancia col chiosco acceso, e un secondo comando uguale non deve
+   * rimettere la plancia sopra la barra appena scoperta. */
+  if (gesto === "hamburger") return apri ? true : !prima;
   if (gesto === "plancia") return false;
   if (gesto === "cassetto") return visto ? aperto : Boolean(prima);
   return Boolean(prima);
+}
+
+/* Un tocco, un comando.
+ *
+ * «Su Chrome col chiosco i tre trattini per tornare a Home Assistant non
+ * vanno; dall'iPhone si'; su Safari nemmeno; senza chiosco va tutto.» Il ☰
+ * della plancia mandava `hass-toggle-menu` due volte di fila — a
+ * `home-assistant` e a `home-assistant-main` — e qui, dove ogni comando
+ * inverte, la plancia scendeva e risaliva nello stesso istante. Sul telefono
+ * la salvava il cassetto, che si fa vedere aperto; su uno schermo largo la
+ * barra laterale non si «apre», e restava coperta.
+ *
+ * Il ☰ adesso ne manda uno; ma chi lo manda puo' essere anche una plancia
+ * vecchia rimasta aperta in un'altra scheda, o qualcun altro che fa come
+ * faceva lei. Quindi qui due comandi a meno di `STESSO_GESTO_MS` l'uno
+ * dall'altro sono un gesto solo: due dita non ci arrivano, due chiamate si'. */
+const STESSO_GESTO_MS = 350;
+
+export function eUnGestoNuovo(ultimo, adesso, finestra = STESSO_GESTO_MS) {
+  const passato = Number(adesso) - Number(ultimo);
+  if (!Number.isFinite(passato) || !ultimo) return true;
+  return passato < 0 || passato >= finestra;
 }
 
 function nextFrame(callback) {
@@ -502,8 +530,12 @@ function bindDrawerToggle() {
   // Dispatched by the plancia hamburger and by every native sidebar toggle.
   view.addEventListener(
     "hass-toggle-menu",
-    () => {
-      applyDrawerRetraction(retrazioneDopo(state.retratta, "hamburger"));
+    (event) => {
+      const adesso = Date.now();
+      if (!eUnGestoNuovo(state.ultimoMenu, adesso)) return;
+      state.ultimoMenu = adesso;
+      const apri = Boolean(event?.detail?.open);
+      applyDrawerRetraction(retrazioneDopo(state.retratta, "hamburger", { apri }));
       trackDrawer();
     },
     true,

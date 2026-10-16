@@ -352,6 +352,255 @@ void main() {
     expect(fonte.ultima, isNull);
   });
 
+  /* La B10 di un utente, con l'integrazione Leapmotor: «Da gdahome · 2 h
+   * fa» mentre ABRP diceva «2 min», e le temperature «non arriva». */
+  group('una Leapmotor B10', () {
+    final b10 = {
+      'uid': 'auto-b10',
+      'name': 'B10',
+      'brand': 'Leapmotor',
+      'model': 'B10',
+      'kwh': '56.2',
+      'ov': {'dm.ev_batteria_auto': 'sensor.b10_battery'},
+    };
+    final adesso = DateTime.utc(2026, 10, 13, 21, 48);
+    Entita t(String id, String nome, String stato, String classe) => Entita(
+      id: id,
+      stato: stato,
+      attributi: {
+        'friendly_name': nome,
+        'device_class': classe,
+        if (classe == 'temperature') 'unit_of_measurement': '°C',
+      },
+      aggiornataIl: adesso.subtract(const Duration(minutes: 2)),
+    );
+    final batteria = Entita(
+      id: 'sensor.b10_battery',
+      stato: '63',
+      attributi: const {'unit_of_measurement': '%', 'device_class': 'battery'},
+      /* Al 63% da due ore: Home Assistant non sposta l'ora se il valore
+       * non cambia. */
+      aggiornataIl: adesso.subtract(const Duration(hours: 2)),
+    );
+    final sensori = [
+      t(
+        'sensor.b10_outdoor_temperature',
+        'B10 Outdoor temperature',
+        '15',
+        'temperature',
+      ),
+      t(
+        'sensor.b10_interior_temperature',
+        'B10 Temperatura interna',
+        '23',
+        'temperature',
+      ),
+      t(
+        'sensor.b10_battery_min_temperature',
+        'B10 Temperatura minima batteria',
+        '22',
+        'temperature',
+      ),
+      t(
+        'sensor.b10_climate_set_temperature_left',
+        'B10 Climate set temp left',
+        '21',
+        'temperature',
+      ),
+      t(
+        'sensor.b10_last_vehicle_update',
+        'B10 Ultimo aggiornamento del veicolo',
+        adesso.subtract(const Duration(minutes: 2)).toIso8601String(),
+        'timestamp',
+      ),
+      t(
+        'sensor.b10_last_successful_refresh',
+        'B10 Ultimo aggiornamento cloud',
+        adesso.subtract(const Duration(seconds: 30)).toIso8601String(),
+        'timestamp',
+      ),
+      t(
+        'sensor.b10_charging_finish_time',
+        'B10 Charging finish time',
+        adesso.add(const Duration(hours: 3)).toIso8601String(),
+        'timestamp',
+      ),
+    ];
+    final stati = {
+      for (final x in [batteria, ...sensori]) x.id: x,
+    };
+    final v = LaVettura.daiValori(valori(auto: [b10]))!
+        .coiVicini([for (final x in sensori) x.id]);
+
+    test('le temperature: fuori e batteria, mai quella dell\'abitacolo', () {
+      final l = v.lettura((id) => stati[id], adesso: adesso)!;
+      expect(l.temperaturaEsternaC, 15);
+      expect(l.temperaturaBatteriaC, 22);
+    });
+
+    test('con solo quella dell\'abitacolo, fuori non arriva', () {
+      final senza = {...stati}..remove('sensor.b10_outdoor_temperature');
+      final l = v.lettura((id) => senza[id], adesso: adesso)!;
+      expect(l.temperaturaEsternaC, isNull);
+      expect(l.temperaturaBatteriaC, 22);
+      expect(
+        LaVettura.eDiFuori(stati['sensor.b10_interior_temperature']!),
+        isFalse,
+      );
+    });
+
+    test(
+      'l\'eta\' e\' quella dei dati dell\'auto, non della batteria ferma',
+      () {
+        final l = v.lettura((id) => stati[id], adesso: adesso)!;
+        expect(l.letto, adesso.subtract(const Duration(minutes: 2)));
+      },
+    );
+
+    test('senza l\'ora del veicolo, quella del cloud', () {
+      final senza = {...stati}..remove('sensor.b10_last_vehicle_update');
+      final l = v.lettura((id) => senza[id], adesso: adesso)!;
+      expect(l.letto, adesso.subtract(const Duration(seconds: 30)));
+    });
+
+    test(
+      'senza sensori dell\'ora, il sensore del dispositivo piu\' fresco',
+      () {
+        final soloNumeri = {
+          for (final x in [batteria, ...sensori])
+            if (x.attributi['device_class'] != 'timestamp') x.id: x,
+        };
+        final l = v.lettura((id) => soloNumeri[id], adesso: adesso)!;
+        expect(l.letto, adesso.subtract(const Duration(minutes: 2)));
+      },
+    );
+
+    test('un\'ora nel futuro non si crede', () {
+      final futuro = {
+        ...stati,
+        'sensor.b10_last_vehicle_update': t(
+          'sensor.b10_last_vehicle_update',
+          'B10 Ultimo aggiornamento del veicolo',
+          adesso.add(const Duration(days: 1)).toIso8601String(),
+          'timestamp',
+        ),
+      };
+      final l = v.lettura((id) => futuro[id], adesso: adesso)!;
+      expect(l.letto, adesso.subtract(const Duration(seconds: 30)));
+    });
+
+    test(
+      'il nome dell\'auto davanti ai sensori, ma non una parola qualsiasi',
+      () {
+        expect(
+          IlFiloDellaVettura.prefissoDellAuto('sensor.b10_battery'),
+          'b10_',
+        );
+        expect(
+          IlFiloDellaVettura.prefissoDellAuto('sensor.battery_level'),
+          isNull,
+        );
+        expect(IlFiloDellaVettura.prefissoDellAuto('sensor.ev_soc'), isNull);
+      },
+    );
+  });
+
+  test('gdanav chiede dati freschi: la casa rilegge l\'auto, e la temperatura '
+      'resta quando l\'auto si addormenta', () async {
+    final ponte = await PonteFinto.alza();
+    final zoeConFuori = {
+      ...zoe,
+      'ov': {
+        ...zoe['ov']! as Map<String, String>,
+        'dm.ev_temperatura_esterna': 'sensor.zoe_fuori',
+      },
+    };
+    ponte.configurazione = {
+      'profile': 'primary',
+      'snapshot': {
+        'values': valori(auto: [zoeConFuori], attiva: 'auto-1'),
+      },
+    };
+    final ora = DateTime.now().toUtc().toIso8601String();
+    ponte.entita = [
+      PonteFinto.unaEntita('sensor.zoe_batteria', '80', unita: '%'),
+      PonteFinto.unaEntita(
+        'sensor.zoe_fuori',
+        '12.5',
+        unita: '°C',
+        tipo: 'temperature',
+        cambiataIl: ora,
+        aggiornataIl: ora,
+      ),
+    ];
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    final collegamento = Collegamento(
+      archivio: archivio,
+      sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+    );
+    final fonte = SorgenteGdahome();
+    final filo = IlFiloDellaVettura(collegamento, fonte);
+    addTearDown(() async {
+      filo.ferma();
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+
+    Future<void> finche(bool Function() fatto) async {
+      for (var i = 0; i < 100 && !fatto(); i += 1) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+    }
+
+    filo.avvia();
+    await collegamento.apri();
+    await finche(() => fonte.ultima?.temperaturaEsternaC != null);
+    expect(fonte.ultima?.temperaturaEsternaC, 12.5);
+
+    await fonte.chiediAggiornamento();
+    final chiesta = ponte.arrivati.lastWhere(
+      (uno) => uno['type'] == 'call_service',
+    );
+    expect(chiesta['domain'], 'homeassistant');
+    expect(chiesta['service'], 'update_entity');
+    expect(
+      (chiesta['target'] as Map)['entity_id'],
+      containsAll(['sensor.zoe_batteria', 'sensor.zoe_fuori']),
+    );
+    /* Due richieste di fila: la seconda aspetta il suo turno. */
+    final quante = ponte.arrivati.where((u) => u['type'] == 'call_service');
+    await fonte.chiediAggiornamento();
+    expect(
+      ponte.arrivati.where((u) => u['type'] == 'call_service').length,
+      quante.length,
+    );
+
+    /* L'auto dorme: la temperatura diventa «unknown», ma quella di poco fa
+     * vale ancora. */
+    final abbonamento = ponte.arrivati.lastWhere(
+      (uno) => uno['type'] == 'subscribe_entities',
+    );
+    ponte.evento(abbonamento['id'] as int, {
+      'c': {
+        'sensor.zoe_fuori': {
+          '+': {'s': 'unknown'},
+        },
+        'sensor.zoe_batteria': {
+          '+': {'s': '79', 'lc': DateTime.now().millisecondsSinceEpoch / 1000},
+        },
+      },
+    });
+    await finche(() => fonte.ultima?.batteria == 79);
+    expect(fonte.ultima?.temperaturaEsternaC, 12.5);
+  });
+
   group('la forma stretta di subscribe_entities', () {
     test('lo stato intero: s, a, lc, e lu solo quando serve', () {
       final e = Entita.daStretta('sensor.zoe_batteria', {
@@ -398,5 +647,60 @@ void main() {
       expect(riscritta.cambiataIl, dopo.cambiataIl);
       expect(riscritta.aggiornataIl, DateTime.utc(2026, 9, 7, 7, 3, 20));
     });
+  });
+
+  test('gdanav manda alla casa solo i comandi dei viaggi, e solo col filo '
+      'aperto', () async {
+    final ponte = await PonteFinto.alza();
+    ponte.configurazione = {
+      'profile': 'primary',
+      'snapshot': {'values': <String, dynamic>{}},
+    };
+    ponte.viaggi = [
+      {'id': 'v_1', 'tipo': 'una'},
+    ];
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    final collegamento = Collegamento(
+      archivio: archivio,
+      sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+    );
+    final fonte = SorgenteGdahome();
+    final filo = IlFiloDellaVettura(collegamento, fonte);
+    addTearDown(() async {
+      filo.ferma();
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+
+    // Prima del filo: un errore, non un'attesa.
+    await expectLater(
+      filo.comandoAllaCasa({'type': 'ponte/viaggi/elenco'}),
+      throwsStateError,
+    );
+    filo.avvia();
+    // gdanav sa come chiedere alla casa i suoi viaggi.
+    expect(fonte.chiedi, isNotNull);
+    await collegamento.apri();
+    final elenco = await fonte.chiedi!({'type': 'ponte/viaggi/elenco'});
+    expect(elenco, {
+      'sbloccato': true,
+      'viaggi': [
+        {'id': 'v_1', 'tipo': 'una'},
+      ],
+    });
+    // Nient'altro passa da qui: la casa non si comanda dal navigatore.
+    await expectLater(
+      filo.comandoAllaCasa({'type': 'call_service', 'domain': 'lock'}),
+      throwsArgumentError,
+    );
+    filo.ferma();
+    expect(fonte.chiedi, isNull);
   });
 }

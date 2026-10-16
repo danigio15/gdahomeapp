@@ -28,20 +28,26 @@ export const DOMANDA_SFOGLIA = "media_player/browse_media";
 /**
  * La domanda per una cartella di quel lettore.
  *
- * Senza `id` si chiede la radice, e la radice **non** si chiede mandando
- * `media_content_id: ""`: Home Assistant distingue «non me l'hai detto» da
- * «me l'hai detto vuoto», e col vuoto risponde che quel contenuto non esiste.
- * I due campi viaggiano insieme o non viaggiano, perché il tipo senza l'id
- * non identifica niente.
+ * Senza `id` e senza tipo si chiede la radice, e la radice **non** si chiede
+ * mandando `media_content_id: ""`: Home Assistant distingue «non me l'hai
+ * detto» da «me l'hai detto vuoto», e col vuoto risponde che quel contenuto
+ * non esiste. I due campi viaggiano insieme o non viaggiano.
+ *
+ * Insieme anche quando l'id è vuoto e il tipo no: è così che Sonos chiama le
+ * sue due cartelle più importanti. «Favorites» — dove stanno le playlist e le
+ * radio di Deezer salvate nell'app di Sonos — è `favorites` con id vuoto, e
+ * «Music Library», le cartelle di musica sul disco di casa, è `library` con id
+ * vuoto. È la domanda che fa anche il frontend di Home Assistant.
  */
 export function laDomandaPerSfogliare(entity, { id = "", tipo = "" } = {}) {
   const dove = pulito(entity);
   if (!dove.includes(".")) return null;
   const domanda = { type: DOMANDA_SFOGLIA, entity_id: dove };
   const cercato = pulito(id);
-  if (cercato) {
+  const genere = pulito(tipo);
+  if (cercato || genere) {
     domanda.media_content_id = cercato;
-    domanda.media_content_type = pulito(tipo);
+    domanda.media_content_type = genere;
   }
   return domanda;
 }
@@ -62,6 +68,28 @@ export function laMiniatura(valore) {
   return /^https?:\/\//i.test(grezzo) ? grezzo : "";
 }
 
+/* Da Deezer, o no.
+ *
+ * Deezer arriva in casa da due strade, e nessuna delle due lo dice in una
+ * parola sola. Da Sonos: quello che si salva fra i preferiti nell'app di
+ * Sonos — playlist, radio, album — torna fra i «Favorites» del lettore, con
+ * un id di Sonos («FV:2/12») e la copertina presa dai server di Deezer
+ * (dzcdn.net). Da Music Assistant col fornitore Deezer: lì gli id sono
+ * `deezer://…`, e la cartella del fornitore si chiama «Deezer». Si guarda
+ * quello che c'è: l'id, l'indirizzo della copertina, il nome di una cartella.
+ * Serve a mettere il segno sulla riga, non a decidere cosa si può fare.
+ */
+const DI_DEEZER = /(^|[^a-z])deezer([^a-z]|$)/i;
+const COPERTINA_DI_DEEZER = /^https?:\/\/([a-z0-9-]+\.)*(dzcdn\.net|deezer\.com)\//i;
+
+export function eDiDeezer(grezza) {
+  const id = pulito(grezza?.media_content_id ?? grezza?.id);
+  if (DI_DEEZER.test(id)) return true;
+  if (COPERTINA_DI_DEEZER.test(pulito(grezza?.thumbnail ?? grezza?.miniatura))) return true;
+  const titolo = pulito(grezza?.title ?? grezza?.titolo);
+  return grezza?.can_expand === true && /^deezer$/i.test(titolo);
+}
+
 /* Una voce dell'elenco, come la usa chi la disegna.
  *
  * `sfogliabile` e `suonabile` sono quello che ha detto Home Assistant, e non
@@ -71,20 +99,23 @@ export function laMiniatura(valore) {
  */
 export function unaVoceDaSfogliare(grezza) {
   const id = pulito(grezza?.media_content_id);
-  const sfogliabile = grezza?.can_expand === true;
-  const suonabile = grezza?.can_play === true;
+  const tipo = pulito(grezza?.media_content_type);
+  const sfogliabile = grezza?.can_expand === true && Boolean(id || tipo);
+  /* Si suona solo con l'id: è quello che va in «play_media». */
+  const suonabile = grezza?.can_play === true && Boolean(id);
   /* Una voce che non si apre e non si suona è una riga su cui non si può fare
-   * niente: nell'elenco non ci va. Senza id non si può fare niente comunque,
-   * perché è l'id la cosa che si rimanda indietro. */
-  if (!id || (!sfogliabile && !suonabile)) return null;
+   * niente: nell'elenco non ci va. Una cartella senza id ma col tipo si apre
+   * lo stesso: sono i «Favorites» e la «Music Library» di Sonos. */
+  if (!sfogliabile && !suonabile) return null;
   return {
     id,
-    tipo: pulito(grezza?.media_content_type),
+    tipo,
     classe: pulito(grezza?.media_class),
     titolo: pulito(grezza?.title) || id,
     miniatura: laMiniatura(grezza?.thumbnail),
     sfogliabile,
     suonabile,
+    deezer: eDiDeezer(grezza),
   };
 }
 
@@ -113,6 +144,44 @@ export function laCartella(risposta) {
     voci: [...cartelle, ...brani],
     nonMostrate: (Number.isFinite(suoi) && suoi > 0 ? suoi : 0) + (figli.length - voci.length),
   };
+}
+
+/* ── cercare ────────────────────────────────────────────────────────────
+ *
+ * Sfogliare va bene per i preferiti e le cartelle; per «quella canzone di
+ * ieri» serve scriverla. Home Assistant lo chiede al lettore con
+ * `media_player/search_media`, ma solo a chi dichiara `SEARCH_MEDIA`: oggi
+ * Music Assistant, che cerca dentro tutti i suoi fornitori — Deezer compreso.
+ * Sonos da solo non cerca, e il campo non compare.
+ */
+export const DOMANDA_CERCA = "media_player/search_media";
+
+/* Due lettere non sono una ricerca: su un catalogo come quello di Deezer
+ * tornano migliaia di risultati a caso, e la risposta ci mette secondi. */
+export const LETTERE_PER_CERCARE = 2;
+
+/** La domanda che cerca quel testo dentro il lettore, o niente. */
+export function laDomandaPerCercare(entity, testo) {
+  const dove = pulito(entity);
+  const cercato = pulito(testo).replace(/\s+/g, " ").slice(0, 120);
+  if (!dove.includes(".") || cercato.length < LETTERE_PER_CERCARE) return null;
+  return { type: DOMANDA_CERCA, entity_id: dove, search_query: cercato };
+}
+
+/**
+ * I risultati di una ricerca, messi come una cartella.
+ *
+ * Home Assistant risponde `{ version, result: [voci] }`: le stesse voci di una
+ * cartella, senza la cartella intorno. Si rimettono in fila come quelle, così
+ * chi disegna non distingue le due cose.
+ */
+export function iRisultati(risposta, testo = "") {
+  const voci = Array.isArray(risposta?.result)
+    ? risposta.result
+    : Array.isArray(risposta)
+      ? risposta
+      : [];
+  return laCartella({ children: voci, title: pulito(testo) });
 }
 
 /**
@@ -156,8 +225,16 @@ export function ilFiloDallaRadice(titolo = "") {
 export function ilFiloDopo(filo, voce) {
   const passi = Array.isArray(filo) ? filo : [];
   const passo = { id: pulito(voce?.id), tipo: pulito(voce?.tipo), titolo: pulito(voce?.titolo) };
-  if (!passo.id) return passi.length ? passi : ilFiloDallaRadice();
-  const gia = passi.findIndex((riga) => pulito(riga?.id) === passo.id);
+  if (!passo.id && !passo.tipo) return passi.length ? passi : ilFiloDallaRadice();
+  /* Lo stesso posto è lo stesso id; e quando l'id è vuoto, come per due
+   * cartelle di Sonos, lo stesso tipo. Una ricerca non è un posto
+   * dell'albero, e non conta. */
+  const stesso = (riga) =>
+    !riga?.cerca &&
+    (passo.id
+      ? pulito(riga?.id) === passo.id
+      : !pulito(riga?.id) && pulito(riga?.tipo) === passo.tipo);
+  const gia = passi.findIndex(stesso);
   if (gia >= 0) return passi.slice(0, gia + 1);
   return [...passi, passo];
 }

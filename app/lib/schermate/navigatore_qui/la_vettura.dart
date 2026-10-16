@@ -137,7 +137,10 @@ class LaVettura {
 
   /// La lettura di adesso, dagli stati della casa; `null` se la batteria non
   /// si sa (senza batteria gdanav non ha niente da farci).
-  StatoAuto? lettura(Entita? Function(String id) stato) {
+  ///
+  /// [adesso] per le prove: l'ora di adesso, per non credere a un orologio
+  /// dell'auto che sta nel futuro.
+  StatoAuto? lettura(Entita? Function(String id) stato, {DateTime? adesso}) {
     Entita? di(String casella) {
       final id = sensori[casella];
       if (id == null || id.startsWith('dm.')) return null;
@@ -167,9 +170,20 @@ class LaVettura {
     ];
     Entita? oDaVicino(String casella, bool Function(Entita) prova) =>
         di(casella) ?? accanto.where(prova).firstOrNull;
+    /* Per l'ora solo i sensori del dispositivo dell'auto: una posizione
+     * mappata dal telefono si aggiorna ogni minuto, e non dice niente di
+     * quanto e' fresca la batteria. */
+    final delDispositivo = [
+      for (final id in vicini)
+        if (id != b.id) ?stato(id),
+    ].where((e) => !e.muta).toList();
     return StatoAuto(
       sorgente: TipoSorgente.gdahome,
-      letto: b.aggiornataIl ?? b.cambiataIl ?? DateTime.now(),
+      letto: quandoLAutoHaParlato(
+        b,
+        delDispositivo,
+        adesso: adesso ?? DateTime.now(),
+      ),
       batteria: double.parse(b.stato).clamp(0, 100).toDouble(),
       autonomiaKm: _km(di(autonomia)),
       inCarica: inCarica(
@@ -190,6 +204,69 @@ class LaVettura {
     );
   }
 
+  /// Quanto e' vecchia davvero la lettura: «Da gdahome · 2 h fa» quando ABRP,
+  /// con la stessa auto, diceva «2 min».
+  ///
+  /// La batteria da sola non lo sa dire. Home Assistant sposta la sua ora
+  /// (`last_updated`) solo quando il valore cambia: un'auto ferma al 63% per
+  /// due ore resta «di due ore fa» anche se l'integrazione l'ha riletta un
+  /// minuto fa, e `subscribe_entities` le riletture uguali non le manda.
+  /// Allora, nell'ordine:
+  ///  1. il sensore dell'auto che dice quando l'auto ha mandato i dati
+  ///     (`timestamp`, «Ultimo aggiornamento del veicolo», «last vehicle
+  ///     update»): e' l'ora vera della lettura;
+  ///  2. se no, quello di quando l'integrazione ha riletto («last
+  ///     successful refresh», «ultimo aggiornamento cloud»);
+  ///  3. se no, il piu' recente fra i sensori dello stesso dispositivo: sono
+  ///     letti tutti insieme, e se uno e' cambiato la lettura e' di allora.
+  /// Mai prima della batteria stessa, e mai nel futuro.
+  static DateTime quandoLAutoHaParlato(
+    Entita batteria,
+    List<Entita> altri, {
+    required DateTime adesso,
+  }) {
+    var letto = batteria.aggiornataIl ?? batteria.cambiataIl ?? adesso;
+    DateTime? piuTardi(DateTime? a, DateTime? b) =>
+        a == null ? b : (b == null || a.isAfter(b) ? a : b);
+    final futuro = adesso.add(const Duration(minutes: 5));
+    DateTime? dalSensore(int quanto) {
+      DateTime? migliore;
+      for (final e in altri) {
+        if (oraDellAuto(e) != quanto) continue;
+        final t = DateTime.tryParse(e.stato);
+        if (t != null && !t.isAfter(futuro)) migliore = piuTardi(migliore, t);
+      }
+      return migliore;
+    }
+
+    final dichiarata = dalSensore(2) ?? dalSensore(1);
+    if (dichiarata != null) return piuTardi(letto, dichiarata)!;
+    for (final e in altri) {
+      final t = e.aggiornataIl;
+      if (t != null && !t.isAfter(futuro)) letto = piuTardi(letto, t)!;
+    }
+    return letto;
+  }
+
+  /// Un sensore che dice l'ora dei dati dell'auto: 2 se dice quando ha
+  /// parlato l'auto, 1 se quando l'integrazione ha riletto, 0 se non e' uno
+  /// di questi (la fine della carica, l'ultimo messaggio, il piano).
+  static int oraDellAuto(Entita e) {
+    if (_classe(e) != 'timestamp') return 0;
+    if (_dice(
+      e,
+      r'(charg|ricaric|\bcarica\b|messag|\bplan\w*|\bpiano\b|finish|\bfine\b|\bstart\w*|\binizio\b)',
+    )) {
+      return 0;
+    }
+    final aggiornato = _dice(
+      e,
+      r'(update|updated|aggiornament\w*|refresh\w*|last seen|data time|sync\w*)',
+    );
+    if (!aggiornato) return 0;
+    return _dice(e, r'\b(vehicle|veicolo|car|auto)\b') ? 2 : 1;
+  }
+
   static Entita? di0(Entita? Function(String id) stato, String id) {
     final e = stato(id);
     return e == null || e.muta || _numero(e.stato) == null ? null : e;
@@ -205,23 +282,47 @@ class LaVettura {
   static bool _dice(Entita e, String re) =>
       RegExp(re, caseSensitive: false).hasMatch(_parole(e));
   static String _classe(Entita e) => '${e.attributi['device_class'] ?? ''}';
+
+  /// Una temperatura, dalla classe o dall'unita'.
+  static bool eGradi(Entita e) => _gradiDi(e);
+
   static bool _gradiDi(Entita e) =>
       _classe(e) == 'temperature' ||
       RegExp(r'°\s?[CF]').hasMatch(e.unita ?? '');
 
   /// La temperatura di fuori: «outside», «outdoor», «esterna», ...
+  ///
+  /// Mai quella dell'abitacolo: «interior», «cabin», «interna» dicono 23 °C
+  /// col clima acceso anche a dicembre, e per il consumo sarebbe una bugia.
+  /// Senza la temperatura di fuori dall'auto gdanav prende quella del meteo.
   static bool eDiFuori(Entita e) =>
       _gradiDi(e) &&
       _dice(
         e,
-        r'\b(outside|outdoor|external|exterior|ambient|esterna|esterno|au(ss|ß)en|ext[ée]rieur)\b',
+        r'\b(outside|outdoor|outdoors|external|exterior|ambient|environment|esterna|esterno|ambiente|au(ss|ß)en\w*|ext[ée]rieur\w*)\b',
+      ) &&
+      !eDellAbitacolo(e);
+
+  /// La temperatura dentro l'auto: non e' quella di fuori, e non si usa.
+  static bool eDellAbitacolo(Entita e) =>
+      _gradiDi(e) &&
+      _dice(
+        e,
+        r'\b(interior|inside|indoor|cabin|abitacolo|interna|interno|innen\w*|habitacle|int[ée]rieur\w*)\b',
       );
 
   /// La temperatura della batteria di trazione, non di quella da 12 volt.
+  /// «Battery min temperature», «Temperatura minima batteria», «BMS», «cell
+  /// temperature», «pack».
   static bool eDellaBatteria(Entita e) =>
       _gradiDi(e) &&
-      _dice(e, r'\b(battery|batteria|pack|hv|akku|batterie|bater[ií]a)\b') &&
-      !_dice(e, r'\b12\s?v\b');
+      _dice(
+        e,
+        r'\b(battery|batteria|pack|hv|akku|batterie|bater[ií]a|bms|cell|cells|cella|celle|accumulatore|traction|trazione)\b',
+      ) &&
+      !_dice(e, r'\b(12\s?v|aux|ausiliaria|servizi)\b') &&
+      !eDellAbitacolo(e) &&
+      !eDiFuori(e);
 
   /// La velocita' dell'auto: la classe o l'unita' delle velocita', non il
   /// vento.
@@ -421,6 +522,8 @@ class IlFiloDellaVettura {
   bool _comePrima = false;
 
   void avvia() {
+    _chiediDa(chiediAllaCasa);
+    _comandiDa(comandoAllaCasa);
     _ascolti
       ..add(collegamento.cambiamenti.listen((_) => _comeVa()))
       ..add(collegamento.entitaCambiate.listen((_) => _aggiorna()))
@@ -439,6 +542,52 @@ class IlFiloDellaVettura {
     unawaited(_abbonamento?.cancel());
     _abbonamento = null;
     fonte.collegamento(false);
+    _chiediDa(null);
+    _comandiDa(null);
+  }
+
+  /// Un comando di gdanav per la casa (i viaggi pianificati,
+  /// `ponte/viaggi/…`), sul filo di adesso. La casa sa chi chiede: ognuno
+  /// legge e scrive solo i suoi viaggi. Senza filo, un errore che gdanav
+  /// dice in parole.
+  Future<Object?> comandoAllaCasa(Map<String, Object?> comando) async {
+    final filo = collegamento.filo;
+    final tipo = comando['type'];
+    // Solo i viaggi: gdanav non manda altro alla casa da qui.
+    if (tipo is! String || !tipo.startsWith('ponte/viaggi/')) {
+      throw ArgumentError.value(
+        tipo,
+        'type',
+        'gdanav chiede alla casa solo i viaggi',
+      );
+    }
+    if (filo == null || !collegamento.dentro || _spento) {
+      throw StateError('la casa non è collegata');
+    }
+    return filo.risultato(Map<String, dynamic>.of(comando));
+  }
+
+  /// Dice a gdanav come mandare un comando alla casa
+  /// (`SorgenteGdahome.chiedi`): per nome, come [_chiediDa].
+  void _comandiDa(Future<Object?> Function(Map<String, Object?>)? come) {
+    try {
+      (fonte as dynamic).chiedi = come;
+    } on NoSuchMethodError {
+      /* gdanav di prima: niente pianificatore nella casa. */
+    }
+  }
+
+  /// Dice a gdanav come chiedere dati freschi (`SorgenteGdahome.aggiorna`).
+  ///
+  /// Per nome e non per tipo: gdanav arriva dalla sua repository a un commit
+  /// fissato in pubspec.lock, e un gdanav di prima questo campo non ce l'ha.
+  /// Con quello si va avanti come prima, senza richieste.
+  void _chiediDa(Future<void> Function()? come) {
+    try {
+      (fonte as dynamic).aggiorna = come;
+    } on NoSuchMethodError {
+      /* gdanav di prima: i dati arrivano quando l'auto li aggiorna. */
+    }
   }
 
   void _comeVa() {
@@ -495,13 +644,19 @@ class IlFiloDellaVettura {
       for (final e in elenco) {
         if (e is Map && e['ei'] == batteria) dispositivo = '${e['di'] ?? ''}';
       }
-      if (dispositivo == null || dispositivo.isEmpty) return const [];
+      final prefisso = prefissoDellAuto(batteria);
       _vicini = [
         for (final e in elenco)
           if (e is Map &&
-              '${e['di'] ?? ''}' == dispositivo &&
               '${e['ei'] ?? ''}'.startsWith('sensor.') &&
-              e['ei'] != batteria)
+              e['ei'] != batteria &&
+              (dispositivo != null && dispositivo.isNotEmpty
+                  ? '${e['di'] ?? ''}' == dispositivo
+                  /* Una batteria senza dispositivo (un sensore modello, un
+                   * MQTT senza device): i sensori col suo stesso nome
+                   * davanti, «sensor.b10_…». */
+                  : prefisso != null &&
+                        '${e['ei']}'.startsWith('sensor.$prefisso')))
             '${e['ei']}',
       ];
       _viciniDella = batteria;
@@ -514,6 +669,93 @@ class IlFiloDellaVettura {
 
   String? _viciniDella;
   List<String> _vicini = const [];
+
+  /// «sensor.b10_battery» → «b10_»: il nome dell'auto davanti ai suoi
+  /// sensori. `null` quando davanti c'e' una parola qualsiasi («battery_»,
+  /// «ev_», «car_»), che prenderebbe i sensori di mezza casa.
+  static String? prefissoDellAuto(String batteria) {
+    final nome = batteria.split('.').last;
+    final i = nome.indexOf('_');
+    if (i < 2) return null;
+    final primo = nome.substring(0, i);
+    const generici = {
+      'battery',
+      'batteria',
+      'ev',
+      'car',
+      'auto',
+      'my',
+      'la',
+      'il',
+      'the',
+      'vehicle',
+      'veicolo',
+      'state',
+      'stato',
+      'soc',
+      'level',
+      'livello',
+    };
+    return generici.contains(primo) ? null : '${primo}_';
+  }
+
+  /* ── Dati freschi, quando gdanav li chiede ─────────────────────────────
+   *
+   * In viaggio ogni minuto, all'avvio, tornando nell'app: gdanav chiede
+   * (`SorgenteGdahome.aggiorna`) e qui si fa rileggere l'auto
+   * all'integrazione con `homeassistant.update_entity`, come fa il pulsante
+   * «Aggiorna» e come fa l'integrazione gdanav. Prima da gdahome non si
+   * chiedeva mai niente: i dati arrivavano quando l'integrazione dell'auto
+   * aggiornava da se', e «Da gdahome · 2 h fa» restava li'. */
+
+  /// Non piu' spesso di cosi': le integrazioni dei costruttori passano da
+  /// un cloud che non ama essere svegliato ogni secondo.
+  static const chiediAlPiuOgni = Duration(seconds: 30);
+  DateTime _chiestoIl = DateTime(0);
+
+  Future<void> chiediAllaCasa() async {
+    final filo = collegamento.filo;
+    final v = _vettura;
+    if (filo == null || !collegamento.dentro || v == null || _spento) return;
+    final adesso = DateTime.now();
+    if (adesso.difference(_chiestoIl) < chiediAlPiuOgni) return;
+    _chiestoIl = adesso;
+    final ids = <String>{
+      for (final id in v.sensori.values)
+        if (!id.startsWith('dm.')) id,
+    }.toList()..sort();
+    if (ids.isEmpty) return;
+    await filo.risultato({
+      'type': 'call_service',
+      'domain': 'homeassistant',
+      'service': 'update_entity',
+      'target': {'entity_id': ids},
+    }, entro: const Duration(seconds: 25));
+  }
+
+  /* ── Le temperature, quando l'auto dorme ───────────────────────────────
+   *
+   * Molte integrazioni (Leapmotor fra queste) dicono la temperatura di fuori
+   * e della batteria solo con l'auto sveglia: ferma, il sensore diventa
+   * «unknown» e la temperatura «non arriva». Una temperatura di un'ora fa
+   * vale ancora per il consumo: la si tiene fino a [ricordoTemperature]. */
+  static const ricordoTemperature = Duration(hours: 2);
+  final _temperature = <String, Entita>{};
+
+  Entita? _conRicordo(String id, Entita? e) {
+    if (e != null && !e.muta) {
+      if (LaVettura.eGradi(e)) _temperature[id] = e;
+      return e;
+    }
+    final prima = _temperature[id];
+    final quando = prima?.aggiornataIl;
+    if (prima != null &&
+        quando != null &&
+        DateTime.now().difference(quando) <= ricordoTemperature) {
+      return prima;
+    }
+    return e;
+  }
 
   /// Si abbona ai sensori dell'auto, e a nient'altro.
   ///
@@ -593,7 +835,7 @@ class IlFiloDellaVettura {
      * tutta la casa (l'elenco dei dispositivi, un ponte di prima), anche da
      * li'. */
     final casa = collegamento.stato;
-    Entita? stato(String id) => _valori[id] ?? casa?[id];
+    Entita? stato(String id) => _conRicordo(id, _valori[id] ?? casa?[id]);
     persone?.aggiorna([for (final p in _diCasa) ?sullaMappa(p, stato)]);
     final v = _vettura;
     if (v == null) return;

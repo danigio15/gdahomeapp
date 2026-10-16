@@ -14,6 +14,7 @@ import { Revoche } from "./revoche.js";
 import { Ricevute } from "./ricevute.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
+import { leggiLaChiaveDiFirebase, Spinte } from "./spinte.js";
 import { versioneMinimaDa } from "./versioni.js";
 
 const POTATURA = 12 * 60 * 60 * 1000;
@@ -105,6 +106,13 @@ export async function alzaIlCentralino({
    * chiedono di essere aggiornate (`versioni.js`, `docs/LICENZE.md`). Vuoto
    * o zero: non si ferma nessuno. */
   versioneMinimaDellApp = process.env.VERSIONE_MINIMA_APP || "",
+  /* La chiave di Firebase per le notifiche (`spinte.js`): un file, mai una
+   * variabile. Di serie quello che systemd passa al servizio
+   * (`LoadCredential=firebase-invio`, in `accendi.sh`); `FIREBASE_INVIO`
+   * dice un altro percorso, per chi lo fa girare a mano. Senza, le notifiche
+   * sono spente. */
+  chiaveDiFirebase = undefined,
+  percorsoDellaChiaveDiFirebase = process.env.FIREBASE_INVIO || "",
 } = {}) {
   const registro = apriIlRegistro(livello);
   const definiti = (oggetto) =>
@@ -122,12 +130,21 @@ export async function alzaIlCentralino({
     modo !== "spento" && dellaRevoche
       ? new Revoche({ dove: dellaRevoche, chiave: chiaveVera, registro })
       : null;
+  const spinte = new Spinte({
+    cartella,
+    registro,
+    chiave:
+      chiaveDiFirebase === undefined
+        ? leggiLaChiaveDiFirebase({ percorso: percorsoDellaChiaveDiFirebase, registro })
+        : chiaveDiFirebase,
+  });
   const centralino = new Centralino({
     case: case_,
     registro,
     chiaveLicenze: chiaveVera,
     modoLicenze: modo,
     revoche,
+    spinte,
   });
   const sportello = new Sportello({
     case: case_,
@@ -228,6 +245,13 @@ export async function alzaIlCentralino({
     registro.info("QUADRO_REVOCHE c'e', ma a licenze spente le licenze tolte non si chiedono");
   }
   revoche?.avvia();
+  /* Delle notifiche si dice se sono accese, e quanti telefoni le aspettano.
+   * Della chiave niente: che c'e', e basta. */
+  registro.info(
+    spinte.accese
+      ? `le notifiche sono accese: ${spinte.quanti()} telefoni le aspettano`
+      : "le notifiche sono spente: manca la chiave di Firebase",
+  );
 
   registro.info(
     contatti.pronto
@@ -252,7 +276,7 @@ export async function alzaIlCentralino({
     chat.archivio.chiudi();
   };
 
-  return { centralino, case: case_, sportello, chat, contatti, server, registro, abbassa };
+  return { centralino, case: case_, spinte, sportello, chat, contatti, server, registro, abbassa };
 }
 
 if (

@@ -53,6 +53,10 @@ import 'diagnostica.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
+import 'campanello.dart';
+import 'notifiche.dart';
+import '../notifiche/consegna.dart';
+import '../notifiche/postino.dart';
 import 'impostazioni_app.dart';
 import 'navigatore_qui/qui.dart';
 import 'zigbee.dart';
@@ -149,10 +153,51 @@ class _HomeState extends State<Home> {
   Timer? _giroDegliAggiornamenti;
   bool _aggiornamentiChiesti = false;
 
+  /* Le notifiche toccate, e il campanello ad app aperta (`postino.dart`). */
+  StreamSubscription<ToccoDellaNotifica>? _tocchi;
+  bool _notificheChieste = false;
+
+  void _ascoltaLeNotifiche() {
+    final postino = Postino.istanza;
+    if (postino == null || _tocchi != null) return;
+    _tocchi = postino.tocchi.listen(_unTocco);
+    for (final tocco in postino.prendiInSospeso()) {
+      _unTocco(tocco);
+    }
+  }
+
+  void _unTocco(ToccoDellaNotifica tocco) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        apriLaNotifica(
+          context,
+          tocco: tocco,
+          collegamento: widget.collegamento,
+          postino: Postino.istanza,
+        ),
+      );
+    });
+  }
+
+  /* La prima volta che si e' dentro una casa, una riga sulle notifiche e il
+   * permesso. Una volta sola, e solo se il telefono non ha gia' risposto. */
+  void _forseChiediLeNotifiche() {
+    final postino = Postino.istanza;
+    if (_notificheChieste || postino == null) return;
+    if (widget.collegamento.comeVa != ComeVa.aperta) return;
+    _notificheChieste = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(postino.chiediSeServe(context));
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     inMacchina.addListener(_inMacchinaECambiato);
+    _ascoltaLeNotifiche();
+    _forseChiediLeNotifiche();
     _seRisponde();
     _quantiAggiornamenti();
     _giroDegliAggiornamenti = Timer.periodic(
@@ -163,6 +208,7 @@ class _HomeState extends State<Home> {
 
   @override
   void dispose() {
+    _tocchi?.cancel();
     _giroDegliAggiornamenti?.cancel();
     inMacchina.removeListener(_inMacchinaECambiato);
     _menuDiGdanav.dispose();
@@ -172,6 +218,8 @@ class _HomeState extends State<Home> {
   @override
   void didUpdateWidget(Home vecchia) {
     super.didUpdateWidget(vecchia);
+    _ascoltaLeNotifiche();
+    _forseChiediLeNotifiche();
     _seRisponde();
     _quantiAggiornamenti();
   }
@@ -325,19 +373,13 @@ class _HomeState extends State<Home> {
   }
 
   void _vai(Sezione dove) {
+    /* In macchina la mappa sta sull'auto: dal telefono si aprono le sue
+     * impostazioni e quelle dell'auto, in una pagina senza mappa. */
     if (dove == Sezione.navigatore && inMacchina.value) {
-      ScaffoldMessenger.maybeOf(context)
-        ?..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              inLingua(
-                it: 'Il navigatore è sullo schermo dell\'auto',
-                en: 'The navigator is on the car screen',
-              ),
-            ),
-          ),
-        );
+      _menuDiGdanav.value = false;
+      unawaited(
+        apriLeImpostazioniInAuto(context, collegamento: widget.collegamento),
+      );
       return;
     }
     /* La pagina Premium non e' una sezione della fila: si apre sopra. E ci
@@ -731,6 +773,14 @@ class _HomeState extends State<Home> {
                                     visibile: _sezione == Sezione.aggiornamenti,
                                     quandoContati: _contati,
                                   ),
+                                /* Le notifiche di questa casa, per questo
+                           * telefono: le tiene il ponte. */
+                                Sezione.notifiche => SchermataDelleNotifiche(
+                                  collegamento: collegamento,
+                                  postino: Postino.istanza,
+                                  nuda: true,
+                                  visibile: _sezione == Sezione.notifiche,
+                                ),
                                 Sezione.segnalazioni =>
                                   SchermataDelleSegnalazioni(
                                     collegamento: collegamento,

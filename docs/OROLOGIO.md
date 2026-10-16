@@ -90,8 +90,8 @@ Gli orologi **non entrano** nei pacchetti finché non si accende la variabile
 `GDAHOME_OROLOGIO` = `si` (Settings → Secrets and variables → Actions →
 Variables), come CarPlay. Fino ad allora il telefono è quello di prima (il
 tramite c'è, ma non trova nessun orologio). Intanto il workflow **«Gli
-orologi»** li compila tutt'e due a ogni modifica, e lascia fra gli artefatti
-l'APK di prova per Wear OS.
+orologi»** li compila tutt'e due a ogni modifica, per sapere che stanno in
+piedi: su GitHub non lascia nessun pacchetto.
 
 ### Apple Watch
 
@@ -111,8 +111,10 @@ l'APK di prova per Wear OS.
    `:orologio` (APK e `.aab`), firmato con la stessa chiave del telefono —
    senza, il Data Layer non li mette in contatto.
 2. Nel Play Console: *Test and release → Advanced settings → Form factors →
-   Wear OS*, poi si carica il `.aab` dell'artefatto `gdahome-wear-os` nella
-   pista Wear OS. Il numero è quello del telefono più uno.
+   Wear OS*, poi si carica nella pista Wear OS il `.aab` costruito sul
+   proprio computer con la chiave vera
+   (`strumenti/gradle-orologio.sh :orologio:bundleRelease`): GitHub non lo
+   tiene, l'app sta solo nei negozi. Il numero è quello del telefono più uno.
 3. A mano: `GDAHOME_OROLOGIO=si ./gradlew :orologio:installDebug` con
    l'orologio collegato in adb, e sul telefono l'app di debug (`.prova`).
 

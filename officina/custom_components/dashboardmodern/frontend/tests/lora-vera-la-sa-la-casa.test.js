@@ -28,7 +28,8 @@ const {
   righeDellaStoria,
 } = await import("../src/core/quando-e-partito.js");
 const { createCycleTracker } = await import("../src/core/appliance-cycle-tracker.js");
-const { letturaDelloStato, laRegolaDelLavora } = await import("../src/core/appliance-view-model.js");
+const { letturaDelloStato, laRegolaDelLavora } =
+  await import("../src/core/appliance-view-model.js");
 
 const ORA = 3600000;
 const MINUTO = 60000;
@@ -36,7 +37,8 @@ const ADESSO = Date.parse("2026-09-26T14:00:00Z");
 const { da: BORDO } = finestraDellAvvio(ADESSO);
 
 const riga = (stato, minutiFa) => ({ stato, quando: ADESSO - minutiFa * MINUTO });
-const leggi = (righe, inFunzione) => avvioDallaStoria(righe, { inFunzione, adesso: ADESSO, da: BORDO });
+const leggi = (righe, inFunzione) =>
+  avvioDallaStoria(righe, { inFunzione, adesso: ADESSO, da: BORDO });
 
 const magazzino = () => {
   const dentro = new Map();
@@ -107,21 +109,26 @@ test("una sosta dentro il ciclo non ne apre un altro", () => {
 });
 
 test("una sosta più lunga della tolleranza chiude il ciclo di prima", () => {
-  const trovato = leggi(
-    [riga("washing", 300), riga("ready", 240), riga("washing", 45)],
-    parole,
-  );
+  const trovato = leggi([riga("washing", 300), riga("ready", 240), riga("washing", 45)], parole);
   assert.equal(trovato.quando, ADESSO - 45 * MINUTO, "il bucato di stamattina non è questo");
 });
 
-test("la tolleranza è scritta con lo stesso numero nei due moduli", () => {
-  /* I due non si conoscono — uno legge la storia, l'altro guarda gli stati di
-   * adesso — e il numero è lo stesso apposta (#26). Se uno dei due lo cambia
-   * da solo, la storia dice un ciclo e il contatore ne dice due. */
+test("la tolleranza è scritta una volta sola, e la leggono tutti", () => {
+  /* La storia, il contatore dei cicli e la card devono raccontare lo stesso
+   * bucato (#26). Prima il numero stava scritto due volte e la card ne aveva
+   * un terzo: adesso c'e' un solo `= 20 * 60 * 1000`, qui, e gli altri lo
+   * importano. */
   const contatore = readFileSync(join(SRC, "core", "appliance-cycle-tracker.js"), "utf8");
-  const scritto = contatore.match(/const PAUSA_DENTRO_UN_CICLO_MS = (\d+) \* 60 \* 1000;/);
-  assert.ok(scritto, "il contatore dei cicli non ha più quella costante, o è scritta altrimenti");
-  assert.equal(Number(scritto[1]) * 60 * 1000, PAUSA_DENTRO_UN_CICLO_MS);
+  assert.doesNotMatch(
+    contatore,
+    /const PAUSA_DENTRO_UN_CICLO_MS =/,
+    "il contatore non se lo riscrive",
+  );
+  assert.match(contatore, /import \{ PAUSA_DENTRO_UN_CICLO_MS \} from "\.\/quando-e-partito\.js"/);
+  const ciclo = readFileSync(join(SRC, "core", "il-ciclo-di-un-elettrodomestico.js"), "utf8");
+  assert.doesNotMatch(ciclo, /const PAUSA_DENTRO_UN_CICLO_MS =/);
+  assert.match(ciclo, /from "\.\/quando-e-partito\.js"/);
+  assert.equal(PAUSA_DENTRO_UN_CICLO_MS, 20 * MINUTO);
 });
 
 test("una sosta dentro la tolleranza tiene il ciclo, una più lunga lo chiude", () => {
@@ -242,9 +249,7 @@ test("un avvio che si sa non si corregge: solo le supposizioni si correggono", (
   const storage = magazzino();
   const cycles = createCycleTracker({ storage, now: () => ADESSO });
   /* La casa lo dichiara: `binary_sensor.…_running` acceso da un'ora. */
-  cycles.update([
-    { id: "lavatrice", mode: "running", watts: 1180, iniziatoIl: ADESSO - ORA },
-  ]);
+  cycles.update([{ id: "lavatrice", mode: "running", watts: 1180, iniziatoIl: ADESSO - ORA }]);
   assert.equal(cycles.record("lavatrice").active.avvioIncerto, undefined);
   assert.equal(cycles.correggiLAvvio("lavatrice", ADESSO - 3 * ORA), false);
   assert.equal(cycles.record("lavatrice").active.startMs, ADESSO - ORA);

@@ -2,9 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createApplianceViewModel } from "../src/core/appliance-view-model.js";
 
+/* Un apparecchio qualunque su una presa: qui si prova la scala delle soglie
+ * e il ritardo scritto. Una macchina a ciclo — lavatrice, lavastoviglie — ha
+ * in piu' la sosta del contatore dei cicli (#26), e le sue prove stanno in
+ * `la-lavatrice-non-fa-mini-cicli.test.js`. */
 const device = {
   id: "washer",
-  name: "Lavatrice",
+  name: "Presa lavanderia",
+  visual_key: "generico",
   power_entity: "sensor.washer_power",
   control_entity: "switch.washer",
   total_energy_entity: "sensor.washer_energy",

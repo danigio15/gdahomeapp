@@ -34,7 +34,9 @@ import {
   ilFiloDopo,
   ilFiloFinoA,
   ilPassoDiAdesso,
+  iRisultati,
   laCartella,
+  laDomandaPerCercare,
   laDomandaPerSfogliare,
 } from "../core/sfoglia-i-media.js";
 import { comandoDelDispositivo } from "../core/comandi-accanto.js";
@@ -834,6 +836,9 @@ function sfoglio() {
     carica: false,
     errore: "",
     nonMostrate: 0,
+    /* Quello che c'e' scritto nel campo della ricerca: la finestra si
+     * ridisegna a ogni risposta, e il testo non deve sparire. */
+    testo: "",
     /* A che domanda stiamo aspettando risposta: chi tocca due cartelle di
      * fila non deve vedersi arrivare il contenuto della prima. */
     giro: 0,
@@ -852,6 +857,17 @@ function finestraDelloSfoglio() {
     if (evento.target === host || evento.target?.closest?.("[data-dm-sf-chiudi]"))
       chiudiLoSfoglio();
   });
+  /* La ricerca parte con l'invio della tastiera o col tasto accanto: non a
+   * ogni lettera, perche' ogni lettera sarebbe una domanda a Deezer. */
+  host.addEventListener("submit", (evento) => {
+    if (!evento.target?.closest?.("[data-dm-sf-cerca]")) return;
+    evento.preventDefault();
+    cerca(evento.target.querySelector("input")?.value);
+  });
+  host.addEventListener("input", (evento) => {
+    if (evento.target?.closest?.("[data-dm-sf-cerca]") && state.sfoglia)
+      state.sfoglia.testo = String(evento.target.value ?? "");
+  });
   doc.body.append(host);
   return host;
 }
@@ -869,6 +885,7 @@ export function apriLoSfoglio(entity) {
   suo.voci = [];
   suo.errore = "";
   suo.nonMostrate = 0;
+  suo.testo = "";
   chiediLaCartella();
   return true;
 }
@@ -895,7 +912,11 @@ export function chiudiLoSfoglio() {
 async function chiediLaCartella() {
   const suo = sfoglio();
   const passo = ilPassoDiAdesso(suo.filo);
-  const domanda = laDomandaPerSfogliare(suo.entity, { id: passo.id, tipo: passo.tipo });
+  /* Un passo del filo puo' essere una ricerca: tornandoci con le briciole si
+   * rifa' la stessa domanda, non si apre la radice. */
+  const domanda = passo.cerca
+    ? laDomandaPerCercare(suo.entity, passo.cerca)
+    : laDomandaPerSfogliare(suo.entity, { id: passo.id, tipo: passo.tipo });
   if (!domanda) return chiudiLoSfoglio();
   const giro = (suo.giro += 1);
   suo.carica = true;
@@ -921,17 +942,37 @@ async function chiediLaCartella() {
     suo.nonMostrate = 0;
     suo.errore = parolaDelGuaio(guaio);
   } else {
-    const cartella = laCartella(risposta);
+    const cartella = passo.cerca ? iRisultati(risposta) : laCartella(risposta);
     suo.voci = cartella.voci;
     suo.nonMostrate = cartella.nonMostrate;
     suo.errore = "";
     /* Come si chiama la cartella lo dice Home Assistant, e lo dice solo
      * quando risponde: il nome del passo si scrive adesso, non prima. */
     const dove = ilPassoDiAdesso(suo.filo);
-    if (cartella.titolo) dove.titolo = cartella.titolo;
+    if (cartella.titolo && !dove.cerca) dove.titolo = nomeDiUnPosto(dove, cartella.titolo);
   }
   disegnaLoSfoglio();
   return true;
+}
+
+/* Una ricerca nuova: un passo in piu' sul filo, sopra la radice.
+ *
+ * Non sopra la cartella in cui si e': quello che si cerca si cerca in tutto
+ * il lettore, e una ricerca dentro «Preferiti › Radio» che pesca da Deezer
+ * mostrerebbe un filo che dice una cosa falsa. */
+function cerca(testo) {
+  const suo = state.sfoglia;
+  if (!suo?.entity) return;
+  const cercato = clean(testo);
+  suo.testo = cercato;
+  if (!laDomandaPerCercare(suo.entity, cercato)) return;
+  suo.filo = [ilFiloDallaRadice(t("Da ascoltare", "To play"))[0], {
+    id: "",
+    tipo: "",
+    titolo: `«${cercato}»`,
+    cerca: cercato,
+  }];
+  chiediLaCartella();
 }
 
 /* Cosa e' andato storto, detto a chi guarda.
@@ -979,6 +1020,18 @@ function fondoDellaMiniatura(url) {
   return pulito.replace(/["'()\\\s]/g, (carattere) => encodeURIComponent(carattere));
 }
 
+/* Le due cartelle di Sonos hanno un nome inglese scritto nell'integrazione,
+ * «Favorites» e «Music Library», qualunque sia la lingua della casa. Si
+ * riconoscono dal tipo con l'id vuoto, e si dicono con parole di qui: quello
+ * che c'e' dentro e' quello che si e' salvato nell'app di Sonos (Deezer
+ * compreso) e le cartelle di musica di casa. */
+function nomeDiUnPosto(passo, titolo) {
+  if (!clean(passo?.id) && passo?.tipo === "favorites") return t("Preferiti di Sonos", "Sonos favourites");
+  if (!clean(passo?.id) && passo?.tipo === "library")
+    return t("Libreria e cartelle di casa", "Library and home folders");
+  return titolo;
+}
+
 function voceMarkup(voce, indice, puoAccodare) {
   const segno = segnoDellaVoce(voce);
   const fondo = fondoDellaMiniatura(voce.miniatura);
@@ -986,7 +1039,9 @@ function voceMarkup(voce, indice, puoAccodare) {
   return `<div class="dm-sf-voce">
     <button type="button" class="dm-sf-riga" data-dm-sf="${dove}" data-dm-sf-voce="${indice}">
       <span class="dm-sf-mini"${fondo ? ` style="background-image:url(${fondo})"` : ""}>${segno}</span>
-      <span class="dm-sf-nome">${esc(voce.titolo)}</span>
+      <span class="dm-sf-nome">${esc(nomeDiUnPosto(voce, voce.titolo))}${
+        voce.deezer ? `<em class="dm-sf-deezer">Deezer</em>` : ""
+      }</span>
       ${voce.sfogliabile ? `<span class="dm-sf-freccia" aria-hidden="true">›</span>` : ""}
     </button>
     ${
@@ -1006,6 +1061,19 @@ function voceMarkup(voce, indice, puoAccodare) {
         : ""
     }
   </div>`;
+}
+
+/* Il campo per cercare: solo sui lettori che sanno cercare. */
+function cercaMarkup(suo) {
+  if (letturaDiUnLettore(suo.entity)?.puo?.trova !== true) return "";
+  return `<form class="dm-sf-cerca" data-dm-sf-cerca role="search">
+    <input type="search" enterkeyhint="search" autocomplete="off" value="${esc(suo.testo)}"
+      placeholder="${esc(t("Cerca brani, artisti, playlist", "Search songs, artists, playlists"))}"
+      aria-label="${esc(t("Cerca", "Search"))}">
+    <button type="submit" class="dm-sf-tondo" aria-label="${esc(t("Cerca", "Search"))}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="2.2" fill="none"/><path d="m15 15 5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </button>
+  </form>`;
 }
 
 function filoMarkup(filo) {
@@ -1075,6 +1143,7 @@ function disegnaLoSfoglio() {
       <button type="button" class="dm-sf-tondo" data-dm-sf-chiudi
         aria-label="${esc(t("Chiudi", "Close"))}">✕</button>
     </header>
+    ${cercaMarkup(suo)}
     ${filoMarkup(suo.filo)}
     ${corpoDelloSfoglio(suo)}
   </div>`;
@@ -1100,7 +1169,7 @@ function tocca(comando, nodo) {
   const voce = suo.voci[Number(nodo.dataset.dmSfVoce)];
   if (!voce) return;
   if (comando === "apri") {
-    suo.filo = ilFiloDopo(suo.filo, voce);
+    suo.filo = ilFiloDopo(suo.filo, { ...voce, titolo: nomeDiUnPosto(voce, voce.titolo) });
     chiediLaCartella();
     return;
   }
@@ -1502,8 +1571,10 @@ function installStyles() {
          schermo: su un telefono la libreria di Music Assistant ha centinaia di
          righe e la finestra deve stare dove sta, col solo elenco che si muove. */
       #dm-sf-popup[hidden]{display:none!important}
+      /* Sopra tutto, pannello a muro compreso: da li' si apre la stessa
+         finestra, e il muro sta a un livello che copre la plancia intera. */
       #dm-sf-popup{
-        position:fixed;inset:0;z-index:2700;display:grid;place-items:center;
+        position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;
         padding:18px;background:rgba(2,6,23,.66);
         backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
       #dm-sf-popup .dm-sf-box{
@@ -1567,6 +1638,19 @@ function installStyles() {
       .dm-sf-nome{
         min-width:0;font-size:13.5px;font-weight:800;
         overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      /* Il segno di Deezer: piccolo, accanto al titolo, coi colori suoi. */
+      .dm-sf-deezer{
+        display:inline-block;margin-left:7px;padding:1px 6px;border-radius:6px;vertical-align:1px;
+        font-style:normal;font-size:9.5px;font-weight:900;letter-spacing:.02em;
+        color:#fff;background:#a238ff}
+      .dm-sf-cerca{
+        display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;
+        flex:0 0 auto;padding:0 2px 10px}
+      .dm-sf-cerca>input{
+        min-width:0;height:38px;padding:0 13px;border-radius:12px;
+        font:inherit;font-size:13.5px;font-weight:700;color:var(--text,#0f172a);
+        background:var(--bg-sculpted,#f1f5f9);border:1px solid var(--card-border,#e2e8f0)}
+      .dm-sf-cerca>.dm-sf-tondo{width:38px;height:38px;border-radius:12px}
       .dm-sf-freccia{color:var(--text-dim,#cbd5e1);font-weight:900;font-size:17px;line-height:1}
       .dm-sf-tasto{
         display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;padding:0;

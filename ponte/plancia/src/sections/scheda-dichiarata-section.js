@@ -379,7 +379,10 @@ export function costruisciSchedaDichiarata(scheda) {
       });
     });
     doc.addEventListener("click", onClick);
-    scheda.inPiuAllInstallazione?.(doc, { ridisegna, configurazione, salva });
+    /* La bozza va anche a chi aggiunge gesti suoi: un gesto dentro una riga
+     * aperta — una lettura aggiunta, una tolta (#177) — salva la riga con
+     * quello che c'e' scritto nelle caselle adesso, come ogni gesto di qui. */
+    scheda.inPiuAllInstallazione?.(doc, { ridisegna, configurazione, salva, bozza, inPiu });
     for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
       root.addEventListener?.(evento, () => {
         root.queueMicrotask?.(() => {
@@ -482,6 +485,30 @@ export function installaStile() {
       overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
     #ed-body .dm-macchina-ed-int-conto{
       font-size:11.5px!important;font-weight:800!important;color:var(--text-dim,#64748b)!important;white-space:nowrap!important}
+    /* Le altre letture di una macchina (#177): le pastiglie di tutte le «Altre
+       letture» della plancia — quelle scelte con la croce, quelle proposte col
+       piu' e il bordo viola. */
+    #ed-body .dm-macchina-ed-letture small{
+      font-size:11px!important;line-height:1.45!important;color:var(--text-dim,#64748b)!important;font-weight:600!important}
+    #ed-body .dm-macchina-ed-chips{display:flex!important;flex-wrap:wrap!important;gap:6px!important;min-width:0!important}
+    #ed-body .dm-macchina-ed-chip{
+      display:inline-flex!important;align-items:center!important;gap:6px!important;max-width:100%!important;
+      padding:5px 10px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:999px!important;
+      background:var(--card-bg,#fff)!important;font:inherit!important;font-size:12px!important;font-weight:800!important;
+      color:var(--text,#0f172a)!important;cursor:pointer!important}
+    #ed-body .dm-macchina-ed-chip>span{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+    #ed-body .dm-macchina-ed-chip>i{font-style:normal!important;opacity:.7!important}
+    #ed-body .dm-macchina-ed-proposte .dm-macchina-ed-chip{border-color:#8b5cf6!important;color:#7c3aed!important}
+    /* Sul fondo scuro il viola pieno non si legge: lo stesso viola, schiarito. */
+    #editor-modal[data-dm-editor-theme="dark"] #ed-body .dm-macchina-ed-proposte .dm-macchina-ed-chip,
+    html[data-theme="dark"] #ed-body .dm-macchina-ed-proposte .dm-macchina-ed-chip{color:#c4b5fd!important}
+    #ed-body .dm-macchina-ed-quante{
+      margin-left:6px!important;font-size:10.5px!important;font-weight:900!important;opacity:.6!important;
+      font-variant-numeric:tabular-nums!important}
+    #ed-body .dm-macchina-ed-quante[data-pieno="true"]{opacity:1!important;color:var(--warning-color,#f59e0b)!important}
+    #ed-body .dm-macchina-ed-aggiungi{background:linear-gradient(135deg,#10b981,#047857)!important}
+    #ed-body .dm-macchina-ed-errore:empty{display:none!important}
+    #ed-body .dm-macchina-ed-letture .dm-macchina-ed-errore{color:var(--error-color,#dc2626)!important;font-weight:800!important}
     `,
   );
   return true;

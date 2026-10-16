@@ -47,12 +47,16 @@ test("le caselle del solare sono le sue, e nessun'altra", () => {
   assert.equal(Object.keys(caselle).length, 3);
   assert.equal(caselle["dm.ev_soc"], undefined, "l'auto non è un pannello solare");
   assert.equal(caselle["dm.boiler_pressione_acqua"], "sensor.pressione");
-  /* Le tredici sono quelle che la scena legge: se l'elenco si accorcia, la
-   * scena resta senza numeri e nessuno se ne accorge finché non si guarda. */
-  assert.equal(CASELLE_SOLARE.length, 13);
+  /* Sono quelle che la scena legge: se l'elenco si accorcia, la scena resta
+   * senza numeri e nessuno se ne accorge finché non si guarda. Tredici del
+   * boiler, più i tre tasti della pagina che non avevano casella — Ricircolo,
+   * PdC e Boost («non trovo Boost ed altro»). */
+  assert.equal(CASELLE_SOLARE.length, 16);
   for (const riga of CASELLE_SOLARE) {
-    assert.match(riga.ref, /^dm\.boiler_/);
+    assert.match(riga.ref, /^dm\.(boiler_|core_05[01]$|core_048$)/);
     assert.ok(riga.it && riga.en, `${riga.ref} senza etichetta`);
+    assert.ok(riga.icona, `${riga.ref} senza icona`);
+    assert.ok(riga.aiutoIt && riga.aiutoEn, `${riga.ref} senza la riga che dice cosa aspetta`);
   }
 });
 

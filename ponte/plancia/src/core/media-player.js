@@ -17,9 +17,9 @@
  * grafico: è un tasto che non fa niente, e chi lo preme pensa sia rotto.
  */
 
-import { comandiDelDispositivo, elencoComandi } from "./comandi-accanto.js";
+import { comandiDelDispositivo, elencoComandi, partiDelComando } from "./comandi-accanto.js";
 import { elencoLetture, lettureDelDispositivo, lettureRiconosciute } from "./letture-accanto.js";
-import { eUnTelecomando, telecomandoDelLettore } from "./telecomando.js";
+import { eUnTelecomando, esitoDelTelecomando, telecomandoDelLettore } from "./telecomando.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
 
@@ -60,6 +60,10 @@ export const SA = Object.freeze({
    * pulsante gruppo.» */
   GRUPPO: 524288,
   ACCODA: 2097152,
+  /* Cercare dentro il lettore («SEARCH_MEDIA»): Music Assistant, che cerca in
+   * tutti i suoi fornitori, Deezer compreso. Non e' «CERCA» qui sopra, che e'
+   * il punto del brano. */
+  TROVA: 4194304,
 });
 
 const STATI_VIVI = new Set(["playing", "paused", "buffering", "idle", "on", "standby"]);
@@ -123,7 +127,8 @@ export function entitaDeiLettori(stored) {
     viste.add(riga.entity);
     /* Anche quelle accanto (#451): se il canale cambia e nessuno le guarda, la
      * scheda resta ferma su quello di prima. */
-    for (const voce of [...riga.comandi, ...riga.letture]) viste.add(voce);
+    for (const voce of [...riga.comandi, ...riga.letture]) viste.add(partiDelComando(voce).entity);
+    if (riga.telecomando) viste.add(riga.telecomando);
   }
   return [...viste];
 }
@@ -225,12 +230,17 @@ export function letturaDelLettore(
       /* La coda la sa solo chi ce l'ha: su un Chromecast «accoda» sostituisce
        * quello che sta suonando, e chi lo premeva perdeva il brano. */
       accoda: sa(SA.ACCODA) && sa(SA.SUONA),
+      /* Cercare ha senso solo se poi si suona quello che si e' trovato. */
+      trova: sa(SA.TROVA) && sa(SA.SUONA),
       gruppo: sa(SA.GRUPPO),
     },
     /* Quello che sta accanto (#451): l'interruttore dell'alimentazione, la
      * tendina della sorgente di SmartThings, il canale, il volume, il
      * consumo. Entità a parte, scelte da chi configura. */
-    comandi: comandiDelDispositivo(voce, states),
+    comandi: comandiDelDispositivo(
+      { ...voce, comandi: comandiColTelecomando(voce, risolvi, piattaforme) },
+      states,
+    ),
     letture: lettureDelDispositivo(voce, states),
     /* Le frecce, OK, indietro, i canali (#132) — solo a TV accesa, e solo
      * quelli che la sua integrazione sa ricevere. In standby la TV risponde ma
@@ -245,6 +255,26 @@ export function letturaDelLettore(
       piattaforme,
     ),
   };
+}
+
+/* Il telecomando scelto che non porta le frecce.
+ *
+ * «I remote li aggiungi nel config, ma non compaiono.» Le frecce ci sono solo
+ * per le integrazioni di cui la plancia conosce i tasti (`TELECOMANDI`): un
+ * telecomando di un'altra — un ampli, un IR, un processore audio — restava
+ * scritto nel config e non compariva da nessuna parte. Adesso compare fra i
+ * comandi accanto come un tasto che lo accende e lo spegne; i suoi comandi
+ * veri si aggiungono in «Altri comandi», `remote.sala:volume_up`. */
+function comandiColTelecomando(voce, risolvi, piattaforme = {}) {
+  const comandi = elencoComandi(voce?.comandi ?? voce?.commands);
+  const scelto = eUnTelecomando(voce?.telecomando) ? risolvi(voce.telecomando) : "";
+  if (!scelto || comandi.includes(scelto)) return comandi;
+  const { esito } = esitoDelTelecomando(
+    { entity: risolvi(voce?.entity), telecomando: scelto },
+    piattaforme,
+  );
+  if (esito === "pronto" || esito === "tv") return comandi;
+  return elencoComandi([scelto, ...comandi]);
 }
 
 /* Il lettore che nasce da un dispositivo di Home Assistant (#451).

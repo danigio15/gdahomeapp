@@ -115,6 +115,8 @@ export class Ponte {
      * Assistant: vedi `commissioni.js`. Senza, un `ponte/…` riceve un rifiuto
      * invece di finire in Home Assistant, che non saprebbe cosa farsene. */
     this.commissioni = commissioni;
+    /* Le notifiche dei telefoni (`notifiche.js`): le mette `index.js`. */
+    this.notifiche = null;
     this.collegamenti = new Set();
     /* Chi parla di piu' in questa casa. Serve a una domanda sola, e non c'e'
      * altro posto da cui rispondere: un telefono che riceve seicento eventi
@@ -293,14 +295,21 @@ class Collegamento {
        * si chiedono solo se il messaggio parla di telecamere, e solo per chi
        * non amministra. */
       const telecamereChiuse =
-        !amministra && testo.includes("camera")
+        !amministra && (testo.includes("camera") || testo.includes("image"))
           ? (this.ponte.commissioni?.telecamereChiuse?.(
               this.dispositivo.utente || "",
               this.ponte.utenti?.amministratoreSubito?.(this.dispositivo.utente || "") ?? null,
             ) ?? null)
           : null;
-      const { passa, rifiuti } = passaLaDogana(testo, { amministra, telecamereChiuse });
+      /* `firmaIlPonte`: le vie delle telecamere dal telefono non si fanno
+       * firmare da Home Assistant (il perche' sta in `dogana.js`). */
+      const { passa, rifiuti, risposte } = passaLaDogana(testo, {
+        amministra,
+        telecamereChiuse,
+        firmaIlPonte: true,
+      });
       for (const no of rifiuti) this.presa.manda(JSON.stringify(no));
+      for (const detta of risposte) this.presa.manda(JSON.stringify(detta));
       for (const uno of passa) {
         if (!this.filo?.manda(uno)) {
           this.chiudi(1011, "il filo con la casa e' caduto");
@@ -334,6 +343,19 @@ class Collegamento {
   }
 
   _commissione(detto) {
+    /* Le notifiche di questo telefono (`notifiche.js`): le sue impostazioni,
+     * il suo gettone, i tasti sotto le sue notifiche. Chi chiede e' il
+     * telefono di questo filo, e nessun altro: il segno l'ha gia' detto. */
+    const notifiche = this.ponte.notifiche;
+    if (notifiche?.riconosce?.(detto.type)) {
+      notifiche
+        .rispondi(detto, { dispositivo: this.dispositivo, amministra: this._amministra() })
+        .catch(() => no(detto.id ?? null, "ponte_notifiche", "non ha funzionato"))
+        .then((detta) => {
+          if (!this.chiuso) this.presa.manda(JSON.stringify(detta));
+        });
+      return;
+    }
     const commissioni = this.ponte.commissioni;
     /* Chi chiede: il telefono che ha aperto questo filo, cioe' l'utente di
      * Home Assistant a cui e' intestato. Serve alle plance riservate — senza,

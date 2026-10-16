@@ -187,6 +187,26 @@
               </div>
               <p class="rimedio" id="rimedio-casa" hidden></p>
             </li>
+            <!-- Il riavvio di Home Assistant, quando serve: la cartella «www» non
+                 c'era quando Home Assistant e' partito, e finche' non riparte la
+                 plancia nelle «Plance» non si apre. Le stesse parole della Plancia e
+                 della campanella (`IL_RIAVVIO` in `src/plance-in-casa.js`). Nascosta
+                 quando non serve. -->
+            <li id="voce-riavvio" hidden>
+              <span class="faccia male"
+                ><svg class="ic" aria-hidden="true"><use href="#ic-ha" /></svg
+              ></span>
+              <div class="testo">
+                <strong id="titolo-riavvio">Serve riavviare Home Assistant una volta</strong>
+                <span id="passi-riavvio"></span>
+              </div>
+              <div class="fine">
+                <span class="stato" id="pas-riavvio" data-come="male" hidden
+                  ><span data-corto>da fare</span></span
+                >
+              </div>
+              <p class="rimedio" id="rimedio-riavvio" hidden></p>
+            </li>
             <li>
               <span class="faccia attesa" id="faccia-fuori"
                 ><svg class="ic" aria-hidden="true"><use href="#ic-segnale" /></svg
@@ -1020,22 +1040,17 @@
             </p>
           </div>
 
-          <!-- Cosa fare quando la plancia, aperta dalle «Plance», esce con
-               «Errore di configurazione». Quel messaggio lo scrive Home Assistant
-               e il motivo non lo mostra; qui invece si prova la cartina da questa
-               pagina — che sta sul suo stesso indirizzo — e si dice quale dei due
-               casi è. -->
+          <!-- Cosa fare quando la plancia, aperta dalle «Plance», non si apre.
+               Qui si prova la pagina che la apre (`/local/gdahome/apri.html`) da
+               questa pagina — che sta sullo stesso indirizzo di Home Assistant —
+               e si dice cosa manca. Di ricaricare non si chiede mai: la Plancia
+               ha dentro solo tessere di Home Assistant. -->
           <div class="blocco">
             <p class="etichetta" data-en="The dashboards in Home Assistant">
               Le plance in Home Assistant
             </p>
             <p class="spiegazione" id="stato-plance-in-casa">…</p>
             <p class="avviso" id="avviso-cartina" hidden></p>
-            <div class="bottoni" id="ripara-cartina" hidden>
-              <button id="carica-la-cartina" type="button" data-en="Load the panel now">
-                Carica la cartina adesso
-              </button>
-            </div>
           </div>
 
           <!-- Da dove viene la plancia. È la risposta a «questa è quella

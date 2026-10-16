@@ -82,6 +82,8 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   // lettore stesso dichiara. Non e' la stessa domanda di qui sopra — quella
   // sfoglia i file su disco, questa sfoglia il lettore — e va detta a parte.
   "media_player/browse_media",
+  // E la ricerca dentro il lettore: Music Assistant, Deezer compreso.
+  "media_player/search_media",
   // Il caricamento «Dal dispositivo»: la foto viaggia sul socket perche' la
   // plancia servita dall'integrazione non possiede nessun token e ogni
   // chiamata REST del browser risponde 401.
@@ -157,6 +159,13 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "dashboardmodern/clima/timer/list",
   "dashboardmodern/clima/timer/set",
   "dashboardmodern/clima/timer/clear",
+  // I viaggi di gdanav, pianificati dalla pagina gdanav (ponte/src/viaggi.js).
+  "ponte/viaggi/elenco",
+  "ponte/viaggi/salva",
+  "ponte/viaggi/togli",
+  "ponte/viaggi/stima",
+  "ponte/viaggi/cerca",
+  "ponte/viaggi/strada",
   "auth/sign_path",
 ]);
 

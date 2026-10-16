@@ -17,6 +17,8 @@
  * kept out of the sync push. Storage and clock are injected for tests.
  */
 
+import { PAUSA_DENTRO_UN_CICLO_MS } from "./quando-e-partito.js";
+
 const STORAGE_KEY = "dm_appliance_cycles";
 const MAX_SAMPLE_GAP_MS = 5 * 60 * 1000;
 /* Quanto puo' stare ferma una macchina senza che il ciclo sia finito (#26).
@@ -27,17 +29,14 @@ const MAX_SAMPLE_GAP_MS = 5 * 60 * 1000;
  *
  * Una lavatrice a meta' programma sta ferma davvero — fra il carico dell'acqua
  * e il lavaggio, nell'ammollo, prima della centrifuga — e una presa smart quei
- * minuti li vede come zero watt. La card fa bene a dire STANDBY: e' la verita',
- * ed e' quello che qualcun altro aveva chiesto. Chi sbagliava era il conto dei
- * cicli, che a ogni pausa ne chiudeva uno e al risveglio ne apriva un altro:
- * alla fine del bucato quattro cicli da venti minuti invece di uno da un'ora e
- * mezza, con quattro consumi e quattro costi che non sono niente.
+ * minuti li vede come zero watt. A ogni pausa il contatore chiudeva un ciclo e
+ * al risveglio ne apriva un altro: alla fine del bucato quattro cicli da venti
+ * minuti invece di uno da un'ora e mezza.
  *
- * Venti minuti, e la scelta e' fra due errori. Troppo corto rimette i mini
- * cicli; troppo lungo unisce due bucati veri in uno. Venti sta largo su
- * qualunque pausa di programma e stretto sul tempo che ci vuole a svuotare il
- * cestello e rifare un carico: fra due lavaggi veri ci passa sempre di piu'. */
-const PAUSA_DENTRO_UN_CICLO_MS = 20 * 60 * 1000;
+ * Il numero e' quello di tutti (`quando-e-partito`), e ogni apparecchio puo'
+ * portarne uno suo piu' lungo — `pausaMs`, il ritardo di fine ciclo scritto
+ * nella scheda — che la card usa allo stesso modo. */
+
 const MIN_CYCLE_MS = 60 * 1000;
 /* Da quanto si e' guardato, perche' l'avvio valga (#65).
  *
@@ -140,7 +139,15 @@ export function createCycleTracker({
     const active = record.active;
     delete record.active;
     if (!active) return;
-    const fine = finePrudente(active, timestamp);
+    /* Se la card lo teneva IN FUNZIONE solo per prudenza — l'attesa che non
+     * spezza un bucato in una pausa — il ciclo e' finito prima: dove l'ha
+     * detto la card (`fineProbabile`), non alla fine dell'attesa. */
+    const probabile = finiteOrNull(active.fineProbabileMs);
+    const fine = Math.max(
+      finiteOrNull(active.startMs) ?? -Infinity,
+      Math.min(finePrudente(active, timestamp), probabile ?? Infinity),
+    );
+    delete active.fineProbabileMs;
     /* Il ciclo si chiude, ma non si butta: se la macchina riparte entro poco e'
      * la stessa, e quello che si e' contato finora e' suo. */
     record.sospeso = { ...active, fineMs: fine };
@@ -208,7 +215,8 @@ export function createCycleTracker({
              * un ciclo. */
             const sospeso = record.sospeso;
             const fermaDa = timestamp - (finiteOrNull(sospeso?.fineMs) ?? -Infinity);
-            if (sospeso && fermaDa >= 0 && fermaDa <= PAUSA_DENTRO_UN_CICLO_MS) {
+            const pausa = Math.max(PAUSA_DENTRO_UN_CICLO_MS, finiteOrNull(entry.pausaMs) ?? 0);
+            if (sospeso && fermaDa >= 0 && fermaDa <= pausa) {
               delete record.sospeso;
               const { fineMs: _fine, ...ripreso } = sospeso;
               if (record.last && record.last.startMs === ripreso.startMs) delete record.last;
@@ -267,6 +275,9 @@ export function createCycleTracker({
           }
           active.lastMs = timestamp;
           if (watts != null) active.lastWatts = watts;
+          const probabile = finiteOrNull(entry.fineProbabile);
+          if (probabile != null) active.fineProbabileMs = probabile;
+          else delete active.fineProbabileMs;
           const daily = finiteOrNull(entry.dailyKwh);
           if (daily != null) {
             if (finiteOrNull(active.startDailyKwh) == null) active.startDailyKwh = daily;

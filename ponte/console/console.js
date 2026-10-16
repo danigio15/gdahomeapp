@@ -847,11 +847,53 @@
     );
   }
 
+  /* ─── «Serve riavviare Home Assistant», nella Panoramica ──────────────────
+   *
+   * Quando la cartella «www» non c'era all'avvio di Home Assistant, la plancia
+   * nelle «Plance» non si apre finche' Home Assistant non riparte. Lo dicono
+   * la Plancia stessa e la campanella; qui lo si dice in cima alla
+   * Panoramica, con le stesse parole — `IL_RIAVVIO` in
+   * `src/plance-in-casa.js`, che una prova tiene uguale a queste.
+   *
+   * Si guarda quello che ha detto il ponte (`manca === "riavvio"`, cioe' Home
+   * Assistant ha risposto «non c'e'») e la prova fatta da questa pagina
+   * (`paginaChe === "no"`). Un «non lo so» non accende niente: dire di
+   * riavviare per un dubbio vorrebbe dire far riavviare per niente. */
+  function laRigaDelRiavvio(esito, prova) {
+    var serve = Boolean(esito && esito.manca === "riavvio") || prova === "no";
+    return {
+      serve: serve,
+      titolo: due("Serve riavviare Home Assistant una volta", "Home Assistant needs one restart"),
+      passi: due(
+        "Impostazioni \u2192 Sistema \u2192 Riavvia (in alto a destra \u23fb) \u2192 Riavvia Home Assistant",
+        "Settings \u2192 System \u2192 Restart (top right \u23fb) \u2192 Restart Home Assistant",
+      ),
+      perche: due(
+        "La cartella «www» non c'era quando Home Assistant è partito: l'ha creata gdahome. Dopo il riavvio la plancia compare da sola nelle «Plance», entro un minuto, su tutti i dispositivi.",
+        "The “www” folder wasn't there when Home Assistant started: gdahome created it. After the restart the dashboard shows up by itself in “Dashboards”, within a minute, on every device.",
+      ),
+      corto: due("da fare", "to do"),
+    };
+  }
+
+  function disegnaIlRiavvio(esito) {
+    var voce = trova("voce-riavvio");
+    if (!voce) return;
+    var riga = laRigaDelRiavvio(esito, paginaChe);
+    voce.hidden = !riga.serve;
+    trova("titolo-riavvio").textContent = riga.titolo;
+    trova("passi-riavvio").textContent = riga.passi;
+    if (riga.serve) pastiglia("pas-riavvio", "male", riga.corto);
+    else trova("pas-riavvio").hidden = true;
+    scriviIlRimedio("rimedio-riavvio", "", riga.serve ? riga.perche : "");
+    contaIGuai();
+  }
+
   /* Il numerino rosso-giallo sulla linguetta della Panoramica: quante righe
    * non vanno. Si guarda da qualunque sezione, e dice di tornare li'. */
   function contaIGuai() {
     var quanti = 0;
-    ["pas-casa", "pas-fuori", "pas-plancia"].forEach(function (id) {
+    ["pas-casa", "pas-fuori", "pas-plancia", "pas-riavvio"].forEach(function (id) {
       var una = trova(id);
       if (una && !una.hidden && una.dataset.come === "male") quanti += 1;
     });
@@ -943,8 +985,12 @@
       "The phones and tablets that use gdahome for this home. You can pair up to " + massimi + ".",
     );
     /* «3 di 10»: era «1 di 10 telefono», con la parola che si accordava col
-     * numero sbagliato. Il numero da solo si legge meglio, e non sbaglia. */
-    trova("conteggio").textContent = due(quanti + " di " + massimi, quanti + " of " + massimi);
+     * numero sbagliato. Il numero da solo si legge meglio, e non sbaglia.
+     * Nei dieci stanno i telefoni di casa: quelli di prova non li contano. */
+    var diCasa = dispositivi.filter(function (uno) {
+      return !uno.finoA;
+    }).length;
+    trova("conteggio").textContent = due(diCasa + " di " + massimi, diCasa + " of " + massimi);
 
     /* Mentre un nome si sta scrivendo, l'elenco resta com'e'. */
     if (inModifica.indexOf("telefono:") === 0) return;
@@ -1551,19 +1597,11 @@
    * creare. Quando non riescono, il ponte lo scrive nel registro: cioe' in un
    * posto dove nessuno guarda. Qui invece sta dove si guarda. */
 
-  /* La versione scritta in fondo all'indirizzo della cartina: `?v=1.4.32.6`.
-   *
-   * Vuota se non c'e' — un indirizzo scritto a mano, una cartina registrata da
-   * una versione che non la metteva — e allora non si dice niente invece di
-   * dire una cosa sbagliata. */
-  function laVersioneDellaCartina(indirizzo) {
-    const pezzi = /[?&]v=([^&]+)/.exec(String(indirizzo || ""));
-    if (!pezzi) return "";
-    try {
-      return decodeURIComponent(pezzi[1]);
-    } catch (_errore) {
-      return pezzi[1];
-    }
+  /* Chi usa ancora le tessere di gdahome, in parole: la risorsa di Lovelace
+   * c'e' per loro, e senza di loro non c'e'. */
+  function chiUsaLeTessere(esito) {
+    var dove = Array.isArray(esito.tessere_in) ? esito.tessere_in : [];
+    return dove.join(", ");
   }
 
   function comeVannoLePlanceInCasa(esito) {
@@ -1588,88 +1626,55 @@
           "Le plance non sono nella barra laterale di Home Assistant: ",
           "The dashboards are not in the Home Assistant sidebar: ",
         ) + (esito.perche || "");
-    /* Le cose che fanno uscire «Errore di configurazione» al posto della
-     * plancia, e che da quella pagina non si capiscono: qui si dicono.
-     *
-     * La prima e' provata, non indovinata: `laCartinaSiScarica` la chiede a
-     * Home Assistant da questa pagina, che sta sul suo stesso indirizzo. */
-    if (esito.risorsa_guaio) {
-      riga +=
-        due(" ⚠️ Lovelace non prende la cartina: ", " ⚠️ Lovelace won't take the panel file: ") +
-        esito.risorsa_guaio;
-    } else if (cartinaChe === "no") {
+    /* La cosa che fa vedere un «404» al posto della plancia, e che da quella
+     * pagina non si capisce: qui si dice. La prova e' fatta da questa pagina
+     * (`laPaginaSiApre`), che sta sullo stesso indirizzo di Home Assistant. */
+    if (paginaChe === "no") {
       riga += due(
-        " ⚠️ Home Assistant non serve la cartina della plancia.",
-        " ⚠️ Home Assistant isn't serving the dashboard's panel file.",
+        " ⚠️ Home Assistant non serve ancora la pagina che apre la plancia.",
+        " ⚠️ Home Assistant isn't serving the page that opens the dashboard yet.",
       );
-    } else if (cartinaChe === "rotta") {
+    } else if (paginaChe === "rotta") {
       riga += due(
-        " ⚠️ La cartina si scarica ma non registra la tessera.",
-        " ⚠️ The panel file downloads but registers no card.",
+        " ⚠️ Home Assistant risponde, ma non con la pagina che apre la plancia.",
+        " ⚠️ Home Assistant answers, but not with the page that opens the dashboard.",
       );
-    } else if (cartinaChe === "si") {
+    } else if (paginaChe === "si") {
       riga += due(
-        " La cartina si scarica, e la tessera si registra.",
-        " The panel file downloads, and the card registers.",
+        " La pagina che apre la plancia si scarica.",
+        " The page that opens the dashboard downloads.",
       );
     } else if (esito.riavvia) {
       riga += due(
         " ⚠️ Riavvia Home Assistant una volta (Impostazioni → Sistema → Riavvia):" +
           " la cartella «www» non c'era e l'ho fatta io, e Home Assistant i file che" +
           " stanno dentro li serve solo se quella cartella c'era quando è partito." +
-          " Finché non riparte, aprendo la plancia esce «Errore di configurazione».",
+          " Dopo il riavvio la plancia compare da sola, entro un minuto.",
         " ⚠️ Restart Home Assistant once (Settings → System → Restart):" +
           " the “www” folder wasn't there and I made it, and Home Assistant" +
           " serves the files inside it only if that folder existed when it started." +
-          " Until it restarts, opening the dashboard gives “Configuration error”.",
-      );
-    } else if (esito.ricarica) {
-      riga += due(
-        " Ricarica la pagina di Home Assistant: la cartina è stata dichiarata adesso," +
-          " e il browser la va a prendere al giro dopo.",
-        " Reload the Home Assistant page: the panel file has just been declared," +
-          " and the browser picks it up on the next round.",
-      );
-    } else if (esito.aggiornata) {
-      /* La riga che mancava, e si è vista: l'add-on aggiornato, la pagina no.
-       *
-       * L'elenco delle risorse Home Assistant lo legge all'avvio della pagina.
-       * Su una pagina già aperta continua a girare la cartina di prima, e
-       * qualunque correzione ci sia dentro quella nuova non arriva — mentre
-       * qui c'era scritto che andava tutto bene. */
-      riga += due(
-        " ⚠️ Ricarica questa pagina di Home Assistant (F5): la cartina della" +
-          " plancia è passata a questa versione, ma una pagina già aperta" +
-          " continua a far girare quella di prima — e le correzioni non si" +
-          " vedono. Si fa una volta per aggiornamento.",
-        " ⚠️ Reload this Home Assistant page (F5): the dashboard's panel file" +
-          " moved to this version, but an already open page keeps running the" +
-          " previous one — and the fixes don't show. Once per update.",
+          " After the restart the dashboard shows up by itself within a minute.",
       );
     }
-    /* E cosa ne dice Home Assistant, riletto da lui: due fatti, non due
-     * opinioni. Stanno sempre a schermo — anche quando va tutto bene — perche'
-     * sono quelli che si guardano quando la plancia non si apre, e una riga
-     * che compare solo nei guai e' una riga che nessuno sa dove cercare. */
-    if (esito.risorsa_in_elenco === true) {
-      /* **Quale** cartina, non solo «ce l'ha».
-       *
-       * L'indirizzo porta la versione dell'add-on, e cambia a ogni
-       * aggiornamento proprio perche' il browser vada a riprendere il file. Ma
-       * l'elenco delle risorse Home Assistant lo legge all'avvio della pagina:
-       * finche' non si ricarica, la pagina fa girare la cartina di prima anche
-       * se in elenco c'e' gia' quella nuova. */
-      const quale = laVersioneDellaCartina(esito.cartina_in_elenco);
+    /* La risorsa di Lovelace: alla plancia non serve piu', e resta solo per
+     * chi le tessere di gdahome le usa ancora. Si dice per chi. */
+    if (esito.tessere === true) {
       riga += due(
-        " Lovelace ha la cartina in elenco" + (quale ? " (" + quale + ")" : "") + ".",
-        " Lovelace lists the panel file" + (quale ? " (" + quale + ")" : "") + ".",
+        " La risorsa di Lovelace resta per chi usa le tessere di gdahome (" +
+          chiUsaLeTessere(esito) +
+          ")" +
+          (esito.risorsa_in_elenco === false ? ", ma ⚠️ Lovelace non ce l'ha in elenco." : "."),
+        " The Lovelace resource stays for whoever uses gdahome's cards (" +
+          chiUsaLeTessere(esito) +
+          ")" +
+          (esito.risorsa_in_elenco === false ? ", but ⚠️ Lovelace doesn't list it." : "."),
+      );
+    } else if (esito.risorsa === "tolta") {
+      riga += due(
+        " La risorsa di Lovelace di prima l'ho tolta: alla plancia non serve più.",
+        " I removed the old Lovelace resource: the dashboard doesn't need it anymore.",
       );
     }
-    if (esito.risorsa_in_elenco === false)
-      riga += due(
-        " ⚠️ Lovelace non ha la cartina in elenco.",
-        " ⚠️ Lovelace doesn't list the panel file.",
-      );
     if (esito.tessera_nella_vista)
       riga += due(
         " Nella Plancia c'è «" + esito.tessera_nella_vista + "».",
@@ -1705,255 +1710,108 @@
         ) + " ";
     }
 
-    /* E cosa ci trova, adesso, chi apre quella voce. Quando la cartina non si
-     * serve il ponte ci scrive un foglietto — quello che dice di riavviare —
-     * al posto della plancia: è la cosa da sapere per prima, perché è quella
-     * che stanno guardando gli altri. */
+    /* E cosa ci trova, adesso, chi apre quella voce. L'unico foglietto che il
+     * ponte ci puo' scrivere al posto della plancia e' quello del riavvio: è
+     * la cosa da sapere per prima, perché è quella che stanno guardando gli
+     * altri. Di ricaricare la pagina non si chiede piu' a nessuno: la
+     * Plancia ha dentro solo tessere di Home Assistant. */
     if (esito.tessera_nella_vista === "markdown")
-      riga +=
-        esito.manca === "ricarica"
-          ? due(
-              " Chi la apre adesso legge il foglietto che dice di ricaricare la pagina, non la" +
-                " plancia: la cartina è stata dichiarata adesso, e una pagina già aperta i file" +
-                " nuovi li prende quando riparte. Torna la plancia da sé.",
-              " Whoever opens it now reads the note telling them to reload the page, not the" +
-                " dashboard: the panel file has just been declared, and a page that is already" +
-                " open picks up new files when it restarts. It goes back by itself.",
-            )
-          : due(
-              " Chi la apre adesso legge il foglietto che dice di riavviare, non la plancia:" +
-                " ci torna da sé appena Home Assistant serve la cartina.",
-              " Whoever opens it now reads the note telling them to restart, not the dashboard:" +
-                " it goes back by itself as soon as Home Assistant serves the panel file.",
-            );
+      riga += due(
+        " Chi la apre adesso legge il foglietto che dice di riavviare, non la plancia:" +
+          " ci torna da sé appena Home Assistant serve la pagina.",
+        " Whoever opens it now reads the note telling them to restart, not the dashboard:" +
+          " it goes back by itself as soon as Home Assistant serves the page.",
+      );
     return riga;
   }
 
-  /* La cartina si scarica? Lo si chiede a Home Assistant.
+  /* La pagina che apre la plancia si scarica? Lo si chiede a Home Assistant.
    *
    * Questa pagina sta dentro l'ingress, cioe' **sullo stesso indirizzo** di
    * Home Assistant: un indirizzo che comincia per `/local/` da qui arriva a
    * lui, non a noi. E' l'unico posto da cui si possa provare quello che poi
-   * prova il browser di chi apre la plancia.
+   * prova la tessera «pagina web» della Plancia.
    *
    * `""` vuol dire «non si e' ancora provato», e si dice diversamente da «no»:
    * un avviso grosso mostrato mentre ancora non si sa sarebbe un avviso
    * sbagliato meta' delle volte. */
-  var cartinaChe = "";
+  var paginaChe = "";
 
-  /* Dove sta la cartina, come l'ha detta il ponte: serve al bottone qui
-   * sotto, che la carica nella pagina di Home Assistant. */
-  var laCartina = "";
+  /* Il segno che la pagina porta in testa: una risposta «200» da sola non
+   * basta, deve essere lei. Lo stesso di `SEGNO_DELL_APERTURA` nel ponte. */
+  var IL_SEGNO = 'name="gdahome" content="apri"';
 
-  /* Come si chiama la tessera: lo stesso nome sta in `carta/plancia.js`, ed e'
-   * quello con cui Lovelace la cerca. Se nessuno l'ha registrata,
-   * `custom:gdahome-plancia` non esiste e Home Assistant disegna «Errore di
-   * configurazione» — senza dire questo, e senza dire niente altro. */
-  var LA_TESSERA = "gdahome-plancia";
-
-  function laCartinaSiScarica(dove) {
-    if (dove) laCartina = dove;
-    if (!dove || cartinaChe === "si") return Promise.resolve(cartinaChe);
+  function laPaginaSiApre(dove) {
+    if (!dove || paginaChe === "si") return Promise.resolve(paginaChe);
     return fetch(dove, { cache: "no-store" })
       .then(function (risposta) {
         if (!risposta.ok) {
-          cartinaChe = "no";
-          return cartinaChe;
+          paginaChe = risposta.status === 404 ? "no" : "";
+          return paginaChe;
         }
-        /* Si scarica. Allora si prova anche a **eseguirla**, perche' «il file
-         * c'e'» e «la tessera esiste» sono due cose diverse e portano a due
-         * rimedi diversi: un file che si scarica e non registra la tessera e'
-         * un file rotto, e una tessera che si registra qui ma in una Plancia
-         * non esiste vuol dire che Lovelace quella risorsa non la carica — il
-         * browser che non l'ha ancora vista, o le dashboard tenute in YAML,
-         * dove le risorse dallo storage non si leggono. */
-        return import(dove).then(
-          function () {
-            cartinaChe = window.customElements.get(LA_TESSERA) ? "si" : "rotta";
-            return cartinaChe;
-          },
-          function () {
-            cartinaChe = "rotta";
-            return cartinaChe;
-          },
-        );
+        return risposta.text().then(function (testo) {
+          paginaChe = String(testo).indexOf(IL_SEGNO) >= 0 ? "si" : "rotta";
+          return paginaChe;
+        });
       })
       .catch(function () {
         /* Senza rete non si sa, e non si dice niente: la riga resta quella. */
-        cartinaChe = "";
-        return cartinaChe;
+        paginaChe = "";
+        return paginaChe;
       });
-  }
-
-  /* La tessera **nella pagina di Home Assistant**, non in questa.
-   *
-   * Questa pagina gira dentro un riquadro, sullo stesso indirizzo di Home
-   * Assistant: puo' guardare la sua. Ed e' li' che la tessera deve esistere —
-   * qui non serve a niente.
-   *
-   * Home Assistant l'elenco delle risorse lo legge **quando la pagina si
-   * carica**: una pagina aperta prima che la cartina esistesse non la conosce,
-   * e continua a non conoscerla finche' non si ricarica per davvero — che
-   * nell'app di Home Assistant vuol dire svuotarle la cache, non riaprirla. */
-  function laTesseraNellaPagina() {
-    try {
-      var fuori = window.parent;
-      if (!fuori || fuori === window || !fuori.customElements) return "non-lo-so";
-      return fuori.customElements.get(LA_TESSERA) ? "si" : "no";
-    } catch (_errore) {
-      /* Se il riquadro non ci lascia guardare fuori, non si sa: e non si dice
-       * niente, invece di dire una cosa a caso. */
-      return "non-lo-so";
-    }
-  }
-
-  /* E caricarcela, adesso.
-   *
-   * E' la stessa cosa che fa Home Assistant con le risorse di Lovelace — un
-   * `<script type="module">` nella sua pagina — fatta a mano una volta sola.
-   * Da li' in poi la tessera esiste in quella pagina e la Plancia si apre,
-   * senza aspettare una ricarica che nell'app non si sa come si fa. */
-  function caricaLaCartinaDiLa(dove) {
-    try {
-      var fuori = window.parent;
-      if (!fuori || fuori === window) return Promise.resolve(false);
-      var documento = fuori.document;
-      var segno = documento.createElement("script");
-      segno.type = "module";
-      segno.src = new URL(dove, fuori.location.origin).href;
-      return new Promise(function (finito) {
-        segno.onload = function () {
-          finito(laTesseraNellaPagina() === "si");
-        };
-        segno.onerror = function () {
-          finito(false);
-        };
-        documento.head.appendChild(segno);
-      });
-    } catch (_errore) {
-      return Promise.resolve(false);
-    }
   }
 
   /* Il foglietto sotto la riga: si vede solo quando c'e' qualcosa da fare, e
    * dice **cosa** fare — non com'e' fatto il mondo. */
-  function avvisaSullaCartina(ilGuaioDellaRisorsa) {
+  function avvisaSullaPagina(esito) {
     var dove = trova("avviso-cartina");
     if (!dove) return;
     var testo = "";
-    if (ilGuaioDellaRisorsa) {
+    if (paginaChe === "no") {
+      testo = due(
+        "Home Assistant non serve ancora la pagina che apre la plancia, e finché non la " +
+          "serve nella Plancia c'è il foglietto che dice di riavviarlo. Riavvialo una volta " +
+          "(Impostazioni → Sistema → Riavvia): la cartella «www» la apre quando parte, e i " +
+          "file arrivati dopo li serve solo dal riavvio dopo. Poi la plancia compare da sola, " +
+          "su tutti i dispositivi.",
+        "Home Assistant isn't serving the page that opens the dashboard yet, and until it " +
+          "does the dashboard shows a note asking to restart it. Restart it once (Settings → " +
+          "System → Restart): it opens the “www” folder when it starts, and files " +
+          "that arrive later it serves only from the next restart on. Then the dashboard " +
+          "shows up by itself, on every device.",
+      );
+    } else if (paginaChe === "rotta") {
+      testo = due(
+        "Home Assistant risponde all'indirizzo della pagina che apre la plancia, ma non con " +
+          "quella pagina. Riavvia l'add-on, che la riscrive da sé a ogni avvio; se succede " +
+          "ancora, scrivilo dalle segnalazioni.",
+        "Home Assistant answers at the address of the page that opens the dashboard, but " +
+          "not with that page. Restart the add-on, which rewrites it by itself at every " +
+          "start; if it happens again, say so from the reports.",
+      );
+    } else if (esito && esito.tessere === true && esito.risorsa_guaio) {
+      /* Solo per chi le tessere le usa: alla plancia la risorsa non serve. */
       testo =
         due(
-          "La cartina sta sul disco ma Lovelace non la vuole dichiarare, e senza quella " +
-            "la tessera della plancia non esiste in nessuna pagina: aprendola dalle " +
-            "«Plance» esce «Errore di configurazione». Quasi sempre vuol dire che questa " +
-            "casa tiene le dashboard in YAML (lovelace: mode: yaml in configuration.yaml): " +
-            "lì Home Assistant le risorse dallo storage non le legge, e va dichiarata a " +
-            "mano. Nel configuration.yaml: lovelace: mode: yaml, poi resources: con - url: " +
-            "/local/gdahome/plancia.js  e  type: module. Poi riavvia Home Assistant. " +
-            "Lovelace ha risposto: ",
-          "The panel file is on disk but Lovelace won't declare it, and without that " +
-            "the dashboard's card exists on no page: opening it from " +
-            "“Dashboards” gives “Configuration error”. Nearly always " +
-            "this means this home keeps its dashboards in YAML (lovelace: mode: yaml in " +
-            "configuration.yaml): there Home Assistant does not read resources from " +
-            "storage, and it has to be declared by hand. In configuration.yaml: lovelace: " +
-            "mode: yaml, then resources: with - url: /local/gdahome/plancia.js  and  " +
-            "type: module. Then restart Home Assistant. Lovelace answered: ",
-        ) + ilGuaioDellaRisorsa;
-    } else if (cartinaChe === "no") {
-      testo = due(
-        "Home Assistant non serve la cartina della plancia, e senza quella la plancia " +
-          "aperta dalle «Plance» esce con «Errore di configurazione». Riavvialo una volta " +
-          "(Impostazioni → Sistema → Riavvia): la cartella «www» la apre quando parte, e i " +
-          "file arrivati dopo li serve solo dal riavvio dopo.",
-        "Home Assistant isn't serving the dashboard's panel file, and without it the " +
-          "dashboard opened from “Dashboards” gives “Configuration " +
-          "error”. Restart it once (Settings → System → Restart): it opens the " +
-          "“www” folder when it starts, and files that arrive later it serves " +
-          "only from the next restart on.",
-      );
-    } else if (cartinaChe === "rotta") {
-      testo = due(
-        "La cartina si scarica ma non registra la tessera: il file è arrivato rotto. " +
-          "Riavvia l'add-on, che la riscrive da sé a ogni avvio; se succede ancora, " +
-          "scrivilo dalle segnalazioni.",
-        "The panel file downloads but registers no card: the file arrived broken. " +
-          "Restart the add-on, which rewrites it by itself at every start; if it happens " +
-          "again, say so from the reports.",
-      );
-    } else if (cartinaChe === "si" && laTesseraNellaPagina() === "no") {
-      /* Senza asterischi: questa riga va in `textContent`, e due asterischi
-       * per parte si leggevano tali e quali. */
-      testo = due(
-        "La cartina c'è e si scarica, ma questa pagina di Home Assistant non ce l'ha: " +
-          "l'elenco delle risorse lo legge quando si carica, e questa si è caricata prima che " +
-          "la cartina esistesse. Finché resta così, la plancia esce con «Errore di " +
-          "configurazione» qualunque cosa faccia l'add-on. Il bottone qui sotto gliela mette " +
-          "adesso: poi apri la plancia dalla barra laterale e si apre. Una volta sola — dalla " +
-          "prossima ricarica vera se la prende da sé. Nell'app di Home Assistant la ricarica " +
-          "vera è Impostazioni → App companion → Svuota la cache, e riaprire.",
-        "The panel file is there and it downloads, but this Home Assistant page does " +
-          "not have it: it reads the resource list when it loads, and this one loaded " +
-          "before the panel file existed. While it stays that way, the dashboard gives " +
-          "“Configuration error” whatever the add-on does. The button below " +
-          "puts it there now: then open the dashboard from the sidebar and it opens. Once " +
-          "only — from the next real reload it takes it by itself. In the Home Assistant " +
-          "app a real reload is Settings → Companion app → Clear the cache, and reopen.",
-      );
-    } else if (cartinaChe === "si") {
-      testo = due(
-        "Se aprendo la plancia dalle «Plance» esce «Errore di configurazione»: da qui la " +
-          "cartina si scarica e la tessera si registra, quindi il file è a posto ed è " +
-          "Lovelace che non la carica. Due cose, in quest'ordine. 1) Ricarica a fondo la " +
-          "pagina di Home Assistant — nell'app: Impostazioni → App companion → Svuota la " +
-          "cache, e riapri: una risorsa aggiunta adesso il browser la vede al giro dopo. " +
-          "2) Se succede anche da un browser che non l'ha mai aperta, Home Assistant tiene " +
-          "le dashboard in YAML (lovelace: mode: yaml) e le risorse dallo storage non le " +
-          "legge: allora va dichiarata a mano in configuration.yaml — lovelace: resources: " +
-          "- url: /local/gdahome/plancia.js  type: module.",
-        "If opening the dashboard from “Dashboards” gives “Configuration " +
-          "error”: from here the panel file downloads and the card registers, so the " +
-          "file is fine and it is Lovelace that isn't loading it. Two things, in this " +
-          "order. 1) Reload the Home Assistant page from scratch — in the app: Settings → " +
-          "Companion app → Clear the cache, and reopen: a resource added now, the browser " +
-          "sees on the next round. 2) If it happens from a browser that never opened it " +
-          "either, Home Assistant keeps its dashboards in YAML (lovelace: mode: yaml) and " +
-          "does not read resources from storage: then it has to be declared by hand in " +
-          "configuration.yaml — lovelace: resources: - url: /local/gdahome/plancia.js  " +
-          "type: module.",
-      );
+          "Le tessere di gdahome (" +
+            chiUsaLeTessere(esito) +
+            ") vogliono la loro risorsa di Lovelace, e Lovelace non la vuole dichiarare. " +
+            "Quasi sempre vuol dire che questa casa tiene le dashboard in YAML: lì va " +
+            "dichiarata a mano in configuration.yaml — lovelace: resources: - url: " +
+            "/local/gdahome/caricatore.js?giro=1  type: module. La plancia non ne ha " +
+            "bisogno, e si apre comunque. Lovelace ha risposto: ",
+          "gdahome's cards (" +
+            chiUsaLeTessere(esito) +
+            ") need their Lovelace resource, and Lovelace won't declare it. Nearly always " +
+            "this means this home keeps its dashboards in YAML: there it has to be declared " +
+            "by hand in configuration.yaml — lovelace: resources: - url: " +
+            "/local/gdahome/caricatore.js?giro=1  type: module. The dashboard doesn't need " +
+            "it, and opens anyway. Lovelace answered: ",
+        ) + esito.risorsa_guaio;
     }
     dove.textContent = testo;
     dove.hidden = !testo;
-    /* Il bottone si vede solo quando c'e' davvero da premerlo. */
-    var tasti = trova("ripara-cartina");
-    if (tasti) tasti.hidden = !(cartinaChe === "si" && laTesseraNellaPagina() === "no");
   }
-
-  trova("carica-la-cartina").addEventListener("click", function () {
-    var tasto = trova("carica-la-cartina");
-    tasto.disabled = true;
-    caricaLaCartinaDiLa(laCartina).then(function (andata) {
-      tasto.disabled = false;
-      trova("avviso-cartina").textContent = andata
-        ? due(
-            "Fatto: adesso apri la plancia dalla barra laterale, si apre. Se la chiudi e " +
-              "riapri l'app di Home Assistant senza svuotarle la cache, questa pagina torna " +
-              "com'era e il bottone ricompare.",
-            "Done: now open the dashboard from the sidebar and it opens. If you close and " +
-              "reopen the Home Assistant app without clearing its cache, this page goes " +
-              "back as it was and the button comes back too.",
-          )
-        : due(
-            "Non ci sono riuscito da qui. Allora: Impostazioni → App companion → Svuota la " +
-              "cache, e riapri Home Assistant.",
-            "I couldn't do it from here. So: Settings → Companion app → Clear the cache, " +
-              "and reopen Home Assistant.",
-          );
-      if (andata) trova("ripara-cartina").hidden = true;
-    });
-  });
 
   function avvisaLePlance(testo) {
     var avviso = trova("avviso-plance");
@@ -2251,9 +2109,11 @@
          * la prova della cartina torna: chi guarda vede una frase giusta
          * adesso e una piu' precisa mezzo secondo dopo, invece di un vuoto. */
         trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
-        laCartinaSiScarica(stato.plance_in_casa && stato.plance_in_casa.cartina).then(function () {
+        disegnaIlRiavvio(stato.plance_in_casa);
+        laPaginaSiApre(stato.plance_in_casa && stato.plance_in_casa.apertura).then(function () {
           trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
-          avvisaSullaCartina(stato.plance_in_casa && stato.plance_in_casa.risorsa_guaio);
+          avvisaSullaPagina(stato.plance_in_casa);
+          disegnaIlRiavvio(stato.plance_in_casa);
         });
         contaIGuai();
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;

@@ -7,8 +7,9 @@
  *
  * Questo e' un secondo codice, con regole sue:
  *
- *   - vale **fino a sette giorni**, e per **piu' telefoni** (al massimo
- *     cinque: un iPhone e un iPad di chi rivede, e un po' di margine);
+ *   - vale **fino a sette giorni**, e per **quanti telefoni servono**: lo
+ *     usano Apple, Google e chi lo prova prima, e i telefoni di prova non
+ *     tolgono posto ai dieci della casa;
  *   - sta su disco, perche' un add-on che si riavvia nel mezzo della
  *     revisione non lo deve buttare via;
  *   - chi entra con lui entra **come un utente che non amministra**, scelto
@@ -43,12 +44,6 @@ const GIORNO = 24 * 60 * 60 * 1000;
  * un giorno o due, e ogni tanto si ferma per una domanda: sette giorni la
  * coprono. Il centralino ha lo stesso tetto (`PROVA_VIVE_AL_MASSIMO`). */
 export const GIORNI_AL_MASSIMO = 7;
-
-/* Quanti telefoni possono entrare con lo stesso codice. Un codice che gira
- * per piu' giorni nelle note di qualcun altro non deve poter riempire la
- * casa: i telefoni di casa restano dieci, e cinque di quelli bastano a chi
- * rivede. */
-export const TELEFONI_DI_PROVA = 5;
 
 /* L'identificativo di un utente di Home Assistant: trentadue cifre
  * esadecimali, come in `abbinamento.js`. */

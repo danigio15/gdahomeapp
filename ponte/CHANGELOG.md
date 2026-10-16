@@ -10,6 +10,375 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.2
+
+- **La testata della Home non sparisce più tornando da Luci e da Porte**
+  (iPhone e iPad, a tutto schermo). A scorrere lì è la pagina stessa, e Luci e
+  Porte non la rimettevano in cima: tornati sulla Home, menu, nome e
+  ingranaggio restavano sotto l'orologio del telefono e si vedeva solo il
+  meteo. Adesso Luci e Porte ripartono dall'alto come le altre schede, e
+  tornando sulla Home — da qualunque strada — la Home riparte dall'alto e la
+  prima fila si ridisegna da capo.
+- **Play Store:** la versione arriva sulla pista anche quando Google vuole che
+  la revisione si mandi a mano, sia al controllo sia alla consegna (la 1.14.1
+  si era fermata al controllo).
+
+## 1.14.1
+
+**Deezer nella Musica.** «Scegli cosa suonare» apre i **Preferiti di Sonos**
+— le playlist, gli album e le radio di Deezer salvati nell'app di Sonos —
+e la **Libreria e cartelle di casa**: prima con Sonos quelle due cartelle
+non comparivano. Le voci che vengono da Deezer hanno il loro segno. Con
+**Music Assistant** (e Deezer fra i suoi fornitori) c'è anche il campo per
+**cercare** brani, artisti e playlist. Sul **pannello a muro**, nella
+pagina Musica, il tasto «Scegli» apre la stessa finestra.
+
+E le novità della 1.14.0, che sul Play Store non era arrivata: il negozio,
+dopo una revisione respinta, vuole che la revisione si mandi a mano, e il
+caricamento si fermava lì. Adesso la versione arriva sulla pista e il
+registro dice di mandarla in revisione dal Play Console. Dentro c'è anche
+il navigatore all'ultima versione.
+
+## 1.14.0
+
+**L'assistente capisce cosa c'è in casa.** Non propone più di spegnere la
+luce dell'acquario, del terrario, le notturne, quelle del giardino o una
+presa che deve restare accesa. Lo capisce dal nome, dalla stanza (area) di
+Home Assistant, dalla marca del dispositivo, dalle automazioni a orario e
+dalle abitudini delle ultime due settimane; e impara dalle risposte.
+
+- **Notifiche più sensate.** Le luci con la casa vuota dicono quali restano
+  accese e perché; «Spegni» spegne solo le altre, e c'è «Restano così». Una
+  porta aperta di notte, con la gente in casa, si dice solo quando la casa
+  dorme e se di solito è chiusa, col nome che si legge («Cucina: la porta è
+  ancora aperta») e «Va bene stanotte».
+- **Cosa c'è in casa.** In Config › Persone, l'elenco di quello che
+  l'assistente ha capito, da correggere con un tocco: «Decide lui», «Resta
+  così», «Avvisa». Nessuna domanda esce di casa.
+- **iPhone:** una notifica sola, coi tasti sotto (Spegni, Più tardi, Restano
+  così, Va bene così).
+- **Casa di prova:** col codice entrano quanti telefoni servono, e non
+  tolgono posto a quelli di casa.
+- **Plancia a muro:** l'Energia legge rete e batteria col verso giusto, anche
+  con due sensori (prelievo e immissione, carica e scarica), e si può
+  invertire il segno; la batteria dice «In carica» o «In scarica». Le
+  linguette delle pagine tengono il nome finché ci sta. Nell'Ingresso le
+  finestre stanno nel riquadro dell'antifurto.
+- **La scheda Runtime** del config dice la versione di gdahome, sempre in
+  pari.
+- **Android Auto e CarPlay:** niente «fallo dal telefono»; il navigatore in
+  auto resta Premium. Cerca e Casa anche fra i tasti di lato su CarPlay.
+- **gdanav:** l'auto ibrida (anche e-Power), e dentro gdahome niente
+  abbinamento a Home Assistant col QR (la casa ce l'ha già).
+- **Correzioni:** la testata della pagina gdanav non lampeggia più; la prima
+  fila della testata su iPad torna dopo l'Energia; il riepilogo della sera
+  conta i dispositivi e non le entità; un elettrodomestico finito si dice
+  una volta.
+
+## 1.13.0
+
+**gdanav: il Pianificatore.** Tre modi di pianificare un viaggio: per un
+giorno («arrivo entro le 9:00 a Caserta, domani»), ogni settimana («Casa –
+Lavoro, dal lunedì al venerdì») e un giro a tappe con le soste. Si dice
+dove e a che ora arrivare, e il navigatore dice a che ora partire, col
+traffico. È Premium.
+
+- **Dal telefono e da PC.** I viaggi stanno nella casa: si scrivono nel
+  navigatore dell'app o nella nuova pagina **gdanav** della plancia, dal
+  computer, e sono gli stessi. Ognuno vede solo i suoi: la casa li tiene per
+  chi li ha scritti, e nel ponte da fuori non si vede nulla.
+- **L'avviso quando partire.** Dieci minuti prima (o quanto si sceglie)
+  arriva la notifica «Parti fra 10 minuti», anche nelle ore di silenzio; si
+  spegne in Notifiche → Viaggi. Prima di partire il navigatore ricalcola la
+  strada col traffico, così l'ora è giusta.
+- **L'auto pronta.** Dalla pagina gdanav si può scegliere il clima dell'auto
+  da accendere prima e il garage: nell'avviso c'è il tasto per aprirlo, e si
+  apre solo se lo si preme.
+- **In auto.** Su CarPlay e Android Auto i viaggi salvati sono in cima a
+  «Dove andiamo?»: si tocca e si parte, con tutte le tappe.
+
+**iPhone: le notifiche col testo vero.** Sull'iPhone le notifiche della casa
+dicevano solo «gdahome: nuova notifica», e il testo si leggeva toccandole.
+Adesso un pezzo nuovo dell'app apre la notifica mentre arriva e mostra subito
+cosa è successo. La notifica resta cifrata fino al telefono, come prima: al
+pezzo nuovo l'app lascia solo la chiave che apre le notifiche, non quella
+della casa.
+
+## 1.12.3
+
+**Navigatore: la Tangenziale di Napoli a 1,05 €, sempre.** Su certi percorsi
+il chilometro della barriera stava sotto un'altra strada e il pedaggio
+restava «~1,00 € stimato». Dentro Napoli un tratto a pagamento è la
+Tangenziale: 1,05 €.
+
+**Navigatore: le ultime ricerche anche in auto.** Su CarPlay e Android Auto,
+aprendo «Cerca», prima di scrivere ci sono le ultime ricerche.
+
+**Navigatore: niente ABRP.** In «La tua auto» non c'è più «Ho il consumo di
+ABRP»: il consumo lo impara il navigatore guidando.
+
+**Navigatore: con Android Auto la guida non compare sul telefono.** Con il
+navigatore sullo schermo dell'auto la notifica della guida non c'è; con
+un'altra app davanti resta per l'auto, e sul telefono sta in fondo, senza
+icona e senza suono.
+
+**Navigatore: un avviso spento sparisce anche dalla mappa.** Sul telefono e
+in auto: scelto «Spento», l'avviso non si dice, non si mostra e non si vede
+più sulla mappa.
+
+**Assistente: le luci con i nomi della plancia.** «Quante luci sono accese?»
+risponde con i nomi e le stanze scelti nella plancia, non con quelli dei
+dispositivi («switch_0»); con tante luci le conta per stanza, e si può
+spegnere una stanza sola. Le luci collegate a un interruttore contano anche
+loro.
+
+**Assistente: un suggerimento scartato torna dopo un'ora.** Con la ✕, o
+segnato «Fatto», dopo un'ora la casa riguarda: se la cosa c'è ancora, lo
+ridice.
+
+**Assistente: le finestre sono quelle della plancia.** «La finestra in camera
+è aperta?» guarda le porte e le finestre della sezione Varchi (e i contatti
+scritti nelle Finestre), coi loro nomi, anche quando Home Assistant non dice
+che sono finestre. In una stanza senza sensori lo dice per quella stanza.
+
+**Assistente: il frigo non «ha finito».** Frigo, congelatore, clima, boiler e
+simili si fermano e ripartono da soli: «ha finito» vale solo per le macchine
+a ciclo, come lavatrice, lavastoviglie e forno.
+
+## 1.12.2
+
+**Android: il campanello senza lo schermo intero automatico.** Per ora, sui
+telefoni Android, il campanello arriva come notifica urgente in cima, che
+suona, con «Apri» e «Ignora»; toccata, apre la telecamera a tutto schermo.
+Non accende più da solo lo schermo col telefono bloccato: per farlo Google
+Play chiede una dichiarazione apposta, che arriverà in una prossima
+versione. Tutto il resto è come nella 1.12.1.
+
+**Notifiche: l'antifurto inserito e disinserito.** In Notifiche › Sicurezza
+c'è «Antifurto inserito o disinserito»: una notifica a ogni cambio vero —
+totale, notte, parziale (casa), vacanza, personalizzato, disinserito — con
+chi l'ha cambiato, se l'antifurto lo dice.
+
+**Assistente di casa: chi è in casa.** Conta in casa anche chi è in una zona
+di Home Assistant che si chiama «Casa», e chi è sulla stessa rete Wi‑Fi di
+qualcuno che è a casa; e con qualcuno di cui non si sa dove sia non dice
+più «non c'è nessuno in casa».
+
+**A muro: l'Energia con più misure.** Oltre a casa, solare, rete e batteria,
+fino a 8 misure in più a scelta (una presa, la pompa di calore, l'auto in
+carica, i kWh di oggi); la griglia si allarga da sola.
+
+**CarPlay: col telefono bloccato la posizione va avanti.** Su CarPlay, con
+l'iPhone bloccato, il segnaposto restava fermo e ripartiva solo alzando il
+telefono: si muoveva al ritmo dello schermo del telefono, che bloccato è
+spento. Adesso segue lo schermo dell'auto.
+
+**App: mai più il logo DashboardModern all'avvio.** Al posto della schermata
+di caricamento col vecchio logo c'è il marchio di gdahome (dalla 1.12.1), e
+anche il velo con cui parte la plancia, quando arriva direttamente da Home
+Assistant, mostra il logo di gdahome invece di quello di serie.
+
+## 1.12.1
+
+**App: all'avvio il marchio di gdahome.** Il caricamento dell'app mostrava
+per un attimo il vecchio logo «DASHBOARDMODERN»: adesso c'è quello di
+gdahome, con la rotella e «Caricamento…».
+
+**Notifiche push nell'app.** Nel menu dell'app, sul telefono, c'è
+«Notifiche»: antifurto, allagamento, fumo e gas, campanello (a tutto schermo,
+con la telecamera e «Apri»), porte e garage aperti, elettrodomestico finito,
+freezer, pioggia con finestre aperte, arrivi e uscite, i consigli
+dell'Assistente di casa, un riepilogo serale, e notifiche tue su qualsiasi
+entità. Ore di silenzio, con le urgenti che passano comunque. Le notifiche
+partono cifrate dalla casa e si aprono solo sul telefono: Google, Apple e il
+tramite non possono leggerle. Arrivano solo ai telefoni abbinati a un utente
+attivo di Home Assistant; i telefoni abbinati prima vanno abbinati di nuovo.
+Sull'iPhone, a telefono bloccato, si legge «gdahome: nuova notifica» finché
+non la apri.
+
+**Chiedi alla casa capisce le domande.** «Fa freddo in camera?», «le luci
+sono accese?», «chi c'è in casa?», «la lavatrice ha finito?», «quanto sto
+consumando?», «domani piove?»: si capiscono in tanti modi di dirle. Le azioni
+chiedono sempre conferma, i codici non si ripetono mai; quando non capisce
+propone domande vicine e lascia la parola ad Assist.
+
+**CarPlay e Android Auto su schermi piccoli.** Le indicazioni si accorciano
+per stare nello schermo, i riquadri si stringono, e le icone di rotonde,
+inversioni e curve strette sono disegnate apposta.
+
+**Navigatore: gli avvisi uno per uno.** Nel menu del navigatore, «Avvisi
+in guida»: ogni avviso — autovelox, Tutor, polizia, incidenti, pericoli,
+lavori, strade chiuse, traffico, ZTL, limite — si sceglie a voce, solo a
+schermo o spento. Vale anche su CarPlay e Android Auto.
+
+**Navigatore: autovelox e Tutor.** I Tutor si annunciano e, dentro il
+tratto, il riquadro mostra la tua media («rallenta» se è sopra il limite);
+all'uscita dice com'è andata. Gli autovelox si avvisano prima quando si va
+forte, dicono «rallenta» se si è sopra il limite, e avvisano anche guidando
+senza percorso. L'archivio è rifatto: in Italia 7.791 autovelox, 3.670 dei
+quali sanno in che direzione guardano (meno avvisi per l'altra carreggiata).
+
+**Navigatore: niente più scatti.** In guida l'auto e la mappa scorrono
+insieme, invece di saltare a ogni lettura del GPS; anche sugli schermi
+dell'auto.
+
+**In auto, Premium resta Premium.** A volte Android Auto, aprendo i comandi
+rapidi della casa, diceva «La casa in auto è compresa in gdahome Premium» a
+chi Premium l'aveva: all'apertura dell'app due scritture del permesso per
+l'auto si sovrapponevano, e poteva restare quella sbagliata. Adesso si
+scrive una volta sola, nell'ordine giusto.
+
+## 1.12.0
+
+**L'Assistente di casa.** Accanto alle persone, nella Home, la casa ti dice
+la cosa più importante da fare adesso, con il tasto per farla: «Nessuno in
+casa e la luce della cucina è accesa da 2 ore» → Spegni; «Tra un'ora piove e
+la finestra della camera è aperta»; «Il fotovoltaico basta fino alle 15» →
+Avvia la lavastoviglie. Venticinque regole su sicurezza, sprechi, elettrodomestici,
+meteo, persone e manutenzione; impara da quello che scarti, si aggiorna da
+solo a ogni cambiamento e ogni minuto, anche sul tablet a muro. «Vedi tutti»
+apre l'elenco per urgenza, con «Chiedi alla casa» (l'assistente di Home
+Assistant). Si regola in Config › Persone.
+
+**Il campanello sul tablet a muro, come un videocitofono.** Quando suona il
+pannello si sveglia, suona (Din don, Classico o Ding, col volume) e mostra la
+telecamera a tutto schermo come una chiamata, con Apri, Parla, Silenzia e
+Chiudi; dopo, gli ultimi squilli con la foto. Nell'app, in modalità muro, lo
+schermo resta acceso (di notte al minimo) e si riaccende quando suona.
+
+**Solare termico animato.** Il liquido scorre nei tubi alla velocità del
+ΔT, la pompa gira, il pannello scalda, la serpentina pulsa e il boiler fa
+vapore quando consuma. Le animazioni dello stato restano anche con «riduci
+movimento» del telefono o di Windows (prima era tutto fermo). Con la pompa
+spenta si legge «Impianto spento», e la valvola di sicurezza sta sul fianco
+del boiler.
+
+**Elettrodomestici: niente più «mini cicli».** Un lavaggio con le pause resta
+un ciclo solo, sulla card e nel contatore. Nel config un avviso propone i
+valori consigliati per lavatrice, lavastoviglie e asciugatrice.
+
+**MiniPC: le altre letture delle macchine di rete** (latenza, uptime,
+pacchetti persi, ultima volta visto) sulla riga di ogni macchina.
+
+**Telecamere nell'app: niente più riquadri neri.** Un'immagine già in
+arrivo non viene più annullata a ogni cambiamento in casa; si aggiorna ogni
+10 secondi. **Sicurezza più forte:** le telecamere arrivano solo a un utente
+di Home Assistant attivo (telefono abbinato o sessione di Home Assistant), le
+plance riservate restano riservate anche per le immagini, il ponte non
+conserva né scrive nei registri nessuna immagine, e i link firmati durano al
+massimo 10 minuti. I telefoni abbinati prima che l'abbinamento fosse legato
+a un utente di Home Assistant vanno riabbinati una volta per vedere le
+telecamere.
+
+**App.** All'avvio un solo caricamento, senza il lampo «Non riesco ad
+accendere la plancia»; su una plancia a muro «Configurazione» apre il config
+del muro.
+
+### Anche, da 1.11.15
+
+**Navigatore: i pedaggi veri.** La Tangenziale di Napoli costa 1,05 € a
+passaggio, non «~1,00 €»: le strade a prezzo fisso hanno il loro listino. Con
+la chiave HERE (segreto `GDANAV_HERE_CHIAVE`) il pedaggio è quello vero,
+casello per casello, anche sulle autostrade a km e all'estero; senza, resta
+la stima.
+
+**In auto, le impostazioni del navigatore e dell'auto dall'app.** Con Android
+Auto acceso, toccando «Navigatore» si apre la pagina «Navigatore e auto»,
+senza mappa: la tua auto, i comandi rapidi, il percorso, la ricarica, la
+fonte dei dati. Quello che cambi lo vede subito l'auto.
+
+**Navigatore: niente più ricalcoli improvvisi sulla strada giusta.** Le
+posizioni che il GPS stesso dichiara imprecise, e quelle arrivate in ritardo
+quando il GPS dell'auto e quello del telefono si danno il cambio, non fanno
+più dire «Ricalcolo il percorso». Uscire davvero di strada ricalcola come
+prima.
+
+## 1.11.14
+
+**Musica: i telecomandi e i sensori aggiunti nel config si vedono.** Le
+«Altre letture» (per esempio un livello in dB) e i telecomandi in «Altri
+comandi» e «Telecomando» ora compaiono nella schermata Musica, sul telefono e
+sul pannello a muro. Un telecomando si accende e spegne, oppure manda il
+comando scritto dopo i due punti (`remote.amplificatore:volume_up`).
+
+**Pannello a muro come una regia, più completo.** Il Mixer accetta canali da
+sensore (solo lettura) e da telecomando (▲ ▼ e muto); Telecamera e Comandi
+accettano telecomandi con il loro comando.
+
+**Pagina Ingresso del muro con tutte le partizioni dell'antifurto.** Ogni
+partizione col suo stato, i suoi tasti e il codice dove serve; sotto,
+«Finestre aperte: 2», le altre letture e gli altri comandi scelti nel config.
+
+**Meteo in alto sul muro: l'icona resta attaccata alla temperatura,** anche
+con la temperatura di casa.
+
+**App: niente più casa da riabbinare dopo un aggiornamento dell'add-on.** Una
+casa Premium che per un momento non risponde mostra «Riconnessione…» e l'app
+riprova da sola, anche da fuori.
+
+**Navigatore:**
+
+- pedaggi stile Waze, con il prezzo stimato sulle strade, nel riepilogo e
+  accanto ai km che restano (anche su Android Auto; su CarPlay accanto);
+- senza auto elettrica configurata propone l'auto termica e ricalcola;
+- batteria all'arrivo più vicina al vero (come ABRP), dati dell'auto riletti
+  ogni minuto in guida e temperature riconosciute meglio.
+
+## 1.11.13
+
+**Solare termico ridisegnato.** Il disegno era troppo grande e non entrava
+nella pagina. Adesso è compatto e su computer e tablet sta tutto in una
+schermata. Ci sono il pannello in vetro col sole, l'accumulo con l'acqua
+calda in alto e fredda in basso, e tubi in cui la luce scorre solo quando
+la pompa gira. I comandi stanno in una fila di pillole dentro lo stesso
+riquadro.
+
+**Config del solare termico con gli stessi nomi della pagina.** Ogni cosa
+che si vede sulla pagina ha il suo campo con lo stesso nome, nello stesso
+ordine e con scritto che entità ci va. Boost, PdC e Ricircolo prima non si
+potevano proprio scegliere. Le entità già messe restano dove sono.
+
+**Flusso energia: niente più «—» sotto la Casa.** Una stanza o un
+elettrodomestico con solo il sensore di potenza, un contatore senza
+statistiche o un sensore non disponibile al riavvio lasciavano il trattino
+nel giornaliero e nel mensile. Adesso i kWh si calcolano dalla storia di
+Home Assistant, mentre si carica si vede «…», e l'ultimo valore del giorno
+resta.
+
+**Modo chiosco: i tre trattini riportano in Home Assistant anche nel
+browser.** Su Chrome e Safari, a schermo largo, il ☰ col chiosco acceso non
+faceva niente. Adesso apre la barra di Home Assistant.
+
+## 1.11.12
+
+**La plancia in Home Assistant non chiede più «ricarica questa pagina».**
+Dopo un aggiornamento dell'add-on l'app di Home Assistant mostrava «Manca un
+passaggio solo… ricarica questa pagina». Adesso la plancia si apre da una
+pagina fissa dentro una scheda di Home Assistant, e un aggiornamento non
+chiede niente. Se una volta serve davvero riavviare Home Assistant, lo
+dicono la plancia, una notifica di Home Assistant e la Panoramica della
+console.
+
+**Pannello a muro come una regia.** Tre pagine nuove:
+
+- **Mixer**: gruppi colorati di cursori verticali con il muto sotto ogni
+  canale e il «Volume totale» in fondo (lettori multimediali e numeri di
+  Home Assistant).
+- **Telecamera**: immagine dal vivo, zoom, frecce, stop e preset.
+- **Comandi**: avvio e spegnimento, la fila delle sale con avvio e stop, e
+  «Ferma tutto».
+
+E un'opzione nuova, «Menu di lato»: sul tablet in orizzontale le pagine
+diventano grandi icone in colonna a sinistra.
+
+**Tapparelle sul muro: i tasti ▲ ■ ▼ si vedono sempre**, anche sul pannello
+piccolo, nelle pagine personali e in quelle delle stanze.
+
+**Temperatura di casa al posto di quella del meteo.** Nel config «A muro»,
+«Temperatura mostrata»: dal meteo o da un sensore in casa.
+
+**CarPlay: scegliere una destinazione non riporta più alla pagina iniziale.**
+
 ## 1.11.11
 
 **Clima: i termostati col caldo e col freddo hanno la loro linguetta.** I
@@ -93,6 +462,7 @@ averla chiusa. Nel centralino una casa rimasta in silenzio a lungo tiene la sua
 identità, e quando torna rientra solo lei.
 
 **Pannello a muro: cancelli, citofono e avvisi.**
+
 - Un cancello o una porta del garage ha il suo riquadro: il suo disegno,
   «Aperto» o «Chiuso», e un tasto grande che apre, chiude o ferma.
 - Sul pannello da 4 pollici il termostato ha il meno e il più sul riquadro.

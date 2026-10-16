@@ -73,7 +73,10 @@ function misurabile(voce) {
     pulito(voce?.monthly_energy_entity) ||
     pulito(voce?.monthly) ||
     pulito(voce?.total_energy_entity) ||
-    pulito(voce?.history_entity),
+    pulito(voce?.history_entity) ||
+    /* La casella dei modelli vecchi: il flusso la sa leggere (vedi
+     * `fonteDiRipiego`), e un apparecchio con lei sola ha la sua stanza. */
+    pulito(voce?.energy_entity),
   );
 }
 

@@ -2,6 +2,7 @@ import {
   flowPeriodEntity,
   flowRecorderEntity,
   flowStageModel,
+  fonteDiRipiego,
 } from "../core/energy-flow-topology.js";
 import {
   allocateSourceFlows,
@@ -10,7 +11,14 @@ import {
 } from "../core/energy-flow-truth.js";
 import { specchioDeiCerchi } from "../core/energy-loads-config.js";
 import { cerchiDelleStanze } from "../core/i-cerchi-delle-stanze.js";
-import { domandaDeiKwhDallaPotenza, kwhDallaPotenza } from "../core/kwh-dalla-potenza.js";
+import {
+  domandaDeiKwhDallaPotenza,
+  domandaDellaStoria,
+  inizioDelPeriodo,
+  kwhDallaPotenza,
+  kwhDallaStoriaDelContatore,
+  kwhDallaStoriaDellaPotenza,
+} from "../core/kwh-dalla-potenza.js";
 import { applySignedSources, wattsFromState } from "../core/signed-energy.js";
 import { vehicleBatteryEntity } from "./ev-section.js";
 import {
@@ -242,18 +250,12 @@ function configuredLoads() {
  * once here so the pure model keeps taking a plain id -> value map. Day and
  * month are both available: a load metered only by its lifetime counter gets a
  * real figure for today, not just for the month. */
-function recorderValuesFor(loads, period) {
+function bundleValuesFor(loads, period) {
   const bundle = period === "day" ? state.bundle?.deviceDay : state.bundle?.deviceMonth;
   const devices = bundle?.devices || [];
   const values = bundle?.values;
   const resolved = {};
-  /* Chi ha solo la potenza: i suoi kilowattora vengono dalle medie orarie
-   * (`kwhDallaPotenzaPer`). Il paniere per lui non ha un contatore — nel mese
-   * leggerebbe lo stato dei watt come se fossero kilowattora — e la sua voce
-   * vince. */
-  const dallaPotenza = kwhDallaPotenzaPer(loads, period);
-  if (!values?.get || !devices.length)
-    return Object.keys(dallaPotenza).length ? dallaPotenza : null;
+  if (!values?.get) return resolved;
   for (const load of loads) {
     const device = devices.find(
       (item) =>
@@ -266,20 +268,82 @@ function recorderValuesFor(loads, period) {
       flowRecorderEntity(load) ||
       flowPeriodEntity(load, period);
     const value = Number(values.get(source));
-    if (Number.isFinite(value)) resolved[clean(load.id) || clean(load.name)] = value;
+    if (Number.isFinite(value)) resolved[chiaveDellaVoce(load)] = value;
   }
-  Object.assign(resolved, dallaPotenza);
-  return Object.keys(resolved).length ? resolved : null;
+  return resolved;
 }
 
-/* ── i kilowattora di chi ha solo la potenza ─────────────────────────────
+const chiaveDellaVoce = (voce) => clean(voce?.id) || clean(voce?.name);
+
+/* I numeri del periodo di ogni voce, e quali sono ancora in viaggio.
+ *
+ * Prima il paniere del Recorder; poi, per chi ha solo la potenza, i suoi
+ * kilowattora ricavati (la sua voce vince: il paniere per lui non ha un
+ * contatore — nel mese leggerebbe lo stato dei watt come se fossero
+ * kilowattora). E per chi resta senza numero — il giornaliero «unavailable»
+ * all'avvio, il totale senza statistiche, la casella dei modelli vecchi — la
+ * fonte di ripiego (`fonteDiRipiego`): la crescita del contatore o i watt,
+ * dalla storia. Era la strada che mancava, e il cerchio restava a «—». */
+function lettureDelPeriodo(loads, period) {
+  const valori = bundleValuesFor(loads, period);
+  const attese = new Set();
+  if (period !== "day" && period !== "month") return { valori, attese };
+  const states = allStates();
+  const richieste = [];
+  const perVoce = [];
+  for (const voce of loads) {
+    const chiave = chiaveDellaVoce(voce);
+    if (!chiave) continue;
+    const potenza = soloPotenza(voce);
+    if (potenza) {
+      perVoce.push([chiave, { kind: "potenza", entity: potenza }]);
+      continue;
+    }
+    if (Number.isFinite(valori[chiave])) continue;
+    const diretta = flowPeriodEntity(voce, period, states);
+    if (diretta && Number.isFinite(Number(states?.[diretta]?.state))) continue;
+    const fonte = fonteDiRipiego(voce, period, states);
+    if (!fonte) continue;
+    const entity = resolvedEntity(fonte.entity);
+    /* Un totale di vita lo legge il paniere del Recorder: finche' il primo
+     * paniere non e' arrivato si aspetta lui, invece di chiedere la storia di
+     * tutti i contatori all'avvio. */
+    if (
+      fonte.kind === "contatore" &&
+      !state.bundle &&
+      Date.now() - (state.installatoAlle || 0) < 60_000
+    ) {
+      attese.add(chiave);
+      continue;
+    }
+    perVoce.push([chiave, { kind: fonte.kind, entity }]);
+  }
+  for (const [, richiesta] of perVoce) richieste.push(richiesta);
+  chiediIKwh(period, richieste);
+  const memoria = state.kwhRicavati?.[period];
+  for (const [chiave, { kind, entity }] of perVoce) {
+    const id = `${kind}:${entity}`;
+    if (memoria?.valori.has(id)) valori[chiave] = memoria.valori.get(id);
+    else if (memoria?.inCorso.has(id)) attese.add(chiave);
+  }
+  return { valori, attese };
+}
+
+function recorderValuesFor(loads, period) {
+  const { valori } = lettureDelPeriodo(loads, period);
+  return Object.keys(valori).length ? valori : null;
+}
+
+/* ── i kilowattora di chi non ha un contatore che risponde ───────────────
  *
  * Giornaliera e Mensile leggono un contatore: il suo stato del giorno o del
  * mese, o la crescita del contatore di vita nel Recorder. Un elettrodomestico
  * con la sola presa che misura i watt non ha niente di tutto questo, e nel
  * cerchio della sua stanza contava zero. I suoi kilowattora si ricavano dalle
- * medie orarie della potenza (`core/kwh-dalla-potenza.js`): si chiedono una
- * volta ogni dieci minuti per periodo, e arrivati si ridisegna. */
+ * medie orarie della potenza (`core/kwh-dalla-potenza.js`) e, quando il
+ * sensore le medie non le ha — niente `state_class` — dalla storia dei suoi
+ * stati. Si chiedono una volta ogni dieci minuti per periodo, e arrivati si
+ * ridisegna. */
 const ATTESA_DEI_KWH = 10 * 60 * 1000;
 const CAMPI_DEI_CONTATORI = Object.freeze([
   "daily_energy_entity",
@@ -297,6 +361,13 @@ function soloPotenza(voce) {
   return resolvedEntity(clean(voce.power_entity) || clean(voce.power));
 }
 
+/* Di quale giorno, o di quale mese, sono i numeri tenuti: a mezzanotte quelli
+ * di ieri non valgono piu'. */
+function chiaveDelPeriodo(periodo, adesso = Date.now()) {
+  const data = new Date(adesso);
+  return periodo === "month" ? `${data.getFullYear()}-${data.getMonth() + 1}` : data.toDateString();
+}
+
 /* La memoria e' per entita', non per elenco. Era una sola voce per periodo,
  * firmata dall'elenco di chi l'aveva chiesta: il flusso chiede tutti i
  * carichi, la finestra di una stanza solo i suoi figli, e ogni elenco diverso
@@ -304,37 +375,107 @@ function soloPotenza(voce) {
  * — «—» — finche' il giro dopo non lo richiedeva. Adesso ogni entita' tiene il
  * suo valore e la sua ora: si chiede solo chi manca o e' vecchio, e quello
  * che arriva si aggiunge a quello che c'era. */
-function chiediIKwh(periodo, entita) {
+function memoriaDei(periodo) {
+  const memorie = (state.kwhRicavati ||= {});
+  const chiave = chiaveDelPeriodo(periodo);
+  if (memorie[periodo]?.chiave !== chiave)
+    memorie[periodo] = {
+      chiave,
+      valori: new Map(),
+      quando: new Map(),
+      inCorso: new Set(),
+    };
+  return memorie[periodo];
+}
+
+function chiediIKwh(periodo, richieste) {
   const broker = root.DashboardModernEnergyService?.broker;
-  if (!broker?.request || !entita.length) return;
-  const memoria = (state.kwhDallaPotenza ||= {});
-  const voce = (memoria[periodo] ||= { valori: new Map(), quando: new Map(), inCorso: new Set() });
+  if (!broker?.request || !richieste.length) return;
+  const voce = memoriaDei(periodo);
   const adesso = Date.now();
-  const daChiedere = entita.filter(
-    (id) => !voce.inCorso.has(id) && !(adesso - (voce.quando.get(id) ?? -Infinity) < ATTESA_DEI_KWH),
-  );
+  const daChiedere = [];
+  const viste = new Set();
+  for (const richiesta of richieste) {
+    const id = `${richiesta.kind}:${richiesta.entity}`;
+    if (viste.has(id)) continue;
+    viste.add(id);
+    if (voce.inCorso.has(id)) continue;
+    if (adesso - (voce.quando.get(id) ?? -Infinity) < ATTESA_DEI_KWH) continue;
+    daChiedere.push({ ...richiesta, id });
+  }
   if (!daChiedere.length) return;
-  for (const id of daChiedere) voce.inCorso.add(id);
-  const stati = allStates();
+  for (const { id } of daChiedere) voce.inCorso.add(id);
   const chiudi = () => {
-    for (const id of daChiedere) {
+    for (const { id } of daChiedere) {
       voce.inCorso.delete(id);
       voce.quando.set(id, Date.now());
     }
   };
-  broker
-    .request(domandaDeiKwhDallaPotenza(daChiedere, periodo, adesso), 15000)
-    .then((risposta) => {
-      for (const id of daChiedere) {
-        const kwh = kwhDallaPotenza(risposta, id, stati[id]?.attributes?.unit_of_measurement);
-        if (kwh !== null) voce.valori.set(id, kwh);
-      }
-      chiudi();
-      refreshEnergyFlows();
+  ricavaIKwh(broker, periodo, daChiedere, adesso)
+    .then((trovati) => {
+      /* Il giorno puo' essere cambiato mentre la domanda viaggiava. */
+      if (memoriaDei(periodo) !== voce) return;
+      for (const [id, kwh] of trovati) voce.valori.set(id, kwh);
     })
     /* Niente Recorder, o la domanda e' scaduta: si riprova dopo l'attesa, e
      * intanto il cerchio tiene il numero che aveva. */
-    .catch(chiudi);
+    .catch(() => {})
+    .finally(() => {
+      chiudi();
+      refreshEnergyFlows();
+    });
+}
+
+/* Prima le medie orarie per le potenze — leggere — poi la storia degli stati
+ * per chi le medie non le ha, e per i contatori. */
+async function ricavaIKwh(broker, periodo, daChiedere, adesso) {
+  const stati = allStates();
+  const unita = (entity) => stati[entity]?.attributes?.unit_of_measurement;
+  const trovati = new Map();
+  const potenze = daChiedere.filter((richiesta) => richiesta.kind === "potenza");
+  if (potenze.length) {
+    try {
+      const medie = await broker.request(
+        domandaDeiKwhDallaPotenza(
+          potenze.map((richiesta) => richiesta.entity),
+          periodo,
+          adesso,
+        ),
+        15000,
+      );
+      for (const { id, entity } of potenze) {
+        const kwh = kwhDallaPotenza(medie, entity, unita(entity) || "W");
+        if (kwh !== null) trovati.set(id, kwh);
+      }
+    } catch (_errore) {
+      /* Le medie non sono arrivate: si prova con la storia. */
+    }
+  }
+  const dallaStoria = daChiedere.filter((richiesta) => !trovati.has(richiesta.id));
+  if (!dallaStoria.length) return trovati;
+  /* La storia che non arriva non butta via le medie gia' arrivate. */
+  let storia;
+  try {
+    storia = await broker.request(
+      domandaDellaStoria(
+        dallaStoria.map((richiesta) => richiesta.entity),
+        periodo,
+        adesso,
+      ),
+      30000,
+    );
+  } catch (_errore) {
+    return trovati;
+  }
+  const inizio = inizioDelPeriodo(periodo, adesso).getTime();
+  for (const { id, kind, entity } of dallaStoria) {
+    const kwh =
+      kind === "potenza"
+        ? kwhDallaStoriaDellaPotenza(storia, entity, unita(entity) || "W", inizio, adesso)
+        : kwhDallaStoriaDelContatore(storia, entity, unita(entity) || "kWh");
+    if (kwh !== null) trovati.set(id, kwh);
+  }
+  return trovati;
 }
 
 /** I kilowattora del periodo per chi ha solo la potenza, per id della voce. */
@@ -343,24 +484,78 @@ export function kwhDallaPotenzaPer(voci, periodo) {
   const perVoce = [];
   for (const voce of voci || []) {
     const entita = soloPotenza(voce);
-    if (entita) perVoce.push([clean(voce.id) || clean(voce.name), entita]);
+    if (entita) perVoce.push([chiaveDellaVoce(voce), entita]);
   }
-  chiediIKwh(periodo, [...new Set(perVoce.map(([, entita]) => entita))]);
-  const valori = state.kwhDallaPotenza?.[periodo]?.valori;
+  chiediIKwh(
+    periodo,
+    perVoce.map(([, entity]) => ({ kind: "potenza", entity })),
+  );
+  const valori = state.kwhRicavati?.[periodo]?.valori;
   const fuori = {};
   if (!valori) return fuori;
   for (const [chiave, entita] of perVoce)
-    if (valori.has(entita)) fuori[chiave] = valori.get(entita);
+    if (valori.has(`potenza:${entita}`)) fuori[chiave] = valori.get(`potenza:${entita}`);
   return fuori;
 }
 
 /**
  * I kilowattora del periodo per ogni voce, come li conta il cerchio: il
- * paniere del Recorder, e per chi ha solo la potenza le sue medie orarie. La
- * finestra di un cerchio li usa per dire gli stessi numeri del cerchio.
+ * paniere del Recorder, per chi ha solo la potenza le sue medie orarie, e per
+ * chi ha un contatore che tace la sua storia. La finestra di un cerchio li usa
+ * per dire gli stessi numeri del cerchio.
  */
 export function kwhDelPeriodo(voci, periodo) {
   return recorderValuesFor(voci || [], periodo) || {};
+}
+
+/* ── l'ultimo numero letto resta ──────────────────────────────────────────
+ *
+ * Un cerchio che oggi ha gia' detto «1,1 kWh» non torna a «—» perche' al
+ * riavvio di Home Assistant il suo sensore e' per un attimo «unavailable», o
+ * perche' la pagina si e' appena aperta e il Recorder non ha ancora risposto.
+ * Il numero si tiene per cerchio, per giorno (o mese) e per impianto, anche
+ * fra un'apertura e l'altra della plancia; un numero nuovo lo sostituisce. */
+const ULTIMI_NUMERI_KEY = "dm_flusso_ultimi_numeri";
+
+function chiaveDeiRicordati(periodo) {
+  const impianto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
+  return `${chiaveDelPeriodo(periodo)}|${impianto}`;
+}
+
+function ultimiNumeri(periodo) {
+  const memorie = (state.ultimiNumeri ||= {});
+  const chiave = chiaveDeiRicordati(periodo);
+  if (memorie[periodo]?.chiave === chiave) return memorie[periodo];
+  let salvati = null;
+  try {
+    salvati = JSON.parse(root.localStorage?.getItem(ULTIMI_NUMERI_KEY) || "null")?.[periodo];
+  } catch (_errore) {
+    salvati = null;
+  }
+  memorie[periodo] = {
+    chiave,
+    valori: salvati?.chiave === chiave && salvati.valori ? { ...salvati.valori } : {},
+  };
+  return memorie[periodo];
+}
+
+function ricordaINumeri(periodo, model) {
+  if (periodo !== "day" && periodo !== "month") return;
+  const memoria = ultimiNumeri(periodo);
+  let cambiato = false;
+  for (const nodo of model.nodes) {
+    if (!Number.isFinite(nodo.value) || memoria.valori[nodo.id] === nodo.value) continue;
+    memoria.valori[nodo.id] = nodo.value;
+    cambiato = true;
+  }
+  if (!cambiato) return;
+  try {
+    const tutti = JSON.parse(root.localStorage?.getItem(ULTIMI_NUMERI_KEY) || "{}") || {};
+    tutti[periodo] = { chiave: memoria.chiave, valori: memoria.valori };
+    root.localStorage?.setItem(ULTIMI_NUMERI_KEY, JSON.stringify(tutti));
+  } catch (_errore) {
+    /* Senza memoria del browser il numero resta per questa apertura. */
+  }
 }
 
 function configuredAppliances() {
@@ -442,7 +637,7 @@ function vehiclePopupTarget() {
 
 function stageModel(period) {
   const { loads, appliances, perStanza } = carichiDelFlusso();
-  return flowStageModel({
+  const model = flowStageModel({
     loads,
     appliances,
     /* I ritocchi dei cerchi vecchi — nome, icona, colore per posto — valgono
@@ -456,11 +651,22 @@ function stageModel(period) {
      * paniere che contiene i soli carichi vuol dire una somma che non trova
      * niente. Il paniere del Recorder e' l'unico posto dove un apparecchio
      * misurato dal solo contatore di vita ha un numero per oggi. */
-    recorderValues:
-      period === "instant" ? null : recorderValuesFor([...loads, ...appliances], period),
+    ...letturePerLaScena([...loads, ...appliances], period),
     locale: locale(),
     wallbox: vehiclePopupTarget(),
   });
+  ricordaINumeri(period, model);
+  return model;
+}
+
+function letturePerLaScena(voci, period) {
+  if (period === "instant") return { recorderValues: null };
+  const { valori, attese } = lettureDelPeriodo(voci, period);
+  return {
+    recorderValues: Object.keys(valori).length ? valori : null,
+    inAttesa: attese,
+    ricordati: ultimiNumeri(period).valori,
+  };
 }
 
 function rememberConnectorVisibility(node) {
@@ -706,6 +912,20 @@ function ensureBubble(stage, node, period, scale) {
   scriviDatoSeCambia(element, "dmCanonicalLoad", node.id);
   scriviDatoSeCambia(element, "dmFlowPeriod", period);
   scriviDatoSeCambia(element, "dmFlowActive", node.active ? "true" : "false");
+  /* «…» e' un numero in viaggio; «—» senza sensore e' un cerchio a cui manca
+   * la configurazione, e passandoci sopra lo dice. */
+  scriviDatoSeCambia(element, "dmFlowWaiting", node.waiting ? "true" : "false");
+  scriviDatoSeCambia(element, "dmFlowSensore", node.sensore === false ? "false" : "true");
+  const suggerimento =
+    node.sensore === false
+      ? t(
+          "Nessun sensore collegato: scegline uno in Configurazione › Carichi o Elettrodomestici.",
+          "No sensor linked: pick one in Settings › Loads or Appliances.",
+        )
+      : node.waiting
+        ? t("Sto leggendo i consumi da Home Assistant…", "Reading consumption from Home Assistant…")
+        : "";
+  if ((element.title || "") !== suggerimento) element.title = suggerimento;
   bindNodeClick(element, node, period);
   return element;
 }
@@ -1655,6 +1875,7 @@ function installStyles() {
 export function installEnergyFlowSection() {
   if (!doc || state.installed) return;
   state.installed = true;
+  state.installatoAlle = Date.now();
   installStyles();
   root.dmRefreshEnergyFlows = refreshEnergyFlows;
   for (const name of [

@@ -1,97 +1,115 @@
 /* Il vestito dell'informativa.
  *
- * L'indice e l'informativa sono due pagine diverse: una racconta, e ha la sua
- * barra in cima, le sue schede, la plancia dentro un riquadro; l'altra e' un
- * testo da leggere e basta, che qualcuno apre dal Play Store per sapere dove
- * finiscono i suoi dati. Fargli addosso lo stesso impianto dell'indice
- * vorrebbe dire dargli una pagina che non e' fatta per lui.
+ * L'indice e l'informativa sono due pagine diverse: una racconta, con le
+ * sue fasce e i suoi telefoni; l'altra è un testo da leggere e basta, che
+ * qualcuno apre dal Play Store per sapere dove finiscono i suoi dati.
  *
- * Quindi qui c'e' solo quello che serve a un testo lungo: una colonna stretta,
- * righe che si leggono, e il resto — i colori, i caratteri, il fondo vivo,
- * chiaro e scuro — preso da `stile.css`, che la pagina carica prima di questo.
- * Un colore cambiato di la' cambia tutte e due le pagine, che e' l'unico modo
- * perche' restino la stessa cosa.
+ * Quindi qui c'è solo quello che serve a un testo lungo: un foglio bianco
+ * arrotondato sul campo azzurrino del sito, una colonna stretta, righe che si
+ * leggono, e il resto — i colori, i caratteri, i tasti — preso da
+ * `stile.css`, che la pagina carica prima di questo.
  */
 
-/* La colonna. Piu' stretta di quella dell'indice apposta: una riga di testo
- * che passa i settanta caratteri si rilegge male, e questa e' una pagina che
- * si legge davvero, non si guarda. */
+body {
+  background: var(--campo);
+}
+
 .dentro {
   width: 100%;
-  max-width: 760px;
+  max-width: 800px;
   margin-inline: auto;
-  padding-inline: 22px;
+  padding-inline: var(--bordo-pagina);
 }
 
 /* ── La testa ──────────────────────────────────────────────────────────── */
 
+.riga-di-testa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--cappello-alto);
+  margin-bottom: clamp(24px, 4vw, 40px);
+}
+
 header.stretta {
-  padding: 48px 0 8px;
-  text-align: left;
+  padding: 0;
 }
 
 header.stretta h1 {
-  margin: 22px 0 6px;
-  font-size: clamp(2rem, 4.4vw, 2.8rem);
+  margin: 0 0 8px;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
 }
 
-/* La strada per tornare indietro sta in cima e si vede subito: chi arriva qui
- * da un negozio non sa ancora cos'e' gdahome, e questo e' l'unico posto da cui
- * puo' andarlo a vedere. */
 .indietro {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--testo-lieve);
+  color: var(--inchiostro);
   text-decoration: none;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
 }
 
 .indietro img {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
 }
 
-.indietro:hover {
-  color: var(--testo);
+.dentro .indietro {
+  color: var(--inchiostro);
 }
 
-.sottotitolo {
-  margin: 0;
-  color: var(--testo-lieve);
-  font-size: 1.05rem;
+.dentro .indietro:hover {
+  color: var(--blu);
 }
 
-/* ── Il testo ──────────────────────────────────────────────────────────── */
+.sottotitolo-informativa {
+  display: inline-block;
+  margin: 0 0 clamp(24px, 4vw, 40px);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--blu-chiaro);
+  color: var(--blu-scuro);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
 
-/* Le sezioni dell'indice respirano (`clamp(56px, 8vw, 104px)`): li' ognuna e'
- * una schermata. Qui sono i capitoli di un documento, e uno spazio da
- * schermata fra un capitolo e l'altro obbligherebbe a scorrere per capire se
- * il testo e' finito. */
+/* ── Il foglio ─────────────────────────────────────────────────────────── */
+
+/* Le sezioni stanno tutte su un foglio bianco: la prima lo apre, l'ultima lo
+ * chiude. Fra un capitolo e l'altro solo aria, niente righe. Il foglio non ha
+ * ombra: un'ombra per sezione si vedrebbe come una riga chiara a ogni
+ * giuntura, e un'ombra sola non c'e' dove metterla. */
 .dentro section {
-  padding-block: 30px 4px;
-  border-top: 1px solid var(--bordo);
+  background: var(--carta);
+  padding: 8px clamp(20px, 4vw, 48px) 8px;
 }
 
 .dentro section:first-of-type {
-  border-top: 0;
+  border-radius: var(--raggio) var(--raggio) 0 0;
+  padding-top: clamp(28px, 4vw, 44px);
+}
+
+.dentro section:last-of-type {
+  border-radius: 0 0 var(--raggio) var(--raggio);
+  padding-bottom: clamp(28px, 4vw, 44px);
 }
 
 .dentro section h2 {
-  font-size: clamp(1.3rem, 2.6vw, 1.6rem);
-  margin-bottom: 12px;
+  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+  margin: 28px 0 12px;
 }
 
 .dentro p,
 .dentro li {
-  color: var(--testo-lieve);
+  color: var(--inchiostro-lieve);
 }
 
 .dentro p strong,
 .dentro li strong {
-  color: var(--testo);
+  color: var(--inchiostro);
 }
 
 .dentro ol,
@@ -105,10 +123,9 @@ header.stretta h1 {
 }
 
 /* I collegamenti qui si devono vedere: in mezzo a un testo di legge, un link
- * dello stesso colore del testo e' un link che nessuno trova. Sull'indice no —
- * li' sono bottoni e schede, e si riconoscono dalla forma. */
+ * dello stesso colore del testo è un link che nessuno trova. */
 .dentro a {
-  color: var(--azzurro);
+  color: var(--blu);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
@@ -119,22 +136,12 @@ header.stretta h1 {
   text-decoration: none;
 }
 
-.dentro code {
-  background: var(--carta-alta);
-  border: 1px solid var(--bordo);
-  border-radius: 7px;
-  padding: 2px 7px;
-  font-size: 0.86em;
-  overflow-wrap: anywhere;
-}
-
 /* ── Il fondo ──────────────────────────────────────────────────────────── */
 
 .dentro footer {
-  margin-top: 36px;
-  padding: 28px 0 72px;
-  border-top: 1px solid var(--bordo);
-  color: var(--testo-lieve);
+  margin-top: 32px;
+  padding: 8px 0 72px;
+  color: var(--inchiostro-lieve);
   font-size: 0.92rem;
 }
 
@@ -143,9 +150,10 @@ header.stretta h1 {
 }
 
 .dentro footer a {
-  color: var(--testo-lieve);
+  color: var(--inchiostro-lieve);
+  font-weight: 600;
 }
 
 .dentro footer a:hover {
-  color: var(--testo);
+  color: var(--blu);
 }

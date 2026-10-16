@@ -31,6 +31,12 @@ class DaDoveSiPassa extends StatelessWidget {
       collegamento.comeVa,
       collegamento.daDove,
     )) {
+      /* Non «non raggiungibile» in rosso: e' una casa che si sta
+       * ritrovando, e si ritrova da sola (`Collegamento.siRiconnette`). */
+      (ComeVa.irraggiungibile, _) when collegamento.siRiconnette => (
+        inLingua(it: 'riconnessione…', en: 'reconnecting…'),
+        colori.onSurfaceVariant,
+      ),
       (ComeVa.aperta, DaDove.daDentro) => (
         inLingua(it: 'in casa', en: 'at home'),
         Colori.bene,

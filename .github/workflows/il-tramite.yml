@@ -85,6 +85,34 @@ jobs:
           echo "sha=$intero" >>"$GITHUB_OUTPUT"
           echo "corto=${intero:0:8}" >>"$GITHUB_OUTPUT"
 
+      # La chiave di Firebase per le notifiche, chiusa per la macchina.
+      #
+      # La macchina non si raggiunge da qui: va lei a guardare il segno. Allora
+      # il segreto si lascia nel messaggio del segno, chiuso con la chiave
+      # pubblica della macchina (`TRAMITE_CHIAVE_DELLA_BUSTA`, che `accendi.sh`
+      # dice alla fine): li' e' pubblico, ma si apre solo sulla macchina. Il
+      # segreto passa da una variabile d'ambiente e non viene scritto mai —
+      # esce solo chiuso, in un file di questa corsa. Senza segreto o senza
+      # chiave della macchina il segno resta com'era, e le notifiche spente.
+      #
+      # Prima delle prove, che si spostano sul commit scelto: lo strumento e'
+      # quello di questa corsa, che c'e' anche se il commit e' di ieri.
+      - name: La busta delle notifiche
+        id: busta
+        env:
+          BUSTA_DENTRO: ${{ secrets.GDAHOME_FIREBASE_INVIO }}
+          CHIAVE_DELLA_MACCHINA: ${{ vars.TRAMITE_CHIAVE_DELLA_BUSTA }}
+        run: |
+          set -euo pipefail
+          if [ -z "$BUSTA_DENTRO" ] || [ -z "$CHIAVE_DELLA_MACCHINA" ]; then
+            echo "Manca il segreto di Firebase o la chiave della macchina: le notifiche restano come sono."
+            echo "chiusa=no" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          umask 077
+          node strumenti/busta-del-tramite.mjs chiudi >"$RUNNER_TEMP/busta.txt"
+          echo "chiusa=si" >>"$GITHUB_OUTPUT"
+
       - name: Le prove del tramite, su quel commit
         env:
           SHA: ${{ steps.quale.outputs.sha }}
@@ -96,11 +124,23 @@ jobs:
       - name: Sposta il segno
         env:
           SHA: ${{ steps.quale.outputs.sha }}
+          CHIUSA: ${{ steps.busta.outputs.chiusa }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -f tramite "$SHA"
+          if [ "$CHIUSA" = "si" ]; then
+            # Un segno con un messaggio: dentro, la busta. La macchina la
+            # prende da li' (`prepara.sh`).
+            {
+              printf 'Il tramite sulla %s\n\n' "${SHA:0:8}"
+              cat "$RUNNER_TEMP/busta.txt"
+            } >"$RUNNER_TEMP/messaggio.txt"
+            git tag -f -a tramite -F "$RUNNER_TEMP/messaggio.txt" "$SHA"
+          else
+            git tag -f tramite "$SHA"
+          fi
+          rm -f "$RUNNER_TEMP/busta.txt" "$RUNNER_TEMP/messaggio.txt"
           git push -f origin tramite
 
       - name: Cosa e' successo

@@ -23,6 +23,7 @@ library;
 import 'dart:convert';
 
 import 'il_fondo.dart';
+import 'il_velo_di_gdahome.dart';
 import 'pannello.dart';
 
 /// Come la pagina chiede il menu dell'app, sul telefono.
@@ -983,6 +984,9 @@ class Premesse {
   /// li porta la pagina che ospita.
   String conLePremesse(String pagina, {required String ilWebSocket}) {
     final quale = pannello;
+    /* Il velo d'avvio col marchio di gdahome, se e' ancora quello di serie
+     * (`il_velo_di_gdahome.dart`). */
+    pagina = colVeloDiGdahome(pagina, velo: quale?.velo ?? '');
     final premessa =
         '<script>'
         'window.__DASHBOARDMODERN_HOSTED__=true;'

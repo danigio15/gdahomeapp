@@ -10,7 +10,12 @@
  */
 import { CHIAVE_MEDIA, ridisegnaMediaPlayer } from "./media-player-section.js";
 import { bindLettoreToDevice } from "../core/media-player.js";
-import { comandiVicini, elencoComandi, genereDelComando } from "../core/comandi-accanto.js";
+import {
+  comandiVicini,
+  elencoComandi,
+  genereDelComando,
+  partiDelComando,
+} from "../core/comandi-accanto.js";
 import { elencoLetture, lettureVicine } from "../core/letture-accanto.js";
 import { ESITI_ELENCO, conLaVoce, tettoDellElenco } from "../core/robot-model.js";
 import { nomeAccantoAlDispositivo } from "../core/nome-accanto-al-dispositivo.js";
@@ -71,8 +76,8 @@ const LISTE = Object.freeze({
       ),
     aiuto: () =>
       t(
-        "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Compaiono sulla scheda sotto i comandi del brano.",
-        "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). They appear on the card under the playback controls.",
+        "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Un telecomando remote.* si accende e si spegne; scritto remote.nome:comando (per esempio remote.ampli:volume_up) manda quel comando. Compaiono sulla scheda sotto i comandi del brano.",
+        "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.",
       ),
   },
   letture: {
@@ -114,13 +119,16 @@ function spiegazione(esito, tipo) {
         "A sensor.*, binary_sensor.* or number.* entity is required — or input_number, input_text.",
       )
     : t(
-        "Serve un'entità button.*, select.* o switch.* — oppure input_button, input_select, input_boolean, script, scene.",
-        "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene.",
+        "Serve un'entità button.*, select.*, switch.* o remote.* (anche remote.nome:comando) — oppure input_button, input_select, input_boolean, script, scene.",
+        "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.",
       );
 }
 
 function pastigliaMarkup(entity, tipo, azione, segno, voce, states) {
-  return `<button type="button" class="dm-mp-chip" data-mp-chip-${esc(azione)}="${esc(entity)}" data-mp-chip-tipo="${esc(tipo)}" data-genere="${esc(genereDelComando(entity) || "lettura")}" title="${esc(entity)}"><span>${esc(nomeAccantoAlDispositivo(entity, voce, states))}</span><i aria-hidden="true">${segno}</i></button>`;
+  /* Un telecomando col suo comando: il nome del telecomando e il comando. */
+  const { entity: id, comando } = tipo === "comandi" ? partiDelComando(entity) : { entity };
+  const nome = nomeAccantoAlDispositivo(id, voce, states);
+  return `<button type="button" class="dm-mp-chip" data-mp-chip-${esc(azione)}="${esc(entity)}" data-mp-chip-tipo="${esc(tipo)}" data-genere="${esc(genereDelComando(entity) || "lettura")}" title="${esc(entity)}"><span>${esc(comando ? `${nome} · ${comando}` : nome)}</span><i aria-hidden="true">${segno}</i></button>`;
 }
 
 function listaMarkup(tipo, voce, indice) {
@@ -176,12 +184,12 @@ function testoDelTelecomando(voce) {
   if (esito === "sconosciuto")
     return nome
       ? t(
-          `Di ${nome} la plancia non conosce i tasti: il telecomando non compare.`,
-          `The dashboard doesn't know the keys of ${nome}: the remote won't show.`,
+          `Di ${nome} la plancia non conosce le frecce: il telecomando compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.`,
+          `The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.`,
         )
       : t(
-          "Di questo telecomando Home Assistant non dice l'integrazione: non compare.",
-          "Home Assistant doesn't say which integration this remote belongs to: it won't show.",
+          "Di questo telecomando Home Assistant non dice l'integrazione: compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.",
+          "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.",
         );
   if (esito === "attesa")
     return t(

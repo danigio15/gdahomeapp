@@ -42,7 +42,7 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>Serve a riconoscerti quando apri gdahome, se accendi il lucchetto. Il tuo volto resta nel telefono: gdahome riceve solo un sì o un no.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Serve solo se registri un video da allegare a una segnalazione.</string>
+	<string>Serve se registri un video da allegare a una segnalazione, e per «Parla» del citofono sul tablet a muro.</string>
 	<!-- La casa sta sulla rete di casa, e da iOS 14 arrivarci vuole un
 	     permesso a parte. Senza questa riga il sistema non chiede niente e non
 	     dice niente: **rifiuta**, e l'app cerca la casa dove la casa c'e'
@@ -69,6 +69,9 @@
 	<array>
 		<string>audio</string>
 		<string>location</string>
+		<!-- Le notifiche della casa, che arrivano da Firebase: senza, il
+		     gettone dell'iPhone non si rinnova ad app chiusa. -->
+		<string>remote-notification</string>
 	</array>
 	<!-- La cifratura e' quella standard (X25519, HKDF, AES-GCM, e HTTPS):
 	     esente, e TestFlight non si ferma a chiederlo a ogni versione. -->

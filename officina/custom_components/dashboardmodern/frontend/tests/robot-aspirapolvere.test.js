@@ -401,7 +401,11 @@ test("i comandi a parte sono tasti, tendine e interruttori, e restano dopo la no
   assert.equal(genereDelComando("input_boolean.a"), "interruttore");
   assert.equal(genereDelComando("sensor.a"), "");
   assert.equal(genereDelComando(""), "");
-  assert.equal(Object.keys(DOMINI_COMANDO).length, 9);
+  /* Un telecomando si accende e si spegne; col comando scritto e' un tasto. */
+  assert.equal(genereDelComando("remote.a"), "interruttore");
+  assert.equal(genereDelComando("remote.a:volume_up"), "tasto");
+  assert.equal(genereDelComando("switch.a:volume_up"), "");
+  assert.equal(Object.keys(DOMINI_COMANDO).length, 10);
 
   assert.deepEqual(
     elencoComandi([

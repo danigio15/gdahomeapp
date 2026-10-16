@@ -1,0 +1,9 @@
+// Le impostazioni dell'estensione delle notifiche (`NotificheService`).
+//
+// Versione e numero devono essere quelli dell'app per iPhone, o l'App Store
+// rifiuta il pacchetto: si prendono dal file che Flutter scrive a ogni
+// costruzione, come fa l'orologio.
+#include? "../Flutter/Generated.xcconfig"
+
+MARKETING_VERSION = $(FLUTTER_BUILD_NAME:default=1.0)
+CURRENT_PROJECT_VERSION = $(FLUTTER_BUILD_NUMBER:default=1)

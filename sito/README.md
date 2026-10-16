@@ -23,25 +23,46 @@ vere e di schede di testo. Le fotografie stanno nella repository, dentro
 perché lo script li infila ancora nella plancia che porta (vedi «Quello che non
 si ribatte a mano»), ma la pagina non li usa più.
 
-## Una luce sola, e il prodotto in faccia
+## Un sito di prodotto, come quelli delle app
 
-Due scelte che valgono più di tutto il resto, e che si possono disfare per
-distrazione.
+Il sito è fatto come i siti delle app che si conoscono: il blu di gdahome come
+colore vero, che si prende la copertina, la scheda Premium e il piede; le
+sezioni che si alternano fra bianco e un azzurrino, così lo scorrimento ha un
+ritmo; le schermate vere dentro un telefono disegnato, con un'ombra che le
+stacca dalla pagina; tasti e schede arrotondati, aria intorno. Prima c'era
+quello che hanno tutti i siti disegnati da un modello — il fondo a macchie di
+luce, il telefono che galleggia su una sfumatura, i quattro numeroni, le tre
+schede uguali con icona, titolo e testo — e si vedeva che era un modello. Le
+scelte che tengono in piedi la pagina, e che si possono disfare per
+distrazione:
+
+**Colore pieno, mai sfumato.** Il blu è un campo piatto, l'azzurrino è un
+campo piatto. Niente sfumature, niente vetro sfocato, niente aloni: sono il
+vestito di mille siti usciti uguali nello stesso anno.
+
+**Un'ombra sola, come la fa la luce.** Morbida e spostata in basso, la stessa
+su tutte le schede; più forte sotto i telefoni, perché sono oggetti. Un bagliore
+colorato intorno a una cosa non è un'ombra.
+
+**Una cosa accesa alla volta.** L'ambra è il colore di una luce accesa: la
+voce del menu della sezione in cui si legge, la spia sotto il primo telefono,
+il segno «primi 14 giorni gratis» su Premium. Non fa altro.
+
+**I caratteri.** Archivo, in `caratteri/` (licenza OFL, nel file accanto),
+servito da qui; Oswald, il carattere dei numeri della plancia, resta per i
+prezzi. Tutti e due dal sito, mai da Google.
 
 **Niente tema scuro.** C'era, e seguiva quello del sistema. Chi apriva
 gdahome.org con un telefono in tema scuro si trovava una pagina quasi nera —
-cioè una pagina diversa da quella che gli era stata mostrata — e le schermate
-dell'app, che sono chiare, ci galleggiavano sopra come ritagli. Una copertina
+cioè una pagina diversa da quella che gli era stata mostrata. Una copertina
 si presenta sempre allo stesso modo. Dentro l'app il chiaro e scuro c'è, e lì
-ha senso: quella si guarda di notte, in corridoio, con una mano sola.
+ha senso.
 
 **Le schermate vere, in cima.** Sono `docs/immagini/`, le stesse del README e
-del negozio: fotografie dell'app, non dei mockup disegnati. Prima la copertina
-raccontava l'app a parole e chiedeva di fidarsi; adesso la fa vedere nella
-prima schermata. La fotografia di copertina è quella delle **luci** e non
-quella della plancia: la seconda mostra una casa non ancora configurata, col
-riquadro «La dashboard è quasi pronta», che è la schermata giusta per il
-manuale e la peggiore possibile per una copertina.
+del negozio: fotografie dell'app, non dei mockup disegnati. La copertina
+mostra le **luci** e non la plancia: la seconda mostra una casa non ancora
+configurata, col riquadro «La dashboard è quasi pronta», che è la schermata
+giusta per il manuale e la peggiore possibile per una copertina.
 
 ## Per chi installa, e dove scrivere
 
@@ -54,7 +75,7 @@ e Premium, come si ha Premium e gdanav, coi prezzi e le regole di
 perché non sblocca niente.
 
 E c'è un posto dove **scrivere** (`#contatti`): un modulo con nome, email e
-messaggio, che arriva per posta a `assistenza@gdahome.org`. È l'unica cosa
+messaggio, che arriva per posta a `domotica@crvgroup.it`. È l'unica cosa
 della pagina che non è un file. Manda un `POST /contatto`, che Caddy passa al
 tramite sulla stessa macchina, e il tramite lo consegna al server di posta
 della casella che risponde (`centralino/src/posta.js`, e il perché sta lì).
@@ -83,7 +104,7 @@ Poi `http://127.0.0.1:8099/`.
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `index.html`                      | la pagina: il colpo d'occhio, la plancia, come funziona, l'app gdahome, gdanav, quanto costa, per chi installa, scaricala, sostegno, contatti                                             |
 | `privacy.html`                    | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                                                                                        |
-| `stile.css`                       | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, le file di fotografie                                                                         |
+| `stile.css`                       | il catalogo: i quattro colori, i caratteri, la griglia di righe sottili, le tavole, le schede tecniche, i listini                                                                         |
 | `privacy.css`                     | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                                                                                              |
 | `casa-in-pagina.js`               | la Home Assistant finta della plancia di prima: la pagina non la usa più                                                                                                                  |
 | `sito.js`                         | la lingua, l'ombra sotto la barra, le schede che compaiono, il modulo dei contatti — lo caricano tutte e due le pagine                                                                    |
@@ -103,8 +124,10 @@ plancia intera: li porta uno script, dalle cartelle dove stanno per davvero.
 node strumenti/porta-nel-sito.mjs
 ```
 
-Rifà `statico/oggetti/`, `statico/font/` e `statico/schermate/`, e basta:
-`statico/app/` e `statico/gdanav/` sono fatte a mano e restano come sono. Prima
+Rifà `statico/oggetti/`, `statico/font/` (solo Oswald) e `statico/schermate/`
+(le fotografie di `docs/immagini/` che le pagine chiamano), e basta:
+`statico/app/`, `statico/gdanav/` e `caratteri/` sono fatte a mano e restano
+come sono. Prima
 lo script buttava via tutta `statico/`, e sul server — dove gira prima di ogni
 scambio — le fotografie delle app sarebbero sparite a ogni versione.
 

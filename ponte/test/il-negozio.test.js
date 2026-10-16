@@ -190,7 +190,14 @@ test("il peso si dice come lo direbbe uno", () => {
 /* Un Play Console finto: tiene in fila le chiamate che gli arrivano — perche'
  * metà di questa prova e' **quali** chiamate partono, e in che ordine — e sa
  * fallire su una di esse, per vedere cosa succede alla modifica aperta. */
-function negozioFinto({ rompiti = "", piste = null, sullaPista = null, rompiLaPista = "" } = {}) {
+function negozioFinto({
+  rompiti = "",
+  piste = null,
+  sullaPista = null,
+  rompiLaPista = "",
+  revisioneAMano = false,
+  soloLaConsegna = false,
+} = {}) {
   const fatte = [];
   const prendi = async (dove, opzioni = {}) => {
     const via = String(dove);
@@ -225,6 +232,18 @@ function negozioFinto({ rompiti = "", piste = null, sullaPista = null, rompiLaPi
       return risposta(200, {
         track: via.split("/").pop(),
         releases: sullaPista ?? [{ status: "completed", versionCodes: ["104322"] }],
+      });
+    /* Com'e' andata la 1.14.0: dopo un rifiuto il negozio non manda piu' da
+     * solo in revisione, e lo dice cosi'. */
+    if (
+      (revisioneAMano && (via.endsWith(":commit") || via.endsWith(":validate"))) ||
+      (soloLaConsegna && via.endsWith(":commit"))
+    )
+      return risposta(400, {
+        error: {
+          message:
+            "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true.",
+        },
       });
     if (via.includes("/bundles?uploadType=media")) return risposta(200, { versionCode: 104322 });
     if (via.endsWith("/edits") && metodo === "POST") return risposta(200, { id: "modifica-1" });
@@ -579,4 +598,79 @@ test("il tasto del workflow e lo strumento si chiamano la stessa cosa", () => {
   );
   const strumento = readFileSync(join(RADICE, "strumenti", "porta-nel-negozio.mjs"), "utf8");
   assert.match(strumento, /detto\.includes\("--piste"\)/, "e lo strumento deve ancora capirla");
+});
+
+test("le app non si pubblicano su GitHub: vanno solo nei negozi", () => {
+  /* La repository e' pubblica: un APK, un AAB o un IPA lasciati fra gli
+   * artefatti o in una release li scarica chiunque. I workflow che
+   * costruiscono le app le portano nel Play Console e su TestFlight, e basta. */
+  for (const nome of ["app.yml", "navigatore-in-prova.yml", "orologi.yml"]) {
+    const workflow = readFileSync(join(RADICE, ".github", "workflows", nome), "utf8");
+    assert.doesNotMatch(
+      workflow,
+      /upload-artifact/,
+      `${nome} non deve lasciare pacchetti fra gli artefatti`,
+    );
+    assert.doesNotMatch(
+      workflow,
+      /gh release (create|upload|edit)/,
+      `${nome} non deve scrivere release`,
+    );
+  }
+});
+
+test("quando il negozio non manda da solo in revisione, si consegna lo stesso e lo si dice", async (t) => {
+  const negozio = negozioFinto({ revisioneAMano: true });
+  const detto = [];
+  const esito = await porta({
+    pacco: unPacco(t),
+    piste: ["internal"],
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    dillo: (riga) => detto.push(riga),
+    aspetta: async () => {},
+  });
+  assert.equal(esito.pubblicato, true);
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  /* Com'e' andata la 1.14.1: il negozio rifiuta gia' il controllo. Si rifa'
+   * il controllo come chiede, e la consegna nasce gia' cosi'. */
+  const chiamate = negozio.fatte.filter((una) => /:(validate|commit)/.test(una));
+  assert.deepEqual(chiamate, [
+    `POST ${app}/edits/modifica-1:validate`,
+    `POST ${app}/edits/modifica-1:validate?changesNotSentForReview=true`,
+    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
+  ]);
+  /* Il primo cestino viene dopo la consegna: quella e' la riguardata. */
+  const consegnata = negozio.fatte.indexOf(
+    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
+  );
+  assert.ok(negozio.fatte.indexOf(`DELETE ${app}/edits/modifica-1`) > consegnata);
+  assert.ok(
+    detto.some((riga) => /Invia per revisione/.test(riga)),
+    "il registro dice che la revisione va mandata dal Play Console",
+  );
+});
+
+test("se rifiuta solo la consegna, il controllo resta com'e' e si riconsegna", async (t) => {
+  /* Com'e' andata la 1.14.0: controllo buono, consegna rifiutata. */
+  const negozio = negozioFinto({ soloLaConsegna: true });
+  const esito = await porta({
+    pacco: unPacco(t),
+    piste: ["internal"],
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    aspetta: async () => {},
+  });
+  assert.equal(esito.pubblicato, true);
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  assert.deepEqual(
+    negozio.fatte.filter((una) => /:(validate|commit)/.test(una)),
+    [
+      `POST ${app}/edits/modifica-1:validate`,
+      `POST ${app}/edits/modifica-1:commit`,
+      `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
+    ],
+  );
 });

@@ -19,6 +19,17 @@ class PonteIrraggiungibile extends ErroreDelPonte {
   const PonteIrraggiungibile(super.spiegazione);
 }
 
+/// La bussata da fuori per chiedere la licenza a una casa creduta Base non e'
+/// arrivata a nessuno: il centralino non risponde, o la casa non gli e'
+/// attaccata — come nei minuti in cui l'add-on si aggiorna.
+///
+/// Non e' un verdetto sulla licenza, ed e' per questo che ha un nome suo: un
+/// [PremiumRichiesto] lo dice chi lo sa (il centralino, o la casa), questo
+/// dice solo che la casa non si e' trovata. Vedi `casa/collegamento.dart`.
+class ProvaDaFuoriNonAndata extends PonteIrraggiungibile {
+  const ProvaDaFuoriNonAndata(super.spiegazione);
+}
+
 /// Il codice di abbinamento non e' quello, o e' scaduto.
 class CodiceRifiutato extends ErroreDelPonte {
   const CodiceRifiutato(super.spiegazione);

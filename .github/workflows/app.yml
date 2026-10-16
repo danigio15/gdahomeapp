@@ -1,9 +1,10 @@
-# Costruisce l'app da installare sul telefono.
+# Costruisce l'app e la porta nei negozi: Play Console e TestFlight.
 #
-# Serve a una cosa sola: **provarla davvero**. L'SDK di Android pesa qualche
-# giga e va installato, configurato e tenuto aggiornato; qui ce l'ha gia' la
-# macchina di GitHub. Chi vuole provare l'app scarica il pacchetto da questa
-# pagina e lo mette sul telefono, senza installarsi niente.
+# **L'app non si pubblica su GitHub.** Ne' una release ne' un pacchetto fra
+# gli artefatti: la repository e' pubblica, e un APK o un IPA lasciati qui
+# li scarica chiunque, Premium compreso. Si prova dal test interno del Play
+# Store e da TestFlight, e solo da li'. Senza pista e senza TestFlight la
+# corsa costruisce e basta: serve a sapere che sta in piedi.
 #
 # Si accende a mano — Actions → «L'app da provare» → Run workflow — e a ogni
 # versione marcata con un'etichetta.
@@ -120,17 +121,11 @@ jobs:
     name: Android (APK)
     runs-on: ubuntu-latest
     if: ${{ !inputs.elenca_le_piste }}
-    # Per pubblicare la release a ogni etichetta, e solo per quello: gli
-    # altri lavori restano in sola lettura.
-    permissions:
-      contents: write
     # Qui c'e' la chiave che firma e la strada per il Play Store: passa
     # dall'ambiente `negozio`, che il proprietario protegge nelle impostazioni
     # della repository.
     environment: negozio
     steps:
-      # La release la scrive `gh` col suo gettone: il checkout non ha bisogno
-      # di tenersi le credenziali.
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
@@ -300,6 +295,32 @@ jobs:
       # quella di TomTom, e il navigatore — in auto e sul telefono — non aveva
       # lo strato del traffico. L'ha detto la sua diagnosi: «Non c'è: l'app è
       # senza la chiave TomTom».
+      # Le notifiche: `google-services.json`, scritto adesso dal segreto e mai
+      # nella repository (il .gitignore lo tiene fuori). Gradle accende
+      # Firebase solo se il file c'e' (`android/app/build.gradle.kts`).
+      #
+      # Solo con la chiave vera: il pacchetto firmato di prova si chiama
+      # `com.gdahome.gdahome.prova`, che nel progetto Firebase non c'e', e il
+      # plugin di Google fermerebbe la costruzione. Senza segreto, o firmato
+      # di prova, l'app esce senza notifiche e lo dice nella sua pagina.
+      - name: Le notifiche (Firebase)
+        working-directory: app
+        env:
+          FIREBASE_ANDROID: ${{ secrets.GDAHOME_FIREBASE_ANDROID }}
+        run: |
+          if [ -z "$FIREBASE_ANDROID" ]; then
+            echo "::warning::Manca il segreto GDAHOME_FIREBASE_ANDROID: l'app esce senza notifiche."
+            exit 0
+          fi
+          if [ ! -f android/chiave.properties ]; then
+            echo "Firmato di prova (.prova): niente Firebase, l'app esce senza notifiche."
+            exit 0
+          fi
+          umask 077
+          printf '%s' "$FIREBASE_ANDROID" > android/app/google-services.json
+          node -e 'const j=JSON.parse(require("fs").readFileSync("android/app/google-services.json","utf8")); if(!j.client?.some(c=>c.client_info?.android_client_info?.package_name==="com.gdahome.gdahome")){console.error("google-services.json non ha com.gdahome.gdahome");process.exit(1)}'
+          echo "### Notifiche: Firebase acceso" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Il pacchetto
         working-directory: app
         env:
@@ -312,6 +333,7 @@ jobs:
           CORSA: ${{ github.run_number }}
           TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
           OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
+          HERE: ${{ secrets.GDANAV_HERE_CHIAVE }}
         run: |
           # Su un'etichetta il numero e' quello del rilascio, e non «37-a0566bd»:
           # chi ha installato una release deve poter dire quale ha, con le stesse
@@ -330,22 +352,16 @@ jobs:
             echo "::warning::Manca il segreto GDANAV_TOMTOM_CHIAVE: il navigatore esce senza traffico, in auto e sul telefono."
           fi
           if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
+          # I pedaggi veri, casello per casello (HERE). Senza, il navigatore li stima.
+          if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
           flutter build apk --release "${definizioni[@]}"
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: gdahome-android
-          path: app/build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-          retention-days: 30
 
       # Il pacchetto per il Play Store, che gli APK non li prende.
       #
       # Si costruisce **solo con la chiave vera**: un bundle firmato di prova
       # non si puo' caricare da nessuna parte, e costruirlo per niente sarebbe
-      # tre minuti di corsa buttati a ogni giro. Non va nella release — quello
-      # che si manda a una persona e' l'APK — ma resta fra gli artefatti, che
-      # e' da dove lo si prende per caricarlo nel Play Console.
+      # tre minuti di corsa buttati a ogni giro. Da qui va solo nel negozio,
+      # col passo «Nel negozio»: fra gli artefatti non resta.
       - name: Il pacchetto per il negozio
         if: steps.chiave.outputs.vera == 'si'
         working-directory: app
@@ -354,6 +370,7 @@ jobs:
           CORSA: ${{ github.run_number }}
           TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
           OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
+          HERE: ${{ secrets.GDANAV_HERE_CHIAVE }}
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             VERSIONE="${GITHUB_REF_NAME#v}"
@@ -364,32 +381,19 @@ jobs:
           if [ -n "$CENTRALINO" ]; then definizioni+=(--dart-define=CENTRALINO="$CENTRALINO"); fi
           if [ -n "$TOMTOM" ]; then definizioni+=(--dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM"); fi
           if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
+          # I pedaggi veri, casello per casello (HERE). Senza, il navigatore li stima.
+          if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
           flutter build appbundle --release "${definizioni[@]}"
           {
             echo "### Il pacchetto per il Play Store"
             echo ""
-            echo "L'\`.aab\` e' fra gli artefatti di questa corsa: si carica dal"
-            echo "Play Console, in Test and release."
+            echo "Costruito. Su GitHub non resta: va nel negozio solo con una pista."
           } >> "$GITHUB_STEP_SUMMARY"
-
-      # Novanta giorni, e non trenta come gli altri: e' il massimo che GitHub
-      # da', e questo e' l'unico pacchetto che serve **dopo**. Gli altri sono
-      # roba da provare subito; questo si carica nel Play Console, e fra il
-      # giorno in cui si costruisce una versione e il giorno in cui la si
-      # pubblica sul negozio puo' passare un mese buono.
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: steps.chiave.outputs.vera == 'si'
-        with:
-          name: gdahome-android-negozio
-          path: app/build/app/outputs/bundle/release/app-release.aab
-          if-no-files-found: error
-          retention-days: 90
 
       # L'orologio Wear OS, quando e' acceso (variabile GDAHOME_OROLOGIO = si,
       # vedi docs/OROLOGIO.md). Stesso nome e stessa chiave del telefono: e'
-      # quello che li fa parlare. Il suo `.aab` sta fra gli artefatti e si
-      # carica nel Play Console nella pista «Wear OS», a mano, finche' la
-      # prima volta non e' passata.
+      # quello che li fa parlare. Si costruisce per sapere che sta in piedi:
+      # su GitHub non resta niente.
       - name: L'orologio Wear OS
         if: vars.GDAHOME_OROLOGIO == 'si'
         run: |
@@ -397,15 +401,6 @@ jobs:
           compiti=(:orologio:assembleRelease)
           if [ -f app/android/chiave.properties ]; then compiti+=(:orologio:bundleRelease); fi
           strumenti/gradle-orologio.sh "${compiti[@]}"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: vars.GDAHOME_OROLOGIO == 'si'
-        with:
-          name: gdahome-wear-os
-          path: |
-            app/build/orologio/outputs/apk/release/*.apk
-            app/build/orologio/outputs/bundle/release/*.aab
-          if-no-files-found: error
-          retention-days: 90
 
       # E il pacchetto sul Play Console, senza passare da nessuno.
       #
@@ -473,58 +468,6 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # La release: il segno che questa versione esiste, e cosa cambia.
-      #
-      # **L'APK non ci va.** Quel pacchetto lo firma la chiave di gdahome;
-      # quello del Play Store lo firma Google. Android non installa un
-      # pacchetto sopra uno con firma diversa: chi fosse partito da qui, il
-      # giorno che passa al negozio, dovrebbe disinstallare e riabbinare il
-      # telefono — e perdere tutto. Finche' il file stava sulla pagina delle
-      # release, quella trappola andava spiegata in un paragrafo di avvertenze
-      # dentro le note. Tolto il file, non c'e' piu' niente da spiegare.
-      #
-      # Non e' una perdita: di quei pacchetti, in due release, non ne ha
-      # scaricato **nessuno** — chi prova l'app la prende dalla prova chiusa
-      # del Play Store, e chi la costruisce la prende dagli artefatti.
-      #
-      # Li' restano tutt'e due, l'APK e l'`.aab` del negozio. La release resta
-      # per quello per cui serve davvero: un indirizzo che dice «c'e' la
-      # 1.4.32, ed ecco cosa e' cambiato». Senza allegati non ha piu' bisogno
-      # della chiave vera, e si fa a ogni etichetta.
-      #
-      # **E nemmeno un link al pacchetto.** Per un pezzo le note mandavano
-      # agli artefatti della corsa, «per chi la sta provando»: e' un link
-      # all'APK con un giro in piu', e chi tiene il progetto ha deciso che
-      # dalle release non ne parte nessuno. Chi prova l'app la prende dalla
-      # prova chiusa del Play Store; chi costruisce sa dove stanno gli
-      # artefatti senza che glielo dica la release.
-      - name: La release
-        if: github.ref_type == 'tag'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          quale="${GITHUB_REF_NAME#v}"
-          # Le note le scrive il CHANGELOG, non questa riga.
-          #
-          # Qui c'erano cinque righe uguali per ogni versione — come si
-          # aggiorna l'add-on, perche' l'apk non e' allegato — e nient'altro.
-          # Chi apriva la pagina della 1.6.8 per sapere cosa cambiava leggeva
-          # quello che aveva gia' letto per la 1.6.7. Cosa cambia sta scritto
-          # in `ponte/CHANGELOG.md`, curato riga per riga: adesso arriva anche
-          # qui. Una versione senza il suo capitolo fa fallire il passo,
-          # invece di scrivere una release vuota.
-          node strumenti/le-note-della-versione.mjs "$quale" > note.md
-          # Una release puo' esserci gia': l'etichetta si puo' spingere da
-          # GitHub, e li' la release nasce insieme a lei. In quel caso non si
-          # ricomincia da capo, si riscrivono le note.
-          gh release create "$GITHUB_REF_NAME" --title "gdahome $quale" --notes-file note.md ||
-            gh release edit "$GITHUB_REF_NAME" --title "gdahome $quale" --notes-file note.md
-          {
-            echo "### Pubblicato"
-            echo ""
-            gh release view "$GITHUB_REF_NAME" --json url --jq .url
-          } >> "$GITHUB_STEP_SUMMARY"
-
   iphone:
     name: iPhone (IPA)
     # Un'app per iPhone la puo' costruire **solo** un Mac, ed e' l'unica
@@ -577,6 +520,39 @@ jobs:
       # rifa' la parte Dart con le definizioni che questo passo ha scritto in
       # Generated.xcconfig, e CarPlay senza la chiave di TomTom resta senza
       # traffico come Android Auto.
+      # Le notifiche sull'iPhone: `GoogleService-Info.plist` dal segreto, mai
+      # nella repository. Il file non entra nel progetto di Xcode: se ne
+      # leggono i cinque campi che Firebase vuole e passano all'app come
+      # `--dart-define` (`lib/notifiche/firebase_qui.dart`). Non aprono
+      # niente: identificano il progetto. Senza segreto l'app esce senza
+      # notifiche.
+      - name: Le notifiche (Firebase)
+        id: firebase
+        working-directory: app
+        env:
+          FIREBASE_IOS: ${{ secrets.GDAHOME_FIREBASE_IOS }}
+        run: |
+          if [ -z "$FIREBASE_IOS" ]; then
+            echo "::warning::Manca il segreto GDAHOME_FIREBASE_IOS: l'app per iPhone esce senza notifiche."
+            echo "c-e=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          umask 077
+          printf '%s' "$FIREBASE_IOS" > "$RUNNER_TEMP/GoogleService-Info.plist"
+          campo() { /usr/libexec/PlistBuddy -c "Print :$1" "$RUNNER_TEMP/GoogleService-Info.plist"; }
+          [ "$(campo BUNDLE_ID)" = "com.gdahome.gdahome" ] || {
+            echo "::error::GoogleService-Info.plist non e' di com.gdahome.gdahome"
+            exit 1
+          }
+          {
+            echo "FIREBASE_IOS_API_KEY=$(campo API_KEY)"
+            echo "FIREBASE_IOS_APP_ID=$(campo GOOGLE_APP_ID)"
+            echo "FIREBASE_IOS_SENDER_ID=$(campo GCM_SENDER_ID)"
+            echo "FIREBASE_IOS_PROJECT_ID=$(campo PROJECT_ID)"
+          } > "$RUNNER_TEMP/firebase.env"
+          rm -f "$RUNNER_TEMP/GoogleService-Info.plist"
+          echo "c-e=si" >> "$GITHUB_OUTPUT"
+
       - name: Compila (senza firma)
         working-directory: app
         env:
@@ -584,6 +560,7 @@ jobs:
           CORSA: ${{ github.run_number }}
           TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
           OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
+          HERE: ${{ secrets.GDANAV_HERE_CHIAVE }}
         run: |
           # Su un'etichetta il numero e' quello del rilascio, come su Android.
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
@@ -599,6 +576,12 @@ jobs:
             echo "::warning::Manca il segreto GDANAV_TOMTOM_CHIAVE: il navigatore esce senza traffico, in CarPlay e sul telefono."
           fi
           if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
+          # I pedaggi veri, casello per casello (HERE). Senza, il navigatore li stima.
+          if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
+          # Il progetto Firebase, se il passo di prima l'ha letto.
+          if [ -f "$RUNNER_TEMP/firebase.env" ]; then
+            while IFS= read -r riga; do definizioni+=(--dart-define="$riga"); done < "$RUNNER_TEMP/firebase.env"
+          fi
           flutter build ios --release --no-codesign --build-number="$CORSA" "${definizioni[@]}"
 
       # Da qui in giu' si va avanti solo se su GitHub ci sono le chiavi di
@@ -638,6 +621,46 @@ jobs:
         working-directory: app
         run: cp ios/Runner/RunnerCarPlay.entitlements ios/Runner/Runner.entitlements
 
+      # Il permesso delle notifiche nella firma: `aps-environment`, che vuole
+      # la capacita' «Push Notifications» sull'identificativo dell'app — la
+      # firma automatica la chiede ad Apple da se'. Solo se le notifiche ci
+      # sono: senza Firebase non servirebbe a niente.
+      #
+      # Le urgenti «sensibili al tempo» (passano la concentrazione) vogliono un
+      # permesso in piu', e si accende con la variabile
+      # GDAHOME_NOTIFICHE_URGENTI = si quando la capacita' «Time Sensitive
+      # Notifications» e' accesa sull'identificativo: vedi docs/NOTIFICHE.md.
+      # Senza, le urgenti arrivano come le altre. Le «critiche», che suonano
+      # anche col telefono muto, vogliono il permesso di Apple: non ci sono.
+      - name: Il permesso delle notifiche
+        if: steps.firebase.outputs.c-e == 'si'
+        working-directory: app
+        env:
+          URGENTI: ${{ vars.GDAHOME_NOTIFICHE_URGENTI }}
+          SQUADRA: ${{ secrets.APPLE_SQUADRA }}
+        run: |
+          permessi=ios/Runner/Runner.entitlements
+          /usr/libexec/PlistBuddy -c "Add :aps-environment string production" "$permessi" 2>/dev/null ||
+            /usr/libexec/PlistBuddy -c "Set :aps-environment production" "$permessi"
+          if [ "$URGENTI" = "si" ]; then
+            /usr/libexec/PlistBuddy -c "Add :com.apple.developer.usernotifications.time-sensitive bool true" "$permessi" 2>/dev/null || true
+          fi
+          # Il portachiavi diviso con l'estensione delle notifiche: li' l'app
+          # lascia le sole chiavi delle notifiche (`ChiaviDelleNotifiche.swift`).
+          # Il primo gruppo resta quello dell'app, dove il portachiavi scrive
+          # da se': i segni delle case restano dove sono sempre stati.
+          if [ -n "$SQUADRA" ]; then
+            /usr/libexec/PlistBuddy -c "Delete :keychain-access-groups" "$permessi" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups array" "$permessi"
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups:0 string $SQUADRA.com.gdahome.gdahome" "$permessi"
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups:1 string $SQUADRA.com.gdahome.gdahome.chiavi-notifiche" "$permessi"
+            estensione=ios/NotificheService/NotificheService.entitlements
+            rm -f "$estensione"
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups array" "$estensione"
+            /usr/libexec/PlistBuddy -c "Add :keychain-access-groups:0 string $SQUADRA.com.gdahome.gdahome.chiavi-notifiche" "$estensione"
+          fi
+          cat "$permessi"
+
       # L'Apple Watch, quando e' acceso (variabile GDAHOME_OROLOGIO = si, vedi
       # docs/OROLOGIO.md): il target si aggiunge al progetto adesso, e
       # l'orologio viaggia dentro l'app per iPhone. Spento, l'archivio e'
@@ -645,6 +668,14 @@ jobs:
       - name: L'Apple Watch
         if: vars.GDAHOME_OROLOGIO == 'si'
         run: ruby strumenti/orologio-in-xcode.rb
+
+      # L'estensione delle notifiche: apre la busta mentre la notifica arriva,
+      # e sull'iPhone si legge il testo vero e non «gdahome: nuova notifica»
+      # (docs/NOTIFICHE.md). Solo con le notifiche e con le chiavi di Apple:
+      # senza, non avrebbe niente da aprire ne' una firma.
+      - name: L'estensione delle notifiche
+        if: steps.firebase.outputs.c-e == 'si' && steps.chiavi.outputs.ci-sono == 'si'
+        run: ruby strumenti/notifiche-in-xcode.rb
 
       - name: L'archivio firmato
         if: steps.chiavi.outputs.ci-sono == 'si'
@@ -680,31 +711,50 @@ jobs:
       # trova già scritti nell'app: senza questo passo il permesso di CarPlay
       # resterebbe fuori. Qui l'app si firma «per finta» (ad hoc) col
       # permesso dentro; la firma vera la rimette l'esportazione, che lo
-      # tiene perché il profilo di Apple ce l'ha.
-      - name: Il permesso di CarPlay nell'archivio
-        if: steps.chiavi.outputs.ci-sono == 'si' && vars.GDAHOME_CARPLAY == 'si'
+      # tiene perché il profilo di Apple ce l'ha. Lo stesso vale per il
+      # permesso delle notifiche (`aps-environment`), quando c'è Firebase.
+      - name: I permessi nell'archivio (CarPlay, notifiche)
+        if: >-
+          steps.chiavi.outputs.ci-sono == 'si' &&
+          (vars.GDAHOME_CARPLAY == 'si' || steps.firebase.outputs.c-e == 'si')
         working-directory: app
+        env:
+          CARPLAY: ${{ vars.GDAHOME_CARPLAY }}
+          NOTIFICHE: ${{ steps.firebase.outputs.c-e }}
         run: |
           app=$(echo build/gdahome.xcarchive/Products/Applications/*.app)
           codesign --force --deep --sign - "$app"
+          # L'estensione delle notifiche col suo portachiavi, prima dell'app
+          # che la contiene: la firma di fuori copre quella di dentro.
+          appex="$app/PlugIns/NotificheService.appex"
+          if [ -d "$appex" ]; then
+            codesign --force --sign - --entitlements ios/NotificheService/NotificheService.entitlements "$appex"
+            codesign -d --entitlements - "$appex" | tee build/permessi-estensione.txt
+            grep -q chiavi-notifiche build/permessi-estensione.txt
+          fi
           codesign --force --sign - --entitlements ios/Runner/Runner.entitlements "$app"
           codesign -d --entitlements - "$app" | tee build/permessi.txt
-          grep -q com.apple.developer.carplay-maps build/permessi.txt
+          if [ "$CARPLAY" = "si" ]; then grep -q com.apple.developer.carplay-maps build/permessi.txt; fi
+          if [ "$NOTIFICHE" = "si" ]; then grep -q aps-environment build/permessi.txt; fi
 
       # Su TestFlight si va come nel Play Store: quando lo si chiede. A ogni
-      # etichetta, o lanciando a mano con «testflight» spuntato; con «prova
-      # del negozio» si fa l'archivio firmato e ci si ferma.
+      # etichetta, o lanciando a mano con «testflight» spuntato. Con «prova
+      # del negozio» si firma per davvero — Apple crea i profili, anche quello
+      # dell'estensione delle notifiche — e il pacchetto resta qui, senza
+      # andare su TestFlight: e' la prova che la firma passa prima di
+      # spenderci un'etichetta.
       - name: Il pacchetto, e su TestFlight
         if: >-
           steps.chiavi.outputs.ci-sono == 'si' &&
-          !inputs.prova_del_negozio &&
-          (github.ref_type == 'tag' || inputs.testflight)
+          (inputs.prova_del_negozio || github.ref_type == 'tag' || inputs.testflight)
         working-directory: app
         env:
           CHIAVE_ID: ${{ secrets.APPLE_CHIAVE_ID }}
           EMITTENTE: ${{ secrets.APPLE_EMITTENTE }}
           SQUADRA: ${{ secrets.APPLE_SQUADRA }}
+          PROVA: ${{ inputs.prova_del_negozio }}
         run: |
+          if [ "$PROVA" = "true" ]; then destinazione=export; else destinazione=upload; fi
           cat > build/esporta.plist <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -713,7 +763,7 @@ jobs:
             <key>teamID</key><string>$SQUADRA</string>
             <key>signingStyle</key><string>automatic</string>
             <key>uploadSymbols</key><true/>
-            <key>destination</key><string>upload</string>
+            <key>destination</key><string>$destinazione</string>
           </dict></plist>
           PLIST
           xcodebuild -exportArchive \
@@ -724,23 +774,20 @@ jobs:
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_$CHIAVE_ID.p8 \
             -authenticationKeyID "$CHIAVE_ID" \
             -authenticationKeyIssuerID "$EMITTENTE"
+          if [ "$PROVA" = "true" ]; then
+            {
+              echo "### Prova del negozio: la firma per l'App Store passa"
+              echo ""
+              echo "Il pacchetto e' firmato: su TestFlight non e' andato niente, e qui non resta."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           {
             echo "### Su TestFlight"
             echo ""
             echo "Fra qualche minuto arriva la notifica di Apple. Da TestFlight"
             echo "sul telefono si installa senza computer."
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: >-
-          steps.chiavi.outputs.ci-sono == 'si' &&
-          !inputs.prova_del_negozio &&
-          (github.ref_type == 'tag' || inputs.testflight)
-        with:
-          name: gdahome-iphone
-          path: app/build/ipa/*.ipa
-          if-no-files-found: warn
-          retention-days: 30
 
   web:
     name: Web
@@ -778,9 +825,3 @@ jobs:
           else
             flutter build web --release --pwa-strategy=none --dart-define=VERSIONE="$VERSIONE"
           fi
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: gdahome-web
-          path: app/build/web
-          if-no-files-found: error
-          retention-days: 30

@@ -127,9 +127,10 @@ test("la dogana risponde come Home Assistant, e un `auth` si lascia cadere", () 
   assert.deepEqual(passaLaDogana(JSON.stringify({ type: "auth", access_token: "x" })), {
     passa: [],
     rifiuti: [],
+    risposte: [],
   });
   /* Un testo che non e' JSON non arriva a Home Assistant. */
-  assert.deepEqual(passaLaDogana("non json"), { passa: [], rifiuti: [] });
+  assert.deepEqual(passaLaDogana("non json"), { passa: [], rifiuti: [], risposte: [] });
   /* Un elenco si guarda un messaggio per volta. */
   const misto = passaLaDogana(
     JSON.stringify([
@@ -530,7 +531,11 @@ test("chi amministra non si scrive un'automazione da far partire: la scrittura s
 
 test("da `ponte/http`, l'automazione di chi amministra non arriva nemmeno a Home Assistant", async () => {
   const chieste = [];
+  /* Chi amministra e' una persona di Home Assistant, attiva: le telecamere si
+   * mostrano solo a chi si sa chi e' (`commissioni.js`). */
+  const CHI = "c".repeat(32);
   const commissioni = new Commissioni({
+    utenti: { eVivo: async (chi) => chi === CHI },
     casa: new Casa({
       indirizzo: "http://supervisor/core",
       segno: SEGNO,
@@ -571,7 +576,7 @@ test("da `ponte/http`, l'automazione di chi amministra non arriva nemmeno a Home
   ]) {
     const passata = await commissioni.rispondi(
       { id: 2, type: TIPO, metodo, percorso },
-      { puoAmministrare: true },
+      { chiChiede: CHI, puoAmministrare: true },
     );
     assert.equal(passata.success, true, `${metodo} ${percorso}`);
   }
@@ -656,6 +661,7 @@ test("quello che l'app e la plancia mandano davvero passa ancora per chi amminis
     { type: "camera/webrtc/offer", entity_id: "camera.x", offer: "v=0" },
     { type: "media_source/browse_media" },
     { type: "media_player/browse_media", entity_id: "media_player.x" },
+    { type: "media_player/search_media", entity_id: "media_player.x", search_query: "x" },
     { type: "frontend/get_user_data", key: "x" },
     { type: "frontend/set_user_data", key: "x", value: {} },
     { type: "calendar/event/create", entity_id: "calendar.x", event: {} },

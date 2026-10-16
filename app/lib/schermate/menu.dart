@@ -79,6 +79,14 @@ enum Sezione {
    * Home Assistant quel pallino rosso sta in una pagina che non si apre piu'.
    * Qui e' una voce del menu, col numero addosso. */
   aggiornamenti('aggiornamenti', pronta: true),
+  /* Le notifiche della casa: quali, quando, e le personalizzate. Per casa e
+   * per questo telefono, e sono del ponte (`ponte/src/notifiche.js`).
+   *
+   * **Solo sul telefono**: nel browser una notifica ad app chiusa non arriva,
+   * e una pagina di interruttori che non accendono niente e' una porta che
+   * non si apre. Il disegno e' quello delle allerte: «avvisi» ce l'ha gia' la
+   * Console. */
+  notifiche('allerte', pronta: true, soloNellApp: true),
   segnalazioni('segnalazioni', pronta: true),
   assistenza('assistenza', pronta: true),
   /* La coda di chi risponde. Non e' una voce come le altre: compare **in una
@@ -173,6 +181,7 @@ enum Sezione {
       en: 'App settings',
     ),
     Sezione.aggiornamenti => inLingua(it: 'Aggiornamenti', en: 'Updates'),
+    Sezione.notifiche => inLingua(it: 'Notifiche', en: 'Notifications'),
     Sezione.segnalazioni => inLingua(it: 'Segnalazioni', en: 'Reports'),
     Sezione.assistenza => inLingua(it: 'Assistenza', en: 'Support'),
     Sezione.console => inLingua(it: 'Console', en: 'Console'),
@@ -208,7 +217,8 @@ enum Sezione {
     Sezione.dispositivi ||
     Sezione.navigatore ||
     Sezione.configurazione ||
-    Sezione.aggiornamenti => GruppoDellaBarra.casa,
+    Sezione.aggiornamenti ||
+    Sezione.notifiche => GruppoDellaBarra.casa,
     /* Con «Come va l'app»: sono le due voci che parlano dell'app e non della
      * casa, e chi cerca l'una guarda dov'e' l'altra. */
     Sezione.impostazioniDellApp ||
