@@ -5638,10 +5638,7 @@ export default Object.freeze({
   "Raise the cooling": "Subir o arrefecimento",
   "Temperature shown": "Temperatura mostrada",
   "From the weather": "Da meteorologia",
-  "From an indoor sensor": "De um sensor interior",
   "The outdoor one, from the weather chosen above": "A de fora, da meteorologia escolhida acima",
-  "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room":
-    "A do sensor interior, no topo e no ecrã de repouso, com a meteorologia ao lado. Vazio: a da divisão da primeira página",
   "«Stop all» button": "Botão «Parar tudo»",
   "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.":
     "Um comando só com início é um bloco grande (por exemplo «Início», «Desligar»); com paragem torna-se uma coluna com os dois botões (por exemplo uma sala). Ligado é dito pela entidade de estado, ou pela de início quando sabe dizê-lo.",
@@ -6145,4 +6142,10 @@ export default Object.freeze({
   "State from (optional)": "Estado de (opcional)",
   "Two buttons": "Dois botões",
   "Two buttons: ON and OFF": "Dois botões: ON e OFF",
+  "From a sensor": "De um sensor",
+  "The sensor is": "O sensor está",
+  "What to write next to the number": "O que escrever ao lado do número",
+  "Indoors": "Dentro",
+  "Outside": "Fora",
+  "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room": "A do sensor escolhido, no topo e no repouso, com o tempo ao lado. Vazio: a da divisão da primeira página",
 });

@@ -119,6 +119,19 @@ const scelte = (via, valore, voci) =>
         `<button type="button" class="${String(v) === String(valore) ? "si" : ""}" data-mu-ed-metti="${esc(via)}" data-mu-ed-valore="${esc(v)}">${esc(testo)}</button>`,
     )
     .join("")}</span>`;
+/* «Il sensore sta: In casa / Fuori.» «Devi far decidere se e' esterno o
+ * interno»: la parola accanto al numero la sceglie chi configura, e non la
+ * indovina il tablet dalla stanza. Si vede quando un sensore c'e' da scegliere:
+ * con «Da un sensore», o nella riga «Temperatura sul riposo». */
+const dovesta = (m) =>
+  riga(
+    t("Il sensore sta", "The sensor is"),
+    t("Cosa scrivere accanto al numero", "What to write next to the number"),
+    scelte("riposo.dove", m.riposo.dove || "casa", [
+      ["casa", t("In casa", "Indoors")],
+      ["fuori", t("Fuori", "Outside")],
+    ]),
+  );
 const tendina = (via, valore, voci, vuota = "") =>
   `<select class="ed-input mu-ed-sel" data-mu-ed-campo="${esc(via)}">${
     vuota !== null ? `<option value="">${esc(vuota || "—")}</option>` : ""
@@ -1058,8 +1071,8 @@ function corpoMarkup() {
         t("Temperatura mostrata", "Temperature shown"),
         m.temperatura === "casa"
           ? t(
-              "Quella del sensore in casa, in alto e sul riposo, con il tempo del meteo accanto. Vuoto: quella della stanza della prima pagina",
-              "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room",
+              "Quella del sensore scelto, in alto e sul riposo, con il tempo del meteo accanto. Vuoto: quella della stanza della prima pagina",
+              "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room",
             )
           : t(
               "Quella di fuori, del meteo scelto qui sopra",
@@ -1067,7 +1080,7 @@ function corpoMarkup() {
             ),
         `${scelte("temperatura", m.temperatura, [
           ["meteo", t("Dal meteo", "From the weather")],
-          ["casa", t("Da un sensore in casa", "From an indoor sensor")],
+          ["casa", t("Da un sensore", "From a sensor")],
         ])}${
           m.temperatura === "casa"
             ? cerca("riposo.sensore", m.riposo.sensore, {
@@ -1078,6 +1091,7 @@ function corpoMarkup() {
         }`,
       )
     }
+    ${m.temperatura === "casa" ? dovesta(m) : ""}
     ${riga(
       t("Riposo", "Rest"),
       t(
@@ -1092,7 +1106,7 @@ function corpoMarkup() {
       )}${interruttore("riposo.attivo", m.riposo.attivo, "riposo")}`,
     )}
     ${riga(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
-    ${m.temperatura === "casa" ? "" : riga(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}
+    ${m.temperatura === "casa" ? "" : riga(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}${m.temperatura === "casa" ? "" : dovesta(m)}
     ${riga(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo("notte.da", m.notte.da, "23:00", "time")}${campo("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
     ${riga(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga(t("Avvisi a tutto schermo", "Full-screen alerts"), t("Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»", "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”"), interruttore("avvisiGrandi", m.avvisiGrandi, "avvisi-grandi"))}
@@ -1638,11 +1652,11 @@ function stili() {
 #ed-body .mu-ed{display:block}
 #ed-body .mu-ed-premium{display:inline-block;margin-left:6px;font-size:9.5px;font-weight:900;letter-spacing:.08em;padding:2px 7px;border-radius:6px;color:#b45309;border:1px solid #f59e0b88;background:#f59e0b18}
 #ed-body .mu-ed-blocco,#ed-body .mu-ed-pagina{border:1px solid var(--divider-color,#dbe4ee);border-radius:14px;padding:12px;margin:0 0 14px;background:color-mix(in srgb,var(--text,#0f172a) 2%,transparent)}
-#ed-body .mu-ed-riga{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-top:8px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
-#ed-body .mu-ed-testo{flex:1;min-width:0}
+#ed-body .mu-ed-riga{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px 12px;margin-top:8px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
+#ed-body .mu-ed-testo{flex:1 1 220px;min-width:0}
 #ed-body .mu-ed-testo b{display:block;font-size:13px}
 #ed-body .mu-ed-testo small{display:block;margin-top:2px;font-size:11.5px;line-height:1.4;color:var(--text-dim,#64748b)}
-#ed-body .mu-ed-dx{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+#ed-body .mu-ed-dx{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;flex:0 1 auto;min-width:0;max-width:100%;margin-left:auto}
 #ed-body .mu-ed-dx .ed-input{margin:0;width:auto;min-width:150px;max-width:260px}
 #ed-body .mu-ed-dx input[type="time"]{min-width:0;width:110px}
 #ed-body .mu-ed-dx input[type="password"]{min-width:0;width:120px}

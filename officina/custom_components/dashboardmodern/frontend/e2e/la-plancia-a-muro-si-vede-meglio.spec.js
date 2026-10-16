@@ -472,31 +472,32 @@ test.describe("la plancia a muro si vede meglio", () => {
     await expect(riposo).not.toContainText("Fuori");
   });
 
-  /* «Il muro scrive "X° in casa", ma per me quel sensore e' esterno.» Una
-   * stanza all'aperto (#251) non e' «in casa». */
-  test("la temperatura di una stanza all'aperto e' «fuori», e senza sensore si cerca una stanza al chiuso", async ({
+  /* «Il muro scrive "X° in casa", ma per me quel sensore e' esterno.» E poi:
+   * «la stanza non va bene, devi far decidere se e' esterno o interno». La
+   * parola la sceglie chi configura (`riposo.dove`), la stanza non conta. */
+  test("la temperatura dice «fuori» quando nel config il sensore sta fuori", async ({
     page,
   }, testInfo) => {
     const seme = structuredClone(SEME_A_MURO);
-    seme.sections.rooms.unshift({
-      id: "terrazzo",
-      name: "Terrazzo",
-      outdoor: true,
-      temp: "sensor.terrazzo_t",
-    });
     const stati = {
       ...STATI,
-      "sensor.terrazzo_t": { state: "12.6", attributes: { unit_of_measurement: "°C" } },
+      "sensor.temperatura_esterna": { state: "12.6", attributes: { unit_of_measurement: "°C" } },
     };
-    /* Il sensore scelto e' quello del terrazzo: sul riposo «fuori», e i
-     * gradi del meteo non ci sono — una temperatura di fuori sola. */
+    /* «Il sensore sta: Fuori»: in alto e sul riposo «fuori», e i gradi del
+     * meteo non ci sono — una temperatura di fuori sola. */
     await apriLaCasaAMuro(page, testInfo, {
       seme,
       stati,
       muro: {
         attiva: true,
         temperatura: "casa",
-        riposo: { attivo: true, minuti: 2, torna: true, sensore: "sensor.terrazzo_t" },
+        riposo: {
+          attivo: true,
+          minuti: 2,
+          torna: true,
+          sensore: "sensor.temperatura_esterna",
+          dove: "fuori",
+        },
         pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }],
       },
     });
@@ -508,38 +509,67 @@ test.describe("la plancia a muro si vede meglio", () => {
     await expect(riga).not.toContainText("in casa");
     await expect(riga).not.toContainText("17°");
 
-    /* Anche con «Temperatura mostrata: meteo» il riposo non mette due
-     * temperature di fuori: resta quella del sensore. */
-    await apriLaCasaAMuro(page, testInfo, {
-      seme,
-      stati,
-      muro: {
-        attiva: true,
-        riposo: { attivo: true, minuti: 2, torna: true, sensore: "sensor.terrazzo_t" },
-        pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }],
-      },
-    });
-    await page.evaluate(() => window.dmMuro.riposa());
-    await expect(muro(page).locator(".mu-riposo-riga")).toContainText("12,6° fuori");
-    await expect(muro(page).locator(".mu-riposo-riga")).not.toContainText("17°");
-
-    /* Senza sensore, con la prima pagina sul terrazzo: «in casa» e' la prima
-     * stanza al chiuso con una sonda, il soggiorno. */
+    /* Lo stesso sensore senza la scelta: «in casa», come sempre. Il tablet
+     * non lo indovina dal nome ne' dalla stanza. */
     await apriLaCasaAMuro(page, testInfo, {
       seme,
       stati,
       muro: {
         attiva: true,
         temperatura: "casa",
-        pagine: [{ id: "p1", modello: "stanza", stanza: "Terrazzo" }],
+        riposo: { attivo: true, minuti: 2, torna: true, sensore: "sensor.temperatura_esterna" },
+        pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }],
       },
     });
-    await expect(muro(page).locator(".mu-meteo b")).toHaveText("21,2°");
-    await expect(muro(page).locator(".mu-meteo .mu-et")).toHaveText(/^in casa/i);
     await page.evaluate(() => window.dmMuro.riposa());
     await expect(muro(page).locator('.mu-riposo-riga [data-mu-riposo="temperatura"]')).toHaveText(
-      "21,2° in casa",
+      "12,6° in casa",
     );
+  });
+
+  /* «Si vede tutto sballato e non esce la configurazione»: la riga della
+   * temperatura col sensore scelto schiacciava il titolo in una colonna di
+   * una parola per riga. Adesso i controlli vanno a capo sotto, e accanto c'e'
+   * «Il sensore sta: In casa / Fuori». */
+  test("nel config la temperatura si legge, e il sensore sta in casa o fuori", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 1000, height: 900 });
+    await apriLaCasaAMuro(page, testInfo, {
+      seme: structuredClone(SEME_A_MURO),
+      stati: STATI,
+      muro: {
+        attiva: true,
+        temperatura: "casa",
+        riposo: {
+          attivo: true,
+          minuti: 2,
+          torna: true,
+          sensore: "sensor.temperatura_bagno_piccolo_temperature",
+        },
+        pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }],
+      },
+    });
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.locator('.ed-tab[data-tab="muro"]').click();
+    const body = page.locator("#ed-body");
+    await body.locator("[data-mu-ed-altro]").click();
+    const riga = body.locator(".mu-ed-riga", { hasText: "Temperatura mostrata" });
+    await expect(riga).toBeVisible();
+    const largo = await riga
+      .locator(".mu-ed-testo")
+      .evaluate((el) => el.getBoundingClientRect().width);
+    expect(largo).toBeGreaterThan(200);
+    await expect(
+      body.locator('[data-mu-ed-valore="casa"]', { hasText: "Da un sensore" }),
+    ).toBeVisible();
+    const dove = body.locator(".mu-ed-riga", { hasText: "Il sensore sta" });
+    await expect(dove).toBeVisible();
+    await expect(dove.locator('[data-mu-ed-metti="riposo.dove"].si')).toHaveText("In casa");
+    await dove.locator('[data-mu-ed-metti="riposo.dove"]', { hasText: "Fuori" }).click();
+    await expect(dove.locator('[data-mu-ed-metti="riposo.dove"].si')).toHaveText("Fuori");
+    if (process.env.FOTO_DEL_CONFIG)
+      await riga.locator("xpath=..").screenshot({ path: process.env.FOTO_DEL_CONFIG });
   });
 
   test("la pagina Musica: il gruppo dei Sonos si fa e si scioglie dal tablet", async ({

@@ -531,7 +531,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-FMXZ7PK4.js";
+} from "../../chunk-53FEZTGC.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3112,6 +3112,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cosa premere": "What to press",
   "Cosa provare": "What to try",
   "Cosa sa fare": "What it can do",
+  "Cosa scrivere accanto al numero": "What to write next to the number",
   "Cosa suona in casa": "What's playing at home",
   "Cosa vorresti ottenere e dove ti sei fermato.": "What you are trying to achieve and where you got stuck.",
   "Cose da fare": "To-do",
@@ -3210,7 +3211,7 @@ var SOURCE_INDEX = Object.freeze({
   "da tenere d'occhio": "to keep an eye on",
   "Da tenere d'occhio": "Worth watching",
   "Da Ultima Ric.": "Since last charge",
-  "Da un sensore in casa": "From an indoor sensor",
+  "Da un sensore": "From a sensor",
   "Dai un nome al gruppo": "Name the group",
   "Dai un nome al gruppo (es. Piano Terra)": "Name the group (e.g. Ground Floor)",
   "Dai un nome all'unità: è quello che si legge sulla card.": "Name the unit: it is what the card shows.",
@@ -3938,6 +3939,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il sensore non risponde": "The sensor is not answering",
   "Il sensore o il number con la posizione della valvola termostatica, da 0 a 100: la card mostra quanto è aperta e quanto chiusa. Se l'unità climate espone già valve_position, non serve.": "The sensor or number with the thermostatic valve position, 0 to 100: the card shows how open and how closed it is. If the climate entity already exposes valve_position, you do not need it.",
   "Il sensore piantato nella terra, in percento: Ecowitt, Tuya, Xiaomi.": "The sensor stuck in the soil, in percent: Ecowitt, Tuya, Xiaomi.",
+  "Il sensore sta": "The sensor is",
   "Il servizio dell'auto ha rifiutato le credenziali dell'integrazione: riprova, e se continua riconnetti l'integrazione in Impostazioni → Dispositivi e servizi.": "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.",
   "Il suono che fa il tablet quando suona il campanello. Nessuno: solo lo schermo.": "The sound the tablet makes when the doorbell rings. None: just the screen.",
   "Il tablet non si spegne mai; nella fascia di notte resta acceso al minimo.": "The tablet never turns off; during the night hours it stays on at minimum brightness.",
@@ -5477,7 +5479,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quattro sensori scelti da te: quelli che leggi per decidere, non una media della casa. Il tipico è quello fuori, con cui ci si regola per i clima interni. L'unità la dice Home Assistant, e un sensore che non indichi è una pastiglia che non compare.": "Four sensors of your choosing: the ones you actually read to decide, not a house average. The typical one is outdoors, the one you go by for the indoor units. The unit comes from Home Assistant, and a sensor you do not name is a pill that does not show up.",
   "Quella che dice pronta, in stampa o ferma — la crea l'integrazione della stampante col suo nome.": "The one that says ready, printing or stopped — the printer integration creates it with its name.",
   "Quella che si guarda: Thermal Comfort la espone come parola («comfortable», «quite_uncomfortable»…). Se il sensore la scrive in italiano, la plancia scrive quello che c'è scritto.": "The one you look at: Thermal Comfort exposes it as a word (comfortable, quite_uncomfortable…). When the sensor writes it in your own language, the dashboard writes what it says.",
-  "Quella del sensore in casa, in alto e sul riposo, con il tempo del meteo accanto. Vuoto: quella della stanza della prima pagina": "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room",
+  "Quella del sensore scelto, in alto e sul riposo, con il tempo del meteo accanto. Vuoto: quella della stanza della prima pagina": "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room",
   "Quella di fuori, del meteo scelto qui sopra": "The outdoor one, from the weather chosen above",
   "Quelle scelte qui, in quest'ordine: ognuna col suo stato e i suoi tasti, quelli che la sua centrale accetta": "The ones chosen here, in this order: each with its state and its buttons, the ones its panel accepts",
   "Quelli scelti qui, in quest'ordine": "The ones chosen here, in this order",
@@ -64792,6 +64794,14 @@ html[data-theme="dark"] .dm-w-panel-row[data-dm-w-obiettivo="alto"] .dm-w-steppe
   font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-sotto{color:#b45309}
+/* Il nome della luce accesa e' scritto sul crema, non sul fondo della finestra.
+   Prima prendeva il colore del testo del tema — e col tema scuro il testo e'
+   quasi bianco: «Lampadario Cucina» bianco su giallo chiaro, che non si
+   leggeva. Sulla scheda accesa il fondo e' sempre lo stesso, chiaro, in tutti
+   e due i temi: il nome va scritto scuro, un marrone della stessa famiglia
+   della riga sotto, e il tema non ci mette bocca. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"],
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-nome{color:#451a03}
 /* Il clima della finestra: una scheda per unita', col colore di quello che
    sta facendo — arancio quando scalda, azzurro quando raffresca. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda]{
@@ -92607,6 +92617,7 @@ function tastiDellaTapparella(attributi2 = {}) {
   ];
 }
 var TEMPERATURE_MOSTRATE = Object.freeze(["meteo", "casa"]);
+var DOVE_STA_IL_SENSORE = Object.freeze(["casa", "fuori"]);
 var POSTO_VUOTO = Object.freeze({ tipo: "vuoto" });
 function senzaVuotiInCoda(posti) {
   const fuori = [...posti];
@@ -93389,7 +93400,7 @@ var MURO_VUOTO = Object.freeze({
   meteo: "",
   temperatura: "meteo",
   menuDiLato: false,
-  riposo: { attivo: true, minuti: 2, torna: true, sensore: "" },
+  riposo: { attivo: true, minuti: 2, torna: true, sensore: "", dove: "casa" },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
   avvisiGrandi: true,
@@ -93443,7 +93454,10 @@ function muroPulito(input) {
       torna: vero2(riposo2.torna, true),
       /* La temperatura «in casa» del riposo, e quella in alto quando si
        * sceglie `temperatura: "casa"`: vuoto, quella della prima stanza. */
-      sensore: entita2(riposo2.sensore)
+      sensore: entita2(riposo2.sensore),
+      /* Dove sta quel sensore: lo dice chi configura, «In casa» o «Fuori».
+       * Di serie in casa, come e' sempre stato. */
+      dove: scelta(riposo2.dove, DOVE_STA_IL_SENSORE, "casa")
     },
     notte: {
       attiva: vero2(notte.attiva, false),
@@ -93713,22 +93727,13 @@ function comandiProposti2(fonte = {}, nomeStanza = "", posti = POSTI) {
   return [...proposti.slice(0, posti - azioni2.length), ...azioni2].map(comandoPulito).filter(Boolean).slice(0, posti);
 }
 function temperaturaDelMuro(muro, fonte = {}) {
-  const stanze4 = elenco10(fonte?.stanze);
-  const sonde = (s) => unici([entita2(s?.temp), ...elenco10(s?.sonde).map(entita2)]);
+  const fuori = muro?.riposo?.dove === "fuori";
   const scelta3 = entita2(muro?.riposo?.sensore);
-  if (scelta3)
-    return {
-      sonda: scelta3,
-      fuori: stanze4.some((s) => s?.outdoor === true && sonde(s).includes(scelta3))
-    };
+  if (scelta3) return { sonda: scelta3, fuori };
   const nome = muro?.pagine?.[0]?.stanza;
-  const stanza2 = nome ? stanze4.find((s) => s?.name === nome) || null : null;
-  if (!stanza2) return { sonda: "", fuori: false };
-  if (stanza2.outdoor !== true) return { sonda: entita2(stanza2.temp), fuori: false };
-  const dentro3 = stanze4.find((s) => s?.outdoor !== true && entita2(s?.temp));
-  if (dentro3) return { sonda: entita2(dentro3.temp), fuori: false };
-  const suo2 = entita2(stanza2.temp);
-  return { sonda: suo2, fuori: Boolean(suo2) };
+  const stanza2 = nome ? elenco10(fonte?.stanze).find((s) => s?.name === nome) || null : null;
+  const sua = entita2(stanza2?.temp);
+  return { sonda: sua, fuori: Boolean(sua) && fuori };
 }
 function comandiDellaPagina(pagina2, fonte = {}, zona = "", { aCoppia: aCoppia2 = null } = {}) {
   if (!pagina2) return [];
@@ -97205,11 +97210,33 @@ function onPointerDown(event) {
     root.clearTimeout?.(state111.pressione);
     state111.pressione = root.setTimeout?.(() => {
       state111.pressione = null;
+      ingoiaIlRilascio();
       if (state111.muro?.blocco?.attivo)
         apriFinestra({ tipo: "codice", scopo: "uscita", scritto: "" });
       else apriIlConfigDelMuro();
     }, 2e3);
   }
+}
+function ingoiaIlRilascio() {
+  if (!doc?.addEventListener) return;
+  const togli2 = () => {
+    doc.removeEventListener("pointerup", alzati, true);
+    doc.removeEventListener("pointerdown", togli2, true);
+    doc.removeEventListener("click", ingoia, true);
+  };
+  const alzati = () => {
+    doc.removeEventListener("pointerup", alzati, true);
+    root.setTimeout?.(togli2, 600);
+  };
+  const ingoia = (event) => {
+    togli2();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+  doc.addEventListener("pointerup", alzati, true);
+  doc.addEventListener("click", ingoia, true);
+  doc.addEventListener("pointerdown", togli2, true);
+  root.setTimeout?.(togli2, 3e4);
 }
 function posizioneDalDito(punto2, riquadro, sdraiato = false) {
   const p = sdraiato ? (punto2.x - riquadro.left) / (riquadro.width || 1) : 1 - (punto2.y - riquadro.top) / (riquadro.height || 1);
@@ -97666,6 +97693,10 @@ ${MURO} .mu-pagine{display:flex;flex:none;gap:6px;padding:5px;border-radius:16px
 ${MURO} .mu-pagine button{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:800;font-size:15px;color:var(--text-dim)}
 ${MURO} .mu-pagine button.si{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));color:color-mix(in srgb,var(--acc) 85%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-ora{margin-left:auto;display:flex;align-items:center;gap:22px;text-align:right}
+/* Il dito tenuto sull'orologio e' un gesto del pannello, e il telefono non se
+   lo deve prendere: niente scorrimento o tirata per ricaricare che lo
+   interrompa a meta', niente menu del tocco lungo. */
+${MURO} .mu-ora{touch-action:none;-webkit-touch-callout:none}
 ${MURO} .mu-pagine+.mu-ora{margin-left:24px}
 ${MURO} .mu-testa>.mu-titolo{flex:0 1 auto;min-width:var(--mu-tit-min,0)}
 ${MURO} .mu-testa>.mu-titolo .mu-sot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -98122,6 +98153,18 @@ ${MURO}[data-compatto="1"] .mu-h{font-size:32px}
 ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;padding:3px;gap:3px}
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
+/* L'ora sul telefono: l'uscita dal pannello e' il dito tenuto sull'orologio,
+   ma qui dell'orologio restano solo le cifre — il meteo, la data e la riga
+   accanto sono nascosti — e le cifre sono una striscia alta una trentina di
+   pixel. Sul tablet il dito trova l'ora col meteo e la data: un bersaglio
+   grande. Sul telefono il dito si posa quasi sempre un poco sotto quello che
+   guarda, finiva sul bordo della testa, e due secondi tenuti li' non aprivano
+   niente: «se clicco su ora non si attiva il config». Il bersaglio si allarga
+   tutto intorno alle cifre, senza spostarle: un velo trasparente che
+   appartiene all'orologio, e che a sinistra si ferma prima delle linguette. */
+${MURO}[data-compatto="1"] .mu-ora{position:relative}
+${MURO}[data-compatto="1"] .mu-ora::after{content:"";position:absolute;inset:-12px -14px -14px -8px}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-ora::after{left:-28px}
 ${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-card .mu-riga1{flex-wrap:wrap;gap:8px;align-content:flex-start}
@@ -98721,6 +98764,14 @@ var interruttore = (via, acceso6, etichetta3) => `<button type="button" class="m
 var scelte4 = (via, valore3, voci4) => `<span class="mu-ed-seg">${voci4.map(
   ([v, testo3]) => `<button type="button" class="${String(v) === String(valore3) ? "si" : ""}" data-mu-ed-metti="${esc(via)}" data-mu-ed-valore="${esc(v)}">${esc(testo3)}</button>`
 ).join("")}</span>`;
+var dovesta = (m) => riga2(
+  t("Il sensore sta", "The sensor is"),
+  t("Cosa scrivere accanto al numero", "What to write next to the number"),
+  scelte4("riposo.dove", m.riposo.dove || "casa", [
+    ["casa", t("In casa", "Indoors")],
+    ["fuori", t("Fuori", "Outside")]
+  ])
+);
 var tendina2 = (via, valore3, voci4, vuota = "") => `<select class="ed-input mu-ed-sel" data-mu-ed-campo="${esc(via)}">${vuota !== null ? `<option value="">${esc(vuota || "—")}</option>` : ""}${voci4.map(
   ([v, testo3]) => `<option value="${esc(v)}"${String(v) === String(valore3) ? " selected" : ""}>${esc(testo3)}</option>`
 ).join(
@@ -99419,20 +99470,21 @@ function corpoMarkup7() {
   riga2(
     t("Temperatura mostrata", "Temperature shown"),
     m.temperatura === "casa" ? t(
-      "Quella del sensore in casa, in alto e sul riposo, con il tempo del meteo accanto. Vuoto: quella della stanza della prima pagina",
-      "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room"
+      "Quella del sensore scelto, in alto e sul riposo, con il tempo del meteo accanto. Vuoto: quella della stanza della prima pagina",
+      "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room"
     ) : t(
       "Quella di fuori, del meteo scelto qui sopra",
       "The outdoor one, from the weather chosen above"
     ),
     `${scelte4("temperatura", m.temperatura, [
       ["meteo", t("Dal meteo", "From the weather")],
-      ["casa", t("Da un sensore in casa", "From an indoor sensor")]
+      ["casa", t("Da un sensore", "From a sensor")]
     ])}${m.temperatura === "casa" ? cerca2("riposo.sensore", m.riposo.sensore, {
       domini: "sensor",
       segnaposto: t("Sensore della temperatura", "Temperature sensor")
     }) : ""}`
   )}
+    ${m.temperatura === "casa" ? dovesta(m) : ""}
     ${riga2(
     t("Riposo", "Rest"),
     t(
@@ -99447,7 +99499,7 @@ function corpoMarkup7() {
     )}${interruttore("riposo.attivo", m.riposo.attivo, "riposo")}`
   )}
     ${riga2(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
-    ${m.temperatura === "casa" ? "" : riga2(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca2("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}
+    ${m.temperatura === "casa" ? "" : riga2(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca2("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}${m.temperatura === "casa" ? "" : dovesta(m)}
     ${riga2(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo3("notte.da", m.notte.da, "23:00", "time")}${campo3("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
     ${riga2(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga2(t("Avvisi a tutto schermo", "Full-screen alerts"), t("Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»", "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”"), interruttore("avvisiGrandi", m.avvisiGrandi, "avvisi-grandi"))}
@@ -99885,11 +99937,11 @@ function stili2() {
 #ed-body .mu-ed{display:block}
 #ed-body .mu-ed-premium{display:inline-block;margin-left:6px;font-size:9.5px;font-weight:900;letter-spacing:.08em;padding:2px 7px;border-radius:6px;color:#b45309;border:1px solid #f59e0b88;background:#f59e0b18}
 #ed-body .mu-ed-blocco,#ed-body .mu-ed-pagina{border:1px solid var(--divider-color,#dbe4ee);border-radius:14px;padding:12px;margin:0 0 14px;background:color-mix(in srgb,var(--text,#0f172a) 2%,transparent)}
-#ed-body .mu-ed-riga{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-top:8px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
-#ed-body .mu-ed-testo{flex:1;min-width:0}
+#ed-body .mu-ed-riga{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px 12px;margin-top:8px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
+#ed-body .mu-ed-testo{flex:1 1 220px;min-width:0}
 #ed-body .mu-ed-testo b{display:block;font-size:13px}
 #ed-body .mu-ed-testo small{display:block;margin-top:2px;font-size:11.5px;line-height:1.4;color:var(--text-dim,#64748b)}
-#ed-body .mu-ed-dx{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+#ed-body .mu-ed-dx{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;flex:0 1 auto;min-width:0;max-width:100%;margin-left:auto}
 #ed-body .mu-ed-dx .ed-input{margin:0;width:auto;min-width:150px;max-width:260px}
 #ed-body .mu-ed-dx input[type="time"]{min-width:0;width:110px}
 #ed-body .mu-ed-dx input[type="password"]{min-width:0;width:120px}

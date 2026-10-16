@@ -196,6 +196,8 @@ export function tastiDellaTapparella(attributi = {}) {
  *   sensore solo per le due cose: due caselle che potevano dire due numeri
  *   diversi per la stessa «temperatura in casa» avrebbero solo confuso. */
 export const TEMPERATURE_MOSTRATE = Object.freeze(["meteo", "casa"]);
+/* Dove sta il sensore della temperatura: «In casa» o «Fuori». */
+export const DOVE_STA_IL_SENSORE = Object.freeze(["casa", "fuori"]);
 
 /* Un posto lasciato vuoto apposta in mezzo agli altri: «il quinto lo voglio
  * libero». Senza, i posti dopo scivolerebbero avanti. */
@@ -1355,7 +1357,7 @@ export const MURO_VUOTO = Object.freeze({
   meteo: "",
   temperatura: "meteo",
   menuDiLato: false,
-  riposo: { attivo: true, minuti: 2, torna: true, sensore: "" },
+  riposo: { attivo: true, minuti: 2, torna: true, sensore: "", dove: "casa" },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
   avvisiGrandi: true,
@@ -1416,6 +1418,9 @@ export function muroPulito(input) {
       /* La temperatura «in casa» del riposo, e quella in alto quando si
        * sceglie `temperatura: "casa"`: vuoto, quella della prima stanza. */
       sensore: entita(riposo.sensore),
+      /* Dove sta quel sensore: lo dice chi configura, «In casa» o «Fuori».
+       * Di serie in casa, come e' sempre stato. */
+      dove: scelta(riposo.dove, DOVE_STA_IL_SENSORE, "casa"),
     },
     notte: {
       attiva: vero(notte.attiva, false),
@@ -1849,33 +1854,21 @@ export function comandiProposti(fonte = {}, nomeStanza = "", posti = POSTI) {
  * sensore, e se e' di dentro o di fuori. `{ sonda, fuori }`, `sonda` vuota se
  * non ce n'e' una.
  *
- * «Il muro scrive "X° in casa", ma quel sensore e' esterno.» Dalla 1.14.3 una
- * stanza puo' essere all'aperto (`outdoor`, #251), e la sua temperatura e'
- * quella di fuori:
- * - il sensore scelto (`riposo.sensore`) e' quello che e', ma se e' una sonda
- *   di una stanza all'aperto si scrive «fuori»;
- * - senza sensore scelto si prende la stanza della prima pagina; se quella e'
- *   all'aperto (il terrazzo, il giardino) per «in casa» si cerca la prima
- *   stanza al chiuso con una sonda, e solo se non ce n'e' nessuna si mostra
- *   quella del terrazzo, scritta «fuori».
+ * «Il muro scrive "X° in casa", ma quel sensore e' esterno.» Nella 1.14.4 lo
+ * indovinava dalla stanza all'aperto (#251), e non bastava: «la stanza non va
+ * bene, devi far decidere se e' esterno o interno». Adesso lo decide chi
+ * configura (`riposo.dove`, «Il sensore sta: In casa / Fuori»), e la stanza
+ * non conta. Il sensore e' quello scelto, o la sonda della stanza della prima
+ * pagina.
  */
 export function temperaturaDelMuro(muro, fonte = {}) {
-  const stanze = elenco(fonte?.stanze);
-  const sonde = (s) => unici([entita(s?.temp), ...elenco(s?.sonde).map(entita)]);
+  const fuori = muro?.riposo?.dove === "fuori";
   const scelta = entita(muro?.riposo?.sensore);
-  if (scelta)
-    return {
-      sonda: scelta,
-      fuori: stanze.some((s) => s?.outdoor === true && sonde(s).includes(scelta)),
-    };
+  if (scelta) return { sonda: scelta, fuori };
   const nome = muro?.pagine?.[0]?.stanza;
-  const stanza = nome ? stanze.find((s) => s?.name === nome) || null : null;
-  if (!stanza) return { sonda: "", fuori: false };
-  if (stanza.outdoor !== true) return { sonda: entita(stanza.temp), fuori: false };
-  const dentro = stanze.find((s) => s?.outdoor !== true && entita(s?.temp));
-  if (dentro) return { sonda: entita(dentro.temp), fuori: false };
-  const suo = entita(stanza.temp);
-  return { sonda: suo, fuori: Boolean(suo) };
+  const stanza = nome ? elenco(fonte?.stanze).find((s) => s?.name === nome) || null : null;
+  const sua = entita(stanza?.temp);
+  return { sonda: sua, fuori: Boolean(sua) && fuori };
 }
 
 /** I comandi che la pagina mostra adesso: quelli scelti, o quelli proposti.

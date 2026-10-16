@@ -5635,10 +5635,7 @@ export default Object.freeze({
   "Raise the cooling": "Повысить охлаждение",
   "Temperature shown": "Показываемая температура",
   "From the weather": "Из погоды",
-  "From an indoor sensor": "С датчика в доме",
   "The outdoor one, from the weather chosen above": "Уличная, из выбранной выше погоды",
-  "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room":
-    "С датчика в доме, вверху и на экране покоя, с погодой рядом. Пусто: температура комнаты первой страницы",
   "«Stop all» button": "Кнопка «Остановить всё»",
   "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.":
     "Команда только с запуском — большая плитка (например «Запуск», «Выключение»); с остановкой она становится колонкой с двумя кнопками (например зал). Включено ли, говорит сущность состояния или сущность запуска, если она это знает.",
@@ -6138,4 +6135,10 @@ export default Object.freeze({
   "State from (optional)": "Состояние из (необязательно)",
   "Two buttons": "Две кнопки",
   "Two buttons: ON and OFF": "Две кнопки: ON и OFF",
+  "From a sensor": "С датчика",
+  "The sensor is": "Датчик находится",
+  "What to write next to the number": "Что писать рядом с числом",
+  "Indoors": "Дома",
+  "Outside": "Снаружи",
+  "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room": "С выбранного датчика, сверху и на экране покоя, с погодой рядом. Пусто: из комнаты первой страницы",
 });

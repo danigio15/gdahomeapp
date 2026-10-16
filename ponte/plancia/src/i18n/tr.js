@@ -5612,11 +5612,8 @@ export default Object.freeze({
   "Raise the cooling": "Soğutmayı yükselt",
   "Temperature shown": "Gösterilen sıcaklık",
   "From the weather": "Hava durumundan",
-  "From an indoor sensor": "Bir iç mekân sensöründen",
   "The outdoor one, from the weather chosen above":
     "Dış sıcaklık, yukarıda seçilen hava durumundan",
-  "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room":
-    "İç mekân sensörününki, üstte ve dinlenme ekranında, yanında hava durumuyla. Boş: ilk sayfadaki odanınki",
   "«Stop all» button": "«Tümünü durdur» düğmesi",
   "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.":
     "Yalnızca başlatma varlığı olan bir komut büyük bir karodur (örneğin «Başlat», «Kapat»); durdurma da varsa iki düğmeli bir sütun olur (örneğin bir salon). Açık olduğunu durum varlığı söyler, ya da söyleyebiliyorsa başlatma varlığı.",
@@ -6119,4 +6116,10 @@ export default Object.freeze({
   "State from (optional)": "Durum kaynağı (isteğe bağlı)",
   "Two buttons": "İki düğme",
   "Two buttons: ON and OFF": "İki düğme: ON ve OFF",
+  "From a sensor": "Bir sensörden",
+  "The sensor is": "Sensör nerede",
+  "What to write next to the number": "Sayının yanına ne yazılsın",
+  "Indoors": "İçeride",
+  "Outside": "Dışarıda",
+  "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room": "Seçilen sensörünki, üstte ve dinlenme ekranında, yanında hava durumu. Boş: ilk sayfanın odasınınki",
 });

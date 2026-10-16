@@ -5601,10 +5601,7 @@ export default Object.freeze({
   "Raise the cooling": "कूलिंग बढ़ाएँ",
   "Temperature shown": "दिखाया गया तापमान",
   "From the weather": "मौसम से",
-  "From an indoor sensor": "घर के अंदर के सेंसर से",
   "The outdoor one, from the weather chosen above": "बाहर का तापमान, ऊपर चुने गए मौसम से",
-  "The indoor sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room":
-    "घर के अंदर के सेंसर का, ऊपर और विश्राम स्क्रीन पर, बगल में मौसम के साथ। खाली: पहले पेज के कमरे का",
   "«Stop all» button": "«सब रोकें» बटन",
   "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.":
     "केवल शुरू वाली कमांड एक बड़ी टाइल होती है (जैसे «शुरू», «बंद करें»); रोकें भी हो तो वह दोनों बटनों वाला एक कॉलम बन जाती है (जैसे एक हॉल)। चालू है या नहीं, यह स्थिति एंटिटी बताती है, या शुरू वाली एंटिटी अगर बता सके।",
@@ -6106,4 +6103,10 @@ export default Object.freeze({
   "State from (optional)": "स्थिति यहाँ से (वैकल्पिक)",
   "Two buttons": "दो बटन",
   "Two buttons: ON and OFF": "दो बटन: ON और OFF",
+  "From a sensor": "सेंसर से",
+  "The sensor is": "सेंसर कहाँ है",
+  "What to write next to the number": "संख्या के पास क्या लिखें",
+  "Indoors": "अंदर",
+  "Outside": "बाहर",
+  "The chosen sensor's, at the top and on the rest screen, with the weather beside it. Empty: the one of the first page's room": "चुने गए सेंसर का, ऊपर और विश्राम स्क्रीन पर, साथ में मौसम। खाली: पहले पेज के कमरे का",
 });
