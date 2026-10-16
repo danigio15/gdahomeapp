@@ -232,3 +232,14 @@ test("le sezioni hanno un titolo che dice di chi e' quella roba", () => {
     }
   }
 });
+
+/* Le plance si aprono anche a chi non amministra.
+ *
+ * Il Supervisor rifiuta la sessione d'ingresso di chi non amministra quando
+ * l'add-on ha `panel_admin`, e di serie ce l'ha: senza questa riga la plancia
+ * di sempre e quelle a muro rispondono «403: Forbidden» a chi abita la casa
+ * senza amministrarla. Chi vede quale plancia lo decide l'add-on, non questo. */
+test("il manifesto lascia l'ingress a chi non amministra", () => {
+  const scritto = readFileSync(qui("../config.yaml"), "utf8");
+  assert.match(scritto, /^panel_admin: false$/m);
+});
