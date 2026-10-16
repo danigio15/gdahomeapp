@@ -140,8 +140,8 @@ solo il giro del Supervisor: `ha store reload`, poi `ha apps rebuild
 local_gdahome`. Se il primo è già quello vecchio, il codice nuovo non è mai
 arrivato: rifà il blocco qui sopra, e stavolta le righe dicono perché.
 
-> **L'app invece non c'entra niente con tutto questo.** L'APK si scarica da
-> Actions, e quello vale per chiunque abbia accesso alla repository.
+> **L'app invece non c'entra niente con tutto questo.** Si installa dai
+> negozi: il test interno del Play Store e TestFlight. Su GitHub non c'è.
 
 ---
 
@@ -197,24 +197,17 @@ code**. Compare il **QR code**, e vale cinque minuti. (Sotto, per chi non
 può inquadrarlo, ci sono le stesse cose in lettere: sedici, in quattro gruppi
 da quattro.)
 
-### Il pacchetto Android
+### L'app sul telefono
 
-Non serve installare niente sul computer: lo costruisce GitHub.
+L'app si installa **solo dai negozi**: il test interno del Play Store su
+Android, TestFlight sull'iPhone. Su GitHub non c'è nessun pacchetto da
+scaricare — la repository è pubblica, e un APK lasciato lì lo prenderebbe
+chiunque.
 
-1. Sulla repository: **Actions → «L'app da provare» → Run workflow**.
-2. C'è una casella **centralino**: se ne hai uno tuo, incollaci il suo
-   indirizzo (`wss://…`). Puoi anche lasciarla vuota: inquadrando il QR code,
-   il centralino glielo dice la casa. Serve solo a chi vuole digitare le
-   lettere a mano da fuori.
-3. Quando finisce (cinque minuti circa), in fondo alla pagina della corsa c'è
-   **gdahome-android**: scaricalo. Dentro c'è `app-release.apk`.
-4. Passa il file sul telefono e aprilo. Android chiederà di consentire
-   l'installazione da questa origine: è la richiesta normale per un'app che non
-   arriva dal Play Store.
-
-Il pacchetto è di _release_, firmato con la chiave di sviluppo: non è quello
-che andrebbe su un negozio, ma è compilato per davvero — quello di _debug_
-girava interpretato, con tutti i controlli accesi, ed era lento e scaldava.
+1. Fatti aggiungere ai collaudatori: la mail entra nell'elenco del test
+   interno del Play Console, o fra i tester di TestFlight.
+2. Apri l'invito dal telefono e installa l'app dal negozio, come una qualsiasi.
+3. Gli aggiornamenti arrivano da lì, da soli.
 
 > **Il ponte va tenuto al passo.** Il ponte e l'app comprimono quello che si
 > mandano (cinque, otto volte meno byte, e meno lavoro per decifrarli): un'app

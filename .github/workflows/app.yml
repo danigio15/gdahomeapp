@@ -1,9 +1,10 @@
-# Costruisce l'app da installare sul telefono.
+# Costruisce l'app e la porta nei negozi: Play Console e TestFlight.
 #
-# Serve a una cosa sola: **provarla davvero**. L'SDK di Android pesa qualche
-# giga e va installato, configurato e tenuto aggiornato; qui ce l'ha gia' la
-# macchina di GitHub. Chi vuole provare l'app scarica il pacchetto da questa
-# pagina e lo mette sul telefono, senza installarsi niente.
+# **L'app non si pubblica su GitHub.** Ne' una release ne' un pacchetto fra
+# gli artefatti: la repository e' pubblica, e un APK o un IPA lasciati qui
+# li scarica chiunque, Premium compreso. Si prova dal test interno del Play
+# Store e da TestFlight, e solo da li'. Senza pista e senza TestFlight la
+# corsa costruisce e basta: serve a sapere che sta in piedi.
 #
 # Si accende a mano — Actions → «L'app da provare» → Run workflow — e a ogni
 # versione marcata con un'etichetta.
@@ -120,17 +121,11 @@ jobs:
     name: Android (APK)
     runs-on: ubuntu-latest
     if: ${{ !inputs.elenca_le_piste }}
-    # Per pubblicare la release a ogni etichetta, e solo per quello: gli
-    # altri lavori restano in sola lettura.
-    permissions:
-      contents: write
     # Qui c'e' la chiave che firma e la strada per il Play Store: passa
     # dall'ambiente `negozio`, che il proprietario protegge nelle impostazioni
     # della repository.
     environment: negozio
     steps:
-      # La release la scrive `gh` col suo gettone: il checkout non ha bisogno
-      # di tenersi le credenziali.
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
@@ -361,20 +356,12 @@ jobs:
           if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
           flutter build apk --release "${definizioni[@]}"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: gdahome-android
-          path: app/build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-          retention-days: 30
-
       # Il pacchetto per il Play Store, che gli APK non li prende.
       #
       # Si costruisce **solo con la chiave vera**: un bundle firmato di prova
       # non si puo' caricare da nessuna parte, e costruirlo per niente sarebbe
-      # tre minuti di corsa buttati a ogni giro. Non va nella release — quello
-      # che si manda a una persona e' l'APK — ma resta fra gli artefatti, che
-      # e' da dove lo si prende per caricarlo nel Play Console.
+      # tre minuti di corsa buttati a ogni giro. Da qui va solo nel negozio,
+      # col passo «Nel negozio»: fra gli artefatti non resta.
       - name: Il pacchetto per il negozio
         if: steps.chiave.outputs.vera == 'si'
         working-directory: app
@@ -400,28 +387,13 @@ jobs:
           {
             echo "### Il pacchetto per il Play Store"
             echo ""
-            echo "L'\`.aab\` e' fra gli artefatti di questa corsa: si carica dal"
-            echo "Play Console, in Test and release."
+            echo "Costruito. Su GitHub non resta: va nel negozio solo con una pista."
           } >> "$GITHUB_STEP_SUMMARY"
-
-      # Novanta giorni, e non trenta come gli altri: e' il massimo che GitHub
-      # da', e questo e' l'unico pacchetto che serve **dopo**. Gli altri sono
-      # roba da provare subito; questo si carica nel Play Console, e fra il
-      # giorno in cui si costruisce una versione e il giorno in cui la si
-      # pubblica sul negozio puo' passare un mese buono.
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: steps.chiave.outputs.vera == 'si'
-        with:
-          name: gdahome-android-negozio
-          path: app/build/app/outputs/bundle/release/app-release.aab
-          if-no-files-found: error
-          retention-days: 90
 
       # L'orologio Wear OS, quando e' acceso (variabile GDAHOME_OROLOGIO = si,
       # vedi docs/OROLOGIO.md). Stesso nome e stessa chiave del telefono: e'
-      # quello che li fa parlare. Il suo `.aab` sta fra gli artefatti e si
-      # carica nel Play Console nella pista «Wear OS», a mano, finche' la
-      # prima volta non e' passata.
+      # quello che li fa parlare. Si costruisce per sapere che sta in piedi:
+      # su GitHub non resta niente.
       - name: L'orologio Wear OS
         if: vars.GDAHOME_OROLOGIO == 'si'
         run: |
@@ -429,15 +401,6 @@ jobs:
           compiti=(:orologio:assembleRelease)
           if [ -f app/android/chiave.properties ]; then compiti+=(:orologio:bundleRelease); fi
           strumenti/gradle-orologio.sh "${compiti[@]}"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: vars.GDAHOME_OROLOGIO == 'si'
-        with:
-          name: gdahome-wear-os
-          path: |
-            app/build/orologio/outputs/apk/release/*.apk
-            app/build/orologio/outputs/bundle/release/*.aab
-          if-no-files-found: error
-          retention-days: 90
 
       # E il pacchetto sul Play Console, senza passare da nessuno.
       #
@@ -503,58 +466,6 @@ jobs:
             echo '```'
             cat negozio.txt
             echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      # La release: il segno che questa versione esiste, e cosa cambia.
-      #
-      # **L'APK non ci va.** Quel pacchetto lo firma la chiave di gdahome;
-      # quello del Play Store lo firma Google. Android non installa un
-      # pacchetto sopra uno con firma diversa: chi fosse partito da qui, il
-      # giorno che passa al negozio, dovrebbe disinstallare e riabbinare il
-      # telefono — e perdere tutto. Finche' il file stava sulla pagina delle
-      # release, quella trappola andava spiegata in un paragrafo di avvertenze
-      # dentro le note. Tolto il file, non c'e' piu' niente da spiegare.
-      #
-      # Non e' una perdita: di quei pacchetti, in due release, non ne ha
-      # scaricato **nessuno** — chi prova l'app la prende dalla prova chiusa
-      # del Play Store, e chi la costruisce la prende dagli artefatti.
-      #
-      # Li' restano tutt'e due, l'APK e l'`.aab` del negozio. La release resta
-      # per quello per cui serve davvero: un indirizzo che dice «c'e' la
-      # 1.4.32, ed ecco cosa e' cambiato». Senza allegati non ha piu' bisogno
-      # della chiave vera, e si fa a ogni etichetta.
-      #
-      # **E nemmeno un link al pacchetto.** Per un pezzo le note mandavano
-      # agli artefatti della corsa, «per chi la sta provando»: e' un link
-      # all'APK con un giro in piu', e chi tiene il progetto ha deciso che
-      # dalle release non ne parte nessuno. Chi prova l'app la prende dalla
-      # prova chiusa del Play Store; chi costruisce sa dove stanno gli
-      # artefatti senza che glielo dica la release.
-      - name: La release
-        if: github.ref_type == 'tag'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          quale="${GITHUB_REF_NAME#v}"
-          # Le note le scrive il CHANGELOG, non questa riga.
-          #
-          # Qui c'erano cinque righe uguali per ogni versione — come si
-          # aggiorna l'add-on, perche' l'apk non e' allegato — e nient'altro.
-          # Chi apriva la pagina della 1.6.8 per sapere cosa cambiava leggeva
-          # quello che aveva gia' letto per la 1.6.7. Cosa cambia sta scritto
-          # in `ponte/CHANGELOG.md`, curato riga per riga: adesso arriva anche
-          # qui. Una versione senza il suo capitolo fa fallire il passo,
-          # invece di scrivere una release vuota.
-          node strumenti/le-note-della-versione.mjs "$quale" > note.md
-          # Una release puo' esserci gia': l'etichetta si puo' spingere da
-          # GitHub, e li' la release nasce insieme a lei. In quel caso non si
-          # ricomincia da capo, si riscrivono le note.
-          gh release create "$GITHUB_REF_NAME" --title "gdahome $quale" --notes-file note.md ||
-            gh release edit "$GITHUB_REF_NAME" --title "gdahome $quale" --notes-file note.md
-          {
-            echo "### Pubblicato"
-            echo ""
-            gh release view "$GITHUB_REF_NAME" --json url --jq .url
           } >> "$GITHUB_STEP_SUMMARY"
 
   iphone:
@@ -867,7 +778,7 @@ jobs:
             {
               echo "### Prova del negozio: la firma per l'App Store passa"
               echo ""
-              echo "Il pacchetto e' firmato e resta qui: su TestFlight non e' andato niente."
+              echo "Il pacchetto e' firmato: su TestFlight non e' andato niente, e qui non resta."
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
@@ -877,17 +788,6 @@ jobs:
             echo "Fra qualche minuto arriva la notifica di Apple. Da TestFlight"
             echo "sul telefono si installa senza computer."
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: >-
-          steps.chiavi.outputs.ci-sono == 'si' &&
-          !inputs.prova_del_negozio &&
-          (github.ref_type == 'tag' || inputs.testflight)
-        with:
-          name: gdahome-iphone
-          path: app/build/ipa/*.ipa
-          if-no-files-found: warn
-          retention-days: 30
 
   web:
     name: Web
@@ -925,9 +825,3 @@ jobs:
           else
             flutter build web --release --pwa-strategy=none --dart-define=VERSIONE="$VERSIONE"
           fi
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: gdahome-web
-          path: app/build/web
-          if-no-files-found: error
-          retention-days: 30

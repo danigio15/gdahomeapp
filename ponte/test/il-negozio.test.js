@@ -580,3 +580,22 @@ test("il tasto del workflow e lo strumento si chiamano la stessa cosa", () => {
   const strumento = readFileSync(join(RADICE, "strumenti", "porta-nel-negozio.mjs"), "utf8");
   assert.match(strumento, /detto\.includes\("--piste"\)/, "e lo strumento deve ancora capirla");
 });
+
+test("le app non si pubblicano su GitHub: vanno solo nei negozi", () => {
+  /* La repository e' pubblica: un APK, un AAB o un IPA lasciati fra gli
+   * artefatti o in una release li scarica chiunque. I workflow che
+   * costruiscono le app le portano nel Play Console e su TestFlight, e basta. */
+  for (const nome of ["app.yml", "navigatore-in-prova.yml", "orologi.yml"]) {
+    const workflow = readFileSync(join(RADICE, ".github", "workflows", nome), "utf8");
+    assert.doesNotMatch(
+      workflow,
+      /upload-artifact/,
+      `${nome} non deve lasciare pacchetti fra gli artefatti`,
+    );
+    assert.doesNotMatch(
+      workflow,
+      /gh release (create|upload|edit)/,
+      `${nome} non deve scrivere release`,
+    );
+  }
+});
