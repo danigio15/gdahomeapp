@@ -10,20 +10,31 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.4
+
+- **Plance per chi non amministra:** si aprono di nuovo, la plancia di sempre
+  e quelle a muro. Dal Supervisor 2026.10.2 Home Assistant rispondeva
+  «403: Forbidden» agli utenti che non amministrano la casa. Chi vede quale
+  plancia lo decide sempre gdahome, alla voce «Le plance». La voce
+  «Configura gdahome» adesso compare anche nella loro barra, e apre solo la
+  pagina che dice che è per gli amministratori.
+- **Pianificatore:** la **cartina** si vede (prima restava vuota), e la
+  ricerca trova anche il **numero civico**: «via Roma 12» porta al 12.
+- **Pianificatore e auto elettrica:** con un'auto elettrica o ibrida nella
+  pagina Auto c'è il riquadro **«L'auto»** — batteria, autonomia, carica di
+  casa — e, se la carica non basta, le **soste di ricarica** lungo la strada:
+  in elenco con gli orari, sulla cartina coi fulmini, e nell'ora a cui
+  partire. Si sceglie con quanta carica si parte, la carica minima all'arrivo
+  e la potenza delle colonnine. La strada non esce di casa.
+- **Meteo:** una pagina nuova, da aggiungere nel config — com'è adesso, la
+  propria stazione meteo, le previsioni e il radar.
+
 ## 1.14.3
 
 - **Pianificatore (pagina gdanav):** la ricerca trova strade e luoghi — se il
   primo servizio non risponde prova il secondo, e dice «nessun posto» o «il
   servizio non risponde» invece di restare vuota. Sotto la meta scelta c'è la
   **cartina** con la strada da casa.
-- **Pianificatore e auto elettrica:** con un'auto elettrica o ibrida nella
-  pagina Auto c'è il riquadro **«L'auto»** — batteria, autonomia, carica di
-  casa — e, se la carica non basta, le **soste di ricarica** alle colonnine
-  rapide lungo la strada: in elenco con gli orari, sulla cartina coi fulmini,
-  e nell'ora a cui partire. Si sceglie con quanta carica si parte, la carica
-  minima all'arrivo e la potenza delle colonnine. L'archivio delle colonnine
-  (OpenStreetMap e Piattaforma Unica Nazionale) la casa lo scarica una volta
-  a settimana, tutto intero: la strada non esce di casa.
 - **Notifiche:** sull'iPhone niente più «gdahome · nuova notifica» doppia dopo
   aver riabbinato il telefono; il **citofono di Ring** suona come gli altri
   campanelli. Togliendo una casa dall'app, la casa smette di mandare notifiche
