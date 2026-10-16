@@ -27,12 +27,29 @@
  *
  * Le ore sono quelle della casa: il fuso lo da' il Supervisor all'add-on,
  * come per le ore di silenzio delle notifiche.
+ *
+ * Con un'auto elettrica la strada porta anche le **soste di ricarica**: la
+ * pagina manda la carica di partenza e le scelte (la carica minima alla meta,
+ * le colonnine da quanti kW), e la casa cammina la strada sull'archivio delle
+ * colonnine rapide (`colonnine.js`, `soste.js`). Il navigatore, che in viaggio
+ * sa quali colonnine sono libere, porta le sue soste insieme alla stima col
+ * traffico, e quelle prendono il posto di quelle della casa. I minuti di
+ * ricarica si sommano alla durata: con «arrivo entro» si parte prima.
  */
 
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
+import { Colonnine, FONTI_DELLE_COLONNINE } from "./colonnine.js";
+import {
+  autoPulita,
+  calcolaLeSoste,
+  MINIMA_ALL_ARRIVO_DI_SERIE,
+  MINIME_ALL_ARRIVO,
+  POTENZA_DELLE_COLONNINE_DI_SERIE,
+  POTENZE_DELLE_COLONNINE,
+} from "./soste.js";
 
 const MINUTO = 60_000;
 const ORA = 60 * MINUTO;
@@ -46,6 +63,15 @@ export const TAPPE_AL_PIU = 10;
 export const MARGINE_SENZA_TRAFFICO = 1.15;
 /* Una stima col traffico vale per qualche ora: dopo, torna il margine. */
 export const STIMA_COL_TRAFFICO_VALE = 6 * ORA;
+
+/* Le soste di ricarica dette dal navigatore valgono quanto la sua stima. */
+export const SOSTE_DEL_NAVIGATORE_VALGONO = STIMA_COL_TRAFFICO_VALE;
+export const SOSTE_AL_PIU = 20;
+
+/* La stessa strada chiesta di nuovo — la pagina la richiede a ogni scelta
+ * dell'auto — non si richiede a OSRM per qualche minuto. */
+const STRADA_RICORDATA = 10 * MINUTO;
+const STRADE_RICORDATE = 8;
 
 /* Ogni quanto si guarda l'orologio. */
 const BATTITO = 30_000;
@@ -62,6 +88,14 @@ function numero(valore) {
   const n = Number(valore);
   return Number.isFinite(n) ? n : null;
 }
+
+/* Un numero scritto come numero: `null`, `""` e `true` non sono zero e uno.
+ * Per le soste e l'auto, dove uno zero inventato e' una sosta al km 0. */
+const cifra = (valore) =>
+  (typeof valore === "number" || typeof valore === "string") && valore !== ""
+    ? numero(valore)
+    : null;
+const entro = (n, minimo, massimo) => n !== null && n >= minimo && n <= massimo;
 
 /* Il numero civico scritto nella ricerca, se c'e'.
  *
@@ -146,6 +180,7 @@ export function viaggioPulito(dato) {
   const climaEntita = testo(dato.prepara?.clima?.entity, 100);
   const climaMin = Math.trunc(numero(dato.prepara?.clima?.minuti) ?? 10);
   const garage = testo(dato.prepara?.garage?.entity, 100);
+  const auto = autoDelViaggio(dato.auto);
   return {
     tipo,
     nome: testo(dato.nome, 80),
@@ -162,7 +197,90 @@ export function viaggioPulito(dato) {
         : null,
       garage: ENTITA_BUONA.test(garage) && garage.startsWith("cover.") ? { entity: garage } : null,
     },
+    ...(auto ? { auto } : {}),
   };
+}
+
+/* Le scelte dell'auto elettrica per un viaggio: quale auto (il suo uid nella
+ * plancia), con quanta carica si parte — quella di adesso, l'obiettivo della
+ * carica di stanotte, o piena —, la carica minima alla meta e le colonnine da
+ * quanti kW. `null` se un'auto non c'e'. */
+const UID_BUONO = /^[\w.-]{1,60}$/;
+const PARTENZE = new Set(["adesso", "obiettivo", 100]);
+
+export function autoDelViaggio(dato) {
+  if (!dato || typeof dato !== "object" || Array.isArray(dato)) return null;
+  const uid = testo(dato.uid, 60);
+  const partenza = dato.partenza === "100" ? 100 : dato.partenza;
+  const minima = cifra(dato.minimaArrivo);
+  const kw = cifra(dato.kwColonnine);
+  return {
+    uid: UID_BUONO.test(uid) ? uid : "",
+    partenza: PARTENZE.has(partenza) ? partenza : "adesso",
+    minimaArrivo: MINIME_ALL_ARRIVO.includes(minima) ? minima : MINIMA_ALL_ARRIVO_DI_SERIE,
+    kwColonnine: POTENZE_DELLE_COLONNINE.includes(kw) ? kw : POTENZA_DELLE_COLONNINE_DI_SERIE,
+  };
+}
+
+/* Una sosta di ricarica come la dicono la casa o il navigatore: `null` se non
+ * sta in piedi. I chilometri e i minuti ci devono essere; il resto, se c'e',
+ * deve essere buono, se no si lascia vuoto. */
+export function sostaPulita(dato) {
+  if (!dato || typeof dato !== "object" || Array.isArray(dato)) return null;
+  const km = cifra(dato.km);
+  const min = cifra(dato.min);
+  if (!entro(km, 0, 20000) || !entro(min, 0, 600)) return null;
+  const kw = cifra(dato.kw);
+  const lat = cifra(dato.lat);
+  const lon = cifra(dato.lon);
+  const da = cifra(dato.da);
+  const a = cifra(dato.a);
+  const posto = entro(lat, -90, 90) && entro(lon, -180, 180);
+  return {
+    km: Math.round(km * 10) / 10,
+    nome: testo(dato.nome, 120),
+    operatore: testo(dato.operatore, 80),
+    kw: entro(kw, 0, 1000) ? Math.round(kw) : 0,
+    lat: posto ? lat : null,
+    lon: posto ? lon : null,
+    da: entro(da, 0, 100) ? Math.round(da) : null,
+    a: entro(a, 0, 100) ? Math.round(a) : null,
+    min: Math.round(min),
+  };
+}
+
+/**
+ * Le soste di un viaggio, ripulite: un elenco (anche vuoto: «non ti fermi»)
+ * o `{ elenco, arrivo }`. Una sola sosta storta e non se ne tiene nessuna:
+ * meglio nessuna che una a meta'. `null` se non sta in piedi.
+ */
+export function sostePulite(dato, { fonte = "casa", arrivo = null, alle = 0 } = {}) {
+  const elenco = Array.isArray(dato) ? dato : Array.isArray(dato?.elenco) ? dato.elenco : null;
+  if (!elenco || elenco.length > SOSTE_AL_PIU) return null;
+  const pulite = elenco.map(sostaPulita);
+  if (pulite.some((s) => !s)) return null;
+  const carica = cifra(arrivo ?? (Array.isArray(dato) ? null : dato.arrivo));
+  return {
+    elenco: pulite.sort((x, y) => x.km - y.km),
+    arrivo: entro(carica, -100, 100) ? Math.round(carica) : null,
+    fonte: fonte === "gdanav" ? "gdanav" : "casa",
+    alle,
+  };
+}
+
+/** I minuti di ricarica di un viaggio, in tutto. */
+export const minutiDiRicaricaDel = (viaggio) =>
+  (Array.isArray(viaggio?.soste?.elenco) ? viaggio.soste.elenco : []).reduce(
+    (somma, s) => somma + (Number(s?.min) || 0),
+    0,
+  );
+
+/* La linea per la cartina: al piu' `quanti` punti, presi a passo regolare e
+ * con l'ultimo sempre dentro — tagliarla in fondo lasciava la strada a meta'. */
+function lineaPerLaCartina(linea, quanti = 400) {
+  if (linea.length <= quanti) return linea;
+  const passo = (linea.length - 1) / (quanti - 1);
+  return Array.from({ length: quanti }, (_v, i) => linea[Math.round(i * passo)]);
 }
 
 /* Il giorno della settimana alla maniera di chi scrive: lunedi' 1, domenica 7. */
@@ -181,7 +299,7 @@ const chiaveDelGiorno = (data) =>
 /**
  * Quanto ci vuole, in millisecondi, secondo la stima che c'e': col traffico
  * se e' fresca, altrimenti la strada vuota col margine. Le soste delle tappe
- * si sommano. `null` se una stima non c'e' ancora.
+ * e quelle di ricarica si sommano. `null` se una stima non c'e' ancora.
  */
 export function durataDelViaggio(viaggio, adesso) {
   const stima = viaggio.stima;
@@ -191,7 +309,7 @@ export function durataDelViaggio(viaggio, adesso) {
     stima.fonte === "traffico" && adesso - (numero(stima.alle) ?? 0) < STIMA_COL_TRAFFICO_VALE;
   const guida = secondi * 1000 * (fresca ? 1 : MARGINE_SENZA_TRAFFICO);
   const soste = viaggio.tappe.slice(0, -1).reduce((somma, t) => somma + (t.sostaMin || 0), 0);
-  return Math.round(guida + soste * MINUTO);
+  return Math.round(guida + (soste + minutiDiRicaricaDel(viaggio)) * MINUTO);
 }
 
 /**
@@ -242,6 +360,7 @@ export class Viaggi {
     scarica = (indirizzo, opzioni) => fetch(indirizzo, opzioni),
     ogni = (quanto, cosa) => setInterval(cosa, quanto),
     smetti = (segno) => clearInterval(segno),
+    colonnine = null,
   } = {}) {
     this._suDisco = Boolean(cartella);
     this.archivio = new Archivio(cartella ? join(cartella, "viaggi.json") : "", {
@@ -261,6 +380,17 @@ export class Viaggi {
     this._smetti = smetti;
     this._battito = null;
     this._dove = null;
+    this._strade = new Map();
+    /* L'archivio delle colonnine rapide: si scarica la prima volta che serve,
+     * non all'accensione — una casa senza auto elettrica non lo scarica mai. */
+    this.colonnine =
+      colonnine ??
+      new Colonnine({
+        cartella,
+        scarica: (indirizzo, opzioni) => this.scarica(indirizzo, opzioni),
+        adesso: () => this.adesso(),
+        registro: this.registro,
+      });
   }
 
   /* Se il pianificatore e' sbloccato: gdanav Premium, o gdahome Premium che
@@ -329,11 +459,26 @@ export class Viaggi {
       gia &&
       JSON.stringify(gia.tappe) === JSON.stringify(pulito.tappe) &&
       JSON.stringify(gia.da) === JSON.stringify(pulito.da);
+    /* Le soste: quelle che porta la pagina, calcolate dalla casa. Ma quelle
+     * fresche del navigatore, sulla stessa strada e con la stessa auto, non
+     * si buttano per un conto fatto senza sapere quali colonnine sono libere.
+     * Senza auto, niente soste. */
+    const sosteDelNavigatore =
+      stessaStrada &&
+      gia?.soste?.fonte === "gdanav" &&
+      JSON.stringify(gia.auto ?? null) === JSON.stringify(pulito.auto ?? null) &&
+      ora - (gia.soste.alle || 0) < SOSTE_DEL_NAVIGATORE_VALGONO
+        ? gia.soste
+        : null;
+    const soste = pulito.auto
+      ? (sosteDelNavigatore ?? sostePulite(dato?.soste, { fonte: "casa", alle: ora }))
+      : null;
     const nuovo = {
       ...pulito,
       id: gia?.id ?? `v_${randomBytes(6).toString("hex")}`,
       utente: chi,
       stima: stima ?? (stessaStrada ? (gia?.stima ?? null) : null),
+      ...(soste ? { soste } : {}),
       creatoIl: gia?.creatoIl ?? ora,
       modificatoIl: ora,
     };
@@ -370,13 +515,23 @@ export class Viaggi {
     };
   }
 
-  /* Il navigatore porta la stima col traffico vero. */
-  stima(utente, id, detta) {
+  /* Il navigatore porta la stima col traffico vero e, con un'auto elettrica,
+   * le sue soste di ricarica: prendono il posto di quelle della casa, come il
+   * traffico prende il posto della strada vuota. Basta una delle due; una
+   * delle due storta e non si cambia niente. */
+  stima(utente, id, detta, soste = null, caricaArrivo = null) {
     const viaggio = this._tutti.find((v) => v.id === id && v.utente === String(utente ?? ""));
     if (!viaggio) return { errore: "non-trovato" };
-    const stima = this._stimaPulita(detta);
-    if (!stima) return { errore: "stima-non-valida" };
-    viaggio.stima = stima;
+    const conStima = detta !== null && detta !== undefined;
+    const conSoste = soste !== null && soste !== undefined;
+    const stima = conStima ? this._stimaPulita(detta) : null;
+    if ((conStima && !stima) || (!conStima && !conSoste)) return { errore: "stima-non-valida" };
+    const nuove = conSoste
+      ? sostePulite(soste, { fonte: "gdanav", arrivo: caricaArrivo, alle: this.adesso() })
+      : null;
+    if (conSoste && !nuove) return { errore: "soste-non-valide" };
+    if (stima) viaggio.stima = stima;
+    if (nuove) viaggio.soste = nuove;
     this._salva();
     return { viaggio: this._visto(viaggio) };
   }
@@ -537,35 +692,91 @@ export class Viaggi {
     );
   }
 
-  /* La strada senza traffico, dalla partenza (o da casa) per le tappe. */
-  async strada(da, tappe) {
+  /* La strada di OSRM fra questi punti, ricordata per qualche minuto: la
+   * pagina la richiede a ogni scelta dell'auto, e la strada non cambia. */
+  async _viaDiOsrm(punti) {
+    const ora = this.adesso();
+    const ricordata = this._strade.get(punti);
+    if (ricordata && ora - ricordata.alle < STRADA_RICORDATA) return ricordata.via;
+    const risposta = await this.scarica(
+      `https://router.project-osrm.org/route/v1/driving/${punti}?overview=simplified&geometries=geojson`,
+      { headers: { "user-agent": "gdahome" }, signal: AbortSignal.timeout(10000) },
+    );
+    if (!risposta.ok) return null;
+    const dati = await risposta.json();
+    const via = dati?.routes?.[0];
+    if (!via || !Number.isFinite(Number(via.duration)) || !Number.isFinite(Number(via.distance)))
+      return null;
+    this._strade.delete(punti);
+    this._strade.set(punti, { via, alle: ora });
+    while (this._strade.size > STRADE_RICORDATE)
+      this._strade.delete(this._strade.keys().next().value);
+    return via;
+  }
+
+  /* Le soste di ricarica lungo la strada, per un'auto elettrica. Le
+   * colonnine vengono dall'archivio in casa; se non c'e', le soste si dicono a
+   * chilometro. Mai un errore: senza soste la strada c'e' lo stesso. */
+  async _sosteLungo(via, auto) {
+    const linea = Array.isArray(via.geometry?.coordinates) ? via.geometry.coordinates : [];
+    const kmTotali = via.distance / 1000;
+    let colonnine = [];
+    let archivio = false;
+    try {
+      ({ colonnine, archivio } = await this.colonnine.lungo(linea, { kmTotali }));
+    } catch (errore) {
+      this.registro.attenzione(`viaggi: colonnine non lette (${errore?.message || errore})`);
+    }
+    const conto = calcolaLeSoste({ kmTotali, auto, colonnine, linea });
+    if (!conto) return null;
+    /* Dove cadono le tappe, per metterle in fila con le soste. */
+    let km = 0;
+    const tappeKm = (Array.isArray(via.legs) ? via.legs : []).map((tratto) => {
+      km += Number(tratto?.distance) / 1000 || 0;
+      return Math.round(km * 10) / 10;
+    });
+    return {
+      elenco: conto.soste,
+      arrivo: conto.arrivo,
+      ricaricaMin: conto.ricaricaMin,
+      partenza: Math.round(auto.batteria),
+      tappeKm,
+      archivio,
+      fonte: "casa",
+      ...(archivio ? { fonti: FONTI_DELLE_COLONNINE } : {}),
+    };
+  }
+
+  /* La strada senza traffico, dalla partenza (o da casa) per le tappe. Con
+   * un'auto elettrica (`auto`, vedi `autoPulita` in `soste.js`) anche le
+   * soste di ricarica. */
+  async strada(da, tappe, auto = null) {
     const partenza = postoPulito(da) ?? (await this._casaQui());
     const fermate = (Array.isArray(tappe) ? tappe : []).map(postoPulito).filter(Boolean);
     if (!partenza || !fermate.length) return { errore: "manca-la-strada" };
     const punti = [partenza, ...fermate.slice(0, TAPPE_AL_PIU)]
       .map((p) => `${p.lon},${p.lat}`)
       .join(";");
+    let via = null;
     try {
-      const risposta = await this.scarica(
-        `https://router.project-osrm.org/route/v1/driving/${punti}?overview=simplified&geometries=geojson`,
-        { headers: { "user-agent": "gdahome" }, signal: AbortSignal.timeout(10000) },
-      );
-      if (!risposta.ok) return { errore: "strada-non-trovata" };
-      const dati = await risposta.json();
-      const via = dati?.routes?.[0];
-      if (!via) return { errore: "strada-non-trovata" };
-      return {
-        stima: {
-          durataS: Math.round(via.duration),
-          km: Math.round(via.distance / 100) / 10,
-          fonte: "strada",
-        },
-        linea: (via.geometry?.coordinates || []).slice(0, 400),
-        da: partenza,
-      };
+      via = await this._viaDiOsrm(punti);
     } catch (_errore) {
       return { errore: "strada-non-trovata" };
     }
+    if (!via) return { errore: "strada-non-trovata" };
+    const linea = Array.isArray(via.geometry?.coordinates) ? via.geometry.coordinates : [];
+    const elettrica = auto ? autoPulita(auto) : null;
+    const soste = elettrica ? await this._sosteLungo(via, elettrica) : null;
+    return {
+      stima: {
+        durataS: Math.round(via.duration),
+        km: Math.round(via.distance / 100) / 10,
+        fonte: "strada",
+      },
+      linea: lineaPerLaCartina(linea),
+      da: partenza,
+      ...(soste ? { soste } : {}),
+    };
   }
 
   /* ── l'orologio della casa ────────────────────────────────────────── */
@@ -722,13 +933,21 @@ export class Viaggi {
         case "ponte/viaggi/togli":
           return esito(this.togli(utente, String(detto.viaggio ?? "")));
         case "ponte/viaggi/stima":
-          return esito(this.stima(utente, String(detto.viaggio ?? ""), detto.stima));
+          return esito(
+            this.stima(
+              utente,
+              String(detto.viaggio ?? ""),
+              detto.stima,
+              detto.soste,
+              detto.caricaArrivo,
+            ),
+          );
         case "ponte/viaggi/cerca":
           if (!this.sbloccato) return no("premium-richiesto", "premium-richiesto");
           return si(await this.cerca(detto.testo));
         case "ponte/viaggi/strada":
           if (!this.sbloccato) return no("premium-richiesto", "premium-richiesto");
-          return esito(await this.strada(detto.da, detto.tappe));
+          return esito(await this.strada(detto.da, detto.tappe, detto.auto));
         default:
           return no("unknown_command", `non conosco ${detto?.type}`);
       }

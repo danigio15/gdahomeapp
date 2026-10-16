@@ -12,19 +12,48 @@
  *
  * E' di gdanav Premium. Senza, la pagina lo dice e non fa scrivere niente:
  * lo stesso che risponde la casa.
+ *
+ * Con un'auto elettrica (o ibrida) nella pagina Auto c'e' il riquadro
+ * «L'auto»: la batteria, con quanta carica si parte, e le soste di ricarica
+ * che la casa calcola sulla strada con l'archivio delle colonnine rapide —
+ * in elenco sotto la cartina, coi fulmini sulla cartina, e nell'ora in cui
+ * partire. Senza un'auto cosi', chi amministra la casa trova l'invito a
+ * collegarla; gli altri niente.
  */
 
 import {
   bozzaNuova,
+  caricaAllaPartenza,
+  caricaDopo,
+  consumoStimato,
   durataDetta,
   durataStimata,
   GIORNI,
+  laStradaInFila,
+  minutiDiRicarica,
+  MINIME_ALL_ARRIVO,
   nomeDelViaggio,
   oraDi,
   partenzaEArrivo,
+  POTENZE_DELLE_COLONNINE,
   quandoDetto,
+  sosteDi,
 } from "../core/i-viaggi.js";
+import {
+  CAPACITA_DI_SERIE,
+  inKilowatt,
+  tempoDellaRicarica,
+} from "../core/il-tempo-della-ricarica.js";
 import { FONDI_MAPPA } from "../core/radar-mappa.js";
+import {
+  capacitaDellaBatteria,
+  siRicarica,
+  VEHICLE_KEY_FIELD,
+  vehicleLabel,
+} from "../core/vehicle-model.js";
+import { capacitaDellAutoInUso } from "./auto-termica-section.js";
+import { activeVehicle, profiles, vehicleBatteryEntity, vehiclePlugged } from "./ev-section.js";
+import { codiceDellaRicaricaAdesso, kilowattDellaColonnina } from "./ev-stato-e-target-section.js";
 import {
   activeLocale,
   allStates,
@@ -56,6 +85,14 @@ const state = (root[KEY] ||= {
   ricerca: "",
   casa: null,
   linea: [],
+  /* Dalla strada con l'auto: dove cadono le tappe, se le colonnine vengono
+   * dall'archivio e le sue fonti, e se il conto e' in corso. */
+  tappeKm: [],
+  archivio: null,
+  calcolo: false,
+  /* Le scelte dell'auto si mostrano quando servono — ci sono soste — o quando
+   * qualcuno le ha gia' toccate. */
+  opzioniAperte: false,
   errore: "",
   salvando: false,
   frame: 0,
@@ -289,6 +326,20 @@ function mappa(b) {
   const inizio = punti[0] || (b.da ? fermate[0] : null);
   const fine = punti[punti.length - 1] || fermate[fermate.length - 1] || null;
   const segnoCasa = !linea.length && !fermate.length && casa.length ? qui(casa[0]) : null;
+  /* Le soste di ricarica: pallini arancio col fulmine, e il loro numero. */
+  const ricariche = (leAuto().length ? sosteDi(b) : [])
+    .filter(
+      (s) => Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lon)) && s.lat !== null,
+    )
+    .map((s, i) => {
+      const [x, y] = qui([Number(s.lon), Number(s.lat)]);
+      return `<g class="dm-gn-fulmine" data-gn-fulmine="${i + 1}" transform="translate(${x} ${y})">
+        <circle r="11" fill="#f59e0b" stroke="#fff" stroke-width="3"/>
+        <path d="M1.6 -7 L-4.4 1.2 H-0.4 L-1.6 7 L4.4 -1.4 H0.4 Z" fill="#fff"/>
+        <circle cx="11" cy="-10" r="7" fill="#111827" stroke="#fff" stroke-width="1.5"/>
+        <text x="11" y="-7" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">${i + 1}</text></g>`;
+    })
+    .join("");
   return `<div class="dm-gn-mappa"><svg viewBox="0 0 ${larga} ${alta}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(t("La strada", "The route"))}">
     <rect width="${larga}" height="${alta}" fill="var(--gn-mappa)"/>
     ${tessereSotto(vista, larga, alta)}
@@ -303,6 +354,7 @@ function mappa(b) {
     ${inizio && punti.length ? `<circle cx="${inizio[0]}" cy="${inizio[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
     ${fine ? `<circle cx="${fine[0]}" cy="${fine[1]}" r="10" fill="#dc2626" stroke="#fff" stroke-width="4"/>` : ""}
     ${segnoCasa ? `<circle cx="${segnoCasa[0]}" cy="${segnoCasa[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
+    ${ricariche}
   </svg><span class="dm-gn-osm">© ${esc(FONDO.attribuzione)}</span></div>`;
 }
 
@@ -338,6 +390,389 @@ function opzioniDiEntita(domini, scelta) {
       ),
     )
     .join("");
+}
+
+/* ── l'auto elettrica ────────────────────────────────────────────────────────
+ *
+ * «Arrivo a Milano con la carica che ho?» La plancia l'auto la conosce gia':
+ * i profili della pagina Auto (`ev-section.js`), con la batteria, l'autonomia,
+ * l'obiettivo e la potenza della carica di casa. Qui si legge l'auto scelta per
+ * il viaggio, si dice con quanta carica si parte, e la casa — che sa la strada
+ * e le colonnine rapide — risponde con le soste (`ponte/src/soste.js`). Il
+ * consumo non lo dice nessuna entita': lo si ricava dalla batteria e
+ * dall'autonomia che l'auto stima, o sono 17 kWh ogni 100 km.
+ *
+ * Le auto che contano sono quelle che si ricaricano: elettriche e ibride. Una
+ * plancia senza profili ma con la batteria mappata ha un'auto sola, la sua. */
+
+function leAuto() {
+  const tutte = profiles().filter((car) => siRicarica(car));
+  if (tutte.length) return tutte;
+  if (profiles().length) return [];
+  return vehicleBatteryEntity({}) ? [{ [VEHICLE_KEY_FIELD]: "", name: "" }] : [];
+}
+
+function nomeDellAuto(car, indice = 0) {
+  return car?.[VEHICLE_KEY_FIELD] || car?.name
+    ? vehicleLabel(car, indice, t("La tua auto", "Your car"))
+    : t("La tua auto", "Your car");
+}
+
+function statoDi(id) {
+  return id ? allStates()?.[id] || null : null;
+}
+
+function numeroDi(stato) {
+  const n = Number.parseFloat(String(stato?.state ?? "").replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+/* L'entita' di una casella per quest'auto: la sua, o — se e' l'auto in uso —
+ * quella della mappatura generale. */
+function entitaDi(car, ref, inUso) {
+  const propria = clean((car?.ov || car?.overrides || {})[ref]);
+  if (propria) return propria;
+  if (!inUso) return "";
+  let risolta = "";
+  try {
+    risolta = clean(root.resolveEntity?.(ref));
+  } catch (_errore) {
+    risolta = "";
+  }
+  return risolta && risolta !== ref ? risolta : "";
+}
+
+/** Quello che si sa dell'auto adesso. */
+function datiDellAuto(car) {
+  const auto = leAuto();
+  const uid = car?.[VEHICLE_KEY_FIELD] || "";
+  const inUso = !profiles().length || uid === (activeVehicle()?.[VEHICLE_KEY_FIELD] || "");
+  const carica = numeroDi(statoDi(vehicleBatteryEntity(car)));
+  const autonomia = numeroDi(statoDi(entitaDi(car, "dm.ev_autonomia", inUso)));
+  const obiettivo = numeroDi(statoDi(entitaDi(car, "dm.ev_target_soc", inUso)));
+  const potenzaPropria = statoDi(entitaDi(car, "dm.ev_potenza_ricarica", inUso));
+  let kw = inKilowatt(potenzaPropria?.state, potenzaPropria?.attributes?.unit_of_measurement);
+  let inCarica = false;
+  let collegata = false;
+  if (inUso) {
+    try {
+      inCarica = codiceDellaRicaricaAdesso() === "C";
+      kw = kw ?? kilowattDellaColonnina();
+      collegata = vehiclePlugged() === true;
+    } catch (_errore) {
+      inCarica = false;
+    }
+  } else {
+    const detto = clean(statoDi(entitaDi(car, "dm.ev_stato_ricarica", false))?.state);
+    inCarica = /^[cd]$|charg|in carica|ricaric/i.test(detto);
+  }
+  const kwh =
+    capacitaDellaBatteria(car) ??
+    (profiles().length ? null : capacitaDellAutoInUso()) ??
+    CAPACITA_DI_SERIE;
+  const fine =
+    inCarica && carica !== null && obiettivo !== null
+      ? tempoDellaRicarica({
+          codice: "C",
+          soc: carica,
+          target: obiettivo,
+          kilowatt: kw,
+          capacita: kwh,
+        })
+      : null;
+  return {
+    uid,
+    nome: nomeDellAuto(car, Math.max(0, auto.indexOf(car))),
+    carica,
+    autonomia,
+    obiettivo,
+    kw: inCarica && kw !== null && kw > 0 ? kw : null,
+    inCarica,
+    collegata,
+    fineAlle: fine?.stato === "carica" ? Date.now() + fine.minuti * 60_000 : null,
+    kwh,
+    consumo: consumoStimato({ kwh, carica, autonomia }),
+  };
+}
+
+/** L'auto del viaggio: quella scelta, o quella in uso, o la prima. */
+function lAutoDelViaggio(b) {
+  const auto = leAuto();
+  if (!auto.length) return null;
+  const scelta = b?.auto?.uid;
+  const inUso = activeVehicle()?.[VEHICLE_KEY_FIELD];
+  return (
+    auto.find((car) => scelta && car[VEHICLE_KEY_FIELD] === scelta) ||
+    auto.find((car) => inUso && car[VEHICLE_KEY_FIELD] === inUso) ||
+    auto[0]
+  );
+}
+
+/** Le scelte dell'auto per il viaggio, con quelle di serie: si parte con
+ * l'obiettivo se l'auto e' in carica, se no con quello che ha. */
+function opzioniDellAuto(b, dati) {
+  const dette = b?.auto || {};
+  return {
+    uid: dati?.uid ?? "",
+    partenza: ["adesso", "obiettivo", 100].includes(dette.partenza)
+      ? dette.partenza
+      : dati?.inCarica && dati.obiettivo !== null
+        ? "obiettivo"
+        : "adesso",
+    minimaArrivo: MINIME_ALL_ARRIVO.includes(dette.minimaArrivo) ? dette.minimaArrivo : 15,
+    kwColonnine: POTENZE_DELLE_COLONNINE.includes(dette.kwColonnine) ? dette.kwColonnine : 100,
+  };
+}
+
+/** L'auto come la vuole la casa per la strada, o `null` se non si sa la carica. */
+function autoPerLaStrada(b) {
+  const car = lAutoDelViaggio(b);
+  if (!car) return null;
+  const dati = datiDellAuto(car);
+  const scelte = opzioniDellAuto(b, dati);
+  const batteria = caricaAllaPartenza(scelte.partenza, dati.carica, dati.obiettivo);
+  if (batteria === null) return null;
+  return {
+    batteria: Math.round(batteria),
+    kwh: dati.kwh,
+    consumo: dati.consumo,
+    kwMax: null,
+    minimaArrivo: scelte.minimaArrivo,
+    kwColonnine: scelte.kwColonnine,
+  };
+}
+
+const cifre = (n, massimo = 0) =>
+  Number(n).toLocaleString(activeLocale?.() || "it", { maximumFractionDigits: massimo });
+
+const pct = (n) => `${Math.round(n)}%`;
+
+function statoDettoDellAuto(dati) {
+  if (dati.inCarica) {
+    if (dati.fineAlle && dati.obiettivo !== null) {
+      const ora = oraDi(dati.fineAlle);
+      const fino = pct(dati.obiettivo);
+      return `⚡ ${t(`In carica a casa · ${fino} alle ${ora}`, `Charging at home · ${fino} at ${ora}`)}`;
+    }
+    return `⚡ ${t("In carica", "Charging")}`;
+  }
+  return dati.collegata
+    ? `🔌 ${t("Ferma a casa · non in carica", "Parked at home · not charging")}`
+    : `🔌 ${t("Ferma · non in carica", "Parked · not charging")}`;
+}
+
+function sosteDette(n) {
+  return n === 1
+    ? t("con 1 sosta di ricarica", "with 1 charging stop")
+    : t(`con ${n} soste di ricarica`, `with ${n} charging stops`);
+}
+
+/* Il riquadro «L'auto», nella colonna di destra. */
+function riquadroDellAuto(b) {
+  const auto = leAuto();
+  if (!auto.length) return invitoACollegare();
+  const car = lAutoDelViaggio(b);
+  const dati = datiDellAuto(car);
+  const scelte = opzioniDellAuto(b, dati);
+  const partenza = caricaAllaPartenza(scelte.partenza, dati.carica, dati.obiettivo);
+  const soste = sosteDi(b);
+  const conto = b.soste && b.tappe.length ? b.soste : null;
+  const arrivo = Number.isFinite(Number(conto?.arrivo)) ? Number(conto.arrivo) : null;
+  const scelta =
+    auto.length > 1
+      ? `<select class="dm-gn-auto-scelta" data-gn-campo="autoUid" aria-label="${esc(t("Quale auto", "Which car"))}">${auto
+          .map(
+            (c, i) =>
+              `<option value="${esc(c[VEHICLE_KEY_FIELD] || "")}"${c === car ? " selected" : ""}>${esc(nomeDellAuto(c, i))}</option>`,
+          )
+          .join("")}</select>`
+      : "";
+  /* La barra: adesso, il tratto che si caricera' prima di partire, e la tacca
+   * della partenza; o, se si parte con quello che c'e', la tacca dell'arrivo. */
+  const adesso = dati.carica ?? 0;
+  const siCarica = partenza !== null && partenza > adesso + 0.5;
+  const tacca = siCarica ? partenza : arrivo;
+  const misura = (n) => Math.max(0, Math.min(100, n));
+  const ora = pct(adesso);
+  const via = partenza !== null ? pct(partenza) : "";
+  const fine = arrivo !== null ? pct(arrivo) : "";
+  const barra =
+    dati.carica === null && partenza === null
+      ? ""
+      : `<div class="dm-gn-barra" role="img" aria-label="${esc(t(`Batteria dell'auto: ${ora}`, `Car battery: ${ora}`))}">
+        <i class="dm-gn-barra-ora" style="width:${misura(adesso).toFixed(1)}%"></i>
+        ${siCarica ? `<i class="dm-gn-barra-poi" style="left:${misura(adesso).toFixed(1)}%;width:${misura(partenza - adesso).toFixed(1)}%"></i>` : ""}
+        ${tacca !== null ? `<b class="dm-gn-barra-tacca" style="left:${misura(tacca).toFixed(1)}%"></b>` : ""}
+      </div>
+      <div class="dm-gn-barra-dida">${
+        siCarica
+          ? `<span>${esc(t(`adesso ${ora}`, `now ${ora}`))}</span><span>${esc(t(`alla partenza ${via}`, `at departure ${via}`))}</span>`
+          : `<span>${arrivo !== null ? esc(t(`all'arrivo ${fine}`, `on arrival ${fine}`)) : ""}</span><span>${esc(t(`adesso ${ora}`, `now ${ora}`))}</span>`
+      }</div>`;
+  const casella = (valore, etichetta, classe = "") =>
+    `<div class="dm-gn-num${classe}"><b>${esc(valore)}</b><span>${esc(etichetta)}</span></div>`;
+  const terzo =
+    dati.kw !== null
+      ? casella(`${cifre(dati.kw, 1)} kW`, t("in carica", "charging"), " verde")
+      : casella(b.stima?.km ? `${cifre(b.stima.km)} km` : "—", t("il viaggio", "the trip"));
+  const numeri = `<div class="dm-gn-numeri">${casella(dati.carica === null ? "—" : pct(dati.carica), t("adesso", "now"))}${casella(dati.autonomia === null ? "—" : `${cifre(dati.autonomia)} km`, t("autonomia", "range"))}${terzo}</div>`;
+  let esito = "";
+  if (!b.tappe.length) esito = "";
+  else if (partenza === null)
+    esito = `<div class="dm-gn-esito grigio"><span>🔋</span><span class="dm-gn-col"><b>${esc(t("La batteria non risponde", "The battery is not answering"))}</b><small>${esc(t("Per le soste scegli 100% alla partenza.", "For the stops, choose 100% at departure."))}</small></span></div>`;
+  else if (!conto)
+    esito = `<div class="dm-gn-esito grigio"><span>⚡</span><span class="dm-gn-col"><b>${esc(state.calcolo ? t("Calcolo le soste…", "Working out the stops…") : t("Le soste arrivano con la strada", "The stops come with the route"))}</b></span></div>`;
+  else if (soste.length) {
+    const minuti = minutiDiRicarica(b);
+    esito = `<div class="dm-gn-esito giallo" data-gn-esito="soste"><span>⚡</span><span class="dm-gn-col"><b>${esc(t(`Arrivi col ${fine}`, `You arrive with ${fine}`))} ${esc(sosteDette(soste.length))}</b><small>${esc(t(`${minuti} minuti di ricarica in tutto`, `${minuti} minutes of charging in all`))}</small></span></div>`;
+  } else {
+    const ritorno = arrivo !== null ? arrivo - (partenza - arrivo) : null;
+    const resta = ritorno !== null ? pct(ritorno) : "";
+    const basta =
+      ritorno !== null && ritorno >= 10
+        ? t(
+            `Al ritorno ti resta il ${resta}: basta senza ricaricare`,
+            `For the way back you still have ${resta}: no need to charge`,
+          )
+        : t("Per il ritorno servirà una ricarica", "You will need to charge for the way back");
+    esito = `<div class="dm-gn-esito verde" data-gn-esito="nessuna"><span>🏁</span><span class="dm-gn-col"><b>${esc(t(`Arrivi col ${fine} · nessuna sosta`, `You arrive with ${fine} · no stops`))}</b><small>${esc(basta)}</small></span></div>`;
+  }
+  /* Le scelte si vedono quando servono: ci sono soste, la batteria non
+   * risponde, qualcuno le ha toccate o non sono piu' quelle di serie. */
+  const diSerie = opzioniDellAuto({}, dati);
+  const mostraLeScelte =
+    state.opzioniAperte ||
+    soste.length > 0 ||
+    partenza === null ||
+    ["partenza", "minimaArrivo", "kwColonnine"].some((k) => scelte[k] !== diSerie[k]);
+  const bottone = (valore, testo) =>
+    `<button type="button" class="${scelte.partenza === valore ? "on" : ""}" data-gn-partenza="${esc(String(valore))}">${esc(testo)}</button>`;
+  const obiettivo = dati.obiettivo !== null ? pct(dati.obiettivo) : "";
+  const sottoPartenza =
+    scelte.partenza === "obiettivo" && dati.obiettivo !== null
+      ? t(`${obiettivo} = l'obiettivo di stanotte`, `${obiettivo} = tonight's target`)
+      : scelte.partenza === 100
+        ? t("Piena", "Full")
+        : t("Con la carica di adesso", "With the charge it has now");
+  const scelteHtml = mostraLeScelte
+    ? `<div class="dm-gn-scelte">
+        <div class="dm-gn-scelta"><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Alla partenza", "At departure"))}</span><span class="dm-gn-s">${esc(sottoPartenza)}</span></span>
+          <span class="dm-gn-seg mini">${dati.carica !== null ? bottone("adesso", pct(dati.carica)) : ""}${dati.obiettivo !== null && dati.obiettivo > (dati.carica ?? -1) ? bottone("obiettivo", pct(dati.obiettivo)) : ""}${bottone(100, "100%")}</span></div>
+        <label class="dm-gn-scelta"><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Carica minima all'arrivo", "Minimum charge on arrival"))}</span><span class="dm-gn-s">${esc(t("E alle colonnine mai sotto il 10%", "And never below 10% at chargers"))}</span></span>
+          <select data-gn-campo="minimaArrivo">${MINIME_ALL_ARRIVO.map((n) => `<option value="${n}"${scelte.minimaArrivo === n ? " selected" : ""}>${n}%</option>`).join("")}</select></label>
+        <label class="dm-gn-scelta"><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Colonnine", "Chargers"))}</span><span class="dm-gn-s">${esc(t("La potenza minima per fermarsi", "The minimum power to stop at"))}</span></span>
+          <select data-gn-campo="kwColonnine">${POTENZE_DELLE_COLONNINE.map((n) => `<option value="${n}"${scelte.kwColonnine === n ? " selected" : ""}>${esc(t(`Da ${n} kW`, `From ${n} kW`))}</option>`).join("")}</select></label>
+      </div>`
+    : "";
+  return `<div class="dm-gn-tit">${esc(t("L'auto", "The car"))}</div>
+    <div class="dm-gn-auto" data-gn-auto="${esc(dati.uid)}">
+      <div class="dm-gn-auto-capo"><span class="dm-gn-auto-ic" aria-hidden="true">🚙</span>
+        <span class="dm-gn-col"><span class="dm-gn-auto-nome">${esc(dati.nome)}</span><span class="dm-gn-auto-stato">${esc(statoDettoDellAuto(dati))}</span></span>
+        ${scelta}</div>
+      ${barra}${numeri}${esito}${scelteHtml}
+    </div>`;
+}
+
+/* Senza un'auto che si ricarica: a chi amministra la casa si dice dove
+ * collegarla; agli altri niente, perche' non potrebbero farlo. */
+function invitoACollegare() {
+  let amministra = false;
+  try {
+    amministra = root.dmPuoConfigurare?.() === true;
+  } catch (_errore) {
+    amministra = false;
+  }
+  if (!amministra) return "";
+  return `<div class="dm-gn-invito" data-gn-invito><span class="dm-gn-invito-ic" aria-hidden="true">🔌</span>
+    <span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Collega l'auto per vedere batteria e soste", "Connect the car to see battery and stops"))}</span>
+    <span class="dm-gn-s">${esc(t("Batteria e autonomia dell'auto elettrica, e le soste di ricarica se non basta.", "The electric car's battery and range, and the charging stops if it is not enough."))}</span>
+    <small>${esc(t("Lo vedi solo tu, che amministri la casa", "Only you see this, as the home's administrator"))}</small></span>
+    <button type="button" class="dm-gn-collega" data-gn-collega>${esc(t("Collega", "Connect"))}</button></div>`;
+}
+
+/* L'elenco delle soste di ricarica, sotto la cartina: la strada in fila, con
+ * le ore e la carica. */
+function elencoDelleSoste(b, partenza) {
+  const soste = sosteDi(b);
+  if (!soste.length || !Number.isFinite(partenza)) return "";
+  const conTappe = { ...b, soste: { ...b.soste, tappeKm: state.tappeKm } };
+  const fila = laStradaInFila(conTappe, partenza);
+  const corto = (posto) => String(posto?.nome || "").split(" · ")[0];
+  const minuti = minutiDiRicarica(b);
+  const arrivo = Number(b.soste?.arrivo);
+  const auto = autoPerLaStrada(b);
+  const pillola = (testo, classe = "") =>
+    `<span class="dm-gn-batt${classe}">🔋 ${esc(testo)}</span>`;
+  const destra = (alle, sotto) =>
+    `<span class="dm-gn-fila-ora"><b>${alle ? esc(oraDi(alle)) : ""}</b><small>${esc(sotto)}</small></span>`;
+  const riparti = (r) => {
+    if (!r.riparte || r.riparte === r.alle) return "";
+    const alle = oraDi(r.riparte);
+    return t(`riparti ${alle}`, `leave ${alle}`);
+  };
+  const righe = fila.map((r) => {
+    if (r.tipo === "partenza")
+      return `<li class="dm-gn-fila partenza"><span class="dm-gn-pallino verde">●</span><span class="dm-gn-col"><b>${esc(corto(b.da) || t("Casa", "Home"))}</b>${auto ? pillola(pct(auto.batteria)) : ""}</span>${destra(r.alle, t("parti", "leave"))}</li>`;
+    if (r.tipo === "tappa") {
+      const km = r.km !== null ? cifre(r.km) : "";
+      return `<li class="dm-gn-fila tappa"><span class="dm-gn-pallino viola">${r.n + 1}</span><span class="dm-gn-col"><b>${esc(corto(r.posto))}</b><small>${km ? esc(t(`dopo ${km} km`, `after ${km} km`)) : ""}</small></span>${destra(r.alle, riparti(r))}</li>`;
+    }
+    if (r.tipo === "sosta") {
+      const s = r.sosta;
+      const n = r.n;
+      const km = cifre(s.km);
+      const min = s.min;
+      const kw = s.kw;
+      const titolo = s.nome
+        ? t(`Sosta ${n} · dopo ${km} km`, `Stop ${n} · after ${km} km`)
+        : t(
+            `Sosta intorno al km ${km} · circa ${min} min`,
+            `Stop around km ${km} · about ${min} min`,
+          );
+      const sotto = s.nome
+        ? [
+            s.nome,
+            s.operatore && s.operatore !== s.nome ? s.operatore : "",
+            kw ? t(`fino a ${kw} kW`, `up to ${kw} kW`) : "",
+          ]
+            .filter(Boolean)
+            .join(" · ")
+        : t("La colonnina la sceglie gdanav in viaggio", "gdanav picks the charger on the way");
+      const da = pct(s.da);
+      const a = pct(s.a);
+      const carica =
+        Number.isFinite(Number(s.da)) && Number.isFinite(Number(s.a)) && s.da !== null
+          ? pillola(
+              t(`dal ${da} all'${a} · ${min} min`, `from ${da} to ${a} · ${min} min`),
+              " gialla",
+            )
+          : "";
+      return `<li class="dm-gn-fila sosta" data-gn-sosta-di-ricarica="${n}"><span class="dm-gn-pallino arancio">⚡</span><span class="dm-gn-col"><b>${esc(titolo)}</b><small>${esc(sotto)}</small>${carica}</span>${destra(r.alle, riparti(r))}</li>`;
+    }
+    return `<li class="dm-gn-fila arrivo"><span class="dm-gn-pallino rosso">🏁</span><span class="dm-gn-col"><b>${esc(corto(r.posto))}</b>${Number.isFinite(arrivo) ? pillola(pct(arrivo)) : ""}</span>${destra(r.alle, t("arrivi", "arrive"))}</li>`;
+  });
+  const fonti =
+    b.soste?.fonte === "gdanav"
+      ? t(
+          "Soste scelte da gdanav in viaggio, con le colonnine libere.",
+          "Stops picked by gdanav on the way, with free chargers.",
+        )
+      : state.archivio
+        ? t(
+            "Colonnine: © OpenStreetMap e Piattaforma Unica Nazionale, nella casa. In viaggio gdanav guarda se sono libere e, se serve, cambia sosta.",
+            "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.",
+          )
+        : t(
+            "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio gdanav sceglie le colonnine e guarda se sono libere.",
+            "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.",
+          );
+  const n = soste.length;
+  const quante = n === 1 ? t("1 sosta", "1 stop") : t(`${n} soste`, `${n} stops`);
+  const fine = Number.isFinite(arrivo) ? pct(arrivo) : "";
+  return `<div class="dm-gn-soste" data-gn-soste><div class="dm-gn-soste-capo"><b>⚡ ${esc(t("Soste di ricarica", "Charging stops"))}</b>
+    <small>${esc(quante)} · ${esc(`${minuti} min`)}${fine ? ` · ${esc(t(`arrivi col ${fine}`, `arrive with ${fine}`))}` : ""}</small></div>
+    <ol>${righe.join("")}</ol>
+    <div class="dm-gn-fonti">${esc(fonti)}</div></div>`;
 }
 
 function editor() {
@@ -390,21 +825,36 @@ function editor() {
       : b.quando.giorno;
   const tempi = partenzaEArrivo(b, giornoDiConto);
   const durata = durataStimata(b);
+  /* Le soste di ricarica stanno in una riga loro: la «Strada» resta la
+   * guida, con le soste delle tappe. */
+  const soste = leAuto().length ? sosteDi(b) : [];
+  const ricarica = soste.length ? minutiDiRicarica(b) : 0;
   const righe = [];
   if (durata !== null) {
     righe.push(
-      `🛣️ ${t("Strada", "Drive")}: ${durataDetta(durata, l)}${b.stima?.km ? ` · ${b.stima.km} km` : ""}`,
+      `🛣️ ${t("Strada", "Drive")}: ${durataDetta(durata - ricarica * 60_000, l)}${b.stima?.km ? ` · ${b.stima.km} km` : ""}`,
     );
+    if (soste.length) {
+      const n = soste.length;
+      const minuti = durataDetta(ricarica * 60_000, l);
+      righe.push(
+        `⚡ ${n === 1 ? t(`Ricarica: ${minuti} in 1 sosta`, `Charging: ${minuti} in 1 stop`) : t(`Ricarica: ${minuti} in ${n} soste`, `Charging: ${minuti} in ${n} stops`)}`,
+      );
+    }
     righe.push(
       b.stima?.fonte === "traffico"
         ? `🚦 ${t("Col traffico, stimato da gdanav", "With traffic, estimated by gdanav")}`
         : `🔄 ${t("Senza traffico, con un margine: gdanav lo ricalcola col traffico vero fino alla partenza", "Without traffic, with a margin: gdanav recalculates with live traffic until you leave")}`,
     );
   }
+  const arrivoDetto =
+    tempi?.arrivo != null && !(b.quando.modo === "arrivo" && b.tipo !== "tappe")
+      ? `<div class="dm-gn-riga" data-gn-arrivo>🏁 ${esc(t("Arrivi verso le", "You arrive around"))} <b>${esc(oraDi(tempi.arrivo))}</b>${soste.length ? ` ${esc(sosteDette(soste.length))}` : ""}</div>`
+      : "";
   const quandoPartire =
     tempi?.partenza != null
       ? `<div class="dm-gn-parti"><div class="dm-gn-parti-t">${esc(t("Parti alle", "Leave at"))}</div><div class="dm-gn-ora">${esc(oraDi(tempi.partenza))}</div>
-        ${tempi.arrivo != null && !(b.quando.modo === "arrivo" && b.tipo !== "tappe") ? `<div class="dm-gn-riga">🏁 ${esc(t("Arrivi verso le", "You arrive around"))} ${esc(oraDi(tempi.arrivo))}</div>` : ""}
+        ${arrivoDetto}
         ${righe.map((r) => `<div class="dm-gn-riga">${esc(r)}</div>`).join("")}</div>`
       : `<div class="dm-gn-parti"><div class="dm-gn-riga">${esc(t("Scegli la meta e l'ora: qui ti dico quando partire.", "Pick the destination and time: I will tell you when to leave."))}</div></div>`;
   const clima = b.prepara?.clima?.entity || "";
@@ -419,12 +869,14 @@ function editor() {
         ${parolaDellaRicerca()}
         ${state.proposte.length ? `<div class="dm-gn-proposte">${state.proposte.map((p, i) => `<button type="button" data-gn-proposta="${i}">📍 ${esc(p.nome)}</button>`).join("")}</div>` : ""}
         ${mappa(b)}
+        ${soste.length ? elencoDelleSoste(b, tempi?.partenza) : ""}
         ${giorno}
         ${modo}
         <label class="dm-gn-campo"><span>🏁 ${esc(b.tipo === "tappe" || b.quando.modo === "partenza" ? t("Parto alle", "Leave at") : t("Arrivo entro", "Arrive by"))}</span><input type="time" data-gn-campo="ora" value="${esc(b.quando.ora)}"></label>
       </div>
       <div>
         ${quandoPartire}
+        ${riquadroDellAuto(b)}
         <div class="dm-gn-tit">${esc(t("Avvisi", "Reminders"))}</div>
         <label class="dm-gn-int"><span>🔔</span><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Avvisami prima", "Remind me"))}</span><span class="dm-gn-s">${esc(t("Sul telefono, prima di partire", "On the phone, before leaving"))}</span></span>
           <select data-gn-campo="avvisoMin">${[5, 10, 15, 20, 30].map((m) => `<option value="${m}"${b.avviso.minuti === m ? " selected" : ""}>${m} min</option>`).join("")}</select>
@@ -499,12 +951,23 @@ export function disegna() {
   const fuoco = cerca && doc.activeElement === cerca;
   const cursore = fuoco ? cerca.selectionStart : null;
   const html = `${testa}<div class="dm-gn-griglia"><div class="dm-gn-card">${elenco()}</div><div class="dm-gn-card">${editor()}</div></div>`;
+  sosteQuandoLAutoRisponde();
   if (!scrivi(posto, html)) return;
   if (fuoco) {
     const nuovo = posto.querySelector("[data-gn-cerca]");
     nuovo?.focus();
     if (cursore !== null) nuovo?.setSelectionRange?.(cursore, cursore);
   }
+}
+
+/* La strada si chiede appena scelto il viaggio, e a volte la batteria non ha
+ * ancora risposto: quando risponde, si richiede una volta, con l'auto. */
+function sosteQuandoLAutoRisponde() {
+  const b = state.bozza;
+  if (!b?.tappe?.length || b.soste || state.calcolo || state.sosteChiestePer === b) return;
+  if (!leAuto().length || !autoPerLaStrada(b)) return;
+  state.sosteChiestePer = b;
+  void stimaLaStrada();
 }
 
 /* ── gesti ───────────────────────────────────────────────────────────────── */
@@ -535,22 +998,61 @@ async function cerca(testo) {
   disegna();
 }
 
+let quanteStrade = 0;
+
 async function stimaLaStrada() {
   const b = state.bozza;
   if (!b?.tappe?.length) return;
+  const mia = ++quanteStrade;
+  /* Con un'auto elettrica la strada porta anche le soste di ricarica. */
+  const auto = autoPerLaStrada(b);
+  state.calcolo = Boolean(auto);
+  if (auto) state.sosteChiestePer = b;
   try {
-    const risposta = await chiedi("strada", { da: b.da, tappe: b.tappe }, 15000);
-    if (state.bozza !== b) return;
+    const risposta = await chiedi(
+      "strada",
+      { da: b.da, tappe: b.tappe, ...(auto ? { auto } : {}) },
+      20000,
+    );
+    if (state.bozza !== b || mia !== quanteStrade) return;
     if (risposta?.stima) {
       /* Una stima col traffico del navigatore non si butta per una senza. */
       if (b.stima?.fonte !== "traffico") b.stima = risposta.stima;
       state.linea = Array.isArray(risposta.linea) ? risposta.linea : [];
       if (!b.da && risposta.da) state.casa = risposta.da;
     }
+    const soste = risposta?.soste;
+    if (soste && Array.isArray(soste.elenco)) {
+      state.tappeKm = Array.isArray(soste.tappeKm) ? soste.tappeKm : [];
+      state.archivio = soste.archivio === true;
+      /* Allo stesso modo le soste del navigatore, che sa quali colonnine
+       * sono libere, restano: finche' non si cambia l'auto o le scelte. */
+      if (b.soste?.fonte !== "gdanav")
+        b.soste = {
+          elenco: soste.elenco,
+          arrivo: soste.arrivo,
+          partenza: soste.partenza,
+          fonte: "casa",
+        };
+    }
   } catch (_errore) {
     /* Senza strada si salva lo stesso: la stima la portera' il navigatore. */
   }
+  if (mia === quanteStrade) state.calcolo = false;
   disegna();
+}
+
+/* Una scelta dell'auto cambiata: le soste di prima — anche quelle del
+ * navigatore — non valgono piu', e si richiede la strada. */
+function cambiaLAuto(cambio) {
+  const b = state.bozza;
+  if (!b) return;
+  const car = lAutoDelViaggio(b);
+  b.auto = { ...opzioniDellAuto(b, car ? datiDellAuto(car) : null), ...cambio };
+  b.soste = null;
+  state.opzioniAperte = true;
+  disegna();
+  void stimaLaStrada();
 }
 
 function scegliIlViaggio(id) {
@@ -567,8 +1069,13 @@ function scegliIlViaggio(id) {
     avviso: v.avviso || { acceso: true, minuti: 10 },
     prepara: v.prepara || { clima: null, garage: null },
     stima: v.stima || null,
+    auto: v.auto || null,
+    soste: v.soste || null,
   });
   state.linea = [];
+  state.tappeKm = [];
+  state.archivio = null;
+  state.opzioniAperte = false;
   state.proposte = [];
   state.cercando = "";
   state.errore = "";
@@ -587,8 +1094,19 @@ async function salva() {
   state.salvando = true;
   state.errore = "";
   disegna();
+  /* Con un'auto che si ricarica il viaggio porta le sue scelte e le soste
+   * calcolate: la casa le conta nell'ora di partenza. Senza, niente. */
+  const car = lAutoDelViaggio(b);
+  const viaggio = { ...b };
+  delete viaggio.auto;
+  delete viaggio.soste;
+  if (car) {
+    viaggio.auto = opzioniDellAuto(b, datiDellAuto(car));
+    if (b.soste?.fonte === "casa" && Array.isArray(b.soste.elenco))
+      viaggio.soste = { elenco: b.soste.elenco, arrivo: b.soste.arrivo };
+  }
   try {
-    const risposta = await chiedi("salva", { viaggio: b });
+    const risposta = await chiedi("salva", { viaggio });
     state.scelto = risposta?.viaggio?.id || "";
     if (risposta?.viaggio) state.bozza.id = risposta.viaggio.id;
     await carica();
@@ -625,14 +1143,33 @@ async function elimina() {
 
 function alClic(event) {
   const bersaglio = event.target?.closest?.(
-    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina]",
+    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina], #dm-gn [data-gn-partenza], #dm-gn [data-gn-collega]",
   );
   if (!bersaglio) return;
   const d = bersaglio.dataset;
+  if (d.gnPartenza && state.bozza) {
+    cambiaLAuto({ partenza: d.gnPartenza === "100" ? 100 : d.gnPartenza });
+    return;
+  }
+  if ("gnCollega" in d) {
+    /* La pagina Auto si configura nel Config, sulla scheda dei veicoli. */
+    try {
+      root.apriConfigEntita?.();
+      root.setTimeout?.(() => {
+        try {
+          root.editorSwitch?.("sez2");
+        } catch (_errore) {}
+      }, 0);
+    } catch (_errore) {}
+    return;
+  }
   if ("gnNuovo" in d) {
     state.bozza = bozzaNuova("una");
     state.scelto = "";
     state.linea = [];
+    state.tappeKm = [];
+    state.archivio = null;
+    state.opzioniAperte = false;
     state.proposte = [];
     state.cercando = "";
     state.errore = "";
@@ -660,6 +1197,9 @@ function alClic(event) {
       else state.bozza.tappe = [posto];
       if (state.bozza.stima?.fonte !== "traffico" || state.bozza.tipo !== "tappe")
         state.bozza.stima = null;
+      /* Un'altra strada, altre soste. */
+      state.bozza.soste = null;
+      state.tappeKm = [];
       state.proposte = [];
       state.cercando = "";
       state.linea = [];
@@ -668,6 +1208,8 @@ function alClic(event) {
   } else if (d.gnTogliTappa && state.bozza) {
     state.bozza.tappe.splice(Number(d.gnTogliTappa), 1);
     state.bozza.stima = null;
+    state.bozza.soste = null;
+    state.tappeKm = [];
     state.linea = [];
     void stimaLaStrada();
   } else if ("gnSalva" in d) {
@@ -712,6 +1254,18 @@ function alCambio(event) {
     case "garage":
       b.prepara.garage = campo.value ? { entity: campo.value } : null;
       break;
+    case "autoUid":
+      /* Un'altra auto: le sue scelte di serie, la sua batteria. */
+      b.auto = { ...(b.auto || {}), uid: campo.value, partenza: null };
+      b.auto = opzioniDellAuto(b, datiDellAuto(lAutoDelViaggio(b)));
+      b.soste = null;
+      disegna();
+      void stimaLaStrada();
+      return;
+    case "minimaArrivo":
+    case "kwColonnine":
+      cambiaLAuto({ [campo.dataset.gnCampo]: Number(campo.value) });
+      return;
     default:
       return;
   }
@@ -797,7 +1351,62 @@ body.dark-mode .dm-gn,html.dark .dm-gn{--gn-mappa:#1e293b;--gn-card:#111827;--gn
 .dm-gn-vuoto.grande{display:grid;place-items:center;min-height:300px;text-align:center}
 .dm-gn-premium{display:flex;gap:16px;align-items:center}
 .dm-gn-premium img{width:72px;height:72px;border-radius:18px}
+.dm-gn-riga b{font-weight:800}
+.dm-gn-auto{border:1px solid var(--gn-bordo);border-radius:18px;padding:14px;background:var(--gn-card)}
+.dm-gn-auto-capo{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dm-gn-auto-capo>.dm-gn-col{flex:1 1 0;min-width:0}
+.dm-gn-auto-ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:24px;background:#dcfce7;flex:none}
+.dm-gn-auto-nome{font-weight:800;font-size:16px}
+.dm-gn-auto-stato{font-size:12.5px;color:var(--gn-piano)}
+.dm-gn-auto-scelta{flex:none;margin-left:auto;max-width:140px;font:inherit;font-size:13px;border:1px solid var(--gn-bordo);border-radius:10px;padding:6px 8px;background:var(--gn-card);color:inherit}
+.dm-gn-barra{position:relative;height:10px;border-radius:99px;background:#e2e8f0;margin:16px 0 4px;overflow:visible}
+.dm-gn-barra>i{position:absolute;top:0;bottom:0;border-radius:99px}
+.dm-gn-barra-ora{left:0;background:linear-gradient(90deg,#16a34a,#22c55e)}
+.dm-gn-barra-poi{background:repeating-linear-gradient(135deg,#bbf7d0 0 6px,#86efac 6px 12px);border-radius:0 99px 99px 0!important}
+.dm-gn-barra-tacca{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;border-radius:2px;background:#15803d}
+.dm-gn-barra-dida{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--gn-piano)}
+.dm-gn-numeri{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.dm-gn-num{background:var(--gn-fondo);border-radius:12px;padding:9px 10px;display:flex;flex-direction:column;min-width:0}
+.dm-gn-num b{font-size:19px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-gn-num span{font-size:11.5px;font-weight:700;color:var(--gn-piano)}
+.dm-gn-num.verde b{color:#15803d}
+.dm-gn-esito{display:flex;gap:10px;align-items:center;margin-top:12px;padding:10px 14px;border-radius:14px;font-size:14px}
+.dm-gn-esito b{font-weight:800}
+.dm-gn-esito small{font-size:12px;font-weight:700}
+.dm-gn-esito.giallo{background:#fef3c7;color:#92400e}
+.dm-gn-esito.verde{background:#dcfce7;color:#166534}
+.dm-gn-esito.grigio{background:var(--gn-fondo);color:var(--gn-piano)}
+.dm-gn-scelte{border-top:1px solid var(--gn-bordo);margin-top:14px;padding-top:6px}
+.dm-gn-scelta{display:flex;align-items:center;gap:10px;padding:7px 0}
+.dm-gn-scelta select{font:inherit;font-size:13px;border:1px solid var(--gn-bordo);border-radius:10px;padding:6px;background:var(--gn-card);color:inherit}
+.dm-gn-seg.mini{margin:0;padding:3px;border-radius:12px;flex:none}
+.dm-gn-seg.mini button{padding:6px 10px;font-size:13px}
+.dm-gn-invito{display:flex;align-items:center;gap:12px;border:1.5px dashed #cbd5e1;border-radius:18px;padding:14px;margin-top:14px;background:var(--gn-fondo)}
+.dm-gn-invito-ic{font-size:26px;flex:none}
+.dm-gn-invito small{font-size:11.5px;color:var(--gn-piano);margin-top:4px}
+.dm-gn-collega{flex:none;border:1px solid #93c5fd;color:#1d4ed8;background:var(--gn-card);border-radius:12px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit}
+.dm-gn-soste{border:1px solid var(--gn-bordo);border-radius:18px;padding:14px;margin:4px 0 8px}
+.dm-gn-soste-capo{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.dm-gn-soste-capo b{font-size:16px;font-weight:800}
+.dm-gn-soste-capo small{font-size:12.5px;font-weight:700;color:var(--gn-piano)}
+.dm-gn-soste ol{list-style:none;margin:0;padding:0}
+.dm-gn-fila{position:relative;display:flex;gap:12px;align-items:flex-start;padding:9px 8px;border-radius:12px}
+.dm-gn-fila:not(:last-child)::before{content:"";position:absolute;left:21px;top:34px;bottom:-10px;width:3px;background:#cbd5e1;border-radius:2px}
+.dm-gn-fila.sosta{background:#fffbeb;margin:4px 0}
+.dm-gn-fila>.dm-gn-col b{font-weight:800;font-size:14.5px}
+.dm-gn-fila>.dm-gn-col small{font-size:12.5px;color:var(--gn-piano)}
+.dm-gn-pallino{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:13px;font-weight:800;color:#fff;border:3px solid var(--gn-card)}
+.dm-gn-pallino.verde{background:#16a34a;font-size:9px}.dm-gn-pallino.viola{background:#6d28d9}.dm-gn-pallino.arancio{background:#f59e0b}.dm-gn-pallino.rosso{background:#dc2626;font-size:12px}
+.dm-gn-fila-ora{display:flex;flex-direction:column;align-items:flex-end;text-align:right;flex:none}
+.dm-gn-fila-ora b{font-weight:800;font-size:14.5px}
+.dm-gn-fila-ora small{font-size:12px;font-weight:700;color:var(--gn-piano)}
+.dm-gn-batt{align-self:flex-start;white-space:nowrap;display:inline-flex;margin-top:4px;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-size:12px;font-weight:800}
+.dm-gn-batt.gialla{background:#fef3c7;color:#92400e}
+.dm-gn-fonti{font-size:11.5px;color:var(--gn-piano);margin-top:8px;line-height:1.45}
+body.dark-mode .dm-gn-fila.sosta,html.dark .dm-gn-fila.sosta{background:#422006}
+body.dark-mode .dm-gn-auto-ic,html.dark .dm-gn-auto-ic{background:#14532d}
 @media (max-width:980px){.dm-gn-griglia,.dm-gn-dett{grid-template-columns:1fr}}
+@media (max-width:560px){.dm-gn-auto-scelta{order:3;flex:1 1 100%;max-width:none;margin-left:0}.dm-gn-scelta{flex-wrap:wrap}}
 `;
 
 /* ── accensione ──────────────────────────────────────────────────────────── */

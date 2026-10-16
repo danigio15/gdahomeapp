@@ -39,18 +39,143 @@ export function domani(adesso = Date.now()) {
   return `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}`;
 }
 
-/**
- * Quanto si guida, in millisecondi, con la stima che c'e': col traffico del
- * navigatore cosi' com'e', senza traffico col margine. Le soste delle tappe in
- * mezzo si sommano. `null` senza stima.
- */
-export function durataStimata(bozza) {
+/** Le soste di ricarica della bozza: quelle che ha, o nessuna. */
+export function sosteDi(bozza) {
+  const elenco = bozza?.soste?.elenco;
+  return Array.isArray(elenco) ? elenco.filter((s) => s && Number.isFinite(Number(s.km))) : [];
+}
+
+/** I minuti di ricarica della bozza, in tutto. */
+export function minutiDiRicarica(bozza) {
+  return sosteDi(bozza).reduce((somma, s) => somma + (Number(s.min) || 0), 0);
+}
+
+/** Quanto si guida e basta, in millisecondi: senza nessuna sosta. */
+export function guidaStimata(bozza) {
   const secondi = Number(bozza?.stima?.durataS);
   if (!Number.isFinite(secondi) || secondi <= 0) return null;
   const margine = bozza.stima.fonte === "traffico" ? 1 : MARGINE_SENZA_TRAFFICO;
+  return Math.round(secondi * 1000 * margine);
+}
+
+/**
+ * Quanto si guida, in millisecondi, con la stima che c'e': col traffico del
+ * navigatore cosi' com'e', senza traffico col margine. Le soste delle tappe in
+ * mezzo si sommano, e le soste di ricarica di un'auto elettrica anche: con
+ * «arrivo entro» si parte prima. `null` senza stima.
+ */
+export function durataStimata(bozza) {
+  const guida = guidaStimata(bozza);
+  if (guida === null) return null;
   const tappe = Array.isArray(bozza.tappe) ? bozza.tappe : [];
   const soste = tappe.slice(0, -1).reduce((s, t) => s + (Number(t?.sostaMin) || 0), 0);
-  return Math.round(secondi * 1000 * margine + soste * MINUTO);
+  return Math.round(guida + (soste + minutiDiRicarica(bozza)) * MINUTO);
+}
+
+/* ── l'auto elettrica ──────────────────────────────────────────────────── */
+
+/* Gli stessi della casa (`ponte/src/soste.js`). */
+export const CONSUMO_DI_SERIE = 17;
+export const MINIME_ALL_ARRIVO = Object.freeze([10, 15, 20, 30]);
+export const POTENZE_DELLE_COLONNINE = Object.freeze([50, 100, 150]);
+
+const numero = (valore) => {
+  if (valore === null || valore === undefined || valore === "") return null;
+  const n = Number.parseFloat(String(valore).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
+
+/**
+ * Quanti kWh ogni 100 km, da quello che l'auto dice di se': la batteria
+ * (kWh x carica) divisa per l'autonomia che stima. Un'auto che non dice
+ * l'autonomia, o un numero che non sta in piedi, prende i 17 di serie.
+ */
+export function consumoStimato({ kwh, carica, autonomia } = {}) {
+  const pacco = numero(kwh);
+  const percento = numero(carica);
+  const km = numero(autonomia);
+  if (pacco === null || percento === null || km === null || km < 10 || percento < 5)
+    return CONSUMO_DI_SERIE;
+  const consumo = ((pacco * percento) / 100 / km) * 100;
+  return consumo >= 8 && consumo <= 40 ? Math.round(consumo * 10) / 10 : CONSUMO_DI_SERIE;
+}
+
+/**
+ * La carica con cui si parte, secondo la scelta: «adesso» quella di adesso,
+ * «obiettivo» quella a cui arriva la carica di casa (mai meno di adesso), 100
+ * piena. `null` se non si sa.
+ */
+export function caricaAllaPartenza(scelta, adesso, obiettivo = null) {
+  if (scelta === 100 || scelta === "100") return 100;
+  const ora = numero(adesso);
+  const fino = numero(obiettivo);
+  if (scelta === "obiettivo" && fino !== null) return Math.max(fino, ora ?? 0);
+  return ora;
+}
+
+/** La carica dopo `km` chilometri, in %. */
+export function caricaDopo(km, { carica, kwh, consumo = CONSUMO_DI_SERIE }) {
+  const pacco = numero(kwh);
+  const partenza = numero(carica);
+  if (pacco === null || partenza === null || !pacco) return null;
+  return partenza - ((numero(km) || 0) * (consumo / 100) * 100) / pacco;
+}
+
+/**
+ * La strada in fila, con le ore: la partenza, le tappe, le soste di ricarica e
+ * l'arrivo, in ordine di chilometri. L'ora di un punto e' la partenza piu' la
+ * guida fin li' (in proporzione ai chilometri) piu' le soste prima di lui.
+ *
+ * Torna `[{ tipo, km, alle, riparte, posto?, sosta?, n? }]`, con `tipo`
+ * "partenza", "tappa", "sosta" o "arrivo". Una tappa di cui la strada non ha
+ * detto i chilometri resta in fila senza ora. `[]` senza stima o senza ora.
+ */
+export function laStradaInFila(bozza, partenza) {
+  const guida = guidaStimata(bozza);
+  const tappe = Array.isArray(bozza?.tappe) ? bozza.tappe : [];
+  if (guida === null || !Number.isFinite(partenza) || !tappe.length) return [];
+  const tappeKm = Array.isArray(bozza?.soste?.tappeKm) ? bozza.soste.tappeKm : [];
+  const kmTotali = numero(bozza.stima?.km) ?? numero(tappeKm[tappeKm.length - 1]);
+  const alKm = (km) => (kmTotali ? (guida * Math.min(km, kmTotali)) / kmTotali : 0);
+  const fermate = [
+    ...tappe.slice(0, -1).map((posto, i) => ({
+      tipo: "tappa",
+      km: numero(tappeKm[i]),
+      sostaMin: Number(posto?.sostaMin) || 0,
+      posto,
+      n: i + 1,
+    })),
+    ...sosteDi(bozza).map((sosta, i) => ({
+      tipo: "sosta",
+      km: Number(sosta.km),
+      sostaMin: Number(sosta.min) || 0,
+      sosta,
+      n: i + 1,
+    })),
+  ].sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity) || (a.tipo === "tappa" ? -1 : 1));
+  const fila = [{ tipo: "partenza", km: 0, alle: partenza, riparte: partenza }];
+  let ferme = 0;
+  for (const f of fermate) {
+    const alle = f.km === null ? null : partenza + alKm(f.km) + ferme * MINUTO;
+    ferme += f.sostaMin;
+    fila.push({
+      tipo: f.tipo,
+      km: f.km,
+      alle,
+      riparte: alle === null ? null : alle + f.sostaMin * MINUTO,
+      n: f.n,
+      ...(f.posto ? { posto: f.posto } : {}),
+      ...(f.sosta ? { sosta: f.sosta } : {}),
+    });
+  }
+  fila.push({
+    tipo: "arrivo",
+    km: kmTotali,
+    alle: partenza + guida + ferme * MINUTO,
+    riparte: null,
+    posto: tappe[tappe.length - 1],
+  });
+  return fila;
 }
 
 /**
