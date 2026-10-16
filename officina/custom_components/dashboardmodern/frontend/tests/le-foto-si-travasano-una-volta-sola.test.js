@@ -262,7 +262,13 @@ test("togliere una chiave non alza la revisione", async () => {
    * ha imparato vale per tutta la casa (`cd_assistente`). */
   /* E la 64 con la pagina Meteo (#206, `cd_meteo`): i sensori della stazione
    * scelti dal computer devono comparire anche sul tablet in cucina. */
-  assert.equal(CONFIG_KEYS_REVISION, 64);
+  /* E la 65 con la ricarica di notte (`cd_ricarica_notte`): la casa la legge
+   * dalla plancia principale, e la scelta fatta dal telefono deve arrivarle. */
+  assert.equal(CONFIG_KEYS_REVISION, 65);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_ricarica_notte"),
+    "la ricarica di notte scelta dal telefono deve arrivare alla casa",
+  );
   assert.ok(
     CONFIG_KEYS.includes("cd_meteo"),
     "la stazione scelta qui dev'essere la stessa anche sul tablet in cucina",
