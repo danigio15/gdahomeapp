@@ -1,112 +1,337 @@
-gdahome License
-Version 1.0 — effective 9 September 2026
+Licenza d'uso di gdahome
+Versione 2.0 — in vigore dal 16 ottobre 2026
 
-Copyright (c) 2026 Giovanni d'Aniello (github.com/danigio15).
-All rights reserved.
+Copyright (c) 2026 Giovanni d'Aniello. Tutti i diritti riservati.
 
-This is a proprietary license. It is NOT an open source license and it is not
-approved by the Open Source Initiative. No right beyond those stated below is
-granted, and nothing here is granted by implication or estoppel.
+Distribuito da CRV IMMOBILIARE S.R.L., Viale della Libertà 24,
+81031 Aversa (CE), Italia — P. IVA e C.F. 03719610614.
+
+Questa è una licenza proprietaria. Il codice è pubblico perché chiunque possa
+leggerlo e controllare cosa fa ("source available"), ma questa NON è una
+licenza open source e non è approvata dalla Open Source Initiative. Non si
+concede nessun diritto oltre a quelli scritti qui, nemmeno in modo implicito.
+
+Il testo che vale è quello italiano; la traduzione inglese, in fondo, serve a
+chi non legge l'italiano. Questa versione sostituisce la gdahome License 1.0
+dal 16 ottobre 2026.
+
+1. DEFINIZIONI
+
+   «Software»: il contenuto della repository
+   https://github.com/danigio15/gdahomeapp — l'app gdahome, l'add-on «ponte»
+   per Home Assistant con la sua plancia, il «centralino», il «quadro» e il
+   sito — con il codice sorgente, le risorse, la documentazione e i pacchetti
+   costruiti da essi, compresi quelli distribuiti dai negozi di applicazioni.
+
+   «Titolare»: Giovanni d'Aniello, autore del Software e titolare dei diritti
+   d'autore su di esso.
+
+   «Distributore»: CRV IMMOBILIARE S.R.L., che per accordo con il Titolare
+   distribuisce il Software e ne vende le funzioni a pagamento.
+
+   «Repository»: la repository indicata sopra.
+
+   «Tu»: la persona fisica o giuridica che usa il Software o esercita i
+   permessi di questa licenza.
+
+   «Installatore autorizzato»: chi ha ricevuto per iscritto dal Distributore
+   l'accesso al programma per gli installatori.
+
+2. COSA PUOI FARE
+
+   Se rispetti questa licenza, il Titolare ti concede il permesso, non
+   esclusivo, non trasferibile, revocabile e gratuito, di:
+
+   (a) installare e usare il Software — l'app sui dispositivi che possiedi o
+       controlli, l'add-on sulle istanze di Home Assistant che possiedi o
+       amministri — per le tue esigenze personali o per quelle della tua
+       attività, nella tua casa o nei tuoi locali;
+
+   (b) scaricare e leggere il codice sorgente, per controllare cosa fa il
+       Software con la tua casa e con i tuoi dati;
+
+   (c) modificare la copia che hai installato per usarla tu, purché la copia
+       modificata non sia distribuita né resa disponibile ad altri, e purché
+       siano rispettate la Sezione 3(e) e la Sezione 5;
+
+   (d) se sei un Installatore autorizzato, installare, configurare e assistere
+       il Software nelle case e nei locali dei tuoi clienti, alle condizioni
+       che il Distributore ti ha dato per iscritto.
+
+3. COSA NON PUOI FARE
+
+   Salvo quanto permettono le Sezioni 2 e 4 o le norme di legge inderogabili,
+   non puoi:
+
+   (a) ridistribuire, pubblicare, duplicare online, ricaricare altrove,
+       installare per altri o rendere comunque disponibile a terzi il Software
+       o una sua parte, in forma sorgente o compilata, modificata o no, a
+       pagamento o gratis;
+
+   (b) pubblicare il Software, o un'app o un add-on che ne derivi, in un
+       negozio di applicazioni, in un archivio di pacchetti o di add-on o in
+       un canale di distribuzione simile;
+
+   (c) fare un fork della Repository, ripubblicarla o riprodurla in altro modo
+       come copia pubblica a sé stante, salvo quanto permette la Sezione 4;
+
+   (d) distribuire opere derivate, adattamenti, traduzioni, versioni con un
+       altro marchio o versioni modificate del Software;
+
+   (e) togliere, alterare, nascondere o aggirare gli avvisi di copyright e di
+       licenza, le attribuzioni, i registri di provenienza, le firme, i sigilli
+       e i controlli di integrità contenuti nel Software o prodotti da esso;
+       aggirare, disattivare o falsificare i controlli delle funzioni a
+       pagamento (licenze, gettoni, codici regalo, abbonamenti); o presentare
+       il Software, o una sua parte, come non proveniente dal Titolare;
+
+   (f) concedere in sublicenza, vendere, noleggiare o dare in locazione il
+       Software, o includerlo in un prodotto a pagamento, in un servizio
+       ospitato per altri o in un'offerta commerciale di installazione,
+       integrazione o assistenza, salvo quanto la Sezione 2(d) permette agli
+       Installatori autorizzati;
+
+   (g) usare i nomi «gdahome», «gdanav», «GDA», «ponte», «centralino» e
+       «quadro» nel senso in cui sono usati qui, il logo o i marchi del
+       Software, o nomi che si possano confondere con questi, per indicare un
+       derivato, un prodotto concorrente o un servizio.
+
+   Questa Sezione non limita gli atti che la legge consente comunque, anche
+   contro un contratto, come la decompilazione per l'interoperabilità
+   prevista dagli articoli 64-ter e 64-quater della legge 22 aprile 1941,
+   n. 633.
+
+4. FORK E CONTRIBUTI
+
+   Finché la Repository è pubblica su GitHub, i Termini di servizio di GitHub
+   permettono a chiunque, tecnicamente, di vederla e di farne un fork. Questa
+   possibilità tecnica non dà, da sola, nessun diritto di usare, tenere o
+   pubblicare la copia così creata. Perciò, finché la Repository è pubblica:
+
+   (a) un fork è permesso solo come mezzo tecnico per preparare un contributo
+       da proporre alla Repository con una pull request;
+
+   (b) quel fork non deve essere modificato oltre quanto serve al contributo,
+       non deve essere pubblicizzato, distribuito o presentato come un
+       progetto a sé, e va cancellato quando la pull request è stata unita o
+       chiusa;
+
+   (c) ogni altro uso di un fork, compreso il semplice tenerlo pubblico come
+       copia a sé stante del Software, è una distribuzione ed è vietato dalla
+       Sezione 3.
+
+   Chi propone un contributo alla Repository concede al Titolare una licenza
+   perpetua, mondiale, irrevocabile, gratuita e sublicenziabile per usare,
+   modificare, pubblicare e distribuire quel contributo come parte del
+   Software, con questa licenza o con qualunque altra il Titolare scelga, e
+   dichiara di avere il diritto di concederla.
+
+5. PROVENIENZA E INTEGRITÀ
+
+   Il Software registra da dove vengono i componenti che distribuisce e
+   verifica che non siano stati alterati. La Sezione 3(e) vale in particolare
+   per questi registri e per questi controlli.
+
+   Usare per te una copia modificata, come permette la Sezione 2(c), non viola
+   questa Sezione. La viola togliere o falsificare il registro di provenienza
+   perché una copia modificata si presenti come intatta, o come proveniente
+   dal Titolare.
+
+6. FUNZIONI A PAGAMENTO
+
+   Alcune funzioni del Software (gdahome Premium) sono a pagamento, e le vende
+   il Distributore: dall'app, attraverso l'App Store di Apple e Google Play e
+   alle condizioni di quei negozi, oppure con codici regalo e con i pacchetti
+   di licenze per gli Installatori autorizzati. Un diritto a una funzione a
+   pagamento vale per una casa, non è trasferibile e non allarga i permessi
+   della Sezione 2. Il Titolare e il Distributore possono aggiungere,
+   cambiare o togliere funzioni a pagamento; un diritto già concesso resta
+   valido per quello che prevedeva quando è stato concesso.
+
+7. CESSAZIONE
+
+   I permessi della Sezione 2 cessano automaticamente se violi questa
+   licenza. Da quel momento devi smettere di usare il Software e cancellarne
+   tutte le copie che hai, salvo quelle che la legge ti obbliga a tenere.
+   Permessi più ampi — commerciali, di ridistribuzione o con un marchio
+   proprio — si concedono solo per iscritto; le richieste vanno al
+   Distributore, all'indirizzo domotica@crvgroup.it.
+
+8. LA PLANCIA E I COMPONENTI DI TERZI
+
+   La plancia distribuita con l'add-on, che prima si chiamava DashboardModern,
+   è opera dello stesso Titolare e fa parte del Software: anche per lei vale
+   questa licenza. Il file `ponte/plancia/ORIGINE.json` registra quale
+   versione distribuisce l'add-on.
+
+   Il Software usa anche componenti di terzi, ognuno con la sua licenza (per
+   esempio quelle in `ponte/plancia/avatars/LICENSE.txt`,
+   `ponte/plancia/brands/LICENSE.txt` e `ponte/app/assets/NOTICES`). Quelle
+   licenze restano come sono, e questa non dà su quei componenti nessun
+   diritto oltre a quelli che danno loro.
+
+9. NESSUNA GARANZIA
+
+   Nei limiti consentiti dalla legge, il Software è fornito «così com'è»,
+   senza garanzie di alcun tipo, espresse o implicite, comprese quelle di
+   commerciabilità, di idoneità a uno scopo particolare e di non violazione
+   di diritti altrui. Il Software comanda apparecchi di una casa: non va usato
+   per la sicurezza delle persone, né dove un suo guasto possa causare lesioni
+   o danni.
+
+10. LIMITAZIONE DI RESPONSABILITÀ
+
+   Nei limiti consentiti dalla legge, il Titolare e il Distributore non
+   rispondono di pretese, danni o altre responsabilità, contrattuali,
+   extracontrattuali o di altro tipo, che derivino dal Software, dal suo uso
+   o da altre operazioni che lo riguardano.
+
+   Questa licenza non esclude né limita le responsabilità che la legge non
+   permette di escludere o limitare, comprese quelle per dolo o colpa grave
+   (articolo 1229 del codice civile) e per i danni alla persona.
+
+11. DIRITTI DEI CONSUMATORI
+
+   Se usi il Software come consumatore, questa licenza non tocca i diritti
+   che ti riconosce la legge a tutela dei consumatori, compreso il Codice del
+   consumo (decreto legislativo 6 settembre 2005, n. 206): in caso di
+   contrasto, prevalgono quelli.
+
+12. LEGGE APPLICABILE E FORO
+
+   Questa licenza è regolata dalla legge italiana, senza applicare le sue
+   norme sui conflitti di leggi. Per le controversie con chi non è
+   consumatore è competente in via esclusiva il Tribunale di Napoli Nord; per
+   i consumatori resta il foro del luogo in cui risiedono. Se una clausola è
+   nulla o inefficace, le altre restano valide.
+
+
+-------------------------------------------------------------------------------
+
+gdahome License — English translation
+(for reference only: the Italian text above prevails)
+
+Version 2.0 — in force from 16 October 2026
+
+Copyright (c) 2026 Giovanni d'Aniello. All rights reserved.
+
+Distributed by CRV IMMOBILIARE S.R.L., Viale della Libertà 24,
+81031 Aversa (CE), Italy — VAT number and tax code 03719610614.
+
+This is a proprietary license. The source code is public so that anyone can
+read it and check what it does ("source available"), but this is NOT an open
+source license and it is not approved by the Open Source Initiative. No right
+beyond those written here is granted, not even by implication. This version
+replaces the gdahome License 1.0 from 16 October 2026.
 
 1. DEFINITIONS
 
-   "Software" means the contents of the repository
-   https://github.com/danigio15/gdahomeapp — the gdahome mobile application,
-   the "ponte" Home Assistant add-on, the "centralino" relay, their source
-   code, assets, documentation and the release artifacts built from them,
-   including any application package distributed through an application store.
+   "Software": the contents of the repository
+   https://github.com/danigio15/gdahomeapp — the gdahome app, the "ponte" Home
+   Assistant add-on with its dashboard, the "centralino", the "quadro" and the
+   website — with their source code, assets, documentation and the packages
+   built from them, including those distributed through application stores.
 
-   "Owner" means Giovanni d'Aniello (github.com/danigio15), the copyright
-   holder.
+   "Owner": Giovanni d'Aniello, the author of the Software and the holder of
+   its copyright.
 
-   "Repository" means the repository named above, as operated by the Owner.
+   "Distributor": CRV IMMOBILIARE S.R.L., which, by agreement with the Owner,
+   distributes the Software and sells its paid features.
 
-   "You" means the individual or legal entity exercising the permissions
-   granted by this license.
+   "Repository": the repository named above.
 
-   "DashboardModern" means the software published at
-   https://github.com/danigio15/dashboardmodern-v2, parts of which the
-   Software distributes; see Section 8.
+   "You": the individual or legal entity using the Software or exercising the
+   permissions of this license.
 
-2. GRANT OF USE
+   "Authorized installer": anyone who has been given written access to the
+   installer program by the Distributor.
+
+2. WHAT YOU MAY DO
 
    Subject to Your compliance with this license, the Owner grants You a
-   personal, non-exclusive, non-transferable, revocable and royalty-free
-   permission to:
+   non-exclusive, non-transferable, revocable and royalty-free permission to:
 
-   (a) install and run the Software — the application on devices You own or
-       control, the add-on and the relay on Home Assistant instances and
-       accounts that You own or administer — for personal, non-commercial
-       purposes;
+   (a) install and use the Software — the app on devices You own or control,
+       the add-on on Home Assistant instances You own or administer — for
+       Your personal needs or those of Your business, in Your home or on Your
+       premises;
 
-   (b) where the source code is made available to You, download and read it,
-       in order to audit what the Software does with Your home and Your data;
+   (b) download and read the source code, in order to check what the Software
+       does with Your home and Your data;
 
-   (c) modify Your own installed copy for Your own use, provided that the
-       modified copy is neither distributed nor made available to anyone else,
-       and provided that Section 3(e) and Section 5 are respected.
+   (c) modify Your installed copy for Your own use, provided that the modified
+       copy is neither distributed nor made available to anyone else, and
+       provided that Sections 3(e) and 5 are respected;
 
-3. RESTRICTIONS
+   (d) if You are an Authorized installer, install, configure and support the
+       Software in Your customers' homes and premises, under the conditions
+       the Distributor has given You in writing.
 
-   Except as expressly permitted by Section 2, by Section 4, or by mandatory
-   applicable law, You may not:
+3. WHAT YOU MAY NOT DO
 
-   (a) redistribute, publish, mirror, re-upload, sideload for others, or
+   Except as permitted by Sections 2 and 4 or by mandatory law, You may not:
+
+   (a) redistribute, publish, mirror, re-upload, install for others or
        otherwise make the Software, or any part of it, available to third
-       parties, whether in source or in built form, whether modified or not,
-       and whether or not for a fee;
+       parties, in source or built form, modified or not, for a fee or free of
+       charge;
 
-   (b) publish the Software, or any application derived from it, to any
-       application store, package repository, add-on repository or similar
+   (b) publish the Software, or an app or add-on derived from it, to an
+       application store, a package or add-on repository or a similar
        distribution channel;
 
-   (c) fork, clone-and-republish or otherwise reproduce the Repository as a
-       separate public copy, except as allowed by Section 4;
+   (c) fork, republish or otherwise reproduce the Repository as a separate
+       public copy, except as permitted by Section 4;
 
-   (d) distribute derivative works, ports, translations, re-brandings or
+   (d) distribute derivative works, adaptations, translations, re-branded or
        modified versions of the Software;
 
-   (e) remove, alter, obscure or circumvent any copyright notice, license
-       notice, attribution, provenance record, signature or integrity check
-       contained in or produced by the Software, or present the Software or
-       any part of it as not originating from the Owner;
+   (e) remove, alter, obscure or circumvent the copyright and license notices,
+       attributions, provenance records, signatures, seals and integrity
+       checks contained in or produced by the Software; circumvent, disable or
+       falsify the checks on paid features (licenses, tokens, gift codes,
+       subscriptions); or present the Software, or any part of it, as not
+       originating from the Owner;
 
-   (f) sublicense, sell, rent, lease, or include the Software in a paid
-       product, a hosted service, or a commercial installation, integration or
-       support offering;
+   (f) sublicense, sell, rent or lease the Software, or include it in a paid
+       product, in a service hosted for others or in a commercial
+       installation, integration or support offering, except as Section 2(d)
+       permits Authorized installers;
 
-   (g) use the names "gdahome", "GDA", "ponte", "centralino" as used herein,
-       the project logo or marks, or any confusingly similar name, to identify
-       a derivative, a competing product, or a service.
+   (g) use the names "gdahome", "gdanav", "GDA", "ponte", "centralino" and
+       "quadro" as used here, the Software's logo or marks, or any confusingly
+       similar name, to identify a derivative, a competing product or a
+       service.
 
-   Nothing in this Section restricts any act that applicable mandatory law
-   permits notwithstanding contract, including acts of decompilation permitted
-   for interoperability purposes.
+   This Section does not restrict acts that the law permits notwithstanding a
+   contract, such as decompilation for interoperability under Articles 64-ter
+   and 64-quater of Italian Law No. 633 of 22 April 1941.
 
 4. FORKS AND CONTRIBUTIONS
 
-   Should the Repository be public on GitHub, GitHub's Terms of Service give
-   every user the technical ability to view and fork it. That platform-level
-   ability does not, by itself, grant any right to use, keep or publish the
-   copy so created. Accordingly, for as long as the Repository is public:
+   For as long as the Repository is public on GitHub, GitHub's Terms of
+   Service give anyone the technical ability to view and fork it. That
+   technical ability does not, by itself, grant any right to use, keep or
+   publish the copy so created. Accordingly, for as long as the Repository is
+   public:
 
    (a) a fork is permitted only as the technical means of preparing a
-       contribution to be submitted back to the Repository as a pull request;
+       contribution to be submitted to the Repository as a pull request;
 
-   (b) such a fork must not be modified beyond what the intended contribution
+   (b) such a fork must not be modified beyond what the contribution
        requires, must not be advertised, distributed or presented as an
-       independent project, and should be deleted once the pull request has
+       independent project, and must be deleted once the pull request has
        been merged or closed;
 
-   (c) any other use of a fork — including simply keeping it publicly
-       available as a standalone copy of the Software — constitutes a
-       distribution and is prohibited by Section 3.
+   (c) any other use of a fork, including simply keeping it public as a
+       standalone copy of the Software, is a distribution and is prohibited
+       by Section 3.
 
    By submitting a contribution to the Repository, You grant the Owner a
    perpetual, worldwide, irrevocable, royalty-free and sublicensable license
    to use, modify, publish and distribute that contribution as part of the
    Software, under this license or any other license the Owner chooses, and
-   You confirm that You have the right to grant that permission.
+   You confirm that You have the right to grant it.
 
 5. PROVENANCE AND INTEGRITY
 
@@ -114,66 +339,73 @@ granted, and nothing here is granted by implication or estoppel.
    verifies that they have not been altered. Section 3(e) applies to those
    records and checks in particular.
 
-   Running a modified copy for Your own use, as Section 2(c) permits, is not a
-   breach of this Section. Removing or falsifying the provenance record so
-   that a modified copy presents itself as unmodified, or as originating from
-   the Owner, is.
+   Running a modified copy for Your own use, as Section 2(c) permits, does not
+   breach this Section. Removing or falsifying the provenance record so that
+   a modified copy presents itself as unmodified, or as originating from the
+   Owner, does.
 
 6. PAID FEATURES
 
-   Some features of the Software may require a purchase. An entitlement to
-   such a feature is granted to a single household installation, is not
-   transferable, and does not enlarge the permissions granted by Section 2.
-   The Owner may add, change or withdraw paid features; an entitlement already
-   granted remains valid for what it stated when it was granted.
+   Some features of the Software (gdahome Premium) are paid, and they are sold
+   by the Distributor: from the app, through Apple's App Store and Google
+   Play and under those stores' terms, or with gift codes and with the
+   license packages for Authorized installers. An entitlement to a paid
+   feature applies to one home, is not transferable and does not enlarge the
+   permissions of Section 2. The Owner and the Distributor may add, change or
+   withdraw paid features; an entitlement already granted remains valid for
+   what it provided when it was granted.
 
 7. TERMINATION
 
-   The permissions granted by Section 2 terminate automatically if You breach
-   any term of this license. Upon termination You must stop using the Software
-   and delete every copy in Your possession, except copies You are required to
-   retain by law. The Owner may grant broader permissions, including
-   commercial, redistribution or white-label rights, only in writing; requests
-   may be sent through the Repository's issue tracker.
+   The permissions of Section 2 terminate automatically if You breach this
+   license. From then on You must stop using the Software and delete every
+   copy You have, except those the law requires You to keep. Broader
+   permissions — commercial, redistribution or white-label — are granted only
+   in writing; requests go to the Distributor at domotica@crvgroup.it.
 
-8. THIRD-PARTY AND BUNDLED SOFTWARE
+8. THE DASHBOARD AND THIRD-PARTY COMPONENTS
 
-   The add-on distributes a copy of DashboardModern, which is covered by its
-   own license and remains the property of its copyright holder. The file
-   `ponte/plancia/ORIGINE.json` records exactly which version is distributed.
-   Nothing in this license grants any right in DashboardModern beyond what
-   that license grants.
+   The dashboard distributed with the add-on, formerly called DashboardModern,
+   is the work of the same Owner and is part of the Software: this license
+   applies to it too. The file `ponte/plancia/ORIGINE.json` records which
+   version the add-on distributes.
 
-   The Software also depends on third-party open source components, each
-   governed by its own license. Those licenses are unaffected by this one.
+   The Software also uses third-party components, each under its own license
+   (for example those in `ponte/plancia/avatars/LICENSE.txt`,
+   `ponte/plancia/brands/LICENSE.txt` and `ponte/app/assets/NOTICES`). Those
+   licenses remain as they are, and this one grants no right in those
+   components beyond what they grant.
 
 9. NO WARRANTY
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. The Software controls
-   equipment in a home; it must not be relied upon for safety, security or any
-   purpose where its failure could cause injury or damage.
+   To the extent permitted by law, the Software is provided "as is", without
+   warranty of any kind, express or implied, including the warranties of
+   merchantability, fitness for a particular purpose and non-infringement.
+   The Software controls equipment in a home: it must not be relied upon for
+   the safety of people, or where its failure could cause injury or damage.
 
 10. LIMITATION OF LIABILITY
 
-   IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+   To the extent permitted by law, neither the Owner nor the Distributor is
+   liable for any claim, damages or other liability, in contract, tort or
+   otherwise, arising from the Software, its use or other dealings in it.
 
-   Nothing in this license excludes or limits liability that cannot be
-   excluded or limited under applicable mandatory law, including liability for
-   death or personal injury caused by negligence, or for fraud.
+   This license does not exclude or limit liability that the law does not
+   allow to be excluded or limited, including liability for wilful
+   misconduct or gross negligence (Article 1229 of the Italian Civil Code)
+   and for personal injury.
 
 11. CONSUMER RIGHTS
 
-   Where You obtain the Software as a consumer, this license does not affect
-   the rights granted to You by mandatory consumer protection law, which
-   prevail over any conflicting term.
+   If You use the Software as a consumer, this license does not affect the
+   rights granted to You by consumer protection law, including the Italian
+   Consumer Code (Legislative Decree No. 206 of 6 September 2005); in case of
+   conflict, those rights prevail.
 
-12. GOVERNING LAW
+12. GOVERNING LAW AND JURISDICTION
 
-   This license is governed by the laws of Italy, without regard to conflict
-   of law rules. If any provision is held unenforceable, the remaining
-   provisions remain in full force.
+   This license is governed by Italian law, without regard to its conflict of
+   law rules. The Court of Napoli Nord has exclusive jurisdiction over
+   disputes with anyone who is not a consumer; consumers keep the court of
+   the place where they reside. If any provision is void or unenforceable,
+   the others remain valid.
