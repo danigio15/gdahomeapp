@@ -106,6 +106,9 @@ const state = (root[KEY] ||= {
 });
 state.fotogrammi ||= {};
 state.chiedendo ||= {};
+/* I posti fuori dalla finestra dove il radar si disegna anche (#206): la
+ * pagina Meteo ne tiene uno, piu' grande. */
+state.posti ||= new Set();
 
 /* Come si legge il fotogramma di adesso dall'elenco di ogni servizio, e come
  * si leggono tutti quelli che servono ad animarlo. */
@@ -129,6 +132,9 @@ const RIPROVA_DOPO = 60_000;
 export const CHIAVE_RADAR = "cd_radar_meteo";
 const BLOCCO = "dm-radar-blocco";
 const IMMAGINE = "dm-radar-img";
+/* La classe del contenitore che ospita il radar fuori dalla finestra: il
+ * foglio di stile del radar vale anche dentro di lui. */
+export const POSTO_DEL_RADAR = "dm-radar-posto";
 
 /* Ogni quanto si ripiglia il radar. I servizi nazionali si aggiornano ogni
  * cinque o dieci minuti: un minuto e' abbastanza fitto da non far aspettare
@@ -422,11 +428,32 @@ export function radarVivo(scelto, states = allStates()) {
 
 const finestra = () => doc?.getElementById?.("weather-modal") || null;
 
-function finestraAperta() {
+function laFinestraSiVede() {
   const modale = finestra();
   if (!modale) return false;
   if (modale.classList.contains("show") || modale.classList.contains("active")) return true;
   return modale.offsetParent !== null;
+}
+
+/* I posti fuori dalla finestra che adesso si vedono. Uno staccato dal
+ * documento — la pagina ridisegnata da capo — si dimentica. */
+function postiInVista() {
+  const visti = [];
+  for (const posto of state.posti) {
+    if (!posto?.isConnected) {
+      state.posti.delete(posto);
+      continue;
+    }
+    if (posto.getClientRects?.().length) visti.push(posto);
+  }
+  return visti;
+}
+
+/* «Aperta» vuol dire che un radar si sta guardando: la finestra delle
+ * previsioni, o la pagina Meteo (#206). Il giro che ridisegna e l'animazione
+ * valgono per tutti e due, e si fermano quando nessuno dei due si vede. */
+function finestraAperta() {
+  return laFinestraSiVede() || postiInVista().length > 0;
 }
 
 /* Il blocco che c'e' gia', senza fabbricarlo. */
@@ -441,7 +468,16 @@ function blocco() {
   if (nodo) return nodo;
   const elenco = modale.querySelector("#weather-forecast-list");
   if (!elenco) return null;
-  nodo = doc.createElement("div");
+  nodo = nuovoBlocco();
+  /* Sopra le previsioni: il radar dice adesso, le previsioni dicono dopo. */
+  elenco.before(nodo);
+  return nodo;
+}
+
+/* Il blocco del radar, vuoto: la testa, il quadro e la legenda. E' lo stesso
+ * dentro la finestra e dentro la pagina Meteo — un disegno solo, due posti. */
+function nuovoBlocco() {
+  const nodo = doc.createElement("div");
   nodo.className = BLOCCO;
   nodo.innerHTML = `<div class="dm-radar-testa">
       <span aria-hidden="true">📡</span>
@@ -472,8 +508,6 @@ function blocco() {
       )}</small>
       <small class="dm-radar-firma" data-dm-radar-firma-fondo></small>
     </div>`;
-  /* Sopra le previsioni: il radar dice adesso, le previsioni dicono dopo. */
-  elenco.before(nodo);
   return nodo;
 }
 
@@ -742,6 +776,9 @@ function daTessere(scelto, nodo) {
 
 export function disegnaRadar() {
   const scelto = radarScelto();
+  /* Prima i posti fuori dalla finestra: la pagina Meteo ha il suo blocco, e
+   * quello che si decide qui sotto per la finestra vale anche per lui. */
+  disegnaNeiPosti(scelto);
   /* Senza radar configurato non si disegna niente — e non si fabbrica
    * nemmeno il posto dove disegnarlo.
    *
@@ -763,16 +800,26 @@ export function disegnaRadar() {
     /* Configurato, ma male: il blocco c'e' e dice cosa correggere. */
     const avviso = blocco();
     if (!avviso) return false;
-    avviso.hidden = false;
-    avviso.dataset.dmModo = "guasto";
-    const titolo = avviso.querySelector(".dm-radar-nome");
-    if (titolo) titolo.textContent = t("Radar meteo", "Weather radar");
-    const spiegazione = avviso.querySelector(".dm-radar-nota");
-    if (spiegazione && spiegazione.textContent !== guasto) spiegazione.textContent = guasto;
+    scriviIlGuasto(avviso, guasto);
     return false;
   }
   const nodo = blocco();
   if (!nodo) return false;
+  return disegnaNelBlocco(nodo, scelto);
+}
+
+/* Il blocco che dice cosa correggere, al posto del radar. */
+function scriviIlGuasto(avviso, guasto) {
+  avviso.hidden = false;
+  avviso.dataset.dmModo = "guasto";
+  const titolo = avviso.querySelector(".dm-radar-nome");
+  if (titolo) titolo.textContent = t("Radar meteo", "Weather radar");
+  const spiegazione = avviso.querySelector(".dm-radar-nota");
+  if (spiegazione && spiegazione.textContent !== guasto) spiegazione.textContent = guasto;
+}
+
+/* Un blocco, dovunque stia: la finestra delle previsioni o la pagina Meteo. */
+function disegnaNelBlocco(nodo, scelto) {
   nodo.hidden = false;
   nodo.dataset.dmModo = scelto.modo;
   const nome = nodo.querySelector(".dm-radar-nome");
@@ -788,6 +835,56 @@ export function disegnaRadar() {
     regolaLAnimazione();
   }
   return true;
+}
+
+/* I posti fuori dalla finestra, uno per uno. Ognuno ha il suo blocco, nato
+ * qui la prima volta: lo stesso disegno di quello della finestra, con le
+ * stesse regole — niente radar, niente blocco; radar sbagliato, la frase che
+ * dice cosa correggere. */
+function disegnaNeiPosti(scelto) {
+  for (const posto of [...state.posti]) {
+    if (!posto?.isConnected) {
+      state.posti.delete(posto);
+      continue;
+    }
+    disegnaNelPosto(posto, scelto);
+  }
+}
+
+function disegnaNelPosto(posto, scelto) {
+  let nodo = posto.querySelector(`:scope > .${BLOCCO}`);
+  if (!scelto) {
+    const guasto = radarGuasto();
+    if (!guasto) {
+      nodo?.remove();
+      return false;
+    }
+    if (!nodo) posto.append((nodo = nuovoBlocco()));
+    scriviIlGuasto(nodo, guasto);
+    return true;
+  }
+  if (!nodo) posto.append((nodo = nuovoBlocco()));
+  return disegnaNelBlocco(nodo, scelto);
+}
+
+/**
+ * Il radar dentro un contenitore qualsiasi (#206): la pagina Meteo lo vuole
+ * piu' grande, con la legenda e l'ora del fotogramma, e con la stessa
+ * configurazione della finestra delle previsioni. Il contenitore si ricorda:
+ * il giro di ogni minuto e l'animazione lo trattano come la finestra, finche'
+ * si vede. Torna se c'e' qualcosa da mostrare — un radar, o la frase che dice
+ * cosa correggere.
+ */
+export function disegnaRadarIn(contenitore) {
+  if (!contenitore || !doc) return false;
+  contenitore.classList?.add?.(POSTO_DEL_RADAR);
+  state.posti.add(contenitore);
+  const mostrato = disegnaNelPosto(contenitore, radarScelto());
+  /* Il giro riparte se il posto si vede: chi apre la pagina vuole il radar
+   * che cammina, non la fotografia di quando la pagina e' nata. */
+  if (finestraAperta()) avvia();
+  regolaLAnimazione();
+  return mostrato;
 }
 
 /* ── il giro, solo mentre si guarda ───────────────────────────────────── */
@@ -842,12 +939,28 @@ function mostraIlFotogramma(nodo, posto) {
 /* Un passo dell'animazione. Sull'ultimo — l'adesso — ci si ferma un attimo di
  * piu': senza, il ritorno indietro sembra un difetto invece che un giro
  * finito. */
+/* I blocchi che qualcuno sta guardando: quello della finestra se e' aperta,
+ * e quelli dei posti che si vedono. */
+function blocchiInVista() {
+  const nodi = [];
+  if (laFinestraSiVede()) {
+    const nodo = bloccoEsistente();
+    if (nodo) nodi.push(nodo);
+  }
+  for (const posto of postiInVista()) {
+    const nodo = posto.querySelector(`:scope > .${BLOCCO}`);
+    if (nodo) nodi.push(nodo);
+  }
+  return nodi;
+}
+
 function passoDellAnimazione() {
-  const nodo = bloccoEsistente();
+  const nodi = blocchiInVista();
+  const nodo = nodi.find((uno) => strati(uno).length > 1);
   const fila = strati(nodo);
   if (!nodo || fila.length < 2) return;
   state.posto = (state.posto + 1) % fila.length;
-  mostraIlFotogramma(nodo, state.posto);
+  for (const uno of nodi) mostraIlFotogramma(uno, state.posto);
   const ultimo = state.posto === fila.length - 1;
   riarma(ultimo ? PAUSA_SULL_ULTIMO : PASSO_ANIMAZIONE);
 }
@@ -868,13 +981,14 @@ function fermaLAnimazione() {
  * movimento. Negli altri casi resta acceso l'adesso, che e' esattamente cio'
  * che si vedeva prima. */
 function regolaLAnimazione() {
-  const nodo = bloccoEsistente();
+  const nodi = blocchiInVista();
+  const nodo = nodi.find((uno) => strati(uno).length > 1) || nodi[0] || bloccoEsistente();
   const fila = strati(nodo);
   if (!nodo || fila.length < 2 || !finestraAperta() || menoMovimento()) {
     fermaLAnimazione();
     if (nodo && fila.length) {
       state.posto = fila.length - 1;
-      mostraIlFotogramma(nodo, state.posto);
+      for (const uno of nodi.length ? nodi : [nodo]) mostraIlFotogramma(uno, state.posto);
     }
     return;
   }
@@ -1183,11 +1297,122 @@ function aggiornaVisibilita(dentro) {
   }
 }
 
-function casellaMarkup(config) {
-  return `<span class="ed-slot-lbl">${esc(t("Radar meteo", "Weather radar"))}</span>
-    <span class="ed-form-row"><input id="dm-radar-entita" class="ed-input mono"
+/* ── le tre strade: nessuno, un servizio di mappe, una camera di casa ─────
+ *
+ * La casella stava sotto il meteo nella scheda Home, e chiedeva tutto in una
+ * volta: l'entita', e «oppure» il servizio, la mappa, l'indirizzo, la zona, lo
+ * zoom e le coordinate. Chi voleva solo spegnerlo doveva capire quale delle
+ * dieci caselle lo spegneva. Adesso sta nella scheda Meteo (#206) e si
+ * comincia dalla domanda vera — da dove arriva il radar — e si compila solo
+ * la strada scelta. La configurazione e' la stessa di prima, `cd_radar_meteo`:
+ * le tre strade sono tre modi di scriverla, non tre chiavi nuove. */
+
+/** Da quale strada arriva il radar adesso: «entita», «mappa» o «nessuno». */
+export function fonteDelRadar(config = configurazione()) {
+  const scelto = radarScelto(config);
+  if (scelto) return scelto.modo;
+  /* La camera scelta prima di avere scritto quale: la strada resta quella, e
+   * la casella aspetta l'entita'. */
+  if (clean(config?.strada) === "entita") return "entita";
+  /* Un indirizzo sbagliato e' la strada delle mappe, presa male: la scheda la
+   * tiene aperta, perche' e' li' che si corregge. */
+  return problemaDellaScelta(config) ? "mappa" : "nessuno";
+}
+
+/** La camera o l'immagine di casa che sembra un radar, se ce n'e' una. */
+export function radarDaProporre(states = allStates()) {
+  for (const [entity, stato] of Object.entries(states || {})) {
+    if (!CON_IMMAGINE.has(entity.split(".")[0])) continue;
+    const nome = `${entity} ${clean(stato?.attributes?.friendly_name)}`.toLowerCase();
+    if (/(radar|piogg|precipit|rain|meteo|weather)/.test(nome)) return entity;
+  }
+  return "";
+}
+
+/* La configurazione dopo aver scelto una strada. «Nessuno» si scrive come
+ * l'ha sempre scritto la tendina; le mappe tornano al servizio di serie solo
+ * se prima non ce n'era uno; la camera prende quella che c'era, o quella
+ * proposta. */
+function conLaFonte(config, fonte, proposta = "") {
+  const prossima = { ...config, strada: fonte };
+  if (fonte === "nessuno") {
+    prossima.servizio = "nessuno";
+    prossima.entity = "";
+  } else if (fonte === "mappa") {
+    prossima.entity = "";
+    const servizio = clean(config.servizio);
+    if (!SERVIZI_RADAR[servizio] && servizio !== "modello") prossima.servizio = SERVIZIO_DI_SERIE;
+  } else if (fonte === "entita") {
+    prossima.entity = clean(config.entity) || proposta;
+    /* Senza un'entita' la camera non c'e' ancora, e il radar resta spento:
+     * le mappe di prima non devono continuare a comparire al suo posto. */
+    if (!prossima.entity) prossima.servizio = "nessuno";
+  }
+  return prossima;
+}
+
+function fontiMarkup(fonte, proposta) {
+  const voci = [
+    [
+      "nessuno",
+      t("Nessuno", "None"),
+      t("il blocco del radar non compare", "the radar block does not show"),
+    ],
+    [
+      "mappa",
+      t("Servizio di mappe", "Map service"),
+      t("RainViewer, senza chiavi: basta dire dove", "RainViewer, no keys: just say where"),
+    ],
+    [
+      "entita",
+      t("Camera di Home Assistant", "Home Assistant camera"),
+      proposta || t("un'entità camera o image che hai già", "a camera or image entity you already have"),
+    ],
+  ];
+  /* Se in casa c'e' gia' un radar, la sua strada si propone per prima: e'
+   * quella che non esce di casa. */
+  if (proposta) voci.unshift(voci.pop());
+  return `<div class="dm-radar-fonti" role="group" aria-label="${esc(t("Radar pioggia", "Rain radar"))}">${voci
+    .map(
+      ([chiave, nome, sotto]) =>
+        `<button type="button" class="dm-radar-fonte" data-dm-radar-fonte="${chiave}" aria-pressed="${String(
+          chiave === fonte,
+        )}"><b>${chiave === fonte ? "● " : "○ "}${esc(nome)}</b><small>${esc(sotto)}</small></button>`,
+    )
+    .join("")}</div>`;
+}
+
+/** La scheda del radar, da mettere dove la vuole chi la ospita: la scheda Meteo. */
+export function editorDelRadarMarkup(config = configurazione(), states = allStates()) {
+  return `<div class="dm-radar-ed" data-dm-radar-ed>${casellaMarkup(config, states)}</div>`;
+}
+
+/** Dopo averla messa a schermo: le righe che si vedono e il problema, se c'e'. */
+export function preparaLEditorDelRadar(dentro) {
+  if (!dentro) return false;
+  aggiornaVisibilita(dentro);
+  mostraIlProblema(dentro, configurazione());
+  return true;
+}
+
+function casellaMarkup(config, states = allStates()) {
+  const fonte = fonteDelRadar(config);
+  const proposta = radarDaProporre(states);
+  const privacy = `<div class="dm-radar-privacy"><span aria-hidden="true">🔒</span><small>${esc(
+    t(
+      "Il browser chiede al servizio i quadratini della zona che guardi: quel servizio sa quindi che zona è. Scegli «Nessuno» e la plancia non bussa a nessuno.",
+      "The browser asks the service for the tiles of the area you are looking at: that service then knows which area it is. Pick «None» and the dashboard knocks on nobody's door.",
+    ),
+  )}</small></div>`;
+  return `${fontiMarkup(fonte, proposta)}${
+    fonte === "entita" ? entitaMarkup(config, proposta) : fonte === "mappa" ? mappaMarkup(config) : ""
+  }${privacy}`;
+}
+
+function entitaMarkup(config, proposta) {
+  return `<span class="ed-form-row"><input id="dm-radar-entita" class="ed-input mono"
       data-dm-radar-campo="entity" value="${esc(clean(config.entity))}"
-      placeholder="camera.radar" autocomplete="off" spellcheck="false"><button type="button"
+      placeholder="${esc(proposta || "camera.radar")}" autocomplete="off" spellcheck="false"><button type="button"
       class="dm-entity-picker" data-dm-radar-pick="dm-radar-entita"
       aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
     <small>${esc(
@@ -1195,9 +1420,11 @@ function casellaMarkup(config) {
         "Un'entità camera o image del tuo Home Assistant: il fotogramma passa dal tuo server e da casa non esce niente. Chi ha portato dentro il radar con la sua integrazione ha già l'entità qui sotto.",
         "A camera or image entity of your own Home Assistant: the frame comes from your own server and nothing leaves the house. If you brought a radar in with its integration, the entity is already there.",
       ),
-    )}</small>
-    <div class="dm-radar-oppure">${esc(t("oppure, da un servizio di mappe", "or, from a map service"))}</div>
-    <div class="dm-radar-dove">
+    )}</small>`;
+}
+
+function mappaMarkup(config) {
+  return `<div class="dm-radar-dove">
       <label><span class="dm-radar-lbl">${esc(t("Servizio radar", "Radar service"))}</span>
         <select class="ed-input" data-dm-radar-campo="servizio">${serviziMarkup(sceltaDelServizio(config))}</select>
       </label>
@@ -1214,12 +1441,6 @@ function casellaMarkup(config) {
     <span class="ed-form-row dm-radar-prova-riga"><button
       type="button" class="dm-radar-prova" data-dm-radar-prova>${esc(t("Prova", "Test"))}</button></span>
     <small class="dm-radar-esito" data-dm-radar-esito>${esc(FRASE_DI_SERIE())}</small>
-    <small>${esc(
-      t(
-        "Il browser chiede al servizio i quadratini della zona che guardi: quel servizio sa quindi che zona è. Scegli «Nessuno» e la plancia non bussa a nessuno.",
-        "The browser asks the service for the tiles of the area you are looking at: that service then knows which area it is. Pick «None» and the dashboard knocks on nobody's door.",
-      ),
-    )}</small>
     <div class="dm-radar-dove">
       <label><span class="dm-radar-lbl">${esc(t("Dove", "Where"))}</span>
         <select class="ed-input" data-dm-radar-campo="zona">${zoneMarkup(clean(config.zona))}</select>
@@ -1258,24 +1479,10 @@ function casellaMarkup(config) {
     )}</small>`;
 }
 
-/* La casella sta accanto a quelle del meteo, dentro la stessa fisarmonica: e'
- * la stessa domanda — che tempo fa — e chiederla in due schede diverse
- * vorrebbe dire farla cercare. */
-function montaLaCasella() {
-  const slotMeteo = doc?.querySelector?.('input[data-ref="dm.home_meteo"]');
-  const riquadro = slotMeteo?.closest?.(".ed-slot");
-  if (!riquadro) return false;
-  const fisarmonica = riquadro.closest("details.ed-acc");
-  if (!fisarmonica || fisarmonica.querySelector("[data-dm-radar-campo]")) return false;
-  const casella = doc.createElement("label");
-  casella.className = "ed-slot dm-radar-ed";
-  const config = configurazione();
-  casella.innerHTML = casellaMarkup(config);
-  riquadro.after(casella);
-  aggiornaVisibilita(casella);
-  mostraIlProblema(casella, config);
-  return true;
-}
+/* La casella stava accanto a quelle del meteo, nella fisarmonica della scheda
+ * Home: la stessa domanda — che tempo fa — in un posto solo. Adesso il posto
+ * solo e' la scheda Meteo (#206), che la monta con `editorDelRadarMarkup`
+ * insieme alle previsioni e alla stazione. */
 
 function raccogli(dentro) {
   const prossima = { ...configurazione() };
@@ -1306,6 +1513,24 @@ function onCambio(event) {
 }
 
 async function onClick(event) {
+  /* Una strada scelta si scrive subito, e la scheda mostra le caselle di
+   * quella strada e basta. */
+  const strada = event.target?.closest?.("[data-dm-radar-fonte]");
+  if (strada) {
+    event.preventDefault();
+    const dentro = strada.closest(".dm-radar-ed");
+    if (!dentro) return;
+    const config = conLaFonte(
+      raccogli(dentro),
+      clean(strada.dataset.dmRadarFonte),
+      radarDaProporre(),
+    );
+    salva(config);
+    dentro.innerHTML = casellaMarkup(config);
+    preparaLEditorDelRadar(dentro);
+    disegnaRadar();
+    return;
+  }
   const pick = event.target?.closest?.("[data-dm-radar-pick]");
   if (pick) {
     event.preventDefault();
@@ -1360,9 +1585,11 @@ async function onClick(event) {
 }
 
 function installStyles() {
-  installStyle(
-    "dm-radar-meteo",
-    `
+  /* Il foglio e' scritto per la finestra delle previsioni, e vale uguale per
+   * ogni altro posto del radar (#206): si scrive una volta, e si allarga a
+   * chi lo ospita al momento di montarlo. Due copie dello stesso foglio
+   * sarebbero due radar che col tempo smettono di somigliarsi. */
+  const foglio = `
       #weather-modal .dm-radar-blocco{display:grid;gap:8px;margin-bottom:14px}
       /* Una regola nostra col display batte l'attributo hidden del browser:
          senza questa riga, nascondere il blocco non lo nascondeva. */
@@ -1474,7 +1701,24 @@ function installStyles() {
         display:block;margin:0 2px 4px;font-size:11px;font-weight:800;letter-spacing:.04em;
         text-transform:uppercase;color:var(--text-dim,#64748b)}
       #ed-body .dm-radar-dove .ed-input{width:100%}
-    `,
+      /* Le tre strade, come tre tasti: si sceglie da dove arriva il radar
+         prima di compilare qualcosa, e si compila solo quello che serve. */
+      #ed-body .dm-radar-fonti{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:2px 0 10px}
+      #ed-body .dm-radar-fonte{display:grid;gap:3px;padding:11px 12px;border-radius:14px;cursor:pointer;text-align:left;font:inherit;
+        border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc);color:var(--text,#0f172a)}
+      #ed-body .dm-radar-fonte b{font-size:13px;font-weight:900}
+      #ed-body .dm-radar-ed .dm-radar-fonte small{margin:0;font-size:10.5px;font-weight:700;line-height:1.3}
+      #ed-body .dm-radar-fonte[aria-pressed="true"]{border-color:#0ea5e9;
+        background:color-mix(in srgb,#0ea5e9 10%,var(--card-bg,#fff));
+        box-shadow:0 0 0 3px color-mix(in srgb,#0ea5e9 18%,transparent)}
+      #ed-body .dm-radar-privacy{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;margin-top:8px;
+        background:color-mix(in srgb,#16a34a 8%,transparent);border:1px solid color-mix(in srgb,#16a34a 26%,transparent)}
+      #ed-body .dm-radar-ed .dm-radar-privacy small{margin:0;font-size:11.5px;font-weight:700;color:var(--text,#0f172a)}
+      @media(max-width:760px){#ed-body .dm-radar-fonti{grid-template-columns:minmax(0,1fr)}}
+    `;
+  installStyle(
+    "dm-radar-meteo",
+    foglio.replaceAll("#weather-modal .dm-radar", `:is(#weather-modal,.${POSTO_DEL_RADAR}) .dm-radar`),
   );
 }
 
@@ -1491,11 +1735,9 @@ export function installRadarMeteo() {
     "dashboardmodern:states-ready",
   ])
     root.addEventListener?.(evento, () => {
-      montaLaCasella();
       osservaLaFinestra();
       guarda();
     });
-  montaLaCasella();
   osservaLaFinestra();
   guarda();
   return true;
