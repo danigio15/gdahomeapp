@@ -60,6 +60,10 @@ export const SA = Object.freeze({
    * pulsante gruppo.» */
   GRUPPO: 524288,
   ACCODA: 2097152,
+  /* Cercare dentro il lettore («SEARCH_MEDIA»): Music Assistant, che cerca in
+   * tutti i suoi fornitori, Deezer compreso. Non e' «CERCA» qui sopra, che e'
+   * il punto del brano. */
+  TROVA: 4194304,
 });
 
 const STATI_VIVI = new Set(["playing", "paused", "buffering", "idle", "on", "standby"]);
@@ -226,6 +230,8 @@ export function letturaDelLettore(
       /* La coda la sa solo chi ce l'ha: su un Chromecast «accoda» sostituisce
        * quello che sta suonando, e chi lo premeva perdeva il brano. */
       accoda: sa(SA.ACCODA) && sa(SA.SUONA),
+      /* Cercare ha senso solo se poi si suona quello che si e' trovato. */
+      trova: sa(SA.TROVA) && sa(SA.SUONA),
       gruppo: sa(SA.GRUPPO),
     },
     /* Quello che sta accanto (#451): l'interruttore dell'alimentazione, la

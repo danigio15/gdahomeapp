@@ -95,6 +95,10 @@ export default Object.freeze({
   Back: "戻る",
   "Choose the climate entity: it is the one starting with climate.":
     "冷暖房のエンティティを選んでください。climate. で始まるものです。",
+  "Library and home folders": "ライブラリと家のフォルダー",
+  "Search": "検索",
+  "Search songs, artists, playlists": "曲、アーティスト、プレイリストを検索",
+  "Sonos favourites": "Sonos のお気に入り",
   "Choose what to play": "再生するものを選ぶ",
   Collected: "受け取り",
   "Confirm locking?": "施錠しますか？",

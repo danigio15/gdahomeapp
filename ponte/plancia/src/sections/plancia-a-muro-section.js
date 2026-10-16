@@ -136,6 +136,7 @@ import {
 } from "./il-suono-del-campanello.js";
 import { avviaWebRtcNativo } from "./telecamera-webrtc-section.js";
 import { consiglioInCima } from "./assistente-di-casa-section.js";
+import { apriLoSfoglio } from "./media-player-section.js";
 import {
   allStates,
   chiamaServizio,
@@ -1812,6 +1813,7 @@ function lettoreGrande(l) {
         <div class="mu-osw mu-mp-titolo">${esc(titolo)}</div>
         ${sotto ? `<div class="mu-sotto">${esc(sotto)}</div>` : ""}
       </div>
+      ${bottoneDaScegliere(l)}
       ${bottoneDelGruppo(l)}
       ${l.puo.spegni && !l.spento ? tastoMusica(l, "spegni", "accendi", { etichetta: t("Spegni", "Turn off") }) : ""}
     </div>
@@ -1919,6 +1921,15 @@ function telecomandoDelLettoreMuro(l) {
 
 /* I lettori della pagina che sanno mettersi in gruppo, letti adesso. */
 let lettoriDiQui = [];
+/* «Scegli cosa suonare»: la stessa finestra della scheda Musica — i preferiti
+ * di Sonos con le playlist di Deezer, le cartelle della libreria, la ricerca
+ * di Music Assistant — aperta sopra il pannello. Dal muro prima si poteva
+ * solo comandare quello che qualcuno aveva fatto partire da un'altra parte. */
+function bottoneDaScegliere(l) {
+  if (!l.puo.sfoglia || l.muto) return "";
+  return `<button type="button" class="mu-mp-gruppo mu-mp-scegli" data-mu-fa="mp-scegli-musica" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Scegli cosa suonare", "Choose what to play"))}"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 6.6h11.2M4.4 11h11.2M4.4 15.4h6.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19.4 8.6v7.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17.5" cy="16.4" r="2" fill="currentColor"/></svg><span>${esc(t("Scegli", "Choose"))}</span></button>`;
+}
+
 function bottoneDelGruppo(l) {
   if (!l.puo.gruppo || l.spento) return "";
   const altri = lettoriDiQui.filter((x) => x.entity !== l.entity && x.puo.gruppo);
@@ -4313,6 +4324,9 @@ function onClick(event) {
       disegna();
       return;
     }
+    case "mp-scegli-musica":
+      apriLoSfoglio(id);
+      return;
     case "mp-sorgente":
       comanda("media_player", "select_source", {
         entity_id: id,
@@ -5190,6 +5204,9 @@ ${MURO} .mu-mp-titolo{font-size:40px;white-space:nowrap;overflow:hidden;text-ove
 ${MURO} .mu-mp-dici .mu-sotto{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-mp-testa>.mu-tondo{align-self:flex-start}
 ${MURO} .mu-mp-gruppo{align-self:flex-start;display:flex;align-items:center;gap:8px;height:56px;padding:0 18px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
+${MURO} .mu-mp-scegli{color:#fff;background:#a238ff;box-shadow:0 10px 24px -12px #a238ff}
+${MURO}[data-compatto="1"] .mu-mp-scegli>span{display:none}
+${MURO}[data-compatto="1"] .mu-mp-scegli{padding:0 16px}
 ${MURO} .mu-mp-gruppo.si{color:#fff;background:var(--acc);box-shadow:0 10px 24px -10px var(--acc)}
 ${MURO} .mu-mp-gruppo-elenco{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto}
 ${MURO} .mu-mp-gruppo-elenco .mu-mp-riga{text-align:left;width:100%}

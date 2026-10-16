@@ -528,7 +528,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-PLE6DCNH.js";
+} from "../../chunk-YDQUE3VP.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2779,9 +2779,11 @@ var SOURCE_INDEX = Object.freeze({
   "Centralina": "Controller",
   "Centrifuga": "Spin",
   "Centrifuga (select)": "Spin (select)",
+  "Cerca": "Search",
   "Cerca (es. acqua, porta, fuoco)…": "Search (e.g. water, door, fire)…",
   "Cerca (es. cucina, forno, garage)…": "Search (e.g. kitchen, oven, garage)…",
   "Cerca brand…": "Search brand…",
+  "Cerca brani, artisti, playlist": "Search songs, artists, playlists",
   "Cerca entità": "Search entity",
   "Cerca icona…": "Search icons…",
   "Cerca in tutta la configurazione…": "Search the whole configuration…",
@@ -4325,6 +4327,7 @@ var SOURCE_INDEX = Object.freeze({
   "libero": "free",
   "Libero": "Free",
   "Libero da": "Free for",
+  "Libreria e cartelle di casa": "Library and home folders",
   "limite 75°": "75° limit",
   "Limite di sicurezza": "Safety limit",
   "Lingua": "Language",
@@ -5191,6 +5194,7 @@ var SOURCE_INDEX = Object.freeze({
   "Power wallbox (W)": "Wallbox power (W)",
   "Power WB": "WB power",
   "Preferite": "Favourites",
+  "Preferiti di Sonos": "Sonos favourites",
   "Preferito": "Favorite",
   "Prelavaggio": "Pre-wash",
   "Preleva dalla rete": "From the grid",
@@ -14471,11 +14475,11 @@ function coloreBarbaCoerente(scelte5) {
   return BARBA_DA_CAPELLI[scelte5.coloreCapelli] || "naturale";
 }
 function testaEOperazioni(scelte5) {
-  const cerca3 = (variante2) => AVATAR_TESTE[`${scelte5.persona}|${variante2 ?? ""}|${scelte5.carnagione}`];
+  const cerca4 = (variante2) => AVATAR_TESTE[`${scelte5.persona}|${variante2 ?? ""}|${scelte5.carnagione}`];
   const operazioni = [];
   const tintaBarba = TINTE_BARBA[coloreBarbaCoerente(scelte5)] || null;
   if (!personaHaCapelli(scelte5.persona)) {
-    const testa3 = cerca3(null);
+    const testa3 = cerca4(null);
     if (scelte5.barba !== "nessuna")
       operazioni.push({
         tipo: "barba",
@@ -14492,10 +14496,10 @@ function testaEOperazioni(scelte5) {
     if (scelte5.coloreCapelli === "naturale" && scelte5.barba !== "nessuna") {
       variante = "barba";
       barbaNativa = true;
-    } else if (VARIANTE_COLORE[scelte5.coloreCapelli] && cerca3(VARIANTE_COLORE[scelte5.coloreCapelli]))
+    } else if (VARIANTE_COLORE[scelte5.coloreCapelli] && cerca4(VARIANTE_COLORE[scelte5.coloreCapelli]))
       variante = VARIANTE_COLORE[scelte5.coloreCapelli];
   }
-  const testa2 = cerca3(variante) || cerca3(scelte5.capelli) || cerca3("lisci");
+  const testa2 = cerca4(variante) || cerca4(scelte5.capelli) || cerca4("lisci");
   const tinta2 = TINTE_CAPELLI[scelte5.coloreCapelli];
   const colorePronto = scelte5.coloreCapelli === "naturale" || scelte5.capelli === "lisci" && variante === VARIANTE_COLORE[scelte5.coloreCapelli];
   if (tinta2 && !colorePronto && scelte5.capelli !== "calvo" && !barbaNativa)
@@ -40344,9 +40348,10 @@ function laDomandaPerSfogliare(entity2, { id = "", tipo = "" } = {}) {
   if (!dove.includes(".")) return null;
   const domanda = { type: DOMANDA_SFOGLIA, entity_id: dove };
   const cercato = pulito33(id);
-  if (cercato) {
+  const genere = pulito33(tipo);
+  if (cercato || genere) {
     domanda.media_content_id = cercato;
-    domanda.media_content_type = pulito33(tipo);
+    domanda.media_content_type = genere;
   }
   return domanda;
 }
@@ -40356,19 +40361,30 @@ function laMiniatura(valore3) {
   if (grezzo.startsWith("/") && !grezzo.startsWith("//")) return grezzo;
   return /^https?:\/\//i.test(grezzo) ? grezzo : "";
 }
+var DI_DEEZER = /(^|[^a-z])deezer([^a-z]|$)/i;
+var COPERTINA_DI_DEEZER = /^https?:\/\/([a-z0-9-]+\.)*(dzcdn\.net|deezer\.com)\//i;
+function eDiDeezer(grezza) {
+  const id = pulito33(grezza?.media_content_id ?? grezza?.id);
+  if (DI_DEEZER.test(id)) return true;
+  if (COPERTINA_DI_DEEZER.test(pulito33(grezza?.thumbnail ?? grezza?.miniatura))) return true;
+  const titolo3 = pulito33(grezza?.title ?? grezza?.titolo);
+  return grezza?.can_expand === true && /^deezer$/i.test(titolo3);
+}
 function unaVoceDaSfogliare(grezza) {
   const id = pulito33(grezza?.media_content_id);
-  const sfogliabile = grezza?.can_expand === true;
-  const suonabile = grezza?.can_play === true;
-  if (!id || !sfogliabile && !suonabile) return null;
+  const tipo = pulito33(grezza?.media_content_type);
+  const sfogliabile = grezza?.can_expand === true && Boolean(id || tipo);
+  const suonabile = grezza?.can_play === true && Boolean(id);
+  if (!sfogliabile && !suonabile) return null;
   return {
     id,
-    tipo: pulito33(grezza?.media_content_type),
+    tipo,
     classe: pulito33(grezza?.media_class),
     titolo: pulito33(grezza?.title) || id,
     miniatura: laMiniatura(grezza?.thumbnail),
     sfogliabile,
-    suonabile
+    suonabile,
+    deezer: eDiDeezer(grezza)
   };
 }
 function laCartella(risposta) {
@@ -40386,6 +40402,18 @@ function laCartella(risposta) {
     nonMostrate: (Number.isFinite(suoi2) && suoi2 > 0 ? suoi2 : 0) + (figli.length - voci4.length)
   };
 }
+var DOMANDA_CERCA = "media_player/search_media";
+var LETTERE_PER_CERCARE = 2;
+function laDomandaPerCercare(entity2, testo2) {
+  const dove = pulito33(entity2);
+  const cercato = pulito33(testo2).replace(/\s+/g, " ").slice(0, 120);
+  if (!dove.includes(".") || cercato.length < LETTERE_PER_CERCARE) return null;
+  return { type: DOMANDA_CERCA, entity_id: dove, search_query: cercato };
+}
+function iRisultati(risposta, testo2 = "") {
+  const voci4 = Array.isArray(risposta?.result) ? risposta.result : Array.isArray(risposta) ? risposta : [];
+  return laCartella({ children: voci4, title: pulito33(testo2) });
+}
 function ilComandoPerSuonare(entity2, voce3, come2 = "subito") {
   const dove = pulito33(entity2);
   const id = pulito33(voce3?.id);
@@ -40400,8 +40428,9 @@ function ilFiloDallaRadice(titolo3 = "") {
 function ilFiloDopo(filo, voce3) {
   const passi2 = Array.isArray(filo) ? filo : [];
   const passo = { id: pulito33(voce3?.id), tipo: pulito33(voce3?.tipo), titolo: pulito33(voce3?.titolo) };
-  if (!passo.id) return passi2.length ? passi2 : ilFiloDallaRadice();
-  const gia = passi2.findIndex((riga3) => pulito33(riga3?.id) === passo.id);
+  if (!passo.id && !passo.tipo) return passi2.length ? passi2 : ilFiloDallaRadice();
+  const stesso = (riga3) => !riga3?.cerca && (passo.id ? pulito33(riga3?.id) === passo.id : !pulito33(riga3?.id) && pulito33(riga3?.tipo) === passo.tipo);
+  const gia = passi2.findIndex(stesso);
   if (gia >= 0) return passi2.slice(0, gia + 1);
   return [...passi2, passo];
 }
@@ -40978,6 +41007,9 @@ function sfoglio() {
     carica: false,
     errore: "",
     nonMostrate: 0,
+    /* Quello che c'e' scritto nel campo della ricerca: la finestra si
+     * ridisegna a ogni risposta, e il testo non deve sparire. */
+    testo: "",
     /* A che domanda stiamo aspettando risposta: chi tocca due cartelle di
      * fila non deve vedersi arrivare il contenuto della prima. */
     giro: 0
@@ -40995,6 +41027,15 @@ function finestraDelloSfoglio() {
     if (evento.target === host2 || evento.target?.closest?.("[data-dm-sf-chiudi]"))
       chiudiLoSfoglio();
   });
+  host2.addEventListener("submit", (evento) => {
+    if (!evento.target?.closest?.("[data-dm-sf-cerca]")) return;
+    evento.preventDefault();
+    cerca(evento.target.querySelector("input")?.value);
+  });
+  host2.addEventListener("input", (evento) => {
+    if (evento.target?.closest?.("[data-dm-sf-cerca]") && state38.sfoglia)
+      state38.sfoglia.testo = String(evento.target.value ?? "");
+  });
   doc.body.append(host2);
   return host2;
 }
@@ -41008,6 +41049,7 @@ function apriLoSfoglio(entity2) {
   suo2.voci = [];
   suo2.errore = "";
   suo2.nonMostrate = 0;
+  suo2.testo = "";
   chiediLaCartella();
   return true;
 }
@@ -41024,7 +41066,7 @@ function chiudiLoSfoglio() {
 async function chiediLaCartella() {
   const suo2 = sfoglio();
   const passo = ilPassoDiAdesso(suo2.filo);
-  const domanda = laDomandaPerSfogliare(suo2.entity, { id: passo.id, tipo: passo.tipo });
+  const domanda = passo.cerca ? laDomandaPerCercare(suo2.entity, passo.cerca) : laDomandaPerSfogliare(suo2.entity, { id: passo.id, tipo: passo.tipo });
   if (!domanda) return chiudiLoSfoglio();
   const giro = suo2.giro += 1;
   suo2.carica = true;
@@ -41044,15 +41086,29 @@ async function chiediLaCartella() {
     suo2.nonMostrate = 0;
     suo2.errore = parolaDelGuaio(guaio);
   } else {
-    const cartella2 = laCartella(risposta);
+    const cartella2 = passo.cerca ? iRisultati(risposta) : laCartella(risposta);
     suo2.voci = cartella2.voci;
     suo2.nonMostrate = cartella2.nonMostrate;
     suo2.errore = "";
     const dove = ilPassoDiAdesso(suo2.filo);
-    if (cartella2.titolo) dove.titolo = cartella2.titolo;
+    if (cartella2.titolo && !dove.cerca) dove.titolo = nomeDiUnPosto(dove, cartella2.titolo);
   }
   disegnaLoSfoglio();
   return true;
+}
+function cerca(testo2) {
+  const suo2 = state38.sfoglia;
+  if (!suo2?.entity) return;
+  const cercato = clean(testo2);
+  suo2.testo = cercato;
+  if (!laDomandaPerCercare(suo2.entity, cercato)) return;
+  suo2.filo = [ilFiloDallaRadice(t("Da ascoltare", "To play"))[0], {
+    id: "",
+    tipo: "",
+    titolo: `«${cercato}»`,
+    cerca: cercato
+  }];
+  chiediLaCartella();
 }
 function parolaDelGuaio(guaio) {
   if (guaio === "timeout") return t("Il lettore non ha risposto.", "The player did not answer.");
@@ -41075,6 +41131,12 @@ function fondoDellaMiniatura(url) {
   if (!pulito61) return "";
   return pulito61.replace(/["'()\\\s]/g, (carattere) => encodeURIComponent(carattere));
 }
+function nomeDiUnPosto(passo, titolo3) {
+  if (!clean(passo?.id) && passo?.tipo === "favorites") return t("Preferiti di Sonos", "Sonos favourites");
+  if (!clean(passo?.id) && passo?.tipo === "library")
+    return t("Libreria e cartelle di casa", "Library and home folders");
+  return titolo3;
+}
 function voceMarkup(voce3, indice, puoAccodare) {
   const segno2 = segnoDellaVoce(voce3);
   const fondo = fondoDellaMiniatura(voce3.miniatura);
@@ -41082,7 +41144,7 @@ function voceMarkup(voce3, indice, puoAccodare) {
   return `<div class="dm-sf-voce">
     <button type="button" class="dm-sf-riga" data-dm-sf="${dove}" data-dm-sf-voce="${indice}">
       <span class="dm-sf-mini"${fondo ? ` style="background-image:url(${fondo})"` : ""}>${segno2}</span>
-      <span class="dm-sf-nome">${esc(voce3.titolo)}</span>
+      <span class="dm-sf-nome">${esc(nomeDiUnPosto(voce3, voce3.titolo))}${voce3.deezer ? `<em class="dm-sf-deezer">Deezer</em>` : ""}</span>
       ${voce3.sfogliabile ? `<span class="dm-sf-freccia" aria-hidden="true">›</span>` : ""}
     </button>
     ${/* Il triangolo accanto c'e' solo dove serve: una playlist si apre E si
@@ -41094,6 +41156,17 @@ function voceMarkup(voce3, indice, puoAccodare) {
     ${voce3.suonabile && puoAccodare ? `<button type="button" class="dm-sf-tasto dm-sf-coda" data-dm-sf="coda" data-dm-sf-voce="${indice}"
             aria-label="${esc(t("Metti in coda", "Add to queue"))}">+</button>` : ""}
   </div>`;
+}
+function cercaMarkup(suo2) {
+  if (letturaDiUnLettore(suo2.entity)?.puo?.trova !== true) return "";
+  return `<form class="dm-sf-cerca" data-dm-sf-cerca role="search">
+    <input type="search" enterkeyhint="search" autocomplete="off" value="${esc(suo2.testo)}"
+      placeholder="${esc(t("Cerca brani, artisti, playlist", "Search songs, artists, playlists"))}"
+      aria-label="${esc(t("Cerca", "Search"))}">
+    <button type="submit" class="dm-sf-tondo" aria-label="${esc(t("Cerca", "Search"))}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="2.2" fill="none"/><path d="m15 15 5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </button>
+  </form>`;
 }
 function filoMarkup(filo) {
   if (filo.length < 2) return "";
@@ -41143,6 +41216,7 @@ function disegnaLoSfoglio() {
       <button type="button" class="dm-sf-tondo" data-dm-sf-chiudi
         aria-label="${esc(t("Chiudi", "Close"))}">✕</button>
     </header>
+    ${cercaMarkup(suo2)}
     ${filoMarkup(suo2.filo)}
     ${corpoDelloSfoglio(suo2)}
   </div>`;
@@ -41161,7 +41235,7 @@ function tocca(comando, nodo2) {
   const voce3 = suo2.voci[Number(nodo2.dataset.dmSfVoce)];
   if (!voce3) return;
   if (comando === "apri") {
-    suo2.filo = ilFiloDopo(suo2.filo, voce3);
+    suo2.filo = ilFiloDopo(suo2.filo, { ...voce3, titolo: nomeDiUnPosto(voce3, voce3.titolo) });
     chiediLaCartella();
     return;
   }
@@ -41517,8 +41591,10 @@ function installStyles17() {
          schermo: su un telefono la libreria di Music Assistant ha centinaia di
          righe e la finestra deve stare dove sta, col solo elenco che si muove. */
       #dm-sf-popup[hidden]{display:none!important}
+      /* Sopra tutto, pannello a muro compreso: da li' si apre la stessa
+         finestra, e il muro sta a un livello che copre la plancia intera. */
       #dm-sf-popup{
-        position:fixed;inset:0;z-index:2700;display:grid;place-items:center;
+        position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;
         padding:18px;background:rgba(2,6,23,.66);
         backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
       #dm-sf-popup .dm-sf-box{
@@ -41582,6 +41658,19 @@ function installStyles17() {
       .dm-sf-nome{
         min-width:0;font-size:13.5px;font-weight:800;
         overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      /* Il segno di Deezer: piccolo, accanto al titolo, coi colori suoi. */
+      .dm-sf-deezer{
+        display:inline-block;margin-left:7px;padding:1px 6px;border-radius:6px;vertical-align:1px;
+        font-style:normal;font-size:9.5px;font-weight:900;letter-spacing:.02em;
+        color:#fff;background:#a238ff}
+      .dm-sf-cerca{
+        display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;
+        flex:0 0 auto;padding:0 2px 10px}
+      .dm-sf-cerca>input{
+        min-width:0;height:38px;padding:0 13px;border-radius:12px;
+        font:inherit;font-size:13.5px;font-weight:700;color:var(--text,#0f172a);
+        background:var(--bg-sculpted,#f1f5f9);border:1px solid var(--card-border,#e2e8f0)}
+      .dm-sf-cerca>.dm-sf-tondo{width:38px;height:38px;border-radius:12px}
       .dm-sf-freccia{color:var(--text-dim,#cbd5e1);font-weight:900;font-size:17px;line-height:1}
       .dm-sf-tasto{
         display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;padding:0;
@@ -66629,10 +66718,10 @@ function disegnoDellaStanza3(riferimento, nomeUnita) {
   } catch (_error) {
     stanze4 = [];
   }
-  const cerca3 = (chiave2) => chiave2 ? stanze4.find(
+  const cerca4 = (chiave2) => chiave2 ? stanze4.find(
     (voce3) => clean(voce3?.id) === chiave2 || clean(voce3?.name).toLowerCase() === chiave2.toLowerCase()
   ) : null;
-  const stanza2 = cerca3(clean(riferimento)) || cerca3(clean(nomeUnita));
+  const stanza2 = cerca4(clean(riferimento)) || cerca4(clean(nomeUnita));
   const icona2 = clean(stanza2?.icon);
   if (!icona2) return "";
   try {
@@ -80208,10 +80297,10 @@ function onClick13(event) {
     if (campo5) openIconPicker(campo5, "action");
     return;
   }
-  const cerca3 = event.target.closest("[data-suo-pick]");
-  if (cerca3) {
+  const cerca4 = event.target.closest("[data-suo-pick]");
+  if (cerca4) {
     event.preventDefault();
-    const campo5 = doc.getElementById(clean(cerca3.dataset.suoPick));
+    const campo5 = doc.getElementById(clean(cerca4.dataset.suoPick));
     if (campo5) root.wzPickEntity?.(campo5);
     return;
   }
@@ -94494,6 +94583,7 @@ function lettoreGrande(l) {
         <div class="mu-osw mu-mp-titolo">${esc(titolo3)}</div>
         ${sotto ? `<div class="mu-sotto">${esc(sotto)}</div>` : ""}
       </div>
+      ${bottoneDaScegliere(l)}
       ${bottoneDelGruppo(l)}
       ${l.puo.spegni && !l.spento ? tastoMusica(l, "spegni", "accendi", { etichetta: t("Spegni", "Turn off") }) : ""}
     </div>
@@ -94560,6 +94650,10 @@ function telecomandoDelLettoreMuro(l) {
   ).join("")}</div>`;
 }
 var lettoriDiQui = [];
+function bottoneDaScegliere(l) {
+  if (!l.puo.sfoglia || l.muto) return "";
+  return `<button type="button" class="mu-mp-gruppo mu-mp-scegli" data-mu-fa="mp-scegli-musica" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Scegli cosa suonare", "Choose what to play"))}"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 6.6h11.2M4.4 11h11.2M4.4 15.4h6.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19.4 8.6v7.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17.5" cy="16.4" r="2" fill="currentColor"/></svg><span>${esc(t("Scegli", "Choose"))}</span></button>`;
+}
 function bottoneDelGruppo(l) {
   if (!l.puo.gruppo || l.spento) return "";
   const altri = lettoriDiQui.filter((x) => x.entity !== l.entity && x.puo.gruppo);
@@ -96327,6 +96421,9 @@ function onClick25(event) {
       disegna5();
       return;
     }
+    case "mp-scegli-musica":
+      apriLoSfoglio(id);
+      return;
     case "mp-sorgente":
       comanda2("media_player", "select_source", {
         entity_id: id,
@@ -97025,6 +97122,9 @@ ${MURO} .mu-mp-titolo{font-size:40px;white-space:nowrap;overflow:hidden;text-ove
 ${MURO} .mu-mp-dici .mu-sotto{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-mp-testa>.mu-tondo{align-self:flex-start}
 ${MURO} .mu-mp-gruppo{align-self:flex-start;display:flex;align-items:center;gap:8px;height:56px;padding:0 18px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
+${MURO} .mu-mp-scegli{color:#fff;background:#a238ff;box-shadow:0 10px 24px -12px #a238ff}
+${MURO}[data-compatto="1"] .mu-mp-scegli>span{display:none}
+${MURO}[data-compatto="1"] .mu-mp-scegli{padding:0 16px}
 ${MURO} .mu-mp-gruppo.si{color:#fff;background:var(--acc);box-shadow:0 10px 24px -10px var(--acc)}
 ${MURO} .mu-mp-gruppo-elenco{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto}
 ${MURO} .mu-mp-gruppo-elenco .mu-mp-riga{text-align:left;width:100%}
@@ -98083,7 +98183,7 @@ var nomeDi9 = (id) => clean(
 ) || /* Una persona col nome della scheda Persone, come sul tablet. */
 nomeDellaPersonaDelMuro(id, state112.fonte || {}, allStates() || {}) || clean(allStates()?.[id]?.attributes?.friendly_name) || id;
 var campiCerca = 0;
-function cerca(via, valore3, { domini: domini2 = "", segnaposto = "" } = {}) {
+function cerca2(via, valore3, { domini: domini2 = "", segnaposto = "" } = {}) {
   const id = `mu-ed-cerca-${campiCerca++}`;
   return `<span class="ed-form-row mu-ed-cerca"><input id="${id}" class="ed-input mono mu-ed-campo" data-mu-ed-campo="${esc(via)}" data-entity-input="true" data-domain="${esc(domini2)}" value="${esc(valore3)}" placeholder="${esc(segnaposto || t("Entità", "Entity"))}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-entity-target="${id}" data-mu-ed-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>`;
 }
@@ -98107,7 +98207,7 @@ function postoMarkup(i, lista5, k, c, posti = 6) {
       <b class="mu-ed-cosa">${esc(descrizione)}</b>
       ${pieno ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
     <div class="mu-ed-posto-corpo">
-      <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Entità", "Entity"))}</span>${cerca(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEI_POSTI })}</label>
+      <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Entità", "Entity"))}</span>${cerca2(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEI_POSTI })}</label>
       ${azioni2.length ? `<label class="mu-ed-voce"><span>${esc(t("oppure un'azione", "or an action"))}</span>${tendina2(`${via}.azione`, c?.azione || "", azioni2, t("Nessuna", "None"))}</label>` : ""}
       ${pieno ? `<label class="mu-ed-voce"><span>${esc(t("Nome sul tablet", "Name on the tablet"))}</span>${campo3(`${via}.nome`, c.nome || "", c.azione || nomeDi9(c.entita))}</label>
       <label class="mu-ed-voce"><span>${esc(t("Riga sotto", "Line below"))}</span>${campo3(`${via}.sotto`, c.sotto || "", t("Facoltativa", "Optional"))}</label>
@@ -98209,7 +98309,7 @@ function elencoDiEntita2(i, chiave2, valori, { domini: domini2, massimo, segnapo
     { length: campi },
     (_, k) => {
       const pieno = Boolean(valori[k]);
-      return `<span class="mu-ed-elenco-voce">${cerca(`${via}.${k}`, valori[k] || "", { domini: domini2, segnaposto: pieno ? "" : segnaposto })}${pieno ? `<span class="mu-ed-frecce"><button type="button" data-mu-ed-sposta="${esc(via)}" data-mu-ed-da="${k}" data-mu-ed-verso="-1"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-sposta="${esc(via)}" data-mu-ed-da="${k}" data-mu-ed-verso="1"${k === valori.length - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>` : ""}</span>`;
+      return `<span class="mu-ed-elenco-voce">${cerca2(`${via}.${k}`, valori[k] || "", { domini: domini2, segnaposto: pieno ? "" : segnaposto })}${pieno ? `<span class="mu-ed-frecce"><button type="button" data-mu-ed-sposta="${esc(via)}" data-mu-ed-da="${k}" data-mu-ed-verso="-1"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-sposta="${esc(via)}" data-mu-ed-da="${k}" data-mu-ed-verso="1"${k === valori.length - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>` : ""}</span>`;
     }
   ).join("")}</span>`;
 }
@@ -98286,7 +98386,7 @@ function paginaMarkup(p, i, tutte) {
     const misura7 = (chiave2, titolo3, nota, domini2 = "sensor") => riga2(
       titolo3,
       sue[chiave2] && !p.energia[chiave2] ? `${nota} · ${t("dalla plancia", "from the dashboard")}: ${nomeDi9(sue[chiave2])}` : nota,
-      cerca(`${via}.energia.${chiave2}`, p.energia[chiave2], {
+      cerca2(`${via}.energia.${chiave2}`, p.energia[chiave2], {
         domini: domini2,
         segnaposto: sue[chiave2] || t("Entità", "Entity")
       })
@@ -98342,7 +98442,7 @@ function paginaMarkup(p, i, tutte) {
       ),
       `<span class="mu-ed-lettori">${Array.from(
         { length: Math.min((p.energia.altre || []).length + 1, ALTRE_MISURE_AL_MASSIMO) },
-        (_, k) => cerca(`${via}.energia.altre.${k}`, (p.energia.altre || [])[k] || "", {
+        (_, k) => cerca2(`${via}.energia.altre.${k}`, (p.energia.altre || [])[k] || "", {
           domini: "sensor"
         })
       ).join("")}</span>`
@@ -98361,7 +98461,7 @@ function paginaMarkup(p, i, tutte) {
       p.lettori.length ? t("Quelli scelti qui, in quest'ordine", "The ones chosen here, in this order") : `${t("Vuoto: quelli della sezione Musica della plancia", "Empty: the ones from the dashboard's Music section")}${sue.length ? ` — ${sue.map((l) => l.nome || nomeDi9(l.entita)).join(", ")}` : ""}`,
       `<span class="mu-ed-lettori">${Array.from(
         { length: campi },
-        (_, k) => cerca(`${via}.lettori.${k}`, p.lettori[k] || "", { domini: "media_player" })
+        (_, k) => cerca2(`${via}.lettori.${k}`, p.lettori[k] || "", { domini: "media_player" })
       ).join("")}</span>`
     )}`;
   } else if (p.modello === "mixer") {
@@ -98432,12 +98532,12 @@ function paginaMarkup(p, i, tutte) {
       })
     )}
     <div class="mu-ed-sotto-titolo">${esc(t("Citofono / telecamera", "Intercom / camera"))}</div>
-    ${riga2(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
-    ${riga2(t("Campanello", "Doorbell"), t("Quando suona, il pannello si sveglia e apre il citofono da solo", "When it rings, the panel wakes up and opens the intercom by itself"), cerca(`${via}.ingresso.campanello`, ing.campanello, { domini: "binary_sensor,event,input_boolean,switch" }))}
+    ${riga2(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca2(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
+    ${riga2(t("Campanello", "Doorbell"), t("Quando suona, il pannello si sveglia e apre il citofono da solo", "When it rings, the panel wakes up and opens the intercom by itself"), cerca2(`${via}.ingresso.campanello`, ing.campanello, { domini: "binary_sensor,event,input_boolean,switch" }))}
     ${campanelloMarkup(i, via, ing)}
-    ${riga2(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
+    ${riga2(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca2(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga2(t("Nome del tasto grande", "Big button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo3(`${via}.ingresso.nomeApri`, ing.nomeApri, ing.apri ? nomeDi9(ing.apri) : t("Cancello", "Gate")))}
-    ${riga2(t("Secondo tasto", "Second button"), t("Per esempio: apri porta", "For example: open the door"), cerca(`${via}.ingresso.apri2`, ing.apri2, { domini: "button,lock,cover,switch,script,input_button" }))}
+    ${riga2(t("Secondo tasto", "Second button"), t("Per esempio: apri porta", "For example: open the door"), cerca2(`${via}.ingresso.apri2`, ing.apri2, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga2(t("Nome del secondo tasto", "Second button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo3(`${via}.ingresso.nomeApri2`, ing.nomeApri2, ing.apri2 ? nomeDi9(ing.apri2) : t("Portoncino", "Front door")))}
     <div class="mu-ed-sotto-titolo">${esc(t("Uscita e chi c'è", "Leaving and who is home"))}</div>
     ${riga2(t("Esco", "Leaving"), t("L'azione del tasto in basso quando l'antifurto è spento", "The bottom button's action when the alarm is off"), tendina2(`${via}.ingresso.esco`, ing.esco, azioni2))}
@@ -98486,12 +98586,12 @@ function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
   return `<div class="mu-ed-posto${pieno ? " pieno" : ""}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? `${nomeDi9(c.entita)} · ${c.entita}` : t("Nuovo canale", "New channel"))}</b>${pieno && togliVia ? togli(togliVia, t("Togli il canale", "Remove the channel")) : ""}</div>
     <div class="mu-ed-posto-corpo">
-      ${voce2(t("Livello", "Level"), cerca(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEL_CANALE2 }), true)}
+      ${voce2(t("Livello", "Level"), cerca2(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEL_CANALE2 }), true)}
       ${pieno ? `${voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.nome`, c.nome || "", nomeDi9(c.entita)))}
       ${telecomando(c.entita) ? `<div class="mu-ed-comandi" data-mu-ed-comandi>${comando("suComando", t("Comando ▲", "▲ command"), "volume_up")}${comando("giuComando", t("Comando ▼", "▼ command"), "volume_down")}</div>` : ""}
-      ${sensore ? "" : voce2(t("Livello letto (facoltativo)", "Read level (optional)"), cerca(`${via}.letto`, c.letto || "", { domini: "sensor", segnaposto: t("Un sensore col livello", "A sensor with the level") }), true)}
+      ${sensore ? "" : voce2(t("Livello letto (facoltativo)", "Read level (optional)"), cerca2(`${via}.letto`, c.letto || "", { domini: "sensor", segnaposto: t("Un sensore col livello", "A sensor with the level") }), true)}
       ${sensore || c.letto ? `<div class="mu-ed-comandi">${voce2(t("Scala: da", "Scale: from"), campo3(`${via}.min`, c.min ?? "", t("Automatica", "Automatic"), "number"))}${voce2(t("Scala: a", "Scale: to"), campo3(`${via}.max`, c.max ?? "", t("Automatica", "Automatic"), "number"))}</div>` : ""}
-      ${voce2(t("Muto (facoltativo)", "Mute (optional)"), cerca(`${via}.muto`, c.muto || "", { domini: DOMINI_DEL_MUTO2, segnaposto: t("Acceso = muto", "On = muted") }), true)}
+      ${voce2(t("Muto (facoltativo)", "Mute (optional)"), cerca2(`${via}.muto`, c.muto || "", { domini: DOMINI_DEL_MUTO2, segnaposto: t("Acceso = muto", "On = muted") }), true)}
       ${conComandi ? `<div class="mu-ed-comandi">${comando("mutoComando", t("Comando del muto", "Mute command"), "mute")}${comando("dispositivo", t("Dispositivo (facoltativo)", "Device (optional)"), "")}</div>` : ""}` : ""}
     </div></div>`;
 }
@@ -98529,7 +98629,7 @@ function telecameraMarkup(p, i) {
   const tasto2 = (chiave2, titolo3, domini2 = DA_PREMERE_O_TELECOMANDO) => riga2(
     titolo3,
     "",
-    `${cerca(`${via}.${chiave2}`, tc[chiave2], { domini: domini2 })}${telecomando(tc[chiave2]) ? campoComando(`${via}.${chiave2}Comando`, tc[`${chiave2}Comando`] || "") : ""}`
+    `${cerca2(`${via}.${chiave2}`, tc[chiave2], { domini: domini2 })}${telecomando(tc[chiave2]) ? campoComando(`${via}.${chiave2}Comando`, tc[`${chiave2}Comando`] || "") : ""}`
   );
   const preset = Array.from(
     { length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) },
@@ -98537,7 +98637,7 @@ function telecameraMarkup(p, i) {
       const v = tc.preset[k];
       const pieno = Boolean(v?.entita);
       return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? v.nome || nomeDi9(v.entita) : t("Nuovo preset", "New preset"))}</b>${pieno ? togli(`${via}.preset.${k}`, t("Togli il preset", "Remove the preset")) : ""}</div>
-      <div class="mu-ed-posto-corpo">${voce2(t("Entità", "Entity"), cerca(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE_O_TELECOMANDO }), true)}${pieno && telecomando(v.entita) ? voce2(t("Comando", "Command"), campo3(`${via}.preset.${k}.comando`, v.comando || "", `preset_${k + 1}`)) : ""}${pieno ? voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
+      <div class="mu-ed-posto-corpo">${voce2(t("Entità", "Entity"), cerca2(`${via}.preset.${k}.entita`, v?.entita || "", { domini: DA_PREMERE_O_TELECOMANDO }), true)}${pieno && telecomando(v.entita) ? voce2(t("Comando", "Command"), campo3(`${via}.preset.${k}.comando`, v.comando || "", `preset_${k + 1}`)) : ""}${pieno ? voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${via}.preset.${k}.nome`, v.nome || "", t("Per esempio: Preset 1", "For example: Preset 1"))) : ""}</div></div>`;
     }
   ).join("");
   const conTelecomando = ["su", "giu", "sinistra", "destra", "stop", "zoomPiu", "zoomMeno"].some(
@@ -98549,13 +98649,13 @@ function telecameraMarkup(p, i) {
       "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off."
     )
   )}</div>
-  ${riga2(t("Telecamera", "Camera"), "", cerca(`${via}.entita`, tc.entita, { domini: "camera" }))}
+  ${riga2(t("Telecamera", "Camera"), "", cerca2(`${via}.entita`, tc.entita, { domini: "camera" }))}
   ${tasto2("su", t("Su", "Up"))}
   ${tasto2("giu", t("Giù", "Down"))}
   ${tasto2("sinistra", t("Sinistra", "Left"))}
   ${tasto2("destra", t("Destra", "Right"))}
   ${tasto2("stop", t("Stop", "Stop"))}
-  ${riga2(t("Zoom", "Zoom"), t("Un numero: diventa un cursore", "A number: it becomes a fader"), cerca(`${via}.zoom`, tc.zoom, { domini: "number,input_number" }))}
+  ${riga2(t("Zoom", "Zoom"), t("Un numero: diventa un cursore", "A number: it becomes a fader"), cerca2(`${via}.zoom`, tc.zoom, { domini: "number,input_number" }))}
   ${tasto2("zoomPiu", t("Zoom avanti", "Zoom in"))}
   ${tasto2("zoomMeno", t("Zoom indietro", "Zoom out"))}
   ${conTelecomando ? riga2(t("Dispositivo del telecomando", "Remote device"), t("Facoltativo: il «device» di remote.send_command", "Optional: the «device» of remote.send_command"), campo3(`${via}.dispositivo`, tc.dispositivo || "", "")) : ""}
@@ -98573,12 +98673,12 @@ function comandiMarkup2(p, i) {
       return `<div class="mu-ed-posto${pieno ? " pieno" : ""}"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><b class="mu-ed-cosa">${esc(pieno ? c.nome || nomeDi9(c.avvio || c.stop) : t("Nuovo comando", "New command"))}</b>${pieno ? togli(v, t("Togli il comando", "Remove the command")) : ""}</div>
       <div class="mu-ed-posto-corpo">
         ${voce2(t("Nome sul tablet", "Name on the tablet"), campo3(`${v}.nome`, c?.nome || "", t("Per esempio: Avvio", "For example: Start")))}
-        ${voce2(t("Avvio", "Start"), cerca(`${v}.avvio`, c?.avvio || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
+        ${voce2(t("Avvio", "Start"), cerca2(`${v}.avvio`, c?.avvio || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
         ${pieno && telecomando(c.avvio) ? voce2(t("Comando d'avvio", "Start command"), campo3(`${v}.avvioComando`, c.avvioComando || "", t("Vuoto: accende", "Empty: turns on"))) : ""}
-        ${pieno ? `${voce2(t("Stop (facoltativo)", "Stop (optional)"), cerca(`${v}.stop`, c.stop || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
+        ${pieno ? `${voce2(t("Stop (facoltativo)", "Stop (optional)"), cerca2(`${v}.stop`, c.stop || "", { domini: `${DA_PREMERE_O_TELECOMANDO},switch,input_boolean` }), true)}
         ${telecomando(c.stop) ? voce2(t("Comando di stop", "Stop command"), campo3(`${v}.stopComando`, c.stopComando || "", t("Vuoto: spegne", "Empty: turns off"))) : ""}
         ${telecomando(c.avvio) || telecomando(c.stop) ? voce2(t("Dispositivo (facoltativo)", "Device (optional)"), campo3(`${v}.dispositivo`, c.dispositivo || "", "")) : ""}
-        ${voce2(t("Stato (facoltativo)", "State (optional)"), cerca(`${v}.stato`, c.stato || "", { domini: "switch,input_boolean,binary_sensor,script,media_player", segnaposto: t("Acceso quando è acceso", "On when it's on") }), true)}
+        ${voce2(t("Stato (facoltativo)", "State (optional)"), cerca2(`${v}.stato`, c.stato || "", { domini: "switch,input_boolean,binary_sensor,script,media_player", segnaposto: t("Acceso quando è acceso", "On when it's on") }), true)}
         ${voce2(t("Disegno", "Drawing"), tendina2(`${v}.disegno`, c.disegno || "", DISEGNI2(), null))}
         ${voce2(t("Colore", "Colour"), colori(`${v}.colore`, c.colore))}` : ""}
       </div></div>`;
@@ -98590,7 +98690,7 @@ function comandiMarkup2(p, i) {
       "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell."
     )
   )}</div><div class="mu-ed-posti">${voci4}</div>
-  ${riga2(t("Tasto «Ferma tutto»", "«Stop all» button"), t("Vuoto: preme lo stop di ogni comando", "Empty: presses every command's stop"), `${p.fermaTutto.attivo ? cerca(`${via}.fermaTutto.entita`, p.fermaTutto.entita, { domini: DA_PREMERE_O_TELECOMANDO }) : ""}${p.fermaTutto.attivo && telecomando(p.fermaTutto.entita) ? campoComando(`${via}.fermaTutto.comando`, p.fermaTutto.comando || "", t("Vuoto: spegne", "Empty: turns off")) : ""}${interruttore(`${via}.fermaTutto.attivo`, p.fermaTutto.attivo, "ferma-tutto")}`)}`;
+  ${riga2(t("Tasto «Ferma tutto»", "«Stop all» button"), t("Vuoto: preme lo stop di ogni comando", "Empty: presses every command's stop"), `${p.fermaTutto.attivo ? cerca2(`${via}.fermaTutto.entita`, p.fermaTutto.entita, { domini: DA_PREMERE_O_TELECOMANDO }) : ""}${p.fermaTutto.attivo && telecomando(p.fermaTutto.entita) ? campoComando(`${via}.fermaTutto.comando`, p.fermaTutto.comando || "", t("Vuoto: spegne", "Empty: turns off")) : ""}${interruttore(`${via}.fermaTutto.attivo`, p.fermaTutto.attivo, "ferma-tutto")}`)}`;
 }
 var SENZA_GRIGLIA = ["ingresso", "energia", "musica", "mixer", "telecamera", "comandi"];
 var GRIGLIE_SCRITTE = () => Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
@@ -98677,7 +98777,7 @@ function corpoMarkup7() {
       "In alto e sul riposo. Vuoto: il primo che Home Assistant ha",
       "At the top and on the rest screen. Empty: the first one Home Assistant has"
     ),
-    cerca("meteo", m.meteo, { domini: "weather" })
+    cerca2("meteo", m.meteo, { domini: "weather" })
   )}
     ${/* «Il meteo lo possiamo scegliere, ma la temperatura no.» Accanto al
    * disegno del meteo, in alto e sul riposo, la temperatura del meteo
@@ -98699,7 +98799,7 @@ function corpoMarkup7() {
     `${scelte4("temperatura", m.temperatura, [
       ["meteo", t("Dal meteo", "From the weather")],
       ["casa", t("Da un sensore in casa", "From an indoor sensor")]
-    ])}${m.temperatura === "casa" ? cerca("riposo.sensore", m.riposo.sensore, {
+    ])}${m.temperatura === "casa" ? cerca2("riposo.sensore", m.riposo.sensore, {
       domini: "sensor",
       segnaposto: t("Sensore della temperatura", "Temperature sensor")
     }) : ""}`
@@ -98718,7 +98818,7 @@ function corpoMarkup7() {
     )}${interruttore("riposo.attivo", m.riposo.attivo, "riposo")}`
   )}
     ${riga2(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
-    ${m.temperatura === "casa" ? "" : riga2(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}
+    ${m.temperatura === "casa" ? "" : riga2(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca2("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}
     ${riga2(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo3("notte.da", m.notte.da, "23:00", "time")}${campo3("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
     ${riga2(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga2(t("Avvisi a tutto schermo", "Full-screen alerts"), t("Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»", "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”"), interruttore("avvisiGrandi", m.avvisiGrandi, "avvisi-grandi"))}
@@ -98728,7 +98828,7 @@ function corpoMarkup7() {
       "Quando questo sensore si accende (per esempio una presenza)",
       "When this sensor turns on (for example a presence sensor)"
     ),
-    `${cerca("risveglio.entita", m.risveglio.entita, { domini: "binary_sensor" })}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}`
+    `${cerca2("risveglio.entita", m.risveglio.entita, { domini: "binary_sensor" })}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}`
   )}
     ${riga2(
     t("Batteria del tablet", "Tablet battery"),
@@ -98744,7 +98844,7 @@ function corpoMarkup7() {
       "Per esempio il sensore della batteria dell'app di Home Assistant. Vuoto: quella che dà il browser del tablet",
       "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives"
     ),
-    cerca("batteria.livello", m.batteria.livello, { domini: "sensor" })
+    cerca2("batteria.livello", m.batteria.livello, { domini: "sensor" })
   )}
     ${riga2(
     t("In carica", "Charging"),
@@ -98752,7 +98852,7 @@ function corpoMarkup7() {
       "Facoltativo: il sensore «in carica» o lo stato della batteria",
       "Optional: the “is charging” sensor or the battery state"
     ),
-    cerca("batteria.carica", m.batteria.carica, { domini: "binary_sensor,sensor" })
+    cerca2("batteria.carica", m.batteria.carica, { domini: "binary_sensor,sensor" })
   )}` : ""}
     ${riga2(t("Blocca il tablet", "Lock the tablet"), t("Per uscire dal pannello serve il PIN, da 4 a 8 cifre", "Leaving the panel needs the PIN, 4 to 8 digits"), `${campo3("blocco.pin", m.blocco.pin, "PIN", "password")}${interruttore("blocco.attivo", m.blocco.attivo, "blocco")}`)}
     ${riga2(t("Antifurto e serrature chiedono il codice", "Alarm and locks ask for the code"), t("Sempre, quando la centrale ne ha uno", "Always, when the panel has one"), `<span class="mu-ed-int fermo" aria-checked="true"><i></i></span>`)}
@@ -102774,9 +102874,9 @@ function disegna6() {
     scrivi4(posto, `${testa2}${premium()}`);
     return;
   }
-  const cerca3 = posto.querySelector("[data-gn-cerca]");
-  const fuoco = cerca3 && doc.activeElement === cerca3;
-  const cursore = fuoco ? cerca3.selectionStart : null;
+  const cerca4 = posto.querySelector("[data-gn-cerca]");
+  const fuoco = cerca4 && doc.activeElement === cerca4;
+  const cursore = fuoco ? cerca4.selectionStart : null;
   const html = `${testa2}<div class="dm-gn-griglia"><div class="dm-gn-card">${elenco12()}</div><div class="dm-gn-card">${editor()}</div></div>`;
   if (!scrivi4(posto, html)) return;
   if (fuoco) {
@@ -102787,7 +102887,7 @@ function disegna6() {
 }
 var cercaTimer = 0;
 var quanteRicerche = 0;
-async function cerca2(testo2) {
+async function cerca3(testo2) {
   const mia = ++quanteRicerche;
   if (clean(testo2).length < 3) {
     state120.proposte = [];
@@ -102978,7 +103078,7 @@ function alTesto(event) {
   if (!campo5?.matches?.("#dm-gn [data-gn-cerca]")) return;
   state120.cercando = campo5.value;
   root.clearTimeout?.(cercaTimer);
-  cercaTimer = root.setTimeout?.(() => void cerca2(state120.cercando), 350);
+  cercaTimer = root.setTimeout?.(() => void cerca3(state120.cercando), 350);
 }
 var STILE14 = `
 .dm-gn{--gn-mappa:#e9eef2;--gn-card:#fff;--gn-bordo:#e2e8f0;--gn-testo:#0f172a;--gn-piano:#64748b;--gn-fondo:#f8fafc;max-width:1396px;margin:0 auto;padding:4px 0 24px;color:var(--gn-testo)}

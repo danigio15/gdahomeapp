@@ -95,6 +95,10 @@ export default Object.freeze({
   Back: "Wstecz",
   "Choose the climate entity: it is the one starting with climate.":
     "Wybierz encję klimatu: to ta, która zaczyna się od climate.",
+  "Library and home folders": "Biblioteka i foldery w domu",
+  "Search": "Szukaj",
+  "Search songs, artists, playlists": "Szukaj utworów, wykonawców, playlist",
+  "Sonos favourites": "Ulubione Sonos",
   "Choose what to play": "Wybierz, co odtworzyć",
   Collected: "Odebrano",
   "Confirm locking?": "Potwierdzasz zablokowanie?",

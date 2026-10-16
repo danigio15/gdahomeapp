@@ -95,6 +95,10 @@ export default Object.freeze({
   Back: "Terug",
   "Choose the climate entity: it is the one starting with climate.":
     "Kies de klimaat-entiteit: dat is degene die met climate. begint.",
+  "Library and home folders": "Bibliotheek en mappen in huis",
+  "Search": "Zoeken",
+  "Search songs, artists, playlists": "Zoek nummers, artiesten, afspeellijsten",
+  "Sonos favourites": "Sonos-favorieten",
   "Choose what to play": "Kies wat er speelt",
   Collected: "Opgehaald",
   "Confirm locking?": "Vergrendelen bevestigen?",

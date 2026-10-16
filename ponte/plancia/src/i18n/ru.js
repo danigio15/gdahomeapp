@@ -95,6 +95,10 @@ export default Object.freeze({
   Back: "Назад",
   "Choose the climate entity: it is the one starting with climate.":
     "Выберите сущность климата: это та, что начинается с climate.",
+  "Library and home folders": "Библиотека и папки дома",
+  "Search": "Поиск",
+  "Search songs, artists, playlists": "Искать песни, исполнителей, плейлисты",
+  "Sonos favourites": "Избранное Sonos",
   "Choose what to play": "Выберите, что включить",
   Collected: "Забрали",
   "Confirm locking?": "Подтвердить блокировку?",

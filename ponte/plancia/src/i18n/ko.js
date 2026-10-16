@@ -95,6 +95,10 @@ export default Object.freeze({
   Back: "뒤로",
   "Choose the climate entity: it is the one starting with climate.":
     "냉난방 엔티티를 고르세요: climate. 으로 시작하는 것입니다.",
+  "Library and home folders": "라이브러리와 집 폴더",
+  "Search": "검색",
+  "Search songs, artists, playlists": "노래, 아티스트, 재생목록 검색",
+  "Sonos favourites": "Sonos 즐겨찾기",
   "Choose what to play": "재생할 항목 선택",
   Collected: "가져감",
   "Confirm locking?": "잠글까요?",

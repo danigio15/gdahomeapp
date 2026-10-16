@@ -91,6 +91,10 @@ export default Object.freeze({
   Back: "返回",
   "Choose the climate entity: it is the one starting with climate.":
     "选择冷暖实体：就是以 climate. 开头的那个。",
+  "Library and home folders": "音乐库和家中文件夹",
+  "Search": "搜索",
+  "Search songs, artists, playlists": "搜索歌曲、艺人、播放列表",
+  "Sonos favourites": "Sonos 收藏",
   "Choose what to play": "选择要播放的内容",
   Collected: "已取",
   "Confirm locking?": "确认上锁？",

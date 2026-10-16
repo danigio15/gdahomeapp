@@ -94,6 +94,10 @@ export default Object.freeze({
   Back: "Geri",
   "Choose the climate entity: it is the one starting with climate.":
     "İklim varlığını seç: climate. ile başlayan olan.",
+  "Library and home folders": "Kitaplık ve evdeki klasörler",
+  "Search": "Ara",
+  "Search songs, artists, playlists": "Şarkı, sanatçı, çalma listesi ara",
+  "Sonos favourites": "Sonos favorileri",
   "Choose what to play": "Ne çalınacağını seç",
   Collected: "Alındı",
   "Confirm locking?": "Kilitlemeyi onaylıyor musun?",
