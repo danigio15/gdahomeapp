@@ -88,19 +88,6 @@ configuration:
         description: >-
           How many phones can stay paired at the same time. Yours, the one of
           whoever lives with you, your parents'.
-      intelligenza:
-        name: Assistant intelligence (Ollama)
-        description: >-
-          When on, the assistant uses an AI model running here, at home, to
-          understand the things it can't recognise by name (the aquarium light,
-          the fridge socket). Needs at least 4 GB of RAM and a 64-bit Home
-          Assistant; the first time it downloads the model (about 1 GB).
-          Nothing leaves the house.
-      modello_intelligenza:
-        name: Model
-        description: >-
-          The Ollama model. Default qwen2.5:1.5b: small and understands
-          Italian. Bigger means more memory and slower.
   chi_installa:
     name: The installer
     description: >-

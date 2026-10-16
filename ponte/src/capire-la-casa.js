@@ -156,8 +156,6 @@ export class CapireLaCasa {
     d.silenzio = voce(d.silenzio);
     d.luci = voce(d.luci);
     d.porte = voce(d.porte);
-    /* Quello che ha detto gdahome AI (`ia.js`), una volta al giorno. */
-    d.ia = voce(d.ia);
     this._sporco = false;
   }
 
@@ -274,43 +272,11 @@ export class CapireLaCasa {
     if (tipo === "luce") {
       const genere = genereDi(id, nome);
       if (genere) return { perche: genere };
-      const dettoDallIa = this.dati.ia[id];
-      if (GENERI_DA_LASCIARE[dettoDallIa]) return { perche: dettoDallIa, ia: true };
       if (this.luceAbituale(id, ora)) return { perche: "abitudine" };
     } else if (this.portaAbituale(id, ora)) {
       return { perche: "abitudine" };
     }
     return null;
-  }
-
-  /** Se una porta e' interna: dal nome, o perche' l'ha detto gdahome AI. */
-  portaInterna(id, nome = "", classe = "") {
-    return eInterna(id, nome, classe) || this.dati.ia[id] === "interna";
-  }
-
-  /**
-   * Le cose da chiedere a gdahome AI: luci, prese e porte che dal nome non
-   * si riconoscono e che non ha gia' visto. Solo id, nome e stanza.
-   */
-  daChiedere(stati = new Map(), nomeDi = (stato, id) => id) {
-    const fuori = [];
-    for (const [id, stato] of stati) {
-      const dominio = id.split(".")[0];
-      const porta =
-        dominio === "binary_sensor" && ["door", "opening"].includes(stato.attributes?.device_class);
-      if (!porta && !["light", "switch"].includes(dominio)) continue;
-      if (this.dati.ia[id] !== undefined) continue;
-      const nome = nomeDi(stato, id);
-      if (porta ? eInterna(id, nome) : genereDi(id, nome)) continue;
-      fuori.push({ id, nome });
-    }
-    return fuori;
-  }
-
-  /** Quello che ha risposto gdahome AI. «normale» si ricorda anche lui: non si richiede. */
-  ricordaIa(risposte = {}) {
-    for (const [id, genere] of Object.entries(risposte)) this.dati.ia[id] = genere;
-    this._salva();
   }
 
   /** Butta i giorni vecchi: lo chiama la sentinella una volta ogni tanto. */

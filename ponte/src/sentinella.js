@@ -20,7 +20,7 @@
  * non lo dice, invece di indovinare.
  */
 
-import { CapireLaCasa, cosaApre, nomePulito } from "./capire-la-casa.js";
+import { CapireLaCasa, cosaApre, eInterna, nomePulito } from "./capire-la-casa.js";
 
 const MINUTO = 60 * 1000;
 const ORA = 60 * MINUTO;
@@ -768,7 +768,7 @@ export class Sentinella {
         aperta &&
         (vuota === true
           ? ["detto", "stanotte"].includes(detto?.perche)
-          : detto !== null || this.capire.portaInterna(id, nome, classe));
+          : detto !== null || eInterna(id, nome, classe));
       const daDire = aperta && !lascia && da >= APERTA_DA && (vuota === true || (notte && dorme));
       if (this._unaVolta(`aperture:${id}`, daDire)) {
         const dove = nomePulito(nome);

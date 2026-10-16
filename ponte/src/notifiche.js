@@ -43,15 +43,12 @@ import { randomBytes } from "node:crypto";
 
 import { Archivio } from "./archivio.js";
 import { CapireLaCasa } from "./capire-la-casa.js";
-import { Ia } from "./ia.js";
 import { CATEGORIE, EVENTI, Sentinella, URGENZE, categoriaDi } from "./sentinella.js";
 import { chiudiLaSpinta, CONTENUTO_MASSIMO } from "./spinta.js";
 import { vedeQualcosa } from "./plance.js";
 
 const MINUTO = 60 * 1000;
 const ORA = 60 * MINUTO;
-/* Quanto spesso si chiede a gdahome AI: una volta al giorno basta. */
-const IA_OGNI = 24 * ORA;
 
 /* Quanto vive il riferimento ai tasti di una notifica. Dopo, «Spegni» non
  * spegne piu' niente: la situazione di due ore fa non e' quella di adesso. */
@@ -206,9 +203,6 @@ export class Notifiche {
     postino = null,
     registro = null,
     adesso = () => Date.now(),
-    /* gdahome AI (`ia.js`): se l'add-on c'e', una volta al giorno dice cosa
-     * sono le cose che dal nome non si riconoscono. Le prove la tengono spenta. */
-    ia = undefined,
   } = {}) {
     this.dispositivi = dispositivi;
     this.utenti = utenti;
@@ -236,8 +230,6 @@ export class Notifiche {
       },
     });
     this.sentinella.personalizzate = this.archivio.dati.personalizzate;
-    this.ia = ia === undefined ? new Ia({ registro: this.registro }) : ia;
-    this._iaIl = 0;
     /** I tasti delle notifiche mandate: id → {telefono, azioni, scade}. */
     this._tasti = new Map();
     /** Quando si e' detto cosa, e a chi: `telefono|chiave` → ora. */
@@ -320,29 +312,7 @@ export class Notifiche {
     await this._riepiloghi();
     if (this.adesso() - this._previsioneIl >= PREVISIONE_OGNI) await this._previsione();
     if (this.adesso() - this._registriIl >= REGISTRI_OGNI) void this._iRegistri();
-    if (this.ia && this.adesso() - this._iaIl >= IA_OGNI) void this._chiediAllIa();
     this._pulisci();
-  }
-
-  /* Una volta al giorno, le cose che l'assistente non ha riconosciuto dal
-   * nome vanno a gdahome AI. Escono solo id e nomi di luci, prese e porte.
-   * Senza l'add-on (o fermo) si riprova fra un'ora: magari lo si accende. */
-  async _chiediAllIa() {
-    this._iaIl = this.adesso();
-    const capire = this.sentinella.capire;
-    const cose = capire.daChiedere(this.sentinella.stati, (stato, id) =>
-      String(stato?.attributes?.friendly_name || id).slice(0, 60),
-    );
-    if (!cose.length) return;
-    const risposte = await this.ia.riconosci(cose);
-    if (risposte === null) {
-      this._iaIl = this.adesso() - IA_OGNI + ORA;
-      return;
-    }
-    capire.ricordaIa(risposte);
-    capire.scrivi();
-    const quante = Object.values(risposte).filter((g) => g !== "normale").length;
-    if (quante) this.registro.info(`gdahome AI ha riconosciuto ${quante} cose della casa`);
   }
 
   /* La previsione oraria, per «tra mezz'ora piove». Solo se c'e' una finestra

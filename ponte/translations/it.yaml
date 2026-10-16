@@ -126,19 +126,6 @@ configuration:
         description: >-
           Quanti telefoni possono restare abbinati nello stesso momento. Il
           telefono di casa, quello di chi ci abita con te, quello dei nonni.
-      intelligenza:
-        name: Intelligenza dell'assistente (Ollama)
-        description: >-
-          Accesa, l'assistente usa un modello di intelligenza artificiale che
-          gira qui, in casa, per capire cosa sono le cose che non riconosce dal
-          nome (la luce dell'acquario, la presa del frigo). Serve almeno 4 GB di
-          RAM e un Home Assistant a 64 bit; la prima volta scarica il modello
-          (circa 1 GB). Non manda niente fuori casa.
-      modello_intelligenza:
-        name: Modello
-        description: >-
-          Il modello di Ollama. Di serie qwen2.5:1.5b: piccolo e capisce
-          l'italiano. Più grande vuol dire più memoria e più lento.
   chi_installa:
     name: Chi installa
     description: >-
