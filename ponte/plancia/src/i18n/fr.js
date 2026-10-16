@@ -15,6 +15,8 @@ export default Object.freeze({
     "Un bouton dans le rappel pour l'ouvrir : jamais tout seul",
   "Add a stop…": "Ajouter une étape…",
   "Arrive by": "Arrivée avant",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "Balcon, terrasse, jardin. La température et l'humidité s'affichent comme d'habitude, mais l'assistant ne propose ni de chauffer, ni de rafraîchir, ni d'aérer, et la pièce n'entre pas dans la moyenne de la maison.",
   "Car climate": "Climatisation de la voiture",
   "Change destination…": "Changer la destination…",
   "Could not delete it.": "Impossible de le supprimer.",
@@ -48,6 +50,8 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Planifiez vos trajets ici : vous les retrouvez dans gdanav sur le téléphone, CarPlay et Android Auto.",
   "Planned trips": "Trajets planifiés",
+  "Read-only: they do not count in the home average":
+    "Lecture seule : elles ne comptent pas dans la moyenne de la maison",
   "Remind me": "Me prévenir",
   "Save trip": "Enregistrer le trajet",
   "The destination is missing.": "La destination manque.",

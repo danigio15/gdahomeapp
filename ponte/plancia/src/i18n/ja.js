@@ -15,6 +15,8 @@ export default Object.freeze({
     "通知のボタンで開けます。自動では開きません",
   "Add a stop…": "経由地を追加…",
   "Arrive by": "到着時刻",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "バルコニー、テラス、庭。温度と湿度はいつもどおり表示されますが、アシスタントは暖房・冷房・換気を提案せず、この部屋は家の平均に含まれません。",
   "Car climate": "車のエアコン",
   "Change destination…": "目的地を変更…",
   "Could not delete it.": "削除できませんでした。",
@@ -46,6 +48,7 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "ここでルートを計画：gdanav のスマホ・CarPlay・Android Auto に表示されます。",
   "Planned trips": "予定のルート",
+  "Read-only: they do not count in the home average": "表示のみ：家の平均には含まれません",
   "Remind me": "通知する",
   "Save trip": "ルートを保存",
   "The destination is missing.": "目的地がありません。",

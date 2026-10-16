@@ -15,6 +15,8 @@ export default Object.freeze({
     "Een knop in de herinnering om hem te openen: nooit vanzelf",
   "Add a stop…": "Tussenstop toevoegen…",
   "Arrive by": "Aankomst vóór",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "Balkon, terras, tuin. Temperatuur en luchtvochtigheid zie je zoals altijd, maar de assistent stelt niet voor om te verwarmen, te koelen of te luchten, en de ruimte telt niet mee in het gemiddelde van het huis.",
   "Car climate": "Klimaat in de auto",
   "Change destination…": "Bestemming wijzigen…",
   "Could not delete it.": "Verwijderen is niet gelukt.",
@@ -46,6 +48,8 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Plan ritten hier: je vindt ze in gdanav op de telefoon, CarPlay en Android Auto.",
   "Planned trips": "Geplande ritten",
+  "Read-only: they do not count in the home average":
+    "Alleen om af te lezen: ze tellen niet mee in het gemiddelde van het huis",
   "Remind me": "Herinner me",
   "Save trip": "Rit opslaan",
   "The destination is missing.": "De bestemming ontbreekt.",

@@ -15,6 +15,8 @@ export default Object.freeze({
     "Um botão no aviso para a abrir: nunca sozinha",
   "Add a stop…": "Adicionar uma paragem…",
   "Arrive by": "Chegar até",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "Varanda, terraço, jardim. A temperatura e a humidade veem-se como sempre, mas o assistente não sugere aquecer, refrescar nem arejar, e a divisão não entra na média da casa.",
   "Car climate": "Climatização do carro",
   "Change destination…": "Mudar o destino…",
   "Could not delete it.": "Não foi possível eliminar.",
@@ -46,6 +48,7 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Planeia viagens daqui: encontras no gdanav no telemóvel, CarPlay e Android Auto.",
   "Planned trips": "Viagens planeadas",
+  "Read-only: they do not count in the home average": "Só se leem: não contam na média da casa",
   "Remind me": "Avisa-me",
   "Save trip": "Guardar a viagem",
   "The destination is missing.": "Falta o destino.",

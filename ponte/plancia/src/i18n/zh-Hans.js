@@ -14,6 +14,8 @@ export default Object.freeze({
   "A button in the reminder to open it: never by itself": "提醒中有开门按钮：绝不会自动打开",
   "Add a stop…": "添加一站…",
   "Arrive by": "到达时间",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "阳台、露台、花园。温度和湿度照常显示，但助手不会建议加热、降温或通风，该房间也不计入全屋平均值。",
   "Car climate": "车内空调",
   "Change destination…": "更改目的地…",
   "Could not delete it.": "无法删除。",
@@ -44,6 +46,7 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "在这里规划行程：可在 gdanav 的手机、CarPlay 和 Android Auto 中找到。",
   "Planned trips": "计划的行程",
+  "Read-only: they do not count in the home average": "仅供查看：不计入全屋平均值",
   "Remind me": "提醒我",
   "Save trip": "保存行程",
   "The destination is missing.": "缺少目的地。",
