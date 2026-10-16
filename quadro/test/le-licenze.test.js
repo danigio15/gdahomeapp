@@ -32,6 +32,7 @@ import {
   MARGINE_DEL_RINNOVO,
   OTTO_GIORNI,
   codiceRegaloPulito,
+  contaGliAbbonamenti,
   firmaIlGettone,
   mesiDopo,
   verificaIlGettone,
@@ -1703,7 +1704,20 @@ test("Google dice com'e' fatto l'abbonamento, e la Gestione lo conta (e i tester
     assert.equal((await compra(QUARTA, "token-del-tester-00000001")).stato, 200);
 
     const detto = await abbonamentiDelGestore(b);
+    const inProva = detto.elenco.find((uno) => uno.sog === UNA);
     assert.deepEqual(detto.conti, {
+      /* Ognuno in un posto solo: 1 + 1 + 1 + 0 + 1 = 4. */
+      tutti: 4,
+      paganti: 1,
+      pagantiMensili: 1,
+      pagantiAnnuali: 0,
+      inProva: 1,
+      primaFineProva: inProva.pagato,
+      disdetti: 1,
+      disdettiInProva: 0,
+      finiti: 0,
+      test: 1,
+      /* I conti di prima, che legge la Panoramica: «di cui». */
       attivi: 3,
       mensili: 2,
       annuali: 1,
@@ -1717,7 +1731,10 @@ test("Google dice com'e' fatto l'abbonamento, e la Gestione lo conta (e i tester
       alMese: { EUR: 4.99 },
     });
     assert.equal(detto.negozi.android.attivi, 3);
+    assert.equal(detto.negozi.android.paganti, 1);
+    assert.equal(detto.negozi.android.test, 1);
     assert.equal(detto.negozi.ios.attivi, 0);
+    assert.equal(detto.negozi.ios.tutti, 0);
     assert.equal(detto.prove, 1, "il tester sta da parte");
 
     assert.equal(detto.elenco.length, 4);
@@ -1878,10 +1895,138 @@ test("Apple: il piano dal prodotto, il prezzo in millesimi, il sandbox, e il rin
     assert.equal(una.negozio.abbonamento.rinnovo, false);
     const detto = await abbonamentiDelGestore(b);
     assert.equal(detto.conti.attivi, 0, "un acquisto di prova non si conta");
+    assert.equal(detto.conti.disdetti, 0, "nemmeno fra i disdetti");
+    assert.equal(detto.conti.test, 1, "si conta solo fra gli acquisti di test");
+    assert.equal(detto.conti.tutti, 1);
     assert.equal(detto.prove, 1);
     assert.equal(detto.elenco[0].stato, "disdetto");
     assert.equal(detto.elenco[0].sandbox, true);
     assert.equal(detto.elenco[0].piattaforma, "ios");
+  } finally {
+    await b.chiudi();
+  }
+});
+
+/* «Attivi» contava anche le prove e i disdetti, «In prova» anche chi aveva
+ * disdetto in prova: tre numeri che si sovrapponevano. Adesso ogni
+ * abbonamento sta in una categoria sola, quella dello stato della sua riga,
+ * e le categorie sommano al totale. */
+test("ogni abbonamento in una categoria sola, e le categorie fanno il totale", () => {
+  const ora = Date.parse("2026-10-16T10:00:00.000Z");
+  const riga = (fatta) => ({
+    vale: true,
+    rinnovo: true,
+    prova: false,
+    sandbox: false,
+    piano: "mensile",
+    prezzo: null,
+    valuta: "",
+    pagato: ora + 10 * GIORNO,
+    fuInProva: false,
+    pagatoDopoLaProva: false,
+    ...fatta,
+  });
+  const righe = [
+    /* Due prove gratuite che si rinnovano: la prima finisce fra 3 giorni. */
+    riga({ prova: true, fuInProva: true, piano: "annuale", pagato: ora + 13 * GIORNO }),
+    riga({ prova: true, fuInProva: true, pagato: ora + 3 * GIORNO }),
+    /* Tre paganti: un annuale, un mensile, e uno che il negozio non ha
+     * ancora detto se si rinnova (rinnovo null: si rinnova). */
+    riga({
+      piano: "annuale",
+      prezzo: 44.99,
+      valuta: "EUR",
+      fuInProva: true,
+      pagatoDopoLaProva: true,
+    }),
+    riga({ prezzo: 4.99, valuta: "EUR" }),
+    riga({ prezzo: 4.99, valuta: "EUR", rinnovo: null }),
+    /* Due disdetti: uno durante la prova, che non paghera', uno pagato. */
+    riga({ prova: true, fuInProva: true, rinnovo: false, pagato: ora + 1 * GIORNO }),
+    riga({ prezzo: 4.99, valuta: "EUR", rinnovo: false }),
+    /* Uno finito. */
+    riga({ vale: false, rinnovo: false, pagato: ora - 5 * GIORNO }),
+    /* Due acquisti di test, uno in prova e uno pagante: fuori da tutto. */
+    riga({ sandbox: true, prova: true, pagato: ora + 1 * GIORNO }),
+    riga({ sandbox: true, piano: "annuale", prezzo: 49.99, valuta: "EUR" }),
+  ];
+  const c = contaGliAbbonamenti(righe, ora);
+  assert.equal(c.tutti, righe.length);
+  assert.equal(c.paganti, 3);
+  assert.equal(c.pagantiMensili, 2);
+  assert.equal(c.pagantiAnnuali, 1);
+  assert.equal(c.inProva, 2, "chi ha disdetto in prova sta fra i disdetti, non qui");
+  assert.equal(c.primaFineProva, ora + 3 * GIORNO);
+  assert.equal(c.disdetti, 2);
+  assert.equal(c.disdettiInProva, 1);
+  assert.equal(c.finiti, 1);
+  assert.equal(c.test, 2);
+  assert.equal(c.paganti + c.inProva + c.disdetti + c.finiti + c.test, c.tutti);
+  /* Gli incassi sono solo dei paganti: un annuale conta un dodicesimo. */
+  assert.deepEqual(c.alMese, { EUR: 13.73 });
+  /* I conti di prima restano com'erano: la Panoramica li legge ancora. */
+  assert.equal(c.attivi, 7, "attivi: tutti quelli che valgono, prove e disdetti compresi");
+  assert.equal(c.prova, 3, "prova: di cui in prova, disdetti in prova compresi");
+  assert.equal(c.finiti30, 1);
+
+  /* Nessuno: tutto a zero, e nessuna prova che finisce. */
+  const vuoti = contaGliAbbonamenti([], ora);
+  assert.equal(vuoti.tutti, 0);
+  assert.equal(vuoti.paganti, 0);
+  assert.equal(vuoti.primaFineProva, null);
+  assert.deepEqual(vuoti.alMese, {});
+});
+
+test("lo stato della riga e la categoria del conto sono la stessa cosa", async () => {
+  const b = await banco();
+  try {
+    const ora = Date.now();
+    const fai = (
+      sog,
+      { prova = false, rinnovo = true, scade = ora + 10 * GIORNO, sandbox = false },
+    ) =>
+      b.licenze.licenze.push({
+        lic: `lic_${sog.slice(5, 13)}`,
+        app: "gdahome",
+        sog,
+        origine: "negozio",
+        creata: ora - GIORNO,
+        scade,
+        prova,
+        fuInProva: prova,
+        negozio: {
+          piattaforma: "ios",
+          prodotto: "gdahome_premium_mensile",
+          abbonamento: { piano: "mensile", prezzo: 4.99, valuta: "EUR", rinnovo, sandbox },
+        },
+      });
+    fai("casa_10000000000000000000000000000001", {});
+    fai("casa_20000000000000000000000000000002", { prova: true });
+    fai("casa_30000000000000000000000000000003", { prova: true, rinnovo: false });
+    fai("casa_40000000000000000000000000000004", { rinnovo: false });
+    fai("casa_50000000000000000000000000000005", { scade: ora - 30 * GIORNO });
+    fai("casa_60000000000000000000000000000006", { sandbox: true });
+    const detto = b.licenze.abbonamenti(ora);
+    const stati = (stato) =>
+      detto.elenco.filter((uno) => !uno.sandbox && uno.stato === stato).length;
+    assert.equal(detto.conti.paganti, stati("attivo"));
+    assert.equal(detto.conti.inProva, stati("prova"));
+    assert.equal(detto.conti.disdetti, stati("disdetto"));
+    assert.equal(detto.conti.finiti, stati("scaduto"));
+    assert.equal(detto.conti.test, detto.elenco.filter((uno) => uno.sandbox).length);
+    assert.deepEqual(
+      [
+        detto.conti.paganti,
+        detto.conti.inProva,
+        detto.conti.disdetti,
+        detto.conti.finiti,
+        detto.conti.test,
+      ],
+      [1, 1, 2, 1, 1],
+    );
+    assert.equal(detto.conti.disdettiInProva, 1);
+    assert.equal(detto.conti.tutti, 6);
+    assert.equal(detto.prove, 1);
   } finally {
     await b.chiudi();
   }
