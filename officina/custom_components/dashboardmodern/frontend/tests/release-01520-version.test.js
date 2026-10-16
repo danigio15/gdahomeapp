@@ -45,8 +45,14 @@ test("the 1.0 beta release metadata is consistently versioned", async () => {
     /img\.shields\.io\/github\/manifest-json\/v\/danigio15\/dashboardmodern-v2\?filename=custom_components%2Fdashboardmodern%2Fmanifest\.json/,
   );
   assert.doesNotMatch(readme, /badge\/version-\d/);
-  assert.ok(buildInfo.includes(`"integrationVersion":"${releaseVersion}"`));
-  assert.ok(buildInfo.includes(`"dashboardVersion":"${releaseVersion}"`));
+  /* La versione che la plancia dice di se' e' quella di gdahome
+   * (`ponte/config.yaml`), non piu' quella del manifesto della vecchia
+   * plancia: la scheda Runtime la mostra, e deve essere quella dell'add-on. */
+  const gdahome = (
+    await readFile(new URL("../../../../../ponte/config.yaml", import.meta.url), "utf8")
+  ).match(/^version:\s*"([^"]+)"/m)[1];
+  assert.ok(buildInfo.includes(`"integrationVersion":"${gdahome}"`));
+  assert.ok(buildInfo.includes(`"dashboardVersion":"${gdahome}"`));
 
   assert.match(readme, /Confronto settimanale dei consumi Casa/i);
   assert.match(readme, /contatore totale kWh/i);
@@ -128,7 +134,8 @@ test("schema migration aliases legacy annual/lifetime values once and preserves 
   assert.equal(legacy.metadata.semantics_version, 4);
 
   legacy.house.annual_energy = "";
-  const saved = migrateState({ schema_version: 4, sections: { energy: legacy } }).state.sections.energy;
+  const saved = migrateState({ schema_version: 4, sections: { energy: legacy } }).state.sections
+    .energy;
   assert.equal(saved.house.annual_energy, "");
   assert.equal(saved.house.total_energy, "sensor.house_total");
   assert.equal(saved.metadata.semantics_version, 4);

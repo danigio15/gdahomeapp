@@ -38,9 +38,9 @@ const DOMANI = (() => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 })();
 
-async function apri(page, testInfo, { sbloccato = true } = {}) {
+async function apri(page, testInfo, { sbloccato = true, larga = 1440 } = {}) {
   test.setTimeout(150_000);
-  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.setViewportSize({ width: larga, height: 1000 });
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
@@ -192,4 +192,37 @@ test("senza gdanav Premium la pagina lo dice, e non si scrive niente", async ({
   await expect(pagina.locator("[data-gn-nuovo]")).toHaveCount(0);
   if (process.env.DM_FOTO)
     await page.screenshot({ path: `${process.env.DM_FOTO}/gdanav-pc-premium.png` });
+});
+
+/* «C'è un problema su intestazione: compare e scompare continuamente.» La
+ * testata della pagina sta dentro `#dm-gn`, e la pagina si riscriveva a ogni
+ * `render` di Home Assistant: la testata spariva e tornava. Qui si fanno
+ * arrivare tanti `render` di fila, e la testata resta la stessa, sempre li'. */
+test("la testata della pagina gdanav resta ferma mentre la casa cambia", async ({
+  page,
+}, testInfo) => {
+  // Su uno schermo largo: la pagina tiene il contenuto a 1396 px, e la
+  // testata va a stare dentro di lui.
+  const pagina = await apri(page, testInfo, { larga: 1700 });
+  await expect(pagina.locator(".dm-gn-viaggio")).toHaveCount(2);
+  const testata = page.locator("#page-gdanav .dm-page-mast");
+  await expect(testata).toBeVisible();
+  await page.evaluate(() => {
+    window.__TESTATA__ = document.querySelector("#page-gdanav .dm-page-mast");
+    window.__SPARITA__ = 0;
+    new MutationObserver(() => {
+      if (!document.querySelector("#page-gdanav .dm-page-mast")) window.__SPARITA__ += 1;
+    }).observe(document.getElementById("page-gdanav"), { childList: true, subtree: true });
+  });
+  for (let i = 0; i < 10; i += 1) {
+    await page.evaluate(() => window.eval("typeof render === 'function' && render()"));
+    await page.waitForTimeout(60);
+  }
+  expect(await page.evaluate(() => window.__SPARITA__)).toBe(0);
+  expect(
+    await page.evaluate(
+      () => window.__TESTATA__ === document.querySelector("#page-gdanav .dm-page-mast"),
+    ),
+  ).toBe(true);
+  await expect(pagina.locator(".dm-gn-viaggio")).toHaveCount(2);
 });

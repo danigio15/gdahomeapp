@@ -290,10 +290,25 @@ rilevatore("frigo-aperto", "sicurezza", (c, o, l) =>
     })),
 );
 
+/* Le luci che restano accese per conto loro, e che l'assistente non propone
+ * mai di spegnere: «se c'e' un acquario in casa e ha la luce accesa non mi
+ * puo' dire che la spengo, quella e' cosi' e tale resta». Dal nome (acquario,
+ * terrario, notturna, giardino), dalle sezioni della plancia che le
+ * possiedono (Animali) — `c.lasciate` — e da quelle che chi abita la casa ha
+ * detto di lasciare stare. Lo stesso criterio delle notifiche del ponte
+ * (`ponte/src/capire-la-casa.js`). */
+const LUCE_CHE_RESTA =
+  /acquari|aquari|vasca\s*pesci|fish\s*tank|terrari|rettil|paludari|vivari|notturn|night\s*light|segnapasso|luce\s*(di\s*)?cortesia|\bnotte\b|giardin|esterno|esterne|esterni|outdoor|garden|vialett|cortil|crepuscol/i;
+export function luceDaLasciare(luce, c = {}) {
+  const id = pulito(luce?.entity);
+  if (elenco(c.lasciate).includes(id)) return true;
+  return LUCE_CHE_RESTA.test(`${id.replace(/[._]/g, " ")} ${pulito(luce?.name)}`);
+}
+
 /* 5. Casa vuota e luci accese. */
 rilevatore("vuota-luci", "risparmio", (c, o, l) => {
   if (!casaVuota(c)) return [];
-  const accese = elenco(c.luci).filter((x) => x.on);
+  const accese = elenco(c.luci).filter((x) => x.on && !luceDaLasciare(x, c));
   if (!accese.length) return [];
   const da = daQuandoVuota(c);
   return [
@@ -606,6 +621,7 @@ rilevatore("notte-luci", "risparmio", (c, o, l) => {
   const accese = elenco(c.luci).filter(
     (x) =>
       x.on &&
+      !luceDaLasciare(x, c) &&
       (sapere
         ? x.stanza && !occupate.has(pulito(x.stanza).toLowerCase())
         : (numero(x.daMs) || 0) >= ORA),

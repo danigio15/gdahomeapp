@@ -107,7 +107,7 @@ export function ensureGdanavPage() {
   page = doc.createElement("section");
   page.className = "page";
   page.id = GDANAV_PAGE_ID;
-  page.innerHTML = `<div class="dm-gn" id="dm-gn"></div>`;
+  page.innerHTML = `<div class="dm-gn" id="dm-gn"><div class="dm-gn-corpo"></div></div>`;
   sorella.after(page);
   return page;
 }
@@ -351,8 +351,35 @@ function premium() {
     <div class="dm-gn-sotto">${esc(t("Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app gdahome, nella pagina Premium.", "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page."))}</div></div></div>`;
 }
 
+/* Si disegna dentro `.dm-gn-corpo`, non in `#dm-gn`.
+ *
+ * «L'intestazione compare e scompare continuamente»: la testata della pagina
+ * (`page-masthead-section.js`) va a stare dentro `#dm-gn`, l'unico contenitore
+ * della pagina, e questa sezione lo riscriveva da capo a ogni `render` di
+ * Home Assistant, cioe' a ogni stato che cambia in casa. La testata spariva,
+ * il suo guardiano la rimetteva, e di nuovo. Adesso il disegno sta in un
+ * figlio suo, e si riscrive solo quando cambia davvero. */
+function corpo() {
+  const casa = doc?.getElementById?.("dm-gn");
+  if (!casa) return null;
+  let dentro = casa.querySelector(":scope > .dm-gn-corpo");
+  if (!dentro) {
+    dentro = doc.createElement("div");
+    dentro.className = "dm-gn-corpo";
+    casa.append(dentro);
+  }
+  return dentro;
+}
+
+function scrivi(posto, html) {
+  if (state.scritto === html && posto.childElementCount) return false;
+  state.scritto = html;
+  posto.innerHTML = html;
+  return true;
+}
+
 export function disegna() {
-  const posto = doc?.getElementById?.("dm-gn");
+  const posto = corpo();
   if (!posto) return;
   const attivo = doc.getElementById(GDANAV_PAGE_ID)?.classList.contains("active");
   if (!attivo && state.caricato) return;
@@ -360,18 +387,22 @@ export function disegna() {
     <p>${esc(t("Pianifica i viaggi da qui: li ritrovi in gdanav sul telefono, su CarPlay e su Android Auto.", "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto."))}</p></div>
     ${state.sbloccato ? `<button type="button" class="dm-gn-nuovo" data-gn-nuovo>＋ ${esc(t("Nuovo viaggio", "New trip"))}</button>` : ""}</div>`;
   if (!state.caricato) {
-    posto.innerHTML = `${testa}<div class="dm-gn-card dm-gn-vuoto">${esc(t("Carico i viaggi…", "Loading trips…"))}</div>`;
+    scrivi(
+      posto,
+      `${testa}<div class="dm-gn-card dm-gn-vuoto">${esc(t("Carico i viaggi…", "Loading trips…"))}</div>`,
+    );
     return;
   }
   if (!state.sbloccato) {
-    posto.innerHTML = `${testa}${premium()}`;
+    scrivi(posto, `${testa}${premium()}`);
     return;
   }
   /* Il campo di ricerca non si ridisegna sotto le dita: si tiene il fuoco. */
   const cerca = posto.querySelector("[data-gn-cerca]");
   const fuoco = cerca && doc.activeElement === cerca;
   const cursore = fuoco ? cerca.selectionStart : null;
-  posto.innerHTML = `${testa}<div class="dm-gn-griglia"><div class="dm-gn-card">${elenco()}</div><div class="dm-gn-card">${editor()}</div></div>`;
+  const html = `${testa}<div class="dm-gn-griglia"><div class="dm-gn-card">${elenco()}</div><div class="dm-gn-card">${editor()}</div></div>`;
+  if (!scrivi(posto, html)) return;
   if (fuoco) {
     const nuovo = posto.querySelector("[data-gn-cerca]");
     nuovo?.focus();

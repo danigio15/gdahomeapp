@@ -231,11 +231,108 @@ test("una porta aperta di notte si dice dopo dieci minuti, una volta", () => {
   );
   sentinella.battito();
   assert.equal(dette.length, 0);
+  /* Aperta da undici minuti ma la casa non dorme ancora da venti: zitta. */
   orologio.ora += 11 * MINUTO;
+  sentinella.battito();
+  assert.equal(dette.length, 0);
+  orologio.ora += 10 * MINUTO;
   sentinella.battito();
   sentinella.battito();
   assert.equal(dette.length, 1);
   assert.equal(dette[0].tipo, "aperture");
+  assert.match(dette[0].parole.it.titolo, /Garage: la porta del garage è ancora aperta/);
+  assert.deepEqual(
+    dette[0].azioni.map((a) => a.id),
+    ["va-bene", "piu-tardi"],
+  );
+});
+
+test("porta aperta di notte con la casa sveglia: niente; e il nome si legge", () => {
+  const notte = new Date(2026, 9, 14, 22, 0, 0).getTime();
+  const porta = (s) =>
+    stato("binary_sensor.sensore_porta_finestra_cucina_porta", s, {
+      device_class: "door",
+      friendly_name: "Sensore Porta/Finestra Cucina Porta",
+    });
+  const { sentinella, dette, orologio } = unaSentinella(
+    [porta("on"), stato("light.soggiorno", "on", { friendly_name: "Soggiorno" })],
+    { adesso: notte },
+  );
+  /* Le dieci in punto, la luce del soggiorno accesa: si e' svegli. */
+  for (let i = 0; i < 6; i += 1) {
+    sentinella.battito();
+    orologio.ora += 10 * MINUTO;
+  }
+  assert.equal(dette.length, 0, "con la casa sveglia una porta aperta non e' una notizia");
+  /* Si spegne tutto e si va a dormire: venti minuti dopo, una volta, col
+   * nome che si legge. */
+  sentinella.cambia(
+    "light.soggiorno",
+    stato("light.soggiorno", "off", { friendly_name: "Soggiorno" }),
+  );
+  orologio.ora += 25 * MINUTO;
+  sentinella.battito();
+  assert.equal(dette.length, 1);
+  assert.equal(dette[0].parole.it.titolo, "🚪 Cucina: la porta è ancora aperta");
+  /* «Va bene stanotte»: fino al mattino tace. */
+  sentinella.capire.vaBeneStanotte("binary_sensor.sensore_porta_finestra_cucina_porta");
+  assert.deepEqual(
+    sentinella.capire.lasciaStare("binary_sensor.sensore_porta_finestra_cucina_porta", "", {
+      tipo: "porta",
+    }),
+    { perche: "stanotte" },
+  );
+  /* Una porta di camera, di notte con la gente in casa, non e' una notizia. */
+  sentinella.cambia(
+    "binary_sensor.porta_camera",
+    stato("binary_sensor.porta_camera", "on", {
+      device_class: "door",
+      friendly_name: "Porta camera",
+    }),
+  );
+  orologio.ora += 11 * MINUTO;
+  sentinella.battito();
+  assert.equal(dette.length, 1);
+});
+
+test("luci con la casa vuota: l'acquario resta, «Spegni» spegne solo le altre, «Restano così» impara", () => {
+  const { sentinella, dette, orologio } = unaSentinella([
+    stato("person.uno", "not_home", { friendly_name: "Persona 1" }),
+    stato("light.luce_acquario_blu", "on", { friendly_name: "Luce acquario blu" }),
+    stato("light.cucina", "on", { friendly_name: "Cucina" }),
+    stato("light.bagno", "on", { friendly_name: "Bagno" }),
+  ]);
+  orologio.ora += 31 * MINUTO;
+  sentinella.battito();
+  const luci = () => dette.filter((d) => d.chiave === "suggerimenti:luci");
+  assert.equal(luci().length, 1);
+  const detta = luci()[0];
+  assert.match(detta.parole.it.testo, /Accese: Cucina, Bagno\. Restano accese Luce acquario blu\./);
+  const spegni = detta.azioni.find((a) => a.id === "spegni");
+  assert.deepEqual(spegni.servizio.entita, ["light.cucina", "light.bagno"]);
+  const resta = detta.azioni.find((a) => a.id === "resta");
+  assert.deepEqual(resta.resta, ["light.cucina", "light.bagno"]);
+  /* «Restano così»: la volta dopo non si propongono piu'. */
+  sentinella.capire.resta(resta.resta);
+  sentinella.cambia("person.uno", stato("person.uno", "home", { friendly_name: "Persona 1" }));
+  sentinella.battito();
+  sentinella.cambia("person.uno", stato("person.uno", "not_home", { friendly_name: "Persona 1" }));
+  orologio.ora += 40 * MINUTO;
+  sentinella.battito();
+  assert.equal(luci().length, 1);
+});
+
+test("una luce accesa con la casa vuota quasi tutti i giorni e' a orario: l'assistente la impara", async () => {
+  const { CapireLaCasa } = await import("../src/capire-la-casa.js");
+  let ora = new Date(2026, 9, 1, 12, 0, 0).getTime();
+  const capire = new CapireLaCasa({ adesso: () => ora, memoria: {} });
+  for (let giorno = 0; giorno < 5; giorno += 1) {
+    capire.luceAccesaConLaCasaVuota("light.mensola", 45, ora);
+    ora += 24 * 60 * MINUTO;
+  }
+  assert.deepEqual(capire.lasciaStare("light.mensola", "Mensola"), { perche: "abitudine" });
+  assert.equal(capire.lasciaStare("light.cucina", "Cucina"), null);
+  assert.deepEqual(capire.lasciaStare("light.vasca_pesci", "Vasca pesci"), { perche: "acquario" });
 });
 
 test("il freezer troppo caldo per un quarto d'ora", () => {
@@ -279,6 +376,56 @@ test("la lavatrice che ha finito: la potenza scende e resta giu'", () => {
   assert.equal(dette.length, 1);
   assert.equal(dette[0].tipo, "elettrodomestici");
 });
+
+/* «Perché arriva due volte la notifica»: «Asciugatrice: finito» e
+ * «asciugatrice W: finito» alla stessa ora. La stessa asciugatrice lo diceva
+ * da due parti: dal suo stato («finished») e dalla presa che ne misura la
+ * potenza. Uno solo, col nome dell'elettrodomestico; una lavatrice che finisce
+ * nello stesso momento si dice lo stesso. */
+for (const primaLoStato of [true, false]) {
+  test(`un elettrodomestico che finisce si dice una volta sola (${primaLoStato ? "prima lo stato" : "prima la potenza"})`, () => {
+    const { sentinella, dette, orologio } = unaSentinella([
+      stato("sensor.asciugatrice_stato", "run", { friendly_name: "Asciugatrice" }),
+      stato("sensor.asciugatrice_w", "0", {
+        unit_of_measurement: "W",
+        friendly_name: "asciugatrice W",
+      }),
+      stato("sensor.lavatrice_stato", "run", { friendly_name: "Lavatrice" }),
+    ]);
+    sentinella.cambia(
+      "sensor.asciugatrice_w",
+      stato("sensor.asciugatrice_w", "800", {
+        unit_of_measurement: "W",
+        friendly_name: "asciugatrice W",
+      }),
+    );
+    orologio.ora += 60 * MINUTO;
+    sentinella.cambia(
+      "sensor.asciugatrice_w",
+      stato("sensor.asciugatrice_w", "1", {
+        unit_of_measurement: "W",
+        friendly_name: "asciugatrice W",
+      }),
+    );
+    const loStato = () =>
+      sentinella.cambia(
+        "sensor.asciugatrice_stato",
+        stato("sensor.asciugatrice_stato", "finished", { friendly_name: "Asciugatrice" }),
+      );
+    if (primaLoStato) loStato();
+    orologio.ora += 6 * MINUTO;
+    sentinella.battito();
+    if (!primaLoStato) loStato();
+    sentinella.cambia(
+      "sensor.lavatrice_stato",
+      stato("sensor.lavatrice_stato", "finished", { friendly_name: "Lavatrice" }),
+    );
+    const titoli = dette.map((d) => d.parole.it.titolo);
+    assert.equal(titoli.filter((t) => /asciugatrice/i.test(t)).length, 1, titoli.join(" | "));
+    assert.ok(titoli.includes("🧺 Lavatrice: finito"), titoli.join(" | "));
+    assert.ok(!titoli.some((t) => / W: /.test(t)), titoli.join(" | "));
+  });
+}
 
 test("una personalizzata: condizione, durata, e non ripetere", () => {
   const { sentinella, dette, orologio } = unaSentinella([
@@ -674,4 +821,85 @@ test("le personalizzate: chi non amministra le fa solo per se'", async () => {
   } finally {
     banco.spegni();
   }
+});
+
+/* «Non ci sono 65 dispositivi non connessi.» Il riepilogo della sera contava
+ * le ENTITA' mute che hanno un dispositivo, non i dispositivi: una presa
+ * spenta con quattro sensori faceva quattro, e il canale non usato di uno
+ * switch acceso faceva uno. Adesso la regola e' quella del cruscotto di chi
+ * installa (`salute.js`) e della pagina «Non connessi»: un dispositivo e' giu'
+ * quando NESSUNA delle sue entita' risponde, e conta una volta sola. */
+test("il riepilogo conta i dispositivi giu', non le entita' mute", () => {
+  const { sentinella } = unaSentinella([
+    // Una presa irraggiungibile: tutte e quattro mute → 1 dispositivo.
+    stato("switch.presa_giardino", "unavailable"),
+    stato("sensor.presa_giardino_potenza", "unavailable"),
+    stato("sensor.presa_giardino_energia", "unavailable"),
+    stato("sensor.presa_giardino_tensione", "unavailable"),
+    // Uno switch acceso col canale non usato muto: non e' giu'.
+    stato("switch.unifi_porta_1", "unavailable"),
+    stato("sensor.unifi_cpu", "6"),
+    // Un'entita' senza dispositivo: non e' un dispositivo non connesso.
+    stato("sensor.template_rotto", "unavailable"),
+  ]);
+  sentinella.dispositivoDi = {
+    "switch.presa_giardino": "presa",
+    "sensor.presa_giardino_potenza": "presa",
+    "sensor.presa_giardino_energia": "presa",
+    "sensor.presa_giardino_tensione": "presa",
+    "switch.unifi_porta_1": "unifi",
+    "sensor.unifi_cpu": "unifi",
+  };
+  const r = sentinella.riepilogo();
+  assert.ok(r, "c'e' un dispositivo giu'");
+  assert.match(r.parole.it.testo, /^1 dispositivo non connesso$/);
+});
+
+test("l'assistente sa dov'e' una cosa e chi la gestisce: area, marca, automazioni a orario", async () => {
+  const { CapireLaCasa } = await import("../src/capire-la-casa.js");
+  const capire = new CapireLaCasa({ memoria: {} });
+  /* Nomi che non dicono niente: lo dice l'anagrafe di Home Assistant. */
+  capire.descrivi({
+    "light.luce_1": "Giardino · Shelly · Plus 1",
+    "light.mensola": "Soggiorno · Fluval · Aquasky",
+    "binary_sensor.porta_2": "Bagno",
+  });
+  assert.deepEqual(capire.lasciaStare("light.luce_1", "Luce 1"), { perche: "esterno" });
+  assert.deepEqual(capire.lasciaStare("light.mensola", "Mensola"), { perche: "acquario" });
+  assert.equal(capire.portaInterna("binary_sensor.porta_2", "Porta 2", "door"), true);
+  assert.equal(capire.lasciaStare("light.cucina", "Cucina"), null);
+  capire.gestiteDaAutomazioni(["light.cucina"]);
+  assert.deepEqual(capire.lasciaStare("light.cucina", "Cucina"), { perche: "automazione" });
+});
+
+test("«Cosa c'è in casa»: l'elenco dice cosa ha capito, e «Avvisa» / «Resta così» lo correggono", async () => {
+  const { CapireLaCasa } = await import("../src/capire-la-casa.js");
+  const capire = new CapireLaCasa({ memoria: {} });
+  const stati = new Map([
+    [
+      "light.luce_acquario_blu",
+      { state: "on", attributes: { friendly_name: "Luce acquario blu" } },
+    ],
+    ["light.cucina", { state: "on", attributes: { friendly_name: "Cucina" } }],
+  ]);
+  const nome = (s, id) => s.attributes.friendly_name || id;
+  const elenco = capire.elenco(stati, nome);
+  assert.deepEqual(
+    elenco.map((c) => [c.entita, c.perche, c.scelta]),
+    [
+      ["light.luce_acquario_blu", "acquario", "auto"],
+      ["light.cucina", null, "auto"],
+    ],
+  );
+  /* «Avvisa» sull'acquario: si propone anche lui. «Resta così» sulla cucina. */
+  assert.equal(capire.scegli("light.luce_acquario_blu", "avvisa"), true);
+  assert.equal(capire.lasciaStare("light.luce_acquario_blu", "Luce acquario blu"), null);
+  capire.scegli("light.cucina", "resta");
+  assert.deepEqual(capire.lasciaStare("light.cucina", "Cucina"), { perche: "detto" });
+  /* «Decide lui» torna come prima. */
+  capire.scegli("light.luce_acquario_blu", "auto");
+  assert.deepEqual(capire.lasciaStare("light.luce_acquario_blu", "Luce acquario blu"), {
+    perche: "acquario",
+  });
+  assert.equal(capire.scegli("light.cucina", "boh"), false);
 });

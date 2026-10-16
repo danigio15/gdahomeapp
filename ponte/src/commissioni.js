@@ -654,6 +654,14 @@ export class Commissioni {
     if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra, puoAmministrare);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
+    /* Cosa ha capito l'assistente della casa, per il config («Cosa c'e' in
+     * casa»): solo chi amministra, perche' vale per tutta la casa. */
+    if (typeof tipo === "string" && tipo.startsWith("ponte/casa-capita/")) {
+      if (puoAmministrare !== true)
+        return no(id, "unauthorized", "questo lo fa solo chi amministra la casa");
+      if (!this.notifiche) return no(id, "unknown_command", `non conosco ${tipo}`);
+      return this.notifiche.casaCapita(detto);
+    }
     /* I viaggi di gdanav: dalla plancia e dal telefono, ognuno coi suoi. */
     if (typeof tipo === "string" && tipo.startsWith("ponte/viaggi/")) {
       if (!this.viaggi) return no(id, "unknown_command", `non conosco ${tipo}`);

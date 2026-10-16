@@ -91,6 +91,7 @@ import {
   ambientiDellaFonte,
   altreMisureDellaPagina,
   energiaDellaPagina,
+  potenzaConIlSegno,
   grigliaPer,
   fonteDaiValori,
   grigliaDellaPagina,
@@ -293,6 +294,7 @@ function fonteDiQui() {
       climate: section("climate", []),
       covers: section("covers", []),
       cameras: section("cameras", []),
+      energy: section("energy", {}),
     },
     {
       azioni: readJson("cd_quick_actions", []),
@@ -721,15 +723,15 @@ function testa(pagina, muro) {
       ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>`
       : "";
   const accento = accentoDi(pagina);
-  /* Con piu' di quattro pagine le linguette tengono il disegno, e il nome
-   * solo quella aperta: otto nomi interi non ci stanno accanto all'ora. */
-  const molte = muro.pagine.length > 4 ? " mu-molte" : "";
+  /* Le linguette col nome finche' ci stanno: da un 4 pollici a un 15 lo
+   * spazio cambia di tanto, e su uno grande cinque pagine non sono troppe.
+   * Lo decide `adattaLeLinguette`, che le misura dopo il disegno. */
   /* Col menu di lato le pagine stanno nella colonna a sinistra, e il ☰ con
    * loro: la testa resta col titolo, il meteo e l'ora. */
   const lato = menuDiLato(muro, state.verso, state.compatto);
   const linguette =
     !lato && muro.pagine.length > 1
-      ? `<div class="mu-pagine${molte}" role="tablist">${muro.pagine
+      ? `<div class="mu-pagine" role="tablist">${muro.pagine
           .map(
             (p, i) =>
               `<button type="button" role="tab" class="${i === state.pagina ? "si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`,
@@ -2008,6 +2010,11 @@ function potenza(id) {
   };
 }
 
+const potenzaScritta = (watt) =>
+  Math.abs(watt) >= 1000
+    ? `${decimale(Math.abs(watt) / 1000, 1)} kW`
+    : `${decimale(Math.abs(watt), 0)} W`;
+
 function paginaEnergia(pagina) {
   const e = energiaDellaPagina(pagina, state.fonte || {});
   const tessere = [];
@@ -2020,6 +2027,7 @@ function paginaEnergia(pagina) {
       t("Consuma la casa", "House uses"),
       p.testo,
       nomeDi(e.casa),
+      "",
     ]);
   }
   if (e.solare) {
@@ -2031,35 +2039,79 @@ function paginaEnergia(pagina) {
       t("Produce il solare", "Solar makes"),
       p.testo,
       nomeDi(e.solare),
+      "",
     ]);
   }
-  if (e.rete) {
-    const p = potenza(e.rete);
-    /* Il segno lo decide chi misura: positivo si preleva, negativo si cede. */
+  /* La rete e la batteria col loro verso (`potenzaConIlSegno`): con un
+   * sensore col segno, o con due sensori sempre positivi. */
+  const watt = (id) => potenza(id).valore;
+  const scambio = potenzaConIlSegno(
+    { segno: e.rete, positivo: e.prelievo, negativo: e.immissione, girata: e.reteGirata },
+    watt,
+  );
+  if (e.rete || e.prelievo || e.immissione) {
+    const cede = scambio !== null && scambio < 0;
     const parola =
-      p.valore === null
+      scambio === null
         ? t("Rete", "Grid")
-        : p.valore < 0
+        : cede
           ? t("Cede alla rete", "To the grid")
           : t("Preleva dalla rete", "From the grid");
     tessere.push([
       "rete",
       "energia",
-      p.valore !== null && p.valore < 0 ? "#10b981" : "#8b5cf6",
+      cede ? "#10b981" : "#8b5cf6",
       parola,
-      p.testo,
-      nomeDi(e.rete),
+      scambio === null ? "—" : potenzaScritta(Math.abs(scambio)),
+      nomeDi((cede ? e.immissione : e.prelievo) || e.rete || e.prelievo || e.immissione),
+      "",
     ]);
   }
+  const flusso = potenzaConIlSegno(
+    { segno: e.potenzaBatteria, positivo: e.scarica, negativo: e.carica, girata: e.batteriaGirata },
+    watt,
+  );
+  /* Sotto i 30 W la batteria e' ferma: l'inverter che la tiene in pari non
+   * e' una carica. */
+  const cosaFa =
+    flusso === null || Math.abs(flusso) < 30
+      ? flusso === null
+        ? null
+        : { testo: t("Ferma", "Idle"), colore: "#94a3b8" }
+      : flusso > 0
+        ? {
+            testo: `${t("In scarica", "Discharging")} · ${potenzaScritta(flusso)}`,
+            colore: "#f97316",
+          }
+        : {
+            testo: `${t("In carica", "Charging")} · ${potenzaScritta(-flusso)}`,
+            colore: "#10b981",
+          };
   if (e.batteria) {
     const v = numero(stato(e.batteria)?.state);
     tessere.push([
       "batteria",
       "batterie",
-      "#10b981",
+      cosaFa?.colore === "#f97316" ? "#f97316" : "#10b981",
       t("Batteria", "Battery"),
       v === null ? "—" : `${decimale(v, 0)}%`,
       nomeDi(e.batteria),
+      cosaFa
+        ? `<div class="mu-cosa-fa" style="color:${cosaFa.colore}">${esc(cosaFa.testo)}</div>`
+        : "",
+    ]);
+  } else if (cosaFa) {
+    /* Senza la carica in % resta la potenza: la tessera dice cosa fa. */
+    tessere.push([
+      "batteria",
+      "batterie",
+      cosaFa.colore,
+      t("Batteria", "Battery"),
+      flusso !== null && Math.abs(flusso) >= 30 ? potenzaScritta(Math.abs(flusso)) : cosaFa.testo,
+      nomeDi(e.potenzaBatteria || e.scarica || e.carica),
+      flusso !== null && Math.abs(flusso) >= 30
+        ? `<div class="mu-cosa-fa" style="color:${cosaFa.colore}">${esc(flusso > 0 ? t("In scarica", "Discharging") : t("In carica", "Charging"))}</div>`
+        : "",
     ]);
   }
   /* Le misure in più: il nome dell'entità sopra, il valore grande. Una
@@ -2074,17 +2126,17 @@ function paginaEnergia(pagina) {
       : v === null
         ? clean(s?.state) || "—"
         : `${decimale(v, Math.abs(v) < 10 && v % 1 ? 1 : 0)}${unita ? ` ${unita}` : ""}`;
-    tessere.push([`altra-${n}`, "energia", "#64748b", nomeDi(id), valore, ""]);
+    tessere.push([`altra-${n}`, "energia", "#64748b", nomeDi(id), valore, "", ""]);
   });
   if (!tessere.length)
     return griglia(pagina, [
       vuoto(0, t("Scegli le misure nel config", "Choose the readings in the config")),
     ]);
   const carte = tessere.map(
-    ([k, d, acc, etichetta, valore, sotto], i) =>
+    ([k, d, acc, etichetta, valore, sotto, extra], i) =>
       `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta)}</span></div>
-      <div class="mu-grande">${esc(valore)}</div><div class="mu-sotto">${esc(sotto)}</div></div>`,
+      <div class="mu-grande">${esc(valore)}</div>${extra || ""}<div class="mu-sotto">${esc(sotto)}</div></div>`,
   );
   /* Le tessere stanno tutte nella griglia: con le misure in più si allarga
    * da sola (6, 8, 12), senza scorrere. */
@@ -2241,8 +2293,8 @@ function comandiDellIngressoMarkup(ing) {
 }
 
 /* Le letture e i comandi sotto l'antifurto, se ce ne sono. */
-function altroDellIngresso(ing) {
-  const dentro = `${lettureDellIngressoMarkup(ing)}${comandiDellIngressoMarkup(ing)}`;
+function altroDellIngresso(ing, { conLeLetture = false } = {}) {
+  const dentro = `${conLeLetture ? lettureDellIngressoMarkup(ing) : ""}${comandiDellIngressoMarkup(ing)}`;
   return dentro ? `<div class="mu-ing-altro">${dentro}</div>` : "";
 }
 
@@ -2405,6 +2457,7 @@ function paginaIngresso(pagina) {
         <div class="mu-allarme-dice"><span class="mu-et">${esc(quanteAree(aree.length))}</span><div class="mu-osw mu-stato-allarme">${esc(riassunto.testo)}${riassunto.suona.length ? ` · ${esc(riassunto.suona.map((a) => nomeDellArea(a, aree.indexOf(a))).join(", "))}` : ""}</div>
         ${avvisoFinestre}</div></div>
       ${areeMarkup(aree)}
+      ${lettureNellAntifurto(ing)}
     </div>`;
     return restoDellIngresso(pagina, carta, riassunto.valore === "disarmed");
   }
@@ -2432,8 +2485,19 @@ function paginaIngresso(pagina) {
               )}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>`
           : ""
       }
+      ${lettureNellAntifurto(ing)}
     </div>`;
   return restoDellIngresso(pagina, carta, spento);
+}
+
+/* Le porte e le finestre scelte fra le letture, dentro la card
+ * dell'antifurto: «ricordati di mettere le finestre sul riquadro
+ * antifurto». Stavano in una striscia in fondo alla pagina, mentre sotto le
+ * aree restava mezza card vuota; li' si leggono accanto a quello che
+ * proteggono. */
+function lettureNellAntifurto(ing) {
+  const letture = lettureDellIngressoMarkup(ing);
+  return letture ? `<div class="mu-allarme-letture">${letture}</div>` : "";
 }
 
 /* Il citofono, l'uscita e chi c'e': uguali con un'area o con tante. */
@@ -2889,7 +2953,7 @@ function finestra() {
     const riassunto = riassuntoDelleAree(aree);
     dentro = `<div class="mu-fin-clima mu-fin-aree" style="--acc:${accentoDellAllarme(riassunto.valore)}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(riassunto.testo)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      ${areeMarkup(aree)}${altroDellIngresso(pagina?.ingresso)}</div>`;
+      ${areeMarkup(aree)}${altroDellIngresso(pagina?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "lettura") {
     dentro = finestraDellaLettura(f);
   } else if (f.tipo === "antifurto") {
@@ -2902,7 +2966,7 @@ function finestra() {
     const aperte = pagina?.ingresso?.finestre ? finestreAperte() : [];
     dentro = `<div class="mu-fin-clima" style="--acc:${valore === "disarmed" ? "#10b981" : "#6366f1"}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore] || valore)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina?.ingresso)}</div>`;
+      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "citofono" && f.suonato) {
     /* Aperta dal campanello: non una finestra, una chiamata (#citofono). */
     return squilloMarkup(f);
@@ -3700,6 +3764,36 @@ function misura(nodo, muro) {
   dentro.style.height = `${altezza / s}px`;
 }
 
+/* Le linguette delle pagine, col nome scritto fin dove si puo'.
+ *
+ * «Sfrutta al massimo lo spazio che c'e' a sinistra: da un 4 pollici a un 15
+ * gli spazi aumentano di tanto. Mantieni il nome scritto fin dove possibile,
+ * poi diventano icone.» Tre gradini, dal piu' largo: tutti i nomi; il nome
+ * solo della pagina aperta (`mu-molte`); solo i disegni (`mu-icone`). Si
+ * prova dal primo e ci si ferma al primo che ci sta: la fila si stringe nello
+ * spazio fra il titolo e l'ora, e se il contenuto e' piu' largo di lei non ci
+ * sta. */
+const GRADINI_DELLE_LINGUETTE = ["", "mu-molte", "mu-icone"];
+function adattaLeLinguette(nodo) {
+  const fila = nodo.querySelector(".mu-testa .mu-pagine");
+  if (!fila) return;
+  const testa = fila.parentElement;
+  /* Il titolo cede la riga sotto («LUCI · CLIMA · TAPPARE…») prima che le
+   * linguette perdano i nomi; il nome della pagina invece resta intero. */
+  const titolo = testa.querySelector(".mu-titolo");
+  const nome = titolo?.querySelector(".mu-tit");
+  if (nome) {
+    const massimo = Number.parseFloat(getComputedStyle(nome).maxWidth);
+    const pieno = Number.isFinite(massimo) ? Math.min(nome.scrollWidth, massimo) : nome.scrollWidth;
+    titolo.style.setProperty("--mu-tit-min", `${Math.ceil(pieno)}px`);
+  }
+  for (const gradino of GRADINI_DELLE_LINGUETTE) {
+    fila.classList.remove(...GRADINI_DELLE_LINGUETTE.filter(Boolean));
+    if (gradino) fila.classList.add(gradino);
+    if (testa.scrollWidth <= testa.clientWidth + 1) return;
+  }
+}
+
 /** Ridisegna il tablet: o lo spegne, se non deve esserci. */
 export function disegna() {
   if (!doc?.body) return;
@@ -3766,6 +3860,7 @@ export function disegna() {
       if (prima && prima !== img) img.replaceWith(prima);
     }
   }
+  adattaLeLinguette(nodo);
   battitoDellaMusica();
   rimettiLaVoce(nodo);
   if (state.riposo) posizionaIlRiposo(nodo);
@@ -5058,11 +5153,13 @@ ${MURO}[data-compatto="1"] .mu-menu{width:40px;height:40px;border-radius:13px}
 ${MURO} .mu-testa::after{content:"";position:absolute;left:24px;right:24px;bottom:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--acc),#0ea5e9 60%,transparent)}
 ${MURO} .mu-tit{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:40px;line-height:1;letter-spacing:.02em;color:var(--acc);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
 ${MURO} .mu-sot{margin-top:8px}
-${MURO} .mu-pagine{display:flex;gap:6px;padding:5px;border-radius:16px;margin-left:auto;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent)}
+${MURO} .mu-pagine{display:flex;flex:none;gap:6px;padding:5px;border-radius:16px;margin-left:auto;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent)}
 ${MURO} .mu-pagine button{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:800;font-size:15px;color:var(--text-dim)}
 ${MURO} .mu-pagine button.si{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));color:color-mix(in srgb,var(--acc) 85%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-ora{margin-left:auto;display:flex;align-items:center;gap:22px;text-align:right}
 ${MURO} .mu-pagine+.mu-ora{margin-left:24px}
+${MURO} .mu-testa>.mu-titolo{flex:0 1 auto;min-width:var(--mu-tit-min,0)}
+${MURO} .mu-testa>.mu-titolo .mu-sot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-h{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:58px;line-height:.9}
 ${MURO} .mu-d{font-size:12px;font-weight:900;letter-spacing:.11em;color:var(--text-dim);margin-top:6px}
 ${MURO} .mu-sep{width:1px;align-self:stretch;background:color-mix(in srgb,var(--text) 12%,transparent)}
@@ -5079,7 +5176,7 @@ ${MURO} .mu-pill b{font-size:20px;font-weight:800;display:block;line-height:1}
 ${MURO} .mu-pill .mu-et{font-size:10.5px}
 ${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;--mu-alto:150px;display:grid;grid-template-columns:repeat(var(--mu-col),minmax(0,1fr));grid-template-rows:repeat(var(--mu-righe),minmax(0,1fr));gap:var(--mu-gap);min-height:0}
 ${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
-${MURO} .mu-pagine.mu-molte button:not(.si) span{display:none}
+${MURO} .mu-pagine.mu-molte button:not(.si) span,${MURO} .mu-pagine.mu-icone button span{display:none}
 ${MURO} .mu-pag-musica{grid-template-rows:auto 1fr}
 ${MURO} .mu-musica{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;min-height:0}
 ${MURO} .mu-musica.solo{grid-template-columns:1fr}
@@ -5160,6 +5257,7 @@ ${MURO} .mu-ambiente .mu-target{margin-top:auto;flex-wrap:wrap}
 ${MURO} .mu-cam{padding:8px}
 ${MURO} .mu-cam .mu-video{height:100%;min-height:0}
 ${MURO} .mu-energia .mu-grande{margin-top:auto;font-size:72px}
+${MURO} .mu-energia .mu-cosa-fa{font-size:22px;font-weight:600;margin-top:4px}
 ${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}
@@ -5366,6 +5464,10 @@ ${MURO} .mu-btn.pieno{--acc:#0ea5e9;background:linear-gradient(180deg,color-mix(
 ${MURO} .mu-due{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 ${MURO} .mu-ingresso{display:grid;grid-template-columns:1fr 1.1fr;grid-template-rows:1fr auto;gap:16px;min-height:0}
 ${MURO} .mu-allarme{padding:24px;display:flex;flex-direction:column;gap:18px}
+${MURO} .mu-allarme-letture{margin-top:auto;min-height:0;overflow:auto;scrollbar-width:none}
+${MURO} .mu-allarme-letture .mu-ing-letture{display:flex;flex-wrap:wrap;gap:8px}
+${MURO} .mu-allarme-letture .mu-ing-lettura{white-space:nowrap}
+${MURO} .mu-ing-striscia .mu-ing-comandi:first-child{margin-left:0;padding-left:0;border-left:0}
 ${MURO} .mu-stato-allarme{font-size:52px;color:var(--acc);margin-top:6px}
 ${MURO} .mu-avviso-finestre{display:flex;align-items:center;gap:8px;margin-top:8px}
 ${MURO} .mu-modi{--acc:#e11d48}
@@ -5507,7 +5609,6 @@ ${MURO}[data-compatto="1"] .mu-sot,${MURO}[data-compatto="1"] .mu-meteo,${MURO}[
 ${MURO}[data-compatto="1"] .mu-h{font-size:32px}
 ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;padding:3px;gap:3px}
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
-${MURO}[data-compatto="1"] .mu-pagine button span{display:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
 ${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}

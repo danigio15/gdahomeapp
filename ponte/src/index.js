@@ -460,6 +460,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   commissioni.viaggi = viaggi;
+  /* «Cosa c'e' in casa» nel config: lo sa l'assistente delle notifiche. */
+  commissioni.notifiche = notifiche;
   /* Una casa di prova fatta prima di un riavvio vale ancora: al centralino
    * la si ridice appena il filo e' su. */
   const provaViva = casaDiProva.viva();

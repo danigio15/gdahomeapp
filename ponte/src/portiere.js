@@ -91,7 +91,6 @@ import {
   VERSIONE_DELL_ABBINAMENTO,
 } from "./cifra.js";
 import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
-import { TELEFONI_DI_PROVA } from "./casa-di-prova.js";
 import { TroppiDispositivi } from "./dispositivi.js";
 import { impronta, stessoSegreto } from "./segreti.js";
 
@@ -649,17 +648,18 @@ export class Portiere {
   /* Chi entra col codice della casa di prova: l'utente e la scadenza.
    *
    * Si riguarda adesso, e non alla stretta di mano: in mezzo la console puo'
-   * averlo revocato, o fatto scadere. E ha un tetto suo di telefoni
-   * (`TELEFONI_DI_PROVA`), che non e' quello della casa. */
+   * averlo revocato, o fatto scadere.
+   *
+   * Tetti di telefoni non ne ha: ce n'erano cinque, e lo stesso codice lo
+   * usano chi rivede per Apple, chi rivede per Google e chi lo prova prima di
+   * mandarlo. Al sesto Google si e' sentito dire di no, e ha rifiutato l'app
+   * («le credenziali non funzionano»). Chi entra cosi' resta un utente che non
+   * amministra, esce da solo alla scadenza e subito con la revoca; e non
+   * prende il posto dei telefoni di casa (`quantiDiCasa`). */
   _chiEntraDiProva(codice) {
     const ancora = this._laProva();
     if (!ancora || !stessoSegreto(impronta(ancora.codice), impronta(codice))) {
       throw new CodiceSbagliato("codice scaduto");
-    }
-    if ((this.dispositivi.quantiDiProva?.() ?? 0) >= TELEFONI_DI_PROVA) {
-      throw new TroppiDispositivi(
-        `con il codice di prova sono gia' entrati ${TELEFONI_DI_PROVA} telefoni`,
-      );
     }
     return { utente: ancora.utente, scadeIl: ancora.scadeIl };
   }

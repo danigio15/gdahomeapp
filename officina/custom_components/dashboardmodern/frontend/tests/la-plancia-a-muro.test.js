@@ -501,9 +501,94 @@ test("le pagine da guardare: tapparelle, ambienti, telecamere, energia", async (
   assert.deepEqual(energiaDellaPagina(pagina, fonte), {
     casa: "sensor.mia_casa",
     solare: "sensor.fv_w",
-    rete: "",
     batteria: "",
+    rete: "",
+    prelievo: "",
+    immissione: "",
+    reteGirata: false,
+    potenzaBatteria: "",
+    carica: "",
+    scarica: "",
+    batteriaGirata: false,
   });
+});
+
+test("energia sul muro: rete e batteria col verso della plancia, o scelte e girate qui", async () => {
+  const { energiaDellaPagina, fonteDalleSezioni, muroPulito, potenzaConIlSegno } =
+    await import("../src/core/plancia-a-muro.js");
+  /* Un FoxESS: la rete in due sensori, la batteria col segno al contrario
+   * (positivo quando carica), dichiarato nella scheda Energia della plancia. */
+  const fonte = fonteDalleSezioni(
+    {
+      energy: {
+        grid: { power: "sensor.fox_prelievo", power_export: "sensor.fox_immissione" },
+        battery: { signed: { power: "sensor.fox_batteria", positive: "charge" } },
+      },
+    },
+    { overrides: { "dm.energy_stato_carica_batteria": "sensor.fox_soc" } },
+  );
+  const vuota = muroPulito({ pagine: [{ modello: "energia" }] }).pagine[0];
+  const e = energiaDellaPagina(vuota, fonte);
+  assert.equal(e.prelievo, "sensor.fox_prelievo");
+  assert.equal(e.immissione, "sensor.fox_immissione");
+  assert.equal(e.rete, "");
+  assert.equal(e.potenzaBatteria, "sensor.fox_batteria");
+  assert.equal(e.batteriaGirata, true);
+  assert.equal(e.batteria, "sensor.fox_soc");
+
+  const watt = (valori) => (id) => (id in valori ? valori[id] : null);
+  /* Di giorno cede 900 W e la batteria carica 700 W. */
+  const giorno = watt({
+    "sensor.fox_prelievo": 0,
+    "sensor.fox_immissione": 900,
+    "sensor.fox_batteria": 700,
+  });
+  assert.equal(
+    potenzaConIlSegno(
+      { segno: e.rete, positivo: e.prelievo, negativo: e.immissione, girata: e.reteGirata },
+      giorno,
+    ),
+    -900,
+    "cede alla rete, non preleva",
+  );
+  assert.equal(
+    potenzaConIlSegno(
+      {
+        segno: e.potenzaBatteria,
+        positivo: e.scarica,
+        negativo: e.carica,
+        girata: e.batteriaGirata,
+      },
+      giorno,
+    ),
+    -700,
+    "in carica",
+  );
+
+  /* Scelte qui: un sensore col segno, girato a mano. La plancia non ci mette
+   * piu' del suo per quel gruppo. */
+  const scelta = muroPulito({
+    pagine: [{ modello: "energia", energia: { rete: "sensor.contatore", invertiRete: true } }],
+  }).pagine[0];
+  const q = energiaDellaPagina(scelta, fonte);
+  assert.equal(q.rete, "sensor.contatore");
+  assert.equal(q.prelievo, "");
+  assert.equal(q.reteGirata, true);
+  assert.equal(
+    potenzaConIlSegno({ segno: q.rete, girata: q.reteGirata }, watt({ "sensor.contatore": 500 })),
+    -500,
+  );
+  /* «Inverti» vale anche sopra il verso della plancia. */
+  const girataQui = muroPulito({
+    pagine: [{ modello: "energia", energia: { invertiBatteria: true } }],
+  }).pagine[0];
+  assert.equal(energiaDellaPagina(girataQui, fonte).batteriaGirata, false);
+  /* Le letture ricavate della plancia sul tablet non esistono. */
+  const vecchia = fonteDalleSezioni(
+    {},
+    { overrides: { "dm.energy_potenza_scambio_rete": "dm_derived.grid_power" } },
+  );
+  assert.equal(vecchia.energia.rete, "");
 });
 
 test("meteo e riposo si scelgono, e di serie il riposo torna alla prima pagina", () => {
@@ -1010,7 +1095,14 @@ test("i comandi prendono anche un telecomando: col comando lo manda, senza si ac
   const p = paginaPulita({
     modello: "comandi",
     pulsanti: [
-      { nome: "AV", avvio: "remote.sala", avvioComando: "power_on", stop: "remote.sala", stopComando: "power_off", dispositivo: "TV" },
+      {
+        nome: "AV",
+        avvio: "remote.sala",
+        avvioComando: "power_on",
+        stop: "remote.sala",
+        stopComando: "power_off",
+        dispositivo: "TV",
+      },
       { nome: "Ampli", avvio: "remote.ampli" },
       { nome: "Muro", avvio: "remote.muro", avvioComando: "PLAY", stop: "remote.muro" },
     ],
@@ -1049,19 +1141,44 @@ test("l'ingresso tiene le aree, le altre letture e gli altri comandi", () => {
         "light.non_e_un_area",
         "alarm_control_panel.perimetrale",
       ],
-      letture: ["binary_sensor.finestra_cucina", "lock.porta_ingresso", "button.no", "cover.garage"],
-      comandi: ["lock.porta_ingresso", "remote.cancello:apri", "select.non_si_tocca", "script.luce", "sensor.no"],
+      letture: [
+        "binary_sensor.finestra_cucina",
+        "lock.porta_ingresso",
+        "button.no",
+        "cover.garage",
+      ],
+      comandi: [
+        "lock.porta_ingresso",
+        "remote.cancello:apri",
+        "select.non_si_tocca",
+        "script.luce",
+        "sensor.no",
+      ],
     },
   });
-  assert.deepEqual(p.ingresso.aree, ["alarm_control_panel.perimetrale", "alarm_control_panel.interno"]);
-  assert.deepEqual(p.ingresso.letture, ["binary_sensor.finestra_cucina", "lock.porta_ingresso", "cover.garage"]);
-  assert.deepEqual(p.ingresso.comandi, ["lock.porta_ingresso", "remote.cancello:apri", "script.luce"]);
+  assert.deepEqual(p.ingresso.aree, [
+    "alarm_control_panel.perimetrale",
+    "alarm_control_panel.interno",
+  ]);
+  assert.deepEqual(p.ingresso.letture, [
+    "binary_sensor.finestra_cucina",
+    "lock.porta_ingresso",
+    "cover.garage",
+  ]);
+  assert.deepEqual(p.ingresso.comandi, [
+    "lock.porta_ingresso",
+    "remote.cancello:apri",
+    "script.luce",
+  ]);
   assert.equal(eLetturaDellIngresso("sensor.temperatura"), true);
   assert.equal(eLetturaDellIngresso("script.luce"), false);
   assert.equal(eComandoDellIngresso("cover.garage"), true);
   assert.equal(eComandoDellIngresso("select.modo"), false);
   /* Una pagina di prima: niente di nuovo, e gli elenchi vuoti. */
-  const vecchia = paginaPulita({ modello: "ingresso", ingresso: { centrale: "alarm_control_panel.casa" } });
+  const vecchia = paginaPulita({
+    modello: "ingresso",
+    ingresso: { centrale: "alarm_control_panel.casa" },
+  });
   assert.deepEqual(vecchia.ingresso.aree, []);
   assert.deepEqual(vecchia.ingresso.letture, []);
   assert.deepEqual(vecchia.ingresso.comandi, []);
@@ -1071,9 +1188,21 @@ test("le aree dell'ingresso: quelle scelte, o la centrale di prima, o tutte quel
   const fonte = fonteDaiValori({
     ...VALORI,
     cd_centrali: JSON.stringify([
-      { id: "a1", nome: "Perimetrale", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.perimetrale" } },
-      { id: "a2", nome: "Interno", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.interno" } },
-      { id: "a3", nome: "Garage", caselle: { "dm.security_centrale_allarme": "alarm_control_panel.garage" } },
+      {
+        id: "a1",
+        nome: "Perimetrale",
+        caselle: { "dm.security_centrale_allarme": "alarm_control_panel.perimetrale" },
+      },
+      {
+        id: "a2",
+        nome: "Interno",
+        caselle: { "dm.security_centrale_allarme": "alarm_control_panel.interno" },
+      },
+      {
+        id: "a3",
+        nome: "Garage",
+        caselle: { "dm.security_centrale_allarme": "alarm_control_panel.garage" },
+      },
     ]),
     cd_entity_overrides: JSON.stringify({
       "dm.security_centrale_allarme": "alarm_control_panel.perimetrale",
@@ -1089,14 +1218,26 @@ test("le aree dell'ingresso: quelle scelte, o la centrale di prima, o tutte quel
     ],
   );
   /* La pagina di prima con la sua centrale: quella sola, come prima. */
-  const vecchia = paginaPulita({ modello: "ingresso", ingresso: { centrale: "alarm_control_panel.interno" } });
-  assert.deepEqual(areeDellIngresso(vecchia, fonte).map((a) => a.entita), ["alarm_control_panel.interno"]);
+  const vecchia = paginaPulita({
+    modello: "ingresso",
+    ingresso: { centrale: "alarm_control_panel.interno" },
+  });
+  assert.deepEqual(
+    areeDellIngresso(vecchia, fonte).map((a) => a.entita),
+    ["alarm_control_panel.interno"],
+  );
   /* Scelte: in quell'ordine, e vincono sulla centrale. */
   const scelte = paginaPulita({
     modello: "ingresso",
-    ingresso: { centrale: "alarm_control_panel.interno", aree: ["alarm_control_panel.garage", "alarm_control_panel.perimetrale"] },
+    ingresso: {
+      centrale: "alarm_control_panel.interno",
+      aree: ["alarm_control_panel.garage", "alarm_control_panel.perimetrale"],
+    },
   });
-  assert.deepEqual(areeDellIngresso(scelte, fonte).map((a) => a.nome), ["Garage", "Perimetrale"]);
+  assert.deepEqual(
+    areeDellIngresso(scelte, fonte).map((a) => a.nome),
+    ["Garage", "Perimetrale"],
+  );
   /* Una pagina nuova con piu' aree non ne fissa una: le segue tutte. */
   assert.equal(ingressoProposto(fonte).centrale, "");
   assert.equal(nuovaPagina("ingresso", fonte).ingresso.centrale, "");
@@ -1110,8 +1251,15 @@ test("le porte e le finestre fra le letture si contano insieme: «Finestre apert
     "binary_sensor.porta_ingresso": { state: "off", attributes: { device_class: "door" } },
     "binary_sensor.movimento": { state: "on", attributes: { device_class: "motion" } },
   };
-  const finestre = ["binary_sensor.finestra_cucina", "binary_sensor.finestra_bagno", "binary_sensor.finestra_camera"];
-  const sole = lettureDellIngresso([...finestre, "sensor.temperatura", "binary_sensor.movimento"], stati);
+  const finestre = [
+    "binary_sensor.finestra_cucina",
+    "binary_sensor.finestra_bagno",
+    "binary_sensor.finestra_camera",
+  ];
+  const sole = lettureDellIngresso(
+    [...finestre, "sensor.temperatura", "binary_sensor.movimento"],
+    stati,
+  );
   assert.deepEqual(sole.gruppo, {
     tipo: "finestre",
     tutte: finestre,

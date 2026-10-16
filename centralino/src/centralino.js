@@ -106,8 +106,9 @@ export const PROVE_PER_INDIRIZZO = 3;
 export const PROVE_NUOVE_PER_CASA_AL_GIORNO = 10;
 const GIORNO = 24 * 60 * 60 * 1000;
 
-/* E quanti canali insieme dalla porta dell'abbinamento, per casa. Il ponte
- * stesso ne lascia passare cinque col codice di prova. */
+/* E quanti canali insieme dalla porta dell'abbinamento, per casa: insieme,
+ * non in tutto. Col codice di prova entrano quanti telefoni servono, uno
+ * dopo l'altro. */
 export const ABBINAMENTI_INSIEME_PER_CASA = 5;
 
 /* Chi bussa alla porta dell'abbinamento e non si abbina. 1008 e' «non per la

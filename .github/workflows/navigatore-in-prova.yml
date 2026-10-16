@@ -7,8 +7,9 @@
 # pacchetto di un ramo di lavoro, da caricare nel test interno. Vedi
 # `GDAHOME_NAVIGATORE` in `app/android/app/build.gradle.kts`.
 #
-# Gira solo sui rami `claude/**`, e da solo non pubblica niente: l'AAB e l'APK
-# restano fra gli artefatti della corsa.
+# Gira solo sui rami `claude/**` e non pubblica niente, nemmeno su GitHub:
+# costruisce per sapere che sta in piedi. L'app va solo nei negozi, da «L'app
+# da provare».
 name: Navigatore in prova
 
 on:
@@ -105,25 +106,9 @@ jobs:
           comuni=(--release --build-number="$NUMERO" --dart-define=VERSIONE="$VERSIONE"
             --dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM" --dart-define=GDANAV_OCM_CHIAVE="$OCM")
           flutter build appbundle "${comuni[@]}"
-          cp build/app/outputs/bundle/release/app-release.aab ../gdahome-navigatore.aab
           flutter build apk "${comuni[@]}"
-          cp build/app/outputs/flutter-apk/app-release.apk ../gdahome-navigatore.apk
           {
             echo "### gdahome col navigatore in auto"
             echo ""
-            if [ "$VERA" = "si" ]; then
-              echo "- \`gdahome-navigatore.aab\`: da caricare nel Play Console di **gdahome**, test interno (numero $NUMERO)."
-              echo "- \`gdahome-navigatore.apk\`: da installare a mano, sopra la gdahome di sempre."
-            else
-              echo "Firmato **di prova** (mancano i segreti della chiave vera): com.gdahome.gdahome.prova, da installare a mano; nel Play Console non si carica."
-            fi
+            echo "Costruito (numero $NUMERO, chiave vera: $VERA). Su GitHub non resta niente: l'app va solo nei negozi."
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: gdahome-navigatore
-          path: |
-            gdahome-navigatore.aab
-            gdahome-navigatore.apk
-          if-no-files-found: error
-          retention-days: 30

@@ -26,7 +26,7 @@ const SEME = {
     energy: {},
     entityOverrides: {},
   },
-  visibility: { home: true, batterie: true },
+  visibility: { home: true, batterie: true, energy: true },
 };
 
 const batteria = (livello, nome) => ({
@@ -118,4 +118,47 @@ test("tornando da Luci il menu e l'ingranaggio non restano larghi zero", async (
   });
   expect(larghezze.sinistra).toBeGreaterThanOrEqual(96);
   expect(larghezze.ingranaggio).toBeGreaterThanOrEqual(34);
+});
+
+/* «Ancora: scompare l'intestazione» — iPad dentro Home Assistant, dalla Home
+ * all'Energia e ritorno: torna il meteo, ma non la fila col menu, il nome e
+ * l'ingranaggio. Lo spegni-e-riaccendi che fa rifare i conti a WebKit non
+ * spegneva piu' niente: sulla Home la fascia e' accesa da una regola con
+ * `!important`, e uno stile in linea senza peso non la scavalca. Qui si guarda
+ * che al ritorno la fascia venga spenta davvero (col suo peso) e riaccesa, e
+ * che alla fine resti accesa e pulita. */
+test("tornando dall'Energia la prima fila si rifa' davvero", async ({ page }, testInfo) => {
+  await avvia(page, testInfo);
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await expect(fascia(page)).toBeVisible();
+  await page.locator('.tab[data-tab="energy"]').evaluate((b) => b.click());
+  await expect.poll(() => segno(page)).toBe("page-energy");
+  await page.evaluate(() => {
+    window.__SPENTA__ = 0;
+    const testata = document.querySelector("body>header:not(.dm-page-mast)");
+    const prima = testata.style.setProperty.bind(testata.style);
+    testata.style.setProperty = (nome, valore, peso) => {
+      if (
+        nome === "display" &&
+        valore === "none" &&
+        peso === "important" &&
+        document.body.dataset.dmPagina === "page-home"
+      ) {
+        window.__SPENTA__ += getComputedStyle(testata).display === "none" ? 0 : 1;
+        prima(nome, valore, peso);
+        if (getComputedStyle(testata).display !== "none") window.__SPENTA__ = -100;
+        return;
+      }
+      prima(nome, valore, peso);
+    };
+  });
+  await page.locator('.tab[data-tab="home"]').evaluate((b) => b.click());
+  await expect.poll(() => segno(page)).toBe("page-home");
+  await expect.poll(() => page.evaluate(() => window.__SPENTA__)).toBeGreaterThan(0);
+  await page.waitForTimeout(500);
+  await expect(fascia(page)).toBeVisible();
+  await expect(fascia(page).locator(".header-left-wrap")).toBeVisible();
+  expect(await fascia(page).evaluate((n) => n.style.getPropertyPriority("display"))).not.toBe(
+    "important",
+  );
 });

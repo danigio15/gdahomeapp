@@ -314,6 +314,14 @@ export function contestoDellaCasa(states = allStates(), adesso = Date.now()) {
     adesso,
     ora: new Date(adesso).getHours(),
     persone: persone(states, adesso),
+    /* Le luci delle sezioni che le possiedono (Animali: l'acquario, il
+     * terrario): restano accese per conto loro. */
+    lasciate: [
+      ...new Set(
+        JSON.stringify(readJson("cd_animali", []) || []).match(/\b(light|switch)\.[a-z0-9_]+/g) ||
+          [],
+      ),
+    ],
     luci: elenco(modello("luci")?.rows).map((r) => ({
       entity: clean(r.entity),
       name: clean(r.name),

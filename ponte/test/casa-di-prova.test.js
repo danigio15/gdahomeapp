@@ -25,14 +25,7 @@ import { Centralino } from "../../centralino/src/centralino.js";
 import { costruisciIlServer } from "../../centralino/src/server.js";
 
 import { Abbinamento } from "../src/abbinamento.js";
-import {
-  CasaDiProva,
-  GIORNI_AL_MASSIMO,
-  InUso,
-  NonCe,
-  SenzaUtente,
-  TELEFONI_DI_PROVA,
-} from "../src/casa-di-prova.js";
+import { CasaDiProva, GIORNI_AL_MASSIMO, InUso, NonCe, SenzaUtente } from "../src/casa-di-prova.js";
 import { Chiamata } from "../src/chiamata.js";
 import {
   aperturaNuova,
@@ -319,7 +312,7 @@ test("un telefono di prova scaduto mentre l'add-on era spento esce all'accension
   }
 });
 
-test("i telefoni di prova scaduti non tengono il posto a quelli di casa", () => {
+test("i telefoni di prova scaduti escono da soli", () => {
   const cartella = cartellaFinta();
   try {
     const tempo = orologio();
@@ -330,9 +323,10 @@ test("i telefoni di prova scaduti non tengono il posto a quelli di casa", () => 
     });
     dispositivi.abbina({ nome: "di casa" });
     dispositivi.abbina({ nome: "di prova", finoA: tempo.adesso() + GIORNO });
-    assert.throws(() => dispositivi.abbina({ nome: "terzo" }), TroppiDispositivi);
+    assert.equal(dispositivi.quantiDiProva(), 1);
     tempo.avanti(GIORNO);
-    assert.ok(dispositivi.abbina({ nome: "terzo" }));
+    assert.equal(dispositivi.quantiDiProva(), 0);
+    assert.equal(dispositivi.quanti(), 1);
   } finally {
     cartella.via();
   }
@@ -554,58 +548,45 @@ test("una casa di prova revocata fra la stretta di mano e la conferma non fa ent
   }
 });
 
-test("col codice di prova entrano al massimo cinque telefoni", async () => {
+test("col codice di prova entrano quanti telefoni servono, anche oltre i dieci della casa", async () => {
+  /* Erano cinque: fra chi rivede per Apple, chi rivede per Google e chi lo
+   * prova a casa, il sesto si e' sentito dire di no — e Google ha rifiutato
+   * l'app. Dodici, tutti dallo stesso indirizzo e col codice giusto: entrano
+   * tutti, e nessuno spende un tentativo. */
   const c = unPortiere();
   try {
     const { codice } = c.casaDiProva.nuova({ utente: REVISIONE });
-    for (let i = 0; i < TELEFONI_DI_PROVA; i += 1) {
+    for (let i = 0; i < 12; i += 1) {
       const presa = presaFinta();
-      c.portiere.accogli(presa, { da: `192.168.1.${40 + i}` });
-      unTelefonoCheSiAbbina(presa, codice, { nome: `telefono ${i}` });
+      c.portiere.accogli(presa, { da: "centralino 17.0.0.1" });
+      const telefono = unTelefonoCheSiAbbina(presa, codice, { nome: `telefono ${i}` });
       await giro();
+      assert.equal(telefono.lette()[0].t, "ecco", `il telefono ${i + 1} entra`);
     }
-    assert.equal(c.dispositivi.quantiDiProva(), TELEFONI_DI_PROVA);
-    const presa = presaFinta();
-    c.portiere.accogli(presa, { da: "192.168.1.60" });
-    const sesto = unTelefonoCheSiAbbina(presa, codice);
-    await giro();
-    const [no] = sesto.lette();
-    assert.equal(no.t, "no");
-    assert.equal(no.motivo, "telefoni");
-    assert.equal(c.dispositivi.quantiDiProva(), TELEFONI_DI_PROVA);
+    assert.equal(c.dispositivi.quantiDiProva(), 12);
+    assert.equal(c.dispositivi.quantiDiCasa(), 0, "nessuno prende il posto di un telefono di casa");
+    assert.equal(c.abbinamento.stato().tentativiSbagliati, 0);
+    assert.equal(c.abbinamento.bloccato("centralino 17.0.0.1"), null);
   } finally {
     c.via();
   }
 });
 
-test("col codice di prova, chi entra non spende un tentativo", async () => {
-  /* Cinque telefoni dallo stesso indirizzo, tutti col codice giusto: se
-   * l'abbinamento riuscito tenesse il suo tentativo, il sesto si sentirebbe
-   * dire «troppi tentativi». Si sente dire invece che i telefoni di prova
-   * sono finiti — e anche quello, avendo il codice in mano, non si conta. */
-  const c = unPortiere();
+test("i telefoni di prova non tolgono posto a quelli di casa", () => {
+  const cartella = cartellaFinta();
   try {
-    const { codice } = c.casaDiProva.nuova({ utente: REVISIONE });
-    for (let i = 0; i < TELEFONI_DI_PROVA; i += 1) {
-      const presa = presaFinta();
-      c.portiere.accogli(presa, { da: "centralino 17.0.0.1" });
-      const telefono = unTelefonoCheSiAbbina(presa, codice, { nome: `telefono ${i}` });
-      await giro();
-      assert.equal(telefono.lette()[0].t, "ecco");
-    }
-    assert.equal(c.abbinamento.stato().tentativiSbagliati, 0);
-    for (let i = 0; i < 3; i += 1) {
-      const presa = presaFinta();
-      c.portiere.accogli(presa, { da: "centralino 17.0.0.1" });
-      const ancora = unTelefonoCheSiAbbina(presa, codice);
-      await giro();
-      assert.ok(ancora.pronto, "la stretta di mano parte");
-      assert.equal(ancora.lette()[0].motivo, "telefoni");
-    }
-    assert.equal(c.abbinamento.stato().tentativiSbagliati, 0);
-    assert.equal(c.abbinamento.bloccato("centralino 17.0.0.1"), null);
+    const dispositivi = new Dispositivi({ cartella: cartella.dove, massimi: 2 });
+    const fino = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    for (let i = 0; i < 4; i += 1) dispositivi.abbina({ nome: `prova ${i}`, finoA: fino });
+    dispositivi.abbina({ nome: "Telefono di casa" });
+    dispositivi.abbina({ nome: "Tablet di casa" });
+    assert.equal(dispositivi.quantiDiCasa(), 2);
+    assert.throws(() => dispositivi.abbina({ nome: "Il terzo di casa" }), TroppiDispositivi);
+    /* E la casa piena non chiude la porta a chi rivede. */
+    dispositivi.abbina({ nome: "prova 5", finoA: fino });
+    assert.equal(dispositivi.quantiDiProva(), 5);
   } finally {
-    c.via();
+    cartella.via();
   }
 });
 
@@ -868,7 +849,7 @@ test("dalla console al telefono che entra da fuori, e la revoca che lo butta fuo
     ).json();
     assert.equal(fatta.attiva, true);
     assert.match(fatta.codice, /^[0-9A-Z]{16}$/);
-    assert.equal(fatta.telefoniMassimi, TELEFONI_DI_PROVA);
+    assert.equal(fatta.telefoniMassimi, undefined, "un tetto di telefoni non c'e' piu'");
     assert.equal(
       (await c.allaConsole("/api/prova", { method: "POST", corpo: { utente: REVISIONE } })).status,
       409,

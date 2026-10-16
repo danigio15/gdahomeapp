@@ -147,8 +147,9 @@ sola, e su tutte le altre sarebbe una porta in più. Da ogni altra casa l'add-on
 rifiuta di farla anche se qualcuno la chiede a mano. Una casa di prova già
 fatta invece si vede dappertutto, finché non scade o non si revoca.
 
-- il codice vale **fino a 7 giorni** e per **più telefoni** (al massimo
-  cinque), e si può usare anche da fuori casa;
+- il codice vale **fino a 7 giorni** e per **quanti telefoni servono** (lo
+  usano Apple, Google e chi lo prova prima), e si può usare anche da fuori
+  casa; i telefoni di prova non tolgono posto ai dieci della casa;
 - chi entra con lui entra come **un utente di Home Assistant che non
   amministra**, scelto nella scheda: vede le plance che vede lui e fa solo
   quello che può fare lui. Un amministratore la scheda non lo propone, e

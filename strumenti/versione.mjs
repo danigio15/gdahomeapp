@@ -30,7 +30,8 @@
  *     node strumenti/versione.mjs --dimmi    dice cosa c'e' scritto adesso
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -134,6 +135,13 @@ function scrivi(quale) {
    * della plancia che non esiste. */
   const tre = pezzi.slice(0, 3).join(".");
   scriviLOrigine(tre);
+  /* E le versioni che la plancia dice di se' (la scheda Runtime del config):
+   * si risigilla, che le riscrive con il numero nuovo. Senza, il Runtime
+   * diceva ancora il numero di prima. */
+  const sigilla = join(RADICE, "strumenti", "sigilla-la-plancia.mjs");
+  if (existsSync(join(RADICE, "ponte", "plancia"))) {
+    execFileSync(process.execPath, [sigilla], { cwd: RADICE, stdio: "inherit" });
+  }
   const pubspec = readFileSync(PUBSPEC, "utf8");
   const suo = `${tre}+${laCostruzione(quale)}`;
   const era = laVersioneDellApp(pubspec);

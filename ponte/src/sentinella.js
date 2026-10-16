@@ -20,6 +20,8 @@
  * non lo dice, invece di indovinare.
  */
 
+import { CapireLaCasa, cosaApre, nomePulito } from "./capire-la-casa.js";
+
 const MINUTO = 60 * 1000;
 const ORA = 60 * MINUTO;
 
@@ -80,6 +82,31 @@ const NOME_DELLA_PIOGGIA = /pioggia|piove|rain/i;
 const NOME_ELETTRODOMESTICO =
   /lavatric|lavastovigl|asciugatric|washer|washing|dishwasher|dryer|lavasciug/i;
 const NOME_DEL_FREEZER = /freezer|congelator/i;
+
+/* Il genere di un elettrodomestico, per non dirlo due volte. La lavastoviglie
+ * prima della lavatrice: «dishwasher» contiene «washer». */
+const GENERI_DI_ELETTRODOMESTICO = [
+  ["lavastoviglie", /lavastovigl|dishwasher/i],
+  ["lavasciuga", /lavasciug|washer.?dryer/i],
+  ["asciugatrice", /asciugatric|dryer/i],
+  ["lavatrice", /lavatric|washer|washing/i],
+];
+export function genereDiElettrodomestico(testo) {
+  for (const [genere, forma] of GENERI_DI_ELETTRODOMESTICO) if (forma.test(testo)) return genere;
+  return String(testo);
+}
+const STESSO_ELETTRODOMESTICO = 15 * 60 * 1000;
+
+/* Il nome senza quello che dice la presa: «asciugatrice W», «Lavatrice
+ * potenza», «Lavastoviglie kW» sono l'elettrodomestico, con la maiuscola. */
+export function nomeDellElettrodomestico(nome) {
+  const pulito = String(nome)
+    .replace(/\b(potenza|power|consumo|watt|k?w)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!pulito) return String(nome);
+  return pulito.charAt(0).toUpperCase() + pulito.slice(1);
+}
 const NOME_DEL_FRIGO = /frigo|fridge|refrigerat/i;
 
 const PIOVE = new Set(["rainy", "pouring", "lightning-rainy", "hail", "snowy-rainy"]);
@@ -97,6 +124,8 @@ const APERTA_DA = 10 * MINUTO;
 const FRIGO_CALDO_DA = 15 * MINUTO;
 const PORTA_DEL_FRIGO_DA = 3 * MINUTO;
 const LUCI_CON_CASA_VUOTA_DA = 30 * MINUTO;
+/* La casa dorme: niente luci e niente movimento da venti minuti. */
+const CASA_CHE_DORME_DA = 20 * MINUTO;
 const CLIMA_CON_CASA_VUOTA_DA = 60 * MINUTO;
 const ELETTRODOMESTICO_ACCESO = 15; // W
 const ELETTRODOMESTICO_FERMO = 5; // W
@@ -135,8 +164,16 @@ export function perQuanto(ms, lingua = "it") {
 /* ─── La sentinella ────────────────────────────────────────────────────── */
 
 export class Sentinella {
-  constructor({ adesso = () => Date.now(), quando = () => {}, registro = null } = {}) {
+  constructor({
+    adesso = () => Date.now(),
+    quando = () => {},
+    registro = null,
+    capire = null,
+  } = {}) {
     this.adesso = adesso;
+    /* Cosa sono le cose e cosa e' normale per questa casa
+     * (`capire-la-casa.js`). Senza disco nelle prove. */
+    this.capire = capire || new CapireLaCasa({ adesso, memoria: {} });
     this.quando = quando;
     this.registro = registro;
     /** Gli stati, per entita': `{state, attributes, dal}`. */
@@ -188,6 +225,8 @@ export class Sentinella {
       return;
     }
     const dopo = this.stati.get(id);
+    /* Una porta che si chiude dimentica il suo «va bene stanotte». */
+    if (["off", "closed"].includes(dopo.state)) this.capire.chiusa(id);
     try {
       this._regoleDelMomento(id, dopo, prima, vuotaPrima);
       this._personalizzate();
@@ -205,6 +244,13 @@ export class Sentinella {
     } catch (errore) {
       this.registro?.errore?.(`una regola delle notifiche: ${errore?.message || errore}`);
     }
+    /* Le abitudini su disco, e una volta al giorno via i giorni vecchi. */
+    const oggi = new Date(this.adesso()).toDateString();
+    if (this._potatoIl !== oggi) {
+      this._potatoIl = oggi;
+      this.capire.pota();
+    }
+    this.capire.scrivi();
   }
 
   _dici(evento) {
@@ -515,7 +561,19 @@ export class Sentinella {
     this._memoria.set(chiave, memoria);
   }
 
+  /* Lo stesso elettrodomestico lo dice spesso da due parti: dal suo stato
+   * («finished») e dalla presa che ne misura la potenza. «Perché arriva due
+   * volte la notifica»: «Asciugatrice: finito» e «asciugatrice W: finito» alla
+   * stessa ora. Di un genere (lavatrice, asciugatrice, lavastoviglie…) si dice
+   * una volta sola per quarto d'ora, da qualunque parte arrivi. */
   _elettrodomesticoFinito(id, nome) {
+    const genere = genereDiElettrodomestico(`${id} ${nome}`);
+    const chiave = `finito:${genere}`;
+    const ora = this.adesso();
+    const ultimo = this._memoria.get(chiave);
+    if (ultimo != null && ora - ultimo < STESSO_ELETTRODOMESTICO) return;
+    this._memoria.set(chiave, ora);
+    nome = nomeDellElettrodomestico(nome);
     this._dici({
       tipo: "elettrodomestici",
       urgenza: "normale",
@@ -631,11 +689,51 @@ export class Sentinella {
     return true;
   }
 
+  /* Se la casa dorme: nessuna luce accesa e nessun movimento da venti
+   * minuti. Le luci che restano accese per conto loro (l'acquario, la
+   * notturna, quelle a orario) non tengono sveglia la casa. */
+  _casaDorme(ora) {
+    let sveglia = false;
+    for (const [id, stato] of this.stati) {
+      const dominio = dominioDi(id);
+      if (dominio === "light" && stato.state === "on") {
+        if (!this.capire.lasciaStare(id, nomeDi(stato, id), { tipo: "luce", ora })) sveglia = true;
+      } else if (
+        dominio === "binary_sensor" &&
+        MOVIMENTO.has(stato.attributes?.device_class) &&
+        stato.state === "on"
+      ) {
+        sveglia = true;
+      }
+      if (sveglia) break;
+    }
+    if (sveglia || !this._memoria.has("svegliaFinoA")) this._memoria.set("svegliaFinoA", ora);
+    return ora - this._memoria.get("svegliaFinoA") >= CASA_CHE_DORME_DA;
+  }
+
+  /* L'ora in cui e' uscita l'ultima persona, se si sa: «alle 9:12». */
+  _uscitaUltima() {
+    const fuori = this.persone()
+      .filter(([, stato]) => stato.state !== "home")
+      .map(([, stato]) => stato.dal)
+      .filter(Number.isFinite);
+    if (!fuori.length) return null;
+    const d = new Date(Math.max(...fuori));
+    return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+
   _durate() {
     const ora = this.adesso();
     const vuota = this.casaVuota();
     const notte = eNotte(new Date(ora));
+    const dorme = this._casaDorme(ora);
+    /* Quanto e' passato dal battito di prima, per le abitudini: al piu' un
+     * minuto, perche' un ponte fermo per un'ora non ha visto niente. */
+    const passati = Math.min(1, Math.max(0, (ora - (this._ultimoBattito ?? ora)) / MINUTO));
+    this._ultimoBattito = ora;
+    const lasciate = [];
     const luciAccese = [];
+    const luciDaSpegnere = [];
     let luciDa = Infinity;
     const climiAccesi = [];
     let climaDa = Infinity;
@@ -646,13 +744,36 @@ export class Sentinella {
       const da = ora - stato.dal;
       const nome = nomeDi(stato, id);
 
-      /* Porte e garage aperti, di notte o con la casa vuota. */
+      /* Porte e garage aperti: con la casa vuota, o di notte quando la casa
+       * dorme.
+       *
+       * «Questa notifica che senso ha?»: alle dieci di sera in punto, con
+       * tutti svegli, «Sensore Porta/Finestra Cucina Porta aperta da 1 h · È
+       * notte». Adesso, con la gente in casa, si aspetta che la casa dorma
+       * (`casaDorme`), e si tace per una porta interna, per una che di notte
+       * resta spesso aperta (l'abitudine) e per una a cui si e' gia' detto
+       * «Va bene stanotte». Con la casa vuota si dice sempre: e' sicurezza. */
       const aperta =
         (dominio === "binary_sensor" && APERTURE.has(classe) && stato.state === "on") ||
         (dominio === "cover" && COPERTURE_APERTE.has(classe) && stato.state === "open");
-      if (
-        this._unaVolta(`aperture:${id}`, aperta && da >= APERTA_DA && (notte || vuota === true))
-      ) {
+      const eUnaApertura =
+        (dominio === "binary_sensor" && APERTURE.has(classe)) ||
+        (dominio === "cover" && COPERTURE_APERTE.has(classe));
+      if (eUnaApertura && notte && dorme && vuota !== true)
+        this.capire.portaDiNotte(id, aperta, ora);
+      /* Con la casa vuota la tace solo chi l'ha detto: l'abitudine e una
+       * porta interna valgono quando in casa c'e' qualcuno. */
+      const detto = aperta ? this.capire.lasciaStare(id, nome, { tipo: "porta", ora }) : null;
+      const lascia =
+        aperta &&
+        (vuota === true
+          ? ["detto", "stanotte"].includes(detto?.perche)
+          : detto !== null || this.capire.portaInterna(id, nome, classe));
+      const daDire = aperta && !lascia && da >= APERTA_DA && (vuota === true || (notte && dorme));
+      if (this._unaVolta(`aperture:${id}`, daDire)) {
+        const dove = nomePulito(nome);
+        const cosa = cosaApre(id, nome, classe);
+        const ultima = vuota === true ? this._uscitaUltima() : null;
         this._dici({
           tipo: "aperture",
           urgenza: "normale",
@@ -662,16 +783,28 @@ export class Sentinella {
           camera: this.telecameraPer(id),
           parole: {
             it: {
-              titolo: `🚪 ${nome} aperta da ${perQuanto(da)}`,
-              testo: vuota === true ? "La casa è vuota" : "È notte",
+              titolo:
+                vuota === true
+                  ? `🚪 ${dove}: ${cosa.it} aperta, in casa non c'è nessuno`
+                  : `🚪 ${dove}: la ${cosa.it} è ancora aperta`,
+              testo:
+                vuota === true
+                  ? `Aperta da ${perQuanto(da)}${ultima ? `, uscita l'ultima persona alle ${ultima}` : ""}.`
+                  : "In casa si dorme. Di solito di notte è chiusa.",
             },
             en: {
-              titolo: `🚪 ${nome} open for ${perQuanto(da, "en")}`,
-              testo: vuota === true ? "Nobody's home" : "It's night",
+              titolo:
+                vuota === true
+                  ? `🚪 ${dove}: ${cosa.en} open, nobody's home`
+                  : `🚪 ${dove}: the ${cosa.en} is still open`,
+              testo:
+                vuota === true
+                  ? `Open for ${perQuanto(da, "en")}${ultima ? `, last person left at ${ultima}` : ""}.`
+                  : "The house is asleep. It's usually closed at night.",
             },
           },
-          azioni:
-            dominio === "cover"
+          azioni: [
+            ...(dominio === "cover"
               ? [
                   {
                     id: "chiudi",
@@ -679,7 +812,17 @@ export class Sentinella {
                     servizio: { dominio: "cover", servizio: "close_cover", entita: [id] },
                   },
                 ]
-              : [],
+              : []),
+            {
+              id: "va-bene",
+              parole:
+                vuota === true
+                  ? duePassi("Va bene così", "That's fine")
+                  : duePassi("Va bene stanotte", "Fine tonight"),
+              vaBene: [id],
+            },
+            { id: "piu-tardi", parole: duePassi("Più tardi", "Later"), piuTardi: true },
+          ],
         });
       }
 
@@ -749,10 +892,7 @@ export class Sentinella {
           ora - memoria.fermoDal >= ELETTRODOMESTICO_FERMO_DA
         ) {
           this._memoria.delete(`potenza:${id}`);
-          this._elettrodomesticoFinito(
-            id,
-            nome.replace(/\s*(potenza|power|consumo)\s*/gi, " ").trim(),
-          );
+          this._elettrodomesticoFinito(id, nome);
         } else if (
           memoria?.giraDal != null &&
           memoria.fermoDal != null &&
@@ -765,8 +905,17 @@ export class Sentinella {
       }
 
       if (vuota === true && dominio === "light" && stato.state === "on") {
-        luciAccese.push(nome);
-        luciDa = Math.min(luciDa, stato.dal);
+        /* L'abitudine si impara prima di decidere: una luce accesa con la
+         * casa vuota quasi tutti i giorni e' a orario. */
+        if (passati > 0) this.capire.luceAccesaConLaCasaVuota(id, passati, ora);
+        const lascia = this.capire.lasciaStare(id, nome, { tipo: "luce", ora });
+        if (lascia) {
+          lasciate.push({ id, nome, perche: lascia.perche });
+        } else {
+          luciAccese.push(nome);
+          luciDaSpegnere.push(id);
+          luciDa = Math.min(luciDa, stato.dal);
+        }
       }
       if (
         vuota === true &&
@@ -784,9 +933,22 @@ export class Sentinella {
       luciAccese.length && ora - Math.max(luciDa, vuotaDa) >= LUCI_CON_CASA_VUOTA_DA;
     if (this._unaVolta("suggerimenti:luci", Boolean(luciLunghe))) {
       const quante = luciAccese.length;
-      const luci = [...this.stati]
-        .filter(([id, s]) => dominioDi(id) === "light" && s.state === "on")
-        .map(([id]) => id);
+      const daQuando = perQuanto(ora - Math.max(luciDa, vuotaDa));
+      /* Quelle lasciate stare si dicono, in una riga: chi legge sa che
+       * l'assistente le ha viste, e perche' non le tocca. «Spegni» spegne
+       * solo le altre: prima spegneva tutte le luci accese, acquario
+       * compreso. */
+      const nomiLasciati = lasciate.slice(0, 2).map((l) => l.nome);
+      const restaIt = nomiLasciati.length
+        ? ` Restano accese ${nomiLasciati.join(", ")}${lasciate.length > 2 ? ` e altre ${lasciate.length - 2}` : ""}.`
+        : "";
+      const restaEn = nomiLasciati.length
+        ? ` Leaving on ${nomiLasciati.join(", ")}${lasciate.length > 2 ? ` and ${lasciate.length - 2} more` : ""}.`
+        : "";
+      const elenco = (lingua) =>
+        quante === 1
+          ? luciAccese[0]
+          : `${luciAccese.slice(0, 3).join(", ")}${quante > 3 ? (lingua === "en" ? ` and ${quante - 3} more` : ` e altre ${quante - 3}`) : ""}`;
       this._dici({
         tipo: "suggerimenti",
         urgenza: "bassa",
@@ -795,25 +957,34 @@ export class Sentinella {
         pausa: 2 * ORA,
         parole: {
           it: {
-            titolo:
-              quante === 1
-                ? `💡 Nessuno in casa: ${luciAccese[0]} accesa da ${perQuanto(ora - Math.max(luciDa, vuotaDa))}`
-                : `💡 Nessuno in casa: ${quante} luci accese`,
-            testo: "Assistente di casa · le spengo?",
+            titolo: `💡 Nessuno in casa da ${daQuando}`,
+            testo: `${quante === 1 ? "Accesa" : "Accese"}: ${elenco("it")}.${restaIt} ${quante === 1 ? "La spengo?" : "Le spengo?"}`,
           },
           en: {
-            titolo:
-              quante === 1
-                ? `💡 Nobody home: ${luciAccese[0]} on for ${perQuanto(ora - Math.max(luciDa, vuotaDa), "en")}`
-                : `💡 Nobody home: ${quante} lights on`,
-            testo: "Home assistant · turn them off?",
+            titolo: `💡 Nobody home for ${perQuanto(ora - Math.max(luciDa, vuotaDa), "en")}`,
+            testo: `On: ${elenco("en")}.${restaEn} Turn ${quante === 1 ? "it" : "them"} off?`,
           },
         },
         azioni: [
           {
             id: "spegni",
-            parole: duePassi("Spegni", "Turn off"),
-            servizio: { dominio: "light", servizio: "turn_off", entita: luci.slice(0, 40) },
+            parole:
+              quante === 1
+                ? duePassi("Spegni", "Turn off")
+                : duePassi(`Spegni le ${quante} luci`, `Turn off ${quante} lights`),
+            servizio: {
+              dominio: "light",
+              servizio: "turn_off",
+              entita: luciDaSpegnere.slice(0, 40),
+            },
+          },
+          {
+            id: "resta",
+            parole:
+              quante === 1
+                ? duePassi("Resta così", "Leave it on")
+                : duePassi("Restano così", "Leave them on"),
+            resta: luciDaSpegnere.slice(0, 40),
           },
           { id: "piu-tardi", parole: duePassi("Più tardi", "Later"), piuTardi: true },
         ],
@@ -903,8 +1074,15 @@ export class Sentinella {
    * un riepilogo vuoto non si manda. */
   riepilogo() {
     const batterie = [];
-    let spenti = 0;
     let aggiornamenti = 0;
+    /* «Non ci sono 65 dispositivi non connessi»: qui si contavano le entita'
+     * mute che hanno un dispositivo, non i dispositivi. Adesso la regola e'
+     * quella del cruscotto di chi installa (`salute.js`) e della pagina «Non
+     * connessi» della plancia: un dispositivo e' giu' quando NESSUNA delle sue
+     * entita' risponde, e conta una volta. Un canale non usato di uno switch
+     * acceso, il blocco bambini di un'asciugatrice spenta, non lo fanno giu'. */
+    const muti = new Set();
+    const vivi = new Set();
     for (const [id, stato] of this.stati) {
       const dominio = dominioDi(id);
       if (dominio === "sensor" && stato.attributes?.device_class === "battery") {
@@ -912,13 +1090,12 @@ export class Sentinella {
         if (n !== null && n <= 15) batterie.push(nomeDi(stato, id));
       }
       if (dominio === "update" && stato.state === "on") aggiornamenti += 1;
-      if (
-        stato.state === "unavailable" &&
-        this.dispositivoDi?.[id] &&
-        ["sensor", "binary_sensor", "light", "switch"].includes(dominio)
-      )
-        spenti += 1;
+      const suo = this.dispositivoDi?.[id];
+      if (!suo) continue;
+      if (stato.state === "unavailable") muti.add(suo);
+      else vivi.add(suo);
     }
+    const spenti = [...muti].filter((suo) => !vivi.has(suo)).length;
     if (!batterie.length && !spenti && !aggiornamenti) return null;
     const pezziIt = [];
     const pezziEn = [];

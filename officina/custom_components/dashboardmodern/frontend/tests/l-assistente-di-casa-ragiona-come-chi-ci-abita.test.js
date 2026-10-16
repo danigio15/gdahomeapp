@@ -146,6 +146,37 @@ test("casa vuota con le luci accese: le spegne, e dice da quando", () => {
   assert.equal(inglese.titolo, "Nobody is home, but Cucina is on");
 });
 
+test("l'acquario, la notturna e le luci degli Animali restano: l'assistente non le propone", () => {
+  const adesso = alle(14);
+  const [primo, ...altri] = suggerimentiDellaCasa(
+    casa(14, {
+      persone: vuota(2 * ORA, adesso),
+      lasciate: ["light.mensola_tartarughe"],
+      luci: [
+        { entity: "light.luce_acquario_blu", name: "Luce acquario blu", on: true },
+        { entity: "light.corridoio_notte", name: "Corridoio notte", on: true },
+        { entity: "light.mensola_tartarughe", name: "Mensola", on: true },
+        { entity: "light.cucina", name: "Cucina", on: true },
+      ],
+    }),
+    {},
+    {},
+    "it",
+  );
+  assert.equal(primo.tipo, "vuota-luci");
+  assert.equal(primo.titolo, "Non c'è nessuno in casa, ma Cucina è accesa");
+  assert.deepEqual(primo.azioni[0].servizio.dati, { entity_id: "light.cucina" });
+  assert.equal(altri.filter((s) => s.tipo === "vuota-luci").length, 0);
+  /* Solo l'acquario acceso: niente da dire. */
+  const niente = suggerimentiDellaCasa(
+    casa(14, {
+      persone: vuota(2 * ORA, adesso),
+      luci: [{ entity: "light.luce_acquario_blu", name: "Luce acquario blu", on: true }],
+    }),
+  );
+  assert.equal(niente.filter((s) => s.tipo === "vuota-luci").length, 0);
+});
+
 test("una casa senza persone configurate non e' una casa vuota", () => {
   const fuori = suggerimentiDellaCasa(
     casa(14, {

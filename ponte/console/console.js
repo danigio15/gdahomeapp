@@ -985,8 +985,12 @@
       "The phones and tablets that use gdahome for this home. You can pair up to " + massimi + ".",
     );
     /* «3 di 10»: era «1 di 10 telefono», con la parola che si accordava col
-     * numero sbagliato. Il numero da solo si legge meglio, e non sbaglia. */
-    trova("conteggio").textContent = due(quanti + " di " + massimi, quanti + " of " + massimi);
+     * numero sbagliato. Il numero da solo si legge meglio, e non sbaglia.
+     * Nei dieci stanno i telefoni di casa: quelli di prova non li contano. */
+    var diCasa = dispositivi.filter(function (uno) {
+      return !uno.finoA;
+    }).length;
+    trova("conteggio").textContent = due(diCasa + " di " + massimi, diCasa + " of " + massimi);
 
     /* Mentre un nome si sta scrivendo, l'elenco resta com'e'. */
     if (inModifica.indexOf("telefono:") === 0) return;

@@ -42,12 +42,15 @@ import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 
 import { Archivio } from "./archivio.js";
+import { CapireLaCasa } from "./capire-la-casa.js";
 import { CATEGORIE, EVENTI, Sentinella, URGENZE, categoriaDi } from "./sentinella.js";
 import { chiudiLaSpinta, CONTENUTO_MASSIMO } from "./spinta.js";
 import { vedeQualcosa } from "./plance.js";
 
 const MINUTO = 60 * 1000;
 const ORA = 60 * MINUTO;
+/* Le automazioni a orario si rileggono una volta al giorno. */
+const AUTOMAZIONI_OGNI = 24 * ORA;
 
 /* Quanto vive il riferimento ai tasti di una notifica. Dopo, «Spegni» non
  * spegne piu' niente: la situazione di due ore fa non e' quella di adesso. */
@@ -223,11 +226,13 @@ export class Notifiche {
     this.sentinella = new Sentinella({
       adesso,
       registro: this.registro,
+      capire: new CapireLaCasa({ cartella, adesso }),
       quando: (evento) => {
         void this.consegna(evento);
       },
     });
     this.sentinella.personalizzate = this.archivio.dati.personalizzate;
+    this._automazioniIl = 0;
     /** I tasti delle notifiche mandate: id → {telefono, azioni, scade}. */
     this._tasti = new Map();
     /** Quando si e' detto cosa, e a chi: `telefono|chiave` → ora. */
@@ -293,6 +298,102 @@ export class Notifiche {
     } catch (_errore) {
       /* Senza registri la telecamera si cerca per nome. */
     }
+    await this._lAnagrafe();
+    if (this.adesso() - this._automazioniIl >= AUTOMAZIONI_OGNI) await this._leAutomazioni();
+  }
+
+  /* «Cosa c'e' in casa», dal config: quello che l'assistente ha capito, e le
+   * correzioni di chi amministra. Solo nomi e generi, niente stati. */
+  casaCapita(detto) {
+    const id = detto?.id ?? null;
+    const capire = this.sentinella.capire;
+    const si = (result) => ({ id, type: "result", success: true, result });
+    if (detto?.type === "ponte/casa-capita/elenco") {
+      const nome = (stato, entita) =>
+        String(stato?.attributes?.friendly_name || entita).slice(0, 60);
+      return si({ cose: capire.elenco(this.sentinella.stati, nome) });
+    }
+    if (detto?.type === "ponte/casa-capita/scegli") {
+      if (!capire.scegli(String(detto.entita || ""), String(detto.scelta || "")))
+        return {
+          id,
+          type: "result",
+          success: false,
+          error: { code: "invalid", message: "scelta non valida" },
+        };
+      capire.scrivi();
+      return si({ fatto: true });
+    }
+    return {
+      id,
+      type: "result",
+      success: false,
+      error: { code: "unknown_command", message: `non conosco ${detto?.type}` },
+    };
+  }
+
+  /* Quello che Home Assistant sa delle cose, per l'assistente: l'area dove
+   * stanno, la marca e il modello del dispositivo. Una luce nell'area
+   * «Giardino» e' esterna, una porta nell'area «Bagno» e' interna. Solo
+   * nomi, e restano qui (`capire-la-casa.js`). */
+  async _lAnagrafe() {
+    try {
+      const { dispositivi, entita } = await this.registri.chiedi();
+      const aree = await this.casa?.chiedi({ type: "config/area_registry/list" }).catch(() => []);
+      const nomeDellArea = new Map(
+        (Array.isArray(aree) ? aree : []).map((a) => [a?.area_id, String(a?.name || "")]),
+      );
+      const dispositivo = new Map(
+        (Array.isArray(dispositivi) ? dispositivi : []).map((d) => [d?.id, d]),
+      );
+      const descrizioni = {};
+      for (const voce of Array.isArray(entita) ? entita : []) {
+        const id = voce?.entity_id;
+        if (typeof id !== "string" || !/^(light|switch|binary_sensor|cover)\./.test(id)) continue;
+        const suo = dispositivo.get(voce?.device_id);
+        const pezzi = [
+          nomeDellArea.get(voce?.area_id || suo?.area_id),
+          suo?.manufacturer,
+          suo?.model,
+          suo?.name_by_user || suo?.name,
+        ]
+          .map((p) => String(p || "").trim())
+          .filter(Boolean);
+        if (pezzi.length) descrizioni[id] = pezzi.join(" · ").slice(0, 160);
+      }
+      this.sentinella.capire.descrivi(descrizioni);
+    } catch (_errore) {
+      /* Senza anagrafe l'assistente guarda i nomi, come prima. */
+    }
+  }
+
+  /* Le luci che un'automazione a orario accende o spegne da se' (all'ora,
+   * al tramonto, a intervalli): sono a orario, e l'assistente non le propone.
+   * Una volta al giorno: le automazioni cambiano di rado. */
+  async _leAutomazioni() {
+    this._automazioniIl = this.adesso();
+    if (!this.casa) return;
+    const gestite = new Set();
+    const automazioni = [...this.sentinella.stati.keys()]
+      .filter((id) => id.startsWith("automation."))
+      .slice(0, 200);
+    for (const id of automazioni) {
+      try {
+        const risposta = await this.casa.chiedi({ type: "automation/config", entity_id: id });
+        const config = risposta?.config || risposta || {};
+        const scatti = [].concat(config.triggers || config.trigger || []);
+        const aOrario = scatti.some((s) =>
+          ["time", "sun", "time_pattern"].includes(String(s?.trigger || s?.platform || "")),
+        );
+        if (!aOrario) continue;
+        const azioni = JSON.stringify(config.actions || config.action || []);
+        for (const entita of azioni.match(/\b(light|switch)\.[a-z0-9_]+/g) || [])
+          gestite.add(entita);
+      } catch (_errore) {
+        /* Un'automazione che non si legge non ferma le altre. */
+      }
+    }
+    this.sentinella.capire.gestiteDaAutomazioni([...gestite]);
   }
 
   ferma() {
@@ -590,6 +691,8 @@ export class Notifiche {
     for (const una of evento.azioni || []) {
       if (una.servizio) azioni[una.id] = { servizio: una.servizio };
       else if (una.piuTardi) azioni[una.id] = { piuTardi: true, chiave: evento.chiave };
+      else if (Array.isArray(una.resta)) azioni[una.id] = { resta: una.resta.slice(0, 40) };
+      else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
     }
     if (!Object.keys(azioni).length) return;
     this._tasti.set(id, { telefono, azioni, scade: this.adesso() + VITA_DEI_TASTI });
@@ -810,6 +913,19 @@ export class Notifiche {
     delete tasti.azioni[String(detto.azione)];
     if (azione.piuTardi) {
       this._rimandati.set(`${telefono}|${azione.chiave}`, this.adesso() + ORA);
+      return si({ fatto: true });
+    }
+    /* «Restano così» e «Va bene stanotte»: l'assistente lo ricorda per
+     * tutta la casa (`capire-la-casa.js`). Non toccano niente in Home
+     * Assistant: dicono solo cosa non proporre piu'. */
+    if (azione.resta) {
+      this.sentinella.capire.resta(azione.resta);
+      this.sentinella.capire.scrivi();
+      return si({ fatto: true });
+    }
+    if (azione.vaBene) {
+      for (const id of azione.vaBene) this.sentinella.capire.vaBeneStanotte(id);
+      this.sentinella.capire.scrivi();
       return si({ fatto: true });
     }
     if (!utente || (this.utenti && !(await this.utenti.eVivo(utente).catch(() => false))))

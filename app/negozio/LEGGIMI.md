@@ -125,7 +125,9 @@ e lì non compra niente. Entra col codice della **casa di prova** (la scheda
 «Casa di prova» della console dell'add-on), e la casa di prova è **Premium**,
 regalata dalla Gestione gdahome: così vede tutto. È lo stesso codice delle note
 per Apple (`app-store.md`): ne esiste uno solo alla volta, dura 7 giorni, e
-entrano fino a cinque telefoni. Quando si rifà, va cambiato in tutti e due i
+entrano quanti telefoni servono (erano cinque: fra Apple, Google e le prove di
+casa il sesto è rimasto fuori, e Google ha rifiutato l'app per «credenziali che
+non funzionano»). Quando si rifà, va cambiato in tutti e due i
 posti, e la revisione riparte: per questo, se sta per scadere, non si rifà ma
 si **allunga** («Allunga di 7 giorni», dalla 1.11.1), e il codice resta
 quello.
