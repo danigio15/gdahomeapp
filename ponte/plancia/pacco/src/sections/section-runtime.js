@@ -529,7 +529,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-YSQO6K5Y.js";
+} from "../../chunk-FUGHU4OA.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -104476,6 +104476,24 @@ function installRoomsOrderEditor() {
   font-size:12px;line-height:1;cursor:pointer;opacity:.75}
 #ed-body .ed-row .dm-room-move:hover{opacity:1}
 #ed-body .ed-row .dm-room-move[disabled]{opacity:.22;cursor:default}
+/* «Soggiorn / o»: al telefono la riga ha quattro colonne (icona, nome,
+   matita, cestino) e le frecce, arrivate dopo, finivano da sole in una
+   seconda riga. Il nome restava stretto fra icona e matita — 82 pixel per
+   «Soggiorno», che ne vuole 90 — e la regola dell'editor che lascia andare a
+   capo dovunque lo spezzava a meta' parola. Il nome prende tutta la prima
+   riga, i quattro tasti stanno insieme nella seconda, che c'era gia'. Un nome
+   lungo va a capo fra le parole, al massimo su due righe, coi puntini. */
+html body #editor-modal #ed-body .ed-row.dm-room-config-row .ed-row-new{
+  overflow-wrap:normal!important;word-break:normal!important;hyphens:manual!important;
+  display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;
+  overflow:hidden!important;text-overflow:ellipsis!important}
+@media (max-width:560px){
+  html body #editor-modal #ed-body .ed-row.dm-room-config-row.dm-beta11-room-row>.ed-row-main{grid-column:2 / -1!important;grid-row:1!important}
+  html body #editor-modal #ed-body .ed-row.dm-room-config-row.dm-beta11-room-row>[data-dm-room-move="-1"]{grid-column:1!important;grid-row:2!important}
+  html body #editor-modal #ed-body .ed-row.dm-room-config-row.dm-beta11-room-row>[data-dm-room-move="1"]{grid-column:2!important;grid-row:2!important;justify-self:start!important}
+  html body #editor-modal #ed-body .ed-row.dm-room-config-row.dm-beta11-room-row>[data-dm-edit-kind="room"]{grid-column:3!important;grid-row:2!important}
+  html body #editor-modal #ed-body .ed-row.dm-room-config-row.dm-beta11-room-row>.ed-del:last-child{grid-column:4!important;grid-row:2!important}
+}
 `
   );
   doc.addEventListener("click", onClick29, true);
