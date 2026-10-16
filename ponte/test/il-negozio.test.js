@@ -196,6 +196,7 @@ function negozioFinto({
   sullaPista = null,
   rompiLaPista = "",
   revisioneAMano = false,
+  soloLaConsegna = false,
 } = {}) {
   const fatte = [];
   const prendi = async (dove, opzioni = {}) => {
@@ -234,7 +235,10 @@ function negozioFinto({
       });
     /* Com'e' andata la 1.14.0: dopo un rifiuto il negozio non manda piu' da
      * solo in revisione, e lo dice cosi'. */
-    if (revisioneAMano && via.endsWith(":commit"))
+    if (
+      (revisioneAMano && (via.endsWith(":commit") || via.endsWith(":validate"))) ||
+      (soloLaConsegna && via.endsWith(":commit"))
+    )
       return risposta(400, {
         error: {
           message:
@@ -629,11 +633,14 @@ test("quando il negozio non manda da solo in revisione, si consegna lo stesso e 
   });
   assert.equal(esito.pubblicato, true);
   const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
-  assert.ok(negozio.fatte.includes(`POST ${app}/edits/modifica-1:commit`));
-  assert.ok(
-    negozio.fatte.includes(`POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`),
-    "la stessa modifica si riconsegna senza mandarla in revisione",
-  );
+  /* Com'e' andata la 1.14.1: il negozio rifiuta gia' il controllo. Si rifa'
+   * il controllo come chiede, e la consegna nasce gia' cosi'. */
+  const chiamate = negozio.fatte.filter((una) => /:(validate|commit)/.test(una));
+  assert.deepEqual(chiamate, [
+    `POST ${app}/edits/modifica-1:validate`,
+    `POST ${app}/edits/modifica-1:validate?changesNotSentForReview=true`,
+    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
+  ]);
   /* Il primo cestino viene dopo la consegna: quella e' la riguardata. */
   const consegnata = negozio.fatte.indexOf(
     `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
@@ -642,5 +649,28 @@ test("quando il negozio non manda da solo in revisione, si consegna lo stesso e 
   assert.ok(
     detto.some((riga) => /Invia per revisione/.test(riga)),
     "il registro dice che la revisione va mandata dal Play Console",
+  );
+});
+
+test("se rifiuta solo la consegna, il controllo resta com'e' e si riconsegna", async (t) => {
+  /* Com'e' andata la 1.14.0: controllo buono, consegna rifiutata. */
+  const negozio = negozioFinto({ soloLaConsegna: true });
+  const esito = await porta({
+    pacco: unPacco(t),
+    piste: ["internal"],
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    aspetta: async () => {},
+  });
+  assert.equal(esito.pubblicato, true);
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  assert.deepEqual(
+    negozio.fatte.filter((una) => /:(validate|commit)/.test(una)),
+    [
+      `POST ${app}/edits/modifica-1:validate`,
+      `POST ${app}/edits/modifica-1:commit`,
+      `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
+    ],
   );
 });
