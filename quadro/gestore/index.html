@@ -3755,6 +3755,232 @@
         color: #fff;
       }
 
+      /* ─── Gli abbonamenti ────────────────────────────────────────────── */
+
+      /* Le categorie: un colore per ognuna, lo stesso nei riquadri, nel
+       * conto, nelle linguette e nelle pastiglie delle righe. */
+      .c-pag {
+        --cat: var(--verde);
+        --cat-soft: var(--verde-soft);
+      }
+
+      .c-pro {
+        --cat: var(--accento);
+        --cat-soft: var(--accento-soft);
+      }
+
+      .c-dis {
+        --cat: var(--ambra);
+        --cat-soft: var(--ambra-soft);
+      }
+
+      .c-fin {
+        --cat: var(--rosso);
+        --cat-soft: var(--rosso-soft);
+      }
+
+      .c-tes {
+        --cat: var(--ink-3);
+        --cat-soft: var(--linea);
+      }
+
+      .c-eur {
+        --cat: var(--ink-2);
+      }
+
+      .pallino {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--cat);
+        flex: none;
+      }
+
+      .nr-cat {
+        border-top: 3px solid var(--cat);
+      }
+
+      .nr-cat.c-eur {
+        border-top-color: var(--linea-forte);
+      }
+
+      .nr-cat.c-eur .pallino {
+        display: none;
+      }
+
+      .nr-cat .valore {
+        color: var(--ink);
+      }
+
+      .nr-cat .dettaglio + .dettaglio {
+        color: var(--ink-3);
+        font-size: 0.8rem;
+      }
+
+      .pastiglia.c-pag,
+      .pastiglia.c-pro,
+      .pastiglia.c-dis,
+      .pastiglia.c-fin {
+        background: var(--cat-soft);
+        color: var(--cat);
+      }
+
+      .pastiglia.c-tes {
+        background: transparent;
+        border: 1px dashed var(--linea-forte);
+        color: var(--ink-3);
+      }
+
+      .il-conto {
+        margin-top: 14px;
+        padding: 14px 20px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .il-conto + .scheda {
+        margin-top: 14px;
+      }
+
+      .il-conto-testo {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        font-size: 0.92rem;
+        color: var(--ink-2);
+      }
+
+      .il-conto-tot {
+        color: var(--ink);
+        font-weight: 800;
+      }
+
+      .conto-pezzo {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .conto-pezzo b {
+        color: var(--ink);
+        font-weight: 800;
+      }
+
+      .conto-pezzo.c-tes,
+      .conto-pezzo.c-tes b {
+        color: var(--ink-3);
+      }
+
+      .il-conto .uguale,
+      .il-conto .piu {
+        color: var(--ink-3);
+        font-weight: 700;
+      }
+
+      .non-conta {
+        color: var(--ink-3);
+        font-size: 0.84rem;
+        margin-left: -4px;
+      }
+
+      .il-conto-barra {
+        display: flex;
+        gap: 3px;
+        height: 8px;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+
+      .il-conto-barra i {
+        background: var(--cat);
+        min-width: 6px;
+      }
+
+      .il-conto-barra i.c-tes {
+        background: repeating-linear-gradient(
+          135deg,
+          var(--linea-forte) 0 4px,
+          var(--linea) 4px 8px
+        );
+      }
+
+      .chip .pallino {
+        margin-right: 2px;
+      }
+
+      .chip[aria-pressed="true"] .pallino {
+        box-shadow: 0 0 0 2px #fff;
+      }
+
+      .chip.c-tes {
+        color: var(--ink-3);
+        border-style: dashed;
+      }
+
+      .chip.c-tes[aria-pressed="true"] {
+        color: #fff;
+        border-style: solid;
+      }
+
+      .sotto-test {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px 10px;
+        margin: 14px 0 4px;
+        padding-top: 12px;
+        border-top: 1px dashed var(--linea-forte);
+      }
+
+      .sotto-test span {
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-3);
+      }
+
+      .sotto-test em {
+        font-style: normal;
+        font-size: 0.82rem;
+        color: var(--ink-3);
+      }
+
+      .riga-test .riga-testo b,
+      .riga-test .riga-testo > span {
+        color: var(--ink-3);
+      }
+
+      .riga-test .tondino {
+        opacity: 0.55;
+        filter: grayscale(1);
+      }
+
+      @media (max-width: 600px) {
+        .il-conto-testo {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6px 12px;
+        }
+
+        .il-conto-tot {
+          grid-column: 1 / -1;
+        }
+
+        .il-conto .uguale,
+        .il-conto .piu {
+          display: none;
+        }
+
+        .non-conta {
+          grid-column: 2;
+          margin: -6px 0 0 15px;
+          font-size: 0.78rem;
+        }
+      }
+
       /* ─── Gli installatori ───────────────────────────────────────────── */
 
       .carta-installatore {
@@ -6449,14 +6675,9 @@
           .join(" + ")}`;
       }
 
-      const PASTIGLIA_DELLO_STATO = {
-        prova: ["lavoro", "in prova"],
-        attivo: ["bene", "attivo"],
-        disdetto: ["attenta", "disdetto"],
-        scaduto: ["offline", "scaduto"],
-      };
-
-      /* Cosa succede dopo, in una frase: si rinnova, finisce, e' finito. */
+      /* Cosa succede dopo, in una frase: si rinnova, finisce, e' finito.
+       * La legge la scheda della casa; l'elenco degli abbonamenti ha la sua,
+       * piu' lunga (`laFraseDellaRiga`). */
       function laFraseDellAbbonamento(uno) {
         const fine = (preposizione) => conLArticolo(preposizione, uno.pagato);
         if (uno.stato === "prova") return `In prova fino ${fine("al")}, poi si rinnova`;
@@ -6471,16 +6692,98 @@
           : `Rinnovo atteso ${fine("dal")}`;
       }
 
-      /* I filtri dell'elenco degli abbonamenti: lo stato del negozio, e a
-       * parte gli acquisti di prova, che hanno lo stato vero ma non contano. */
-      const I_FILTRI_DEGLI_ABBONAMENTI = [
-        ["tutti", "Tutti", () => true],
-        ["attivo", "Si rinnovano", (uno) => !uno.sandbox && uno.stato === "attivo"],
-        ["prova", "In prova", (uno) => !uno.sandbox && uno.stato === "prova"],
-        ["disdetto", "Disdetti", (uno) => !uno.sandbox && uno.stato === "disdetto"],
-        ["scaduto", "Scaduti", (uno) => !uno.sandbox && uno.stato === "scaduto"],
-        ["sandbox", "Di prova", (uno) => uno.sandbox],
-      ];
+      /* Le categorie degli abbonamenti. Ognuno sta in una sola, quella del
+       * suo stato, e gli acquisti di test (TestFlight, tester di Google) in
+       * una a parte, fuori da ogni numero. Gli stessi nomi, gli stessi colori
+       * e gli stessi numeri nei riquadri, nel conto, nelle linguette e nelle
+       * pastiglie delle righe. `conto` e' il campo dei conti del quadro. */
+      const LE_CATEGORIE_DEGLI_ABBONAMENTI = {
+        paganti: {
+          nome: "Paganti",
+          pastiglia: "pagante",
+          tinta: "c-pag",
+          conto: "paganti",
+          stato: "attivo",
+        },
+        prova: {
+          nome: "In prova gratuita",
+          pastiglia: "prova gratuita",
+          tinta: "c-pro",
+          conto: "inProva",
+          stato: "prova",
+        },
+        disdetti: {
+          nome: "Disdetti",
+          pastiglia: "disdetto",
+          tinta: "c-dis",
+          conto: "disdetti",
+          stato: "disdetto",
+        },
+        finiti: {
+          nome: "Finiti",
+          pastiglia: "finito",
+          tinta: "c-fin",
+          conto: "finiti",
+          stato: "scaduto",
+        },
+        test: {
+          nome: "Acquisti di test",
+          pastiglia: "test",
+          tinta: "c-tes",
+          conto: "test",
+          stato: "",
+        },
+      };
+
+      /* Le linguette di prima si chiamavano per stato: la Panoramica ci
+       * manda ancora con quei nomi. */
+      const I_FILTRI_DI_PRIMA = {
+        attivo: "paganti",
+        disdetto: "disdetti",
+        scaduto: "finiti",
+        sandbox: "test",
+      };
+
+      /* La categoria di una riga dell'elenco. */
+      function laCategoria(uno) {
+        if (uno.sandbox) return "test";
+        return (
+          Object.keys(LE_CATEGORIE_DEGLI_ABBONAMENTI).find(
+            (quale) => LE_CATEGORIE_DEGLI_ABBONAMENTI[quale].stato === uno.stato,
+          ) || "finiti"
+        );
+      }
+
+      /* Cosa e' successo e cosa succede, in una frase che dice se ha pagato. */
+      function laFraseDellaRiga(uno) {
+        const il = conLArticolo("il", uno.pagato);
+        const al = conLArticolo("al", uno.pagato);
+        if (uno.stato === "prova") {
+          const prezzo = uno.prezzo
+            ? ` a ${iSoldi(uno.prezzo, uno.valuta)}/${uno.piano === "annuale" ? "anno" : "mese"}`
+            : "";
+          return `Prova gratuita fino ${al}, poi si rinnova${prezzo}`;
+        }
+        if (uno.stato === "disdetto")
+          return uno.prova
+            ? `Disdetto durante la prova: finisce ${il} senza pagare`
+            : `Disdetto: ha pagato fino ${al}, poi finisce`;
+        if (uno.stato === "scaduto")
+          return uno.finito === "acquisto-rimborsato" ? "Rimborsato" : `Finito ${il}`;
+        return uno.pagato >= Date.now()
+          ? `Pagato fino ${al}, poi si rinnova`
+          : `Rinnovo atteso ${conLArticolo("dal", uno.pagato)}`;
+      }
+
+      /* Quando una linguetta non ha nessuno, cosa vuol dire. */
+      const IL_FILTRO_VUOTO = {
+        paganti:
+          "Nessuno ha ancora pagato: chi è in prova gratuita passa qui quando la prova finisce.",
+        prova: "Nessuna prova gratuita in corso.",
+        disdetti: "Nessuno ha disdetto.",
+        finiti: "Nessun abbonamento è finito.",
+        test: "Nessun acquisto di test.",
+      };
 
       function gliAbbonamenti() {
         const A = ABBONAMENTI;
@@ -6497,13 +6800,26 @@
               <div class="vuoto"><b>Gli abbonamenti non sono arrivati</b> Riprova fra poco, o premi «Aggiorna».</div>
             </section>`;
 
+        const CAT = LE_CATEGORIE_DEGLI_ABBONAMENTI;
+        /* I numeri vengono dal quadro, che li conta tutti: l'elenco puo'
+         * essere tagliato alle prime righe. */
+        const tutti = A.conti || {};
+        const quanti = (quale) => Number(tutti[CAT[quale].conto]) || 0;
+        const paganti = quanti("paganti");
+        const inProva = quanti("prova");
+        const disdetti = quanti("disdetti");
+        const finiti = quanti("finiti");
+        const diTest = quanti("test");
+        const inTutto = Number(tutti.tutti) || 0;
+        const prove = tutti.prove || { finite: 0, pagate: 0 };
+        const primaFineProva = Number(tutti.primaFineProva) || 0;
+        const disdettiInProva = Number(tutti.disdettiInProva) || 0;
+
         const conto = (tinta, disegno, valore, nome) =>
           `<div class="servizio-conto ${testo(tinta)}">
              <span class="servizio-conto-ic" aria-hidden="true">${LE_ICONE[disegno]}</span>
              <b>${testo(valore)}</b><span>${testo(nome)}</span>
            </div>`;
-        const tutti = A.conti || {};
-        const prove = tutti.prove || { finite: 0, pagate: 0 };
         const iNegozi = [
           ["ios", "App Store"],
           ["android", "Google Play"],
@@ -6517,7 +6833,7 @@
               <span class="servizio-ic" aria-hidden="true">${LE_ICONE["telefono"]}</span>
               <div class="servizio-chi">
                 <b>${testo(nome)}</b>
-                <span>${testo(plurale(suoi.attivi || 0, "abbonamento attivo", "abbonamenti attivi"))}${alMese === "—" ? "" : ` · ${testo(alMese)} al mese`}</span>
+                <span>${testo(plurale(Number(suoi.paganti) || 0, "pagante", "paganti"))}${alMese === "—" ? "" : ` · ${testo(alMese)} al mese`}</span>
               </div>
               <span class="pastiglia ${suoi.rinnovi7 ? "posto" : ""}">${
                 suoi.rinnovi7
@@ -6526,15 +6842,16 @@
               }</span>
             </div>
             <div class="servizio-conti">
-              ${/* già HTML */ conto("blu", "abbonamenti", suoi.mensili || 0, "mensili")}
-              ${/* già HTML */ conto("verde", "abbonamenti", suoi.annuali || 0, "annuali")}
-              ${/* già HTML */ conto("ambra", "licenze", suoi.prova || 0, "di cui in prova gratuita")}
-              ${/* già HTML */ conto("ambra", "abbonamenti", suoi.disdetti || 0, "di cui disdetti: finiscono a scadenza")}
+              ${/* già HTML */ conto("verde", "abbonamenti", Number(suoi.paganti) || 0, "paganti")}
+              ${/* già HTML */ conto("blu", "licenze", Number(suoi.inProva) || 0, "in prova gratuita")}
+              ${/* già HTML */ conto("ambra", "abbonamenti", Number(suoi.disdetti) || 0, "disdetti: finiscono a scadenza")}
+              ${/* già HTML */ conto("blu", "abbonamenti", Number(suoi.test) || 0, "acquisti di test, non contano")}
             </div>
           </div>`;
         };
 
         const riga = (uno) => {
+          const cat = laCategoria(uno);
           const diUnaCasa = String(uno.sog || "").startsWith("casa_");
           const nome = diUnaCasa
             ? CONTI.nomi.get(uno.sog) || `Casa senza nome · ${String(uno.sog).slice(5, 13)}`
@@ -6547,63 +6864,182 @@
               : uno.sandbox
                 ? "Google Play (tester)"
                 : "Google Play";
+          /* In prova il prezzo sta nella frase: «poi si rinnova a 44,99 €/anno». */
           const piano = `${
             uno.piano === "mensile"
               ? "Mensile"
               : uno.piano === "annuale"
                 ? "Annuale"
                 : uno.piano || "Piano non detto"
-          }${uno.prezzo ? ` ${iSoldi(uno.prezzo, uno.valuta)}` : ""}`;
-          const [tinta, parola] = uno.sandbox
-            ? ["", "di prova"]
-            : PASTIGLIA_DELLO_STATO[uno.stato] || ["", uno.stato];
+          }${uno.prezzo && cat !== "prova" ? ` ${iSoldi(uno.prezzo, uno.valuta)}` : ""}`;
           const pezzi = [
             `${uno.app === "gdanav" ? "gdanav · " : ""}${dove}`,
             piano,
             ...(uno.inizio ? [conLArticolo("dal", uno.inizio)] : []),
-            ...(uno.pagato ? [laFraseDellAbbonamento(uno)] : []),
-            ...(uno.sandbox ? ["non entra nei conti"] : []),
+            ...(uno.pagato && cat !== "test" ? [laFraseDellaRiga(uno)] : []),
           ];
           const di = CONTI.tutte.find((una) => una.matricola === uno.sog)?.chi || "";
           return `
-          <li${diUnaCasa ? ` data-apri-casa="${testo(uno.sog)}" data-di="${testo(di)}" role="button" tabindex="0"` : ' class="ferma"'}>
+          <li${diUnaCasa ? ` data-apri-casa="${testo(uno.sog)}" data-di="${testo(di)}" role="button" tabindex="0"` : ""} class="${diUnaCasa ? "" : "ferma"}${cat === "test" ? " riga-test" : ""}">
             <span class="tondino">${LE_ICONE["telefono"]}</span>
             <span class="riga-testo">
               <b>${testo(nome)}</b>
               <span>${pezzi.map(testo).join(" · ")}</span>
             </span>
-            <span class="pastiglia ${testo(tinta)}">${testo(parola)}</span>
+            <span class="pastiglia ${testo(CAT[cat].tinta)}">${testo(CAT[cat].pastiglia)}</span>
             ${diUnaCasa ? `<span class="freccina">${LE_ICONE["freccia"]}</span>` : ""}
           </li>`;
         };
 
         const elenco = A.elenco || [];
-        const ilFiltro = I_FILTRI_DEGLI_ABBONAMENTI.find(([quale]) => quale === FILTRO_ABBONAMENTI)
-          ? FILTRO_ABBONAMENTI
-          : "tutti";
-        const filtrati = elenco.filter(
-          I_FILTRI_DEGLI_ABBONAMENTI.find(([quale]) => quale === ilFiltro)[2],
-        );
-        const lePastiglie = I_FILTRI_DEGLI_ABBONAMENTI.map(([quale, parola, filtro]) => {
-          const quanti = elenco.filter(filtro).length;
-          if (!quanti && quale !== "tutti" && quale !== ilFiltro) return "";
-          return `<button type="button" class="chip" data-filtro-abbonamenti="${testo(quale)}" aria-pressed="${quale === ilFiltro}">${testo(parola)} <b>${Number(quanti)}</b></button>`;
-        }).join("");
+        const detto = I_FILTRI_DI_PRIMA[FILTRO_ABBONAMENTI] || FILTRO_ABBONAMENTI;
+        const ilFiltro = CAT[detto] ? detto : "tutti";
 
+        /* I quattro riquadri: tre categorie e quello che incassano. */
+        const alMese = alMeseDetto(tutti.alMese);
         const dalNegozio = iNegozi
           .map(([chiave, nome]) => {
-            const detto = alMeseDetto(A.negozi?.[chiave]?.alMese);
-            return detto === "—" ? "" : `${nome} ${detto}`;
+            const suo = alMeseDetto(A.negozi?.[chiave]?.alMese);
+            return suo === "—" ? "" : `${nome} ${suo}`;
           })
           .filter(Boolean)
           .join(" · ");
-        const alMese = alMeseDetto(tutti.alMese);
-        const numerone = (etichetta, valore, dettaglio, piccolo = "") => `
-          <div class="numerone">
-            <span class="etichetta">${testo(etichetta)}</span>
+        const riquadro = (tinta, etichetta, valore, righe, piccolo = "") => `
+          <div class="numerone nr-cat ${testo(tinta)}">
+            <span class="etichetta"><i class="pallino" aria-hidden="true"></i>${testo(etichetta)}</span>
             <span class="valore">${testo(valore)}${piccolo ? `<small> ${testo(piccolo)}</small>` : ""}</span>
-            <span class="dettaglio">${testo(dettaglio)}</span>
+            ${righe
+              .filter(Boolean)
+              .map((una) => `<span class="dettaglio">${testo(una)}</span>`)
+              .join("")}
           </div>`;
+        const pagate = Number(prove.pagate) || 0;
+        const incassi = paganti
+          ? riquadro(
+              "c-eur",
+              "Incassi al mese",
+              alMese,
+              [
+                `da ${plurale(paganti, "pagante", "paganti")}, IVA compresa`,
+                alMese === "—" ? "il negozio non ha detto il prezzo" : dalNegozio,
+              ],
+              alMese === "—" ? "" : "/mese",
+            )
+          : riquadro("c-eur", "Incassi al mese", "0 €", [
+              "nessun pagante ancora",
+              primaFineProva
+                ? "il primo incasso possibile " +
+                  conLArticolo("il", primaFineProva) +
+                  ", a fine prova"
+                : "",
+            ]);
+        const riquadri = `
+          <div class="griglia griglia-4">
+            ${
+              /* già HTML */ riquadro(CAT.paganti.tinta, CAT.paganti.nome, numero(paganti), [
+                paganti ? "hanno pagato e si rinnovano da soli" : "nessuno ha ancora pagato",
+                paganti
+                  ? `${plurale(Number(tutti.pagantiMensili) || 0, "mensile", "mensili")} · ${plurale(Number(tutti.pagantiAnnuali) || 0, "annuale", "annuali")}`
+                  : "",
+              ])
+            }
+            ${
+              /* già HTML */ riquadro(CAT.prova.tinta, CAT.prova.nome, numero(inProva), [
+                inProva ? "non hanno ancora pagato: pagano a fine prova" : "nessuna prova in corso",
+                primaFineProva && inProva
+                  ? "la prima finisce " + conLArticolo("il", primaFineProva)
+                  : "",
+                prove.finite
+                  ? `${Number(pagate)} ${pagate === 1 ? "prova" : "prove"} su ${Number(prove.finite)} ${pagate === 1 ? "passata" : "passate"} a pagamento`
+                  : "",
+              ])
+            }
+            ${
+              /* già HTML */ riquadro(CAT.disdetti.tinta, CAT.disdetti.nome, numero(disdetti), [
+                disdetti
+                  ? "restano Premium fino alla scadenza, poi finiscono"
+                  : "nessuno ha disdetto",
+                disdettiInProva
+                  ? `${disdettiInProva === 1 ? "1 era" : `${Number(disdettiInProva)} erano`} ancora in prova: non ${disdettiInProva === 1 ? "pagherà" : "pagheranno"}`
+                  : "",
+              ])
+            }
+            ${/* già HTML */ incassi}
+          </div>`;
+
+        /* La riga che fa il conto: ogni abbonamento sta in un posto solo. */
+        const pezzo = (quale, n, uno, molti) =>
+          `<span class="conto-pezzo ${testo(CAT[quale].tinta)}"><i class="pallino" aria-hidden="true"></i><b>${Number(n)}</b> ${testo(n === 1 ? uno : molti)}</span>`;
+        const piu = `<span class="piu" aria-hidden="true">+</span>`;
+        const barra = [
+          ["paganti", paganti],
+          ["prova", inProva],
+          ["disdetti", disdetti],
+          ["finiti", finiti],
+          ["test", diTest],
+        ]
+          .filter(([, n]) => n)
+          .map(
+            ([quale, n]) => `<i class="${testo(CAT[quale].tinta)}" style="flex: ${Number(n)}"></i>`,
+          )
+          .join("");
+        const ilConto = inTutto
+          ? `
+          <section class="scheda il-conto">
+            <div class="il-conto-testo">
+              <b class="il-conto-tot">${testo(plurale(inTutto, "abbonamento", "abbonamenti"))}</b>
+              <span class="uguale" aria-hidden="true">=</span>
+              ${/* già HTML */ pezzo("paganti", paganti, "pagante", "paganti")}
+              ${/* già HTML */ piu}
+              ${/* già HTML */ pezzo("prova", inProva, "in prova gratuita", "in prova gratuita")}
+              ${/* già HTML */ piu}
+              ${/* già HTML */ pezzo("disdetti", disdetti, "disdetto", "disdetti")}
+              ${finiti ? `${/* già HTML */ piu}${/* già HTML */ pezzo("finiti", finiti, "finito", "finiti")}` : ""}
+              ${/* già HTML */ piu}
+              ${/* già HTML */ pezzo("test", diTest, "acquisto di test", "acquisti di test")}<span class="non-conta">(non contano)</span>
+            </div>
+            <div class="il-conto-barra" aria-hidden="true">${/* già HTML */ barra}</div>
+          </section>`
+          : "";
+
+        /* Le linguette: gli stessi nomi, numeri e colori dei riquadri. «Finiti»
+         * si vede solo quando ce n'e'. */
+        const lePastiglie = [
+          ["tutti", "Tutti", inTutto, ""],
+          ...Object.entries(CAT).map(([quale, una]) => [quale, una.nome, quanti(quale), una.tinta]),
+        ]
+          .map(([quale, parola, n, tinta]) => {
+            if (quale === "finiti" && !n && ilFiltro !== quale) return "";
+            return `<button type="button" class="chip ${testo(tinta)}" data-filtro-abbonamenti="${testo(quale)}" aria-pressed="${quale === ilFiltro}">${tinta ? '<i class="pallino" aria-hidden="true"></i>' : ""}${testo(parola)} <b>${Number(n)}</b></button>`;
+          })
+          .join("");
+
+        /* L'elenco: quelli veri, e gli acquisti di test in fondo, a parte. */
+        const veri = elenco.filter((uno) =>
+          ilFiltro === "tutti"
+            ? !uno.sandbox
+            : laCategoria(uno) === ilFiltro && ilFiltro !== "test",
+        );
+        const diProva =
+          ilFiltro === "tutti" || ilFiltro === "test" ? elenco.filter((uno) => uno.sandbox) : [];
+        const corpo = !elenco.length
+          ? `<div class="vuoto"><b>Ancora nessun abbonamento</b> Compaiono qui da soli quando qualcuno compra gdahome Premium nell'app.</div>`
+          : `${
+              veri.length
+                ? `<ul class="elenco si-tocca">${veri.map(riga).join("")}</ul>`
+                : ilFiltro === "test" && diProva.length
+                  ? ""
+                  : `<div class="vuoto"><b>Nessun abbonamento qui</b> ${testo(IL_FILTRO_VUOTO[ilFiltro] || "Prova un altro filtro.")}</div>`
+            }${
+              diProva.length
+                ? `<div class="sotto-test"><span>Acquisti di test</span><em>TestFlight e tester di Google: sono nostri, non entrano in nessun numero sopra</em></div>
+                   <ul class="elenco si-tocca">${diProva.map(riga).join("")}</ul>`
+                : ""
+            }`;
+        const tagliato =
+          inTutto > elenco.length
+            ? `<p class="minuta" style="margin: 10px 2px 0">Nell'elenco ci sono i primi ${numero(elenco.length)}: i numeri sopra li contano tutti e ${numero(inTutto)}.</p>`
+            : "";
 
         return `${/* già HTML */ testa}
           ${
@@ -6615,32 +7051,25 @@
                  </div>`
           }
 
-          <div class="griglia griglia-4">
-            ${/* già HTML */ numerone("Attivi", numero(tutti.attivi), `${plurale(Number(tutti.mensili) || 0, "mensile", "mensili")} · ${plurale(Number(tutti.annuali) || 0, "annuale", "annuali")}`)}
-            ${/* già HTML */ numerone("In prova gratuita", numero(tutti.prova), prove.finite ? `${Number(prove.pagate)} ${Number(prove.pagate) === 1 ? "prova" : "prove"} su ${Number(prove.finite)} ${Number(prove.pagate) === 1 ? "è passata" : "sono passate"} a pagamento` : "nessuna prova ancora finita")}
-            ${/* già HTML */ numerone("Disdetti", numero(tutti.disdetti), `finiscono alla scadenza · ${plurale(Number(tutti.finiti30) || 0, "finito", "finiti")} in 30 giorni`)}
-            ${/* già HTML */ numerone("Incassi stimati", alMese, dalNegozio || "nessun abbonamento a pagamento", alMese === "—" ? "" : "/mese")}
-          </div>
+          ${/* già HTML */ riquadri}
+          ${/* già HTML */ ilConto}
 
           <section class="scheda">
             <div class="filtri">${/* già HTML */ lePastiglie}</div>
-            ${
-              filtrati.length
-                ? `<ul class="elenco si-tocca">${filtrati.map(riga).join("")}</ul>`
-                : `<div class="vuoto"><b>${elenco.length ? "Nessun abbonamento con questo filtro" : "Ancora nessun abbonamento"}</b> ${elenco.length ? "Prova un altro filtro." : "Compaiono qui da soli quando qualcuno compra gdahome Premium nell'app."}</div>`
-            }
+            ${/* già HTML */ corpo}
+            ${/* già HTML */ tagliato}
             <details class="apri-riga">
               <summary>Tutti i conti, negozio per negozio<span class="freccina">${LE_ICONE["freccia"]}</span></summary>
               <div class="servizio-blocco">
                 <p class="servizio-titolo">In tutto</p>
                 <div class="servizio-conti">
-                  ${/* già HTML */ conto("verde", "abbonamenti", tutti.attivi, "abbonamenti attivi")}
-                  ${/* già HTML */ conto("blu", "abbonamenti", tutti.mensili, "mensili")}
-                  ${/* già HTML */ conto("blu", "abbonamenti", tutti.annuali, "annuali")}
-                  ${/* già HTML */ conto("ambra", "licenze", tutti.prova, "di cui in prova gratuita")}
-                  ${/* già HTML */ conto("ambra", "abbonamenti", tutti.disdetti, "di cui disdetti: finiscono a scadenza")}
-                  ${/* già HTML */ conto("blu", "abbonamenti", tutti.finiti30, "finiti negli ultimi 30 giorni")}
-                  ${/* già HTML */ conto("verde", "licenze", prove.finite ? `${Number(prove.pagate)} su ${Number(prove.finite)}` : "—", "prove finite che sono passate a pagamento")}
+                  ${/* già HTML */ conto("verde", "abbonamenti", paganti, "paganti")}
+                  ${/* già HTML */ conto("blu", "abbonamenti", Number(tutti.pagantiMensili) || 0, "paganti mensili")}
+                  ${/* già HTML */ conto("blu", "abbonamenti", Number(tutti.pagantiAnnuali) || 0, "paganti annuali")}
+                  ${/* già HTML */ conto("blu", "licenze", inProva, "in prova gratuita")}
+                  ${/* già HTML */ conto("ambra", "abbonamenti", disdetti, "disdetti: finiscono a scadenza")}
+                  ${/* già HTML */ conto("blu", "abbonamenti", Number(tutti.finiti30) || 0, "finiti negli ultimi 30 giorni")}
+                  ${/* già HTML */ conto("verde", "licenze", prove.finite ? `${Number(pagate)} su ${Number(prove.finite)}` : "—", "prove finite che sono passate a pagamento")}
                   ${/* già HTML */ conto("verde", "abbonamenti", alMeseDetto(tutti.alMese), "al mese, quello che pagano i clienti")}
                 </div>
               </div>
@@ -6649,7 +7078,8 @@
           </section>
 
           <p class="minuta" style="margin: 14px 2px 0">
-            Gli importi sono quelli che pagano i clienti, IVA compresa: Apple e Google trattengono la loro commissione e versano il resto. Il conto preciso, con le tasse di ogni paese, sta in App Store Connect e nella Play Console. Gli acquisti di prova (TestFlight e tester di Google) si vedono nell'elenco ma non entrano nei conti.
+            <b>Paganti</b>: hanno pagato e si rinnovano. <b>In prova gratuita</b>: non hanno ancora pagato; pagano quando la prova finisce, se non disdicono. <b>Disdetti</b>: hanno spento il rinnovo, restano Premium fino alla scadenza e poi finiscono. Gli <b>acquisti di test</b> (TestFlight e tester di Google) si vedono in fondo all'elenco e non entrano in nessun numero.
+            Gli importi sono quelli che pagano i clienti, IVA compresa: Apple e Google trattengono la loro commissione e versano il resto. Il conto preciso, con le tasse di ogni paese, sta in App Store Connect e nella Play Console.
           </p>`;
       }
 

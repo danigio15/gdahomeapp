@@ -77,8 +77,9 @@
  *
  * ─── Gli abbonamenti ─────────────────────────────────────────────────────
  *
- * La Gestione ha una schermata «Abbonamenti»: quanti sono attivi, mensili e
- * annuali, in prova gratuita, disdetti, per App Store e per Google Play, e
+ * La Gestione ha una schermata «Abbonamenti»: quanti pagano, quanti sono in
+ * prova gratuita, quanti hanno disdetto — ognuno in un posto solo — mensili
+ * e annuali, per App Store e per Google Play, e
  * uno per riga (`abbonamenti`). Per questo una licenza del negozio tiene
  * anche com'e' fatto l'abbonamento (`negozio.abbonamento`: piano, prezzo,
  * rinnovo automatico, acquisto di prova, da quando, paese — `negozi.js`), e
@@ -374,38 +375,81 @@ export function ilPacchettoDetto(detto) {
 }
 
 /**
+ * Lo stato di un abbonamento, uno solo: `scaduto` (non vale piu'), `disdetto`
+ * (vale ancora ma non si rinnova), `prova` (prova gratuita che si rinnova),
+ * `attivo` (pagato, e si rinnova). E' quello della riga dell'elenco e quello
+ * con cui si contano le categorie: cosi' i numeri e le righe non si smentiscono.
+ */
+export function loStatoDellAbbonamento({ vale, rinnovo, prova }) {
+  return !vale ? "scaduto" : rinnovo === false ? "disdetto" : prova ? "prova" : "attivo";
+}
+
+/**
  * I conti degli abbonamenti, dalle righe di `Licenze.abbonamenti`.
  *
- * - `attivi`: quelli che valgono adesso, prova gratuita compresa; `mensili`
- *   e `annuali` sono gli stessi divisi per piano, `prova` e `disdetti` sono
- *   «di cui»: in prova gratuita, e col rinnovo spento (finiscono a scadenza);
+ * Ogni abbonamento sta in **una** categoria sola, quella del suo stato, e le
+ * categorie sommano a `tutti`:
+ *
+ * - `paganti`: hanno pagato e si rinnovano (stato `attivo`), divisi per piano
+ *   in `pagantiMensili` e `pagantiAnnuali`;
+ * - `inProva`: in prova gratuita, col rinnovo acceso (stato `prova`): non
+ *   hanno ancora pagato; `primaFineProva` e' la prima di queste prove che
+ *   finisce, cioe' il primo incasso possibile;
+ * - `disdetti`: col rinnovo spento, valgono fino alla scadenza (stato
+ *   `disdetto`); `disdettiInProva` sono quelli disdetti durante la prova, che
+ *   non pagheranno;
+ * - `finiti`: non valgono piu' (stato `scaduto`);
+ * - `test`: gli acquisti di prova (TestFlight, tester di Google). Stanno qui
+ *   e in nessun altro numero, nemmeno in quelli che seguono.
+ *
+ * E quelli di prima, che legge anche la Panoramica:
+ *
+ * - `attivi`: quelli che valgono adesso, prova gratuita e disdetti compresi;
+ *   `mensili` e `annuali` sono gli stessi divisi per piano, `prova` e' il
+ *   «di cui» in prova gratuita (disdetti in prova compresi);
  * - `rinnovi7`: quelli che si rinnovano — o passano a pagamento — entro
  *   sette giorni;
  * - `finiti30`: quelli finiti negli ultimi trenta giorni;
  * - `prove`: le prove gratuite finite, e quante sono passate a pagamento;
- * - `alMese`: quello che pagano al mese i clienti degli abbonamenti che si
- *   rinnovano, valuta per valuta, IVA compresa e prima della commissione del
- *   negozio — un annuale conta un dodicesimo. La prova non paga, e chi ha
- *   disdetto non paga piu'.
+ * - `alMese`: quello che pagano al mese i `paganti`, valuta per valuta, IVA
+ *   compresa e prima della commissione del negozio — un annuale conta un
+ *   dodicesimo. La prova non paga, e chi ha disdetto non paga piu'.
  */
-export function contaGliAbbonamenti(righe, ora = Date.now()) {
+export function contaGliAbbonamenti(tutte, ora = Date.now()) {
   const GIORNO = 24 * 60 * 60 * 1000;
+  const righe = tutte.filter((riga) => !riga.sandbox);
   const valide = righe.filter((riga) => riga.vale);
   const quante = (filtro) => valide.filter(filtro).length;
+  const diStato = (stato) => righe.filter((riga) => loStatoDellAbbonamento(riga) === stato);
+  const paganti = diStato("attivo");
+  const inProva = diStato("prova");
+  const disdetti = diStato("disdetto");
   const alMese = {};
-  for (const riga of valide) {
-    if (riga.prova || riga.rinnovo === false || !(riga.prezzo > 0) || !riga.valuta) continue;
+  for (const riga of paganti) {
+    if (!(riga.prezzo > 0) || !riga.valuta) continue;
     const alMeseSuo =
       riga.piano === "annuale" ? riga.prezzo / 12 : riga.piano === "mensile" ? riga.prezzo : null;
     if (alMeseSuo === null) continue;
     alMese[riga.valuta] = Math.round(((alMese[riga.valuta] || 0) + alMeseSuo) * 100) / 100;
   }
+  const fineProve = inProva
+    .map((riga) => riga.pagato)
+    .filter((quando) => typeof quando === "number");
   return {
+    tutti: tutte.length,
+    paganti: paganti.length,
+    pagantiMensili: paganti.filter((riga) => riga.piano === "mensile").length,
+    pagantiAnnuali: paganti.filter((riga) => riga.piano === "annuale").length,
+    inProva: inProva.length,
+    primaFineProva: fineProve.length ? Math.min(...fineProve) : null,
+    disdetti: disdetti.length,
+    disdettiInProva: disdetti.filter((riga) => riga.prova).length,
+    finiti: diStato("scaduto").length,
+    test: tutte.length - righe.length,
     attivi: valide.length,
     mensili: quante((riga) => riga.piano === "mensile"),
     annuali: quante((riga) => riga.piano === "annuale"),
     prova: quante((riga) => riga.prova),
-    disdetti: quante((riga) => riga.rinnovo === false),
     rinnovi7: quante(
       (riga) =>
         riga.rinnovo !== false &&
@@ -1044,7 +1088,7 @@ export class Licenze {
       inizio: suo.inizio ?? una.creata ?? null,
       pagato: una.scade,
       vale,
-      stato: !vale ? "scaduto" : rinnovo === false ? "disdetto" : una.prova ? "prova" : "attivo",
+      stato: loStatoDellAbbonamento({ vale, rinnovo, prova: una.prova }),
       prova: Boolean(una.prova),
       fuInProva: Boolean(una.fuInProva),
       pagatoDopoLaProva: Boolean(una.pagatoDopoLaProva),
@@ -1069,21 +1113,23 @@ export class Licenze {
           ORDINE[a.stato] - ORDINE[b.stato] ||
           (b.inizio ?? 0) - (a.inizio ?? 0),
       );
-    const vere = righe.filter((riga) => !riga.sandbox);
+    /* I conti si fanno qui, su tutte: l'elenco puo' essere tagliato. Gli
+     * acquisti di prova li mette da parte `contaGliAbbonamenti` (`test`). */
+    const conti = contaGliAbbonamenti(righe, ora);
     return {
       accese: this.accese,
-      conti: contaGliAbbonamenti(vere, ora),
+      conti,
       negozi: {
         ios: contaGliAbbonamenti(
-          vere.filter((riga) => riga.piattaforma === "ios"),
+          righe.filter((riga) => riga.piattaforma === "ios"),
           ora,
         ),
         android: contaGliAbbonamenti(
-          vere.filter((riga) => riga.piattaforma === "android"),
+          righe.filter((riga) => riga.piattaforma === "android"),
           ora,
         ),
       },
-      prove: righe.length - vere.length,
+      prove: conti.test,
       elenco: righe.slice(0, ABBONAMENTI_IN_ELENCO),
     };
   }
