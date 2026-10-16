@@ -16,6 +16,14 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
   primo servizio non risponde prova il secondo, e dice «nessun posto» o «il
   servizio non risponde» invece di restare vuota. Sotto la meta scelta c'è la
   **cartina** con la strada da casa.
+- **Pianificatore e auto elettrica:** con un'auto elettrica o ibrida nella
+  pagina Auto c'è il riquadro **«L'auto»** — batteria, autonomia, carica di
+  casa — e, se la carica non basta, le **soste di ricarica** alle colonnine
+  rapide lungo la strada: in elenco con gli orari, sulla cartina coi fulmini,
+  e nell'ora a cui partire. Si sceglie con quanta carica si parte, la carica
+  minima all'arrivo e la potenza delle colonnine. L'archivio delle colonnine
+  (OpenStreetMap e Piattaforma Unica Nazionale) la casa lo scarica una volta
+  a settimana, tutto intero: la strada non esce di casa.
 - **Notifiche:** sull'iPhone niente più «gdahome · nuova notifica» doppia dopo
   aver riabbinato il telefono; il **citofono di Ring** suona come gli altri
   campanelli. Togliendo una casa dall'app, la casa smette di mandare notifiche

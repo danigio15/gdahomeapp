@@ -517,7 +517,9 @@ import {
   varchiDiCasa,
   vehicleBatteryEntity,
   vehicleIndex,
+  vehicleLabel,
   vehiclePhoto,
+  vehiclePlugged,
   verdettoDellaTessera,
   verdettoPressione,
   versoInvertito,
@@ -529,7 +531,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-OFQE4LMK.js";
+} from "../../chunk-7EYNXCH5.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1943,16 +1945,19 @@ var SOURCE_INDEX = Object.freeze({
   "${lettura.conteggio} voli in zona": "${lettura.conteggio} flights in the area",
   "${lettura.pagine} pagine stampate": "${lettura.pagine} pages printed",
   "${letture.length} fonti": "${letture.length} sources",
+  "${minuti} minuti di ricarica in tutto": "${minuti} minutes of charging in all",
   "${moving} in movimento": "${moving} moving",
   "${mute} non rispondono": "${mute} not answering",
   "${muti.length} dispositivi non rispondono": "${muti.length} devices are not answering",
   "${muti[0].name} non risponde": "${muti[0].name} is not answering",
   "${n} fonti non rispondono": "${n} sources not responding",
   "${n} risposte nuove": "${n} new replies",
+  "${n} soste": "${n} stops",
   "${nome}: i tasti li prende la TV stessa, il telecomando non serve.": "${nome}: the TV takes the keys itself, no remote needed.",
   "${nome}: le frecce, OK e gli altri tasti compaiono sotto la scheda, a TV accesa.": "${nome}: the arrows, OK and the other keys show under the card while the TV is on.",
   "${nomi} spenti": "${nomi} off",
   "${nuove.length} persone importate": "${nuove.length} people imported",
+  "${obiettivo} = l'obiettivo di stanotte": "${obiettivo} = tonight's target",
   "${on.length} accese": "${on.length} on",
   "${open} aperte": "${open} open",
   "${pacco.name}: celle da bilanciare (${deltaInParole(pacco.delta)})": "${pacco.name}: cells need balancing (${deltaInParole(pacco.delta)})",
@@ -2060,6 +2065,7 @@ var SOURCE_INDEX = Object.freeze({
   "1 sbloccata · tocca per chiudere a chiave": "1 unlocked · tap to lock",
   "1 sciopero in programma": "1 strike scheduled",
   "1 sezione": "1 section",
+  "1 sosta": "1 stop",
   "1 sta bene": "1 doing well",
   "1 stampante": "1 printer",
   "1 stanza": "1 room",
@@ -2164,6 +2170,7 @@ var SOURCE_INDEX = Object.freeze({
   "Adesso": "Now",
   "ADESSO": "NOW",
   "Adesso · La mia stazione · Previsioni · Radar": "Now · My station · Forecast · Radar",
+  "adesso ${ora}": "now ${ora}",
   "Adesso avanzano ${kw} kW dal fotovoltaico.": "${kw} kW of solar to spare right now.",
   "Adesso è spento: scrivi una quota fra 30 e 95 per accenderlo, zero lo rispegne.": "Right now it is off: write a level between 30 and 95 to turn it on, zero turns it back off.",
   "Adesso l'attributo": "Now the attribute",
@@ -2280,6 +2287,7 @@ var SOURCE_INDEX = Object.freeze({
   "Al posto del percorso puoi scrivere un'entità immagine (image.auto) o una telecamera (camera.auto): la foto la tiene aggiornata l'integrazione, e la lente 🔍 te la fa cercare.": "Instead of a path you can write an image entity (image.car) or a camera (camera.car): the integration keeps the photo up to date, and the 🔍 lens finds it for you.",
   "Al posto di «Esco» quando l'antifurto è inserito": "Instead of «Leaving» when the alarm is armed",
   "Al riposo torna alla prima pagina": "On rest go back to the first page",
+  "Al ritorno ti resta il ${resta}: basta senza ricaricare": "For the way back you still have ${resta}: no need to charge",
   "Alba": "Sunrise",
   "Alberi": "Tree",
   "Alberi (facoltativo)": "Tree (optional)",
@@ -2291,10 +2299,13 @@ var SOURCE_INDEX = Object.freeze({
   "all'aperto": "outdoors",
   "All'aperto": "Outdoors",
   "All'aperto: se sta per piovere, aspetta": "Outdoors: if rain is coming, wait",
+  "all'arrivo ${fine}": "on arrival ${fine}",
   "All'indirizzo manca un segnaposto: servono tutti e tre — {z} per l'ingrandimento, {x} e {y} per il quadratino. Con uno solo si chiederebbe sempre lo stesso pezzo di mondo.": "The address is missing a placeholder: all three are needed — {z} for the zoom, {x} and {y} for the tile. With only one it would always ask for the same piece of the world.",
   "All'uscita c'è": "At the outlet there is",
   "Alla base": "Docked",
   "alla fine": "to full",
+  "Alla partenza": "At departure",
+  "alla partenza ${via}": "at departure ${via}",
   "Allagamenti": "Floods",
   "Allagamento": "Flood",
   "Allarme": "Alarm",
@@ -2466,6 +2477,10 @@ var SOURCE_INDEX = Object.freeze({
   "Arrivata": "Arrived",
   "arrivata alle": "arrived at",
   "Arrivata da una dashboard: la risposta le torna dentro": "Came from a dashboard: the reply goes back into it",
+  "arrivi": "arrive",
+  "arrivi col ${fine}": "arrive with ${fine}",
+  "Arrivi col ${fine}": "You arrive with ${fine}",
+  "Arrivi col ${fine} · nessuna sosta": "You arrive with ${fine} · no stops",
   "Arrivi verso le": "You arrive around",
   "Arrivo": "Arriving",
   "Arrivo entro": "Arrive by",
@@ -2517,6 +2532,7 @@ var SOURCE_INDEX = Object.freeze({
   "Automatico segue come è montato il tablet": "Automatic follows how the tablet is mounted",
   "Automatico: acceso, connesso, online, up e simili vogliono dire «in linea» — com'è oggi, con in più online e up. Scegli tu quando il tuo sistema di controllo usa parole sue, o mette lo stato in un attributo.": "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.",
   "Automazioni": "Automations",
+  "autonomia": "range",
   "Autonomia": "Range",
   "Autonomia al target": "Range at target",
   "Autonomia al Target": "Range to target",
@@ -2600,8 +2616,10 @@ var SOURCE_INDEX = Object.freeze({
   "Batteria caricata · Oggi": "Battery charged · Today",
   "Batteria del collare": "Collar battery",
   "Batteria del tablet": "Tablet battery",
+  "Batteria dell'auto: ${ora}": "Car battery: ${ora}",
   "Batteria di accumulo": "Storage battery",
   "Batteria di servizio 12 V (% o V)": "Service battery 12 V (% or V)",
+  "Batteria e autonomia dell'auto elettrica, e le soste di ricarica se non basta.": "The electric car's battery and range, and the charging stops if it is not enough.",
   "Batteria nuova": "New battery",
   "Batteria orologio": "Watch battery",
   "Batteria quasi scarica: ${prima.name}": "Battery low: ${prima.name}",
@@ -2654,6 +2672,7 @@ var SOURCE_INDEX = Object.freeze({
   "Caffettiera": "Coffee machine",
   "Calcolata": "Calculated",
   "calcolato da Recorder": "calculated from Recorder",
+  "Calcolo le soste…": "Working out the stops…",
   "calda": "hot",
   "Caldaia": "Furnace",
   "Caldaia accesa": "Furnace on",
@@ -2715,6 +2734,7 @@ var SOURCE_INDEX = Object.freeze({
   "Carica ${auto} col sole": "Charge ${auto} on solar",
   "Carica anche senza sole": "Charge even without sun",
   "CARICA COMPLETA": "FULLY CHARGED",
+  "Carica minima all'arrivo": "Minimum charge on arrival",
   "carica più bassa": "lowest charge",
   "CARICAMENTO": "LOADING",
   "Caricamento dati Energia…": "Loading Energy data…",
@@ -2904,10 +2924,12 @@ var SOURCE_INDEX = Object.freeze({
   "Collana": "Necklace",
   "Collare": "Collar",
   "Collare quasi scarico": "Collar battery low",
+  "Collega": "Connect",
   "Collega a un'integrazione": "Link to an integration",
   "Collega evcc": "Connect evcc",
   "Collega GitHub": "Connect GitHub",
   "Collega GitHub per scrivere sotto questa segnalazione.": "Connect GitHub to write under this report.",
+  "Collega l'auto per vedere batteria e soste": "Connect the car to see battery and stops",
   "Collega la colonnina": "Connect the charger",
   "Collega un altro dispositivo": "Link another device",
   "Collega un dispositivo all'animale": "Link a device to the pet",
@@ -2919,6 +2941,8 @@ var SOURCE_INDEX = Object.freeze({
   "Collegato. Le segnalazioni in attesa sono partite.": "Connected. Pending reports were sent.",
   "Colonnina": "Charger",
   "Colonnina di ricarica": "Charging station",
+  "Colonnine": "Chargers",
+  "Colonnine: © OpenStreetMap e Piattaforma Unica Nazionale, nella casa. In viaggio gdanav guarda se sono libere e, se serve, cambia sosta.": "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.",
   "Colorati": "Coloured",
   "Colore": "Color",
   "Colore barba": "Beard color",
@@ -2966,6 +2990,8 @@ var SOURCE_INDEX = Object.freeze({
   "Compilate: ${caselle}.": "Filled in: ${caselle}.",
   "Composti volatili (cottura, detersivi)": "Volatile compounds (cooking, cleaners)",
   "compresi qui: il contatore li aveva già fatti prima che ne cominciassero le statistiche": "included here: the counter had already made them before its statistics began",
+  "con ${n} soste di ricarica": "with ${n} charging stops",
+  "con 1 sosta di ricarica": "with 1 charging stop",
   "Con Auto si stringono solo sugli schermi stretti": "With Auto they shrink on narrow screens only",
   "Con calma, quando hai un minuto.": "No rush, when you have a minute.",
   "con credenziali": "with credentials",
@@ -2973,6 +2999,7 @@ var SOURCE_INDEX = Object.freeze({
   "Con gdahome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app gdahome.": "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.",
   "Con l'orario": "By the clock",
   "Con l'orario: chiaro di giorno, scuro la sera": "By the clock: light by day, dark in the evening",
+  "Con la carica di adesso": "With the charge it has now",
   "Con questa la pagina prende il tasto: lo stato dice se lavora, questo la comanda.": "With this the page grows a switch: the state says whether it is working, this one commands it.",
   "Con questi valori un ciclo solo può diventare tanti mini cicli.": "With these values one cycle can turn into many mini-cycles.",
   "Con un contatore totale configurato la dashboard ricava giorno, mese e anno da quello con Recorder, cosi' i numeri restano coerenti tra loro. Le entita' scritte nei campi di periodo restano salvate ma non vengono usate: svuotale, oppure togli il contatore totale se preferisci leggere i periodi direttamente.": "With a total meter configured the dashboard derives day, month and year from it through Recorder, so the numbers agree with each other. Entities written in the period fields stay saved but are not used: clear them, or remove the total meter if you would rather read the periods directly.",
@@ -3117,6 +3144,7 @@ var SOURCE_INDEX = Object.freeze({
   "Da ${durata(f.daMs, l)}.": "For ${durata(f.daMs, l)}.",
   "da ${giorni} giorni": "for ${giorni} days",
   "da ${minuti} min": "for ${minuti} min",
+  "Da ${n} kW": "From ${n} kW",
   "da ${ore} h": "for ${ore} h",
   "Da 4 a 8 cifre: prima di aprire viene chiesto il codice, contro i tocchi accidentali. Vuoto = solo conferma.": "4 to 8 digits: the code is asked before opening, against accidental taps. Empty = confirm only.",
   "Da ascoltare": "To play",
@@ -3187,6 +3215,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dai un nome al gruppo (es. Piano Terra)": "Name the group (e.g. Ground Floor)",
   "Dai un nome all'unità: è quello che si legge sulla card.": "Name the unit: it is what the card shows.",
   "Dal": "From",
+  "dal ${da} all'${a} · ${min} min": "from ${da} to ${a} · ${min} min",
   "Dal calendario di casa.": "From the home calendar.",
   "Dal dispositivo": "From this device",
   "dal fotovoltaico": "from solar",
@@ -3290,6 +3319,7 @@ var SOURCE_INDEX = Object.freeze({
   "domani": "tomorrow",
   "Domani": "Tomorrow",
   "Donna": "Woman",
+  "dopo ${km} km": "after ${km} km",
   "Dopo quest'ora, il ritiro di domani": "After this hour, tomorrow's collection",
   "Dopo questi giorni la pagina e la tessera in Home dicono che il cambio d'acqua è da fare.": "After this many days the page and the Home tile say the water change is due.",
   "Dopo un po' senza tocchi resta l'orologio": "After a while without touches only the clock stays",
@@ -3318,6 +3348,7 @@ var SOURCE_INDEX = Object.freeze({
   "Durata programma": "Program duration",
   "Duration (minuti)": "Duration (minutes)",
   "e": "and",
+  "E alle colonnine mai sotto il 10%": "And never below 10% at chargers",
   "e altre ${altre}": "and ${altre} more",
   "e altre ${conversazioni.length - MOSTRATE}": "and ${conversazioni.length - MOSTRATE} more",
   "E altre ${quante} che non stanno in questo elenco.": "And ${quante} more that do not fit this list.",
@@ -3551,6 +3582,8 @@ var SOURCE_INDEX = Object.freeze({
   "Febbraio": "February",
   "ferma": "stopped",
   "Ferma": "Stop",
+  "Ferma · non in carica": "Parked · not charging",
+  "Ferma a casa · non in carica": "Parked at home · not charging",
   "Ferma l'irrigazione": "Stop watering",
   "Ferma tutto": "Stop all",
   "Ferme da oltre un mese:": "Stuck for over a month:",
@@ -3603,6 +3636,7 @@ var SOURCE_INDEX = Object.freeze({
   "finisce fra": "done in",
   "Finita": "Finished",
   "Finito ${durata(da, l)} fa.": "Finished ${durata(da, l)} ago.",
+  "fino a ${kw} kW": "up to ${kw} kW",
   "fino a 7 giorni": "up to 7 days",
   "Fino a 8 in più: una presa, la pompa di calore, l'auto in carica, i kWh di oggi": "Up to 8 more: a socket, the heat pump, the car charging, today's kWh",
   "Fino a: buona": "Up to: good",
@@ -3917,6 +3951,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il valore che vuol dire «inserito»": "The value that means “armed”",
   "Il valore della vista Istantaneo.": "What the Instant view shows.",
   "Il verso invertito": "The inverted direction",
+  "il viaggio": "the trip",
   "Il viaggio non si è salvato: controlla la meta, il giorno e l'ora.": "The trip was not saved: check destination, day and time.",
   "Il video del citofono": "The intercom video",
   "Il video sta arrivando…": "The video is on its way…",
@@ -3966,6 +4001,7 @@ var SOURCE_INDEX = Object.freeze({
   "in calo": "falling",
   "in carica": "charging",
   "In carica": "Charging",
+  "In carica a casa · ${fino} alle ${ora}": "Charging at home · ${fino} at ${ora}",
   "In carico a": "Taken by",
   "in casa": "inside",
   "In casa": "Into the house",
@@ -4157,6 +4193,7 @@ var SOURCE_INDEX = Object.freeze({
   "l'unità è": "the unit is",
   "L'UPS non risponde": "The UPS is not answering",
   "La % di umidità del terreno compare nella card del programma.": "The soil moisture % appears on the schedule card.",
+  "La batteria non risponde": "The battery is not answering",
   "La card e il popup offrono sempre la tendina con tutte le percentuali: 0 = chiusa, 100 = aperta. Qui scegli quella di casa — 5 chiude quasi tutto lasciando passare un po' d'aria — e nella tendina compare con la stella. Vuoto = nessuna preferita.": "The card and the popup always offer the dropdown with every percentage: 0 = closed, 100 = open. Here you pick your usual one — 5 closes almost fully while letting some air through — and it shows up starred in the dropdown. Empty = no favorite.",
   "La card resta In funzione per questi minuti dopo l'ultima potenza sopra soglia: copre l'asciugatura a 0 W della lavastoviglie e le pause del ciclo.": "The card stays Running for these minutes after the last power reading above the threshold: it covers the dishwasher's 0 W drying phase and mid-cycle pauses.",
   "La cartella config/www non esiste ancora: creala e mettici dentro le foto.": "The config/www folder does not exist yet: create it and put the photos in there.",
@@ -4172,6 +4209,7 @@ var SOURCE_INDEX = Object.freeze({
   "La coda da lavorare": "The queue to work on",
   "La colonnina è della casa, non di una macchina: si collega una volta e vale per tutte le vetture. Porta quello che misura: potenza, energia, tensione, temperatura, il cavo.": "The charger belongs to the house, not to one car: connect it once and it counts for every vehicle. It brings what it measures: power, energy, voltage, temperature, the cable.",
   "La colonnina e evcc": "The wallbox and evcc",
+  "La colonnina la sceglie gdanav in viaggio": "gdanav picks the charger on the way",
   "La configurazione di questa plancia è riservata al suo amministratore.": "This dashboard's configuration is reserved for its administrator.",
   "La configurazione è salvata": "Configuration is saved",
   "La cottura compare quando fra gli elettrodomestici c'è una friggitrice, un forno, un microonde, un piano cottura o una cappa.": "Cooking shows up once the appliances include an air fryer, an oven, a microwave, a cooktop or a hood.",
@@ -4214,6 +4252,7 @@ var SOURCE_INDEX = Object.freeze({
   "La plancia a tutto schermo, sopra la barra laterale di Home Assistant. Vale solo per questa plancia e solo su questo apparecchio: sul telefono si accende da sola.": "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.",
   "La pompa gira anche se il pannello è più freddo dell'acqua.": "The pump is running even though the panel is colder than the water.",
   "La pompa gira: il calore del pannello sta andando nel boiler.": "The pump is running: the panel's heat is going into the boiler.",
+  "La potenza minima per fermarsi": "The minimum power to stop at",
   "La prima casella vuole un water_heater.*; le sonde vanno nelle caselle sotto.": "The first field wants a water_heater.*; put probes in the fields below.",
   "La prima settimana comincia il": "The first week starts on",
   "la prossima da innaffiare": "the next to water",
@@ -4248,6 +4287,7 @@ var SOURCE_INDEX = Object.freeze({
   "La stufa scalda la stanza in cui sta: la pagina disegna la fiamma, la potenza, il ventilatore, la canna fumaria e il serbatoio, e dà i tasti per accenderla, l'obiettivo, la potenza e il ventilatore. Nessuna casella è obbligatoria: col solo termostato la pagina ha già quasi tutto. Se ne hai più d'una aggiungile qui, e in pagina compare la fila per passare dall'una all'altra.": "The stove heats the room it stands in: the page draws the flame, the power, the fan, the flue and the hopper, and gives you the buttons for on and off, the target, the power and the fan. No field is required: with just the thermostat the page already has almost everything. With more than one, add them here and the page grows a row to switch between them.",
   "La sua configurazione": "Its settings",
   "La tessera del muro mostra il flusso continuo invece di un'istantanea ogni quattro secondi — è quello che fa «camera_view: live». Tiene aperta una connessione mentre guardi la sezione Sicurezza: accendilo sulle telecamere che vuoi vedere muoversi.": "The wall tile shows the continuous stream instead of a still every four seconds — this is what “camera_view: live” does. It holds a connection open while you are looking at the Security section: turn it on for the cameras you want to see moving.",
+  "La tua auto": "Your car",
   "La tua domanda": "Your question",
   "La tua sezione": "Your section",
   "La vita che resta al filtro della fontanella, in percentuale: sotto soglia la scheda dice che è a fine corsa.": "The fountain filter's remaining life, as a percentage: below the threshold the card says it is worn out.",
@@ -4282,6 +4322,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le caselle di una caldaia a pellet o a legna: la combustione, il serbatoio e l'obiettivo della centralina. Lasciale vuote se la tua caldaia va a gas: quello che non mappi non compare in pagina.": "The fields of a pellet or wood boiler: the combustion, the hopper and the controller's own target. Leave them empty if your boiler runs on gas: what you do not map does not appear on the page.",
   "Le casse": "Speakers",
   "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Se sta sullo stesso dispositivo del contatto, o si chiama come lui con «bypass» in fondo, la plancia lo trova da sola; altrimenti scrivilo qui. Nella pagina Varchi compare il tasto per escludere o includere questo varco. Acceso vuol dire escluso. Scrivi - per non mostrare il tasto.": "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. If it sits on the same device as the contact, or is named like it with «bypass» at the end, the dashboard finds it by itself; otherwise write it here. The button to bypass or re-include this opening shows up on the Openings page. On means bypassed. Write - to hide the button.",
+  "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio gdanav sceglie le colonnine e guarda se sono libere.": "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.",
   "Le coordinate scritte a mano vincono su tutto; se le lasci vuote vale la zona qui sopra, e se non scegli niente vale casa. Per un posto che non è casa tua, creagli una zona in Home Assistant: comparirà nella tendina col suo nome.": "Coordinates typed by hand win over everything; leave them empty and the zone above is used, and with no choice at all it is home. For somewhere that is not your house, give it a zone in Home Assistant: it shows up in the list under its own name.",
   "Le cose che la plancia sa gia'": "The things the dashboard already knows",
   "Le cose che tieni d'occhio": "What you keep an eye on",
@@ -4324,6 +4365,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le sezioni della plancia": "The dashboard sections",
   "Le soglie e l'umidità": "The thresholds and the humidity",
   "Le sonde": "The probes",
+  "Le soste arrivano con la strada": "The stops come with the route",
   "Le spengo?": "Turn them off?",
   "Le stanze": "The rooms",
   "Le stanze di casa": "Rooms of the home",
@@ -4407,6 +4449,7 @@ var SOURCE_INDEX = Object.freeze({
   "Lo stato viene da": "The state comes from",
   "lo storico dei consumi non è ancora arrivato": "the usage history has not arrived yet",
   "Lo trovi subito in gdanav, sul telefono e in auto.": "You find it right away in gdanav, on the phone and in the car.",
+  "Lo vedi solo tu, che amministri la casa": "Only you see this, as the home's administrator",
   "Locale tecnico": "Utility room",
   "Longitudine": "Longitude",
   "luce": "light",
@@ -5034,6 +5077,7 @@ var SOURCE_INDEX = Object.freeze({
   "Parla": "Talk",
   "Parla con il citofono (se lo supporta)": "Talk through the intercom (if supported)",
   "Partenza": "Departure",
+  "parti": "leave",
   "parti alle": "leave at",
   "Partizioni dell'antifurto": "Alarm partitions",
   "Parto alle": "Leave at",
@@ -5057,8 +5101,10 @@ var SOURCE_INDEX = Object.freeze({
   "Per esempio: Microfoni": "For example: Microphones",
   "Per esempio: Preset 1": "For example: Preset 1",
   "Per frigo e congelatore: mostra la barra temperatura al posto della potenza.": "For fridge and freezer: shows the temperature strip instead of the power bar.",
+  "Per il ritorno servirà una ricarica": "You will need to charge for the way back",
   "Per le luci che vuoi solo vedere, senza rischiare un tocco: la riga resta dov'è, il tasto smette di rispondere.": "For lights you only want to see, with no accidental taps: the row stays where it is, the button stops responding.",
   "Per le prese che non vanno spente: il frigo, il modem, il congelatore. La riga resta dov'è, il tasto smette di rispondere.": "For sockets that must not be switched off: the fridge, the modem, the freezer. The row stays where it is, the button stops responding.",
+  "Per le soste scegli 100% alla partenza.": "For the stops, choose 100% at departure.",
   "Per ogni sorgente, Contatore energia totale è il sensore cumulativo Recorder (normalmente state_class: total_increasing). Non è un valore di periodo: giorno, mese e anno sono calcolati come somma Recorder finale meno somma Recorder iniziale, preservando i reset. I sensori di periodo sono override facoltativi del periodo corrente.": "For every source, Total energy meter is the cumulative Recorder source (normally state_class: total_increasing). It is not a period value: day, month and year are calculated as final Recorder sum minus initial Recorder sum, so meter resets are preserved. Period sensors are optional current-period overrides.",
   "Per ogni voce scrivi la": "For each item enter",
   "per ognuno; lo stato (In funzione / Standby / Spento) è ricavato dal": "to each; the status (Running / Standby / Off) is derived from",
@@ -5111,6 +5157,7 @@ var SOURCE_INDEX = Object.freeze({
   "picco": "peak",
   "Picco": "Peak",
   "Piccole": "Small",
+  "Piena": "Full",
   "piena fra": "full in",
   "piena fra ${quanto}": "full in ${quanto}",
   "Pilota": "Pilot",
@@ -5384,6 +5431,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quadro avvisi (aperture, batterie, luci, clima)": "Alerts board (openings, batteries, lights, climate)",
   "Quadro elettrico": "Main panel",
   "Qualcosa si comporta in modo diverso da come dovrebbe": "Something behaves differently from how it should",
+  "Quale auto": "Which car",
   "Quale entità usa la dashboard": "Which entity the dashboard uses",
   "Quale voce": "Which option",
   "Quale voce dell'elenco": "Which option",
@@ -5533,6 +5581,8 @@ var SOURCE_INDEX = Object.freeze({
   "Riattiva l'audio": "Unmute",
   "Riavvia": "Restart",
   "Ricarica sempre EVCC / Always charge (select)": "EVCC always charge (select)",
+  "Ricarica: ${minuti} in ${n} soste": "Charging: ${minuti} in ${n} stops",
+  "Ricarica: ${minuti} in 1 sosta": "Charging: ${minuti} in 1 stop",
   "Ricci": "Curly",
   "Ricircolo": "Recirculation",
   "Ricircolo attivo": "Recirculation running",
@@ -5568,6 +5618,7 @@ var SOURCE_INDEX = Object.freeze({
   "Rinomina": "Rename",
   "Rinomina sezione": "Rename section",
   "Riparte sotto il": "Starts again below",
+  "riparti ${alle}": "leave ${alle}",
   "Riposo": "Rest",
   "Ripostiglio": "Storage",
   "Riprendi": "Resume",
@@ -6035,6 +6086,10 @@ var SOURCE_INDEX = Object.freeze({
   "Sorgente del prezzo di acquisto": "Purchase price source",
   "Sorteggia": "Shuffle",
   "sosta": "stop",
+  "Sosta ${n} · dopo ${km} km": "Stop ${n} · after ${km} km",
+  "Sosta intorno al km ${km} · circa ${min} min": "Stop around km ${km} · about ${min} min",
+  "Soste di ricarica": "Charging stops",
+  "Soste scelte da gdanav in viaggio, con le colonnine libere.": "Stops picked by gdanav on the way, with free chargers.",
   "Sostituirà la configurazione attuale.": "It will replace the current configuration.",
   "Sostituisci il servizio qui sotto con quello del tuo telefono.": "Replace the service below with your phone's.",
   "Sostituzioni, carichi, avvisi, testi, sezioni ed esportazione HTML": "Replacements, loads, alerts, texts, sections and HTML export",
@@ -10824,8 +10879,8 @@ function eAcceso(stato3) {
 // src/core/le-stanze-per-piano.js
 var pulito5 = (valore3) => String(valore3 ?? "").trim();
 var conta = (valore3) => {
-  const numero54 = Number(valore3);
-  return Number.isFinite(numero54) && numero54 > 0 ? Math.round(numero54) : 0;
+  const numero55 = Number(valore3);
+  return Number.isFinite(numero55) && numero55 > 0 ? Math.round(numero55) : 0;
 };
 function stanzePerPiano(pagine, { piani = [] } = {}) {
   const elenco15 = Array.isArray(pagine) ? pagine.filter(Boolean) : [];
@@ -16188,8 +16243,8 @@ function normalizzaIMesi(stored) {
   if (!Array.isArray(stored)) return [];
   const dentro3 = /* @__PURE__ */ new Set();
   for (const voce3 of stored) {
-    const numero54 = Math.trunc(Number(voce3));
-    if (Number.isFinite(numero54) && numero54 >= 1 && numero54 <= 12) dentro3.add(numero54);
+    const numero55 = Math.trunc(Number(voce3));
+    if (Number.isFinite(numero55) && numero55 >= 1 && numero55 <= 12) dentro3.add(numero55);
   }
   if (dentro3.size >= 12) return [];
   return [...dentro3].sort((a, b2) => a - b2);
@@ -18480,11 +18535,11 @@ function renderDailyPopup(breakdown = state16.dailyBreakdown, { loading = false 
     return;
   }
   list.innerHTML = breakdown.rows.map((row) => {
-    const pct2 = breakdown.total > 0 ? Math.round(row.value / breakdown.total * 100) : 0;
+    const pct3 = breakdown.total > 0 ? Math.round(row.value / breakdown.total * 100) : 0;
     const source = row.direct ? t("Sensore giornaliero", "Daily sensor") : t("Contatore totale → Recorder", "Total meter → Recorder");
     return `<button type="button" class="dm-appliance-daily-row" data-dm-daily-entity="${esc(row.entity)}">
         <span class="dm-appliance-daily-row-main"><strong>${esc(row.name)}</strong><small>${esc(row.entity)}</small><small>${source}</small></span>
-        <span class="dm-appliance-daily-row-value"><strong>${formatDaily(row.value)}</strong><small>${pct2}%</small></span>
+        <span class="dm-appliance-daily-row-value"><strong>${formatDaily(row.value)}</strong><small>${pct3}%</small></span>
       </button>`;
   }).join("");
   list.querySelectorAll("[data-dm-daily-entity]").forEach((row) => {
@@ -18759,8 +18814,8 @@ var pulito14 = (valore3) => String(valore3 ?? "").trim();
 var minuscolo = (valore3) => pulito14(valore3).toLowerCase();
 var finito = (valore3) => {
   if (valore3 === "" || valore3 == null) return null;
-  const numero54 = Number(String(valore3).replace(",", "."));
-  return Number.isFinite(numero54) ? numero54 : null;
+  const numero55 = Number(String(valore3).replace(",", "."));
+  return Number.isFinite(numero55) ? numero55 : null;
 };
 var senzaSeparatori = (valore3) => minuscolo(valore3).replace(/[\s_\-.]+/g, "");
 var MUTO = /^(unknown|unavailable|none|null|)$/i;
@@ -18987,8 +19042,8 @@ var eUnEntita = (testo3) => /^[a-z][a-z0-9_]*\.[a-z0-9_]+$/.test(testo3);
 function valoreDelParametro(grezzo) {
   const testo3 = pulito14(grezzo);
   if (/^(true|false)$/i.test(testo3)) return testo3.toLowerCase() === "true";
-  const numero54 = finito(testo3);
-  if (numero54 != null && /^-?\d+([.,]\d+)?$/.test(testo3)) return numero54;
+  const numero55 = finito(testo3);
+  if (numero55 != null && /^-?\d+([.,]\d+)?$/.test(testo3)) return numero55;
   return testo3;
 }
 function leggiIlComando(testo3, states = {}) {
@@ -24328,7 +24383,7 @@ function letturaDellaVoce(voce3, states = {}, resolve = (valore3) => valore3, li
   const grezzo = pulito21(stato3?.state).toLowerCase();
   const muto2 = MUTI4.has(grezzo);
   const dominio4 = entity2.split(".")[0] || "";
-  const numero54 = Number(stato3?.state);
+  const numero55 = Number(stato3?.state);
   const presenti = stato3?.attributes && typeof stato3.attributes === "object" ? stato3.attributes : {};
   const attributi2 = [];
   for (const scelto of voce3.attributi || []) {
@@ -24354,7 +24409,7 @@ function letturaDellaVoce(voce3, states = {}, resolve = (valore3) => valore3, li
     acceso: !muto2 && STATI_ACCESI.has(grezzo),
     /* Un numero con la sua unita' si mostra com'e'; il resto e' una parola di
      * stato, e la traduce chi disegna. */
-    numero: Number.isFinite(numero54) && grezzo !== "" && !MUTI4.has(grezzo) ? numero54 : null,
+    numero: Number.isFinite(numero55) && grezzo !== "" && !MUTI4.has(grezzo) ? numero55 : null,
     unita: pulito21(stato3?.attributes?.unit_of_measurement),
     stato: muto2 ? "" : pulito21(stato3?.state),
     comandabile: COMANDABILI.has(dominio4),
@@ -24579,10 +24634,10 @@ function cifreDellaMisura(soglie, valore3) {
 function valoreScritto(lettura3, locale3 = "it") {
   const valore3 = Number(lettura3?.valore);
   if (!Number.isFinite(valore3)) return "";
-  const cifre2 = cifreDellaMisura(lettura3?.soglie, valore3);
+  const cifre3 = cifreDellaMisura(lettura3?.soglie, valore3);
   return valore3.toLocaleString(locale3 || "it", {
-    minimumFractionDigits: cifre2 > 1 ? 0 : cifre2,
-    maximumFractionDigits: cifre2
+    minimumFractionDigits: cifre3 > 1 ? 0 : cifre3,
+    maximumFractionDigits: cifre3
   });
 }
 var TONO_DEL_GRADO = Object.freeze({
@@ -24899,7 +24954,7 @@ function pneumaticiInAvviso(lettura3 = {}) {
   return ruoteDellAuto(lettura3).some((ruota) => ruota.avviso === true);
 }
 function letturaTermica(mappa2 = {}, states = {}, resolve = null) {
-  const statoDi5 = (ref) => {
+  const statoDi6 = (ref) => {
     let entity2 = pulito22(mappa2?.[ref]);
     if (!entity2 && typeof resolve === "function") {
       try {
@@ -24914,7 +24969,7 @@ function letturaTermica(mappa2 = {}, states = {}, resolve = null) {
   };
   const fuori = { caselle: {} };
   for (const voce3 of CASELLE_TERMICHE) {
-    const { entity: entity2, stato: stato3 } = statoDi5(voce3.ref);
+    const { entity: entity2, stato: stato3 } = statoDi6(voce3.ref);
     if (!entity2) continue;
     const grezzo = stato3 ? pulito22(stato3.state) : "";
     const unita2 = pulito22(stato3?.attributes?.unit_of_measurement);
@@ -24971,8 +25026,8 @@ function letturaTermica(mappa2 = {}, states = {}, resolve = null) {
   const servizio2 = fuori.batteriaServizio;
   fuori.batteriaServizio = servizio2 ? servizio2.valore : servizio2 === void 0 ? void 0 : null;
   fuori.batteriaServizioUnita = servizio2 ? servizio2.unita : "%";
-  const autonomia = statoDi5("dm.ev_autonomia");
-  const odometro = statoDi5("dm.ev_odometro");
+  const autonomia = statoDi6("dm.ev_autonomia");
+  const odometro = statoDi6("dm.ev_odometro");
   fuori.autonomia = autonomia.entity ? numero12(autonomia.stato?.state) : null;
   fuori.autonomiaUnita = pulito22(autonomia.stato?.attributes?.unit_of_measurement) || "km";
   fuori.odometro = odometro.entity ? numero12(odometro.stato?.state) : null;
@@ -25923,8 +25978,8 @@ function sincronizzaCapacita(casella5) {
 function scriviLaCapacita(valore3) {
   const { auto, casa } = diChiParlaLaScheda();
   const scritto2 = clean(valore3).replace(",", ".");
-  const numero54 = Number(scritto2);
-  const nuovo = scritto2 === "" ? "" : Number.isFinite(numero54) && numero54 > 0 ? scritto2 : null;
+  const numero55 = Number(scritto2);
+  const nuovo = scritto2 === "" ? "" : Number.isFinite(numero55) && numero55 > 0 ? scritto2 : null;
   if (nuovo === null) return false;
   if (!casa && !auto) {
     state21.capacitaInBozza = nuovo;
@@ -25954,12 +26009,12 @@ function arco2(percentuale4) {
 function pillola(glifo2, testo3, tono) {
   return `<span class="dm-termica-pillola" data-tono="${esc(tono)}"><i aria-hidden="true">${glifo2}</i>${esc(testo3)}</span>`;
 }
-function misura(glifo2, etichetta3, valore3, unita2, ref, cifre2 = 0) {
+function misura(glifo2, etichetta3, valore3, unita2, ref, cifre3 = 0) {
   if (valore3 === null || valore3 === void 0) return "";
   const nome = etichettaScelta(ref, etichetta3);
   return `<button type="button" class="dm-termica-misura" data-dm-storico="${esc(ref)}" data-dm-nome="${esc(nome)}">
     <i aria-hidden="true">${glifo2}</i>
-    <span class="dm-termica-misura-testo"><small>${esc(nome)}</small><b>${esc(formatNumber(valore3, cifre2))}<em>${esc(unita2)}</em></b></span>
+    <span class="dm-termica-misura-testo"><small>${esc(nome)}</small><b>${esc(formatNumber(valore3, cifre3))}<em>${esc(unita2)}</em></b></span>
   </button>`;
 }
 function gomma(voce3) {
@@ -26359,8 +26414,8 @@ function vocePerOpzione(opzione) {
   if (!valore3) return null;
   return { valore: valore3, testo: /^\d+(?:[.,]\d+)?$/.test(valore3) ? `${valore3}%` : valore3 };
 }
-function quanteCifre(numero54) {
-  const scritto2 = String(numero54);
+function quanteCifre(numero55) {
+  const scritto2 = String(numero55);
   if (scritto2.includes("e") || scritto2.includes("E") || !scritto2.includes(".")) return 0;
   return scritto2.split(".")[1].length;
 }
@@ -26387,10 +26442,10 @@ function vociDaiNumeri(attributi2) {
     mio = suo2 * quante3;
     if ((max - min) / mio <= QUANTE_AL_MASSIMO) break;
   }
-  const cifre2 = Math.max(...[suo2, min, max].map(quanteCifre));
+  const cifre3 = Math.max(...[suo2, min, max].map(quanteCifre));
   const voci4 = [];
   const aggiungi5 = (valore3) => {
-    const scritto2 = senzaZeriInCoda(valore3.toFixed(cifre2));
+    const scritto2 = senzaZeriInCoda(valore3.toFixed(cifre3));
     if (voci4.some((voce3) => voce3.valore === scritto2)) return;
     voci4.push({ valore: scritto2, testo: `${scritto2}%` });
   };
@@ -27135,7 +27190,7 @@ function elencoUps(stored) {
   const presi = /* @__PURE__ */ new Set();
   return grezzi.map((gruppo, posizione) => normalizzaUps(gruppo, posizione)).filter((gruppo) => gruppo.name || entitaDellUps(gruppo).length).map((gruppo) => {
     let uid = gruppo[CAMPO_UID_UPS];
-    for (let numero54 = 2; presi.has(uid); numero54 += 1) uid = `${gruppo[CAMPO_UID_UPS]}-${numero54}`;
+    for (let numero55 = 2; presi.has(uid); numero55 += 1) uid = `${gruppo[CAMPO_UID_UPS]}-${numero55}`;
     presi.add(uid);
     return uid === gruppo[CAMPO_UID_UPS] ? gruppo : { ...gruppo, [CAMPO_UID_UPS]: uid };
   });
@@ -27426,7 +27481,7 @@ function eventoModificabile(evento, capacita) {
 function eventoCancellabile(evento, capacita) {
   return Boolean(capacita?.cancella && clean14(evento?.uid));
 }
-var due = (numero54) => String(numero54).padStart(2, "0");
+var due = (numero55) => String(numero55).padStart(2, "0");
 function giornoDiCasella(istante6) {
   const quando4 = new Date(istante6);
   return `${quando4.getFullYear()}-${due(quando4.getMonth() + 1)}-${due(quando4.getDate())}`;
@@ -27436,13 +27491,13 @@ function oraDiCasella(istante6) {
   return `${due(quando4.getHours())}:${due(quando4.getMinutes())}`;
 }
 function istanteDaCaselle(giorno2, ora3) {
-  const [anno, mese, numero54] = clean14(giorno2).split("-").map(Number);
-  if (!Number.isFinite(anno) || !Number.isFinite(mese) || !Number.isFinite(numero54)) return null;
+  const [anno, mese, numero55] = clean14(giorno2).split("-").map(Number);
+  if (!Number.isFinite(anno) || !Number.isFinite(mese) || !Number.isFinite(numero55)) return null;
   const [ore, minuti] = clean14(ora3).split(":").map(Number);
   return new Date(
     anno,
     mese - 1,
-    numero54,
+    numero55,
     Number.isFinite(ore) ? ore : 0,
     Number.isFinite(minuti) ? minuti : 0,
     0,
@@ -27650,9 +27705,9 @@ function etichettaDelGiorno(giorno2, adesso = Date.now(), parole4 = PAROLE_CALEN
   if (giorno2 === oggi) return dette.oggi;
   const domani2 = chiaveDelGiorno(ilGiornoDopo(adesso));
   if (giorno2 === domani2) return dette.domani;
-  const [anno, mese, numero54] = clean14(giorno2).split("-").map(Number);
+  const [anno, mese, numero55] = clean14(giorno2).split("-").map(Number);
   if (!Number.isFinite(anno)) return clean14(giorno2);
-  const data = new Date(anno, mese - 1, numero54);
+  const data = new Date(anno, mese - 1, numero55);
   try {
     return data.toLocaleDateString(lingua3 || void 0, {
       weekday: "long",
@@ -29526,7 +29581,7 @@ var GIORNI_DEL_TURNO = 14;
 function dataScritta(valore3) {
   const data = leggiData(valore3);
   if (!data) return "";
-  const due3 = (numero54) => String(numero54).padStart(2, "0");
+  const due3 = (numero55) => String(numero55).padStart(2, "0");
   return `${data.getFullYear()}-${due3(data.getMonth() + 1)}-${due3(data.getDate())}`;
 }
 function normalizzaTurno(stored) {
@@ -32523,9 +32578,9 @@ var QUANDO_DOPO = Object.freeze(["domani"]);
 function normalizzaOraDelRitiro(valore3) {
   const testo3 = pulito29(valore3);
   if (!testo3) return "";
-  const numero54 = Number(testo3);
-  if (!Number.isInteger(numero54) || numero54 < 0 || numero54 > 23) return "";
-  return String(numero54);
+  const numero55 = Number(testo3);
+  if (!Number.isInteger(numero55) || numero55 < 0 || numero55 > 23) return "";
+  return String(numero55);
 }
 function giorniDelRitiro(oraDelPassaggio, adesso = /* @__PURE__ */ new Date()) {
   const ora3 = normalizzaOraDelRitiro(oraDelPassaggio);
@@ -32547,9 +32602,9 @@ function lePastiglieMie(config, mie) {
     if (!mia.entity) continue;
     const letta = mie?.[mia.entity];
     if (!laMiaSiVede(mia, letta)) continue;
-    const numero54 = Number(letta?.valore ?? NaN);
+    const numero55 = Number(letta?.valore ?? NaN);
     const testo3 = pulito29(letta?.testo);
-    if (!Number.isFinite(numero54) && !testo3) continue;
+    if (!Number.isFinite(numero55) && !testo3) continue;
     const segno2 = pulito29(mia.icona) || pulito29(letta?.icona) || SEGNO_MIO;
     const disegnato = /^mdi:/i.test(segno2);
     fuori.push({
@@ -32565,7 +32620,7 @@ function lePastiglieMie(config, mie) {
       icona: disegnato ? "" : segno2,
       mdi: disegnato ? segno2 : "",
       tinta: pulito29(mia.tinta) || TINTA_MIA,
-      valore: Number.isFinite(numero54) ? numero54 : null,
+      valore: Number.isFinite(numero55) ? numero55 : null,
       /* Un numero si scrive come numero, tutto il resto com'e' scritto: la
        * parola gia' tradotta la porta la sezione, che e' quella che ha la
        * tabella delle parole di Home Assistant. */
@@ -32936,10 +32991,10 @@ function letturaDellaMia(entity2, states) {
   if (!stato3) return null;
   const grezzo = clean(stato3.state);
   if (!grezzo || /^(unknown|unavailable)$/i.test(grezzo)) return null;
-  const numero54 = SOLO_UN_NUMERO.test(grezzo) ? Number(grezzo.replace(",", ".")) : NaN;
+  const numero55 = SOLO_UN_NUMERO.test(grezzo) ? Number(grezzo.replace(",", ".")) : NaN;
   return {
-    valore: Number.isFinite(numero54) ? numero54 : null,
-    testo: Number.isFinite(numero54) ? "" : parolaDiStato(grezzo),
+    valore: Number.isFinite(numero55) ? numero55 : null,
+    testo: Number.isFinite(numero55) ? "" : parolaDiStato(grezzo),
     unita: clean(stato3.attributes?.unit_of_measurement),
     nome: clean(stato3.attributes?.friendly_name) || id,
     icona: clean(stato3.attributes?.icon)
@@ -36653,8 +36708,8 @@ function testoLettura(voce3) {
   }
   if (voce3.minuti !== null) return quantoFa(voce3.minuti);
   if (voce3.valore !== null) {
-    const numero54 = Math.round(voce3.valore * 10) / 10;
-    return voce3.unita ? `${numero54} ${voce3.unita}` : String(numero54);
+    const numero55 = Math.round(voce3.valore * 10) / 10;
+    return voce3.unita ? `${numero55} ${voce3.unita}` : String(numero55);
   }
   return voce3.stato;
 }
@@ -37680,10 +37735,10 @@ function accendiLaVoce4() {
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 var SPAZIO2 = " ";
-function cifreUtili(valore3, cifre2) {
-  if (!cifre2) return 0;
-  const tondo = Math.round(valore3 * 10 ** cifre2) / 10 ** cifre2;
-  return Number.isInteger(tondo) ? 0 : cifre2;
+function cifreUtili(valore3, cifre3) {
+  if (!cifre3) return 0;
+  const tondo = Math.round(valore3 * 10 ** cifre3) / 10 ** cifre3;
+  return Number.isInteger(tondo) ? 0 : cifre3;
 }
 function volumeInParole(litri2) {
   const come2 = comeSiDiceIlVolume(litri2);
@@ -37704,8 +37759,8 @@ function barInParole(bar) {
   return `${formatNumber(bar, 1)}${SPAZIO2}bar`;
 }
 function forcellaInParole(minimo, massimo) {
-  const cifre2 = (valore3) => Number.isInteger(valore3) ? 0 : 1;
-  return `${formatNumber(minimo, cifre2(minimo))} – ${formatNumber(massimo, cifre2(massimo))}${SPAZIO2}bar`;
+  const cifre3 = (valore3) => Number.isInteger(valore3) ? 0 : 1;
+  return `${formatNumber(minimo, cifre3(minimo))} – ${formatNumber(massimo, cifre3(massimo))}${SPAZIO2}bar`;
 }
 function portataInParole(lettura3) {
   if (lettura3.muto) return "—";
@@ -39116,8 +39171,8 @@ function scesoInPagina(riga3) {
 var gradi3 = (valore3) => valore3 == null ? "" : `${Math.round(valore3)}°`;
 function misura2(valore3) {
   if (valore3 == null || valore3 === "") return null;
-  const numero54 = Number(valore3);
-  return Number.isFinite(numero54) ? numero54 : null;
+  const numero55 = Number(valore3);
+  return Number.isFinite(numero55) ? numero55 : null;
 }
 function nomeDelGiorno(quando4) {
   try {
@@ -40408,11 +40463,11 @@ function pacchiInParole(pacchi) {
   const celle = new Set(pacchi.map((pacco) => pacco.celle.length));
   if (tipi.size !== 1 || tipi.has("altro")) return quanti2;
   const [tipo] = tipi;
-  const [numero54] = celle;
-  if (celle.size !== 1 || !numero54) return `${quanti2}${SPAZIO4}${tipoInParole(tipo)}`;
+  const [numero55] = celle;
+  if (celle.size !== 1 || !numero55) return `${quanti2}${SPAZIO4}${tipoInParole(tipo)}`;
   return t(
-    `${quanti2} ${tipoInParole(tipo)} da ${numero54} celle`,
-    `${quanti2} of ${tipoInParole(tipo)}, ${numero54} cells each`
+    `${quanti2} ${tipoInParole(tipo)} da ${numero55} celle`,
+    `${quanti2} of ${tipoInParole(tipo)}, ${numero55} cells each`
   );
 }
 function deltaInParole(delta) {
@@ -43361,9 +43416,9 @@ var NOME_DI_CARTUCCIA = /(inchiostro|cartuccia|toner|ink|cartridge|marker|nero|b
 function percentuale3(stato3) {
   const grezzo = pulito37(stato3?.state);
   if (STATI_MUTI2.has(minuscolo8(grezzo))) return null;
-  const numero54 = Number(grezzo.replace(",", "."));
-  if (!Number.isFinite(numero54)) return null;
-  return Math.min(100, Math.max(0, Math.round(numero54)));
+  const numero55 = Number(grezzo.replace(",", "."));
+  if (!Number.isFinite(numero55)) return null;
+  return Math.min(100, Math.max(0, Math.round(numero55)));
 }
 function nomeLeggibile2(entity2, stato3) {
   const amichevole = pulito37(stato3?.attributes?.friendly_name);
@@ -43478,8 +43533,8 @@ function letturaDellaStampante(voce3, states = {}, resolve = (valore3) => valore
 function percentualeLibera(stato3) {
   const grezzo = pulito37(stato3?.state);
   if (STATI_MUTI2.has(minuscolo8(grezzo))) return null;
-  const numero54 = Number(grezzo.replace(",", "."));
-  return Number.isFinite(numero54) ? numero54 : null;
+  const numero55 = Number(grezzo.replace(",", "."));
+  return Number.isFinite(numero55) ? numero55 : null;
 }
 function lettureDelleStampanti(stored, states = {}, resolve) {
   return normalizzaStampanti(stored).map((voce3) => letturaDellaStampante(voce3, states, resolve));
@@ -48062,7 +48117,7 @@ function numeriDellaFrase(f) {
   let gradi9 = null;
   let passo = null;
   let percento6 = null;
-  let numero54 = null;
+  let numero55 = null;
   const valore3 = (parola) => {
     if (/^\d+(\.\d+)?$/.test(parola)) return Number(parola);
     return Object.hasOwn(NUMERI_A_PAROLE, parola) ? NUMERI_A_PAROLE[parola] : null;
@@ -48085,17 +48140,17 @@ function numeriDellaFrase(f) {
     }
     if (/^(al|a|to)$/.test(prima) && n <= 100 && /^\d/.test(p[i])) {
       percento6 ??= n;
-      numero54 ??= n;
+      numero55 ??= n;
       continue;
     }
     if (/^(di|by)$/.test(prima) && n <= 5) {
       passo ??= n;
       continue;
     }
-    numero54 ??= n;
+    numero55 ??= n;
   }
   if (percento6 === null && /\b(a meta|half way|halfway|meta)\b/.test(f.testo)) percento6 = 50;
-  return { gradi: gradi9, passo, percento: percento6, numero: numero54 };
+  return { gradi: gradi9, passo, percento: percento6, numero: numero55 };
 }
 var GIORNI_IT = ["domenica", "lunedi", "martedi", "mercoledi", "giovedi", "venerdi", "sabato"];
 var GIORNI_EN = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -49947,13 +50002,13 @@ function bersagliDel(c, s, m, domini2) {
 }
 function servizioPer(e, azione, numeri = {}) {
   const d = e.dominio;
-  const pct2 = numeri.percento;
+  const pct3 = numeri.percento;
   if (d === "cover") {
-    if (pct2 !== null && pct2 !== void 0 && ["apri", "alza", "chiudi", "abbassa", "imposta"].includes(azione))
+    if (pct3 !== null && pct3 !== void 0 && ["apri", "alza", "chiudi", "abbassa", "imposta"].includes(azione))
       return {
         dominio: d,
         servizio: "set_cover_position",
-        dati: { entity: e.entity, position: Math.max(0, Math.min(100, Math.round(pct2))) }
+        dati: { entity: e.entity, position: Math.max(0, Math.min(100, Math.round(pct3))) }
       };
     if (azione === "apri" || azione === "alza")
       return { dominio: d, servizio: "open_cover", dati: { entity: e.entity } };
@@ -49978,11 +50033,11 @@ function servizioPer(e, azione, numeri = {}) {
       return { dominio: d, servizio: "close_valve", dati: { entity: e.entity } };
     return null;
   }
-  if (d === "light" && azione === "accendi" && pct2 !== null && pct2 !== void 0)
+  if (d === "light" && azione === "accendi" && pct3 !== null && pct3 !== void 0)
     return {
       dominio: d,
       servizio: "turn_on",
-      dati: { entity: e.entity, brightness_pct: Math.max(1, Math.min(100, Math.round(pct2))) }
+      dati: { entity: e.entity, brightness_pct: Math.max(1, Math.min(100, Math.round(pct3))) }
     };
   if (azione === "accendi") return { dominio: d, servizio: "turn_on", dati: { entity: e.entity } };
   if (azione === "spegni") return { dominio: d, servizio: "turn_off", dati: { entity: e.entity } };
@@ -50148,8 +50203,8 @@ RISPOSTE.comando = (c, s, m) => {
   const voci4 = conServizio.map((x) => x.e);
   const chiamata = servizi(conServizio.map((x) => x.v));
   const pericolo = voci4.some((e) => eUnCancello(e));
-  const pct2 = c.numeri?.percento;
-  const alPct = pct2 !== null && pct2 !== void 0 ? dire(l, ` ${alPercento(pct2, l)}`, ` to ${Math.round(pct2)}%`) : "";
+  const pct3 = c.numeri?.percento;
+  const alPct = pct3 !== null && pct3 !== void 0 ? dire(l, ` ${alPercento(pct3, l)}`, ` to ${Math.round(pct3)}%`) : "";
   const unaSola = voci4.length === 1 ? nomeCompleto(voci4[0], l) : "";
   const cosa = voci4.length === 1 ? `${unaSola}${c.stanza && !stessaStanza2(voci4[0].nome, c.stanza) && !paroleDelNome(voci4[0].nome).some((p) => paroleDelNome(c.stanza).includes(p)) ? ` (${c.stanza})` : ""}` : `${quante(
     voci4.length,
@@ -52143,8 +52198,8 @@ function casellaDellaPressione(riga3, storia, norma = PRESSIONE_NORMA) {
   const bar = numero39(riga3?.raw);
   if (bar == null) return "";
   const come2 = comeStaLaPressione(bar, norma);
-  const cifre2 = (valore3) => formatNumber(valore3, Number.isInteger(valore3) ? 0 : 1);
-  const fascia2 = `(${cifre2(norma.min)}–${cifre2(norma.max)})`;
+  const cifre3 = (valore3) => formatNumber(valore3, Number.isInteger(valore3) ? 0 : 1);
+  const fascia2 = `(${cifre3(norma.min)}–${cifre3(norma.max)})`;
   const parola = come2 === "bassa" ? t("bassa", "low") : come2 === "alta" ? t("alta", "high") : t("nella norma", "normal");
   return `<div class="dm-f-solare-gr dm-f-solare-pressione" data-come="${come2}">
       <small class="dm-f-solare-gr-tit"><i aria-hidden="true">${disegnoDiCasa("gauge", { misura: 22 })}</i>${esc(t("Pressione", "Pressure"))}</small>
@@ -54801,7 +54856,7 @@ var num3 = (valore3) => {
   return Number.isFinite(letto) ? letto : null;
 };
 var tra = (valore3, minimo, massimo) => Math.max(minimo, Math.min(massimo, valore3));
-var gradi7 = (valore3, cifre2 = 1) => `${formatNumber(valore3, cifre2)}°`;
+var gradi7 = (valore3, cifre3 = 1) => `${formatNumber(valore3, cifre3)}°`;
 var gradiUtili = (valore3) => gradi7(valore3, Number.isInteger(Math.round(valore3 * 10) / 10) ? 0 : 1);
 var percento4 = (valore3) => `${formatNumber(Math.round(valore3), 0)}%`;
 function watt4(valore3) {
@@ -55334,12 +55389,12 @@ var COMANDI_DELLA_VASCA = Object.freeze({
   heatEnt: { icona: "♨️", nome: () => t("Riscaldamento", "Heating"), femminile: false },
   lightEnt: { icona: "💡", nome: () => t("Luce", "Light"), femminile: true }
 });
-function barraChimica({ chiave: chiave2, nome, valore: valore3, minimo, massimo, scalaDa, scalaA, cifre: cifre2 }) {
+function barraChimica({ chiave: chiave2, nome, valore: valore3, minimo, massimo, scalaDa, scalaA, cifre: cifre3 }) {
   const da = Math.min(scalaDa, valore3);
   const a = Math.max(scalaA, valore3);
-  const posto = (numero54) => Math.round((numero54 - da) / (a - da) * 1e3) / 10;
+  const posto = (numero55) => Math.round((numero55 - da) / (a - da) * 1e3) / 10;
   return `<div class="dm-f-piscina-chimica" data-dm-f-chimica="${chiave2}" data-bene="${valore3 >= minimo && valore3 <= massimo}">
-    <b>${esc(nome)}<em>${esc(`${formatNumber(minimo, cifre2)}–${formatNumber(massimo, cifre2)}`)}</em></b>
+    <b>${esc(nome)}<em>${esc(`${formatNumber(minimo, cifre3)}–${formatNumber(massimo, cifre3)}`)}</em></b>
     <span class="dm-f-piscina-fascia"><u style="left:${posto(minimo)}%;right:${100 - posto(massimo)}%"></u><s style="left:${posto(valore3)}%"></s></span>
     <span class="dm-f-imp-num">${esc(formatNumber(valore3, 1))}</span>
   </div>`;
@@ -56168,8 +56223,8 @@ function nomeDellaMisura(lettura3) {
 }
 function valoreDellaMisura(lettura3) {
   if (lettura3.valore === null || lettura3.valore === void 0) return "—";
-  const cifre2 = Math.abs(lettura3.valore) >= 100 ? 0 : 1;
-  return `${formatNumber(lettura3.valore, cifre2)}${lettura3.unita ? ` ${lettura3.unita}` : ""}`;
+  const cifre3 = Math.abs(lettura3.valore) >= 100 ? 0 : 1;
+  return `${formatNumber(lettura3.valore, cifre3)}${lettura3.unita ? ` ${lettura3.unita}` : ""}`;
 }
 function vascaMarkup2(vasca, piuVasche) {
   const { come: come2, testa: testa2, tipo } = vasca;
@@ -57392,9 +57447,9 @@ function finestraMinipc(widget) {
     )}</span></div>`;
   });
   const rete = ["scarica", "invia", "ping"].map((chiave2) => [chiave2, di(chiave2)]).filter(([, riga3]) => riga3).map(([chiave2, riga3]) => {
-    const { numero: numero54, unita: unita2 } = numeroEUnita(riga3.value);
+    const { numero: numero55, unita: unita2 } = numeroEUnita(riga3.value);
     const nome = chiave2 === "scarica" ? `⬇ ${t("Scarica", "Download")}` : chiave2 === "invia" ? `⬆ ${t("Invia", "Upload")}` : "Ping";
-    return `<div class="dm-f-pc-cas"><small>${esc(nome)}</small><span class="dm-f-num">${esc(numero54)}</span><em>${esc(unita2)}</em></div>`;
+    return `<div class="dm-f-pc-cas"><small>${esc(nome)}</small><span class="dm-f-num">${esc(numero55)}</span><em>${esc(unita2)}</em></div>`;
   });
   return `<div class="dm-f dm-f-minipc">${eroe}${quote.length ? `<h4 class="dm-f-tit">${esc(t("Quanto è pieno", "How full"))}</h4>${quote.join("")}` : ""}${rete.length ? `<h4 class="dm-f-tit">${esc(t("La rete", "Network"))}</h4><div class="dm-f-pc-tre">${rete.join("")}</div>` : ""}</div>`;
 }
@@ -57704,12 +57759,12 @@ function finestraSegnalazioni(widget) {
   const conversazioni = Array.isArray(conto.conversazioni) ? conto.conversazioni : [];
   const MOSTRATE = 3;
   const attesa = conversazioni.length ? `<h4 class="dm-f-tit">${esc(t("Ti stanno aspettando", "Waiting for you"))}</h4>${conversazioni.slice(-MOSTRATE).reverse().map((voce3) => {
-    const numero54 = Number(voce3?.number) || 0;
+    const numero55 = Number(voce3?.number) || 0;
     const stato3 = voce3?.stato === "in-carico" ? t("in lavorazione", "in progress") : voce3?.stato === "inviato" ? t("mai aperta", "never opened") : "";
-    const sotto = [numero54 ? `#${numero54}` : "", clean(voce3?.autore), stato3].filter(Boolean).join(" · ");
+    const sotto = [numero55 ? `#${numero55}` : "", clean(voce3?.autore), stato3].filter(Boolean).join(" · ");
     return `<div class="dm-f-seg-att">
             <span class="dm-f-seg-av" aria-hidden="true">${esc(iniziali(voce3?.autore))}</span>
-            <span class="dm-f-seg-n"><b data-dm-no-i18n>${esc(clean(voce3?.title) || `#${numero54}`)}</b><em>${esc(sotto)}</em></span>
+            <span class="dm-f-seg-n"><b data-dm-no-i18n>${esc(clean(voce3?.title) || `#${numero55}`)}</b><em>${esc(sotto)}</em></span>
             <span class="dm-f-seg-badge" title="${esc(t("Messaggi nuovi", "New messages"))}">${Number(voce3?.messages) || 1}</span>
           </div>`;
   }).join("")}${conversazioni.length > MOSTRATE ? `<p class="dm-f-seg-altre">${esc(t("e altre:", "and more:"))} ${conversazioni.length - MOSTRATE}</p>` : ""}` : "";
@@ -58024,7 +58079,7 @@ function schedaCalendario(entity2) {
 }
 function orarioPerIlServizio(istante6) {
   const quando4 = new Date(istante6);
-  const due3 = (numero54) => String(numero54).padStart(2, "0");
+  const due3 = (numero55) => String(numero55).padStart(2, "0");
   return `${quando4.getFullYear()}-${due3(quando4.getMonth() + 1)}-${due3(quando4.getDate())} ${due3(
     quando4.getHours()
   )}:${due3(quando4.getMinutes())}:${due3(quando4.getSeconds())}`;
@@ -58351,7 +58406,7 @@ function rigaClima(states, unit) {
   const raw = clean(current?.state).toLowerCase();
   const attributi2 = current?.attributes || {};
   const elenco15 = (valori) => Array.isArray(valori) ? valori.map(clean).filter(Boolean) : [];
-  const numero54 = (valore3, difetto = null) => Number.isFinite(Number(valore3)) ? Number(valore3) : difetto;
+  const numero55 = (valore3, difetto = null) => Number.isFinite(Number(valore3)) ? Number(valore3) : difetto;
   const scala2 = scalaDellUnita(attributi2);
   const obiettivi = obiettiviDelClima(attributi2, raw);
   return {
@@ -58363,11 +58418,11 @@ function rigaClima(states, unit) {
      * Assistant resta «off», e in Home risultava spento. */
     on: accesoPerIlConsumo(unit, states) ?? (Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown"),
     mode: raw,
-    ambient: numero54(attributi2.current_temperature),
+    ambient: numero55(attributi2.current_temperature),
     /* Per chi ne ha due, quello che la modalita' rende vero — il basso in
      * caldo, l'alto in freddo — e `null` in automatico: la coppia la porta
      * `obiettivi`, e chi ha posto per un numero solo la scrive intera. */
-    target: obiettivi.doppio ? obiettivoMostrato(obiettivi) : numero54(attributi2.temperature),
+    target: obiettivi.doppio ? obiettivoMostrato(obiettivi) : numero55(attributi2.temperature),
     obiettivi,
     /* Quello che serve al pannello della rotella: cosa l'unita' accetta, e
      * dove sta adesso. Sono attributi che Home Assistant pubblica gia' —
@@ -58402,7 +58457,7 @@ function rigaClima(states, unit) {
     minima: scala2[0],
     massima: scala2[1],
     passo: passoDellUnita(attributi2, 0.5),
-    umidita: numero54(attributi2.current_humidity),
+    umidita: numero55(attributi2.current_humidity),
     azione: clean(attributi2.hvac_action),
     /* Che macchina e', non solo cosa sta facendo adesso: un termosifone
      * spento resta un termosifone, e il fiocco di neve sopra un
@@ -59156,16 +59211,16 @@ function autoAllaPresa(stato3) {
 var SPINA_NO = /(not[\s_-]*charging|dis[\s_-]*connect|un[\s_-]*plug|no[nt]?[\s_-]*(in[\s_-]*)?carica|no[nt]?[\s_-]*colleg|scolleg|staccat|no[\s_-]*vehicle|not[\s_-]*connect)/;
 var SPINA_SI = /(charging|carica|plug|connect|conness|colleg)/;
 function testimoniDellaRicarica(states, mappa2) {
-  const statoDi5 = (riferimento) => {
+  const statoDi6 = (riferimento) => {
     const propria = clean(mappa2?.[riferimento]);
     const entity2 = propria || clean(root.resolveEntity?.(riferimento) || "");
     if (!entity2 || entity2 === riferimento) return null;
     return stateOf(states, entity2);
   };
-  const collegata = cavoDalloStato(statoDi5("dm.ev_cavo_collegato")?.state);
+  const collegata = cavoDalloStato(statoDi6("dm.ev_cavo_collegato")?.state);
   let potenza3 = null;
   for (const riferimento of ["dm.ev_potenza_wallbox", "dm.ev_charge_power"]) {
-    const letta = Number(statoDi5(riferimento)?.state);
+    const letta = Number(statoDi6(riferimento)?.state);
     if (Number.isFinite(letta)) {
       potenza3 = letta;
       break;
@@ -59245,10 +59300,10 @@ function rigaDaEntita(states, entity2, glifo2 = "•") {
   const grezzo = clean(stato3?.state);
   if (STATI_MUTI3.test(grezzo)) return null;
   const nome = friendlyName(states, chiave2);
-  const numero54 = numOf(states, chiave2);
-  if (numero54 != null) {
+  const numero55 = numOf(states, chiave2);
+  if (numero55 != null) {
     const unita2 = clean(stato3?.attributes?.unit_of_measurement);
-    const cifre2 = Number.isInteger(numero54) || Math.abs(numero54) >= 100 ? 0 : 1;
+    const cifre3 = Number.isInteger(numero55) || Math.abs(numero55) >= 100 ? 0 : 1;
     return {
       glyph: glifo2,
       /* Il nome senza la parola che il numero dice gia': «Temperatura Pannello
@@ -59257,9 +59312,9 @@ function rigaDaEntita(states, entity2, glifo2 = "•") {
        * abita la casa, e quello dell'entita', scritto dall'integrazione. */
       name: nomeDellaLettura(nome, { unita: unita2 }),
       entity: chiave2,
-      raw: numero54,
+      raw: numero55,
       unit: unita2,
-      value: `${formatNumber(numero54, cifre2)}${unita2 ? ` ${unita2}` : ""}`
+      value: `${formatNumber(numero55, cifre3)}${unita2 ? ` ${unita2}` : ""}`
     };
   }
   const daQuando5 = Date.parse(stato3?.last_changed ?? stato3?.last_updated ?? "");
@@ -59691,7 +59746,7 @@ function scaldabagnoModel(states) {
          * quelle che si guardano e basta. */
         comando: siComanda(lettura3.comandabile)
       });
-    const misura7 = (chiave2, testo3, valore3, cifre2, unita2) => {
+    const misura7 = (chiave2, testo3, valore3, cifre3, unita2) => {
       if (valore3 == null) return;
       rows.push({
         glyph: GLIFI_SCALDABAGNO[chiave2],
@@ -59700,8 +59755,8 @@ function scaldabagnoModel(states) {
         raw: valore3,
         /* Watt e wattora salgono di scala al migliaio; gradi e per cento no. */
         value: (() => {
-          const salita = laMisuraDallUnita(valore3, unita2, { decimali: cifre2 });
-          return salita ? `${salita.numero} ${salita.unita}` : `${formatNumber(valore3, cifre2)}${unita2}`;
+          const salita = laMisuraDallUnita(valore3, unita2, { decimali: cifre3 });
+          return salita ? `${salita.numero} ${salita.unita}` : `${formatNumber(valore3, cifre3)}${unita2}`;
         })()
       });
     };
@@ -59770,14 +59825,14 @@ function caldaiaModel(states) {
         on: riga3.fiamma === true || riga3.acceso === true,
         value: riga3.fiamma === true || riga3.acceso === true ? t("Acceso", "On") : t("Spento", "Off")
       });
-    const misura7 = (campo5, testo3, glyph, valore3, cifre2, unita2) => {
+    const misura7 = (campo5, testo3, glyph, valore3, cifre3, unita2) => {
       if (valore3 == null) return;
       rows.push({
         glyph,
         name: suo2(testo3),
         entity: clean(dato[campo5]),
         raw: valore3,
-        value: `${formatNumber(valore3, cifre2)}${unita2}`
+        value: `${formatNumber(valore3, cifre3)}${unita2}`
       });
     };
     misura7("mandata", t("Mandata", "Flow"), "🌡️", riga3.mandata, 1, "°");
@@ -59831,7 +59886,7 @@ function righeDellUps(config, lettura3, conIlNome) {
       on: lettura3.rete === true,
       value: lettura3.rete === true ? t("Presente", "Present") : lettura3.rete === false ? t("Manca", "Missing") : t("Sconosciuta", "Unknown")
     });
-  const misura7 = (campo5, testo3, glyph, valore3, cifre2, unita2) => {
+  const misura7 = (campo5, testo3, glyph, valore3, cifre3, unita2) => {
     if (valore3 == null) return;
     rows.push({
       glyph,
@@ -59840,8 +59895,8 @@ function righeDellUps(config, lettura3, conIlNome) {
       raw: valore3,
       /* Watt e wattora salgono di scala al migliaio; per cento, volt e minuti no. */
       value: (() => {
-        const salita = laMisuraDallUnita(valore3, unita2, { decimali: cifre2 });
-        return salita ? `${salita.numero} ${salita.unita}` : `${formatNumber(valore3, cifre2)}${unita2}`;
+        const salita = laMisuraDallUnita(valore3, unita2, { decimali: cifre3 });
+        return salita ? `${salita.numero} ${salita.unita}` : `${formatNumber(valore3, cifre3)}${unita2}`;
       })()
     });
   };
@@ -60265,9 +60320,9 @@ function misuraDelMiniPC(casella5, dato, states) {
   const attesa = clean(casella5.unita);
   const sua = clean(states?.[dato.entity]?.attributes?.unit_of_measurement);
   const unita2 = sua || attesa;
-  const numero54 = Number(dato.value);
-  const cifre2 = !sua || sua === attesa ? casella5.cifre : Number.isInteger(numero54) ? 0 : 1;
-  const scritto2 = formatNumber(dato.value, cifre2);
+  const numero55 = Number(dato.value);
+  const cifre3 = !sua || sua === attesa ? casella5.cifre : Number.isInteger(numero55) ? 0 : 1;
+  const scritto2 = formatNumber(dato.value, cifre3);
   if (!unita2) return scritto2;
   return unita2 === "%" ? `${scritto2}%` : `${scritto2} ${unita2}`;
 }
@@ -60890,7 +60945,7 @@ function floodModel(states) {
 function avvisoAttivo(avviso, current) {
   const raw = String(current?.state ?? "");
   const stato3 = raw.toLowerCase();
-  const numero54 = Number.parseFloat(raw);
+  const numero55 = Number.parseFloat(raw);
   const soglia2 = Number.parseFloat(avviso?.value);
   switch (clean(avviso?.cond)) {
     case "off":
@@ -60910,9 +60965,9 @@ function avvisoAttivo(avviso, current) {
     case "neq":
       return stato3 !== String(avviso?.value ?? "").toLowerCase();
     case "gt":
-      return !Number.isNaN(numero54) && !Number.isNaN(soglia2) && numero54 > soglia2;
+      return !Number.isNaN(numero55) && !Number.isNaN(soglia2) && numero55 > soglia2;
     case "lt":
-      return !Number.isNaN(numero54) && !Number.isNaN(soglia2) && numero54 < soglia2;
+      return !Number.isNaN(numero55) && !Number.isNaN(soglia2) && numero55 < soglia2;
     default:
       return [
         "on",
@@ -61848,7 +61903,7 @@ function firmaDellaFaccia(widget) {
 function tileMarkup(widget, index = 0) {
   const open = state48.expanded === widget.key;
   const giaVista = viste().has(widget.key) ? ' data-dm-seen="true"' : "";
-  const { numero: numero54, unita: unita2 } = dividiValore(widget.value);
+  const { numero: numero55, unita: unita2 } = dividiValore(widget.value);
   return `<button type="button" class="dm-tile" data-dm-widget="${widget.key}" data-open="${open}"${giaVista}
       data-alert="${Boolean(widget.alert)}" data-acceso="${tesseraAccesa(widget)}"
       style="--dm-widget-accent:${widget.accent};--dm-tile-i:${index}" aria-expanded="${open}" aria-label="${esc(widget.label)}">
@@ -61858,7 +61913,7 @@ function tileMarkup(widget, index = 0) {
         <span class="dm-tile-label" data-dm-tile-label>${esc(widget.label)}</span>
         ${widget.menu ? `<span class="dm-tile-menu" aria-hidden="true">⋮</span>` : ""}
       </span>
-      <span class="dm-tile-val"><b class="dm-tile-value" data-dm-tile-value data-dm-len="${misuraValore(widget.value)}">${esc(numero54)}</b><i class="dm-tile-unit" data-dm-tile-unit data-simbolo="${unitaSimbolo(unita2)}">${esc(unita2)}</i></span>
+      <span class="dm-tile-val"><b class="dm-tile-value" data-dm-tile-value data-dm-len="${misuraValore(widget.value)}">${esc(numero55)}</b><i class="dm-tile-unit" data-dm-tile-unit data-simbolo="${unitaSimbolo(unita2)}">${esc(unita2)}</i></span>
       <span class="dm-tile-fondo">
         <span class="dm-tile-testo">
           <small class="dm-tile-caption"><span class="dm-tile-scroll" data-dm-tile-caption>${esc(widget.caption)}</span></small>
@@ -66531,12 +66586,12 @@ function gradiNellaFinestra(entity2) {
   casella5.dataset.dmClDoppio = "entrambi";
   if (finestra6) finestra6.dataset.dmClDoppio = "entrambi";
   const labels = copy3();
-  const numero54 = (estremo) => `<span class="dm-cl-cp-obj" data-dm-cl-obj="${estremo}" aria-label="${esc(
+  const numero55 = (estremo) => `<span class="dm-cl-cp-obj" data-dm-cl-obj="${estremo}" aria-label="${esc(
     `${estremo === "basso" ? labels.warm : labels.cold} ${gradoScritto(coppia[estremo])}°`
   )}">${gradoScritto(coppia[estremo])}°</span>`;
   scriviSeCambia(
     casella5,
-    `${numero54("basso")}<span class="dm-cl-cp-tra" aria-hidden="true">–</span>${numero54("alto")}`
+    `${numero55("basso")}<span class="dm-cl-cp-tra" aria-hidden="true">–</span>${numero55("alto")}`
   );
   return true;
 }
@@ -66914,9 +66969,9 @@ function wholeDegreeDelta(shown, delta) {
   return next - current;
 }
 function gradoScritto(valore3) {
-  const numero54 = Number(valore3);
-  if (!Number.isFinite(numero54)) return "--";
-  return String(Math.round(numero54 * 10) / 10);
+  const numero55 = Number(valore3);
+  if (!Number.isFinite(numero55)) return "--";
+  return String(Math.round(numero55 * 10) / 10);
 }
 function scalaDellaPresa(presa) {
   const reading = climateReading(presa.entity);
@@ -68241,9 +68296,9 @@ function vistaDellaPagina() {
 function letturaScritta(grezzo, coda) {
   const valore3 = clean(grezzo);
   if (!valore3 || valore3 === "unknown" || valore3 === "unavailable") return "—";
-  const numero54 = Number(valore3);
-  if (!Number.isFinite(numero54)) return `${valore3}${coda}`;
-  return `${formatNumber(numero54, coda === "%" ? 0 : 1)}${coda}`;
+  const numero55 = Number(valore3);
+  if (!Number.isFinite(numero55)) return `${valore3}${coda}`;
+  return `${formatNumber(numero55, coda === "%" ? 0 : 1)}${coda}`;
 }
 function valoreLetto(entity2, coda, states) {
   return letturaScritta(states?.[entity2]?.state, coda);
@@ -71998,9 +72053,9 @@ function numeroDellaBolla(testo3) {
   const scritto2 = String(testo3 ?? "");
   const trovato = scritto2.match(/(\d[\d.,]*)\s*(mwh|kwh|wh|mw|kw|w)\b/i);
   if (!trovato) return null;
-  let cifre2 = trovato[1];
-  if (cifre2.includes(",")) cifre2 = cifre2.replace(/\./g, "").replace(",", ".");
-  const valore3 = Number.parseFloat(cifre2);
+  let cifre3 = trovato[1];
+  if (cifre3.includes(",")) cifre3 = cifre3.replace(/\./g, "").replace(",", ".");
+  const valore3 = Number.parseFloat(cifre3);
   if (!Number.isFinite(valore3)) return null;
   return valore3 * SCALE_DEL_NUMERO[trovato[2].toLowerCase()];
 }
@@ -74116,8 +74171,8 @@ function famiglie(appliance) {
       continue;
     }
     if (STATI_MUTI4.test(grezzo)) continue;
-    const numero54 = Number.parseFloat(grezzo.replace(",", "."));
-    if (Number.isFinite(numero54)) {
+    const numero55 = Number.parseFloat(grezzo.replace(",", "."));
+    if (Number.isFinite(numero55)) {
       const unit = clean(stato3?.attributes?.unit_of_measurement);
       misure.push({
         entity: entity2,
@@ -75596,8 +75651,8 @@ function rifaiLaScheda() {
   } catch (_errore) {
   }
 }
-function quante2(numero54) {
-  return numero54 === 1 ? t("1 stanza", "1 room") : `${numero54} ${t("stanze", "rooms")}`;
+function quante2(numero55) {
+  return numero55 === 1 ? t("1 stanza", "1 room") : `${numero55} ${t("stanze", "rooms")}`;
 }
 function pannelloDeiPiani(piani, senza = [], { chiede = "", rinomina: rinomina2 = "", segnoAperto = "", errore = "" } = {}) {
   const tutte = piani.reduce((totale, piano) => totale + piano.stanze.length, 0) + senza.length;
@@ -76731,9 +76786,9 @@ function misuraDelGrafico(chiave2) {
   return MISURE5.find((misura7) => misura7.chiave === pulito49(chiave2)) || MISURE5[0];
 }
 function scriviIlValore(valore3, misura7 = MISURE5[0], virgola = ",") {
-  const numero54 = Number(valore3);
-  if (!Number.isFinite(numero54)) return "—";
-  return `${numero54.toFixed(misura7.decimali).replace(".", virgola)}${misura7.unita}`;
+  const numero55 = Number(valore3);
+  if (!Number.isFinite(numero55)) return "—";
+  return `${numero55.toFixed(misura7.decimali).replace(".", virgola)}${misura7.unita}`;
 }
 function serieSpente(stored) {
   const elenco15 = Array.isArray(stored?.spente) ? stored.spente : [];
@@ -76935,8 +76990,8 @@ function tacche(min, max) {
   }
   return valori;
 }
-function valore(numero54, misura7 = misuraDelGrafico(state64.misura)) {
-  return scriviIlValore(numero54, misura7, t(",", "."));
+function valore(numero55, misura7 = misuraDelGrafico(state64.misura)) {
+  return scriviIlValore(numero55, misura7, t(",", "."));
 }
 function rowsFor2(entity2, hours) {
   return serieDi(entity2, hours);
@@ -90780,14 +90835,14 @@ function foglioArrivato() {
   }
   return false;
 }
-function riprova(nodo2, numero54) {
+function riprova(nodo2, numero55) {
   const href = String(nodo2.getAttribute("href") || "");
   if (!href) return false;
   const separatore = href.includes("?") ? "&" : "?";
   const nuovo = root.document.createElement("link");
   nuovo.rel = "stylesheet";
-  nuovo.dataset.dmFoglioRiprovato = String(numero54);
-  nuovo.href = `${href}${separatore}dm-riprova=${numero54}`;
+  nuovo.dataset.dmFoglioRiprovato = String(numero55);
+  nuovo.href = `${href}${separatore}dm-riprova=${numero55}`;
   nodo2.after(nuovo);
   return true;
 }
@@ -90797,10 +90852,10 @@ function controllaFoglio() {
   const nodo2 = collegamento();
   if (!nodo2) return true;
   if (state103.tentativi >= ATTESE.length) return false;
-  const numero54 = state103.tentativi + 1;
+  const numero55 = state103.tentativi + 1;
   const attesa = ATTESE[state103.tentativi];
-  state103.tentativi = numero54;
-  riprova(nodo2, numero54);
+  state103.tentativi = numero55;
+  riprova(nodo2, numero55);
   root.setTimeout?.(controllaFoglio, attesa);
   return false;
 }
@@ -92565,8 +92620,8 @@ var profilo = (valore3) => {
   return /^[a-z0-9][a-z0-9-]{0,63}$/.test(pulito62) ? pulito62 : PROFILO_DI_ORIGINE;
 };
 function pinPulito(valore3) {
-  const cifre2 = String(valore3 ?? "").replace(/\D/g, "");
-  return cifre2.length >= 4 && cifre2.length <= 8 ? cifre2 : "";
+  const cifre3 = String(valore3 ?? "").replace(/\D/g, "");
+  return cifre3.length >= 4 && cifre3.length <= 8 ? cifre3 : "";
 }
 function comandoPulito(input) {
   if (!input || typeof input !== "object") return null;
@@ -93558,14 +93613,14 @@ function avvisoAcceso(avviso, stati = {}) {
   return avviso.entita.some((id) => {
     const stato3 = String(stati[id]?.state ?? "").toLowerCase();
     if (!stato3 || stato3 === "unavailable" || stato3 === "unknown") return false;
-    const numero54 = Number(stato3);
+    const numero55 = Number(stato3);
     const soglia2 = Number(avviso.value);
     if (avviso.cond === "on") return ACCESI4.has(stato3);
     if (avviso.cond === "off") return !ACCESI4.has(stato3);
     if (avviso.cond === "eq") return stato3 === avviso.value.toLowerCase();
     if (avviso.cond === "neq") return stato3 !== avviso.value.toLowerCase();
-    if (!Number.isFinite(numero54) || !Number.isFinite(soglia2)) return false;
-    return avviso.cond === "gt" ? numero54 > soglia2 : numero54 < soglia2;
+    if (!Number.isFinite(numero55) || !Number.isFinite(soglia2)) return false;
+    return avviso.cond === "gt" ? numero55 > soglia2 : numero55 < soglia2;
   });
 }
 function derivaDelRiposo(adesso = Date.now()) {
@@ -93998,9 +94053,9 @@ var numero47 = (valore3) => {
   const n = Number(valore3);
   return Number.isFinite(n) ? n : null;
 };
-var decimale2 = (valore3, cifre2 = 1) => numero47(valore3) === null ? "—" : Number(valore3).toLocaleString(locale(), {
+var decimale2 = (valore3, cifre3 = 1) => numero47(valore3) === null ? "—" : Number(valore3).toLocaleString(locale(), {
   minimumFractionDigits: 0,
-  maximumFractionDigits: cifre2
+  maximumFractionDigits: cifre3
 });
 var nomeDi8 = (id, scelto = "", fonte = state111.fonte) => {
   if (clean(scelto)) return clean(scelto);
@@ -94503,15 +94558,15 @@ var colorabile = (id) => (attributi(id).supported_color_modes || []).some(
 function cardLuce(c, i) {
   const id = c.entita;
   const on = acceso4(id);
-  const pct2 = luminosita(id);
+  const pct3 = luminosita(id);
   const dimmer = dimmerabile(id);
   const manca = !stato2(id);
   return `<div class="mu-carta mu-card mu-fam mu-luce ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
-    <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span><span class="mu-stato ${on ? "" : "spento"}">${esc(manca ? t("Non trovata", "Not found") : on ? dimmer ? `${t("Accesa", "On")} · ${pct2}%` : t("Accesa", "On") : t("Spenta", "Off"))}</span>
+    <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span><span class="mu-stato ${on ? "" : "spento"}">${esc(manca ? t("Non trovata", "Not found") : on ? dimmer ? `${t("Accesa", "On")} · ${pct3}%` : t("Accesa", "On") : t("Spenta", "Off"))}</span>
       <button type="button" class="mu-inter ${on ? "on" : ""}" data-mu-fa="interruttore" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(nomeDi8(id, c.nome))}"><i></i></button></div>
     <div class="mu-osw mu-fam-nome mu-n">${esc(nomeDi8(id, c.nome))}</div>
-    ${dimmer ? `<div class="mu-giu"><div class="mu-giu-et"><span class="mu-et">${esc(t("Luminosità", "Brightness"))} <span class="mu-tag">DIMMER</span></span><span class="mu-stato ${on ? "" : "spento"}">${on ? `${pct2}%` : "—"}</span></div>
-      <div class="mu-bar" data-mu-cursore="luce" data-mu-entita="${esc(id)}"><i style="width:${pct2}%"></i>${on ? `<u style="left:${pct2}%"></u>` : ""}</div></div>` : ""}</div>`;
+    ${dimmer ? `<div class="mu-giu"><div class="mu-giu-et"><span class="mu-et">${esc(t("Luminosità", "Brightness"))} <span class="mu-tag">DIMMER</span></span><span class="mu-stato ${on ? "" : "spento"}">${on ? `${pct3}%` : "—"}</span></div>
+      <div class="mu-bar" data-mu-cursore="luce" data-mu-entita="${esc(id)}"><i style="width:${pct3}%"></i>${on ? `<u style="left:${pct3}%"></u>` : ""}</div></div>` : ""}</div>`;
 }
 var PAROLE_DEL_CLIMA = () => ({
   heat: t("Caldo", "Heat"),
@@ -95518,8 +95573,8 @@ function canaleOra(canale) {
 }
 function testoDellaMisura(m) {
   if (!m) return "—";
-  const cifre2 = Number.isInteger(m.valore) || Math.abs(m.valore) >= 100 ? 0 : 1;
-  return `${decimale2(m.valore, cifre2)}${m.unita ? ` ${m.unita}` : ""}`;
+  const cifre3 = Number.isInteger(m.valore) || Math.abs(m.valore) >= 100 ? 0 : 1;
+  return `${decimale2(m.valore, cifre3)}${m.unita ? ` ${m.unita}` : ""}`;
 }
 function testoDelCanale(lettura3, posizione = lettura3.posizione) {
   if (lettura3.tipo === "telecomando")
@@ -95528,8 +95583,8 @@ function testoDelCanale(lettura3, posizione = lettura3.posizione) {
   if (lettura3.tipo === "misura") return testoDellaMisura(lettura3);
   const valore3 = valoreDallaPosizione(posizione, lettura3);
   if (lettura3.tipo === "volume") return `${Math.round(valore3 * 100)}%`;
-  const cifre2 = lettura3.passo >= 1 ? 0 : lettura3.passo >= 0.1 ? 1 : 2;
-  return `${decimale2(valore3, cifre2)}${lettura3.unita ? ` ${lettura3.unita}` : ""}`;
+  const cifre3 = lettura3.passo >= 1 ? 0 : lettura3.passo >= 0.1 ? 1 : 2;
+  return `${decimale2(valore3, cifre3)}${lettura3.unita ? ` ${lettura3.unita}` : ""}`;
 }
 var strisciaLetta = (m) => m ? `<span class="mu-fad-letto" style="--l:${m.posizione.toFixed(4)}" title="${esc(testoDellaMisura(m))}"><i></i></span>` : "";
 function fader(canale, lettura3, { sdraiato = false } = {}) {
@@ -95731,11 +95786,11 @@ function finestra4() {
   if (f.tipo === "luce") {
     const id = f.entita;
     const on = acceso4(id);
-    const pct2 = luminosita(id);
+    const pct3 = luminosita(id);
     dentro3 = `<div class="mu-fin-luce">
-      <div class="mu-colonna" data-mu-cursore="luce-alta" data-mu-entita="${esc(id)}"><i style="height:${pct2}%"></i><b>${on ? `${pct2}%` : t("Spenta", "Off")}</b></div>
+      <div class="mu-colonna" data-mu-cursore="luce-alta" data-mu-entita="${esc(id)}"><i style="height:${pct3}%"></i><b>${on ? `${pct3}%` : t("Spenta", "Off")}</b></div>
       <div class="mu-fin-dx">
-        <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span><div class="mu-nome"><div class="mu-n" style="font-size:28px">${esc(nomeDi8(id))}</div><div class="mu-stato">${esc(on ? `${t("Accesa", "On")} · ${pct2}%` : t("Spenta", "Off"))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+        <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span><div class="mu-nome"><div class="mu-n" style="font-size:28px">${esc(nomeDi8(id))}</div><div class="mu-stato">${esc(on ? `${t("Accesa", "On")} · ${pct3}%` : t("Spenta", "Off"))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
         ${colorabile(id) || (attributi(id).supported_color_modes || []).includes("color_temp") ? `<div><span class="mu-et">${esc(t("Colore", "Colour"))}</span><div class="mu-colori">${COLORI3.map(
       ([c], i) => `<button type="button" style="background:${c}" data-mu-fa="colore" data-mu-colore="${i}" data-mu-entita="${esc(id)}" aria-label="${c}"></button>`
     ).join("")}</div></div>` : ""}
@@ -95744,7 +95799,7 @@ function finestra4() {
       60,
       100
     ].map(
-      (p) => `<button type="button" class="${on && pct2 === p ? "si" : ""}" data-mu-fa="livello" data-mu-livello="${p}" data-mu-entita="${esc(id)}">${p}%</button>`
+      (p) => `<button type="button" class="${on && pct3 === p ? "si" : ""}" data-mu-fa="livello" data-mu-livello="${p}" data-mu-entita="${esc(id)}">${p}%</button>`
     ).join("")}</div></div>
         <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="spegni" data-mu-entita="${esc(id)}">${esc(t("Spegni", "Turn off"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="chiudi">${esc(t("Fatto", "Done"))}</button></div>
       </div></div>`;
@@ -97207,9 +97262,9 @@ function tempoDelloSquillo(fase, trascorsi) {
   return quantoFaScritto(trascorsi);
 }
 function quantoFaScritto(ms) {
-  const { numero: numero54, unita: unita2 } = quantoFa4(ms);
+  const { numero: numero55, unita: unita2 } = quantoFa4(ms);
   const misura7 = unita2 === "giorni" ? t("giorni", "days") : unita2 === "h" ? t("h", "h") : unita2 === "min" ? t("min", "min") : "s";
-  return `${numero54} ${misura7} ${t("fa", "ago")}`;
+  return `${numero55} ${misura7} ${t("fa", "ago")}`;
 }
 function silenzia() {
   fermaIlCampanello();
@@ -102929,13 +102984,96 @@ function domani(adesso = Date.now()) {
   d.setDate(d.getDate() + 1);
   return `${d.getFullYear()}-${due2(d.getMonth() + 1)}-${due2(d.getDate())}`;
 }
-function durataStimata(bozza3) {
+function sosteDi(bozza3) {
+  const elenco15 = bozza3?.soste?.elenco;
+  return Array.isArray(elenco15) ? elenco15.filter((s) => s && Number.isFinite(Number(s.km))) : [];
+}
+function minutiDiRicarica(bozza3) {
+  return sosteDi(bozza3).reduce((somma2, s) => somma2 + (Number(s.min) || 0), 0);
+}
+function guidaStimata(bozza3) {
   const secondi = Number(bozza3?.stima?.durataS);
   if (!Number.isFinite(secondi) || secondi <= 0) return null;
   const margine = bozza3.stima.fonte === "traffico" ? 1 : MARGINE_SENZA_TRAFFICO;
+  return Math.round(secondi * 1e3 * margine);
+}
+function durataStimata(bozza3) {
+  const guida = guidaStimata(bozza3);
+  if (guida === null) return null;
   const tappe = Array.isArray(bozza3.tappe) ? bozza3.tappe : [];
   const soste = tappe.slice(0, -1).reduce((s, t2) => s + (Number(t2?.sostaMin) || 0), 0);
-  return Math.round(secondi * 1e3 * margine + soste * MINUTO5);
+  return Math.round(guida + (soste + minutiDiRicarica(bozza3)) * MINUTO5);
+}
+var CONSUMO_DI_SERIE = 17;
+var MINIME_ALL_ARRIVO = Object.freeze([10, 15, 20, 30]);
+var POTENZE_DELLE_COLONNINE = Object.freeze([50, 100, 150]);
+var numero49 = (valore3) => {
+  if (valore3 === null || valore3 === void 0 || valore3 === "") return null;
+  const n = Number.parseFloat(String(valore3).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
+function consumoStimato({ kwh: kwh4, carica: carica2, autonomia } = {}) {
+  const pacco = numero49(kwh4);
+  const percento6 = numero49(carica2);
+  const km = numero49(autonomia);
+  if (pacco === null || percento6 === null || km === null || km < 10 || percento6 < 5)
+    return CONSUMO_DI_SERIE;
+  const consumo = pacco * percento6 / 100 / km * 100;
+  return consumo >= 8 && consumo <= 40 ? Math.round(consumo * 10) / 10 : CONSUMO_DI_SERIE;
+}
+function caricaAllaPartenza(scelta3, adesso, obiettivo2 = null) {
+  if (scelta3 === 100 || scelta3 === "100") return 100;
+  const ora3 = numero49(adesso);
+  const fino = numero49(obiettivo2);
+  if (scelta3 === "obiettivo" && fino !== null) return Math.max(fino, ora3 ?? 0);
+  return ora3;
+}
+function laStradaInFila(bozza3, partenza) {
+  const guida = guidaStimata(bozza3);
+  const tappe = Array.isArray(bozza3?.tappe) ? bozza3.tappe : [];
+  if (guida === null || !Number.isFinite(partenza) || !tappe.length) return [];
+  const tappeKm = Array.isArray(bozza3?.soste?.tappeKm) ? bozza3.soste.tappeKm : [];
+  const kmTotali = numero49(bozza3.stima?.km) ?? numero49(tappeKm[tappeKm.length - 1]);
+  const alKm = (km) => kmTotali ? guida * Math.min(km, kmTotali) / kmTotali : 0;
+  const fermate = [
+    ...tappe.slice(0, -1).map((posto, i) => ({
+      tipo: "tappa",
+      km: numero49(tappeKm[i]),
+      sostaMin: Number(posto?.sostaMin) || 0,
+      posto,
+      n: i + 1
+    })),
+    ...sosteDi(bozza3).map((sosta, i) => ({
+      tipo: "sosta",
+      km: Number(sosta.km),
+      sostaMin: Number(sosta.min) || 0,
+      sosta,
+      n: i + 1
+    }))
+  ].sort((a, b2) => (a.km ?? Infinity) - (b2.km ?? Infinity) || (a.tipo === "tappa" ? -1 : 1));
+  const fila2 = [{ tipo: "partenza", km: 0, alle: partenza, riparte: partenza }];
+  let ferme = 0;
+  for (const f of fermate) {
+    const alle = f.km === null ? null : partenza + alKm(f.km) + ferme * MINUTO5;
+    ferme += f.sostaMin;
+    fila2.push({
+      tipo: f.tipo,
+      km: f.km,
+      alle,
+      riparte: alle === null ? null : alle + f.sostaMin * MINUTO5,
+      n: f.n,
+      ...f.posto ? { posto: f.posto } : {},
+      ...f.sosta ? { sosta: f.sosta } : {}
+    });
+  }
+  fila2.push({
+    tipo: "arrivo",
+    km: kmTotali,
+    alle: partenza + guida + ferme * MINUTO5,
+    riparte: null,
+    posto: tappe[tappe.length - 1]
+  });
+  return fila2;
 }
 function partenzaEArrivo(bozza3, giorno2) {
   const ora3 = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(bozza3?.quando?.ora || "");
@@ -103011,18 +103149,18 @@ var LATO_TESSERA = 256;
 var METRI_PER_PIXEL_ZERO = 156543.03392804097;
 var ZOOM_MINIMO = 3;
 var ZOOM_MASSIMO = 12;
-var numero49 = (valore3) => {
+var numero50 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || String(valore3).trim() === "") return null;
   const n = Number(valore3);
   return Number.isFinite(n) ? n : null;
 };
 var stringa = (valore3) => String(valore3 ?? "").trim();
 function latitudine(valore3) {
-  const n = numero49(valore3);
+  const n = numero50(valore3);
   return n === null || n < -85.05112878 || n > 85.05112878 ? null : n;
 }
 function longitudine(valore3) {
-  const n = numero49(valore3);
+  const n = numero50(valore3);
   return n === null || n < -180 || n > 180 ? null : n;
 }
 function tesseraDelPunto(lat, lon, zoom) {
@@ -103036,8 +103174,8 @@ function metriPerPixel(lat, zoom) {
   return METRI_PER_PIXEL_ZERO * Math.cos(lat * Math.PI / 180) / 2 ** zoom;
 }
 function zoomPerRaggio(lat, raggioKm, latoPx) {
-  const raggio = numero49(raggioKm);
-  const lato = numero49(latoPx);
+  const raggio = numero50(raggioKm);
+  const lato = numero50(latoPx);
   const dove = latitudine(lat);
   if (!raggio || raggio <= 0 || !lato || lato <= 0 || dove === null) return ZOOM_MINIMO;
   const metriVoluti = raggio * 2e3;
@@ -103050,10 +103188,10 @@ function finestraDiTessere(lat, lon, opzioni = {}) {
   const dove = latitudine(lat);
   const quanto = longitudine(lon);
   if (dove === null || quanto === null) return null;
-  const lato = Math.max(64, numero49(opzioni.latoPx) || 320);
-  const alto = Math.max(64, numero49(opzioni.altoPx) || lato);
-  const tessera3 = numero49(opzioni.lato) || LATO_TESSERA;
-  const zoom = numero49(opzioni.zoom) === null ? zoomPerRaggio(dove, numero49(opzioni.raggioKm) || 30, Math.min(lato, alto)) : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(numero49(opzioni.zoom))));
+  const lato = Math.max(64, numero50(opzioni.latoPx) || 320);
+  const alto = Math.max(64, numero50(opzioni.altoPx) || lato);
+  const tessera3 = numero50(opzioni.lato) || LATO_TESSERA;
+  const zoom = numero50(opzioni.zoom) === null ? zoomPerRaggio(dove, numero50(opzioni.raggioKm) || 30, Math.min(lato, alto)) : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(numero50(opzioni.zoom))));
   const centro2 = tesseraDelPunto(dove, quanto, zoom);
   const centroPx = { x: centro2.x * tessera3, y: centro2.y * tessera3 };
   const origine = { x: centroPx.x - lato / 2, y: centroPx.y - alto / 2 };
@@ -103080,15 +103218,15 @@ function finestraDiTessere(lat, lon, opzioni = {}) {
   return { zoom, lato, alto, tessera: tessera3, tessere, metriPerPixel: metriPerPixel(dove, zoom) };
 }
 function zoomDellaPioggia(config = {}, servizio2 = "") {
-  const scritto2 = numero49(config?.zoomPioggia);
+  const scritto2 = numero50(config?.zoomPioggia);
   if (scritto2 !== null)
     return scritto2 <= 0 ? null : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(scritto2)));
-  const suo2 = numero49(SERVIZI_RADAR[stringa(servizio2)]?.zoomMassimo);
-  return suo2 === null ? numero49(SERVIZI_RADAR[SERVIZIO_DI_SERIE]?.zoomMassimo) : suo2;
+  const suo2 = numero50(SERVIZI_RADAR[stringa(servizio2)]?.zoomMassimo);
+  return suo2 === null ? numero50(SERVIZI_RADAR[SERVIZIO_DI_SERIE]?.zoomMassimo) : suo2;
 }
 function finestraDellaPioggia(lat, lon, finestra6, zoomMassimo = null) {
   if (!finestra6) return null;
-  const tetto = numero49(zoomMassimo);
+  const tetto = numero50(zoomMassimo);
   if (tetto === null || finestra6.zoom <= tetto) return finestra6;
   const salto = finestra6.zoom - Math.max(ZOOM_MINIMO, Math.round(tetto));
   const fattore = 2 ** salto;
@@ -103302,6 +103440,14 @@ var state120 = root[KEY124] ||= {
   ricerca: "",
   casa: null,
   linea: [],
+  /* Dalla strada con l'auto: dove cadono le tappe, se le colonnine vengono
+   * dall'archivio e le sue fonti, e se il conto e' in corso. */
+  tappeKm: [],
+  archivio: null,
+  calcolo: false,
+  /* Le scelte dell'auto si mostrano quando servono — ci sono soste — o quando
+   * qualcuno le ha gia' toccate. */
+  opzioniAperte: false,
   errore: "",
   salvando: false,
   frame: 0
@@ -103486,6 +103632,16 @@ function mappa(b2) {
   const inizio = punti[0] || (b2.da ? fermate[0] : null);
   const fine = punti[punti.length - 1] || fermate[fermate.length - 1] || null;
   const segnoCasa = !linea.length && !fermate.length && casa.length ? qui(casa[0]) : null;
+  const ricariche = (leAuto().length ? sosteDi(b2) : []).filter(
+    (s) => Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lon)) && s.lat !== null
+  ).map((s, i) => {
+    const [x, y] = qui([Number(s.lon), Number(s.lat)]);
+    return `<g class="dm-gn-fulmine" data-gn-fulmine="${i + 1}" transform="translate(${x} ${y})">
+        <circle r="11" fill="#f59e0b" stroke="#fff" stroke-width="3"/>
+        <path d="M1.6 -7 L-4.4 1.2 H-0.4 L-1.6 7 L4.4 -1.4 H0.4 Z" fill="#fff"/>
+        <circle cx="11" cy="-10" r="7" fill="#111827" stroke="#fff" stroke-width="1.5"/>
+        <text x="11" y="-7" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">${i + 1}</text></g>`;
+  }).join("");
   return `<div class="dm-gn-mappa"><svg viewBox="0 0 ${larga} ${alta}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(t("La strada", "The route"))}">
     <rect width="${larga}" height="${alta}" fill="var(--gn-mappa)"/>
     ${tessereSotto(vista2, larga, alta)}
@@ -103496,6 +103652,7 @@ function mappa(b2) {
     ${inizio && punti.length ? `<circle cx="${inizio[0]}" cy="${inizio[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
     ${fine ? `<circle cx="${fine[0]}" cy="${fine[1]}" r="10" fill="#dc2626" stroke="#fff" stroke-width="4"/>` : ""}
     ${segnoCasa ? `<circle cx="${segnoCasa[0]}" cy="${segnoCasa[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
+    ${ricariche}
   </svg><span class="dm-gn-osm">© ${esc(FONDO3.attribuzione)}</span></div>`;
 }
 function parolaDellaRicerca() {
@@ -103521,6 +103678,275 @@ function opzioniDiEntita(domini2, scelta3) {
       ([id, nome]) => `<option value="${esc(id)}"${id === scelta3 ? " selected" : ""}>${esc(nome)}</option>`
     )
   ).join("");
+}
+function leAuto() {
+  const tutte = profiles().filter((car) => siRicarica(car));
+  if (tutte.length) return tutte;
+  if (profiles().length) return [];
+  return vehicleBatteryEntity({}) ? [{ [VEHICLE_KEY_FIELD]: "", name: "" }] : [];
+}
+function nomeDellAuto(car, indice = 0) {
+  return car?.[VEHICLE_KEY_FIELD] || car?.name ? vehicleLabel(car, indice, t("La tua auto", "Your car")) : t("La tua auto", "Your car");
+}
+function statoDi5(id) {
+  return id ? allStates()?.[id] || null : null;
+}
+function numeroDi2(stato3) {
+  const n = Number.parseFloat(String(stato3?.state ?? "").replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+function entitaDi4(car, ref, inUso) {
+  const propria = clean((car?.ov || car?.overrides || {})[ref]);
+  if (propria) return propria;
+  if (!inUso) return "";
+  let risolta2 = "";
+  try {
+    risolta2 = clean(root.resolveEntity?.(ref));
+  } catch (_errore) {
+    risolta2 = "";
+  }
+  return risolta2 && risolta2 !== ref ? risolta2 : "";
+}
+function datiDellAuto(car) {
+  const auto = leAuto();
+  const uid = car?.[VEHICLE_KEY_FIELD] || "";
+  const inUso = !profiles().length || uid === (activeVehicle()?.[VEHICLE_KEY_FIELD] || "");
+  const carica2 = numeroDi2(statoDi5(vehicleBatteryEntity(car)));
+  const autonomia = numeroDi2(statoDi5(entitaDi4(car, "dm.ev_autonomia", inUso)));
+  const obiettivo2 = numeroDi2(statoDi5(entitaDi4(car, "dm.ev_target_soc", inUso)));
+  const potenzaPropria = statoDi5(entitaDi4(car, "dm.ev_potenza_ricarica", inUso));
+  let kw = inKilowatt(potenzaPropria?.state, potenzaPropria?.attributes?.unit_of_measurement);
+  let inCarica = false;
+  let collegata = false;
+  if (inUso) {
+    try {
+      inCarica = codiceDellaRicaricaAdesso() === "C";
+      kw = kw ?? kilowattDellaColonnina();
+      collegata = vehiclePlugged() === true;
+    } catch (_errore) {
+      inCarica = false;
+    }
+  } else {
+    const detto2 = clean(statoDi5(entitaDi4(car, "dm.ev_stato_ricarica", false))?.state);
+    inCarica = /^[cd]$|charg|in carica|ricaric/i.test(detto2);
+  }
+  const kwh4 = capacitaDellaBatteria(car) ?? (profiles().length ? null : capacitaDellAutoInUso()) ?? CAPACITA_DI_SERIE;
+  const fine = inCarica && carica2 !== null && obiettivo2 !== null ? tempoDellaRicarica({
+    codice: "C",
+    soc: carica2,
+    target: obiettivo2,
+    kilowatt: kw,
+    capacita: kwh4
+  }) : null;
+  return {
+    uid,
+    nome: nomeDellAuto(car, Math.max(0, auto.indexOf(car))),
+    carica: carica2,
+    autonomia,
+    obiettivo: obiettivo2,
+    kw: inCarica && kw !== null && kw > 0 ? kw : null,
+    inCarica,
+    collegata,
+    fineAlle: fine?.stato === "carica" ? Date.now() + fine.minuti * 6e4 : null,
+    kwh: kwh4,
+    consumo: consumoStimato({ kwh: kwh4, carica: carica2, autonomia })
+  };
+}
+function lAutoDelViaggio(b2) {
+  const auto = leAuto();
+  if (!auto.length) return null;
+  const scelta3 = b2?.auto?.uid;
+  const inUso = activeVehicle()?.[VEHICLE_KEY_FIELD];
+  return auto.find((car) => scelta3 && car[VEHICLE_KEY_FIELD] === scelta3) || auto.find((car) => inUso && car[VEHICLE_KEY_FIELD] === inUso) || auto[0];
+}
+function opzioniDellAuto(b2, dati) {
+  const dette = b2?.auto || {};
+  return {
+    uid: dati?.uid ?? "",
+    partenza: ["adesso", "obiettivo", 100].includes(dette.partenza) ? dette.partenza : dati?.inCarica && dati.obiettivo !== null ? "obiettivo" : "adesso",
+    minimaArrivo: MINIME_ALL_ARRIVO.includes(dette.minimaArrivo) ? dette.minimaArrivo : 15,
+    kwColonnine: POTENZE_DELLE_COLONNINE.includes(dette.kwColonnine) ? dette.kwColonnine : 100
+  };
+}
+function autoPerLaStrada(b2) {
+  const car = lAutoDelViaggio(b2);
+  if (!car) return null;
+  const dati = datiDellAuto(car);
+  const scelte5 = opzioniDellAuto(b2, dati);
+  const batteria = caricaAllaPartenza(scelte5.partenza, dati.carica, dati.obiettivo);
+  if (batteria === null) return null;
+  return {
+    batteria: Math.round(batteria),
+    kwh: dati.kwh,
+    consumo: dati.consumo,
+    kwMax: null,
+    minimaArrivo: scelte5.minimaArrivo,
+    kwColonnine: scelte5.kwColonnine
+  };
+}
+var cifre2 = (n, massimo = 0) => Number(n).toLocaleString(activeLocale?.() || "it", { maximumFractionDigits: massimo });
+var pct = (n) => `${Math.round(n)}%`;
+function statoDettoDellAuto(dati) {
+  if (dati.inCarica) {
+    if (dati.fineAlle && dati.obiettivo !== null) {
+      const ora3 = oraDi3(dati.fineAlle);
+      const fino = pct(dati.obiettivo);
+      return `⚡ ${t(`In carica a casa · ${fino} alle ${ora3}`, `Charging at home · ${fino} at ${ora3}`)}`;
+    }
+    return `⚡ ${t("In carica", "Charging")}`;
+  }
+  return dati.collegata ? `🔌 ${t("Ferma a casa · non in carica", "Parked at home · not charging")}` : `🔌 ${t("Ferma · non in carica", "Parked · not charging")}`;
+}
+function sosteDette(n) {
+  return n === 1 ? t("con 1 sosta di ricarica", "with 1 charging stop") : t(`con ${n} soste di ricarica`, `with ${n} charging stops`);
+}
+function riquadroDellAuto(b2) {
+  const auto = leAuto();
+  if (!auto.length) return invitoACollegare();
+  const car = lAutoDelViaggio(b2);
+  const dati = datiDellAuto(car);
+  const scelte5 = opzioniDellAuto(b2, dati);
+  const partenza = caricaAllaPartenza(scelte5.partenza, dati.carica, dati.obiettivo);
+  const soste = sosteDi(b2);
+  const conto = b2.soste && b2.tappe.length ? b2.soste : null;
+  const arrivo = Number.isFinite(Number(conto?.arrivo)) ? Number(conto.arrivo) : null;
+  const scelta3 = auto.length > 1 ? `<select class="dm-gn-auto-scelta" data-gn-campo="autoUid" aria-label="${esc(t("Quale auto", "Which car"))}">${auto.map(
+    (c, i) => `<option value="${esc(c[VEHICLE_KEY_FIELD] || "")}"${c === car ? " selected" : ""}>${esc(nomeDellAuto(c, i))}</option>`
+  ).join("")}</select>` : "";
+  const adesso = dati.carica ?? 0;
+  const siCarica = partenza !== null && partenza > adesso + 0.5;
+  const tacca = siCarica ? partenza : arrivo;
+  const misura7 = (n) => Math.max(0, Math.min(100, n));
+  const ora3 = pct(adesso);
+  const via = partenza !== null ? pct(partenza) : "";
+  const fine = arrivo !== null ? pct(arrivo) : "";
+  const barra = dati.carica === null && partenza === null ? "" : `<div class="dm-gn-barra" role="img" aria-label="${esc(t(`Batteria dell'auto: ${ora3}`, `Car battery: ${ora3}`))}">
+        <i class="dm-gn-barra-ora" style="width:${misura7(adesso).toFixed(1)}%"></i>
+        ${siCarica ? `<i class="dm-gn-barra-poi" style="left:${misura7(adesso).toFixed(1)}%;width:${misura7(partenza - adesso).toFixed(1)}%"></i>` : ""}
+        ${tacca !== null ? `<b class="dm-gn-barra-tacca" style="left:${misura7(tacca).toFixed(1)}%"></b>` : ""}
+      </div>
+      <div class="dm-gn-barra-dida">${siCarica ? `<span>${esc(t(`adesso ${ora3}`, `now ${ora3}`))}</span><span>${esc(t(`alla partenza ${via}`, `at departure ${via}`))}</span>` : `<span>${arrivo !== null ? esc(t(`all'arrivo ${fine}`, `on arrival ${fine}`)) : ""}</span><span>${esc(t(`adesso ${ora3}`, `now ${ora3}`))}</span>`}</div>`;
+  const casella5 = (valore3, etichetta3, classe2 = "") => `<div class="dm-gn-num${classe2}"><b>${esc(valore3)}</b><span>${esc(etichetta3)}</span></div>`;
+  const terzo = dati.kw !== null ? casella5(`${cifre2(dati.kw, 1)} kW`, t("in carica", "charging"), " verde") : casella5(b2.stima?.km ? `${cifre2(b2.stima.km)} km` : "—", t("il viaggio", "the trip"));
+  const numeri = `<div class="dm-gn-numeri">${casella5(dati.carica === null ? "—" : pct(dati.carica), t("adesso", "now"))}${casella5(dati.autonomia === null ? "—" : `${cifre2(dati.autonomia)} km`, t("autonomia", "range"))}${terzo}</div>`;
+  let esito2 = "";
+  if (!b2.tappe.length) esito2 = "";
+  else if (partenza === null)
+    esito2 = `<div class="dm-gn-esito grigio"><span>🔋</span><span class="dm-gn-col"><b>${esc(t("La batteria non risponde", "The battery is not answering"))}</b><small>${esc(t("Per le soste scegli 100% alla partenza.", "For the stops, choose 100% at departure."))}</small></span></div>`;
+  else if (!conto)
+    esito2 = `<div class="dm-gn-esito grigio"><span>⚡</span><span class="dm-gn-col"><b>${esc(state120.calcolo ? t("Calcolo le soste…", "Working out the stops…") : t("Le soste arrivano con la strada", "The stops come with the route"))}</b></span></div>`;
+  else if (soste.length) {
+    const minuti = minutiDiRicarica(b2);
+    esito2 = `<div class="dm-gn-esito giallo" data-gn-esito="soste"><span>⚡</span><span class="dm-gn-col"><b>${esc(t(`Arrivi col ${fine}`, `You arrive with ${fine}`))} ${esc(sosteDette(soste.length))}</b><small>${esc(t(`${minuti} minuti di ricarica in tutto`, `${minuti} minutes of charging in all`))}</small></span></div>`;
+  } else {
+    const ritorno = arrivo !== null ? arrivo - (partenza - arrivo) : null;
+    const resta = ritorno !== null ? pct(ritorno) : "";
+    const basta = ritorno !== null && ritorno >= 10 ? t(
+      `Al ritorno ti resta il ${resta}: basta senza ricaricare`,
+      `For the way back you still have ${resta}: no need to charge`
+    ) : t("Per il ritorno servirà una ricarica", "You will need to charge for the way back");
+    esito2 = `<div class="dm-gn-esito verde" data-gn-esito="nessuna"><span>🏁</span><span class="dm-gn-col"><b>${esc(t(`Arrivi col ${fine} · nessuna sosta`, `You arrive with ${fine} · no stops`))}</b><small>${esc(basta)}</small></span></div>`;
+  }
+  const diSerie = opzioniDellAuto({}, dati);
+  const mostraLeScelte = state120.opzioniAperte || soste.length > 0 || partenza === null || ["partenza", "minimaArrivo", "kwColonnine"].some((k) => scelte5[k] !== diSerie[k]);
+  const bottone = (valore3, testo3) => `<button type="button" class="${scelte5.partenza === valore3 ? "on" : ""}" data-gn-partenza="${esc(String(valore3))}">${esc(testo3)}</button>`;
+  const obiettivo2 = dati.obiettivo !== null ? pct(dati.obiettivo) : "";
+  const sottoPartenza = scelte5.partenza === "obiettivo" && dati.obiettivo !== null ? t(`${obiettivo2} = l'obiettivo di stanotte`, `${obiettivo2} = tonight's target`) : scelte5.partenza === 100 ? t("Piena", "Full") : t("Con la carica di adesso", "With the charge it has now");
+  const scelteHtml = mostraLeScelte ? `<div class="dm-gn-scelte">
+        <div class="dm-gn-scelta"><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Alla partenza", "At departure"))}</span><span class="dm-gn-s">${esc(sottoPartenza)}</span></span>
+          <span class="dm-gn-seg mini">${dati.carica !== null ? bottone("adesso", pct(dati.carica)) : ""}${dati.obiettivo !== null && dati.obiettivo > (dati.carica ?? -1) ? bottone("obiettivo", pct(dati.obiettivo)) : ""}${bottone(100, "100%")}</span></div>
+        <label class="dm-gn-scelta"><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Carica minima all'arrivo", "Minimum charge on arrival"))}</span><span class="dm-gn-s">${esc(t("E alle colonnine mai sotto il 10%", "And never below 10% at chargers"))}</span></span>
+          <select data-gn-campo="minimaArrivo">${MINIME_ALL_ARRIVO.map((n) => `<option value="${n}"${scelte5.minimaArrivo === n ? " selected" : ""}>${n}%</option>`).join("")}</select></label>
+        <label class="dm-gn-scelta"><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Colonnine", "Chargers"))}</span><span class="dm-gn-s">${esc(t("La potenza minima per fermarsi", "The minimum power to stop at"))}</span></span>
+          <select data-gn-campo="kwColonnine">${POTENZE_DELLE_COLONNINE.map((n) => `<option value="${n}"${scelte5.kwColonnine === n ? " selected" : ""}>${esc(t(`Da ${n} kW`, `From ${n} kW`))}</option>`).join("")}</select></label>
+      </div>` : "";
+  return `<div class="dm-gn-tit">${esc(t("L'auto", "The car"))}</div>
+    <div class="dm-gn-auto" data-gn-auto="${esc(dati.uid)}">
+      <div class="dm-gn-auto-capo"><span class="dm-gn-auto-ic" aria-hidden="true">🚙</span>
+        <span class="dm-gn-col"><span class="dm-gn-auto-nome">${esc(dati.nome)}</span><span class="dm-gn-auto-stato">${esc(statoDettoDellAuto(dati))}</span></span>
+        ${scelta3}</div>
+      ${barra}${numeri}${esito2}${scelteHtml}
+    </div>`;
+}
+function invitoACollegare() {
+  let amministra = false;
+  try {
+    amministra = root.dmPuoConfigurare?.() === true;
+  } catch (_errore) {
+    amministra = false;
+  }
+  if (!amministra) return "";
+  return `<div class="dm-gn-invito" data-gn-invito><span class="dm-gn-invito-ic" aria-hidden="true">🔌</span>
+    <span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Collega l'auto per vedere batteria e soste", "Connect the car to see battery and stops"))}</span>
+    <span class="dm-gn-s">${esc(t("Batteria e autonomia dell'auto elettrica, e le soste di ricarica se non basta.", "The electric car's battery and range, and the charging stops if it is not enough."))}</span>
+    <small>${esc(t("Lo vedi solo tu, che amministri la casa", "Only you see this, as the home's administrator"))}</small></span>
+    <button type="button" class="dm-gn-collega" data-gn-collega>${esc(t("Collega", "Connect"))}</button></div>`;
+}
+function elencoDelleSoste(b2, partenza) {
+  const soste = sosteDi(b2);
+  if (!soste.length || !Number.isFinite(partenza)) return "";
+  const conTappe = { ...b2, soste: { ...b2.soste, tappeKm: state120.tappeKm } };
+  const fila2 = laStradaInFila(conTappe, partenza);
+  const corto = (posto) => String(posto?.nome || "").split(" · ")[0];
+  const minuti = minutiDiRicarica(b2);
+  const arrivo = Number(b2.soste?.arrivo);
+  const auto = autoPerLaStrada(b2);
+  const pillola2 = (testo3, classe2 = "") => `<span class="dm-gn-batt${classe2}">🔋 ${esc(testo3)}</span>`;
+  const destra = (alle, sotto) => `<span class="dm-gn-fila-ora"><b>${alle ? esc(oraDi3(alle)) : ""}</b><small>${esc(sotto)}</small></span>`;
+  const riparti = (r) => {
+    if (!r.riparte || r.riparte === r.alle) return "";
+    const alle = oraDi3(r.riparte);
+    return t(`riparti ${alle}`, `leave ${alle}`);
+  };
+  const righe2 = fila2.map((r) => {
+    if (r.tipo === "partenza")
+      return `<li class="dm-gn-fila partenza"><span class="dm-gn-pallino verde">●</span><span class="dm-gn-col"><b>${esc(corto(b2.da) || t("Casa", "Home"))}</b>${auto ? pillola2(pct(auto.batteria)) : ""}</span>${destra(r.alle, t("parti", "leave"))}</li>`;
+    if (r.tipo === "tappa") {
+      const km = r.km !== null ? cifre2(r.km) : "";
+      return `<li class="dm-gn-fila tappa"><span class="dm-gn-pallino viola">${r.n + 1}</span><span class="dm-gn-col"><b>${esc(corto(r.posto))}</b><small>${km ? esc(t(`dopo ${km} km`, `after ${km} km`)) : ""}</small></span>${destra(r.alle, riparti(r))}</li>`;
+    }
+    if (r.tipo === "sosta") {
+      const s = r.sosta;
+      const n2 = r.n;
+      const km = cifre2(s.km);
+      const min = s.min;
+      const kw = s.kw;
+      const titolo3 = s.nome ? t(`Sosta ${n2} · dopo ${km} km`, `Stop ${n2} · after ${km} km`) : t(
+        `Sosta intorno al km ${km} · circa ${min} min`,
+        `Stop around km ${km} · about ${min} min`
+      );
+      const sotto = s.nome ? [
+        s.nome,
+        s.operatore && s.operatore !== s.nome ? s.operatore : "",
+        kw ? t(`fino a ${kw} kW`, `up to ${kw} kW`) : ""
+      ].filter(Boolean).join(" · ") : t("La colonnina la sceglie gdanav in viaggio", "gdanav picks the charger on the way");
+      const da = pct(s.da);
+      const a = pct(s.a);
+      const carica2 = Number.isFinite(Number(s.da)) && Number.isFinite(Number(s.a)) && s.da !== null ? pillola2(
+        t(`dal ${da} all'${a} · ${min} min`, `from ${da} to ${a} · ${min} min`),
+        " gialla"
+      ) : "";
+      return `<li class="dm-gn-fila sosta" data-gn-sosta-di-ricarica="${n2}"><span class="dm-gn-pallino arancio">⚡</span><span class="dm-gn-col"><b>${esc(titolo3)}</b><small>${esc(sotto)}</small>${carica2}</span>${destra(r.alle, riparti(r))}</li>`;
+    }
+    return `<li class="dm-gn-fila arrivo"><span class="dm-gn-pallino rosso">🏁</span><span class="dm-gn-col"><b>${esc(corto(r.posto))}</b>${Number.isFinite(arrivo) ? pillola2(pct(arrivo)) : ""}</span>${destra(r.alle, t("arrivi", "arrive"))}</li>`;
+  });
+  const fonti = b2.soste?.fonte === "gdanav" ? t(
+    "Soste scelte da gdanav in viaggio, con le colonnine libere.",
+    "Stops picked by gdanav on the way, with free chargers."
+  ) : state120.archivio ? t(
+    "Colonnine: © OpenStreetMap e Piattaforma Unica Nazionale, nella casa. In viaggio gdanav guarda se sono libere e, se serve, cambia sosta.",
+    "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop."
+  ) : t(
+    "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio gdanav sceglie le colonnine e guarda se sono libere.",
+    "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free."
+  );
+  const n = soste.length;
+  const quante3 = n === 1 ? t("1 sosta", "1 stop") : t(`${n} soste`, `${n} stops`);
+  const fine = Number.isFinite(arrivo) ? pct(arrivo) : "";
+  return `<div class="dm-gn-soste" data-gn-soste><div class="dm-gn-soste-capo"><b>⚡ ${esc(t("Soste di ricarica", "Charging stops"))}</b>
+    <small>${esc(quante3)} · ${esc(`${minuti} min`)}${fine ? ` · ${esc(t(`arrivi col ${fine}`, `arrive with ${fine}`))}` : ""}</small></div>
+    <ol>${righe2.join("")}</ol>
+    <div class="dm-gn-fonti">${esc(fonti)}</div></div>`;
 }
 function editor() {
   const b2 = state120.bozza;
@@ -103552,17 +103978,27 @@ function editor() {
   })() : b2.quando.giorno;
   const tempi = partenzaEArrivo(b2, giornoDiConto);
   const durata6 = durataStimata(b2);
+  const soste = leAuto().length ? sosteDi(b2) : [];
+  const ricarica2 = soste.length ? minutiDiRicarica(b2) : 0;
   const righe2 = [];
   if (durata6 !== null) {
     righe2.push(
-      `🛣️ ${t("Strada", "Drive")}: ${durataDetta(durata6, l)}${b2.stima?.km ? ` · ${b2.stima.km} km` : ""}`
+      `🛣️ ${t("Strada", "Drive")}: ${durataDetta(durata6 - ricarica2 * 6e4, l)}${b2.stima?.km ? ` · ${b2.stima.km} km` : ""}`
     );
+    if (soste.length) {
+      const n = soste.length;
+      const minuti = durataDetta(ricarica2 * 6e4, l);
+      righe2.push(
+        `⚡ ${n === 1 ? t(`Ricarica: ${minuti} in 1 sosta`, `Charging: ${minuti} in 1 stop`) : t(`Ricarica: ${minuti} in ${n} soste`, `Charging: ${minuti} in ${n} stops`)}`
+      );
+    }
     righe2.push(
       b2.stima?.fonte === "traffico" ? `🚦 ${t("Col traffico, stimato da gdanav", "With traffic, estimated by gdanav")}` : `🔄 ${t("Senza traffico, con un margine: gdanav lo ricalcola col traffico vero fino alla partenza", "Without traffic, with a margin: gdanav recalculates with live traffic until you leave")}`
     );
   }
+  const arrivoDetto = tempi?.arrivo != null && !(b2.quando.modo === "arrivo" && b2.tipo !== "tappe") ? `<div class="dm-gn-riga" data-gn-arrivo>🏁 ${esc(t("Arrivi verso le", "You arrive around"))} <b>${esc(oraDi3(tempi.arrivo))}</b>${soste.length ? ` ${esc(sosteDette(soste.length))}` : ""}</div>` : "";
   const quandoPartire = tempi?.partenza != null ? `<div class="dm-gn-parti"><div class="dm-gn-parti-t">${esc(t("Parti alle", "Leave at"))}</div><div class="dm-gn-ora">${esc(oraDi3(tempi.partenza))}</div>
-        ${tempi.arrivo != null && !(b2.quando.modo === "arrivo" && b2.tipo !== "tappe") ? `<div class="dm-gn-riga">🏁 ${esc(t("Arrivi verso le", "You arrive around"))} ${esc(oraDi3(tempi.arrivo))}</div>` : ""}
+        ${arrivoDetto}
         ${righe2.map((r) => `<div class="dm-gn-riga">${esc(r)}</div>`).join("")}</div>` : `<div class="dm-gn-parti"><div class="dm-gn-riga">${esc(t("Scegli la meta e l'ora: qui ti dico quando partire.", "Pick the destination and time: I will tell you when to leave."))}</div></div>`;
   const clima = b2.prepara?.clima?.entity || "";
   const garage = b2.prepara?.garage?.entity || "";
@@ -103576,12 +104012,14 @@ function editor() {
         ${parolaDellaRicerca()}
         ${state120.proposte.length ? `<div class="dm-gn-proposte">${state120.proposte.map((p, i) => `<button type="button" data-gn-proposta="${i}">📍 ${esc(p.nome)}</button>`).join("")}</div>` : ""}
         ${mappa(b2)}
+        ${soste.length ? elencoDelleSoste(b2, tempi?.partenza) : ""}
         ${giorno2}
         ${modo}
         <label class="dm-gn-campo"><span>🏁 ${esc(b2.tipo === "tappe" || b2.quando.modo === "partenza" ? t("Parto alle", "Leave at") : t("Arrivo entro", "Arrive by"))}</span><input type="time" data-gn-campo="ora" value="${esc(b2.quando.ora)}"></label>
       </div>
       <div>
         ${quandoPartire}
+        ${riquadroDellAuto(b2)}
         <div class="dm-gn-tit">${esc(t("Avvisi", "Reminders"))}</div>
         <label class="dm-gn-int"><span>🔔</span><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Avvisami prima", "Remind me"))}</span><span class="dm-gn-s">${esc(t("Sul telefono, prima di partire", "On the phone, before leaving"))}</span></span>
           <select data-gn-campo="avvisoMin">${[5, 10, 15, 20, 30].map((m) => `<option value="${m}"${b2.avviso.minuti === m ? " selected" : ""}>${m} min</option>`).join("")}</select>
@@ -103643,12 +104081,20 @@ function disegna6() {
   const fuoco = cerca4 && doc.activeElement === cerca4;
   const cursore = fuoco ? cerca4.selectionStart : null;
   const html = `${testa2}<div class="dm-gn-griglia"><div class="dm-gn-card">${elenco12()}</div><div class="dm-gn-card">${editor()}</div></div>`;
+  sosteQuandoLAutoRisponde();
   if (!scrivi4(posto, html)) return;
   if (fuoco) {
     const nuovo = posto.querySelector("[data-gn-cerca]");
     nuovo?.focus();
     if (cursore !== null) nuovo?.setSelectionRange?.(cursore, cursore);
   }
+}
+function sosteQuandoLAutoRisponde() {
+  const b2 = state120.bozza;
+  if (!b2?.tappe?.length || b2.soste || state120.calcolo || state120.sosteChiestePer === b2) return;
+  if (!leAuto().length || !autoPerLaStrada(b2)) return;
+  state120.sosteChiestePer = b2;
+  void stimaLaStrada();
 }
 var cercaTimer = 0;
 var quanteRicerche = 0;
@@ -103674,20 +104120,52 @@ async function cerca3(testo3) {
   }
   disegna6();
 }
+var quanteStrade = 0;
 async function stimaLaStrada() {
   const b2 = state120.bozza;
   if (!b2?.tappe?.length) return;
+  const mia = ++quanteStrade;
+  const auto = autoPerLaStrada(b2);
+  state120.calcolo = Boolean(auto);
+  if (auto) state120.sosteChiestePer = b2;
   try {
-    const risposta = await chiedi6("strada", { da: b2.da, tappe: b2.tappe }, 15e3);
-    if (state120.bozza !== b2) return;
+    const risposta = await chiedi6(
+      "strada",
+      { da: b2.da, tappe: b2.tappe, ...auto ? { auto } : {} },
+      2e4
+    );
+    if (state120.bozza !== b2 || mia !== quanteStrade) return;
     if (risposta?.stima) {
       if (b2.stima?.fonte !== "traffico") b2.stima = risposta.stima;
       state120.linea = Array.isArray(risposta.linea) ? risposta.linea : [];
       if (!b2.da && risposta.da) state120.casa = risposta.da;
     }
+    const soste = risposta?.soste;
+    if (soste && Array.isArray(soste.elenco)) {
+      state120.tappeKm = Array.isArray(soste.tappeKm) ? soste.tappeKm : [];
+      state120.archivio = soste.archivio === true;
+      if (b2.soste?.fonte !== "gdanav")
+        b2.soste = {
+          elenco: soste.elenco,
+          arrivo: soste.arrivo,
+          partenza: soste.partenza,
+          fonte: "casa"
+        };
+    }
   } catch (_errore) {
   }
+  if (mia === quanteStrade) state120.calcolo = false;
   disegna6();
+}
+function cambiaLAuto(cambio) {
+  const b2 = state120.bozza;
+  if (!b2) return;
+  const car = lAutoDelViaggio(b2);
+  b2.auto = { ...opzioniDellAuto(b2, car ? datiDellAuto(car) : null), ...cambio };
+  b2.soste = null;
+  state120.opzioniAperte = true;
+  disegna6();
+  void stimaLaStrada();
 }
 function scegliIlViaggio(id) {
   const v = state120.viaggi.find((x) => x.id === id);
@@ -103702,9 +104180,14 @@ function scegliIlViaggio(id) {
     quando: { ...v.quando, giorni: v.quando?.giorni || [] },
     avviso: v.avviso || { acceso: true, minuti: 10 },
     prepara: v.prepara || { clima: null, garage: null },
-    stima: v.stima || null
+    stima: v.stima || null,
+    auto: v.auto || null,
+    soste: v.soste || null
   });
   state120.linea = [];
+  state120.tappeKm = [];
+  state120.archivio = null;
+  state120.opzioniAperte = false;
   state120.proposte = [];
   state120.cercando = "";
   state120.errore = "";
@@ -103722,8 +104205,17 @@ async function salva16() {
   state120.salvando = true;
   state120.errore = "";
   disegna6();
+  const car = lAutoDelViaggio(b2);
+  const viaggio = { ...b2 };
+  delete viaggio.auto;
+  delete viaggio.soste;
+  if (car) {
+    viaggio.auto = opzioniDellAuto(b2, datiDellAuto(car));
+    if (b2.soste?.fonte === "casa" && Array.isArray(b2.soste.elenco))
+      viaggio.soste = { elenco: b2.soste.elenco, arrivo: b2.soste.arrivo };
+  }
   try {
-    const risposta = await chiedi6("salva", { viaggio: b2 });
+    const risposta = await chiedi6("salva", { viaggio });
     state120.scelto = risposta?.viaggio?.id || "";
     if (risposta?.viaggio) state120.bozza.id = risposta.viaggio.id;
     await carica();
@@ -103753,14 +104245,34 @@ async function elimina2() {
 }
 function alClic(event) {
   const bersaglio = event.target?.closest?.(
-    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina]"
+    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina], #dm-gn [data-gn-partenza], #dm-gn [data-gn-collega]"
   );
   if (!bersaglio) return;
   const d = bersaglio.dataset;
+  if (d.gnPartenza && state120.bozza) {
+    cambiaLAuto({ partenza: d.gnPartenza === "100" ? 100 : d.gnPartenza });
+    return;
+  }
+  if ("gnCollega" in d) {
+    try {
+      root.apriConfigEntita?.();
+      root.setTimeout?.(() => {
+        try {
+          root.editorSwitch?.("sez2");
+        } catch (_errore) {
+        }
+      }, 0);
+    } catch (_errore) {
+    }
+    return;
+  }
   if ("gnNuovo" in d) {
     state120.bozza = bozzaNuova2("una");
     state120.scelto = "";
     state120.linea = [];
+    state120.tappeKm = [];
+    state120.archivio = null;
+    state120.opzioniAperte = false;
     state120.proposte = [];
     state120.cercando = "";
     state120.errore = "";
@@ -103788,6 +104300,8 @@ function alClic(event) {
       else state120.bozza.tappe = [posto];
       if (state120.bozza.stima?.fonte !== "traffico" || state120.bozza.tipo !== "tappe")
         state120.bozza.stima = null;
+      state120.bozza.soste = null;
+      state120.tappeKm = [];
       state120.proposte = [];
       state120.cercando = "";
       state120.linea = [];
@@ -103796,6 +104310,8 @@ function alClic(event) {
   } else if (d.gnTogliTappa && state120.bozza) {
     state120.bozza.tappe.splice(Number(d.gnTogliTappa), 1);
     state120.bozza.stima = null;
+    state120.bozza.soste = null;
+    state120.tappeKm = [];
     state120.linea = [];
     void stimaLaStrada();
   } else if ("gnSalva" in d) {
@@ -103839,6 +104355,17 @@ function alCambio2(event) {
     case "garage":
       b2.prepara.garage = campo5.value ? { entity: campo5.value } : null;
       break;
+    case "autoUid":
+      b2.auto = { ...b2.auto || {}, uid: campo5.value, partenza: null };
+      b2.auto = opzioniDellAuto(b2, datiDellAuto(lAutoDelViaggio(b2)));
+      b2.soste = null;
+      disegna6();
+      void stimaLaStrada();
+      return;
+    case "minimaArrivo":
+    case "kwColonnine":
+      cambiaLAuto({ [campo5.dataset.gnCampo]: Number(campo5.value) });
+      return;
     default:
       return;
   }
@@ -103920,7 +104447,62 @@ body.dark-mode .dm-gn,html.dark .dm-gn{--gn-mappa:#1e293b;--gn-card:#111827;--gn
 .dm-gn-vuoto.grande{display:grid;place-items:center;min-height:300px;text-align:center}
 .dm-gn-premium{display:flex;gap:16px;align-items:center}
 .dm-gn-premium img{width:72px;height:72px;border-radius:18px}
+.dm-gn-riga b{font-weight:800}
+.dm-gn-auto{border:1px solid var(--gn-bordo);border-radius:18px;padding:14px;background:var(--gn-card)}
+.dm-gn-auto-capo{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dm-gn-auto-capo>.dm-gn-col{flex:1 1 0;min-width:0}
+.dm-gn-auto-ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:24px;background:#dcfce7;flex:none}
+.dm-gn-auto-nome{font-weight:800;font-size:16px}
+.dm-gn-auto-stato{font-size:12.5px;color:var(--gn-piano)}
+.dm-gn-auto-scelta{flex:none;margin-left:auto;max-width:140px;font:inherit;font-size:13px;border:1px solid var(--gn-bordo);border-radius:10px;padding:6px 8px;background:var(--gn-card);color:inherit}
+.dm-gn-barra{position:relative;height:10px;border-radius:99px;background:#e2e8f0;margin:16px 0 4px;overflow:visible}
+.dm-gn-barra>i{position:absolute;top:0;bottom:0;border-radius:99px}
+.dm-gn-barra-ora{left:0;background:linear-gradient(90deg,#16a34a,#22c55e)}
+.dm-gn-barra-poi{background:repeating-linear-gradient(135deg,#bbf7d0 0 6px,#86efac 6px 12px);border-radius:0 99px 99px 0!important}
+.dm-gn-barra-tacca{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;border-radius:2px;background:#15803d}
+.dm-gn-barra-dida{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--gn-piano)}
+.dm-gn-numeri{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.dm-gn-num{background:var(--gn-fondo);border-radius:12px;padding:9px 10px;display:flex;flex-direction:column;min-width:0}
+.dm-gn-num b{font-size:19px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-gn-num span{font-size:11.5px;font-weight:700;color:var(--gn-piano)}
+.dm-gn-num.verde b{color:#15803d}
+.dm-gn-esito{display:flex;gap:10px;align-items:center;margin-top:12px;padding:10px 14px;border-radius:14px;font-size:14px}
+.dm-gn-esito b{font-weight:800}
+.dm-gn-esito small{font-size:12px;font-weight:700}
+.dm-gn-esito.giallo{background:#fef3c7;color:#92400e}
+.dm-gn-esito.verde{background:#dcfce7;color:#166534}
+.dm-gn-esito.grigio{background:var(--gn-fondo);color:var(--gn-piano)}
+.dm-gn-scelte{border-top:1px solid var(--gn-bordo);margin-top:14px;padding-top:6px}
+.dm-gn-scelta{display:flex;align-items:center;gap:10px;padding:7px 0}
+.dm-gn-scelta select{font:inherit;font-size:13px;border:1px solid var(--gn-bordo);border-radius:10px;padding:6px;background:var(--gn-card);color:inherit}
+.dm-gn-seg.mini{margin:0;padding:3px;border-radius:12px;flex:none}
+.dm-gn-seg.mini button{padding:6px 10px;font-size:13px}
+.dm-gn-invito{display:flex;align-items:center;gap:12px;border:1.5px dashed #cbd5e1;border-radius:18px;padding:14px;margin-top:14px;background:var(--gn-fondo)}
+.dm-gn-invito-ic{font-size:26px;flex:none}
+.dm-gn-invito small{font-size:11.5px;color:var(--gn-piano);margin-top:4px}
+.dm-gn-collega{flex:none;border:1px solid #93c5fd;color:#1d4ed8;background:var(--gn-card);border-radius:12px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit}
+.dm-gn-soste{border:1px solid var(--gn-bordo);border-radius:18px;padding:14px;margin:4px 0 8px}
+.dm-gn-soste-capo{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.dm-gn-soste-capo b{font-size:16px;font-weight:800}
+.dm-gn-soste-capo small{font-size:12.5px;font-weight:700;color:var(--gn-piano)}
+.dm-gn-soste ol{list-style:none;margin:0;padding:0}
+.dm-gn-fila{position:relative;display:flex;gap:12px;align-items:flex-start;padding:9px 8px;border-radius:12px}
+.dm-gn-fila:not(:last-child)::before{content:"";position:absolute;left:21px;top:34px;bottom:-10px;width:3px;background:#cbd5e1;border-radius:2px}
+.dm-gn-fila.sosta{background:#fffbeb;margin:4px 0}
+.dm-gn-fila>.dm-gn-col b{font-weight:800;font-size:14.5px}
+.dm-gn-fila>.dm-gn-col small{font-size:12.5px;color:var(--gn-piano)}
+.dm-gn-pallino{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:13px;font-weight:800;color:#fff;border:3px solid var(--gn-card)}
+.dm-gn-pallino.verde{background:#16a34a;font-size:9px}.dm-gn-pallino.viola{background:#6d28d9}.dm-gn-pallino.arancio{background:#f59e0b}.dm-gn-pallino.rosso{background:#dc2626;font-size:12px}
+.dm-gn-fila-ora{display:flex;flex-direction:column;align-items:flex-end;text-align:right;flex:none}
+.dm-gn-fila-ora b{font-weight:800;font-size:14.5px}
+.dm-gn-fila-ora small{font-size:12px;font-weight:700;color:var(--gn-piano)}
+.dm-gn-batt{align-self:flex-start;white-space:nowrap;display:inline-flex;margin-top:4px;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-size:12px;font-weight:800}
+.dm-gn-batt.gialla{background:#fef3c7;color:#92400e}
+.dm-gn-fonti{font-size:11.5px;color:var(--gn-piano);margin-top:8px;line-height:1.45}
+body.dark-mode .dm-gn-fila.sosta,html.dark .dm-gn-fila.sosta{background:#422006}
+body.dark-mode .dm-gn-auto-ic,html.dark .dm-gn-auto-ic{background:#14532d}
 @media (max-width:980px){.dm-gn-griglia,.dm-gn-dett{grid-template-columns:1fr}}
+@media (max-width:560px){.dm-gn-auto-scelta{order:3;flex:1 1 100%;max-width:none;margin-left:0}.dm-gn-scelta{flex-wrap:wrap}}
 `;
 function schedule28() {
   if (state120.frame) return;
@@ -111739,7 +112321,7 @@ function installAutoOMoto() {
 senzaCadere(installAutoOMoto);
 
 // src/core/le-fasce-del-dispositivo.js
-var numero50 = (valore3) => {
+var numero51 = (valore3) => {
   const letto = Number(valore3);
   return Number.isFinite(letto) ? letto : null;
 };
@@ -111748,7 +112330,7 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
   const config = normalizzaLeFasce(fasceSalvate);
   const quante3 = config.voci.length;
   if (!quante3 || !leFasceValgono(config)) return null;
-  const unico = Math.max(0, numero50(prezzoUnico) || 0);
+  const unico = Math.max(0, numero51(prezzoUnico) || 0);
   const prezzoDi = (indice) => {
     const suo2 = config.voci[indice]?.prezzo;
     return suo2 === null || suo2 === void 0 ? unico : suo2;
@@ -112232,23 +112814,23 @@ senzaCadere(installLaVentolaDellInverter);
 // src/core/il-solare-in-movimento.js
 var PERIODO = 4;
 var PASSI = 6;
-var numero51 = (valore3) => {
+var numero52 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || String(valore3).trim() === "") return null;
   const n = Number(String(valore3).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 };
 function passiDelFlusso(delta) {
-  const d = numero51(delta);
+  const d = numero52(delta);
   return Math.max(1, Math.min(PASSI, 1 + Math.round(Math.max(0, d ?? 0) / 6)));
 }
 function caloreDelPannello(gradi9) {
-  const g = numero51(gradi9);
+  const g = numero52(gradi9);
   if (g === null) return 0;
   return Math.max(0, Math.min(1, (g - 30) / 60));
 }
 function ilMotoDelSolare({ delta, pannello, potenza: potenza3 } = {}) {
   const n = passiDelFlusso(delta);
-  const w = numero51(potenza3);
+  const w = numero52(potenza3);
   return {
     ciclo: `${(PERIODO / n).toFixed(4)}s`,
     rotore: `${(PERIODO / (n * 2)).toFixed(4)}s`,
@@ -112271,7 +112853,7 @@ function lettureDelMoto(states = {}, risolvi2 = (rif) => rif) {
       entita3 = "";
     }
     const stato3 = entita3 && entita3 !== rif ? states?.[entita3] : null;
-    let valore3 = numero51(stato3?.state);
+    let valore3 = numero52(stato3?.state);
     const unita2 = String(stato3?.attributes?.unit_of_measurement || "").toLowerCase();
     if (valore3 !== null && chiave2 === "potenza" && unita2 === "kw") valore3 *= 1e3;
     fuori[chiave2] = valore3;
@@ -112374,10 +112956,10 @@ var BUTTON_LABELS = [
   ["b-c-sicurezza", () => t("V. sicurezza", "Safety valve")]
 ];
 var KPI_ORDER = ["delta", "press", "power"];
-var pct = (value, total) => `${(value / total * 100).toFixed(3)}%`;
+var pct2 = (value, total) => `${(value / total * 100).toFixed(3)}%`;
 function placeRules(layout) {
   const P7 = PLACES[layout.name];
-  const at = (sel, [x, y]) => `#page-boiler ${sel}{left:${pct(x, layout.w)} !important;top:${pct(y, layout.h)} !important}`;
+  const at = (sel, [x, y]) => `#page-boiler ${sel}{left:${pct2(x, layout.w)} !important;top:${pct2(y, layout.h)} !important}`;
   const [hx, hy, hw, hh] = P7.collectorHit;
   return [
     at("#syn-p-solare", P7.pump),
@@ -112391,7 +112973,7 @@ function placeRules(layout) {
     at('.dm-st-plant > [data-dm-st-kpi="press"]', P7.press),
     at('.dm-st-plant > [data-dm-st-kpi="power"]', P7.power),
     at(".dm-st-tap-tag", P7.tapTag),
-    `#page-boiler .dm-st-node-collector{left:${pct(hx, layout.w)} !important;top:${pct(hy, layout.h)} !important;width:${pct(hw, layout.w)};height:${pct(hh, layout.h)}}`,
+    `#page-boiler .dm-st-node-collector{left:${pct2(hx, layout.w)} !important;top:${pct2(hy, layout.h)} !important;width:${pct2(hw, layout.w)};height:${pct2(hh, layout.h)}}`,
     `#page-boiler .dm-st-plant{--vw:${layout.w};--vh:${layout.h};width:min(100cqw, 100cqh * ${layout.w} / ${layout.h});height:min(100cqh, 100cqw * ${layout.h} / ${layout.w});--k:calc(min(100cqw, 100cqh * ${layout.w} / ${layout.h}) / ${layout.w})}`
   ].join("\n");
 }
@@ -113740,14 +114322,14 @@ function targhetta(etichetta3, valore3, unita2, colore, extra = "") {
     <b class="dm-it-plate-val" style="color:${colore}">${esc(valore3)}<i>${esc(unita2)}</i></b>
   </div>`;
 }
-var NUMERO = (valore3, cifre2 = 1) => formatNumber(valore3, cifre2);
-function nodoTarghetta(posizione, etichetta3, valore3, unita2, colore, cifre2 = 1, extra = "", classe2 = "") {
+var NUMERO = (valore3, cifre3 = 1) => formatNumber(valore3, cifre3);
+function nodoTarghetta(posizione, etichetta3, valore3, unita2, colore, cifre3 = 1, extra = "", classe2 = "") {
   if (valore3 == null) return "";
-  const salita = laMisuraDallUnita(valore3, unita2, { decimali: cifre2 });
+  const salita = laMisuraDallUnita(valore3, unita2, { decimali: cifre3 });
   return `<div class="dm-it-nodo dm-it-nodo-plate ${classe2}" style="${posizione}">
     ${targhetta(
     etichetta3,
-    salita ? salita.numero : NUMERO(valore3, cifre2),
+    salita ? salita.numero : NUMERO(valore3, cifre3),
     salita ? ` ${salita.unita}` : unita2,
     colore,
     extra
@@ -116444,7 +117026,7 @@ function accendiLaVoce7() {
   if (!serve && pagina2?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
-var NUMERO2 = (valore3, cifre2 = 1) => formatNumber(valore3, cifre2);
+var NUMERO2 = (valore3, cifre3 = 1) => formatNumber(valore3, cifre3);
 var RIENTRO = "76px";
 var POSTI2 = Object.freeze({
   rete: `left:max(12%,${RIENTRO});top:50%`,
@@ -116457,15 +117039,15 @@ var POSTI2 = Object.freeze({
   temperatura: "left:86%;top:82%",
   verdetto: "left:14%;top:82%"
 });
-function targhetta2(posto, etichetta3, valore3, unita2, colore, cifre2 = 1) {
+function targhetta2(posto, etichetta3, valore3, unita2, colore, cifre3 = 1) {
   if (valore3 == null) return "";
-  const salita = laMisuraDallUnita(valore3, unita2, { decimali: cifre2 });
-  const numero54 = salita ? salita.numero : NUMERO2(valore3, cifre2);
+  const salita = laMisuraDallUnita(valore3, unita2, { decimali: cifre3 });
+  const numero55 = salita ? salita.numero : NUMERO2(valore3, cifre3);
   const sigla = salita ? ` ${salita.unita}` : unita2;
   return `<div class="dm-ups-nodo dm-ups-nodo-plate" data-dm-ups-posto="${esc(posto)}" style="${POSTI2[posto]}">
     <div class="dm-ups-plate">
       <span class="dm-ups-plate-lbl">${esc(etichetta3)}</span>
-      <b class="dm-ups-plate-val" style="color:${colore}">${esc(numero54)}<i>${esc(sigla)}</i></b>
+      <b class="dm-ups-plate-val" style="color:${colore}">${esc(numero55)}<i>${esc(sigla)}</i></b>
     </div>
   </div>`;
 }
@@ -118196,7 +118778,7 @@ function lunediDiOggi() {
   const oggi = /* @__PURE__ */ new Date();
   const indietro = (oggi.getDay() + 6) % 7;
   const lunedi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() - indietro);
-  const due3 = (numero54) => String(numero54).padStart(2, "0");
+  const due3 = (numero55) => String(numero55).padStart(2, "0");
   return `${lunedi.getFullYear()}-${due3(lunedi.getMonth() + 1)}-${due3(lunedi.getDate())}`;
 }
 function nomeDelGiorno2(inizio, indice) {
@@ -120599,8 +121181,8 @@ function conICampiDelContatore(bozza3, body, indice) {
 }
 function valoreDellaRiga(letta) {
   if (!letta || letta.muto) return "—";
-  const cifre2 = Math.abs(letta.valore) < 100 ? 1 : 0;
-  return `${formatNumber(letta.valore, cifre2)}${letta.unita ? ` ${letta.unita}` : ""}`;
+  const cifre3 = Math.abs(letta.valore) < 100 ? 1 : 0;
+  return `${formatNumber(letta.valore, cifre3)}${letta.unita ? ` ${letta.unita}` : ""}`;
 }
 var scheda4 = costruisciSchedaDichiarata({
   nome: "contatori",
@@ -120850,7 +121432,7 @@ senzaCadere(installPianteEditor);
 
 // src/core/la-pagina-meteo.js
 var pulito59 = (valore3) => String(valore3 ?? "").trim();
-var numero52 = (valore3) => {
+var numero53 = (valore3) => {
   if (valore3 === "" || valore3 == null) return null;
   const n = Number(String(valore3).replace(",", "."));
   return Number.isFinite(n) ? n : null;
@@ -121028,7 +121610,7 @@ function trovaLaStazione(states, scelte5 = {}) {
   return trovate;
 }
 function letturaDi4(stato3) {
-  const valore3 = numero52(stato3?.state);
+  const valore3 = numero53(stato3?.state);
   if (valore3 === null) return null;
   const quando4 = Date.parse(pulito59(stato3?.last_updated || stato3?.last_changed));
   return {
@@ -121038,7 +121620,7 @@ function letturaDi4(stato3) {
   };
 }
 function inEttopascal(valore3, unita2 = "hPa") {
-  const n = numero52(valore3);
+  const n = numero53(valore3);
   if (n === null) return null;
   const misura7 = pulito59(unita2).toLowerCase();
   if (misura7 === "kpa") return n * 10;
@@ -121049,13 +121631,13 @@ function inEttopascal(valore3, unita2 = "hPa") {
   return n;
 }
 function inCelsius(valore3, unita2 = "°C") {
-  const n = numero52(valore3);
+  const n = numero53(valore3);
   if (n === null) return null;
   return /f$/i.test(pulito59(unita2)) ? (n - 32) * 5 / 9 : n;
 }
 function puntoDiRugiada(temperatura, umidita, unita2 = "°C") {
   const gradi9 = inCelsius(temperatura, unita2);
-  const relativa = numero52(umidita);
+  const relativa = numero53(umidita);
   if (gradi9 === null || relativa === null || relativa <= 0 || relativa > 100) return null;
   const a = 17.62;
   const b2 = 243.12;
@@ -121083,7 +121665,7 @@ function tendenzaDellaPressione(serie2, { adesso = Date.now(), unita: unita2 = "
   return { differenza, differenzaHpa, verso: verso2, forte: Math.abs(differenzaHpa) >= PRESSIONE_FORTE };
 }
 function ordinata(serie2) {
-  return (Array.isArray(serie2) ? serie2 : []).map((punto2) => ({ quando: Number(punto2?.quando), valore: numero52(punto2?.valore) })).filter((punto2) => Number.isFinite(punto2.quando) && punto2.valore !== null).sort((a, b2) => a.quando - b2.quando);
+  return (Array.isArray(serie2) ? serie2 : []).map((punto2) => ({ quando: Number(punto2?.quando), valore: numero53(punto2?.valore) })).filter((punto2) => Number.isFinite(punto2.quando) && punto2.valore !== null).sort((a, b2) => a.quando - b2.quando);
 }
 function istante4(riga3) {
   const grezzo = riga3?.lu ?? riga3?.lc ?? riga3?.last_updated ?? riga3?.last_changed;
@@ -121160,7 +121742,7 @@ function pioggiaOraPerOra(serie2, { adesso = Date.now(), ore = 24, unita: unita2
   return caselle2;
 }
 function fasciaUV(indice) {
-  const n = numero52(indice);
+  const n = numero53(indice);
   if (n === null) return "";
   if (n < 3) return "basso";
   if (n < 6) return "moderato";
@@ -121169,7 +121751,7 @@ function fasciaUV(indice) {
   return "estremo";
 }
 function spicchioDelVento(direzione) {
-  const n = numero52(direzione);
+  const n = numero53(direzione);
   if (n !== null) return (Math.round(n / 45) % 8 + 8) % 8;
   const sigla = pulito59(direzione).toUpperCase();
   const sigle2 = [["N"], ["NE"], ["E"], ["SE"], ["S"], ["SW", "SO"], ["W", "O"], ["NW", "NO"]];
@@ -121177,7 +121759,7 @@ function spicchioDelVento(direzione) {
   return indice < 0 ? null : indice;
 }
 function gradiDelVento(direzione) {
-  const n = numero52(direzione);
+  const n = numero53(direzione);
   if (n !== null) return (n % 360 + 360) % 360;
   const spicchio = spicchioDelVento(direzione);
   return spicchio === null ? null : spicchio * 45;
@@ -121190,9 +121772,9 @@ function voceDellePrevisioni(previsione, unita2) {
   return {
     quando: quando4,
     condizione: pulito59(previsione?.condition),
-    temperatura: numero52(previsione?.temperature),
-    bassa: numero52(previsione?.templow),
-    probabilita: numero52(previsione?.precipitation_probability),
+    temperatura: numero53(previsione?.temperature),
+    bassa: numero53(previsione?.templow),
+    probabilita: numero53(previsione?.precipitation_probability),
     mm: inMillimetri(previsione?.precipitation, unita2)
   };
 }
@@ -121269,7 +121851,7 @@ function misureDiAdesso({ stazione = {}, meteo: meteo3 = null } = {}) {
       continue;
     }
     const grezzo = attributi2[attributo2];
-    const valore3 = chiave2 === "direzione" ? gradiDelVento(grezzo) : numero52(grezzo);
+    const valore3 = chiave2 === "direzione" ? gradiDelVento(grezzo) : numero53(grezzo);
     if (valore3 === null) continue;
     fuori[chiave2] = {
       valore: valore3,
@@ -122901,10 +123483,10 @@ function apriMeteoNelConfig() {
   return true;
 }
 var SPAZIO5 = " ";
-function numeroBello(valore3, cifre2 = null) {
+function numeroBello(valore3, cifre3 = null) {
   const n = Number(valore3);
   if (!Number.isFinite(n)) return "—";
-  const quante3 = cifre2 ?? (Math.abs(n) < 100 && Math.round(n) !== n ? 1 : 0);
+  const quante3 = cifre3 ?? (Math.abs(n) < 100 && Math.round(n) !== n ? 1 : 0);
   try {
     return new Intl.NumberFormat(locale(), {
       minimumFractionDigits: quante3,
@@ -125109,7 +125691,7 @@ senzaCadere(installMacchineEditor);
 
 // src/core/nodi-del-cluster.js
 var clean28 = (valore3) => String(valore3 ?? "").trim();
-var numero53 = (valore3) => {
+var numero54 = (valore3) => {
   const n = Number.parseFloat(String(valore3 ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : null;
 };
@@ -125121,7 +125703,7 @@ var SOGLIE2 = Object.freeze({
   temperatura: Object.freeze({ alto: 70, critico: 85 })
 });
 function livelloDella(valore3, soglie = SOGLIE2.carico) {
-  const n = numero53(valore3);
+  const n = numero54(valore3);
   if (n === null) return "";
   if (n >= soglie.critico) return "critico";
   if (n >= soglie.alto) return "alto";
@@ -125178,7 +125760,7 @@ function misura6(entity2, states, soglie) {
   if (!id) return null;
   const stato3 = states?.[id];
   if (!stato3) return null;
-  const valore3 = numero53(stato3.state);
+  const valore3 = numero54(stato3.state);
   if (valore3 === null) return null;
   const unita2 = clean28(stato3.attributes?.unit_of_measurement);
   return {
