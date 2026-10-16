@@ -67,6 +67,10 @@ const state = (root[KEY] ||= {
  * inghiottendo a tratti quello che c'e' in mezzo. Due commenti piu' su
  * campavano cosi', e aggiungerne altri qui dentro ha spostato l'accoppiamento
  * e li ha scoperti. Un commento fuori dal letterale non puo' fare danni.
+ *
+ * La pagina Meteo (#206) sta subito dopo le Temperature, come la sua voce
+ * nella barra: il sottotitolo lo riscrive la pagina coi blocchi che ha
+ * davvero, e quello qui sotto e' il caso con tutto.
  */
 const PAGES = Object.freeze([
   {
@@ -75,6 +79,12 @@ const PAGES = Object.freeze([
     it: ["Temperature", "Sensori stanza per stanza · Comfort · Umidità"],
     en: ["Temperatures", "Room by room sensors · Comfort · Humidity"],
     fold: "h2:not(.dm-page-mast-title)",
+  },
+  {
+    id: "page-meteo",
+    tint: ["14,165,233", "99,102,241"],
+    it: ["Meteo", "Adesso · La mia stazione · Previsioni · Radar"],
+    en: ["Weather", "Now · My station · Forecast · Radar"],
   },
   {
     id: "page-tapparelle",

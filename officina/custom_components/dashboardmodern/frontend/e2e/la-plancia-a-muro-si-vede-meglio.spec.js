@@ -8,7 +8,7 @@
  * la si guarda; nel config l'anteprima dal vivo, la bozza che non si perde
  * cambiando scheda, la pagina duplicata e il colore. */
 import { expect, test } from "@playwright/test";
-import { STATI_A_MURO, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
+import { SEME_A_MURO, STATI_A_MURO, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
 
 const muro = (page) => page.locator("#dm-muro");
 const salvato = (page) =>
@@ -430,8 +430,11 @@ test.describe("la plancia a muro si vede meglio", () => {
     const riga = muro(page).locator(".mu-riposo-aree");
     await expect(riga).toBeVisible();
     await expect(riga).toContainText("Perimetrale");
-    await expect(riga).toContainText("Fuori");
-    await expect(riga).toContainText("Zona notte");
+    /* «Non devi scrivere fuori ma metti inserito»: lo stato dice inserito, e
+     * come solo quando non e' l'inserimento pieno. */
+    await expect(riga).toContainText(/Perimetrale\s*Inserito/);
+    await expect(riga).not.toContainText("Fuori");
+    await expect(riga).toContainText(/Zona notte\s*Inserito notte/);
     await expect(riga).not.toContainText("Garage");
 
     /* Tutte disinserite: «Disattivo». */
@@ -442,6 +445,101 @@ test.describe("la plancia a muro si vede meglio", () => {
       window.dmMuro.riposa();
     });
     await expect(riga).toContainText(/Antifurto\s*·\s*Disattivo/);
+  });
+
+  /* «Quando c'e' antifurto inserito non devi scrivere fuori ma metti inserito
+   * e al massimo il nome della partizione inserita. Tipo se e' notte scrivi
+   * inserito notte.» */
+  test("il riposo con l'antifurto inserito: «Inserito notte», «Inserito», mai «Fuori»", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: { attiva: true, pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }] },
+      stati: {
+        ...STATI,
+        "alarm_control_panel.casa": { state: "armed_night", attributes: {} },
+      },
+    });
+    await page.evaluate(() => window.dmMuro.riposa());
+    const riposo = muro(page).locator(".mu-riposo");
+    await expect(riposo).toContainText(/Antifurto · Inserito notte/);
+    await page.evaluate(() => {
+      const id = "alarm_control_panel.casa";
+      eval("_RAW_STATES")[id] = { entity_id: id, state: "armed_away", attributes: {} };
+      window.dmMuro.riposa();
+    });
+    await expect(riposo).toContainText(/Antifurto · Inserito/);
+    await expect(riposo).not.toContainText("Fuori");
+  });
+
+  /* «Il muro scrive "X° in casa", ma per me quel sensore e' esterno.» Una
+   * stanza all'aperto (#251) non e' «in casa». */
+  test("la temperatura di una stanza all'aperto e' «fuori», e senza sensore si cerca una stanza al chiuso", async ({
+    page,
+  }, testInfo) => {
+    const seme = structuredClone(SEME_A_MURO);
+    seme.sections.rooms.unshift({
+      id: "terrazzo",
+      name: "Terrazzo",
+      outdoor: true,
+      temp: "sensor.terrazzo_t",
+    });
+    const stati = {
+      ...STATI,
+      "sensor.terrazzo_t": { state: "12.6", attributes: { unit_of_measurement: "°C" } },
+    };
+    /* Il sensore scelto e' quello del terrazzo: sul riposo «fuori», e i
+     * gradi del meteo non ci sono — una temperatura di fuori sola. */
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      stati,
+      muro: {
+        attiva: true,
+        temperatura: "casa",
+        riposo: { attivo: true, minuti: 2, torna: true, sensore: "sensor.terrazzo_t" },
+        pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }],
+      },
+    });
+    await expect(muro(page).locator(".mu-meteo b")).toHaveText("12,6°");
+    await expect(muro(page).locator(".mu-meteo .mu-et")).toHaveText(/^fuori · poco nuvoloso/i);
+    await page.evaluate(() => window.dmMuro.riposa());
+    const riga = muro(page).locator(".mu-riposo-riga");
+    await expect(riga.locator('[data-mu-riposo="temperatura"]')).toHaveText("12,6° fuori");
+    await expect(riga).not.toContainText("in casa");
+    await expect(riga).not.toContainText("17°");
+
+    /* Anche con «Temperatura mostrata: meteo» il riposo non mette due
+     * temperature di fuori: resta quella del sensore. */
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      stati,
+      muro: {
+        attiva: true,
+        riposo: { attivo: true, minuti: 2, torna: true, sensore: "sensor.terrazzo_t" },
+        pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }],
+      },
+    });
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect(muro(page).locator(".mu-riposo-riga")).toContainText("12,6° fuori");
+    await expect(muro(page).locator(".mu-riposo-riga")).not.toContainText("17°");
+
+    /* Senza sensore, con la prima pagina sul terrazzo: «in casa» e' la prima
+     * stanza al chiuso con una sonda, il soggiorno. */
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      stati,
+      muro: {
+        attiva: true,
+        temperatura: "casa",
+        pagine: [{ id: "p1", modello: "stanza", stanza: "Terrazzo" }],
+      },
+    });
+    await expect(muro(page).locator(".mu-meteo b")).toHaveText("21,2°");
+    await expect(muro(page).locator(".mu-meteo .mu-et")).toHaveText(/^in casa/i);
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect(muro(page).locator('.mu-riposo-riga [data-mu-riposo="temperatura"]')).toHaveText(
+      "21,2° in casa",
+    );
   });
 
   test("la pagina Musica: il gruppo dei Sonos si fa e si scioglie dal tablet", async ({

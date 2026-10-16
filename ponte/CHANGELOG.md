@@ -10,6 +10,37 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.4
+
+- **Plance per chi non amministra:** si aprono di nuovo, la plancia di sempre
+  e quelle a muro. Dal Supervisor 2026.10.2 Home Assistant rispondeva
+  «403: Forbidden» agli utenti che non amministrano la casa. Chi vede quale
+  plancia lo decide sempre gdahome, alla voce «Le plance». La voce
+  «Configura gdahome» adesso compare anche nella loro barra, e apre solo la
+  pagina che dice che è per gli amministratori.
+- **Pianificatore:** la **cartina** si vede (prima restava vuota), e la
+  ricerca trova anche il **numero civico**: «via Roma 12» porta al 12.
+- **Pianificatore e auto elettrica:** con un'auto elettrica o ibrida nella
+  pagina Auto c'è il riquadro **«L'auto»** — batteria, autonomia, carica di
+  casa — e, se la carica non basta, le **soste di ricarica** lungo la strada:
+  in elenco con gli orari, sulla cartina coi fulmini, e nell'ora a cui
+  partire. Si sceglie con quanta carica si parte, la carica minima all'arrivo
+  e la potenza delle colonnine. La strada non esce di casa.
+- **Meteo:** una pagina nuova, da aggiungere nel config — com'è adesso, la
+  propria stazione meteo, le previsioni e il radar.
+- **Pannello a muro, due tasti:** un riquadro nuovo, **«Due tasti: ON e
+  OFF»**, per chi accende e spegne con due entità separate: un nome solo e,
+  al posto dell'interruttore, ON a sinistra e OFF a destra, ognuno con la sua
+  entità. Con un'entità di stato dice «Accesa» o «Spenta»; senza, dopo il
+  tocco, «✓ Inviato».
+- **Pannello a muro, antifurto:** inserito si legge **«Inserito»**, o
+  «Inserito notte», «Inserito casa», «Inserito» col nome del modo scritto a
+  mano — non più «Fuori», che resta la parola del tasto.
+- **Pannello a muro, temperatura:** il sensore di una stanza **all'aperto**
+  si legge «fuori», non «in casa», e sul riposo non si ripetono i gradi del
+  meteo. Senza sensore scelto, se la prima pagina è all'aperto, «in casa» è
+  la prima stanza al chiuso con una sonda.
+
 ## 1.14.3
 
 - **Pianificatore (pagina gdanav):** la ricerca trova strade e luoghi — se il

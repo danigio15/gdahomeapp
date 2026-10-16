@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.14.3"
+version: "1.14.4"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -73,6 +73,21 @@ ingress_port: 8099
 # Home Assistant vuol dire «qui si configura».
 panel_icon: mdi:cog
 panel_title: Configura gdahome
+# L'ingress si apre anche a chi non amministra, e deve.
+#
+# Le plance — quella di sempre e quelle a muro — passano da qui: la Plancia
+# di Home Assistant apre `apri.html`, che chiede una sessione d'ingresso e
+# carica la plancia dall'add-on. Il Supervisor da ottobre 2026 (#7308) rifiuta
+# con «403: Forbidden» la sessione di chi non amministra quando l'add-on ha
+# `panel_admin`, che di serie e' **si'**: da un giorno all'altro le plance non
+# si aprivano piu' a chi abita la casa senza amministrarla.
+#
+# Non apre niente di nuovo. La console a chi non amministra non si serve
+# (`soloChiAmministra`), tutto `/api/` vuole un amministratore, e chi vede
+# quale plancia lo decide «Le plance» (`laVede`), guardando l'utente che
+# l'ingress scrive in testa alla richiesta. La voce «Configura gdahome»
+# compare anche nella loro barra, e apre la pagina che lo dice.
+panel_admin: false
 
 # La porta dell'app.
 ports:

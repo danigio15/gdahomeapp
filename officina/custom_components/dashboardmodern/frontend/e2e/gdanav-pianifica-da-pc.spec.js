@@ -233,13 +233,19 @@ test("la testata della pagina gdanav resta ferma mentre la casa cambia", async (
 
 /* «Il pianificatore non trova indirizzi, la mappa non ha nulla.» La ricerca
  * che non risponde lo dice, quella che non trova lo dice in un altro modo, e
- * sotto la strada c'e' la cartina di OpenStreetMap. */
+ * sotto la strada c'e' la cartina — col fondo di Esri, come il radar: il server
+ * dei volontari di OpenStreetMap risponde «403 Access blocked». */
 test("la ricerca dice cosa succede, e sotto la strada c'e' la cartina", async ({
   page,
 }, testInfo) => {
   const tessere = [];
   const pagina = await apri(page, testInfo);
+  const bloccate = [];
   await page.route("https://tile.openstreetmap.org/**", (route) => {
+    bloccate.push(route.request().url());
+    route.fulfill({ status: 403, body: "Access blocked" });
+  });
+  await page.route("https://server.arcgisonline.com/**", (route) => {
     tessere.push(route.request().url());
     const [z, x, y] = route.request().url().split("/").slice(-3);
     route.fulfill({
@@ -261,10 +267,15 @@ test("la ricerca dice cosa succede, e sotto la strada c'e' la cartina", async ({
   await expect(pagina.locator(".dm-gn-mappa svg image").first()).toBeAttached();
   await expect.poll(() => tessere.length).toBeGreaterThan(1);
   expect(
-    tessere.every((u) => /^https:\/\/tile\.openstreetmap\.org\/\d+\/\d+\/\d+\.png$/.test(u)),
+    tessere.every((u) =>
+      /^https:\/\/server\.arcgisonline\.com\/ArcGIS\/rest\/services\/World_Street_Map\/MapServer\/tile\/\d+\/\d+\/\d+$/.test(
+        u,
+      ),
+    ),
   ).toBe(true);
   await expect(pagina.locator(".dm-gn-mappa path")).toHaveCount(2);
-  await expect(pagina.locator(".dm-gn-osm")).toHaveText("© OpenStreetMap");
+  await expect(pagina.locator(".dm-gn-osm")).toHaveText("© Esri");
+  expect(bloccate).toEqual([]);
   if (process.env.DM_FOTO) {
     await page.waitForTimeout(600);
     await page.screenshot({ path: `${process.env.DM_FOTO}/gdanav-pc-cartina.png` });

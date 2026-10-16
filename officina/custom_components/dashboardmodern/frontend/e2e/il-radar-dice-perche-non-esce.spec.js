@@ -91,7 +91,10 @@ test("la scheda tiene la scelta «Un indirizzo mio» e dice subito che e' una pa
   await page.evaluate(() => {
     if (!document.getElementById("editor-modal")?.classList.contains("show")) apriConfigEntita();
   });
-  await page.locator('.ed-tab[data-tab="sez0"]').first().click();
+  /* Il radar si configura nella scheda Meteo, dove e' nata la sua pagina
+   * (#206): prima stava sotto il meteo della scheda Home. */
+  await expect(page.locator('.ed-tab[data-tab="meteo"]')).toHaveCount(1, { timeout: 15_000 });
+  await page.evaluate(() => window.editorSwitch?.("meteo"));
   const tendina = page.locator('#ed-body [data-dm-radar-campo="servizio"]');
   await expect(tendina).toHaveCount(1, { timeout: 15_000 });
   /* Prima tornava su «Nessuno», e la scelta sembrava sparita. */

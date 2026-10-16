@@ -90,6 +90,32 @@ export function previsioniDeiGiorni() {
   return Array.isArray(state.previsioni) ? state.previsioni : [];
 }
 
+/* Le stesse previsioni dei giorni, per la pagina Meteo (#206).
+ *
+ * La pagina le vuole tutte e sette e la card ne usa quattro, ma la domanda a
+ * Home Assistant e' la stessa: farla due volte ogni mezz'ora per la stessa
+ * entita' sarebbe un giro sul socket per niente. Chi la fa per primo la
+ * lascia all'altro. */
+
+/** Le previsioni dei giorni di `entita`, se la card le ha chieste da poco. */
+export function previsioniDeiGiorniFresche(entita, adesso = Date.now()) {
+  if (!entita || state.chiestePer !== entita || state.inVolo) return null;
+  if (!state.chieste || adesso - state.chieste >= RIPOSO) return null;
+  return Array.isArray(state.previsioni) && state.previsioni.length ? state.previsioni : null;
+}
+
+/** Le previsioni dei giorni chieste dalla pagina, lasciate alla card. */
+export function accogliLePrevisioniDeiGiorni(entita, previsioni, adesso = Date.now()) {
+  if (!entita || !Array.isArray(previsioni) || !previsioni.length) return false;
+  state.chiestePer = entita;
+  state.chieste = adesso;
+  state.previsioni = previsioni;
+  try {
+    vestiLaCard();
+  } catch (_errore) {}
+  return true;
+}
+
 function chiediLePrevisioni() {
   if (state.inVolo) return;
   const entita = entitaDelMeteo();

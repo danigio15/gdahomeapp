@@ -114,7 +114,10 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_barra_casa: "sez0",
   cd_evidenza: "sez0",
   cd_meteo_entita_proprie: "sez0",
-  cd_radar_meteo: "sez0",
+  /* Il radar sta nella scheda Meteo dal giorno in cui la pagina e' nata
+   * (#206), insieme a quello che della pagina e' solo suo. */
+  cd_radar_meteo: "meteo",
+  cd_meteo: "meteo",
   cd_sections: "visib",
   cd_section_names: "visib",
   cd_branding: "visib",

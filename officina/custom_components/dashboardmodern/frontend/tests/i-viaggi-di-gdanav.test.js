@@ -5,9 +5,16 @@ import test from "node:test";
 
 import {
   bozzaNuova,
+  caricaAllaPartenza,
+  caricaDopo,
+  CONSUMO_DI_SERIE,
+  consumoStimato,
   durataStimata,
   giorniDetti,
+  guidaStimata,
+  laStradaInFila,
   MARGINE_SENZA_TRAFFICO,
+  minutiDiRicarica,
   nomeDelViaggio,
   oraDi,
   partenzaEArrivo,
@@ -84,4 +91,86 @@ test("la strada sta dentro il riquadro, senza deformarsi", () => {
   }
   assert.ok(punti[1][1] < punti[0][1], "il nord sta in alto");
   assert.deepEqual(proietta([], 600, 260), []);
+});
+
+/* ── l'auto elettrica ─────────────────────────────────────────────────── */
+
+/* Napoli – Aversa – Milano: 788 km, 9 h 55 col margine, due soste di
+ * ricarica da 22 e 23 minuti. */
+const DA_NAPOLI = () => ({
+  ...bozzaNuova("tappe"),
+  quando: { modo: "partenza", ora: "09:00", giorno: "2026-10-17", giorni: [] },
+  tappe: [
+    { nome: "Aversa · Caserta, Campania", lat: 40.97, lon: 14.2 },
+    { nome: "Milano · Lombardia", lat: 45.46, lon: 9.19 },
+  ],
+  stima: { durataS: 31044, km: 788, fonte: "strada" },
+  soste: {
+    elenco: [
+      { km: 268, nome: "Area di servizio Ovest", kw: 300, da: 15, a: 80, min: 22 },
+      { km: 528, nome: "Area di servizio Nord", kw: 350, da: 17, a: 80, min: 23 },
+    ],
+    arrivo: 17,
+    tappeKm: [16, 788],
+  },
+});
+
+test("le soste di ricarica allungano il viaggio: l'arrivo dopo, la partenza prima", () => {
+  const bozza = DA_NAPOLI();
+  assert.equal(minutiDiRicarica(bozza), 45);
+  assert.equal(Math.round(guidaStimata(bozza) / MINUTO), 595);
+  assert.equal(durataStimata(bozza), guidaStimata(bozza) + 45 * MINUTO);
+  const { arrivo } = partenzaEArrivo(bozza, "2026-10-17");
+  assert.equal(oraDi(arrivo), "19:40");
+  /* Con «arrivo entro» si parte prima, e di 45 minuti in piu'. */
+  const entro = {
+    ...bozza,
+    tipo: "una",
+    quando: { ...bozza.quando, modo: "arrivo", ora: "19:40" },
+  };
+  const senza = { ...entro, soste: null };
+  const conSoste = partenzaEArrivo(entro, "2026-10-17").partenza;
+  const senzaSoste = partenzaEArrivo(senza, "2026-10-17").partenza;
+  assert.equal(senzaSoste - conSoste, 45 * MINUTO);
+});
+
+test("la strada in fila: partenza, tappe, soste e arrivo, con le ore", () => {
+  const bozza = DA_NAPOLI();
+  const partenza = new Date(2026, 9, 17, 9, 0).getTime();
+  const fila = laStradaInFila(bozza, partenza);
+  assert.deepEqual(
+    fila.map((r) => [r.tipo, r.km, oraDi(r.alle), r.riparte ? oraDi(r.riparte) : ""]),
+    [
+      ["partenza", 0, "9:00", "9:00"],
+      ["tappa", 16, "9:12", "9:12"],
+      ["sosta", 268, "12:22", "12:44"],
+      ["sosta", 528, "16:00", "16:23"],
+      ["arrivo", 788, "19:40", ""],
+    ],
+  );
+  assert.equal(fila[2].sosta.nome, "Area di servizio Ovest");
+  assert.equal(fila[3].n, 2);
+  /* La sosta dell'utente a una tappa sposta tutto quello che viene dopo. */
+  bozza.tappe[0].sostaMin = 30;
+  const conSosta = laStradaInFila(bozza, partenza);
+  assert.equal(oraDi(conSosta[1].riparte), "9:42");
+  assert.equal(oraDi(conSosta[2].alle), "12:52");
+  assert.equal(oraDi(conSosta[4].alle), "20:10");
+  /* Senza stima, niente fila. */
+  assert.deepEqual(laStradaInFila({ ...bozza, stima: null }, partenza), []);
+});
+
+test("il consumo e la carica: dall'auto, o di serie", () => {
+  /* 70 kWh al 62% con 245 km di autonomia: 17,7 kWh ogni 100 km. */
+  assert.equal(consumoStimato({ kwh: 70, carica: 62, autonomia: 245 }), 17.7);
+  assert.equal(consumoStimato({ kwh: 70, carica: 62 }), CONSUMO_DI_SERIE);
+  assert.equal(consumoStimato({ kwh: 70, carica: 62, autonomia: 2 }), CONSUMO_DI_SERIE);
+  assert.equal(consumoStimato({ kwh: 70, carica: 90, autonomia: 40 }), CONSUMO_DI_SERIE);
+  assert.equal(caricaAllaPartenza("adesso", 62, 80), 62);
+  assert.equal(caricaAllaPartenza("obiettivo", 62, 80), 80);
+  assert.equal(caricaAllaPartenza("obiettivo", 90, 80), 90, "l'obiettivo non toglie carica");
+  assert.equal(caricaAllaPartenza("obiettivo", 62, null), 62);
+  assert.equal(caricaAllaPartenza(100, null), 100);
+  assert.equal(caricaAllaPartenza("adesso", "unavailable"), null);
+  assert.equal(Math.round(caricaDopo(41.3, { carica: 62, kwh: 70, consumo: 17 })), 52);
 });
