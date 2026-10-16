@@ -457,8 +457,6 @@ export default Object.freeze({
   "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.":
     "लेटरबॉक्स पर एक संपर्क सेंसर: जब डाकिया ढक्कन खोलता है तो डाक की गोली दिखती है, ध्यान खींचने के लिए हिलती है और तब तक वहीं रहती है जब तक कोई उसे छू न ले। डाक तब आती है जब कोई देख नहीं रहा होता, इसलिए दो सेकंड की चमक किसी काम की नहीं।",
   "A control that does not respond": "एक बटन जो जवाब नहीं देता",
-  "A donation is any amount you like and unlocks nothing: the dashboard stays the same for everyone. It is a thank-you, and a way of saying «keep going».":
-    "दान की राशि आपकी पसंद है और इससे कुछ अनलॉक नहीं होता: डैशबोर्ड सभी के लिए वही रहता है। यह एक धन्यवाद है, और «जारी रखो» कहने का तरीका।",
   "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.":
     "फ्रीज़र वाला फ्रिज दो हिस्से हैं: दूसरा यहाँ डालें। दोनों भरे हों तो कार्ड दो पट्टियाँ बनाता है।",
   "A group with this name already exists": "इस नाम का समूह पहले से है",
@@ -1095,8 +1093,6 @@ export default Object.freeze({
   "Dashboard language": "डैशबोर्ड की भाषा",
   "Dashboard not connected.": "डैशबोर्ड जुड़ा नहीं है।",
   "Dashboard version": "डैशबोर्ड संस्करण",
-  "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.":
-    "DashboardModern स्वतंत्र और ओपन सोर्स है, खाली समय में बनाया गया: न प्रायोजक, न सदस्यता, न डेटा संग्रह। एक दान से सुधार, समस्याओं के जवाब और असली डिवाइस पर परीक्षण जारी रहते हैं।",
   "Date not found": "तारीख नहीं मिली",
   Day: "दिन",
   "Day / Month / Year": "दिन / महीना / साल",
@@ -1173,7 +1169,6 @@ export default Object.freeze({
   Doctor: "डॉक्टर",
   Dog: "कुत्ता",
   "Domestic hot water": "घरेलू गर्म पानी",
-  "Donate with PayPal": "PayPal से दान करें",
   Done: "हो गया",
   "Done.": "हो गया।",
   Door: "दरवाज़ा",
@@ -1326,8 +1321,6 @@ export default Object.freeze({
     "हर संयंत्र का अपना मीटर, अपना सौर, अपनी बैटरी और अपने भार होते हैं। नीचे के खाने चुने हुए संयंत्र के हैं: नया जोड़ना शून्य से शुरू होता है और जो पहले से सेट है उसे नहीं छूता।",
   "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.":
     "हर संयंत्र के अपने तेरह खाने हैं। जिस पर «अभी पेज पर» लिखा है, वही सौर तापीय पेज और होम की टाइल दिखा रहे हैं: किसी दूसरे के पास वाली आँख उसे उसकी जगह स्क्रीन पर ले आती है।",
-  "Every release brings new sections, fixes seen in the field and tests on phones, tablets and wall screens. The time to do it is what donations help keep free.":
-    "हर संस्करण नए अनुभाग, वास्तविक उपयोग में मिले सुधार और फोन, टैबलेट और दीवार स्क्रीन पर परीक्षण लाता है। इसके लिए समय निकालने में दान मदद करता है।",
   "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.":
     "सब कुछ तैयार: खिड़की का कार्ड अपने कमरे की नमी दिखाता है और सीमा पार होते ही खोलने को कहता है।",
   "Everything off": "सब बंद",
@@ -2776,7 +2769,6 @@ export default Object.freeze({
   "Paste your token here (starts with eyJ...)": "अपना टोकन यहाँ चिपकाएँ (eyJ... से शुरू होता है)",
   Pause: "रोकें",
   Paused: "रुका हुआ",
-  "Payment happens on PayPal, in a new tab.": "भुगतान PayPal पर एक नए टैब में होता है।",
   Peak: "शिखर",
   Pellet: "पेलेट",
   "Pellet level": "पेलेट का स्तर",
@@ -3352,7 +3344,6 @@ export default Object.freeze({
   "Supply fan (rpm)": "आपूर्ति पंखा (आरपीएम)",
   "Supply level": "आपूर्ति स्तर",
   Support: "सहायता",
-  "Support the project": "प्रोजेक्ट का समर्थन करें",
   Sweltering: "दमघोंटू गर्मी",
   Swing: "फ्लैप",
   "Switch (turns it on and off)": "स्विच (चालू और बंद करता है)",
@@ -3495,8 +3486,6 @@ export default Object.freeze({
     "गर्मी और नमी से होने वाली असुविधा का हिसाब। अनुभाग का स्तर इन चारों में सबसे ऊँचा होता है: चिल्लाता हुआ सूचकांक शांत अनुभूति के पीछे छिपा नहीं रहता।",
   "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.":
     "डैशबोर्ड पूरी स्क्रीन पर, Home Assistant की साइडबार के ऊपर। यह सिर्फ़ इसी डैशबोर्ड पर और सिर्फ़ इसी डिवाइस पर लागू होता है: फ़ोन पर यह अपने आप चालू हो जाता है।",
-  "The dashboard is independent and subscription-free: here is how to give it a hand":
-    "यह डैशबोर्ड स्वतंत्र है और बिना सदस्यता के: इसकी मदद कैसे करें, यहाँ देखें",
   "The dashboard sections": "डैशबोर्ड के अनुभाग",
   "The data it shows": "दिखाया गया डेटा",
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
@@ -4048,7 +4037,6 @@ export default Object.freeze({
   "Who this is, by their home name": "यह कौन है, घर के नाम से",
   "Whole house": "पूरा घर",
   "Whose it is": "यह किसका है",
-  "Why, and how": "क्यों, और कैसे",
   "Wi-Fi": "वाई-फ़ाई",
   "WiFi network": "WiFi नेटवर्क",
   Widgets: "विजेट",

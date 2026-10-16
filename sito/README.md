@@ -71,8 +71,7 @@ l'unico pezzo di gdahome che non è per chi abita la casa: come sta ogni casa,
 le licenze Premium da dare ai clienti, e accanto cosa **non** vede, con le
 parole del quadro (`quadro/README.md`). **Quanto costa** (`#prezzi`) dice Base
 e Premium, come si ha Premium e gdanav, coi prezzi e le regole di
-[`docs/LICENZE.md`](../docs/LICENZE.md); il sostegno (`#sostieni`) sta a parte,
-perché non sblocca niente.
+[`docs/LICENZE.md`](../docs/LICENZE.md).
 
 E c'è un posto dove **scrivere** (`#contatti`): un modulo con nome, email e
 messaggio, che arriva per posta a `domotica@crvgroup.it`. È l'unica cosa
@@ -217,8 +216,7 @@ ordine di quanto fa male sbagliarlo:
    si apre e si richiude;
 5. **la lingua si cambia** coi due tasti, anche nelle sezioni nuove, e si torna
    all'italiano;
-6. **i link portano dove dicono**, il modulo dei contatti manda al tramite, il
-   bottone delle donazioni è quello della plancia;
+6. **i link portano dove dicono**, e il modulo dei contatti manda al tramite;
 7. **la copertina resta chiara** anche a chi preferisce il tema scuro;
 8. **l'informativa è vestita come il sito**: i caratteri giusti, il fondo
    giusto, una colonna da leggere e i collegamenti che si distinguono dal

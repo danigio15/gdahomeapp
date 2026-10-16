@@ -244,8 +244,8 @@ ponte non ha la plancia, e restano i dispositivi.
 
 Si configura **dall'app**, dalla voce **Configurazione** del menu: quella apre
 la pagina Configurazione della plancia, la sua, con la tessera «Configura
-Entità» che porta all'editor, il **Tema** con le sei tavolozze, la **Barra di
-navigazione** e «Sostieni il progetto». Nella barra in fondo alla plancia la
+Entità» che porta all'editor, il **Tema** con le sei tavolozze e la **Barra di
+navigazione**. Nella barra in fondo alla plancia la
 voce Config non c'è: su un telefono quella fila di schede non ci sta, ed è la
 sola ragione per cui la porta si è spostata. Tornando a **Plancia** dal menu,
 la plancia torna dov'era.
@@ -415,9 +415,7 @@ se non funzionano:
   quella scritta nella scheda dell'add-on, e se ne dice una più vecchia il
   ponte non è aggiornato — e sotto le sue
   tessere: 🧩 Configura Entità, 🎨 Tema con le sei tavolozze, 📌 Barra di
-  navigazione. «Sostieni il progetto» qui **non c'è**: questa pagina si presenta come
-  gdahome, e una donazione che porta a un altro progetto, dentro una pagina
-  che ne porta il nome, è una cosa che chi la legge non capisce.
+  navigazione.
 
 E poi tutto il resto:
 

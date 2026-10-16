@@ -455,8 +455,6 @@ export default Object.freeze({
   "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.":
     "جهة تماس على صندوق البريد: عندما يفتح ساعي البريد الغطاء تظهر كبسولة البريد، وتتحرك لتلفت الانتباه وتبقى هناك حتى يلمسها أحد. يصل البريد بينما لا ينظر أحد، لذا لا تفيد ومضة من ثانيتين.",
   "A control that does not respond": "زر لا يستجيب",
-  "A donation is any amount you like and unlocks nothing: the dashboard stays the same for everyone. It is a thank-you, and a way of saying «keep going».":
-    "التبرع بأي مبلغ تريده ولا يفتح شيئًا: تبقى اللوحة نفسها للجميع. إنه شكر، وطريقة لقول «واصل».",
   "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.":
     "الثلاجة مع الفريزر حيّزان: الثاني يوضع هنا. عند ملء الحقلين ترسم البطاقة شريطين.",
   "A group with this name already exists": "توجد مجموعة بهذا الاسم بالفعل",
@@ -1090,8 +1088,6 @@ export default Object.freeze({
   "Dashboard language": "لغة اللوحة",
   "Dashboard not connected.": "لوحة التحكم غير متصلة.",
   "Dashboard version": "إصدار لوحة التحكم",
-  "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.":
-    "DashboardModern مشروع مستقل ومفتوح المصدر، يُصنع في وقت الفراغ: لا رعاة، لا اشتراكات، لا جمع للبيانات. التبرع يُبقي التصحيحات والردود على البلاغات والاختبارات على الأجهزة الحقيقية مستمرة.",
   "Date not found": "لم يُعثر على التاريخ",
   Day: "يوم",
   "Day / Month / Year": "يوم / شهر / سنة",
@@ -1167,7 +1163,6 @@ export default Object.freeze({
   Doctor: "طبيب",
   Dog: "كلب",
   "Domestic hot water": "الماء الساخن المنزلي",
-  "Donate with PayPal": "تبرّع عبر PayPal",
   Done: "تم",
   "Done.": "تم.",
   Door: "باب",
@@ -1320,8 +1315,6 @@ export default Object.freeze({
     "لكل منشأة عدّادها وألواحها الشمسية وبطاريتها وأحمالها. الحقول أدناه تخصّ المنشأة المختارة: إضافة واحدة تبدأ من الصفر ولا تمسّ ما أعددته سابقًا.",
   "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.":
     "لكل منظومة خاناتها الثلاث عشرة. المؤشَّرة بـ«على الصفحة الآن» هي ما تعرضه صفحة الطاقة الشمسية الحرارية وبطاقة الرئيسية: العين بجانب أخرى تُحضرها إلى الشاشة مكانها.",
-  "Every release brings new sections, fixes seen in the field and tests on phones, tablets and wall screens. The time to do it is what donations help keep free.":
-    "كل إصدار يجلب أقسامًا جديدة وتصحيحات شوهدت في الواقع واختبارات على الهواتف والأجهزة اللوحية والشاشات الحائطية. الوقت اللازم لذلك هو ما تساعد التبرعات في إبقائه متاحًا.",
   "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.":
     "كل شيء جاهز: بطاقة النافذة تعرض رطوبة غرفتها وتنصح بالفتح فور تجاوز الحد.",
   "Everything off": "كل شيء مطفأ",
@@ -2765,7 +2758,6 @@ export default Object.freeze({
   "Paste your token here (starts with eyJ...)": "الصق رمزك هنا (يبدأ بـ eyJ...)",
   Pause: "إيقاف مؤقت",
   Paused: "متوقفة مؤقتًا",
-  "Payment happens on PayPal, in a new tab.": "يتم الدفع على PayPal في علامة تبويب جديدة.",
   Peak: "الذروة",
   Pellet: "حبيبات",
   "Pellet level": "مستوى الحبيبات",
@@ -3339,7 +3331,6 @@ export default Object.freeze({
   "Supply fan (rpm)": "مروحة التغذية (دورة/د)",
   "Supply level": "مستوى التغذية",
   Support: "المساعدة",
-  "Support the project": "ادعم المشروع",
   Sweltering: "حر خانق",
   Swing: "الريش",
   "Switch (turns it on and off)": "مفتاح (يشغّل ويطفئ)",
@@ -3481,8 +3472,6 @@ export default Object.freeze({
     "حساب الانزعاج الناتج عن الحرارة والرطوبة. مستوى القسم هو الأعلى بين الأربعة: مؤشر يصرخ لا يبقى مخفيًا خلف إحساس هادئ.",
   "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.":
     "لوحة التحكم بملء الشاشة، فوق الشريط الجانبي لـ Home Assistant. ينطبق على هذه اللوحة وحدها وعلى هذا الجهاز وحده: على الهاتف يعمل من تلقاء نفسه.",
-  "The dashboard is independent and subscription-free: here is how to give it a hand":
-    "اللوحة مستقلة وبلا اشتراكات: هنا تجد كيف تمدّ لها يد العون",
   "The dashboard sections": "أقسام اللوحة",
   "The data it shows": "البيانات التي تعرضها",
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
@@ -4031,7 +4020,6 @@ export default Object.freeze({
   "Who this is, by their home name": "من هذا، باسمه في المنزل",
   "Whole house": "المنزل بأكمله",
   "Whose it is": "لمن هو",
-  "Why, and how": "لماذا، وكيف",
   "Wi-Fi": "واي فاي",
   "WiFi network": "شبكة WiFi",
   Widgets: "الودجات",

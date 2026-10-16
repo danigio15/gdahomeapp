@@ -53,11 +53,3 @@ codice che gira è ancora quello di prima.
 - [Le novità di ogni versione](https://github.com/danigio15/dashboardmodern-v2/blob/main/CHANGELOG.md)
 - [Segnalazioni e richieste](https://github.com/danigio15/dashboardmodern-v2/issues)
   — si aprono anche dalla plancia, dalla scheda Assistenza.
-
-## Sostieni il progetto
-
-Ci metto parecchia energia e parecchia passione. Se puoi permettertelo, dai
-anche tu una piccola spinta: più sostegno significa **più assistenza,
-correzioni più rapide e più prove su dispositivi veri**.
-
-[![Sostieni il progetto con PayPal](https://img.shields.io/badge/PAYPAL-ME-1f8fdd?style=for-the-badge&logo=paypal&logoColor=white&labelColor=555555)](https://www.paypal.com/paypalme/giovannidaniello15)

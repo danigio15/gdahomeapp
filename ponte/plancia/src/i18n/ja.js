@@ -459,8 +459,6 @@ export default Object.freeze({
   "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.":
     "郵便受けの開閉センサー：郵便配達員がふたを開けると郵便のピルが現れ、気づいてもらえるように動き、誰かが触れるまでそこに残ります。郵便は誰も見ていないときに届くので、2 秒だけ光っても役に立ちません。",
   "A control that does not respond": "反応しない操作ボタン",
-  "A donation is any amount you like and unlocks nothing: the dashboard stays the same for everyone. It is a thank-you, and a way of saying «keep going».":
-    "寄付は金額自由で、何かが解放されるわけではありません。ダッシュボードは誰にとっても同じままです。感謝の気持ちであり、「続けて」と伝える方法です。",
   "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.":
     "冷凍室のある冷蔵庫は二つの区画です。二つめはここに。両方を入れるとカードは二本のバーを描きます。",
   "A group with this name already exists": "同じ名前のグループがすでにあります",
@@ -1100,8 +1098,6 @@ export default Object.freeze({
   "Dashboard language": "ダッシュボードの言語",
   "Dashboard not connected.": "ダッシュボードに接続していません。",
   "Dashboard version": "ダッシュボードのバージョン",
-  "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.":
-    "DashboardModern は余暇に作られた独立したオープンソースのプロジェクトです。スポンサーも、購読も、データ収集もありません。寄付は修正、報告への返答、実機でのテストを続ける力になります。",
   "Date not found": "日付が見つかりません",
   Day: "日",
   "Day / Month / Year": "日 / 月 / 年",
@@ -1178,7 +1174,6 @@ export default Object.freeze({
   Doctor: "医師",
   Dog: "犬",
   "Domestic hot water": "給湯",
-  "Donate with PayPal": "PayPal で寄付",
   Done: "完了",
   "Done.": "やりました。",
   Door: "ドア",
@@ -1331,8 +1326,6 @@ export default Object.freeze({
     "設備ごとにメーター、太陽光、蓄電池、負荷があります。下の欄は選択中の設備のものです。追加するとゼロから始まり、すでに設定したものには触れません。",
   "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.":
     "設備ごとに十三の項目があります。「いまページに表示中」と付いているものが、太陽熱のページとホームのタイルに出ているものです: 別の設備の横の目を押すと、そちらが代わりに画面に出ます。",
-  "Every release brings new sections, fixes seen in the field and tests on phones, tablets and wall screens. The time to do it is what donations help keep free.":
-    "各リリースは新しいセクション、現場で見つかった修正、スマートフォン・タブレット・壁掛け画面でのテストをもたらします。そのための時間を確保する助けになるのが寄付です。",
   "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.":
     "準備完了：窓のカードはその部屋の湿度を表示し、しきい値を超えるとすぐに開けるよう勧めます。",
   "Everything off": "すべてオフ",
@@ -2785,7 +2778,6 @@ export default Object.freeze({
     "ここにトークンを貼り付けてください（eyJ... で始まります）",
   Pause: "一時停止",
   Paused: "一時停止中",
-  "Payment happens on PayPal, in a new tab.": "支払いは新しいタブの PayPal で行われます。",
   Peak: "ピーク",
   Pellet: "ペレット",
   "Pellet level": "ペレット残量",
@@ -3366,7 +3358,6 @@ export default Object.freeze({
   "Supply fan (rpm)": "給気ファン（rpm）",
   "Supply level": "給気風量",
   Support: "サポート",
-  "Support the project": "プロジェクトを支援",
   Sweltering: "うだるような暑さ",
   Swing: "ルーバー",
   "Switch (turns it on and off)": "スイッチ (入と切)",
@@ -3509,8 +3500,6 @@ export default Object.freeze({
     "暑さと湿度による不快さの指標です。セクションの段階は四つのうち最も高いものになります。声を上げている指数が、穏やかな体感の陰に隠れることはありません。",
   "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.":
     "ダッシュボードを全画面で、Home Assistant のサイドバーの上に表示します。このダッシュボードだけ、この端末だけに適用されます。スマートフォンでは自動的に有効になります。",
-  "The dashboard is independent and subscription-free: here is how to give it a hand":
-    "このダッシュボードは独立していて定額課金もありません。支える方法はこちらです",
   "The dashboard sections": "ダッシュボードのセクション",
   "The data it shows": "表示されるデータ",
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
@@ -4064,7 +4053,6 @@ export default Object.freeze({
   "Who this is, by their home name": "誰なのか、家で呼ぶ名前で",
   "Whole house": "住宅全体",
   "Whose it is": "誰のもの",
-  "Why, and how": "理由と方法",
   "Wi-Fi": "Wi-Fi",
   "WiFi network": "WiFiネットワーク",
   Widgets: "ウィジェット",

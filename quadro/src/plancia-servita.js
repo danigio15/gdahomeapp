@@ -18,7 +18,7 @@
  *     «configura» che la casa ritira;
  *  2. la pagina si apre **sulla Configurazione** e ci resta: la barra in
  *     fondo, il «← HOME», le tessere che qui non hanno senso (segnalazioni,
- *     chat, donazioni, tema e barra «su questo dispositivo») non ci sono;
+ *     chat, tema e barra «su questo dispositivo») non ci sono;
  *  3. il deposito del browser della pagina e' **uno per casa e per plancia**,
  *     e si svuota a ogni apertura: la plancia tiene una copia locale di
  *     quello che sta scrivendo, e una copia della casa Rossi che finisse
@@ -335,7 +335,7 @@ function daCapo(istanza) {
  * pagine: qui si sta sulla Configurazione e ci si resta — e' l'unica cosa
  * che da lontano si fa. Via la barra e la sua maniglia, via il «← HOME»
  * della Configurazione, via le tessere che parlano con la casa o col mondo
- * (segnalazioni, chat, donazioni) e quelle «su questo dispositivo» (tema,
+ * (segnalazioni, chat) e quelle «su questo dispositivo» (tema,
  * barra), via il menu ☰ della plancia con dentro il «Reset totale».
  *
  * La linguetta si preme appena c'e' — la pagina i suoi script li legge per
@@ -349,7 +349,6 @@ export const LA_CONFIGURAZIONE_E_TUTTO =
   "html body nav.tabs.bottom-nav-bar,html body .bottom-nav-handle{display:none!important}" +
   "html body #page-config .back-home-btn{display:none!important}" +
   "#page-config #dm-tkt-card,#page-config #dm-chat-card{display:none!important}" +
-  "html body #page-config .dm-sostieni-tessera,html body #editor-modal .dm-sostieni-pastiglia,html body #ed-body .dm-sostieni-card{display:none!important}" +
   "#page-config .cfg-card-theme{display:none!important}" +
   "header .ha-menu-btn{display:none!important}" +
   /* Il tasto di Assist: parla con Home Assistant, che qui non c'e'. */

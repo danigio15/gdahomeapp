@@ -1317,7 +1317,7 @@ try {
    * le si rifacessero le caselle una per una restava un'altra cosa —
    * un'altra grafica, un'altra alberatura, un altro posto dove ogni cosa
    * sta. Poi la voce apriva solo il suo editor, e la pagina restava murata:
-   * cosi' si perdevano il Tema, la Tavolozza, la Barra e le donazioni, che
+   * cosi' si perdevano il Tema, la Tavolozza e la Barra, che
    * stanno nella pagina e non nell'editor. Adesso si apre la pagina: di
    * rifatto non c'e' niente, e si guarda che sia la sua. */
   /* La plancia si ricarica, e si deve **ricollegare**.
@@ -1566,10 +1566,7 @@ try {
 
   /* Le tessere che nell'app non ci vanno.
    *
-   * «Sostieni il progetto», perche' questa pagina si presenta come gdahome e
-   * una donazione che porta a un altro progetto, dentro una pagina che ne
-   * porta il nome, e' una cosa che chi la legge non capisce. Le
-   * **Segnalazioni** e l'**Assistenza**, perche' quella porta c'e' gia' ed e'
+   * Le **Segnalazioni** e l'**Assistenza**, perche' quella porta c'e' gia' ed e'
    * una voce del menu — e l'Assistenza ne ha due, «Assistenza» per chi chiede
    * aiuto e «Console» per chi risponde.
    *
@@ -1578,7 +1575,6 @@ try {
   racconta("controllo che le tessere doppie non compaiano nella Config");
   const siVedono = await laConfig.evaluate(() =>
     [
-      ["donazioni", "#page-config .dm-sostieni-tessera"],
       ["segnalazioni", "#page-config #dm-tkt-card"],
       ["assistenza", "#page-config #dm-chat-card"],
     ]

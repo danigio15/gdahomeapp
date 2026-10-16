@@ -450,8 +450,6 @@ export default Object.freeze({
   "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.":
     "信箱上的门磁传感器：邮递员打开箱盖时，邮件药丸就会出现，晃动以引起注意，并一直停在那里，直到有人点它。邮件是在没人看的时候送到的，所以闪两秒钟没有用。",
   "A control that does not respond": "没有反应的操作按钮",
-  "A donation is any amount you like and unlocks nothing: the dashboard stays the same for everyone. It is a thank-you, and a way of saying «keep going».":
-    "捐赠金额随意，也不会解锁任何内容：面板对所有人都一样。它是一份感谢，也是一句«继续下去»。",
   "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.":
     "带冷冻室的冰箱是两个隔间：第二个填在这里。两个框都填好，卡片会画两条条带。",
   "A group with this name already exists": "已经有同名的分组了",
@@ -1079,8 +1077,6 @@ export default Object.freeze({
   "Dashboard language": "面板语言",
   "Dashboard not connected.": "面板未连接。",
   "Dashboard version": "面板版本",
-  "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.":
-    "DashboardModern 是独立的开源项目，在业余时间开发：没有赞助商，没有订阅，不收集数据。捐赠让修复、问题回复和真机测试得以继续。",
   "Date not found": "未找到日期",
   Day: "日",
   "Day / Month / Year": "日 / 月 / 年",
@@ -1156,7 +1152,6 @@ export default Object.freeze({
   Doctor: "医生",
   Dog: "狗",
   "Domestic hot water": "生活热水",
-  "Donate with PayPal": "通过 PayPal 捐赠",
   Done: "完成",
   "Done.": "好了。",
   Door: "门",
@@ -1309,8 +1304,6 @@ export default Object.freeze({
     "每个系统都有自己的电表、自己的光伏、自己的电池和自己的负载。下面的字段属于所选系统：新增一个从零开始，不会动你已经配置好的内容。",
   "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.":
     "每套系统都有自己的十三个字段。标着“当前在页面上”的那套，就是“太阳能”页面和首页卡片正在显示的：点另一套旁边的眼睛，就换成它出现在屏幕上。",
-  "Every release brings new sections, fixes seen in the field and tests on phones, tablets and wall screens. The time to do it is what donations help keep free.":
-    "每个版本都会带来新的板块、实际使用中发现的修复，以及在手机、平板和壁挂屏幕上的测试。捐赠帮助腾出做这些事的时间。",
   "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.":
     "一切就绪：窗户卡片会显示所在房间的湿度，一旦超过阈值就提示开窗。",
   "Everything off": "全部关闭",
@@ -2739,7 +2732,6 @@ export default Object.freeze({
   "Paste your token here (starts with eyJ...)": "把令牌粘贴到这里（以 eyJ... 开头）",
   Pause: "暂停",
   Paused: "已暂停",
-  "Payment happens on PayPal, in a new tab.": "付款在新标签页中通过 PayPal 完成。",
   Peak: "峰值",
   Pellet: "颗粒燃料",
   "Pellet level": "颗粒燃料余量",
@@ -3307,7 +3299,6 @@ export default Object.freeze({
   "Supply fan (rpm)": "送风机（转/分）",
   "Supply level": "送风档位",
   Support: "支持",
-  "Support the project": "支持这个项目",
   Sweltering: "酷热难当",
   Swing: "导风板",
   "Switch (turns it on and off)": "开关（开和关）",
@@ -3449,8 +3440,6 @@ export default Object.freeze({
     "由高温与湿度造成的不适程度。分区的等级取四者中最高者：一个在报警的指数，不会被平静的体感掩盖。",
   "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.":
     "仪表盘全屏显示，覆盖 Home Assistant 的侧边栏。仅对此仪表盘、且仅在本设备上生效：在手机上会自动开启。",
-  "The dashboard is independent and subscription-free: here is how to give it a hand":
-    "这块面板独立运作、没有订阅：这里说明如何为它出一份力",
   "The dashboard sections": "面板的各个板块",
   "The data it shows": "它显示的数据",
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
@@ -3993,7 +3982,6 @@ export default Object.freeze({
   "Who this is, by their home name": "这是谁，用家里的称呼",
   "Whole house": "整栋房子",
   "Whose it is": "属于谁",
-  "Why, and how": "为什么，以及怎么做",
   "Wi-Fi": "Wi-Fi",
   "WiFi network": "WiFi 网络",
   Widgets: "小组件",
