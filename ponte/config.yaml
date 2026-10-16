@@ -279,6 +279,15 @@ options:
     giorni_di_silenzio: 90
     # Quanti telefoni possono restare abbinati insieme.
     dispositivi_massimi: 10
+    # L'intelligenza dell'assistente, dentro casa: Ollama, con un modello
+    # piccolo, qui dentro l'add-on. Spenta di serie, perche' vuole memoria
+    # (almeno 4 GB di RAM) e la prima volta scarica il modello (circa 1 GB).
+    # Accesa, una volta al giorno l'assistente gli chiede cosa sono le luci,
+    # le prese e le porte che dal nome non riconosce. Gli si mandano solo i
+    # loro nomi; mai persone, posizioni, telecamere o codici. Ollama ascolta
+    # solo dentro l'add-on: da fuori, e dal ponte da fuori, non si vede.
+    intelligenza: false
+    modello_intelligenza: "qwen2.5:1.5b"
 
   # ─────────────────────────────────────────────────────────────────────────
   # INSTALLATORE — solo se gdahome lo monti in casa d'altri. Se la casa e' la
@@ -372,6 +381,8 @@ schema:
     minuti_del_codice: int(1,60)
     giorni_di_silenzio: int(0,3650)
     dispositivi_massimi: int(1,100)
+    intelligenza: bool
+    modello_intelligenza: "match(^[a-z0-9][a-z0-9._-]*(:[a-z0-9._-]+)?$)"
 
   # ─────────────────────────────────────────────────────────────────────────
   # INSTALLATORE — solo se gdahome lo monti in casa d'altri. Se la casa e' la

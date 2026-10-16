@@ -6,26 +6,26 @@ import test from "node:test";
 import { CapireLaCasa } from "../src/capire-la-casa.js";
 import { Ia } from "../src/ia.js";
 
-function unSupervisor({ stato = "started", risposta = {} } = {}) {
+const QUI = "http://127.0.0.1:11434";
+
+function unOllama({ modelli = ["qwen2.5:1.5b"], risposta = {} } = {}) {
   const chieste = [];
   const fetch = async (url, opzioni = {}) => {
     chieste.push({ url, opzioni });
     const json = (data) => ({ ok: true, json: async () => data });
-    if (url === "http://supervisor/addons")
-      return json({ data: { addons: [{ slug: "abc123_gdahome_ia", state: stato }] } });
-    if (url === "http://supervisor/addons/abc123_gdahome_ia/info")
-      return json({
-        data: { hostname: "abc123-gdahome-ia", options: { modello: "qwen2.5:1.5b" } },
-      });
-    if (url === "http://abc123-gdahome-ia:11434/api/chat")
-      return json({ message: { content: JSON.stringify(risposta) } });
+    if (url === `${QUI}/api/tags`) return json({ models: modelli.map((name) => ({ name })) });
+    if (url === `${QUI}/api/pull`) {
+      modelli.push(JSON.parse(opzioni.body).model);
+      return json({ status: "success" });
+    }
+    if (url === `${QUI}/api/chat`) return json({ message: { content: JSON.stringify(risposta) } });
     return { ok: false, json: async () => ({}) };
   };
   return { fetch, chieste };
 }
 
-test("l'add-on acceso: si trova sulla rete interna e risponde solo per quello che si e' chiesto", async () => {
-  const { fetch, chieste } = unSupervisor({
+test("accesa: Ollama dentro l'add-on risponde solo per quello che si e' chiesto", async () => {
+  const { fetch, chieste } = unOllama({
     risposta: {
       "light.mensola_blu": "acquario",
       "switch.presa_3": "sempre",
@@ -34,7 +34,7 @@ test("l'add-on acceso: si trova sulla rete interna e risponde solo per quello ch
       "switch.presa_4": "esplosivo",
     },
   });
-  const ia = new Ia({ segno: "s", fetch });
+  const ia = new Ia({ url: QUI, fetch });
   const detto = await ia.riconosci([
     { id: "light.mensola_blu", nome: "Mensola blu" },
     { id: "switch.presa_3", nome: "Presa 3" },
@@ -46,7 +46,7 @@ test("l'add-on acceso: si trova sulla rete interna e risponde solo per quello ch
     "switch.presa_3": "sempre",
     "light.cucina": "normale",
   });
-  /* Al modello vanno solo id e nomi, sulla rete interna. */
+  /* Al modello vanno solo id e nomi. */
   const domanda = chieste.find((c) => c.url.endsWith("/api/chat"));
   const corpo = JSON.parse(domanda.opzioni.body);
   assert.equal(corpo.model, "qwen2.5:1.5b");
@@ -57,22 +57,28 @@ test("l'add-on acceso: si trova sulla rete interna e risponde solo per quello ch
   });
 });
 
-test("senza add-on, o fermo, o senza il segno del Supervisor: nessuna risposta, nessuna domanda", async () => {
-  const fermo = unSupervisor({ stato: "stopped" });
+test("la prima volta il modello si scarica, poi no", async () => {
+  const { fetch, chieste } = unOllama({ modelli: [] });
+  const ia = new Ia({ url: QUI, fetch });
+  await ia.riconosci([{ id: "light.a", nome: "A" }]);
+  await ia.riconosci([{ id: "light.b", nome: "B" }]);
+  assert.equal(chieste.filter((c) => c.url.endsWith("/api/pull")).length, 1);
+});
+
+test("spenta, o con un indirizzo che non e' di casa: nessuna domanda", async () => {
+  const spenta = unOllama();
   assert.equal(
-    await new Ia({ segno: "s", fetch: fermo.fetch }).riconosci([{ id: "light.a", nome: "A" }]),
+    await new Ia({ url: "", fetch: spenta.fetch }).riconosci([{ id: "light.a", nome: "A" }]),
     null,
   );
+  const fuori = unOllama();
   assert.equal(
-    fermo.chieste.some((c) => c.url.endsWith("/api/chat")),
-    false,
-  );
-  const senzaSegno = unSupervisor();
-  assert.equal(
-    await new Ia({ segno: "", fetch: senzaSegno.fetch }).riconosci([{ id: "light.a", nome: "A" }]),
+    await new Ia({ url: "http://esempio.it:11434", fetch: fuori.fetch }).riconosci([
+      { id: "light.a", nome: "A" },
+    ]),
     null,
   );
-  assert.equal(senzaSegno.chieste.length, 0);
+  assert.equal(spenta.chieste.length + fuori.chieste.length, 0);
 });
 
 test("quello che dice l'IA l'assistente lo usa: la mensola dell'acquario resta accesa", () => {

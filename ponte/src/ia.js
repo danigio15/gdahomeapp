@@ -1,24 +1,27 @@
-/* L'intelligenza in casa: il ponte chiede a gdahome AI (Ollama).
+/* L'intelligenza in casa: Ollama, dentro l'add-on gdahome.
  *
- * «Ingloba Ollama all'interno, che possa essere intelligente.» L'add-on
- * `gdahome AI` (cartella `ia/`) fa girare Ollama sulla rete interna degli
- * add-on. Qui il ponte lo trova — chiedendo al Supervisor com'e' messo e qual
- * e' il suo nome sulla rete — e gli fa una domanda sola, una volta al giorno:
- * cosa sono le cose che dal nome non si riconoscono.
+ * «Ingloba Ollama all'interno, che possa essere intelligente» — e «deve
+ * essere tutto in un add-on». Chi accende «Intelligenza dell'assistente»
+ * nelle opzioni si trova Ollama acceso dentro questo stesso add-on (`run.sh`),
+ * che ascolta solo su 127.0.0.1: non lo raggiunge nessun altro, e dal ponte
+ * da fuori non si vede. Il modello la prima volta lo scarica il ponte, in
+ * /data, e da li' resta. Una domanda sola, una volta al giorno: cosa sono le
+ * cose che dal nome non si riconoscono.
  *
  * Quello che esce verso il modello e' poco e scelto: l'id e il nome di luci,
  * prese e porte. Mai persone, posizioni, telecamere, codici. E il modello
- * gira in casa: niente va fuori. Senza l'add-on, o con l'add-on fermo, non
- * succede niente: l'assistente resta con le sue regole e le sue abitudini.
+ * gira in casa: niente va fuori. Spenta, o su una macchina a 32 bit dove
+ * Ollama non c'e', non succede niente: l'assistente resta con le sue regole
+ * e le sue abitudini.
  *
  * Il modello risponde in JSON (`format: "json"`), e la risposta si prende
  * solo per quello che e' previsto: un genere fra quelli conosciuti, per un id
  * che e' stato chiesto. Un modello che inventa non scrive niente.
  */
 
-const SLUG = /(^|_)gdahome_ia$/;
-const PORTA = 11434;
 const ATTESA = 60 * 1000;
+/* Il primo scaricamento del modello: un gigabyte, anche su una linea lenta. */
+const ATTESA_DEL_MODELLO = 60 * 60 * 1000;
 
 /* I generi che il modello puo' dire, e cosa vogliono dire per l'assistente. */
 export const GENERI_DELL_IA = Object.freeze([
@@ -43,38 +46,57 @@ Rispondi solo con un oggetto JSON: {"<id>": "<parola>", ...}. Nel dubbio: normal
 
 export class Ia {
   constructor({
-    segno = process.env.SUPERVISOR_TOKEN || "",
-    supervisor = process.env.PONTE_SUPERVISOR || "http://supervisor",
+    url = process.env.PONTE_IA || "",
+    modello = process.env.PONTE_IA_MODELLO || "qwen2.5:1.5b",
     fetch: prendi = globalThis.fetch,
     registro = null,
   } = {}) {
-    this.segno = segno;
-    this.supervisor = String(supervisor).replace(/\/+$/, "");
+    /* Solo in casa: un indirizzo che non e' locale non si usa. */
+    this.url = /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(String(url)) ? String(url) : "";
+    this.modello = String(modello || "").trim() || "qwen2.5:1.5b";
     this.prendi = prendi;
     this.registro = registro;
+    this._modelloPronto = false;
   }
 
-  async _alSupervisor(via) {
-    const risposta = await this.prendi(`${this.supervisor}${via}`, {
-      headers: { authorization: `Bearer ${this.segno}` },
+  /** Se l'intelligenza e' accesa nelle opzioni e Ollama c'e'. */
+  get accesa() {
+    return Boolean(this.url) && typeof this.prendi === "function";
+  }
+
+  /* Il modello c'e'? Se no, lo si scarica: la prima volta ci vuole un po'. */
+  async _ilModello() {
+    if (this._modelloPronto) return true;
+    const elenco = await this.prendi(`${this.url}/api/tags`, {
       signal: AbortSignal.timeout(10_000),
     });
-    if (!risposta.ok) return null;
-    return (await risposta.json())?.data ?? null;
+    if (!elenco.ok) return false;
+    const nomi = ((await elenco.json())?.models || []).map((m) =>
+      String(m?.name || m?.model || ""),
+    );
+    const conLaVersione = this.modello.includes(":") ? this.modello : `${this.modello}:latest`;
+    if (!nomi.includes(conLaVersione)) {
+      this.registro?.info?.(
+        `intelligenza: scarico il modello ${this.modello}, la prima volta ci vuole un po'`,
+      );
+      const presa = await this.prendi(`${this.url}/api/pull`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ model: this.modello, stream: false }),
+        signal: AbortSignal.timeout(ATTESA_DEL_MODELLO),
+      });
+      if (!presa.ok) return false;
+      this.registro?.info?.(`intelligenza: il modello ${this.modello} e' pronto`);
+    }
+    this._modelloPronto = true;
+    return true;
   }
 
-  /** Dove sta Ollama, se l'add-on c'e' e gira: `http://host:11434`, o `null`. */
+  /** Dove sta Ollama e con che modello, se e' accesa e pronta; o `null`. */
   async dove() {
-    if (!this.segno || typeof this.prendi !== "function") return null;
+    if (!this.accesa) return null;
     try {
-      const elenco = await this._alSupervisor("/addons");
-      const addon = (elenco?.addons || []).find((a) => SLUG.test(String(a?.slug || "")));
-      if (!addon || addon.state !== "started") return null;
-      const info = await this._alSupervisor(`/addons/${addon.slug}/info`);
-      const host = String(info?.hostname || "").trim();
-      if (!/^[a-z0-9-]+$/i.test(host)) return null;
-      const modello = String(info?.options?.modello || "").trim();
-      return { url: `http://${host}:${PORTA}`, modello: modello || "qwen2.5:1.5b" };
+      return (await this._ilModello()) ? { url: this.url, modello: this.modello } : null;
     } catch {
       return null;
     }

@@ -6,6 +6,13 @@ FROM ${BUILD_FROM}
 # cambiare sotto ai piedi fra una versione e l'altra.
 RUN apk add --no-cache nodejs
 
+# L'intelligenza dell'assistente (Ollama), per chi la accende nelle opzioni.
+# Il programma sta qui, il modello no: quello si scarica in /data la prima
+# volta che si accende, cosi' chi non la usa non lo paga a ogni aggiornamento.
+# C'e' solo per i 64 bit; altrove l'opzione dice che non c'e' e basta.
+RUN apk add --no-cache ollama 2>/dev/null \
+    || echo "Ollama non c'e' per questa architettura: l'intelligenza resta spenta."
+
 WORKDIR /app
 COPY src/ /app/src/
 COPY package.json /app/

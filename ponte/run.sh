@@ -25,5 +25,23 @@ export PONTE_CONSOLE="/app/console"
 # come si deve nel manifesto, invece di chiederlo di nascosto e sentirsi dire
 # di no.
 
+# L'intelligenza dell'assistente: Ollama, solo se accesa nelle opzioni e solo
+# se c'e' (64 bit). Ascolta su 127.0.0.1, dentro l'add-on: non lo raggiunge
+# nessun altro. Il modello sta in /data e lo scarica il ponte la prima volta
+# (`src/ia.js`).
+if bashio::config.true 'casa.intelligenza'; then
+  if command -v ollama >/dev/null 2>&1; then
+    mkdir -p /data/intelligenza
+    OLLAMA_HOST=127.0.0.1:11434 OLLAMA_MODELS=/data/intelligenza \
+      OLLAMA_MAX_LOADED_MODELS=1 OLLAMA_KEEP_ALIVE=10m \
+      ollama serve >/dev/null 2>&1 &
+    export PONTE_IA="http://127.0.0.1:11434"
+    export PONTE_IA_MODELLO="$(bashio::config 'casa.modello_intelligenza')"
+    bashio::log.info "L'intelligenza dell'assistente e' accesa."
+  else
+    bashio::log.warning "L'intelligenza e' accesa ma su questa macchina Ollama non c'e' (serve un Home Assistant a 64 bit)."
+  fi
+fi
+
 bashio::log.info "Il ponte si alza."
 exec node /app/src/index.js
