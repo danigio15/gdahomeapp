@@ -41,7 +41,7 @@ gdahome porta la plancia di Home Assistant sul telefono (Android, iPhone, browse
 - **Installatori:** cruscotto con tutti gli impianti, dieci controlli al giorno per casa, avviso quando una casa smette di parlare; pacchetto di licenze per durata (mese, anno, per sempre), assegnate alla casa o trasformate in codice regalo; aggiornare, riavviare e configurare la plancia da lontano solo con tre interruttori accesi dal cliente; non vede plancia, stanze, persone, telecamere: numeri, non nomi. Accesso chiedendolo dai contatti.
 - **Contatti:** `domotica@crvgroup.it`. Nel sito i testi e i fatti di oggi restano (confermato dall'utente): cambia la forma, non le promesse.
 - **In arrivo** (dichiarato nel sito di oggi): gli aiutanti di Home Assistant nativi nell'app, le automazioni guidate.
-- Il codice è pubblico ma non open source (`LICENSE`); la plancia è DashboardModern con la sua licenza.
+- Il codice è pubblico ma non open source: Licenza d'uso di gdahome 2.0 (`LICENSE`, in italiano con la traduzione inglese). Titolare Giovanni d'Aniello, distributore CRV Immobiliare S.r.l.; uso permesso anche nella propria attività, installazioni per i clienti solo con l'autorizzazione della società; vale anche per la plancia (già DashboardModern).
 
 ## Brand Commitments
 

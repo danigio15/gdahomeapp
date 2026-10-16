@@ -63,12 +63,21 @@ non si può:
 - farne versioni modificate, port, rifacimenti col proprio nome (§3d);
 - toglierne le firme, i sigilli e le prove di provenienza (§3e, §5);
 - venderlo, affittarlo o metterlo dentro un prodotto o un servizio a pagamento
-  (§3f);
+  (§3f): chi installa per i clienti lo può fare solo con l'autorizzazione
+  scritta della società (§2d);
+- aggirare i controlli di Premium: licenze, gettoni, codici regalo (§3e);
 - usare i nomi «gdahome», «GDA», «ponte», «centralino» o il logo per una cosa
   che non è questa (§3g).
 
 Un fork è permesso **solo** come modo tecnico di preparare una pull request, e
 va cancellato quando la pull request è chiusa (§4a, §4b).
+
+Dalla versione 2.0 (16 ottobre 2026) la licenza è in italiano, con la
+traduzione inglese in fondo, e dice chi vende: il titolare resta Giovanni
+d'Aniello, il distributore è CRV Immobiliare S.r.l., e i permessi più ampi si
+chiedono a lei. L'uso è permesso anche nella propria attività, non più solo in
+casa. La plancia, che era DashboardModern con una licenza sua, sta sotto la
+stessa licenza.
 
 La parola giusta, in inglese, è **source available**: sorgente disponibile, non
 open source. Chi legge «pubblica su GitHub» pensa spesso «allora è mia»: non lo
@@ -245,5 +254,5 @@ niente**.
 
 ---
 
-Aggiornato il 27 settembre 2026. Se si tocca il `LICENSE`, `repository.yaml`,
+Aggiornato il 16 ottobre 2026. Se si tocca il `LICENSE`, `repository.yaml`,
 il sistema delle licenze o il guardiano dei segreti, si aggiorna anche questo.

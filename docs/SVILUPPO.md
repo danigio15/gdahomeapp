@@ -10,7 +10,7 @@ pubblica. Qui i pezzi si chiamano col loro nome di casa.
 | ----------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | **il ponte**      | [`ponte/`](../ponte/README.md)              | l'add-on: fa entrare l'app da dentro e da fuori casa, serve la plancia, tiene la configurazione e la licenza della casa |
 | **l'app**         | [`app/`](../app/README.md)                  | Flutter, per Android, iPhone e browser: si abbina, si collega, comanda ([iPhone e CarPlay](IPHONE.md))                  |
-| **la plancia**    | `ponte/plancia/`                            | i file di DashboardModern che il ponte serve dal disco, **con la sua licenza**                                          |
+| **la plancia**    | `ponte/plancia/`                            | i file della plancia (prima DashboardModern) che il ponte serve dal disco                                               |
 | **l'officina**    | [`officina/`](../officina/LEGGIMI.md)       | il resto del progetto DashboardModern: gli attrezzi che costruiscono la plancia, le sue prove, i suoi documenti         |
 | **il centralino** | [`centralino/`](../centralino/README.md)    | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono                                    |
 | **il quadro**     | [`quadro/`](../quadro/README.md)            | il cruscotto di chi installa, e le licenze Premium: le rilascia, le regala, controlla i rinnovi col negozio             |
@@ -172,10 +172,11 @@ sta [sul ramo `contatori`](https://github.com/danigio15/gdahomeapp/blob/contator
 
 ## La licenza e la repository pubblica
 
-Il codice di gdahome ha la sua licenza ([`LICENSE`](../LICENSE)). La plancia in
-`ponte/plancia/` è DashboardModern, **con la sua licenza**
-([`ponte/plancia/LICENSE`](../ponte/plancia/LICENSE)). Il nome e il marchio di
-gdahome si applicano quando i file vengono serviti, non nei file.
+Il codice di gdahome ha la sua licenza ([`LICENSE`](../LICENSE)), la Licenza
+d'uso di gdahome 2.0, e vale anche per la plancia in `ponte/plancia/`, che prima
+era DashboardModern con una licenza sua: [`ponte/plancia/LICENSE`](../ponte/plancia/LICENSE)
+ora rimanda lì. Il nome e il marchio di gdahome si applicano quando i file
+vengono serviti, non nei file.
 
 Questa repository è **pubblica**, e deve restarlo: il Supervisor va a prendere
 gli archivi senza presentarsi, e da una repository privata si sente rispondere
