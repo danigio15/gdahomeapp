@@ -6068,4 +6068,16 @@ export default Object.freeze({
   "You arrive with ${fine} · no stops": "تصل بـ ${fine} · بلا توقفات",
   "You will need to charge for the way back": "ستحتاج إلى الشحن للعودة",
   "Your car": "سيارتك",
+  "Armed home": "مفعّل · في المنزل",
+  "Armed night": "مفعّل · ليلي",
+  "Armed partial": "مفعّل · جزئي",
+  "Armed vacation": "مفعّل · عطلة",
+  "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.":
+    "تصلح الأزرار والمفاتيح والسكربتات والمشاهد والأتمتة: زر ON يشغّل كيانه أو يضغطه، وزر OFF يفعل الشيء نفسه بكيانه. إذا كان الكيانان مفتاحين والحالة فارغة، تُستخدم حالة زر ON.",
+  "Entity or action": "كيان أو إجراء",
+  "OFF button": "زر OFF",
+  "ON button": "زر ON",
+  "State from (optional)": "الحالة من (اختياري)",
+  "Two buttons": "زران",
+  "Two buttons: ON and OFF": "زران: ON و OFF",
 });

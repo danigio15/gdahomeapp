@@ -531,7 +531,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-O67FGZNR.js";
+} from "../../chunk-FMXZ7PK4.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3337,6 +3337,8 @@ var SOURCE_INDEX = Object.freeze({
   "Due scatti della stessa auto: la plancia mostra quello con il cavo attaccato mentre è in ricarica e l'altro nel resto del tempo. Basta la prima: senza la seconda resta sempre quella.": "Two shots of the same car: the dashboard shows the plugged-in one while it charges and the other one the rest of the time. The first is enough — without the second it simply stays.",
   "Due sensori": "Two sensors",
   "Due settimane che si ripetono, scritte a mano: tocca un giorno e scegli cosa esce. Non serve nessun sensore e nessun calendario di Home Assistant — la pagina e la tessera in Home leggono questo esattamente come leggerebbero un'integrazione. Un materiale che ha già il suo sensore qui sopra non si ripete: comanda il sensore.": "Two weeks that repeat, written by hand: tap a day and pick what goes out. No sensor and no Home Assistant calendar needed — the page and the Home tile read this exactly as they would read an integration. A material that already has its own sensor above is not repeated: the sensor wins.",
+  "Due tasti": "Two buttons",
+  "Due tasti: ON e OFF": "Two buttons: ON and OFF",
   "Due tocchi per aprire": "Two taps to open",
   "Duplica": "Duplicate",
   "Duplica la pagina": "Duplicate page",
@@ -3497,6 +3499,7 @@ var SOURCE_INDEX = Object.freeze({
   "Entità non disponibile in Home Assistant.": "Entity unavailable in Home Assistant.",
   "entità non valide ignorate — il resto è salvato": "invalid entities skipped — the rest is saved",
   "Entità nuova": "New entity",
+  "Entità o azione": "Entity or action",
   "Entità per i servizi": "Entity for the services",
   "Entità persona": "Person entity",
   "Entità porta": "Door entity",
@@ -4107,6 +4110,10 @@ var SOURCE_INDEX = Object.freeze({
   "Inserisci una entità valida": "Enter a valid entity",
   "Inserita · ${modo}": "Armed · ${modo}",
   "Inserito": "Armed",
+  "Inserito casa": "Armed home",
+  "Inserito notte": "Armed night",
+  "Inserito parziale": "Armed partial",
+  "Inserito vacanza": "Armed vacation",
   "insieme": "together",
   "Installa": "Install",
   "Installa questo aggiornamento": "Install this update",
@@ -4136,8 +4143,8 @@ var SOURCE_INDEX = Object.freeze({
   "Inverti il verso (ON = chiusa)": "Flip the direction (ON = closed)",
   "Inverti le percentuali (100 = chiusa)": "Flip the percentages (100 = closed)",
   "Invia": "Upload",
-  "Inviata": "Sent",
   "Inviata. Grazie.": "Sent. Thank you.",
+  "Inviato": "Sent",
   "Invio…": "Sending…",
   "Irrigazione": "Irrigation",
   "irrigazione avviata": "watering started",
@@ -6188,6 +6195,7 @@ var SOURCE_INDEX = Object.freeze({
   "Stato antifurto": "Alarm status",
   "Stato Antifurto": "Alarm status",
   "Stato attuale": "Current status",
+  "Stato da (facoltativo)": "State from (optional)",
   "Stato del nodo": "Node status",
   "Stato dell'antifurto": "Alarm state",
   "Stato della caldaia": "Boiler state",
@@ -6283,6 +6291,8 @@ var SOURCE_INDEX = Object.freeze({
   "Tasto che apre": "Button that opens",
   "Tasto Clima rapido": "Quick climate button",
   "Tasto grande": "Big button",
+  "Tasto OFF": "OFF button",
+  "Tasto ON": "ON button",
   "Te la propongo io:": "My suggestion:",
   "Telecamera": "Camera",
   "Telecamera aggiunta": "Camera added",
@@ -6688,6 +6698,7 @@ var SOURCE_INDEX = Object.freeze({
   "Valvola della zona": "Zone valve",
   "Valvola TRV (posizione %)": "TRV valve (position %)",
   "Vampiro": "Vampire",
+  "Vanno bene pulsanti, interruttori, script, scene e automazioni: il tasto ON li accende o li preme, il tasto OFF fa lo stesso con la sua entità. Se le due entità sono interruttori e lo stato è vuoto, si guarda quello del tasto ON.": "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.",
   "vanno bene: le statistiche non coprono ancora il periodo chiesto": "both fine: statistics do not cover the requested period yet",
   "Vapore": "Steam",
   "Varchi": "Openings",
@@ -92570,7 +92581,13 @@ var TIPI_DI_COMANDO = Object.freeze([
   "tapparella",
   "entita",
   "azione",
-  "vuoto"
+  "vuoto",
+  /* «Se ci fosse un on e off di uno switch che sono due entita' separate, si
+   * potrebbe nei riquadri smezzarlo e fare in uno unico on e off? Unico nome,
+   * ma con ON e OFF uno a destra e uno a sinistra.» Il riquadro dei due tasti:
+   * un nome solo, e in alto, al posto dell'interruttore, ON a sinistra e OFF a
+   * destra, ognuno con la sua entita'. Vedi `servizioDelTasto` piu' sotto. */
+  "duetasti"
 ]);
 var CARTE_DEDICATE = Object.freeze({ light: "luce", climate: "clima", cover: "tapparella" });
 function tipoDellEntita(id) {
@@ -92640,14 +92657,42 @@ function comandoPulito(input) {
   }
   const id = entita2(input.entita);
   if (!id) return null;
+  if (tipo === "duetasti") {
+    const spegne = entita2(input.entitaOff);
+    if (!spegne) return null;
+    return { tipo, entita: id, entitaOff: spegne, stato: entita2(input.stato), ...aspetto };
+  }
   return { tipo: tipoDellEntita(id), entita: id, ...aspetto };
+}
+var DOMINI_CHE_SI_PREMONO = Object.freeze(["button", "input_button"]);
+var DOMINI_CHE_PARTONO = Object.freeze(["script", "scene"]);
+var DOMINI_CHE_DICONO_LO_STATO = Object.freeze(["switch", "input_boolean", "light"]);
+function servizioDelTasto(id) {
+  const pulita = entita2(id);
+  if (!pulita) return null;
+  const d = dominioDi7(pulita);
+  const data = { entity_id: pulita };
+  if (DOMINI_CHE_SI_PREMONO.includes(d)) return { domain: d, service: "press", data };
+  if (DOMINI_CHE_PARTONO.includes(d)) return { domain: d, service: "turn_on", data };
+  if (d === "automation") return { domain: d, service: "trigger", data };
+  if (DOMINI_CHE_DICONO_LO_STATO.includes(d)) return { domain: d, service: "turn_on", data };
+  return { domain: "homeassistant", service: "turn_on", data };
+}
+function statoDeiDueTasti(comando) {
+  if (!comando || comando.tipo !== "duetasti") return "";
+  const scritto2 = entita2(comando.stato);
+  if (scritto2) return scritto2;
+  const on = entita2(comando.entita);
+  return DOMINI_CHE_DICONO_LO_STATO.includes(dominioDi7(on)) ? on : "";
 }
 function scenaPulita(input) {
   if (!input || typeof input !== "object") return null;
   const tipo = input.tipo || (input.entita && !input.azione ? "entita" : "azione");
   const comando = comandoPulito({ ...input, tipo });
   if (!comando) return null;
-  return comando.entita ? { ...comando, tipo: "entita" } : comando;
+  if (!comando.entita) return comando;
+  const { entitaOff: _off, stato: _stato, ...tessera3 } = comando;
+  return { ...tessera3, tipo: "entita" };
 }
 var INGRESSO_VUOTO = Object.freeze({
   centrale: "",
@@ -93532,7 +93577,12 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
       id: testo(s.id, 80),
       name: testo(s.name),
       temp: entita2(s.temp),
-      hum: entita2(s.hum)
+      hum: entita2(s.hum),
+      /* All'aperto (#251): la sua temperatura e' quella di fuori, e il
+       * tablet non la scrive «in casa» (`temperaturaDelMuro`). Con lei le
+       * altre sonde della stanza, oltre alla prima. */
+      outdoor: stanzaAllAperto(s),
+      sonde: unici(temperatureEntries(s).map((e) => entita2(e.temp)))
     })),
     luci: dispositivi("lights"),
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
@@ -93661,6 +93711,24 @@ function comandiProposti2(fonte = {}, nomeStanza = "", posti = POSTI) {
   const liberi = Math.max(posti - proposti.length, Math.min(2, posti));
   const azioni2 = azioniDellaStanza(fonte, stanza2).slice(0, liberi).map((a) => ({ tipo: "azione", azione: a.name, nome: "", sotto: "" }));
   return [...proposti.slice(0, posti - azioni2.length), ...azioni2].map(comandoPulito).filter(Boolean).slice(0, posti);
+}
+function temperaturaDelMuro(muro, fonte = {}) {
+  const stanze4 = elenco10(fonte?.stanze);
+  const sonde = (s) => unici([entita2(s?.temp), ...elenco10(s?.sonde).map(entita2)]);
+  const scelta3 = entita2(muro?.riposo?.sensore);
+  if (scelta3)
+    return {
+      sonda: scelta3,
+      fuori: stanze4.some((s) => s?.outdoor === true && sonde(s).includes(scelta3))
+    };
+  const nome = muro?.pagine?.[0]?.stanza;
+  const stanza2 = nome ? stanze4.find((s) => s?.name === nome) || null : null;
+  if (!stanza2) return { sonda: "", fuori: false };
+  if (stanza2.outdoor !== true) return { sonda: entita2(stanza2.temp), fuori: false };
+  const dentro3 = stanze4.find((s) => s?.outdoor !== true && entita2(s?.temp));
+  if (dentro3) return { sonda: entita2(dentro3.temp), fuori: false };
+  const suo2 = entita2(stanza2.temp);
+  return { sonda: suo2, fuori: Boolean(suo2) };
 }
 function comandiDellaPagina(pagina2, fonte = {}, zona = "", { aCoppia: aCoppia2 = null } = {}) {
   if (!pagina2) return [];
@@ -94317,13 +94385,12 @@ function meteo2() {
   return { temperatura: s?.attributes?.temperature, condizione: s?.state };
 }
 function temperaturaInCasa(muro) {
-  const pagina2 = muro?.pagine?.[0];
-  const stanza2 = (state111.fonte?.stanze || []).find((s) => s.name === pagina2?.stanza);
-  const sonda = clean(muro?.riposo?.sensore) || stanza2?.temp || "";
+  const { sonda, fuori } = temperaturaDelMuro(muro, state111.fonte || {});
   if (sonda) segna(sonda);
   const n = sonda ? numero47(stato2(sonda)?.state) : null;
-  return n === null ? "" : `${decimale2(n)}°`;
+  return { testo: n === null ? "" : `${decimale2(n)}°`, fuori };
 }
+var doveDellaTemperatura = (fuori) => fuori ? t("fuori", "outside") : t("in casa", "inside");
 var PAROLE_DEL_METEO = () => ({
   sunny: t("sereno", "sunny"),
   "clear-night": t("sereno", "clear"),
@@ -94345,9 +94412,10 @@ function titoloLungo(titolo3) {
 function testa(pagina2, muro) {
   const o = orologio3();
   const m = pagina2.riga?.meteo !== false ? meteo2() : null;
-  const inCasa = pagina2.riga?.meteo !== false && muro.temperatura === "casa" ? temperaturaInCasa(muro) : "";
+  const sensore = pagina2.riga?.meteo !== false && muro.temperatura === "casa" ? temperaturaInCasa(muro) : { testo: "", fuori: false };
+  const inCasa = sensore.testo;
   const parolaDelMeteo = m ? PAROLE_DEL_METEO()[m.condizione] || "" : "";
-  const chipDelMeteo = inCasa ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([t("in casa", "inside"), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>` : m && numero47(m.temperatura) !== null ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale2(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>` : "";
+  const chipDelMeteo = inCasa ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([doveDellaTemperatura(sensore.fuori), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>` : m && numero47(m.temperatura) !== null ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale2(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>` : "";
   const accento = accentoDi(pagina2);
   const lato = menuDiLato(muro, state111.verso, state111.compatto);
   const linguette3 = !lato && muro.pagine.length > 1 ? `<div class="mu-pagine" role="tablist">${muro.pagine.map(
@@ -94373,11 +94441,16 @@ function paginaIntera(pagina2, muro) {
 var STATI_DELL_ALLARME = () => ({
   /* «Metterei disattivo»: l'antifurto non si spegne, si disattiva. */
   disarmed: t("Disattivo", "Disarmed"),
-  armed_home: t("In casa", "Home"),
-  armed_away: t("Fuori", "Away"),
-  armed_night: t("Notte", "Night"),
-  armed_vacation: t("Vacanza", "Vacation"),
-  armed_custom_bypass: t("Parziale", "Custom"),
+  /* «Quando c'e' antifurto inserito non devi scrivere fuori ma metti
+   * inserito e al massimo il nome della partizione inserita. Tipo se e' notte
+   * scrivi inserito notte.» Lo stato dice che l'antifurto e' inserito, e come;
+   * «Fuori» resta la parola del tasto (`PAROLE_DEI_MODI`), che e' un gesto:
+   * scritto come stato, accanto all'ora, sembrava dire dov'era la gente. */
+  armed_home: t("Inserito casa", "Armed home"),
+  armed_away: t("Inserito", "Armed"),
+  armed_night: t("Inserito notte", "Armed night"),
+  armed_vacation: t("Inserito vacanza", "Armed vacation"),
+  armed_custom_bypass: t("Inserito parziale", "Armed partial"),
   arming: t("Inserimento…", "Arming…"),
   pending: t("In attesa…", "Pending…"),
   triggered: t("ALLARME", "Alarm going off"),
@@ -94409,6 +94482,14 @@ function tastoAcceso(s, tasti) {
 }
 function modoSuMisura(id) {
   return normalizzaModiSuMisura(state111.fonte?.antifurto?.suMisura || []).find((m) => m.id === id) || null;
+}
+function statoDellaCentrale(s) {
+  const valore3 = String(s?.state || "");
+  if (valore3.startsWith("armed_")) {
+    const mio = modoSuMisura(tastoAcceso(s, tastiDellAntifurto(s)));
+    if (mio) return `${t("Inserito", "Armed")} ${mio.nome || mio.id}`;
+  }
+  return STATI_DELL_ALLARME()[valore3] || valore3;
 }
 function areeDellaPagina(pagina2) {
   return areeDellIngresso(pagina2, state111.fonte || {});
@@ -94567,6 +94648,50 @@ function cardLuce(c, i) {
     <div class="mu-osw mu-fam-nome mu-n">${esc(nomeDi8(id, c.nome))}</div>
     ${dimmer ? `<div class="mu-giu"><div class="mu-giu-et"><span class="mu-et">${esc(t("Luminosità", "Brightness"))} <span class="mu-tag">DIMMER</span></span><span class="mu-stato ${on ? "" : "spento"}">${on ? `${pct3}%` : "—"}</span></div>
       <div class="mu-bar" data-mu-cursore="luce" data-mu-entita="${esc(id)}"><i style="width:${pct3}%"></i>${on ? `<u style="left:${pct3}%"></u>` : ""}</div></div>` : ""}</div>`;
+}
+var INVIATO_PER = 2e3;
+var accesoDeiDueTasti = (id) => typeof state111.inAttesa[id]?.acceso === "boolean" ? state111.inAttesa[id].acceso : accesoVero(id) || ["home", "unlocked", "playing"].includes(String(stato2(id)?.state));
+var chiaveDeiDueTasti = (c) => `${c.entita}|${c.entitaOff}`;
+function cardDueTasti(c, i) {
+  const letto = statoDeiDueTasti(c);
+  const nome = clean(c.nome) || nomeDi8(c.entita);
+  const manca = letto && !stato2(letto);
+  const sa = Boolean(letto) && !manca;
+  const on = sa && accesoDeiDueTasti(letto);
+  const inviato = !sa ? state111.inviati?.[chiaveDeiDueTasti(c)] || "" : "";
+  const icona3 = clean(c.disegno) ? disegno(clean(c.disegno), 30, `dt-${i}`) : bulbo(on ? "#1f2937" : "var(--text-dim)");
+  const parola = manca ? t("Non trovata", "Not found") : sa ? on ? t("Accesa", "On") : t("Spenta", "Off") : inviato ? `✓ ${t("Inviato", "Sent")}` : t("Comando", "Command");
+  const tasto2 = (verso2, id, scritta, etichetta3) => {
+    const classi = [
+      "mu-tasto",
+      `mu-tasto-${verso2}`,
+      sa && verso2 === "on" && on ? "si" : "",
+      sa && verso2 === "off" && !on ? "si" : "",
+      inviato === verso2 ? "premuto" : ""
+    ].filter(Boolean).join(" ");
+    return `<button type="button" class="${classi}" data-mu-fa="duetasti" data-mu-verso="${verso2}" data-mu-entita="${esc(id)}" data-mu-stato="${esc(sa ? letto : "")}" data-mu-chiave="${esc(chiaveDeiDueTasti(c))}"${sa ? ` aria-pressed="${verso2 === "on" ? on : !on}"` : ""} aria-label="${esc(etichetta3)}">${scritta}</button>`;
+  };
+  return `<div class="mu-carta mu-card mu-fam mu-duetasti ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}">
+    <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${icona3}</span><span class="mu-stato ${on ? "" : "spento"}${inviato ? " mu-inviato" : ""}">${esc(parola)}</span>
+      <div class="mu-due">${tasto2("on", c.entita, "ON", `${t("Accendi", "Turn on")} ${nome}`)}${tasto2("off", c.entitaOff, "OFF", `${t("Spegni", "Turn off")} ${nome}`)}</div></div>
+    <div class="mu-osw mu-fam-nome mu-n">${esc(nome)}</div></div>`;
+}
+function premiIlTasto2(bersaglio) {
+  const { muEntita: id, muVerso: verso2, muStato: letto, muChiave: chiave2 } = bersaglio.dataset;
+  const servizio2 = servizioDelTasto(id);
+  if (!servizio2) return;
+  if (letto) attendi(letto, "acceso", verso2 === "on");
+  else if (chiave2) {
+    const inviati = state111.inviati ||= {};
+    inviati[chiave2] = verso2;
+    root.clearTimeout?.((state111.timerDegliInviati ||= {})[chiave2]);
+    state111.timerDegliInviati[chiave2] = root.setTimeout?.(() => {
+      delete inviati[chiave2];
+      disegna5();
+    }, INVIATO_PER);
+  }
+  comanda2(servizio2.domain, servizio2.service, servizio2.data);
+  disegna5();
 }
 var PAROLE_DEL_CLIMA = () => ({
   heat: t("Caldo", "Heat"),
@@ -94915,6 +95040,7 @@ function paginaStanza(pagina2) {
     if (c.tipo === "clima") return cardClima(c, i, zona);
     if (c.tipo === "tapparella") return cardTapparella(c, i);
     if (c.tipo === "entita") return cardEntita(c, i);
+    if (c.tipo === "duetasti") return cardDueTasti(c, i);
     return cardAzione(c, i);
   });
   const riga3 = pagina2.modello === "stanza" ? pillole(pagina2) : linguette3;
@@ -95413,7 +95539,7 @@ function paginaIngressoCompatta(pagina2) {
       chiave: "sicurezza",
       accento: valore3 === "triggered" ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1",
       etichetta: riassunto2 ? quanteAree(aree2.length) : t("Antifurto", "Alarm"),
-      titolo: riassunto2 ? riassunto2.testo : STATI_DELL_ALLARME()[valore3] || valore3,
+      titolo: riassunto2 ? riassunto2.testo : statoDellaCentrale(s),
       sotto: "",
       attiva: true,
       dati: `data-mu-fa="finestra-antifurto"`,
@@ -95505,7 +95631,7 @@ function paginaIngresso(pagina2) {
   const acceso6 = tastoAcceso(s, modi);
   const carta = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
-        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? STATI_DELL_ALLARME()[valore3] || valore3 : modi.find((m) => m.mode === acceso6)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
+        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? statoDellaCentrale(s) : modi.find((m) => m.mode === acceso6)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
         ${avvisoFinestre}</div></div>
       ${modi.length ? `<div class="mu-seg mu-modi">${modi.map((m) => {
     const attivo = m.mode === acceso6;
@@ -95840,7 +95966,7 @@ function finestra4() {
     const acceso6 = tastoAcceso(s, modi);
     const aperte = pagina2?.ingresso?.finestre ? finestreAperte() : [];
     dentro3 = `<div class="mu-fin-clima" style="--acc:${valore3 === "disarmed" ? "#10b981" : "#6366f1"}">
-      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore3] || valore3)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(statoDellaCentrale(s))}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina2?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "citofono" && f.suonato) {
     return squilloMarkup(f);
@@ -95919,10 +96045,10 @@ function riposo(muro) {
   const m = meteo2();
   const centrale = centraleDelMuro(pagina2);
   const aree2 = state111.fonte?.aree?.length > 1 ? state111.fonte.aree : null;
-  const allarme2 = !aree2 && centrale && stato2(centrale) ? STATI_DELL_ALLARME()[stato2(centrale).state] : "";
+  const allarme2 = !aree2 && centrale && stato2(centrale) ? statoDellaCentrale(stato2(centrale)) : "";
   const rigaDelleAree = aree2 ? areeSulRiposo(aree2) : "";
-  const dentro3 = temperaturaInCasa(muro);
-  const soloCasa = muro.temperatura === "casa" && Boolean(dentro3);
+  const { testo: dentro3, fuori } = temperaturaInCasa(muro);
+  const soloCasa = (muro.temperatura === "casa" || fuori) && Boolean(dentro3);
   const persone4 = personeInCasa();
   const chi = persone4.inCasa === 0 ? t("Nessuno in casa", "Nobody home") : persone4.nomi.length <= 2 ? persone4.nomi.join(" · ") : `${persone4.inCasa} ${t("in casa", "at home")}`;
   const aperte = finestreAperte().length;
@@ -95932,7 +96058,7 @@ function riposo(muro) {
     <div class="mu-et mu-data">${esc(o.lungo)}${pilaDelRiposo(muro)}</div>
     <div class="mu-riposo-riga">
       ${m && soloCasa && PAROLE_DEL_METEO()[m.condizione] ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${esc(PAROLE_DEL_METEO()[m.condizione])}</span>` : m && !soloCasa && numero47(m.temperatura) !== null ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${decimale2(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>` : ""}
-      ${dentro3 ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro3} ${esc(t("in casa", "inside"))}</span>` : ""}
+      ${dentro3 ? `<span data-mu-riposo="temperatura">${disegno("temperatura", 30, "rip-temp")}${dentro3} ${esc(doveDellaTemperatura(fuori))}</span>` : ""}
       ${persone4.tutte ? `<span data-mu-riposo="persone">${disegno("persone", 30, "rip-persone")}${esc(chi)}</span>` : ""}
       ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
       ${allarme2 ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme2)}</span>` : ""}
@@ -96754,6 +96880,9 @@ function onClick25(event) {
       return;
     case "interruttore":
       alterna(id, dominio2(id) || "light", "toggle");
+      return;
+    case "duetasti":
+      premiIlTasto2(bersaglio);
       return;
     case "spegni":
       attendi(id, "acceso", false);
@@ -98218,6 +98347,32 @@ ${MURO} .mu-card.mu-tapparella:not(.mu-accesa) .mu-tap-stato{color:var(--text-di
 @container (max-width:179px){
   ${MURO} .mu-card.mu-fam .mu-riga1>.mu-stato{display:none}
 }
+/* Il riquadro dei due tasti (\`cardDueTasti\`): al posto dell'interruttore, ON
+ * e OFF affiancati, ognuno grande come il disco. ON acceso e' pieno d'ambra
+ * come l'interruttore acceso della luce; OFF quando la cosa e' spenta si
+ * schiarisce appena, perche' spento e' lo stato di riposo e non deve gridare.
+ * Nelle caselle strette i tasti si stringono con la casella, e a far posto
+ * se ne vanno, in quest'ordine, la parola dello stato e il disco: i due tasti
+ * e il nome restano sempre. Sul pannello piccolo la riga in alto non va a
+ * capo come nelle altre card: i tasti sotto il disco spingevano il nome fuori. */
+${MURO} .mu-card.mu-fam .mu-riga1>.mu-due{margin-left:auto;flex:0 1 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0;width:min(62%,260px)}
+${MURO} .mu-tasto{height:62px;min-width:0;padding:0 6px;border-radius:18px;display:flex;align-items:center;justify-content:center;text-align:center;white-space:nowrap;overflow:hidden;
+  font-weight:900;font-size:16px;letter-spacing:.1em;color:var(--text);background:color-mix(in srgb,var(--text) 9%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent);transition:background .15s ease,box-shadow .15s ease,transform .1s ease}
+${MURO} .mu-tasto:active{transform:scale(.96)}
+${MURO} .mu-tasto-on.si{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1f2937;box-shadow:0 0 22px -4px #f59e0bcc}
+${MURO} .mu-tasto-off.si{background:color-mix(in srgb,var(--text) 18%,var(--card-bg));color:var(--text)}
+${MURO} .mu-tasto.premuto{outline:3px solid color-mix(in srgb,var(--text) 50%,transparent);outline-offset:2px}
+${MURO} .mu-stato.mu-inviato{color:#34d399}
+${MURO} .mu-g6>.mu-card.mu-duetasti .mu-riga1>.mu-due{gap:clamp(6px,3cqw,10px);width:clamp(96px,50cqw,250px)}
+${MURO} .mu-g6>.mu-card.mu-duetasti .mu-tasto{height:clamp(30px,min(32cqh,24cqw),62px);font-size:clamp(12px,min(8cqh,5cqw),16px);border-radius:clamp(10px,9cqh,18px);letter-spacing:clamp(.02em,.6cqw,.1em)}
+${MURO}[data-compatto="1"] .mu-card.mu-duetasti .mu-riga1{flex-wrap:nowrap}
+@container (max-width:259px){
+  ${MURO} .mu-card.mu-duetasti .mu-riga1>.mu-stato{display:none}
+}
+@container (max-width:199px){
+  ${MURO} .mu-card.mu-duetasti .mu-riga1>.mu-disco{display:none}
+  ${MURO} .mu-g6>.mu-card.mu-duetasti .mu-riga1>.mu-due{width:100%}
+}
 /* ── Il menu di lato ─────────────────────────────────────────────────────
  *
  * «Come sui pannelli di regia»: una colonna di tasti grandi a sinistra, il
@@ -98644,22 +98799,48 @@ var DISEGNI2 = () => [
   ])
 ];
 var DOMINI_DEI_POSTI = "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,media_player,vacuum,sensor,binary_sensor";
+var DOMINI_DEI_DUE_TASTI = "button,input_button,switch,input_boolean,light,script,scene,automation,remote,fan";
+var DOMINI_DELLO_STATO = "binary_sensor,switch,input_boolean,light,sensor,fan,remote,media_player,device_tracker";
+var TIPI_DEL_POSTO = () => [
+  ["", t("Entità o azione", "Entity or action")],
+  ["duetasti", t("Due tasti: ON e OFF", "Two buttons: ON and OFF")]
+];
+var dueTastiInCorso = () => state112.dueTasti ||= {};
+function dueTastiMarkup(via, c) {
+  const nomeOn = c.entita ? nomeDi9(c.entita) : "";
+  return `<label class="mu-ed-voce"><span>${esc(t("Nome", "Name"))}</span>${campo3(`${via}.nome`, c.nome || "", nomeOn)}</label>
+      <div class="mu-ed-coppia">
+        <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Tasto ON", "ON button"))}</span>${cerca2(`${via}.entita`, c.entita || "", { domini: DOMINI_DEI_DUE_TASTI })}</label>
+        <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Tasto OFF", "OFF button"))}</span>${cerca2(`${via}.entitaOff`, c.entitaOff || "", { domini: DOMINI_DEI_DUE_TASTI })}</label>
+      </div>
+      <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Stato da (facoltativo)", "State from (optional)"))}</span>${cerca2(`${via}.stato`, c.stato || "", { domini: DOMINI_DELLO_STATO, segnaposto: t("Acceso quando è acceso", "On when it's on") })}</label>
+      <small class="mu-ed-aiuto">${esc(
+    t(
+      "Vanno bene pulsanti, interruttori, script, scene e automazioni: il tasto ON li accende o li preme, il tasto OFF fa lo stesso con la sua entità. Se le due entità sono interruttori e lo stato è vuoto, si guarda quello del tasto ON.",
+      "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used."
+    )
+  )}</small>
+      <label class="mu-ed-voce"><span>${esc(t("Icona", "Icon"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI2(), null)}</label>`;
+}
 function postoMarkup(i, lista5, k, c, posti = 6) {
   const via = `pagine.${i}.${lista5}.${k}`;
+  const inCorso2 = lista5 === "comandi" ? dueTastiInCorso()[via] : null;
+  const due3 = c?.tipo === "duetasti" || Boolean(inCorso2);
   const pieno = c && c.tipo !== "vuoto";
   const azioni2 = azioniUsabili();
-  const descrizione = !pieno ? t("Posto libero", "Empty slot") : c.azione ? `⚡ ${c.azione}` : `${nomeDi9(c.entita)} · ${c.entita}`;
-  return `<div class="mu-ed-posto${pieno ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
+  const descrizione = due3 ? `${clean(inCorso2?.nome || c?.nome) || nomeDi9(inCorso2?.entita || c?.entita || "") || t("Due tasti", "Two buttons")} · ON / OFF` : !pieno ? t("Posto libero", "Empty slot") : c.azione ? `⚡ ${c.azione}` : `${nomeDi9(c.entita)} · ${c.entita}`;
+  const tipo = lista5 === "comandi" ? `<label class="mu-ed-voce"><span>${esc(t("Tipo", "Type"))}</span>${tendina2(`${via}.tipo`, due3 ? "duetasti" : "", TIPI_DEL_POSTO(), null)}</label>` : "";
+  return `<div class="mu-ed-posto${pieno || due3 ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista5}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista5}"${k === posti - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       <b class="mu-ed-cosa">${esc(descrizione)}</b>
-      ${pieno ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
+      ${pieno || due3 ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
     <div class="mu-ed-posto-corpo">
-      <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Entità", "Entity"))}</span>${cerca2(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEI_POSTI })}</label>
+      ${tipo}${due3 ? dueTastiMarkup(via, inCorso2 || c) : `<label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Entità", "Entity"))}</span>${cerca2(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEI_POSTI })}</label>
       ${azioni2.length ? `<label class="mu-ed-voce"><span>${esc(t("oppure un'azione", "or an action"))}</span>${tendina2(`${via}.azione`, c?.azione || "", azioni2, t("Nessuna", "None"))}</label>` : ""}
       ${pieno ? `<label class="mu-ed-voce"><span>${esc(t("Nome sul tablet", "Name on the tablet"))}</span>${campo3(`${via}.nome`, c.nome || "", c.azione || nomeDi9(c.entita))}</label>
       <label class="mu-ed-voce"><span>${esc(t("Riga sotto", "Line below"))}</span>${campo3(`${via}.sotto`, c.sotto || "", t("Facoltativa", "Optional"))}</label>
-      <label class="mu-ed-voce"><span>${esc(t("Disegno", "Drawing"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI2(), null)}</label>` : ""}
+      <label class="mu-ed-voce"><span>${esc(t("Disegno", "Drawing"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI2(), null)}</label>` : ""}`}
     </div></div>`;
 }
 function postiMarkup(i, lista5, posti, quanti2 = 6) {
@@ -99335,7 +99516,8 @@ function ensureMuroEditor() {
     state112.premium,
     state112.plance?.length,
     state112.aperta,
-    state112.altro
+    state112.altro,
+    state112.dueTasti || {}
   ]);
   if (body.dataset.dmMuroEditor === firma2 && body.querySelector(".mu-ed")) {
     rinfrescaLAnteprima();
@@ -99402,6 +99584,53 @@ function metti3(via, valore3) {
       );
       const ora3 = posti[k];
       const scritto2 = clean(valore3);
+      const chiave2 = `pagine.${i}.${lista5}.${k}`;
+      const inCorso2 = dueTastiInCorso();
+      if (lista5 === "comandi" && campo5 === "tipo") {
+        const prima = inCorso2[chiave2] || ora3;
+        delete inCorso2[chiave2];
+        const aspettoDiPrima = {
+          nome: prima.nome || "",
+          sotto: prima.sotto || "",
+          disegno: prima.disegno || ""
+        };
+        if (valore3 === "duetasti") {
+          const bozzaDelPosto = {
+            ...aspettoDiPrima,
+            tipo: "duetasti",
+            entita: prima.entita || "",
+            entitaOff: prima.entitaOff || "",
+            stato: prima.stato || ""
+          };
+          const pulito62 = comandoPulito(bozzaDelPosto);
+          if (pulito62) posti[k] = pulito62;
+          else {
+            inCorso2[chiave2] = bozzaDelPosto;
+            posti[k] = { tipo: "vuoto" };
+          }
+        } else if (prima.tipo === "duetasti")
+          posti[k] = prima.entita ? { ...aspettoDiPrima, tipo: tipoDellEntita(prima.entita), entita: prima.entita } : { tipo: "vuoto" };
+        p[lista5] = posti;
+        p.scelti = true;
+        state112.bozza = muroPulito(m);
+        return;
+      }
+      if (lista5 === "comandi" && campo5 !== "svuota" && (inCorso2[chiave2] || ora3.tipo === "duetasti")) {
+        const scrittoQui = { ...inCorso2[chiave2] || ora3, tipo: "duetasti", [campo5]: valore3 };
+        const pulito62 = comandoPulito(scrittoQui);
+        if (pulito62) {
+          delete inCorso2[chiave2];
+          posti[k] = pulito62;
+        } else {
+          inCorso2[chiave2] = scrittoQui;
+          posti[k] = { tipo: "vuoto" };
+        }
+        p[lista5] = posti;
+        p.scelti = true;
+        state112.bozza = muroPulito(m);
+        return;
+      }
+      if (campo5 === "svuota") delete inCorso2[chiave2];
       const cambiato = campo5 === "entita" && scritto2 !== clean(ora3.entita) || campo5 === "azione" && scritto2 !== clean(ora3.azione);
       const aspetto = {
         nome: cambiato ? "" : ora3.nome || "",
@@ -99569,11 +99798,13 @@ function onClick26(event) {
     copia2.id = nuovaPagina(copia2.modello, {}, i + 1).id;
     copia2.titolo = copia2.titolo ? `${copia2.titolo} 2`.slice(0, 32) : "";
     m.pagine.splice(i + 1, 0, copia2);
+    state112.dueTasti = {};
     state112.bozza = muroPulito(m);
     state112.aperta = i + 1;
   } else if (d.muEdTogli !== void 0) {
     const m = structuredClone(bozza());
     m.pagine.splice(Number(d.muEdTogli), 1);
+    state112.dueTasti = {};
     state112.bozza = muroPulito(m);
     state112.aperta = -1;
   } else if (d.muEdPaginaSu !== void 0 || d.muEdPaginaGiu !== void 0) {
@@ -99581,6 +99812,7 @@ function onClick26(event) {
     const i = Number(d.muEdPaginaSu ?? d.muEdPaginaGiu);
     const verso2 = d.muEdPaginaSu !== void 0 ? i - 1 : i + 1;
     m.pagine = sposta2(m.pagine, i, verso2);
+    state112.dueTasti = {};
     if (state112.aperta === i) state112.aperta = verso2;
     state112.bozza = muroPulito(m);
   } else if (d.muEdPostoSu !== void 0 || d.muEdPostoGiu !== void 0) {
@@ -99588,6 +99820,7 @@ function onClick26(event) {
     const m = structuredClone(bozza());
     const p = m.pagine[i];
     const lista5 = d.muEdLista === "scene" ? "scene" : "comandi";
+    state112.dueTasti = {};
     const posti = Array.from(
       { length: postiDellaPagina(p) },
       (_, n) => p[lista5][n] || { tipo: "vuoto" }
@@ -99703,6 +99936,8 @@ html[data-theme="dark"] #ed-body .mu-ed-prova{color:#7dd3fc}
 #ed-body .mu-ed-posto-corpo{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 12px;margin-top:8px;align-items:start}
 #ed-body .mu-ed-posto-corpo:empty{display:none}
 #ed-body .mu-ed-voce{display:grid;gap:4px;min-width:0}
+#ed-body .mu-ed-coppia{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 12px;min-width:0}
+#ed-body .mu-ed-aiuto{grid-column:1/-1;display:block;margin-top:-2px;font-size:12px;line-height:1.4;color:var(--text-dim,#9ca3af)}
 #ed-body .mu-ed-voce>span{font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
 #ed-body .mu-ed-voce .ed-input{margin:0;width:100%;max-width:none;min-width:0}
 #ed-body .mu-ed-comandi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px 12px;min-width:0}

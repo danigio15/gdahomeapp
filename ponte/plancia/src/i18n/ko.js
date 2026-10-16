@@ -6089,4 +6089,16 @@ export default Object.freeze({
   "You arrive with ${fine} · no stops": "도착 시 ${fine} · 정차 없음",
   "You will need to charge for the way back": "돌아올 때 충전이 필요합니다",
   "Your car": "내 차",
+  "Armed home": "경계 중 · 재실",
+  "Armed night": "경계 중 · 야간",
+  "Armed partial": "경계 중 · 부분",
+  "Armed vacation": "경계 중 · 휴가",
+  "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.":
+    "버튼, 스위치, 스크립트, 장면, 자동화 모두 됩니다: ON 버튼은 자기 엔티티를 켜거나 누르고, OFF 버튼은 자기 엔티티로 같은 일을 합니다. 두 엔티티가 모두 스위치이고 상태가 비어 있으면 ON 버튼의 상태를 씁니다.",
+  "Entity or action": "엔티티 또는 동작",
+  "OFF button": "OFF 버튼",
+  "ON button": "ON 버튼",
+  "State from (optional)": "상태 가져올 곳 (선택)",
+  "Two buttons": "버튼 두 개",
+  "Two buttons: ON and OFF": "버튼 두 개: ON과 OFF",
 });

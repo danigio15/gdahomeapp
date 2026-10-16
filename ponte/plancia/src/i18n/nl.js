@@ -6133,4 +6133,16 @@ export default Object.freeze({
   "You arrive with ${fine} · no stops": "Je komt aan met ${fine} · geen stops",
   "You will need to charge for the way back": "Voor de terugweg moet je laden",
   "Your car": "Jouw auto",
+  "Armed home": "Ingeschakeld · thuis",
+  "Armed night": "Ingeschakeld · nacht",
+  "Armed partial": "Ingeschakeld · gedeeltelijk",
+  "Armed vacation": "Ingeschakeld · vakantie",
+  "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.":
+    "Knoppen, schakelaars, scripts, scènes en automatiseringen werken allemaal: de ON-knop zet zijn entiteit aan of drukt hem in, de OFF-knop doet hetzelfde met de zijne. Zijn beide entiteiten schakelaars en is de status leeg, dan geldt die van de ON-knop.",
+  "Entity or action": "Entiteit of actie",
+  "OFF button": "OFF-knop",
+  "ON button": "ON-knop",
+  "State from (optional)": "Status van (optioneel)",
+  "Two buttons": "Twee knoppen",
+  "Two buttons: ON and OFF": "Twee knoppen: ON en OFF",
 });

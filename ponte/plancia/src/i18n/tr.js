@@ -6107,4 +6107,16 @@ export default Object.freeze({
   "You arrive with ${fine} · no stops": "${fine} ile varırsın · mola yok",
   "You will need to charge for the way back": "Dönüş için şarj gerekecek",
   "Your car": "Senin aracın",
+  "Armed home": "Devrede · evde",
+  "Armed night": "Devrede · gece",
+  "Armed partial": "Devrede · kısmi",
+  "Armed vacation": "Devrede · tatil",
+  "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.":
+    "Düğmeler, anahtarlar, betikler, sahneler ve otomasyonlar uygundur: ON düğmesi kendi varlığını açar ya da basar, OFF düğmesi aynısını kendi varlığıyla yapar. İki varlık da anahtarsa ve durum boşsa ON düğmesinin durumu kullanılır.",
+  "Entity or action": "Varlık veya eylem",
+  "OFF button": "OFF düğmesi",
+  "ON button": "ON düğmesi",
+  "State from (optional)": "Durum kaynağı (isteğe bağlı)",
+  "Two buttons": "İki düğme",
+  "Two buttons: ON and OFF": "İki düğme: ON ve OFF",
 });

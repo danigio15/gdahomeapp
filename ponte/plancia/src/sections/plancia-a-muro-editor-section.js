@@ -33,6 +33,7 @@ import {
   postiDellaPagina,
   telecamereDellaFonte,
   comandiProposti,
+  comandoPulito,
   eUnaScena,
   tipoDellEntita,
   muroPulito,
@@ -241,22 +242,75 @@ const DOMINI_DEI_POSTI =
  * «Devi dare la possibilita' di personalizzare le 6 card e scegliere a
  * piacimento cosa inserire, non solo quelle che hai inserito tu.»
  */
+/* I domini che i tasti del riquadro ON e OFF propongono per primi: quello che
+ * si preme, si avvia o si accende (`servizioDelTasto` nel nucleo). */
+const DOMINI_DEI_DUE_TASTI =
+  "button,input_button,switch,input_boolean,light,script,scene,automation,remote,fan";
+/* E lo stato: chi dice acceso o spento. */
+const DOMINI_DELLO_STATO =
+  "binary_sensor,switch,input_boolean,light,sensor,fan,remote,media_player,device_tracker";
+
+/* I tipi che un posto della griglia puo' essere. «Entita' o azione» e' quello
+ * di sempre: il tipo lo decide l'entita' scelta. «Due tasti» e' il riquadro
+ * con ON e OFF, ognuno con la sua entita'. Le Scene non lo hanno: le loro
+ * tessere sono un tocco solo. */
+const TIPI_DEL_POSTO = () => [
+  ["", t("Entità o azione", "Entity or action")],
+  ["duetasti", t("Due tasti: ON e OFF", "Two buttons: ON and OFF")],
+];
+
+/* Un riquadro dei due tasti a meta': scelto il tipo, o scritto il tasto ON,
+ * ma senza ancora il tasto OFF. Il nucleo lo butterebbe (un riquadro senza OFF
+ * non e' un riquadro dei due tasti), e il posto nella bozza resta libero;
+ * quello che si e' scritto si tiene qui finche' non e' completo, per posto. */
+const dueTastiInCorso = () => (state.dueTasti ||= {});
+
+/* Il corpo di un posto dei due tasti: il nome, i due tasti, lo stato e il
+ * disegno, nell'ordine del riquadro. */
+function dueTastiMarkup(via, c) {
+  const nomeOn = c.entita ? nomeDi(c.entita) : "";
+  return `<label class="mu-ed-voce"><span>${esc(t("Nome", "Name"))}</span>${campo(`${via}.nome`, c.nome || "", nomeOn)}</label>
+      <div class="mu-ed-coppia">
+        <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Tasto ON", "ON button"))}</span>${cerca(`${via}.entita`, c.entita || "", { domini: DOMINI_DEI_DUE_TASTI })}</label>
+        <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Tasto OFF", "OFF button"))}</span>${cerca(`${via}.entitaOff`, c.entitaOff || "", { domini: DOMINI_DEI_DUE_TASTI })}</label>
+      </div>
+      <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Stato da (facoltativo)", "State from (optional)"))}</span>${cerca(`${via}.stato`, c.stato || "", { domini: DOMINI_DELLO_STATO, segnaposto: t("Acceso quando è acceso", "On when it's on") })}</label>
+      <small class="mu-ed-aiuto">${esc(
+        t(
+          "Vanno bene pulsanti, interruttori, script, scene e automazioni: il tasto ON li accende o li preme, il tasto OFF fa lo stesso con la sua entità. Se le due entità sono interruttori e lo stato è vuoto, si guarda quello del tasto ON.",
+          "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.",
+        ),
+      )}</small>
+      <label class="mu-ed-voce"><span>${esc(t("Icona", "Icon"))}</span>${tendina(`${via}.disegno`, c.disegno || "", DISEGNI(), null)}</label>`;
+}
+
 function postoMarkup(i, lista, k, c, posti = 6) {
   const via = `pagine.${i}.${lista}.${k}`;
+  const inCorso = lista === "comandi" ? dueTastiInCorso()[via] : null;
+  const due = c?.tipo === "duetasti" || Boolean(inCorso);
   const pieno = c && c.tipo !== "vuoto";
   const azioni = azioniUsabili();
-  const descrizione = !pieno
-    ? t("Posto libero", "Empty slot")
-    : c.azione
-      ? `⚡ ${c.azione}`
-      : `${nomeDi(c.entita)} · ${c.entita}`;
-  return `<div class="mu-ed-posto${pieno ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
+  const descrizione = due
+    ? `${clean(inCorso?.nome || c?.nome) || nomeDi(inCorso?.entita || c?.entita || "") || t("Due tasti", "Two buttons")} · ON / OFF`
+    : !pieno
+      ? t("Posto libero", "Empty slot")
+      : c.azione
+        ? `⚡ ${c.azione}`
+        : `${nomeDi(c.entita)} · ${c.entita}`;
+  const tipo =
+    lista === "comandi"
+      ? `<label class="mu-ed-voce"><span>${esc(t("Tipo", "Type"))}</span>${tendina(`${via}.tipo`, due ? "duetasti" : "", TIPI_DEL_POSTO(), null)}</label>`
+      : "";
+  return `<div class="mu-ed-posto${pieno || due ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
     <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista}"${k === posti - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       <b class="mu-ed-cosa">${esc(descrizione)}</b>
-      ${pieno ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
+      ${pieno || due ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
     <div class="mu-ed-posto-corpo">
-      <label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Entità", "Entity"))}</span>${cerca(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEI_POSTI })}</label>
+      ${tipo}${
+        due
+          ? dueTastiMarkup(via, inCorso || c)
+          : `<label class="mu-ed-voce" data-entity-field><span class="ed-slot-lbl">${esc(t("Entità", "Entity"))}</span>${cerca(`${via}.entita`, c?.entita || "", { domini: DOMINI_DEI_POSTI })}</label>
       ${
         azioni.length
           ? `<label class="mu-ed-voce"><span>${esc(t("oppure un'azione", "or an action"))}</span>${tendina(`${via}.azione`, c?.azione || "", azioni, t("Nessuna", "None"))}</label>`
@@ -268,6 +322,7 @@ function postoMarkup(i, lista, k, c, posti = 6) {
       <label class="mu-ed-voce"><span>${esc(t("Riga sotto", "Line below"))}</span>${campo(`${via}.sotto`, c.sotto || "", t("Facoltativa", "Optional"))}</label>
       <label class="mu-ed-voce"><span>${esc(t("Disegno", "Drawing"))}</span>${tendina(`${via}.disegno`, c.disegno || "", DISEGNI(), null)}</label>`
           : ""
+      }`
       }
     </div></div>`;
 }
@@ -1118,6 +1173,7 @@ export function ensureMuroEditor() {
     state.plance?.length,
     state.aperta,
     state.altro,
+    state.dueTasti || {},
   ]);
   if (body.dataset.dmMuroEditor === firma && body.querySelector(".mu-ed")) {
     rinfrescaLAnteprima();
@@ -1206,6 +1262,64 @@ function metti(via, valore) {
       );
       const ora = posti[k];
       const scritto = clean(valore);
+      const chiave = `pagine.${i}.${lista}.${k}`;
+      const inCorso = dueTastiInCorso();
+      /* Il tipo del posto: «Due tasti» prende quello che c'era — l'entita'
+       * diventa il tasto ON, il nome e il disegno restano — e aspetta il tasto
+       * OFF; «Entita' o azione» torna alla card di sempre col solo tasto ON. */
+      if (lista === "comandi" && campo === "tipo") {
+        const prima = inCorso[chiave] || ora;
+        delete inCorso[chiave];
+        const aspettoDiPrima = {
+          nome: prima.nome || "",
+          sotto: prima.sotto || "",
+          disegno: prima.disegno || "",
+        };
+        if (valore === "duetasti") {
+          const bozzaDelPosto = {
+            ...aspettoDiPrima,
+            tipo: "duetasti",
+            entita: prima.entita || "",
+            entitaOff: prima.entitaOff || "",
+            stato: prima.stato || "",
+          };
+          const pulito = comandoPulito(bozzaDelPosto);
+          if (pulito) posti[k] = pulito;
+          else {
+            inCorso[chiave] = bozzaDelPosto;
+            posti[k] = { tipo: "vuoto" };
+          }
+        } else if (prima.tipo === "duetasti")
+          posti[k] = prima.entita
+            ? { ...aspettoDiPrima, tipo: tipoDellEntita(prima.entita), entita: prima.entita }
+            : { tipo: "vuoto" };
+        p[lista] = posti;
+        p.scelti = true;
+        state.bozza = muroPulito(m);
+        return;
+      }
+      /* Un campo di un posto dei due tasti: si scrive nella sua bozza, e il
+       * posto prende il riquadro appena ha tutti e due i tasti. */
+      if (
+        lista === "comandi" &&
+        campo !== "svuota" &&
+        (inCorso[chiave] || ora.tipo === "duetasti")
+      ) {
+        const scrittoQui = { ...(inCorso[chiave] || ora), tipo: "duetasti", [campo]: valore };
+        const pulito = comandoPulito(scrittoQui);
+        if (pulito) {
+          delete inCorso[chiave];
+          posti[k] = pulito;
+        } else {
+          inCorso[chiave] = scrittoQui;
+          posti[k] = { tipo: "vuoto" };
+        }
+        p[lista] = posti;
+        p.scelti = true;
+        state.bozza = muroPulito(m);
+        return;
+      }
+      if (campo === "svuota") delete inCorso[chiave];
       /* Il nome scritto a mano era di quello che c'era prima: con un'altra
        * entita' o un'altra azione nel posto, il nome torna il suo — quello
        * della scheda Persone per una persona, non quello di chi c'era. */
@@ -1418,11 +1532,13 @@ function onClick(event) {
     copia.id = nuovaPagina(copia.modello, {}, i + 1).id;
     copia.titolo = copia.titolo ? `${copia.titolo} 2`.slice(0, 32) : "";
     m.pagine.splice(i + 1, 0, copia);
+    state.dueTasti = {};
     state.bozza = muroPulito(m);
     state.aperta = i + 1;
   } else if (d.muEdTogli !== undefined) {
     const m = structuredClone(bozza());
     m.pagine.splice(Number(d.muEdTogli), 1);
+    state.dueTasti = {};
     state.bozza = muroPulito(m);
     state.aperta = -1;
   } else if (d.muEdPaginaSu !== undefined || d.muEdPaginaGiu !== undefined) {
@@ -1430,6 +1546,7 @@ function onClick(event) {
     const i = Number(d.muEdPaginaSu ?? d.muEdPaginaGiu);
     const verso = d.muEdPaginaSu !== undefined ? i - 1 : i + 1;
     m.pagine = sposta(m.pagine, i, verso);
+    state.dueTasti = {};
     if (state.aperta === i) state.aperta = verso;
     state.bozza = muroPulito(m);
   } else if (d.muEdPostoSu !== undefined || d.muEdPostoGiu !== undefined) {
@@ -1439,6 +1556,9 @@ function onClick(event) {
     const m = structuredClone(bozza());
     const p = m.pagine[i];
     const lista = d.muEdLista === "scene" ? "scene" : "comandi";
+    /* I due tasti ancora a meta' stanno per posto: spostando i posti non
+     * saprebbero piu' di chi sono, e si lasciano. */
+    state.dueTasti = {};
     /* Anche i posti vuoti si spostano: «il quinto lo voglio libero». */
     const posti = Array.from(
       { length: postiDellaPagina(p) },
@@ -1569,6 +1689,8 @@ html[data-theme="dark"] #ed-body .mu-ed-prova{color:#7dd3fc}
 #ed-body .mu-ed-posto-corpo{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 12px;margin-top:8px;align-items:start}
 #ed-body .mu-ed-posto-corpo:empty{display:none}
 #ed-body .mu-ed-voce{display:grid;gap:4px;min-width:0}
+#ed-body .mu-ed-coppia{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 12px;min-width:0}
+#ed-body .mu-ed-aiuto{grid-column:1/-1;display:block;margin-top:-2px;font-size:12px;line-height:1.4;color:var(--text-dim,#9ca3af)}
 #ed-body .mu-ed-voce>span{font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
 #ed-body .mu-ed-voce .ed-input{margin:0;width:100%;max-width:none;min-width:0}
 #ed-body .mu-ed-comandi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px 12px;min-width:0}

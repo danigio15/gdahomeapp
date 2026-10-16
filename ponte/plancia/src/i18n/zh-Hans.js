@@ -6000,4 +6000,16 @@ export default Object.freeze({
   "You arrive with ${fine} · no stops": "到达时电量 ${fine} · 无需停靠",
   "You will need to charge for the way back": "回程需要充电",
   "Your car": "你的车",
+  "Armed home": "已布防 · 在家",
+  "Armed night": "已布防 · 夜间",
+  "Armed partial": "已布防 · 部分",
+  "Armed vacation": "已布防 · 度假",
+  "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.":
+    "按钮、开关、脚本、场景和自动化都可以:ON 按钮打开或按下它的实体,OFF 按钮对自己的实体做同样的事。如果两个实体都是开关且状态为空,则使用 ON 按钮的状态。",
+  "Entity or action": "实体或动作",
+  "OFF button": "OFF 按钮",
+  "ON button": "ON 按钮",
+  "State from (optional)": "状态来源(可选)",
+  "Two buttons": "两个按钮",
+  "Two buttons: ON and OFF": "两个按钮:ON 和 OFF",
 });

@@ -6110,4 +6110,16 @@ export default Object.freeze({
   "You arrive with ${fine} · no stops": "到着時 ${fine} · 停車なし",
   "You will need to charge for the way back": "帰りには充電が必要です",
   "Your car": "あなたの車",
+  "Armed home": "警戒中・在宅",
+  "Armed night": "警戒中・夜間",
+  "Armed partial": "警戒中・部分",
+  "Armed vacation": "警戒中・休暇",
+  "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.":
+    "ボタン、スイッチ、スクリプト、シーン、オートメーションが使えます。ONボタンは自分のエンティティをオンにするか押し、OFFボタンは自分のエンティティで同じことをします。両方がスイッチで状態が空なら、ONボタンの状態を使います。",
+  "Entity or action": "エンティティまたはアクション",
+  "OFF button": "OFFボタン",
+  "ON button": "ONボタン",
+  "State from (optional)": "状態の取得元(任意)",
+  "Two buttons": "2つのボタン",
+  "Two buttons: ON and OFF": "2つのボタン:ONとOFF",
 });

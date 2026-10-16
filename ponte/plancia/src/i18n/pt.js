@@ -6133,4 +6133,16 @@ export default Object.freeze({
   "You arrive with ${fine} · no stops": "Chegas com ${fine} · sem paragens",
   "You will need to charge for the way back": "Vais precisar de carregar para o regresso",
   "Your car": "O teu carro",
+  "Armed home": "Armado · casa",
+  "Armed night": "Armado · noite",
+  "Armed partial": "Armado · parcial",
+  "Armed vacation": "Armado · férias",
+  "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.":
+    "Servem botões, interruptores, scripts, cenas e automações: o botão ON liga ou prime a sua entidade, o botão OFF faz o mesmo com a sua. Se as duas entidades forem interruptores e o estado estiver vazio, usa-se o do botão ON.",
+  "Entity or action": "Entidade ou ação",
+  "OFF button": "Botão OFF",
+  "ON button": "Botão ON",
+  "State from (optional)": "Estado de (opcional)",
+  "Two buttons": "Dois botões",
+  "Two buttons: ON and OFF": "Dois botões: ON e OFF",
 });

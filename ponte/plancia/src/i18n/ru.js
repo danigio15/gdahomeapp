@@ -6126,4 +6126,16 @@ export default Object.freeze({
   "You arrive with ${fine} · no stops": "Прибудете с ${fine} · без остановок",
   "You will need to charge for the way back": "На обратный путь понадобится зарядка",
   "Your car": "Ваша машина",
+  "Armed home": "Под охраной · дома",
+  "Armed night": "Под охраной · ночь",
+  "Armed partial": "Под охраной · частично",
+  "Armed vacation": "Под охраной · отпуск",
+  "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.":
+    "Подходят кнопки, выключатели, скрипты, сцены и автоматизации: кнопка ON включает или нажимает свою сущность, кнопка OFF делает то же со своей. Если обе сущности — выключатели, а состояние не задано, берётся состояние кнопки ON.",
+  "Entity or action": "Сущность или действие",
+  "OFF button": "Кнопка OFF",
+  "ON button": "Кнопка ON",
+  "State from (optional)": "Состояние из (необязательно)",
+  "Two buttons": "Две кнопки",
+  "Two buttons: ON and OFF": "Две кнопки: ON и OFF",
 });

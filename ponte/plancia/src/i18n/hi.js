@@ -6094,4 +6094,16 @@ export default Object.freeze({
   "You arrive with ${fine} · no stops": "आप ${fine} के साथ पहुँचेंगे · कोई पड़ाव नहीं",
   "You will need to charge for the way back": "वापसी के लिए चार्ज करना होगा",
   "Your car": "आपकी कार",
+  "Armed home": "सक्रिय · घर",
+  "Armed night": "सक्रिय · रात",
+  "Armed partial": "सक्रिय · आंशिक",
+  "Armed vacation": "सक्रिय · छुट्टी",
+  "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.":
+    "बटन, स्विच, स्क्रिप्ट, सीन और ऑटोमेशन सभी चलते हैं: ON बटन अपनी एंटिटी को चालू करता या दबाता है, OFF बटन अपनी एंटिटी के साथ वही करता है। अगर दोनों एंटिटी स्विच हैं और स्थिति खाली है, तो ON बटन की स्थिति ली जाती है।",
+  "Entity or action": "एंटिटी या क्रिया",
+  "OFF button": "OFF बटन",
+  "ON button": "ON बटन",
+  "State from (optional)": "स्थिति यहाँ से (वैकल्पिक)",
+  "Two buttons": "दो बटन",
+  "Two buttons: ON and OFF": "दो बटन: ON और OFF",
 });

@@ -28,6 +28,18 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
   e la potenza delle colonnine. La strada non esce di casa.
 - **Meteo:** una pagina nuova, da aggiungere nel config — com'è adesso, la
   propria stazione meteo, le previsioni e il radar.
+- **Pannello a muro, due tasti:** un riquadro nuovo, **«Due tasti: ON e
+  OFF»**, per chi accende e spegne con due entità separate: un nome solo e,
+  al posto dell'interruttore, ON a sinistra e OFF a destra, ognuno con la sua
+  entità. Con un'entità di stato dice «Accesa» o «Spenta»; senza, dopo il
+  tocco, «✓ Inviato».
+- **Pannello a muro, antifurto:** inserito si legge **«Inserito»**, o
+  «Inserito notte», «Inserito casa», «Inserito» col nome del modo scritto a
+  mano — non più «Fuori», che resta la parola del tasto.
+- **Pannello a muro, temperatura:** il sensore di una stanza **all'aperto**
+  si legge «fuori», non «in casa», e sul riposo non si ripetono i gradi del
+  meteo. Senza sensore scelto, se la prima pagina è all'aperto, «in casa» è
+  la prima stanza al chiuso con una sonda.
 
 ## 1.14.3
 
