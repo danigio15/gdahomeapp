@@ -5878,4 +5878,19 @@ export default Object.freeze({
   "Two sensors": "مستشعران",
   "What comes out of the battery": "ما يخرج من البطارية",
   "What goes into the battery": "ما يدخل إلى البطارية",
+  "An automation handles it": "تتولاه أتمتة",
+  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
+    "تعذّرت القراءة: يجب أن تكون إضافة gdahome قيد التشغيل وأن تكون مسؤولاً.",
+  "Fine tonight": "لا بأس الليلة",
+  "Inner door": "باب داخلي",
+  "Leave it": "اتركه هكذا",
+  "Must stay on": "يجب أن يبقى مشغّلاً",
+  "Night light": "ضوء ليلي",
+  "One moment…": "لحظة…",
+  "See what it understood ›": "انظر ما فهمه ›",
+  "Usually like this": "عادةً هكذا",
+  "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.":
+    "ما فهمه المساعد عن الأضواء والمقابس والأبواب: من الاسم والغرفة والعلامة التجارية والأتمتة والعادات. إن أخطأ، صحّحه بلمسة.",
+  "What's in the house": "ما الموجود في المنزل",
+  "You said so": "أنت قلت ذلك",
 });

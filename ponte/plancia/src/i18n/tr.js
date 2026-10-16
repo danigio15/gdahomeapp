@@ -5916,4 +5916,19 @@ export default Object.freeze({
   "Two sensors": "İki sensör",
   "What comes out of the battery": "Bataryadan çıkan",
   "What goes into the battery": "Bataryaya giren",
+  "An automation handles it": "Bunu bir otomasyon yönetiyor",
+  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
+    "Okunamıyor: gdahome eklentisi çalışıyor olmalı ve yönetici olmalısın.",
+  "Fine tonight": "Bu gece sorun yok",
+  "Inner door": "İç kapı",
+  "Leave it": "Böyle kalsın",
+  "Must stay on": "Açık kalmalı",
+  "Night light": "Gece lambası",
+  "One moment…": "Bir dakika…",
+  "See what it understood ›": "Ne anladığını gör ›",
+  "Usually like this": "Genelde böyle",
+  "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.":
+    "Asistanın ışıklar, prizler ve kapılar hakkında anladıkları: addan, odadan, markadan, otomasyonlardan ve alışkanlıklardan. Yanılıyorsa tek dokunuşla düzelt.",
+  "What's in the house": "Evde neler var",
+  "You said so": "Sen öyle dedin",
 });

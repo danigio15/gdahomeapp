@@ -5899,4 +5899,19 @@ export default Object.freeze({
   "Two sensors": "센서 두 개",
   "What comes out of the battery": "배터리에서 나가는 전력",
   "What goes into the battery": "배터리로 들어가는 전력",
+  "An automation handles it": "자동화가 관리함",
+  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
+    "읽을 수 없음: gdahome 애드온이 실행 중이고 관리자여야 합니다.",
+  "Fine tonight": "오늘 밤은 괜찮음",
+  "Inner door": "실내 문",
+  "Leave it": "그대로 두기",
+  "Must stay on": "켜 둬야 함",
+  "Night light": "취침등",
+  "One moment…": "잠시만요…",
+  "See what it understood ›": "이해한 내용 보기 ›",
+  "Usually like this": "보통 이렇다",
+  "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.":
+    "조명, 콘센트, 문에 대해 어시스턴트가 이해한 것: 이름, 방, 브랜드, 자동화, 습관으로. 틀리면 한 번 탭해서 고치세요.",
+  "What's in the house": "집에 있는 것",
+  "You said so": "직접 지정함",
 });

@@ -5943,4 +5943,19 @@ export default Object.freeze({
   "Two sensors": "Twee sensoren",
   "What comes out of the battery": "Wat uit de batterij komt",
   "What goes into the battery": "Wat de batterij in gaat",
+  "An automation handles it": "Een automatisering regelt het",
+  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
+    "Niet leesbaar: de gdahome-add-on moet draaien en je moet beheerder zijn.",
+  "Fine tonight": "Vannacht goed",
+  "Inner door": "Binnendeur",
+  "Leave it": "Zo laten",
+  "Must stay on": "Moet aan blijven",
+  "Night light": "Nachtlampje",
+  "One moment…": "Even geduld…",
+  "See what it understood ›": "Bekijk wat hij begreep ›",
+  "Usually like this": "Meestal zo",
+  "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.":
+    "Wat de assistent begreep over lampen, stopcontacten en deuren: uit de naam, de ruimte, het merk, de automatiseringen en de gewoonten. Klopt het niet, corrigeer met één tik.",
+  "What's in the house": "Wat er in huis is",
+  "You said so": "Dat zei jij",
 });

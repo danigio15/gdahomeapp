@@ -528,7 +528,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-AYQK25XQ.js";
+} from "../../chunk-CFJ722TL.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2830,6 +2830,7 @@ var SOURCE_INDEX = Object.freeze({
   "Chiuso a chiave": "Locked",
   "Chiuso da": "Closed for",
   "Ci pensa la pioggia": "The rain will see to it",
+  "Ci pensa un'automazione": "An automation handles it",
   "Ci sono ${quante} telecamere configurate che adesso non si vedono qui.": "There are ${quante} configured cameras that are not shown here now.",
   "Ci sono ${quanti} aggiornamenti da installare": "There are ${quanti} updates to install",
   "Ci sono solo le modalità che la centrale accetta davvero. Toglierne una la nasconde dalla sezione e non cambia niente di quello che la centrale sa fare; lo sblocco resta sempre.": "Only the modes the panel actually accepts are listed. Removing one hides it from the section and changes nothing about what the panel can do; disarm always stays.",
@@ -3043,6 +3044,7 @@ var SOURCE_INDEX = Object.freeze({
   "Corta": "Short",
   "Cosa": "What",
   "Cosa accende la card": "What lights the card up",
+  "Cosa c'è in casa": "What's in the house",
   "Cosa c'è nel locale caldaia": "What is in the boiler room",
   "Cosa è": "What it is",
   "Cosa esce questo giorno": "What goes out this day",
@@ -3201,6 +3203,7 @@ var SOURCE_INDEX = Object.freeze({
   "Deumidificatori": "Dehumidifiers",
   "Deumidificatori salvati": "Dehumidifiers saved",
   "Deve essere un contatore cumulativo kWh con state_class total o total_increasing. Non usare qui il sensore mensile: questo campo serve per ricostruire anche i mesi precedenti.": "This must be a cumulative kWh meter with state_class total or total_increasing. Do not use the monthly sensor here: this field is required to reconstruct previous months.",
+  "Deve restare accesa": "Must stay on",
   "di ${minuti} min": "of ${minuti} min",
   "Di ${nome} la plancia non conosce le frecce: il telecomando compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.": "The dashboard doesn't know the arrows of ${nome}: the remote shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.",
   "di autonomia": "of range",
@@ -3215,6 +3218,7 @@ var SOURCE_INDEX = Object.freeze({
   "Di questo telecomando Home Assistant non dice l'integrazione: compare fra i comandi come tasto acceso/spento. I suoi comandi si aggiungono in «Altri comandi», come remote.nome:comando.": "Home Assistant doesn't say which integration this remote belongs to: it shows among the commands as an on/off button. Its commands go in «Other commands», as remote.name:command.",
   "di rete": "network",
   "Di serie la pioggia arriva da RainViewer e la mappa da OpenStreetMap: basta scegliere dove. Puoi cambiare servizio dalla tendina, oppure «Un indirizzo mio» e scrivere quello che pubblica il servizio che vuoi usare, con {z}/{x}/{y} al posto dei numeri del quadratino. Il tasto Prova ne scarica uno e ti dice se arriva.": "Out of the box the rain comes from RainViewer and the map from OpenStreetMap: just pick where. You can change the service from the list, or «An address of mine» and write the one your service publishes, with {z}/{x}/{y} standing in for the tile numbers. Test downloads one and tells you whether it arrives.",
+  "Di solito è così": "Usually like this",
   "di umidità": "moisture",
   "Diagnostica": "Diagnostics",
   "Diagnostica runtime": "Runtime diagnostics",
@@ -3666,6 +3670,7 @@ var SOURCE_INDEX = Object.freeze({
   "Gruppo luci": "Light group",
   "Gruppo luci aggiornato": "Light group updated",
   "Gruppo luci creato": "Light group created",
+  "Guarda cosa ha capito ›": "See what it understood ›",
   "Guarda il display della stufa.": "Check the stove's display.",
   "Guardia": "Guard",
   "ha gia' piovuto abbastanza": "enough rain already",
@@ -4091,6 +4096,7 @@ var SOURCE_INDEX = Object.freeze({
   "L'entità comando resta per leggere lo stato, ma la card non mostra l'interruttore: il frigo non si spegne per sbaglio.": "The control entity still reads the state, but the card hides the switch: the fridge cannot be turned off by mistake.",
   "L’entità non sembra cumulativa: seleziona il contatore totale lifetime del dispositivo.": "This entity does not look cumulative: select the device lifetime total meter.",
   "L'entity_id dato ai servizi che non ne scrivono uno. Vuota: lo stato della cottura.": "The entity_id given to services that do not name one. Empty: the cooking status.",
+  "L'hai detto tu": "You said so",
   "L’hai scelta tu": "Your choice",
   "L'ho presa": "Got it",
   "L’icona è personalizzabile anche per le azioni integrate e viene mostrata nella Home.": "The icon is customizable for built-in actions too and is shown on Home.",
@@ -4359,6 +4365,7 @@ var SOURCE_INDEX = Object.freeze({
   "Luce accesa": "Light on",
   "Luce aggiunta": "Light added",
   "Luce diurna": "Daylight",
+  "Luce notturna": "Night light",
   "Luce piscina": "Pool light",
   "Luce rimossa": "Light removed",
   "luci": "lights",
@@ -4842,6 +4849,7 @@ var SOURCE_INDEX = Object.freeze({
   "non rispondono": "not answering",
   "Non riuscita.": "It did not work.",
   "Non scorre": "Not flowing",
+  "Non si legge: serve l'add-on gdahome acceso, e chi amministra la casa.": "Can't read it: the gdahome add-on must be running, and you must be an administrator.",
   "Non si riesce a leggere la libreria.": "The library cannot be read.",
   "Non si sa": "Unknown",
   "Non so dove metterlo: scegli tu qui sotto. Un dispositivo che non ha una sezione sua sta bene fra le tue entità.": "I do not know where this goes: pick below. A device with no section of its own belongs with your own entities.",
@@ -5094,6 +5102,7 @@ var SOURCE_INDEX = Object.freeze({
   "Porta chiusa": "Door closed",
   "Porta col microchip": "Microchip door",
   "Porta fuori: ${r.name}": "Take out: ${r.name}",
+  "Porta interna": "Inner door",
   "Porta o finestra": "Door or window",
   "Portano il nome di questo apparecchio ma appartengono a un'altra voce del registro: quasi sempre la presa smart sotto la macchina, o un sensore che ti sei costruito.": "They carry this appliance's name but belong to another registry entry: almost always the smart plug under the machine, or a sensor you built yourself.",
   "Portata acqua": "Water flow",
@@ -5335,6 +5344,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quella di fuori, del meteo scelto qui sopra": "The outdoor one, from the weather chosen above",
   "Quelle scelte qui, in quest'ordine: ognuna col suo stato e i suoi tasti, quelli che la sua centrale accetta": "The ones chosen here, in this order: each with its state and its buttons, the ones its panel accepts",
   "Quelli scelti qui, in quest'ordine": "The ones chosen here, in this order",
+  "Quello che l'assistente ha capito di luci, prese e porte: dal nome, dalla stanza, dalla marca, dalle automazioni e dalle abitudini. Se sbaglia, correggilo con un tocco.": "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.",
   "Quello che l'integrazione pubblica accanto al lettore — l'interruttore dell'alimentazione di una TV, la tendina della sorgente, una scena: entità button.*, select.*, switch.* (e input_*, script.*, scene.*). Un telecomando remote.* si accende e si spegne; scritto remote.nome:comando (per esempio remote.ampli:volume_up) manda quel comando. Compaiono sulla scheda sotto i comandi del brano.": "What the integration publishes next to the player — a TV's power switch, the input dropdown, a scene: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*). A remote.* turns on and off; written remote.name:command (for example remote.amp:volume_up) it sends that command. They appear on the card under the playback controls.",
   "Quello che la voce «Cottura» degli Elettrodomestici legge e preme. Un comando è un'entità (button, switch, number, script) oppure un servizio con i suoi parametri: philips_airfryer.adjust_time time=60 method=add. Si mostra solo il tasto che ha la sua casella, e solo se risponde.": "What the “Cooking” entry of Appliances reads and presses. A control is an entity (button, switch, number, script) or a service with its parameters: philips_airfryer.adjust_time time=60 method=add. A button only shows up when its field is filled in, and only if it answers.",
   "Quello che scrivi qui arriva a chi mantiene la plancia, e a nessun altro. Non passa da GitHub e non diventa pubblico. Insieme al messaggio partono solo la versione della plancia, quella di Home Assistant e la lingua. Puoi cancellare la conversazione quando vuoi.": "What you write here reaches whoever maintains the dashboard, and nobody else. It does not go through GitHub and does not become public. Along with the message only the dashboard version, the Home Assistant version and the language are sent. You can delete the conversation whenever you want.",
@@ -5413,6 +5423,7 @@ var SOURCE_INDEX = Object.freeze({
   "Resistenza": "Heating element",
   "Resistenza accesa": "Heating element on",
   "Resistenza spenta": "Heating element off",
+  "Resta così": "Leave it",
   "Resta qui": "Stay here",
   "Restano scritti qui perché si sappia che ci sono. Col campanello tornano nell'avviso, se sono ancora muti.": "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.",
   "restano senza piano: non vengono cancellate.": "are left with no floor: they are not deleted.",
@@ -6416,6 +6427,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un frigorifero con il congelatore sono due vani: qui il secondo. Con due caselle piene la card disegna due barre.": "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.",
   "Un impegno": "An appointment",
   "Un indirizzo mio ({z}/{x}/{y})": "An address of mine ({z}/{x}/{y})",
+  "Un momento…": "One moment…",
   "Un number o input_number: il − e il + lo spostano di un passo.": "A number or input_number: − and + move it by one step.",
   "Un number o un select, da 1 a 5 o da P1 a P5: in pagina diventa i pallini col meno e il più.": "A number or a select, 1 to 5 or P1 to P5: on the page it becomes the dots with minus and plus.",
   "Un number, un climate o un water_heater: dal termostato si legge il suo obiettivo.": "A number, a climate or a water_heater: the target is read from the thermostat.",
@@ -6497,6 +6509,7 @@ var SOURCE_INDEX = Object.freeze({
   "Va a batteria": "On battery",
   "Va a batteria · ${carica}%": "On battery · ${carica}%",
   "Va bene cosi'": "It is fine as it is",
+  "Va bene stanotte": "Fine tonight",
   "Va bene una percentuale di comando o un interruttore: quale sia lo capisce da sé.": "A command percentage or a switch: it works out which on its own.",
   "Vacanza": "Vacation",
   "Vale per tutte: sotto questa percentuale la batteria entra nel conto di quelle da cambiare.": "It applies to all of them: below this percentage a battery joins the count of those to replace.",
@@ -108330,11 +108343,83 @@ function assistenteMarkup() {
     (livello) => `<button type="button" role="radio" class="dm-face-mode${livello === opzioni.sensibilita ? " on" : ""}" data-person-ass-sensibilita="${esc(livello)}" aria-checked="${livello === opzioni.sensibilita}">${esc(nomeDellaSensibilita(livello))}</button>`
   ).join("")}</div>
     <label class="dm-people-ass-notte"><span class="ed-slot-lbl">${esc(t("La notte comincia alle", "Night starts at"))}</span>
-      <select class="ed-input" data-person-ass-notte>${ore.map((ora3) => `<option value="${ora3}"${ora3 === opzioni.notteDalle ? " selected" : ""}>${ora3}:00</option>`).join("")}</select></label>
+      <select class="ed-input" data-person-ass-notte>${ore.map(
+    (ora3) => `<option value="${ora3}"${ora3 === opzioni.notteDalle ? " selected" : ""}>${ora3}:00</option>`
+  ).join("")}</select></label>
     <button type="button" class="ed-btn-add dm-people-ass-scorda" data-person-ass-scorda${imparato ? "" : " disabled"}>${esc(
     t("Dimentica quello che ha imparato", "Forget what it has learned")
   )}</button>
+    ${cosaCeInCasaMarkup()}
   </div>`;
+}
+var PERCHE = () => ({
+  acquario: t("Acquario", "Aquarium"),
+  terrario: t("Terrario", "Terrarium"),
+  notte: t("Luce notturna", "Night light"),
+  esterno: t("Fuori casa", "Outdoors"),
+  sempre: t("Deve restare accesa", "Must stay on"),
+  interna: t("Porta interna", "Inner door"),
+  abitudine: t("Di solito è così", "Usually like this"),
+  automazione: t("Ci pensa un'automazione", "An automation handles it"),
+  detto: t("L'hai detto tu", "You said so"),
+  stanotte: t("Va bene stanotte", "Fine tonight")
+});
+var SCELTE = () => [
+  ["auto", t("Decide lui", "Auto")],
+  ["resta", t("Resta così", "Leave it")],
+  ["avvisa", t("Avvisa", "Alert")]
+];
+async function caricaCosaCeInCasa() {
+  state134.casa = { stato: "caricando", cose: state134.casa?.cose || [] };
+  ridisegna14();
+  try {
+    const risposta = await chiediAHomeAssistant({ type: "ponte/casa-capita/elenco" }, 15e3);
+    state134.casa = { stato: "ok", cose: Array.isArray(risposta?.cose) ? risposta.cose : [] };
+  } catch (_errore) {
+    state134.casa = { stato: "no", cose: [] };
+  }
+  ridisegna14();
+}
+async function scegliCosa(entita3, scelta3) {
+  const voce3 = state134.casa?.cose?.find((c) => c.entita === entita3);
+  if (voce3) voce3.scelta = scelta3;
+  ridisegna14();
+  try {
+    await chiediAHomeAssistant({ type: "ponte/casa-capita/scegli", entita: entita3, scelta: scelta3 }, 1e4);
+  } catch (_errore) {
+  }
+  void caricaCosaCeInCasa();
+}
+function cosaCeInCasaMarkup() {
+  const casa = state134.casa;
+  const titolo3 = `<span class="ed-slot-lbl">${esc(t("Cosa c'è in casa", "What's in the house"))}</span>`;
+  const nota = `<small>${esc(
+    t(
+      "Quello che l'assistente ha capito di luci, prese e porte: dal nome, dalla stanza, dalla marca, dalle automazioni e dalle abitudini. Se sbaglia, correggilo con un tocco.",
+      "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap."
+    )
+  )}</small>`;
+  if (!casa)
+    return `<div class="dm-people-casa">${titolo3}${nota}<button type="button" class="ed-btn-add" data-person-casa-apri>${esc(
+      t("Guarda cosa ha capito ›", "See what it understood ›")
+    )}</button></div>`;
+  if (casa.stato === "no")
+    return `<div class="dm-people-casa">${titolo3}<small>${esc(
+      t(
+        "Non si legge: serve l'add-on gdahome acceso, e chi amministra la casa.",
+        "Can't read it: the gdahome add-on must be running, and you must be an administrator."
+      )
+    )}</small></div>`;
+  const perche3 = PERCHE();
+  const righe2 = (casa.cose || []).map((c) => {
+    const motivo = perche3[c.perche] || perche3[c.genere] || (c.tipo === "porta" ? t("Porta", "Door") : t("Luce", "Light"));
+    return `<div class="dm-people-casa-riga" data-person-casa="${esc(c.entita)}">
+        <div class="dm-people-casa-nome"><b>${esc(c.nome || c.entita)}</b><small>${esc(motivo)}</small></div>
+        <div class="dm-face-modes" role="radiogroup">${SCELTE().map(
+      ([v, testo2]) => `<button type="button" role="radio" class="dm-face-mode${c.scelta === v ? " on" : ""}" aria-checked="${c.scelta === v}" data-person-casa-scelta="${esc(v)}" data-person-casa-entita="${esc(c.entita)}">${esc(testo2)}</button>`
+    ).join("")}</div></div>`;
+  }).join("");
+  return `<div class="dm-people-casa">${titolo3}${nota}${casa.stato === "caricando" && !casa.cose.length ? `<small>${esc(t("Un momento…", "One moment…"))}</small>` : `<div class="dm-people-casa-elenco">${righe2 || `<small>${esc(t("Ancora niente da mostrare", "Nothing to show yet"))}</small>`}</div>`}</div>`;
 }
 function accantoMarkup() {
   const scelta3 = cosaAccanto();
@@ -108400,6 +108485,7 @@ function ensurePeopleEditor() {
     cosaAccanto(),
     JSON.stringify(readJson(CHIAVE_ASSISTENTE, {})?.opzioni || {}),
     JSON.stringify(memoriaPulita(readJson(CHIAVE_ASSISTENTE, {})?.memoria)) !== '{"tipi":{},"istanze":{}}',
+    JSON.stringify(state134.casa || null),
     ...people.map(
       (person) => `${person.id}~${person.nascosta ? "off" : "on"}~${person.name}~${person.entity}~${person.photo}~${person.avatar.emoji}~${person.avatar.color}~${JSON.stringify(person.avatar.face)}~${person.battery}~${person.batteryState}~${person.watch}~${person.distance}~${person.travel}~${person.address}~${person.activity}~${person.wifi}~${person.direction}`
     )
@@ -108580,7 +108666,10 @@ async function onClick35(event) {
     const quale = clean(categoria.dataset.personAssCategoria);
     if (!CATEGORIE2.includes(quale)) return;
     scriviAssistente(({ opzioni }) => ({
-      opzioni: { ...opzioni, categorie: { ...opzioni.categorie, [quale]: !opzioni.categorie[quale] } }
+      opzioni: {
+        ...opzioni,
+        categorie: { ...opzioni.categorie, [quale]: !opzioni.categorie[quale] }
+      }
     }));
     return;
   }
@@ -108590,6 +108679,20 @@ async function onClick35(event) {
     const livello = clean(sensibilita.dataset.personAssSensibilita);
     if (!SENSIBILITA.includes(livello)) return;
     scriviAssistente(({ opzioni }) => ({ opzioni: { ...opzioni, sensibilita: livello } }));
+    return;
+  }
+  if (event.target.closest("[data-person-casa-apri]")) {
+    event.preventDefault();
+    void caricaCosaCeInCasa();
+    return;
+  }
+  const sceltaCasa = event.target.closest("[data-person-casa-scelta]");
+  if (sceltaCasa) {
+    event.preventDefault();
+    void scegliCosa(
+      clean(sceltaCasa.dataset.personCasaEntita),
+      clean(sceltaCasa.dataset.personCasaScelta)
+    );
     return;
   }
   if (event.target.closest("[data-person-ass-scorda]")) {
@@ -108783,7 +108886,9 @@ function onChange11(event) {
   if (!body || activeTab6() !== PEOPLE_EDITOR_TAB || !body.contains(event.target)) return;
   if (event.target?.matches?.("[data-person-ass-notte]")) {
     const ora3 = Number(event.target.value);
-    scriviAssistente(({ opzioni }) => ({ opzioni: opzioniDellAssistente({ ...opzioni, notteDalle: ora3 }) }));
+    scriviAssistente(({ opzioni }) => ({
+      opzioni: opzioniDellAssistente({ ...opzioni, notteDalle: ora3 })
+    }));
     return;
   }
   if (!event.target?.matches?.("[data-person-field]")) return;
@@ -108922,6 +109027,12 @@ function installStyles64() {
         #ed-body .dm-people-ass-categorie{grid-template-columns:1fr 1fr}
       }
       #ed-body .dm-people-accanto-ed>small{color:var(--secondary-text-color,#64748b);font-size:11.5px;line-height:1.45}
+      #ed-body .dm-people-casa{display:grid;gap:8px;margin-top:10px}
+      #ed-body .dm-people-casa-elenco{display:grid;gap:6px;max-height:420px;overflow:auto}
+      #ed-body .dm-people-casa-riga{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:12px;background:color-mix(in srgb,var(--text,#0f172a) 4%,transparent);flex-wrap:wrap}
+      #ed-body .dm-people-casa-nome{display:grid;min-width:0}
+      #ed-body .dm-people-casa-nome b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #ed-body .dm-people-casa-nome small{opacity:.7}
       #ed-body .dm-people-assistente-ed{display:grid;gap:8px;margin-top:6px;padding:12px;border-radius:16px;
         border:1px solid color-mix(in srgb,#8b5cf6 26%,var(--card-border,#e2e8f0));background:color-mix(in srgb,#8b5cf6 5%,transparent)}
       #ed-body .dm-people-ass-notte{display:flex;align-items:center;gap:10px;flex-wrap:wrap}

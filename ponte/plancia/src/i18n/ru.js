@@ -5935,4 +5935,19 @@ export default Object.freeze({
   "Two sensors": "Два датчика",
   "What comes out of the battery": "Что выходит из батареи",
   "What goes into the battery": "Что входит в батарею",
+  "An automation handles it": "Этим занимается автоматизация",
+  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
+    "Не читается: дополнение gdahome должно работать, и нужно быть администратором.",
+  "Fine tonight": "Сегодня ночью можно",
+  "Inner door": "Внутренняя дверь",
+  "Leave it": "Оставить",
+  "Must stay on": "Должно оставаться включённым",
+  "Night light": "Ночник",
+  "One moment…": "Минутку…",
+  "See what it understood ›": "Посмотреть, что он понял ›",
+  "Usually like this": "Обычно так",
+  "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.":
+    "Что ассистент понял о светильниках, розетках и дверях: по названию, комнате, марке, автоматизациям и привычкам. Если ошибся — исправьте одним касанием.",
+  "What's in the house": "Что есть в доме",
+  "You said so": "Вы так сказали",
 });

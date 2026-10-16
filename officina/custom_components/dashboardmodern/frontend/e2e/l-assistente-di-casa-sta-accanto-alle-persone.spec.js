@@ -164,6 +164,100 @@ test("sul telefono sta sotto le persone, a tutta larghezza", async ({ page }, te
   expect(Math.abs(lei.width - fila.width)).toBeLessThan(2);
 });
 
+test("in Config › Persone, «Cosa c'è in casa»: quello che ha capito, e si corregge con un tocco", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo);
+  await page.evaluate(() => {
+    window.__COSE__ = [
+      {
+        entita: "light.luce_acquario_blu",
+        nome: "Luce acquario blu",
+        tipo: "luce",
+        genere: "acquario",
+        perche: "acquario",
+        scelta: "auto",
+      },
+      {
+        entita: "light.luci_giardino",
+        nome: "Luci giardino",
+        tipo: "luce",
+        genere: null,
+        perche: "automazione",
+        scelta: "auto",
+      },
+      {
+        entita: "switch.presa_frigo",
+        nome: "Presa frigo garage",
+        tipo: "luce",
+        genere: "sempre",
+        perche: "sempre",
+        scelta: "auto",
+      },
+      {
+        entita: "binary_sensor.porta_bagno",
+        nome: "Porta bagno",
+        tipo: "porta",
+        genere: "interna",
+        perche: null,
+        scelta: "auto",
+      },
+      {
+        entita: "light.cucina",
+        nome: "Cucina",
+        tipo: "luce",
+        genere: null,
+        perche: null,
+        scelta: "auto",
+      },
+    ];
+    window.__SCELTE__ = [];
+    const vero = window.eval("ws");
+    window.__FINTO__ = {
+      readyState: 1,
+      send(grezzo) {
+        const m = JSON.parse(grezzo);
+        if (!String(m.type).startsWith("ponte/casa-capita/")) return vero?.send?.(grezzo);
+        const rispondi = (result) =>
+          setTimeout(() => {
+            const attese = window.eval("pendingWsCallbacks");
+            const torna = attese[m.id];
+            delete attese[m.id];
+            torna?.({ id: m.id, type: "result", success: true, result });
+          }, 15);
+        if (m.type === "ponte/casa-capita/elenco") return rispondi({ cose: window.__COSE__ });
+        window.__SCELTE__.push(`${m.entita}=${m.scelta}`);
+        const voce = window.__COSE__.find((c) => c.entita === m.entita);
+        if (voce) voce.scelta = m.scelta;
+        return rispondi({ fatto: true });
+      },
+    };
+    window.eval("ws = window.__FINTO__");
+  });
+  await page.evaluate(() => window.apriConfigEntita());
+  await page.locator('.ed-tab[data-tab="people"]').click();
+  await page.locator("#ed-body [data-person-casa-apri]").click();
+  const righe = page.locator("#ed-body .dm-people-casa-riga");
+  await expect(righe).toHaveCount(5);
+  await expect(righe.first()).toContainText("Luce acquario blu");
+  await expect(righe.first()).toContainText("Acquario");
+  await expect(righe.nth(1)).toContainText("Ci pensa un'automazione");
+  /* «Avvisa» sulla cucina: va al ponte, e la riga lo mostra. */
+  await page
+    .locator('#ed-body [data-person-casa-entita="light.cucina"][data-person-casa-scelta="avvisa"]')
+    .click();
+  await expect.poll(() => page.evaluate(() => window.__SCELTE__)).toEqual(["light.cucina=avvisa"]);
+  await expect(
+    page.locator(
+      '#ed-body [data-person-casa-entita="light.cucina"][data-person-casa-scelta="avvisa"]',
+    ),
+  ).toHaveAttribute("aria-checked", "true");
+  if (process.env.DM_FOTO) {
+    await page.locator("#ed-body .dm-people-casa").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `${process.env.DM_FOTO}/cosa-c-e-in-casa.png` });
+  }
+});
+
 test("in Config › Persone si spegne, e si regola", async ({ page }, testInfo) => {
   await boot(page, testInfo);
   await page.evaluate(() => window.apriConfigEntita());

@@ -5810,4 +5810,19 @@ export default Object.freeze({
   "Two sensors": "两个传感器",
   "What comes out of the battery": "从电池流出的",
   "What goes into the battery": "流入电池的",
+  "An automation handles it": "由自动化处理",
+  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
+    "无法读取：gdahome 加载项必须在运行，且你需要是管理员。",
+  "Fine tonight": "今晚没关系",
+  "Inner door": "室内门",
+  "Leave it": "保持原样",
+  "Must stay on": "必须保持开启",
+  "Night light": "夜灯",
+  "One moment…": "稍等…",
+  "See what it understood ›": "查看它理解的内容 ›",
+  "Usually like this": "通常如此",
+  "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.":
+    "助手对灯、插座和门的理解：来自名称、房间、品牌、自动化和习惯。如有错误，轻点即可更正。",
+  "What's in the house": "家里有什么",
+  "You said so": "你指定的",
 });

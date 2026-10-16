@@ -871,3 +871,35 @@ test("l'assistente sa dov'e' una cosa e chi la gestisce: area, marca, automazion
   capire.gestiteDaAutomazioni(["light.cucina"]);
   assert.deepEqual(capire.lasciaStare("light.cucina", "Cucina"), { perche: "automazione" });
 });
+
+test("«Cosa c'è in casa»: l'elenco dice cosa ha capito, e «Avvisa» / «Resta così» lo correggono", async () => {
+  const { CapireLaCasa } = await import("../src/capire-la-casa.js");
+  const capire = new CapireLaCasa({ memoria: {} });
+  const stati = new Map([
+    [
+      "light.luce_acquario_blu",
+      { state: "on", attributes: { friendly_name: "Luce acquario blu" } },
+    ],
+    ["light.cucina", { state: "on", attributes: { friendly_name: "Cucina" } }],
+  ]);
+  const nome = (s, id) => s.attributes.friendly_name || id;
+  const elenco = capire.elenco(stati, nome);
+  assert.deepEqual(
+    elenco.map((c) => [c.entita, c.perche, c.scelta]),
+    [
+      ["light.luce_acquario_blu", "acquario", "auto"],
+      ["light.cucina", null, "auto"],
+    ],
+  );
+  /* «Avvisa» sull'acquario: si propone anche lui. «Resta così» sulla cucina. */
+  assert.equal(capire.scegli("light.luce_acquario_blu", "avvisa"), true);
+  assert.equal(capire.lasciaStare("light.luce_acquario_blu", "Luce acquario blu"), null);
+  capire.scegli("light.cucina", "resta");
+  assert.deepEqual(capire.lasciaStare("light.cucina", "Cucina"), { perche: "detto" });
+  /* «Decide lui» torna come prima. */
+  capire.scegli("light.luce_acquario_blu", "auto");
+  assert.deepEqual(capire.lasciaStare("light.luce_acquario_blu", "Luce acquario blu"), {
+    perche: "acquario",
+  });
+  assert.equal(capire.scegli("light.cucina", "boh"), false);
+});

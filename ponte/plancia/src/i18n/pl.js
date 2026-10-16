@@ -5938,4 +5938,19 @@ export default Object.freeze({
   "Two sensors": "Dwa czujniki",
   "What comes out of the battery": "Co wychodzi z baterii",
   "What goes into the battery": "Co wchodzi do baterii",
+  "An automation handles it": "Zajmuje się tym automatyzacja",
+  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
+    "Nie można odczytać: dodatek gdahome musi działać, a ty musisz być administratorem.",
+  "Fine tonight": "Dziś w nocy w porządku",
+  "Inner door": "Drzwi wewnętrzne",
+  "Leave it": "Zostaw",
+  "Must stay on": "Musi zostać włączone",
+  "Night light": "Lampka nocna",
+  "One moment…": "Chwileczkę…",
+  "See what it understood ›": "Zobacz, co zrozumiał ›",
+  "Usually like this": "Zwykle tak jest",
+  "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.":
+    "Co asystent zrozumiał o światłach, gniazdkach i drzwiach: z nazwy, pomieszczenia, marki, automatyzacji i nawyków. Jeśli się myli, popraw jednym dotknięciem.",
+  "What's in the house": "Co jest w domu",
+  "You said so": "Sam tak powiedziałeś",
 });

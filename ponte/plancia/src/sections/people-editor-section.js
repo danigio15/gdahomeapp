@@ -54,6 +54,7 @@ import { pickMediaImage } from "./media-picker-section.js";
 import { installAvatar3dStyle, ritrattoFermo, ritrattoVivo } from "./person-avatar-section.js";
 import {
   allStates,
+  chiediAHomeAssistant,
   clean,
   doc,
   esc,
@@ -606,12 +607,107 @@ function assistenteMarkup() {
     ).join("")}</div>
     <label class="dm-people-ass-notte"><span class="ed-slot-lbl">${esc(t("La notte comincia alle", "Night starts at"))}</span>
       <select class="ed-input" data-person-ass-notte>${ore
-        .map((ora) => `<option value="${ora}"${ora === opzioni.notteDalle ? " selected" : ""}>${ora}:00</option>`)
+        .map(
+          (ora) =>
+            `<option value="${ora}"${ora === opzioni.notteDalle ? " selected" : ""}>${ora}:00</option>`,
+        )
         .join("")}</select></label>
     <button type="button" class="ed-btn-add dm-people-ass-scorda" data-person-ass-scorda${imparato ? "" : " disabled"}>${esc(
       t("Dimentica quello che ha imparato", "Forget what it has learned"),
     )}</button>
+    ${cosaCeInCasaMarkup()}
   </div>`;
+}
+
+/* ── «Cosa c'e' in casa» ─────────────────────────────────────────────────
+ *
+ * Quello che l'assistente ha capito delle luci, delle prese e delle porte —
+ * dal nome, dall'area, dalla marca, dalle automazioni, dalle abitudini e
+ * dalle risposte — e la correzione di chi amministra, con un tocco: «Decide
+ * lui», «Resta così» (non proporla mai), «Avvisa» (proponila sempre). Lo
+ * tiene il ponte (`ponte/src/capire-la-casa.js`), per tutta la casa. */
+const PERCHE = () => ({
+  acquario: t("Acquario", "Aquarium"),
+  terrario: t("Terrario", "Terrarium"),
+  notte: t("Luce notturna", "Night light"),
+  esterno: t("Fuori casa", "Outdoors"),
+  sempre: t("Deve restare accesa", "Must stay on"),
+  interna: t("Porta interna", "Inner door"),
+  abitudine: t("Di solito è così", "Usually like this"),
+  automazione: t("Ci pensa un'automazione", "An automation handles it"),
+  detto: t("L'hai detto tu", "You said so"),
+  stanotte: t("Va bene stanotte", "Fine tonight"),
+});
+const SCELTE = () => [
+  ["auto", t("Decide lui", "Auto")],
+  ["resta", t("Resta così", "Leave it")],
+  ["avvisa", t("Avvisa", "Alert")],
+];
+
+async function caricaCosaCeInCasa() {
+  state.casa = { stato: "caricando", cose: state.casa?.cose || [] };
+  ridisegna();
+  try {
+    const risposta = await chiediAHomeAssistant({ type: "ponte/casa-capita/elenco" }, 15000);
+    state.casa = { stato: "ok", cose: Array.isArray(risposta?.cose) ? risposta.cose : [] };
+  } catch (_errore) {
+    state.casa = { stato: "no", cose: [] };
+  }
+  ridisegna();
+}
+
+async function scegliCosa(entita, scelta) {
+  const voce = state.casa?.cose?.find((c) => c.entita === entita);
+  if (voce) voce.scelta = scelta;
+  ridisegna();
+  try {
+    await chiediAHomeAssistant({ type: "ponte/casa-capita/scegli", entita, scelta }, 10000);
+  } catch (_errore) {}
+  void caricaCosaCeInCasa();
+}
+
+function cosaCeInCasaMarkup() {
+  const casa = state.casa;
+  const titolo = `<span class="ed-slot-lbl">${esc(t("Cosa c'è in casa", "What's in the house"))}</span>`;
+  const nota = `<small>${esc(
+    t(
+      "Quello che l'assistente ha capito di luci, prese e porte: dal nome, dalla stanza, dalla marca, dalle automazioni e dalle abitudini. Se sbaglia, correggilo con un tocco.",
+      "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.",
+    ),
+  )}</small>`;
+  if (!casa)
+    return `<div class="dm-people-casa">${titolo}${nota}<button type="button" class="ed-btn-add" data-person-casa-apri>${esc(
+      t("Guarda cosa ha capito ›", "See what it understood ›"),
+    )}</button></div>`;
+  if (casa.stato === "no")
+    return `<div class="dm-people-casa">${titolo}<small>${esc(
+      t(
+        "Non si legge: serve l'add-on gdahome acceso, e chi amministra la casa.",
+        "Can't read it: the gdahome add-on must be running, and you must be an administrator.",
+      ),
+    )}</small></div>`;
+  const perche = PERCHE();
+  const righe = (casa.cose || [])
+    .map((c) => {
+      const motivo =
+        perche[c.perche] ||
+        perche[c.genere] ||
+        (c.tipo === "porta" ? t("Porta", "Door") : t("Luce", "Light"));
+      return `<div class="dm-people-casa-riga" data-person-casa="${esc(c.entita)}">
+        <div class="dm-people-casa-nome"><b>${esc(c.nome || c.entita)}</b><small>${esc(motivo)}</small></div>
+        <div class="dm-face-modes" role="radiogroup">${SCELTE()
+          .map(
+            ([v, testo]) =>
+              `<button type="button" role="radio" class="dm-face-mode${c.scelta === v ? " on" : ""}" aria-checked="${c.scelta === v}" data-person-casa-scelta="${esc(v)}" data-person-casa-entita="${esc(c.entita)}">${esc(testo)}</button>`,
+          )
+          .join("")}</div></div>`;
+    })
+    .join("");
+  return `<div class="dm-people-casa">${titolo}${nota}${
+    casa.stato === "caricando" && !casa.cose.length
+      ? `<small>${esc(t("Un momento…", "One moment…"))}</small>`
+      : `<div class="dm-people-casa-elenco">${righe || `<small>${esc(t("Ancora niente da mostrare", "Nothing to show yet"))}</small>`}</div>`
+  }</div>`;
 }
 
 function accantoMarkup() {
@@ -697,7 +793,9 @@ export function ensurePeopleEditor() {
     state.aperto,
     cosaAccanto(),
     JSON.stringify(readJson(CHIAVE_ASSISTENTE, {})?.opzioni || {}),
-    JSON.stringify(memoriaPulita(readJson(CHIAVE_ASSISTENTE, {})?.memoria)) !== '{"tipi":{},"istanze":{}}',
+    JSON.stringify(memoriaPulita(readJson(CHIAVE_ASSISTENTE, {})?.memoria)) !==
+      '{"tipi":{},"istanze":{}}',
+    JSON.stringify(state.casa || null),
     ...people.map(
       (person) =>
         `${person.id}~${person.nascosta ? "off" : "on"}~${person.name}~${person.entity}~${person.photo}~${person.avatar.emoji}~${person.avatar.color}~${JSON.stringify(person.avatar.face)}~${person.battery}~${person.batteryState}~${person.watch}~${person.distance}~${person.travel}~${person.address}~${person.activity}~${person.wifi}~${person.direction}`,
@@ -931,7 +1029,10 @@ async function onClick(event) {
     const quale = clean(categoria.dataset.personAssCategoria);
     if (!CATEGORIE.includes(quale)) return;
     scriviAssistente(({ opzioni }) => ({
-      opzioni: { ...opzioni, categorie: { ...opzioni.categorie, [quale]: !opzioni.categorie[quale] } },
+      opzioni: {
+        ...opzioni,
+        categorie: { ...opzioni.categorie, [quale]: !opzioni.categorie[quale] },
+      },
     }));
     return;
   }
@@ -941,6 +1042,20 @@ async function onClick(event) {
     const livello = clean(sensibilita.dataset.personAssSensibilita);
     if (!SENSIBILITA.includes(livello)) return;
     scriviAssistente(({ opzioni }) => ({ opzioni: { ...opzioni, sensibilita: livello } }));
+    return;
+  }
+  if (event.target.closest("[data-person-casa-apri]")) {
+    event.preventDefault();
+    void caricaCosaCeInCasa();
+    return;
+  }
+  const sceltaCasa = event.target.closest("[data-person-casa-scelta]");
+  if (sceltaCasa) {
+    event.preventDefault();
+    void scegliCosa(
+      clean(sceltaCasa.dataset.personCasaEntita),
+      clean(sceltaCasa.dataset.personCasaScelta),
+    );
     return;
   }
   if (event.target.closest("[data-person-ass-scorda]")) {
@@ -1183,7 +1298,9 @@ function onChange(event) {
   if (!body || activeTab() !== PEOPLE_EDITOR_TAB || !body.contains(event.target)) return;
   if (event.target?.matches?.("[data-person-ass-notte]")) {
     const ora = Number(event.target.value);
-    scriviAssistente(({ opzioni }) => ({ opzioni: opzioniDellAssistente({ ...opzioni, notteDalle: ora }) }));
+    scriviAssistente(({ opzioni }) => ({
+      opzioni: opzioniDellAssistente({ ...opzioni, notteDalle: ora }),
+    }));
     return;
   }
   if (!event.target?.matches?.("[data-person-field]")) return;
@@ -1334,6 +1451,12 @@ function installStyles() {
         #ed-body .dm-people-ass-categorie{grid-template-columns:1fr 1fr}
       }
       #ed-body .dm-people-accanto-ed>small{color:var(--secondary-text-color,#64748b);font-size:11.5px;line-height:1.45}
+      #ed-body .dm-people-casa{display:grid;gap:8px;margin-top:10px}
+      #ed-body .dm-people-casa-elenco{display:grid;gap:6px;max-height:420px;overflow:auto}
+      #ed-body .dm-people-casa-riga{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:12px;background:color-mix(in srgb,var(--text,#0f172a) 4%,transparent);flex-wrap:wrap}
+      #ed-body .dm-people-casa-nome{display:grid;min-width:0}
+      #ed-body .dm-people-casa-nome b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #ed-body .dm-people-casa-nome small{opacity:.7}
       #ed-body .dm-people-assistente-ed{display:grid;gap:8px;margin-top:6px;padding:12px;border-radius:16px;
         border:1px solid color-mix(in srgb,#8b5cf6 26%,var(--card-border,#e2e8f0));background:color-mix(in srgb,#8b5cf6 5%,transparent)}
       #ed-body .dm-people-ass-notte{display:flex;align-items:center;gap:10px;flex-wrap:wrap}

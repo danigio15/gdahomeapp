@@ -5920,4 +5920,19 @@ export default Object.freeze({
   "Two sensors": "センサー2つ",
   "What comes out of the battery": "バッテリーから出る電力",
   "What goes into the battery": "バッテリーに入る電力",
+  "An automation handles it": "オートメーションが管理",
+  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
+    "読み込めません：gdahome アドオンが動作していて、管理者である必要があります。",
+  "Fine tonight": "今夜は大丈夫",
+  "Inner door": "室内ドア",
+  "Leave it": "このまま",
+  "Must stay on": "点けたままにする",
+  "Night light": "常夜灯",
+  "One moment…": "少々お待ちください…",
+  "See what it understood ›": "理解した内容を見る ›",
+  "Usually like this": "いつもこう",
+  "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.":
+    "照明・コンセント・ドアについてアシスタントが理解したこと：名前、部屋、メーカー、オートメーション、習慣から。間違っていたらタップで修正。",
+  "What's in the house": "家にあるもの",
+  "You said so": "あなたが指定",
 });

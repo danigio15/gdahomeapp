@@ -5903,4 +5903,19 @@ export default Object.freeze({
   "Two sensors": "दो सेंसर",
   "What comes out of the battery": "बैटरी से जो निकलता है",
   "What goes into the battery": "बैटरी में जो जाता है",
+  "An automation handles it": "एक ऑटोमेशन इसे संभालता है",
+  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
+    "पढ़ा नहीं जा सकता: gdahome ऐड-ऑन चालू होना चाहिए और आपको व्यवस्थापक होना चाहिए।",
+  "Fine tonight": "आज रात ठीक है",
+  "Inner door": "अंदर का दरवाज़ा",
+  "Leave it": "ऐसे ही रहने दें",
+  "Must stay on": "चालू रहना चाहिए",
+  "Night light": "रात की बत्ती",
+  "One moment…": "एक पल…",
+  "See what it understood ›": "देखें उसने क्या समझा ›",
+  "Usually like this": "आमतौर पर ऐसा ही",
+  "What the assistant understood about lights, sockets and doors: from the name, the room, the brand, the automations and the habits. If it's wrong, fix it with a tap.":
+    "सहायक ने लाइट, सॉकेट और दरवाज़ों के बारे में क्या समझा: नाम, कमरे, ब्रांड, ऑटोमेशन और आदतों से। गलत हो तो एक टैप से सुधारें।",
+  "What's in the house": "घर में क्या है",
+  "You said so": "आपने ऐसा कहा",
 });

@@ -162,6 +162,9 @@ export class CapireLaCasa {
     d.silenzio = voce(d.silenzio);
     d.luci = voce(d.luci);
     d.porte = voce(d.porte);
+    /* «Avvisa»: chi abita la casa vuole che questa si proponga anche se il
+     * nome, l'area o le abitudini direbbero di lasciarla stare. */
+    d.avvisa = voce(d.avvisa);
     /* Quello che Home Assistant sa gia' di ogni cosa: l'area, la marca e il
      * modello del dispositivo (`descrivi`), e le luci che accende o spegne
      * un'automazione a orario (`automatiche`). Non si scrive: si rilegge. */
@@ -203,6 +206,22 @@ export class CapireLaCasa {
   nonRestaPiu(id) {
     delete this.dati.resta[id];
     this._salva();
+  }
+
+  /**
+   * La scelta dal config «Cosa c'e' in casa»: «resta» (non proporla mai),
+   * «avvisa» (proponila sempre, anche se sembra da lasciare stare), o «auto»
+   * (decide l'assistente).
+   */
+  scegli(id, scelta) {
+    if (typeof id !== "string" || !id.includes(".")) return false;
+    delete this.dati.resta[id];
+    delete this.dati.avvisa[id];
+    if (scelta === "resta") this.dati.resta[id] = this.adesso();
+    else if (scelta === "avvisa") this.dati.avvisa[id] = this.adesso();
+    else if (scelta !== "auto") return false;
+    this._salva();
+    return true;
   }
 
   /** «Va bene stanotte»: zitta fino al mattino, o finche' si chiude. */
@@ -274,6 +293,7 @@ export class CapireLaCasa {
    */
   lasciaStare(id, nome = "", { tipo = "luce", ora = this.adesso() } = {}) {
     if (this.dati.resta[id] !== undefined) return { perche: "detto" };
+    if (this.dati.avvisa[id] !== undefined) return null;
     const fino = this.dati.silenzio[id];
     if (Number.isFinite(fino)) {
       if (fino > ora) return { perche: "stanotte" };
@@ -340,13 +360,30 @@ export class CapireLaCasa {
         continue;
       const lascia = this.lasciaStare(id, nome, { tipo: porta ? "porta" : "luce", ora });
       const genere = porta
-        ? eInterna(id, nome, stato.attributes?.device_class)
+        ? this.portaInterna(id, nome, stato.attributes?.device_class)
           ? "interna"
           : null
-        : genereDi(id, nome);
-      if (!lascia && !genere && dominio === "switch") continue;
-      fuori.push({ entita: id, nome, genere, perche: lascia?.perche || null });
+        : genereDi(id, `${nome} ${this.descrizioni[id] || ""}`);
+      const scelta =
+        this.dati.resta[id] !== undefined
+          ? "resta"
+          : this.dati.avvisa[id] !== undefined
+            ? "avvisa"
+            : "auto";
+      if (!lascia && !genere && scelta === "auto" && dominio !== "light") continue;
+      fuori.push({
+        entita: id,
+        nome,
+        tipo: porta ? "porta" : "luce",
+        genere,
+        perche: lascia?.perche || null,
+        scelta,
+      });
     }
+    /* Prima quello che l'assistente ha capito o che e' stato scelto, poi il
+     * resto in ordine di nome. */
+    const peso = (c) => (c.scelta !== "auto" ? 0 : c.perche || c.genere ? 1 : 2);
+    fuori.sort((a, b) => peso(a) - peso(b) || a.nome.localeCompare(b.nome));
     return fuori.slice(0, 200);
   }
 }

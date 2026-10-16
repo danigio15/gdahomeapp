@@ -302,6 +302,36 @@ export class Notifiche {
     if (this.adesso() - this._automazioniIl >= AUTOMAZIONI_OGNI) await this._leAutomazioni();
   }
 
+  /* «Cosa c'e' in casa», dal config: quello che l'assistente ha capito, e le
+   * correzioni di chi amministra. Solo nomi e generi, niente stati. */
+  casaCapita(detto) {
+    const id = detto?.id ?? null;
+    const capire = this.sentinella.capire;
+    const si = (result) => ({ id, type: "result", success: true, result });
+    if (detto?.type === "ponte/casa-capita/elenco") {
+      const nome = (stato, entita) =>
+        String(stato?.attributes?.friendly_name || entita).slice(0, 60);
+      return si({ cose: capire.elenco(this.sentinella.stati, nome) });
+    }
+    if (detto?.type === "ponte/casa-capita/scegli") {
+      if (!capire.scegli(String(detto.entita || ""), String(detto.scelta || "")))
+        return {
+          id,
+          type: "result",
+          success: false,
+          error: { code: "invalid", message: "scelta non valida" },
+        };
+      capire.scrivi();
+      return si({ fatto: true });
+    }
+    return {
+      id,
+      type: "result",
+      success: false,
+      error: { code: "unknown_command", message: `non conosco ${detto?.type}` },
+    };
+  }
+
   /* Quello che Home Assistant sa delle cose, per l'assistente: l'area dove
    * stanno, la marca e il modello del dispositivo. Una luce nell'area
    * «Giardino» e' esterna, una porta nell'area «Bagno» e' interna. Solo
