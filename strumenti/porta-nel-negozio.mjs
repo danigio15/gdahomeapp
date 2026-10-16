@@ -264,34 +264,54 @@ async function chiedi(prendi, dove, { metodo = "GET", gettone, corpo, tipo } = {
   }
 }
 
-/* Consegna la modifica.
+/* Controllare e consegnare la modifica.
  *
  * Dopo un rifiuto di Google, o con una revisione gia' in corso, il negozio non
  * accetta piu' che una modifica parta da sola verso la revisione: risponde 400,
  * «Changes cannot be sent for review automatically», e chiede
- * `changesNotSentForReview=true`. Successo con la 1.14.0: pacchetto caricato,
- * messo sulla pista, e poi buttato per quella riga. Adesso si riconsegna la
- * stessa modifica cosi' come chiede: la versione va sulla pista, e la
- * revisione si manda dal Play Console, col tasto «Invia per revisione». Detto
- * nel registro, perche' senza quel tasto non arriva a nessuno. */
+ * `changesNotSentForReview=true`. Lo chiede **a tutti e due i passi**: al
+ * controllo (`validate`) e alla consegna (`commit`). La 1.14.0 si e' fermata
+ * alla consegna; la 1.14.1 gia' al controllo, che la prima cura non copriva.
+ * Adesso il passo rifiutato si rifa' cosi' come chiede, e il passo dopo nasce
+ * gia' con la stessa richiesta: la versione va sulla pista, e la revisione si
+ * manda dal Play Console, col tasto «Invia per revisione». Detto nel registro,
+ * perche' senza quel tasto non arriva a nessuno. */
 export const DA_MANDARE_A_MANO = /changesNotSentForReview/;
+const SENZA_REVISIONE = "?changesNotSentForReview=true";
 
-async function consegna(prendi, quale, gettone, dillo = () => {}) {
+async function unPasso(prendi, quale, passo, gettone, come) {
+  if (come.aMano) {
+    await chiedi(prendi, perApp(`/edits/${quale}:${passo}${SENZA_REVISIONE}`), {
+      metodo: "POST",
+      gettone,
+    });
+    return;
+  }
   try {
-    await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
-    return { aMano: false };
+    await chiedi(prendi, perApp(`/edits/${quale}:${passo}`), { metodo: "POST", gettone });
   } catch (errore) {
     if (!DA_MANDARE_A_MANO.test(errore?.message || "")) throw errore;
+    come.aMano = true;
+    await chiedi(prendi, perApp(`/edits/${quale}:${passo}${SENZA_REVISIONE}`), {
+      metodo: "POST",
+      gettone,
+    });
   }
-  await chiedi(prendi, perApp(`/edits/${quale}:commit?changesNotSentForReview=true`), {
-    metodo: "POST",
-    gettone,
-  });
-  dillo(
-    "ATTENZIONE: il negozio non manda da solo in revisione: la modifica e' consegnata, " +
-      "la revisione si invia dal Play Console (Panoramica della pubblicazione → Invia per revisione)",
-  );
-  return { aMano: true };
+}
+
+/** Il controllo del negozio, prima di consegnare. `come` si porta al passo dopo. */
+async function controlla(prendi, quale, gettone, come) {
+  await unPasso(prendi, quale, "validate", gettone, come);
+}
+
+async function consegna(prendi, quale, gettone, dillo = () => {}, come = { aMano: false }) {
+  await unPasso(prendi, quale, "commit", gettone, come);
+  if (come.aMano)
+    dillo(
+      "ATTENZIONE: il negozio non manda da solo in revisione: la modifica e' consegnata, " +
+        "la revisione si invia dal Play Console (Panoramica della pubblicazione → Invia per revisione)",
+    );
+  return come;
 }
 
 /** Il gettone che vale un'ora, in cambio del biglietto firmato. */
@@ -408,8 +428,9 @@ export async function promuovi({
     try {
       await dentroUnaModifica({ gettone, prendi, dillo }, async (quale) => {
         await sullaPista({ quale, pista, numero, novita, gettone, prendi });
-        await chiedi(prendi, perApp(`/edits/${quale}:validate`), { metodo: "POST", gettone });
-        await consegna(prendi, quale, gettone, dillo);
+        const come = { aMano: false };
+        await controlla(prendi, quale, gettone, come);
+        await consegna(prendi, quale, gettone, dillo, come);
       });
     } catch (errore) {
       const perche = errore?.message || String(errore);
@@ -495,7 +516,8 @@ export async function porta({
 
     /* Prima di consegnare si chiede a lui se va bene: e' l'unico modo di
      * scoprire un guaio **senza** averlo pubblicato. */
-    await chiedi(prendi, perApp(`/edits/${quale}:validate`), { metodo: "POST", gettone });
+    const come = { aMano: false };
+    await controlla(prendi, quale, gettone, come);
     dillo("il negozio dice che va bene");
 
     if (prova) {
@@ -504,7 +526,7 @@ export async function porta({
       return quanto;
     }
 
-    await consegna(prendi, quale, gettone, dillo);
+    await consegna(prendi, quale, gettone, dillo, come);
     dillo(`pubblicato: la ${quanto} e' sulle piste ${subito.map((una) => `«${una}»`).join(", ")}`);
     return quanto;
   });

@@ -1,0 +1,68 @@
+# La testata della Home su Safari (WebKit), a misura di iPhone e di iPad.
+#
+# «Se vado su Luci e Porte continua a sparire la parte sopra»: succede solo su
+# iPhone e iPad, e le prove di tutti i giorni girano su Chromium, dove non
+# succede. Qui le prove della testata girano sul motore di Safari, e il
+# registro scrive come sta la fila in alto a ogni ritorno alla Home.
+#
+# Non costruisce e non pubblica niente: le foto della prova restano fra gli
+# artefatti della corsa, e sono foto della plancia di prova, non l'app.
+name: La testata su Safari
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths:
+      - "officina/custom_components/dashboardmodern/frontend/e2e/la-testata-*.spec.js"
+      - "ponte/plancia/src/sections/weather-in-masthead-section.js"
+      - "ponte/plancia/src/sections/page-masthead-section.js"
+      - "officina/playwright.safari.config.js"
+      - ".github/workflows/la-testata-su-safari.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testata-safari-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  safari:
+    name: La testata su WebKit
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.54.1-noble
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: officina
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22"
+      - run: npm ci --no-audit --no-fund
+      # Il server delle prove si chiama «python»: nell'immagine c'e' python3.
+      - name: Python
+        run: command -v python || ln -s "$(command -v python3)" /usr/local/bin/python
+      - name: I dati della versione
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          python scripts/generate_build_info.py --expected-commit "$GITHUB_SHA"
+      - name: Le prove della testata, su WebKit
+        env:
+          DM_FOTO: ${{ github.workspace }}/officina/foto-testata
+        run: |
+          mkdir -p "$DM_FOTO"
+          npx playwright test -c playwright.safari.config.js --reporter=list
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: testata-safari
+          path: |
+            officina/foto-testata
+            officina/test-results
+          retention-days: 7

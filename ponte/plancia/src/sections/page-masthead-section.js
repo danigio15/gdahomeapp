@@ -894,6 +894,12 @@ function paginaAperta() {
  * riga che la plancia scrive). */
 const guardate = new WeakSet();
 
+/* Chi vuole sapere quando la pagina aperta cambia davvero, qualunque strada
+ * abbia preso chi l'ha cambiata: le voci del guscio, quelle di Luci e di
+ * Porte nate dopo, il tasto Home di una pagina, una scorciatoia della Home.
+ * Lo sa chi scrive il segno, e lo dice qui; nessuno deve osservare il corpo. */
+const cambiDiPagina = new Set();
+
 export function segnaLaPagina() {
   const corpo = doc?.body;
   if (!corpo) return "";
@@ -906,9 +912,17 @@ export function segnaLaPagina() {
     }
   }
   const aperta = paginaAperta();
+  const prima = corpo.dataset[SEGNO_DELLA_PAGINA] || "";
   if (!aperta) delete corpo.dataset[SEGNO_DELLA_PAGINA];
-  else if (corpo.dataset[SEGNO_DELLA_PAGINA] !== aperta) corpo.dataset[SEGNO_DELLA_PAGINA] = aperta;
+  else if (prima !== aperta) corpo.dataset[SEGNO_DELLA_PAGINA] = aperta;
+  if (aperta && prima && prima !== aperta)
+    for (const ascolto of cambiDiPagina) senzaCadere(() => ascolto(aperta, prima));
   return aperta;
+}
+
+export function quandoCambiaLaPaginaAperta(ascolto) {
+  if (typeof ascolto === "function") cambiDiPagina.add(ascolto);
+  return () => cambiDiPagina.delete(ascolto);
 }
 
 function installStyles() {

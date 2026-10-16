@@ -528,7 +528,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-YDQUE3VP.js";
+} from "../../chunk-66G7IZEG.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -25274,6 +25274,7 @@ function paginaAperta() {
   return aperte.find((pagina2) => pagina2.id !== "page-home")?.id || "page-home";
 }
 var guardate = /* @__PURE__ */ new WeakSet();
+var cambiDiPagina = /* @__PURE__ */ new Set();
 function segnaLaPagina() {
   const corpo3 = doc?.body;
   if (!corpo3) return "";
@@ -25286,9 +25287,16 @@ function segnaLaPagina() {
     }
   }
   const aperta = paginaAperta();
+  const prima = corpo3.dataset[SEGNO_DELLA_PAGINA] || "";
   if (!aperta) delete corpo3.dataset[SEGNO_DELLA_PAGINA];
-  else if (corpo3.dataset[SEGNO_DELLA_PAGINA] !== aperta) corpo3.dataset[SEGNO_DELLA_PAGINA] = aperta;
+  else if (prima !== aperta) corpo3.dataset[SEGNO_DELLA_PAGINA] = aperta;
+  if (aperta && prima && prima !== aperta)
+    for (const ascolto of cambiDiPagina) senzaCadere(() => ascolto(aperta, prima));
   return aperta;
+}
+function quandoCambiaLaPaginaAperta(ascolto) {
+  if (typeof ascolto === "function") cambiDiPagina.add(ascolto);
+  return () => cambiDiPagina.delete(ascolto);
 }
 function installStyles6() {
   installStyle(
@@ -38654,6 +38662,34 @@ function rifaiLaFila(header2, { sempre = false } = {}) {
   void header2.offsetWidth;
   return true;
 }
+function inCima() {
+  root.scrollTo?.({ top: 0, left: 0, behavior: "instant" });
+  for (const nodo2 of [doc?.scrollingElement, doc?.documentElement, doc?.body]) {
+    if (nodo2 && nodo2.scrollTop) nodo2.scrollTop = 0;
+  }
+}
+function rimettiLaPrimaFila(header2) {
+  if (!header2) return 0;
+  let rimessi = 0;
+  for (const nodo2 of header2.querySelectorAll?.(":scope > .header-left-wrap, :scope > .dm-editor-entry") || []) {
+    const dopo = nodo2.nextSibling;
+    header2.insertBefore(nodo2, dopo);
+    rimessi += 1;
+  }
+  return rimessi;
+}
+function tornatiSullaHome() {
+  inCima();
+  const header2 = testata();
+  if (!header2) return;
+  rimettiLaPrimaFila(header2);
+  rifaiLaFila(header2, { sempre: true });
+  root.requestAnimationFrame?.(() => inCima());
+  root.setTimeout?.(() => {
+    inCima();
+    rifaiLaFila(header2);
+  }, 350);
+}
 var FLAG_METEO = "cd_meteo_entita_proprie";
 function flagMeteo() {
   try {
@@ -38727,6 +38763,9 @@ function installWeatherInMasthead() {
   root.addEventListener?.("scrollend", ripara);
   doc.addEventListener?.("visibilitychange", ripara);
   quandoSiCambiaPagina(ripara);
+  quandoCambiaLaPaginaAperta((adesso) => {
+    if (adesso === "page-home") tornatiSullaHome();
+  });
   for (const eventoEditor of ["dashboardmodern:editor-rendered", "dashboardmodern:legacy-ready"])
     root.addEventListener?.(eventoEditor, () => montaFlagMeteo());
   doc.addEventListener?.(
@@ -118085,6 +118124,8 @@ function ensureVarchiTab() {
     const testata4 = doc.querySelector("header");
     if (testata4) testata4.style.display = "none";
     root.scrollTo?.({ top: 0, behavior: "instant" });
+    if (doc.documentElement) doc.documentElement.scrollTop = 0;
+    if (doc.body) doc.body.scrollTop = 0;
     if (root.navigator?.vibrate) root.navigator.vibrate(5);
     schedule36();
   });

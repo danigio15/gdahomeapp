@@ -10,6 +10,19 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.2
+
+- **La testata della Home non sparisce più tornando da Luci e da Porte**
+  (iPhone e iPad, a tutto schermo). A scorrere lì è la pagina stessa, e Luci e
+  Porte non la rimettevano in cima: tornati sulla Home, menu, nome e
+  ingranaggio restavano sotto l'orologio del telefono e si vedeva solo il
+  meteo. Adesso Luci e Porte ripartono dall'alto come le altre schede, e
+  tornando sulla Home — da qualunque strada — la Home riparte dall'alto e la
+  prima fila si ridisegna da capo.
+- **Play Store:** la versione arriva sulla pista anche quando Google vuole che
+  la revisione si mandi a mano, sia al controllo sia alla consegna (la 1.14.1
+  si era fermata al controllo).
+
 ## 1.14.1
 
 **Deezer nella Musica.** «Scegli cosa suonare» apre i **Preferiti di Sonos**
