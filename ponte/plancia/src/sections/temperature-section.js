@@ -1,6 +1,11 @@
 // DM-FIX-20260815A
 import { directEmoji, roomGlyph } from "../core/personalization-catalog.js";
-import { humidityEntry, temperatureEntries } from "../core/room-overview.js";
+import {
+  humidityEntry,
+  primaLeStanzeDiCasa,
+  stanzaAllAperto,
+  temperatureEntries,
+} from "../core/room-overview.js";
 import {
   allStates,
   applyTemperatureReading,
@@ -50,7 +55,9 @@ function roomEntries() {
     const entries = temperatureEntries(room).filter((entry) => clean(entry.temp));
     for (const entry of entries) voci.push({ room, entry, quante: entries.length });
   }
-  return voci;
+  /* Le stanze all'aperto (#251) in fondo, sotto il loro separatore: si
+   * leggono, ma la casa e' quella di sopra. */
+  return primaLeStanzeDiCasa(voci, (voce) => voce.room);
 }
 
 function eventEntityIds(event) {
@@ -92,6 +99,49 @@ function comfortLabel(temperature) {
   return "Comfort";
 }
 
+/**
+ * Il cartellino in alto a destra della card: com'e' la stanza.
+ *
+ * Una stanza all'aperto (#251) non e' fredda, comoda o calda: e' fuori. Il
+ * cartellino lo dice al posto del comfort, e la card si fa neutra — grigia, il
+ * bordo a tratti, senza la scala del comfort in fondo. I due che aggiornano le
+ * card passano tutti e due di qui, cosi' un aggiornamento del sensore non
+ * rimette «Freddo» sul balcone.
+ */
+export function scriviIlCartellino(badge, room, temperature) {
+  if (!badge) return false;
+  const fuori = stanzaAllAperto(room);
+  const label = fuori ? t("All'aperto", "Outdoors") : comfortLabel(temperature);
+  badge.textContent = comfortBadgeText(label);
+  badge.title = label;
+  badge.setAttribute("aria-label", label);
+  badge.dataset.comfort = fuori ? "all-aperto" : label.toLowerCase().replaceAll(" ", "-");
+  const card = badge.closest?.(".temp-card");
+  if (card) {
+    if (fuori) card.dataset.dmFuori = "true";
+    else delete card.dataset.dmFuori;
+  }
+  return true;
+}
+
+/* Il separatore sopra le stanze all'aperto: dice che cosa sono prima che
+ * qualcuno cerchi la scala del comfort che non hanno. */
+function separatoreAllAperto() {
+  const riga = doc.createElement("div");
+  riga.className = "dm-temp-fuori-sep";
+  riga.dataset.dmTempFuoriSep = "true";
+  const titolo = makeText("dm-temp-fuori-titolo", `🌿 ${t("All'aperto", "Outdoors")}`);
+  const nota = makeText(
+    "dm-temp-fuori-nota",
+    t(
+      "Si leggono e basta: non contano nella media della casa",
+      "Read-only: they do not count in the home average",
+    ),
+  );
+  riga.append(titolo, nota);
+  return riga;
+}
+
 function safeId(entity) {
   return clean(entity).replace(/[.\-]/g, "_");
 }
@@ -126,6 +176,7 @@ function cardSignature(values = roomEntries()) {
         clean(voce.room.floor),
         clean(voce.entry.temp),
         entryHumidity(voce.entry),
+        stanzaAllAperto(voce.room) ? "fuori" : "",
       ].join("|"),
     )
     .join(";");
@@ -223,13 +274,7 @@ function updateCard(card, voce) {
   if (humidityValue)
     humidityValue.textContent = humidity == null ? "—%" : `${humidity.toFixed(0)}%`;
   applyTemperatureReading(card, temperature, humidity);
-  if (comfort) {
-    const label = comfortLabel(temperature);
-    comfort.textContent = comfortBadgeText(label);
-    comfort.title = label;
-    comfort.setAttribute("aria-label", label);
-    comfort.dataset.comfort = label.toLowerCase().replaceAll(" ", "-");
-  }
+  scriviIlCartellino(comfort, room, temperature);
   if (icon) {
     icon.dataset.roomIcon = clean(room.icon || "mdi:home");
     const fallback =
@@ -285,11 +330,16 @@ export function renderTemperatureCards({ force = false } = {}) {
     return false;
   }
 
-  const cards = values.map((voce) => {
+  const cards = [];
+  for (const voce of values) {
     const card = createTemperatureCard(voce);
     updateCard(card, voce);
-    return card;
-  });
+    /* Le voci arrivano gia' con le stanze all'aperto in fondo: il separatore
+     * va davanti alla prima. */
+    if (stanzaAllAperto(voce.room) && !cards.some((nodo) => nodo.dataset?.dmTempFuoriSep))
+      cards.push(separatoreAllAperto());
+    cards.push(card);
+  }
   grid.replaceChildren(...cards);
   grid.dataset.dmTemperatureRenderer = "canonical";
   return true;
@@ -574,6 +624,18 @@ function installStyles() {
     #temp-grid .cp-temp-target .val{font-size:23px!important;font-weight:850!important;line-height:1!important;letter-spacing:-.4px!important;font-variant-numeric:tabular-nums!important;white-space:nowrap!important;color:var(--text-dim,var(--secondary-text-color,#64748b))!important}
     #temp-grid .dm-temperature-icon-fallback{display:block!important;font-size:24px!important;line-height:1!important}
     #temp-grid .dm-temperature-empty{grid-column:1/-1!important;box-sizing:border-box!important;width:100%!important;padding:28px 20px!important;border:1px dashed var(--card-border,var(--divider-color,#dbe4ee))!important;border-radius:22px!important;background:var(--ha-card-background,var(--card-bg,#fff))!important;color:var(--text-dim,#64748b)!important;text-align:center!important;font-weight:750!important}
+    /* All'aperto (#251): la card si legge come le altre, ma e' neutra — grigia,
+       il bordo a tratti, niente scala del comfort in fondo — e sta sotto il suo
+       separatore, che dice perche'. */
+    #temp-grid .dm-temp-fuori-sep{grid-column:1/-1!important;display:flex!important;flex-wrap:wrap!important;align-items:baseline!important;gap:4px 14px!important;margin:6px 0 -2px!important;padding:14px 2px 0!important;border-top:1px solid var(--card-border,var(--divider-color,#e2e8f0))!important}
+    #temp-grid .dm-temp-fuori-titolo{font-size:11px!important;font-weight:900!important;letter-spacing:.14em!important;text-transform:uppercase!important;color:var(--text-dim,var(--secondary-text-color,#475569))!important}
+    #temp-grid .dm-temp-fuori-nota{font-size:12px!important;font-weight:650!important;color:var(--text-dim,var(--secondary-text-color,#64748b))!important}
+    #temp-grid .temp-card[data-dm-fuori="true"]{--dm-temp-accent:100,116,139;border-style:dashed!important;border-color:color-mix(in srgb,var(--text-dim,#64748b) 30%,var(--card-border,var(--divider-color,#e2e8f0)))!important;background:color-mix(in srgb,var(--text-dim,#64748b) 6%,var(--dm-temp-surface))!important;box-shadow:0 10px 24px -20px rgba(15,23,42,.32)!important}
+    #temp-grid .temp-card[data-dm-fuori="true"]::before{opacity:.55!important}
+    #temp-grid .temp-card[data-dm-fuori="true"]::after{content:none!important;display:none!important}
+    #temp-grid .temp-card[data-dm-fuori="true"][data-dm-reading="off"] .cp-temp-current::after{content:""!important}
+    #temp-grid .temp-comfort-badge[data-comfort="all-aperto"]{background:color-mix(in srgb,var(--text-dim,#64748b) 12%,var(--dm-temp-surface))!important;color:color-mix(in srgb,var(--text-dim,#64748b) 80%,var(--text,#0f172a))!important}
+    @media(max-width:680px){#temp-grid .dm-temp-fuori-sep{flex-direction:column!important;align-items:flex-start!important;margin-top:4px!important}}
     #editor-modal [data-temperature-room][data-dm-temperature-name-visible="true"]>.ed-row-main{display:block!important;visibility:visible!important;opacity:1!important;min-width:0!important;align-self:center!important;overflow:hidden!important}
     #editor-modal [data-temperature-room][data-dm-temperature-name-visible="true"]>.ed-row-main>.ed-row-new{display:block!important;visibility:visible!important;opacity:1!important;color:var(--text,#0f172a)!important;font-weight:900!important;line-height:1.25!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
     #editor-modal [data-temperature-room][data-dm-temperature-name-visible="true"]>.ed-row-main>.ed-row-old{display:block!important;visibility:visible!important;opacity:1!important;margin-top:3px!important;color:var(--secondary-text-color,var(--text-dim,#64748b))!important;line-height:1.25!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}

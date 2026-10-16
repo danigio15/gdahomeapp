@@ -15,6 +15,8 @@ export default Object.freeze({
     "زر في التذكير لفتحه: لا يُفتح وحده أبدًا",
   "Add a stop…": "أضف محطة…",
   "Arrive by": "الوصول قبل",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "شرفة، تراس، حديقة. تظهر درجة الحرارة والرطوبة كالمعتاد، لكن المساعد لا يقترح التدفئة أو التبريد أو التهوية، ولا تدخل الغرفة في متوسط المنزل.",
   "Car climate": "تكييف السيارة",
   "Change destination…": "غيّر الوجهة…",
   "Could not delete it.": "تعذّر الحذف.",
@@ -46,6 +48,7 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "خطّط للرحلات من هنا: تجدها في gdanav على الهاتف وCarPlay وAndroid Auto.",
   "Planned trips": "الرحلات المخططة",
+  "Read-only: they do not count in the home average": "للقراءة فقط: لا تُحتسب في متوسط المنزل",
   "Remind me": "ذكّرني",
   "Save trip": "احفظ الرحلة",
   "The destination is missing.": "الوجهة غير محددة.",
@@ -97,6 +100,9 @@ export default Object.freeze({
   "Search": "بحث",
   "Search songs, artists, playlists": "ابحث عن أغانٍ وفنانين وقوائم تشغيل",
   "Sonos favourites": "مفضلات Sonos",
+  "Address search is not answering: try again shortly.": "البحث عن العناوين لا يستجيب: حاول بعد قليل.",
+  "No place with this name. Try adding the city.": "لا يوجد مكان بهذا الاسم. جرّب إضافة المدينة.",
+  "Searching…": "جارٍ البحث…",
   "Choose what to play": "اختر ما تريد تشغيله",
   Collected: "أُخذت",
   "Confirm locking?": "تأكيد القفل؟",
@@ -4854,8 +4860,6 @@ export default Object.freeze({
     "الأجهزة والشبكة. كل صفّ جهاز — الكِيان، والاسم الذي تريده، والرسم، وفي أيّ الشريطين يقع — وصفحة MiniPC تعرض هذه، مُشغَّلة ومُطفأة.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "صفحة MiniPC فيها شريطان: الأجهزة والشبكة. هذا الصفّ يذهب إلى الذي تختاره هنا.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "المستشعر الذي يقول إن كان يعمل أو يمكن الوصول إليه: ‎binary_sensor.*‎ من صنف running أو connectivity.",
   "Unnamed machine": "جهاز بلا اسم",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "ما دمت لم تختر الكِيان فهذا الجهاز ليس في أي مكان: لا في الصفحة ولا في عدد المتوقِّفة.",
@@ -5885,4 +5889,28 @@ export default Object.freeze({
     "ما فهمه المساعد عن الأضواء والمقابس والأبواب: من الاسم والغرفة والعلامة التجارية والأتمتة والعادات. إن أخطأ، صحّحه بلمسة.",
   "What's in the house": "ما الموجود في المنزل",
   "You said so": "أنت قلت ذلك",
+  "${scelti} of ${tutti}": "${scelti} من ${tutti}",
+  "Attributes to show": "السمات المعروضة",
+  "Name to show": "الاسم المعروض",
+  "not there right now": "غير موجودة الآن",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "هذه هي السمات الموجودة في الكيان الآن. تظهر في القسم بهذا الترتيب، بالاسم الذي تكتبه هنا؛ وبدون اسم يُستخدم اسم السمة نفسها.",
+  "This entity has no attributes to show right now.": "لا يملك هذا الكيان الآن سمات لعرضها.",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "المستشعر الذي يقول إن كان الجهاز يعمل أم لا: binary_sensor.* ‏(running، connectivity) أو sensor.* بكلمات مثل online وoffline وup وdown.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "«unavailable» و«unknown» تبقى دائمًا «لا يستجيب»: عندما يكون Home Assistant هو الذي لا يعرف، لا تقول اللوحة إن الجهاز متوقف.",
+  Attribute: "السمة",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "تلقائي: يعمل، متصل، online، up وما شابهها تعني «متصل» — كما هو الآن، مع إضافة online وup. اختر بنفسك عندما يستخدم نظام المراقبة كلماته الخاصة، أو يضع الحالة في سمة.",
+  "I choose": "أختار بنفسي",
+  "If it reads anything else": "إذا كانت القيمة غير ذلك",
+  is: "قيمته",
+  "is not in Home Assistant": "غير موجود في Home Assistant",
+  "It is online when it reads": "يكون متصلًا عندما تكون القيمة",
+  "Now the attribute": "الآن السمة",
+  Online: "متصل",
+  reachable: "يمكن الوصول إليه",
+  "The entity state": "حالة الكيان",
+  "The state comes from": "تأتي الحالة من",
+  "What to look at": "ما الذي يُراقَب",
 });

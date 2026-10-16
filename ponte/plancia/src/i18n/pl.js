@@ -15,6 +15,8 @@ export default Object.freeze({
     "Przycisk w przypomnieniu, by go otworzyć: nigdy sam z siebie",
   "Add a stop…": "Dodaj przystanek…",
   "Arrive by": "Przyjazd do",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "Balkon, taras, ogród. Temperatura i wilgotność są widoczne jak zawsze, ale asystent nie proponuje ogrzewania, chłodzenia ani wietrzenia, a pomieszczenie nie wlicza się do średniej domu.",
   "Car climate": "Klimatyzacja auta",
   "Change destination…": "Zmień cel…",
   "Could not delete it.": "Nie udało się usunąć.",
@@ -46,6 +48,8 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Planuj podróże stąd: znajdziesz je w gdanav w telefonie, CarPlay i Android Auto.",
   "Planned trips": "Zaplanowane podróże",
+  "Read-only: they do not count in the home average":
+    "Tylko do odczytu: nie wliczają się do średniej domu",
   "Remind me": "Przypomnij mi",
   "Save trip": "Zapisz podróż",
   "The destination is missing.": "Brakuje celu.",
@@ -99,6 +103,9 @@ export default Object.freeze({
   "Search": "Szukaj",
   "Search songs, artists, playlists": "Szukaj utworów, wykonawców, playlist",
   "Sonos favourites": "Ulubione Sonos",
+  "Address search is not answering: try again shortly.": "Wyszukiwanie adresów nie odpowiada: spróbuj za chwilę.",
+  "No place with this name. Try adding the city.": "Brak miejsca o tej nazwie. Dodaj miasto.",
+  "Searching…": "Szukam…",
   "Choose what to play": "Wybierz, co odtworzyć",
   Collected: "Odebrano",
   "Confirm locking?": "Potwierdzasz zablokowanie?",
@@ -4902,8 +4909,6 @@ export default Object.freeze({
     "Maszyny i sieć. Każdy wiersz to maszyna — encja, nazwa, jaką chcesz, rysunek i to, w którym z dwóch pasów się znajduje — a strona MiniPC pokazuje właśnie te, włączone i wyłączone.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "Strona MiniPC ma dwa pasy: maszyny i sieć. Ten wiersz trafia do tego, który wybierzesz tutaj.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "Czujnik, który mówi, czy działa albo czy jest osiągalna: binary_sensor.* klasy running albo connectivity.",
   "Unnamed machine": "Maszyna bez nazwy",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "Dopóki nie wybierzesz encji, tej maszyny nigdzie nie ma: ani na stronie, ani w liczbie tych, które padły.",
@@ -5945,4 +5950,28 @@ export default Object.freeze({
     "Co asystent zrozumiał o światłach, gniazdkach i drzwiach: z nazwy, pomieszczenia, marki, automatyzacji i nawyków. Jeśli się myli, popraw jednym dotknięciem.",
   "What's in the house": "Co jest w domu",
   "You said so": "Sam tak powiedziałeś",
+  "${scelti} of ${tutti}": "${scelti} z ${tutti}",
+  "Attributes to show": "Atrybuty do pokazania",
+  "Name to show": "Nazwa do pokazania",
+  "not there right now": "teraz go nie ma",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "To te, które encja ma teraz. Pojawiają się w sekcji w tej kolejności, z nazwą, którą tu wpiszesz; bez nazwy używana jest nazwa atrybutu.",
+  "This entity has no attributes to show right now.": "Ta encja nie ma teraz atrybutów do pokazania.",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "Czujnik, który mówi, czy działa, czy nie: binary_sensor.* (running, connectivity) albo sensor.* ze słowami jak online, offline, up, down.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "„unavailable” i „unknown” zawsze zostają „Nie odpowiada”: gdy to Home Assistant nie wie, panel nie mówi, że urządzenie nie działa.",
+  Attribute: "Atrybut",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "Automatycznie: włączony, połączony, online, up i podobne oznaczają „online” — jak dotąd, a do tego online i up. Wybierz sam, gdy twój system monitorowania używa własnych słów albo zapisuje stan w atrybucie.",
+  "I choose": "Wybieram sam",
+  "If it reads anything else": "Gdy wartość jest inna",
+  is: "ma wartość",
+  "is not in Home Assistant": "nie istnieje w Home Assistant",
+  "It is online when it reads": "Jest online, gdy wartość to",
+  "Now the attribute": "Teraz atrybut",
+  Online: "Dostępny",
+  reachable: "osiągalny",
+  "The entity state": "Stan encji",
+  "The state comes from": "Stan pochodzi z",
+  "What to look at": "Co obserwować",
 });

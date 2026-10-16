@@ -15,6 +15,8 @@ export default Object.freeze({
     "Ein Knopf in der Erinnerung zum Öffnen: nie von selbst",
   "Add a stop…": "Stopp hinzufügen…",
   "Arrive by": "Ankunft bis",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "Balkon, Terrasse, Garten. Temperatur und Luftfeuchtigkeit werden wie immer angezeigt, aber der Assistent schlägt weder Heizen, Kühlen noch Lüften vor, und der Raum zählt nicht zum Durchschnitt des Zuhauses.",
   "Car climate": "Klima im Auto",
   "Change destination…": "Ziel ändern…",
   "Could not delete it.": "Konnte nicht gelöscht werden.",
@@ -46,6 +48,8 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Plane Fahrten hier: du findest sie in gdanav auf dem Handy, in CarPlay und Android Auto.",
   "Planned trips": "Geplante Fahrten",
+  "Read-only: they do not count in the home average":
+    "Nur zum Ablesen: sie zählen nicht zum Durchschnitt des Zuhauses",
   "Remind me": "Erinnere mich",
   "Save trip": "Fahrt speichern",
   "The destination is missing.": "Das Ziel fehlt.",
@@ -99,6 +103,9 @@ export default Object.freeze({
   "Search": "Suchen",
   "Search songs, artists, playlists": "Titel, Künstler, Playlists suchen",
   "Sonos favourites": "Sonos-Favoriten",
+  "Address search is not answering: try again shortly.": "Die Adresssuche antwortet nicht: versuche es gleich noch einmal.",
+  "No place with this name. Try adding the city.": "Kein Ort mit diesem Namen. Füge die Stadt hinzu.",
+  "Searching…": "Suche…",
   "Choose what to play": "Auswählen, was abgespielt wird",
   Collected: "Abgeholt",
   "Confirm locking?": "Sperren bestätigen?",
@@ -4920,8 +4927,6 @@ export default Object.freeze({
     "Die Maschinen und das Netz. Jede Zeile ist eine Maschine — die Entität, der Name, den Sie wollen, das Bild, und in welchem der beiden Bänder sie steht — und die Seite MiniPC zeigt diese, an und aus.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "Die Seite MiniPC hat zwei Bänder: Maschinen und Netz. Diese Zeile kommt in das, was Sie hier wählen.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "Der Sensor, der meldet, ob sie läuft oder erreichbar ist: ein binary_sensor.* der Klasse running oder connectivity.",
   "Unnamed machine": "Maschine ohne Namen",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "Solange Sie keine Entität wählen, ist diese Maschine nirgends: weder auf der Seite noch in der Zahl der ausgefallenen.",
@@ -5968,4 +5973,28 @@ export default Object.freeze({
     "Was der Assistent über Lichter, Steckdosen und Türen verstanden hat: aus dem Namen, dem Raum, der Marke, den Automatisierungen und den Gewohnheiten. Wenn er sich irrt, korrigiere es mit einem Tipp.",
   "What's in the house": "Was ist im Haus",
   "You said so": "Hast du gesagt",
+  "${scelti} of ${tutti}": "${scelti} von ${tutti}",
+  "Attributes to show": "Angezeigte Attribute",
+  "Name to show": "Angezeigter Name",
+  "not there right now": "gerade nicht vorhanden",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "Das sind die, die die Entität gerade hat. Sie erscheinen in der Sektion in dieser Reihenfolge, mit dem Namen, den du hier schreibst; ohne Namen wird der des Attributs verwendet.",
+  "This entity has no attributes to show right now.": "Diese Entität hat gerade keine Attribute zum Anzeigen.",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "Der Sensor, der sagt, ob es läuft oder nicht: ein binary_sensor.* (running, connectivity) oder ein sensor.* mit Wörtern wie online, offline, up, down.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "„unavailable“ und „unknown“ bleiben immer „Antwortet nicht“: Wenn Home Assistant es nicht weiß, sagt das Dashboard nicht, dass das Gerät aus ist.",
+  Attribute: "Attribut",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "Automatisch: an, verbunden, online, up und Ähnliches bedeuten „online“ — wie bisher, dazu online und up. Wähle selbst, wenn dein Überwachungssystem eigene Wörter benutzt oder den Zustand in ein Attribut schreibt.",
+  "I choose": "Ich wähle",
+  "If it reads anything else": "Bei jedem anderen Wert",
+  is: "meldet",
+  "is not in Home Assistant": "ist nicht in Home Assistant",
+  "It is online when it reads": "Online, wenn der Wert ist",
+  "Now the attribute": "Das Attribut",
+  Online: "Erreichbar",
+  reachable: "erreichbar",
+  "The entity state": "Der Zustand der Entität",
+  "The state comes from": "Der Zustand kommt von",
+  "What to look at": "Was beobachtet wird",
 });

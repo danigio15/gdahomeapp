@@ -458,7 +458,10 @@ function termostatoDellaStanza(s, stanza) {
 RISPOSTE.temperatura_dentro = (c, s) => {
   const l = c.lingua;
   const u = s.unitaTemperatura || "°C";
-  const righe = elenco(s.dentro).filter((r) => r.temperatura !== null);
+  const tutte = elenco(s.dentro).filter((r) => r.temperatura !== null);
+  /* La casa sono le stanze di casa: il balcone segnato «All'aperto» (#251)
+   * risponde se lo si chiede per nome, ma non entra nella media. */
+  const righe = tutte.filter((r) => r.fuori !== true);
   const chiesto = /\b(caldo|calda|freddo|fredda|fresco|fresca|hot|cold|warm|chilly)\b/.test(
     c.testo,
   );
@@ -469,7 +472,7 @@ RISPOSTE.temperatura_dentro = (c, s) => {
   if (c.stanza) {
     const riga = rigaDellaStanza(s, c.stanza) || termostatoDellaStanza(s, c.stanza);
     if (!riga || riga.temperatura === null) {
-      const altre = righe.slice(0, 4);
+      const altre = tutte.slice(0, 4);
       return {
         testo: altre.length
           ? dire(
@@ -601,9 +604,12 @@ RISPOSTE.umidita = (c, s) => {
       ),
     };
   }
-  const righe = elenco(s.dentro).filter((r) => r.umidita !== null && r.umidita !== undefined);
+  const tutte = elenco(s.dentro).filter((r) => r.umidita !== null && r.umidita !== undefined);
+  /* Come per la temperatura: il balcone «All'aperto» (#251) si legge per
+   * nome, ma la media della casa e la stanza piu' umida sono di casa. */
+  const righe = tutte.filter((r) => r.fuori !== true);
   if (c.stanza) {
-    const riga = righe.find((r) => stessaStanza(r.stanza, c.stanza));
+    const riga = tutte.find((r) => stessaStanza(r.stanza, c.stanza));
     if (!riga)
       return {
         testo: dire(
@@ -612,12 +618,15 @@ RISPOSTE.umidita = (c, s) => {
           `I don't have a humidity sensor in ${c.stanza}.`,
         ),
       };
+    /* Fuori l'aria non si cambia: sul balcone il numero e basta. */
     const nota =
-      riga.umidita >= 65
-        ? dire(l, ": è alta, arieggia un po'", ": that's high, let some air in")
-        : riga.umidita <= 35
-          ? dire(l, ": è secca", ": that's dry")
-          : "";
+      riga.fuori === true
+        ? ""
+        : riga.umidita >= 65
+          ? dire(l, ": è alta, arieggia un po'", ": that's high, let some air in")
+          : riga.umidita <= 35
+            ? dire(l, ": è secca", ": that's dry")
+            : "";
     return {
       testo: dire(
         l,

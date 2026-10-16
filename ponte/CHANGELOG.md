@@ -10,6 +10,31 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.3
+
+- **Pianificatore (pagina gdanav):** la ricerca trova strade e luoghi — se il
+  primo servizio non risponde prova il secondo, e dice «nessun posto» o «il
+  servizio non risponde» invece di restare vuota. Sotto la meta scelta c'è la
+  **cartina** con la strada da casa.
+- **Notifiche:** sull'iPhone niente più «gdahome · nuova notifica» doppia dopo
+  aver riabbinato il telefono; il **citofono di Ring** suona come gli altri
+  campanelli. Togliendo una casa dall'app, la casa smette di mandare notifiche
+  a quel telefono (serve anche l'app aggiornata).
+- **Balconi, terrazzi e giardini:** nella stanza c'è la casella «All'aperto».
+  Temperatura e umidità si vedono come sempre, ma l'assistente non propone di
+  scaldare, rinfrescare o arieggiare, e la stanza non entra nella media della
+  casa. Nella pagina Temperature sta in fondo, sotto «All'aperto».
+- **Rete:** un sensore che dice `online` o `up` vale «Connesso»; con «Lo stato
+  viene da → Scelgo io» si sceglie cosa guardare (lo stato o un attributo) e
+  quali parole vogliono dire «in linea». Gli indirizzi IP nelle Altre letture
+  si vedono interi.
+- **Sezioni personalizzate:** la scheda mostra di nuovo lo stato, e sotto gli
+  **attributi** che si scelgono nell'editor, ciascuno col suo nome.
+- **Gestione termica sul tablet in piedi:** i comandi della stufa e i serbatoi
+  del pellet non coprono più le altre letture.
+- **Config › Stanze al telefono:** il nome della stanza non si spezza più a
+  metà parola.
+
 ## 1.14.2
 
 - **La testata della Home non sparisce più tornando da Luci e da Porte**

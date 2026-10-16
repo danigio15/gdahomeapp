@@ -15,6 +15,8 @@ export default Object.freeze({
     "Кнопка в напоминании, чтобы открыть: никогда сам",
   "Add a stop…": "Добавить остановку…",
   "Arrive by": "Прибыть к",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "Балкон, терраса, сад. Температура и влажность видны как обычно, но ассистент не предлагает обогреть, охладить или проветрить, и помещение не входит в среднее значение по дому.",
   "Car climate": "Климат в машине",
   "Change destination…": "Изменить пункт назначения…",
   "Could not delete it.": "Не удалось удалить.",
@@ -47,6 +49,8 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Планируйте поездки здесь: они появятся в gdanav на телефоне, в CarPlay и Android Auto.",
   "Planned trips": "Запланированные поездки",
+  "Read-only: they do not count in the home average":
+    "Только для чтения: не учитываются в среднем значении по дому",
   "Remind me": "Напомнить",
   "Save trip": "Сохранить поездку",
   "The destination is missing.": "Не указан пункт назначения.",
@@ -99,6 +103,9 @@ export default Object.freeze({
   "Search": "Поиск",
   "Search songs, artists, playlists": "Искать песни, исполнителей, плейлисты",
   "Sonos favourites": "Избранное Sonos",
+  "Address search is not answering: try again shortly.": "Поиск адресов не отвечает: попробуйте чуть позже.",
+  "No place with this name. Try adding the city.": "Нет места с таким названием. Добавьте город.",
+  "Searching…": "Ищу…",
   "Choose what to play": "Выберите, что включить",
   Collected: "Забрали",
   "Confirm locking?": "Подтвердить блокировку?",
@@ -4901,8 +4908,6 @@ export default Object.freeze({
     "Машины и сеть. Каждая строка — машина: сущность, имя, какое хотите, рисунок и то, в какой из двух полос она стоит. Страница MiniPC показывает именно их, включённые и выключенные.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "У страницы MiniPC две полосы: машины и сеть. Эта строка попадёт в ту, которую выберете здесь.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "Датчик, который говорит, работает ли она или доступна: binary_sensor.* класса running или connectivity.",
   "Unnamed machine": "Машина без имени",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "Пока не выбрана сущность, этой машины нигде нет: ни на странице, ни в счёте упавших.",
@@ -5942,4 +5947,28 @@ export default Object.freeze({
     "Что ассистент понял о светильниках, розетках и дверях: по названию, комнате, марке, автоматизациям и привычкам. Если ошибся — исправьте одним касанием.",
   "What's in the house": "Что есть в доме",
   "You said so": "Вы так сказали",
+  "${scelti} of ${tutti}": "${scelti} из ${tutti}",
+  "Attributes to show": "Показываемые атрибуты",
+  "Name to show": "Отображаемое имя",
+  "not there right now": "сейчас отсутствует",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "Это атрибуты, которые есть у объекта сейчас. В разделе они показываются в этом порядке и с именем, которое вы здесь напишете; без имени используется имя атрибута.",
+  "This entity has no attributes to show right now.": "У этого объекта сейчас нет атрибутов для показа.",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "Датчик, который говорит, работает ли устройство: binary_sensor.* (running, connectivity) или sensor.* со словами вроде online, offline, up, down.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "«unavailable» и «unknown» всегда остаются «Не отвечает»: если не знает сам Home Assistant, панель не говорит, что устройство недоступно.",
+  Attribute: "Атрибут",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "Автоматически: включено, подключено, online, up и похожие слова значат «на связи» — как сейчас, плюс online и up. Выберите сами, если ваша система мониторинга использует свои слова или пишет состояние в атрибут.",
+  "I choose": "Выбираю сам",
+  "If it reads anything else": "Если значение другое",
+  is: "показывает",
+  "is not in Home Assistant": "нет в Home Assistant",
+  "It is online when it reads": "На связи, когда значение",
+  "Now the attribute": "Сейчас атрибут",
+  Online: "На связи",
+  reachable: "доступен",
+  "The entity state": "Состояние сущности",
+  "The state comes from": "Состояние берётся из",
+  "What to look at": "Что отслеживать",
 });

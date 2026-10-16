@@ -15,6 +15,8 @@ export default Object.freeze({
     "खोलने के लिए याद दिलाने में एक बटन: कभी अपने-आप नहीं",
   "Add a stop…": "पड़ाव जोड़ें…",
   "Arrive by": "पहुँचना है",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "बालकनी, छत, बगीचा। तापमान और नमी हमेशा की तरह दिखते हैं, लेकिन सहायक गर्म करने, ठंडा करने या हवा लगाने का सुझाव नहीं देता, और यह कमरा घर के औसत में नहीं गिना जाता।",
   "Car climate": "कार का क्लाइमेट",
   "Change destination…": "गंतव्य बदलें…",
   "Could not delete it.": "हटाया नहीं जा सका।",
@@ -46,6 +48,8 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "यहाँ से यात्राएँ प्लान करें: ये gdanav में फ़ोन, CarPlay और Android Auto पर मिलेंगी।",
   "Planned trips": "योजनाबद्ध यात्राएँ",
+  "Read-only: they do not count in the home average":
+    "केवल पढ़ने के लिए: ये घर के औसत में नहीं गिने जाते",
   "Remind me": "मुझे याद दिलाएँ",
   "Save trip": "यात्रा सहेजें",
   "The destination is missing.": "गंतव्य नहीं चुना गया।",
@@ -98,6 +102,9 @@ export default Object.freeze({
   "Search": "खोजें",
   "Search songs, artists, playlists": "गाने, कलाकार, प्लेलिस्ट खोजें",
   "Sonos favourites": "Sonos पसंदीदा",
+  "Address search is not answering: try again shortly.": "पता खोज जवाब नहीं दे रही: थोड़ी देर में फिर कोशिश करें।",
+  "No place with this name. Try adding the city.": "इस नाम की कोई जगह नहीं। शहर जोड़कर देखें।",
+  "Searching…": "खोज रहे हैं…",
   "Choose what to play": "चुनें क्या चलाना है",
   Collected: "लिया गया",
   "Confirm locking?": "लॉक करना पक्का?",
@@ -4874,8 +4881,6 @@ export default Object.freeze({
     "मशीनें और नेटवर्क। हर पंक्ति एक मशीन है — एंटिटी, आपका दिया नाम, चित्र, और वह दोनों में से किस पट्टी में है — और MiniPC पेज इन्हीं को दिखाता है, चालू और बंद।",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "MiniPC पेज में दो पट्टियाँ हैं: मशीनें और नेटवर्क। यह पंक्ति उसी में जाएगी जो आप यहाँ चुनते हैं।",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "वह सेंसर जो बताता है कि यह चल रही है या पहुँच में है: running या connectivity क्लास का binary_sensor.*।",
   "Unnamed machine": "बिना नाम की मशीन",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "जब तक एंटिटी नहीं चुनते, यह मशीन कहीं नहीं है: न पेज पर, न कितनी बंद हैं इसकी गिनती में।",
@@ -5910,4 +5915,28 @@ export default Object.freeze({
     "सहायक ने लाइट, सॉकेट और दरवाज़ों के बारे में क्या समझा: नाम, कमरे, ब्रांड, ऑटोमेशन और आदतों से। गलत हो तो एक टैप से सुधारें।",
   "What's in the house": "घर में क्या है",
   "You said so": "आपने ऐसा कहा",
+  "${scelti} of ${tutti}": "${tutti} में से ${scelti}",
+  "Attributes to show": "दिखाने के लिए एट्रिब्यूट",
+  "Name to show": "दिखाने के लिए नाम",
+  "not there right now": "अभी मौजूद नहीं",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "ये वे हैं जो एंटिटी के पास अभी हैं। ये सेक्शन में इसी क्रम में दिखते हैं, उस नाम के साथ जो आप यहाँ लिखते हैं; नाम के बिना एट्रिब्यूट का अपना नाम इस्तेमाल होता है।",
+  "This entity has no attributes to show right now.": "इस एंटिटी के पास अभी दिखाने के लिए कोई एट्रिब्यूट नहीं है।",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "वह सेंसर जो बताता है कि यह चालू है या बंद: एक binary_sensor.* (running, connectivity) या online, offline, up, down जैसे शब्दों वाला sensor.*।",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "“unavailable” और “unknown” हमेशा “जवाब नहीं दे रहा” ही रहते हैं: जब Home Assistant को ही पता नहीं, तो डैशबोर्ड यह नहीं कहता कि उपकरण बंद है।",
+  Attribute: "एट्रिब्यूट",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "स्वचालित: चालू, कनेक्टेड, online, up और ऐसे शब्दों का मतलब “ऑनलाइन” है — जैसा आज है, साथ में online और up भी। जब आपका निगरानी सिस्टम अपने शब्द इस्तेमाल करे, या स्थिति को किसी एट्रिब्यूट में रखे, तो खुद चुनें।",
+  "I choose": "मैं चुनूँगा",
+  "If it reads anything else": "अगर मान कुछ और हो",
+  is: "का मान",
+  "is not in Home Assistant": "Home Assistant में नहीं है",
+  "It is online when it reads": "ऑनलाइन तब, जब मान हो",
+  "Now the attribute": "अभी एट्रिब्यूट",
+  Online: "ऑनलाइन",
+  reachable: "पहुँच योग्य",
+  "The entity state": "एंटिटी की स्थिति",
+  "The state comes from": "स्थिति कहाँ से आती है",
+  "What to look at": "क्या देखना है",
 });

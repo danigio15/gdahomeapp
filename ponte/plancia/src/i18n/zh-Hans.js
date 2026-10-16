@@ -14,6 +14,8 @@ export default Object.freeze({
   "A button in the reminder to open it: never by itself": "提醒中有开门按钮：绝不会自动打开",
   "Add a stop…": "添加一站…",
   "Arrive by": "到达时间",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "阳台、露台、花园。温度和湿度照常显示，但助手不会建议加热、降温或通风，该房间也不计入全屋平均值。",
   "Car climate": "车内空调",
   "Change destination…": "更改目的地…",
   "Could not delete it.": "无法删除。",
@@ -44,6 +46,7 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "在这里规划行程：可在 gdanav 的手机、CarPlay 和 Android Auto 中找到。",
   "Planned trips": "计划的行程",
+  "Read-only: they do not count in the home average": "仅供查看：不计入全屋平均值",
   "Remind me": "提醒我",
   "Save trip": "保存行程",
   "The destination is missing.": "缺少目的地。",
@@ -95,6 +98,9 @@ export default Object.freeze({
   "Search": "搜索",
   "Search songs, artists, playlists": "搜索歌曲、艺人、播放列表",
   "Sonos favourites": "Sonos 收藏",
+  "Address search is not answering: try again shortly.": "地址搜索没有响应：请稍后再试。",
+  "No place with this name. Try adding the city.": "没有这个名字的地方。试试加上城市。",
+  "Searching…": "正在搜索…",
   "Choose what to play": "选择要播放的内容",
   Collected: "已取",
   "Confirm locking?": "确认上锁？",
@@ -4807,8 +4813,6 @@ export default Object.freeze({
     "机器和网络。每一行是一台机器——实体、你想要的名字、图，以及它属于两条带中的哪一条——「MiniPC」页面显示的正是这些，开着的和关着的。",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "「MiniPC」页面有两条带：机器和网络。这一行会进入你在这里选的那一条。",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "报告它是否在运行或是否可达的传感器：类别为 running 或 connectivity 的 binary_sensor.*。",
   "Unnamed machine": "未命名的机器",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "在你选定实体之前，这台机器哪里都不在：页面上没有，掉线的数量里也没有。",
@@ -5817,4 +5821,28 @@ export default Object.freeze({
     "助手对灯、插座和门的理解：来自名称、房间、品牌、自动化和习惯。如有错误，轻点即可更正。",
   "What's in the house": "家里有什么",
   "You said so": "你指定的",
+  "${scelti} of ${tutti}": "${scelti}/${tutti}",
+  "Attributes to show": "要显示的属性",
+  "Name to show": "显示名称",
+  "not there right now": "当前不存在",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "这些是实体当前拥有的属性。它们会按此顺序显示在分区中，使用你在这里填写的名称；没有名称时使用属性本身的名称。",
+  "This entity has no attributes to show right now.": "该实体当前没有可显示的属性。",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "说明设备是否在运行的传感器：binary_sensor.*（running、connectivity），或使用 online、offline、up、down 等词的 sensor.*。",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "“unavailable”和“unknown”始终显示为“没有响应”：当是 Home Assistant 自己不知道时，仪表板不会说设备已离线。",
+  Attribute: "属性",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "自动：开、已连接、online、up 等表示“在线”——和现在一样，另外加上 online 和 up。如果你的监控系统使用自己的词，或把状态放在属性里，请自己选择。",
+  "I choose": "我来选",
+  "If it reads anything else": "如果是其他值",
+  is: "的值为",
+  "is not in Home Assistant": "不在 Home Assistant 中",
+  "It is online when it reads": "值为以下时在线",
+  "Now the attribute": "现在属性",
+  Online: "在线",
+  reachable: "可达",
+  "The entity state": "实体状态",
+  "The state comes from": "状态来自",
+  "What to look at": "查看什么",
 });

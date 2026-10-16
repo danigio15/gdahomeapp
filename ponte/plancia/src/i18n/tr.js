@@ -15,6 +15,8 @@ export default Object.freeze({
     "Açmak için hatırlatmada bir düğme: asla kendiliğinden değil",
   "Add a stop…": "Durak ekle…",
   "Arrive by": "Varış en geç",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "Balkon, teras, bahçe. Sıcaklık ve nem her zamanki gibi görünür, ancak asistan ısıtmayı, serinletmeyi veya havalandırmayı önermez ve oda evin ortalamasına girmez.",
   "Car climate": "Araç kliması",
   "Change destination…": "Hedefi değiştir…",
   "Could not delete it.": "Silinemedi.",
@@ -46,6 +48,8 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Yolculukları buradan planla: gdanav'da telefonda, CarPlay ve Android Auto'da bulursun.",
   "Planned trips": "Planlanmış yolculuklar",
+  "Read-only: they do not count in the home average":
+    "Yalnızca okunur: evin ortalamasına dahil edilmez",
   "Remind me": "Hatırlat",
   "Save trip": "Yolculuğu kaydet",
   "The destination is missing.": "Hedef eksik.",
@@ -98,6 +102,9 @@ export default Object.freeze({
   "Search": "Ara",
   "Search songs, artists, playlists": "Şarkı, sanatçı, çalma listesi ara",
   "Sonos favourites": "Sonos favorileri",
+  "Address search is not answering: try again shortly.": "Adres araması yanıt vermiyor: biraz sonra yeniden deneyin.",
+  "No place with this name. Try adding the city.": "Bu adla bir yer yok. Şehri eklemeyi deneyin.",
+  "Searching…": "Aranıyor…",
   "Choose what to play": "Ne çalınacağını seç",
   Collected: "Alındı",
   "Confirm locking?": "Kilitlemeyi onaylıyor musun?",
@@ -4886,8 +4893,6 @@ export default Object.freeze({
     "Makineler ve ağ. Her satır bir makinedir — varlık, istediğiniz ad, çizim ve iki şeritten hangisinde durduğu — ve MiniPC sayfası bunları açık ve kapalı olarak gösterir.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "MiniPC sayfasının iki şeridi vardır: makineler ve ağ. Bu satır burada seçtiğinize gider.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "Çalışıyor mu ya da erişilebilir mi söyleyen sensör: running ya da connectivity sınıfından bir binary_sensor.*.",
   "Unnamed machine": "Adsız makine",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "Varlığı seçmediğiniz sürece bu makine hiçbir yerde yoktur: ne sayfada, ne de kaç tanesinin düştüğü sayısında.",
@@ -5923,4 +5928,28 @@ export default Object.freeze({
     "Asistanın ışıklar, prizler ve kapılar hakkında anladıkları: addan, odadan, markadan, otomasyonlardan ve alışkanlıklardan. Yanılıyorsa tek dokunuşla düzelt.",
   "What's in the house": "Evde neler var",
   "You said so": "Sen öyle dedin",
+  "${scelti} of ${tutti}": "${tutti} içinden ${scelti}",
+  "Attributes to show": "Gösterilecek nitelikler",
+  "Name to show": "Gösterilecek ad",
+  "not there right now": "şu an yok",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "Bunlar varlığın şu an sahip olduğu niteliklerdir. Bölümde bu sırayla, burada yazdığın adla görünürler; ad yoksa niteliğin kendi adı kullanılır.",
+  "This entity has no attributes to show right now.": "Bu varlığın şu an gösterilecek niteliği yok.",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "Açık mı kapalı mı olduğunu söyleyen sensör: bir binary_sensor.* (running, connectivity) ya da online, offline, up, down gibi kelimeler kullanan bir sensor.*.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "“unavailable” ve “unknown” her zaman “Yanıt vermiyor” olarak kalır: bilmeyen Home Assistant ise, pano cihazın kapalı olduğunu söylemez.",
+  Attribute: "Öznitelik",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "Otomatik: açık, bağlı, online, up ve benzerleri “çevrimiçi” demektir — bugünkü gibi, ayrıca online ve up. İzleme sisteminiz kendi kelimelerini kullanıyorsa ya da durumu bir özniteliğe yazıyorsa kendiniz seçin.",
+  "I choose": "Ben seçerim",
+  "If it reads anything else": "Başka bir değer olursa",
+  is: "değeri:",
+  "is not in Home Assistant": "Home Assistant'ta yok",
+  "It is online when it reads": "Şu değerde çevrimiçi",
+  "Now the attribute": "Şimdi öznitelik",
+  Online: "Çevrimiçi",
+  reachable: "erişilebilir",
+  "The entity state": "Varlığın durumu",
+  "The state comes from": "Durum nereden gelir",
+  "What to look at": "Neye bakılsın",
 });

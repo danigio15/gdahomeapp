@@ -52,7 +52,7 @@ import {
   stanzeSenzaPiano,
   stessoOrdine,
 } from "../core/i-piani-della-casa.js";
-import { nomiRipetuti } from "../core/room-overview.js";
+import { nomiRipetuti, stanzaAllAperto } from "../core/room-overview.js";
 import {
   clean,
   doc,
@@ -340,6 +340,17 @@ function intitolaIGruppi(corpo, stanze, piani, ripetuti) {
      * il posto dove dirlo, ed e' anche il posto dove si rimedia. */
     const dove = riga.querySelector(".ed-row-main") || riga;
     dove.querySelector(".dm-piano-doppio")?.remove();
+    /* L'etichetta «All'aperto» (#251) segue la stessa strada dell'avviso qui
+     * sotto, e per la stessa ragione: il dato e' della stanza, e il nome della
+     * riga lo riscrivono in tre. Accanto al nome, e sotto al nome sul
+     * telefono, dove accanto non ci sta. */
+    dove.querySelector(".dm-stanza-fuori")?.remove();
+    if (stanza && stanzaAllAperto(stanza)) {
+      const fuori = doc.createElement("span");
+      fuori.className = "dm-stanza-fuori";
+      fuori.textContent = `🌿 ${t("All'aperto", "Outdoors")}`;
+      dove.append(fuori);
+    }
     if (!stanza || !ripetuti.has(clean(stanza.name).toLowerCase())) return;
     const avviso = doc.createElement("span");
     avviso.className = "dm-piano-doppio";
@@ -627,6 +638,12 @@ function foglio() {
       .dm-piani-nota{font-size:11px!important;line-height:1.5!important;color:var(--secondary-text-color,#64748b)!important}
       .dm-piano-titolo-lista{display:flex!important;align-items:center!important;gap:8px!important;margin:16px 0 6px!important;font-size:12px!important;font-weight:900!important;letter-spacing:.04em!important;text-transform:uppercase!important;color:var(--secondary-text-color,#64748b)!important}
       .dm-piano-titolo-lista::after{content:""!important;flex:1!important;height:1px!important;background:var(--divider-color,#e2e8f0)!important}
+      .dm-stanza-fuori{display:inline-flex!important;align-items:center!important;gap:4px!important;margin-left:8px!important;padding:2px 8px!important;border-radius:999px!important;border:1px solid color-mix(in srgb,var(--success-color,#10b981) 34%,transparent)!important;background:color-mix(in srgb,var(--success-color,#10b981) 12%,transparent)!important;color:#047857!important;font-size:10.5px!important;font-weight:900!important;line-height:1.4!important;vertical-align:middle!important;white-space:nowrap!important}
+      /* Il nome della riga e' un blocco: l'etichetta gli sta accanto solo se
+       * il riquadro che li tiene li mette in fila. Il cartellino del piano,
+       * quando c'e', resta sotto. */
+      #ed-body .ed-row>.ed-row-main:has(>.dm-stanza-fuori){display:flex!important;flex-wrap:wrap!important;align-items:center!important}
+      #ed-body .ed-row>.ed-row-main:has(>.dm-stanza-fuori)>.ed-row-old{flex-basis:100%!important}
       .dm-piano-doppio{display:inline-flex!important;align-items:center!important;gap:4px!important;margin-left:7px!important;padding:2px 7px!important;border-radius:999px!important;background:color-mix(in srgb,var(--warning-color,#f59e0b) 22%,transparent)!important;color:#92400e!important;font-size:10px!important;font-weight:900!important;vertical-align:middle!important;white-space:nowrap!important}
       @media (max-width:620px){
         .dm-piano{grid-template-columns:28px 40px minmax(0,1fr)!important;gap:8px!important;row-gap:8px!important}
@@ -637,6 +654,8 @@ function foglio() {
         .dm-piano-nuovo .ed-input{flex:1 1 100%!important}
         .dm-piano-nuovo .ed-btn-add{flex:1 1 auto!important}
         .dm-piano-doppio{display:flex!important;margin:4px 0 0!important;white-space:normal!important}
+        #ed-body .ed-row>.ed-row-main:has(>.dm-stanza-fuori){display:block!important}
+        .dm-stanza-fuori{display:flex!important;width:max-content!important;margin:6px 0 0!important}
       }
     `,
   );

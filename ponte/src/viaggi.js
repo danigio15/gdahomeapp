@@ -273,7 +273,9 @@ export class Viaggi {
         (a.prossima?.partenza ?? Infinity) - (b.prossima?.partenza ?? Infinity) ||
         a.creatoIl - b.creatoIl,
     );
-    return { sbloccato: this.sbloccato, viaggi: miei };
+    /* Dove sta la casa, se si sa gia': la mappa della pagina parte da li'
+     * anche prima di scegliere una meta. */
+    return { sbloccato: this.sbloccato, viaggi: miei, ...(this._dove ? { casa: this._dove } : {}) };
   }
 
   /* Salva un viaggio nuovo (senza `id`) o cambia uno dei propri. Torna il
@@ -360,11 +362,54 @@ export class Viaggi {
     return this._dove;
   }
 
-  /* Le mete che somigliano a quello che si e' scritto, vicine a casa prima. */
+  /* Le mete che somigliano a quello che si e' scritto, vicine a casa prima.
+   *
+   * «Il pianificatore non trova indirizzi»: la ricerca stava tutta su Photon,
+   * e quando Photon non rispondeva — e' un servizio gratuito, a volte pieno o
+   * fermo — la casa diceva «nessun posto» e la pagina restava muta, come se
+   * Napoli non esistesse. Adesso se Photon non risponde, o non trova niente,
+   * si chiede a Nominatim (lo stesso OpenStreetMap, un'altra porta); e se non
+   * risponde nessuno dei due la risposta lo dice (`guasto`), cosi' la pagina
+   * puo' dire «la ricerca non risponde» invece di tacere. */
   async cerca(testoCercato) {
     const cosa = testo(testoCercato, 120);
     if (cosa.length < 3) return { posti: [] };
     const casa = await this._casaQui();
+    let guasti = 0;
+    for (const fonte of [() => this._daPhoton(cosa, casa), () => this._daNominatim(cosa, casa)]) {
+      const posti = await fonte();
+      if (posti === null) {
+        guasti += 1;
+        continue;
+      }
+      if (posti.length) return { posti };
+    }
+    return guasti === 2 ? { posti: [], guasto: true } : { posti: [] };
+  }
+
+  /* Una fonte risponde con un elenco (anche vuoto), o con `null` se non
+   * risponde: le due cose sono diverse, e la pagina le dice diverse. */
+  async _chiediPosti(indirizzo, leggi, chi) {
+    try {
+      const risposta = await this.scarica(indirizzo, {
+        headers: { "user-agent": "gdahome (Home Assistant add-on)", accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!risposta.ok) {
+        this.registro.attenzione(`viaggi: ${chi} ha risposto ${risposta.status}`);
+        return null;
+      }
+      return leggi(await risposta.json())
+        .map(postoPulito)
+        .filter(Boolean)
+        .slice(0, 6);
+    } catch (errore) {
+      this.registro.attenzione(`viaggi: ${chi} non risponde (${errore?.message || errore})`);
+      return null;
+    }
+  }
+
+  _daPhoton(cosa, casa) {
     const indirizzo = new URL("https://photon.komoot.io/api/");
     indirizzo.searchParams.set("q", cosa);
     indirizzo.searchParams.set("limit", "6");
@@ -373,26 +418,50 @@ export class Viaggi {
       indirizzo.searchParams.set("lat", String(casa.lat));
       indirizzo.searchParams.set("lon", String(casa.lon));
     }
-    try {
-      const risposta = await this.scarica(indirizzo.toString(), {
-        headers: { "user-agent": "gdahome" },
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!risposta.ok) return { posti: [] };
-      const dati = await risposta.json();
-      const posti = (dati?.features || [])
-        .map((f) => {
+    return this._chiediPosti(
+      indirizzo.toString(),
+      (dati) =>
+        (dati?.features || []).map((f) => {
           const p = f?.properties || {};
           const [lon, lat] = f?.geometry?.coordinates || [];
           const nome = [p.name || p.street, p.housenumber].filter(Boolean).join(" ");
           const dove = [p.city || p.town || p.village, p.state].filter(Boolean).join(", ");
-          return postoPulito({ nome: [nome, dove].filter(Boolean).join(" · ") || dove, lat, lon });
-        })
-        .filter(Boolean);
-      return { posti };
-    } catch (_errore) {
-      return { posti: [] };
-    }
+          return { nome: [nome, dove].filter(Boolean).join(" · ") || dove, lat, lon };
+        }),
+      "Photon",
+    );
+  }
+
+  _daNominatim(cosa, casa) {
+    const indirizzo = new URL("https://nominatim.openstreetmap.org/search");
+    indirizzo.searchParams.set("format", "jsonv2");
+    indirizzo.searchParams.set("q", cosa);
+    indirizzo.searchParams.set("limit", "6");
+    indirizzo.searchParams.set("addressdetails", "1");
+    indirizzo.searchParams.set("accept-language", "it");
+    /* Vicino a casa prima, senza chiudere fuori il resto. */
+    if (casa)
+      indirizzo.searchParams.set(
+        "viewbox",
+        [casa.lon - 1, casa.lat + 1, casa.lon + 1, casa.lat - 1].map((n) => n.toFixed(4)).join(","),
+      );
+    return this._chiediPosti(
+      indirizzo.toString(),
+      (dati) =>
+        (Array.isArray(dati) ? dati : []).map((r) => {
+          const a = r?.address || {};
+          const nome =
+            [a.road || r?.name, a.house_number].filter(Boolean).join(" ") ||
+            String(r?.display_name || "").split(",")[0];
+          const dove = [a.city || a.town || a.village, a.state].filter(Boolean).join(", ");
+          return {
+            nome: [nome, dove].filter(Boolean).join(" · ") || dove,
+            lat: Number(r?.lat),
+            lon: Number(r?.lon),
+          };
+        }),
+      "Nominatim",
+    );
   }
 
   /* La strada senza traffico, dalla partenza (o da casa) per le tappe. */

@@ -603,10 +603,23 @@ export class Notifiche {
     const chiCe = await this._chiCe();
     const ora = this.adesso();
     let quanti = 0;
+    /* E per le case che hanno gia' due abbinamenti con lo stesso indirizzo
+     * (prima della regola qui sopra): a ogni indirizzo una busta sola, quella
+     * dell'abbinamento aggiornato per ultimo. */
+    const ultimoPer = new Map();
+    for (const dispositivo of elenco) {
+      const voce = this.archivio.dati.telefoni[dispositivo.id];
+      if (!voce?.gettone) continue;
+      const gia = ultimoPer.get(voce.gettone);
+      const suo = Number(voce.aggiornatoIl) || 0;
+      if (!gia || suo >= gia.quando)
+        ultimoPer.set(voce.gettone, { id: dispositivo.id, quando: suo });
+    }
     for (const dispositivo of elenco) {
       if (soloA && dispositivo.id !== soloA) continue;
       const voce = this.archivio.dati.telefoni[dispositivo.id];
       if (!voce?.gettone) continue;
+      if (ultimoPer.get(voce.gettone)?.id !== dispositivo.id) continue;
       /* Solo telefoni di utenti veri, attivi adesso. Un telefono senza
        * utente — abbinato prima che i telefoni si intestassero — non riceve:
        * non si sa di chi sia, e allora non si sa cosa possa vedere. */
@@ -731,6 +744,15 @@ export class Notifiche {
             impostazioni: impostazioniDiSerie(),
           });
           voce.gettone = gettone;
+          /* Lo stesso telefono abbinato di nuovo (casa tolta e rimessa
+           * nell'app) ha un abbinamento nuovo e lo stesso indirizzo di
+           * Firebase. Il vecchio restava qui col suo indirizzo, e la casa
+           * mandava due buste: quella nuova si apriva, quella vecchia — la
+           * cui chiave il telefono non ha piu' — arrivava come «gdahome ·
+           * nuova notifica». Un indirizzo e' di un abbinamento solo: l'ultimo
+           * che lo dice. */
+          for (const [altro, sua] of Object.entries(this.archivio.dati.telefoni))
+            if (altro !== telefono && sua?.gettone === gettone) sua.gettone = "";
           voce.piattaforma = detto.piattaforma === "ios" ? "ios" : "android";
           voce.aggiornatoIl = this.adesso();
           if (detto.lingua === "it" || detto.lingua === "en")

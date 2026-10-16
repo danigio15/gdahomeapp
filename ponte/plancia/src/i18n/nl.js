@@ -15,6 +15,8 @@ export default Object.freeze({
     "Een knop in de herinnering om hem te openen: nooit vanzelf",
   "Add a stop…": "Tussenstop toevoegen…",
   "Arrive by": "Aankomst vóór",
+  "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.":
+    "Balkon, terras, tuin. Temperatuur en luchtvochtigheid zie je zoals altijd, maar de assistent stelt niet voor om te verwarmen, te koelen of te luchten, en de ruimte telt niet mee in het gemiddelde van het huis.",
   "Car climate": "Klimaat in de auto",
   "Change destination…": "Bestemming wijzigen…",
   "Could not delete it.": "Verwijderen is niet gelukt.",
@@ -46,6 +48,8 @@ export default Object.freeze({
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Plan ritten hier: je vindt ze in gdanav op de telefoon, CarPlay en Android Auto.",
   "Planned trips": "Geplande ritten",
+  "Read-only: they do not count in the home average":
+    "Alleen om af te lezen: ze tellen niet mee in het gemiddelde van het huis",
   "Remind me": "Herinner me",
   "Save trip": "Rit opslaan",
   "The destination is missing.": "De bestemming ontbreekt.",
@@ -99,6 +103,9 @@ export default Object.freeze({
   "Search": "Zoeken",
   "Search songs, artists, playlists": "Zoek nummers, artiesten, afspeellijsten",
   "Sonos favourites": "Sonos-favorieten",
+  "Address search is not answering: try again shortly.": "Het zoeken naar adressen reageert niet: probeer het zo opnieuw.",
+  "No place with this name. Try adding the city.": "Geen plaats met deze naam. Voeg de stad toe.",
+  "Searching…": "Zoeken…",
   "Choose what to play": "Kies wat er speelt",
   Collected: "Opgehaald",
   "Confirm locking?": "Vergrendelen bevestigen?",
@@ -4905,8 +4912,6 @@ export default Object.freeze({
     "De machines en het netwerk. Elke rij is een machine — de entiteit, de naam die jij wilt, de tekening, en in welke van de twee banden hij staat — en de pagina MiniPC toont deze, aan en uit.",
   "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.":
     "De pagina MiniPC heeft twee banden: machines en netwerk. Deze rij komt in de band die je hier kiest.",
-  "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.":
-    "De sensor die meldt of hij draait of bereikbaar is: een binary_sensor.* van klasse running of connectivity.",
   "Unnamed machine": "Machine zonder naam",
   "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down.":
     "Zolang je geen entiteit kiest is deze machine nergens: niet op de pagina, en niet in het aantal dat uit ligt.",
@@ -5949,4 +5954,28 @@ export default Object.freeze({
     "Wat de assistent begreep over lampen, stopcontacten en deuren: uit de naam, de ruimte, het merk, de automatiseringen en de gewoonten. Klopt het niet, corrigeer met één tik.",
   "What's in the house": "Wat er in huis is",
   "You said so": "Dat zei jij",
+  "${scelti} of ${tutti}": "${scelti} van ${tutti}",
+  "Attributes to show": "Te tonen attributen",
+  "Name to show": "Te tonen naam",
+  "not there right now": "nu niet aanwezig",
+  "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.": "Dit zijn de attributen die de entiteit nu heeft. Ze verschijnen in de sectie in deze volgorde, met de naam die je hier schrijft; zonder naam wordt die van het attribuut gebruikt.",
+  "This entity has no attributes to show right now.": "Deze entiteit heeft nu geen attributen om te tonen.",
+  "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.":
+    "De sensor die zegt of het aan of uit is: een binary_sensor.* (running, connectivity) of een sensor.* met woorden als online, offline, up, down.",
+  "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.":
+    "“unavailable” en “unknown” blijven altijd “Geeft geen antwoord”: als Home Assistant het niet weet, zegt het dashboard niet dat het apparaat uit is.",
+  Attribute: "Attribuut",
+  "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.":
+    "Automatisch: aan, verbonden, online, up en dergelijke betekenen “online” — zoals nu, met daarbij online en up. Kies zelf als je bewakingssysteem eigen woorden gebruikt, of de status in een attribuut zet.",
+  "I choose": "Ik kies",
+  "If it reads anything else": "Bij elke andere waarde",
+  is: "meldt",
+  "is not in Home Assistant": "staat niet in Home Assistant",
+  "It is online when it reads": "Online als de waarde is",
+  "Now the attribute": "Het attribuut",
+  Online: "Bereikbaar",
+  reachable: "bereikbaar",
+  "The entity state": "De status van de entiteit",
+  "The state comes from": "De status komt van",
+  "What to look at": "Waar te kijken",
 });
