@@ -201,7 +201,10 @@ export class PostinoDiFirebase {
           headers: {
             "apns-priority": "10",
             "apns-push-type": "alert",
-            "apns-expiration": String(Math.floor(this.adesso() / 1000) + (urgente ? 300 : 3600)),
+            /* Dieci minuti e non cinque: la scadenza di Apple e' un'ora
+             * assoluta, e un orologio un po' indietro bastava a far arrivare
+             * gia' scaduto il campanello — gli urgenti, proprio quelli. */
+            "apns-expiration": String(Math.floor(this.adesso() / 1000) + (urgente ? 600 : 3600)),
           },
           payload: {
             aps: {
