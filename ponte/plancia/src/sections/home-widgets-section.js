@@ -11159,6 +11159,14 @@ html[data-theme="dark"] .dm-w-panel-row[data-dm-w-obiettivo="alto"] .dm-w-steppe
   font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-sotto{color:#b45309}
+/* Il nome della luce accesa e' scritto sul crema, non sul fondo della finestra.
+   Prima prendeva il colore del testo del tema — e col tema scuro il testo e'
+   quasi bianco: «Lampadario Cucina» bianco su giallo chiaro, che non si
+   leggeva. Sulla scheda accesa il fondo e' sempre lo stesso, chiaro, in tutti
+   e due i temi: il nome va scritto scuro, un marrone della stessa famiglia
+   della riga sotto, e il tema non ci mette bocca. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"],
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-nome{color:#451a03}
 /* Il clima della finestra: una scheda per unita', col colore di quello che
    sta facendo — arancio quando scalda, azzurro quando raffresca. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda]{

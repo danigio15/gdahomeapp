@@ -531,7 +531,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-Z327FZND.js";
+} from "../../chunk-F3N74MUA.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -64794,6 +64794,14 @@ html[data-theme="dark"] .dm-w-panel-row[data-dm-w-obiettivo="alto"] .dm-w-steppe
   font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-sotto{color:#b45309}
+/* Il nome della luce accesa e' scritto sul crema, non sul fondo della finestra.
+   Prima prendeva il colore del testo del tema — e col tema scuro il testo e'
+   quasi bianco: «Lampadario Cucina» bianco su giallo chiaro, che non si
+   leggeva. Sulla scheda accesa il fondo e' sempre lo stesso, chiaro, in tutti
+   e due i temi: il nome va scritto scuro, un marrone della stessa famiglia
+   della riga sotto, e il tema non ci mette bocca. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"],
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-nome{color:#451a03}
 /* Il clima della finestra: una scheda per unita', col colore di quello che
    sta facendo — arancio quando scalda, azzurro quando raffresca. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda]{
@@ -97202,11 +97210,33 @@ function onPointerDown(event) {
     root.clearTimeout?.(state111.pressione);
     state111.pressione = root.setTimeout?.(() => {
       state111.pressione = null;
+      ingoiaIlRilascio();
       if (state111.muro?.blocco?.attivo)
         apriFinestra({ tipo: "codice", scopo: "uscita", scritto: "" });
       else apriIlConfigDelMuro();
     }, 2e3);
   }
+}
+function ingoiaIlRilascio() {
+  if (!doc?.addEventListener) return;
+  const togli2 = () => {
+    doc.removeEventListener("pointerup", alzati, true);
+    doc.removeEventListener("pointerdown", togli2, true);
+    doc.removeEventListener("click", ingoia, true);
+  };
+  const alzati = () => {
+    doc.removeEventListener("pointerup", alzati, true);
+    root.setTimeout?.(togli2, 600);
+  };
+  const ingoia = (event) => {
+    togli2();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+  doc.addEventListener("pointerup", alzati, true);
+  doc.addEventListener("click", ingoia, true);
+  doc.addEventListener("pointerdown", togli2, true);
+  root.setTimeout?.(togli2, 3e4);
 }
 function posizioneDalDito(punto2, riquadro, sdraiato = false) {
   const p = sdraiato ? (punto2.x - riquadro.left) / (riquadro.width || 1) : 1 - (punto2.y - riquadro.top) / (riquadro.height || 1);
@@ -97663,6 +97693,10 @@ ${MURO} .mu-pagine{display:flex;flex:none;gap:6px;padding:5px;border-radius:16px
 ${MURO} .mu-pagine button{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:800;font-size:15px;color:var(--text-dim)}
 ${MURO} .mu-pagine button.si{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));color:color-mix(in srgb,var(--acc) 85%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-ora{margin-left:auto;display:flex;align-items:center;gap:22px;text-align:right}
+/* Il dito tenuto sull'orologio e' un gesto del pannello, e il telefono non se
+   lo deve prendere: niente scorrimento o tirata per ricaricare che lo
+   interrompa a meta', niente menu del tocco lungo. */
+${MURO} .mu-ora{touch-action:none;-webkit-touch-callout:none}
 ${MURO} .mu-pagine+.mu-ora{margin-left:24px}
 ${MURO} .mu-testa>.mu-titolo{flex:0 1 auto;min-width:var(--mu-tit-min,0)}
 ${MURO} .mu-testa>.mu-titolo .mu-sot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -98119,6 +98153,18 @@ ${MURO}[data-compatto="1"] .mu-h{font-size:32px}
 ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;padding:3px;gap:3px}
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
+/* L'ora sul telefono: l'uscita dal pannello e' il dito tenuto sull'orologio,
+   ma qui dell'orologio restano solo le cifre — il meteo, la data e la riga
+   accanto sono nascosti — e le cifre sono una striscia alta una trentina di
+   pixel. Sul tablet il dito trova l'ora col meteo e la data: un bersaglio
+   grande. Sul telefono il dito si posa quasi sempre un poco sotto quello che
+   guarda, finiva sul bordo della testa, e due secondi tenuti li' non aprivano
+   niente: «se clicco su ora non si attiva il config». Il bersaglio si allarga
+   tutto intorno alle cifre, senza spostarle: un velo trasparente che
+   appartiene all'orologio, e che a sinistra si ferma prima delle linguette. */
+${MURO}[data-compatto="1"] .mu-ora{position:relative}
+${MURO}[data-compatto="1"] .mu-ora::after{content:"";position:absolute;inset:-12px -14px -14px -8px}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-ora::after{left:-28px}
 ${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-card .mu-riga1{flex-wrap:wrap;gap:8px;align-content:flex-start}

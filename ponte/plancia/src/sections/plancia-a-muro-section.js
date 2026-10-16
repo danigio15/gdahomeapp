@@ -4675,11 +4675,52 @@ function onPointerDown(event) {
     root.clearTimeout?.(state.pressione);
     state.pressione = root.setTimeout?.(() => {
       state.pressione = null;
+      ingoiaIlRilascio();
       if (state.muro?.blocco?.attivo)
         apriFinestra({ tipo: "codice", scopo: "uscita", scritto: "" });
       else apriIlConfigDelMuro();
     }, 2000);
   }
+}
+
+/* Il dito che si alza dopo i due secondi sull'orologio non e' un tocco.
+ *
+ * «Con questo formato se clicco su ora non si attiva il config.» Si attivava:
+ * dopo due secondi il config si apriva, e il dito, alzandosi, lo richiudeva.
+ * Sul telefono il config prende tutto lo schermo e la sua ✕ sta in alto a
+ * destra — proprio sotto l'ora del pannello, dov'era il dito. Il pannello se
+ * n'e' gia' andato, il rilascio finisce su quello che c'e' adesso, e il clic
+ * che ne nasce preme la ✕: il config si chiudeva in un lampo, e il pannello
+ * tornava. Sul tablet la ✕ sta lontano dall'ora, e non succedeva.
+ *
+ * E' lo stesso inciampo della luce tenuta (`state.tenuto`), ma qui il clic
+ * non arriva al pannello: arriva al config, o al tastierino del PIN. Lo si
+ * ferma prima di tutti, sul documento: il primo clic dopo che il dito si e'
+ * alzato, e solo quello, e solo subito dopo. */
+function ingoiaIlRilascio() {
+  if (!doc?.addEventListener) return;
+  const togli = () => {
+    doc.removeEventListener("pointerup", alzati, true);
+    doc.removeEventListener("pointerdown", togli, true);
+    doc.removeEventListener("click", ingoia, true);
+  };
+  /* Il clic del rilascio arriva subito dopo il dito alzato: passato un
+   * attimo, se non e' arrivato non arriva piu', e il tocco dopo e' vero. */
+  const alzati = () => {
+    doc.removeEventListener("pointerup", alzati, true);
+    root.setTimeout?.(togli, 600);
+  };
+  const ingoia = (event) => {
+    togli();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+  doc.addEventListener("pointerup", alzati, true);
+  doc.addEventListener("click", ingoia, true);
+  /* Un dito nuovo che si posa e' un tocco vero: il rilascio e' passato. */
+  doc.addEventListener("pointerdown", togli, true);
+  /* E se il dito resta giu' a lungo, la guardia non resta li' per sempre. */
+  root.setTimeout?.(togli, 30_000);
 }
 
 /* Da 0 a 1, dove sta il dito lungo la traccia del cursore. */
@@ -5289,6 +5330,10 @@ ${MURO} .mu-pagine{display:flex;flex:none;gap:6px;padding:5px;border-radius:16px
 ${MURO} .mu-pagine button{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:800;font-size:15px;color:var(--text-dim)}
 ${MURO} .mu-pagine button.si{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));color:color-mix(in srgb,var(--acc) 85%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-ora{margin-left:auto;display:flex;align-items:center;gap:22px;text-align:right}
+/* Il dito tenuto sull'orologio e' un gesto del pannello, e il telefono non se
+   lo deve prendere: niente scorrimento o tirata per ricaricare che lo
+   interrompa a meta', niente menu del tocco lungo. */
+${MURO} .mu-ora{touch-action:none;-webkit-touch-callout:none}
 ${MURO} .mu-pagine+.mu-ora{margin-left:24px}
 ${MURO} .mu-testa>.mu-titolo{flex:0 1 auto;min-width:var(--mu-tit-min,0)}
 ${MURO} .mu-testa>.mu-titolo .mu-sot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -5745,6 +5790,18 @@ ${MURO}[data-compatto="1"] .mu-h{font-size:32px}
 ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;padding:3px;gap:3px}
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
+/* L'ora sul telefono: l'uscita dal pannello e' il dito tenuto sull'orologio,
+   ma qui dell'orologio restano solo le cifre — il meteo, la data e la riga
+   accanto sono nascosti — e le cifre sono una striscia alta una trentina di
+   pixel. Sul tablet il dito trova l'ora col meteo e la data: un bersaglio
+   grande. Sul telefono il dito si posa quasi sempre un poco sotto quello che
+   guarda, finiva sul bordo della testa, e due secondi tenuti li' non aprivano
+   niente: «se clicco su ora non si attiva il config». Il bersaglio si allarga
+   tutto intorno alle cifre, senza spostarle: un velo trasparente che
+   appartiene all'orologio, e che a sinistra si ferma prima delle linguette. */
+${MURO}[data-compatto="1"] .mu-ora{position:relative}
+${MURO}[data-compatto="1"] .mu-ora::after{content:"";position:absolute;inset:-12px -14px -14px -8px}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-ora::after{left:-28px}
 ${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-card .mu-riga1{flex-wrap:wrap;gap:8px;align-content:flex-start}
