@@ -455,8 +455,6 @@ export default Object.freeze({
   "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.":
     "우편함의 접점 센서: 집배원이 뚜껑을 열면 우편 알약이 나타나 눈에 띄도록 움직이고, 누군가 누를 때까지 그대로 남아 있습니다. 우편은 아무도 보고 있지 않을 때 도착하므로 2초 반짝임은 소용이 없습니다.",
   "A control that does not respond": "반응하지 않는 조작 버튼",
-  "A donation is any amount you like and unlocks nothing: the dashboard stays the same for everyone. It is a thank-you, and a way of saying «keep going».":
-    "기부 금액은 자유이며 아무것도 해제되지 않습니다. 대시보드는 모두에게 같습니다. 감사의 표시이자 «계속해 주세요»라는 말입니다.",
   "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.":
     "냉동실이 있는 냉장고는 두 칸입니다. 두 번째는 여기에. 둘 다 채우면 카드가 막대 두 개를 그립니다.",
   "A group with this name already exists": "같은 이름의 그룹이 이미 있습니다",
@@ -1094,8 +1092,6 @@ export default Object.freeze({
   "Dashboard language": "대시보드 언어",
   "Dashboard not connected.": "대시보드가 연결되지 않았습니다.",
   "Dashboard version": "대시보드 버전",
-  "DashboardModern is independent and open source, made in spare time: no sponsors, no subscriptions, no data collected. A donation keeps the fixes, the issue replies and the tests on real devices coming.":
-    "DashboardModern은 여가 시간에 만드는 독립 오픈소스 프로젝트입니다. 스폰서도, 구독도, 데이터 수집도 없습니다. 기부는 수정, 문의 답변, 실제 기기 테스트를 이어가게 합니다.",
   "Date not found": "날짜를 찾을 수 없음",
   Day: "일",
   "Day / Month / Year": "일 / 월 / 연",
@@ -1172,7 +1168,6 @@ export default Object.freeze({
   Doctor: "의사",
   Dog: "개",
   "Domestic hot water": "온수",
-  "Donate with PayPal": "PayPal로 기부",
   Done: "완료",
   "Done.": "했습니다.",
   Door: "문",
@@ -1325,8 +1320,6 @@ export default Object.freeze({
     "설비마다 자체 계량기, 태양광, 배터리, 부하가 있습니다. 아래 항목은 선택한 설비의 것입니다. 새로 추가하면 처음부터 시작하며 이미 설정한 것은 건드리지 않습니다.",
   "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.":
     "설비마다 자기 열세 칸이 있습니다. “지금 페이지에”라고 표시된 것이 태양열 페이지와 홈 타일이 보여 주는 것입니다: 다른 설비 옆의 눈을 누르면 그것이 대신 화면에 올라옵니다.",
-  "Every release brings new sections, fixes seen in the field and tests on phones, tablets and wall screens. The time to do it is what donations help keep free.":
-    "각 릴리스는 새 섹션, 현장에서 발견한 수정, 휴대폰·태블릿·벽면 화면에서의 테스트를 가져옵니다. 그 시간을 비워 두는 데 기부가 도움이 됩니다.",
   "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.":
     "모두 준비됨: 창문 카드가 방의 습도를 보여 주고, 기준을 넘는 즉시 열라고 알려 줍니다.",
   "Everything off": "모두 꺼짐",
@@ -2776,7 +2769,6 @@ export default Object.freeze({
   "Paste your token here (starts with eyJ...)": "여기에 토큰을 붙여 넣으세요(eyJ... 로 시작합니다)",
   Pause: "일시정지",
   Paused: "일시정지됨",
-  "Payment happens on PayPal, in a new tab.": "결제는 새 탭의 PayPal에서 이루어집니다.",
   Peak: "최대",
   Pellet: "펠릿",
   "Pellet level": "펠릿 잔량",
@@ -3354,7 +3346,6 @@ export default Object.freeze({
   "Supply fan (rpm)": "급기 팬(rpm)",
   "Supply level": "급기 단계",
   Support: "지원",
-  "Support the project": "프로젝트 후원",
   Sweltering: "찌는 더위",
   Swing: "바람 방향",
   "Switch (turns it on and off)": "스위치 (켜고 끔)",
@@ -3497,8 +3488,6 @@ export default Object.freeze({
     "더위와 습도로 인한 불편함을 나타내는 값입니다. 섹션의 단계는 네 가지 중 가장 높은 값입니다. 경고하는 지수가 조용한 체감 뒤에 숨지 않습니다.",
   "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.":
     "대시보드를 전체 화면으로, Home Assistant 사이드바 위에 표시합니다. 이 대시보드에만, 이 기기에서만 적용됩니다. 휴대전화에서는 저절로 켜집니다.",
-  "The dashboard is independent and subscription-free: here is how to give it a hand":
-    "이 대시보드는 독립적이고 구독료가 없습니다. 돕는 방법은 여기에 있습니다",
   "The dashboard sections": "대시보드 섹션",
   "The data it shows": "표시되는 데이터",
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
@@ -4048,7 +4037,6 @@ export default Object.freeze({
   "Who this is, by their home name": "누구인지, 집에서 부르는 이름으로",
   "Whole house": "집 전체",
   "Whose it is": "누구의 것",
-  "Why, and how": "이유와 방법",
   "Wi-Fi": "Wi-Fi",
   "WiFi network": "WiFi 네트워크",
   Widgets: "위젯",

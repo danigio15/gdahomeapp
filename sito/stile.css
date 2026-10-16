@@ -939,10 +939,6 @@ main > section.fascia {
   margin-top: 6px;
 }
 
-#sostieni .scheda {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 /* Di fianco a una schermata le voci stanno in una colonna sola. */
 .tavola-e-testo .scheda {
   grid-template-columns: 1fr;
@@ -950,8 +946,7 @@ main > section.fascia {
 }
 
 @media (max-width: 940px) {
-  .scheda,
-  #sostieni .scheda {
+  .scheda {
     grid-template-columns: 1fr;
     gap: 22px;
   }

@@ -18,6 +18,7 @@ si fa una volta sola dalla parte di Apple, e come esce una versione.
 | La vibrazione della plancia (`navigator.vibrate`) | Il WebView dell'iPhone non ce l'ha: gliela dà l'app, e diventa un colpetto del telefono | `lib/schermate/riquadro/sul_telefono.dart` |
 | Finestra riservata col lucchetto (`FLAG_SECURE`) | L'istantanea delle app recenti è coperta da un velo nativo. Vietare la fotografia dello schermo, sull'iPhone, non si può | `SceneDelegate.swift` |
 | Niente copie (`allowBackup=false`) | I file dell'app fuori dalle copie di iCloud; i segreti stanno nel portachiavi, solo su questo telefono | `AppDelegate.swift` |
+| Il portachiavi è dell'app, chiunque la firmi | Il portachiavi è legato al team che firma: se l'app cambia account Apple Developer, la versione firmata dal team nuovo non legge più i segni della vecchia. Il **ponte** ne tiene una copia nella cartella di supporto, fuori dalle copie, e la rimette nel portachiavi quando lo trova vuoto ([sotto](#se-lapp-cambia-account-il-trasferimento)) | `lib/casa/ponte_del_portachiavi.dart` |
 | Schermata d'avvio coi colori dell'app, chiara e scura | Uguale | `Assets.xcassets/FondoAvvio.colorset` |
 
 Il progetto è per **iPhone e iPad**: sull'iPad la plancia usa il formato
@@ -81,6 +82,35 @@ dalla firma (`Runner.entitlements` è vuoto). Quando Apple dice di sì:
 Per provarlo prima, su un Mac: Xcode → Open Developer Tool → Simulator, e nel
 simulatore I/O → External Displays → CarPlay. Nel simulatore il permesso non
 serve.
+
+### Se l'app cambia account: il trasferimento
+
+Un'app si può trasferire a un altro account Apple Developer (App Store
+Connect → l'app → App Information → **Transfer App**, con il Team ID e
+l'Apple ID dell'Account Holder che la riceve), per esempio a una società che
+la vende. Identificativo, abbonati, recensioni e prodotti passano con lei. Il
+**team** però cambia, e con lui due cose:
+
+- **il portachiavi.** Ogni voce sta in un gruppo di accesso che comincia con
+  l'identificativo del team: la prima versione firmata dal team nuovo trova
+  il portachiavi vuoto, e senza rimedio ogni casa andrebbe riabbinata col QR
+  code, e gdanav riabbinato con Home Assistant. Il rimedio è il **ponte**
+  (`lib/casa/ponte_del_portachiavi.dart`): alla prima lettura di ogni avvio
+  e a ogni scrittura l'app tiene una copia dei segni in
+  `portachiavi-ponte-casa.json` e `portachiavi-ponte-gdanav.json`, nella
+  cartella di supporto, che è fuori dalle copie di iCloud; quando trova il
+  portachiavi vuoto e la copia piena, rimette i segni nel portachiavi.
+  Perché funzioni, **la versione col ponte deve essere sui telefoni prima
+  del trasferimento**: va pubblicata, e si aspetta che la gente l'abbia (la
+  versione minima del centralino aiuta). Chi installa l'app per la prima
+  volta dopo il trasferimento non ha niente da ritrovare;
+- **i permessi e le chiavi.** CarPlay va richiesto di nuovo per il team
+  nuovo, e finché non arriva non si pubblica una build, se no la perde. I
+  quattro segreti `APPLE_*` della CI e la chiave per gli acquisti in-app del
+  quadro vanno rigenerati dall'account nuovo.
+
+Il trasferimento parte solo da un'app già pubblicata e senza versioni in
+revisione, e l'app resta in vendita per tutto il tempo.
 
 ## Come esce una versione
 

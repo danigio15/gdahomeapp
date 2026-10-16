@@ -24,6 +24,8 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'ponte_del_portachiavi.dart';
+
 abstract interface class Cassaforte {
   Future<String?> leggi(String chiave);
   Future<void> scrivi(String chiave, String valore);
@@ -54,7 +56,16 @@ class CassaforteDelSistema implements Cassaforte {
   /// 11 per questo — la 11 lo spostamento non lo fa piu', e i segni rimasti
   /// indietro li perderebbe. Si sale alla 11 quando le case sono passate tutte
   /// dalla 10.
-  static const portachiavi = FlutterSecureStorage(
+  ///
+  /// Sull'iPhone il portachiavi e' legato al team che firma l'app: se l'app
+  /// cambia account Apple Developer, la versione firmata dal team nuovo non
+  /// legge piu' i segni scritti dalla vecchia, e ogni casa andrebbe
+  /// riabbinata. Per questo e' un [PortachiaviColPonte]: tiene una copia dei
+  /// segni nella cartella di supporto dell'app, fuori dalle copie di iCloud,
+  /// e la rimette nel portachiavi quando lo trova vuoto
+  /// (`ponte_del_portachiavi.dart`). Fuori dall'iPhone il ponte e' spento.
+  static const portachiavi = PortachiaviColPonte(
+    nome: 'casa',
     aOptions: AndroidOptions(),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,

@@ -22,6 +22,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:gdanav_app/gdanav_app.dart';
 
 import '../../casa/collegamento.dart';
+import '../../casa/ponte_del_portachiavi.dart';
 import '../../licenza/licenza.dart' show GestoreLicenza, licenzeInQuestaApp;
 import '../../parole.dart';
 import '../../vestito/marchio.dart';
@@ -36,7 +37,12 @@ import 'la_vettura.dart';
 /// scelta, i luoghi. Nello stesso scomparto dei segni della casa le chiavi di
 /// due app si pesterebbero i piedi, e cancellare l'una potrebbe portarsi via
 /// l'altra.
-const _portachiavi = FlutterSecureStorage(
+///
+/// Col ponte, come quello della casa (`casa/ponte_del_portachiavi.dart`):
+/// sull'iPhone l'abbinamento di gdanav con Home Assistant e l'auto scelta
+/// sopravvivono al cambio di team che firma l'app.
+const _portachiavi = PortachiaviColPonte(
+  nome: 'gdanav',
   aOptions: AndroidOptions(storageNamespace: 'gdanav'),
   iOptions: IOSOptions(
     accountName: 'gdanav',
