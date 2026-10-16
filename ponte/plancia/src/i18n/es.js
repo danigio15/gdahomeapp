@@ -94,6 +94,10 @@ export default Object.freeze({
   Back: "Atrás",
   "Choose the climate entity: it is the one starting with climate.":
     "Elige la entidad de clima: es la que empieza por climate.",
+  "Library and home folders": "Biblioteca y carpetas de casa",
+  "Search": "Buscar",
+  "Search songs, artists, playlists": "Busca canciones, artistas, listas",
+  "Sonos favourites": "Favoritos de Sonos",
   "Choose what to play": "Elige qué reproducir",
   Collected: "Recogida",
   "Confirm locking?": "¿Confirmas el bloqueo?",

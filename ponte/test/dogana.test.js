@@ -661,6 +661,7 @@ test("quello che l'app e la plancia mandano davvero passa ancora per chi amminis
     { type: "camera/webrtc/offer", entity_id: "camera.x", offer: "v=0" },
     { type: "media_source/browse_media" },
     { type: "media_player/browse_media", entity_id: "media_player.x" },
+    { type: "media_player/search_media", entity_id: "media_player.x", search_query: "x" },
     { type: "frontend/get_user_data", key: "x" },
     { type: "frontend/set_user_data", key: "x", value: {} },
     { type: "calendar/event/create", entity_id: "calendar.x", event: {} },

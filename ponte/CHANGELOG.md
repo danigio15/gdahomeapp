@@ -10,6 +10,22 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.1
+
+**Deezer nella Musica.** «Scegli cosa suonare» apre i **Preferiti di Sonos**
+— le playlist, gli album e le radio di Deezer salvati nell'app di Sonos —
+e la **Libreria e cartelle di casa**: prima con Sonos quelle due cartelle
+non comparivano. Le voci che vengono da Deezer hanno il loro segno. Con
+**Music Assistant** (e Deezer fra i suoi fornitori) c'è anche il campo per
+**cercare** brani, artisti e playlist. Sul **pannello a muro**, nella
+pagina Musica, il tasto «Scegli» apre la stessa finestra.
+
+E le novità della 1.14.0, che sul Play Store non era arrivata: il negozio,
+dopo una revisione respinta, vuole che la revisione si mandi a mano, e il
+caricamento si fermava lì. Adesso la versione arriva sulla pista e il
+registro dice di mandarla in revisione dal Play Console. Dentro c'è anche
+il navigatore all'ultima versione.
+
 ## 1.14.0
 
 **L'assistente capisce cosa c'è in casa.** Non propone più di spegnere la

@@ -210,6 +210,10 @@ const PER_TUTTI = new Set([
    * cambia niente, come le altre di questo elenco: quello che poi si suona
    * passa per «call_service», che qui c'e' gia'. */
   "media_player/browse_media",
+  /* La ricerca dentro il lettore (Music Assistant, e con lui Deezer): come la
+   * domanda qui sopra legge e basta, e quello che si sceglie passa per
+   * «call_service». */
+  "media_player/search_media",
   "frontend/get_user_data",
   "frontend/set_user_data",
   "frontend/get_translations",

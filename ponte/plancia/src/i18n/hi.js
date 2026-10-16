@@ -94,6 +94,10 @@ export default Object.freeze({
   Back: "वापस",
   "Choose the climate entity: it is the one starting with climate.":
     "जलवायु इकाई चुनें: वह जो climate. से शुरू होती है।",
+  "Library and home folders": "लाइब्रेरी और घर के फ़ोल्डर",
+  "Search": "खोजें",
+  "Search songs, artists, playlists": "गाने, कलाकार, प्लेलिस्ट खोजें",
+  "Sonos favourites": "Sonos पसंदीदा",
   "Choose what to play": "चुनें क्या चलाना है",
   Collected: "लिया गया",
   "Confirm locking?": "लॉक करना पक्का?",

@@ -93,6 +93,10 @@ export default Object.freeze({
   Back: "رجوع",
   "Choose the climate entity: it is the one starting with climate.":
     "اختر كيان المناخ: هو الذي يبدأ بـ climate.",
+  "Library and home folders": "المكتبة ومجلدات المنزل",
+  "Search": "بحث",
+  "Search songs, artists, playlists": "ابحث عن أغانٍ وفنانين وقوائم تشغيل",
+  "Sonos favourites": "مفضلات Sonos",
   "Choose what to play": "اختر ما تريد تشغيله",
   Collected: "أُخذت",
   "Confirm locking?": "تأكيد القفل؟",

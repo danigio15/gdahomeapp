@@ -22,10 +22,13 @@ import {
   ilFiloDopo,
   ilFiloFinoA,
   ilPassoDiAdesso,
+  iRisultati,
   laCartella,
+  laDomandaPerCercare,
   laDomandaPerSfogliare,
   laMiniatura,
   unaVoceDaSfogliare,
+  DOMANDA_CERCA,
 } from "../src/core/sfoglia-i-media.js";
 
 const lettura = (bandiere, stato = "playing") =>
@@ -83,11 +86,20 @@ test("la radice non si chiede mandando un contenuto vuoto", () => {
     type: DOMANDA_SFOGLIA,
     entity_id: "media_player.cucina",
   });
-  assert.deepEqual(laDomandaPerSfogliare("media_player.cucina", { id: "  ", tipo: "album" }), {
+  assert.deepEqual(laDomandaPerSfogliare("media_player.cucina", { id: "  ", tipo: "  " }), {
     type: DOMANDA_SFOGLIA,
     entity_id: "media_player.cucina",
   });
-  /* E il tipo viaggia con l'id, perche' da solo non identifica niente. */
+  /* Il tipo con l'id vuoto invece e' un posto vero: e' cosi' che Sonos chiama
+   * i suoi «Favorites», dove stanno le playlist di Deezer salvate nell'app di
+   * Sonos. Si chiede come lo chiede il frontend di Home Assistant. */
+  assert.deepEqual(laDomandaPerSfogliare("media_player.cucina", { id: "", tipo: "favorites" }), {
+    type: DOMANDA_SFOGLIA,
+    entity_id: "media_player.cucina",
+    media_content_id: "",
+    media_content_type: "favorites",
+  });
+  /* E il tipo viaggia con l'id. */
   assert.deepEqual(
     laDomandaPerSfogliare("media_player.cucina", { id: "library://playlist/3", tipo: "playlist" }),
     {
@@ -154,7 +166,10 @@ test("le cartelle prima dei brani, e quelle lasciate fuori si contano", () => {
 
 test("una miniatura che non e' un indirizzo non finisce in un url()", () => {
   assert.equal(laMiniatura("https://i.scdn.co/image/ab67.jpg"), "https://i.scdn.co/image/ab67.jpg");
-  assert.equal(laMiniatura("/api/media_player_proxy/media_player.cucina"), "/api/media_player_proxy/media_player.cucina");
+  assert.equal(
+    laMiniatura("/api/media_player_proxy/media_player.cucina"),
+    "/api/media_player_proxy/media_player.cucina",
+  );
   /* Un riferimento interno in un «src» non ci va, e nemmeno del codice: una
    * miniatura arriva da fuori — da Spotify, da TuneIn — e non e' un posto da
    * cui accettare qualcosa da eseguire. */
@@ -201,4 +216,135 @@ test("il filo per risalire non si allunga da solo", () => {
   assert.deepEqual(ilFiloFinoA(filo, 0).length, 1);
   assert.deepEqual(ilFiloFinoA(filo, 9), filo, "un passo che non c'e' non cambia niente");
   assert.deepEqual(ilFiloFinoA(filo, -1), filo);
+});
+
+/* ── Deezer, da Sonos e da Music Assistant ─────────────────────────────── */
+
+test("le cartelle di Sonos senza id si aprono: i preferiti e la libreria", () => {
+  /* Com'e' la radice di un Sonos in Home Assistant: «Favorites» e «Music
+   * Library» hanno l'id vuoto e il tipo pieno. Prima finivano fuori
+   * dall'elenco, e con loro le playlist di Deezer e le cartelle di casa. */
+  const radice = laCartella({
+    title: "Sonos",
+    children: [
+      {
+        title: "Favorites",
+        media_content_id: "",
+        media_content_type: "favorites",
+        can_expand: true,
+      },
+      {
+        title: "Music Library",
+        media_content_id: "",
+        media_content_type: "library",
+        can_expand: true,
+      },
+    ],
+  });
+  assert.deepEqual(
+    radice.voci.map((voce) => [voce.titolo, voce.tipo, voce.sfogliabile, voce.suonabile]),
+    [
+      ["Favorites", "favorites", true, false],
+      ["Music Library", "library", true, false],
+    ],
+  );
+  /* Una voce senza id non si suona: e' l'id che va a «play_media». */
+  assert.equal(
+    unaVoceDaSfogliare({ title: "x", media_content_type: "track", can_play: true }),
+    null,
+  );
+  /* E nel filo le due cartelle restano due posti diversi. */
+  let filo = ilFiloDallaRadice("Da ascoltare");
+  filo = ilFiloDopo(filo, radice.voci[0]);
+  filo = ilFiloDopo(filo, radice.voci[1]);
+  assert.deepEqual(
+    filo.map((passo) => passo.tipo),
+    ["", "favorites", "library"],
+  );
+  filo = ilFiloDopo(filo, radice.voci[0]);
+  assert.deepEqual(
+    filo.map((passo) => passo.tipo),
+    ["", "favorites"],
+  );
+});
+
+test("il segno di Deezer: dalla copertina di Sonos, dall'id di Music Assistant", () => {
+  const preferito = unaVoceDaSfogliare({
+    title: "Flow",
+    media_content_id: "FV:2/12",
+    media_content_type: "favorite_item_id",
+    thumbnail: "https://e-cdns-images.dzcdn.net/images/cover/abc/250x250.jpg",
+    can_play: true,
+  });
+  assert.equal(preferito.deezer, true);
+  const daMusicAssistant = unaVoceDaSfogliare({
+    title: "So What",
+    media_content_id: "deezer://track/3135556",
+    media_content_type: "track",
+    can_play: true,
+  });
+  assert.equal(daMusicAssistant.deezer, true);
+  const cartella = unaVoceDaSfogliare({
+    title: "Deezer",
+    media_content_id: "deezer--Ab12",
+    media_content_type: "folder",
+    can_expand: true,
+  });
+  assert.equal(cartella.deezer, true);
+  /* Una radio di TuneIn, un file di casa: niente segno. */
+  assert.equal(
+    unaVoceDaSfogliare({
+      title: "Radio Deejay",
+      media_content_id: "FV:2/3",
+      thumbnail: "https://cdn-profiles.tunein.com/s1/logo.png",
+      can_play: true,
+    }).deezer,
+    false,
+  );
+  assert.equal(
+    unaVoceDaSfogliare({
+      title: "deezerish",
+      media_content_id: "S://nas/deezerish.mp3",
+      can_play: true,
+    }).deezer,
+    false,
+  );
+});
+
+test("cercare: una domanda sola, sui lettori che sanno farlo", () => {
+  assert.deepEqual(laDomandaPerCercare("media_player.ma_salotto", "  miles   davis "), {
+    type: DOMANDA_CERCA,
+    entity_id: "media_player.ma_salotto",
+    search_query: "miles davis",
+  });
+  /* Una lettera sola non e' una ricerca, e un lettore senza nome nemmeno. */
+  assert.equal(laDomandaPerCercare("media_player.ma_salotto", "m"), null);
+  assert.equal(laDomandaPerCercare("", "miles"), null);
+  /* Cercare va solo con «SEARCH_MEDIA», e solo se poi si puo' suonare. */
+  assert.equal(lettura(SA.SUONA | SA.SFOGLIA | SA.TROVA).puo.trova, true);
+  assert.equal(lettura(SA.SFOGLIA | SA.TROVA).puo.trova, false);
+  assert.equal(lettura(SA.SUONA | SA.SFOGLIA).puo.trova, false);
+  /* La risposta e' una lista senza cartella intorno: si mette in fila uguale. */
+  const trovati = iRisultati({
+    version: 1,
+    result: [
+      {
+        title: "So What",
+        media_content_id: "deezer://track/1",
+        media_content_type: "track",
+        can_play: true,
+      },
+      {
+        title: "Miles Davis",
+        media_content_id: "deezer://artist/9",
+        media_content_type: "artist",
+        can_expand: true,
+      },
+    ],
+  });
+  assert.deepEqual(
+    trovati.voci.map((voce) => voce.titolo),
+    ["Miles Davis", "So What"],
+  );
+  assert.equal(iRisultati(null).voci.length, 0);
 });
