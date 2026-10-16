@@ -233,6 +233,15 @@ function negozioFinto({
         track: via.split("/").pop(),
         releases: sullaPista ?? [{ status: "completed", versionCodes: ["104322"] }],
       });
+    /* Com'e' andata la 1.14.2: il controllo non conosce il parametro della
+     * revisione a mano, e il negozio vero risponde cosi'. */
+    if (via.includes(":validate?"))
+      return risposta(400, {
+        error: {
+          message:
+            "Invalid JSON payload received. Unknown name \"changesNotSentForReview\": Cannot bind query parameter. Field 'changesNotSentForReview' could not be found in request message.",
+        },
+      });
     /* Com'e' andata la 1.14.0: dopo un rifiuto il negozio non manda piu' da
      * solo in revisione, e lo dice cosi'. */
     if (
@@ -633,14 +642,15 @@ test("quando il negozio non manda da solo in revisione, si consegna lo stesso e 
   });
   assert.equal(esito.pubblicato, true);
   const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
-  /* Com'e' andata la 1.14.1: il negozio rifiuta gia' il controllo. Si rifa'
-   * il controllo come chiede, e la consegna nasce gia' cosi'. */
+  /* Com'e' andata la 1.14.1: il negozio rifiuta gia' il controllo. Il
+   * controllo NON si rifa' col parametro (la 1.14.2 si e' fermata li': il
+   * controllo non lo conosce), e la consegna nasce gia' cosi'. */
   const chiamate = negozio.fatte.filter((una) => /:(validate|commit)/.test(una));
   assert.deepEqual(chiamate, [
     `POST ${app}/edits/modifica-1:validate`,
-    `POST ${app}/edits/modifica-1:validate?changesNotSentForReview=true`,
     `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
   ]);
+  assert.ok(!negozio.fatte.some((una) => una.includes(":validate?")));
   /* Il primo cestino viene dopo la consegna: quella e' la riguardata. */
   const consegnata = negozio.fatte.indexOf(
     `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,

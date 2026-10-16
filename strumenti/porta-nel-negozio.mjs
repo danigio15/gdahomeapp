@@ -269,43 +269,44 @@ async function chiedi(prendi, dove, { metodo = "GET", gettone, corpo, tipo } = {
  * Dopo un rifiuto di Google, o con una revisione gia' in corso, il negozio non
  * accetta piu' che una modifica parta da sola verso la revisione: risponde 400,
  * «Changes cannot be sent for review automatically», e chiede
- * `changesNotSentForReview=true`. Lo chiede **a tutti e due i passi**: al
- * controllo (`validate`) e alla consegna (`commit`). La 1.14.0 si e' fermata
- * alla consegna; la 1.14.1 gia' al controllo, che la prima cura non copriva.
- * Adesso il passo rifiutato si rifa' cosi' come chiede, e il passo dopo nasce
- * gia' con la stessa richiesta: la versione va sulla pista, e la revisione si
- * manda dal Play Console, col tasto «Invia per revisione». Detto nel registro,
- * perche' senza quel tasto non arriva a nessuno. */
+ * `changesNotSentForReview=true`. Puo' dirlo gia' al controllo (`validate`,
+ * com'e' successo alla 1.14.1) o solo alla consegna (`commit`, la 1.14.0).
+ *
+ * Ma il parametro lo accetta **solo la consegna**: dato al controllo, il negozio
+ * risponde 400 «Unknown name "changesNotSentForReview"… Cannot bind query
+ * parameter» — ed e' cosi' che si e' fermata la 1.14.2. Quindi: se il controllo
+ * dice che la revisione va mandata a mano, il controllo si lascia li' (la
+ * consegna controlla lo stesso, dal lato di Google, e rifiuta cio' che non va)
+ * e la consegna parte gia' col parametro. La versione va sulla pista, e la
+ * revisione si manda dal Play Console, col tasto «Invia per revisione». Detto
+ * nel registro, perche' senza quel tasto non arriva a nessuno. */
 export const DA_MANDARE_A_MANO = /changesNotSentForReview/;
 const SENZA_REVISIONE = "?changesNotSentForReview=true";
 
-async function unPasso(prendi, quale, passo, gettone, come) {
-  if (come.aMano) {
-    await chiedi(prendi, perApp(`/edits/${quale}:${passo}${SENZA_REVISIONE}`), {
-      metodo: "POST",
-      gettone,
-    });
-    return;
-  }
+/** Il controllo del negozio, prima di consegnare. `come` si porta al passo dopo. */
+async function controlla(prendi, quale, gettone, come) {
+  if (come.aMano) return;
   try {
-    await chiedi(prendi, perApp(`/edits/${quale}:${passo}`), { metodo: "POST", gettone });
+    await chiedi(prendi, perApp(`/edits/${quale}:validate`), { metodo: "POST", gettone });
   } catch (errore) {
     if (!DA_MANDARE_A_MANO.test(errore?.message || "")) throw errore;
     come.aMano = true;
-    await chiedi(prendi, perApp(`/edits/${quale}:${passo}${SENZA_REVISIONE}`), {
-      metodo: "POST",
-      gettone,
-    });
   }
 }
 
-/** Il controllo del negozio, prima di consegnare. `come` si porta al passo dopo. */
-async function controlla(prendi, quale, gettone, come) {
-  await unPasso(prendi, quale, "validate", gettone, come);
-}
-
 async function consegna(prendi, quale, gettone, dillo = () => {}, come = { aMano: false }) {
-  await unPasso(prendi, quale, "commit", gettone, come);
+  const consegnaCosi = (piu = "") =>
+    chiedi(prendi, perApp(`/edits/${quale}:commit${piu}`), { metodo: "POST", gettone });
+  if (come.aMano) await consegnaCosi(SENZA_REVISIONE);
+  else {
+    try {
+      await consegnaCosi();
+    } catch (errore) {
+      if (!DA_MANDARE_A_MANO.test(errore?.message || "")) throw errore;
+      come.aMano = true;
+      await consegnaCosi(SENZA_REVISIONE);
+    }
+  }
   if (come.aMano)
     dillo(
       "ATTENZIONE: il negozio non manda da solo in revisione: la modifica e' consegnata, " +
