@@ -528,7 +528,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-UL3ATY3I.js";
+} from "../../chunk-XOTOFMNF.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1994,6 +1994,7 @@ var SOURCE_INDEX = Object.freeze({
   "${s.name} è calda: ${gradi}°": "${s.name} is hot: ${gradi}°",
   "${s.name} è fredda: ${gradi}°": "${s.name} is cold: ${gradi}°",
   "${scariche.length} batterie quasi scariche": "${scariche.length} batteries low",
+  "${scelti} di ${tutti}": "${scelti} of ${tutti}",
   "${spente} entità sono disabilitate in Home Assistant: abilitale da lì per vederle anche qui.": "${spente} entities are disabled in Home Assistant: enable them there to see them here too.",
   "${totale} luci": "${totale} lights",
   "${trovate.length} cartucce trovate": "${trovate.length} cartridges found",
@@ -2158,6 +2159,7 @@ var SOURCE_INDEX = Object.freeze({
   "ADESSO": "NOW",
   "Adesso avanzano ${kw} kW dal fotovoltaico.": "${kw} kW of solar to spare right now.",
   "Adesso è spento: scrivi una quota fra 30 e 95 per accenderlo, zero lo rispegne.": "Right now it is off: write a level between 30 and 95 to turn it on, zero turns it back off.",
+  "adesso non c'è": "not there right now",
   "Adesso non c'è una lettura per questo carico.": "There is no reading for this load right now.",
   "Adesso risponde tutto. Se qualcosa smette di farlo compare qui, e in Home compare la sua tessera.": "Everything is answering right now. If something stops, it shows up here, and its card shows up on Home.",
   "Adesso, in casa": "Right now, at home",
@@ -2485,6 +2487,7 @@ var SOURCE_INDEX = Object.freeze({
   "Attiva solo quelle rilevanti per casa tua — potrai cambiarle in seguito.": "Enable only the ones relevant to your home — you can change them later.",
   "Attività": "Activity",
   "Attivo": "Active",
+  "Attributi da mostrare": "Attributes to show",
   "Aut. Prevista": "Expected range",
   "Auth WebRTC rifiutata": "WebRTC auth rejected",
   "Auto": "Car",
@@ -4779,6 +4782,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nome (es. Studio)": "Name (e.g. Office)",
   "Nome (facoltativo)": "Name (optional)",
   "Nome (facoltativo): «Giro clienti»": "Name (optional): “Client round”",
+  "Nome da mostrare": "Name to show",
   "Nome del carico": "Load name",
   "Nome del piano": "Floor name",
   "Nome del secondo tasto": "Second button name",
@@ -5350,6 +5354,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quello che la voce «Cottura» degli Elettrodomestici legge e preme. Un comando è un'entità (button, switch, number, script) oppure un servizio con i suoi parametri: philips_airfryer.adjust_time time=60 method=add. Si mostra solo il tasto che ha la sua casella, e solo se risponde.": "What the “Cooking” entry of Appliances reads and presses. A control is an entity (button, switch, number, script) or a service with its parameters: philips_airfryer.adjust_time time=60 method=add. A button only shows up when its field is filled in, and only if it answers.",
   "Quello che scrivi qui arriva a chi mantiene la plancia, e a nessun altro. Non passa da GitHub e non diventa pubblico. Insieme al messaggio partono solo la versione della plancia, quella di Home Assistant e la lingua. Puoi cancellare la conversazione quando vuoi.": "What you write here reaches whoever maintains the dashboard, and nobody else. It does not go through GitHub and does not become public. Along with the message only the dashboard version, the Home Assistant version and the language are sent. You can delete the conversation whenever you want.",
   "Quello della bolletta: trasforma il mese in euro. Lascialo vuoto e la pagina dice solo i metri cubi.": "The one on the bill: it turns the month into euros. Leave it empty and the page shows only cubic metres.",
+  "Questa entità adesso non ha attributi da mostrare.": "This entity has no attributes to show right now.",
   "Questa entità è dentro la tessera della Home: tocca per toglierla.": "This entity is inside the Home tile: tap to leave it out.",
   "Questa entità è già configurata.": "This entity is already configured.",
   "Questa entità meteo non dà le previsioni": "This weather entity has no forecast",
@@ -5931,6 +5936,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sono le card del popup che si apre cliccando il cerchio nel flusso, e la somma di cui il cerchio è il totale. Un elettrodomestico assegnato a questo carico dall'editor Elettrodomestici compare qui da solo.": "These are the cards of the popup opened by clicking the circle in the flow, and the total the circle shows. An appliance assigned to this load from the Appliances editor appears here on its own.",
   "Sono mostrate solo le stanze che contengono almeno una luce. Modifica apre tutti i dati della luce, non una finestra del browser. Le pastiglie dicono cosa sa fare ogni luce — RGB, bianco regolabile, dimmer o solo acceso/spento — ed è quello che comanda i controlli nel popup.": "Only rooms containing a light are shown. Edit opens all light fields, not a browser prompt. The pills say what each light can do — RGB, tunable white, dimmer or plain on/off — and that is what drives the controls in the popup.",
   "Sono otto: la barra non ne tiene di più senza diventare illeggibile.": "That is eight: the bar cannot hold more without becoming unreadable.",
+  "Sono quelli che l'entità ha adesso. Si vedono nella sezione in quest'ordine, col nome che scrivi qui; senza nome si usa quello dell'attributo.": "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.",
   "sopra la soglia": "above the threshold",
   "Sopra la soglia in Home compare l'avviso di sovraccarico e la tessera Energia cambia colore: ambra per tenerla d'occhio, rossa quando sta per saltare. Lascia vuoto un campo per non usarlo.": "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.",
   "Sopra questa potenza = In funzione. Per elettrodomestici non-wifi imposta ~5 W.": "Above this power = Running. For non-wifi appliances set ~5 W.",
@@ -9209,15 +9215,15 @@ var oreDeiMesiChiusi = /* @__PURE__ */ new Map();
 function dimenticaLeOreTenute() {
   oreDeiMesiChiusi.clear();
 }
-function meseGiaChiuso(pezzo, adesso) {
+function meseGiaChiuso(pezzo2, adesso) {
   const primoDelMese2 = new Date(adesso.getFullYear(), adesso.getMonth(), 1);
-  return pezzo?.end instanceof Date && pezzo.end <= primoDelMese2;
+  return pezzo2?.end instanceof Date && pezzo2.end <= primoDelMese2;
 }
-async function leOreDalRecorder(entita3, pezzo, unita2, adesso = /* @__PURE__ */ new Date()) {
-  const baseline = baselineRange(pezzo.kind, pezzo.start);
-  const chiave2 = meseGiaChiuso(pezzo, adesso) ? `${entita3.join("|")}~${baseline.start.getTime()}~${pezzo.end.getTime()}` : "";
+async function leOreDalRecorder(entita3, pezzo2, unita2, adesso = /* @__PURE__ */ new Date()) {
+  const baseline = baselineRange(pezzo2.kind, pezzo2.start);
+  const chiave2 = meseGiaChiuso(pezzo2, adesso) ? `${entita3.join("|")}~${baseline.start.getTime()}~${pezzo2.end.getTime()}` : "";
   if (chiave2 && oreDeiMesiChiusi.has(chiave2)) return oreDeiMesiChiusi.get(chiave2);
-  const righe2 = await broker.statistics(entita3, baseline.start, pezzo.end, "hour", unita2);
+  const righe2 = await broker.statistics(entita3, baseline.start, pezzo2.end, "hour", unita2);
   if (chiave2) {
     if (oreDeiMesiChiusi.size >= TETTO_DEI_MESI_TENUTI)
       oreDeiMesiChiusi.delete(oreDeiMesiChiusi.keys().next().value);
@@ -9229,17 +9235,17 @@ async function quotaSuArchi(archi, dispositivo, casa, rete, unita2, totale, legg
   const serie2 = { dispositivo: [], casa: [], rete: [] };
   const caduti = [];
   for (const range of archi) {
-    for (const pezzo of mesiDellArco(range)) {
+    for (const pezzo2 of mesiDellArco(range)) {
       let righe2;
       try {
-        righe2 = await leggiLeOre([dispositivo, casa, rete], pezzo, unita2);
+        righe2 = await leggiLeOre([dispositivo, casa, rete], pezzo2, unita2);
       } catch (_errore) {
-        caduti.push(`${pezzo.start.getFullYear()}-${pezzo.start.getMonth() + 1}`);
+        caduti.push(`${pezzo2.start.getFullYear()}-${pezzo2.start.getMonth() + 1}`);
         continue;
       }
-      serie2.dispositivo.push(...secchielliNellArco(righe2[dispositivo], pezzo));
-      serie2.casa.push(...secchielliNellArco(righe2[casa], pezzo));
-      serie2.rete.push(...secchielliNellArco(righe2[rete], pezzo));
+      serie2.dispositivo.push(...secchielliNellArco(righe2[dispositivo], pezzo2));
+      serie2.casa.push(...secchielliNellArco(righe2[casa], pezzo2));
+      serie2.rete.push(...secchielliNellArco(righe2[rete], pezzo2));
     }
   }
   if (caduti.length) {
@@ -9572,7 +9578,7 @@ function spiegazioneDellErrore(testo2, states = allStates()) {
   if (incompleto) {
     const entita3 = [
       ...new Set(
-        incompleto[1].split(",").map((pezzo) => clean(pezzo).split(":").pop()).filter(Boolean)
+        incompleto[1].split(",").map((pezzo2) => clean(pezzo2).split(":").pop()).filter(Boolean)
       )
     ];
     const dettagli = entita3.map((entity2) => comEMessoIlSensore(entity2, states)).join(" · ");
@@ -18887,10 +18893,10 @@ function leggiIlComando(testo2, states = {}) {
     if (states?.[primo] || !verbo) return { tipo: "entita", entita: primo, dominio: dominio4 };
   }
   const dati = {};
-  for (const pezzo of pezzi.slice(1)) {
-    const uguale = pezzo.indexOf("=");
+  for (const pezzo2 of pezzi.slice(1)) {
+    const uguale = pezzo2.indexOf("=");
     if (uguale <= 0) return null;
-    dati[pezzo.slice(0, uguale)] = valoreDelParametro(pezzo.slice(uguale + 1));
+    dati[pezzo2.slice(0, uguale)] = valoreDelParametro(pezzo2.slice(uguale + 1));
   }
   return { tipo: "servizio", dominio: dominio4, servizio: nome, dati };
 }
@@ -23935,13 +23941,13 @@ var LETTURE = Object.freeze({
       };
     }
     const primo = suonano[0];
-    const pezzo = [pulito20(primo?.titolo), pulito20(primo?.artista)].filter(Boolean).join(" — ");
+    const pezzo2 = [pulito20(primo?.titolo), pulito20(primo?.artista)].filter(Boolean).join(" — ");
     if (suonano.length === 1)
       return {
         tono: VERDETTI.corso,
-        frase: pezzo ? tr(
-          `${pulito20(primo?.nome)} sta suonando ${pezzo}.`,
-          `${pulito20(primo?.nome)} is playing ${pezzo}.`
+        frase: pezzo2 ? tr(
+          `${pulito20(primo?.nome)} sta suonando ${pezzo2}.`,
+          `${pulito20(primo?.nome)} is playing ${pezzo2}.`
         ) : tr(`${pulito20(primo?.nome)} sta suonando.`, `${pulito20(primo?.nome)} is playing.`),
         punti
       };
@@ -24068,6 +24074,118 @@ var COMANDABILI = /* @__PURE__ */ new Set([
   "siren",
   "humidifier"
 ]);
+var ATTRIBUTI_TECNICI = Object.freeze(
+  /* @__PURE__ */ new Set([
+    "friendly_name",
+    "icon",
+    "unit_of_measurement",
+    "device_class",
+    "state_class",
+    "attribution",
+    "entity_picture",
+    "supported_features",
+    "supported_color_modes",
+    "assumed_state",
+    "restored",
+    "editable"
+  ])
+);
+var MASSIMO_VOCI_DI_LISTA = 3;
+function nomeLeggibile(chiave2) {
+  const parole4 = pulito21(chiave2).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+  return parole4 ? parole4.charAt(0).toUpperCase() + parole4.slice(1) : "";
+}
+function normalizzaAttributi(lista5) {
+  const visti = /* @__PURE__ */ new Set();
+  const scelti = [];
+  for (const voce3 of Array.isArray(lista5) ? lista5 : []) {
+    const chiave2 = pulito21(typeof voce3 === "string" ? voce3 : voce3?.chiave);
+    if (!chiave2 || visti.has(chiave2) || ATTRIBUTI_TECNICI.has(chiave2)) continue;
+    visti.add(chiave2);
+    scelti.push({ chiave: chiave2, nome: pulito21(typeof voce3 === "string" ? "" : voce3?.nome) });
+  }
+  return scelti;
+}
+function vuoto(valore3) {
+  if (valore3 === null || valore3 === void 0) return true;
+  if (typeof valore3 === "string") return valore3.trim() === "";
+  if (Array.isArray(valore3)) return valore3.every(vuoto);
+  if (typeof valore3 === "object") return Object.values(valore3).every(vuoto);
+  return false;
+}
+var NUMERO_SCRITTO = /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/;
+var DATA_ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+function dataLeggibile(testo2, lingua3) {
+  const parti = DATA_ISO.exec(testo2);
+  if (!parti) return null;
+  const [, anno, mese, giorno2, ore, minuti] = parti;
+  const conOra = ore !== void 0 && !(ore === "00" && minuti === "00");
+  const data = conOra ? new Date(testo2.replace(" ", "T")) : new Date(Number(anno), Number(mese) - 1, Number(giorno2));
+  if (Number.isNaN(data.getTime())) return null;
+  const forma2 = { weekday: "short", day: "numeric", month: "short" };
+  if (conOra) Object.assign(forma2, { hour: "2-digit", minute: "2-digit" });
+  try {
+    return data.toLocaleString(intlLocale(lingua3), forma2).replace(/\s+/g, " ");
+  } catch (_errore) {
+    return null;
+  }
+}
+function testoSemplice(valore3, lingua3 = getLocale()) {
+  if (valore3 === null || valore3 === void 0) return "";
+  if (typeof valore3 === "boolean")
+    return valore3 ? pick("Sì", "Yes", lingua3) : pick("No", "No", lingua3);
+  if (typeof valore3 === "number") {
+    if (!Number.isFinite(valore3)) return "";
+    return new Intl.NumberFormat(intlLocale(lingua3), { maximumFractionDigits: 2 }).format(valore3);
+  }
+  if (Array.isArray(valore3))
+    return valore3.map((voce3) => testoSemplice(voce3, lingua3)).filter(Boolean).join(", ");
+  if (typeof valore3 === "object")
+    return Object.values(valore3).map((voce3) => testoSemplice(voce3, lingua3)).filter(Boolean).join(" · ");
+  const testo2 = pulito21(valore3);
+  if (NUMERO_SCRITTO.test(testo2)) return testoSemplice(Number(testo2), lingua3);
+  return dataLeggibile(testo2, lingua3) ?? testo2;
+}
+function pezzo(valore3, lingua3) {
+  if (valore3 && typeof valore3 === "object" && !Array.isArray(valore3)) {
+    const parti = Object.values(valore3).filter((voce3) => !vuoto(voce3)).map((voce3) => testoSemplice(voce3, lingua3)).filter(Boolean);
+    return { testa: parti[0] || "", resto: parti.slice(1) };
+  }
+  return { testa: testoSemplice(valore3, lingua3), resto: [] };
+}
+function valoreDellAttributo(valore3, lingua3 = getLocale()) {
+  if (vuoto(valore3)) return null;
+  if (Array.isArray(valore3)) {
+    const voci4 = valore3.filter((voce3) => !vuoto(voce3));
+    const pezzi = voci4.slice(0, MASSIMO_VOCI_DI_LISTA).map((voce3) => pezzo(voce3, lingua3));
+    const altre = voci4.length - pezzi.length;
+    const riga3 = pezzi.map((p) => [p.testa, ...p.resto].join(" · ")).join(", ");
+    const altriTesto = altre > 0 ? pick(`e altri ${altre}`, `and ${altre} more`, lingua3) : "";
+    return {
+      lista: true,
+      pezzi,
+      altri: altre,
+      altriTesto,
+      testo: altriTesto ? `${riga3} ${altriTesto}` : riga3
+    };
+  }
+  const solo = pezzo(valore3, lingua3);
+  return {
+    lista: false,
+    pezzi: [solo],
+    altri: 0,
+    altriTesto: "",
+    testo: [solo.testa, ...solo.resto].join(" · ")
+  };
+}
+function attributiDisponibili(stato3, lingua3 = getLocale()) {
+  const attributi2 = stato3?.attributes;
+  if (!attributi2 || typeof attributi2 !== "object") return [];
+  return Object.keys(attributi2).filter((chiave2) => !ATTRIBUTI_TECNICI.has(chiave2)).map((chiave2) => ({
+    chiave: chiave2,
+    anteprima: valoreDellAttributo(attributi2[chiave2], lingua3)?.testo || ""
+  }));
+}
 function normalizzaVoce(voce3, indice) {
   const entity2 = pulito21(voce3?.entity);
   if (!entity2.includes(".")) return null;
@@ -24075,7 +24193,8 @@ function normalizzaVoce(voce3, indice) {
     id: pulito21(voce3?.id) || `voce-${indice + 1}`,
     nome: pulito21(voce3?.nome ?? voce3?.name),
     entity: entity2,
-    icona: pulito21(voce3?.icona ?? voce3?.icon)
+    icona: pulito21(voce3?.icona ?? voce3?.icon),
+    attributi: normalizzaAttributi(voce3?.attributi)
   };
 }
 function normalizzaSezioni(stored) {
@@ -24094,13 +24213,25 @@ function normalizzaSezioni(stored) {
 function sezioniDaMostrare(stored) {
   return normalizzaSezioni(stored).filter((sezione2) => sezione2.mostra && sezione2.voci.length);
 }
-function letturaDellaVoce(voce3, states = {}, resolve = (valore3) => valore3) {
+function letturaDellaVoce(voce3, states = {}, resolve = (valore3) => valore3, lingua3 = getLocale()) {
   const entity2 = resolve(voce3.entity) || voce3.entity;
   const stato3 = states?.[entity2];
   const grezzo = pulito21(stato3?.state).toLowerCase();
   const muto2 = MUTI4.has(grezzo);
   const dominio4 = entity2.split(".")[0] || "";
   const numero53 = Number(stato3?.state);
+  const presenti = stato3?.attributes && typeof stato3.attributes === "object" ? stato3.attributes : {};
+  const attributi2 = [];
+  for (const scelto of voce3.attributi || []) {
+    if (!Object.hasOwn(presenti, scelto.chiave)) continue;
+    const valore3 = valoreDellAttributo(presenti[scelto.chiave], lingua3);
+    if (!valore3) continue;
+    attributi2.push({
+      chiave: scelto.chiave,
+      etichetta: scelto.nome || nomeLeggibile(scelto.chiave),
+      valore: valore3
+    });
+  }
   return {
     id: voce3.id,
     entity: entity2,
@@ -24128,11 +24259,12 @@ function letturaDellaVoce(voce3, states = {}, resolve = (valore3) => valore3) {
      * finiva nel «si legge e basta», perche' il dominio non e' fra quelli che
      * si accendono. Chi se l'era messo nella sua sezione ci trovava una riga
      * morta. Anche questa domanda la fa `core/comandi-accanto.js`. */
-    tendina: siPuoScegliere(entity2)
+    tendina: siPuoScegliere(entity2),
+    attributi: attributi2
   };
 }
-function lettureDellaSezione2(sezione2, states = {}, resolve = (valore3) => valore3) {
-  return (sezione2?.voci || []).map((voce3) => letturaDellaVoce(voce3, states, resolve));
+function lettureDellaSezione2(sezione2, states = {}, resolve = (valore3) => valore3, lingua3 = getLocale()) {
+  return (sezione2?.voci || []).map((voce3) => letturaDellaVoce(voce3, states, resolve, lingua3));
 }
 function contoDellaSezione(letture2 = []) {
   const vive = letture2.filter((riga3) => !riga3.muto);
@@ -24140,7 +24272,8 @@ function contoDellaSezione(letture2 = []) {
     quante: letture2.length,
     vive: vive.length,
     accese: vive.filter((riga3) => riga3.acceso).length,
-    mute: letture2.length - vive.length
+    mute: letture2.length - vive.length,
+    comandabili: letture2.filter((riga3) => riga3.comandabile).length
   };
 }
 
@@ -25825,7 +25958,7 @@ function quadroMarkup(lettura3, tipo) {
     misura("⛽", t("Consumato in totale", "Total fuel used"), lettura3.carburanteTotale, " L", "dm.ev_carburante_totale"),
     gomme.riassunto
   ].join("");
-  const vuoto4 = !serbatoio && !righe2 && !tessere && !gomme.quadretto && !pillole2.length ? `<div class="dm-termica-vuoto">${esc(
+  const vuoto5 = !serbatoio && !righe2 && !tessere && !gomme.quadretto && !pillole2.length ? `<div class="dm-termica-vuoto">${esc(
     t(
       "Compila le caselle dell'auto — carburante, autonomia, portiere, motore — dalla scheda Auto della configurazione.",
       "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings."
@@ -25838,7 +25971,7 @@ function quadroMarkup(lettura3, tipo) {
     <div class="dm-termica-quadro">${serbatoio}<div class="dm-termica-righe">${righe2}</div></div>
     ${tessere ? `<div class="dm-termica-griglia">${tessere}</div>` : ""}
     ${gomme.quadretto}
-    ${vuoto4}`;
+    ${vuoto5}`;
 }
 function dipingi() {
   posaLaCapacitaDellaBozza();
@@ -26850,14 +26983,14 @@ function sigle(state171) {
 function reteDalloStato(state171) {
   const pezzi = sigle(state171);
   if (!pezzi.length) return null;
-  if (pezzi.some((pezzo) => A_BATTERIA.has(pezzo))) return false;
-  if (pezzi.some((pezzo) => IN_LINEA.has(pezzo))) return true;
+  if (pezzi.some((pezzo2) => A_BATTERIA.has(pezzo2))) return false;
+  if (pezzi.some((pezzo2) => IN_LINEA.has(pezzo2))) return true;
   if (pezzi.includes("on") || pezzi.includes("true")) return true;
   if (pezzi.includes("off") || pezzi.includes("false")) return false;
   return null;
 }
 function batteriaScaricaDalloStato(state171) {
-  return sigle(state171).some((pezzo) => SCARICA.has(pezzo));
+  return sigle(state171).some((pezzo2) => SCARICA.has(pezzo2));
 }
 function normalizzaUps(stored, posizione = 0) {
   const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
@@ -38547,9 +38680,9 @@ function avvolgiLeParole(meteo3) {
       continue;
     }
     if (gia) continue;
-    for (const pezzo of [...misura7.childNodes]) {
-      if (pezzo.nodeType !== 3) continue;
-      const intero = pezzo.textContent;
+    for (const pezzo2 of [...misura7.childNodes]) {
+      if (pezzo2.nodeType !== 3) continue;
+      const intero = pezzo2.textContent;
       if (!/\p{L}/u.test(intero)) continue;
       misura7.setAttribute(SORGENTE, intero.trim());
       const coda = /\s*$/.exec(intero)[0];
@@ -38562,7 +38695,7 @@ function avvolgiLeParole(meteo3) {
       guscio3.className = "dm-meteo-parola";
       guscio3.textContent = parti[2];
       gruppo.append(guscio3, parti[3] || " ");
-      pezzo.replaceWith(gruppo);
+      pezzo2.replaceWith(gruppo);
     }
   }
 }
@@ -38631,10 +38764,10 @@ function ripara() {
 function primaFilaStorta(header2) {
   const riquadro = header2?.getBoundingClientRect?.();
   if (!riquadro || riquadro.width < 1) return false;
-  for (const pezzo of header2.querySelectorAll?.(
+  for (const pezzo2 of header2.querySelectorAll?.(
     ":scope > .header-left-wrap, :scope > .header-left-wrap .brand-text, :scope > .dm-editor-entry"
   ) || []) {
-    const r = pezzo.getBoundingClientRect?.();
+    const r = pezzo2.getBoundingClientRect?.();
     if (!r) continue;
     if (r.width < 1 || r.height < 1) return true;
     if (r.bottom <= riquadro.top + 1 || r.top >= riquadro.bottom - 1) return true;
@@ -39690,8 +39823,8 @@ function entitaScritta(valore3) {
 function celleDaTesto(testo2) {
   const viste2 = /* @__PURE__ */ new Set();
   const celle = [];
-  for (const pezzo of String(testo2 ?? "").split(/[\s,;]+/)) {
-    const entity2 = entitaScritta(pezzo);
+  for (const pezzo2 of String(testo2 ?? "").split(/[\s,;]+/)) {
+    const entity2 = entitaScritta(pezzo2);
     if (!entity2 || viste2.has(entity2)) continue;
     viste2.add(entity2);
     celle.push(entity2);
@@ -43101,7 +43234,7 @@ function percentuale3(stato3) {
   if (!Number.isFinite(numero53)) return null;
   return Math.min(100, Math.max(0, Math.round(numero53)));
 }
-function nomeLeggibile(entity2, stato3) {
+function nomeLeggibile2(entity2, stato3) {
   const amichevole = pulito37(stato3?.attributes?.friendly_name);
   if (amichevole) return amichevole;
   const coda = pulito37(entity2).split(".")[1] || "";
@@ -43129,7 +43262,7 @@ function cartucceTrovate(entity2, states = {}) {
 function letturaDellaCartuccia(entity2, states = {}) {
   const stato3 = states?.[entity2] || null;
   const quanta = percentuale3(stato3);
-  const nome = nomeLeggibile(entity2, stato3);
+  const nome = nomeLeggibile2(entity2, stato3);
   return {
     entity: entity2,
     nome,
@@ -43192,7 +43325,7 @@ function letturaDellaStampante(voce3, states = {}, resolve = (valore3) => valore
   return {
     id: riga3.id,
     entity: entity2,
-    nome: riga3.nome || nomeLeggibile(entity2, stato3),
+    nome: riga3.nome || nomeLeggibile2(entity2, stato3),
     stanza: riga3.stanza,
     stato: quale,
     /* La parola che ha detto la stampante: serve quando lo stato e' «altro»,
@@ -43777,12 +43910,12 @@ function cercaFuoriDalDispositivo({
   escludi = [],
   ruoli = RUOLI_FUORI
 } = {}) {
-  const token = nomeRidotto(deviceName).split(" ").filter((pezzo) => pezzo.length >= 4);
+  const token = nomeRidotto(deviceName).split(" ").filter((pezzo2) => pezzo2.length >= 4);
   if (!token.length) return {};
   const gia = new Set(escludi.map(clean21).filter(Boolean));
   const parenti = Object.entries(states).filter(([id]) => id.startsWith("sensor.") && !gia.has(id)).map(([id, stato3]) => recordDalloStato(id, stato3)).filter((record2) => {
     const parole4 = nomeRidotto(`${record2.entity_id} ${record2.name}`);
-    return token.every((pezzo) => parole4.includes(pezzo));
+    return token.every((pezzo2) => parole4.includes(pezzo2));
   });
   if (!parenti.length) return {};
   const presi = /* @__PURE__ */ new Set();
@@ -44235,7 +44368,7 @@ function apriMenuIntegrazioni({
    * fra quaranta voci, vuole evcc. Senza filtro si vede tutto. */
   filtra = null,
   /* Cosa dire quando il filtro non lascia niente. */
-  vuoto: vuoto4 = "",
+  vuoto: vuoto5 = "",
   /* Oppure, quando il filtro non lascia niente, mostrare tutto lo stesso. */
   altrimentiTutte = false
 } = {}) {
@@ -44350,7 +44483,7 @@ function apriMenuIntegrazioni({
     const filtrate = typeof filtra === "function" ? tutte.filter((voce3) => filtra(voce3)) : tutte;
     menu = filtrate.length || !altrimentiTutte ? filtrate : tutte;
     if (!menu.length) {
-      stato3.textContent = tutte.length && vuoto4 || t(
+      stato3.textContent = tutte.length && vuoto5 || t(
         "Nessuna integrazione con dispositivi trovata: in Home Assistant non c'è ancora un dispositivo con delle entità.",
         "No integration with devices found: Home Assistant does not have a device with entities yet."
       );
@@ -47330,15 +47463,15 @@ function normalizza3(testo2) {
   const pezzi = frase3.split(/\s+/).filter(Boolean);
   const fuori = [];
   for (let i = 0; i < pezzi.length; i += 1) {
-    const pezzo = pezzi[i];
+    const pezzo2 = pezzi[i];
     const dopo = pezzi[i + 1];
-    if (pezzo === "c" && dopo && /^(e|era|erano|eran|sono)$/.test(dopo)) {
+    if (pezzo2 === "c" && dopo && /^(e|era|erano|eran|sono)$/.test(dopo)) {
       fuori.push(dopo === "sono" ? "ci" : `c${dopo}`);
       if (dopo === "sono") fuori.push("sono");
       i += 1;
       continue;
     }
-    fuori.push(RIPARAZIONI.get(pezzo) || pezzo);
+    fuori.push(RIPARAZIONI.get(pezzo2) || pezzo2);
   }
   return fuori.join(" ");
 }
@@ -56365,7 +56498,7 @@ function avvisoGrande(riga3, adesso) {
         <div><b>${esc(titolo3)}</b>${sotto ? `<em>${esc(sotto)}</em>` : ""}</div>
       </div>
       ${testo2 ? `<p>${esc(testo2)}</p>` : ""}
-      ${quando4.length ? `<div class="dm-f-allerte-quando">${quando4.map((pezzo) => `<span>${esc(pezzo)}</span>`).join("")}</div>` : ""}
+      ${quando4.length ? `<div class="dm-f-allerte-quando">${quando4.map((pezzo2) => `<span>${esc(pezzo2)}</span>`).join("")}</div>` : ""}
     </section>`;
 }
 function numeroDellaFonte(riga3) {
@@ -57358,7 +57491,7 @@ ${P6} .dm-f-mia-riga>span:first-child{font-size:20px}
 ${P6} .dm-f-mia-riga b{flex:1;min-width:0;font-size:14px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
 ${P6} .dm-f-mia-riga .dm-f-num{font-size:22px;color:var(--text,#0f172a);white-space:nowrap}
 `;
-var iniziali = (nome) => clean(nome).split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((pezzo) => pezzo.charAt(0).toUpperCase()).join("") || "#";
+var iniziali = (nome) => clean(nome).split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((pezzo2) => pezzo2.charAt(0).toUpperCase()).join("") || "#";
 function finestraSegnalazioni(widget) {
   const conto = widget.conto || {};
   const generi = [
@@ -59800,8 +59933,8 @@ function preseModel(states) {
   };
 }
 function cosaSuona(riga3, conIlPosto) {
-  const pezzo = [titoloDelLettore(riga3), riga3.artista].filter(Boolean).join(" — ");
-  return conIlPosto ? `${riga3.nome}: ${pezzo}` : pezzo;
+  const pezzo2 = [titoloDelLettore(riga3), riga3.artista].filter(Boolean).join(" — ");
+  return conIlPosto ? `${riga3.nome}: ${pezzo2}` : pezzo2;
 }
 function mediaModel(states) {
   const lettori2 = lettoriConfigurati(readJson(CHIAVE_MEDIA, []));
@@ -66840,10 +66973,10 @@ function disegnaClimaRapido() {
   const states = allStates();
   griglia3.replaceChildren();
   if (!unita2.length) {
-    const vuoto4 = doc.createElement("p");
-    vuoto4.className = "ns-clima-empty";
-    vuoto4.textContent = modo === "caldo" ? t("Nessun termosifone configurato", "No radiator configured") : t("Nessun condizionatore configurato", "No air conditioner configured");
-    griglia3.append(vuoto4);
+    const vuoto5 = doc.createElement("p");
+    vuoto5.className = "ns-clima-empty";
+    vuoto5.textContent = modo === "caldo" ? t("Nessun termosifone configurato", "No radiator configured") : t("Nessun condizionatore configurato", "No air conditioner configured");
+    griglia3.append(vuoto5);
     return true;
   }
   for (const voce3 of unita2) griglia3.append(tastoRapido(voce3, states));
@@ -71237,7 +71370,7 @@ var cssEscape = (value) => String(value).replaceAll("\\", "\\\\").replaceAll('"'
 function regolaDelleBolleVecchie() {
   return `${FLOW_VIEWS.flatMap(
     ({ id }) => LEGACY_LOAD_SELECTOR.split(",").map(
-      (pezzo) => `#${id} ${pezzo.trim()}:not([data-dm-flow-node]):not([data-dm-flow-arc])`
+      (pezzo2) => `#${id} ${pezzo2.trim()}:not([data-dm-flow-node]):not([data-dm-flow-arc])`
     )
   ).join(",")}{display:none!important}`;
 }
@@ -72303,7 +72436,7 @@ function preview(load, index) {
   node.append(element("span", "dm-loads-preview-index", String(index + 1)), bubble, text);
   return node;
 }
-function textField(label, value, onChange18, { className = "ed-input", type = "text", hook = "" } = {}) {
+function textField(label, value, onChange19, { className = "ed-input", type = "text", hook = "" } = {}) {
   const field = element("label", "ed-slot");
   field.append(element("span", "ed-slot-lbl", label));
   const input = doc.createElement("input");
@@ -72311,11 +72444,11 @@ function textField(label, value, onChange18, { className = "ed-input", type = "t
   input.type = type;
   if (hook) input.dataset[hook] = "true";
   input.value = value || "";
-  input.addEventListener("change", () => onChange18(clean(input.value)));
+  input.addEventListener("change", () => onChange19(clean(input.value)));
   field.append(input);
   return field;
 }
-function iconField(id, valore3, onChange18) {
+function iconField(id, valore3, onChange19) {
   const field = element("label", "ed-slot dm-loads-field");
   field.append(element("span", "ed-slot-lbl", t("Icona", "Icon")));
   const row = element("span", "dm-loads-icon-row");
@@ -72327,7 +72460,7 @@ function iconField(id, valore3, onChange18) {
   input.value = valore3 || "";
   input.placeholder = "🍳 / mdi:stove";
   input.addEventListener("input", () => iconInto(pick2, clean(input.value)));
-  input.addEventListener("change", () => onChange18(clean(input.value)));
+  input.addEventListener("change", () => onChange19(clean(input.value)));
   const pick2 = element("button", "dm-loads-icon-btn");
   pick2.type = "button";
   pick2.dataset.dmLoadIconPick = "true";
@@ -72352,7 +72485,7 @@ function iconField(id, valore3, onChange18) {
   );
   return field;
 }
-function entityField2(id, label, value, hint, onChange18) {
+function entityField2(id, label, value, hint, onChange19) {
   const field = element("label", "ed-slot");
   const caption = element("span", "ed-slot-lbl", label);
   field.append(caption);
@@ -72364,7 +72497,7 @@ function entityField2(id, label, value, hint, onChange18) {
     locale: activeLocale(),
     placeholder: "sensor.entity",
     onPick: (input) => root.wzPickEntity?.(input),
-    onChange: onChange18
+    onChange: onChange19
   });
   field.append(picker);
   return field;
@@ -73413,8 +73546,8 @@ function riconcilia(list, model2) {
   } else {
     aggiornaTestata(testata4, model2);
   }
-  const vuoto4 = griglia3.querySelector(".dm-subload-empty");
-  if (!model2.count && !vuoto4)
+  const vuoto5 = griglia3.querySelector(".dm-subload-empty");
+  if (!model2.count && !vuoto5)
     griglia3.append(
       element2(
         "div",
@@ -73425,7 +73558,7 @@ function riconcilia(list, model2) {
         )
       )
     );
-  else if (model2.count && vuoto4) vuoto4.remove?.();
+  else if (model2.count && vuoto5) vuoto5.remove?.();
   const carte = new Map(
     [...griglia3.querySelectorAll("[data-dm-subload-card]")].map((nodo2) => [
       nodo2.dataset.dmSubloadCard,
@@ -73744,10 +73877,10 @@ function nomeDellaLettura2(entity2, nome, unit, tokenElettrodomestico, usate) {
 function nomeInParole(nome, tokenElettrodomestico) {
   const via = new Set(tokenElettrodomestico);
   const tutte = clean(nome).replaceAll(/[_\-.]+/g, " ").split(/\s+/).filter(Boolean);
-  const pulito61 = tutte.filter((pezzo) => !via.has(pezzo.toLowerCase())).join(" ").trim();
+  const pulito61 = tutte.filter((pezzo2) => !via.has(pezzo2.toLowerCase())).join(" ").trim();
   if (pulito61) return pulito61;
   const senzaDoppioni = tutte.filter(
-    (pezzo, i) => i === 0 || pezzo.toLowerCase() !== tutte[i - 1].toLowerCase()
+    (pezzo2, i) => i === 0 || pezzo2.toLowerCase() !== tutte[i - 1].toLowerCase()
   );
   return senzaDoppioni.join(" ") || clean(nome);
 }
@@ -75659,7 +75792,7 @@ function giornoDi2(quando4) {
   const giorno2 = String(istante5.getDate()).padStart(2, "0");
   return `${istante5.getFullYear()}-${mese}-${giorno2}`;
 }
-function vuoto(quante3) {
+function vuoto2(quante3) {
   return Array.from({ length: quante3 }, () => 0);
 }
 function reportDelleFasce(righe2, fasceSalvate, { prezzoUnico = 0, totale = null } = {}) {
@@ -75672,7 +75805,7 @@ function reportDelleFasce(righe2, fasceSalvate, { prezzoUnico = 0, totale = null
     return suo2 === null || suo2 === void 0 ? unico : suo2;
   };
   const ore = kwhPerOra(righe2);
-  const kwhPerFascia = vuoto(quante3);
+  const kwhPerFascia = vuoto2(quante3);
   const perGiorno = /* @__PURE__ */ new Map();
   const perOra = Array.from({ length: 24 }, () => ({ kwh: 0, euro: 0 }));
   let spiegati = 0;
@@ -75683,7 +75816,7 @@ function reportDelleFasce(righe2, fasceSalvate, { prezzoUnico = 0, totale = null
     kwhPerFascia[quale] += ora3.kwh;
     spiegati += ora3.kwh;
     const giorno2 = giornoDi2(ora3.quando);
-    if (!perGiorno.has(giorno2)) perGiorno.set(giorno2, vuoto(quante3));
+    if (!perGiorno.has(giorno2)) perGiorno.set(giorno2, vuoto2(quante3));
     perGiorno.get(giorno2)[quale] += ora3.kwh;
     const casella5 = perOra[quando4.getHours()];
     if (!casella5) continue;
@@ -75960,10 +76093,10 @@ async function aggiornaIlReportDelleFasce(bundle, { forza = false } = {}) {
       fonti.filter((piano) => piano.entity).map((piano) => [piano.entity, piano.unita || ""])
     );
     const arco3 = periodRange("month", new Date(periodo.year, periodo.month - 1, 1), /* @__PURE__ */ new Date());
-    const pezzo = { ...arco3, kind: "month", period: "hour" };
-    const righe2 = await leOreDalRecorder([rete], pezzo, unita2);
+    const pezzo2 = { ...arco3, kind: "month", period: "hour" };
+    const righe2 = await leOreDalRecorder([rete], pezzo2, unita2);
     if (giro !== state61.giro) return false;
-    const ore = secchielliNellArco(righe2?.[rete], pezzo);
+    const ore = secchielliNellArco(righe2?.[rete], pezzo2);
     const totale = Number(bundle?.month?.gridImport);
     const report = reportDelleFasce(ore, config, {
       prezzoUnico: unico,
@@ -77889,9 +78022,9 @@ function entitaPerLaCottura(values) {
   const catalogo = entitaDelDispositivo(clean(values.device_id)) || [];
   const scatto = bindingSnapshot(values);
   if (catalogo.length || scatto.length) return [...catalogo, ...scatto];
-  const pezzi = clean(values.name).toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((pezzo) => pezzo.length >= 4);
+  const pezzi = clean(values.name).toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((pezzo2) => pezzo2.length >= 4);
   if (tipoDellaCucina({ visual_key: values.icon }) === "air-fryer") pezzi.push("airfryer");
-  return Object.keys(allStates()).filter((id) => pezzi.some((pezzo) => id.includes(pezzo)));
+  return Object.keys(allStates()).filter((id) => pezzi.some((pezzo2) => id.includes(pezzo2)));
 }
 function compilaLaCottura(form, entita3, integrazione = "") {
   const proposta = proponiLaCottura(entita3, allStates(), { integrazione });
@@ -78567,7 +78700,7 @@ function foglia(valore3) {
   return "";
 }
 function strada(pezzi) {
-  return pezzi.filter((pezzo) => pezzo !== "" && pezzo !== null && pezzo !== void 0).join(" · ");
+  return pezzi.filter((pezzo2) => pezzo2 !== "" && pezzo2 !== null && pezzo2 !== void 0).join(" · ");
 }
 function nomeDellaRiga3(riga3, indice) {
   if (riga3 && typeof riga3 === "object") {
@@ -78981,7 +79114,7 @@ function disegnaGliEsiti(contenitore2, parola) {
     riga3.className = `${BARRA}-esito`;
     riga3.dataset.salta = scheda8 ? "si" : "no";
     const strada2 = clean(esito2.dove).split(" · ").filter(
-      (pezzo, indice, tutti) => pezzo && pezzo !== "sections" && !(indice === tutti.indexOf("sections") + 1 && tutti.includes("sections"))
+      (pezzo2, indice, tutti) => pezzo2 && pezzo2 !== "sections" && !(indice === tutti.indexOf("sections") + 1 && tutti.includes("sections"))
     ).join(" · ");
     const dove = [nome, strada2, esito2.campo].filter(Boolean).join(" · ");
     riga3.innerHTML = `<span class="${BARRA}-dove">${esc(dove)}</span><span class="${BARRA}-testo">${conLaParolaAccesa(
@@ -90042,11 +90175,11 @@ function adegua() {
   const griglia3 = doc?.getElementById?.("qa-grid");
   const vassoio = griglia3?.parentElement;
   if (!vassoio?.classList?.contains?.("dm-vassoio")) return;
-  const vuoto4 = griglia3.style.display === "none";
-  vassoio.hidden = vuoto4;
+  const vuoto5 = griglia3.style.display === "none";
+  vassoio.hidden = vuoto5;
   const titolo3 = vassoio.previousElementSibling;
   if (titolo3 && /azioni/i.test(titolo3.textContent || ""))
-    titolo3.style.display = vuoto4 ? "none" : "";
+    titolo3.style.display = vuoto5 ? "none" : "";
 }
 function ripassa2() {
   if (!paginaVisibile("page-home")) return;
@@ -94407,7 +94540,7 @@ function tessera({
 }
 function cardAzione(c, i, grande = false) {
   const azione = azioneDi(c.azione);
-  if (!azione) return vuoto2(i, t("Azione non trovata", "Action not found"));
+  if (!azione) return vuoto3(i, t("Azione non trovata", "Action not found"));
   return tessera({
     chiave: disegnoDellAzione(azione, c.disegno),
     accento: ACCENTI.azione,
@@ -94478,7 +94611,7 @@ function cardDato(c, i, s) {
     ${clean(c.sotto) ? `<div class="mu-dato-s">${esc(clean(c.sotto))}</div>` : ""}
   </div>`;
 }
-var vuoto2 = (i, perche3 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche3 || t("Posto libero", "Empty slot"))}</span></div>`;
+var vuoto3 = (i, perche3 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche3 || t("Posto libero", "Empty slot"))}</span></div>`;
 function paginaStanza(pagina2) {
   const zona = pagina2.modello === "clima" ? zonaDellaPagina(pagina2) : "";
   const comandi = comandiDellaPagina(pagina2, state111.fonte, zona, { aCoppia });
@@ -94493,10 +94626,10 @@ function paginaStanza(pagina2) {
   const posti = postiDellaPagina(pagina2);
   const quante3 = elenco15 ? Math.max(comandi.length, 1) : posti;
   if (elenco15 && !comandi.length)
-    return `${linguette3}<div class="mu-g6" style="${stileDellaGriglia(pagina2)}">${vuoto2(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+    return `${linguette3}<div class="mu-g6" style="${stileDellaGriglia(pagina2)}">${vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
   const carte = Array.from({ length: quante3 }, (_, i) => {
     const c = comandi[i];
-    if (!c || c.tipo === "vuoto") return vuoto2(i);
+    if (!c || c.tipo === "vuoto") return vuoto3(i);
     if (c.tipo === "luce") return cardLuce(c, i);
     if (c.tipo === "clima") return cardClima(c, i, zona);
     if (c.tipo === "tapparella") return cardTapparella(c, i);
@@ -94526,7 +94659,7 @@ function paginaScene(pagina2) {
   const scene = pagina2.scene.length ? pagina2.scene : [];
   const carte = Array.from({ length: postiDellaPagina(pagina2) }, (_, i) => {
     const c = scene[i];
-    if (!c || c.tipo === "vuoto") return vuoto2(i);
+    if (!c || c.tipo === "vuoto") return vuoto3(i);
     return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
   });
   return griglia2(pagina2, carte);
@@ -94535,7 +94668,7 @@ function paginaAmbienti(pagina2) {
   const ambienti = ambientiDellaFonte(state111.fonte || {});
   if (!ambienti.length)
     return griglia2(pagina2, [
-      vuoto2(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))
+      vuoto3(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))
     ]);
   const carte = ambienti.map(({ stanza: stanza2, luci }, i) => {
     const temp = stanza2.temp ? numero47(stato2(stanza2.temp)?.state) : null;
@@ -94552,7 +94685,7 @@ function paginaTelecamere(pagina2) {
   const telecamere3 = telecamereDellaFonte(state111.fonte || {});
   if (!telecamere3.length)
     return griglia2(pagina2, [
-      vuoto2(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))
+      vuoto3(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))
     ]);
   const carte = telecamere3.map(
     (k, i) => `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video">${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi8(k.entita))}</span></div></button>`
@@ -94709,7 +94842,7 @@ function paginaMusica(pagina2) {
   const voci4 = lettoriDellaPagina(pagina2, state111.fonte || {});
   if (!voci4.length)
     return griglia2(pagina2, [
-      vuoto2(
+      vuoto3(
         0,
         t(
           "Nessun lettore: aggiungili nella sezione Musica o qui nel config",
@@ -94849,7 +94982,7 @@ function paginaEnergia(pagina2) {
   });
   if (!tessere.length)
     return griglia2(pagina2, [
-      vuoto2(0, t("Scegli le misure nel config", "Choose the readings in the config"))
+      vuoto3(0, t("Scegli le misure nel config", "Choose the readings in the config"))
     ]);
   const carte = tessere.map(
     ([k, d, acc, etichetta3, valore3, sotto, extra], i) => `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
@@ -95211,7 +95344,7 @@ function paginaMixer(pagina2) {
   const master = pagina2.mixer?.master;
   if (!gruppi2.length && !master?.entita)
     return griglia2({ ...pagina2, griglia: 4 }, [
-      vuoto2(0, t("Scegli i canali nel config", "Choose the channels in the config"))
+      vuoto3(0, t("Scegli i canali nel config", "Choose the channels in the config"))
     ]);
   const quanti2 = gruppi2.map((g) => `minmax(0,${g.canali.length}fr)`).join(" ");
   const banchi = gruppi2.length ? `<div class="mu-mix-gruppi" style="grid-template-columns:${quanti2}">${gruppi2.map(
@@ -95287,7 +95420,7 @@ function paginaComandi(pagina2) {
   const tutti = pulsantiDellaPagina(pagina2).map((p, k) => ({ p, k }));
   if (!tutti.length)
     return griglia2({ ...pagina2, griglia: 4 }, [
-      vuoto2(0, t("Scegli i comandi nel config", "Choose the commands in the config"))
+      vuoto3(0, t("Scegli i comandi nel config", "Choose the commands in the config"))
     ]);
   const parola = (p, on) => diceLoStato(p) ? `<span class="mu-stato ${on ? "" : "spento"}">${esc(on ? t("Acceso", "On") : t("Spento", "Off"))}</span>` : "";
   const icona2 = (p, k, misura7) => clean(p.disegno) ? disegno(p.disegno, misura7, `reg-${misura7}-${k}`) : segno("accendi", Math.round(misura7 * 0.7));
@@ -99028,8 +99161,8 @@ function metti3(via, valore3) {
   }
   let dove = m;
   const crea = REGIA.test(via);
-  pezzi.slice(0, -1).forEach((pezzo, n) => {
-    const chiave2 = Number.isInteger(+pezzo) ? +pezzo : pezzo;
+  pezzi.slice(0, -1).forEach((pezzo2, n) => {
+    const chiave2 = Number.isInteger(+pezzo2) ? +pezzo2 : pezzo2;
     if (crea && dove && dove[chiave2] == null)
       dove[chiave2] = Number.isInteger(+pezzi[n + 1]) ? [] : {};
     dove = dove?.[chiave2];
@@ -99048,7 +99181,7 @@ function togliVoce(via) {
   const indice = Number(pezzi.pop());
   const m = structuredClone(bozza());
   const elenco15 = pezzi.reduce(
-    (dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo],
+    (dove, pezzo2) => dove?.[Number.isInteger(+pezzo2) ? +pezzo2 : pezzo2],
     m
   );
   if (!Array.isArray(elenco15) || !Number.isInteger(indice)) return;
@@ -99057,13 +99190,13 @@ function togliVoce(via) {
 }
 function aggiungiVoce(via) {
   const m = structuredClone(bozza());
-  const elenco15 = via.split(".").reduce((dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo], m);
+  const elenco15 = via.split(".").reduce((dove, pezzo2) => dove?.[Number.isInteger(+pezzo2) ? +pezzo2 : pezzo2], m);
   if (!Array.isArray(elenco15)) return;
   elenco15.push({ nome: "", colore: "", canali: [] });
   state112.bozza = muroPulito(m);
 }
 function leggiDalPercorso(via) {
-  return via.split(".").reduce((dove, pezzo) => dove?.[Number.isInteger(+pezzo) ? +pezzo : pezzo], bozza());
+  return via.split(".").reduce((dove, pezzo2) => dove?.[Number.isInteger(+pezzo2) ? +pezzo2 : pezzo2], bozza());
 }
 function sposta2(elenco15, da, a) {
   if (a < 0 || a >= elenco15.length) return elenco15;
@@ -106019,8 +106152,8 @@ async function onClick33(event) {
     const next = animali.slice();
     next[indice] = leggiRiga5(riga3, animali[indice]);
     const errore = riga3.querySelector("[data-animale-error]");
-    const vuoto4 = !clean(next[indice].nome) && [...CAMPI, ...AZIONI].every((campo5) => !clean(next[indice][campo5.chiave])) && !(next[indice].righe || []).some((voce3) => clean(voce3.entity));
-    if (vuoto4) {
+    const vuoto5 = !clean(next[indice].nome) && [...CAMPI, ...AZIONI].every((campo5) => !clean(next[indice][campo5.chiave])) && !(next[indice].righe || []).some((voce3) => clean(voce3.entity));
+    if (vuoto5) {
       if (errore)
         errore.textContent = t(
           "Serve almeno il nome, oppure un'entità in una delle caselle.",
@@ -109003,11 +109136,11 @@ async function onClick35(event) {
     scriviFace(riga3, people, index, null);
     return;
   }
-  const pezzo = event.target.closest("[data-face-k]");
-  if (pezzo) {
+  const pezzo2 = event.target.closest("[data-face-k]");
+  if (pezzo2) {
     event.preventDefault();
     const face = rigaFace(riga3) || normalizeAvatar3d({});
-    face[clean(pezzo.dataset.faceK)] = clean(pezzo.dataset.faceV);
+    face[clean(pezzo2.dataset.faceK)] = clean(pezzo2.dataset.faceV);
     scriviFace(riga3, people, index, normalizeAvatar3d(face));
     return;
   }
@@ -109670,10 +109803,10 @@ function tessereOrdinate() {
 function salvaTessere(rows, hidden) {
   scriviPreferenze({ order: rows.map(([key]) => key), hidden: [...hidden] });
 }
-function scriviPreferenze(pezzo) {
+function scriviPreferenze(pezzo2) {
   const stored = readJson(WIDGETS_CONFIG_KEY, {});
   const base = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
-  writeJsonIfChanged(WIDGETS_CONFIG_KEY, { ...base, ...pezzo });
+  writeJsonIfChanged(WIDGETS_CONFIG_KEY, { ...base, ...pezzo2 });
   try {
     renderHomeWidgets();
   } catch (_error) {
@@ -111321,7 +111454,7 @@ var numero50 = (valore3) => {
   const letto = Number(valore3);
   return Number.isFinite(letto) ? letto : null;
 };
-var vuoto3 = (quante3) => Array.from({ length: quante3 }, () => 0);
+var vuoto4 = (quante3) => Array.from({ length: quante3 }, () => 0);
 function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, fasceSalvate, { prezzoUnico = 0 } = {}) {
   const config = normalizzaLeFasce(fasceSalvate);
   const quante3 = config.voci.length;
@@ -111334,9 +111467,9 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
   const suoi2 = perMomento(dispositivo);
   const diCasa = perMomento(casa);
   const dallaRete = perMomento(rete);
-  const kwhPerFascia = vuoto3(quante3);
-  const retePerFascia = vuoto3(quante3);
-  const solePerFascia = vuoto3(quante3);
+  const kwhPerFascia = vuoto4(quante3);
+  const retePerFascia = vuoto4(quante3);
+  const solePerFascia = vuoto4(quante3);
   const perOra = Array.from({ length: 24 }, () => ({ kwh: 0, rete: 0 }));
   let suoiKwh = 0;
   let spartiti = 0;
@@ -111572,14 +111705,14 @@ async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
       fonti.filter((piano) => piano.entity).map((piano) => [piano.entity, piano.unita || ""])
     );
     const arco3 = periodRange("month", new Date(periodo.year, periodo.month - 1, 1), /* @__PURE__ */ new Date());
-    const pezzo = { ...arco3, kind: "month", period: "hour" };
-    const righe2 = await leOreDalRecorder([scelto, casa, rete], pezzo, unita2);
+    const pezzo2 = { ...arco3, kind: "month", period: "hour" };
+    const righe2 = await leOreDalRecorder([scelto, casa, rete], pezzo2, unita2);
     if (giro !== state140.giro) return false;
     const detto2 = leFasceDelDispositivo(
       {
-        dispositivo: secchielliNellArco(righe2?.[scelto], pezzo),
-        casa: secchielliNellArco(righe2?.[casa], pezzo),
-        rete: secchielliNellArco(righe2?.[rete], pezzo)
+        dispositivo: secchielliNellArco(righe2?.[scelto], pezzo2),
+        casa: secchielliNellArco(righe2?.[casa], pezzo2),
+        rete: secchielliNellArco(righe2?.[rete], pezzo2)
       },
       config,
       { prezzoUnico: unico }
@@ -122673,14 +122806,20 @@ function toglieteLeVecchie(vive) {
     pagina2.remove();
   }
 }
+function valoreMarkup(riga3) {
+  if (riga3.muto) return `<b class="dm-mia-muta">${esc(t("Non risponde", "Not reporting"))}</b>`;
+  if (riga3.numero !== null)
+    return `<b>${esc(formatNumber(riga3.numero, Number.isInteger(riga3.numero) ? 0 : 1))}${riga3.unita ? `<small> ${esc(riga3.unita)}</small>` : ""}</b>`;
+  return `<b>${esc(parolaDiStato(riga3.stato))}</b>`;
+}
 function codaMarkup(riga3) {
-  const vuoto4 = `<span class="dm-mia-vuoto" aria-hidden="true"></span>`;
-  if (riga3.muto) return vuoto4;
+  const vuoto5 = `<span class="dm-mia-vuoto" aria-hidden="true"></span>`;
+  if (riga3.muto) return vuoto5;
   if (riga3.tendina && siComanda(riga3.entity))
     return `<button type="button" class="dm-mia-parti dm-mia-scegli" data-dm-mia-scegli="${esc(riga3.entity)}"
        title="${esc(t("Scegli", "Choose"))}"
        aria-label="${esc(t("Scegli", "Choose"))} — ${esc(riga3.nome)}">⋮</button>`;
-  if (!riga3.comandabile) return vuoto4;
+  if (!riga3.comandabile) return vuoto5;
   const parti = riga3.avviabile ? `<button type="button" class="dm-mia-parti" data-dm-mia-parti="${esc(riga3.entity)}"
          title="${esc(t("Fai partire adesso", "Run it now"))}"
          aria-label="${esc(t("Fai partire adesso", "Run it now"))} — ${esc(riga3.nome)}">▶</button>` : "";
@@ -122688,19 +122827,42 @@ function codaMarkup(riga3) {
        role="switch" aria-checked="${riga3.acceso}"
        aria-label="${esc(riga3.nome)}"><i></i></button>`;
 }
-function rigaMarkup26(riga3) {
+var ATTRIBUTI_NELLE_PICCOLE = 2;
+function valoreAttributoMarkup(valore3) {
+  const pezzo2 = ({ testa: testa2, resto }) => `<b>${esc(testa2)}</b>${resto.length ? `<span> · ${esc(resto.join(" · "))}</span>` : ""}`;
+  if (!valore3.lista) return pezzo2(valore3.pezzi[0]);
+  return `<ul class="dm-mia-attr-lista">${valore3.pezzi.map((p) => `<li>${pezzo2(p)}</li>`).join("")}</ul>` + (valore3.altri ? `<em class="dm-mia-attr-altri">${esc(valore3.altriTesto)}</em>` : "");
+}
+function attributiMarkup(riga3, formato) {
+  const piccole = formato === "piccole";
+  const righe2 = piccole ? riga3.attributi.slice(0, ATTRIBUTI_NELLE_PICCOLE) : riga3.attributi;
+  if (!righe2.length) return "";
+  return `<dl class="dm-mia-attr">${righe2.map((attributo2) => attributoMarkup(attributo2, piccole)).join("")}</dl>`;
+}
+function attributoMarkup(attributo2, piccole) {
+  const lista5 = !piccole && attributo2.valore.lista;
+  const valore3 = piccole ? esc(attributo2.valore.testo) : valoreAttributoMarkup(attributo2.valore);
+  return `<div class="dm-mia-attr-riga" data-lista="${lista5}">
+      <dt>${esc(attributo2.etichetta)}</dt>
+      <dd>${valore3}</dd>
+    </div>`;
+}
+function rigaMarkup26(riga3, formato) {
   const icona2 = riga3.icona || (riga3.comandabile ? "💡" : "📈");
   return `<article class="dm-mia-riga" data-on="${riga3.acceso}" data-muta="${riga3.muto}">
     <span class="dm-mia-ic" aria-hidden="true">${esc(icona2)}</span>
     <span class="dm-mia-nome">
       <strong>${esc(riga3.nome)}</strong>
     </span>
+    <span class="dm-mia-val">${riga3.comandabile && !riga3.muto ? "" : valoreMarkup(riga3)}</span>
     <span class="dm-mia-coda">${codaMarkup(riga3)}</span>
+    ${attributiMarkup(riga3, formato)}
   </article>`;
 }
 function sottotitolo4(letture2) {
   const conto = contoDellaSezione(letture2);
-  const vive = conto.vive ? `${conto.accese} ${t("accese su", "on out of")} ${conto.vive}` : t("Nessuna risponde", "None reporting");
+  const quante3 = `${conto.quante} ${conto.quante === 1 ? t("entità", "entity") : t("entità", "entities")}`;
+  const vive = !conto.vive ? t("Nessuna risponde", "None reporting") : conto.comandabili ? `${conto.accese} ${t("accese su", "on out of")} ${conto.vive}` : quante3;
   return conto.mute ? `${vive} · ${conto.mute} ${t("mute", "silent")}` : vive;
 }
 function annunciaLaPagina(sezione2, indice, letture2) {
@@ -122713,7 +122875,7 @@ function annunciaLaPagina(sezione2, indice, letture2) {
   });
 }
 function paginaMarkup2(letture2, formato) {
-  return `<div class="dm-mia-lista" data-formato="${esc(formato)}">${letture2.map(rigaMarkup26).join("")}</div>`;
+  return `<div class="dm-mia-lista" data-formato="${esc(formato)}">${letture2.map((riga3) => rigaMarkup26(riga3, formato)).join("")}</div>`;
 }
 function dipingi16() {
   if (!doc) return;
@@ -122858,6 +123020,40 @@ function installStyles82() {
         box-shadow:0 2px 6px rgba(15,23,42,.25);transition:transform .25s cubic-bezier(.16,1,.3,1)}
       .dm-mia-riga[data-on="true"] .dm-mia-lev{background:linear-gradient(135deg,#fb923c,#ea580c)}
       .dm-mia-riga[data-on="true"] .dm-mia-lev i{transform:translateX(20px)}
+      /* Gli attributi (#256): una riga in piu' della griglia, sotto il nome e
+       * lunga fino in fondo, staccata da una riga tratteggiata. Sul desktop
+       * due colonne — l'etichetta e il valore — cosi' i valori di tutte le
+       * schede partono dallo stesso punto e si leggono in colonna. */
+      .dm-mia-attr{
+        grid-column:2 / -1;display:grid;gap:6px;margin:0;padding:10px 0 2px;
+        border-top:1px dashed var(--card-border,#e2e8f0)}
+      .dm-mia-attr-riga{
+        display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr);column-gap:8px;align-items:baseline}
+      .dm-mia-attr dt{
+        font-size:12px;font-weight:700;color:var(--text-dim,#64748b);overflow-wrap:anywhere}
+      .dm-mia-attr dd{
+        margin:0;min-width:0;font-size:13px;line-height:1.45;color:var(--text,#0f172a);overflow-wrap:anywhere}
+      .dm-mia-attr dd b{font-weight:800}
+      .dm-mia-attr dd span{font-weight:600;color:var(--text-dim,#64748b)}
+      .dm-mia-attr-lista{display:grid;gap:3px;margin:0;padding:0;list-style:none}
+      .dm-mia-attr-lista li{position:relative;padding-left:12px}
+      .dm-mia-attr-lista li::before{
+        content:"";position:absolute;left:1px;top:.62em;width:4px;height:4px;border-radius:50%;
+        background:var(--text-dim,#64748b)}
+      .dm-mia-attr-altri{
+        display:block;margin-top:3px;padding-left:12px;font-style:normal;font-size:12px;font-weight:800;color:#ea580c}
+      @media(max-width:560px){
+        /* Sul telefono la riga si allarga fino al bordo della scheda, e
+         * l'etichetta sta a sinistra col valore a destra: due colonne fisse
+         * in 330 px lascerebbero al valore meta' riga. Una lista non ci sta
+         * a destra, e scende sotto la sua etichetta. */
+        .dm-mia-attr{grid-column:1 / -1}
+        .dm-mia-attr-riga{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+        .dm-mia-attr-riga dd{text-align:right}
+        .dm-mia-attr-riga[data-lista="true"]{display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+        .dm-mia-attr-riga[data-lista="true"] dd{text-align:start}
+        .dm-mia-attr-altri{padding-left:12px}
+      }
       @media(max-width:560px){
         /* La coda si misura su quello che contiene: da quando un'automazione
          * porta anche il tasto «fai partire», 46 px fissi le stavano stretti. */
@@ -122905,6 +123101,17 @@ function installStyles82() {
       .dm-mia-lista[data-formato="piccole"] .dm-mia-coda{gap:6px}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-parti{width:26px;height:26px;font-size:10px}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-scegli{font-size:15px}
+      /* Nelle piccole gli attributi sono al massimo due, e ognuno sta su una
+       * riga sola: etichetta a sinistra, valore a destra, e i puntini dove
+       * non ci sta. */
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-attr{grid-column:1 / -1;gap:2px;padding-top:6px}
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-attr-riga{
+        display:flex;justify-content:space-between;align-items:baseline;gap:8px;min-width:0}
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-attr dt{
+        flex:0 1 auto;max-width:55%;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-attr dd{
+        flex:1 1 0;font-size:11.5px;font-weight:800;text-align:right;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       @media(max-width:560px){
         .dm-mia-lista[data-formato="piccole"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
         .dm-mia-lista[data-formato="piccole"] .dm-mia-riga{
@@ -122946,6 +123153,7 @@ function installSezioniMie() {
 // src/sections/sezioni-mie-editor-section.js
 var KEY167 = "__DASHBOARDMODERN_SEZIONI_MIE_EDITOR__";
 var state163 = root[KEY167] ||= { installed: false, aperta: 0 };
+state163.attributiAperti ||= /* @__PURE__ */ new Set();
 var SEZIONI_MIE_EDITOR_TAB = "mie";
 var CHIAVE_SEZIONE5 = SEZIONI_MIE_TAB;
 function schedaAttiva15() {
@@ -122993,6 +123201,122 @@ function formatoMarkup(sezione2) {
     <span class="dm-mia-ed-formato-tasti" data-mia-campo-formato="${esc(scelto)}">${tasti}</span>
   </div>`;
 }
+function statoDellEntita(entity2) {
+  const resolve = root.resolveEntity || ((valore3) => valore3);
+  const vera2 = resolve(entity2) || entity2;
+  return allStates()?.[vera2];
+}
+function nomeDellaChiave(chiave2) {
+  return nomeLeggibile(chiave2) || chiave2;
+}
+function righeDegliAttributi(entity2, scelti) {
+  const disponibili = clean(entity2).includes(".") ? attributiDisponibili(statoDellEntita(clean(entity2))) : [];
+  const presenti = new Set(disponibili.map((attributo2) => attributo2.chiave));
+  const perChiave = new Map(scelti.map((scelto) => [scelto.chiave, scelto]));
+  return [
+    ...disponibili.map((attributo2) => ({
+      ...attributo2,
+      presente: true,
+      scelto: perChiave.get(attributo2.chiave) || null
+    })),
+    ...scelti.filter((scelto) => !presenti.has(scelto.chiave)).map((scelto) => ({ chiave: scelto.chiave, anteprima: "", presente: false, scelto }))
+  ];
+}
+function rigaAttributoMarkup(attributo2) {
+  const scelto = Boolean(attributo2.scelto);
+  const nome = scelto ? clean(attributo2.scelto.nome) : "";
+  const adesso = attributo2.presente ? `${t("adesso", "now")}: ${attributo2.anteprima}` : t("adesso non c'è", "not there right now");
+  return `<div class="dm-mia-ed-attr-riga" data-mia-attr="${esc(attributo2.chiave)}" data-scelto="${scelto}">
+      <label class="dm-mia-ed-attr-chi">
+        <input type="checkbox" data-mia-attr-spunta${scelto ? " checked" : ""}>
+        <span><code>${esc(attributo2.chiave)}</code><small>${esc(adesso)}</small></span>
+      </label>
+      <input class="ed-input dm-mia-ed-attr-nome" data-mia-attr-nome value="${esc(
+    scelto ? nome || nomeDellaChiave(attributo2.chiave) : ""
+  )}" placeholder="${esc(t("Nome da mostrare", "Name to show"))}"
+        aria-label="${esc(t("Nome da mostrare", "Name to show"))} — ${esc(attributo2.chiave)}"${scelto ? "" : " hidden"}>
+    </div>`;
+}
+function contoAttributi(scelti, tutti) {
+  return t(`${scelti} di ${tutti}`, `${scelti} of ${tutti}`);
+}
+function corpoAttributiMarkup(righe2) {
+  if (!righe2.length)
+    return `<p class="dm-mia-ed-attr-nota">${esc(
+      t(
+        "Questa entità adesso non ha attributi da mostrare.",
+        "This entity has no attributes to show right now."
+      )
+    )}</p>`;
+  return `${righe2.map(rigaAttributoMarkup).join("")}<p class="dm-mia-ed-attr-nota">${esc(
+    t(
+      "Sono quelli che l'entità ha adesso. Si vedono nella sezione in quest'ordine, col nome che scrivi qui; senza nome si usa quello dell'attributo.",
+      "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used."
+    )
+  )}</p>`;
+}
+function attributiMarkup2(voce3, chiaveBlocco) {
+  const scelti = normalizzaAttributi(voce3?.attributi);
+  const righe2 = righeDegliAttributi(voce3?.entity, scelti);
+  const aperto2 = state163.attributiAperti.has(chiaveBlocco);
+  return `<div class="dm-mia-ed-attr" data-mia-attr-blocco="${esc(chiaveBlocco)}" data-open="${aperto2}"
+    data-mia-attr-entita="${esc(clean(voce3?.entity))}">
+    <button type="button" class="dm-mia-ed-attr-testa" data-mia-attr-apri aria-expanded="${aperto2}">
+      <span aria-hidden="true">🏷️</span>
+      <span class="dm-mia-ed-attr-titolo">${esc(t("Attributi da mostrare", "Attributes to show"))}</span>
+      <b data-mia-attr-conto>${esc(contoAttributi(scelti.length, righe2.length))}</b>
+      <i aria-hidden="true">▾</i>
+    </button>
+    <div class="dm-mia-ed-attr-corpo"${aperto2 ? "" : " hidden"}>${corpoAttributiMarkup(righe2)}</div>
+  </div>`;
+}
+function attributiDalBlocco(blocco3) {
+  return [...blocco3?.querySelectorAll("[data-mia-attr]") || []].filter((riga3) => riga3.querySelector("[data-mia-attr-spunta]")?.checked).map((riga3) => ({
+    chiave: clean(riga3.dataset.miaAttr),
+    nome: clean(riga3.querySelector("[data-mia-attr-nome]")?.value)
+  }));
+}
+function aggiornaIlConto(blocco3) {
+  const conto = blocco3?.querySelector("[data-mia-attr-conto]");
+  if (!conto) return;
+  const tutte = blocco3.querySelectorAll("[data-mia-attr]").length;
+  conto.textContent = contoAttributi(attributiDalBlocco(blocco3).length, tutte);
+}
+function rifaiIlBlocco(voce3) {
+  const blocco3 = voce3?.querySelector("[data-mia-attr-blocco]");
+  const corpo3 = blocco3?.querySelector(".dm-mia-ed-attr-corpo");
+  if (!corpo3) return;
+  const entity2 = clean(voce3.querySelector('[data-mia-campo="entity"]')?.value);
+  if (entity2 === clean(blocco3.dataset.miaAttrEntita)) return;
+  blocco3.dataset.miaAttrEntita = entity2;
+  const disponibili = righeDegliAttributi(entity2, []);
+  const presenti = new Set(disponibili.map((attributo2) => attributo2.chiave));
+  const scelti = attributiDalBlocco(blocco3).filter((scelto) => presenti.has(scelto.chiave));
+  corpo3.innerHTML = corpoAttributiMarkup(righeDegliAttributi(entity2, scelti));
+  aggiornaIlConto(blocco3);
+}
+function cambiaLaSpunta(spunta) {
+  const riga3 = spunta.closest("[data-mia-attr]");
+  if (!riga3) return;
+  riga3.dataset.scelto = String(spunta.checked);
+  const nome = riga3.querySelector("[data-mia-attr-nome]");
+  if (nome) {
+    nome.hidden = !spunta.checked;
+    if (spunta.checked && !clean(nome.value)) nome.value = nomeDellaChiave(riga3.dataset.miaAttr);
+  }
+  aggiornaIlConto(riga3.closest("[data-mia-attr-blocco]"));
+}
+function onChange17(event) {
+  const body = doc?.getElementById("ed-body");
+  if (!body || schedaAttiva15() !== SEZIONI_MIE_EDITOR_TAB || !body.contains(event.target)) return;
+  const spunta = event.target.closest?.("[data-mia-attr-spunta]");
+  if (spunta) {
+    cambiaLaSpunta(spunta);
+    return;
+  }
+  if (event.target.matches?.('[data-mia-campo="entity"]'))
+    rifaiIlBlocco(event.target.closest("[data-mia-voce]"));
+}
 function rigaVoceMarkup(voce3, sezione2, riga3) {
   const id = `dm-mia-${sezione2}-${riga3}`;
   return `<div class="dm-mia-ed-voce" data-mia-voce="${riga3}">
@@ -123011,6 +123335,7 @@ function rigaVoceMarkup(voce3, sezione2, riga3) {
         spellcheck="false"><button type="button" class="dm-entity-picker" data-mia-pick="${id}"
         aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
     </label>
+    ${attributiMarkup2(voce3, `${sezione2}-${riga3}`)}
   </div>`;
 }
 function rigaSezioneMarkup(sezione2, indice) {
@@ -123079,7 +123404,8 @@ function corpoMarkup14() {
 function ensureSezioniMieEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva15() !== SEZIONI_MIE_EDITOR_TAB) return false;
-  const firma2 = `${JSON.stringify(sezioni())}|${state163.aperta}|${sezioneNascosta5()}`;
+  const quali = sezioni().flatMap((sezione2) => vociDi(sezione2)).map((voce3) => Object.keys(statoDellEntita(clean(voce3?.entity))?.attributes || {}).join(","));
+  const firma2 = `${JSON.stringify(sezioni())}|${state163.aperta}|${sezioneNascosta5()}|${quali.join(";")}`;
   if (body.dataset.dmMieEditor === firma2 && body.querySelector(".dm-mia-ed")) return true;
   body.dataset.dmMieEditor = firma2;
   body.innerHTML = corpoMarkup14();
@@ -123104,6 +123430,8 @@ function leggiLaRiga3(riga3) {
     const voce3 = {};
     for (const campo5 of nodo2.querySelectorAll("[data-mia-campo]"))
       voce3[clean(campo5.dataset.miaCampo)] = clean(campo5.value);
+    const attributi2 = attributiDalBlocco(nodo2.querySelector("[data-mia-attr-blocco]"));
+    if (attributi2.length) voce3.attributi = attributi2;
     return voce3;
   });
   return letto;
@@ -123144,6 +123472,20 @@ function onClick51(event) {
     event.preventDefault();
     const input = body.querySelector(`#${CSS.escape(clean(pick2.dataset.miaPick))}`);
     if (input) root.wzPickEntity?.(input);
+    return;
+  }
+  const apriAttributi = event.target.closest("[data-mia-attr-apri]");
+  if (apriAttributi) {
+    event.preventDefault();
+    const blocco3 = apriAttributi.closest("[data-mia-attr-blocco]");
+    const chiave2 = clean(blocco3?.dataset?.miaAttrBlocco);
+    const aperto2 = !state163.attributiAperti.has(chiave2);
+    if (aperto2) state163.attributiAperti.add(chiave2);
+    else state163.attributiAperti.delete(chiave2);
+    blocco3.dataset.open = String(aperto2);
+    apriAttributi.setAttribute("aria-expanded", String(aperto2));
+    const corpo3 = blocco3.querySelector(".dm-mia-ed-attr-corpo");
+    if (corpo3) corpo3.hidden = !aperto2;
     return;
   }
   const formato = event.target.closest("[data-mia-formato]");
@@ -123258,8 +123600,48 @@ function installStyles83() {
       #ed-body .dm-mia-ed-riga .ed-row-new,
       #ed-body .dm-mia-ed-riga .ed-row-old{display:block;overflow:hidden;text-overflow:ellipsis}
       #ed-body .dm-mia-ed-riga .ed-row-old{margin-top:3px;color:var(--text-dim,#64748b)}
+      /* Gli attributi della voce (#256): un riquadro bianco dentro il
+         blocchetto grigio della voce, che si apre dalla sua testata. Il conto
+         sta a destra e si legge anche da chiuso: «3 di 6» dice che qualcosa
+         e' scelto senza doverlo aprire. */
+      #ed-body .dm-mia-ed-attr{
+        border-radius:12px;background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0)}
+      #ed-body .dm-mia-ed-attr-testa{
+        display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:0;
+        background:transparent;cursor:pointer;text-align:start;font:inherit;color:var(--text,#0f172a)}
+      #ed-body .dm-mia-ed-attr-titolo{flex:1 1 auto;min-width:0;font-size:12.5px;font-weight:800}
+      #ed-body .dm-mia-ed-attr-testa b{font-size:11.5px;font-weight:900;color:#ea580c;white-space:nowrap}
+      #ed-body .dm-mia-ed-attr-testa i{
+        font-style:normal;font-size:11px;color:var(--text-dim,#64748b);transition:transform .2s ease}
+      #ed-body .dm-mia-ed-attr[data-open="false"] .dm-mia-ed-attr-testa i{transform:rotate(-90deg)}
+      #ed-body .dm-mia-ed-attr-corpo{display:grid;gap:6px;padding:0 10px 10px}
+      #ed-body .dm-mia-ed-attr-corpo[hidden]{display:none}
+      #ed-body .dm-mia-ed-attr-riga{
+        display:grid;grid-template-columns:minmax(0,1fr) minmax(0,230px);align-items:center;gap:8px;
+        padding:7px 9px;border-radius:10px;background:var(--bg-sculpted,#f0f4f8)}
+      #ed-body .dm-mia-ed-attr-chi{display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer}
+      #ed-body .dm-mia-ed-attr-chi input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin:0}
+      #ed-body .dm-mia-ed-attr-chi span{display:grid;min-width:0}
+      #ed-body .dm-mia-ed-attr-chi code{
+        font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;font-weight:800;
+        color:var(--text,#0f172a);overflow-wrap:anywhere}
+      #ed-body .dm-mia-ed-attr-chi small{
+        font-size:11px;font-weight:700;color:var(--text-dim,#64748b);
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      /* Quelli non scelti restano leggibili ma si fanno da parte. */
+      #ed-body .dm-mia-ed-attr-riga[data-scelto="false"] .dm-mia-ed-attr-chi span{opacity:.6}
+      #ed-body .dm-mia-ed-attr-nome{margin:0;min-width:0}
+      #ed-body .dm-mia-ed-attr-nome[hidden]{display:none}
+      #ed-body .dm-mia-ed-attr-nota{margin:4px 2px 0;${NOTA_DI_SCHEDA};font-weight:700}
       @media(max-width:560px){
         #ed-body .dm-mia-ed-voce-testa{grid-template-columns:48px minmax(0,1fr) 38px;gap:6px}
+        /* Sul telefono il nome va sotto la chiave, allineato al testo e non
+           alla spunta: accanto, a 300 px, non ci starebbe nessuno dei due. */
+        #ed-body .dm-mia-ed-attr-riga{grid-template-columns:minmax(0,1fr)}
+        #ed-body .dm-mia-ed-attr-nome{
+          box-sizing:border-box;margin-left:28px;width:calc(100% - 28px);max-width:none}
+        #ed-body .dm-mia-ed-attr-testa{gap:6px;padding:10px}
+        #ed-body .dm-mia-ed-attr-titolo{font-size:12px}
       }
     `
   );
@@ -123269,6 +123651,7 @@ function installSezioniMieEditor() {
   state163.installed = true;
   installStyles83();
   doc.addEventListener("click", onClick51);
+  doc.addEventListener("change", onChange17);
   wrapFunction("apriConfigEntita", "__dmSezioniMieEditor", () => {
     ensureSezioniMieTab();
     ensureSezioniMieEditor();
@@ -123296,7 +123679,7 @@ var KEY168 = "__DASHBOARDMODERN_ENTITA_MIE__";
 var STYLE_ID32 = "dm-entita-mie-style";
 var state164 = root[KEY168] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
 var voci2 = () => readJson(CHIAVE_ENTITA_MIE, []);
-function valoreMarkup(riga3) {
+function valoreMarkup2(riga3) {
   if (riga3.muto) return `<b class="dm-mie-muta">${esc(t("Non risponde", "Not reporting"))}</b>`;
   if (riga3.numero !== null)
     return `<b>${esc(formatNumber(riga3.numero, Number.isInteger(riga3.numero) ? 0 : 1))}${riga3.unita ? `<small> ${esc(riga3.unita)}</small>` : ""}</b>`;
@@ -123308,13 +123691,13 @@ function disegno3(riga3) {
   return oggettoWidget(riga3.comandabile ? "azioni" : "evidenza", "", `mie-${riga3.entity}`);
 }
 function codaMarkup2(riga3) {
-  const vuoto4 = `<span class="dm-mie-vuoto" aria-hidden="true"></span>`;
-  if (riga3.muto) return vuoto4;
+  const vuoto5 = `<span class="dm-mie-vuoto" aria-hidden="true"></span>`;
+  if (riga3.muto) return vuoto5;
   if (riga3.tendina && siComanda(riga3.entity))
     return `<button type="button" class="dm-mie-scegli" data-dm-mie-scegli="${esc(riga3.entity)}"
              title="${esc(t("Scegli", "Choose"))}"
              aria-label="${esc(t("Scegli", "Choose"))} — ${esc(riga3.nome)}">⋮</button>`;
-  if (!riga3.comandabile) return vuoto4;
+  if (!riga3.comandabile) return vuoto5;
   return `<button type="button" class="dm-mie-lev" data-dm-mie-tocca="${esc(riga3.entity)}"
              role="switch" aria-checked="${riga3.acceso}" aria-label="${esc(riga3.nome)}"><i></i></button>`;
 }
@@ -123322,7 +123705,7 @@ function rigaMarkup27(riga3) {
   return `<article class="dm-mie-riga" data-on="${riga3.acceso}" data-muta="${riga3.muto}">
     <span class="dm-mie-ic" aria-hidden="true">${disegno3(riga3)}</span>
     <span class="dm-mie-nome"><strong>${esc(riga3.nome)}</strong></span>
-    <span class="dm-mie-val">${valoreMarkup(riga3)}</span>
+    <span class="dm-mie-val">${valoreMarkup2(riga3)}</span>
     ${codaMarkup2(riga3)}
   </article>`;
 }
@@ -124188,7 +124571,7 @@ function onClick54(event) {
     root.edToast?.(t("💾 Lettore salvato", "💾 Player saved"));
   }
 }
-function onChange17(event) {
+function onChange18(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva17() !== MEDIA_EDITOR_TAB || !body.contains(event.target)) return;
   const campo5 = clean(event.target?.dataset?.mpCampo);
@@ -124261,7 +124644,7 @@ function installMediaEditor() {
   state166.installed = true;
   installStyles86();
   doc.addEventListener("click", onClick54);
-  doc.addEventListener("change", onChange17);
+  doc.addEventListener("change", onChange18);
   root.addEventListener?.(EVENTO_PIATTAFORME, aggiornaGliEsiti);
   wrapFunction("apriConfigEntita", "__dmMediaEditor", () => {
     ensureMediaTab();
@@ -124621,18 +125004,18 @@ function conLEntitaVera(indirizzo, risolvi2) {
   const trovato = valore3.match(RIFERIMENTO);
   if (!trovato) return null;
   const prima = trovato[2].split(",");
-  const dopo = prima.map((pezzo) => {
-    const nome = pezzo.trim();
-    if (!virtuale(nome)) return pezzo;
+  const dopo = prima.map((pezzo2) => {
+    const nome = pezzo2.trim();
+    if (!virtuale(nome)) return pezzo2;
     let vero3 = "";
     try {
       vero3 = pulito59(risolvi2(nome));
     } catch (_errore) {
-      return pezzo;
+      return pezzo2;
     }
-    return vero3 && vero3 !== nome && !virtuale(vero3) ? vero3 : pezzo;
+    return vero3 && vero3 !== nome && !virtuale(vero3) ? vero3 : pezzo2;
   });
-  if (dopo.every((pezzo, indice) => pezzo === prima[indice])) return null;
+  if (dopo.every((pezzo2, indice) => pezzo2 === prima[indice])) return null;
   return valore3.replace(RIFERIMENTO, (_tutto, capo) => `${capo}${dopo.join(",")}`);
 }
 
