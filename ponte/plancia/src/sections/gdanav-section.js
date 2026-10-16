@@ -24,6 +24,7 @@ import {
   partenzaEArrivo,
   quandoDetto,
 } from "../core/i-viaggi.js";
+import { FONDI_MAPPA } from "../core/radar-mappa.js";
 import {
   activeLocale,
   allStates,
@@ -201,11 +202,21 @@ function elenco() {
  *
  * «Mappe non ha nulla»: sotto la linea c'era un fondo grigio, e una strada
  * disegnata nel vuoto non dice dove passa. Adesso sotto ci sono le tessere di
- * OpenStreetMap — le stesse di ogni mappa libera — scelte allo zoom piu'
- * grande in cui tutta la strada ci sta, e sopra la linea e le fermate negli
- * stessi pixel. Niente libreria: sono immagini messe in griglia e un disegno
- * sopra. Senza meta la cartina mostra la casa, se la si sa. */
+ * una mappa, scelte allo zoom piu' grande in cui tutta la strada ci sta, e
+ * sopra la linea e le fermate negli stessi pixel. Niente libreria: sono
+ * immagini messe in griglia e un disegno sopra. Senza meta la cartina mostra
+ * la casa, se la si sa.
+ *
+ * Il fondo e' lo stesso del radar (`FONDI_MAPPA.esri`, in
+ * `core/radar-mappa.js`), non `tile.openstreetmap.org`. La prima versione
+ * prendeva le tessere da li', e sul campo la cartina era piena di «403 —
+ * Access blocked. App is not following the tile usage policy of
+ * OpenStreetMap's volunteer-run servers»: e' la stessa porta che il radar
+ * aveva gia' trovato chiusa, e per la stessa ragione — il server dei
+ * volontari non e' fatto per una plancia in centinaia di case. Esri da' i suoi
+ * quadratini senza chiave e chiede che il suo nome si veda: sta nell'angolo. */
 const TESSERA = 256;
+const FONDO = FONDI_MAPPA.esri;
 const ZOOM_MASSIMO = 16;
 
 function inPixel(lon, lat, zoom) {
@@ -251,7 +262,7 @@ function tessereSotto(vista, larga, alta) {
     for (let tx = prime[0]; tx <= ultime[0]; tx += 1) {
       const x = ((tx % n) + n) % n;
       fuori.push(
-        `<image href="https://tile.openstreetmap.org/${vista.zoom}/${x}/${ty}.png" x="${(tx * TESSERA - vista.x0).toFixed(1)}" y="${(ty * TESSERA - vista.y0).toFixed(1)}" width="${TESSERA}" height="${TESSERA}"/>`,
+        `<image href="${esc(FONDO.modello.replace("{z}", vista.zoom).replace("{x}", x).replace("{y}", ty))}" x="${(tx * TESSERA - vista.x0).toFixed(1)}" y="${(ty * TESSERA - vista.y0).toFixed(1)}" width="${TESSERA}" height="${TESSERA}"/>`,
       );
     }
   }
@@ -292,7 +303,7 @@ function mappa(b) {
     ${inizio && punti.length ? `<circle cx="${inizio[0]}" cy="${inizio[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
     ${fine ? `<circle cx="${fine[0]}" cy="${fine[1]}" r="10" fill="#dc2626" stroke="#fff" stroke-width="4"/>` : ""}
     ${segnoCasa ? `<circle cx="${segnoCasa[0]}" cy="${segnoCasa[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
-  </svg><span class="dm-gn-osm">© OpenStreetMap</span></div>`;
+  </svg><span class="dm-gn-osm">© ${esc(FONDO.attribuzione)}</span></div>`;
 }
 
 /* Cosa dire sotto il campo, quando la ricerca non ha proposte da mostrare. */
@@ -301,8 +312,14 @@ function parolaDellaRicerca() {
   if (state.proposte.length || !state.ricerca || !clean(state.cercando)) return "";
   const parole = {
     cerco: t("Cerco…", "Searching…"),
-    vuota: t("Nessun posto con questo nome. Prova ad aggiungere la città.", "No place with this name. Try adding the city."),
-    guasto: t("La ricerca degli indirizzi non risponde: riprova fra poco.", "Address search is not answering: try again shortly."),
+    vuota: t(
+      "Nessun posto con questo nome. Prova ad aggiungere la città.",
+      "No place with this name. Try adding the city.",
+    ),
+    guasto: t(
+      "La ricerca degli indirizzi non risponde: riprova fra poco.",
+      "Address search is not answering: try again shortly.",
+    ),
   };
   return `<div class="dm-gn-ricerca" data-gn-ricerca="${esc(state.ricerca)}" role="status">${esc(parole[state.ricerca] || "")}</div>`;
 }

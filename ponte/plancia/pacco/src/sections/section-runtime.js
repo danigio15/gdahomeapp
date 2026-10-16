@@ -529,7 +529,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-2BJI6JBE.js";
+} from "../../chunk-3OQ22OLH.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -102889,6 +102889,284 @@ function bozzaNuova2(tipo = "una", adesso = Date.now()) {
   };
 }
 
+// src/core/radar-mappa.js
+var LATO_TESSERA = 256;
+var METRI_PER_PIXEL_ZERO = 156543.03392804097;
+var ZOOM_MINIMO = 3;
+var ZOOM_MASSIMO = 12;
+var numero49 = (valore3) => {
+  if (valore3 === null || valore3 === void 0 || String(valore3).trim() === "") return null;
+  const n = Number(valore3);
+  return Number.isFinite(n) ? n : null;
+};
+var stringa = (valore3) => String(valore3 ?? "").trim();
+function latitudine(valore3) {
+  const n = numero49(valore3);
+  return n === null || n < -85.05112878 || n > 85.05112878 ? null : n;
+}
+function longitudine(valore3) {
+  const n = numero49(valore3);
+  return n === null || n < -180 || n > 180 ? null : n;
+}
+function tesseraDelPunto(lat, lon, zoom) {
+  const scala2 = 2 ** zoom;
+  const radianti = lat * Math.PI / 180;
+  const x = (lon + 180) / 360 * scala2;
+  const y = (1 - Math.log(Math.tan(radianti) + 1 / Math.cos(radianti)) / Math.PI) / 2 * scala2;
+  return { x, y };
+}
+function metriPerPixel(lat, zoom) {
+  return METRI_PER_PIXEL_ZERO * Math.cos(lat * Math.PI / 180) / 2 ** zoom;
+}
+function zoomPerRaggio(lat, raggioKm, latoPx) {
+  const raggio = numero49(raggioKm);
+  const lato = numero49(latoPx);
+  const dove = latitudine(lat);
+  if (!raggio || raggio <= 0 || !lato || lato <= 0 || dove === null) return ZOOM_MINIMO;
+  const metriVoluti = raggio * 2e3;
+  const ideale = Math.log2(
+    METRI_PER_PIXEL_ZERO * Math.cos(dove * Math.PI / 180) * lato / metriVoluti
+  );
+  return Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.floor(ideale)));
+}
+function finestraDiTessere(lat, lon, opzioni = {}) {
+  const dove = latitudine(lat);
+  const quanto = longitudine(lon);
+  if (dove === null || quanto === null) return null;
+  const lato = Math.max(64, numero49(opzioni.latoPx) || 320);
+  const alto = Math.max(64, numero49(opzioni.altoPx) || lato);
+  const tessera2 = numero49(opzioni.lato) || LATO_TESSERA;
+  const zoom = numero49(opzioni.zoom) === null ? zoomPerRaggio(dove, numero49(opzioni.raggioKm) || 30, Math.min(lato, alto)) : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(numero49(opzioni.zoom))));
+  const centro2 = tesseraDelPunto(dove, quanto, zoom);
+  const centroPx = { x: centro2.x * tessera2, y: centro2.y * tessera2 };
+  const origine = { x: centroPx.x - lato / 2, y: centroPx.y - alto / 2 };
+  const primaX = Math.floor(origine.x / tessera2);
+  const primaY = Math.floor(origine.y / tessera2);
+  const quanteX = Math.ceil((origine.x + lato) / tessera2) - primaX;
+  const quanteY = Math.ceil((origine.y + alto) / tessera2) - primaY;
+  const scala2 = 2 ** zoom;
+  const tessere = [];
+  for (let ry = 0; ry < quanteY; ry += 1) {
+    for (let rx = 0; rx < quanteX; rx += 1) {
+      const x = primaX + rx;
+      const y = primaY + ry;
+      if (y < 0 || y >= scala2) continue;
+      tessere.push({
+        x: (x % scala2 + scala2) % scala2,
+        y,
+        sx: Math.round(x * tessera2 - origine.x),
+        sy: Math.round(y * tessera2 - origine.y),
+        lato: tessera2
+      });
+    }
+  }
+  return { zoom, lato, alto, tessera: tessera2, tessere, metriPerPixel: metriPerPixel(dove, zoom) };
+}
+function zoomDellaPioggia(config = {}, servizio2 = "") {
+  const scritto2 = numero49(config?.zoomPioggia);
+  if (scritto2 !== null)
+    return scritto2 <= 0 ? null : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(scritto2)));
+  const suo2 = numero49(SERVIZI_RADAR[stringa(servizio2)]?.zoomMassimo);
+  return suo2 === null ? numero49(SERVIZI_RADAR[SERVIZIO_DI_SERIE]?.zoomMassimo) : suo2;
+}
+function finestraDellaPioggia(lat, lon, finestra6, zoomMassimo = null) {
+  if (!finestra6) return null;
+  const tetto = numero49(zoomMassimo);
+  if (tetto === null || finestra6.zoom <= tetto) return finestra6;
+  const salto = finestra6.zoom - Math.max(ZOOM_MINIMO, Math.round(tetto));
+  const fattore = 2 ** salto;
+  const piu = finestraDiTessere(lat, lon, {
+    latoPx: finestra6.lato,
+    altoPx: finestra6.alto,
+    zoom: finestra6.zoom - salto,
+    lato: finestra6.tessera * fattore
+  });
+  return piu || finestra6;
+}
+function problemaDellIndirizzo(indirizzo) {
+  const testo2 = stringa(indirizzo);
+  if (!testo2) return "vuoto";
+  if (/\{-?[zxy]\}/.test(testo2)) {
+    return /\{z\}/.test(testo2) && /\{x\}/.test(testo2) && /\{-?y\}/.test(testo2) ? "" : "segnaposto-a-meta";
+  }
+  if (/^https?:\/\//i.test(testo2)) return "sito";
+  return "senza-segnaposto";
+}
+function urlDellaTessera(modello2, tessera2 = {}, zoom = 0, sottodomini = "abc") {
+  const testo2 = stringa(modello2);
+  if (!testo2 || !/\{[zxy]\}/.test(testo2)) return "";
+  const scala2 = 2 ** zoom;
+  const lettera = sottodomini ? sottodomini[Math.abs((tessera2.x || 0) + (tessera2.y || 0)) % sottodomini.length] : "";
+  return testo2.replaceAll("{z}", String(zoom)).replaceAll("{x}", String(tessera2.x ?? 0)).replaceAll("{y}", String(tessera2.y ?? 0)).replaceAll("{-y}", String(scala2 - 1 - (tessera2.y ?? 0))).replaceAll("{s}", lettera);
+}
+function luogoDelRadar(config = {}, states = {}, casa = {}) {
+  const scritte = {
+    lat: latitudine(config.lat),
+    lon: longitudine(config.lon)
+  };
+  if (scritte.lat !== null && scritte.lon !== null)
+    return { ...scritte, da: "scritte", nome: stringa(config.nome) };
+  const zona = stringa(config.zona);
+  if (zona) {
+    const stato3 = states?.[zona];
+    const lat2 = latitudine(stato3?.attributes?.latitude);
+    const lon2 = longitudine(stato3?.attributes?.longitude);
+    if (lat2 !== null && lon2 !== null)
+      return { lat: lat2, lon: lon2, da: "zona", nome: stringa(stato3?.attributes?.friendly_name) || zona };
+  }
+  const dellaCasa = states?.["zone.home"]?.attributes || {};
+  const lat = latitudine(dellaCasa.latitude ?? casa.latitude);
+  const lon = longitudine(dellaCasa.longitude ?? casa.longitude);
+  if (lat !== null && lon !== null)
+    return {
+      lat,
+      lon,
+      da: "casa",
+      nome: stringa(dellaCasa.friendly_name) || stringa(casa.location_name)
+    };
+  return null;
+}
+function zoneDisponibili(states = {}) {
+  return Object.entries(states || {}).filter(([id, stato3]) => {
+    if (!id.startsWith("zone.") || id === "zone.home") return false;
+    const a = stato3?.attributes || {};
+    return latitudine(a.latitude) !== null && longitudine(a.longitude) !== null;
+  }).map(([id, stato3]) => ({
+    entity: id,
+    nome: stringa(stato3?.attributes?.friendly_name) || id.slice(5)
+  })).sort((a, b) => a.nome.localeCompare(b.nome));
+}
+var SERVIZI_RADAR = Object.freeze({
+  rainviewer: Object.freeze({
+    nome: "RainViewer",
+    elenco: "https://api.rainviewer.com/public/weather-maps.json",
+    modello: "{host}{path}/256/{z}/{x}/{y}/2/1_1.png",
+    /* Ogni quanto l'elenco vale la pena di rileggerlo: i fotogrammi nascono
+     * ogni dieci minuti, e rileggerlo piu' spesso e' chiedere la stessa cosa. */
+    ogni: 10 * 60 * 1e3,
+    /* Fin dove risponde con la pioggia invece che con una scritta.
+     *
+     * Questo numero non viene da un manuale: viene da una schermata. Una
+     * plancia con raggio trenta chilometri chiedeva `z9`, e i quadratini
+     * tornavano tutti «Zoom Level Not Supported» — l'elenco dei fotogrammi
+     * invece arrivava, quindi il servizio c'era e a quel livello non serviva.
+     *
+     * Da quella schermata si sa solo che nove e' troppo. Sette e' il massimo
+     * che la documentazione di RainViewer dichiara per i quadratini della
+     * mappa meteo, ed e' la lettura che ha retto alla revisione: fermarsi a
+     * otto avrebbe lasciato la scritta a chi calcola otto — cioe' a schermi di
+     * poco piu' stretti di quello della segnalazione — e avrebbe rifatto lo
+     * stesso difetto un gradino piu' in basso.
+     *
+     * Chi ha un servizio che a nove risponde eccome non paga questo numero:
+     * la casella nella scheda lo alza, lo abbassa, o lo toglie del tutto. Un
+     * numero che nasce da una schermata sola non e' una legge, e sta dove si
+     * puo' cambiare. */
+    zoomMassimo: 7
+  })
+});
+var FONDI_MAPPA = Object.freeze({
+  esri: Object.freeze({
+    nome: "Esri · Strade",
+    modello: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+    attribuzione: "Esri"
+  }),
+  /* Grigio chiaro: sotto i colori della pioggia si legge meglio di una mappa
+   * a colori pieni, che con il rosso del temporale sopra diventa una zuppa. */
+  esriChiaro: Object.freeze({
+    nome: "Esri · Grigio chiaro",
+    modello: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    attribuzione: "Esri"
+  })
+});
+var FONDI_RITIRATI = Object.freeze({ carto: "esri", osm: "esri" });
+var OSPITI_RITIRATI = [
+  /(^|\.)cartocdn\.com$/i,
+  /(^|\.)carto\.com$/i,
+  /(^|\.)tile\.openstreetmap\.org$/i,
+  /(^|\.)tile\.osm\.org$/i
+];
+function indirizzoRitirato(modello2) {
+  const testo2 = stringa(modello2);
+  if (!testo2) return false;
+  const pulito61 = testo2.replaceAll(/\{-?[a-z]\}/gi, "1");
+  let ospite3 = "";
+  try {
+    ospite3 = new URL(pulito61).hostname;
+  } catch (_errore) {
+    const trovato = /^[a-z]+:\/\/([^/?#]+)/i.exec(pulito61);
+    ospite3 = trovato ? trovato[1] : "";
+  }
+  if (!ospite3) return false;
+  return OSPITI_RITIRATI.some((forma2) => forma2.test(ospite3));
+}
+var FOTOGRAMMI_ANIMATI = 6;
+function fotogrammiRainViewer(elenco15, quanti2 = FOTOGRAMMI_ANIMATI) {
+  const host2 = stringa(elenco15?.host);
+  if (!host2) return [];
+  const tetto = Number(quanti2);
+  const quanti_ = Number.isFinite(tetto) && tetto > 0 ? Math.floor(tetto) : FOTOGRAMMI_ANIMATI;
+  const passati = Array.isArray(elenco15?.radar?.past) ? elenco15.radar.past : [];
+  const puliti = passati.filter((voce3) => stringa(voce3?.path));
+  return puliti.slice(-quanti_).map((voce3) => {
+    const quando4 = Number(voce3.time);
+    return {
+      host: host2.replace(/\/+$/, ""),
+      path: stringa(voce3.path),
+      time: Number.isFinite(quando4) ? quando4 : null
+    };
+  });
+}
+function fotogrammaRainViewer(elenco15) {
+  const tutti = fotogrammiRainViewer(elenco15, FOTOGRAMMI_ANIMATI);
+  return tutti.length ? tutti[tutti.length - 1] : null;
+}
+function modelloDelServizio(servizio2, fotogramma2 = null) {
+  const scelto = SERVIZI_RADAR[stringa(servizio2)];
+  if (!scelto) return "";
+  let modello2 = scelto.modello;
+  if (modello2.includes("{host}") || modello2.includes("{path}")) {
+    const host2 = stringa(fotogramma2?.host);
+    const path = stringa(fotogramma2?.path);
+    if (!host2 || !path) return "";
+    modello2 = modello2.replaceAll("{host}", host2).replaceAll("{path}", path);
+  }
+  return /\{[zxy]\}/.test(modello2) ? modello2 : "";
+}
+function modelliDelServizio(servizio2, fotogrammi = []) {
+  const elenco15 = Array.isArray(fotogrammi) ? fotogrammi : [];
+  return elenco15.map((fotogramma2) => ({ modello: modelloDelServizio(servizio2, fotogramma2), fotogramma: fotogramma2 })).filter((voce3) => voce3.modello);
+}
+var SERVIZIO_DI_SERIE = "rainviewer";
+var FONDO_DI_SERIE = "esri";
+var NIENTE = Object.freeze(["nessuno", "nessuna", "none"]);
+function fondoDelRadar(config = {}) {
+  const niente = { modello: "", attribuzione: "" };
+  const voce3 = (preset) => ({
+    modello: preset.modello,
+    attribuzione: stringa(preset.attribuzione)
+  });
+  const dellaSerie = FONDI_MAPPA[FONDO_DI_SERIE];
+  let fondo = stringa(config?.fondo);
+  if (NIENTE.includes(fondo.toLowerCase())) return niente;
+  if (FONDI_RITIRATI[fondo]) fondo = FONDI_RITIRATI[fondo];
+  if (FONDI_MAPPA[fondo]) return voce3(FONDI_MAPPA[fondo]);
+  const suo2 = (indirizzo) => indirizzoRitirato(indirizzo) ? voce3(dellaSerie) : { modello: indirizzo, attribuzione: "" };
+  if (fondo === "modello") {
+    const mio = stringa(config?.fondoModello);
+    return /\{[zxy]\}/.test(mio) ? suo2(mio) : niente;
+  }
+  if (/\{[zxy]\}/.test(fondo)) return suo2(fondo);
+  if (!fondo) return voce3(dellaSerie);
+  return niente;
+}
+function modelloDelFondo(config = {}) {
+  return fondoDelRadar(config).modello;
+}
+function attribuzioneDelFondo(config = {}) {
+  return fondoDelRadar(config).attribuzione;
+}
+
 // src/sections/gdanav-section.js
 var GDANAV_PAGE_ID = "page-gdanav";
 var GDANAV_TAB = "gdanav";
@@ -103023,7 +103301,8 @@ function elenco12() {
   ).join("");
 }
 var TESSERA2 = 256;
-var ZOOM_MASSIMO = 16;
+var FONDO3 = FONDI_MAPPA.esri;
+var ZOOM_MASSIMO2 = 16;
 function inPixel2(lon, lat, zoom) {
   const scala2 = TESSERA2 * 2 ** zoom;
   const fi = Math.max(-85, Math.min(85, lat)) * Math.PI / 180;
@@ -103035,7 +103314,7 @@ function inPixel2(lon, lat, zoom) {
 function inquadra(punti, larga, alta, margine = 36) {
   const buoni = punti.filter((p) => Number.isFinite(p?.[0]) && Number.isFinite(p?.[1]));
   if (!buoni.length) return null;
-  for (let zoom = ZOOM_MASSIMO; zoom >= 2; zoom -= 1) {
+  for (let zoom = ZOOM_MASSIMO2; zoom >= 2; zoom -= 1) {
     const px = buoni.map(([lon, lat]) => inPixel2(lon, lat, zoom));
     const xs = px.map((p) => p[0]);
     const ys = px.map((p) => p[1]);
@@ -103064,7 +103343,7 @@ function tessereSotto(vista2, larga, alta) {
     for (let tx = prime[0]; tx <= ultime[0]; tx += 1) {
       const x = (tx % n + n) % n;
       fuori.push(
-        `<image href="https://tile.openstreetmap.org/${vista2.zoom}/${x}/${ty}.png" x="${(tx * TESSERA2 - vista2.x0).toFixed(1)}" y="${(ty * TESSERA2 - vista2.y0).toFixed(1)}" width="${TESSERA2}" height="${TESSERA2}"/>`
+        `<image href="${esc(FONDO3.modello.replace("{z}", vista2.zoom).replace("{x}", x).replace("{y}", ty))}" x="${(tx * TESSERA2 - vista2.x0).toFixed(1)}" y="${(ty * TESSERA2 - vista2.y0).toFixed(1)}" width="${TESSERA2}" height="${TESSERA2}"/>`
       );
     }
   }
@@ -103100,14 +103379,20 @@ function mappa(b) {
     ${inizio && punti.length ? `<circle cx="${inizio[0]}" cy="${inizio[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
     ${fine ? `<circle cx="${fine[0]}" cy="${fine[1]}" r="10" fill="#dc2626" stroke="#fff" stroke-width="4"/>` : ""}
     ${segnoCasa ? `<circle cx="${segnoCasa[0]}" cy="${segnoCasa[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
-  </svg><span class="dm-gn-osm">© OpenStreetMap</span></div>`;
+  </svg><span class="dm-gn-osm">© ${esc(FONDO3.attribuzione)}</span></div>`;
 }
 function parolaDellaRicerca() {
   if (state120.proposte.length || !state120.ricerca || !clean(state120.cercando)) return "";
   const parole4 = {
     cerco: t("Cerco…", "Searching…"),
-    vuota: t("Nessun posto con questo nome. Prova ad aggiungere la città.", "No place with this name. Try adding the city."),
-    guasto: t("La ricerca degli indirizzi non risponde: riprova fra poco.", "Address search is not answering: try again shortly.")
+    vuota: t(
+      "Nessun posto con questo nome. Prova ad aggiungere la città.",
+      "No place with this name. Try adding the city."
+    ),
+    guasto: t(
+      "La ricerca degli indirizzi non risponde: riprova fra poco.",
+      "Address search is not answering: try again shortly."
+    )
   };
   return `<div class="dm-gn-ricerca" data-gn-ricerca="${esc(state120.ricerca)}" role="status">${esc(parole4[state120.ricerca] || "")}</div>`;
 }
@@ -107526,284 +107811,6 @@ function installAvatar3dStyle() {
       .dm-avatar-3d{animation:none;transform:none}
     `
   );
-}
-
-// src/core/radar-mappa.js
-var LATO_TESSERA = 256;
-var METRI_PER_PIXEL_ZERO = 156543.03392804097;
-var ZOOM_MINIMO = 3;
-var ZOOM_MASSIMO2 = 12;
-var numero49 = (valore3) => {
-  if (valore3 === null || valore3 === void 0 || String(valore3).trim() === "") return null;
-  const n = Number(valore3);
-  return Number.isFinite(n) ? n : null;
-};
-var stringa = (valore3) => String(valore3 ?? "").trim();
-function latitudine(valore3) {
-  const n = numero49(valore3);
-  return n === null || n < -85.05112878 || n > 85.05112878 ? null : n;
-}
-function longitudine(valore3) {
-  const n = numero49(valore3);
-  return n === null || n < -180 || n > 180 ? null : n;
-}
-function tesseraDelPunto(lat, lon, zoom) {
-  const scala2 = 2 ** zoom;
-  const radianti = lat * Math.PI / 180;
-  const x = (lon + 180) / 360 * scala2;
-  const y = (1 - Math.log(Math.tan(radianti) + 1 / Math.cos(radianti)) / Math.PI) / 2 * scala2;
-  return { x, y };
-}
-function metriPerPixel(lat, zoom) {
-  return METRI_PER_PIXEL_ZERO * Math.cos(lat * Math.PI / 180) / 2 ** zoom;
-}
-function zoomPerRaggio(lat, raggioKm, latoPx) {
-  const raggio = numero49(raggioKm);
-  const lato = numero49(latoPx);
-  const dove = latitudine(lat);
-  if (!raggio || raggio <= 0 || !lato || lato <= 0 || dove === null) return ZOOM_MINIMO;
-  const metriVoluti = raggio * 2e3;
-  const ideale = Math.log2(
-    METRI_PER_PIXEL_ZERO * Math.cos(dove * Math.PI / 180) * lato / metriVoluti
-  );
-  return Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO2, Math.floor(ideale)));
-}
-function finestraDiTessere(lat, lon, opzioni = {}) {
-  const dove = latitudine(lat);
-  const quanto = longitudine(lon);
-  if (dove === null || quanto === null) return null;
-  const lato = Math.max(64, numero49(opzioni.latoPx) || 320);
-  const alto = Math.max(64, numero49(opzioni.altoPx) || lato);
-  const tessera2 = numero49(opzioni.lato) || LATO_TESSERA;
-  const zoom = numero49(opzioni.zoom) === null ? zoomPerRaggio(dove, numero49(opzioni.raggioKm) || 30, Math.min(lato, alto)) : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO2, Math.round(numero49(opzioni.zoom))));
-  const centro2 = tesseraDelPunto(dove, quanto, zoom);
-  const centroPx = { x: centro2.x * tessera2, y: centro2.y * tessera2 };
-  const origine = { x: centroPx.x - lato / 2, y: centroPx.y - alto / 2 };
-  const primaX = Math.floor(origine.x / tessera2);
-  const primaY = Math.floor(origine.y / tessera2);
-  const quanteX = Math.ceil((origine.x + lato) / tessera2) - primaX;
-  const quanteY = Math.ceil((origine.y + alto) / tessera2) - primaY;
-  const scala2 = 2 ** zoom;
-  const tessere = [];
-  for (let ry = 0; ry < quanteY; ry += 1) {
-    for (let rx = 0; rx < quanteX; rx += 1) {
-      const x = primaX + rx;
-      const y = primaY + ry;
-      if (y < 0 || y >= scala2) continue;
-      tessere.push({
-        x: (x % scala2 + scala2) % scala2,
-        y,
-        sx: Math.round(x * tessera2 - origine.x),
-        sy: Math.round(y * tessera2 - origine.y),
-        lato: tessera2
-      });
-    }
-  }
-  return { zoom, lato, alto, tessera: tessera2, tessere, metriPerPixel: metriPerPixel(dove, zoom) };
-}
-function zoomDellaPioggia(config = {}, servizio2 = "") {
-  const scritto2 = numero49(config?.zoomPioggia);
-  if (scritto2 !== null)
-    return scritto2 <= 0 ? null : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO2, Math.round(scritto2)));
-  const suo2 = numero49(SERVIZI_RADAR[stringa(servizio2)]?.zoomMassimo);
-  return suo2 === null ? numero49(SERVIZI_RADAR[SERVIZIO_DI_SERIE]?.zoomMassimo) : suo2;
-}
-function finestraDellaPioggia(lat, lon, finestra6, zoomMassimo = null) {
-  if (!finestra6) return null;
-  const tetto = numero49(zoomMassimo);
-  if (tetto === null || finestra6.zoom <= tetto) return finestra6;
-  const salto = finestra6.zoom - Math.max(ZOOM_MINIMO, Math.round(tetto));
-  const fattore = 2 ** salto;
-  const piu = finestraDiTessere(lat, lon, {
-    latoPx: finestra6.lato,
-    altoPx: finestra6.alto,
-    zoom: finestra6.zoom - salto,
-    lato: finestra6.tessera * fattore
-  });
-  return piu || finestra6;
-}
-function problemaDellIndirizzo(indirizzo) {
-  const testo2 = stringa(indirizzo);
-  if (!testo2) return "vuoto";
-  if (/\{-?[zxy]\}/.test(testo2)) {
-    return /\{z\}/.test(testo2) && /\{x\}/.test(testo2) && /\{-?y\}/.test(testo2) ? "" : "segnaposto-a-meta";
-  }
-  if (/^https?:\/\//i.test(testo2)) return "sito";
-  return "senza-segnaposto";
-}
-function urlDellaTessera(modello2, tessera2 = {}, zoom = 0, sottodomini = "abc") {
-  const testo2 = stringa(modello2);
-  if (!testo2 || !/\{[zxy]\}/.test(testo2)) return "";
-  const scala2 = 2 ** zoom;
-  const lettera = sottodomini ? sottodomini[Math.abs((tessera2.x || 0) + (tessera2.y || 0)) % sottodomini.length] : "";
-  return testo2.replaceAll("{z}", String(zoom)).replaceAll("{x}", String(tessera2.x ?? 0)).replaceAll("{y}", String(tessera2.y ?? 0)).replaceAll("{-y}", String(scala2 - 1 - (tessera2.y ?? 0))).replaceAll("{s}", lettera);
-}
-function luogoDelRadar(config = {}, states = {}, casa = {}) {
-  const scritte = {
-    lat: latitudine(config.lat),
-    lon: longitudine(config.lon)
-  };
-  if (scritte.lat !== null && scritte.lon !== null)
-    return { ...scritte, da: "scritte", nome: stringa(config.nome) };
-  const zona = stringa(config.zona);
-  if (zona) {
-    const stato3 = states?.[zona];
-    const lat2 = latitudine(stato3?.attributes?.latitude);
-    const lon2 = longitudine(stato3?.attributes?.longitude);
-    if (lat2 !== null && lon2 !== null)
-      return { lat: lat2, lon: lon2, da: "zona", nome: stringa(stato3?.attributes?.friendly_name) || zona };
-  }
-  const dellaCasa = states?.["zone.home"]?.attributes || {};
-  const lat = latitudine(dellaCasa.latitude ?? casa.latitude);
-  const lon = longitudine(dellaCasa.longitude ?? casa.longitude);
-  if (lat !== null && lon !== null)
-    return {
-      lat,
-      lon,
-      da: "casa",
-      nome: stringa(dellaCasa.friendly_name) || stringa(casa.location_name)
-    };
-  return null;
-}
-function zoneDisponibili(states = {}) {
-  return Object.entries(states || {}).filter(([id, stato3]) => {
-    if (!id.startsWith("zone.") || id === "zone.home") return false;
-    const a = stato3?.attributes || {};
-    return latitudine(a.latitude) !== null && longitudine(a.longitude) !== null;
-  }).map(([id, stato3]) => ({
-    entity: id,
-    nome: stringa(stato3?.attributes?.friendly_name) || id.slice(5)
-  })).sort((a, b) => a.nome.localeCompare(b.nome));
-}
-var SERVIZI_RADAR = Object.freeze({
-  rainviewer: Object.freeze({
-    nome: "RainViewer",
-    elenco: "https://api.rainviewer.com/public/weather-maps.json",
-    modello: "{host}{path}/256/{z}/{x}/{y}/2/1_1.png",
-    /* Ogni quanto l'elenco vale la pena di rileggerlo: i fotogrammi nascono
-     * ogni dieci minuti, e rileggerlo piu' spesso e' chiedere la stessa cosa. */
-    ogni: 10 * 60 * 1e3,
-    /* Fin dove risponde con la pioggia invece che con una scritta.
-     *
-     * Questo numero non viene da un manuale: viene da una schermata. Una
-     * plancia con raggio trenta chilometri chiedeva `z9`, e i quadratini
-     * tornavano tutti «Zoom Level Not Supported» — l'elenco dei fotogrammi
-     * invece arrivava, quindi il servizio c'era e a quel livello non serviva.
-     *
-     * Da quella schermata si sa solo che nove e' troppo. Sette e' il massimo
-     * che la documentazione di RainViewer dichiara per i quadratini della
-     * mappa meteo, ed e' la lettura che ha retto alla revisione: fermarsi a
-     * otto avrebbe lasciato la scritta a chi calcola otto — cioe' a schermi di
-     * poco piu' stretti di quello della segnalazione — e avrebbe rifatto lo
-     * stesso difetto un gradino piu' in basso.
-     *
-     * Chi ha un servizio che a nove risponde eccome non paga questo numero:
-     * la casella nella scheda lo alza, lo abbassa, o lo toglie del tutto. Un
-     * numero che nasce da una schermata sola non e' una legge, e sta dove si
-     * puo' cambiare. */
-    zoomMassimo: 7
-  })
-});
-var FONDI_MAPPA = Object.freeze({
-  esri: Object.freeze({
-    nome: "Esri · Strade",
-    modello: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-    attribuzione: "Esri"
-  }),
-  /* Grigio chiaro: sotto i colori della pioggia si legge meglio di una mappa
-   * a colori pieni, che con il rosso del temporale sopra diventa una zuppa. */
-  esriChiaro: Object.freeze({
-    nome: "Esri · Grigio chiaro",
-    modello: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-    attribuzione: "Esri"
-  })
-});
-var FONDI_RITIRATI = Object.freeze({ carto: "esri", osm: "esri" });
-var OSPITI_RITIRATI = [
-  /(^|\.)cartocdn\.com$/i,
-  /(^|\.)carto\.com$/i,
-  /(^|\.)tile\.openstreetmap\.org$/i,
-  /(^|\.)tile\.osm\.org$/i
-];
-function indirizzoRitirato(modello2) {
-  const testo2 = stringa(modello2);
-  if (!testo2) return false;
-  const pulito61 = testo2.replaceAll(/\{-?[a-z]\}/gi, "1");
-  let ospite3 = "";
-  try {
-    ospite3 = new URL(pulito61).hostname;
-  } catch (_errore) {
-    const trovato = /^[a-z]+:\/\/([^/?#]+)/i.exec(pulito61);
-    ospite3 = trovato ? trovato[1] : "";
-  }
-  if (!ospite3) return false;
-  return OSPITI_RITIRATI.some((forma2) => forma2.test(ospite3));
-}
-var FOTOGRAMMI_ANIMATI = 6;
-function fotogrammiRainViewer(elenco15, quanti2 = FOTOGRAMMI_ANIMATI) {
-  const host2 = stringa(elenco15?.host);
-  if (!host2) return [];
-  const tetto = Number(quanti2);
-  const quanti_ = Number.isFinite(tetto) && tetto > 0 ? Math.floor(tetto) : FOTOGRAMMI_ANIMATI;
-  const passati = Array.isArray(elenco15?.radar?.past) ? elenco15.radar.past : [];
-  const puliti = passati.filter((voce3) => stringa(voce3?.path));
-  return puliti.slice(-quanti_).map((voce3) => {
-    const quando4 = Number(voce3.time);
-    return {
-      host: host2.replace(/\/+$/, ""),
-      path: stringa(voce3.path),
-      time: Number.isFinite(quando4) ? quando4 : null
-    };
-  });
-}
-function fotogrammaRainViewer(elenco15) {
-  const tutti = fotogrammiRainViewer(elenco15, FOTOGRAMMI_ANIMATI);
-  return tutti.length ? tutti[tutti.length - 1] : null;
-}
-function modelloDelServizio(servizio2, fotogramma2 = null) {
-  const scelto = SERVIZI_RADAR[stringa(servizio2)];
-  if (!scelto) return "";
-  let modello2 = scelto.modello;
-  if (modello2.includes("{host}") || modello2.includes("{path}")) {
-    const host2 = stringa(fotogramma2?.host);
-    const path = stringa(fotogramma2?.path);
-    if (!host2 || !path) return "";
-    modello2 = modello2.replaceAll("{host}", host2).replaceAll("{path}", path);
-  }
-  return /\{[zxy]\}/.test(modello2) ? modello2 : "";
-}
-function modelliDelServizio(servizio2, fotogrammi = []) {
-  const elenco15 = Array.isArray(fotogrammi) ? fotogrammi : [];
-  return elenco15.map((fotogramma2) => ({ modello: modelloDelServizio(servizio2, fotogramma2), fotogramma: fotogramma2 })).filter((voce3) => voce3.modello);
-}
-var SERVIZIO_DI_SERIE = "rainviewer";
-var FONDO_DI_SERIE = "esri";
-var NIENTE = Object.freeze(["nessuno", "nessuna", "none"]);
-function fondoDelRadar(config = {}) {
-  const niente = { modello: "", attribuzione: "" };
-  const voce3 = (preset) => ({
-    modello: preset.modello,
-    attribuzione: stringa(preset.attribuzione)
-  });
-  const dellaSerie = FONDI_MAPPA[FONDO_DI_SERIE];
-  let fondo = stringa(config?.fondo);
-  if (NIENTE.includes(fondo.toLowerCase())) return niente;
-  if (FONDI_RITIRATI[fondo]) fondo = FONDI_RITIRATI[fondo];
-  if (FONDI_MAPPA[fondo]) return voce3(FONDI_MAPPA[fondo]);
-  const suo2 = (indirizzo) => indirizzoRitirato(indirizzo) ? voce3(dellaSerie) : { modello: indirizzo, attribuzione: "" };
-  if (fondo === "modello") {
-    const mio = stringa(config?.fondoModello);
-    return /\{[zxy]\}/.test(mio) ? suo2(mio) : niente;
-  }
-  if (/\{[zxy]\}/.test(fondo)) return suo2(fondo);
-  if (!fondo) return voce3(dellaSerie);
-  return niente;
-}
-function modelloDelFondo(config = {}) {
-  return fondoDelRadar(config).modello;
-}
-function attribuzioneDelFondo(config = {}) {
-  return fondoDelRadar(config).attribuzione;
 }
 
 // src/core/la-persona-nel-navigatore.js

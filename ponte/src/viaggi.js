@@ -63,6 +63,40 @@ function numero(valore) {
   return Number.isFinite(n) ? n : null;
 }
 
+/* Il numero civico scritto nella ricerca, se c'e'.
+ *
+ * «Non mi fa ricercare per numeri civici»: «via sandro pertini 82 aversa»
+ * tornava «Via Sandro Pertini · Aversa», e l'82 spariva. OpenStreetMap ha i
+ * numeri civici solo dove qualcuno li ha disegnati — in Italia, spesso no — e
+ * allora Photon risponde con la via intera. Il numero lo sa solo chi l'ha
+ * scritto: si prende qui, e si rimette sul nome della via.
+ *
+ * E' l'ultimo numero di una a quattro cifre (con la lettera o la barra:
+ * «12b», «12/a», «n. 12»), non un CAP, e non quello dentro un nome come «via 4
+ * Novembre» o «corso XX Settembre», che e' seguito da un mese. */
+const MESI =
+  /^(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)$/i;
+
+export function civicoScritto(cercato) {
+  const parole = testo(cercato, 120)
+    .replace(/\bn[.°º]\s*(?=\d)/gi, "")
+    .split(/[\s,]+/)
+    .filter(Boolean);
+  for (let i = parole.length - 1; i > 0; i -= 1) {
+    const parola = parole[i];
+    if (!/^\d{1,4}(?:[a-z]|\/[a-z0-9]{1,3})?$/i.test(parola)) continue;
+    if (MESI.test(parole[i + 1] || "")) return "";
+    return parola.toLowerCase();
+  }
+  return "";
+}
+
+/* Il nome di una via col civico che si e' scritto, se non ce l'ha gia'. */
+function conIlCivico(nomeDellaVia, civico) {
+  if (!civico || !nomeDellaVia) return nomeDellaVia;
+  return /\d/.test(nomeDellaVia.split(" ").pop()) ? nomeDellaVia : `${nomeDellaVia} ${civico}`;
+}
+
 /* Un posto: un nome e le sue coordinate, buone. */
 export function postoPulito(dato) {
   if (!dato || typeof dato !== "object") return null;
@@ -375,6 +409,29 @@ export class Viaggi {
     const cosa = testo(testoCercato, 120);
     if (cosa.length < 3) return { posti: [] };
     const casa = await this._casaQui();
+    /* Con un civico si chiede a tutti e due: uno dei due puo' conoscere
+     * proprio quel numero, e allora va primo. Se nessuno lo conosce, la via
+     * col numero scritto — il punto e' sulla via, non sul portone. */
+    const civico = civicoScritto(cosa);
+    if (civico) {
+      const [daPhoton, daNominatim] = await Promise.all([
+        this._daPhoton(cosa, casa, civico),
+        this._daNominatim(cosa, casa, civico),
+      ]);
+      if (daPhoton === null && daNominatim === null) return { posti: [], guasto: true };
+      const visti = new Set();
+      const posti = [...(daPhoton || []), ...(daNominatim || [])]
+        .sort((a, b) => Number(Boolean(b.esatto)) - Number(Boolean(a.esatto)))
+        .filter((posto) => {
+          const chiave = posto.nome.toLowerCase();
+          if (visti.has(chiave)) return false;
+          visti.add(chiave);
+          return true;
+        })
+        .slice(0, 6)
+        .map(({ esatto: _esatto, ...posto }) => posto);
+      return { posti };
+    }
     let guasti = 0;
     for (const fonte of [() => this._daPhoton(cosa, casa), () => this._daNominatim(cosa, casa)]) {
       const posti = await fonte();
@@ -399,8 +456,13 @@ export class Viaggi {
         this.registro.attenzione(`viaggi: ${chi} ha risposto ${risposta.status}`);
         return null;
       }
+      /* `esatto`: chi ha risposto conosce proprio il civico scritto. Serve solo
+       * a metterlo primo, e non esce dalla casa. */
       return leggi(await risposta.json())
-        .map(postoPulito)
+        .map((grezzo) => {
+          const posto = postoPulito(grezzo);
+          return posto && grezzo?.esatto ? { ...posto, esatto: true } : posto;
+        })
         .filter(Boolean)
         .slice(0, 6);
     } catch (errore) {
@@ -409,7 +471,7 @@ export class Viaggi {
     }
   }
 
-  _daPhoton(cosa, casa) {
+  _daPhoton(cosa, casa, civico = "") {
     const indirizzo = new URL("https://photon.komoot.io/api/");
     indirizzo.searchParams.set("q", cosa);
     indirizzo.searchParams.set("limit", "6");
@@ -424,15 +486,21 @@ export class Viaggi {
         (dati?.features || []).map((f) => {
           const p = f?.properties || {};
           const [lon, lat] = f?.geometry?.coordinates || [];
-          const nome = [p.name || p.street, p.housenumber].filter(Boolean).join(" ");
+          const via = [p.name || p.street, p.housenumber].filter(Boolean).join(" ");
+          const nome = !p.housenumber && p.osm_key === "highway" ? conIlCivico(via, civico) : via;
           const dove = [p.city || p.town || p.village, p.state].filter(Boolean).join(", ");
-          return { nome: [nome, dove].filter(Boolean).join(" · ") || dove, lat, lon };
+          return {
+            nome: [nome, dove].filter(Boolean).join(" · ") || dove,
+            lat,
+            lon,
+            esatto: Boolean(civico) && String(p.housenumber || "").toLowerCase() === civico,
+          };
         }),
       "Photon",
     );
   }
 
-  _daNominatim(cosa, casa) {
+  _daNominatim(cosa, casa, civico = "") {
     const indirizzo = new URL("https://nominatim.openstreetmap.org/search");
     indirizzo.searchParams.set("format", "jsonv2");
     indirizzo.searchParams.set("q", cosa);
@@ -450,14 +518,19 @@ export class Viaggi {
       (dati) =>
         (Array.isArray(dati) ? dati : []).map((r) => {
           const a = r?.address || {};
-          const nome =
+          const via =
             [a.road || r?.name, a.house_number].filter(Boolean).join(" ") ||
             String(r?.display_name || "").split(",")[0];
+          const nome =
+            !a.house_number && (r?.category === "highway" || r?.class === "highway")
+              ? conIlCivico(via, civico)
+              : via;
           const dove = [a.city || a.town || a.village, a.state].filter(Boolean).join(", ");
           return {
             nome: [nome, dove].filter(Boolean).join(" · ") || dove,
             lat: Number(r?.lat),
             lon: Number(r?.lon),
+            esatto: Boolean(civico) && String(a.house_number || "").toLowerCase() === civico,
           };
         }),
       "Nominatim",

@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  civicoScritto,
   durataDelViaggio,
   MARGINE_SENZA_TRAFFICO,
   prossimaVolta,
@@ -333,4 +334,95 @@ test("cerca: se Photon non risponde, chiede a Nominatim", async () => {
     }),
   });
   assert.deepEqual(await vuota.cerca("xqzzyw"), { posti: [] });
+});
+
+test("il numero civico scritto si legge, e non quello dentro un nome", () => {
+  assert.equal(civicoScritto("via sandro pertini 82 aversa"), "82");
+  assert.equal(civicoScritto("Via Roma, 12/B Caserta"), "12/b");
+  assert.equal(civicoScritto("corso umberto n. 7 napoli"), "7");
+  assert.equal(civicoScritto("via 4 novembre aversa"), "");
+  assert.equal(civicoScritto("via 4 novembre 15 aversa"), "15");
+  assert.equal(civicoScritto("via roma 81031 aversa"), "");
+  assert.equal(civicoScritto("napoli"), "");
+  assert.equal(civicoScritto("82"), "");
+});
+
+test("cerca col civico: chi conosce il numero va primo, sennò la via col numero scritto", async () => {
+  /* «Non mi fa ricercare per numeri civici»: Photon conosceva solo la via. */
+  const chiesti = [];
+  const risponde = ({ photonCivico = false, nominatimCivico = false } = {}) =>
+    new Viaggi({
+      casa: casaFinta(),
+      licenze: { attive: false },
+      ogni: () => null,
+      scarica: async (indirizzo) => {
+        chiesti.push(indirizzo);
+        if (indirizzo.includes("photon"))
+          return {
+            ok: true,
+            json: async () => ({
+              features: [
+                {
+                  properties: {
+                    osm_key: photonCivico ? "place" : "highway",
+                    name: photonCivico ? undefined : "Via Sandro Pertini",
+                    street: "Via Sandro Pertini",
+                    housenumber: photonCivico ? "82" : undefined,
+                    city: "Aversa",
+                    state: "Campania",
+                  },
+                  geometry: { coordinates: [14.2, 40.97] },
+                },
+              ],
+            }),
+          };
+        return {
+          ok: true,
+          json: async () =>
+            nominatimCivico
+              ? [
+                  {
+                    lat: "40.9712",
+                    lon: "14.2061",
+                    category: "place",
+                    address: {
+                      road: "Via Sandro Pertini",
+                      house_number: "82",
+                      town: "Aversa",
+                      state: "Campania",
+                    },
+                  },
+                ]
+              : [],
+        };
+      },
+    });
+
+  /* Nessuno conosce l'82: la via, col numero che si e' scritto. */
+  const soloLaVia = await risponde().cerca("via sandro pertini 82 aversa");
+  assert.deepEqual(
+    soloLaVia.posti.map((p) => p.nome),
+    ["Via Sandro Pertini 82 · Aversa, Campania"],
+  );
+  assert.equal(soloLaVia.posti[0].esatto, undefined);
+  /* Si e' chiesto a tutti e due. */
+  assert.ok(chiesti.some((u) => u.includes("photon")));
+  assert.ok(chiesti.some((u) => u.includes("nominatim")));
+
+  /* Nominatim conosce proprio quel portone: va primo, anche se arriva dopo. */
+  const conIlPortone = await risponde({ nominatimCivico: true }).cerca(
+    "via sandro pertini 82 aversa",
+  );
+  assert.equal(conIlPortone.posti[0].lat, 40.9712);
+  assert.equal(conIlPortone.posti[0].nome, "Via Sandro Pertini 82 · Aversa, Campania");
+  assert.equal(
+    conIlPortone.posti.length,
+    1,
+    "la via col numero e il portone hanno lo stesso nome: uno solo",
+  );
+
+  /* Senza civico tutto come prima: Photon, e Nominatim solo se serve. */
+  chiesti.length = 0;
+  await risponde().cerca("via sandro pertini aversa");
+  assert.ok(chiesti.every((u) => u.includes("photon")));
 });
