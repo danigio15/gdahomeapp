@@ -125,6 +125,17 @@ if (process.argv[1] && process.argv[1].endsWith("sigilla-la-plancia.mjs")) {
     );
     process.exit(aPosto ? 0 : 1);
   }
+  /* Le versioni che la plancia dice di se' (la scheda Runtime del config):
+   * quelle di gdahome, rimesse in pari a ogni sigillo. */
+  try {
+    execFileSync("python3", ["scripts/generate_build_info.py", "--if-changed"], {
+      cwd: join(RADICE, "officina"),
+      stdio: "inherit",
+    });
+  } catch (errore) {
+    console.error(`le versioni della plancia non si sono rifatte: ${errore.message}`);
+    process.exit(1);
+  }
   const moduli = impacchetta(PLANCIA);
   console.log(`pacchetto rifatto: ${moduli} moduli`);
   const nuovo = ilSigillo(PLANCIA, { prima, commit: ilCommit() });

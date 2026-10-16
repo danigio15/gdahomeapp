@@ -5,9 +5,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-const manifest = JSON.parse(
-  readFileSync("custom_components/dashboardmodern/manifest.json", "utf8"),
-);
+/* La versione e' quella di gdahome (`ponte/config.yaml`), non quella
+ * vecchia della plancia: la scheda Runtime la mostra. */
+const manifest = {
+  version: readFileSync("../ponte/config.yaml", "utf8").match(/^version:\s*"([^"]+)"/m)[1],
+};
 
 test("build info is generated from HEAD and exposes one canonical release version", () => {
   const head = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
