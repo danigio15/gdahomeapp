@@ -1,5 +1,0 @@
-# L'immagine ufficiale di Ollama, per le due architetture che ha. Il numero
-# e' fisso: un aggiornamento di Ollama si sceglie, non arriva da solo.
-build_from:
-  aarch64: ollama/ollama:0.9.6
-  amd64: ollama/ollama:0.9.6

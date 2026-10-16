@@ -1,4 +1,0 @@
-configuration:
-  modello:
-    name: Modello
-    description: "Il modello di Ollama da usare. Di serie qwen2.5:1.5b: piccolo (circa 1 GB) e capisce l'italiano. Più grande vuol dire più memoria e più lento."

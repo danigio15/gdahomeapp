@@ -36,8 +36,6 @@ import { fileURLToPath } from "node:url";
 
 const RADICE = dirname(dirname(fileURLToPath(import.meta.url)));
 const MANIFESTO = join(RADICE, "ponte", "config.yaml");
-/* L'add-on gdahome AI (`ia/`) esce con lo stesso numero del ponte. */
-const MANIFESTO_IA = join(RADICE, "ia", "config.yaml");
 const PUBSPEC = join(RADICE, "app", "pubspec.yaml");
 /* E il terzo posto: il numero che l'app **fa vedere**.
  *
@@ -128,8 +126,6 @@ function scrivi(quale) {
   const prima = laVersioneDellAddon(manifesto);
   writeFileSync(MANIFESTO, manifesto.replace(/^version: "[^"]+"$/m, `version: "${quale}"`), "utf8");
   process.stdout.write(`l'add-on: ${prima || "?"} → ${quale}\n`);
-  const ia = readFileSync(MANIFESTO_IA, "utf8");
-  writeFileSync(MANIFESTO_IA, ia.replace(/^version: "[^"]+"$/m, `version: "${quale}"`), "utf8");
 
   /* Il **nome** dell'app segue solo i primi tre numeri — il quarto e' una
    * correzione dell'add-on, e un numero fatto cosi' i negozi non lo prendono —

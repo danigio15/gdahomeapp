@@ -7,10 +7,9 @@
 # altro add-on.
 #
 # Il Supervisor guarda questo file e le cartelle di primo livello che hanno un
-# `config.yaml`: `ponte/` — la cartella si chiama come il pezzo, e l'add-on
-# che ci sta dentro si chiama `gdahome` come il prodotto — e `ia/`, «gdahome
-# AI», l'intelligenza dell'assistente in casa (Ollama), che si installa solo
-# se si vuole. Non serve nessun gettone, perche' questa repository e' pubblica.
+# `config.yaml`: oggi una sola, `ponte/` — la cartella si chiama come il pezzo,
+# e l'add-on che ci sta dentro si chiama `gdahome` come il prodotto. Non serve
+# nessun gettone, perche' questa repository e' pubblica.
 name: gdahome
 url: https://github.com/danigio15/gdahomeapp
 maintainer: danigio15 <https://github.com/danigio15>
