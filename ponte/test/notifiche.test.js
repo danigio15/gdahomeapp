@@ -854,3 +854,20 @@ test("il riepilogo conta i dispositivi giu', non le entita' mute", () => {
   assert.ok(r, "c'e' un dispositivo giu'");
   assert.match(r.parole.it.testo, /^1 dispositivo non connesso$/);
 });
+
+test("l'assistente sa dov'e' una cosa e chi la gestisce: area, marca, automazioni a orario", async () => {
+  const { CapireLaCasa } = await import("../src/capire-la-casa.js");
+  const capire = new CapireLaCasa({ memoria: {} });
+  /* Nomi che non dicono niente: lo dice l'anagrafe di Home Assistant. */
+  capire.descrivi({
+    "light.luce_1": "Giardino · Shelly · Plus 1",
+    "light.mensola": "Soggiorno · Fluval · Aquasky",
+    "binary_sensor.porta_2": "Bagno",
+  });
+  assert.deepEqual(capire.lasciaStare("light.luce_1", "Luce 1"), { perche: "esterno" });
+  assert.deepEqual(capire.lasciaStare("light.mensola", "Mensola"), { perche: "acquario" });
+  assert.equal(capire.portaInterna("binary_sensor.porta_2", "Porta 2", "door"), true);
+  assert.equal(capire.lasciaStare("light.cucina", "Cucina"), null);
+  capire.gestiteDaAutomazioni(["light.cucina"]);
+  assert.deepEqual(capire.lasciaStare("light.cucina", "Cucina"), { perche: "automazione" });
+});

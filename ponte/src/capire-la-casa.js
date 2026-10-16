@@ -41,16 +41,22 @@ const GIORNI_TENUTI = 14;
 
 /* I generi riconosciuti dal nome, e cosa vogliono dire. */
 const GENERI = Object.freeze([
-  ["acquario", /acquari|aquari|vasca\s*pesci|fish\s*tank/i],
+  [
+    "acquario",
+    /acquari|aquari|vasca\s*pesci|fish\s*tank|fluval|juwel|eheim|tetra|aquael|chihiros|aquasky/i,
+  ],
   ["terrario", /terrari|rettil|paludari|vivari/i],
-  ["notte", /notturn|night\s*light|luce\s*(di\s*)?(cortesia|notte)|segnapasso|\bnotte\b/i],
+  [
+    "notte",
+    /notturn|night\s*light|luce\s*(di\s*)?(cortesia|notte)|segnapasso|veilleuse|nachtlicht|nocturn|\bnotte\b/i,
+  ],
   [
     "esterno",
-    /giardin|esterno|esterne|esterni|outdoor|garden|vialett|cortil|terrazz|balcon|portico|facciat|crepuscol/i,
+    /giardin|esterno|esterne|esterni|outdoor|garden|jard|garten|au(ss|ß)en|exterior|ext[eé]rieur|terrasse|vialett|cortil|terrazz|balcon|portico|facciat|crepuscol/i,
   ],
   [
     "sempre",
-    /frig|freezer|congelator|server|router|modem|\bnas\b|switch\s*di\s*rete|firewall|pompa\s*(acquario|pozzo)|allarm|centralin|caldaia|boiler/i,
+    /frig|freezer|congelator|k[uü]hlschrank|gefrier|r[eé]frig[eé]rateur|nevera|server|router|modem|\bnas\b|switch\s*di\s*rete|firewall|pompa\s*(acquario|pozzo)|allarm|centralin|caldaia|boiler/i,
   ],
 ]);
 
@@ -156,6 +162,11 @@ export class CapireLaCasa {
     d.silenzio = voce(d.silenzio);
     d.luci = voce(d.luci);
     d.porte = voce(d.porte);
+    /* Quello che Home Assistant sa gia' di ogni cosa: l'area, la marca e il
+     * modello del dispositivo (`descrivi`), e le luci che accende o spegne
+     * un'automazione a orario (`automatiche`). Non si scrive: si rilegge. */
+    this.descrizioni = {};
+    this.automatiche = new Set();
     this._sporco = false;
   }
 
@@ -270,13 +281,34 @@ export class CapireLaCasa {
       this._salva();
     }
     if (tipo === "luce") {
-      const genere = genereDi(id, nome);
+      const genere = genereDi(id, `${nome} ${this.descrizioni[id] || ""}`);
       if (genere) return { perche: genere };
+      if (this.automatiche.has(id)) return { perche: "automazione" };
       if (this.luceAbituale(id, ora)) return { perche: "abitudine" };
     } else if (this.portaAbituale(id, ora)) {
       return { perche: "abitudine" };
     }
     return null;
+  }
+
+  /**
+   * Quello che Home Assistant sa delle cose: `{ id: "area · marca · modello" }`.
+   * Una luce nell'area «Giardino» e' esterna, una porta nell'area «Bagno» e'
+   * interna, una presa di un controller per acquari e' dell'acquario.
+   */
+  descrivi(descrizioni = {}) {
+    this.descrizioni = descrizioni && typeof descrizioni === "object" ? descrizioni : {};
+  }
+
+  /** Le luci (e le prese) che un'automazione a orario accende o spegne da se'. */
+  gestiteDaAutomazioni(entita = []) {
+    this.automatiche = new Set([].concat(entita).filter((id) => typeof id === "string"));
+  }
+
+  /** Se una porta e' interna: dal nome, o dall'area dove sta. */
+  portaInterna(id, nome = "", classe = "") {
+    const area = this.descrizioni[id] || "";
+    return eInterna(id, `${nome} ${area}`, classe);
   }
 
   /** Butta i giorni vecchi: lo chiama la sentinella una volta ogni tanto. */
