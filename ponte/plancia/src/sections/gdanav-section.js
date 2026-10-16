@@ -22,7 +22,6 @@ import {
   nomeDelViaggio,
   oraDi,
   partenzaEArrivo,
-  proietta,
   quandoDetto,
 } from "../core/i-viaggi.js";
 import {
@@ -51,6 +50,10 @@ const state = (root[KEY] ||= {
   scelto: "",
   proposte: [],
   cercando: "",
+  /* Com'e' andata l'ultima ricerca: "" niente da dire, "cerco", "vuota"
+   * (nessun posto con quel nome), "guasto" (il servizio non risponde). */
+  ricerca: "",
+  casa: null,
   linea: [],
   errore: "",
   salvando: false,
@@ -80,6 +83,7 @@ async function carica() {
     const risposta = await chiedi("elenco");
     state.sbloccato = risposta?.sbloccato !== false;
     state.viaggi = Array.isArray(risposta?.viaggi) ? risposta.viaggi : [];
+    if (risposta?.casa) state.casa = risposta.casa;
     state.errore = "";
   } catch (errore) {
     state.errore = t(
@@ -193,39 +197,114 @@ function elenco() {
     .join("");
 }
 
+/* La cartina sotto la strada.
+ *
+ * «Mappe non ha nulla»: sotto la linea c'era un fondo grigio, e una strada
+ * disegnata nel vuoto non dice dove passa. Adesso sotto ci sono le tessere di
+ * OpenStreetMap — le stesse di ogni mappa libera — scelte allo zoom piu'
+ * grande in cui tutta la strada ci sta, e sopra la linea e le fermate negli
+ * stessi pixel. Niente libreria: sono immagini messe in griglia e un disegno
+ * sopra. Senza meta la cartina mostra la casa, se la si sa. */
+const TESSERA = 256;
+const ZOOM_MASSIMO = 16;
+
+function inPixel(lon, lat, zoom) {
+  const scala = TESSERA * 2 ** zoom;
+  const fi = (Math.max(-85, Math.min(85, lat)) * Math.PI) / 180;
+  return [
+    ((lon + 180) / 360) * scala,
+    ((1 - Math.log(Math.tan(fi) + 1 / Math.cos(fi)) / Math.PI) / 2) * scala,
+  ];
+}
+
+export function inquadra(punti, larga, alta, margine = 36) {
+  const buoni = punti.filter((p) => Number.isFinite(p?.[0]) && Number.isFinite(p?.[1]));
+  if (!buoni.length) return null;
+  for (let zoom = ZOOM_MASSIMO; zoom >= 2; zoom -= 1) {
+    const px = buoni.map(([lon, lat]) => inPixel(lon, lat, zoom));
+    const xs = px.map((p) => p[0]);
+    const ys = px.map((p) => p[1]);
+    const w = Math.max(...xs) - Math.min(...xs);
+    const h = Math.max(...ys) - Math.min(...ys);
+    if (w <= larga - 2 * margine && h <= alta - 2 * margine) {
+      const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+      const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+      /* Un punto solo non ha misura: si sta a uno zoom da quartiere. */
+      const z = buoni.length === 1 ? Math.min(zoom, 13) : zoom;
+      const [ox, oy] = z === zoom ? [cx, cy] : inPixel(buoni[0][0], buoni[0][1], z);
+      return { zoom: z, x0: ox - larga / 2, y0: oy - alta / 2 };
+    }
+  }
+  return null;
+}
+
+function tessereSotto(vista, larga, alta) {
+  const n = 2 ** vista.zoom;
+  const prime = [Math.floor(vista.x0 / TESSERA), Math.floor(vista.y0 / TESSERA)];
+  const ultime = [
+    Math.floor((vista.x0 + larga) / TESSERA),
+    Math.floor((vista.y0 + alta) / TESSERA),
+  ];
+  const fuori = [];
+  for (let ty = prime[1]; ty <= ultime[1]; ty += 1) {
+    if (ty < 0 || ty >= n) continue;
+    for (let tx = prime[0]; tx <= ultime[0]; tx += 1) {
+      const x = ((tx % n) + n) % n;
+      fuori.push(
+        `<image href="https://tile.openstreetmap.org/${vista.zoom}/${x}/${ty}.png" x="${(tx * TESSERA - vista.x0).toFixed(1)}" y="${(ty * TESSERA - vista.y0).toFixed(1)}" width="${TESSERA}" height="${TESSERA}"/>`,
+      );
+    }
+  }
+  return fuori.join("");
+}
+
 function mappa(b) {
   const larga = 600;
-  const alta = 260;
-  const linea = state.linea.length
-    ? state.linea
-    : [b.da, ...b.tappe].filter(Boolean).map((p) => [p.lon, p.lat]);
-  if (linea.length < 2)
+  const alta = 280;
+  const fermateLonLat = [b.da, ...b.tappe].filter(Boolean).map((p) => [p.lon, p.lat]);
+  const linea = state.linea.length ? state.linea : fermateLonLat;
+  const casa = state.casa ? [[state.casa.lon, state.casa.lat]] : [];
+  const daMostrare = linea.length ? linea : fermateLonLat.length ? fermateLonLat : casa;
+  const vista = inquadra(daMostrare.concat(fermateLonLat), larga, alta);
+  if (!vista)
     return `<div class="dm-gn-mappa dm-gn-mappa-vuota">${esc(t("Scegli una meta: qui compare la strada.", "Pick a destination: the route shows here."))}</div>`;
-  const punti = proietta(linea, larga, alta);
+  const qui = ([lon, lat]) => {
+    const [x, y] = inPixel(lon, lat, vista.zoom);
+    return [Number((x - vista.x0).toFixed(1)), Number((y - vista.y0).toFixed(1))];
+  };
+  const punti = linea.length >= 2 ? linea.map(qui) : [];
   const d = punti.map((p, i) => `${i ? "L" : "M"}${p[0]} ${p[1]}`).join(" ");
-  const fermate = proietta(
-    [b.da, ...b.tappe]
-      .filter(Boolean)
-      .map((p) => [p.lon, p.lat])
-      .concat(linea),
-    larga,
-    alta,
-  ).slice(0, (b.da ? 1 : 0) + b.tappe.length);
-  const inizio = punti[0];
-  const fine = punti[punti.length - 1];
-  return `<div class="dm-gn-mappa"><svg viewBox="0 0 ${larga} ${alta}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(t("La strada", "The route"))}">
+  const fermate = fermateLonLat.map(qui);
+  const inizio = punti[0] || (b.da ? fermate[0] : null);
+  const fine = punti[punti.length - 1] || fermate[fermate.length - 1] || null;
+  const segnoCasa = !linea.length && !fermate.length && casa.length ? qui(casa[0]) : null;
+  return `<div class="dm-gn-mappa"><svg viewBox="0 0 ${larga} ${alta}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(t("La strada", "The route"))}">
     <rect width="${larga}" height="${alta}" fill="var(--gn-mappa)"/>
-    <path d="${d}" stroke="#2563eb" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    ${tessereSotto(vista, larga, alta)}
+    ${d ? `<path d="${d}" stroke="#fff" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/><path d="${d}" stroke="#2563eb" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
     ${fermate
-      .slice(0, -1)
+      .slice(b.da ? 1 : 0, -1)
       .map(
         (p) =>
           `<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="#6d28d9" stroke="#fff" stroke-width="3"/>`,
       )
       .join("")}
-    <circle cx="${inizio[0]}" cy="${inizio[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>
-    <circle cx="${fine[0]}" cy="${fine[1]}" r="10" fill="#dc2626" stroke="#fff" stroke-width="4"/>
-  </svg></div>`;
+    ${inizio && punti.length ? `<circle cx="${inizio[0]}" cy="${inizio[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
+    ${fine ? `<circle cx="${fine[0]}" cy="${fine[1]}" r="10" fill="#dc2626" stroke="#fff" stroke-width="4"/>` : ""}
+    ${segnoCasa ? `<circle cx="${segnoCasa[0]}" cy="${segnoCasa[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
+  </svg><span class="dm-gn-osm">© OpenStreetMap</span></div>`;
+}
+
+/* Cosa dire sotto il campo, quando la ricerca non ha proposte da mostrare. */
+function parolaDellaRicerca() {
+  /* Scelta una meta, o svuotato il campo, la ricerca non ha piu' niente da dire. */
+  if (state.proposte.length || !state.ricerca || !clean(state.cercando)) return "";
+  const parole = {
+    cerco: t("Cerco…", "Searching…"),
+    vuota: t("Nessun posto con questo nome. Prova ad aggiungere la città.", "No place with this name. Try adding the city."),
+    guasto: t("La ricerca degli indirizzi non risponde: riprova fra poco.", "Address search is not answering: try again shortly."),
+  };
+  return `<div class="dm-gn-ricerca" data-gn-ricerca="${esc(state.ricerca)}" role="status">${esc(parole[state.ricerca] || "")}</div>`;
 }
 
 function opzioniDiEntita(domini, scelta) {
@@ -320,6 +399,7 @@ function editor() {
         <label class="dm-gn-nomecampo"><input type="text" maxlength="80" placeholder="${esc(t("Nome (facoltativo): «Giro clienti»", "Name (optional): “Client round”"))}" data-gn-campo="nome" value="${esc(b.nome || "")}"></label>
         ${tappe}
         <div class="dm-gn-cerca">🔎 <input type="search" autocomplete="off" placeholder="${esc(b.tipo === "tappe" ? t("Aggiungi una tappa…", "Add a stop…") : b.tappe.length ? t("Cambia la meta…", "Change destination…") : t("Dove vai?", "Where to?"))}" data-gn-cerca value="${esc(state.cercando)}"></div>
+        ${parolaDellaRicerca()}
         ${state.proposte.length ? `<div class="dm-gn-proposte">${state.proposte.map((p, i) => `<button type="button" data-gn-proposta="${i}">📍 ${esc(p.nome)}</button>`).join("")}</div>` : ""}
         ${mappa(b)}
         ${giorno}
@@ -419,15 +499,21 @@ async function cerca(testo) {
   const mia = ++quanteRicerche;
   if (clean(testo).length < 3) {
     state.proposte = [];
+    state.ricerca = "";
     disegna();
     return;
   }
+  state.ricerca = "cerco";
+  disegna();
   try {
-    const risposta = await chiedi("cerca", { testo });
+    const risposta = await chiedi("cerca", { testo }, 20000);
     if (mia !== quanteRicerche) return;
     state.proposte = Array.isArray(risposta?.posti) ? risposta.posti : [];
+    state.ricerca = state.proposte.length ? "" : risposta?.guasto ? "guasto" : "vuota";
   } catch (_errore) {
+    if (mia !== quanteRicerche) return;
     state.proposte = [];
+    state.ricerca = "guasto";
   }
   disegna();
 }
@@ -667,7 +753,10 @@ body.dark-mode .dm-gn,html.dark .dm-gn{--gn-mappa:#1e293b;--gn-card:#111827;--gn
 .dm-gn-sosta{font-size:12.5px;color:var(--gn-piano)}
 .dm-gn-sosta input{width:56px}
 .dm-gn-x{border:0;background:none;color:var(--gn-piano);cursor:pointer;font-size:14px}
-.dm-gn-mappa{border-radius:18px;overflow:hidden;margin:8px 0}
+.dm-gn-mappa{position:relative;border-radius:18px;overflow:hidden;margin:8px 0}
+.dm-gn-osm{position:absolute;right:8px;bottom:6px;padding:1px 6px;border-radius:6px;background:#ffffffd9;color:#334155;font-size:10px;font-weight:700}
+.dm-gn-ricerca{padding:8px 14px;margin:-2px 0 10px;border-radius:12px;font-size:13px;font-weight:700;background:var(--gn-mappa);color:var(--gn-piano)}
+.dm-gn-ricerca[data-gn-ricerca="guasto"]{background:#fef2f2;color:#b91c1c}
 .dm-gn-mappa svg{display:block;width:100%;height:auto}
 .dm-gn-mappa-vuota{height:140px;display:grid;place-items:center;background:var(--gn-mappa);color:var(--gn-piano);font-size:14px;padding:0 16px;text-align:center}
 .dm-gn-campo{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--gn-bordo);font-size:15px}

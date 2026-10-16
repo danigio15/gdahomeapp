@@ -528,7 +528,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-66G7IZEG.js";
+} from "../../chunk-CCI2EVEH.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2793,6 +2793,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cerca…": "Search…",
   "CERCHI SOTTO CASA": "CIRCLES UNDER HOME",
   "Cerchio = stanza": "Circle = room",
+  "Cerco…": "Searching…",
   "Cestino": "Waste bin",
   "Cestino dei rifiuti (problema sì/no)": "Waste bin (problem yes/no)",
   "Che materiale è": "Which material",
@@ -4178,6 +4179,7 @@ var SOURCE_INDEX = Object.freeze({
   "La pulizia": "The cleaning",
   "La rete e il ping": "The network and the ping",
   "La ricarica e il target": "The charge and the target",
+  "La ricerca degli indirizzi non risponde: riprova fra poco.": "Address search is not answering: try again shortly.",
   "La riga in alto": "The top row",
   "La riga in cima alla Home: caldaia accesa e antifurto inserito. Compare da sola solo quando ha qualcosa da dire.": "The row at the top of Home: boiler on and alarm armed. It only shows up when it has something to say.",
   "La risposta finisce sotto la segnalazione, e chi l'ha aperta la trova nella sua plancia.": "The reply goes under the report, and whoever opened it finds it in their own dashboard.",
@@ -4627,6 +4629,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessun pacco risponde": "No pack answering",
   "Nessun parametro aggiunto. Scegline uno dal menu.": "No parameters added. Choose one from the menu.",
   "Nessun piano. Aggiungine uno qui sotto: serve solo se la casa ne ha più di uno.": "No floors yet. Add one below: you only need them if the house has more than one.",
+  "Nessun posto con questo nome. Prova ad aggiungere la città.": "No place with this name. Try adding the city.",
   "Nessun rilevatore configurato": "No detector configured",
   "Nessun rilevatore trovato": "No detector found",
   "Nessun rischio di gelo": "No frost risk",
@@ -102596,27 +102599,6 @@ function quandoDetto(viaggio, adesso = Date.now(), lingua3 = "it") {
   });
   return `${quando4} · ${azione}`;
 }
-function proietta(linea, larga, alta, margine = 28) {
-  const punti = (Array.isArray(linea) ? linea : []).filter(
-    (p) => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1])
-  );
-  if (!punti.length) return [];
-  const latMedia = punti.reduce((s, p) => s + p[1], 0) / punti.length;
-  const k = Math.cos(latMedia * Math.PI / 180) || 1;
-  const xs = punti.map((p) => p[0] * k);
-  const ys = punti.map((p) => p[1]);
-  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  const scala2 = Math.min(
-    (larga - 2 * margine) / Math.max(x1 - x0, 1e-6),
-    (alta - 2 * margine) / Math.max(y1 - y0, 1e-6)
-  );
-  const dx = (larga - (x1 - x0) * scala2) / 2;
-  const dy = (alta - (y1 - y0) * scala2) / 2;
-  return punti.map((_p, i) => [
-    Math.round((dx + (xs[i] - x0) * scala2) * 10) / 10,
-    Math.round((alta - dy - (ys[i] - y0) * scala2) * 10) / 10
-  ]);
-}
 function bozzaNuova2(tipo = "una", adesso = Date.now()) {
   return {
     tipo,
@@ -102648,6 +102630,10 @@ var state120 = root[KEY124] ||= {
   scelto: "",
   proposte: [],
   cercando: "",
+  /* Com'e' andata l'ultima ricerca: "" niente da dire, "cerco", "vuota"
+   * (nessun posto con quel nome), "guasto" (il servizio non risponde). */
+  ricerca: "",
+  casa: null,
   linea: [],
   errore: "",
   salvando: false,
@@ -102668,6 +102654,7 @@ async function carica() {
     const risposta = await chiedi6("elenco");
     state120.sbloccato = risposta?.sbloccato !== false;
     state120.viaggi = Array.isArray(risposta?.viaggi) ? risposta.viaggi : [];
+    if (risposta?.casa) state120.casa = risposta.casa;
     state120.errore = "";
   } catch (errore) {
     state120.errore = t(
@@ -102763,30 +102750,94 @@ function elenco12() {
     ([titolo3, voci4]) => `<div class="dm-gn-tit">${esc(titolo3)}</div>${voci4.map(rigaDelViaggio).join("")}`
   ).join("");
 }
+var TESSERA2 = 256;
+var ZOOM_MASSIMO = 16;
+function inPixel2(lon, lat, zoom) {
+  const scala2 = TESSERA2 * 2 ** zoom;
+  const fi = Math.max(-85, Math.min(85, lat)) * Math.PI / 180;
+  return [
+    (lon + 180) / 360 * scala2,
+    (1 - Math.log(Math.tan(fi) + 1 / Math.cos(fi)) / Math.PI) / 2 * scala2
+  ];
+}
+function inquadra(punti, larga, alta, margine = 36) {
+  const buoni = punti.filter((p) => Number.isFinite(p?.[0]) && Number.isFinite(p?.[1]));
+  if (!buoni.length) return null;
+  for (let zoom = ZOOM_MASSIMO; zoom >= 2; zoom -= 1) {
+    const px = buoni.map(([lon, lat]) => inPixel2(lon, lat, zoom));
+    const xs = px.map((p) => p[0]);
+    const ys = px.map((p) => p[1]);
+    const w = Math.max(...xs) - Math.min(...xs);
+    const h = Math.max(...ys) - Math.min(...ys);
+    if (w <= larga - 2 * margine && h <= alta - 2 * margine) {
+      const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+      const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+      const z = buoni.length === 1 ? Math.min(zoom, 13) : zoom;
+      const [ox, oy] = z === zoom ? [cx, cy] : inPixel2(buoni[0][0], buoni[0][1], z);
+      return { zoom: z, x0: ox - larga / 2, y0: oy - alta / 2 };
+    }
+  }
+  return null;
+}
+function tessereSotto(vista2, larga, alta) {
+  const n = 2 ** vista2.zoom;
+  const prime = [Math.floor(vista2.x0 / TESSERA2), Math.floor(vista2.y0 / TESSERA2)];
+  const ultime = [
+    Math.floor((vista2.x0 + larga) / TESSERA2),
+    Math.floor((vista2.y0 + alta) / TESSERA2)
+  ];
+  const fuori = [];
+  for (let ty = prime[1]; ty <= ultime[1]; ty += 1) {
+    if (ty < 0 || ty >= n) continue;
+    for (let tx = prime[0]; tx <= ultime[0]; tx += 1) {
+      const x = (tx % n + n) % n;
+      fuori.push(
+        `<image href="https://tile.openstreetmap.org/${vista2.zoom}/${x}/${ty}.png" x="${(tx * TESSERA2 - vista2.x0).toFixed(1)}" y="${(ty * TESSERA2 - vista2.y0).toFixed(1)}" width="${TESSERA2}" height="${TESSERA2}"/>`
+      );
+    }
+  }
+  return fuori.join("");
+}
 function mappa(b) {
   const larga = 600;
-  const alta = 260;
-  const linea = state120.linea.length ? state120.linea : [b.da, ...b.tappe].filter(Boolean).map((p) => [p.lon, p.lat]);
-  if (linea.length < 2)
+  const alta = 280;
+  const fermateLonLat = [b.da, ...b.tappe].filter(Boolean).map((p) => [p.lon, p.lat]);
+  const linea = state120.linea.length ? state120.linea : fermateLonLat;
+  const casa = state120.casa ? [[state120.casa.lon, state120.casa.lat]] : [];
+  const daMostrare = linea.length ? linea : fermateLonLat.length ? fermateLonLat : casa;
+  const vista2 = inquadra(daMostrare.concat(fermateLonLat), larga, alta);
+  if (!vista2)
     return `<div class="dm-gn-mappa dm-gn-mappa-vuota">${esc(t("Scegli una meta: qui compare la strada.", "Pick a destination: the route shows here."))}</div>`;
-  const punti = proietta(linea, larga, alta);
+  const qui = ([lon, lat]) => {
+    const [x, y] = inPixel2(lon, lat, vista2.zoom);
+    return [Number((x - vista2.x0).toFixed(1)), Number((y - vista2.y0).toFixed(1))];
+  };
+  const punti = linea.length >= 2 ? linea.map(qui) : [];
   const d = punti.map((p, i) => `${i ? "L" : "M"}${p[0]} ${p[1]}`).join(" ");
-  const fermate = proietta(
-    [b.da, ...b.tappe].filter(Boolean).map((p) => [p.lon, p.lat]).concat(linea),
-    larga,
-    alta
-  ).slice(0, (b.da ? 1 : 0) + b.tappe.length);
-  const inizio = punti[0];
-  const fine = punti[punti.length - 1];
-  return `<div class="dm-gn-mappa"><svg viewBox="0 0 ${larga} ${alta}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(t("La strada", "The route"))}">
+  const fermate = fermateLonLat.map(qui);
+  const inizio = punti[0] || (b.da ? fermate[0] : null);
+  const fine = punti[punti.length - 1] || fermate[fermate.length - 1] || null;
+  const segnoCasa = !linea.length && !fermate.length && casa.length ? qui(casa[0]) : null;
+  return `<div class="dm-gn-mappa"><svg viewBox="0 0 ${larga} ${alta}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(t("La strada", "The route"))}">
     <rect width="${larga}" height="${alta}" fill="var(--gn-mappa)"/>
-    <path d="${d}" stroke="#2563eb" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    ${fermate.slice(0, -1).map(
+    ${tessereSotto(vista2, larga, alta)}
+    ${d ? `<path d="${d}" stroke="#fff" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/><path d="${d}" stroke="#2563eb" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
+    ${fermate.slice(b.da ? 1 : 0, -1).map(
     (p) => `<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="#6d28d9" stroke="#fff" stroke-width="3"/>`
   ).join("")}
-    <circle cx="${inizio[0]}" cy="${inizio[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>
-    <circle cx="${fine[0]}" cy="${fine[1]}" r="10" fill="#dc2626" stroke="#fff" stroke-width="4"/>
-  </svg></div>`;
+    ${inizio && punti.length ? `<circle cx="${inizio[0]}" cy="${inizio[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
+    ${fine ? `<circle cx="${fine[0]}" cy="${fine[1]}" r="10" fill="#dc2626" stroke="#fff" stroke-width="4"/>` : ""}
+    ${segnoCasa ? `<circle cx="${segnoCasa[0]}" cy="${segnoCasa[1]}" r="9" fill="#16a34a" stroke="#fff" stroke-width="4"/>` : ""}
+  </svg><span class="dm-gn-osm">© OpenStreetMap</span></div>`;
+}
+function parolaDellaRicerca() {
+  if (state120.proposte.length || !state120.ricerca || !clean(state120.cercando)) return "";
+  const parole4 = {
+    cerco: t("Cerco…", "Searching…"),
+    vuota: t("Nessun posto con questo nome. Prova ad aggiungere la città.", "No place with this name. Try adding the city."),
+    guasto: t("La ricerca degli indirizzi non risponde: riprova fra poco.", "Address search is not answering: try again shortly.")
+  };
+  return `<div class="dm-gn-ricerca" data-gn-ricerca="${esc(state120.ricerca)}" role="status">${esc(parole4[state120.ricerca] || "")}</div>`;
 }
 function opzioniDiEntita(domini2, scelta3) {
   const stati = allStates() || {};
@@ -102848,6 +102899,7 @@ function editor() {
         <label class="dm-gn-nomecampo"><input type="text" maxlength="80" placeholder="${esc(t("Nome (facoltativo): «Giro clienti»", "Name (optional): “Client round”"))}" data-gn-campo="nome" value="${esc(b.nome || "")}"></label>
         ${tappe}
         <div class="dm-gn-cerca">🔎 <input type="search" autocomplete="off" placeholder="${esc(b.tipo === "tappe" ? t("Aggiungi una tappa…", "Add a stop…") : b.tappe.length ? t("Cambia la meta…", "Change destination…") : t("Dove vai?", "Where to?"))}" data-gn-cerca value="${esc(state120.cercando)}"></div>
+        ${parolaDellaRicerca()}
         ${state120.proposte.length ? `<div class="dm-gn-proposte">${state120.proposte.map((p, i) => `<button type="button" data-gn-proposta="${i}">📍 ${esc(p.nome)}</button>`).join("")}</div>` : ""}
         ${mappa(b)}
         ${giorno2}
@@ -102930,15 +102982,21 @@ async function cerca3(testo2) {
   const mia = ++quanteRicerche;
   if (clean(testo2).length < 3) {
     state120.proposte = [];
+    state120.ricerca = "";
     disegna6();
     return;
   }
+  state120.ricerca = "cerco";
+  disegna6();
   try {
-    const risposta = await chiedi6("cerca", { testo: testo2 });
+    const risposta = await chiedi6("cerca", { testo: testo2 }, 2e4);
     if (mia !== quanteRicerche) return;
     state120.proposte = Array.isArray(risposta?.posti) ? risposta.posti : [];
+    state120.ricerca = state120.proposte.length ? "" : risposta?.guasto ? "guasto" : "vuota";
   } catch (_errore) {
+    if (mia !== quanteRicerche) return;
     state120.proposte = [];
+    state120.ricerca = "guasto";
   }
   disegna6();
 }
@@ -103161,7 +103219,10 @@ body.dark-mode .dm-gn,html.dark .dm-gn{--gn-mappa:#1e293b;--gn-card:#111827;--gn
 .dm-gn-sosta{font-size:12.5px;color:var(--gn-piano)}
 .dm-gn-sosta input{width:56px}
 .dm-gn-x{border:0;background:none;color:var(--gn-piano);cursor:pointer;font-size:14px}
-.dm-gn-mappa{border-radius:18px;overflow:hidden;margin:8px 0}
+.dm-gn-mappa{position:relative;border-radius:18px;overflow:hidden;margin:8px 0}
+.dm-gn-osm{position:absolute;right:8px;bottom:6px;padding:1px 6px;border-radius:6px;background:#ffffffd9;color:#334155;font-size:10px;font-weight:700}
+.dm-gn-ricerca{padding:8px 14px;margin:-2px 0 10px;border-radius:12px;font-size:13px;font-weight:700;background:var(--gn-mappa);color:var(--gn-piano)}
+.dm-gn-ricerca[data-gn-ricerca="guasto"]{background:#fef2f2;color:#b91c1c}
 .dm-gn-mappa svg{display:block;width:100%;height:auto}
 .dm-gn-mappa-vuota{height:140px;display:grid;place-items:center;background:var(--gn-mappa);color:var(--gn-piano);font-size:14px;padding:0 16px;text-align:center}
 .dm-gn-campo{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--gn-bordo);font-size:15px}
@@ -107181,7 +107242,7 @@ function installAvatar3dStyle() {
 var LATO_TESSERA = 256;
 var METRI_PER_PIXEL_ZERO = 156543.03392804097;
 var ZOOM_MINIMO = 3;
-var ZOOM_MASSIMO = 12;
+var ZOOM_MASSIMO2 = 12;
 var numero49 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || String(valore3).trim() === "") return null;
   const n = Number(valore3);
@@ -107215,7 +107276,7 @@ function zoomPerRaggio(lat, raggioKm, latoPx) {
   const ideale = Math.log2(
     METRI_PER_PIXEL_ZERO * Math.cos(dove * Math.PI / 180) * lato / metriVoluti
   );
-  return Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.floor(ideale)));
+  return Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO2, Math.floor(ideale)));
 }
 function finestraDiTessere(lat, lon, opzioni = {}) {
   const dove = latitudine(lat);
@@ -107224,7 +107285,7 @@ function finestraDiTessere(lat, lon, opzioni = {}) {
   const lato = Math.max(64, numero49(opzioni.latoPx) || 320);
   const alto = Math.max(64, numero49(opzioni.altoPx) || lato);
   const tessera2 = numero49(opzioni.lato) || LATO_TESSERA;
-  const zoom = numero49(opzioni.zoom) === null ? zoomPerRaggio(dove, numero49(opzioni.raggioKm) || 30, Math.min(lato, alto)) : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(numero49(opzioni.zoom))));
+  const zoom = numero49(opzioni.zoom) === null ? zoomPerRaggio(dove, numero49(opzioni.raggioKm) || 30, Math.min(lato, alto)) : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO2, Math.round(numero49(opzioni.zoom))));
   const centro2 = tesseraDelPunto(dove, quanto, zoom);
   const centroPx = { x: centro2.x * tessera2, y: centro2.y * tessera2 };
   const origine = { x: centroPx.x - lato / 2, y: centroPx.y - alto / 2 };
@@ -107253,7 +107314,7 @@ function finestraDiTessere(lat, lon, opzioni = {}) {
 function zoomDellaPioggia(config = {}, servizio2 = "") {
   const scritto2 = numero49(config?.zoomPioggia);
   if (scritto2 !== null)
-    return scritto2 <= 0 ? null : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(scritto2)));
+    return scritto2 <= 0 ? null : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO2, Math.round(scritto2)));
   const suo2 = numero49(SERVIZI_RADAR[stringa(servizio2)]?.zoomMassimo);
   return suo2 === null ? numero49(SERVIZI_RADAR[SERVIZIO_DI_SERIE]?.zoomMassimo) : suo2;
 }

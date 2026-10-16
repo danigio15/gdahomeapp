@@ -290,5 +290,47 @@ test("cerca e strada: Photon e OSRM, vicino a casa, e niente se non rispondono",
       throw new Error("rete");
     },
   });
-  assert.deepEqual(await muta.cerca("piazza dante"), { posti: [] });
+  /* Nessuna delle due risponde: si dice, perche' la pagina lo dica. */
+  assert.deepEqual(await muta.cerca("piazza dante"), { posti: [], guasto: true });
+});
+
+test("cerca: se Photon non risponde, chiede a Nominatim", async () => {
+  const chiesti = [];
+  const viaggi = new Viaggi({
+    casa: casaFinta(),
+    licenze: { attive: false },
+    ogni: () => null,
+    scarica: async (indirizzo) => {
+      chiesti.push(indirizzo);
+      if (indirizzo.includes("photon")) return { ok: false, status: 503, json: async () => ({}) };
+      return {
+        ok: true,
+        json: async () => [
+          {
+            lat: "40.8518",
+            lon: "14.2681",
+            name: "Napoli",
+            display_name: "Napoli, Campania, Italia",
+            address: { city: "Napoli", state: "Campania" },
+          },
+        ],
+      };
+    },
+  });
+  const { posti, guasto } = await viaggi.cerca("napoli");
+  assert.equal(guasto, undefined);
+  assert.equal(posti.length, 1);
+  assert.match(posti[0].nome, /Napoli/);
+  assert.ok(chiesti[1].startsWith("https://nominatim.openstreetmap.org/search"));
+  assert.match(chiesti[1], /viewbox=/);
+  /* Nessun posto da tutt'e due: vuoto, ma non guasto. */
+  const vuota = new Viaggi({
+    licenze: { attive: false },
+    ogni: () => null,
+    scarica: async (indirizzo) => ({
+      ok: true,
+      json: async () => (indirizzo.includes("photon") ? { features: [] } : []),
+    }),
+  });
+  assert.deepEqual(await vuota.cerca("xqzzyw"), { posti: [] });
 });

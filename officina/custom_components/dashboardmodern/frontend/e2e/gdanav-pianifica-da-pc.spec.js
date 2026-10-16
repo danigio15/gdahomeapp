@@ -110,6 +110,10 @@ async function apri(page, testInfo, { sbloccato = true, larga = 1440 } = {}) {
               code: "premium-richiesto",
               message: "premium-richiesto",
             });
+          if (m.type === "ponte/viaggi/cerca" && m.testo === "guasto")
+            return rispondi(true, { posti: [], guasto: true });
+          if (m.type === "ponte/viaggi/cerca" && m.testo === "xqzzyw")
+            return rispondi(true, { posti: [] });
           if (m.type === "ponte/viaggi/cerca")
             return rispondi(true, {
               posti: [
@@ -225,4 +229,44 @@ test("la testata della pagina gdanav resta ferma mentre la casa cambia", async (
     ),
   ).toBe(true);
   await expect(pagina.locator(".dm-gn-viaggio")).toHaveCount(2);
+});
+
+/* «Il pianificatore non trova indirizzi, la mappa non ha nulla.» La ricerca
+ * che non risponde lo dice, quella che non trova lo dice in un altro modo, e
+ * sotto la strada c'e' la cartina di OpenStreetMap. */
+test("la ricerca dice cosa succede, e sotto la strada c'e' la cartina", async ({
+  page,
+}, testInfo) => {
+  const tessere = [];
+  const pagina = await apri(page, testInfo);
+  await page.route("https://tile.openstreetmap.org/**", (route) => {
+    tessere.push(route.request().url());
+    const [z, x, y] = route.request().url().split("/").slice(-3);
+    route.fulfill({
+      status: 200,
+      contentType: "image/svg+xml",
+      body: `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#eef2e6"/><path d="M0 ${(Number(x) * 37) % 256} L256 ${(Number(y) * 53) % 256}" stroke="#fff" stroke-width="9"/><path d="M${(Number(y) * 29) % 256} 0 L${(Number(x) * 71) % 256} 256" stroke="#f8d38a" stroke-width="6"/><rect x="${(Number(x) * 13) % 200}" y="${(Number(y) * 17) % 200}" width="46" height="30" fill="#cfe3c4"/><text x="8" y="250" font-size="9" fill="#94a3b8">${z}</text></svg>`,
+    });
+  });
+  await pagina.locator("[data-gn-nuovo]").click();
+  const campo = pagina.locator("[data-gn-cerca]");
+
+  await campo.fill("guasto");
+  await expect(pagina.locator('[data-gn-ricerca="guasto"]')).toContainText(/non risponde/);
+  await campo.fill("xqzzyw");
+  await expect(pagina.locator('[data-gn-ricerca="vuota"]')).toContainText(/Nessun posto/);
+
+  await campo.fill("lungomare salerno");
+  await pagina.locator("[data-gn-proposta]").first().click();
+  await expect(pagina.locator(".dm-gn-mappa svg image").first()).toBeAttached();
+  await expect.poll(() => tessere.length).toBeGreaterThan(1);
+  expect(
+    tessere.every((u) => /^https:\/\/tile\.openstreetmap\.org\/\d+\/\d+\/\d+\.png$/.test(u)),
+  ).toBe(true);
+  await expect(pagina.locator(".dm-gn-mappa path")).toHaveCount(2);
+  await expect(pagina.locator(".dm-gn-osm")).toHaveText("© OpenStreetMap");
+  if (process.env.DM_FOTO) {
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: `${process.env.DM_FOTO}/gdanav-pc-cartina.png` });
+  }
 });
