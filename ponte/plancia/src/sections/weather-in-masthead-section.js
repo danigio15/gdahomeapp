@@ -15,7 +15,7 @@
 import { onLocaleChange } from "../core/i18n.js";
 import { translateSource } from "../core/i18n-dom.js";
 import { CHIAVE_ORDINE_BLOCCHI, ilMeteoStaInTestata } from "../core/ordine-dei-blocchi.js";
-import { unaSolaPaginaAperta } from "./page-masthead-section.js";
+import { quandoCambiaLaPaginaAperta, unaSolaPaginaAperta } from "./page-masthead-section.js";
 import { clean, doc, installStyle, quandoSiCambiaPagina, readJson, root, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_WEATHER_MASTHEAD__";
@@ -508,6 +508,58 @@ export function rifaiLaFila(header, { sempre = false } = {}) {
   return true;
 }
 
+/* Tornati sulla Home, la Home comincia dall'alto (#228, «se vado su Luci e
+ * Porte sparisce la parte sopra»).
+ *
+ * Nel chiosco dell'iPhone html e corpo sono alti quanto lo schermo, e a
+ * scorrere non e' la finestra: e' il corpo. Il gestore delle voci del guscio
+ * lo rimette in cima a ogni cambio di pagina; quelli di Luci e di Porte, nati
+ * dopo, no — Luci non toccava niente, Porte solo la finestra. La Home si
+ * riapriva spostata in su quanto bastava a far finire la prima fila (menu,
+ * nome, ingranaggio) sotto l'orologio del telefono: restava il meteo, che e'
+ * proprio quello che si vede nelle foto.
+ *
+ * Qui non si rincorre chi ha aperto la pagina: lo dice chi scrive il segno
+ * della pagina sul corpo (`data-dm-pagina`), che cambia qualunque strada si
+ * prenda, e al ritorno sulla Home si rimette in cima tutto quello che puo'
+ * scorrere. */
+export function inCima() {
+  root.scrollTo?.({ top: 0, left: 0, behavior: "instant" });
+  for (const nodo of [doc?.scrollingElement, doc?.documentElement, doc?.body]) {
+    if (nodo && nodo.scrollTop) nodo.scrollTop = 0;
+  }
+}
+
+/* E la prima fila rimessa nel documento: WebKit, rimettendo un nodo, rifa' da
+ * capo il suo disegno, che e' piu' di quanto faccia lo spegni-e-riaccendi
+ * della fascia. Stessi nodi, stessi ascolti: cambia solo il disegno. */
+export function rimettiLaPrimaFila(header) {
+  if (!header) return 0;
+  let rimessi = 0;
+  for (const nodo of header.querySelectorAll?.(":scope > .header-left-wrap, :scope > .dm-editor-entry") ||
+    []) {
+    const dopo = nodo.nextSibling;
+    header.insertBefore(nodo, dopo);
+    rimessi += 1;
+  }
+  return rimessi;
+}
+
+function tornatiSullaHome() {
+  inCima();
+  const header = testata();
+  if (!header) return;
+  rimettiLaPrimaFila(header);
+  rifaiLaFila(header, { sempre: true });
+  /* Safari scorre e impagina un fotogramma dopo: si ripete li', e quando le
+   * animazioni della pagina sono finite. */
+  root.requestAnimationFrame?.(() => inCima());
+  root.setTimeout?.(() => {
+    inCima();
+    rifaiLaFila(header);
+  }, 350);
+}
+
 /* La mappatura del meteo, sfoltita: «non mostrare tutte le entita'; un flag
  * "usa entita' proprie" mostra i campi, altrimenti default sull'entita'
  * weather». I cinque campi della stazione — temperatura, umidita',
@@ -606,6 +658,9 @@ export function installWeatherInMasthead() {
    * che cambia, nessuno che scorre — fra un cambio di pagina e il battito
    * dopo possono passare minuti. */
   quandoSiCambiaPagina(ripara);
+  quandoCambiaLaPaginaAperta((adesso) => {
+    if (adesso === "page-home") tornatiSullaHome();
+  });
   /* La lingua puo' arrivare dopo: il catalogo si scarica, e quando e' pronto
    * le parole del meteo vanno rifatte dal loro originale. */
   for (const eventoEditor of ["dashboardmodern:editor-rendered", "dashboardmodern:legacy-ready"])

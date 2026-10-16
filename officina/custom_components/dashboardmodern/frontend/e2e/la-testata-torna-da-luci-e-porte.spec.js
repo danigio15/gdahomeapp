@@ -16,7 +16,10 @@ import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 const SEME = {
   schema_version: 4,
   sections: {
-    rooms: [{ name: "Cucina", icon: "🍳" }, { name: "Sala", icon: "🛋️" }],
+    rooms: [
+      { name: "Cucina", icon: "🍳" },
+      { name: "Sala", icon: "🛋️" },
+    ],
     cameras: [],
     appliances: [],
     loads: [],
@@ -54,6 +57,18 @@ async function avvia(page, testInfo) {
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  /* Il velo d'avvio copre la fila finche' la plancia non e' pronta: su WebKit
+   * ci mette di piu', e misurare prima vuol dire misurare il velo. */
+  await page
+    .waitForFunction(
+      () => {
+        const velo = document.getElementById("cd-boot-overlay");
+        return !velo || !velo.getClientRects().length || getComputedStyle(velo).opacity === "0";
+      },
+      null,
+      { timeout: 30_000 },
+    )
+    .catch(() => {});
   await page.evaluate((stati) => {
     window.__HASS__ = { states: { ...(window.__HASS__?.states || {}), ...stati } };
     const raw = window.eval("typeof _RAW_STATES !== 'undefined' ? _RAW_STATES : null");
@@ -94,7 +109,9 @@ function laFila(page) {
         opacita: stile.opacity,
         suo: Boolean(sopra && (sopra === nodo || nodo.contains(sopra))),
         sopra: sopra
-          ? `${sopra.tagName.toLowerCase()}${sopra.id ? `#${sopra.id}` : ""}.${String(sopra.className || "")
+          ? `${sopra.tagName.toLowerCase()}${sopra.id ? `#${sopra.id}` : ""}.${String(
+              sopra.className || "",
+            )
               .split(" ")
               .slice(0, 2)
               .join(".")}`
@@ -106,6 +123,9 @@ function laFila(page) {
       ? { y: Math.round(rt.top), alto: Math.round(rt.height), largo: Math.round(rt.width) }
       : { manca: true };
     fuori.scroll = Math.round(window.scrollY);
+    fuori.scrollCorpo = Math.round(document.body.scrollTop);
+    fuori.scrollRadice = Math.round(document.documentElement.scrollTop);
+    fuori.cima = Math.round(parseFloat(getComputedStyle(document.body).paddingTop) || 0);
     return fuori;
   });
 }
@@ -116,14 +136,46 @@ async function controllaLaFila(page, passo, testInfo) {
   // Nel registro della corsa: e' quello che serve se su WebKit non va.
   console.log(`[fila] ${testInfo.project.name} ${passo}: ${JSON.stringify(fila)}`);
   if (process.env.DM_FOTO)
-    await page.screenshot({ path: `${process.env.DM_FOTO}/fila-${testInfo.project.name}-${passo}.png` });
+    await page.screenshot({
+      path: `${process.env.DM_FOTO}/fila-${testInfo.project.name}-${passo}.png`,
+    });
   for (const pezzo of ["sinistra", "nome", "ingranaggio"]) {
     expect(fila[pezzo].manca, `${passo}: ${pezzo} c'e'`).toBeUndefined();
     expect(fila[pezzo].largo, `${passo}: ${pezzo} ha una larghezza`).toBeGreaterThan(8);
     expect(fila[pezzo].alto, `${passo}: ${pezzo} ha un'altezza`).toBeGreaterThan(8);
-    expect(fila[pezzo].y, `${passo}: ${pezzo} sta sullo schermo`).toBeGreaterThanOrEqual(-1);
+    /* Non sotto l'orologio: sotto la fascia che il corpo lascia libera. */
+    expect(
+      fila[pezzo].y,
+      `${passo}: ${pezzo} sta sotto la fascia di sistema`,
+    ).toBeGreaterThanOrEqual(fila.cima - 1);
     expect(fila[pezzo].suo, `${passo}: sopra ${pezzo} c'e' ${fila[pezzo].sopra}`).toBe(true);
   }
+}
+
+/* Scorrere come col dito: chi scorre davvero dipende da come e' fatta la
+ * pagina — la finestra di solito, il corpo nel chiosco dell'iPhone, dove
+ * html e corpo sono alti quanto lo schermo. Si scorre quello che scorre. */
+async function scorri(page, quanto) {
+  await page.evaluate((dy) => {
+    for (const nodo of [document.scrollingElement, document.body, document.documentElement])
+      if (nodo && nodo.scrollHeight > nodo.clientHeight + 1) nodo.scrollTop += dy;
+    window.scrollBy(0, dy);
+  }, quanto);
+  await page.waitForTimeout(400);
+}
+
+/* Il chiosco dell'iPhone come lo accende l'app: la plancia a tutto vetro, e
+ * la fascia dell'orologio che l'app dice in «--gdahome-alto». */
+async function chioscoDellIphone(page, alto = 59) {
+  await page.evaluate((fascia) => {
+    document.documentElement.setAttribute("data-dm-ios-kiosk", "true");
+    document.documentElement.style.setProperty("--dm-ios-kiosk-height", `${innerHeight}px`);
+    const foglio = document.createElement("style");
+    foglio.id = "gdahome-misure";
+    foglio.textContent = `:root{--gdahome-alto:${fascia}px;--gdahome-basso:0px}html body{padding-top:var(--gdahome-alto)!important}`;
+    document.body.appendChild(foglio);
+  }, alto);
+  await page.waitForTimeout(300);
 }
 
 async function andata(page, tab, pagina) {
@@ -144,6 +196,72 @@ async function ritornoColTastoDellaPagina(page, pagina) {
 test.describe("la fila in alto torna da Luci e da Porte", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
+  });
+
+  test("nel chiosco dell'iPhone, dopo aver scorso Luci e Porte, la fila non resta sotto l'orologio", async ({
+    page,
+  }, testInfo) => {
+    await avvia(page, testInfo);
+    await chioscoDellIphone(page);
+    await controllaLaFila(page, "k0-avvio", testInfo);
+
+    await scorri(page, 600);
+    await andata(page, "luci", "page-luci");
+    await scorri(page, 1500);
+    await ritornoColTastoInBasso(page);
+    await controllaLaFila(page, "k1-luci", testInfo);
+
+    await scorri(page, 600);
+    await andata(page, "varchi", "page-varchi");
+    await scorri(page, 1500);
+    await ritornoColTastoDellaPagina(page, "page-varchi");
+    await controllaLaFila(page, "k2-porte", testInfo);
+
+    await andata(page, "luci", "page-luci");
+    await scorri(page, 1500);
+    await ritornoColTastoDellaPagina(page, "page-luci");
+    await controllaLaFila(page, "k3-luci-tasto-della-pagina", testInfo);
+  });
+
+  test("tornati sulla Home da qualunque strada, la Home comincia dall'alto", async ({
+    page,
+  }, testInfo) => {
+    await avvia(page, testInfo);
+    await chioscoDellIphone(page);
+    await andata(page, "luci", "page-luci");
+    /* Una strada che non passa dalle voci: le pagine cambiate a mano, con la
+     * Home lasciata a meta' — com'era dopo Luci e Porte nel chiosco. */
+    await page.evaluate(() => {
+      /* Una Home lunga quanto quella di una casa vera, e un dito che la
+       * scorre: col chiosco a scorrere e' il corpo. */
+      const lungo = document.createElement("div");
+      lungo.id = "dm-prova-lungo";
+      lungo.style.height = "4000px";
+      document.getElementById("page-home").append(lungo);
+      for (const pagina of document.querySelectorAll(".page")) pagina.classList.remove("active");
+      document.getElementById("page-home").classList.add("active");
+      for (const nodo of [document.scrollingElement, document.body, document.documentElement])
+        if (nodo) nodo.scrollTop = 300;
+      window.scrollTo(0, 300);
+    });
+    await expect.poll(() => segno(page)).toBe("page-home");
+    console.log(
+      `[fila] scorrimento dopo il ritorno: ${await page.evaluate(() =>
+        JSON.stringify([
+          window.scrollY,
+          document.body.scrollTop,
+          document.documentElement.scrollTop,
+        ]),
+      )}`,
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          Math.max(window.scrollY, document.body.scrollTop, document.documentElement.scrollTop),
+        ),
+      )
+      .toBe(0);
+    await controllaLaFila(page, "k4-strada-qualunque", testInfo);
   });
 
   test("Luci e Porte, col tasto in basso e col tasto della pagina, anche dopo aver scorso", async ({
@@ -171,14 +289,12 @@ test.describe("la fila in alto torna da Luci e da Porte", () => {
     /* Scorrendo la pagina prima di tornare: le Luci di una casa vera sono
      * una pagina lunga. */
     await andata(page, "luci", "page-luci");
-    await page.mouse.wheel(0, 1500);
-    await page.waitForTimeout(400);
+    await scorri(page, 1500);
     await ritornoColTastoInBasso(page);
     await controllaLaFila(page, "5-luci-dopo-lo-scorrimento", testInfo);
 
     await andata(page, "varchi", "page-varchi");
-    await page.mouse.wheel(0, 1500);
-    await page.waitForTimeout(400);
+    await scorri(page, 1500);
     await ritornoColTastoInBasso(page);
     await controllaLaFila(page, "6-porte-dopo-lo-scorrimento", testInfo);
 

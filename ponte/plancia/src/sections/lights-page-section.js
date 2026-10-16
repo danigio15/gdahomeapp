@@ -338,6 +338,12 @@ export function ensureLightsTab() {
     for (const node of doc.querySelectorAll(".page")) node.classList.remove("active");
     tab.classList.add("active");
     ensureLightsPage()?.classList.add("active");
+    /* In cima, come fa il guscio con le sue voci: nel chiosco dell'iPhone a
+     * scorrere e' il corpo, e una pagina che si apre a meta' del corpo lascia
+     * la Home, al ritorno, con la prima fila sotto l'orologio (#228). */
+    root.scrollTo?.({ top: 0, behavior: "instant" });
+    if (doc.documentElement) doc.documentElement.scrollTop = 0;
+    if (doc.body) doc.body.scrollTop = 0;
     if (root.navigator?.vibrate) root.navigator.vibrate(5);
     schedule();
   });
