@@ -1,19 +1,28 @@
 /* Le automazioni (Premium), come le vede chi apre la plancia.
  *
- * Le esegue la casa (`ponte/src/automazioni.js`), e le loro regole si provano
- * nel ponte. Qui si guarda la plancia: la voce «Automazioni» del config subito
- * dopo «Azioni», col bollino PREMIUM, e senza Premium col lucchetto e il velo;
- * la lista con «Prossimo» e «Ultime eseguite» che dice la casa; i modelli; un
- * editor che crea e salva in `cd_automazioni`; e nell'app la voce del config
- * che non c'e', con la pagina a schermo pieno aperta dalla maniglia.
+ * Sono quelle vere di Home Assistant: le esegue lui, e la plancia le
+ * racconta, le accende e le spegne, e le scrive passando dal ponte
+ * (`ponte/automazioni/salva`), che le traduce con `core/automazioni-ha.js`.
+ * Le traduzioni si provano nel ponte; qui si guarda la plancia:
  *
- * E le proposte («Suggerite per la tua casa ✨»): il blocco con tre carte,
- * «Vedi tutte», «Crea» che apre l'editor gia' compilato e si salva a mano,
- * «No, grazie» che la toglie e lo dice alla casa, e senza Premium una carta
- * sola sopra il velo.
+ *  - il config: la voce «Automazioni» dopo «Azioni», col bollino PREMIUM;
+ *    tutte quelle di Home Assistant a gruppi (Per tipo / Per stanza), la
+ *    ricerca, le etichette gdahome e Blueprint, l'interruttore che chiama
+ *    `automation.turn_off`; l'editor che salva in Home Assistant e il
+ *    «Salvata in Home Assistant ✓»; una semplice che si modifica, una
+ *    complessa col riassunto e «Apri in Home Assistant ↗»; «Elimina» con la
+ *    conferma; il cronotermostato; i pezzi di tutta Home Assistant; le
+ *    proposte; l'invito a convertire quelle della versione di prova;
+ *  - la sezione della dashboard: la linguetta subito prima di Config, le tre
+ *    tessere, i gruppi con le carte, l'interruttore, il foglio di una carta;
+ *  - senza Premium: tutto velato, e «Scopri Premium» che in Home Assistant
+ *    apre la finestra «Premium arriva con le app»;
+ *  - nell'app: niente linguetta e niente voce del config; la pagina del menu
+ *    con la faccia della dashboard, «＋ Nuova» sopra la bolla
+ *    dell'assistente, e il foglio con «✏️ Modifica».
  *
- * La casa qui e' finta, e risponde a `ponte/automazioni/stato` e alle
- * proposte come il ponte.
+ * La casa qui e' finta: tiene le configurazioni come Home Assistant e
+ * risponde ai comandi del ponte con lo stesso traduttore.
  */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
@@ -52,51 +61,78 @@ const STATI = {
     attributes: { friendly_name: "Termostato soggiorno", hvac_modes: ["off", "heat"] },
   },
   "cover.soggiorno": { state: "open", attributes: { friendly_name: "Tapparelle soggiorno" } },
+  "water_heater.boiler": { state: "eco", attributes: { friendly_name: "Scaldabagno" } },
+  "person.anna": { state: "home", attributes: { friendly_name: "Anna" } },
 };
 
-const UNA = {
-  id: "a1",
-  nome: "",
-  attiva: true,
-  quando: { tipo: "orario", ore: ["07:15"], giorni: [true, true, true, true, true, false, false] },
-  allora: [{ tipo: "tapparella", entita: "cover.soggiorno", modo: "apri" }],
+/* Le automazioni di Home Assistant di questa casa: due nate dalla plancia,
+ * una scritta a mano, una complessa e una da blueprint. */
+const SEGNO = "Creata con la plancia gdahome. #gdahome";
+const HA = {
+  1001: {
+    id: "1001",
+    alias: "Tapparelle mattina",
+    description: SEGNO,
+    mode: "restart",
+    triggers: [{ trigger: "time", at: ["07:15:00"] }],
+    conditions: [{ condition: "time", weekday: ["mon", "tue", "wed", "thu", "fri"] }],
+    actions: [{ action: "cover.open_cover", target: { entity_id: "cover.soggiorno" } }],
+  },
+  1002: {
+    id: "1002",
+    alias: "Luce corridoio di notte",
+    description: SEGNO,
+    mode: "restart",
+    triggers: [
+      { trigger: "state", entity_id: "binary_sensor.pir_corridoio", from: "off", to: "on" },
+    ],
+    conditions: [{ condition: "state", entity_id: "sun.sun", state: "below_horizon" }],
+    actions: [
+      {
+        action: "light.turn_on",
+        target: { entity_id: "light.corridoio" },
+        data: { brightness_pct: 20 },
+      },
+      { delay: { minutes: 2 } },
+      { action: "light.turn_off", target: { entity_id: "light.corridoio" } },
+    ],
+  },
+  1003: {
+    id: "1003",
+    alias: "Clima spento con finestra aperta",
+    trigger: [{ platform: "state", entity_id: "binary_sensor.finestra", from: "off", to: "on" }],
+    action: [{ service: "climate.turn_off", entity_id: "climate.soggiorno" }],
+    mode: "single",
+  },
+  1004: {
+    id: "1004",
+    alias: "Scaldabagno col sole",
+    triggers: [{ trigger: "template", value_template: "{{ now().weekday() < 5 }}" }],
+    actions: [
+      {
+        choose: [
+          {
+            conditions: [{ condition: "template", value_template: "{{ true }}" }],
+            sequence: [
+              { action: "water_heater.turn_on", target: { entity_id: "water_heater.boiler" } },
+            ],
+          },
+        ],
+        default: [{ action: "notify.notify", data: { message: "acqua" } }],
+      },
+    ],
+  },
+  1005: {
+    id: "1005",
+    alias: "Batterie scariche",
+    use_blueprint: { path: "batterie.yaml", input: {} },
+  },
 };
+const AREE = { 1001: "soggiorno", 1002: "corridoio", 1003: "soggiorno" };
+const SPENTE = ["1003"];
 
-/* Le proposte come le manda la casa (`core/automazioni-proposte.js`). */
+/* Una proposta come la manda la casa (`core/automazioni-proposte.js`). */
 const PROPOSTE = [
-  {
-    id: "movimento-luce:binary_sensor.pir_corridoio|light.corridoio",
-    gruppo: "dispositivi",
-    chiave: "movimentoLuce",
-    disegno: "presenza",
-    dati: { area: "Corridoio" },
-    automazione: {
-      attiva: true,
-      quando: { tipo: "movimento", entita: ["binary_sensor.pir_corridoio"], verso: "si" },
-      soloSe: [{ tipo: "notte", da: "", a: "" }],
-      allora: [
-        { tipo: "accendi", entita: ["light.corridoio"], livello: 20 },
-        { tipo: "aspetta", minuti: 2 },
-        { tipo: "spegni", entita: ["light.corridoio"] },
-      ],
-    },
-  },
-  {
-    id: "finestra-clima:binary_sensor.finestra|climate.soggiorno",
-    gruppo: "dispositivi",
-    chiave: "finestraClima",
-    disegno: "finestra",
-    dati: { area: "Soggiorno", finestra: "Finestra soggiorno" },
-    automazione: {
-      attiva: true,
-      quando: { tipo: "stato", entita: ["binary_sensor.finestra"], a: "on", per: 2 },
-      allora: [
-        { tipo: "clima", entita: ["climate.soggiorno"], modo: "spegni" },
-        { tipo: "aspettaChe", entita: "binary_sensor.finestra", stato: "off", massimo: 720 },
-        { tipo: "accendi", entita: ["climate.soggiorno"] },
-      ],
-    },
-  },
   {
     id: "elettrodomestico:sensor.lavatrice_potenza",
     gruppo: "dispositivi",
@@ -114,36 +150,19 @@ const PROPOSTE = [
       allora: [{ tipo: "notifica", testo: "Lavatrice" }],
     },
   },
-  {
-    id: "abitudine-accende-feriali:light.corridoio",
-    gruppo: "abitudini",
-    chiave: "abitudineOrario",
-    disegno: "luci",
-    dati: {
-      nome: "Luce corridoio",
-      ora: "19:10",
-      festivi: false,
-      da: "19:00",
-      a: "19:20",
-      verso: "accende",
-      settimane: 3,
-    },
-    automazione: {
-      attiva: true,
-      quando: {
-        tipo: "orario",
-        ore: ["19:10"],
-        giorni: [true, true, true, true, true, false, false],
-      },
-      allora: [{ tipo: "accendi", entita: ["light.corridoio"] }],
-    },
-  },
 ];
 
 async function avvia(
   page,
   testInfo,
-  { premium = true, app = false, automazioni = [UNA], proposte = [] } = {},
+  {
+    premium = true,
+    app = false,
+    configurazioni = HA,
+    proposte = [],
+    rimaste = [],
+    amministra = true,
+  } = {},
 ) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
@@ -163,47 +182,151 @@ async function avvia(
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true);
   await page.evaluate(
-    ({ stati, automazioni, proposte }) => {
-      localStorage.setItem("cd_automazioni", JSON.stringify(automazioni));
-      const grezzi = eval("_RAW_STATES");
-      for (const [entity, stato] of Object.entries(stati))
-        grezzi[entity] = { entity_id: entity, ...stato };
-      window.__HASS__ = { states: { ...(window.__HASS__?.states || {}), ...grezzi } };
-      /* La casa finta: dice cosa viene dopo e cosa ha fatto. */
-      window.__CASA__ = {
-        premium: true,
-        prossimi: [{ id: "a1", alle: Date.now() + 3_600_000 }],
-        ultime: [{ id: "a1", alle: Date.now() - 600_000, esito: "ok" }],
-        perAutomazione: { a1: { alle: Date.now() - 600_000, esito: "ok" } },
-        inCorso: [],
+    async ({ stati, configurazioni, aree, spente, proposte, rimaste, amministra }) => {
+      const HA = await import("/src/core/automazioni-ha.js");
+      localStorage.setItem("cd_automazioni", JSON.stringify(rimaste));
+      const grezzi = window.eval("_RAW_STATES");
+      const metti = (id, stato) => {
+        grezzi[id] = { entity_id: id, ...stato };
+        window.__HASS__ = { states: { ...(window.__HASS__?.states || {}), [id]: grezzi[id] } };
       };
-      window.__PROPOSTE__ = proposte;
-      window.__SCARTATE__ = [];
+      for (const [entity, stato] of Object.entries(stati)) metti(entity, stato);
+      const casa = {
+        config: structuredClone(configurazioni),
+        aree: { ...aree },
+        comandi: [],
+        servizi: [],
+        proposte,
+        scartate: [],
+      };
+      window.__CASA__ = casa;
+      const entitaDi = (id) => `automation.a${id}`;
+      const mettiLAutomazione = (id) => {
+        const c = casa.config[id];
+        const prima = grezzi[entitaDi(id)];
+        metti(entitaDi(id), {
+          state: prima?.state || (spente.includes(id) ? "off" : "on"),
+          attributes: {
+            id,
+            friendly_name: c.alias,
+            last_triggered: id === "1001" ? new Date(Date.now() - 600_000).toISOString() : null,
+          },
+        });
+      };
+      for (const id of Object.keys(casa.config)) mettiLAutomazione(id);
+      const statoDi = (id) => grezzi[id] || null;
+      const NOMI = { soggiorno: "Soggiorno", corridoio: "Corridoio" };
+      const elenco = () =>
+        Object.keys(casa.config).map((id) => {
+          const config = casa.config[id];
+          const s = grezzi[entitaDi(id)];
+          const modello = HA.dallaHomeAssistant(config, { statoDi, stati: grezzi });
+          return {
+            entity_id: entitaDi(id),
+            id,
+            nome: config.alias,
+            attiva: s?.state === "on",
+            ultima: Date.parse(s?.attributes?.last_triggered || "") || null,
+            area: NOMI[casa.aree[id]] || "",
+            areaId: casa.aree[id] || "",
+            categoria: HA.categoriaDi(config, statoDi),
+            origine: HA.origineDi(config),
+            modello,
+            modificabile: true,
+            config: amministra ? config : null,
+          };
+        });
+      const risposta = (m) => {
+        casa.comandi.push(m);
+        if (m.type === "ponte/automazioni/stato")
+          return {
+            premium: true,
+            puoScrivere: amministra,
+            automazioni: elenco(),
+            aree: [
+              { id: "corridoio", nome: "Corridoio" },
+              { id: "soggiorno", nome: "Soggiorno" },
+            ],
+          };
+        if (m.type === "ponte/automazioni/salva") {
+          const id = m.automazione_id || String(2000 + Object.keys(casa.config).length);
+          const config = HA.inHomeAssistant(
+            { ...m.automazione, id },
+            {
+              stati: grezzi,
+              descrizione: casa.config[id] ? (casa.config[id].description ?? "") : null,
+            },
+          );
+          casa.config[id] = config;
+          mettiLAutomazione(id);
+          return { id, alias: config.alias };
+        }
+        if (m.type === "ponte/automazioni/elimina") {
+          delete casa.config[m.automazione_id];
+          delete grezzi[entitaDi(m.automazione_id)];
+          return { id: m.automazione_id };
+        }
+        if (m.type === "ponte/automazioni/duplica") {
+          const id = String(3000 + Object.keys(casa.config).length);
+          casa.config[id] = {
+            ...casa.config[m.automazione_id],
+            id,
+            alias: `${casa.config[m.automazione_id].alias} (copia)`,
+          };
+          mettiLAutomazione(id);
+          return { id, alias: casa.config[id].alias };
+        }
+        if (m.type === "ponte/automazioni/rinomina") {
+          if (m.nome) casa.config[m.automazione_id].alias = m.nome;
+          if (m.area !== undefined) casa.aree[m.automazione_id] = m.area;
+          return { id: m.automazione_id };
+        }
+        if (m.type === "ponte/automazioni/proposte/scarta") casa.scartate.push(m.proposta);
+        return {
+          proposte: casa.proposte.filter((p) => !casa.scartate.includes(p.id)),
+          giorni: 21,
+          abitudiniPronte: true,
+        };
+      };
       const vero = window.eval("ws");
       window.__FINTO__ = {
         readyState: 1,
         send(grezzo) {
           const m = JSON.parse(grezzo);
-          if (!String(m.type).startsWith("ponte/automazioni/")) return vero?.send?.(grezzo);
-          if (m.type === "ponte/automazioni/proposte/scarta") window.__SCARTATE__.push(m.proposta);
-          const elenco = () =>
-            window.__PROPOSTE__.filter((p) => !window.__SCARTATE__.includes(p.id));
-          const risultato =
-            m.type === "ponte/automazioni/stato"
-              ? window.__CASA__
-              : { proposte: elenco(), giorni: 21, abitudiniPronte: true };
+          const nostro = String(m.type).startsWith("ponte/automazioni/");
+          const servizio = m.type === "call_service" && m.domain === "automation";
+          if (!nostro && !servizio) return vero?.send?.(grezzo);
+          let result = null;
+          if (servizio) {
+            casa.servizi.push({ service: m.service, data: m.service_data || m.target || {} });
+            const entita = (m.service_data || m.target || {}).entity_id;
+            if (m.service === "turn_on" || m.service === "turn_off")
+              metti(entita, {
+                ...grezzi[entita],
+                state: m.service === "turn_on" ? "on" : "off",
+              });
+          } else result = risposta(m);
           setTimeout(() => {
             const attese = window.eval("pendingWsCallbacks");
             const torna = attese[m.id];
             delete attese[m.id];
-            torna?.({ id: m.id, type: "result", success: true, result: risultato });
+            torna?.({ id: m.id, type: "result", success: true, result });
+            window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
           }, 10);
         },
       };
       window.eval("ws = window.__FINTO__");
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
     },
-    { stati: STATI, automazioni, proposte },
+    {
+      stati: STATI,
+      configurazioni,
+      aree: AREE,
+      spente: SPENTE,
+      proposte,
+      rimaste,
+      amministra,
+    },
   );
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
 }
@@ -216,10 +339,14 @@ async function apriLaVoce(page) {
   return voce;
 }
 
-const salvate = (page) =>
-  page.evaluate(() => JSON.parse(localStorage.getItem("cd_automazioni") || "[]"));
+const comandi = (page, tipo) =>
+  page.evaluate((tipo) => window.__CASA__.comandi.filter((m) => m.type === tipo), tipo);
+const servizi = (page) => page.evaluate(() => window.__CASA__.servizi);
+const configDi = (page, id) => page.evaluate((id) => window.__CASA__.config[id], id);
 
-test("la voce sta dopo Azioni, col bollino PREMIUM, e la lista dice quello che la casa ha fatto", async ({
+/* ── il config ───────────────────────────────────────────────────────────── */
+
+test("il config: tutte quelle di Home Assistant a gruppi, le etichette, la ricerca e l'interruttore", async ({
   page,
 }, testInfo) => {
   await avvia(page, testInfo);
@@ -231,36 +358,57 @@ test("la voce sta dopo Azioni, col bollino PREMIUM, e la lista dice quello che l
     ),
   ).toBe("automazioni");
   const pagina = page.locator("#ed-body .au-web");
-  await expect(pagina.locator(".au-riga")).toHaveCount(1);
-  await expect(pagina.locator(".au-riga .au-quando")).toContainText("Alle 07:15");
-  await expect(pagina.locator(".au-riga .au-allora")).toContainText("apri Tapparelle soggiorno");
-  await expect(pagina.locator(".au-riga .au-ultima")).toContainText("ultima volta: oggi");
-  await expect(pagina.locator(".au-box.blu .au-pross b")).toHaveText(/\d\d:\d\d/);
-  await expect(pagina.locator(".au-ult i")).toHaveText("✓");
-  /* Senza proposte il blocco non c'e'. */
-  await expect(pagina.locator(".pro")).toHaveCount(0);
-  /* L'interruttore la spegne e la salva, senza aprirla. */
-  await pagina.locator('[data-au-attiva="a1"]').click();
-  await expect.poll(async () => (await salvate(page))[0]?.attiva).toBe(false);
-  await expect(pagina.locator(".au-riga")).toHaveClass(/spenta/);
+  await expect(pagina.locator(".ha-barra h3")).toContainText("Le automazioni di casa");
+  await expect(pagina.locator(".ha-barra h3 small")).toContainText("5, da Home Assistant");
+  await expect(pagina.locator(".ha-riga")).toHaveCount(5);
+  /* Per tipo: tapparelle, luci, clima, energia, altre. */
+  await expect(pagina.locator(".ha-gruppo")).toHaveText([
+    /Luci/,
+    /Clima/,
+    /Tapparelle/,
+    /Energia/,
+    /Altre/,
+  ]);
+  const tapparelle = pagina.locator(".ha-riga", { hasText: "Tapparelle mattina" });
+  await expect(tapparelle.locator(".ha-orig.g")).toHaveText("gdahome");
+  await expect(tapparelle.locator(".ha-fr")).toContainText("Alle 07:15");
+  await expect(tapparelle.locator(".ha-fr")).toContainText("apri Tapparelle soggiorno");
+  await expect(tapparelle.locator(".au-ultima")).toContainText("ultima volta: oggi");
+  await expect(
+    pagina.locator(".ha-riga", { hasText: "Batterie scariche" }).locator(".ha-orig.b"),
+  ).toHaveText("Blueprint");
+  await expect(
+    pagina.locator(".ha-riga", { hasText: "Scaldabagno" }).locator(".ha-fr"),
+  ).toHaveClass(/av/);
+  await expect(pagina.locator(".ha-riga", { hasText: "Clima spento" })).toHaveClass(/spenta/);
+  /* Per stanza, e la ricerca. */
+  await pagina.locator('[data-au-per="stanza"]').click();
+  await expect(pagina.locator(".ha-gruppo").first()).toContainText("Corridoio");
+  await pagina.locator("[data-au-cerca]").fill("tapparelle");
+  await expect(pagina.locator(".ha-riga")).toHaveCount(1);
+  await expect(pagina.locator("[data-au-cerca]")).toBeFocused();
+  await pagina.locator("[data-au-cerca]").fill("");
+  /* L'interruttore la spegne in Home Assistant, senza aprirla. */
+  await pagina.locator('[data-au-attiva="automation.a1001"]').click();
+  await expect
+    .poll(() => servizi(page))
+    .toContainEqual({ service: "turn_off", data: { entity_id: "automation.a1001" } });
+  await expect(pagina.locator(".ha-riga", { hasText: "Tapparelle mattina" })).toHaveClass(/spenta/);
 });
 
-test("dai modelli all'editor: si crea, si legge e si salva", async ({ page }, testInfo) => {
-  await avvia(page, testInfo, { automazioni: [] });
+test("dai modelli all'editor: si crea e si salva in Home Assistant", async ({ page }, testInfo) => {
+  await avvia(page, testInfo, { configurazioni: {} });
   await apriLaVoce(page);
   const pagina = page.locator("#ed-body .au-web");
   await pagina.locator('[data-au-vai="modelli"]').first().click();
   await expect(pagina.locator(".au-mod")).toHaveCount(8);
   await pagina.locator('[data-au-modello="luce"]').click();
-  await expect(pagina.locator(".au-blocco.au-q")).toBeVisible();
   await expect(pagina.locator('select[data-au-campo="quando.entita.0"]')).toHaveValue(
     "binary_sensor.pir_corridoio",
   );
-  /* La tendina del QUANDO: sette cose, una sola si sceglie. */
   await pagina.locator("[data-au-tendina]").click();
   await expect(pagina.locator(".au-tendina [data-au-quando]")).toHaveCount(7);
   await pagina.locator('.au-tendina [data-au-quando="movimento"]').click();
-  /* Notte fra le 23 e le 6, che attraversa la mezzanotte. */
   await pagina.locator('[data-au-campo="soloSe.0.da"]').fill("23:00");
   await pagina.locator('[data-au-campo="soloSe.0.da"]').dispatchEvent("change");
   await pagina.locator('[data-au-campo="soloSe.0.a"]').fill("06:00");
@@ -269,13 +417,16 @@ test("dai modelli all'editor: si crea, si legge e si salva", async ({ page }, te
   await expect(pagina.locator("[data-au-leggi]")).toContainText(
     "quando c'è movimento in Corridoio, solo se di notte (23:00–06:00), accendi Luce corridoio al 30%, aspetta 2 min e spegni Luce corridoio",
   );
+  await expect(pagina.locator(".ha-salva-dove")).toContainText(
+    "Home Assistant → Impostazioni → Automazioni",
+  );
   await pagina.locator("[data-au-salva]").click();
   await expect
-    .poll(() => salvate(page))
-    .toMatchObject([
-      {
+    .poll(async () => (await comandi(page, "ponte/automazioni/salva"))[0])
+    .toMatchObject({
+      automazione_id: "",
+      automazione: {
         nome: "Luce corridoio di notte",
-        attiva: true,
         quando: { tipo: "movimento", entita: ["binary_sensor.pir_corridoio"], verso: "si" },
         soloSe: [{ tipo: "notte", da: "23:00", a: "06:00" }],
         allora: [
@@ -284,59 +435,350 @@ test("dai modelli all'editor: si crea, si legge e si salva", async ({ page }, te
           { tipo: "spegni", entita: ["light.corridoio"] },
         ],
       },
-    ]);
-  await expect(pagina.locator(".au-riga")).toHaveCount(1);
+    });
+  /* La configurazione vera, scritta come la scrive il ponte. */
+  const scritta = await configDi(page, "2000");
+  expect(scritta.description).toContain("#gdahome");
+  expect(scritta.actions[0]).toEqual({
+    action: "light.turn_on",
+    target: { entity_id: "light.corridoio" },
+    data: { brightness_pct: 30 },
+  });
+  const ok = pagina.locator(".ha-ok");
+  await expect(ok).toContainText("Salvata in Home Assistant ✓ «Luce corridoio di notte»");
+  await expect(ok).toContainText("Impostazioni → Automazioni, con l'etichetta gdahome");
+  await expect(ok.locator(".ha-link")).toHaveAttribute("href", "/config/automation/edit/2000");
+  await expect(pagina.locator(".ha-riga")).toHaveCount(1);
 });
 
-test("il cronotermostato: due temperature e le fasce trascinate", async ({ page }, testInfo) => {
-  await avvia(page, testInfo, { automazioni: [] });
+test("una semplice si modifica; una complessa ha il riassunto e Apri in Home Assistant", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo);
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  await pagina.locator('[data-au-apri="automation.a1002"]').click();
+  const testa = pagina.locator(".ha-testa");
+  await expect(testa.locator('[data-au-testo="nome"]')).toHaveValue("Luce corridoio di notte");
+  await expect(testa.locator(".ha-dove")).toContainText("automation.a1002");
+  await expect(testa.locator("[data-au-area]")).toHaveValue("corridoio");
+  await expect(pagina.locator('select[data-au-campo="quando.entita.0"]')).toHaveValue(
+    "binary_sensor.pir_corridoio",
+  );
+  await testa.locator("[data-au-esegui]").click();
+  await expect
+    .poll(() => servizi(page))
+    .toContainEqual({
+      service: "trigger",
+      data: { entity_id: "automation.a1002", skip_condition: true },
+    });
+  await testa.locator('[data-au-testo="nome"]').fill("Luce corridoio piano");
+  await pagina.locator("[data-au-salva]").click();
+  await expect.poll(async () => (await configDi(page, "1002")).alias).toBe("Luce corridoio piano");
+  expect((await configDi(page, "1002")).description).toContain("#gdahome");
+  expect((await comandi(page, "ponte/automazioni/salva"))[0].automazione_id).toBe("1002");
+
+  /* La complessa: il riassunto, e il resto in Home Assistant. */
+  await pagina.locator('[data-au-apri="automation.a1004"]').click();
+  await expect(page.locator("#ed-body .dm-alberatura-titolo-nome")).toHaveText(
+    "Scaldabagno col sole",
+  );
+  await expect(pagina.locator(".ha-riep.q")).toContainText("una condizione scritta a mano");
+  await expect(pagina.locator(".ha-riep.q code")).toHaveText("{{ now().weekday() < 5 }}");
+  await expect(pagina.locator(".ha-riep.a")).toContainText("sceglie un caso:");
+  await expect(pagina.locator(".ha-riep.a")).toContainText("altrimenti → manda una notifica");
+  await expect(pagina.locator(".ha-av .ha-apri")).toHaveAttribute(
+    "href",
+    "/config/automation/edit/1004",
+  );
+  await expect(pagina.locator('[data-au-salva], [data-au-campo="quando.tipo"]')).toHaveCount(0);
+  /* Rinominarla e cambiarle stanza si puo'. */
+  await pagina.locator("[data-au-rinomina]").fill("Boiler col sole");
+  await pagina.locator("[data-au-rinomina]").dispatchEvent("change");
+  await expect.poll(async () => (await configDi(page, "1004")).alias).toBe("Boiler col sole");
+  expect((await configDi(page, "1004")).triggers).toEqual(HA[1004].triggers);
+  await pagina.locator("[data-au-area]").selectOption("soggiorno");
+  await expect
+    .poll(async () => (await comandi(page, "ponte/automazioni/rinomina")).at(-1))
+    .toMatchObject({ automazione_id: "1004", area: "soggiorno" });
+});
+
+test("Elimina chiede, Duplica copia", async ({ page }, testInfo) => {
+  await avvia(page, testInfo);
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  await pagina.locator('[data-au-apri="automation.a1001"]').click();
+  await pagina.locator("[data-au-duplica]").click();
+  await expect
+    .poll(() => page.evaluate(() => Object.values(window.__CASA__.config).map((c) => c.alias)))
+    .toContain("Tapparelle mattina (copia)");
+  await pagina.locator("[data-au-elimina]").click();
+  const conferma = page.locator(".ha-conferma");
+  await expect(conferma.locator("h4")).toHaveText("Eliminare «Tapparelle mattina»?");
+  await expect(conferma).toContainText("Si toglie anche da Home Assistant");
+  await conferma.locator("[data-au-conferma-no]").click();
+  await expect(conferma).toHaveCount(0);
+  expect(await configDi(page, "1001")).toBeTruthy();
+  await pagina.locator("[data-au-elimina]").click();
+  await page.locator("[data-au-conferma-si]").click();
+  await expect.poll(() => configDi(page, "1001")).toBeUndefined();
+  await expect(pagina.locator(".ha-barra")).toBeVisible();
+});
+
+test("il cronotermostato: due temperature e le fasce trascinate, in Home Assistant", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, { configurazioni: {} });
   await apriLaVoce(page);
   const pagina = page.locator("#ed-body .au-web");
   await pagina.locator('[data-au-vai="modelli"]').first().click();
   await pagina.locator('[data-au-modello="crono"]').click();
   await expect(pagina.locator('[data-au-barra="feriali"] i')).toHaveCount(48);
   await pagina.locator('[data-au-gradi="inCasa"][data-au-passo="0.5"]').click();
-  /* Un tocco sulla mezz'ora di mezzanotte la accende. */
   const barra = pagina.locator('[data-au-barra="festivi"]');
   const box = await barra.boundingBox();
   await page.mouse.click(box.x + 3, box.y + box.height / 2);
   await pagina.locator("[data-au-salva]").click();
   await expect
-    .poll(() => salvate(page))
-    .toMatchObject([
-      {
-        tipo: "crono",
-        crono: {
-          termostati: ["climate.soggiorno"],
-          inCasa: 21.5,
-          fuori: 18,
-          festivi: [
-            [0, 30],
-            [480, 1320],
-          ],
-          finestre: ["binary_sensor.finestra"],
-        },
+    .poll(async () => (await comandi(page, "ponte/automazioni/salva"))[0]?.automazione)
+    .toMatchObject({
+      tipo: "crono",
+      crono: {
+        termostati: ["climate.soggiorno"],
+        inCasa: 21.5,
+        fuori: 18,
+        festivi: [
+          [0, 30],
+          [480, 1320],
+        ],
+        finestre: ["binary_sensor.finestra"],
       },
-    ]);
+    });
+  const scritta = await configDi(page, "2000");
+  expect(scritta.variables.gdahome_crono.inCasa).toBe(21.5);
+  /* E riletta e' di nuovo un cronotermostato, che si apre con le sue barre. */
+  await pagina.locator('[data-au-apri="automation.a2000"]').click();
+  await expect(pagina.locator('[data-au-barra="festivi"]')).toBeVisible();
 });
 
-test("senza Premium: la voce col lucchetto e il velo", async ({ page }, testInfo) => {
+test("tutta Home Assistant: un evento, un servizio e le Avanzate", async ({ page }, testInfo) => {
+  await avvia(page, testInfo, { configurazioni: {} });
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  await pagina.locator('[data-au-vai="modelli"]').first().click();
+  await pagina.locator('[data-au-modello="zero"]').click();
+  await pagina.locator("[data-au-tendina]").click();
+  await expect(pagina.locator('.au-tendina [data-au-quando="evento"]')).toHaveCount(0);
+  await pagina.locator("[data-au-tendina-altro]").click();
+  await pagina.locator('.au-tendina [data-au-quando="evento"]').click();
+  await pagina.locator('[data-au-testo="quando.evento"]').fill("zha_event");
+  await pagina.locator('[data-au-aggiungi="quando.filtroRighe"]').click();
+  await pagina.locator('[data-au-testo="quando.filtroRighe.0.0"]').fill("command");
+  await pagina.locator('[data-au-testo="quando.filtroRighe.0.1"]').fill("on");
+  await pagina.locator('[data-au-aggiungi="allora"]').click();
+  await pagina.locator('[data-au-campo="allora.1.tipo"]').selectOption("servizio");
+  await pagina.locator('[data-au-testo="allora.1.servizio"]').fill("notify.notify");
+  await pagina.locator('[data-au-testo="allora.1.dati"]').fill('{"message":"Tasto"}');
+  await expect(pagina.locator('[data-au-campo="modo"]')).toHaveCount(0);
+  await pagina.locator("[data-au-avanzate]").click();
+  await pagina.locator('[data-au-campo="modo"]').selectOption("ignora");
+  await pagina.locator('[data-au-campo="pausa"]').selectOption("5");
+  await pagina.locator('[data-au-testo="nome"]').fill("Tasto della sala");
+  await pagina.locator("[data-au-salva]").click();
+  await expect
+    .poll(() => configDi(page, "2000"))
+    .toMatchObject({
+      alias: "Tasto della sala",
+      mode: "single",
+      triggers: [{ trigger: "event", event_type: "zha_event", event_data: { command: "on" } }],
+    });
+  const scritta = await configDi(page, "2000");
+  expect(scritta.actions.at(-1)).toEqual({ action: "notify.notify", data: { message: "Tasto" } });
+  expect(scritta.conditions[0].value_template).toContain("total_seconds() > 300");
+  /* Un servizio che apre la casa non si salva: lo si dice. */
+  await pagina.locator('[data-au-apri="automation.a2000"]').click();
+  await pagina.locator('[data-au-testo="allora.1.servizio"]').fill("lock.unlock");
+  await pagina.locator("[data-au-salva]").click();
+  await expect(pagina.locator(".au-errore")).toContainText("Questo servizio la casa non lo chiama");
+});
+
+test("le proposte: il blocco, «Crea» che salva in Home Assistant e «No, grazie»", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, { proposte: PROPOSTE });
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  const blocco = pagina.locator(".pro");
+  await expect(blocco.locator(".pro-testa h3")).toHaveText("Suggerite per la tua casa ✨");
+  await expect(blocco.locator(".pro-carta")).toHaveCount(1);
+  await blocco.locator("[data-au-crea]").click();
+  await expect(pagina.locator(".pro-etichetta")).toContainText(
+    "finché non la salvi in Home Assistant non parte niente",
+  );
+  await pagina.locator("[data-au-salva]").click();
+  await expect
+    .poll(async () => (await configDi(page, "2005"))?.actions?.[0]?.event_data?.testo)
+    .toBe("Lavatrice ha finito");
+  await expect(pagina.locator(".pro")).toHaveCount(0);
+});
+
+test("le automazioni della versione di prova si convertono con un tasto", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, {
+    configurazioni: {},
+    rimaste: [
+      {
+        id: "a1",
+        nome: "Vecchia",
+        attiva: true,
+        quando: { tipo: "orario", ore: ["07:15"] },
+        allora: [{ tipo: "tapparella", entita: "cover.soggiorno", modo: "apri" }],
+      },
+    ],
+  });
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  await expect(pagina.locator(".ha-converti")).toContainText(
+    "Un'automazione della versione di prova è ferma",
+  );
+  await pagina.locator("[data-au-converti]").click();
+  await expect.poll(() => configDi(page, "2000")).toMatchObject({ alias: "Vecchia" });
+  await expect
+    .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("cd_automazioni") || "[]")))
+    .toEqual([]);
+  await expect(pagina.locator(".ha-converti")).toHaveCount(0);
+});
+
+test("chi non amministra Home Assistant le accende e le spegne, e non le modifica", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, { amministra: false });
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  await expect(pagina.locator(".au-nota")).toContainText("chi amministra Home Assistant");
+  await expect(pagina.locator(".ha-riga")).toHaveCount(5);
+  await expect(pagina.locator("[data-au-apri]")).toHaveCount(0);
+  await expect(pagina.locator('[data-au-vai="modelli"]')).toHaveCount(0);
+});
+
+/* ── senza Premium ───────────────────────────────────────────────────────── */
+
+test("senza Premium: il config velato, e «Scopri Premium» dice dove si compra", async ({
+  page,
+}, testInfo) => {
   await avvia(page, testInfo, { premium: false });
   const voce = await apriLaVoce(page);
   await expect(voce).toHaveClass(/au-chiusa/);
   await expect(voce.locator(".au-lucchetto")).toHaveCount(1);
   const velo = page.locator("#ed-body .au-velo");
+  await expect(velo.locator(".au-prem")).toHaveText("PREMIUM · IN ARRIVO");
   await expect(velo.locator("h3")).toHaveText("Automazioni con Premium");
-  await expect(velo.locator("[data-au-scopri]")).toHaveText("Scopri Premium");
-  await expect(velo).toContainText("Premium si attiva dall'app gdahome.");
-  /* Quello che c'e' sotto non si tocca: resta salvato com'e'. */
-  expect((await salvate(page))[0].attiva).toBe(true);
+  await expect(velo).toContainText(
+    "Si acquista solo dalle app gdahome su App Store e Google Play. Le app sono in arrivo.",
+  );
+  /* Sotto il velo non si tocca niente. */
+  await expect(page.locator("#ed-body .au-sotto")).toHaveAttribute("inert", "");
+  await velo.locator("[data-au-scopri]").click();
+  const store = page.locator("#au-store");
+  await expect(store.locator("h3")).toHaveText("Premium arriva con le app");
+  await expect(store).toContainText("Qui in Home Assistant non si paga nulla");
+  await expect(store.locator(".neg")).toHaveText([
+    /App Store.*in arrivo/i,
+    /Google Play.*in arrivo/i,
+  ]);
+  await store.locator(".ok").click();
+  await expect(store).toHaveCount(0);
 });
 
-test("nell'app la voce del config non c'e', e la pagina si apre a schermo pieno", async ({
+/* ── la sezione della dashboard ──────────────────────────────────────────── */
+
+const linguette = (page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll("nav.tabs .tab[data-tab]")].map((t) => t.dataset.tab),
+  );
+
+test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gruppi e il foglio", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo);
+  await expect
+    .poll(async () => (await linguette(page)).slice(-2))
+    .toEqual(["automazioni", "config"]);
+  await page.locator('nav.tabs .tab[data-tab="automazioni"]').click();
+  const sezione = page.locator("#page-automazioni-casa");
+  await expect(sezione).toHaveClass(/active/);
+  await expect(sezione.locator(".dm-page-mast-title")).toHaveText("Automazioni");
+  await expect(sezione.locator(".dm-page-mast-sub")).toHaveText(
+    "Tutte quelle di casa · da Home Assistant",
+  );
+  await expect(sezione.locator("[data-auc-attive] b")).toHaveText("4");
+  await expect(sezione.locator("[data-auc-spente] b")).toHaveText("1");
+  await expect(sezione.locator(".dm-lucip-room")).toHaveCount(5);
+  const carta = sezione.locator('[data-auc-carta="automation.a1001"]');
+  await expect(carta.locator("strong")).toHaveText("Tapparelle mattina");
+  await expect(carta.locator(".ad-frase")).toContainText("Alle 07:15");
+  await expect(sezione.locator('[data-auc-carta="automation.a1003"] .dm-lucip-badge')).toHaveText(
+    "SPENTA",
+  );
+  /* L'interruttore della carta la spegne in Home Assistant. */
+  await carta.locator("[data-auc-led]").click();
+  await expect
+    .poll(() => servizi(page))
+    .toContainEqual({ service: "turn_off", data: { entity_id: "automation.a1001" } });
+  await expect(carta).not.toHaveClass(/is-on/);
+  /* Per stanza. */
+  await sezione.locator('[data-auc-per="stanza"]').click();
+  await expect(sezione.locator(".dm-lucip-room-name").first()).toHaveText("🏠 Corridoio");
+  /* Il foglio: in sola lettura, con «Esegui ora» e «Modifica nel config ›». */
+  await sezione.locator('[data-auc-carta="automation.a1002"]').click();
+  const foglio = page.locator("#auc-foglio .ad-foglio");
+  await expect(foglio.locator("h4")).toHaveText("Luce corridoio di notte");
+  await expect(foglio.locator(".riga.q")).toContainText("c'è movimento in Corridoio");
+  await expect(foglio.locator(".riga.s")).toContainText("di notte");
+  await expect(foglio.locator(".riga.a")).toContainText("accendi Luce corridoio al 20%");
+  await foglio.locator("[data-auc-esegui]").click();
+  await expect
+    .poll(() => servizi(page))
+    .toContainEqual({
+      service: "trigger",
+      data: { entity_id: "automation.a1002", skip_condition: true },
+    });
+  await foglio.locator("[data-auc-modifica]").click();
+  await expect(page.locator("#auc-foglio")).toHaveCount(0);
+  await expect(page.locator('#ed-body .au-web [data-au-testo="nome"]')).toHaveValue(
+    "Luce corridoio di notte",
+  );
+});
+
+test("la sezione della dashboard senza Premium: velata, e la finestra dello store", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, { premium: false });
+  await page.locator('nav.tabs .tab[data-tab="automazioni"]').click();
+  const sezione = page.locator("#page-automazioni-casa");
+  const carta = sezione.locator(".ad-chiusa .carta");
+  await expect(carta.locator(".tag")).toHaveText("PREMIUM · IN ARRIVO");
+  await expect(carta.locator("h3")).toHaveText("Automazioni");
+  await expect(carta.locator("li")).toHaveText([
+    "Tutte le automazioni di Home Assistant, a gruppi",
+    "Le accendi e le spegni con un tocco",
+    "Le crei e le modifichi in tre passi",
+    "Proposte pensate per la tua casa",
+  ]);
+  await expect(sezione.locator(".ad-chiusa .sotto")).toHaveAttribute("inert", "");
+  await carta.locator("[data-auc-scopri]").click();
+  await expect(page.locator("#au-store h3")).toHaveText("Premium arriva con le app");
+  expect(await servizi(page)).toEqual([]);
+});
+
+/* ── nell'app ────────────────────────────────────────────────────────────── */
+
+test("nell'app: niente linguetta e niente voce, la pagina del menu con «＋ Nuova» e il foglio", async ({
   page,
 }, testInfo) => {
   await avvia(page, testInfo, { app: true });
+  expect(await linguette(page)).not.toContain("automazioni");
   await page.evaluate(() => window.apriConfigEntita?.());
   await expect(page.locator("#editor-modal .ed-tab").first()).toBeVisible();
   await expect(page.locator('#editor-modal .ed-tab[data-tab="automazioni"]')).toHaveCount(0);
@@ -347,204 +789,41 @@ test("nell'app la voce del config non c'e', e la pagina si apre a schermo pieno"
   await page.evaluate(() => window.gdahomeApriLeAutomazioni());
   const pagina = page.locator("#page-automazioni");
   await expect(pagina).toHaveClass(/active/);
-  await expect(pagina.locator(".au-titolo h1")).toHaveText("Automazioni");
-  await expect(pagina.locator(".au-riga")).toHaveCount(1);
+  await expect(pagina.locator(".dm-page-mast-sub")).toHaveText("Tutte quelle di casa");
+  await expect(pagina.locator(".ad-cfg")).toHaveCount(0);
+  await expect(pagina.locator("[data-auc-carta]")).toHaveCount(5);
+  /* «＋ Nuova» non sta sotto la bolla dell'assistente. */
+  const nuova = page.locator("#auc-nuova");
+  await expect(nuova).toBeVisible();
+  const bolla = page.locator(".dm-assist-tasto");
+  if (await bolla.isVisible().catch(() => false)) {
+    const a = await nuova.boundingBox();
+    const b = await bolla.boundingBox();
+    const sovrapposti =
+      a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+    expect(sovrapposti).toBe(false);
+  }
+  /* Il foglio porta «✏️ Modifica» e le tre cose sotto. */
+  await pagina.locator('[data-auc-carta="automation.a1002"]').click();
+  const foglio = page.locator("#auc-foglio .ad-foglio");
+  await expect(foglio.locator("[data-auc-modifica]")).toHaveText("✏️ Modifica");
+  await expect(foglio.locator(".op-mod button")).toHaveText([
+    "Duplica",
+    "Stanza e nome",
+    "Elimina",
+  ]);
+  await foglio.locator("[data-auc-modifica]").click();
+  await expect(pagina.locator('.au-app [data-au-testo="nome"]')).toHaveValue(
+    "Luce corridoio di notte",
+  );
+  await expect(nuova).toHaveCount(0);
+  await pagina.locator('.au-indietro[data-au-vai="lista"]').click();
+  await expect(pagina.locator("[data-auc-carta]")).toHaveCount(5);
+  await expect(page.locator("#auc-nuova")).toBeVisible();
+  /* «＋ Nuova»: i modelli, nella stessa pagina. */
+  await page.locator("#auc-nuova").click();
+  await expect(pagina.locator(".au-mod")).toHaveCount(8);
   await page.evaluate(() => window.gdahomeTornaDalleAutomazioni());
   await expect(page.locator("#page-automazioni")).toHaveCount(0);
-  await expect(page.locator(".page.active")).toHaveCount(1);
-});
-
-test("tutta Home Assistant: un evento, un servizio, la ricerca su tutte le entità e le Avanzate", async ({
-  page,
-}, testInfo) => {
-  await avvia(page, testInfo, { automazioni: [] });
-  await apriLaVoce(page);
-  const pagina = page.locator("#ed-body .au-web");
-  await pagina.locator('[data-au-vai="modelli"]').first().click();
-  await pagina.locator('[data-au-modello="zero"]').click();
-  /* I QUANDO generici stanno dietro «Altro…», chiusi di serie. */
-  await pagina.locator("[data-au-tendina]").click();
-  await expect(pagina.locator('.au-tendina [data-au-quando="evento"]')).toHaveCount(0);
-  await pagina.locator("[data-au-tendina-altro]").click();
-  await pagina.locator('.au-tendina [data-au-quando="evento"]').click();
-  await pagina.locator('[data-au-testo="quando.evento"]').fill("zha_event");
-  await pagina.locator('[data-au-aggiungi="quando.filtroRighe"]').click();
-  await pagina.locator('[data-au-testo="quando.filtroRighe.0.0"]').fill("command");
-  await pagina.locator('[data-au-testo="quando.filtroRighe.0.1"]').fill("on");
-  /* «🔍 Tutte le entità…»: la ricerca del config, su tutta la casa. */
-  await pagina.locator('select[data-au-campo="allora.0.entita.0"]').selectOption("__cerca__");
-  const ricerca = page.locator("#cd-entpick");
-  await expect(ricerca).toBeVisible();
-  await page.locator("#cd-ep-search").fill("cover.soggiorno");
-  await ricerca.getByText("cover.soggiorno").first().click();
-  await expect(ricerca).toHaveCount(0);
-  await expect(pagina.locator('[data-au-campo="allora.0.tipo"]')).toHaveValue("accendi");
-  /* Il servizio a mano sta nel gruppo «Altro…» delle azioni. */
-  await pagina.locator('[data-au-aggiungi="allora"]').click();
-  await pagina.locator('[data-au-campo="allora.1.tipo"]').selectOption("servizio");
-  await pagina.locator('[data-au-testo="allora.1.servizio"]').fill("notify.notify");
-  await pagina.locator('[data-au-testo="allora.1.dati"]').fill('{"message":"Tasto"}');
-  /* Le Avanzate sono chiuse di serie. */
-  await expect(pagina.locator('[data-au-campo="modo"]')).toHaveCount(0);
-  await pagina.locator("[data-au-avanzate]").click();
-  await pagina.locator('[data-au-campo="modo"]').selectOption("ignora");
-  await pagina.locator('[data-au-campo="pausa"]').selectOption("5");
-  await pagina.locator('[data-au-testo="nome"]').fill("Tasto della sala");
-  await pagina.locator("[data-au-salva]").click();
-  await expect
-    .poll(() => salvate(page))
-    .toMatchObject([
-      {
-        nome: "Tasto della sala",
-        quando: { tipo: "evento", evento: "zha_event", filtro: { command: "on" } },
-        modo: "ignora",
-        pausa: 5,
-        allora: [
-          { tipo: "accendi" },
-          { tipo: "servizio", servizio: "notify.notify", dati: { message: "Tasto" } },
-        ],
-      },
-    ]);
-  /* Un servizio che apre la casa non si salva: lo si dice. */
-  await pagina.locator(".au-riga").first().click();
-  await pagina.locator('[data-au-testo="allora.1.servizio"]').fill("lock.unlock");
-  await pagina.locator("[data-au-salva]").click();
-  await expect(pagina.locator(".au-errore")).toContainText("Questo servizio la casa non lo chiama");
-});
-
-test("le proposte: il blocco con tre carte, Vedi tutte e «No, grazie»", async ({
-  page,
-}, testInfo) => {
-  await avvia(page, testInfo, { proposte: PROPOSTE });
-  await apriLaVoce(page);
-  const pagina = page.locator("#ed-body .au-web");
-  const blocco = pagina.locator(".pro");
-  await expect(blocco.locator(".pro-testa h3")).toHaveText("Suggerite per la tua casa ✨");
-  await expect(blocco.locator(".pro-carta")).toHaveCount(3);
-  await expect(blocco.locator(".pro-carta").first().locator(".pro-q")).toHaveText(
-    "Quando c'è movimento in Corridoio di notte",
-  );
-  await expect(blocco.locator(".pro-carta").first().locator(".pro-a")).toContainText(
-    "accendi Luce corridoio al 20%, spegni dopo 2 min",
-  );
-  await expect(blocco.locator(".pro-carta").first().locator(".pro-perche")).toContainText(
-    "in Corridoio ci sono un sensore di movimento e una luce.",
-  );
-  /* Il blocco sta fra la casa e «Le tue automazioni». */
-  expect(
-    await pagina.evaluate((au) => au.querySelector(".pro").nextElementSibling?.className),
-  ).toContain("au-testa");
-
-  await blocco.locator(".pro-tutte").click();
-  await expect(blocco.locator(".pro-tutte")).toHaveCount(0);
-  await expect(page.locator("#ed-body .dm-alberatura-titolo-nome")).toHaveText(
-    "Proposte per la tua casa",
-  );
-  const gruppi = pagina.locator(".pro-gruppo");
-  await expect(gruppi).toHaveCount(2);
-  await expect(gruppi.nth(0)).toContainText("Dai tuoi dispositivi");
-  await expect(gruppi.nth(0)).toContainText("· 3");
-  await expect(gruppi.nth(1)).toContainText("Dalle tue abitudini");
-  await expect(gruppi.nth(1)).toContainText("ultime 3 settimane");
-  await expect(pagina.locator(".pro-elenco .au-riga")).toHaveCount(4);
-  await expect(pagina.locator(".pro-elenco .au-riga").nth(3)).toContainText(
-    "Alle 19:10 nei giorni feriali",
-  );
-  await expect(pagina.locator(".pro-fondo")).toContainText("niente esce di casa");
-
-  /* «No, grazie»: sparisce, e la casa lo sa. */
-  await pagina.locator('[data-au-scarta="elettrodomestico:sensor.lavatrice_potenza"]').click();
-  await expect(pagina.locator(".pro-elenco .au-riga")).toHaveCount(3);
-  expect(await page.evaluate(() => window.__SCARTATE__)).toEqual([
-    "elettrodomestico:sensor.lavatrice_potenza",
-  ]);
-  await pagina.locator('.au-indietro[data-au-vai="lista"]').click();
-  await expect(pagina.locator(".pro-tutte")).toHaveText("Vedi tutte (3) ›");
-});
-
-test("le proposte: «Crea» apre l'editor gia' compilato, e solo Salva la scrive", async ({
-  page,
-}, testInfo) => {
-  await avvia(page, testInfo, { automazioni: [], proposte: PROPOSTE });
-  await apriLaVoce(page);
-  const pagina = page.locator("#ed-body .au-web");
-  await pagina.locator(".pro-carta").first().locator("[data-au-crea]").click();
-  await expect(pagina.locator(".pro-etichetta .pro-pill")).toHaveText("Proposta ✨");
-  await expect(pagina.locator(".pro-etichetta")).toContainText("finché non salvi non parte niente");
-  await expect(pagina.locator(".au-indietro")).toHaveText("‹ Automazioni");
-  await expect(pagina.locator('[data-au-testo="nome"]')).toHaveValue(
-    "Luce col movimento in Corridoio",
-  );
-  await expect(pagina.locator('select[data-au-campo="quando.entita.0"]')).toHaveValue(
-    "binary_sensor.pir_corridoio",
-  );
-  /* Finche' non si salva, non c'e' niente. */
-  expect(await salvate(page)).toEqual([]);
-  await pagina.locator("[data-au-salva]").click();
-  await expect
-    .poll(() => salvate(page))
-    .toMatchObject([
-      {
-        nome: "Luce col movimento in Corridoio",
-        quando: { tipo: "movimento", entita: ["binary_sensor.pir_corridoio"] },
-        soloSe: [{ tipo: "notte" }],
-        allora: [
-          { tipo: "accendi", entita: ["light.corridoio"], livello: 20 },
-          { tipo: "aspetta", minuti: 2 },
-          { tipo: "spegni", entita: ["light.corridoio"] },
-        ],
-      },
-    ]);
-  /* Salvata, non e' piu' una proposta. */
-  await expect(pagina.locator(".au-riga")).toHaveCount(1);
-  await expect(pagina.locator(".pro-tutte")).toHaveText("Vedi tutte (3) ›");
-  await expect(
-    pagina.locator(
-      '[data-au-proposta="movimento-luce:binary_sensor.pir_corridoio|light.corridoio"]',
-    ),
-  ).toHaveCount(0);
-  /* E la lavatrice: l'avviso ha gia' le sue parole. */
-  await pagina.locator('[data-au-crea="elettrodomestico:sensor.lavatrice_potenza"]').click();
-  await pagina.locator("[data-au-salva]").click();
-  await expect
-    .poll(async () => (await salvate(page))[1]?.allora?.[0]?.testo)
-    .toBe("Lavatrice ha finito");
-});
-
-test("le proposte senza Premium: una si legge, le altre sono un numero", async ({
-  page,
-}, testInfo) => {
-  await avvia(page, testInfo, { premium: false, proposte: PROPOSTE });
-  await apriLaVoce(page);
-  const pagina = page.locator("#ed-body .au-web");
-  const blocco = pagina.locator(".pro.pro-senza");
-  await expect(blocco.locator(".pro-carta")).toHaveCount(1);
-  await expect(blocco.locator(".pro-crea.prem")).toHaveText("✨ Crea con Premium");
-  await expect(blocco.locator("[data-au-scarta]")).toHaveCount(0);
-  await expect(blocco.locator(".pro-altre")).toContainText(
-    "altre 3 proposte pronte: le trovi tutte con Premium",
-  );
-  /* Sopra il velo, non sotto. */
-  await expect(pagina.locator(".au-velato .pro")).toHaveCount(0);
-  await blocco.locator(".pro-crea.prem").click();
-  await expect(pagina.locator(".au-scopri-di-piu")).toBeVisible();
-  expect(await salvate(page)).toHaveLength(1);
-});
-
-test("le proposte nell'app: le carte scorrono coi puntini, e Vedi tutte apre la pagina", async ({
-  page,
-}, testInfo) => {
-  await avvia(page, testInfo, { app: true, proposte: PROPOSTE });
-  await page.evaluate(() => window.gdahomeApriLeAutomazioni());
-  const pagina = page.locator("#page-automazioni");
-  await expect(pagina.locator(".pro-carta")).toHaveCount(3);
-  await expect(pagina.locator(".pro-punti i")).toHaveCount(3);
-  await expect(pagina.locator(".pro-punti i.si")).toHaveCount(1);
-  await expect(pagina.locator(".pro-carte")).toHaveCSS("overflow-x", "auto");
-  await pagina.locator(".pro-tutte").click();
-  await expect(pagina.locator(".au-titolo h1")).toHaveText("Proposte");
-  await expect(pagina.locator(".pro-elenco .au-riga")).toHaveCount(4);
-  await pagina.locator(".pro-elenco [data-au-crea]").first().click();
-  await expect(pagina.locator(".pro-etichetta")).toBeVisible();
-  await expect(pagina.locator(".au-indietro")).toHaveText("‹ Automazioni");
+  await expect(page.locator("#auc-nuova")).toHaveCount(0);
 });

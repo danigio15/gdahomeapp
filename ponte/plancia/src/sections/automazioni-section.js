@@ -1,38 +1,47 @@
 /* «Automazioni» (Premium): Quando · Solo se · Allora.
  *
  * «Quando succede qualcosa — un orario, una porta, un movimento, un valore,
- * chi arriva o esce — la casa fa da sola quello che le dici.» Qui si scrivono
- * e si guardano; a farle e' la casa (`ponte/src/automazioni.js`), che gira
- * anche quando nessuna pagina e' aperta. Le regole sono una sola, in
- * `core/automazioni.js`, e le leggono tutte e due: la frase «Si legge così»
- * dice esattamente quello che la casa fara'.
+ * chi arriva o esce — la casa fa da sola quello che le dici.» Le automazioni
+ * sono quelle **vere di Home Assistant**: tutte, anche quelle scritte in Home
+ * Assistant anni fa, a gruppi. Le esegue lui, e quelle create o modificate
+ * qui si ritrovano in Impostazioni → Automazioni col segno «gdahome». La
+ * plancia le racconta, le accende e le spegne (`automation.turn_on/off`), le
+ * fa partire (`automation.trigger`), e le scrive passando dal ponte
+ * (`ponte/automazioni/salva`, `ponte/src/automazioni.js`), che le traduce con
+ * `core/automazioni-ha.js`.
  *
- * Le automazioni stanno in `cd_automazioni`, una casella della configurazione
- * come le altre: viaggia fra i dispositivi e la casa la legge dalla plancia
- * principale. Le scrive solo chi ha un utente (`ponte/src/commissioni.js`).
- * Quello che la casa ha fatto — cosa viene dopo, le ultime eseguite, l'ultima
- * volta di ognuna — lo si chiede con `ponte/automazioni/stato`, in sola
- * lettura.
+ * Due specie:
+ *  - le **semplici**, che stanno tutte in Quando · Solo se · Allora: si
+ *    modificano con l'editor di sempre, e si salvano in Home Assistant;
+ *  - le **complesse** (template, scelte fra casi, blueprint…): una scheda col
+ *    riassunto leggibile, l'interruttore, «Esegui ora», il nome e la stanza,
+ *    e «Apri in Home Assistant ↗» per il resto. Modificarle qui vorrebbe dire
+ *    perderne un pezzo senza dirlo.
  *
- * ── Due porte, una pagina ─────────────────────────────────────────────────
+ * ── Tre porte ─────────────────────────────────────────────────────────────
  *
- *  - **Sul web** (la plancia dentro Home Assistant) e' una voce del config,
- *    nel gruppo Plancia subito dopo «Azioni», col bollino PREMIUM. Senza
- *    Premium la voce ha il lucchetto, e la pagina un velo che dice cosa fa.
- *  - **Nell'app** la voce del config non c'e': le automazioni sono una voce
- *    del menu dell'app, e la pagina si apre a schermo pieno quando l'app la
- *    chiede — la maniglia `gdahomeApriLeAutomazioni`, o il messaggio
- *    `apri-le-automazioni`, come fa la Configurazione con le sue.
+ *  - **La sezione della dashboard** (`automazioni-casa-section.js`): tutte,
+ *    si guardano, si accendono e si spengono; si modificano nel config.
+ *  - **Il config** (la plancia dentro Home Assistant): la voce «Automazioni»
+ *    nel gruppo Plancia subito dopo «Azioni», col bollino PREMIUM, dove si
+ *    creano e si modificano.
+ *  - **Nell'app** la voce del config non c'e' e la linguetta nemmeno: tutto
+ *    sta sotto «Automazioni» del menu dell'app, che apre la pagina a schermo
+ *    pieno con `gdahomeApriLeAutomazioni` — una pagina sola con l'aspetto
+ *    della dashboard, e qui dentro l'editor.
  *
- * Le viste sono cinque: la lista, i modelli pronti, l'editor (Quando · Solo
- * se · Allora), il cronotermostato e le proposte. Una bozza alla volta: si
- * salva col suo tasto, e solo se sta in piedi.
+ * Senza Premium tutto e' velato: niente elenco gratuito, niente interruttori.
+ * Premium si compra solo dalle app gdahome: nel browser di Home Assistant
+ * «Scopri Premium» lo dice e basta, e non chiede niente.
  *
  * Le proposte («Suggerite per la tua casa ✨») le calcola l'add-on in casa,
- * dai dispositivi e dalla loro storia (`ponte/src/automazioni.js`, regole in
- * `core/automazioni-proposte.js`): qui si raccontano nella lingua di chi
- * guarda, «Crea» ne apre una nell'editor gia' compilata — e finche' non si
- * salva non parte niente — e «No, grazie» la scarta per la casa.
+ * dai dispositivi e dalla loro storia (`core/automazioni-proposte.js`): qui
+ * si raccontano, «Crea» ne apre una nell'editor gia' compilata — e finche'
+ * non si salva in Home Assistant non c'e' niente — e «No, grazie» la scarta.
+ *
+ * Le automazioni scritte dalla versione di prova che le eseguiva l'add-on
+ * (`cd_automazioni`) restano ferme nella configurazione: la lista invita a
+ * convertirle in automazioni di Home Assistant, una volta, con un tasto.
  */
 import {
   AZIONI_AL_MASSIMO,
@@ -52,13 +61,14 @@ import {
   prossimiEventi,
   servizioPermesso,
 } from "../core/automazioni.js";
+import { CATEGORIE, EVENTO_AVVISA, normalizzata } from "../core/automazioni-ha.js";
 import { proposteDaMostrare } from "../core/automazioni-proposte.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
-import { currentProfile } from "./config-persistence-section.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
 import {
   allStates,
+  chiamaServizio,
   chiediAHomeAssistant,
   clean,
   doc,
@@ -78,6 +88,9 @@ const state = (root[KEY] ||= {
   installed: false,
   vista: "lista",
   bozza: null,
+  /* L'automazione di Home Assistant aperta (la voce dell'elenco): c'e' per
+   * una che esiste, non c'e' per una nuova. */
+  scheda: null,
   /* Da dove si e' arrivati all'editor: i modelli, o la lista (una che c'era). */
   daModelli: false,
   premium: null,
@@ -90,7 +103,18 @@ const state = (root[KEY] ||= {
   tendinaAltro: false,
   avanzate: false,
   errore: "",
-  scopri: false,
+  /* Un salvataggio in volo: il tasto non si ripreme. */
+  salvando: false,
+  /* L'ultima salvata, per il «Salvata in Home Assistant ✓» in cima. */
+  salvata: null,
+  /* «Per tipo» o «Per stanza», e la ricerca. */
+  perStanza: false,
+  cerca: "",
+  /* Gli interruttori appena toccati: valgono finche' Home Assistant non dice
+   * lo stesso, al piu' dieci secondi. */
+  toccate: {},
+  /* «Eliminare?»: la voce da confermare. */
+  conferma: null,
   /* La pagina a schermo pieno dell'app e' aperta. */
   inApp: false,
   doveEra: "",
@@ -101,14 +125,18 @@ const state = (root[KEY] ||= {
   proposte: null,
   proposta: null,
   scartateQui: [],
+  /* Chi disegna la lista della pagina dell'app: la sezione della dashboard
+   * (`automazioni-casa-section.js`), che la presta con la sua faccia. */
+  listaDellApp: null,
 });
 
 export const AUTOMAZIONI_TAB = "automazioni";
 const ID_PAGINA = "page-automazioni";
-/* Lo stato della casa si richiede quando si apre la pagina, dopo un
+/* L'elenco della casa si richiede quando si apre la pagina, dopo un
  * salvataggio, e al ridisegno se e' piu' vecchio di un minuto. Nessun
  * orologio: la pagina non deve rincorrere niente. */
 const VALE = 60_000;
+const TOCCATA_VALE = 10_000;
 
 const schedaAttiva = () => clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 
@@ -118,6 +146,9 @@ const schedaAttiva = () => clean(doc?.querySelector?.(".ed-tab.active")?.dataset
 export function nellApp() {
   return Boolean(doc?.getElementById?.("gdahome-config-fuori") || root.gdahomeDice?.postMessage);
 }
+
+/** Lo stato della pagina, per la sezione della dashboard. */
+export const statoDelleAutomazioni = () => state;
 
 /* ── cosa c'e' in casa ───────────────────────────────────────────────────── */
 
@@ -208,20 +239,53 @@ function azioniDellaPlancia() {
     .map((a) => clean(a.name));
 }
 
-/* ── le automazioni salvate ──────────────────────────────────────────────── */
+/* ── le automazioni di casa ──────────────────────────────────────────────── */
 
-export const leAutomazioni = () => automazioniPulite(readJson(CHIAVE_AUTOMAZIONI, []));
+/** Quelle rimaste nella configurazione dalla versione di prova: ferme. */
+export const rimasteNellaPlancia = () => automazioniPulite(readJson(CHIAVE_AUTOMAZIONI, []));
 
-function salvaLElenco(elenco) {
-  writeJsonIfChanged(CHIAVE_AUTOMAZIONI, automazioniPulite(elenco));
-  try {
-    root.dispatchEvent?.(new CustomEvent("dashboardmodern:automazioni"));
-  } catch (_errore) {}
+/**
+ * Tutte le automazioni di Home Assistant, come le ha dette il ponte, con
+ * quello che si sa di piu' fresco: acceso o spento e l'ultima volta li dice
+ * lo stato vivo di Home Assistant, non l'elenco di un minuto fa.
+ */
+export function automazioniDiCasa() {
+  const elenco = Array.isArray(state.ponte?.automazioni) ? state.ponte.automazioni : [];
+  const vivi = stati();
+  const ora = Date.now();
+  return elenco.map((v) => {
+    const s = vivi[v.entity_id];
+    let attiva = s ? clean(s.state) === "on" : v.attiva === true;
+    const toccata = state.toccate[v.entity_id];
+    if (toccata) {
+      if (ora - toccata.il > TOCCATA_VALE || toccata.attiva === attiva) delete state.toccate[v.entity_id];
+      else attiva = toccata.attiva;
+    }
+    const ultima = Date.parse(s?.attributes?.last_triggered || "");
+    return {
+      ...v,
+      attiva,
+      nome: clean(s?.attributes?.friendly_name) || v.nome,
+      ultima: Number.isFinite(ultima) ? ultima : v.ultima,
+      modello: v.modello ? { ...v.modello, attiva } : null,
+    };
+  });
 }
+
+/* Le forme della plancia di tutte quelle che ci stanno, piu' quelle rimaste:
+ * servono a non riproporre quello che c'e' gia'. */
+const leFormeDiCasa = () => [
+  ...rimasteNellaPlancia(),
+  ...automazioniDiCasa()
+    .map((v) => v.modello)
+    .filter(Boolean),
+];
+
+const puoScrivere = () => state.ponte?.puoScrivere === true;
 
 /* ── la casa ─────────────────────────────────────────────────────────────── */
 
-async function chiediAllaCasa({ forza = false } = {}) {
+export async function chiediAllaCasa({ forza = false } = {}) {
   if (state.chiedendo) return;
   const adesso = Date.now();
   if (!forza && adesso - state.chiestoIl < VALE) return;
@@ -233,11 +297,11 @@ async function chiediAllaCasa({ forza = false } = {}) {
     state.premium = state.premium === true;
   }
   try {
-    state.ponte = await chiediAHomeAssistant({ type: "ponte/automazioni/stato" }, 8000);
+    state.ponte = await chiediAHomeAssistant({ type: "ponte/automazioni/stato" }, 25000);
     state.assente = false;
   } catch (errore) {
-    /* «Non conosco»: questa plancia non sta dietro all'add-on, e le
-     * automazioni non le fa nessuno. Un filo non ancora aperto si riprova. */
+    /* «Non conosco»: questa plancia non sta dietro all'add-on, e l'elenco
+     * non lo legge nessuno. Un filo non ancora aperto si riprova. */
     const detto = clean(errore?.message);
     state.assente = /non conosco|unknown/i.test(detto);
     if (detto === "socket") state.chiestoIl = adesso - VALE + 4000;
@@ -246,7 +310,7 @@ async function chiediAllaCasa({ forza = false } = {}) {
    * metterci qualche secondo. Senza add-on non ce ne sono. */
   try {
     if (!state.assente) {
-      ridisegna();
+      ridisegnaTutto();
       state.proposte = await chiediAHomeAssistant({ type: "ponte/automazioni/proposte" }, 15000);
     }
   } catch (_errore) {
@@ -255,7 +319,61 @@ async function chiediAllaCasa({ forza = false } = {}) {
   } finally {
     state.chiedendo = false;
   }
+  ridisegnaTutto();
+}
+
+/* Chi ridisegna quando la casa risponde: questa pagina, e la sezione della
+ * dashboard che si iscrive qui. */
+const ascoltatori = new Set();
+export const quandoCambiaLaCasa = (chi) => ascoltatori.add(chi);
+function ridisegnaTutto() {
   ridisegna();
+  for (const chi of ascoltatori) {
+    try {
+      chi();
+    } catch (_errore) {}
+  }
+}
+
+/* ── dire a Home Assistant ───────────────────────────────────────────────── */
+
+/** Accende o spegne un'automazione di Home Assistant. */
+export function alternaInCasa(voce, attiva = !voce?.attiva) {
+  if (!voce?.entity_id) return false;
+  state.toccate[voce.entity_id] = { attiva, il: Date.now() };
+  chiamaServizio({
+    domain: "automation",
+    service: attiva ? "turn_on" : "turn_off",
+    data: { entity_id: voce.entity_id },
+  });
+  ridisegnaTutto();
+  return true;
+}
+
+/** «▶ Esegui ora»: le azioni, senza guardare il Solo se. */
+export function eseguiOra(voce) {
+  if (!voce?.entity_id) return false;
+  const nome = voce.nome;
+  chiamaServizio({
+    domain: "automation",
+    service: "trigger",
+    data: { entity_id: voce.entity_id, skip_condition: true },
+  });
+  root.edToast?.(t(`▶ «${nome}» eseguita`, `▶ «${nome}» run`));
+  return true;
+}
+
+/* Una domanda al ponte che scrive in Home Assistant. Il perche' di un no lo
+ * dice chi ha detto no. */
+async function scriviInCasa(comando) {
+  return chiediAHomeAssistant(comando, 25000);
+}
+
+/* Home Assistant ricarica le automazioni dopo ogni scrittura, e l'entita'
+ * nuova arriva un attimo dopo: si richiede l'elenco due volte. */
+function rileggiPresto() {
+  void chiediAllaCasa({ forza: true });
+  root.setTimeout?.(() => void chiediAllaCasa({ forza: true }), 2500);
 }
 
 /* ── le parole ───────────────────────────────────────────────────────────── */
@@ -531,22 +649,297 @@ export function siLeggeCosi(a) {
   return `<b>${esc(quando.charAt(0).toLowerCase() + quando.slice(1))}</b>${esc(se)}, <b>${esc(allora)}</b>.`;
 }
 
+/* ── le automazioni di Home Assistant, dette ──────────────────────────────── */
+
+/** I gruppi «Per tipo»: simbolo, nome, disegno di casa e colore. */
+export const CATEGORIA = () => ({
+  luci: ["💡", t("Luci", "Lights"), "luci", "#f59e0b"],
+  clima: ["🌡️", t("Clima", "Climate"), "clima", "#0ea5e9"],
+  tapparelle: ["🪟", t("Tapparelle", "Shutters"), "tapparelle", "#6366f1"],
+  sicurezza: ["🛡️", t("Sicurezza", "Security"), "sicurezza", "#16a34a"],
+  avvisi: ["🔔", t("Avvisi", "Alerts"), "allerte", "#f97316"],
+  energia: ["⚡", t("Energia", "Energy"), "energia", "#eab308"],
+  altre: ["⚙️", t("Altre", "Other"), "impostazioni", "#64748b"],
+});
+
+const categoriaDi = (v) => (CATEGORIE.includes(v?.categoria) ? v.categoria : "altre");
+
+/** La frase di una carta: il Quando (col primo Solo se) e l'Allora. `null` se e' complessa. */
+export function fraseDellaVoce(v) {
+  const m = v?.modello;
+  if (!m) return null;
+  if (m.tipo === "crono") return { quando: t("Cronotermostato", "Thermostat schedule"), allora: fraseDelCrono(m.crono) };
+  const se = m.soloSe?.length ? `, ${fraseDellaCondizione(m.soloSe[0])}` : "";
+  return { quando: `${fraseDelQuando(m.quando)}${se}`, allora: fraseDellAllora(m.allora) || "…" };
+}
+
+/** «ultima volta: oggi 07:15», o «mai». */
+export const ultimaVoltaDi = (v) => (v?.ultima ? quandoFu(v.ultima) : t("mai", "never"));
+
+/* La ricerca guarda il nome, la stanza e la frase. */
+function trovata(v, cerca) {
+  const q = clean(cerca).toLowerCase();
+  if (!q) return true;
+  const f = fraseDellaVoce(v);
+  return [v.nome, v.area, f?.quando, f?.allora].some((x) => clean(x).toLowerCase().includes(q));
+}
+
+/**
+ * Le automazioni a gruppi: «Per tipo» nell'ordine delle categorie, o «Per
+ * stanza» in ordine di nome, con quelle senza stanza in fondo. Solo i gruppi
+ * che hanno qualcosa, e solo quello che la ricerca trova.
+ */
+export function gruppiDelleAutomazioni(elenco, { perStanza = false, cerca = "" } = {}) {
+  const trovate = elenco.filter((v) => trovata(v, cerca));
+  if (perStanza) {
+    const stanze = [...new Set(trovate.map((v) => clean(v.area)).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b, locale()),
+    );
+    return [...stanze, ""]
+      .map((stanza) => ({
+        chiave: stanza || "-",
+        titolo: stanza ? `🏠 ${stanza}` : t("Senza stanza", "No room"),
+        voci: trovate.filter((v) => clean(v.area) === stanza),
+      }))
+      .filter((g) => g.voci.length);
+  }
+  const nomi = CATEGORIA();
+  return CATEGORIE.map((k) => ({
+    chiave: k,
+    titolo: `${nomi[k][0]} ${nomi[k][1]}`,
+    voci: trovate.filter((v) => categoriaDi(v) === k),
+  })).filter((g) => g.voci.length);
+}
+
+/** Cosa viene dopo: la prima delle accese che ha un'ora. */
+export function prossimaDiCasa(elenco = automazioniDiCasa()) {
+  const perId = new Map();
+  const forme = [];
+  for (const v of elenco)
+    if (v.modello && v.attiva) {
+      perId.set(v.modello.id, v);
+      forme.push(v.modello);
+    }
+  const primo = prossimiEventi(forme, Date.now(), (id) => stati()[id] || null, 1)[0];
+  return primo ? { alle: primo.alle, ora: oraBreve(primo.alle), voce: perId.get(primo.id) } : null;
+}
+
+/* ── il riassunto di una complessa ─────────────────────────────────────── *
+ *
+ * Una complessa non sta in una frase sola, ma si puo' leggere: una riga per
+ * ogni pezzo, coi nomi delle cose di casa al posto degli id, e il codice
+ * scritto a mano mostrato com'e', piccolo, per chi lo sa leggere. */
+
+const nomiDentro = (v) => nomiDi((Array.isArray(v) ? v : v ? [v] : []).filter((x) => clean(x).includes(".")));
+const comeCodice = (testo) => clean(testo).slice(0, 120);
+
+const scritto = (v) => (v !== undefined && v !== null && typeof v !== "object" ? String(v) : "");
+const testiDi = (azioni) =>
+  [].concat(azioni || []).flatMap((y) => righeDellAzione(y)).map((r) => r.testo).join(", ");
+
+function rigaDelTrigger(x) {
+  const tipo = clean(x?.trigger);
+  const quale = tipo || "?";
+  const chi = nomiDentro(x?.entity_id);
+  if (tipo === "time") {
+    const ore = []
+      .concat(x.at || [])
+      .map((o) => String(o).replace(/^(\d{1,2}:\d{2}):00$/, "$1"))
+      .join(", ");
+    return { testo: t(`alle ${ore}`, `at ${ore}`) };
+  }
+  if (tipo === "sun")
+    return { testo: x.event === "sunrise" ? t("all'alba", "at sunrise") : t("al tramonto", "at sunset") };
+  if (tipo === "state") {
+    const a = typeof x.to === "string" ? x.to : "";
+    return {
+      testo: a
+        ? t(`${chi} diventa «${a}»`, `${chi} becomes «${a}»`)
+        : t(`${chi} cambia stato`, `${chi} changes state`),
+    };
+  }
+  if (tipo === "numeric_state") {
+    const sopra = scritto(x.above);
+    const sotto = scritto(x.below);
+    if (sopra) return { testo: t(`${chi} supera ${sopra}`, `${chi} goes above ${sopra}`) };
+    if (sotto) return { testo: t(`${chi} scende sotto ${sotto}`, `${chi} drops below ${sotto}`) };
+    return { testo: t(`${chi} cambia valore`, `${chi} changes value`) };
+  }
+  if (tipo === "template")
+    return {
+      testo: t("una condizione scritta a mano", "a hand-written condition"),
+      codice: comeCodice(x.value_template),
+    };
+  if (tipo === "event") {
+    const evento = clean(x.event_type);
+    return { testo: t(`arriva l'evento ${evento}`, `the ${evento} event arrives`) };
+  }
+  if (tipo === "homeassistant")
+    return {
+      testo:
+        x.event === "shutdown"
+          ? t("Home Assistant si spegne", "Home Assistant shuts down")
+          : t("Home Assistant si avvia", "Home Assistant starts"),
+    };
+  if (tipo === "time_pattern") return { testo: t("a intervalli regolari", "at regular intervals") };
+  if (tipo === "zone")
+    return { testo: t(`${chi} entra o esce da una zona`, `${chi} enters or leaves a zone`) };
+  if (tipo === "device") return { testo: t("un dispositivo fa qualcosa", "a device does something") };
+  return { testo: t(`un trigger «${quale}»`, `a «${quale}» trigger`) };
+}
+
+function righeDellaCondizione(c, rientra = false) {
+  const tipo = clean(c?.condition);
+  const quale = tipo || "?";
+  const chi = nomiDentro(c?.entity_id);
+  if (["and", "or", "not"].includes(tipo)) {
+    const testa = {
+      and: t("tutte queste:", "all of these:"),
+      or: t("una di queste:", "any of these:"),
+      not: t("nessuna di queste:", "none of these:"),
+    }[tipo];
+    return [
+      { testo: testa, sub: rientra },
+      ...(Array.isArray(c.conditions) ? c.conditions : []).flatMap((x) =>
+        righeDellaCondizione(x, true),
+      ),
+    ];
+  }
+  let riga;
+  if (tipo === "state") {
+    const stato = [].concat(c.state ?? "").join(", ");
+    riga = { testo: t(`${chi} è «${stato}»`, `${chi} is «${stato}»`) };
+  } else if (tipo === "numeric_state") {
+    const sopra = scritto(c.above);
+    const sotto = scritto(c.below);
+    riga = {
+      testo: sopra
+        ? t(`${chi} sopra ${sopra}`, `${chi} above ${sopra}`)
+        : sotto
+          ? t(`${chi} sotto ${sotto}`, `${chi} below ${sotto}`)
+          : t(`un valore di ${chi}`, `a value of ${chi}`),
+    };
+  } else if (tipo === "time") {
+    const da = clean(c.after) || "…";
+    const a = clean(c.before) || "…";
+    riga = {
+      testo:
+        c.after || c.before
+          ? t(`fra ${da} e ${a}`, `between ${da} and ${a}`)
+          : t("in certi giorni", "on certain days"),
+    };
+  } else if (tipo === "sun") riga = { testo: t("secondo il sole", "depending on the sun") };
+  else if (tipo === "template")
+    riga = {
+      testo: t("una condizione scritta a mano", "a hand-written condition"),
+      codice: comeCodice(c.value_template),
+    };
+  else if (tipo === "trigger")
+    riga = { testo: t("secondo cosa l'ha fatta partire", "depending on what started it") };
+  else riga = { testo: t(`una condizione «${quale}»`, `a «${quale}» condition`) };
+  return [{ ...riga, sub: rientra }];
+}
+
+function rigaDelServizio(x) {
+  const servizio = clean(x.action);
+  const [dominio, cosa] = servizio.split(".");
+  const chi = nomiDentro(x.target?.entity_id);
+  if (dominio === "notify" || dominio === "persistent_notification")
+    return t("manda una notifica", "sends a notification");
+  if (dominio === "script" && cosa !== "turn_on" && cosa !== "turn_off") {
+    const script = nomeDi(servizio);
+    return t(`esegue lo script «${script}»`, `runs the «${script}» script`);
+  }
+  if (chi) {
+    if (cosa === "turn_on") return t(`accendi ${chi}`, `turn on ${chi}`);
+    if (cosa === "turn_off") return t(`spegni ${chi}`, `turn off ${chi}`);
+    if (cosa === "toggle") return t(`accendi o spegni ${chi}`, `toggle ${chi}`);
+    if (cosa === "open_cover") return t(`apri ${chi}`, `open ${chi}`);
+    if (cosa === "close_cover") return t(`chiudi ${chi}`, `close ${chi}`);
+    if (cosa === "set_temperature")
+      return t(`porta ${chi} a una temperatura`, `set ${chi} to a temperature`);
+    return t(`${servizio} su ${chi}`, `${servizio} on ${chi}`);
+  }
+  if (x.target?.area_id) return t(`${servizio} in una stanza`, `${servizio} in a room`);
+  return servizio || t("un'azione", "an action");
+}
+
+function righeDellAzione(x, sub = false) {
+  if (!x || typeof x !== "object") return [];
+  if (typeof x.action === "string") return [{ testo: rigaDelServizio(x), sub }];
+  if (x.delay !== undefined) {
+    const min = typeof x.delay === "number" ? Math.max(1, Math.round(x.delay / 60)) : 0;
+    return [{ testo: min ? t(`aspetta ${min} min`, `wait ${min} min`) : t("aspetta un po'", "waits a while"), sub }];
+  }
+  if (x.event === EVENTO_AVVISA) return [{ testo: `📱 «${clean(x.event_data?.testo)}»`, sub }];
+  if (x.event) {
+    const evento = clean(x.event);
+    return [{ testo: t(`manda l'evento ${evento}`, `fires the ${evento} event`), sub }];
+  }
+  if (x.wait_template !== undefined || x.wait_for_trigger !== undefined)
+    return [
+      {
+        testo: t("aspetta che succeda qualcosa", "waits for something to happen"),
+        sub,
+        codice: comeCodice(x.wait_template),
+      },
+    ];
+  if (Array.isArray(x.choose)) {
+    const casi = x.choose.length;
+    const righe = [
+      {
+        testo:
+          casi === 1
+            ? t("sceglie un caso:", "chooses one case:")
+            : t(`sceglie fra ${casi} casi:`, `chooses between ${casi} cases:`),
+        sub,
+      },
+    ];
+    x.choose.forEach((caso, i) => {
+      const n = i + 1;
+      const cosa = testiDi(caso.sequence) || "…";
+      righe.push({ testo: t(`caso ${n} → ${cosa}`, `case ${n} → ${cosa}`), sub: true });
+    });
+    const cosa = testiDi(x.default);
+    if (cosa) righe.push({ testo: t(`altrimenti → ${cosa}`, `otherwise → ${cosa}`), sub: true });
+    return righe;
+  }
+  if (x.if !== undefined) {
+    const allora = testiDi(x.then) || "…";
+    const altrimenti = testiDi(x.else);
+    return [
+      { testo: t("se succede una cosa:", "if something holds:"), sub },
+      { testo: t(`allora → ${allora}`, `then → ${allora}`), sub: true },
+      ...(altrimenti
+        ? [{ testo: t(`altrimenti → ${altrimenti}`, `otherwise → ${altrimenti}`), sub: true }]
+        : []),
+    ];
+  }
+  if (x.repeat) return [{ testo: t("ripete alcune azioni", "repeats some actions"), sub }];
+  if (x.parallel) return [{ testo: t("fa più cose insieme", "does several things at once"), sub }];
+  if (x.variables) return [{ testo: t("si prepara dei valori", "prepares some values"), sub }];
+  if (x.stop !== undefined) return [{ testo: t("si ferma", "stops"), sub }];
+  if (x.scene) {
+    const scena = nomeDi(x.scene);
+    return [{ testo: t(`attiva la scena ${scena}`, `activates the ${scena} scene`), sub }];
+  }
+  if (x.device_id) return [{ testo: t("un'azione di un dispositivo", "a device action"), sub }];
+  return [{ testo: t("un'altra azione", "another action"), sub }];
+}
+
+/** Il riassunto di una configurazione di Home Assistant, in tre blocchi. */
+export function riassuntoDi(config) {
+  const n = normalizzata(config);
+  return {
+    quando: n.triggers.map(rigaDelTrigger),
+    soloSe: n.conditions.flatMap((c) => righeDellaCondizione(c)),
+    allora: n.actions.flatMap((x) => righeDellAzione(x)),
+    blueprint: Boolean(config?.use_blueprint),
+  };
+}
+
 /* ── i disegni ───────────────────────────────────────────────────────────── */
 
-const DISEGNO_DEL_QUANDO = {
-  orario: "automazioni",
-  ogni: "automazioni",
-  apertura: "finestra",
-  movimento: "presenza",
-  valore: "temperatura",
-  persone: "persone",
-  antifurto: "sicurezza",
-  elettrodomestico: "elettrodomestici",
-  stato: "evidenza",
-  attributo: "impostazioni",
-  evento: "azioni",
-  crono: "caldo",
-};
 let disegni = 0;
 const disegno = (chiave, dove = "") =>
   oggettoWidget(chiave, "", `au-${dove || chiave}-${disegni++ % 64}`);
@@ -617,144 +1010,239 @@ const QUANDO_ALTRO = () => [
 
 /* ── la lista ────────────────────────────────────────────────────────────── */
 
-function nomeDellAutomazione(a) {
-  if (a.nome) return a.nome;
-  return a.tipo === "crono"
-    ? t("Cronotermostato", "Thermostat schedule")
-    : fraseDelQuando(a.quando);
-}
-
 function boxDellaCasa(elenco) {
-  const ponte = state.ponte;
-  const perId = new Map(elenco.map((a) => [a.id, a]));
-  /* Cosa viene dopo: lo dice la casa; senza la casa lo si calcola qui con gli
-   * stessi conti, perche' «prossimo» e' una domanda d'orologio. */
-  const prossimi = (
-    ponte?.prossimi?.length
-      ? ponte.prossimi
-      : prossimiEventi(elenco, Date.now(), (id) => stati()[id] || null)
-  ).filter((p) => perId.has(p.id));
-  const detto = (p) => {
-    const a = perId.get(p.id);
-    if (a.tipo === "crono") return `${nomeDellAutomazione(a)}: ${p.crono}°`;
-    return a.nome || fraseDellAllora(a.allora);
-  };
-  const primo = prossimi[0];
-  const poi = prossimi[1];
-  const poiAlle = poi ? oraBreve(poi.alle) : "";
-  const poiCosa = poi ? detto(poi) : "";
-  const pross = primo
-    ? `<div class="au-pross"><b>${esc(oraBreve(primo.alle))}</b><span>${esc(detto(primo))}${
-        poi
-          ? `<small>${esc(t(`poi alle ${poiAlle}: ${poiCosa}`, `then at ${poiAlle}: ${poiCosa}`))}</small>`
-          : ""
-      }</span></div>`
+  const prossima = prossimaDiCasa(elenco);
+  const pross = prossima
+    ? `<div class="au-pross"><b>${esc(prossima.ora)}</b><span>${esc(prossima.voce?.nome || "")}</span></div>`
     : `<div class="au-vuoto">${esc(t("Niente a un orario, per ora.", "Nothing on a schedule, for now."))}</div>`;
-  const ultime = (ponte?.ultime || []).filter((u) => perId.has(u.id)).slice(0, 3);
+  const ultime = elenco
+    .filter((v) => v.ultima)
+    .sort((x, y) => y.ultima - x.ultima)
+    .slice(0, 3);
   const ult = ultime.length
     ? `<div class="au-ult">${ultime
-        .map(
-          (u) =>
-            `<div><em>${esc(oraBreve(u.alle))}</em><span>${esc(nomeDellAutomazione(perId.get(u.id)))}</span>${
-              u.esito === "ok" ? "<i>✓</i>" : u.esito === "errore" ? '<i class="no">✕</i>' : ""
-            }</div>`,
-        )
+        .map((v) => `<div><em>${esc(oraBreve(v.ultima))}</em><span>${esc(v.nome)}</span><i>✓</i></div>`)
         .join("")}</div>`
-    : `<div class="au-vuoto">${esc(
-        state.assente
-          ? t(
-              "Le esegue l'add-on gdahome: qui non c'è.",
-              "The gdahome add-on runs them: it is not here.",
-            )
-          : t("Ancora nessuna.", "None yet."),
-      )}</div>`;
+    : `<div class="au-vuoto">${esc(t("Ancora nessuna.", "None yet."))}</div>`;
   return `<div class="au-due">
 <div class="au-box blu"><div class="au-et">${esc(t("Prossimo", "Next"))}</div>${pross}</div>
 <div class="au-box"><div class="au-et">${esc(t("Ultime eseguite", "Last run"))}</div>${ult}</div></div>`;
 }
 
-function rigaDellaLista(a) {
-  const ultima = state.ponte?.perAutomazione?.[a.id];
-  const se = a.tipo === "regola" && a.soloSe.length ? fraseDellaCondizione(a.soloSe[0]) : "";
-  const giorni =
-    a.tipo === "regola" && a.quando.tipo === "orario" ? giorniDetti(a.quando.giorni) : "";
-  const pastiglia = [giorni, se].filter(Boolean).join(" · ");
-  const quando = a.tipo === "crono" ? nomeDellAutomazione(a) : a.nome || fraseDelQuando(a.quando);
-  const sotto = a.tipo === "crono" ? fraseDelCrono(a.crono) : fraseDellAllora(a.allora);
-  const sopra = a.tipo === "regola" && a.nome ? fraseDelQuando(a.quando) : "";
-  const fu = ultima?.alle ? quandoFu(ultima.alle) : "";
-  return `<div class="au-riga${a.attiva ? "" : " spenta"}" data-au-apri="${esc(a.id)}" role="button" tabindex="0">
-<span class="au-ico">${disegno(DISEGNO_DEL_QUANDO[a.tipo === "crono" ? "crono" : a.quando.tipo], `riga-${a.id}`)}</span>
-<div class="au-frase"><div class="au-quando">${esc(quando)}${pastiglia ? `<span class="au-se">${esc(pastiglia)}</span>` : ""}</div>
-${sopra ? `<div class="au-sopra">${esc(sopra)}</div>` : ""}
-<div class="au-allora"><span class="fr">→</span>${esc(sotto || "…")}</div>
-<div class="au-ultima">${esc(
-    ultima?.alle
-      ? t(`ultima volta: ${fu}`, `last time: ${fu}`)
-      : t("ultima volta: mai", "last time: never"),
-  )}${ultima?.esito === "errore" ? ` · <b class="au-male">${esc(t("non è andata", "it failed"))}</b>` : ""}</div></div>
-<button type="button" class="au-int" role="switch" aria-checked="${a.attiva}" data-au-attiva="${esc(a.id)}" aria-label="${esc(t("Attiva o spenta", "On or off"))}"><i></i></button><span class="au-fr" aria-hidden="true">›</span></div>`;
+/* Da dove viene: nata dalla plancia, o da un blueprint. */
+export const etichettaDiOrigine = (v) =>
+  v?.origine === "gdahome"
+    ? '<span class="ha-orig g">gdahome</span>'
+    : v?.origine === "blueprint"
+      ? '<span class="ha-orig b">Blueprint</span>'
+      : "";
+
+function rigaDellaLista(v) {
+  const frase = fraseDellaVoce(v);
+  const cat = CATEGORIA()[categoriaDi(v)];
+  const apribile = puoScrivere() && v.modificabile;
+  const fu = ultimaVoltaDi(v);
+  return `<div class="au-riga ha-riga${v.attiva ? "" : " spenta"}"${apribile ? ` data-au-apri="${esc(v.entity_id)}" role="button" tabindex="0"` : ""}>
+<span class="au-ico">${disegno(cat[2], `riga-${v.entity_id}`)}</span>
+<div class="au-frase"><div class="ha-nome">${esc(v.nome)}${etichettaDiOrigine(v)}</div>${
+    frase
+      ? `<div class="ha-fr">${esc(frase.quando)}<span class="fr">→</span>${esc(frase.allora)}</div>`
+      : `<div class="ha-fr av">${esc(t("Avanzata: usa template, scelte o blueprint", "Advanced: uses templates, choices or blueprints"))}</div>`
+  }<div class="au-ultima">${esc(t(`ultima volta: ${fu}`, `last time: ${fu}`))}</div></div>
+<button type="button" class="au-int" role="switch" aria-checked="${v.attiva}" data-au-attiva="${esc(v.entity_id)}" aria-label="${esc(t("Attiva o spenta", "On or off"))}"><i></i></button>${
+    apribile ? '<span class="au-fr" aria-hidden="true">›</span>' : ""
+  }</div>`;
 }
 
-function lista({ app, proposte = true }) {
-  const elenco = leAutomazioni();
-  const nonPrincipale = currentProfile() !== "primary";
-  const nota = nonPrincipale
-    ? `<div class="au-nota">${esc(
-        t(
-          "La casa esegue solo le automazioni della plancia principale: quelle scritte qui restano ferme.",
-          "The home only runs the main dashboard's automations: the ones written here stay idle.",
-        ),
-      )}</div>`
-    : "";
-  const righe = elenco.length
-    ? `<div class="au-lista">${elenco.map(rigaDellaLista).join("")}</div>`
-    : `<div class="au-lista au-lista-vuota"><p>${esc(t("Nessuna automazione: comincia da un modello pronto.", "No automations: start from a ready-made template."))}</p><button type="button" class="au-piu" data-au-vai="modelli">＋ ${esc(t("Nuova", "Add new"))}</button></div>`;
-  return `${nota}${boxDellaCasa(elenco)}${proposte ? bloccoDelleProposte() : ""}
-<div class="au-testa"><h3>${esc(t("Le tue automazioni", "Your automations"))}</h3>${
-    app && !elenco.length
-      ? ""
-      : `<button type="button" class="au-piu" data-au-vai="modelli">＋ ${esc(t("Nuova", "Add new"))}</button>`
-  }</div>${righe}`;
+function gruppiHtml(elenco) {
+  const gruppi = gruppiDelleAutomazioni(elenco, { perStanza: state.perStanza, cerca: state.cerca });
+  if (!gruppi.length)
+    return `<div class="au-lista au-lista-vuota"><p>${esc(
+      elenco.length
+        ? t("Nessuna automazione con queste parole.", "No automation matches these words.")
+        : t("Nessuna automazione, per ora: comincia da un modello pronto.", "No automations yet: start from a ready-made template."),
+    )}</p></div>`;
+  return gruppi
+    .map(
+      (g) =>
+        `<div class="ha-gruppo" data-au-gruppo="${esc(g.chiave)}">${esc(g.titolo)}<span>${g.voci.length}</span></div><div class="au-lista">${g.voci
+          .map(rigaDellaLista)
+          .join("")}</div>`,
+    )
+    .join("");
+}
+
+/* «Per tipo» o «Per stanza», la ricerca e «＋ Nuova». */
+function barraDellaLista(elenco, { chiuso = false } = {}) {
+  const n = elenco.length;
+  return `<div class="ha-barra au-testa"><h3>${esc(t("Le automazioni di casa", "The home's automations"))} <small>· ${esc(
+    t(`${n}, da Home Assistant`, `${n}, from Home Assistant`),
+  )}</small></h3><span class="ha-seg" role="group"><button type="button" data-au-per="tipo" class="${state.perStanza ? "" : "si"}">${esc(
+    t("Per tipo", "By type"),
+  )}</button><button type="button" data-au-per="stanza" class="${state.perStanza ? "si" : ""}">${esc(
+    t("Per stanza", "By room"),
+  )}</button></span><label class="ha-cerca"><span aria-hidden="true">🔍</span><input type="search" data-au-cerca value="${esc(
+    state.cerca,
+  )}" placeholder="${esc(t("Cerca un'automazione…", "Search an automation…"))}"></label>${
+    chiuso
+      ? `<button type="button" class="au-piu chiuso" tabindex="-1">🔒 ${esc(t("Nuova", "Add new"))}</button>`
+      : puoScrivere()
+        ? `<button type="button" class="au-piu" data-au-vai="modelli">＋ ${esc(t("Nuova", "Add new"))}</button>`
+        : ""
+  }</div>`;
+}
+
+/* Dove la si ritrova in Home Assistant. Nell'app l'indirizzo di Home
+ * Assistant non e' quello della pagina, e il collegamento non c'e'. */
+const indirizzoInHA = (id) => `/config/automation/edit/${encodeURIComponent(id)}`;
+const apriInHA = (id, testo) =>
+  nellApp() || !id
+    ? ""
+    : `<a class="ha-link" href="${esc(indirizzoInHA(id))}" target="_top" rel="noopener">${esc(testo)}</a>`;
+
+function salvataHtml() {
+  const v = state.salvata;
+  if (!v) return "";
+  return `<div class="ha-ok" role="status"><span class="s">✓</span><div>${esc(
+    t(`Salvata in Home Assistant ✓ «${v.nome}»`, `Saved in Home Assistant ✓ «${v.nome}»`),
+  )}<small>${esc(
+    t(
+      "La ritrovi in Impostazioni → Automazioni, con l'etichetta gdahome.",
+      "You'll find it in Settings → Automations, labelled gdahome.",
+    ),
+  )}</small></div>${apriInHA(v.id, t("Apri in HA ↗", "Open in HA ↗"))}</div>`;
+}
+
+/* Le automazioni della versione di prova, rimaste ferme nella plancia: un
+ * tasto le scrive in Home Assistant, una volta. */
+function inviteAConvertire() {
+  const rimaste = rimasteNellaPlancia();
+  if (!rimaste.length || !puoScrivere()) return "";
+  const n = rimaste.length;
+  return `<div class="ha-converti"><span aria-hidden="true">🔁</span><div><b>${esc(
+    n === 1
+      ? t("Un'automazione della versione di prova è ferma", "One automation from the trial version is idle")
+      : t(`${n} automazioni della versione di prova sono ferme`, `${n} automations from the trial version are idle`),
+  )}</b><small>${esc(
+    t(
+      "Adesso le automazioni le esegue Home Assistant: convertile e ripartono, con l'etichetta gdahome.",
+      "Home Assistant runs automations now: convert them and they start again, labelled gdahome.",
+    ),
+  )}</small></div><button type="button" data-au-converti>${esc(t("Converti", "Convert"))}</button></div>`;
+}
+
+function noteDellaLista() {
+  if (state.assente)
+    return `<div class="au-nota">${esc(
+      t(
+        "L'elenco e i salvataggi passano dall'add-on gdahome: qui non c'è.",
+        "The list and saving go through the gdahome add-on: it is not here.",
+      ),
+    )}</div>`;
+  if (state.ponte && !puoScrivere())
+    return `<div class="au-nota">${esc(
+      t(
+        "Le automazioni le crea e le modifica chi amministra Home Assistant: qui si accendono e si spengono.",
+        "Automations are created and edited by whoever administers Home Assistant: here you turn them on and off.",
+      ),
+    )}</div>`;
+  return "";
+}
+
+function lista() {
+  const elenco = automazioniDiCasa();
+  return `${salvataHtml()}${noteDellaLista()}${inviteAConvertire()}${boxDellaCasa(elenco)}${bloccoDelleProposte()}
+${barraDellaLista(elenco)}<div class="ha-tutte">${gruppiHtml(elenco)}</div>`;
+}
+
+/* L'interruttore della sezione della dashboard: come per le altre, sta in
+ * cima alla sua pagina del config. */
+function interruttoreDellaSezione() {
+  try {
+    return root.cdSecToggleHtml?.("automazioni") || "";
+  } catch (_errore) {
+    return "";
+  }
 }
 
 const INTRO = () =>
   `<p class="au-intro">${esc(
     t(
-      "Quando succede qualcosa — un orario, una porta, un movimento, un valore, chi arriva o esce — la casa fa da sola quello che le dici. Le esegue l'add-on, anche con la plancia e l'app chiuse.",
-      "When something happens — a time, a door, motion, a value, someone arriving or leaving — the home does what you told it, by itself. The add-on runs them, even with the dashboard and the app closed.",
+      "Tutte le automazioni di Home Assistant, a gruppi: le crei, le modifichi, le accendi e le spegni. Le esegue Home Assistant, anche con la plancia e l'app chiuse.",
+      "All of Home Assistant's automations, in groups: you create them, edit them, turn them on and off. Home Assistant runs them, even with the dashboard and the app closed.",
     ),
   )} <span class="au-prem">PREMIUM</span></p>`;
 
+/* La nota sotto ogni velo e ogni «Scopri Premium»: dove si compra. */
+export const DOVE_SI_COMPRA = () =>
+  t(
+    "Si acquista solo dalle app gdahome su App Store e Google Play. Le app sono in arrivo.",
+    "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.",
+  );
+
 function velo(dentro) {
-  return `<div class="au-velato"><div class="au-sotto" aria-hidden="true" inert>${dentro}</div><div class="au-velo"><span class="st">✨</span><h3>${esc(
-    t("Automazioni con Premium", "Automations with Premium"),
-  )}</h3><p>${esc(
+  return `<div class="au-velato"><div class="au-sotto" aria-hidden="true" inert>${dentro}</div><div class="au-velo"><span class="st">✨</span><span class="au-prem">${esc(
+    t("PREMIUM · IN ARRIVO", "PREMIUM · COMING SOON"),
+  )}</span><h3>${esc(t("Automazioni con Premium", "Automations with Premium"))}</h3><p>${esc(
     t(
-      "Luci, tapparelle, clima e avvisi che partono da soli: a un orario, quando si apre una porta, quando c'è movimento o quando esci di casa.",
-      "Lights, shutters, climate and alerts that start by themselves: at a time, when a door opens, when there is motion or when you leave home.",
+      "Vedi tutte le automazioni di casa, le accendi e le spegni, ne crei di nuove in tre passi e ricevi le proposte pensate per la tua casa.",
+      "See all the home's automations, turn them on and off, create new ones in three steps and get suggestions designed for your home.",
     ),
   )}</p><button type="button" data-au-scopri>${esc(t("Scopri Premium", "Discover Premium"))}</button><small>${esc(
-    t("Premium si attiva dall'app gdahome.", "Premium is turned on from the gdahome app."),
-  )}</small>${
-    state.scopri
-      ? `<small class="au-scopri-di-piu">${esc(
-          t(
-            "Le automazioni che scrivi restano salvate: la casa le esegue dal giorno in cui è Premium.",
-            "The automations you write stay saved: the home runs them from the day it is Premium.",
-          ),
-        )}</small>`
-      : ""
-  }</div></div>`;
+    DOVE_SI_COMPRA(),
+  )}</small></div></div>`;
+}
+
+/* ── «Premium arriva con le app» ───────────────────────────────────────────
+ *
+ * Toccato «Scopri Premium» dentro Home Assistant: Premium si compra solo
+ * dalle app sugli store, e qui lo si dice — niente prezzi, niente moduli,
+ * niente dati di pagamento. Nell'app invece si apre la pagina Premium
+ * dell'app, che sa vendere (`diciAllApp("premium")`). */
+const ID_DELLO_STORE = "au-store";
+
+export function apriLoStore() {
+  if (!doc?.body || doc.getElementById(ID_DELLO_STORE)) return;
+  const velo = doc.createElement("div");
+  velo.id = ID_DELLO_STORE;
+  velo.className = "ps-velo";
+  velo.dataset.auStoreChiudi = "";
+  velo.innerHTML = `<div class="ps" role="dialog" aria-modal="true" aria-labelledby="au-store-titolo"><div class="man"></div><span class="ico" aria-hidden="true">✨</span><span class="tag">${esc(
+    t("PREMIUM · IN ARRIVO", "PREMIUM · COMING SOON"),
+  )}</span><h3 id="au-store-titolo">${esc(t("Premium arriva con le app", "Premium comes with the apps"))}</h3><p>${esc(
+    t("Premium si acquista", "Premium is bought"),
+  )} <b>${esc(t("esclusivamente dalle app gdahome", "only from the gdahome apps"))}</b> ${esc(
+    t(
+      "su App Store e Google Play. Qui in Home Assistant non si paga nulla e non si inseriscono dati di pagamento.",
+      "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.",
+    ),
+  )}</p><div class="negozi"><span class="neg">App Store <small>${esc(t("in arrivo", "coming soon"))}</small></span><span class="neg">▶ Google Play <small>${esc(
+    t("in arrivo", "coming soon"),
+  )}</small></span></div><p>${esc(
+    t(
+      "Quando le app saranno sugli store, attivi Premium dall'app e qui le Automazioni si sbloccano da sole.",
+      "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.",
+    ),
+  )}</p><button type="button" class="ok" data-au-store-chiudi>${esc(t("Ho capito", "Got it"))}</button></div>`;
+  doc.body.append(velo);
+  velo.querySelector(".ok")?.focus?.();
+}
+
+const chiudiLoStore = () => doc?.getElementById?.(ID_DELLO_STORE)?.remove();
+
+/** «Scopri Premium»: nell'app la pagina Premium dell'app, qui la finestra. */
+export function scopriPremium() {
+  if (nellApp()) diciAllApp("premium");
+  else apriLoStore();
 }
 
 /* ── le proposte ─────────────────────────────────────────────────────────── */
 
 /* Quelle da mostrare: le scarta anche la plancia, appena si dice «No,
  * grazie» o si salva, senza aspettare che la casa lo ridica. */
-function leProposte() {
+export function leProposte() {
   const tutte = Array.isArray(state.proposte?.proposte) ? state.proposte.proposte : [];
-  return proposteDaMostrare(tutte, { automazioni: leAutomazioni(), scartate: state.scartateQui });
+  return proposteDaMostrare(tutte, { automazioni: leFormeDiCasa(), scartate: state.scartateQui });
 }
 
 const settimaneDellaStoria = () => Math.max(1, Math.round((state.proposte?.giorni || 21) / 7));
@@ -942,11 +1430,8 @@ const disegnoDellaProposta = (p) =>
 const perche = (testo) =>
   `<div class="pro-perche"><b>${esc(t("Perché:", "Why:"))}</b> ${esc(testo)}</div>`;
 
-function tastiDellaProposta(p, { premium }) {
-  if (!premium)
-    return `<div class="pro-tasti"><button type="button" class="pro-crea prem" data-au-scopri>✨ ${esc(
-      t("Crea con Premium", "Create with Premium"),
-    )}</button></div>`;
+function tastiDellaProposta(p) {
+  if (!puoScrivere()) return "";
   return `<div class="pro-tasti"><button type="button" class="pro-crea" data-au-crea="${esc(p.id)}">${esc(
     t("Crea", "Create"),
   )}</button><button type="button" class="pro-no" data-au-scarta="${esc(p.id)}">${esc(
@@ -954,14 +1439,14 @@ function tastiDellaProposta(p, { premium }) {
   )}</button></div>`;
 }
 
-function cartaDellaProposta(p, { premium = true } = {}) {
+function cartaDellaProposta(p) {
   const w = paroleDi(p);
   return `<div class="pro-carta" data-au-proposta="${esc(p.id)}"><div class="pro-su"><span class="au-ico">${disegno(
     disegnoDellaProposta(p),
     `pro-${p.id}`,
   )}</span><div><div class="pro-q">${esc(w.quando)}</div><div class="pro-a"><span class="fr">→</span>${esc(
     w.allora,
-  )}</div></div></div>${perche(w.perche)}${tastiDellaProposta(p, { premium })}</div>`;
+  )}</div></div></div>${perche(w.perche)}${tastiDellaProposta(p)}</div>`;
 }
 
 const testaDelleProposte = (destra = "") =>
@@ -985,37 +1470,6 @@ function bloccoDelleProposte() {
   }</div>`;
 }
 
-/* Senza Premium: una proposta si legge, le altre sono un numero. */
-function bloccoSenzaPremium() {
-  const proposte = leProposte();
-  if (!proposte.length) return "";
-  const altre = proposte.length - 1;
-  return `<div class="pro pro-senza">${testaDelleProposte()}<div class="pro-carte">${cartaDellaProposta(
-    proposte[0],
-    {
-      premium: false,
-    },
-  )}</div>${
-    altre > 0
-      ? `<div class="pro-altre">✨ <span>${
-          altre === 1
-            ? esc(
-                t(
-                  "Per la tua casa c'è un'altra proposta pronta: la trovi con Premium.",
-                  "There is one more suggestion ready for your home: you'll find it with Premium.",
-                ),
-              )
-            : esc(
-                t(
-                  `Per la tua casa ci sono altre ${altre} proposte pronte: le trovi tutte con Premium.`,
-                  `There are ${altre} more suggestions ready for your home: you'll find them all with Premium.`,
-                ),
-              )
-        }</span></div>`
-      : ""
-  }</div>`;
-}
-
 function rigaDellaProposta(p) {
   const w = paroleDi(p);
   return `<div class="au-riga" data-au-proposta="${esc(p.id)}"><span class="au-ico">${disegno(
@@ -1023,7 +1477,7 @@ function rigaDellaProposta(p) {
     `pro-r-${p.id}`,
   )}</span><div class="au-frase"><div class="au-quando">${esc(w.quando)}</div><div class="au-allora"><span class="fr">→</span>${esc(
     w.allora,
-  )}</div>${perche(w.perche)}</div>${tastiDellaProposta(p, { premium: true })}</div>`;
+  )}</div>${perche(w.perche)}</div>${tastiDellaProposta(p)}</div>`;
 }
 
 /* La pagina di tutte le proposte: prima i dispositivi, poi le abitudini. */
@@ -1067,9 +1521,9 @@ function pagineDelleProposte({ app }) {
 
 /* «Crea»: l'editor gia' compilato, con l'etichetta «Proposta ✨». Non si
  * salva niente: finche' non si preme Salva non parte niente. */
-function creaDallaProposta(id) {
+export function creaDallaProposta(id) {
   const p = leProposte().find((x) => x.id === id);
-  if (!p) return;
+  if (!p) return false;
   const w = paroleDi(p);
   const automazione = structuredClone(p.automazione);
   if (p.chiave === "elettrodomestico" && w.avviso)
@@ -1078,6 +1532,7 @@ function creaDallaProposta(id) {
     );
   apriBozza({ ...automazione, id: nuovoId(), nome: w.nome.slice(0, 60) });
   state.proposta = { id: p.id, perche: w.perche };
+  return true;
 }
 
 const etichettaDellaProposta = () =>
@@ -1086,8 +1541,8 @@ const etichettaDellaProposta = () =>
         t("Perché:", "Why:"),
       )}</b> ${esc(state.proposta.perche)} ${esc(
         t(
-          "Controlla e salva: finché non salvi non parte niente.",
-          "Check and save: nothing runs until you save.",
+          "Controlla e salva: finché non la salvi in Home Assistant non parte niente.",
+          "Check and save: nothing runs until you save it in Home Assistant.",
         ),
       )}</small></div>`
     : "";
@@ -1870,16 +2325,140 @@ function avanzate(b) {
   }`;
 }
 
+/* ── la scheda di un'automazione di Home Assistant ──────────────────────── */
+
+function indietroDellaScheda(app) {
+  if (app) return "";
+  const aiModelli = state.daModelli && !state.scheda;
+  return `<button type="button" class="au-indietro" data-au-vai="${aiModelli ? "modelli" : "lista"}">‹ ${esc(
+    aiModelli ? t("Modelli", "Templates") : t("Automazioni", "Automations"),
+  )}</button>`;
+}
+
+/* La testa di una che c'e' gia': il nome, l'interruttore, «Esegui ora»,
+ * «Duplica», «Elimina», la stanza e dove sta in Home Assistant. Il nome di
+ * una semplice si salva col resto; quello di una complessa subito, da solo. */
+function testaDellaScheda(v, { nome = null } = {}) {
+  const cat = CATEGORIA()[categoriaDi(v)];
+  const campoDelNome =
+    nome === null
+      ? `data-au-rinomina value="${esc(v.nome)}"${v.modificabile ? "" : " disabled"}`
+      : `data-au-testo="nome" value="${esc(nome || "")}"`;
+  const aree = Array.isArray(state.ponte?.aree) ? state.ponte.aree : [];
+  return `<div class="ha-testa"><div class="ha-testa-su"><span class="au-ico">${disegno(cat[2], `testa-${v.entity_id}`)}</span><label class="ha-in"><input type="text" maxlength="100" ${campoDelNome} aria-label="${esc(
+    t("Nome", "Name"),
+  )}"><i aria-hidden="true">✎</i></label><button type="button" class="au-int" role="switch" aria-checked="${v.attiva}" data-au-attiva="${esc(
+    v.entity_id,
+  )}" aria-label="${esc(t("Attiva o spenta", "On or off"))}"><i></i></button></div>
+<div class="ha-sotto"><button type="button" class="ha-tasto esegui" data-au-esegui="${esc(v.entity_id)}">▶ ${esc(
+    t("Esegui ora", "Run now"),
+  )}</button>${
+    v.modificabile
+      ? `<button type="button" class="ha-tasto" data-au-duplica>${esc(t("Duplica", "Duplicate"))}</button><button type="button" class="ha-tasto elimina" data-au-elimina>${esc(
+          t("Elimina", "Delete"),
+        )}</button>`
+      : ""
+  }<select class="ha-chip" data-au-area aria-label="${esc(t("Stanza", "Room"))}"><option value="">🏠 ${esc(
+    t("Nessuna stanza", "No room"),
+  )}</option>${aree
+    .map((a) => `<option value="${esc(a.id)}"${a.id === v.areaId ? " selected" : ""}>🏠 ${esc(a.nome)}</option>`)
+    .join("")}</select><span class="ha-dove">${etichettaDiOrigine(v)}${esc(t("in HA come", "in HA as"))} <code>${esc(
+    v.entity_id,
+  )}</code></span></div></div>`;
+}
+
+/* Il tasto Salva, l'errore, e dove andra' a finire. */
+function piedeDelSalva(pulita) {
+  const nome = clean(pulita?.nome) || t("la nuova automazione", "the new automation");
+  return `${state.errore ? `<div class="au-errore" role="alert">${esc(state.errore)}</div>` : ""}
+<button type="button" class="au-salva" data-au-salva${state.salvando ? " disabled" : ""}>💾 ${esc(
+    state.salvando ? t("SALVO…", "SAVING…") : t("SALVA IN HOME ASSISTANT", "SAVE IN HOME ASSISTANT"),
+  )}</button>
+<div class="ha-salva-dove"><span aria-hidden="true">🏠</span><span>${esc(t("Si salva in", "It is saved in"))} <b>${esc(
+    t("Home Assistant → Impostazioni → Automazioni", "Home Assistant → Settings → Automations"),
+  )}</b>, ${esc(t("come", "as"))} <b>“${esc(nome)}”</b>${
+    state.scheda && state.scheda.origine !== "gdahome"
+      ? ""
+      : ` ${esc(t("con l'etichetta", "labelled"))} <b>gdahome</b>`
+  }. ${esc(t("La trovi lì e la esegue Home Assistant.", "You'll find it there and Home Assistant runs it."))}</span></div>`;
+}
+
+function righeDelRiassunto(righe) {
+  return `<ul>${righe
+    .map(
+      (r) =>
+        `<li${r.sub ? ' class="sub"' : ""}>${esc(r.testo)}${r.codice ? ` <code>${esc(r.codice)}</code>` : ""}</li>`,
+    )
+    .join("")}</ul>`;
+}
+
+/* Una complessa: il riassunto, e il resto in Home Assistant. */
+function complessa({ app }) {
+  const v = state.scheda;
+  const r = v?.config ? riassuntoDi(v.config) : null;
+  const blocco = (classe, colore, titolo, righe, nota = "") =>
+    righe.length
+      ? `<div class="ha-riep ${classe}" style="--c:${colore}"><div class="au-et">${esc(titolo)}${
+          nota ? ` <small>· ${esc(nota)}</small>` : ""
+        }</div>${righeDelRiassunto(righe)}</div>`
+      : "";
+  const corpo = r
+    ? `${blocco("q", "#0ea5e9", t("Quando", "When"), r.quando, r.quando.length > 1 ? t("una di queste", "any of these") : "")}${blocco(
+        "s",
+        "#8b5cf6",
+        t("Solo se", "Only if"),
+        r.soloSe,
+      )}${blocco("a", "#16a34a", t("Allora", "Then do"), r.allora)}`
+    : "";
+  const perche = !v?.modificabile
+    ? t(
+        "Questa automazione sta in un file di Home Assistant: qui la accendi, la spegni e la esegui, e si cambia lì.",
+        "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.",
+      )
+    : t(
+        "Questa automazione usa funzioni avanzate (una scelta fra casi, un template, un blueprint…): qui puoi accenderla, spegnerla, eseguirla, rinominarla e cambiarle stanza. Per il resto:",
+        "This automation uses advanced features (a choice between cases, a template, a blueprint…): here you can turn it on and off, run it, rename it and change its room. For the rest:",
+      );
+  const link = v?.id && !nellApp()
+    ? `<a class="ha-apri" href="${esc(indirizzoInHA(v.id))}" target="_top" rel="noopener">${esc(t("Apri in Home Assistant ↗", "Open in Home Assistant ↗"))}</a>`
+    : "";
+  return `${indietroDellaScheda(app)}${v ? testaDellaScheda(v) : ""}${corpo}<div class="ha-av"><span class="i" aria-hidden="true">ℹ️</span><div>${esc(perche)}${
+    link ? `<br>${link}` : ""
+  }</div></div>${state.errore ? `<div class="au-errore" role="alert">${esc(state.errore)}</div>` : ""}`;
+}
+
+/* «Eliminare?»: si chiede sopra la pagina, con le parole di Home Assistant. */
+const ID_DELLA_CONFERMA = "au-conferma";
+export function apriLaConferma(v) {
+  if (!doc?.body || !v) return;
+  doc.getElementById(ID_DELLA_CONFERMA)?.remove();
+  const velo = doc.createElement("div");
+  velo.id = ID_DELLA_CONFERMA;
+  velo.className = "ha-velo";
+  velo.innerHTML = `<div class="ha-conferma" role="alertdialog" aria-modal="true"><h4>${esc(
+    t(`Eliminare «${v.nome}»?`, `Delete «${v.nome}»?`),
+  )}</h4><p>${esc(
+    t(
+      "Si toglie anche da Home Assistant, e non si può annullare. Se vuoi solo fermarla, spegnila con l'interruttore.",
+      "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.",
+    ),
+  )}</p><div><button type="button" data-au-conferma-no>${esc(t("Annulla", "Cancel"))}</button><button type="button" class="r" data-au-conferma-si>${esc(
+    t("Elimina", "Delete"),
+  )}</button></div></div>`;
+  doc.body.append(velo);
+  state.conferma = v;
+}
+
 function editor({ app }) {
   const b = state.bozza;
   const q = b.quando;
   const pulita = pulitaDallaBozza(b);
-  const esistente = leAutomazioni().some((a) => a.id === b.id);
-  return `${
-    app
-      ? ""
-      : `<button type="button" class="au-indietro" data-au-vai="${state.daModelli ? "modelli" : "lista"}">‹ ${esc(state.daModelli ? t("Modelli", "Templates") : t("Automazioni", "Automations"))}</button>`
-  }<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b.nome || "")}" placeholder="${esc(t("Come la chiami", "What you call it"))}"></label>${etichettaDellaProposta()}
+  const v = state.scheda;
+  return `${indietroDellaScheda(app)}${
+    v
+      ? testaDellaScheda(v, { nome: b.nome })
+      : `<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b.nome || "")}" placeholder="${esc(t("Come la chiami", "What you call it"))}"></label>`
+  }${etichettaDellaProposta()}
 <div class="au-blocco au-q"><div class="au-et">${esc(t("Quando", "When"))} <small>· ${esc(t("una cosa sola", "one thing only"))}</small></div>
 <div class="au-rf">${tendinaDelQuando(q)} ${campiDelQuando(q)}</div></div>
 <div class="au-blocco au-s"><div class="au-et">${esc(t("Solo se", "Only if"))} <small>· ${esc(
@@ -1916,9 +2495,7 @@ ${b.allora
   }</div>
 ${avanzate(b)}
 <div class="au-leggi" data-au-leggi>${esc(t("Si legge così:", "It reads:"))} ${siLeggeCosi(pulita)}</div>
-${state.errore ? `<div class="au-errore" role="alert">${esc(state.errore)}</div>` : ""}
-<button type="button" class="au-salva" data-au-salva>💾 ${esc(t("SALVA", "SAVE"))}</button>
-${esistente ? `<button type="button" class="au-elimina" data-au-elimina>🗑 ${esc(t("Elimina questa automazione", "Delete this automation"))}</button>` : ""}`;
+${piedeDelSalva(pulita)}`;
 }
 
 /* ── il cronotermostato ──────────────────────────────────────────────────── */
@@ -1946,13 +2523,12 @@ function crono({ app }) {
     off: t("spento", "off"),
   };
   const finestra = c.finestre[0] || "";
-  const esistente = leAutomazioni().some((a) => a.id === b.id);
   const giorni = iniziali();
-  return `${
-    app
-      ? ""
-      : `<button type="button" class="au-indietro" data-au-vai="${state.daModelli ? "modelli" : "lista"}">‹ ${esc(state.daModelli ? t("Modelli", "Templates") : t("Automazioni", "Automations"))}</button>`
-  }<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b.nome || "")}"></label>
+  return `${indietroDellaScheda(app)}${
+    state.scheda
+      ? testaDellaScheda(state.scheda, { nome: b.nome })
+      : `<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b.nome || "")}"></label>`
+  }
 <div class="au-blocco au-q"><div class="au-et">${esc(t("Cosa", "What"))}</div><div class="au-rf"><span class="au-ico au-ico-p">${disegno("caldo", "crono")}</span>${entitaMolte(
     "crono.termostati",
     c.termostati,
@@ -1973,54 +2549,60 @@ function crono({ app }) {
     t("si spegne, riparte quando la chiudi", "turns off, restarts when you close it"),
   )}</span><button type="button" class="au-int au-int-dx" role="switch" aria-checked="${c.finestraSpegne}" data-au-finestra aria-label="${esc(t("Finestra aperta, si spegne", "Window open, turns off"))}"><i></i></button></div></div>
 <div class="au-leggi" data-au-leggi>${esc(t("Si legge così:", "It reads:"))} ${esc(siLeggeCosi(automazionePulita(b)))}</div>
-${state.errore ? `<div class="au-errore" role="alert">${esc(state.errore)}</div>` : ""}
-<button type="button" class="au-salva" data-au-salva>💾 ${esc(t("SALVA", "SAVE"))}</button>
-${esistente ? `<button type="button" class="au-elimina" data-au-elimina>🗑 ${esc(t("Elimina questa automazione", "Delete this automation"))}</button>` : ""}`;
+${piedeDelSalva(automazionePulita(b))}`;
 }
 
 /* ── la pagina ───────────────────────────────────────────────────────────── */
 
 function titoloDellaVista() {
   if (state.vista === "modelli") return t("Nuova automazione", "New automation");
-  if (state.vista === "crono") return t("Cronotermostato", "Thermostat schedule");
   if (state.vista === "proposte")
     return state.inApp
       ? t("Proposte", "Suggestions")
       : t("Proposte per la tua casa", "Suggestions for your home");
-  if (state.vista === "editor") {
-    const esistente = leAutomazioni().some((a) => a.id === state.bozza?.id);
-    return esistente
-      ? state.bozza.nome || t("Automazione", "Automation")
+  if (state.vista === "complessa") return state.scheda?.nome || t("Automazione", "Automation");
+  if (state.vista === "editor" || state.vista === "crono") {
+    if (state.scheda) return state.bozza?.nome || state.scheda.nome || t("Automazione", "Automation");
+    return state.vista === "crono"
+      ? t("Cronotermostato", "Thermostat schedule")
       : t("Nuova automazione", "New automation");
   }
   return t("Automazioni", "Automations");
 }
 
+/* Sotto il velo: la lista vera, sfocata e senza tocchi; se la casa non ne
+ * ha, i modelli. */
+function sottoIlVelo() {
+  const elenco = automazioniDiCasa();
+  return elenco.length
+    ? `${barraDellaLista(elenco, { chiuso: true })}<div class="ha-tutte">${gruppiHtml(elenco)}</div>`
+    : modelli();
+}
+
 export function paginaHtml({ app = false } = {}) {
   if (!state.bozza && (state.vista === "editor" || state.vista === "crono")) state.vista = "lista";
+  if (!state.scheda && state.vista === "complessa") state.vista = "lista";
   const premium = state.premium !== false;
+  /* Nell'app la lista e il velo li disegna la sezione della dashboard: la
+   * pagina dell'app e' la stessa faccia, con «＋ Nuova» in piu'. */
+  if (app && (state.vista === "lista" || !premium) && state.listaDellApp) return state.listaDellApp();
   let dentro;
-  if (!premium)
-    dentro = `${bloccoSenzaPremium()}${velo(leAutomazioni().length ? lista({ app, proposte: false }) : modelli())}`;
+  if (!premium) dentro = velo(sottoIlVelo());
   else if (state.vista === "proposte") dentro = pagineDelleProposte({ app });
   else if (state.vista === "modelli")
     dentro = `${app ? "" : `<button type="button" class="au-indietro" data-au-vai="lista">‹ ${esc(t("Automazioni", "Automations"))}</button>`}${modelli()}`;
   else if (state.vista === "editor") dentro = editor({ app });
   else if (state.vista === "crono") dentro = crono({ app });
-  else dentro = lista({ app });
+  else if (state.vista === "complessa") dentro = complessa({ app });
+  else dentro = lista();
   if (!app)
-    return `<div class="au au-web">${state.vista === "lista" || !premium ? INTRO() : ""}${dentro}</div>`;
+    return `<div class="au au-web">${state.vista === "lista" || !premium ? `${interruttoreDellaSezione()}${INTRO()}` : ""}${dentro}</div>`;
+  const aiModelli = state.vista !== "modelli" && state.daModelli && !state.scheda;
   const testa =
     state.vista === "lista" || !premium
-      ? `<div class="au-titolo"><h1>${esc(t("Automazioni", "Automations"))}</h1><span class="au-prem">PREMIUM</span>${
-          premium
-            ? `<button type="button" class="au-piu" data-au-vai="modelli" aria-label="${esc(t("Nuova", "Add new"))}">＋</button>`
-            : ""
-        }</div>`
-      : `<button type="button" class="au-indietro" data-au-vai="${state.vista === "modelli" || !state.daModelli ? "lista" : "modelli"}">‹ ${esc(
-          state.vista === "modelli" || !state.daModelli
-            ? t("Automazioni", "Automations")
-            : t("Modelli", "Templates"),
+      ? `<div class="au-titolo"><h1>${esc(t("Automazioni", "Automations"))}</h1><span class="au-prem">PREMIUM</span></div>`
+      : `<button type="button" class="au-indietro" data-au-vai="${aiModelli ? "modelli" : "lista"}">‹ ${esc(
+          aiModelli ? t("Modelli", "Templates") : t("Automazioni", "Automations"),
         )}</button><div class="au-titolo"><h1>${esc(titoloDellaVista())}</h1></div>`;
   return `<div class="au au-app">${testa}${dentro}</div>`;
 }
@@ -2029,6 +2611,34 @@ function contenitore() {
   if (state.inApp) return doc?.getElementById?.(ID_PAGINA) || null;
   if (schedaAttiva() === AUTOMAZIONI_TAB) return doc?.getElementById?.("ed-body") || null;
   return null;
+}
+
+/* Il campo sotto le dita: dopo un ridisegno si torna li', col cursore dov'era. */
+function campoAttivo() {
+  const attivo = doc.activeElement;
+  const d = attivo?.dataset || {};
+  const quale =
+    d.auTesto !== undefined
+      ? `[data-au-testo="${CSS.escape(d.auTesto)}"]`
+      : d.auCerca !== undefined
+        ? "[data-au-cerca]"
+        : d.auRinomina !== undefined
+          ? "[data-au-rinomina]"
+          : d.aucCerca !== undefined
+            ? "[data-auc-cerca]"
+            : "";
+  return quale ? { quale, cursore: attivo.selectionStart ?? null } : null;
+}
+
+function rimettiIlCampo(dove, campo) {
+  if (!campo) return;
+  const nuovo = dove.querySelector(campo.quale);
+  nuovo?.focus?.();
+  if (campo.cursore !== null) {
+    try {
+      nuovo?.setSelectionRange?.(campo.cursore, campo.cursore);
+    } catch (_errore) {}
+  }
 }
 
 export function ridisegna() {
@@ -2040,10 +2650,8 @@ export function ridisegna() {
   const app = state.inApp;
   if (Date.now() - state.chiestoIl > VALE && !state.chiedendo) void chiediAllaCasa();
   const html = paginaHtml({ app });
-  if (dove.dataset.auScritto !== html || !dove.querySelector(":scope > .au, .au")) {
-    const attivo = doc.activeElement;
-    const campo = attivo?.dataset?.auTesto;
-    const cursore = campo ? attivo.selectionStart : null;
+  if (dove.dataset.auScritto !== html || !dove.firstElementChild) {
+    const campo = campoAttivo();
     if (app) dove.innerHTML = html;
     else {
       dove
@@ -2053,13 +2661,9 @@ export function ridisegna() {
     }
     dove.dataset.auScritto = html;
     dove.dataset.renderer = AUTOMAZIONI_TAB;
-    /* Chi stava scrivendo il nome resta li': il ridisegno non gli ruba la
-     * casella sotto le dita. */
-    if (campo) {
-      const nuovo = dove.querySelector(`[data-au-testo="${CSS.escape(campo)}"]`);
-      nuovo?.focus?.();
-      if (cursore !== null) nuovo?.setSelectionRange?.(cursore, cursore);
-    }
+    /* Chi stava scrivendo resta li': il ridisegno non gli ruba la casella
+     * sotto le dita. */
+    rimettiIlCampo(dove, campo);
   }
   if (!app) {
     ensureTitoloDellaSezione();
@@ -2069,6 +2673,11 @@ export function ridisegna() {
     doc.documentElement.classList.add("au-su");
   }
   return true;
+}
+
+/** La lista della pagina dell'app: la presta la sezione della dashboard. */
+export function prestaLaListaDellApp(disegna) {
+  state.listaDellApp = typeof disegna === "function" ? disegna : null;
 }
 
 /* ── scrivere nella bozza ────────────────────────────────────────────────── */
@@ -2220,8 +2829,10 @@ function aggiungiA(via) {
 
 const SULLE_COSE = ["accendi", "spegni", "tapparella", "clima", "media"];
 
-function apriBozza(bozza, { daModelli = false } = {}) {
+function apriBozza(bozza, { daModelli = false, scheda = null } = {}) {
   state.bozza = structuredClone(bozza);
+  state.scheda = scheda;
+  state.salvata = null;
   state.proposta = null;
   /* Una regola che arriva dal salvato ha gia' la forma pulita; i campi che le
    * mancano per l'editor — `ore`, `chi`, le righe del filtro — li rimette
@@ -2251,7 +2862,30 @@ function apriBozza(bozza, { daModelli = false } = {}) {
   state.errore = "";
 }
 
-function salva() {
+/**
+ * Apre un'automazione di Home Assistant: l'editor se e' semplice, la scheda
+ * col riassunto se e' complessa.
+ */
+export function apriPerModificare(voce) {
+  if (!voce) return false;
+  state.errore = "";
+  state.salvata = null;
+  if (voce.modello && voce.modificabile) apriBozza(voce.modello, { scheda: voce });
+  else {
+    state.bozza = null;
+    state.scheda = voce;
+    state.vista = "complessa";
+  }
+  return true;
+}
+
+const voceDi = (entity) => automazioniDiCasa().find((v) => v.entity_id === entity) || null;
+
+const perCheNo = (errore) =>
+  clean(errore?.message) || t("la casa non ha risposto", "the home did not answer");
+
+async function salva() {
+  if (state.salvando) return false;
   const pulita = pulitaDallaBozza(state.bozza);
   /* Un servizio scritto che la casa non chiamera' si dice, invece di
    * sparire in silenzio al salvataggio. */
@@ -2278,35 +2912,121 @@ function salva() {
       pulita.tipo === "crono"
         ? t("Cronotermostato", "Thermostat schedule")
         : fraseDelQuando(pulita.quando).slice(0, 60);
-  const elenco = leAutomazioni();
-  const i = elenco.findIndex((a) => a.id === pulita.id);
-  if (i >= 0) elenco[i] = pulita;
-  else elenco.push(pulita);
-  salvaLElenco(elenco);
-  root.edToast?.(t("💾 Automazione salvata", "💾 Automation saved"));
-  state.bozza = null;
-  state.proposta = null;
-  state.vista = "lista";
-  state.daModelli = false;
-  void chiediAllaCasa({ forza: true });
+  state.salvando = true;
+  state.errore = "";
   ridisegna();
+  try {
+    const fatto = await scriviInCasa({
+      type: "ponte/automazioni/salva",
+      automazione: pulita,
+      automazione_id: state.scheda?.id || "",
+    });
+    /* Una proposta salvata non si ripropone: lo dira' anche la casa, appena
+     * rilegge l'elenco. */
+    if (state.proposta?.id) state.scartateQui = [...new Set([...state.scartateQui, state.proposta.id])];
+    state.salvata = { nome: clean(fatto?.alias) || pulita.nome, id: clean(fatto?.id) };
+    state.bozza = null;
+    state.scheda = null;
+    state.proposta = null;
+    state.vista = "lista";
+    state.daModelli = false;
+    root.edToast?.(t("💾 Salvata in Home Assistant", "💾 Saved in Home Assistant"));
+    rileggiPresto();
+  } catch (errore) {
+    const no = perCheNo(errore);
+    state.errore = t(
+      `Home Assistant non l'ha salvata: ${no}`,
+      `Home Assistant did not save it: ${no}`,
+    );
+  } finally {
+    state.salvando = false;
+    ridisegna();
+  }
   return true;
 }
 
-function elimina() {
-  const id = state.bozza?.id;
-  if (!id) return;
-  const conferma = root.confirm?.(t("Eliminare questa automazione?", "Delete this automation?"));
-  if (conferma === false) return;
-  salvaLElenco(leAutomazioni().filter((a) => a.id !== id));
-  state.bozza = null;
-  state.vista = "lista";
+async function eliminaDavvero() {
+  const v = state.conferma;
+  state.conferma = null;
+  doc.getElementById(ID_DELLA_CONFERMA)?.remove();
+  if (!v?.id) return;
+  try {
+    await scriviInCasa({ type: "ponte/automazioni/elimina", automazione_id: v.id });
+    root.edToast?.(t(`🗑 «${v.nome}» eliminata`, `🗑 «${v.nome}» deleted`));
+    state.bozza = null;
+    state.scheda = null;
+    state.vista = "lista";
+    rileggiPresto();
+  } catch (errore) {
+    const no = perCheNo(errore);
+    state.errore = t(`Non si è eliminata: ${no}`, `It was not deleted: ${no}`);
+  }
+  ridisegnaTutto();
+}
+
+async function duplica(v = state.scheda) {
+  if (!v?.id) return;
+  try {
+    const fatto = await scriviInCasa({ type: "ponte/automazioni/duplica", automazione_id: v.id });
+    const copia = clean(fatto?.alias);
+    root.edToast?.(t(`📄 Copiata: «${copia}»`, `📄 Copied: «${copia}»`));
+    rileggiPresto();
+  } catch (errore) {
+    const no = perCheNo(errore);
+    state.errore = t(`Non si è copiata: ${no}`, `It was not copied: ${no}`);
+    ridisegna();
+  }
+}
+
+/** «Duplica», dalla carta della pagina dell'app. */
+export const duplicaInCasa = (v) => duplica(v);
+
+/* Il nome di una complessa, o la stanza di qualunque: subito, da soli. */
+async function rinomina({ nome, area } = {}) {
+  const v = state.scheda;
+  if (!v?.id) return;
+  try {
+    await scriviInCasa({
+      type: "ponte/automazioni/rinomina",
+      automazione_id: v.id,
+      ...(nome !== undefined ? { nome } : {}),
+      ...(area !== undefined ? { area } : {}),
+    });
+    if (nome !== undefined) state.scheda = { ...v, nome };
+    if (area !== undefined) {
+      const stanza = (state.ponte?.aree || []).find((a) => a.id === area);
+      state.scheda = { ...state.scheda, areaId: area, area: stanza?.nome || "" };
+    }
+    root.edToast?.(t("✓ Fatto", "✓ Done"));
+    rileggiPresto();
+  } catch (errore) {
+    const no = perCheNo(errore);
+    state.errore = t(`Non si è cambiata: ${no}`, `It was not changed: ${no}`);
+  }
   ridisegna();
 }
 
-function alternaAttiva(id) {
-  const elenco = leAutomazioni().map((a) => (a.id === id ? { ...a, attiva: !a.attiva } : a));
-  salvaLElenco(elenco);
+/* Le automazioni della versione di prova, scritte in Home Assistant una per
+ * una; quelle andate si tolgono dalla plancia, quelle no restano. */
+async function converti() {
+  const rimaste = rimasteNellaPlancia();
+  const restano = [];
+  for (const a of rimaste) {
+    try {
+      await scriviInCasa({ type: "ponte/automazioni/salva", automazione: a, automazione_id: "" });
+    } catch (_errore) {
+      restano.push(a);
+    }
+  }
+  writeJsonIfChanged(CHIAVE_AUTOMAZIONI, restano);
+  const fatte = rimaste.length - restano.length;
+  const no = restano.length;
+  root.edToast?.(
+    restano.length
+      ? t(`🔁 ${fatte} convertite, ${no} no: riprova`, `🔁 ${fatte} converted, ${no} not: try again`)
+      : t(`🔁 ${fatte} convertite in Home Assistant`, `🔁 ${fatte} converted into Home Assistant`),
+  );
+  rileggiPresto();
   ridisegna();
 }
 
@@ -2317,7 +3037,33 @@ function dentroDiNoi(event) {
   return dove && dove.contains(event.target) && event.target.closest?.(".au") ? dove : null;
 }
 
+/* I tocchi sulle finestre che stanno sopra la pagina, fuori da `.au`: la
+ * finestra «Premium arriva con le app» e «Eliminare?». */
+function toccoSopra(event) {
+  const chiudi = event.target.closest?.("[data-au-store-chiudi]");
+  if (chiudi && (chiudi.id !== ID_DELLO_STORE || event.target === chiudi)) {
+    event.preventDefault();
+    chiudiLoStore();
+    return true;
+  }
+  if (event.target.closest?.(`#${ID_DELLO_STORE}`)) return true;
+  if (event.target.closest?.("[data-au-conferma-si]")) {
+    event.preventDefault();
+    void eliminaDavvero();
+    return true;
+  }
+  const conferma = doc.getElementById(ID_DELLA_CONFERMA);
+  if (conferma && (event.target.closest?.("[data-au-conferma-no]") || event.target === conferma)) {
+    event.preventDefault();
+    conferma.remove();
+    state.conferma = null;
+    return true;
+  }
+  return Boolean(conferma?.contains(event.target));
+}
+
 function onClick(event) {
+  if (toccoSopra(event)) return;
   const dove = dentroDiNoi(event);
   if (!dove) {
     if (state.tendina) {
@@ -2327,7 +3073,7 @@ function onClick(event) {
     return;
   }
   const el = event.target.closest(
-    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta]",
+    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta],[data-au-per],[data-au-esegui],[data-au-duplica],[data-au-converti]",
   );
   if (!el) {
     if (state.tendina) {
@@ -2339,38 +3085,53 @@ function onClick(event) {
   const d = el.dataset;
   if (d.auScopri !== undefined) {
     event.preventDefault();
-    /* Nell'app la pagina Premium la apre l'app; sul web si dice di piu'. */
-    if (nellApp()) diciAllApp("premium");
-    else {
-      state.scopri = !state.scopri;
-      ridisegna();
-    }
+    scopriPremium();
     return;
   }
   if (state.premium === false) return;
   event.preventDefault();
   if (d.auAttiva) {
     event.stopPropagation();
-    alternaAttiva(d.auAttiva);
+    const v = voceDi(d.auAttiva);
+    if (v) {
+      alternaInCasa(v);
+      if (state.scheda?.entity_id === v.entity_id) state.scheda = { ...state.scheda, attiva: !v.attiva };
+      ridisegna();
+    }
+    return;
+  }
+  if (d.auEsegui) {
+    eseguiOra(voceDi(d.auEsegui) || state.scheda);
+    return;
+  }
+  if (d.auDuplica !== undefined) {
+    void duplica();
+    return;
+  }
+  if (d.auConverti !== undefined) {
+    void converti();
     return;
   }
   if (d.auScarta) {
     void scartaLaProposta(d.auScarta);
     return;
   }
-  if (d.auVai) {
+  if (d.auPer) {
+    state.perStanza = d.auPer === "stanza";
+  } else if (d.auVai) {
     state.vista = d.auVai;
-    if (d.auVai === "lista" || d.auVai === "proposte") {
+    state.salvata = null;
+    if (d.auVai === "lista" || d.auVai === "proposte" || d.auVai === "modelli") {
       state.bozza = null;
+      state.scheda = null;
       state.proposta = null;
+      state.errore = "";
     }
     state.tendina = false;
   } else if (d.auCrea) creaDallaProposta(d.auCrea);
   else if (d.auModello) apriBozza(bozzaDelModello(d.auModello), { daModelli: true });
-  else if (d.auApri) {
-    const a = leAutomazioni().find((x) => x.id === d.auApri);
-    if (a) apriBozza(a);
-  } else if (d.auTendinaAltro !== undefined) state.tendinaAltro = !state.tendinaAltro;
+  else if (d.auApri) apriPerModificare(voceDi(d.auApri));
+  else if (d.auTendinaAltro !== undefined) state.tendinaAltro = !state.tendinaAltro;
   else if (d.auAvanzate !== undefined) state.avanzate = !state.avanzate;
   else if (d.auTendina !== undefined) state.tendina = !state.tendina;
   else if (d.auQuando) {
@@ -2397,19 +3158,33 @@ function onClick(event) {
   } else if (d.auFinestra !== undefined)
     state.bozza.crono.finestraSpegne = !state.bozza.crono.finestraSpegne;
   else if (d.auSalva !== undefined) {
-    salva();
+    void salva();
     return;
   } else if (d.auElimina !== undefined) {
-    elimina();
+    apriLaConferma(state.scheda);
     return;
   }
   ridisegna();
-  if (state.inApp) doc.getElementById(ID_PAGINA)?.scrollIntoView?.({ block: "start" });
+  /* Una vista nuova si apre dall'alto. */
+  if (d.auApri || d.auVai || d.auModello || d.auCrea) {
+    if (state.inApp) doc.getElementById(ID_PAGINA)?.scrollIntoView?.({ block: "start" });
+    else contenitore()?.scrollTo?.(0, 0);
+  }
 }
 
 function onChange(event) {
   if (!dentroDiNoi(event)) return;
-  const via = event.target?.dataset?.auCampo;
+  const dati = event.target?.dataset || {};
+  if (dati.auArea !== undefined) {
+    void rinomina({ area: event.target.value });
+    return;
+  }
+  if (dati.auRinomina !== undefined) {
+    const nome = clean(event.target.value);
+    if (nome && nome !== state.scheda?.nome) void rinomina({ nome });
+    return;
+  }
+  const via = dati.auCampo;
   if (!via || !state.bozza) return;
   /* «🔍 Tutte le entità…»: la tendina torna com'era, e si apre la ricerca
    * del config sulla casella nascosta accanto; la scelta torna qui come un
@@ -2429,6 +3204,13 @@ function onChange(event) {
 
 function onInput(event) {
   if (!dentroDiNoi(event)) return;
+  /* La ricerca: si ridisegnano solo i gruppi, e la casella resta dov'e'. */
+  if (event.target?.dataset?.auCerca !== undefined) {
+    state.cerca = event.target.value;
+    const tutte = contenitore()?.querySelector?.(".ha-tutte");
+    if (tutte) tutte.innerHTML = gruppiHtml(automazioniDiCasa());
+    return;
+  }
   const via = event.target?.dataset?.auTesto;
   if (!via || !state.bozza) return;
   const pezzi = via.split(".");
@@ -2446,6 +3228,12 @@ function onInput(event) {
 }
 
 function onKey(event) {
+  if (event.key === "Escape") {
+    chiudiLoStore();
+    doc.getElementById(ID_DELLA_CONFERMA)?.remove();
+    state.conferma = null;
+    return;
+  }
   if (event.key !== "Enter" && event.key !== " ") return;
   const riga = event.target?.closest?.("[data-au-apri]");
   if (!riga || event.target !== riga || !dentroDiNoi(event)) return;
@@ -2559,11 +3347,48 @@ export function ensureLaScheda() {
     if (!doc?.getElementById?.("editor-modal")) {
       state.vista = "lista";
       state.bozza = null;
+      state.scheda = null;
     }
     return false;
   }
   if (state.premium === null && !state.chiedendo) void chiediAllaCasa({ forza: true });
   return ridisegna();
+}
+
+/** Va a una vista della pagina (la lista, i modelli, le proposte). */
+export function vaiA(vista) {
+  state.vista = vista;
+  state.bozza = null;
+  state.scheda = null;
+  state.proposta = null;
+  state.salvata = null;
+  state.errore = "";
+  ridisegna();
+  if (state.inApp) root.scrollTo?.(0, 0);
+}
+
+/**
+ * Apre il config sulle Automazioni — la lista, le proposte, o una aperta —
+ * dalla sezione della dashboard, che si guarda e non si modifica. La voce
+ * del config arriva quando il config si e' disegnato: la si aspetta un poco.
+ */
+export function apriNelConfig({ voce = null, vista = "lista" } = {}) {
+  if (typeof root.apriConfigEntita !== "function") return false;
+  root.apriConfigEntita();
+  let volte = 0;
+  const prova = () => {
+    const voceDelConfig = doc.querySelector(`#editor-modal .ed-tab[data-tab="${AUTOMAZIONI_TAB}"]`);
+    if (!voceDelConfig) {
+      if ((volte += 1) < 40) root.setTimeout?.(prova, 50);
+      return;
+    }
+    root.editorSwitch?.(AUTOMAZIONI_TAB);
+    vaiA(vista);
+    if (voce) apriPerModificare(voce);
+    ridisegna();
+  };
+  prova();
+  return true;
 }
 
 /* ── la pagina a schermo pieno (app) ─────────────────────────────────────── */
@@ -2606,6 +3431,8 @@ export function apriLeAutomazioni() {
   state.inApp = true;
   state.vista = "lista";
   state.bozza = null;
+  state.scheda = null;
+  state.salvata = null;
   ridisegna();
   void chiediAllaCasa({ forza: true });
   root.scrollTo?.(0, 0);
@@ -2616,6 +3443,7 @@ export function apriLeAutomazioni() {
 function chiudiLaPagina() {
   state.inApp = false;
   state.bozza = null;
+  state.scheda = null;
   state.vista = "lista";
   doc?.getElementById?.(ID_PAGINA)?.remove();
 }
@@ -2726,6 +3554,7 @@ html[data-theme="dark"] .au .au-prem{color:#fbbf24}
 .au .au-sotto{filter:blur(3px);opacity:.55;pointer-events:none;user-select:none}
 .au .au-velo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:90px 20px 0;text-align:center;background:linear-gradient(180deg,color-mix(in srgb,var(--au-carta) 55%,transparent),var(--au-carta) 75%)}
 .au .au-velo .st{font-size:34px}
+.au .au-velo .au-prem{margin-top:6px;font-size:10.5px;letter-spacing:.12em;padding:3px 10px;border-radius:999px}
 .au .au-velo h3{font-family:Oswald,sans-serif;font-weight:500;font-size:28px;margin:8px 0;text-transform:none;letter-spacing:.01em;color:var(--au-tx)}
 .au .au-velo p{margin:0 0 18px;max-width:460px;font-size:14px;line-height:1.55;font-weight:600;color:var(--au-dim)}
 .au .au-velo button{border:0;border-radius:14px;padding:13px 26px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:900;font-size:15px;box-shadow:0 8px 22px -8px #d97706aa}
@@ -2838,9 +3667,6 @@ html[data-theme="dark"] .au .pro-tutte{color:#7dd3fc}
 .au .pro-tasti{display:flex;gap:8px;margin-top:auto}
 .au .pro-crea{flex:1;border:0;border-radius:11px;padding:9px 12px;background:var(--au-tx);color:var(--au-carta);font-weight:900;font-size:13px;cursor:pointer;font-family:inherit}
 .au .pro-no{border:1px solid var(--au-bordo);border-radius:11px;padding:9px 12px;background:none;color:var(--au-dim);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
-.au .pro-crea.prem{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
-.au .pro-senza .pro-carte{grid-template-columns:repeat(3,minmax(0,1fr))}
-.au .pro-altre{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 14px;border-radius:14px;border:1px dashed color-mix(in srgb,#f59e0b 45%,var(--au-bordo));font-size:13px;font-weight:700;color:var(--au-dim)}
 .au .pro-gruppo{margin:16px 2px 8px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--au-dim);display:flex;gap:8px;align-items:center}
 .au .pro-gruppo small{text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
 .au .pro-elenco .au-riga{align-items:flex-start;cursor:default}
@@ -2860,12 +3686,108 @@ html[data-theme="dark"] .au .pro-tutte{color:#7dd3fc}
 .au-app .pro-carte{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:10px;margin-right:-14px;padding-right:14px}
 .au-app .pro-carte::-webkit-scrollbar{display:none}
 .au-app .pro-carta{flex:0 0 82%;scroll-snap-align:start}
-.au-app .pro-senza .pro-carta{flex-basis:100%}
 .au-app .pro-testa{flex-wrap:wrap}
 .au-app .pro-testa small{order:3;width:100%}
 .au-app .pro-elenco .au-riga{flex-wrap:wrap}
 .au-app .pro-elenco .pro-tasti{flex-direction:row;width:100%;padding-left:55px}
 .au-app .pro-elenco .pro-crea{flex:1}
+/* La lista di Home Assistant, a gruppi. */
+.au .ha-barra{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0 10px}
+.au .ha-barra h3{margin:0;font-size:15px;font-weight:900;text-transform:none;letter-spacing:0;font-family:inherit;color:var(--au-tx)}
+.au .ha-barra h3 small{font-weight:700;color:var(--au-dim);font-size:12.5px;margin-left:4px}
+.au .ha-seg{display:inline-flex;padding:3px;border-radius:11px;border:1px solid var(--au-bordo);background:var(--au-carta)}
+.au .ha-seg button{border:0;background:none;padding:6px 11px;border-radius:8px;font-size:12px;font-weight:800;color:var(--au-dim)}
+.au .ha-seg button.si{background:var(--au-tx);color:var(--au-carta)}
+.au .ha-cerca{flex:1;min-width:170px;max-width:320px;display:flex;align-items:center;gap:8px;padding:0 12px;border-radius:11px;border:1px solid var(--au-bordo);background:var(--au-carta);font-size:13px;color:var(--au-dim)}
+.au .ha-cerca input{flex:1;min-width:0;border:0;background:none;outline:none;padding:8px 0;font:inherit;font-weight:600;color:var(--au-tx)}
+.au .ha-barra .au-piu{margin-left:auto}
+.au .au-piu.chiuso{background:var(--au-tenue);color:var(--au-dim);cursor:default}
+.au .ha-gruppo{display:flex;align-items:center;gap:8px;margin:16px 4px 7px;font-size:13px;font-weight:900;color:var(--au-tx)}
+.au .ha-gruppo span{font-size:11.5px;font-weight:800;color:var(--au-dim);padding:1px 8px;border-radius:999px;background:var(--au-tenue)}
+.au .ha-tutte>.ha-gruppo:first-child{margin-top:6px}
+.au .ha-nome{font-size:14px;font-weight:900;line-height:1.3;color:var(--au-tx)}
+.au .ha-orig{display:inline-block;margin-left:6px;vertical-align:1px;font-size:10px;font-weight:800;letter-spacing:.02em;padding:1px 7px;border-radius:6px;border:1px solid var(--au-bordo);color:var(--au-dim)}
+.au .ha-orig.g{color:#0284c7;border-color:color-mix(in srgb,#0ea5e9 45%,transparent);background:color-mix(in srgb,#0ea5e9 8%,transparent)}
+html[data-theme="dark"] .au .ha-orig.g{color:#7dd3fc}
+.au .ha-orig.b{color:#7c3aed;border-color:color-mix(in srgb,#8b5cf6 45%,transparent);background:color-mix(in srgb,#8b5cf6 8%,transparent)}
+html[data-theme="dark"] .au .ha-orig.b{color:#c4b5fd}
+.au .ha-fr{font-size:12.5px;font-weight:700;line-height:1.35;margin-top:2px;color:var(--au-tx)}
+.au .ha-fr .fr{color:#0ea5e9;font-weight:900;margin:0 4px}
+.au .ha-fr.av{color:var(--au-dim);font-style:italic;font-weight:600}
+.au .ha-riga:not([data-au-apri]){cursor:default}
+.au .ha-riga.spenta .ha-nome,.au .ha-riga.spenta .ha-fr{color:var(--au-dim)}
+.au .ha-riga.spenta .au-ico{opacity:.5}
+.au .ha-ok{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,#16a34a 40%,var(--au-bordo));background:color-mix(in srgb,#16a34a 9%,var(--au-carta));font-size:13px;font-weight:700;color:var(--au-tx)}
+.au .ha-ok .s{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#16a34a;color:#fff;font-weight:900;flex:none}
+.au .ha-ok small{display:block;font-weight:600;color:var(--au-dim);font-size:12px;margin-top:1px}
+.au .ha-ok .ha-link,.au .ha-link{margin-left:auto;color:#0284c7;font-weight:900;font-size:12.5px;white-space:nowrap;text-decoration:none}
+html[data-theme="dark"] .au .ha-link{color:#7dd3fc}
+.au .ha-converti{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,#7c3aed 35%,var(--au-bordo));background:color-mix(in srgb,#7c3aed 7%,var(--au-carta));font-size:13px;color:var(--au-tx)}
+.au .ha-converti>span{font-size:20px}
+.au .ha-converti b{display:block;font-weight:900}
+.au .ha-converti small{display:block;font-weight:600;color:var(--au-dim);font-size:12px;margin-top:2px;line-height:1.4}
+.au .ha-converti button{margin-left:auto;flex:none;border:0;border-radius:11px;padding:9px 14px;background:#7c3aed;color:#fff;font-weight:900;font-size:13px}
+/* La scheda di una che c'e' gia'. */
+.au .ha-testa{border:1px solid var(--au-bordo);border-radius:16px;background:var(--au-carta);padding:12px 14px;margin:0 0 12px}
+.au .ha-testa-su{display:flex;align-items:center;gap:12px}
+.au .ha-testa-su .au-ico{width:46px;height:46px}
+.au .ha-in{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:0 12px;border-radius:11px;border:1px solid var(--au-bordo)}
+.au .ha-in input{flex:1;min-width:0;border:0;background:none;outline:none;padding:8px 0;font:inherit;font-size:16px;font-weight:900;color:var(--au-tx)}
+.au .ha-in i{font-style:normal;font-size:13px;color:var(--au-dim)}
+.au .ha-sotto{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.au .ha-tasto{border:1px solid var(--au-bordo);background:var(--au-carta);border-radius:11px;padding:8px 13px;font-weight:800;font-size:12.5px;color:var(--au-tx)}
+.au .ha-tasto.esegui{border-color:color-mix(in srgb,#16a34a 45%,var(--au-bordo));color:#15803d;background:color-mix(in srgb,#16a34a 8%,var(--au-carta))}
+html[data-theme="dark"] .au .ha-tasto.esegui{color:#86efac}
+.au .ha-tasto.elimina{color:#dc2626;border-color:color-mix(in srgb,#ef4444 40%,var(--au-bordo))}
+.au select.ha-chip{appearance:none;-webkit-appearance:none;border:0;padding:7px 11px;border-radius:11px;background:var(--au-tenue);font:inherit;font-size:12.5px;font-weight:800;color:var(--au-tx);max-width:200px}
+.au .ha-dove{font-size:11.5px;font-weight:600;color:var(--au-dim);margin-left:auto}
+.au .ha-dove .ha-orig{margin:0 6px 0 0}
+.au .ha-dove code{font-size:11px;padding:1px 5px;border-radius:5px;background:var(--au-tenue)}
+.au .au-salva[disabled]{opacity:.6;cursor:progress}
+.au .ha-salva-dove{display:flex;gap:8px;align-items:flex-start;margin:10px 4px 0;font-size:12.5px;line-height:1.45;font-weight:600;color:var(--au-dim)}
+.au .ha-salva-dove b{color:var(--au-tx)}
+.au .ha-riep{border:1px solid var(--au-bordo);border-radius:16px;background:var(--au-carta);padding:12px 14px 12px 18px;margin-bottom:10px;position:relative}
+.au .ha-riep::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:0 4px 4px 0;background:var(--c)}
+.au .ha-riep .au-et{color:var(--c);margin-bottom:6px}
+.au .ha-riep .au-et small{font-weight:700;letter-spacing:0;text-transform:none;color:var(--au-dim)}
+.au .ha-riep ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.au .ha-riep li{display:flex;flex-wrap:wrap;gap:4px 9px;font-size:13.5px;font-weight:700;line-height:1.4;color:var(--au-tx)}
+.au .ha-riep li::before{content:"•";color:var(--c);font-weight:900}
+.au .ha-riep li.sub{margin-left:18px;font-weight:600}
+.au .ha-riep li.sub::before{content:"↳"}
+.au .ha-riep code{font-size:11.5px;padding:1px 6px;border-radius:6px;background:var(--au-tenue);color:var(--au-dim);font-weight:700;word-break:break-all}
+.au .ha-av{display:flex;gap:12px;align-items:flex-start;margin-top:4px;padding:13px 15px;border-radius:14px;border:1px solid color-mix(in srgb,#0ea5e9 35%,var(--au-bordo));background:color-mix(in srgb,#0ea5e9 7%,var(--au-carta));font-size:13px;line-height:1.5;font-weight:600;color:var(--au-tx)}
+.au .ha-av .i{font-size:20px}
+.au .ha-av .ha-apri{display:inline-flex;margin-top:8px;padding:8px 13px;border-radius:11px;background:#0ea5e9;color:#fff;font-weight:900;font-size:12.5px;text-decoration:none}
+.au-app .ha-testa-su .au-ico{display:none}
+.au-app .ha-dove{margin-left:0;flex-basis:100%}
+@media (max-width:640px){.au-web .ha-cerca{order:5;max-width:none;flex-basis:100%}}
+/* «Eliminare?» */
+.ha-velo{position:fixed;inset:0;z-index:100000;display:grid;place-items:center;background:rgba(15,23,42,.45)}
+.ha-conferma{width:min(420px,calc(100vw - 32px));box-sizing:border-box;border-radius:20px;padding:20px;background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 30px 70px -20px rgba(0,0,0,.5);font-family:Inter,sans-serif}
+.ha-conferma h4{margin:0 0 6px;font-size:17px;font-weight:900}
+.ha-conferma p{margin:0 0 16px;font-size:13.5px;line-height:1.5;font-weight:600;color:var(--secondary-text-color,#64748b)}
+.ha-conferma div{display:flex;gap:10px;justify-content:flex-end}
+.ha-conferma button{border-radius:12px;padding:10px 16px;font:inherit;font-weight:900;font-size:13.5px;border:1px solid var(--divider-color,#e2e8f0);background:none;color:inherit;cursor:pointer}
+.ha-conferma button.r{background:#dc2626;border-color:#dc2626;color:#fff}
+/* «Premium arriva con le app» */
+.ps-velo{position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.5);display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:700px){.ps-velo{align-items:center}}
+.ps{width:min(460px,100vw);box-sizing:border-box;padding:14px 22px calc(24px + env(safe-area-inset-bottom,0px));border-radius:28px 28px 0 0;background:var(--card-bg,#fff);color:var(--text,#0f172a);font-family:Inter,sans-serif;display:grid;justify-items:center;text-align:center;gap:10px;box-shadow:0 -20px 60px -20px rgba(0,0,0,.45)}
+@media (min-width:700px){.ps{border-radius:28px;padding:26px 26px 24px}}
+.ps .man{width:42px;height:5px;border-radius:9px;background:var(--divider-color,#dbe4ee)}
+@media (min-width:700px){.ps .man{display:none}}
+.ps .ico{font-size:34px}
+.ps .tag{font-size:10.5px;font-weight:900;letter-spacing:1.4px;color:#b45309;background:color-mix(in srgb,#f59e0b 16%,transparent);border-radius:999px;padding:4px 10px}
+html[data-theme="dark"] .ps .tag{color:#fcd34d}
+.ps h3{margin:0;font-family:Oswald,sans-serif;font-weight:700;font-size:23px;letter-spacing:1px;text-transform:uppercase}
+.ps p{margin:0;font-size:13.5px;line-height:1.55;font-weight:600;color:var(--secondary-text-color,#64748b)}
+.ps p b{color:var(--text,#0f172a)}
+.ps .negozi{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:4px 0}
+.ps .neg{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee);font-size:13px;font-weight:900}
+.ps .neg small{font-size:10px;font-weight:900;letter-spacing:.8px;color:#b45309;text-transform:uppercase}
+html[data-theme="dark"] .ps .neg small{color:#fcd34d}
+.ps .ok{margin-top:6px;width:100%;border:0;border-radius:16px;padding:14px;background:#7c3aed;color:#fff;font:inherit;font-size:14px;font-weight:900;cursor:pointer}
 @media (max-width:760px){.au-web .pro-carte{grid-template-columns:1fr}.au-web .pro-elenco .au-riga{flex-wrap:wrap}.au-web .pro-elenco .pro-tasti{flex-direction:row;width:100%}}
 `,
   );

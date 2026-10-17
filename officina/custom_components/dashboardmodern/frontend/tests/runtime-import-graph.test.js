@@ -1552,8 +1552,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 462 con le proposte delle automazioni: il nucleo puro
   // `core/automazioni-proposte.js`, che il ponte usa per calcolarle in casa e
   // la plancia per togliere quelle gia' salvate o scartate.
+  // 464 con le automazioni di Home Assistant: il traduttore puro
+  // `core/automazioni-ha.js`, che legge anche il ponte, e la sezione della
+  // dashboard `sections/automazioni-casa-section.js`.
   assert.ok(
-    relative.length <= 462,
+    relative.length <= 464,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

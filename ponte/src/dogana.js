@@ -36,7 +36,10 @@
  *        un'automazione scritta con dentro `hassio.addon_stdin` e fatta
  *        partire con `automation.trigger` passerebbe tutto quello che qui si
  *        ferma. Per lo stesso motivo non passa un copione scritto al momento
- *        (`execute_script`). Le risorse e le configurazioni delle dashboard di
+ *        (`execute_script`). Le automazioni della plancia passano da un'altra
+ *        porta, `ponte/automazioni/salva`, che non riceve una configurazione
+ *        ma la forma della plancia, e la configurazione la scrive il
+ *        traduttore coi servizi che sceglie lui (`servizioPermesso`). Le risorse e le configurazioni delle dashboard di
  *        Home Assistant (`lovelace/resources/*`, `lovelace/config/save` e
  *        `/delete`) sono programmi che girano nel browser di chiunque apra
  *        Home Assistant, anche di chi lo amministra davvero; i pacchetti di

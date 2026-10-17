@@ -474,10 +474,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   commissioni.ricaricaDiNotte = ricaricaDiNotte;
-  /* Le automazioni della plancia (Quando · Solo se · Allora): le esegue la
-   * casa, anche a plancia e app chiuse, e solo con gdahome Premium. Sentono
-   * la casa dallo stesso specchio delle notifiche, e avvisano i telefoni con
-   * la loro stessa busta (`automazioni.js`). */
+  /* Le automazioni: le esegue Home Assistant, che le ha fra le sue. Qui
+   * l'elenco per la plancia, i salvataggi con l'API di Home Assistant, le
+   * proposte, e gli avvisi «sul telefono» che le automazioni mandano con
+   * l'evento `gdahome_avvisa` e che partono con la busta delle notifiche
+   * (`automazioni.js`). */
   const automazioni = new Automazioni({
     cartella: opzioni.cartella,
     casa,
@@ -485,15 +486,12 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     stati: () => notifiche.sentinella?.stati ?? null,
     notifiche,
     licenze,
-    /* Per le proposte: le stanze dai registri, e le luci rimaste accese con
-     * la casa vuota che l'assistente delle notifiche conta gia'. */
+    /* Per l'elenco e le proposte: le stanze dai registri, e le luci rimaste
+     * accese con la casa vuota che l'assistente delle notifiche conta gia'. */
     registri,
     luciConCasaVuota: () => notifiche.sentinella?.capire?.dati?.luci ?? null,
     registro,
   });
-  notifiche.sentinella?.ascoltatori?.push((id, dopo, prima) =>
-    automazioni.quandoCambia(id, dopo, prima),
-  );
   commissioni.automazioni = automazioni;
   /* «Cosa c'e' in casa» nel config: lo sa l'assistente delle notifiche. */
   commissioni.notifiche = notifiche;

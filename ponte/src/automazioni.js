@@ -1,55 +1,46 @@
-/* Le automazioni, fatte dalla casa.
+/* Le automazioni della casa, dal lato dell'add-on.
  *
- * «Quando c'e' movimento in corridoio, di notte, accendi la luce al 20% e
- * dopo due minuti spegnila.» Chi la scrive ha la plancia sul telefono e il
- * telefono in tasca: alle due di notte nessuna pagina e' aperta, e una regola
- * che vivesse nella pagina non scatterebbe mai. Per questo sta qui, nel
- * ponte, che gira finche' gira Home Assistant — come la ricarica di notte
- * (`ricarica-di-notte.js`), da cui prende il modo di stare al mondo.
+ * Le automazioni le esegue **Home Assistant**: la plancia le scrive come
+ * automazioni vere, che si ritrovano in Impostazioni → Automazioni con il
+ * segno «gdahome», e da li' partono anche ad add-on spento. Fino a ieri le
+ * eseguiva questo file, con un motore suo che guardava l'orologio ogni venti
+ * secondi: due posti dove la casa fa le cose da sola erano un posto di
+ * troppo, e chi apriva Home Assistant non le vedeva. Il motore non c'e' piu';
+ * l'add-on resta leggero e fa solo quello che la plancia non puo' fare da se':
  *
- * Le regole non stanno in questo file: stanno in
- * `plancia/src/core/automazioni.js`, che la plancia importa per scriverle e
- * raccontarle e il ponte per eseguirle — una regola sola, due lettori. Qui ci
- * sono le cose che la plancia non puo' fare:
+ *  - **leggere l'elenco**: tutte le automazioni di Home Assistant, dagli stati
+ *    `automation.*` dello specchio della sentinella (ognuna col suo `id`),
+ *    ognuna con la sua configurazione (`GET /api/config/automation/config/
+ *    <id>`), la sua stanza dai registri, e quando e' partita l'ultima volta
+ *    (`last_triggered`). La traduzione nella forma della plancia — e se ci
+ *    sta, o e' «complessa» — la fa `plancia/src/core/automazioni-ha.js`;
+ *  - **scriverle**: salvare, togliere, rinominare, cambiare stanza,
+ *    duplicare, con l'API di Home Assistant e il segno dell'add-on
+ *    (`casa.api`). Chi salva manda la forma della plancia, mai una
+ *    configurazione scritta da lui: la configurazione la scrive il
+ *    traduttore, coi servizi che sceglie lui (`servizioPermesso`). E una
+ *    complessa non si sovrascrive mai con l'editor della plancia;
+ *  - **avvisare i telefoni**: l'azione «avvisa sul telefono» scrive l'evento
+ *    `gdahome_avvisa`, e qui lo si ascolta e lo si consegna con la busta
+ *    delle notifiche di sempre. Home Assistant non sa niente dei telefoni;
+ *  - **le proposte** («Suggerite per la tua casa ✨»), come prima.
  *
- *  - **sentire la casa**: ogni cambio di stato che arriva alla sentinella delle
- *    notifiche passa anche di qui (`quandoCambia`), senza chiedere niente a
- *    Home Assistant — lo specchio degli stati c'e' gia', e `get_states` a
- *    raffica vorrebbe dire scaricare tutta la casa a ogni giro;
- *  - **guardare l'orologio** ogni venti secondi: gli orari, l'alba, il «da
- *    dieci minuti», la lavatrice che ha finito, il cronotermostato;
- *  - **chiamare i servizi** che il nucleo ha scelto, e solo quelli;
- *  - **ricordarsi** su disco (`/data/automazioni.json`) quello che deve
- *    sopravvivere a un riavvio: l'«aspetta due minuti» a meta', la lavatrice
- *    che gira, il valore gia' sopra soglia, l'ultima volta di ognuna.
+ * Accendere, spegnere ed eseguire un'automazione non passa di qui: sono
+ * servizi di Home Assistant (`automation.turn_on`, `automation.trigger`), e
+ * la plancia li chiama come chiama una luce.
  *
- * Non solo le cose che la plancia conosce: un QUANDO puo' guardare qualunque
- * entita' di Home Assistant, un suo attributo, o un evento del bus (il tasto
- * Zigbee che manda `zha_event`): a quegli eventi, e solo a quelli che servono
- * alle automazioni accese, ci si abbona qui (`_sincronizzaGliEventi`). E ogni
- * automazione dice cosa fare se riscatta mentre e' ancora in corso
- * (ricomincia, ignora, in coda), una pausa minima fra due volte, e una data
- * in cui si accende o si spegne da sola.
+ * ── Chi puo' cosa ─────────────────────────────────────────────────────────
  *
- * ── Premium ───────────────────────────────────────────────────────────────
+ * Tutti i comandi rispondono solo a chi sul filo ha un utente (`unauthorized`
+ * agli altri). Scrivere vuole in piu' **chi amministra Home Assistant** — e'
+ * la stessa regola di Home Assistant per la sua pagina delle automazioni: il
+ * segno dell'add-on puo' tutto, e non deve diventare la porta di servizio di
+ * chi in Home Assistant quella pagina non la vede — e gdahome Premium (o le
+ * licenze spente, come nei ponti di prova). La configurazione intera di
+ * un'automazione arriva solo a chi amministra; agli altri arriva il racconto.
+ * Niente esce di casa: si parla solo con Home Assistant.
  *
- * Le automazioni sono di gdahome Premium. Senza, restano salvate nella
- * plancia ma qui non parte niente — nessun orario, nessun servizio — e il
- * giorno che la casa torna Premium ripartono da sole. Con le licenze spente
- * (la chiave vuota, come nei ponti di prova) e' tutto aperto, come per il
- * pianificatore dei viaggi (`viaggi.js`).
- *
- * ── Chi le scrive, chi le legge ───────────────────────────────────────────
- *
- * Le automazioni si scrivono nella configurazione della plancia principale
- * (`cd_automazioni`) e solo da chi ha un utente: un salvataggio senza nome
- * non le tocca (`commissioni.js`, `conservaLeAutomazioni`). Qui non c'e'
- * nessun comando per scriverle — una porta in meno da difendere. Alla plancia
- * si risponde con un comando solo, in sola lettura, `ponte/automazioni/stato`
- * — cosa viene dopo, le ultime eseguite, l'ultima volta di ognuna — e solo a
- * chi sul filo ha un nome.
- *
- * ── Le proposte («Suggerite per la tua casa ✨») ──────────────────────────
+ * ── Le proposte ───────────────────────────────────────────────────────────
  *
  * Le regole stanno in `plancia/src/core/automazioni-proposte.js`; qui si
  * raccoglie quello che serve per applicarle, e niente esce di casa:
@@ -65,13 +56,9 @@
  *  - le luci rimaste accese con la casa vuota, che l'assistente delle
  *    notifiche conta gia' (`capire-la-casa.js`).
  *
- * Due comandi: `ponte/automazioni/proposte` le legge, e
- * `ponte/automazioni/proposte/scarta` ricorda un «No, grazie» — tutti e due
- * solo a chi ha un utente, come lo stato. Uno scarto vale per la casa, non
- * per il telefono: chi dice «no» alla luce col movimento non la vuole
- * ritrovare sul tablet della cucina. Una proposta non scrive niente in
- * `cd_automazioni`: «Crea» apre l'editor della plancia, e si salva da li',
- * con le regole di sempre.
+ * Uno scarto («No, grazie») vale per la casa, non per il telefono, e si
+ * ricorda in `/data/automazioni.json`. Una proposta non scrive niente da
+ * sola: «Crea» apre l'editor della plancia, e si salva da li'.
  */
 
 import { join } from "node:path";
@@ -81,16 +68,19 @@ import { PROFILO_PRINCIPALE } from "./configurazione.js";
 import {
   CHIAVE_AUTOMAZIONI,
   MINUTO,
+  automazionePulita,
   automazioniPulite,
-  cronoDecide,
-  eAttivaAdesso,
-  eLoStatoAtteso,
-  entitaDelQuando,
-  passiDellAllora,
-  prossimiEventi,
-  soloSeVale,
-  valutaIlQuando,
+  eCompleta,
 } from "../plancia/src/core/automazioni.js";
+import {
+  EVENTO_AVVISA,
+  categoriaDi,
+  dallaHomeAssistant,
+  idBuono,
+  inHomeAssistant,
+  nuovoIdHA,
+  origineDi,
+} from "../plancia/src/core/automazioni-ha.js";
 import {
   ENTITA_GUARDATE,
   GIORNI_DI_STORIA,
@@ -99,22 +89,31 @@ import {
   proposteDalleAbitudini,
 } from "../plancia/src/core/automazioni-proposte.js";
 
-/* Ogni quanto si guarda l'orologio. Un orario comincia a un minuto preciso, e
- * venti secondi di ritardo su una tapparella non si vedono. */
-const BATTITO = 20_000;
-
-/* Le ultime eseguite che si tengono per la plancia. */
-const STORIA = 12;
-
-/* Un «aspetta» rimasto a meta' per un riavvio si riprende se la casa torna
- * presto. Mezz'ora dopo no: la luce del corridoio che si spegne un'ora dopo il
- * riavvio va bene, quella che si accende no — e il passo dopo un'attesa
- * potrebbe essere un'accensione. */
-const RIPRESA_POSSIBILE = 30 * MINUTO;
-
 export const COMANDO_DELLO_STATO = "ponte/automazioni/stato";
+export const COMANDO_DEL_SALVA = "ponte/automazioni/salva";
+export const COMANDO_DELL_ELIMINA = "ponte/automazioni/elimina";
+export const COMANDO_DEL_RINOMINA = "ponte/automazioni/rinomina";
+export const COMANDO_DEL_DUPLICA = "ponte/automazioni/duplica";
 export const COMANDO_DELLE_PROPOSTE = "ponte/automazioni/proposte";
 export const COMANDO_DELLO_SCARTO = "ponte/automazioni/proposte/scarta";
+
+/** Tutti i comandi delle automazioni: li riconosce `commissioni.js`. */
+export const COMANDI_DELLE_AUTOMAZIONI = Object.freeze([
+  COMANDO_DELLO_STATO,
+  COMANDO_DEL_SALVA,
+  COMANDO_DELL_ELIMINA,
+  COMANDO_DEL_RINOMINA,
+  COMANDO_DEL_DUPLICA,
+  COMANDO_DELLE_PROPOSTE,
+  COMANDO_DELLO_SCARTO,
+]);
+/* Quelli che scrivono in Home Assistant. */
+const SCRIVONO = new Set([
+  COMANDO_DEL_SALVA,
+  COMANDO_DELL_ELIMINA,
+  COMANDO_DEL_RINOMINA,
+  COMANDO_DEL_DUPLICA,
+]);
 
 /* La storia si rilegge una volta al giorno; le stanze e le entita' ogni
  * cinque minuti, come i registri. Chi apre le Automazioni non aspetta la
@@ -125,6 +124,20 @@ const AREE_DURANO = 5 * MINUTO;
 const ATTESA_DELLA_STORIA = 8_000;
 /* I «No, grazie» che si ricordano, al piu'. */
 const SCARTATE_AL_MASSIMO = 300;
+
+/* Una configurazione letta vale mezzo minuto: la plancia chiede l'elenco
+ * quando si apre e dopo ogni salvataggio, e una casa con cento automazioni
+ * non deve fare cento domande ogni volta. Si leggono sei per volta. */
+const CONFIG_DURA = 30_000;
+const INSIEME = 6;
+
+/* Gli avvisi da Home Assistant ai telefoni: al piu' trenta ogni dieci
+ * minuti. Un'automazione scritta male che avvisa a ogni lettura di un
+ * sensore non deve far vibrare un telefono ogni secondo. */
+const AVVISI_AL_MASSIMO = 30;
+const FINESTRA_DEGLI_AVVISI = 10 * MINUTO;
+/* Ogni quanto si controlla di essere ancora in ascolto degli avvisi. */
+const ASCOLTO = 60_000;
 
 /* La storia del Recorder com'e' sul socket: `{id: [{s, lu}]}` (la forma
  * stretta, `minimal_response`) o `{id: [{state, last_changed}]}`. Torna
@@ -151,15 +164,6 @@ export function storieDallaRisposta(risposta) {
   return fuori;
 }
 
-function leggiJson(valore) {
-  if (typeof valore !== "string") return valore ?? null;
-  try {
-    return JSON.parse(valore);
-  } catch (_errore) {
-    return null;
-  }
-}
-
 /* Lo specchio della sentinella e' una `Map`; il nucleo legge un oggetto. Un
  * oggetto finto che guarda nella mappa costa niente e non copia la casa a
  * ogni cambio di un sensore di potenza. */
@@ -180,25 +184,20 @@ function comeOggetto(mappa) {
   );
 }
 
-const memoriaVuota = () => ({
-  tracce: {},
-  ultime: {},
-  storia: [],
-  corse: [],
-  giro: 0,
-  scartate: [],
-  abitudini: null,
-});
+function leggiJson(valore) {
+  if (typeof valore !== "string") return valore ?? null;
+  try {
+    return JSON.parse(valore);
+  } catch (_errore) {
+    return null;
+  }
+}
+
+const memoriaVuota = () => ({ scartate: [], abitudini: null });
 
 function memoriaPulita(dato) {
   const d = dato && typeof dato === "object" ? dato : {};
-  const oggetto = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : {});
   return {
-    tracce: oggetto(d.tracce),
-    ultime: oggetto(d.ultime),
-    storia: Array.isArray(d.storia) ? d.storia.slice(0, STORIA) : [],
-    corse: Array.isArray(d.corse) ? d.corse.filter((c) => c && typeof c.id === "string") : [],
-    giro: Number(d.giro) || 0,
     scartate: Array.isArray(d.scartate)
       ? d.scartate.filter((x) => typeof x === "string").slice(-SCARTATE_AL_MASSIMO)
       : [],
@@ -209,18 +208,25 @@ function memoriaPulita(dato) {
   };
 }
 
+const no = (id, code, message) => ({
+  id,
+  type: "result",
+  success: false,
+  error: { code, message },
+});
+const si = (id, result) => ({ id, type: "result", success: true, result });
+
 export class Automazioni {
   constructor({
     cartella = "",
     casa = null,
     configurazione = null,
     /* Tutti gli stati della casa, dallo specchio della sentinella: una `Map`
-     * `id → {state, attributes, dal}`. */
+     * `id → {state, attributes}`. */
     stati = () => null,
     notifiche = null,
     licenze = null,
-    /* I registri di Home Assistant (`registri.js`), per le stanze delle
-     * proposte. */
+    /* I registri di Home Assistant (`registri.js`): le stanze. */
     registri = null,
     /* Le luci rimaste accese con la casa vuota, giorno per giorno: quello
      * che conta l'assistente delle notifiche (`capire-la-casa.js`). */
@@ -245,20 +251,17 @@ export class Automazioni {
     this._luciConCasaVuota = luciConCasaVuota;
     this._aree = null;
     this._storiaInCorso = null;
+    this._configurazioni = new Map();
+    this._avvisiDetti = [];
+    this._ascolto = null;
+    this._disdici = null;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
     this._ogni = ogni;
     this._smetti = smetti;
-    this._battito = null;
-    this._inCorso = false;
-    /* Le corse vive: id dell'automazione → la corsa. Una corsa nuova della
-     * stessa automazione prende il posto di quella vecchia (il movimento che
-     * torna rimette da capo i due minuti della luce). */
-    this._vive = new Map();
-    this._sporca = false;
   }
 
-  /* Se le automazioni possono girare: gdahome Premium, o le licenze spente. */
+  /* Se si possono scrivere e avvisare: gdahome Premium, o le licenze spente. */
   get sbloccato() {
     try {
       if (!this.licenze?.attive) return true;
@@ -276,21 +279,16 @@ export class Automazioni {
     }
   }
 
-  /** Le automazioni salvate nella plancia principale, ripulite. */
-  elenco() {
-    /* Si chiede a ogni cambio di stato della casa — un sensore di potenza ne
-     * manda uno al secondo — e si ripulisce solo quando la casella cambia. */
-    const crudo = this._valori()[CHIAVE_AUTOMAZIONI];
-    if (crudo !== this._crudo || !this._pulite) {
-      this._crudo = crudo;
-      this._pulite = automazioniPulite(crudo);
-    }
-    return this._pulite;
+  /* Le automazioni rimaste nella configurazione della plancia, dalla
+   * versione di prova che le eseguiva qui: la plancia invita a convertirle,
+   * e finche' non lo si fa restano li', ferme. */
+  rimasteNellaPlancia() {
+    return automazioniPulite(this._valori()[CHIAVE_AUTOMAZIONI]);
   }
 
-  _contesto() {
+  _azioni() {
     const azioni = leggiJson(this._valori().cd_quick_actions);
-    return { azioni: Array.isArray(azioni) ? azioni : [], stati: this.stati() };
+    return Array.isArray(azioni) ? azioni : [];
   }
 
   stati() {
@@ -302,7 +300,6 @@ export class Automazioni {
   }
 
   _salva() {
-    this._sporca = false;
     this.archivio.dati = this.memoria;
     if (!this._suDisco) return;
     try {
@@ -312,378 +309,321 @@ export class Automazioni {
     }
   }
 
-  /* ── l'orologio ───────────────────────────────────────────────────── */
+  /* ── gli avvisi da Home Assistant ─────────────────────────────────── */
 
   parti() {
-    if (this._battito) return;
-    this._riprendiLeCorse();
-    this._battito = this._ogni(BATTITO, () => {
-      this.battito().catch((errore) =>
-        this.registro.attenzione(`automazioni: ${errore?.message || errore}`),
-      );
-    });
-    this._battito?.unref?.();
+    if (this._ascolto) return;
+    void this._ascoltaGliAvvisi();
+    this._ascolto = this._ogni(ASCOLTO, () => void this._ascoltaGliAvvisi());
+    this._ascolto?.unref?.();
   }
 
   ferma() {
-    if (this._battito) this._smetti(this._battito);
-    this._battito = null;
-    for (const disdici of this._eventi?.values() || []) void disdici?.();
-    this._eventi?.clear();
+    if (this._ascolto) this._smetti(this._ascolto);
+    this._ascolto = null;
+    const disdici = this._disdici;
+    this._disdici = null;
+    void disdici?.();
   }
 
-  /* Dopo un riavvio: le attese rimaste a meta' tornano vive se la casa e'
-   * tornata presto, e si buttano se no. */
-  _riprendiLeCorse() {
-    const ora = this.adesso();
-    const tenute = [];
-    for (const corsa of this.memoria.corse) {
-      if (ora - Number(corsa.riprendi || 0) > RIPRESA_POSSIBILE) continue;
-      const ferma = { ...corsa, ferma: true };
-      tenute.push(ferma);
-      this._vive.set(ferma.id, ferma);
-    }
-    if (tenute.length !== this.memoria.corse.length) {
-      this.memoria.corse = tenute;
-      this._salva();
-    }
-  }
-
-  /** Un giro: gli orari, le durate, i cronotermostati e le attese finite. */
-  async battito() {
-    if (this._inCorso) return;
-    this._inCorso = true;
-    try {
-      const ora = this.adesso();
-      const giroPrima = this.memoria.giro || null;
-      this.memoria.giro = ora;
-      if (!this.sbloccato) return;
-      const stati = this.stati();
-      void this._sincronizzaGliEventi();
-      for (const a of this.elenco()) {
-        if (!eAttivaAdesso(a, ora)) continue;
-        if (a.tipo === "crono") {
-          await this._crono(a, stati);
-          continue;
-        }
-        this._valuta(a, { stati, adesso: ora, giroPrima });
-      }
-      /* Solo le corse ferme a un «aspetta»: quelle appena partite stanno gia'
-       * andando avanti da sole, e ripassarle le farebbe due volte. */
-      for (const corsa of [...this._vive.values()])
-        if (corsa.ferma && Number(corsa.riprendi || 0) <= ora) {
-          corsa.ferma = false;
-          delete corsa.attende;
-          await this._avanza(corsa);
-        }
-    } finally {
-      this._inCorso = false;
-      this._salva();
-    }
-  }
-
-  /* ── i cambi di stato ─────────────────────────────────────────────── */
-
-  /* La sentinella chiama qui a ogni `state_changed` (`index.js`). Non solleva
-   * e non aspetta: chi chiama e' il filo con Home Assistant. */
-  quandoCambia(id, dopo, prima) {
-    try {
-      if (!this.sbloccato) return;
-      const ora = this.adesso();
-      this._liberaChiAttende(id, dopo);
-      const elenco = this.elenco().filter((a) => eAttivaAdesso(a, ora));
-      if (!elenco.length) return;
-      const persona = /^(person|device_tracker)\./.test(String(id));
-      let stati = null;
-      for (const a of elenco) {
-        if (a.tipo === "crono") {
-          if (a.crono.finestre.includes(id) || a.crono.termostati.includes(id)) {
-            stati ??= this.stati();
-            if (a.crono.finestre.includes(id))
-              this._crono(a, stati).catch((errore) =>
-                this.registro.attenzione(`cronotermostato: ${errore?.message || errore}`),
-              );
-          }
-          continue;
-        }
-        const riguarda =
-          entitaDelQuando(a.quando).includes(id) || (persona && a.quando.tipo === "persone");
-        if (!riguarda) continue;
-        stati ??= this.stati();
-        this._valuta(a, { stati, adesso: ora, cambio: { id, prima, dopo } });
-      }
-      if (this._sporca) this._salva();
-    } catch (errore) {
-      this.registro.attenzione(`automazioni: ${errore?.message || errore}`);
-    }
-  }
-
-  /* «Aspetta finche'…»: un'entita' che diventa lo stato atteso libera la
-   * corsa ferma su di lei. Il tempo massimo lo guarda il battito. */
-  _liberaChiAttende(id, dopo) {
-    for (const corsa of [...this._vive.values()]) {
-      const attende = corsa.attende;
-      if (!corsa.ferma || !attende || attende.entita !== id) continue;
-      if (!eLoStatoAtteso(attende.stato, dopo?.state)) continue;
-      corsa.ferma = false;
-      delete corsa.attende;
-      this._avanza(corsa).catch((errore) =>
-        this.registro.attenzione(`automazione «${corsa.nome}»: ${errore?.message || errore}`),
-      );
-    }
-  }
-
-  /* Gli eventi del bus che servono alle automazioni accese: ci si abbona a
-   * quelli, e solo a quelli, e ci si disdice da quelli che non servono piu'.
-   * `state_changed` no: e' gia' lo specchio della sentinella, e un'automazione
-   * che lo chiedesse riceverebbe tutta la casa. */
-  async _sincronizzaGliEventi() {
-    if (!this.casa?.ascolta || this._abbonando) return;
-    this._eventi ??= new Map();
-    const ora = this.adesso();
-    const servono = new Set(
-      this.sbloccato
-        ? this.elenco()
-            .filter((a) => eAttivaAdesso(a, ora) && a.quando?.tipo === "evento")
-            .map((a) => a.quando.evento)
-            .filter((tipo) => tipo && tipo !== "state_changed")
-        : [],
-    );
+  /* Ci si abbona a `gdahome_avvisa`, e solo a lui. Se il filo cade
+   * l'abbonamento cade con lui, e il giro dopo lo rifa'. */
+  async _ascoltaGliAvvisi() {
+    if (this._disdici || this._abbonando || !this.casa?.ascolta) return;
     this._abbonando = true;
     try {
-      for (const [tipo, disdici] of [...this._eventi]) {
-        if (servono.has(tipo)) continue;
-        this._eventi.delete(tipo);
-        await disdici?.();
-      }
-      for (const tipo of servono) {
-        if (this._eventi.has(tipo)) continue;
-        try {
-          const disdici = await this.casa.ascolta(
-            tipo,
-            (evento) => this.quandoEvento(tipo, evento?.data),
-            { onCaduto: () => this._eventi?.delete(tipo) },
+      this._disdici = await this.casa.ascolta(
+        EVENTO_AVVISA,
+        (evento) => {
+          void this.avvisa(evento?.data).catch((errore) =>
+            this.registro.attenzione(`avviso di un'automazione: ${errore?.message || errore}`),
           );
-          this._eventi.set(tipo, disdici);
-        } catch (errore) {
-          this.registro.attenzione(
-            `automazioni: l'evento «${tipo}» non si ascolta (${errore?.message || errore})`,
-          );
-        }
-      }
+        },
+        {
+          onCaduto: () => {
+            this._disdici = null;
+          },
+        },
+      );
+    } catch (errore) {
+      this.registro.debug?.(
+        `gli avvisi delle automazioni non si ascoltano: ${errore?.message || errore}`,
+      );
     } finally {
       this._abbonando = false;
     }
   }
 
-  /** Un evento del bus di Home Assistant, per le automazioni che lo aspettano. */
-  quandoEvento(tipo, dati) {
-    try {
-      if (!this.sbloccato) return;
-      const ora = this.adesso();
-      let stati = null;
-      for (const a of this.elenco()) {
-        if (!eAttivaAdesso(a, ora) || a.quando?.tipo !== "evento" || a.quando.evento !== tipo)
-          continue;
-        stati ??= this.stati();
-        this._valuta(a, { stati, adesso: ora, evento: { tipo, dati } });
-      }
-    } catch (errore) {
-      this.registro.attenzione(`automazioni: ${errore?.message || errore}`);
-    }
-  }
-
-  _valuta(a, { stati, adesso, giroPrima = null, cambio = null, evento = null }) {
-    const prima = this.memoria.tracce[a.id] || {};
-    const { scatta, traccia } = valutaIlQuando(a.quando, {
-      evento,
-      cambio,
-      stati,
-      adesso,
-      giroPrima,
-      traccia: prima,
-    });
-    if (JSON.stringify(traccia) !== JSON.stringify(prima)) {
-      this.memoria.tracce[a.id] = traccia;
-      this._sporca = true;
-    }
-    if (!scatta) return false;
-    /* SOLO SE: guardato nel momento in cui il QUANDO scatta, non dopo. */
-    if (!soloSeVale(a.soloSe, { stati, adesso }, a.tutte !== false)) return false;
-    this.avvia(a).catch((errore) =>
-      this.registro.attenzione(`automazione «${a.nome}»: ${errore?.message || errore}`),
-    );
-    return true;
-  }
-
-  /* ── eseguire ─────────────────────────────────────────────────────── */
-
-  /** Fa partire un'automazione: i passi dell'ALLORA, uno dopo l'altro. */
-  async avvia(a) {
-    if (!this.sbloccato) return null;
+  /** Un avviso scritto da un'automazione: ai telefoni, con la busta di sempre. */
+  async avvisa(dati) {
+    if (!this.sbloccato || !this.notifiche?.consegna) return false;
+    const d = dati && typeof dati === "object" ? dati : {};
+    const testo = String(d.testo ?? "")
+      .trim()
+      .slice(0, 300);
+    if (!testo) return false;
+    const titolo =
+      String(d.titolo ?? "")
+        .trim()
+        .slice(0, 80) || "gdahome";
     const ora = this.adesso();
-    /* «Non piu' di una volta ogni X minuti»: dall'ultima partenza. */
-    const ultima = this.memoria.ultime[a.id];
-    if (a.pausa && ultima?.alle && ora - ultima.alle < a.pausa * MINUTO) return null;
-    /* Ancora in corso: ignora, o in coda (al piu' tre), o ricomincia. */
-    const viva = this._vive.get(a.id);
-    if (viva && a.modo === "ignora") return null;
-    if (viva && a.modo === "coda") {
-      this._code ??= new Map();
-      const coda = this._code.get(a.id) || 0;
-      if (coda < 3) this._code.set(a.id, coda + 1);
-      return null;
-    }
-    const passi = passiDellAllora(a.allora, this._contesto());
-    const corsa = { id: a.id, nome: a.nome, passi, indice: 0, riprendi: ora, partita: ora };
-    this._vive.set(a.id, corsa);
-    this.memoria.ultime[a.id] = { alle: ora, esito: "in-corso" };
-    this._sporca = true;
-    await this._avanza(corsa);
-    return corsa;
-  }
-
-  async _avanza(corsa) {
-    /* Una corsa a meta' di un'automazione tolta, spenta, o di una casa che
-     * non e' piu' Premium, si ferma li'. */
-    const viva = this.elenco().find((a) => a.id === corsa.id);
-    if (!viva || !eAttivaAdesso(viva, this.adesso()) || !this.sbloccato) {
-      this._chiudi(corsa, "fermata");
-      return;
-    }
-    for (let i = corsa.indice; i < corsa.passi.length; i += 1) {
-      if (this._vive.get(corsa.id) !== corsa) return;
-      const passo = corsa.passi[i];
-      if (passo.aspetta) {
-        corsa.indice = i + 1;
-        corsa.riprendi = this.adesso() + passo.aspetta;
-        corsa.ferma = true;
-        this._ricordaLeCorse();
-        return;
-      }
-      /* «Aspetta finche'…»: se e' gia' cosi' si va avanti subito, se no ci si
-       * ferma fino allo stato atteso o al tempo massimo. */
-      if (passo.attendi) {
-        const ora = String(this.stati()[passo.attendi.entita]?.state ?? "");
-        if (eLoStatoAtteso(passo.attendi.stato, ora)) continue;
-        corsa.indice = i + 1;
-        corsa.riprendi = this.adesso() + passo.attendi.per;
-        corsa.attende = { entita: passo.attendi.entita, stato: passo.attendi.stato };
-        corsa.ferma = true;
-        this._ricordaLeCorse();
-        return;
-      }
-      try {
-        if (passo.servizio) await this._servizio(passo.servizio);
-        else if (passo.notifica) await this._notifica(viva, passo.notifica);
-      } catch (errore) {
-        this.registro.attenzione(
-          `automazione «${viva.nome}»: ${passo.servizio?.domain}.${passo.servizio?.service} non e' andato (${errore?.message || errore})`,
-        );
-        this._chiudi(corsa, "errore");
-        return;
-      }
-    }
-    if (this._vive.get(corsa.id) === corsa) this._chiudi(corsa, "ok");
-    /* Chi aspettava in coda parte adesso. */
-    const coda = this._code?.get(corsa.id) || 0;
-    if (coda > 0) {
-      this._code.set(corsa.id, coda - 1);
-      await this.avvia(viva);
-    }
-  }
-
-  async _servizio({ domain, service, data }) {
-    await this.casa?.chiedi?.({ type: "call_service", domain, service, service_data: data });
-  }
-
-  async _notifica(a, testo) {
-    if (!this.notifiche?.consegna) return;
-    const titolo = a.nome || "gdahome";
+    this._avvisiDetti = this._avvisiDetti.filter((t) => ora - t < FINESTRA_DEGLI_AVVISI);
+    if (this._avvisiDetti.length >= AVVISI_AL_MASSIMO) return false;
+    this._avvisiDetti.push(ora);
     await this.notifiche.consegna({
       tipo: "personalizzata",
-      chiave: `automazione:${a.id}`,
+      chiave: `automazione:${titolo}`,
       urgenza: "normale",
       parole: { it: { titolo, testo }, en: { titolo, testo } },
     });
+    return true;
   }
 
-  _chiudi(corsa, esito) {
-    if (this._vive.get(corsa.id) === corsa) this._vive.delete(corsa.id);
-    if (esito !== "fermata") {
-      this.memoria.ultime[corsa.id] = { alle: corsa.partita, esito };
-      this.memoria.storia = [
-        { id: corsa.id, nome: corsa.nome || "", alle: corsa.partita, esito },
-        ...this.memoria.storia.filter((s) => !(s.id === corsa.id && s.alle === corsa.partita)),
-      ].slice(0, STORIA);
-      if (esito === "ok") this.registro.info(`automazione «${corsa.nome}» eseguita`);
-    } else if (this.memoria.ultime[corsa.id]?.esito === "in-corso") {
-      this.memoria.ultime[corsa.id] = { alle: corsa.partita, esito: "fermata" };
-    }
-    this._ricordaLeCorse();
+  /* ── l'elenco di Home Assistant ───────────────────────────────────── */
+
+  async _api(metodo, percorso, corpo) {
+    if (!this.casa?.api) throw new Error("Home Assistant non si raggiunge");
+    return this.casa.api(metodo, percorso, corpo);
   }
 
-  _ricordaLeCorse() {
-    this.memoria.corse = [...this._vive.values()].map((c) => ({
-      id: c.id,
-      nome: c.nome,
-      passi: c.passi,
-      indice: c.indice,
-      riprendi: c.riprendi,
-      partita: c.partita,
-      ...(c.attende ? { attende: c.attende } : {}),
-    }));
-    this._salva();
-  }
-
-  /* Il cronotermostato: comanda solo ai passaggi (`cronoDecide`), e si
-   * ricorda cosa ha chiesto solo per i comandi andati. */
-  async _crono(a, stati) {
-    if (!this.sbloccato) return;
+  /* La configurazione di un'automazione, o `null` se Home Assistant non la
+   * da' (una scritta in un pacchetto YAML, fuori da `automations.yaml`). */
+  async _configDi(id, { forza = false } = {}) {
     const ora = this.adesso();
-    const prima = this.memoria.tracce[a.id] || {};
-    const { comandi } = cronoDecide(a.crono, { adesso: ora, stati, traccia: prima });
-    if (!comandi.length) return;
-    const voluto = { ...(prima.voluto || {}) };
-    let esito = "ok";
-    for (const comando of comandi) {
+    const tenuta = this._configurazioni.get(id);
+    if (!forza && tenuta && ora - tenuta.il < CONFIG_DURA) return tenuta.config;
+    let config = null;
+    try {
+      config = await this._api("GET", `config/automation/config/${encodeURIComponent(id)}`);
+    } catch (errore) {
+      if (errore?.status !== 404 && errore?.status !== 400) throw errore;
+      config = null;
+    }
+    const buona = config && typeof config === "object" && !Array.isArray(config) ? config : null;
+    this._configurazioni.set(id, { il: ora, config: buona });
+    return buona;
+  }
+
+  /* Le stanze, per nome: `{area_id: nome}`. */
+  async _nomiDelleAree() {
+    const ora = this.adesso();
+    if (this._aree && ora - this._aree.il < AREE_DURANO) return this._aree.nomi;
+    const nomi = {};
+    try {
+      const elenco = await this.casa?.chiedi?.({ type: "config/area_registry/list" });
+      for (const a of Array.isArray(elenco) ? elenco : [])
+        if (a?.area_id) nomi[a.area_id] = String(a.name || a.area_id);
+    } catch (errore) {
+      this.registro.debug?.(`le stanze non si leggono: ${errore?.message || errore}`);
+    }
+    this._aree = { il: ora, nomi };
+    return nomi;
+  }
+
+  async _registri() {
+    try {
+      return (await this.registri?.chiedi?.()) || null;
+    } catch (errore) {
+      this.registro.debug?.(`i registri non si leggono: ${errore?.message || errore}`);
+      return null;
+    }
+  }
+
+  /**
+   * Tutte le automazioni di Home Assistant, pronte per la plancia. Con
+   * `conConfig` ognuna porta la sua configurazione intera (per chi
+   * amministra); senza, solo il racconto.
+   */
+  async elencoDiCasa({ conConfig = false } = {}) {
+    const mappa = this._stati();
+    if (!mappa || typeof mappa.entries !== "function") return [];
+    const stati = comeOggetto(mappa);
+    const statoDi = (id) => mappa.get(id) ?? null;
+    const voci = [...mappa.entries()].filter(([id]) => String(id).startsWith("automation."));
+    const ids = voci.map(([, s]) => String(s?.attributes?.id ?? "").trim()).filter(idBuono);
+    const configurazioni = new Map();
+    for (let i = 0; i < ids.length; i += INSIEME) {
+      const giro = ids.slice(i, i + INSIEME);
+      const lette = await Promise.all(
+        giro.map((id) =>
+          this._configDi(id).catch((errore) => {
+            this.registro.debug?.(`l'automazione ${id} non si legge: ${errore?.message || errore}`);
+            return null;
+          }),
+        ),
+      );
+      giro.forEach((id, j) => configurazioni.set(id, lette[j]));
+    }
+    const registri = await this._registri();
+    const nomiDelleAree = await this._nomiDelleAree();
+    const areaDelDispositivo = new Map();
+    for (const d of Array.isArray(registri?.dispositivi) ? registri.dispositivi : [])
+      if (d?.id) areaDelDispositivo.set(d.id, d.area_id || "");
+    const voceDi = new Map();
+    for (const v of Array.isArray(registri?.entita) ? registri.entita : [])
+      if (v?.entity_id) voceDi.set(v.entity_id, v);
+    const azioni = this._azioni();
+    const fuori = [];
+    for (const [entity, s] of voci) {
+      const attributi = s?.attributes || {};
+      const id = String(attributi.id ?? "").trim();
+      const config = idBuono(id) ? (configurazioni.get(id) ?? null) : null;
+      const voce = voceDi.get(entity);
+      const areaId = voce?.area_id || areaDelDispositivo.get(voce?.device_id) || "";
+      const attiva = String(s?.state) === "on";
+      let modello = null;
       try {
-        for (const servizio of comando.servizi) await this._servizio(servizio);
-        voluto[comando.entita] = comando.voluto;
-      } catch (errore) {
-        esito = "errore";
-        this.registro.attenzione(
-          `cronotermostato «${a.nome}»: ${comando.entita} non risponde (${errore?.message || errore})`,
-        );
+        modello = config ? dallaHomeAssistant(config, { statoDi, azioni, stati }) : null;
+      } catch (_errore) {
+        modello = null;
       }
+      const ultima = Date.parse(attributi.last_triggered || "");
+      fuori.push({
+        entity_id: entity,
+        id: idBuono(id) ? id : "",
+        nome: String(attributi.friendly_name || config?.alias || entity),
+        attiva,
+        ultima: Number.isFinite(ultima) ? ultima : null,
+        area: areaId ? nomiDelleAree[areaId] || "" : "",
+        areaId,
+        categoria: config ? categoriaDi(config, statoDi) : "altre",
+        origine: origineDi(config),
+        modello: modello ? { ...modello, attiva } : null,
+        /* Si modifica dalla plancia solo se Home Assistant ne da' la
+         * configurazione: una scritta in un pacchetto YAML si guarda e basta. */
+        modificabile: Boolean(config),
+        config: conConfig ? config : null,
+      });
     }
-    this.memoria.tracce[a.id] = { ...prima, voluto };
-    this.memoria.ultime[a.id] = { alle: ora, esito };
-    this.memoria.storia = [
-      { id: a.id, nome: a.nome, alle: ora, esito },
-      ...this.memoria.storia,
-    ].slice(0, STORIA);
-    this._salva();
+    return fuori.sort((a, b) => a.nome.localeCompare(b.nome));
   }
 
-  /* ── quello che si dice alla plancia ──────────────────────────────── */
+  async _modelliPerLeProposte() {
+    let diCasa = [];
+    try {
+      diCasa = (await this.elencoDiCasa()).map((v) => v.modello).filter(Boolean);
+    } catch (_errore) {
+      diCasa = [];
+    }
+    return [...this.rimasteNellaPlancia(), ...diCasa];
+  }
 
-  stato() {
-    const ora = this.adesso();
-    const elenco = this.elenco();
-    const stati = this.stati();
-    const ids = new Set(elenco.map((a) => a.id));
+  async stato({ amministra = false } = {}) {
+    const nomi = await this._nomiDelleAree();
     return {
       premium: this.sbloccato,
-      adesso: ora,
-      attive: elenco.filter((a) => eAttivaAdesso(a, ora)).length,
-      prossimi: this.sbloccato ? prossimiEventi(elenco, ora, (id) => stati[id] || null) : [],
-      ultime: this.memoria.storia.filter((s) => ids.has(s.id)).slice(0, 6),
-      perAutomazione: Object.fromEntries(
-        Object.entries(this.memoria.ultime).filter(([id]) => ids.has(id)),
-      ),
-      inCorso: [...this._vive.values()].map((c) => ({ id: c.id, riprendi: c.riprendi })),
+      /* Chi puo' scrivere: chi amministra Home Assistant, con Premium. */
+      puoScrivere: amministra === true && this.sbloccato,
+      adesso: this.adesso(),
+      automazioni: await this.elencoDiCasa({ conConfig: amministra === true }),
+      aree: Object.entries(nomi)
+        .map(([id, nome]) => ({ id, nome }))
+        .sort((a, b) => a.nome.localeCompare(b.nome)),
+      rimasteNellaPlancia: this.rimasteNellaPlancia().length,
     };
+  }
+
+  /* ── scrivere in Home Assistant ───────────────────────────────────── */
+
+  _dimentica(id) {
+    this._configurazioni.delete(id);
+  }
+
+  _entitaDi(id) {
+    const mappa = this._stati();
+    if (!mappa || typeof mappa.entries !== "function") return "";
+    for (const [entity, s] of mappa.entries())
+      if (String(entity).startsWith("automation.") && String(s?.attributes?.id ?? "") === id)
+        return entity;
+    return "";
+  }
+
+  /** Salva un'automazione della plancia come automazione di Home Assistant. */
+  async salva({ automazione, id = "" } = {}) {
+    const esistente = idBuono(id) ? String(id).trim() : "";
+    const a = automazionePulita({
+      ...(automazione && typeof automazione === "object" ? automazione : {}),
+      id: esistente || nuovoIdHA(this.adesso()),
+    });
+    if (!a || !eCompleta(a))
+      return { errore: "invalid_format", perche: "l'automazione non sta in piedi" };
+    let descrizione = null;
+    if (esistente) {
+      const prima = await this._configDi(esistente, { forza: true });
+      if (prima) {
+        /* Una complessa non si sovrascrive con l'editor della plancia: ne
+         * perderebbe un pezzo senza dirlo. */
+        const stati = this.stati();
+        if (
+          !dallaHomeAssistant(prima, {
+            statoDi: (x) => stati[x] ?? null,
+            azioni: this._azioni(),
+            stati,
+          })
+        )
+          return {
+            errore: "complessa",
+            perche: "questa automazione si modifica in Home Assistant",
+          };
+        descrizione = typeof prima.description === "string" ? prima.description : "";
+      }
+    }
+    const config = inHomeAssistant(a, { azioni: this._azioni(), stati: this.stati(), descrizione });
+    if (!config) return { errore: "invalid_format", perche: "l'automazione non sta in piedi" };
+    await this._api("POST", `config/automation/config/${encodeURIComponent(a.id)}`, config);
+    this._dimentica(a.id);
+    this.registro.info(`automazione «${config.alias}» salvata in Home Assistant`);
+    return { id: a.id, alias: config.alias };
+  }
+
+  async elimina({ id = "" } = {}) {
+    if (!idBuono(id)) return { errore: "invalid_format", perche: "quale automazione?" };
+    await this._api("DELETE", `config/automation/config/${encodeURIComponent(id)}`);
+    this._dimentica(id);
+    return { id };
+  }
+
+  /* Il nome e la stanza: valgono anche per le complesse, perche' non
+   * toccano quello che fanno. Il nome sta nella configurazione, la stanza
+   * nel registro delle entita'. */
+  async rinomina({ id = "", nome = undefined, area = undefined } = {}) {
+    if (!idBuono(id)) return { errore: "invalid_format", perche: "quale automazione?" };
+    if (typeof nome === "string") {
+      const alias = nome.trim().slice(0, 100);
+      if (!alias) return { errore: "invalid_format", perche: "serve un nome" };
+      const config = await this._configDi(id, { forza: true });
+      if (!config) return { errore: "not_found", perche: "Home Assistant non la da'" };
+      await this._api("POST", `config/automation/config/${encodeURIComponent(id)}`, {
+        ...config,
+        alias,
+      });
+      this._dimentica(id);
+    }
+    if (typeof area === "string") {
+      const entity = this._entitaDi(id);
+      if (!entity) return { errore: "not_found", perche: "l'automazione non c'e'" };
+      await this.casa.chiedi({
+        type: "config/entity_registry/update",
+        entity_id: entity,
+        area_id: area.trim() || null,
+      });
+      this.registri?.dimentica?.();
+    }
+    return { id };
+  }
+
+  async duplica({ id = "" } = {}) {
+    if (!idBuono(id)) return { errore: "invalid_format", perche: "quale automazione?" };
+    const config = await this._configDi(id, { forza: true });
+    if (!config) return { errore: "not_found", perche: "Home Assistant non la da'" };
+    const nuovo = nuovoIdHA(this.adesso());
+    const alias = `${String(config.alias || "").trim() || "gdahome"} (copia)`.slice(0, 100);
+    await this._api("POST", `config/automation/config/${encodeURIComponent(nuovo)}`, {
+      ...config,
+      id: nuovo,
+      alias,
+    });
+    return { id: nuovo, alias };
   }
 
   /* ── le proposte ──────────────────────────────────────────────────── */
@@ -823,7 +763,7 @@ export class Automazioni {
     ];
     return {
       proposte: proposteDaMostrare(tutte, {
-        automazioni: this.elenco(),
+        automazioni: await this._modelliPerLeProposte(),
         scartate: this.memoria.scartate,
       }),
       abitudiniDel: this.memoria.abitudini?.il || null,
@@ -844,50 +784,51 @@ export class Automazioni {
   }
 
   riconosce(tipo) {
-    return [COMANDO_DELLO_STATO, COMANDO_DELLE_PROPOSTE, COMANDO_DELLO_SCARTO].includes(tipo);
+    return COMANDI_DELLE_AUTOMAZIONI.includes(tipo);
   }
 
   /* `utente`: chi sta dall'altra parte, gia' riconosciuto dal ponte. Senza un
-   * nome non si risponde: e' un comando della plancia, e la plancia la apre
-   * qualcuno che Home Assistant conosce. */
-  async rispondi(detto, { utente = "" } = {}) {
+   * nome non si risponde. `amministra`: se amministra Home Assistant — lo
+   * decide chi sta sul filo (`ponte.js`, `cucitura.js`), e vale solo `true`. */
+  async rispondi(detto, { utente = "", amministra = false } = {}) {
     const id = detto?.id ?? null;
     if (!String(utente || "").trim())
-      return {
-        id,
-        type: "result",
-        success: false,
-        error: { code: "unauthorized", message: "le automazioni le vede chi e' entrato" },
-      };
-    if (!this.riconosce(detto?.type))
-      return {
-        id,
-        type: "result",
-        success: false,
-        error: { code: "unknown_command", message: `non conosco ${detto?.type}` },
-      };
+      return no(id, "unauthorized", "le automazioni le vede chi e' entrato");
+    const tipo = detto?.type;
+    if (!this.riconosce(tipo)) return no(id, "unknown_command", `non conosco ${tipo}`);
+    if (SCRIVONO.has(tipo)) {
+      if (amministra !== true)
+        return no(id, "unauthorized", "le automazioni le cambia chi amministra Home Assistant");
+      if (!this.sbloccato)
+        return no(id, "premium-richiesto", "le automazioni sono di gdahome Premium");
+    }
     try {
-      if (detto.type === COMANDO_DELLE_PROPOSTE)
-        return { id, type: "result", success: true, result: await this.proposte() };
-      if (detto.type === COMANDO_DELLO_SCARTO) {
-        if (!this.scarta(detto.proposta))
-          return {
-            id,
-            type: "result",
-            success: false,
-            error: { code: "invalid_format", message: "quale proposta?" },
-          };
-        return { id, type: "result", success: true, result: await this.proposte({ attesa: 0 }) };
+      if (tipo === COMANDO_DELLE_PROPOSTE) return si(id, await this.proposte());
+      if (tipo === COMANDO_DELLO_SCARTO) {
+        if (!this.scarta(detto.proposta)) return no(id, "invalid_format", "quale proposta?");
+        return si(id, await this.proposte({ attesa: 0 }));
       }
-      return { id, type: "result", success: true, result: this.stato() };
+      if (tipo === COMANDO_DELLO_STATO) return si(id, await this.stato({ amministra }));
+      const fatto =
+        tipo === COMANDO_DEL_SALVA
+          ? await this.salva({ automazione: detto.automazione, id: detto.automazione_id })
+          : tipo === COMANDO_DELL_ELIMINA
+            ? await this.elimina({ id: detto.automazione_id })
+            : tipo === COMANDO_DEL_RINOMINA
+              ? await this.rinomina({
+                  id: detto.automazione_id,
+                  nome: detto.nome,
+                  area: detto.area,
+                })
+              : await this.duplica({ id: detto.automazione_id });
+      if (fatto?.errore) return no(id, fatto.errore, fatto.perche);
+      return si(id, fatto);
     } catch (errore) {
       this.registro.errore(`automazioni: ${errore?.message || errore}`);
-      return {
-        id,
-        type: "result",
-        success: false,
-        error: { code: "ponte_automazioni", message: "non ha funzionato" },
-      };
+      /* Il perche' di Home Assistant («Message malformed: …») e' la sola
+       * spiegazione che chi salva puo' capire; un guasto nostro no. */
+      const diHA = String(errore?.code || "").startsWith("http_");
+      return no(id, "ponte_automazioni", diHA ? String(errore.message) : "non ha funzionato");
     }
   }
 }

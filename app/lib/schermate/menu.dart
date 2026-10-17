@@ -49,16 +49,18 @@ enum Sezione {
    * con l'auto della plancia (vedi `BarraDelleSezioni.tessera`). */
   navigatore('ev', pronta: true, soloNellApp: true),
   configurazione('impostazioni', pronta: true),
-  /* Le automazioni della casa (Premium): Quando · Solo se · Allora, e il
-   * cronotermostato. Le scrive la pagina Automazioni della plancia — la
-   * stessa che nel browser di Home Assistant sta nel config — e le esegue
-   * l'add-on, anche ad app chiusa (`ponte/src/automazioni.js`).
+  /* Le automazioni della casa (Premium): tutte quelle di Home Assistant, a
+   * gruppi, con l'interruttore, e quelle nuove scritte con Quando · Solo se ·
+   * Allora. Le esegue Home Assistant, che le ha fra le sue — anche ad app
+   * chiusa — e la plancia le scrive passando dal ponte
+   * (`ponte/src/automazioni.js`).
    *
-   * Sta nella Casa accanto a «Configurazione plancia», e non piu' fra le
-   * Avanzate: non apre piu' le automazioni di Home Assistant, apre le nostre,
-   * che si scrivono con una frase. Nell'app la plancia la sua voce nel config
-   * non ce l'ha: la porta e' questa, come per la Configurazione. C'e' anche
-   * nella webapp, perche' la pagina e' della plancia e la plancia c'e'. */
+   * Sta nella Casa accanto a «Configurazione plancia», col bollino ✨ PREMIUM.
+   * Nell'app e' l'unica porta: la plancia non ha ne' la linguetta in basso ne'
+   * la voce nel config, e questa voce apre la pagina delle Automazioni a
+   * schermo pieno — la stessa faccia della sezione della dashboard, con
+   * «＋ Nuova» e l'editor dentro. C'e' anche nella webapp, perche' la pagina e'
+   * della plancia e la plancia c'e'. */
   automazioni('automazioni', pronta: true),
   comeVaLApp('minipc', pronta: true),
   /* Le impostazioni dell'**app**, e dentro la sicurezza: il lucchetto, il

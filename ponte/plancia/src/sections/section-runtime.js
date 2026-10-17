@@ -143,6 +143,7 @@ import { installWidgetEntityChoiceSection } from "./widget-entity-choice-section
 import { installEvShowcaseSection } from "./ev-showcase-section.js";
 import { installRicaricaDiNotteSection } from "./ricarica-di-notte-section.js";
 import { installAutomazioniSection } from "./automazioni-section.js";
+import { installAutomazioniCasaSection } from "./automazioni-casa-section.js";
 import { installEvStatoETargetSection } from "./ev-stato-e-target-section.js";
 import { installAutoTermica } from "./auto-termica-section.js";
 import { installAutoOMoto } from "./auto-o-moto-section.js";
@@ -1167,8 +1168,11 @@ export function installSectionRuntime() {
     senzaCadere(installRicaricaDiNotteSection);
     /* Le automazioni (Premium): la voce del config dopo le Azioni, e nell'app
      * la pagina a schermo pieno che l'app apre con la sua maniglia. Le
-     * esegue la casa (`ponte/src/automazioni.js`). */
+     * esegue Home Assistant: sono le sue. */
     senzaCadere(installAutomazioniSection);
+    /* E la loro sezione della dashboard, con la linguetta prima di Config:
+     * dopo la pagina del config, perche' le presta la lista dell'app. */
+    senzaCadere(installAutomazioniCasaSection);
     /* L'auto a benzina (#208) si appoggia alla pagina EV gia' vestita: le
      * sue caselle entrano nella stessa scheda, e il suo quadro prende il
      * posto di quello della ricarica quando il motore non e' elettrico. */

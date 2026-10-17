@@ -2,19 +2,17 @@
  *
  * «Quando succede qualcosa — un orario, una porta, un movimento, un valore,
  * chi arriva o esce — la casa fa da sola quello che le dici.» Le scrive chi
- * configura la plancia, le esegue l'add-on (`ponte/src/automazioni.js`), anche
- * a plancia e app chiuse: una regola che vivesse nella pagina scatterebbe
- * solo a pagina aperta, cioe' quasi mai quando serve.
+ * configura la plancia, e le esegue Home Assistant: la plancia le salva come
+ * automazioni vere, e le traduce `core/automazioni-ha.js`.
  *
- * Questo file e' il patto fra le due meta'. La plancia lo importa per pulire
- * quello che salva e per raccontarlo («Si legge così: …»), il ponte per
- * decidere quando scattano e cosa chiedere a Home Assistant. Una regola
- * scritta due volte sarebbe due regole il giorno che una delle due cambia.
+ * Questo file e' la forma comoda: la plancia lo importa per pulire quello
+ * che salva e per raccontarlo («Si legge così: …»), il traduttore per sapere
+ * quali servizi scegliere. I conti qui sotto — quando scatta un QUANDO, se
+ * vale un SOLO SE — li faceva il motore dell'add-on, che non c'e' piu': ne
+ * restano vivi il «prossimo» della plancia e i servizi delle azioni, e il
+ * resto racconta la stessa regola che adesso scrive Home Assistant.
  *
- * Qui non c'e' DOM, non c'e' un filo e non c'e' un orologio: entrano
- * l'automazione, gli stati della casa, l'istante e la traccia di prima; escono
- * la decisione e la traccia nuova. E' tutto quello che serve per provarle
- * senza una casa.
+ * Qui non c'e' DOM, non c'e' un filo e non c'e' un orologio.
  *
  * ── La forma ──────────────────────────────────────────────────────────────
  *
@@ -25,9 +23,8 @@
  *
  *   { id, nome, attiva, tipo: "crono", crono: {…} }
  *
- * «Ultima volta» non sta qui: la sa la casa, che l'ha eseguita, e la dice
- * alla plancia quando gliela chiede (`ponte/automazioni/stato`). Nella
- * configurazione c'e' solo quello che si sceglie.
+ * «Ultima volta» non sta qui: la sa Home Assistant (`last_triggered`), e il
+ * ponte la dice alla plancia con l'elenco (`ponte/automazioni/stato`).
  *
  * ── Cosa la casa NON fa ───────────────────────────────────────────────────
  *
@@ -50,7 +47,9 @@ const GIORNO = 24 * ORA;
  * dispositivi e che la casa legge dalla plancia principale. */
 export const CHIAVE_AUTOMAZIONI = "cd_automazioni";
 
-export const AUTOMAZIONI_AL_MASSIMO = 40;
+/* Quante se ne leggono in un elenco: quelle di Home Assistant possono essere
+ * tante, e la plancia le mostra tutte. */
+export const AUTOMAZIONI_AL_MASSIMO = 500;
 /* Due condizioni bastano quasi sempre, e la pagina ne propone due; chi vuole
  * di piu' — «tutte» o «almeno una» — arriva a quattro. */
 export const CONDIZIONI_AL_MASSIMO = 4;
@@ -173,8 +172,10 @@ const DOMINI_CHIUSI = new Set([
   "backup",
   "recorder",
   "shell_command",
+  "command_line",
   "python_script",
   "pyscript",
+  "hacs",
   "update",
   "system_log",
   "logger",
@@ -597,7 +598,9 @@ export function cronoPulito(dato) {
   };
 }
 
-const ID_BUONO = /^[a-z0-9_-]{1,40}$/i;
+/* Gli id di Home Assistant: quelli che scrive la sua pagina sono cifre, ma
+ * chi le scrive a mano ci mette quello che vuole. */
+const ID_BUONO = /^[a-z0-9_-]{1,64}$/i;
 
 /** Un'automazione, ripulita. `null` se non sta in piedi. */
 export function automazionePulita(dato) {

@@ -1,20 +1,16 @@
-/* Le automazioni (`automazioni.js`, e le loro regole in
- * `plancia/src/core/automazioni.js`).
+/* Le regole delle automazioni nella forma della plancia
+ * (`plancia/src/core/automazioni.js`).
  *
- * Quello che deve restare vero: ogni QUANDO scatta al passaggio e non a ogni
- * lettura; il SOLO SE si guarda quando il QUANDO scatta; l'ALLORA diventa
- * servizi scelti qui e mai scritti da chi salva; «aspetta» sopravvive a un
- * riavvio breve; l'alba si calcola in casa; una fascia attraversa la
- * mezzanotte; la lavatrice ha finito dopo X minuti fermi; il cronotermostato
- * comanda ai passaggi e si spegne con la finestra aperta; senza Premium non
- * parte niente; lo stato lo legge solo chi ha un nome, e le automazioni le
- * scrive solo chi ha un utente.
+ * Le esegue Home Assistant (la traduzione e il ponte si provano in
+ * `automazioni-ha.test.js`); qui resta vero quello che la forma comoda
+ * racconta e sceglie: ogni QUANDO scatta al passaggio e non a ogni lettura —
+ * e' anche il «prossimo» della plancia —, il SOLO SE si legge come Home
+ * Assistant lo leggera', l'ALLORA diventa servizi scelti qui e mai scritti da
+ * chi salva, l'alba si calcola in casa, una fascia attraversa la mezzanotte;
+ * e quelle rimaste nella plancia le cambia solo chi ha un utente.
  */
 
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import test from "node:test";
 
 import {
@@ -32,14 +28,12 @@ import {
   eCompleta,
   fascePulite,
   passiDellAllora,
-  prossimiEventi,
   prossimoIstante,
   serviziDellAzione,
   soleDelGiorno,
   valutaIlQuando,
 } from "../plancia/src/core/automazioni.js";
-import { Automazioni } from "../src/automazioni.js";
-import { Commissioni, conservaLeAutomazioni } from "../src/commissioni.js";
+import { conservaLeAutomazioni } from "../src/commissioni.js";
 
 const MINUTO = 60_000;
 /* Sabato 17 ottobre 2026, nell'ora della casa. */
@@ -456,179 +450,9 @@ test("cronotermostato: comanda ai passaggi, Lun–Ven e Sab–Dom, e la finestra
   );
 });
 
-/* ── la casa che esegue ──────────────────────────────────────────────────── */
+/* ── quelle rimaste nella plancia ───────────────────────────────────────── */
 
-function unaCasa({
-  automazioni = [],
-  premium = true,
-  attive = true,
-  stati = {},
-  azioni = [],
-} = {}) {
-  let ora = alle(16, 7, 14, 50);
-  const chiamate = [];
-  const avvisi = [];
-  const mappa = new Map(Object.entries(stati));
-  const valori = {
-    cd_automazioni: JSON.stringify(automazioni),
-    cd_quick_actions: JSON.stringify(azioni),
-  };
-  const cartella = mkdtempSync(join(tmpdir(), "automazioni-"));
-  const fai = () =>
-    new Automazioni({
-      cartella,
-      casa: { chiedi: async (m) => chiamate.push(m) },
-      configurazione: { leggi: () => ({ snapshot: { values: valori } }) },
-      stati: () => mappa,
-      notifiche: { consegna: async (e) => avvisi.push(e) },
-      licenze: { attive, premium },
-      adesso: () => ora,
-      ogni: () => null,
-    });
-  return {
-    fai,
-    chiamate,
-    avvisi,
-    mappa,
-    valori,
-    passa: (minuti) => {
-      ora += minuti * MINUTO;
-    },
-    get ora() {
-      return ora;
-    },
-  };
-}
-
-const luceColMovimento = {
-  id: "luce",
-  nome: "Luce corridoio di notte",
-  quando: { tipo: "movimento", entita: ["binary_sensor.pir"], verso: "si" },
-  soloSe: [{ tipo: "notte", da: "23:00", a: "06:00" }],
-  allora: [
-    { tipo: "accendi", entita: "light.corridoio", livello: 20 },
-    { tipo: "aspetta", minuti: 2 },
-    { tipo: "spegni", entita: "light.corridoio" },
-    { tipo: "notifica", testo: "Movimento in corridoio" },
-  ],
-};
-
-test("la casa esegue: accende, aspetta, e dopo un riavvio breve finisce il lavoro", async () => {
-  const casa = unaCasa({ automazioni: [luceColMovimento] });
-  casa.passa(-7 * 60 + 2 * 60 + 15); // le 2:30 di notte
-  const uno = casa.fai();
-  uno.quandoCambia("binary_sensor.pir", s("on"), s("off"));
-  await new Promise((r) => setImmediate(r));
-  assert.equal(casa.chiamate.length, 1);
-  assert.equal(casa.chiamate[0].service, "turn_on");
-  assert.equal(uno.stato().inCorso.length, 1, "aspetta due minuti");
-  // L'add-on si riavvia nel mezzo.
-  casa.passa(3);
-  const due = casa.fai();
-  due.parti();
-  await due.battito();
-  assert.deepEqual(
-    casa.chiamate.map((c) => c.service),
-    ["turn_on", "turn_off"],
-  );
-  assert.equal(casa.avvisi[0].parole.it.testo, "Movimento in corridoio");
-  assert.equal(casa.avvisi[0].tipo, "personalizzata");
-  const stato = due.stato();
-  assert.equal(stato.perAutomazione.luce.esito, "ok");
-  assert.equal(stato.ultime[0].id, "luce");
-});
-
-test("di giorno il SOLO SE la ferma; e un riavvio lungo butta l'attesa", async () => {
-  const casa = unaCasa({ automazioni: [luceColMovimento] });
-  const uno = casa.fai();
-  uno.quandoCambia("binary_sensor.pir", s("on"), s("off"));
-  await new Promise((r) => setImmediate(r));
-  assert.equal(casa.chiamate.length, 0, "alle 7:15 non e' notte");
-  casa.passa(-7 * 60 - 15 + 23 * 60 + 30);
-  uno.quandoCambia("binary_sensor.pir", s("on"), s("off"));
-  await new Promise((r) => setImmediate(r));
-  assert.equal(casa.chiamate.length, 1);
-  casa.passa(120);
-  const due = casa.fai();
-  due.parti();
-  await due.battito();
-  assert.equal(casa.chiamate.length, 1, "due ore dopo la luce non si tocca piu'");
-});
-
-test("un orario fatto dal battito, e il prossimo nello stato", async () => {
-  const casa = unaCasa({
-    automazioni: [
-      {
-        id: "tapp",
-        nome: "Tapparelle",
-        quando: { tipo: "orario", ore: ["07:15", "21:30"] },
-        allora: [{ tipo: "tapparella", entita: "cover.soggiorno", modo: "apri" }],
-      },
-    ],
-  });
-  const a = casa.fai();
-  await a.battito();
-  casa.passa(0.5);
-  await a.battito();
-  assert.equal(casa.chiamate.length, 1);
-  assert.equal(casa.chiamate[0].service, "open_cover");
-  assert.equal(a.stato().prossimi[0].alle, alle(16, 21, 30));
-  assert.deepEqual(
-    prossimiEventi(a.elenco(), alle(16, 22)).map((p) => p.alle),
-    [alle(17, 7, 15)],
-  );
-});
-
-test("senza Premium le automazioni restano salvate ma non parte niente", async () => {
-  const casa = unaCasa({ automazioni: [luceColMovimento], premium: false });
-  casa.passa(-5 * 60);
-  const a = casa.fai();
-  a.quandoCambia("binary_sensor.pir", s("on"), s("off"));
-  await a.battito();
-  assert.equal(casa.chiamate.length, 0);
-  assert.equal(a.stato().premium, false);
-  assert.equal(a.elenco().length, 1, "restano salvate");
-  // Con le licenze spente (chiave vuota) e' tutto aperto, come i viaggi.
-  assert.equal(unaCasa({ premium: false, attive: false }).fai().sbloccato, true);
-});
-
-test("il cronotermostato dalla casa: comanda una volta, e la finestra lo spegne subito", async () => {
-  const casa = unaCasa({
-    automazioni: [
-      {
-        id: "crono",
-        nome: "Cronotermostato",
-        tipo: "crono",
-        crono: { termostati: ["climate.s"], finestre: ["binary_sensor.f"] },
-      },
-    ],
-    stati: { "climate.s": s("heat", { hvac_modes: ["off", "heat"] }), "binary_sensor.f": s("off") },
-  });
-  const a = casa.fai();
-  await a.battito();
-  await a.battito();
-  assert.equal(casa.chiamate.length, 1);
-  casa.mappa.set("binary_sensor.f", s("on"));
-  a.quandoCambia("binary_sensor.f", s("on"), s("off"));
-  await new Promise((r) => setImmediate(r));
-  assert.equal(casa.chiamate.at(-1).service, "turn_off");
-});
-
-test("lo stato lo legge solo chi ha un nome, da commissioni.js", async () => {
-  const casa = unaCasa({ automazioni: [luceColMovimento] });
-  const commissioni = new Commissioni({ automazioni: casa.fai() });
-  const senza = await commissioni.rispondi({ id: 1, type: "ponte/automazioni/stato" });
-  assert.equal(senza.success, false);
-  assert.equal(senza.error.code, "unauthorized");
-  const con = await commissioni.rispondi(
-    { id: 2, type: "ponte/automazioni/stato" },
-    { chiChiede: "u1" },
-  );
-  assert.equal(con.success, true);
-  assert.equal(con.result.attive, 1);
-});
-
-test("le automazioni le scrive solo chi ha un utente", () => {
+test("le automazioni rimaste nella plancia le cambia solo chi ha un utente", () => {
   const salvati = { cd_automazioni: "[1]", cd_luci: "a" };
   assert.deepEqual(conservaLeAutomazioni({ cd_automazioni: "[2]", cd_luci: "b" }, salvati, ""), {
     cd_automazioni: "[1]",
@@ -884,84 +708,12 @@ test("attiva fino a una data, spenta fino a una data", () => {
   );
 });
 
-test("la casa: aspetta finché la porta si chiude, ignora o mette in coda, e non più di una volta ogni X minuti", async () => {
-  const porta = {
-    id: "porta",
-    nome: "Porta",
-    quando: { tipo: "apertura", entita: ["binary_sensor.porta"], verso: "apre" },
-    allora: [
-      { tipo: "accendi", entita: ["light.ingresso"] },
-      { tipo: "aspettaChe", entita: "binary_sensor.porta", stato: "off", massimo: 10 },
-      { tipo: "spegni", entita: ["light.ingresso"] },
-    ],
-    modo: "ignora",
-    pausa: 30,
-  };
-  const casa = unaCasa({ automazioni: [porta], stati: { "binary_sensor.porta": s("on") } });
-  const a = casa.fai();
-  a.quandoCambia("binary_sensor.porta", s("on"), s("off"));
-  await new Promise((r) => setImmediate(r));
-  assert.deepEqual(
-    casa.chiamate.map((c) => c.service),
-    ["turn_on"],
-  );
-  a.quandoCambia("binary_sensor.porta", s("on"), s("off"));
-  await new Promise((r) => setImmediate(r));
-  assert.equal(casa.chiamate.length, 1, "in corso: ignora");
-  casa.mappa.set("binary_sensor.porta", s("off"));
-  a.quandoCambia("binary_sensor.porta", s("off"), s("on"));
-  await new Promise((r) => setImmediate(r));
-  assert.deepEqual(
-    casa.chiamate.map((c) => c.service),
-    ["turn_on", "turn_off"],
-    "chiusa: va avanti",
-  );
-  casa.passa(5);
-  a.quandoCambia("binary_sensor.porta", s("on"), s("off"));
-  await new Promise((r) => setImmediate(r));
-  assert.equal(casa.chiamate.length, 2, "dentro la pausa di trenta minuti non riparte");
-  // Il tempo massimo: la porta resta aperta, e dopo dieci minuti si va avanti.
-  casa.passa(30);
-  casa.mappa.set("binary_sensor.porta", s("on"));
-  a.quandoCambia("binary_sensor.porta", s("on"), s("off"));
-  await new Promise((r) => setImmediate(r));
-  assert.equal(casa.chiamate.length, 3);
-  casa.passa(11);
-  await a.battito();
-  assert.equal(casa.chiamate.at(-1).service, "turn_off");
-});
-
-test("la casa ascolta solo gli eventi che servono, e li passa alle automazioni", async () => {
-  const ascoltati = [];
-  const casa = unaCasa({
-    automazioni: [
-      {
-        id: "tasto",
-        nome: "Tasto",
-        quando: { tipo: "evento", evento: "zha_event", filtro: { command: "on" } },
-        allora: [{ tipo: "accendi", entita: ["light.sala"] }],
-      },
-    ],
-  });
-  const a = casa.fai();
-  a.casa.ascolta = async (tipo, cb) => {
-    ascoltati.push(tipo);
-    a._cb = cb;
-    return async () => ascoltati.push(`via ${tipo}`);
-  };
-  await a._sincronizzaGliEventi();
-  assert.deepEqual(ascoltati, ["zha_event"]);
-  a._cb({ data: { command: "on" } });
-  await new Promise((r) => setImmediate(r));
-  assert.equal(casa.chiamate[0].service, "turn_on");
-  casa.valori.cd_automazioni = "[]";
-  await a._sincronizzaGliEventi();
-  assert.deepEqual(ascoltati, ["zha_event", "via zha_event"]);
-});
-
 test("accendi e spegni trovano ogni entità, mai una serratura", () => {
   assert.deepEqual(serviziDellAzione({ tipo: "accendi", entita: ["cover.box", "lock.porta"] }), [
     { domain: "homeassistant", service: "turn_on", data: { entity_id: "cover.box" } },
   ]);
-  assert.equal(azionePulita({ tipo: "spegni", entita: ["lock.porta", "alarm_control_panel.casa"] }), null);
+  assert.equal(
+    azionePulita({ tipo: "spegni", entita: ["lock.porta", "alarm_control_panel.casa"] }),
+    null,
+  );
 });

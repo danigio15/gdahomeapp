@@ -79,6 +79,7 @@ import {
   puoConfigurare,
 } from "./chi-configura.js";
 import { CHIAVE_AUTOMAZIONI } from "../plancia/src/core/automazioni.js";
+import { COMANDI_DELLE_AUTOMAZIONI } from "./automazioni.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -158,9 +159,10 @@ const LICENZA = new Map([
 /* Le automazioni della plancia (`cd_automazioni`) le scrive solo chi ha un
  * utente.
  *
- * Un'automazione e' un comando alla casa che parte da solo, col filo
- * dell'add-on, anche quando nessuno guarda: e' piu' di una preferenza della
- * plancia. Chi salva la configurazione senza un nome — un telefono abbinato
+ * Sono quelle rimaste dalla versione di prova che le eseguiva l'add-on:
+ * adesso le esegue Home Assistant, e la plancia invita a convertirle in
+ * automazioni sue (`ponte/automazioni/salva`). Finche' restano qui non
+ * partono, ma sono ancora comandi alla casa scritti da qualcuno. Chi salva la configurazione senza un nome — un telefono abbinato
  * prima che i telefoni si intestassero a qualcuno, che il ponte lascia ancora
  * amministrare «com'era ieri» — salva tutto il resto, ma le automazioni
  * restano quelle che erano: quelle salvate, o nessuna. Torna i valori da
@@ -700,34 +702,37 @@ export class Commissioni {
       if (!this.ricaricaDiNotte) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.ricaricaDiNotte.rispondi(detto, { utente: chiChiede });
     }
-    /* Le automazioni (`automazioni.js`): cosa viene dopo, le ultime eseguite
-     * e l'ultima volta di ognuna, in sola lettura e solo a chi ha un utente
-     * (senza nome: `unauthorized`). Scriverle non passa di qui: stanno nella
-     * configurazione della plancia principale (`cd_automazioni`), e le scrive
-     * solo chi salva la configurazione — chi amministra, e la casella «Utente
-     * admin» quando nomina qualcuno — e in piu' **solo chi ha un utente**:
-     * un'automazione comanda la casa col filo dell'add-on, anche a pagine
-     * chiuse, e un telefono abbinato prima che i telefoni avessero un nome
-     * non deve poterne scrivere una. Un salvataggio senza nome le lascia come
-     * sono (`conservaLeAutomazioni`), e un ripristino senza nome che le
-     * cambierebbe si rifiuta.
+    /* Le automazioni (`automazioni.js`): le esegue Home Assistant, e queste
+     * sono le domande della plancia su di loro. Tutte rispondono **solo a chi
+     * ha un utente** sul filo — un telefono senza nome, o una pagina che non
+     * ha detto chi e', si sente dire `unauthorized` — e nel ponte non si vede
+     * niente: non c'e' una pagina, non c'e' una console, e niente esce di
+     * casa (si parla solo con Home Assistant).
      *
-     * Le proposte («Suggerite per la tua casa ✨») passano di qui con le
-     * stesse regole: `ponte/automazioni/proposte` le legge e
-     * `ponte/automazioni/proposte/scarta` ricorda un «No, grazie», e tutti e
-     * due rispondono `unauthorized` a chi non ha un utente. Lo scarto scrive
-     * solo nella memoria dell'add-on (quale proposta non mostrare piu'),
-     * mai in `cd_automazioni`: un'automazione nata da una proposta si salva
-     * dall'editor, come tutte le altre, con le regole qui sopra. E le
-     * proposte si calcolano in casa — i dispositivi e la loro storia dal
-     * Recorder, letti col filo dell'add-on — senza che niente esca. */
-    if (
-      tipo === "ponte/automazioni/stato" ||
-      tipo === "ponte/automazioni/proposte" ||
-      tipo === "ponte/automazioni/proposte/scarta"
-    ) {
+     *  - `ponte/automazioni/stato`: tutte le automazioni di Home Assistant,
+     *    con la stanza, l'ultima volta, il gruppo «Per tipo» e, se ci sta, la
+     *    forma della plancia. La configurazione intera arriva solo a chi
+     *    amministra Home Assistant;
+     *  - `ponte/automazioni/salva`, `…/elimina`, `…/rinomina`, `…/duplica`:
+     *    scrivono in Home Assistant col segno dell'add-on, e allora vogliono
+     *    in piu' **chi amministra Home Assistant** (`puoAmministrare`), che e'
+     *    la regola di Home Assistant per la sua pagina delle automazioni, e
+     *    gdahome Premium. `salva` riceve la forma della plancia e mai una
+     *    configurazione: la scrive il traduttore
+     *    (`plancia/src/core/automazioni-ha.js`), coi servizi che sceglie lui,
+     *    e una complessa non la sovrascrive;
+     *  - `ponte/automazioni/proposte` e `…/proposte/scarta`: le proposte
+     *    calcolate in casa e il «No, grazie», che scrive solo nella memoria
+     *    dell'add-on.
+     *
+     * Accendere, spegnere ed eseguire non passano di qui: sono servizi di
+     * Home Assistant, chiamati come tutti gli altri. */
+    if (COMANDI_DELLE_AUTOMAZIONI.includes(tipo)) {
       if (!this.automazioni) return no(id, "unknown_command", `non conosco ${tipo}`);
-      return this.automazioni.rispondi(detto, { utente: chiChiede });
+      return this.automazioni.rispondi(detto, {
+        utente: chiChiede,
+        amministra: puoAmministrare === true,
+      });
     }
     /* I viaggi di gdanav: dalla plancia e dal telefono, ognuno coi suoi. */
     if (typeof tipo === "string" && tipo.startsWith("ponte/viaggi/")) {
