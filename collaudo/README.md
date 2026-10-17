@@ -121,13 +121,37 @@ Il sito in [`../sito/`](../sito/README.md) e' fatto di file statici e non ha
 prove sue: non c'e' niente da chiamare, non c'e' niente che risponda. L'unico
 modo di sapere se sta in piedi e' aprirlo con un browser e provarci dentro.
 
-Questo lo serve, lo apre a tre larghezze e guarda che **la plancia
-dimostrativa risponda ai clic** — la luce che si spegne, la tapparella che
-scende, il termostato che si sposta, l'allarme che si inserisce, il lucchetto
-che porta ai piani — che non ci siano errori in console ne' file che non
-arrivano, che la pagina non scorra di lato, e che i prezzi presi da
-`listino.js` finiscano davvero nella pagina. Le fotografie restano in
-`collaudo/foto/sito-*.png`.
+Questo lo serve, lo apre a tre larghezze e guarda che **ogni fotografia
+arrivi** — scorrendo la pagina e, di lato, ogni nastro di fotografie — che le
+sezioni della plancia, dell'app e di gdanav ci siano e si raggiungano dal
+menu, che la lingua si cambi, che il modulo dei contatti mandi al tramite, che
+non ci siano errori in console ne' file che non arrivano, e che la pagina non
+scorra di lato. Le fotografie restano in `collaudo/foto/sito-*.png`.
+
+## Le fotografie della plancia, per il sito
+
+```bash
+node strumenti/porta-nel-sito.mjs
+node collaudo/fotografa-la-plancia.mjs
+node strumenti/porta-nel-sito.mjs
+```
+
+Il sito fa vedere la plancia con fotografie, e queste sono della plancia vera:
+la stessa che `porta-nel-sito.mjs` mette in `sito/dashboardmodern_static/`,
+con dentro la Home Assistant finta della pagina (`sito/casa-in-pagina.js`) e
+questa casa demo. Lo script prende ogni pagina dalla sua linguetta — la casa,
+le luci, il clima, l'energia, le finestre, la sicurezza, l'auto, le stanze, e
+la casa e l'energia anche sul computer — e le scrive in
+`docs/immagini/plancia-*.jpg`. La seconda passata di `porta-nel-sito.mjs` le
+copia nel sito.
+
+La configurazione della casa demo porta, accanto a `dm_dashboard_state`, anche
+le chiavi «di prima» di ogni sezione — `cd_energy_model`, `cd_loads`,
+`cd_ev_cars`, `cd_piscina`, `cd_irrigazione`, `cd_robot`, `cd_energy_loads` —
+uguali alle sezioni della copia canonica, come le salva una plancia vera.
+All'avvio la plancia fa parlare per ultime quelle (`core/dashboard-store.js`),
+e una chiave che manca la riscrive vuota: senza `cd_energy_model` la pagina
+Energia restava senza fotovoltaico, rete e batteria.
 
 ## Quello che il collaudo *non* prova
 
