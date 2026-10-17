@@ -68,23 +68,38 @@ test("col secondo impianto scelto si vede solo il suo", () => {
   assert.deepEqual(nomi(canonicalReportDevices([], CARICHI, {}, secondo)), ["Pompa di sopra"]);
 });
 
-test("e gli elettrodomestici seguono la stessa regola dei carichi", () => {
+test("e gli elettrodomestici seguono la regola del flusso", () => {
   /* Il Report nasce da due elenchi — apparecchi e carichi — e un apparecchio
-   * dichiarato nella seconda casa non deve comparire nel report della prima.
-   * La regola è una sola per tutti e due: `plantLoads`, la stessa del flusso. */
+   * della seconda casa non deve comparire nel report della prima. La regola è
+   * quella del flusso (`impiantoDellElettrodomestico`): scritto, dedotto dal
+   * carico con la stessa misura, o dal piano. Con due impianti un apparecchio
+   * che non si sa dove stia non va in nessun report — e il config lo chiede. */
   const apparecchi = [
     { id: "asciu", name: "Asciugatrice", total_energy_entity: "sensor.asciu_kwh" },
+    { id: "frigo", name: "Frigo", total_energy_entity: "sensor.frigo_kwh", plant: PRIMO_IMPIANTO },
     {
       id: "forno2",
       name: "Forno di sopra",
       total_energy_entity: "sensor.forno2_kwh",
       plant: "impianto-2",
     },
+    {
+      id: "lava2",
+      name: "Lavatrice di sopra",
+      power_entity: "sensor.lava2_w",
+      total_energy_entity: "sensor.lava2_kwh",
+    },
   ];
-  const primo = plantAt(DUE_IMPIANTI, PRIMO_IMPIANTO);
-  assert.deepEqual(nomi(canonicalReportDevices(apparecchi, [], {}, primo)), ["Asciugatrice"]);
+  /* Il carico della seconda casa misura la stessa potenza: è lo stesso
+   * apparecchio, quindi è della seconda casa anche senza campo. */
+  const carico = { power_entity: "sensor.lava2_w", plant: "impianto-2" };
+  const primo = { ...plantAt(DUE_IMPIANTI, PRIMO_IMPIANTO) };
+  assert.deepEqual(nomi(canonicalReportDevices(apparecchi, [], {}, primo)), ["Frigo"]);
   const secondo = plantAt(DUE_IMPIANTI, "impianto-2");
-  assert.deepEqual(nomi(canonicalReportDevices(apparecchi, [], {}, secondo)), ["Forno di sopra"]);
+  const delSecondo = canonicalReportDevices(apparecchi, [carico], {}, secondo).filter(
+    (voce) => voce.name,
+  );
+  assert.deepEqual(nomi(delSecondo), ["Forno di sopra", "Lavatrice di sopra"]);
 });
 
 test("il guscio chiede l'elenco dell'impianto che si sta guardando", () => {

@@ -30,6 +30,10 @@
  *    stanza e la sua scheda.
  *  · I cerchi sono al massimo quanti ne disegna il flusso: le stanze che non
  *    ci stanno finiscono in «Altro».
+ *  · Con `perPiano` le stanze dello stesso piano fanno un cerchio solo — «Piano
+ *    terra · 3 stanze» — e la finestra che si apre toccandolo ha le stanze come
+ *    filtri. Una stanza senza piano resta un cerchio a se'. E' una scelta
+ *    dell'impianto, mai di serie: chi non l'ha chiesta vede le stanze di sempre.
  */
 
 /* Quanti cerchi stanno sotto Casa: e' il tetto di `flowStageLoads`. */
@@ -38,6 +42,7 @@ export const CERCHI_AL_MASSIMO = 8;
 /* Il prefisso dei cerchi delle stanze, e quello di «Altro». */
 export const PREFISSO_DELLA_STANZA = "stanza-";
 export const CERCHIO_ALTRO = "stanza-altro";
+export const PREFISSO_DEL_PIANO = "piano-";
 
 const pulito = (valore) => (valore == null ? "" : String(valore).trim());
 
@@ -103,6 +108,7 @@ function elencoDelleStanze(stanze = []) {
       id: pulito(stanza?.id) || pulito(stanza?.room_id) || `room-${indice}`,
       nome: pulito(stanza?.name) || pulito(stanza?.nome),
       icona: pulito(stanza?.icon),
+      piano: pulito(stanza?.floor),
       indice,
     }))
     .filter((stanza) => stanza.nome);
@@ -126,6 +132,8 @@ export function cerchiDelleStanze({
   rooms = [],
   entitaDellaWallbox = [],
   altro = "Altro",
+  perPiano = false,
+  stanzeDelPiano = (quante) => `${quante}`,
 } = {}) {
   const carichi = (Array.isArray(loads) ? loads : []).filter(Boolean);
   const apparecchi = (Array.isArray(appliances) ? appliances : []).filter(Boolean);
@@ -185,9 +193,44 @@ export function cerchiDelleStanze({
   for (const voce of apparecchiDaSistemare) metti(voce, "apparecchi");
   for (const voce of carichiSenzaDoppi) metti(voce, "carichi");
 
-  const conStanza = [...perStanza.values()]
+  let conStanza = [...perStanza.values()]
     .filter((gruppo) => gruppo.stanza)
     .sort((a, b) => a.stanza.indice - b.stanza.indice);
+  /* Per piano: le stanze dello stesso piano si fondono in un gruppo solo, che
+   * si porta dietro quali stanze ha dentro (i filtri della finestra). */
+  if (perPiano) {
+    const perPianoMappa = new Map();
+    const fusi = [];
+    for (const gruppo of conStanza) {
+      const piano = gruppo.stanza.piano;
+      if (!piano) {
+        fusi.push(gruppo);
+        continue;
+      }
+      const chiave = piano.toLowerCase();
+      let unito = perPianoMappa.get(chiave);
+      if (!unito) {
+        unito = {
+          stanza: {
+            id: chiave,
+            nome: piano,
+            icona: "mdi:floor-plan",
+            indice: gruppo.stanza.indice,
+          },
+          piano: true,
+          stanzeDentro: [],
+          carichi: [],
+          apparecchi: [],
+        };
+        perPianoMappa.set(chiave, unito);
+        fusi.push(unito);
+      }
+      unito.stanzeDentro.push({ id: gruppo.stanza.id, nome: gruppo.stanza.nome });
+      unito.carichi.push(...gruppo.carichi);
+      unito.apparecchi.push(...gruppo.apparecchi);
+    }
+    conStanza = fusi;
+  }
   const posti = Math.max(1, CERCHI_AL_MASSIMO - wallbox.length);
   const senzaStanza = perStanza.get("") || { stanza: null, carichi: [], apparecchi: [] };
   /* Se le stanze sono piu' dei posti, l'ultimo posto e' «Altro» e raccoglie
@@ -212,13 +255,22 @@ export function cerchiDelleStanze({
     if (gruppiDellaWallbox.has(gruppoDi(carico))) nuoviCarichi.push(carico);
 
   const cerchio = (id, nome, icona, gruppo) => {
+    const delPiano = gruppo.piano === true;
     nuoviCarichi.push({
       id,
       name: nome,
       icon: icona || "mdi:home",
       order: ordine++,
       show_in_dashboard: true,
-      metadata: { flow_group: id, cerchio_della_stanza: true },
+      metadata: delPiano
+        ? {
+            flow_group: id,
+            cerchio_della_stanza: true,
+            cerchio_del_piano: true,
+            stanze: gruppo.stanzeDentro,
+            sottotitolo: stanzeDelPiano(gruppo.stanzeDentro.length),
+          }
+        : { flow_group: id, cerchio_della_stanza: true },
     });
     for (const carico of gruppo.carichi)
       nuoviCarichi.push(conIlGruppo(carico, id, { show_in_dashboard: false }));
@@ -226,7 +278,9 @@ export function cerchiDelleStanze({
   };
   for (const gruppo of conStanza.slice(0, tenute))
     cerchio(
-      `${PREFISSO_DELLA_STANZA}${gruppo.stanza.id}`,
+      gruppo.piano
+        ? `${PREFISSO_DEL_PIANO}${gruppo.stanza.id.replace(/[^a-z0-9]+/g, "-")}`
+        : `${PREFISSO_DELLA_STANZA}${gruppo.stanza.id}`,
       gruppo.stanza.nome,
       gruppo.stanza.icona,
       gruppo,

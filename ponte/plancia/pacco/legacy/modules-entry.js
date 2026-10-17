@@ -45,7 +45,7 @@ import {
   stepReporter,
   stradaAppenaCaduta,
   strategieDellaTelecamera
-} from "../chunk-GUQNPZBI.js";
+} from "../chunk-AHF2GGQZ.js";
 
 // src/legacy/dashboard-data.js
 function stableRoomId(room, index = 0) {
@@ -358,7 +358,10 @@ var reportDelPiano = (appliances, loads, states) => canonicalReportDevices(
   appliances,
   loads,
   states,
-  plantAt(store.getSection("energy") || {}, impiantoAperto())
+  {
+    ...plantAt(store.getSection("energy") || {}, impiantoAperto()),
+    stanze: store.getSection("rooms") || []
+  }
 );
 function renderEnergyEditorTab(target) {
   const model = plantModel(store.getSection("energy"), impiantoAperto());

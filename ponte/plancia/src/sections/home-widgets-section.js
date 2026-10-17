@@ -124,7 +124,9 @@ import {
   SOGLIA_POTENZA_KEY,
   SORGENTE_RETE,
   coloreDelLivello,
+  ilVerdettoPeggiore,
   livelloDellaPotenza,
+  verdettiDegliImpianti,
 } from "../core/la-soglia-della-potenza.js";
 import {
   TESSERA_PER_IMPIANTO,
@@ -2029,6 +2031,41 @@ export function lettureDiCasa(states = allStates()) {
   };
 }
 
+/**
+ * Le letture che servono alla soglia, un impianto per volta.
+ *
+ * «Io ho due contatori»: ognuno ha il suo limite, e la soglia di un contatore
+ * si confronta coi SUOI numeri — la sua casa, la sua rete — non con la somma.
+ * Con un impianto solo esce una riga sola, coi numeri di sempre.
+ *
+ * @returns {{id:string, index:number, nome:string, letture:{casa:number|null, rete:number|null}}[]}
+ */
+export function lettureDegliImpianti(states = allStates()) {
+  const documento = section("energy", {}) || {};
+  const impianti = plantList(documento)
+    .map((impianto, index) => ({ impianto, index }))
+    .filter(({ impianto, index }) => index === 0 || plantIsConfigured(impianto));
+  return impianti.map(({ impianto, index }) => {
+    const lettura = lettureDellImpianto(states, impianto, index === 0);
+    return {
+      id: clean(impianto?.id) || PRIMO_IMPIANTO,
+      index,
+      nome: plantLabel(impianto, index, t("Impianto", "Plant")),
+      letture: {
+        casa: lettura.house,
+        rete: lettura.rows.find((riga) => riga.group === "grid")?.watts ?? null,
+      },
+    };
+  });
+}
+
+/** I verdetti della soglia, uno per contatore, e il peggiore. */
+export function verdettiDellaSoglia(states = allStates()) {
+  const impianti = lettureDegliImpianti(states);
+  const verdetti = verdettiDegliImpianti(readJson(SOGLIA_POTENZA_KEY, {}), impianti);
+  return { verdetti, peggiore: ilVerdettoPeggiore(verdetti), quanti: impianti.length };
+}
+
 /* Cosa dice la didascalia del giorno, in che ordine e con quale parola.
  *
  * L'ordine e' quello con cui si guarda una casa — quanto ha consumato, quanto
@@ -2130,7 +2167,10 @@ function paroleDelSovraccarico(verdetto) {
   if (verdetto.livello === LIVELLO_QUIETE) return "";
   const dove =
     verdetto.sorgente === SORGENTE_RETE ? t("dalla rete", "from the grid") : t("in casa", "at home");
-  return `⚠️ ${t("Sovraccarico", "Overload")} ${dove} · ${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
+  /* Con piu' contatori si dice quale: «Zona Giorno». Con uno solo il nome non
+   * c'e', e la frase e' quella di sempre. */
+  const quale = clean(verdetto.nome) ? ` · ${clean(verdetto.nome)}` : "";
+  return `⚠️ ${t("Sovraccarico", "Overload")} ${dove}${quale} · ${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
 }
 
 function tesseraEnergia(
@@ -2232,17 +2272,20 @@ function energyModels(states) {
   if (
     comeSiVedeLEnergia(root.localStorage?.getItem?.(TESSERE_IMPIANTI_KEY)) === TESSERA_PER_IMPIANTO
   ) {
-    /* La soglia e' della CASA, e la casa e' la somma.
-     *
-     * Il numero che si scrive dice «oltre qui salta il contatore», e il
-     * contatore e' uno. Valutarlo un impianto per volta lo sbaglia a meta':
-     * due misuratori che tirano 2 kW l'uno restano in quiete sotto una soglia
-     * di 3,3 kW, mentre la pagina Energia — che somma — dice giustamente che
-     * la casa ne sta tirando 4. Un verdetto solo, portato su ogni tessera: il
-     * colore e le parole dicono la stessa cosa da qualunque parte si guardi. */
-    const dellaCasa = sovraccaricoDellaTessera(
-      sommaLetture(letture.map((lettura) => lettura.rows)),
-      sommaNumeri(letture.map((lettura) => lettura.house)),
+    /* Ogni tessera col SUO contatore e la SUA soglia («io ho due contatori»):
+     * la somma di due misuratori non e' il limite di nessuno dei due, e
+     * diceva «oltre 3 kW» con 1,97 da una parte e 1,80 dall'altra. */
+    const verdetti = verdettiDegliImpianti(
+      readJson(SOGLIA_POTENZA_KEY, {}),
+      configurati.map((impianto, indice) => ({
+        id: clean(impianto?.id) || PRIMO_IMPIANTO,
+        index: impianti.indexOf(impianto),
+        nome: "",
+        letture: {
+          casa: letture[indice].house,
+          rete: letture[indice].rows.find((riga) => riga.group === "grid")?.watts ?? null,
+        },
+      })),
     );
     /* Una per impianto. La prima tiene la chiave di sempre, così l'ordine e la
      * visibilità che si erano già scelti restano suoi; le altre portano il
@@ -2254,19 +2297,35 @@ function energyModels(states) {
           label: plantLabel(impianto, indice, t("Impianto", "Plant")),
           impianto: clean(impianto?.id) || PRIMO_IMPIANTO,
           oggi: letture[indice].oggi,
-          verdetto: dellaCasa,
+          verdetto: verdetti[indice],
         }),
       )
       .filter(Boolean);
   }
   /* Una sola, con la somma: è quello che una Home dice — quanto consuma la
-   * casa — e chi ha unito due appartamenti ha una casa sola. */
+   * casa — e chi ha unito due appartamenti ha una casa sola. Il colore pero'
+   * e' quello del contatore messo peggio, col suo nome nelle parole: la somma
+   * non ha un limite suo. */
+  const peggiore = ilVerdettoPeggiore(
+    verdettiDegliImpianti(
+      readJson(SOGLIA_POTENZA_KEY, {}),
+      configurati.map((impianto, indice) => ({
+        id: clean(impianto?.id) || PRIMO_IMPIANTO,
+        index: impianti.indexOf(impianto),
+        nome: plantLabel(impianto, impianti.indexOf(impianto), t("Impianto", "Plant")),
+        letture: {
+          casa: letture[indice].house,
+          rete: letture[indice].rows.find((riga) => riga.group === "grid")?.watts ?? null,
+        },
+      })),
+    ),
+  );
   return [
     tesseraEnergia(
       sommaLetture(letture.map((lettura) => lettura.rows)),
       sommaNumeri(letture.map((lettura) => lettura.house)),
       sommaNumeri(letture.map((lettura) => lettura.today)),
-      { oggi: sommaOggi(letture.map((lettura) => lettura.oggi)) },
+      { oggi: sommaOggi(letture.map((lettura) => lettura.oggi)), verdetto: peggiore },
     ),
   ].filter(Boolean);
 }

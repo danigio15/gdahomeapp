@@ -16,7 +16,25 @@
  */
 import { openIconPicker } from "./icon-engine-section.js";
 import { applianceArtwork } from "../core/appliance-artwork.js";
-import { IMPIANTO_SCELTO_KEY, PRIMO_IMPIANTO, plantAt, plantLabel } from "../core/energy-plants.js";
+import {
+  CERCHI_DALLE_STANZE_FIELD,
+  DA_CARICO,
+  DA_PIANO,
+  IMPIANTO_SCELTO_KEY,
+  PIANI_FIELD,
+  PIANI_NEL_FLUSSO_FIELD,
+  PRIMO_IMPIANTO,
+  assegnaElettrodomestico as assegnaAllImpianto,
+  impiantoDellElettrodomestico,
+  cerchiDalleStanzeAccesi,
+  elettrodomesticiDaAssegnare,
+  pianiDellImpianto,
+  pianiNelFlusso,
+  plantAt,
+  plantLabel,
+  plantList,
+  storedPlants,
+} from "../core/energy-plants.js";
 import { createEntityPickerField } from "../core/renderers.js";
 import {
   MAX_FLOW_LOADS,
@@ -207,17 +225,25 @@ function elettrodomestici() {
 /* Quelli che un carico può ancora adottare: configurati, con un nome, e non
  * già dentro un cerchio. L'indice è quello della lista salvata, perché la
  * scelta riscrive esattamente quella riga. */
-function elettrodomesticiLiberi() {
+function elettrodomesticiLiberi(load = null) {
+  /* Con piu' impianti si propongono solo quelli di questo impianto, e quelli
+   * che un impianto non ce l'hanno ancora: sceglierli qui glielo da'. */
+  const { list: impianti } = impiantoAperto();
+  const suo = clean(load?.plant) || PRIMO_IMPIANTO;
+  const contesto = contestoDegliImpianti(impianti);
   return elettrodomestici()
     .map((device, index) => ({ device, index }))
     .filter(
       ({ device }) => device && clean(device.name) && !clean(device.metadata?.beta27_subload_group),
-    );
+    )
+    .filter(({ device }) => {
+      if (impianti.length < 2) return true;
+      const { id } = impiantoDellElettrodomestico(device, contesto);
+      return !id || id === suo;
+    });
 }
 
-/* Se questo carico sta nell'impianto principale. Gli elettrodomestici non
- * hanno un campo impianto: appartengono tutti alla prima casa, e proporli per
- * un cerchio di un'altra li farebbe contare due volte dalla parte sbagliata. */
+/* Se questo carico sta nell'impianto principale. */
 function caricoDelPrimoImpianto(load) {
   const suo = clean(load?.plant);
   return !suo || suo === PRIMO_IMPIANTO;
@@ -279,8 +305,12 @@ async function assegnaElettrodomestico(panel, load, index) {
   const device = list[index];
   if (!device) return false;
   const group = clean(load.group) || clean(load.id);
+  /* Dentro un cerchio di un impianto, l'elettrodomestico e' di quell'impianto:
+   * lo si scrive, cosi' il flusso e il Report lo trovano dalla stessa parte. */
+  const { list: impianti } = impiantoAperto();
   list[index] = {
     ...device,
+    ...(impianti.length > 1 ? { plant: clean(load.plant) || PRIMO_IMPIANTO } : {}),
     metadata: { ...(device.metadata || {}), beta27_subload_group: group },
   };
   await scriviElettrodomestici(list);
@@ -941,25 +971,6 @@ function loadCard(panel, load, index, total) {
   const addRow = element("div", "dm-loads-add-row");
   addRow.append(addChild);
 
-  if (!caricoDelPrimoImpianto(load)) {
-    /* Un cerchio di un altro impianto non ha elettrodomestici da scegliere, e
-     * un pulsante muto sembrerebbe rotto: al suo posto c'è il perché. */
-    children.append(addRow);
-    children.append(
-      element(
-        "div",
-        "ed-hint dm-loads-pick-foreign",
-        t(
-          "Gli elettrodomestici non hanno un campo impianto: si possono scegliere solo per i carichi dell'impianto principale.",
-          "Appliances carry no plant field: they can only be picked for the loads of the main plant.",
-        ),
-      ),
-    );
-    body.append(children);
-    card.append(body);
-    return card;
-  }
-
   const pieno = load.children.length >= MAX_SUBLOADS;
   const scegli = element(
     "button",
@@ -995,7 +1006,7 @@ function loadCard(panel, load, index, total) {
         ),
       ),
     );
-    const liberi = elettrodomesticiLiberi();
+    const liberi = elettrodomesticiLiberi(load);
     if (!liberi.length)
       picker.append(
         element(
@@ -1086,6 +1097,8 @@ export function renderEnergyLoadsEditor(panel = doc?.querySelector?.(PANEL)) {
       );
     }
 
+    if (impianti.length > 1 && plant) host.append(riquadroDegliImpianti(panel, plant, impianti));
+
     if (!values.length)
       host.append(
         element(
@@ -1157,6 +1170,222 @@ function render(panel) {
   renderEnergyLoadsEditor(panel);
 }
 
+/* ── con piu' impianti: di chi e' ogni elettrodomestico ─────────────────
+ *
+ * «Mi ha messo in automatico anche il bagno dove c'è la lavatrice e
+ * l'esterno, ma non sono configurati.» Con due contatori gli elettrodomestici
+ * vanno nel flusso del loro impianto, e quelli che non si sa dove stanno non
+ * vanno da nessuna parte: qui si dice quanti sono e li si assegna — uno per
+ * uno, o confermando in un tocco quelli che la plancia ha gia' capito da sola
+ * (stessa potenza di un carico, o un piano coperto).
+ *
+ * Sotto, quello che l'impianto dice di se': i piani che il suo contatore
+ * misura, se vuole i cerchi automatici delle stanze, e se li vuole per piano.
+ * Con un impianto solo questo riquadro non esiste. */
+function contestoDegliImpianti(impianti) {
+  return { impianti, carichi: carichiCanonici(), stanze: stanzeDiCasa() };
+}
+
+function riquadroDegliImpianti(panel, plant, impianti) {
+  const box = element("div", "dm-imp-box");
+  box.dataset.dmImpiantiBox = "true";
+  const nome = (impianto) =>
+    plantLabel(impianto, impianti.indexOf(impianto), t("Impianto", "Plant"));
+  const daFare = elettrodomesticiDaAssegnare(elettrodomestici(), contestoDegliImpianti(impianti));
+  const senza = daFare.filter((voce) => !voce.id);
+  const suggeriti = daFare.filter((voce) => voce.id);
+
+  if (daFare.length) {
+    const avviso = element("div", "dm-imp-avviso");
+    avviso.append(
+      element(
+        "b",
+        "",
+        senza.length
+          ? `⚠️ ${senza.length} ${
+              senza.length === 1
+                ? t("elettrodomestico senza impianto", "appliance without a plant")
+                : t("elettrodomestici senza impianto", "appliances without a plant")
+            } · ${t("assegnali", "assign them")}`
+          : `✨ ${suggeriti.length} ${t("da confermare", "to confirm")}`,
+      ),
+      element(
+        "small",
+        "",
+        t(
+          "Gli elettrodomestici della casa diventano cerchi per stanza nel flusso. Ognuno va nel flusso del suo contatore: finché non lo dici, non compare in nessuno.",
+          "The house appliances become per-room circles in the flow. Each one goes in its meter's flow: until you say which, it shows up in none.",
+        ),
+      ),
+    );
+    for (const voce of daFare) {
+      const riga = element("div", "dm-imp-riga");
+      const testo = element("div", "dm-imp-riga-testo");
+      testo.append(element("b", "", clean(voce.device.name)));
+      const perche =
+        voce.da === DA_CARICO
+          ? t("suggerito: la stessa potenza è già un carico di", "suggested: the same power is already a load of")
+          : voce.da === DA_PIANO
+            ? t("suggerito: il suo piano è coperto da", "suggested: its floor is covered by")
+            : t("nessun impianto", "no plant");
+      const suggerito = impianti.find((impianto) => clean(impianto.id) === voce.id);
+      testo.append(
+        element("small", "", suggerito ? `${perche} ${nome(suggerito)}` : perche),
+      );
+      riga.append(testo);
+      const scelte = element("div", "dm-imp-scelte");
+      for (const impianto of impianti) {
+        const tasto = element("button", "dm-imp-scelta", nome(impianto));
+        tasto.type = "button";
+        tasto.dataset.dmImpAssegna = clean(impianto.id);
+        if (clean(impianto.id) === voce.id) tasto.dataset.on = "true";
+        tasto.addEventListener("click", () => {
+          void assegnaEdAggiorna(panel, [[voce.index, clean(impianto.id)]]);
+        });
+        scelte.append(tasto);
+      }
+      riga.append(scelte);
+      avviso.append(riga);
+    }
+    if (suggeriti.length) {
+      const conferma = element(
+        "button",
+        "ed-btn-add dm-imp-conferma",
+        `✓ ${t("Conferma i suggeriti", "Confirm the suggestions")}`,
+      );
+      conferma.type = "button";
+      conferma.dataset.dmImpConferma = "true";
+      conferma.addEventListener("click", () => {
+        void assegnaEdAggiorna(
+          panel,
+          suggeriti.map((voce) => [voce.index, voce.id]),
+        );
+      });
+      avviso.append(conferma);
+    }
+    box.append(avviso);
+  }
+
+  const misura = element("div", "dm-imp-misura");
+  const quale = nome(plant);
+  misura.append(
+    element(
+      "b",
+      "",
+      `🏠 ${t(`Cosa misura il contatore di ${quale}`, `What the ${quale} meter measures`)}`,
+    ),
+    element(
+      "small",
+      "",
+      t(
+        "Le stanze dei piani scelti vanno a questo impianto da sole, con i loro elettrodomestici.",
+        "The rooms on the chosen floors go to this plant by themselves, with their appliances.",
+      ),
+    ),
+  );
+  const piani = [...new Set(stanzeDiCasa().map((stanza) => clean(stanza.floor)).filter(Boolean))];
+  const suoi = new Set(pianiDellImpianto(plant).map((voce) => voce.toLowerCase()));
+  if (piani.length) {
+    const fila = element("div", "dm-imp-piani");
+    for (const piano of piani) {
+      const quante = stanzeDiCasa().filter((stanza) => clean(stanza.floor) === piano).length;
+      const tasto = element(
+        "button",
+        "dm-imp-piano",
+        `${suoi.has(piano.toLowerCase()) ? "✓ " : ""}${piano} · ${quante} ${
+          quante === 1 ? t("stanza", "room") : t("stanze", "rooms")
+        }`,
+      );
+      tasto.type = "button";
+      tasto.dataset.dmImpPiano = piano;
+      if (suoi.has(piano.toLowerCase())) tasto.dataset.on = "true";
+      tasto.addEventListener("click", () => {
+        const nuovi = suoi.has(piano.toLowerCase())
+          ? pianiDellImpianto(plant).filter((voce) => voce.toLowerCase() !== piano.toLowerCase())
+          : [...pianiDellImpianto(plant), piano];
+        void scriviMetadatiImpianto(panel, plant.id, { [PIANI_FIELD]: nuovi });
+      });
+      fila.append(tasto);
+    }
+    misura.append(fila);
+  } else {
+    misura.append(
+      element(
+        "small",
+        "dm-imp-nessun-piano",
+        t(
+          "Le stanze non hanno un piano: lo scegli nella pagina Stanze del config.",
+          "The rooms have no floor: you can set one in the Rooms page of the config.",
+        ),
+      ),
+    );
+  }
+  const interruttore = (campo, acceso, titolo, sotto) => {
+    const riga = element("label", "dm-imp-interruttore");
+    const testo = element("span", "dm-imp-interruttore-testo");
+    testo.append(element("b", "", titolo), element("small", "", sotto));
+    const input = doc.createElement("input");
+    input.type = "checkbox";
+    input.checked = acceso;
+    input.dataset.dmImpCampo = campo;
+    input.addEventListener("change", () => {
+      void scriviMetadatiImpianto(panel, plant.id, { [campo]: input.checked });
+    });
+    riga.append(testo, input);
+    return riga;
+  };
+  misura.append(
+    interruttore(
+      CERCHI_DALLE_STANZE_FIELD,
+      cerchiDalleStanzeAccesi(plant),
+      t("Cerchi automatici dalle stanze", "Automatic circles from rooms"),
+      t(
+        "Le stanze di questo impianto, coi loro elettrodomestici; il resto in «Altro».",
+        "This plant's rooms, with their appliances; the rest under «Other».",
+      ),
+    ),
+  );
+  if (piani.length)
+    misura.append(
+      interruttore(
+        PIANI_NEL_FLUSSO_FIELD,
+        pianiNelFlusso(plant),
+        t("Raggruppa per piano", "Group by floor"),
+        t(
+          "Un cerchio per piano; toccandolo si vedono le sue stanze.",
+          "One circle per floor; tap it to see its rooms.",
+        ),
+      ),
+    );
+  box.append(misura);
+  return box;
+}
+
+async function assegnaEdAggiorna(panel, coppie) {
+  let lista = elettrodomestici();
+  for (const [index, id] of coppie) lista = assegnaAllImpianto(lista, index, id);
+  await scriviElettrodomestici(lista);
+  if (!state.dirty) state.model = null;
+  render(panel);
+}
+
+async function scriviMetadatiImpianto(panel, plantId, campi) {
+  const store = dashboardStore();
+  const salvato = store?.getSection?.("energy") || section("energy", {}) || {};
+  const lista = plantList(salvato).map((impianto) =>
+    clean(impianto.id) === clean(plantId)
+      ? { ...impianto, metadata: { ...(impianto.metadata || {}), ...campi } }
+      : impianto,
+  );
+  if (!store?.replaceSection) return;
+  await store.replaceSection("energy", storedPlants(lista, salvato));
+  root.cdMarkDirty?.();
+  root.cdSyncPush?.();
+  root.dmRefreshEnergyFlows?.();
+  if (!state.dirty) state.model = null;
+  render(panel);
+}
+
 function installStyles() {
   installStyle(
     "dm-energy-loads-editor-style",
@@ -1168,6 +1397,24 @@ function installStyles() {
        the size of the box it sits in, so preview and button stay as drawn. */
     .dm-loads-preview-bubble .dm-icon-engine-glyph,.dm-loads-icon-btn .dm-icon-engine-glyph{font-size:inherit!important}
     .dm-loads-list{display:grid;gap:10px}
+    .dm-imp-box{display:grid;gap:12px;margin:0 0 14px}
+    .dm-imp-avviso,.dm-imp-misura{display:grid;gap:8px;padding:12px 14px;border-radius:16px;border:1px solid var(--card-border,rgba(15,23,42,.12));background:var(--card-bg,#fff)}
+    .dm-imp-avviso{border-color:color-mix(in srgb,#f59e0b 45%,transparent);background:color-mix(in srgb,#f59e0b 8%,var(--card-bg,#fff))}
+    .dm-imp-avviso>b,.dm-imp-misura>b{font-size:13.5px;font-weight:900;color:var(--text,#0f172a)}
+    .dm-imp-avviso>small,.dm-imp-misura>small{font-size:11.5px;color:var(--text-dim,#64748b);font-weight:600;line-height:1.4}
+    .dm-imp-riga{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--divider-color,#e2e8f0)}
+    .dm-imp-riga-testo{display:grid;gap:2px;flex:1 1 180px;min-width:0}
+    .dm-imp-riga-testo b{font-size:13px;color:var(--text,#0f172a)}
+    .dm-imp-riga-testo small{font-size:11px;color:var(--text-dim,#64748b)}
+    .dm-imp-scelte,.dm-imp-piani{display:flex;gap:6px;flex-wrap:wrap}
+    .dm-imp-scelta,.dm-imp-piano{border:1px solid var(--card-border,rgba(15,23,42,.14));background:var(--card-bg,#fff);color:var(--text,#0f172a);border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+    .dm-imp-scelta[data-on="true"],.dm-imp-piano[data-on="true"]{background:var(--primary-color,#0ea5e9);border-color:var(--primary-color,#0ea5e9);color:#fff}
+    .dm-imp-conferma{justify-self:start}
+    .dm-imp-interruttore{display:flex;align-items:center;gap:12px;padding-top:8px;border-top:1px solid var(--divider-color,#e2e8f0);cursor:pointer}
+    .dm-imp-interruttore-testo{display:grid;gap:2px;flex:1;min-width:0}
+    .dm-imp-interruttore-testo b{font-size:13px;color:var(--text,#0f172a)}
+    .dm-imp-interruttore-testo small{font-size:11px;color:var(--text-dim,#64748b)}
+    .dm-imp-interruttore input{width:20px;height:20px;flex:none}
     .dm-loads-card>.ed-acc-head{display:flex;align-items:center;gap:10px;justify-content:space-between}
     .dm-loads-preview{display:flex;align-items:center;gap:10px;min-width:0}
     .dm-loads-preview-index{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--divider-color,#e2e8f0);color:var(--text-dim,#64748b);font-size:12px;font-weight:800}

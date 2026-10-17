@@ -14,6 +14,7 @@ import {
   CASELLE_CALDAIA,
   CASELLE_SOLARE,
   CASELLE_STUFA,
+  CERCHI_DALLE_STANZE_FIELD,
   CHIAVE_BATTERIE,
   CHIAVE_CALDAIA,
   CHIAVE_ENTITA_MIE,
@@ -31,6 +32,8 @@ import {
   CONFIG_KEYS,
   CONFIG_KEYS_REVISION,
   COOLING_SLOT_MAP,
+  DA_CARICO,
+  DA_PIANO,
   DEFAULT_EXPORT_RATE,
   DEFAULT_IMPORT_RATE,
   DEFAULT_LOCALE,
@@ -65,6 +68,8 @@ import {
   PANNELLO,
   PAUSA_DENTRO_UN_CICLO_MS,
   PERIOD_SOURCES,
+  PIANI_FIELD,
+  PIANI_NEL_FLUSSO_FIELD,
   PLANT_GROUPS,
   PRIMO_IMPIANTO,
   PRIMO_SOLARE,
@@ -109,6 +114,7 @@ import {
   applyFinancialOverview,
   applySignedSources,
   archiDelPeriodo,
+  assegnaElettrodomestico,
   attributoSeCambia,
   avviaWebRtcNativo,
   avvioDallaStoria,
@@ -131,6 +137,7 @@ import {
   caselleSolariDa,
   catalogLabel,
   cavoDalloStato,
+  cerchiDalleStanzeAccesi,
   chiamaServizio,
   chiaveDellArco,
   chiaviDaProvare,
@@ -215,6 +222,8 @@ import {
   elencoConCorrente,
   elencoLetture,
   elencoMappe,
+  elettrodomesticiDaAssegnare,
+  elettrodomesticiDellImpianto,
   energyBalance,
   energyCost,
   energyPercentages,
@@ -266,6 +275,7 @@ import {
   ilValoreDelSempreAcceso,
   impiantiScelti,
   impiantiSolari,
+  impiantoDellElettrodomestico,
   importRateEntity,
   inKilowattora,
   inMinuti,
@@ -376,6 +386,8 @@ import {
   periodDelta,
   periodRange,
   persistEnergyField,
+  pianiDellImpianto,
+  pianiNelFlusso,
   pick,
   pickMediaImage,
   pickPlant,
@@ -533,7 +545,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GUQNPZBI.js";
+} from "../../chunk-AHF2GGQZ.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2618,6 +2630,7 @@ var SOURCE_INDEX = Object.freeze({
   "Aspiratore con l'umidità in ${area}": "Extractor fan with humidity in ${area}",
   "Aspirazione": "Suction",
   "Assegna la segnalazione a te su GitHub": "Assign the report to yourself on GitHub",
+  "assegnali": "assign them",
   "Assente": "Down",
   "Assenza lunga": "Extended away",
   "Assistente (vuoto = automatico: un modello linguistico se c'è, se no quello di serie)": "Assistant (empty = automatic: a language model if there is one, otherwise the default)",
@@ -2978,6 +2991,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cerca un dispositivo…": "Search a device…",
   "Cerca un'automazione…": "Search an automation…",
   "Cerca…": "Search…",
+  "Cerchi automatici dalle stanze": "Automatic circles from rooms",
   "CERCHI SOTTO CASA": "CIRCLES UNDER HOME",
   "Cerchio = stanza": "Circle = room",
   "Cerco…": "Searching…",
@@ -3185,6 +3199,7 @@ var SOURCE_INDEX = Object.freeze({
   "condizioni, percepita, minima e massima": "conditions, feels like, low and high",
   "Conferma": "Confirm",
   "Conferma ✓": "Confirm ✓",
+  "Conferma i suggeriti": "Confirm the suggestions",
   "Conferma opzionale": "Optional confirmation",
   "Confermi il blocco?": "Confirm locking?",
   "Confermi l'apertura?": "Confirm opening?",
@@ -3281,6 +3296,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cosa guardare": "What to look at",
   "Cosa hai fatto, cosa ti aspettavi, cosa e' successo invece.": "What you did, what you expected, what happened instead.",
   "Cosa misura": "What it measures",
+  "Cosa misura il contatore di ${quale}": "What the ${quale} meter measures",
   "Cosa mostra": "What it shows",
   "Cosa mostrare nella finestra": "What to show in the window",
   "Cosa premere": "What to press",
@@ -3341,7 +3357,9 @@ var SOURCE_INDEX = Object.freeze({
   "da casa": "from home",
   "Da casa": "From the house",
   "Da come sta si capisce dove va il calore: al riscaldamento o al sanitario.": "Where the heat is going is told by how it sits: to the heating or to the hot water.",
+  "da confermare": "to confirm",
   "Da controllare": "Check it",
+  "Da decidere": "To decide",
   "da Elettrodomestici": "from Appliances",
   "da fare": "to do",
   "Da fare": "To do",
@@ -3598,9 +3616,11 @@ var SOURCE_INDEX = Object.freeze({
   "Elettrodomestici / dispositivi": "Appliances / devices",
   "elettrodomestici attivi": "appliances running",
   "Elettrodomestici in funzione": "Appliances running",
+  "elettrodomestici senza impianto": "appliances without a plant",
   "Elettrodomestico": "Appliance",
   "elettrodomestico attivo": "appliance running",
   "Elettrodomestico salvato": "Appliance saved",
+  "elettrodomestico senza impianto": "appliance without a plant",
   "Elettrovalvola": "Solenoid valve",
   "Elettrovalvola 2": "Solenoid valve 2",
   "Elettrovalvola di riciclo": "Recirculation solenoid valve",
@@ -3936,8 +3956,8 @@ var SOURCE_INDEX = Object.freeze({
   "Gli altri in cucina": "The rest of the kitchen",
   "Gli animali di casa: una scheda per ognuno, con la sua foto e quello che lo riguarda — la ciotola, la lettiera, l'acqua, la porta col microchip, il collare. Anche gli acquari e i terrari, quanti ne hai: ognuno con le sue entità.": "The pets of the house: one card each, with its photo and what concerns it — the bowl, the litter box, the water, the microchip door, the collar. Aquariums and terrariums too, as many as you have: each with its own entities.",
   "Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento": "Active custom alerts and a triggered alarm show even on the rest screen",
+  "Gli elettrodomestici della casa diventano cerchi per stanza nel flusso. Ognuno va nel flusso del suo contatore: finché non lo dici, non compare in nessuno.": "The house appliances become per-room circles in the flow. Each one goes in its meter's flow: until you say which, it shows up in none.",
   "Gli elettrodomestici di quella stanza entrano nel cerchio da soli, anche quelli configurati domani; chi sta già in un altro cerchio non si conta due volte.": "The appliances of that room join the circle on their own, future ones included; anything already inside another circle is not counted twice.",
-  "Gli elettrodomestici non hanno un campo impianto: si possono scegliere solo per i carichi dell'impianto principale.": "Appliances carry no plant field: they can only be picked for the loads of the main plant.",
   "Gli eventi": "The events",
   "Gli impegni e le cose da fare, nella stessa pagina: qui si dice quali calendari e quali liste guardare. Se la tessera in Home si vede o no si sceglie nella scheda Widget.": "Appointments and to-do items, on the same page: here you choose which calendars and which lists to watch. Whether the Home tile shows is chosen in the Widgets tab.",
   "Gli ingressi dichiarati nella sezione Sicurezza": "The entries declared in the Security section",
@@ -4091,6 +4111,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il collare è quasi scarico: mettilo in carica.": "The collar is almost flat: charge it.",
   "Il comando rapido della plancia: modalità, gradi e ventola scelti per ogni stanza nella scheda Clima. Premuto di nuovo, spegne.": "The dashboard quick command: mode, degrees and fan chosen for each room in the Climate tab. Pressed again, it turns off.",
   "Il contatore che conta (total o total_increasing), oppure il sensore della pressione, della portata o del sale.": "The meter that counts (total or total_increasing), or the pressure, flow or salt sensor.",
+  "Il contatore che lo misura: compare nel flusso di quell'impianto.": "The meter that measures it: it shows up in that plant's flow.",
   "Il contatore della sessione non sta rispondendo.": "The session meter is not answering.",
   "Il contatore totale abilita il mese selezionato, i mesi precedenti e il totale anno.": "The total meter enables the selected month, previous months and yearly total.",
   "Il contatore totale comanda: questi campi non vengono letti": "The total meter wins: these fields are not read",
@@ -4640,8 +4661,11 @@ var SOURCE_INDEX = Object.freeze({
   "Le soste arrivano con la strada": "The stops come with the route",
   "Le spengo?": "Turn them off?",
   "Le stanze": "The rooms",
+  "Le stanze dei piani scelti vanno a questo impianto da sole, con i loro elettrodomestici.": "The rooms on the chosen floors go to this plant by themselves, with their appliances.",
   "Le stanze di casa": "Rooms of the home",
+  "Le stanze di questo impianto, coi loro elettrodomestici; il resto in «Altro».": "This plant's rooms, with their appliances; the rest under «Other».",
   "Le stanze e le mappe": "The rooms and the maps",
+  "Le stanze non hanno un piano: lo scegli nella pagina Stanze del config.": "The rooms have no floor: you can set one in the Rooms page of the config.",
   "Le stanze, le luci, le azioni e l'antifurto arrivano da qui": "Rooms, lights, actions and the alarm come from here",
   "le tapparelle chiuse la sera tengono il caldo dentro e la casa riservata.": "shutters closed in the evening keep the warmth in and the home private.",
   "Le tapparelle e le tende compaiono nella pagina 🪟 Finestre, raggruppate per piano e stanza. Ogni riga accetta un'entità cover.* — con posizione e percentuali — oppure un relè switch.*: uno solo se accendendolo la tapparella sta su, due se ce n'è uno per la salita e uno per la discesa, come uno Shelly in modalità interruttore. Se la finestra si apre a mano — persiane, scuri, una maniglia — lascia vuote le caselle dei comandi e compila solo il sensore di apertura: la card la disegna lo stesso e dice se è aperta.": "Shutters and curtains show up on the 🪟 Windows page, grouped by floor and room. Every row accepts a cover.* entity — with position and percentages — or a switch.* relay: one when switching it on keeps the shutter up, two when one relay sends it up and another sends it down, like a Shelly in switch mode. When the window opens by hand — shutters, blinds, a handle — leave the command boxes empty and fill in the contact sensor alone: the card still draws it and says whether it is open.",
@@ -5010,6 +5034,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessun giorno scelto": "No days chosen",
   "Nessun gruppo": "No group",
   "Nessun gruppo di continuità configurato": "No UPS configured",
+  "nessun impianto": "no plant",
   "Nessun lettore configurato.": "No media player configured.",
   "Nessun lettore: aggiungili nella sezione Musica o qui nel config": "No player: add them in the Music section or here in the config",
   "nessun movimento": "no motion",
@@ -5338,6 +5363,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ogni fascia vale dalla sua ora fino a quella dopo, e l'ultima attraversa la mezzanotte. Il costo di un ciclo — la lavastoviglie di stanotte — usa il prezzo dell'ora in cui è successo, che è esatto. Il Report di un mese usa la media delle fasce pesata sulle ore: la plancia sa quanti kWh sono passati, non in che ore, quindi lì è una stima.": "Each band runs from its hour to the next one, and the last one crosses midnight. A cycle's cost — last night's dishwasher — uses the price of the hour it happened at, which is exact. A month's Report uses the bands averaged by the hours each covers: the dashboard knows how many kWh went through, not at what hours, so there it is an estimate.",
   "ogni giorno": "every day",
   "ogni giorno alle": "every day at",
+  "Ogni impianto ha il suo contatore e il suo limite: sopra la soglia l'avviso dice quale impianto. Quella che c'era prima ora è del primo impianto.": "Each plant has its own meter and its own limit: above the threshold the alert says which plant. The one you had before now belongs to the first plant.",
   "Ogni impianto ha il suo misuratore, il suo fotovoltaico, la sua batteria e i suoi carichi. Le caselle qui sotto sono quelle dell'impianto scelto: aggiungerne uno riparte da zero e non tocca quello che hai già configurato.": "Every plant has its own meter, its own solar, its own battery and its own loads. The fields below belong to the selected plant: adding one starts from scratch and leaves what you already configured alone.",
   "Ogni impianto ha le sue tredici caselle. Quello segnato «in pagina adesso» è ciò che la pagina Solare termico e la tessera della Home stanno mostrando: l'occhio accanto a un altro lo porta a schermo al posto suo.": "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.",
   "Ogni settimana": "Every week",
@@ -5923,6 +5949,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ragazzo": "Boy",
   "Raggio (km)": "Radius (km)",
   "raggiungibile": "reachable",
+  "Raggruppa per piano": "Group by floor",
   "RainViewer, senza chiavi: basta dire dove": "RainViewer, no keys: just say where",
   "Rallenta il ventilatore": "Slow the fan down",
   "Rame": "Copper",
@@ -6470,6 +6497,7 @@ var SOURCE_INDEX = Object.freeze({
   "Soglia 'in funzione' (Watt)": "Running threshold (Watts)",
   "Soglia acceso (W)": "On threshold (W)",
   "Soglia di potenza": "Power threshold",
+  "Soglia di potenza · una per contatore": "Power threshold · one per meter",
   "Soglia in funzione": "Running threshold",
   "Soglia in funzione sotto 1 W: basta il display acceso per risultare In funzione.": "Running threshold under 1 W: a lit display is enough to show Running.",
   "Soglia standby (W)": "Standby threshold (W)",
@@ -6701,6 +6729,8 @@ var SOURCE_INDEX = Object.freeze({
   "Suggerite": "Suggested",
   "Suggerite per la tua casa ✨": "Suggested for your home ✨",
   "Suggerito: ha una potenza mappata": "Suggested: it has a mapped power sensor",
+  "suggerito: il suo piano è coperto da": "suggested: its floor is covered by",
+  "suggerito: la stessa potenza è già un carico di": "suggested: the same power is already a load of",
   "Sul riposo: quanto è carica e se è attaccata alla corrente": "On the rest screen: how charged it is and whether it is plugged in",
   "sul tablet": "on the tablet",
   "Sul telefono, prima di partire": "On the phone, before leaving",
@@ -7061,6 +7091,7 @@ var SOURCE_INDEX = Object.freeze({
   "un avviso già creato.": "an existing alert.",
   "Un bidone per materiale, e per ognuno il sensore che dice quando passa il ritiro: la pagina risponde alla domanda della sera — cosa metto fuori stasera — e la tessera in Home si accende il giorno prima. Chi ha un calendario solo, con un evento per ritiro, lo mette nella casella in fondo.": "One bin per material, and for each the sensor that says when the collection comes: the page answers the evening question — what do I put out tonight — and the Home tile lights up the day before. Whoever has a single calendar, with one event per collection, puts it in the box at the bottom.",
   "Un boiler d'accumulo": "A storage tank",
+  "Un cerchio per piano; toccandolo si vedono le sue stanze.": "One circle per floor; tap it to see its rooms.",
   "Un comando che non risponde": "A control that does not respond",
   "Un comando con il solo avvio è una tessera grande (per esempio «Avvio», «Spegnimento»); con anche lo stop diventa una colonna con i due tasti (per esempio una sala). Acceso lo dice l'entità di stato, o quella dell'avvio quando sa dirlo.": "A command with only a start entity is a big tile (for example «Start», «Shutdown»); with a stop too it becomes a column with both buttons (for example a room). On is told by the state entity, or by the start one when it can tell.",
   "Un condizionatore da maggio a settembre, i termosifoni da ottobre ad aprile: fuori da quei mesi la card non compare. Nessun mese acceso vuol dire tutto l'anno. Un'unità accesa si vede sempre, anche fuori stagione.": "An air conditioner from May to September, radiators from October to April: outside those months the card does not appear. No month lit means all year. A unit that is on always shows, even out of season.",
@@ -29061,6 +29092,74 @@ function coloreDelLivello(livello) {
   if (livello === LIVELLO_ROSSA) return COLORE_ROSSA;
   if (livello === LIVELLO_AMBRA) return COLORE_AMBRA;
   return null;
+}
+var SOGLIE_PER_IMPIANTO = "perImpianto";
+var PRIMO = "impianto";
+function oggettoDa(grezzo) {
+  let fonte = grezzo;
+  if (typeof fonte === "string") {
+    try {
+      fonte = JSON.parse(fonte);
+    } catch (_errore) {
+      fonte = null;
+    }
+  }
+  return fonte && typeof fonte === "object" && !Array.isArray(fonte) ? fonte : {};
+}
+var ePrimo = (plantId, index) => index === 0 || !clean14(plantId) || clean14(plantId) === PRIMO;
+function sogliaDellImpianto(grezzo, plantId = "", index = 0) {
+  const base = oggettoDa(grezzo);
+  if (ePrimo(plantId, index)) return sogliaDellaPotenza(base);
+  const altre = oggettoDa(base[SOGLIE_PER_IMPIANTO]);
+  return sogliaDellaPotenza(altre[clean14(plantId)]);
+}
+function conLaSogliaDellImpianto(grezzo, plantId = "", index = 0, nuova = {}) {
+  const base = oggettoDa(grezzo);
+  const soglia2 = sogliaDellaPotenza(nuova);
+  if (ePrimo(plantId, index)) return { ...base, ...soglia2 };
+  return {
+    ...base,
+    [SOGLIE_PER_IMPIANTO]: { ...oggettoDa(base[SOGLIE_PER_IMPIANTO]), [clean14(plantId)]: soglia2 }
+  };
+}
+function qualcheSogliaScritta(grezzo) {
+  const base = oggettoDa(grezzo);
+  if (sogliaScritta(sogliaDellaPotenza(base))) return true;
+  return Object.values(oggettoDa(base[SOGLIE_PER_IMPIANTO])).some(
+    (voce3) => sogliaScritta(sogliaDellaPotenza(voce3))
+  );
+}
+var GRAVITA = { [LIVELLO_QUIETE]: 0, [LIVELLO_AMBRA]: 1, [LIVELLO_ROSSA]: 2 };
+function verdettiDegliImpianti(grezzo, impianti2 = []) {
+  return (Array.isArray(impianti2) ? impianti2 : []).map((impianto, posto) => {
+    const index = Number.isInteger(impianto?.index) ? impianto.index : posto;
+    return {
+      ...livelloDellaPotenza(sogliaDellImpianto(grezzo, impianto?.id, index), impianto?.letture),
+      impianto: clean14(impianto?.id) || PRIMO,
+      nome: clean14(impianto?.nome)
+    };
+  });
+}
+function ilVerdettoPeggiore(verdetti = []) {
+  let peggiore = null;
+  for (const verdetto of Array.isArray(verdetti) ? verdetti : []) {
+    if (!verdetto || verdetto.livello === LIVELLO_QUIETE) continue;
+    if (!peggiore) {
+      peggiore = verdetto;
+      continue;
+    }
+    const prima = GRAVITA[verdetto.livello] - GRAVITA[peggiore.livello];
+    const oltre = (voce3) => voce3.limite ? voce3.watt / voce3.limite : 0;
+    if (prima > 0 || prima === 0 && oltre(verdetto) > oltre(peggiore)) peggiore = verdetto;
+  }
+  return peggiore || {
+    livello: LIVELLO_QUIETE,
+    watt: null,
+    sorgente: SORGENTE_CASA,
+    limite: null,
+    impianto: "",
+    nome: ""
+  };
 }
 
 // src/core/calendario-model.js
@@ -60295,17 +60394,17 @@ function coversModel(states) {
   }).filter(Boolean).sort((a, b2) => Number(b2.open) - Number(a.open));
   if (!rows.length) return null;
   const { alzate, aperte, soloMotori, miste, insieme: insieme3, contate, tutte } = contoDelleAperture(rows);
-  const stanzeDiCasa5 = root.getStanze?.() || readJson("cd_stanze", []);
-  const sogliaDiCasa3 = readJson(CHIAVE_SOGLIA_UMIDITA, null);
+  const stanzeDiCasa6 = root.getStanze?.() || readJson("cd_stanze", []);
+  const sogliaDiCasa2 = readJson(CHIAVE_SOGLIA_UMIDITA, null);
   const umiditaFuori = stateOf(states, "dm.home_meteo_umidita")?.state ?? null;
   const daArieggiare = finestreDaArieggiare(
     rows.map((riga3) => {
-      const stanza2 = stanzaDiUnaFinestra(riga3.config, stanzeDiCasa5);
+      const stanza2 = stanzaDiUnaFinestra(riga3.config, stanzeDiCasa6);
       return {
         nome: riga3.name,
         stanza: clean(stanza2?.name),
         dentro: stateOf(states, stanza2?.hum)?.state ?? null,
-        soglia: sogliaDellaFinestra(riga3.config, sogliaDiCasa3),
+        soglia: sogliaDellaFinestra(riga3.config, sogliaDiCasa2),
         fuori: umiditaFuori,
         aperta: riga3.open
       };
@@ -60660,6 +60759,27 @@ function lettureDiCasa(states = allStates()) {
     soc: di("battery")?.soc ?? null
   };
 }
+function lettureDegliImpianti(states = allStates()) {
+  const documento = section("energy", {}) || {};
+  const impianti2 = plantList(documento).map((impianto, index) => ({ impianto, index })).filter(({ impianto, index }) => index === 0 || plantIsConfigured(impianto));
+  return impianti2.map(({ impianto, index }) => {
+    const lettura3 = lettureDellImpianto(states, impianto, index === 0);
+    return {
+      id: clean(impianto?.id) || PRIMO_IMPIANTO,
+      index,
+      nome: plantLabel(impianto, index, t("Impianto", "Plant")),
+      letture: {
+        casa: lettura3.house,
+        rete: lettura3.rows.find((riga3) => riga3.group === "grid")?.watts ?? null
+      }
+    };
+  });
+}
+function verdettiDellaSoglia(states = allStates()) {
+  const impianti2 = lettureDegliImpianti(states);
+  const verdetti = verdettiDegliImpianti(readJson(SOGLIA_POTENZA_KEY, {}), impianti2);
+  return { verdetti, peggiore: ilVerdettoPeggiore(verdetti), quanti: impianti2.length };
+}
 var GLIFI_ENERGIA = Object.freeze({
   house: "🏠",
   solar: "☀️",
@@ -60695,7 +60815,8 @@ function sovraccaricoDellaTessera(rows, house) {
 function paroleDelSovraccarico(verdetto) {
   if (verdetto.livello === LIVELLO_QUIETE) return "";
   const dove = verdetto.sorgente === SORGENTE_RETE ? t("dalla rete", "from the grid") : t("in casa", "at home");
-  return `⚠️ ${t("Sovraccarico", "Overload")} ${dove} · ${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
+  const quale = clean(verdetto.nome) ? ` · ${clean(verdetto.nome)}` : "";
+  return `⚠️ ${t("Sovraccarico", "Overload")} ${dove}${quale} · ${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
 }
 function tesseraEnergia(rows, house, today, { key = "energia", label, impianto = "", oggi, verdetto: dato } = {}) {
   if (house == null && !rows.length) return null;
@@ -60766,9 +60887,17 @@ function energyModels(states) {
     return [tesseraEnergia(sola.rows, sola.house, sola.today, { oggi: sola.oggi })].filter(Boolean);
   }
   if (comeSiVedeLEnergia(root.localStorage?.getItem?.(TESSERE_IMPIANTI_KEY)) === TESSERA_PER_IMPIANTO) {
-    const dellaCasa = sovraccaricoDellaTessera(
-      sommaLetture(letture2.map((lettura3) => lettura3.rows)),
-      sommaNumeri(letture2.map((lettura3) => lettura3.house))
+    const verdetti = verdettiDegliImpianti(
+      readJson(SOGLIA_POTENZA_KEY, {}),
+      configurati2.map((impianto, indice) => ({
+        id: clean(impianto?.id) || PRIMO_IMPIANTO,
+        index: impianti2.indexOf(impianto),
+        nome: "",
+        letture: {
+          casa: letture2[indice].house,
+          rete: letture2[indice].rows.find((riga3) => riga3.group === "grid")?.watts ?? null
+        }
+      }))
     );
     return configurati2.map(
       (impianto, indice) => tesseraEnergia(letture2[indice].rows, letture2[indice].house, letture2[indice].today, {
@@ -60776,16 +60905,30 @@ function energyModels(states) {
         label: plantLabel(impianto, indice, t("Impianto", "Plant")),
         impianto: clean(impianto?.id) || PRIMO_IMPIANTO,
         oggi: letture2[indice].oggi,
-        verdetto: dellaCasa
+        verdetto: verdetti[indice]
       })
     ).filter(Boolean);
   }
+  const peggiore = ilVerdettoPeggiore(
+    verdettiDegliImpianti(
+      readJson(SOGLIA_POTENZA_KEY, {}),
+      configurati2.map((impianto, indice) => ({
+        id: clean(impianto?.id) || PRIMO_IMPIANTO,
+        index: impianti2.indexOf(impianto),
+        nome: plantLabel(impianto, impianti2.indexOf(impianto), t("Impianto", "Plant")),
+        letture: {
+          casa: letture2[indice].house,
+          rete: letture2[indice].rows.find((riga3) => riga3.group === "grid")?.watts ?? null
+        }
+      }))
+    )
+  );
   return [
     tesseraEnergia(
       sommaLetture(letture2.map((lettura3) => lettura3.rows)),
       sommaNumeri(letture2.map((lettura3) => lettura3.house)),
       sommaNumeri(letture2.map((lettura3) => lettura3.today)),
-      { oggi: sommaOggi(letture2.map((lettura3) => lettura3.oggi)) }
+      { oggi: sommaOggi(letture2.map((lettura3) => lettura3.oggi)), verdetto: peggiore }
     )
   ].filter(Boolean);
 }
@@ -72618,6 +72761,7 @@ function batteryReadout(battery = 0, format = (watt5) => laPotenzaInParole(watt5
 var CERCHI_AL_MASSIMO = 8;
 var PREFISSO_DELLA_STANZA = "stanza-";
 var CERCHIO_ALTRO = "stanza-altro";
+var PREFISSO_DEL_PIANO = "piano-";
 var pulito47 = (valore3) => valore3 == null ? "" : String(valore3).trim();
 var WALLBOX_NOME = /wallbox|colonnina|ev[ _-]?charger|car[ _-]?charger/i;
 function eLaWallbox(carico = {}, entitaDellaWallbox = []) {
@@ -72663,6 +72807,7 @@ function elencoDelleStanze(stanze4 = []) {
     id: pulito47(stanza2?.id) || pulito47(stanza2?.room_id) || `room-${indice}`,
     nome: pulito47(stanza2?.name) || pulito47(stanza2?.nome),
     icona: pulito47(stanza2?.icon),
+    piano: pulito47(stanza2?.floor),
     indice
   })).filter((stanza2) => stanza2.nome);
 }
@@ -72676,7 +72821,9 @@ function cerchiDelleStanze({
   appliances: appliances4 = [],
   rooms: rooms2 = [],
   entitaDellaWallbox = [],
-  altro = "Altro"
+  altro = "Altro",
+  perPiano = false,
+  stanzeDelPiano = (quante3) => `${quante3}`
 } = {}) {
   const carichi = (Array.isArray(loads) ? loads : []).filter(Boolean);
   const apparecchi2 = (Array.isArray(appliances4) ? appliances4 : []).filter(Boolean);
@@ -72723,7 +72870,40 @@ function cerchiDelleStanze({
   };
   for (const voce3 of apparecchiDaSistemare) metti5(voce3, "apparecchi");
   for (const voce3 of carichiSenzaDoppi) metti5(voce3, "carichi");
-  const conStanza = [...perStanza.values()].filter((gruppo) => gruppo.stanza).sort((a, b2) => a.stanza.indice - b2.stanza.indice);
+  let conStanza = [...perStanza.values()].filter((gruppo) => gruppo.stanza).sort((a, b2) => a.stanza.indice - b2.stanza.indice);
+  if (perPiano) {
+    const perPianoMappa = /* @__PURE__ */ new Map();
+    const fusi = [];
+    for (const gruppo of conStanza) {
+      const piano = gruppo.stanza.piano;
+      if (!piano) {
+        fusi.push(gruppo);
+        continue;
+      }
+      const chiave2 = piano.toLowerCase();
+      let unito3 = perPianoMappa.get(chiave2);
+      if (!unito3) {
+        unito3 = {
+          stanza: {
+            id: chiave2,
+            nome: piano,
+            icona: "mdi:floor-plan",
+            indice: gruppo.stanza.indice
+          },
+          piano: true,
+          stanzeDentro: [],
+          carichi: [],
+          apparecchi: []
+        };
+        perPianoMappa.set(chiave2, unito3);
+        fusi.push(unito3);
+      }
+      unito3.stanzeDentro.push({ id: gruppo.stanza.id, nome: gruppo.stanza.nome });
+      unito3.carichi.push(...gruppo.carichi);
+      unito3.apparecchi.push(...gruppo.apparecchi);
+    }
+    conStanza = fusi;
+  }
   const posti = Math.max(1, CERCHI_AL_MASSIMO - wallbox.length);
   const senzaStanza = perStanza.get("") || { stanza: null, carichi: [], apparecchi: [] };
   const serveAltro = senzaStanza.carichi.length + senzaStanza.apparecchi.length > 0;
@@ -72743,13 +72923,20 @@ function cerchiDelleStanze({
   for (const carico of carichi)
     if (gruppiDellaWallbox.has(gruppoDi(carico))) nuoviCarichi.push(carico);
   const cerchio = (id, nome, icona3, gruppo) => {
+    const delPiano = gruppo.piano === true;
     nuoviCarichi.push({
       id,
       name: nome,
       icon: icona3 || "mdi:home",
       order: ordine++,
       show_in_dashboard: true,
-      metadata: { flow_group: id, cerchio_della_stanza: true }
+      metadata: delPiano ? {
+        flow_group: id,
+        cerchio_della_stanza: true,
+        cerchio_del_piano: true,
+        stanze: gruppo.stanzeDentro,
+        sottotitolo: stanzeDelPiano(gruppo.stanzeDentro.length)
+      } : { flow_group: id, cerchio_della_stanza: true }
     });
     for (const carico of gruppo.carichi)
       nuoviCarichi.push(conIlGruppo(carico, id, { show_in_dashboard: false }));
@@ -72757,7 +72944,7 @@ function cerchiDelleStanze({
   };
   for (const gruppo of conStanza.slice(0, tenute))
     cerchio(
-      `${PREFISSO_DELLA_STANZA}${gruppo.stanza.id}`,
+      gruppo.piano ? `${PREFISSO_DEL_PIANO}${gruppo.stanza.id.replace(/[^a-z0-9]+/g, "-")}` : `${PREFISSO_DELLA_STANZA}${gruppo.stanza.id}`,
       gruppo.stanza.nome,
       gruppo.stanza.icona,
       gruppo
@@ -73193,20 +73380,35 @@ function configuredAppliances() {
   const stored = readJson("cd_appliances", []);
   return Array.isArray(stored) ? stored : [];
 }
-function appliancesOfThePlant() {
+function stanzeDiCasa3() {
+  const stanze4 = section("rooms", null);
+  return Array.isArray(stanze4) ? stanze4 : readJson("cd_stanze", []);
+}
+function appliancesOfThePlant(plant = impiantoScelto2().plant) {
   const apparecchi2 = configuredAppliances();
+  if (!plant) return apparecchi2;
+  return elettrodomesticiDellImpianto(apparecchi2, plant, {
+    impianti: plantList(section("energy", {}) || {}),
+    carichi: tuttiICarichi(),
+    stanze: stanzeDiCasa3()
+  });
+}
+function impiantoScelto2() {
   const scelto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
-  const { plant, index } = plantAt(section("energy", {}) || {}, scelto);
-  return plant ? plantLoads(apparecchi2, plant, index) : apparecchi2;
+  return plantAt(section("energy", {}) || {}, scelto);
 }
 function carichiDelFlusso() {
-  const stanze4 = section("rooms", null);
+  const { plant } = impiantoScelto2();
+  const loads = configuredLoads();
+  const appliances4 = appliancesOfThePlant(plant);
+  if (plant && !cerchiDalleStanzeAccesi(plant)) return { loads, appliances: appliances4, perStanza: false };
   return cerchiDelleStanze({
-    loads: configuredLoads(),
-    appliances: appliancesOfThePlant(),
-    rooms: Array.isArray(stanze4) ? stanze4 : readJson("cd_stanze", []),
+    loads,
+    appliances: appliances4,
+    rooms: stanzeDiCasa3(),
     entitaDellaWallbox: WALLBOX_REFS.map(resolvedEntity3).filter(Boolean),
-    altro: t("Altro", "Other")
+    altro: t("Altro", "Other"),
+    perPiano: Boolean(plant && pianiNelFlusso(plant))
   });
 }
 function resolvedEntity3(reference) {
@@ -74322,10 +74524,17 @@ function elettrodomestici2() {
   const legacy = readJson("cd_appliances", []);
   return Array.isArray(legacy) ? legacy : [];
 }
-function elettrodomesticiLiberi() {
+function elettrodomesticiLiberi(load = null) {
+  const { list: impianti2 } = impiantoAperto();
+  const suo2 = clean(load?.plant) || PRIMO_IMPIANTO;
+  const contesto2 = contestoDegliImpianti(impianti2);
   return elettrodomestici2().map((device, index) => ({ device, index })).filter(
     ({ device }) => device && clean(device.name) && !clean(device.metadata?.beta27_subload_group)
-  );
+  ).filter(({ device }) => {
+    if (impianti2.length < 2) return true;
+    const { id } = impiantoDellElettrodomestico(device, contesto2);
+    return !id || id === suo2;
+  });
 }
 function caricoDelPrimoImpianto(load) {
   const suo2 = clean(load?.plant);
@@ -74359,14 +74568,16 @@ async function togliElettrodomestico(panel2, load, child, index) {
   render(panel2);
   return true;
 }
-async function assegnaElettrodomestico(panel2, load, index) {
+async function assegnaElettrodomestico2(panel2, load, index) {
   if (load.children.length >= MAX_SUBLOADS) return false;
   const list = elettrodomestici2();
   const device = list[index];
   if (!device) return false;
   const group = clean(load.group) || clean(load.id);
+  const { list: impianti2 } = impiantoAperto();
   list[index] = {
     ...device,
+    ...impianti2.length > 1 ? { plant: clean(load.plant) || PRIMO_IMPIANTO } : {},
     metadata: { ...device.metadata || {}, beta27_subload_group: group }
   };
   await scriviElettrodomestici(list);
@@ -74407,7 +74618,7 @@ async function impostaStanzaDelCerchio(load, roomId) {
   root.dmRefreshEnergyFlows?.();
   return true;
 }
-function stanzeDiCasa3() {
+function stanzeDiCasa4() {
   const stored = section("rooms", null);
   const lista7 = Array.isArray(stored) && stored.length ? stored : readJson("cd_stanze", []);
   return (Array.isArray(lista7) ? lista7 : []).filter((voce3) => clean(voce3?.name));
@@ -74691,7 +74902,7 @@ function loadCard(panel2, load, index, total) {
   card2.append(head);
   const body = element("div", "ed-acc-body");
   const identity = element("section", "dm-loads-identity");
-  const stanze4 = stanzeDiCasa3();
+  const stanze4 = stanzeDiCasa4();
   const nameField = element("label", "ed-slot dm-loads-field");
   nameField.append(element("span", "ed-slot-lbl", t("Nome del carico", "Load name")));
   const name = doc.createElement("input");
@@ -74899,22 +75110,6 @@ function loadCard(panel2, load, index, total) {
   });
   const addRow = element("div", "dm-loads-add-row");
   addRow.append(addChild);
-  if (!caricoDelPrimoImpianto(load)) {
-    children.append(addRow);
-    children.append(
-      element(
-        "div",
-        "ed-hint dm-loads-pick-foreign",
-        t(
-          "Gli elettrodomestici non hanno un campo impianto: si possono scegliere solo per i carichi dell'impianto principale.",
-          "Appliances carry no plant field: they can only be picked for the loads of the main plant."
-        )
-      )
-    );
-    body.append(children);
-    card2.append(body);
-    return card2;
-  }
   const pieno = load.children.length >= MAX_SUBLOADS;
   const scegli5 = element(
     "button",
@@ -74946,7 +75141,7 @@ function loadCard(panel2, load, index, total) {
         )
       )
     );
-    const liberi = elettrodomesticiLiberi();
+    const liberi = elettrodomesticiLiberi(load);
     if (!liberi.length)
       picker.append(
         element(
@@ -74972,7 +75167,7 @@ function loadCard(panel2, load, index, total) {
         choice.textContent = `🔌 ${clean(device.name)}`;
       }
       choice.addEventListener("click", () => {
-        void assegnaElettrodomestico(panel2, load, at).catch((error) => {
+        void assegnaElettrodomestico2(panel2, load, at).catch((error) => {
           console.error("[DashboardModern] unable to assign the appliance", error);
         });
       });
@@ -75025,6 +75220,7 @@ function renderEnergyLoadsEditor(panel2 = doc?.querySelector?.(PANEL)) {
         )
       );
     }
+    if (impianti2.length > 1 && plant) host2.append(riquadroDegliImpianti(panel2, plant, impianti2));
     if (!values.length)
       host2.append(
         element(
@@ -75089,6 +75285,186 @@ function renderEnergyLoadsEditor(panel2 = doc?.querySelector?.(PANEL)) {
 function render(panel2) {
   renderEnergyLoadsEditor(panel2);
 }
+function contestoDegliImpianti(impianti2) {
+  return { impianti: impianti2, carichi: carichiCanonici(), stanze: stanzeDiCasa4() };
+}
+function riquadroDegliImpianti(panel2, plant, impianti2) {
+  const box = element("div", "dm-imp-box");
+  box.dataset.dmImpiantiBox = "true";
+  const nome = (impianto) => plantLabel(impianto, impianti2.indexOf(impianto), t("Impianto", "Plant"));
+  const daFare = elettrodomesticiDaAssegnare(elettrodomestici2(), contestoDegliImpianti(impianti2));
+  const senza = daFare.filter((voce3) => !voce3.id);
+  const suggeriti = daFare.filter((voce3) => voce3.id);
+  if (daFare.length) {
+    const avviso2 = element("div", "dm-imp-avviso");
+    avviso2.append(
+      element(
+        "b",
+        "",
+        senza.length ? `⚠️ ${senza.length} ${senza.length === 1 ? t("elettrodomestico senza impianto", "appliance without a plant") : t("elettrodomestici senza impianto", "appliances without a plant")} · ${t("assegnali", "assign them")}` : `✨ ${suggeriti.length} ${t("da confermare", "to confirm")}`
+      ),
+      element(
+        "small",
+        "",
+        t(
+          "Gli elettrodomestici della casa diventano cerchi per stanza nel flusso. Ognuno va nel flusso del suo contatore: finché non lo dici, non compare in nessuno.",
+          "The house appliances become per-room circles in the flow. Each one goes in its meter's flow: until you say which, it shows up in none."
+        )
+      )
+    );
+    for (const voce3 of daFare) {
+      const riga3 = element("div", "dm-imp-riga");
+      const testo4 = element("div", "dm-imp-riga-testo");
+      testo4.append(element("b", "", clean(voce3.device.name)));
+      const perche4 = voce3.da === DA_CARICO ? t("suggerito: la stessa potenza è già un carico di", "suggested: the same power is already a load of") : voce3.da === DA_PIANO ? t("suggerito: il suo piano è coperto da", "suggested: its floor is covered by") : t("nessun impianto", "no plant");
+      const suggerito = impianti2.find((impianto) => clean(impianto.id) === voce3.id);
+      testo4.append(
+        element("small", "", suggerito ? `${perche4} ${nome(suggerito)}` : perche4)
+      );
+      riga3.append(testo4);
+      const scelte5 = element("div", "dm-imp-scelte");
+      for (const impianto of impianti2) {
+        const tasto2 = element("button", "dm-imp-scelta", nome(impianto));
+        tasto2.type = "button";
+        tasto2.dataset.dmImpAssegna = clean(impianto.id);
+        if (clean(impianto.id) === voce3.id) tasto2.dataset.on = "true";
+        tasto2.addEventListener("click", () => {
+          void assegnaEdAggiorna(panel2, [[voce3.index, clean(impianto.id)]]);
+        });
+        scelte5.append(tasto2);
+      }
+      riga3.append(scelte5);
+      avviso2.append(riga3);
+    }
+    if (suggeriti.length) {
+      const conferma = element(
+        "button",
+        "ed-btn-add dm-imp-conferma",
+        `✓ ${t("Conferma i suggeriti", "Confirm the suggestions")}`
+      );
+      conferma.type = "button";
+      conferma.dataset.dmImpConferma = "true";
+      conferma.addEventListener("click", () => {
+        void assegnaEdAggiorna(
+          panel2,
+          suggeriti.map((voce3) => [voce3.index, voce3.id])
+        );
+      });
+      avviso2.append(conferma);
+    }
+    box.append(avviso2);
+  }
+  const misura7 = element("div", "dm-imp-misura");
+  const quale = nome(plant);
+  misura7.append(
+    element(
+      "b",
+      "",
+      `🏠 ${t(`Cosa misura il contatore di ${quale}`, `What the ${quale} meter measures`)}`
+    ),
+    element(
+      "small",
+      "",
+      t(
+        "Le stanze dei piani scelti vanno a questo impianto da sole, con i loro elettrodomestici.",
+        "The rooms on the chosen floors go to this plant by themselves, with their appliances."
+      )
+    )
+  );
+  const piani = [...new Set(stanzeDiCasa4().map((stanza2) => clean(stanza2.floor)).filter(Boolean))];
+  const suoi2 = new Set(pianiDellImpianto(plant).map((voce3) => voce3.toLowerCase()));
+  if (piani.length) {
+    const fila2 = element("div", "dm-imp-piani");
+    for (const piano of piani) {
+      const quante3 = stanzeDiCasa4().filter((stanza2) => clean(stanza2.floor) === piano).length;
+      const tasto2 = element(
+        "button",
+        "dm-imp-piano",
+        `${suoi2.has(piano.toLowerCase()) ? "✓ " : ""}${piano} · ${quante3} ${quante3 === 1 ? t("stanza", "room") : t("stanze", "rooms")}`
+      );
+      tasto2.type = "button";
+      tasto2.dataset.dmImpPiano = piano;
+      if (suoi2.has(piano.toLowerCase())) tasto2.dataset.on = "true";
+      tasto2.addEventListener("click", () => {
+        const nuovi = suoi2.has(piano.toLowerCase()) ? pianiDellImpianto(plant).filter((voce3) => voce3.toLowerCase() !== piano.toLowerCase()) : [...pianiDellImpianto(plant), piano];
+        void scriviMetadatiImpianto(panel2, plant.id, { [PIANI_FIELD]: nuovi });
+      });
+      fila2.append(tasto2);
+    }
+    misura7.append(fila2);
+  } else {
+    misura7.append(
+      element(
+        "small",
+        "dm-imp-nessun-piano",
+        t(
+          "Le stanze non hanno un piano: lo scegli nella pagina Stanze del config.",
+          "The rooms have no floor: you can set one in the Rooms page of the config."
+        )
+      )
+    );
+  }
+  const interruttore3 = (campo5, acceso6, titolo3, sotto) => {
+    const riga3 = element("label", "dm-imp-interruttore");
+    const testo4 = element("span", "dm-imp-interruttore-testo");
+    testo4.append(element("b", "", titolo3), element("small", "", sotto));
+    const input = doc.createElement("input");
+    input.type = "checkbox";
+    input.checked = acceso6;
+    input.dataset.dmImpCampo = campo5;
+    input.addEventListener("change", () => {
+      void scriviMetadatiImpianto(panel2, plant.id, { [campo5]: input.checked });
+    });
+    riga3.append(testo4, input);
+    return riga3;
+  };
+  misura7.append(
+    interruttore3(
+      CERCHI_DALLE_STANZE_FIELD,
+      cerchiDalleStanzeAccesi(plant),
+      t("Cerchi automatici dalle stanze", "Automatic circles from rooms"),
+      t(
+        "Le stanze di questo impianto, coi loro elettrodomestici; il resto in «Altro».",
+        "This plant's rooms, with their appliances; the rest under «Other»."
+      )
+    )
+  );
+  if (piani.length)
+    misura7.append(
+      interruttore3(
+        PIANI_NEL_FLUSSO_FIELD,
+        pianiNelFlusso(plant),
+        t("Raggruppa per piano", "Group by floor"),
+        t(
+          "Un cerchio per piano; toccandolo si vedono le sue stanze.",
+          "One circle per floor; tap it to see its rooms."
+        )
+      )
+    );
+  box.append(misura7);
+  return box;
+}
+async function assegnaEdAggiorna(panel2, coppie) {
+  let lista7 = elettrodomestici2();
+  for (const [index, id] of coppie) lista7 = assegnaElettrodomestico(lista7, index, id);
+  await scriviElettrodomestici(lista7);
+  if (!state56.dirty) state56.model = null;
+  render(panel2);
+}
+async function scriviMetadatiImpianto(panel2, plantId, campi) {
+  const store = dashboardStore();
+  const salvato2 = store?.getSection?.("energy") || section("energy", {}) || {};
+  const lista7 = plantList(salvato2).map(
+    (impianto) => clean(impianto.id) === clean(plantId) ? { ...impianto, metadata: { ...impianto.metadata || {}, ...campi } } : impianto
+  );
+  if (!store?.replaceSection) return;
+  await store.replaceSection("energy", storedPlants(lista7, salvato2));
+  root.cdMarkDirty?.();
+  root.cdSyncPush?.();
+  root.dmRefreshEnergyFlows?.();
+  if (!state56.dirty) state56.model = null;
+  render(panel2);
+}
 function installStyles26() {
   installStyle(
     "dm-energy-loads-editor-style",
@@ -75100,6 +75476,24 @@ function installStyles26() {
        the size of the box it sits in, so preview and button stay as drawn. */
     .dm-loads-preview-bubble .dm-icon-engine-glyph,.dm-loads-icon-btn .dm-icon-engine-glyph{font-size:inherit!important}
     .dm-loads-list{display:grid;gap:10px}
+    .dm-imp-box{display:grid;gap:12px;margin:0 0 14px}
+    .dm-imp-avviso,.dm-imp-misura{display:grid;gap:8px;padding:12px 14px;border-radius:16px;border:1px solid var(--card-border,rgba(15,23,42,.12));background:var(--card-bg,#fff)}
+    .dm-imp-avviso{border-color:color-mix(in srgb,#f59e0b 45%,transparent);background:color-mix(in srgb,#f59e0b 8%,var(--card-bg,#fff))}
+    .dm-imp-avviso>b,.dm-imp-misura>b{font-size:13.5px;font-weight:900;color:var(--text,#0f172a)}
+    .dm-imp-avviso>small,.dm-imp-misura>small{font-size:11.5px;color:var(--text-dim,#64748b);font-weight:600;line-height:1.4}
+    .dm-imp-riga{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--divider-color,#e2e8f0)}
+    .dm-imp-riga-testo{display:grid;gap:2px;flex:1 1 180px;min-width:0}
+    .dm-imp-riga-testo b{font-size:13px;color:var(--text,#0f172a)}
+    .dm-imp-riga-testo small{font-size:11px;color:var(--text-dim,#64748b)}
+    .dm-imp-scelte,.dm-imp-piani{display:flex;gap:6px;flex-wrap:wrap}
+    .dm-imp-scelta,.dm-imp-piano{border:1px solid var(--card-border,rgba(15,23,42,.14));background:var(--card-bg,#fff);color:var(--text,#0f172a);border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+    .dm-imp-scelta[data-on="true"],.dm-imp-piano[data-on="true"]{background:var(--primary-color,#0ea5e9);border-color:var(--primary-color,#0ea5e9);color:#fff}
+    .dm-imp-conferma{justify-self:start}
+    .dm-imp-interruttore{display:flex;align-items:center;gap:12px;padding-top:8px;border-top:1px solid var(--divider-color,#e2e8f0);cursor:pointer}
+    .dm-imp-interruttore-testo{display:grid;gap:2px;flex:1;min-width:0}
+    .dm-imp-interruttore-testo b{font-size:13px;color:var(--text,#0f172a)}
+    .dm-imp-interruttore-testo small{font-size:11px;color:var(--text-dim,#64748b)}
+    .dm-imp-interruttore input{width:20px;height:20px;flex:none}
     .dm-loads-card>.ed-acc-head{display:flex;align-items:center;gap:10px;justify-content:space-between}
     .dm-loads-preview{display:flex;align-items:center;gap:10px;min-width:0}
     .dm-loads-preview-index{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--divider-color,#e2e8f0);color:var(--text-dim,#64748b);font-size:12px;font-weight:800}
@@ -75650,7 +76044,11 @@ function renderSubloadPopup(groupId = state57.group) {
   const load = loadForGroup(groupId);
   if (!load) return false;
   const { loads, appliances: appliances4 } = carichiDelFlusso();
-  const figli = subloadsOf(load, loads, Array.isArray(appliances4) ? appliances4 : []);
+  const tutti = subloadsOf(load, loads, Array.isArray(appliances4) ? appliances4 : []);
+  const stanzeDelPiano = load?.metadata?.cerchio_del_piano ? Array.isArray(load.metadata.stanze) ? load.metadata.stanze : [] : [];
+  const filtro = stanzeDelPiano.length ? clean(state57.filtri?.[clean(load.id)]) : "";
+  const figli = filtro ? tutti.filter((voce3) => stanzaDelFiglio(voce3, stanzeDelPiano) === filtro) : tutti;
+  disegnaIFiltri(list, load, stanzeDelPiano, filtro, tutti, groupId);
   const model2 = subloadPopupModel({
     load: stageIdentity(load, loads, appliances4),
     children: figli,
@@ -75676,11 +76074,67 @@ function renderSubloadPopup(groupId = state57.group) {
   riconcilia(list, model2);
   return true;
 }
+function stanzaDelFiglio(voce3, stanze4) {
+  const scritte = [voce3?.room_id, voce3?.roomId, voce3?.room].map(clean).filter(Boolean);
+  for (const scritta of scritte) {
+    const trovata2 = stanze4.find(
+      (stanza2) => clean(stanza2?.id) === scritta || clean(stanza2?.nome).toLowerCase() === scritta.toLowerCase()
+    );
+    if (trovata2) return clean(trovata2.id);
+  }
+  return "";
+}
+function disegnaIFiltri(list, load, stanze4, filtro, tutti, groupId) {
+  const id = "dm-subload-filtri";
+  let fila2 = doc.getElementById(id);
+  if (!stanze4.length) {
+    fila2?.remove();
+    return;
+  }
+  if (!fila2) {
+    fila2 = element2("div", "dm-subload-filtri");
+    fila2.id = id;
+    fila2.setAttribute("role", "group");
+    fila2.addEventListener("click", (evento) => {
+      const pillola2 = evento.target?.closest?.("[data-dm-subload-filtro]");
+      if (!pillola2) return;
+      state57.filtri ||= {};
+      state57.filtri[clean(fila2.dataset.carico)] = clean(pillola2.dataset.dmSubloadFiltro);
+      renderSubloadPopup(fila2.dataset.gruppo);
+    });
+  }
+  fila2.dataset.carico = clean(load.id);
+  fila2.dataset.gruppo = clean(groupId);
+  if (fila2.nextElementSibling !== list) list.before(fila2);
+  const voci4 = [
+    { id: "", nome: t("Tutte", "All"), quanti: tutti.length },
+    ...stanze4.map((stanza2) => ({
+      id: clean(stanza2.id),
+      nome: clean(stanza2.nome),
+      quanti: tutti.filter((voce3) => stanzaDelFiglio(voce3, stanze4) === clean(stanza2.id)).length
+    }))
+  ];
+  const firma2 = `${filtro}§${voci4.map((voce3) => `${voce3.id}:${voce3.quanti}`).join(",")}`;
+  if (fila2.dataset.firma === firma2) return;
+  fila2.dataset.firma = firma2;
+  fila2.replaceChildren(
+    ...voci4.map((voce3) => {
+      const pillola2 = element2("button", "dm-subload-filtro", `${voce3.nome} · ${voce3.quanti}`);
+      pillola2.type = "button";
+      pillola2.dataset.dmSubloadFiltro = voce3.id;
+      pillola2.setAttribute("aria-pressed", String(voce3.id === filtro));
+      return pillola2;
+    })
+  );
+}
 function installStyles27() {
   installStyle(
     "dm-subload-popup-style",
     `
     #subloads-list[data-dm-subload-owner="beta30"]{display:block!important}
+    .dm-subload-filtri{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px}
+    .dm-subload-filtro{border:1px solid var(--card-border,rgba(15,23,42,.12));background:var(--card-bg,#fff);color:var(--text,#0f172a);border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+    .dm-subload-filtro[aria-pressed="true"]{background:var(--primary-color,#0ea5e9);border-color:var(--primary-color,#0ea5e9);color:#fff}
     /* Il foglio su un livello suo non e' piu' qui: il motivo non era mai stato
      * dei carichi. Ogni finestra che si apra su una pagina viva sta nella
      * stessa condizione — il velo sfocato rilegge lo sfondo, e il contenuto del
@@ -79344,6 +79798,24 @@ function roomOptions(selected) {
     })
   ].join("");
 }
+function impiantoMarkup(device = {}) {
+  const impianti2 = plantList(section("energy", {}) || {});
+  if (impianti2.length < 2) return "";
+  const scritto3 = clean(device?.[LOAD_PLANT_FIELD]);
+  const voci4 = [
+    `<option value=""${scritto3 ? "" : " selected"}>${esc(t("Da decidere", "To decide"))}</option>`,
+    ...impianti2.map((impianto, indice) => {
+      const id = clean(impianto.id);
+      return `<option value="${esc(id)}"${id === scritto3 ? " selected" : ""}>${esc(
+        plantLabel(impianto, indice, t("Impianto", "Plant"))
+      )}</option>`;
+    })
+  ].join("");
+  return `<label class="ed-slot"><span class="ed-slot-lbl">${t("Impianto", "Plant")}</span><select class="ed-input" name="plant" data-dm-appliance-plant>${voci4}</select><small>${t(
+    "Il contatore che lo misura: compare nel flusso di quell'impianto.",
+    "The meter that measures it: it shows up in that plant's flow."
+  )}</small></label>`;
+}
 function flowLoadOptions(selected) {
   const loads = section("loads", readJson("cd_loads", []));
   const circles = (Array.isArray(loads) ? loads : []).filter(
@@ -80388,6 +80860,7 @@ function openApplianceEditor(index) {
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(device.name)}" required></label>
         <label class="ed-slot dm-appliance-icon-field"><span class="ed-slot-lbl">${t("Tipo / immagine", "Type / artwork")}</span><input type="hidden" name="icon" value="${esc(visual)}"><span class="dm-appliance-icon-row"><span class="dm-appliance-icon-preview" data-icon-preview data-dm-preview-source="canonical-picker" aria-hidden="false"></span><button type="button" class="ed-input dm-appliance-type-trigger" data-type-trigger aria-haspopup="listbox"></button></span><small>${t("Usa lo stesso catalogo e la stessa icona azzurra della prima configurazione.", "Uses the same catalog and blue icon as the first configuration.")}</small></label>
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><select class="ed-input" name="room_id">${roomOptions(device.room_id || device.room)}</select></label>
+        ${impiantoMarkup(device)}
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Carico energia", "Energy load")}</span><select class="ed-input" name="flow_group" data-dm-appliance-flow-group>${flowLoadOptions(device.metadata?.beta27_subload_group)}</select><small class="dm-appliance-flow-suggestion" data-dm-flow-suggestion${flowGroupSuggested(device) ? "" : " hidden"}>✨ ${t("Suggerito: ha una potenza mappata", "Suggested: it has a mapped power sensor")}</small><small>${t("Il cerchio del flusso in cui rientra. Il suo valore diventa la somma dei dispositivi assegnati, e il popup del cerchio lo elenca: non serve riconfigurarlo nei Carichi.", "The flow circle it belongs to. That circle becomes the total of the appliances assigned to it and its popup lists them, with nothing to configure again under Loads.")}</small></label>
         ${soglieMarkup(device)}
       </div>
@@ -80482,6 +80955,9 @@ function openApplianceEditor(index) {
       device_type: visualKey,
       visual_type: "asset",
       room_id: clean(values.room_id),
+      /* L'impianto si scrive solo se la casella c'e' (piu' impianti): con uno
+       * solo resta com'era, e non compare un campo che nessuno ha chiesto. */
+      ..."plant" in values ? { [LOAD_PLANT_FIELD]: clean(values.plant) } : {},
       metadata: { ...device.metadata || {}, beta27_subload_group: clean(values.flow_group) },
       /* Vuota resta vuota: vuol dire «i valori consigliati per il suo tipo»
        * (o i 5 W di sempre), e non uno zero che accende la card a ogni
@@ -103079,9 +103555,9 @@ var scheda = costruisciSchedaDichiarata({
         );
         return;
       }
-      const sogliaDiCasa3 = evento.target?.closest?.("[data-dm-batt-soglia]");
-      if (sogliaDiCasa3) {
-        salvaSoglia(sogliaDiCasa3.value);
+      const sogliaDiCasa2 = evento.target?.closest?.("[data-dm-batt-soglia]");
+      if (sogliaDiCasa2) {
+        salvaSoglia(sogliaDiCasa2.value);
         ridisegna29();
       }
     });
@@ -110778,13 +111254,34 @@ function installStyles55() {
 // src/sections/la-soglia-della-potenza-section.js
 var formatWatts3 = (valore3) => formatWatts2(valore3, intlLocale());
 var KEY128 = "__DASHBOARDMODERN_SOGLIA_POTENZA__";
-var state124 = root[KEY128] ||= { installed: false, frame: 0 };
-function sogliaDiCasa2() {
-  return sogliaDellaPotenza(readJson(SOGLIA_POTENZA_KEY, {}));
-}
-function salva19(soglia2) {
+var state124 = root[KEY128] ||= { installed: false, frame: 0, impianto: "" };
+function impiantiDellaScheda() {
   try {
-    root.localStorage?.setItem?.(SOGLIA_POTENZA_KEY, JSON.stringify(soglia2));
+    return lettureDegliImpianti();
+  } catch (_errore) {
+    return [];
+  }
+}
+function impiantoInScheda(impianti2 = impiantiDellaScheda()) {
+  return impianti2.find((voce3) => voce3.id === state124.impianto) || impianti2[0] || {
+    id: "",
+    index: 0,
+    nome: "",
+    letture: {}
+  };
+}
+function sogliaInScheda(impianto = impiantoInScheda()) {
+  return sogliaDellImpianto(readJson(SOGLIA_POTENZA_KEY, {}), impianto.id, impianto.index);
+}
+function salva19(soglia2, impianto = impiantoInScheda()) {
+  const tutto = conLaSogliaDellImpianto(
+    readJson(SOGLIA_POTENZA_KEY, {}),
+    impianto.id,
+    impianto.index,
+    soglia2
+  );
+  try {
+    root.localStorage?.setItem?.(SOGLIA_POTENZA_KEY, JSON.stringify(tutto));
   } catch (_errore) {
   }
   root.cdMarkDirty?.();
@@ -110807,9 +111304,8 @@ function spiegaLaSorgente(sorgente) {
     "How much the appliances are drawing, wherever the power comes from. This is the threshold for those with solar who want to know what the house is pulling."
   );
 }
-function rigaDiAdesso(sorgente) {
-  const letture2 = lettureDiCasa();
-  const verdetto = livelloDellaPotenza({ sorgente }, letture2);
+function rigaDiAdesso(sorgente, impianto = impiantoInScheda()) {
+  const verdetto = livelloDellaPotenza({ sorgente }, impianto.letture || {});
   if (verdetto.watt === null)
     return t(
       "Adesso non c'è una lettura per questo carico.",
@@ -110817,7 +111313,17 @@ function rigaDiAdesso(sorgente) {
     );
   return `${t("Adesso", "Right now")}: ${formatWatts3(verdetto.watt)}`;
 }
-function schedaMarkup8(soglia2) {
+function linguetteMarkup(impianti2, scelto) {
+  if (impianti2.length < 2) return "";
+  return `<div class="dm-soglia-impianti" role="tablist">${impianti2.map(
+    (voce3) => `<button type="button" role="tab" class="dm-soglia-impianto" data-dm-soglia-impianto="${esc(
+      voce3.id
+    )}" aria-selected="${voce3.id === scelto.id}"${voce3.id === scelto.id ? ' data-on="true"' : ""}>🏠 ${esc(
+      voce3.nome
+    )}</button>`
+  ).join("")}</div>`;
+}
+function schedaMarkup8(soglia2, impianti2 = [], scelto = impiantoInScheda(impianti2)) {
   const voce3 = (valore3, etichetta3) => `<button type="button" class="dm-soglia-scelta" data-dm-soglia-sorgente="${esc(valore3)}"
       aria-pressed="${soglia2.sorgente === valore3}"${soglia2.sorgente === valore3 ? ' data-on="true"' : ""}>${esc(etichetta3)}</button>`;
   const campo5 = (nome, etichetta3, valore3, esempio3) => `<label class="dm-soglia-campo">
@@ -110827,13 +111333,19 @@ function schedaMarkup8(soglia2) {
         placeholder="${esc(esempio3)}">
     </label>`;
   return `
-    <div class="ed-sec-title">⚠️ ${esc(t("Soglia di potenza", "Power threshold"))}</div>
+    <div class="ed-sec-title">⚠️ ${esc(
+    impianti2.length > 1 ? t("Soglia di potenza · una per contatore", "Power threshold · one per meter") : t("Soglia di potenza", "Power threshold")
+  )}</div>
     <div class="ed-hint">${esc(
-    t(
+    impianti2.length > 1 ? t(
+      "Ogni impianto ha il suo contatore e il suo limite: sopra la soglia l'avviso dice quale impianto. Quella che c'era prima ora è del primo impianto.",
+      "Each plant has its own meter and its own limit: above the threshold the alert says which plant. The one you had before now belongs to the first plant."
+    ) : t(
       "Sopra la soglia in Home compare l'avviso di sovraccarico e la tessera Energia cambia colore: ambra per tenerla d'occhio, rossa quando sta per saltare. Lascia vuoto un campo per non usarlo.",
       "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it."
     )
   )}</div>
+    ${linguetteMarkup(impianti2, scelto)}
     <div class="dm-soglia-scelte" role="group" aria-label="${esc(t("Carico da sorvegliare", "Load to watch"))}">
       ${voce3(SORGENTE_CASA, nomeDellaSorgente(SORGENTE_CASA))}
       ${voce3(SORGENTE_RETE, nomeDellaSorgente(SORGENTE_RETE))}
@@ -110843,7 +111355,7 @@ function schedaMarkup8(soglia2) {
       ${campo5("ambra", t("Ambra da", "Amber from"), soglia2.ambra, "3000")}
       ${campo5("rossa", t("Rossa da", "Red from"), soglia2.rossa, "3300")}
     </div>
-    <small class="dm-soglia-ora" data-dm-soglia-ora>${esc(rigaDiAdesso(soglia2.sorgente))}</small>
+    <small class="dm-soglia-ora" data-dm-soglia-ora>${esc(rigaDiAdesso(soglia2.sorgente, scelto))}</small>
     <button type="button" class="ed-save-btn" data-dm-soglia-salva>💾 ${esc(
     t("Salva soglia", "Save threshold")
   )}</button>`;
@@ -110861,29 +111373,30 @@ function ensureScheda() {
     scheda8.className = "ed-form dm-soglia-card";
     impostazioni.append(scheda8);
   }
-  const soglia2 = sogliaDiCasa2();
-  const firma2 = `${soglia2.sorgente}§${soglia2.ambra ?? ""}§${soglia2.rossa ?? ""}`;
+  const impianti2 = impiantiDellaScheda();
+  const scelto = impiantoInScheda(impianti2);
+  const soglia2 = sogliaInScheda(scelto);
+  const firma2 = `${impianti2.map((voce3) => `${voce3.id}:${voce3.nome}`).join(",")}§${scelto.id}§${soglia2.sorgente}§${soglia2.ambra ?? ""}§${soglia2.rossa ?? ""}`;
   if (scheda8.dataset.firma === firma2) {
     if (impostazioni.hidden) return;
     const ora5 = scheda8.querySelector("[data-dm-soglia-ora]");
-    const testo4 = rigaDiAdesso(soglia2.sorgente);
+    const testo4 = rigaDiAdesso(soglia2.sorgente, scelto);
     if (ora5 && ora5.textContent !== testo4) ora5.textContent = testo4;
     return;
   }
   scheda8.dataset.firma = firma2;
-  scheda8.innerHTML = schedaMarkup8(soglia2);
+  scheda8.innerHTML = schedaMarkup8(soglia2, impianti2, scelto);
 }
 function ensureStriscia() {
   const vista2 = doc?.getElementById?.("view-ist");
   if (!vista2) return;
-  const soglia2 = sogliaDiCasa2();
   const disegnata = vista2.querySelector("#dm-soglia-striscia");
-  if (!sogliaScritta(soglia2)) {
+  if (!qualcheSogliaScritta(readJson(SOGLIA_POTENZA_KEY, {}))) {
     disegnata?.remove();
     return;
   }
   if (!paginaVisibile("page-energy")) return;
-  const verdetto = livelloDellaPotenza(soglia2, lettureDiCasa());
+  const { peggiore: verdetto, quanti: quanti2 } = verdettiDellaSoglia();
   let striscia = disegnata;
   if (verdetto.livello === LIVELLO_QUIETE) {
     striscia?.remove();
@@ -110897,7 +111410,8 @@ function ensureStriscia() {
   }
   const livello = verdetto.livello === LIVELLO_AMBRA ? "ambra" : "rossa";
   if (striscia.dataset.livello !== livello) striscia.dataset.livello = livello;
-  const testo4 = `⚠️ ${t("Sovraccarico", "Overload")} · ${nomeDellaSorgente(verdetto.sorgente)} ${formatWatts3(
+  const quale = quanti2 > 1 && verdetto.nome ? `${verdetto.nome} · ` : `${t("Sovraccarico", "Overload")} · `;
+  const testo4 = `⚠️ ${quale}${nomeDellaSorgente(verdetto.sorgente)} ${formatWatts3(
     verdetto.watt
   )} ${t("oltre", "over")} ${formatWatts3(verdetto.limite)}`;
   if (striscia.textContent !== testo4) striscia.textContent = testo4;
@@ -110917,12 +111431,11 @@ function ensureAllertaInHome() {
     gia?.remove();
     return;
   }
-  const soglia2 = sogliaDiCasa2();
-  if (!sogliaScritta(soglia2)) {
+  if (!qualcheSogliaScritta(readJson(SOGLIA_POTENZA_KEY, {}))) {
     gia?.remove();
     return;
   }
-  const verdetto = livelloDellaPotenza(soglia2, lettureDiCasa());
+  const { peggiore: verdetto, quanti: quanti2 } = verdettiDellaSoglia();
   if (verdetto.livello === LIVELLO_QUIETE) {
     gia?.remove();
     return;
@@ -110940,7 +111453,7 @@ function ensureAllertaInHome() {
       }
     });
   }
-  const dove = nomeDellaSorgente(verdetto.sorgente);
+  const dove = quanti2 > 1 && verdetto.nome ? `${verdetto.nome} · ${nomeDellaSorgente(verdetto.sorgente)}` : nomeDellaSorgente(verdetto.sorgente);
   const misura7 = `${formatWatts3(verdetto.watt)} / ${formatWatts3(verdetto.limite)}`;
   const firma2 = `${verdetto.sorgente}|${dove}|${misura7}`;
   if (allerta.dataset.firma !== firma2) {
@@ -110999,10 +111512,16 @@ function installLaSogliaDellaPotenza() {
   state124.installed = true;
   installStyles56();
   doc.addEventListener("click", (event) => {
+    const linguetta3 = event.target?.closest?.("[data-dm-soglia-impianto]");
+    if (linguetta3) {
+      state124.impianto = clean(linguetta3.getAttribute("data-dm-soglia-impianto"));
+      schedule30();
+      return;
+    }
     const scelta3 = event.target?.closest?.("[data-dm-soglia-sorgente]");
     if (scelta3) {
       const scheda9 = scelta3.closest("#dm-energia-soglia");
-      const numeri = scheda9 ? numeriDellaScheda(scheda9) : sogliaDiCasa2();
+      const numeri = scheda9 ? numeriDellaScheda(scheda9) : sogliaInScheda();
       salva19({ ...numeri, sorgente: clean(scelta3.getAttribute("data-dm-soglia-sorgente")) });
       return;
     }
@@ -111010,7 +111529,7 @@ function installLaSogliaDellaPotenza() {
     if (!salvataggio) return;
     const scheda8 = salvataggio.closest("#dm-energia-soglia");
     if (!scheda8) return;
-    salva19({ ...numeriDellaScheda(scheda8), sorgente: sogliaDiCasa2().sorgente });
+    salva19({ ...numeriDellaScheda(scheda8), sorgente: sogliaInScheda().sorgente });
   });
   onEditorRedraw("__dmSogliaPotenzaSection", schedule30);
   for (const evento of [
@@ -111031,6 +111550,12 @@ function installStyles56() {
     "dm-soglia-potenza-style",
     `
       .dm-soglia-card{display:grid;gap:9px}
+      .dm-soglia-impianti{display:flex;gap:8px;flex-wrap:wrap}
+      .dm-soglia-impianto{
+        padding:7px 13px;border-radius:999px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;
+        border:1px solid var(--card-border,#e2e8f0);background:var(--card-background-color,#fff);color:inherit}
+      .dm-soglia-impianto[data-on="true"]{
+        border-color:#16a34a;color:#15803d;background:color-mix(in srgb,#16a34a 10%,var(--card-background-color,#fff))}
       .dm-soglia-scelte{display:flex;gap:8px;flex-wrap:wrap}
       .dm-soglia-scelta{
         flex:1 1 150px;padding:9px 13px;border-radius:14px;font:inherit;font-size:12.5px;
@@ -116733,7 +117258,7 @@ function salvaEvidenze(voci4) {
   } catch (_error) {
   }
 }
-function stanzeDiCasa4() {
+function stanzeDiCasa5() {
   try {
     const rooms2 = root.getStanze?.() || readJson("cd_stanze", []);
     return (Array.isArray(rooms2) ? rooms2 : []).map((room) => ({ id: clean(room?.id), name: clean(room?.name) || clean(room?.id) })).filter((room) => room.id);
@@ -116762,7 +117287,7 @@ function evidenzeDalDocumento(body, voci4) {
 function rigaEvidenzaMarkup(voce3, index) {
   const aperto2 = state138.evidAperto === index;
   const nome = clean(voce3?.name) || clean(voce3?.entity) || `${t("Entità", "Entity")} ${index + 1}`;
-  const stanze4 = stanzeDiCasa4();
+  const stanze4 = stanzeDiCasa5();
   const scelta3 = clean(voce3?.room_id);
   return `<article class="ed-row dm-todo-ed-row dm-evid-row" data-evid-index="${index}" data-open="${aperto2}">
     <div class="dm-todo-ed-head">
@@ -122928,7 +123453,7 @@ function linguettaAttiva(scelti) {
   const scelta3 = clean(state147.linguetta);
   return scelti.includes(scelta3) ? scelta3 : scelti[0];
 }
-function linguetteMarkup(scelti, attiva2) {
+function linguetteMarkup2(scelti, attiva2) {
   if (!servonoLinguette(scelti)) return "";
   return `<div class="dm-it-ed-strip" role="tablist">${scelti.map(
     (tipo) => `<button type="button" class="dm-it-ed-tab" data-dm-it-ed-tab="${esc(tipo)}"
@@ -122952,7 +123477,7 @@ function pannelloMarkup3(attiva2) {
 function corpoMarkup10() {
   const scelti = impiantiDiCasa();
   const attiva2 = linguettaAttiva(scelti);
-  return `<div class="dm-it-ed">${sceltaMarkup()}${linguetteMarkup(scelti, attiva2)}${pannelloMarkup3(attiva2)}</div>`;
+  return `<div class="dm-it-ed">${sceltaMarkup()}${linguetteMarkup2(scelti, attiva2)}${pannelloMarkup3(attiva2)}</div>`;
 }
 function caselleDelSolare(body) {
   return [...body.querySelectorAll(":scope details.ed-acc")].find(
