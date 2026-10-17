@@ -215,9 +215,14 @@ export class Centralino {
     /* Le notifiche delle case verso i loro telefoni (`spinte.js`). Senza, le
      * buste che le case mandano si lasciano cadere. */
     spinte = null,
+    /* Le istantanee delle notifiche elaborate, cifrate per il telefono
+     * (`foto.js`). Senza, la casa si sente dire «spente» e manda la notifica
+     * senza foto. */
+    foto = null,
   } = {}) {
     this.case = case_;
     this.spinte = spinte;
+    this.foto = foto;
     this.chiaveLicenze = String(chiaveLicenze || "");
     this.revoche = revoche;
     this.vitaDelCanaleDiAbbinamento = vitaDelCanaleDiAbbinamento;
@@ -750,6 +755,12 @@ class CasaCollegata {
       case "spinta":
         void this._unaSpinta(detto);
         return;
+      /* La foto di una notifica elaborata (`foto.js`): un blocco cifrato per
+       * un telefono, che qui si tiene dieci minuti. Si risponde con il suo
+       * identificativo, che la casa mette nella notifica. */
+      case "foto":
+        this._unaFoto(detto);
+        return;
       default:
         /* Il contratto chiama il campo `tipo`: una casa scritta leggendo solo
          * quello manda `tipo` e basta, e va capita lo stesso. */
@@ -941,6 +952,24 @@ class CasaCollegata {
     if (esito === "morta" && !this.chiusa) {
       this._manda(JSON.stringify({ t: "spinta-morta", telefono: detto.telefono }));
     }
+  }
+
+  /* Una foto per un telefono di questa casa: `foto-ok` col suo
+   * identificativo, o `foto-no` col perche'. `n` e' il numero della casa,
+   * rimandato com'e', per accoppiare la risposta alla domanda. */
+  _unaFoto(detto) {
+    const n = Number.isSafeInteger(detto.n) ? detto.n : null;
+    const foto = this.centralino.foto;
+    const esito =
+      foto && this.id
+        ? foto.lascia(this.id, { telefono: detto.telefono, dati: detto.dati })
+        : { perche: "spente" };
+    if (this.chiusa) return;
+    this._manda(
+      JSON.stringify(
+        esito.id ? { t: "foto-ok", n, id: esito.id } : { t: "foto-no", n, perche: esito.perche },
+      ),
+    );
   }
 
   /* ─── Le ricevute ────────────────────────────────────────────────────── */

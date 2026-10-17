@@ -65,6 +65,12 @@ void main() {
       ),
     );
     await _lasciaFare(tester);
+    /* Sopra c'e' «Come le vuoi»: la voce sta piu' giu'. */
+    await tester.scrollUntilVisible(
+      find.text('Antifurto scattato'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Antifurto scattato'), findsOneWidget);
     expect(
       ponte.chieste.map((una) => una['type']),
@@ -137,6 +143,101 @@ void main() {
       await collegamento.chiudi();
       await ponte.spegni();
     });
+  });
+
+  testWidgets('«Elaborate» e il foglio di una voce vanno alla casa', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 2600);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      ponte = await PonteFinto.alza();
+      collegamento = await _casaCollegata(ponte);
+    });
+    final cassaforte = CassaforteInMemoria();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SchermataDelleNotifiche(
+          collegamento: collegamento,
+          cassaforte: cassaforte,
+        ),
+      ),
+    );
+    await _lasciaFare(tester);
+    expect(find.text('Come le vuoi'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('stile-elaborate')));
+    await _lasciaFare(tester);
+    var imposta = ponte.chieste.lastWhere(
+      (una) => una['type'] == 'ponte/notifiche/imposta',
+    );
+    expect((imposta['impostazioni'] as Map)['stile'], 'elaborate');
+
+    // La voce dell'elettrodomestico: il foglio, e «Semplice» solo per lei.
+    await tester.scrollUntilVisible(
+      find.text('Elettrodomestico finito'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text('Elettrodomestico finito'),
+          matching: find.byType(InkWell),
+        ),
+        matching: find.text('ELABORATA'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Elettrodomestico finito'));
+    await tester.pumpAndSettle();
+    expect(find.byType(FoglioDellaVoce), findsOneWidget);
+    expect(
+      find.text('Prova: mandamela adesso'),
+      findsNothing,
+      reason: 'il telefono non ha ancora detto alla casa dove mandarle',
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('voce-stile')),
+        matching: find.text('Semplice'),
+      ),
+    );
+    await _lasciaFare(tester);
+    imposta = ponte.chieste.lastWhere(
+      (una) => una['type'] == 'ponte/notifiche/imposta',
+    );
+    final su = (imposta['impostazioni'] as Map)['su'] as Map;
+    expect((su['elettrodomestici'] as Map)['stile'], 'semplice');
+    final copia = await tester.runAsync(
+      () => CopiaDelleNotifiche(cassaforte).leggi(collegamento.casa!.id),
+    );
+    expect(copia!.impostazioni.elaborata('elettrodomestici'), isFalse);
+    expect(copia.impostazioni.elaborata('antifurto'), isTrue);
+
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
+  test('la prova di una voce dice alla casa quale', () async {
+    final ponte = await PonteFinto.alza();
+    final collegamento = await _casaCollegata(ponte);
+    try {
+      try {
+        await Notifiche(collegamento.filo!).prova(evento: 'blackout');
+      } catch (_) {
+        /* Il ponte finto non la manda: conta la domanda. */
+      }
+      expect(ponte.chieste.last, containsPair('type', 'ponte/notifiche/prova'));
+      expect(ponte.chieste.last, containsPair('evento', 'blackout'));
+    } finally {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    }
   });
 
   test('un tasto di una notifica va alla casa, col suo numero', () async {

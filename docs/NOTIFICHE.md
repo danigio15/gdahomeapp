@@ -91,6 +91,29 @@ che il workflow aggiunge con la variabile `GDAHOME_NOTIFICHE_URGENTI = si`.
 Le «critiche» (che suonano col telefono muto) vogliono un permesso che concede
 Apple su richiesta: non ci sono.
 
+## Semplici o elaborate
+
+Nella pagina Notifiche dell'app, «Come le vuoi»: **Semplici** (solo testo, di
+serie) o **Elaborate**. Ogni voce si apre e si sceglie anche da sola — stile,
+quali dispositivi, una soglia, il suono, gli orari, subito o nel riepilogo
+della sera — e tutto va sul ponte come le altre impostazioni (`stile`, `su`).
+
+Le elaborate portano nella busta una **scheda**: i numeri, non il disegno (il
+ciclo di un elettrodomestico, la giornata del sole, l'UPS, l'antifurto). Il
+disegno lo fa il telefono: su Android l'app (`lib/notifiche/scheda.dart`,
+anche ad app chiusa, nel servizio che Android sveglia), sull'iPhone
+l'estensione (`NotificheService/LaScheda.swift`). Se il disegno non riesce, la
+notifica arriva semplice.
+
+Il movimento e l'antifurto possono portare la **foto della telecamera**. In
+una spinta non ci sta: la casa la chiude con la stessa chiave delle notifiche
+di quel telefono (dati autenticati `gdahome/foto/v1|telefono`) e la lascia al
+centralino sul suo filo (`{t: "foto"}` → `{t: "foto-ok", id}`). Il centralino
+la tiene in memoria **dieci minuti** e la dà **una volta sola** a
+`GET /foto/<id>` (`centralino/src/foto.js`); non la può aprire. L'app su
+Android e l'estensione sull'iPhone la prendono, la aprono e la mettono nella
+notifica. Con le semplici la casa non manda nessuna foto.
+
 ## Cosa va fatto a mano
 
 1. **Firebase**: nel progetto, l'app Android `com.gdahome.gdahome` e l'app iOS

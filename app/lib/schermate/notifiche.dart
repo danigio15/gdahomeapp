@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 
 import '../casa/cassaforte.dart';
 import '../casa/collegamento.dart';
+import '../casa/entita.dart';
 import '../notifiche/modello.dart';
 import '../notifiche/notifiche.dart';
 import '../notifiche/postino.dart';
@@ -29,143 +30,158 @@ import '../vestito/pezzi.dart';
 import '../vestito/tema.dart';
 import 'notifica_personalizzata.dart';
 
+part 'notifiche_su_misura.dart';
+
 /// Il disegno, il nome e la riga sotto di ogni evento.
-({String disegno, String titolo, String sotto}) comeSiChiama(
-  String evento,
-) => switch (evento) {
-  'antifurto' => (
-    disegno: 'sicurezza',
-    titolo: inLingua(it: 'Antifurto scattato', en: 'Alarm triggered'),
-    sotto: inLingua(
-      it: 'Subito, con la zona che è scattata',
-      en: 'Right away, with the zone that tripped',
-    ),
-  ),
-  'allarmi' => (
-    disegno: 'allagamenti',
-    titolo: inLingua(it: 'Allagamento, fumo, gas', en: 'Leak, smoke, gas'),
-    sotto: inLingua(
-      it: 'Dal primo sensore che se ne accorge',
-      en: 'From the first sensor that notices',
-    ),
-  ),
-  'campanello' => (
-    disegno: 'avvisi',
-    titolo: inLingua(it: 'Campanello', en: 'Doorbell'),
-    sotto: inLingua(
-      it: 'Con la foto della porta e «Apri cancello»',
-      en: 'With the door photo and «Open gate»',
-    ),
-  ),
-  'inserimenti' => (
-    disegno: 'sicurezza',
-    titolo: inLingua(
-      it: 'Antifurto inserito o disinserito',
-      en: 'Alarm armed or disarmed',
-    ),
-    sotto: inLingua(
-      it: 'Totale, notte, parziale, vacanza, disinserito',
-      en: 'Away, night, home, vacation, disarmed',
-    ),
-  ),
-  'uscito' => (
-    disegno: 'aperture',
-    titolo: inLingua(
-      it: 'Uscito senza antifurto',
-      en: 'Left without the alarm',
-    ),
-    sotto: inLingua(
-      it: 'L\'ultimo esce e l\'antifurto è spento',
-      en: 'The last one leaves and the alarm is off',
-    ),
-  ),
-  'aperture' => (
-    disegno: 'varchi',
-    titolo: inLingua(it: 'Porta o garage aperti', en: 'Door or garage open'),
-    sotto: inLingua(
-      it: 'Di notte, o quando la casa è vuota',
-      en: 'At night, or when nobody\'s home',
-    ),
-  ),
-  'movimento' => (
-    disegno: 'presenza',
-    titolo: inLingua(it: 'Movimento con casa vuota', en: 'Motion while away'),
-    sotto: inLingua(
-      it: 'Nessuno in casa, ma qualcosa si muove',
-      en: 'Nobody\'s home, but something moves',
-    ),
-  ),
-  'elettrodomestici' => (
-    disegno: 'elettrodomestici',
-    titolo: inLingua(it: 'Elettrodomestico finito', en: 'Appliance done'),
-    sotto: inLingua(
-      it: 'Lavatrice, lavastoviglie, asciugatrice',
-      en: 'Washer, dishwasher, dryer',
-    ),
-  ),
-  'frigo' => (
-    disegno: 'temperatura',
-    titolo: inLingua(it: 'Freezer e frigo', en: 'Freezer and fridge'),
-    sotto: inLingua(
-      it: 'Troppo caldi, o porta rimasta aperta',
-      en: 'Too warm, or the door left open',
-    ),
-  ),
-  'pioggia' => (
-    disegno: 'irrigazione',
-    titolo: inLingua(
-      it: 'Pioggia con finestre aperte',
-      en: 'Rain with windows open',
-    ),
-    sotto: inLingua(
-      it: 'Mezz\'ora prima, se c\'è una finestra aperta',
-      en: 'Half an hour before, if a window is open',
-    ),
-  ),
-  'arrivi' => (
-    disegno: 'presenza',
-    titolo: inLingua(it: 'Arrivi e uscite', en: 'Arrivals and departures'),
-    sotto: inLingua(
-      it: 'Solo per le persone che scegli',
-      en: 'Only for the people you pick',
-    ),
-  ),
-  'suggerimenti' => (
-    disegno: 'azioni',
-    titolo: inLingua(it: 'Suggerimenti', en: 'Suggestions'),
-    sotto: inLingua(
-      it:
-          'Luci o clima accesi con la casa vuota, con il tasto per '
-          'sistemare',
-      en: 'Lights or climate on with nobody home, with a button to fix it',
-    ),
-  ),
-  'riepilogo' => (
-    disegno: 'aggiornamenti',
-    titolo: inLingua(it: 'Riepilogo serale', en: 'Evening summary'),
-    sotto: inLingua(
-      it:
-          'Una notifica sola: batterie scariche, dispositivi non '
-          'connessi, aggiornamenti',
-      en:
-          'A single notification: low batteries, offline devices, '
-          'updates',
-    ),
-  ),
-  'viaggi' => (
-    disegno: 'ev',
-    titolo: inLingua(it: 'Quando partire', en: 'When to leave'),
-    sotto: inLingua(
-      it:
-          'I viaggi pianificati in gdanav, col traffico: arriva anche '
-          'nelle ore di silenzio',
-      en:
-          'Trips planned in gdanav, with traffic: it comes even during '
-          'quiet hours',
-    ),
-  ),
-  _ => (disegno: 'avvisi', titolo: evento, sotto: ''),
-};
+({String disegno, String titolo, String sotto}) comeSiChiama(String evento) =>
+    switch (evento) {
+      'antifurto' => (
+        disegno: 'sicurezza',
+        titolo: inLingua(it: 'Antifurto scattato', en: 'Alarm triggered'),
+        sotto: inLingua(
+          it: 'Subito, con la zona che è scattata',
+          en: 'Right away, with the zone that tripped',
+        ),
+      ),
+      'allarmi' => (
+        disegno: 'allagamenti',
+        titolo: inLingua(it: 'Allagamento, fumo, gas', en: 'Leak, smoke, gas'),
+        sotto: inLingua(
+          it: 'Dal primo sensore che se ne accorge',
+          en: 'From the first sensor that notices',
+        ),
+      ),
+      'campanello' => (
+        disegno: 'avvisi',
+        titolo: inLingua(it: 'Campanello', en: 'Doorbell'),
+        sotto: inLingua(
+          it: 'Con la foto della porta e «Apri cancello»',
+          en: 'With the door photo and «Open gate»',
+        ),
+      ),
+      'inserimenti' => (
+        disegno: 'sicurezza',
+        titolo: inLingua(
+          it: 'Antifurto inserito o disinserito',
+          en: 'Alarm armed or disarmed',
+        ),
+        sotto: inLingua(
+          it: 'Totale, notte, parziale, vacanza, disinserito',
+          en: 'Away, night, home, vacation, disarmed',
+        ),
+      ),
+      'uscito' => (
+        disegno: 'aperture',
+        titolo: inLingua(
+          it: 'Uscito senza antifurto',
+          en: 'Left without the alarm',
+        ),
+        sotto: inLingua(
+          it: 'L\'ultimo esce e l\'antifurto è spento',
+          en: 'The last one leaves and the alarm is off',
+        ),
+      ),
+      'aperture' => (
+        disegno: 'varchi',
+        titolo: inLingua(
+          it: 'Porta o garage aperti',
+          en: 'Door or garage open',
+        ),
+        sotto: inLingua(
+          it: 'Di notte, o quando la casa è vuota',
+          en: 'At night, or when nobody\'s home',
+        ),
+      ),
+      'movimento' => (
+        disegno: 'telecamere',
+        titolo: inLingua(
+          it: 'Movimento davanti alle telecamere',
+          en: 'Motion in front of the cameras',
+        ),
+        sotto: inLingua(
+          it: 'Con la foto · a casa vuota o di notte',
+          en: 'With the photo · when away or at night',
+        ),
+      ),
+      'elettrodomestici' => (
+        disegno: 'elettrodomestici',
+        titolo: inLingua(it: 'Elettrodomestico finito', en: 'Appliance done'),
+        sotto: inLingua(
+          it: 'Durata, kWh e costo col sole',
+          en: 'Duration, kWh and cost with the sun',
+        ),
+      ),
+      'blackout' => (
+        disegno: 'ups',
+        titolo: inLingua(it: 'Manca la corrente', en: 'Power outage'),
+        sotto: inLingua(
+          it: 'Dagli UPS: autonomia, e quando torna',
+          en: 'From the UPS: runtime, and when it\'s back',
+        ),
+      ),
+      'frigo' => (
+        disegno: 'temperatura',
+        titolo: inLingua(it: 'Freezer e frigo', en: 'Freezer and fridge'),
+        sotto: inLingua(
+          it: 'Troppo caldi, o porta rimasta aperta',
+          en: 'Too warm, or the door left open',
+        ),
+      ),
+      'pioggia' => (
+        disegno: 'irrigazione',
+        titolo: inLingua(
+          it: 'Pioggia con finestre aperte',
+          en: 'Rain with windows open',
+        ),
+        sotto: inLingua(
+          it: 'Mezz\'ora prima, se c\'è una finestra aperta',
+          en: 'Half an hour before, if a window is open',
+        ),
+      ),
+      'arrivi' => (
+        disegno: 'presenza',
+        titolo: inLingua(it: 'Arrivi e uscite', en: 'Arrivals and departures'),
+        sotto: inLingua(
+          it: 'Solo per le persone che scegli',
+          en: 'Only for the people you pick',
+        ),
+      ),
+      'suggerimenti' => (
+        disegno: 'azioni',
+        titolo: inLingua(it: 'Suggerimenti', en: 'Suggestions'),
+        sotto: inLingua(
+          it:
+              'Luci o clima accesi con la casa vuota, con il tasto per '
+              'sistemare',
+          en: 'Lights or climate on with nobody home, with a button to fix it',
+        ),
+      ),
+      'riepilogo' => (
+        disegno: 'aggiornamenti',
+        titolo: inLingua(it: 'Riepilogo serale', en: 'Evening summary'),
+        sotto: inLingua(
+          it:
+              'Una notifica sola: il sole, i soldi, domani, e quello che va '
+              'sistemato',
+          en:
+              'A single notification: the sun, the money, tomorrow, and '
+              'what needs fixing',
+        ),
+      ),
+      'viaggi' => (
+        disegno: 'ev',
+        titolo: inLingua(it: 'Quando partire', en: 'When to leave'),
+        sotto: inLingua(
+          it:
+              'I viaggi pianificati in gdanav, col traffico: arriva anche '
+              'nelle ore di silenzio',
+          en:
+              'Trips planned in gdanav, with traffic: it comes even during '
+              'quiet hours',
+        ),
+      ),
+      _ => (disegno: 'avvisi', titolo: evento, sotto: ''),
+    };
 
 ({String disegno, String titolo}) _laCategoria(String categoria) =>
     switch (categoria) {
@@ -374,12 +390,12 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
     await _imposta(stato.impostazioni.con(acceso: acceso));
   }
 
-  Future<void> _prova() async {
+  Future<void> _prova({String? evento}) async {
     final filo = _collegamento.filo;
     if (filo == null) return;
     setState(() => _inProva = true);
     try {
-      await Notifiche(filo).prova();
+      await Notifiche(filo).prova(evento: evento);
       _dici(
         inLingua(
           it: 'Partita: arriva fra qualche secondo',
@@ -436,6 +452,44 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
     }
   }
 
+  /// Le entita' chieste alla casa, quando la plancia non le ha ancora lette:
+  /// per i nomi in «Quali».
+  Future<List<Entita>> _chiediLeEntita() async {
+    final filo = _collegamento.filo;
+    if (filo == null) return const [];
+    final tutte = await filo.risultato({'type': 'get_states'});
+    return [
+      if (tutte is List)
+        for (final una in tutte)
+          if (Entita.leggi(una) case final Entita entita) entita,
+    ];
+  }
+
+  /// Il foglio di una voce: come arriva quella notifica, su questo telefono.
+  Future<void> _apriLaVoce(String evento) async {
+    final stato = _stato;
+    if (stato == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => FoglioDellaVoce(
+        evento: evento,
+        scelta: stato.impostazioni.sceltaDi(evento),
+        stileGenerale: stato.impostazioni.stile,
+        entita: _collegamento.stato?.tutte() ?? const [],
+        chiediLeEntita: _chiediLeEntita,
+        cambia: (scelta) {
+          final adesso = _stato?.impostazioni ?? stato.impostazioni;
+          unawaited(_imposta(adesso.conScelta(evento, scelta)));
+        },
+        prova: _collegamento.filo == null || !stato.registrato
+            ? null
+            : () => _prova(evento: evento),
+      ),
+    );
+  }
+
   Future<void> _sceglieOra(String adesso, ValueChanged<String> fatto) async {
     final parti = adesso.split(':');
     final scelta = await showTimePicker(
@@ -464,19 +518,23 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
                   'serve ti scrive. Le regole stanno sul suo add-on, e qui '
                   'scegli quali vuoi ricevere su questo telefono. Partono già '
                   'cifrate con la chiave di questo telefono: il centralino, '
-                  'Google e Apple vedono solo un blocco chiuso. Le foto delle '
-                  'telecamere non viaggiano nella notifica: le chiede '
-                  'l\'app alla casa quando la apri, e solo se quella '
-                  'telecamera puoi vederla.',
+                  'Google e Apple vedono solo un blocco chiuso. Con le '
+                  'notifiche «elaborate» la scheda col grafico la disegna '
+                  'questo telefono, e la foto della telecamera passa dal '
+                  'centralino chiusa con la stessa chiave: lui non la può '
+                  'aprire, e la cancella appena consegnata o dopo dieci '
+                  'minuti. Con le «semplici» non passa nessuna foto.',
               en:
                   'Your home decides the notifications: it watches the '
                   'sensors and writes to you when needed. The rules live on '
                   'its add-on, and here you choose which ones this phone '
                   'gets. They leave already encrypted with this phone\'s key: '
-                  'the relay, Google and Apple only see a sealed block. '
-                  'Camera photos don\'t travel in the notification: the app '
-                  'asks your home for them when you open it, and only if '
-                  'you\'re allowed to see that camera.',
+                  'the relay, Google and Apple only see a sealed block. With '
+                  '«rich» notifications this phone draws the chart card, and '
+                  'the camera photo goes through the relay sealed with the '
+                  'same key: it can\'t open it, and deletes it once '
+                  'delivered or after ten minutes. With «simple» ones no '
+                  'photo travels at all.',
             ),
           ),
         ),
@@ -545,6 +603,17 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
         ),
         ..._gliAvvisi(context, stato),
         const SizedBox(height: 20),
+        _Titolo(
+          disegno: 'evidenza',
+          testo: inLingua(it: 'Come le vuoi', en: 'How you want them'),
+        ),
+        _ComeLeVuoi(
+          stile: imp.stile,
+          iPhone: defaultTargetPlatform == TargetPlatform.iOS,
+          spento: spente,
+          cambia: (stile) => _imposta(imp.con(stile: stile)),
+        ),
+        const SizedBox(height: 20),
         for (final MapEntry(key: categoria, value: eventi)
             in categorieDelleNotifiche.entries) ...[
           _Titolo(
@@ -570,6 +639,8 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
                     valore: imp.evento(evento),
                     spento: spente,
                     cambia: (si) => _imposta(imp.conEvento(evento, si)),
+                    etichette: etichetteDellaVoce(imp, evento),
+                    apri: () => _apriLaVoce(evento),
                   ),
                 ],
                 if (categoria == 'persone')
@@ -698,7 +769,7 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
         const SizedBox(height: 12),
         Center(
           child: TextButton.icon(
-            onPressed: _inProva || !stato.registrato ? null : _prova,
+            onPressed: _inProva || !stato.registrato ? null : () => _prova(),
             icon: _inProva
                 ? const SizedBox(
                     width: 16,
@@ -1089,7 +1160,8 @@ class _Riga extends StatelessWidget {
       const Divider(height: 1, indent: 62, endIndent: 16);
 }
 
-/// Una riga con il suo interruttore.
+/// Una riga con il suo interruttore. Con [apri], la riga si tocca e apre il
+/// foglio della voce; le [etichette] dicono come arriva.
 class _Interruttore extends StatelessWidget {
   const _Interruttore({
     this.disegno,
@@ -1099,6 +1171,8 @@ class _Interruttore extends StatelessWidget {
     required this.valore,
     required this.cambia,
     this.spento = false,
+    this.etichette = const [],
+    this.apri,
   });
 
   final String? disegno;
@@ -1108,60 +1182,78 @@ class _Interruttore extends StatelessWidget {
   final bool valore;
   final bool spento;
   final ValueChanged<bool> cambia;
+  final List<(String, Color)> etichette;
+  final VoidCallback? apri;
 
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
-    return Opacity(
-      opacity: spento ? 0.5 : 1,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: colori.surfaceContainer,
-                borderRadius: BorderRadius.circular(icona != null ? 18 : 10),
-              ),
-              child: disegno != null
-                  ? Oggetto(disegno!, lato: 22)
-                  : Icon(icona, size: 20, color: colori.primary),
+    final riga = Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: colori.surfaceContainer,
+              borderRadius: BorderRadius.circular(icona != null ? 18 : 10),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: disegno != null
+                ? Oggetto(disegno!, lato: 22)
+                : Icon(icona, size: 20, color: colori.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  titolo,
+                  style: testi.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                if (sotto.isNotEmpty)
                   Text(
-                    titolo,
-                    style: testi.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+                    sotto,
+                    style: testi.bodySmall?.copyWith(
+                      color: colori.onSurfaceVariant,
                     ),
                   ),
-                  if (sotto.isNotEmpty)
-                    Text(
-                      sotto,
-                      style: testi.bodySmall?.copyWith(
-                        color: colori.onSurfaceVariant,
-                      ),
-                    ),
+                if (etichette.isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      for (final (testo, colore) in etichette)
+                        _Etichetta(testo: testo, colore: colore),
+                    ],
+                  ),
                 ],
-              ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Switch(
-              value: valore,
-              onChanged: spento ? null : cambia,
-              activeTrackColor: colori.primary,
-              activeThumbColor: colori.onPrimary,
+          ),
+          if (apri != null)
+            Icon(
+              Icons.chevron_right_rounded,
+              color: colori.onSurfaceVariant,
+              size: 22,
             ),
-          ],
-        ),
+          const SizedBox(width: 4),
+          Switch(
+            value: valore,
+            onChanged: spento ? null : cambia,
+            activeTrackColor: colori.primary,
+            activeThumbColor: colori.onPrimary,
+          ),
+        ],
       ),
+    );
+    return Opacity(
+      opacity: spento ? 0.5 : 1,
+      child: apri == null || spento ? riga : InkWell(onTap: apri, child: riga),
     );
   }
 }
