@@ -946,10 +946,22 @@ figure figcaption span {
   border-top: 2px solid var(--inchiostro);
 }
 
+/* I titoletti delle schede, dei passi e dei punti: grandi e in maiuscolo,
+ * come li ha chiesti l'utente (17 ottobre 2026). Sono lo stesso oggetto in
+ * tre sezioni, e hanno lo stesso vestito. */
+.scheda dt,
+.passi h3,
+.punti b {
+  font-size: clamp(1.12rem, 1.55vw, 1.32rem);
+  font-weight: 800;
+  font-stretch: 104%;
+  letter-spacing: 0.035em;
+  line-height: 1.22;
+  text-transform: uppercase;
+}
+
 .scheda dt {
-  margin-bottom: 8px;
-  font-weight: 700;
-  font-size: 1.08rem;
+  margin-bottom: 10px;
 }
 
 .scheda dd {
@@ -996,8 +1008,7 @@ figure figcaption span {
 }
 
 .passi h3 {
-  margin: 0 0 8px;
-  font-size: 1.2rem;
+  margin: 0 0 10px;
 }
 
 .passi p {
@@ -1066,10 +1077,6 @@ figure figcaption span {
   gap: 6px;
   padding-top: 18px;
   border-top: 2px solid var(--inchiostro);
-}
-
-.punti b {
-  font-size: 1.08rem;
 }
 
 .punti span {
