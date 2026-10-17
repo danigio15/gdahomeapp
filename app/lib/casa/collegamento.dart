@@ -664,6 +664,42 @@ class Collegamento {
      * si aspetta: la casa e' gia' aperta, e questo e' solo per andarci piu'
      * dritti. */
     unawaited(_imparaLaStradaDiCasa(filo));
+    /* E se questa casa e' stata riabbinata, si fa staccare il telefono di
+     * prima: e' sempre questo telefono, e non deve contare due volte. */
+    unawaited(_staccaIlVecchio(filo));
+  }
+
+  /// Fa staccare dalla casa il telefono di prima, dopo un riabbinamento
+  /// (`CasaConosciuta.vecchioIdentificativo`).
+  ///
+  /// «Nei telefoni abbinati lo stesso telefono compare due volte.» Si dice
+  /// alla casa chi si era, col vecchio segno, che ha solo questo telefono
+  /// (`ponte/telefono/sostituisci`). Fatto — o se la casa dice che non c'e'
+  /// piu', o se non sa cosa sia — il vecchio segno si dimentica. Se il filo
+  /// cade a meta', si riprova alla prossima connessione.
+  Future<void> _staccaIlVecchio(Filo filo) async {
+    final casa = _casa;
+    if (casa == null || !casa.haUnVecchioDaStaccare) return;
+    try {
+      await filo.risultato({
+        'type': 'ponte/telefono/sostituisci',
+        'vecchio': casa.vecchioIdentificativo,
+        'segno': casa.vecchioSegno,
+      });
+    } on ComandoRifiutato {
+      /* Un add-on di prima non sa cosa sia: il vecchio se ne andra' coi
+       * giorni di silenzio, come prima. Non c'e' niente da ritentare. */
+    } catch (_) {
+      /* Il filo caduto, la casa che non risponde: si riprova la prossima
+       * volta, il segno resta. */
+      return;
+    }
+    try {
+      await archivio.segnaIlVecchioStaccato(casa.id);
+    } catch (_) {
+      /* Non scritto: alla prossima connessione si richiede, e la casa
+       * risponde di nuovo «non c'e'». */
+    }
   }
 
   /* ─── La licenza ─────────────────────────────────────────────────────── */

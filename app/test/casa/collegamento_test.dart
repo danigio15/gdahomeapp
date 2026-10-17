@@ -104,6 +104,42 @@ void main() {
     },
   );
 
+  test(
+    'riabbinata, la casa si fa staccare il telefono di prima, una volta',
+    () async {
+      /* «Nei telefoni abbinati lo stesso telefono compare due volte.» */
+      final ponte = await PonteFinto.alza();
+      await archivio.aggiungi(
+        nome: 'Casa',
+        segno: 'segno-di-prima',
+        identificativo: 'dm_prima',
+        chiave: chiaveBuona,
+        casaAlCentralino: 'casa_stessa',
+        inCasa: ponte.indirizzo,
+      );
+      final casa = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        casaAlCentralino: 'casa_stessa',
+        inCasa: ponte.indirizzo,
+      );
+      expect(archivio.tutte.length, 1);
+      expect(casa.haUnVecchioDaStaccare, isTrue);
+
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({ponte.indirizzo}),
+      );
+      await collegamento.apri();
+      await _finoA(() => !archivio.quella(casa.id)!.haUnVecchioDaStaccare);
+      expect(ponte.sostituzioni.single['vecchio'], 'dm_prima');
+      expect(ponte.sostituzioni.single['segno'], 'segno-di-prima');
+      await ponte.spegni();
+    },
+  );
+
   test('in casa non si passa più dalla strada lunga: se la fa dire', () async {
     /* «Compare fuori casa quando in realtà sono in wifi e sono in casa.»
      *

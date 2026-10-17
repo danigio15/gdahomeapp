@@ -10,6 +10,7 @@ import 'dart:convert';
 import '../ponte/indirizzo.dart';
 import 'ausili.dart';
 import 'casa_conosciuta.dart';
+import 'case_doppie.dart';
 import 'cassaforte.dart';
 
 /// Piu' di cosi' non e' un elenco di case, e' un elenco di prove.
@@ -41,9 +42,23 @@ class ArchivioDelleCase {
     return trovata.isNotEmpty ? trovata.first : null;
   }
 
-  Future<void> apri() async {
-    _case.clear();
-    _attiva = null;
+  Future<void>? _apertura;
+
+  /// Legge le case dalla cassaforte.
+  ///
+  /// **Una lettura alla volta.** Si chiedeva da piu' parti insieme — l'avvio,
+  /// l'auto che si collega, un comando da Android Auto — e ognuna svuotava
+  /// l'elenco, aspettava il portachiavi e poi ci aggiungeva tutte le case:
+  /// tre letture, tre copie di ogni casa, e al primo salvataggio le copie
+  /// restavano sul disco per sempre (vedi `case_doppie.dart`). Adesso chi
+  /// arriva mentre si sta leggendo aspetta la stessa lettura, e l'elenco si
+  /// costruisce a parte e si mette al suo posto tutto insieme, alla fine.
+  Future<void> apri() =>
+      _apertura ??= _leggi().whenComplete(() => _apertura = null);
+
+  Future<void> _leggi() async {
+    final lette = <CasaConosciuta>[];
+    String? attiva;
     final scritto = await _cassaforte.leggi(_chiave);
     if (scritto != null) {
       try {
@@ -55,21 +70,40 @@ class ArchivioDelleCase {
               final una = CasaConosciuta.daJson(grezza);
               /* Una casa storta si salta, le altre restano: un archivio
                * rovinato a meta' non deve svuotare l'app. */
-              if (una != null) _case.add(una);
+              if (una != null) lette.add(una);
             }
           }
-          final attiva = letto['attiva'];
-          if (attiva is String) _attiva = attiva;
+          final detta = letto['attiva'];
+          if (detta is String) attiva = detta;
         }
       } catch (_) {
         /* Illeggibile: si riparte da vuoto, ma quello che c'e' sul disco non
          * si cancella finche' non si scrive qualcosa di buono. */
       }
     }
+    /* Un archivio con la stessa casa piu' volte — scritto da un'app di
+     * prima — si ripara qui, e si riscrive subito. */
+    final (:case_, :fuse) = fondiLeCopie(lette);
+    _case
+      ..clear()
+      ..addAll(case_);
+    _attiva = fuse[attiva] ?? attiva;
     _aperto = true;
+    if (case_.length != lette.length) {
+      try {
+        await _salva();
+      } catch (_) {
+        /* Non scritto: in memoria e' gia' a posto, e la prossima lettura
+         * ripara di nuovo. */
+      }
+    }
   }
 
   /// Mette dentro una casa nuova e la rende quella attiva.
+  ///
+  /// Se e' una casa che c'e' gia' — lo stesso `casa_…`, riabbinata — non ne
+  /// fa un'altra: prende le chiavi nuove e tiene il resto (nome, plancia,
+  /// gettone), e si segna il telefono di prima da far staccare.
   Future<CasaConosciuta> aggiungi({
     required String nome,
     required String segno,
@@ -81,6 +115,43 @@ class ArchivioDelleCase {
     IndirizzoDelPonte? daFuoriCasa,
     DaDove? approdoIniziale,
   }) async {
+    final stessa = casaAlCentralino == null || casaAlCentralino.isEmpty
+        ? -1
+        : _case.indexWhere((una) => una.casaAlCentralino == casaAlCentralino);
+    if (stessa >= 0) {
+      final prima = _case[stessa];
+      final vecchio =
+          prima.identificativo != null &&
+              prima.identificativo!.isNotEmpty &&
+              prima.identificativo != identificativo
+          ? prima
+          : null;
+      final rifatta = CasaConosciuta(
+        id: prima.id,
+        nome: prima.nome,
+        segno: segno,
+        identificativo: identificativo,
+        chiave: chiave,
+        casaAlCentralino: casaAlCentralino,
+        centralino: centralino ?? prima.centralino,
+        inCasa: inCasa ?? prima.inCasa,
+        daFuoriCasa: daFuoriCasa ?? prima.daFuoriCasa,
+        ultimoApprodo: approdoIniziale ?? prima.ultimoApprodo,
+        plancia: prima.plancia,
+        gettone: prima.gettone,
+        gettonePremium: prima.gettonePremium,
+        senzaLicenze: prima.senzaLicenze,
+        /* Chiavi nuove: il legame lo si deve rivedere. */
+        legata: false,
+        vecchioIdentificativo:
+            vecchio?.identificativo ?? prima.vecchioIdentificativo,
+        vecchioSegno: vecchio?.segno ?? prima.vecchioSegno,
+      );
+      _case[stessa] = rifatta;
+      _attiva = rifatta.id;
+      await _salva();
+      return rifatta;
+    }
     if (piena) {
       throw TroppeCase('non si possono tenere più di $caseMassime case');
     }
@@ -234,13 +305,31 @@ class ArchivioDelleCase {
     await _cambia(id, (vecchia) => vecchia.con(legata: true));
   }
 
+  /// Il telefono di prima e' stato staccato, o non c'era piu' niente da
+  /// staccare: il suo segno si dimentica.
+  Future<void> segnaIlVecchioStaccato(String id) async {
+    final casa = quella(id);
+    if (casa == null ||
+        (casa.vecchioIdentificativo == null && casa.vecchioSegno == null)) {
+      return;
+    }
+    await _cambia(id, (vecchia) => vecchia.con(togliIlVecchio: true));
+  }
+
+  /* Tutte le voci con quell'`id`, non solo la prima: dopo `apri` di copie
+   * non ce ne sono, ma se ce ne fossero non deve succedere di nuovo che una
+   * abbia il gettone nuovo e un'altra quello vecchio. */
   Future<void> _cambia(
     String id,
     CasaConosciuta Function(CasaConosciuta) come,
   ) async {
-    final dove = _case.indexWhere((una) => una.id == id);
-    if (dove < 0) return;
-    _case[dove] = come(_case[dove]);
+    var cambiate = 0;
+    for (var dove = 0; dove < _case.length; dove++) {
+      if (_case[dove].id != id) continue;
+      _case[dove] = come(_case[dove]);
+      cambiate += 1;
+    }
+    if (cambiate == 0) return;
     await _salva();
   }
 

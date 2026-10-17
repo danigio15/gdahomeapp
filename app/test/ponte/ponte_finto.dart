@@ -422,6 +422,18 @@ class PonteFinto {
       });
       return;
     }
+    /* Il telefono riabbinato che fa staccare quello di prima: ci si ricorda
+     * di cosa ha chiesto, e si dice di si'. */
+    if (detto['type'] == 'ponte/telefono/sostituisci') {
+      sostituzioni.add(detto);
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': {'staccato': true},
+      });
+      return;
+    }
     _manda(presa, {
       'id': id,
       'type': 'result',
@@ -447,6 +459,10 @@ class PonteFinto {
       },
     });
   }
+
+  /// I `ponte/telefono/sostituisci` ricevuti: il telefono di prima da
+  /// staccare, col suo segno.
+  final List<Map<String, dynamic>> sostituzioni = [];
 
   /// Quello che il ponte sa delle notifiche di questo telefono: la risposta
   /// a `ponte/notifiche/stato`.
