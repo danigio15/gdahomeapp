@@ -715,6 +715,24 @@ const OGGETTI = Object.freeze({
     <g stroke="#6366f1" stroke-width="1.9" fill="none" stroke-linecap="round" opacity=".7">
       <path d="M24.6 22.6a12 12 0 0 0 1.8-3.4M27.8 25a15.6 15.6 0 0 0 2.2-4.4"/></g>`,
 
+  /* Le automazioni: la sveglia d'oro con le due stelline. Non il tasto delle
+   * Azioni — quelle si premono, queste partono da sole — e non l'orologio
+   * nudo, che direbbe soltanto «a un orario»: le stelline sono il «da sola».
+   * Lo stesso disegno sta nell'app, nel menu (`app/assets/oggetti`). */
+  automazioni: `<defs>
+      <linearGradient id="dmoAutomazioni" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fcd34d"/><stop offset=".55" stop-color="#f59e0b"/>
+        <stop offset="1" stop-color="#b45309"/></linearGradient></defs>
+    ${OMBRA(15, 28.2, 8)}
+    <circle cx="15" cy="16" r="10" fill="url(#dmoAutomazioni)"/>
+    <circle cx="15" cy="16" r="7.2" fill="#fffbeb"/>
+    <path d="M15 11.2V16l3.4 2.2" stroke="#92400e" stroke-width="2" fill="none"
+      stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8.6 9.4a8.6 8.6 0 0 1 4-2.6" stroke="#fff" stroke-opacity=".85" stroke-width="1.6"
+      fill="none" stroke-linecap="round"/>
+    <path d="M26.2 3.2l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="#f59e0b"/>
+    <path d="M28.6 10.4l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5z" fill="#fbbf24"/>`,
+
   /* Le stanze: il divano, di fronte. */
   stanze: `<defs>
       <linearGradient id="dmoDivano" x1="0" y1="0" x2="0" y2="1">

@@ -142,6 +142,7 @@ import { installTodoEditorSection } from "./todo-editor-section.js";
 import { installWidgetEntityChoiceSection } from "./widget-entity-choice-section.js";
 import { installEvShowcaseSection } from "./ev-showcase-section.js";
 import { installRicaricaDiNotteSection } from "./ricarica-di-notte-section.js";
+import { installAutomazioniSection } from "./automazioni-section.js";
 import { installEvStatoETargetSection } from "./ev-stato-e-target-section.js";
 import { installAutoTermica } from "./auto-termica-section.js";
 import { installAutoOMoto } from "./auto-o-moto-section.js";
@@ -1164,6 +1165,10 @@ export function installSectionRuntime() {
     /* La ricarica di notte sta sotto la console di evcc, che deve esserci gia':
      * la carta le si mette accanto, e la regola la fa la casa. */
     senzaCadere(installRicaricaDiNotteSection);
+    /* Le automazioni (Premium): la voce del config dopo le Azioni, e nell'app
+     * la pagina a schermo pieno che l'app apre con la sua maniglia. Le
+     * esegue la casa (`ponte/src/automazioni.js`). */
+    senzaCadere(installAutomazioniSection);
     /* L'auto a benzina (#208) si appoggia alla pagina EV gia' vestita: le
      * sue caselle entrano nella stessa scheda, e il suo quadro prende il
      * posto di quello della ricarica quando il motore non e' elettrico. */

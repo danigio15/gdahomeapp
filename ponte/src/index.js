@@ -49,6 +49,7 @@ import { Registri } from "./registri.js";
 import { Notifiche } from "./notifiche.js";
 import { Viaggi } from "./viaggi.js";
 import { RicaricaDiNotte } from "./ricarica-di-notte.js";
+import { Automazioni } from "./automazioni.js";
 
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
@@ -473,6 +474,23 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   commissioni.ricaricaDiNotte = ricaricaDiNotte;
+  /* Le automazioni della plancia (Quando · Solo se · Allora): le esegue la
+   * casa, anche a plancia e app chiuse, e solo con gdahome Premium. Sentono
+   * la casa dallo stesso specchio delle notifiche, e avvisano i telefoni con
+   * la loro stessa busta (`automazioni.js`). */
+  const automazioni = new Automazioni({
+    cartella: opzioni.cartella,
+    casa,
+    configurazione,
+    stati: () => notifiche.sentinella?.stati ?? null,
+    notifiche,
+    licenze,
+    registro,
+  });
+  notifiche.sentinella?.ascoltatori?.push((id, dopo, prima) =>
+    automazioni.quandoCambia(id, dopo, prima),
+  );
+  commissioni.automazioni = automazioni;
   /* «Cosa c'e' in casa» nel config: lo sa l'assistente delle notifiche. */
   commissioni.notifiche = notifiche;
   /* Una casa di prova fatta prima di un riavvio vale ancora: al centralino
@@ -626,6 +644,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   void notifiche.parti();
   viaggi.parti();
   ricaricaDiNotte.parti();
+  automazioni.parti();
   postino.parti();
   /* Separata dal rapporto, e non per caso: il rapporto resta spento di serie,
    * e le licenze non ne hanno bisogno. Manda solo chi e' la casa. */
@@ -710,6 +729,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     notifiche.ferma();
     viaggi.ferma();
     ricaricaDiNotte.ferma();
+    automazioni.ferma();
     postino.ferma();
     licenze.ferma();
     versioneMinima.ferma();
@@ -732,6 +752,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     notifiche,
     viaggi,
     ricaricaDiNotte,
+    automazioni,
     ritorno,
     registro,
     postino,

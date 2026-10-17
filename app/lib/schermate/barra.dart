@@ -1105,6 +1105,15 @@ class _StatoDellaMattonella extends State<_Mattonella> {
           Positioned(top: 8, right: 8, child: _Quanti(widget.quanti)),
         if (widget.bloccata)
           Positioned(top: 8, right: 8, child: _IlLucchetto(sulloScuro: scelta)),
+        /* Le Automazioni sono Premium anche quando la casa lo e': il bollino lo
+         * dice, come la voce del config nella plancia. Senza Premium al suo
+         * posto c'e' il lucchetto. */
+        if (sezione == Sezione.automazioni && !widget.bloccata)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: _IlBollinoPremium(sulloScuro: scelta),
+          ),
         if (widget.plance case final c?)
           Positioned(
             top: 4,
@@ -1316,6 +1325,40 @@ class _Quanti extends StatelessWidget {
   }
 }
 
+/// Il bollino «✨ PREMIUM» sulla mattonella delle Automazioni: ambra come il
+/// lucchetto, ma aperto — dice di che cosa e' fatta la voce, non che e'
+/// chiusa.
+class _IlBollinoPremium extends StatelessWidget {
+  const _IlBollinoPremium({this.sulloScuro = false});
+
+  final bool sulloScuro;
+
+  @override
+  Widget build(BuildContext context) {
+    final scuro = sulloScuro || Theme.of(context).brightness == Brightness.dark;
+    final colore = scuro ? Colori.ambra : Colori.ambraScura;
+    return Container(
+      key: const Key('bollino-premium'),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colori.ambra.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colori.ambra.withValues(alpha: 0.6)),
+      ),
+      child: Text(
+        '✨ PREMIUM',
+        style: TextStyle(
+          fontSize: 9.5,
+          height: 1.2,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.6,
+          color: colore,
+        ),
+      ),
+    );
+  }
+}
+
 /// Il lucchetto di gdahome Premium, addosso a una mattonella.
 ///
 /// Ambra come il numero degli aggiornamenti, e per lo stesso motivo: non e'
@@ -1358,8 +1401,8 @@ class _IlLucchetto extends StatelessWidget {
 /// una rete Zigbee c'e' davvero: in una casa senza ZHA e senza Zigbee2MQTT
 /// quella voce aprirebbe una schermata che non puo' fare niente.
 ///
-/// E poi c'e' un taglio di un altro tipo: **Navigatore, Zigbee, Aiutanti e
-/// Automazioni non ci sono affatto nella webapp**. Sono cose che vogliono il
+/// E poi c'e' un taglio di un altro tipo: **Navigatore, Zigbee e Aiutanti
+/// non ci sono affatto nella webapp**. Sono cose che vogliono il
 /// telefono — aprire una rete Zigbee si fa in piedi davanti al dispositivo,
 /// e si guida col GPS e la voce del telefono — e nel
 /// browser sarebbero porte che si aprono su meta' di quello che promettono.

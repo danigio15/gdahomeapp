@@ -166,6 +166,10 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "ponte/viaggi/stima",
   "ponte/viaggi/cerca",
   "ponte/viaggi/strada",
+  // Le automazioni (Premium): cosa ha fatto la casa e cosa fara', in sola
+  // lettura (ponte/src/automazioni.js). Le esegue il ponte, e solo lui sa
+  // rispondere: dentro il pannello senza add-on la risposta e' «non conosco».
+  "ponte/automazioni/stato",
   "auth/sign_path",
 ]);
 

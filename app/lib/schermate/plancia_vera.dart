@@ -342,6 +342,29 @@ class PlanciaVeraState extends State<PlanciaVera> {
     _riquadro.currentState?.tornaDallaConfig();
   }
 
+  /* Le Automazioni chieste prima che la pagina fosse pronta: come la Config,
+   * si aprono appena arriva. */
+  bool _leAutomazioniAppenaSiPuo = false;
+
+  /// Apre la pagina Automazioni della plancia, a schermo pieno: la voce
+  /// «Automazioni» del menu. La pagina e' della plancia
+  /// (`automazioni-section.js`), come la Config.
+  void apriLeAutomazioni() {
+    if (!mounted) return;
+    if (!_caricata) {
+      _leAutomazioniAppenaSiPuo = true;
+      return;
+    }
+    _riquadro.currentState?.apriLeAutomazioni();
+  }
+
+  /// Torna dov'era la plancia prima delle Automazioni.
+  void tornaDalleAutomazioni() {
+    if (!mounted) return;
+    _leAutomazioniAppenaSiPuo = false;
+    _riquadro.currentState?.tornaDalleAutomazioni();
+  }
+
   /// Passa alla plancia un dispositivo appena abbinato (#54, passo 4).
   ///
   /// A decidere in che sezione va e a scriverla e' la plancia: le sue sezioni
@@ -736,6 +759,10 @@ class PlanciaVeraState extends State<PlanciaVera> {
                   _laConfigAppenaSiPuo = false;
                   _riquadro.currentState?.apriLaConfig();
                 }
+                if (_leAutomazioniAppenaSiPuo) {
+                  _leAutomazioniAppenaSiPuo = false;
+                  _riquadro.currentState?.apriLeAutomazioni();
+                }
               },
               quandoFallisce: (perche) {
                 if (mounted) setState(() => _perche = perche);
@@ -1118,6 +1145,21 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     final controllore = _controllore;
     if (controllore != null) {
       unawaited(riquadro.tornaDallaConfig(controllore));
+    }
+  }
+
+  /// Apre la pagina Automazioni della plancia: la maniglia sta nella pagina.
+  void apriLeAutomazioni() {
+    final controllore = _controllore;
+    if (controllore != null) {
+      unawaited(riquadro.apriLeAutomazioni(controllore));
+    }
+  }
+
+  void tornaDalleAutomazioni() {
+    final controllore = _controllore;
+    if (controllore != null) {
+      unawaited(riquadro.tornaDalleAutomazioni(controllore));
     }
   }
 

@@ -381,6 +381,16 @@ Future<void> apriLaConfig(WebViewController controllore, Uri pagina) async =>
 Future<void> tornaDallaConfig(WebViewController controllore) async =>
     _tira('gdahomeTornaDallaConfig', 'torna-dalla-config');
 
+/// Apre la pagina Automazioni della plancia: la maniglia la mette la plancia
+/// stessa (`automazioni-section.js`), e da fuori del riquadro si bussa col
+/// messaggio `apri-le-automazioni`.
+Future<void> apriLeAutomazioni(WebViewController controllore) async =>
+    _tira('gdahomeApriLeAutomazioni', 'apri-le-automazioni');
+
+/// Riporta la plancia dov'era prima delle Automazioni.
+Future<void> tornaDalleAutomazioni(WebViewController controllore) async =>
+    _tira('gdahomeTornaDalleAutomazioni', 'torna-dalle-automazioni');
+
 /// Passa alla plancia un dispositivo appena abbinato (#54, passo 4).
 ///
 /// Qui non si tira nessuna maniglia: si **bussa**, e basta. Il foglietto della

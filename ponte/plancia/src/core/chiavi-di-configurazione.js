@@ -328,7 +328,11 @@
  * regola non la esegue la plancia ma la casa, che la legge dalla plancia
  * principale: una scelta fatta dal telefono che restasse sul telefono non
  * arriverebbe mai a chi la deve mettere in pratica. */
-export const CONFIG_KEYS_REVISION = 65;
+/* La revisione 66 aggiunge le automazioni (`cd_automazioni`): Quando · Solo
+ * se · Allora, e i cronotermostati. Le esegue la casa, che le legge dalla
+ * plancia principale: scritte dal computer, devono valere anche col telefono
+ * in tasca e la plancia chiusa. */
+export const CONFIG_KEYS_REVISION = 66;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -632,4 +636,7 @@ export const CONFIG_KEYS = Object.freeze([
   /* La ricarica di notte: la ragione per cui sta qui è scritta accanto alla
    * revisione 65. */
   "cd_ricarica_notte",
+  /* Le automazioni: la ragione per cui sta qui è scritta accanto alla
+   * revisione 66. */
+  "cd_automazioni",
 ]);

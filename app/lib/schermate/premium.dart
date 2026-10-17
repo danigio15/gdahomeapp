@@ -83,6 +83,15 @@ abstract final class PerchePremium {
         'part of gdahome Premium.',
   );
 
+  static String get automazioni => inLingua(
+    it:
+        'Le automazioni — luci, tapparelle, clima e avvisi che partono da '
+        'soli — sono di gdahome Premium.',
+    en:
+        'Automations — lights, shutters, climate and alerts that start by '
+        'themselves — are part of gdahome Premium.',
+  );
+
   static String get fuoriCasa => inLingua(
     it:
         'Fuori casa serve gdahome Premium. Sotto il Wi-Fi di casa si entra '
@@ -727,6 +736,14 @@ List<(IconData, String, String)> _funzioni(bool sulWeb) {
       inLingua(
         it: 'La plancia si cambia dal telefono',
         en: 'Change the dashboard from your phone',
+      ),
+    ),
+    (
+      Icons.auto_mode,
+      inLingua(it: 'Automazioni', en: 'Automations'),
+      inLingua(
+        it: 'Quando succede qualcosa, la casa fa da sola',
+        en: 'When something happens, the home acts by itself',
       ),
     ),
     (

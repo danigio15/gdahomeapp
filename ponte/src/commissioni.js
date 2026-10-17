@@ -78,6 +78,7 @@ import {
   conservaGliAmministratori,
   puoConfigurare,
 } from "./chi-configura.js";
+import { CHIAVE_AUTOMAZIONI } from "../plancia/src/core/automazioni.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -153,6 +154,27 @@ const LICENZA = new Map([
   ["ponte/licenza/negozio", "negozio"],
   ["ponte/licenza/riscatta", "riscatta"],
 ]);
+
+/* Le automazioni della plancia (`cd_automazioni`) le scrive solo chi ha un
+ * utente.
+ *
+ * Un'automazione e' un comando alla casa che parte da solo, col filo
+ * dell'add-on, anche quando nessuno guarda: e' piu' di una preferenza della
+ * plancia. Chi salva la configurazione senza un nome — un telefono abbinato
+ * prima che i telefoni si intestassero a qualcuno, che il ponte lascia ancora
+ * amministrare «com'era ieri» — salva tutto il resto, ma le automazioni
+ * restano quelle che erano: quelle salvate, o nessuna. Torna i valori da
+ * salvare. */
+export function conservaLeAutomazioni(nuovi, salvati, chiChiede = "") {
+  if (!nuovi || typeof nuovi !== "object") return nuovi;
+  if (String(chiChiede || "").trim()) return nuovi;
+  const prima = salvati && typeof salvati === "object" ? salvati[CHIAVE_AUTOMAZIONI] : undefined;
+  if (nuovi[CHIAVE_AUTOMAZIONI] === prima) return nuovi;
+  const fuori = { ...nuovi };
+  if (prima === undefined) delete fuori[CHIAVE_AUTOMAZIONI];
+  else fuori[CHIAVE_AUTOMAZIONI] = prima;
+  return fuori;
+}
 
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
@@ -495,6 +517,9 @@ export class Commissioni {
     /* La ricarica di notte (`ricarica-di-notte.js`): nasce dopo, come i
      * viaggi, perche' legge la casa dallo specchio delle notifiche. */
     ricaricaDiNotte = null,
+    /* Le automazioni (`automazioni.js`): nascono dopo per la stessa ragione,
+     * leggono la casa dallo specchio delle notifiche. */
+    automazioni = null,
     /* La rete Zigbee di questa casa. Che poi una rete ci sia o no lo dice lui,
      * rispondendo `quale: ""`: i comandi `ponte/zigbee/` sono di questo ponte
      * comunque — sono nel suo nome — e non si mandano a Home Assistant, che
@@ -560,6 +585,7 @@ export class Commissioni {
     this.viaggi = viaggi;
     /* E la ricarica di notte, che nasce dopo per la stessa ragione. */
     this.ricaricaDiNotte = ricaricaDiNotte;
+    this.automazioni = automazioni;
     this.zigbee = zigbee;
     this.registri = registri;
     /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
@@ -674,6 +700,21 @@ export class Commissioni {
       if (!this.ricaricaDiNotte) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.ricaricaDiNotte.rispondi(detto, { utente: chiChiede });
     }
+    /* Le automazioni (`automazioni.js`): cosa viene dopo, le ultime eseguite
+     * e l'ultima volta di ognuna, in sola lettura e solo a chi ha un utente
+     * (senza nome: `unauthorized`). Scriverle non passa di qui: stanno nella
+     * configurazione della plancia principale (`cd_automazioni`), e le scrive
+     * solo chi salva la configurazione — chi amministra, e la casella «Utente
+     * admin» quando nomina qualcuno — e in piu' **solo chi ha un utente**:
+     * un'automazione comanda la casa col filo dell'add-on, anche a pagine
+     * chiuse, e un telefono abbinato prima che i telefoni avessero un nome
+     * non deve poterne scrivere una. Un salvataggio senza nome le lascia come
+     * sono (`conservaLeAutomazioni`), e un ripristino senza nome che le
+     * cambierebbe si rifiuta. */
+    if (tipo === "ponte/automazioni/stato") {
+      if (!this.automazioni) return no(id, "unknown_command", `non conosco ${tipo}`);
+      return this.automazioni.rispondi(detto, { utente: chiChiede });
+    }
     /* I viaggi di gdanav: dalla plancia e dal telefono, ognuno coi suoi. */
     if (typeof tipo === "string" && tipo.startsWith("ponte/viaggi/")) {
       if (!this.viaggi) return no(id, "unknown_command", `non conosco ${tipo}`);
@@ -728,7 +769,7 @@ export class Commissioni {
           "la configurazione di questa plancia la cambia solo l'utente che la amministra",
         );
       }
-      return this._configurazione(detto);
+      return this._configurazione(detto, chiChiede);
     }
     if (tipo === CHI_SONO) return this._chiSono(detto, chiChiede, puoAmministrare);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
@@ -1525,7 +1566,7 @@ export class Commissioni {
     });
   }
 
-  async _configurazione(detto) {
+  async _configurazione(detto, chiChiede = "") {
     const id = detto.id ?? null;
     const cassetta = this.configurazione;
     if (!cassetta) return no(id, "unknown_command", `non conosco ${detto.type}`);
@@ -1563,6 +1604,17 @@ export class Commissioni {
       if (detto.type === CONFIG_RESTORE) {
         const revisione = Number(detto.revision);
         if (!Number.isFinite(revisione)) return no(id, "invalid_format", "manca la revisione");
+        /* Senza un utente non si cambiano le automazioni, nemmeno tornando a
+         * una revisione di prima: vedi `conservaLeAutomazioni`. */
+        if (!String(chiChiede || "").trim()) {
+          const voluta = cassetta.valoriDellaRevisione?.(profilo, revisione);
+          const adesso = cassetta.leggi(profilo)?.snapshot?.values || {};
+          if (
+            voluta &&
+            (voluta[CHIAVE_AUTOMAZIONI] ?? null) !== (adesso[CHIAVE_AUTOMAZIONI] ?? null)
+          )
+            return no(id, "unauthorized", "le automazioni le cambia solo chi ha un utente");
+        }
         return si(id, this._eCambiata(cassetta.ripristina(profilo, revisione)));
       }
       const scatto = detto.snapshot;
@@ -1580,7 +1632,11 @@ export class Commissioni {
            * `conservaGliAmministratori`. */
           cassetta.scrivi(
             profilo,
-            conservaGliAmministratori(scatto.values, cassetta.leggi(profilo)?.snapshot?.values),
+            conservaLeAutomazioni(
+              conservaGliAmministratori(scatto.values, cassetta.leggi(profilo)?.snapshot?.values),
+              cassetta.leggi(profilo)?.snapshot?.values,
+              chiChiede,
+            ),
             {
               keys_revision: scatto.keys_revision ?? 0,
               writer_generation: scatto.writer_generation ?? 0,

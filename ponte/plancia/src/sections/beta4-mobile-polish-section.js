@@ -48,6 +48,7 @@ const TAB_ICONS = Object.freeze({
   allerte: "⚠️",
   rifiuti: "♻️",
   muro: "📟",
+  automazioni: "⏰",
   scollegati: "📡",
   /* Le due della beta.12: la Musica (#269) e le entita' che uno si aggiunge
    * (#271). Senza il loro simbolo qui la linguetta restava intera anche dove

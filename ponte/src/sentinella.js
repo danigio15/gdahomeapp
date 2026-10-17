@@ -188,6 +188,10 @@ export class Sentinella {
     /* Quello che una regola deve ricordarsi fra un giro e l'altro: da quando
      * un elettrodomestico gira, se una cosa lunga e' gia' stata detta. */
     this._memoria = new Map();
+    /* Chi altro vuole sapere di ogni cambio: le automazioni
+     * (`automazioni.js`). Lo specchio e' uno, e chi lo guarda non deve
+     * chiedere la casa una seconda volta a Home Assistant. */
+    this.ascoltatori = [];
   }
 
   /* ─── Quello che arriva da Home Assistant ──────────────────────────── */
@@ -229,6 +233,13 @@ export class Sentinella {
     const dopo = this.stati.get(id);
     /* Una porta che si chiude dimentica il suo «va bene stanotte». */
     if (["off", "closed"].includes(dopo.state)) this.capire.chiusa(id);
+    for (const ascolta of this.ascoltatori) {
+      try {
+        ascolta(id, dopo, prima);
+      } catch (errore) {
+        this.registro?.errore?.(`chi ascolta la casa: ${errore?.message || errore}`);
+      }
+    }
     try {
       this._regoleDelMomento(id, dopo, prima, vuotaPrima);
       this._personalizzate();

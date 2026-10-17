@@ -88,6 +88,7 @@ const disegniDegliOggetti = <String>{
   'aperture',
   'aria',
   'assistenza',
+  'automazioni',
   'avvisi',
   'azioni',
   'backup',

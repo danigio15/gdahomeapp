@@ -264,7 +264,13 @@ test("togliere una chiave non alza la revisione", async () => {
    * scelti dal computer devono comparire anche sul tablet in cucina. */
   /* E la 65 con la ricarica di notte (`cd_ricarica_notte`): la casa la legge
    * dalla plancia principale, e la scelta fatta dal telefono deve arrivarle. */
-  assert.equal(CONFIG_KEYS_REVISION, 65);
+  /* E la 66 con le automazioni (`cd_automazioni`): le esegue la casa, che le
+   * legge dalla plancia principale. */
+  assert.equal(CONFIG_KEYS_REVISION, 66);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_automazioni"),
+    "le automazioni scritte dal computer devono arrivare alla casa",
+  );
   assert.ok(
     CONFIG_KEYS.includes("cd_ricarica_notte"),
     "la ricarica di notte scelta dal telefono deve arrivare alla casa",

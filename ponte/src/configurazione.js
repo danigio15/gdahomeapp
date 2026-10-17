@@ -289,6 +289,16 @@ export class Configurazione {
     return this._risposta(STATO.salvato, profilo, scatto);
   }
 
+  /* I valori di una revisione tenuta, senza rimetterla: serve a chi deve
+   * guardare cosa cambierebbe prima di lasciarla tornare (le automazioni,
+   * `commissioni.js`). `null` se non c'e'. */
+  valoriDellaRevisione(profilo, revisione) {
+    const voluta = (this._profili[profilo]?.history || []).find(
+      (una) => intero(una.revision) === intero(revisione),
+    );
+    return voluta ? { ...(voluta.values || {}) } : null;
+  }
+
   /* Rimette a corrente una revisione tenuta. */
   ripristina(profilo, revisione) {
     const corrente = this._profili[profilo] || null;

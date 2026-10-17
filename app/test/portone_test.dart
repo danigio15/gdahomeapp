@@ -595,16 +595,30 @@ void main() {
       expect(nellaBarra('Dispositivi'), findsOneWidget);
       /* In tre gruppi: la casa, l'aiuto, le avanzate. */
       expect(nellaBarra('CASA'), findsOneWidget);
+      /* Le Automazioni stanno nella casa, accanto alla Configurazione: sono
+       * una pagina della plancia, come lei. */
+      final ilMenu = find
+          .descendant(
+            of: find.byType(BarraDelleSezioni),
+            matching: find.byType(Scrollable),
+          )
+          .last;
+      await tester.scrollUntilVisible(
+        nellaBarra('Automazioni'),
+        80,
+        scrollable: ilMenu,
+      );
+      expect(nellaBarra('Automazioni'), findsOneWidget);
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
        * si sa dove sta andando l'app. Stanno in fondo, fra le avanzate: si
        * scorre fin li'. */
       await tester.scrollUntilVisible(
-        nellaBarra('Automazioni'),
+        nellaBarra('Aiutanti'),
         80,
         /* L'**ultimo**, non il primo: dentro il menu di Scrollable ce ne
          * sono due, e il primo e' quello della casella per cercare. Tirando
          * quello non si muove niente, e la prova falliva dicendo che
-         * «Automazioni» non c'era. */
+         * la voce non c'era. */
         scrollable: find
             .descendant(
               of: find.byType(BarraDelleSezioni),
@@ -614,7 +628,6 @@ void main() {
       );
       expect(nellaBarra('AVANZATE'), findsOneWidget);
       expect(nellaBarra('Aiutanti'), findsOneWidget);
-      expect(nellaBarra('Automazioni'), findsOneWidget);
       /* Zigbee no, e non perche' non sia pronta: perche' **questa casa non ha
        * una rete Zigbee**. E' la stessa regola della Console e del Cruscotto —
        * una porta che non si apre e' peggio di una porta che non c'e' — ed e'

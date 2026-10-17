@@ -347,13 +347,13 @@ class _HomeState extends State<Home> {
 
   /// Le voci col lucchetto, per la casa di adesso.
   ///
-  /// La Configurazione e Zigbee sono di gdahome Premium: senza, restano nel
-  /// menu col lucchetto e portano alla sua pagina. Con i controlli spenti —
+  /// La Configurazione, Zigbee e le Automazioni sono di gdahome Premium:
+  /// senza, restano nel menu col lucchetto e portano alla sua pagina. Con i controlli spenti —
   /// la chiave delle licenze vuota — non ce n'e' nessuna.
   Set<Sezione> get _bloccate {
     final licenza = widget.collegamento.licenza;
     if (!licenza.controlliAccesi || licenza.premium) return const {};
-    return const {Sezione.configurazione, Sezione.zigbee};
+    return const {Sezione.configurazione, Sezione.zigbee, Sezione.automazioni};
   }
 
   /* Con Android Auto acceso il navigatore e' sullo schermo dell'auto, e sul
@@ -392,6 +392,7 @@ class _HomeState extends State<Home> {
           perche: switch (dove) {
             Sezione.configurazione => PerchePremium.configurazione,
             Sezione.zigbee => PerchePremium.zigbee,
+            Sezione.automazioni => PerchePremium.automazioni,
             _ => null,
           },
         ),
@@ -407,6 +408,15 @@ class _HomeState extends State<Home> {
      *
      * La sezione resta segnata «Configurazione» anche se sotto si vede il
      * riquadro: e' li' che si e', e il menu deve dirlo. */
+    /* Le Automazioni sono come la Configurazione: una pagina della plancia,
+     * aperta a schermo pieno dentro il riquadro con la sua maniglia
+     * (`automazioni-section.js`). */
+    if (dove == Sezione.automazioni) {
+      if (_sezione != dove) setState(() => _sezione = dove);
+      _laPagina = 'automazioni';
+      _plancia.currentState?.apriLeAutomazioni();
+      return;
+    }
     if (dove == Sezione.configurazione) {
       if (_sezione != dove) setState(() => _sezione = dove);
       /* La Config l'abbiamo chiesta noi: la pagina lo confermera' appena si
@@ -431,7 +441,10 @@ class _HomeState extends State<Home> {
      * Chiedere al menu, allora, voleva dire ricaricare la plancia per
      * ritrovarsi la Configurazione. Chiedere alla pagina vuol dire uscirne. */
     if (dove == Sezione.plancia) {
-      if (_laPaginaENellaConfig) {
+      if (_laPagina == 'automazioni') {
+        _laPagina = '';
+        _plancia.currentState?.tornaDalleAutomazioni();
+      } else if (_laPaginaENellaConfig) {
         _laPaginaENellaConfig = false;
         _plancia.currentState?.tornaDallaConfig();
       } else if (_sezione == dove) {
@@ -500,12 +513,33 @@ class _HomeState extends State<Home> {
   /// «Plancia»: uscire dalla Config, o ricaricare.
   bool _laPaginaENellaConfig = false;
 
+  /// L'ultima pagina che la plancia ha detto di mostrare: serve a sapere se
+  /// sta mostrando le Automazioni, che come la Config si lasciano col tasto
+  /// «Plancia».
+  String _laPagina = '';
+
   void _laPlanciaEAltrove(String pagina) {
     if (!mounted) return;
+    /* «Scopri Premium» dentro la pagina delle Automazioni: la pagina Premium
+     * la apre l'app, che sa vendere; la plancia resta dov'e'. */
+    if (pagina == 'premium') {
+      unawaited(
+        apriLaPaginaPremium(
+          context,
+          widget.collegamento,
+          perche: PerchePremium.automazioni,
+        ),
+      );
+      return;
+    }
     /* Non ridisegna niente: non e' una cosa che si vede, e' una cosa che si
      * sa. */
+    _laPagina = pagina;
     _laPaginaENellaConfig = pagina == 'config';
-    if (_sezione != Sezione.configurazione || pagina == 'config') return;
+    final fuoriDallaSua =
+        (_sezione == Sezione.configurazione && pagina != 'config') ||
+        (_sezione == Sezione.automazioni && pagina != 'automazioni');
+    if (!fuoriDallaSua) return;
     setState(() => _sezione = Sezione.plancia);
   }
 
@@ -516,10 +550,13 @@ class _HomeState extends State<Home> {
      * testata, col nome della casa e il meteo, e una seconda riga sopra
      * direbbe le stesse cose a tre centimetri di distanza. */
     final sullaPlancia =
-        _sezione == Sezione.plancia || _sezione == Sezione.configurazione;
+        _sezione == Sezione.plancia ||
+        _sezione == Sezione.configurazione ||
+        _sezione == Sezione.automazioni;
     /* La sezione che si vede davvero: la Configurazione e' una pagina della
      * plancia, e si guarda dentro il suo riquadro. */
-    final mostrata = _sezione == Sezione.configurazione
+    final mostrata =
+        _sezione == Sezione.configurazione || _sezione == Sezione.automazioni
         ? Sezione.plancia
         : _sezione;
     /* Anche il navigatore ha tutto lo schermo, come la plancia: la mappa ha i
@@ -741,6 +778,9 @@ class _HomeState extends State<Home> {
                            * stessa cosa. */
                                 Sezione.configurazione =>
                                   const SizedBox.shrink(),
+                                /* Le Automazioni pure: sono una pagina della
+                                 * plancia, a schermo pieno nel riquadro. */
+                                Sezione.automazioni => const SizedBox.shrink(),
                                 /* Anche Premium: la voce apre la sua pagina sopra. */
                                 Sezione.premium => const SizedBox.shrink(),
                                 /* «Come va l'app»: la stessa schermata che apre
@@ -837,8 +877,7 @@ class _HomeState extends State<Home> {
                 conIlCruscotto: _cruscotto.isNotEmpty,
                 conLaGestione: _gestione.isNotEmpty,
                 conZigbee: _zigbee,
-                /* Navigatore, Zigbee, Aiutanti e Automazioni nella webapp non
-                 * ci sono:
+                /* Navigatore, Zigbee e Aiutanti nella webapp non ci sono:
                  * vogliono il telefono, e nel browser sarebbero porte che si
                  * aprono su meta' di quello che promettono. */
                 nellApp: widget.impostazioni.sulTelefono,
