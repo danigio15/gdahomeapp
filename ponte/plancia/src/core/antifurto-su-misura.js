@@ -217,3 +217,156 @@ export function tastiSuMisura(stored) {
     }),
   );
 }
+
+/* ─── Quando e' scattato ────────────────────────────────────────────────
+ *
+ * «Prevedi un'entità per inserire allarme antifurto, ho uno switch che mi
+ * controlla se è scattato antifurto.» Chi si e' fatto l'antifurto da se'
+ * spesso ha un interruttore — o un sensore — che si accende quando suona: la
+ * centrale vera lo direbbe con `triggered`, questo lo dice con un `on`. Qui
+ * lo si dichiara una volta: quale entita', quale valore vuol dire «scattato»
+ * (di solito `on`), e facoltativi la sirena e da dove leggere la zona.
+ *
+ * Lo leggono la sezione Sicurezza, la tessera della Home, il pannello a muro e
+ * la casa, che manda la notifica urgente anche a plancia chiusa. Per chi ha la
+ * plancia di prima vale anche la casella storica dell'interruttore
+ * dell'antifurto (`dm.home_interruttore_antifurto`): il salvataggio scrive
+ * anche quella, cosi' le due strade dicono la stessa cosa. */
+
+/** Dove si scrive. */
+export const CHIAVE_ANTIFURTO_SCATTATO = "cd_antifurto_scattato";
+
+/** La casella storica dell'interruttore dell'antifurto. */
+export const CASELLA_DELLO_SCATTATO = "dm.home_interruttore_antifurto";
+
+/** I domini che possono dire «scattato». */
+export const DOMINI_DELLO_SCATTATO = Object.freeze([
+  "switch",
+  "binary_sensor",
+  "input_boolean",
+  "sensor",
+  "siren",
+  "light",
+]);
+
+/** I domini di una sirena, e il servizio che la spegne. */
+export const SPEGNI_LA_SIRENA = Object.freeze({
+  siren: "turn_off",
+  switch: "turn_off",
+  input_boolean: "turn_off",
+  light: "turn_off",
+});
+
+/**
+ * Lo «scattato» ripulito, o `null` se non c'e' un'entita'.
+ *
+ * `ripiego`: l'entita' della casella storica, per chi non ha ancora scritto
+ * niente qui ma l'aveva mappata nella plancia di prima.
+ */
+export function normalizzaScattato(grezzo, ripiego = "") {
+  let dato = grezzo;
+  if (typeof dato === "string") {
+    try {
+      dato = JSON.parse(dato);
+    } catch (_errore) {
+      dato = null;
+    }
+  }
+  const d = dato && typeof dato === "object" && !Array.isArray(dato) ? dato : {};
+  const entita = pulito(d.entita) || pulito(ripiego);
+  if (!entita.includes(".") || !DOMINI_DELLO_SCATTATO.includes(dominioDi(entita))) return null;
+  const sirena = pulito(d.sirena);
+  const zona = pulito(d.zona);
+  return Object.freeze({
+    entita,
+    valore: pulito(d.valore),
+    sirena: sirena.includes(".") && SPEGNI_LA_SIRENA[dominioDi(sirena)] ? sirena : "",
+    zona: zona.includes(".") ? zona : "",
+  });
+}
+
+/* Se uno stato vuol dire «scattato»: il valore scritto, oppure `on`. */
+export function valeScattato(scattato, stato) {
+  if (!scattato) return false;
+  const adesso = minuscolo(stato);
+  if (!adesso || ["unavailable", "unknown", "none"].includes(adesso)) return false;
+  const atteso = minuscolo(scattato.valore);
+  return atteso ? adesso === atteso : adesso === "on" || adesso === "triggered";
+}
+
+/** Se l'antifurto su misura e' scattato adesso. */
+export function eScattatoAdesso(scattato, states = {}) {
+  if (!scattato) return false;
+  return valeScattato(scattato, states?.[scattato.entita]?.state);
+}
+
+/** Se la sirena dichiarata suona adesso. */
+export function sirenaAccesa(scattato, states = {}) {
+  if (!scattato?.sirena) return false;
+  return minuscolo(states?.[scattato.sirena]?.state) === "on";
+}
+
+const APERTURE_E_MOVIMENTO = new Set([
+  "door",
+  "window",
+  "garage_door",
+  "opening",
+  "motion",
+  "occupancy",
+  "presence",
+  "vibration",
+  "tamper",
+]);
+
+/**
+ * Che cosa l'ha fatto scattare, detto con un nome.
+ *
+ * Se e' dichiarata un'entita' della zona: il suo stato se e' una parola (un
+ * `sensor` che dice «Finestra cucina»), il suo nome se e' un sensore acceso.
+ * Altrimenti l'ultima porta, finestra o movimento che si e' acceso nei dieci
+ * minuti prima: quasi sempre e' quello. `""` se non si sa.
+ */
+export function zonaDelloScattato(scattato, states = {}, { adesso = Date.now() } = {}) {
+  const nome = (id, st) =>
+    pulito(st?.attributes?.friendly_name) || id.split(".")[1]?.replace(/_/g, " ") || id;
+  if (scattato?.zona) {
+    const st = states?.[scattato.zona];
+    if (st) {
+      const valore = pulito(st.state);
+      if (dominioDi(scattato.zona) === "binary_sensor")
+        return valore === "on" ? nome(scattato.zona, st) : "";
+      if (valore && !["unknown", "unavailable", "none", "off", "on"].includes(valore.toLowerCase()))
+        return valore.slice(0, 40);
+      if (valore === "on") return nome(scattato.zona, st);
+    }
+  }
+  let migliore = null;
+  for (const [id, st] of Object.entries(states || {})) {
+    if (dominioDi(id) !== "binary_sensor" || st?.state !== "on") continue;
+    if (!APERTURE_E_MOVIMENTO.has(st?.attributes?.device_class)) continue;
+    const quando = Date.parse(st.last_changed || "");
+    if (!Number.isFinite(quando) || adesso - quando > 10 * 60 * 1000) continue;
+    if (!migliore || quando > migliore.quando) migliore = { id, st, quando };
+  }
+  return migliore ? nome(migliore.id, migliore.st).slice(0, 40) : "";
+}
+
+/* Il tasto che disinserisce, fra quelli su misura: quello che si chiama cosi'. */
+const DISINSERITO = /disinser|disarm|spent|off\b|libero/i;
+
+/** Il modo su misura che disinserisce, o `null`. */
+export function modoCheDisinserisce(modi = []) {
+  return modi.find((modo) => DISINSERITO.test(`${modo.id} ${modo.nome}`)) || null;
+}
+
+/* Il tasto che inserisce «fuori casa»: totale, fuori, away; altrimenti il
+ * primo che non disinserisce. */
+const TOTALE = /total|fuori|away|tutt|esco|uscit/i;
+
+/** Il modo su misura con cui inserire dalla notifica, o `null`. */
+export function modoPerInserire(modi = []) {
+  const inserimenti = modi.filter((modo) => !DISINSERITO.test(`${modo.id} ${modo.nome}`));
+  return (
+    inserimenti.find((modo) => TOTALE.test(`${modo.id} ${modo.nome}`)) || inserimenti[0] || null
+  );
+}

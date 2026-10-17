@@ -266,7 +266,13 @@ test("togliere una chiave non alza la revisione", async () => {
    * dalla plancia principale, e la scelta fatta dal telefono deve arrivarle. */
   /* E la 66 con le automazioni (`cd_automazioni`): le esegue la casa, che le
    * legge dalla plancia principale. */
-  assert.equal(CONFIG_KEYS_REVISION, 66);
+  /* E la 67 con quando l'antifurto su misura e' scattato
+   * (`cd_antifurto_scattato`): la legge anche la casa, per la notifica. */
+  assert.equal(CONFIG_KEYS_REVISION, 67);
+  assert.ok(
+    CONFIG_KEYS.includes("cd_antifurto_scattato"),
+    "lo scattato su misura deve arrivare alla casa e agli altri schermi",
+  );
   assert.ok(
     CONFIG_KEYS.includes("cd_automazioni"),
     "le automazioni scritte dal computer devono arrivare alla casa",

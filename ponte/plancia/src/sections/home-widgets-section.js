@@ -293,6 +293,11 @@ import {
   CHIAVE_ANTIFURTO_SU_MISURA,
   modoSuMisuraAcceso,
   normalizzaModiSuMisura,
+  CASELLA_DELLO_SCATTATO,
+  CHIAVE_ANTIFURTO_SCATTATO,
+  eScattatoAdesso,
+  normalizzaScattato,
+  zonaDelloScattato,
 } from "../core/antifurto-su-misura.js";
 import { EVENTO_PIATTAFORME, piattaformeConosciute } from "./di-chi-e-unentita-section.js";
 /* I server adottati per dispositivo (#411) li raccoglie la sezione Server, e
@@ -1580,7 +1585,15 @@ function securityModel(states) {
   // aperture, da sole, hanno gia' la loro tessera.
   if (!alarm && !miei.length) return null;
   const raw = clean(alarm?.state).toLowerCase();
-  const triggered = raw === "triggered" || raw === "pending";
+  /* «Ho uno switch che mi controlla se è scattato antifurto»: lo scattato su
+   * misura vale quanto il `triggered` della centrale, e la tessera lo dice in
+   * rosso con la zona — non «Inserito» mentre in cima c'e' «ALLARME!». */
+  const scattato = normalizzaScattato(
+    readJson(CHIAVE_ANTIFURTO_SCATTATO, {}),
+    clean((readJson("cd_entity_overrides", {}) || {})[CASELLA_DELLO_SCATTATO]),
+  );
+  const suona = eScattatoAdesso(scattato, states);
+  const triggered = raw === "triggered" || raw === "pending" || suona;
   const armed = raw.startsWith("armed") || Boolean(mioAcceso);
   const value =
     !alarm && !miei.length
@@ -1600,7 +1613,7 @@ function securityModel(states) {
     alert: triggered,
     label: t("Sicurezza", "Security"),
     value,
-    caption: "",
+    caption: suona ? didascaliaDelloScattato(scattato, states) : "",
     ring: armed || triggered ? 100 : 0,
     /* «C'e' un antifurto da comandare»: la centrale, oppure i tasti scritti a
      * mano. Chi legge questo campo apre la fila dei tasti, e quella fila i
@@ -1619,6 +1632,16 @@ function securityModel(states) {
       (riga) => riga.stato === "aperto" || riga.escluso,
     ),
   };
+}
+
+/* «Finestra cucina · 18:22»: che cosa e da quando, sotto «Allarme!». */
+function didascaliaDelloScattato(scattato, states) {
+  const zona = zonaDelloScattato(scattato, states);
+  const dal = Date.parse(clean(states?.[scattato?.entita]?.last_changed));
+  const ora = Number.isFinite(dal)
+    ? new Date(dal).toLocaleTimeString(activeLocale() || undefined, { hour: "2-digit", minute: "2-digit" })
+    : "";
+  return [zona, ora].filter(Boolean).join(" · ");
 }
 
 function modiDellaFinestra(centrale) {

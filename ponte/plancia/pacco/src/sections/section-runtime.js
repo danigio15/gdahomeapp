@@ -533,7 +533,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-LVXYODN3.js";
+} from "../../chunk-GUQNPZBI.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1902,6 +1902,8 @@ var SOURCE_INDEX = Object.freeze({
   "😀 Scegli un'icona": "😀 Choose an icon",
   "😕 Nessuna entità riconosciuta automaticamente: potrai assegnarle a mano dall'editor con la ricerca 🔍.": "😕 No entities recognized automatically: you can assign them manually from the editor with 🔍 search.",
   "🚗 Auto elettrica": "🚗 Electric car",
+  "🚨 Salvato: la casa sa quando suona": "🚨 Saved: the house knows when it goes off",
+  "🚨 Tolto": "🚨 Removed",
   "🚪 ${quanti} varchi aggiunti": "🚪 ${quanti} openings added",
   "🚪 Apertura": "🚪 Opening",
   "🚪 Porta col microchip": "🚪 Microchip pet door",
@@ -2156,7 +2158,7 @@ var SOURCE_INDEX = Object.freeze({
   "A piedi": "Walking",
   "A posto": "All good",
   "A rete presente la tessera mostra la carica della batteria; quando la corrente cade mostra i minuti che restano e si accende. Nessuna casella è obbligatoria: con il solo stato di NUT la tessera sa già dire se c'è tensione. Se ne hai più di uno, aggiungili qui sotto: ognuno ha la sua scena nella pagina UPS.": "With mains present the tile shows the battery charge; when power drops it shows the minutes left and lights up. No field is required: with the NUT status alone the tile already knows whether there is power. If you have more than one, add them below: each gets its own scene on the UPS page.",
-  "a riposo": "idle",
+  "a riposo": "at rest",
   "A riposo": "Standby",
   "A scomparsa": "Auto-hide",
   "A scomparsa: appare con swipe/tocco sulla linguetta. Fissa: sempre in vista.": "Auto-hide: appears with a swipe/tap on the handle. Fixed: always in view.",
@@ -2982,6 +2984,7 @@ var SOURCE_INDEX = Object.freeze({
   "certi giorni": "certain days",
   "Cestino": "Waste bin",
   "Cestino dei rifiuti (problema sì/no)": "Waste bin (problem yes/no)",
+  "Che cosa l'ha fatto scattare (facoltativo)": "What set it off (optional)",
   "Che materiale è": "Which material",
   "chi": "who",
   "chi è in casa": "who is home",
@@ -3518,6 +3521,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dove piove adesso": "Where it is raining now",
   "Dove si configura": "Where it is configured",
   "Dove si legge se è inserito": "Where to read if it is armed",
+  "Dove si legge se è scattato": "Where to read if it is triggered",
   "Dove siamo": "Where we are",
   "Dove vai?": "Where to?",
   "Due fasce": "Two bands",
@@ -4174,6 +4178,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il tocco chiede conferma; col PIN, il codice.": "A tap asks to confirm; with a PIN, the code.",
   "Il Vallhorn di IKEA, un contatto Zigbee sullo sportello, un sensore di luce… scegli il dispositivo della cassetta e le caselle che quell'integrazione pubblica si compilano da sole. Anche un sensore solo basta.": "IKEA's Vallhorn, a Zigbee contact on the flap, a light sensor… pick the mailbox device and whichever fields that integration publishes fill themselves in. One sensor alone is enough too.",
   "Il valore che vuol dire «inserito»": "The value that means “armed”",
+  "Il valore che vuol dire «scattato»": "The value that means “triggered”",
   "Il valore della vista Istantaneo.": "What the Instant view shows.",
   "Il verso invertito": "The inverted direction",
   "il viaggio": "the trip",
@@ -4212,7 +4217,6 @@ var SOURCE_INDEX = Object.freeze({
   "In ${conto.attivi} stanze c'è qualcuno": "Someone in ${conto.attivi} rooms",
   "In 1 stanza c'è qualcuno": "Someone in 1 room",
   "In Ah, Wh o kWh. Vuota, si ricava dalla carica e dalla capacità.": "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.",
-  "in allarme": "triggered",
   "In allarme": "In alarm",
   "In alto e sul riposo. Vuoto: il primo che Home Assistant ha": "At the top and on the rest screen. Empty: the first one Home Assistant has",
   "In apertura": "Opening",
@@ -4411,6 +4415,7 @@ var SOURCE_INDEX = Object.freeze({
   "L'elenco diviso per tipo, come prima": "The list split by type, as before",
   "L'elenco e i salvataggi passano dall'add-on gdahome: qui non c'è.": "The list and saving go through the gdahome add-on: it is not here.",
   "L'elettrodomestico non è entrato nello store": "Appliance did not enter the store",
+  "L'entità che dice che l'antifurto sta suonando: un interruttore, un sensore o un aiutante. Quando vale «scattato» la Sicurezza, la tessera della Home e il pannello a muro diventano rossi, e la casa manda la notifica urgente.": "The entity that says the alarm is going off: a switch, a sensor or a helper. When it reads “triggered” Security, the Home tile and the wall panel turn red, and the house sends the urgent notification.",
   "L'entità che dice se è acceso o spento": "The entity that says whether it is on or off",
   "L'entità che dice se l'animale è dentro o fuori: la porta col microchip (SureFlap e simili) la pubblica come binary_sensor.": "The entity telling whether the pet is in or out: microchip pet doors (SureFlap and the like) publish it as a binary_sensor.",
   "L'entità che rileva il consenso di accensione e spegnimento della caldaia.": "The entity that reports the boiler's call for heat, on or off.",
@@ -5292,6 +5297,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nuova automazione": "New automation",
   "Nuova cosa da fare": "New to-do",
   "Nuove": "New",
+  "NUOVO": "NEW",
   "Nuovo canale": "New channel",
   "Nuovo carico": "New load",
   "Nuovo comando": "New command",
@@ -5424,6 +5430,7 @@ var SOURCE_INDEX = Object.freeze({
   "Per esempio: Preset 1": "For example: Preset 1",
   "Per frigo e congelatore: mostra la barra temperatura al posto della potenza.": "For fridge and freezer: shows the temperature strip instead of the power bar.",
   "Per il ritorno servirà una ricarica": "You will need to charge for the way back",
+  "Per il tasto «Spegni sirena» nella notifica e nella Sicurezza.": "For the “Siren off” button in the notification and in Security.",
   "Per le luci che vuoi solo vedere, senza rischiare un tocco: la riga resta dov'è, il tasto smette di rispondere.": "For lights you only want to see, with no accidental taps: the row stays where it is, the button stops responding.",
   "Per le prese che non vanno spente: il frigo, il modem, il congelatore. La riga resta dov'è, il tasto smette di rispondere.": "For sockets that must not be switched off: the fridge, the modem, the freezer. The row stays where it is, the button stops responding.",
   "Per le soste scegli 100% alla partenza.": "For the stops, choose 100% at departure.",
@@ -5803,6 +5810,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quando c'è movimento in ${area} di notte": "When there is motion in ${area} at night",
   "Quando c'è movimento in ${dove}": "When there is motion in ${dove}",
   "Quando cambia ${attributo} di ${chi}": "When ${attributo} of ${chi} changes",
+  "Quando è scattato": "When it is triggered",
   "Quando Fotovoltaico e Rete sono configurati, il consumo Casa usa lo stesso bilancio dei flussi di Home Assistant. Il contatore totale kWh comanda: se c'è, giorno, mese e anno si ricavano da quello con Recorder e i campi di periodo non vengono letti. I campi giornaliero, mensile e annuale servono quando un contatore totale non esiste.": "When Solar and Grid are configured, Home consumption uses the same flow balance as Home Assistant. The total kWh meter wins: when one is set, day, month and year are derived from it through Recorder and the period fields are not read. The daily, monthly and annual fields are for when no total meter exists.",
   "Quando l'antifurto si disinserisce": "When the alarm is disarmed",
   "Quando l'antifurto si inserisce": "When the alarm is armed",
@@ -6153,6 +6161,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scaricata questo mese": "Discharged this month",
   "Scarico e centrifuga": "Drain and spin",
   "Scarsa": "Poor",
+  "scattato": "triggered",
   "Scegli": "Choose",
   "Scegli almeno un termostato.": "Choose at least one thermostat.",
   "Scegli con 🔍, oppure scrivi l'entità: dominio.nome": "Pick with 🔍, or type the entity: domain.name",
@@ -6444,6 +6453,10 @@ var SOURCE_INDEX = Object.freeze({
   "Sincronizzazione dati…": "Synchronizing data…",
   "Sinistra": "Left",
   "Sintetici": "Synthetics",
+  "Sirena (facoltativa)": "Siren (optional)",
+  "sirena accesa": "siren on",
+  "Sirena accesa": "Siren on",
+  "sirena spenta": "siren off",
   "Sistema climatico": "Climate system",
   "SISTEMA CLIMATICO": "CLIMATE SYSTEM",
   "Sistema di sicurezza": "Security system",
@@ -6531,6 +6544,7 @@ var SOURCE_INDEX = Object.freeze({
   "Spegni il clima": "Turn off climate",
   "spegni le luci": "turn off the lights",
   "spegni le luci rimaste accese": "turn off the lights left on",
+  "Spegni sirena": "Siren off",
   "Spegni tutte": "Turn all off",
   "Spegni tutte le luci": "Turn all lights off",
   "Spegni tutto": "Turn everything off",
@@ -7072,6 +7086,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un po' afoso": "Somewhat muggy",
   "Un po' di disagio": "Some discomfort",
   "Un rilevatore di fumo o gas sta suonando.": "A smoke or gas detector is going off.",
+  "Un sensore che dice la zona. Vuoto: la casa guarda quale porta, finestra o movimento si è acceso per ultimo.": "A sensor that names the zone. Empty: the house looks at which door, window or motion turned on last.",
   "Un sensore che Home Assistant non ha etichettato — un template fatto in casa — non viene trovato: qui gli si dice che misura è.": "A sensor Home Assistant has not labelled — a template of your own — is not found: here you say which measure it is.",
   "Un sensore col livello": "A sensor with the level",
   "Un sensore col numero degli scioperi e l'elenco negli attributi — settore, regione, data d'inizio: le integrazioni italiane degli scioperi lo pubblicano cosi'.": "A sensor with the number of strikes and the list in its attributes — sector, region, start date: the Italian strike integrations publish it that way.",
@@ -7263,6 +7278,7 @@ var SOURCE_INDEX = Object.freeze({
   "vuoto — aggiungi carichi": "empty — add loads",
   "Vuoto = tariffa della sezione Energia.": "Empty = tariff from the Energy section.",
   "Vuoto vale il valore di serie scritto nel campo.": "Empty means the default shown in the field.",
+  "Vuoto vuol dire «on».": "Empty means “on”.",
   "Vuoto vuol dire «on». Senza questo il tasto funziona lo stesso: semplicemente non resta acceso.": "Empty means “on”. Without it the button still works: it simply does not stay lit.",
   "Vuoto: accende": "Empty: turns on",
   "Vuoto: il nome dell'entità": "Empty: the entity name",
@@ -7280,6 +7296,7 @@ var SOURCE_INDEX = Object.freeze({
   "WebSocket WebRTC non raggiungibile": "WebRTC WebSocket unreachable",
   "Widget": "Widgets",
   "Widget di avviso": "Alert widgets",
+  "zona": "zone",
   "Zona": "Zone",
   "Zona giorno": "Day zone",
   "Zona notte": "Night zone",
@@ -21993,6 +22010,96 @@ function tastiSuMisura(stored) {
     })
   );
 }
+var CHIAVE_ANTIFURTO_SCATTATO = "cd_antifurto_scattato";
+var CASELLA_DELLO_SCATTATO = "dm.home_interruttore_antifurto";
+var DOMINI_DELLO_SCATTATO = Object.freeze([
+  "switch",
+  "binary_sensor",
+  "input_boolean",
+  "sensor",
+  "siren",
+  "light"
+]);
+var SPEGNI_LA_SIRENA = Object.freeze({
+  siren: "turn_off",
+  switch: "turn_off",
+  input_boolean: "turn_off",
+  light: "turn_off"
+});
+function normalizzaScattato(grezzo, ripiego = "") {
+  let dato = grezzo;
+  if (typeof dato === "string") {
+    try {
+      dato = JSON.parse(dato);
+    } catch (_errore) {
+      dato = null;
+    }
+  }
+  const d = dato && typeof dato === "object" && !Array.isArray(dato) ? dato : {};
+  const entita3 = pulito16(d.entita) || pulito16(ripiego);
+  if (!entita3.includes(".") || !DOMINI_DELLO_SCATTATO.includes(dominioDi2(entita3))) return null;
+  const sirena = pulito16(d.sirena);
+  const zona = pulito16(d.zona);
+  return Object.freeze({
+    entita: entita3,
+    valore: pulito16(d.valore),
+    sirena: sirena.includes(".") && SPEGNI_LA_SIRENA[dominioDi2(sirena)] ? sirena : "",
+    zona: zona.includes(".") ? zona : ""
+  });
+}
+function valeScattato(scattato, stato3) {
+  if (!scattato) return false;
+  const adesso = minuscolo2(stato3);
+  if (!adesso || ["unavailable", "unknown", "none"].includes(adesso)) return false;
+  const atteso = minuscolo2(scattato.valore);
+  return atteso ? adesso === atteso : adesso === "on" || adesso === "triggered";
+}
+function eScattatoAdesso(scattato, states = {}) {
+  if (!scattato) return false;
+  return valeScattato(scattato, states?.[scattato.entita]?.state);
+}
+function sirenaAccesa(scattato, states = {}) {
+  if (!scattato?.sirena) return false;
+  return minuscolo2(states?.[scattato.sirena]?.state) === "on";
+}
+var APERTURE_E_MOVIMENTO = /* @__PURE__ */ new Set([
+  "door",
+  "window",
+  "garage_door",
+  "opening",
+  "motion",
+  "occupancy",
+  "presence",
+  "vibration",
+  "tamper"
+]);
+function zonaDelloScattato(scattato, states = {}, { adesso = Date.now() } = {}) {
+  const nome = (id, st) => pulito16(st?.attributes?.friendly_name) || id.split(".")[1]?.replace(/_/g, " ") || id;
+  if (scattato?.zona) {
+    const st = states?.[scattato.zona];
+    if (st) {
+      const valore3 = pulito16(st.state);
+      if (dominioDi2(scattato.zona) === "binary_sensor")
+        return valore3 === "on" ? nome(scattato.zona, st) : "";
+      if (valore3 && !["unknown", "unavailable", "none", "off", "on"].includes(valore3.toLowerCase()))
+        return valore3.slice(0, 40);
+      if (valore3 === "on") return nome(scattato.zona, st);
+    }
+  }
+  let migliore = null;
+  for (const [id, st] of Object.entries(states || {})) {
+    if (dominioDi2(id) !== "binary_sensor" || st?.state !== "on") continue;
+    if (!APERTURE_E_MOVIMENTO.has(st?.attributes?.device_class)) continue;
+    const quando4 = Date.parse(st.last_changed || "");
+    if (!Number.isFinite(quando4) || adesso - quando4 > 10 * 60 * 1e3) continue;
+    if (!migliore || quando4 > migliore.quando) migliore = { id, st, quando: quando4 };
+  }
+  return migliore ? nome(migliore.id, migliore.st).slice(0, 40) : "";
+}
+var DISINSERITO = /disinser|disarm|spent|off\b|libero/i;
+function modoCheDisinserisce(modi = []) {
+  return modi.find((modo) => DISINSERITO.test(`${modo.id} ${modo.nome}`)) || null;
+}
 
 // src/core/le-zone-della-centrale.js
 var pulito17 = (valore3) => String(valore3 ?? "").trim();
@@ -22767,6 +22874,69 @@ function syncCards(grid, models, labels) {
   grid._sig = signature4;
   return true;
 }
+function loScattato() {
+  return normalizzaScattato(
+    readJson(CHIAVE_ANTIFURTO_SCATTATO, {}),
+    clean((readJson("cd_entity_overrides", {}) || {})[CASELLA_DELLO_SCATTATO])
+  );
+}
+function striscetteDelloScattato(scattato, states, adesso = Date.now()) {
+  if (!eScattatoAdesso(scattato, states)) return "";
+  const zona = zonaDelloScattato(scattato, states, { adesso });
+  const dal = Date.parse(clean(states?.[scattato.entita]?.last_changed));
+  const pillole2 = [];
+  if (zona) pillole2.push(`<span class="dm-sec-scat-pill">📍 ${esc(zona)}</span>`);
+  if (Number.isFinite(dal)) {
+    const ora5 = new Date(dal).toLocaleTimeString(activeLocale() || void 0, {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    const minuti = Math.max(0, Math.round((adesso - dal) / 6e4));
+    pillole2.push(
+      `<span class="dm-sec-scat-pill">🕒 ${esc(t("dalle", "since"))} ${esc(ora5)} · ${minuti} min</span>`
+    );
+  }
+  if (sirenaAccesa(scattato, states))
+    pillole2.push(`<span class="dm-sec-scat-pill is-sirena">🔊 ${esc(t("Sirena accesa", "Siren on"))}</span>`);
+  const tasti = [];
+  if (scattato.sirena)
+    tasti.push(
+      `<button type="button" class="dm-sec-scat-btn is-rosso" data-dm-spegni-sirena>🔇 ${esc(t("Spegni sirena", "Siren off"))}</button>`
+    );
+  const spegni2 = modoCheDisinserisce(modiSuMisura());
+  if (spegni2)
+    tasti.push(
+      `<button type="button" class="dm-sec-scat-btn" onclick="promptPinAndSet(${jsArg(`${PREFISSO_SU_MISURA}${spegni2.id}`)})">🔓 ${esc(t("Disinserisci", "Disarm"))}</button>`
+    );
+  return `<div class="dm-sec-scat-pillole">${pillole2.join("")}</div>${tasti.length ? `<div class="dm-sec-scat-tasti">${tasti.join("")}</div>` : ""}`;
+}
+function syncScattato(shell) {
+  const stage = shell.querySelector("#alarm-stage");
+  let fascia2 = shell.querySelector("[data-dm-sec-scattato]");
+  const markup7 = stage ? striscetteDelloScattato(loScattato(), allStates()) : "";
+  if (!markup7) {
+    fascia2?.remove();
+    return false;
+  }
+  if (!fascia2) {
+    fascia2 = doc.createElement("div");
+    fascia2.className = "dm-sec-scat";
+    fascia2.dataset.dmSecScattato = "true";
+    stage.append(fascia2);
+  }
+  if (fascia2.innerHTML !== markup7) fascia2.innerHTML = markup7;
+  return true;
+}
+function spegniLaSirena() {
+  const sirena = loScattato()?.sirena;
+  if (!sirena) return false;
+  const dominio5 = sirena.split(".")[0];
+  return chiamaServizio({
+    domain: dominio5,
+    service: SPEGNI_LA_SIRENA[dominio5] || "turn_off",
+    data: { entity_id: sirena }
+  });
+}
 function renderSecurity() {
   const host2 = doc?.getElementById?.("page-security");
   if (!host2) return false;
@@ -22778,6 +22948,7 @@ function renderSecurity() {
   syncModes(shell, labels);
   syncAree(shell, labels);
   syncZone(shell, labels);
+  syncScattato(shell);
   const models = cameraModels();
   if (syncCards(grid, models, labels) && models.length) requestCameraFrames();
   const states = allStates();
@@ -22823,6 +22994,11 @@ function openCamera(card2) {
 }
 function onShellClick2(event) {
   const target = event.target;
+  if (target?.closest?.("[data-dm-spegni-sirena]")) {
+    event.preventDefault();
+    spegniLaSirena();
+    return;
+  }
   if (target?.closest?.("[data-dm-aree-annulla]")) {
     event.preventDefault();
     if (sciogliIlGruppo()) renderSecurity();
@@ -23104,6 +23280,17 @@ function cssString(value) {
 }
 function securityCss() {
   return `
+    .dm-sec-scat{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px dashed color-mix(in srgb,#dc2626 35%,transparent)}
+    .dm-sec-scat-pillole{display:flex;flex-wrap:wrap;gap:8px}
+    .dm-sec-scat-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:800;background:color-mix(in srgb,#dc2626 10%,var(--card-bg,#fff));color:#b91c1c;border:1px solid color-mix(in srgb,#dc2626 28%,transparent)}
+    html[data-theme="dark"] .dm-sec-scat-pill{color:#fca5a5}
+    .dm-sec-scat-pill.is-sirena{animation:dmSecScatBatte 1.2s ease-in-out infinite}
+    @keyframes dmSecScatBatte{50%{background:color-mix(in srgb,#dc2626 22%,var(--card-bg,#fff))}}
+    @media (prefers-reduced-motion:reduce){.dm-sec-scat-pill.is-sirena{animation:none}}
+    .dm-sec-scat-tasti{display:flex;gap:8px;flex-wrap:wrap}
+    .dm-sec-scat-btn{border:1px solid color-mix(in srgb,#dc2626 35%,var(--divider-color,#e2e8f0));background:var(--card-bg,#fff);color:inherit;border-radius:999px;padding:9px 16px;font:inherit;font-size:12.5px;font-weight:900;cursor:pointer}
+    .dm-sec-scat-btn.is-rosso{background:#dc2626;border-color:#dc2626;color:#fff;box-shadow:0 8px 20px -10px #dc2626}
+
 .dm-sec-shell,.dm-sec-shell *,.dm-sec-shell *::before,.dm-sec-shell *::after{box-sizing:border-box}
 .dm-sec-shell{
   --dm-sec-cyan:#22d3ee;--dm-sec-cyan-deep:#0284c7;
@@ -60196,7 +60383,12 @@ function securityModel(states) {
   const mioAcceso = miei.length ? modoSuMisuraAcceso(miei, states) : "";
   if (!alarm && !miei.length) return null;
   const raw = clean(alarm?.state).toLowerCase();
-  const triggered = raw === "triggered" || raw === "pending";
+  const scattato = normalizzaScattato(
+    readJson(CHIAVE_ANTIFURTO_SCATTATO, {}),
+    clean((readJson("cd_entity_overrides", {}) || {})[CASELLA_DELLO_SCATTATO])
+  );
+  const suona = eScattatoAdesso(scattato, states);
+  const triggered = raw === "triggered" || raw === "pending" || suona;
   const armed = raw.startsWith("armed") || Boolean(mioAcceso);
   const value = !alarm && !miei.length ? "—" : triggered ? t("Allarme!", "Alarm!") : armed ? t("Inserito", "Armed") : t("Disinserito", "Disarmed");
   return {
@@ -60206,7 +60398,7 @@ function securityModel(states) {
     alert: triggered,
     label: t("Sicurezza", "Security"),
     value,
-    caption: "",
+    caption: suona ? didascaliaDelloScattato(scattato, states) : "",
     ring: armed || triggered ? 100 : 0,
     /* «C'e' un antifurto da comandare»: la centrale, oppure i tasti scritti a
      * mano. Chi legge questo campo apre la fila dei tasti, e quella fila i
@@ -60225,6 +60417,12 @@ function securityModel(states) {
       (riga3) => riga3.stato === "aperto" || riga3.escluso
     )
   };
+}
+function didascaliaDelloScattato(scattato, states) {
+  const zona = zonaDelloScattato(scattato, states);
+  const dal = Date.parse(clean(states?.[scattato?.entita]?.last_changed));
+  const ora5 = Number.isFinite(dal) ? new Date(dal).toLocaleTimeString(activeLocale() || void 0, { hour: "2-digit", minute: "2-digit" }) : "";
+  return [zona, ora5].filter(Boolean).join(" · ");
 }
 function modiDellaFinestra(centrale) {
   try {
@@ -82205,8 +82403,98 @@ function rigaMarkup6(modo, indice) {
     <button type="button" class="ed-save-btn" data-suo-save>💾 ${esc(t("Salva il tasto", "Save the button"))}</button>
   </article>`;
 }
+function scattatoSalvato() {
+  const grezzo = readJson(CHIAVE_ANTIFURTO_SCATTATO, {});
+  return grezzo && typeof grezzo === "object" && !Array.isArray(grezzo) ? grezzo : {};
+}
+function casellaStorica() {
+  const caselle2 = readJson("cd_entity_overrides", {}) || {};
+  return clean(caselle2[CASELLA_DELLO_SCATTATO]);
+}
+function adessoMarkup(grezzo) {
+  const scattato = normalizzaScattato(grezzo, casellaStorica());
+  if (!scattato) return "";
+  let stati2 = {};
+  try {
+    stati2 = allStates() || {};
+  } catch (_error) {
+    stati2 = {};
+  }
+  const suona = eScattatoAdesso(scattato, stati2);
+  const pezzi = [
+    suona ? t("scattato", "triggered") : t("a riposo", "at rest")
+  ];
+  if (suona) {
+    const zona = zonaDelloScattato(scattato, stati2);
+    if (zona) pezzi.push(`${t("zona", "zone")} «${zona}»`);
+  }
+  if (scattato.sirena)
+    pezzi.push(sirenaAccesa(scattato, stati2) ? t("sirena accesa", "siren on") : t("sirena spenta", "siren off"));
+  return `<output class="dm-scat-adesso${suona ? " is-on" : ""}"><span class="dm-scat-punto"></span>${esc(
+    t("Adesso", "Now")
+  )}: ${esc(pezzi.join(" · "))}</output>`;
+}
+function scattatoMarkup() {
+  const salvato2 = scattatoSalvato();
+  const entita3 = clean(salvato2.entita) || casellaStorica();
+  const campo5 = (id, chiave2, valore3, segnaposto, picker = true) => `<span class="ed-form-row"><input
+        id="${id}" class="ed-input mono" data-scat-field="${chiave2}" value="${esc(valore3)}"
+        placeholder="${esc(segnaposto)}" autocomplete="off" spellcheck="false">${picker ? `<button type="button" class="dm-entity-picker" data-scat-pick="${id}"
+        aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button>` : ""}</span>`;
+  return `<section class="dm-scat" id="dm-antifurto-scattato">
+    <div class="dm-scat-testa"><span class="dm-scat-titolo">🚨 ${esc(t("Quando è scattato", "When it is triggered"))}</span>
+      <span class="dm-scat-nuovo">${esc(t("NUOVO", "NEW"))}</span></div>
+    <p class="ed-intro dm-scat-intro">${esc(
+    t(
+      "L'entità che dice che l'antifurto sta suonando: un interruttore, un sensore o un aiutante. Quando vale «scattato» la Sicurezza, la tessera della Home e il pannello a muro diventano rossi, e la casa manda la notifica urgente.",
+      "The entity that says the alarm is going off: a switch, a sensor or a helper. When it reads “triggered” Security, the Home tile and the wall panel turn red, and the house sends the urgent notification."
+    )
+  )}</p>
+    <div class="dm-scat-griglia">
+      <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Dove si legge se è scattato", "Where to read if it is triggered"))}</span>
+        ${campo5("dm-scat-entita", "entita", entita3, "switch.antifurto_scattato")}</label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Il valore che vuol dire «scattato»", "The value that means “triggered”"))}</span>
+        ${campo5("dm-scat-valore", "valore", clean(salvato2.valore), "on", false)}
+        <small>${esc(t("Vuoto vuol dire «on».", "Empty means “on”."))}</small></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Sirena (facoltativa)", "Siren (optional)"))}</span>
+        ${campo5("dm-scat-sirena", "sirena", clean(salvato2.sirena), "switch.sirena")}
+        <small>${esc(t("Per il tasto «Spegni sirena» nella notifica e nella Sicurezza.", "For the “Siren off” button in the notification and in Security."))}</small></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${esc(t("Che cosa l'ha fatto scattare (facoltativo)", "What set it off (optional)"))}</span>
+        ${campo5("dm-scat-zona", "zona", clean(salvato2.zona), "sensor.antifurto_zona")}
+        <small>${esc(
+    t(
+      "Un sensore che dice la zona. Vuoto: la casa guarda quale porta, finestra o movimento si è acceso per ultimo.",
+      "A sensor that names the zone. Empty: the house looks at which door, window or motion turned on last."
+    )
+  )}</small></label>
+    </div>
+    ${adessoMarkup({ ...salvato2, entita: entita3 })}
+    <button type="button" class="ed-save-btn" data-scat-save>💾 ${esc(t("Salva", "Save"))}</button>
+  </section>`;
+}
+function salvaLoScattato(blocco3) {
+  const letto = {};
+  for (const campo5 of blocco3.querySelectorAll("[data-scat-field]"))
+    letto[clean(campo5.dataset.scatField)] = clean(campo5.value);
+  const prima = scattatoSalvato();
+  const buono = normalizzaScattato(letto);
+  writeJsonIfChanged(CHIAVE_ANTIFURTO_SCATTATO, buono ? { ...buono } : {});
+  const caselle2 = readJson("cd_entity_overrides", {}) || {};
+  const prossime = { ...caselle2 };
+  if (buono) prossime[CASELLA_DELLO_SCATTATO] = buono.entita;
+  else if (clean(caselle2[CASELLA_DELLO_SCATTATO]) === clean(prima.entita))
+    delete prossime[CASELLA_DELLO_SCATTATO];
+  writeJsonIfChanged("cd_entity_overrides", prossime);
+  try {
+    root.cdApplyCanonicalOverrides?.(prossime);
+    root.renderSecurity?.();
+    root.render?.();
+  } catch (_error) {
+  }
+  return Boolean(buono);
+}
 function markup2(modi) {
-  return `<div class="ed-slot-lbl dm-suo-titolo">${esc(t("Tasti d'inserimento su misura", "Custom arming buttons"))}</div>
+  return `${scattatoMarkup()}<div class="ed-slot-lbl dm-suo-titolo">${esc(t("Tasti d'inserimento su misura", "Custom arming buttons"))}</div>
   <p class="ed-intro dm-suo-intro">${esc(
     t(
       "Serve a chi una centrale non ce l'ha: un antifurto fatto con ESPHome, con gli script o con un elenco di modalità. Ogni tasto qui sotto compare nella sezione Sicurezza e nella tessera della Home, accanto a quelli della centrale — e se una centrale non c'è, al posto loro.",
@@ -82217,7 +82505,7 @@ function markup2(modi) {
   <button type="button" class="ed-btn-add" data-suo-add>＋ ${esc(t("Aggiungi un tasto", "Add a button"))}</button>`;
 }
 function firmaDelle(modi) {
-  return modi.map(
+  return `${JSON.stringify(scattatoSalvato())}#${casellaStorica()}#` + modi.map(
     (modo) => `${clean(modo?.nome)}~${clean(modo?.icona)}~${clean(modo?.entita)}~${clean(modo?.opzione)}~${clean(modo?.stato)}~${clean(modo?.valore)}`
   ).join("|");
 }
@@ -82255,6 +82543,14 @@ function leggiRiga(riga3, modo) {
     next[clean(campo5.dataset.suoField)] = clean(campo5.value);
   return next;
 }
+function salvaLeRighe(blocco3, modi = grezze()) {
+  const prossimi = modi.map((voce3, quale) => {
+    const nodo2 = blocco3.querySelector(`[data-suo-index="${quale}"]`);
+    return nodo2 ? leggiRiga(nodo2, voce3) : voce3;
+  });
+  salva5(prossimi);
+  return prossimi;
+}
 function onClick13(event) {
   const blocco3 = doc?.getElementById?.(BLOCK_ID2);
   if (!blocco3 || !blocco3.contains(event.target)) return;
@@ -82262,6 +82558,26 @@ function onClick13(event) {
     event.preventDefault();
     salva5([...grezze(), { icona: ICONA_DI_SERIE }]);
     ridisegna2();
+    return;
+  }
+  const scat = event.target.closest(".dm-scat");
+  if (scat) {
+    const cerca5 = event.target.closest("[data-scat-pick]");
+    if (cerca5) {
+      event.preventDefault();
+      const campo5 = doc.getElementById(clean(cerca5.dataset.scatPick));
+      if (campo5) root.wzPickEntity?.(campo5);
+      return;
+    }
+    if (event.target.closest("[data-scat-save]")) {
+      event.preventDefault();
+      const buono = salvaLoScattato(scat);
+      salvaLeRighe(blocco3);
+      ridisegna2();
+      root.edToast?.(
+        buono ? t("🚨 Salvato: la casa sa quando suona", "🚨 Saved: the house knows when it goes off") : t("🚨 Tolto", "🚨 Removed")
+      );
+    }
     return;
   }
   const riga3 = event.target.closest("[data-suo-index]");
@@ -82292,11 +82608,7 @@ function onClick13(event) {
   }
   if (event.target.closest("[data-suo-save]")) {
     event.preventDefault();
-    const prossimi = modi.map((voce3, quale) => {
-      const nodo2 = blocco3.querySelector(`[data-suo-index="${quale}"]`);
-      return nodo2 ? leggiRiga(nodo2, voce3) : voce3;
-    });
-    salva5(prossimi);
+    const prossimi = salvaLeRighe(blocco3, modi);
     ridisegna2();
     root.edToast?.(
       normalizzaModoSuMisura(prossimi[indice], indice) ? t("🛡️ Tasto salvato", "🛡️ Button saved") : t("Scegli cosa deve premere", "Pick what it has to press")
@@ -82314,6 +82626,16 @@ function css4() {
   #${BLOCK_ID2} .dm-suo-head .ed-row-new{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
   #${BLOCK_ID2} .dm-suo-icona{border:0;background:transparent;font-size:18px;cursor:pointer;line-height:1;padding:0 6px}
   #${BLOCK_ID2} .dm-suo-muto{display:block;font-size:11px;opacity:.75}
+  #${BLOCK_ID2} .dm-scat{margin:0 0 14px;padding:12px 14px;border-radius:16px;border:1px solid color-mix(in srgb,#dc2626 35%,var(--divider-color,#e2e8f0));background:linear-gradient(160deg,color-mix(in srgb,#dc2626 7%,var(--card-bg,#fff)),var(--card-bg,#fff) 70%);display:flex;flex-direction:column;gap:8px}
+  #${BLOCK_ID2} .dm-scat-testa{display:flex;align-items:center;gap:8px}
+  #${BLOCK_ID2} .dm-scat-titolo{font-weight:900;font-size:14px}
+  #${BLOCK_ID2} .dm-scat-nuovo{font-size:9.5px;font-weight:900;letter-spacing:.08em;padding:2px 7px;border-radius:999px;background:#dc2626;color:#fff}
+  #${BLOCK_ID2} .dm-scat-intro{margin:0}
+  #${BLOCK_ID2} .dm-scat-griglia{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px 12px}
+  #${BLOCK_ID2} .dm-scat-adesso{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;padding:8px 10px;border-radius:12px;background:color-mix(in srgb,var(--text,#0f172a) 5%,transparent)}
+  #${BLOCK_ID2} .dm-scat-adesso.is-on{background:color-mix(in srgb,#dc2626 14%,transparent);color:#b91c1c}
+  #${BLOCK_ID2} .dm-scat-punto{width:9px;height:9px;border-radius:50%;background:#94a3b8;flex:none}
+  #${BLOCK_ID2} .dm-scat-adesso.is-on .dm-scat-punto{background:#dc2626;box-shadow:0 0 0 4px color-mix(in srgb,#dc2626 25%,transparent)}
   `;
 }
 function installAntifurtoSuMisuraEditorSection() {
@@ -95045,6 +95367,7 @@ function fonteDaiValori(valori = {}) {
     lettori: json(valori.cd_media_player, []),
     antifurtoModi: json(valori.cd_antifurto_modi, []),
     antifurtoSuMisura: json(valori.cd_antifurto_su_misura, []),
+    antifurtoScattato: json(valori.cd_antifurto_scattato, {}),
     varchi: json(valori.cd_varchi, {}),
     invertiti: json(valori.cd_stati_invertiti, []),
     rapidoGlobale: json(valori.cd_clima_rapido, null),
@@ -95158,6 +95481,12 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
     antifurto: {
       tolte: alarmHiddenModes(altro.antifurtoModi),
       suMisura: elenco10(altro.antifurtoSuMisura),
+      /* Quando l'antifurto su misura e' scattato (l'interruttore che lo dice):
+       * il muro diventa rosso come per una centrale che suona. */
+      scattato: normalizzaScattato(
+        altro.antifurtoScattato,
+        String(overrides2?.[CASELLA_DELLO_SCATTATO] || "")
+      ),
       ingressi: Object.fromEntries(
         centraliAllarme(elenco10(altro.centrali), overrides2).map((c) => [entitaDellaCentrale(c), ingressiScritti(c)]).filter(([id]) => id)
       )
@@ -95229,7 +95558,8 @@ function avvisiAccesi(fonte = {}, stati2 = {}, centrale = "") {
     grave: false
   }));
   const tutte = [...new Set([entita2(centrale), ...elenco10(fonte.centrali)].filter(Boolean))];
-  const allarme2 = tutte.find((id) => String(stati2[id]?.state) === "triggered");
+  const suMisura = fonte.antifurto?.scattato;
+  const allarme2 = tutte.find((id) => String(stati2[id]?.state) === "triggered") || (eScattatoAdesso(suMisura, stati2) ? suMisura.entita : "");
   if (allarme2) accesi.unshift({ chiave: allarme2, testo: "", icon: "", grave: true });
   return accesi;
 }
@@ -97144,14 +97474,16 @@ function paginaIngresso(pagina2) {
   const centrale = centraleDelMuro(pagina2);
   const s = stato2(centrale);
   const valore3 = String(s?.state || "");
-  const scattato = valore3 === "triggered";
+  const suMisura = state112.fonte?.antifurto?.scattato;
+  const suonaSuMisura = Boolean(suMisura) && eScattatoAdesso(suMisura, allStates() || {});
+  const scattato = valore3 === "triggered" || suonaSuMisura;
   const spento = valore3 === "disarmed";
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
   const modi = tastiDellAntifurto(s);
   const acceso6 = tastoAcceso(s, modi);
   const carta2 = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
-        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? statoDellaCentrale(s) : modi.find((m) => m.mode === acceso6)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
+        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(suonaSuMisura ? STATI_DELL_ALLARME().triggered : s ? statoDellaCentrale(s) : modi.find((m) => m.mode === acceso6)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
         ${avvisoFinestre}</div></div>
       ${modi.length ? `<div class="mu-seg mu-modi">${modi.map((m) => {
     const attivo = m.mode === acceso6;
@@ -99118,7 +99450,7 @@ function svegliaSeServe(event) {
   ];
   const ids = event?.detail?.entity_ids || (event?.detail?.entity_id ? [event.detail.entity_id] : []);
   const tocca2 = (id) => !ids.length || ids.includes(id);
-  if (sensore && tocca2(sensore) && String(stato2(sensore)?.state) === "on" || centrali2.some((id) => tocca2(id) && String(stato2(id)?.state) === "triggered")) {
+  if (sensore && tocca2(sensore) && String(stato2(sensore)?.state) === "on" || centrali2.some((id) => tocca2(id) && String(stato2(id)?.state) === "triggered") || state112.fonte?.antifurto?.scattato && tocca2(state112.fonte.antifurto.scattato.entita) && eScattatoAdesso(state112.fonte.antifurto.scattato, allStates() || {})) {
     state112.riposo = false;
     tocco();
   }
@@ -129854,7 +130186,7 @@ function titoloMarkup2(disegno6, titolo3, sotto = "") {
   return `<h3 class="dm-meteo-titolo"><span aria-hidden="true">${icona2(disegno6, 20)}</span><span>${esc(titolo3)}</span>${sotto ? `<small>${esc(sotto)}</small>` : ""}</h3>`;
 }
 var b = (testo4) => `<b>${esc(testo4)}</b>`;
-function adessoMarkup(vista2) {
+function adessoMarkup2(vista2) {
   const { meteo: meteo3, entita: entita3, misure, frase: frase3, oggi, sole } = vista2;
   const temperatura = misure.temperatura;
   const unitaT = clean(temperatura?.unita) || "°C";
@@ -130225,7 +130557,7 @@ function puoConfigurareAdesso() {
   }
 }
 var DISEGNI3 = Object.freeze({
-  adesso: adessoMarkup,
+  adesso: adessoMarkup2,
   stazione: stazioneMarkup,
   invito: invitoMarkup2,
   ore: oreMarkup,

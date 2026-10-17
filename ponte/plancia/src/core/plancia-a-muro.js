@@ -20,6 +20,11 @@
 
 import { opzioniDelCampanello } from "./il-campanello-a-muro.js";
 import { alarmHiddenModes, centraliAllarme, entitaDellaCentrale } from "./alarm-panel.js";
+import {
+  CASELLA_DELLO_SCATTATO,
+  eScattatoAdesso,
+  normalizzaScattato,
+} from "./antifurto-su-misura.js";
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
 import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
@@ -1517,6 +1522,7 @@ export function fonteDaiValori(valori = {}) {
     lettori: json(valori.cd_media_player, []),
     antifurtoModi: json(valori.cd_antifurto_modi, []),
     antifurtoSuMisura: json(valori.cd_antifurto_su_misura, []),
+    antifurtoScattato: json(valori.cd_antifurto_scattato, {}),
     varchi: json(valori.cd_varchi, {}),
     invertiti: json(valori.cd_stati_invertiti, []),
     rapidoGlobale: json(valori.cd_clima_rapido, null),
@@ -1664,6 +1670,12 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
     antifurto: {
       tolte: alarmHiddenModes(altro.antifurtoModi),
       suMisura: elenco(altro.antifurtoSuMisura),
+      /* Quando l'antifurto su misura e' scattato (l'interruttore che lo dice):
+       * il muro diventa rosso come per una centrale che suona. */
+      scattato: normalizzaScattato(
+        altro.antifurtoScattato,
+        String(overrides?.[CASELLA_DELLO_SCATTATO] || ""),
+      ),
       ingressi: Object.fromEntries(
         centraliAllarme(elenco(altro.centrali), overrides)
           .map((c) => [entitaDellaCentrale(c), ingressiScritti(c)])
@@ -1798,7 +1810,10 @@ export function avvisiAccesi(fonte = {}, stati = {}, centrale = "") {
   /* Suona una qualunque area, non solo la prima: con piu' partizioni quella
    * che scatta puo' essere la terza. */
   const tutte = [...new Set([entita(centrale), ...elenco(fonte.centrali)].filter(Boolean))];
-  const allarme = tutte.find((id) => String(stati[id]?.state) === "triggered");
+  const suMisura = fonte.antifurto?.scattato;
+  const allarme =
+    tutte.find((id) => String(stati[id]?.state) === "triggered") ||
+    (eScattatoAdesso(suMisura, stati) ? suMisura.entita : "");
   if (allarme) accesi.unshift({ chiave: allarme, testo: "", icon: "", grave: true });
   return accesi;
 }

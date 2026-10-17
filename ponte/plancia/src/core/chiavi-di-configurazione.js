@@ -332,7 +332,11 @@
  * se · Allora, e i cronotermostati. Le esegue la casa, che le legge dalla
  * plancia principale: scritte dal computer, devono valere anche col telefono
  * in tasca e la plancia chiusa. */
-export const CONFIG_KEYS_REVISION = 66;
+/* La revisione 67 aggiunge quando l'antifurto su misura e' scattato
+ * (`cd_antifurto_scattato`): l'interruttore o il sensore che lo dice, il
+ * valore, la sirena e la zona. E' della casa come i tasti su misura accanto a
+ * cui sta, e la legge anche la casa per mandare la notifica urgente. */
+export const CONFIG_KEYS_REVISION = 67;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -367,6 +371,9 @@ export const CONFIG_KEYS = Object.freeze([
   // I tasti d'inserimento scritti a mano, per chi una centrale non ce l'ha
   // (#413): nome, icona, entita' da chiamare, dove leggere se e' inserita.
   "cd_antifurto_su_misura",
+  // Quando l'antifurto su misura e' scattato: l'interruttore che lo dice, la
+  // sirena e la zona.
+  "cd_antifurto_scattato",
   "cd_todo",
   "cd_widgets",
   // In che ordine stanno i blocchi della Home: persone, widget, azioni, dispositivi.
