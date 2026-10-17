@@ -72,7 +72,10 @@ void main() {
   test('senza Premium la voce ha il lucchetto, come la Configurazione', () {
     final casa = File('lib/schermate/home.dart').readAsStringSync();
     final bloccate = casa.substring(casa.indexOf('Set<Sezione> get _bloccate'));
-    expect(bloccate.substring(0, 500), contains('Sezione.automazioni,'));
+    expect(
+      bloccate.substring(0, 500),
+      matches(RegExp(r'Sezione\.automazioni\b')),
+    );
     expect(casa, contains('PerchePremium.automazioni'));
   });
 
