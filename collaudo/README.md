@@ -122,7 +122,7 @@ prove sue: non c'e' niente da chiamare, non c'e' niente che risponda. L'unico
 modo di sapere se sta in piedi e' aprirlo con un browser e provarci dentro.
 
 Questo lo serve, lo apre a tre larghezze e guarda che **ogni fotografia
-arrivi** — scorrendo la pagina e, di lato, ogni nastro di fotografie — che le
+arrivi** — scorrendo la pagina, e chiedendo subito quelle dei nastri — che le
 sezioni della plancia, dell'app e di gdanav ci siano e si raggiungano dal
 menu, che la lingua si cambi, che il modulo dei contatti mandi al tramite, che
 non ci siano errori in console ne' file che non arrivano, e che la pagina non

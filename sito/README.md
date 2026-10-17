@@ -241,9 +241,10 @@ node collaudo/guarda-il-sito.mjs
 Apre il sito a tre larghezze — telefono, tablet, computer — e guarda, in
 ordine di quanto fa male sbagliarlo:
 
-1. **le fotografie arrivano**: si scorre tutta la pagina, e ogni nastro di
-   lato fino in fondo (le immagini sono caricate quando ci si arriva), e si
-   chiede al browser se in ogni immagine ci sono davvero dei pixel, perché
+1. **le fotografie arrivano**: si scorre tutta la pagina (le immagini sono
+   caricate quando ci si arriva), quelle dei nastri si chiedono subito — di
+   lato il browser le chiede solo quando ci si arriva col dito — e si chiede
+   al browser se in ogni immagine ci sono davvero dei pixel, perché
    un'immagine che non arriva lascia un buco e non fa nessun rumore;
 2. **la plancia, l'app e gdanav** hanno la loro sezione, la loro voce nel menu
    e le loro fotografie; nella pagina non c'è più nessun riquadro;
