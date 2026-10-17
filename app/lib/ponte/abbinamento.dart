@@ -116,10 +116,15 @@ class Abbinamento {
   ///
   /// Dritti e' meglio quando si puo': sono i millesimi contro i decimi, e
   /// soprattutto non ha bisogno che internet ci sia.
+  ///
+  /// [modello] e' marca, modello e versione del sistema
+  /// (`IlModello.perLaCasa`): la casa ne fa il nome della riga fra i
+  /// «Telefoni abbinati». Facoltativo: una casa di prima lo ignora.
   static Future<Entrata> conLInvito(
     Invito invito, {
     required String nome,
     required String sistema,
+    Map<String, String> modello = const {},
     IndirizzoDelCentralino? centralinoDiRipiego,
     ApriLaPresa? apri,
     Future<bool> Function(Uri)? bussa,
@@ -137,6 +142,7 @@ class Abbinamento {
           codice: invito.codice,
           nome: nome,
           sistema: sistema,
+          modello: modello,
           apri: apri,
         ),
         daDentro: inCasa,
@@ -165,6 +171,7 @@ class Abbinamento {
         codice: invito.codice,
         nome: nome,
         sistema: sistema,
+        modello: modello,
         apri: apri,
       ),
     );
@@ -181,6 +188,7 @@ class Abbinamento {
     required String codice,
     required String nome,
     required String sistema,
+    Map<String, String> modello = const {},
     ApriLaPresa? apri,
   }) async {
     final pulito = _codiceBuono(codice);
@@ -192,6 +200,7 @@ class Abbinamento {
       codice: pulito,
       nome: nome,
       sistema: sistema,
+      modello: modello,
       apri: apri,
     );
   }
@@ -213,6 +222,7 @@ class Abbinamento {
     required String codice,
     required String nome,
     required String sistema,
+    Map<String, String> modello = const {},
     ApriLaPresa? apri,
   }) async {
     final pulito = _codiceBuono(codice);
@@ -222,6 +232,7 @@ class Abbinamento {
       codice: pulito,
       nome: nome,
       sistema: sistema,
+      modello: modello,
       apri: apri,
     );
   }
@@ -255,6 +266,7 @@ class Abbinamento {
     required String codice,
     required String nome,
     required String sistema,
+    Map<String, String> modello = const {},
     ApriLaPresa? apri,
   }) async {
     final Presa sotto;
@@ -280,6 +292,7 @@ class Abbinamento {
           'casa': cifrata.suaPubblica,
           'nome': nome,
           'sistema': sistema,
+          ...modello,
         }),
       );
       return _leggiLEcco(

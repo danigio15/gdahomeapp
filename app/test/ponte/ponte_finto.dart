@@ -434,6 +434,17 @@ class PonteFinto {
       });
       return;
     }
+    /* Il telefono che dice che telefono e', e di chi: ci si ricorda. */
+    if (detto['type'] == 'ponte/telefono/chi-sono') {
+      presentazioni.add(detto);
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': {'cambiato': true},
+      });
+      return;
+    }
     _manda(presa, {
       'id': id,
       'type': 'result',
@@ -463,6 +474,9 @@ class PonteFinto {
   /// I `ponte/telefono/sostituisci` ricevuti: il telefono di prima da
   /// staccare, col suo segno.
   final List<Map<String, dynamic>> sostituzioni = [];
+
+  /// I `ponte/telefono/chi-sono` ricevuti: marca, modello, di chi e'.
+  final List<Map<String, dynamic>> presentazioni = [];
 
   /// Quello che il ponte sa delle notifiche di questo telefono: la risposta
   /// a `ponte/notifiche/stato`.

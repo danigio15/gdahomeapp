@@ -32,9 +32,26 @@ import '../ponte/indirizzo.dart';
 import '../ponte/parole_del_centralino.dart' show fuoriCasaServePremium;
 import '../ponte/presa.dart';
 import '../ponte/sonda.dart';
+import '../versione.dart';
 import 'archivio_delle_case.dart';
 import 'casa_conosciuta.dart';
+import 'questo_qui/qui.dart';
 import 'stato_della_casa.dart';
+
+/// Che telefono e' questo, per la casa: marca, modello, versione del sistema
+/// (`leggiIlModello`) e dell'app, e di chi e' se l'ha detto. Nel browser
+/// niente modello.
+Future<Map<String, String>> _presentazioneVera(
+  ArchivioDelleCase archivio,
+) async {
+  final modello = await leggiIlModello();
+  final diChi = await archivio.proprietario();
+  return {
+    ...?modello?.perLaCasa(),
+    'app': versioneDiQuestApp,
+    if (diChi.isNotEmpty) 'proprietario': diChi,
+  };
+}
 
 enum ComeVa {
   /// Nessuna casa: bisogna abbinarne una.
@@ -82,7 +99,9 @@ class Collegamento {
     this.ogniQuantoLaLicenza = const Duration(hours: 6),
     this.ogniQuantoSiRiprovaDaFuori = const Duration(minutes: 10),
     this.consegnaAlCentralino,
-  }) : _sonda = sonda ?? Sonda(),
+    Future<Map<String, String>> Function()? comeSiPresenta,
+  }) : _comeSiPresenta = comeSiPresenta ?? (() => _presentazioneVera(archivio)),
+       _sonda = sonda ?? Sonda(),
        licenza = licenza ?? GestoreLicenza(),
        _licenzaMia = licenza == null {
     this.licenza.addListener(_avvisa);
@@ -108,6 +127,35 @@ class Collegamento {
   /// serie una POST vera (`ricevuta_da_fuori.dart`), nelle prove una finta.
   final ConsegnaAlCentralino? consegnaAlCentralino;
   Timer? _rileggiLaLicenza;
+
+  /// Marca, modello, versione del sistema e dell'app di questo telefono, da
+  /// dire alla casa (`ponte/telefono/chi-sono`). Di serie quello che dice il
+  /// telefono; nelle prove uno finto.
+  final Future<Map<String, String>> Function() _comeSiPresenta;
+
+  /* Le case a cui ci si e' gia' presentati da quando l'app e' aperta: una
+   * volta basta, la casa se lo scrive. */
+  final Set<String> _presentate = {};
+
+  /// Vero quando conviene chiedere «Di chi e' questo telefono?»: e' collegato
+  /// a una casa e nessuno l'ha mai detto (chi si era abbinato prima). Lo
+  /// guarda la home, che apre il foglio; si accende una volta per apertura
+  /// dell'app, e «Più tardi» vuol dire alla prossima. Quando cambia passa da
+  /// [cambiamenti], come il resto.
+  bool get vuoleSapereDiChiE => _vuoleSapereDiChiE;
+  bool _vuoleSapereDiChiE = false;
+  bool _chiestoDiChiE = false;
+
+  /// La risposta al foglio: si scrive e si ridice alle case. `null` e'
+  /// «Più tardi»: non si scrive niente, e per stavolta non si richiede.
+  Future<void> rispostoDiChiE(String? nome) async {
+    _vuoleSapereDiChiE = false;
+    if (nome == null) return;
+    await archivio.segnaIlProprietario(nome);
+    _presentate.clear();
+    final filo = _filo;
+    if (filo != null && filo.dentro) await _presentati(filo);
+  }
 
   /// gdahome Premium: quale casa lo e', e cosa si apre (`licenza/`).
   ///
@@ -667,6 +715,50 @@ class Collegamento {
     /* E se questa casa e' stata riabbinata, si fa staccare il telefono di
      * prima: e' sempre questo telefono, e non deve contare due volte. */
     unawaited(_staccaIlVecchio(filo));
+    /* E si dice alla casa che telefono e' questo: i telefoni abbinati prima
+     * del modello si chiamano ancora «Telefono Android». */
+    unawaited(_presentati(filo));
+  }
+
+  /// Dice alla casa marca, modello e versioni di questo telefono
+  /// (`ponte/telefono/chi-sono`), una volta per casa da quando l'app e'
+  /// aperta.
+  ///
+  /// «Aggiungi anche il modello del telefono, e il nome di chi e'.» La casa ne
+  /// fa il nome della riga fra i «Telefoni abbinati» — se nessuno l'ha
+  /// rinominato a mano — e vale solo per il telefono di questo filo. Un
+  /// add-on di prima non sa cosa sia: non si ritenta. Un filo caduto si',
+  /// alla prossima connessione.
+  Future<void> _presentati(Filo filo) async {
+    final casa = _casa;
+    if (casa == null) return;
+    if (!_chiestoDiChiE) {
+      _chiestoDiChiE = true;
+      try {
+        if (!await archivio.proprietarioDetto()) {
+          _vuoleSapereDiChiE = true;
+          _avvisa();
+        }
+      } catch (_) {
+        /* Non si sa: non si chiede. */
+      }
+    }
+    if (_presentate.contains(casa.id)) return;
+    final Map<String, String> detto;
+    try {
+      detto = await _comeSiPresenta();
+    } catch (_) {
+      return;
+    }
+    if (detto.isEmpty || _filo != filo) return;
+    _presentate.add(casa.id);
+    try {
+      await filo.risultato({'type': 'ponte/telefono/chi-sono', ...detto});
+    } on ComandoRifiutato {
+      /* Un add-on di prima: resta il nome di prima. */
+    } catch (_) {
+      _presentate.remove(casa.id);
+    }
   }
 
   /// Fa staccare dalla casa il telefono di prima, dopo un riabbinamento

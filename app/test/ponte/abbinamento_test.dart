@@ -98,6 +98,34 @@ void main() {
     },
   );
 
+  test(
+    'nella conferma vanno anche modello e di chi e\', se si sanno',
+    () async {
+      ponte.codiceVivo = codice;
+      await Abbinamento.chiedi(
+        dove: dove,
+        codice: codice,
+        nome: 'Galaxy S24 Ultra',
+        sistema: 'android',
+        modello: const {
+          'marca': 'Samsung',
+          'modello': 'Galaxy S24 Ultra',
+          'versione': '15',
+          'proprietario': 'Persona 1',
+        },
+        apri: alPonteFinto,
+      );
+      final conferma = ponte.conferme.single;
+      expect(conferma['nome'], 'Galaxy S24 Ultra');
+      expect(conferma['marca'], 'Samsung');
+      expect(conferma['modello'], 'Galaxy S24 Ultra');
+      expect(conferma['versione'], '15');
+      expect(conferma['proprietario'], 'Persona 1');
+      /* Le chiavi della stretta restano quelle: il modello non le copre. */
+      expect(conferma['t'], 'conferma');
+    },
+  );
+
   test('un codice sbagliato non riceve niente, e lo sa', () async {
     ponte.codiceVivo = codice;
     await expectLater(
