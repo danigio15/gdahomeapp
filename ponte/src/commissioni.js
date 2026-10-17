@@ -695,6 +695,28 @@ export class Commissioni {
       if (!this.notifiche) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.notifiche.casaCapita(detto);
     }
+    /* Le notifiche semplici ed elaborate (`notifiche.js`) non hanno comandi
+     * di qui: le loro domande — `ponte/notifiche/*` — arrivano solo da un
+     * telefono abbinato e intestato a un utente di Home Assistant
+     * (`ponte.js`), e ognuno legge e scrive soltanto le impostazioni del suo
+     * telefono: lo stile («Come le vuoi»), le voci su misura e la prova di una
+     * voce (`ponte/notifiche/prova` con `tipo`, numeri d'esempio). Un utente
+     * senza nome non ha niente da chiedere, e nel ponte non si vede nulla:
+     * nessuna pagina, nessuna console.
+     *
+     * Quello che queste notifiche usano della casa sta in casa: i conti
+     * dell'energia (`l-energia-di-casa.js`, `/data/energia-di-casa.json`, solo
+     * numeri), gli UPS e l'antifurto su misura letti dalla configurazione
+     * della plancia. L'unica cosa che esce e' la foto di una telecamera per
+     * la notifica di un movimento o dell'antifurto: solo per i telefoni che
+     * hanno scelto le notifiche **elaborate**, solo della telecamera che a
+     * quell'utente si mostra, chiusa con la chiave delle notifiche di quel
+     * telefono (`spinta.js`), e solo verso il centralino, che la tiene dieci
+     * minuti e la da' una volta. Con le semplici nessuna foto lascia la casa.
+     *
+     * I tasti nuovi (spegni sirena, disinserisci, inserisci col modo su
+     * misura) sono comandi preparati dal ponte per quella notifica e quel
+     * telefono, come gli altri tasti: il telefono dice solo quale tasto. */
     /* La ricarica di notte (`ricarica-di-notte.js`): cosa sta facendo la
      * casa con l'auto, in sola lettura. Le impostazioni non passano di qui —
      * stanno nella configurazione della plancia, con le sue regole. */

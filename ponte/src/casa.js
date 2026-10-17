@@ -119,6 +119,22 @@ export class Casa {
     return dati;
   }
 
+  /* I byte di un'immagine dall'API di Home Assistant, col segno dell'add-on:
+   * l'istantanea di una telecamera (`camera_proxy/<entita'>?width=…`) per la
+   * notifica di un movimento o dell'antifurto scattato. La chiama solo
+   * `notifiche.js`, e la foto esce di casa solo chiusa per il telefono che
+   * l'ha scelta (`spinta.js`). `null` se non e' un'immagine. */
+  async immagine(percorso) {
+    const risposta = await this.prendi(`${this.indirizzo}/api/${percorso}`, {
+      headers: { authorization: `Bearer ${this.segno}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!risposta.ok) return null;
+    const tipo = String(risposta.headers?.get?.("content-type") || "");
+    if (tipo && !tipo.startsWith("image/")) return null;
+    return Buffer.from(await risposta.arrayBuffer());
+  }
+
   /* Dove stanno i file della plancia.
    *
    * Il Supervisor inoltra soltanto `/api/`: i file statici — quelli di

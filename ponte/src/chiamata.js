@@ -200,6 +200,36 @@ export class Chiamata {
     });
   }
 
+  /* La foto di una notifica, gia' chiusa per quel telefono (`spinta.js`,
+   * `chiudiLaFoto`), al centralino, sullo stesso filo delle spinte:
+   *
+   *     casa → centralino   {t: "foto", n, telefono, dati}
+   *     centralino → casa   {t: "foto-ok", n, id} | {t: "foto-no", n, perche}
+   *
+   * Il centralino la tiene al piu' dieci minuti e la da' una volta sola al
+   * telefono che la chiede per numero (`GET /foto/<id>`). Torna l'`id`, o
+   * `null` se il filo non c'e', se il centralino dice di no o se non risponde
+   * in cinque secondi: la notifica parte lo stesso, senza foto. */
+  mandaLaFoto({ telefono, dati }) {
+    if (!this.dentro) return Promise.resolve(null);
+    this._foto ??= new Map();
+    this._fotoN = (this._fotoN || 0) + 1;
+    const n = this._fotoN;
+    return new Promise((risolvi) => {
+      const scade = setTimeout(() => {
+        this._foto.delete(n);
+        risolvi(null);
+      }, 5000);
+      scade.unref?.();
+      this._foto.set(n, (id) => {
+        clearTimeout(scade);
+        this._foto.delete(n);
+        risolvi(id);
+      });
+      if (!this._manda({ t: "foto", n, telefono, dati })) this._foto.get(n)?.(null);
+    });
+  }
+
   /* Se le notifiche hanno una strada adesso. */
   get pronto() {
     return this.dentro;
@@ -386,6 +416,12 @@ export class Chiamata {
 
     if (detto.t === "ricevuta") {
       void this._laRicevuta(detto);
+      return;
+    }
+
+    if (detto.t === "foto-ok" || detto.t === "foto-no") {
+      const id = detto.t === "foto-ok" && /^[0-9a-f]{32}$/.test(String(detto.id)) ? detto.id : null;
+      this._foto?.get(detto.n)?.(id);
       return;
     }
 

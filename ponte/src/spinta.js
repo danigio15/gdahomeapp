@@ -129,3 +129,69 @@ export class SpintaTroppoGrande extends Error {
     super(`una notifica da ${quanto} byte non ci sta in una spinta`);
   }
 }
+
+/* ─── La foto di una notifica ─────────────────────────────────────────────
+ *
+ * «Quando il motion delle telecamere rileva un movimento ti fanno una foto e
+ * ti mandano la foto.» Una foto in una spinta non ci sta — Firebase porta
+ * quattro chilobyte — e allora viaggia a parte: la casa la chiude per quel
+ * telefono, con LA STESSA chiave delle notifiche, e la lascia al centralino
+ * per dieci minuti; nella busta va solo il suo numero. Il telefono la prende,
+ * la apre e la mette nella notifica.
+ *
+ * Il centralino tiene un blocco di byte che non sa aprire, e lo da' una volta
+ * sola. Le etichette dei dati autenticati sono diverse da quelle della busta
+ * («gdahome/foto/v1»): una foto non si puo' far passare per una notifica, ne'
+ * il contrario. E parte solo per chi ha scelto le notifiche «elaborate»: con
+ * le semplici nessuna foto lascia la casa. */
+
+export const ETICHETTA_DELLA_FOTO = "gdahome/foto/v1";
+
+/* Quanto puo' pesare una foto: il centralino non ne tiene di piu'. */
+export const FOTO_MASSIMA = 300 * 1024;
+
+const datiAutenticatiDellaFoto = (telefono) =>
+  Buffer.from(`${ETICHETTA_DELLA_FOTO}|${String(telefono)}`, "utf8");
+
+/* Chiude i byte di una foto per quel telefono. Torna la busta in base64. */
+export function chiudiLaFoto({ chiaveDelFilo, telefono, byte }) {
+  const dati = Buffer.isBuffer(byte) ? byte : Buffer.from(byte || []);
+  if (!dati.length) throw new Error("una foto vuota non si manda");
+  if (dati.length > FOTO_MASSIMA) throw new SpintaTroppoGrande(dati.length);
+  const nonce = randomBytes(12);
+  const cifratore = createCipheriv(
+    "aes-256-gcm",
+    chiaveDellaSpinta(chiaveDelFilo, telefono),
+    nonce,
+  );
+  cifratore.setAAD(datiAutenticatiDellaFoto(telefono));
+  const cifrato = Buffer.concat([cifratore.update(dati), cifratore.final()]);
+  return Buffer.concat([
+    Buffer.from([VERSIONE_DELLA_SPINTA]),
+    nonce,
+    cifrato,
+    cifratore.getAuthTag(),
+  ]).toString("base64");
+}
+
+/* Il contrario, per le prove: l'app fa lo stesso in Dart, l'iPhone in Swift. */
+export function apriLaFoto({ chiaveDelFilo, telefono, busta }) {
+  const tutto = Buffer.from(String(busta ?? ""), "base64");
+  if (tutto.length < 1 + 12 + 16 || tutto[0] !== VERSIONE_DELLA_SPINTA)
+    throw new SpintaGuasta("foto guasta");
+  const decifratore = createDecipheriv(
+    "aes-256-gcm",
+    chiaveDellaSpinta(chiaveDelFilo, telefono),
+    tutto.subarray(1, 13),
+  );
+  decifratore.setAAD(datiAutenticatiDellaFoto(telefono));
+  decifratore.setAuthTag(tutto.subarray(tutto.length - 16));
+  try {
+    return Buffer.concat([
+      decifratore.update(tutto.subarray(13, tutto.length - 16)),
+      decifratore.final(),
+    ]);
+  } catch (_errore) {
+    throw new SpintaGuasta("la foto non si apre");
+  }
+}

@@ -449,6 +449,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registri,
     postino: chiamata,
     registro,
+    configurazione,
   });
   chiamata.alGettoneMorto = (telefono) => notifiche.gettoneMorto(telefono);
   ponte.notifiche = notifiche;

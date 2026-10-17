@@ -21,6 +21,29 @@
  */
 
 import { CapireLaCasa, cosaApre, nomePulito } from "./capire-la-casa.js";
+import {
+  chiamataDelModo,
+  ilModoChiedeIlCodice,
+  modoCheDisinserisce,
+  modoPerInserire,
+  modoSuMisuraAcceso,
+  normalizzaModiSuMisura,
+  normalizzaScattato,
+  SPEGNI_LA_SIRENA,
+  valeScattato,
+  CASELLA_DELLO_SCATTATO,
+  CHIAVE_ANTIFURTO_SCATTATO,
+  CHIAVE_ANTIFURTO_SU_MISURA,
+} from "../plancia/src/core/antifurto-su-misura.js";
+import { gliUps } from "./gli-ups.js";
+import { fasciaPiuBassa, giornoDi, letturaDellEnergia, prezzoAllOra } from "./l-energia-di-casa.js";
+import { risolutoreDalla } from "./ricarica-di-notte.js";
+import {
+  paroleDelBlackout,
+  paroleDelCiclo,
+  paroleDelMovimento,
+  paroleDellAntifurto,
+} from "./parole-delle-notifiche.js";
 
 const MINUTO = 60 * 1000;
 const ORA = 60 * MINUTO;
@@ -32,7 +55,7 @@ export const URGENZE = Object.freeze(["bassa", "normale", "urgente"]);
  * nome dell'evento e' anche la chiave del suo interruttore nelle impostazioni
  * di un telefono (`notifiche.js`). */
 export const CATEGORIE = Object.freeze({
-  urgenti: ["antifurto", "allarmi", "campanello"],
+  urgenti: ["antifurto", "allarmi", "campanello", "blackout"],
   sicurezza: ["inserimenti", "uscito", "aperture", "movimento"],
   casa: ["elettrodomestici", "frigo", "pioggia"],
   persone: ["arrivi"],
@@ -155,6 +178,37 @@ const numero = (valore) => {
 
 const duePassi = (it, en) => ({ it, en });
 
+/* Le parole semplici di un racconto, nelle due lingue: le stesse che
+ * `notifiche.js` scrive a chi ha scelto le notifiche semplici. */
+const inDueLingue = (comporre, dati) => {
+  const it = comporre(dati, "it");
+  const en = comporre(dati, "en");
+  return { it: { titolo: it.titolo, testo: it.testo }, en: { titolo: en.titolo, testo: en.testo } };
+};
+
+const oraMinuti = (istante) => {
+  const d = new Date(istante);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
+
+/* Il servizio di un tasto su misura, nella forma dei tasti delle notifiche:
+ * dominio, servizio, entita' e — per un menu — l'opzione da scegliere. */
+function servizioDelModo(modo) {
+  const chiamata = chiamataDelModo(modo);
+  if (!chiamata) return null;
+  return {
+    dominio: chiamata.domain,
+    servizio: chiamata.service,
+    entita: [chiamata.entity],
+    ...(chiamata.data.option ? { dati: { option: chiamata.data.option } } : {}),
+  };
+}
+
+const oraSecondi = (istante) => {
+  const d = new Date(istante);
+  return `${oraMinuti(istante)}:${String(d.getSeconds()).padStart(2, "0")}`;
+};
+
 /* Per quanto, detto a una persona. */
 export function perQuanto(ms, lingua = "it") {
   const minuti = Math.max(1, Math.round(ms / MINUTO));
@@ -188,6 +242,106 @@ export class Sentinella {
     /* Quello che una regola deve ricordarsi fra un giro e l'altro: da quando
      * un elettrodomestico gira, se una cosa lunga e' gia' stata detta. */
     this._memoria = new Map();
+    /** La configurazione della plancia principale (i valori salvati): la
+     * mette `notifiche.js`. Da qui si leggono le fasce, le caselle
+     * dell'energia, gli UPS e l'antifurto su misura. */
+    this.valori = () => ({});
+    /** Il taccuino dell'energia (`l-energia-di-casa.js`): lo mette
+     * `notifiche.js`. Senza, i conti dei cicli e della giornata non ci sono. */
+    this.taccuino = null;
+    /** Se almeno un telefono vuole il movimento sempre, anche con la gente in
+     * casa e di giorno: lo dice `notifiche.js`. Di serie no — con qualcuno in
+     * casa il movimento non e' una notizia. */
+    this.movimentoSempre = false;
+    /* Le ultime porte, finestre e movimenti accesi: «che cosa e' successo
+     * prima» nella notifica dell'antifurto scattato. */
+    this._recenti = [];
+    /* Com'era ogni UPS al giro prima. */
+    this._ups = new Map();
+    this._conSole = false;
+  }
+
+  /* ─── La configurazione della plancia ──────────────────────────────── */
+
+  _valori() {
+    try {
+      return this.valori() || {};
+    } catch (_errore) {
+      return {};
+    }
+  }
+
+  /* Casella della plancia → entita' (`dm.energy_potenza_fotovoltaico` →
+   * `sensor.inverter_pv`). */
+  _risolutore(valori = this._valori()) {
+    const risolvi = risolutoreDalla(valori);
+    return (casella) => {
+      try {
+        return risolvi(casella);
+      } catch (_errore) {
+        return "";
+      }
+    };
+  }
+
+  /* Gli stati nella forma di Home Assistant, per i moduli della plancia che
+   * li vogliono come oggetto (`states[id].state`). Non si copia niente: si
+   * guarda nella mappa quando chiedono. */
+  statiComeOggetto() {
+    const stati = this.stati;
+    return new Proxy(
+      {},
+      {
+        get(_t, id) {
+          const st = stati.get(String(id));
+          return st ? { ...st, last_changed: new Date(st.dal).toISOString() } : undefined;
+        },
+        has(_t, id) {
+          return stati.has(String(id));
+        },
+        ownKeys() {
+          return [...stati.keys()];
+        },
+        getOwnPropertyDescriptor(_t, id) {
+          const st = stati.get(String(id));
+          return st
+            ? {
+                enumerable: true,
+                configurable: true,
+                value: { ...st, last_changed: new Date(st.dal).toISOString() },
+              }
+            : undefined;
+        },
+      },
+    );
+  }
+
+  /* Il prezzo della corrente in quell'istante, dalle fasce della plancia. */
+  prezzo(istante, valori = this._valori()) {
+    return prezzoAllOra(
+      { fasce: valori.cd_fasce_kwh, costo: valori.cd_costo_kwh, stato: (id) => this.stati.get(id) },
+      istante,
+    );
+  }
+
+  /* L'antifurto su misura: quando e' scattato, e i suoi tasti. */
+  _suMisura(valori = this._valori()) {
+    const risolvi = this._risolutore(valori);
+    let modi = valori[CHIAVE_ANTIFURTO_SU_MISURA];
+    if (typeof modi === "string") {
+      try {
+        modi = JSON.parse(modi);
+      } catch (_errore) {
+        modi = [];
+      }
+    }
+    return {
+      scattato: normalizzaScattato(
+        valori[CHIAVE_ANTIFURTO_SCATTATO],
+        risolvi(CASELLA_DELLO_SCATTATO),
+      ),
+      modi: normalizzaModiSuMisura(modi),
+    };
   }
 
   /* ─── Quello che arriva da Home Assistant ──────────────────────────── */
@@ -241,6 +395,12 @@ export class Sentinella {
    * `notifiche.js` lo chiama ogni mezzo minuto. */
   battito() {
     try {
+      this._campiona();
+      this._gliUpsAdesso();
+    } catch (errore) {
+      this.registro?.errore?.(`il taccuino dell'energia: ${errore?.message || errore}`);
+    }
+    try {
       this._durate();
       this._personalizzate();
     } catch (errore) {
@@ -253,6 +413,116 @@ export class Sentinella {
       this.capire.pota();
     }
     this.capire.scrivi();
+  }
+
+  /* ─── L'energia e gli UPS, a ogni battito ──────────────────────────── */
+
+  /* Le prese degli elettrodomestici: le stesse che la sentinella segue per
+   * dire «ha finito». L'elenco si rifa' ogni dieci minuti. */
+  _prese() {
+    const ora = this.adesso();
+    if (!this._preseCache || ora - this._preseCache.il > 10 * MINUTO) {
+      const ids = [];
+      for (const [id, stato] of this.stati)
+        if (
+          dominioDi(id) === "sensor" &&
+          NOME_ELETTRODOMESTICO.test(id) &&
+          this._watt(stato) !== null
+        )
+          ids.push(id);
+      this._preseCache = { il: ora, ids };
+    }
+    return this._preseCache.ids;
+  }
+
+  _campiona() {
+    if (!this.taccuino) return;
+    const valori = this._valori();
+    const letture = letturaDellEnergia(this._risolutore(valori), (id) => this.stati.get(id));
+    this._conSole = letture.sole !== null || letture.soleOggi !== null;
+    this._ultimeLetture = letture;
+    letture.apparecchi = {};
+    for (const id of this._prese()) letture.apparecchi[id] = this._watt(this.stati.get(id));
+    this.taccuino.campiona(letture, (istante) => this.prezzo(istante, valori));
+  }
+
+  /* La corrente che va via e torna, dagli UPS. Solo i cambi veri: un ponte
+   * che si accende nel mezzo di un blackout non sa quando e' cominciato, e
+   * non lo dice. */
+  _gliUpsAdesso() {
+    const valori = this._valori();
+    const elenco = gliUps(this.stati, valori, this._risolutore(valori));
+    const ora = this.adesso();
+    const molti = elenco.length > 1;
+    for (const ups of elenco) {
+      const prima = this._ups.get(ups.chiave);
+      const memoria = prima ?? { rete: ups.rete, dal: ora, bassa: false, detto: false };
+      const dati = (fase, extra = {}) => ({
+        nome: ups.name,
+        molti,
+        carica: ups.batteria,
+        minuti: ups.autonomia,
+        watt: ups.potenza,
+        dalle: oraMinuti(memoria.dal),
+        fase,
+        ...extra,
+      });
+      const chiave = ups.chiave;
+      if (prima && prima.rete === true && ups.rete === false) {
+        memoria.dal = ora;
+        memoria.bassa = false;
+        memoria.detto = true;
+        const d = dati("via");
+        this._dici({
+          tipo: "blackout",
+          urgenza: "urgente",
+          chiave: `blackout:${chiave}`,
+          pausa: 10 * MINUTO,
+          entita: ups.entita,
+          misura: { fase: "via", dal: ora },
+          ancora: () => this._ups.get(chiave)?.rete === false,
+          componi: { tipo: "blackout", dati: d },
+          parole: inDueLingue(paroleDelBlackout, d),
+        });
+      } else if (
+        prima?.rete === false &&
+        ups.rete === false &&
+        memoria.detto &&
+        !memoria.bassa &&
+        ups.batteria !== null &&
+        ups.batteria <= 30
+      ) {
+        memoria.bassa = true;
+        const d = dati("bassa");
+        this._dici({
+          tipo: "blackout",
+          urgenza: "urgente",
+          chiave: `blackout-bassa:${chiave}`,
+          pausa: 30 * MINUTO,
+          entita: ups.entita,
+          misura: { fase: "bassa", dal: memoria.dal },
+          ancora: () => this._ups.get(chiave)?.rete === false,
+          componi: { tipo: "blackout", dati: d },
+          parole: inDueLingue(paroleDelBlackout, d),
+        });
+      } else if (prima?.rete === false && ups.rete === true && memoria.detto) {
+        const minuti = Math.max(1, Math.round((ora - memoria.dal) / MINUTO));
+        memoria.detto = false;
+        const d = dati("torna", { durata: minuti });
+        this._dici({
+          tipo: "blackout",
+          urgenza: "normale",
+          chiave: `blackout-torna:${chiave}`,
+          pausa: 0,
+          entita: ups.entita,
+          misura: { fase: "torna", durata: minuti },
+          componi: { tipo: "blackout", dati: d },
+          parole: inDueLingue(paroleDelBlackout, d),
+        });
+      }
+      if (ups.rete !== null) memoria.rete = ups.rete;
+      this._ups.set(chiave, memoria);
+    }
   }
 
   _dici(evento) {
@@ -294,7 +564,7 @@ export class Sentinella {
   /* La telecamera che fa vedere quello che e' successo: prima quella dello
    * stesso dispositivo, poi quella che ha una parola del nome in comune, poi
    * l'unica che c'e'. Altrimenti nessuna. */
-  telecameraPer(id) {
+  telecameraPer(id, { soloVicina = false } = {}) {
     const telecamere = [...this.stati.keys()].filter((uno) => dominioDi(uno) === "camera");
     if (!telecamere.length) return null;
     const suo = this.dispositivoDi?.[id];
@@ -307,6 +577,10 @@ export class Sentinella {
       .filter((una) => una.length > 3);
     const vicina = telecamere.find((una) => parole.some((parola) => una.includes(parola)));
     if (vicina) return vicina;
+    /* L'unica telecamera di casa va bene per l'antifurto — fa vedere la casa —
+     * ma non per il movimento della camera da letto: la foto sarebbe del
+     * cancello. */
+    if (soloVicina) return null;
     return telecamere.length === 1 ? telecamere[0] : null;
   }
 
@@ -323,6 +597,164 @@ export class Sentinella {
     return null;
   }
 
+  /* ─── L'antifurto ──────────────────────────────────────────────────── */
+
+  /* L'antifurto su misura, riletto al piu' ogni mezzo minuto: `cambia` arriva
+   * molte volte al secondo, e la configurazione cambia una volta al mese. */
+  _suMisuraAdesso() {
+    const ora = this.adesso();
+    if (!this._suMisuraCache || ora - this._suMisuraCache.il > 30 * 1000)
+      this._suMisuraCache = { il: ora, ...this._suMisura() };
+    return this._suMisuraCache;
+  }
+
+  _ricorda(id, nome, colore) {
+    const ora = this.adesso();
+    this._recenti.push({ id, nome: nomePulito(nome), colore, quando: ora });
+    this._recenti = this._recenti.filter((r) => ora - r.quando <= 15 * MINUTO).slice(-10);
+  }
+
+  /* Se la casa dormiva fino al giro prima. */
+  _dormivaPrima(ora) {
+    if (!this._memoria.has("svegliaFinoA")) return false;
+    return ora - this._memoria.get("svegliaFinoA") >= CASA_CHE_DORME_DA;
+  }
+
+  /* «Inserisci» sotto una notifica: solo se l'antifurto adesso e' spento. Una
+   * centrale vera senza codice si inserisce dal tasto; un modo su misura col
+   * codice apre l'app, dove il tastierino c'e'. */
+  _tastoInserisci() {
+    for (const [id, stato] of this.stati) {
+      if (dominioDi(id) !== "alarm_control_panel" || stato.state !== "disarmed") continue;
+      if (stato.attributes?.code_arm_required)
+        return [{ id: "inserisci", parole: duePassi("Inserisci", "Arm"), apre: true }];
+      return [
+        {
+          id: "inserisci",
+          parole: duePassi("Inserisci", "Arm"),
+          servizio: { dominio: "alarm_control_panel", servizio: "alarm_arm_away", entita: [id] },
+        },
+      ];
+    }
+    const { modi } = this._suMisuraAdesso();
+    if (!modi.length) return [];
+    const acceso = modoSuMisuraAcceso(modi, this.statiComeOggetto());
+    const disinserito = modoCheDisinserisce(modi);
+    if (acceso && acceso !== disinserito?.id) return [];
+    const modo = modoPerInserire(modi);
+    if (!modo) return [];
+    const parole = duePassi(
+      `Inserisci · ${modo.nome || modo.id}`.slice(0, 30),
+      `Arm · ${modo.nome || modo.id}`.slice(0, 30),
+    );
+    if (ilModoChiedeIlCodice(modo)) return [{ id: "inserisci", parole, apre: true }];
+    const servizio = servizioDelModo(modo);
+    return servizio ? [{ id: "inserisci", parole, servizio }] : [];
+  }
+
+  /* L'antifurto scattato, dalla centrale vera o dall'interruttore su misura:
+   * zona, ora, sirena, cosa e' successo prima, e i tasti per spegnere. */
+  _antifurtoScattato({ id, nome, centrale = null, scattato = null, modi = [] }) {
+    const ora = this.adesso();
+    const recenti = this._recenti.filter((r) => ora - r.quando <= 10 * MINUTO);
+    const ultimo = recenti.at(-1) || null;
+    let zona = "";
+    let zonaId = ultimo?.id || null;
+    if (scattato?.zona) {
+      const st = this.stati.get(scattato.zona);
+      const valore = String(st?.state || "");
+      if (dominioDi(scattato.zona) === "binary_sensor") {
+        if (valore === "on") {
+          zona = nomePulito(nomeDi(st, scattato.zona));
+          zonaId = scattato.zona;
+        }
+      } else if (
+        valore &&
+        !["unknown", "unavailable", "none", "on", "off"].includes(valore.toLowerCase())
+      )
+        zona = valore.slice(0, 40);
+    }
+    if (!zona && ultimo) zona = ultimo.nome;
+    const camera = this.telecameraPer(zonaId || id);
+    const sirena = scattato?.sirena
+      ? this.stati.get(scattato.sirena)?.state === "on"
+      : Boolean(centrale);
+    let modo = "";
+    let dalle = "";
+    if (modi.length) {
+      const acceso = modoSuMisuraAcceso(modi, this.statiComeOggetto());
+      const suo = modi.find((m) => m.id === acceso);
+      if (suo) {
+        modo = suo.nome || suo.id;
+        const st = this.stati.get(suo.stato);
+        if (st?.dal) dalle = oraMinuti(st.dal);
+      }
+    }
+    const ev = recenti
+      .slice(-3)
+      .reverse()
+      .map((r) => [
+        oraMinuti(r.quando),
+        r.colore === "a" ? `Movimento · ${r.nome}`.slice(0, 40) : `${r.nome} · aperta`.slice(0, 40),
+        r.colore,
+      ]);
+    const dati = { nome: nomePulito(nome), zona, ora: oraMinuti(ora), modo, dalle, sirena, ev };
+    const azioni = [];
+    if (scattato?.sirena) {
+      const dominio = dominioDi(scattato.sirena);
+      azioni.push({
+        id: "spegni-sirena",
+        parole: duePassi("Spegni sirena", "Siren off"),
+        servizio: { dominio, servizio: SPEGNI_LA_SIRENA[dominio], entita: [scattato.sirena] },
+      });
+    }
+    if (centrale) {
+      if (centrale.attributes?.code_format)
+        azioni.push({ id: "disinserisci", parole: duePassi("Disinserisci", "Disarm"), apre: true });
+      else
+        azioni.push({
+          id: "disinserisci",
+          parole: duePassi("Disinserisci", "Disarm"),
+          servizio: { dominio: "alarm_control_panel", servizio: "alarm_disarm", entita: [id] },
+        });
+    } else {
+      const spegni = modoCheDisinserisce(modi);
+      if (spegni) {
+        if (ilModoChiedeIlCodice(spegni))
+          azioni.push({
+            id: "disinserisci",
+            parole: duePassi("Disinserisci", "Disarm"),
+            apre: true,
+          });
+        else {
+          const servizio = servizioDelModo(spegni);
+          if (servizio)
+            azioni.push({
+              id: "disinserisci",
+              parole: duePassi("Disinserisci", "Disarm"),
+              servizio,
+            });
+        }
+      }
+    }
+    azioni.push({ id: "guarda", parole: duePassi("Guarda", "View"), apre: true });
+    const parole = inDueLingue(paroleDellAntifurto, dati);
+    if (centrale?.attributes?.changed_by && !zona)
+      parole.it.testo = `Da ${String(centrale.attributes.changed_by).slice(0, 40)}`;
+    this._dici({
+      tipo: "antifurto",
+      urgenza: "urgente",
+      chiave: `antifurto:${id}`,
+      pausa: 5 * MINUTO,
+      entita: id,
+      camera,
+      conFoto: Boolean(camera),
+      componi: { tipo: "antifurto", dati },
+      parole,
+      azioni: azioni.slice(0, 3),
+    });
+  }
+
   /* ─── Le regole che scattano subito ────────────────────────────────── */
 
   _regoleDelMomento(id, dopo, prima, vuotaPrima) {
@@ -331,27 +763,33 @@ export class Sentinella {
     const era = prima?.state;
     const nome = nomeDi(dopo, id);
 
-    /* L'antifurto scattato. */
+    /* Le porte, le finestre e i movimenti che si accendono: si ricordano per
+     * dieci minuti, per dire «che cosa e' successo prima» se l'antifurto
+     * scatta. */
+    if (
+      dominio === "binary_sensor" &&
+      dopo.state === "on" &&
+      era !== "on" &&
+      (APERTURE.has(classe) || classe === "window" || MOVIMENTO.has(classe))
+    )
+      this._ricorda(id, nome, MOVIMENTO.has(classe) ? "a" : "r");
+
+    /* L'antifurto scattato: la centrale vera. */
     if (dominio === "alarm_control_panel" && dopo.state === "triggered" && era !== "triggered") {
-      const camera = this.telecameraPer(id);
-      this._dici({
-        tipo: "antifurto",
-        urgenza: "urgente",
-        chiave: `antifurto:${id}`,
-        pausa: 5 * MINUTO,
-        entita: id,
-        camera,
-        parole: {
-          it: {
-            titolo: `🚨 Antifurto scattato · ${nome}`,
-            testo: dopo.attributes?.changed_by
-              ? `Da ${String(dopo.attributes.changed_by).slice(0, 40)}`
-              : "Sirena accesa",
-          },
-          en: { titolo: `🚨 Alarm triggered · ${nome}`, testo: "Siren on" },
-        },
-        azioni: [{ id: "guarda", parole: duePassi("Guarda", "View"), apre: true }],
-      });
+      this._antifurtoScattato({ id, nome, centrale: dopo });
+      return;
+    }
+
+    /* L'antifurto su misura: l'interruttore che dice «scattato». */
+    const suMisura = this._suMisuraAdesso();
+    if (
+      suMisura.scattato &&
+      id === suMisura.scattato.entita &&
+      prima &&
+      valeScattato(suMisura.scattato, dopo.state) &&
+      !valeScattato(suMisura.scattato, era)
+    ) {
+      this._antifurtoScattato({ id, nome, scattato: suMisura.scattato, modi: suMisura.modi });
       return;
     }
 
@@ -490,32 +928,45 @@ export class Sentinella {
       return;
     }
 
-    /* Movimento con la casa vuota. */
+    /* Il movimento: con la casa vuota, o di notte quando la casa dorme. Se
+     * c'e' una telecamera li', con la sua foto per chi ha scelto le notifiche
+     * elaborate. Chi lo vuole sempre lo dice nelle sue impostazioni. */
     if (
       dominio === "binary_sensor" &&
       MOVIMENTO.has(classe) &&
       dopo.state === "on" &&
       era !== "on"
     ) {
-      if (this.casaVuota() === true) {
+      const ora = this.adesso();
+      const vuota = this.casaVuota() === true;
+      /* La casa dorme se dormiva fino a un attimo fa: questo movimento e'
+       * quello che la sveglia. */
+      const notte = eNotte(new Date(ora)) && this._dormivaPrima(ora);
+      if (vuota || notte || this.movimentoSempre) {
+        const camera = this.telecameraPer(id, { soloVicina: true });
+        const dati = {
+          nome: nomePulito(nome),
+          cam: camera ? nomePulito(nomeDi(this.stati.get(camera), camera)) : "",
+          ora: oraMinuti(ora),
+          secondi: oraSecondi(ora),
+          vuota,
+          notte: !vuota && notte,
+        };
         this._dici({
           tipo: "movimento",
           urgenza: "normale",
           chiave: `movimento:${id}`,
-          pausa: 30 * MINUTO,
+          pausa: 10 * MINUTO,
           entita: id,
-          camera: this.telecameraPer(id),
-          parole: {
-            it: {
-              titolo: `🏃 Movimento con casa vuota · ${nome}`,
-              testo: "Nessuno in casa, ma qualcosa si muove",
-            },
-            en: {
-              titolo: `🏃 Motion while away · ${nome}`,
-              testo: "Nobody's home, but something moved",
-            },
-          },
-          azioni: [{ id: "guarda", parole: duePassi("Guarda", "View"), apre: true }],
+          camera,
+          conFoto: Boolean(camera),
+          perche: vuota ? "casa-vuota" : notte ? "notte" : "giorno",
+          componi: { tipo: "movimento", dati },
+          parole: inDueLingue(paroleDelMovimento, dati),
+          azioni: [
+            { id: "guarda", parole: duePassi("Guarda", "View"), apre: true },
+            ...this._tastoInserisci(),
+          ],
         });
       }
       return;
@@ -578,7 +1029,7 @@ export class Sentinella {
    * volte la notifica»: «Asciugatrice: finito» e «asciugatrice W: finito» alla
    * stessa ora. Di un genere (lavatrice, asciugatrice, lavastoviglie…) si dice
    * una volta sola per quarto d'ora, da qualunque parte arrivi. */
-  _elettrodomesticoFinito(id, nome) {
+  _elettrodomesticoFinito(id, nome, { finitoIl = null } = {}) {
     const genere = genereDiElettrodomestico(`${id} ${nome}`);
     const chiave = `finito:${genere}`;
     const ora = this.adesso();
@@ -586,16 +1037,43 @@ export class Sentinella {
     if (ultimo != null && ora - ultimo < STESSO_ELETTRODOMESTICO) return;
     this._memoria.set(chiave, ora);
     nome = nomeDellElettrodomestico(nome);
+    /* I conti del ciclo, se il taccuino l'ha seguito: dalla presa di questa
+     * entita', o — quando a dire «finito» e' lo stato dell'elettrodomestico —
+     * dalla presa dello stesso genere. */
+    let ciclo = null;
+    const valori = this._valori();
+    if (this.taccuino) {
+      let dove = this.taccuino.haUnCiclo(id) ? id : null;
+      if (!dove)
+        for (const altro of this.taccuino.cicli.keys())
+          if (
+            genereDiElettrodomestico(`${altro} ${nomeDi(this.stati.get(altro), altro)}`) === genere
+          ) {
+            dove = altro;
+            break;
+          }
+      if (dove)
+        ciclo = this.taccuino.chiudiIlCiclo(dove, {
+          finitoIl,
+          prezzoMigliore: fasciaPiuBassa(valori.cd_fasce_kwh),
+        });
+    }
+    const dati = {
+      nome,
+      genere,
+      ciclo,
+      conSole: this._conSole,
+      fascia: ciclo ? this.prezzo(finitoIl ?? ora, valori).fascia : "",
+    };
     this._dici({
       tipo: "elettrodomestici",
       urgenza: "normale",
       chiave: `elettrodomestici:${id}`,
       pausa: 30 * MINUTO,
       entita: id,
-      parole: {
-        it: { titolo: `🧺 ${nome}: finito`, testo: "Ha appena finito" },
-        en: { titolo: `🧺 ${nome}: done`, testo: "It just finished" },
-      },
+      misura: { euro: ciclo?.eur ?? null },
+      componi: { tipo: "ciclo", dati },
+      parole: inDueLingue(paroleDelCiclo, dati),
     });
   }
 
@@ -904,7 +1382,7 @@ export class Sentinella {
           ora - memoria.fermoDal >= ELETTRODOMESTICO_FERMO_DA
         ) {
           this._memoria.delete(`potenza:${id}`);
-          this._elettrodomesticoFinito(id, nome);
+          this._elettrodomesticoFinito(id, nome, { finitoIl: memoria.fermoDal });
         } else if (
           memoria?.giraDal != null &&
           memoria.fermoDal != null &&
@@ -913,6 +1391,7 @@ export class Sentinella {
         ) {
           /* Un'accensione breve non e' un lavaggio. */
           this._memoria.delete(`potenza:${id}`);
+          this.taccuino?.dimentica(id);
         }
       }
 
@@ -1108,7 +1587,10 @@ export class Sentinella {
       else vivi.add(suo);
     }
     const spenti = [...muti].filter((suo) => !vivi.has(suo)).length;
-    if (!batterie.length && !spenti && !aggiornamenti) return null;
+    const daSistemare = { batterie: batterie.length, spenti, aggiornamenti };
+    const dati = { ...this._laGiornataDaRaccontare(), daSistemare };
+    const nienteDaSistemare = !batterie.length && !spenti && !aggiornamenti;
+    if (nienteDaSistemare && !dati.giornata) return null;
     const pezziIt = [];
     const pezziEn = [];
     if (batterie.length) {
@@ -1132,9 +1614,76 @@ export class Sentinella {
       urgenza: "bassa",
       chiave: "riepilogo",
       pausa: 12 * ORA,
+      /* La giornata la scrive `notifiche.js`, per ogni telefono: con il meteo
+       * di domani e le notifiche che quel telefono ha voluto «nel
+       * riepilogo». Queste sono le parole di sempre, per chi non ha energia
+       * da raccontare. */
+      componi: { tipo: "riepilogo", dati },
       parole: {
         it: { titolo: "🔋 Riepilogo di stasera", testo: pezziIt.join(", ") },
         en: { titolo: "🔋 Tonight's summary", testo: pezziEn.join(", ") },
+      },
+    };
+  }
+
+  /* La giornata della casa, per il riepilogo: quello che il taccuino ha visto
+   * e le cose belle — il record, gli elettrodomestici andati col sole, la
+   * batteria per la notte. Senza taccuino, niente giornata. */
+  _laGiornataDaRaccontare() {
+    const g = this.taccuino?.laGiornata?.();
+    if (!g || g.d !== giornoDi(this.adesso()) || (!g.sole && !g.casa && !g.presi))
+      return { giornata: null };
+    const conSole = Boolean(this._conSole && g.sole);
+    const passati = this.taccuino.giorniPassati();
+    const misura = (giorno) => (conSole ? giorno.pk : giorno.casa);
+    const oggi = conSole ? g.sole : (g.casa ?? g.presi);
+    const ieri = passati.at(-1);
+    const settimana = passati
+      .slice(-7)
+      .map(misura)
+      .filter((v) => v > 0);
+    const media =
+      settimana.length >= 3 ? settimana.reduce((a, b) => a + b, 0) / settimana.length : null;
+    let record = null;
+    if (conSole) {
+      const mese = g.d.slice(0, 7);
+      const anno = g.d.slice(0, 4);
+      const delMese = passati.filter((x) => x.d.startsWith(mese));
+      const dellAnno = passati.filter((x) => x.d.startsWith(anno));
+      if (dellAnno.length >= 30 && dellAnno.every((x) => (x.pk || 0) < oggi)) record = "anno";
+      else if (delMese.length >= 5 && delMese.every((x) => (x.pk || 0) < oggi)) record = "mese";
+    }
+    const nomeDellaPresa = (id) => nomeDellElettrodomestico(nomeDi(this.stati.get(id), id));
+    const colSole = conSole
+      ? [...new Set(g.cicli.filter((c) => c.sole >= 0.8).map((c) => nomeDellaPresa(c.id)))].slice(
+          0,
+          3,
+        )
+      : [];
+    const grosso = g.cicli.slice().sort((a, b) => (b.kwh || 0) - (a.kwh || 0))[0];
+    const valori = this._valori();
+    const bassa = fasciaPiuBassa(valori.cd_fasce_kwh);
+    const nomi = {};
+    for (const k of Object.keys(g.perFascia || {})) nomi[k] = `F${Number(k) + 1}`;
+    return {
+      giornata: g,
+      conSole,
+      ieri: ieri && ieri.d < g.d ? misura(ieri) || null : null,
+      media,
+      oggi,
+      record,
+      colSole,
+      piuAcceso:
+        !conSole && grosso?.kwh > 0.2 ? { nome: nomeDellaPresa(grosso.id), kwh: grosso.kwh } : null,
+      batteria: this._ultimeLetture?.carica ?? null,
+      fasce: {
+        nomi,
+        piuBassa: bassa
+          ? {
+              nome: bassa.nome,
+              dalle: `${String(Math.floor(bassa.dalle / 60)).padStart(2, "0")}:${String(bassa.dalle % 60).padStart(2, "0")}`,
+            }
+          : null,
       },
     };
   }
