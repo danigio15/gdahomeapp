@@ -990,7 +990,13 @@
     var diCasa = dispositivi.filter(function (uno) {
       return !uno.finoA;
     }).length;
-    trova("conteggio").textContent = due(diCasa + " di " + massimi, diCasa + " of " + massimi);
+    /* «2 di 10» e quattro righe sotto: le due di prova non contano, e lo si
+     * dice, invece di lasciarlo indovinare. */
+    var diProva = dispositivi.length - diCasa;
+    trova("conteggio").textContent = due(
+      diCasa + " di " + massimi + (diProva ? " · più " + diProva + " di prova" : ""),
+      diCasa + " of " + massimi + (diProva ? " · plus " + diProva + " trial" : ""),
+    );
 
     /* Mentre un nome si sta scrivendo, l'elenco resta com'e'. */
     if (inModifica.indexOf("telefono:") === 0) return;

@@ -40,6 +40,13 @@
  * Tutto il resto no. Questo non e' un proxy verso Home Assistant: sono due
  * cartelle, e il telefono non ottiene di qui niente che non avesse gia' col
  * filo, che dopo l'abbinamento puo' chiedere a Home Assistant qualunque cosa.
+ *
+ * Una commissione non passa da qui: `ponte/telefono/sostituisci`, che fa il
+ * filo stesso (`ponte.js`). E' il telefono appena riabbinato che stacca
+ * quello che era prima, dandone il vecchio segno: la usa solo un telefono
+ * entrato col suo segno, vale solo per se stesso, e senza il segno giusto non
+ * stacca nessuno (`sostituisci` in `dispositivi.js`). Nel ponte non si vede
+ * nulla: ne' il segno, che si confronta per impronta, ne' chi era.
  */
 
 import { QUADRO_DI_DIFETTO } from "./rapporto.js";

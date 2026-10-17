@@ -28,6 +28,10 @@ import { eUnaCommissione, no } from "./commissioni.js";
 import { passaLaDogana } from "./dogana.js";
 import { NOME } from "./marchio.js";
 
+/* Il telefono riabbinato che stacca quello che era prima: vedi
+ * `sostituisci` in `dispositivi.js`. */
+export const SOSTITUISCI = "ponte/telefono/sostituisci";
+
 /* Quanti messaggi al secondo puo' mandare un telefono.
  *
  * Una plancia che si apre ne manda una raffica — le sottoscrizioni, i
@@ -343,6 +347,28 @@ class Collegamento {
   }
 
   _commissione(detto) {
+    /* Il telefono riabbinato che dice chi era prima (`dispositivi.js`,
+     * `sostituisci`): col vecchio segno, che ha solo lui, il vecchio si
+     * stacca e i suoi fili si chiudono. Solo per se stesso: il nuovo e' il
+     * telefono di questo filo, nessun altro. */
+    if (detto.type === SOSTITUISCI) {
+      const staccato =
+        this.ponte.dispositivi?.sostituisci?.({
+          nuovo: this.dispositivo?.id,
+          vecchio: detto.vecchio,
+          segno: detto.segno,
+        }) === true;
+      if (staccato) this.ponte.scollega(String(detto.vecchio));
+      this.presa.manda(
+        JSON.stringify({
+          id: detto.id ?? null,
+          type: "result",
+          success: true,
+          result: { staccato },
+        }),
+      );
+      return;
+    }
     /* Le notifiche di questo telefono (`notifiche.js`): le sue impostazioni,
      * il suo gettone, i tasti sotto le sue notifiche. Chi chiede e' il
      * telefono di questo filo, e nessun altro: il segno l'ha gia' detto. */

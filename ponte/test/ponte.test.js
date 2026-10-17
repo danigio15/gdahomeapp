@@ -336,6 +336,50 @@ test("staccare un telefono dalla console butta giu' il suo filo", async () => {
   }
 });
 
+test("il telefono riabbinato stacca se stesso di prima, e il suo vecchio filo si chiude", async () => {
+  const b = await banco();
+  try {
+    const prima = b.dispositivi.abbina({ nome: "Telefono Android" });
+    const dopo = b.dispositivi.abbina({ nome: "Telefono Android" });
+    const vecchio = telefono(b.indirizzo);
+    await vecchio.aperta;
+    await vecchio.aspetta("auth_required");
+    vecchio.manda({ type: "auth", access_token: prima.segno });
+    await vecchio.aspetta("auth_ok");
+    const nuovo = telefono(b.indirizzo);
+    await nuovo.aperta;
+    await nuovo.aspetta("auth_required");
+    nuovo.manda({ type: "auth", access_token: dopo.segno });
+    await nuovo.aspetta("auth_ok");
+
+    /* Un segno sbagliato: non stacca niente. */
+    nuovo.manda({
+      id: 7,
+      type: "ponte/telefono/sostituisci",
+      vecchio: prima.dispositivo.id,
+      segno: "no",
+    });
+    await attendi(() => nuovo.detti.some((uno) => uno.id === 7));
+    assert.deepEqual(nuovo.detti.find((uno) => uno.id === 7).result, { staccato: false });
+    assert.equal(b.dispositivi.quantiDiCasa(), 2);
+
+    nuovo.manda({
+      id: 8,
+      type: "ponte/telefono/sostituisci",
+      vecchio: prima.dispositivo.id,
+      segno: prima.segno,
+    });
+    await attendi(() => nuovo.detti.some((uno) => uno.id === 8));
+    assert.deepEqual(nuovo.detti.find((uno) => uno.id === 8).result, { staccato: true });
+    await vecchio.chiusa;
+    assert.equal(b.dispositivi.quantiDiCasa(), 1);
+    assert.equal(b.ponte.quantiCollegati(), 1);
+    nuovo.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
 test("quando il telefono se ne va, il filo con la casa si chiude", async () => {
   const b = await banco();
   try {

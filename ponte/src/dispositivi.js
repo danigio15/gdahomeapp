@@ -272,6 +272,25 @@ export class Dispositivi {
     return true;
   }
 
+  /* Un telefono riabbinato stacca se stesso di prima.
+   *
+   * «Nei telefoni abbinati lo stesso telefono compare due volte.» Ogni
+   * abbinamento fa un telefono nuovo, e quello di prima restava finche' non
+   * stava zitto per i giorni di silenzio. Adesso il telefono appena entrato
+   * (`nuovo`, quello del filo) puo' dire chi era: il vecchio identificativo e
+   * il vecchio **segno**, che ha solo lui. Se il segno torna con l'impronta
+   * di quel telefono, quel telefono era lui, e si stacca. Senza il segno
+   * giusto non si stacca niente: nessuno puo' mandar via il telefono di un
+   * altro sapendone soltanto l'identificativo, che non e' un segreto. */
+  sostituisci({ nuovo, vecchio, segno } = {}) {
+    if (typeof vecchio !== "string" || typeof segno !== "string" || !segno) return false;
+    if (!nuovo || vecchio === nuovo) return false;
+    if (!this.lista.some((uno) => uno.id === nuovo)) return false;
+    const quello = this.lista.find((uno) => uno.id === vecchio);
+    if (!quello || !stessoSegreto(quello.impronta, impronta(segno))) return false;
+    return this.stacca(vecchio);
+  }
+
   staccaTutti() {
     const andati = [...this.lista];
     this.archivio.dati.dispositivi = [];
