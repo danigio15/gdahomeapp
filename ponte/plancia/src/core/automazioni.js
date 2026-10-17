@@ -782,6 +782,21 @@ export const acceso = (stato) =>
   statoNoto(stato) && !SPENTI.has(pulito(stato?.state).toLowerCase());
 const aCasa = (stato) => pulito(stato?.state).toLowerCase() === "home";
 
+/* Lo stato che un «aspetta finche'…» aspetta: uno stato scritto («off»,
+ * «closed») o una soglia («<60», «>25»), che serve all'umidita' che scende o
+ * alla temperatura che sale — un numero preciso non arriverebbe mai. Uno
+ * stato sconosciuto non soddisfa una soglia. */
+export function eLoStatoAtteso(voluto, stato) {
+  const v = pulito(voluto);
+  const s = pulito(stato);
+  const soglia = /^([<>])\s*(-?\d+(?:[.,]\d+)?)$/.exec(v);
+  if (!soglia) return s === v;
+  const letto = numero(s);
+  if (letto === null || SCONOSCIUTI.has(s.toLowerCase())) return false;
+  const limite = Number(soglia[2].replace(",", "."));
+  return soglia[1] === "<" ? letto < limite : letto > limite;
+}
+
 function valoreNumerico(stato) {
   if (!statoNoto(stato)) return null;
   return numero(stato.state);

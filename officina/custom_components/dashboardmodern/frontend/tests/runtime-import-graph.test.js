@@ -1549,8 +1549,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // che legge anche il ponte, e la carta `sections/ricarica-di-notte-section.js`.
   // 461 con le automazioni: il nucleo puro `core/automazioni.js`, che legge
   // anche il ponte, e la pagina `sections/automazioni-section.js`.
+  // 462 con le proposte delle automazioni: il nucleo puro
+  // `core/automazioni-proposte.js`, che il ponte usa per calcolarle in casa e
+  // la plancia per togliere quelle gia' salvate o scartate.
   assert.ok(
-    relative.length <= 461,
+    relative.length <= 462,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

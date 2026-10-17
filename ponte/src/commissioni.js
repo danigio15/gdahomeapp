@@ -710,8 +710,22 @@ export class Commissioni {
      * chiuse, e un telefono abbinato prima che i telefoni avessero un nome
      * non deve poterne scrivere una. Un salvataggio senza nome le lascia come
      * sono (`conservaLeAutomazioni`), e un ripristino senza nome che le
-     * cambierebbe si rifiuta. */
-    if (tipo === "ponte/automazioni/stato") {
+     * cambierebbe si rifiuta.
+     *
+     * Le proposte («Suggerite per la tua casa ✨») passano di qui con le
+     * stesse regole: `ponte/automazioni/proposte` le legge e
+     * `ponte/automazioni/proposte/scarta` ricorda un «No, grazie», e tutti e
+     * due rispondono `unauthorized` a chi non ha un utente. Lo scarto scrive
+     * solo nella memoria dell'add-on (quale proposta non mostrare piu'),
+     * mai in `cd_automazioni`: un'automazione nata da una proposta si salva
+     * dall'editor, come tutte le altre, con le regole qui sopra. E le
+     * proposte si calcolano in casa — i dispositivi e la loro storia dal
+     * Recorder, letti col filo dell'add-on — senza che niente esca. */
+    if (
+      tipo === "ponte/automazioni/stato" ||
+      tipo === "ponte/automazioni/proposte" ||
+      tipo === "ponte/automazioni/proposte/scarta"
+    ) {
       if (!this.automazioni) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.automazioni.rispondi(detto, { utente: chiChiede });
     }

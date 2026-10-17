@@ -485,6 +485,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     stati: () => notifiche.sentinella?.stati ?? null,
     notifiche,
     licenze,
+    /* Per le proposte: le stanze dai registri, e le luci rimaste accese con
+     * la casa vuota che l'assistente delle notifiche conta gia'. */
+    registri,
+    luciConCasaVuota: () => notifiche.sentinella?.capire?.dati?.luci ?? null,
     registro,
   });
   notifiche.sentinella?.ascoltatori?.push((id, dopo, prima) =>

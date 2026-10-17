@@ -24,9 +24,15 @@
  *    chiede — la maniglia `gdahomeApriLeAutomazioni`, o il messaggio
  *    `apri-le-automazioni`, come fa la Configurazione con le sue.
  *
- * Le viste sono quattro: la lista, i modelli pronti, l'editor (Quando · Solo
- * se · Allora) e il cronotermostato. Una bozza alla volta: si salva col suo
- * tasto, e solo se sta in piedi.
+ * Le viste sono cinque: la lista, i modelli pronti, l'editor (Quando · Solo
+ * se · Allora), il cronotermostato e le proposte. Una bozza alla volta: si
+ * salva col suo tasto, e solo se sta in piedi.
+ *
+ * Le proposte («Suggerite per la tua casa ✨») le calcola l'add-on in casa,
+ * dai dispositivi e dalla loro storia (`ponte/src/automazioni.js`, regole in
+ * `core/automazioni-proposte.js`): qui si raccontano nella lingua di chi
+ * guarda, «Crea» ne apre una nell'editor gia' compilata — e finche' non si
+ * salva non parte niente — e «No, grazie» la scarta per la casa.
  */
 import {
   AZIONI_AL_MASSIMO,
@@ -46,6 +52,7 @@ import {
   prossimiEventi,
   servizioPermesso,
 } from "../core/automazioni.js";
+import { proposteDaMostrare } from "../core/automazioni-proposte.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { currentProfile } from "./config-persistence-section.js";
@@ -88,6 +95,12 @@ const state = (root[KEY] ||= {
   inApp: false,
   doveEra: "",
   trascina: null,
+  /* Le proposte della casa (`ponte/automazioni/proposte`), quella da cui
+   * nasce la bozza aperta, e i «No, grazie» detti da qui e non ancora
+   * tornati dalla casa. */
+  proposte: null,
+  proposta: null,
+  scartateQui: [],
 });
 
 export const AUTOMAZIONI_TAB = "automazioni";
@@ -228,6 +241,17 @@ async function chiediAllaCasa({ forza = false } = {}) {
     const detto = clean(errore?.message);
     state.assente = /non conosco|unknown/i.test(detto);
     if (detto === "socket") state.chiestoIl = adesso - VALE + 4000;
+  }
+  /* Le proposte: la prima volta del giorno la casa legge la storia, e puo'
+   * metterci qualche secondo. Senza add-on non ce ne sono. */
+  try {
+    if (!state.assente) {
+      ridisegna();
+      state.proposte = await chiediAHomeAssistant({ type: "ponte/automazioni/proposte" }, 15000);
+    }
+  } catch (_errore) {
+    /* Nessuna proposta e' meglio di un errore: il blocco semplicemente non
+     * c'e'. */
   } finally {
     state.chiedendo = false;
   }
@@ -456,6 +480,19 @@ export function fraseDellAzione(a) {
   if (a.tipo === "aspettaChe") {
     const stato = a.stato;
     const massimo = a.massimo;
+    /* «<60» e «>25» sono soglie: si leggono come una salita o una discesa. */
+    const soglia = /^([<>])\s*(-?\d+(?:[.,]\d+)?)$/.exec(clean(stato));
+    const limite = soglia ? soglia[2] : "";
+    if (soglia?.[1] === "<")
+      return t(
+        `aspetta che ${chi} scenda sotto ${limite} (al massimo ${massimo} min)`,
+        `wait until ${chi} drops below ${limite} (at most ${massimo} min)`,
+      );
+    if (soglia)
+      return t(
+        `aspetta che ${chi} salga sopra ${limite} (al massimo ${massimo} min)`,
+        `wait until ${chi} rises above ${limite} (at most ${massimo} min)`,
+      );
     return t(
       `aspetta che ${chi} diventi «${stato}» (al massimo ${massimo} min)`,
       `wait until ${chi} becomes «${stato}» (at most ${massimo} min)`,
@@ -659,7 +696,7 @@ ${sopra ? `<div class="au-sopra">${esc(sopra)}</div>` : ""}
 <button type="button" class="au-int" role="switch" aria-checked="${a.attiva}" data-au-attiva="${esc(a.id)}" aria-label="${esc(t("Attiva o spenta", "On or off"))}"><i></i></button><span class="au-fr" aria-hidden="true">›</span></div>`;
 }
 
-function lista({ app }) {
+function lista({ app, proposte = true }) {
   const elenco = leAutomazioni();
   const nonPrincipale = currentProfile() !== "primary";
   const nota = nonPrincipale
@@ -673,7 +710,7 @@ function lista({ app }) {
   const righe = elenco.length
     ? `<div class="au-lista">${elenco.map(rigaDellaLista).join("")}</div>`
     : `<div class="au-lista au-lista-vuota"><p>${esc(t("Nessuna automazione: comincia da un modello pronto.", "No automations: start from a ready-made template."))}</p><button type="button" class="au-piu" data-au-vai="modelli">＋ ${esc(t("Nuova", "Add new"))}</button></div>`;
-  return `${nota}${boxDellaCasa(elenco)}
+  return `${nota}${boxDellaCasa(elenco)}${proposte ? bloccoDelleProposte() : ""}
 <div class="au-testa"><h3>${esc(t("Le tue automazioni", "Your automations"))}</h3>${
     app && !elenco.length
       ? ""
@@ -709,6 +746,371 @@ function velo(dentro) {
         )}</small>`
       : ""
   }</div></div>`;
+}
+
+/* ── le proposte ─────────────────────────────────────────────────────────── */
+
+/* Quelle da mostrare: le scarta anche la plancia, appena si dice «No,
+ * grazie» o si salva, senza aspettare che la casa lo ridica. */
+function leProposte() {
+  const tutte = Array.isArray(state.proposte?.proposte) ? state.proposte.proposte : [];
+  return proposteDaMostrare(tutte, { automazioni: leAutomazioni(), scartate: state.scartateQui });
+}
+
+const settimaneDellaStoria = () => Math.max(1, Math.round((state.proposte?.giorni || 21) / 7));
+
+/* Le parole di una proposta: il QUANDO, l'ALLORA, il perche' e il nome che
+ * avra' l'automazione. La casa manda la regola e i nomi; la frase la fa la
+ * plancia, nella lingua di chi guarda. */
+function paroleDi(p) {
+  const d = p.dati || {};
+  const a = p.automazione || {};
+  const prima = a.allora?.[0] || {};
+  const cose = Array.isArray(prima.entita) ? prima.entita : prima.entita ? [prima.entita] : [];
+  const cosa = cose.length === 1 ? nomeDi(cose[0]) : "";
+  const quante = cose.length;
+  const area = clean(d.area);
+  const nome = clean(d.nome);
+  if (p.chiave === "movimentoLuce") {
+    const luce = cosa;
+    return {
+      quando: t(
+        `Quando c'è movimento in ${area} di notte`,
+        `When there is motion in ${area} at night`,
+      ),
+      allora: t(
+        `accendi ${luce} al 20%, spegni dopo 2 min`,
+        `turn on ${luce} at 20%, off after 2 min`,
+      ),
+      perche: t(
+        `in ${area} ci sono un sensore di movimento e una luce.`,
+        `${area} has a motion sensor and a light.`,
+      ),
+      nome: t(`Luce col movimento in ${area}`, `Motion light in ${area}`),
+    };
+  }
+  if (p.chiave === "finestraClima") {
+    const finestra = clean(d.finestra);
+    const clima = cosa || t(`${quante} climatizzatori`, `${quante} climate devices`);
+    return {
+      quando: t(`Quando ${finestra} resta aperta 2 min`, `When ${finestra} stays open 2 min`),
+      allora: t(
+        `spegni ${clima}, riaccendi quando la chiudi`,
+        `turn off ${clima}, back on when you close it`,
+      ),
+      perche: t(
+        `finestra e clima sono nella stessa stanza (${area}).`,
+        `the window and the climate are in the same room (${area}).`,
+      ),
+      nome: t(`Clima spento con ${finestra} aperta`, `Climate off with ${finestra} open`),
+    };
+  }
+  if (p.chiave === "umiditaAspiratore") {
+    const aspiratore = clean(d.aspiratore) || cosa;
+    return {
+      quando: t(
+        `Quando l'umidità in ${area} supera 70%`,
+        `When humidity in ${area} goes above 70%`,
+      ),
+      allora: t(
+        `accendi ${aspiratore}, spegnilo sotto 60%`,
+        `turn on ${aspiratore}, off below 60%`,
+      ),
+      perche: t(
+        `in ${area} ci sono un sensore di umidità e un aspiratore.`,
+        `${area} has a humidity sensor and an extractor fan.`,
+      ),
+      nome: t(`Aspiratore con l'umidità in ${area}`, `Extractor fan with humidity in ${area}`),
+    };
+  }
+  if (p.chiave === "elettrodomestico")
+    return {
+      quando: t(`Quando ${nome} ha finito`, `When ${nome} has finished`),
+      allora: t("avvisami sul telefono", "notify me on the phone"),
+      perche: t(
+        `${nome} misura la potenza: si vede quando il ciclo finisce.`,
+        `${nome} measures power: you can tell when the cycle ends.`,
+      ),
+      nome: t(`${nome}: ha finito`, `${nome}: finished`),
+      avviso: t(`${nome} ha finito`, `${nome} has finished`),
+    };
+  if (p.chiave === "fuoriLuci" || p.chiave === "abitudineFuoriLuci") {
+    const volte = Number(d.volte) || 0;
+    return {
+      quando: t("Quando tutti escono", "When everyone leaves"),
+      allora:
+        p.chiave === "fuoriLuci"
+          ? t(`spegni ${quante} luci`, `turn off ${quante} lights`)
+          : t("spegni le luci rimaste accese", "turn off the lights left on"),
+      perche:
+        p.chiave === "fuoriLuci"
+          ? t(
+              "in casa ci sono persone e luci: nessuna resta accesa per niente.",
+              "the home knows its people and lights: none stays on for nothing.",
+            )
+          : t(
+              `questa settimana ${volte} volte sono rimaste accese senza nessuno in casa.`,
+              `this week they were left on ${volte} times with nobody home.`,
+            ),
+      nome: t("Tutti fuori: luci spente", "Everyone out: lights off"),
+    };
+  }
+  if (p.chiave === "vuotaClima")
+    return {
+      quando: t("Quando la casa è vuota da 30 min", "When the home has been empty for 30 min"),
+      allora: t("spegni il clima", "turn off the climate"),
+      perche: t(
+        "il clima acceso con la casa vuota scalda o rinfresca per nessuno.",
+        "climate running in an empty home heats or cools for nobody.",
+      ),
+      nome: t("Casa vuota: clima spento", "Empty home: climate off"),
+    };
+  if (p.chiave === "antifurtoLuci")
+    return {
+      quando: t("Quando l'antifurto si inserisce", "When the alarm is armed"),
+      allora: t("spegni le luci", "turn off the lights"),
+      perche: t(
+        "chi inserisce l'antifurto di solito esce: le luci si possono spegnere.",
+        "whoever arms the alarm usually leaves: the lights can go off.",
+      ),
+      nome: t("Antifurto inserito: luci spente", "Alarm armed: lights off"),
+    };
+  if (p.chiave === "tramontoTapparelle" || p.chiave === "abitudineTramonto") {
+    const tapparella = nome || cosa;
+    return {
+      quando: t("Al tramonto", "At sunset"),
+      allora: tapparella
+        ? t(`chiudi ${tapparella}`, `close ${tapparella}`)
+        : t(`chiudi ${quante} tapparelle`, `close ${quante} shutters`),
+      perche:
+        p.chiave === "abitudineTramonto"
+          ? t(
+              "la chiudi a mano quasi ogni sera, poco dopo il tramonto.",
+              "you close it by hand almost every evening, just after sunset.",
+            )
+          : t(
+              "le tapparelle chiuse la sera tengono il caldo dentro e la casa riservata.",
+              "shutters closed in the evening keep the warmth in and the home private.",
+            ),
+      nome: tapparella
+        ? t(`${tapparella} al tramonto`, `${tapparella} at sunset`)
+        : t("Tapparelle al tramonto", "Shutters at sunset"),
+    };
+  }
+  /* L'abitudine a un orario. */
+  const ora = clean(d.ora);
+  const da = clean(d.da);
+  const fino = clean(d.a);
+  const settimane = Number(d.settimane) || settimaneDellaStoria();
+  const tapparella = prima.tipo === "tapparella";
+  const accende = d.verso === "accende";
+  const quando = d.festivi
+    ? t(`Alle ${ora} nel fine settimana`, `At ${ora} at the weekend`)
+    : t(`Alle ${ora} nei giorni feriali`, `At ${ora} on weekdays`);
+  const allora = tapparella
+    ? accende
+      ? t(`apri ${nome}`, `open ${nome}`)
+      : t(`chiudi ${nome}`, `close ${nome}`)
+    : accende
+      ? t(`accendi ${nome}`, `turn on ${nome}`)
+      : t(`spegni ${nome}`, `turn off ${nome}`);
+  const perche = tapparella
+    ? accende
+      ? t(
+          `l'hai aperta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
+          `you opened it almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`,
+        )
+      : t(
+          `l'hai chiusa quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
+          `you closed it almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`,
+        )
+    : accende
+      ? t(
+          `l'hai accesa quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
+          `you turned it on almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`,
+        )
+      : t(
+          `l'hai spenta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
+          `you turned it off almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`,
+        );
+  return { quando, allora, perche, nome: `${nome} · ${ora}` };
+}
+
+const disegnoDellaProposta = (p) =>
+  p.chiave === "abitudineOrario" ? "automazioni" : clean(p.disegno) || "automazioni";
+
+const perche = (testo) =>
+  `<div class="pro-perche"><b>${esc(t("Perché:", "Why:"))}</b> ${esc(testo)}</div>`;
+
+function tastiDellaProposta(p, { premium }) {
+  if (!premium)
+    return `<div class="pro-tasti"><button type="button" class="pro-crea prem" data-au-scopri>✨ ${esc(
+      t("Crea con Premium", "Create with Premium"),
+    )}</button></div>`;
+  return `<div class="pro-tasti"><button type="button" class="pro-crea" data-au-crea="${esc(p.id)}">${esc(
+    t("Crea", "Create"),
+  )}</button><button type="button" class="pro-no" data-au-scarta="${esc(p.id)}">${esc(
+    t("No, grazie", "No, thanks"),
+  )}</button></div>`;
+}
+
+function cartaDellaProposta(p, { premium = true } = {}) {
+  const w = paroleDi(p);
+  return `<div class="pro-carta" data-au-proposta="${esc(p.id)}"><div class="pro-su"><span class="au-ico">${disegno(
+    disegnoDellaProposta(p),
+    `pro-${p.id}`,
+  )}</span><div><div class="pro-q">${esc(w.quando)}</div><div class="pro-a"><span class="fr">→</span>${esc(
+    w.allora,
+  )}</div></div></div>${perche(w.perche)}${tastiDellaProposta(p, { premium })}</div>`;
+}
+
+const testaDelleProposte = (destra = "") =>
+  `<div class="pro-testa"><h3>${esc(t("Suggerite per la tua casa ✨", "Suggested for your home ✨"))}</h3><small>${esc(
+    t("dai tuoi dispositivi e da come li usi", "from your devices and how you use them"),
+  )}</small>${destra}</div>`;
+
+/* Il blocco nella lista: tre carte e «Vedi tutte». Nell'app scorrono di
+ * lato, coi puntini. Senza proposte il blocco non c'e'. */
+function bloccoDelleProposte() {
+  const proposte = leProposte();
+  if (!proposte.length) return "";
+  const n = proposte.length;
+  const tre = proposte.slice(0, 3);
+  return `<div class="pro">${testaDelleProposte(
+    `<button type="button" class="pro-tutte" data-au-vai="proposte">${esc(t(`Vedi tutte (${n})`, `See all (${n})`))} ›</button>`,
+  )}<div class="pro-carte">${tre.map((p) => cartaDellaProposta(p)).join("")}</div>${
+    tre.length > 1
+      ? `<div class="pro-punti" aria-hidden="true">${tre.map((_p, i) => `<i${i === 0 ? ' class="si"' : ""}></i>`).join("")}</div>`
+      : ""
+  }</div>`;
+}
+
+/* Senza Premium: una proposta si legge, le altre sono un numero. */
+function bloccoSenzaPremium() {
+  const proposte = leProposte();
+  if (!proposte.length) return "";
+  const altre = proposte.length - 1;
+  return `<div class="pro pro-senza">${testaDelleProposte()}<div class="pro-carte">${cartaDellaProposta(
+    proposte[0],
+    {
+      premium: false,
+    },
+  )}</div>${
+    altre > 0
+      ? `<div class="pro-altre">✨ <span>${
+          altre === 1
+            ? esc(
+                t(
+                  "Per la tua casa c'è un'altra proposta pronta: la trovi con Premium.",
+                  "There is one more suggestion ready for your home: you'll find it with Premium.",
+                ),
+              )
+            : esc(
+                t(
+                  `Per la tua casa ci sono altre ${altre} proposte pronte: le trovi tutte con Premium.`,
+                  `There are ${altre} more suggestions ready for your home: you'll find them all with Premium.`,
+                ),
+              )
+        }</span></div>`
+      : ""
+  }</div>`;
+}
+
+function rigaDellaProposta(p) {
+  const w = paroleDi(p);
+  return `<div class="au-riga" data-au-proposta="${esc(p.id)}"><span class="au-ico">${disegno(
+    disegnoDellaProposta(p),
+    `pro-r-${p.id}`,
+  )}</span><div class="au-frase"><div class="au-quando">${esc(w.quando)}</div><div class="au-allora"><span class="fr">→</span>${esc(
+    w.allora,
+  )}</div>${perche(w.perche)}</div>${tastiDellaProposta(p, { premium: true })}</div>`;
+}
+
+/* La pagina di tutte le proposte: prima i dispositivi, poi le abitudini. */
+function pagineDelleProposte({ app }) {
+  const proposte = leProposte();
+  const dispositivi = proposte.filter((p) => p.gruppo === "dispositivi");
+  const abitudini = proposte.filter((p) => p.gruppo === "abitudini");
+  const n = proposte.length;
+  const nd = dispositivi.length;
+  const na = abitudini.length;
+  const settimane = settimaneDellaStoria();
+  const indietro = app
+    ? ""
+    : `<button type="button" class="au-indietro" data-au-vai="lista">‹ ${esc(t("Automazioni", "Automations"))}</button>`;
+  const intro = n
+    ? t(
+        `${n} automazioni pensate per la tua casa. «Crea» le apre già compilate: le controlli e le salvi. «No, grazie» non le ripropone più.`,
+        `${n} automations designed for your home. «Create» opens them already filled in: you check them and save. «No, thanks» never suggests them again.`,
+      )
+    : t(
+        "Per ora nessuna proposta: quando la casa ne trova una, la vedi qui.",
+        "No suggestions for now: when the home finds one, you'll see it here.",
+      );
+  return `${indietro}<p class="au-intro">${esc(intro)}</p>${
+    nd
+      ? `<div class="pro-gruppo">🔌 ${esc(t("Dai tuoi dispositivi", "From your devices"))} <small>· ${nd}</small></div><div class="au-lista pro-elenco">${dispositivi.map(rigaDellaProposta).join("")}</div>`
+      : ""
+  }${
+    na
+      ? `<div class="pro-gruppo">📈 ${esc(t("Dalle tue abitudini", "From your habits"))} <small>· ${na} · ${esc(
+          t(`ultime ${settimane} settimane`, `last ${settimane} weeks`),
+        )}</small></div><div class="au-lista pro-elenco">${abitudini.map(rigaDellaProposta).join("")}</div>`
+      : ""
+  }<div class="pro-fondo"><span>🏠</span><div>${esc(
+    t(
+      "Le proposte nascono in casa: l'add-on guarda i tuoi dispositivi e la loro storia, niente esce di casa.",
+      "Suggestions are born at home: the add-on looks at your devices and their history, nothing leaves the home.",
+    ),
+  )}</div></div>`;
+}
+
+/* «Crea»: l'editor gia' compilato, con l'etichetta «Proposta ✨». Non si
+ * salva niente: finche' non si preme Salva non parte niente. */
+function creaDallaProposta(id) {
+  const p = leProposte().find((x) => x.id === id);
+  if (!p) return;
+  const w = paroleDi(p);
+  const automazione = structuredClone(p.automazione);
+  if (p.chiave === "elettrodomestico" && w.avviso)
+    automazione.allora = (automazione.allora || []).map((a) =>
+      a.tipo === "notifica" ? { ...a, testo: w.avviso } : a,
+    );
+  apriBozza({ ...automazione, id: nuovoId(), nome: w.nome.slice(0, 60) });
+  state.proposta = { id: p.id, perche: w.perche };
+}
+
+const etichettaDellaProposta = () =>
+  state.proposta
+    ? `<div class="pro-etichetta"><span class="pro-pill">${esc(t("Proposta ✨", "Suggestion ✨"))}</span><small><b>${esc(
+        t("Perché:", "Why:"),
+      )}</b> ${esc(state.proposta.perche)} ${esc(
+        t(
+          "Controlla e salva: finché non salvi non parte niente.",
+          "Check and save: nothing runs until you save.",
+        ),
+      )}</small></div>`
+    : "";
+
+/* «No, grazie»: sparisce subito, e la casa se lo ricorda per sempre. */
+async function scartaLaProposta(id) {
+  if (!id) return;
+  state.scartateQui = [...new Set([...state.scartateQui, id])];
+  ridisegna();
+  try {
+    const detto = await chiediAHomeAssistant(
+      { type: "ponte/automazioni/proposte/scarta", proposta: id },
+      15000,
+    );
+    if (detto && Array.isArray(detto.proposte)) state.proposte = detto;
+  } catch (_errore) {
+    /* La casa non ha risposto: qui resta scartata, e la prossima volta
+     * che si apre la pagina tornera' a chiederlo. */
+    root.edToast?.(
+      t("La casa non ha risposto: riprova più tardi.", "The home did not answer: try again later."),
+    );
+  }
+  ridisegna();
 }
 
 /* ── i modelli ───────────────────────────────────────────────────────────── */
@@ -1393,7 +1795,7 @@ function campiDellAzione(a, i) {
     )}</span> ${sel(
       `${via}.massimo`,
       a.massimo || 10,
-      [1, 2, 5, 10, 15, 30, 60, 120, 240].map((m) => [m, `${m} min`]),
+      [1, 2, 5, 10, 15, 30, 60, 120, 240, 720].map((m) => [m, m < 720 ? `${m} min` : "12 h"]),
     )}`;
   if (a.tipo === "servizio") {
     const scritto = clean(a.servizio);
@@ -1477,7 +1879,7 @@ function editor({ app }) {
     app
       ? ""
       : `<button type="button" class="au-indietro" data-au-vai="${state.daModelli ? "modelli" : "lista"}">‹ ${esc(state.daModelli ? t("Modelli", "Templates") : t("Automazioni", "Automations"))}</button>`
-  }<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b.nome || "")}" placeholder="${esc(t("Come la chiami", "What you call it"))}"></label>
+  }<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b.nome || "")}" placeholder="${esc(t("Come la chiami", "What you call it"))}"></label>${etichettaDellaProposta()}
 <div class="au-blocco au-q"><div class="au-et">${esc(t("Quando", "When"))} <small>· ${esc(t("una cosa sola", "one thing only"))}</small></div>
 <div class="au-rf">${tendinaDelQuando(q)} ${campiDelQuando(q)}</div></div>
 <div class="au-blocco au-s"><div class="au-et">${esc(t("Solo se", "Only if"))} <small>· ${esc(
@@ -1581,6 +1983,10 @@ ${esistente ? `<button type="button" class="au-elimina" data-au-elimina>🗑 ${e
 function titoloDellaVista() {
   if (state.vista === "modelli") return t("Nuova automazione", "New automation");
   if (state.vista === "crono") return t("Cronotermostato", "Thermostat schedule");
+  if (state.vista === "proposte")
+    return state.inApp
+      ? t("Proposte", "Suggestions")
+      : t("Proposte per la tua casa", "Suggestions for your home");
   if (state.vista === "editor") {
     const esistente = leAutomazioni().some((a) => a.id === state.bozza?.id);
     return esistente
@@ -1594,7 +2000,9 @@ export function paginaHtml({ app = false } = {}) {
   if (!state.bozza && (state.vista === "editor" || state.vista === "crono")) state.vista = "lista";
   const premium = state.premium !== false;
   let dentro;
-  if (!premium) dentro = velo(leAutomazioni().length ? lista({ app }) : modelli());
+  if (!premium)
+    dentro = `${bloccoSenzaPremium()}${velo(leAutomazioni().length ? lista({ app, proposte: false }) : modelli())}`;
+  else if (state.vista === "proposte") dentro = pagineDelleProposte({ app });
   else if (state.vista === "modelli")
     dentro = `${app ? "" : `<button type="button" class="au-indietro" data-au-vai="lista">‹ ${esc(t("Automazioni", "Automations"))}</button>`}${modelli()}`;
   else if (state.vista === "editor") dentro = editor({ app });
@@ -1814,6 +2222,7 @@ const SULLE_COSE = ["accendi", "spegni", "tapparella", "clima", "media"];
 
 function apriBozza(bozza, { daModelli = false } = {}) {
   state.bozza = structuredClone(bozza);
+  state.proposta = null;
   /* Una regola che arriva dal salvato ha gia' la forma pulita; i campi che le
    * mancano per l'editor — `ore`, `chi`, le righe del filtro — li rimette
    * qui, e le azioni sulle cose con un'entita' sola tornano un elenco. */
@@ -1876,6 +2285,7 @@ function salva() {
   salvaLElenco(elenco);
   root.edToast?.(t("💾 Automazione salvata", "💾 Automation saved"));
   state.bozza = null;
+  state.proposta = null;
   state.vista = "lista";
   state.daModelli = false;
   void chiediAllaCasa({ forza: true });
@@ -1917,7 +2327,7 @@ function onClick(event) {
     return;
   }
   const el = event.target.closest(
-    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate]",
+    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta]",
   );
   if (!el) {
     if (state.tendina) {
@@ -1944,11 +2354,19 @@ function onClick(event) {
     alternaAttiva(d.auAttiva);
     return;
   }
+  if (d.auScarta) {
+    void scartaLaProposta(d.auScarta);
+    return;
+  }
   if (d.auVai) {
     state.vista = d.auVai;
-    if (d.auVai === "lista") state.bozza = null;
+    if (d.auVai === "lista" || d.auVai === "proposte") {
+      state.bozza = null;
+      state.proposta = null;
+    }
     state.tendina = false;
-  } else if (d.auModello) apriBozza(bozzaDelModello(d.auModello), { daModelli: true });
+  } else if (d.auCrea) creaDallaProposta(d.auCrea);
+  else if (d.auModello) apriBozza(bozzaDelModello(d.auModello), { daModelli: true });
   else if (d.auApri) {
     const a = leAutomazioni().find((x) => x.id === d.auApri);
     if (a) apriBozza(a);
@@ -2402,6 +2820,53 @@ html[data-theme="dark"] .au .au-temp .c{color:#fdba74}html[data-theme="dark"] .a
 .au-app .au-sel{font-size:13px}
 @media (max-width:760px){.au .au-due{grid-template-columns:1fr}.au-web .au-modelli{grid-template-columns:1fr 1fr}}
 @media (max-width:420px){.au .au-temp>div{flex-wrap:wrap}.au .au-temp b{font-size:28px}}
+.au .pro{margin:16px 0 4px}
+.au .pro-testa{display:flex;align-items:baseline;gap:10px;margin:0 2px 8px}
+.au .pro-testa h3{margin:0;font-size:15px;font-weight:900;text-transform:none;letter-spacing:0;font-family:inherit;color:var(--au-tx)}
+.au .pro-testa small{font-size:12px;font-weight:600;color:var(--au-dim)}
+.au .pro-tutte{margin-left:auto;border:0;background:none;padding:0;color:#0284c7;font-weight:900;font-size:13px;white-space:nowrap;cursor:pointer;font-family:inherit}
+html[data-theme="dark"] .au .pro-tutte{color:#7dd3fc}
+.au .pro-carte{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.au .pro-carta{position:relative;display:flex;flex-direction:column;gap:9px;padding:14px;border-radius:16px;border:1px solid color-mix(in srgb,#f59e0b 38%,var(--au-bordo));background:linear-gradient(160deg,color-mix(in srgb,#f59e0b 8%,var(--au-carta)),var(--au-carta) 60%);min-width:0}
+.au .pro-su{display:flex;gap:11px;align-items:flex-start}
+.au .pro-carta .au-ico{width:40px;height:40px;flex:none}
+.au .pro-q{font-size:13.5px;font-weight:900;line-height:1.3;color:var(--au-tx)}
+.au .pro-a{font-size:13px;font-weight:700;line-height:1.35;margin-top:2px;color:var(--au-tx)}
+.au .pro-a .fr{color:#0ea5e9;font-weight:900;margin-right:5px}
+.au .pro-perche{font-size:12px;line-height:1.45;font-weight:600;color:var(--au-dim);padding:7px 9px;border-radius:10px;background:var(--au-tenue)}
+.au .pro-perche b{color:var(--au-tx);font-weight:800}
+.au .pro-tasti{display:flex;gap:8px;margin-top:auto}
+.au .pro-crea{flex:1;border:0;border-radius:11px;padding:9px 12px;background:var(--au-tx);color:var(--au-carta);font-weight:900;font-size:13px;cursor:pointer;font-family:inherit}
+.au .pro-no{border:1px solid var(--au-bordo);border-radius:11px;padding:9px 12px;background:none;color:var(--au-dim);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
+.au .pro-crea.prem{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.au .pro-senza .pro-carte{grid-template-columns:repeat(3,minmax(0,1fr))}
+.au .pro-altre{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 14px;border-radius:14px;border:1px dashed color-mix(in srgb,#f59e0b 45%,var(--au-bordo));font-size:13px;font-weight:700;color:var(--au-dim)}
+.au .pro-gruppo{margin:16px 2px 8px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--au-dim);display:flex;gap:8px;align-items:center}
+.au .pro-gruppo small{text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
+.au .pro-elenco .au-riga{align-items:flex-start;cursor:default}
+.au .pro-elenco .pro-perche{margin-top:6px;padding:5px 8px;display:inline-block}
+.au .pro-elenco .pro-tasti{flex-direction:column;margin:0;gap:6px;flex:none}
+.au .pro-elenco .pro-crea,.au .pro-elenco .pro-no{padding:7px 14px;font-size:12.5px}
+.au .pro-fondo{display:flex;gap:12px;align-items:center;margin:18px 0 0;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,#16a34a 8%,transparent);border:1px solid color-mix(in srgb,#16a34a 28%,transparent);font-size:13px;line-height:1.5;font-weight:700;color:var(--au-tx)}
+.au .pro-fondo span{font-size:22px}
+.au .pro-etichetta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;border-radius:14px;border:1px solid color-mix(in srgb,#f59e0b 40%,var(--au-bordo));background:color-mix(in srgb,#f59e0b 8%,var(--au-carta))}
+.au .pro-etichetta .pro-pill{font-size:11px;font-weight:900;letter-spacing:.06em;padding:3px 9px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.au .pro-etichetta small{font-size:12.5px;font-weight:600;color:var(--au-dim);line-height:1.4;flex:1;min-width:200px}
+.au .pro-etichetta small b{color:var(--au-tx)}
+.au .pro-punti{display:none}
+.au-app .pro-punti{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.au-app .pro-punti i{width:7px;height:7px;border-radius:50%;background:color-mix(in srgb,var(--au-tx) 20%,transparent);transition:width .2s}
+.au-app .pro-punti i.si{width:18px;border-radius:4px;background:#f59e0b}
+.au-app .pro-carte{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:10px;margin-right:-14px;padding-right:14px}
+.au-app .pro-carte::-webkit-scrollbar{display:none}
+.au-app .pro-carta{flex:0 0 82%;scroll-snap-align:start}
+.au-app .pro-senza .pro-carta{flex-basis:100%}
+.au-app .pro-testa{flex-wrap:wrap}
+.au-app .pro-testa small{order:3;width:100%}
+.au-app .pro-elenco .au-riga{flex-wrap:wrap}
+.au-app .pro-elenco .pro-tasti{flex-direction:row;width:100%;padding-left:55px}
+.au-app .pro-elenco .pro-crea{flex:1}
+@media (max-width:760px){.au-web .pro-carte{grid-template-columns:1fr}.au-web .pro-elenco .au-riga{flex-wrap:wrap}.au-web .pro-elenco .pro-tasti{flex-direction:row;width:100%}}
 `,
   );
 }
@@ -2420,6 +2885,22 @@ export function installAutomazioniSection() {
   doc.addEventListener("pointermove", onPointerMove);
   doc.addEventListener("pointerup", onPointerUp);
   doc.addEventListener("pointercancel", onPointerUp);
+  /* I puntini delle proposte nell'app seguono la carta in vista: si
+   * spostano qui, senza ridisegnare la pagina sotto il dito. */
+  doc.addEventListener(
+    "scroll",
+    (evento) => {
+      const carte = evento.target?.closest?.(".au .pro-carte");
+      if (!carte) return;
+      const prima = carte.firstElementChild;
+      const passo = (prima?.offsetWidth || 1) + 10;
+      const vista = Math.round(carte.scrollLeft / passo);
+      carte.parentElement
+        ?.querySelectorAll?.(".pro-punti i")
+        .forEach((punto, i) => punto.classList.toggle("si", i === vista));
+    },
+    true,
+  );
   prendiLeManiglie();
   const ancora = () =>
     root.queueMicrotask?.(() => {

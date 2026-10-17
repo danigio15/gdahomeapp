@@ -533,7 +533,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NCX642XP.js";
+} from "../../chunk-ABUMDGTZ.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1981,9 +1981,13 @@ var SOURCE_INDEX = Object.freeze({
   "${mute} non rispondono": "${mute} not answering",
   "${muti.length} dispositivi non rispondono": "${muti.length} devices are not answering",
   "${muti[0].name} non risponde": "${muti[0].name} is not answering",
+  "${n} automazioni pensate per la tua casa. «Crea» le apre già compilate: le controlli e le salvi. «No, grazie» non le ripropone più.": "${n} automations designed for your home. «Create» opens them already filled in: you check them and save. «No, thanks» never suggests them again.",
   "${n} fonti non rispondono": "${n} sources not responding",
   "${n} risposte nuove": "${n} new replies",
   "${n} soste": "${n} stops",
+  "${nome} ha finito": "${nome} has finished",
+  "${nome} misura la potenza: si vede quando il ciclo finisce.": "${nome} measures power: you can tell when the cycle ends.",
+  "${nome}: ha finito": "${nome}: finished",
   "${nome}: i tasti li prende la TV stessa, il telecomando non serve.": "${nome}: the TV takes the keys itself, no remote needed.",
   "${nome}: le frecce, OK e gli altri tasti compaiono sotto la scheda, a TV accesa.": "${nome}: the arrows, OK and the other keys show under the card while the TV is on.",
   "${nomi} spenti": "${nomi} off",
@@ -2004,6 +2008,7 @@ var SOURCE_INDEX = Object.freeze({
   "${quante} aspettano la pioggia": "${quante} waiting for rain",
   "${quante} azioni": "${quante} actions",
   "${quante} celle": "${quante} cells",
+  "${quante} climatizzatori": "${quante} climate devices",
   "${quante} da innaffiare": "${quante} need water",
   "${quante} domani": "${quante} tomorrow",
   "${quante} entità": "${quante} entities",
@@ -2039,6 +2044,7 @@ var SOURCE_INDEX = Object.freeze({
   "${scelti} di ${tutti}": "${scelti} of ${tutti}",
   "${soc}% raggiunto": "${soc}% reached",
   "${spente} entità sono disabilitate in Home Assistant: abilitale da lì per vederle anche qui.": "${spente} entities are disabled in Home Assistant: enable them there to see them here too.",
+  "${tapparella} al tramonto": "${tapparella} at sunset",
   "${totale} luci": "${totale} lights",
   "${trovate.length} cartucce trovate": "${trovate.length} cartridges found",
   "${trovate.length} celle trovate": "${trovate.length} cells found",
@@ -2148,8 +2154,11 @@ var SOURCE_INDEX = Object.freeze({
   "Accendere e spegnere": "Turning them on and off",
   "accendi": "turn on",
   "Accendi": "All on",
+  "accendi ${aspiratore}, spegnilo sotto 60%": "turn on ${aspiratore}, off below 60%",
   "accendi ${chi}": "turn on ${chi}",
   "accendi ${chi} al ${a.livello}%": "turn on ${chi} at ${a.livello}%",
+  "accendi ${luce} al 20%, spegni dopo 2 min": "turn on ${luce} at 20%, off after 2 min",
+  "accendi ${nome}": "turn on ${nome}",
   "Accendi lo schermo quando suona": "Turn the screen on when it rings",
   "Accendi o spegni": "Turn on or off",
   "Accendi o spegni la caldaia": "Turn the boiler on or off",
@@ -2369,6 +2378,8 @@ var SOURCE_INDEX = Object.freeze({
   "alle": "at",
   "alle ${o}": "at ${o}",
   "alle ${ora}": "at ${ora}",
+  "Alle ${ora} nei giorni feriali": "At ${ora} on weekdays",
+  "Alle ${ora} nel fine settimana": "At ${ora} at the weekend",
   "Allegati": "Attachments",
   "Allegato": "Attachment",
   "Allerta arancione": "Orange alert",
@@ -2448,6 +2459,7 @@ var SOURCE_INDEX = Object.freeze({
   "Antifurto · Totale": "Alarm · Total",
   "Antifurto e serrature chiedono il codice": "Alarm and locks ask for the code",
   "Antifurto e videosorveglianza": "Alarm system and video surveillance",
+  "Antifurto inserito: luci spente": "Alarm armed: lights off",
   "Antifurto: allarme in corso": "Alarm: triggered",
   "Antipiega": "Tumbling",
   "Anziana": "Old woman",
@@ -2475,6 +2487,7 @@ var SOURCE_INDEX = Object.freeze({
   "Apri": "Unlock",
   "Apri (come prima)": "Open (as before)",
   "apri ${chi}": "open ${chi}",
+  "apri ${nome}": "open ${nome}",
   "Apri Assist": "Open Assist",
   "Apri Cancello": "Open gate",
   "Apri configurazione": "Open configuration",
@@ -2557,11 +2570,14 @@ var SOURCE_INDEX = Object.freeze({
   "Aspetta": "Waiting",
   "aspetta ${a.minuti} min": "wait ${a.minuti} min",
   "aspetta che ${chi} diventi «${stato}» (al massimo ${massimo} min)": "wait until ${chi} becomes «${stato}» (at most ${massimo} min)",
+  "aspetta che ${chi} salga sopra ${limite} (al massimo ${massimo} min)": "wait until ${chi} rises above ${limite} (at most ${massimo} min)",
+  "aspetta che ${chi} scenda sotto ${limite} (al massimo ${massimo} min)": "wait until ${chi} drops below ${limite} (at most ${massimo} min)",
   "aspetta finché…": "wait until…",
   "Aspetta la pioggia": "Waiting for the rain",
   "Aspetto della dashboard su questo dispositivo": "Dashboard appearance on this device",
   "Aspirapolvere": "Vacuum",
   "Aspiratore canna fumaria": "Flue extractor fan",
+  "Aspiratore con l'umidità in ${area}": "Extractor fan with humidity in ${area}",
   "Aspirazione": "Suction",
   "Assegna la segnalazione a te su GitHub": "Assign the report to yourself on GitHub",
   "Assente": "Down",
@@ -2641,6 +2657,7 @@ var SOURCE_INDEX = Object.freeze({
   "Avvisami di nuovo per questo": "Warn me about this again",
   "Avvisami prima": "Remind me",
   "Avvisami quando la lavatrice ha finito": "Tell me when the washer is done",
+  "avvisami sul telefono": "notify me on the phone",
   "avvisi": "warnings",
   "Avvisi": "Alerts",
   "Avvisi a tutto schermo": "Full-screen alerts",
@@ -2866,6 +2883,7 @@ var SOURCE_INDEX = Object.freeze({
   "Casa Mia": "My Home",
   "Casa vuota da ${durata(da, l)}: le spengo?": "Empty for ${durata(da, l)}: turn them off?",
   "Casa vuota e ${nomi(aperte, l)} non è chiusa a chiave": "The house is empty and ${nomi(aperte, l)} is unlocked",
+  "Casa vuota: clima spento": "Empty home: climate off",
   "casella": "field",
   "caselle": "fields",
   "caselle collegate": "fields connected",
@@ -2928,6 +2946,7 @@ var SOURCE_INDEX = Object.freeze({
   "chi è in casa": "who is home",
   "Chi è in casa": "Who is home",
   "Chi è, col suo nome di casa": "Who this is, by their home name",
+  "chi inserisce l'antifurto di solito esce: le luci si possono spegnere.": "whoever arms the alarm usually leaves: the lights can go off.",
   "Chi scatta, e per cosa: persona, animale, veicolo, movimento. Quando uno di questi si accende, la tessera Telecamere in Home lo dice — con il nome della telecamera e l'ora — e il fotogramma è lì dentro. Le caselle sono già compilate con i sensori che stanno accanto a ogni telecamera: correggile se ha sbagliato, svuotale per non guardarle.": "What trips, and for what: person, animal, vehicle, motion. When one of them turns on, the Cameras tile on the Home says so — with the camera name and the time — and the frame is right there. The boxes are prefilled with the sensors sitting next to each camera: correct them if it got it wrong, empty them to stop watching.",
   "Chi sta guardando?": "Who is watching?",
   "Chi suona · Apri · Cassetta": "Who rings · Open · Mailbox",
@@ -2954,6 +2973,9 @@ var SOURCE_INDEX = Object.freeze({
   "chiudi": "close",
   "Chiudi": "Close",
   "chiudi ${chi}": "close ${chi}",
+  "chiudi ${nome}": "close ${nome}",
+  "chiudi ${quante} tapparelle": "close ${quante} shutters",
+  "chiudi ${tapparella}": "close ${tapparella}",
   "Chiudi il gruppo ${nome}": "Close the ${nome} group",
   "Chiudi l'acqua": "Shut the water",
   "Chiudi selettore icone": "Close icon picker",
@@ -2998,6 +3020,7 @@ var SOURCE_INDEX = Object.freeze({
   "Clima dell'auto": "Car climate",
   "Clima e acqua": "Climate and water",
   "clima prima": "climate first",
+  "Clima spento con ${finestra} aperta": "Climate off with ${finestra} open",
   "Clima spento con finestra aperta": "Climate off with the window open",
   "Cloro": "Chlorine",
   "Cloro / Redox": "Chlorine / Redox",
@@ -3183,6 +3206,7 @@ var SOURCE_INDEX = Object.freeze({
   "Contatori · Oggi e il mese": "Meters · Today and this month",
   "Conteggio dei fulmini": "Lightning count",
   "Continuo": "Continuous",
+  "Controlla e salva: finché non salvi non parte niente.": "Check and save: nothing runs until you save.",
   "Controlla le proposte negli accordion: puoi correggere o rimuovere tutto liberamente.": "Review the proposals in the accordions: you can freely edit or remove anything.",
   "Controlla URL e che HA sia raggiungibile da questo dispositivo. Se il file è aperto da un download, l'URL qui sopra è obbligatorio.": "Check the URL and that HA is reachable from this device. If the file was opened from a download, the URL above is required.",
   "Controlli di": "Controls for",
@@ -3229,6 +3253,8 @@ var SOURCE_INDEX = Object.freeze({
   "Cottura": "Cooking",
   "Cottura — stato, tempi, temperatura e comandi": "Cooking — status, times, temperature and controls",
   "cover.tapparella_x — oppure switch.tapparella_su": "cover.shutter_x — or switch.shutter_up",
+  "Crea": "Create",
+  "Crea con Premium": "Create with Premium",
   "Crea gruppo": "Create group",
   "Crea il ritratto": "Create the portrait",
   "Crea token": "Create token",
@@ -3319,6 +3345,8 @@ var SOURCE_INDEX = Object.freeze({
   "Da Ultima Ric.": "Since last charge",
   "Da un sensore": "From a sensor",
   "Da zero": "From scratch",
+  "Dai tuoi dispositivi": "From your devices",
+  "dai tuoi dispositivi e da come li usi": "from your devices and how you use them",
   "Dai un nome al gruppo": "Name the group",
   "Dai un nome al gruppo (es. Piano Terra)": "Name the group (e.g. Ground Floor)",
   "Dai un nome all'unità: è quello che si legge sulla card.": "Name the unit: it is what the card shows.",
@@ -3346,6 +3374,7 @@ var SOURCE_INDEX = Object.freeze({
   "dalla tua camera": "from your camera",
   "dalle": "since",
   "dalle ${ora}": "since ${ora}",
+  "Dalle tue abitudini": "From your habits",
   "Dashboard Energia": "Energy dashboard",
   "Dashboard Energy": "Energy dashboard",
   "Data non trovata": "Date not found",
@@ -3756,6 +3785,7 @@ var SOURCE_INDEX = Object.freeze({
   "Finestra aperta, si spegne": "Window open, turns off",
   "Finestra chiusa": "Window closed",
   "Finestra cucina": "Kitchen window",
+  "finestra e clima sono nella stessa stanza (${area}).": "the window and the climate are in the same room (${area}).",
   "Finestre": "Windows",
   "finestre aperte": "windows open",
   "Finestre aperte": "Open windows",
@@ -3995,6 +4025,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il citofono e la cassetta della posta si dichiarano dalla scheda Citofono e posta della configurazione: il tasto che apre, il campanello, e i due sensori della cassetta.": "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.",
   "Il citofono non accetta la voce": "The intercom does not take audio",
   "Il classico sensore porta: la card dice «Porta aperta» quando resta aperta. Su un frigorifero è l'unica cosa che vale la pena sapere di sfuggita.": "The usual door contact: the card says “Door open” while it stays open. On a fridge that is the one thing worth knowing at a glance.",
+  "il clima acceso con la casa vuota scalda o rinfresca per nessuno.": "climate running in an empty home heats or cools for nobody.",
   "Il codice e' scaduto: riprova.": "The code expired: try again.",
   "Il codice si chiede prima di inserire": "The code is asked before arming",
   "Il collare è quasi scarico: mettilo in carica.": "The collar is almost flat: charge it.",
@@ -4120,6 +4151,8 @@ var SOURCE_INDEX = Object.freeze({
   "impostazioni. La dashboard si ricarica.": "settings. The dashboard will reload.",
   "Impulso": "Pulse",
   "in": "in:",
+  "in ${area} ci sono un sensore di movimento e una luce.": "${area} has a motion sensor and a light.",
+  "in ${area} ci sono un sensore di umidità e un aspiratore.": "${area} has a humidity sensor and an extractor fan.",
   "In ${conto.attivi} stanze c'è qualcuno": "Someone in ${conto.attivi} rooms",
   "In 1 stanza c'è qualcuno": "Someone in 1 room",
   "In Ah, Wh o kWh. Vuota, si ricava dalla carica e dalla capacità.": "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.",
@@ -4148,6 +4181,7 @@ var SOURCE_INDEX = Object.freeze({
   "in casa": "inside",
   "In casa": "Into the house",
   "IN CASA": "AT HOME",
+  "in casa ci sono persone e luci: nessuna resta accesa per niente.": "the home knows its people and lights: none stays on for nothing.",
   "In casa ci sono questi — un tocco lo sceglie:": "These are in the house — one tap picks it:",
   "In casa è tutto in ordine.": "Everything is fine at home.",
   "In che ordine si vedono in Home. Le prime due — la striscia col menù e il riquadro col meteo — finché stanno in cima restano sopra la pagina, dove sono sempre state; spostandole più in basso scendono in pagina insieme agli altri blocchi. La striscia col menù scende solo qui: sulle altre pagine torna in alto da sola, o l'hamburger sparirebbe. Dentro ogni blocco l'ordine si fa dove si configura quel blocco: le persone nella loro scheda, le tessere in Widget, le azioni rapide nella loro.": "The order they appear in on Home. The first two — the strip with the menu and the weather box — stay above the page as long as they are on top, where they have always been; move them further down and they come into the page with the other blocks. The menu strip only comes down here: on the other pages it goes back up by itself, or the hamburger would disappear. Inside each block the order is set where that block is configured: people in their own tab, tiles in Widgets, quick actions in theirs.",
@@ -4323,8 +4357,12 @@ var SOURCE_INDEX = Object.freeze({
   "L'entità comando resta per leggere lo stato, ma la card non mostra l'interruttore: il frigo non si spegne per sbaglio.": "The control entity still reads the state, but the card hides the switch: the fridge cannot be turned off by mistake.",
   "L’entità non sembra cumulativa: seleziona il contatore totale lifetime del dispositivo.": "This entity does not look cumulative: select the device lifetime total meter.",
   "L'entity_id dato ai servizi che non ne scrivono uno. Vuota: lo stato della cottura.": "The entity_id given to services that do not name one. Empty: the cooking status.",
+  "l'hai accesa quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.": "you turned it on almost every day between ${da} and ${fino}, over the last ${settimane} weeks.",
+  "l'hai aperta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.": "you opened it almost every day between ${da} and ${fino}, over the last ${settimane} weeks.",
+  "l'hai chiusa quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.": "you closed it almost every day between ${da} and ${fino}, over the last ${settimane} weeks.",
   "L'hai detto tu": "You said so",
   "L’hai scelta tu": "Your choice",
+  "l'hai spenta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.": "you turned it off almost every day between ${da} and ${fino}, over the last ${settimane} weeks.",
   "L'ho presa": "Got it",
   "L’icona è personalizzabile anche per le azioni integrate e viene mostrata nella Home.": "The icon is customizable for built-in actions too and is shown on Home.",
   "L'immagine dal vivo a sinistra, le frecce e lo zoom a destra, i preset sotto. Ogni tasto preme un'entità che c'è già in Home Assistant: un tasto (button) della telecamera, uno script con onvif.ptz, o un telecomando (remote) col comando da mandare. Un tasto senza entità resta spento.": "The live picture on the left, arrows and zoom on the right, presets below. Each button presses an entity already in Home Assistant: a camera button, a script with onvif.ptz, or a remote with the command to send. A button without an entity stays off.",
@@ -4351,11 +4389,13 @@ var SOURCE_INDEX = Object.freeze({
   "La cartella ha troppi file: ne sono elencati solo i primi.": "The folder has too many files: only the first ones are listed.",
   "La casa adesso": "The house now",
   "La casa esegue solo le automazioni della plancia principale: quelle scritte qui restano ferme.": "The home only runs the main dashboard's automations: the ones written here stay idle.",
+  "La casa non ha risposto: riprova più tardi.": "The home did not answer: try again later.",
   "La casa non ha risposto.": "The house did not answer.",
   "La casa non risponde: riprova fra poco.": "The home is not answering: try again shortly.",
   "La casa prende ${kw} kW dalla rete": "The house is drawing ${kw} kW from the grid",
   "La centrale non ha accettato": "The alarm panel refused",
   "La centralina esterna detta il verdetto di tutta la casa: da qui si toglie di mezzo senza spegnere la tessera.": "The outdoor station dictates the verdict for the whole house: this drops it without turning the tile off.",
+  "la chiudi a mano quasi ogni sera, poco dopo il tramonto.": "you close it by hand almost every evening, just after sunset.",
   "La chiudo?": "Lock it?",
   "La ciotola e il cibo": "The bowl and the food",
   "La coda da lavorare": "The queue to work on",
@@ -4519,6 +4559,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le piante di casa, una per riga: il sensore dell'umidità della terra, il nome, il disegno, e se c'è la temperatura. La pagina Piante dice quali sono da innaffiare, quali aspettano la pioggia e quando toccherà alle altre.": "The plants at home, one per row: the soil moisture sensor, the name, the drawing, and the temperature if there is one. The Plant care page says which need watering, which are waiting for rain and when the others will be due.",
   "Le porte e le finestre": "The doors and the windows",
   "Le prese di casa: la TV del salotto, quella della camera, il Firestick, il modem. Si accendono e si spengono come le luci, ma stanno per conto loro — cosi' «spegni tutte le luci» non spegne il modem.": "The sockets around the house: the living-room TV, the bedroom one, the Firestick, the modem. They switch on and off like lights, but they live on their own — so «turn all lights off» does not turn off the modem.",
+  "Le proposte nascono in casa: l'add-on guarda i tuoi dispositivi e la loro storia, niente esce di casa.": "Suggestions are born at home: the add-on looks at your devices and their history, nothing leaves the home.",
   "Le quattro temperature di una VMC dicono da sole se la macchina sta lavorando: l'aria entra da fuori, si scalda con quella che esce, e la differenza fra le due è il recupero. La pagina del Clima le mostra incrociate come i due flussi, con il bypass, la stagione e i filtri.": "The four temperatures of a heat-recovery unit tell you on their own whether the machine is doing its job: air comes in from outside, warms up with the air going out, and the difference between the two is the recovery. The Climate page shows them crossed like the two flows, with the bypass, the season and the filters.",
   "Le segnalazioni partono a tuo nome: la prima volta serve un passaggio su GitHub.": "Reports go out under your name: the first time takes one step on GitHub.",
   "Le sezioni della plancia": "The dashboard sections",
@@ -4530,6 +4571,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le stanze di casa": "Rooms of the home",
   "Le stanze e le mappe": "The rooms and the maps",
   "Le stanze, le luci, le azioni e l'antifurto arrivano da qui": "Rooms, lights, actions and the alarm come from here",
+  "le tapparelle chiuse la sera tengono il caldo dentro e la casa riservata.": "shutters closed in the evening keep the warmth in and the home private.",
   "Le tapparelle e le tende compaiono nella pagina 🪟 Finestre, raggruppate per piano e stanza. Ogni riga accetta un'entità cover.* — con posizione e percentuali — oppure un relè switch.*: uno solo se accendendolo la tapparella sta su, due se ce n'è uno per la salita e uno per la discesa, come uno Shelly in modalità interruttore. Se la finestra si apre a mano — persiane, scuri, una maniglia — lascia vuote le caselle dei comandi e compila solo il sensore di apertura: la card la disegna lo stesso e dice se è aperta.": "Shutters and curtains show up on the 🪟 Windows page, grouped by floor and room. Every row accepts a cover.* entity — with position and percentages — or a switch.* relay: one when switching it on keeps the shutter up, two when one relay sends it up and another sends it down, like a Shelly in switch mode. When the window opens by hand — shutters, blinds, a handle — leave the command boxes empty and fill in the contact sensor alone: the card still draws it and says whether it is open.",
   "Le telecamere": "The cameras",
   "Le telecamere della plancia di origine, tutte insieme; un tocco ne apre una a tutto schermo.": "The source dashboard's cameras, all together; a tap opens one full screen.",
@@ -4619,6 +4661,7 @@ var SOURCE_INDEX = Object.freeze({
   "Luce accesa": "Light on",
   "Luce aggiunta": "Light added",
   "Luce col movimento": "Light with motion",
+  "Luce col movimento in ${area}": "Motion light in ${area}",
   "Luce diurna": "Daylight",
   "Luce notturna": "Night light",
   "Luce piscina": "Pool light",
@@ -5044,6 +5087,7 @@ var SOURCE_INDEX = Object.freeze({
   "NO": "NW",
   "No room con sensore — aggiungila nel tab Temperatura dell'editor": "No room with a sensor — add one in the editor's Temperature tab",
   "No room. Aggiungine una qui sotto.": "No room. Add one below.",
+  "No, grazie": "No, thanks",
   "nodi": "nodes",
   "nodo": "node",
   "Nodo": "Node",
@@ -5302,6 +5346,8 @@ var SOURCE_INDEX = Object.freeze({
   "Per esempio: Preset 1": "For example: Preset 1",
   "Per frigo e congelatore: mostra la barra temperatura al posto della potenza.": "For fridge and freezer: shows the temperature strip instead of the power bar.",
   "Per il ritorno servirà una ricarica": "You will need to charge for the way back",
+  "Per la tua casa c'è un'altra proposta pronta: la trovi con Premium.": "There is one more suggestion ready for your home: you'll find it with Premium.",
+  "Per la tua casa ci sono altre ${altre} proposte pronte: le trovi tutte con Premium.": "There are ${altre} more suggestions ready for your home: you'll find them all with Premium.",
   "Per le luci che vuoi solo vedere, senza rischiare un tocco: la riga resta dov'è, il tasto smette di rispondere.": "For lights you only want to see, with no accidental taps: the row stays where it is, the button stops responding.",
   "Per le prese che non vanno spente: il frigo, il modem, il congelatore. La riga resta dov'è, il tasto smette di rispondere.": "For sockets that must not be switched off: the fridge, the modem, the freezer. The row stays where it is, the button stops responding.",
   "Per le soste scegli 100% alla partenza.": "For the stops, choose 100% at departure.",
@@ -5309,6 +5355,7 @@ var SOURCE_INDEX = Object.freeze({
   "Per ogni voce scrivi la": "For each item enter",
   "per ognuno; lo stato (In funzione / Standby / Spento) è ricavato dal": "to each; the status (Running / Standby / Off) is derived from",
   "Per ora nessuna": "None yet",
+  "Per ora nessuna proposta: quando la casa ne trova una, la vedi qui.": "No suggestions for now: when the home finds one, you'll see it here.",
   "Per quelle ore Home Assistant non tiene il consumo della casa, e non si sa quanto venisse dal sole. La fascia però è quella giusta.": "For those hours Home Assistant doesn't keep the house consumption, so we can't tell how much came from the sun. The band is right all the same.",
   "Per quello che si ricarica e non si cambia: il tablet a muro, un accumulatore. Le due entità sono number.* o input_number.*, quelle che il dispositivo espone per dire sotto quanto riparte e sopra quanto si ferma. Lasciale vuote e questa resta una batteria come le altre.": "For what recharges instead of being replaced: the wall tablet, a power bank. The two entities are number.* or input_number.*, the ones the device exposes to say where it starts again and where it stops. Leave them empty and this stays a battery like the others.",
   "Per stanza · prima le aperte": "By room · open first",
@@ -5318,6 +5365,7 @@ var SOURCE_INDEX = Object.freeze({
   "Percentuali invertite (100% = chiusa)": "Inverted percentages (100% = closed)",
   "Percepita": "Feels like",
   "Percezione": "Perception",
+  "Perché:": "Why:",
   "Percorso /local o entità immagine, es. /local/auto.png o image.auto": "A /local path or an image entity, e.g. /local/car.png or image.car",
   "Perdita acqua": "Water leak",
   "Pericolo immediato": "Immediate danger",
@@ -5601,6 +5649,9 @@ var SOURCE_INDEX = Object.freeze({
   "Pronta fra ${durata}": "Ready in ${durata}",
   "pronta per la doccia": "ready for a shower",
   "Pronte · Inchiostro · Pagine": "Ready · Ink · Pages",
+  "Proposta ✨": "Suggestion ✨",
+  "Proposte": "Suggestions",
+  "Proposte per la tua casa": "Suggestions for your home",
   "Proprio tutto": "Everything",
   "Prossime 24 ore": "Next 24 hours",
   "Prossimi": "Upcoming",
@@ -5665,7 +5716,10 @@ var SOURCE_INDEX = Object.freeze({
   "Quando ${chi} scende sotto ${soglia}": "When ${chi} drops below ${soglia}",
   "Quando ${chi} si apre": "When ${chi} opens",
   "Quando ${chi} si chiude": "When ${chi} closes",
+  "Quando ${finestra} resta aperta 2 min": "When ${finestra} stays open 2 min",
+  "Quando ${nome} ha finito": "When ${nome} has finished",
   "Quando arriva l'evento ${evento}": "When the ${evento} event arrives",
+  "Quando c'è movimento in ${area} di notte": "When there is motion in ${area} at night",
   "Quando c'è movimento in ${dove}": "When there is motion in ${dove}",
   "Quando cambia ${attributo} di ${chi}": "When ${attributo} of ${chi} changes",
   "Quando Fotovoltaico e Rete sono configurati, il consumo Casa usa lo stesso bilancio dei flussi di Home Assistant. Il contatore totale kWh comanda: se c'è, giorno, mese e anno si ricavano da quello con Recorder e i campi di periodo non vengono letti. I campi giornaliero, mensile e annuale servono quando un contatore totale non esiste.": "When Solar and Grid are configured, Home consumption uses the same flow balance as Home Assistant. The total kWh meter wins: when one is set, day, month and year are derived from it through Recorder and the period fields are not read. The daily, monthly and annual fields are for when no total meter exists.",
@@ -5673,6 +5727,8 @@ var SOURCE_INDEX = Object.freeze({
   "Quando l'antifurto si inserisce": "When the alarm is armed",
   "Quando l'antifurto suona": "When the alarm goes off",
   "Quando l'umidità di una stanza supera questa quota, la finestra di quella stanza suggerisce di aprirla per arieggiare. L'umidità è quella del sensore della stanza. Vale per le finestre che non hanno una soglia propria nella loro riga. Vuoto vale 60. Zero spegne il suggerimento.": "When a room's humidity goes above this level, that room's window suggests opening it to air out. The humidity is the room sensor's. It applies to the windows without a threshold of their own in their row. Empty means 60. Zero turns the suggestion off.",
+  "Quando l'umidità in ${area} supera 70%": "When humidity in ${area} goes above 70%",
+  "Quando la casa è vuota da 30 min": "When the home has been empty for 30 min",
   "Quando la cella più alta e la più bassa sono più lontane di così, il pacco dice «Da bilanciare» e la tessera in Home chiede attenzione.": "When the highest and lowest cells are further apart than this, the pack says “Needs balancing” and the Home tile asks for attention.",
   "Quando la innaffi la plancia se ne accorge da sola: la terra risale e la pianta torna in fondo alla lista.": "When you water it the dashboard notices by itself: the soil comes back up and the plant goes back to the bottom of the list.",
   "Quando la lettiera è stata pulita l'ultima volta: una data, o i minuti passati. Oltre le ore indicate qui sotto la scheda lo dice.": "When the litter box was last cleaned: a date, or the minutes gone by. Past the hours set below the card says so.",
@@ -5682,6 +5738,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quando serve il caldo": "When heating is needed",
   "Quando succede qualcosa — un orario, una porta, un movimento, un valore, chi arriva o esce — la casa fa da sola quello che le dici. Le esegue l'add-on, anche con la plancia e l'app chiuse.": "When something happens — a time, a door, motion, a value, someone arriving or leaving — the home does what you told it, by itself. The add-on runs them, even with the dashboard and the app closed.",
   "Quando suona, il pannello si sveglia e apre il citofono da solo": "When it rings, the panel wakes up and opens the intercom by itself",
+  "Quando tutti escono": "When everyone leaves",
   "Quando tutti sono fuori": "When everyone is out",
   "Quando un avviso personalizzato si accende, la plancia lo apre da sola. Solo quando si accende, e mai sopra una finestra gia' aperta.": "When a custom alert turns on, the dashboard opens it by itself. Only when it turns on, and never on top of a window that is already open.",
   "Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»": "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”",
@@ -5732,6 +5789,7 @@ var SOURCE_INDEX = Object.freeze({
   "Questa Sett.": "This week",
   "Questa settimana": "This week",
   "questa settimana / scorsa": "this week / last week",
+  "questa settimana ${volte} volte sono rimaste accese senza nessuno in casa.": "this week they were left on ${volte} times with nobody home.",
   "Questa stanza non ha ancora niente. L'assegnazione si fa nella scheda di ogni sezione.": "Nothing here yet. Entities are assigned from each section's own tab.",
   "questa stanza non ha un sensore di umidità: si associa nella scheda Temperature.": "this room has no humidity sensor: set it under the Temperature tab.",
   "Questa voce non ha ancora un'entità: mappala in Configurazione per vedere il suo storico.": "This reading has no entity yet: map it in the configuration to see its history.",
@@ -6370,7 +6428,13 @@ var SOURCE_INDEX = Object.freeze({
   "spegni": "turn off",
   "Spegni": "Turn off",
   "spegni ${chi}": "turn off ${chi}",
+  "spegni ${clima}, riaccendi quando la chiudi": "turn off ${clima}, back on when you close it",
+  "spegni ${nome}": "turn off ${nome}",
+  "spegni ${quante} luci": "turn off ${quante} lights",
+  "spegni il clima": "turn off the climate",
   "Spegni il clima": "Turn off climate",
+  "spegni le luci": "turn off the lights",
+  "spegni le luci rimaste accese": "turn off the lights left on",
   "Spegni tutte": "Turn all off",
   "Spegni tutte le luci": "Turn all lights off",
   "Spegni tutto": "Turn everything off",
@@ -6522,6 +6586,7 @@ var SOURCE_INDEX = Object.freeze({
   "sud-ovest": "south-west",
   "Suggerisci di arieggiare sopra il (%), di serie": "Suggest airing above (%), by default",
   "Suggerite": "Suggested",
+  "Suggerite per la tua casa ✨": "Suggested for your home ✨",
   "Suggerito: ha una potenza mappata": "Suggested: it has a mapped power sensor",
   "Sul riposo: quanto è carica e se è attaccata alla corrente": "On the rest screen: how charged it is and whether it is plugged in",
   "sul tablet": "on the tablet",
@@ -6548,6 +6613,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tapparelle": "Shutters",
   "Tapparelle · Tende · Sensori di apertura": "Shutters · Curtains · Contact sensors",
   "Tapparelle a orario": "Shutters on a schedule",
+  "Tapparelle al tramonto": "Shutters at sunset",
   "tapparelle aperte": "shutters open",
   "Tapparelle su": "Shutters up",
   "tappe": "stops",
@@ -6790,6 +6856,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tutti e due i tasti": "Both buttons",
   "Tutti facoltativi, uno per tipo. Temperatura, umidità, percepita e vento sono gli stessi campi della testata della Home; pioggia e intensità sono quelli che usa già l'Irrigazione. Si scelgono una volta sola e valgono ovunque.": "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.",
   "tutti fermi": "all idle",
+  "Tutti fuori: luci spente": "Everyone out: lights off",
   "Tutti fuori: spegni tutto": "Everyone out: turn it all off",
   "Tutti i campi sono facoltativi: la card mostra automaticamente ciò che è disponibile. Avvio, durata, consumo e costo dell'ultimo ciclo vengono calcolati da soli dalle transizioni di potenza se non indichi entità dedicate.": "Every field is optional: the card automatically shows what is available. Start, duration, energy and cost of the last cycle are computed automatically from power transitions unless you provide dedicated entities.",
   "Tutti i giorni": "All days",
@@ -6839,6 +6906,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ultima volta": "Last time",
   "ultima volta: ${fu}": "last time: ${fu}",
   "ultima volta: mai": "last time: never",
+  "ultime ${settimane} settimane": "last ${settimane} weeks",
   "Ultime aperture": "Latest openings",
   "Ultime cose": "Latest events",
   "Ultime eseguite": "Last run",
@@ -7006,6 +7074,7 @@ var SOURCE_INDEX = Object.freeze({
   "Varco senza nome": "Unnamed opening",
   "vasche": "tanks",
   "Vedi la discussione": "See the discussion",
+  "Vedi tutte (${n})": "See all (${n})",
   "vedi tutti": "see all",
   "Vedi tutto": "See everything",
   "Veicoli": "Vehicles",
@@ -25513,7 +25582,7 @@ function ilRacconto({ imp, ponte, assente, lettura: lettura3, prezzo, adesso }) 
       };
     }
     if (esito2.tipo === "finita") {
-      const perche3 = esito2.motivo === "limite" && Number.isFinite(esito2.soc) ? t(`${soc}% raggiunto`, `${soc}% reached`) : esito2.motivo === "staccata" ? t("Auto staccata", "Car unplugged") : esito2.motivo === "spenta" ? t("Spenta da te", "Turned off") : t("Fine della fascia", "End of the window");
+      const perche4 = esito2.motivo === "limite" && Number.isFinite(esito2.soc) ? t(`${soc}% raggiunto`, `${soc}% reached`) : esito2.motivo === "staccata" ? t("Auto staccata", "Car unplugged") : esito2.motivo === "spenta" ? t("Spenta da te", "Turned off") : t("Fine della fascia", "End of the window");
       const pezzi = [];
       if (Number.isFinite(esito2.kwh)) {
         const kwh4 = formatNumber(esito2.kwh, 1);
@@ -25529,7 +25598,7 @@ function ilRacconto({ imp, ponte, assente, lettura: lettura3, prezzo, adesso }) 
       }
       return {
         tono: "finita",
-        titolo: `${t(`Finita alle ${alle}`, `Finished at ${alle}`)} · ${perche3}`,
+        titolo: `${t(`Finita alle ${alle}`, `Finished at ${alle}`)} · ${perche4}`,
         sotto: pezzi.join(" · ")
       };
     }
@@ -25687,8 +25756,8 @@ function campoOra(nome) {
   return `<input type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="5" placeholder="hh:mm" data-rn="${nome}">`;
 }
 function oraScritta(testo4) {
-  const pulito64 = clean(testo4).replace(".", ":");
-  const soloCifre = /^\d{3,4}$/.test(pulito64) ? `${pulito64.slice(0, -2)}:${pulito64.slice(-2)}` : pulito64;
+  const pulito65 = clean(testo4).replace(".", ":");
+  const soloCifre = /^\d{3,4}$/.test(pulito65) ? `${pulito65.slice(0, -2)}:${pulito65.slice(-2)}` : pulito65;
   const minuti = minutiDellOra(soloCifre);
   if (minuti === null) return "";
   return `${String(Math.floor(minuti / 60)).padStart(2, "0")}:${String(minuti % 60).padStart(2, "0")}`;
@@ -28186,7 +28255,7 @@ function scriviLaSessione() {
   const muto2 = !grezzo || /^(unknown|unavailable|none)$/i.test(grezzo);
   const kwh4 = muto2 ? null : inKilowattora(numero14(grezzo), stato3?.attributes?.unit_of_measurement);
   const testo4 = kwh4 === null ? "—" : lEnergiaInParole(kwh4, { decimali: Math.abs(kwh4) < 10 ? 2 : 1 });
-  const perche3 = kwh4 !== null ? "" : stato3 ? t(
+  const perche4 = kwh4 !== null ? "" : stato3 ? t(
     "Il contatore della sessione non sta rispondendo.",
     "The session meter is not answering."
   ) : t(
@@ -28196,7 +28265,7 @@ function scriviLaSessione() {
   for (const casella5 of caselle2) {
     if (casella5.textContent !== testo4) casella5.textContent = testo4;
     const riga3 = casella5.closest(".lm-kpi-card,.lm-sess-kpi,.ev-popup-session-row") || casella5;
-    if (riga3.title !== perche3) riga3.title = perche3;
+    if (riga3.title !== perche4) riga3.title = perche4;
   }
 }
 function umanizzaCaselle() {
@@ -42823,9 +42892,9 @@ function segnoDellaVoce(voce3) {
   return CLASSI_CHE_TRASMETTONO.has(voce3.classe) ? SEGNI_DELLE_VOCI.onde : SEGNI_DELLE_VOCI.nota;
 }
 function fondoDellaMiniatura(url) {
-  const pulito64 = clean(url);
-  if (!pulito64) return "";
-  return pulito64.replace(/["'()\\\s]/g, (carattere) => encodeURIComponent(carattere));
+  const pulito65 = clean(url);
+  if (!pulito65) return "";
+  return pulito65.replace(/["'()\\\s]/g, (carattere) => encodeURIComponent(carattere));
 }
 function nomeDiUnPosto(passo, titolo3) {
   if (!clean(passo?.id) && passo?.tipo === "favorites") return t("Preferiti di Sonos", "Sonos favourites");
@@ -47081,9 +47150,9 @@ function ensureFloodEditorRows() {
 }
 function seNonEUnaSonda(id, states) {
   const suo2 = states?.[id];
-  const perche3 = !suo2 ? t("in Home Assistant non c'è", "not in Home Assistant") : isFloodSensor(id, suo2) ? "" : t("non è un sensore di allagamento", "not a flood sensor");
-  if (!perche3) return "";
-  return `<div class="ed-hint" data-dm-flood-dubbia="true">⚠️ ${esc(perche3)}</div>`;
+  const perche4 = !suo2 ? t("in Home Assistant non c'è", "not in Home Assistant") : isFloodSensor(id, suo2) ? "" : t("non è un sensore di allagamento", "not a flood sensor");
+  if (!perche4) return "";
+  return `<div class="ed-hint" data-dm-flood-dubbia="true">⚠️ ${esc(perche4)}</div>`;
 }
 function installFloodDeleteHandler() {
   if (state45.deleteBound) return false;
@@ -55789,11 +55858,11 @@ ${P3} .dm-f-fumo-pila[data-bassa="true"]{color:${AMBRA}}
 ${P3} .dm-f-fumo-nota{margin:4px 0 0;padding:11px 13px;border-radius:16px;font-size:12.5px;font-weight:750;line-height:1.4;
   color:var(--text-dim,#475569);background:color-mix(in srgb,var(--text-dim,#64748b) 7%,var(--card-bg,#fff))}`;
 function nomePulitoDellaSonda(nome) {
-  const pulito64 = clean(nome).replace(
+  const pulito65 = clean(nome).replace(
     /^(sensore\s+)?(di\s+)?(perdita|perdite|allagamento|acqua|water\s+leak|leak|flood)(\s+(d'|di\s+)?acqua)?\s+/i,
     ""
   ).trim();
-  return pulito64 ? pulito64.charAt(0).toLocaleUpperCase() + pulito64.slice(1) : clean(nome);
+  return pulito65 ? pulito65.charAt(0).toLocaleUpperCase() + pulito65.slice(1) : clean(nome);
 }
 function disegnaAllagamenti(widget, states) {
   const k = "allagamenti";
@@ -56068,8 +56137,8 @@ ${P3} .dm-f-nonrisponde-tasto{font:inherit;cursor:pointer;margin-top:4px;padding
 ${P3} .dm-f-nonrisponde-tasto[data-dm-w-in-corso="true"]{opacity:.6}
 html[data-theme="dark"] ${P3} .dm-f-nonrisponde-tasto{background:#f8fafc;color:#0f172a}`;
 function nomePulitoDellaPila(nome) {
-  const pulito64 = clean(nome).replace(/\b(livello\s+(della\s+)?)?(batteria|battery|batt)(\s+level)?\b/gi, " ").replace(/\s{2,}/g, " ").replace(/^[\s·:,-]+|[\s·:,-]+$/g, "").trim();
-  return pulito64 ? pulito64.charAt(0).toLocaleUpperCase() + pulito64.slice(1) : clean(nome);
+  const pulito65 = clean(nome).replace(/\b(livello\s+(della\s+)?)?(batteria|battery|batt)(\s+level)?\b/gi, " ").replace(/\s{2,}/g, " ").replace(/^[\s·:,-]+|[\s·:,-]+$/g, "").trim();
+  return pulito65 ? pulito65.charAt(0).toLocaleUpperCase() + pulito65.slice(1) : clean(nome);
 }
 var PROSSIME = 60;
 var PILE_IN_GRANDE = 6;
@@ -75492,8 +75561,8 @@ function nomeDellaLettura2(entity2, nome, unit, tokenElettrodomestico, usate) {
 function nomeInParole(nome, tokenElettrodomestico) {
   const via = new Set(tokenElettrodomestico);
   const tutte = clean(nome).replaceAll(/[_\-.]+/g, " ").split(/\s+/).filter(Boolean);
-  const pulito64 = tutte.filter((pezzo2) => !via.has(pezzo2.toLowerCase())).join(" ").trim();
-  if (pulito64) return pulito64;
+  const pulito65 = tutte.filter((pezzo2) => !via.has(pezzo2.toLowerCase())).join(" ").trim();
+  if (pulito65) return pulito65;
   const senzaDoppioni = tutte.filter(
     (pezzo2, i) => i === 0 || pezzo2.toLowerCase() !== tutte[i - 1].toLowerCase()
   );
@@ -93984,8 +94053,8 @@ var ora3 = (valore3, ripiego) => {
 var scelta = (valore3, ammesse, ripiego) => ammesse.includes(valore3) ? valore3 : ripiego;
 var vero2 = (valore3, ripiego) => typeof valore3 === "boolean" ? valore3 : ripiego;
 var profilo = (valore3) => {
-  const pulito64 = testo2(valore3, 64).toLowerCase();
-  return /^[a-z0-9][a-z0-9-]{0,63}$/.test(pulito64) ? pulito64 : PROFILO_DI_ORIGINE;
+  const pulito65 = testo2(valore3, 64).toLowerCase();
+  return /^[a-z0-9][a-z0-9-]{0,63}$/.test(pulito65) ? pulito65 : PROFILO_DI_ORIGINE;
 };
 function pinPulito(valore3) {
   const cifre3 = String(valore3 ?? "").replace(/\D/g, "");
@@ -96351,7 +96420,7 @@ function cardDato(c, i, s) {
     ${clean(c.sotto) ? `<div class="mu-dato-s">${esc(clean(c.sotto))}</div>` : ""}
   </div>`;
 }
-var vuoto3 = (i, perche3 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche3 || t("Posto libero", "Empty slot"))}</span></div>`;
+var vuoto3 = (i, perche4 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche4 || t("Posto libero", "Empty slot"))}</span></div>`;
 function paginaStanza(pagina2) {
   const zona = pagina2.modello === "clima" ? zonaDellaPagina(pagina2) : "";
   const comandi = comandiDellaPagina(pagina2, state112.fonte, zona, { aCoppia });
@@ -100983,8 +101052,8 @@ function metti3(via, valore3) {
             entitaOff: prima.entitaOff || "",
             stato: prima.stato || ""
           };
-          const pulito64 = comandoPulito(bozzaDelPosto);
-          if (pulito64) posti[k] = pulito64;
+          const pulito65 = comandoPulito(bozzaDelPosto);
+          if (pulito65) posti[k] = pulito65;
           else {
             inCorso2[chiave2] = bozzaDelPosto;
             posti[k] = { tipo: "vuoto" };
@@ -100998,10 +101067,10 @@ function metti3(via, valore3) {
       }
       if (lista6 === "comandi" && campo5 !== "svuota" && (inCorso2[chiave2] || ora5.tipo === "duetasti")) {
         const scrittoQui = { ...inCorso2[chiave2] || ora5, tipo: "duetasti", [campo5]: valore3 };
-        const pulito64 = comandoPulito(scrittoQui);
-        if (pulito64) {
+        const pulito65 = comandoPulito(scrittoQui);
+        if (pulito65) {
           delete inCorso2[chiave2];
-          posti[k] = pulito64;
+          posti[k] = pulito65;
         } else {
           inCorso2[chiave2] = scrittoQui;
           posti[k] = { tipo: "vuoto" };
@@ -104960,12 +105029,12 @@ var OSPITI_RITIRATI = [
 function indirizzoRitirato(modello2) {
   const testo4 = stringa(modello2);
   if (!testo4) return false;
-  const pulito64 = testo4.replaceAll(/\{-?[a-z]\}/gi, "1");
+  const pulito65 = testo4.replaceAll(/\{-?[a-z]\}/gi, "1");
   let ospite3 = "";
   try {
-    ospite3 = new URL(pulito64).hostname;
+    ospite3 = new URL(pulito65).hostname;
   } catch (_errore) {
-    const trovato = /^[a-z]+:\/\/([^/?#]+)/i.exec(pulito64);
+    const trovato = /^[a-z]+:\/\/([^/?#]+)/i.exec(pulito65);
     ospite3 = trovato ? trovato[1] : "";
   }
   if (!ospite3) return false;
@@ -105836,8 +105905,8 @@ async function salva17() {
     if (risposta?.viaggio) state121.bozza.id = risposta.viaggio.id;
     await carica();
   } catch (errore) {
-    const perche3 = clean(errore?.message);
-    state121.errore = perche3 === "premium-richiesto" ? t("Serve gdanav Premium.", "gdanav Premium is needed.") : perche3 === "troppi-viaggi" ? t("Hai già 50 viaggi: togline qualcuno.", "You already have 50 trips: remove some.") : t(
+    const perche4 = clean(errore?.message);
+    state121.errore = perche4 === "premium-richiesto" ? t("Serve gdanav Premium.", "gdanav Premium is needed.") : perche4 === "troppi-viaggi" ? t("Hai già 50 viaggi: togline qualcuno.", "You already have 50 trips: remove some.") : t(
       "Il viaggio non si è salvato: controlla la meta, il giorno e l'ora.",
       "The trip was not saved: check destination, day and time."
     );
@@ -111222,9 +111291,9 @@ function cosaCeInCasaMarkup() {
         "Can't read it: the gdahome add-on must be running, and you must be an administrator."
       )
     )}</small></div>`;
-  const perche3 = PERCHE();
+  const perche4 = PERCHE();
   const righe2 = (casa.cose || []).map((c) => {
-    const motivo = perche3[c.perche] || perche3[c.genere] || (c.tipo === "porta" ? t("Porta", "Door") : t("Luce", "Light"));
+    const motivo = perche4[c.perche] || perche4[c.genere] || (c.tipo === "porta" ? t("Porta", "Door") : t("Luce", "Light"));
     return `<div class="dm-people-casa-riga" data-person-casa="${esc(c.entita)}">
         <div class="dm-people-casa-nome"><b>${esc(c.nome || c.entita)}</b><small>${esc(motivo)}</small></div>
         <div class="dm-face-modes" role="radiogroup">${SCELTE().map(
@@ -114309,6 +114378,59 @@ function prossimiEventi2(automazioni, adesso, statoDi6 = null, quanti2 = 3) {
   return fuori.sort((x, y) => x.alle - y.alle).slice(0, quanti2);
 }
 
+// src/core/automazioni-proposte.js
+var pulito60 = (v) => String(v ?? "").trim();
+var MINUTO8 = 6e4;
+var GIORNO4 = 24 * 60 * MINUTO8;
+function firmaDelQuando(q) {
+  if (!q) return "";
+  const ent = (v) => Array.isArray(v) ? [...v].sort().join(",") : pulito60(v);
+  if (q.tipo === "orario")
+    return q.sole ? `orario:${q.sole}` : `orario:${(q.ore || []).map(minutiDi2).join(",")}`;
+  if (q.tipo === "persone") return `persone:${q.verso}`;
+  if (q.tipo === "stato") return `stato:${ent(q.entita)}:${pulito60(q.a)}`;
+  return `${q.tipo}:${ent(q.entita)}:${pulito60(q.verso)}`;
+}
+var entitaDellAllora = (allora) => new Set(
+  (allora || []).flatMap(
+    (a) => Array.isArray(a.entita) ? a.entita : a.entita ? [a.entita] : []
+  )
+);
+function giaCe(proposta, automazioni = []) {
+  const sua = proposta?.automazione;
+  if (!sua) return true;
+  const firma2 = firmaDelQuando(sua.quando);
+  const cose = entitaDellAllora(sua.allora);
+  return automazioni.some((a) => {
+    if (a?.tipo === "crono") {
+      return proposta.chiave === "finestraClima" && a.crono.finestraSpegne && a.crono.finestre.some((f) => sua.quando.entita?.includes(f));
+    }
+    if (firmaDelQuando(a.quando) !== firma2) return false;
+    const loro = entitaDellAllora(a.allora);
+    if (!cose.size) return true;
+    return [...cose].some((e) => loro.has(e));
+  });
+}
+function proposteDaMostrare(proposte = [], { automazioni = [], scartate = [] } = {}) {
+  const salvate = automazioniPulite(automazioni);
+  const no = new Set(scartate);
+  const abitudini = new Set(proposte.filter((p) => p.gruppo === "abitudini").map((p) => p.chiave));
+  const visti = /* @__PURE__ */ new Set();
+  const fuori = [];
+  for (const p of proposte) {
+    if (!p?.id || visti.has(p.id) || no.has(p.id)) continue;
+    if (p.chiave === "tramontoTapparelle" && abitudini.has("abitudineTramonto")) continue;
+    if (p.chiave === "fuoriLuci" && abitudini.has("abitudineFuoriLuci")) continue;
+    if (giaCe(p, salvate)) continue;
+    visti.add(p.id);
+    fuori.push(p);
+  }
+  return [
+    ...fuori.filter((p) => p.gruppo === "dispositivi"),
+    ...fuori.filter((p) => p.gruppo === "abitudini")
+  ];
+}
+
 // src/sections/automazioni-section.js
 var KEY144 = "__DASHBOARDMODERN_AUTOMAZIONI__";
 var state140 = root[KEY144] ||= {
@@ -114331,7 +114453,13 @@ var state140 = root[KEY144] ||= {
   /* La pagina a schermo pieno dell'app e' aperta. */
   inApp: false,
   doveEra: "",
-  trascina: null
+  trascina: null,
+  /* Le proposte della casa (`ponte/automazioni/proposte`), quella da cui
+   * nasce la bozza aperta, e i «No, grazie» detti da qui e non ancora
+   * tornati dalla casa. */
+  proposte: null,
+  proposta: null,
+  scartateQui: []
 };
 var AUTOMAZIONI_TAB = "automazioni";
 var ID_PAGINA = "page-automazioni";
@@ -114424,6 +114552,13 @@ async function chiediAllaCasa3({ forza = false } = {}) {
     const detto2 = clean(errore?.message);
     state140.assente = /non conosco|unknown/i.test(detto2);
     if (detto2 === "socket") state140.chiestoIl = adesso - VALE + 4e3;
+  }
+  try {
+    if (!state140.assente) {
+      ridisegna16();
+      state140.proposte = await chiediAHomeAssistant({ type: "ponte/automazioni/proposte" }, 15e3);
+    }
+  } catch (_errore) {
   } finally {
     state140.chiedendo = false;
   }
@@ -114606,6 +114741,18 @@ function fraseDellAzione(a) {
   if (a.tipo === "aspettaChe") {
     const stato3 = a.stato;
     const massimo = a.massimo;
+    const soglia2 = /^([<>])\s*(-?\d+(?:[.,]\d+)?)$/.exec(clean(stato3));
+    const limite = soglia2 ? soglia2[2] : "";
+    if (soglia2?.[1] === "<")
+      return t(
+        `aspetta che ${chi} scenda sotto ${limite} (al massimo ${massimo} min)`,
+        `wait until ${chi} drops below ${limite} (at most ${massimo} min)`
+      );
+    if (soglia2)
+      return t(
+        `aspetta che ${chi} salga sopra ${limite} (al massimo ${massimo} min)`,
+        `wait until ${chi} rises above ${limite} (at most ${massimo} min)`
+      );
     return t(
       `aspetta che ${chi} diventi «${stato3}» (al massimo ${massimo} min)`,
       `wait until ${chi} becomes «${stato3}» (at most ${massimo} min)`
@@ -114761,7 +114908,7 @@ ${sopra ? `<div class="au-sopra">${esc(sopra)}</div>` : ""}
   )}${ultima?.esito === "errore" ? ` · <b class="au-male">${esc(t("non è andata", "it failed"))}</b>` : ""}</div></div>
 <button type="button" class="au-int" role="switch" aria-checked="${a.attiva}" data-au-attiva="${esc(a.id)}" aria-label="${esc(t("Attiva o spenta", "On or off"))}"><i></i></button><span class="au-fr" aria-hidden="true">›</span></div>`;
 }
-function lista5({ app }) {
+function lista5({ app, proposte = true }) {
   const elenco15 = leAutomazioni();
   const nonPrincipale = currentProfile() !== "primary";
   const nota = nonPrincipale ? `<div class="au-nota">${esc(
@@ -114771,7 +114918,7 @@ function lista5({ app }) {
     )
   )}</div>` : "";
   const righe2 = elenco15.length ? `<div class="au-lista">${elenco15.map(rigaDellaLista).join("")}</div>` : `<div class="au-lista au-lista-vuota"><p>${esc(t("Nessuna automazione: comincia da un modello pronto.", "No automations: start from a ready-made template."))}</p><button type="button" class="au-piu" data-au-vai="modelli">＋ ${esc(t("Nuova", "Add new"))}</button></div>`;
-  return `${nota}${boxDellaCasa(elenco15)}
+  return `${nota}${boxDellaCasa(elenco15)}${proposte ? bloccoDelleProposte() : ""}
 <div class="au-testa"><h3>${esc(t("Le tue automazioni", "Your automations"))}</h3>${app && !elenco15.length ? "" : `<button type="button" class="au-piu" data-au-vai="modelli">＋ ${esc(t("Nuova", "Add new"))}</button>`}</div>${righe2}`;
 }
 var INTRO = () => `<p class="au-intro">${esc(
@@ -114796,6 +114943,282 @@ function velo3(dentro3) {
       "The automations you write stay saved: the home runs them from the day it is Premium."
     )
   )}</small>` : ""}</div></div>`;
+}
+function leProposte() {
+  const tutte = Array.isArray(state140.proposte?.proposte) ? state140.proposte.proposte : [];
+  return proposteDaMostrare(tutte, { automazioni: leAutomazioni(), scartate: state140.scartateQui });
+}
+var settimaneDellaStoria = () => Math.max(1, Math.round((state140.proposte?.giorni || 21) / 7));
+function paroleDi2(p) {
+  const d = p.dati || {};
+  const a = p.automazione || {};
+  const prima = a.allora?.[0] || {};
+  const cose = Array.isArray(prima.entita) ? prima.entita : prima.entita ? [prima.entita] : [];
+  const cosa = cose.length === 1 ? nomeDi16(cose[0]) : "";
+  const quante3 = cose.length;
+  const area = clean(d.area);
+  const nome = clean(d.nome);
+  if (p.chiave === "movimentoLuce") {
+    const luce = cosa;
+    return {
+      quando: t(
+        `Quando c'è movimento in ${area} di notte`,
+        `When there is motion in ${area} at night`
+      ),
+      allora: t(
+        `accendi ${luce} al 20%, spegni dopo 2 min`,
+        `turn on ${luce} at 20%, off after 2 min`
+      ),
+      perche: t(
+        `in ${area} ci sono un sensore di movimento e una luce.`,
+        `${area} has a motion sensor and a light.`
+      ),
+      nome: t(`Luce col movimento in ${area}`, `Motion light in ${area}`)
+    };
+  }
+  if (p.chiave === "finestraClima") {
+    const finestra6 = clean(d.finestra);
+    const clima = cosa || t(`${quante3} climatizzatori`, `${quante3} climate devices`);
+    return {
+      quando: t(`Quando ${finestra6} resta aperta 2 min`, `When ${finestra6} stays open 2 min`),
+      allora: t(
+        `spegni ${clima}, riaccendi quando la chiudi`,
+        `turn off ${clima}, back on when you close it`
+      ),
+      perche: t(
+        `finestra e clima sono nella stessa stanza (${area}).`,
+        `the window and the climate are in the same room (${area}).`
+      ),
+      nome: t(`Clima spento con ${finestra6} aperta`, `Climate off with ${finestra6} open`)
+    };
+  }
+  if (p.chiave === "umiditaAspiratore") {
+    const aspiratore = clean(d.aspiratore) || cosa;
+    return {
+      quando: t(
+        `Quando l'umidità in ${area} supera 70%`,
+        `When humidity in ${area} goes above 70%`
+      ),
+      allora: t(
+        `accendi ${aspiratore}, spegnilo sotto 60%`,
+        `turn on ${aspiratore}, off below 60%`
+      ),
+      perche: t(
+        `in ${area} ci sono un sensore di umidità e un aspiratore.`,
+        `${area} has a humidity sensor and an extractor fan.`
+      ),
+      nome: t(`Aspiratore con l'umidità in ${area}`, `Extractor fan with humidity in ${area}`)
+    };
+  }
+  if (p.chiave === "elettrodomestico")
+    return {
+      quando: t(`Quando ${nome} ha finito`, `When ${nome} has finished`),
+      allora: t("avvisami sul telefono", "notify me on the phone"),
+      perche: t(
+        `${nome} misura la potenza: si vede quando il ciclo finisce.`,
+        `${nome} measures power: you can tell when the cycle ends.`
+      ),
+      nome: t(`${nome}: ha finito`, `${nome}: finished`),
+      avviso: t(`${nome} ha finito`, `${nome} has finished`)
+    };
+  if (p.chiave === "fuoriLuci" || p.chiave === "abitudineFuoriLuci") {
+    const volte = Number(d.volte) || 0;
+    return {
+      quando: t("Quando tutti escono", "When everyone leaves"),
+      allora: p.chiave === "fuoriLuci" ? t(`spegni ${quante3} luci`, `turn off ${quante3} lights`) : t("spegni le luci rimaste accese", "turn off the lights left on"),
+      perche: p.chiave === "fuoriLuci" ? t(
+        "in casa ci sono persone e luci: nessuna resta accesa per niente.",
+        "the home knows its people and lights: none stays on for nothing."
+      ) : t(
+        `questa settimana ${volte} volte sono rimaste accese senza nessuno in casa.`,
+        `this week they were left on ${volte} times with nobody home.`
+      ),
+      nome: t("Tutti fuori: luci spente", "Everyone out: lights off")
+    };
+  }
+  if (p.chiave === "vuotaClima")
+    return {
+      quando: t("Quando la casa è vuota da 30 min", "When the home has been empty for 30 min"),
+      allora: t("spegni il clima", "turn off the climate"),
+      perche: t(
+        "il clima acceso con la casa vuota scalda o rinfresca per nessuno.",
+        "climate running in an empty home heats or cools for nobody."
+      ),
+      nome: t("Casa vuota: clima spento", "Empty home: climate off")
+    };
+  if (p.chiave === "antifurtoLuci")
+    return {
+      quando: t("Quando l'antifurto si inserisce", "When the alarm is armed"),
+      allora: t("spegni le luci", "turn off the lights"),
+      perche: t(
+        "chi inserisce l'antifurto di solito esce: le luci si possono spegnere.",
+        "whoever arms the alarm usually leaves: the lights can go off."
+      ),
+      nome: t("Antifurto inserito: luci spente", "Alarm armed: lights off")
+    };
+  if (p.chiave === "tramontoTapparelle" || p.chiave === "abitudineTramonto") {
+    const tapparella2 = nome || cosa;
+    return {
+      quando: t("Al tramonto", "At sunset"),
+      allora: tapparella2 ? t(`chiudi ${tapparella2}`, `close ${tapparella2}`) : t(`chiudi ${quante3} tapparelle`, `close ${quante3} shutters`),
+      perche: p.chiave === "abitudineTramonto" ? t(
+        "la chiudi a mano quasi ogni sera, poco dopo il tramonto.",
+        "you close it by hand almost every evening, just after sunset."
+      ) : t(
+        "le tapparelle chiuse la sera tengono il caldo dentro e la casa riservata.",
+        "shutters closed in the evening keep the warmth in and the home private."
+      ),
+      nome: tapparella2 ? t(`${tapparella2} al tramonto`, `${tapparella2} at sunset`) : t("Tapparelle al tramonto", "Shutters at sunset")
+    };
+  }
+  const ora5 = clean(d.ora);
+  const da = clean(d.da);
+  const fino = clean(d.a);
+  const settimane = Number(d.settimane) || settimaneDellaStoria();
+  const tapparella = prima.tipo === "tapparella";
+  const accende = d.verso === "accende";
+  const quando4 = d.festivi ? t(`Alle ${ora5} nel fine settimana`, `At ${ora5} at the weekend`) : t(`Alle ${ora5} nei giorni feriali`, `At ${ora5} on weekdays`);
+  const allora = tapparella ? accende ? t(`apri ${nome}`, `open ${nome}`) : t(`chiudi ${nome}`, `close ${nome}`) : accende ? t(`accendi ${nome}`, `turn on ${nome}`) : t(`spegni ${nome}`, `turn off ${nome}`);
+  const perche4 = tapparella ? accende ? t(
+    `l'hai aperta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
+    `you opened it almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`
+  ) : t(
+    `l'hai chiusa quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
+    `you closed it almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`
+  ) : accende ? t(
+    `l'hai accesa quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
+    `you turned it on almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`
+  ) : t(
+    `l'hai spenta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
+    `you turned it off almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`
+  );
+  return { quando: quando4, allora, perche: perche4, nome: `${nome} · ${ora5}` };
+}
+var disegnoDellaProposta = (p) => p.chiave === "abitudineOrario" ? "automazioni" : clean(p.disegno) || "automazioni";
+var perche2 = (testo4) => `<div class="pro-perche"><b>${esc(t("Perché:", "Why:"))}</b> ${esc(testo4)}</div>`;
+function tastiDellaProposta(p, { premium: premium2 }) {
+  if (!premium2)
+    return `<div class="pro-tasti"><button type="button" class="pro-crea prem" data-au-scopri>✨ ${esc(
+      t("Crea con Premium", "Create with Premium")
+    )}</button></div>`;
+  return `<div class="pro-tasti"><button type="button" class="pro-crea" data-au-crea="${esc(p.id)}">${esc(
+    t("Crea", "Create")
+  )}</button><button type="button" class="pro-no" data-au-scarta="${esc(p.id)}">${esc(
+    t("No, grazie", "No, thanks")
+  )}</button></div>`;
+}
+function cartaDellaProposta(p, { premium: premium2 = true } = {}) {
+  const w = paroleDi2(p);
+  return `<div class="pro-carta" data-au-proposta="${esc(p.id)}"><div class="pro-su"><span class="au-ico">${disegno3(
+    disegnoDellaProposta(p),
+    `pro-${p.id}`
+  )}</span><div><div class="pro-q">${esc(w.quando)}</div><div class="pro-a"><span class="fr">→</span>${esc(
+    w.allora
+  )}</div></div></div>${perche2(w.perche)}${tastiDellaProposta(p, { premium: premium2 })}</div>`;
+}
+var testaDelleProposte = (destra = "") => `<div class="pro-testa"><h3>${esc(t("Suggerite per la tua casa ✨", "Suggested for your home ✨"))}</h3><small>${esc(
+  t("dai tuoi dispositivi e da come li usi", "from your devices and how you use them")
+)}</small>${destra}</div>`;
+function bloccoDelleProposte() {
+  const proposte = leProposte();
+  if (!proposte.length) return "";
+  const n = proposte.length;
+  const tre = proposte.slice(0, 3);
+  return `<div class="pro">${testaDelleProposte(
+    `<button type="button" class="pro-tutte" data-au-vai="proposte">${esc(t(`Vedi tutte (${n})`, `See all (${n})`))} ›</button>`
+  )}<div class="pro-carte">${tre.map((p) => cartaDellaProposta(p)).join("")}</div>${tre.length > 1 ? `<div class="pro-punti" aria-hidden="true">${tre.map((_p, i) => `<i${i === 0 ? ' class="si"' : ""}></i>`).join("")}</div>` : ""}</div>`;
+}
+function bloccoSenzaPremium() {
+  const proposte = leProposte();
+  if (!proposte.length) return "";
+  const altre = proposte.length - 1;
+  return `<div class="pro pro-senza">${testaDelleProposte()}<div class="pro-carte">${cartaDellaProposta(
+    proposte[0],
+    {
+      premium: false
+    }
+  )}</div>${altre > 0 ? `<div class="pro-altre">✨ <span>${altre === 1 ? esc(
+    t(
+      "Per la tua casa c'è un'altra proposta pronta: la trovi con Premium.",
+      "There is one more suggestion ready for your home: you'll find it with Premium."
+    )
+  ) : esc(
+    t(
+      `Per la tua casa ci sono altre ${altre} proposte pronte: le trovi tutte con Premium.`,
+      `There are ${altre} more suggestions ready for your home: you'll find them all with Premium.`
+    )
+  )}</span></div>` : ""}</div>`;
+}
+function rigaDellaProposta(p) {
+  const w = paroleDi2(p);
+  return `<div class="au-riga" data-au-proposta="${esc(p.id)}"><span class="au-ico">${disegno3(
+    disegnoDellaProposta(p),
+    `pro-r-${p.id}`
+  )}</span><div class="au-frase"><div class="au-quando">${esc(w.quando)}</div><div class="au-allora"><span class="fr">→</span>${esc(
+    w.allora
+  )}</div>${perche2(w.perche)}</div>${tastiDellaProposta(p, { premium: true })}</div>`;
+}
+function pagineDelleProposte({ app }) {
+  const proposte = leProposte();
+  const dispositivi = proposte.filter((p) => p.gruppo === "dispositivi");
+  const abitudini = proposte.filter((p) => p.gruppo === "abitudini");
+  const n = proposte.length;
+  const nd = dispositivi.length;
+  const na = abitudini.length;
+  const settimane = settimaneDellaStoria();
+  const indietro = app ? "" : `<button type="button" class="au-indietro" data-au-vai="lista">‹ ${esc(t("Automazioni", "Automations"))}</button>`;
+  const intro = n ? t(
+    `${n} automazioni pensate per la tua casa. «Crea» le apre già compilate: le controlli e le salvi. «No, grazie» non le ripropone più.`,
+    `${n} automations designed for your home. «Create» opens them already filled in: you check them and save. «No, thanks» never suggests them again.`
+  ) : t(
+    "Per ora nessuna proposta: quando la casa ne trova una, la vedi qui.",
+    "No suggestions for now: when the home finds one, you'll see it here."
+  );
+  return `${indietro}<p class="au-intro">${esc(intro)}</p>${nd ? `<div class="pro-gruppo">🔌 ${esc(t("Dai tuoi dispositivi", "From your devices"))} <small>· ${nd}</small></div><div class="au-lista pro-elenco">${dispositivi.map(rigaDellaProposta).join("")}</div>` : ""}${na ? `<div class="pro-gruppo">📈 ${esc(t("Dalle tue abitudini", "From your habits"))} <small>· ${na} · ${esc(
+    t(`ultime ${settimane} settimane`, `last ${settimane} weeks`)
+  )}</small></div><div class="au-lista pro-elenco">${abitudini.map(rigaDellaProposta).join("")}</div>` : ""}<div class="pro-fondo"><span>🏠</span><div>${esc(
+    t(
+      "Le proposte nascono in casa: l'add-on guarda i tuoi dispositivi e la loro storia, niente esce di casa.",
+      "Suggestions are born at home: the add-on looks at your devices and their history, nothing leaves the home."
+    )
+  )}</div></div>`;
+}
+function creaDallaProposta(id) {
+  const p = leProposte().find((x) => x.id === id);
+  if (!p) return;
+  const w = paroleDi2(p);
+  const automazione = structuredClone(p.automazione);
+  if (p.chiave === "elettrodomestico" && w.avviso)
+    automazione.allora = (automazione.allora || []).map(
+      (a) => a.tipo === "notifica" ? { ...a, testo: w.avviso } : a
+    );
+  apriBozza({ ...automazione, id: nuovoId2(), nome: w.nome.slice(0, 60) });
+  state140.proposta = { id: p.id, perche: w.perche };
+}
+var etichettaDellaProposta = () => state140.proposta ? `<div class="pro-etichetta"><span class="pro-pill">${esc(t("Proposta ✨", "Suggestion ✨"))}</span><small><b>${esc(
+  t("Perché:", "Why:")
+)}</b> ${esc(state140.proposta.perche)} ${esc(
+  t(
+    "Controlla e salva: finché non salvi non parte niente.",
+    "Check and save: nothing runs until you save."
+  )
+)}</small></div>` : "";
+async function scartaLaProposta(id) {
+  if (!id) return;
+  state140.scartateQui = [.../* @__PURE__ */ new Set([...state140.scartateQui, id])];
+  ridisegna16();
+  try {
+    const detto2 = await chiediAHomeAssistant(
+      { type: "ponte/automazioni/proposte/scarta", proposta: id },
+      15e3
+    );
+    if (detto2 && Array.isArray(detto2.proposte)) state140.proposte = detto2;
+  } catch (_errore) {
+    root.edToast?.(
+      t("La casa non ha risposto: riprova più tardi.", "The home did not answer: try again later.")
+    );
+  }
+  ridisegna16();
 }
 var MODELLI3 = () => [
   [
@@ -115333,7 +115756,7 @@ function campiDellAzione(a, i) {
     )}</span> ${sel(
       `${via}.massimo`,
       a.massimo || 10,
-      [1, 2, 5, 10, 15, 30, 60, 120, 240].map((m) => [m, `${m} min`])
+      [1, 2, 5, 10, 15, 30, 60, 120, 240, 720].map((m) => [m, m < 720 ? `${m} min` : "12 h"])
     )}`;
   if (a.tipo === "servizio") {
     const scritto2 = clean(a.servizio);
@@ -115388,7 +115811,7 @@ function editor2({ app }) {
   const q = b2.quando;
   const pulita = pulitaDallaBozza(b2);
   const esistente = leAutomazioni().some((a) => a.id === b2.id);
-  return `${app ? "" : `<button type="button" class="au-indietro" data-au-vai="${state140.daModelli ? "modelli" : "lista"}">‹ ${esc(state140.daModelli ? t("Modelli", "Templates") : t("Automazioni", "Automations"))}</button>`}<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b2.nome || "")}" placeholder="${esc(t("Come la chiami", "What you call it"))}"></label>
+  return `${app ? "" : `<button type="button" class="au-indietro" data-au-vai="${state140.daModelli ? "modelli" : "lista"}">‹ ${esc(state140.daModelli ? t("Modelli", "Templates") : t("Automazioni", "Automations"))}</button>`}<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b2.nome || "")}" placeholder="${esc(t("Come la chiami", "What you call it"))}"></label>${etichettaDellaProposta()}
 <div class="au-blocco au-q"><div class="au-et">${esc(t("Quando", "When"))} <small>· ${esc(t("una cosa sola", "one thing only"))}</small></div>
 <div class="au-rf">${tendinaDelQuando(q)} ${campiDelQuando(q)}</div></div>
 <div class="au-blocco au-s"><div class="au-et">${esc(t("Solo se", "Only if"))} <small>· ${esc(
@@ -115455,6 +115878,8 @@ ${esistente ? `<button type="button" class="au-elimina" data-au-elimina>🗑 ${e
 function titoloDellaVista() {
   if (state140.vista === "modelli") return t("Nuova automazione", "New automation");
   if (state140.vista === "crono") return t("Cronotermostato", "Thermostat schedule");
+  if (state140.vista === "proposte")
+    return state140.inApp ? t("Proposte", "Suggestions") : t("Proposte per la tua casa", "Suggestions for your home");
   if (state140.vista === "editor") {
     const esistente = leAutomazioni().some((a) => a.id === state140.bozza?.id);
     return esistente ? state140.bozza.nome || t("Automazione", "Automation") : t("Nuova automazione", "New automation");
@@ -115465,7 +115890,9 @@ function paginaHtml({ app = false } = {}) {
   if (!state140.bozza && (state140.vista === "editor" || state140.vista === "crono")) state140.vista = "lista";
   const premium2 = state140.premium !== false;
   let dentro3;
-  if (!premium2) dentro3 = velo3(leAutomazioni().length ? lista5({ app }) : modelli());
+  if (!premium2)
+    dentro3 = `${bloccoSenzaPremium()}${velo3(leAutomazioni().length ? lista5({ app, proposte: false }) : modelli())}`;
+  else if (state140.vista === "proposte") dentro3 = pagineDelleProposte({ app });
   else if (state140.vista === "modelli")
     dentro3 = `${app ? "" : `<button type="button" class="au-indietro" data-au-vai="lista">‹ ${esc(t("Automazioni", "Automations"))}</button>`}${modelli()}`;
   else if (state140.vista === "editor") dentro3 = editor2({ app });
@@ -115649,6 +116076,7 @@ function aggiungiA(via) {
 var SULLE_COSE = ["accendi", "spegni", "tapparella", "clima", "media"];
 function apriBozza(bozza3, { daModelli = false } = {}) {
   state140.bozza = structuredClone(bozza3);
+  state140.proposta = null;
   if (state140.bozza.tipo !== "crono") {
     const q = { ...nuovoQuando(state140.bozza.quando?.tipo), ...state140.bozza.quando || {} };
     if (q.tipo === "evento") q.filtroRighe = Object.entries(q.filtro || {});
@@ -115692,6 +116120,7 @@ function salva22() {
   salvaLElenco(elenco15);
   root.edToast?.(t("💾 Automazione salvata", "💾 Automation saved"));
   state140.bozza = null;
+  state140.proposta = null;
   state140.vista = "lista";
   state140.daModelli = false;
   void chiediAllaCasa3({ forza: true });
@@ -115727,7 +116156,7 @@ function onClick39(event) {
     return;
   }
   const el = event.target.closest(
-    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate]"
+    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta]"
   );
   if (!el) {
     if (state140.tendina) {
@@ -115753,11 +116182,19 @@ function onClick39(event) {
     alternaAttiva(d.auAttiva);
     return;
   }
+  if (d.auScarta) {
+    void scartaLaProposta(d.auScarta);
+    return;
+  }
   if (d.auVai) {
     state140.vista = d.auVai;
-    if (d.auVai === "lista") state140.bozza = null;
+    if (d.auVai === "lista" || d.auVai === "proposte") {
+      state140.bozza = null;
+      state140.proposta = null;
+    }
     state140.tendina = false;
-  } else if (d.auModello) apriBozza(bozzaDelModello(d.auModello), { daModelli: true });
+  } else if (d.auCrea) creaDallaProposta(d.auCrea);
+  else if (d.auModello) apriBozza(bozzaDelModello(d.auModello), { daModelli: true });
   else if (d.auApri) {
     const a = leAutomazioni().find((x) => x.id === d.auApri);
     if (a) apriBozza(a);
@@ -116169,6 +116606,53 @@ html[data-theme="dark"] .au .au-temp .c{color:#fdba74}html[data-theme="dark"] .a
 .au-app .au-sel{font-size:13px}
 @media (max-width:760px){.au .au-due{grid-template-columns:1fr}.au-web .au-modelli{grid-template-columns:1fr 1fr}}
 @media (max-width:420px){.au .au-temp>div{flex-wrap:wrap}.au .au-temp b{font-size:28px}}
+.au .pro{margin:16px 0 4px}
+.au .pro-testa{display:flex;align-items:baseline;gap:10px;margin:0 2px 8px}
+.au .pro-testa h3{margin:0;font-size:15px;font-weight:900;text-transform:none;letter-spacing:0;font-family:inherit;color:var(--au-tx)}
+.au .pro-testa small{font-size:12px;font-weight:600;color:var(--au-dim)}
+.au .pro-tutte{margin-left:auto;border:0;background:none;padding:0;color:#0284c7;font-weight:900;font-size:13px;white-space:nowrap;cursor:pointer;font-family:inherit}
+html[data-theme="dark"] .au .pro-tutte{color:#7dd3fc}
+.au .pro-carte{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.au .pro-carta{position:relative;display:flex;flex-direction:column;gap:9px;padding:14px;border-radius:16px;border:1px solid color-mix(in srgb,#f59e0b 38%,var(--au-bordo));background:linear-gradient(160deg,color-mix(in srgb,#f59e0b 8%,var(--au-carta)),var(--au-carta) 60%);min-width:0}
+.au .pro-su{display:flex;gap:11px;align-items:flex-start}
+.au .pro-carta .au-ico{width:40px;height:40px;flex:none}
+.au .pro-q{font-size:13.5px;font-weight:900;line-height:1.3;color:var(--au-tx)}
+.au .pro-a{font-size:13px;font-weight:700;line-height:1.35;margin-top:2px;color:var(--au-tx)}
+.au .pro-a .fr{color:#0ea5e9;font-weight:900;margin-right:5px}
+.au .pro-perche{font-size:12px;line-height:1.45;font-weight:600;color:var(--au-dim);padding:7px 9px;border-radius:10px;background:var(--au-tenue)}
+.au .pro-perche b{color:var(--au-tx);font-weight:800}
+.au .pro-tasti{display:flex;gap:8px;margin-top:auto}
+.au .pro-crea{flex:1;border:0;border-radius:11px;padding:9px 12px;background:var(--au-tx);color:var(--au-carta);font-weight:900;font-size:13px;cursor:pointer;font-family:inherit}
+.au .pro-no{border:1px solid var(--au-bordo);border-radius:11px;padding:9px 12px;background:none;color:var(--au-dim);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
+.au .pro-crea.prem{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.au .pro-senza .pro-carte{grid-template-columns:repeat(3,minmax(0,1fr))}
+.au .pro-altre{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 14px;border-radius:14px;border:1px dashed color-mix(in srgb,#f59e0b 45%,var(--au-bordo));font-size:13px;font-weight:700;color:var(--au-dim)}
+.au .pro-gruppo{margin:16px 2px 8px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--au-dim);display:flex;gap:8px;align-items:center}
+.au .pro-gruppo small{text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
+.au .pro-elenco .au-riga{align-items:flex-start;cursor:default}
+.au .pro-elenco .pro-perche{margin-top:6px;padding:5px 8px;display:inline-block}
+.au .pro-elenco .pro-tasti{flex-direction:column;margin:0;gap:6px;flex:none}
+.au .pro-elenco .pro-crea,.au .pro-elenco .pro-no{padding:7px 14px;font-size:12.5px}
+.au .pro-fondo{display:flex;gap:12px;align-items:center;margin:18px 0 0;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,#16a34a 8%,transparent);border:1px solid color-mix(in srgb,#16a34a 28%,transparent);font-size:13px;line-height:1.5;font-weight:700;color:var(--au-tx)}
+.au .pro-fondo span{font-size:22px}
+.au .pro-etichetta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;border-radius:14px;border:1px solid color-mix(in srgb,#f59e0b 40%,var(--au-bordo));background:color-mix(in srgb,#f59e0b 8%,var(--au-carta))}
+.au .pro-etichetta .pro-pill{font-size:11px;font-weight:900;letter-spacing:.06em;padding:3px 9px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.au .pro-etichetta small{font-size:12.5px;font-weight:600;color:var(--au-dim);line-height:1.4;flex:1;min-width:200px}
+.au .pro-etichetta small b{color:var(--au-tx)}
+.au .pro-punti{display:none}
+.au-app .pro-punti{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.au-app .pro-punti i{width:7px;height:7px;border-radius:50%;background:color-mix(in srgb,var(--au-tx) 20%,transparent);transition:width .2s}
+.au-app .pro-punti i.si{width:18px;border-radius:4px;background:#f59e0b}
+.au-app .pro-carte{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:10px;margin-right:-14px;padding-right:14px}
+.au-app .pro-carte::-webkit-scrollbar{display:none}
+.au-app .pro-carta{flex:0 0 82%;scroll-snap-align:start}
+.au-app .pro-senza .pro-carta{flex-basis:100%}
+.au-app .pro-testa{flex-wrap:wrap}
+.au-app .pro-testa small{order:3;width:100%}
+.au-app .pro-elenco .au-riga{flex-wrap:wrap}
+.au-app .pro-elenco .pro-tasti{flex-direction:row;width:100%;padding-left:55px}
+.au-app .pro-elenco .pro-crea{flex:1}
+@media (max-width:760px){.au-web .pro-carte{grid-template-columns:1fr}.au-web .pro-elenco .au-riga{flex-wrap:wrap}.au-web .pro-elenco .pro-tasti{flex-direction:row;width:100%}}
 `
   );
 }
@@ -116184,6 +116668,18 @@ function installAutomazioniSection() {
   doc.addEventListener("pointermove", onPointerMove2);
   doc.addEventListener("pointerup", onPointerUp2);
   doc.addEventListener("pointercancel", onPointerUp2);
+  doc.addEventListener(
+    "scroll",
+    (evento) => {
+      const carte = evento.target?.closest?.(".au .pro-carte");
+      if (!carte) return;
+      const prima = carte.firstElementChild;
+      const passo = (prima?.offsetWidth || 1) + 10;
+      const vista2 = Math.round(carte.scrollLeft / passo);
+      carte.parentElement?.querySelectorAll?.(".pro-punti i").forEach((punto2, i) => punto2.classList.toggle("si", i === vista2));
+    },
+    true
+  );
   prendiLeManiglie();
   const ancora2 = () => root.queueMicrotask?.(() => {
     ensureLaVoce();
@@ -116756,7 +117252,7 @@ function installLeFasceDelDispositivo() {
 senzaCadere(installLeFasceDelDispositivo);
 
 // src/core/la-ventola-dell-inverter.js
-var pulito60 = (valore3) => String(valore3 ?? "").trim();
+var pulito61 = (valore3) => String(valore3 ?? "").trim();
 var RIFERIMENTO_DELLA_VENTOLA = "dm.energy_interruttore_ventola_inverter";
 var DOMINI_DI_SOLA_LETTURA = Object.freeze([
   "sensor",
@@ -116770,7 +117266,7 @@ var DOMINI_DI_SOLA_LETTURA = Object.freeze([
 ]);
 var soloLettura = new Set(DOMINI_DI_SOLA_LETTURA);
 function ilComandoDellaVentola(entita3) {
-  const id = pulito60(entita3);
+  const id = pulito61(entita3);
   if (!id) return { si: false, perche: "non-mappata" };
   if (id.startsWith("dm.")) return { si: false, perche: "non-mappata" };
   const punto2 = id.indexOf(".");
@@ -116829,7 +117325,7 @@ function avvisa2(parola) {
   } catch (_errore) {
   }
 }
-function perche2(motivo, entita3) {
+function perche3(motivo, entita3) {
   if (motivo === "non-mappata")
     return t(
       "Nessuna entità per l'interruttore della ventola: mettila in Energia → Temperature e raffreddamento.",
@@ -116848,7 +117344,7 @@ function perche2(motivo, entita3) {
 function accendiOSpegniLaVentola() {
   const detto2 = ilComandoDellaVentola(entitaDellaVentola());
   if (!detto2.si) {
-    avvisa2(perche2(detto2.perche, detto2.entita));
+    avvisa2(perche3(detto2.perche, detto2.entita));
     return false;
   }
   if (chiama6(detto2.chiamata)) return true;
@@ -123373,10 +123869,10 @@ function veloMarkup(riga3) {
 }
 function erroreMarkup(riga3) {
   if (!vivoPer(state152.errore, riga3.entity)) return "";
-  const perche3 = clean(state152.errore.testo);
+  const perche4 = clean(state152.errore.testo);
   return `<small class="dm-varco-errore" role="alert">⚠️<span>${esc(
     t("La centrale non ha accettato", "The alarm panel refused")
-  )}${perche3 ? `: ${esc(perche3)}` : ""}</span></small>`;
+  )}${perche4 ? `: ${esc(perche4)}` : ""}</span></small>`;
 }
 function rigaMarkup20(riga3, states = {}) {
   return `<article class="dm-varco" data-varco="${esc(riga3.stato || "muto")}"
@@ -125516,7 +126012,7 @@ function installPianteEditor() {
 senzaCadere(installPianteEditor);
 
 // src/core/la-pagina-meteo.js
-var pulito61 = (valore3) => String(valore3 ?? "").trim();
+var pulito62 = (valore3) => String(valore3 ?? "").trim();
 var numero54 = (valore3) => {
   if (valore3 === "" || valore3 == null) return null;
   const n = Number(String(valore3).replace(",", "."));
@@ -125543,19 +126039,19 @@ var DELLA_PAGINA = MISURE_DELLA_STAZIONE.filter((misura7) => misura7.pagina).map
   (misura7) => misura7.pagina
 );
 var entitaScritta2 = (valore3) => {
-  const testo4 = pulito61(valore3);
+  const testo4 = pulito62(valore3);
   return testo4.includes(".") ? testo4 : "";
 };
 function normalizzaMeteo(salvato2) {
   const dato = salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
   const fuori = {};
   for (const chiave2 of DELLA_PAGINA) fuori[chiave2] = entitaScritta2(dato[chiave2]);
-  const scritto2 = Array.isArray(dato.ordine) ? dato.ordine.map(pulito61) : [];
+  const scritto2 = Array.isArray(dato.ordine) ? dato.ordine.map(pulito62) : [];
   const ordine = [];
   for (const blocco3 of [...scritto2, ...BLOCCHI])
     if (BLOCCHI.includes(blocco3) && !ordine.includes(blocco3)) ordine.push(blocco3);
   fuori.ordine = ordine;
-  fuori.spenti = (Array.isArray(dato.spenti) ? dato.spenti.map(pulito61) : []).filter(
+  fuori.spenti = (Array.isArray(dato.spenti) ? dato.spenti.map(pulito62) : []).filter(
     (blocco3, indice, tutti) => BLOCCHI.includes(blocco3) && tutti.indexOf(blocco3) === indice
   );
   return fuori;
@@ -125588,7 +126084,7 @@ var ventoUnita = /^(km\/h|m\/s|mph|kn|kt|knots|ft\/s|bft)$/i;
 var pressioneUnita = /^(hpa|mbar|mb|kpa|pa|inhg|mmhg|psi)$/i;
 var NON_ARIA = /(soil|terra|suolo|water|acqua|pool|piscina|cpu|battery|batteria|inverter|boiler|frigo|fridge|freezer|probe|sonda|dew|rugiada|chill|heat_?index|indice)/;
 function testo3(entity2, stato3) {
-  return `${entity2} ${pulito61(stato3?.attributes?.friendly_name)}`.toLowerCase();
+  return `${entity2} ${pulito62(stato3?.attributes?.friendly_name)}`.toLowerCase();
 }
 var RICONOSCITORI = Object.freeze({
   temperatura: {
@@ -125643,17 +126139,17 @@ var RICONOSCITORI = Object.freeze({
   }
 });
 function famigliaDi2(entity2) {
-  return pulito61(entity2).split(".")[1]?.split("_")[0] || "";
+  return pulito62(entity2).split(".")[1]?.split("_")[0] || "";
 }
 function trovaLaStazione(states, scelte5 = {}) {
   const sensori = Object.entries(states && typeof states === "object" ? states : {}).filter(([entity2]) => entity2.startsWith("sensor.")).map(([entity2, stato3]) => ({
     entity: entity2,
-    classe: pulito61(stato3?.attributes?.device_class).toLowerCase(),
-    unita: pulito61(stato3?.attributes?.unit_of_measurement),
+    classe: pulito62(stato3?.attributes?.device_class).toLowerCase(),
+    unita: pulito62(stato3?.attributes?.unit_of_measurement),
     nome: testo3(entity2, stato3)
   }));
   const prese = new Set(
-    Object.values(scelte5 || {}).map(pulito61).filter(Boolean)
+    Object.values(scelte5 || {}).map(pulito62).filter(Boolean)
   );
   const trovate = {};
   const migliore = (chiave2, ammessa2) => {
@@ -125675,7 +126171,7 @@ function trovaLaStazione(states, scelte5 = {}) {
     return meglio > 0 ? vincente : null;
   };
   const prendi = (chiave2, ammessa2) => {
-    if (pulito61(scelte5?.[chiave2])) return;
+    if (pulito62(scelte5?.[chiave2])) return;
     const vincente = migliore(chiave2, ammessa2);
     if (!vincente) return;
     trovate[chiave2] = vincente.entity;
@@ -125697,17 +126193,17 @@ function trovaLaStazione(states, scelte5 = {}) {
 function letturaDi4(stato3) {
   const valore3 = numero54(stato3?.state);
   if (valore3 === null) return null;
-  const quando4 = Date.parse(pulito61(stato3?.last_updated || stato3?.last_changed));
+  const quando4 = Date.parse(pulito62(stato3?.last_updated || stato3?.last_changed));
   return {
     valore: valore3,
-    unita: pulito61(stato3?.attributes?.unit_of_measurement),
+    unita: pulito62(stato3?.attributes?.unit_of_measurement),
     quando: Number.isFinite(quando4) ? quando4 : null
   };
 }
 function inEttopascal(valore3, unita3 = "hPa") {
   const n = numero54(valore3);
   if (n === null) return null;
-  const misura7 = pulito61(unita3).toLowerCase();
+  const misura7 = pulito62(unita3).toLowerCase();
   if (misura7 === "kpa") return n * 10;
   if (misura7 === "pa") return n / 100;
   if (misura7 === "inhg") return n * 33.8639;
@@ -125718,7 +126214,7 @@ function inEttopascal(valore3, unita3 = "hPa") {
 function inCelsius(valore3, unita3 = "°C") {
   const n = numero54(valore3);
   if (n === null) return null;
-  return /f$/i.test(pulito61(unita3)) ? (n - 32) * 5 / 9 : n;
+  return /f$/i.test(pulito62(unita3)) ? (n - 32) * 5 / 9 : n;
 }
 function puntoDiRugiada(temperatura, umidita, unita3 = "°C") {
   const gradi9 = inCelsius(temperatura, unita3);
@@ -125728,7 +126224,7 @@ function puntoDiRugiada(temperatura, umidita, unita3 = "°C") {
   const b2 = 243.12;
   const gamma = Math.log(relativa / 100) + a * gradi9 / (b2 + gradi9);
   const rugiada = b2 * gamma / (a - gamma);
-  return /f$/i.test(pulito61(unita3)) ? rugiada * 9 / 5 + 32 : rugiada;
+  return /f$/i.test(pulito62(unita3)) ? rugiada * 9 / 5 + 32 : rugiada;
 }
 var PRESSIONE_STABILE = 1;
 var PRESSIONE_FORTE = 3;
@@ -125755,7 +126251,7 @@ function ordinata(serie2) {
 function istante4(riga3) {
   const grezzo = riga3?.lu ?? riga3?.lc ?? riga3?.last_updated ?? riga3?.last_changed;
   if (typeof grezzo === "number") return grezzo < 1e12 ? grezzo * 1e3 : grezzo;
-  const letto = Date.parse(pulito61(grezzo));
+  const letto = Date.parse(pulito62(grezzo));
   return Number.isFinite(letto) ? letto : NaN;
 }
 function domandaDelleUltimeOre(entita3, adesso, ore = 24) {
@@ -125763,7 +126259,7 @@ function domandaDelleUltimeOre(entita3, adesso, ore = 24) {
     type: "history/history_during_period",
     start_time: new Date(adesso - ore * H5).toISOString(),
     end_time: new Date(adesso).toISOString(),
-    entity_ids: [...new Set((Array.isArray(entita3) ? entita3 : []).map(pulito61).filter(Boolean))],
+    entity_ids: [...new Set((Array.isArray(entita3) ? entita3 : []).map(pulito62).filter(Boolean))],
     include_start_time_state: true,
     significant_changes_only: false,
     minimal_response: true,
@@ -125838,7 +126334,7 @@ function fasciaUV(indice) {
 function spicchioDelVento(direzione) {
   const n = numero54(direzione);
   if (n !== null) return (Math.round(n / 45) % 8 + 8) % 8;
-  const sigla = pulito61(direzione).toUpperCase();
+  const sigla = pulito62(direzione).toUpperCase();
   const sigle2 = [["N"], ["NE"], ["E"], ["SE"], ["S"], ["SW", "SO"], ["W", "O"], ["NW", "NO"]];
   const indice = sigle2.findIndex((voci4) => voci4.includes(sigla));
   return indice < 0 ? null : indice;
@@ -125852,11 +126348,11 @@ function gradiDelVento(direzione) {
 var BAGNATE = /* @__PURE__ */ new Set(["rainy", "pouring", "lightning-rainy", "snowy-rainy", "hail", "snowy"]);
 var PROBABILE = 50;
 function voceDellePrevisioni(previsione, unita3) {
-  const quando4 = Date.parse(pulito61(previsione?.datetime));
+  const quando4 = Date.parse(pulito62(previsione?.datetime));
   if (!Number.isFinite(quando4)) return null;
   return {
     quando: quando4,
-    condizione: pulito61(previsione?.condition),
+    condizione: pulito62(previsione?.condition),
     temperatura: numero54(previsione?.temperature),
     bassa: numero54(previsione?.templow),
     probabilita: numero54(previsione?.precipitation_probability),
@@ -125940,7 +126436,7 @@ function misureDiAdesso({ stazione = {}, meteo: meteo3 = null } = {}) {
     if (valore3 === null) continue;
     fuori[chiave2] = {
       valore: valore3,
-      unita: pulito61(unitaDi3 ? attributi2[unitaDi3] : "") || unitaDiSerie,
+      unita: pulito62(unitaDi3 ? attributi2[unitaDi3] : "") || unitaDiSerie,
       fonte: "meteo"
     };
   }
@@ -127101,8 +127597,8 @@ function nomiPuliti(elenco15) {
   const fuori = [];
   for (const uno of elenco15) {
     if (typeof uno !== "string") continue;
-    const pulito64 = uno.trim().slice(0, 120);
-    if (pulito64 && !fuori.includes(pulito64)) fuori.push(pulito64);
+    const pulito65 = uno.trim().slice(0, 120);
+    if (pulito65 && !fuori.includes(pulito65)) fuori.push(pulito65);
     if (fuori.length >= AL_MASSIMO2) break;
   }
   return fuori;
@@ -133106,19 +133602,19 @@ function installMediaInAzioni() {
 }
 
 // src/core/indirizzo-di-casa.js
-var pulito62 = (valore3) => String(valore3 ?? "").trim();
+var pulito63 = (valore3) => String(valore3 ?? "").trim();
 var ASSOLUTO = /^https?:\/\//i;
 function senzaHost(indirizzo) {
-  return /^https?:\/\/(?:\/|$)/i.test(pulito62(indirizzo));
+  return /^https?:\/\/(?:\/|$)/i.test(pulito63(indirizzo));
 }
 function versoLApi(indirizzo) {
-  const valore3 = pulito62(indirizzo);
+  const valore3 = pulito63(indirizzo);
   if (!valore3) return false;
   if (valore3.startsWith("/api/")) return true;
   return /^https?:\/\/[^/]*\/api\//i.test(valore3);
 }
 function percorsoConDomanda(indirizzo) {
-  const valore3 = pulito62(indirizzo);
+  const valore3 = pulito63(indirizzo);
   if (senzaHost(valore3)) {
     const nudo = valore3.replace(ASSOLUTO, "");
     return nudo.startsWith("/") ? nudo : `/${nudo}`;
@@ -133131,13 +133627,13 @@ function percorsoConDomanda(indirizzo) {
   }
 }
 function indirizzoRiparato(indirizzo, base = "", hostDelDocumento2 = "") {
-  const valore3 = pulito62(indirizzo);
+  const valore3 = pulito63(indirizzo);
   if (!valore3 || !versoLApi(valore3)) return null;
   if (!ASSOLUTO.test(valore3)) return null;
   const rotto = senzaHost(valore3);
-  if (!rotto && pulito62(hostDelDocumento2)) return null;
+  if (!rotto && pulito63(hostDelDocumento2)) return null;
   const percorso = percorsoConDomanda(valore3);
-  const fondo = pulito62(base);
+  const fondo = pulito63(base);
   if (!fondo) return rotto ? percorso : null;
   try {
     return new URL(percorso, fondo).href;
@@ -133147,7 +133643,7 @@ function indirizzoRiparato(indirizzo, base = "", hostDelDocumento2 = "") {
 }
 var GETTONE_FINTO = "__dashboardmodern_hosted__";
 function autorizzazioneInutile(valore3) {
-  const scritto2 = pulito62(valore3);
+  const scritto2 = pulito63(valore3);
   if (!scritto2) return false;
   const nudo = scritto2.replace(/^Bearer\b\s*/i, "").trim();
   return !nudo || nudo === GETTONE_FINTO || nudo === "undefined" || nudo === "null";
@@ -133155,7 +133651,7 @@ function autorizzazioneInutile(valore3) {
 var RIFERIMENTO = /([?&]filter_entity_id=)([^&#]*)/i;
 var virtuale = (nome) => /^dm\./i.test(nome);
 function conLEntitaVera(indirizzo, risolvi3) {
-  const valore3 = pulito62(indirizzo);
+  const valore3 = pulito63(indirizzo);
   if (!valore3 || typeof risolvi3 !== "function") return null;
   const trovato = valore3.match(RIFERIMENTO);
   if (!trovato) return null;
@@ -133165,7 +133661,7 @@ function conLEntitaVera(indirizzo, risolvi3) {
     if (!virtuale(nome)) return pezzo2;
     let vero3 = "";
     try {
-      vero3 = pulito62(risolvi3(nome));
+      vero3 = pulito63(risolvi3(nome));
     } catch (_errore) {
       return pezzo2;
     }
@@ -133176,24 +133672,24 @@ function conLEntitaVera(indirizzo, risolvi3) {
 }
 
 // src/core/storico-rest.js
-var pulito63 = (valore3) => String(valore3 ?? "").trim();
+var pulito64 = (valore3) => String(valore3 ?? "").trim();
 var PERCORSO = /\/api\/history\/period\/?([^?#]*)/i;
 function eUnoStoricoRest(indirizzo) {
-  return PERCORSO.test(pulito63(indirizzo));
+  return PERCORSO.test(pulito64(indirizzo));
 }
 function istante5(testo4) {
-  const voce3 = pulito63(testo4);
+  const voce3 = pulito64(testo4);
   if (!voce3) return null;
   const data = new Date(voce3);
   return Number.isFinite(data.getTime()) ? data.toISOString() : null;
 }
 function bandiera(parametri, nome, seManca) {
   if (!parametri.has(nome)) return seManca;
-  const valore3 = pulito63(parametri.get(nome)).toLowerCase();
+  const valore3 = pulito64(parametri.get(nome)).toLowerCase();
   return !(valore3 === "false" || valore3 === "0" || valore3 === "no");
 }
 function domandaDallIndirizzo(indirizzo) {
-  const voce3 = pulito63(indirizzo);
+  const voce3 = pulito64(indirizzo);
   const trovato = PERCORSO.exec(voce3);
   if (!trovato) return null;
   let parametri;
@@ -133202,7 +133698,7 @@ function domandaDallIndirizzo(indirizzo) {
   } catch (_errore) {
     return null;
   }
-  const entita3 = pulito63(parametri.get("filter_entity_id")).split(",").map(pulito63).filter(Boolean);
+  const entita3 = pulito64(parametri.get("filter_entity_id")).split(",").map(pulito64).filter(Boolean);
   if (!entita3.length) return null;
   let inizio = null;
   try {
@@ -133227,15 +133723,15 @@ function domandaDallIndirizzo(indirizzo) {
 }
 var DURATA_PERIODO = Object.freeze({ hour: 36e5, day: 864e5 });
 function intervalloDellaDomanda(domanda, adesso = Date.now()) {
-  const start = Date.parse(pulito63(domanda?.start_time));
-  const end = domanda?.end_time ? Date.parse(pulito63(domanda.end_time)) : adesso;
+  const start = Date.parse(pulito64(domanda?.start_time));
+  const end = domanda?.end_time ? Date.parse(pulito64(domanda.end_time)) : adesso;
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
   return { start, end };
 }
 function domandaStatisticheDallaDomanda(domanda, adesso = Date.now()) {
   const intervallo2 = intervalloDellaDomanda(domanda, adesso);
   if (!intervallo2 || !vuoleLeStatistiche(intervallo2)) return null;
-  const entita3 = Array.isArray(domanda?.entity_ids) ? domanda.entity_ids.map(pulito63).filter(Boolean) : [];
+  const entita3 = Array.isArray(domanda?.entity_ids) ? domanda.entity_ids.map(pulito64).filter(Boolean) : [];
   if (!entita3.length) return null;
   const period = periodoDelleStatistiche(intervallo2);
   return {
@@ -133275,18 +133771,18 @@ function rispostaDalleStatistiche(risultato, entityIds = [], period = "hour", ad
   return fuori;
 }
 function entitaSenzaRighe(entityIds = [], righe2 = []) {
-  const presenti = new Set(righe2.map((elenco15) => pulito63(elenco15?.[0]?.entity_id)).filter(Boolean));
-  return entityIds.map(pulito63).filter((id) => id && !presenti.has(id));
+  const presenti = new Set(righe2.map((elenco15) => pulito64(elenco15?.[0]?.entity_id)).filter(Boolean));
+  return entityIds.map(pulito64).filter((id) => id && !presenti.has(id));
 }
 function unisciRisposte(entityIds = [], ...risposte) {
   const perEntita = /* @__PURE__ */ new Map();
   for (const risposta of risposte) {
     for (const elenco15 of Array.isArray(risposta) ? risposta : []) {
-      const id = pulito63(elenco15?.[0]?.entity_id);
+      const id = pulito64(elenco15?.[0]?.entity_id);
       if (id && !perEntita.has(id)) perEntita.set(id, elenco15);
     }
   }
-  return entityIds.map((id) => perEntita.get(pulito63(id))).filter(Boolean);
+  return entityIds.map((id) => perEntita.get(pulito64(id))).filter(Boolean);
 }
 function isoDaSecondi(secondi) {
   const n = Number(secondi);
@@ -133297,8 +133793,8 @@ function rigaComeRest(riga3, entity2) {
   if (!riga3 || typeof riga3 !== "object") return null;
   const stato3 = riga3.s ?? riga3.state;
   if (stato3 === void 0 || stato3 === null) return null;
-  const aggiornata = riga3.lu !== void 0 ? isoDaSecondi(riga3.lu) : pulito63(riga3.last_updated);
-  const cambiata = riga3.lc !== void 0 ? isoDaSecondi(riga3.lc) : pulito63(riga3.last_changed) || aggiornata;
+  const aggiornata = riga3.lu !== void 0 ? isoDaSecondi(riga3.lu) : pulito64(riga3.last_updated);
+  const cambiata = riga3.lc !== void 0 ? isoDaSecondi(riga3.lc) : pulito64(riga3.last_changed) || aggiornata;
   return {
     entity_id: entity2,
     state: String(stato3),

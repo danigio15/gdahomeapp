@@ -7,7 +7,13 @@
  * editor che crea e salva in `cd_automazioni`; e nell'app la voce del config
  * che non c'e', con la pagina a schermo pieno aperta dalla maniglia.
  *
- * La casa qui e' finta, e risponde a `ponte/automazioni/stato` come il ponte.
+ * E le proposte («Suggerite per la tua casa ✨»): il blocco con tre carte,
+ * «Vedi tutte», «Crea» che apre l'editor gia' compilato e si salva a mano,
+ * «No, grazie» che la toglie e lo dice alla casa, e senza Premium una carta
+ * sola sopra il velo.
+ *
+ * La casa qui e' finta, e risponde a `ponte/automazioni/stato` e alle
+ * proposte come il ponte.
  */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
@@ -56,7 +62,89 @@ const UNA = {
   allora: [{ tipo: "tapparella", entita: "cover.soggiorno", modo: "apri" }],
 };
 
-async function avvia(page, testInfo, { premium = true, app = false, automazioni = [UNA] } = {}) {
+/* Le proposte come le manda la casa (`core/automazioni-proposte.js`). */
+const PROPOSTE = [
+  {
+    id: "movimento-luce:binary_sensor.pir_corridoio|light.corridoio",
+    gruppo: "dispositivi",
+    chiave: "movimentoLuce",
+    disegno: "presenza",
+    dati: { area: "Corridoio" },
+    automazione: {
+      attiva: true,
+      quando: { tipo: "movimento", entita: ["binary_sensor.pir_corridoio"], verso: "si" },
+      soloSe: [{ tipo: "notte", da: "", a: "" }],
+      allora: [
+        { tipo: "accendi", entita: ["light.corridoio"], livello: 20 },
+        { tipo: "aspetta", minuti: 2 },
+        { tipo: "spegni", entita: ["light.corridoio"] },
+      ],
+    },
+  },
+  {
+    id: "finestra-clima:binary_sensor.finestra|climate.soggiorno",
+    gruppo: "dispositivi",
+    chiave: "finestraClima",
+    disegno: "finestra",
+    dati: { area: "Soggiorno", finestra: "Finestra soggiorno" },
+    automazione: {
+      attiva: true,
+      quando: { tipo: "stato", entita: ["binary_sensor.finestra"], a: "on", per: 2 },
+      allora: [
+        { tipo: "clima", entita: ["climate.soggiorno"], modo: "spegni" },
+        { tipo: "aspettaChe", entita: "binary_sensor.finestra", stato: "off", massimo: 720 },
+        { tipo: "accendi", entita: ["climate.soggiorno"] },
+      ],
+    },
+  },
+  {
+    id: "elettrodomestico:sensor.lavatrice_potenza",
+    gruppo: "dispositivi",
+    chiave: "elettrodomestico",
+    disegno: "elettrodomestici",
+    dati: { nome: "Lavatrice" },
+    automazione: {
+      attiva: true,
+      quando: {
+        tipo: "elettrodomestico",
+        entita: "sensor.lavatrice_potenza",
+        soglia: 5,
+        minuti: 3,
+      },
+      allora: [{ tipo: "notifica", testo: "Lavatrice" }],
+    },
+  },
+  {
+    id: "abitudine-accende-feriali:light.corridoio",
+    gruppo: "abitudini",
+    chiave: "abitudineOrario",
+    disegno: "luci",
+    dati: {
+      nome: "Luce corridoio",
+      ora: "19:10",
+      festivi: false,
+      da: "19:00",
+      a: "19:20",
+      verso: "accende",
+      settimane: 3,
+    },
+    automazione: {
+      attiva: true,
+      quando: {
+        tipo: "orario",
+        ore: ["19:10"],
+        giorni: [true, true, true, true, true, false, false],
+      },
+      allora: [{ tipo: "accendi", entita: ["light.corridoio"] }],
+    },
+  },
+];
+
+async function avvia(
+  page,
+  testInfo,
+  { premium = true, app = false, automazioni = [UNA], proposte = [] } = {},
+) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await page.addInitScript(
@@ -75,7 +163,7 @@ async function avvia(page, testInfo, { premium = true, app = false, automazioni 
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true);
   await page.evaluate(
-    ({ stati, automazioni }) => {
+    ({ stati, automazioni, proposte }) => {
       localStorage.setItem("cd_automazioni", JSON.stringify(automazioni));
       const grezzi = eval("_RAW_STATES");
       for (const [entity, stato] of Object.entries(stati))
@@ -89,24 +177,33 @@ async function avvia(page, testInfo, { premium = true, app = false, automazioni 
         perAutomazione: { a1: { alle: Date.now() - 600_000, esito: "ok" } },
         inCorso: [],
       };
+      window.__PROPOSTE__ = proposte;
+      window.__SCARTATE__ = [];
       const vero = window.eval("ws");
       window.__FINTO__ = {
         readyState: 1,
         send(grezzo) {
           const m = JSON.parse(grezzo);
-          if (m.type !== "ponte/automazioni/stato") return vero?.send?.(grezzo);
+          if (!String(m.type).startsWith("ponte/automazioni/")) return vero?.send?.(grezzo);
+          if (m.type === "ponte/automazioni/proposte/scarta") window.__SCARTATE__.push(m.proposta);
+          const elenco = () =>
+            window.__PROPOSTE__.filter((p) => !window.__SCARTATE__.includes(p.id));
+          const risultato =
+            m.type === "ponte/automazioni/stato"
+              ? window.__CASA__
+              : { proposte: elenco(), giorni: 21, abitudiniPronte: true };
           setTimeout(() => {
             const attese = window.eval("pendingWsCallbacks");
             const torna = attese[m.id];
             delete attese[m.id];
-            torna?.({ id: m.id, type: "result", success: true, result: window.__CASA__ });
+            torna?.({ id: m.id, type: "result", success: true, result: risultato });
           }, 10);
         },
       };
       window.eval("ws = window.__FINTO__");
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
     },
-    { stati: STATI, automazioni },
+    { stati: STATI, automazioni, proposte },
   );
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
 }
@@ -140,6 +237,8 @@ test("la voce sta dopo Azioni, col bollino PREMIUM, e la lista dice quello che l
   await expect(pagina.locator(".au-riga .au-ultima")).toContainText("ultima volta: oggi");
   await expect(pagina.locator(".au-box.blu .au-pross b")).toHaveText(/\d\d:\d\d/);
   await expect(pagina.locator(".au-ult i")).toHaveText("✓");
+  /* Senza proposte il blocco non c'e'. */
+  await expect(pagina.locator(".pro")).toHaveCount(0);
   /* L'interruttore la spegne e la salva, senza aprirla. */
   await pagina.locator('[data-au-attiva="a1"]').click();
   await expect.poll(async () => (await salvate(page))[0]?.attiva).toBe(false);
@@ -311,4 +410,141 @@ test("tutta Home Assistant: un evento, un servizio, la ricerca su tutte le entit
   await pagina.locator('[data-au-testo="allora.1.servizio"]').fill("lock.unlock");
   await pagina.locator("[data-au-salva]").click();
   await expect(pagina.locator(".au-errore")).toContainText("Questo servizio la casa non lo chiama");
+});
+
+test("le proposte: il blocco con tre carte, Vedi tutte e «No, grazie»", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, { proposte: PROPOSTE });
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  const blocco = pagina.locator(".pro");
+  await expect(blocco.locator(".pro-testa h3")).toHaveText("Suggerite per la tua casa ✨");
+  await expect(blocco.locator(".pro-carta")).toHaveCount(3);
+  await expect(blocco.locator(".pro-carta").first().locator(".pro-q")).toHaveText(
+    "Quando c'è movimento in Corridoio di notte",
+  );
+  await expect(blocco.locator(".pro-carta").first().locator(".pro-a")).toContainText(
+    "accendi Luce corridoio al 20%, spegni dopo 2 min",
+  );
+  await expect(blocco.locator(".pro-carta").first().locator(".pro-perche")).toContainText(
+    "in Corridoio ci sono un sensore di movimento e una luce.",
+  );
+  /* Il blocco sta fra la casa e «Le tue automazioni». */
+  expect(
+    await pagina.evaluate((au) => au.querySelector(".pro").nextElementSibling?.className),
+  ).toContain("au-testa");
+
+  await blocco.locator(".pro-tutte").click();
+  await expect(blocco.locator(".pro-tutte")).toHaveCount(0);
+  await expect(page.locator("#ed-body .dm-alberatura-titolo-nome")).toHaveText(
+    "Proposte per la tua casa",
+  );
+  const gruppi = pagina.locator(".pro-gruppo");
+  await expect(gruppi).toHaveCount(2);
+  await expect(gruppi.nth(0)).toContainText("Dai tuoi dispositivi");
+  await expect(gruppi.nth(0)).toContainText("· 3");
+  await expect(gruppi.nth(1)).toContainText("Dalle tue abitudini");
+  await expect(gruppi.nth(1)).toContainText("ultime 3 settimane");
+  await expect(pagina.locator(".pro-elenco .au-riga")).toHaveCount(4);
+  await expect(pagina.locator(".pro-elenco .au-riga").nth(3)).toContainText(
+    "Alle 19:10 nei giorni feriali",
+  );
+  await expect(pagina.locator(".pro-fondo")).toContainText("niente esce di casa");
+
+  /* «No, grazie»: sparisce, e la casa lo sa. */
+  await pagina.locator('[data-au-scarta="elettrodomestico:sensor.lavatrice_potenza"]').click();
+  await expect(pagina.locator(".pro-elenco .au-riga")).toHaveCount(3);
+  expect(await page.evaluate(() => window.__SCARTATE__)).toEqual([
+    "elettrodomestico:sensor.lavatrice_potenza",
+  ]);
+  await pagina.locator('.au-indietro[data-au-vai="lista"]').click();
+  await expect(pagina.locator(".pro-tutte")).toHaveText("Vedi tutte (3) ›");
+});
+
+test("le proposte: «Crea» apre l'editor gia' compilato, e solo Salva la scrive", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, { automazioni: [], proposte: PROPOSTE });
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  await pagina.locator(".pro-carta").first().locator("[data-au-crea]").click();
+  await expect(pagina.locator(".pro-etichetta .pro-pill")).toHaveText("Proposta ✨");
+  await expect(pagina.locator(".pro-etichetta")).toContainText("finché non salvi non parte niente");
+  await expect(pagina.locator(".au-indietro")).toHaveText("‹ Automazioni");
+  await expect(pagina.locator('[data-au-testo="nome"]')).toHaveValue(
+    "Luce col movimento in Corridoio",
+  );
+  await expect(pagina.locator('select[data-au-campo="quando.entita.0"]')).toHaveValue(
+    "binary_sensor.pir_corridoio",
+  );
+  /* Finche' non si salva, non c'e' niente. */
+  expect(await salvate(page)).toEqual([]);
+  await pagina.locator("[data-au-salva]").click();
+  await expect
+    .poll(() => salvate(page))
+    .toMatchObject([
+      {
+        nome: "Luce col movimento in Corridoio",
+        quando: { tipo: "movimento", entita: ["binary_sensor.pir_corridoio"] },
+        soloSe: [{ tipo: "notte" }],
+        allora: [
+          { tipo: "accendi", entita: ["light.corridoio"], livello: 20 },
+          { tipo: "aspetta", minuti: 2 },
+          { tipo: "spegni", entita: ["light.corridoio"] },
+        ],
+      },
+    ]);
+  /* Salvata, non e' piu' una proposta. */
+  await expect(pagina.locator(".au-riga")).toHaveCount(1);
+  await expect(pagina.locator(".pro-tutte")).toHaveText("Vedi tutte (3) ›");
+  await expect(
+    pagina.locator(
+      '[data-au-proposta="movimento-luce:binary_sensor.pir_corridoio|light.corridoio"]',
+    ),
+  ).toHaveCount(0);
+  /* E la lavatrice: l'avviso ha gia' le sue parole. */
+  await pagina.locator('[data-au-crea="elettrodomestico:sensor.lavatrice_potenza"]').click();
+  await pagina.locator("[data-au-salva]").click();
+  await expect
+    .poll(async () => (await salvate(page))[1]?.allora?.[0]?.testo)
+    .toBe("Lavatrice ha finito");
+});
+
+test("le proposte senza Premium: una si legge, le altre sono un numero", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, { premium: false, proposte: PROPOSTE });
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  const blocco = pagina.locator(".pro.pro-senza");
+  await expect(blocco.locator(".pro-carta")).toHaveCount(1);
+  await expect(blocco.locator(".pro-crea.prem")).toHaveText("✨ Crea con Premium");
+  await expect(blocco.locator("[data-au-scarta]")).toHaveCount(0);
+  await expect(blocco.locator(".pro-altre")).toContainText(
+    "altre 3 proposte pronte: le trovi tutte con Premium",
+  );
+  /* Sopra il velo, non sotto. */
+  await expect(pagina.locator(".au-velato .pro")).toHaveCount(0);
+  await blocco.locator(".pro-crea.prem").click();
+  await expect(pagina.locator(".au-scopri-di-piu")).toBeVisible();
+  expect(await salvate(page)).toHaveLength(1);
+});
+
+test("le proposte nell'app: le carte scorrono coi puntini, e Vedi tutte apre la pagina", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, { app: true, proposte: PROPOSTE });
+  await page.evaluate(() => window.gdahomeApriLeAutomazioni());
+  const pagina = page.locator("#page-automazioni");
+  await expect(pagina.locator(".pro-carta")).toHaveCount(3);
+  await expect(pagina.locator(".pro-punti i")).toHaveCount(3);
+  await expect(pagina.locator(".pro-punti i.si")).toHaveCount(1);
+  await expect(pagina.locator(".pro-carte")).toHaveCSS("overflow-x", "auto");
+  await pagina.locator(".pro-tutte").click();
+  await expect(pagina.locator(".au-titolo h1")).toHaveText("Proposte");
+  await expect(pagina.locator(".pro-elenco .au-riga")).toHaveCount(4);
+  await pagina.locator(".pro-elenco [data-au-crea]").first().click();
+  await expect(pagina.locator(".pro-etichetta")).toBeVisible();
+  await expect(pagina.locator(".au-indietro")).toHaveText("‹ Automazioni");
 });

@@ -48,6 +48,30 @@
  * si risponde con un comando solo, in sola lettura, `ponte/automazioni/stato`
  * — cosa viene dopo, le ultime eseguite, l'ultima volta di ognuna — e solo a
  * chi sul filo ha un nome.
+ *
+ * ── Le proposte («Suggerite per la tua casa ✨») ──────────────────────────
+ *
+ * Le regole stanno in `plancia/src/core/automazioni-proposte.js`; qui si
+ * raccoglie quello che serve per applicarle, e niente esce di casa:
+ *
+ *  - le entita' dallo specchio della sentinella, con la stanza dai registri
+ *    di Home Assistant (`registri.js`, gia' tenuti da parte per il rapporto,
+ *    e `config/area_registry/list`), senza le interne, le nascoste e le
+ *    spente;
+ *  - la storia delle ultime tre settimane dal Recorder
+ *    (`history/history_during_period`), per al piu' quaranta luci, prese e
+ *    tapparelle, **una volta al giorno** e solo quando qualcuno apre le
+ *    Automazioni: si tiene su disco quello che se ne e' capito, non la storia;
+ *  - le luci rimaste accese con la casa vuota, che l'assistente delle
+ *    notifiche conta gia' (`capire-la-casa.js`).
+ *
+ * Due comandi: `ponte/automazioni/proposte` le legge, e
+ * `ponte/automazioni/proposte/scarta` ricorda un «No, grazie» — tutti e due
+ * solo a chi ha un utente, come lo stato. Uno scarto vale per la casa, non
+ * per il telefono: chi dice «no» alla luce col movimento non la vuole
+ * ritrovare sul tablet della cucina. Una proposta non scrive niente in
+ * `cd_automazioni`: «Crea» apre l'editor della plancia, e si salva da li',
+ * con le regole di sempre.
  */
 
 import { join } from "node:path";
@@ -60,12 +84,20 @@ import {
   automazioniPulite,
   cronoDecide,
   eAttivaAdesso,
+  eLoStatoAtteso,
   entitaDelQuando,
   passiDellAllora,
   prossimiEventi,
   soloSeVale,
   valutaIlQuando,
 } from "../plancia/src/core/automazioni.js";
+import {
+  ENTITA_GUARDATE,
+  GIORNI_DI_STORIA,
+  proposteDaMostrare,
+  proposteDaiDispositivi,
+  proposteDalleAbitudini,
+} from "../plancia/src/core/automazioni-proposte.js";
 
 /* Ogni quanto si guarda l'orologio. Un orario comincia a un minuto preciso, e
  * venti secondi di ritardo su una tapparella non si vedono. */
@@ -81,6 +113,43 @@ const STORIA = 12;
 const RIPRESA_POSSIBILE = 30 * MINUTO;
 
 export const COMANDO_DELLO_STATO = "ponte/automazioni/stato";
+export const COMANDO_DELLE_PROPOSTE = "ponte/automazioni/proposte";
+export const COMANDO_DELLO_SCARTO = "ponte/automazioni/proposte/scarta";
+
+/* La storia si rilegge una volta al giorno; le stanze e le entita' ogni
+ * cinque minuti, come i registri. Chi apre le Automazioni non aspetta la
+ * storia piu' di qualche secondo: se tarda, le abitudini arrivano la volta
+ * dopo. */
+const ABITUDINI_DURANO = 24 * 60 * MINUTO;
+const AREE_DURANO = 5 * MINUTO;
+const ATTESA_DELLA_STORIA = 8_000;
+/* I «No, grazie» che si ricordano, al piu'. */
+const SCARTATE_AL_MASSIMO = 300;
+
+/* La storia del Recorder com'e' sul socket: `{id: [{s, lu}]}` (la forma
+ * stretta, `minimal_response`) o `{id: [{state, last_changed}]}`. Torna
+ * `{id: [[ms, stato], …]}` in ordine. */
+export function storieDallaRisposta(risposta) {
+  const fuori = {};
+  const crudo = risposta && typeof risposta === "object" ? risposta : {};
+  for (const [id, righe] of Object.entries(crudo)) {
+    if (!Array.isArray(righe)) continue;
+    const storia = [];
+    for (const r of righe) {
+      if (!r || typeof r !== "object") continue;
+      const stato = r.s ?? r.state;
+      const quando =
+        typeof (r.lc ?? r.lu) === "number"
+          ? (r.lc ?? r.lu) * 1000
+          : Date.parse(r.last_changed || r.last_updated || "");
+      if (stato === undefined || !Number.isFinite(quando)) continue;
+      storia.push([quando, String(stato)]);
+    }
+    storia.sort((a, b) => a[0] - b[0]);
+    if (storia.length) fuori[id] = storia;
+  }
+  return fuori;
+}
 
 function leggiJson(valore) {
   if (typeof valore !== "string") return valore ?? null;
@@ -111,7 +180,15 @@ function comeOggetto(mappa) {
   );
 }
 
-const memoriaVuota = () => ({ tracce: {}, ultime: {}, storia: [], corse: [], giro: 0 });
+const memoriaVuota = () => ({
+  tracce: {},
+  ultime: {},
+  storia: [],
+  corse: [],
+  giro: 0,
+  scartate: [],
+  abitudini: null,
+});
 
 function memoriaPulita(dato) {
   const d = dato && typeof dato === "object" ? dato : {};
@@ -122,6 +199,13 @@ function memoriaPulita(dato) {
     storia: Array.isArray(d.storia) ? d.storia.slice(0, STORIA) : [],
     corse: Array.isArray(d.corse) ? d.corse.filter((c) => c && typeof c.id === "string") : [],
     giro: Number(d.giro) || 0,
+    scartate: Array.isArray(d.scartate)
+      ? d.scartate.filter((x) => typeof x === "string").slice(-SCARTATE_AL_MASSIMO)
+      : [],
+    abitudini:
+      d.abitudini && Array.isArray(d.abitudini.proposte) && Number(d.abitudini.il)
+        ? { il: Number(d.abitudini.il), proposte: d.abitudini.proposte }
+        : null,
   };
 }
 
@@ -135,6 +219,12 @@ export class Automazioni {
     stati = () => null,
     notifiche = null,
     licenze = null,
+    /* I registri di Home Assistant (`registri.js`), per le stanze delle
+     * proposte. */
+    registri = null,
+    /* Le luci rimaste accese con la casa vuota, giorno per giorno: quello
+     * che conta l'assistente delle notifiche (`capire-la-casa.js`). */
+    luciConCasaVuota = () => null,
     registro = null,
     adesso = () => Date.now(),
     ogni = (quanto, cosa) => setInterval(cosa, quanto),
@@ -151,6 +241,10 @@ export class Automazioni {
     this._stati = stati;
     this.notifiche = notifiche;
     this.licenze = licenze;
+    this.registri = registri;
+    this._luciConCasaVuota = luciConCasaVuota;
+    this._aree = null;
+    this._storiaInCorso = null;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
     this._ogni = ogni;
@@ -330,7 +424,7 @@ export class Automazioni {
     for (const corsa of [...this._vive.values()]) {
       const attende = corsa.attende;
       if (!corsa.ferma || !attende || attende.entita !== id) continue;
-      if (String(dopo?.state ?? "") !== attende.stato) continue;
+      if (!eLoStatoAtteso(attende.stato, dopo?.state)) continue;
       corsa.ferma = false;
       delete corsa.attende;
       this._avanza(corsa).catch((errore) =>
@@ -471,7 +565,7 @@ export class Automazioni {
        * ferma fino allo stato atteso o al tempo massimo. */
       if (passo.attendi) {
         const ora = String(this.stati()[passo.attendi.entita]?.state ?? "");
-        if (ora === passo.attendi.stato) continue;
+        if (eLoStatoAtteso(passo.attendi.stato, ora)) continue;
         corsa.indice = i + 1;
         corsa.riprendi = this.adesso() + passo.attendi.per;
         corsa.attende = { entita: passo.attendi.entita, stato: passo.attendi.stato };
@@ -592,14 +686,171 @@ export class Automazioni {
     };
   }
 
+  /* ── le proposte ──────────────────────────────────────────────────── */
+
+  /* Le stanze, per nome: `{area_id: nome}`. */
+  async _nomiDelleAree() {
+    const ora = this.adesso();
+    if (this._aree && ora - this._aree.il < AREE_DURANO) return this._aree.nomi;
+    const nomi = {};
+    try {
+      const elenco = await this.casa?.chiedi?.({ type: "config/area_registry/list" });
+      for (const a of Array.isArray(elenco) ? elenco : [])
+        if (a?.area_id) nomi[a.area_id] = String(a.name || a.area_id);
+    } catch (errore) {
+      this.registro.debug?.(`le stanze non si leggono: ${errore?.message || errore}`);
+    }
+    this._aree = { il: ora, nomi };
+    return nomi;
+  }
+
+  /** Le entita' della casa che contano: `[{id, nome, area, classe, unita}]`. */
+  async entitaDellaCasa() {
+    const stati = this._stati();
+    if (!stati || typeof stati.entries !== "function") return [];
+    let registri = null;
+    try {
+      registri = await this.registri?.chiedi?.();
+    } catch (errore) {
+      this.registro.debug?.(`i registri non si leggono: ${errore?.message || errore}`);
+    }
+    const nomiDelleAree = await this._nomiDelleAree();
+    const areaDelDispositivo = new Map();
+    for (const d of Array.isArray(registri?.dispositivi) ? registri.dispositivi : [])
+      if (d?.id) areaDelDispositivo.set(d.id, d.area_id || "");
+    const voci = new Map();
+    for (const v of Array.isArray(registri?.entita) ? registri.entita : [])
+      if (v?.entity_id) voci.set(v.entity_id, v);
+    const fuori = [];
+    for (const [id, stato] of stati.entries()) {
+      const voce = voci.get(id);
+      /* Le interne (diagnostica, configurazione), le nascoste e le spente
+       * non si propongono: nessuno vuole un'automazione sul segnale WiFi. */
+      if (voce && (voce.entity_category || voce.hidden_by || voce.disabled_by)) continue;
+      const areaId = voce?.area_id || areaDelDispositivo.get(voce?.device_id) || "";
+      const attributi = stato?.attributes || {};
+      fuori.push({
+        id,
+        nome: String(attributi.friendly_name || voce?.name || voce?.original_name || ""),
+        area: areaId ? nomiDelleAree[areaId] || "" : "",
+        classe: String(
+          attributi.device_class || voce?.device_class || voce?.original_device_class || "",
+        ),
+        unita: String(attributi.unit_of_measurement || ""),
+      });
+    }
+    return fuori;
+  }
+
+  /* Le abitudini dalla storia: una volta al giorno, una lettura per volta.
+   * Si tiene quello che se ne e' capito, non la storia. */
+  _abitudiniDallaStoria(entita) {
+    const ora = this.adesso();
+    const tenute = this.memoria.abitudini;
+    if (tenute && ora - tenute.il < ABITUDINI_DURANO) return Promise.resolve(tenute.proposte);
+    if (this._storiaInCorso) return this._storiaInCorso;
+    const ordine = { light: 0, cover: 1, switch: 2 };
+    const guardate = entita
+      .filter((e) => e.id.split(".")[0] in ordine)
+      .sort((a, b) => ordine[a.id.split(".")[0]] - ordine[b.id.split(".")[0]])
+      .slice(0, ENTITA_GUARDATE)
+      .map((e) => e.id);
+    this._storiaInCorso = (async () => {
+      let proposte = [];
+      if (guardate.length && this.casa?.chiedi) {
+        const risposta = await this.casa.chiedi({
+          type: "history/history_during_period",
+          start_time: new Date(ora - GIORNI_DI_STORIA * 24 * 60 * MINUTO).toISOString(),
+          end_time: new Date(ora).toISOString(),
+          entity_ids: guardate,
+          minimal_response: true,
+          no_attributes: true,
+          significant_changes_only: false,
+        });
+        const stati = this.stati();
+        proposte = proposteDalleAbitudini({
+          storie: storieDallaRisposta(risposta),
+          entita,
+          adesso: ora,
+          statoDi: (id) => stati[id] || null,
+        });
+      }
+      this.memoria.abitudini = { il: ora, proposte };
+      this._salva();
+      return proposte;
+    })()
+      .catch((errore) => {
+        /* La storia che non risponde si riprova fra un'ora, non al prossimo
+         * giro: il Recorder spento non deve diventare una domanda al minuto. */
+        this.registro.attenzione(`proposte: la storia non si legge (${errore?.message || errore})`);
+        this.memoria.abitudini = {
+          il: ora - ABITUDINI_DURANO + 60 * MINUTO,
+          proposte: tenute?.proposte || [],
+        };
+        return this.memoria.abitudini.proposte;
+      })
+      .finally(() => {
+        this._storiaInCorso = null;
+      });
+    return this._storiaInCorso;
+  }
+
+  /** Le proposte da mostrare: dai dispositivi e dalle abitudini. */
+  async proposte({ attesa = ATTESA_DELLA_STORIA } = {}) {
+    const entita = await this.entitaDellaCasa();
+    const dalla = this._abitudiniDallaStoria(entita);
+    let abitudini = this.memoria.abitudini?.proposte || [];
+    let pronte = true;
+    let segno = null;
+    const tardi = new Promise((risolvi) => {
+      segno = setTimeout(() => risolvi(null), attesa);
+      segno?.unref?.();
+    });
+    const arrivate = await Promise.race([dalla, tardi]);
+    clearTimeout(segno);
+    if (arrivate) abitudini = arrivate;
+    else pronte = false;
+    let luci = null;
+    try {
+      luci = this._luciConCasaVuota?.() || null;
+    } catch (_errore) {
+      luci = null;
+    }
+    const tutte = [
+      ...proposteDaiDispositivi({ entita }),
+      ...abitudini,
+      ...proposteDalleAbitudini({ luciConCasaVuota: luci || {}, adesso: this.adesso() }),
+    ];
+    return {
+      proposte: proposteDaMostrare(tutte, {
+        automazioni: this.elenco(),
+        scartate: this.memoria.scartate,
+      }),
+      abitudiniDel: this.memoria.abitudini?.il || null,
+      abitudiniPronte: pronte,
+      giorni: GIORNI_DI_STORIA,
+    };
+  }
+
+  /** «No, grazie»: quella proposta non torna piu'. */
+  scarta(idProposta) {
+    const id = String(idProposta || "").trim();
+    if (!id || id.length > 200) return false;
+    if (!this.memoria.scartate.includes(id)) {
+      this.memoria.scartate = [...this.memoria.scartate, id].slice(-SCARTATE_AL_MASSIMO);
+      this._salva();
+    }
+    return true;
+  }
+
   riconosce(tipo) {
-    return tipo === COMANDO_DELLO_STATO;
+    return [COMANDO_DELLO_STATO, COMANDO_DELLE_PROPOSTE, COMANDO_DELLO_SCARTO].includes(tipo);
   }
 
   /* `utente`: chi sta dall'altra parte, gia' riconosciuto dal ponte. Senza un
    * nome non si risponde: e' un comando della plancia, e la plancia la apre
    * qualcuno che Home Assistant conosce. */
-  rispondi(detto, { utente = "" } = {}) {
+  async rispondi(detto, { utente = "" } = {}) {
     const id = detto?.id ?? null;
     if (!String(utente || "").trim())
       return {
@@ -608,7 +859,7 @@ export class Automazioni {
         success: false,
         error: { code: "unauthorized", message: "le automazioni le vede chi e' entrato" },
       };
-    if (detto?.type !== COMANDO_DELLO_STATO)
+    if (!this.riconosce(detto?.type))
       return {
         id,
         type: "result",
@@ -616,6 +867,18 @@ export class Automazioni {
         error: { code: "unknown_command", message: `non conosco ${detto?.type}` },
       };
     try {
+      if (detto.type === COMANDO_DELLE_PROPOSTE)
+        return { id, type: "result", success: true, result: await this.proposte() };
+      if (detto.type === COMANDO_DELLO_SCARTO) {
+        if (!this.scarta(detto.proposta))
+          return {
+            id,
+            type: "result",
+            success: false,
+            error: { code: "invalid_format", message: "quale proposta?" },
+          };
+        return { id, type: "result", success: true, result: await this.proposte({ attesa: 0 }) };
+      }
       return { id, type: "result", success: true, result: this.stato() };
     } catch (errore) {
       this.registro.errore(`automazioni: ${errore?.message || errore}`);

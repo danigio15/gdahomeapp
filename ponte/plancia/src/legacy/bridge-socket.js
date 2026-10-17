@@ -170,6 +170,8 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   // lettura (ponte/src/automazioni.js). Le esegue il ponte, e solo lui sa
   // rispondere: dentro il pannello senza add-on la risposta e' «non conosco».
   "ponte/automazioni/stato",
+  "ponte/automazioni/proposte",
+  "ponte/automazioni/proposte/scarta",
   "auth/sign_path",
 ]);
 
