@@ -433,3 +433,54 @@ test("rinominare cambia il nome e basta", () => {
     c.via();
   }
 });
+
+/* ─── Il telefono riabbinato stacca se stesso di prima ──────────────────── */
+
+test("riabbinato, il telefono stacca quello di prima col suo vecchio segno", () => {
+  const c = cartellaFinta();
+  try {
+    const d = new Dispositivi({ cartella: c.dove, massimi: 2 });
+    const prima = d.abbina({ nome: "Telefono Android", sistema: "android" });
+    const dopo = d.abbina({ nome: "Telefono Android", sistema: "android" });
+    assert.equal(d.quantiDiCasa(), 2);
+    assert.equal(
+      d.sostituisci({
+        nuovo: dopo.dispositivo.id,
+        vecchio: prima.dispositivo.id,
+        segno: prima.segno,
+      }),
+      true,
+    );
+    assert.equal(d.quantiDiCasa(), 1);
+    assert.equal(d.riconosci(prima.segno), null);
+    assert.equal(d.riconosci(dopo.segno).id, dopo.dispositivo.id);
+    /* Il posto liberato si riusa. */
+    d.abbina({ nome: "Tablet" });
+    assert.equal(d.quantiDiCasa(), 2);
+  } finally {
+    c.via();
+  }
+});
+
+test("senza il segno giusto non si stacca nessuno, e mai se stessi", () => {
+  const c = cartellaFinta();
+  try {
+    const d = new Dispositivi({ cartella: c.dove });
+    const altro = d.abbina({ nome: "Telefono di un altro" });
+    const io = d.abbina({ nome: "Il mio telefono" });
+    const vecchio = altro.dispositivo.id;
+    const nuovo = io.dispositivo.id;
+    /* Sapere l'identificativo non basta: non e' un segreto. */
+    assert.equal(d.sostituisci({ nuovo, vecchio, segno: io.segno }), false);
+    assert.equal(d.sostituisci({ nuovo, vecchio, segno: "" }), false);
+    assert.equal(d.sostituisci({ nuovo, vecchio, segno: segnoNuovo() }), false);
+    assert.equal(d.sostituisci({ nuovo, vecchio }), false);
+    /* Ne' se stessi, ne' per conto di un telefono che non c'e'. */
+    assert.equal(d.sostituisci({ nuovo, vecchio: nuovo, segno: io.segno }), false);
+    assert.equal(d.sostituisci({ nuovo: "dm_nessuno", vecchio, segno: altro.segno }), false);
+    assert.equal(d.quantiDiCasa(), 2);
+    assert.equal(stessoSegreto(impronta(altro.segno), impronta(altro.segno)), true);
+  } finally {
+    c.via();
+  }
+});

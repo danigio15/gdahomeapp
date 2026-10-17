@@ -362,6 +362,26 @@
     return quale;
   }
 
+  /* Cos'e', per un telefono che l'ha detto: «Samsung · Android 15 · app
+   * 1.15.0». Chi non l'ha detto — un'app di prima, il browser — resta com'era
+   * («app su Android»). */
+  function comEFattoAPieno(uno) {
+    var marca = String((uno && uno.marca) || "").trim();
+    var versione = String((uno && uno.versione) || "").trim();
+    var app = String((uno && uno.app) || "").trim();
+    var quale = String((uno && uno.sistema) || "").toLowerCase();
+    var pezzi = [];
+    if (marca || versione) {
+      if (marca) pezzi.push(marca);
+      var sistema = quale === "ios" ? "iOS" : quale === "android" ? "Android" : "";
+      if (sistema) pezzi.push(versione ? sistema + " " + versione : sistema);
+    } else {
+      pezzi.push(comEFatto(uno && uno.sistema));
+    }
+    if (app) pezzi.push("app " + app);
+    return pezzi.join(" · ");
+  }
+
   /* Quando si e' visto un telefono, come lo direbbe una persona.
    *
    * `toLocaleString()` scrive «13/09/2026, 14:40:49»: una riga di numeri che
@@ -990,7 +1010,13 @@
     var diCasa = dispositivi.filter(function (uno) {
       return !uno.finoA;
     }).length;
-    trova("conteggio").textContent = due(diCasa + " di " + massimi, diCasa + " of " + massimi);
+    /* «2 di 10» e quattro righe sotto: le due di prova non contano, e lo si
+     * dice, invece di lasciarlo indovinare. */
+    var diProva = dispositivi.length - diCasa;
+    trova("conteggio").textContent = due(
+      diCasa + " di " + massimi + (diProva ? " · più " + diProva + " di prova" : ""),
+      diCasa + " of " + massimi + (diProva ? " · plus " + diProva + " trial" : ""),
+    );
 
     /* Mentre un nome si sta scrivendo, l'elenco resta com'e'. */
     if (inModifica.indexOf("telefono:") === 0) return;
@@ -1028,8 +1054,12 @@
        * **tutte** le plance, comprese quelle riservate a qualcuno, ed e'
        * esattamente quello di cui bisogna accorgersi guardando l'elenco. */
       var diChi = nomeDellUtente(uno.utente);
+      /* Chi ha scritto di chi e' il telefono («Di chi e' questo telefono?»
+       * nell'app) ce l'ha gia' nel nome: qui resta solo l'avviso di chi vede
+       * tutte le plance. */
+      if (uno.proprietario && uno.utente) diChi = "";
       sotto.textContent =
-        comEFatto(uno.sistema) +
+        comEFattoAPieno(uno) +
         " · " +
         (uno.collegati
           ? due("collegato adesso", "connected right now")

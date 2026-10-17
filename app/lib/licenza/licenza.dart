@@ -32,6 +32,7 @@ import 'package:flutter/foundation.dart';
 
 import '../casa/archivio_delle_case.dart';
 import '../casa/casa_conosciuta.dart';
+import '../casa/case_doppie.dart';
 import '../parole.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
@@ -184,9 +185,18 @@ class GestoreLicenza extends ChangeNotifier {
   /// ogni volta che un gettone cambia. Controlla le firme nuove.
   Future<void> conosci(Iterable<CasaConosciuta> tutte) async {
     _conosciute = true;
+    /* Le copie con lo stesso `id` come le fonde l'archivio
+     * (`casa/case_doppie.dart`): con due copie vinceva l'ultima, cioe' quella
+     * col gettone vecchio, e la casa aperta risultava Base. Adesso vince il
+     * gettone piu' nuovo, comunque l'elenco arrivi. */
     _case
       ..clear()
-      ..addEntries(tutte.map((una) => MapEntry(una.id, una)));
+      ..addEntries(
+        fondiLeCopie(
+          tutte,
+          ancheLaStessaCasa: false,
+        ).case_.map((una) => MapEntry(una.id, una)),
+      );
     _grezzi.removeWhere((id, _) => !_case.containsKey(id));
     _letti.removeWhere((id, _) => !_case.containsKey(id));
     _ricordatiGrezzi.removeWhere((id, _) => !_case.containsKey(id));

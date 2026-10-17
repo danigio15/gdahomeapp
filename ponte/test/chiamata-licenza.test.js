@@ -137,3 +137,20 @@ test("senza chi la controlla, o se inciampa, la risposta arriva lo stesso", asyn
   assert.equal(inciampa.chiamata.dentro, true);
   inciampa.chiamata.spegni();
 });
+
+/* La foto di una notifica: va sul filo col suo numero, e il numero che il
+ * centralino le da' torna a chi l'ha mandata. Un «no» e' `null`, non un
+ * errore: la notifica parte senza foto. */
+test("la foto va al centralino sul filo, e torna il numero che le ha dato", async () => {
+  const { chiamata, presa } = await unaChiamata();
+  const presa1 = chiamata.mandaLaFoto({ telefono: "dm_uno", dati: "AAAA" });
+  const mandata = presa.mandati.find((uno) => uno.t === "foto");
+  assert.deepEqual(mandata, { t: "foto", n: 1, telefono: "dm_uno", dati: "AAAA" });
+  presa.dice({ t: "foto-ok", n: 1, id: "f".repeat(32) });
+  assert.equal(await presa1, "f".repeat(32));
+  const presa2 = chiamata.mandaLaFoto({ telefono: "dm_uno", dati: "BBBB" });
+  presa.dice({ t: "foto-no", n: 2, perche: "troppe" });
+  assert.equal(await presa2, null);
+  chiamata.spegni();
+  assert.equal(await chiamata.mandaLaFoto({ telefono: "dm_uno", dati: "C" }), null);
+});

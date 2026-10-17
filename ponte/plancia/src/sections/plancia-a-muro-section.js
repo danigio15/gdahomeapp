@@ -42,6 +42,7 @@ import {
   ilCodiceApreIlModo,
   ilModoChiedeIlCodice,
   normalizzaModiSuMisura,
+  eScattatoAdesso,
 } from "../core/antifurto-su-misura.js";
 import { ingressiDellaCentrale } from "../core/le-zone-della-centrale.js";
 import { varchiDiCasa } from "../core/varchi-di-casa.js";
@@ -2583,14 +2584,18 @@ function paginaIngresso(pagina) {
   const centrale = centraleDelMuro(pagina);
   const s = stato(centrale);
   const valore = String(s?.state || "");
-  const scattato = valore === "triggered";
+  /* Lo scattato su misura (l'interruttore che lo dice) vale quanto il
+   * `triggered` di una centrale: la card diventa rossa e dice «ALLARME». */
+  const suMisura = state.fonte?.antifurto?.scattato;
+  const suonaSuMisura = Boolean(suMisura) && eScattatoAdesso(suMisura, allStates() || {});
+  const scattato = valore === "triggered" || suonaSuMisura;
   const spento = valore === "disarmed";
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
   const modi = tastiDellAntifurto(s);
   const acceso = tastoAcceso(s, modi);
   const carta = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
-        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? statoDellaCentrale(s) : modi.find((m) => m.mode === acceso)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
+        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(suonaSuMisura ? STATI_DELL_ALLARME().triggered : s ? statoDellaCentrale(s) : modi.find((m) => m.mode === acceso)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
         ${avvisoFinestre}</div></div>
       ${
         modi.length
@@ -5217,7 +5222,10 @@ function svegliaSeServe(event) {
   const tocca = (id) => !ids.length || ids.includes(id);
   if (
     (sensore && tocca(sensore) && String(stato(sensore)?.state) === "on") ||
-    centrali.some((id) => tocca(id) && String(stato(id)?.state) === "triggered")
+    centrali.some((id) => tocca(id) && String(stato(id)?.state) === "triggered") ||
+    (state.fonte?.antifurto?.scattato &&
+      tocca(state.fonte.antifurto.scattato.entita) &&
+      eScattatoAdesso(state.fonte.antifurto.scattato, allStates() || {}))
   ) {
     state.riposo = false;
     tocco();

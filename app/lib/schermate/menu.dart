@@ -49,6 +49,19 @@ enum Sezione {
    * con l'auto della plancia (vedi `BarraDelleSezioni.tessera`). */
   navigatore('ev', pronta: true, soloNellApp: true),
   configurazione('impostazioni', pronta: true),
+  /* Le automazioni della casa (Premium): tutte quelle di Home Assistant, a
+   * gruppi, con l'interruttore, e quelle nuove scritte con Quando · Solo se ·
+   * Allora. Le esegue Home Assistant, che le ha fra le sue — anche ad app
+   * chiusa — e la plancia le scrive passando dal ponte
+   * (`ponte/src/automazioni.js`).
+   *
+   * Sta nella Casa accanto a «Configurazione plancia», col bollino ✨ PREMIUM.
+   * Nell'app e' l'unica porta: la plancia non ha ne' la linguetta in basso ne'
+   * la voce nel config, e questa voce apre la pagina delle Automazioni a
+   * schermo pieno — la stessa faccia della sezione della dashboard, con
+   * «＋ Nuova» e l'editor dentro. C'e' anche nella webapp, perche' la pagina e'
+   * della plancia e la plancia c'e'. */
+  automazioni('automazioni', pronta: true),
   comeVaLApp('minipc', pronta: true),
   /* Le impostazioni dell'**app**, e dentro la sicurezza: il lucchetto, il
    * volto, l'impronta, e i momenti in cui l'app li chiede.
@@ -116,8 +129,8 @@ enum Sezione {
   gestione('persone', pronta: true),
   /* ─── Quelle che ci sono solo nell'app ────────────────────────────────
    *
-   * Tre voci vivono **solo su Android e iOS**, e non nella webapp — quattro
-   * col Navigatore, che sta piu' su vicino ai Dispositivi. Non e' una
+   * Due voci vivono **solo su Android e iOS**, e non nella webapp — tre col
+   * Navigatore, che sta piu' su vicino ai Dispositivi. Non e' una
    * dimenticanza: sono cose che vogliono il telefono — la rete Zigbee si apre
    * stando in piedi davanti al dispositivo, col telefono in una mano — e una
    * copia nel browser sarebbe una porta che si apre su meta' di quello che
@@ -130,7 +143,6 @@ enum Sezione {
    * l'app. In una casa senza ZHA e senza Zigbee2MQTT quella voce aprirebbe
    * una porta che non si apre — vedi `vociDellaBarra`. */
   zigbee('runtime', pronta: true, soloNellApp: true),
-  automazioni('azioni', soloNellApp: true),
   /* gdahome Premium: cosa comprende, i piani, il codice regalo. Non e' una
    * schermata della fila — la voce apre la sua pagina sopra — e c'e' solo
    * quando c'e' qualcosa da vendere: con la chiave delle licenze vuota tutto
@@ -145,9 +157,9 @@ enum Sezione {
   /// E' una domanda e non un campo perche' un campo di un `enum` si decide
   /// quando si compila, e la lingua si sa quando si apre l'app.
   ///
-  /// «Aiutanti» e «Automazioni» prendono i nomi che hanno in Home Assistant —
-  /// Helpers e Automations — perche' aprono le sue pagine, e due nomi per la
-  /// stessa stanza sono un nome di troppo.
+  /// «Aiutanti» prende il nome che ha in Home Assistant — Helpers — perche'
+  /// apre la sua pagina, e due nomi per la stessa stanza sono un nome di
+  /// troppo.
   String get titolo => switch (this) {
     Sezione.plancia => inLingua(it: 'Plancia', en: 'Dashboard'),
     Sezione.dispositivi => inLingua(it: 'Dispositivi', en: 'Devices'),
@@ -217,6 +229,7 @@ enum Sezione {
     Sezione.dispositivi ||
     Sezione.navigatore ||
     Sezione.configurazione ||
+    Sezione.automazioni ||
     Sezione.aggiornamenti ||
     Sezione.notifiche => GruppoDellaBarra.casa,
     /* Con «Come va l'app»: sono le due voci che parlano dell'app e non della

@@ -281,3 +281,42 @@ test("la ricerca dice cosa succede, e sotto la strada c'e' la cartina", async ({
     await page.screenshot({ path: `${process.env.DM_FOTO}/gdanav-pc-cartina.png` });
   }
 });
+
+/* Nell'app la voce non c'e': i viaggi si pianificano dentro il navigatore
+ * («Pianifica i viaggi» nel menu laterale e la scheda sulla mappa). Nel
+ * browser di Home Assistant resta. */
+test("nell'app la voce gdanav non c'e', nel browser si'", async ({ page }, testInfo) => {
+  test.setTimeout(150_000);
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await page.addInitScript(() => {
+    /* Il segno con cui l'app serve la plancia (`premesse.dart`). */
+    document.addEventListener("DOMContentLoaded", () => {
+      const foglio = document.createElement("style");
+      foglio.id = "gdahome-config-fuori";
+      document.head.append(foglio);
+    });
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60000,
+  });
+  await expect(page.locator('nav.tabs .tab[data-tab="home"]')).toBeVisible();
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready")));
+  await page.waitForTimeout(400);
+  await expect(page.locator('nav.tabs .tab[data-tab="gdanav"]')).toHaveCount(0);
+
+  /* Nel browser, la stessa plancia senza il segno dell'app: la voce c'e'. */
+  const browser = await page.context().newPage();
+  await browser.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(browser, "dashboard.html", testInfo, SEME);
+  await browser.waitForFunction(
+    () => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true,
+    null,
+    {
+      timeout: 60000,
+    },
+  );
+  const voce = browser.locator('nav.tabs .tab[data-tab="gdanav"]');
+  await expect(voce).toHaveCount(1);
+  await expect(voce.locator(".text")).toHaveText("gdanav");
+});

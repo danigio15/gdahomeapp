@@ -1547,8 +1547,16 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `sections/meteo-editor-section.js`.
   // 460 con la ricarica di notte: il nucleo puro `core/ricarica-di-notte.js`,
   // che legge anche il ponte, e la carta `sections/ricarica-di-notte-section.js`.
+  // 461 con le automazioni: il nucleo puro `core/automazioni.js`, che legge
+  // anche il ponte, e la pagina `sections/automazioni-section.js`.
+  // 462 con le proposte delle automazioni: il nucleo puro
+  // `core/automazioni-proposte.js`, che il ponte usa per calcolarle in casa e
+  // la plancia per togliere quelle gia' salvate o scartate.
+  // 464 con le automazioni di Home Assistant: il traduttore puro
+  // `core/automazioni-ha.js`, che legge anche il ponte, e la sezione della
+  // dashboard `sections/automazioni-casa-section.js`.
   assert.ok(
-    relative.length <= 460,
+    relative.length <= 464,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

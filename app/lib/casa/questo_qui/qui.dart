@@ -10,4 +10,5 @@ export 'sul_web.dart' if (dart.library.io) 'sul_telefono.dart';
 
 /* E anche il nome e il sistema: chi chiede «com'e' fatto questo» vuole la
  * risposta, non due import per averla. */
-export '../questo_dispositivo.dart' show QuestoDispositivo;
+export '../questo_dispositivo.dart'
+    show IlModello, QuestoDispositivo, nomeConIlModello, proprietarioPulito;

@@ -40,6 +40,22 @@
  * Tutto il resto no. Questo non e' un proxy verso Home Assistant: sono due
  * cartelle, e il telefono non ottiene di qui niente che non avesse gia' col
  * filo, che dopo l'abbinamento puo' chiedere a Home Assistant qualunque cosa.
+ *
+ * Una commissione non passa da qui: `ponte/telefono/sostituisci`, che fa il
+ * filo stesso (`ponte.js`). E' il telefono appena riabbinato che stacca
+ * quello che era prima, dandone il vecchio segno: la usa solo un telefono
+ * entrato col suo segno, vale solo per se stesso, e senza il segno giusto non
+ * stacca nessuno (`sostituisci` in `dispositivi.js`). Nel ponte non si vede
+ * nulla: ne' il segno, che si confronta per impronta, ne' chi era.
+ *
+ * Neanche `ponte/telefono/chi-sono`, sempre del filo (`ponte.js`): il
+ * telefono dice marca, modello, versione del sistema e dell'app, e il nome
+ * che chi lo usa ha scritto alla domanda «Di chi e' questo telefono?». Lo
+ * usa solo un telefono entrato col suo segno (un utente abbinato), e vale
+ * solo per la sua riga: l'identificativo lo mette il ponte, non il
+ * telefono. Sono parole corte ripulite (`chiE` in `dispositivi.js`), servono
+ * al nome della riga fra i «Telefoni abbinati» se nessuno l'ha rinominata a
+ * mano, e nel ponte non si vede nulla: nessun registro le scrive.
  */
 
 import { QUADRO_DI_DIFETTO } from "./rapporto.js";
@@ -78,6 +94,8 @@ import {
   conservaGliAmministratori,
   puoConfigurare,
 } from "./chi-configura.js";
+import { CHIAVE_AUTOMAZIONI } from "../plancia/src/core/automazioni.js";
+import { COMANDI_DELLE_AUTOMAZIONI } from "./automazioni.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -153,6 +171,28 @@ const LICENZA = new Map([
   ["ponte/licenza/negozio", "negozio"],
   ["ponte/licenza/riscatta", "riscatta"],
 ]);
+
+/* Le automazioni della plancia (`cd_automazioni`) le scrive solo chi ha un
+ * utente.
+ *
+ * Sono quelle rimaste dalla versione di prova che le eseguiva l'add-on:
+ * adesso le esegue Home Assistant, e la plancia invita a convertirle in
+ * automazioni sue (`ponte/automazioni/salva`). Finche' restano qui non
+ * partono, ma sono ancora comandi alla casa scritti da qualcuno. Chi salva la configurazione senza un nome — un telefono abbinato
+ * prima che i telefoni si intestassero a qualcuno, che il ponte lascia ancora
+ * amministrare «com'era ieri» — salva tutto il resto, ma le automazioni
+ * restano quelle che erano: quelle salvate, o nessuna. Torna i valori da
+ * salvare. */
+export function conservaLeAutomazioni(nuovi, salvati, chiChiede = "") {
+  if (!nuovi || typeof nuovi !== "object") return nuovi;
+  if (String(chiChiede || "").trim()) return nuovi;
+  const prima = salvati && typeof salvati === "object" ? salvati[CHIAVE_AUTOMAZIONI] : undefined;
+  if (nuovi[CHIAVE_AUTOMAZIONI] === prima) return nuovi;
+  const fuori = { ...nuovi };
+  if (prima === undefined) delete fuori[CHIAVE_AUTOMAZIONI];
+  else fuori[CHIAVE_AUTOMAZIONI] = prima;
+  return fuori;
+}
 
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
@@ -495,6 +535,9 @@ export class Commissioni {
     /* La ricarica di notte (`ricarica-di-notte.js`): nasce dopo, come i
      * viaggi, perche' legge la casa dallo specchio delle notifiche. */
     ricaricaDiNotte = null,
+    /* Le automazioni (`automazioni.js`): nascono dopo per la stessa ragione,
+     * leggono la casa dallo specchio delle notifiche. */
+    automazioni = null,
     /* La rete Zigbee di questa casa. Che poi una rete ci sia o no lo dice lui,
      * rispondendo `quale: ""`: i comandi `ponte/zigbee/` sono di questo ponte
      * comunque — sono nel suo nome — e non si mandano a Home Assistant, che
@@ -560,6 +603,7 @@ export class Commissioni {
     this.viaggi = viaggi;
     /* E la ricarica di notte, che nasce dopo per la stessa ragione. */
     this.ricaricaDiNotte = ricaricaDiNotte;
+    this.automazioni = automazioni;
     this.zigbee = zigbee;
     this.registri = registri;
     /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
@@ -667,12 +711,66 @@ export class Commissioni {
       if (!this.notifiche) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.notifiche.casaCapita(detto);
     }
+    /* Le notifiche semplici ed elaborate (`notifiche.js`) non hanno comandi
+     * di qui: le loro domande — `ponte/notifiche/*` — arrivano solo da un
+     * telefono abbinato e intestato a un utente di Home Assistant
+     * (`ponte.js`), e ognuno legge e scrive soltanto le impostazioni del suo
+     * telefono: lo stile («Come le vuoi»), le voci su misura e la prova di una
+     * voce (`ponte/notifiche/prova` con `tipo`, numeri d'esempio). Un utente
+     * senza nome non ha niente da chiedere, e nel ponte non si vede nulla:
+     * nessuna pagina, nessuna console.
+     *
+     * Quello che queste notifiche usano della casa sta in casa: i conti
+     * dell'energia (`l-energia-di-casa.js`, `/data/energia-di-casa.json`, solo
+     * numeri), gli UPS e l'antifurto su misura letti dalla configurazione
+     * della plancia. L'unica cosa che esce e' la foto di una telecamera per
+     * la notifica di un movimento o dell'antifurto: solo per i telefoni che
+     * hanno scelto le notifiche **elaborate**, solo della telecamera che a
+     * quell'utente si mostra, chiusa con la chiave delle notifiche di quel
+     * telefono (`spinta.js`), e solo verso il centralino, che la tiene dieci
+     * minuti e la da' una volta. Con le semplici nessuna foto lascia la casa.
+     *
+     * I tasti nuovi (spegni sirena, disinserisci, inserisci col modo su
+     * misura) sono comandi preparati dal ponte per quella notifica e quel
+     * telefono, come gli altri tasti: il telefono dice solo quale tasto. */
     /* La ricarica di notte (`ricarica-di-notte.js`): cosa sta facendo la
      * casa con l'auto, in sola lettura. Le impostazioni non passano di qui —
      * stanno nella configurazione della plancia, con le sue regole. */
     if (tipo === "ponte/ricarica-notte/stato") {
       if (!this.ricaricaDiNotte) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.ricaricaDiNotte.rispondi(detto, { utente: chiChiede });
+    }
+    /* Le automazioni (`automazioni.js`): le esegue Home Assistant, e queste
+     * sono le domande della plancia su di loro. Tutte rispondono **solo a chi
+     * ha un utente** sul filo — un telefono senza nome, o una pagina che non
+     * ha detto chi e', si sente dire `unauthorized` — e nel ponte non si vede
+     * niente: non c'e' una pagina, non c'e' una console, e niente esce di
+     * casa (si parla solo con Home Assistant).
+     *
+     *  - `ponte/automazioni/stato`: tutte le automazioni di Home Assistant,
+     *    con la stanza, l'ultima volta, il gruppo «Per tipo» e, se ci sta, la
+     *    forma della plancia. La configurazione intera arriva solo a chi
+     *    amministra Home Assistant;
+     *  - `ponte/automazioni/salva`, `…/elimina`, `…/rinomina`, `…/duplica`:
+     *    scrivono in Home Assistant col segno dell'add-on, e allora vogliono
+     *    in piu' **chi amministra Home Assistant** (`puoAmministrare`), che e'
+     *    la regola di Home Assistant per la sua pagina delle automazioni, e
+     *    gdahome Premium. `salva` riceve la forma della plancia e mai una
+     *    configurazione: la scrive il traduttore
+     *    (`plancia/src/core/automazioni-ha.js`), coi servizi che sceglie lui,
+     *    e una complessa non la sovrascrive;
+     *  - `ponte/automazioni/proposte` e `…/proposte/scarta`: le proposte
+     *    calcolate in casa e il «No, grazie», che scrive solo nella memoria
+     *    dell'add-on.
+     *
+     * Accendere, spegnere ed eseguire non passano di qui: sono servizi di
+     * Home Assistant, chiamati come tutti gli altri. */
+    if (COMANDI_DELLE_AUTOMAZIONI.includes(tipo)) {
+      if (!this.automazioni) return no(id, "unknown_command", `non conosco ${tipo}`);
+      return this.automazioni.rispondi(detto, {
+        utente: chiChiede,
+        amministra: puoAmministrare === true,
+      });
     }
     /* I viaggi di gdanav: dalla plancia e dal telefono, ognuno coi suoi. */
     if (typeof tipo === "string" && tipo.startsWith("ponte/viaggi/")) {
@@ -728,7 +826,7 @@ export class Commissioni {
           "la configurazione di questa plancia la cambia solo l'utente che la amministra",
         );
       }
-      return this._configurazione(detto);
+      return this._configurazione(detto, chiChiede);
     }
     if (tipo === CHI_SONO) return this._chiSono(detto, chiChiede, puoAmministrare);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
@@ -1525,7 +1623,7 @@ export class Commissioni {
     });
   }
 
-  async _configurazione(detto) {
+  async _configurazione(detto, chiChiede = "") {
     const id = detto.id ?? null;
     const cassetta = this.configurazione;
     if (!cassetta) return no(id, "unknown_command", `non conosco ${detto.type}`);
@@ -1563,6 +1661,17 @@ export class Commissioni {
       if (detto.type === CONFIG_RESTORE) {
         const revisione = Number(detto.revision);
         if (!Number.isFinite(revisione)) return no(id, "invalid_format", "manca la revisione");
+        /* Senza un utente non si cambiano le automazioni, nemmeno tornando a
+         * una revisione di prima: vedi `conservaLeAutomazioni`. */
+        if (!String(chiChiede || "").trim()) {
+          const voluta = cassetta.valoriDellaRevisione?.(profilo, revisione);
+          const adesso = cassetta.leggi(profilo)?.snapshot?.values || {};
+          if (
+            voluta &&
+            (voluta[CHIAVE_AUTOMAZIONI] ?? null) !== (adesso[CHIAVE_AUTOMAZIONI] ?? null)
+          )
+            return no(id, "unauthorized", "le automazioni le cambia solo chi ha un utente");
+        }
         return si(id, this._eCambiata(cassetta.ripristina(profilo, revisione)));
       }
       const scatto = detto.snapshot;
@@ -1580,7 +1689,11 @@ export class Commissioni {
            * `conservaGliAmministratori`. */
           cassetta.scrivi(
             profilo,
-            conservaGliAmministratori(scatto.values, cassetta.leggi(profilo)?.snapshot?.values),
+            conservaLeAutomazioni(
+              conservaGliAmministratori(scatto.values, cassetta.leggi(profilo)?.snapshot?.values),
+              cassetta.leggi(profilo)?.snapshot?.values,
+              chiChiede,
+            ),
             {
               keys_revision: scatto.keys_revision ?? 0,
               writer_generation: scatto.writer_generation ?? 0,

@@ -52,6 +52,7 @@ import {
   vehicleLabel,
 } from "../core/vehicle-model.js";
 import { capacitaDellAutoInUso } from "./auto-termica-section.js";
+import { nellApp } from "./automazioni-section.js";
 import { activeVehicle, profiles, vehicleBatteryEntity, vehiclePlugged } from "./ev-section.js";
 import { codiceDellaRicaricaAdesso, kilowattDellaColonnina } from "./ev-stato-e-target-section.js";
 import {
@@ -163,9 +164,16 @@ function apri() {
   void carica();
 }
 
+/* La linguetta, subito dopo Home. Nell'app non c'e': i viaggi si pianificano
+ * dentro il navigatore, da «Pianifica i viaggi» del menu laterale e dalla
+ * scheda sulla mappa di gdanav. Nel browser di Home Assistant resta qui. */
 export function ensureGdanavTab() {
   if (!doc) return null;
   let tab = doc.querySelector(`.tab[data-tab="${GDANAV_TAB}"]`);
+  if (nellApp()) {
+    tab?.remove();
+    return null;
+  }
   if (tab) return tab;
   const nav = doc.querySelector("nav.tabs");
   if (!nav) return null;

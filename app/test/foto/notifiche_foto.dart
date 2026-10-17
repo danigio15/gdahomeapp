@@ -93,6 +93,19 @@ Map<String, dynamic> _statoDiCasa() => {
     'riepilogo': '20:30',
     'silenzio': {'acceso': true, 'dalle': '23:00', 'alle': '07:00'},
     'soloFuori': false,
+    'stile': 'elaborate',
+    'su': {
+      'riepilogo': {'stile': 'semplice'},
+      'elettrodomestici': {
+        'stile': 'come-tutte',
+        'quali': ['switch.lavatrice', 'switch.lavastoviglie'],
+        'soglia': 0.1,
+        'suono': 'normale',
+        'orari': {'dalle': '07:00', 'alle': '23:00'},
+        'come': 'subito',
+        'dentro': ['durata', 'kwh', 'costo', 'sole'],
+      },
+    },
   },
   'registrato': true,
   'intestato': true,
@@ -169,6 +182,17 @@ Future<(PonteFinto, Collegamento)> _unaCasa() async {
     ..clear()
     ..addAll(_statoDiCasa());
   ponte.entita = [
+    for (final (id, nome) in const [
+      ('switch.lavatrice', 'Lavatrice'),
+      ('switch.lavastoviglie', 'Lavastoviglie'),
+    ])
+      {
+        'entity_id': id,
+        'state': 'off',
+        'attributes': {'friendly_name': nome},
+        'last_changed': DateTime.now().toUtc().toIso8601String(),
+        'last_updated': DateTime.now().toUtc().toIso8601String(),
+      },
     {
       'entity_id': 'sensor.temperatura_freezer',
       'state': '-18.4',
@@ -259,6 +283,44 @@ void main() {
           ),
         );
       }
+      await tester.runAsync(() async {
+        await collegamento.chiudi();
+        await ponte.spegni();
+      });
+    });
+
+    testWidgets('il foglio di una voce, $tinta', (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      late PonteFinto ponte;
+      late Collegamento collegamento;
+      await tester.runAsync(() async {
+        (ponte, collegamento) = await _unaCasa();
+      });
+      await tester.pumpWidget(
+        _app(
+          SchermataDelleNotifiche(
+            collegamento: collegamento,
+            postino: _PostinoFinto(collegamento),
+            cassaforte: CassaforteInMemoria(),
+            nomeDelTelefono: 'iPhone',
+          ),
+          scuro: scuro,
+        ),
+      );
+      await _lasciaFare(tester);
+      await tester.scrollUntilVisible(
+        find.text('Elettrodomestico finito'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Elettrodomestico finito'));
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('$_cartella/09-foglio-voce-$tinta.png'),
+      );
       await tester.runAsync(() async {
         await collegamento.chiudi();
         await ponte.spegni();

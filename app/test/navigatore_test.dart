@@ -76,4 +76,53 @@ void main() {
     await tester.tap(find.byTooltip('Impostazioni del navigatore'));
     expect(impostazioni, 1);
   });
+
+  /* I viaggi pianificati stanno nel navigatore: «Pianifica i viaggi», sotto
+   * la tessera, porta li'. Senza chi lo apre, la riga non c'e'. */
+  testWidgets('sotto la tessera, «Pianifica i viaggi»', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    var pianifica = 0;
+    var aperto = 0;
+    Future<void> barra({VoidCallback? quando}) async {
+      final chiave = GlobalKey<BarraDelleSezioniState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BarraDelleSezioni(
+              key: chiave,
+              sezioni: vociDellaBarra(),
+              aperta: Sezione.plancia,
+              vai: (_) {},
+              vaiAlleCase: () {},
+              tessera: laTesseraDelNavigatore(
+                scelta: false,
+                apri: () => aperto++,
+                impostazioni: () {},
+                pianifica: quando,
+              ),
+            ),
+          ),
+        ),
+      );
+      chiave.currentState!.apri();
+      await tester.pumpAndSettle();
+    }
+
+    await barra();
+    expect(find.text('Pianifica i viaggi'), findsNothing);
+
+    await barra(quando: () => pianifica++);
+    expect(find.text('Pianifica i viaggi'), findsOneWidget);
+    expect(find.text('Viaggi programmati, col traffico'), findsOneWidget);
+    /* Sotto la tessera, e il suo tocco e' suo: non apre la mappa. */
+    expect(
+      tester.getTopLeft(find.text('Pianifica i viaggi')).dy,
+      greaterThan(tester.getTopLeft(find.text('GDANAV')).dy),
+    );
+    await tester.tap(find.text('Pianifica i viaggi'));
+    expect(pianifica, 1);
+    expect(aperto, 0);
+  });
 }

@@ -16,12 +16,14 @@ class IlNavigatore extends StatelessWidget {
     this.collegamento,
     this.menuOspite,
     this.apriIlMenu,
+    this.apriIlPianificatore,
   });
 
   final bool visibile;
   final Collegamento? collegamento;
   final VoidCallback? menuOspite;
   final ValueNotifier<bool>? apriIlMenu;
+  final ValueNotifier<bool>? apriIlPianificatore;
   final GlobalKey<NavigatorState> navigatore;
 
   @override
@@ -44,6 +46,7 @@ Widget? laTesseraDelNavigatore({
   required bool scelta,
   required VoidCallback apri,
   required VoidCallback impostazioni,
+  VoidCallback? pianifica,
   Object? fonte,
 }) => null;
 

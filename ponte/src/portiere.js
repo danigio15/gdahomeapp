@@ -600,6 +600,13 @@ export class Portiere {
       abbinato = this.dispositivi.abbina({
         nome: detto?.nome,
         sistema: detto?.sistema,
+        /* Marca, modello, versioni e di chi e': facoltativi, li ripulisce
+         * `chiE` in `dispositivi.js`. */
+        marca: detto?.marca,
+        modello: detto?.modello,
+        versione: detto?.versione,
+        app: detto?.app,
+        proprietario: detto?.proprietario,
         utente: perChi,
         ...(finoA ? { finoA } : {}),
       });

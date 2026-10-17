@@ -154,6 +154,8 @@ void main() {
                 scelta: false,
                 apri: () {},
                 impostazioni: () {},
+                /* «Pianifica i viaggi», sotto la tessera: nell'app c'e'. */
+                pianifica: () {},
               ),
             ),
           ],

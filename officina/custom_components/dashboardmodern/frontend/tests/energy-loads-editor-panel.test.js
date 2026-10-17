@@ -495,26 +495,42 @@ test("a full load says so on the picker button instead of truncating in silence"
   assert.equal(panel.querySelector("[data-dm-appliance-picker]"), null);
 });
 
-test("a load of another plant explains why appliances cannot be picked for it", () => {
+test("a load of another plant offers its own appliances and the unassigned ones", () => {
+  /* Gli elettrodomestici adesso hanno un impianto: il cerchio della seconda
+   * casa propone i suoi e quelli che un impianto non ce l'hanno ancora — non
+   * quelli della prima, che si conterebbero dalla parte sbagliata. */
   resetEditor();
   storage.set("cd_energy_plant", "impianto-2");
   sections.energy = { plants: [{ id: "impianto-2", name: "Casa 2" }] };
   sections.loads = [
     { id: "altro", name: "Altro", order: 0, power_entity: "sensor.altro", plant: "impianto-2" },
   ];
-  sections.appliances = [{ id: "appl-forno", name: "Forno", power_entity: "sensor.forno_power" }];
+  sections.appliances = [
+    { id: "appl-forno", name: "Forno", power_entity: "sensor.forno_power" },
+    { id: "appl-frigo", name: "Frigo", power_entity: "sensor.frigo_power", plant: "impianto" },
+    { id: "appl-lava", name: "Lavatrice", power_entity: "sensor.lava_power", plant: "impianto-2" },
+  ];
   render();
 
   assert.deepEqual(
     cards().map((card) => card.dataset.dmLoad),
     ["altro"],
   );
-  // Gli elettrodomestici non hanno un campo impianto: niente pulsante qui,
-  // e al suo posto la riga che spiega il perché.
-  assert.equal(panel.querySelector("[data-dm-subload-pick]"), null);
-  const spiegazione = panel.querySelector(".dm-loads-pick-foreign");
-  assert.ok(spiegazione);
-  assert.match(spiegazione.textContent, /impianto principale/);
+  assert.equal(panel.querySelector(".dm-loads-pick-foreign"), null);
+  const pick = panel.querySelector("[data-dm-subload-pick]");
+  assert.ok(pick, "the picker button is there for the second plant too");
+  pick.click();
+  const picker = panel.querySelector("[data-dm-appliance-picker]");
+  assert.ok(picker);
+  /* Le scelte portano l'indice dell'elettrodomestico: Forno (0) e Lavatrice
+   * (2), non Frigo (1), che è della prima casa. */
+  assert.deepEqual(
+    [...panel.querySelectorAll("[data-dm-appliance-choice]")].map(
+      (scelta) => scelta.dataset.dmApplianceChoice,
+    ),
+    ["0", "2"],
+  );
+  panel.querySelector("[data-dm-subload-pick]").click();
 
   storage.delete("cd_energy_plant");
   delete sections.energy;

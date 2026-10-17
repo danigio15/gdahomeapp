@@ -536,6 +536,43 @@ Future<void> tornaDallaConfig(WebViewController controllore) async {
   }
 }
 
+/// Apre la pagina Automazioni della plancia, a schermo pieno.
+///
+/// La maniglia la mette la plancia stessa (`automazioni-section.js`): una
+/// pagina appena nata i suoi script li sta ancora leggendo, e allora si
+/// riprova qualche volta, come fa la maniglia della Config da se'. Una plancia
+/// vecchia che la maniglia non ce l'ha non fa niente: la voce non apre
+/// niente, e non rompe niente.
+Future<void> apriLeAutomazioni(WebViewController controllore) async {
+  for (final fra in const [
+    Duration.zero,
+    Duration(milliseconds: 400),
+    Duration(milliseconds: 1200),
+    Duration(milliseconds: 2500),
+  ]) {
+    if (fra > Duration.zero) await Future<void>.delayed(fra);
+    try {
+      final fatto = await controllore.runJavaScriptReturningResult(
+        '!!(window.gdahomeApriLeAutomazioni&&window.gdahomeApriLeAutomazioni())',
+      );
+      if (fatto == true || fatto.toString() == 'true') return;
+    } catch (_) {
+      /* La pagina non c'e' ancora: c'e' il colpo dopo. */
+    }
+  }
+}
+
+/// Riporta la plancia dov'era prima delle Automazioni.
+Future<void> tornaDalleAutomazioni(WebViewController controllore) async {
+  try {
+    await controllore.runJavaScript(
+      'window.gdahomeTornaDalleAutomazioni&&window.gdahomeTornaDalleAutomazioni()',
+    );
+  } catch (_) {
+    /* La pagina non c'e' ancora: non c'e' nemmeno da dove tornare. */
+  }
+}
+
 /// Passa alla plancia un dispositivo appena abbinato, perche' chieda lei dove
 /// va a finire (#54, passo 4).
 ///

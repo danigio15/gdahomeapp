@@ -39,6 +39,8 @@ class CasaConosciuta {
     this.gettonePremium,
     this.senzaLicenze = false,
     this.legata = false,
+    this.vecchioIdentificativo,
+    this.vecchioSegno,
   });
 
   /// Identificativo interno dell'app, mai mostrato. Non e' quello del ponte.
@@ -136,10 +138,27 @@ class CasaConosciuta {
   /// aperta, e la prima stretta dopo l'apertura sarebbe quella scoperta.
   ///
   /// Si accende e basta: non c'e' modo di spegnerlo se non togliendo la casa.
-  /// Riabbinarla fa una casa nuova, che parte da `false` — ed e' giusto: un
-  /// add-on di prima si rimette con un abbinamento, non con un ritocco per
-  /// strada. Una casa mai vista legare resta `false` e si apre come sempre.
+  /// Riabbinarla rimette le chiavi nuove e lo riporta a `false` — ed e'
+  /// giusto: un add-on di prima si rimette con un abbinamento, non con un
+  /// ritocco per strada. Una casa mai vista legare resta `false` e si apre come sempre.
   final bool legata;
+
+  /// Il telefono di prima in questa casa, quando la si e' riabbinata: il suo
+  /// identificativo e il suo segno.
+  ///
+  /// Ogni abbinamento fa un telefono nuovo, e quello di prima restava nella
+  /// casa — due «Telefono Android» collegati, per lo stesso telefono. Alla
+  /// prossima connessione il telefono nuovo lo fa staccare
+  /// (`ponte/telefono/sostituisci`): col vecchio segno, che ha solo lui, e
+  /// che per questo si tiene qui, nella cassaforte, finche' non e' fatto.
+  /// Poi si dimenticano tutti e due.
+  final String? vecchioIdentificativo;
+  final String? vecchioSegno;
+
+  /// Se c'e' un telefono di prima da far staccare.
+  bool get haUnVecchioDaStaccare =>
+      (vecchioIdentificativo?.isNotEmpty ?? false) &&
+      (vecchioSegno?.isNotEmpty ?? false);
 
   /// `true` quando questa casa e' stata abbinata prima che esistessero le
   /// chiavi, e adesso non basta piu'.
@@ -218,6 +237,9 @@ class CasaConosciuta {
     String? gettonePremium,
     bool? senzaLicenze,
     bool? legata,
+    String? vecchioIdentificativo,
+    String? vecchioSegno,
+    bool togliIlVecchio = false,
     bool togliInCasa = false,
     bool togliDaFuori = false,
     bool togliLaPlancia = false,
@@ -243,6 +265,10 @@ class CasaConosciuta {
     gettonePremium: gettonePremium ?? this.gettonePremium,
     senzaLicenze: senzaLicenze ?? this.senzaLicenze,
     legata: legata ?? this.legata,
+    vecchioIdentificativo: togliIlVecchio
+        ? null
+        : (vecchioIdentificativo ?? this.vecchioIdentificativo),
+    vecchioSegno: togliIlVecchio ? null : (vecchioSegno ?? this.vecchioSegno),
   );
 
   /// La stessa casa, con la sola strada di casa.
@@ -263,6 +289,8 @@ class CasaConosciuta {
     gettonePremium: gettonePremium,
     senzaLicenze: senzaLicenze,
     legata: legata,
+    vecchioIdentificativo: vecchioIdentificativo,
+    vecchioSegno: vecchioSegno,
   );
 
   /// Se questa casa ha una strada che porta da fuori: il centralino, o un
@@ -287,6 +315,9 @@ class CasaConosciuta {
     if (gettonePremium != null) 'gettone_premium': gettonePremium,
     if (senzaLicenze) 'senza_licenze': true,
     if (legata) 'legata': true,
+    if (vecchioIdentificativo != null)
+      'vecchio_identificativo': vecchioIdentificativo,
+    if (vecchioSegno != null) 'vecchio_segno': vecchioSegno,
   };
 
   /// Torna `null` quando quello che c'e' scritto non e' una casa: un archivio
@@ -334,6 +365,14 @@ class CasaConosciuta {
       /* Un archivio scritto prima del legame non ce l'ha: `false`, e la
        * prima stretta legata lo riaccende. */
       legata: grezza['legata'] == true,
+      vecchioIdentificativo: switch (grezza['vecchio_identificativo']) {
+        final String s when s.isNotEmpty => s,
+        _ => null,
+      },
+      vecchioSegno: switch (grezza['vecchio_segno']) {
+        final String s when s.isNotEmpty => s,
+        _ => null,
+      },
     );
   }
 

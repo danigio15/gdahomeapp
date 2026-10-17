@@ -44,8 +44,11 @@ import { randomBytes } from "node:crypto";
 import { Archivio } from "./archivio.js";
 import { CapireLaCasa } from "./capire-la-casa.js";
 import { CATEGORIE, EVENTI, Sentinella, URGENZE, categoriaDi } from "./sentinella.js";
-import { chiudiLaSpinta, CONTENUTO_MASSIMO } from "./spinta.js";
+import { chiudiLaFoto, chiudiLaSpinta, CONTENUTO_MASSIMO, FOTO_MASSIMA } from "./spinta.js";
 import { vedeQualcosa } from "./plance.js";
+import { PROFILO_PRINCIPALE } from "./configurazione.js";
+import { TaccuinoDellEnergia } from "./l-energia-di-casa.js";
+import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
 
 const MINUTO = 60 * 1000;
 const ORA = 60 * MINUTO;
@@ -89,7 +92,117 @@ const SERVIZI_DEI_TASTI = new Set([
   "cover.open_cover",
   "lock.unlock",
   "button.press",
+  /* L'antifurto scattato: spegnere la sirena, disinserire. E l'inserimento
+   * su misura (#413) dalla notifica di movimento: i servizi che un tasto su
+   * misura sa chiamare (`plancia/src/core/antifurto-su-misura.js`). Il tasto
+   * lo prepara il ponte, per quella entita' e basta: il telefono non sceglie
+   * ne' il servizio ne' l'entita'. */
+  "alarm_control_panel.alarm_disarm",
+  "siren.turn_off",
+  "switch.turn_off",
+  "input_boolean.turn_off",
+  "light.turn_on",
+  "script.turn_on",
+  "scene.turn_on",
+  "input_button.press",
+  "automation.trigger",
+  "switch.turn_on",
+  "input_boolean.turn_on",
+  "select.select_option",
+  "input_select.select_option",
 ]);
+
+/* ─── Come le vuoi, e ognuna su misura ─────────────────────────────────────
+ *
+ * «Dai la scelta nelle impostazioni se vedere notifiche semplici o
+ * elaborate.» Ogni telefono sceglie per tutte (`stile`), e poi — voce per
+ * voce, toccandola nella pagina Notifiche dell'app — su misura (`su`): lo
+ * stile di quella sola, quali dispositivi, una soglia, il suono, in che ore,
+ * se subito o dentro il riepilogo della sera, e cosa scriverci.
+ *
+ * Di serie le notifiche sono **semplici**: con le elaborate, sull'iPhone, la
+ * foto di una telecamera passa dal centralino (chiusa per quel telefono, e
+ * cancellata appena presa — `spinta.js`), e quella strada si apre solo se la
+ * sceglie chi tiene il telefono. */
+
+export const STILI = Object.freeze(["semplici", "elaborate"]);
+const STILI_DI_UNA = Object.freeze(["come-tutte", "semplice", "elaborata"]);
+const SUONI = Object.freeze(["muta", "normale", "suo"]);
+const COME = Object.freeze(["subito", "riepilogo"]);
+/* Quando dire un movimento: «solo a casa vuota o di notte» e' quello di serie. */
+export const QUANDO_IL_MOVIMENTO = Object.freeze([
+  "sempre",
+  "casa-vuota",
+  "notte",
+  "casa-vuota-o-notte",
+]);
+
+/** Quello che vale per un evento su quel telefono, coi difetti al loro posto. */
+export function suDi(impostazioni, tipo) {
+  const suo = impostazioni?.su?.[tipo] || {};
+  return {
+    stile: STILI_DI_UNA.includes(suo.stile) ? suo.stile : "come-tutte",
+    quali: Array.isArray(suo.quali) ? suo.quali : [],
+    soglia: typeof suo.soglia === "number" && suo.soglia > 0 ? suo.soglia : null,
+    suono: SUONI.includes(suo.suono) ? suo.suono : "normale",
+    orari:
+      suo.orari && ORARIO.test(String(suo.orari.dalle)) && ORARIO.test(String(suo.orari.alle))
+        ? suo.orari
+        : null,
+    come: COME.includes(suo.come) ? suo.come : "subito",
+    dentro: Array.isArray(suo.dentro) ? suo.dentro : [...PEZZI_DEL_CICLO],
+    quando: QUANDO_IL_MOVIMENTO.includes(suo.quando) ? suo.quando : "casa-vuota-o-notte",
+  };
+}
+
+/** Lo stile che vale per quell'evento su quel telefono: «semplice» o «elaborata». */
+export function stileDi(impostazioni, tipo) {
+  const suo = suDi(impostazioni, tipo).stile;
+  if (suo === "semplice" || suo === "elaborata") return suo;
+  return impostazioni?.stile === "elaborate" ? "elaborata" : "semplice";
+}
+
+/* Una voce di `su` come arriva dal telefono, ripulita sopra quella di prima.
+ * Un campo che non si capisce resta com'era; `null` toglie la voce. */
+function unaVocePulita(detta, prima = {}) {
+  const fuori = { ...prima };
+  if (STILI_DI_UNA.includes(detta.stile)) fuori.stile = detta.stile;
+  if (Array.isArray(detta.quali))
+    fuori.quali = [...new Set(detta.quali.filter((una) => ENTITA_BUONA.test(String(una))))].slice(
+      0,
+      50,
+    );
+  if (detta.soglia === null) delete fuori.soglia;
+  else if (
+    Number.isFinite(Number(detta.soglia)) &&
+    detta.soglia !== "" &&
+    detta.soglia !== undefined
+  )
+    fuori.soglia = Math.max(0, Math.min(10_000, Number(detta.soglia)));
+  if (SUONI.includes(detta.suono)) fuori.suono = detta.suono;
+  if (detta.orari === null) delete fuori.orari;
+  else if (
+    detta.orari &&
+    ORARIO.test(String(detta.orari.dalle)) &&
+    ORARIO.test(String(detta.orari.alle))
+  )
+    fuori.orari = { dalle: detta.orari.dalle, alle: detta.orari.alle };
+  if (COME.includes(detta.come)) fuori.come = detta.come;
+  if (Array.isArray(detta.dentro))
+    fuori.dentro = PEZZI_DEL_CICLO.filter((pezzo) => detta.dentro.includes(pezzo));
+  if (QUANDO_IL_MOVIMENTO.includes(detta.quando)) fuori.quando = detta.quando;
+  return fuori;
+}
+
+/* Se adesso e' dentro le ore scelte per quella voce. Uguali: tutte. */
+function dentroLeOre(orari, data) {
+  if (!orari) return true;
+  const dalle = minutiDi(orari.dalle);
+  const alle = minutiDi(orari.alle);
+  if (dalle === alle) return true;
+  const ora = data.getHours() * 60 + data.getMinutes();
+  return dalle < alle ? ora >= dalle && ora < alle : ora >= dalle || ora < alle;
+}
 
 export function impostazioniDiSerie() {
   return {
@@ -103,6 +216,8 @@ export function impostazioniDiSerie() {
     silenzio: { acceso: true, dalle: "23:00", alle: "07:00" },
     soloFuori: false,
     lingua: "it",
+    stile: "semplici",
+    su: {},
   };
 }
 
@@ -110,8 +225,23 @@ export function impostazioniDiSerie() {
  * capisce resta com'era. */
 export function impostazioniPulite(dette, prima = impostazioniDiSerie()) {
   const base = { ...impostazioniDiSerie(), ...prima };
-  const nuove = { ...base, eventi: { ...base.eventi }, silenzio: { ...base.silenzio } };
+  const nuove = {
+    ...base,
+    eventi: { ...base.eventi },
+    silenzio: { ...base.silenzio },
+    su: base.su && typeof base.su === "object" && !Array.isArray(base.su) ? { ...base.su } : {},
+  };
+  if (!STILI.includes(nuove.stile)) nuove.stile = "semplici";
   if (!dette || typeof dette !== "object") return nuove;
+  if (STILI.includes(dette.stile)) nuove.stile = dette.stile;
+  if (dette.su && typeof dette.su === "object" && !Array.isArray(dette.su)) {
+    for (const [tipo, voce] of Object.entries(dette.su)) {
+      if (!EVENTI.includes(tipo)) continue;
+      if (voce === null) delete nuove.su[tipo];
+      else if (voce && typeof voce === "object")
+        nuove.su[tipo] = unaVocePulita(voce, nuove.su[tipo] || {});
+    }
+  }
   if (typeof dette.acceso === "boolean") nuove.acceso = dette.acceso;
   if (dette.eventi && typeof dette.eventi === "object") {
     for (const uno of EVENTI)
@@ -204,8 +334,13 @@ export class Notifiche {
      * chiamata); senza, le notifiche si preparano e non partono. */
     postino = null,
     registro = null,
+    /* La configurazione della plancia (`configurazione.js`): le fasce, le
+     * caselle dell'energia, gli UPS, l'antifurto su misura. Senza, le regole
+     * che ne hanno bisogno tacciono. */
+    configurazione = null,
     adesso = () => Date.now(),
   } = {}) {
+    this.configurazione = configurazione;
     this.dispositivi = dispositivi;
     this.utenti = utenti;
     this.casa = casa;
@@ -232,6 +367,20 @@ export class Notifiche {
       },
     });
     this.sentinella.personalizzate = this.archivio.dati.personalizzate;
+    this.sentinella.valori = () => this._valori();
+    /* Il taccuino dell'energia: i conti dei cicli e della giornata. */
+    this.sentinella.taccuino = new TaccuinoDellEnergia({
+      cartella: cartella || "",
+      adesso,
+      registro: this.registro,
+    });
+    /** Le righe che un telefono ha voluto «nel riepilogo della sera». */
+    this._inCoda = new Map();
+    /** Le notifiche che aspettano la loro soglia (il blackout «oltre N minuti»). */
+    this._attese = [];
+    /** L'ultima foto chiesta a ogni telefecamera: una al minuto, non di piu'. */
+    this._fotoDi = new Map();
+    this._domani = null;
     this._automazioniIl = 0;
     /** I tasti delle notifiche mandate: id → {telefono, azioni, scade}. */
     this._tasti = new Map();
@@ -247,6 +396,16 @@ export class Notifiche {
     this._disdici = null;
     this._previsioneIl = 0;
     this._registriIl = 0;
+  }
+
+  /* La configurazione della plancia principale, come la tengono i
+   * dispositivi. */
+  _valori() {
+    try {
+      return this.configurazione?.leggi?.(PROFILO_PRINCIPALE)?.snapshot?.values || {};
+    } catch (_errore) {
+      return {};
+    }
   }
 
   /* ─── Accendere e spegnere ─────────────────────────────────────────── */
@@ -406,7 +565,11 @@ export class Notifiche {
 
   async _battito() {
     if (!this._disdici) await this._abbonati();
+    this.sentinella.movimentoSempre = Object.values(this.archivio.dati.telefoni).some(
+      (voce) => suDi(impostazioniPulite(voce?.impostazioni), "movimento").quando === "sempre",
+    );
     this.sentinella.battito();
+    await this._leAttese();
     this.sincronizza();
     await this._riepiloghi();
     if (this.adesso() - this._previsioneIl >= PREVISIONE_OGNI) await this._previsione();
@@ -441,7 +604,9 @@ export class Notifiche {
     }
   }
 
-  /* Il riepilogo della sera: ogni telefono alla sua ora. */
+  /* Il riepilogo della sera: ogni telefono alla sua ora, con la giornata
+   * della casa, il meteo di domani e le notifiche che ha voluto lasciare per
+   * la sera. */
   async _riepiloghi() {
     const ora = new Date(this.adesso());
     const adessoInMinuti = ora.getHours() * 60 + ora.getMinutes();
@@ -454,9 +619,72 @@ export class Notifiche {
       if (adessoInMinuti < quando || adessoInMinuti > quando + 10) continue;
       if (this._riepilogoDel.get(telefono) === oggi) continue;
       this._riepilogoDel.set(telefono, oggi);
-      riepilogo ??= this.sentinella.riepilogo();
-      if (!riepilogo) return;
-      await this.consegna({ ...riepilogo, quando: this.adesso(), azioni: [] }, { soloA: telefono });
+      if (riepilogo === undefined) {
+        riepilogo = this.sentinella.riepilogo();
+        if (riepilogo) riepilogo.componi.dati.domani = await this._ilTempoDiDomani();
+      }
+      const inCoda = this._inCoda.get(telefono) || [];
+      this._inCoda.delete(telefono);
+      if (!riepilogo && !inCoda.length) continue;
+      const base = riepilogo ?? {
+        tipo: "riepilogo",
+        urgenza: "bassa",
+        chiave: "riepilogo",
+        pausa: 12 * ORA,
+        componi: { tipo: "riepilogo", dati: { giornata: null } },
+        parole: { it: { titolo: "🔋 Riepilogo di stasera", testo: "" } },
+      };
+      await this.consegna(
+        {
+          ...base,
+          quando: this.adesso(),
+          azioni: base.componi.dati.giornata
+            ? [{ id: "energia", parole: { it: "Apri Energia", en: "Open Energy" }, apre: true }]
+            : [],
+          componi: { ...base.componi, dati: { ...base.componi.dati, inCoda } },
+        },
+        { soloA: telefono },
+      );
+    }
+  }
+
+  /* Il cielo di domani dalle nove alle cinque, per il consiglio del
+   * riepilogo: una volta per sera, dalla previsione oraria di Home Assistant. */
+  async _ilTempoDiDomani() {
+    const giorno = new Date(this.adesso()).toDateString();
+    if (this._domani?.giorno === giorno) return this._domani.dati;
+    this._domani = { giorno, dati: null };
+    const tempo = [...this.sentinella.stati.keys()].find((id) => id.startsWith("weather."));
+    if (!tempo || !this.casa) return null;
+    try {
+      const risposta = await this.casa.chiedi({
+        type: "execute_script",
+        sequence: [
+          {
+            service: "weather.get_forecasts",
+            data: { type: "hourly" },
+            target: { entity_id: tempo },
+            response_variable: "previsione",
+          },
+          { stop: "fatto", response_variable: "previsione" },
+        ],
+      });
+      this._domani.dati = cieloDiDomani(risposta?.response?.[tempo]?.forecast, this.adesso());
+    } catch (_errore) {
+      /* Senza previsione, niente consiglio. */
+    }
+    return this._domani.dati;
+  }
+
+  /* Le notifiche che aspettano la loro soglia: partono se quello che dicono e'
+   * ancora vero (la corrente e' ancora via dopo i minuti scelti). */
+  async _leAttese() {
+    const ora = this.adesso();
+    const pronte = this._attese.filter((una) => una.dopo <= ora);
+    this._attese = this._attese.filter((una) => una.dopo > ora);
+    for (const una of pronte) {
+      if (typeof una.evento.ancora === "function" && !una.evento.ancora()) continue;
+      await this.consegna({ ...una.evento, attesa: true }, { soloA: una.telefono });
     }
   }
 
@@ -576,6 +804,27 @@ export class Notifiche {
     if (imp.soloFuori && (categoria === "casa" || categoria === "assistente")) {
       if (this.sentinella.aCasa(utente) === true) return false;
     }
+    /* Su misura, voce per voce. */
+    const su = suDi(imp, evento.tipo);
+    if (su.quali.length && ![evento.entita, evento.camera].some((uno) => su.quali.includes(uno)))
+      return false;
+    if (!dentroLeOre(su.orari, new Date(this.adesso()))) return false;
+    if (evento.tipo === "movimento" && evento.perche) {
+      const vuole = {
+        sempre: true,
+        "casa-vuota": evento.perche === "casa-vuota",
+        notte: evento.perche === "notte",
+        "casa-vuota-o-notte": evento.perche !== "giorno",
+      }[su.quando];
+      if (!vuole) return false;
+    }
+    if (
+      evento.tipo === "elettrodomestici" &&
+      su.soglia !== null &&
+      typeof evento.misura?.euro === "number" &&
+      evento.misura.euro < su.soglia
+    )
+      return false;
     return true;
   }
 
@@ -631,6 +880,35 @@ export class Notifiche {
       if (!this._vedeLaCasa(utente, amministra)) continue;
       const imp = impostazioniPulite(voce.impostazioni);
       if (!this._lovuole(imp, evento, utente)) continue;
+      const su = suDi(imp, evento.tipo);
+      /* «Nel riepilogo della sera»: non parte adesso, si mette da parte una
+       * riga. L'urgente parte sempre — una cosa urgente la sera non serve. */
+      if (
+        su.come === "riepilogo" &&
+        evento.tipo !== "riepilogo" &&
+        evento.tipo !== "prova" &&
+        evento.urgenza !== "urgente"
+      ) {
+        const { titolo } = this._parole(evento, imp.lingua, { stile: "semplice", su });
+        const coda = this._inCoda.get(dispositivo.id) || [];
+        coda.push(String(titolo).slice(0, 90));
+        this._inCoda.set(dispositivo.id, coda.slice(-6));
+        continue;
+      }
+      /* Il blackout «oltre N minuti»: aspetta, e parte solo se la corrente e'
+       * ancora via (`_leAttese`). E il ritorno di un blackout che a questo
+       * telefono non si e' detto non si dice nemmeno lui. */
+      if (evento.tipo === "blackout" && su.soglia) {
+        if (evento.misura?.fase === "torna") {
+          if ((evento.misura?.durata || 0) < su.soglia) continue;
+        } else if (!evento.attesa) {
+          const dopo = (evento.misura?.dal ?? ora) + su.soglia * MINUTO;
+          if (dopo > ora) {
+            this._attese.push({ telefono: dispositivo.id, evento, dopo });
+            continue;
+          }
+        }
+      }
       const chiave = `${dispositivo.id}|${evento.chiave}`;
       if ((this._rimandati.get(chiave) || 0) > ora) continue;
       if (
@@ -642,8 +920,31 @@ export class Notifiche {
       if (!this._cePosto(dispositivo.id, evento)) continue;
       const chiaveDelFilo = this.dispositivi.chiaveDi(dispositivo.id);
       if (!chiaveDelFilo) continue;
+      const camera = this._vedeLaTelecamera(utente, amministra, evento.camera)
+        ? evento.camera
+        : null;
+      const stile = evento.stileDellaVoce || stileDi(imp, evento.tipo);
+      /* La foto solo a chi ha scelto le elaborate, e solo della telecamera che
+       * gli si mostra. Va al centralino prima della busta, che porta il numero
+       * che il centralino le ha dato. */
+      let foto = null;
+      if (stile === "elaborata" && evento.conFoto && camera && this.postino?.mandaLaFoto) {
+        const byte = await this._laFoto(evento, camera);
+        if (byte) {
+          try {
+            const dati = chiudiLaFoto({ chiaveDelFilo, telefono: dispositivo.id, byte });
+            const id = await this.postino.mandaLaFoto({ telefono: dispositivo.id, dati });
+            if (typeof id === "string" && id) foto = { id, t: "image/jpeg" };
+          } catch (errore) {
+            this.registro.attenzione(`una foto non si chiude: ${errore?.message || errore}`);
+          }
+        }
+      }
       const contenuto = this._contenuto(evento, imp.lingua, {
-        camera: this._vedeLaTelecamera(utente, amministra, evento.camera) ? evento.camera : null,
+        camera,
+        stile,
+        su: evento.suDellaVoce || su,
+        foto,
       });
       let busta;
       try {
@@ -667,35 +968,102 @@ export class Notifiche {
     return quanti;
   }
 
+  /* Le parole di un evento per quel telefono: quelle del racconto, nello
+   * stile scelto, o quelle che l'evento porta gia'. */
+  _parole(evento, lingua, { stile = "semplice", su = null } = {}) {
+    const comporre = evento.componi && COMPOSITORI[evento.componi.tipo];
+    if (comporre) {
+      try {
+        const fuori = comporre(evento.componi.dati, lingua, {
+          stile,
+          ...(su?.dentro ? { dentro: su.dentro } : {}),
+        });
+        if (fuori)
+          return {
+            titolo: fuori.titolo,
+            testo: fuori.testo,
+            scheda: stile === "elaborata" ? fuori.scheda || null : null,
+          };
+      } catch (errore) {
+        this.registro.attenzione?.(`una notifica non si scrive: ${errore?.message || errore}`);
+      }
+    }
+    const parole = evento.parole?.[lingua] ?? evento.parole?.it ?? { titolo: "gdahome", testo: "" };
+    return { titolo: parole.titolo, testo: parole.testo, scheda: null };
+  }
+
+  /* La foto di quella telecamera per questo evento: una per evento (tutti i
+   * telefoni ricevono la stessa, chiusa ognuno con la sua chiave) e — tranne
+   * l'antifurto — al piu' una al minuto per telecamera. Grande al piu' 1280
+   * punti, e se pesa troppo 640: il centralino non tiene oltre 300 KB. */
+  _laFoto(evento, camera) {
+    if (evento._foto !== undefined) return evento._foto;
+    evento._foto = (async () => {
+      const ora = this.adesso();
+      if (evento.tipo !== "antifurto" && ora - (this._fotoDi.get(camera) || 0) < MINUTO)
+        return null;
+      this._fotoDi.set(camera, ora);
+      if (typeof this.casa?.immagine !== "function") return null;
+      for (const larghezza of [1280, 640]) {
+        try {
+          const byte = await this.casa.immagine(`camera_proxy/${camera}?width=${larghezza}`);
+          if (byte?.length && byte.length <= FOTO_MASSIMA) return byte;
+        } catch (_errore) {
+          return null;
+        }
+      }
+      return null;
+    })();
+    return evento._foto;
+  }
+
   /* Quello che va dentro la busta. Le parole nella lingua del telefono; i
    * tasti col loro nome, e senza il comando — quello resta qui. */
-  _contenuto(evento, lingua, { camera }) {
-    const parole = evento.parole?.[lingua] ?? evento.parole?.it ?? { titolo: "gdahome", testo: "" };
+  _contenuto(evento, lingua, { camera, stile = "semplice", su = null, foto = null }) {
+    const { titolo, testo, scheda } = this._parole(evento, lingua, { stile, su });
     const contenuto = {
       v: 1,
       id: randomBytes(9).toString("base64url"),
       tipo: evento.tipo,
       cat: categoriaDi(evento.tipo) ?? "prova",
       urg: evento.urgenza,
-      titolo: String(parole.titolo || "").slice(0, 120),
-      testo: String(parole.testo || "").slice(0, 300),
+      titolo: String(titolo || "").slice(0, 120),
+      testo: String(testo || "").slice(0, 600),
       quando: evento.quando ?? this.adesso(),
       scade: (evento.quando ?? this.adesso()) + VITA_DEI_TASTI,
+      stile: stile === "elaborata" ? "e" : "s",
+      ...(su && su.suono !== "normale" ? { suono: su.suono } : {}),
       ...(evento.entita ? { entita: evento.entita } : {}),
       ...(camera ? { camera } : {}),
       ...(evento.chiamata ? { chiamata: true } : {}),
+      ...(scheda ? { scheda: structuredClone(scheda) } : {}),
+      ...(foto ? { foto } : {}),
       azioni: (evento.azioni || []).slice(0, 3).map((una) => ({
         id: una.id,
         etichetta: String(una.parole?.[lingua] ?? una.parole?.it ?? una.id).slice(0, 30),
         ...(una.apre ? { apre: true } : {}),
       })),
     };
-    /* Una notifica troppo lunga si accorcia nel testo, mai nel resto. */
-    while (
-      Buffer.byteLength(JSON.stringify(contenuto)) > CONTENUTO_MASSIMO - 50 &&
-      contenuto.testo.length > 10
-    )
-      contenuto.testo = `${contenuto.testo.slice(0, Math.floor(contenuto.testo.length * 0.7))}…`;
+    /* Una notifica troppo lunga si accorcia: prima il testo, poi le curve
+     * della scheda (meta' dei punti), poi la scheda se ne va. La notifica
+     * parte sempre. */
+    const pesa = () => Buffer.byteLength(JSON.stringify(contenuto));
+    while (pesa() > CONTENUTO_MASSIMO - 50) {
+      const curve = contenuto.scheda
+        ? ["w", "s", "p", "c", "met", "ev"].filter(
+            (k) => Array.isArray(contenuto.scheda[k]) && contenuto.scheda[k].length > 4,
+          )
+        : [];
+      if (contenuto.testo.length > 120)
+        contenuto.testo = `${contenuto.testo.slice(0, Math.floor(contenuto.testo.length * 0.7))}…`;
+      else if (curve.length)
+        for (const k of curve)
+          contenuto.scheda[k] = contenuto.scheda[k].filter((_v, i) => i % 2 === 0);
+      else if (contenuto.scheda) delete contenuto.scheda;
+      else if (contenuto.testo.length > 10)
+        contenuto.testo = `${contenuto.testo.slice(0, Math.floor(contenuto.testo.length * 0.7))}…`;
+      else break;
+    }
     return contenuto;
   }
 
@@ -789,10 +1157,20 @@ export class Notifiche {
            * arriverebbe, col valore di adesso, ma solo a chi la sta scrivendo. */
           const regola = detto.regola ? personalizzataPulita(detto.regola) : null;
           if (detto.regola && !regola) return no("invalid_format", "la notifica non e' completa");
-          const mandate = await this.consegna(
-            regola ? this._provaDi(regola) : this._provaQualunque(),
-            { soloA: telefono },
-          );
+          /* «Prova: mandamela adesso» dal foglio di una voce: com'e' fatta
+           * quella notifica, nello stile scelto, con numeri d'esempio. */
+          const tipo = detto.tipo ?? detto.evento;
+          const esempio = !regola && tipo ? esempioDi(tipo, this.adesso()) : null;
+          if (tipo && !regola && !esempio)
+            return no("invalid_format", "di questa notifica non c'e' un esempio");
+          const prova = regola ? this._provaDi(regola) : esempio || this._provaQualunque();
+          if (esempio) {
+            /* Lo stile e' quello che la voce avra' davvero. */
+            const imp = this.impostazioniDi(telefono);
+            prova.stileDellaVoce = stileDi(imp, tipo);
+            prova.suDellaVoce = suDi(imp, tipo);
+          }
+          const mandate = await this.consegna(prova, { soloA: telefono });
           if (!mandate) return no("not_sent", "non e' partita: riprova fra qualche minuto");
           return si({ mandata: true });
         }
@@ -952,16 +1330,203 @@ export class Notifiche {
     }
     if (!utente || (this.utenti && !(await this.utenti.eVivo(utente).catch(() => false))))
       return no("unauthorized", "l'utente di questo telefono non c'e' piu'");
-    const { dominio, servizio, entita } = azione.servizio;
+    const { dominio, servizio, entita, dati } = azione.servizio;
     if (!SERVIZI_DEI_TASTI.has(`${dominio}.${servizio}`))
       return no("unauthorized", "questo tasto no");
+    /* L'unico dato che un tasto porta e' la voce di un menu (l'inserimento su
+     * misura con un `select`): scritta dal ponte quando ha preparato il tasto. */
+    const opzione =
+      servizio === "select_option" && typeof dati?.option === "string"
+        ? dati.option.slice(0, 100)
+        : null;
     await this.casa.chiedi({
       type: "call_service",
       domain: dominio,
       service: servizio,
       target: { entity_id: entita },
+      ...(opzione ? { service_data: { option: opzione } } : {}),
     });
     this.registro.info(`dal tasto di una notifica: ${dominio}.${servizio}`);
     return si({ fatto: true });
+  }
+}
+
+/* ─── Il cielo di domani ─────────────────────────────────────────────────── */
+
+const CIELI = Object.freeze({
+  sunny: "sole",
+  "clear-night": "sole",
+  partlycloudy: "poco",
+  cloudy: "nuvole",
+  fog: "nuvole",
+  windy: "nuvole",
+  "windy-variant": "nuvole",
+  rainy: "pioggia",
+  pouring: "pioggia",
+  "lightning-rainy": "pioggia",
+  lightning: "pioggia",
+  snowy: "pioggia",
+  "snowy-rainy": "pioggia",
+  hail: "pioggia",
+});
+
+/**
+ * Dalla previsione oraria di Home Assistant, il cielo di domani alle 9, 11,
+ * 13, 15 e 17, fino a che ora c'e' il sole (dalle nove in poi, senza
+ * interruzioni), e se piove. `null` se domani nella previsione non c'e'.
+ */
+export function cieloDiDomani(previsione, adesso) {
+  const domani = new Date(adesso);
+  domani.setDate(domani.getDate() + 1);
+  const giorno = domani.toDateString();
+  const perOra = new Map();
+  for (const una of Array.isArray(previsione) ? previsione : []) {
+    const quando = new Date(Date.parse(una?.datetime || ""));
+    if (Number.isNaN(quando.getTime()) || quando.toDateString() !== giorno) continue;
+    perOra.set(quando.getHours(), CIELI[una?.condition] || "nuvole");
+  }
+  if (!perOra.size) return null;
+  const met = [9, 11, 13, 15, 17].filter((h) => perOra.has(h)).map((h) => [h, perOra.get(h)]);
+  let soleFino = null;
+  for (let h = 9; h <= 18; h += 1) {
+    const cielo = perOra.get(h);
+    if (cielo === undefined) continue;
+    if (cielo === "sole" || cielo === "poco") soleFino = `${String(h + 1).padStart(2, "0")}:00`;
+    else break;
+  }
+  if (soleFino && Number(soleFino.slice(0, 2)) < 12) soleFino = null;
+  const pioggia = [...perOra.entries()].some(([h, c]) => h >= 8 && h <= 20 && c === "pioggia");
+  return { met, soleFino, pioggia };
+}
+
+/* ─── Gli esempi ─────────────────────────────────────────────────────────── */
+
+/**
+ * Una notifica d'esempio di quel tipo, coi numeri dei disegni approvati: per
+ * «Prova: mandamela adesso» e per le prove. `null` per un tipo che non
+ * racconta niente.
+ */
+export function esempioDi(tipo, adesso = Date.now()) {
+  const curva = [
+    30, 1900, 2050, 1980, 400, 180, 160, 170, 150, 160, 170, 600, 620, 180, 170, 160, 600, 650, 700,
+    300, 120, 110, 400, 450, 380, 60, 40, 20, 10,
+  ];
+  const sole = [
+    1500, 1480, 1450, 1420, 400, 180, 160, 170, 150, 160, 170, 600, 620, 180, 170, 160, 600, 650,
+    600, 300, 120, 110, 350, 300, 250, 60, 40, 20, 10,
+  ];
+  const base = { tipo: "prova", urgenza: "normale", chiave: "prova", quando: adesso, azioni: [] };
+  const conParole = (evento, comporre, dati) => {
+    const it = comporre(dati, "it");
+    const en = comporre(dati, "en");
+    return {
+      ...evento,
+      componi: { tipo: Object.keys(COMPOSITORI).find((k) => COMPOSITORI[k] === comporre), dati },
+      parole: {
+        it: { titolo: it.titolo, testo: it.testo },
+        en: { titolo: en.titolo, testo: en.testo },
+      },
+    };
+  };
+  switch (tipo) {
+    case "elettrodomestici":
+      return conParole(base, COMPOSITORI.ciclo, {
+        nome: "Lavatrice",
+        genere: "lavatrice",
+        conSole: true,
+        fascia: "F1",
+        ciclo: {
+          da: "15:50",
+          a: "17:42",
+          min: 112,
+          kwh: 0.94,
+          sole: 0.72,
+          batt: 0,
+          rkwh: 0.26,
+          eur: 0.05,
+          reur: 0.05,
+          senza: 0.16,
+          w: curva,
+          s: sole,
+          meglio: null,
+        },
+      });
+    case "riepilogo": {
+      const p = [0, 0, 0, 0, 0, 0, 1, 5, 14, 25, 35, 43, 48, 49, 46, 39, 29, 17, 6, 1, 0, 0, 0, 0];
+      const c = [4, 3, 3, 3, 3, 3, 5, 9, 7, 6, 19, 21, 8, 7, 6, 7, 12, 9, 14, 22, 16, 10, 7, 5];
+      return conParole(base, COMPOSITORI.riepilogo, {
+        giornata: {
+          d: new Date(adesso).toISOString().slice(0, 10),
+          sole: 18.4,
+          casa: 16.7,
+          presi: 3.1,
+          ceduti: 4.8,
+          usato: 13.6,
+          quotaInCasa: 0.74,
+          euroRete: 0.52,
+          risparmio: 2.41,
+          picco: 4.9,
+          piccoIl: "13:10",
+          p,
+          c,
+          perFascia: {},
+          cicli: [],
+        },
+        conSole: true,
+        ieri: 16.4,
+        media: 15.1,
+        record: "mese",
+        colSole: ["Lavatrice", "Lavastoviglie"],
+        piuAcceso: null,
+        batteria: 62,
+        domani: {
+          met: [
+            [9, "sole"],
+            [11, "sole"],
+            [13, "sole"],
+            [15, "poco"],
+            [17, "nuvole"],
+          ],
+          soleFino: "15:00",
+          pioggia: false,
+        },
+        fasce: { nomi: {}, piuBassa: null },
+        daSistemare: { batterie: 1, spenti: 0, aggiornamenti: 1 },
+        inCoda: [],
+      });
+    }
+    case "blackout":
+      return conParole(base, COMPOSITORI.blackout, {
+        nome: "UPS di casa",
+        carica: 96,
+        minuti: 25,
+        watt: 180,
+        dalle: "18:04",
+        fase: "via",
+      });
+    case "movimento":
+      return conParole(base, COMPOSITORI.movimento, {
+        nome: "Ingresso",
+        cam: "Ingresso",
+        ora: "18:22",
+        secondi: "18:22:07",
+        vuota: true,
+        notte: false,
+      });
+    case "antifurto":
+      return conParole(base, COMPOSITORI.antifurto, {
+        nome: "Antifurto",
+        zona: "Finestra cucina",
+        ora: "18:22",
+        modo: "Totale",
+        dalle: "08:10",
+        sirena: true,
+        ev: [
+          ["18:22", "Finestra cucina · aperta", "r"],
+          ["18:21", "Movimento · Cucina", "a"],
+        ],
+      });
+    default:
+      return null;
   }
 }

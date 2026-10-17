@@ -62,7 +62,17 @@ export const TAB_SECTION_KEYS = CHIAVI_PER_SCHEDA;
  * plancia, e il cestino scrive subito. Un tasto verde in fondo, li', fa
  * credere che finche' non lo si preme non sia successo niente — mentre e' gia'
  * successo tutto. */
-const NO_SAVE_TABS = new Set(["runtime", "visib", "export", "rileva", "backup", "scollegati"]);
+/* «automazioni» ha il suo «Salva» per l'automazione aperta: un secondo tasto
+ * in fondo che salva «la sezione» non saprebbe cosa salvare. */
+const NO_SAVE_TABS = new Set([
+  "runtime",
+  "visib",
+  "export",
+  "rileva",
+  "backup",
+  "scollegati",
+  "automazioni",
+]);
 
 /* What counts as "save this section". Add buttons, profile buttons and the
  * visibility banner are not saves, however much their label looks like one:

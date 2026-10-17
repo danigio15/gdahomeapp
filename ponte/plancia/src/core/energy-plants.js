@@ -287,6 +287,141 @@ export function dropPlantLoads(loads = [], plantId) {
   );
 }
 
+/* ── gli elettrodomestici, che adesso hanno un impianto ────────────────── */
+
+/* «Come sai ho la casa divisa in due impianti, questo è quello della zona
+ * giorno e mi ha messo in automatico anche il bagno dove c'è la lavatrice e
+ * l'esterno, ma non sono configurati.»
+ *
+ * Gli elettrodomestici un impianto non ce l'avevano: valevano tutti per il
+ * primo, che con un impianto solo e' la casa intera e va benissimo. Con due
+ * contatori la lavatrice della zona notte finiva nel cerchio «Bagno» della zona
+ * giorno — e nella zona notte, dove c'era scritta a mano come carico, si
+ * contava una seconda volta.
+ *
+ * Adesso un elettrodomestico ha il suo impianto, e lo si sa in quest'ordine:
+ *
+ *  1. scritto: chi l'ha scelto ha sempre ragione;
+ *  2. dal carico: la stessa potenza e' gia' un carico di un impianto — e' lo
+ *     stesso apparecchio, misurato da quel contatore;
+ *  3. dal piano: la sua stanza sta su un piano che un impianto dice di coprire;
+ *  4. altrimenti non lo si sa, e non lo si indovina: un elettrodomestico senza
+ *     impianto non compare in nessun flusso finche' qualcuno non lo assegna.
+ *     Meglio un cerchio che manca, e un avviso che lo dice, di un cerchio nella
+ *     casa sbagliata.
+ *
+ * Con un impianto solo la domanda non esiste: e' il suo, come sempre. */
+
+/* Cosa un impianto dice di se', nei suoi metadati. */
+export const PIANI_FIELD = "piani";
+export const CERCHI_DALLE_STANZE_FIELD = "cerchi_dalle_stanze";
+export const PIANI_NEL_FLUSSO_FIELD = "piani_nel_flusso";
+
+/* Come si e' saputo l'impianto: si scrive accanto, cosi' il config puo' dire
+ * «suggerito» e chiedere di confermarlo. */
+export const DA_SCRITTO = "scritto";
+export const DA_CARICO = "carico";
+export const DA_PIANO = "piano";
+export const DA_UNICO = "unico";
+
+/** I piani che un impianto dice di coprire, come li scrive la pagina Stanze. */
+export function pianiDellImpianto(plant = {}) {
+  const scritti = oggetto(plant?.metadata)[PIANI_FIELD];
+  return [...new Set((Array.isArray(scritti) ? scritti : []).map(clean).filter(Boolean))];
+}
+
+/** Se l'impianto vuole i cerchi automatici delle stanze. Di serie si'. */
+export function cerchiDalleStanzeAccesi(plant = {}) {
+  return oggetto(plant?.metadata)[CERCHI_DALLE_STANZE_FIELD] !== false;
+}
+
+/** Se l'impianto vuole i cerchi per piano invece che per stanza. Di serie no. */
+export function pianiNelFlusso(plant = {}) {
+  return oggetto(plant?.metadata)[PIANI_NEL_FLUSSO_FIELD] === true;
+}
+
+const potenzaDellaVoce = (voce) => clean(voce?.power_entity) || clean(voce?.power);
+
+/* La stanza di una voce, per id o per nome come la scriveva il guscio vecchio. */
+function stanzaDellaVoce(voce, stanze = []) {
+  const scritte = [voce?.room_id, voce?.roomId, voce?.room].map(clean).filter(Boolean);
+  for (const scritta of scritte) {
+    const minuscola = scritta.toLowerCase();
+    const trovata = (Array.isArray(stanze) ? stanze : []).find(
+      (stanza) => clean(stanza?.id) === scritta || clean(stanza?.name).toLowerCase() === minuscola,
+    );
+    if (trovata) return trovata;
+  }
+  return null;
+}
+
+/**
+ * L'impianto di un elettrodomestico, e come lo si e' saputo.
+ *
+ * `impianti` e' l'elenco di `plantList`; `carichi` i carichi canonici (col loro
+ * campo `plant`); `stanze` quelle della casa, col loro `floor`.
+ *
+ * @returns {{id:string, da:string}} `id` vuoto quando non lo si sa.
+ */
+export function impiantoDellElettrodomestico(
+  apparecchio = {},
+  { impianti = [], carichi = [], stanze = [] } = {},
+) {
+  const lista = Array.isArray(impianti) ? impianti : [];
+  if (lista.length <= 1) return { id: clean(lista[0]?.id) || PRIMO_IMPIANTO, da: DA_UNICO };
+  const esiste = (id) => lista.some((impianto) => clean(impianto?.id) === id);
+
+  const scritto = clean(apparecchio?.[LOAD_PLANT_FIELD]);
+  if (scritto && esiste(scritto)) return { id: scritto, da: DA_SCRITTO };
+
+  const potenza = potenzaDellaVoce(apparecchio);
+  if (potenza) {
+    const carico = (Array.isArray(carichi) ? carichi : []).find(
+      (voce) => potenzaDellaVoce(voce) === potenza,
+    );
+    if (carico) {
+      const suo = clean(carico?.[LOAD_PLANT_FIELD]) || PRIMO_IMPIANTO;
+      if (esiste(suo)) return { id: suo, da: DA_CARICO };
+    }
+  }
+
+  const piano = clean(stanzaDellaVoce(apparecchio, stanze)?.floor).toLowerCase();
+  if (piano) {
+    const coperto = lista.find((impianto) =>
+      pianiDellImpianto(impianto).some((voce) => voce.toLowerCase() === piano),
+    );
+    if (coperto) return { id: clean(coperto.id), da: DA_PIANO };
+  }
+  return { id: "", da: "" };
+}
+
+/** Gli elettrodomestici di un impianto, nell'ordine in cui stavano. */
+export function elettrodomesticiDellImpianto(apparecchi = [], plant = {}, contesto = {}) {
+  const id = clean(plant?.id);
+  return (Array.isArray(apparecchi) ? apparecchi : []).filter(
+    (voce) => voce && impiantoDellElettrodomestico(voce, contesto).id === id,
+  );
+}
+
+/**
+ * Gli elettrodomestici che chiedono una risposta: quelli senza impianto, e
+ * quelli che ce l'hanno solo dedotto (da confermare). Vuoto con un impianto
+ * solo.
+ */
+export function elettrodomesticiDaAssegnare(apparecchi = [], contesto = {}) {
+  if ((contesto.impianti || []).length <= 1) return [];
+  return (Array.isArray(apparecchi) ? apparecchi : [])
+    .map((device, index) => ({ device, index, ...impiantoDellElettrodomestico(device, contesto) }))
+    .filter(({ device, da }) => device && clean(device.name) && da !== DA_SCRITTO);
+}
+
+/** Lo stesso elenco, con l'elettrodomestico assegnato a un impianto. */
+export function assegnaElettrodomestico(apparecchi = [], index, plantId) {
+  return (Array.isArray(apparecchi) ? apparecchi : []).map((voce, at) =>
+    at === index ? { ...voce, [LOAD_PLANT_FIELD]: clean(plantId) } : voce,
+  );
+}
+
 /* ── la tessera della Home, con più di un impianto (#286) ──────────────── */
 
 /* «Ho fatto due impianti diversi avendo due appartamenti uniti con due

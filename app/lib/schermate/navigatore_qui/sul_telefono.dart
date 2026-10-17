@@ -286,6 +286,7 @@ class IlNavigatore extends StatefulWidget {
     this.collegamento,
     this.menuOspite,
     this.apriIlMenu,
+    this.apriIlPianificatore,
   });
 
   /// Il menu di gdahome: lo apre il tasto in alto a sinistra di gdanav, come
@@ -294,6 +295,10 @@ class IlNavigatore extends StatefulWidget {
 
   /// Per aprire le impostazioni di gdanav da fuori (la tessera della barra).
   final ValueNotifier<bool>? apriIlMenu;
+
+  /// Per aprire il pianificatore di gdanav da fuori: «Pianifica i viaggi»,
+  /// sotto la tessera della barra. Vedi [_gdanavDentro].
+  final ValueNotifier<bool>? apriIlPianificatore;
 
   /// La casa di adesso: da li' l'auto della plancia arriva a gdanav, anche
   /// con la sezione chiusa (e gdanav la trova pronta quando si accende).
@@ -318,11 +323,27 @@ class _IlNavigatoreState extends State<IlNavigatore>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _seguiLaCasa(this, widget.collegamento);
+    widget.apriIlPianificatore?.addListener(_pianificatoreSenzaAggancio);
+  }
+
+  /* Un gdanav senza l'aggancio del pianificatore: si apre il suo menu, dove
+   * «Pianifica i viaggi» e' la prima voce del Viaggio. */
+  void _pianificatoreSenzaAggancio() {
+    final chiesto = widget.apriIlPianificatore;
+    if (_conIlPianificatore != false || chiesto == null || !chiesto.value) {
+      return;
+    }
+    chiesto.value = false;
+    widget.apriIlMenu?.value = true;
   }
 
   @override
   void didUpdateWidget(IlNavigatore prima) {
     super.didUpdateWidget(prima);
+    if (prima.apriIlPianificatore != widget.apriIlPianificatore) {
+      prima.apriIlPianificatore?.removeListener(_pianificatoreSenzaAggancio);
+      widget.apriIlPianificatore?.addListener(_pianificatoreSenzaAggancio);
+    }
     /* Un'altra casa, un'altra plancia, forse un'altra auto. */
     if (prima.collegamento != widget.collegamento) {
       _seguiLaCasa(this, widget.collegamento);
@@ -343,6 +364,7 @@ class _IlNavigatoreState extends State<IlNavigatore>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.apriIlPianificatore?.removeListener(_pianificatoreSenzaAggancio);
     _lasciaLaCasa(this);
     super.dispose();
   }
@@ -375,40 +397,78 @@ class _IlNavigatoreState extends State<IlNavigatore>
         if (app == null) {
           return const Center(child: CircularProgressIndicator());
         }
-        return GdanavDentro(
-          app: app,
-          navigatore: widget.navigatore,
-          /* Accanto al ☰ di gdanav (il suo menu), il marchio di gdahome
-           * apre la barra dell'app. */
-          menuOspite: widget.menuOspite,
-          iconaOspite: const Marchio(lato: 34),
-          apriIlMenu: widget.apriIlMenu,
-          /* I comandi di casa per l'auto si scelgono dal menu del
-           * navigatore: e' li' che si pensa all'auto. La schermata e' di
-           * gdahome, col suo vestito, sopra tutto. */
-          vociOspite: [
-            VoceOspite(
-              icona: Icons.bolt_rounded,
-              titolo: inLingua(
-                it: 'Comandi rapidi in auto',
-                en: 'Quick commands in car',
-              ),
-              sotto: inLingua(
-                it: 'Crea e scegli i tasti di casa da usare in auto',
-                en: 'Create and pick home buttons for the car',
-              ),
-              apri: () => Navigator.of(context, rootNavigator: true).push(
-                MaterialPageRoute<void>(
-                  builder: (_) =>
-                      ComandiInAuto(collegamento: widget.collegamento),
+        return _gdanavDentro(
+          <Symbol, Object?>{
+            #app: app,
+            #navigatore: widget.navigatore,
+            /* Accanto al ☰ di gdanav (il suo menu), il marchio di gdahome
+             * apre la barra dell'app. */
+            #menuOspite: widget.menuOspite,
+            #iconaOspite: const Marchio(lato: 34),
+            #apriIlMenu: widget.apriIlMenu,
+            /* I comandi di casa per l'auto si scelgono dal menu del
+             * navigatore: e' li' che si pensa all'auto. La schermata e' di
+             * gdahome, col suo vestito, sopra tutto. */
+            #vociOspite: [
+              VoceOspite(
+                icona: Icons.bolt_rounded,
+                titolo: inLingua(
+                  it: 'Comandi rapidi in auto',
+                  en: 'Quick commands in car',
+                ),
+                sotto: inLingua(
+                  it: 'Crea e scegli i tasti di casa da usare in auto',
+                  en: 'Create and pick home buttons for the car',
+                ),
+                apri: () => Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        ComandiInAuto(collegamento: widget.collegamento),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          },
+          pianificatore: widget.apriIlPianificatore,
+          gia: _pianificatoreSenzaAggancio,
         );
       },
     );
   }
+}
+
+/// Se il gdanav di questa app sa aprire il pianificatore da fuori: `null`
+/// finche' non si e' provato.
+bool? _conIlPianificatore;
+
+/// gdanav dentro l'app, con l'aggancio del pianificatore quando c'e'.
+///
+/// L'aggancio (`GdanavDentro.apriIlPianificatore`) e' di un gdanav nuovo, e
+/// gdanav arriva dalla sua repository al commit fissato in pubspec.lock: con
+/// quello di prima l'argomento non esiste. Per questo si costruisce per nome,
+/// come `_comandiDa` in `la_vettura.dart`: se gdanav non lo conosce, si
+/// costruisce senza, e [gia] — che ascolta la stessa richiesta — apre il menu
+/// di gdanav al posto del pianificatore.
+Widget _gdanavDentro(
+  Map<Symbol, Object?> argomenti, {
+  required ValueNotifier<bool>? pianificatore,
+  required VoidCallback gia,
+}) {
+  if (pianificatore != null && _conIlPianificatore != false) {
+    try {
+      final dentro = Function.apply(GdanavDentro.new, const [], {
+        ...argomenti,
+        #apriIlPianificatore: pianificatore,
+      });
+      _conIlPianificatore = true;
+      return dentro as Widget;
+    } on NoSuchMethodError {
+      _conIlPianificatore = false;
+      /* Chiesto prima di saperlo: lo si porta al menu appena si puo'. */
+      WidgetsBinding.instance.addPostFrameCallback((_) => gia());
+    }
+  }
+  return Function.apply(GdanavDentro.new, const [], argomenti) as Widget;
 }
 
 /// Le impostazioni del navigatore e dell'auto, quando il navigatore e' sullo
@@ -525,11 +585,13 @@ Widget? laTesseraDelNavigatore({
   required bool scelta,
   required VoidCallback apri,
   required VoidCallback impostazioni,
+  VoidCallback? pianifica,
   SorgenteGdahome? fonte,
 }) => _LaTessera(
   scelta: scelta,
   apri: apri,
   impostazioni: impostazioni,
+  pianifica: pianifica,
   fonte: fonte ?? _vettura,
 );
 
@@ -539,12 +601,16 @@ class _LaTessera extends StatelessWidget {
     required this.apri,
     required this.impostazioni,
     required this.fonte,
+    this.pianifica,
   });
 
   final bool scelta;
   final VoidCallback apri;
   final VoidCallback impostazioni;
   final SorgenteGdahome fonte;
+
+  /// «Pianifica i viaggi»: apre il navigatore sul pianificatore di gdanav.
+  final VoidCallback? pianifica;
 
   static const _notte = Color(0xFF0F172A);
 
@@ -700,6 +766,13 @@ class _LaTessera extends StatelessWidget {
                           ),
                         ],
                       ),
+                      /* I viaggi pianificati stanno nel navigatore: la
+                       * porta e' qui, sotto la sua tessera, e non piu' una
+                       * linguetta della plancia. */
+                      if (pianifica case final p?) ...[
+                        const SizedBox(height: 6),
+                        _Pianifica(quando: p),
+                      ],
                     ],
                   ),
                 ),
@@ -708,6 +781,69 @@ class _LaTessera extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _Pianifica extends StatelessWidget {
+  const _Pianifica({required this.quando});
+
+  final VoidCallback quando;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      key: const Key('tessera-pianifica-i-viaggi'),
+      color: Colors.white.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: quando,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 7, 6, 7),
+          child: Row(
+            children: [
+              const Icon(Icons.event_rounded, size: 18, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      inLingua(it: 'Pianifica i viaggi', en: 'Plan your trips'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      inLingua(
+                        it: 'Viaggi programmati, col traffico',
+                        en: 'Scheduled trips, with traffic',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

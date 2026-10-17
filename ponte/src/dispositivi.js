@@ -68,6 +68,65 @@ const nomePulito = (scritto) =>
     .trim()
     .slice(0, 60);
 
+/* Marca, modello e versioni che il telefono dice di se'
+ * (`ponte/telefono/chi-sono`, o all'abbinamento). Arrivano dalla porta
+ * esposta: parole corte, senza caratteri di controllo. */
+const campoCorto = (scritto) =>
+  String(scritto ?? "")
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 40);
+
+/* Cosa dice di se' un telefono: solo i campi che conosciamo, ripuliti. Il
+ * proprietario e' il nome che ha scritto chi lo usa nell'app («Di chi e'
+ * questo telefono?»), non l'utente di Home Assistant: al piu' 30 caratteri. */
+export function chiE(detto = {}) {
+  const fuori = {};
+  for (const campo of ["marca", "modello", "versione", "app", "proprietario"]) {
+    const pulito = campoCorto(detto?.[campo])
+      .slice(0, campo === "proprietario" ? 30 : 40)
+      .trim();
+    if (pulito) fuori[campo] = pulito;
+  }
+  return fuori;
+}
+
+/* Il nome che la casa da' da sola a un telefono: il modello, e di chi e' se
+ * l'ha detto. «Galaxy S24 Ultra di Persona 1». Senza modello, niente. */
+export function nomeDalModello({ modello, proprietario } = {}) {
+  if (!modello) return "";
+  return nomePulito(proprietario ? `${modello} di ${proprietario}` : modello);
+}
+
+/* I nomi che un telefono si dava da solo prima del modello: questi si
+ * possono sostituire col modello. Uno scritto da una persona no. */
+const NOMI_DA_SOLI = new Set([
+  "telefono",
+  "telefono android",
+  "android phone",
+  "iphone",
+  "ipad",
+  "dispositivo",
+  "localhost",
+  "localhost.localdomain",
+  "android",
+  "sconosciuto",
+]);
+
+/* Il nome si puo' rifare col modello: nessuno l'ha scelto a mano, ed e' uno
+ * di quelli che il telefono si dava da solo — o quello fatto qui col modello
+ * di prima. */
+function nomeRifacibile(dispositivo) {
+  if (dispositivo.rinominato === true) return false;
+  const nome = String(dispositivo.nome || "")
+    .trim()
+    .toLowerCase();
+  if (!nome || NOMI_DA_SOLI.has(nome)) return true;
+  return nome === nomeDalModello(dispositivo).toLowerCase();
+}
+
 /* L'identificativo di un utente di Home Assistant: trentadue cifre
  * esadecimali. Quello che non ha quella forma diventa «non si sa di chi e'» —
  * cioe' vede tutto, come prima — invece di un fantasma che non apre niente. */
@@ -152,7 +211,20 @@ export class Dispositivi {
 
   /* Quello che si puo' far vedere: l'impronta resta dentro. */
   elenco() {
-    return this._vivi.map(({ id, nome, sistema, natoIl, vistoIl, utente, finoA }) => ({
+    return this._vivi.map((uno) => ({
+      ...this._chiE(uno),
+      ...this._vistoInElenco(uno),
+    }));
+  }
+
+  /* Marca, modello, versioni, di chi e', e se il nome l'ha scelto una
+   * persona: quello che la console scrive sotto il nome. */
+  _chiE(uno) {
+    return { ...chiE(uno), rinominato: uno.rinominato === true };
+  }
+
+  _vistoInElenco({ id, nome, sistema, natoIl, vistoIl, utente, finoA }) {
+    return {
       id,
       nome,
       sistema,
@@ -164,7 +236,34 @@ export class Dispositivi {
       /* Fino a quando, per un telefono della casa di prova: la console lo
        * scrive accanto al nome. Gli altri non ce l'hanno. */
       ...(Number.isFinite(finoA) ? { finoA } : {}),
-    }));
+    };
+  }
+
+  /* Il telefono dice di se' marca, modello, versioni e di chi e'
+   * (`ponte/telefono/chi-sono`): si scrive, e se il nome non l'ha scelto una
+   * persona si rifa' col modello — «Telefono Android» diventa «Galaxy S24
+   * Ultra di Persona 1». Vale solo per il telefono di quel filo: lo decide
+   * chi chiama. Torna `true` se e' cambiato qualcosa. */
+  presentati(id, detto = {}) {
+    const dispositivo = this.lista.find((uno) => uno.id === id);
+    if (!dispositivo) return false;
+    const chi = chiE(detto);
+    if (!Object.keys(chi).length) return false;
+    const rifacibile = nomeRifacibile(dispositivo);
+    let cambiato = false;
+    for (const [campo, valore] of Object.entries(chi)) {
+      if (dispositivo[campo] !== valore) {
+        dispositivo[campo] = valore;
+        cambiato = true;
+      }
+    }
+    const nuovo = nomeDalModello(dispositivo);
+    if (rifacibile && nuovo && dispositivo.nome !== nuovo) {
+      dispositivo.nome = nuovo;
+      cambiato = true;
+    }
+    if (cambiato) this.archivio.salva();
+    return cambiato;
   }
 
   /* Di chi e' questo telefono. `""` per uno che non c'e' e per uno abbinato
@@ -201,16 +300,21 @@ export class Dispositivi {
    *
    * Il segno esce da qui una volta sola, adesso. Chi lo perde riabbina: non
    * c'e' nessuna strada per rileggerlo, ed e' voluto. */
-  abbina({ nome, sistema, utente = "", finoA = null } = {}) {
+  abbina({ nome, sistema, utente = "", finoA = null, ...detto } = {}) {
     if (!Number.isFinite(finoA) && this.quantiDiCasa() >= this.massimi) {
       throw new TroppiDispositivi(`sono gia' abbinati ${this.massimi} dispositivi`);
     }
     const segno = segnoNuovo();
     const chiave = chiaveDelFiloNuova();
+    /* Marca, modello, versioni e di chi e', se l'app li dice: il nome lo fa
+     * il modello. Un'app di prima non li manda, e resta il nome che dice. */
+    const chi = chiE(detto);
     const dispositivo = {
       id: `dm_${segnoNuovo().slice(0, 16)}`,
-      nome: nomePulito(nome) || "Telefono",
+      nome: nomeDalModello(chi) || nomePulito(nome) || "Telefono",
       sistema: nomePulito(sistema) || "sconosciuto",
+      ...chi,
+      rinominato: false,
       impronta: impronta(segno),
       chiave,
       natoIl: this.adesso(),
@@ -272,6 +376,25 @@ export class Dispositivi {
     return true;
   }
 
+  /* Un telefono riabbinato stacca se stesso di prima.
+   *
+   * «Nei telefoni abbinati lo stesso telefono compare due volte.» Ogni
+   * abbinamento fa un telefono nuovo, e quello di prima restava finche' non
+   * stava zitto per i giorni di silenzio. Adesso il telefono appena entrato
+   * (`nuovo`, quello del filo) puo' dire chi era: il vecchio identificativo e
+   * il vecchio **segno**, che ha solo lui. Se il segno torna con l'impronta
+   * di quel telefono, quel telefono era lui, e si stacca. Senza il segno
+   * giusto non si stacca niente: nessuno puo' mandar via il telefono di un
+   * altro sapendone soltanto l'identificativo, che non e' un segreto. */
+  sostituisci({ nuovo, vecchio, segno } = {}) {
+    if (typeof vecchio !== "string" || typeof segno !== "string" || !segno) return false;
+    if (!nuovo || vecchio === nuovo) return false;
+    if (!this.lista.some((uno) => uno.id === nuovo)) return false;
+    const quello = this.lista.find((uno) => uno.id === vecchio);
+    if (!quello || !stessoSegreto(quello.impronta, impronta(segno))) return false;
+    return this.stacca(vecchio);
+  }
+
   staccaTutti() {
     const andati = [...this.lista];
     this.archivio.dati.dispositivi = [];
@@ -312,7 +435,12 @@ export class Dispositivi {
   rinomina(id, nome) {
     const dispositivo = this.lista.find((uno) => uno.id === id);
     if (!dispositivo) return false;
-    dispositivo.nome = nomePulito(nome) || dispositivo.nome;
+    const scelto = nomePulito(nome);
+    if (scelto) {
+      dispositivo.nome = scelto;
+      /* Scelto da una persona: il modello non lo rifa' piu'. */
+      dispositivo.rinominato = true;
+    }
     this.archivio.salva();
     return true;
   }

@@ -137,6 +137,11 @@ async function apriLaPaginaAuto(page) {
   });
   const carta = page.locator("#dm-rn");
   await expect(carta).toBeVisible();
+  /* Di serie la carta e' chiusa: le prove guardano le opzioni, quindi la si
+   * apre con la freccia, come farebbe chi la usa. */
+  const freccia = carta.locator('[data-rn="apri"]');
+  if ((await freccia.getAttribute("aria-expanded")) !== "true") await freccia.click();
+  await expect(carta.locator(".dm-rn-corpo")).toBeVisible();
   return carta;
 }
 
@@ -341,4 +346,34 @@ test("senza evcc la carta non c'e'", async ({ page }, testInfo) => {
     window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
   });
   await expect(page.locator("#dm-rn")).toBeHidden();
+});
+
+test("la carta e' chiusa di serie: freccia per aprirla, si apre da sola quando la accendi", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo);
+  await page.evaluate(() => {
+    document.querySelectorAll(".page").forEach((n) => n.classList.remove("active"));
+    document.getElementById("page-ev")?.classList.add("active");
+    window.dispatchEvent(new CustomEvent("dashboardmodern:legacy-ready"));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
+  });
+  const carta = page.locator("#dm-rn");
+  await expect(carta).toBeVisible();
+  const corpo = carta.locator(".dm-rn-corpo");
+  const freccia = carta.locator('[data-rn="apri"]');
+  await expect(corpo).toBeHidden();
+  await expect(freccia).toHaveAttribute("aria-expanded", "false");
+  await freccia.click();
+  await expect(corpo).toBeVisible();
+  await freccia.click();
+  await expect(corpo).toBeHidden();
+  /* Accesa: si apre da sola. */
+  await carta.locator('[data-rn="attiva"]').click();
+  await expect(corpo).toBeVisible();
+  /* Chiusa e accesa: sotto il titolo la riga dello stato. */
+  await freccia.click();
+  await expect(corpo).toBeHidden();
+  await expect(carta.locator('[data-rn="statino"]')).toBeVisible();
+  await expect(carta.locator('[data-rn="statino"]')).not.toHaveText("");
 });

@@ -141,3 +141,109 @@ export function coloreDelLivello(livello) {
   if (livello === LIVELLO_AMBRA) return COLORE_AMBRA;
   return null;
 }
+
+/* ── una soglia per contatore ───────────────────────────────────────────
+ *
+ * «Poi le soglie ho visto che sono in comune, anche queste andrebbero divise:
+ * io ho due contatori.»
+ *
+ * Con due contatori i limiti sono due — ognuno ha il suo contratto, e salta
+ * per conto suo — e una soglia sola confrontata con la somma diceva
+ * «sovraccarico 3,77 kW oltre 3,00 kW» quando nessuno dei due aveva passato
+ * niente: 1,97 da una parte e 1,80 dall'altra.
+ *
+ * La forma segue la regola degli impianti: NON SI SPOSTA NIENTE. La soglia che
+ * c'era resta al primo livello ed e' quella del primo impianto — chi ha un
+ * contatore solo non migra niente — e quelle degli altri stanno accanto, in
+ * `perImpianto`, sotto il loro id. */
+export const SOGLIE_PER_IMPIANTO = "perImpianto";
+const PRIMO = "impianto";
+
+function oggettoDa(grezzo) {
+  let fonte = grezzo;
+  if (typeof fonte === "string") {
+    try {
+      fonte = JSON.parse(fonte);
+    } catch (_errore) {
+      fonte = null;
+    }
+  }
+  return fonte && typeof fonte === "object" && !Array.isArray(fonte) ? fonte : {};
+}
+
+const ePrimo = (plantId, index) => index === 0 || !clean(plantId) || clean(plantId) === PRIMO;
+
+/** La soglia di UN impianto, in forma. Il primo e' quella di sempre. */
+export function sogliaDellImpianto(grezzo, plantId = "", index = 0) {
+  const base = oggettoDa(grezzo);
+  if (ePrimo(plantId, index)) return sogliaDellaPotenza(base);
+  const altre = oggettoDa(base[SOGLIE_PER_IMPIANTO]);
+  return sogliaDellaPotenza(altre[clean(plantId)]);
+}
+
+/** Lo stesso oggetto salvato, con la soglia di un impianto riscritta. */
+export function conLaSogliaDellImpianto(grezzo, plantId = "", index = 0, nuova = {}) {
+  const base = oggettoDa(grezzo);
+  const soglia = sogliaDellaPotenza(nuova);
+  if (ePrimo(plantId, index)) return { ...base, ...soglia };
+  return {
+    ...base,
+    [SOGLIE_PER_IMPIANTO]: { ...oggettoDa(base[SOGLIE_PER_IMPIANTO]), [clean(plantId)]: soglia },
+  };
+}
+
+/** Se almeno un impianto ha una soglia scritta: senza, non si legge niente. */
+export function qualcheSogliaScritta(grezzo) {
+  const base = oggettoDa(grezzo);
+  if (sogliaScritta(sogliaDellaPotenza(base))) return true;
+  return Object.values(oggettoDa(base[SOGLIE_PER_IMPIANTO])).some((voce) =>
+    sogliaScritta(sogliaDellaPotenza(voce)),
+  );
+}
+
+const GRAVITA = { [LIVELLO_QUIETE]: 0, [LIVELLO_AMBRA]: 1, [LIVELLO_ROSSA]: 2 };
+
+/**
+ * Il verdetto di ogni impianto, ognuno sulle SUE letture e con la SUA soglia.
+ *
+ * `impianti` e' una lista di `{id, index, nome, letture:{casa, rete}}`. Esce la
+ * stessa lista coi verdetti, nello stesso ordine.
+ */
+export function verdettiDegliImpianti(grezzo, impianti = []) {
+  return (Array.isArray(impianti) ? impianti : []).map((impianto, posto) => {
+    const index = Number.isInteger(impianto?.index) ? impianto.index : posto;
+    return {
+      ...livelloDellaPotenza(sogliaDellImpianto(grezzo, impianto?.id, index), impianto?.letture),
+      impianto: clean(impianto?.id) || PRIMO,
+      nome: clean(impianto?.nome),
+    };
+  });
+}
+
+/**
+ * Il verdetto piu' grave fra quelli degli impianti: il rosso prima dell'ambra,
+ * e a parita' chi e' piu' oltre il suo limite. Senza niente, la quiete.
+ */
+export function ilVerdettoPeggiore(verdetti = []) {
+  let peggiore = null;
+  for (const verdetto of Array.isArray(verdetti) ? verdetti : []) {
+    if (!verdetto || verdetto.livello === LIVELLO_QUIETE) continue;
+    if (!peggiore) {
+      peggiore = verdetto;
+      continue;
+    }
+    const prima = GRAVITA[verdetto.livello] - GRAVITA[peggiore.livello];
+    const oltre = (voce) => (voce.limite ? voce.watt / voce.limite : 0);
+    if (prima > 0 || (prima === 0 && oltre(verdetto) > oltre(peggiore))) peggiore = verdetto;
+  }
+  return (
+    peggiore || {
+      livello: LIVELLO_QUIETE,
+      watt: null,
+      sorgente: SORGENTE_CASA,
+      limite: null,
+      impianto: "",
+      nome: "",
+    }
+  );
+}

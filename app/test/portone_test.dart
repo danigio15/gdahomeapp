@@ -209,6 +209,15 @@ Finder nellaBarra(String scritta) => find.descendant(
   matching: find.text(scritta),
 );
 
+/// Tocca una voce del menu, facendola scorrere fin dove si vede: sotto la
+/// tessera di gdanav c'e' anche «Pianifica i viaggi», e le voci possono
+/// stare piu' giu' dello schermo della prova.
+Future<void> toccaNellaBarra(WidgetTester tester, String scritta) async {
+  await tester.ensureVisible(nellaBarra(scritta));
+  await tester.pumpAndSettle();
+  await tester.tap(nellaBarra(scritta));
+}
+
 void main() {
   /* Il fondo dell'app si muove da solo, e `pumpAndSettle` non si assesta mai
    * finche' qualcosa si muove. Qui si dice a Flutter che questo telefono ha
@@ -235,12 +244,13 @@ void main() {
 
     /* La cosa che si sta provando e' quello che **non** c'e'.
      *
-     * Una casella sola, e non e' nemmeno il codice: e' il nome della casa.
-     * Nessun indirizzo, nessuna porta, nessun codice da battere, e soprattutto
-     * nessuna credenziale di Home Assistant — che e' una promessa scritta a
-     * schermo, e la prima cosa che si romperebbe rimettendo dentro un campo
-     * per volta. */
-    expect(find.byType(TextField), findsOneWidget);
+     * Due caselle, e nessuna e' il codice: il nome della casa e di chi e' il
+     * telefono, facoltativo. Nessun indirizzo, nessuna porta, nessun codice
+     * da battere, e soprattutto nessuna credenziale di Home Assistant — che
+     * e' una promessa scritta a schermo, e la prima cosa che si romperebbe
+     * rimettendo dentro un campo per volta. */
+    expect(find.byType(TextField), findsNWidgets(2));
+    expect(find.text('Di chi è questo telefono?'), findsOneWidget);
     expect(find.text('Indirizzo di Home Assistant in casa'), findsNothing);
     expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
     expect(
@@ -271,6 +281,7 @@ void main() {
     expect(find.text('Inquadra il QR code'), findsNothing);
 
     /* Le lettere a mano: la casella si chiama col suo nome inglese. */
+    await tester.ensureVisible(find.text('Can\'t scan it? Enter the code'));
     await tester.tap(find.text('Can\'t scan it? Enter the code'));
     await tester.pumpAndSettle();
     expect(
@@ -411,7 +422,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Inquadra il QR code'), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
+    /* Il nome della casa e di chi e' il telefono: nessuna casella del codice. */
+    expect(find.byType(TextField), findsNWidgets(2));
     /* Le due cose che si direbbero di un QR code letto male: nessuna delle
      * due, perche' non si e' letto niente. */
     expect(find.textContaining('Inquadra quello che sta'), findsNothing);
@@ -595,16 +607,30 @@ void main() {
       expect(nellaBarra('Dispositivi'), findsOneWidget);
       /* In tre gruppi: la casa, l'aiuto, le avanzate. */
       expect(nellaBarra('CASA'), findsOneWidget);
+      /* Le Automazioni stanno nella casa, accanto alla Configurazione: sono
+       * una pagina della plancia, come lei. */
+      final ilMenu = find
+          .descendant(
+            of: find.byType(BarraDelleSezioni),
+            matching: find.byType(Scrollable),
+          )
+          .last;
+      await tester.scrollUntilVisible(
+        nellaBarra('Automazioni'),
+        80,
+        scrollable: ilMenu,
+      );
+      expect(nellaBarra('Automazioni'), findsOneWidget);
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
        * si sa dove sta andando l'app. Stanno in fondo, fra le avanzate: si
        * scorre fin li'. */
       await tester.scrollUntilVisible(
-        nellaBarra('Automazioni'),
+        nellaBarra('Aiutanti'),
         80,
         /* L'**ultimo**, non il primo: dentro il menu di Scrollable ce ne
          * sono due, e il primo e' quello della casella per cercare. Tirando
          * quello non si muove niente, e la prova falliva dicendo che
-         * «Automazioni» non c'era. */
+         * la voce non c'era. */
         scrollable: find
             .descendant(
               of: find.byType(BarraDelleSezioni),
@@ -614,7 +640,6 @@ void main() {
       );
       expect(nellaBarra('AVANZATE'), findsOneWidget);
       expect(nellaBarra('Aiutanti'), findsOneWidget);
-      expect(nellaBarra('Automazioni'), findsOneWidget);
       /* Zigbee no, e non perche' non sia pronta: perche' **questa casa non ha
        * una rete Zigbee**. E' la stessa regola della Console e del Cruscotto —
        * una porta che non si apre e' peggio di una porta che non c'e' — ed e'
@@ -653,7 +678,7 @@ void main() {
        * sull'energia. Il menu dell'app restava segnato su «Configurazione»
        * con sotto un'altra pagina: due barre che dicevano due cose diverse.
        * Adesso la pagina dice dov'e' andata, e il menu la segue. */
-      await tester.tap(nellaBarra('Configurazione plancia'));
+      await toccaNellaBarra(tester, 'Configurazione plancia');
       await tester.pumpAndSettle();
       expect(
         tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
@@ -668,7 +693,7 @@ void main() {
       );
       /* Tornando sulla Config, invece, ci si resta. */
       await apriLaBarra(tester);
-      await tester.tap(nellaBarra('Configurazione plancia'));
+      await toccaNellaBarra(tester, 'Configurazione plancia');
       await tester.pumpAndSettle();
       plancia.cambioPagina?.call('config');
       await tester.pumpAndSettle();
@@ -680,7 +705,7 @@ void main() {
 
       /* Da li' ai dispositivi: la barra si richiude, la sezione cambia, e le
        * entita' compaiono adesso — non prima. */
-      await tester.tap(nellaBarra('Dispositivi'));
+      await toccaNellaBarra(tester, 'Dispositivi');
       await tester.pump();
       /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
        * tempo finto non le fa arrivare, si aspetta quello vero. */
@@ -731,6 +756,8 @@ void main() {
         ]);
         final archivio = ArchivioDelleCase(CassaforteInMemoria());
         await archivio.apri();
+        /* Gia' detto di chi e' il telefono: qui non si prova il foglio. */
+        await archivio.segnaIlProprietario('Persona 1');
         await archivio.aggiungi(
           nome: 'Casa mia',
           segno: segnoBuono,
@@ -763,7 +790,7 @@ void main() {
        * che nessuno apre. */
       expect(nellaBarra('2'), findsOneWidget);
 
-      await tester.tap(nellaBarra('Aggiornamenti'));
+      await toccaNellaBarra(tester, 'Aggiornamenti');
       await tester.pump();
       /* Qui non si puo' «aspettare che tutto si fermi»: mentre l'elenco
        * arriva c'e' una rotella che gira, e una rotella non si ferma mai —
@@ -805,6 +832,8 @@ void main() {
         ];
         final archivio = ArchivioDelleCase(CassaforteInMemoria());
         await archivio.apri();
+        /* Gia' detto di chi e' il telefono: qui non si prova il foglio. */
+        await archivio.segnaIlProprietario('Persona 1');
         await archivio.aggiungi(
           nome: 'Casa mia',
           segno: segnoBuono,
@@ -903,7 +932,7 @@ void main() {
       expect(uscita, 1, reason: 'al primo indietro non si esce');
 
       /* E il ☰, sulle sezioni che una barra del titolo ce l'hanno. */
-      await tester.tap(nellaBarra('Dispositivi'));
+      await toccaNellaBarra(tester, 'Dispositivi');
       await tester.pump();
       /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
        * tempo finto non le fa arrivare, si aspetta quello vero. Finche' non

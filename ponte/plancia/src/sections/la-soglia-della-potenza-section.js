@@ -21,16 +21,22 @@ import {
   SOGLIA_POTENZA_KEY,
   SORGENTE_CASA,
   SORGENTE_RETE,
+  conLaSogliaDellImpianto,
   livelloDellaPotenza,
+  qualcheSogliaScritta,
+  sogliaDellImpianto,
   sogliaDellaPotenza,
-  sogliaScritta,
 } from "../core/la-soglia-della-potenza.js";
 import { intlLocale } from "../core/i18n.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { corsiaDegliAvvisi } from "./come-sta-la-casa-section.js";
 import { durataDellaDeriva, spazioDaPercorrere } from "../core/la-fascia-deriva.js";
 import { formatWatts as wattScritti } from "../core/subload-popup-model.js";
-import { lettureDiCasa, renderHomeWidgets } from "./home-widgets-section.js";
+import {
+  lettureDegliImpianti,
+  renderHomeWidgets,
+  verdettiDellaSoglia,
+} from "./home-widgets-section.js";
 import {
   clean,
   doc,
@@ -53,16 +59,46 @@ import {
 const formatWatts = (valore) => wattScritti(valore, intlLocale());
 
 const KEY = "__DASHBOARDMODERN_SOGLIA_POTENZA__";
-const state = (root[KEY] ||= { installed: false, frame: 0 });
+const state = (root[KEY] ||= { installed: false, frame: 0, impianto: "" });
 
-/** La soglia salvata, gia' in forma. */
+/** La soglia salvata del primo impianto (quella di sempre), gia' in forma. */
 export function sogliaDiCasa() {
   return sogliaDellaPotenza(readJson(SOGLIA_POTENZA_KEY, {}));
 }
 
-function salva(soglia) {
+/* Gli impianti con una soglia da scrivere: quelli che hanno un contatore. Con
+ * uno solo la scheda e' quella di sempre, senza linguette. */
+function impiantiDellaScheda() {
   try {
-    root.localStorage?.setItem?.(SOGLIA_POTENZA_KEY, JSON.stringify(soglia));
+    return lettureDegliImpianti();
+  } catch (_errore) {
+    return [];
+  }
+}
+
+/* L'impianto di cui si sta scrivendo la soglia, e il suo posto. */
+function impiantoInScheda(impianti = impiantiDellaScheda()) {
+  return impianti.find((voce) => voce.id === state.impianto) || impianti[0] || {
+    id: "",
+    index: 0,
+    nome: "",
+    letture: {},
+  };
+}
+
+function sogliaInScheda(impianto = impiantoInScheda()) {
+  return sogliaDellImpianto(readJson(SOGLIA_POTENZA_KEY, {}), impianto.id, impianto.index);
+}
+
+function salva(soglia, impianto = impiantoInScheda()) {
+  const tutto = conLaSogliaDellImpianto(
+    readJson(SOGLIA_POTENZA_KEY, {}),
+    impianto.id,
+    impianto.index,
+    soglia,
+  );
+  try {
+    root.localStorage?.setItem?.(SOGLIA_POTENZA_KEY, JSON.stringify(tutto));
   } catch (_errore) {}
   root.cdMarkDirty?.();
   root.cdSyncPush?.();
@@ -103,9 +139,8 @@ function spiegaLaSorgente(sorgente) {
  * Una soglia si sceglie guardando quanto si consuma davvero: senza questa riga
  * si tira a indovinare, e si scopre di aver messo il numero sbagliato solo
  * quando la tessera resta rossa per due giorni. */
-function rigaDiAdesso(sorgente) {
-  const letture = lettureDiCasa();
-  const verdetto = livelloDellaPotenza({ sorgente }, letture);
+function rigaDiAdesso(sorgente, impianto = impiantoInScheda()) {
+  const verdetto = livelloDellaPotenza({ sorgente }, impianto.letture || {});
   if (verdetto.watt === null)
     return t(
       "Adesso non c'è una lettura per questo carico.",
@@ -114,7 +149,22 @@ function rigaDiAdesso(sorgente) {
   return `${t("Adesso", "Right now")}: ${formatWatts(verdetto.watt)}`;
 }
 
-function schedaMarkup(soglia) {
+/* Le linguette dei contatori, solo quando sono piu' d'uno. */
+function linguetteMarkup(impianti, scelto) {
+  if (impianti.length < 2) return "";
+  return `<div class="dm-soglia-impianti" role="tablist">${impianti
+    .map(
+      (voce) =>
+        `<button type="button" role="tab" class="dm-soglia-impianto" data-dm-soglia-impianto="${esc(
+          voce.id,
+        )}" aria-selected="${voce.id === scelto.id}"${voce.id === scelto.id ? ' data-on="true"' : ""}>🏠 ${esc(
+          voce.nome,
+        )}</button>`,
+    )
+    .join("")}</div>`;
+}
+
+function schedaMarkup(soglia, impianti = [], scelto = impiantoInScheda(impianti)) {
   const voce = (valore, etichetta) =>
     `<button type="button" class="dm-soglia-scelta" data-dm-soglia-sorgente="${esc(valore)}"
       aria-pressed="${soglia.sorgente === valore}"${soglia.sorgente === valore ? ' data-on="true"' : ""}>${esc(etichetta)}</button>`;
@@ -126,13 +176,23 @@ function schedaMarkup(soglia) {
         placeholder="${esc(esempio)}">
     </label>`;
   return `
-    <div class="ed-sec-title">⚠️ ${esc(t("Soglia di potenza", "Power threshold"))}</div>
-    <div class="ed-hint">${esc(
-      t(
-        "Sopra la soglia in Home compare l'avviso di sovraccarico e la tessera Energia cambia colore: ambra per tenerla d'occhio, rossa quando sta per saltare. Lascia vuoto un campo per non usarlo.",
-        "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.",
-      ),
+    <div class="ed-sec-title">⚠️ ${esc(
+      impianti.length > 1
+        ? t("Soglia di potenza · una per contatore", "Power threshold · one per meter")
+        : t("Soglia di potenza", "Power threshold"),
     )}</div>
+    <div class="ed-hint">${esc(
+      impianti.length > 1
+        ? t(
+            "Ogni impianto ha il suo contatore e il suo limite: sopra la soglia l'avviso dice quale impianto. Quella che c'era prima ora è del primo impianto.",
+            "Each plant has its own meter and its own limit: above the threshold the alert says which plant. The one you had before now belongs to the first plant.",
+          )
+        : t(
+            "Sopra la soglia in Home compare l'avviso di sovraccarico e la tessera Energia cambia colore: ambra per tenerla d'occhio, rossa quando sta per saltare. Lascia vuoto un campo per non usarlo.",
+            "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.",
+          ),
+    )}</div>
+    ${linguetteMarkup(impianti, scelto)}
     <div class="dm-soglia-scelte" role="group" aria-label="${esc(t("Carico da sorvegliare", "Load to watch"))}">
       ${voce(SORGENTE_CASA, nomeDellaSorgente(SORGENTE_CASA))}
       ${voce(SORGENTE_RETE, nomeDellaSorgente(SORGENTE_RETE))}
@@ -142,7 +202,7 @@ function schedaMarkup(soglia) {
       ${campo("ambra", t("Ambra da", "Amber from"), soglia.ambra, "3000")}
       ${campo("rossa", t("Rossa da", "Red from"), soglia.rossa, "3300")}
     </div>
-    <small class="dm-soglia-ora" data-dm-soglia-ora>${esc(rigaDiAdesso(soglia.sorgente))}</small>
+    <small class="dm-soglia-ora" data-dm-soglia-ora>${esc(rigaDiAdesso(soglia.sorgente, scelto))}</small>
     <button type="button" class="ed-save-btn" data-dm-soglia-salva>💾 ${esc(
       t("Salva soglia", "Save threshold"),
     )}</button>`;
@@ -161,8 +221,12 @@ function ensureScheda() {
     scheda.className = "ed-form dm-soglia-card";
     impostazioni.append(scheda);
   }
-  const soglia = sogliaDiCasa();
-  const firma = `${soglia.sorgente}§${soglia.ambra ?? ""}§${soglia.rossa ?? ""}`;
+  const impianti = impiantiDellaScheda();
+  const scelto = impiantoInScheda(impianti);
+  const soglia = sogliaInScheda(scelto);
+  const firma = `${impianti.map((voce) => `${voce.id}:${voce.nome}`).join(",")}§${scelto.id}§${
+    soglia.sorgente
+  }§${soglia.ambra ?? ""}§${soglia.rossa ?? ""}`;
   if (scheda.dataset.firma === firma) {
     /* La struttura e' la stessa, ma il numero di adesso no: quello si muove da
      * solo mentre la scheda sta aperta, ed e' l'unica cosa da riscrivere.
@@ -174,12 +238,12 @@ function ensureScheda() {
      * cambio di stato per una riga che non ha davanti. */
     if (impostazioni.hidden) return;
     const ora = scheda.querySelector("[data-dm-soglia-ora]");
-    const testo = rigaDiAdesso(soglia.sorgente);
+    const testo = rigaDiAdesso(soglia.sorgente, scelto);
     if (ora && ora.textContent !== testo) ora.textContent = testo;
     return;
   }
   scheda.dataset.firma = firma;
-  scheda.innerHTML = schedaMarkup(soglia);
+  scheda.innerHTML = schedaMarkup(soglia, impianti, scelto);
 }
 
 /* ───────────────────────── la striscia sulla pagina ─────────────────────── */
@@ -203,15 +267,16 @@ function ensureStriscia() {
    * l'intera casa settanta volte per scoprire ogni volta che non si colora
    * nulla — e sulla pagina Energia, dove l'Energia sta gia' lavorando, quel
    * lavoro in piu' si sente. */
-  const soglia = sogliaDiCasa();
   const disegnata = vista.querySelector("#dm-soglia-striscia");
-  if (!sogliaScritta(soglia)) {
+  if (!qualcheSogliaScritta(readJson(SOGLIA_POTENZA_KEY, {}))) {
     disegnata?.remove();
     return;
   }
   /* E nemmeno per una pagina che nessuno sta guardando. */
   if (!paginaVisibile("page-energy")) return;
-  const verdetto = livelloDellaPotenza(soglia, lettureDiCasa());
+  /* Ogni contatore con la sua soglia; la striscia dice il messo peggio, e con
+   * piu' contatori dice quale. */
+  const { peggiore: verdetto, quanti } = verdettiDellaSoglia();
   let striscia = disegnata;
   if (verdetto.livello === LIVELLO_QUIETE) {
     striscia?.remove();
@@ -225,7 +290,8 @@ function ensureStriscia() {
   }
   const livello = verdetto.livello === LIVELLO_AMBRA ? "ambra" : "rossa";
   if (striscia.dataset.livello !== livello) striscia.dataset.livello = livello;
-  const testo = `⚠️ ${t("Sovraccarico", "Overload")} · ${nomeDellaSorgente(verdetto.sorgente)} ${formatWatts(
+  const quale = quanti > 1 && verdetto.nome ? `${verdetto.nome} · ` : `${t("Sovraccarico", "Overload")} · `;
+  const testo = `⚠️ ${quale}${nomeDellaSorgente(verdetto.sorgente)} ${formatWatts(
     verdetto.watt,
   )} ${t("oltre", "over")} ${formatWatts(verdetto.limite)}`;
   if (striscia.textContent !== testo) striscia.textContent = testo;
@@ -286,12 +352,11 @@ function ensureAllertaInHome() {
     gia?.remove();
     return;
   }
-  const soglia = sogliaDiCasa();
-  if (!sogliaScritta(soglia)) {
+  if (!qualcheSogliaScritta(readJson(SOGLIA_POTENZA_KEY, {}))) {
     gia?.remove();
     return;
   }
-  const verdetto = livelloDellaPotenza(soglia, lettureDiCasa());
+  const { peggiore: verdetto, quanti } = verdettiDellaSoglia();
   if (verdetto.livello === LIVELLO_QUIETE) {
     gia?.remove();
     return;
@@ -308,7 +373,10 @@ function ensureAllertaInHome() {
       } catch (_errore) {}
     });
   }
-  const dove = nomeDellaSorgente(verdetto.sorgente);
+  const dove =
+    quanti > 1 && verdetto.nome
+      ? `${verdetto.nome} · ${nomeDellaSorgente(verdetto.sorgente)}`
+      : nomeDellaSorgente(verdetto.sorgente);
   const misura = `${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
   const firma = `${verdetto.sorgente}|${dove}|${misura}`;
   if (allerta.dataset.firma !== firma) {
@@ -407,13 +475,19 @@ export function installLaSogliaDellaPotenza() {
   state.installed = true;
   installStyles();
   doc.addEventListener("click", (event) => {
+    const linguetta = event.target?.closest?.("[data-dm-soglia-impianto]");
+    if (linguetta) {
+      state.impianto = clean(linguetta.getAttribute("data-dm-soglia-impianto"));
+      schedule();
+      return;
+    }
     const scelta = event.target?.closest?.("[data-dm-soglia-sorgente]");
     if (scelta) {
       /* La sorgente si applica subito: e' una risposta a una domanda, non un
        * numero da rileggere: e cambiandola cambia anche la riga «adesso», che
        * e' quello che serve per scegliere il numero giusto. */
       const scheda = scelta.closest("#dm-energia-soglia");
-      const numeri = scheda ? numeriDellaScheda(scheda) : sogliaDiCasa();
+      const numeri = scheda ? numeriDellaScheda(scheda) : sogliaInScheda();
       salva({ ...numeri, sorgente: clean(scelta.getAttribute("data-dm-soglia-sorgente")) });
       return;
     }
@@ -424,7 +498,7 @@ export function installLaSogliaDellaPotenza() {
     /* I numeri si salvano quando lo si chiede, come il costo del kWh nella
      * scheda accanto: un tasto premuto per sbaglio non deve poter cambiare il
      * colore di una tessera senza che nessuno l'abbia voluto. */
-    salva({ ...numeriDellaScheda(scheda), sorgente: sogliaDiCasa().sorgente });
+    salva({ ...numeriDellaScheda(scheda), sorgente: sogliaInScheda().sorgente });
   });
   onEditorRedraw("__dmSogliaPotenzaSection", schedule);
   for (const evento of [
@@ -453,6 +527,12 @@ function installStyles() {
     "dm-soglia-potenza-style",
     `
       .dm-soglia-card{display:grid;gap:9px}
+      .dm-soglia-impianti{display:flex;gap:8px;flex-wrap:wrap}
+      .dm-soglia-impianto{
+        padding:7px 13px;border-radius:999px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;
+        border:1px solid var(--card-border,#e2e8f0);background:var(--card-background-color,#fff);color:inherit}
+      .dm-soglia-impianto[data-on="true"]{
+        border-color:#16a34a;color:#15803d;background:color-mix(in srgb,#16a34a 10%,var(--card-background-color,#fff))}
       .dm-soglia-scelte{display:flex;gap:8px;flex-wrap:wrap}
       .dm-soglia-scelta{
         flex:1 1 150px;padding:9px 13px;border-radius:14px;font:inherit;font-size:12.5px;

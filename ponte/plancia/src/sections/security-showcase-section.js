@@ -57,9 +57,18 @@ import { CHIAVE_PRESENZA, contoDellaPresenza, presenzaDiCasa } from "../core/pre
 import { CHIAVE_VARCHI, contoDeiVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
 import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import {
+  CASELLA_DELLO_SCATTATO,
+  CHIAVE_ANTIFURTO_SCATTATO,
   CHIAVE_ANTIFURTO_SU_MISURA,
+  PREFISSO_SU_MISURA,
+  SPEGNI_LA_SIRENA,
   chiamataDelModo,
+  eScattatoAdesso,
   ilCodiceApreIlModo,
+  modoCheDisinserisce,
+  normalizzaScattato,
+  sirenaAccesa,
+  zonaDelloScattato,
   ilModoChiedeIlCodice,
   modoDalServizio,
   modoSuMisuraAcceso,
@@ -1006,6 +1015,81 @@ function syncCards(grid, models, labels) {
   return true;
 }
 
+/* ─── Quando l'antifurto su misura e' scattato ──────────────────────────
+ *
+ * Il guscio storico dice gia' «ALLARME!» quando l'interruttore e' acceso. Qui
+ * sotto si aggiunge quello che serve in quel momento: che cosa, da quando, se
+ * la sirena suona — e i due tasti per farla finita: spegnere la sirena,
+ * disinserire col tasto su misura (col suo PIN, se ce l'ha). */
+function loScattato() {
+  return normalizzaScattato(
+    readJson(CHIAVE_ANTIFURTO_SCATTATO, {}),
+    clean((readJson("cd_entity_overrides", {}) || {})[CASELLA_DELLO_SCATTATO]),
+  );
+}
+
+export function striscetteDelloScattato(scattato, states, adesso = Date.now()) {
+  if (!eScattatoAdesso(scattato, states)) return "";
+  const zona = zonaDelloScattato(scattato, states, { adesso });
+  const dal = Date.parse(clean(states?.[scattato.entita]?.last_changed));
+  const pillole = [];
+  if (zona) pillole.push(`<span class="dm-sec-scat-pill">📍 ${esc(zona)}</span>`);
+  if (Number.isFinite(dal)) {
+    const ora = new Date(dal).toLocaleTimeString(activeLocale() || undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const minuti = Math.max(0, Math.round((adesso - dal) / 60000));
+    pillole.push(
+      `<span class="dm-sec-scat-pill">🕒 ${esc(t("dalle", "since"))} ${esc(ora)} · ${minuti} min</span>`,
+    );
+  }
+  if (sirenaAccesa(scattato, states))
+    pillole.push(`<span class="dm-sec-scat-pill is-sirena">🔊 ${esc(t("Sirena accesa", "Siren on"))}</span>`);
+  const tasti = [];
+  if (scattato.sirena)
+    tasti.push(
+      `<button type="button" class="dm-sec-scat-btn is-rosso" data-dm-spegni-sirena>🔇 ${esc(t("Spegni sirena", "Siren off"))}</button>`,
+    );
+  const spegni = modoCheDisinserisce(modiSuMisura());
+  if (spegni)
+    tasti.push(
+      `<button type="button" class="dm-sec-scat-btn" onclick="promptPinAndSet(${jsArg(`${PREFISSO_SU_MISURA}${spegni.id}`)})">🔓 ${esc(t("Disinserisci", "Disarm"))}</button>`,
+    );
+  return `<div class="dm-sec-scat-pillole">${pillole.join("")}</div>${
+    tasti.length ? `<div class="dm-sec-scat-tasti">${tasti.join("")}</div>` : ""
+  }`;
+}
+
+function syncScattato(shell) {
+  const stage = shell.querySelector("#alarm-stage");
+  let fascia = shell.querySelector("[data-dm-sec-scattato]");
+  const markup = stage ? striscetteDelloScattato(loScattato(), allStates()) : "";
+  if (!markup) {
+    fascia?.remove();
+    return false;
+  }
+  if (!fascia) {
+    fascia = doc.createElement("div");
+    fascia.className = "dm-sec-scat";
+    fascia.dataset.dmSecScattato = "true";
+    stage.append(fascia);
+  }
+  if (fascia.innerHTML !== markup) fascia.innerHTML = markup;
+  return true;
+}
+
+function spegniLaSirena() {
+  const sirena = loScattato()?.sirena;
+  if (!sirena) return false;
+  const dominio = sirena.split(".")[0];
+  return chiamaServizio({
+    domain: dominio,
+    service: SPEGNI_LA_SIRENA[dominio] || "turn_off",
+    data: { entity_id: sirena },
+  });
+}
+
 export function renderSecurity() {
   const host = doc?.getElementById?.("page-security");
   if (!host) return false;
@@ -1023,6 +1107,8 @@ export function renderSecurity() {
   /* Le zone e gli ingressi della centrale (#511): le stesse righe della
    * Presenza e dei Varchi, chiamate col nome che hanno sul pannello. */
   syncZone(shell, labels);
+  /* L'antifurto su misura scattato: che cosa, da quando, la sirena. */
+  syncScattato(shell);
 
   const models = cameraModels();
   // A rebuilt wall is a wall of empty <img> elements: whatever frame the live
@@ -1091,6 +1177,11 @@ function openCamera(card) {
 
 function onShellClick(event) {
   const target = event.target;
+  if (target?.closest?.("[data-dm-spegni-sirena]")) {
+    event.preventDefault();
+    spegniLaSirena();
+    return;
+  }
   if (target?.closest?.("[data-dm-aree-annulla]")) {
     event.preventDefault();
     if (sciogliIlGruppo()) renderSecurity();
@@ -1543,6 +1634,17 @@ function cssString(value) {
 
 function securityCss() {
   return `
+    .dm-sec-scat{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px dashed color-mix(in srgb,#dc2626 35%,transparent)}
+    .dm-sec-scat-pillole{display:flex;flex-wrap:wrap;gap:8px}
+    .dm-sec-scat-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:800;background:color-mix(in srgb,#dc2626 10%,var(--card-bg,#fff));color:#b91c1c;border:1px solid color-mix(in srgb,#dc2626 28%,transparent)}
+    html[data-theme="dark"] .dm-sec-scat-pill{color:#fca5a5}
+    .dm-sec-scat-pill.is-sirena{animation:dmSecScatBatte 1.2s ease-in-out infinite}
+    @keyframes dmSecScatBatte{50%{background:color-mix(in srgb,#dc2626 22%,var(--card-bg,#fff))}}
+    @media (prefers-reduced-motion:reduce){.dm-sec-scat-pill.is-sirena{animation:none}}
+    .dm-sec-scat-tasti{display:flex;gap:8px;flex-wrap:wrap}
+    .dm-sec-scat-btn{border:1px solid color-mix(in srgb,#dc2626 35%,var(--divider-color,#e2e8f0));background:var(--card-bg,#fff);color:inherit;border-radius:999px;padding:9px 16px;font:inherit;font-size:12.5px;font-weight:900;cursor:pointer}
+    .dm-sec-scat-btn.is-rosso{background:#dc2626;border-color:#dc2626;color:#fff;box-shadow:0 8px 20px -10px #dc2626}
+
 .dm-sec-shell,.dm-sec-shell *,.dm-sec-shell *::before,.dm-sec-shell *::after{box-sizing:border-box}
 .dm-sec-shell{
   --dm-sec-cyan:#22d3ee;--dm-sec-cyan-deep:#0284c7;

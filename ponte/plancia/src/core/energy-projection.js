@@ -1,6 +1,6 @@
 // DM-FIX-20260812B
 import { getDeviceVisual } from "./device-model.js";
-import { plantLoads } from "./energy-plants.js";
+import { elettrodomesticiDellImpianto, plantLoads } from "./energy-plants.js";
 import { contatoreCheNonSiLegge, isCumulativeEnergyEntity } from "./period-service.js";
 
 /* La scheda Temperature di Energia: inverter, batteria e ventola. Vive fuori
@@ -448,8 +448,20 @@ export function canonicalReportDevices(
   impianto = null,
 ) {
   const seenEntities = new Set();
-  const tutti = [...appliances, ...loads];
-  return (impianto?.plant ? plantLoads(tutti, impianto.plant, impianto.index || 0) : tutti)
+  /* Gli elettrodomestici hanno la loro regola (`impiantoDellElettrodomestico`,
+   * la stessa del flusso): senza campo non vuol dire «il primo» quando gli
+   * impianti sono due. I carichi restano col loro campo. */
+  const suoi = impianto?.plant
+    ? [
+        ...elettrodomesticiDellImpianto(appliances, impianto.plant, {
+          impianti: impianto.list || [impianto.plant],
+          carichi: loads,
+          stanze: impianto.stanze || [],
+        }),
+        ...plantLoads(loads, impianto.plant, impianto.index || 0),
+      ]
+    : [...appliances, ...loads];
+  return suoi
     .filter(
       (item) =>
         item.show_in_report !== false &&

@@ -49,6 +49,7 @@ import { Registri } from "./registri.js";
 import { Notifiche } from "./notifiche.js";
 import { Viaggi } from "./viaggi.js";
 import { RicaricaDiNotte } from "./ricarica-di-notte.js";
+import { Automazioni } from "./automazioni.js";
 
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
@@ -448,6 +449,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registri,
     postino: chiamata,
     registro,
+    configurazione,
   });
   chiamata.alGettoneMorto = (telefono) => notifiche.gettoneMorto(telefono);
   ponte.notifiche = notifiche;
@@ -473,6 +475,25 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   commissioni.ricaricaDiNotte = ricaricaDiNotte;
+  /* Le automazioni: le esegue Home Assistant, che le ha fra le sue. Qui
+   * l'elenco per la plancia, i salvataggi con l'API di Home Assistant, le
+   * proposte, e gli avvisi «sul telefono» che le automazioni mandano con
+   * l'evento `gdahome_avvisa` e che partono con la busta delle notifiche
+   * (`automazioni.js`). */
+  const automazioni = new Automazioni({
+    cartella: opzioni.cartella,
+    casa,
+    configurazione,
+    stati: () => notifiche.sentinella?.stati ?? null,
+    notifiche,
+    licenze,
+    /* Per l'elenco e le proposte: le stanze dai registri, e le luci rimaste
+     * accese con la casa vuota che l'assistente delle notifiche conta gia'. */
+    registri,
+    luciConCasaVuota: () => notifiche.sentinella?.capire?.dati?.luci ?? null,
+    registro,
+  });
+  commissioni.automazioni = automazioni;
   /* «Cosa c'e' in casa» nel config: lo sa l'assistente delle notifiche. */
   commissioni.notifiche = notifiche;
   /* Una casa di prova fatta prima di un riavvio vale ancora: al centralino
@@ -626,6 +647,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   void notifiche.parti();
   viaggi.parti();
   ricaricaDiNotte.parti();
+  automazioni.parti();
   postino.parti();
   /* Separata dal rapporto, e non per caso: il rapporto resta spento di serie,
    * e le licenze non ne hanno bisogno. Manda solo chi e' la casa. */
@@ -710,6 +732,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     notifiche.ferma();
     viaggi.ferma();
     ricaricaDiNotte.ferma();
+    automazioni.ferma();
     postino.ferma();
     licenze.ferma();
     versioneMinima.ferma();
@@ -732,6 +755,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     notifiche,
     viaggi,
     ricaricaDiNotte,
+    automazioni,
     ritorno,
     registro,
     postino,

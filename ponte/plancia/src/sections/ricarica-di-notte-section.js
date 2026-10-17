@@ -404,7 +404,10 @@ function scheletro() {
     <div class="dm-rn-titoli">
       <h3 class="dm-rn-titolo">${esc(t("Ricarica notturna", "Night charging"))}</h3>
       <small class="dm-rn-sotto" data-rn="riassunto"></small>
+      <small class="dm-rn-statino" data-rn="statino" hidden></small>
     </div>
+    <button type="button" class="dm-rn-apri" data-rn="apri" aria-expanded="false"
+      aria-label="${esc(t("Mostra le opzioni", "Show options"))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     <button type="button" class="dm-rn-int" role="switch" aria-checked="false" data-rn="attiva"
       aria-label="${esc(t("Ricarica notturna", "Night charging"))}"><span></span></button>
   </div>
@@ -544,7 +547,27 @@ function laCarta() {
     carta.dataset.lingua = lingua;
     carta.innerHTML = scheletro();
   }
+  if (!carta.dataset.aperta) carta.dataset.aperta = aperta() ? "1" : "0";
   return carta;
+}
+
+/* Aperta o chiusa: «inizialmente si vede solo il toggle, poi se si attiva o
+ * con una freccia si espandono le opzioni». Di serie chiusa; si apre da sola
+ * quando la si accende, e la freccia la apre e la chiude. E' una comodita' di
+ * chi guarda, non un'impostazione della casa: sta nel deposito del browser,
+ * un telefono per se'. */
+const CHIAVE_APERTA = "dm_rn_aperta";
+function aperta() {
+  try {
+    return root.localStorage?.getItem?.(CHIAVE_APERTA) === "1";
+  } catch (_errore) {
+    return false;
+  }
+}
+function apri(si) {
+  try {
+    root.localStorage?.setItem?.(CHIAVE_APERTA, si ? "1" : "0");
+  } catch (_errore) {}
 }
 
 function minutiDi(oraTesto) {
@@ -554,6 +577,13 @@ function minutiDi(oraTesto) {
 export function renderRicaricaDiNotte(adesso = Date.now()) {
   const carta = laCarta();
   if (!carta) return false;
+  /* Aperta o chiusa per prima cosa: anche quando il resto non si puo' ancora
+   * disegnare, la carta chiusa deve restare chiusa. */
+  const apertaOra = aperta();
+  if ((carta.dataset.aperta === "1") !== apertaOra) carta.dataset.aperta = apertaOra ? "1" : "0";
+  const freccia = carta.querySelector('[data-rn="apri"]');
+  if (freccia && freccia.getAttribute("aria-expanded") !== String(apertaOra))
+    freccia.setAttribute("aria-expanded", String(apertaOra));
   let resolve = (valore) => valore;
   try {
     if (typeof root.resolveEntity === "function") resolve = root.resolveEntity;
@@ -626,6 +656,16 @@ export function renderRicaricaDiNotte(adesso = Date.now()) {
     prezzo,
     adesso,
   });
+  /* Chiusa e accesa, sotto il titolo una riga dice cosa sta facendo: «In
+   * carica · fino all'80% o alle 05:00», «Stanotte alle 23:00». Aperta non
+   * serve, lo dice il riquadro dello stato. */
+  const laVedo = carta.dataset.aperta === "1";
+  const statino = q("statino");
+  const mostra = imp.attiva && !laVedo && Boolean(racconto.titolo);
+  if (statino) {
+    testo(statino, mostra ? racconto.titolo : "");
+    if (statino.hidden !== !mostra) statino.hidden = !mostra;
+  }
   attributo(q("stato"), "data-tono", racconto.tono);
   testo(q("statoTitolo"), racconto.titolo);
   testo(q("statoSotto"), racconto.sotto);
@@ -658,7 +698,14 @@ function salva(cambia) {
 
 function alTocco(evento) {
   const bersaglio = evento.target;
+  if (bersaglio?.closest?.('[data-rn="apri"]')) {
+    apri(!aperta());
+    renderRicaricaDiNotte();
+    return;
+  }
   if (bersaglio?.closest?.('[data-rn="attiva"]')) {
+    /* Accesa, si apre: le opzioni servono adesso. Spenta resta com'e'. */
+    if (!leImpostazioni().attiva) apri(true);
     salva((imp) => ({ attiva: !imp.attiva }));
     return;
   }
@@ -792,6 +839,12 @@ function stile() {
   --rn-line:rgba(255,255,255,.07)
 }
 .dm-rn-testa{display:flex;align-items:center;gap:12px;min-width:0}
+.dm-rn[data-aperta="0"] .dm-rn-corpo{display:none}
+.dm-rn-apri{flex:0 0 auto;margin-left:auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;cursor:pointer;
+  background:transparent;color:inherit;border:1px solid var(--divider-color,rgba(127,127,127,.25))}
+.dm-rn-apri svg{transition:transform .18s ease}
+.dm-rn-apri[aria-expanded="true"] svg{transform:rotate(180deg)}
+.dm-rn-statino{display:block;margin-top:3px;font-size:12.5px;font-weight:800;color:#6366f1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dm-rn-luna{flex:0 0 46px;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
   color:#f5c542;background:rgba(var(--rn-acc-rgb),.14);box-shadow:inset 0 0 0 1px rgba(var(--rn-acc-rgb),.25)}
 .dm-rn-titoli{flex:1;min-width:0;display:grid;gap:2px}

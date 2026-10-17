@@ -166,6 +166,18 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "ponte/viaggi/stima",
   "ponte/viaggi/cerca",
   "ponte/viaggi/strada",
+  // Le automazioni (Premium): le esegue Home Assistant, e queste sono le
+  // domande della plancia su di loro — l'elenco, salvare, togliere,
+  // rinominare, duplicare (ponte/src/automazioni.js). Le fa il ponte con
+  // l'API di Home Assistant: dentro il pannello senza add-on la risposta e'
+  // «non conosco».
+  "ponte/automazioni/stato",
+  "ponte/automazioni/salva",
+  "ponte/automazioni/elimina",
+  "ponte/automazioni/rinomina",
+  "ponte/automazioni/duplica",
+  "ponte/automazioni/proposte",
+  "ponte/automazioni/proposte/scarta",
   "auth/sign_path",
 ]);
 

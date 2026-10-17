@@ -10,6 +10,35 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.15.0
+
+- **Automazioni (Premium):** quelle create dalla plancia sono automazioni vere
+  di Home Assistant (le ritrovi in Impostazioni → Automazioni, col segno
+  «gdahome») e le esegue lui. Nel config tutte quelle di casa, a gruppi, da
+  modificare facili; le complesse con «Apri in Home Assistant». Nuova sezione
+  «Automazioni» nella dashboard, prima di Config, per accenderle e spegnerle.
+  Proposte «Suggerite per la tua casa ✨» calcolate in casa. Le vecchie
+  automazioni della plancia si spostano in Home Assistant col tasto
+  «Converti». In Home Assistant Premium si acquista solo dalle app sugli
+  store (in arrivo).
+- **Notifiche semplici o elaborate**, scelta nell'app per ogni telefono, e
+  ogni notifica su misura (stile, dispositivi, soglia, suono, orari, subito o
+  nel riepilogo). Le elaborate hanno la scheda col grafico; le foto delle
+  telecamere passano cifrate e restano al più dieci minuti.
+- **Elettrodomestico finito:** durata, kWh e costo, col sole, la batteria di
+  casa e il prezzo della fascia.
+- **Riepilogo della sera** col fotovoltaico: prodotto, usato in casa,
+  risparmiato, record, consiglio per domani.
+- **Blackout dagli UPS** (si trovano da soli), **movimento con la foto**, e
+  **antifurto scattato** anche da un interruttore su misura, con «Spegni
+  sirena» e «Disinserisci» dalla notifica.
+- **Due impianti:** ogni elettrodomestico col suo impianto, soglie per
+  contatore e avviso col nome dell'impianto; stanze raggruppate per piano.
+- **Telefoni abbinati:** col modello e «di chi è»; le case doppie nell'app si
+  fondono da sole e il Premium non sparisce più.
+- **Pianifica i viaggi** nel navigatore dell'app; nell'app la linguetta
+  GDANAV della plancia non c'è più.
+
 ## 1.14.6
 
 - **Ricarica notturna (auto elettrica con evcc):** nella pagina Auto una carta

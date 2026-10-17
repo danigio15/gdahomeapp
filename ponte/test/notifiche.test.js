@@ -422,7 +422,7 @@ for (const primaLoStato of [true, false]) {
     );
     const titoli = dette.map((d) => d.parole.it.titolo);
     assert.equal(titoli.filter((t) => /asciugatrice/i.test(t)).length, 1, titoli.join(" | "));
-    assert.ok(titoli.includes("🧺 Lavatrice: finito"), titoli.join(" | "));
+    assert.ok(titoli.includes("🫧 Lavatrice finita"), titoli.join(" | "));
     assert.ok(!titoli.some((t) => / W: /.test(t)), titoli.join(" | "));
   });
 }

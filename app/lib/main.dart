@@ -29,6 +29,7 @@ import 'parole.dart';
 import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
 import 'schermate/caricamento.dart';
+import 'schermate/di_chi_e.dart';
 import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
@@ -605,6 +606,24 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     await finestraRiservata(adesso);
   }
 
+  /// «Di chi e' questo telefono?», una volta: il foglio si chiude con «Più
+  /// tardi», e la risposta va alla casa (`Collegamento.rispostoDiChiE`).
+  bool _foglioDiChiE = false;
+  Future<void> _chiediDiChiE() async {
+    if (_foglioDiChiE || !mounted) return;
+    _foglioDiChiE = true;
+    try {
+      final iniziale = await _collegamento.archivio.proprietario();
+      if (!mounted) return;
+      final detto = await chiediDiChiE(context, iniziale: iniziale);
+      await _collegamento.rispostoDiChiE(detto);
+    } catch (_) {
+      /* Il foglio non si e' potuto aprire: si richiedera' alla prossima. */
+    } finally {
+      _foglioDiChiE = false;
+    }
+  }
+
   /// Un cambiamento del velo: lo stato, e subito dopo chi lo disegna. Nello
   /// stesso giro, perche' fra le due cose non passi un fotogramma con la
   /// casa scoperta.
@@ -777,6 +796,9 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     }
     _ascolto = _collegamento.cambiamenti.listen((_) {
       if (mounted) _cambiaIlVelo(() {});
+      /* Chi si era abbinato prima che l'app chiedesse di chi e' il telefono
+       * se lo vede chiedere una volta, adesso che la casa c'e'. */
+      if (_collegamento.vuoleSapereDiChiE) unawaited(_chiediDiChiE());
       /* Una ricevuta rimasta indietro parte appena la casa c'e'. */
       if (_collegamento.comeVa == ComeVa.aperta) {
         unawaited(acquistiDellApp?.riprova());

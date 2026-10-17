@@ -23,6 +23,9 @@ import { applySignedSources, wattsFromState } from "../core/signed-energy.js";
 import { vehicleBatteryEntity } from "./ev-section.js";
 import {
   IMPIANTO_SCELTO_KEY,
+  cerchiDalleStanzeAccesi,
+  elettrodomesticiDellImpianto,
+  pianiNelFlusso,
   plantAt,
   plantList,
   plantLoads,
@@ -565,12 +568,32 @@ function configuredAppliances() {
   return Array.isArray(stored) ? stored : [];
 }
 
-/* Gli elettrodomestici dell'impianto scelto: la stessa regola dei carichi. */
-function appliancesOfThePlant() {
+function stanzeDiCasa() {
+  const stanze = section("rooms", null);
+  return Array.isArray(stanze) ? stanze : readJson("cd_stanze", []);
+}
+
+/* Gli elettrodomestici dell'impianto scelto.
+ *
+ * Non piu' la regola dei carichi — «senza impianto vuol dire il primo» — ma la
+ * loro: scritto, dedotto dal carico con la stessa potenza, dedotto dal piano
+ * (`impiantoDellElettrodomestico`). Con due contatori un elettrodomestico che
+ * non si sa dove sta non va da nessuna parte: e' quello che metteva la
+ * lavatrice della zona notte nel «Bagno» della zona giorno. Con un impianto
+ * solo sono tutti suoi, come sempre. */
+function appliancesOfThePlant(plant = impiantoScelto().plant) {
   const apparecchi = configuredAppliances();
+  if (!plant) return apparecchi;
+  return elettrodomesticiDellImpianto(apparecchi, plant, {
+    impianti: plantList(section("energy", {}) || {}),
+    carichi: tuttiICarichi(),
+    stanze: stanzeDiCasa(),
+  });
+}
+
+function impiantoScelto() {
   const scelto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
-  const { plant, index } = plantAt(section("energy", {}) || {}, scelto);
-  return plant ? plantLoads(apparecchi, plant, index) : apparecchi;
+  return plantAt(section("energy", {}) || {}, scelto);
 }
 
 /**
@@ -580,13 +603,20 @@ function appliancesOfThePlant() {
  * della stessa stanza.
  */
 export function carichiDelFlusso() {
-  const stanze = section("rooms", null);
+  const { plant } = impiantoScelto();
+  const loads = configuredLoads();
+  const appliances = appliancesOfThePlant(plant);
+  /* L'impianto puo' dire di no ai cerchi automatici: allora il flusso e'
+   * quello dei carichi scritti a mano, e gli elettrodomestici restano dove li
+   * mettono i carichi (dentro un cerchio, se qualcuno ce li ha messi). */
+  if (plant && !cerchiDalleStanzeAccesi(plant)) return { loads, appliances, perStanza: false };
   return cerchiDelleStanze({
-    loads: configuredLoads(),
-    appliances: appliancesOfThePlant(),
-    rooms: Array.isArray(stanze) ? stanze : readJson("cd_stanze", []),
+    loads,
+    appliances,
+    rooms: stanzeDiCasa(),
     entitaDellaWallbox: WALLBOX_REFS.map(resolvedEntity).filter(Boolean),
     altro: t("Altro", "Other"),
+    perPiano: Boolean(plant && pianiNelFlusso(plant)),
   });
 }
 

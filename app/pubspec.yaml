@@ -13,7 +13,7 @@ publish_to: "none"
 # sempre**. Si ricava dalla versione invece di batterlo a mano:
 # 1.4.24 → 1 × 10000 + 4 × 100 + 24 = 10424. Finche' il minore e la patch
 # stanno sotto cento, cresce insieme alla versione e non si sbaglia.
-version: 1.14.6+1140600
+version: 1.15.0+1150000
 
 environment:
   sdk: ^3.13.0
@@ -89,6 +89,12 @@ dependencies:
   # nel coprocessore del telefono: non passano di qui, non passano dall'app, e
   # non arrivano ne' a gdahome ne' alla casa.
   local_auth: ^2.3.0
+
+  # Che telefono e': marca, modello, sistema. Finisce nel nome che la casa
+  # gli da' fra i «Telefoni abbinati» («Galaxy S24 Ultra di …»), perche' due
+  # righe «Telefono Android» della stessa persona non si distinguono. Mai il
+  # nome che il telefono ha avuto dal suo padrone: quello non si legge.
+  device_info_plus: ^13.2.0
   flutter_svg: ^2.3.0
   webview_flutter_web: ^0.2.3+4
   webview_flutter_android: ^4.14.1

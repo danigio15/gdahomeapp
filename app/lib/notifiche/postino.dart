@@ -33,12 +33,14 @@
 library;
 
 import 'dart:async';
+import 'dart:io' show Directory, File;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../casa/archivio_delle_case.dart';
 import '../casa/cassaforte.dart';
@@ -47,8 +49,10 @@ import '../parole.dart';
 import 'chiavi_per_l_iphone.dart';
 import 'consegna.dart';
 import 'firebase_qui.dart';
+import 'foto_di_passaggio.dart';
 import 'modello.dart';
 import 'notifiche.dart';
+import 'scheda.dart';
 
 /// Quello che si legge quando la busta non si apre: la stessa frase che vede
 /// Apple, e che non dice niente a nessuno.
@@ -92,6 +96,23 @@ const _categorieDellIphone = <String, List<(String, String, String)>>{
     ('va-bene', 'Va bene così', "That's fine"),
     ('piu-tardi', 'Più tardi', 'Later'),
   ],
+  /* L'antifurto scattato: la sirena, disinserire, guardare. Senza sirena
+   * configurata il tasto non c'e', e la categoria e' quella dopo. */
+  'gdahome_scattato': [
+    ('spegni-sirena', 'Spegni sirena', 'Silence siren'),
+    ('disinserisci', 'Disinserisci', 'Disarm'),
+    ('guarda', 'Guarda', 'View'),
+  ],
+  'gdahome_disinserisci': [
+    ('disinserisci', 'Disinserisci', 'Disarm'),
+    ('guarda', 'Guarda', 'View'),
+  ],
+  /* Il movimento con la casa vuota: guardare, e inserire l'antifurto col
+   * modo scelto (quello su misura, se la casa ne ha). */
+  'gdahome_guarda_inserisci': [
+    ('guarda', 'Guarda', 'View'),
+    ('inserisci', 'Inserisci antifurto', 'Arm alarm'),
+  ],
 };
 
 String? _categoriaPer(List<TastoDellaNotifica> tasti) {
@@ -103,6 +124,8 @@ String? _categoriaPer(List<TastoDellaNotifica> tasti) {
     }
   }
   if (ids.contains('apri')) return 'gdahome_campanello';
+  if (ids.contains('spegni-sirena')) return 'gdahome_scattato';
+  if (ids.contains('disinserisci')) return 'gdahome_disinserisci';
   if (ids.contains('guarda')) return 'gdahome_guarda';
   return null;
 }
@@ -179,11 +202,67 @@ InitializationSettings _impostazioniLocali() => InitializationSettings(
   ),
 );
 
+/// Il disegno di una notifica elaborata: la foto dal centralino, se c'e', e
+/// la scheda. Vuoto per le semplici, e per qualunque cosa vada storta.
+Future<DisegnoDellaNotifica> _ilDisegnoDi(NotificaDaMostrare quale) async {
+  final notifica = quale.notifica;
+  if (!notifica.elaborata) return const DisegnoDellaNotifica();
+  final casa = quale.casa;
+  final idDellaFoto = notifica.foto;
+  final centralino = casa.centralino;
+  final chiave = casa.chiave;
+  final telefono = casa.identificativo;
+  final foto =
+      idDellaFoto != null &&
+          centralino != null &&
+          chiave != null &&
+          telefono != null
+      ? await prendiLaFoto(
+          dove: centralino.foto(idDellaFoto),
+          chiaveDelFilo: chiave,
+          telefono: telefono,
+        )
+      : null;
+  return disegnaLaNotifica(scheda: notifica.scheda, foto: foto);
+}
+
+/// Sull'iPhone un allegato e' un file: si scrive nella cartella dei
+/// provvisori, e il sistema se lo prende.
+Future<List<DarwinNotificationAttachment>?> _gliAllegati(
+  NotificaDaMostrare quale,
+  DisegnoDellaNotifica disegno,
+) async {
+  final grande = disegno.grande;
+  if (grande == null || defaultTargetPlatform != TargetPlatform.iOS) {
+    return null;
+  }
+  try {
+    final cartella = Directory(
+      '${(await getTemporaryDirectory()).path}/notifiche',
+    );
+    await cartella.create(recursive: true);
+    final file = File('${cartella.path}/${quale.numero}.png');
+    await file.writeAsBytes(grande, flush: true);
+    return [DarwinNotificationAttachment(file.path)];
+  } catch (_) {
+    return null;
+  }
+}
+
 /// Mostra una notifica gia' aperta, come notifica del telefono.
+///
+/// Le elaborate portano la scheda disegnata qui (`scheda.dart`), o la foto
+/// della telecamera: su Android sotto la notifica, come «grande foto», con
+/// l'icona piccola a destra. Se il disegno non riesce, la notifica arriva
+/// semplice: col suo testo, come sempre.
 Future<void> mostra(NotificaDaMostrare quale) async {
   final notifica = quale.notifica;
   final canale = quale.canale;
   final tasti = quale.tasti;
+  final disegno = await _ilDisegnoDi(quale);
+  final grande = disegno.grande;
+  final icona = disegno.icona;
+  final allegati = await _gliAllegati(quale, disegno);
   await _locali.show(
     id: quale.numero,
     title: notifica.titolo,
@@ -219,7 +298,15 @@ Future<void> mostra(NotificaDaMostrare quale) async {
             ? AndroidNotificationCategory.call
             : (notifica.urgente ? AndroidNotificationCategory.alarm : null),
         timeoutAfter: notifica.chiamata ? 60 * 1000 : null,
-        styleInformation: BigTextStyleInformation(notifica.testo),
+        largeIcon: icona == null ? null : ByteArrayAndroidBitmap(icona),
+        styleInformation: grande == null
+            ? BigTextStyleInformation(notifica.testo)
+            : BigPictureStyleInformation(
+                ByteArrayAndroidBitmap(grande),
+                contentTitle: notifica.titolo,
+                summaryText: notifica.testo,
+                hideExpandedLargeIcon: true,
+              ),
         actions: [
           for (final tasto in tasti)
             AndroidNotificationAction(
@@ -240,6 +327,7 @@ Future<void> mostra(NotificaDaMostrare quale) async {
             ? InterruptionLevel.timeSensitive
             : InterruptionLevel.active,
         presentSound: canale != CanaleDelleNotifiche.manutenzione,
+        attachments: allegati,
       ),
     ),
   );

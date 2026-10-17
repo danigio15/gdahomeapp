@@ -422,7 +422,16 @@ export function renderSubloadPopup(groupId = state.group) {
   const load = loadForGroup(groupId);
   if (!load) return false;
   const { loads, appliances } = carichiDelFlusso();
-  const figli = subloadsOf(load, loads, Array.isArray(appliances) ? appliances : []);
+  const tutti = subloadsOf(load, loads, Array.isArray(appliances) ? appliances : []);
+  /* Il cerchio di un piano ha dentro piu' stanze: la finestra le mette in fila
+   * come filtri, e un filtro scelto mostra solo i suoi apparecchi. Il totale in
+   * testa resta quello del filtro, come i cerchi: quello che si vede si somma. */
+  const stanzeDelPiano = load?.metadata?.cerchio_del_piano
+    ? (Array.isArray(load.metadata.stanze) ? load.metadata.stanze : [])
+    : [];
+  const filtro = stanzeDelPiano.length ? clean(state.filtri?.[clean(load.id)]) : "";
+  const figli = filtro ? tutti.filter((voce) => stanzaDelFiglio(voce, stanzeDelPiano) === filtro) : tutti;
+  disegnaIFiltri(list, load, stanzeDelPiano, filtro, tutti, groupId);
   const model = subloadPopupModel({
     load: stageIdentity(load, loads, appliances),
     children: figli,
@@ -469,11 +478,75 @@ export function renderSubloadPopup(groupId = state.group) {
   return true;
 }
 
+/* La stanza di un apparecchio dentro il cerchio di un piano: per id, o per
+ * nome come la scriveva il guscio vecchio. */
+function stanzaDelFiglio(voce, stanze) {
+  const scritte = [voce?.room_id, voce?.roomId, voce?.room].map(clean).filter(Boolean);
+  for (const scritta of scritte) {
+    const trovata = stanze.find(
+      (stanza) =>
+        clean(stanza?.id) === scritta ||
+        clean(stanza?.nome).toLowerCase() === scritta.toLowerCase(),
+    );
+    if (trovata) return clean(trovata.id);
+  }
+  return "";
+}
+
+/* La fila dei filtri sopra la lista: «Tutte» e una pillola per stanza, col
+ * numero dei suoi apparecchi. Esiste solo nella finestra di un piano. */
+function disegnaIFiltri(list, load, stanze, filtro, tutti, groupId) {
+  const id = "dm-subload-filtri";
+  let fila = doc.getElementById(id);
+  if (!stanze.length) {
+    fila?.remove();
+    return;
+  }
+  if (!fila) {
+    fila = element("div", "dm-subload-filtri");
+    fila.id = id;
+    fila.setAttribute("role", "group");
+    fila.addEventListener("click", (evento) => {
+      const pillola = evento.target?.closest?.("[data-dm-subload-filtro]");
+      if (!pillola) return;
+      state.filtri ||= {};
+      state.filtri[clean(fila.dataset.carico)] = clean(pillola.dataset.dmSubloadFiltro);
+      renderSubloadPopup(fila.dataset.gruppo);
+    });
+  }
+  fila.dataset.carico = clean(load.id);
+  fila.dataset.gruppo = clean(groupId);
+  if (fila.nextElementSibling !== list) list.before(fila);
+  const voci = [
+    { id: "", nome: t("Tutte", "All"), quanti: tutti.length },
+    ...stanze.map((stanza) => ({
+      id: clean(stanza.id),
+      nome: clean(stanza.nome),
+      quanti: tutti.filter((voce) => stanzaDelFiglio(voce, stanze) === clean(stanza.id)).length,
+    })),
+  ];
+  const firma = `${filtro}§${voci.map((voce) => `${voce.id}:${voce.quanti}`).join(",")}`;
+  if (fila.dataset.firma === firma) return;
+  fila.dataset.firma = firma;
+  fila.replaceChildren(
+    ...voci.map((voce) => {
+      const pillola = element("button", "dm-subload-filtro", `${voce.nome} · ${voce.quanti}`);
+      pillola.type = "button";
+      pillola.dataset.dmSubloadFiltro = voce.id;
+      pillola.setAttribute("aria-pressed", String(voce.id === filtro));
+      return pillola;
+    }),
+  );
+}
+
 function installStyles() {
   installStyle(
     "dm-subload-popup-style",
     `
     #subloads-list[data-dm-subload-owner="beta30"]{display:block!important}
+    .dm-subload-filtri{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px}
+    .dm-subload-filtro{border:1px solid var(--card-border,rgba(15,23,42,.12));background:var(--card-bg,#fff);color:var(--text,#0f172a);border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+    .dm-subload-filtro[aria-pressed="true"]{background:var(--primary-color,#0ea5e9);border-color:var(--primary-color,#0ea5e9);color:#fff}
     /* Il foglio su un livello suo non e' piu' qui: il motivo non era mai stato
      * dei carichi. Ogni finestra che si apra su una pagina viva sta nella
      * stessa condizione — il velo sfocato rilegge lo sfondo, e il contenuto del

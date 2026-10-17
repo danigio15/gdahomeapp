@@ -83,6 +83,58 @@ export class Casa {
     }
   }
 
+  /* Una domanda all'API REST di Home Assistant, col segno dell'add-on.
+   *
+   * Serve a una cosa che il filo non sa fare: salvare e togliere le
+   * automazioni (`config/automation/config/<id>`), che Home Assistant scrive
+   * solo da qui — e' la stessa porta che usa la sua pagina delle automazioni.
+   * La chiama solo `automazioni.js`, e solo per chi amministra la casa. Torna
+   * la risposta letta, o solleva `RispostaNegativa` col codice `http_<n>`. */
+  async api(metodo, percorso, corpo = undefined) {
+    const conCorpo = corpo !== undefined;
+    const risposta = await this.prendi(`${this.indirizzo}/api/${percorso}`, {
+      method: metodo,
+      headers: {
+        authorization: `Bearer ${this.segno}`,
+        ...(conCorpo ? { "content-type": "application/json" } : {}),
+      },
+      ...(conCorpo ? { body: JSON.stringify(corpo) } : {}),
+      signal: AbortSignal.timeout(15_000),
+    });
+    const testo = await risposta.text();
+    let dati = null;
+    try {
+      dati = testo ? JSON.parse(testo) : null;
+    } catch (_errore) {
+      dati = null;
+    }
+    if (!risposta.ok) {
+      const errore = new RispostaNegativa(
+        `http_${risposta.status}`,
+        String(dati?.message || `Home Assistant risponde ${risposta.status}`),
+      );
+      errore.status = risposta.status;
+      throw errore;
+    }
+    return dati;
+  }
+
+  /* I byte di un'immagine dall'API di Home Assistant, col segno dell'add-on:
+   * l'istantanea di una telecamera (`camera_proxy/<entita'>?width=…`) per la
+   * notifica di un movimento o dell'antifurto scattato. La chiama solo
+   * `notifiche.js`, e la foto esce di casa solo chiusa per il telefono che
+   * l'ha scelta (`spinta.js`). `null` se non e' un'immagine. */
+  async immagine(percorso) {
+    const risposta = await this.prendi(`${this.indirizzo}/api/${percorso}`, {
+      headers: { authorization: `Bearer ${this.segno}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!risposta.ok) return null;
+    const tipo = String(risposta.headers?.get?.("content-type") || "");
+    if (tipo && !tipo.startsWith("image/")) return null;
+    return Buffer.from(await risposta.arrayBuffer());
+  }
+
   /* Dove stanno i file della plancia.
    *
    * Il Supervisor inoltra soltanto `/api/`: i file statici — quelli di

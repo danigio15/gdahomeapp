@@ -42,6 +42,7 @@ import {
   entitaDelDispositivo,
 } from "./appliance-integration-section.js";
 import { CAMPI_SCELTI } from "../core/energy-loads-config.js";
+import { LOAD_PLANT_FIELD, plantLabel, plantList } from "../core/energy-plants.js";
 import {
   SOGLIA_IN_FUNZIONE_DI_SERIE,
   SOGLIA_STANDBY_DI_SERIE,
@@ -105,6 +106,29 @@ function roomOptions(selected) {
  * whole configuration: the circle's value starts including this appliance, the
  * popup behind the circle starts listing it, and nothing has to be typed a
  * second time in the Loads editor. */
+/* L'impianto dell'elettrodomestico, solo quando gli impianti sono piu' d'uno:
+ * con due contatori la lavatrice va nel flusso del suo, e «Da decidere» vuol
+ * dire che non compare in nessuno finche' non lo si sceglie (o finche' la
+ * plancia non lo capisce da sola: stessa potenza di un carico, piano coperto). */
+function impiantoMarkup(device = {}) {
+  const impianti = plantList(section("energy", {}) || {});
+  if (impianti.length < 2) return "";
+  const scritto = clean(device?.[LOAD_PLANT_FIELD]);
+  const voci = [
+    `<option value=""${scritto ? "" : " selected"}>${esc(t("Da decidere", "To decide"))}</option>`,
+    ...impianti.map((impianto, indice) => {
+      const id = clean(impianto.id);
+      return `<option value="${esc(id)}"${id === scritto ? " selected" : ""}>${esc(
+        plantLabel(impianto, indice, t("Impianto", "Plant")),
+      )}</option>`;
+    }),
+  ].join("");
+  return `<label class="ed-slot"><span class="ed-slot-lbl">${t("Impianto", "Plant")}</span><select class="ed-input" name="plant" data-dm-appliance-plant>${voci}</select><small>${t(
+    "Il contatore che lo misura: compare nel flusso di quell'impianto.",
+    "The meter that measures it: it shows up in that plant's flow.",
+  )}</small></label>`;
+}
+
 function flowLoadOptions(selected) {
   const loads = section("loads", readJson("cd_loads", []));
   const circles = (Array.isArray(loads) ? loads : []).filter(
@@ -1528,6 +1552,7 @@ export function openApplianceEditor(index) {
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(device.name)}" required></label>
         <label class="ed-slot dm-appliance-icon-field"><span class="ed-slot-lbl">${t("Tipo / immagine", "Type / artwork")}</span><input type="hidden" name="icon" value="${esc(visual)}"><span class="dm-appliance-icon-row"><span class="dm-appliance-icon-preview" data-icon-preview data-dm-preview-source="canonical-picker" aria-hidden="false"></span><button type="button" class="ed-input dm-appliance-type-trigger" data-type-trigger aria-haspopup="listbox"></button></span><small>${t("Usa lo stesso catalogo e la stessa icona azzurra della prima configurazione.", "Uses the same catalog and blue icon as the first configuration.")}</small></label>
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><select class="ed-input" name="room_id">${roomOptions(device.room_id || device.room)}</select></label>
+        ${impiantoMarkup(device)}
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Carico energia", "Energy load")}</span><select class="ed-input" name="flow_group" data-dm-appliance-flow-group>${flowLoadOptions(device.metadata?.beta27_subload_group)}</select><small class="dm-appliance-flow-suggestion" data-dm-flow-suggestion${flowGroupSuggested(device) ? "" : " hidden"}>✨ ${t("Suggerito: ha una potenza mappata", "Suggested: it has a mapped power sensor")}</small><small>${t("Il cerchio del flusso in cui rientra. Il suo valore diventa la somma dei dispositivi assegnati, e il popup del cerchio lo elenca: non serve riconfigurarlo nei Carichi.", "The flow circle it belongs to. That circle becomes the total of the appliances assigned to it and its popup lists them, with nothing to configure again under Loads.")}</small></label>
         ${soglieMarkup(device)}
       </div>
@@ -1630,6 +1655,9 @@ export function openApplianceEditor(index) {
       device_type: visualKey,
       visual_type: "asset",
       room_id: clean(values.room_id),
+      /* L'impianto si scrive solo se la casella c'e' (piu' impianti): con uno
+       * solo resta com'era, e non compare un campo che nessuno ha chiesto. */
+      ...("plant" in values ? { [LOAD_PLANT_FIELD]: clean(values.plant) } : {}),
       metadata: { ...(device.metadata || {}), beta27_subload_group: clean(values.flow_group) },
       /* Vuota resta vuota: vuol dire «i valori consigliati per il suo tipo»
        * (o i 5 W di sempre), e non uno zero che accende la card a ogni
