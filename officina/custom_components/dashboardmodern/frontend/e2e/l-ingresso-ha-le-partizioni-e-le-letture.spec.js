@@ -116,8 +116,9 @@ test.describe("l'ingresso ha le partizioni e le altre letture", () => {
     const aree = muro(page).locator(".mu-area");
     await expect(aree).toHaveCount(3);
     await expect(aree.locator(".mu-area-nome")).toHaveText(["Perimetrale", "Interno", "Garage"]);
+    /* Inserita fuori si legge «Inserito»: «Fuori» e' la parola del tasto. */
     await expect(aree.locator(".mu-area-stato")).toHaveText([
-      /Fuori/i,
+      /^Inserito$/i,
       /Disattivo/i,
       /Inserimento/i,
     ]);

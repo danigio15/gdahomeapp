@@ -8,6 +8,7 @@ import { COOLING_SLOT_MAP, ENERGY_SLOT_MAP } from "./energy-projection.js";
 import { normalizeRobots } from "./robot-model.js";
 import { SIGNED_GROUPS } from "./signed-energy.js";
 import { normalizzaPrese } from "./prese-model.js";
+import { stanzaAllAperto } from "./room-overview.js";
 
 export const SECTION_KEYS = Object.freeze({
   rooms: "cd_stanze",
@@ -75,6 +76,9 @@ export function migrateRooms(input = []) {
         rgb: room.rgb || "",
         order: Number.isFinite(+room.order) ? +room.order : index,
         metadata: { ...(room.metadata || {}) },
+        /* All'aperto (#251) e' un si' o un no. Chi non l'ha mai scelto non se
+         * lo trova scritto addosso: la chiave c'e' solo se c'era. */
+        ...(room.outdoor !== undefined ? { outdoor: stanzaAllAperto(room) } : {}),
       },
       room,
       "rooms",

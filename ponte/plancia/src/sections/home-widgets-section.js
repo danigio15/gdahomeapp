@@ -89,6 +89,7 @@ import {
   capacitaDellaBatteria,
 } from "../core/vehicle-model.js";
 import { eDellaWallbox } from "../core/wallbox-device-binding.js";
+import { laPastigliaDellaNotte } from "./ricarica-di-notte-section.js";
 import { statoUmanoEV } from "./il-popup-dell-auto-racconta-section.js";
 import { poolList } from "../core/pool-model.js";
 /* La tessera delle segnalazioni chiede il suo conto a chi gia' lo tiene, invece
@@ -258,7 +259,7 @@ import {
   stanzaDiUnaFinestra,
 } from "../core/arieggiare.js";
 import { azioniDellaPorta } from "../core/security-door-model.js";
-import { humidityEntry } from "../core/room-overview.js";
+import { humidityEntry, stanzaAllAperto } from "../core/room-overview.js";
 import {
   CHIAVE_VARCHI,
   contattiDichiaratiNelleFinestre,
@@ -2343,7 +2344,7 @@ function appliancesModel(states) {
   };
 }
 
-function temperatureModel(states) {
+export function temperatureModel(states) {
   const rooms = root.getStanze?.() || readJson("cd_stanze", []);
   if (!Array.isArray(rooms)) return null;
   const fuori = widgetExcludedEntities("temperatura");
@@ -2367,12 +2368,19 @@ function temperatureModel(states) {
         icon: clean(room.icon),
         temperature,
         humidity,
+        /* All'aperto (#251): il balcone si legge, ma la casa non e' lui. La
+         * riga resta — la finestra la mostra e lo storico la chiede — e chi
+         * fa la media, qui e nell'assistente, sa che deve saltarla. */
+        fuori: stanzaAllAperto(room),
       };
     })
     .filter((row) => row.temperature != null);
   if (!rows.length) return null;
-  const average = rows.reduce((sum, row) => sum + row.temperature, 0) / rows.length;
-  const humidities = rows.map((row) => row.humidity).filter((value) => value != null);
+  const dentro = rows.filter((row) => !row.fuori);
+  const average = dentro.length
+    ? dentro.reduce((sum, row) => sum + row.temperature, 0) / dentro.length
+    : null;
+  const humidities = dentro.map((row) => row.humidity).filter((value) => value != null);
   const humidity = humidities.length
     ? Math.round(humidities.reduce((sum, value) => sum + value, 0) / humidities.length)
     : null;
@@ -2385,7 +2393,9 @@ function temperatureModel(states) {
     accent: "#ef4444",
     icon: "🌡️",
     label: t("Temperatura", "Temperature"),
-    value: `${formatNumber(sola ? sola.temperature : average, 1)}°`,
+    /* Solo stanze all'aperto e nessuna scelta: una media della casa non
+     * c'e', e il trattino lo dice meglio di un balcone spacciato per casa. */
+    value: sola || average != null ? `${formatNumber(sola ? sola.temperature : average, 1)}°` : "—",
     caption: sola
       ? [
           sola.name,
@@ -3001,6 +3011,12 @@ function evModel(states) {
       foto: lettura.foto || "",
     })),
     evcc: comandiDiEvcc(states),
+    /* La ricarica di notte, in una riga (`ricarica-di-notte-section.js`):
+     * «🌙 Ricarica notturna · Fast fino all'80% o alle 05:00» mentre carica, «🌙 Ricarica notturna
+     * stanotte alle 23:00» quando aspetta. Sta sotto la didascalia della
+     * tessera e dentro la finestra, sotto i tasti di evcc; spenta, niente. */
+    notte: laPastigliaDellaNotte(),
+    sottotitolo: laPastigliaDellaNotte(),
     rows,
   };
 }
@@ -7906,8 +7922,13 @@ function summaryChips(widget) {
     ];
   }
   if (widget.key === "temperatura") {
-    const gradi = numeri("temperature");
-    if (!gradi.length) return [];
+    /* La media, la piu' fredda e la piu' calda sono della casa: il balcone
+     * all'aperto (#251) non e' la stanza piu' fredda di casa. */
+    const gradi = righe
+      .filter((riga) => !riga?.fuori)
+      .map((riga) => Number(riga?.temperature))
+      .filter((valore) => Number.isFinite(valore));
+    if (gradi.length < 2) return [];
     return [
       [t("media", "average"), `${formatNumber(media(gradi), 1)}°`],
       [t("la più fredda", "coldest"), `${formatNumber(Math.min(...gradi), 1)}°`],
@@ -8381,8 +8402,13 @@ function entitaDelRacconto(widget) {
    * prima e la si confrontava con la media di tutte — «piu' alto del solito»
    * detto su un numero diverso da quello scritto sopra. Meglio nessuna lettura
    * nel tempo che una che parla di un'altra cosa. */
-  if (widget?.key === "temperatura")
-    return (widget?.rows?.length || 0) === 1 ? clean(widget?.rows?.[0]?.entity) : "";
+  if (widget?.key === "temperatura") {
+    /* Le stanze all'aperto (#251) nella media non ci sono, e quindi nemmeno
+     * qui: con una sola stanza di casa e un balcone, la storia e' della
+     * stanza. */
+    const dentro = (Array.isArray(widget?.rows) ? widget.rows : []).filter((riga) => !riga?.fuori);
+    return dentro.length === 1 ? clean(dentro[0]?.entity) : "";
+  }
   if (widget?.key === "ev") return clean(widget?.rows?.[0]?.batteria || widget?.rows?.[0]?.entity);
   if (["solare", "piscina", "robot", "irrigazione"].includes(widget?.key))
     return clean(widget?.rows?.[0]?.entity);
@@ -11140,6 +11166,14 @@ html[data-theme="dark"] .dm-w-panel-row[data-dm-w-obiettivo="alto"] .dm-w-steppe
   font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-sotto{color:#b45309}
+/* Il nome della luce accesa e' scritto sul crema, non sul fondo della finestra.
+   Prima prendeva il colore del testo del tema — e col tema scuro il testo e'
+   quasi bianco: «Lampadario Cucina» bianco su giallo chiaro, che non si
+   leggeva. Sulla scheda accesa il fondo e' sempre lo stesso, chiaro, in tutti
+   e due i temi: il nome va scritto scuro, un marrone della stessa famiglia
+   della riga sotto, e il tema non ci mette bocca. */
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"],
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-luce[data-on="true"] .dm-w-luce-nome{color:#451a03}
 /* Il clima della finestra: una scheda per unita', col colore di quello che
    sta facendo — arancio quando scalda, azzurro quando raffresca. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda]{
@@ -12153,6 +12187,9 @@ export function installHomeWidgetsSection() {
     EVENTO_PIANTE,
     /* E le medie del livello dell'acquario. */
     EVENTO_ACQUARIO,
+    /* La casa ha detto com'e' la notte dell'auto: la riga della ricarica di
+       notte sotto la tessera Auto si rifa' con la sua risposta. */
+    "dashboardmodern:ricarica-notte",
     /* La chat di assistenza dice quando ha una risposta da leggere, e quando
        e' stata letta: la sua tessera compare e sparisce con quello. */
     "dashboardmodern:chat-stato",

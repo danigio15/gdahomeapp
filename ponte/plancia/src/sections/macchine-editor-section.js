@@ -19,12 +19,17 @@ import {
   CHIAVE_MACCHINE,
   FAMIGLIE,
   candidateDaChiedere,
+  comeSta,
   integrazioniDaScegliere,
   lettureDellaRiga,
   lettureProposteDellaMacchina,
   macchineDaImportare,
   macchineERete,
   normalizzaMacchine,
+  paroleDiPartenza,
+  regolaDelloStato,
+  regolaScritta,
+  valoreDelloStato,
 } from "../core/macchine-e-rete.js";
 import { ESITI_ELENCO, conLaVoce, tettoDellElenco } from "../core/robot-model.js";
 import { nomeAccantoAlDispositivo } from "../core/nome-accanto-al-dispositivo.js";
@@ -155,6 +160,133 @@ function campoDellaFamiglia(riga, indice) {
     )}</small></label>`;
 }
 
+/* ── da dove viene lo stato, il terzo campo in più (#177) ──────────────── */
+
+/* «Lo stato me lo dà un sensore del mio sistema di ping: online, offline.»
+ *
+ * Quasi sempre basta l'automatico, che capisce anche le parole di un sensore
+ * qualunque. Quando non basta si sceglie a mano: cosa guardare — lo stato o
+ * un attributo —, quali parole vogliono dire «in linea», e cosa vuol dire il
+ * resto. Sotto, la prova dal vivo: quello che il sensore dice adesso, e come
+ * lo legge la regola appena scritta. Una regola che si vede funzionare prima
+ * di salvarla non ha bisogno di un manuale.
+ *
+ * La regola sta in una casella nascosta, come l'icona e le letture: ogni
+ * gesto la riscrive, salva la riga con quello che c'è nelle altre caselle e
+ * ridisegna, e la riga resta aperta. */
+const NON_ATTRIBUTI = new Set(["friendly_name", "icon", "entity_picture"]);
+
+/* La regola scritta nella casella nascosta. Una casella vuota, o scritta male,
+ * e' l'automatico: e' quello che una riga senza regola e' sempre stata. */
+function leggiLaRegola(testo) {
+  try {
+    return clean(testo) ? JSON.parse(testo) : null;
+  } catch {
+    return null;
+  }
+}
+
+function attributiDaGuardare(entity, states, scelto) {
+  const attributi = Object.keys(states?.[entity]?.attributes || {}).filter(
+    (nome) => !NON_ATTRIBUTI.has(nome),
+  );
+  if (scelto && !attributi.includes(scelto)) attributi.unshift(scelto);
+  return attributi;
+}
+
+function scelteMarkup(via, indice, valore, voci) {
+  return `<span class="dm-macchina-ed-seg" role="group">${voci
+    .map(
+      ([v, testo]) =>
+        `<button type="button" class="${v === valore ? "si" : ""}" aria-pressed="${v === valore}" data-dm-macchina-stato-${via}="${esc(v)}" data-dm-macchina-stato-riga="${indice}">${esc(testo)}</button>`,
+    )
+    .join("")}</span>`;
+}
+
+/* La prova dal vivo: cosa dice adesso il sensore, e cosa ne capisce la riga. */
+function provaDelloStato(riga, states) {
+  const entity = clean(riga.entity);
+  if (!entity) return "";
+  const regola = regolaDelloStato(riga.stato);
+  const letto = valoreDelloStato(states?.[entity], regola);
+  const esito = comeSta(states?.[entity], regola);
+  const parola =
+    esito === "su"
+      ? t("In linea", "Online")
+      : esito === "giu"
+        ? t("Assente", "Down")
+        : t("Non risponde", "Not answering");
+  const codice = (testo) => `<code>${esc(testo)}</code>`;
+  const detto = !letto
+    ? `${codice(entity)} ${esc(t("non c'è in Home Assistant", "is not in Home Assistant"))}`
+    : regola.modo === "mio" && regola.attributo && !letto.muto
+      ? `${esc(t("Adesso l'attributo", "Now the attribute"))} ${codice(regola.attributo)} ${esc(t("vale", "is"))} ${codice(letto.valore || "—")}`
+      : `${esc(t("Adesso", "Now"))} ${codice(entity)} ${esc(t("vale", "is"))} ${codice(letto.valore || "—")}`;
+  return `<div class="dm-macchina-ed-prova" data-dm-macchina-stato-prova="${esc(esito || "muto")}" role="status">
+      <span>${detto}</span><b>${esc(parola)}</b>
+    </div>
+    <small>${esc(
+      t(
+        "«unavailable» e «unknown» restano sempre «Non risponde»: se è Home Assistant a non sapere, la plancia non dice che l'apparecchio è giù.",
+        "“unavailable” and “unknown” always stay “Not answering”: when it is Home Assistant that does not know, the dashboard does not say the device is down.",
+      ),
+    )}</small>`;
+}
+
+function campoDelloStato(riga, indice) {
+  const states = allStates();
+  const regola = regolaDelloStato(riga.stato);
+  const scritta = regolaScritta(regola);
+  const etichetta = (testo) => `<span class="ed-slot-lbl">${esc(testo)}</span>`;
+  const mio =
+    regola.modo === "mio"
+      ? `<label class="ed-slot dm-dich-campo">${etichetta(t("Cosa guardare", "What to look at"))}
+      <span class="ed-form-row"><select class="ed-input" data-dm-macchina-stato-attributo="${indice}">
+        <option value=""${regola.attributo ? "" : " selected"}>${esc(t("Lo stato dell'entità", "The entity state"))}</option>${attributiDaGuardare(
+          riga.entity,
+          states,
+          regola.attributo,
+        )
+          .map(
+            (nome) =>
+              `<option value="${esc(nome)}"${nome === regola.attributo ? " selected" : ""}>${esc(t("Attributo", "Attribute"))}: ${esc(nome)}</option>`,
+          )
+          .join("")}</select></span></label>
+    <div class="ed-slot dm-dich-campo" data-dm-macchina-stato-parole="${indice}">${etichetta(t("È in linea quando vale", "It is online when it reads"))}
+      <div class="dm-macchina-ed-chips">${regola.inLinea
+        .map(
+          (parola) =>
+            `<button type="button" class="dm-macchina-ed-chip" data-dm-macchina-stato-via="${esc(parola)}" data-dm-macchina-stato-riga="${indice}" title="${esc(t("Togli", "Remove"))}"><span>${esc(parola)}</span><i aria-hidden="true">✕</i></button>`,
+        )
+        .join("")}</div>
+      <span class="ed-form-row"><input class="ed-input mono" data-dm-macchina-stato-nuova="${indice}" placeholder="${esc(t("raggiungibile", "reachable"))}" autocomplete="off" spellcheck="false"><button type="button" class="dm-macchina-ed-piu" data-dm-macchina-stato-aggiungi="${indice}" aria-label="${esc(t("Aggiungi", "Add"))}" title="${esc(t("Aggiungi", "Add"))}">＋</button></span>
+    </div>
+    <div class="ed-slot dm-dich-campo">${etichetta(t("Se vale altro", "If it reads anything else"))}
+      ${scelteMarkup("altrimenti", indice, regola.altrimenti, [
+        ["giu", t("Assente", "Down")],
+        ["muto", t("Non risponde", "Not answering")],
+      ])}
+    </div>`
+      : "";
+  return `<div class="dm-macchina-ed-stato">
+    <div class="ed-slot dm-dich-campo">${etichetta(t("Lo stato viene da", "The state comes from"))}
+      <input type="hidden" data-dm-dich-campo="stato" data-dm-dich-riga="${indice}" value="${esc(scritta ? JSON.stringify(scritta) : "")}">
+      ${scelteMarkup("modo", indice, regola.modo, [
+        ["auto", t("Automatico", "Automatic")],
+        ["mio", t("Scelgo io", "I choose")],
+      ])}
+      <small>${esc(
+        t(
+          "Automatico: acceso, connesso, online, up e simili vogliono dire «in linea» — com'è oggi, con in più online e up. Scegli tu quando il tuo sistema di controllo usa parole sue, o mette lo stato in un attributo.",
+          "Automatic: on, connected, online, up and the like mean “online” — as today, plus online and up. Choose yourself when your monitoring system uses its own words, or puts the state in an attribute.",
+        ),
+      )}</small>
+    </div>
+    ${mio}
+    ${provaDelloStato(riga, states)}
+  </div>`;
+}
+
 /* ── le altre letture, il secondo campo in più (#177) ──────────────────── */
 
 /* «Ho un sistema di ping esterno che per ogni apparecchio mi dà online,
@@ -270,9 +402,12 @@ const scheda = costruisciSchedaDichiarata({
     salvato: `🖥️ ${t("Macchina salvata", "Machine saved")}`,
     etichettaEntita: t("Entità della macchina", "Machine entity"),
     segnaposto: "binary_sensor.pve_qemu_103_running",
+    /* Non solo i `binary_sensor` (#177): un sensore qualunque che scrive
+     * online o offline, up o down va bene uguale — l'automatico lo capisce, e
+     * per le parole che non capisce c'è «Lo stato viene da». */
     aiutoEntita: t(
-      "Il sensore che dice se è accesa o raggiungibile: binary_sensor.* di classe running o connectivity.",
-      "The sensor that says whether it is up or reachable: a binary_sensor.* of class running or connectivity.",
+      "Il sensore che dice se è su o giù: un binary_sensor.* (running, connectivity) oppure un sensor.* con parole come online, offline, up, down.",
+      "The sensor that says whether it is up or down: a binary_sensor.* (running, connectivity) or a sensor.* with words like online, offline, up, down.",
     ),
     /* Un nome proprio non si traduce, e passarlo da `t()` vorrebbe dire
      * chiedere a tredici cataloghi di ripetere la stessa parola. */
@@ -295,21 +430,27 @@ const scheda = costruisciSchedaDichiarata({
   },
 
   inTesta: integrazioniMarkup,
-  campiInPiu: (riga, indice) => `${campoDellaFamiglia(riga, indice)}${campoDelleLetture(riga, indice)}`,
+  campiInPiu: (riga, indice) =>
+    `${campoDellaFamiglia(riga, indice)}${campoDelloStato(riga, indice)}${campoDelleLetture(riga, indice)}`,
 
-  /* La fascia si legge dalla tendina e le letture dalla loro casella nascosta:
-   * sono i due campi in piu' che stanno nel documento, e la scheda condivisa
-   * non sa dove la sezione li ha messi. */
+  /* La fascia si legge dalla tendina, le letture e la regola dello stato dalle
+   * loro caselle nascoste: sono i campi in piu' che stanno nel documento, e la
+   * scheda condivisa non sa dove la sezione li ha messi. */
   bozzaInPiu(bozza, body, indice) {
     const campo = (quale) =>
       body.querySelector(`[data-dm-dich-campo="${quale}"][data-dm-dich-riga="${indice}"]`);
     const scelta = clean(campo("famiglia")?.value);
     const letture = campo("letture");
-    return {
+    const fuori = {
       ...bozza,
       famiglia: FAMIGLIE[scelta] ? scelta : bozza.famiglia || "macchine",
       letture: lettureDellaRiga(letture ? { letture: letture.value } : bozza),
     };
+    const casella = campo("stato");
+    const regola = regolaScritta(casella ? leggiLaRegola(casella.value) : bozza.stato);
+    if (regola) fuori.stato = regola;
+    else delete fuori.stato;
+    return fuori;
   },
 
   leggi(elenco) {
@@ -368,6 +509,84 @@ const scheda = costruisciSchedaDichiarata({
     };
     const aggiungi = (casella, indice, nuova) =>
       cambiaLeLetture(casella, indice, (elenco) => conLaVoce(elenco, nuova, "letture"));
+
+    /* La regola dello stato (#177) si salva allo stesso modo: ogni gesto la
+     * cambia, la riga si salva con quello che c'e' nelle altre caselle, e la
+     * prova dal vivo sotto si rifa' con la regola nuova. */
+    const cambiaLaRegola = (indice, cambia) => {
+      const body = doc.getElementById(ANCORA);
+      if (!body || !Number.isInteger(indice) || indice < 0) return false;
+      const prima = bozza(body, indice);
+      const regola = cambia(regolaDelloStato(prima.stato), prima);
+      salva(
+        conLaRiga(config(), indice, { ...prima, stato: regolaScritta(regola) || undefined }, inPiu),
+      );
+      ridisegna();
+      return true;
+    };
+    const aggiungiLaParola = (indice) => {
+      const scritta = doc
+        .getElementById(ANCORA)
+        ?.querySelector(`[data-dm-macchina-stato-nuova="${indice}"]`);
+      const parola = clean(scritta?.value).toLowerCase();
+      if (!parola) return false;
+      return cambiaLaRegola(indice, (regola) => ({
+        ...regola,
+        inLinea: [...regola.inLinea, parola],
+      }));
+    };
+
+    documento.addEventListener("click", (evento) => {
+      const dentro = doc.getElementById(ANCORA);
+      const tasto = evento.target?.closest?.("[data-dm-macchina-stato-riga]");
+      if (!tasto || !dentro?.contains(tasto)) return;
+      evento.preventDefault();
+      const indice = Number(tasto.dataset.dmMacchinaStatoRiga);
+      const dati = tasto.dataset;
+      if (dati.dmMacchinaStatoModo !== undefined)
+        cambiaLaRegola(indice, (regola, riga) => ({
+          ...regola,
+          modo: dati.dmMacchinaStatoModo === "mio" ? "mio" : "auto",
+          /* Chi passa a «Scelgo io» parte da parole che danno lo stesso
+           * esito di adesso, non da un elenco vuoto. */
+          inLinea:
+            dati.dmMacchinaStatoModo === "mio" && !regola.inLinea.length
+              ? paroleDiPartenza(allStates()[riga.entity])
+              : regola.inLinea,
+        }));
+      else if (dati.dmMacchinaStatoAltrimenti !== undefined)
+        cambiaLaRegola(indice, (regola) => ({
+          ...regola,
+          altrimenti: dati.dmMacchinaStatoAltrimenti,
+        }));
+      else if (dati.dmMacchinaStatoVia !== undefined)
+        cambiaLaRegola(indice, (regola) => ({
+          ...regola,
+          inLinea: regola.inLinea.filter((parola) => parola !== dati.dmMacchinaStatoVia),
+        }));
+    });
+    documento.addEventListener("click", (evento) => {
+      const tasto = evento.target?.closest?.("[data-dm-macchina-stato-aggiungi]");
+      if (!tasto || !doc.getElementById(ANCORA)?.contains(tasto)) return;
+      evento.preventDefault();
+      aggiungiLaParola(Number(tasto.dataset.dmMacchinaStatoAggiungi));
+    });
+    /* Invio nella casella delle parole aggiunge, come il «＋» accanto. */
+    documento.addEventListener("keydown", (evento) => {
+      const scritta = evento.target?.closest?.("[data-dm-macchina-stato-nuova]");
+      if (evento.key !== "Enter" || !scritta || !doc.getElementById(ANCORA)?.contains(scritta))
+        return;
+      evento.preventDefault();
+      aggiungiLaParola(Number(scritta.dataset.dmMacchinaStatoNuova));
+    });
+    documento.addEventListener("change", (evento) => {
+      const tendina = evento.target?.closest?.("[data-dm-macchina-stato-attributo]");
+      if (!tendina || !doc.getElementById(ANCORA)?.contains(tendina)) return;
+      cambiaLaRegola(Number(tendina.dataset.dmMacchinaStatoAttributo), (regola) => ({
+        ...regola,
+        attributo: clean(tendina.value),
+      }));
+    });
 
     documento.addEventListener("click", (evento) => {
       const dentro = doc.getElementById(ANCORA);

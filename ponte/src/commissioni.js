@@ -492,6 +492,9 @@ export class Commissioni {
     /* I viaggi pianificati di gdanav (`viaggi.js`). Si mettono anche dopo:
      * hanno bisogno delle notifiche, che nascono dopo le commissioni. */
     viaggi = null,
+    /* La ricarica di notte (`ricarica-di-notte.js`): nasce dopo, come i
+     * viaggi, perche' legge la casa dallo specchio delle notifiche. */
+    ricaricaDiNotte = null,
     /* La rete Zigbee di questa casa. Che poi una rete ci sia o no lo dice lui,
      * rispondendo `quale: ""`: i comandi `ponte/zigbee/` sono di questo ponte
      * comunque — sono nel suo nome — e non si mandano a Home Assistant, che
@@ -555,6 +558,8 @@ export class Commissioni {
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
     this.viaggi = viaggi;
+    /* E la ricarica di notte, che nasce dopo per la stessa ragione. */
+    this.ricaricaDiNotte = ricaricaDiNotte;
     this.zigbee = zigbee;
     this.registri = registri;
     /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
@@ -661,6 +666,13 @@ export class Commissioni {
         return no(id, "unauthorized", "questo lo fa solo chi amministra la casa");
       if (!this.notifiche) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.notifiche.casaCapita(detto);
+    }
+    /* La ricarica di notte (`ricarica-di-notte.js`): cosa sta facendo la
+     * casa con l'auto, in sola lettura. Le impostazioni non passano di qui —
+     * stanno nella configurazione della plancia, con le sue regole. */
+    if (tipo === "ponte/ricarica-notte/stato") {
+      if (!this.ricaricaDiNotte) return no(id, "unknown_command", `non conosco ${tipo}`);
+      return this.ricaricaDiNotte.rispondi(detto, { utente: chiChiede });
     }
     /* I viaggi di gdanav: dalla plancia e dal telefono, ognuno coi suoi. */
     if (typeof tipo === "string" && tipo.startsWith("ponte/viaggi/")) {

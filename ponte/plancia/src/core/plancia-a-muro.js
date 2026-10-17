@@ -26,6 +26,7 @@ import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { lettoriConfigurati } from "./media-player.js";
 import { isDerivedEntity, powerPairSource, signedSource } from "./signed-energy.js";
 import { isCharging, nomeDellaPersona, personViewModel } from "./person-model.js";
+import { stanzaAllAperto, temperatureEntries } from "./room-overview.js";
 
 export const CHIAVE_MURO = "cd_muro";
 
@@ -136,6 +137,12 @@ export const TIPI_DI_COMANDO = Object.freeze([
   "entita",
   "azione",
   "vuoto",
+  /* «Se ci fosse un on e off di uno switch che sono due entita' separate, si
+   * potrebbe nei riquadri smezzarlo e fare in uno unico on e off? Unico nome,
+   * ma con ON e OFF uno a destra e uno a sinistra.» Il riquadro dei due tasti:
+   * un nome solo, e in alto, al posto dell'interruttore, ON a sinistra e OFF a
+   * destra, ognuno con la sua entita'. Vedi `servizioDelTasto` piu' sotto. */
+  "duetasti",
 ]);
 
 /* Le entita' che hanno una card loro: la luce col cursore, il clima col meno e
@@ -189,6 +196,8 @@ export function tastiDellaTapparella(attributi = {}) {
  *   sensore solo per le due cose: due caselle che potevano dire due numeri
  *   diversi per la stessa «temperatura in casa» avrebbero solo confuso. */
 export const TEMPERATURE_MOSTRATE = Object.freeze(["meteo", "casa"]);
+/* Dove sta il sensore della temperatura: «In casa» o «Fuori». */
+export const DOVE_STA_IL_SENSORE = Object.freeze(["casa", "fuori"]);
 
 /* Un posto lasciato vuoto apposta in mezzo agli altri: «il quinto lo voglio
  * libero». Senza, i posti dopo scivolerebbero avanti. */
@@ -262,7 +271,58 @@ export function comandoPulito(input) {
   }
   const id = entita(input.entita);
   if (!id) return null;
+  if (tipo === "duetasti") {
+    /* Qui il tipo lo decide chi l'ha scritto, non l'entita': due tasti di
+     * una luce restano due tasti, non la card della luce col cursore. Senza
+     * il tasto OFF non e' un riquadro dei due tasti, e il posto resta vuoto
+     * piuttosto che mostrare un OFF che non spegne niente. Lo stato e'
+     * facoltativo: un'entita' scritta male vale come non scritta. */
+    const spegne = entita(input.entitaOff);
+    if (!spegne) return null;
+    return { tipo, entita: id, entitaOff: spegne, stato: entita(input.stato), ...aspetto };
+  }
   return { tipo: tipoDellEntita(id), entita: id, ...aspetto };
+}
+
+/* ── Il riquadro dei due tasti ────────────────────────────────────────────
+ *
+ * Ogni tasto «attiva» la sua entita' e basta: non e' un interruttore che va e
+ * viene, e premere ON due volte lascia acceso. Un pulsante si preme, uno
+ * script o una scena partono, un'automazione scatta, e tutto il resto — un
+ * interruttore, un input_boolean, una luce — si accende. Chi ha due entita'
+ * separate per accendere e spegnere (il relè a impulsi, il telecomando
+ * imparato, i due pulsanti del led) le ha cosi' tutte e due sotto un nome. */
+const DOMINI_CHE_SI_PREMONO = Object.freeze(["button", "input_button"]);
+const DOMINI_CHE_PARTONO = Object.freeze(["script", "scene"]);
+/* Le entita' del tasto ON che dicono da sole se la cosa e' accesa: quando lo
+ * stato non e' scritto, il riquadro guarda loro. Un pulsante o uno script no:
+ * dopo la pressione tornano come prima, e non dicono niente. */
+const DOMINI_CHE_DICONO_LO_STATO = Object.freeze(["switch", "input_boolean", "light"]);
+
+/** Il servizio che manda il tocco su un tasto dei due: `{ domain, service, data }`. */
+export function servizioDelTasto(id) {
+  const pulita = entita(id);
+  if (!pulita) return null;
+  const d = dominioDi(pulita);
+  const data = { entity_id: pulita };
+  if (DOMINI_CHE_SI_PREMONO.includes(d)) return { domain: d, service: "press", data };
+  if (DOMINI_CHE_PARTONO.includes(d)) return { domain: d, service: "turn_on", data };
+  if (d === "automation") return { domain: d, service: "trigger", data };
+  if (DOMINI_CHE_DICONO_LO_STATO.includes(d)) return { domain: d, service: "turn_on", data };
+  /* Il resto (una ventola, un telecomando, una valvola) lo accende Home
+   * Assistant col servizio di tutti: ogni dominio ha il suo «accendi». */
+  return { domain: "homeassistant", service: "turn_on", data };
+}
+
+/** Da quale entita' il riquadro dei due tasti legge se e' acceso: quella
+ * scritta come stato, o il tasto ON quando e' un interruttore, una luce, un
+ * input_boolean. Vuoto: il riquadro non sa lo stato e dice «Comando». */
+export function statoDeiDueTasti(comando) {
+  if (!comando || comando.tipo !== "duetasti") return "";
+  const scritto = entita(comando.stato);
+  if (scritto) return scritto;
+  const on = entita(comando.entita);
+  return DOMINI_CHE_DICONO_LO_STATO.includes(dominioDi(on)) ? on : "";
 }
 
 /* Una scena: un'azione della plancia di origine o un'entita' qualunque — una
@@ -273,8 +333,11 @@ function scenaPulita(input) {
   const comando = comandoPulito({ ...input, tipo });
   if (!comando) return null;
   /* Nelle scene un'entita' e' sempre una tessera grande: anche una luce qui
-   * e' «accendi», non il cursore. */
-  return comando.entita ? { ...comando, tipo: "entita" } : comando;
+   * e' «accendi», non il cursore. E i due tasti, che le Scene non hanno,
+   * diventano la tessera del solo tasto ON. */
+  if (!comando.entita) return comando;
+  const { entitaOff: _off, stato: _stato, ...tessera } = comando;
+  return { ...tessera, tipo: "entita" };
 }
 
 const INGRESSO_VUOTO = Object.freeze({
@@ -1294,7 +1357,7 @@ export const MURO_VUOTO = Object.freeze({
   meteo: "",
   temperatura: "meteo",
   menuDiLato: false,
-  riposo: { attivo: true, minuti: 2, torna: true, sensore: "" },
+  riposo: { attivo: true, minuti: 2, torna: true, sensore: "", dove: "casa" },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
   avvisiGrandi: true,
@@ -1355,6 +1418,9 @@ export function muroPulito(input) {
       /* La temperatura «in casa» del riposo, e quella in alto quando si
        * sceglie `temperatura: "casa"`: vuoto, quella della prima stanza. */
       sensore: entita(riposo.sensore),
+      /* Dove sta quel sensore: lo dice chi configura, «In casa» o «Fuori».
+       * Di serie in casa, come e' sempre stato. */
+      dove: scelta(riposo.dove, DOVE_STA_IL_SENSORE, "casa"),
     },
     notte: {
       attiva: vero(notte.attiva, false),
@@ -1554,6 +1620,11 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
         name: testo(s.name),
         temp: entita(s.temp),
         hum: entita(s.hum),
+        /* All'aperto (#251): la sua temperatura e' quella di fuori, e il
+         * tablet non la scrive «in casa» (`temperaturaDelMuro`). Con lei le
+         * altre sonde della stanza, oltre alla prima. */
+        outdoor: stanzaAllAperto(s),
+        sonde: unici(temperatureEntries(s).map((e) => entita(e.temp))),
       })),
     luci: dispositivi("lights"),
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
@@ -1776,6 +1847,28 @@ export function comandiProposti(fonte = {}, nomeStanza = "", posti = POSTI) {
     .map(comandoPulito)
     .filter(Boolean)
     .slice(0, posti);
+}
+
+/**
+ * La temperatura che il tablet scrive accanto al meteo e sul riposo: da quale
+ * sensore, e se e' di dentro o di fuori. `{ sonda, fuori }`, `sonda` vuota se
+ * non ce n'e' una.
+ *
+ * «Il muro scrive "X° in casa", ma quel sensore e' esterno.» Nella 1.14.4 lo
+ * indovinava dalla stanza all'aperto (#251), e non bastava: «la stanza non va
+ * bene, devi far decidere se e' esterno o interno». Adesso lo decide chi
+ * configura (`riposo.dove`, «Il sensore sta: In casa / Fuori»), e la stanza
+ * non conta. Il sensore e' quello scelto, o la sonda della stanza della prima
+ * pagina.
+ */
+export function temperaturaDelMuro(muro, fonte = {}) {
+  const fuori = muro?.riposo?.dove === "fuori";
+  const scelta = entita(muro?.riposo?.sensore);
+  if (scelta) return { sonda: scelta, fuori };
+  const nome = muro?.pagine?.[0]?.stanza;
+  const stanza = nome ? elenco(fonte?.stanze).find((s) => s?.name === nome) || null : null;
+  const sua = entita(stanza?.temp);
+  return { sonda: sua, fuori: Boolean(sua) && fuori };
 }
 
 /** I comandi che la pagina mostra adesso: quelli scelti, o quelli proposti.

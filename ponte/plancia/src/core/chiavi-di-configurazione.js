@@ -318,7 +318,17 @@
  * ha imparato (`cd_assistente`). Sono della casa: il tablet in cucina e il
  * computer devono mostrare la stessa card nello stesso posto, e un
  * suggerimento scartato dal telefono non deve ripresentarsi sul tablet. */
-export const CONFIG_KEYS_REVISION = 63;
+/* La revisione 64 aggiunge la pagina Meteo (#206, `cd_meteo`): i sensori della
+ * stazione che non avevano una casella — pressione, raffica, indice UV,
+ * radiazione e luminosità — e l'ordine dei blocchi della pagina. Sono della
+ * casa come le caselle della testata accanto a cui stanno: la stazione scelta
+ * dal computer deve comparire anche sul tablet in cucina. */
+/* La revisione 65 aggiunge la ricarica di notte (`cd_ricarica_notte`): la
+ * fascia, cosa fa evcc dentro e dopo, i giorni e la soglia della batteria. La
+ * regola non la esegue la plancia ma la casa, che la legge dalla plancia
+ * principale: una scelta fatta dal telefono che restasse sul telefono non
+ * arriverebbe mai a chi la deve mettere in pratica. */
+export const CONFIG_KEYS_REVISION = 65;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -616,4 +626,10 @@ export const CONFIG_KEYS = Object.freeze([
   /* Le batterie di accumulo (#117): la ragione per cui stanno qui è scritta
    * accanto alla revisione 59. */
   "cd_accumulo",
+  /* La pagina Meteo (#206): la ragione per cui sta qui è scritta accanto alla
+   * revisione 64. */
+  "cd_meteo",
+  /* La ricarica di notte: la ragione per cui sta qui è scritta accanto alla
+   * revisione 65. */
+  "cd_ricarica_notte",
 ]);

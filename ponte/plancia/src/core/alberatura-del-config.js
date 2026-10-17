@@ -147,6 +147,9 @@ export const SCHEDE = Object.freeze({
   /* ── 🌡️ Clima e acqua ──────────────────────────────────────────────── */
   sez9: { famiglia: "clima", posizione: 10 }, // Clima: termostati, VMC
   sez7: { famiglia: "clima", posizione: 20 }, // Temperature delle stanze
+  /* Il meteo (#206): subito dopo le temperature delle stanze, come nella
+   * barra — la stessa domanda, guardata fuori. */
+  meteo: { famiglia: "clima", posizione: 22 },
   /* La scheda che il guscio chiama «Solare» ma che il suo modulo rinomina
    * «Gestione termica»: pompa solare, boiler, scaldabagno, caldaia, pressione
    * dell'acqua, valvola di sicurezza. Era finita sotto Energia al primo giro,

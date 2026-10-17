@@ -57,6 +57,8 @@ const TAB_ICONS = Object.freeze({
   /* Gli animali (#358): stessa storia, stessa cura — il simbolo e' quello che
    * la scheda si scrive da se'. */
   animali: "🐾",
+  /* Il meteo (#206): il sole dietro la nuvola, come la sua voce nella barra. */
+  meteo: "🌦️",
 });
 
 /* Quale disegno di casa porta ogni scheda della configurazione.
@@ -121,6 +123,8 @@ const OGGETTO_DELLA_SCHEDA = Object.freeze({
    * Il nome della scheda non e' il nome del disegno, e la prova l'ha trovata
    * nuda per la quarta volta. */
   scollegati: "nonrisponde",
+  /* Il meteo (#206): lo stesso disegno della sua voce nella barra. */
+  meteo: "meteo",
 });
 
 const FLOW_LOADS = Object.freeze({

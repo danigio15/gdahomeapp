@@ -77,6 +77,8 @@ const COPERTURE_APERTE = new Set(["garage", "gate", "door"]);
 const MOVIMENTO = new Set(["motion", "occupancy", "presence"]);
 
 const NOME_DEL_CAMPANELLO = /campanell|doorbell|citofon|ding/i;
+/* Per gli eventi la parola intera: «ding» dentro «building» non e' un campanello. */
+const EVENTO_DEL_CAMPANELLO = /campanell|doorbell|citofon|intercom|(^|[._])ding([._]|$)/i;
 const NOME_DEL_CANCELLO = /cancell|gate|portone|cancel/i;
 const NOME_DELLA_PIOGGIA = /pioggia|piove|rain/i;
 const NOME_ELETTRODOMESTICO =
@@ -416,9 +418,19 @@ export class Sentinella {
 
     /* Il campanello: un `event.*` di classe doorbell che cambia ora, o un
      * sensore che si chiama campanello e si accende. */
+    /* Non tutti i campanelli dicono «doorbell»: il citofono di Ring, e altri,
+     * arrivano come un `event.*` senza classe, col nome o l'evento che dicono
+     * cos'e' («…_ding», `event_type: ding`). Il movimento no: e' un'altra
+     * notifica, e ha la sua classe. */
+    const tipoDiEvento = String(dopo.attributes?.event_type ?? "").toLowerCase();
+    const eUnCampanello =
+      classe === "doorbell" ||
+      (classe !== "motion" &&
+        (EVENTO_DEL_CAMPANELLO.test(id) ||
+          /^(ding|intercom_ding|ring|doorbell)$/.test(tipoDiEvento)));
     const suona =
       (dominio === "event" &&
-        classe === "doorbell" &&
+        eUnCampanello &&
         prima &&
         era !== dopo.state &&
         era !== "unavailable" &&

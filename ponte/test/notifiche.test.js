@@ -903,3 +903,62 @@ test("«Cosa c'è in casa»: l'elenco dice cosa ha capito, e «Avvisa» / «Rest
   });
   assert.equal(capire.scegli("light.cucina", "boh"), false);
 });
+
+test("un telefono riabbinato riceve una notifica sola, non anche «nuova notifica»", async () => {
+  /* La casa tolta e rimessa nell'app: un abbinamento nuovo, lo stesso
+   * indirizzo di Firebase. Il vecchio non ha piu' la chiave sul telefono, e la
+   * sua busta arrivava come «gdahome · nuova notifica» accanto a quella vera. */
+  const banco = unBanco();
+  try {
+    const nuovo = banco.dispositivi.abbina({ nome: "Telefono A, di nuovo", utente: UTENTE_A });
+    const stesso = `gettone-dello-stesso-telefono-${"x".repeat(20)}`;
+    const registraCon = (chi) =>
+      banco.notifiche.rispondi(
+        { id: 1, type: "ponte/notifiche/registra", gettone: stesso },
+        { dispositivo: chi.dispositivo },
+      );
+    await registraCon(banco.a);
+    banco.orologio.ora += MINUTO;
+    await registraCon(nuovo);
+    assert.equal(await banco.notifiche.consegna(antifurto()), 1);
+    assert.equal(banco.spinte.length, 1);
+    assert.equal(banco.spinte[0].telefono, nuovo.dispositivo.id, "va all'abbinamento nuovo");
+
+    /* Una casa che li aveva gia' doppi da prima: una busta sola lo stesso. */
+    banco.notifiche.archivio.dati.telefoni[banco.a.dispositivo.id].gettone = stesso;
+    banco.orologio.ora += 6 * MINUTO;
+    banco.spinte.length = 0;
+    assert.equal(await banco.notifiche.consegna(antifurto({ chiave: "antifurto:y" })), 1);
+    assert.equal(banco.spinte[0].telefono, nuovo.dispositivo.id);
+  } finally {
+    banco.spegni();
+  }
+});
+
+test("il citofono di Ring: un evento senza classe, col nome o l'evento che dice ding", () => {
+  for (const [id, attributi] of [
+    ["event.citofono_ding", {}],
+    ["event.ingresso_intercom", { event_type: "ding" }],
+  ]) {
+    const { sentinella, dette } = unaSentinella([stato(id, "2026-10-14T10:00:00Z", attributi)]);
+    sentinella.cambia(id, stato(id, "2026-10-14T12:00:00Z", attributi));
+    assert.deepEqual(
+      dette.map((d) => d.tipo),
+      ["campanello"],
+      id,
+    );
+  }
+  /* Un evento qualunque che ha «ding» in mezzo al nome non e' un campanello. */
+  {
+    const altro = "event.building_pulsante";
+    const { sentinella, dette } = unaSentinella([stato(altro, "2026-10-14T10:00:00Z", {})]);
+    sentinella.cambia(altro, stato(altro, "2026-10-14T12:00:00Z", {}));
+    assert.ok(!dette.some((d) => d.tipo === "campanello"));
+  }
+  /* Il movimento di Ring no: ha la sua classe, e non e' un campanello. */
+  const id = "event.citofono_motion";
+  const attributi = { device_class: "motion", event_type: "motion" };
+  const { sentinella, dette } = unaSentinella([stato(id, "2026-10-14T10:00:00Z", attributi)]);
+  sentinella.cambia(id, stato(id, "2026-10-14T12:00:00Z", attributi));
+  assert.ok(!dette.some((d) => d.tipo === "campanello"));
+});

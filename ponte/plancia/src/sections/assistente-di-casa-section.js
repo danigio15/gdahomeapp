@@ -249,6 +249,9 @@ function stanze(states) {
     entity: clean(r.entity),
     temperatura: r.temperature,
     umidita: r.humidity,
+    /* All'aperto (#251): il nucleo la legge, ma non propone di scaldarla,
+     * rinfrescarla o arieggiarla. */
+    fuori: r.fuori === true,
   }));
   for (const riga of elenco(modello("aria")?.rows)) {
     const stato = states?.[clean(riga.entity)];

@@ -79,6 +79,9 @@ import {
   servizioDelPasso,
   servizioDelPulsante,
   servizioDellaTelecamera,
+  servizioDelTasto,
+  statoDeiDueTasti,
+  temperaturaDelMuro,
   valoreDallaPosizione,
   derivaDelRiposo,
   batteriaDalBrowser,
@@ -396,20 +399,17 @@ const ACCENTI = Object.freeze({
   allarme: "#e11d48",
 });
 
-/* Il disegno di un'azione: quello scelto, o uno che le somiglia dal nome. */
-function disegnoDellAzione(azione, scelto = "") {
-  if (clean(scelto)) return clean(scelto);
-  const nome = String(azione?.name || "").toLowerCase();
-  const indizi = [
-    [/buongiorno|mattin|sveglia|morning/, "meteo"],
-    [/esco|uscit|leave|away|fuori/, "aperture"],
-    [/rientr|arriv|casa|home|torno/, "home"],
-    [/cena|pranz|cucin|dinner|lunch/, "cottura"],
-    [/cinema|film|tv|relax|musica|movie/, "media"],
-    [/notte|buonanotte|night|dorm/, "sicurezza"],
-    [/luc|light/, "luci"],
-  ];
-  return indizi.find(([re]) => re.test(nome))?.[1] || "azioni";
+/* Il disegno di un'azione: quello scelto nel config, o quello delle scene.
+ *
+ * Qui il tablet lo indovinava dal nome — «luci» la lampadina, «cinema» la
+ * cassa — e le scene di Home Assistant scelte come entita' avevano invece
+ * sempre il loro. Due tessere che fanno la stessa cosa uscivano diverse: «Luci
+ * salone» con la lampadina, «Modo cinema» con la cassa, la stessa scena scelta
+ * come entita' con il disegno delle scene. «Perche' ci sono due icone diverse?
+ * Sono due scene praticamente uguali.» Adesso una scena e' una scena, comunque
+ * la si scelga; chi ne vuole uno suo lo sceglie nel campo «Icona». */
+function disegnoDellAzione(_azione, scelto = "") {
+  return clean(scelto) || "azioni";
 }
 
 /* ── i comandi verso Home Assistant ──────────────────────────────────────── */
@@ -674,14 +674,17 @@ function meteo() {
  * casa» (`muro.temperatura === "casa"`) prende anche il posto della
  * temperatura del meteo, in alto accanto all'ora. Un numero solo, da un posto
  * solo: in alto e sul riposo non possono dire due «in casa» diversi. */
+/* Quale sensore, e se e' di fuori, lo decide il nucleo (`temperaturaDelMuro`):
+ * una stanza all'aperto non e' «in casa». Restituisce `{ testo, fuori }`, il
+ * testo vuoto se il sensore non dice un numero. */
 function temperaturaInCasa(muro) {
-  const pagina = muro?.pagine?.[0];
-  const stanza = (state.fonte?.stanze || []).find((s) => s.name === pagina?.stanza);
-  const sonda = clean(muro?.riposo?.sensore) || stanza?.temp || "";
+  const { sonda, fuori } = temperaturaDelMuro(muro, state.fonte || {});
   if (sonda) segna(sonda);
   const n = sonda ? numero(stato(sonda)?.state) : null;
-  return n === null ? "" : `${decimale(n)}°`;
+  return { testo: n === null ? "" : `${decimale(n)}°`, fuori };
 }
+/* La parola sotto il numero: «in casa», o «fuori» per la sonda del terrazzo. */
+const doveDellaTemperatura = (fuori) => (fuori ? t("fuori", "outside") : t("in casa", "inside"));
 
 const PAROLE_DEL_METEO = () => ({
   sunny: t("sereno", "sunny"),
@@ -715,11 +718,14 @@ function testa(pagina, muro) {
    * accanto alla colonna, una scritta lunga («in casa · poco nuvoloso») la
    * allargherebbe e lo staccherebbe dal numero. La scritta sta su una riga
    * sola, e quando non c'e' posto finisce coi puntini. */
-  const inCasa =
-    pagina.riga?.meteo !== false && muro.temperatura === "casa" ? temperaturaInCasa(muro) : "";
+  const sensore =
+    pagina.riga?.meteo !== false && muro.temperatura === "casa"
+      ? temperaturaInCasa(muro)
+      : { testo: "", fuori: false };
+  const inCasa = sensore.testo;
   const parolaDelMeteo = m ? PAROLE_DEL_METEO()[m.condizione] || "" : "";
   const chipDelMeteo = inCasa
-    ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([t("in casa", "inside"), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>`
+    ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([doveDellaTemperatura(sensore.fuori), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>`
     : m && numero(m.temperatura) !== null
       ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>`
       : "";
@@ -772,11 +778,16 @@ function paginaIntera(pagina, muro) {
 const STATI_DELL_ALLARME = () => ({
   /* «Metterei disattivo»: l'antifurto non si spegne, si disattiva. */
   disarmed: t("Disattivo", "Disarmed"),
-  armed_home: t("In casa", "Home"),
-  armed_away: t("Fuori", "Away"),
-  armed_night: t("Notte", "Night"),
-  armed_vacation: t("Vacanza", "Vacation"),
-  armed_custom_bypass: t("Parziale", "Custom"),
+  /* «Quando c'e' antifurto inserito non devi scrivere fuori ma metti
+   * inserito e al massimo il nome della partizione inserita. Tipo se e' notte
+   * scrivi inserito notte.» Lo stato dice che l'antifurto e' inserito, e come;
+   * «Fuori» resta la parola del tasto (`PAROLE_DEI_MODI`), che e' un gesto:
+   * scritto come stato, accanto all'ora, sembrava dire dov'era la gente. */
+  armed_home: t("Inserito casa", "Armed home"),
+  armed_away: t("Inserito", "Armed"),
+  armed_night: t("Inserito notte", "Armed night"),
+  armed_vacation: t("Inserito vacanza", "Armed vacation"),
+  armed_custom_bypass: t("Inserito parziale", "Armed partial"),
   arming: t("Inserimento…", "Arming…"),
   pending: t("In attesa…", "Pending…"),
   triggered: t("ALLARME", "Alarm going off"),
@@ -819,6 +830,18 @@ function modoSuMisura(id) {
   return (
     normalizzaModiSuMisura(state.fonte?.antifurto?.suMisura || []).find((m) => m.id === id) || null
   );
+}
+
+/* Lo stato di una centrale sola in parole, coi modi scritti a mano: se la
+ * centrale e' inserita e il tasto acceso e' uno di quelli scritti a mano
+ * (antifurto-su-misura.js), «Inserito Giardino» dice di piu' di «Inserito». */
+function statoDellaCentrale(s) {
+  const valore = String(s?.state || "");
+  if (valore.startsWith("armed_")) {
+    const mio = modoSuMisura(tastoAcceso(s, tastiDellAntifurto(s)));
+    if (mio) return `${t("Inserito", "Armed")} ${mio.nome || mio.id}`;
+  }
+  return STATI_DELL_ALLARME()[valore] || valore;
 }
 
 /* Le aree dell'antifurto di una pagina: quelle scelte nell'Ingresso, o la
@@ -1046,6 +1069,90 @@ function cardLuce(c, i) {
       <div class="mu-bar" data-mu-cursore="luce" data-mu-entita="${esc(id)}"><i style="width:${pct}%"></i>${on ? `<u style="left:${pct}%"></u>` : ""}</div></div>`
         : ""
     }</div>`;
+}
+
+/* ── il riquadro dei due tasti ───────────────────────────────────────────
+ *
+ * «Se ci fosse un on e off di uno switch che sono due entita' separate, si
+ * potrebbe nei riquadri smezzarlo e fare in uno unico on e off? Unico nome,
+ * ma con ON e OFF uno a destra e uno a sinistra.» La forma e' quella della
+ * luce (`cardLuce`): il disco e lo stato in alto a sinistra, il nome grande in
+ * fondo; in alto a destra, al posto dell'interruttore, due tasti — ON a
+ * sinistra, OFF a destra — e ognuno manda il suo comando alla sua entita'
+ * (`servizioDelTasto` nel nucleo). Il tocco sul riquadro fuori dai tasti non
+ * apre niente: la card non ha un'entita' sola a cui aprire la finestra.
+ *
+ * Lo stato, se c'e' da dove leggerlo (`statoDeiDueTasti`), si vede come sulla
+ * luce: «Accesa» col disco illuminato e il tasto ON pieno d'ambra, «Spenta»
+ * col tasto OFF schiarito. Se non c'e' — due pulsanti e basta — il riquadro
+ * dice «Comando», e per un paio di secondi dopo il tocco «✓ Inviato», col
+ * tasto premuto cerchiato: senza, chi preme non saprebbe se e' partito. */
+const INVIATO_PER = 2000;
+/* Acceso come lo dice l'entita' dello stato: quello che conta per la luce
+ * (`acceso`), e in piu' i sensori che dicono «in casa», «aperta», «suona». */
+const accesoDeiDueTasti = (id) =>
+  typeof state.inAttesa[id]?.acceso === "boolean"
+    ? state.inAttesa[id].acceso
+    : accesoVero(id) || ["home", "unlocked", "playing"].includes(String(stato(id)?.state));
+const chiaveDeiDueTasti = (c) => `${c.entita}|${c.entitaOff}`;
+
+function cardDueTasti(c, i) {
+  const letto = statoDeiDueTasti(c);
+  const nome = clean(c.nome) || nomeDi(c.entita);
+  const manca = letto && !stato(letto);
+  const sa = Boolean(letto) && !manca;
+  const on = sa && accesoDeiDueTasti(letto);
+  const inviato = !sa ? state.inviati?.[chiaveDeiDueTasti(c)] || "" : "";
+  /* Il disegno: quello scelto, o la lampadina se non se n'e' scelto uno —
+   * e' la stessa della luce, che col disco acceso si illumina. */
+  const icona = clean(c.disegno)
+    ? disegno(clean(c.disegno), 30, `dt-${i}`)
+    : bulbo(on ? "#1f2937" : "var(--text-dim)");
+  const parola = manca
+    ? t("Non trovata", "Not found")
+    : sa
+      ? on
+        ? t("Accesa", "On")
+        : t("Spenta", "Off")
+      : inviato
+        ? `✓ ${t("Inviato", "Sent")}`
+        : t("Comando", "Command");
+  const tasto = (verso, id, scritta, etichetta) => {
+    const classi = [
+      "mu-tasto",
+      `mu-tasto-${verso}`,
+      sa && verso === "on" && on ? "si" : "",
+      sa && verso === "off" && !on ? "si" : "",
+      inviato === verso ? "premuto" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return `<button type="button" class="${classi}" data-mu-fa="duetasti" data-mu-verso="${verso}" data-mu-entita="${esc(id)}" data-mu-stato="${esc(sa ? letto : "")}" data-mu-chiave="${esc(chiaveDeiDueTasti(c))}"${sa ? ` aria-pressed="${verso === "on" ? on : !on}"` : ""} aria-label="${esc(etichetta)}">${scritta}</button>`;
+  };
+  return `<div class="mu-carta mu-card mu-fam mu-duetasti ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}">
+    <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${icona}</span><span class="mu-stato ${on ? "" : "spento"}${inviato ? " mu-inviato" : ""}">${esc(parola)}</span>
+      <div class="mu-due">${tasto("on", c.entita, "ON", `${t("Accendi", "Turn on")} ${nome}`)}${tasto("off", c.entitaOff, "OFF", `${t("Spegni", "Turn off")} ${nome}`)}</div></div>
+    <div class="mu-osw mu-fam-nome mu-n">${esc(nome)}</div></div>`;
+}
+
+/* Il tocco su un tasto dei due: il suo comando, e il riquadro che lo mostra
+ * subito — acceso o spento se sa lo stato, «✓ Inviato» se non lo sa. */
+function premiIlTasto(bersaglio) {
+  const { muEntita: id, muVerso: verso, muStato: letto, muChiave: chiave } = bersaglio.dataset;
+  const servizio = servizioDelTasto(id);
+  if (!servizio) return;
+  if (letto) attendi(letto, "acceso", verso === "on");
+  else if (chiave) {
+    const inviati = (state.inviati ||= {});
+    inviati[chiave] = verso;
+    root.clearTimeout?.((state.timerDegliInviati ||= {})[chiave]);
+    state.timerDegliInviati[chiave] = root.setTimeout?.(() => {
+      delete inviati[chiave];
+      disegna();
+    }, INVIATO_PER);
+  }
+  comanda(servizio.domain, servizio.service, servizio.data);
+  disegna();
 }
 
 const PAROLE_DEL_CLIMA = () => ({
@@ -1637,6 +1744,7 @@ function paginaStanza(pagina) {
     if (c.tipo === "clima") return cardClima(c, i, zona);
     if (c.tipo === "tapparella") return cardTapparella(c, i);
     if (c.tipo === "entita") return cardEntita(c, i);
+    if (c.tipo === "duetasti") return cardDueTasti(c, i);
     return cardAzione(c, i);
   });
   const riga = pagina.modello === "stanza" ? pillole(pagina) : linguette;
@@ -2368,7 +2476,7 @@ function paginaIngressoCompatta(pagina) {
           chiave: "sicurezza",
           accento: valore === "triggered" ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1",
           etichetta: riassunto ? quanteAree(aree.length) : t("Antifurto", "Alarm"),
-          titolo: riassunto ? riassunto.testo : STATI_DELL_ALLARME()[valore] || valore,
+          titolo: riassunto ? riassunto.testo : statoDellaCentrale(s),
           sotto: "",
           attiva: true,
           dati: `data-mu-fa="finestra-antifurto"`,
@@ -2482,7 +2590,7 @@ function paginaIngresso(pagina) {
   const acceso = tastoAcceso(s, modi);
   const carta = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
-        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? STATI_DELL_ALLARME()[valore] || valore : modi.find((m) => m.mode === acceso)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
+        <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(s ? statoDellaCentrale(s) : modi.find((m) => m.mode === acceso)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
         ${avvisoFinestre}</div></div>
       ${
         modi.length
@@ -2976,7 +3084,7 @@ function finestra() {
     const acceso = tastoAcceso(s, modi);
     const aperte = pagina?.ingresso?.finestre ? finestreAperte() : [];
     dentro = `<div class="mu-fin-clima" style="--acc:${valore === "disarmed" ? "#10b981" : "#6366f1"}">
-      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(STATI_DELL_ALLARME()[valore] || valore)}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(statoDellaCentrale(s))}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "citofono" && f.suonato) {
     /* Aperta dal campanello: non una finestra, una chiamata (#citofono). */
@@ -3086,14 +3194,16 @@ function riposo(muro) {
    * sono inserite: «Antifurto · Spento» non diceva niente a chi ha la
    * perimetrale accesa e la zona notte no. */
   const aree = state.fonte?.aree?.length > 1 ? state.fonte.aree : null;
-  const allarme =
-    !aree && centrale && stato(centrale) ? STATI_DELL_ALLARME()[stato(centrale).state] : "";
+  const allarme = !aree && centrale && stato(centrale) ? statoDellaCentrale(stato(centrale)) : "";
   const rigaDelleAree = aree ? areeSulRiposo(aree) : "";
-  const dentro = temperaturaInCasa(muro);
+  const { testo: dentro, fuori } = temperaturaInCasa(muro);
   /* Con «Temperatura mostrata: da un sensore in casa» il meteo resta come
    * disegno e parola, senza i gradi di fuori: la temperatura e' quella di
-   * casa, una volta sola, accanto. */
-  const soloCasa = muro.temperatura === "casa" && Boolean(dentro);
+   * casa, una volta sola, accanto. E se il sensore e' di fuori (una stanza
+   * all'aperto) i gradi del meteo se ne vanno lo stesso: due temperature di
+   * fuori, una accanto all'altra, che non dicono lo stesso numero, confondono
+   * — resta quella del sensore, che e' di casa. */
+  const soloCasa = (muro.temperatura === "casa" || fuori) && Boolean(dentro);
   /* Quello che si vuole sapere passando davanti, senza toccare: fuori, dentro,
    * chi c'e', cosa e' rimasto aperto, l'antifurto. Ognuna solo se c'e'. */
   const persone = personeInCasa();
@@ -3116,7 +3226,7 @@ function riposo(muro) {
             ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>`
             : ""
       }
-      ${dentro ? `<span>${disegno("temperatura", 30, "rip-temp")}${dentro} ${esc(t("in casa", "inside"))}</span>` : ""}
+      ${dentro ? `<span data-mu-riposo="temperatura">${disegno("temperatura", 30, "rip-temp")}${dentro} ${esc(doveDellaTemperatura(fuori))}</span>` : ""}
       ${persone.tutte ? `<span data-mu-riposo="persone">${disegno("persone", 30, "rip-persone")}${esc(chi)}</span>` : ""}
       ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
       ${allarme ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme)}</span>` : ""}
@@ -4201,6 +4311,11 @@ function onClick(event) {
        * dominio, `light.toggle` su uno `switch` non fa niente. */
       alterna(id, dominio(id) || "light", "toggle");
       return;
+    case "duetasti":
+      /* Un tasto del riquadro ON e OFF: il suo comando e basta, niente
+       * finestra (il tocco si ferma qui, prima della card). */
+      premiIlTasto(bersaglio);
+      return;
     case "spegni":
       attendi(id, "acceso", false);
       comanda(dominio(id) || "light", "turn_off", { entity_id: id });
@@ -4557,11 +4672,52 @@ function onPointerDown(event) {
     root.clearTimeout?.(state.pressione);
     state.pressione = root.setTimeout?.(() => {
       state.pressione = null;
+      ingoiaIlRilascio();
       if (state.muro?.blocco?.attivo)
         apriFinestra({ tipo: "codice", scopo: "uscita", scritto: "" });
       else apriIlConfigDelMuro();
     }, 2000);
   }
+}
+
+/* Il dito che si alza dopo i due secondi sull'orologio non e' un tocco.
+ *
+ * «Con questo formato se clicco su ora non si attiva il config.» Si attivava:
+ * dopo due secondi il config si apriva, e il dito, alzandosi, lo richiudeva.
+ * Sul telefono il config prende tutto lo schermo e la sua ✕ sta in alto a
+ * destra — proprio sotto l'ora del pannello, dov'era il dito. Il pannello se
+ * n'e' gia' andato, il rilascio finisce su quello che c'e' adesso, e il clic
+ * che ne nasce preme la ✕: il config si chiudeva in un lampo, e il pannello
+ * tornava. Sul tablet la ✕ sta lontano dall'ora, e non succedeva.
+ *
+ * E' lo stesso inciampo della luce tenuta (`state.tenuto`), ma qui il clic
+ * non arriva al pannello: arriva al config, o al tastierino del PIN. Lo si
+ * ferma prima di tutti, sul documento: il primo clic dopo che il dito si e'
+ * alzato, e solo quello, e solo subito dopo. */
+function ingoiaIlRilascio() {
+  if (!doc?.addEventListener) return;
+  const togli = () => {
+    doc.removeEventListener("pointerup", alzati, true);
+    doc.removeEventListener("pointerdown", togli, true);
+    doc.removeEventListener("click", ingoia, true);
+  };
+  /* Il clic del rilascio arriva subito dopo il dito alzato: passato un
+   * attimo, se non e' arrivato non arriva piu', e il tocco dopo e' vero. */
+  const alzati = () => {
+    doc.removeEventListener("pointerup", alzati, true);
+    root.setTimeout?.(togli, 600);
+  };
+  const ingoia = (event) => {
+    togli();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+  doc.addEventListener("pointerup", alzati, true);
+  doc.addEventListener("click", ingoia, true);
+  /* Un dito nuovo che si posa e' un tocco vero: il rilascio e' passato. */
+  doc.addEventListener("pointerdown", togli, true);
+  /* E se il dito resta giu' a lungo, la guardia non resta li' per sempre. */
+  root.setTimeout?.(togli, 30_000);
 }
 
 /* Da 0 a 1, dove sta il dito lungo la traccia del cursore. */
@@ -5171,6 +5327,10 @@ ${MURO} .mu-pagine{display:flex;flex:none;gap:6px;padding:5px;border-radius:16px
 ${MURO} .mu-pagine button{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:800;font-size:15px;color:var(--text-dim)}
 ${MURO} .mu-pagine button.si{background:color-mix(in srgb,var(--acc) 18%,var(--card-bg));color:color-mix(in srgb,var(--acc) 85%,var(--text));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
 ${MURO} .mu-ora{margin-left:auto;display:flex;align-items:center;gap:22px;text-align:right}
+/* Il dito tenuto sull'orologio e' un gesto del pannello, e il telefono non se
+   lo deve prendere: niente scorrimento o tirata per ricaricare che lo
+   interrompa a meta', niente menu del tocco lungo. */
+${MURO} .mu-ora{touch-action:none;-webkit-touch-callout:none}
 ${MURO} .mu-pagine+.mu-ora{margin-left:24px}
 ${MURO} .mu-testa>.mu-titolo{flex:0 1 auto;min-width:var(--mu-tit-min,0)}
 ${MURO} .mu-testa>.mu-titolo .mu-sot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -5627,6 +5787,18 @@ ${MURO}[data-compatto="1"] .mu-h{font-size:32px}
 ${MURO}[data-compatto="1"] .mu-pagine{order:0;width:auto;margin:0 0 0 auto;padding:3px;gap:3px}
 ${MURO}[data-compatto="1"] .mu-pagine button{padding:8px;flex:none}
 ${MURO}[data-compatto="1"] .mu-ora{margin-left:10px}
+/* L'ora sul telefono: l'uscita dal pannello e' il dito tenuto sull'orologio,
+   ma qui dell'orologio restano solo le cifre — il meteo, la data e la riga
+   accanto sono nascosti — e le cifre sono una striscia alta una trentina di
+   pixel. Sul tablet il dito trova l'ora col meteo e la data: un bersaglio
+   grande. Sul telefono il dito si posa quasi sempre un poco sotto quello che
+   guarda, finiva sul bordo della testa, e due secondi tenuti li' non aprivano
+   niente: «se clicco su ora non si attiva il config». Il bersaglio si allarga
+   tutto intorno alle cifre, senza spostarle: un velo trasparente che
+   appartiene all'orologio, e che a sinistra si ferma prima delle linguette. */
+${MURO}[data-compatto="1"] .mu-ora{position:relative}
+${MURO}[data-compatto="1"] .mu-ora::after{content:"";position:absolute;inset:-12px -14px -14px -8px}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-ora::after{left:-28px}
 ${MURO}[data-compatto="1"] .mu-g6{--mu-gap:10px}
 ${MURO}[data-compatto="1"] .mu-card{padding:12px;gap:8px;border-radius:18px}
 ${MURO}[data-compatto="1"] .mu-card .mu-riga1{flex-wrap:wrap;gap:8px;align-content:flex-start}
@@ -5851,6 +6023,32 @@ ${MURO} .mu-card.mu-tapparella:not(.mu-accesa) .mu-tap-stato{color:var(--text-di
 }
 @container (max-width:179px){
   ${MURO} .mu-card.mu-fam .mu-riga1>.mu-stato{display:none}
+}
+/* Il riquadro dei due tasti (\`cardDueTasti\`): al posto dell'interruttore, ON
+ * e OFF affiancati, ognuno grande come il disco. ON acceso e' pieno d'ambra
+ * come l'interruttore acceso della luce; OFF quando la cosa e' spenta si
+ * schiarisce appena, perche' spento e' lo stato di riposo e non deve gridare.
+ * Nelle caselle strette i tasti si stringono con la casella, e a far posto
+ * se ne vanno, in quest'ordine, la parola dello stato e il disco: i due tasti
+ * e il nome restano sempre. Sul pannello piccolo la riga in alto non va a
+ * capo come nelle altre card: i tasti sotto il disco spingevano il nome fuori. */
+${MURO} .mu-card.mu-fam .mu-riga1>.mu-due{margin-left:auto;flex:0 1 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0;width:min(62%,260px)}
+${MURO} .mu-tasto{height:62px;min-width:0;padding:0 6px;border-radius:18px;display:flex;align-items:center;justify-content:center;text-align:center;white-space:nowrap;overflow:hidden;
+  font-weight:900;font-size:16px;letter-spacing:.1em;color:var(--text);background:color-mix(in srgb,var(--text) 9%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent);transition:background .15s ease,box-shadow .15s ease,transform .1s ease}
+${MURO} .mu-tasto:active{transform:scale(.96)}
+${MURO} .mu-tasto-on.si{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1f2937;box-shadow:0 0 22px -4px #f59e0bcc}
+${MURO} .mu-tasto-off.si{background:color-mix(in srgb,var(--text) 18%,var(--card-bg));color:var(--text)}
+${MURO} .mu-tasto.premuto{outline:3px solid color-mix(in srgb,var(--text) 50%,transparent);outline-offset:2px}
+${MURO} .mu-stato.mu-inviato{color:#34d399}
+${MURO} .mu-g6>.mu-card.mu-duetasti .mu-riga1>.mu-due{gap:clamp(6px,3cqw,10px);width:clamp(96px,50cqw,250px)}
+${MURO} .mu-g6>.mu-card.mu-duetasti .mu-tasto{height:clamp(30px,min(32cqh,24cqw),62px);font-size:clamp(12px,min(8cqh,5cqw),16px);border-radius:clamp(10px,9cqh,18px);letter-spacing:clamp(.02em,.6cqw,.1em)}
+${MURO}[data-compatto="1"] .mu-card.mu-duetasti .mu-riga1{flex-wrap:nowrap}
+@container (max-width:259px){
+  ${MURO} .mu-card.mu-duetasti .mu-riga1>.mu-stato{display:none}
+}
+@container (max-width:199px){
+  ${MURO} .mu-card.mu-duetasti .mu-riga1>.mu-disco{display:none}
+  ${MURO} .mu-g6>.mu-card.mu-duetasti .mu-riga1>.mu-due{width:100%}
 }
 /* ── Il menu di lato ─────────────────────────────────────────────────────
  *

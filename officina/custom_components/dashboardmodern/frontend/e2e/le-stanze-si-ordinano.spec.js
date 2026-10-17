@@ -92,3 +92,42 @@ test("scendere e' l'inverso di salire", async ({ page }, testInfo) => {
     .poll(() => nomiSalvati(page))
     .toEqual(["Cucina", "Soggiorno", "Sala Cinema", "Bagnetto"]);
 });
+
+test("al telefono il nome della stanza non si spezza a metà parola", async ({ page }, testInfo) => {
+  /* «Soggiorn / o»: le frecce, arrivate dopo, lasciavano al nome 82 pixel fra
+   * l'icona e la matita, e la regola dell'editor lo spezzava dove capitava. */
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  /* Con i piani la scheda disegna le stanze piano per piano: e' li' che le
+   * righe prendono la griglia stretta del telefono. */
+  const conIlPiano = STANZE.map((stanza) => ({ ...stanza, floor: "Piano terra" }));
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  /* La griglia del telefono la mette un modulo del runtime: si aspetta che
+   * ci sia, o la prova guarderebbe una scheda che il telefono non vede mai. */
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate((stanze) => {
+    window.localStorage.setItem("cd_stanze", JSON.stringify(stanze));
+    window.localStorage.setItem("cd_floors", JSON.stringify(["Piano terra"]));
+  }, conIlPiano);
+  await page.evaluate(() => window.apriConfigEntita());
+  await page.locator('.ed-tab[data-tab="stanze"]').click();
+  /* La veste del telefono si mette quando la scheda si ridisegna: la si
+   * ridisegna, come succede tornandoci sopra. */
+  await page.evaluate(() => window.editorSwitch?.("stanze"));
+  await expect(page.locator("#ed-body .dm-beta11-room-row [data-dm-room-move]")).toHaveCount(8);
+  const quanteRighe = (nome) =>
+    page.evaluate((cercato) => {
+      const nodo = [...document.querySelectorAll("#ed-body .dm-room-config-row .ed-row-new")].find(
+        (uno) => uno.textContent.trim() === cercato,
+      );
+      if (!nodo) return -1;
+      const tratto = document.createRange();
+      tratto.selectNodeContents(nodo);
+      return new Set([...tratto.getClientRects()].map((r) => Math.round(r.top))).size;
+    }, nome);
+  await expect.poll(() => quanteRighe("Soggiorno")).toBe(1);
+  await expect.poll(() => quanteRighe("Sala Cinema")).toBe(1);
+});

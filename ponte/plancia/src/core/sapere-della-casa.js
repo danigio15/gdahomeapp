@@ -285,7 +285,8 @@ function eventiDelCalendario(states, fonti) {
  *   aree          i nomi delle aree di Home Assistant;
  *   stanze        le stanze della plancia (nomi o `{ name }`);
  *   temperature   i termometri scelti per le stanze: `{ name, entity,
- *                 temperature, humidity }`;
+ *                 temperature, humidity, fuori }`, con `fuori` vero per le
+ *                 stanze segnate «All'aperto»;
  *   persone       le persone scelte: `{ name, entity }`;
  *   meteo         l'entita' del meteo scelta;
  *   previsioni    `{ giorni, ore }` da `weather.get_forecasts`;
@@ -379,6 +380,10 @@ export function sapereDellaCasa(fonti = {}) {
       entity: pulito(r.entity),
       temperatura: numero(r.temperature ?? r.temperatura),
       umidita: numero(r.humidity ?? r.umidita),
+      /* Il balcone segnato «All'aperto» (#251) resta fra le stanze — «quanti
+       * gradi ci sono sul balcone?» ha una risposta — ma chi fa la media della
+       * casa lo salta. La chiave c'e' solo quando e' vera. */
+      ...(r.fuori === true ? { fuori: true } : {}),
     }))
     .filter((r) => r.stanza && (r.temperatura !== null || r.umidita !== null));
   const dentro = configurate.length ? configurate : stanzeDaHomeAssistant(entita);

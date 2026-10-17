@@ -8,7 +8,7 @@
  * la si guarda; nel config l'anteprima dal vivo, la bozza che non si perde
  * cambiando scheda, la pagina duplicata e il colore. */
 import { expect, test } from "@playwright/test";
-import { STATI_A_MURO, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
+import { SEME_A_MURO, STATI_A_MURO, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
 
 const muro = (page) => page.locator("#dm-muro");
 const salvato = (page) =>
@@ -430,8 +430,11 @@ test.describe("la plancia a muro si vede meglio", () => {
     const riga = muro(page).locator(".mu-riposo-aree");
     await expect(riga).toBeVisible();
     await expect(riga).toContainText("Perimetrale");
-    await expect(riga).toContainText("Fuori");
-    await expect(riga).toContainText("Zona notte");
+    /* «Non devi scrivere fuori ma metti inserito»: lo stato dice inserito, e
+     * come solo quando non e' l'inserimento pieno. */
+    await expect(riga).toContainText(/Perimetrale\s*Inserito/);
+    await expect(riga).not.toContainText("Fuori");
+    await expect(riga).toContainText(/Zona notte\s*Inserito notte/);
     await expect(riga).not.toContainText("Garage");
 
     /* Tutte disinserite: «Disattivo». */
@@ -442,6 +445,131 @@ test.describe("la plancia a muro si vede meglio", () => {
       window.dmMuro.riposa();
     });
     await expect(riga).toContainText(/Antifurto\s*·\s*Disattivo/);
+  });
+
+  /* «Quando c'e' antifurto inserito non devi scrivere fuori ma metti inserito
+   * e al massimo il nome della partizione inserita. Tipo se e' notte scrivi
+   * inserito notte.» */
+  test("il riposo con l'antifurto inserito: «Inserito notte», «Inserito», mai «Fuori»", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      muro: { attiva: true, pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }] },
+      stati: {
+        ...STATI,
+        "alarm_control_panel.casa": { state: "armed_night", attributes: {} },
+      },
+    });
+    await page.evaluate(() => window.dmMuro.riposa());
+    const riposo = muro(page).locator(".mu-riposo");
+    await expect(riposo).toContainText(/Antifurto · Inserito notte/);
+    await page.evaluate(() => {
+      const id = "alarm_control_panel.casa";
+      eval("_RAW_STATES")[id] = { entity_id: id, state: "armed_away", attributes: {} };
+      window.dmMuro.riposa();
+    });
+    await expect(riposo).toContainText(/Antifurto · Inserito/);
+    await expect(riposo).not.toContainText("Fuori");
+  });
+
+  /* «Il muro scrive "X° in casa", ma per me quel sensore e' esterno.» E poi:
+   * «la stanza non va bene, devi far decidere se e' esterno o interno». La
+   * parola la sceglie chi configura (`riposo.dove`), la stanza non conta. */
+  test("la temperatura dice «fuori» quando nel config il sensore sta fuori", async ({
+    page,
+  }, testInfo) => {
+    const seme = structuredClone(SEME_A_MURO);
+    const stati = {
+      ...STATI,
+      "sensor.temperatura_esterna": { state: "12.6", attributes: { unit_of_measurement: "°C" } },
+    };
+    /* «Il sensore sta: Fuori»: in alto e sul riposo «fuori», e i gradi del
+     * meteo non ci sono — una temperatura di fuori sola. */
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      stati,
+      muro: {
+        attiva: true,
+        temperatura: "casa",
+        riposo: {
+          attivo: true,
+          minuti: 2,
+          torna: true,
+          sensore: "sensor.temperatura_esterna",
+          dove: "fuori",
+        },
+        pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }],
+      },
+    });
+    await expect(muro(page).locator(".mu-meteo b")).toHaveText("12,6°");
+    await expect(muro(page).locator(".mu-meteo .mu-et")).toHaveText(/^fuori · poco nuvoloso/i);
+    await page.evaluate(() => window.dmMuro.riposa());
+    const riga = muro(page).locator(".mu-riposo-riga");
+    await expect(riga.locator('[data-mu-riposo="temperatura"]')).toHaveText("12,6° fuori");
+    await expect(riga).not.toContainText("in casa");
+    await expect(riga).not.toContainText("17°");
+
+    /* Lo stesso sensore senza la scelta: «in casa», come sempre. Il tablet
+     * non lo indovina dal nome ne' dalla stanza. */
+    await apriLaCasaAMuro(page, testInfo, {
+      seme,
+      stati,
+      muro: {
+        attiva: true,
+        temperatura: "casa",
+        riposo: { attivo: true, minuti: 2, torna: true, sensore: "sensor.temperatura_esterna" },
+        pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }],
+      },
+    });
+    await page.evaluate(() => window.dmMuro.riposa());
+    await expect(muro(page).locator('.mu-riposo-riga [data-mu-riposo="temperatura"]')).toHaveText(
+      "12,6° in casa",
+    );
+  });
+
+  /* «Si vede tutto sballato e non esce la configurazione»: la riga della
+   * temperatura col sensore scelto schiacciava il titolo in una colonna di
+   * una parola per riga. Adesso i controlli vanno a capo sotto, e accanto c'e'
+   * «Il sensore sta: In casa / Fuori». */
+  test("nel config la temperatura si legge, e il sensore sta in casa o fuori", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 1000, height: 900 });
+    await apriLaCasaAMuro(page, testInfo, {
+      seme: structuredClone(SEME_A_MURO),
+      stati: STATI,
+      muro: {
+        attiva: true,
+        temperatura: "casa",
+        riposo: {
+          attivo: true,
+          minuti: 2,
+          torna: true,
+          sensore: "sensor.temperatura_bagno_piccolo_temperature",
+        },
+        pagine: [{ id: "p1", modello: "stanza", stanza: "Soggiorno" }],
+      },
+    });
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.locator('.ed-tab[data-tab="muro"]').click();
+    const body = page.locator("#ed-body");
+    await body.locator("[data-mu-ed-altro]").click();
+    const riga = body.locator(".mu-ed-riga", { hasText: "Temperatura mostrata" });
+    await expect(riga).toBeVisible();
+    const largo = await riga
+      .locator(".mu-ed-testo")
+      .evaluate((el) => el.getBoundingClientRect().width);
+    expect(largo).toBeGreaterThan(200);
+    await expect(
+      body.locator('[data-mu-ed-valore="casa"]', { hasText: "Da un sensore" }),
+    ).toBeVisible();
+    const dove = body.locator(".mu-ed-riga", { hasText: "Il sensore sta" });
+    await expect(dove).toBeVisible();
+    await expect(dove.locator('[data-mu-ed-metti="riposo.dove"].si')).toHaveText("In casa");
+    await dove.locator('[data-mu-ed-metti="riposo.dove"]', { hasText: "Fuori" }).click();
+    await expect(dove.locator('[data-mu-ed-metti="riposo.dove"].si')).toHaveText("Fuori");
+    if (process.env.FOTO_DEL_CONFIG)
+      await riga.locator("xpath=..").screenshot({ path: process.env.FOTO_DEL_CONFIG });
   });
 
   test("la pagina Musica: il gruppo dei Sonos si fa e si scioglie dal tablet", async ({

@@ -15,16 +15,16 @@ import {
 import { CHIAVE_PRESENZA, presenzaConfigurata } from "../core/presenza-in-casa.js";
 import { CHIAVE_VARCHI, varchiConfigurati } from "../core/varchi-di-casa.js";
 import { sectionForEditorSlot } from "../core/editor-slots.js";
-import { humidityEntry } from "../core/room-overview.js";
+import { humidityEntry, primaLeStanzeDiCasa } from "../core/room-overview.js";
 import {
   renderBeta25TemperatureCards,
   temperatureEntries,
 } from "./beta25-real-device-fixes-section.js";
+import { scriviIlCartellino } from "./temperature-section.js";
 import {
   allStates,
   applyTemperatureReading,
   clean,
-  comfortBadgeText,
   dashboardStore,
   doc,
   english,
@@ -130,13 +130,6 @@ function numericState(entity) {
   return Number.isFinite(value) ? value : null;
 }
 
-function comfortLabel(value) {
-  if (value == null) return t("Non disponibile", "Unavailable");
-  if (value < 18) return t("Freddo", "Cold");
-  if (value > 26) return t("Caldo", "Hot");
-  return "Comfort";
-}
-
 function temperatureRecords(roomValues = rooms()) {
   return roomValues.flatMap((room) =>
     temperatureEntries(room)
@@ -168,7 +161,10 @@ function temperatureSignature(roomValues = rooms()) {
 }
 
 export function temperatureRoomTabsModel(roomValues = rooms()) {
-  const configured = roomValues.filter((room) => temperatureEntries(room).length > 0);
+  /* Le pastiglie seguono le card: le stanze all'aperto (#251) in fondo. */
+  const configured = primaLeStanzeDiCasa(
+    roomValues.filter((room) => temperatureEntries(room).length > 0),
+  );
   return [
     {
       id: "all",
@@ -260,13 +256,9 @@ function updateStableTemperatureValues() {
     if (humidityValue)
       humidityValue.textContent = humidity == null ? "—%" : `${humidity.toFixed(0)}%`;
     applyTemperatureReading(card, value, humidity);
-    if (comfort) {
-      const label = comfortLabel(value);
-      comfort.textContent = comfortBadgeText(label);
-      comfort.title = label;
-      comfort.setAttribute("aria-label", label);
-      comfort.dataset.comfort = label.toLowerCase().replaceAll(" ", "-");
-    }
+    /* Lo stesso cartellino del disegnatore canonico: una stanza all'aperto
+     * (#251) resta «All'aperto» anche a ogni lettura nuova. */
+    scriviIlCartellino(comfort, record.room, value);
   });
   syncBeta26TemperatureLabels();
   return true;
@@ -290,6 +282,13 @@ function applyTemperatureRoomFilter() {
     if (visible) card.style?.removeProperty?.("display");
     else card.style?.setProperty?.("display", "none", "important");
     card.dataset.dmBeta27Filtered = visible ? "visible" : "hidden";
+  });
+  /* Il separatore delle stanze all'aperto (#251) ha senso sopra tutte le
+   * stanze: con una stanza sola scelta, quello che separa non c'e'. */
+  grid.querySelectorAll("[data-dm-temp-fuori-sep]").forEach((separatore) => {
+    separatore.hidden = state.activeTemperatureRoom !== "all";
+    if (separatore.hidden) separatore.style?.setProperty?.("display", "none", "important");
+    else separatore.style?.removeProperty?.("display");
   });
 
   doc?.querySelectorAll?.("#dm-beta16-temperature-tabs [data-room-filter]").forEach(

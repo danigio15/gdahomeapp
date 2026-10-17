@@ -15,6 +15,10 @@ import {
   comandiDellaPagina,
   comandoPulito,
   comandiProposti,
+  servizioDelTasto,
+  statoDeiDueTasti,
+  temperaturaDelMuro,
+  TIPI_DI_COMANDO,
   derivaDelRiposo,
   eComandoDellIngresso,
   eLetturaDellIngresso,
@@ -312,6 +316,107 @@ test("un posto prende qualunque entita', col suo nome, la riga sotto e il disegn
   assert.deepEqual(comandiDellaPagina(pagina, {}), pagina.comandi);
 });
 
+test("il riquadro dei due tasti: un nome, ON e OFF ognuno con la sua entita'", () => {
+  /* «Unico nome, ma con ON e OFF uno a destra e uno a sinistra.» Il tipo lo
+   * decide chi l'ha scritto: due tasti di una luce non diventano la card della
+   * luce, e senza il tasto OFF il posto resta vuoto. */
+  assert.ok(TIPI_DI_COMANDO.includes("duetasti"));
+  assert.deepEqual(
+    comandoPulito({
+      tipo: "duetasti",
+      entita: "button.led_salone_on",
+      entitaOff: "BUTTON.led_salone_off",
+      stato: "binary_sensor.led_salone",
+      nome: "Led salone",
+      disegno: "luci",
+    }),
+    {
+      tipo: "duetasti",
+      entita: "button.led_salone_on",
+      entitaOff: "button.led_salone_off",
+      stato: "binary_sensor.led_salone",
+      nome: "Led salone",
+      sotto: "",
+      disegno: "luci",
+    },
+  );
+  assert.equal(
+    comandoPulito({ tipo: "duetasti", entita: "light.led", entitaOff: "light.led_off" }).tipo,
+    "duetasti",
+  );
+  assert.equal(comandoPulito({ tipo: "duetasti", entita: "button.on" }), null);
+  assert.equal(comandoPulito({ tipo: "duetasti", entita: "button.on", entitaOff: "no" }), null);
+  assert.equal(comandoPulito({ tipo: "duetasti", entitaOff: "button.off" }), null);
+  /* Lo stato scritto male vale come non scritto. */
+  assert.equal(
+    comandoPulito({ tipo: "duetasti", entita: "button.on", entitaOff: "button.off", stato: "x" })
+      .stato,
+    "",
+  );
+  /* Nella pagina resta al suo posto, coi vuoti intorno. */
+  const pagina = muroPulito({
+    attiva: true,
+    pagine: [
+      {
+        modello: "personale",
+        comandi: [
+          { tipo: "vuoto" },
+          { tipo: "duetasti", entita: "switch.rele_on", entitaOff: "switch.rele_off" },
+          { tipo: "duetasti", entita: "switch.rele_on" },
+        ],
+      },
+    ],
+  }).pagine[0];
+  assert.deepEqual(
+    pagina.comandi.map((c) => c.tipo),
+    ["vuoto", "duetasti"],
+  );
+  assert.deepEqual(comandiDellaPagina(pagina, {}), pagina.comandi);
+  /* Nelle Scene, che i due tasti non li hanno, resta la tessera del tasto ON. */
+  const scene = muroPulito({
+    attiva: true,
+    pagine: [
+      {
+        modello: "scene",
+        scene: [{ tipo: "duetasti", entita: "script.on", entitaOff: "script.off" }],
+      },
+    ],
+  }).pagine[0].scene;
+  assert.deepEqual(scene, [
+    { tipo: "entita", entita: "script.on", nome: "", sotto: "", disegno: "" },
+  ]);
+});
+
+test("ogni tasto dei due attiva la sua entita', non la alterna", () => {
+  const servizio = (id) => {
+    const s = servizioDelTasto(id);
+    return s && `${s.domain}.${s.service} ${s.data.entity_id}`;
+  };
+  assert.equal(servizio("button.led_on"), "button.press button.led_on");
+  assert.equal(servizio("input_button.led_off"), "input_button.press input_button.led_off");
+  assert.equal(servizio("script.apri"), "script.turn_on script.apri");
+  assert.equal(servizio("scene.sera"), "scene.turn_on scene.sera");
+  assert.equal(servizio("automation.chiudi"), "automation.trigger automation.chiudi");
+  assert.equal(servizio("switch.rele_off"), "switch.turn_on switch.rele_off");
+  assert.equal(servizio("input_boolean.notte"), "input_boolean.turn_on input_boolean.notte");
+  assert.equal(servizio("light.led"), "light.turn_on light.led");
+  assert.equal(servizio("fan.bagno"), "homeassistant.turn_on fan.bagno");
+  assert.equal(servizio("non valida"), null);
+});
+
+test("il riquadro dei due tasti sa lo stato da quello scritto, o dal tasto ON", () => {
+  const due = (entita, stato = "") =>
+    statoDeiDueTasti(comandoPulito({ tipo: "duetasti", entita, entitaOff: "button.off", stato }));
+  assert.equal(due("button.on", "binary_sensor.led"), "binary_sensor.led");
+  assert.equal(due("switch.rele_on"), "switch.rele_on");
+  assert.equal(due("input_boolean.led"), "input_boolean.led");
+  assert.equal(due("light.led"), "light.led");
+  /* Un pulsante o uno script non dicono niente: «Comando». */
+  assert.equal(due("button.on"), "");
+  assert.equal(due("script.on"), "");
+  assert.equal(statoDeiDueTasti({ tipo: "entita", entita: "switch.x" }), "");
+});
+
 test("le scene prendono anche un'entita' qualunque", () => {
   const pagina = muroPulito({
     attiva: true,
@@ -606,6 +711,7 @@ test("meteo e riposo si scelgono, e di serie il riposo torna alla prima pagina",
     minuti: 5,
     torna: false,
     sensore: "sensor.salotto_t",
+    dove: "casa",
   });
 });
 
@@ -1272,4 +1378,48 @@ test("le porte e le finestre fra le letture si contano insieme: «Finestre apert
   const una = lettureDellIngresso(["binary_sensor.finestra_cucina", "sensor.temperatura"], stati);
   assert.equal(una.gruppo, null);
   assert.deepEqual(una.singole, ["binary_sensor.finestra_cucina", "sensor.temperatura"]);
+});
+
+test("la temperatura del muro: «in casa» o «fuori» lo decide chi configura", () => {
+  /* «La stanza non va bene, devi far decidere se e' esterno o interno.» */
+  const fonte = {
+    stanze: [
+      { name: "Terrazzo", outdoor: true, temp: "sensor.terrazzo_t" },
+      { name: "Soggiorno", temp: "sensor.soggiorno_t" },
+    ],
+  };
+  const muro = (pagina, sensore = "", dove) => ({
+    pagine: [{ modello: "stanza", stanza: pagina }],
+    riposo: { sensore, ...(dove ? { dove } : {}) },
+  });
+  assert.equal(muroPulito({}).riposo.dove, "casa");
+  assert.equal(muroPulito({ riposo: { dove: "fuori" } }).riposo.dove, "fuori");
+  assert.equal(muroPulito({ riposo: { dove: "giardino" } }).riposo.dove, "casa");
+  /* Il sensore scelto, con la parola scelta. */
+  assert.deepEqual(temperaturaDelMuro(muro("Soggiorno", "sensor.esterna", "fuori"), fonte), {
+    sonda: "sensor.esterna",
+    fuori: true,
+  });
+  assert.deepEqual(temperaturaDelMuro(muro("Soggiorno", "sensor.esterna"), fonte), {
+    sonda: "sensor.esterna",
+    fuori: false,
+  });
+  /* La stanza all'aperto non decide piu' niente. */
+  assert.deepEqual(temperaturaDelMuro(muro("Soggiorno", "sensor.terrazzo_t"), fonte), {
+    sonda: "sensor.terrazzo_t",
+    fuori: false,
+  });
+  /* Senza sensore: la sonda della stanza della prima pagina, qualunque sia. */
+  assert.deepEqual(temperaturaDelMuro(muro("Terrazzo"), fonte), {
+    sonda: "sensor.terrazzo_t",
+    fuori: false,
+  });
+  assert.deepEqual(temperaturaDelMuro(muro("Terrazzo", "", "fuori"), fonte), {
+    sonda: "sensor.terrazzo_t",
+    fuori: true,
+  });
+  assert.deepEqual(temperaturaDelMuro({ pagine: [{ modello: "scene" }] }, fonte), {
+    sonda: "",
+    fuori: false,
+  });
 });

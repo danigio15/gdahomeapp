@@ -141,6 +141,7 @@ import { installHomeWidgetsSection } from "./home-widgets-section.js";
 import { installTodoEditorSection } from "./todo-editor-section.js";
 import { installWidgetEntityChoiceSection } from "./widget-entity-choice-section.js";
 import { installEvShowcaseSection } from "./ev-showcase-section.js";
+import { installRicaricaDiNotteSection } from "./ricarica-di-notte-section.js";
 import { installEvStatoETargetSection } from "./ev-stato-e-target-section.js";
 import { installAutoTermica } from "./auto-termica-section.js";
 import { installAutoOMoto } from "./auto-o-moto-section.js";
@@ -170,6 +171,8 @@ import { installContatori } from "./contatori-section.js";
 import { installContatoriEditor } from "./contatori-editor-section.js";
 import { installPiante } from "./piante-section.js";
 import { installPianteEditor } from "./piante-editor-section.js";
+import { installMeteo } from "./meteo-section.js";
+import { installMeteoEditor } from "./meteo-editor-section.js";
 import { installAcquario } from "./acquario-section.js";
 import { installAccumuloInEnergia } from "./accumulo-in-energia-section.js";
 import { installAccumuloEditor } from "./accumulo-editor-section.js";
@@ -1158,6 +1161,9 @@ export function installSectionRuntime() {
     // already mounted, and re-renders itself on the same runtime events.
     senzaCadere(installEvShowcaseSection);
     senzaCadere(installEvStatoETargetSection);
+    /* La ricarica di notte sta sotto la console di evcc, che deve esserci gia':
+     * la carta le si mette accanto, e la regola la fa la casa. */
+    senzaCadere(installRicaricaDiNotteSection);
     /* L'auto a benzina (#208) si appoggia alla pagina EV gia' vestita: le
      * sue caselle entrano nella stessa scheda, e il suo quadro prende il
      * posto di quello della ricarica quando il motore non e' elettrico. */
@@ -1203,6 +1209,11 @@ export function installSectionRuntime() {
     /* Le piante (#159): la pagina e la sua scheda, nello stesso ordine. */
     senzaCadere(installPiante);
     senzaCadere(installPianteEditor);
+    /* La pagina Meteo (#206): la pagina e la sua scheda, nello stesso ordine.
+     * Il radar della pagina e' quello della finestra delle previsioni, che si
+     * installa piu' giu' e la trova gia' pronta. */
+    senzaCadere(installMeteo);
+    senzaCadere(installMeteoEditor);
     /* Le vasche (#127): la storia del livello, i comandi, il cambio d'acqua e
      * il travaso di `cd_acquario` negli Animali. La pagina e la scheda sono
      * quelle degli Animali. */
@@ -1340,6 +1351,8 @@ export function installSectionRuntime() {
         "contatori-editor",
         "piante",
         "piante-editor",
+        "meteo",
+        "meteo-editor",
         "acquario",
         "accumulo",
         "accumulo-editor",

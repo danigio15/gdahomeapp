@@ -333,13 +333,18 @@ function disegnaTemperatura(widget) {
     .map((riga) => ({ ...riga, temperature: Number(riga.temperature) }))
     .sort((a, b) => b.temperature - a.temperature);
   if (!stanze.length) return `<p class="dm-w-empty">${esc(t("Nessuna lettura", "No reading"))}</p>`;
-  const media = stanze.reduce((somma, riga) => somma + riga.temperature, 0) / stanze.length;
-  const calda = stanze[0];
-  const fredda = stanze[stanze.length - 1];
+  /* Le stanze all'aperto (#251) si leggono in fondo all'elenco, ma la media
+   * «In casa» e la scala dalla piu' fredda alla piu' calda sono della casa.
+   * Senza nessuna stanza di casa, in grande va la prima che c'e'. */
+  const diCasa = stanze.filter((riga) => !riga.fuori);
+  const misurate = diCasa.length ? diCasa : stanze.slice(0, 1);
+  const media = misurate.reduce((somma, riga) => somma + riga.temperature, 0) / misurate.length;
+  const calda = misurate[0];
+  const fredda = misurate[misurate.length - 1];
   const fahrenheit = media > 45;
   const ampiezza = calda.temperature - fredda.temperature;
   const scala =
-    stanze.length > 1 && ampiezza > 0
+    misurate.length > 1 && ampiezza > 0
       ? `<div class="dm-f-temperatura-scala">
           <i aria-hidden="true"></i>
           <span><b>${esc(gradi(fredda.temperature))} ${esc(fredda.name)}</b><b>${esc(
@@ -348,14 +353,18 @@ function disegnaTemperatura(widget) {
         </div>`
       : "";
   const eroe = `<section class="dm-f-temperatura-eroe">
-      <div><small>${esc(stanze.length > 1 ? t("In casa", "At home") : stanze[0].name)}</small>
+      <div><small>${esc(misurate.length > 1 ? t("In casa", "At home") : misurate[0].name)}</small>
         <span class="dm-f-num">${esc(gradi(media))}</span></div>
       ${scala}
     </section>`;
-  const elenco = stanze
+  const elenco = [...diCasa, ...stanze.filter((riga) => riga.fuori)]
     .map((riga) => {
+      /* La barra resta fra 10 e 100 anche per chi sta fuori dalla scala di
+       * casa: il balcone a sei gradi non e' una barra negativa. */
       const larga =
-        ampiezza > 0 ? 10 + (90 * (riga.temperature - fredda.temperature)) / ampiezza : 60;
+        ampiezza > 0
+          ? Math.min(100, Math.max(10, 10 + (90 * (riga.temperature - fredda.temperature)) / ampiezza))
+          : 60;
       const umidita = numero(riga.humidity);
       return `<div class="dm-f-temperatura-stanza">
         <span class="dm-f-temperatura-ic" aria-hidden="true">${esc(roomGlyph(riga.icon || riga.name))}</span>
@@ -718,7 +727,12 @@ function disegnaEv(widget) {
         .map((riga) => casella(nomeSenzaAuto(riga), esc(riga.value)))
         .join("")}</div>`
     : "";
-  return `<div class="dm-f dm-f-ev">${auto}${evcc ? tastiDiEvcc(evcc) : ""}${wallboxMarkup}</div>`;
+  /* La ricarica di notte, sotto i tasti che comanda: la stessa riga della
+   * tessera, con lo stile che le da' la sua sezione. */
+  const notte = clean(widget?.notte)
+    ? `<div class="dm-f-evcc-notte" data-dm-notte>${esc(widget.notte)}</div>`
+    : "";
+  return `<div class="dm-f dm-f-ev">${auto}${evcc ? tastiDiEvcc(evcc) : ""}${notte}${wallboxMarkup}</div>`;
 }
 
 const COMANDATE_DA_EVCC = new Set(["dm.ev_modalita_ricarica_evcc", "dm.ev_ricarica_sempre_evcc"]);

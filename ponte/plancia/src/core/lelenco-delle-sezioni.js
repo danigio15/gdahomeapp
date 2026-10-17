@@ -70,6 +70,9 @@ export const SEZIONI = Object.freeze(
       en: "Machines and network",
     },
     { scheda: "sez7", chiave: "temp", glifo: "🌡️", it: "Temperature", en: "Temperatures" },
+    /* Il meteo (#206): com'e' adesso, la stazione di casa, le previsioni e il
+     * radar. */
+    { scheda: "meteo", chiave: "meteo", glifo: "🌦️", it: "Meteo", en: "Weather" },
     { scheda: "sez9", chiave: "clima", glifo: "❄️", it: "Clima", en: "Climate" },
     { scheda: "tapp", chiave: "tapparelle", glifo: "🪟", it: "Finestre", en: "Windows" },
     { scheda: "pool", chiave: "piscina", glifo: "🏊", it: "Piscina", en: "Pool" },

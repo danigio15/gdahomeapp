@@ -297,6 +297,35 @@ export function humidityEntry(entry = {}) {
   return gemella !== temp ? gemella : "";
 }
 
+/**
+ * La stanza all'aperto (#251): il balcone, il terrazzo, il giardino.
+ *
+ * «Il balcone e' a 6 gradi e l'assistente mi dice di scaldarlo.» Un
+ * termometro fuori si legge come quello del soggiorno, ma non e' una stanza da
+ * scaldare, da rinfrescare o da arieggiare, e nella media della casa la tira
+ * giu' di tre gradi d'inverno.
+ *
+ * Lo dice la spunta «All'aperto» nella finestra della stanza, e solo lei: dal
+ * nome non si deduce niente. Un «Balcone» chiuso a veranda e' una stanza come
+ * le altre, e una stanza senza la spunta resta quella di prima.
+ */
+export function stanzaAllAperto(room = {}) {
+  return room?.outdoor === true || room?.outdoor === "true";
+}
+
+/**
+ * Prima le stanze di casa, poi quelle all'aperto: dentro ogni gruppo resta
+ * l'ordine che c'era. `stanzaDi` dice dove sta la stanza in una voce che non e'
+ * la stanza stessa.
+ */
+export function primaLeStanzeDiCasa(voci = [], stanzaDi = (voce) => voce) {
+  const elenco = Array.isArray(voci) ? voci : [];
+  return [
+    ...elenco.filter((voce) => !stanzaAllAperto(stanzaDi(voce))),
+    ...elenco.filter((voce) => stanzaAllAperto(stanzaDi(voce))),
+  ];
+}
+
 /** Ogni associazione temperatura di una stanza canonica, primaria compresa. */
 export function temperatureEntries(room = {}) {
   const entries = [];

@@ -113,6 +113,22 @@ class ToccoDellaNotifica {
 bool eUnaNostraSpinta(Map<String, dynamic> dati) =>
     dati['g'] == '1' && dati['d'] is String && dati['b'] is String;
 
+/// Se la spinta e' per un abbinamento che questo telefono ha ancora.
+///
+/// Una casa tolta dall'app puo' continuare a scrivere finche' non sa di essere
+/// stata tolta (`Collegamento.dimentica` glielo dice, quando la raggiunge):
+/// la sua busta non si apre, e mostrarne la frase di riserva vorrebbe dire
+/// notificare una casa che qui non c'e' piu'. Per una casa che c'e' — con una
+/// busta che non si apre, una chiave cambiata — la frase di riserva resta.
+bool eDiUnaCasaConosciuta(
+  Map<String, dynamic> dati,
+  Iterable<CasaConosciuta> case_,
+) {
+  if (!eUnaNostraSpinta(dati)) return false;
+  final telefono = dati['d'] as String;
+  return case_.any((una) => una.identificativo == telefono);
+}
+
 /// Apre quello che e' arrivato. `null` se non e' nostro, se non c'e' la casa,
 /// se la busta non si apre, o se l'abbiamo gia' vista.
 Future<NotificaDaMostrare?> apriQuellaArrivata(

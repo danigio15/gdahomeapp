@@ -10,6 +10,88 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.6
+
+- **Ricarica notturna (auto elettrica con evcc):** nella pagina Auto una carta
+  nuova. Nella fascia scelta (di serie dalle 23:00 alle 05:00), se l'auto è
+  collegata e la batteria è sotto la soglia scelta, evcc passa a **Fast**; si
+  ferma al limite impostato in evcc o all'ora di fine, quello che arriva
+  prima, e poi mette evcc su Spento (o come prima, o Intelligente). Lo fa
+  l'add-on, anche con la plancia e l'app chiuse. Il prezzo lo prende da
+  Impostazioni → Energia (la fascia della notte, se no la tariffa unica) e
+  dice quanto si è caricato e speso. Nel popup dell'Auto: «🌙 Ricarica
+  notturna · Fast fino all'80% o alle 05:00».
+- **Pannello a muro, scene:** un'azione della plancia ha lo stesso disegno di
+  una scena scelta come entità, invece di indovinarlo dal nome; chi ne vuole
+  uno suo lo sceglie nel campo «Icona».
+
+## 1.14.5
+
+- **Pannello a muro, temperatura:** nel config «A muro» c'è «Il sensore sta:
+  In casa / Fuori». Lo decidi tu: con «Fuori» il pannello scrive «12,6°
+  fuori» e non ripete i gradi del meteo. La casella «All'aperto» delle stanze
+  non decide più niente. La riga «Temperatura mostrata» non si schiaccia più.
+- **Pannello a muro sul telefono:** tenendo premuta l'ora il config si apre e
+  resta aperto (prima si richiudeva da solo alzando il dito).
+- **Luci:** nella finestra delle luci il nome delle luci accese si legge
+  anche col tema scuro.
+
+## 1.14.4
+
+- **Plance per chi non amministra:** si aprono di nuovo, la plancia di sempre
+  e quelle a muro. Dal Supervisor 2026.10.2 Home Assistant rispondeva
+  «403: Forbidden» agli utenti che non amministrano la casa. Chi vede quale
+  plancia lo decide sempre gdahome, alla voce «Le plance». La voce
+  «Configura gdahome» adesso compare anche nella loro barra, e apre solo la
+  pagina che dice che è per gli amministratori.
+- **Pianificatore:** la **cartina** si vede (prima restava vuota), e la
+  ricerca trova anche il **numero civico**: «via Roma 12» porta al 12.
+- **Pianificatore e auto elettrica:** con un'auto elettrica o ibrida nella
+  pagina Auto c'è il riquadro **«L'auto»** — batteria, autonomia, carica di
+  casa — e, se la carica non basta, le **soste di ricarica** lungo la strada:
+  in elenco con gli orari, sulla cartina coi fulmini, e nell'ora a cui
+  partire. Si sceglie con quanta carica si parte, la carica minima all'arrivo
+  e la potenza delle colonnine. La strada non esce di casa.
+- **Meteo:** una pagina nuova, da aggiungere nel config — com'è adesso, la
+  propria stazione meteo, le previsioni e il radar.
+- **Pannello a muro, due tasti:** un riquadro nuovo, **«Due tasti: ON e
+  OFF»**, per chi accende e spegne con due entità separate: un nome solo e,
+  al posto dell'interruttore, ON a sinistra e OFF a destra, ognuno con la sua
+  entità. Con un'entità di stato dice «Accesa» o «Spenta»; senza, dopo il
+  tocco, «✓ Inviato».
+- **Pannello a muro, antifurto:** inserito si legge **«Inserito»**, o
+  «Inserito notte», «Inserito casa», «Inserito» col nome del modo scritto a
+  mano — non più «Fuori», che resta la parola del tasto.
+- **Pannello a muro, temperatura:** il sensore di una stanza **all'aperto**
+  si legge «fuori», non «in casa», e sul riposo non si ripetono i gradi del
+  meteo. Senza sensore scelto, se la prima pagina è all'aperto, «in casa» è
+  la prima stanza al chiuso con una sonda.
+
+## 1.14.3
+
+- **Pianificatore (pagina gdanav):** la ricerca trova strade e luoghi — se il
+  primo servizio non risponde prova il secondo, e dice «nessun posto» o «il
+  servizio non risponde» invece di restare vuota. Sotto la meta scelta c'è la
+  **cartina** con la strada da casa.
+- **Notifiche:** sull'iPhone niente più «gdahome · nuova notifica» doppia dopo
+  aver riabbinato il telefono; il **citofono di Ring** suona come gli altri
+  campanelli. Togliendo una casa dall'app, la casa smette di mandare notifiche
+  a quel telefono (serve anche l'app aggiornata).
+- **Balconi, terrazzi e giardini:** nella stanza c'è la casella «All'aperto».
+  Temperatura e umidità si vedono come sempre, ma l'assistente non propone di
+  scaldare, rinfrescare o arieggiare, e la stanza non entra nella media della
+  casa. Nella pagina Temperature sta in fondo, sotto «All'aperto».
+- **Rete:** un sensore che dice `online` o `up` vale «Connesso»; con «Lo stato
+  viene da → Scelgo io» si sceglie cosa guardare (lo stato o un attributo) e
+  quali parole vogliono dire «in linea». Gli indirizzi IP nelle Altre letture
+  si vedono interi.
+- **Sezioni personalizzate:** la scheda mostra di nuovo lo stato, e sotto gli
+  **attributi** che si scelgono nell'editor, ciascuno col suo nome.
+- **Gestione termica sul tablet in piedi:** i comandi della stufa e i serbatoi
+  del pellet non coprono più le altre letture.
+- **Config › Stanze al telefono:** il nome della stanza non si spezza più a
+  metà parola.
+
 ## 1.14.2
 
 - **La testata della Home non sparisce più tornando da Luci e da Porte**
