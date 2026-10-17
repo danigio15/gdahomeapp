@@ -166,6 +166,16 @@ node collaudo/fotografa-la-plancia.mjs   # le fotografie, in docs/immagini/
 node strumenti/porta-nel-sito.mjs        # e di nuovo, per copiarle in statico/
 ```
 
+E rifà il **segno** con cui le pagine chiamano `stile.css`, `privacy.css` e
+`sito.js`: il `?v=` dopo il nome, che è l'impronta del file. Il server fa
+rivedere le pagine a ogni visita, ma lo stile e il codice no, e il browser se li
+tiene quanto vuole: il 17 ottobre 2026 il sito rifatto è arrivato a chi l'aveva
+appena aperto vestito con lo stile di prima — le fotografie a tutta pagina, le
+didascalie in mezzo — e nessun errore da nessuna parte. Col segno, un file
+cambiato è un indirizzo nuovo, e il browser lo deve chiedere. Chi tocca uno di
+quei tre file rilancia lo script; se se ne dimentica, non passa
+[`centralino/test/sito.test.js`](../centralino/test/sito.test.js).
+
 La plancia (`dashboardmodern_static/`) la porta ancora, anche se la pagina non
 la mostra più: lo scambio sul server (`prepara.sh`, che nasce da
 `centralino/accendi.sh`) porta il sito **solo** se dopo lo script c'è
@@ -205,7 +215,8 @@ così com'è. Nel suo blocco ci sono quattro cose e basta:
   non far finta di essere l'indice;
 - **due velocità di cache** — `statico/` un giorno, perché
   cambiano solo quando cambia la versione; le pagine no, perché un testo
-  corretto che resta in cache è un testo corretto che nessuno legge;
+  corretto che resta in cache è un testo corretto che nessuno legge. Lo stile e
+  il codice non hanno una regola loro, e per questo portano il segno (sopra);
 - **`www` è un redirect vero**, non un secondo sito;
 - **`/contatto` va al tramite** — l'unica via del sito che non è un file: il
   modulo dei contatti, che il tramite spedisce per posta.
@@ -227,7 +238,8 @@ che l'informativa pubblicata dica quello che dice `docs/PRIVACY.md`, sezione
 per sezione e con la stessa data. E guardano che **ogni file che le pagine
 chiamano stia dentro `sito/`**, salvato in git e scritto con le stesse
 maiuscole: un'immagine che punta fuori da `sito/` si vede aprendo la pagina
-dalla repository, e sul server è un buco.
+dalla repository, e sul server è un buco. E che lo stile e il codice siano
+chiamati col segno di come sono adesso.
 
 ## Come si prova
 
