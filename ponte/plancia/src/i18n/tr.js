@@ -6170,4 +6170,5 @@ export default Object.freeze({
   "Tonight at ${alle}": "Bu gece ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "Hangisi önce gelirse. Sınır evcc'den okunur: orada değiştirirsen burada da değişir.",
   "Smart": "Akıllı",
+  "Show options": "Seçenekleri göster",
 });

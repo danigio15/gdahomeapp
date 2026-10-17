@@ -6152,4 +6152,5 @@ export default Object.freeze({
   "Tonight at ${alle}": "오늘 밤 ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "먼저 도달하는 쪽에서 멈춥니다. 한도는 evcc에서 읽어 옵니다: 거기서 바꾸면 여기도 바뀝니다.",
   "Smart": "스마트",
+  "Show options": "옵션 보기",
 });

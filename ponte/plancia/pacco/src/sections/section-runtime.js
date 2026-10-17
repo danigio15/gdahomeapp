@@ -533,7 +533,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-O6ULXM2S.js";
+} from "../../chunk-7HBWM7ZJ.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -4666,6 +4666,7 @@ var SOURCE_INDEX = Object.freeze({
   "Mostra dispositivi ed entità che hanno consumato": "Show devices and energy sources",
   "Mostra il cerchio quando configurato": "Show node when configured",
   "Mostra in pagina": "Show on the page",
+  "Mostra le opzioni": "Show options",
   "Mostra le telecamere in Sicurezza": "Show the cameras under Security",
   "Mostra menu": "Show menu",
   "Mostra nel flusso": "Show in the flow",
@@ -15940,9 +15941,9 @@ function aperturaDagliAttributi(attributi2) {
   return null;
 }
 function letturaValvola({ stato: stato3 = null, attributi: attributi2 = null } = {}) {
-  const aperta = aperturaDaStato(stato3) ?? aperturaDagliAttributi(attributi2);
-  if (aperta === null) return null;
-  return { aperta, chiusa: 100 - aperta };
+  const aperta2 = aperturaDaStato(stato3) ?? aperturaDagliAttributi(attributi2);
+  if (aperta2 === null) return null;
+  return { aperta: aperta2, chiusa: 100 - aperta2 };
 }
 
 // src/core/climate-power.js
@@ -19612,8 +19613,8 @@ function notaMarkup(voce3) {
     );
   else if (lettura3.fase === "pronta") {
     const ora4 = lettura3.finitaAlle ? orologio2(lettura3.finitaAlle) : "";
-    const apri6 = lettura3.tipo === "air-fryer" && lettura3.cassetto === false ? t("apri il cassetto", "open the drawer") : "";
-    nota = [ora4 ? t(`Fine alle ${ora4}`, `Done at ${ora4}`) : "", apri6].filter(Boolean).join(" · ");
+    const apri7 = lettura3.tipo === "air-fryer" && lettura3.cassetto === false ? t("apri il cassetto", "open the drawer") : "";
+    nota = [ora4 ? t(`Fine alle ${ora4}`, `Done at ${ora4}`) : "", apri7].filter(Boolean).join(" · ");
   } else
     nota = t(
       "I comandi compaiono quando parte una cottura",
@@ -20669,12 +20670,12 @@ function renderCottura(shell) {
   const voce3 = shell.querySelector("[data-dm-side-cottura]");
   const presente = ceLaCucina();
   if (!presente && state18.ui.pane === "cottura") state18.ui.pane = "";
-  const aperta = state18.ui.pane === "cottura";
-  shell.dataset.pane = aperta ? "cottura" : "";
+  const aperta2 = state18.ui.pane === "cottura";
+  shell.dataset.pane = aperta2 ? "cottura" : "";
   if (voce3) {
     voce3.hidden = !presente;
-    voce3.classList.toggle("active", aperta);
-    voce3.setAttribute("aria-pressed", aperta ? "true" : "false");
+    voce3.classList.toggle("active", aperta2);
+    voce3.setAttribute("aria-pressed", aperta2 ? "true" : "false");
   }
   if (!presente) return "";
   const vista2 = vistaDellaCucina();
@@ -20684,7 +20685,7 @@ function renderCottura(shell) {
     if (conto.textContent !== testo4) conto.textContent = testo4;
     conto.hidden = !vista2.vive;
   }
-  if (!aperta) return `${vista2.vive}`;
+  if (!aperta2) return `${vista2.vive}`;
   const markup7 = paginaDellaCottura(vista2);
   scriviLaCottura(shell.querySelector("[data-dm-cottura]"), markup7);
   if (vista2.voci.some(
@@ -25375,7 +25376,10 @@ function scheletro() {
     <div class="dm-rn-titoli">
       <h3 class="dm-rn-titolo">${esc(t("Ricarica notturna", "Night charging"))}</h3>
       <small class="dm-rn-sotto" data-rn="riassunto"></small>
+      <small class="dm-rn-statino" data-rn="statino" hidden></small>
     </div>
+    <button type="button" class="dm-rn-apri" data-rn="apri" aria-expanded="false"
+      aria-label="${esc(t("Mostra le opzioni", "Show options"))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     <button type="button" class="dm-rn-int" role="switch" aria-checked="false" data-rn="attiva"
       aria-label="${esc(t("Ricarica notturna", "Night charging"))}"><span></span></button>
   </div>
@@ -25496,7 +25500,22 @@ function laCarta() {
     carta.dataset.lingua = lingua3;
     carta.innerHTML = scheletro();
   }
+  if (!carta.dataset.aperta) carta.dataset.aperta = aperta() ? "1" : "0";
   return carta;
+}
+var CHIAVE_APERTA = "dm_rn_aperta";
+function aperta() {
+  try {
+    return root.localStorage?.getItem?.(CHIAVE_APERTA) === "1";
+  } catch (_errore) {
+    return false;
+  }
+}
+function apri(si) {
+  try {
+    root.localStorage?.setItem?.(CHIAVE_APERTA, si ? "1" : "0");
+  } catch (_errore) {
+  }
 }
 function minutiDi(oraTesto) {
   return minutiDellOra(oraTesto) ?? 0;
@@ -25504,6 +25523,11 @@ function minutiDi(oraTesto) {
 function renderRicaricaDiNotte(adesso = Date.now()) {
   const carta = laCarta();
   if (!carta) return false;
+  const apertaOra = aperta();
+  if (carta.dataset.aperta === "1" !== apertaOra) carta.dataset.aperta = apertaOra ? "1" : "0";
+  const freccia3 = carta.querySelector('[data-rn="apri"]');
+  if (freccia3 && freccia3.getAttribute("aria-expanded") !== String(apertaOra))
+    freccia3.setAttribute("aria-expanded", String(apertaOra));
   let resolve = (valore3) => valore3;
   try {
     if (typeof root.resolveEntity === "function") resolve = root.resolveEntity;
@@ -25568,6 +25592,13 @@ function renderRicaricaDiNotte(adesso = Date.now()) {
     prezzo,
     adesso
   });
+  const laVedo = carta.dataset.aperta === "1";
+  const statino = q("statino");
+  const mostra2 = imp.attiva && !laVedo && Boolean(racconto.titolo);
+  if (statino) {
+    testo(statino, mostra2 ? racconto.titolo : "");
+    if (statino.hidden !== !mostra2) statino.hidden = !mostra2;
+  }
   attributo(q("stato"), "data-tono", racconto.tono);
   testo(q("statoTitolo"), racconto.titolo);
   testo(q("statoSotto"), racconto.sotto);
@@ -25594,7 +25625,13 @@ function salva(cambia) {
 }
 function alTocco(evento) {
   const bersaglio = evento.target;
+  if (bersaglio?.closest?.('[data-rn="apri"]')) {
+    apri(!aperta());
+    renderRicaricaDiNotte();
+    return;
+  }
   if (bersaglio?.closest?.('[data-rn="attiva"]')) {
+    if (!leImpostazioni().attiva) apri(true);
     salva((imp) => ({ attiva: !imp.attiva }));
     return;
   }
@@ -25711,6 +25748,12 @@ function stile() {
   --rn-line:rgba(255,255,255,.07)
 }
 .dm-rn-testa{display:flex;align-items:center;gap:12px;min-width:0}
+.dm-rn[data-aperta="0"] .dm-rn-corpo{display:none}
+.dm-rn-apri{flex:0 0 auto;margin-left:auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;cursor:pointer;
+  background:transparent;color:inherit;border:1px solid var(--divider-color,rgba(127,127,127,.25))}
+.dm-rn-apri svg{transition:transform .18s ease}
+.dm-rn-apri[aria-expanded="true"] svg{transform:rotate(180deg)}
+.dm-rn-statino{display:block;margin-top:3px;font-size:12.5px;font-weight:800;color:#6366f1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dm-rn-luna{flex:0 0 46px;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
   color:#f5c542;background:rgba(var(--rn-acc-rgb),.14);box-shadow:inset 0 0 0 1px rgba(var(--rn-acc-rgb),.25)}
 .dm-rn-titoli{flex:1;min-width:0;display:grid;gap:2px}
@@ -26635,13 +26678,13 @@ function segnaLaPagina() {
       state21.osservatore.observe(pagina2, { attributes: true, attributeFilter: ["class"] });
     }
   }
-  const aperta = paginaAperta();
+  const aperta2 = paginaAperta();
   const prima = corpo3.dataset[SEGNO_DELLA_PAGINA] || "";
-  if (!aperta) delete corpo3.dataset[SEGNO_DELLA_PAGINA];
-  else if (prima !== aperta) corpo3.dataset[SEGNO_DELLA_PAGINA] = aperta;
-  if (aperta && prima && prima !== aperta)
-    for (const ascolto of cambiDiPagina) senzaCadere(() => ascolto(aperta, prima));
-  return aperta;
+  if (!aperta2) delete corpo3.dataset[SEGNO_DELLA_PAGINA];
+  else if (prima !== aperta2) corpo3.dataset[SEGNO_DELLA_PAGINA] = aperta2;
+  if (aperta2 && prima && prima !== aperta2)
+    for (const ascolto of cambiDiPagina) senzaCadere(() => ascolto(aperta2, prima));
+  return aperta2;
 }
 function quandoCambiaLaPaginaAperta(ascolto) {
   if (typeof ascolto === "function") cambiDiPagina.add(ascolto);
@@ -31262,15 +31305,15 @@ function apertaAdesso(stato3, soglia2) {
 }
 function letturaDelCitofono(voce3 = {}, states = {}) {
   const conf = normalizzaCitofono(voce3);
-  const apri6 = conf.apri ? states?.[conf.apri] : null;
+  const apri7 = conf.apri ? states?.[conf.apri] : null;
   const campanello = conf.campanello ? states?.[conf.campanello] : null;
   return {
     id: conf.id,
-    nome: conf.nome || clean16(apri6?.attributes?.friendly_name) || conf.apri || conf.campanello,
+    nome: conf.nome || clean16(apri7?.attributes?.friendly_name) || conf.apri || conf.campanello,
     apri: conf.apri,
     /* Un tasto mai premuto sta su «unknown», ed e' un tasto che funziona: non
      * raggiungibile e' solo chi lo dice. */
-    puoAprire: Boolean(conf.apri) && puoAprire(conf.apri) && clean16(apri6?.state) !== "unavailable",
+    puoAprire: Boolean(conf.apri) && puoAprire(conf.apri) && clean16(apri7?.state) !== "unavailable",
     comando: conf.apri ? comandoDiApertura(conf.apri, states) : null,
     campanello: conf.campanello,
     suona: conf.campanello ? muto(campanello) ? null : acceso(campanello) : null,
@@ -31283,9 +31326,9 @@ function letturaDellaCassetta(voce3 = {}, states = {}, ritiriAMano2 = null, arri
   const posta = conf.posta ? states?.[conf.posta] : null;
   const ritiro = conf.ritiro ? states?.[conf.ritiro] : null;
   const soloSportello = !conf.posta && Boolean(conf.ritiro);
-  const aperta = conf.ritiro ? apertaAdesso(ritiro, conf.soglia) : null;
+  const aperta2 = conf.ritiro ? apertaAdesso(ritiro, conf.soglia) : null;
   const visto = numero20(arriviVisti2?.[conf.id]);
-  const arrivata = soloSportello ? aperta === true ? quando3(ritiro) : visto : !conf.posta ? null : acceso(posta) ? quando3(posta) : visto ?? quando3(posta);
+  const arrivata = soloSportello ? aperta2 === true ? quando3(ritiro) : visto : !conf.posta ? null : acceso(posta) ? quando3(posta) : visto ?? quando3(posta);
   const daSensore = soloSportello || !conf.ritiro ? null : quando3(ritiro);
   const aMano = numero20(ritiriAMano2?.[conf.id]);
   const ritirata = daSensore === null ? aMano : aMano === null ? daSensore : Math.max(daSensore, aMano);
@@ -31297,7 +31340,7 @@ function letturaDellaCassetta(voce3 = {}, states = {}, ritiriAMano2 = null, arri
     posta: conf.posta,
     ritiro: conf.ritiro,
     contatore: contatore2,
-    aperta,
+    aperta: aperta2,
     arrivata,
     ritirata,
     muta: Boolean(sorgente) && muto(sorgente),
@@ -31307,13 +31350,13 @@ function letturaDellaCassetta(voce3 = {}, states = {}, ritiriAMano2 = null, arri
     /* Con il solo sportello l'arrivo E' un'apertura, e la pagina lo scrive
      * cosi': «ultimo movimento» sarebbe il nome di un rilevatore che non c'e'. */
     daSportello: soloSportello,
-    ce: cePosta({ sorgente, arrivata, ritirata, aperta })
+    ce: cePosta({ sorgente, arrivata, ritirata, aperta: aperta2 })
   };
 }
-function cePosta({ sorgente, arrivata, ritirata, aperta }) {
+function cePosta({ sorgente, arrivata, ritirata, aperta: aperta2 }) {
   if (!sorgente) return null;
   if (muto(sorgente)) return null;
-  if (aperta === true) return false;
+  if (aperta2 === true) return false;
   if (arrivata === null) return acceso(sorgente) ? true : null;
   if (ritirata === null) return true;
   return arrivata > ritirata;
@@ -31381,7 +31424,7 @@ function bindCitofonoToDevice({
   precedente = {}
 } = {}) {
   const elenco15 = utilizzabili(entities);
-  const apri6 = elenco15.find((voce3) => dominioDi3(voce3) === "button" && PAROLE4.apri.test(parole(voce3, states))) || elenco15.find((voce3) => dominioDi3(voce3) === "lock") || elenco15.find((voce3) => puoAprire(voce3.entity_id) && PAROLE4.apri.test(parole(voce3, states)));
+  const apri7 = elenco15.find((voce3) => dominioDi3(voce3) === "button" && PAROLE4.apri.test(parole(voce3, states))) || elenco15.find((voce3) => dominioDi3(voce3) === "lock") || elenco15.find((voce3) => puoAprire(voce3.entity_id) && PAROLE4.apri.test(parole(voce3, states)));
   const campanello = elenco15.find(
     (voce3) => dominioDi3(voce3) === "event" && (classeDi2(voce3, states) === "doorbell" || PAROLE4.campanello.test(parole(voce3, states)))
   ) || elenco15.find(
@@ -31393,7 +31436,7 @@ function bindCitofonoToDevice({
   return {
     ...normalizzaCitofono(precedente, indice),
     nome: clean16(precedente.nome) || clean16(device.name),
-    apri: clean16(apri6?.entity_id) || clean16(precedente.apri),
+    apri: clean16(apri7?.entity_id) || clean16(precedente.apri),
     campanello: clean16(campanello?.entity_id) || clean16(precedente.campanello),
     telecamera: clean16(telecamera2?.entity_id) || clean16(precedente.telecamera)
   };
@@ -41968,7 +42011,7 @@ function ensurePagina() {
   sorella.after(pagina2);
   return pagina2;
 }
-function apri(voce3) {
+function apri2(voce3) {
   for (const nodo2 of doc.querySelectorAll(".tab")) nodo2.classList.remove("active");
   for (const nodo2 of doc.querySelectorAll(".page")) nodo2.classList.remove("active");
   voce3.classList.add("active");
@@ -41998,7 +42041,7 @@ function ensureVoce() {
   if (luci) luci.after(voce3);
   else if (config) config.before(voce3);
   else barra.append(voce3);
-  voce3.addEventListener("click", () => apri(voce3));
+  voce3.addEventListener("click", () => apri2(voce3));
   return voce3;
 }
 function sottotitolo2(righe2) {
@@ -42256,8 +42299,8 @@ function ferma() {
   }
 }
 function batti(righe2) {
-  const aperta = state39.aperto ? letturaDiUnLettore(state39.aperto) : null;
-  const serve = paginaAperta2() && righe2.some((riga3) => riga3.suona && posizioneOra(riga3)) || Boolean(aperta?.suona && posizioneOra(aperta));
+  const aperta2 = state39.aperto ? letturaDiUnLettore(state39.aperto) : null;
+  const serve = paginaAperta2() && righe2.some((riga3) => riga3.suona && posizioneOra(riga3)) || Boolean(aperta2?.suona && posizioneOra(aperta2));
   if (!serve) {
     ferma();
     return;
@@ -42279,8 +42322,8 @@ function avanzaIlTempo() {
   if (!dove.length) return;
   for (const riga3 of letture()) avanzaLaBarra(dove, riga3);
   if (state39.aperto) {
-    const aperta = letturaDiUnLettore(state39.aperto);
-    if (aperta) avanzaLaBarra(dove, aperta);
+    const aperta2 = letturaDiUnLettore(state39.aperto);
+    if (aperta2) avanzaLaBarra(dove, aperta2);
   }
 }
 function avanzaLaBarra(dove, riga3) {
@@ -44106,7 +44149,7 @@ function umiditaDellaRiga(scritto2) {
   if (letto <= 0) return 0;
   return Math.round(Math.max(SOGLIA_MINIMA, Math.min(SOGLIA_MASSIMA, letto)));
 }
-function consiglioDiArieggiare({ dentro: dentro3, fuori, soglia: soglia2, aperta = null } = {}) {
+function consiglioDiArieggiare({ dentro: dentro3, fuori, soglia: soglia2, aperta: aperta2 = null } = {}) {
   const stanza2 = numero35(dentro3);
   const esterna = numero35(fuori);
   const quota = numero35(soglia2);
@@ -44116,11 +44159,11 @@ function consiglioDiArieggiare({ dentro: dentro3, fuori, soglia: soglia2, aperta
     fuori: esterna,
     soglia: quota,
     fuoriPiuUmido: false,
-    aperta: aperta === true
+    aperta: aperta2 === true
   };
   if (quota === null) return { ...esito2, motivo: "senza-soglia" };
   if (stanza2 === null) return { ...esito2, motivo: "senza-misura-dentro" };
-  if (aperta === true) return { ...esito2, motivo: "gia-aperta" };
+  if (aperta2 === true) return { ...esito2, motivo: "gia-aperta" };
   if (stanza2 <= quota) return { ...esito2, motivo: "sotto-soglia" };
   const fuoriPiuUmido = esterna !== null && esterna >= stanza2;
   return { ...esito2, arieggia: true, fuoriPiuUmido, motivo: "conviene" };
@@ -46330,7 +46373,7 @@ function ensurePagina2() {
   sorella.after(pagina2);
   return pagina2;
 }
-function apri2(voce3) {
+function apri3(voce3) {
   for (const nodo2 of doc.querySelectorAll(".tab")) nodo2.classList.remove("active");
   for (const nodo2 of doc.querySelectorAll(".page")) nodo2.classList.remove("active");
   voce3.classList.add("active");
@@ -46359,7 +46402,7 @@ function ensureVoce2() {
   if (sicurezza) sicurezza.after(voce3);
   else if (config) config.before(voce3);
   else barra.append(voce3);
-  voce3.addEventListener("click", () => apri2(voce3));
+  voce3.addEventListener("click", () => apri3(voce3));
   return voce3;
 }
 function ensureBlock(shell) {
@@ -54394,8 +54437,8 @@ function tastiDellaPorta(riga3) {
         { domain: "cover", service: "close_cover", data: { entity_id: riga3.entity } },
         { classe: "dm-f-porte-tasto", testo: esc(t("Chiudi", "Close")) }
       );
-    const apri6 = gesti.find((voce3) => voce3.gesto === "apri");
-    return apri6 ? tastoPorta(riga3, "apri", apri6.parola) : "";
+    const apri7 = gesti.find((voce3) => voce3.gesto === "apri");
+    return apri7 ? tastoPorta(riga3, "apri", apri7.parola) : "";
   }
   if (riga3.dominio === "lock") {
     const adesso = riga3.aperta ? gesti.find((voce3) => voce3.gesto === "blocca") : gesti.find((voce3) => voce3.gesto !== "blocca");
@@ -54534,14 +54577,14 @@ function cassettaMarkup2(voce3, sola) {
 }
 function citofonoMarkup2(voce3, solo) {
   const suona = voce3.suona === true;
-  const apri6 = voce3.puoAprire && voce3.comando ? tastoServizio(voce3.comando, {
+  const apri7 = voce3.puoAprire && voce3.comando ? tastoServizio(voce3.comando, {
     classe: "dm-f-citofono-apri",
     conferma: t("Tocca ancora per aprire", "Tap again to open"),
     testo: `<span class="dm-f-citofono-apri-ic" aria-hidden="true">🔓</span><span><b>${esc(
       solo ? t("Apri il cancello", "Open the gate") : `${t("Apri", "Open")} · ${voce3.nome}`
     )}</b><small>${esc(t("Due tocchi per aprire", "Two taps to open"))}</small></span>`
   }) : "";
-  if (!suona) return apri6;
+  if (!suona) return apri7;
   return `<div class="dm-f-citofono-eroe" data-tono="suona">
     <div class="dm-f-citofono-riga">
       <span class="dm-f-citofono-ic" aria-hidden="true">🔔</span>
@@ -54549,7 +54592,7 @@ function citofonoMarkup2(voce3, solo) {
     t("C'è qualcuno alla porta", "Someone is at the door")
   )}</b>${Number.isFinite(voce3.squillo) ? `<em>${esc(quantoFa2(voce3.squillo))}</em>` : ""}</span>
     </div>
-    ${apri6}
+    ${apri7}
   </div>`;
 }
 function finestraCitofono(widget) {
@@ -55521,10 +55564,10 @@ function disegnaAllagamenti(widget, states) {
   )}</b><span class="dm-f-${k}-sotto">${esc(sotto)}</span></div>
     </div>`;
   const valvole = (Array.isArray(widget.valvole) ? widget.valvole : []).map((valvola) => {
-    const aperta = valvola.state === "open" || valvola.state === "opening";
+    const aperta2 = valvola.state === "open" || valvola.state === "opening";
     const chiusa = valvola.state === "closed" || valvola.state === "closing";
     const parola = valvola.state === "open" ? t("Aperta", "Open") : valvola.state === "closed" ? t("Chiusa", "Closed") : valvola.state === "opening" ? t("In apertura", "Opening") : valvola.state === "closing" ? t("In chiusura", "Closing") : t("Non risponde", "Not answering");
-    const tasto2 = aperta ? tastoServizio(
+    const tasto2 = aperta2 ? tastoServizio(
       { domain: "valve", service: "close_valve", data: { entity_id: valvola.entity } },
       {
         classe: `dm-f-${k}-tasto`,
@@ -55539,7 +55582,7 @@ function disegnaAllagamenti(widget, states) {
         conferma: t("Tocca ancora per aprire", "Tap again to open")
       }
     ) : "";
-    return `<div class="dm-f-${k}-valvola" data-aperta="${aperta ? "true" : "false"}">
+    return `<div class="dm-f-${k}-valvola" data-aperta="${aperta2 ? "true" : "false"}">
           <span class="dm-f-${k}-ic" aria-hidden="true">🚰</span>
           <div class="dm-f-${k}-nome"><b>${esc(valvola.name)}</b><span>${esc(parola)}</span></div>
           ${tasto2}
@@ -64350,8 +64393,8 @@ function renderHomeWidgets() {
         tile.dataset.acceso = accesa3;
         cambiato = true;
       }
-      const aperta = String(state49.expanded === widget.key);
-      if (tile.dataset.open !== aperta) tile.dataset.open = aperta;
+      const aperta2 = String(state49.expanded === widget.key);
+      if (tile.dataset.open !== aperta2) tile.dataset.open = aperta2;
       const caption = tile.querySelector("[data-dm-tile-caption]");
       if (caption && caption.textContent !== widget.caption) {
         caption.textContent = widget.caption;
@@ -64878,19 +64921,19 @@ function onClick8(event) {
   if (misure) {
     event.preventDefault();
     const chiave2 = clean(misure.dataset.dmWTutteMisure);
-    const apri6 = !misureAperte().has(chiave2);
-    if (apri6) misureAperte().add(chiave2);
+    const apri7 = !misureAperte().has(chiave2);
+    if (apri7) misureAperte().add(chiave2);
     else misureAperte().delete(chiave2);
     const griglia3 = misure.previousElementSibling;
     const caselle2 = [
       ...griglia3?.querySelectorAll?.(".dm-w-casella, .dm-w-pillola") || []
     ];
     caselle2.forEach((casella5, indice) => {
-      casella5.hidden = !apri6 && indice >= MISURE_IN_VISTA;
+      casella5.hidden = !apri7 && indice >= MISURE_IN_VISTA;
     });
-    misure.setAttribute("aria-expanded", String(apri6));
-    misure.innerHTML = `<span aria-hidden="true">${apri6 ? "▴" : "▾"}</span>${esc(
-      apri6 ? t("Mostra solo le prime", "Show fewer") : `${t("Mostra tutte", "Show all")} · ${caselle2.length}`
+    misure.setAttribute("aria-expanded", String(apri7));
+    misure.innerHTML = `<span aria-hidden="true">${apri7 ? "▴" : "▾"}</span>${esc(
+      apri7 ? t("Mostra solo le prime", "Show fewer") : `${t("Mostra tutte", "Show all")} · ${caselle2.length}`
     )}`;
     return;
   }
@@ -64901,12 +64944,12 @@ function onClick8(event) {
     const pannello = doc?.querySelector?.(
       `[data-dm-w-panel="${entity2.replace(/["\\]/g, "\\$&")}"]:not(.dm-w-panel-solo)`
     );
-    const apri6 = !state49.aperti.has(entity2);
-    if (apri6) state49.aperti.add(entity2);
+    const apri7 = !state49.aperti.has(entity2);
+    if (apri7) state49.aperti.add(entity2);
     else state49.aperti.delete(entity2);
-    if (pannello) pannello.hidden = !apri6;
-    rotella.setAttribute("aria-expanded", String(apri6));
-    rotella.closest(".dm-w-row")?.setAttribute("data-dm-w-open", String(apri6));
+    if (pannello) pannello.hidden = !apri7;
+    rotella.setAttribute("aria-expanded", String(apri7));
+    rotella.closest(".dm-w-row")?.setAttribute("data-dm-w-open", String(apri7));
     return;
   }
   const modo = event.target?.closest?.("[data-dm-w-mode]");
@@ -68113,8 +68156,8 @@ function installTemperatureStep() {
   const current = root.cpSetTemp;
   if (typeof current !== "function" || current.__dmClimateThermal) return;
   function cpSetTempThermal(delta) {
-    const aperta = clean(state50.climaAperta || lexicalGlobal("cpCurrentEntity"));
-    if (muoviIlClimaDoppio(aperta, Number(delta) < 0 ? -1 : 1)) return void 0;
+    const aperta2 = clean(state50.climaAperta || lexicalGlobal("cpCurrentEntity"));
+    if (muoviIlClimaDoppio(aperta2, Number(delta) < 0 ? -1 : 1)) return void 0;
     const shown = parseFloat(clean(doc?.getElementById("cp-temp-val")?.textContent));
     return current.call(this, wholeDegreeDelta(shown, delta));
   }
@@ -79323,8 +79366,8 @@ function cotturaMarkup(device = {}, tipo = "") {
     cottura_meno_caldo: "philips_airfryer.adjust_temp temp=5 method=subtract"
   };
   const comandi = COMANDI_DELLA_COTTURA.map((chiave2) => `cottura_${chiave2}`);
-  const aperta = CASELLE_DELLA_COTTURA.some((casella5) => clean(device[casella5]));
-  return `<details class="dm-appliance-cottura" data-appl-cottura${aperta ? " open" : ""}${tipo ? "" : " hidden"}>
+  const aperta2 = CASELLE_DELLA_COTTURA.some((casella5) => clean(device[casella5]));
+  return `<details class="dm-appliance-cottura" data-appl-cottura${aperta2 ? " open" : ""}${tipo ? "" : " hidden"}>
     <summary>🍟 ${t("Cottura — stato, tempi, temperatura e comandi", "Cooking — status, times, temperature and controls")}</summary>
     <div class="dm-appliance-card-fields-intro">${t(
     "Quello che la voce «Cottura» degli Elettrodomestici legge e preme. Un comando è un'entità (button, switch, number, script) oppure un servizio con i suoi parametri: philips_airfryer.adjust_time time=60 method=add. Si mostra solo il tasto che ha la sua casella, e solo se risponde.",
@@ -92057,7 +92100,7 @@ function nomeCopertura(item, current, entity2, distingui) {
 function windowOnlyView(item = {}) {
   const contatto = clean(contactEntity(item));
   if (!contatto) return null;
-  const aperta = apertaSecondoVerso(
+  const aperta2 = apertaSecondoVerso(
     windowOpenFromState(allStates()[contatto]?.state),
     insiemeInvertiti(readJson(CHIAVE_VERSI, [])).has(contatto)
   );
@@ -92069,7 +92112,7 @@ function windowOnlyView(item = {}) {
     name: clean(item.name) || clean(allStates()[contatto]?.attributes?.friendly_name) || contatto,
     room,
     floor: clean(root.cdRoomFloorOf?.(room)),
-    status: aperta === true ? "open" : aperta === false ? "closed" : "unknown",
+    status: aperta2 === true ? "open" : aperta2 === false ? "closed" : "unknown",
     /* Il vano si vede solo quando la finestra e' aperta: senza tapparella
      * davanti la posizione non esiste, e il disegno non deve fingerla. */
     position: 100,
@@ -92356,8 +92399,8 @@ function statoCarta(view) {
   const tutte = coperture2(view);
   const inMoto = tutte.find((cover) => cover.moving);
   if (inMoto) return { stato: statoVisibile(inMoto), testo: statusLabel(inMoto) };
-  const aperta = tutte.find((cover) => statoVisibile(cover) === "open");
-  if (aperta) return { stato: "open", testo: statusLabel(aperta) };
+  const aperta2 = tutte.find((cover) => statoVisibile(cover) === "open");
+  if (aperta2) return { stato: "open", testo: statusLabel(aperta2) };
   return { stato: statoVisibile(view), testo: statusLabel(view) };
 }
 function syncCard(card2, view) {
@@ -98583,13 +98626,13 @@ function squilloMarkup(f) {
     return giorno2 ? voce3.quando === f.suonato ? `${t("Oggi", "Today")} · ${quantoFaScritto(Date.now() - voce3.quando)}` : t("Oggi", "Today") : orologio3(new Date(voce3.quando)).giorno;
   };
   const video = ing.telecamera ? `<img data-mu-telecamera="${esc(ing.telecamera)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "sq-vuota")}</div>`;
-  const apri6 = (grande) => [
+  const apri7 = (grande) => [
     ing.apri ? `<button type="button" class="mu-btn pieno${grande ? " grande" : ""}" style="--acc:#16a34a" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${ICONE_DELLO_SQUILLO.apri}${esc(nomeDi8(ing.apri, ing.nomeApri))}</button>` : "",
     ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${ICONE_DELLO_SQUILLO.apri}${esc(nomeDi8(ing.apri2, ing.nomeApri2))}</button>` : ""
   ].join("");
   const chiudi2 = `<button type="button" class="mu-btn rosso" data-mu-fa="chiudi">${ICONE_DELLO_SQUILLO.chiudi}${esc(t("Chiudi", "Close"))}</button>`;
   const parlaTasto = opzioni.parla && ing.telecamera ? `<button type="button" class="mu-btn mu-sq-parla${state112.parla ? " si" : ""}" data-mu-fa="citofono-parla" aria-pressed="${Boolean(state112.parla)}">${ICONE_DELLO_SQUILLO.parla}${esc(state112.parla ? t("In linea", "Talking") : t("Parla", "Talk"))}${state112.parlaErrore ? `<small>${esc(t("Il citofono non accetta la voce", "The intercom does not take audio"))}</small>` : ""}</button>` : "";
-  const tasti = squilla2 ? `<div class="mu-sq-tasti">${apri6(true)}${parlaTasto}<button type="button" class="mu-btn" data-mu-fa="citofono-silenzia">${ICONE_DELLO_SQUILLO.muto}${esc(t("Silenzia", "Silence"))}</button>${chiudi2}</div>` : `<div class="mu-sq-tasti dopo"><div class="mu-sq-due">${apri6(false)}${state112.parla ? parlaTasto : ""}${chiudi2}</div>
+  const tasti = squilla2 ? `<div class="mu-sq-tasti">${apri7(true)}${parlaTasto}<button type="button" class="mu-btn" data-mu-fa="citofono-silenzia">${ICONE_DELLO_SQUILLO.muto}${esc(t("Silenzia", "Silence"))}</button>${chiudi2}</div>` : `<div class="mu-sq-tasti dopo"><div class="mu-sq-due">${apri7(false)}${state112.parla ? parlaTasto : ""}${chiudi2}</div>
       ${storia.length ? `<div class="mu-carta mu-sq-storia"><span class="mu-stato">${esc(t("Ultimi squilli", "Last rings"))}</span><div class="mu-sq-righe">${storia.map((voce3) => `<div class="mu-sq-squillo${voce3.quando === f.suonato ? " ora" : ""}">${mini(voce3)}<div><b>${esc(orologio3(new Date(voce3.quando)).ora)}</b><small>${esc(quandoEra2(voce3))}</small></div></div>`).join("")}</div></div>` : ""}</div>`;
   const avviso = squilla2 && suonoBloccato() && opzioni.suono !== "nessuno" ? `<div class="mu-sq-avviso">${esc(t("Tocca lo schermo una volta: il browser fa suonare il campanello solo dopo un tocco", "Tap the screen once: the browser plays the doorbell only after a tap"))}</div>` : "";
   return `<div class="mu-squillo${squilla2 ? " squilla" : ""}" style="--acc:${accento}" role="alertdialog" aria-label="${esc(squilla2 ? t("Suona il campanello", "The doorbell is ringing") : `${t("Ha suonato alle", "It rang at")} ${ora4}`)}">
@@ -100263,13 +100306,13 @@ function paginaMarkup(p, i, tutte) {
     ${riga2(t("Chi è in casa", "Who is home"), "", interruttore(`${via}.ingresso.persone`, ing.persone, "persone"))}`;
   }
   const nomeDiSerie = p.modello === "stanza" && clean(p.stanza) || NOME_DEL_MODELLO(p.modello);
-  const aperta = state113.aperta === i;
+  const aperta2 = state113.aperta === i;
   const testa2 = `<div class="mu-ed-pagina-testa">
-      <button type="button" class="mu-ed-apri" data-mu-ed-apri="${i}" aria-expanded="${aperta}">${disegno2(clean(p.disegno) || DISEGNO_DI_SERIE[p.modello], 26, `pag-${i}`)}<span class="mu-ed-apri-tx"><b>${esc(clean(p.titolo) || nomeDiSerie)}</b><small>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(NOME_DEL_MODELLO(p.modello))}</small></span><span class="mu-ed-freccia" aria-hidden="true">${aperta ? "▾" : "▸"}</span></button>
+      <button type="button" class="mu-ed-apri" data-mu-ed-apri="${i}" aria-expanded="${aperta2}">${disegno2(clean(p.disegno) || DISEGNO_DI_SERIE[p.modello], 26, `pag-${i}`)}<span class="mu-ed-apri-tx"><b>${esc(clean(p.titolo) || nomeDiSerie)}</b><small>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(NOME_DEL_MODELLO(p.modello))}</small></span><span class="mu-ed-freccia" aria-hidden="true">${aperta2 ? "▾" : "▸"}</span></button>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-pagina-su="${i}"${i === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-pagina-giu="${i}"${i === tutte - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       ${tutte < PAGINE_AL_MASSIMO ? `<button type="button" class="mu-ed-copia" data-mu-ed-copia="${i}" aria-label="${esc(t("Duplica la pagina", "Duplicate page"))}" title="${esc(t("Duplica", "Duplicate"))}">⧉</button>` : ""}
       <button type="button" class="mu-ed-svuota" data-mu-ed-togli="${i}" aria-label="${esc(t("Togli la pagina", "Remove page"))}">🗑</button></div>`;
-  if (!aperta) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}">${testa2}</div>`;
+  if (!aperta2) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}">${testa2}</div>`;
   return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}">${testa2}
     ${riga2(t("Nome sul tablet", "Name on the tablet"), t("Si legge sulla linguetta in alto", "Shown on the tab at the top"), campo3(`${via}.titolo`, p.titolo, nomeDiSerie))}
     ${riga2(t("Icona", "Icon"), "", tendina2(`${via}.disegno`, p.disegno, DISEGNI2(), null))}
@@ -101715,13 +101758,13 @@ function corpoMarkup9(scheda8, riga3, indice) {
     <button type="button" class="ed-save-btn" data-dm-dich-salva="${indice}">💾 ${esc(parole4.salva)}</button>
   </div>`;
 }
-function rigaMarkup14(scheda8, riga3, indice, letta, aperta) {
+function rigaMarkup14(scheda8, riga3, indice, letta, aperta2) {
   const { parole: parole4 } = scheda8;
   const stato3 = riga3.entity ? scheda8.statoDellaRiga(letta) : "muta";
   const sotto = riga3.entity ? `${riga3.entity}${letta && scheda8.didascalia(letta) ? ` · ${scheda8.didascalia(letta)}` : ""}` : t("nessuna entità", "no entity");
   const accanto = riga3.entity && scheda8.accanto ? scheda8.accanto(letta) : "";
   return `<article class="ed-row dm-dich-riga" data-dm-dich-stato="${esc(stato3)}"
-    data-dm-dich-indice="${indice}" data-open="${aperta}">
+    data-dm-dich-indice="${indice}" data-open="${aperta2}">
     <div class="dm-dich-testa">
       <span class="dm-dich-ic" aria-hidden="true">${disegnoDiCasa(riga3.icon, { misura: 34, ripiego: scheda8.ripiego })}</span>
       <span class="ed-row-main dm-dich-testo">
@@ -101735,7 +101778,7 @@ function rigaMarkup14(scheda8, riga3, indice, letta, aperta) {
       <button type="button" class="ed-del" data-dm-dich-elimina="${indice}"
         aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
     </div>
-    ${aperta ? corpoMarkup9(scheda8, riga3, indice) : ""}
+    ${aperta2 ? corpoMarkup9(scheda8, riga3, indice) : ""}
   </article>`;
 }
 function costruisciSchedaDichiarata(scheda8) {
@@ -101838,10 +101881,10 @@ function costruisciSchedaDichiarata(scheda8) {
     return scheda8.bozzaInPiu ? scheda8.bozzaInPiu(fuori, body, indice) : fuori;
   }
   function tieniLaRigaAperta(body, tranne = -1) {
-    const aperta = stato3.aperto;
-    if (!Number.isInteger(aperta) || aperta < 0 || aperta === tranne) return false;
-    if (!body.querySelector(`[data-dm-dich-riga="${aperta}"]`)) return false;
-    salva32(conLaRiga(configurazione23(), aperta, bozza3(body, aperta), inPiu));
+    const aperta2 = stato3.aperto;
+    if (!Number.isInteger(aperta2) || aperta2 < 0 || aperta2 === tranne) return false;
+    if (!body.querySelector(`[data-dm-dich-riga="${aperta2}"]`)) return false;
+    salva32(conLaRiga(configurazione23(), aperta2, bozza3(body, aperta2), inPiu));
     return true;
   }
   function onClick58(event) {
@@ -101870,10 +101913,10 @@ function costruisciSchedaDichiarata(scheda8) {
       ridisegna28();
       return;
     }
-    const apri6 = event.target.closest("[data-dm-dich-apri]");
-    if (apri6) {
+    const apri7 = event.target.closest("[data-dm-dich-apri]");
+    if (apri7) {
       event.preventDefault();
-      const indice = Number(apri6.dataset.dmDichApri);
+      const indice = Number(apri7.dataset.dmDichApri);
       if (stato3.aperto === indice) {
         salva32(conLaRiga(configurazione23(), indice, bozza3(body, indice), inPiu));
         stato3.aperto = -1;
@@ -102599,14 +102642,14 @@ function misura5(riferimento, states) {
 function stanzaDellaFinestra(cover) {
   return stanzaDiUnaFinestra(cover, section("rooms", readJson("cd_stanze", [])));
 }
-function consiglioDellaFinestra(cover, states = allStates(), { aperta = null } = {}) {
+function consiglioDellaFinestra(cover, states = allStates(), { aperta: aperta2 = null } = {}) {
   const stanza2 = stanzaDellaFinestra(cover);
   if (!stanza2) return null;
   return consiglioDiArieggiare({
     dentro: misura5(stanza2.hum, states),
     fuori: misura5(ENTITA_UMIDITA_FUORI, states),
     soglia: sogliaDellaFinestra(cover, readJson(CHIAVE_SOGLIA_UMIDITA, null)),
-    aperta
+    aperta: aperta2
   });
 }
 function ensureArieggia(card2, cover, states, model2 = null) {
@@ -103330,15 +103373,15 @@ function campoMarkup5(pool, index, [field, italiano, inglese4, esempio3, kind]) 
   return `<label class="ed-slot dm-pool-field"><span class="ed-slot-lbl">${esc(label)}</span><span class="ed-form-row">${input}${lente}</span></label>`;
 }
 function schedaMarkup7(pool, index) {
-  const aperta = state119.aperta === index;
-  return `<article class="ed-row dm-pool-row" data-pool-index="${index}" data-open="${aperta}">
+  const aperta2 = state119.aperta === index;
+  return `<article class="ed-row dm-pool-row" data-pool-index="${index}" data-open="${aperta2}">
     <header class="dm-pool-row-head">
       <span class="dm-pool-row-icon" aria-hidden="true">🏊</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nomeDi10(pool, index))}</strong><small class="ed-row-old mono">${esc(clean(pool.pumpEnt) || clean(pool.tempEnt) || t("nessuna entità", "no entity"))}</small></span>
       <button type="button" class="ed-del dm-pool-edit" data-pool-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
       <button type="button" class="ed-del dm-pool-del" data-pool-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
     </header>
-    <div class="dm-pool-row-body"${aperta ? "" : " hidden"}>
+    <div class="dm-pool-row-body"${aperta2 ? "" : " hidden"}>
       <label class="ed-slot dm-pool-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-pool-${index}-name" class="ed-input" data-pool-field="name" value="${esc(clean(pool.name))}" placeholder="${t("Piscina piccola", "Small pool")}"></span></label>
       ${CAMPI2.map((campo5) => campoMarkup5(pool, index, campo5)).join("")}
       <label class="ed-slot dm-pool-field dm-pool-switch"><input type="checkbox" data-pool-field="autoHours" ${pool.autoHours ? "checked" : ""}><span>${t("Ore automatiche (temperatura / 2)", "Automatic hours (temperature / 2)")}</span></label>
@@ -104819,7 +104862,7 @@ function ensureGdanavPage() {
   sorella.after(page2);
   return page2;
 }
-function apri3() {
+function apri4() {
   for (const node of doc.querySelectorAll(".tab")) node.classList.remove("active");
   for (const node of doc.querySelectorAll(".page")) node.classList.remove("active");
   doc.querySelector(`.tab[data-tab="${GDANAV_TAB}"]`)?.classList.add("active");
@@ -104839,7 +104882,7 @@ function ensureGdanavTab() {
   tab.dataset.tab = GDANAV_TAB;
   tab.id = `tab-${GDANAV_TAB}`;
   tab.innerHTML = `<span class="icon"><img class="dm-gn-tab-logo" src="${esc(logo())}" alt=""></span><span class="text">gdanav</span>`;
-  tab.addEventListener("click", apri3);
+  tab.addEventListener("click", apri4);
   if (dopo) dopo.after(tab);
   else nav.prepend(tab);
   return tab;
@@ -107300,7 +107343,7 @@ function collegaICerchiAlloStorico() {
   }
   return quanti2;
 }
-function apri4(nodo2, event) {
+function apri5(nodo2, event) {
   const cerchio = CERCHI.find((voce3) => voce3.id === nodo2.id);
   if (!cerchio) return;
   try {
@@ -107311,14 +107354,14 @@ function apri4(nodo2, event) {
 function onClick31(event) {
   const nodo2 = event.target?.closest?.("[data-dm-storico-ref]");
   if (!nodo2 || !nodo2.dataset.dmStoricoRef) return;
-  apri4(nodo2, event);
+  apri5(nodo2, event);
 }
 function onKey2(event) {
   if (event.key !== "Enter" && event.key !== " ") return;
   const nodo2 = event.target?.closest?.("[data-dm-storico-ref]");
   if (!nodo2 || !nodo2.dataset.dmStoricoRef) return;
   event.preventDefault();
-  apri4(nodo2, event);
+  apri5(nodo2, event);
 }
 function installStyles58() {
   installStyle(
@@ -117582,17 +117625,17 @@ function caselleStufa(index, voce3) {
   }).join("");
 }
 function rigaStufaMarkup(voce3, index) {
-  const aperta = state145.stufaAperta === index;
+  const aperta2 = state145.stufaAperta === index;
   const nome = clean(voce3?.name) || `${t("Stufa", "Stove")} ${index + 1}`;
   const sotto = clean(voce3?.clima) || clean(voce3?.interruttore) || clean(voce3?.stato) || t("nessuna entità", "no entity");
-  return `<article class="ed-row dm-todo-ed-row dm-stufa-row" data-stufa-index="${index}" data-open="${aperta}">
+  return `<article class="ed-row dm-todo-ed-row dm-stufa-row" data-stufa-index="${index}" data-open="${aperta2}">
     <div class="dm-todo-ed-head">
       <span class="dm-todo-ed-icon" aria-hidden="true">🪵</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old mono">${esc(sotto)}</small></span>
       <button type="button" class="ed-del dm-todo-ed-edit" data-stufa-edit aria-label="${t("Modifica", "Edit")}">✏️</button>
       <button type="button" class="ed-del dm-todo-ed-del" data-stufa-del aria-label="${t("Elimina", "Remove")}">🗑️</button>
     </div>
-    <div class="dm-todo-ed-body"${aperta ? "" : " hidden"}>
+    <div class="dm-todo-ed-body"${aperta2 ? "" : " hidden"}>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-stufa-${index}-name" class="ed-input" data-stufa-field="name" value="${esc(clean(voce3?.name))}" placeholder="${esc(t("Stufa del soggiorno", "Living room stove"))}"></span></label>
       ${caselleStufa(index, voce3)}
       <button type="button" class="ed-save-btn" data-stufa-save>💾 ${esc(t("Salva stufa", "Save stove"))}</button>
@@ -124492,8 +124535,8 @@ function applica2() {
     doc.getElementById("editor-modal")?.remove?.();
   } catch (_error) {
   }
-  const aperta = doc.getElementById("page-config");
-  if (aperta?.classList?.contains("active")) {
+  const aperta2 = doc.getElementById("page-config");
+  if (aperta2?.classList?.contains("active")) {
     try {
       doc.querySelector('.tab[data-tab="home"]')?.click?.();
     } catch (_error) {
@@ -128124,7 +128167,7 @@ function ensurePagina3(sezione2) {
   sorella.after(pagina2);
   return pagina2;
 }
-function apri5(sezione2, voce3) {
+function apri6(sezione2, voce3) {
   for (const nodo2 of doc.querySelectorAll(".tab")) nodo2.classList.remove("active");
   for (const nodo2 of doc.querySelectorAll(".page")) nodo2.classList.remove("active");
   voce3.classList.add("active");
@@ -128147,7 +128190,7 @@ function ensureVoce3(sezione2) {
   voce3.dataset.tab = chiave2;
   voce3.dataset.dmMia = sezione2.id;
   voce3.id = `tab-${chiave2}`;
-  voce3.addEventListener("click", () => apri5(sezione2, voce3));
+  voce3.addEventListener("click", () => apri6(sezione2, voce3));
   const config = barra.querySelector('.tab[data-tab="config"]');
   if (config) config.before(voce3);
   else barra.append(voce3);
@@ -128706,10 +128749,10 @@ function rigaVoceMarkup(voce3, sezione2, riga3) {
   </div>`;
 }
 function rigaSezioneMarkup(sezione2, indice) {
-  const aperta = state167.aperta === indice;
+  const aperta2 = state167.aperta === indice;
   const voci4 = vociDi(sezione2);
   const titolo3 = clean(sezione2?.titolo) || `${t("Sezione", "Section")} ${indice + 1}`;
-  return `<article class="ed-row dm-todo-ed-row dm-mia-ed-riga" data-mia-sezione="${indice}" data-open="${aperta}">
+  return `<article class="ed-row dm-todo-ed-row dm-mia-ed-riga" data-mia-sezione="${indice}" data-open="${aperta2}">
     <div class="dm-todo-ed-head">
       <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(sezione2?.icona) || "⭐")}</span>
       <span class="ed-row-main">
@@ -128723,7 +128766,7 @@ function rigaSezioneMarkup(sezione2, indice) {
       <button type="button" class="ed-del dm-todo-ed-del" data-mia-del
         aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
     </div>
-    <div class="dm-todo-ed-body"${aperta ? "" : " hidden"}>
+    <div class="dm-todo-ed-body"${aperta2 ? "" : " hidden"}>
       <div class="dm-mia-ed-testa">
         <input class="ed-input dm-mia-ed-icona" data-mia-campo="icona" value="${esc(clean(sezione2?.icona) || "⭐")}"
           placeholder="⭐" aria-label="${esc(t("Icona", "Icon"))}" maxlength="4"
@@ -129290,10 +129333,10 @@ function nomeDellaSezione3(tab, sezioni2) {
   return sezioni2.find((sezione2) => sezione2.tab === quale)?.nome || quale;
 }
 function rigaMarkup28(voce3, indice, sezioni2, troppe) {
-  const aperta = state169.aperta === indice;
+  const aperta2 = state169.aperta === indice;
   const id = `dm-mia-ent-${indice}`;
   const nome = clean(voce3?.nome) || clean(voce3?.entity) || t("Entità nuova", "New entity");
-  return `<article class="ed-row dm-todo-ed-row dm-mia-ent-riga" data-mia-ent="${indice}" data-open="${aperta}">
+  return `<article class="ed-row dm-todo-ed-row dm-mia-ent-riga" data-mia-ent="${indice}" data-open="${aperta2}">
     <div class="dm-todo-ed-head">
       <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(voce3?.icona) || "⭐")}</span>
       <span class="ed-row-main">
@@ -129305,7 +129348,7 @@ function rigaMarkup28(voce3, indice, sezioni2, troppe) {
       <button type="button" class="ed-del dm-todo-ed-del" data-mia-ent-del
         aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
     </div>
-    <div class="dm-todo-ed-body"${aperta ? "" : " hidden"}>
+    <div class="dm-todo-ed-body"${aperta2 ? "" : " hidden"}>
       <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
     t("In quale scheda", "On which page")
   )}</span><span class="ed-form-row"><select id="${id}-sez" class="ed-input"
@@ -129694,10 +129737,10 @@ function sezioneNascosta7() {
   }
 }
 function rigaMarkup29(voce3, indice) {
-  const aperta = state170.aperta === indice;
+  const aperta2 = state170.aperta === indice;
   const id = `dm-mp-ed-${indice}`;
   const nome = clean(voce3?.nome) || clean(voce3?.entity) || t("Lettore nuovo", "New player");
-  return `<article class="ed-row dm-todo-ed-row dm-mp-ed-riga" data-mp-voce="${indice}" data-open="${aperta}">
+  return `<article class="ed-row dm-todo-ed-row dm-mp-ed-riga" data-mp-voce="${indice}" data-open="${aperta2}">
     <div class="dm-todo-ed-head">
       <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(voce3?.icona) || "🔊")}</span>
       <span class="ed-row-main">
@@ -129709,7 +129752,7 @@ function rigaMarkup29(voce3, indice) {
       <button type="button" class="ed-del dm-todo-ed-del" data-mp-del
         aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
     </div>
-    <div class="dm-todo-ed-body"${aperta ? "" : " hidden"}>
+    <div class="dm-todo-ed-body"${aperta2 ? "" : " hidden"}>
       <div class="dm-mp-ed-testa">
         <input class="ed-input dm-mp-ed-icona" data-mp-campo="icona" value="${esc(
     clean(voce3?.icona)

@@ -6157,4 +6157,5 @@ export default Object.freeze({
   "Tonight at ${alle}": "आज रात ${alle} बजे",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "जो पहले हो। सीमा evcc से पढ़ी जाती है: वहाँ बदलें तो यहाँ भी बदलेगी।",
   "Smart": "स्मार्ट",
+  "Show options": "विकल्प दिखाएँ",
 });

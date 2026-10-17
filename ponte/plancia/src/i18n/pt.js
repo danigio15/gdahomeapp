@@ -6196,4 +6196,5 @@ export default Object.freeze({
   "Tonight at ${alle}": "Esta noite às ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "O que chegar primeiro. O limite é lido do evcc: se o mudares lá, muda também aqui.",
   "Smart": "Inteligente",
+  "Show options": "Mostrar opções",
 });

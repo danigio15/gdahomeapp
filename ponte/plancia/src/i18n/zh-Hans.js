@@ -6063,4 +6063,5 @@ export default Object.freeze({
   "Tonight at ${alle}": "今晚 ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "以先到者为准。上限读取自 evcc：在那里更改，这里也会随之改变。",
   "Smart": "智能",
+  "Show options": "显示选项",
 });

@@ -3090,6 +3090,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Mostra dispositivi ed entità che hanno consumato": "Show devices and energy sources",
   "Mostra il cerchio quando configurato": "Show node when configured",
   "Mostra in pagina": "Show on the page",
+  "Mostra le opzioni": "Show options",
   "Mostra le telecamere in Sicurezza": "Show the cameras under Security",
   "Mostra menu": "Show menu",
   "Mostra nel flusso": "Show in the flow",

@@ -6196,4 +6196,5 @@ export default Object.freeze({
   "Tonight at ${alle}": "Vannacht om ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "Wat het eerst komt. De limiet komt uit evcc: wijzig je hem daar, dan verandert hij hier ook.",
   "Smart": "Slim",
+  "Show options": "Opties tonen",
 });

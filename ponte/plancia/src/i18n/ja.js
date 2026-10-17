@@ -6173,4 +6173,5 @@ export default Object.freeze({
   "Tonight at ${alle}": "今夜${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "早いほうで停止します。上限はevccから読み取ります：そちらで変えるとここも変わります。",
   "Smart": "スマート",
+  "Show options": "オプションを表示",
 });

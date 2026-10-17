@@ -4021,6 +4021,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Show menu",
   "Show node when configured",
   "Show on the page",
+  "Show options",
   "Show the cameras under Security",
   "Show them anyway",
   "Shown but not controllable",
