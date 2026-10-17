@@ -44,6 +44,7 @@ import {
   mezzoreDelleFasce,
   nuovoId,
   prossimiEventi,
+  servizioPermesso,
 } from "../core/automazioni.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
@@ -79,6 +80,8 @@ const state = (root[KEY] ||= {
   chiestoIl: 0,
   /* La tendina del QUANDO aperta. */
   tendina: false,
+  tendinaAltro: false,
+  avanzate: false,
   errore: "",
   scopri: false,
   /* La pagina a schermo pieno dell'app e' aperta. */
@@ -144,6 +147,10 @@ const SCELTE = {
     dominio(id) === "sensor" && (classe(s) === "power" || /^k?w$/i.test(unita(s))),
   antifurto: (id) => dominio(id) === "alarm_control_panel",
   persona: (id) => dominio(id) === "person",
+  /* Qualunque entita' di Home Assistant: per i QUANDO e i SOLO SE generici. */
+  tutte: () => true,
+  imposta: (id) => DOMINI.imposta.includes(dominio(id)),
+  media: (id) => dominio(id) === "media_player",
   stato: (id) =>
     [
       "light",
@@ -280,9 +287,13 @@ function misuraDi(id) {
   return u ? ` ${u}` : "";
 }
 
+/* I nomi di un elenco di entita' (o di una sola), detti come una frase. */
+const nomiDi = (elenco) =>
+  eDetti((Array.isArray(elenco) ? elenco : elenco ? [elenco] : []).map(nomeDi));
+
 /** Il QUANDO in una frase: «Quando c'è movimento in Corridoio». */
 export function fraseDelQuando(q) {
-  const nomi = (elenco) => eDetti((elenco || []).map(nomeDi));
+  const nomi = nomiDi;
   if (q.tipo === "orario") {
     if (q.sole) {
       const scarto = Math.abs(q.scarto);
@@ -295,6 +306,7 @@ export function fraseDelQuando(q) {
     const ore = eDetti(q.ore.map((o) => t(`alle ${o}`, `at ${o}`)));
     return `${ore.charAt(0).toUpperCase()}${ore.slice(1)}`;
   }
+  if (q.tipo === "ogni") return t(`Ogni ${q.minuti} min`, `Every ${q.minuti} min`);
   if (q.tipo === "apertura") {
     const chi = q.entita.length ? nomi(q.entita) : t("una porta o finestra", "a door or window");
     return q.verso === "chiude"
@@ -330,6 +342,36 @@ export function fraseDelQuando(q) {
       ? t("Quando l'antifurto si disinserisce", "When the alarm is disarmed")
       : t("Quando l'antifurto si inserisce", "When the alarm is armed");
   }
+  if (q.tipo === "stato") {
+    const chi = q.entita.length ? nomi(q.entita) : "…";
+    const da = q.da;
+    const a = q.a;
+    let frase = t(`Quando ${chi} cambia stato`, `When ${chi} changes state`);
+    if (da && a)
+      frase = t(
+        `Quando ${chi} passa da «${da}» a «${a}»`,
+        `When ${chi} goes from «${da}» to «${a}»`,
+      );
+    else if (a) frase = t(`Quando ${chi} diventa «${a}»`, `When ${chi} becomes «${a}»`);
+    else if (da) frase = t(`Quando ${chi} non è più «${da}»`, `When ${chi} is no longer «${da}»`);
+    const per = q.per;
+    return per ? t(`${frase} da ${per} min`, `${frase} for ${per} min`) : frase;
+  }
+  if (q.tipo === "attributo") {
+    const chi = q.entita ? nomeDi(q.entita) : "…";
+    const attributo = q.attributo || "…";
+    const valore = q.valore;
+    return valore
+      ? t(
+          `Quando ${attributo} di ${chi} diventa «${valore}»`,
+          `When ${attributo} of ${chi} becomes «${valore}»`,
+        )
+      : t(`Quando cambia ${attributo} di ${chi}`, `When ${attributo} of ${chi} changes`);
+  }
+  if (q.tipo === "evento") {
+    const evento = q.evento || "…";
+    return t(`Quando arriva l'evento ${evento}`, `When the ${evento} event arrives`);
+  }
   const chi = q.entita ? nomeDi(q.entita) : "…";
   return t(`Quando ${chi} ha finito`, `When ${chi} has finished`);
 }
@@ -342,6 +384,10 @@ export function fraseDellaCondizione(c) {
   }
   if (c.tipo === "fascia") return t(`fra ${c.da} e ${c.a}`, `between ${c.da} and ${c.a}`);
   if (c.tipo === "giorni") return giorniDetti(c.giorni) || t("tutti i giorni", "every day");
+  if (c.tipo === "sole")
+    return c.posizione === "sotto"
+      ? t("col sole sotto l'orizzonte", "with the sun below the horizon")
+      : t("col sole sopra l'orizzonte", "with the sun above the horizon");
   if (c.tipo === "casa")
     return c.chi === "nessuno"
       ? t("nessuno in casa", "nobody home")
@@ -349,20 +395,38 @@ export function fraseDellaCondizione(c) {
   const chi = nomeDi(c.entita);
   if (c.tipo === "stato")
     return c.vale === "spento" ? t(`${chi} spento`, `${chi} off`) : t(`${chi} acceso`, `${chi} on`);
+  if (c.tipo === "uguale") {
+    const valore = c.valore || "…";
+    return c.non
+      ? t(`${chi} non è «${valore}»`, `${chi} is not «${valore}»`)
+      : t(`${chi} è «${valore}»`, `${chi} is «${valore}»`);
+  }
+  if (c.tipo === "attributo") {
+    const attributo = c.attributo || "…";
+    const valore = c.valore || "…";
+    if (c.confronto === "sopra")
+      return t(`${attributo} di ${chi} sopra ${valore}`, `${attributo} of ${chi} above ${valore}`);
+    if (c.confronto === "sotto")
+      return t(`${attributo} di ${chi} sotto ${valore}`, `${attributo} of ${chi} below ${valore}`);
+    return t(`${attributo} di ${chi} è «${valore}»`, `${attributo} of ${chi} is «${valore}»`);
+  }
   const soglia = `${c.soglia}${misuraDi(c.entita)}`;
   return c.verso === "sotto"
     ? t(`${chi} sotto ${soglia}`, `${chi} below ${soglia}`)
     : t(`${chi} sopra ${soglia}`, `${chi} above ${soglia}`);
 }
 
+const SI_ATTIVANO = ["script", "scene", "button", "input_button"];
+
 /** Un'azione dell'ALLORA, detta: «accendi Luce corridoio al 20%». */
 export function fraseDellAzione(a) {
-  const chi = a.entita ? nomeDi(a.entita) : "";
+  const chi = nomiDi(a.entita);
   if (a.tipo === "aspetta") return t(`aspetta ${a.minuti} min`, `wait ${a.minuti} min`);
   if (a.tipo === "notifica") return `📱 «${a.testo}»`;
   if (a.tipo === "azione") return t(`lancia «${a.nome}»`, `run «${a.nome}»`);
   if (a.tipo === "accendi") {
-    if (["script", "scene", "button", "input_button"].includes(dominio(a.entita)))
+    const elenco = Array.isArray(a.entita) ? a.entita : [a.entita];
+    if (elenco.length && elenco.every((e) => SI_ATTIVANO.includes(dominio(e))))
       return t(`attiva ${chi}`, `activate ${chi}`);
     return a.livello
       ? t(`accendi ${chi} al ${a.livello}%`, `turn on ${chi} at ${a.livello}%`)
@@ -374,6 +438,34 @@ export function fraseDellAzione(a) {
     if (a.modo === "posizione")
       return t(`porta ${chi} al ${a.posizione}%`, `set ${chi} to ${a.posizione}%`);
     return t(`apri ${chi}`, `open ${chi}`);
+  }
+  if (a.tipo === "imposta") {
+    const valore = a.valore;
+    return t(`metti ${chi} a «${valore}»`, `set ${chi} to «${valore}»`);
+  }
+  if (a.tipo === "media") {
+    const valore = a.valore;
+    if (a.comando === "pausa") return t(`metti in pausa ${chi}`, `pause ${chi}`);
+    if (a.comando === "stop") return t(`ferma ${chi}`, `stop ${chi}`);
+    if (a.comando === "successivo") return t(`brano dopo su ${chi}`, `next track on ${chi}`);
+    if (a.comando === "volume")
+      return t(`${chi} al volume ${valore}%`, `${chi} at volume ${valore}%`);
+    if (a.comando === "sorgente") return t(`${chi} su «${valore}»`, `${chi} on «${valore}»`);
+    return t(`fai suonare ${chi}`, `play ${chi}`);
+  }
+  if (a.tipo === "aspettaChe") {
+    const stato = a.stato;
+    const massimo = a.massimo;
+    return t(
+      `aspetta che ${chi} diventi «${stato}» (al massimo ${massimo} min)`,
+      `wait until ${chi} becomes «${stato}» (at most ${massimo} min)`,
+    );
+  }
+  if (a.tipo === "servizio") {
+    const servizio = a.servizio;
+    return chi
+      ? t(`chiama ${servizio} su ${chi}`, `call ${servizio} on ${chi}`)
+      : t(`chiama ${servizio}`, `call ${servizio}`);
   }
   if (a.modo === "spegni") return t(`spegni ${chi}`, `turn off ${chi}`);
   return t(`${chi} a ${a.gradi}°`, `${chi} to ${a.gradi}°`);
@@ -394,7 +486,9 @@ export function siLeggeCosi(a) {
   if (a.tipo === "crono")
     return `${a.nome || t("Cronotermostato", "Thermostat schedule")}: ${fraseDelCrono(a.crono)}`;
   const quando = fraseDelQuando(a.quando);
-  const condizioni = eDetti(a.soloSe.map(fraseDellaCondizione));
+  const condizioni = a.tutte
+    ? eDetti(a.soloSe.map(fraseDellaCondizione))
+    : a.soloSe.map(fraseDellaCondizione).join(` ${t("o", "or")} `);
   const se = a.soloSe.length ? t(`, solo se ${condizioni}`, `, only if ${condizioni}`) : "";
   const allora = a.allora.length ? fraseDellAllora(a.allora) : "…";
   return `<b>${esc(quando.charAt(0).toLowerCase() + quando.slice(1))}</b>${esc(se)}, <b>${esc(allora)}</b>.`;
@@ -404,12 +498,16 @@ export function siLeggeCosi(a) {
 
 const DISEGNO_DEL_QUANDO = {
   orario: "automazioni",
+  ogni: "automazioni",
   apertura: "finestra",
   movimento: "presenza",
   valore: "temperatura",
   persone: "persone",
   antifurto: "sicurezza",
   elettrodomestico: "elettrodomestici",
+  stato: "evidenza",
+  attributo: "impostazioni",
+  evento: "azioni",
   crono: "caldo",
 };
 let disegni = 0;
@@ -454,6 +552,30 @@ const QUANDO_DELLA_TENDINA = () => [
     t("un elettrodomestico finisce", "an appliance finishes"),
     t("lavatrice, lavastoviglie…", "washer, dishwasher…"),
   ],
+];
+
+/* I QUANDO per chi vuole tutta Home Assistant: dietro «Altro…», chiusi di
+ * serie, perche' la porta d'ingresso resta quella delle sette cose di casa. */
+const QUANDO_ALTRO = () => [
+  [
+    "stato",
+    "🔁",
+    t("un'entità cambia stato", "an entity changes state"),
+    t("qualsiasi, da → a", "any, from → to"),
+  ],
+  [
+    "attributo",
+    "🏷️",
+    t("un attributo cambia", "an attribute changes"),
+    t("sorgente, modalità…", "source, mode…"),
+  ],
+  [
+    "evento",
+    "⚡",
+    t("un evento di Home Assistant", "a Home Assistant event"),
+    t("tasti Zigbee, tag…", "Zigbee buttons, tags…"),
+  ],
+  ["ogni", "🔂", t("ogni tot minuti", "every few minutes"), t("dalla mezzanotte", "from midnight")],
 ];
 
 /* ── la lista ────────────────────────────────────────────────────────────── */
@@ -736,10 +858,17 @@ function bozzaDelModello(chiave) {
       nome: t("Tutti fuori: spegni tutto", "Everyone out: turn it all off"),
       quando: { tipo: "persone", verso: "tuttiFuori", chi: [] },
       allora: [
-        ...opzioni("luce")
-          .slice(0, 6)
-          .map(([e]) => ({ tipo: "spegni", entita: e })),
-        ...(clima ? [{ tipo: "clima", entita: clima, modo: "spegni" }] : []),
+        ...(opzioni("luce").length
+          ? [
+              {
+                tipo: "spegni",
+                entita: opzioni("luce")
+                  .slice(0, 8)
+                  .map(([e]) => e),
+              },
+            ]
+          : []),
+        ...(clima ? [{ tipo: "clima", entita: [clima], modo: "spegni" }] : []),
       ],
     };
   if (chiave === "bentornato")
@@ -769,7 +898,11 @@ function bozzaDelModello(chiave) {
 
 /* ── l'editor ────────────────────────────────────────────────────────────── */
 
-const sel = (via, valore, voci, { vuota = null, classe: c = "" } = {}) =>
+/* Una tendina. Con `cerca` in fondo c'e' «🔍 Tutte le entità…»: apre la
+ * ricerca del config su TUTTE le entita' di Home Assistant, non solo quelle
+ * proposte qui — la tendina propone, la ricerca trova. La scelta torna nella
+ * casella nascosta accanto, e da li' nella bozza come una scelta qualunque. */
+const sel = (via, valore, voci, { vuota = null, classe: c = "", cerca = false } = {}) =>
   `<select class="au-sel${c ? ` ${c}` : ""}" data-au-campo="${esc(via)}">${
     vuota !== null ? `<option value="">${esc(vuota)}</option>` : ""
   }${voci
@@ -779,9 +912,13 @@ const sel = (via, valore, voci, { vuota = null, classe: c = "" } = {}) =>
     )
     .join("")}${
     valore && !voci.some(([v]) => String(v) === String(valore))
-      ? `<option value="${esc(valore)}" selected>${esc(dominio(valore) ? nomeDi(valore) : valore)}</option>`
+      ? `<option value="${esc(valore)}" selected>${esc(dominio(valore) && valore.includes(".") ? nomeDi(valore) : valore)}</option>`
       : ""
-  }</select>`;
+  }${cerca ? `<option value="__cerca__">🔍 ${esc(t("Tutte le entità…", "All entities…"))}</option>` : ""}</select>${
+    cerca
+      ? `<input type="text" hidden class="au-cerca-in" data-au-campo="${esc(via)}" data-au-cerca-di="${esc(via)}" value="">`
+      : ""
+  }`;
 
 const numeroIn = (via, valore, { passo = 1, min = "", max = "", largo = 70 } = {}) =>
   `<input class="au-sel au-num-in" type="number" inputmode="decimal" step="${passo}" min="${min}" max="${max}" style="width:${largo}px" data-au-campo="${esc(via)}" value="${esc(valore)}">`;
@@ -789,26 +926,44 @@ const numeroIn = (via, valore, { passo = 1, min = "", max = "", largo = 70 } = {
 const oraIn = (via, valore, segnaposto = "") =>
   `<input class="au-sel au-ora-in" type="time" data-au-campo="${esc(via)}" value="${esc(valore)}" placeholder="${esc(segnaposto)}">`;
 
+/* Una scritta a mano: uno stato, un attributo, un evento. Si scrive senza
+ * ridisegnare la riga (la frase sotto si', `onInput`). */
+const testoIn = (via, valore, segnaposto = "", largo = 130, lista = "") =>
+  `<input class="au-sel au-scritto-in" type="text" autocomplete="off" spellcheck="false" style="width:${largo}px" data-au-testo="${esc(via)}" value="${esc(valore ?? "")}" placeholder="${esc(segnaposto)}"${lista ? ` list="${lista}"` : ""}>`;
+
 const togli = (via) =>
   `<button type="button" class="au-x" data-au-togli="${esc(via)}" aria-label="${esc(t("Togli", "Remove"))}">✕</button>`;
 
 const nessuna = () => t("— scegli —", "— choose —");
 
+/** Una entita', con la ricerca su tutta la casa in fondo alla tendina. */
+const unaEntita = (via, valore, quale, vuota = nessuna()) =>
+  sel(via, valore || "", opzioni(quale), { vuota, cerca: true });
+
 function entitaMolte(via, elenco, quale, massimo = ENTITA_AL_MASSIMO) {
+  const lista = Array.isArray(elenco) ? elenco : elenco ? [elenco] : [];
   const tutte = opzioni(quale);
-  const scelte = (elenco || []).map(
+  const scelte = lista.map(
     (id, i) =>
-      `<span class="au-coppia">${sel(`${via}.${i}`, id, tutte)}${elenco.length > 1 ? togli(`${via}.${i}`) : ""}</span>`,
+      `<span class="au-coppia">${sel(`${via}.${i}`, id, tutte, { cerca: true })}${lista.length > 1 ? togli(`${via}.${i}`) : ""}</span>`,
   );
-  if ((elenco || []).length < massimo)
+  if (lista.length < massimo)
     scelte.push(
       sel(`${via}.+`, "", tutte, {
-        vuota: elenco?.length ? "＋" : nessuna(),
-        classe: elenco?.length ? "au-sel-piu" : "",
+        vuota: lista.length ? "＋" : nessuna(),
+        classe: lista.length ? "au-sel-piu" : "",
+        cerca: true,
       }),
     );
   return scelte.join(` <span class="au-o">${esc(t("o", "or"))}</span> `);
 }
+
+/* Per le azioni «e» e non «o»: accendi questa e questa. */
+const entitaInsieme = (via, elenco, quale) =>
+  entitaMolte(via, elenco, quale).replaceAll(
+    ` <span class="au-o">${esc(t("o", "or"))}</span> `,
+    ` <span class="au-o">${esc(t("e", "and"))}</span> `,
+  );
 
 function chipGiorni(via, giorni) {
   const nomi = iniziali();
@@ -819,6 +974,58 @@ function chipGiorni(via, giorni) {
     )
     .join("")}</span>`;
 }
+
+/* Gli attributi che un'entita' ha adesso: la tendina li propone, e si puo'
+ * scrivere anche uno che adesso non c'e'. */
+function attributiDi(id) {
+  return Object.keys(stati()[id]?.attributes || {})
+    .filter((k) => k !== "friendly_name")
+    .sort()
+    .map((k) => [k, k]);
+}
+
+/* Gli stati che un'entita' puo' avere, se li dice (le opzioni di una
+ * tendina, le sorgenti di un lettore), da proporre accanto alla scritta. */
+function statiPossibili(id) {
+  const s = stati()[id];
+  const a = s?.attributes || {};
+  const d = dominio(id);
+  if (Array.isArray(a.options)) return a.options.map(String);
+  if (["light", "switch", "fan", "input_boolean", "binary_sensor", "automation"].includes(d))
+    return ["on", "off"];
+  if (d === "cover") return ["open", "closed", "opening", "closing"];
+  if (d === "person" || d === "device_tracker") return ["home", "not_home"];
+  if (d === "media_player") return ["playing", "paused", "idle", "off", "on"];
+  if (d === "climate" && Array.isArray(a.hvac_modes)) return a.hvac_modes.map(String);
+  if (d === "alarm_control_panel")
+    return ["disarmed", "armed_home", "armed_away", "armed_night", "triggered"];
+  return s?.state ? [String(s.state)] : [];
+}
+
+let liste = 0;
+/* Una scritta con i suggerimenti sotto (`datalist`): si sceglie o si scrive. */
+function scrittoConSuggerimenti(via, valore, suggeriti, segnaposto = "", largo = 130) {
+  const id = `au-lista-${liste++ % 200}`;
+  return `${testoIn(via, valore, segnaposto, largo, id)}<datalist id="${id}">${[
+    ...new Set(suggeriti),
+  ]
+    .slice(0, 60)
+    .map((v) => `<option value="${esc(v)}"></option>`)
+    .join("")}</datalist>`;
+}
+
+const EVENTI_NOTI = [
+  "zha_event",
+  "deconz_event",
+  "hue_event",
+  "shelly.click",
+  "tag_scanned",
+  "mobile_app_notification_action",
+  "ios.action_fired",
+  "lutron_caseta_button_event",
+  "knx_event",
+  "esphome.button_pressed",
+];
 
 function campiDelQuando(q) {
   if (q.tipo === "orario") {
@@ -852,6 +1059,12 @@ function campiDelQuando(q) {
         }`;
     return `${modo} ${ore}</div><div class="au-rf">${chipGiorni("quando.giorni", q.giorni)}`;
   }
+  if (q.tipo === "ogni")
+    return sel(
+      "quando.minuti",
+      q.minuti,
+      [5, 10, 15, 20, 30, 60, 120, 180, 360, 720, 1440].map((m) => [m, `${m} min`]),
+    );
   if (q.tipo === "apertura")
     return `${entitaMolte("quando.entita", q.entita, "apertura")} ${sel("quando.verso", q.verso, [
       ["apre", t("si apre", "opens")],
@@ -875,14 +1088,10 @@ function campiDelQuando(q) {
         : ""
     }`;
   if (q.tipo === "valore")
-    return `${sel("quando.entita", q.entita, opzioni("valore"), { vuota: nessuna() })} ${sel(
-      "quando.verso",
-      q.verso,
-      [
-        ["sopra", t("sale sopra", "rises above")],
-        ["sotto", t("scende sotto", "drops below")],
-      ],
-    )} ${numeroIn("quando.soglia", q.soglia, { passo: "any" })}<span class="au-o">${esc(misuraDi(q.entita))}</span>`;
+    return `${unaEntita("quando.entita", q.entita, "valore")} ${sel("quando.verso", q.verso, [
+      ["sopra", t("sale sopra", "rises above")],
+      ["sotto", t("scende sotto", "drops below")],
+    ])} ${numeroIn("quando.soglia", q.soglia, { passo: "any" })}<span class="au-o">${esc(misuraDi(q.entita))}</span>`;
   if (q.tipo === "persone")
     return `${sel("quando.verso", q.verso, [
       ["arriva", t("arriva a casa", "gets home")],
@@ -895,22 +1104,61 @@ function campiDelQuando(q) {
             "quando.chi.0",
             q.chi?.[0] || "",
             opzioni("persona"),
-            {
-              vuota: t("chiunque", "anyone"),
-            },
+            { vuota: t("chiunque", "anyone") },
           )}`
     }`;
   if (q.tipo === "antifurto")
-    return `${sel("quando.entita", q.entita, opzioni("antifurto"), { vuota: nessuna() })} ${sel(
-      "quando.verso",
-      q.verso,
-      [
-        ["inserito", t("si inserisce", "is armed")],
-        ["disinserito", t("si disinserisce", "is disarmed")],
-        ["suona", t("suona", "goes off")],
-      ],
+    return `${unaEntita("quando.entita", q.entita, "antifurto")} ${sel("quando.verso", q.verso, [
+      ["inserito", t("si inserisce", "is armed")],
+      ["disinserito", t("si disinserisce", "is disarmed")],
+      ["suona", t("suona", "goes off")],
+    ])}`;
+  if (q.tipo === "stato") {
+    const possibili = (q.entita || []).flatMap(statiPossibili);
+    return `${entitaMolte("quando.entita", q.entita, "tutte")}</div><div class="au-rf"><span class="au-o">${esc(
+      t("da", "from"),
+    )}</span> ${scrittoConSuggerimenti("quando.da", q.da, possibili, t("qualsiasi", "any"), 110)} <span class="au-o">${esc(
+      t("a", "to"),
+    )}</span> ${scrittoConSuggerimenti("quando.a", q.a, possibili, t("qualsiasi", "any"), 110)} ${sel(
+      "quando.per",
+      q.per || 0,
+      [0, 1, 2, 5, 10, 15, 30, 60, 120].map((m) => [
+        m,
+        m ? t(`da ${m} min`, `for ${m} min`) : t("subito", "right away"),
+      ]),
     )}`;
-  return `${sel("quando.entita", q.entita, opzioni("potenza"), { vuota: nessuna() })} <span class="au-o">${esc(
+  }
+  if (q.tipo === "attributo")
+    return `${unaEntita("quando.entita", q.entita, "tutte")} ${sel(
+      "quando.attributo",
+      q.attributo || "",
+      attributiDi(q.entita),
+      {
+        vuota: t("— attributo —", "— attribute —"),
+      },
+    )} <span class="au-o">${esc(t("diventa", "becomes"))}</span> ${testoIn(
+      "quando.valore",
+      q.valore,
+      t("qualsiasi", "any"),
+      110,
+    )}`;
+  if (q.tipo === "evento") {
+    const filtro = Array.isArray(q.filtroRighe) ? q.filtroRighe : Object.entries(q.filtro || {});
+    const righe = filtro
+      .map(
+        ([k, v], i) =>
+          `<span class="au-coppia">${testoIn(`quando.filtroRighe.${i}.0`, k, t("campo", "event field"), 100)}<span class="au-o">=</span>${testoIn(`quando.filtroRighe.${i}.1`, v, t("valore", "value"), 110)}${togli(`quando.filtroRighe.${i}`)}</span>`,
+      )
+      .join(" ");
+    return `${scrittoConSuggerimenti("quando.evento", q.evento, EVENTI_NOTI, "zha_event", 170)}</div><div class="au-rf"><span class="au-o">${esc(
+      t("con", "with"),
+    )}</span> ${righe} ${
+      filtro.length < 6
+        ? `<button type="button" class="au-agg-pic" data-au-aggiungi="quando.filtroRighe">＋ ${esc(t("campo", "event field"))}</button>`
+        : ""
+    }<small class="au-nota-in">${esc(t("Lo vedi in Strumenti per sviluppatori → Eventi.", "You can see it in Developer tools → Events."))}</small>`;
+  }
+  return `${unaEntita("quando.entita", q.entita, "potenza")} <span class="au-o">${esc(
     t("sotto", "below"),
   )}</span> ${numeroIn("quando.soglia", q.soglia, { passo: "any", largo: 64 })}<span class="au-o">W ${esc(
     t("per", "for"),
@@ -923,17 +1171,18 @@ function campiDelQuando(q) {
 
 function tendinaDelQuando(q) {
   const voci = QUANDO_DELLA_TENDINA();
-  const scelta = voci.find(([k]) => k === q.tipo) || voci[0];
+  const altre = QUANDO_ALTRO();
+  const scelta = [...voci, ...altre].find(([k]) => k === q.tipo) || voci[0];
   const etichetta =
     q.tipo === "movimento" && q.verso === "no" ? t("nessun movimento", "no motion") : scelta[2];
+  const riga = ([k, e, testo, nota]) =>
+    `<button type="button" role="option" class="${k === q.tipo ? "si" : ""}" data-au-quando="${k}" aria-selected="${k === q.tipo}">${e} ${esc(testo)}<small>${esc(nota)}</small></button>`;
+  const altroAperto = state.tendinaAltro || altre.some(([k]) => k === q.tipo);
   return `<span class="au-tendina-qui"><button type="button" class="au-sel au-sel-quando" data-au-tendina aria-expanded="${state.tendina}">${scelta[1]} ${esc(etichetta)}</button>${
     state.tendina
-      ? `<div class="au-tendina" role="listbox">${voci
-          .map(
-            ([k, e, testo, nota]) =>
-              `<button type="button" role="option" class="${k === q.tipo ? "si" : ""}" data-au-quando="${k}" aria-selected="${k === q.tipo}">${e} ${esc(testo)}<small>${esc(nota)}</small></button>`,
-          )
-          .join("")}</div>`
+      ? `<div class="au-tendina" role="listbox">${voci.map(riga).join("")}<button type="button" class="au-altro" data-au-tendina-altro aria-expanded="${altroAperto}">${esc(
+          t("Altro…", "More…"),
+        )}<small>${altroAperto ? "▾" : "▸"}</small></button>${altroAperto ? altre.map(riga).join("") : ""}</div>`
       : ""
   }</span>`;
 }
@@ -945,6 +1194,9 @@ const TIPI_DELLE_CONDIZIONI = () => [
   ["casa", `🏠 ${t("chi è in casa", "who is home")}`],
   ["stato", `💡 ${t("un'entità è…", "an entity is…")}`],
   ["valore", `🌡️ ${t("un valore è…", "a value is…")}`],
+  ["uguale", `🔣 ${t("un'entità è in uno stato…", "an entity is in a state…")}`],
+  ["attributo", `🏷️ ${t("un attributo è…", "an attribute is…")}`],
+  ["sole", `☀️ ${t("il sole è…", "the sun is…")}`],
 ];
 
 function campiDellaCondizione(c, i) {
@@ -965,23 +1217,42 @@ function campiDellaCondizione(c, i) {
       ["qualcuno", t("qualcuno in casa", "someone home")],
       ["nessuno", t("nessuno in casa", "nobody home")],
     ]);
+  if (c.tipo === "sole")
+    return sel(`${via}.posizione`, c.posizione || "sopra", [
+      ["sopra", t("sopra l'orizzonte", "above the horizon")],
+      ["sotto", t("sotto l'orizzonte", "below the horizon")],
+    ]);
   if (c.tipo === "stato")
-    return `${sel(`${via}.entita`, c.entita, opzioni("stato"), { vuota: nessuna() })} ${sel(
-      `${via}.vale`,
-      c.vale,
+    return `${unaEntita(`${via}.entita`, c.entita, "stato")} ${sel(`${via}.vale`, c.vale, [
+      ["acceso", t("è acceso / aperto", "is on / open")],
+      ["spento", t("è spento / chiuso", "is off / closed")],
+    ])}`;
+  if (c.tipo === "uguale")
+    return `${unaEntita(`${via}.entita`, c.entita, "tutte")} ${sel(
+      `${via}.non`,
+      c.non ? "si" : "",
       [
-        ["acceso", t("è acceso / aperto", "is on / open")],
-        ["spento", t("è spento / chiuso", "is off / closed")],
+        ["", t("è", "equals")],
+        ["si", t("non è", "is not")],
       ],
-    )}`;
-  return `${sel(`${via}.entita`, c.entita, opzioni("valore"), { vuota: nessuna() })} ${sel(
-    `${via}.verso`,
-    c.verso,
-    [
+    )} ${scrittoConSuggerimenti(`${via}.valore`, c.valore, statiPossibili(c.entita), t("stato, o più con la virgola", "state, or several with commas"), 170)}`;
+  if (c.tipo === "attributo")
+    return `${unaEntita(`${via}.entita`, c.entita, "tutte")} ${sel(
+      `${via}.attributo`,
+      c.attributo || "",
+      attributiDi(c.entita),
+      {
+        vuota: t("— attributo —", "— attribute —"),
+      },
+    )} ${sel(`${via}.confronto`, c.confronto || "uguale", [
+      ["uguale", t("è", "equals")],
       ["sopra", t("sopra", "above")],
       ["sotto", t("sotto", "below")],
-    ],
-  )} ${numeroIn(`${via}.soglia`, c.soglia, { passo: "any" })}`;
+    ])} ${testoIn(`${via}.valore`, c.valore, t("valore", "value"), 100)}`;
+  return `${unaEntita(`${via}.entita`, c.entita, "valore")} ${sel(`${via}.verso`, c.verso, [
+    ["sopra", t("sopra", "above")],
+    ["sotto", t("sotto", "below")],
+  ])} ${numeroIn(`${via}.soglia`, c.soglia, { passo: "any" })}`;
 }
 
 const TIPI_DELLE_AZIONI = () => [
@@ -993,6 +1264,22 @@ const TIPI_DELLE_AZIONI = () => [
   ["notifica", `📱 ${t("notifica", "notification")}`],
   ["aspetta", `⏱ ${t("aspetta", "wait")}`],
 ];
+/* Le azioni per chi vuole tutta Home Assistant: nella stessa tendina, in un
+ * gruppo «Altro…» in fondo. */
+const TIPI_ALTRI = () => [
+  ["imposta", `🎚️ ${t("imposta un valore", "set a value")}`],
+  ["media", `🎵 ${t("lettore multimediale", "media player")}`],
+  ["aspettaChe", `⏳ ${t("aspetta finché…", "wait until…")}`],
+  ["servizio", `🧰 ${t("chiama un servizio", "call a service")}`],
+];
+
+function tendinaDellAzione(via, tipo) {
+  const voce = ([v, testo]) =>
+    `<option value="${esc(v)}"${v === tipo ? " selected" : ""}>${esc(testo)}</option>`;
+  return `<select class="au-sel" data-au-campo="${esc(via)}">${TIPI_DELLE_AZIONI().map(voce).join("")}<optgroup label="${esc(
+    t("Altro…", "More…"),
+  )}">${TIPI_ALTRI().map(voce).join("")}</optgroup></select>`;
+}
 
 function campiDellAzione(a, i) {
   const via = `allora.${i}`;
@@ -1016,8 +1303,9 @@ function campiDellAzione(a, i) {
       : `<small class="au-nota-in">${esc(t("Nessuna azione della plancia che parta da sola: si aggiungono in «Azioni».", "No dashboard action that can start by itself: add them in «Actions»."))}</small>`;
   }
   if (a.tipo === "accendi") {
-    const luce = dominio(a.entita) === "light";
-    return `${sel(`${via}.entita`, a.entita || "", opzioni("accendi"), { vuota: nessuna() })}${
+    const elenco = Array.isArray(a.entita) ? a.entita : [];
+    const luce = elenco.some((e) => dominio(e) === "light");
+    return `${entitaInsieme(`${via}.entita`, elenco, "accendi")}${
       luce
         ? ` <span class="au-o">${esc(t("al", "at level"))}</span> ${sel(
             `${via}.livello`,
@@ -1028,10 +1316,9 @@ function campiDellAzione(a, i) {
         : ""
     }`;
   }
-  if (a.tipo === "spegni")
-    return sel(`${via}.entita`, a.entita || "", opzioni("spegni"), { vuota: nessuna() });
+  if (a.tipo === "spegni") return entitaInsieme(`${via}.entita`, a.entita, "spegni");
   if (a.tipo === "tapparella")
-    return `${sel(`${via}.entita`, a.entita || "", opzioni("tapparella"), { vuota: nessuna() })} ${sel(
+    return `${entitaInsieme(`${via}.entita`, a.entita, "tapparella")} ${sel(
       `${via}.modo`,
       a.modo || "apri",
       [
@@ -1048,7 +1335,84 @@ function campiDellAzione(a, i) {
           )}`
         : ""
     }`;
-  return `${sel(`${via}.entita`, a.entita || "", opzioni("clima"), { vuota: nessuna() })} ${sel(
+  if (a.tipo === "imposta") {
+    const possibili = Array.isArray(stati()[a.entita]?.attributes?.options)
+      ? stati()[a.entita].attributes.options.map(String)
+      : [];
+    return `${unaEntita(`${via}.entita`, a.entita, "imposta")} <span class="au-o">${esc(t("a", "to"))}</span> ${
+      possibili.length
+        ? sel(
+            `${via}.valore`,
+            a.valore || "",
+            possibili.map((v) => [v, v]),
+            { vuota: nessuna() },
+          )
+        : testoIn(`${via}.valore`, a.valore, t("valore", "value"), 110)
+    }`;
+  }
+  if (a.tipo === "media") {
+    const primo = Array.isArray(a.entita) ? a.entita[0] : "";
+    const sorgenti = stati()[primo]?.attributes?.source_list;
+    return `${entitaInsieme(`${via}.entita`, a.entita, "media")} ${sel(
+      `${via}.comando`,
+      a.comando || "play",
+      [
+        ["play", `▶ ${t("riproduci", "play")}`],
+        ["pausa", `⏸ ${t("pausa", "pause")}`],
+        ["stop", `⏹ ${t("ferma", "stop playback")}`],
+        ["successivo", `⏭ ${t("brano dopo", "next track")}`],
+        ["volume", `🔊 ${t("volume", "volume")}`],
+        ["sorgente", `🎛️ ${t("sorgente", "input source")}`],
+      ],
+    )}${
+      a.comando === "volume"
+        ? ` ${sel(
+            `${via}.valore`,
+            a.valore || "30",
+            [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((v) => [String(v), `${v}%`]),
+          )}`
+        : a.comando === "sorgente"
+          ? ` ${
+              Array.isArray(sorgenti) && sorgenti.length
+                ? sel(
+                    `${via}.valore`,
+                    a.valore || "",
+                    sorgenti.map((v) => [String(v), String(v)]),
+                    { vuota: nessuna() },
+                  )
+                : testoIn(`${via}.valore`, a.valore, t("sorgente", "input source"), 120)
+            }`
+          : ""
+    }`;
+  }
+  if (a.tipo === "aspettaChe")
+    return `${unaEntita(`${via}.entita`, a.entita, "tutte")} <span class="au-o">${esc(
+      t("diventa", "becomes"),
+    )}</span> ${scrittoConSuggerimenti(`${via}.stato`, a.stato, statiPossibili(a.entita), "off", 100)} <span class="au-o">${esc(
+      t("al massimo", "at most"),
+    )}</span> ${sel(
+      `${via}.massimo`,
+      a.massimo || 10,
+      [1, 2, 5, 10, 15, 30, 60, 120, 240].map((m) => [m, `${m} min`]),
+    )}`;
+  if (a.tipo === "servizio") {
+    const scritto = clean(a.servizio);
+    const chiuso = scritto && !servizioPermesso(scritto);
+    return `${scrittoConSuggerimenti(`${via}.servizio`, a.servizio, ["notify.notify", "light.turn_on", "switch.toggle", "scene.turn_on", "script.turn_on", "input_boolean.toggle", "tts.speak", "persistent_notification.create"], "dominio.servizio", 190)}</div><div class="au-rf"><span class="au-o">${esc(
+      t("su", "on"),
+    )}</span> ${entitaInsieme(`${via}.entita`, a.entita, "tutte")}</div><div class="au-rf au-rf-dati"><textarea class="au-sel au-dati-in" rows="2" spellcheck="false" data-au-testo="${via}.dati" placeholder='{"message": "…"}'>${esc(
+      typeof a.dati === "string"
+        ? a.dati
+        : a.dati && Object.keys(a.dati).length
+          ? JSON.stringify(a.dati)
+          : "",
+    )}</textarea>${
+      chiuso
+        ? `<small class="au-nota-in au-male">${esc(t("Questo servizio la casa non lo chiama da sola.", "The home does not call this service by itself."))}</small>`
+        : ""
+    }`;
+  }
+  return `${entitaInsieme(`${via}.entita`, a.entita, "clima")} ${sel(
     `${via}.modo`,
     a.modo || "temperatura",
     [
@@ -1058,10 +1422,56 @@ function campiDellAzione(a, i) {
   )}${a.modo === "spegni" ? "" : ` ${numeroIn(`${via}.gradi`, a.gradi ?? 21, { passo: 0.5, min: 5, max: 35, largo: 64 })}<span class="au-o">°</span>`}`;
 }
 
+/* Le opzioni dell'automazione, chiuse di serie: cosa fare se riscatta mentre
+ * e' ancora in corso, una pausa minima fra due volte, e una data in cui si
+ * accende o si spegne da sola. */
+function avanzate(b) {
+  const scadenza = b.scadenza || { data: "", stato: "spenta" };
+  return `<button type="button" class="au-avanzate" data-au-avanzate aria-expanded="${state.avanzate}"><span>⚙️ ${esc(
+    t("Avanzate", "Advanced"),
+  )}</span><small>${esc(t("Se riscatta, pausa, fino a una data", "If it fires again, pause, until a date"))}</small><span class="au-fr">${state.avanzate ? "▾" : "▸"}</span></button>${
+    state.avanzate
+      ? `<div class="au-blocco au-v"><div class="au-rf"><span class="au-o">${esc(
+          t("Se riscatta mentre è in corso", "If it fires while running"),
+        )}</span> ${sel("modo", b.modo || "ricomincia", [
+          ["ricomincia", t("ricomincia da capo", "start over")],
+          ["ignora", t("ignora", "ignore")],
+          ["coda", t("mettila in coda", "queue it")],
+        ])}</div><div class="au-rf"><span class="au-o">${esc(t("Non più di una volta ogni", "No more than once every"))}</span> ${sel(
+          "pausa",
+          b.pausa || 0,
+          [0, 1, 5, 10, 15, 30, 60, 120, 240, 720, 1440].map((m) => [
+            m,
+            m ? `${m} min` : t("— sempre —", "— always —"),
+          ]),
+        )}</div><div class="au-rf">${sel("scadenza.stato", b.scadenza ? scadenza.stato : "", [
+          ["", t("Sempre come dice l'interruttore", "Always as the switch says")],
+          ["spenta", t("Spenta fino al", "Off until")],
+          ["attiva", t("Attiva fino al", "On until")],
+        ])}${
+          b.scadenza
+            ? ` <input class="au-sel au-data-in" type="date" data-au-campo="scadenza.data" value="${esc(scadenza.data || "")}">`
+            : ""
+        }</div>${
+          b.soloSe.length > 1
+            ? `<div class="au-rf"><span class="au-o">${esc(t("Le condizioni", "Conditions"))}</span> ${sel(
+                "tutte",
+                b.tutte === false ? "no" : "si",
+                [
+                  ["si", t("tutte", "all")],
+                  ["no", t("almeno una", "at least one")],
+                ],
+              )}</div>`
+            : ""
+        }</div>`
+      : ""
+  }`;
+}
+
 function editor({ app }) {
   const b = state.bozza;
   const q = b.quando;
-  const pulita = automazionePulita(b);
+  const pulita = pulitaDallaBozza(b);
   const esistente = leAutomazioni().some((a) => a.id === b.id);
   return `${
     app
@@ -1070,7 +1480,13 @@ function editor({ app }) {
   }<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b.nome || "")}" placeholder="${esc(t("Come la chiami", "What you call it"))}"></label>
 <div class="au-blocco au-q"><div class="au-et">${esc(t("Quando", "When"))} <small>· ${esc(t("una cosa sola", "one thing only"))}</small></div>
 <div class="au-rf">${tendinaDelQuando(q)} ${campiDelQuando(q)}</div></div>
-<div class="au-blocco au-s"><div class="au-et">${esc(t("Solo se", "Only if"))} <small>· ${esc(t("facoltativo, fino a 2", "optional, up to 2"))}</small></div>
+<div class="au-blocco au-s"><div class="au-et">${esc(t("Solo se", "Only if"))} <small>· ${esc(
+    b.soloSe.length > 1
+      ? b.tutte === false
+        ? t("basta una", "any one is enough")
+        : t("tutte insieme", "all together")
+      : t("facoltativo", "optional"),
+  )}</small></div>
 ${b.soloSe
   .map(
     (c, i) =>
@@ -1089,13 +1505,14 @@ ${b.soloSe
 ${b.allora
   .map(
     (a, i) =>
-      `<div class="au-rf"><span class="au-num">${i + 1}</span>${sel(`allora.${i}.tipo`, a.tipo, TIPI_DELLE_AZIONI())} ${campiDellAzione(a, i)}${togli(`allora.${i}`)}</div>`,
+      `<div class="au-rf"><span class="au-num">${i + 1}</span>${tendinaDellAzione(`allora.${i}.tipo`, a.tipo)} ${campiDellAzione(a, i)}${togli(`allora.${i}`)}</div>`,
   )
   .join("")}${
     b.allora.length < AZIONI_AL_MASSIMO
       ? `<button type="button" class="au-agg" data-au-aggiungi="allora">＋ ${esc(t("Aggiungi un'azione", "Add an action"))}</button>`
       : ""
   }</div>
+${avanzate(b)}
 <div class="au-leggi" data-au-leggi>${esc(t("Si legge così:", "It reads:"))} ${siLeggeCosi(pulita)}</div>
 ${state.errore ? `<div class="au-errore" role="alert">${esc(state.errore)}</div>` : ""}
 <button type="button" class="au-salva" data-au-salva>💾 ${esc(t("SALVA", "SAVE"))}</button>
@@ -1150,7 +1567,7 @@ function crono({ app }) {
 <div class="au-blocco au-a"><div class="au-et">${esc(t("Quando serve il caldo", "When heating is needed"))} <small>· ${esc(t("trascina sulle barre", "drag on the bars"))}</small></div>
 <div class="au-giorno"><small>${esc(`${giorni[0].corto} – ${giorni[4].corto}`)}</small>${barra("feriali", c.feriali)}</div>
 <div class="au-giorno"><small>${esc(`${giorni[5].corto} – ${giorni[6].corto}`)}</small>${barra("festivi", c.festivi)}</div>
-<div class="au-rf">${sel("crono.finestre.0", finestra, opzioni("finestra"), { vuota: t("🪟 nessuna finestra", "🪟 no window") })} <span class="au-o">→ ${esc(
+<div class="au-rf">${sel("crono.finestre.0", finestra, opzioni("finestra"), { vuota: t("🪟 nessuna finestra", "🪟 no window"), cerca: true })} <span class="au-o">→ ${esc(
     t("si spegne, riparte quando la chiudi", "turns off, restarts when you close it"),
   )}</span><button type="button" class="au-int au-int-dx" role="switch" aria-checked="${c.finestraSpegne}" data-au-finestra aria-label="${esc(t("Finestra aperta, si spegne", "Window open, turns off"))}"><i></i></button></div></div>
 <div class="au-leggi" data-au-leggi>${esc(t("Si legge così:", "It reads:"))} ${esc(siLeggeCosi(automazionePulita(b)))}</div>
@@ -1209,6 +1626,9 @@ function contenitore() {
 export function ridisegna() {
   const dove = contenitore();
   if (!dove) return false;
+  /* La ricerca delle entita' aperta sopra scrive in una casella di questa
+   * pagina: ridisegnarla adesso le toglierebbe la casella da sotto. */
+  if (doc.getElementById("cd-entpick") && dove.querySelector("[data-au-cerca-di]")) return true;
   const app = state.inApp;
   if (Date.now() - state.chiestoIl > VALE && !state.chiedendo) void chiediAllaCasa();
   const html = paginaHtml({ app });
@@ -1250,18 +1670,29 @@ function nuovaCondizione(tipo) {
   if (tipo === "fascia") return { tipo, da: "08:00", a: "20:00" };
   if (tipo === "giorni") return { tipo, giorni: [true, true, true, true, true, false, false] };
   if (tipo === "casa") return { tipo, chi: "qualcuno" };
+  if (tipo === "sole") return { tipo, posizione: "sotto" };
   if (tipo === "stato") return { tipo, entita: primaDi("stato"), vale: "acceso" };
+  if (tipo === "uguale") return { tipo, entita: "", valore: "", non: false };
+  if (tipo === "attributo")
+    return { tipo, entita: "", attributo: "", confronto: "uguale", valore: "" };
   return { tipo: "valore", entita: primaDi("valore"), verso: "sopra", soglia: 25 };
 }
+
+const unaLista = (id) => (id ? [id] : []);
 
 function nuovaAzione(tipo) {
   if (tipo === "aspetta") return { tipo, minuti: 2 };
   if (tipo === "notifica") return { tipo, testo: "" };
   if (tipo === "azione") return { tipo, nome: azioniDellaPlancia()[0] || "" };
-  if (tipo === "spegni") return { tipo, entita: primaDi("luce") || primaDi("spegni") };
-  if (tipo === "tapparella") return { tipo, entita: primaDi("tapparella"), modo: "apri" };
-  if (tipo === "clima") return { tipo, entita: primaDi("clima"), modo: "temperatura", gradi: 21 };
-  return { tipo: "accendi", entita: primaDi("luce") || primaDi("accendi") };
+  if (tipo === "spegni") return { tipo, entita: unaLista(primaDi("luce") || primaDi("spegni")) };
+  if (tipo === "tapparella") return { tipo, entita: unaLista(primaDi("tapparella")), modo: "apri" };
+  if (tipo === "clima")
+    return { tipo, entita: unaLista(primaDi("clima")), modo: "temperatura", gradi: 21 };
+  if (tipo === "imposta") return { tipo, entita: primaDi("imposta"), valore: "" };
+  if (tipo === "media") return { tipo, entita: unaLista(primaDi("media")), comando: "play" };
+  if (tipo === "aspettaChe") return { tipo, entita: "", stato: "off", massimo: 10 };
+  if (tipo === "servizio") return { tipo, servizio: "", entita: [], dati: "" };
+  return { tipo: "accendi", entita: unaLista(primaDi("luce") || primaDi("accendi")) };
 }
 
 function nuovoQuando(tipo) {
@@ -1275,15 +1706,52 @@ function nuovoQuando(tipo) {
   if (tipo === "antifurto") return { tipo, entita: primaDi("antifurto"), verso: "inserito" };
   if (tipo === "elettrodomestico")
     return { tipo, entita: primaDi("potenza"), soglia: 5, minuti: 3 };
+  if (tipo === "stato") return { tipo, entita: [], da: "", a: "", per: 0 };
+  if (tipo === "attributo") return { tipo, entita: "", attributo: "", valore: "" };
+  if (tipo === "evento") return { tipo, evento: "", filtro: {}, filtroRighe: [] };
+  if (tipo === "ogni") return { tipo, minuti: 30 };
   return { tipo: "orario", ore: ["07:00"], sole: "", scarto: 0, giorni: tutti };
 }
 
-const NUMERI = /\.(soglia|minuti|livello|posizione|gradi|scarto)$/;
+/* La bozza tiene due cose in un modo comodo da scrivere, e il salvato in un
+ * altro: il filtro di un evento come righe «campo = valore», e le azioni
+ * sulle cose con un'entita' sola come stringa (le automazioni di prima). */
+function pulitaDallaBozza(b) {
+  if (!b) return null;
+  if (b.tipo === "crono") return automazionePulita(b);
+  const quando = { ...(b.quando || {}) };
+  if (Array.isArray(quando.filtroRighe))
+    quando.filtro = Object.fromEntries(quando.filtroRighe.filter(([k]) => clean(k)));
+  const pulita = automazionePulita({
+    ...b,
+    quando,
+    scadenza: b.scadenza?.stato ? b.scadenza : null,
+  });
+  return pulita;
+}
+
+const NUMERI = /\.(soglia|minuti|livello|posizione|gradi|scarto|per|massimo|pausa)$/;
 
 function metti(via, valore) {
   const b = structuredClone(state.bozza);
   const pezzi = via.split(".");
   const ultimo = pezzi.pop();
+  /* Le opzioni dell'automazione, in cima alla bozza. */
+  if (via === "tutte") {
+    b.tutte = valore !== "no";
+    state.bozza = b;
+    return;
+  }
+  if (via === "scadenza.stato") {
+    b.scadenza = valore ? { data: b.scadenza?.data || "", stato: valore } : null;
+    state.bozza = b;
+    return;
+  }
+  if (via === "scadenza.data") {
+    b.scadenza = { stato: b.scadenza?.stato || "spenta", data: valore };
+    state.bozza = b;
+    return;
+  }
   let dove = b;
   for (const p of pezzi) {
     dove = dove?.[Number.isInteger(+p) ? +p : p];
@@ -1302,10 +1770,14 @@ function metti(via, valore) {
     let v = valore;
     if (NUMERI.test(`.${ultimo}`))
       v = valore === "" ? "" : Number(String(valore).replace(",", "."));
+    if (ultimo === "non") v = valore === "si";
     if (Array.isArray(dove) && v === "") dove.splice(chiave, 1);
     else dove[chiave] = v;
     if (via === "quando.verso" && b.quando.tipo === "persone" && v === "tuttiFuori")
       b.quando.chi = [];
+    /* Un'altra entita': l'attributo scelto era dell'altra. */
+    if (/^(quando|soloSe\.\d+)\.entita$/.test(via) && dove.attributo !== undefined)
+      dove.attributo = "";
   }
   state.bozza = b;
   state.errore = "";
@@ -1332,33 +1804,58 @@ function aggiungiA(via) {
     b.allora.push(nuovaAzione(b.allora.length ? "aspetta" : "accendi"));
   } else if (via === "quando.ore" && b.quando.ore.length < ORARI_AL_MASSIMO) {
     b.quando.ore.push("21:30");
+  } else if (via === "quando.filtroRighe" && (b.quando.filtroRighe || []).length < 6) {
+    b.quando.filtroRighe = [...(b.quando.filtroRighe || []), ["", ""]];
   }
   state.bozza = b;
 }
 
+const SULLE_COSE = ["accendi", "spegni", "tapparella", "clima", "media"];
+
 function apriBozza(bozza, { daModelli = false } = {}) {
   state.bozza = structuredClone(bozza);
   /* Una regola che arriva dal salvato ha gia' la forma pulita; i campi che le
-   * mancano per l'editor — `ore`, `chi` — li rimette la pulizia. */
+   * mancano per l'editor — `ore`, `chi`, le righe del filtro — li rimette
+   * qui, e le azioni sulle cose con un'entita' sola tornano un elenco. */
   if (state.bozza.tipo !== "crono") {
-    state.bozza.quando = {
-      ...nuovoQuando(state.bozza.quando?.tipo),
-      ...(state.bozza.quando || {}),
-    };
+    const q = { ...nuovoQuando(state.bozza.quando?.tipo), ...(state.bozza.quando || {}) };
+    if (q.tipo === "evento") q.filtroRighe = Object.entries(q.filtro || {});
+    state.bozza.quando = q;
     state.bozza.soloSe ||= [];
-    state.bozza.allora ||= [];
+    state.bozza.allora = (state.bozza.allora || []).map((a) =>
+      SULLE_COSE.includes(a.tipo) && !Array.isArray(a.entita)
+        ? { ...a, entita: unaLista(a.entita) }
+        : a.tipo === "servizio" && a.dati && typeof a.dati === "object"
+          ? { ...a, dati: Object.keys(a.dati).length ? JSON.stringify(a.dati) : "" }
+          : a,
+    );
   } else state.bozza.crono = cronoPulito(state.bozza.crono);
   state.vista = state.bozza.tipo === "crono" ? "crono" : "editor";
   state.daModelli = daModelli;
   state.tendina = false;
+  state.tendinaAltro = false;
+  state.avanzate = Boolean(
+    state.bozza.scadenza ||
+    state.bozza.pausa ||
+    (state.bozza.modo && state.bozza.modo !== "ricomincia"),
+  );
   state.errore = "";
 }
 
 function salva() {
-  const pulita = automazionePulita(state.bozza);
-  if (!pulita || !eCompleta(pulita)) {
-    state.errore =
-      pulita?.tipo === "crono"
+  const pulita = pulitaDallaBozza(state.bozza);
+  /* Un servizio scritto che la casa non chiamera' si dice, invece di
+   * sparire in silenzio al salvataggio. */
+  const servizioChiuso = (state.bozza?.allora || []).some(
+    (a) => a.tipo === "servizio" && clean(a.servizio) && !servizioPermesso(a.servizio),
+  );
+  if (!pulita || !eCompleta(pulita) || servizioChiuso) {
+    state.errore = servizioChiuso
+      ? t(
+          "Questo servizio la casa non lo chiama da sola.",
+          "The home does not call this service by itself.",
+        )
+      : pulita?.tipo === "crono"
         ? t("Scegli almeno un termostato.", "Choose at least one thermostat.")
         : t(
             "Manca qualcosa: scegli cosa la fa partire e almeno un'azione.",
@@ -1420,7 +1917,7 @@ function onClick(event) {
     return;
   }
   const el = event.target.closest(
-    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri]",
+    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate]",
   );
   if (!el) {
     if (state.tendina) {
@@ -1455,7 +1952,9 @@ function onClick(event) {
   else if (d.auApri) {
     const a = leAutomazioni().find((x) => x.id === d.auApri);
     if (a) apriBozza(a);
-  } else if (d.auTendina !== undefined) state.tendina = !state.tendina;
+  } else if (d.auTendinaAltro !== undefined) state.tendinaAltro = !state.tendinaAltro;
+  else if (d.auAvanzate !== undefined) state.avanzate = !state.avanzate;
+  else if (d.auTendina !== undefined) state.tendina = !state.tendina;
   else if (d.auQuando) {
     if (d.auQuando !== state.bozza.quando.tipo)
       state.bozza = { ...state.bozza, quando: nuovoQuando(d.auQuando) };
@@ -1494,6 +1993,18 @@ function onChange(event) {
   if (!dentroDiNoi(event)) return;
   const via = event.target?.dataset?.auCampo;
   if (!via || !state.bozza) return;
+  /* «🔍 Tutte le entità…»: la tendina torna com'era, e si apre la ricerca
+   * del config sulla casella nascosta accanto; la scelta torna qui come un
+   * «change» di quella casella. */
+  if (event.target.value === "__cerca__") {
+    const prima = event.target.querySelector("option[selected]")?.value ?? "";
+    event.target.value = prima;
+    const casella = event.target.parentElement?.querySelector(
+      `[data-au-cerca-di="${CSS.escape(via)}"]`,
+    );
+    if (casella && typeof root.wzPickEntity === "function") root.wzPickEntity(casella);
+    return;
+  }
   metti(via, event.target.value);
   ridisegna();
 }
@@ -1509,7 +2020,7 @@ function onInput(event) {
   dove[ultimo] = event.target.value;
   /* Solo la frase sotto: i campi restano dove sono. */
   const leggi = contenitore()?.querySelector?.("[data-au-leggi]");
-  const pulita = automazionePulita(state.bozza);
+  const pulita = pulitaDallaBozza(state.bozza);
   if (leggi)
     leggi.innerHTML = `${esc(t("Si legge così:", "It reads:"))} ${
       pulita?.tipo === "crono" ? esc(siLeggeCosi(pulita)) : siLeggeCosi(pulita)
@@ -1831,6 +2342,7 @@ html[data-theme="dark"] .au .au-indietro{color:#7dd3fc}
 .au .au-rf:has(>.au-x){position:relative;padding-right:30px}
 .au .au-rf>.au-x{position:absolute;right:-4px;top:50%;transform:translateY(-50%)}
 .au select.au-sel{field-sizing:content}
+#editor-modal .au select.au-sel,.au select.au-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%2394a3b8'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 9px center!important;background-size:8px 5px!important}
 .au input.au-ora-in{width:118px}
 .au .au-coppia .au-x{margin-left:0}
 .au .au-agg{display:inline-block;margin-top:8px;border:0;background:none;padding:0;color:var(--c);font-weight:900;font-size:13px}
@@ -1852,6 +2364,16 @@ html[data-theme="dark"] .au .au-errore{color:#fecaca;background:#7f1d1d55}
 .au .au-tendina button{display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;border-radius:10px;background:none;color:var(--au-tx);font-size:13.5px;font-weight:800;text-align:left;white-space:nowrap}
 .au .au-tendina button small{margin-left:auto;font-weight:600;font-size:11px;color:var(--au-dim)}
 .au .au-tendina button.si,.au .au-tendina button:hover{background:color-mix(in srgb,#0ea5e9 12%,transparent)}
+.au .au-tendina .au-altro{border-top:1px dashed var(--au-bordo);border-radius:0 0 10px 10px;margin-top:4px;color:var(--au-dim);font-weight:900}
+.au .au-avanzate{display:grid;grid-template-columns:1fr auto;align-items:center;width:100%;margin:0 0 10px;padding:12px 14px;border-radius:14px;border:1px solid var(--au-bordo);background:var(--au-carta);color:var(--au-tx);text-align:left}
+.au .au-avanzate>span:first-child{font-weight:900;font-size:13.5px}
+.au .au-avanzate small{grid-column:1;font-size:11.5px;font-weight:600;color:var(--au-dim)}
+.au .au-avanzate .au-fr{grid-row:1/span 2;grid-column:2}
+.au .au-v{--c:#64748b}
+.au .au-dati-in{width:100%;min-height:54px;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;padding-right:11px;background-image:none;resize:vertical}
+.au .au-rf-dati{padding-right:0}
+.au input.au-data-in{padding-right:11px;background-image:none;font-family:inherit}
+.au .au-cerca-in{display:none}
 .au .au-temp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .au .au-temp>div{border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px}
 .au .au-temp small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.08em}

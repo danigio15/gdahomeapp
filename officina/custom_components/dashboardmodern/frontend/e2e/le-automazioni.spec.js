@@ -154,7 +154,7 @@ test("dai modelli all'editor: si crea, si legge e si salva", async ({ page }, te
   await expect(pagina.locator(".au-mod")).toHaveCount(8);
   await pagina.locator('[data-au-modello="luce"]').click();
   await expect(pagina.locator(".au-blocco.au-q")).toBeVisible();
-  await expect(pagina.locator('[data-au-campo="quando.entita.0"]')).toHaveValue(
+  await expect(pagina.locator('select[data-au-campo="quando.entita.0"]')).toHaveValue(
     "binary_sensor.pir_corridoio",
   );
   /* La tendina del QUANDO: sette cose, una sola si sceglie. */
@@ -180,9 +180,9 @@ test("dai modelli all'editor: si crea, si legge e si salva", async ({ page }, te
         quando: { tipo: "movimento", entita: ["binary_sensor.pir_corridoio"], verso: "si" },
         soloSe: [{ tipo: "notte", da: "23:00", a: "06:00" }],
         allora: [
-          { tipo: "accendi", entita: "light.corridoio", livello: 30 },
+          { tipo: "accendi", entita: ["light.corridoio"], livello: 30 },
           { tipo: "aspetta", minuti: 2 },
-          { tipo: "spegni", entita: "light.corridoio" },
+          { tipo: "spegni", entita: ["light.corridoio"] },
         ],
       },
     ]);
@@ -253,4 +253,62 @@ test("nell'app la voce del config non c'e', e la pagina si apre a schermo pieno"
   await page.evaluate(() => window.gdahomeTornaDalleAutomazioni());
   await expect(page.locator("#page-automazioni")).toHaveCount(0);
   await expect(page.locator(".page.active")).toHaveCount(1);
+});
+
+test("tutta Home Assistant: un evento, un servizio, la ricerca su tutte le entità e le Avanzate", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo, { automazioni: [] });
+  await apriLaVoce(page);
+  const pagina = page.locator("#ed-body .au-web");
+  await pagina.locator('[data-au-vai="modelli"]').first().click();
+  await pagina.locator('[data-au-modello="zero"]').click();
+  /* I QUANDO generici stanno dietro «Altro…», chiusi di serie. */
+  await pagina.locator("[data-au-tendina]").click();
+  await expect(pagina.locator('.au-tendina [data-au-quando="evento"]')).toHaveCount(0);
+  await pagina.locator("[data-au-tendina-altro]").click();
+  await pagina.locator('.au-tendina [data-au-quando="evento"]').click();
+  await pagina.locator('[data-au-testo="quando.evento"]').fill("zha_event");
+  await pagina.locator('[data-au-aggiungi="quando.filtroRighe"]').click();
+  await pagina.locator('[data-au-testo="quando.filtroRighe.0.0"]').fill("command");
+  await pagina.locator('[data-au-testo="quando.filtroRighe.0.1"]').fill("on");
+  /* «🔍 Tutte le entità…»: la ricerca del config, su tutta la casa. */
+  await pagina.locator('select[data-au-campo="allora.0.entita.0"]').selectOption("__cerca__");
+  const ricerca = page.locator("#cd-entpick");
+  await expect(ricerca).toBeVisible();
+  await page.locator("#cd-ep-search").fill("cover.soggiorno");
+  await ricerca.getByText("cover.soggiorno").first().click();
+  await expect(ricerca).toHaveCount(0);
+  await expect(pagina.locator('[data-au-campo="allora.0.tipo"]')).toHaveValue("accendi");
+  /* Il servizio a mano sta nel gruppo «Altro…» delle azioni. */
+  await pagina.locator('[data-au-aggiungi="allora"]').click();
+  await pagina.locator('[data-au-campo="allora.1.tipo"]').selectOption("servizio");
+  await pagina.locator('[data-au-testo="allora.1.servizio"]').fill("notify.notify");
+  await pagina.locator('[data-au-testo="allora.1.dati"]').fill('{"message":"Tasto"}');
+  /* Le Avanzate sono chiuse di serie. */
+  await expect(pagina.locator('[data-au-campo="modo"]')).toHaveCount(0);
+  await pagina.locator("[data-au-avanzate]").click();
+  await pagina.locator('[data-au-campo="modo"]').selectOption("ignora");
+  await pagina.locator('[data-au-campo="pausa"]').selectOption("5");
+  await pagina.locator('[data-au-testo="nome"]').fill("Tasto della sala");
+  await pagina.locator("[data-au-salva]").click();
+  await expect
+    .poll(() => salvate(page))
+    .toMatchObject([
+      {
+        nome: "Tasto della sala",
+        quando: { tipo: "evento", evento: "zha_event", filtro: { command: "on" } },
+        modo: "ignora",
+        pausa: 5,
+        allora: [
+          { tipo: "accendi" },
+          { tipo: "servizio", servizio: "notify.notify", dati: { message: "Tasto" } },
+        ],
+      },
+    ]);
+  /* Un servizio che apre la casa non si salva: lo si dice. */
+  await pagina.locator(".au-riga").first().click();
+  await pagina.locator('[data-au-testo="allora.1.servizio"]').fill("lock.unlock");
+  await pagina.locator("[data-au-salva]").click();
+  await expect(pagina.locator(".au-errore")).toContainText("Questo servizio la casa non lo chiama");
 });

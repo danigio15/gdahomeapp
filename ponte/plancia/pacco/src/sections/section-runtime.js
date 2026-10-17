@@ -533,7 +533,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NRV7JNP5.js";
+} from "../../chunk-NCX642XP.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1589,6 +1589,7 @@ var SOURCE_INDEX = Object.freeze({
   " — configurata": " — configured",
   " e ": " and ",
   "— Altre zone —": "— Other zones —",
+  "— attributo —": "— attribute —",
   "— kWh da FV": "— kWh from PV",
   "— kWh dalla rete": "— kWh from the grid",
   "— Nessun elemento Report configurato —": "— No Report items configured —",
@@ -1596,6 +1597,7 @@ var SOURCE_INDEX = Object.freeze({
   "— Nessuno —": "— None —",
   "— scegli —": "— choose —",
   "— Scegli —": "— Choose —",
+  "— sempre —": "— always —",
   "— si sceglie ogni volta, dal popup —": "— chosen each time, from the popup —",
   ",": ".",
   ", con condizione,": ", with a condition,",
@@ -1917,15 +1919,22 @@ var SOURCE_INDEX = Object.freeze({
   "${appliance.name} aggiunto dall'integrazione": "${appliance.name} added from the integration",
   "${appliance.name} aggiunto: ${quante} caselle compilate dall'integrazione": "${appliance.name} added: ${quante} fields filled from the integration",
   "${attive.length} allerte in corso": "${attive.length} alerts in force",
+  "${attributo} di ${chi} è «${valore}»": "${attributo} of ${chi} is «${valore}»",
+  "${attributo} di ${chi} sopra ${valore}": "${attributo} of ${chi} above ${valore}",
+  "${attributo} di ${chi} sotto ${valore}": "${attributo} of ${chi} below ${valore}",
   "${avvisi} chiedono attenzione": "${avvisi} need attention",
   "${base}, ${scarto} min dopo": "${base}, ${scarto} min after",
   "${base}, ${scarto} min prima": "${base}, ${scarto} min before",
   "${c.inCasa}° in casa · ${c.fuori}° di notte e fuori": "${c.inCasa}° at home · ${c.fuori}° at night and away",
   "${chi} a ${a.gradi}°": "${chi} to ${a.gradi}°",
   "${chi} acceso": "${chi} on",
+  "${chi} al volume ${valore}%": "${chi} at volume ${valore}%",
+  "${chi} è «${valore}»": "${chi} is «${valore}»",
+  "${chi} non è «${valore}»": "${chi} is not «${valore}»",
   "${chi} sopra ${soglia}": "${chi} above ${soglia}",
   "${chi} sotto ${soglia}": "${chi} below ${soglia}",
   "${chi} spento": "${chi} off",
+  "${chi} su «${valore}»": "${chi} on «${valore}»",
   "${children} dispositivi": "${children} appliances",
   "${cifre(come.energiaKwh, 1)} di ${cifre(come.capacitaKwh, 1)} kWh": "${cifre(come.energiaKwh, 1)} of ${cifre(come.capacitaKwh, 1)} kWh",
   "${closed} chiuse": "${closed} closed",
@@ -1949,6 +1958,7 @@ var SOURCE_INDEX = Object.freeze({
   "${finestra.name} è aperta: spengo ${unita.name} finché non la chiudi?": "${finestra.name} is open: turn off ${unita.name} until you close it?",
   "${folder.skipped} elementi che non sono foto non sono elencati.": "${folder.skipped} entries that are not photos are not listed.",
   "${formatNumber(lettura.ritardo, 0)} minuti di ritardo": "${formatNumber(lettura.ritardo, 0)} minutes late",
+  "${frase} da ${per} min": "${frase} for ${per} min",
   "${giorni} giorni": "${giorni} days",
   "${giorni} giorni fa": "${giorni} days ago",
   "${giorno} alle ${alle}": "${giorno} at ${alle}",
@@ -2315,6 +2325,7 @@ var SOURCE_INDEX = Object.freeze({
   "al lavoro": "working",
   "al lavoro adesso": "working now",
   "al limite di evcc o alle ${fine}": "at the evcc limit or at ${fine}",
+  "al massimo": "at most",
   "al massimo ${probabile} di probabilità": "at most ${probabile} chance",
   "Al posto del percorso puoi scrivere un'entità immagine (image.auto) o una telecamera (camera.auto): la foto la tiene aggiornata l'integrazione, e la lente 🔍 te la fa cercare.": "Instead of a path you can write an image entity (image.car) or a camera (camera.car): the integration keeps the photo up to date, and the 🔍 lens finds it for you.",
   "Al posto di «Esco» quando l'antifurto è inserito": "Instead of «Leaving» when the alarm is armed",
@@ -2366,6 +2377,7 @@ var SOURCE_INDEX = Object.freeze({
   "Allerte": "Alerts",
   "Allora": "Then do",
   "almeno": "at least",
+  "almeno una": "at least one",
   "Almeno una deve restare nel grafico": "At least one has to stay on the chart",
   "Almeno una modalità deve restare": "At least one mode has to stay",
   "Alternativa semplice alla durata da entità.": "Simple alternative to the duration entity.",
@@ -2392,6 +2404,7 @@ var SOURCE_INDEX = Object.freeze({
   "Altro comando": "Other switch",
   "Altro in questa stanza": "Also in this room",
   "Altro valore dell'acqua": "Other water reading",
+  "Altro…": "More…",
   "Alza": "Raise",
   "Alza il caldo": "Raise the heating",
   "Alza il freddo": "Raise the cooling",
@@ -2543,6 +2556,8 @@ var SOURCE_INDEX = Object.freeze({
   "aspetta": "wait",
   "Aspetta": "Waiting",
   "aspetta ${a.minuti} min": "wait ${a.minuti} min",
+  "aspetta che ${chi} diventi «${stato}» (al massimo ${massimo} min)": "wait until ${chi} becomes «${stato}» (at most ${massimo} min)",
+  "aspetta finché…": "wait until…",
   "Aspetta la pioggia": "Waiting for the rain",
   "Aspetto della dashboard su questo dispositivo": "Dashboard appearance on this device",
   "Aspirapolvere": "Vacuum",
@@ -2563,6 +2578,7 @@ var SOURCE_INDEX = Object.freeze({
   "attiva": "active",
   "attiva ${chi}": "activate ${chi}",
   "Attiva audio": "Enable audio",
+  "Attiva fino al": "On until",
   "Attiva nella sezione EV — tocca per toglierla": "Active in the EV section — tap to remove it",
   "Attiva o spenta": "On or off",
   "Attiva solo quelle rilevanti per casa tua — potrai cambiarle in seguito.": "Enable only the ones relevant to your home — you can change them later.",
@@ -2597,6 +2613,7 @@ var SOURCE_INDEX = Object.freeze({
   "Autosufficienza Energetica": "Energy self-sufficiency",
   "Avanti →": "Next →",
   "Avanzano ${kw} kW e il sole tiene anche nelle prossime ore.": "${kw} kW to spare, and the sun holds for the next hours.",
+  "Avanzate": "Advanced",
   "Avatar (senza foto)": "Avatar (without a photo)",
   "Avvia": "Start",
   "Avvia ${a.name} col sole": "Start ${a.name} on solar",
@@ -2663,6 +2680,7 @@ var SOURCE_INDEX = Object.freeze({
   "bassa: rabbocca": "low: top it up",
   "basso": "low",
   "Basso": "Bottom",
+  "basta una": "any one is enough",
   "Batt. Scariche": "Low batteries",
   "batteria": "battery",
   "Batteria": "Battery",
@@ -2712,6 +2730,8 @@ var SOURCE_INDEX = Object.freeze({
   "Boiler solare": "Solar water heater",
   "Bollitore": "Kettle",
   "Bosco": "Forest",
+  "brano dopo": "next track",
+  "brano dopo su ${chi}": "next track on ${chi}",
   "Brano precedente": "Previous track",
   "Brano successivo": "Next track",
   "Bruciatore": "Burner",
@@ -2768,6 +2788,7 @@ var SOURCE_INDEX = Object.freeze({
   "Campanello": "Doorbell",
   "Campanello classico": "Classic bell",
   "Campi di periodo svuotati": "Period fields cleared",
+  "campo": "event field",
   "Canale precedente": "Previous channel",
   "Canale successivo": "Next channel",
   "Canali": "Channels",
@@ -2911,6 +2932,9 @@ var SOURCE_INDEX = Object.freeze({
   "Chi sta guardando?": "Who is watching?",
   "Chi suona · Apri · Cassetta": "Who rings · Open · Mailbox",
   "Chi suona alla porta e cosa c'è in cassetta. Del citofono servono il tasto che apre — un button, uno script, una serratura, un cancello motorizzato — e, se c'è, il campanello. Della cassetta basta un sensore: con tutti e due — quello che dice che è arrivato qualcosa e quello dello sportello — la plancia confronta i due momenti e sa da sola se la posta è ancora dentro; con uno solo l'apertura vale come arrivo, e a dire che l'hai presa sei tu, col tasto sulla card.": "Who is at the door and what is in the mailbox. The intercom needs the button that opens — a button, a script, a lock, a motorised gate — and the doorbell if there is one. One sensor is enough for the mailbox: with both — the one that says something arrived and the flap one — the dashboard compares the two moments and works out on its own whether the mail is still inside; with only one, an opening counts as an arrival, and you are the one who says you took it, with the button on the card.",
+  "chiama ${servizio}": "call ${servizio}",
+  "chiama ${servizio} su ${chi}": "call ${servizio} on ${chi}",
+  "chiama un servizio": "call a service",
   "Chiamare l'idraulico": "Call the plumber",
   "Chiara": "Light",
   "Chiara+": "Light+",
@@ -2990,6 +3014,8 @@ var SOURCE_INDEX = Object.freeze({
   "Cofano chiuso": "Bonnet closed",
   "Cofano motore (chiuso/aperto)": "Bonnet (closed/open)",
   "Col segno che usa il BMS: se in carica la scrive negativa, sceglilo in «Segno della corrente».": "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.",
+  "col sole sopra l'orizzonte": "with the sun above the horizon",
+  "col sole sotto l'orizzonte": "with the sun below the horizon",
   "Col terreno già bagnato il programma delle ore fisse salta (con l'avviso in card); sotto la soglia bassa parte da solo, una volta al giorno.": "With the ground already wet the scheduled program skips (with the notice on the card); below the low threshold it starts on its own, once a day.",
   "col traffico": "with traffic",
   "Col traffico, stimato da gdanav": "With traffic, estimated by gdanav",
@@ -3066,6 +3092,7 @@ var SOURCE_INDEX = Object.freeze({
   "Compilate: ${caselle}.": "Filled in: ${caselle}.",
   "Composti volatili (cottura, detersivi)": "Volatile compounds (cooking, cleaners)",
   "compresi qui: il contatore li aveva già fatti prima che ne cominciassero le statistiche": "included here: the counter had already made them before its statistics began",
+  "con": "with",
   "con ${n} soste di ricarica": "with ${n} charging stops",
   "con 1 sosta di ricarica": "with 1 charging stop",
   "Con Auto si stringono solo sugli schermi stretti": "With Auto they shrink on narrow screens only",
@@ -3222,6 +3249,7 @@ var SOURCE_INDEX = Object.freeze({
   "da ${da}": "for ${da}",
   "Da ${durata(f.daMs, l)}.": "For ${durata(f.daMs, l)}.",
   "da ${giorni} giorni": "for ${giorni} days",
+  "da ${m} min": "for ${m} min",
   "da ${minuti} min": "for ${minuti} min",
   "Da ${n} kW": "From ${n} kW",
   "da ${ore} h": "for ${ore} h",
@@ -3309,6 +3337,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dall'ultima carica": "Since last charge",
   "Dall'ultimo riavvio": "Since last restart",
   "Dalla fascia ${fascia} in Impostazioni → Energia": "From band ${fascia} in Settings → Energy",
+  "dalla mezzanotte": "from midnight",
   "Dalla più calda": "Warmest first",
   "Dalla più lunga": "Longest first",
   "Dalla più scarica": "Most drained first",
@@ -3398,6 +3427,7 @@ var SOURCE_INDEX = Object.freeze({
   "Distanza da casa": "Distance from home",
   "Distanza dell'ultimo fulmine (km)": "Distance of the last strike (km)",
   "Distanza in km (facoltativa)": "Distance in km (optional)",
+  "diventa": "becomes",
   "Diversa da…": "Different from…",
   "domani": "tomorrow",
   "Domani": "Tomorrow",
@@ -3434,6 +3464,7 @@ var SOURCE_INDEX = Object.freeze({
   "Durata programma": "Program duration",
   "Duration (minuti)": "Duration (minutes)",
   "e": "and",
+  "è": "equals",
   "è acceso / aperto": "is on / open",
   "E alle colonnine mai sotto il 10%": "And never below 10% at chargers",
   "e altre ${altre}": "and ${altre} more",
@@ -3654,8 +3685,8 @@ var SOURCE_INDEX = Object.freeze({
   "Facoltativa: mostrata durante la ricarica": "Optional: shown while charging",
   "Facoltativa: sostituisce il calcolo del giorno.": "Optional: overrides the daily calculation.",
   "Facoltativa: sostituisce il calcolo del mese corrente.": "Optional: overrides the current-month calculation.",
+  "facoltativo": "optional",
   "Facoltativo": "Optional",
-  "facoltativo, fino a 2": "optional, up to 2",
   "Facoltativo: il «device» di remote.send_command": "Optional: the «device» of remote.send_command",
   "Facoltativo: il sensore «in carica» o lo stato della batteria": "Optional: the “is charging” sensor or the battery state",
   "Facoltativo: interruttore, es. switch.lavatrice": "Optional: switch, e.g. switch.lavatrice",
@@ -3664,6 +3695,7 @@ var SOURCE_INDEX = Object.freeze({
   "Facoltativo: stato o programma, es. sensor.lavatrice_stato": "Optional: state or programme, e.g. sensor.lavatrice_stato",
   "Facoltativo: vuoto, il terrario non ricorda la pulizia a nessuno. Con un numero la scheda dice quando tocca.": "Optional: left empty, the terrarium reminds nobody to clean it. With a number the card says when it is due.",
   "Fai partire adesso": "Run it now",
+  "fai suonare ${chi}": "play ${chi}",
   "Famiglia": "Family",
   "Fasce non impostate: uso la tariffa unica": "No time bands set: using the single rate",
   "Fasce orarie": "Time-of-use bands",
@@ -3679,6 +3711,7 @@ var SOURCE_INDEX = Object.freeze({
   "ferma": "stopped",
   "Ferma": "Stop",
   "Ferma · non in carica": "Parked · not charging",
+  "ferma ${chi}": "stop ${chi}",
   "Ferma a casa · non in carica": "Parked at home · not charging",
   "Ferma l'irrigazione": "Stop watering",
   "Ferma tutto": "Stop all",
@@ -4040,6 +4073,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il sensore piantato nella terra, in percento: Ecowitt, Tuya, Xiaomi.": "The sensor stuck in the soil, in percent: Ecowitt, Tuya, Xiaomi.",
   "Il sensore sta": "The sensor is",
   "Il servizio dell'auto ha rifiutato le credenziali dell'integrazione: riprova, e se continua riconnetti l'integrazione in Impostazioni → Dispositivi e servizi.": "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.",
+  "il sole è…": "the sun is…",
   "Il suono che fa il tablet quando suona il campanello. Nessuno: solo lo schermo.": "The sound the tablet makes when the doorbell rings. None: just the screen.",
   "Il tablet non si spegne mai; nella fascia di notte resta acceso al minimo.": "The tablet never turns off; during the night hours it stays on at minimum brightness.",
   "Il target è di sola lettura: collega evcc nella scheda Auto per cambiarlo.": "The target is read-only: connect evcc in the Car tab to change it.",
@@ -4080,6 +4114,7 @@ var SOURCE_INDEX = Object.freeze({
   "Importa da Home Assistant": "Import from Home Assistant",
   "Importa e applica": "Import and apply",
   "Impossibile firmare URL WebRTC:": "Unable to sign WebRTC URL:",
+  "imposta un valore": "set a value",
   "IMPOSTAZIONI": "SETTINGS",
   "Impostazioni Manuali": "Manual settings",
   "impostazioni. La dashboard si ricarica.": "settings. The dashboard will reload.",
@@ -4445,6 +4480,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le casse": "Speakers",
   "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Se sta sullo stesso dispositivo del contatto, o si chiama come lui con «bypass» in fondo, la plancia lo trova da sola; altrimenti scrivilo qui. Nella pagina Varchi compare il tasto per escludere o includere questo varco. Acceso vuol dire escluso. Scrivi - per non mostrare il tasto.": "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. If it sits on the same device as the contact, or is named like it with «bypass» at the end, the dashboard finds it by itself; otherwise write it here. The button to bypass or re-include this opening shows up on the Openings page. On means bypassed. Write - to hide the button.",
   "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio gdanav sceglie le colonnine e guarda se sono libere.": "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.",
+  "Le condizioni": "Conditions",
   "Le coordinate scritte a mano vincono su tutto; se le lasci vuote vale la zona qui sopra, e se non scegli niente vale casa. Per un posto che non è casa tua, creagli una zona in Home Assistant: comparirà nella tendina col suo nome.": "Coordinates typed by hand win over everything; leave them empty and the zone above is used, and with no choice at all it is home. For somewhere that is not your house, give it a zone in Home Assistant: it shows up in the list under its own name.",
   "Le cose che la plancia sa gia'": "The things the dashboard already knows",
   "Le cose che tieni d'occhio": "What you keep an eye on",
@@ -4530,6 +4566,7 @@ var SOURCE_INDEX = Object.freeze({
   "lettiera pulita": "litter cleaned",
   "Letto da Home Assistant. Una luce dietro uno switch accende e spegne soltanto; luminosità e colore compaiono nel popup solo se l'entità li dichiara.": "Read from Home Assistant. A light behind a switch only turns on and off; brightness and colour appear in the popup only when the entity declares them.",
   "Lettore": "Player",
+  "lettore multimediale": "media player",
   "Lettore multimediale": "Media player",
   "Lettore nuovo": "New player",
   "Lettori": "Players",
@@ -4573,6 +4610,7 @@ var SOURCE_INDEX = Object.freeze({
   "Lo stato viene da": "The state comes from",
   "lo storico dei consumi non è ancora arrivato": "the usage history has not arrived yet",
   "Lo trovi subito in gdanav, sul telefono e in auto.": "You find it right away in gdanav, on the phone and in the car.",
+  "Lo vedi in Strumenti per sviluppatori → Eventi.": "You can see it in Developer tools → Events.",
   "Lo vedi solo tu, che amministri la casa": "Only you see this, as the home's administrator",
   "Locale tecnico": "Utility room",
   "Longitudine": "Longitude",
@@ -4684,8 +4722,11 @@ var SOURCE_INDEX = Object.freeze({
   "Meteo, avvisi, azioni rapide": "Weather, alerts, quick actions",
   "Meteoalarm espone un binary_sensor col colore dell'avviso negli attributi; i bollettini della Protezione Civile un sensore che dice «gialla», «arancione», «rossa».": "Meteoalarm exposes a binary_sensor with the warning colour in its attributes; the Civil Protection bulletins a sensor saying yellow, orange, red.",
   "Metti": "Set",
+  "metti ${chi} a «${valore}»": "set ${chi} to «${valore}»",
   "Metti in coda": "Add to queue",
+  "metti in pausa ${chi}": "pause ${chi}",
   "Metti un'emoji": "Add an emoji",
+  "mettila in coda": "queue it",
   "Mettilo in ${nomeDellaSezione(suo)}": "Put it in ${nomeDellaSezione(suo)}",
   "Mezzo": "Vehicle kind",
   "Micio": "Whiskers",
@@ -5070,6 +5111,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non costano niente a nessun'ora, e gli euro qui sopra sono solo su quello che ha preso dalla rete.": "They cost nothing at any hour, and the euros above are only on what it took from the grid.",
   "Non disponibile": "Unavailable",
   "NON DISPONIBILE": "UNAVAILABLE",
+  "non è": "is not",
   "Non è ancora segnata: tocca «Fatto oggi» il giorno che lo pulisci, e da lì la scheda conta i giorni.": "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.",
   "Non è ancora segnato: tocca «Fatto oggi» il giorno che lo fai, e da lì la pagina conta i giorni.": "Not recorded yet: tap “Done today” on the day you do it, and from then on the page counts the days.",
   "non è andata": "it failed",
@@ -5084,6 +5126,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non hai salvato": "You haven't saved",
   "Non in carica": "Not charging",
   "Non lo so": "I do not know",
+  "Non più di una volta ogni": "No more than once every",
   "Non protetto": "Unprotected",
   "Non raggiungibile": "Unavailable",
   "Non riesco a copiare la foto in Home Assistant (${clean(error?.message)}). Mettila in /config/www e scrivi /local/nomefile.": "Cannot copy the photo into Home Assistant (${clean(error?.message)}). Put it in /config/www and type /local/filename.",
@@ -5159,6 +5202,7 @@ var SOURCE_INDEX = Object.freeze({
   "Oggi ritirano": "Collected today",
   "Oggi sciopero: ${adesso.settore}": "Strike today: ${adesso.settore}",
   "ogni ${ogni} giorni": "every ${ogni} days",
+  "Ogni ${q.minuti} min": "Every ${q.minuti} min",
   "Ogni area è una centrale di Home Assistant, con i suoi inserimenti. Quella segnata «in pagina adesso» è quella che il quadrante e il tastierino stanno comandando: l'occhio accanto a un'altra la porta a schermo al posto suo.": "Every area is a Home Assistant panel of its own, with its own arming modes. The one marked “on the page now” is what the dial and the keypad are commanding: the eye beside another one brings it on screen in its place.",
   "Ogni canale è un cursore in piedi col suo muto: il volume di un lettore, o un numero (number, input_number) come i dB di un mixer. Un sensore (sensor) diventa uno strumento che si guarda; un telecomando (remote) ha ▲ / ▼ e il muto, ognuno col suo comando (remote.send_command). Il muto è quello del lettore, un interruttore (acceso vuol dire muto), un telecomando o un tasto da premere.": "Each channel is an upright fader with its mute: a player's volume, or a number (number, input_number) like a mixer's dB. A sensor becomes a meter you look at; a remote gets ▲ / ▼ and mute, each with its own command (remote.send_command). Mute is the player's own, a switch (on means muted), a remote or a button to press.",
   "Ogni carico qui sotto è un cerchio del flusso Energia, sotto Casa, nell'ordine di questa lista. Quello che scrivi qui è quello che vedi nel flusso, e i dispositivi che gli assegni sono quelli che compaiono toccando il cerchio.": "Every load below is a circle of the Energy flow, under Home, in the order of this list. What you write here is what the flow shows, and the devices you file under it are the ones that appear when you tap the circle.",
@@ -5171,6 +5215,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ogni impianto ha le sue tredici caselle. Quello segnato «in pagina adesso» è ciò che la pagina Solare termico e la tessera della Home stanno mostrando: l'occhio accanto a un altro lo porta a schermo al posto suo.": "Every plant has its own thirteen fields. The one marked “on the page now” is what the Solar thermal page and the Home tile are showing: the eye beside another one brings it on screen in its place.",
   "Ogni settimana": "Every week",
   "Ogni tipo": "Any type",
+  "ogni tot minuti": "every few minutes",
   "ognuna col nome del suo": "each one named after its plant",
   "Ognuno ha i suoi mesi nella Configurazione della plancia. Se li accendi compaiono comunque.": "Each one has its months in the dashboard configuration. Switched on, they show anyway.",
   "OK / Risolto": "OK / Resolved",
@@ -5238,6 +5283,7 @@ var SOURCE_INDEX = Object.freeze({
   "Passato": "Past",
   "Pastiglia senza nome": "Unnamed pill",
   "Pastiglie di stato": "Status pills",
+  "pausa": "pause",
   "Pausa": "Pause",
   "PAUSA": "PAUSE",
   "PdC": "Heat pump",
@@ -5602,17 +5648,26 @@ var SOURCE_INDEX = Object.freeze({
   "Qualità acqua": "Water quality",
   "Qualità dell'acqua · Filtrazione · Riscaldamento": "Water quality · Filtration · Heating",
   "Qualità dell'aria": "Air quality",
+  "qualsiasi": "any",
+  "qualsiasi, da → a": "any, from → to",
   "Qualunque entità di Home Assistant: la tessera ne mostra lo stato, con l'unità quando c'è.": "Any Home Assistant entity: the tile shows its state, with the unit when there is one.",
   "Qualunque testa su qualunque vestito: i pezzi si combinano liberamente.": "Any head on any outfit: the pieces combine freely.",
   "Quando": "When",
+  "Quando ${attributo} di ${chi} diventa «${valore}»": "When ${attributo} of ${chi} becomes «${valore}»",
   "Quando ${chi} arriva a casa": "When ${chi} gets home",
+  "Quando ${chi} cambia stato": "When ${chi} changes state",
+  "Quando ${chi} diventa «${a}»": "When ${chi} becomes «${a}»",
   "Quando ${chi} esce di casa": "When ${chi} leaves home",
   "Quando ${chi} ha finito": "When ${chi} has finished",
+  "Quando ${chi} non è più «${da}»": "When ${chi} is no longer «${da}»",
+  "Quando ${chi} passa da «${da}» a «${a}»": "When ${chi} goes from «${da}» to «${a}»",
   "Quando ${chi} sale sopra ${soglia}": "When ${chi} rises above ${soglia}",
   "Quando ${chi} scende sotto ${soglia}": "When ${chi} drops below ${soglia}",
   "Quando ${chi} si apre": "When ${chi} opens",
   "Quando ${chi} si chiude": "When ${chi} closes",
+  "Quando arriva l'evento ${evento}": "When the ${evento} event arrives",
   "Quando c'è movimento in ${dove}": "When there is motion in ${dove}",
+  "Quando cambia ${attributo} di ${chi}": "When ${attributo} of ${chi} changes",
   "Quando Fotovoltaico e Rete sono configurati, il consumo Casa usa lo stesso bilancio dei flussi di Home Assistant. Il contatore totale kWh comanda: se c'è, giorno, mese e anno si ricavano da quello con Recorder e i campi di periodo non vengono letti. I campi giornaliero, mensile e annuale servono quando un contatore totale non esiste.": "When Solar and Grid are configured, Home consumption uses the same flow balance as Home Assistant. The total kWh meter wins: when one is set, day, month and year are derived from it through Recorder and the period fields are not read. The daily, monthly and annual fields are for when no total meter exists.",
   "Quando l'antifurto si disinserisce": "When the alarm is disarmed",
   "Quando l'antifurto si inserisce": "When the alarm is armed",
@@ -5697,6 +5752,7 @@ var SOURCE_INDEX = Object.freeze({
   "Questo sensore è configurato anche in": "This sensor is also configured in",
   "Questo sensore misura in «${misura}»: la card mostra solo sensori in W o kW, e questo lo ignora.": "This sensor measures in “${misura}”: the card only shows W or kW sensors, and ignores this one.",
   "Questo sensore non dichiara un'unità di misura: la card mostra solo sensori in W o kW, e questo lo ignora.": "This sensor declares no unit of measurement: the card only shows W or kW sensors, and ignores this one.",
+  "Questo servizio la casa non lo chiama da sola.": "The home does not call this service by itself.",
   "Questo target è un sensore di sola lettura: per cambiarlo da qui collega evcc, o un'entità number/select, nella scheda Auto.": "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.",
   "Qui non c'è niente.": "Nothing here.",
   "Quick Actions": "Quick actions",
@@ -5766,6 +5822,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ricci": "Curly",
   "Ricircolo": "Recirculation",
   "Ricircolo attivo": "Recirculation running",
+  "ricomincia da capo": "start over",
   "Riconnessione...": "Reconnecting…",
   "Riconnessione…": "Reconnecting…",
   "Riconosce i BMS JK, JBD e Daly dai nomi delle loro entità e li raggruppa per prefisso. Li mette qui come righe, una volta sola: da lì in poi sono tuoi.": "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.",
@@ -5805,6 +5862,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ripresa (da casa)": "Return (from the house)",
   "Ripristina da un backup": "Restore from a backup",
   "Ripristina e ricarica": "Restore and reload",
+  "riproduci": "play",
   "Riproduci": "Play",
   "Riprova a contattarli": "Try reaching them again",
   "Riprova da «Le mie».": "Try again from «Mine».",
@@ -6040,6 +6098,8 @@ var SOURCE_INDEX = Object.freeze({
   "Se la pagina dice «In scarica» mentre la batteria si sta caricando, il tuo BMS scrive la corrente al contrario: scegli «Negativa in carica».": "If the page says “Discharging” while the battery is charging, your BMS writes the current the other way round: pick “Negative when charging”.",
   "Se la telecamera ha già la sua integrazione in Home Assistant — Reolink, Tapo, Hikvision — l'entità c'è già: sceglila nel campo qui sopra, e il video passa da lì.": "If the camera already has its own integration in Home Assistant — Reolink, Tapo, Hikvision — the entity is already there: pick it in the field above, and the video goes through it.",
   "Se lo compili, la card mostra la finestra aperta quando il contatto lo dice.": "Fill it in and the card shows the window open when the contact says so.",
+  "Se riscatta mentre è in corso": "If it fires while running",
+  "Se riscatta, pausa, fino a una data": "If it fires again, pause, until a date",
   "Se sotto (%)": "If below (%)",
   "Se uno suona, la sua riga sale in cima in rosso e la tessera in Home lampeggia.": "If one goes off, its row moves to the top in red and the Home tile flashes.",
   "Se usi go2rtc o Frigate, metti questa riga sotto «streams:» nel loro file:": "If you run go2rtc or Frigate, put this line under “streams:” in their file:",
@@ -6083,6 +6143,7 @@ var SOURCE_INDEX = Object.freeze({
   "Seleziona:": "Select:",
   "selezionate.": "selected.",
   "Sempre": "Always",
+  "Sempre come dice l'interruttore": "Always as the switch says",
   "Sempre visibile o a scomparsa, su questo dispositivo": "Always visible or auto-hide, on this device",
   "Sempre, quando la centrale ne ha uno": "Always, when the panel has one",
   "Sensore": "Sensor",
@@ -6277,11 +6338,14 @@ var SOURCE_INDEX = Object.freeze({
   "Sono otto: la barra non ne tiene di più senza diventare illeggibile.": "That is eight: the bar cannot hold more without becoming unreadable.",
   "Sono quelli che l'entità ha adesso. Si vedono nella sezione in quest'ordine, col nome che scrivi qui; senza nome si usa quello dell'attributo.": "These are the ones the entity has right now. They show in the section in this order, with the name you write here; without a name, the attribute's own is used.",
   "sopra": "above",
+  "sopra l'orizzonte": "above the horizon",
   "sopra la soglia": "above the threshold",
   "Sopra la soglia in Home compare l'avviso di sovraccarico e la tessera Energia cambia colore: ambra per tenerla d'occhio, rossa quando sta per saltare. Lascia vuoto un campo per non usarlo.": "Above the threshold an overload alert appears on Home and the Energy tile changes colour: amber to keep an eye on it, red when it is about to trip. Leave a field empty to skip it.",
   "Sopra questa potenza = In funzione. Per elettrodomestici non-wifi imposta ~5 W.": "Above this power = Running. For non-wifi appliances set ~5 W.",
+  "sorgente": "input source",
   "Sorgente": "Source",
   "Sorgente del prezzo di acquisto": "Purchase price source",
+  "sorgente, modalità…": "source, mode…",
   "Sorteggia": "Shuffle",
   "sosta": "stop",
   "Sosta ${n} · dopo ${km} km": "Stop ${n} · after ${km} km",
@@ -6296,6 +6360,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sotto il meteo porte e finestre aperte sono due pastiglie. Di serie lo decide la classe che Home Assistant dà al contatto; scegli qui quando non è quella giusta.": "Under the weather, open doors and open windows are two pills. By default the class Home Assistant gives the contact decides; pick here when it is not the right one.",
   "Sotto l'antifurto, ognuna col suo valore: porte e finestre (binary_sensor), sensori, serrature, tapparelle. Due o più porte o finestre diventano un conto solo, «Finestre aperte: 2»; un tocco le elenca.": "Under the alarm, each with its value: doors and windows (binary_sensor), sensors, locks, blinds. Two or more doors or windows become a single count, «Open windows: 2»; a tap lists them.",
   "sotto l'obiettivo di": "below the target of",
+  "sotto l'orizzonte": "below the horizon",
   "Sotto la soglia In funzione e sopra questa = Standby.": "Below the running threshold and above this = Standby.",
   "Sotto protezione": "Protected load",
   "Sotto questa umidità la terra è asciutta e la pianta entra fra quelle da innaffiare.": "Below this moisture the soil is dry and the plant joins those that need water.",
@@ -6318,6 +6383,7 @@ var SOURCE_INDEX = Object.freeze({
   "SPENTA": "OFF",
   "Spenta / Chiusa (off)": "Off / Closed (off)",
   "Spenta da te": "Turned off",
+  "Spenta fino al": "Off until",
   "Spenta, basta l'entità weather qui sopra: temperatura, umidità e vento si leggono da lei.": "Off, the weather entity above is enough: temperature, humidity and wind come from it.",
   "Spenta: ci pensa il sole.": "Off: the sun is doing the work.",
   "Spenta: evcc fa come sempre": "Off: evcc works as usual",
@@ -6408,6 +6474,7 @@ var SOURCE_INDEX = Object.freeze({
   "stato o valore a mano (es. heat, 23.5, open)": "manual state or value (e.g. heat, 23.5, open)",
   "stato programma": "program state",
   "Stato termico (Caldo)": "Thermal status (Heat)",
+  "stato, o più con la virgola": "state, or several with commas",
   "stato/valore a mano": "manual state/value",
   "Stazione": "Station",
   "Stazione meteo: direzione vento (sensore)": "Weather station: wind direction (sensor)",
@@ -6449,6 +6516,7 @@ var SOURCE_INDEX = Object.freeze({
   "Su una finestra ci stanno tutte e tre: compila le caselle che hai, il tipo lo dice la casella.": "One window can carry all three: fill in the boxes you have, the box tells the type.",
   "su una o": "alert on one or",
   "Su una scheda ne compaiono al massimo dodici: oltre non è più «qualcosa in più», è un elenco — e per quello c'è «Le tue sezioni».": "At most twelve show up on one page: past that it is not «one more thing» any more, it is a list — and for that there is «Your sections».",
+  "subito": "right away",
   "sud": "south",
   "sud-est": "south-east",
   "sud-ovest": "south-west",
@@ -6490,6 +6558,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tasti d'inserimento su misura": "Custom arming buttons",
   "Tasti grandi: un'azione della plancia o un'entità qualunque (una scena, uno script, un tasto). Per ognuno il nome sul tablet, la riga sotto e il disegno.": "Big buttons: a dashboard action or any entity (a scene, a script, a button). For each one the name on the tablet, the line below and the drawing.",
   "Tasti nella Cottura": "Buttons in Cooking",
+  "tasti Zigbee, tag…": "Zigbee buttons, tags…",
   "Tasto": "Button",
   "Tasto «Ferma tutto»": "«Stop all» button",
   "Tasto che apre": "Button that opens",
@@ -6702,11 +6771,14 @@ var SOURCE_INDEX = Object.freeze({
   "Turbante": "Turban",
   "Tutta la casa": "Whole house",
   "Tutta su": "All the way up",
+  "tutte": "all",
   "Tutte": "All",
   "Tutte a posto": "All fine",
   "Tutte abbassate": "All down",
   "Tutte cariche": "All charged",
   "Tutte in piedi · ${conto.su}": "All up · ${conto.su}",
+  "tutte insieme": "all together",
+  "Tutte le entità…": "All entities…",
   "Tutte le luci": "All lights",
   "Tutte le luci di casa": "Every light in the house",
   "Tutte le stanze": "All rooms",
@@ -6799,6 +6871,8 @@ var SOURCE_INDEX = Object.freeze({
   "Umidità troppo bassa": "Humidity too low",
   "un altro impianto": "another plant",
   "Un animale sta spesso su più dispositivi: la ciotola di una marca, la lettiera di un'altra, il collare di una terza. Quello che scegli si somma a quello che c'è già: le caselle piene restano come sono.": "A pet often lives across several devices: the bowl from one brand, the litter box from another, the collar from a third. What you pick adds to what is already there: filled fields stay as they are.",
+  "un attributo cambia": "an attribute changes",
+  "un attributo è…": "an attribute is…",
   "un avviso già creato.": "an existing alert.",
   "Un bidone per materiale, e per ognuno il sensore che dice quando passa il ritiro: la pagina risponde alla domanda della sera — cosa metto fuori stasera — e la tessera in Home si accende il giorno prima. Chi ha un calendario solo, con un evento per ritiro, lo mette nella casella in fondo.": "One bin per material, and for each the sensor that says when the collection comes: the page answers the evening question — what do I put out tonight — and the Home tile lights up the day before. Whoever has a single calendar, with one event per collection, puts it in the box at the bottom.",
   "Un boiler d'accumulo": "A storage tank",
@@ -6810,6 +6884,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un contatto sulla cassetta: quando il postino apre lo sportello la pastiglia della posta compare, si muove per farsi notare e resta lì finché qualcuno non la tocca. La posta arriva mentre non si guarda, quindi non basta un lampo di due secondi.": "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.",
   "Un deumidificatore non è un termostato: scegli la sua entità humidifier e la pagina del Clima gli dà una card sua, con l'umidità di adesso, l'obiettivo, le modalità, la ventola e l'avviso del serbatoio pieno. Le altre caselle si riempiono da sole quando salvi.": "A dehumidifier is not a thermostat: pick its humidifier entity and the Climate page gives it a card of its own, with the current humidity, the target, the modes, the fan and the tank-full warning. The other fields fill themselves in when you save.",
   "un elettrodomestico finisce": "an appliance finishes",
+  "un evento di Home Assistant": "a Home Assistant event",
   "Un fan, un number o un select. Senza, si usano i modi del ventilatore del termostato, se li ha.": "A fan, a number or a select. Without it, the thermostat's fan modes are used, if it has any.",
   "Un file JSON con la configurazione di adesso.": "A JSON file with the configuration as it is now.",
   "Un frigorifero con il congelatore sono due vani: qui il secondo. Con due caselle piene la card disegna due barre.": "A fridge with a freezer is two compartments: the second one goes here. With both boxes filled the card draws two strips.",
@@ -6844,8 +6919,10 @@ var SOURCE_INDEX = Object.freeze({
   "Un'altra condizione": "Another condition",
   "Un'emoji o un'icona mdi:. Tocca il riquadro accanto per sceglierla dal catalogo dei carichi.": "An emoji or an mdi: icon. Tap the box beside it to pick one from the load catalogue.",
   "Un'entità alarm_control_panel.*: la pagina legge da lei gli inserimenti che accetta e ci manda i comandi.": "An alarm_control_panel.* entity: the page reads the arming modes it accepts from it and sends the commands to it.",
+  "un'entità cambia stato": "an entity changes state",
   "un'entità camera o image che hai già": "a camera or image entity you already have",
   "Un'entità camera o image del tuo Home Assistant: il fotogramma passa dal tuo server e da casa non esce niente. Chi ha portato dentro il radar con la sua integrazione ha già l'entità qui sotto.": "A camera or image entity of your own Home Assistant: the frame comes from your own server and nothing leaves the house. If you brought a radar in with its integration, the entity is already there.",
+  "un'entità è in uno stato…": "an entity is in a state…",
   "un'entità è…": "an entity is…",
   "Un'entità, o il numero scritto sull'etichetta del pacco con la sua unità. Con la capacità di ogni pacco la carica di tutto l'accumulo si pesa sull'energia, e la pagina dice fra quanto è piena o vuota.": "An entity, or the number printed on the pack label with its unit. With every pack's capacity the overall charge is weighted by energy, and the page says when it will be full or empty.",
   "Un'idea, una cosa che manca, un modo migliore": "An idea, something missing, a better way",
@@ -15616,7 +15693,7 @@ var NON_RISPONDE = "unavailable";
 function nonRisponde(stato3) {
   return pulito8(stato3?.state).toLowerCase() === NON_RISPONDE;
 }
-function chiNonRisponde(entita3, states = {}, { nomeDi: nomeDi16 = null } = {}) {
+function chiNonRisponde(entita3, states = {}, { nomeDi: nomeDi17 = null } = {}) {
   const viste2 = /* @__PURE__ */ new Set();
   const fuori = [];
   for (const grezzo of entita3 || []) {
@@ -15627,7 +15704,7 @@ function chiNonRisponde(entita3, states = {}, { nomeDi: nomeDi16 = null } = {}) 
     if (!stato3 || !nonRisponde(stato3)) continue;
     let nome = "";
     try {
-      nome = pulito8(nomeDi16?.(entity2));
+      nome = pulito8(nomeDi17?.(entity2));
     } catch (_errore) {
       nome = "";
     }
@@ -15665,8 +15742,8 @@ function senzaDispositivo(entity2) {
   const punto2 = pulito8(entity2).indexOf(".");
   return punto2 > 0 && SENZA.has(pulito8(entity2).slice(0, punto2).toLowerCase());
 }
-function chiNonRispondePerDispositivo(entita3, states = {}, { nomeDi: nomeDi16 = null, di = null, nomi: nomi2 = null } = {}) {
-  const sciolte = chiNonRisponde(entita3, states, { nomeDi: nomeDi16 }).filter(
+function chiNonRispondePerDispositivo(entita3, states = {}, { nomeDi: nomeDi17 = null, di = null, nomi: nomi2 = null } = {}) {
+  const sciolte = chiNonRisponde(entita3, states, { nomeDi: nomeDi17 }).filter(
     (una) => !senzaDispositivo(una.entity)
   );
   const diChiE = di && typeof di === "object" ? di : {};
@@ -23484,7 +23561,7 @@ function iDispositiviScollegati({
   configurate: configurate2 = [],
   states = {},
   escluse = [],
-  nomeDi: nomeDi16 = null,
+  nomeDi: nomeDi17 = null,
   di = null,
   nomi: nomi2 = null
 } = {}) {
@@ -23493,7 +23570,7 @@ function iDispositiviScollegati({
   const adesso = chiNonRispondePerDispositivo(
     tutte.filter((entity2) => !fuori.has(pulito19(entity2))),
     states,
-    { nomeDi: nomeDi16, di, nomi: nomi2 }
+    { nomeDi: nomeDi17, di, nomi: nomi2 }
   );
   const viste2 = /* @__PURE__ */ new Set();
   const sciolte = [];
@@ -23505,7 +23582,7 @@ function iDispositiviScollegati({
     viste2.add(entity2);
     let nome = "";
     try {
-      nome = pulito19(nomeDi16?.(entity2));
+      nome = pulito19(nomeDi17?.(entity2));
     } catch (_errore) {
       nome = "";
     }
@@ -29075,12 +29152,12 @@ var campo = (nome, etichetta3, dentro3, aiuto = "") => `<label class="dm-calm-ca
     ${dentro3}
     ${aiuto ? `<small>${esc(aiuto)}</small>` : ""}
   </label>`;
-function moduloMarkup(calendari, liste = []) {
+function moduloMarkup(calendari, liste2 = []) {
   const bozza3 = state25.bozza;
   if (!bozza3) return "";
-  return bozza3.tipo === "cosa" ? moduloDellaCosa(bozza3, liste) : moduloDellImpegno(bozza3, calendari);
+  return bozza3.tipo === "cosa" ? moduloDellaCosa(bozza3, liste2) : moduloDellImpegno(bozza3, calendari);
 }
-function moduloDellaCosa(bozza3, liste) {
+function moduloDellaCosa(bozza3, liste2) {
   const nuova = !clean(bozza3.uid);
   return `<form class="dm-calm-modulo" data-dm-calm-modulo data-tipo="cosa">
     <div class="dm-calm-testa">
@@ -29088,10 +29165,10 @@ function moduloDellaCosa(bozza3, liste) {
       <button type="button" class="dm-calm-chiudi" data-dm-calm-annulla
         aria-label="${esc(t("Annulla", "Cancel"))}">✕</button>
     </div>
-    ${nuova && liste.length > 1 ? campo(
+    ${nuova && liste2.length > 1 ? campo(
     "listaId",
     t("Lista", "List"),
-    `<select class="dm-calm-input" data-dm-calm-campo-valore="listaId">${liste.map(
+    `<select class="dm-calm-input" data-dm-calm-campo-valore="listaId">${liste2.map(
       (voce3) => `<option value="${esc(voce3.id)}"${voce3.id === bozza3.listaId ? " selected" : ""}>${esc(clean(voce3.name) || voce3.entity)}</option>`
     ).join("")}</select>`
   ) : ""}
@@ -32590,7 +32667,7 @@ function nomeDellaVasca(config) {
   return pulito28(config?.nome) || pulito28(config?.vasca);
 }
 var MUTI6 = /* @__PURE__ */ new Set(["", "unknown", "unavailable", "none"]);
-function righeDaImportare(states = {}, config, nomeDi16 = (entity2) => entity2, { tipo = "acquario", esclusi = [] } = {}) {
+function righeDaImportare(states = {}, config, nomeDi17 = (entity2) => entity2, { tipo = "acquario", esclusi = [] } = {}) {
   const gia = /* @__PURE__ */ new Set([
     ...righeDellAcquario(config).map((riga3) => riga3.entity),
     ...esclusi instanceof Set ? esclusi : Array.isArray(esclusi) ? esclusi : []
@@ -32609,7 +32686,7 @@ function righeDaImportare(states = {}, config, nomeDi16 = (entity2) => entity2, 
       continue;
     righe2.push({
       entity: entity2,
-      name: pulito28(nomeDi16(entity2)) || entity2,
+      name: pulito28(nomeDi17(entity2)) || entity2,
       icon: disegnoDelGenere(genere, tipo),
       genere
     });
@@ -32639,7 +32716,7 @@ function eAcceso3(entity2, grezzo) {
   if (dominio5 === "climate" || dominio5 === "water_heater") return grezzo !== "off";
   return grezzo === "on";
 }
-function letturaDellaRiga(riga3, states = {}, nomeDi16 = (entity2) => entity2, tipo = "acquario") {
+function letturaDellaRiga(riga3, states = {}, nomeDi17 = (entity2) => entity2, tipo = "acquario") {
   const entity2 = pulito28(riga3?.entity);
   const stato3 = states?.[entity2];
   const attributi2 = stato3?.attributes || {};
@@ -32648,7 +32725,7 @@ function letturaDellaRiga(riga3, states = {}, nomeDi16 = (entity2) => entity2, t
   const tace2 = !stato3 || MUTI6.has(grezzo);
   const base = {
     entity: entity2,
-    name: pulito28(riga3?.name) || pulito28(nomeDi16(entity2)) || entity2,
+    name: pulito28(riga3?.name) || pulito28(nomeDi17(entity2)) || entity2,
     icon: pulito28(riga3?.icon) || disegnoDelGenere(genere, tipo),
     genere,
     unita: pulito28(attributi2.unit_of_measurement),
@@ -32691,9 +32768,9 @@ function letturaDellaRiga(riga3, states = {}, nomeDi16 = (entity2) => entity2, t
     massimo: forcella ? massimo : null
   });
 }
-function acquarioDiCasa(states = {}, config, nomeDi16 = (entity2) => entity2) {
+function acquarioDiCasa(states = {}, config, nomeDi17 = (entity2) => entity2) {
   const tipo = tipoValido(config?.specie);
-  return righeDellAcquario(config).map((riga3) => letturaDellaRiga(riga3, states, nomeDi16, tipo));
+  return righeDellAcquario(config).map((riga3) => letturaDellaRiga(riga3, states, nomeDi17, tipo));
 }
 function livelliDaSeguire(letture2 = []) {
   return letture2.filter(
@@ -38459,7 +38536,7 @@ function righeDeiContatori(config) {
 function contatoriConfigurati(config) {
   return righeDeiContatori(config).length > 0;
 }
-function contatoriDaImportare(states = {}, config, nomeDi16 = (entity2) => entity2) {
+function contatoriDaImportare(states = {}, config, nomeDi17 = (entity2) => entity2) {
   const gia = new Set(righeDeiContatori(config).map((riga3) => riga3.entity));
   const righe2 = [];
   for (const [entity2, stato3] of Object.entries(states || {})) {
@@ -38468,7 +38545,7 @@ function contatoriDaImportare(states = {}, config, nomeDi16 = (entity2) => entit
     if (!genere) continue;
     righe2.push({
       entity: entity2,
-      name: pulito31(nomeDi16(entity2)) || entity2,
+      name: pulito31(nomeDi17(entity2)) || entity2,
       icon: disegnoDelGenere2(genere),
       genere
     });
@@ -38481,14 +38558,14 @@ function istanteDelCambio2(stato3) {
   const quando4 = Date.parse(pulito31(stato3?.last_changed) || pulito31(stato3?.last_updated) || "");
   return Number.isFinite(quando4) ? quando4 : null;
 }
-function letturaDelContatore(riga3, stato3, nomeDi16 = (entity2) => entity2) {
+function letturaDelContatore(riga3, stato3, nomeDi17 = (entity2) => entity2) {
   const entity2 = pulito31(riga3?.entity);
   const genere = genereValido2(riga3?.genere) || genereDelSensore2(entity2, stato3) || "acqua";
   const unita3 = pulito31(stato3?.attributes?.unit_of_measurement);
   const grezzo = MUTI8.has(pulito31(stato3?.state).toLowerCase()) ? null : numero28(stato3?.state);
   return Object.freeze({
     entity: entity2,
-    name: pulito31(riga3?.name) || pulito31(nomeDi16(entity2)) || entity2,
+    name: pulito31(riga3?.name) || pulito31(nomeDi17(entity2)) || entity2,
     icon: pulito31(riga3?.icon) || disegnoDelGenere2(genere),
     genere,
     unita: unita3,
@@ -38504,9 +38581,9 @@ function letturaDelContatore(riga3, stato3, nomeDi16 = (entity2) => entity2) {
     soglia: numero28(riga3?.soglia)
   });
 }
-function contatoriDiCasa(states = {}, config, nomeDi16 = (entity2) => entity2) {
+function contatoriDiCasa(states = {}, config, nomeDi17 = (entity2) => entity2) {
   const lette = righeDeiContatori(config).map(
-    (riga3) => letturaDelContatore(riga3, states?.[riga3.entity], nomeDi16)
+    (riga3) => letturaDelContatore(riga3, states?.[riga3.entity], nomeDi17)
   );
   const posto = (lettura3) => GENERI2.indexOf(lettura3.genere);
   return lette.map((lettura3, indice) => ({ lettura: lettura3, indice })).sort((a, b2) => posto(a.lettura) - posto(b2.lettura) || a.indice - b2.indice).map((voce3) => voce3.lettura);
@@ -39652,14 +39729,14 @@ function righeDellePiante(config) {
 function pianteConfigurate(config) {
   return righeDellePiante(config).length > 0;
 }
-function pianteDaImportare(states = {}, config, nomeDi16 = (entity2) => entity2) {
+function pianteDaImportare(states = {}, config, nomeDi17 = (entity2) => entity2) {
   const gia = new Set(righeDellePiante(config).map((riga3) => riga3.entity));
   const righe2 = [];
   for (const [entity2, stato3] of Object.entries(states || {})) {
     if (gia.has(entity2) || !eUnaPianta(entity2, stato3)) continue;
     righe2.push({
       entity: entity2,
-      name: pulito32(nomeDi16(entity2)) || entity2,
+      name: pulito32(nomeDi17(entity2)) || entity2,
       icon: "plant",
       temperatura: temperaturaAccanto(entity2, states)
     });
@@ -39677,7 +39754,7 @@ function istanteDelCambio3(stato3) {
 function vero(valore3) {
   return valore3 === true || /^(true|on|1|si|sì|yes)$/i.test(pulito32(valore3));
 }
-function letturaDellaPianta(riga3, states = {}, nomeDi16 = (entity2) => entity2) {
+function letturaDellaPianta(riga3, states = {}, nomeDi17 = (entity2) => entity2) {
   const entity2 = pulito32(riga3?.entity);
   const stato3 = states?.[entity2];
   const umidita = lettura2(stato3);
@@ -39686,7 +39763,7 @@ function letturaDellaPianta(riga3, states = {}, nomeDi16 = (entity2) => entity2)
   const massimo = numero29(riga3?.massimo) ?? TERRA_ZUPPA;
   return Object.freeze({
     entity: entity2,
-    name: pulito32(riga3?.name) || pulito32(nomeDi16(entity2)) || entity2,
+    name: pulito32(riga3?.name) || pulito32(nomeDi17(entity2)) || entity2,
     icon: pulito32(riga3?.icon) || "plant",
     umidita,
     muta: umidita === null,
@@ -39698,8 +39775,8 @@ function letturaDellaPianta(riga3, states = {}, nomeDi16 = (entity2) => entity2)
     fuori: vero(riga3?.fuori)
   });
 }
-function pianteDiCasa(states = {}, config, nomeDi16 = (entity2) => entity2) {
-  return righeDellePiante(config).map((riga3) => letturaDellaPianta(riga3, states, nomeDi16));
+function pianteDiCasa(states = {}, config, nomeDi17 = (entity2) => entity2) {
+  return righeDellePiante(config).map((riga3) => letturaDellaPianta(riga3, states, nomeDi17));
 }
 function domandaDellaTerra(entita3, adesso) {
   return domandaDelleMedieDiOgniOra(entita3, adesso);
@@ -41383,7 +41460,7 @@ function nomeComune(nomi2) {
   if (comuni.length >= Math.min(...parole4.map((voce3) => voce3.length))) return "";
   return comuni.join(" ");
 }
-function pacchiDaImportare(states = {}, config, nomeDi16 = (entity2) => entity2) {
+function pacchiDaImportare(states = {}, config, nomeDi17 = (entity2) => entity2) {
   const gia = new Set(pacchiDellAccumulo(config).map((riga3) => riga3.entity));
   const gruppi2 = /* @__PURE__ */ new Map();
   for (const [entity2, stato3] of Object.entries(states || {})) {
@@ -41414,7 +41491,7 @@ function pacchiDaImportare(states = {}, config, nomeDi16 = (entity2) => entity2)
     if (!soc || gia.has(soc)) continue;
     const bms = gruppo.celle.length >= 2 || gruppo.campi.tensione && gruppo.campi.corrente;
     if (!bms) continue;
-    const nome = nomeComune(gruppo.nomi.filter(Boolean)) || nomeDalPrefisso(prefisso) || pulito33(nomeDi16(soc)) || soc;
+    const nome = nomeComune(gruppo.nomi.filter(Boolean)) || nomeDalPrefisso(prefisso) || pulito33(nomeDi17(soc)) || soc;
     const riga3 = {
       entity: soc,
       name: nome,
@@ -41528,7 +41605,7 @@ function celleLette(states = {}, celle = []) {
     delta: vive.length >= 2 ? Math.round((massima.volt - minima.volt) * 1e3) : null
   };
 }
-function letturaDelPacco(riga3, states = {}, nomeDi16 = (entity2) => entity2) {
+function letturaDelPacco(riga3, states = {}, nomeDi17 = (entity2) => entity2) {
   const entity2 = pulito33(riga3?.entity);
   const soc = misura3(states, entity2)?.valore ?? null;
   const tensione = inVolt(misura3(states, riga3?.tensione));
@@ -41550,7 +41627,7 @@ function letturaDelPacco(riga3, states = {}, nomeDi16 = (entity2) => entity2) {
   const soglia2 = numero31(riga3?.soglia) ?? SOGLIA_DELTA_MV;
   return Object.freeze({
     entity: entity2,
-    name: pulito33(riga3?.name) || pulito33(nomeDi16(entity2)) || entity2,
+    name: pulito33(riga3?.name) || pulito33(nomeDi17(entity2)) || entity2,
     icon: pulito33(riga3?.icon) || "battery",
     tipo: tipoValido2(riga3?.tipo) || "altro",
     muto: soc === null,
@@ -41577,8 +41654,8 @@ function letturaDelPacco(riga3, states = {}, nomeDi16 = (entity2) => entity2) {
     verso: versoDelPacco(potenza3, corrente2)
   });
 }
-function accumuloDiCasa(states = {}, config, nomeDi16 = (entity2) => entity2) {
-  return pacchiDellAccumulo(config).map((riga3) => letturaDelPacco(riga3, states, nomeDi16));
+function accumuloDiCasa(states = {}, config, nomeDi17 = (entity2) => entity2) {
+  return pacchiDellAccumulo(config).map((riga3) => letturaDelPacco(riga3, states, nomeDi17));
 }
 function minutiAllaFine({ verso: verso2, potenza: potenza3, energiaKwh, capacitaKwh }) {
   if (potenza3 === null || potenza3 === void 0 || Math.abs(potenza3) < RIPOSO_W) return null;
@@ -45051,8 +45128,8 @@ function senzaLeRighe(config) {
   const { righe: _via, ...resto } = dato;
   return resto;
 }
-function macchineDaImportare(states = {}, config, nomeDi16 = (entity2) => entity2, piattaforme = null, registro2 = {}) {
-  const elenchi = macchineERete(states, senzaLeRighe(config), nomeDi16, piattaforme, registro2);
+function macchineDaImportare(states = {}, config, nomeDi17 = (entity2) => entity2, piattaforme = null, registro2 = {}) {
+  const elenchi = macchineERete(states, senzaLeRighe(config), nomeDi17, piattaforme, registro2);
   return [...elenchi.macchine, ...elenchi.rete].map((riga3) => ({
     entity: riga3.entity,
     name: riga3.name,
@@ -45060,14 +45137,14 @@ function macchineDaImportare(states = {}, config, nomeDi16 = (entity2) => entity
     famiglia: riga3.famiglia
   }));
 }
-function macchineERete(states = {}, config, nomeDi16 = (entity2) => entity2, piattaforme = null, { dispositivi = [], entita: entita3 = {} } = {}) {
+function macchineERete(states = {}, config, nomeDi17 = (entity2) => entity2, piattaforme = null, { dispositivi = [], entita: entita3 = {} } = {}) {
   const scelte5 = normalizzaMacchine(config);
   const elenchi = { macchine: [], rete: [] };
   const dichiarate = righeDichiarate(config, CAMPI_IN_PIU6);
   if (dichiarate) {
     for (const riga3 of dichiarate.filter((voce3) => voce3.entity)) {
       const famiglia = FAMIGLIE2[riga3.famiglia] ? riga3.famiglia : "macchine";
-      const name = clean21(riga3.name) || clean21(nomeDi16(riga3.entity)) || riga3.entity;
+      const name = clean21(riga3.name) || clean21(nomeDi17(riga3.entity)) || riga3.entity;
       const letture2 = lettureDellaRiga(riga3);
       elenchi[famiglia].push({
         entity: riga3.entity,
@@ -45098,7 +45175,7 @@ function macchineERete(states = {}, config, nomeDi16 = (entity2) => entity2, pia
     elenchi[famiglia].push({
       entity: entity2,
       famiglia,
-      name: scelte5.nomi[entity2] || clean21(nomeDi16(entity2)) || entity2,
+      name: scelte5.nomi[entity2] || clean21(nomeDi17(entity2)) || entity2,
       glifo: FAMIGLIE2[famiglia].glifo,
       stato: comeSta2(stato3),
       comandi: famiglia === "macchine" ? comandiDellaMacchina(entity2, states) : null
@@ -54506,11 +54583,11 @@ function finestraTapparelle(widget) {
   const motori = righe2.filter(eUnMotore);
   const aperte = ante.filter((riga3) => riga3.open);
   const alzate = motori.filter((riga3) => riga3.open);
-  const nomiDi = (lista6) => [...new Set(lista6.map((riga3) => clean(riga3.stanza || riga3.name)))];
+  const nomiDi2 = (lista6) => [...new Set(lista6.map((riga3) => clean(riga3.stanza || riga3.name)))];
   const eroi = [];
   if (ante.length) {
     const prima = aperte.map((riga3) => riga3.da).filter(Number.isFinite).sort((a, b2) => a - b2)[0];
-    const stanzeAperte = nomiDi(aperte).map(
+    const stanzeAperte = nomiDi2(aperte).map(
       (nome) => `<span class="dm-f-tapparelle-chip">${disegnoDellaStanza(nome, 20)}${esc(nome)}</span>`
     ).join("");
     eroi.push(`<div class="dm-f-tapparelle-eroe dm-f-tapparelle-eroe-ic" data-tono="${aperte.length ? "aperte" : "quiete"}">
@@ -54528,7 +54605,7 @@ function finestraTapparelle(widget) {
       <small>${esc(t("Tapparelle su", "Shutters up"))}</small>
       <b class="dm-f-num">${alzate.length}</b>
       <em>${esc(
-      [`${t("su", "of")} ${motori.length}`, alzate.length ? nomiDi(alzate).join(", ") : ""].filter(Boolean).join(" · ")
+      [`${t("su", "of")} ${motori.length}`, alzate.length ? nomiDi2(alzate).join(", ") : ""].filter(Boolean).join(" · ")
     )}</em>
     </div>`);
   }
@@ -57897,8 +57974,8 @@ function finestraAgenda(widget) {
     )}</p>`}
       ${dopo ? `<p class="dm-f-sv-vuoto">+${dopo} ${esc(t("più avanti", "later on"))}</p>` : ""}`;
   }
-  const liste = (widget.cose?.blocks || []).map((blocco3) => listaDaFare(blocco3, widget.bozze)).join("");
-  return `<div class="dm-f-sv dm-f-agenda">${impegni}${liste}</div>`;
+  const liste2 = (widget.cose?.blocks || []).map((blocco3) => listaDaFare(blocco3, widget.bozze)).join("");
+  return `<div class="dm-f-sv dm-f-agenda">${impegni}${liste2}</div>`;
 }
 function sottotitoloAgenda(widget) {
   const adesso = Date.now();
@@ -61004,8 +61081,8 @@ function scaldabagnoModel(states) {
   );
   if (!letture2.length) return null;
   const piuDiUno = letture2.length > 1;
-  const nomeDi16 = (lettura3, indice) => clean(lettura3.name) || `${t("Scaldabagno", "Water heater")} ${indice + 1}`;
-  const etichetta3 = (lettura3, indice, testo4) => piuDiUno ? `${nomeDi16(lettura3, indice)} · ${testo4}` : testo4;
+  const nomeDi17 = (lettura3, indice) => clean(lettura3.name) || `${t("Scaldabagno", "Water heater")} ${indice + 1}`;
+  const etichetta3 = (lettura3, indice, testo4) => piuDiUno ? `${nomeDi17(lettura3, indice)} · ${testo4}` : testo4;
   const rows = [];
   letture2.forEach((lettura3, indice) => {
     if (lettura3.comandabile)
@@ -76754,10 +76831,10 @@ function apriIlPopupDelDispositivo(voce3 = {}) {
 }
 function cosaCiSarebbeGia(quale, dentro3) {
   const states = allStates() || {};
-  const nomeDi16 = (entity2) => clean(states?.[entity2]?.attributes?.friendly_name) || entity2;
+  const nomeDi17 = (entity2) => clean(states?.[entity2]?.attributes?.friendly_name) || entity2;
   try {
-    if (quale === "presenza") return rilevatoriDaImportare(states, dentro3.cd_presenza, nomeDi16);
-    if (quale === "varchi") return varchiDaImportare(states, dentro3.cd_varchi, nomeDi16);
+    if (quale === "presenza") return rilevatoriDaImportare(states, dentro3.cd_presenza, nomeDi17);
+    if (quale === "varchi") return varchiDaImportare(states, dentro3.cd_varchi, nomeDi17);
   } catch (_errore) {
   }
   return [];
@@ -113638,7 +113715,7 @@ var ORA7 = 60 * MINUTO7;
 var GIORNO3 = 24 * ORA7;
 var CHIAVE_AUTOMAZIONI = "cd_automazioni";
 var AUTOMAZIONI_AL_MASSIMO = 40;
-var CONDIZIONI_AL_MASSIMO = 2;
+var CONDIZIONI_AL_MASSIMO = 4;
 var AZIONI_AL_MASSIMO2 = 12;
 var ORARI_AL_MASSIMO = 4;
 var ENTITA_AL_MASSIMO = 10;
@@ -113652,9 +113729,27 @@ var QUANDO = Object.freeze([
   "valore",
   "persone",
   "antifurto",
-  "elettrodomestico"
+  "elettrodomestico",
+  /* I QUANDO generici, per chi vuole tutto Home Assistant e non solo le cose
+   * di casa che la plancia conosce: un'entita' qualsiasi che cambia stato,
+   * un attributo che cambia, un evento del bus (il tasto Zigbee che manda
+   * `zha_event`), e un battito ogni N minuti. */
+  "stato",
+  "attributo",
+  "evento",
+  "ogni"
 ]);
-var SOLO_SE = Object.freeze(["notte", "fascia", "giorni", "casa", "stato", "valore"]);
+var SOLO_SE = Object.freeze([
+  "notte",
+  "fascia",
+  "giorni",
+  "casa",
+  "stato",
+  "valore",
+  "uguale",
+  "attributo",
+  "sole"
+]);
 var ALLORA = Object.freeze([
   "accendi",
   "spegni",
@@ -113662,8 +113757,13 @@ var ALLORA = Object.freeze([
   "clima",
   "azione",
   "notifica",
-  "aspetta"
+  "aspetta",
+  "imposta",
+  "media",
+  "aspettaChe",
+  "servizio"
 ]);
+var MODI2 = Object.freeze(["ricomincia", "ignora", "coda"]);
 var DOMINI = Object.freeze({
   accendi: Object.freeze([
     "light",
@@ -113695,8 +113795,54 @@ var DOMINI = Object.freeze({
   persone: Object.freeze(["person", "device_tracker"]),
   antifurto: Object.freeze(["alarm_control_panel"]),
   elettrodomestico: Object.freeze(["sensor"]),
-  finestre: Object.freeze(["binary_sensor"])
+  finestre: Object.freeze(["binary_sensor"]),
+  imposta: Object.freeze([
+    "input_number",
+    "number",
+    "input_select",
+    "select",
+    "input_text",
+    "text",
+    "input_boolean"
+  ]),
+  media: Object.freeze(["media_player"])
 });
+var DOMINI_CHIUSI = /* @__PURE__ */ new Set([
+  "hassio",
+  "backup",
+  "recorder",
+  "shell_command",
+  "python_script",
+  "pyscript",
+  "update",
+  "system_log",
+  "logger",
+  "auth",
+  "cloud",
+  "homeassistant_alerts",
+  "zha",
+  "mqtt"
+]);
+var SERVIZI_CHIUSI = /* @__PURE__ */ new Set([
+  "lock.unlock",
+  "lock.open",
+  "alarm_control_panel.alarm_disarm",
+  "homeassistant.restart",
+  "homeassistant.stop",
+  "homeassistant.reload_all",
+  "homeassistant.reload_core_config",
+  "homeassistant.reload_config_entry",
+  "homeassistant.set_location",
+  "homeassistant.save_persistent_states"
+]);
+var SERVIZIO_BUONO = /^([a-z_][a-z0-9_]*)\.([a-z_][a-z0-9_]*)$/;
+function servizioPermesso(scritto2) {
+  const m = SERVIZIO_BUONO.exec(pulito59(scritto2).toLowerCase());
+  if (!m) return false;
+  if (DOMINI_CHIUSI.has(m[1]) || SERVIZI_CHIUSI.has(`${m[1]}.${m[2]}`)) return false;
+  if (m[2] === "reload" || m[2].startsWith("reload_")) return false;
+  return true;
+}
 var ENTITA_BUONA = /^[a-z_]+\.[a-z0-9_]+$/;
 var ORA_BUONA2 = /^([01]\d|2[0-3]):[0-5]\d$/;
 var dominioDi8 = (id) => pulito59(id).split(".")[0];
@@ -113802,12 +113948,54 @@ function quandoPulito(dato) {
       entita: entitaDi5(d.entita, DOMINI.antifurto),
       verso: ["inserito", "disinserito", "suona"].includes(d.verso) ? d.verso : "inserito"
     };
+  if (tipo === "stato")
+    return {
+      tipo,
+      entita: elencoDiEntita3(d.entita),
+      da: testoBreve(d.da),
+      a: testoBreve(d.a),
+      per: intero(d.per, 0, 240, 0)
+    };
+  if (tipo === "attributo")
+    return {
+      tipo,
+      entita: entitaDi5(d.entita),
+      attributo: nomeDi15(d.attributo),
+      valore: testoBreve(d.valore)
+    };
+  if (tipo === "evento") return { tipo, evento: nomeDi15(d.evento), filtro: filtroPulito(d.filtro) };
+  if (tipo === "ogni") return { tipo, minuti: intero(d.minuti, 5, 1440, 30) };
   return {
     tipo,
     entita: entitaDi5(d.entita, DOMINI.elettrodomestico),
     soglia: fra(numero51(d.soglia) ?? 5, 0.5, 5e3),
     minuti: intero(d.minuti, 1, 60, 3)
   };
+}
+var testoBreve = (v) => pulito59(v).replace(/[\r\n]+/g, " ").slice(0, 80);
+var nomeDi15 = (v) => pulito59(v).toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 60);
+function filtroPulito(v) {
+  const fuori = {};
+  const coppie = v && typeof v === "object" && !Array.isArray(v) ? Object.entries(v) : [];
+  for (const [k, x] of coppie.slice(0, 6)) {
+    const chiave2 = nomeDi15(k);
+    if (chiave2) fuori[chiave2] = testoBreve(x);
+  }
+  return fuori;
+}
+function datiPuliti(v) {
+  const letto = typeof v === "string" ? leggiJson2(v) : v;
+  if (!letto || typeof letto !== "object" || Array.isArray(letto)) return {};
+  const fuori = {};
+  for (const [k, x] of Object.entries(letto).slice(0, 20)) {
+    const chiave2 = nomeDi15(k);
+    if (!chiave2 || chiave2 === "entity_id") continue;
+    if (x === null || ["string", "number", "boolean"].includes(typeof x))
+      fuori[chiave2] = typeof x === "string" ? x.slice(0, 200) : x;
+    else if (Array.isArray(x)) fuori[chiave2] = x.slice(0, 20).filter((y) => typeof y !== "object");
+    else if (typeof x === "object") fuori[chiave2] = datiPuliti(JSON.stringify(x));
+  }
+  return fuori;
 }
 function condizionePulita(dato) {
   const d = dato && typeof dato === "object" ? dato : {};
@@ -113821,6 +114009,21 @@ function condizionePulita(dato) {
     const entita4 = entitaDi5(d.entita);
     return entita4 ? { tipo, entita: entita4, vale: d.vale === "spento" ? "spento" : "acceso" } : null;
   }
+  if (tipo === "sole") return { tipo, posizione: d.posizione === "sotto" ? "sotto" : "sopra" };
+  if (tipo === "uguale") {
+    const entita4 = entitaDi5(d.entita);
+    return entita4 ? { tipo, entita: entita4, valore: testoBreve(d.valore), non: d.non === true } : null;
+  }
+  if (tipo === "attributo") {
+    const entita4 = entitaDi5(d.entita);
+    return entita4 ? {
+      tipo,
+      entita: entita4,
+      attributo: nomeDi15(d.attributo),
+      confronto: ["uguale", "sopra", "sotto"].includes(d.confronto) ? d.confronto : "uguale",
+      valore: testoBreve(d.valore)
+    } : null;
+  }
   const entita3 = entitaDi5(d.entita, DOMINI.valore);
   return entita3 ? {
     tipo,
@@ -113829,6 +114032,8 @@ function condizionePulita(dato) {
     soglia: numero51(d.soglia) ?? 0
   } : null;
 }
+var MAI_SULLE_COSE = /* @__PURE__ */ new Set(["lock", "alarm_control_panel"]);
+var sulleCose = (valore3) => elencoDiEntita3(valore3).filter((e) => !MAI_SULLE_COSE.has(dominioDi8(e)));
 function azionePulita(dato) {
   const d = dato && typeof dato === "object" ? dato : {};
   if (!ALLORA.includes(d.tipo)) return null;
@@ -113843,24 +114048,52 @@ function azionePulita(dato) {
     return nome ? { tipo, nome } : null;
   }
   if (tipo === "accendi") {
-    const entita4 = entitaDi5(d.entita, DOMINI.accendi);
-    if (!entita4) return null;
-    const livello = dominioDi8(entita4) === "light" ? intero(d.livello, 1, 100, null) : null;
-    return livello === null ? { tipo, entita: entita4 } : { tipo, entita: entita4, livello };
+    const entita3 = sulleCose(d.entita);
+    if (!entita3.length) return null;
+    const livello = entita3.some((e) => dominioDi8(e) === "light") ? intero(d.livello, 1, 100, null) : null;
+    return livello === null ? { tipo, entita: entita3 } : { tipo, entita: entita3, livello };
   }
   if (tipo === "spegni") {
-    const entita4 = entitaDi5(d.entita, DOMINI.spegni);
-    return entita4 ? { tipo, entita: entita4 } : null;
+    const entita3 = sulleCose(d.entita).filter(
+      (e) => !["script", "scene", "button", "input_button"].includes(dominioDi8(e))
+    );
+    return entita3.length ? { tipo, entita: entita3 } : null;
   }
   if (tipo === "tapparella") {
-    const entita4 = entitaDi5(d.entita, DOMINI.tapparella);
-    if (!entita4) return null;
+    const entita3 = elencoDiEntita3(d.entita, DOMINI.tapparella);
+    if (!entita3.length) return null;
     const modo = ["apri", "chiudi", "posizione"].includes(d.modo) ? d.modo : "apri";
-    return modo === "posizione" ? { tipo, entita: entita4, modo, posizione: intero(d.posizione, 0, 100, 50) } : { tipo, entita: entita4, modo };
+    return modo === "posizione" ? { tipo, entita: entita3, modo, posizione: intero(d.posizione, 0, 100, 50) } : { tipo, entita: entita3, modo };
   }
-  const entita3 = entitaDi5(d.entita, DOMINI.clima);
-  if (!entita3) return null;
-  return d.modo === "spegni" ? { tipo, entita: entita3, modo: "spegni" } : { tipo, entita: entita3, modo: "temperatura", gradi: fra(numero51(d.gradi) ?? 21, 5, 35) };
+  if (tipo === "clima") {
+    const entita3 = elencoDiEntita3(d.entita, DOMINI.clima);
+    if (!entita3.length) return null;
+    return d.modo === "spegni" ? { tipo, entita: entita3, modo: "spegni" } : { tipo, entita: entita3, modo: "temperatura", gradi: fra(numero51(d.gradi) ?? 21, 5, 35) };
+  }
+  if (tipo === "imposta") {
+    const entita3 = entitaDi5(d.entita, DOMINI.imposta);
+    return entita3 ? { tipo, entita: entita3, valore: testoBreve(d.valore) } : null;
+  }
+  if (tipo === "media") {
+    const entita3 = elencoDiEntita3(d.entita, DOMINI.media);
+    if (!entita3.length) return null;
+    const comando = ["play", "pausa", "stop", "successivo", "volume", "sorgente"].includes(
+      d.comando
+    ) ? d.comando : "play";
+    return comando === "volume" ? { tipo, entita: entita3, comando, valore: String(intero(d.valore, 0, 100, 30)) } : comando === "sorgente" ? { tipo, entita: entita3, comando, valore: testoBreve(d.valore) } : { tipo, entita: entita3, comando };
+  }
+  if (tipo === "aspettaChe") {
+    const entita3 = entitaDi5(d.entita);
+    return entita3 ? {
+      tipo,
+      entita: entita3,
+      stato: testoBreve(d.stato) || "off",
+      massimo: intero(d.massimo, 1, ASPETTA_AL_MASSIMO, 10)
+    } : null;
+  }
+  const servizio2 = pulito59(d.servizio).toLowerCase();
+  if (!servizioPermesso(servizio2)) return null;
+  return { tipo, servizio: servizio2, entita: elencoDiEntita3(d.entita), dati: datiPuliti(d.dati) };
 }
 function fascePulite(valore3) {
   const mezzore = new Array(48).fill(false);
@@ -113922,10 +114155,39 @@ function automazionePulita(dato) {
   if (!id) return null;
   const nome = pulito59(d.nome).slice(0, 60);
   const attiva2 = d.attiva !== false;
-  if (d.tipo === "crono") return { id, nome, attiva: attiva2, tipo: "crono", crono: cronoPulito(d.crono) };
+  const data = /^\d{4}-\d{2}-\d{2}$/.test(pulito59(d.scadenza?.data)) ? pulito59(d.scadenza.data) : "";
+  const scadenza = data ? { data, stato: d.scadenza?.stato === "attiva" ? "attiva" : "spenta" } : null;
+  const extra = scadenza ? { scadenza } : {};
+  if (d.tipo === "crono")
+    return { id, nome, attiva: attiva2, ...extra, tipo: "crono", crono: cronoPulito(d.crono) };
   const soloSe = (Array.isArray(d.soloSe) ? d.soloSe : []).map(condizionePulita).filter(Boolean).slice(0, CONDIZIONI_AL_MASSIMO);
   const allora = (Array.isArray(d.allora) ? d.allora : []).map(azionePulita).filter(Boolean).slice(0, AZIONI_AL_MASSIMO2);
-  return { id, nome, attiva: attiva2, tipo: "regola", quando: quandoPulito(d.quando), soloSe, allora };
+  return {
+    id,
+    nome,
+    attiva: attiva2,
+    ...extra,
+    tipo: "regola",
+    quando: quandoPulito(d.quando),
+    soloSe,
+    /* «Tutte» le condizioni, o «almeno una». */
+    tutte: d.tutte !== false,
+    allora,
+    modo: MODI2.includes(d.modo) ? d.modo : "ricomincia",
+    /* «Non piu' di una volta ogni X minuti». */
+    pausa: intero(d.pausa, 0, 1440, 0)
+  };
+}
+var chiaveDelGiornoDi = (istante6) => {
+  const d = new Date(istante6);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+function eAttivaAdesso(a, adesso) {
+  if (!a?.attiva) return false;
+  if (!a.scadenza) return true;
+  const oggi = chiaveDelGiornoDi(adesso);
+  if (a.scadenza.stato === "spenta") return oggi >= a.scadenza.data;
+  return oggi < a.scadenza.data;
 }
 function automazioniPulite(valore3) {
   const letto = leggiJson2(valore3);
@@ -113947,7 +114209,7 @@ function eCompleta(a) {
   if (!a) return false;
   if (a.tipo === "crono") return a.crono.termostati.length > 0;
   const q = a.quando;
-  const serveEntita = ["apertura", "movimento"].includes(q.tipo) ? q.entita.length > 0 : ["valore", "antifurto", "elettrodomestico"].includes(q.tipo) ? Boolean(q.entita) : true;
+  const serveEntita = ["apertura", "movimento", "stato"].includes(q.tipo) ? q.entita.length > 0 : ["valore", "antifurto", "elettrodomestico"].includes(q.tipo) ? Boolean(q.entita) : q.tipo === "attributo" ? Boolean(q.entita && q.attributo) : q.tipo === "evento" ? Boolean(q.evento) : true;
   const faQualcosa = a.allora.some((x) => x.tipo !== "aspetta");
   return serveEntita && faQualcosa;
 }
@@ -113995,6 +114257,11 @@ function soleDelGiorno(statoDi6, giorno2) {
 var RECUPERO_DELL_ORARIO = 5 * MINUTO7;
 var AVVIO_DELL_ELETTRODOMESTICO = 2 * MINUTO7;
 function istantiDelGiorno(quando4, istante6, statoDi6 = null) {
+  if (quando4?.tipo === "ogni") {
+    const fuori = [];
+    for (let m = 0; m < 1440; m += quando4.minuti) fuori.push(alleOre(istante6, 0, m));
+    return fuori;
+  }
   if (!quando4 || quando4.tipo !== "orario") return [];
   if (!quando4.giorni[giornoDellaSettimana4(istante6)]) return [];
   if (quando4.sole) {
@@ -114028,14 +114295,14 @@ function cronoProssimo(crono2, adesso) {
 function prossimiEventi2(automazioni, adesso, statoDi6 = null, quanti2 = 3) {
   const fuori = [];
   for (const a of automazioni || []) {
-    if (!a?.attiva) continue;
+    if (!eAttivaAdesso(a, adesso)) continue;
     if (a.tipo === "crono") {
       if (!a.crono.termostati.length) continue;
       const p = cronoProssimo(a.crono, adesso);
       if (p) fuori.push({ id: a.id, alle: p.alle, crono: p.voluto });
       continue;
     }
-    if (a.quando?.tipo !== "orario") continue;
+    if (a.quando?.tipo !== "orario" && a.quando?.tipo !== "ogni") continue;
     const alle = prossimoIstante(a.quando, adesso, statoDi6);
     if (alle !== null) fuori.push({ id: a.id, alle });
   }
@@ -114057,6 +114324,8 @@ var state140 = root[KEY144] ||= {
   chiestoIl: 0,
   /* La tendina del QUANDO aperta. */
   tendina: false,
+  tendinaAltro: false,
+  avanzate: false,
   errore: "",
   scopri: false,
   /* La pagina a schermo pieno dell'app e' aperta. */
@@ -114078,7 +114347,7 @@ var stati = () => {
     return {};
   }
 };
-function nomeDi15(id) {
+function nomeDi16(id) {
   const s = stati()[id];
   return clean(s?.attributes?.friendly_name) || clean(id).split(".").slice(1).join(".") || "—";
 }
@@ -114098,6 +114367,10 @@ var SCELTE2 = {
   potenza: (id, s) => dominio4(id) === "sensor" && (classe2(s) === "power" || /^k?w$/i.test(unita2(s))),
   antifurto: (id) => dominio4(id) === "alarm_control_panel",
   persona: (id) => dominio4(id) === "person",
+  /* Qualunque entita' di Home Assistant: per i QUANDO e i SOLO SE generici. */
+  tutte: () => true,
+  imposta: (id) => DOMINI.imposta.includes(dominio4(id)),
+  media: (id) => dominio4(id) === "media_player",
   stato: (id) => [
     "light",
     "switch",
@@ -114113,7 +114386,7 @@ var SCELTE2 = {
 };
 function opzioni(quale) {
   const prova = SCELTE2[quale] || (() => false);
-  return Object.entries(stati()).filter(([id, s]) => prova(id, s)).map(([id]) => [id, nomeDi15(id)]).sort((a, b2) => a[1].localeCompare(b2[1], locale()));
+  return Object.entries(stati()).filter(([id, s]) => prova(id, s)).map(([id]) => [id, nomeDi16(id)]).sort((a, b2) => a[1].localeCompare(b2[1], locale()));
 }
 var primaDi = (quale, preferita = null) => {
   const tutte = opzioni(quale);
@@ -114197,8 +114470,9 @@ function misuraDi(id) {
   const u = unita2(stati()[id]);
   return u ? ` ${u}` : "";
 }
+var nomiDi = (elenco15) => eDetti((Array.isArray(elenco15) ? elenco15 : elenco15 ? [elenco15] : []).map(nomeDi16));
 function fraseDelQuando(q) {
-  const nomi2 = (elenco15) => eDetti((elenco15 || []).map(nomeDi15));
+  const nomi2 = nomiDi;
   if (q.tipo === "orario") {
     if (q.sole) {
       const scarto = Math.abs(q.scarto);
@@ -114209,6 +114483,7 @@ function fraseDelQuando(q) {
     const ore = eDetti(q.ore.map((o) => t(`alle ${o}`, `at ${o}`)));
     return `${ore.charAt(0).toUpperCase()}${ore.slice(1)}`;
   }
+  if (q.tipo === "ogni") return t(`Ogni ${q.minuti} min`, `Every ${q.minuti} min`);
   if (q.tipo === "apertura") {
     const chi2 = q.entita.length ? nomi2(q.entita) : t("una porta o finestra", "a door or window");
     return q.verso === "chiude" ? t(`Quando ${chi2} si chiude`, `When ${chi2} closes`) : t(`Quando ${chi2} si apre`, `When ${chi2} opens`);
@@ -114221,7 +114496,7 @@ function fraseDelQuando(q) {
     ) : t(`Quando c'è movimento in ${dove}`, `When there is motion in ${dove}`);
   }
   if (q.tipo === "valore") {
-    const chi2 = q.entita ? nomeDi15(q.entita) : "…";
+    const chi2 = q.entita ? nomeDi16(q.entita) : "…";
     const soglia2 = `${q.soglia}${misuraDi(q.entita)}`;
     return q.verso === "sotto" ? t(`Quando ${chi2} scende sotto ${soglia2}`, `When ${chi2} drops below ${soglia2}`) : t(`Quando ${chi2} sale sopra ${soglia2}`, `When ${chi2} rises above ${soglia2}`);
   }
@@ -114234,7 +114509,35 @@ function fraseDelQuando(q) {
     if (q.verso === "suona") return t("Quando l'antifurto suona", "When the alarm goes off");
     return q.verso === "disinserito" ? t("Quando l'antifurto si disinserisce", "When the alarm is disarmed") : t("Quando l'antifurto si inserisce", "When the alarm is armed");
   }
-  const chi = q.entita ? nomeDi15(q.entita) : "…";
+  if (q.tipo === "stato") {
+    const chi2 = q.entita.length ? nomi2(q.entita) : "…";
+    const da = q.da;
+    const a = q.a;
+    let frase3 = t(`Quando ${chi2} cambia stato`, `When ${chi2} changes state`);
+    if (da && a)
+      frase3 = t(
+        `Quando ${chi2} passa da «${da}» a «${a}»`,
+        `When ${chi2} goes from «${da}» to «${a}»`
+      );
+    else if (a) frase3 = t(`Quando ${chi2} diventa «${a}»`, `When ${chi2} becomes «${a}»`);
+    else if (da) frase3 = t(`Quando ${chi2} non è più «${da}»`, `When ${chi2} is no longer «${da}»`);
+    const per = q.per;
+    return per ? t(`${frase3} da ${per} min`, `${frase3} for ${per} min`) : frase3;
+  }
+  if (q.tipo === "attributo") {
+    const chi2 = q.entita ? nomeDi16(q.entita) : "…";
+    const attributo3 = q.attributo || "…";
+    const valore3 = q.valore;
+    return valore3 ? t(
+      `Quando ${attributo3} di ${chi2} diventa «${valore3}»`,
+      `When ${attributo3} of ${chi2} becomes «${valore3}»`
+    ) : t(`Quando cambia ${attributo3} di ${chi2}`, `When ${attributo3} of ${chi2} changes`);
+  }
+  if (q.tipo === "evento") {
+    const evento = q.evento || "…";
+    return t(`Quando arriva l'evento ${evento}`, `When the ${evento} event arrives`);
+  }
+  const chi = q.entita ? nomeDi16(q.entita) : "…";
   return t(`Quando ${chi} ha finito`, `When ${chi} has finished`);
 }
 function fraseDellaCondizione(c) {
@@ -114244,21 +114547,38 @@ function fraseDellaCondizione(c) {
   }
   if (c.tipo === "fascia") return t(`fra ${c.da} e ${c.a}`, `between ${c.da} and ${c.a}`);
   if (c.tipo === "giorni") return giorniDetti2(c.giorni) || t("tutti i giorni", "every day");
+  if (c.tipo === "sole")
+    return c.posizione === "sotto" ? t("col sole sotto l'orizzonte", "with the sun below the horizon") : t("col sole sopra l'orizzonte", "with the sun above the horizon");
   if (c.tipo === "casa")
     return c.chi === "nessuno" ? t("nessuno in casa", "nobody home") : t("qualcuno in casa", "someone home");
-  const chi = nomeDi15(c.entita);
+  const chi = nomeDi16(c.entita);
   if (c.tipo === "stato")
     return c.vale === "spento" ? t(`${chi} spento`, `${chi} off`) : t(`${chi} acceso`, `${chi} on`);
+  if (c.tipo === "uguale") {
+    const valore3 = c.valore || "…";
+    return c.non ? t(`${chi} non è «${valore3}»`, `${chi} is not «${valore3}»`) : t(`${chi} è «${valore3}»`, `${chi} is «${valore3}»`);
+  }
+  if (c.tipo === "attributo") {
+    const attributo3 = c.attributo || "…";
+    const valore3 = c.valore || "…";
+    if (c.confronto === "sopra")
+      return t(`${attributo3} di ${chi} sopra ${valore3}`, `${attributo3} of ${chi} above ${valore3}`);
+    if (c.confronto === "sotto")
+      return t(`${attributo3} di ${chi} sotto ${valore3}`, `${attributo3} of ${chi} below ${valore3}`);
+    return t(`${attributo3} di ${chi} è «${valore3}»`, `${attributo3} of ${chi} is «${valore3}»`);
+  }
   const soglia2 = `${c.soglia}${misuraDi(c.entita)}`;
   return c.verso === "sotto" ? t(`${chi} sotto ${soglia2}`, `${chi} below ${soglia2}`) : t(`${chi} sopra ${soglia2}`, `${chi} above ${soglia2}`);
 }
+var SI_ATTIVANO = ["script", "scene", "button", "input_button"];
 function fraseDellAzione(a) {
-  const chi = a.entita ? nomeDi15(a.entita) : "";
+  const chi = nomiDi(a.entita);
   if (a.tipo === "aspetta") return t(`aspetta ${a.minuti} min`, `wait ${a.minuti} min`);
   if (a.tipo === "notifica") return `📱 «${a.testo}»`;
   if (a.tipo === "azione") return t(`lancia «${a.nome}»`, `run «${a.nome}»`);
   if (a.tipo === "accendi") {
-    if (["script", "scene", "button", "input_button"].includes(dominio4(a.entita)))
+    const elenco15 = Array.isArray(a.entita) ? a.entita : [a.entita];
+    if (elenco15.length && elenco15.every((e) => SI_ATTIVANO.includes(dominio4(e))))
       return t(`attiva ${chi}`, `activate ${chi}`);
     return a.livello ? t(`accendi ${chi} al ${a.livello}%`, `turn on ${chi} at ${a.livello}%`) : t(`accendi ${chi}`, `turn on ${chi}`);
   }
@@ -114268,6 +114588,32 @@ function fraseDellAzione(a) {
     if (a.modo === "posizione")
       return t(`porta ${chi} al ${a.posizione}%`, `set ${chi} to ${a.posizione}%`);
     return t(`apri ${chi}`, `open ${chi}`);
+  }
+  if (a.tipo === "imposta") {
+    const valore3 = a.valore;
+    return t(`metti ${chi} a «${valore3}»`, `set ${chi} to «${valore3}»`);
+  }
+  if (a.tipo === "media") {
+    const valore3 = a.valore;
+    if (a.comando === "pausa") return t(`metti in pausa ${chi}`, `pause ${chi}`);
+    if (a.comando === "stop") return t(`ferma ${chi}`, `stop ${chi}`);
+    if (a.comando === "successivo") return t(`brano dopo su ${chi}`, `next track on ${chi}`);
+    if (a.comando === "volume")
+      return t(`${chi} al volume ${valore3}%`, `${chi} at volume ${valore3}%`);
+    if (a.comando === "sorgente") return t(`${chi} su «${valore3}»`, `${chi} on «${valore3}»`);
+    return t(`fai suonare ${chi}`, `play ${chi}`);
+  }
+  if (a.tipo === "aspettaChe") {
+    const stato3 = a.stato;
+    const massimo = a.massimo;
+    return t(
+      `aspetta che ${chi} diventi «${stato3}» (al massimo ${massimo} min)`,
+      `wait until ${chi} becomes «${stato3}» (at most ${massimo} min)`
+    );
+  }
+  if (a.tipo === "servizio") {
+    const servizio2 = a.servizio;
+    return chi ? t(`chiama ${servizio2} su ${chi}`, `call ${servizio2} on ${chi}`) : t(`chiama ${servizio2}`, `call ${servizio2}`);
   }
   if (a.modo === "spegni") return t(`spegni ${chi}`, `turn off ${chi}`);
   return t(`${chi} a ${a.gradi}°`, `${chi} to ${a.gradi}°`);
@@ -114284,19 +114630,23 @@ function siLeggeCosi(a) {
   if (a.tipo === "crono")
     return `${a.nome || t("Cronotermostato", "Thermostat schedule")}: ${fraseDelCrono(a.crono)}`;
   const quando4 = fraseDelQuando(a.quando);
-  const condizioni = eDetti(a.soloSe.map(fraseDellaCondizione));
+  const condizioni = a.tutte ? eDetti(a.soloSe.map(fraseDellaCondizione)) : a.soloSe.map(fraseDellaCondizione).join(` ${t("o", "or")} `);
   const se = a.soloSe.length ? t(`, solo se ${condizioni}`, `, only if ${condizioni}`) : "";
   const allora = a.allora.length ? fraseDellAllora(a.allora) : "…";
   return `<b>${esc(quando4.charAt(0).toLowerCase() + quando4.slice(1))}</b>${esc(se)}, <b>${esc(allora)}</b>.`;
 }
 var DISEGNO_DEL_QUANDO = {
   orario: "automazioni",
+  ogni: "automazioni",
   apertura: "finestra",
   movimento: "presenza",
   valore: "temperatura",
   persone: "persone",
   antifurto: "sicurezza",
   elettrodomestico: "elettrodomestici",
+  stato: "evidenza",
+  attributo: "impostazioni",
+  evento: "azioni",
   crono: "caldo"
 };
 var disegni = 0;
@@ -114339,6 +114689,27 @@ var QUANDO_DELLA_TENDINA = () => [
     t("un elettrodomestico finisce", "an appliance finishes"),
     t("lavatrice, lavastoviglie…", "washer, dishwasher…")
   ]
+];
+var QUANDO_ALTRO = () => [
+  [
+    "stato",
+    "🔁",
+    t("un'entità cambia stato", "an entity changes state"),
+    t("qualsiasi, da → a", "any, from → to")
+  ],
+  [
+    "attributo",
+    "🏷️",
+    t("un attributo cambia", "an attribute changes"),
+    t("sorgente, modalità…", "source, mode…")
+  ],
+  [
+    "evento",
+    "⚡",
+    t("un evento di Home Assistant", "a Home Assistant event"),
+    t("tasti Zigbee, tag…", "Zigbee buttons, tags…")
+  ],
+  ["ogni", "🔂", t("ogni tot minuti", "every few minutes"), t("dalla mezzanotte", "from midnight")]
 ];
 function nomeDellAutomazione(a) {
   if (a.nome) return a.nome;
@@ -114564,8 +114935,13 @@ function bozzaDelModello(chiave2) {
       nome: t("Tutti fuori: spegni tutto", "Everyone out: turn it all off"),
       quando: { tipo: "persone", verso: "tuttiFuori", chi: [] },
       allora: [
-        ...opzioni("luce").slice(0, 6).map(([e]) => ({ tipo: "spegni", entita: e })),
-        ...clima ? [{ tipo: "clima", entita: clima, modo: "spegni" }] : []
+        ...opzioni("luce").length ? [
+          {
+            tipo: "spegni",
+            entita: opzioni("luce").slice(0, 8).map(([e]) => e)
+          }
+        ] : [],
+        ...clima ? [{ tipo: "clima", entita: [clima], modo: "spegni" }] : []
       ]
     };
   if (chiave2 === "bentornato")
@@ -114592,33 +114968,78 @@ function bozzaDelModello(chiave2) {
     allora: [{ tipo: "accendi", entita: luce }]
   };
 }
-var sel = (via, valore3, voci4, { vuota = null, classe: c = "" } = {}) => `<select class="au-sel${c ? ` ${c}` : ""}" data-au-campo="${esc(via)}">${vuota !== null ? `<option value="">${esc(vuota)}</option>` : ""}${voci4.map(
+var sel = (via, valore3, voci4, { vuota = null, classe: c = "", cerca: cerca4 = false } = {}) => `<select class="au-sel${c ? ` ${c}` : ""}" data-au-campo="${esc(via)}">${vuota !== null ? `<option value="">${esc(vuota)}</option>` : ""}${voci4.map(
   ([v, testo4]) => `<option value="${esc(v)}"${String(v) === String(valore3) ? " selected" : ""}>${esc(testo4)}</option>`
-).join("")}${valore3 && !voci4.some(([v]) => String(v) === String(valore3)) ? `<option value="${esc(valore3)}" selected>${esc(dominio4(valore3) ? nomeDi15(valore3) : valore3)}</option>` : ""}</select>`;
+).join("")}${valore3 && !voci4.some(([v]) => String(v) === String(valore3)) ? `<option value="${esc(valore3)}" selected>${esc(dominio4(valore3) && valore3.includes(".") ? nomeDi16(valore3) : valore3)}</option>` : ""}${cerca4 ? `<option value="__cerca__">🔍 ${esc(t("Tutte le entità…", "All entities…"))}</option>` : ""}</select>${cerca4 ? `<input type="text" hidden class="au-cerca-in" data-au-campo="${esc(via)}" data-au-cerca-di="${esc(via)}" value="">` : ""}`;
 var numeroIn = (via, valore3, { passo = 1, min = "", max = "", largo = 70 } = {}) => `<input class="au-sel au-num-in" type="number" inputmode="decimal" step="${passo}" min="${min}" max="${max}" style="width:${largo}px" data-au-campo="${esc(via)}" value="${esc(valore3)}">`;
 var oraIn = (via, valore3, segnaposto = "") => `<input class="au-sel au-ora-in" type="time" data-au-campo="${esc(via)}" value="${esc(valore3)}" placeholder="${esc(segnaposto)}">`;
+var testoIn = (via, valore3, segnaposto = "", largo = 130, lista6 = "") => `<input class="au-sel au-scritto-in" type="text" autocomplete="off" spellcheck="false" style="width:${largo}px" data-au-testo="${esc(via)}" value="${esc(valore3 ?? "")}" placeholder="${esc(segnaposto)}"${lista6 ? ` list="${lista6}"` : ""}>`;
 var togli2 = (via) => `<button type="button" class="au-x" data-au-togli="${esc(via)}" aria-label="${esc(t("Togli", "Remove"))}">✕</button>`;
 var nessuna = () => t("— scegli —", "— choose —");
+var unaEntita = (via, valore3, quale, vuota = nessuna()) => sel(via, valore3 || "", opzioni(quale), { vuota, cerca: true });
 function entitaMolte(via, elenco15, quale, massimo = ENTITA_AL_MASSIMO) {
+  const lista6 = Array.isArray(elenco15) ? elenco15 : elenco15 ? [elenco15] : [];
   const tutte = opzioni(quale);
-  const scelte5 = (elenco15 || []).map(
-    (id, i) => `<span class="au-coppia">${sel(`${via}.${i}`, id, tutte)}${elenco15.length > 1 ? togli2(`${via}.${i}`) : ""}</span>`
+  const scelte5 = lista6.map(
+    (id, i) => `<span class="au-coppia">${sel(`${via}.${i}`, id, tutte, { cerca: true })}${lista6.length > 1 ? togli2(`${via}.${i}`) : ""}</span>`
   );
-  if ((elenco15 || []).length < massimo)
+  if (lista6.length < massimo)
     scelte5.push(
       sel(`${via}.+`, "", tutte, {
-        vuota: elenco15?.length ? "＋" : nessuna(),
-        classe: elenco15?.length ? "au-sel-piu" : ""
+        vuota: lista6.length ? "＋" : nessuna(),
+        classe: lista6.length ? "au-sel-piu" : "",
+        cerca: true
       })
     );
   return scelte5.join(` <span class="au-o">${esc(t("o", "or"))}</span> `);
 }
+var entitaInsieme = (via, elenco15, quale) => entitaMolte(via, elenco15, quale).replaceAll(
+  ` <span class="au-o">${esc(t("o", "or"))}</span> `,
+  ` <span class="au-o">${esc(t("e", "and"))}</span> `
+);
 function chipGiorni(via, giorni) {
   const nomi2 = iniziali2();
   return `<span class="au-gg">${nomi2.map(
     (g, i) => `<button type="button" class="${giorni?.[i] ? "si" : ""}" data-au-giorno="${esc(`${via}.${i}`)}" aria-pressed="${Boolean(giorni?.[i])}" aria-label="${esc(g.corto)}">${esc(g.breve)}</button>`
   ).join("")}</span>`;
 }
+function attributiDi2(id) {
+  return Object.keys(stati()[id]?.attributes || {}).filter((k) => k !== "friendly_name").sort().map((k) => [k, k]);
+}
+function statiPossibili(id) {
+  const s = stati()[id];
+  const a = s?.attributes || {};
+  const d = dominio4(id);
+  if (Array.isArray(a.options)) return a.options.map(String);
+  if (["light", "switch", "fan", "input_boolean", "binary_sensor", "automation"].includes(d))
+    return ["on", "off"];
+  if (d === "cover") return ["open", "closed", "opening", "closing"];
+  if (d === "person" || d === "device_tracker") return ["home", "not_home"];
+  if (d === "media_player") return ["playing", "paused", "idle", "off", "on"];
+  if (d === "climate" && Array.isArray(a.hvac_modes)) return a.hvac_modes.map(String);
+  if (d === "alarm_control_panel")
+    return ["disarmed", "armed_home", "armed_away", "armed_night", "triggered"];
+  return s?.state ? [String(s.state)] : [];
+}
+var liste = 0;
+function scrittoConSuggerimenti(via, valore3, suggeriti, segnaposto = "", largo = 130) {
+  const id = `au-lista-${liste++ % 200}`;
+  return `${testoIn(via, valore3, segnaposto, largo, id)}<datalist id="${id}">${[
+    ...new Set(suggeriti)
+  ].slice(0, 60).map((v) => `<option value="${esc(v)}"></option>`).join("")}</datalist>`;
+}
+var EVENTI_NOTI = [
+  "zha_event",
+  "deconz_event",
+  "hue_event",
+  "shelly.click",
+  "tag_scanned",
+  "mobile_app_notification_action",
+  "ios.action_fired",
+  "lutron_caseta_button_event",
+  "knx_event",
+  "esphome.button_pressed"
+];
 function campiDelQuando(q) {
   if (q.tipo === "orario") {
     const modo = sel("quando.sole", q.sole || "", [
@@ -114638,6 +115059,12 @@ function campiDelQuando(q) {
     ).join(` <span class="au-o">${esc(t("e", "and"))}</span> `)}${(q.ore || []).length < ORARI_AL_MASSIMO ? ` <button type="button" class="au-agg-pic" data-au-aggiungi="quando.ore">＋ ${esc(t("ora", "time"))}</button>` : ""}`;
     return `${modo} ${ore}</div><div class="au-rf">${chipGiorni("quando.giorni", q.giorni)}`;
   }
+  if (q.tipo === "ogni")
+    return sel(
+      "quando.minuti",
+      q.minuti,
+      [5, 10, 15, 20, 30, 60, 120, 180, 360, 720, 1440].map((m) => [m, `${m} min`])
+    );
   if (q.tipo === "apertura")
     return `${entitaMolte("quando.entita", q.entita, "apertura")} ${sel("quando.verso", q.verso, [
       ["apre", t("si apre", "opens")],
@@ -114657,14 +115084,10 @@ function campiDelQuando(q) {
       [2, 5, 10, 15, 20, 30, 45, 60, 120].map((m) => [m, `${m} min`])
     )}` : ""}`;
   if (q.tipo === "valore")
-    return `${sel("quando.entita", q.entita, opzioni("valore"), { vuota: nessuna() })} ${sel(
-      "quando.verso",
-      q.verso,
-      [
-        ["sopra", t("sale sopra", "rises above")],
-        ["sotto", t("scende sotto", "drops below")]
-      ]
-    )} ${numeroIn("quando.soglia", q.soglia, { passo: "any" })}<span class="au-o">${esc(misuraDi(q.entita))}</span>`;
+    return `${unaEntita("quando.entita", q.entita, "valore")} ${sel("quando.verso", q.verso, [
+      ["sopra", t("sale sopra", "rises above")],
+      ["sotto", t("scende sotto", "drops below")]
+    ])} ${numeroIn("quando.soglia", q.soglia, { passo: "any" })}<span class="au-o">${esc(misuraDi(q.entita))}</span>`;
   if (q.tipo === "persone")
     return `${sel("quando.verso", q.verso, [
       ["arriva", t("arriva a casa", "gets home")],
@@ -114674,21 +115097,53 @@ function campiDelQuando(q) {
       "quando.chi.0",
       q.chi?.[0] || "",
       opzioni("persona"),
-      {
-        vuota: t("chiunque", "anyone")
-      }
+      { vuota: t("chiunque", "anyone") }
     )}`}`;
   if (q.tipo === "antifurto")
-    return `${sel("quando.entita", q.entita, opzioni("antifurto"), { vuota: nessuna() })} ${sel(
-      "quando.verso",
-      q.verso,
-      [
-        ["inserito", t("si inserisce", "is armed")],
-        ["disinserito", t("si disinserisce", "is disarmed")],
-        ["suona", t("suona", "goes off")]
-      ]
+    return `${unaEntita("quando.entita", q.entita, "antifurto")} ${sel("quando.verso", q.verso, [
+      ["inserito", t("si inserisce", "is armed")],
+      ["disinserito", t("si disinserisce", "is disarmed")],
+      ["suona", t("suona", "goes off")]
+    ])}`;
+  if (q.tipo === "stato") {
+    const possibili = (q.entita || []).flatMap(statiPossibili);
+    return `${entitaMolte("quando.entita", q.entita, "tutte")}</div><div class="au-rf"><span class="au-o">${esc(
+      t("da", "from")
+    )}</span> ${scrittoConSuggerimenti("quando.da", q.da, possibili, t("qualsiasi", "any"), 110)} <span class="au-o">${esc(
+      t("a", "to")
+    )}</span> ${scrittoConSuggerimenti("quando.a", q.a, possibili, t("qualsiasi", "any"), 110)} ${sel(
+      "quando.per",
+      q.per || 0,
+      [0, 1, 2, 5, 10, 15, 30, 60, 120].map((m) => [
+        m,
+        m ? t(`da ${m} min`, `for ${m} min`) : t("subito", "right away")
+      ])
     )}`;
-  return `${sel("quando.entita", q.entita, opzioni("potenza"), { vuota: nessuna() })} <span class="au-o">${esc(
+  }
+  if (q.tipo === "attributo")
+    return `${unaEntita("quando.entita", q.entita, "tutte")} ${sel(
+      "quando.attributo",
+      q.attributo || "",
+      attributiDi2(q.entita),
+      {
+        vuota: t("— attributo —", "— attribute —")
+      }
+    )} <span class="au-o">${esc(t("diventa", "becomes"))}</span> ${testoIn(
+      "quando.valore",
+      q.valore,
+      t("qualsiasi", "any"),
+      110
+    )}`;
+  if (q.tipo === "evento") {
+    const filtro = Array.isArray(q.filtroRighe) ? q.filtroRighe : Object.entries(q.filtro || {});
+    const righe2 = filtro.map(
+      ([k, v], i) => `<span class="au-coppia">${testoIn(`quando.filtroRighe.${i}.0`, k, t("campo", "event field"), 100)}<span class="au-o">=</span>${testoIn(`quando.filtroRighe.${i}.1`, v, t("valore", "value"), 110)}${togli2(`quando.filtroRighe.${i}`)}</span>`
+    ).join(" ");
+    return `${scrittoConSuggerimenti("quando.evento", q.evento, EVENTI_NOTI, "zha_event", 170)}</div><div class="au-rf"><span class="au-o">${esc(
+      t("con", "with")
+    )}</span> ${righe2} ${filtro.length < 6 ? `<button type="button" class="au-agg-pic" data-au-aggiungi="quando.filtroRighe">＋ ${esc(t("campo", "event field"))}</button>` : ""}<small class="au-nota-in">${esc(t("Lo vedi in Strumenti per sviluppatori → Eventi.", "You can see it in Developer tools → Events."))}</small>`;
+  }
+  return `${unaEntita("quando.entita", q.entita, "potenza")} <span class="au-o">${esc(
     t("sotto", "below")
   )}</span> ${numeroIn("quando.soglia", q.soglia, { passo: "any", largo: 64 })}<span class="au-o">W ${esc(
     t("per", "for")
@@ -114700,11 +115155,14 @@ function campiDelQuando(q) {
 }
 function tendinaDelQuando(q) {
   const voci4 = QUANDO_DELLA_TENDINA();
-  const scelta3 = voci4.find(([k]) => k === q.tipo) || voci4[0];
+  const altre = QUANDO_ALTRO();
+  const scelta3 = [...voci4, ...altre].find(([k]) => k === q.tipo) || voci4[0];
   const etichetta3 = q.tipo === "movimento" && q.verso === "no" ? t("nessun movimento", "no motion") : scelta3[2];
-  return `<span class="au-tendina-qui"><button type="button" class="au-sel au-sel-quando" data-au-tendina aria-expanded="${state140.tendina}">${scelta3[1]} ${esc(etichetta3)}</button>${state140.tendina ? `<div class="au-tendina" role="listbox">${voci4.map(
-    ([k, e, testo4, nota]) => `<button type="button" role="option" class="${k === q.tipo ? "si" : ""}" data-au-quando="${k}" aria-selected="${k === q.tipo}">${e} ${esc(testo4)}<small>${esc(nota)}</small></button>`
-  ).join("")}</div>` : ""}</span>`;
+  const riga3 = ([k, e, testo4, nota]) => `<button type="button" role="option" class="${k === q.tipo ? "si" : ""}" data-au-quando="${k}" aria-selected="${k === q.tipo}">${e} ${esc(testo4)}<small>${esc(nota)}</small></button>`;
+  const altroAperto = state140.tendinaAltro || altre.some(([k]) => k === q.tipo);
+  return `<span class="au-tendina-qui"><button type="button" class="au-sel au-sel-quando" data-au-tendina aria-expanded="${state140.tendina}">${scelta3[1]} ${esc(etichetta3)}</button>${state140.tendina ? `<div class="au-tendina" role="listbox">${voci4.map(riga3).join("")}<button type="button" class="au-altro" data-au-tendina-altro aria-expanded="${altroAperto}">${esc(
+    t("Altro…", "More…")
+  )}<small>${altroAperto ? "▾" : "▸"}</small></button>${altroAperto ? altre.map(riga3).join("") : ""}</div>` : ""}</span>`;
 }
 var TIPI_DELLE_CONDIZIONI = () => [
   ["notte", `🌙 ${t("è notte", "it is night")}`],
@@ -114712,7 +115170,10 @@ var TIPI_DELLE_CONDIZIONI = () => [
   ["giorni", `📅 ${t("certi giorni", "certain days")}`],
   ["casa", `🏠 ${t("chi è in casa", "who is home")}`],
   ["stato", `💡 ${t("un'entità è…", "an entity is…")}`],
-  ["valore", `🌡️ ${t("un valore è…", "a value is…")}`]
+  ["valore", `🌡️ ${t("un valore è…", "a value is…")}`],
+  ["uguale", `🔣 ${t("un'entità è in uno stato…", "an entity is in a state…")}`],
+  ["attributo", `🏷️ ${t("un attributo è…", "an attribute is…")}`],
+  ["sole", `☀️ ${t("il sole è…", "the sun is…")}`]
 ];
 function campiDellaCondizione(c, i) {
   const via = `soloSe.${i}`;
@@ -114728,23 +115189,42 @@ function campiDellaCondizione(c, i) {
       ["qualcuno", t("qualcuno in casa", "someone home")],
       ["nessuno", t("nessuno in casa", "nobody home")]
     ]);
+  if (c.tipo === "sole")
+    return sel(`${via}.posizione`, c.posizione || "sopra", [
+      ["sopra", t("sopra l'orizzonte", "above the horizon")],
+      ["sotto", t("sotto l'orizzonte", "below the horizon")]
+    ]);
   if (c.tipo === "stato")
-    return `${sel(`${via}.entita`, c.entita, opzioni("stato"), { vuota: nessuna() })} ${sel(
-      `${via}.vale`,
-      c.vale,
+    return `${unaEntita(`${via}.entita`, c.entita, "stato")} ${sel(`${via}.vale`, c.vale, [
+      ["acceso", t("è acceso / aperto", "is on / open")],
+      ["spento", t("è spento / chiuso", "is off / closed")]
+    ])}`;
+  if (c.tipo === "uguale")
+    return `${unaEntita(`${via}.entita`, c.entita, "tutte")} ${sel(
+      `${via}.non`,
+      c.non ? "si" : "",
       [
-        ["acceso", t("è acceso / aperto", "is on / open")],
-        ["spento", t("è spento / chiuso", "is off / closed")]
+        ["", t("è", "equals")],
+        ["si", t("non è", "is not")]
       ]
-    )}`;
-  return `${sel(`${via}.entita`, c.entita, opzioni("valore"), { vuota: nessuna() })} ${sel(
-    `${via}.verso`,
-    c.verso,
-    [
+    )} ${scrittoConSuggerimenti(`${via}.valore`, c.valore, statiPossibili(c.entita), t("stato, o più con la virgola", "state, or several with commas"), 170)}`;
+  if (c.tipo === "attributo")
+    return `${unaEntita(`${via}.entita`, c.entita, "tutte")} ${sel(
+      `${via}.attributo`,
+      c.attributo || "",
+      attributiDi2(c.entita),
+      {
+        vuota: t("— attributo —", "— attribute —")
+      }
+    )} ${sel(`${via}.confronto`, c.confronto || "uguale", [
+      ["uguale", t("è", "equals")],
       ["sopra", t("sopra", "above")],
       ["sotto", t("sotto", "below")]
-    ]
-  )} ${numeroIn(`${via}.soglia`, c.soglia, { passo: "any" })}`;
+    ])} ${testoIn(`${via}.valore`, c.valore, t("valore", "value"), 100)}`;
+  return `${unaEntita(`${via}.entita`, c.entita, "valore")} ${sel(`${via}.verso`, c.verso, [
+    ["sopra", t("sopra", "above")],
+    ["sotto", t("sotto", "below")]
+  ])} ${numeroIn(`${via}.soglia`, c.soglia, { passo: "any" })}`;
 }
 var TIPI_DELLE_AZIONI = () => [
   ["accendi", `💡 ${t("accendi", "turn on")}`],
@@ -114755,6 +115235,18 @@ var TIPI_DELLE_AZIONI = () => [
   ["notifica", `📱 ${t("notifica", "notification")}`],
   ["aspetta", `⏱ ${t("aspetta", "wait")}`]
 ];
+var TIPI_ALTRI = () => [
+  ["imposta", `🎚️ ${t("imposta un valore", "set a value")}`],
+  ["media", `🎵 ${t("lettore multimediale", "media player")}`],
+  ["aspettaChe", `⏳ ${t("aspetta finché…", "wait until…")}`],
+  ["servizio", `🧰 ${t("chiama un servizio", "call a service")}`]
+];
+function tendinaDellAzione(via, tipo) {
+  const voce3 = ([v, testo4]) => `<option value="${esc(v)}"${v === tipo ? " selected" : ""}>${esc(testo4)}</option>`;
+  return `<select class="au-sel" data-au-campo="${esc(via)}">${TIPI_DELLE_AZIONI().map(voce3).join("")}<optgroup label="${esc(
+    t("Altro…", "More…")
+  )}">${TIPI_ALTRI().map(voce3).join("")}</optgroup></select>`;
+}
 function campiDellAzione(a, i) {
   const via = `allora.${i}`;
   if (a.tipo === "aspetta")
@@ -114775,18 +115267,18 @@ function campiDellAzione(a, i) {
     ) : `<small class="au-nota-in">${esc(t("Nessuna azione della plancia che parta da sola: si aggiungono in «Azioni».", "No dashboard action that can start by itself: add them in «Actions»."))}</small>`;
   }
   if (a.tipo === "accendi") {
-    const luce = dominio4(a.entita) === "light";
-    return `${sel(`${via}.entita`, a.entita || "", opzioni("accendi"), { vuota: nessuna() })}${luce ? ` <span class="au-o">${esc(t("al", "at level"))}</span> ${sel(
+    const elenco15 = Array.isArray(a.entita) ? a.entita : [];
+    const luce = elenco15.some((e) => dominio4(e) === "light");
+    return `${entitaInsieme(`${via}.entita`, elenco15, "accendi")}${luce ? ` <span class="au-o">${esc(t("al", "at level"))}</span> ${sel(
       `${via}.livello`,
       a.livello || "",
       [10, 20, 30, 50, 70, 100].map((p) => [p, `${p}%`]),
       { vuota: t("come prima", "as before") }
     )}` : ""}`;
   }
-  if (a.tipo === "spegni")
-    return sel(`${via}.entita`, a.entita || "", opzioni("spegni"), { vuota: nessuna() });
+  if (a.tipo === "spegni") return entitaInsieme(`${via}.entita`, a.entita, "spegni");
   if (a.tipo === "tapparella")
-    return `${sel(`${via}.entita`, a.entita || "", opzioni("tapparella"), { vuota: nessuna() })} ${sel(
+    return `${entitaInsieme(`${via}.entita`, a.entita, "tapparella")} ${sel(
       `${via}.modo`,
       a.modo || "apri",
       [
@@ -114799,7 +115291,60 @@ function campiDellAzione(a, i) {
       a.posizione ?? 50,
       [10, 20, 30, 40, 50, 60, 70, 80, 90].map((p) => [p, `${p}%`])
     )}` : ""}`;
-  return `${sel(`${via}.entita`, a.entita || "", opzioni("clima"), { vuota: nessuna() })} ${sel(
+  if (a.tipo === "imposta") {
+    const possibili = Array.isArray(stati()[a.entita]?.attributes?.options) ? stati()[a.entita].attributes.options.map(String) : [];
+    return `${unaEntita(`${via}.entita`, a.entita, "imposta")} <span class="au-o">${esc(t("a", "to"))}</span> ${possibili.length ? sel(
+      `${via}.valore`,
+      a.valore || "",
+      possibili.map((v) => [v, v]),
+      { vuota: nessuna() }
+    ) : testoIn(`${via}.valore`, a.valore, t("valore", "value"), 110)}`;
+  }
+  if (a.tipo === "media") {
+    const primo = Array.isArray(a.entita) ? a.entita[0] : "";
+    const sorgenti = stati()[primo]?.attributes?.source_list;
+    return `${entitaInsieme(`${via}.entita`, a.entita, "media")} ${sel(
+      `${via}.comando`,
+      a.comando || "play",
+      [
+        ["play", `▶ ${t("riproduci", "play")}`],
+        ["pausa", `⏸ ${t("pausa", "pause")}`],
+        ["stop", `⏹ ${t("ferma", "stop playback")}`],
+        ["successivo", `⏭ ${t("brano dopo", "next track")}`],
+        ["volume", `🔊 ${t("volume", "volume")}`],
+        ["sorgente", `🎛️ ${t("sorgente", "input source")}`]
+      ]
+    )}${a.comando === "volume" ? ` ${sel(
+      `${via}.valore`,
+      a.valore || "30",
+      [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((v) => [String(v), `${v}%`])
+    )}` : a.comando === "sorgente" ? ` ${Array.isArray(sorgenti) && sorgenti.length ? sel(
+      `${via}.valore`,
+      a.valore || "",
+      sorgenti.map((v) => [String(v), String(v)]),
+      { vuota: nessuna() }
+    ) : testoIn(`${via}.valore`, a.valore, t("sorgente", "input source"), 120)}` : ""}`;
+  }
+  if (a.tipo === "aspettaChe")
+    return `${unaEntita(`${via}.entita`, a.entita, "tutte")} <span class="au-o">${esc(
+      t("diventa", "becomes")
+    )}</span> ${scrittoConSuggerimenti(`${via}.stato`, a.stato, statiPossibili(a.entita), "off", 100)} <span class="au-o">${esc(
+      t("al massimo", "at most")
+    )}</span> ${sel(
+      `${via}.massimo`,
+      a.massimo || 10,
+      [1, 2, 5, 10, 15, 30, 60, 120, 240].map((m) => [m, `${m} min`])
+    )}`;
+  if (a.tipo === "servizio") {
+    const scritto2 = clean(a.servizio);
+    const chiuso = scritto2 && !servizioPermesso(scritto2);
+    return `${scrittoConSuggerimenti(`${via}.servizio`, a.servizio, ["notify.notify", "light.turn_on", "switch.toggle", "scene.turn_on", "script.turn_on", "input_boolean.toggle", "tts.speak", "persistent_notification.create"], "dominio.servizio", 190)}</div><div class="au-rf"><span class="au-o">${esc(
+      t("su", "on")
+    )}</span> ${entitaInsieme(`${via}.entita`, a.entita, "tutte")}</div><div class="au-rf au-rf-dati"><textarea class="au-sel au-dati-in" rows="2" spellcheck="false" data-au-testo="${via}.dati" placeholder='{"message": "…"}'>${esc(
+      typeof a.dati === "string" ? a.dati : a.dati && Object.keys(a.dati).length ? JSON.stringify(a.dati) : ""
+    )}</textarea>${chiuso ? `<small class="au-nota-in au-male">${esc(t("Questo servizio la casa non lo chiama da sola.", "The home does not call this service by itself."))}</small>` : ""}`;
+  }
+  return `${entitaInsieme(`${via}.entita`, a.entita, "clima")} ${sel(
     `${via}.modo`,
     a.modo || "temperatura",
     [
@@ -114808,15 +115353,47 @@ function campiDellAzione(a, i) {
     ]
   )}${a.modo === "spegni" ? "" : ` ${numeroIn(`${via}.gradi`, a.gradi ?? 21, { passo: 0.5, min: 5, max: 35, largo: 64 })}<span class="au-o">°</span>`}`;
 }
+function avanzate(b2) {
+  const scadenza = b2.scadenza || { data: "", stato: "spenta" };
+  return `<button type="button" class="au-avanzate" data-au-avanzate aria-expanded="${state140.avanzate}"><span>⚙️ ${esc(
+    t("Avanzate", "Advanced")
+  )}</span><small>${esc(t("Se riscatta, pausa, fino a una data", "If it fires again, pause, until a date"))}</small><span class="au-fr">${state140.avanzate ? "▾" : "▸"}</span></button>${state140.avanzate ? `<div class="au-blocco au-v"><div class="au-rf"><span class="au-o">${esc(
+    t("Se riscatta mentre è in corso", "If it fires while running")
+  )}</span> ${sel("modo", b2.modo || "ricomincia", [
+    ["ricomincia", t("ricomincia da capo", "start over")],
+    ["ignora", t("ignora", "ignore")],
+    ["coda", t("mettila in coda", "queue it")]
+  ])}</div><div class="au-rf"><span class="au-o">${esc(t("Non più di una volta ogni", "No more than once every"))}</span> ${sel(
+    "pausa",
+    b2.pausa || 0,
+    [0, 1, 5, 10, 15, 30, 60, 120, 240, 720, 1440].map((m) => [
+      m,
+      m ? `${m} min` : t("— sempre —", "— always —")
+    ])
+  )}</div><div class="au-rf">${sel("scadenza.stato", b2.scadenza ? scadenza.stato : "", [
+    ["", t("Sempre come dice l'interruttore", "Always as the switch says")],
+    ["spenta", t("Spenta fino al", "Off until")],
+    ["attiva", t("Attiva fino al", "On until")]
+  ])}${b2.scadenza ? ` <input class="au-sel au-data-in" type="date" data-au-campo="scadenza.data" value="${esc(scadenza.data || "")}">` : ""}</div>${b2.soloSe.length > 1 ? `<div class="au-rf"><span class="au-o">${esc(t("Le condizioni", "Conditions"))}</span> ${sel(
+    "tutte",
+    b2.tutte === false ? "no" : "si",
+    [
+      ["si", t("tutte", "all")],
+      ["no", t("almeno una", "at least one")]
+    ]
+  )}</div>` : ""}</div>` : ""}`;
+}
 function editor2({ app }) {
   const b2 = state140.bozza;
   const q = b2.quando;
-  const pulita = automazionePulita(b2);
+  const pulita = pulitaDallaBozza(b2);
   const esistente = leAutomazioni().some((a) => a.id === b2.id);
   return `${app ? "" : `<button type="button" class="au-indietro" data-au-vai="${state140.daModelli ? "modelli" : "lista"}">‹ ${esc(state140.daModelli ? t("Modelli", "Templates") : t("Automazioni", "Automations"))}</button>`}<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b2.nome || "")}" placeholder="${esc(t("Come la chiami", "What you call it"))}"></label>
 <div class="au-blocco au-q"><div class="au-et">${esc(t("Quando", "When"))} <small>· ${esc(t("una cosa sola", "one thing only"))}</small></div>
 <div class="au-rf">${tendinaDelQuando(q)} ${campiDelQuando(q)}</div></div>
-<div class="au-blocco au-s"><div class="au-et">${esc(t("Solo se", "Only if"))} <small>· ${esc(t("facoltativo, fino a 2", "optional, up to 2"))}</small></div>
+<div class="au-blocco au-s"><div class="au-et">${esc(t("Solo se", "Only if"))} <small>· ${esc(
+    b2.soloSe.length > 1 ? b2.tutte === false ? t("basta una", "any one is enough") : t("tutte insieme", "all together") : t("facoltativo", "optional")
+  )}</small></div>
 ${b2.soloSe.map(
     (c, i) => `<div class="au-rf">${sel(`soloSe.${i}.tipo`, c.tipo, TIPI_DELLE_CONDIZIONI())} ${campiDellaCondizione(c, i)}${togli2(`soloSe.${i}`)}</div>`
   ).join("")}${b2.soloSe.length < CONDIZIONI_AL_MASSIMO ? `<button type="button" class="au-agg" data-au-aggiungi="soloSe">＋ ${esc(
@@ -114824,8 +115401,9 @@ ${b2.soloSe.map(
   )}</button>` : ""}</div>
 <div class="au-blocco au-a"><div class="au-et">${esc(t("Allora", "Then do"))} <small>· ${esc(t("una o più, in ordine", "one or more, in order"))}</small></div>
 ${b2.allora.map(
-    (a, i) => `<div class="au-rf"><span class="au-num">${i + 1}</span>${sel(`allora.${i}.tipo`, a.tipo, TIPI_DELLE_AZIONI())} ${campiDellAzione(a, i)}${togli2(`allora.${i}`)}</div>`
+    (a, i) => `<div class="au-rf"><span class="au-num">${i + 1}</span>${tendinaDellAzione(`allora.${i}.tipo`, a.tipo)} ${campiDellAzione(a, i)}${togli2(`allora.${i}`)}</div>`
   ).join("")}${b2.allora.length < AZIONI_AL_MASSIMO2 ? `<button type="button" class="au-agg" data-au-aggiungi="allora">＋ ${esc(t("Aggiungi un'azione", "Add an action"))}</button>` : ""}</div>
+${avanzate(b2)}
 <div class="au-leggi" data-au-leggi>${esc(t("Si legge così:", "It reads:"))} ${siLeggeCosi(pulita)}</div>
 ${state140.errore ? `<div class="au-errore" role="alert">${esc(state140.errore)}</div>` : ""}
 <button type="button" class="au-salva" data-au-salva>💾 ${esc(t("SALVA", "SAVE"))}</button>
@@ -114866,7 +115444,7 @@ function crono({ app }) {
 <div class="au-blocco au-a"><div class="au-et">${esc(t("Quando serve il caldo", "When heating is needed"))} <small>· ${esc(t("trascina sulle barre", "drag on the bars"))}</small></div>
 <div class="au-giorno"><small>${esc(`${giorni[0].corto} – ${giorni[4].corto}`)}</small>${barra("feriali", c.feriali)}</div>
 <div class="au-giorno"><small>${esc(`${giorni[5].corto} – ${giorni[6].corto}`)}</small>${barra("festivi", c.festivi)}</div>
-<div class="au-rf">${sel("crono.finestre.0", finestra6, opzioni("finestra"), { vuota: t("🪟 nessuna finestra", "🪟 no window") })} <span class="au-o">→ ${esc(
+<div class="au-rf">${sel("crono.finestre.0", finestra6, opzioni("finestra"), { vuota: t("🪟 nessuna finestra", "🪟 no window"), cerca: true })} <span class="au-o">→ ${esc(
     t("si spegne, riparte quando la chiudi", "turns off, restarts when you close it")
   )}</span><button type="button" class="au-int au-int-dx" role="switch" aria-checked="${c.finestraSpegne}" data-au-finestra aria-label="${esc(t("Finestra aperta, si spegne", "Window open, turns off"))}"><i></i></button></div></div>
 <div class="au-leggi" data-au-leggi>${esc(t("Si legge così:", "It reads:"))} ${esc(siLeggeCosi(automazionePulita(b2)))}</div>
@@ -114908,6 +115486,7 @@ function contenitore() {
 function ridisegna16() {
   const dove = contenitore();
   if (!dove) return false;
+  if (doc.getElementById("cd-entpick") && dove.querySelector("[data-au-cerca-di]")) return true;
   const app = state140.inApp;
   if (Date.now() - state140.chiestoIl > VALE && !state140.chiedendo) void chiediAllaCasa3();
   const html = paginaHtml({ app });
@@ -114942,17 +115521,27 @@ function nuovaCondizione(tipo) {
   if (tipo === "fascia") return { tipo, da: "08:00", a: "20:00" };
   if (tipo === "giorni") return { tipo, giorni: [true, true, true, true, true, false, false] };
   if (tipo === "casa") return { tipo, chi: "qualcuno" };
+  if (tipo === "sole") return { tipo, posizione: "sotto" };
   if (tipo === "stato") return { tipo, entita: primaDi("stato"), vale: "acceso" };
+  if (tipo === "uguale") return { tipo, entita: "", valore: "", non: false };
+  if (tipo === "attributo")
+    return { tipo, entita: "", attributo: "", confronto: "uguale", valore: "" };
   return { tipo: "valore", entita: primaDi("valore"), verso: "sopra", soglia: 25 };
 }
+var unaLista = (id) => id ? [id] : [];
 function nuovaAzione(tipo) {
   if (tipo === "aspetta") return { tipo, minuti: 2 };
   if (tipo === "notifica") return { tipo, testo: "" };
   if (tipo === "azione") return { tipo, nome: azioniDellaPlancia()[0] || "" };
-  if (tipo === "spegni") return { tipo, entita: primaDi("luce") || primaDi("spegni") };
-  if (tipo === "tapparella") return { tipo, entita: primaDi("tapparella"), modo: "apri" };
-  if (tipo === "clima") return { tipo, entita: primaDi("clima"), modo: "temperatura", gradi: 21 };
-  return { tipo: "accendi", entita: primaDi("luce") || primaDi("accendi") };
+  if (tipo === "spegni") return { tipo, entita: unaLista(primaDi("luce") || primaDi("spegni")) };
+  if (tipo === "tapparella") return { tipo, entita: unaLista(primaDi("tapparella")), modo: "apri" };
+  if (tipo === "clima")
+    return { tipo, entita: unaLista(primaDi("clima")), modo: "temperatura", gradi: 21 };
+  if (tipo === "imposta") return { tipo, entita: primaDi("imposta"), valore: "" };
+  if (tipo === "media") return { tipo, entita: unaLista(primaDi("media")), comando: "play" };
+  if (tipo === "aspettaChe") return { tipo, entita: "", stato: "off", massimo: 10 };
+  if (tipo === "servizio") return { tipo, servizio: "", entita: [], dati: "" };
+  return { tipo: "accendi", entita: unaLista(primaDi("luce") || primaDi("accendi")) };
 }
 function nuovoQuando(tipo) {
   const tutti = [true, true, true, true, true, true, true];
@@ -114965,13 +115554,45 @@ function nuovoQuando(tipo) {
   if (tipo === "antifurto") return { tipo, entita: primaDi("antifurto"), verso: "inserito" };
   if (tipo === "elettrodomestico")
     return { tipo, entita: primaDi("potenza"), soglia: 5, minuti: 3 };
+  if (tipo === "stato") return { tipo, entita: [], da: "", a: "", per: 0 };
+  if (tipo === "attributo") return { tipo, entita: "", attributo: "", valore: "" };
+  if (tipo === "evento") return { tipo, evento: "", filtro: {}, filtroRighe: [] };
+  if (tipo === "ogni") return { tipo, minuti: 30 };
   return { tipo: "orario", ore: ["07:00"], sole: "", scarto: 0, giorni: tutti };
 }
-var NUMERI4 = /\.(soglia|minuti|livello|posizione|gradi|scarto)$/;
+function pulitaDallaBozza(b2) {
+  if (!b2) return null;
+  if (b2.tipo === "crono") return automazionePulita(b2);
+  const quando4 = { ...b2.quando || {} };
+  if (Array.isArray(quando4.filtroRighe))
+    quando4.filtro = Object.fromEntries(quando4.filtroRighe.filter(([k]) => clean(k)));
+  const pulita = automazionePulita({
+    ...b2,
+    quando: quando4,
+    scadenza: b2.scadenza?.stato ? b2.scadenza : null
+  });
+  return pulita;
+}
+var NUMERI4 = /\.(soglia|minuti|livello|posizione|gradi|scarto|per|massimo|pausa)$/;
 function metti4(via, valore3) {
   const b2 = structuredClone(state140.bozza);
   const pezzi = via.split(".");
   const ultimo = pezzi.pop();
+  if (via === "tutte") {
+    b2.tutte = valore3 !== "no";
+    state140.bozza = b2;
+    return;
+  }
+  if (via === "scadenza.stato") {
+    b2.scadenza = valore3 ? { data: b2.scadenza?.data || "", stato: valore3 } : null;
+    state140.bozza = b2;
+    return;
+  }
+  if (via === "scadenza.data") {
+    b2.scadenza = { stato: b2.scadenza?.stato || "spenta", data: valore3 };
+    state140.bozza = b2;
+    return;
+  }
   let dove = b2;
   for (const p of pezzi) {
     dove = dove?.[Number.isInteger(+p) ? +p : p];
@@ -114989,10 +115610,13 @@ function metti4(via, valore3) {
     let v = valore3;
     if (NUMERI4.test(`.${ultimo}`))
       v = valore3 === "" ? "" : Number(String(valore3).replace(",", "."));
+    if (ultimo === "non") v = valore3 === "si";
     if (Array.isArray(dove) && v === "") dove.splice(chiave2, 1);
     else dove[chiave2] = v;
     if (via === "quando.verso" && b2.quando.tipo === "persone" && v === "tuttiFuori")
       b2.quando.chi = [];
+    if (/^(quando|soloSe\.\d+)\.entita$/.test(via) && dove.attributo !== void 0)
+      dove.attributo = "";
   }
   state140.bozza = b2;
   state140.errore = "";
@@ -115017,28 +115641,42 @@ function aggiungiA(via) {
     b2.allora.push(nuovaAzione(b2.allora.length ? "aspetta" : "accendi"));
   } else if (via === "quando.ore" && b2.quando.ore.length < ORARI_AL_MASSIMO) {
     b2.quando.ore.push("21:30");
+  } else if (via === "quando.filtroRighe" && (b2.quando.filtroRighe || []).length < 6) {
+    b2.quando.filtroRighe = [...b2.quando.filtroRighe || [], ["", ""]];
   }
   state140.bozza = b2;
 }
+var SULLE_COSE = ["accendi", "spegni", "tapparella", "clima", "media"];
 function apriBozza(bozza3, { daModelli = false } = {}) {
   state140.bozza = structuredClone(bozza3);
   if (state140.bozza.tipo !== "crono") {
-    state140.bozza.quando = {
-      ...nuovoQuando(state140.bozza.quando?.tipo),
-      ...state140.bozza.quando || {}
-    };
+    const q = { ...nuovoQuando(state140.bozza.quando?.tipo), ...state140.bozza.quando || {} };
+    if (q.tipo === "evento") q.filtroRighe = Object.entries(q.filtro || {});
+    state140.bozza.quando = q;
     state140.bozza.soloSe ||= [];
-    state140.bozza.allora ||= [];
+    state140.bozza.allora = (state140.bozza.allora || []).map(
+      (a) => SULLE_COSE.includes(a.tipo) && !Array.isArray(a.entita) ? { ...a, entita: unaLista(a.entita) } : a.tipo === "servizio" && a.dati && typeof a.dati === "object" ? { ...a, dati: Object.keys(a.dati).length ? JSON.stringify(a.dati) : "" } : a
+    );
   } else state140.bozza.crono = cronoPulito(state140.bozza.crono);
   state140.vista = state140.bozza.tipo === "crono" ? "crono" : "editor";
   state140.daModelli = daModelli;
   state140.tendina = false;
+  state140.tendinaAltro = false;
+  state140.avanzate = Boolean(
+    state140.bozza.scadenza || state140.bozza.pausa || state140.bozza.modo && state140.bozza.modo !== "ricomincia"
+  );
   state140.errore = "";
 }
 function salva22() {
-  const pulita = automazionePulita(state140.bozza);
-  if (!pulita || !eCompleta(pulita)) {
-    state140.errore = pulita?.tipo === "crono" ? t("Scegli almeno un termostato.", "Choose at least one thermostat.") : t(
+  const pulita = pulitaDallaBozza(state140.bozza);
+  const servizioChiuso = (state140.bozza?.allora || []).some(
+    (a) => a.tipo === "servizio" && clean(a.servizio) && !servizioPermesso(a.servizio)
+  );
+  if (!pulita || !eCompleta(pulita) || servizioChiuso) {
+    state140.errore = servizioChiuso ? t(
+      "Questo servizio la casa non lo chiama da sola.",
+      "The home does not call this service by itself."
+    ) : pulita?.tipo === "crono" ? t("Scegli almeno un termostato.", "Choose at least one thermostat.") : t(
       "Manca qualcosa: scegli cosa la fa partire e almeno un'azione.",
       "Something is missing: choose what starts it and at least one action."
     );
@@ -115089,7 +115727,7 @@ function onClick39(event) {
     return;
   }
   const el = event.target.closest(
-    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri]"
+    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate]"
   );
   if (!el) {
     if (state140.tendina) {
@@ -115123,7 +115761,9 @@ function onClick39(event) {
   else if (d.auApri) {
     const a = leAutomazioni().find((x) => x.id === d.auApri);
     if (a) apriBozza(a);
-  } else if (d.auTendina !== void 0) state140.tendina = !state140.tendina;
+  } else if (d.auTendinaAltro !== void 0) state140.tendinaAltro = !state140.tendinaAltro;
+  else if (d.auAvanzate !== void 0) state140.avanzate = !state140.avanzate;
+  else if (d.auTendina !== void 0) state140.tendina = !state140.tendina;
   else if (d.auQuando) {
     if (d.auQuando !== state140.bozza.quando.tipo)
       state140.bozza = { ...state140.bozza, quando: nuovoQuando(d.auQuando) };
@@ -115160,6 +115800,15 @@ function onChange14(event) {
   if (!dentroDiNoi(event)) return;
   const via = event.target?.dataset?.auCampo;
   if (!via || !state140.bozza) return;
+  if (event.target.value === "__cerca__") {
+    const prima = event.target.querySelector("option[selected]")?.value ?? "";
+    event.target.value = prima;
+    const casella5 = event.target.parentElement?.querySelector(
+      `[data-au-cerca-di="${CSS.escape(via)}"]`
+    );
+    if (casella5 && typeof root.wzPickEntity === "function") root.wzPickEntity(casella5);
+    return;
+  }
   metti4(via, event.target.value);
   ridisegna16();
 }
@@ -115173,7 +115822,7 @@ function onInput5(event) {
   if (!dove) return;
   dove[ultimo] = event.target.value;
   const leggi3 = contenitore()?.querySelector?.("[data-au-leggi]");
-  const pulita = automazionePulita(state140.bozza);
+  const pulita = pulitaDallaBozza(state140.bozza);
   if (leggi3)
     leggi3.innerHTML = `${esc(t("Si legge così:", "It reads:"))} ${pulita?.tipo === "crono" ? esc(siLeggeCosi(pulita)) : siLeggeCosi(pulita)}`;
 }
@@ -115460,6 +116109,7 @@ html[data-theme="dark"] .au .au-indietro{color:#7dd3fc}
 .au .au-rf:has(>.au-x){position:relative;padding-right:30px}
 .au .au-rf>.au-x{position:absolute;right:-4px;top:50%;transform:translateY(-50%)}
 .au select.au-sel{field-sizing:content}
+#editor-modal .au select.au-sel,.au select.au-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%2394a3b8'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 9px center!important;background-size:8px 5px!important}
 .au input.au-ora-in{width:118px}
 .au .au-coppia .au-x{margin-left:0}
 .au .au-agg{display:inline-block;margin-top:8px;border:0;background:none;padding:0;color:var(--c);font-weight:900;font-size:13px}
@@ -115481,6 +116131,16 @@ html[data-theme="dark"] .au .au-errore{color:#fecaca;background:#7f1d1d55}
 .au .au-tendina button{display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;border-radius:10px;background:none;color:var(--au-tx);font-size:13.5px;font-weight:800;text-align:left;white-space:nowrap}
 .au .au-tendina button small{margin-left:auto;font-weight:600;font-size:11px;color:var(--au-dim)}
 .au .au-tendina button.si,.au .au-tendina button:hover{background:color-mix(in srgb,#0ea5e9 12%,transparent)}
+.au .au-tendina .au-altro{border-top:1px dashed var(--au-bordo);border-radius:0 0 10px 10px;margin-top:4px;color:var(--au-dim);font-weight:900}
+.au .au-avanzate{display:grid;grid-template-columns:1fr auto;align-items:center;width:100%;margin:0 0 10px;padding:12px 14px;border-radius:14px;border:1px solid var(--au-bordo);background:var(--au-carta);color:var(--au-tx);text-align:left}
+.au .au-avanzate>span:first-child{font-weight:900;font-size:13.5px}
+.au .au-avanzate small{grid-column:1;font-size:11.5px;font-weight:600;color:var(--au-dim)}
+.au .au-avanzate .au-fr{grid-row:1/span 2;grid-column:2}
+.au .au-v{--c:#64748b}
+.au .au-dati-in{width:100%;min-height:54px;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;padding-right:11px;background-image:none;resize:vertical}
+.au .au-rf-dati{padding-right:0}
+.au input.au-data-in{padding-right:11px;background-image:none;font-family:inherit}
+.au .au-cerca-in{display:none}
 .au .au-temp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .au .au-temp>div{border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px}
 .au .au-temp small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.08em}
@@ -129948,24 +130608,24 @@ function onClick53(event) {
     }
     return;
   }
-  const liste = listeGrezze();
+  const liste2 = listeGrezze();
   if (event.target.closest("[data-todo-add]")) {
     event.preventDefault();
-    state165.todoAperto = liste.length;
-    salvaListe([...liste, { id: `todo-${Date.now().toString(36)}`, name: "", entity: "" }]);
+    state165.todoAperto = liste2.length;
+    salvaListe([...liste2, { id: `todo-${Date.now().toString(36)}`, name: "", entity: "" }]);
     ridisegna25();
     return;
   }
   if (event.target.closest("[data-todo-detect]")) {
     event.preventDefault();
-    const trovate = suggestTodoLists(allStates(), liste);
+    const trovate = suggestTodoLists(allStates(), liste2);
     if (!trovate.length) {
       root.edToast?.(t("Nessuna lista todo.* trovata", "No todo.* list found"));
       return;
     }
     state165.todoAperto = -1;
     salvaListe([
-      ...liste,
+      ...liste2,
       ...trovate.map((voce3, indice2) => ({
         id: `todo-${Date.now().toString(36)}-${indice2}`,
         name: voce3.name,
@@ -129986,7 +130646,7 @@ function onClick53(event) {
   const rigaTodo = event.target.closest("[data-todo-index]");
   if (!rigaTodo) return;
   const indice = Number(rigaTodo.dataset.todoIndex);
-  if (!Number.isFinite(indice) || !liste[indice]) return;
+  if (!Number.isFinite(indice) || !liste2[indice]) return;
   if (event.target.closest("[data-todo-edit]")) {
     event.preventDefault();
     state165.todoAperto = state165.todoAperto === indice ? -1 : indice;
@@ -129995,17 +130655,17 @@ function onClick53(event) {
   }
   if (event.target.closest("[data-todo-del]")) {
     event.preventDefault();
-    const nome = nomeDellaLista3(liste[indice], indice);
+    const nome = nomeDellaLista3(liste2[indice], indice);
     if (root.confirm && !root.confirm(t(`Elimino "${nome}"?`, `Remove "${nome}"?`))) return;
     state165.todoAperto = -1;
-    salvaListe(liste.filter((_voce, posto) => posto !== indice));
+    salvaListe(liste2.filter((_voce, posto) => posto !== indice));
     ridisegna25();
     return;
   }
   if (event.target.closest("[data-todo-save]")) {
     event.preventDefault();
-    const prossime = liste.slice();
-    const letta = { ...liste[indice] };
+    const prossime = liste2.slice();
+    const letta = { ...liste2[indice] };
     for (const campo5 of rigaTodo.querySelectorAll("[data-todo-field]"))
       letta[clean(campo5.dataset.todoField)] = clean(campo5.value);
     const errore = rigaTodo.querySelector("[data-todo-error]");

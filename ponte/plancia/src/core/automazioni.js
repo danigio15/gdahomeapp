@@ -51,7 +51,9 @@ const GIORNO = 24 * ORA;
 export const CHIAVE_AUTOMAZIONI = "cd_automazioni";
 
 export const AUTOMAZIONI_AL_MASSIMO = 40;
-export const CONDIZIONI_AL_MASSIMO = 2;
+/* Due condizioni bastano quasi sempre, e la pagina ne propone due; chi vuole
+ * di piu' — «tutte» o «almeno una» — arriva a quattro. */
+export const CONDIZIONI_AL_MASSIMO = 4;
 export const AZIONI_AL_MASSIMO = 12;
 export const ORARI_AL_MASSIMO = 4;
 export const ENTITA_AL_MASSIMO = 10;
@@ -69,8 +71,26 @@ export const QUANDO = Object.freeze([
   "persone",
   "antifurto",
   "elettrodomestico",
+  /* I QUANDO generici, per chi vuole tutto Home Assistant e non solo le cose
+   * di casa che la plancia conosce: un'entita' qualsiasi che cambia stato,
+   * un attributo che cambia, un evento del bus (il tasto Zigbee che manda
+   * `zha_event`), e un battito ogni N minuti. */
+  "stato",
+  "attributo",
+  "evento",
+  "ogni",
 ]);
-export const SOLO_SE = Object.freeze(["notte", "fascia", "giorni", "casa", "stato", "valore"]);
+export const SOLO_SE = Object.freeze([
+  "notte",
+  "fascia",
+  "giorni",
+  "casa",
+  "stato",
+  "valore",
+  "uguale",
+  "attributo",
+  "sole",
+]);
 export const ALLORA = Object.freeze([
   "accendi",
   "spegni",
@@ -79,7 +99,16 @@ export const ALLORA = Object.freeze([
   "azione",
   "notifica",
   "aspetta",
+  "imposta",
+  "media",
+  "aspettaChe",
+  "servizio",
 ]);
+
+/* Le modalita' di una automazione che riscatta mentre e' ancora in corso:
+ * ricomincia da capo (il movimento che torna rimette i due minuti della
+ * luce), ignora il nuovo scatto, o lo mette in coda dopo quello in corso. */
+export const MODI = Object.freeze(["ricomincia", "ignora", "coda"]);
 
 /* I domini che ogni azione accetta. «Accendi» vale per tutto quello che si
  * accende e per quello che si fa partire (uno script, una scena, un tasto);
@@ -116,7 +145,68 @@ export const DOMINI = Object.freeze({
   antifurto: Object.freeze(["alarm_control_panel"]),
   elettrodomestico: Object.freeze(["sensor"]),
   finestre: Object.freeze(["binary_sensor"]),
+  imposta: Object.freeze([
+    "input_number",
+    "number",
+    "input_select",
+    "select",
+    "input_text",
+    "text",
+    "input_boolean",
+  ]),
+  media: Object.freeze(["media_player"]),
 });
+
+/* «Chiama un servizio di Home Assistant»: l'ALLORA per chi sa cosa fa, dietro
+ * «Altro…». Si chiama col filo dell'add-on, che in Home Assistant puo' tutto,
+ * e allora non tutto passa. Fuori restano:
+ *  - quello che apre la casa o la lascia senza difese: le serrature che si
+ *    aprono, l'antifurto che si disinserisce, il cancello del garage non e'
+ *    qui perche' `cover` serve a tutte le tapparelle;
+ *  - quello che spegne o riscrive Home Assistant stesso: riavvii, arresti,
+ *    ricariche, il Supervisor, i backup, gli aggiornamenti, il recorder;
+ *  - quello che esegue codice: comandi di shell, script Python.
+ * Le notifiche e tutto il resto passano: e' la stessa porta che apre chi
+ * amministra la configurazione, e quella la apre gia' solo lui. */
+const DOMINI_CHIUSI = new Set([
+  "hassio",
+  "backup",
+  "recorder",
+  "shell_command",
+  "python_script",
+  "pyscript",
+  "update",
+  "system_log",
+  "logger",
+  "auth",
+  "cloud",
+  "homeassistant_alerts",
+  "zha",
+  "mqtt",
+]);
+const SERVIZI_CHIUSI = new Set([
+  "lock.unlock",
+  "lock.open",
+  "alarm_control_panel.alarm_disarm",
+  "homeassistant.restart",
+  "homeassistant.stop",
+  "homeassistant.reload_all",
+  "homeassistant.reload_core_config",
+  "homeassistant.reload_config_entry",
+  "homeassistant.set_location",
+  "homeassistant.save_persistent_states",
+]);
+const SERVIZIO_BUONO = /^([a-z_][a-z0-9_]*)\.([a-z_][a-z0-9_]*)$/;
+
+/** Se la casa accetta di chiamare `dominio.servizio` da sola. */
+export function servizioPermesso(scritto) {
+  const m = SERVIZIO_BUONO.exec(pulito(scritto).toLowerCase());
+  if (!m) return false;
+  if (DOMINI_CHIUSI.has(m[1]) || SERVIZI_CHIUSI.has(`${m[1]}.${m[2]}`)) return false;
+  /* Le ricariche di qualunque integrazione, anche quelle scritte domani. */
+  if (m[2] === "reload" || m[2].startsWith("reload_")) return false;
+  return true;
+}
 
 const ENTITA_BUONA = /^[a-z_]+\.[a-z0-9_]+$/;
 const ORA_BUONA = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -251,12 +341,70 @@ export function quandoPulito(dato) {
       entita: entitaDi(d.entita, DOMINI.antifurto),
       verso: ["inserito", "disinserito", "suona"].includes(d.verso) ? d.verso : "inserito",
     };
+  if (tipo === "stato")
+    return {
+      tipo,
+      entita: elencoDiEntita(d.entita),
+      da: testoBreve(d.da),
+      a: testoBreve(d.a),
+      per: intero(d.per, 0, 240, 0),
+    };
+  if (tipo === "attributo")
+    return {
+      tipo,
+      entita: entitaDi(d.entita),
+      attributo: nomeDi(d.attributo),
+      valore: testoBreve(d.valore),
+    };
+  if (tipo === "evento") return { tipo, evento: nomeDi(d.evento), filtro: filtroPulito(d.filtro) };
+  if (tipo === "ogni") return { tipo, minuti: intero(d.minuti, 5, 1440, 30) };
   return {
     tipo,
     entita: entitaDi(d.entita, DOMINI.elettrodomestico),
     soglia: fra(numero(d.soglia) ?? 5, 0.5, 5000),
     minuti: intero(d.minuti, 1, 60, 3),
   };
+}
+
+/* Uno stato o un valore scritto a mano: corto, una riga. */
+const testoBreve = (v) =>
+  pulito(v)
+    .replace(/[\r\n]+/g, " ")
+    .slice(0, 80);
+/* Il nome di un attributo o di un evento: lettere, cifre, sottolineature. */
+const nomeDi = (v) =>
+  pulito(v)
+    .toLowerCase()
+    .replace(/[^a-z0-9_.]/g, "")
+    .slice(0, 60);
+
+/* Il filtro di un evento: coppie chiave = valore che i dati dell'evento devono
+ * avere («command = on», «device_ieee = …»). Al piu' sei. */
+function filtroPulito(v) {
+  const fuori = {};
+  const coppie = v && typeof v === "object" && !Array.isArray(v) ? Object.entries(v) : [];
+  for (const [k, x] of coppie.slice(0, 6)) {
+    const chiave = nomeDi(k);
+    if (chiave) fuori[chiave] = testoBreve(x);
+  }
+  return fuori;
+}
+
+/* I dati di un servizio scritti a mano: un oggetto piatto o con un livello
+ * sotto, al piu' venti campi, e niente che non sia JSON. */
+function datiPuliti(v) {
+  const letto = typeof v === "string" ? leggiJson(v) : v;
+  if (!letto || typeof letto !== "object" || Array.isArray(letto)) return {};
+  const fuori = {};
+  for (const [k, x] of Object.entries(letto).slice(0, 20)) {
+    const chiave = nomeDi(k);
+    if (!chiave || chiave === "entity_id") continue;
+    if (x === null || ["string", "number", "boolean"].includes(typeof x))
+      fuori[chiave] = typeof x === "string" ? x.slice(0, 200) : x;
+    else if (Array.isArray(x)) fuori[chiave] = x.slice(0, 20).filter((y) => typeof y !== "object");
+    else if (typeof x === "object") fuori[chiave] = datiPuliti(JSON.stringify(x));
+  }
+  return fuori;
 }
 
 export function condizionePulita(dato) {
@@ -273,6 +421,23 @@ export function condizionePulita(dato) {
     const entita = entitaDi(d.entita);
     return entita ? { tipo, entita, vale: d.vale === "spento" ? "spento" : "acceso" } : null;
   }
+  if (tipo === "sole") return { tipo, posizione: d.posizione === "sotto" ? "sotto" : "sopra" };
+  if (tipo === "uguale") {
+    const entita = entitaDi(d.entita);
+    return entita ? { tipo, entita, valore: testoBreve(d.valore), non: d.non === true } : null;
+  }
+  if (tipo === "attributo") {
+    const entita = entitaDi(d.entita);
+    return entita
+      ? {
+          tipo,
+          entita,
+          attributo: nomeDi(d.attributo),
+          confronto: ["uguale", "sopra", "sotto"].includes(d.confronto) ? d.confronto : "uguale",
+          valore: testoBreve(d.valore),
+        }
+      : null;
+  }
   const entita = entitaDi(d.entita, DOMINI.valore);
   return entita
     ? {
@@ -283,6 +448,14 @@ export function condizionePulita(dato) {
       }
     : null;
 }
+
+/* «Accendi» e «spegni» valgono per ogni entita' che Home Assistant sa
+ * accendere — la tendina propone le solite, la ricerca trova tutte le altre,
+ * e quelle si comandano con `homeassistant.turn_on`. Mai le serrature e
+ * l'antifurto: «accendi» una serratura vorrebbe dire aprirla. */
+const MAI_SULLE_COSE = new Set(["lock", "alarm_control_panel"]);
+const sulleCose = (valore) =>
+  elencoDiEntita(valore).filter((e) => !MAI_SULLE_COSE.has(dominioDi(e)));
 
 export function azionePulita(dato) {
   const d = dato && typeof dato === "object" ? dato : {};
@@ -297,29 +470,71 @@ export function azionePulita(dato) {
     const nome = pulito(d.nome).slice(0, 80);
     return nome ? { tipo, nome } : null;
   }
+  /* Le azioni sulle cose prendono una o piu' entita': «accendi queste luci». */
   if (tipo === "accendi") {
-    const entita = entitaDi(d.entita, DOMINI.accendi);
-    if (!entita) return null;
-    const livello = dominioDi(entita) === "light" ? intero(d.livello, 1, 100, null) : null;
+    const entita = sulleCose(d.entita);
+    if (!entita.length) return null;
+    const livello = entita.some((e) => dominioDi(e) === "light")
+      ? intero(d.livello, 1, 100, null)
+      : null;
     return livello === null ? { tipo, entita } : { tipo, entita, livello };
   }
   if (tipo === "spegni") {
-    const entita = entitaDi(d.entita, DOMINI.spegni);
-    return entita ? { tipo, entita } : null;
+    const entita = sulleCose(d.entita).filter(
+      (e) => !["script", "scene", "button", "input_button"].includes(dominioDi(e)),
+    );
+    return entita.length ? { tipo, entita } : null;
   }
   if (tipo === "tapparella") {
-    const entita = entitaDi(d.entita, DOMINI.tapparella);
-    if (!entita) return null;
+    const entita = elencoDiEntita(d.entita, DOMINI.tapparella);
+    if (!entita.length) return null;
     const modo = ["apri", "chiudi", "posizione"].includes(d.modo) ? d.modo : "apri";
     return modo === "posizione"
       ? { tipo, entita, modo, posizione: intero(d.posizione, 0, 100, 50) }
       : { tipo, entita, modo };
   }
-  const entita = entitaDi(d.entita, DOMINI.clima);
-  if (!entita) return null;
-  return d.modo === "spegni"
-    ? { tipo, entita, modo: "spegni" }
-    : { tipo, entita, modo: "temperatura", gradi: fra(numero(d.gradi) ?? 21, 5, 35) };
+  if (tipo === "clima") {
+    const entita = elencoDiEntita(d.entita, DOMINI.clima);
+    if (!entita.length) return null;
+    return d.modo === "spegni"
+      ? { tipo, entita, modo: "spegni" }
+      : { tipo, entita, modo: "temperatura", gradi: fra(numero(d.gradi) ?? 21, 5, 35) };
+  }
+  if (tipo === "imposta") {
+    const entita = entitaDi(d.entita, DOMINI.imposta);
+    return entita ? { tipo, entita, valore: testoBreve(d.valore) } : null;
+  }
+  if (tipo === "media") {
+    const entita = elencoDiEntita(d.entita, DOMINI.media);
+    if (!entita.length) return null;
+    const comando = ["play", "pausa", "stop", "successivo", "volume", "sorgente"].includes(
+      d.comando,
+    )
+      ? d.comando
+      : "play";
+    return comando === "volume"
+      ? { tipo, entita, comando, valore: String(intero(d.valore, 0, 100, 30)) }
+      : comando === "sorgente"
+        ? { tipo, entita, comando, valore: testoBreve(d.valore) }
+        : { tipo, entita, comando };
+  }
+  /* «Aspetta finche'…»: un'entita' che diventa uno stato, con un tempo
+   * massimo. Passato quello si va avanti lo stesso: una luce che resta accesa
+   * perche' un sensore non risponde e' peggio di una che si spegne. */
+  if (tipo === "aspettaChe") {
+    const entita = entitaDi(d.entita);
+    return entita
+      ? {
+          tipo,
+          entita,
+          stato: testoBreve(d.stato) || "off",
+          massimo: intero(d.massimo, 1, ASPETTA_AL_MASSIMO, 10),
+        }
+      : null;
+  }
+  const servizio = pulito(d.servizio).toLowerCase();
+  if (!servizioPermesso(servizio)) return null;
+  return { tipo, servizio, entita: elencoDiEntita(d.entita), dati: datiPuliti(d.dati) };
 }
 
 /* Le fasce di una giornata tipo: mezz'ore intere, ordinate, senza buchi fra
@@ -392,7 +607,14 @@ export function automazionePulita(dato) {
   if (!id) return null;
   const nome = pulito(d.nome).slice(0, 60);
   const attiva = d.attiva !== false;
-  if (d.tipo === "crono") return { id, nome, attiva, tipo: "crono", crono: cronoPulito(d.crono) };
+  /* «Attiva fino al…» o «spenta fino al…»: la data in cui cambia da sola. */
+  const data = /^\d{4}-\d{2}-\d{2}$/.test(pulito(d.scadenza?.data)) ? pulito(d.scadenza.data) : "";
+  const scadenza = data
+    ? { data, stato: d.scadenza?.stato === "attiva" ? "attiva" : "spenta" }
+    : null;
+  const extra = scadenza ? { scadenza } : {};
+  if (d.tipo === "crono")
+    return { id, nome, attiva, ...extra, tipo: "crono", crono: cronoPulito(d.crono) };
   const soloSe = (Array.isArray(d.soloSe) ? d.soloSe : [])
     .map(condizionePulita)
     .filter(Boolean)
@@ -401,7 +623,39 @@ export function automazionePulita(dato) {
     .map(azionePulita)
     .filter(Boolean)
     .slice(0, AZIONI_AL_MASSIMO);
-  return { id, nome, attiva, tipo: "regola", quando: quandoPulito(d.quando), soloSe, allora };
+  return {
+    id,
+    nome,
+    attiva,
+    ...extra,
+    tipo: "regola",
+    quando: quandoPulito(d.quando),
+    soloSe,
+    /* «Tutte» le condizioni, o «almeno una». */
+    tutte: d.tutte !== false,
+    allora,
+    modo: MODI.includes(d.modo) ? d.modo : "ricomincia",
+    /* «Non piu' di una volta ogni X minuti». */
+    pausa: intero(d.pausa, 0, 1440, 0),
+  };
+}
+
+const chiaveDelGiornoDi = (istante) => {
+  const d = new Date(istante);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+/**
+ * Se un'automazione vale adesso: l'interruttore, e la data in cui cambia da
+ * sola. «Spenta fino al 3 novembre» torna attiva il 3; «attiva fino al 3»
+ * smette il 3. Una data passata non cambia piu' niente: vale l'interruttore.
+ */
+export function eAttivaAdesso(a, adesso) {
+  if (!a?.attiva) return false;
+  if (!a.scadenza) return true;
+  const oggi = chiaveDelGiornoDi(adesso);
+  if (a.scadenza.stato === "spenta") return oggi >= a.scadenza.data;
+  return oggi < a.scadenza.data;
 }
 
 /** L'elenco salvato: l'array o il suo JSON, ripulito, senza id doppi. */
@@ -431,11 +685,15 @@ export function eCompleta(a) {
   if (!a) return false;
   if (a.tipo === "crono") return a.crono.termostati.length > 0;
   const q = a.quando;
-  const serveEntita = ["apertura", "movimento"].includes(q.tipo)
+  const serveEntita = ["apertura", "movimento", "stato"].includes(q.tipo)
     ? q.entita.length > 0
     : ["valore", "antifurto", "elettrodomestico"].includes(q.tipo)
       ? Boolean(q.entita)
-      : true;
+      : q.tipo === "attributo"
+        ? Boolean(q.entita && q.attributo)
+        : q.tipo === "evento"
+          ? Boolean(q.evento)
+          : true;
   const faQualcosa = a.allora.some((x) => x.tipo !== "aspetta");
   return serveEntita && faQualcosa;
 }
@@ -554,6 +812,13 @@ export const AVVIO_DELL_ELETTRODOMESTICO = 2 * MINUTO;
 
 /** Gli istanti di un orario nel giorno di `istante` (con i giorni scelti). */
 export function istantiDelGiorno(quando, istante, statoDi = null) {
+  /* «Ogni N minuti», contati dalla mezzanotte: ogni 30 vuol dire alle 0:00,
+   * alle 0:30, all'1:00… — si sa sempre quando viene il prossimo. */
+  if (quando?.tipo === "ogni") {
+    const fuori = [];
+    for (let m = 0; m < 1440; m += quando.minuti) fuori.push(alleOre(istante, 0, m));
+    return fuori;
+  }
   if (!quando || quando.tipo !== "orario") return [];
   if (!quando.giorni[giornoDellaSettimana(istante)]) return [];
   if (quando.sole) {
@@ -598,14 +863,79 @@ function rientrato(verso, soglia, n) {
  */
 export function valutaIlQuando(
   quando,
-  { cambio = null, stati = {}, adesso, giroPrima = null, traccia = {} } = {},
+  { cambio = null, evento = null, stati = {}, adesso, giroPrima = null, traccia = {} } = {},
 ) {
   const t = { ...(traccia || {}) };
   const statoDi = (id) => stati[id] || null;
   const no = { scatta: false, traccia: t };
   if (!quando) return no;
 
-  if (quando.tipo === "orario") {
+  /* Un evento del bus di Home Assistant: il suo tipo, e i dati che il filtro
+   * chiede, uguali come testo. Nient'altro lo fa scattare. */
+  if (quando.tipo === "evento") {
+    if (!evento || evento.tipo !== quando.evento) return no;
+    const dati = evento.dati && typeof evento.dati === "object" ? evento.dati : {};
+    const vale = Object.entries(quando.filtro || {}).every(
+      ([k, v]) => !v || String(dati[k] ?? "") === v,
+    );
+    return { scatta: vale, traccia: t };
+  }
+  if (evento) return no;
+
+  /* Un'entita' qualsiasi che cambia stato, da uno stato a un altro (tutti e
+   * due facoltativi), e se si vuole «da almeno X minuti»: allora non scatta al
+   * cambio, ma quando lo stato nuovo e' durato abbastanza. */
+  if (quando.tipo === "stato") {
+    const voluto = (s) => statoNoto(s) && (!quando.a || pulito(s?.state) === quando.a);
+    if (cambio) {
+      if (!quando.entita.includes(cambio.id)) return no;
+      const prima = pulito(cambio.prima?.state);
+      const dopo = pulito(cambio.dopo?.state);
+      if (prima === dopo || !statoNoto(cambio.dopo)) return no;
+      if (quando.da && prima !== quando.da) return no;
+      if (!voluto(cambio.dopo)) {
+        delete t[cambio.id];
+        return no;
+      }
+      if (!quando.per) return { scatta: true, traccia: t };
+      t[cambio.id] = { dal: adesso, fatto: false };
+      return no;
+    }
+    if (!quando.per) return no;
+    for (const id of quando.entita) {
+      const attesa = t[id];
+      if (!attesa || attesa.fatto) continue;
+      if (!voluto(statoDi(id))) {
+        delete t[id];
+        continue;
+      }
+      if (adesso - attesa.dal >= quando.per * MINUTO) {
+        t[id] = { ...attesa, fatto: true };
+        return { scatta: true, traccia: t };
+      }
+    }
+    return no;
+  }
+
+  /* Un attributo che cambia (la sorgente di un lettore, la modalita' di un
+   * clima): al cambio, e se c'e' un valore scritto, solo quando diventa quello. */
+  if (quando.tipo === "attributo") {
+    if (!cambio || cambio.id !== quando.entita || !quando.attributo) return no;
+    const leggi = (s) => {
+      const v = s?.attributes?.[quando.attributo];
+      return v === undefined || v === null
+        ? ""
+        : typeof v === "object"
+          ? JSON.stringify(v)
+          : String(v);
+    };
+    const prima = leggi(cambio.prima);
+    const dopo = leggi(cambio.dopo);
+    if (prima === dopo) return no;
+    return { scatta: !quando.valore || dopo === quando.valore, traccia: t };
+  }
+
+  if (quando.tipo === "orario" || quando.tipo === "ogni") {
     if (cambio) return no;
     const da = Math.max(giroPrima ?? adesso - RECUPERO_DELL_ORARIO, adesso - RECUPERO_DELL_ORARIO);
     const candidati = [
@@ -725,8 +1055,8 @@ export function valutaIlQuando(
 /** Le entita' il cui cambio puo' far scattare questo QUANDO. */
 export function entitaDelQuando(quando) {
   if (!quando) return [];
-  if (["apertura", "movimento"].includes(quando.tipo)) return quando.entita;
-  if (["valore", "antifurto", "elettrodomestico"].includes(quando.tipo))
+  if (["apertura", "movimento", "stato"].includes(quando.tipo)) return quando.entita;
+  if (["valore", "antifurto", "elettrodomestico", "attributo"].includes(quando.tipo))
     return quando.entita ? [quando.entita] : [];
   return [];
 }
@@ -765,12 +1095,49 @@ export function condizioneVera(c, { stati = {}, adesso } = {}) {
     if (!s || !statoNoto(s)) return false;
     return c.vale === "spento" ? !acceso(s) : acceso(s);
   }
+  /* Il sole sopra o sotto l'orizzonte: lo dice `sun.sun`, e senza lui il
+   * conto dell'alba e del tramonto. */
+  if (c.tipo === "sole") {
+    const sun = pulito(statoDi("sun.sun")?.state);
+    const sopra =
+      sun === "above_horizon"
+        ? true
+        : sun === "below_horizon"
+          ? false
+          : !eNotte({}, { adesso, statoDi });
+    return c.posizione === "sotto" ? !sopra : sopra;
+  }
+  /* «È in uno di questi stati»: si scrivono separati da virgole. */
+  if (c.tipo === "uguale") {
+    const s = statoDi(c.entita);
+    if (!s) return false;
+    const voluti = c.valore
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+    const dentro = voluti.includes(pulito(s.state));
+    return c.non ? !dentro : dentro;
+  }
+  if (c.tipo === "attributo") {
+    const v = statoDi(c.entita)?.attributes?.[c.attributo];
+    if (v === undefined || v === null) return false;
+    if (c.confronto === "uguale")
+      return (typeof v === "object" ? JSON.stringify(v) : String(v)) === c.valore;
+    const n = numero(v);
+    const soglia = numero(c.valore);
+    return n !== null && soglia !== null && sogliaPassata(c.confronto, soglia, n);
+  }
   const n = valoreNumerico(statoDi(c.entita));
   return n !== null && sogliaPassata(c.verso, c.soglia, n);
 }
 
-export function soloSeVale(condizioni, contesto) {
-  return (Array.isArray(condizioni) ? condizioni : []).every((c) => condizioneVera(c, contesto));
+/** Il SOLO SE: tutte le condizioni (di serie), o almeno una. Nessuna: vale. */
+export function soloSeVale(condizioni, contesto, tutte = true) {
+  const elenco = Array.isArray(condizioni) ? condizioni : [];
+  if (!elenco.length) return true;
+  return tutte
+    ? elenco.every((c) => condizioneVera(c, contesto))
+    : elenco.some((c) => condizioneVera(c, contesto));
 }
 
 /* ── ALLORA ─────────────────────────────────────────────────────────────── */
@@ -803,21 +1170,83 @@ export function azioneDellaPlancia(azione) {
  * sono due cose — accenderlo, poi dirgli la temperatura. `azioni` sono le
  * Azioni della plancia (`cd_quick_actions`), per nome.
  */
+/* Le entita' di un'azione, divise per dominio: «accendi la luce e la presa»
+ * sono due servizi, `light.turn_on` e `switch.turn_on`. Una sola entita'
+ * resta una stringa, come Home Assistant la scrive di solito. */
+function perDominio(entita) {
+  const gruppi = new Map();
+  for (const id of entita) {
+    const d = dominioDi(id);
+    if (!gruppi.has(d)) gruppi.set(d, []);
+    gruppi.get(d).push(id);
+  }
+  return [...gruppi].map(([d, ids]) => [d, ids.length === 1 ? ids[0] : ids]);
+}
+
 export function serviziDellAzione(azione, { azioni = [], stati = {} } = {}) {
   const a = azionePulita(azione);
   if (!a) return [];
-  const id = a.entita;
-  const d = id ? dominioDi(id) : "";
-  if (a.tipo === "accendi") {
-    if (d === "script" || d === "scene")
-      return [{ domain: d, service: "turn_on", data: { entity_id: id } }];
-    if (d === "button" || d === "input_button")
-      return [{ domain: d, service: "press", data: { entity_id: id } }];
-    const data = { entity_id: id };
-    if (a.livello) data.brightness_pct = a.livello;
-    return [{ domain: d, service: "turn_on", data }];
+  if (a.tipo === "accendi")
+    return perDominio(a.entita).map(([d, id]) => {
+      if (d === "script" || d === "scene")
+        return { domain: d, service: "turn_on", data: { entity_id: id } };
+      if (d === "button" || d === "input_button")
+        return { domain: d, service: "press", data: { entity_id: id } };
+      const data = { entity_id: id };
+      if (a.livello && d === "light") data.brightness_pct = a.livello;
+      return { domain: DOMINI.accendi.includes(d) ? d : "homeassistant", service: "turn_on", data };
+    });
+  if (a.tipo === "spegni")
+    return perDominio(a.entita).map(([d, id]) => ({
+      domain: DOMINI.spegni.includes(d) ? d : "homeassistant",
+      service: "turn_off",
+      data: { entity_id: id },
+    }));
+  const id = Array.isArray(a.entita) && a.entita.length === 1 ? a.entita[0] : a.entita;
+  if (a.tipo === "imposta") {
+    const d = dominioDi(a.entita);
+    if (d === "input_boolean")
+      return [
+        {
+          domain: d,
+          service: ["on", "true", "1", "si", "sì"].includes(a.valore.toLowerCase())
+            ? "turn_on"
+            : "turn_off",
+          data: { entity_id: a.entita },
+        },
+      ];
+    if (d === "input_select" || d === "select")
+      return [
+        { domain: d, service: "select_option", data: { entity_id: a.entita, option: a.valore } },
+      ];
+    if (d === "input_number" || d === "number") {
+      const n = numero(a.valore);
+      return n === null
+        ? []
+        : [{ domain: d, service: "set_value", data: { entity_id: a.entita, value: n } }];
+    }
+    return [{ domain: d, service: "set_value", data: { entity_id: a.entita, value: a.valore } }];
   }
-  if (a.tipo === "spegni") return [{ domain: d, service: "turn_off", data: { entity_id: id } }];
+  if (a.tipo === "media") {
+    const servizio = {
+      play: "media_play",
+      pausa: "media_pause",
+      stop: "media_stop",
+      successivo: "media_next_track",
+      volume: "volume_set",
+      sorgente: "select_source",
+    }[a.comando];
+    const data = { entity_id: id };
+    if (a.comando === "volume") data.volume_level = Number(a.valore) / 100;
+    if (a.comando === "sorgente") data.source = a.valore;
+    return [{ domain: "media_player", service: servizio, data }];
+  }
+  if (a.tipo === "servizio") {
+    const [domain, service] = a.servizio.split(".");
+    const data = { ...a.dati };
+    if (a.entita.length) data.entity_id = a.entita.length === 1 ? a.entita[0] : a.entita;
+    return [{ domain, service, data }];
+  }
   if (a.tipo === "tapparella") {
     if (a.modo === "posizione")
       return [
@@ -838,9 +1267,17 @@ export function serviziDellAzione(azione, { azioni = [], stati = {} } = {}) {
   if (a.tipo === "clima") {
     if (a.modo === "spegni")
       return [{ domain: "climate", service: "turn_off", data: { entity_id: id } }];
-    const spento = pulito(stati[id]?.state) === "off";
+    const spenti = a.entita.filter((e) => pulito(stati[e]?.state) === "off");
     return [
-      ...(spento ? [{ domain: "climate", service: "turn_on", data: { entity_id: id } }] : []),
+      ...(spenti.length
+        ? [
+            {
+              domain: "climate",
+              service: "turn_on",
+              data: { entity_id: spenti.length === 1 ? spenti[0] : spenti },
+            },
+          ]
+        : []),
       {
         domain: "climate",
         service: "set_temperature",
@@ -867,6 +1304,8 @@ export function passiDellAllora(allora, contesto = {}) {
     const a = azionePulita(una);
     if (!a) continue;
     if (a.tipo === "aspetta") passi.push({ aspetta: a.minuti * MINUTO });
+    else if (a.tipo === "aspettaChe")
+      passi.push({ attendi: { entita: a.entita, stato: a.stato, per: a.massimo * MINUTO } });
     else if (a.tipo === "notifica") passi.push({ notifica: a.testo });
     else for (const servizio of serviziDellAzione(a, contesto)) passi.push({ servizio });
   }
@@ -956,14 +1395,14 @@ export function cronoProssimo(crono, adesso) {
 export function prossimiEventi(automazioni, adesso, statoDi = null, quanti = 3) {
   const fuori = [];
   for (const a of automazioni || []) {
-    if (!a?.attiva) continue;
+    if (!eAttivaAdesso(a, adesso)) continue;
     if (a.tipo === "crono") {
       if (!a.crono.termostati.length) continue;
       const p = cronoProssimo(a.crono, adesso);
       if (p) fuori.push({ id: a.id, alle: p.alle, crono: p.voluto });
       continue;
     }
-    if (a.quando?.tipo !== "orario") continue;
+    if (a.quando?.tipo !== "orario" && a.quando?.tipo !== "ogni") continue;
     const alle = prossimoIstante(a.quando, adesso, statoDi);
     if (alle !== null) fuori.push({ id: a.id, alle });
   }

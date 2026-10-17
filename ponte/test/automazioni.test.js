@@ -19,6 +19,10 @@ import test from "node:test";
 
 import {
   albaETramonto,
+  azionePulita,
+  eAttivaAdesso,
+  servizioPermesso,
+  soloSeVale,
   automazionePulita,
   automazioniPulite,
   azioneDellaPlancia,
@@ -62,9 +66,11 @@ test("si pulisce quello che arriva: tipi, domini, limiti", () => {
   });
   assert.equal(a.nome, "Luce");
   assert.deepEqual(a.quando.entita, ["binary_sensor.pir"]);
-  assert.equal(a.soloSe.length, 2, "al massimo due condizioni");
+  assert.equal(a.soloSe.length, 3);
+  assert.equal(a.tutte, true, "di serie tutte le condizioni");
+  assert.equal(a.modo, "ricomincia");
   assert.deepEqual(a.allora, [
-    { tipo: "accendi", entita: "light.corridoio", livello: 100 },
+    { tipo: "accendi", entita: ["light.corridoio"], livello: 100 },
     { tipo: "aspetta", minuti: 720 },
   ]);
   assert.equal(automazionePulita({ nome: "senza id" }), null);
@@ -632,4 +638,330 @@ test("le automazioni le scrive solo chi ha un utente", () => {
   assert.deepEqual(conservaLeAutomazioni({ cd_automazioni: "[2]" }, salvati, "u1"), {
     cd_automazioni: "[2]",
   });
+});
+
+/* ── i pezzi generici: tutta Home Assistant, non solo la plancia ─────────── */
+
+test("quando un'entità qualsiasi cambia stato: da, a, e «da almeno X minuti»", () => {
+  const q = regola({
+    tipo: "stato",
+    entita: ["input_select.modo"],
+    da: "giorno",
+    a: "notte",
+  }).quando;
+  const c = (p, d) => ({ id: "input_select.modo", prima: s(p), dopo: s(d) });
+  assert.equal(valutaIlQuando(q, { cambio: c("giorno", "notte"), adesso: 1 }).scatta, true);
+  assert.equal(valutaIlQuando(q, { cambio: c("ospiti", "notte"), adesso: 1 }).scatta, false);
+  const per = regola({ tipo: "stato", entita: ["binary_sensor.porta"], a: "on", per: 5 }).quando;
+  let r = valutaIlQuando(per, {
+    cambio: { id: "binary_sensor.porta", prima: s("off"), dopo: s("on") },
+    adesso: alle(17, 10),
+  });
+  assert.equal(r.scatta, false, "non subito");
+  const aperta = { "binary_sensor.porta": s("on") };
+  r = valutaIlQuando(per, { stati: aperta, adesso: alle(17, 10, 4), traccia: r.traccia });
+  assert.equal(r.scatta, false);
+  r = valutaIlQuando(per, { stati: aperta, adesso: alle(17, 10, 5), traccia: r.traccia });
+  assert.equal(r.scatta, true, "dopo cinque minuti aperta");
+  assert.equal(
+    valutaIlQuando(per, { stati: aperta, adesso: alle(17, 10, 9), traccia: r.traccia }).scatta,
+    false,
+  );
+});
+
+test("quando cambia un attributo, e quando arriva un evento del bus col suo filtro", () => {
+  const attr = regola({
+    tipo: "attributo",
+    entita: "media_player.tv",
+    attributo: "source",
+    valore: "HDMI 1",
+  }).quando;
+  const tv = (sorgente) => s("on", { source: sorgente });
+  assert.equal(
+    valutaIlQuando(attr, {
+      cambio: { id: "media_player.tv", prima: tv("TV"), dopo: tv("HDMI 1") },
+      adesso: 1,
+    }).scatta,
+    true,
+  );
+  assert.equal(
+    valutaIlQuando(attr, {
+      cambio: { id: "media_player.tv", prima: tv("TV"), dopo: tv("HDMI 2") },
+      adesso: 1,
+    }).scatta,
+    false,
+  );
+  const ev = regola({
+    tipo: "evento",
+    evento: "zha_event",
+    filtro: { command: "on", device_ieee: "aa:bb" },
+  }).quando;
+  assert.equal(
+    valutaIlQuando(ev, {
+      evento: { tipo: "zha_event", dati: { command: "on", device_ieee: "aa:bb" } },
+      adesso: 1,
+    }).scatta,
+    true,
+  );
+  assert.equal(
+    valutaIlQuando(ev, {
+      evento: { tipo: "zha_event", dati: { command: "off", device_ieee: "aa:bb" } },
+      adesso: 1,
+    }).scatta,
+    false,
+  );
+  assert.equal(
+    valutaIlQuando(ev, { evento: { tipo: "deconz_event", dati: {} }, adesso: 1 }).scatta,
+    false,
+  );
+});
+
+test("ogni N minuti, contati dalla mezzanotte", () => {
+  const q = regola({ tipo: "ogni", minuti: 30 }).quando;
+  assert.equal(
+    valutaIlQuando(q, { adesso: alle(17, 10, 30, 5), giroPrima: alle(17, 10, 29, 45) }).scatta,
+    true,
+  );
+  assert.equal(
+    valutaIlQuando(q, { adesso: alle(17, 10, 40), giroPrima: alle(17, 10, 39, 40) }).scatta,
+    false,
+  );
+  assert.equal(prossimoIstante(q, alle(17, 10, 40)), alle(17, 11));
+});
+
+test("solo se: stato fra quelli scritti, attributo, sole, e «almeno una»", () => {
+  const stati = {
+    "input_select.modo": s("vacanza"),
+    "climate.s": s("heat", { temperature: 21, hvac_action: "heating" }),
+    "sun.sun": s("below_horizon"),
+  };
+  const ctx = { stati, adesso: 1 };
+  assert.equal(
+    condizioneVera({ tipo: "uguale", entita: "input_select.modo", valore: "casa, vacanza" }, ctx),
+    true,
+  );
+  assert.equal(
+    condizioneVera(
+      { tipo: "uguale", entita: "input_select.modo", valore: "vacanza", non: true },
+      ctx,
+    ),
+    false,
+  );
+  assert.equal(
+    condizioneVera(
+      {
+        tipo: "attributo",
+        entita: "climate.s",
+        attributo: "hvac_action",
+        confronto: "uguale",
+        valore: "heating",
+      },
+      ctx,
+    ),
+    true,
+  );
+  assert.equal(
+    condizioneVera(
+      {
+        tipo: "attributo",
+        entita: "climate.s",
+        attributo: "temperature",
+        confronto: "sopra",
+        valore: "22",
+      },
+      ctx,
+    ),
+    false,
+  );
+  assert.equal(condizioneVera({ tipo: "sole", posizione: "sotto" }, ctx), true);
+  const una = automazionePulita({
+    id: "x",
+    quando: {},
+    soloSe: [
+      { tipo: "sole", posizione: "sopra" },
+      { tipo: "uguale", entita: "input_select.modo", valore: "vacanza" },
+    ],
+    tutte: false,
+    allora: [],
+  });
+  assert.equal(una.tutte, false);
+  assert.equal(soloSeVale(una.soloSe, ctx, una.tutte), true, "almeno una");
+  assert.equal(soloSeVale(una.soloSe, ctx, true), false, "tutte no");
+});
+
+test("allora: più entità per riga, valori, lettori, e il servizio a mano senza le porte chiuse", () => {
+  const due = serviziDellAzione({
+    tipo: "accendi",
+    entita: ["light.a", "light.b", "switch.c"],
+    livello: 40,
+  });
+  assert.deepEqual(due, [
+    {
+      domain: "light",
+      service: "turn_on",
+      data: { entity_id: ["light.a", "light.b"], brightness_pct: 40 },
+    },
+    { domain: "switch", service: "turn_on", data: { entity_id: "switch.c" } },
+  ]);
+  assert.deepEqual(
+    serviziDellAzione({ tipo: "imposta", entita: "input_number.soglia", valore: "21,5" })[0],
+    {
+      domain: "input_number",
+      service: "set_value",
+      data: { entity_id: "input_number.soglia", value: 21.5 },
+    },
+  );
+  assert.equal(
+    serviziDellAzione({ tipo: "imposta", entita: "select.modo", valore: "eco" })[0].service,
+    "select_option",
+  );
+  assert.deepEqual(
+    serviziDellAzione({
+      tipo: "media",
+      entita: ["media_player.tv"],
+      comando: "volume",
+      valore: 25,
+    })[0].data,
+    {
+      entity_id: "media_player.tv",
+      volume_level: 0.25,
+    },
+  );
+  assert.deepEqual(
+    serviziDellAzione({
+      tipo: "servizio",
+      servizio: "notify.mobile_app_x",
+      entita: [],
+      dati: '{"message":"Ciao","entity_id":"lock.porta"}',
+    })[0],
+    { domain: "notify", service: "mobile_app_x", data: { message: "Ciao" } },
+    "entity_id dai dati non passa: le entità si scelgono a parte",
+  );
+  for (const chiuso of [
+    "lock.unlock",
+    "alarm_control_panel.alarm_disarm",
+    "homeassistant.restart",
+    "hassio.host_shutdown",
+    "shell_command.x",
+    "automation.reload",
+    "zha.remove",
+  ])
+    assert.equal(servizioPermesso(chiuso), false, chiuso);
+  assert.equal(servizioPermesso("light.turn_on"), true);
+  assert.equal(
+    azionePulita({ tipo: "servizio", servizio: "lock.unlock", entita: ["lock.porta"] }),
+    null,
+  );
+  const passi = passiDellAllora([
+    { tipo: "aspettaChe", entita: "binary_sensor.porta", stato: "off", massimo: 5 },
+  ]);
+  assert.deepEqual(passi, [
+    { attendi: { entita: "binary_sensor.porta", stato: "off", per: 5 * MINUTO } },
+  ]);
+});
+
+test("attiva fino a una data, spenta fino a una data", () => {
+  const spenta = automazionePulita({
+    id: "x",
+    quando: {},
+    allora: [],
+    scadenza: { data: "2026-10-20", stato: "spenta" },
+  });
+  assert.equal(eAttivaAdesso(spenta, alle(19, 12)), false, "in vacanza fino al 20");
+  assert.equal(eAttivaAdesso(spenta, alle(20, 0, 1)), true);
+  const finoAl = automazionePulita({
+    id: "y",
+    quando: {},
+    allora: [],
+    scadenza: { data: "2026-10-20", stato: "attiva" },
+  });
+  assert.equal(eAttivaAdesso(finoAl, alle(19, 12)), true);
+  assert.equal(eAttivaAdesso(finoAl, alle(21, 12)), false);
+  assert.equal(
+    eAttivaAdesso({ ...finoAl, attiva: false }, alle(19, 12)),
+    false,
+    "l'interruttore vince",
+  );
+});
+
+test("la casa: aspetta finché la porta si chiude, ignora o mette in coda, e non più di una volta ogni X minuti", async () => {
+  const porta = {
+    id: "porta",
+    nome: "Porta",
+    quando: { tipo: "apertura", entita: ["binary_sensor.porta"], verso: "apre" },
+    allora: [
+      { tipo: "accendi", entita: ["light.ingresso"] },
+      { tipo: "aspettaChe", entita: "binary_sensor.porta", stato: "off", massimo: 10 },
+      { tipo: "spegni", entita: ["light.ingresso"] },
+    ],
+    modo: "ignora",
+    pausa: 30,
+  };
+  const casa = unaCasa({ automazioni: [porta], stati: { "binary_sensor.porta": s("on") } });
+  const a = casa.fai();
+  a.quandoCambia("binary_sensor.porta", s("on"), s("off"));
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(
+    casa.chiamate.map((c) => c.service),
+    ["turn_on"],
+  );
+  a.quandoCambia("binary_sensor.porta", s("on"), s("off"));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(casa.chiamate.length, 1, "in corso: ignora");
+  casa.mappa.set("binary_sensor.porta", s("off"));
+  a.quandoCambia("binary_sensor.porta", s("off"), s("on"));
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(
+    casa.chiamate.map((c) => c.service),
+    ["turn_on", "turn_off"],
+    "chiusa: va avanti",
+  );
+  casa.passa(5);
+  a.quandoCambia("binary_sensor.porta", s("on"), s("off"));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(casa.chiamate.length, 2, "dentro la pausa di trenta minuti non riparte");
+  // Il tempo massimo: la porta resta aperta, e dopo dieci minuti si va avanti.
+  casa.passa(30);
+  casa.mappa.set("binary_sensor.porta", s("on"));
+  a.quandoCambia("binary_sensor.porta", s("on"), s("off"));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(casa.chiamate.length, 3);
+  casa.passa(11);
+  await a.battito();
+  assert.equal(casa.chiamate.at(-1).service, "turn_off");
+});
+
+test("la casa ascolta solo gli eventi che servono, e li passa alle automazioni", async () => {
+  const ascoltati = [];
+  const casa = unaCasa({
+    automazioni: [
+      {
+        id: "tasto",
+        nome: "Tasto",
+        quando: { tipo: "evento", evento: "zha_event", filtro: { command: "on" } },
+        allora: [{ tipo: "accendi", entita: ["light.sala"] }],
+      },
+    ],
+  });
+  const a = casa.fai();
+  a.casa.ascolta = async (tipo, cb) => {
+    ascoltati.push(tipo);
+    a._cb = cb;
+    return async () => ascoltati.push(`via ${tipo}`);
+  };
+  await a._sincronizzaGliEventi();
+  assert.deepEqual(ascoltati, ["zha_event"]);
+  a._cb({ data: { command: "on" } });
+  await new Promise((r) => setImmediate(r));
+  assert.equal(casa.chiamate[0].service, "turn_on");
+  casa.valori.cd_automazioni = "[]";
+  await a._sincronizzaGliEventi();
+  assert.deepEqual(ascoltati, ["zha_event", "via zha_event"]);
+});
+
+test("accendi e spegni trovano ogni entità, mai una serratura", () => {
+  assert.deepEqual(serviziDellAzione({ tipo: "accendi", entita: ["cover.box", "lock.porta"] }), [
+    { domain: "homeassistant", service: "turn_on", data: { entity_id: "cover.box" } },
+  ]);
+  assert.equal(azionePulita({ tipo: "spegni", entita: ["lock.porta", "alarm_control_panel.casa"] }), null);
 });

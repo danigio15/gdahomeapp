@@ -23,6 +23,14 @@
  *    sopravvivere a un riavvio: l'«aspetta due minuti» a meta', la lavatrice
  *    che gira, il valore gia' sopra soglia, l'ultima volta di ognuna.
  *
+ * Non solo le cose che la plancia conosce: un QUANDO puo' guardare qualunque
+ * entita' di Home Assistant, un suo attributo, o un evento del bus (il tasto
+ * Zigbee che manda `zha_event`): a quegli eventi, e solo a quelli che servono
+ * alle automazioni accese, ci si abbona qui (`_sincronizzaGliEventi`). E ogni
+ * automazione dice cosa fare se riscatta mentre e' ancora in corso
+ * (ricomincia, ignora, in coda), una pausa minima fra due volte, e una data
+ * in cui si accende o si spegne da sola.
+ *
  * ── Premium ───────────────────────────────────────────────────────────────
  *
  * Le automazioni sono di gdahome Premium. Senza, restano salvate nella
@@ -51,6 +59,7 @@ import {
   MINUTO,
   automazioniPulite,
   cronoDecide,
+  eAttivaAdesso,
   entitaDelQuando,
   passiDellAllora,
   prossimiEventi,
@@ -225,6 +234,8 @@ export class Automazioni {
   ferma() {
     if (this._battito) this._smetti(this._battito);
     this._battito = null;
+    for (const disdici of this._eventi?.values() || []) void disdici?.();
+    this._eventi?.clear();
   }
 
   /* Dopo un riavvio: le attese rimaste a meta' tornano vive se la casa e'
@@ -254,8 +265,9 @@ export class Automazioni {
       this.memoria.giro = ora;
       if (!this.sbloccato) return;
       const stati = this.stati();
+      void this._sincronizzaGliEventi();
       for (const a of this.elenco()) {
-        if (!a.attiva) continue;
+        if (!eAttivaAdesso(a, ora)) continue;
         if (a.tipo === "crono") {
           await this._crono(a, stati);
           continue;
@@ -267,6 +279,7 @@ export class Automazioni {
       for (const corsa of [...this._vive.values()])
         if (corsa.ferma && Number(corsa.riprendi || 0) <= ora) {
           corsa.ferma = false;
+          delete corsa.attende;
           await this._avanza(corsa);
         }
     } finally {
@@ -282,10 +295,11 @@ export class Automazioni {
   quandoCambia(id, dopo, prima) {
     try {
       if (!this.sbloccato) return;
-      const elenco = this.elenco().filter((a) => a.attiva);
+      const ora = this.adesso();
+      this._liberaChiAttende(id, dopo);
+      const elenco = this.elenco().filter((a) => eAttivaAdesso(a, ora));
       if (!elenco.length) return;
       const persona = /^(person|device_tracker)\./.test(String(id));
-      const ora = this.adesso();
       let stati = null;
       for (const a of elenco) {
         if (a.tipo === "crono") {
@@ -310,9 +324,85 @@ export class Automazioni {
     }
   }
 
-  _valuta(a, { stati, adesso, giroPrima = null, cambio = null }) {
+  /* «Aspetta finche'…»: un'entita' che diventa lo stato atteso libera la
+   * corsa ferma su di lei. Il tempo massimo lo guarda il battito. */
+  _liberaChiAttende(id, dopo) {
+    for (const corsa of [...this._vive.values()]) {
+      const attende = corsa.attende;
+      if (!corsa.ferma || !attende || attende.entita !== id) continue;
+      if (String(dopo?.state ?? "") !== attende.stato) continue;
+      corsa.ferma = false;
+      delete corsa.attende;
+      this._avanza(corsa).catch((errore) =>
+        this.registro.attenzione(`automazione «${corsa.nome}»: ${errore?.message || errore}`),
+      );
+    }
+  }
+
+  /* Gli eventi del bus che servono alle automazioni accese: ci si abbona a
+   * quelli, e solo a quelli, e ci si disdice da quelli che non servono piu'.
+   * `state_changed` no: e' gia' lo specchio della sentinella, e un'automazione
+   * che lo chiedesse riceverebbe tutta la casa. */
+  async _sincronizzaGliEventi() {
+    if (!this.casa?.ascolta || this._abbonando) return;
+    this._eventi ??= new Map();
+    const ora = this.adesso();
+    const servono = new Set(
+      this.sbloccato
+        ? this.elenco()
+            .filter((a) => eAttivaAdesso(a, ora) && a.quando?.tipo === "evento")
+            .map((a) => a.quando.evento)
+            .filter((tipo) => tipo && tipo !== "state_changed")
+        : [],
+    );
+    this._abbonando = true;
+    try {
+      for (const [tipo, disdici] of [...this._eventi]) {
+        if (servono.has(tipo)) continue;
+        this._eventi.delete(tipo);
+        await disdici?.();
+      }
+      for (const tipo of servono) {
+        if (this._eventi.has(tipo)) continue;
+        try {
+          const disdici = await this.casa.ascolta(
+            tipo,
+            (evento) => this.quandoEvento(tipo, evento?.data),
+            { onCaduto: () => this._eventi?.delete(tipo) },
+          );
+          this._eventi.set(tipo, disdici);
+        } catch (errore) {
+          this.registro.attenzione(
+            `automazioni: l'evento «${tipo}» non si ascolta (${errore?.message || errore})`,
+          );
+        }
+      }
+    } finally {
+      this._abbonando = false;
+    }
+  }
+
+  /** Un evento del bus di Home Assistant, per le automazioni che lo aspettano. */
+  quandoEvento(tipo, dati) {
+    try {
+      if (!this.sbloccato) return;
+      const ora = this.adesso();
+      let stati = null;
+      for (const a of this.elenco()) {
+        if (!eAttivaAdesso(a, ora) || a.quando?.tipo !== "evento" || a.quando.evento !== tipo)
+          continue;
+        stati ??= this.stati();
+        this._valuta(a, { stati, adesso: ora, evento: { tipo, dati } });
+      }
+    } catch (errore) {
+      this.registro.attenzione(`automazioni: ${errore?.message || errore}`);
+    }
+  }
+
+  _valuta(a, { stati, adesso, giroPrima = null, cambio = null, evento = null }) {
     const prima = this.memoria.tracce[a.id] || {};
     const { scatta, traccia } = valutaIlQuando(a.quando, {
+      evento,
       cambio,
       stati,
       adesso,
@@ -325,7 +415,7 @@ export class Automazioni {
     }
     if (!scatta) return false;
     /* SOLO SE: guardato nel momento in cui il QUANDO scatta, non dopo. */
-    if (!soloSeVale(a.soloSe, { stati, adesso })) return false;
+    if (!soloSeVale(a.soloSe, { stati, adesso }, a.tutte !== false)) return false;
     this.avvia(a).catch((errore) =>
       this.registro.attenzione(`automazione «${a.nome}»: ${errore?.message || errore}`),
     );
@@ -338,6 +428,18 @@ export class Automazioni {
   async avvia(a) {
     if (!this.sbloccato) return null;
     const ora = this.adesso();
+    /* «Non piu' di una volta ogni X minuti»: dall'ultima partenza. */
+    const ultima = this.memoria.ultime[a.id];
+    if (a.pausa && ultima?.alle && ora - ultima.alle < a.pausa * MINUTO) return null;
+    /* Ancora in corso: ignora, o in coda (al piu' tre), o ricomincia. */
+    const viva = this._vive.get(a.id);
+    if (viva && a.modo === "ignora") return null;
+    if (viva && a.modo === "coda") {
+      this._code ??= new Map();
+      const coda = this._code.get(a.id) || 0;
+      if (coda < 3) this._code.set(a.id, coda + 1);
+      return null;
+    }
     const passi = passiDellAllora(a.allora, this._contesto());
     const corsa = { id: a.id, nome: a.nome, passi, indice: 0, riprendi: ora, partita: ora };
     this._vive.set(a.id, corsa);
@@ -351,7 +453,7 @@ export class Automazioni {
     /* Una corsa a meta' di un'automazione tolta, spenta, o di una casa che
      * non e' piu' Premium, si ferma li'. */
     const viva = this.elenco().find((a) => a.id === corsa.id);
-    if (!viva || !viva.attiva || !this.sbloccato) {
+    if (!viva || !eAttivaAdesso(viva, this.adesso()) || !this.sbloccato) {
       this._chiudi(corsa, "fermata");
       return;
     }
@@ -361,6 +463,18 @@ export class Automazioni {
       if (passo.aspetta) {
         corsa.indice = i + 1;
         corsa.riprendi = this.adesso() + passo.aspetta;
+        corsa.ferma = true;
+        this._ricordaLeCorse();
+        return;
+      }
+      /* «Aspetta finche'…»: se e' gia' cosi' si va avanti subito, se no ci si
+       * ferma fino allo stato atteso o al tempo massimo. */
+      if (passo.attendi) {
+        const ora = String(this.stati()[passo.attendi.entita]?.state ?? "");
+        if (ora === passo.attendi.stato) continue;
+        corsa.indice = i + 1;
+        corsa.riprendi = this.adesso() + passo.attendi.per;
+        corsa.attende = { entita: passo.attendi.entita, stato: passo.attendi.stato };
         corsa.ferma = true;
         this._ricordaLeCorse();
         return;
@@ -377,6 +491,12 @@ export class Automazioni {
       }
     }
     if (this._vive.get(corsa.id) === corsa) this._chiudi(corsa, "ok");
+    /* Chi aspettava in coda parte adesso. */
+    const coda = this._code?.get(corsa.id) || 0;
+    if (coda > 0) {
+      this._code.set(corsa.id, coda - 1);
+      await this.avvia(viva);
+    }
   }
 
   async _servizio({ domain, service, data }) {
@@ -417,6 +537,7 @@ export class Automazioni {
       indice: c.indice,
       riprendi: c.riprendi,
       partita: c.partita,
+      ...(c.attende ? { attende: c.attende } : {}),
     }));
     this._salva();
   }
@@ -461,7 +582,7 @@ export class Automazioni {
     return {
       premium: this.sbloccato,
       adesso: ora,
-      attive: elenco.filter((a) => a.attiva).length,
+      attive: elenco.filter((a) => eAttivaAdesso(a, ora)).length,
       prossimi: this.sbloccato ? prossimiEventi(elenco, ora, (id) => stati[id] || null) : [],
       ultime: this.memoria.storia.filter((s) => ids.has(s.id)).slice(0, 6),
       perAutomazione: Object.fromEntries(
