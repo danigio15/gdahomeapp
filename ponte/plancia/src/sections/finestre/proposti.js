@@ -727,7 +727,12 @@ function disegnaEv(widget) {
         .map((riga) => casella(nomeSenzaAuto(riga), esc(riga.value)))
         .join("")}</div>`
     : "";
-  return `<div class="dm-f dm-f-ev">${auto}${evcc ? tastiDiEvcc(evcc) : ""}${wallboxMarkup}</div>`;
+  /* La ricarica di notte, sotto i tasti che comanda: la stessa riga della
+   * tessera, con lo stile che le da' la sua sezione. */
+  const notte = clean(widget?.notte)
+    ? `<div class="dm-f-evcc-notte" data-dm-notte>${esc(widget.notte)}</div>`
+    : "";
+  return `<div class="dm-f dm-f-ev">${auto}${evcc ? tastiDiEvcc(evcc) : ""}${notte}${wallboxMarkup}</div>`;
 }
 
 const COMANDATE_DA_EVCC = new Set(["dm.ev_modalita_ricarica_evcc", "dm.ev_ricarica_sempre_evcc"]);

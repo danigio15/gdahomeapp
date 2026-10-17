@@ -48,6 +48,7 @@ import { costruisciLaConsole, costruisciLaPortaDellApp, PROXY_DELL_INGRESS } fro
 import { Registri } from "./registri.js";
 import { Notifiche } from "./notifiche.js";
 import { Viaggi } from "./viaggi.js";
+import { RicaricaDiNotte } from "./ricarica-di-notte.js";
 
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
@@ -460,6 +461,18 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   commissioni.viaggi = viaggi;
+  /* La ricarica di notte dell'auto elettrica con evcc: la fascia che costa
+   * meno, e la modalita' di evcc giusta a quell'ora anche a plancia chiusa.
+   * Legge le impostazioni dalla plancia principale e gli stati dallo specchio
+   * della casa che le notifiche tengono gia' (`ricarica-di-notte.js`). */
+  const ricaricaDiNotte = new RicaricaDiNotte({
+    cartella: opzioni.cartella,
+    casa,
+    configurazione,
+    stati: (id) => notifiche.sentinella?.stati?.get(id) ?? null,
+    registro,
+  });
+  commissioni.ricaricaDiNotte = ricaricaDiNotte;
   /* «Cosa c'e' in casa» nel config: lo sa l'assistente delle notifiche. */
   commissioni.notifiche = notifiche;
   /* Una casa di prova fatta prima di un riavvio vale ancora: al centralino
@@ -612,6 +625,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   chiamata.avvia();
   void notifiche.parti();
   viaggi.parti();
+  ricaricaDiNotte.parti();
   postino.parti();
   /* Separata dal rapporto, e non per caso: il rapporto resta spento di serie,
    * e le licenze non ne hanno bisogno. Manda solo chi e' la casa. */
@@ -695,6 +709,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chiamata.spegni();
     notifiche.ferma();
     viaggi.ferma();
+    ricaricaDiNotte.ferma();
     postino.ferma();
     licenze.ferma();
     versioneMinima.ferma();
@@ -716,6 +731,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chiamata,
     notifiche,
     viaggi,
+    ricaricaDiNotte,
     ritorno,
     registro,
     postino,

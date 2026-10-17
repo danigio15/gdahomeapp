@@ -89,6 +89,7 @@ import {
   capacitaDellaBatteria,
 } from "../core/vehicle-model.js";
 import { eDellaWallbox } from "../core/wallbox-device-binding.js";
+import { laPastigliaDellaNotte } from "./ricarica-di-notte-section.js";
 import { statoUmanoEV } from "./il-popup-dell-auto-racconta-section.js";
 import { poolList } from "../core/pool-model.js";
 /* La tessera delle segnalazioni chiede il suo conto a chi gia' lo tiene, invece
@@ -3010,6 +3011,12 @@ function evModel(states) {
       foto: lettura.foto || "",
     })),
     evcc: comandiDiEvcc(states),
+    /* La ricarica di notte, in una riga (`ricarica-di-notte-section.js`):
+     * «🌙 Ricarica notturna · Fast fino all'80% o alle 05:00» mentre carica, «🌙 Ricarica notturna
+     * stanotte alle 23:00» quando aspetta. Sta sotto la didascalia della
+     * tessera e dentro la finestra, sotto i tasti di evcc; spenta, niente. */
+    notte: laPastigliaDellaNotte(),
+    sottotitolo: laPastigliaDellaNotte(),
     rows,
   };
 }
@@ -12180,6 +12187,9 @@ export function installHomeWidgetsSection() {
     EVENTO_PIANTE,
     /* E le medie del livello dell'acquario. */
     EVENTO_ACQUARIO,
+    /* La casa ha detto com'e' la notte dell'auto: la riga della ricarica di
+       notte sotto la tessera Auto si rifa' con la sua risposta. */
+    "dashboardmodern:ricarica-notte",
     /* La chat di assistenza dice quando ha una risposta da leggere, e quando
        e' stata letta: la sua tessera compare e sparisce con quello. */
     "dashboardmodern:chat-stato",

@@ -1545,8 +1545,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // con la tendenza della pressione, il punto di rugiada e la frase sulle
   // prossime ore, la pagina `sections/meteo-section.js` e la sua scheda
   // `sections/meteo-editor-section.js`.
+  // 460 con la ricarica di notte: il nucleo puro `core/ricarica-di-notte.js`,
+  // che legge anche il ponte, e la carta `sections/ricarica-di-notte-section.js`.
   assert.ok(
-    relative.length <= 458,
+    relative.length <= 460,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1672,6 +1674,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
    * consiglio deve essere quello di adesso. Il giro e' un calcolo puro, e
    * riscrive la card solo se il messaggio e' cambiato.
    *
+   * Il diciassettesimo e' la ricarica di notte. La notte la fa la casa, ma a
+   * dire «sta caricando» o «finita alle 03:40» e' la casa sola: nessun evento
+   * di Home Assistant lo porta alla plancia. Una domanda al minuto al ponte,
+   * in sola lettura, solo se la plancia si vede e la notte e' accesa; e la
+   * carta si ridisegna solo se si vede.
+   *
    * These are the intervals production is allowed, and they are named here so
    * another one cannot arrive unnoticed. */
   const intervals = [...graph.entries()].filter(([, source]) =>
@@ -1694,6 +1702,7 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
       "src/sections/plancia-a-muro-section.js",
       "src/sections/pool-extra-section.js",
       "src/sections/radar-meteo-section.js",
+      "src/sections/ricarica-di-notte-section.js",
       "src/sections/segnalazioni-section.js",
       "src/sections/spegnimento-programmato-section.js",
     ],

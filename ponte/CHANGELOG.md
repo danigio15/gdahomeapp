@@ -10,6 +10,21 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.14.6
+
+- **Ricarica notturna (auto elettrica con evcc):** nella pagina Auto una carta
+  nuova. Nella fascia scelta (di serie dalle 23:00 alle 05:00), se l'auto è
+  collegata e la batteria è sotto la soglia scelta, evcc passa a **Fast**; si
+  ferma al limite impostato in evcc o all'ora di fine, quello che arriva
+  prima, e poi mette evcc su Spento (o come prima, o Intelligente). Lo fa
+  l'add-on, anche con la plancia e l'app chiuse. Il prezzo lo prende da
+  Impostazioni → Energia (la fascia della notte, se no la tariffa unica) e
+  dice quanto si è caricato e speso. Nel popup dell'Auto: «🌙 Ricarica
+  notturna · Fast fino all'80% o alle 05:00».
+- **Pannello a muro, scene:** un'azione della plancia ha lo stesso disegno di
+  una scena scelta come entità, invece di indovinarlo dal nome; chi ne vuole
+  uno suo lo sceglie nel campo «Icona».
+
 ## 1.14.5
 
 - **Pannello a muro, temperatura:** nel config «A muro» c'è «Il sensore sta:
