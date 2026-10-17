@@ -399,20 +399,17 @@ const ACCENTI = Object.freeze({
   allarme: "#e11d48",
 });
 
-/* Il disegno di un'azione: quello scelto, o uno che le somiglia dal nome. */
-function disegnoDellAzione(azione, scelto = "") {
-  if (clean(scelto)) return clean(scelto);
-  const nome = String(azione?.name || "").toLowerCase();
-  const indizi = [
-    [/buongiorno|mattin|sveglia|morning/, "meteo"],
-    [/esco|uscit|leave|away|fuori/, "aperture"],
-    [/rientr|arriv|casa|home|torno/, "home"],
-    [/cena|pranz|cucin|dinner|lunch/, "cottura"],
-    [/cinema|film|tv|relax|musica|movie/, "media"],
-    [/notte|buonanotte|night|dorm/, "sicurezza"],
-    [/luc|light/, "luci"],
-  ];
-  return indizi.find(([re]) => re.test(nome))?.[1] || "azioni";
+/* Il disegno di un'azione: quello scelto nel config, o quello delle scene.
+ *
+ * Qui il tablet lo indovinava dal nome — «luci» la lampadina, «cinema» la
+ * cassa — e le scene di Home Assistant scelte come entita' avevano invece
+ * sempre il loro. Due tessere che fanno la stessa cosa uscivano diverse: «Luci
+ * salone» con la lampadina, «Modo cinema» con la cassa, la stessa scena scelta
+ * come entita' con il disegno delle scene. «Perche' ci sono due icone diverse?
+ * Sono due scene praticamente uguali.» Adesso una scena e' una scena, comunque
+ * la si scelga; chi ne vuole uno suo lo sceglie nel campo «Icona». */
+function disegnoDellAzione(_azione, scelto = "") {
+  return clean(scelto) || "azioni";
 }
 
 /* ── i comandi verso Home Assistant ──────────────────────────────────────── */

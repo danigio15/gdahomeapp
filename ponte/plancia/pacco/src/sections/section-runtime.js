@@ -533,7 +533,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-UIVMZITC.js";
+} from "../../chunk-A4P3VRMV.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3597,7 +3597,6 @@ var SOURCE_INDEX = Object.freeze({
   "Fasce non impostate: uso la tariffa unica": "No time bands set: using the single rate",
   "Fasce orarie": "Time-of-use bands",
   "Fascia": "Band",
-  "Fascia ${fascia}": "Band ${fascia}",
   "FASE ATTUALE": "CURRENT PHASE",
   "Fase corrente (testo)": "Current phase (text)",
   "Fase della stufa": "Stove phase",
@@ -5629,7 +5628,7 @@ var SOURCE_INDEX = Object.freeze({
   "Riapri il Setup Wizard (connessione · nome · sezioni · luci)": "Reopen the Setup Wizard (connection · name · sections · lights)",
   "Riattiva l'audio": "Unmute",
   "Riavvia": "Restart",
-  "Ricarica di notte": "Night charging",
+  "Ricarica notturna": "Night charging",
   "Ricarica sempre EVCC / Always charge (select)": "EVCC always charge (select)",
   "Ricarica: ${minuti} in ${n} soste": "Charging: ${minuti} in ${n} stops",
   "Ricarica: ${minuti} in 1 sosta": "Charging: ${minuti} in 1 stop",
@@ -6333,7 +6332,6 @@ var SOURCE_INDEX = Object.freeze({
   "tappe": "stops",
   "TARGET RAGGIUNTO": "TARGET REACHED",
   "Target Ricarica (SoC)": "Charge target (SoC)",
-  "Tariffa unica": "Single rate",
   "Tariffe usate dal Report Energia.": "Rates used by the Energy Report.",
   "Tasti accanto alle letture: serrature (chiude e apre), script, button, scene, switch, tapparelle. Un telecomando si accende e si spegne; scritto remote.nome:comando manda quel comando.": "Buttons next to the readings: locks (lock and unlock), scripts, buttons, scenes, switches, blinds. A remote turns on and off; written remote.name:command it sends that command.",
   "Tasti d'inserimento su misura": "Custom arming buttons",
@@ -25319,8 +25317,7 @@ function ilRacconto({ imp, ponte, assente, lettura: lettura3, prezzo, adesso }) 
 function laPastigliaDellaNotte(adesso = Date.now()) {
   const imp = leImpostazioni();
   if (!imp.attiva) return "";
-  const prezzo = ilPrezzo(imp);
-  const fascia2 = prezzo.fascia ? `${prezzo.fascia} ` : "";
+  const nome = t("Ricarica notturna", "Night charging");
   const sessione = state20.ponte?.sessione;
   if (sessione) {
     const modo = nomeDelModo2(sessione.modo);
@@ -25329,14 +25326,14 @@ function laPastigliaDellaNotte(adesso = Date.now()) {
     const limite = letto === null ? "" : pct(letto);
     const alLimite = alPercento(limite);
     const corpo3 = limite ? t(`${modo} fino ${alLimite} o alle ${fine}`, `${modo} until ${limite}% or ${fine}`) : t(`${modo} fino alle ${fine}`, `${modo} until ${fine}`);
-    return `🌙 ${fascia2 ? `${fascia2}· ` : ""}${corpo3}`;
+    return `🌙 ${nome} · ${corpo3}`;
   }
   const dentro3 = fasciaDi(imp, adesso);
   if (dentro3.dentro) return "";
   const prossima = prossimaFascia(imp, adesso);
   if (!prossima || !stessoGiorno(prossima.inizio, adesso)) return "";
   const alle = ora(prossima.inizio);
-  return `🌙 ${fascia2}${t(`stanotte alle ${alle}`, `tonight at ${alle}`)}`;
+  return `🌙 ${nome} ${t(`stanotte alle ${alle}`, `tonight at ${alle}`)}`;
 }
 async function chiediAllaCasa(forza = false) {
   if (state20.chiedendo || !leImpostazioni().attiva) return;
@@ -25383,11 +25380,11 @@ function scheletro() {
   <div class="dm-rn-testa">
     <span class="dm-rn-luna" aria-hidden="true">${ICONA_LUNA}</span>
     <div class="dm-rn-titoli">
-      <h3 class="dm-rn-titolo">${esc(t("Ricarica di notte", "Night charging"))}</h3>
+      <h3 class="dm-rn-titolo">${esc(t("Ricarica notturna", "Night charging"))}</h3>
       <small class="dm-rn-sotto" data-rn="riassunto"></small>
     </div>
     <button type="button" class="dm-rn-int" role="switch" aria-checked="false" data-rn="attiva"
-      aria-label="${esc(t("Ricarica di notte", "Night charging"))}"><span></span></button>
+      aria-label="${esc(t("Ricarica notturna", "Night charging"))}"><span></span></button>
   </div>
   <div class="dm-rn-corpo"><div class="dm-rn-colonna">
   <div class="dm-rn-ore">
@@ -25477,9 +25474,7 @@ function prezzoMarkup(prezzo) {
 }
 function riassunto(imp, prezzo) {
   const pezzi = [];
-  const fascia2 = prezzo.fascia;
-  if (prezzo.fonte === "fascia") pezzi.push(t(`Fascia ${fascia2}`, `Band ${fascia2}`));
-  else if (prezzo.fonte === "unica") pezzi.push(t("Tariffa unica", "Single rate"));
+  pezzi.push(`${imp.da}–${imp.a}`);
   if (prezzo.prezzo) pezzi.push(`${formatNumber(prezzo.prezzo, 2)} €/kWh`);
   const sotto = imp.sotto;
   const ilSotto = ilPercento(sotto);
@@ -25504,7 +25499,7 @@ function laCarta() {
     carta = doc.createElement("section");
     carta.id = "dm-rn";
     carta.className = "dm-rn";
-    carta.setAttribute("aria-label", t("Ricarica di notte", "Night charging"));
+    carta.setAttribute("aria-label", t("Ricarica notturna", "Night charging"));
     evcc.insertAdjacentElement("afterend", carta);
     carta.addEventListener("click", alTocco);
     carta.addEventListener("change", alCambio);
@@ -60643,7 +60638,7 @@ function evModel(states) {
     })),
     evcc: comandiDiEvcc(states),
     /* La ricarica di notte, in una riga (`ricarica-di-notte-section.js`):
-     * «🌙 F3 · Veloce fino all'80% o alle 05:00» mentre carica, «🌙 F3
+     * «🌙 Ricarica notturna · Veloce fino all'80% o alle 05:00» mentre carica, «🌙 Ricarica notturna
      * stanotte alle 23:00» quando aspetta. Sta sotto la didascalia della
      * tessera e dentro la finestra, sotto i tasti di evcc; spenta, niente. */
     notte: laPastigliaDellaNotte(),
@@ -95227,19 +95222,8 @@ var ACCENTI = Object.freeze({
   sicurezza: "#10b981",
   allarme: "#e11d48"
 });
-function disegnoDellAzione(azione, scelto = "") {
-  if (clean(scelto)) return clean(scelto);
-  const nome = String(azione?.name || "").toLowerCase();
-  const indizi2 = [
-    [/buongiorno|mattin|sveglia|morning/, "meteo"],
-    [/esco|uscit|leave|away|fuori/, "aperture"],
-    [/rientr|arriv|casa|home|torno/, "home"],
-    [/cena|pranz|cucin|dinner|lunch/, "cottura"],
-    [/cinema|film|tv|relax|musica|movie/, "media"],
-    [/notte|buonanotte|night|dorm/, "sicurezza"],
-    [/luc|light/, "luci"]
-  ];
-  return indizi2.find(([re]) => re.test(nome))?.[1] || "azioni";
+function disegnoDellAzione(_azione, scelto = "") {
+  return clean(scelto) || "azioni";
 }
 function comanda2(domain, service, data) {
   try {

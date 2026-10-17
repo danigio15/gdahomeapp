@@ -307,15 +307,20 @@ export function ilRacconto({ imp, ponte, assente, lettura, prezzo, adesso }) {
 }
 
 /**
- * La riga della notte sul widget Auto della Home: «🌙 F3 · Veloce fino
- * all'80% o alle 05:00» mentre carica, «🌙 F3 stanotte alle 23:00» quando
- * aspetta la sua ora. Vuota quando e' spenta, o quando stanotte non c'e'.
+ * La riga della notte sul widget Auto della Home: «🌙 Ricarica notturna · Veloce
+ * fino all'80% o alle 05:00» mentre carica, «🌙 Ricarica notturna stanotte alle
+ * 23:00» quando aspetta la sua ora. Vuota quando e' spenta, o quando stanotte
+ * non c'e'.
+ *
+ * Il nome e' «Ricarica notturna» e non la fascia della bolletta: «nel popup non deve
+ * uscire ricarica F3, inventa un nome differente». «F3» e' una sigla del
+ * contratto, che non dice niente a chi guarda l'auto; «notturna» dice quando
+ * a colpo d'occhio, e il nome e' uno solo anche per chi la fascia non ce l'ha.
  */
 export function laPastigliaDellaNotte(adesso = Date.now()) {
   const imp = leImpostazioni();
   if (!imp.attiva) return "";
-  const prezzo = ilPrezzo(imp);
-  const fascia = prezzo.fascia ? `${prezzo.fascia} ` : "";
+  const nome = t("Ricarica notturna", "Night charging");
   const sessione = state.ponte?.sessione;
   if (sessione) {
     const modo = nomeDelModo(sessione.modo);
@@ -326,14 +331,14 @@ export function laPastigliaDellaNotte(adesso = Date.now()) {
     const corpo = limite
       ? t(`${modo} fino ${alLimite} o alle ${fine}`, `${modo} until ${limite}% or ${fine}`)
       : t(`${modo} fino alle ${fine}`, `${modo} until ${fine}`);
-    return `🌙 ${fascia ? `${fascia}· ` : ""}${corpo}`;
+    return `🌙 ${nome} · ${corpo}`;
   }
   const dentro = fasciaDi(imp, adesso);
   if (dentro.dentro) return "";
   const prossima = prossimaFascia(imp, adesso);
   if (!prossima || !stessoGiorno(prossima.inizio, adesso)) return "";
   const alle = ora(prossima.inizio);
-  return `🌙 ${fascia}${t(`stanotte alle ${alle}`, `tonight at ${alle}`)}`;
+  return `🌙 ${nome} ${t(`stanotte alle ${alle}`, `tonight at ${alle}`)}`;
 }
 
 /* ── la casa ─────────────────────────────────────────────────────────────── */
@@ -397,11 +402,11 @@ function scheletro() {
   <div class="dm-rn-testa">
     <span class="dm-rn-luna" aria-hidden="true">${ICONA_LUNA}</span>
     <div class="dm-rn-titoli">
-      <h3 class="dm-rn-titolo">${esc(t("Ricarica di notte", "Night charging"))}</h3>
+      <h3 class="dm-rn-titolo">${esc(t("Ricarica notturna", "Night charging"))}</h3>
       <small class="dm-rn-sotto" data-rn="riassunto"></small>
     </div>
     <button type="button" class="dm-rn-int" role="switch" aria-checked="false" data-rn="attiva"
-      aria-label="${esc(t("Ricarica di notte", "Night charging"))}"><span></span></button>
+      aria-label="${esc(t("Ricarica notturna", "Night charging"))}"><span></span></button>
   </div>
   <div class="dm-rn-corpo"><div class="dm-rn-colonna">
   <div class="dm-rn-ore">
@@ -505,9 +510,10 @@ function prezzoMarkup(prezzo) {
 
 function riassunto(imp, prezzo) {
   const pezzi = [];
-  const fascia = prezzo.fascia;
-  if (prezzo.fonte === "fascia") pezzi.push(t(`Fascia ${fascia}`, `Band ${fascia}`));
-  else if (prezzo.fonte === "unica") pezzi.push(t("Tariffa unica", "Single rate"));
+  /* Gli orari e non la sigla della bolletta: «F3» a chi guarda la carta non
+   * dice quando carica, «23:00–05:00» si'. Da dove viene il prezzo lo dice gia'
+   * il riquadro «Prezzo in fascia». */
+  pezzi.push(`${imp.da}–${imp.a}`);
   if (prezzo.prezzo) pezzi.push(`${formatNumber(prezzo.prezzo, 2)} €/kWh`);
   const sotto = imp.sotto;
   const ilSotto = ilPercento(sotto);
@@ -534,7 +540,7 @@ function laCarta() {
     carta = doc.createElement("section");
     carta.id = "dm-rn";
     carta.className = "dm-rn";
-    carta.setAttribute("aria-label", t("Ricarica di notte", "Night charging"));
+    carta.setAttribute("aria-label", t("Ricarica notturna", "Night charging"));
     evcc.insertAdjacentElement("afterend", carta);
     carta.addEventListener("click", alTocco);
     carta.addEventListener("change", alCambio);

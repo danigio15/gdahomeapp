@@ -3012,7 +3012,7 @@ function evModel(states) {
     })),
     evcc: comandiDiEvcc(states),
     /* La ricarica di notte, in una riga (`ricarica-di-notte-section.js`):
-     * «🌙 F3 · Veloce fino all'80% o alle 05:00» mentre carica, «🌙 F3
+     * «🌙 Ricarica notturna · Veloce fino all'80% o alle 05:00» mentre carica, «🌙 Ricarica notturna
      * stanotte alle 23:00» quando aspetta. Sta sotto la didascalia della
      * tessera e dentro la finestra, sotto i tasti di evcc; spenta, niente. */
     notte: laPastigliaDellaNotte(),

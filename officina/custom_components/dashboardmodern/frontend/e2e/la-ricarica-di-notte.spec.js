@@ -170,7 +170,7 @@ test("la carta sta sotto la console di evcc, spenta di serie, e scrive le scelte
   expect(
     await page.evaluate(() => document.querySelector(".lm-evcc-card")?.nextElementSibling?.id),
   ).toBe("dm-rn");
-  await expect(carta.locator(".dm-rn-titolo")).toHaveText("Ricarica di notte");
+  await expect(carta.locator(".dm-rn-titolo")).toHaveText("Ricarica notturna");
   await expect(carta.locator('[data-rn="attiva"]')).toHaveAttribute("aria-checked", "false");
   await expect(carta.locator('[data-rn="da"]')).toHaveValue("23:00");
   await expect(carta.locator('[data-rn="a"]')).toHaveValue("05:00");
@@ -205,7 +205,7 @@ test("la carta sta sotto la console di evcc, spenta di serie, e scrive le scelte
     });
   await expect(carta.locator('[data-rn="sottoDetto"]')).toHaveText("60%");
   await expect(carta.locator('[data-rn-giorno="6"]')).toHaveAttribute("aria-pressed", "false");
-  await expect(carta.locator(".dm-rn-sotto")).toHaveText("Fascia F3 · 0,13 €/kWh · sotto il 60%");
+  await expect(carta.locator(".dm-rn-sotto")).toHaveText("22:30–05:00 · 0,13 €/kWh · sotto il 60%");
   /* Venerdi' alle 21:30, con l'auto collegata: la carta dice che stanotte parte. */
   await expect(carta.locator('[data-rn="statoTitolo"]')).toHaveText("Stanotte alle 22:30");
   await expect(carta.locator('[data-rn="statoSotto"]')).toHaveText(
@@ -299,7 +299,7 @@ test("sul widget Auto della Home: la riga della notte, e niente se e' spenta", a
   const tessera = page.locator('#dm-widgets .dm-tile[data-dm-widget="ev"]');
   await expect(tessera).toBeVisible({ timeout: 20_000 });
   const riga = tessera.locator("[data-dm-tile-sotto]");
-  await expect(riga).toHaveText("🌙 F3 stanotte alle 23:00", { timeout: 15_000 });
+  await expect(riga).toHaveText("🌙 Ricarica notturna stanotte alle 23:00", { timeout: 15_000 });
 
   await laCasaDice(page, {
     attiva: true,
@@ -310,11 +310,13 @@ test("sul widget Auto della Home: la riga della notte, e niente se e' spenta", a
   await page.evaluate(() =>
     window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} })),
   );
-  await expect(riga).toHaveText("🌙 F3 · Veloce fino all'80% o alle 05:00", { timeout: 15_000 });
+  await expect(riga).toHaveText("🌙 Ricarica notturna · Veloce fino all'80% o alle 05:00", {
+    timeout: 15_000,
+  });
   await fotografa(page, "widget-home", tessera);
   await tessera.click();
   const pastiglia = page.locator("#dm-widget-popup .dm-f-evcc-notte");
-  await expect(pastiglia).toHaveText("🌙 F3 · Veloce fino all'80% o alle 05:00");
+  await expect(pastiglia).toHaveText("🌙 Ricarica notturna · Veloce fino all'80% o alle 05:00");
   await fotografa(page, "widget-finestra", page.locator("#dm-widget-popup .dm-f-ev"));
   await page.keyboard.press("Escape");
 
