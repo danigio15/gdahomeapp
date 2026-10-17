@@ -2,8 +2,8 @@
  *
  * Sono poche, e nessuna è indispensabile: la pagina si legge tutta anche
  * senza JavaScript. La lingua, il menu del telefono che si richiude, la cosa
- * accesa che segue lo scorrimento, e il modulo dei contatti che resta sulla
- * pagina invece di andarsene.
+ * accesa che segue lo scorrimento, le frecce dei nastri di fotografie, e il
+ * modulo dei contatti che resta sulla pagina invece di andarsene.
  */
 
 (function () {
@@ -215,6 +215,44 @@
           if (corrente === "inizio") spia.classList.add("acceso");
         }, 600);
     }
+  }
+
+  /* ── I nastri delle fotografie ────────────────────────────────────────
+   *
+   * Le fotografie della plancia e di gdanav stanno in un nastro che scorre
+   * di lato dentro di sé: col dito, col trackpad, con la rotella e Maiuscole.
+   * Col topo da solo no, e per lui ci sono le due frecce. Senza JavaScript
+   * restano nascoste — un tasto che non fa niente è peggio di nessun tasto —
+   * e si nascondono anche quando il nastro ci sta tutto nello schermo. */
+  var tastiDeiNastri = document.querySelectorAll(".nastro-tasti[data-nastro]");
+  for (var t = 0; t < tastiDeiNastri.length; t += 1) {
+    (function (tasti) {
+      var nastro = document.getElementById(tasti.getAttribute("data-nastro"));
+      var indietro = tasti.querySelector('[data-verso="-1"]');
+      var avanti = tasti.querySelector('[data-verso="1"]');
+      if (!nastro || !indietro || !avanti) return;
+      var guarda = function () {
+        var fine = nastro.scrollWidth - nastro.clientWidth - 2;
+        tasti.hidden = fine <= 0;
+        indietro.disabled = nastro.scrollLeft <= 2;
+        avanti.disabled = nastro.scrollLeft >= fine;
+      };
+      var vai = function (verso) {
+        nastro.scrollBy({
+          left: verso * Math.max(240, nastro.clientWidth * 0.75),
+          behavior: fermi ? "auto" : "smooth",
+        });
+      };
+      indietro.addEventListener("click", function () {
+        vai(-1);
+      });
+      avanti.addEventListener("click", function () {
+        vai(1);
+      });
+      nastro.addEventListener("scroll", guarda, { passive: true });
+      window.addEventListener("resize", guarda);
+      guarda();
+    })(tastiDeiNastri[t]);
   }
 
   /* ── Il modulo dei contatti ───────────────────────────────────────────

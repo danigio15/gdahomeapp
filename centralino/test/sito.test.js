@@ -21,6 +21,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -255,6 +256,38 @@ test("ogni file che le pagine chiamano sta dentro sito/, col nome giusto", () =>
   for (const trovata of leggi("sito/stile.css").matchAll(/url\("?([^")]+)"?\)/g)) {
     if (/^(?:data:|[a-z]+:|\/\/)/i.test(trovata[1])) continue;
     assert.ok(esiste(trovata[1]), `stile.css chiama ${trovata[1]}, e in sito/ non c'e'`);
+  }
+});
+
+test("lo stile e il codice si chiamano col segno di come sono adesso", () => {
+  /* Il server fa rivedere le pagine a ogni visita, ma non `stile.css`,
+     `privacy.css` e `sito.js`: quelli il browser se li tiene quanto gli pare.
+     Il 17 ottobre 2026 il sito rifatto e' arrivato a chi l'aveva appena aperto
+     vestito con lo stile di prima — le fotografie a tutta pagina, le
+     didascalie in mezzo — e nessun errore da nessuna parte. Le pagine li
+     chiamano con un `?v=` che e' l'impronta del file: cambia il file, deve
+     cambiare l'indirizzo. Il segno lo scrive `strumenti/porta-nel-sito.mjs`;
+     qui si guarda che sia quello del file com'e' adesso. */
+  const impronta = (file) =>
+    createHash("sha256")
+      .update(readFileSync(join(RADICE, "sito", file)))
+      .digest("hex")
+      .slice(0, 8);
+  for (const quale of PAGINE) {
+    const chiamati = [
+      ...leggi(quale).matchAll(/(?:src|href)="([\w./-]+\.(?:css|js))(?:\?v=([0-9a-f]*))?"/g),
+    ];
+    for (const file of ["stile.css", "sito.js"])
+      assert.ok(
+        chiamati.some(([, chiamato]) => chiamato === file),
+        `«${quale}» non chiama ${file}`,
+      );
+    for (const [, file, segno] of chiamati)
+      assert.equal(
+        segno,
+        impronta(file),
+        `«${quale}» chiama ${file} senza il segno di com'e' adesso: si rifa' con «node strumenti/porta-nel-sito.mjs»`,
+      );
   }
 });
 

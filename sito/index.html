@@ -37,7 +37,7 @@
       href="caratteri/archivo-variabile.woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="stile.css" />
+    <link rel="stylesheet" href="stile.css?v=4bc08432" />
   </head>
   <body>
     <!-- ── La testata ──────────────────────────────────────────────────── -->
@@ -65,7 +65,7 @@
                 d="M4 7h16M4 12h16M4 17h16"
                 stroke="currentColor"
                 stroke-width="1.8"
-                stroke-linecap="square"
+                stroke-linecap="round"
                 fill="none"
               />
             </svg>
@@ -74,7 +74,7 @@
                 d="M6 6l12 12M18 6L6 18"
                 stroke="currentColor"
                 stroke-width="1.8"
-                stroke-linecap="square"
+                stroke-linecap="round"
                 fill="none"
               />
             </svg>
@@ -117,20 +117,24 @@
 
     <main>
       <!-- ── La copertina ──────────────────────────────────────────────── -->
+      <!-- Il prodotto prima del racconto: la plancia vera sul computer e le
+           luci sul telefono, fotografate con la casa demo del collaudo
+           (`collaudo/fotografa-la-plancia.mjs`). Il palco blu e' un campo
+           pieno, senza sfumature: e' il colore di gdahome. -->
       <section class="apertura" id="inizio">
-        <div class="limite apertura-dentro">
-          <div class="apertura-detto">
-            <h1 data-en="Your home in one dashboard. Away too, with no ports to open.">
-              La tua casa in una plancia. Anche fuori casa, senza aprire porte.
+        <div class="limite">
+          <div class="apertura-testa">
+            <h1
+              data-en="Your home in one dashboard. &lt;span&gt;Away too, with no ports to open.&lt;/span&gt;"
+            >
+              La tua casa in una plancia. <span>Anche fuori casa, senza aprire porte.</span>
             </h1>
             <p
               class="guida"
-              data-en="gdahome shows Home Assistant on your phone as a dashboard — the real one, with its thirty sections — and puts next to it what takes several steps in Home Assistant: pairing a Zigbee device and choosing where it goes, configuring the dashboard, getting in from away. And gdanav, the navigator, is inside."
+              data-en="gdahome puts the real Home Assistant dashboard on your phone, with its thirty sections. It pairs by scanning a QR code, and gdanav, the navigator, is inside."
             >
-              gdahome mostra Home Assistant sul telefono come una plancia — quella vera, con le sue
-              trenta sezioni — e ci mette accanto quello che in Home Assistant richiede più
-              passaggi: abbinare un dispositivo Zigbee e scegliere dove va, configurare la plancia,
-              entrare da fuori casa. E dentro c'è gdanav, il navigatore.
+              gdahome porta sul telefono la plancia vera di Home Assistant, con le sue trenta
+              sezioni. Si abbina inquadrando un QR code, e dentro c’è gdanav, il navigatore.
             </p>
             <div class="bottoni">
               <a class="bottone bottone-pieno" href="#scarica" data-en="Install the add-on"
@@ -142,30 +146,34 @@
             </div>
             <p
               class="sottobottoni"
-              data-en="Pairing happens by scanning a QR code: no address to type, no Home Assistant credentials. Base is free; Premium starts with 14 days free."
+              data-en="Base is free and does not expire. Premium starts with 14 days free."
             >
-              L'abbinamento avviene inquadrando un QR code: nessun indirizzo da digitare, nessuna
-              credenziale di Home Assistant. Base è gratis; Premium comincia con 14 giorni gratis.
+              Base è gratis e non scade. Premium comincia con 14 giorni gratis.
             </p>
           </div>
 
-          <!-- Il prodotto, non il racconto del prodotto: una fotografia vera
-               dell'app, la stessa che sta sul negozio, messa dritta come una
-               tavola di catalogo. -->
-          <div class="apertura-tavola">
-            <figure class="tavola">
+          <div class="palco">
+            <figure class="tablet palco-schermo">
               <img
-                src="statico/schermate/3-le-luci.png"
-                alt="Le luci di casa in gdahome, divise per stanza: ognuna col suo colore, la sua intensità e il suo interruttore."
-                width="380"
-                height="741"
+                src="statico/schermate/plancia-computer.jpg"
+                alt="La plancia di casa sul computer: il meteo, l’antifurto inserito, le persone, l’assistente con le cose da fare e le sezioni coi loro numeri."
+                width="1440"
+                height="900"
                 fetchpriority="high"
-                data-en-alt="The lights of the home in gdahome, room by room: each with its colour, its brightness and its switch."
+                data-en-alt="The home dashboard on a computer: the weather, the alarm set, the people, the assistant with things to do, and the sections with their numbers."
+              />
+            </figure>
+            <figure class="telefono palco-telefono">
+              <img
+                src="statico/schermate/plancia-luci.jpg"
+                alt="Le luci della plancia, divise per stanza: ognuna col suo colore, la sua intensità e il suo interruttore."
+                width="585"
+                height="1266"
+                fetchpriority="high"
+                data-en-alt="The dashboard’s lights, room by room: each with its colour, its brightness and its switch."
               />
               <figcaption>
-                <span
-                  ><span data-en="The lights, room by room">Le luci, stanza per stanza</span></span
-                >
+                <span data-en="The lights, room by room">Le luci, stanza per stanza</span>
                 <span class="spia" id="spia" data-en="on">accesa</span>
               </figcaption>
             </figure>
@@ -173,206 +181,12 @@
         </div>
       </section>
 
-      <!-- La serie: le sezioni della plancia, come pastiglie sotto la
-           copertina. Le icone sono quelle dell'app. -->
-      <div class="serie">
-        <div class="limite">
-          <p class="riga-tecnica serie-titolo">
-            <span data-en="The series" class="riga-tecnica">La serie</span>
-            <span
-              data-en="Thirty sections of the dashboard, each with its own design. One tap, and it is yours."
-              >Trenta sezioni della plancia, ognuna col suo disegno. Un tocco, ed è tua.</span
-            >
-          </p>
-          <ul class="sezioni">
-            <li>
-              <img src="statico/oggetti/home.svg" alt="" width="28" height="28" /><span
-                data-en="Home"
-                >Casa</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/stanze.svg" alt="" width="28" height="28" /><span
-                data-en="Rooms"
-                >Stanze</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/luci.svg" alt="" width="28" height="28" /><span
-                data-en="Lights"
-                >Luci</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/clima.svg" alt="" width="28" height="28" /><span
-                data-en="Climate"
-                >Clima</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/temperatura.svg" alt="" width="28" height="28" /><span
-                data-en="Temperatures"
-                >Temperature</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/tapparelle.svg" alt="" width="28" height="28" /><span
-                data-en="Shutters"
-                >Tapparelle</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/sicurezza.svg" alt="" width="28" height="28" /><span
-                data-en="Security"
-                >Sicurezza</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/telecamere.svg" alt="" width="28" height="28" /><span
-                data-en="Cameras"
-                >Telecamere</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/varchi.svg" alt="" width="28" height="28" /><span
-                data-en="Doors"
-                >Porte</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/energia.svg" alt="" width="28" height="28" /><span
-                data-en="Energy"
-                >Energia</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/solare.svg" alt="" width="28" height="28" /><span
-                data-en="Solar"
-                >Solare</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/batterie.svg" alt="" width="28" height="28" /><span
-                data-en="Batteries"
-                >Batterie</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/ev.svg" alt="" width="28" height="28" /><span
-                data-en="Electric car"
-                >Auto elettrica</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/prese.svg" alt="" width="28" height="28" /><span
-                data-en="Sockets"
-                >Prese</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/elettrodomestici.svg" alt="" width="28" height="28" /><span
-                data-en="Appliances"
-                >Elettrodomestici</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/caldaia.svg" alt="" width="28" height="28" /><span
-                data-en="Boiler"
-                >Caldaia</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/scaldabagno.svg" alt="" width="28" height="28" /><span
-                data-en="Water heater"
-                >Scaldabagno</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/vmc.svg" alt="" width="28" height="28" /><span
-                data-en="Ventilation"
-                >Ricambio d’aria</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/aria.svg" alt="" width="28" height="28" /><span
-                data-en="Air"
-                >Aria</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/irrigazione.svg" alt="" width="28" height="28" /><span
-                data-en="Irrigation"
-                >Irrigazione</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/piscina.svg" alt="" width="28" height="28" /><span
-                data-en="Pool"
-                >Piscina</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/media.svg" alt="" width="28" height="28" /><span
-                data-en="Media"
-                >Media</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/robot.svg" alt="" width="28" height="28" /><span
-                data-en="Robots"
-                >Robot</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/persone.svg" alt="" width="28" height="28" /><span
-                data-en="People"
-                >Persone</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/animali.svg" alt="" width="28" height="28" /><span
-                data-en="Pets"
-                >Animali</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/agenda.svg" alt="" width="28" height="28" /><span
-                data-en="Diary"
-                >Agenda</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/rifiuti.svg" alt="" width="28" height="28" /><span
-                data-en="Waste"
-                >Rifiuti</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/allerte.svg" alt="" width="28" height="28" /><span
-                data-en="Alerts"
-                >Allerte</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/fumo.svg" alt="" width="28" height="28" /><span
-                data-en="Smoke"
-                >Fumo</span
-              >
-            </li>
-            <li>
-              <img src="statico/oggetti/allagamenti.svg" alt="" width="28" height="28" /><span
-                data-en="Floods"
-                >Allagamenti</span
-              >
-            </li>
-          </ul>
-        </div>
-      </div>
-
       <!-- ── La plancia ─────────────────────────────────────────────────── -->
-      <!-- Fotografie vere dell'app, e non la plancia che gira nella pagina.
-           Le fotografie stanno nella repository, e ci sono sempre. -->
-      <section id="plancia">
+      <!-- Fotografie vere della plancia, pagina per pagina, in un nastro che
+           scorre di lato dentro di se' (la pagina no). Le fotografie stanno
+           in `docs/immagini/plancia-*.jpg`, e `porta-nel-sito.mjs` le copia
+           in `statico/schermate/`. -->
+      <section id="plancia" class="fascia">
         <div class="limite">
           <div class="testa-sezione">
             <h2 data-en="A dashboard, not a list of switches.">
@@ -380,74 +194,415 @@
             </h2>
             <p
               class="guida"
-              data-en="The app does not rewrite the dashboard: it shows the real one, the same one the add-on puts in Home Assistant, with its cards, its dialogs and its configuration. The rooms, the lights with their colour, the climate with its curves: these are photographs of the app, and what you see here is what you get when you install it."
+              data-en="The app does not rewrite the dashboard: it shows the real one, the same one the add-on puts in Home Assistant, with its cards, its dialogs and its configuration. What you see here is what you get when you install it."
             >
               L’app non riscrive la plancia: mostra quella vera, la stessa che l’add-on mette in
-              Home Assistant, con le sue tessere, le sue finestre e la sua configurazione. Le
-              stanze, le luci col colore, il clima con le sue curve: sono fotografie dell’app, e
-              quello che si vede qui è quello che si trova installandola.
+              Home Assistant, con le sue tessere, le sue finestre e la sua configurazione. Quello
+              che si vede qui è quello che si trova installandola.
             </p>
           </div>
+        </div>
 
-          <div class="tavole">
-            <figure class="tavola">
-              <img
-                src="statico/schermate/1-la-plancia.png"
-                alt="La plancia di casa: il meteo, l’antifurto, le persone e le sezioni."
-                width="380"
-                height="741"
-                loading="lazy"
-                data-en-alt="The home dashboard: the weather, the alarm, the people and the sections."
-              />
-              <figcaption>
-                <span><span data-en="The home dashboard">La plancia di casa</span></span>
-              </figcaption>
-            </figure>
-            <figure class="tavola">
-              <img
-                src="statico/schermate/4-il-clima.png"
-                alt="Il clima: i termostati della casa con la temperatura voluta e quella vera."
-                width="380"
-                height="741"
-                loading="lazy"
-                data-en-alt="Climate: the home's thermostats with the temperature you want and the real one."
-              />
-              <figcaption>
-                <span
-                  ><span data-en="Climate, room by room">Il clima, stanza per stanza</span></span
+        <div
+          class="nastro"
+          id="nastro-plancia"
+          tabindex="0"
+          role="region"
+          aria-label="Le pagine della plancia"
+          data-en-aria-label="The dashboard’s pages"
+        >
+          <figure class="telefono">
+            <img
+              src="statico/schermate/plancia-casa.jpg"
+              alt="La pagina di casa: il meteo, l’antifurto inserito, le persone, l’assistente con le cose da fare e le sezioni."
+              width="585"
+              height="1266"
+              loading="lazy"
+              data-en-alt="The home page: the weather, the alarm set, the people, the assistant with things to do, and the sections."
+            />
+            <figcaption>
+              <b data-en="The home at a glance">La casa a colpo d’occhio</b>
+              <span data-en="Who is in, what is on, what needs you"
+                >Chi c’è, cosa è acceso, cosa chiede</span
+              >
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/schermate/plancia-energia.jpg"
+              alt="L’energia in questo momento: il fotovoltaico produce 7,40 kW, la rete ne riceve 520 W, la batteria si carica al 68%, la casa ne usa 6,48 kW."
+              width="585"
+              height="1266"
+              loading="lazy"
+              data-en-alt="Energy right now: the solar panels produce 7.40 kW, the grid takes 520 W, the battery is charging at 68%, the home uses 6.48 kW."
+            />
+            <figcaption>
+              <b data-en="Solar, grid and battery">Fotovoltaico, rete e batteria</b>
+              <span data-en="Where the energy goes, right now">Dove va l’energia, adesso</span>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/schermate/plancia-clima.jpg"
+              alt="Il clima: il termostato di ogni stanza, con la temperatura voluta e quella vera."
+              width="585"
+              height="1266"
+              loading="lazy"
+              data-en-alt="Climate: the thermostat of each room, with the temperature you want and the real one."
+            />
+            <figcaption>
+              <b data-en="Climate, room by room">Il clima, stanza per stanza</b>
+              <span data-en="Heating, cooling, the times">Caldo, freddo, gli orari</span>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/schermate/plancia-finestre.jpg"
+              alt="Le finestre: ogni tapparella con la sua posizione, i tasti Apri, Stop e Chiudi e i sensori di apertura."
+              width="585"
+              height="1266"
+              loading="lazy"
+              data-en-alt="The windows: each shutter with its position, the Open, Stop and Close buttons and the opening sensors."
+            />
+            <figcaption>
+              <b data-en="Shutters and windows">Tapparelle e finestre</b>
+              <span data-en="Open, stop, close, one by one or all"
+                >Apri, ferma, chiudi, una o tutte</span
+              >
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/schermate/plancia-sicurezza.jpg"
+              alt="La sicurezza: l’antifurto armato fuori casa, i modi di inserimento, i rilevatori di fumo e la videosorveglianza."
+              width="585"
+              height="1266"
+              loading="lazy"
+              data-en-alt="Security: the alarm armed for away, the arming modes, the smoke detectors and the video surveillance."
+            />
+            <figcaption>
+              <b data-en="The alarm and the cameras">L’antifurto e le telecamere</b>
+              <span data-en="Arm it in one tap">Si inserisce con un tocco</span>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/schermate/plancia-auto.jpg"
+              alt="L’auto elettrica in carica dalla wallbox: la batteria al 74%, la potenza, il tempo che manca e l’autonomia."
+              width="585"
+              height="1266"
+              loading="lazy"
+              data-en-alt="The electric car charging from the wallbox: the battery at 74%, the power, the time left and the range."
+            />
+            <figcaption>
+              <b data-en="The electric car">L’auto elettrica</b>
+              <span data-en="Charge, range, wallbox">Carica, autonomia, wallbox</span>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/schermate/plancia-stanze.jpg"
+              alt="Le stanze, piano per piano: in ognuna le luci accese, le prese, la temperatura e il clima."
+              width="585"
+              height="1266"
+              loading="lazy"
+              data-en-alt="The rooms, floor by floor: in each one the lights on, the sockets, the temperature and the climate."
+            />
+            <figcaption>
+              <b data-en="One room at a time">Una stanza per volta</b>
+              <span data-en="Everything in the room, together">Tutto quello che c’è, insieme</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="limite">
+          <div class="nastro-piede">
+            <p
+              class="nota"
+              data-en="Photographs of the real dashboard, with the demo home: the data is sample data."
+            >
+              Fotografie della plancia vera, con la casa dimostrativa: i dati sono d’esempio.
+            </p>
+            <div class="nastro-tasti" data-nastro="nastro-plancia" hidden>
+              <button
+                type="button"
+                class="tasto-tondo"
+                data-verso="-1"
+                aria-label="Indietro"
+                data-en-aria-label="Back"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                  <path
+                    d="M15 5l-7 7 7 7"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="tasto-tondo"
+                data-verso="1"
+                aria-label="Avanti"
+                data-en-aria-label="Forward"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                  <path
+                    d="M9 5l7 7-7 7"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- L'energia ha una tavola sua: e' la pagina che si guarda di piu',
+               e quella che chi fa impianti fotovoltaici mostra per prima. -->
+          <div class="energia">
+            <div class="energia-detto">
+              <h3 data-en="Solar, grid and battery, at a glance">
+                Fotovoltaico, rete e batteria, a colpo d’occhio
+              </h3>
+              <p
+                data-en="The Energy page draws the flow right now: how much the solar panels produce, how much the grid gives or takes, whether the battery is charging or discharging, and where the energy goes in the home — the wallbox, the kitchen, the garage."
+              >
+                La pagina Energia disegna il flusso di adesso: quanto produce il fotovoltaico,
+                quanto prende o cede la rete, se la batteria si carica o si scarica, e dove va
+                l’energia in casa — la wallbox, la cucina, il garage.
+              </p>
+              <ul class="elenco">
+                <li
+                  data-en="The day, the month and the year, with what was produced, bought and sold"
                 >
-              </figcaption>
-            </figure>
-            <figure class="tavola">
-              <img
-                src="statico/schermate/2-le-plance.png"
-                alt="Il menu dell’app aperto sulla plancia: si sceglie fra le plance della casa."
-                width="380"
-                height="741"
-                loading="lazy"
-                data-en-alt="The app menu open over the dashboard: you choose among the home's dashboards."
-              />
-              <figcaption>
-                <span
-                  ><span data-en="More dashboards, one tap apart"
-                    >Più plance, a un tocco</span
-                  ></span
+                  Il giorno, il mese e l’anno, con quello che si è prodotto, comprato e venduto
+                </li>
+                <li data-en="More than one system, each with its own flow">
+                  Più impianti, ognuno col suo flusso
+                </li>
+                <li
+                  data-en="The same balance as the Home Assistant Energy dashboard, when the sensors are there"
                 >
-              </figcaption>
+                  Lo stesso bilancio della distribuzione Energia di Home Assistant, quando i sensori
+                  ci sono
+                </li>
+              </ul>
+            </div>
+            <figure class="tablet">
+              <img
+                src="statico/schermate/plancia-energia-computer.jpg"
+                alt="La pagina Energia sul computer: il fotovoltaico a 7,40 kW, la rete a −520 W, la batteria che si carica al 68%, la casa a 6,48 kW, e sotto i carichi — wallbox, soggiorno, cucina, bagno, garage e il resto."
+                width="1440"
+                height="900"
+                loading="lazy"
+                data-en-alt="The Energy page on a computer: solar at 7.40 kW, the grid at −520 W, the battery charging at 68%, the home at 6.48 kW, and below the loads — wallbox, living room, kitchen, bathroom, garage and the rest."
+              />
             </figure>
           </div>
 
-          <dl class="scheda schede-sotto">
-            <div>
-              <dt data-en="Thirty sections, ready">Trenta sezioni, già pronte</dt>
-              <dd
-                data-en="Lights, climate, security, energy, windows, batteries, diary and the others, each with its own design. You link the Home Assistant entities, and the dashboard puts them in their place."
+          <div class="serie">
+            <div class="serie-detto">
+              <h3 data-en="Thirty sections, ready">Trenta sezioni, già pronte</h3>
+              <p
+                data-en="Each with its own design. You link the Home Assistant entities, and the dashboard puts them in their place."
               >
-                Luci, clima, sicurezza, energia, finestre, batterie, agenda e le altre, ognuna col
-                suo disegno. Si collegano le entità di Home Assistant, e la plancia le mette al loro
-                posto.
-              </dd>
+                Ognuna col suo disegno. Si collegano le entità di Home Assistant, e la plancia le
+                mette al loro posto.
+              </p>
             </div>
+            <ul class="sezioni">
+              <li>
+                <img src="statico/oggetti/home.svg" alt="" width="28" height="28" /><span
+                  data-en="Home"
+                  >Casa</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/stanze.svg" alt="" width="28" height="28" /><span
+                  data-en="Rooms"
+                  >Stanze</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/luci.svg" alt="" width="28" height="28" /><span
+                  data-en="Lights"
+                  >Luci</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/clima.svg" alt="" width="28" height="28" /><span
+                  data-en="Climate"
+                  >Clima</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/temperatura.svg" alt="" width="28" height="28" /><span
+                  data-en="Temperatures"
+                  >Temperature</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/tapparelle.svg" alt="" width="28" height="28" /><span
+                  data-en="Shutters"
+                  >Tapparelle</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/sicurezza.svg" alt="" width="28" height="28" /><span
+                  data-en="Security"
+                  >Sicurezza</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/telecamere.svg" alt="" width="28" height="28" /><span
+                  data-en="Cameras"
+                  >Telecamere</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/varchi.svg" alt="" width="28" height="28" /><span
+                  data-en="Doors"
+                  >Porte</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/energia.svg" alt="" width="28" height="28" /><span
+                  data-en="Energy"
+                  >Energia</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/solare.svg" alt="" width="28" height="28" /><span
+                  data-en="Solar"
+                  >Solare</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/batterie.svg" alt="" width="28" height="28" /><span
+                  data-en="Batteries"
+                  >Batterie</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/ev.svg" alt="" width="28" height="28" /><span
+                  data-en="Electric car"
+                  >Auto elettrica</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/prese.svg" alt="" width="28" height="28" /><span
+                  data-en="Sockets"
+                  >Prese</span
+                >
+              </li>
+              <li>
+                <img
+                  src="statico/oggetti/elettrodomestici.svg"
+                  alt=""
+                  width="28"
+                  height="28"
+                /><span data-en="Appliances">Elettrodomestici</span>
+              </li>
+              <li>
+                <img src="statico/oggetti/caldaia.svg" alt="" width="28" height="28" /><span
+                  data-en="Boiler"
+                  >Caldaia</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/scaldabagno.svg" alt="" width="28" height="28" /><span
+                  data-en="Water heater"
+                  >Scaldabagno</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/vmc.svg" alt="" width="28" height="28" /><span
+                  data-en="Ventilation"
+                  >Ricambio d’aria</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/aria.svg" alt="" width="28" height="28" /><span
+                  data-en="Air"
+                  >Aria</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/irrigazione.svg" alt="" width="28" height="28" /><span
+                  data-en="Irrigation"
+                  >Irrigazione</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/piscina.svg" alt="" width="28" height="28" /><span
+                  data-en="Pool"
+                  >Piscina</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/media.svg" alt="" width="28" height="28" /><span
+                  data-en="Media"
+                  >Media</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/robot.svg" alt="" width="28" height="28" /><span
+                  data-en="Robots"
+                  >Robot</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/persone.svg" alt="" width="28" height="28" /><span
+                  data-en="People"
+                  >Persone</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/animali.svg" alt="" width="28" height="28" /><span
+                  data-en="Pets"
+                  >Animali</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/agenda.svg" alt="" width="28" height="28" /><span
+                  data-en="Diary"
+                  >Agenda</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/rifiuti.svg" alt="" width="28" height="28" /><span
+                  data-en="Waste"
+                  >Rifiuti</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/allerte.svg" alt="" width="28" height="28" /><span
+                  data-en="Alerts"
+                  >Allerte</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/fumo.svg" alt="" width="28" height="28" /><span
+                  data-en="Smoke"
+                  >Fumo</span
+                >
+              </li>
+              <li>
+                <img src="statico/oggetti/allagamenti.svg" alt="" width="28" height="28" /><span
+                  data-en="Floods"
+                  >Allagamenti</span
+                >
+              </li>
+            </ul>
+          </div>
+
+          <dl class="scheda scheda-due">
             <div>
               <dt data-en="Sections of your own">Le sezioni tue</dt>
               <dd
@@ -471,7 +626,7 @@
       </section>
 
       <!-- ── Come funziona ──────────────────────────────────────────────── -->
-      <section id="come" class="fascia">
+      <section id="come">
         <div class="limite">
           <div class="testa-sezione">
             <h2 data-en="The home starts the connection.">È la casa a iniziare il collegamento.</h2>
@@ -484,6 +639,40 @@
               aperta; i telefoni si collegano da quel lato.
             </p>
           </div>
+
+          <ol class="passi">
+            <li>
+              <span class="passo numero">1</span>
+              <h3 data-en="Install the add-on">Installi l’add-on</h3>
+              <p
+                data-en="From the Home Assistant add-on store, like any other. From then on it updates itself."
+              >
+                Dal negozio degli add-on di Home Assistant, come qualunque altro. Da lì in poi si
+                aggiorna da sé.
+              </p>
+            </li>
+            <li>
+              <span class="passo numero">2</span>
+              <h3 data-en="Scan the QR code">Inquadri il QR code</h3>
+              <p
+                data-en="No address, no Home Assistant credentials: the phone receives &lt;b&gt;a credential of its own&lt;/b&gt;, valid only for that home and revocable with one button. Without a camera you type the code: sixteen characters in four groups."
+              >
+                Nessun indirizzo, nessuna credenziale di Home Assistant: il telefono riceve
+                <b>una credenziale propria</b>, valida solo per quella casa e revocabile con un
+                tasto. Senza fotocamera si digita il codice: sedici caratteri in quattro gruppi.
+              </p>
+            </li>
+            <li>
+              <span class="passo numero">3</span>
+              <h3 data-en="You are home, from away too">Sei a casa, anche da fuori</h3>
+              <p
+                data-en="At home the app goes straight to the add-on. Away, with Premium, it goes through the relay, encrypted end to end: the relay routes, and can read nothing."
+              >
+                In casa l’app va dritta all’add-on. Fuori casa, con Premium, passa dal centralino,
+                cifrata punta a punta: lui instrada, e non può leggere niente.
+              </p>
+            </li>
+          </ol>
 
           <figure class="strada">
             <svg viewBox="0 0 960 320" role="img" aria-labelledby="titolo-strada">
@@ -508,17 +697,13 @@
                 >
                   <path d="M0 0 L10 5 L0 10 z" fill="context-stroke" />
                 </marker>
-                <pattern id="quadretti" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M20 0H0V20" fill="none" stroke="#e3e6eb" stroke-width="1" />
-                </pattern>
               </defs>
-              <rect width="960" height="320" fill="url(#quadretti)" />
 
               <!-- il telefono chiama il centralino -->
               <path
                 d="M206 176 C 256 176, 258 64, 306 64"
                 fill="none"
-                stroke="#4b5563"
+                stroke="#64748b"
                 stroke-width="1.5"
                 stroke-dasharray="5 5"
                 marker-end="url(#punta)"
@@ -543,7 +728,7 @@
               <path
                 d="M730 200 H 774"
                 fill="none"
-                stroke="#0b1220"
+                stroke="#0f172a"
                 stroke-width="1.5"
                 marker-end="url(#punta)"
               />
@@ -554,9 +739,10 @@
                 y="26"
                 width="340"
                 height="76"
+                rx="16"
                 fill="#ffffff"
-                stroke="#0b1220"
-                stroke-width="1"
+                stroke="#94a3b8"
+                stroke-width="1.2"
                 stroke-dasharray="6 4"
               />
               <text
@@ -565,7 +751,7 @@
                 text-anchor="middle"
                 font-size="16"
                 font-weight="700"
-                fill="#0b1220"
+                fill="#0f172a"
                 data-en="the relay"
               >
                 il centralino
@@ -575,21 +761,30 @@
                 y="80"
                 text-anchor="middle"
                 font-size="12.5"
-                fill="#4b5563"
+                fill="#475569"
                 data-en="it routes, and can read nothing"
               >
                 instrada, e non può leggere niente
               </text>
 
               <!-- l'app -->
-              <rect x="36" y="150" width="170" height="100" fill="#ffffff" stroke="#0b1220" />
+              <rect
+                x="36"
+                y="150"
+                width="170"
+                height="100"
+                rx="16"
+                fill="#ffffff"
+                stroke="#cbd5e1"
+                stroke-width="1.2"
+              />
               <text
                 x="121"
                 y="186"
                 text-anchor="middle"
                 font-size="16"
                 font-weight="700"
-                fill="#0b1220"
+                fill="#0f172a"
                 data-en="the app"
               >
                 l'app
@@ -599,7 +794,7 @@
                 y="208"
                 text-anchor="middle"
                 font-size="12.5"
-                fill="#4b5563"
+                fill="#475569"
                 data-en="Android and iPhone"
               >
                 Android e iPhone
@@ -609,7 +804,7 @@
                 y="228"
                 text-anchor="middle"
                 font-size="11.5"
-                fill="#4b5563"
+                fill="#475569"
                 data-en="credential + key, revocable"
               >
                 credenziale + chiave, revocabili
@@ -621,6 +816,7 @@
                 y="150"
                 width="170"
                 height="100"
+                rx="16"
                 fill="#ffffff"
                 stroke="#1d4ed8"
                 stroke-width="2"
@@ -631,7 +827,7 @@
                 text-anchor="middle"
                 font-size="16"
                 font-weight="700"
-                fill="#0b1220"
+                fill="#0f172a"
                 data-en="the add-on"
               >
                 l'add-on
@@ -641,7 +837,7 @@
                 y="208"
                 text-anchor="middle"
                 font-size="12.5"
-                fill="#4b5563"
+                fill="#475569"
                 data-en="at home, with Home Assistant"
               >
                 in casa, con Home Assistant
@@ -651,21 +847,30 @@
                 y="228"
                 text-anchor="middle"
                 font-size="11.5"
-                fill="#4b5563"
+                fill="#475569"
                 data-en="the credentials stay here"
               >
                 le credenziali restano qui
               </text>
 
               <!-- Home Assistant -->
-              <rect x="774" y="150" width="152" height="100" fill="#ffffff" stroke="#0b1220" />
+              <rect
+                x="774"
+                y="150"
+                width="152"
+                height="100"
+                rx="16"
+                fill="#ffffff"
+                stroke="#cbd5e1"
+                stroke-width="1.2"
+              />
               <text
                 x="850"
                 y="192"
                 text-anchor="middle"
                 font-size="15"
                 font-weight="700"
-                fill="#0b1220"
+                fill="#0f172a"
               >
                 Home
               </text>
@@ -675,7 +880,7 @@
                 text-anchor="middle"
                 font-size="15"
                 font-weight="700"
-                fill="#0b1220"
+                fill="#0f172a"
               >
                 Assistant
               </text>
@@ -697,7 +902,7 @@
                 y="116"
                 text-anchor="end"
                 font-size="12"
-                fill="#4b5563"
+                fill="#475569"
                 data-en="from away, with Premium"
               >
                 da fuori, con Premium
@@ -717,7 +922,7 @@
               <path
                 d="M121 272 V 286 M121 286 H 645 M645 286 V 272"
                 fill="none"
-                stroke="#0b1220"
+                stroke="#0f172a"
                 stroke-width="1"
                 stroke-dasharray="3 5"
               />
@@ -726,31 +931,29 @@
                 y="308"
                 text-anchor="middle"
                 font-size="12"
-                fill="#4b5563"
+                fill="#475569"
                 data-en="between the phone and the home: encrypted end to end"
               >
                 fra il telefono e la casa: cifrato punta a punta
               </text>
             </svg>
             <figcaption
-              data-en="Between the phone and the home there is a key exchange that goes through the relay without the relay getting anything out of it; from that moment every message is encrypted end to end. This is not a claim: it is an automated test that records everything crossing the relay and verifies that none of it is readable."
+              data-en="Between the phone and the home there is a key exchange that goes through the relay without the relay getting anything out of it. This is not a claim: an automated test records everything crossing the relay and verifies that none of it is readable."
             >
               Fra il telefono e la casa avviene uno scambio di chiavi che passa dal centralino senza
-              che lui ne ricavi nulla; da quel momento ogni messaggio è cifrato punta a punta. Non è
-              una dichiarazione: è una prova automatica che registra tutto quello che attraversa il
-              centralino e verifica che non contenga niente di leggibile.
+              che lui ne ricavi nulla. Non è una dichiarazione: una prova automatica registra tutto
+              quello che attraversa il centralino e verifica che non contenga niente di leggibile.
             </figcaption>
           </figure>
 
-          <ul class="tre-strade">
+          <ul class="punti">
             <li
-              data-en="&lt;b&gt;Three routes, one home&lt;/b&gt; &lt;span&gt;Which one works depends on where the phone is at that moment, and it changes while the app is open. The app tries them all at once and keeps the first that answers, at every reconnection and not once at startup.&lt;/span&gt;"
+              data-en="&lt;b&gt;Three routes, one home&lt;/b&gt; &lt;span&gt;The app tries them all at once and keeps the first that answers, at every reconnection: which one works depends on where the phone is.&lt;/span&gt;"
             >
               <b>Tre percorsi, una sola casa</b>
               <span
-                >Quale funziona dipende da dove si trova il telefono in quel momento, e cambia
-                mentre l'app è aperta. L'app li prova tutti insieme e tiene il primo che risponde, a
-                ogni riconnessione e non una volta sola all'avvio.</span
+                >L'app li prova tutti insieme e tiene il primo che risponde, a ogni riconnessione:
+                quale funziona dipende da dove si trova il telefono.</span
               >
             </li>
             <li
@@ -760,72 +963,24 @@
               <span>Un comando dato a tre metri di distanza non deve attraversare la rete.</span>
             </li>
             <li
-              data-en="&lt;b&gt;From away, with Premium&lt;/b&gt; &lt;span&gt;The relay runs on a machine of ours: there is nothing to install and nothing to configure. Whoever prefers their own turns one on — it is the same code, and the live test passes identically on both.&lt;/span&gt;"
+              data-en="&lt;b&gt;Your credentials stay where they are&lt;/b&gt; &lt;span&gt;The Supervisor token never leaves the add-on: neither the page nor the phone sees it.&lt;/span&gt;"
             >
-              <b>Da fuori casa, con Premium</b>
+              <b>Le credenziali restano dove sono</b>
               <span
-                >Il centralino gira su una macchina nostra: non c'è niente da installare e niente da
-                configurare. Chi preferisce il proprio se lo accende — è lo stesso codice, e la
-                prova dal vivo passa identica su entrambi.</span
+                >Il token del Supervisor non esce mai dall’add-on: né la pagina né il telefono lo
+                vedono.</span
+              >
+            </li>
+            <li
+              data-en="&lt;b&gt;The relay is ours, or yours&lt;/b&gt; &lt;span&gt;It runs on a gdahome machine: there is nothing to install. Whoever prefers their own turns one on — it is the same code.&lt;/span&gt;"
+            >
+              <b>Il centralino è nostro, o tuo</b>
+              <span
+                >Gira su una macchina di gdahome: non c'è niente da installare. Chi preferisce il
+                proprio se lo accende — è lo stesso codice.</span
               >
             </li>
           </ul>
-
-          <div class="tavola-e-testo al-contrario">
-            <figure class="tavola schermo">
-              <img
-                src="statico/schermate/addon-genera-qr.png"
-                alt="La scheda dell’add-on in Home Assistant: «Abbina un telefono», il tasto Genera QR code e il riquadro dove compare il codice."
-                width="800"
-                height="349"
-                loading="lazy"
-                data-en-alt="The add-on’s page in Home Assistant: “Pair a phone”, the Generate QR code button and the box where the code appears."
-              />
-              <figcaption>
-                <span
-                  ><span data-en="The add-on in Home Assistant: pair a phone"
-                    >L’add-on in Home Assistant: abbina un telefono</span
-                  ></span
-                >
-              </figcaption>
-            </figure>
-            <dl class="scheda">
-              <div>
-                <dt data-en="A QR code, and nothing else">Un QR code, e nient’altro</dt>
-                <dd
-                  data-en="No address, no Home Assistant credentials. You scan the QR code the add-on shows in Home Assistant — or type the code, sixteen characters in four groups, if the camera is not available — and the phone receives &lt;b&gt;a credential of its own&lt;/b&gt;, valid only for that home and revocable with one button."
-                >
-                  Nessun indirizzo, nessuna credenziale di Home Assistant. Si inquadra il QR code
-                  che l’add-on mostra in Home Assistant — o si digita il codice, sedici caratteri in
-                  quattro gruppi, se la fotocamera non è disponibile — e il telefono riceve
-                  <b>una credenziale propria</b>, valida solo per quella casa e revocabile con un
-                  tasto.
-                </dd>
-              </div>
-              <div>
-                <dt data-en="Your Home Assistant credentials stay where they are">
-                  Le credenziali di Home Assistant restano dove sono
-                </dt>
-                <dd
-                  data-en="The Supervisor token never leaves the add-on: neither the page nor the phone sees it. A long-lived token pasted by hand is worth everything and never expires; this one is worth a single home, and it can be revoked."
-                >
-                  Il token del Supervisor non esce mai dall’add-on: né la pagina né il telefono lo
-                  vedono. Un token di lunga durata incollato a mano vale tutto e non scade; questo
-                  vale una casa sola, ed è revocabile.
-                </dd>
-              </div>
-              <div>
-                <dt data-en="More homes, without pairing again">Più case, senza riabbinare</dt>
-                <dd
-                  data-en="Every home has its own credential, and you move from one to the other from the app’s menu. Your parents’ home, the one by the sea, the one belonging to someone who asked for a hand: with Premium up to ten, the same app, the same phone."
-                >
-                  Ogni casa ha la sua credenziale, e si passa dall’una all’altra dal menu dell’app.
-                  La casa dei genitori, quella al mare, quella di chi ha chiesto una mano: con
-                  Premium fino a dieci, la stessa app, lo stesso telefono.
-                </dd>
-              </div>
-            </dl>
-          </div>
         </div>
       </section>
 
@@ -834,132 +989,68 @@
            `statico/app/` e `statico/gdanav/`: sono le schermate dei README,
            ridotte in JPG. Le fa una persona e non uno script, e lo script che
            rifà `statico/` non le tocca. -->
-      <section id="app">
+      <section id="app" class="fascia">
         <div class="limite">
           <div class="testa-sezione">
             <h2 data-en="The whole home on your phone.">Tutta la casa sul telefono.</h2>
             <p
               class="guida"
-              data-en="gdahome is the app for Android and iPhone — and it opens from a browser too — that pairs with the home by scanning a QR code. Inside there is the dashboard; around it, the things that take several steps in Home Assistant: the devices, Zigbee, the configuration, the reports."
+              data-en="gdahome is the app for Android and iPhone — and it opens from a browser too. Inside there is the dashboard; around it, the things that take several steps in Home Assistant: the devices, Zigbee, the configuration, the reports."
             >
-              gdahome è l’app per Android e iPhone — e si apre anche dal browser — che si abbina
-              alla casa inquadrando un QR code. Dentro c’è la plancia; intorno, le cose che in Home
-              Assistant richiedono più passaggi: i dispositivi, lo Zigbee, la configurazione, le
-              segnalazioni.
+              gdahome è l’app per Android e iPhone — e si apre anche dal browser. Dentro c’è la
+              plancia; intorno, le cose che in Home Assistant richiedono più passaggi: i
+              dispositivi, lo Zigbee, la configurazione, le segnalazioni.
             </p>
           </div>
 
-          <div class="tavole">
-            <figure class="tavola">
-              <img
-                src="statico/app/menu.jpg"
-                alt="Il menu dell’app: la casa, la plancia, i dispositivi, gdanav, la configurazione, gli aggiornamenti, lo Zigbee, le segnalazioni e l’assistenza."
-                width="420"
-                height="909"
-                loading="lazy"
-                data-en-alt="The app menu: the home, the dashboard, the devices, gdanav, the configuration, the updates, Zigbee, reports and support."
-              />
-              <figcaption>
-                <span
-                  ><span data-en="The menu: home, dashboards, devices"
-                    >Il menu: casa, plance, dispositivi</span
-                  ></span
-                >
-                <span class="esempio" data-en="sample data">dati d’esempio</span>
-              </figcaption>
-            </figure>
-            <figure class="tavola">
-              <img
-                src="statico/app/plance.jpg"
-                alt="Le plance di una casa: gdahome, Al mare e Ufficio; le ultime due col lucchetto di Premium."
-                width="420"
-                height="909"
-                loading="lazy"
-                data-en-alt="The dashboards of a home: gdahome, Al mare and Ufficio; the last two with the Premium padlock."
-              />
-              <figcaption>
-                <span
-                  ><span data-en="More dashboards for each home"
-                    >Più plance per ogni casa</span
-                  ></span
-                >
-                <span class="esempio" data-en="sample data">dati d’esempio</span>
-              </figcaption>
-            </figure>
-            <figure class="tavola">
-              <img
-                src="statico/app/premium.jpg"
-                alt="La pagina Premium: più plance e più case, da fuori casa, configurazione e Zigbee dall’app, gdanav Premium compreso; 49,99 € all’anno o 4,99 € al mese, con 14 giorni di prova."
-                width="420"
-                height="908"
-                loading="lazy"
-                data-en-alt="The Premium page: more dashboards and homes, from away, configuration and Zigbee from the app, gdanav Premium included; €49.99 a year or €4.99 a month, with a 14-day trial."
-              />
-              <figcaption>
-                <span><span data-en="Premium, 14 days free">Premium, 14 giorni gratis</span></span>
-              </figcaption>
-            </figure>
-          </div>
-
-          <h3 class="sottotitolo" data-en="On the wall and on your wrist">Sul muro e al polso</h3>
-          <p
-            class="guida"
-            data-en="With Premium the home also goes on a tablet fixed to the wall, with big controls taken from the main dashboard, and on the watch: the quick commands, the devices and the gdanav guidance, on Apple Watch and Wear OS."
-          >
-            Con Premium la casa va anche su un tablet fisso al muro, coi comandi grandi presi dalla
-            plancia principale, e sull’orologio: i comandi rapidi, i dispositivi e la guida di
-            gdanav, su Apple Watch e Wear OS.
-          </p>
-          <div class="tavola-e-testo">
-            <figure class="tavola schermo">
-              <img
-                src="statico/app/plancia-a-muro.jpg"
-                alt="La plancia a muro su un tablet: la pagina Soggiorno con le linguette Scene, Energia e Ingresso, l’orologio, le luci, il clima, le tapparelle e due scene."
-                width="960"
-                height="600"
-                loading="lazy"
-                data-en-alt="The wall dashboard on a tablet: the Living room page with the Scenes, Energy and Entrance tabs, the clock, the lights, the climate, the shutters and two scenes."
-              />
-              <figcaption>
-                <span
-                  ><span data-en="The wall dashboard, on a tablet or an NSPanel"
-                    >La plancia a muro, su tablet o NSPanel</span
-                  ></span
-                >
-              </figcaption>
-            </figure>
-            <div class="tavole tavole-due">
-              <figure class="tavola orologio">
+          <div class="app-in-vetrina">
+            <div class="tre-telefoni">
+              <figure class="telefono">
                 <img
-                  src="statico/app/apple-watch.jpg"
-                  alt="gdahome su Apple Watch: Casa al mare, coi comandi Cancello, Portone e Luci giardino."
-                  width="410"
-                  height="502"
+                  src="statico/app/menu.jpg"
+                  alt="Il menu dell’app: la casa, la plancia, i dispositivi, gdanav, la configurazione, gli aggiornamenti, lo Zigbee, le segnalazioni e l’assistenza."
+                  width="420"
+                  height="909"
                   loading="lazy"
-                  data-en-alt="gdahome on Apple Watch: the beach house, with the Gate, Front door and Garden lights commands."
+                  data-en-alt="The app menu: the home, the dashboard, the devices, gdanav, the configuration, the updates, Zigbee, reports and support."
                 />
                 <figcaption>
-                  <span>Apple Watch</span>
+                  <b data-en="The menu: home, dashboards, devices"
+                    >Il menu: casa, plance, dispositivi</b
+                  >
+                  <span class="esempio" data-en="sample data">dati d’esempio</span>
                 </figcaption>
               </figure>
-              <figure class="tavola orologio">
+              <figure class="telefono">
                 <img
-                  src="statico/app/wear-os.jpg"
-                  alt="La guida di gdanav su Wear OS: fra 350 metri svolta a destra in Via Roma, arrivo alle 9:24, limite 50."
-                  width="454"
-                  height="454"
+                  src="statico/app/plance.jpg"
+                  alt="Le plance di una casa: gdahome, Al mare e Ufficio; le ultime due col lucchetto di Premium."
+                  width="420"
+                  height="909"
                   loading="lazy"
-                  data-en-alt="The gdanav guidance on Wear OS: in 350 metres turn right onto Via Roma, arrival at 9:24, limit 50."
+                  data-en-alt="The dashboards of a home: gdahome, Al mare and Ufficio; the last two with the Premium padlock."
                 />
                 <figcaption>
-                  <span>Wear OS</span>
+                  <b data-en="More dashboards for each home">Più plance per ogni casa</b>
+                  <span class="esempio" data-en="sample data">dati d’esempio</span>
+                </figcaption>
+              </figure>
+              <figure class="telefono">
+                <img
+                  src="statico/app/premium.jpg"
+                  alt="La pagina Premium: più plance e più case, da fuori casa, configurazione e Zigbee dall’app, gdanav Premium compreso; 49,99 € all’anno o 4,99 € al mese, con 14 giorni di prova."
+                  width="420"
+                  height="908"
+                  loading="lazy"
+                  data-en-alt="The Premium page: more dashboards and homes, from away, configuration and Zigbee from the app, gdanav Premium included; €49.99 a year or €4.99 a month, with a 14-day trial."
+                />
+                <figcaption>
+                  <b data-en="Premium, 14 days free">Premium, 14 giorni gratis</b>
                 </figcaption>
               </figure>
             </div>
-          </div>
 
-          <div class="schede">
-            <div>
+            <div class="cosa-c-e">
               <h3 data-en="What is in the app">Cosa c’è nell’app</h3>
               <ul class="elenco">
                 <li data-en="The dashboard inside the app, the real one, with its thirty sections">
@@ -981,31 +1072,6 @@
                   — finisce nella sezione giusta della plancia
                 </li>
                 <li
-                  data-en="&lt;b&gt;The dashboard configured from the phone&lt;/b&gt;: its Config page, untouched, inside the app"
-                >
-                  <b>La plancia configurata dal telefono</b>: la sua pagina Config, intatta, dentro
-                  l’app
-                </li>
-                <li
-                  data-en="&lt;b&gt;From away&lt;/b&gt;: the same app, with no ports opened on the router and encrypted end to end"
-                >
-                  <b>Da fuori casa</b>: la stessa app, senza aprire porte sul router e cifrata punta
-                  a punta
-                </li>
-                <li
-                  data-en="&lt;b&gt;The wall dashboard&lt;/b&gt;: a fixed tablet or an NSPanel shows one screen with big controls — room, scenes, entrance, lights, climate, shutters, cameras, energy — and takes them from the main dashboard"
-                >
-                  <b>La plancia a muro</b>: un tablet fisso o un NSPanel mostra una schermata sola
-                  coi comandi grandi — stanza, scene, ingresso, luci, clima, tapparelle, telecamere,
-                  energia — e li prende dalla plancia principale
-                </li>
-                <li
-                  data-en="&lt;b&gt;On your wrist&lt;/b&gt;: on Apple Watch and Wear OS the quick commands, the devices, the dashboard’s actions, who is home, and the gdanav guidance"
-                >
-                  <b>Al polso</b>: su Apple Watch e Wear OS i comandi rapidi, i dispositivi, le
-                  azioni della plancia, chi è in casa, e la guida di gdanav
-                </li>
-                <li
                   data-en="The home’s updates in the menu: Home Assistant, the add-ons, gdahome, the firmware"
                 >
                   Gli aggiornamenti di casa nel menu: Home Assistant, gli add-on, gdahome, i
@@ -1017,88 +1083,86 @@
                 <li data-en="The lock: the app opens with your fingerprint or your face">
                   Il lucchetto: l’app si apre con l’impronta o col volto
                 </li>
-                <li data-en="gdanav, the navigator, one entry away in the menu">
-                  gdanav, il navigatore, a una voce di distanza nel menu
-                </li>
               </ul>
-            </div>
-            <div>
-              <h3 data-en="Android, iPhone and browser">Android, iPhone e browser</h3>
               <p
-                data-en="On the Play Store with Android Auto and Wear OS, on the App Store with CarPlay, Siri and Apple Watch, for phones and tablets — and the tablet can go on the wall. Whoever does not want to install anything opens it from a browser, and pairs it by typing the code."
+                class="piattaforme"
+                data-en="On the Play Store with Android Auto and Wear OS, on the App Store with CarPlay, Siri and Apple Watch. Whoever does not want to install anything opens it from a browser, and pairs it by typing the code."
               >
                 Sul Play Store con Android Auto e Wear OS, sull’App Store con CarPlay, Siri e Apple
-                Watch, per telefoni e tablet — e il tablet si può mettere a muro. Chi non vuole
-                installare niente la apre dal browser, e la abbina digitando il codice.
-              </p>
-              <h3 data-en="Coming" style="margin-top: 28px">In arrivo</h3>
-              <ul class="elenco in-arrivo">
-                <li data-en="The Home Assistant helpers, native in the app">
-                  Gli aiutanti di Home Assistant, nativi nell’app
-                </li>
-                <li data-en="Automations, written from the app with a guided flow">
-                  Le automazioni, scritte dall’app con una procedura guidata
-                </li>
-              </ul>
-              <h3 data-en="Base and Premium" style="margin-top: 28px">Base e Premium</h3>
-              <p
-                data-en="&lt;b&gt;Base is free&lt;/b&gt; and does not expire: the main dashboard, one home, on the home network. &lt;b&gt;Premium&lt;/b&gt; belongs to the home and counts on every phone: up to 30 dashboards and 10 homes, getting in from away, configuration and Zigbee from the app, the wall dashboard, the home on your wrist and in the car, gdanav Premium included."
-              >
-                <b>Base è gratis</b> e non scade: la plancia principale, una casa, sulla rete di
-                casa. <b>Premium</b> è della casa e vale su tutti i telefoni: fino a 30 plance e 10
-                case, l’accesso da fuori casa, la configurazione e lo Zigbee dall’app, la plancia a
-                muro, la casa al polso e in auto, gdanav Premium compreso.
+                Watch. Chi non vuole installare niente la apre dal browser, e la abbina digitando il
+                codice.
               </p>
               <p
-                data-en="Away from the home Wi-Fi, without Premium, the app says so plainly instead of leaving you waiting. And Premium also comes with a gift code, typed into the app."
+                class="in-arrivo"
+                data-en="&lt;b&gt;Coming:&lt;/b&gt; the Home Assistant helpers, native in the app, and automations written from the app with a guided flow."
               >
-                Fuori dal Wi-Fi di casa, senza Premium, l’app lo dice chiaro invece di lasciarti ad
-                aspettare. E Premium arriva anche con un codice regalo, da scrivere nell’app.
+                <b>In arrivo:</b> gli aiutanti di Home Assistant, nativi nell’app, e le automazioni
+                scritte dall’app con una procedura guidata.
               </p>
-              <div class="tavole tavole-due" style="margin-top: 20px">
-                <figure class="tavola">
-                  <img
-                    src="statico/app/fuori-casa.jpg"
-                    alt="Fuori casa senza Premium: l’app dice che la casa si apre sotto il suo Wi-Fi, e che con Premium ci si entra da ovunque."
-                    width="420"
-                    height="540"
-                    loading="lazy"
-                    data-en-alt="Away from home without Premium: the app says the home opens on its own Wi-Fi, and that with Premium you get in from anywhere."
-                  />
-                  <figcaption>
-                    <span
-                      ><span data-en="Away, without Premium">Fuori casa, senza Premium</span></span
-                    >
-                    <span class="esempio" data-en="sample data">dati d’esempio</span>
-                  </figcaption>
-                </figure>
-                <figure class="tavola">
-                  <img
-                    src="statico/app/codice-regalo.jpg"
-                    alt="Il codice regalo: si scrive GDA-XXXX-XXXX-XXXX e si preme Riscatta, e Premium vale per la casa e per tutti i suoi telefoni."
-                    width="420"
-                    height="632"
-                    loading="lazy"
-                    data-en-alt="The gift code: you type GDA-XXXX-XXXX-XXXX and press Redeem, and Premium counts for the home and all its phones."
-                  />
-                  <figcaption>
-                    <span><span data-en="The gift code">Il codice regalo</span></span>
-                    <span class="esempio" data-en="sample data">dati d’esempio</span>
-                  </figcaption>
-                </figure>
-              </div>
-              <p style="margin-top: 20px">
-                <a class="bottone" href="#prezzi" data-en="See the prices">Vedi i prezzi</a>
+            </div>
+          </div>
+
+          <div class="muro">
+            <div class="muro-detto">
+              <h3 class="sottotitolo" data-en="On the wall and on your wrist">
+                Sul muro e al polso
+              </h3>
+              <p
+                data-en="With Premium the home also goes on a tablet fixed to the wall — or an NSPanel — with big controls taken from the main dashboard, up to eight pages. And on the watch: the quick commands, the devices and the gdanav guidance, on Apple Watch and Wear OS."
+              >
+                Con Premium la casa va anche su un tablet fisso al muro — o un NSPanel — coi comandi
+                grandi presi dalla plancia principale, fino a otto pagine. E sull’orologio: i
+                comandi rapidi, i dispositivi e la guida di gdanav, su Apple Watch e Wear OS.
               </p>
+            </div>
+            <figure class="tablet muro-tablet">
+              <img
+                src="statico/app/plancia-a-muro.jpg"
+                alt="La plancia a muro su un tablet: la pagina Soggiorno con le linguette Scene, Energia e Ingresso, l’orologio, le luci, il clima, le tapparelle e due scene."
+                width="960"
+                height="600"
+                loading="lazy"
+                data-en-alt="The wall dashboard on a tablet: the Living room page with the Scenes, Energy and Entrance tabs, the clock, the lights, the climate, the shutters and two scenes."
+              />
+              <figcaption>
+                <b data-en="The wall dashboard, on a tablet or an NSPanel"
+                  >La plancia a muro, su tablet o NSPanel</b
+                >
+              </figcaption>
+            </figure>
+            <div class="orologi">
+              <figure class="orologio">
+                <img
+                  src="statico/app/apple-watch.jpg"
+                  alt="gdahome su Apple Watch: Casa al mare, coi comandi Cancello, Portone e Luci giardino."
+                  width="410"
+                  height="502"
+                  loading="lazy"
+                  data-en-alt="gdahome on Apple Watch: the beach house, with the Gate, Front door and Garden lights commands."
+                />
+                <figcaption><b>Apple Watch</b></figcaption>
+              </figure>
+              <figure class="orologio orologio-tondo">
+                <img
+                  src="statico/app/wear-os.jpg"
+                  alt="La guida di gdanav su Wear OS: fra 350 metri svolta a destra in Via Roma, arrivo alle 9:24, limite 50."
+                  width="454"
+                  height="454"
+                  loading="lazy"
+                  data-en-alt="The gdanav guidance on Wear OS: in 350 metres turn right onto Via Roma, arrival at 9:24, limit 50."
+                />
+                <figcaption><b>Wear OS</b></figcaption>
+              </figure>
             </div>
           </div>
         </div>
       </section>
 
       <!-- ── gdanav ─────────────────────────────────────────────────────── -->
-      <!-- Quello che fa e come si presenta: i prezzi stanno in «Quanto costa»,
-           accanto a quelli di gdahome, e qui c'e' solo il rimando. -->
-      <section id="gdanav" class="fascia">
+      <!-- La sezione scura della pagina: un navigatore si guarda al buio, e le
+           sue schermate chiare ci stanno sopra come sul cruscotto dell'auto.
+           I prezzi stanno in «Prezzi», accanto a quelli di gdahome. -->
+      <section id="gdanav" class="notte">
         <div class="limite">
           <div class="testa-sezione">
             <h2 data-en="The navigator for electric cars. Fine for petrol and diesel too.">
@@ -1113,192 +1177,222 @@
               Sta dentro gdahome, nel menu, ed esiste anche come app a sé per Android e iPhone.
             </p>
           </div>
+        </div>
 
-          <div class="tavole tavole-quattro">
-            <figure class="tavola">
-              <img
-                src="statico/gdanav/guida-corsie.jpg"
-                alt="La guida: la prossima manovra col cartello dell’uscita, le corsie giuste in blu, la polizia segnalata, la velocità col limite e la batteria all’arrivo."
-                width="420"
-                height="909"
-                loading="lazy"
-                data-en-alt="Driving: the next manoeuvre with the exit sign, the right lanes in blue, police reported, the speed with the limit and the battery on arrival."
-              />
-              <figcaption>
-                <span><span data-en="Driving, with the lanes">La guida, con le corsie</span></span>
-              </figcaption>
-            </figure>
-            <figure class="tavola">
-              <img
-                src="statico/gdanav/guida-svincolo.jpg"
-                alt="Lo svincolo in 3D, con l’uscita da prendere accesa in blu."
-                width="420"
-                height="909"
-                loading="lazy"
-                data-en-alt="The junction in 3D, with the exit to take lit in blue."
-              />
-              <figcaption>
-                <span><span data-en="The junction in 3D">Lo svincolo in 3D</span></span>
-              </figcaption>
-            </figure>
-            <figure class="tavola">
-              <img
-                src="statico/gdanav/segnala.jpg"
-                alt="Cosa vedi? Traffico, polizia, incidente, pericolo, lavori, strada chiusa, autovelox."
-                width="420"
-                height="909"
-                loading="lazy"
-                data-en-alt="What do you see? Traffic, police, accident, hazard, roadworks, road closed, speed camera."
-              />
-              <figcaption>
-                <span><span data-en="Report what you see">Segnala quello che vedi</span></span>
-              </figcaption>
-            </figure>
-            <figure class="tavola">
-              <img
-                src="statico/gdanav/viaggio-soste.jpg"
-                alt="Un viaggio in auto elettrica: arrivo, soste, consumo, il grafico della batteria e le colonnine libere."
-                width="420"
-                height="909"
-                loading="lazy"
-                data-en-alt="A trip by electric car: arrival, stops, consumption, the battery chart and the free chargers."
-              />
-              <figcaption>
-                <span><span data-en="Stops at the chargers">Le soste alle colonnine</span></span>
-              </figcaption>
-            </figure>
+        <div
+          class="nastro"
+          id="nastro-gdanav"
+          tabindex="0"
+          role="region"
+          aria-label="Le schermate di gdanav"
+          data-en-aria-label="gdanav’s screens"
+        >
+          <figure class="telefono">
+            <img
+              src="statico/gdanav/guida-corsie.jpg"
+              alt="La guida: la prossima manovra col cartello dell’uscita, le corsie giuste in blu, la polizia segnalata, la velocità col limite e la batteria all’arrivo."
+              width="420"
+              height="909"
+              loading="lazy"
+              data-en-alt="Driving: the next manoeuvre with the exit sign, the right lanes in blue, police reported, the speed with the limit and the battery on arrival."
+            />
+            <figcaption>
+              <b data-en="Driving, with the lanes">La guida, con le corsie</b>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/gdanav/guida-svincolo.jpg"
+              alt="Lo svincolo in 3D, con l’uscita da prendere accesa in blu."
+              width="420"
+              height="909"
+              loading="lazy"
+              data-en-alt="The junction in 3D, with the exit to take lit in blue."
+            />
+            <figcaption>
+              <b data-en="The junction in 3D">Lo svincolo in 3D</b>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/gdanav/viaggio-soste.jpg"
+              alt="Un viaggio in auto elettrica: arrivo, soste, consumo, il grafico della batteria e le colonnine libere."
+              width="420"
+              height="909"
+              loading="lazy"
+              data-en-alt="A trip by electric car: arrival, stops, consumption, the battery chart and the free chargers."
+            />
+            <figcaption>
+              <b data-en="Stops at the chargers">Le soste alle colonnine</b>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/gdanav/segnala.jpg"
+              alt="Cosa vedi? Traffico, polizia, incidente, pericolo, lavori, strada chiusa, autovelox."
+              width="420"
+              height="909"
+              loading="lazy"
+              data-en-alt="What do you see? Traffic, police, accident, hazard, roadworks, road closed, speed camera."
+            />
+            <figcaption>
+              <b data-en="Report what you see">Segnala quello che vedi</b>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/gdanav/distributori-prezzi.jpg"
+              alt="I distributori vicini col prezzo del diesel di oggi, dal più vicino."
+              width="420"
+              height="909"
+              loading="lazy"
+              data-en-alt="The fuel stations nearby with today’s diesel price, nearest first."
+            />
+            <figcaption>
+              <b data-en="Fuel stations, with prices">I distributori, coi prezzi</b>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/gdanav/la-tua-auto.jpg"
+              alt="La tua auto: elettrica o termica, il modello fra più di quattrocento, e come ti vedi sulla mappa."
+              width="420"
+              height="909"
+              loading="lazy"
+              data-en-alt="Your car: electric or combustion, the model among more than four hundred, and how you look on the map."
+            />
+            <figcaption>
+              <b data-en="Your car, electric or not">La tua auto, elettrica o termica</b>
+            </figcaption>
+          </figure>
+          <figure class="telefono">
+            <img
+              src="statico/gdanav/premium.jpg"
+              alt="gdanav Premium: Home Assistant e la batteria letta dall’auto, le soste alle colonnine, Android Auto; 29,99 € all’anno o 2,99 € al mese, con 14 giorni di prova."
+              width="420"
+              height="909"
+              loading="lazy"
+              data-en-alt="gdanav Premium: Home Assistant and the battery read from the car, stops at the chargers, Android Auto; €29.99 a year or €2.99 a month, with a 14-day trial."
+            />
+            <figcaption><b>gdanav Premium</b></figcaption>
+          </figure>
+        </div>
+
+        <div class="limite">
+          <div class="nastro-piede">
+            <p class="nota" data-en="Swipe to see the others, or use the arrows.">
+              Scorri per vedere le altre, o usa le frecce.
+            </p>
+            <div class="nastro-tasti" data-nastro="nastro-gdanav" hidden>
+              <button
+                type="button"
+                class="tasto-tondo"
+                data-verso="-1"
+                aria-label="Indietro"
+                data-en-aria-label="Back"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                  <path
+                    d="M15 5l-7 7 7 7"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="tasto-tondo"
+                data-verso="1"
+                aria-label="Avanti"
+                data-en-aria-label="Forward"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                  <path
+                    d="M9 5l7 7-7 7"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <dl class="scheda">
             <div>
               <dt data-en="It takes you there">Ti porta a destinazione</dt>
               <dd
-                data-en="The voice tells you what to do and when. At the top, the next manoeuvre with the exit sign; before junctions, the right lanes lit in blue; near the exit, the junction in 3D. At the bottom, the arrival time, the speed and the road’s limit."
+                data-en="The voice tells you what to do and when. At the top, the next manoeuvre with the exit sign; before junctions, the right lanes lit in blue; near the exit, the junction in 3D."
               >
                 La voce dice cosa fare e quando. In alto la prossima manovra col cartello
                 dell’uscita, prima degli svincoli le corsie giuste accese in blu, vicino all’uscita
-                lo svincolo in 3D. In basso l’ora di arrivo, la velocità e il limite della strada.
+                lo svincolo in 3D.
               </dd>
             </div>
             <div>
               <dt data-en="Reports, like Waze">Segnalazioni, come Waze</dt>
               <dd
-                data-en="One tap on the yellow triangle and you report traffic, police, an accident, a hazard, roadworks, a closed road or a speed camera. Whoever comes after you is warned by voice, and confirms whether it is still there: old reports disappear by themselves."
+                data-en="One tap on the yellow triangle and you report traffic, police, an accident, a hazard, roadworks, a closed road or a speed camera. Whoever comes after you is warned by voice."
               >
                 Un tocco sul triangolo giallo e si segnala traffico, polizia, incidente, pericolo,
-                lavori, strada chiusa o autovelox. Chi passa dopo riceve l’avviso a voce e conferma
-                se c’è ancora: le segnalazioni vecchie spariscono da sole.
+                lavori, strada chiusa o autovelox. Chi passa dopo riceve l’avviso a voce.
               </dd>
             </div>
             <div>
               <dt data-en="Speed cameras, traffic, weather">Autovelox, traffico, meteo</dt>
               <dd
-                data-en="The fixed speed cameras are already in the app, even without a connection. If the traffic changes and there is a faster road, gdanav offers it. The weather is the one you find along the way, at the time you pass."
+                data-en="The fixed speed cameras are already in the app, even without a connection. If the traffic changes and there is a faster road, gdanav offers it. The weather is the one along the way."
               >
                 Gli autovelox fissi sono già nell’app, anche senza rete. Se il traffico cambia e c’è
-                una strada più veloce, gdanav la propone. Il meteo è quello che si trova lungo la
-                strada, all’ora in cui ci si passa.
+                una strada più veloce, gdanav la propone. Il meteo è quello lungo la strada.
               </dd>
             </div>
             <div>
               <dt data-en="With an electric car">Con l’auto elettrica</dt>
               <dd
-                data-en="Consumption is worked out stretch by stretch: speed, climbs, wind, temperature, air conditioning. If the battery is not enough, gdanav says where to stop and how much to charge, with the chargers free or busy right then. It knows more than four hundred models."
+                data-en="Consumption is worked out stretch by stretch. If the battery is not enough, gdanav says where to stop and how much to charge, with the chargers free or busy right then. It knows more than four hundred models."
               >
-                Il consumo si calcola tratto per tratto: velocità, salite, vento, temperatura, clima
-                acceso. Se la batteria non basta, gdanav dice dove fermarsi e quanto caricare, con
-                le colonnine libere o occupate in quel momento. Conosce più di quattrocento modelli.
+                Il consumo si calcola tratto per tratto. Se la batteria non basta, gdanav dice dove
+                fermarsi e quanto caricare, con le colonnine libere o occupate in quel momento.
+                Conosce più di quattrocento modelli.
               </dd>
             </div>
             <div>
               <dt data-en="With a petrol or diesel car">Con l’auto termica</dt>
               <dd
-                data-en="You choose the fuel, and the orange button shows the fuel stations nearby with today’s prices, from the Ministry’s fuel price service (MIMIT): nearest or cheapest first, self-service or attended."
+                data-en="You choose the fuel, and the orange button shows the fuel stations nearby with today’s prices, from the Ministry’s fuel price service (MIMIT)."
               >
                 Si sceglie il carburante e il tasto arancione mostra i distributori vicini coi
-                prezzi del giorno, dall’Osservaprezzi carburanti del Ministero (MIMIT): dal più
-                vicino o dal più economico, self o servito.
+                prezzi del giorno, dall’Osservaprezzi carburanti del Ministero (MIMIT).
               </dd>
             </div>
             <div>
               <dt data-en="In the car, and at home">In auto, e a casa</dt>
               <dd
-                data-en="With Android Auto and CarPlay, map, driving, reports and stops are on the car’s screen. With Home Assistant the battery is read from the home, and the home knows where you are going and when you arrive. Inside gdahome the home is one button away: the gate, the front door, “I’m coming home”."
+                data-en="With Android Auto and CarPlay the map and the guidance are on the car’s screen. With Home Assistant the battery is read from the home, and the home knows when you arrive."
               >
-                Con Android Auto e CarPlay mappa, guida, segnalazioni e soste stanno sullo schermo
-                dell’auto. Con Home Assistant la batteria si legge dalla casa, e la casa sa dove vai
-                e quando arrivi. Dentro gdahome la casa è a un tasto: il cancello, il portone, «sto
-                arrivando».
+                Con Android Auto e CarPlay mappa e guida stanno sullo schermo dell’auto. Con Home
+                Assistant la batteria si legge dalla casa, e la casa sa quando arrivi.
               </dd>
             </div>
           </dl>
 
-          <div class="tavola-e-testo">
-            <div class="tavole">
-              <figure class="tavola">
-                <img
-                  src="statico/gdanav/distributori-prezzi.jpg"
-                  alt="I distributori vicini col prezzo del diesel di oggi, dal più vicino."
-                  width="420"
-                  height="909"
-                  loading="lazy"
-                  data-en-alt="The fuel stations nearby with today’s diesel price, nearest first."
-                />
-                <figcaption>
-                  <span
-                    ><span data-en="Fuel stations, with prices"
-                      >I distributori, coi prezzi</span
-                    ></span
-                  >
-                </figcaption>
-              </figure>
-              <figure class="tavola">
-                <img
-                  src="statico/gdanav/la-tua-auto.jpg"
-                  alt="La tua auto: elettrica o termica, il modello fra più di quattrocento, e come ti vedi sulla mappa."
-                  width="420"
-                  height="909"
-                  loading="lazy"
-                  data-en-alt="Your car: electric or combustion, the model among more than four hundred, and how you look on the map."
-                />
-                <figcaption>
-                  <span
-                    ><span data-en="Your car, electric or not"
-                      >La tua auto, elettrica o termica</span
-                    ></span
-                  >
-                </figcaption>
-              </figure>
-              <figure class="tavola">
-                <img
-                  src="statico/gdanav/premium.jpg"
-                  alt="gdanav Premium: Home Assistant e la batteria letta dall’auto, le soste alle colonnine, Android Auto; 29,99 € all’anno o 2,99 € al mese, con 14 giorni di prova."
-                  width="420"
-                  height="909"
-                  loading="lazy"
-                  data-en-alt="gdanav Premium: Home Assistant and the battery read from the car, stops at the chargers, Android Auto; €29.99 a year or €2.99 a month, with a 14-day trial."
-                />
-                <figcaption>
-                  <span>gdanav Premium</span>
-                </figcaption>
-              </figure>
-            </div>
-            <div>
-              <h3 class="sottotitolo" style="margin-top: 0" data-en="Free, and Premium">
-                Gratis, e Premium
-              </h3>
-              <p
-                data-en="&lt;b&gt;gdanav is free&lt;/b&gt;, with no adverts and no account: route, voice, lanes, reports, speed cameras, traffic, weather, and the combustion car complete. &lt;b&gt;Premium&lt;/b&gt; adds the battery read from the car, the stops at the chargers, Home Assistant, Android Auto and CarPlay — and it is included in gdahome Premium."
-              >
-                <b>gdanav è gratis</b>, senza pubblicità e senza account: percorso, voce, corsie,
-                segnalazioni, autovelox, traffico, meteo, e l’auto termica completa.
-                <b>Premium</b> aggiunge la batteria letta dall’auto, le soste alle colonnine, Home
-                Assistant, Android Auto e CarPlay — ed è compreso in gdahome Premium.
-              </p>
-              <p>
-                <a class="bottone" href="#prezzi" data-en="See the prices">Vedi i prezzi</a>
-              </p>
-            </div>
+          <div class="gdanav-piede">
+            <p
+              data-en="&lt;b&gt;gdanav is free&lt;/b&gt;, with no adverts and no account. &lt;b&gt;Premium&lt;/b&gt; adds the battery read from the car, the stops at the chargers, Home Assistant, Android Auto and CarPlay — and it is included in gdahome Premium."
+            >
+              <b>gdanav è gratis</b>, senza pubblicità e senza account. <b>Premium</b> aggiunge la
+              batteria letta dall’auto, le soste alle colonnine, Home Assistant, Android Auto e
+              CarPlay — ed è compreso in gdahome Premium.
+            </p>
+            <a class="bottone bottone-chiaro" href="#prezzi" data-en="See the prices"
+              >Vedi i prezzi</a
+            >
           </div>
         </div>
       </section>
@@ -1308,131 +1402,132 @@
            promette niente che il contratto fra i pezzi non dica. -->
       <section id="prezzi">
         <div class="limite">
-          <div class="testa-sezione">
+          <div class="testa-sezione testa-al-centro">
             <h2 data-en="Free to start. Premium when you need more.">
               Gratis per cominciare. Premium quando serve di più.
             </h2>
             <p
               class="guida"
-              data-en="Base is free and does not expire. Premium belongs to the home, not to the phone: every phone paired with that home, and the app in the browser, are Premium together with it. In both cases there is no account to create, no adverts, and nothing of yours to sell."
+              data-en="Premium belongs to the home, not to the phone: every phone paired with that home, and the app in the browser, are Premium together with it. In both cases there is no account to create, no adverts, and nothing of yours to sell."
             >
-              Base è gratis e non scade. Premium è della casa, non del telefono: tutti i telefoni
-              abbinati a quella casa, e l’app dal browser, sono Premium insieme a lei. In tutti e
-              due i casi nessun account da fare, nessuna pubblicità, e niente di tuo da vendere.
+              Premium è della casa, non del telefono: tutti i telefoni abbinati a quella casa, e
+              l’app dal browser, sono Premium insieme a lei. In tutti e due i casi nessun account da
+              fare, nessuna pubblicità, e niente di tuo da vendere.
             </p>
           </div>
 
-          <table class="listino">
-            <thead>
-              <tr>
-                <th scope="col"><span data-en="gdahome">gdahome</span></th>
-                <th scope="col">
-                  <span class="piano-nome">gdahome Base</span>
-                  <span class="prezzo" data-en="Free">Gratis</span>
-                </th>
-                <th scope="col">
-                  <span class="piano-nome">gdahome Premium</span>
-                  <span
-                    class="prezzo"
-                    data-en="€4.99 &lt;span&gt;a month, or €49.99 a year&lt;/span&gt;"
-                    >4,99 € <span>al mese, o 49,99 € all’anno</span></span
-                  >
-                  <span class="piano-prova" data-en="first 14 days free"
-                    >primi 14 giorni gratis</span
-                  >
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row" data-en="The add-on and the dashboard">L’add-on e la plancia</th>
-                <td class="si" data-en="The add-on and the main dashboard">
+          <div class="piani">
+            <article class="piano">
+              <h3 class="piano-nome">gdahome Base</h3>
+              <p class="prezzo numero" data-en="Free">Gratis</p>
+              <p class="piano-detto" data-en="For ever, with no account.">
+                Per sempre, senza account.
+              </p>
+              <ul class="elenco">
+                <li data-en="The add-on and the main dashboard">
                   L’add-on e la plancia principale
-                </td>
-                <td class="si" data-en="&lt;b&gt;Up to 30 dashboards&lt;/b&gt; for each home">
-                  <b>Fino a 30 plance</b> per ogni casa
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" data-en="Homes in the app">Le case nell’app</th>
-                <td class="si" data-en="One home, on the home network">
-                  Una casa, sulla rete di casa
-                </td>
-                <td
-                  class="si"
-                  data-en="&lt;b&gt;Up to 10 homes&lt;/b&gt;, and &lt;b&gt;from away&lt;/b&gt;: encrypted, with no ports to open"
-                >
-                  <b>Fino a 10 case</b>, e <b>da fuori casa</b>: cifrato, senza aprire porte
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" data-en="From the phone">Dal telefono</th>
-                <td class="no" data-en="—">—</td>
-                <td
-                  class="si"
-                  data-en="&lt;b&gt;Configuration and Zigbee&lt;/b&gt;: the dashboard and “Where do I put it?”"
-                >
-                  <b>Configurazione e Zigbee</b>: la plancia e «Dove lo metto?»
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" data-en="On the wall, on your wrist, in the car">
-                  Al muro, al polso, in auto
-                </th>
-                <td class="no" data-en="—">—</td>
-                <td
-                  class="si"
-                  data-en="The &lt;b&gt;wall dashboard&lt;/b&gt;: a fixed tablet or an NSPanel with big controls, up to 8 pages. &lt;b&gt;On your wrist&lt;/b&gt;: the home and the navigator on Apple Watch and Wear OS. &lt;b&gt;In the car&lt;/b&gt;: the home on Android Auto and CarPlay"
-                >
-                  La <b>plancia a muro</b>: un tablet fisso o un NSPanel coi comandi grandi, fino a
-                  8 pagine. <b>Al polso</b>: la casa e il navigatore su Apple Watch e Wear OS.
-                  <b>In auto</b>: la casa su Android Auto e CarPlay
-                </td>
-              </tr>
-              <tr>
-                <th scope="row">gdanav</th>
-                <td
-                  class="si"
+                </li>
+                <li data-en="One home, on the home network">Una casa, sulla rete di casa</li>
+                <li
                   data-en="gdanav free: the combustion car complete, the electric one with the battery typed in"
                 >
                   gdanav gratis: l’auto termica completa, l’elettrica con la batteria scritta a mano
-                </td>
-                <td
-                  class="si"
-                  data-en="&lt;b&gt;gdanav Premium included&lt;/b&gt;, with everything unlocked"
+                </li>
+                <li data-en="Reports and the support chat">
+                  Le segnalazioni e la chat di assistenza
+                </li>
+              </ul>
+            </article>
+            <article class="piano piano-premium">
+              <h3 class="piano-nome">gdahome Premium</h3>
+              <p class="prezzo numero" data-en="€4.99 &lt;span&gt;a month&lt;/span&gt;">
+                4,99 € <span>al mese</span>
+              </p>
+              <p class="piano-detto" data-en="or €49.99 a year">o 49,99 € all’anno</p>
+              <p class="piano-prova" data-en="first 14 days free">primi 14 giorni gratis</p>
+              <ul class="elenco">
+                <li data-en="&lt;b&gt;Up to 30 dashboards&lt;/b&gt; for each home">
+                  <b>Fino a 30 plance</b> per ogni casa
+                </li>
+                <li
+                  data-en="&lt;b&gt;Up to 10 homes&lt;/b&gt;, and &lt;b&gt;from away&lt;/b&gt;: encrypted, with no ports to open"
                 >
+                  <b>Fino a 10 case</b>, e <b>da fuori casa</b>: cifrato, senza aprire porte
+                </li>
+                <li
+                  data-en="&lt;b&gt;Configuration and Zigbee&lt;/b&gt; from the phone: the dashboard and “Where do I put it?”"
+                >
+                  <b>Configurazione e Zigbee</b> dal telefono: la plancia e «Dove lo metto?»
+                </li>
+                <li
+                  data-en="The &lt;b&gt;wall dashboard&lt;/b&gt;, up to 8 pages; the home &lt;b&gt;on your wrist&lt;/b&gt; and &lt;b&gt;in the car&lt;/b&gt;"
+                >
+                  La <b>plancia a muro</b>, fino a 8 pagine; la casa <b>al polso</b> e
+                  <b>in auto</b>
+                </li>
+                <li data-en="&lt;b&gt;gdanav Premium included&lt;/b&gt;, with everything unlocked">
                   <b>gdanav Premium compreso</b>, con tutto sbloccato
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" data-en="Support">Assistenza</th>
-                <td class="si" data-en="Reports and the support chat">
-                  Le segnalazioni e la chat di assistenza
-                </td>
-                <td class="si" data-en="Reports and the support chat">
-                  Le segnalazioni e la chat di assistenza
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" data-en="Account">Account</th>
-                <td class="si" data-en="No account">Nessun account</td>
-                <td
-                  class="si"
-                  data-en="None. For every phone of the home, and for the app in the browser"
-                >
-                  Nessuno. Per tutti i telefoni della casa, e per l’app dal browser
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </li>
+                <li data-en="For every phone of the home, and for the app in the browser">
+                  Per tutti i telefoni della casa, e per l’app dal browser
+                </li>
+              </ul>
+            </article>
+          </div>
           <p
-            class="sottobottoni"
+            class="sottobottoni al-centro"
             data-en="The 14 free days apply the first time. You cancel from Google Play or the App Store, like any subscription; if Premium ends, the home goes back to Base and the extra dashboards stay saved until you renew."
           >
             I 14 giorni gratis valgono la prima volta. Si disdice dal Play Store o dall’App Store,
             come ogni abbonamento; se Premium finisce, la casa torna Base e le plance in più restano
             salvate fino al rinnovo.
           </p>
+
+          <h3 class="sottotitolo" data-en="gdanav, the navigator">gdanav, il navigatore</h3>
+          <p
+            class="guida"
+            data-en="With gdahome Premium it is included: the Premium home unlocks everything in the navigator too, with no second subscription."
+          >
+            Con gdahome Premium è compreso: la casa Premium sblocca tutto anche nel navigatore,
+            senza un secondo abbonamento.
+          </p>
+          <div class="piani piani-piccoli">
+            <article class="piano">
+              <h3 class="piano-nome">gdanav</h3>
+              <p class="prezzo numero" data-en="Free">Gratis</p>
+              <ul class="elenco">
+                <li data-en="Combustion car complete: route, fuel stations, prices">
+                  Auto termica completa: percorso, distributori, prezzi
+                </li>
+                <li
+                  data-en="Electric car with the battery typed in, and a route without charging stops"
+                >
+                  Auto elettrica con la batteria scritta a mano, e percorso senza soste
+                </li>
+                <li data-en="Traffic, speed cameras, weather">Traffico, autovelox, meteo</li>
+              </ul>
+            </article>
+            <article class="piano piano-premium">
+              <h3 class="piano-nome">gdanav Premium</h3>
+              <p class="prezzo numero" data-en="€2.99 &lt;span&gt;a month&lt;/span&gt;">
+                2,99 € <span>al mese</span>
+              </p>
+              <p class="piano-detto" data-en="or €29.99 a year">o 29,99 € all’anno</p>
+              <p class="piano-prova" data-en="first 14 days free">primi 14 giorni gratis</p>
+              <ul class="elenco">
+                <li data-en="&lt;b&gt;Home Assistant, and the battery read from the car&lt;/b&gt;">
+                  <b>Home Assistant, e la batteria letta dall’auto</b>
+                </li>
+                <li data-en="Route with the charging stops, and the chargers’ state in real time">
+                  Percorso con le soste alle colonnine, e il loro stato in tempo reale
+                </li>
+                <li data-en="Android Auto and CarPlay">Android Auto e CarPlay</li>
+                <li data-en="&lt;b&gt;Included in gdahome Premium&lt;/b&gt;">
+                  <b>Compreso in gdahome Premium</b>
+                </li>
+              </ul>
+            </article>
+          </div>
 
           <h3 class="sottotitolo" data-en="How you get Premium">Come si ha Premium</h3>
           <dl class="scheda">
@@ -1466,81 +1561,6 @@
               </dd>
             </div>
           </dl>
-
-          <h3 class="sottotitolo" data-en="gdanav, the navigator">gdanav, il navigatore</h3>
-          <p
-            class="guida"
-            data-en="With gdahome Premium it is included: the Premium home unlocks everything in the navigator too, with no second subscription."
-          >
-            Con gdahome Premium è compreso: la casa Premium sblocca tutto anche nel navigatore,
-            senza un secondo abbonamento.
-          </p>
-          <table class="listino">
-            <thead>
-              <tr>
-                <th scope="col">gdanav</th>
-                <th scope="col">
-                  <span class="piano-nome">gdanav</span>
-                  <span class="prezzo" data-en="Free">Gratis</span>
-                </th>
-                <th scope="col">
-                  <span class="piano-nome">gdanav Premium</span>
-                  <span
-                    class="prezzo"
-                    data-en="€2.99 &lt;span&gt;a month, or €29.99 a year&lt;/span&gt;"
-                    >2,99 € <span>al mese, o 29,99 € all’anno</span></span
-                  >
-                  <span class="piano-prova" data-en="first 14 days free"
-                    >primi 14 giorni gratis</span
-                  >
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row" data-en="Combustion car">Auto termica</th>
-                <td class="si" data-en="Complete: route, fuel stations, prices">
-                  Completa: percorso, distributori, prezzi
-                </td>
-                <td class="si" data-en="Complete">Completa</td>
-              </tr>
-              <tr>
-                <th scope="row" data-en="Electric car">Auto elettrica</th>
-                <td
-                  class="si"
-                  data-en="With the battery typed in, and a route without charging stops"
-                >
-                  Con la batteria scritta a mano, e percorso senza soste
-                </td>
-                <td
-                  class="si"
-                  data-en="&lt;b&gt;Home Assistant, and the battery read from the car&lt;/b&gt;; route with the charging stops, and the chargers’ state in real time"
-                >
-                  <b>Home Assistant, e la batteria letta dall’auto</b>; percorso con le soste alle
-                  colonnine, e il loro stato in tempo reale
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" data-en="Traffic, speed cameras, weather">
-                  Traffico, autovelox, meteo
-                </th>
-                <td class="si" data-en="For everyone">Per tutti</td>
-                <td class="si" data-en="For everyone">Per tutti</td>
-              </tr>
-              <tr>
-                <th scope="row" data-en="In the car">In auto</th>
-                <td class="no" data-en="—">—</td>
-                <td class="si" data-en="Android Auto and CarPlay">Android Auto e CarPlay</td>
-              </tr>
-              <tr>
-                <th scope="row" data-en="With gdahome">Con gdahome</th>
-                <td class="no" data-en="—">—</td>
-                <td class="si" data-en="&lt;b&gt;Included in gdahome Premium&lt;/b&gt;">
-                  <b>Compreso in gdahome Premium</b>
-                </td>
-              </tr>
-            </tbody>
-          </table>
 
           <aside class="nota-privacy">
             <b data-en="What gdahome knows about who pays">Cosa sa gdahome di chi paga</b>
@@ -1579,27 +1599,8 @@
             </p>
           </div>
 
-          <figure class="tavola schermo">
-            <img
-              src="statico/schermate/cruscotto-licenze.png"
-              alt="Il cruscotto per installatori, pagina Licenze: il pacchetto diviso per durata, le licenze assegnate alle case, i codici regalo da consegnare."
-              width="870"
-              height="420"
-              loading="lazy"
-              data-en-alt="The installer panel, Licences page: the package split by duration, the licences assigned to homes, the gift codes to hand over."
-            />
-            <figcaption>
-              <span
-                ><span data-en="The installer panel: the licences for your customers"
-                  >Il cruscotto: le licenze per i clienti</span
-                ></span
-              >
-              <span class="esempio" data-en="sample data">dati d’esempio</span>
-            </figcaption>
-          </figure>
-
           <div class="schede">
-            <div>
+            <div class="scheda-bianca">
               <h3 data-en="How every home is doing">Come sta ogni casa</h3>
               <ul class="elenco">
                 <li
@@ -1608,46 +1609,33 @@
                   Tutti gli impianti in una pagina, e per primo quanti chiedono qualcosa adesso
                 </li>
                 <li
-                  data-en="Ten checks a day for each home: the dashboard, the phones, the connection from away, the links, the updates, the add-ons, the network, the machine, the backup, the batteries of the devices"
+                  data-en="Ten checks a day for each home: the dashboard, the phones, the connection from away, the updates, the network, the machine, the backup, the batteries of the devices"
                 >
                   Dieci controlli al giorno per ogni casa: la plancia, i telefoni, il collegamento
-                  da fuori, i collegamenti, gli aggiornamenti, gli add-on, la rete, la macchina, il
-                  backup, le batterie dei dispositivi
-                </li>
-                <li
-                  data-en="The machine: processor, memory, disk and how much of its life is already spent, temperature"
-                >
-                  La macchina: processore, memoria, disco e quanta vita ha già consumato,
-                  temperatura
+                  da fuori, gli aggiornamenti, la rete, la macchina, il backup, le batterie dei
+                  dispositivi
                 </li>
                 <li data-en="A notice when a home stops talking, and one when it starts again">
                   Un avviso quando una casa smette di parlare, e uno quando riprende
                 </li>
               </ul>
-              <h3 data-en="What you can do" style="margin-top: 32px">Cosa puoi fare</h3>
+              <h3 data-en="What you can do">Cosa puoi fare</h3>
               <ul class="elenco">
-                <li data-en="&lt;b&gt;Install updates&lt;/b&gt; from afar, where there are any">
-                  <b>Installare gli aggiornamenti</b> da lontano, dove ci sono
-                </li>
-                <li data-en="&lt;b&gt;Restart&lt;/b&gt;, when it is needed">
-                  <b>Riavviare</b>, quando serve
+                <li
+                  data-en="&lt;b&gt;Install updates&lt;/b&gt;, &lt;b&gt;restart&lt;/b&gt; and &lt;b&gt;configure the customer's dashboard&lt;/b&gt; from afar"
+                >
+                  <b>Installare gli aggiornamenti</b>, <b>riavviare</b> e
+                  <b>configurare la plancia</b> del cliente da lontano
                 </li>
                 <li
-                  data-en="&lt;b&gt;Configure the customer's dashboard&lt;/b&gt; from your panel: the sections, the rooms, the entities"
+                  data-en="Each one only where the customer has allowed it: three switches on the add-on's page, off by default"
                 >
-                  <b>Configurare la plancia</b> del cliente dal tuo cruscotto: le sezioni, le
-                  stanze, le entità
+                  Ognuna solo dove il cliente l'ha permessa: tre interruttori nella scheda
+                  dell'add-on, spenti di serie
                 </li>
               </ul>
-              <p
-                class="sottobottoni"
-                data-en="Each one only where the customer has allowed it: three switches on the add-on's page, off by default, that the people who live in the home turn on and off."
-              >
-                Ognuna solo dove il cliente l'ha permessa: tre interruttori nella scheda
-                dell'add-on, spenti di serie, che chi abita la casa accende e spegne.
-              </p>
             </div>
-            <div>
+            <div class="scheda-bianca">
               <h3 data-en="Licences for your customers">Le licenze per i clienti</h3>
               <ul class="elenco">
                 <li
@@ -1657,15 +1645,10 @@
                   per sempre
                 </li>
                 <li
-                  data-en="You assign one to one of your homes, and from that moment the home is Premium"
+                  data-en="You assign one to one of your homes, or it becomes a gift code to send to the customer"
                 >
-                  Una licenza si assegna a una delle tue case, e da quel momento la casa è Premium
-                </li>
-                <li
-                  data-en="Or it becomes a gift code to send to the customer: the duration starts when they redeem it"
-                >
-                  Oppure diventa un codice regalo da mandare al cliente: la durata parte quando lo
-                  riscatta
+                  Una licenza si assegna a una delle tue case, oppure diventa un codice regalo da
+                  mandare al cliente
                 </li>
                 <li
                   data-en="Taken back, or with an unused code cancelled, it returns to your package"
@@ -1673,7 +1656,7 @@
                   Tolta, o annullato il codice non usato, torna nel tuo pacchetto
                 </li>
               </ul>
-              <h3 data-en="What you cannot see" style="margin-top: 32px">Cosa non vedi</h3>
+              <h3 data-en="What you cannot see">Cosa non vedi</h3>
               <ul class="elenco contro">
                 <li
                   data-en="You do not open the customer's dashboard: there is no command to get into a home"
@@ -1683,19 +1666,7 @@
                 <li data-en="You see no rooms, people or cameras: you get numbers, not names">
                   Non vedi stanze, persone né telecamere: ricevi numeri, non nomi
                 </li>
-                <li
-                  data-en="The camera images never leave the home, not even while you configure the dashboard"
-                >
-                  Le immagini delle telecamere non escono mai di casa, nemmeno mentre configuri la
-                  plancia
-                </li>
               </ul>
-              <p
-                class="sottobottoni"
-                data-en="An electrician replaces a switch without reading the post of the people who live there."
-              >
-                Un elettricista sostituisce un interruttore senza leggere la posta di chi ci abita.
-              </p>
             </div>
           </div>
 
@@ -1738,24 +1709,6 @@
             </p>
           </div>
 
-          <figure class="tavola schermo tavola-larga">
-            <img
-              src="statico/schermate/addon-la-scheda.png"
-              alt="La scheda dell’add-on in Home Assistant: abbina un telefono, i telefoni abbinati, le plance, la licenza."
-              width="880"
-              height="978"
-              loading="lazy"
-              data-en-alt="The add-on’s page in Home Assistant: pair a phone, the paired phones, the dashboards, the licence."
-            />
-            <figcaption>
-              <span
-                ><span data-en="The add-on’s page in Home Assistant"
-                  >La scheda dell’add-on in Home Assistant</span
-                ></span
-              >
-            </figcaption>
-          </figure>
-
           <ol class="scarichi">
             <li>
               <a
@@ -1765,24 +1718,20 @@
               >
                 <span class="passo numero">1</span>
                 <h3 data-en="The add-on">L'add-on</h3>
-                <div>
-                  <p
-                    data-en="It is called &lt;b&gt;gdahome&lt;/b&gt; and it installs &lt;b&gt;from the store&lt;/b&gt;, like any other add-on: Settings → Add-ons → Store → Repositories, paste &lt;code&gt;https://github.com/danigio15/gdahomeapp&lt;/code&gt; and it appears in the list. From then on it updates itself."
-                  >
-                    Si chiama <b>gdahome</b> e si installa <b>dal negozio</b>, come qualunque altro
-                    add-on: Impostazioni → Add-on → Negozio → Archivi, si incolla
-                    <code>https://github.com/danigio15/gdahomeapp</code> e compare nell’elenco. Da
-                    lì in poi si aggiorna da sé.
-                  </p>
-                  <p
-                    class="serve"
-                    data-en="&lt;b&gt;It needs Home Assistant OS or Supervised&lt;/b&gt;, the two that have the Supervisor. On Container — Home Assistant in Docker — the add-on store does not exist, and no add-on installs, from anyone."
-                  >
-                    <b>Serve Home Assistant OS o Supervised</b>, cioè le due che hanno il
-                    Supervisor. Su Container — Home Assistant in Docker — il negozio degli add-on
-                    non esiste, e non si installa nessun add-on di nessuno.
-                  </p>
-                </div>
+                <p
+                  data-en="It is called &lt;b&gt;gdahome&lt;/b&gt; and it installs &lt;b&gt;from the store&lt;/b&gt;, like any other add-on: Settings → Add-ons → Store → Repositories, paste &lt;code&gt;https://github.com/danigio15/gdahomeapp&lt;/code&gt; and it appears in the list."
+                >
+                  Si chiama <b>gdahome</b> e si installa <b>dal negozio</b>, come qualunque altro
+                  add-on: Impostazioni → Add-on → Negozio → Archivi, si incolla
+                  <code>https://github.com/danigio15/gdahomeapp</code> e compare nell’elenco.
+                </p>
+                <p
+                  class="serve"
+                  data-en="&lt;b&gt;It needs Home Assistant OS or Supervised&lt;/b&gt;, the two that have the Supervisor. On Container — Home Assistant in Docker — the add-on store does not exist."
+                >
+                  <b>Serve Home Assistant OS o Supervised</b>, cioè le due che hanno il Supervisor.
+                  Su Container — Home Assistant in Docker — il negozio degli add-on non esiste.
+                </p>
                 <span class="come" data-en="How to install it →">Come si installa →</span>
               </a>
             </li>
@@ -1794,15 +1743,13 @@
               >
                 <span class="passo numero">2</span>
                 <h3 data-en="The app, for Android">L'app, per Android</h3>
-                <div>
-                  <p
-                    data-en="On the &lt;b&gt;Play Store&lt;/b&gt;, with Android Auto. You open the app, scan the QR code the add-on shows, and the home is paired. Premium is bought from here, with the first 14 days free."
-                  >
-                    Sul <b>Play Store</b>, con Android Auto. Si apre l’app, si inquadra il QR code
-                    che mostra l’add-on, e la casa è abbinata. Premium si compra da qui, coi primi
-                    14 giorni gratis.
-                  </p>
-                </div>
+                <p
+                  data-en="On the &lt;b&gt;Play Store&lt;/b&gt;, with Android Auto. You open the app, scan the QR code the add-on shows, and the home is paired. Premium is bought from here, with the first 14 days free."
+                >
+                  Sul <b>Play Store</b>, con Android Auto. Si apre l’app, si inquadra il QR code che
+                  mostra l’add-on, e la casa è abbinata. Premium si compra da qui, coi primi 14
+                  giorni gratis.
+                </p>
                 <span class="come" data-en="To the Play Store →">Al Play Store →</span>
               </a>
             </li>
@@ -1810,75 +1757,48 @@
               <div class="scarico">
                 <span class="passo numero">3</span>
                 <h3 data-en="The app, for iPhone and iPad">L'app, per iPhone e iPad</h3>
-                <div>
-                  <p
-                    data-en="On the &lt;b&gt;App Store&lt;/b&gt;: search for gdahome. Everything the Android app has, with CarPlay and Siri. Same Premium: it belongs to the home, so it counts on every phone."
-                  >
-                    Sull’<b>App Store</b>: si cerca gdahome. Tutto quello che ha l’app per Android,
-                    con CarPlay e Siri. Stesso Premium: è della casa, quindi vale su tutti i
-                    telefoni.
-                  </p>
-                </div>
+                <p
+                  data-en="On the &lt;b&gt;App Store&lt;/b&gt;: search for gdahome. Everything the Android app has, with CarPlay and Siri. Same Premium: it belongs to the home, so it counts on every phone."
+                >
+                  Sull’<b>App Store</b>: si cerca gdahome. Tutto quello che ha l’app per Android,
+                  con CarPlay e Siri. Stesso Premium: è della casa, quindi vale su tutti i telefoni.
+                </p>
               </div>
             </li>
             <li>
-              <a
-                class="scarico scarico-senza-numero"
-                href="https://webapp.gdahome.org"
-                rel="noopener"
-              >
-                <h3 data-en="Or from a browser">Oppure dal browser</h3>
-                <div>
-                  <p
-                    data-en="The same app, without installing anything, and it adapts to the screen. You open it from the add-on’s page in Home Assistant or from &lt;b&gt;webapp.gdahome.org&lt;/b&gt;, and pair it by typing the code."
-                  >
-                    La stessa app, senza installare niente, e si adatta allo schermo. Si apre dalla
-                    scheda dell’add-on in Home Assistant o da <b>webapp.gdahome.org</b>, e si abbina
-                    digitando il codice.
-                  </p>
-                </div>
+              <a class="scarico" href="https://webapp.gdahome.org" rel="noopener">
+                <span class="passo passo-oppure" data-en="or">oppure</span>
+                <h3 data-en="From a browser">Dal browser</h3>
+                <p
+                  data-en="The same app, without installing anything. You open it from the add-on’s page in Home Assistant or from &lt;b&gt;webapp.gdahome.org&lt;/b&gt;, and pair it by typing the code."
+                >
+                  La stessa app, senza installare niente. Si apre dalla scheda dell’add-on in Home
+                  Assistant o da <b>webapp.gdahome.org</b>, e si abbina digitando il codice.
+                </p>
                 <span class="come" data-en="Open it →">Aprila →</span>
               </a>
             </li>
+          </ol>
+
+          <ul class="altri-link">
             <li>
               <a
-                class="scarico scarico-senza-numero"
                 href="https://github.com/danigio15/gdahomeapp/blob/main/centralino/README.md"
                 rel="noopener"
+                data-en="&lt;b&gt;The relay&lt;/b&gt; — what gets you in from away, and keeps nothing →"
+                ><b>Il centralino</b> — quello che fa entrare da fuori casa, e non conserva nulla
+                →</a
               >
-                <h3 data-en="The relay">Il centralino</h3>
-                <div>
-                  <p
-                    data-en="It is what gets you in from away, with Premium. It runs on a gdahome machine, the same one as this site, and keeps nothing: it lets a phone and its home meet without being able to read what they exchange, because what passes through is already encrypted when it arrives and it does not hold the keys."
-                  >
-                    È quello che fa entrare da fuori casa, con Premium. Gira su una macchina di
-                    gdahome, la stessa di questo sito, e non conserva nulla: fa incontrare un
-                    telefono e la sua casa senza poter leggere quello che si scambiano, perché
-                    quello che passa è già cifrato quando arriva e le chiavi non le ha.
-                  </p>
-                </div>
-                <span class="come" data-en="How it is built →">Com'è fatto →</span>
-              </a>
             </li>
             <li>
               <a
-                class="scarico scarico-senza-numero"
                 href="https://github.com/danigio15/gdahomeapp"
                 rel="noopener"
+                data-en="&lt;b&gt;The repository&lt;/b&gt; — the whole code, and it is public →"
+                ><b>La repository</b> — il codice per intero, ed è pubblica →</a
               >
-                <h3 data-en="The repository">La repository</h3>
-                <div>
-                  <p
-                    data-en="The whole code, and it is &lt;b&gt;public&lt;/b&gt;: the add-on, the relay, the app, the tools and the automated tests that run at every change."
-                  >
-                    Il codice per intero, ed è <b>pubblica</b>: l’add-on, il centralino, l’app, gli
-                    strumenti e le prove automatiche che girano a ogni modifica.
-                  </p>
-                </div>
-                <span class="come" data-en="Go to the repository →">Vai alla repository →</span>
-              </a>
             </li>
-          </ol>
+          </ul>
         </div>
       </section>
 
@@ -1890,18 +1810,18 @@
            il modulo e' un modulo, e il tramite risponde con una pagina.
            L'indirizzo sta scritto in `data-scrivi`: e' quello che il modulo
            dice quando la posta non e' configurata o non parte. -->
-      <section id="contatti">
+      <section id="contatti" class="fascia">
         <div class="limite">
           <div class="testa-sezione">
             <h2 data-en="Write to us. A person answers.">Scrivici. Risponde una persona.</h2>
             <p
               class="guida"
-              data-en="If gdahome is already in your home, the shortest way is the support chat inside the app: it arrives with the version and the state of the connection, and it is answered from there. For everything else — the installer panel, a question before you start, a collaboration — there is this form. It reaches &lt;b&gt;domotica@crvgroup.it&lt;/b&gt;."
+              data-en="If gdahome is already in your home, the shortest way is the support chat inside the app: it arrives with the version and the state of the connection. For everything else — the installer panel, a question before you start, a collaboration — there is this form. It reaches &lt;b&gt;domotica@crvgroup.it&lt;/b&gt;."
             >
               Se gdahome è già in casa tua, la strada più corta è la chat di assistenza dentro
-              l'app: arriva con la versione e con lo stato del collegamento, e si risponde da lì.
-              Per tutto il resto — il cruscotto per chi installa, una domanda prima di cominciare,
-              una collaborazione — c'è questo modulo. Arriva a <b>domotica@crvgroup.it</b>.
+              l'app: arriva con la versione e con lo stato del collegamento. Per tutto il resto — il
+              cruscotto per chi installa, una domanda prima di cominciare, una collaborazione — c'è
+              questo modulo. Arriva a <b>domotica@crvgroup.it</b>.
             </p>
           </div>
 
@@ -1984,12 +1904,30 @@
 
     <footer class="fondo-pagina">
       <div class="limite">
-        <p
-          data-en="gdahome — the Home Assistant dashboard on your phone, with the add-on that serves it. Base is free; Premium is €4.99 a month or €49.99 a year, with the first 14 days free."
-        >
-          gdahome — la plancia di Home Assistant sul telefono, con l’add-on che la serve. Base è
-          gratis; Premium costa 4,99 € al mese o 49,99 € all’anno, coi primi 14 giorni gratis.
-        </p>
+        <div class="fondo-alto">
+          <a class="marchio marchio-chiaro" href="#inizio">
+            <img src="statico/marchio.png" alt="" width="28" height="28" />
+            <span>gdahome</span>
+          </a>
+          <p
+            data-en="The Home Assistant dashboard on your phone, with the add-on that serves it. Base is free; Premium is €4.99 a month or €49.99 a year, with the first 14 days free."
+          >
+            La plancia di Home Assistant sul telefono, con l’add-on che la serve. Base è gratis;
+            Premium costa 4,99 € al mese o 49,99 € all’anno, coi primi 14 giorni gratis.
+          </p>
+          <nav aria-label="Link utili" data-en-aria-label="Useful links">
+            <a href="#plancia" data-en="The dashboard">La plancia</a>
+            <a href="#come" data-en="How it works">Come funziona</a>
+            <a href="#app" data-en="The app">L’app</a>
+            <a href="#gdanav">gdanav</a>
+            <a href="#prezzi" data-en="Pricing">Prezzi</a>
+            <a href="#installatori" data-en="Installers">Installatori</a>
+            <a href="#scarica" data-en="Get it">Scaricala</a>
+            <a href="#contatti" data-en="Contact">Contatti</a>
+            <a href="privacy.html" data-en="Privacy">Privacy</a>
+            <a href="https://github.com/danigio15/gdahomeapp" rel="noopener">GitHub</a>
+          </nav>
+        </div>
         <!-- La società: i dati sono quelli del Registro delle Imprese (visura
              camerale della Camera di Commercio di Caserta). Quello che per
              legge sta sul sito di una società, e niente di più. -->
@@ -2016,21 +1954,9 @@
             elettronici, climatizzazione, idrici, gas, sollevamento, antincendio</span
           >
         </address>
-        <nav aria-label="Link utili" data-en-aria-label="Useful links">
-          <a href="#plancia" data-en="The dashboard">La plancia</a>
-          <a href="#come" data-en="How it works">Come funziona</a>
-          <a href="#app" data-en="The app">L’app</a>
-          <a href="#gdanav">gdanav</a>
-          <a href="#prezzi" data-en="Pricing">Prezzi</a>
-          <a href="#installatori" data-en="Installers">Installatori</a>
-          <a href="#scarica" data-en="Get it">Scaricala</a>
-          <a href="#contatti" data-en="Contact">Contatti</a>
-          <a href="privacy.html" data-en="Privacy">Privacy</a>
-          <a href="https://github.com/danigio15/gdahomeapp" rel="noopener">GitHub</a>
-        </nav>
       </div>
     </footer>
 
-    <script src="sito.js"></script>
+    <script src="sito.js?v=3acf72dc"></script>
   </body>
 </html>

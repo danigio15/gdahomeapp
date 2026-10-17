@@ -21,20 +21,33 @@ Adesso le tre sezioni che raccontano le app — **la plancia** (`#plancia`),
 vere e di schede di testo. Le fotografie stanno nella repository, dentro
 `sito/`, e ci sono sempre. `casa-in-pagina.js` e `statico/casa.js` restano
 perché lo script li infila ancora nella plancia che porta (vedi «Quello che non
-si ribatte a mano»), ma la pagina non li usa più.
+si ribatte a mano»), e perché è con loro che si fotografa la plancia.
+
+Le fotografie della plancia sono **della plancia vera**, configurata: le fa
+`collaudo/fotografa-la-plancia.mjs`, che apre la plancia portata nel sito con
+la casa demo del collaudo, prende ogni pagina dalla sua linguetta e la scrive
+in `docs/immagini/plancia-*.jpg`. Da lì `porta-nel-sito.mjs` copia in
+`statico/schermate/` quelle che la pagina chiama. Nelle fotografie mancano due
+cose sole, e nessuna è la plancia: il riquadro «La dashboard è quasi pronta»,
+che dentro la pagina compare anche su una casa configurata, e il tasto tondo
+dell'assistente, che copre la scheda sotto. L'Energia si fotografa
+sull'istante — fotovoltaico, rete, batteria, casa e carichi — perché le viste
+del giorno e del mese vogliono lo storico, che la Home Assistant dentro la
+pagina non ha.
 
 ## Un sito di prodotto, come quelli delle app
 
-Il sito è fatto come i siti delle app che si conoscono: il blu di gdahome come
-colore vero, che si prende la copertina, la scheda Premium e il piede; le
-sezioni che si alternano fra bianco e un azzurrino, così lo scorrimento ha un
-ritmo; le schermate vere dentro un telefono disegnato, con un'ombra che le
-stacca dalla pagina; tasti e schede arrotondati, aria intorno. Prima c'era
-quello che hanno tutti i siti disegnati da un modello — il fondo a macchie di
-luce, il telefono che galleggia su una sfumatura, i quattro numeroni, le tre
-schede uguali con icona, titolo e testo — e si vedeva che era un modello. Le
-scelte che tengono in piedi la pagina, e che si possono disfare per
-distrazione:
+Il sito è fatto come i siti delle app che si conoscono: la plancia vera in
+copertina, sul computer e sul telefono, appoggiata a un palco col blu di
+gdahome; il blu anche sulle schede Premium; le sezioni che si alternano fra
+bianco e un azzurrino, così lo scorrimento ha un ritmo, e gdanav al buio,
+come lo schermo di un'auto; le schermate vere dentro telefoni, tablet e
+orologi disegnati, con un'ombra che le stacca dalla pagina; tasti e schede
+arrotondati, aria intorno. Prima c'era quello che hanno tutti i siti disegnati
+da un modello — il fondo a macchie di luce, il telefono che galleggia su una
+sfumatura, i quattro numeroni, le tre schede uguali con icona, titolo e testo —
+e si vedeva che era un modello. Le scelte che tengono in piedi la pagina, e
+che si possono disfare per distrazione:
 
 **Colore pieno, mai sfumato.** Il blu è un campo piatto, l'azzurrino è un
 campo piatto. Niente sfumature, niente vetro sfocato, niente aloni: sono il
@@ -45,31 +58,45 @@ su tutte le schede; più forte sotto i telefoni, perché sono oggetti. Un baglio
 colorato intorno a una cosa non è un'ombra.
 
 **Una cosa accesa alla volta.** L'ambra è il colore di una luce accesa: la
-voce del menu della sezione in cui si legge, la spia sotto il primo telefono,
-il segno «primi 14 giorni gratis» su Premium. Non fa altro.
+voce del menu della sezione in cui si legge, la spia sotto il telefono della
+copertina, il segno «primi 14 giorni gratis» su Premium. Non fa altro.
+
+**Niente occhielli e niente schede in fila.** Sopra i titoli non c'è la riga
+piccola in maiuscolo che dice la sezione, e i passi non sono tre scatole
+uguali col numero, il titolo e due righe: stanno sotto una riga sottile, come
+le schede tecniche, e quelli per averla sono un elenco che si legge in ordine.
+È un vincolo dichiarato (`PRODUCT.md`), e il primo che si rompe per abitudine.
 
 **I caratteri.** Archivo, in `caratteri/` (licenza OFL, nel file accanto),
 servito da qui; Oswald, il carattere dei numeri della plancia, resta per i
-prezzi. Tutti e due dal sito, mai da Google.
+prezzi e i numeri dei passi. Tutti e due dal sito, mai da Google.
 
 **Niente tema scuro.** C'era, e seguiva quello del sistema. Chi apriva
 gdahome.org con un telefono in tema scuro si trovava una pagina quasi nera —
 cioè una pagina diversa da quella che gli era stata mostrata. Una copertina
 si presenta sempre allo stesso modo. Dentro l'app il chiaro e scuro c'è, e lì
-ha senso.
+ha senso. La sezione di gdanav è scura per tutti: è una sezione, non un tema.
 
 **Le schermate vere, in cima.** Sono `docs/immagini/`, le stesse del README e
 del negozio: fotografie dell'app, non dei mockup disegnati. La copertina
-mostra le **luci** e non la plancia: la seconda mostra una casa non ancora
-configurata, col riquadro «La dashboard è quasi pronta», che è la schermata
-giusta per il manuale e la peggiore possibile per una copertina.
+mostra la **plancia sul computer** e le **luci sul telefono**: prima mostrava
+solo le luci, perché l'unica fotografia della plancia era di una casa non
+ancora configurata, col riquadro «La dashboard è quasi pronta». Adesso la
+plancia si fotografa configurata (vedi sopra).
+
+**Le fotografie scorrono di lato, la pagina no.** Le pagine della plancia e le
+schermate di gdanav stanno in un nastro che scorre dentro di sé, col dito o
+con le due frecce; la pagina resta larga quanto lo schermo.
 
 ## Per chi installa, e dove scrivere
 
 Il **cruscotto installatore** ha una sezione sua (`#installatori`), perché è
 l'unico pezzo di gdahome che non è per chi abita la casa: come sta ogni casa,
 le licenze Premium da dare ai clienti, e accanto cosa **non** vede, con le
-parole del quadro (`quadro/README.md`). **Quanto costa** (`#prezzi`) dice Base
+parole del quadro (`quadro/README.md`). Lo racconta a parole, senza
+fotografie: il sito fa vedere la plancia e il navigatore, non i pannelli di chi
+li gestisce — né quello degli installatori, né quello di chi vende, né la
+scheda dell'add-on. **Quanto costa** (`#prezzi`) dice Base
 e Premium, come si ha Premium e gdanav, coi prezzi e le regole di
 [`docs/LICENZE.md`](../docs/LICENZE.md).
 
@@ -101,23 +128,23 @@ Poi `http://127.0.0.1:8099/`.
 
 |                                   |                                                                                                                                                                                           |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.html`                      | la pagina: il colpo d'occhio, la plancia, come funziona, l'app gdahome, gdanav, quanto costa, per chi installa, scaricala, sostegno, contatti                                             |
+| `index.html`                      | la pagina: la copertina con la plancia, la plancia, come funziona, l'app gdahome, gdanav, quanto costa, per chi installa, scaricala, contatti                                             |
 | `privacy.html`                    | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                                                                                        |
-| `stile.css`                       | il catalogo: i quattro colori, i caratteri, la griglia di righe sottili, le tavole, le schede tecniche, i listini                                                                         |
+| `stile.css`                       | il vestito: i colori, i caratteri, il palco della copertina, telefoni, tablet e orologi, i nastri delle fotografie, le schede tecniche, i piani                                           |
 | `privacy.css`                     | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                                                                                              |
-| `casa-in-pagina.js`               | la Home Assistant finta della plancia di prima: la pagina non la usa più                                                                                                                  |
-| `sito.js`                         | la lingua, l'ombra sotto la barra, le schede che compaiono, il modulo dei contatti — lo caricano tutte e due le pagine                                                                    |
-| `statico/`                        | marchio, icone, caratteri, casa demo e le schermate della plancia — **non si toccano a mano**, sono salvati nella repository                                                              |
+| `casa-in-pagina.js`               | la Home Assistant finta dentro la pagina: la pagina non la usa, la usa la plancia portata nel sito per farsi fotografare                                                                  |
+| `sito.js`                         | la lingua, l'ombra sotto la barra, la cosa accesa, le frecce dei nastri, il modulo dei contatti — lo caricano tutte e due le pagine                                                       |
+| `statico/`                        | marchio, icone, caratteri, casa demo e le schermate della plancia (da `docs/immagini/`) — **non si toccano a mano**, sono salvati nella repository                                        |
 | `statico/app/`, `statico/gdanav/` | le fotografie delle due app, ridotte in JPG dalle schermate dei README (quelle di gdanav vengono da `danigio15/gdanav`, `docs/immagini/`) — **si fanno a mano**, e lo script non le tocca |
-| `dashboardmodern_static/`         | la plancia vera — fuori da git; la pagina non la usa più, la vuole lo scambio sul server                                                                                                  |
+| `dashboardmodern_static/`         | la plancia vera — fuori da git; la pagina non la usa, la vogliono lo scambio sul server e le fotografie della plancia                                                                     |
 | `gdahome.png`                     | il marchio dell'informativa                                                                                                                                                               |
 | `robots.txt`, `sitemap.xml`       | si può guardare tutto, e le pagine sono due                                                                                                                                               |
 
 ## Quello che non si ribatte a mano
 
-Il marchio, le icone, i caratteri Inter e Oswald, le schermate della plancia
-(solo quelle che le pagine usano, da `docs/immagini/`), la casa demo e la
-plancia intera: li porta uno script, dalle cartelle dove stanno per davvero.
+Il marchio, le icone, il carattere Oswald, le schermate della plancia (solo
+quelle che le pagine usano, da `docs/immagini/`), la casa demo e la plancia
+intera: li porta uno script, dalle cartelle dove stanno per davvero.
 
 ```bash
 node strumenti/porta-nel-sito.mjs
@@ -129,6 +156,25 @@ Rifà `statico/oggetti/`, `statico/font/` (solo Oswald) e `statico/schermate/`
 come sono. Prima
 lo script buttava via tutta `statico/`, e sul server — dove gira prima di ogni
 scambio — le fotografie delle app sarebbero sparite a ogni versione.
+
+Le fotografie della plancia in `docs/immagini/plancia-*.jpg` si rifanno con la
+plancia vera, quando la plancia cambia aspetto:
+
+```bash
+node strumenti/porta-nel-sito.mjs        # la plancia e la casa demo nel sito
+node collaudo/fotografa-la-plancia.mjs   # le fotografie, in docs/immagini/
+node strumenti/porta-nel-sito.mjs        # e di nuovo, per copiarle in statico/
+```
+
+E rifà il **segno** con cui le pagine chiamano `stile.css`, `privacy.css` e
+`sito.js`: il `?v=` dopo il nome, che è l'impronta del file. Il server fa
+rivedere le pagine a ogni visita, ma lo stile e il codice no, e il browser se li
+tiene quanto vuole: il 17 ottobre 2026 il sito rifatto è arrivato a chi l'aveva
+appena aperto vestito con lo stile di prima — le fotografie a tutta pagina, le
+didascalie in mezzo — e nessun errore da nessuna parte. Col segno, un file
+cambiato è un indirizzo nuovo, e il browser lo deve chiedere. Chi tocca uno di
+quei tre file rilancia lo script; se se ne dimentica, non passa
+[`centralino/test/sito.test.js`](../centralino/test/sito.test.js).
 
 La plancia (`dashboardmodern_static/`) la porta ancora, anche se la pagina non
 la mostra più: lo scambio sul server (`prepara.sh`, che nasce da
@@ -169,7 +215,8 @@ così com'è. Nel suo blocco ci sono quattro cose e basta:
   non far finta di essere l'indice;
 - **due velocità di cache** — `statico/` un giorno, perché
   cambiano solo quando cambia la versione; le pagine no, perché un testo
-  corretto che resta in cache è un testo corretto che nessuno legge;
+  corretto che resta in cache è un testo corretto che nessuno legge. Lo stile e
+  il codice non hanno una regola loro, e per questo portano il segno (sopra);
 - **`www` è un redirect vero**, non un secondo sito;
 - **`/contatto` va al tramite** — l'unica via del sito che non è un file: il
   modulo dei contatti, che il tramite spedisce per posta.
@@ -191,7 +238,8 @@ che l'informativa pubblicata dica quello che dice `docs/PRIVACY.md`, sezione
 per sezione e con la stessa data. E guardano che **ogni file che le pagine
 chiamano stia dentro `sito/`**, salvato in git e scritto con le stesse
 maiuscole: un'immagine che punta fuori da `sito/` si vede aprendo la pagina
-dalla repository, e sul server è un buco.
+dalla repository, e sul server è un buco. E che lo stile e il codice siano
+chiamati col segno di come sono adesso.
 
 ## Come si prova
 
@@ -206,9 +254,10 @@ Apre il sito a tre larghezze — telefono, tablet, computer — e guarda, in
 ordine di quanto fa male sbagliarlo:
 
 1. **le fotografie arrivano**: si scorre tutta la pagina (le immagini sono
-   caricate quando ci si arriva) e si chiede al browser se in ogni immagine ci
-   sono davvero dei pixel, perché un'immagine che non arriva lascia un buco e
-   non fa nessun rumore;
+   caricate quando ci si arriva), quelle dei nastri si chiedono subito — di
+   lato il browser le chiede solo quando ci si arriva col dito — e si chiede
+   al browser se in ogni immagine ci sono davvero dei pixel, perché
+   un'immagine che non arriva lascia un buco e non fa nessun rumore;
 2. **la plancia, l'app e gdanav** hanno la loro sezione, la loro voce nel menu
    e le loro fotografie; nella pagina non c'è più nessun riquadro;
 3. **niente errori** in console e nessun file che non arriva;

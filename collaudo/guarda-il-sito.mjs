@@ -166,6 +166,16 @@ async function scorriTutta(pagina) {
     await pagina.evaluate((dove) => window.scrollTo(0, dove), y);
     await pagina.waitForTimeout(120);
   }
+  /* I nastri delle fotografie scorrono di lato dentro di se': quelle in fondo
+   * il browser le chiede quando ci si arriva col dito, e scorrendo la pagina
+   * solo in giu' non ci si arriva mai. Sul telefono restavano «non arrivate»
+   * senza esserlo. Scorrerli di lato non bastava: sulla macchina di GitHub,
+   * piu' lenta, il nastro tornava all'inizio prima che il browser avesse
+   * chiesto le ultime. Qui si guarda se le fotografie ci sono, non quando il
+   * browser decide di chiederle: quelle dei nastri si chiedono subito. */
+  await pagina.evaluate(() => {
+    for (const una of document.querySelectorAll(".nastro img")) una.loading = "eager";
+  });
   await pagina
     .waitForFunction(() => [...document.images].every((una) => una.complete), null, {
       timeout: PAZIENZA,

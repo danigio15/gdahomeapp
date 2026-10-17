@@ -437,8 +437,7 @@ di gdahome** ([`LICENSE`](LICENSE)), in italiano con la traduzione inglese. In
 breve: si legge e si controlla cosa fa, si installa e si usa a casa propria o
 nella propria attività; non si ripubblica, non si rivende e non si aggira
 Premium. Chi installa per i clienti lo fa con l'autorizzazione di CRV
-Immobiliare S.r.l. La stessa licenza vale anche per la plancia, che prima si
-chiamava DashboardModern.
+Immobiliare S.r.l.
 
 ---
 
