@@ -6131,8 +6131,6 @@ export default Object.freeze({
   "Fast": "빠르게",
   "Finished at ${alle}": "${alle}에 완료",
   "From band ${fascia} in Settings → Energy": "설정 → 에너지의 시간대 ${fascia}에서",
-  "In the window": "시간대 중",
-  "Min+Solar": "최소+태양광",
   "Needs the add-on: the home starts it": "애드온이 필요합니다: 집이 시작합니다",
   "Night charging": "야간 충전",
   "No days chosen": "선택한 요일 없음",
@@ -6153,4 +6151,5 @@ export default Object.freeze({
   "tonight at ${alle}": "오늘 밤 ${alle}",
   "Tonight at ${alle}": "오늘 밤 ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "먼저 도달하는 쪽에서 멈춥니다. 한도는 evcc에서 읽어 옵니다: 거기서 바꾸면 여기도 바뀝니다.",
+  "Smart": "스마트",
 });

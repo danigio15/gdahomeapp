@@ -6211,8 +6211,6 @@ export default Object.freeze({
   "Fast": "Rapide",
   "Finished at ${alle}": "Terminée à ${alle}",
   "From band ${fascia} in Settings → Energy": "De la tranche ${fascia} dans Réglages → Énergie",
-  "In the window": "Dans la plage",
-  "Min+Solar": "Min+Soleil",
   "Needs the add-on: the home starts it": "Nécessite le module complémentaire : c'est la maison qui la lance",
   "Night charging": "Recharge de nuit",
   "No days chosen": "Aucun jour choisi",
@@ -6233,4 +6231,5 @@ export default Object.freeze({
   "tonight at ${alle}": "cette nuit à ${alle}",
   "Tonight at ${alle}": "Cette nuit à ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "Le premier des deux. La limite est lue dans evcc : si tu la changes là-bas, elle change ici aussi.",
+  "Smart": "Intelligent",
 });

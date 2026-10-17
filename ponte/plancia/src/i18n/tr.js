@@ -6149,8 +6149,6 @@ export default Object.freeze({
   "Fast": "Hızlı",
   "Finished at ${alle}": "${alle} itibarıyla bitti",
   "From band ${fascia} in Settings → Energy": "Ayarlar → Enerji içindeki ${fascia} diliminden",
-  "In the window": "Aralık içinde",
-  "Min+Solar": "Min+Güneş",
   "Needs the add-on: the home starts it": "Eklenti gerekir: onu ev başlatır",
   "Night charging": "Gece şarjı",
   "No days chosen": "Gün seçilmedi",
@@ -6171,4 +6169,5 @@ export default Object.freeze({
   "tonight at ${alle}": "bu gece ${alle}",
   "Tonight at ${alle}": "Bu gece ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "Hangisi önce gelirse. Sınır evcc'den okunur: orada değiştirirsen burada da değişir.",
+  "Smart": "Akıllı",
 });

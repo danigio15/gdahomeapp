@@ -6110,8 +6110,6 @@ export default Object.freeze({
   "Fast": "سريع",
   "Finished at ${alle}": "انتهت الساعة ${alle}",
   "From band ${fascia} in Settings → Energy": "من الشريحة ${fascia} في الإعدادات ← الطاقة",
-  "In the window": "خلال الفترة",
-  "Min+Solar": "حد أدنى+شمس",
   "Needs the add-on: the home starts it": "تحتاج إلى الإضافة: المنزل هو من يبدأها",
   "Night charging": "الشحن الليلي",
   "No days chosen": "لم يتم اختيار أيام",
@@ -6132,4 +6130,5 @@ export default Object.freeze({
   "tonight at ${alle}": "الليلة الساعة ${alle}",
   "Tonight at ${alle}": "الليلة الساعة ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "أيهما يأتي أولًا. يُقرأ الحد من evcc: إن غيّرته هناك يتغير هنا أيضًا.",
+  "Smart": "ذكي",
 });

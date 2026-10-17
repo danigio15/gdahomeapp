@@ -27,8 +27,8 @@ const MAPPA = {
 
 const STATI = {
   "select.evcc_garage_mode": {
-    state: "pv",
-    attributes: { options: ["off", "pv", "minpv", "now"] },
+    state: "smart",
+    attributes: { options: ["off", "smart", "now"] },
   },
   "sensor.evcc_garage_vehicle_soc": { state: "42", attributes: { unit_of_measurement: "%" } },
   "number.evcc_garage_limit_soc": { state: "80", attributes: { unit_of_measurement: "%" } },
@@ -185,7 +185,8 @@ test("la carta sta sotto la console di evcc, spenta di serie, e scrive le scelte
     .poll(() => salvate(page))
     .toMatchObject({ attiva: true, inFascia: "now", poi: "off" });
   await carta.locator('[data-rn-scelta="poi"][data-valore="prima"]').click();
-  await carta.locator('[data-rn-scelta="inFascia"][data-valore="minpv"]').click();
+  /* Il Min+Sole non c'e': evcc l'ha tolto, e la notte si carica in Fast. */
+  await expect(carta.locator('[data-rn-scelta="inFascia"]')).toHaveCount(0);
   /* La domenica no: la notte fra domenica e lunedi'. */
   await carta.locator('[data-rn-giorno="6"]').click();
   await carta.locator('[data-rn="da"]').fill("22:30");
@@ -198,7 +199,7 @@ test("la carta sta sotto la console di evcc, spenta di serie, e scrive le scelte
       attiva: true,
       da: "22:30",
       a: "05:00",
-      inFascia: "minpv",
+      inFascia: "now",
       poi: "prima",
       giorni: [true, true, true, true, true, true, false],
       sotto: 60,
@@ -310,13 +311,13 @@ test("sul widget Auto della Home: la riga della notte, e niente se e' spenta", a
   await page.evaluate(() =>
     window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} })),
   );
-  await expect(riga).toHaveText("🌙 Ricarica notturna · Veloce fino all'80% o alle 05:00", {
+  await expect(riga).toHaveText("🌙 Ricarica notturna · Fast fino all'80% o alle 05:00", {
     timeout: 15_000,
   });
   await fotografa(page, "widget-home", tessera);
   await tessera.click();
   const pastiglia = page.locator("#dm-widget-popup .dm-f-evcc-notte");
-  await expect(pastiglia).toHaveText("🌙 Ricarica notturna · Veloce fino all'80% o alle 05:00");
+  await expect(pastiglia).toHaveText("🌙 Ricarica notturna · Fast fino all'80% o alle 05:00");
   await fotografa(page, "widget-finestra", page.locator("#dm-widget-popup .dm-f-ev"));
   await page.keyboard.press("Escape");
 

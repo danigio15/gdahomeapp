@@ -56,7 +56,10 @@ export const CHIAVE_RICARICA_NOTTE = "cd_ricarica_notte";
 /* Le due modalita' che si possono chiedere alla fascia, e le tre che si
  * possono lasciare dopo. «pv» e' il nome storico del solare: evcc oggi lo
  * chiama «smart», e quale dei due esista lo dice evcc (`modoPerEvcc`). */
-export const MODI_IN_FASCIA = Object.freeze(["now", "minpv"]);
+/* In fascia si carica in Fast, e basta. C'era anche il Min+Sole, ma evcc
+ * l'ha tolto (evcc-io/evcc#32490): «minisolar non esiste piu'». Chi l'aveva
+ * scelto torna alla veloce. */
+export const MODI_IN_FASCIA = Object.freeze(["now"]);
 export const MODI_DOPO = Object.freeze(["off", "prima", "pv"]);
 
 export const IMPOSTAZIONI_DI_SERIE = Object.freeze({

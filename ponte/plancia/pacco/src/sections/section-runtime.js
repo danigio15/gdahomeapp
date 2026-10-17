@@ -533,7 +533,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-A4P3VRMV.js";
+} from "../../chunk-LZQ3IKHZ.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -4043,7 +4043,6 @@ var SOURCE_INDEX = Object.freeze({
   "In corso": "Installing",
   "In evidenza": "Highlights",
   "In evidenza · le tue tessere": "Highlights · your own tiles",
-  "In fascia": "In the window",
   "in funzione": "running",
   "In funzione": "Running",
   "IN FUNZIONE": "RUNNING",
@@ -4148,6 +4147,7 @@ var SOURCE_INDEX = Object.freeze({
   "Installa": "Install",
   "Installa questo aggiornamento": "Install this update",
   "Integrazioni": "Integrations",
+  "Intelligente": "Smart",
   "Intensità della pioggia": "Rain rate",
   "Internet assente": "Internet down",
   "Internet attivo": "Internet up",
@@ -4601,7 +4601,6 @@ var SOURCE_INDEX = Object.freeze({
   "Microonde": "Microwave",
   "min ${cifre(pacco.minima.volt, 3)} V · cella ${pacco.minima.numero}": "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}",
   "min fa": "min ago",
-  "Min+Sole": "Min+Solar",
   "MiniPC": "Server",
   "MiniPC Server": "MiniPC server",
   "Minore di…": "Less than…",
@@ -6762,7 +6761,6 @@ var SOURCE_INDEX = Object.freeze({
   "Vedi tutto": "See everything",
   "Veicoli": "Vehicles",
   "Velo": "Veil",
-  "Veloce": "Fast",
   "Velocità": "Speed",
   "Velocità del vento": "Wind speed",
   "Velocità della ventola (fan o select)": "Fan speed (fan or select)",
@@ -24872,7 +24870,7 @@ var pulito22 = (valore3) => String(valore3 ?? "").trim();
 var MINUTO2 = 6e4;
 var ORA2 = 60 * MINUTO2;
 var CHIAVE_RICARICA_NOTTE = "cd_ricarica_notte";
-var MODI_IN_FASCIA = Object.freeze(["now", "minpv"]);
+var MODI_IN_FASCIA = Object.freeze(["now"]);
 var MODI_DOPO = Object.freeze(["off", "prima", "pv"]);
 var IMPOSTAZIONI_DI_SERIE = Object.freeze({
   attiva: false,
@@ -24960,10 +24958,6 @@ function prossimaFascia(dato, adesso) {
   return null;
 }
 var SINONIMI = Object.freeze({ pv: "smart", smart: "smart", now: "now", fast: "now" });
-function saFareMinPiuSole(opzioni = []) {
-  const dichiarate = (Array.isArray(opzioni) ? opzioni : []).map(pulito22).filter(Boolean);
-  return !dichiarate.length || dichiarate.some((voce3) => voce3.toLowerCase() === "minpv");
-}
 var RIFERIMENTI = Object.freeze({
   modo: "dm.ev_modalita_ricarica_evcc",
   soc: Object.freeze(["dm.ev_batteria_auto", "dm.ev_battery", "dm.ev_soc"]),
@@ -25165,9 +25159,8 @@ var ora = (istante6) => new Date(istante6).toLocaleTimeString(locale(), {
 function nomeDelModo2(modo) {
   const m = clean(modo).toLowerCase();
   if (m === "off") return t("Spento", "Off");
-  if (m === "now" || m === "fast") return t("Veloce", "Fast");
-  if (m === "minpv") return t("Min+Sole", "Min+Solar");
-  if (m === "pv" || m === "smart") return t("Solare", "Solar");
+  if (m === "now" || m === "fast") return t("Fast", "Fast");
+  if (m === "pv" || m === "smart" || m === "minpv") return t("Intelligente", "Smart");
   return clean(modo);
 }
 var pct = (n) => `${Math.round(n)}`;
@@ -25396,13 +25389,6 @@ function scheletro() {
     <div class="dm-rn-nastro"><i data-rn="tratto1"></i><i data-rn="tratto2"></i><b data-rn="adesso"></b></div>
     <div class="dm-rn-tacche"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
   </div>
-  <div class="dm-rn-riga">
-    <span class="dm-rn-nome">${esc(t("In fascia", "In the window"))}</span>
-    ${segmentato("inFascia", [
-    ["now", t("Veloce", "Fast")],
-    ["minpv", t("Min+Sole", "Min+Solar")]
-  ])}
-  </div>
   <div class="dm-rn-riga dm-rn-riga-alta">
     <div class="dm-rn-coppia"><span class="dm-rn-nome">${esc(t("Si ferma", "Stops"))}</span><b class="dm-rn-valore" data-rn="ferma"></b></div>
     <small class="dm-rn-nota">${esc(
@@ -25417,7 +25403,7 @@ function scheletro() {
     ${segmentato("poi", [
     ["off", t("Spento", "Off")],
     ["prima", t("Come prima", "As before")],
-    ["pv", t("Solare", "Solar")]
+    ["pv", t("Intelligente", "Smart")]
   ])}
   </div>
   </div><div class="dm-rn-colonna">
@@ -25555,14 +25541,9 @@ function renderRicaricaDiNotte(adesso = Date.now()) {
   });
   const d = new Date(adesso);
   attributo(q("adesso"), "style", `left:${pc(d.getHours() * 60 + d.getMinutes())}`);
-  const opzioni = lettura3.opzioni;
   for (const tasto2 of carta.querySelectorAll("[data-rn-scelta]")) {
     const gruppo = tasto2.dataset.rnScelta;
     attributo(tasto2, "aria-pressed", String(imp[gruppo] === tasto2.dataset.valore));
-    if (gruppo === "inFascia" && tasto2.dataset.valore === "minpv") {
-      const nascosto = !saFareMinPiuSole(opzioni) && imp.inFascia !== "minpv";
-      if (tasto2.hidden !== nascosto) tasto2.hidden = nascosto;
-    }
   }
   for (const tasto2 of carta.querySelectorAll("[data-rn-giorno]"))
     attributo(tasto2, "aria-pressed", String(imp.giorni[Number(tasto2.dataset.rnGiorno)] === true));
@@ -60638,7 +60619,7 @@ function evModel(states) {
     })),
     evcc: comandiDiEvcc(states),
     /* La ricarica di notte, in una riga (`ricarica-di-notte-section.js`):
-     * «🌙 Ricarica notturna · Veloce fino all'80% o alle 05:00» mentre carica, «🌙 Ricarica notturna
+     * «🌙 Ricarica notturna · Fast fino all'80% o alle 05:00» mentre carica, «🌙 Ricarica notturna
      * stanotte alle 23:00» quando aspetta. Sta sotto la didascalia della
      * tessera e dentro la finestra, sotto i tasti di evcc; spenta, niente. */
     notte: laPastigliaDellaNotte(),

@@ -6168,8 +6168,6 @@ export default Object.freeze({
   "Fast": "Быстро",
   "Finished at ${alle}": "Завершено в ${alle}",
   "From band ${fascia} in Settings → Energy": "Из зоны ${fascia} в Настройки → Энергия",
-  "In the window": "В интервале",
-  "Min+Solar": "Мин+Солнце",
   "Needs the add-on: the home starts it": "Нужно дополнение: запускает дом",
   "Night charging": "Ночная зарядка",
   "No days chosen": "Дни не выбраны",
@@ -6190,4 +6188,5 @@ export default Object.freeze({
   "tonight at ${alle}": "сегодня ночью в ${alle}",
   "Tonight at ${alle}": "Сегодня ночью в ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "Что наступит раньше. Лимит берётся из evcc: измените его там — изменится и здесь.",
+  "Smart": "Умный",
 });

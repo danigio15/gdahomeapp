@@ -6175,8 +6175,6 @@ export default Object.freeze({
   "Fast": "Snel",
   "Finished at ${alle}": "Klaar om ${alle}",
   "From band ${fascia} in Settings → Energy": "Uit tijdvak ${fascia} in Instellingen → Energie",
-  "In the window": "In het tijdvak",
-  "Min+Solar": "Min+Zon",
   "Needs the add-on: the home starts it": "Heeft de add-on nodig: het huis start hem",
   "Night charging": "'s Nachts laden",
   "No days chosen": "Geen dagen gekozen",
@@ -6197,4 +6195,5 @@ export default Object.freeze({
   "tonight at ${alle}": "vannacht om ${alle}",
   "Tonight at ${alle}": "Vannacht om ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "Wat het eerst komt. De limiet komt uit evcc: wijzig je hem daar, dan verandert hij hier ook.",
+  "Smart": "Slim",
 });

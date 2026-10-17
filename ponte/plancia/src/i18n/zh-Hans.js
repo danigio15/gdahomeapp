@@ -6042,8 +6042,6 @@ export default Object.freeze({
   "Fast": "快速",
   "Finished at ${alle}": "${alle} 完成",
   "From band ${fascia} in Settings → Energy": "来自 设置 → 能源 中的时段 ${fascia}",
-  "In the window": "时段内",
-  "Min+Solar": "最低+光伏",
   "Needs the add-on: the home starts it": "需要加载项：由家来启动",
   "Night charging": "夜间充电",
   "No days chosen": "未选择日期",
@@ -6064,4 +6062,5 @@ export default Object.freeze({
   "tonight at ${alle}": "今晚 ${alle}",
   "Tonight at ${alle}": "今晚 ${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "以先到者为准。上限读取自 evcc：在那里更改，这里也会随之改变。",
+  "Smart": "智能",
 });

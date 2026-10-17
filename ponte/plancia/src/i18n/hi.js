@@ -6136,8 +6136,6 @@ export default Object.freeze({
   "Fast": "तेज़",
   "Finished at ${alle}": "${alle} बजे पूरा",
   "From band ${fascia} in Settings → Energy": "सेटिंग्स → ऊर्जा में स्लॉट ${fascia} से",
-  "In the window": "समय-सीमा में",
-  "Min+Solar": "न्यूनतम+सौर",
   "Needs the add-on: the home starts it": "ऐड-ऑन चाहिए: इसे घर शुरू करता है",
   "Night charging": "रात की चार्जिंग",
   "No days chosen": "कोई दिन नहीं चुना",
@@ -6158,4 +6156,5 @@ export default Object.freeze({
   "tonight at ${alle}": "आज रात ${alle} बजे",
   "Tonight at ${alle}": "आज रात ${alle} बजे",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "जो पहले हो। सीमा evcc से पढ़ी जाती है: वहाँ बदलें तो यहाँ भी बदलेगी।",
+  "Smart": "स्मार्ट",
 });

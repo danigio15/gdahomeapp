@@ -27,7 +27,6 @@ import {
   letturaDellAuto,
   prezzoDellaNotte,
   prossimaFascia,
-  saFareMinPiuSole,
 } from "../core/ricarica-di-notte.js";
 import { CHIAVE_FASCE, minutiDellOra } from "../core/fasce-della-tariffa.js";
 import {
@@ -122,9 +121,10 @@ const ora = (istante) =>
 function nomeDelModo(modo) {
   const m = clean(modo).toLowerCase();
   if (m === "off") return t("Spento", "Off");
-  if (m === "now" || m === "fast") return t("Veloce", "Fast");
-  if (m === "minpv") return t("Min+Sole", "Min+Solar");
-  if (m === "pv" || m === "smart") return t("Solare", "Solar");
+  /* Le stesse parole dei tasti di evcc nella finestra dell'Auto: «Fast» e
+   * «Intelligente», non «Veloce» e «Solare», che li' non ci sono. */
+  if (m === "now" || m === "fast") return t("Fast", "Fast");
+  if (m === "pv" || m === "smart" || m === "minpv") return t("Intelligente", "Smart");
   return clean(modo);
 }
 
@@ -307,7 +307,7 @@ export function ilRacconto({ imp, ponte, assente, lettura, prezzo, adesso }) {
 }
 
 /**
- * La riga della notte sul widget Auto della Home: «🌙 Ricarica notturna · Veloce
+ * La riga della notte sul widget Auto della Home: «🌙 Ricarica notturna · Fast
  * fino all'80% o alle 05:00» mentre carica, «🌙 Ricarica notturna stanotte alle
  * 23:00» quando aspetta la sua ora. Vuota quando e' spenta, o quando stanotte
  * non c'e'.
@@ -418,13 +418,6 @@ function scheletro() {
     <div class="dm-rn-nastro"><i data-rn="tratto1"></i><i data-rn="tratto2"></i><b data-rn="adesso"></b></div>
     <div class="dm-rn-tacche"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
   </div>
-  <div class="dm-rn-riga">
-    <span class="dm-rn-nome">${esc(t("In fascia", "In the window"))}</span>
-    ${segmentato("inFascia", [
-      ["now", t("Veloce", "Fast")],
-      ["minpv", t("Min+Sole", "Min+Solar")],
-    ])}
-  </div>
   <div class="dm-rn-riga dm-rn-riga-alta">
     <div class="dm-rn-coppia"><span class="dm-rn-nome">${esc(t("Si ferma", "Stops"))}</span><b class="dm-rn-valore" data-rn="ferma"></b></div>
     <small class="dm-rn-nota">${esc(
@@ -439,7 +432,7 @@ function scheletro() {
     ${segmentato("poi", [
       ["off", t("Spento", "Off")],
       ["prima", t("Come prima", "As before")],
-      ["pv", t("Solare", "Solar")],
+      ["pv", t("Intelligente", "Smart")],
     ])}
   </div>
   </div><div class="dm-rn-colonna">
@@ -604,17 +597,9 @@ export function renderRicaricaDiNotte(adesso = Date.now()) {
   });
   const d = new Date(adesso);
   attributo(q("adesso"), "style", `left:${pc(d.getHours() * 60 + d.getMinutes())}`);
-  const opzioni = lettura.opzioni;
   for (const tasto of carta.querySelectorAll("[data-rn-scelta]")) {
     const gruppo = tasto.dataset.rnScelta;
     attributo(tasto, "aria-pressed", String(imp[gruppo] === tasto.dataset.valore));
-    if (gruppo === "inFascia" && tasto.dataset.valore === "minpv") {
-      /* Un evcc di oggi il Min+Sole non ce l'ha: il tasto non si offre, a
-       * meno che non sia gia' la scelta — allora resta, e la casa usa la
-       * veloce. */
-      const nascosto = !saFareMinPiuSole(opzioni) && imp.inFascia !== "minpv";
-      if (tasto.hidden !== nascosto) tasto.hidden = nascosto;
-    }
   }
   for (const tasto of carta.querySelectorAll("[data-rn-giorno]"))
     attributo(tasto, "aria-pressed", String(imp.giorni[Number(tasto.dataset.rnGiorno)] === true));

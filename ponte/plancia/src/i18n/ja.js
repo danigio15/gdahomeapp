@@ -6152,8 +6152,6 @@ export default Object.freeze({
   "Fast": "急速",
   "Finished at ${alle}": "${alle}に終了",
   "From band ${fascia} in Settings → Energy": "設定 → エネルギーの時間帯 ${fascia} から",
-  "In the window": "時間帯中",
-  "Min+Solar": "最小+太陽光",
   "Needs the add-on: the home starts it": "アドオンが必要です：開始するのは家です",
   "Night charging": "夜間充電",
   "No days chosen": "曜日が選ばれていません",
@@ -6174,4 +6172,5 @@ export default Object.freeze({
   "tonight at ${alle}": "今夜${alle}",
   "Tonight at ${alle}": "今夜${alle}",
   "Whichever comes first. The limit is read from evcc: change it there and it changes here too.": "早いほうで停止します。上限はevccから読み取ります：そちらで変えるとここも変わります。",
+  "Smart": "スマート",
 });
