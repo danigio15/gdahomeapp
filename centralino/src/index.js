@@ -6,6 +6,7 @@ import { Case } from "./case.js";
 import { ArchivioDellaChat, Chat } from "./chat.js";
 import { Centralino } from "./centralino.js";
 import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
+import { FotoDiPassaggio } from "./foto.js";
 import { numeroDa } from "./freno.js";
 import { Contatti, Postino } from "./posta.js";
 import { ilModoDelleLicenze } from "./modo-delle-licenze.js";
@@ -138,6 +139,8 @@ export async function alzaIlCentralino({
         ? leggiLaChiaveDiFirebase({ percorso: percorsoDellaChiaveDiFirebase, registro })
         : chiaveDiFirebase,
   });
+  /* Le istantanee delle notifiche elaborate: in memoria, dieci minuti. */
+  const foto = new FotoDiPassaggio();
   const centralino = new Centralino({
     case: case_,
     registro,
@@ -145,6 +148,7 @@ export async function alzaIlCentralino({
     modoLicenze: modo,
     revoche,
     spinte,
+    foto,
   });
   const sportello = new Sportello({
     case: case_,
@@ -196,6 +200,7 @@ export async function alzaIlCentralino({
     chat,
     contatti,
     ricevute: new Ricevute({ centralino, registro }),
+    foto,
     registro,
     dove: { sito: ilSito, app: lApp },
     versioneMinima: minima,
@@ -276,7 +281,18 @@ export async function alzaIlCentralino({
     chat.archivio.chiudi();
   };
 
-  return { centralino, case: case_, spinte, sportello, chat, contatti, server, registro, abbassa };
+  return {
+    centralino,
+    case: case_,
+    spinte,
+    foto,
+    sportello,
+    chat,
+    contatti,
+    server,
+    registro,
+    abbassa,
+  };
 }
 
 if (
