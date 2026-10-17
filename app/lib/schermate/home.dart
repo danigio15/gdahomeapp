@@ -212,6 +212,7 @@ class _HomeState extends State<Home> {
     _giroDegliAggiornamenti?.cancel();
     inMacchina.removeListener(_inMacchinaECambiato);
     _menuDiGdanav.dispose();
+    _pianificatoreDiGdanav.dispose();
     super.dispose();
   }
 
@@ -377,6 +378,7 @@ class _HomeState extends State<Home> {
      * impostazioni e quelle dell'auto, in una pagina senza mappa. */
     if (dove == Sezione.navigatore && inMacchina.value) {
       _menuDiGdanav.value = false;
+      _pianificatoreDiGdanav.value = false;
       unawaited(
         apriLeImpostazioniInAuto(context, collegamento: widget.collegamento),
       );
@@ -481,6 +483,9 @@ class _HomeState extends State<Home> {
   /// Le impostazioni di gdanav chieste dalla tessera della barra: si aprono
   /// appena il navigatore c'e'.
   final _menuDiGdanav = ValueNotifier<bool>(false);
+
+  /// «Pianifica i viaggi» sotto la tessera: gdanav apre il pianificatore.
+  final _pianificatoreDiGdanav = ValueNotifier<bool>(false);
 
   void _indietro() {
     if (_sezione == Sezione.navigatore &&
@@ -768,6 +773,7 @@ class _HomeState extends State<Home> {
                                   navigatore: _navigatore,
                                   menuOspite: () => _barra.currentState?.apri(),
                                   apriIlMenu: _menuDiGdanav,
+                                  apriIlPianificatore: _pianificatoreDiGdanav,
                                   /* L'auto della plancia va a gdanav da qui. */
                                   collegamento: collegamento,
                                 ),
@@ -906,6 +912,11 @@ class _HomeState extends State<Home> {
                       impostazioni: () {
                         _barra.currentState?.sceltaFatta();
                         _menuDiGdanav.value = true;
+                        _vai(Sezione.navigatore);
+                      },
+                      pianifica: () {
+                        _barra.currentState?.sceltaFatta();
+                        _pianificatoreDiGdanav.value = true;
                         _vai(Sezione.navigatore);
                       },
                     )

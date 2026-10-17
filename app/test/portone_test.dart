@@ -209,6 +209,15 @@ Finder nellaBarra(String scritta) => find.descendant(
   matching: find.text(scritta),
 );
 
+/// Tocca una voce del menu, facendola scorrere fin dove si vede: sotto la
+/// tessera di gdanav c'e' anche «Pianifica i viaggi», e le voci possono
+/// stare piu' giu' dello schermo della prova.
+Future<void> toccaNellaBarra(WidgetTester tester, String scritta) async {
+  await tester.ensureVisible(nellaBarra(scritta));
+  await tester.pumpAndSettle();
+  await tester.tap(nellaBarra(scritta));
+}
+
 void main() {
   /* Il fondo dell'app si muove da solo, e `pumpAndSettle` non si assesta mai
    * finche' qualcosa si muove. Qui si dice a Flutter che questo telefono ha
@@ -666,7 +675,7 @@ void main() {
        * sull'energia. Il menu dell'app restava segnato su «Configurazione»
        * con sotto un'altra pagina: due barre che dicevano due cose diverse.
        * Adesso la pagina dice dov'e' andata, e il menu la segue. */
-      await tester.tap(nellaBarra('Configurazione plancia'));
+      await toccaNellaBarra(tester, 'Configurazione plancia');
       await tester.pumpAndSettle();
       expect(
         tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
@@ -681,7 +690,7 @@ void main() {
       );
       /* Tornando sulla Config, invece, ci si resta. */
       await apriLaBarra(tester);
-      await tester.tap(nellaBarra('Configurazione plancia'));
+      await toccaNellaBarra(tester, 'Configurazione plancia');
       await tester.pumpAndSettle();
       plancia.cambioPagina?.call('config');
       await tester.pumpAndSettle();
@@ -693,7 +702,7 @@ void main() {
 
       /* Da li' ai dispositivi: la barra si richiude, la sezione cambia, e le
        * entita' compaiono adesso — non prima. */
-      await tester.tap(nellaBarra('Dispositivi'));
+      await toccaNellaBarra(tester, 'Dispositivi');
       await tester.pump();
       /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
        * tempo finto non le fa arrivare, si aspetta quello vero. */
@@ -776,7 +785,7 @@ void main() {
        * che nessuno apre. */
       expect(nellaBarra('2'), findsOneWidget);
 
-      await tester.tap(nellaBarra('Aggiornamenti'));
+      await toccaNellaBarra(tester, 'Aggiornamenti');
       await tester.pump();
       /* Qui non si puo' «aspettare che tutto si fermi»: mentre l'elenco
        * arriva c'e' una rotella che gira, e una rotella non si ferma mai —
@@ -916,7 +925,7 @@ void main() {
       expect(uscita, 1, reason: 'al primo indietro non si esce');
 
       /* E il ☰, sulle sezioni che una barra del titolo ce l'hanno. */
-      await tester.tap(nellaBarra('Dispositivi'));
+      await toccaNellaBarra(tester, 'Dispositivi');
       await tester.pump();
       /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
        * tempo finto non le fa arrivare, si aspetta quello vero. Finche' non
