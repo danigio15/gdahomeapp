@@ -380,6 +380,45 @@ test("il telefono riabbinato stacca se stesso di prima, e il suo vecchio filo si
   }
 });
 
+test("il telefono dice chi e': cambia solo la sua riga, e il nome segue il modello", async () => {
+  const b = await banco();
+  try {
+    const mio = b.dispositivi.abbina({ nome: "Telefono Android", sistema: "android" });
+    const altro = b.dispositivi.abbina({ nome: "Telefono Android", sistema: "android" });
+    const t = telefono(b.indirizzo);
+    await t.aperta;
+    await t.aspetta("auth_required");
+    t.manda({ type: "auth", access_token: mio.segno });
+    await t.aspetta("auth_ok");
+
+    /* Un identificativo nel messaggio non conta: vale il telefono del filo. */
+    t.manda({
+      id: 9,
+      type: "ponte/telefono/chi-sono",
+      id_telefono: altro.dispositivo.id,
+      marca: "Samsung",
+      modello: "Galaxy S24 Ultra",
+      proprietario: "Persona 1",
+    });
+    await attendi(() => t.detti.some((uno) => uno.id === 9));
+    assert.deepEqual(t.detti.find((uno) => uno.id === 9).result, { cambiato: true });
+    const righe = b.dispositivi.elenco();
+    assert.equal(
+      righe.find((uno) => uno.id === mio.dispositivo.id).nome,
+      "Galaxy S24 Ultra di Persona 1",
+    );
+    assert.equal(righe.find((uno) => uno.id === altro.dispositivo.id).nome, "Telefono Android");
+    /* E a Home Assistant non arriva. */
+    assert.equal(
+      b.ha.arrivati.some((uno) => uno.type === "ponte/telefono/chi-sono"),
+      false,
+    );
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
 test("quando il telefono se ne va, il filo con la casa si chiude", async () => {
   const b = await banco();
   try {

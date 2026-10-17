@@ -12,6 +12,7 @@ import 'ausili.dart';
 import 'casa_conosciuta.dart';
 import 'case_doppie.dart';
 import 'cassaforte.dart';
+import 'questo_dispositivo.dart' show proprietarioPulito;
 
 /// Piu' di cosi' non e' un elenco di case, e' un elenco di prove.
 const int caseMassime = 10;
@@ -337,7 +338,38 @@ class ArchivioDelleCase {
     _case.clear();
     _attiva = null;
     await _cassaforte.cancella(_chiave);
+    await _cassaforte.cancella(_chiaveDelProprietario);
   }
+
+  /* ─── Di chi e' questo telefono ─────────────────────────────────────── */
+
+  static const _chiaveDelProprietario = 'il_proprietario';
+
+  /// Il nome scritto alla domanda «Di chi e' questo telefono?». E' del
+  /// telefono, non di una casa: chi abbina una seconda casa lo ritrova gia'
+  /// scritto. `''` se non l'ha mai detto.
+  Future<String> proprietario() async {
+    try {
+      return proprietarioPulito(
+        await _cassaforte.leggi(_chiaveDelProprietario) ?? '',
+      );
+    } catch (_) {
+      return '';
+    }
+  }
+
+  /// Se il nome e' gia' stato detto (anche vuoto, per scelta). Chi non l'ha
+  /// mai detto se lo vede chiedere una volta (vedi `Collegamento`).
+  Future<bool> proprietarioDetto() async {
+    try {
+      return await _cassaforte.leggi(_chiaveDelProprietario) != null;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> segnaIlProprietario(String nome) =>
+      _cassaforte.scrivi(_chiaveDelProprietario, proprietarioPulito(nome));
 
   Future<void> _salva() => _cassaforte.scrivi(
     _chiave,

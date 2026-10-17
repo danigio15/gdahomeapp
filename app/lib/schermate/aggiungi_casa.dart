@@ -17,6 +17,8 @@
 /// l'altro.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../casa/ingresso_qui/qui.dart';
@@ -31,8 +33,10 @@ import '../ponte/abbinamento.dart';
 import '../ponte/errori.dart';
 import '../ponte/indirizzo.dart';
 import '../ponte/invito.dart';
+import '../versione.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
+import 'di_chi_e.dart';
 import 'firma.dart';
 import 'lettore.dart';
 
@@ -69,6 +73,11 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   final _nome = TextEditingController(text: 'Casa');
   final _dentro = TextEditingController();
   final _codice = TextEditingController();
+
+  /* «Di chi e' questo telefono?» Il nome con cui la casa chiamera' questo
+   * telefono fra i «Telefoni abbinati» («Galaxy S24 di …»). Facoltativo; chi
+   * l'ha gia' scritto per un'altra casa lo ritrova. */
+  final _proprietario = TextEditingController();
   bool _sto = false;
   bool _aMano = false;
   String? _male;
@@ -80,10 +89,23 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   bool get _serveLIndirizzo => _centralino == null;
 
   @override
+  void initState() {
+    super.initState();
+    unawaited(_ritrovaIlProprietario());
+  }
+
+  Future<void> _ritrovaIlProprietario() async {
+    final detto = await widget.archivio.proprietario();
+    if (!mounted || detto.isEmpty || _proprietario.text.isNotEmpty) return;
+    _proprietario.text = detto;
+  }
+
+  @override
   void dispose() {
     _nome.dispose();
     _dentro.dispose();
     _codice.dispose();
+    _proprietario.dispose();
     super.dispose();
   }
 
@@ -94,6 +116,31 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
    * stessa persona si abbina da tutti e due (vedi
    * `casa/questo_dispositivo.dart`). */
   late final QuestoDispositivo _questo = comEFatto();
+
+  /* Marca e modello: «Galaxy S24 Ultra», non «Telefono Android». Si comincia
+   * a chiederlo subito, e quando si abbina e' gia' pronto; se il telefono non
+   * lo dice si va avanti col nome di prima. */
+  late final Future<IlModello?> _ilModello = leggiIlModello();
+
+  /* Nome e modello da mandare alla casa, aspettando il modello al piu' un
+   * attimo: un abbinamento non si ferma per questo. */
+  Future<({String nome, Map<String, String> modello})> _chiSono() async {
+    IlModello? modello;
+    try {
+      modello = await _ilModello.timeout(const Duration(seconds: 2));
+    } catch (_) {
+      modello = null;
+    }
+    final diChi = proprietarioPulito(_proprietario.text);
+    return (
+      nome: nomeConIlModello(modello, _questo.nome),
+      modello: {
+        ...?modello?.perLaCasa(),
+        'app': versioneDiQuestApp,
+        if (diChi.isNotEmpty) 'proprietario': diChi,
+      },
+    );
+  }
 
   /* ─── Inquadrare ───────────────────────────────────────────────────────── */
 
@@ -133,14 +180,16 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
 
     /* Il nome che si e' battuto vale lo stesso: e' l'unica cosa che l'app non
      * puo' sapere da sola. */
-    await _prova(
-      () => Abbinamento.conLInvito(
+    await _prova(() async {
+      final chi = await _chiSono();
+      return Abbinamento.conLInvito(
         invito,
-        nome: _questo.nome,
+        nome: chi.nome,
         sistema: _questo.sistema,
+        modello: chi.modello,
         centralinoDiRipiego: _centralino,
-      ),
-    );
+      );
+    });
   }
 
   /* ─── Scriverlo a mano ─────────────────────────────────────────────────── */
@@ -185,18 +234,21 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       /* Due strade, stessa risposta. Con un indirizzo si bussa dritti, ed e'
        * quello che si fa stando in casa; senza, si passa dal centralino, dove
        * la casa e' andata ad aspettare. */
+      final chi = await _chiSono();
       final abbinato = inCasa != null
           ? await Abbinamento.chiedi(
               dove: inCasa,
               codice: _codice.text,
-              nome: _questo.nome,
+              nome: chi.nome,
               sistema: _questo.sistema,
+              modello: chi.modello,
             )
           : await Abbinamento.colCodice(
               centralino: _centralino!,
               codice: _codice.text,
-              nome: _questo.nome,
+              nome: chi.nome,
               sistema: _questo.sistema,
+              modello: chi.modello,
             );
       return Entrata(abbinato, daDentro: inCasa);
     }, inCasa: inCasa);
@@ -235,6 +287,13 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
             ? DaDove.daDentro
             : DaDove.dalCentralino,
       );
+      /* Di chi e' questo telefono, per la prossima casa e per non chiederlo
+       * di nuovo: anche vuoto, che e' una risposta. */
+      try {
+        await widget.archivio.segnaIlProprietario(_proprietario.text);
+      } catch (_) {
+        /* Non scritto: lo si richiedera'. */
+      }
       if (!mounted) return;
       widget.quandoFatto(casa);
     } on ErroreDelPonte catch (errore) {
@@ -527,6 +586,11 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                         en: 'Home, Mum\'s, Beach house',
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 14),
+                  CampoDelProprietario(
+                    controller: _proprietario,
+                    enabled: !_sto,
                   ),
                   if (_aMano) ..._leLettere(testi) else ..._ilRipiego(),
                   if (_male != null) ...[

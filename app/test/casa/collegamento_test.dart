@@ -140,6 +140,89 @@ void main() {
     },
   );
 
+  test(
+    'si dice alla casa che telefono e\' e di chi, una volta per apertura',
+    () async {
+      /* «Si aggiungi anche il modello del telefono, e il nome di chi e'.» */
+      final ponte = await PonteFinto.alza();
+      final casa = await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      await archivio.segnaIlProprietario('Persona 1');
+      var chieste = 0;
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({ponte.indirizzo}),
+        comeSiPresenta: () async {
+          chieste += 1;
+          return {
+            'marca': 'Samsung',
+            'modello': 'Galaxy S24 Ultra',
+            'proprietario': await archivio.proprietario(),
+          };
+        },
+      );
+      await collegamento.apri();
+      await _finoA(() => ponte.presentazioni.isNotEmpty);
+      final detto = ponte.presentazioni.single;
+      expect(detto['modello'], 'Galaxy S24 Ultra');
+      expect(detto['proprietario'], 'Persona 1');
+      /* Gia' detto di chi e': niente foglio. */
+      expect(collegamento.vuoleSapereDiChiE, isFalse);
+
+      /* Riaprendo la stessa casa non si ridice. */
+      await collegamento.apri(forza: true);
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      expect(ponte.presentazioni.length, 1);
+      expect(chieste, 1);
+      expect(archivio.quella(casa.id), isNotNull);
+      await ponte.spegni();
+    },
+  );
+
+  test('chi non ha mai detto di chi e\' il telefono se lo vede chiedere, e la '
+      'risposta va alla casa', () async {
+    final ponte = await PonteFinto.alza();
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+      comeSiPresenta: () async {
+        final diChi = await archivio.proprietario();
+        return {
+          'modello': 'Pixel 9',
+          if (diChi.isNotEmpty) 'proprietario': diChi,
+        };
+      },
+    );
+    await collegamento.apri();
+    await _finoA(() => collegamento.vuoleSapereDiChiE);
+    await _finoA(() => ponte.presentazioni.isNotEmpty);
+    expect(ponte.presentazioni.single.containsKey('proprietario'), isFalse);
+
+    /* «Più tardi»: non si scrive niente, e per stavolta basta. */
+    await collegamento.rispostoDiChiE(null);
+    expect(collegamento.vuoleSapereDiChiE, isFalse);
+    expect(await archivio.proprietarioDetto(), isFalse);
+
+    /* La risposta: si scrive, ripulita, e si ridice alla casa. */
+    await collegamento.rispostoDiChiE('  Persona   1 ');
+    expect(await archivio.proprietario(), 'Persona 1');
+    await _finoA(() => ponte.presentazioni.length == 2);
+    expect(ponte.presentazioni.last['proprietario'], 'Persona 1');
+    await ponte.spegni();
+  });
+
   test('in casa non si passa più dalla strada lunga: se la fa dire', () async {
     /* «Compare fuori casa quando in realtà sono in wifi e sono in casa.»
      *

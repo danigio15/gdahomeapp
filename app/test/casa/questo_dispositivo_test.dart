@@ -127,4 +127,74 @@ void main() {
       expect(nomeDalBrowser('qualcosa che non somiglia a niente'), 'Browser');
     });
   });
+
+  group('il modello', () {
+    test('un Samsung dal codice di fabbrica al nome in vendita', () {
+      final s24 = modelloDaAndroid(
+        produttore: 'samsung',
+        modello: 'SM-S928B',
+        versione: '15',
+      );
+      expect(s24.marca, 'Samsung');
+      expect(s24.modello, 'Galaxy S24 Ultra');
+      expect(s24.versione, '15');
+      /* La lettera del paese non conta. */
+      expect(
+        modelloDaAndroid(produttore: 'samsung', modello: 'SM-X710N').modello,
+        'Galaxy Tab S9',
+      );
+      /* Uno che non si conosce resta col suo codice. */
+      expect(
+        modelloDaAndroid(produttore: 'samsung', modello: 'SM-Z999X').modello,
+        'SM-Z999X',
+      );
+    });
+
+    test('chi scrive gia\' il nome lo tiene, senza ripetere la marca', () {
+      expect(
+        modelloDaAndroid(produttore: 'Google', modello: 'Pixel 9 Pro').modello,
+        'Pixel 9 Pro',
+      );
+      final xiaomi = modelloDaAndroid(
+        produttore: 'Xiaomi',
+        modello: 'Xiaomi 14',
+      );
+      expect(xiaomi.marca, 'Xiaomi');
+      expect(xiaomi.modello, '14');
+      expect(marcaLeggibile('oneplus'), 'OnePlus');
+      expect(marcaLeggibile('fairphone'), 'Fairphone');
+    });
+
+    test('un iPhone dal suo codice, e uno nuovo dice almeno che cos\'e\'', () {
+      expect(nomeDellIPhone('iPhone16,1'), 'iPhone 15 Pro');
+      expect(nomeDellIPhone('iPhone17,5'), 'iPhone 16e');
+      expect(nomeDellIPhone('iPad16,6'), 'iPad Pro 13"');
+      expect(nomeDellIPhone('iPhone99,9'), 'iPhone');
+      expect(nomeDellIPhone('iPad99,9'), 'iPad');
+      final ios = modelloDaIos(codice: 'iPhone17,1', versione: '18.1');
+      expect(ios.marca, 'Apple');
+      expect(ios.modello, 'iPhone 16 Pro');
+      expect(ios.perLaCasa(), {
+        'marca': 'Apple',
+        'modello': 'iPhone 16 Pro',
+        'versione': '18.1',
+      });
+    });
+
+    test('il nome all\'abbinamento: il modello, o quello di prima', () {
+      const pixel = IlModello(marca: 'Google', modello: 'Pixel 9');
+      expect(nomeConIlModello(pixel, 'Telefono Android'), 'Pixel 9');
+      expect(nomeConIlModello(null, 'Telefono Android'), 'Telefono Android');
+      expect(const IlModello(marca: '', modello: '').perLaCasa(), isEmpty);
+    });
+  });
+
+  group('di chi è il telefono', () {
+    test('una riga sola, senza caratteri strani, al più 30 caratteri', () {
+      expect(proprietarioPulito('  Persona   1 \n'), 'Persona 1');
+      expect(proprietarioPulito('Pers\u0000ona'), 'Persona');
+      expect(proprietarioPulito('x' * 80).length, 30);
+      expect(proprietarioPulito('   '), '');
+    });
+  });
 }

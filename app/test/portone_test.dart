@@ -244,12 +244,13 @@ void main() {
 
     /* La cosa che si sta provando e' quello che **non** c'e'.
      *
-     * Una casella sola, e non e' nemmeno il codice: e' il nome della casa.
-     * Nessun indirizzo, nessuna porta, nessun codice da battere, e soprattutto
-     * nessuna credenziale di Home Assistant — che e' una promessa scritta a
-     * schermo, e la prima cosa che si romperebbe rimettendo dentro un campo
-     * per volta. */
-    expect(find.byType(TextField), findsOneWidget);
+     * Due caselle, e nessuna e' il codice: il nome della casa e di chi e' il
+     * telefono, facoltativo. Nessun indirizzo, nessuna porta, nessun codice
+     * da battere, e soprattutto nessuna credenziale di Home Assistant — che
+     * e' una promessa scritta a schermo, e la prima cosa che si romperebbe
+     * rimettendo dentro un campo per volta. */
+    expect(find.byType(TextField), findsNWidgets(2));
+    expect(find.text('Di chi è questo telefono?'), findsOneWidget);
     expect(find.text('Indirizzo di Home Assistant in casa'), findsNothing);
     expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
     expect(
@@ -280,6 +281,7 @@ void main() {
     expect(find.text('Inquadra il QR code'), findsNothing);
 
     /* Le lettere a mano: la casella si chiama col suo nome inglese. */
+    await tester.ensureVisible(find.text('Can\'t scan it? Enter the code'));
     await tester.tap(find.text('Can\'t scan it? Enter the code'));
     await tester.pumpAndSettle();
     expect(
@@ -420,7 +422,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Inquadra il QR code'), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
+    /* Il nome della casa e di chi e' il telefono: nessuna casella del codice. */
+    expect(find.byType(TextField), findsNWidgets(2));
     /* Le due cose che si direbbero di un QR code letto male: nessuna delle
      * due, perche' non si e' letto niente. */
     expect(find.textContaining('Inquadra quello che sta'), findsNothing);
@@ -753,6 +756,8 @@ void main() {
         ]);
         final archivio = ArchivioDelleCase(CassaforteInMemoria());
         await archivio.apri();
+        /* Gia' detto di chi e' il telefono: qui non si prova il foglio. */
+        await archivio.segnaIlProprietario('Persona 1');
         await archivio.aggiungi(
           nome: 'Casa mia',
           segno: segnoBuono,
@@ -827,6 +832,8 @@ void main() {
         ];
         final archivio = ArchivioDelleCase(CassaforteInMemoria());
         await archivio.apri();
+        /* Gia' detto di chi e' il telefono: qui non si prova il foglio. */
+        await archivio.segnaIlProprietario('Persona 1');
         await archivio.aggiungi(
           nome: 'Casa mia',
           segno: segnoBuono,

@@ -32,6 +32,10 @@ import { NOME } from "./marchio.js";
  * `sostituisci` in `dispositivi.js`. */
 export const SOSTITUISCI = "ponte/telefono/sostituisci";
 
+/* Il telefono che dice chi e': marca, modello, versioni e di chi e' (vedi
+ * `presentati` in `dispositivi.js`). Solo per se stesso. */
+export const CHI_SONO = "ponte/telefono/chi-sono";
+
 /* Quanti messaggi al secondo puo' mandare un telefono.
  *
  * Una plancia che si apre ne manda una raffica — le sottoscrizioni, i
@@ -365,6 +369,23 @@ class Collegamento {
           type: "result",
           success: true,
           result: { staccato },
+        }),
+      );
+      return;
+    }
+    /* Il telefono che dice che telefono e', e di chi: vale per il telefono di
+     * questo filo e nessun altro, l'identificativo lo mette il ponte. */
+    if (detto.type === CHI_SONO) {
+      const cambiato =
+        this.dispositivo?.id && this.ponte.dispositivi?.presentati
+          ? this.ponte.dispositivi.presentati(this.dispositivo.id, detto) === true
+          : false;
+      this.presa.manda(
+        JSON.stringify({
+          id: detto.id ?? null,
+          type: "result",
+          success: true,
+          result: { cambiato },
         }),
       );
       return;

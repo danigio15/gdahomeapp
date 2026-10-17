@@ -47,6 +47,15 @@
  * entrato col suo segno, vale solo per se stesso, e senza il segno giusto non
  * stacca nessuno (`sostituisci` in `dispositivi.js`). Nel ponte non si vede
  * nulla: ne' il segno, che si confronta per impronta, ne' chi era.
+ *
+ * Neanche `ponte/telefono/chi-sono`, sempre del filo (`ponte.js`): il
+ * telefono dice marca, modello, versione del sistema e dell'app, e il nome
+ * che chi lo usa ha scritto alla domanda «Di chi e' questo telefono?». Lo
+ * usa solo un telefono entrato col suo segno (un utente abbinato), e vale
+ * solo per la sua riga: l'identificativo lo mette il ponte, non il
+ * telefono. Sono parole corte ripulite (`chiE` in `dispositivi.js`), servono
+ * al nome della riga fra i «Telefoni abbinati» se nessuno l'ha rinominata a
+ * mano, e nel ponte non si vede nulla: nessun registro le scrive.
  */
 
 import { QUADRO_DI_DIFETTO } from "./rapporto.js";

@@ -16,3 +16,6 @@ QuestoDispositivo comEFatto() {
    * telefono e' meta' di quello che serve sapere guardando l'elenco. */
   return QuestoDispositivo(nome: nomeDalBrowser(agente), sistema: 'web');
 }
+
+/// Nel browser il modello non c'e': il nome lo dice gia' [comEFatto].
+Future<IlModello?> leggiIlModello() async => null;

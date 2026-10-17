@@ -32,6 +32,24 @@ void main() {
     expect(archivio.tutte, isEmpty);
   });
 
+  test(
+    'di chi è il telefono: si scrive ripulito, e vuoto vale come detto',
+    () async {
+      expect(await archivio.proprietario(), '');
+      expect(await archivio.proprietarioDetto(), isFalse);
+      await archivio.segnaIlProprietario('  Persona   1 ');
+      expect(await archivio.proprietario(), 'Persona 1');
+      expect(await archivio.proprietarioDetto(), isTrue);
+      /* Chi salva senza scrivere ha risposto lo stesso: non si richiede. */
+      await archivio.segnaIlProprietario('');
+      expect(await archivio.proprietario(), '');
+      expect(await archivio.proprietarioDetto(), isTrue);
+      /* Ricominciare da capo dimentica anche questo. */
+      await archivio.svuota();
+      expect(await archivio.proprietarioDetto(), isFalse);
+    },
+  );
+
   test('la casa aggiunta diventa quella attiva', () async {
     final casa = await archivio.aggiungi(
       nome: 'Casa',
