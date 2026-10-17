@@ -371,6 +371,15 @@ bool _vaBenePer(String evento, Entita una) => switch (evento) {
   _ => false,
 };
 
+/// Un nome da leggere quando la casa non ne dice uno: `switch.lavatrice_2`
+/// diventa «Lavatrice 2».
+String nomeDallId(String id) {
+  final dopo = id.contains('.') ? id.substring(id.indexOf('.') + 1) : id;
+  final parole = dopo.replaceAll('_', ' ').trim();
+  if (parole.isEmpty) return id;
+  return parole[0].toUpperCase() + parole.substring(1);
+}
+
 /// Il foglio di una voce: come arriva quella notifica, su questo telefono.
 ///
 /// Ogni scelta si salva appena la si tocca, come gli interruttori della
@@ -383,6 +392,7 @@ class FoglioDellaVoce extends StatefulWidget {
     required this.stileGenerale,
     required this.cambia,
     this.entita = const [],
+    this.chiediLeEntita,
     this.prova,
   });
 
@@ -393,8 +403,12 @@ class FoglioDellaVoce extends StatefulWidget {
   final String stileGenerale;
   final ValueChanged<SceltaDellaVoce> cambia;
 
-  /// Le entita' della casa, per «Quali».
+  /// Le entita' della casa, per «Quali»: i loro nomi, e la scelta.
   final List<Entita> entita;
+
+  /// Se [entita] e' vuota — la pagina si puo' aprire prima della plancia —
+  /// si chiedono alla casa.
+  final Future<List<Entita>> Function()? chiediLeEntita;
 
   /// «Prova: mandamela adesso». `null` se la casa adesso non risponde, o il
   /// telefono non le ha ancora detto dove mandarle.
@@ -406,6 +420,23 @@ class FoglioDellaVoce extends StatefulWidget {
 
 class _StatoDelFoglio extends State<FoglioDellaVoce> {
   late SceltaDellaVoce _scelta = widget.scelta;
+  late List<Entita> _entita = widget.entita;
+
+  @override
+  void initState() {
+    super.initState();
+    final chiedi = widget.chiediLeEntita;
+    if (_entita.isEmpty && chiedi != null) unawaited(_leEntita(chiedi));
+  }
+
+  Future<void> _leEntita(Future<List<Entita>> Function() chiedi) async {
+    try {
+      final lette = await chiedi();
+      if (mounted && lette.isNotEmpty) setState(() => _entita = lette);
+    } catch (_) {
+      /* Senza, i nomi si ricavano dagli identificativi. */
+    }
+  }
 
   String get _evento => widget.evento;
 
@@ -419,7 +450,7 @@ class _StatoDelFoglio extends State<FoglioDellaVoce> {
 
   Future<void> _sceglieQuali() async {
     final adatte = [
-      for (final una in widget.entita)
+      for (final una in _entita)
         if (_vaBenePer(_evento, una)) una,
     ];
     final scelte = await showModalBottomSheet<List<String>>(
@@ -514,8 +545,8 @@ class _StatoDelFoglio extends State<FoglioDellaVoce> {
         _ => inLingua(it: 'Tutti', en: 'All'),
       };
     }
-    final nomi = {for (final una in widget.entita) una.id: una.nome};
-    return _scelta.quali.map((id) => nomi[id] ?? id).join(', ');
+    final nomi = {for (final una in _entita) una.id: una.nome};
+    return _scelta.quali.map((id) => nomi[id] ?? nomeDallId(id)).join(', ');
   }
 
   @override

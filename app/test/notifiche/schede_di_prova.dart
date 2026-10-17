@@ -6,6 +6,89 @@ library;
 import 'dart:io';
 import 'dart:typed_data';
 
+/// Le stesse schede coi numeri e i nomi piu' lunghi che possono capitare:
+/// nessun testo deve restare tagliato (`scheda_ci_sta_test.dart`).
+const Map<String, Map<String, dynamic>> schedeLunghe = {
+  'ciclo': {
+    'v': 1,
+    't': 'ciclo',
+    'n': 'Asciugatrice',
+    'da': '23:58',
+    'a': '23:57',
+    'min': 1439,
+    'kwh': 12.34,
+    'eur': 10.25,
+    'sole': 0.5,
+    'batt': 0.3,
+    'rkwh': 12.34,
+    'reur': 10.25,
+    'senza': 20.5,
+    'w': [100, 2000, 1500, 100],
+    's': [50, 1000, 750, 50],
+  },
+  'giornata': {
+    'v': 1,
+    't': 'giornata',
+    'd': '2026-09-30',
+    'pk': 123.4,
+    'casa': 1.0,
+    'ris': 10.25,
+    'pkw': 12.3,
+    'pora': '13:10',
+    'rec': 'settembre',
+    'p': [0, 10, 60, 123, 80, 20, 0],
+    'c': [5, 10, 20, 30, 20, 10, 5],
+    'met': [
+      ['9', 'sole'],
+      ['11', 'poco'],
+      ['13', 'nuvole'],
+      ['15', 'pioggia'],
+      ['17', 'sole'],
+      ['19', 'nuvole'],
+    ],
+    'cons': 'lavastoviglie e lavatrice dopo pranzo',
+  },
+  'giornata-senza-sole': {
+    'v': 1,
+    't': 'giornata',
+    'd': '2026-12-31',
+    'pk': null,
+    'rk': 123.45,
+    're': 100.25,
+    'c': [5, 10, 20],
+  },
+  'ups': {
+    'v': 1,
+    't': 'ups',
+    'n': 'UPS dello studio',
+    'car': 0.04,
+    'min': 999,
+    'w': 12345,
+    'dalle': '23:59',
+    'acc': ['router', 'NAS', 'telecamere', 'centralina', 'frigo', 'modem'],
+  },
+  'antifurto': {
+    'v': 1,
+    't': 'antifurto',
+    'zona': 'Finestra camera dei ragazzi',
+    'ora': '23:59',
+    'modo': 'Notte parziale',
+    'dalle': '22:30',
+    'sir': true,
+    'ev': [
+      ['23:59', 'Finestra camera dei ragazzi aperta', 'r'],
+      ['23:58', 'Movimento nel corridoio del piano di sopra', 'a'],
+      ['23:57', 'Porta del garage aperta', 'a'],
+    ],
+  },
+  'movimento': {
+    'v': 1,
+    't': 'movimento',
+    'cam': 'Telecamera del cortile',
+    'ora': '23:59:59',
+  },
+};
+
 const Map<String, Map<String, dynamic>> schedeDiProva = {
   'ciclo': {
     'v': 1,

@@ -135,6 +135,16 @@ enum LaScheda {
     colore: UIColor = chiaro, titolo: Bool = false, larga: CGFloat = 320,
     allinea: NSTextAlignment = .left, righe: Int = 1
   ) -> CGSize {
+    /* Come nell'app: se non ci sta si rimpicciolisce mezzo punto alla volta,
+     * fino ai sette decimi; solo dopo si taglia coi puntini. Su una riga
+     * sola; su piu' righe va a capo da se'. */
+    let minimo = corpo * 0.7
+    var corpo = corpo
+    if righe == 1 {
+      while misura(testo, corpo: corpo, peso: peso, titolo: titolo).width > larga, corpo - 0.5 >= minimo {
+        corpo -= 0.5
+      }
+    }
     let quanto = misura(testo, corpo: corpo, peso: peso, titolo: titolo)
     let w = min(quanto.width, larga)
     let x: CGFloat
@@ -180,13 +190,17 @@ enum LaScheda {
 
   @discardableResult
   static func pillola(_ dove: CGPoint, _ colore: UIColor, _ testo: String, finoA: CGFloat = 346) -> CGFloat {
-    let quanto = min(misura(testo, corpo: 9.5, peso: .heavy).width, finoA - dove.x - 26)
+    var corpo: CGFloat = 9.5
+    while misura(testo, corpo: corpo, peso: .heavy).width > finoA - dove.x - 26, corpo - 0.5 >= 9.5 * 0.7 {
+      corpo -= 0.5
+    }
+    let quanto = min(misura(testo, corpo: corpo, peso: .heavy).width, finoA - dove.x - 26)
     let riquadro = CGRect(x: dove.x, y: dove.y, width: quanto + 26, height: 19)
     vetro.setFill()
     UIBezierPath(roundedRect: riquadro, cornerRadius: 10).fill()
     colore.setFill()
     UIBezierPath(roundedRect: CGRect(x: dove.x + 8, y: dove.y + 6, width: 7, height: 7), cornerRadius: 2).fill()
-    scrivi(testo, CGPoint(x: dove.x + 19, y: dove.y + 3), corpo: 9.5, peso: .heavy, larga: quanto)
+    scrivi(testo, CGPoint(x: dove.x + 19, y: dove.y + 3), corpo: corpo, peso: .heavy, larga: quanto + 1)
     return riquadro.width
   }
 
@@ -256,8 +270,10 @@ enum LaScheda {
     if let energia {
       scrivi(kwh(energia), CGPoint(x: 346, y: 38), corpo: 9.5, peso: .bold, colore: spento, larga: 110, allinea: .right)
     }
+    // Il grafico a sinistra, la ciambella a destra, e sotto le pillole a
+    // tutta larghezza: cosi' i numeri lunghi ci stanno interi.
     let watt = serie(s["w"]), sole = serie(s["s"])
-    let grafico = CGRect(x: 14, y: 58, width: 196, height: 88)
+    let grafico = CGRect(x: 14, y: 56, width: 236, height: 70)
     if watt.count > 1 {
       let massimo = max(watt.max() ?? 1, 1) * 1.08
       let dalSole = watt.indices.map { i in i < sole.count ? min(watt[i], sole[i]) : 0 }
@@ -271,28 +287,34 @@ enum LaScheda {
       chiaro.withAlphaComponent(0.8).setStroke()
       bordo.stroke()
     }
-    if let da = s["da"] as? String { scrivi(da, CGPoint(x: grafico.minX, y: 150), corpo: 8, colore: spento) }
+    let sotto: CGFloat = 129
+    if let da = s["da"] as? String { scrivi(da, CGPoint(x: grafico.minX, y: sotto), corpo: 8, colore: spento, larga: 50) }
     if let a = s["a"] as? String {
-      scrivi(a, CGPoint(x: grafico.maxX, y: 150), corpo: 8, colore: spento, larga: 60, allinea: .right)
+      scrivi(a, CGPoint(x: grafico.maxX, y: sotto), corpo: 8, colore: spento, larga: 50, allinea: .right)
     }
     let quota = numero(s["sole"])
     let batteria = numero(s["batt"]) ?? 0
-    if let quota { ciambella(CGPoint(x: 281, y: 84), 22, quota) }
-    var y: CGFloat = 118
+    if let senza = numero(s["senza"]), let quota, quota > 0 {
+      scrivi(detto("senza sole \(euro(senza))", "without sun \(euro(senza))"), CGPoint(x: grafico.midX, y: sotto),
+        corpo: 8, peso: .bold, colore: gialloChiaro, larga: 120, allinea: .center)
+    }
+    if let quota { ciambella(CGPoint(x: 300, y: 92), 24, quota) }
+    var pillole: [(UIColor, String)] = []
     if let energia, let quota, energia * quota > 0 {
-      pillola(CGPoint(x: 220, y: y), giallo, detto("Sole \(kwh(energia * quota))", "Sun \(kwh(energia * quota))"))
-      y += 22
+      pillole.append((giallo, detto("Sole \(kwh(energia * quota)) · gratis", "Sun \(kwh(energia * quota)) · free")))
     }
     if batteria > 0 {
-      pillola(CGPoint(x: 220, y: y), verde, detto("Batteria \(percento(batteria))", "Battery \(percento(batteria))"))
-      y += 22
+      pillole.append((verde, detto("Batteria \(percento(batteria))", "Battery \(percento(batteria))")))
     }
-    if let rete = numero(s["rkwh"]), rete > 0, y < 170 {
-      pillola(CGPoint(x: 220, y: y), grigio, detto("Rete \(kwh(rete))", "Grid \(kwh(rete))"))
+    if let rete = numero(s["rkwh"]), rete > 0 {
+      let soldi = numero(s["reur"]).map { " · \(euro($0))" } ?? ""
+      pillole.append((grigio, detto("Rete \(kwh(rete))\(soldi)", "Grid \(kwh(rete))\(soldi)")))
     }
-    if let senza = numero(s["senza"]), let quota, quota > 0 {
-      scrivi(detto("senza sole \(euro(senza))", "without sun \(euro(senza))"), CGPoint(x: grafico.midX, y: 150),
-        corpo: 8, peso: .bold, colore: gialloChiaro, larga: 140, allinea: .center)
+    var x: CGFloat = 14
+    for (i, (colore, testo)) in pillole.enumerated() {
+      let restano = CGFloat(pillole.count - i)
+      let finoA = restano == 1 ? 346 : max(x + (346 - x - 8 * (restano - 1)) / restano, x + 60)
+      x += pillola(CGPoint(x: x, y: 148), colore, testo, finoA: finoA) + 8
     }
   }
 

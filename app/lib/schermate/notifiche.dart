@@ -452,6 +452,19 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
     }
   }
 
+  /// Le entita' chieste alla casa, quando la plancia non le ha ancora lette:
+  /// per i nomi in «Quali».
+  Future<List<Entita>> _chiediLeEntita() async {
+    final filo = _collegamento.filo;
+    if (filo == null) return const [];
+    final tutte = await filo.risultato({'type': 'get_states'});
+    return [
+      if (tutte is List)
+        for (final una in tutte)
+          if (Entita.leggi(una) case final Entita entita) entita,
+    ];
+  }
+
   /// Il foglio di una voce: come arriva quella notifica, su questo telefono.
   Future<void> _apriLaVoce(String evento) async {
     final stato = _stato;
@@ -465,6 +478,7 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
         scelta: stato.impostazioni.sceltaDi(evento),
         stileGenerale: stato.impostazioni.stile,
         entita: _collegamento.stato?.tutte() ?? const [],
+        chiediLeEntita: _chiediLeEntita,
         cambia: (scelta) {
           final adesso = _stato?.impostazioni ?? stato.impostazioni;
           unawaited(_imposta(adesso.conScelta(evento, scelta)));

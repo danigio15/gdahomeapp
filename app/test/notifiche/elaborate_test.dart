@@ -5,11 +5,14 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/casa/entita.dart';
 import 'package:gdahome/notifiche/foto_di_passaggio.dart';
 import 'package:gdahome/notifiche/modello.dart';
 import 'package:gdahome/notifiche/scheda.dart';
+import 'package:gdahome/schermate/notifiche.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
@@ -205,6 +208,69 @@ void main() {
         expect(chieste, hasLength(2));
       },
     );
+  });
+
+  group('il foglio di una voce', () {
+    const scelta = SceltaDellaVoce(
+      quali: ['switch.lavatrice', 'switch.lavastoviglie'],
+    );
+    Widget foglio({
+      List<Entita> entita = const [],
+      Future<List<Entita>> Function()? chiedi,
+    }) => MaterialApp(
+      home: Scaffold(
+        body: FoglioDellaVoce(
+          evento: 'elettrodomestici',
+          scelta: scelta,
+          stileGenerale: 'elaborate',
+          entita: entita,
+          chiediLeEntita: chiedi,
+          cambia: (_) {},
+        ),
+      ),
+    );
+    Entita una(String id, String nome) =>
+        Entita(id: id, stato: 'off', attributi: {'friendly_name': nome});
+
+    testWidgets('«Quali» dice i nomi, non gli identificativi', (tester) async {
+      await tester.pumpWidget(
+        foglio(
+          entita: [
+            una('switch.lavatrice', 'Lavatrice'),
+            una('switch.lavastoviglie', 'Lavastoviglie'),
+          ],
+        ),
+      );
+      expect(find.text('Lavatrice, Lavastoviglie'), findsOneWidget);
+      expect(find.textContaining('switch.'), findsNothing);
+    });
+
+    testWidgets(
+      'se la plancia non le ha ancora, i nomi si chiedono alla casa',
+      (tester) async {
+        await tester.pumpWidget(
+          foglio(
+            chiedi: () async => [
+              una('switch.lavatrice', 'Lavatrice di sotto'),
+              una('switch.lavastoviglie', 'Lavastoviglie'),
+            ],
+          ),
+        );
+        await tester.pump();
+        expect(find.text('Lavatrice di sotto, Lavastoviglie'), findsOneWidget);
+      },
+    );
+
+    testWidgets('e se la casa non risponde, un nome dall\'identificativo', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        foglio(chiedi: () async => throw StateError('la casa non risponde')),
+      );
+      await tester.pump();
+      expect(find.text('Lavatrice, Lavastoviglie'), findsOneWidget);
+      expect(nomeDallId('switch.lavatrice_2'), 'Lavatrice 2');
+    });
   });
 
   group('la scheda disegnata', () {

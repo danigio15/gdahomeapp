@@ -214,6 +214,44 @@ void _fondo(Canvas tela, Rect dove, List<Color> colori, {double raggio = 18}) {
   );
 }
 
+/// I testi che, anche rimpiccioliti, non ci stavano: per le prove, che
+/// controllano che nessuna scheda tagli niente (`elaborate_test.dart`).
+@visibleForTesting
+final List<String> testiTagliati = [];
+
+/// Un testo misurato per stare in [larghezza]: se non ci sta, si
+/// rimpicciolisce mezzo punto alla volta fino ai sette decimi; solo se
+/// nemmeno cosi' ci sta, si taglia coi puntini — e si annota.
+TextPainter _misurato(
+  String testo,
+  TextStyle stile,
+  double larghezza, {
+  int righe = 1,
+  TextAlign allinea = TextAlign.left,
+}) {
+  final corpo = stile.fontSize ?? 12;
+  var adesso = corpo;
+  while (true) {
+    final scritto = TextPainter(
+      text: TextSpan(
+        text: testo,
+        style: stile.copyWith(fontSize: adesso),
+      ),
+      textAlign: allinea,
+      textDirection: TextDirection.ltr,
+      maxLines: righe,
+      ellipsis: '…',
+    )..layout(maxWidth: math.max(larghezza, 1));
+    if (!scritto.didExceedMaxLines) return scritto;
+    if (adesso - 0.5 < corpo * 0.7) {
+      testiTagliati.add(testo);
+      return scritto;
+    }
+    scritto.dispose();
+    adesso -= 0.5;
+  }
+}
+
 /// Scrive un testo. Torna la sua misura, per mettere il resto accanto.
 Size _scrivi(
   Canvas tela,
@@ -228,23 +266,20 @@ Size _scrivi(
   double spaziatura = 0,
   int righe = 1,
 }) {
-  final scritto = TextPainter(
-    text: TextSpan(
-      text: testo,
-      style: TextStyle(
-        fontFamily: titolo ? 'Oswald' : 'Inter',
-        fontSize: corpo,
-        fontWeight: peso,
-        color: colore,
-        letterSpacing: spaziatura,
-        height: 1.15,
-      ),
+  final scritto = _misurato(
+    testo,
+    TextStyle(
+      fontFamily: titolo ? 'Oswald' : 'Inter',
+      fontSize: corpo,
+      fontWeight: peso,
+      color: colore,
+      letterSpacing: spaziatura,
+      height: 1.15,
     ),
-    textAlign: allinea,
-    textDirection: TextDirection.ltr,
-    maxLines: righe,
-    ellipsis: '…',
-  )..layout(maxWidth: larghezza);
+    larghezza,
+    righe: righe,
+    allinea: allinea,
+  );
   final x = switch (allinea) {
     TextAlign.right => dove.dx - scritto.width,
     TextAlign.center => dove.dx - scritto.width / 2,
@@ -264,20 +299,16 @@ double _pillola(
   String testo, {
   double finoA = 346,
 }) {
-  final scritto = TextPainter(
-    text: TextSpan(
-      text: testo,
-      style: const TextStyle(
-        fontFamily: 'Inter',
-        fontSize: 9.5,
-        fontWeight: FontWeight.w800,
-        color: _chiaro,
-      ),
+  final scritto = _misurato(
+    testo,
+    const TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 9.5,
+      fontWeight: FontWeight.w800,
+      color: _chiaro,
     ),
-    textDirection: TextDirection.ltr,
-    maxLines: 1,
-    ellipsis: '…',
-  )..layout(maxWidth: math.max(finoA - dove.dx - 26, 10));
+    finoA - dove.dx - 26,
+  );
   final larga = scritto.width + 26;
   tela.drawRRect(
     RRect.fromRectAndRadius(
@@ -434,9 +465,11 @@ void _ilCiclo(Canvas tela, Map<String, dynamic> s, PictureInfo? svg) {
     );
   }
   // La curva: in grigio quello che ha preso, in giallo quello che era sole.
+  // A destra la ciambella; sotto, a tutta larghezza, le pillole: cosi' i
+  // numeri lunghi — «12,34 kWh», «10,25 €» — ci stanno interi.
   final watt = _serie(s['w']);
   final sole = _serie(s['s']);
-  const grafico = Rect.fromLTWH(14, 58, 196, 88);
+  const grafico = Rect.fromLTWH(14, 56, 236, 70);
   if (watt.length > 1) {
     final massimo = math.max(watt.reduce(math.max), 1.0) * 1.08;
     final dalSole = [
@@ -468,62 +501,30 @@ void _ilCiclo(Canvas tela, Map<String, dynamic> s, PictureInfo? svg) {
         ..color = _chiaro.withValues(alpha: 0.8),
     );
   }
+  const sottoIlGrafico = 129.0;
   if (s['da'] is String) {
     _scrivi(
       tela,
       '${s['da']}',
-      Offset(grafico.left, 150),
+      Offset(grafico.left, sottoIlGrafico),
       corpo: 8,
       colore: _spento,
+      larghezza: 50,
     );
   }
   if (s['a'] is String) {
     _scrivi(
       tela,
       '${s['a']}',
-      Offset(grafico.right, 150),
+      Offset(grafico.right, sottoIlGrafico),
       corpo: 8,
       colore: _spento,
       allinea: TextAlign.right,
-      larghezza: 60,
+      larghezza: 50,
     );
   }
-  // A destra: quanto era sole, e quanto rete.
   final quota = _numero(s['sole']);
   final batteria = _numero(s['batt']) ?? 0;
-  if (quota != null) _ciambella(tela, const Offset(281, 84), 22, quota);
-  var y = 118.0;
-  final kwhDalSole = kwh != null && quota != null ? kwh * quota : null;
-  if (kwhDalSole != null && kwhDalSole > 0) {
-    _pillola(
-      tela,
-      Offset(220, y),
-      _giallo,
-      inLingua(it: 'Sole ${_kwh(kwhDalSole)}', en: 'Sun ${_kwh(kwhDalSole)}'),
-    );
-    y += 22;
-  }
-  if (batteria > 0) {
-    _pillola(
-      tela,
-      Offset(220, y),
-      _verde,
-      inLingua(
-        it: 'Batteria ${_percento(batteria)}',
-        en: 'Battery ${_percento(batteria)}',
-      ),
-    );
-    y += 22;
-  }
-  final reteKwh = _numero(s['rkwh']);
-  if (reteKwh != null && reteKwh > 0 && y < 170) {
-    _pillola(
-      tela,
-      Offset(220, y),
-      _grigio,
-      inLingua(it: 'Rete ${_kwh(reteKwh)}', en: 'Grid ${_kwh(reteKwh)}'),
-    );
-  }
   final senza = _numero(s['senza']);
   if (senza != null && quota != null && quota > 0) {
     _scrivi(
@@ -532,13 +533,64 @@ void _ilCiclo(Canvas tela, Map<String, dynamic> s, PictureInfo? svg) {
         it: 'senza sole ${_euro(senza)}',
         en: 'without sun ${_euro(senza)}',
       ),
-      Offset(grafico.center.dx, 150),
+      Offset(grafico.center.dx, sottoIlGrafico),
       corpo: 8,
       peso: FontWeight.w700,
       colore: _gialloChiaro,
       allinea: TextAlign.center,
-      larghezza: 140,
+      larghezza: 120,
     );
+  }
+  if (quota != null) _ciambella(tela, const Offset(300, 92), 24, quota);
+  // Le pillole, in fila sotto: quanto era sole, batteria, rete.
+  final reteKwh = _numero(s['rkwh']);
+  final reteEuro = _numero(s['reur']);
+  final kwhDalSole = kwh != null && quota != null ? kwh * quota : null;
+  final pillole = [
+    if (kwhDalSole != null && kwhDalSole > 0)
+      (
+        _giallo,
+        inLingua(
+          it: 'Sole ${_kwh(kwhDalSole)} · gratis',
+          en: 'Sun ${_kwh(kwhDalSole)} · free',
+        ),
+      ),
+    if (batteria > 0)
+      (
+        _verde,
+        inLingua(
+          it: 'Batteria ${_percento(batteria)}',
+          en: 'Battery ${_percento(batteria)}',
+        ),
+      ),
+    if (reteKwh != null && reteKwh > 0)
+      (
+        _grigio,
+        inLingua(
+          it:
+              'Rete ${_kwh(reteKwh)}'
+              '${reteEuro == null ? '' : ' · ${_euro(reteEuro)}'}',
+          en:
+              'Grid ${_kwh(reteKwh)}'
+              '${reteEuro == null ? '' : ' · ${_euro(reteEuro)}'}',
+        ),
+      ),
+  ];
+  var x = 14.0;
+  for (final (i, (colore, testo)) in pillole.indexed) {
+    // Lo spazio che resta si divide fra le pillole che mancano: nessuna
+    // si prende tutto e lascia le altre senza posto.
+    final restano = pillole.length - i;
+    final finoA = x + (346 - x - 8 * (restano - 1)) / restano;
+    x +=
+        _pillola(
+          tela,
+          Offset(x, 148),
+          colore,
+          testo,
+          finoA: restano == 1 ? 346 : math.max(finoA, x + 60),
+        ) +
+        8;
   }
 }
 
@@ -1140,20 +1192,16 @@ Future<Uint8List?> _laFoto(Uint8List byte, Map<String, dynamic>? scheda) async {
       );
       tela.restore();
       if (scritta.isEmpty) return;
-      final scritto = TextPainter(
-        text: TextSpan(
-          text: scritta,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 9.5,
-            fontWeight: FontWeight.w800,
-            color: _bianco,
-          ),
+      final scritto = _misurato(
+        scritta,
+        const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+          color: _bianco,
         ),
-        textDirection: TextDirection.ltr,
-        maxLines: 1,
-        ellipsis: '…',
-      )..layout(maxWidth: 300);
+        300,
+      );
       final pillola = Rect.fromLTWH(10, 180 - 10 - 20, scritto.width + 26, 20);
       tela.drawRRect(
         RRect.fromRectAndRadius(pillola, const Radius.circular(7)),

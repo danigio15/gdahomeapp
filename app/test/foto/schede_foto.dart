@@ -42,12 +42,16 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(_iCaratteri);
 
-  for (final MapEntry(key: nome, value: scheda) in schedeDiProva.entries) {
+  for (final MapEntry(key: nome, value: scheda) in {
+    ...schedeDiProva,
+    for (final MapEntry(:key, :value) in schedeLunghe.entries)
+      'lunga-$key': value,
+  }.entries) {
     testWidgets('la scheda $nome', (tester) async {
       final disegno = (await tester.runAsync(
         () => disegnaLaNotifica(
           scheda: scheda,
-          foto: nome == 'movimento' ? fotoDiProva() : null,
+          foto: nome.endsWith('movimento') ? fotoDiProva() : null,
           attesa: const Duration(seconds: 30),
         ),
       ))!;
