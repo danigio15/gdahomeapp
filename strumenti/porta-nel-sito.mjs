@@ -23,7 +23,11 @@
  *    la casa non parla con nessuno e poi va a prendersi i caratteri da Google
  *    si smentisce da solo. Archivo, il carattere del testo, non viene dalla
  *    plancia: sta in `sito/caratteri/`, salvato in git, e questo script non
- *    lo tocca.
+ *    lo tocca;
+ *  - **il segno sullo stile e sul codice**, dai file stessi — il `?v=` con cui
+ *    le pagine chiamano `stile.css`, `privacy.css` e `sito.js`, che e'
+ *    l'impronta del file: senza, chi aveva gia' aperto il sito vede la pagina
+ *    nuova vestita con lo stile di prima.
  *
  * ## Le due meta', e perche' una sola sta nella repository
  *
@@ -60,6 +64,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -255,6 +260,35 @@ for (const nome of CARATTERI) {
 }
 conta("i caratteri", CARATTERI.length, fontByte);
 
+/* Il segno sullo stile e sul codice.
+ *
+ * Il server fa rivedere al browser le pagine a ogni visita, ma non i file che
+ * stanno loro di fianco: `stile.css`, `privacy.css` e `sito.js` il browser se
+ * li tiene quanto gli pare. Il 17 ottobre 2026 il sito rifatto e' arrivato a
+ * chi l'aveva appena aperto vestito con lo stile di prima — le fotografie a
+ * tutta pagina, le didascalie in mezzo — e nessun errore da nessuna parte.
+ *
+ * Per questo le pagine li chiamano con un `?v=` che e' l'impronta del file:
+ * cambia il file, cambia l'indirizzo, e il browser lo deve chiedere di nuovo.
+ * Qui si riscrive; `centralino/test/sito.test.js` guarda che sia giusto. Un
+ * file che non c'e' resta senza segno, e lo dice la prova. */
+const impronta = (file) =>
+  createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 8);
+const segni = new Map();
+for (const pagina of readdirSync(SITO).filter((nome) => nome.endsWith(".html"))) {
+  const dove = join(SITO, pagina);
+  const prima = readFileSync(dove, "utf8");
+  const dopo = prima.replace(
+    /((?:src|href)=")([\w./-]+\.(?:css|js))(?:\?v=[0-9a-f]*)?"/g,
+    (chiamata, attributo, file) => {
+      if (!existsSync(join(SITO, file))) return chiamata;
+      if (!segni.has(file)) segni.set(file, impronta(join(SITO, file)));
+      return `${attributo}${file}?v=${segni.get(file)}"`;
+    },
+  );
+  if (dopo !== prima) writeFileSync(dove, dopo);
+}
+
 /* La casa demo. */
 const casa = laCasa();
 const dove = join(STATICO, "casa.js");
@@ -276,6 +310,9 @@ const scritti = (n) =>
 process.stdout.write("Nel sito:\n");
 for (const { che, quanti, byte, unita } of fatto)
   process.stdout.write(`  ${che}: ${quanti} ${unita}, ${scritti(byte)}\n`);
+process.stdout.write(
+  `  i segni: ${[...segni].map(([file, segno]) => `${file}?v=${segno}`).join(", ")}\n`,
+);
 process.stdout.write(
   `  in tutto: ${scritti(fatto.reduce((somma, x) => somma + x.byte, 0))}\n` +
     "  (sito/dashboardmodern_static/ sta fuori da git: si rifa' con questo script)\n",
