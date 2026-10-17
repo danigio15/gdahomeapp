@@ -46,7 +46,12 @@ Future<void> lasciaLeChiaviAllEstensione(Iterable<CasaConosciuta> case_) async {
   }
 }
 
-/// Telefono → `{k: chiave delle notifiche, n: nome della casa, c: casa}`.
+/// Telefono → `{k: chiave delle notifiche, n: nome della casa, c: casa, u:
+/// dove stanno le foto}`.
+///
+/// `u` e' l'indirizzo delle istantanee sul centralino (`…/foto/`, senza
+/// l'identificativo): l'estensione ci attacca quello della notifica, prende
+/// la foto cifrata e la apre con `k`. Senza centralino non c'e'.
 @visibleForTesting
 Future<Map<String, Map<String, String>>> chiaviPerLEstensione(
   Iterable<CasaConosciuta> case_,
@@ -61,6 +66,8 @@ Future<Map<String, Map<String, String>>> chiaviPerLEstensione(
       'k': byte.map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
       'n': casa.nome,
       'c': casa.id,
+      if (casa.centralino case final centralino?)
+        'u': centralino.foto('').toString(),
     };
   }
   return chiavi;

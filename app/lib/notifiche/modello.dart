@@ -13,7 +13,7 @@ library;
 /// Gli eventi di ogni categoria, nell'ordine della pagina. Sono gli stessi di
 /// `CATEGORIE` in `ponte/src/sentinella.js`.
 const Map<String, List<String>> categorieDelleNotifiche = {
-  'urgenti': ['antifurto', 'allarmi', 'campanello'],
+  'urgenti': ['antifurto', 'allarmi', 'campanello', 'blackout'],
   'sicurezza': ['inserimenti', 'uscito', 'aperture', 'movimento'],
   'casa': ['elettrodomestici', 'frigo', 'pioggia'],
   'persone': ['arrivi'],
@@ -23,6 +23,189 @@ const Map<String, List<String>> categorieDelleNotifiche = {
 };
 
 final RegExp _orario = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
+
+/// Gli eventi che hanno anche la versione «elaborata»: con la scheda
+/// disegnata sul telefono, o con la foto della telecamera.
+const Set<String> eventiElaborabili = {
+  'elettrodomestici',
+  'riepilogo',
+  'blackout',
+  'antifurto',
+  'movimento',
+};
+
+/// Cosa si puo' mettere dentro la notifica di un elettrodomestico finito.
+const List<String> pezziDellElettrodomestico = [
+  'durata',
+  'kwh',
+  'costo',
+  'sole',
+  'consiglio',
+];
+
+/// Le scelte di una voce sola: come arriva quella notifica, su questo
+/// telefono. Quello che non si sceglie resta «come tutte».
+///
+/// I nomi sono quelli del ponte (`su` in `ponte/src/notifiche.js`): il ponte
+/// le legge per decidere se mandare, a chi e come scriverla.
+class SceltaDellaVoce {
+  const SceltaDellaVoce({
+    this.stile = 'come-tutte',
+    this.quali = const [],
+    this.soglia,
+    this.suono = 'normale',
+    this.dalle,
+    this.alle,
+    this.come = 'subito',
+    this.dentro = pezziDellElettrodomestico,
+    this.quando = 'casa-vuota-o-notte',
+  });
+
+  /// `come-tutte`, `semplice` o `elaborata`.
+  final String stile;
+
+  /// Le entita' a cui vale; vuoto vuol dire tutte.
+  final List<String> quali;
+
+  /// Euro del ciclo, o minuti del blackout: sotto, non arriva.
+  final double? soglia;
+
+  /// `muta`, `normale` o `suo`.
+  final String suono;
+
+  /// Fuori da queste ore non arriva. `null` tutte e due: sempre.
+  final String? dalle;
+  final String? alle;
+
+  /// `subito`, o `riepilogo`: finisce nel riepilogo della sera.
+  final String come;
+
+  /// Per gli elettrodomestici: cosa scrivere.
+  final List<String> dentro;
+
+  /// Per il movimento: `sempre`, `casa-vuota`, `notte` o
+  /// `casa-vuota-o-notte`.
+  final String quando;
+
+  bool get haGliOrari => dalle != null && alle != null;
+
+  SceltaDellaVoce con({
+    String? stile,
+    List<String>? quali,
+    double? soglia,
+    bool senzaSoglia = false,
+    String? suono,
+    String? dalle,
+    String? alle,
+    bool senzaOrari = false,
+    String? come,
+    List<String>? dentro,
+    String? quando,
+  }) => SceltaDellaVoce(
+    stile: stile ?? this.stile,
+    quali: quali ?? this.quali,
+    soglia: senzaSoglia ? null : (soglia ?? this.soglia),
+    suono: suono ?? this.suono,
+    dalle: senzaOrari ? null : (dalle ?? this.dalle),
+    alle: senzaOrari ? null : (alle ?? this.alle),
+    come: come ?? this.come,
+    dentro: dentro ?? this.dentro,
+    quando: quando ?? this.quando,
+  );
+
+  Map<String, Object?> inJson() => {
+    'stile': stile,
+    'quali': quali,
+    'soglia': soglia,
+    'suono': suono,
+    'orari': haGliOrari ? {'dalle': dalle, 'alle': alle} : null,
+    'come': come,
+    'dentro': dentro,
+    'quando': quando,
+  };
+
+  static SceltaDellaVoce leggi(Object? grezzo) {
+    if (grezzo is! Map) return const SceltaDellaVoce();
+    final quali = grezzo['quali'];
+    final dentro = grezzo['dentro'];
+    final orari = grezzo['orari'];
+    final dalle = orari is Map ? orari['dalle'] : null;
+    final alle = orari is Map ? orari['alle'] : null;
+    final buoniOrari =
+        dalle is String &&
+        alle is String &&
+        _orario.hasMatch(dalle) &&
+        _orario.hasMatch(alle);
+    final soglia = grezzo['soglia'];
+    return SceltaDellaVoce(
+      stile: switch (grezzo['stile']) {
+        'semplice' => 'semplice',
+        'elaborata' => 'elaborata',
+        _ => 'come-tutte',
+      },
+      quali: [
+        if (quali is List)
+          for (final una in quali)
+            if (una is String && una.contains('.')) una,
+      ],
+      soglia: soglia is num && soglia >= 0 ? soglia.toDouble() : null,
+      suono: switch (grezzo['suono']) {
+        'muta' => 'muta',
+        'suo' => 'suo',
+        _ => 'normale',
+      },
+      dalle: buoniOrari ? dalle : null,
+      alle: buoniOrari ? alle : null,
+      come: grezzo['come'] == 'riepilogo' ? 'riepilogo' : 'subito',
+      dentro: dentro is List
+          ? [
+              for (final uno in pezziDellElettrodomestico)
+                if (dentro.contains(uno)) uno,
+            ]
+          : pezziDellElettrodomestico,
+      quando: switch (grezzo['quando']) {
+        'sempre' => 'sempre',
+        'casa-vuota' => 'casa-vuota',
+        'notte' => 'notte',
+        _ => 'casa-vuota-o-notte',
+      },
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is SceltaDellaVoce &&
+      other.stile == stile &&
+      _stessi(other.quali, quali) &&
+      other.soglia == soglia &&
+      other.suono == suono &&
+      other.dalle == dalle &&
+      other.alle == alle &&
+      other.come == come &&
+      _stessi(other.dentro, dentro) &&
+      other.quando == quando;
+
+  @override
+  int get hashCode => Object.hash(
+    stile,
+    Object.hashAll(quali),
+    soglia,
+    suono,
+    dalle,
+    alle,
+    come,
+    Object.hashAll(dentro),
+    quando,
+  );
+}
+
+bool _stessi(List<String> a, List<String> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i += 1) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
 
 class OreDiSilenzio {
   const OreDiSilenzio({
@@ -81,6 +264,8 @@ class ImpostazioniDelleNotifiche {
     this.silenzio = const OreDiSilenzio(),
     this.soloFuori = false,
     this.lingua = 'it',
+    this.stile = 'semplici',
+    this.su = const {},
   });
 
   /// L'interruttore generale.
@@ -99,7 +284,32 @@ class ImpostazioniDelleNotifiche {
   final bool soloFuori;
   final String lingua;
 
+  /// `semplici` (solo testo) o `elaborate` (la scheda disegnata e la foto
+  /// della telecamera). Di serie semplici: con le elaborate, sull'iPhone, la
+  /// foto passa dal centralino — cifrata — e deve sceglierlo chi la riceve.
+  final String stile;
+
+  /// Le scelte di ogni voce: evento → [SceltaDellaVoce].
+  final Map<String, SceltaDellaVoce> su;
+
   bool evento(String quale) => eventi[quale] ?? true;
+
+  SceltaDellaVoce sceltaDi(String evento) =>
+      su[evento] ?? const SceltaDellaVoce();
+
+  /// Se quella notifica, su questo telefono, arriva elaborata.
+  bool elaborata(String evento) {
+    if (!eventiElaborabili.contains(evento)) return false;
+    return switch (sceltaDi(evento).stile) {
+      'semplice' => false,
+      'elaborata' => true,
+      _ => stile == 'elaborate',
+    };
+  }
+
+  /// Una voce cambiata, e le altre come sono.
+  ImpostazioniDelleNotifiche conScelta(String evento, SceltaDellaVoce scelta) =>
+      con(su: {...su, evento: scelta});
 
   ImpostazioniDelleNotifiche con({
     bool? acceso,
@@ -110,6 +320,8 @@ class ImpostazioniDelleNotifiche {
     OreDiSilenzio? silenzio,
     bool? soloFuori,
     String? lingua,
+    String? stile,
+    Map<String, SceltaDellaVoce>? su,
   }) => ImpostazioniDelleNotifiche(
     acceso: acceso ?? this.acceso,
     eventi: eventi ?? this.eventi,
@@ -119,6 +331,8 @@ class ImpostazioniDelleNotifiche {
     silenzio: silenzio ?? this.silenzio,
     soloFuori: soloFuori ?? this.soloFuori,
     lingua: lingua ?? this.lingua,
+    stile: stile ?? this.stile,
+    su: su ?? this.su,
   );
 
   /// Un evento acceso o spento, e gli altri come sono.
@@ -134,6 +348,10 @@ class ImpostazioniDelleNotifiche {
     'silenzio': silenzio.inJson(),
     'soloFuori': soloFuori,
     'lingua': lingua,
+    'stile': stile,
+    'su': {
+      for (final MapEntry(:key, :value) in su.entries) key: value.inJson(),
+    },
   };
 
   static ImpostazioniDelleNotifiche leggi(Object? grezzo) {
@@ -160,6 +378,12 @@ class ImpostazioniDelleNotifiche {
       silenzio: OreDiSilenzio.leggi(grezzo['silenzio']),
       soloFuori: grezzo['soloFuori'] == true,
       lingua: grezzo['lingua'] == 'en' ? 'en' : 'it',
+      stile: grezzo['stile'] == 'elaborate' ? 'elaborate' : 'semplici',
+      su: {
+        if (grezzo['su'] case final Map voci)
+          for (final MapEntry(:key, :value) in voci.entries)
+            if (key is String) key: SceltaDellaVoce.leggi(value),
+      },
     );
   }
 }
@@ -432,6 +656,8 @@ class NotificaArrivata {
     this.camera,
     this.chiamata = false,
     this.tasti = const [],
+    this.scheda,
+    this.foto,
   });
 
   final String id;
@@ -452,6 +678,17 @@ class NotificaArrivata {
   final bool chiamata;
   final List<TastoDellaNotifica> tasti;
 
+  /// La scheda da disegnare sul telefono, per le elaborate: i numeri, non il
+  /// disegno (`scheda.dart`). `null` per le semplici.
+  final Map<String, dynamic>? scheda;
+
+  /// L'istantanea della telecamera, per le elaborate: sta sul centralino,
+  /// cifrata con la chiave di questo telefono, per dieci minuti
+  /// (`foto_di_passaggio.dart`). L'identificativo e basta.
+  final String? foto;
+
+  bool get elaborata => scheda != null || foto != null;
+
   bool get urgente => urgenza == 'urgente';
 
   /// Se e' ancora buona: una notifica scaduta non si mostra, e i suoi tasti
@@ -465,6 +702,9 @@ class NotificaArrivata {
     DateTime ora(Object? ms) =>
         DateTime.fromMillisecondsSinceEpoch((ms as num?)?.toInt() ?? 0);
     final tasti = grezzo['azioni'];
+    final scheda = grezzo['scheda'];
+    final foto = grezzo['foto'];
+    final idDellaFoto = foto is Map ? foto['id'] : null;
     return NotificaArrivata(
       id: id,
       tipo: grezzo['tipo']?.toString() ?? '',
@@ -491,6 +731,14 @@ class NotificaArrivata {
                 apre: uno['apre'] == true,
               ),
       ],
+      scheda: scheda is Map<String, dynamic> && scheda['v'] == 1
+          ? scheda
+          : null,
+      foto:
+          idDellaFoto is String &&
+              RegExp(r'^[0-9a-f]{32}$').hasMatch(idDellaFoto)
+          ? idDellaFoto
+          : null,
     );
   }
 }

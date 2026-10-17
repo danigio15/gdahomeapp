@@ -52,7 +52,11 @@ class Notifiche {
     );
   }
 
-  Future<void> prova() => _filo.risultato({'type': 'ponte/notifiche/prova'});
+  /// Una notifica di prova. Con [evento], quella di quel tipo, come
+  /// arriverebbe su questo telefono — semplice o elaborata. Un ponte di prima
+  /// l'evento non lo guarda e ne manda una qualunque.
+  Future<void> prova({String? evento}) =>
+      _filo.risultato({'type': 'ponte/notifiche/prova', 'evento': ?evento});
 
   Future<NotificaPersonalizzata?> salva(NotificaPersonalizzata regola) async {
     final detto = await _filo.risultato({

@@ -228,6 +228,10 @@ class IndirizzoDelCentralino {
   Uri ricevuta(String idDellaCasa) =>
       _via(sicuro ? 'https' : 'http', '/licenza/$idDellaCasa');
 
+  /// L'istantanea di una notifica elaborata, cifrata per questo telefono:
+  /// sta qui dieci minuti e si legge una volta (`notifiche/foto_di_passaggio`).
+  Uri foto(String id) => _via(sicuro ? 'https' : 'http', '/foto/$id');
+
   Uri _via(String schema, String percorso, {Map<String, String>? con}) =>
       porta == null
       ? Uri(scheme: schema, host: casa, path: percorso, queryParameters: con)
