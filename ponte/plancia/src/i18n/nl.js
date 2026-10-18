@@ -5519,10 +5519,7 @@ export default Object.freeze({
   "The wall dashboard is Premium": "Het wandpaneel is Premium",
   "This tablet's pages": "Pagina's van deze tablet",
   "Use this dashboard on the wall": "Dit dashboard aan de muur gebruiken",
-  "Wakes up by itself": "Wordt vanzelf wakker",
   "Warn about open windows": "Waarschuwen voor open ramen",
-  "When this sensor turns on (for example a presence sensor)":
-    "Als deze sensor aangaat (bijvoorbeeld een aanwezigheidssensor)",
   "Who is home": "Wie is er thuis",
   windy: "winderig",
   "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
@@ -5585,8 +5582,6 @@ export default Object.freeze({
   "On rest go back to the first page": "In rust terug naar de eerste pagina",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "Eén tegel per kamer, met temperatuur, luchtvochtigheid en hoeveel lichten aan zijn, live. Kamers en hun sensoren komen uit het brondashboard.",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "Oriëntatie, thema, weer, rust, nacht, wekken, pincode",
   "Positive is drawn, negative is fed in": "Positief wordt afgenomen, negatief teruggeleverd",
   "Power, in W or kW": "Vermogen, in W of kW",
   "Right now, at home": "Op dit moment, thuis",
@@ -6665,4 +6660,61 @@ export default Object.freeze({
   "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "wacht tot ${chi} ${parola} wordt (hooguit ${massimo} min)",
   "When ${chi} goes from ${prima} to ${dopo}": "Als ${chi} van ${prima} naar ${dopo} gaat",
   "When ${chi} is no longer ${prima}": "Als ${chi} niet meer ${prima} is",
+  "0% = black screen, like “Black screen at night”":
+    "0% = zwart scherm, zoals „Zwart scherm 's nachts”",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "Een sensor van Home Assistant: mmWave, beweging, bezetting. Als hij aangaat, wordt het paneel wakker.",
+  "A touch on the screen also counts as “someone nearby”.":
+    "Ook een aanraking van het scherm telt als „iemand in de buurt”.",
+  "At night": "'s Nachts",
+  "By the sun: night from half an hour after sunset to sunrise":
+    "Met de zon: nacht van een half uur na zonsondergang tot zonsopgang",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "Dicht bij het scherm, een paar centimeter: handig voor een hand die nadert. Niet elke tablet heeft er een.",
+  "Day and night from": "Dag en nacht volgens",
+  "detecting": "detecteert",
+  "Dim after": "Dimmen na",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "Home Assistant heeft geen sun.sun: de uren van „Zwart scherm 's nachts” gelden",
+  "Home presence sensor": "Aanwezigheidssensor in huis",
+  "Home's sun": "Zon van het huis",
+  "Hours": "Tijden",
+  "How bright": "Hoe fel",
+  "Night (from the hours)": "Nacht (volgens de tijden)",
+  "Night (from the sun)": "Nacht (volgens de zon)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "Nacht in de uren van „Zwart scherm 's nachts”, ook als de schakelaar uit staat",
+  "nobody": "niemand",
+  "On a touch or when someone arrives": "Bij een aanraking of als er iemand komt",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "Op de iPad is het licht in de kamer niet te lezen: de zon of de tijden bepalen dag en nacht.",
+  "Only in the gdahome app on Android.": "Alleen in de gdahome-app op Android.",
+  "Orientation, theme, weather, rest, night, brightness, PIN":
+    "Oriëntatie, thema, weer, rust, nacht, helderheid, PIN",
+  "presence sensor": "aanwezigheidssensor",
+  "Preview of a day": "Voorbeeld van een dag",
+  "RECOMMENDED": "AANBEVOLEN",
+  "Resting, by day": "In rust, overdag",
+  "Room light": "Licht in de kamer",
+  "Screen brightness": "Helderheid van het scherm",
+  "Someone nearby": "Iemand in de buurt",
+  "Someone nearby (example)": "Iemand in de buurt (voorbeeld)",
+  "tablet proximity": "nabijheid van de tablet",
+  "Tablet proximity sensor": "Nabijheidssensor van de tablet",
+  "The clock is readable, but it does not light up the room":
+    "De klok is leesbaar, maar verlicht de kamer niet",
+  "The iPad does not have one.": "De iPad heeft er geen.",
+  "The panel sets it, only in the gdahome app on the tablet":
+    "Het paneel regelt het, alleen in de gdahome-app op de tablet",
+  "This tablet does not have one.": "Deze tablet heeft er geen.",
+  "This tablet has no light sensor: the home's sun applies":
+    "Deze tablet heeft geen lichtsensor: de zon van het huis geldt",
+  "This tablet has one.": "Deze tablet heeft er een.",
+  "Time with nobody nearby and no touches": "Tijd zonder iemand in de buurt en zonder aanrakingen",
+  "When someone is nearby": "Als er iemand in de buurt is",
+  "Who is nearby · one source is enough": "Wie is in de buurt · één bron is genoeg",
+  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
+    "Met de lichtsensor van de tablet, alleen in de gdahome-app op Android. Zonder geldt de zon van het huis",
+  "With this tablet's light sensor: it is night when the room is dark":
+    "Met de lichtsensor van deze tablet: het is nacht als de kamer donker is",
 });

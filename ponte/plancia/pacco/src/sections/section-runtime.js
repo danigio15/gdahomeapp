@@ -545,7 +545,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-QQW45MYA.js";
+} from "../../chunk-H44LXMQ5.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2092,6 +2092,7 @@ var SOURCE_INDEX = Object.freeze({
   "${value} unità": "${value} units",
   "${valvola.aperta}% aperta": "${valvola.aperta}% open",
   "${valvola.chiusa}% chiusa": "${valvola.chiusa}% closed",
+  "0% = schermo nero, come «Di notte schermo nero»": "0% = black screen, like “Black screen at night”",
   "1 · Di che si tratta": "1 · What is it about",
   "1 accesa": "1 on",
   "1 acceso · tocca per spegnere": "1 on · tap to turn off",
@@ -2170,12 +2171,14 @@ var SOURCE_INDEX = Object.freeze({
   "A rete presente la tessera mostra la carica della batteria; quando la corrente cade mostra i minuti che restano e si accende. Nessuna casella è obbligatoria: con il solo stato di NUT la tessera sa già dire se c'è tensione. Se ne hai più di uno, aggiungili qui sotto: ognuno ha la sua scena nella pagina UPS.": "With mains present the tile shows the battery charge; when power drops it shows the minutes left and lights up. No field is required: with the NUT status alone the tile already knows whether there is power. If you have more than one, add them below: each gets its own scene on the UPS page.",
   "a riposo": "at rest",
   "A riposo": "Standby",
+  "A riposo, di giorno": "Resting, by day",
   "A scomparsa": "Auto-hide",
   "A scomparsa: appare con swipe/tocco sulla linguetta. Fissa: sempre in vista.": "Auto-hide: appears with a swipe/tap on the handle. Fixed: always in view.",
   "A tappe": "Multi-stop",
   "a un orario": "at a time",
   "a una temperatura": "to a temperature",
   "Abbassa": "Lower",
+  "Abbassa dopo": "Dim after",
   "Abbassa il caldo": "Lower the heating",
   "Abbassa il freddo": "Lower the cooling",
   "Abbassa il target": "Lower the target",
@@ -2376,6 +2379,7 @@ var SOURCE_INDEX = Object.freeze({
   "Al posto di «Esco» quando l'antifurto è inserito": "Instead of «Leaving» when the alarm is armed",
   "Al riposo torna alla prima pagina": "On rest go back to the first page",
   "Al ritorno ti resta il ${resta}: basta senza ricaricare": "For the way back you still have ${resta}: no need to charge",
+  "Al tocco o all'arrivo di qualcuno": "On a touch or when someone arrives",
   "al tramonto": "at sunset",
   "Al tramonto": "At sunset",
   "al…": "to…",
@@ -2473,6 +2477,7 @@ var SOURCE_INDEX = Object.freeze({
   "Analizzo ${index.size} entità…": "Analysing ${index.size} entities…",
   "Anche a schermo spento: si accende al massimo e il citofono prende tutto lo schermo, come una chiamata.": "Even with the screen off: it turns on at full brightness and the intercom takes the whole screen, like a call.",
   "anche alba e tramonto": "sunrise and sunset too",
+  "Anche un tocco sullo schermo vale come «qualcuno vicino».": "A touch on the screen also counts as “someone nearby”.",
   "Ancora nessuna pagina: aggiungine una qui sotto.": "No pages yet: add one below.",
   "Ancora nessuna.": "None yet.",
   "Ancora niente di chiuso.": "Nothing closed yet.",
@@ -2489,6 +2494,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ant. sx": "Front L",
   'Anteprima ~2 fps · Tocca "Attiva audio" per audio + video': 'Preview ~2 fps · Tap "Enable audio" for audio + video',
   "Anteprima dal vivo": "Live preview",
+  "Anteprima di una giornata": "Preview of a day",
   "Anteriore destro": "Front right",
   "Anteriore sinistro": "Front left",
   "antifurto": "alarm",
@@ -2998,6 +3004,7 @@ var SOURCE_INDEX = Object.freeze({
   "Che cosa l'ha fatto scattare (facoltativo)": "What set it off (optional)",
   "Che materiale è": "Which material",
   "chi": "who",
+  "Chi c'è vicino · basta una fonte": "Who is nearby · one source is enough",
   "chi è in casa": "who is home",
   "Chi è in casa": "Who is home",
   "Chi è, col suo nome di casa": "Who this is, by their home name",
@@ -3090,8 +3097,11 @@ var SOURCE_INDEX = Object.freeze({
   "Cofano chiuso": "Bonnet closed",
   "Cofano motore (chiuso/aperto)": "Bonnet (closed/open)",
   "Col segno che usa il BMS: se in carica la scrive negativa, sceglilo in «Segno della corrente».": "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.",
+  "Col sensore di luce del tablet, solo nell'app gdahome su Android. Senza, vale il sole di casa": "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies",
+  "Col sensore di luce di questo tablet: è notte quando la stanza è buia": "With this tablet's light sensor: it is night when the room is dark",
   "col sole sopra l'orizzonte": "with the sun above the horizon",
   "col sole sotto l'orizzonte": "with the sun below the horizon",
+  "Col sole: notte da mezz'ora dopo il tramonto all'alba": "By the sun: night from half an hour after sunset to sunrise",
   "Col terreno già bagnato il programma delle ore fisse salta (con l'avviso in card); sotto la soglia bassa parte da solo, una volta al giorno.": "With the ground already wet the scheduled program skips (with the notice on the card); below the low threshold it starts on its own, once a day.",
   "col traffico": "with traffic",
   "Col traffico, stimato da gdanav": "With traffic, estimated by gdanav",
@@ -3224,6 +3234,7 @@ var SOURCE_INDEX = Object.freeze({
   "CONNESSO": "CONNECTED",
   "Connettività": "Connectivity",
   "Consigliati: in funzione ${a} W, standby ${b} W, ritardo ${minuti} min.": "Recommended: running ${a} W, standby ${b} W, delay ${minuti} min.",
+  "CONSIGLIATO": "RECOMMENDED",
   "Consiglio": "Advice",
   "Consuma la casa": "House uses",
   "Consumato": "Energy used",
@@ -3468,6 +3479,7 @@ var SOURCE_INDEX = Object.freeze({
   "Di cosa parla": "What it talks about",
   "di Home Assistant. Se i valori restano a zero, verifica che le entità abbiano": ". If values stay at zero, make sure the entities have",
   "di notte": "at night",
+  "Di notte": "At night",
   "di notte (${c.da}–${c.a})": "at night (${c.da}–${c.a})",
   "Di notte schermo nero": "Black screen at night",
   "di quello che può reggere: c'è margine": "of what it can take: plenty of headroom",
@@ -3939,6 +3951,7 @@ var SOURCE_INDEX = Object.freeze({
   "Giorno": "Day",
   "GIORNO": "DAY",
   "Giorno / Mese / Anno": "Day / Month / Year",
+  "Giorno e notte da": "Day and night from",
   "giorno fa": "day ago",
   "Giri a tappe": "Multi-stop trips",
   "giù": "down",
@@ -4008,6 +4021,7 @@ var SOURCE_INDEX = Object.freeze({
   "Home Assistant non ha preso il comando della ventola: riprova fra un momento.": "Home Assistant did not take the fan command: try again in a moment.",
   "Home Assistant non ha preso lo spegnimento programmato: aggiorna l'integrazione e riprova.": "Home Assistant did not take the scheduled switch-off: update the integration and try again.",
   "Home Assistant non ha questa entità": "Home Assistant does not have this entity",
+  "Home Assistant non ha sun.sun: vale l'orario di «Di notte schermo nero»": "Home Assistant has no sun.sun: the hours of “Black screen at night” apply",
   "Home Assistant non l'ha salvata: ${no}": "Home Assistant did not save it: ${no}",
   "Home Assistant non risponde": "Home Assistant is not answering",
   "Home Assistant non ti autorizza a comandare questa entità: serve un utente con il permesso, oppure l'entità è esposta in sola lettura.": "Home Assistant does not allow you to command this entity: it needs a user with permission, or the entity is exposed read-only.",
@@ -4484,6 +4498,7 @@ var SOURCE_INDEX = Object.freeze({
   "La colonnina è della casa, non di una macchina: si collega una volta e vale per tutte le vetture. Porta quello che misura: potenza, energia, tensione, temperatura, il cavo.": "The charger belongs to the house, not to one car: connect it once and it counts for every vehicle. It brings what it measures: power, energy, voltage, temperature, the cable.",
   "La colonnina e evcc": "The wallbox and evcc",
   "La colonnina la sceglie gdanav in viaggio": "gdanav picks the charger on the way",
+  "La comanda il pannello, solo nell'app gdahome sul tablet": "The panel sets it, only in the gdahome app on the tablet",
   "La configurazione di questa plancia è riservata al suo amministratore.": "This dashboard's configuration is reserved for its administrator.",
   "La configurazione è salvata": "Configuration is saved",
   "La cottura compare quando fra gli elettrodomestici c'è una friggitrice, un forno, un microonde, un piano cottura o una cappa.": "Cooking shows up once the appliances include an air fryer, an oven, a microwave, a cooktop or a hood.",
@@ -4754,6 +4769,7 @@ var SOURCE_INDEX = Object.freeze({
   "Luce aggiunta": "Light added",
   "Luce col movimento": "Light with motion",
   "Luce col movimento in ${area}": "Motion light in ${area}",
+  "Luce della stanza": "Room light",
   "Luce diurna": "Daylight",
   "Luce notturna": "Night light",
   "Luce piscina": "Pool light",
@@ -4769,6 +4785,7 @@ var SOURCE_INDEX = Object.freeze({
   "Luglio": "July",
   "luminosità": "brightness",
   "Luminosità": "Illuminance",
+  "Luminosità dello schermo": "Screen brightness",
   "Lunga": "Long",
   "ma la cache non si aggiorna. Svuota la cache del browser/app.": "but the cache is not updating. Clear the browser/app cache.",
   "Macchina": "Unit",
@@ -5144,6 +5161,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna voce": "No entries",
   "Nessuna zona configurata": "No zone configured",
   "Nessuna zona sta bagnando": "No zone is watering",
+  "nessuno": "nobody",
   "Nessuno": "Nobody",
   "nessuno da…": "none for…",
   "Nessuno ha ancora scritto niente.": "Nobody has written anything yet.",
@@ -5306,9 +5324,12 @@ var SOURCE_INDEX = Object.freeze({
   "Note": "Notes",
   "notifica": "notification",
   "Notte": "Night",
+  "Notte (dal sole)": "Night (from the sun)",
+  "Notte (dall'orario)": "Night (from the hours)",
   "NOTTE / FUORI": "NIGHT / AWAY",
   "Notte / Riposo": "Night / Rest",
   "Notte blu": "Blue night",
+  "Notte nella fascia di «Di notte schermo nero», anche con l'interruttore spento": "Night in the hours of “Black screen at night”, even with its switch off",
   "Novembre": "November",
   "Numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine, col verso che ha lì.": "Big live numbers. Left empty, they come from the source dashboard's Energy section, with its direction.",
   "Numero": "Number",
@@ -5384,7 +5405,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ora e data": "Time and date",
   "ora fa": "hour ago",
   "ora per ora, dalle previsioni": "hour by hour, from the forecast",
-  "Orario": "Time",
+  "Orario": "Hours",
   "Ordine dei blocchi della Home": "Order of the Home blocks",
   "ore": "hours",
   "Ore automatiche (temperatura / 2)": "Automatic hours (temperature / 2)",
@@ -5392,7 +5413,7 @@ var SOURCE_INDEX = Object.freeze({
   "ore fa": "hours ago",
   "Organico": "Organic waste",
   "Orientamento": "Orientation",
-  "Orientamento, tema, meteo, riposo, notte, risveglio, PIN": "Orientation, theme, weather, rest, night, wake-up, PIN",
+  "Orientamento, tema, meteo, riposo, notte, luminosità, PIN": "Orientation, theme, weather, rest, night, brightness, PIN",
   "Orizzontale": "Landscape",
   "OSO": "WSW",
   "Ossigeno": "Oxygen",
@@ -5765,6 +5786,7 @@ var SOURCE_INDEX = Object.freeze({
   "Prossime 24 ore": "Next 24 hours",
   "Prossimi": "Upcoming",
   "Prossimi giorni": "Next days",
+  "prossimità del tablet": "tablet proximity",
   "prossimo": "next",
   "Prossimo ritiro": "Next collection",
   "protetta": "protected",
@@ -5799,6 +5821,8 @@ var SOURCE_INDEX = Object.freeze({
   "qualcuno": "someone",
   "qualcuno arriva o esce": "someone arrives or leaves",
   "qualcuno in casa": "someone home",
+  "Qualcuno vicino": "Someone nearby",
+  "Qualcuno vicino (esempio)": "Someone nearby (example)",
   "Quale auto": "Which car",
   "Quale entità usa la dashboard": "Which entity the dashboard uses",
   "Quale voce": "Which option",
@@ -5844,7 +5868,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quando la terra è asciutta ma il meteo di casa prevede pioggia nelle prossime ore, la pianta aspetta invece di chiedere acqua. Solo per chi la pioggia la prende davvero.": "When the soil is dry but the home weather forecasts rain in the next hours, the plant waits instead of asking for water. Only for those the rain really reaches.",
   "Quando le app saranno sugli store, attivi Premium dall'app e qui le Automazioni si sbloccano da sole.": "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.",
   "Quando non c'è movimento in ${dove} da ${q.minuti} min": "When there is no motion in ${dove} for ${q.minuti} min",
-  "Quando questo sensore si accende (per esempio una presenza)": "When this sensor turns on (for example a presence sensor)",
+  "Quando qualcuno è vicino": "When someone is nearby",
   "Quando serve il caldo": "When heating is needed",
   "Quando suona, il pannello si sveglia e apre il citofono da solo": "When it rings, the panel wakes up and opens the intercom by itself",
   "Quando tutti escono": "When everyone leaves",
@@ -5857,6 +5881,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quanti giorni restano prima di sostituirlo. Sotto la soglia la scheda lo dice, e il tasto qui sotto azzera il conto una volta cambiato.": "How many days are left before replacing it. Below the threshold the card says so, and the button below resets the count once you have changed it.",
   "Quanti posti, e quanto grandi. In verticale colonne e righe si scambiano": "How many slots, and how big. In portrait columns and rows swap",
   "Quanto cibo resta nel distributore. In percentuale la scheda ne fa una barra; chi scrive «Low» o «Empty» vale lo stesso, e sotto soglia la scheda avvisa.": "How much food is left in the feeder. As a percentage the card draws a bar; a sensor saying “Low” or “Empty” counts the same, and below the threshold the card warns.",
+  "Quanto è luminoso": "How bright",
   "Quanto è pieno": "How full",
   "Quanto entra nella batteria": "What goes into the battery",
   "Quanto esce dalla batteria": "What comes out of the battery",
@@ -5922,6 +5947,9 @@ var SOURCE_INDEX = Object.freeze({
   "Questo sensore misura in «${misura}»: la card mostra solo sensori in W o kW, e questo lo ignora.": "This sensor measures in “${misura}”: the card only shows W or kW sensors, and ignores this one.",
   "Questo sensore non dichiara un'unità di misura: la card mostra solo sensori in W o kW, e questo lo ignora.": "This sensor declares no unit of measurement: the card only shows W or kW sensors, and ignores this one.",
   "Questo servizio la casa non lo chiama da sola.": "The home does not call this service by itself.",
+  "Questo tablet ce l'ha.": "This tablet has one.",
+  "Questo tablet non ce l'ha.": "This tablet does not have one.",
+  "Questo tablet non ha il sensore di luce: vale il sole di casa": "This tablet has no light sensor: the home's sun applies",
   "Questo target è un sensore di sola lettura: per cambiarlo da qui collega evcc, o un'entità number/select, nella scheda Auto.": "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.",
   "Qui non c'è niente.": "Nothing here.",
   "Quick Actions": "Quick actions",
@@ -6003,6 +6031,7 @@ var SOURCE_INDEX = Object.freeze({
   "Rifiuti": "Waste",
   "Riga sotto": "Line below",
   "Righe": "Rows",
+  "rileva": "detecting",
   "Rileva da Home Assistant": "Detect from Home Assistant",
   "Rileva dal telefono": "Detect from the phone",
   "rileva il movimento": "it detects motion",
@@ -6335,7 +6364,10 @@ var SOURCE_INDEX = Object.freeze({
   "Sensore della cassetta della posta": "Mailbox contact sensor",
   "Sensore della temperatura": "Temperature sensor",
   "Sensore di potenza (sensor, W)": "Power sensor (sensor, W)",
+  "sensore di presenza": "presence sensor",
+  "Sensore di presenza di casa": "Home presence sensor",
   "Sensore di pressione (sensor, bar)": "Pressure sensor (sensor, bar)",
+  "Sensore di prossimità del tablet": "Tablet proximity sensor",
   "Sensore di temperatura": "Temperature sensor",
   "Sensore di temperatura (sensor, °C)": "Temperature sensor (sensor, °C)",
   "Sensore di temperatura (sensor, °C): pannello meno accumulo": "Temperature sensor (sensor, °C): panel minus tank",
@@ -6440,6 +6472,7 @@ var SOURCE_INDEX = Object.freeze({
   "si inserisce": "is armed",
   "si inserisce / suona": "armed / goes off",
   "Si legge così:": "It reads:",
+  "Si legge l'orologio, ma non illumina la stanza": "The clock is readable, but it does not light up the room",
   "Si legge sulla linguetta in alto": "Shown on the tab at the top",
   "Si leggono e basta: non contano nella media della casa": "Read-only: they do not count in the home average",
   "si prepara dei valori": "prepares some values",
@@ -6454,7 +6487,6 @@ var SOURCE_INDEX = Object.freeze({
   "Si sta allontanando da casa": "Moving away from home",
   "Si sta avvicinando a casa": "Approaching home",
   "Si sta bene": "Comfortable",
-  "Si sveglia da solo": "Wakes up by itself",
   "Si toglie anche da Home Assistant, e non si può annullare. Se vuoi solo fermarla, spegnila con l'interruttore.": "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.",
   "Si vede in Home": "Shown on Home",
   "Si vede ma non si comanda": "Shown but not controllable",
@@ -6504,10 +6536,12 @@ var SOURCE_INDEX = Object.freeze({
   "Solare termico": "Solar thermal",
   "Solare Termico": "Solar thermal",
   "Sole": "Sun",
+  "Sole di casa": "Home's sun",
   "Soleggiato": "Sunny",
   "Solo col terreno sotto (%)": "Only with the soil below (%)",
   "Solo l'importante": "Only what matters",
   "Solo lettura": "Read only",
+  "Solo nell'app gdahome su Android.": "Only in the gdahome app on Android.",
   "Solo per il campanello: non cambia il volume del tablet.": "Only for the doorbell: it does not change the tablet's volume.",
   "Solo per questa finestra: ferma a questa percentuale o sotto conta come chiusa. Vuota, vale la soglia di casa scritta in cima.": "For this window only: resting at this percentage or below counts as closed. Empty, the house threshold at the top applies.",
   "Solo per questa finestra: quando l'umidità della sua stanza supera questa quota, la card dice di aprirla per arieggiare. Vuota, vale la soglia di casa scritta in cima; zero spegne il consiglio su questa finestra.": "For this window only: when its room's humidity goes above this level, the card says to open it to air out. Empty, the house threshold at the top applies; zero turns the advice off on this window.",
@@ -6729,6 +6763,8 @@ var SOURCE_INDEX = Object.freeze({
   "Sul riposo: quanto è carica e se è attaccata alla corrente": "On the rest screen: how charged it is and whether it is plugged in",
   "sul tablet": "on the tablet",
   "Sul telefono, prima di partire": "On the phone, before leaving",
+  "Sull'iPad la luce della stanza non si legge: giorno e notte li dice il sole o l'orario.": "On the iPad the room light cannot be read: the sun or the hours tell day from night.",
+  "Sull'iPad non c'è.": "The iPad does not have one.",
   "suona": "goes off",
   "Suona": "Ringing",
   "Suona il campanello": "The doorbell is ringing",
@@ -6831,6 +6867,7 @@ var SOURCE_INDEX = Object.freeze({
   "tempo rimanente": "remaining time",
   "Tempo rimanente": "Remaining time",
   "TEMPO RIMANENTE": "TIME REMAINING",
+  "Tempo senza nessuno vicino e senza tocchi": "Time with nobody nearby and no touches",
   "Tempo stimato": "Time left",
   "Tempo Stimato": "Estimated time",
   "Tempo totale": "Total time",
@@ -7119,6 +7156,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un sensore col segno, o due separati": "One signed sensor, or two separate ones",
   "Un sensore col testo dell'allarme o un binary_sensor: quando scatta, in pagina compare la fascia rossa con le sue parole.": "A sensor with the alarm text or a binary_sensor: when it trips, the page shows the red banner with its words.",
   "Un sensore con la prossima data (nello stato o negli attributi), o un calendar.* con un evento per ritiro.": "A sensor with the next date (in its state or attributes), or a calendar.* with one event per collection.",
+  "Un sensore di Home Assistant: mmWave, movimento, occupazione. Quando si accende il pannello si sveglia.": "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.",
   "Un sensore di movimento o di presenza lo dichiara Home Assistant da sé e compare qui senza configurare niente. Se il tuo non viene trovato, aggiungilo dalla scheda Presenza della configurazione.": "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.",
   "Un tasto che apre l'assistente di Home Assistant: si scrive la domanda, oppure si tocca il microfono e si parla. Le frasi le capisce Home Assistant — la plancia gliele passa e basta.": "A button that opens the Home Assistant assistant: type the question, or tap the microphone and speak. Home Assistant understands the sentences — the dashboard just passes them along.",
   "Un tasto che compare sulla scheda dell'animale. Va bene un button.*, uno script.* o uno switch.*: la plancia lo preme con il servizio giusto per il suo dominio.": "A button that appears on the pet card. A button.*, a script.* or a switch.* all work: the dashboard presses it with the right service for its domain.",
@@ -7271,6 +7309,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vetro": "Glass",
   "Via Roma 12": "12 Main Street",
   "Viaggi pianificati": "Planned trips",
+  "Vicino allo schermo, pochi centimetri: utile per la mano che si avvicina. Non tutti i tablet lo hanno.": "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.",
   "Video dal vivo nella tessera": "Live video on the tile",
   "Videosorveglianza": "Video surveillance",
   "Viola": "Violet",
@@ -26220,10 +26259,10 @@ function renderRicaricaDiNotte(adesso = Date.now()) {
   const fascia2 = fasciaDi(imp, adesso);
   const fine = state20.ponte?.sessione?.fine ?? (fascia2.dentro ? fascia2.fine : prossimaFascia(imp, adesso)?.fine ?? fascia2.fine);
   testo(q("ferma"), siFerma(lettura3.limite ?? state20.ponte?.auto?.limite ?? null, fine));
-  const cursore = q("sotto");
-  if (cursore && doc.activeElement !== cursore && cursore.value !== String(imp.sotto))
-    cursore.value = String(imp.sotto);
-  pitturaIlCursore(carta, cursore ? Number(cursore.value) : imp.sotto);
+  const cursore2 = q("sotto");
+  if (cursore2 && doc.activeElement !== cursore2 && cursore2.value !== String(imp.sotto))
+    cursore2.value = String(imp.sotto);
+  pitturaIlCursore(carta, cursore2 ? Number(cursore2.value) : imp.sotto);
   const scatola = q("prezzo");
   const firma2 = `${prezzo.fonte}|${prezzo.prezzo}|${prezzo.fascia}|${locale()}`;
   if (scatola && scatola.dataset.firma !== firma2) {
@@ -26255,8 +26294,8 @@ function renderRicaricaDiNotte(adesso = Date.now()) {
 function pitturaIlCursore(carta, valore3) {
   const n = Number.isFinite(valore3) ? valore3 : 100;
   testo(carta.querySelector('[data-rn="sottoDetto"]'), `${n}%`);
-  const cursore = carta.querySelector('[data-rn="sotto"]');
-  if (cursore) cursore.style.setProperty("--rn-pieno", `${(n - 10) / 90 * 100}%`);
+  const cursore2 = carta.querySelector('[data-rn="sotto"]');
+  if (cursore2) cursore2.style.setProperty("--rn-pieno", `${(n - 10) / 90 * 100}%`);
 }
 function salva(cambia) {
   const prima = leImpostazioni();
@@ -43505,22 +43544,22 @@ function toccaIlVolume(entity2, riga3, verso2) {
   const daQui = chiesto && Date.now() - chiesto.quando < ATTESA_DEL_VOLUME ? chiesto.volume : riga3.volume;
   const volume = volumeDopoIlPasso(daQui, verso2);
   volumiChiesti.set(entity2, { volume, quando: Date.now() });
-  for (const cursore of root.document?.querySelectorAll?.("[data-dm-mp-volume]") || []) {
-    if (clean(cursore.dataset.dmMpVolume) !== entity2) continue;
-    cursore.value = String(Math.round(volume * 100));
-    const scritta = cursore.parentElement?.querySelector("[data-dm-mp-percento]");
+  for (const cursore2 of root.document?.querySelectorAll?.("[data-dm-mp-volume]") || []) {
+    if (clean(cursore2.dataset.dmMpVolume) !== entity2) continue;
+    cursore2.value = String(Math.round(volume * 100));
+    const scritta = cursore2.parentElement?.querySelector("[data-dm-mp-percento]");
     if (scritta) scritta.textContent = `${Math.round(volume * 100)}%`;
   }
   chiamaHa("media_player", "volume_set", { entity_id: entity2, volume_level: volume });
 }
 function onInput(event) {
-  const cursore = event.target?.closest?.("[data-dm-mp-volume]");
-  if (!cursore) return;
-  const percento6 = Math.min(100, Math.max(0, Number(cursore.value) || 0));
-  const scritta = cursore.parentElement?.querySelector("[data-dm-mp-percento]");
+  const cursore2 = event.target?.closest?.("[data-dm-mp-volume]");
+  if (!cursore2) return;
+  const percento6 = Math.min(100, Math.max(0, Number(cursore2.value) || 0));
+  const scritta = cursore2.parentElement?.querySelector("[data-dm-mp-percento]");
   if (scritta) scritta.textContent = `${percento6}%`;
   chiamaHa("media_player", "volume_set", {
-    entity_id: clean(cursore.dataset.dmMpVolume),
+    entity_id: clean(cursore2.dataset.dmMpVolume),
     volume_level: percento6 / 100
   });
 }
@@ -48663,10 +48702,10 @@ rilevatore(
   }))
 );
 var LUCE_CHE_RESTA = /acquari|aquari|vasca\s*pesci|fish\s*tank|terrari|rettil|paludari|vivari|notturn|night\s*light|segnapasso|luce\s*(di\s*)?cortesia|\bnotte\b|giardin|esterno|esterne|esterni|outdoor|garden|vialett|cortil|crepuscol/i;
-function luceDaLasciare(luce, c = {}) {
-  const id = pulito41(luce?.entity);
+function luceDaLasciare(luce2, c = {}) {
+  const id = pulito41(luce2?.entity);
   if (elenco5(c.lasciate).includes(id)) return true;
-  return LUCE_CHE_RESTA.test(`${id.replace(/[._]/g, " ")} ${pulito41(luce?.name)}`);
+  return LUCE_CHE_RESTA.test(`${id.replace(/[._]/g, " ")} ${pulito41(luce2?.name)}`);
 }
 rilevatore("vuota-luci", "risparmio", (c, o, l) => {
   if (!casaVuota(c)) return [];
@@ -70165,11 +70204,11 @@ function blockMarkup3(blocco3, states) {
     return `<h2 class="dm-stanze-h"><span>${esc(nomeBlocco(blocco3))}</span><span class="dm-stanze-n">${blocco3.voci.length}</span></h2>
     <div class="dm-stanze-grid dm-stanze-grid-clima">${carte}</div>`;
   }
-  const card2 = blocco3.key === "luci" || blocco3.key === "prese" ? blocco3.voci.map((luce) => {
-    const entity2 = clean(luce.entity || luce.id);
+  const card2 = blocco3.key === "luci" || blocco3.key === "prese" ? blocco3.voci.map((luce2) => {
+    const entity2 = clean(luce2.entity || luce2.id);
     return pageCardMarkup(
       lightView(entity2, {
-        name: clean(luce.name),
+        name: clean(luce2.name),
         state: states?.[entity2],
         comandabile: siComanda(entity2)
       })
@@ -71405,11 +71444,11 @@ function misureMarkup(gradi9, umidita) {
 function cardMarkup5(pagina2, states) {
   const riassunto3 = riassuntoDellaStanza(pagina2, states);
   const tasti = tastiDellaStanza(pagina2, states);
-  const luce = riassunto3.perTipo.some((voce3) => voce3.chiave === "luci");
+  const luce2 = riassunto3.perTipo.some((voce3) => voce3.chiave === "luci");
   const didascalia = didascaliaDellaStanza(riassunto3.perTipo, tasti);
   const disegno6 = disegnoDellaStanza4(pagina2.icon);
   return `<article class="dm-stanza-plancia" role="button" tabindex="0" data-dm-stanza-plancia="${esc(pagina2.id)}"
-      data-accesa="${luce}" aria-label="${esc(pagina2.name)}">
+      data-accesa="${luce2}" aria-label="${esc(pagina2.name)}">
     <span class="dm-stanza-plancia-cima">
       <span class="dm-stanza-plancia-ic" aria-hidden="true">${disegno6}</span>
       <span class="dm-stanza-plancia-nome">${esc(pagina2.name)}</span>
@@ -78023,7 +78062,7 @@ function disegnaIPiani() {
   const primaDi2 = pannello.querySelector("[data-dm-piano-nome]");
   const bozza3 = primaDi2?.value || "";
   const scrivendo = Boolean(primaDi2) && doc.activeElement === primaDi2;
-  const cursore = scrivendo ? [primaDi2.selectionStart, primaDi2.selectionEnd] : null;
+  const cursore2 = scrivendo ? [primaDi2.selectionStart, primaDi2.selectionEnd] : null;
   const rifatto = scriviSeCambia(pannello, markup7);
   if (rifatto && (bozza3 || scrivendo)) {
     const campo5 = pannello.querySelector("[data-dm-piano-nome]");
@@ -78032,7 +78071,7 @@ function disegnaIPiani() {
       if (scrivendo) {
         campo5.focus();
         try {
-          campo5.setSelectionRange(...cursore);
+          campo5.setSelectionRange(...cursore2);
         } catch (_errore) {
         }
       }
@@ -92641,8 +92680,8 @@ function azioneAccesa(azione, states = {}, risolvi3 = null) {
     const luci = Array.isArray(azione.lights) ? azione.lights.map(pulito55).filter(Boolean) : [];
     if (!luci.length) return null;
     let vive = 0;
-    for (const luce of luci) {
-      const stato4 = minuscolo10(states?.[risolta(luce, risolvi3)]?.state);
+    for (const luce2 of luci) {
+      const stato4 = minuscolo10(states?.[risolta(luce2, risolvi3)]?.state);
       if (MUTI13.has(stato4)) continue;
       vive += 1;
       if (ACCESI3.has(stato4)) return true;
@@ -95760,6 +95799,39 @@ function versiDellaPlancia(energy) {
     if (typeof v === "string" && isDerivedEntity(v)) fuori[k] = "";
   return fuori;
 }
+var SECONDI_PER_ABBASSARE = Object.freeze([15, 30, 45, 60, 120, 300]);
+var GIORNO_E_NOTTE_DA = Object.freeze(["sole", "stanza", "orario"]);
+var LUCE_SPENTA = Object.freeze({
+  attiva: false,
+  vicino: 90,
+  riposo: 20,
+  notte: 3,
+  dopo: 45,
+  giorno: "sole",
+  prossimita: false
+});
+var DOPO_IL_TRAMONTO_MS = 30 * 60 * 1e3;
+var percentoDellaLuce = (valore3, ripiego, minimo = 0) => {
+  const n = Math.round(Number(valore3));
+  if (valore3 === "" || valore3 === null || !Number.isFinite(n)) return ripiego;
+  return Math.max(minimo, Math.min(100, n));
+};
+function lucePulita(input) {
+  const dentro3 = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const dopo = Number(dentro3.dopo);
+  return {
+    attiva: vero2(dentro3.attiva, false),
+    /* «Quando qualcuno e' vicino» non scende sotto il 10%: un tocco che non
+     * accende niente sembra un tablet rotto. */
+    vicino: percentoDellaLuce(dentro3.vicino, LUCE_SPENTA.vicino, 10),
+    riposo: percentoDellaLuce(dentro3.riposo, LUCE_SPENTA.riposo),
+    /* Di notte lo 0% vuol dire schermo nero, come «Di notte schermo nero». */
+    notte: percentoDellaLuce(dentro3.notte, LUCE_SPENTA.notte),
+    dopo: SECONDI_PER_ABBASSARE.includes(dopo) ? dopo : LUCE_SPENTA.dopo,
+    giorno: scelta(dentro3.giorno, GIORNO_E_NOTTE_DA, LUCE_SPENTA.giorno),
+    prossimita: vero2(dentro3.prossimita, false)
+  };
+}
 var MURO_VUOTO = Object.freeze({
   attiva: false,
   fonte: PROFILO_DI_ORIGINE,
@@ -95773,6 +95845,7 @@ var MURO_VUOTO = Object.freeze({
   avvisi: true,
   avvisiGrandi: true,
   risveglio: { attivo: false, entita: "" },
+  luce: LUCE_SPENTA,
   blocco: { attivo: false, pin: "" },
   batteria: { attiva: false, livello: "", carica: "" },
   pagine: []
@@ -95836,10 +95909,18 @@ function muroPulito(input) {
     /* Un avviso che si accende — l'allagamento, il fumo, l'antifurto che
      * suona — prende tutto lo schermo finche' qualcuno tocca «Ho visto». */
     avvisiGrandi: vero2(dentro3.avvisiGrandi, true),
+    /* «Si sveglia da solo»: il sensore di presenza di casa. Dal #224 e' la
+     * prima fonte di «Chi c'e' vicino» sotto «Luminosita' dello schermo», ma
+     * resta scritto qui com'era: i tablet con la plancia di prima continuano
+     * a svegliarsi col sensore di sempre, e nessun config va riscritto. */
     risveglio: {
       attivo: vero2(risveglio.attivo, false) && Boolean(entita2(risveglio.entita)),
       entita: entita2(risveglio.entita)
     },
+    /* La luminosita' dello schermo (#224): spenta finche' qualcuno non la
+     * accende, cosi' chi aveva gia' il tablet a muro non vede cambiare
+     * niente. */
+    luce: lucePulita(dentro3.luce),
     /* Senza PIN il blocco non c'e': un tablet bloccato senza la chiave per
      * uscire e' un tablet da smontare dal muro. */
     blocco: { attivo: vero2(blocco3.attivo, false) && Boolean(pin), pin },
@@ -96172,6 +96253,60 @@ function eNotte2(muro, adesso = /* @__PURE__ */ new Date()) {
   const qui = adesso.getHours() * 60 + adesso.getMinutes();
   if (da === a) return false;
   return da < a ? qui >= da && qui < a : qui >= da || qui < a;
+}
+function dentroLaFascia(muro, adesso) {
+  const da = minutiDa3(muro?.notte?.da || MURO_VUOTO.notte.da);
+  const a = minutiDa3(muro?.notte?.a || MURO_VUOTO.notte.a);
+  const qui = adesso.getHours() * 60 + adesso.getMinutes();
+  if (da === a) return false;
+  return da < a ? qui >= da && qui < a : qui >= da || qui < a;
+}
+function notteDalSole(sole, adesso = /* @__PURE__ */ new Date()) {
+  const dove = String(sole?.state || "");
+  if (dove === "above_horizon") return false;
+  if (dove !== "below_horizon") return null;
+  const prossimo = Date.parse(sole?.attributes?.next_setting || "");
+  if (!Number.isFinite(prossimo)) return true;
+  const tramonto = prossimo - 24 * 60 * 60 * 1e3;
+  return adesso.getTime() >= tramonto + DOPO_IL_TRAMONTO_MS;
+}
+function eNotteDellaLuce(muro, { sole = null, stanza: stanza2 = "", premium: premium2 = false, adesso = /* @__PURE__ */ new Date() } = {}) {
+  const giorno2 = muro?.luce?.giorno || "sole";
+  if (giorno2 === "stanza" && premium2 && ["buio", "penombra", "chiaro"].includes(stanza2))
+    return stanza2 === "buio";
+  if (giorno2 !== "orario") {
+    const dalSole = notteDalSole(sole, adesso);
+    if (dalSole !== null) return dalSole;
+  }
+  return dentroLaFascia(muro, adesso);
+}
+function chiCeVicino(muro, { presenza = false, prossimita = false, toccato = 0, premium: premium2 = false, adesso = Date.now() } = {}) {
+  if (premium2 && muro?.risveglio?.attivo && presenza) return "presenza";
+  if (premium2 && muro?.luce?.prossimita && prossimita) return "prossimita";
+  const dopo = (muro?.luce?.dopo || LUCE_SPENTA.dopo) * 1e3;
+  if (adesso - Number(toccato || 0) < dopo) return "tocco";
+  return "";
+}
+function livelloDellaLuce(muro, { vicino = false, notte = false } = {}) {
+  const luce2 = muro?.luce;
+  if (!luce2?.attiva) return null;
+  if (vicino) return luce2.vicino;
+  return notte ? luce2.notte : luce2.riposo;
+}
+var PASSAGGI_DI_ESEMPIO = Object.freeze([
+  [7, 7.5],
+  [13, 13.4],
+  [19.5, 20.3]
+]);
+function giornataDellaLuce(muro, notte, passi2 = 96) {
+  const luce2 = lucePulita(muro?.luce);
+  const punti = [];
+  for (let i = 0; i <= passi2; i += 1) {
+    const quando4 = i / passi2 * 24;
+    const vicino = PASSAGGI_DI_ESEMPIO.some(([da, a]) => quando4 >= da && quando4 <= a);
+    punti.push([quando4, vicino ? luce2.vicino : notte(quando4) ? luce2.notte : luce2.riposo]);
+  }
+  return punti;
 }
 function temaDelMomento(muro, adesso = /* @__PURE__ */ new Date(), temaDellaPlancia = "dark") {
   const tema = muro?.tema || "plancia";
@@ -98403,7 +98538,7 @@ function chiudiFinestra() {
 }
 function riposo(muro) {
   const o = orologio3();
-  const notte = eNotte2(muro);
+  const notte = muro.luce?.attiva ? Boolean(luce.notte && muro.luce.notte === 0) : eNotte2(muro);
   const pagina2 = muro.pagine[0];
   if (muro.avvisi) for (const a of state112.fonte?.avvisi || []) a.entita.forEach(segna);
   const avvisi = muro.avvisi ? avvisiAccesi(state112.fonte || {}, allStates() || {}, centraleDelMuro(pagina2)) : [];
@@ -98424,7 +98559,7 @@ function riposo(muro) {
   const persone4 = personeInCasa();
   const chi = persone4.inCasa === 0 ? t("Nessuno in casa", "Nobody home") : persone4.nomi.length <= 2 ? persone4.nomi.join(" · ") : `${persone4.inCasa} ${t("in casa", "at home")}`;
   const aperte = finestreAperte().length;
-  return `<div class="mu-riposo${notte ? " fioco" : ""}" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
+  return `<div class="mu-riposo${notte && !muro.luce?.attiva ? " fioco" : ""}" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
     <div class="mu-et mu-data">${esc(o.lungo)}${pilaDelRiposo(muro)}</div>
@@ -98885,8 +99020,113 @@ function svegliaLoSchermo() {
   } catch (_errore) {
   }
 }
+var SCHERMO_DELL_APP = "__GDAHOME_SCHERMO__";
+var luce = {
+  /* L'ultimo livello detto all'app: `null` se lo schermo e' del sistema. */
+  detta: null,
+  /* I sensori chiesti all'app, come gliel'abbiamo detto. */
+  sensori: "no",
+  /* Chi era vicino al giro prima: "" vuol dire nessuno, schermo abbassato. */
+  fonte: "",
+  notte: false,
+  pillolaFino: 0,
+  pillolaDi: "",
+  timer: 0
+};
+function quelloCheDiceIlTablet() {
+  const detto3 = root[SCHERMO_DELL_APP];
+  return detto3 && typeof detto3 === "object" ? detto3 : {};
+}
+function mandaAlloSchermo(messaggio) {
+  try {
+    root.gdahomeSchermo?.postMessage?.(messaggio);
+  } catch (_errore) {
+  }
+}
+function sensoriVoluti(muro) {
+  if (state112.premium !== true) return "no";
+  const voluti = [];
+  if (muro.luce?.attiva && muro.luce.giorno === "stanza") voluti.push("luce");
+  if (muro.luce?.prossimita) voluti.push("prossimita");
+  return voluti.length ? voluti.join("+") : "no";
+}
+function regolaLaLuce() {
+  const muro = state112.muro;
+  if (!muro?.luce || !muroInScena() || editorAperto()) return;
+  const adesso = Date.now();
+  const premium2 = state112.premium === true;
+  const tablet = quelloCheDiceIlTablet();
+  const voluti = sensoriVoluti(muro);
+  if (voluti !== luce.sensori) {
+    luce.sensori = voluti;
+    mandaAlloSchermo(`sensori:${voluti}`);
+  }
+  const sensore = muro.risveglio?.attivo ? muro.risveglio.entita : "";
+  const presenza = Boolean(sensore) && String(allStates()?.[sensore]?.state) === "on";
+  const fonte = chiCeVicino(muro, {
+    presenza,
+    prossimita: tablet.prossimita === "si",
+    toccato: state112.toccato,
+    premium: premium2,
+    adesso
+  });
+  const daUnSensore = fonte === "presenza" || fonte === "prossimita";
+  if (daUnSensore && (luce.fonte === "" || state112.riposo)) {
+    if (state112.riposo) {
+      state112.riposo = false;
+      state112.toccato = adesso;
+    }
+    if (muro.luce.attiva) {
+      luce.pillolaFino = adesso + 2e3;
+      luce.pillolaDi = fonte;
+      root.setTimeout?.(() => disegna5(), 2050);
+    }
+  }
+  if (muro.luce.attiva && daUnSensore) state112.toccato = adesso;
+  luce.fonte = fonte;
+  luce.notte = eNotteDellaLuce(muro, {
+    sole: allStates()?.["sun.sun"] || null,
+    stanza: tablet.luce || "",
+    premium: premium2,
+    adesso: new Date(adesso)
+  });
+  if (muro.luce.attiva && luce.notte && muro.luce.notte === 0 && !fonte && !state112.riposo && !state112.finestra && !state112.trascina) {
+    state112.riposo = true;
+    if (muro.riposo.torna !== false) state112.pagina = 0;
+  }
+  const livello = livelloDellaLuce(muro, { vicino: Boolean(fonte), notte: luce.notte });
+  const detta = livello === null ? null : String(livello);
+  if (detta !== luce.detta) {
+    mandaAlloSchermo(`luce:${detta ?? "no"}`);
+    luce.detta = detta;
+  }
+  root.clearTimeout?.(luce.timer);
+  luce.timer = 0;
+  if (muro.luce.attiva && fonte === "tocco")
+    luce.timer = root.setTimeout?.(
+      () => disegna5(),
+      Math.max(250, state112.toccato + muro.luce.dopo * 1e3 - adesso + 50)
+    ) || 0;
+}
+function pillolaDellaLuce(muro) {
+  if (!muro.luce?.attiva || Date.now() >= luce.pillolaFino) return "";
+  const sensore = muro.risveglio?.entita || "";
+  const chi = luce.pillolaDi === "prossimita" ? t("prossimità del tablet", "tablet proximity") : clean(allStates()?.[sensore]?.attributes?.friendly_name) || t("sensore di presenza", "presence sensor");
+  return `<div class="mu-luce-pillola" role="status"><i aria-hidden="true"></i><span>${esc(t("Qualcuno vicino", "Someone nearby"))} · ${esc(chi)} · ${muro.luce.vicino}%</span></div>`;
+}
+function restituisciLoSchermo() {
+  root.clearTimeout?.(luce.timer);
+  luce.timer = 0;
+  luce.fonte = "";
+  luce.pillolaFino = 0;
+  if (luce.detta !== null) mandaAlloSchermo("luce:no");
+  luce.detta = null;
+  if (luce.sensori !== "no") mandaAlloSchermo("sensori:no");
+  luce.sensori = "no";
+}
 function togliLaTela() {
   smettiDiSquillare();
+  restituisciLoSchermo();
   diciAlloSchermo("acceso", false);
   diciAlloSchermo("spento", false);
   diciAlloSchermo("muro", false);
@@ -98947,6 +99187,8 @@ function disegna5() {
   const temaPlancia = doc.documentElement.getAttribute("data-theme") || "dark";
   nodo2.dataset.tema = temaDelMomento(muro, /* @__PURE__ */ new Date(), temaPlancia);
   misura4(nodo2, muro);
+  diciAlloSchermo("muro", true);
+  regolaLaLuce();
   if (state112.pagina >= muro.pagine.length) state112.pagina = 0;
   const pagina2 = muro.pagine[state112.pagina];
   raccolta = { ids: /* @__PURE__ */ new Set(), domini: /* @__PURE__ */ new Set() };
@@ -98954,6 +99196,7 @@ function disegna5() {
   try {
     corpo4 = state112.riposo ? riposo(muro) : `${paginaIntera(pagina2, muro)}${finestra4()}`;
     corpo4 += avvisoGrande2();
+    corpo4 += pillolaDellaLuce(muro);
     segna(centraleDelMuro(muro.pagine[0]));
     inVista2 = raccolta;
   } finally {
@@ -98983,9 +99226,8 @@ function disegna5() {
   battitoDellaMusica();
   rimettiLaVoce(nodo2);
   if (state112.riposo) posizionaIlRiposo(nodo2);
-  diciAlloSchermo("muro", true);
   diciAlloSchermo("acceso", schermoSempreAcceso(muro));
-  diciAlloSchermo("spento", Boolean(state112.riposo && eNotte2(muro)));
+  diciAlloSchermo("spento", Boolean(!muro.luce?.attiva && state112.riposo && eNotte2(muro)));
 }
 function posizionaIlRiposo(nodo2) {
   const blocco3 = nodo2.querySelector(".mu-deriva");
@@ -99534,6 +99776,7 @@ function percentualeDalDito(event, barra2, verticale, minimo = 1) {
 }
 function onPointerDown(event) {
   tocco();
+  if (state112.muro?.luce?.attiva) regolaLaLuce();
   state112.tenuto = false;
   const barra2 = event.target?.closest?.("[data-mu-cursore]");
   if (barra2?.dataset.muCursore === "fader") {
@@ -100365,6 +100608,13 @@ ${MURO}[data-compatto="1"] .mu-sq-mini span{display:grid;justify-items:center;ga
 ${MURO}[data-compatto="1"] .mu-sq-mini img,${MURO}[data-compatto="1"] .mu-sq-mini .mu-sq-senza{position:static;width:52px;height:32px;border-radius:6px;object-fit:cover}
 @media (prefers-reduced-motion:reduce){${MURO} .mu-sq-campana .onda,${MURO} .mu-squillo.squilla .mu-sq-campana>svg{animation:none}}
 ${MURO}[data-compatto="1"] .mu-avviso-grande{gap:10px;padding:14px}
+/* La pillola di chi ha acceso lo schermo: due secondi, in basso al centro,
+ * sopra le card ma sotto gli avvisi grandi. */
+${MURO} .mu-luce-pillola{position:absolute;left:50%;bottom:16px;z-index:40;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:9px 18px;border-radius:999px;font-weight:700;font-size:16px;color:#bbf7d0;background:rgba(5,46,26,.94);box-shadow:inset 0 0 0 1px rgba(34,197,94,.45),0 8px 24px rgba(0,0,0,.3);pointer-events:none;animation:muLucePillola .25s ease-out}
+${MURO} .mu-luce-pillola span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${MURO} .mu-luce-pillola i{flex:none;width:9px;height:9px;border-radius:50%;background:#22c55e}
+${MURO}[data-compatto="1"] .mu-luce-pillola{font-size:13px;padding:7px 12px;bottom:10px}
+@keyframes muLucePillola{from{opacity:0;transform:translate(-50%,8px)}}
 ${MURO}[data-compatto="1"] .mu-avg-disco{width:92px;height:92px;box-shadow:0 0 0 10px rgba(255,255,255,.08)}
 ${MURO}[data-compatto="1"] .mu-avg-disco .dm-oggetto,${MURO}[data-compatto="1"] .mu-avg-disco svg{width:54px!important;height:54px!important}
 ${MURO}[data-compatto="1"] .mu-avg-tit{font-size:30px}
@@ -101047,6 +101297,10 @@ function installPlanciaAMuro() {
     disegna5();
   });
   root.addEventListener?.("resize", () => disegna5());
+  root.addEventListener?.("gdahome:schermo", (event) => {
+    const detto3 = event?.detail || {};
+    if ("prossimita" in detto3 || "luce" in detto3) disegna5();
+  });
   for (const evento of ["dashboardmodern:persistence-saved", "dashboardmodern:store-user-write"])
     root.addEventListener?.(evento, () => {
       if (state112.muro?.attiva) ancora2();
@@ -101079,7 +101333,8 @@ function installPlanciaAMuro() {
       state112.finestra = null;
       disegna5();
     },
-    stato: () => ({ ...state112, trascina: null })
+    stato: () => ({ ...state112, trascina: null }),
+    luce: () => ({ ...luce })
   };
   ancora2();
   return true;
@@ -101747,6 +102002,149 @@ function colori(via, valore3) {
     ([v]) => `<button type="button" class="${String(v) === String(valore3 || "") ? "si" : ""}${v ? "" : " auto"}" style="${v ? `--c:${v}` : ""}" data-mu-ed-metti="${esc(via)}" data-mu-ed-valore="${esc(v)}" aria-label="${esc(v || t("Come il tipo di pagina", "Like the page type"))}">${v ? "" : "A"}</button>`
   ).join("")}</span>`;
 }
+function capacitaDelTablet() {
+  const detto3 = root.__GDAHOME_SCHERMO__;
+  const capacita = detto3 && typeof detto3 === "object" ? detto3.capacita : null;
+  return capacita && typeof capacita === "object" ? capacita : null;
+}
+function chiediLeCapacita() {
+  if (state113.capacitaChieste || capacitaDelTablet()) return;
+  state113.capacitaChieste = true;
+  try {
+    root.gdahomeSchermo?.postMessage?.("capacita?");
+  } catch (_errore) {
+  }
+}
+var cursore = (via, valore3, minimo, etichetta3) => `<span class="mu-ed-volume mu-ed-luce-cursore"><input type="range" min="${minimo}" max="100" step="1" data-mu-ed-campo="${esc(via)}" value="${valore3}" aria-label="${esc(etichetta3)}"><b data-mu-ed-percento>${valore3}%</b></span>`;
+function notteDellAnteprima(m) {
+  const sole = allStates()?.["sun.sun"];
+  const tramonto = new Date(Date.parse(sole?.attributes?.next_setting || "") + DOPO_IL_TRAMONTO_MS);
+  const alba = new Date(Date.parse(sole?.attributes?.next_rising || ""));
+  const ore = (data) => data.getHours() + data.getMinutes() / 60;
+  if (m.luce.giorno !== "orario" && Number.isFinite(tramonto.getTime()) && Number.isFinite(alba.getTime())) {
+    const da = ore(tramonto);
+    const a = ore(alba);
+    return { da, a, dalSole: true };
+  }
+  const [hDa, mDa] = m.notte.da.split(":").map(Number);
+  const [hA, mA] = m.notte.a.split(":").map(Number);
+  return { da: hDa + mDa / 60, a: hA + mA / 60, dalSole: false };
+}
+function anteprimaDellaGiornata(m) {
+  const { da, a, dalSole } = notteDellAnteprima(m);
+  const eNotte3 = (ora5) => da > a ? ora5 >= da || ora5 < a : ora5 >= da && ora5 < a;
+  const L = 46;
+  const W = 600;
+  const H7 = 136;
+  const T = 8;
+  const B = 26;
+  const w = W - L - 14;
+  const h = H7 - T - B;
+  const x = (ora5) => (L + ora5 / 24 * w).toFixed(1);
+  const y = (v) => (T + h - v / 100 * h).toFixed(1);
+  const fasce = (da > a ? [
+    [0, a],
+    [da, 24]
+  ] : [[da, a]]).map(
+    ([i, f]) => `<rect class="notte" x="${x(i)}" y="${T}" width="${(x(f) - x(i)).toFixed(1)}" height="${h}"/>`
+  ).join("");
+  const righe3 = [0, 50, 100].map(
+    (v) => `<line x1="${L}" x2="${W - 14}" y1="${y(v)}" y2="${y(v)}"/><text class="asse-y" x="${L - 6}" y="${Number(y(v)) + 4}" text-anchor="end">${v}%</text>`
+  ).join("");
+  const ore = [0, 6, 12, 18, 24].map(
+    (o) => `<text x="${x(o)}" y="${H7 - 4}" text-anchor="middle">${String(o).padStart(2, "0")}</text>`
+  ).join("");
+  const vicini = PASSAGGI_DI_ESEMPIO.map(
+    ([i, f]) => `<rect class="vicino" x="${x(i)}" y="${T + h - 4}" width="${(x(f) - x(i)).toFixed(1)}" height="4" rx="2"/>`
+  ).join("");
+  let linea = "";
+  let prima = null;
+  for (const [ora5, v] of giornataDellaLuce(m, eNotte3)) {
+    linea += prima === null ? `M${x(ora5)},${y(v)}` : `L${x(ora5)},${y(prima)}L${x(ora5)},${y(v)}`;
+    prima = v;
+  }
+  return `<div class="mu-ed-giornata">
+    <div class="mu-ed-leg"><span><i class="luce"></i>${esc(t("Luminosità", "Brightness"))}</span><span><i class="vicino"></i>${esc(t("Qualcuno vicino (esempio)", "Someone nearby (example)"))}</span><span><i class="notte"></i>${esc(dalSole ? t("Notte (dal sole)", "Night (from the sun)") : t("Notte (dall'orario)", "Night (from the hours)"))}</span></div>
+    <svg viewBox="0 0 ${W} ${H7}" role="img" aria-label="${esc(t("Anteprima di una giornata", "Preview of a day"))}">${fasce}${righe3}${ore}${vicini}<path class="luce" d="${linea}"/></svg>
+  </div>`;
+}
+function luceMarkup(m) {
+  const l = m.luce;
+  const capacita = capacitaDelTablet();
+  const sullIPad = capacita?.piattaforma === "ios";
+  const senzaLuce = Boolean(capacita) && !capacita.luce;
+  const senzaVicino = Boolean(capacita) && !capacita.prossimita;
+  const sole = allStates()?.["sun.sun"];
+  const notaDelGiorno = l.giorno === "stanza" ? capacita?.luce ? t(
+    "Col sensore di luce di questo tablet: è notte quando la stanza è buia",
+    "With this tablet's light sensor: it is night when the room is dark"
+  ) : senzaLuce ? t(
+    "Questo tablet non ha il sensore di luce: vale il sole di casa",
+    "This tablet has no light sensor: the home's sun applies"
+  ) : t(
+    "Col sensore di luce del tablet, solo nell'app gdahome su Android. Senza, vale il sole di casa",
+    "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies"
+  ) : l.giorno === "orario" ? t(
+    "Notte nella fascia di «Di notte schermo nero», anche con l'interruttore spento",
+    "Night in the hours of “Black screen at night”, even with its switch off"
+  ) : sole ? t(
+    "Col sole: notte da mezz'ora dopo il tramonto all'alba",
+    "By the sun: night from half an hour after sunset to sunrise"
+  ) : t(
+    "Home Assistant non ha sun.sun: vale l'orario di «Di notte schermo nero»",
+    "Home Assistant has no sun.sun: the hours of “Black screen at night” apply"
+  );
+  const voci4 = [
+    ["sole", t("Sole di casa", "Home's sun"), false],
+    ["stanza", t("Luce della stanza", "Room light"), sullIPad || senzaLuce],
+    ["orario", t("Orario", "Hours"), false]
+  ];
+  const giorno2 = `<span class="mu-ed-seg">${voci4.map(
+    ([v, testo4, spento]) => `<button type="button" class="${v === l.giorno ? "si" : ""}" data-mu-ed-metti="luce.giorno" data-mu-ed-valore="${v}"${spento && v !== l.giorno ? " disabled" : ""}>${esc(testo4)}</button>`
+  ).join("")}</span>`;
+  const livelli = l.attiva ? `<div class="mu-ed-sotto-titolo">${esc(t("Quanto è luminoso", "How bright"))}</div>
+    ${riga2(t("Quando qualcuno è vicino", "When someone is nearby"), t("Al tocco o all'arrivo di qualcuno", "On a touch or when someone arrives"), cursore("luce.vicino", l.vicino, 10, t("Quando qualcuno è vicino", "When someone is nearby")))}
+    ${riga2(t("A riposo, di giorno", "Resting, by day"), t("Si legge l'orologio, ma non illumina la stanza", "The clock is readable, but it does not light up the room"), cursore("luce.riposo", l.riposo, 0, t("A riposo, di giorno", "Resting, by day")))}
+    ${riga2(t("Di notte", "At night"), t("0% = schermo nero, come «Di notte schermo nero»", "0% = black screen, like “Black screen at night”"), cursore("luce.notte", l.notte, 0, t("Di notte", "At night")))}
+    ${riga2(
+    t("Abbassa dopo", "Dim after"),
+    t("Tempo senza nessuno vicino e senza tocchi", "Time with nobody nearby and no touches"),
+    tendina2(
+      "luce.dopo",
+      l.dopo,
+      SECONDI_PER_ABBASSARE.map((n) => [n, n < 60 ? `${n} s` : `${n / 60} min`]),
+      null
+    )
+  )}
+    ${riga2(
+    t("Giorno e notte da", "Day and night from"),
+    notaDelGiorno,
+    `${giorno2}${l.giorno === "orario" ? `${campo3("notte.da", m.notte.da, "23:00", "time")}${campo3("notte.a", m.notte.a, "06:30", "time")}` : ""}`
+  )}
+    ${sullIPad ? `<div class="mu-ed-nota">${esc(t("Sull'iPad la luce della stanza non si legge: giorno e notte li dice il sole o l'orario.", "On the iPad the room light cannot be read: the sun or the hours tell day from night."))}</div>` : ""}
+    <div class="mu-ed-sotto-titolo">${esc(t("Anteprima di una giornata", "Preview of a day"))}</div>
+    ${anteprimaDellaGiornata(m)}` : "";
+  const sensore = m.risveglio.entita;
+  const letto = sensore ? allStates()?.[sensore] : null;
+  const statoDelSensore = letto ? `<span class="mu-ed-ent"><i class="${letto.state === "on" ? "on" : ""}"></i>${esc(sensore)} · ${esc(letto.state === "on" ? t("rileva", "detecting") : t("nessuno", "nobody"))}</span>` : "";
+  const notaDelTablet = capacita?.prossimita ? t("Questo tablet ce l'ha.", "This tablet has one.") : sullIPad ? t("Sull'iPad non c'è.", "The iPad does not have one.") : senzaVicino ? t("Questo tablet non ce l'ha.", "This tablet does not have one.") : t("Solo nell'app gdahome su Android.", "Only in the gdahome app on Android.");
+  return `<div class="mu-ed-luce" data-mu-ed-luce>
+    <div class="mu-ed-luce-testa"><span class="mu-ed-luce-ic" aria-hidden="true">☀️</span><div class="mu-ed-testo"><b>${esc(t("Luminosità dello schermo", "Screen brightness"))}</b><small>${esc(t("La comanda il pannello, solo nell'app gdahome sul tablet", "The panel sets it, only in the gdahome app on the tablet"))}</small></div>${interruttore("luce.attiva", l.attiva, "luce")}</div>
+    ${livelli}
+    <div class="mu-ed-sotto-titolo">${esc(t("Chi c'è vicino · basta una fonte", "Who is nearby · one source is enough"))}</div>
+    <div class="mu-ed-fonte" data-mu-ed-fonte="presenza">
+      <span class="mu-ed-fonte-em" aria-hidden="true">📡</span>
+      <div class="mu-ed-testo"><b>${esc(t("Sensore di presenza di casa", "Home presence sensor"))} <span class="mu-ed-chip">${esc(t("CONSIGLIATO", "RECOMMENDED"))}</span></b><small>${esc(t("Un sensore di Home Assistant: mmWave, movimento, occupazione. Quando si accende il pannello si sveglia.", "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up."))}</small>${statoDelSensore}</div>
+      <div class="mu-ed-dx">${cerca2("risveglio.entita", sensore, { domini: "binary_sensor" })}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}</div>
+    </div>
+    <div class="mu-ed-fonte${senzaVicino ? " assente" : ""}" data-mu-ed-fonte="prossimita">
+      <span class="mu-ed-fonte-em" aria-hidden="true">📳</span>
+      <div class="mu-ed-testo"><b>${esc(t("Sensore di prossimità del tablet", "Tablet proximity sensor"))}</b><small>${esc(t("Vicino allo schermo, pochi centimetri: utile per la mano che si avvicina. Non tutti i tablet lo hanno.", "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one."))} ${esc(notaDelTablet)}</small></div>
+      <div class="mu-ed-dx">${senzaVicino && !l.prossimita ? `<span class="mu-ed-int fermo" aria-checked="false"><i></i></span>` : interruttore("luce.prossimita", l.prossimita, "prossimita")}</div>
+    </div>
+    <div class="mu-ed-nota">${esc(t("Anche un tocco sullo schermo vale come «qualcuno vicino».", "A touch on the screen also counts as “someone nearby”."))}</div>
+  </div>`;
+}
 function corpoMarkup7() {
   const m = bozza();
   const premium2 = state113.premium === true;
@@ -101786,7 +102184,7 @@ function corpoMarkup7() {
   ${m.pagine.length < PAGINE_AL_MASSIMO ? `<div class="mu-ed-aggiungi"><span>＋ ${esc(t("Aggiungi una pagina", "Add a page"))}</span>${MODELLI2().map(
     ([v, testo4]) => `<button type="button" class="ed-btn-add" data-mu-ed-nuova="${v}">${esc(testo4)}</button>`
   ).join("")}</div>` : ""}
-  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state113.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, meteo, riposo, notte, risveglio, PIN", "Orientation, theme, weather, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state113.altro ? "▾" : "▸"}</span></button>
+  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state113.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, meteo, riposo, notte, luminosità, PIN", "Orientation, theme, weather, rest, night, brightness, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state113.altro ? "▾" : "▸"}</span></button>
   ${state113.altro ? `<div class="mu-ed-blocco">
     ${riga2(
     t("Orientamento", "Orientation"),
@@ -101868,16 +102266,9 @@ function corpoMarkup7() {
     ${riga2(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
     ${m.temperatura === "casa" ? "" : riga2(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca2("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}${m.temperatura === "casa" ? "" : dovesta(m)}
     ${riga2(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo3("notte.da", m.notte.da, "23:00", "time")}${campo3("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
+    ${luceMarkup(m)}
     ${riga2(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga2(t("Avvisi a tutto schermo", "Full-screen alerts"), t("Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»", "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”"), interruttore("avvisiGrandi", m.avvisiGrandi, "avvisi-grandi"))}
-    ${riga2(
-    t("Si sveglia da solo", "Wakes up by itself"),
-    t(
-      "Quando questo sensore si accende (per esempio una presenza)",
-      "When this sensor turns on (for example a presence sensor)"
-    ),
-    `${cerca2("risveglio.entita", m.risveglio.entita, { domini: "binary_sensor" })}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}`
-  )}
     ${riga2(
     t("Batteria del tablet", "Tablet battery"),
     t(
@@ -101929,6 +102320,7 @@ function ensureMuroEditor() {
     return false;
   }
   if (state113.fonte === null && state113.premium === null && !state113.chiedendo) chiediAlPonte();
+  chiediLeCapacita();
   const firma2 = JSON.stringify([
     bozza(),
     Boolean(state113.fonte),
@@ -102389,6 +102781,41 @@ html[data-theme="dark"] #ed-body .mu-ed-sporca{color:#fde68a;background:#78350f5
 #ed-body .mu-ed-elenco-voce>.mu-ed-frecce{margin-left:0}
 #ed-body .mu-ed-anteprima{margin-top:8px;width:100%;max-width:720px;overflow:hidden;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee)}
 #ed-body .mu-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}
+#ed-body .mu-ed-luce{margin-top:8px;padding:12px;border-radius:14px;border:1px solid color-mix(in srgb,#f59e0b 40%,var(--divider-color,#dbe4ee));background:color-mix(in srgb,#f59e0b 5%,transparent)}
+#ed-body .mu-ed-luce-testa{display:flex;align-items:center;gap:12px}
+#ed-body .mu-ed-luce-testa .mu-ed-testo b{font-size:15px}
+#ed-body .mu-ed-luce-ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:linear-gradient(135deg,#fde68a,#f59e0b)}
+#ed-body .mu-ed-luce-cursore{width:280px;max-width:100%}
+#ed-body .mu-ed-luce-cursore input{flex:1 1 auto;width:auto;min-width:0;accent-color:#f59e0b}
+#ed-body .mu-ed-luce-cursore b{font-family:Oswald,Inter,sans-serif;font-size:16px;color:#b45309;text-align:right}
+html[data-theme="dark"] #ed-body .mu-ed-luce-cursore b{color:#fde68a}
+#ed-body .mu-ed-luce .mu-ed-seg button[disabled]{opacity:.4;cursor:not-allowed}
+#ed-body .mu-ed-fonte{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:10px 12px;margin-top:8px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
+#ed-body .mu-ed-fonte.assente{opacity:.65}
+#ed-body .mu-ed-fonte-em{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:color-mix(in srgb,var(--text,#0f172a) 7%,transparent)}
+#ed-body .mu-ed-fonte>.mu-ed-testo{flex:1 1 200px}
+#ed-body .mu-ed-chip{display:inline-block;margin-left:4px;padding:2px 7px;border-radius:6px;font-size:9.5px;font-weight:900;letter-spacing:.08em;vertical-align:1px;color:#1d4ed8;background:color-mix(in srgb,#3b82f6 14%,transparent)}
+html[data-theme="dark"] #ed-body .mu-ed-chip{color:#bfdbfe}
+#ed-body .mu-ed-ent{display:inline-flex;align-items:center;gap:7px;max-width:100%;margin-top:6px;padding:4px 9px;border-radius:8px;font:600 11.5px ui-monospace,monospace;overflow-wrap:anywhere;background:color-mix(in srgb,var(--text,#0f172a) 6%,transparent)}
+#ed-body .mu-ed-ent i{flex:none;width:8px;height:8px;border-radius:50%;background:#94a3b8}
+#ed-body .mu-ed-ent i.on{background:#22c55e}
+#ed-body .mu-ed-giornata{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
+#ed-body .mu-ed-giornata svg{display:block;width:100%;max-width:640px;height:auto}
+#ed-body .mu-ed-giornata text{font-size:10px;font-weight:700;fill:var(--text-dim,#64748b)}
+/* Sul telefono il disegno si stringe a meno di meta': le ore crescono dentro,
+ * e fuori restano leggibili; le percentuali a sinistra non ci stanno, e la
+ * legenda dice gia' cosa si guarda. La scelta del sensore va a capo intera. */
+@media (max-width:600px){#ed-body .mu-ed-giornata text{font-size:22px}#ed-body .mu-ed-giornata text.asse-y{display:none}#ed-body .mu-ed-fonte>.mu-ed-dx{flex:1 1 100%}}
+#ed-body .mu-ed-giornata line{stroke:color-mix(in srgb,var(--text,#0f172a) 10%,transparent)}
+#ed-body .mu-ed-giornata rect.notte{fill:color-mix(in srgb,#334155 22%,transparent)}
+#ed-body .mu-ed-giornata rect.vicino{fill:#22c55e}
+#ed-body .mu-ed-giornata path.luce{fill:none;stroke:#f59e0b;stroke-width:2}
+#ed-body .mu-ed-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:6px;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-leg span{display:inline-flex;align-items:center;gap:6px}
+#ed-body .mu-ed-leg i{width:10px;height:10px;border-radius:3px}
+#ed-body .mu-ed-leg i.luce{background:#f59e0b}
+#ed-body .mu-ed-leg i.vicino{background:#22c55e}
+#ed-body .mu-ed-leg i.notte{background:color-mix(in srgb,#334155 40%,transparent)}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}
 #ed-body .mu-ed-lucchetto b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:26px;text-transform:uppercase}
 #ed-body .mu-ed-lucchetto p{max-width:520px;font-size:14px;line-height:1.55;color:var(--text-dim,#64748b)}
@@ -102404,6 +102831,11 @@ function installPlanciaAMuroEditor() {
   doc.addEventListener("input", (event) => {
     if (event.target?.dataset?.muEdCampo?.endsWith(".ingresso.volume")) {
       const scritta = event.target.parentElement?.querySelector?.("[data-mu-ed-volume]");
+      if (scritta) scritta.textContent = `${event.target.value}%`;
+      return;
+    }
+    if (/^luce\.(vicino|riposo|notte)$/.test(event.target?.dataset?.muEdCampo || "")) {
+      const scritta = event.target.parentElement?.querySelector?.("[data-mu-ed-percento]");
       if (scritta) scritta.textContent = `${event.target.value}%`;
       return;
     }
@@ -102424,6 +102856,9 @@ function installPlanciaAMuroEditor() {
   });
   root.addEventListener?.("resize", () => {
     if (schedaAttiva6() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+  });
+  root.addEventListener?.("gdahome:schermo", (event) => {
+    if (event?.detail?.capacita && schedaAttiva6() === MURO_EDITOR_TAB && state113.altro) ridisegna8();
   });
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
     root.addEventListener?.(evento, ancora2);
@@ -102956,13 +103391,13 @@ function installStyles50() {
   );
 }
 function onSoglia(event) {
-  const cursore = event.target?.closest?.("[data-dm-soglia]");
-  if (!cursore) return;
-  const entity2 = clean(cursore.dataset.dmSoglia);
-  const chiamata = comandoDellaSoglia(entity2, cursore.value);
+  const cursore2 = event.target?.closest?.("[data-dm-soglia]");
+  if (!cursore2) return;
+  const entity2 = clean(cursore2.dataset.dmSoglia);
+  const chiamata = comandoDellaSoglia(entity2, cursore2.value);
   if (!chiamata) return;
-  const scritta = cursore.closest(".dm-batt-limite")?.querySelector(`[data-dm-soglia-valore="${CSS.escape(entity2)}"]`);
-  if (scritta) scritta.textContent = `${Math.round(Number(cursore.value))}%`;
+  const scritta = cursore2.closest(".dm-batt-limite")?.querySelector(`[data-dm-soglia-valore="${CSS.escape(entity2)}"]`);
+  if (scritta) scritta.textContent = `${Math.round(Number(cursore2.value))}%`;
   if (event.type !== "change") return;
   root.navigator?.vibrate?.(6);
   try {
@@ -107153,8 +107588,8 @@ function servizioCrudo(servizio2, { chi = "", dati = {} } = {}) {
   if ((dominio5 === "button" || dominio5 === "input_button") && nome === "press")
     return su("premi", "press");
   if (nome === "turn_on") {
-    const luce = dominio5 === "light" && numeroEn(d.brightness_pct);
-    return luce ? coppia(
+    const luce2 = dominio5 === "light" && numeroEn(d.brightness_pct);
+    return luce2 ? coppia(
       `accendi ${chi} al ${numeroEn(d.brightness_pct)}%`,
       `turn on ${chi} at ${numeroEn(d.brightness_pct)}%`
     ) : su("accendi", "turn on");
@@ -108146,15 +108581,15 @@ function paroleDi2(p) {
   const area = clean(d.area);
   const nome = clean(d.nome);
   if (p.chiave === "movimentoLuce") {
-    const luce = cosa;
+    const luce2 = cosa;
     return {
       quando: t(
         `Quando c'è movimento in ${area} di notte`,
         `When there is motion in ${area} at night`
       ),
       allora: t(
-        `accendi ${luce} al 20%, spegni dopo 2 min`,
-        `turn on ${luce} at 20%, off after 2 min`
+        `accendi ${luce2} al 20%, spegni dopo 2 min`,
+        `turn on ${luce2} at 20%, off after 2 min`
       ),
       perche: t(
         `in ${area} ci sono un sensore di movimento e una luce.`,
@@ -108452,7 +108887,7 @@ function modelli() {
 }
 function bozzaDelModello(chiave2) {
   const id = nuovoId2();
-  const luce = primaDi("luce");
+  const luce2 = primaDi("luce");
   const clima = primaDi("clima");
   if (chiave2 === "crono")
     return {
@@ -108479,9 +108914,9 @@ function bozzaDelModello(chiave2) {
       },
       soloSe: [{ tipo: "notte", da: "", a: "" }],
       allora: [
-        { tipo: "accendi", entita: luce, livello: 30 },
+        { tipo: "accendi", entita: luce2, livello: 30 },
         { tipo: "aspetta", minuti: 2 },
-        { tipo: "spegni", entita: luce }
+        { tipo: "spegni", entita: luce2 }
       ]
     };
   if (chiave2 === "tapparelle")
@@ -108538,7 +108973,7 @@ function bozzaDelModello(chiave2) {
       quando: { tipo: "persone", verso: "arriva", chi: [] },
       soloSe: [{ tipo: "notte", da: "", a: "" }],
       allora: [
-        ...luce ? [{ tipo: "accendi", entita: luce }] : [],
+        ...luce2 ? [{ tipo: "accendi", entita: luce2 }] : [],
         ...clima ? [{ tipo: "clima", entita: clima, modo: "temperatura", gradi: 21 }] : []
       ]
     };
@@ -108552,7 +108987,7 @@ function bozzaDelModello(chiave2) {
       scarto: 0,
       giorni: [true, true, true, true, true, true, true]
     },
-    allora: [{ tipo: "accendi", entita: luce }]
+    allora: [{ tipo: "accendi", entita: luce2 }]
   };
 }
 var sel = (via, valore3, voci4, { vuota = null, classe: c = "", cerca: cerca4 = false } = {}) => `<select class="au-sel${c ? ` ${c}` : ""}" data-au-campo="${esc(via)}">${vuota !== null ? `<option value="">${esc(vuota)}</option>` : ""}${voci4.map(
@@ -108855,8 +109290,8 @@ function campiDellAzione(a, i) {
   }
   if (a.tipo === "accendi") {
     const elenco15 = Array.isArray(a.entita) ? a.entita : [];
-    const luce = elenco15.some((e) => dominio3(e) === "light");
-    return `${entitaInsieme(`${via}.entita`, elenco15, "accendi")}${luce ? ` <span class="au-o">${esc(t("al", "at level"))}</span> ${sel(
+    const luce2 = elenco15.some((e) => dominio3(e) === "light");
+    return `${entitaInsieme(`${via}.entita`, elenco15, "accendi")}${luce2 ? ` <span class="au-o">${esc(t("al", "at level"))}</span> ${sel(
       `${via}.livello`,
       a.livello || "",
       [10, 20, 30, 50, 70, 100].map((p) => [p, `${p}%`]),
@@ -110939,14 +111374,14 @@ function disegna6() {
   }
   const cerca4 = posto.querySelector("[data-gn-cerca]");
   const fuoco = cerca4 && doc.activeElement === cerca4;
-  const cursore = fuoco ? cerca4.selectionStart : null;
+  const cursore2 = fuoco ? cerca4.selectionStart : null;
   const html = `${testa2}<div class="dm-gn-griglia"><div class="dm-gn-card">${elenco12()}</div><div class="dm-gn-card">${editor2()}</div></div>`;
   sosteQuandoLAutoRisponde();
   if (!scrivi4(posto, html)) return;
   if (fuoco) {
     const nuovo = posto.querySelector("[data-gn-cerca]");
     nuovo?.focus();
-    if (cursore !== null) nuovo?.setSelectionRange?.(cursore, cursore);
+    if (cursore2 !== null) nuovo?.setSelectionRange?.(cursore2, cursore2);
   }
 }
 function sosteQuandoLAutoRisponde() {
@@ -116708,7 +117143,7 @@ function aggiornaBuilder(builder, markup7) {
     }
     vecchiePerChiave.set(chiaveDi2(fila2), fila2);
   }
-  let cursore = fileVecchie.firstElementChild;
+  let cursore2 = fileVecchie.firstElementChild;
   for (const filaNuova of nuove) {
     const chiave2 = chiaveDi2(filaNuova);
     let fila2 = vecchiePerChiave.get(chiave2) || null;
@@ -116716,7 +117151,7 @@ function aggiornaBuilder(builder, markup7) {
       const bottoniNuovi = [...filaNuova.querySelectorAll("[data-face-k]")];
       const bottoni = [...fila2.querySelectorAll("[data-face-k]")];
       if (bottoni.length !== bottoniNuovi.length || bottoni.some((b2, i) => b2.dataset.faceV !== bottoniNuovi[i].dataset.faceV)) {
-        if (fila2 === cursore) cursore = filaNuova;
+        if (fila2 === cursore2) cursore2 = filaNuova;
         fila2.replaceWith(filaNuova);
         fila2 = filaNuova;
       } else {
@@ -116738,8 +117173,8 @@ function aggiornaBuilder(builder, markup7) {
     } else {
       fila2 = filaNuova;
     }
-    if (fila2 === cursore) cursore = cursore.nextElementSibling;
-    else fileVecchie.insertBefore(fila2, cursore);
+    if (fila2 === cursore2) cursore2 = cursore2.nextElementSibling;
+    else fileVecchie.insertBefore(fila2, cursore2);
   }
 }
 function aggiornaAnteprima(riga3, people, index) {
@@ -119258,14 +119693,14 @@ var laSezioneSiVede = () => doc?.getElementById?.(ID_DELLA_SEZIONE)?.classList?.
 function conIlCampo(dove, scrivi5) {
   const attivo = doc.activeElement;
   const cercava = Boolean(attivo?.matches?.("[data-auc-cerca]"));
-  const cursore = cercava ? attivo.selectionStart : null;
+  const cursore2 = cercava ? attivo.selectionStart : null;
   scrivi5();
   if (cercava) {
     const campo5 = dove.querySelector("[data-auc-cerca]");
     campo5?.focus?.();
-    if (cursore !== null) {
+    if (cursore2 !== null) {
       try {
-        campo5?.setSelectionRange?.(cursore, cursore);
+        campo5?.setSelectionRange?.(cursore2, cursore2);
       } catch (_errore) {
       }
     }
@@ -123971,10 +124406,10 @@ function ordinaLeCaselleDelSolare(caselle2) {
   }
   if (!voluti.length) return false;
   if (!voluti[0].isConnected) prima.before(voluti[0]);
-  let cursore = voluti[0];
+  let cursore2 = voluti[0];
   for (const nodo2 of voluti.slice(1)) {
-    if (cursore.nextElementSibling !== nodo2) cursore.after(nodo2);
-    cursore = nodo2;
+    if (cursore2.nextElementSibling !== nodo2) cursore2.after(nodo2);
+    cursore2 = nodo2;
   }
   return true;
 }
@@ -131299,21 +131734,21 @@ function stazioneMarkup(vista2) {
     );
   }
   const radiazione = stazione.radiazione;
-  const luce = stazione.luminosita;
-  if (radiazione || luce) {
-    const principale = radiazione || luce;
+  const luce2 = stazione.luminosita;
+  if (radiazione || luce2) {
+    const principale = radiazione || luce2;
     const lux = (lettura3) => /^lx$/i.test(lettura3.unita) && lettura3.valore >= 1e3 ? `${numeroBello(lettura3.valore / 1e3, 0)} klx` : `${numeroBello(lettura3.valore, 0)} ${lettura3.unita || "lx"}`;
     const picco = minimoEMassimo(serieDi2(principale.entity, principale), { da: inizio })?.massimo;
-    const valoreLuce = !radiazione && /^lx$/i.test(luce.unita) && luce.valore >= 1e3;
+    const valoreLuce = !radiazione && /^lx$/i.test(luce2.unita) && luce2.valore >= 1e3;
     tessere2.push(
       tessera2({
         chiave: "sole",
         disegno: "solar",
         nome: t("Sole", "Sun"),
-        valore: valoreLuce ? numeroBello(luce.valore / 1e3, 0) : numeroBello(principale.valore, 0),
+        valore: valoreLuce ? numeroBello(luce2.valore / 1e3, 0) : numeroBello(principale.valore, 0),
         unita: valoreLuce ? "klx" : principale.unita || (radiazione ? "W/m²" : "lx"),
         sotto: [
-          radiazione && luce ? `${esc(t("luminosità", "brightness"))} ${b(lux(luce))}` : "",
+          radiazione && luce2 ? `${esc(t("luminosità", "brightness"))} ${b(lux(luce2))}` : "",
           picco && picco.valore > 0 ? `${esc(t("picco", "peak"))} ${b(`${numeroBello(picco.valore, 0)} ${principale.unita}`)} ${esc(t("alle", "at"))} ${esc(quando4(picco))}` : ""
         ].filter(Boolean).join(" · "),
         grafico: spark(passo(principale), { colore: "#f59e0b", id: "sole" }),

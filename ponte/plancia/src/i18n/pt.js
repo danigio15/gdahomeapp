@@ -5520,10 +5520,7 @@ export default Object.freeze({
   "The wall dashboard is Premium": "O painel de parede é Premium",
   "This tablet's pages": "Páginas deste tablet",
   "Use this dashboard on the wall": "Usar este painel na parede",
-  "Wakes up by itself": "Acorda sozinho",
   "Warn about open windows": "Avisar sobre janelas abertas",
-  "When this sensor turns on (for example a presence sensor)":
-    "Quando este sensor liga (por exemplo um sensor de presença)",
   "Who is home": "Quem está em casa",
   windy: "vento",
   "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
@@ -5586,8 +5583,6 @@ export default Object.freeze({
   "On rest go back to the first page": "Em repouso voltar à primeira página",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "Um cartão por divisão, com temperatura, humidade e quantas luzes estão acesas, ao vivo. As divisões e os seus sensores vêm do painel de origem.",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "Orientação, tema, meteorologia, repouso, noite, despertar, PIN",
   "Positive is drawn, negative is fed in": "Positivo é consumido da rede, negativo é injetado",
   "Power, in W or kW": "Potência, em W ou kW",
   "Right now, at home": "Agora mesmo, em casa",
@@ -6665,4 +6660,60 @@ export default Object.freeze({
   "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "espera até ${chi} passar a ${parola} (máx. ${massimo} min)",
   "When ${chi} goes from ${prima} to ${dopo}": "Quando ${chi} passa de ${prima} para ${dopo}",
   "When ${chi} is no longer ${prima}": "Quando ${chi} deixa de ser ${prima}",
+  "0% = black screen, like “Black screen at night”": "0% = ecrã preto, como «Ecrã preto à noite»",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "Um sensor do Home Assistant: mmWave, movimento, ocupação. Quando liga, o painel acorda.",
+  "A touch on the screen also counts as “someone nearby”.":
+    "Um toque no ecrã também conta como «alguém por perto».",
+  "At night": "À noite",
+  "By the sun: night from half an hour after sunset to sunrise":
+    "Pelo sol: noite desde meia hora depois do pôr do sol até ao nascer do sol",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "Perto do ecrã, poucos centímetros: útil para a mão que se aproxima. Nem todos os tablets o têm.",
+  "Day and night from": "Dia e noite pelo",
+  "detecting": "deteta",
+  "Dim after": "Baixar após",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "O Home Assistant não tem sun.sun: valem as horas de «Ecrã preto à noite»",
+  "Home presence sensor": "Sensor de presença da casa",
+  "Home's sun": "Sol da casa",
+  "Hours": "Horário",
+  "How bright": "Que brilho",
+  "Night (from the hours)": "Noite (pelo horário)",
+  "Night (from the sun)": "Noite (pelo sol)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "Noite nas horas de «Ecrã preto à noite», mesmo com o interruptor desligado",
+  "nobody": "ninguém",
+  "On a touch or when someone arrives": "Com um toque ou quando alguém chega",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "No iPad a luz da divisão não se lê: o dia e a noite são dados pelo sol ou pelo horário.",
+  "Only in the gdahome app on Android.": "Só na app gdahome no Android.",
+  "Orientation, theme, weather, rest, night, brightness, PIN":
+    "Orientação, tema, meteorologia, repouso, noite, brilho, PIN",
+  "presence sensor": "sensor de presença",
+  "Preview of a day": "Pré-visualização de um dia",
+  "RECOMMENDED": "RECOMENDADO",
+  "Resting, by day": "Em repouso, de dia",
+  "Room light": "Luz da divisão",
+  "Screen brightness": "Brilho do ecrã",
+  "Someone nearby": "Alguém por perto",
+  "Someone nearby (example)": "Alguém por perto (exemplo)",
+  "tablet proximity": "proximidade do tablet",
+  "Tablet proximity sensor": "Sensor de proximidade do tablet",
+  "The clock is readable, but it does not light up the room":
+    "O relógio lê-se, mas não ilumina a divisão",
+  "The iPad does not have one.": "O iPad não o tem.",
+  "The panel sets it, only in the gdahome app on the tablet":
+    "É o painel que o controla, só na app gdahome no tablet",
+  "This tablet does not have one.": "Este tablet não o tem.",
+  "This tablet has no light sensor: the home's sun applies":
+    "Este tablet não tem sensor de luz: vale o sol da casa",
+  "This tablet has one.": "Este tablet tem.",
+  "Time with nobody nearby and no touches": "Tempo sem ninguém por perto e sem toques",
+  "When someone is nearby": "Quando alguém está por perto",
+  "Who is nearby · one source is enough": "Quem está por perto · basta uma fonte",
+  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
+    "Com o sensor de luz do tablet, só na app gdahome no Android. Sem ele, vale o sol da casa",
+  "With this tablet's light sensor: it is night when the room is dark":
+    "Com o sensor de luz deste tablet: é noite quando a divisão está escura",
 });

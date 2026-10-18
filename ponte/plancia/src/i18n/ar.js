@@ -5459,10 +5459,7 @@ export default Object.freeze({
   "The wall dashboard is Premium": "اللوحة الجدارية ميزة Premium",
   "This tablet's pages": "صفحات هذا الجهاز اللوحي",
   "Use this dashboard on the wall": "استخدام هذه اللوحة على الجدار",
-  "Wakes up by itself": "يستيقظ تلقائيًا",
   "Warn about open windows": "التحذير من النوافذ المفتوحة",
-  "When this sensor turns on (for example a presence sensor)":
-    "عندما يعمل هذا المستشعر (مثل مستشعر الحضور)",
   "Who is home": "من في المنزل",
   windy: "عاصف",
   "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
@@ -5526,8 +5523,6 @@ export default Object.freeze({
   "On rest go back to the first page": "عند الراحة العودة إلى الصفحة الأولى",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "بطاقة لكل غرفة، مع الحرارة والرطوبة وعدد الأضواء المضاءة، مباشرة. الغرف ومستشعراتها من اللوحة المصدر.",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "الاتجاه، السمة، الطقس، الراحة، الليل، الإيقاظ، الرمز",
   "Positive is drawn, negative is fed in": "الموجب سحب، والسالب ضخ",
   "Power, in W or kW": "القدرة، بالواط أو الكيلوواط",
   "Right now, at home": "الآن، في المنزل",
@@ -6600,4 +6595,59 @@ export default Object.freeze({
   "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "انتظر حتى يصبح ${chi} ${parola} (بحد أقصى ${massimo} د)",
   "When ${chi} goes from ${prima} to ${dopo}": "عندما ينتقل ${chi} من ${prima} إلى ${dopo}",
   "When ${chi} is no longer ${prima}": "عندما لا يعود ${chi} ${prima}",
+  "0% = black screen, like “Black screen at night”": "0% = شاشة سوداء، مثل «شاشة سوداء ليلًا»",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "مستشعر من Home Assistant: mmWave أو حركة أو إشغال. عندما يعمل تستيقظ اللوحة.",
+  "A touch on the screen also counts as “someone nearby”.":
+    "لمس الشاشة يُحتسب أيضًا «شخصًا قريبًا».",
+  "At night": "ليلًا",
+  "By the sun: night from half an hour after sunset to sunrise":
+    "حسب الشمس: الليل من نصف ساعة بعد الغروب حتى الشروق",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "قريب من الشاشة ببضعة سنتيمترات: مفيد لليد التي تقترب. ليس كل جهاز لوحي يملكه.",
+  "Day and night from": "النهار والليل حسب",
+  "detecting": "يرصد",
+  "Dim after": "خفض الإضاءة بعد",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "لا يوجد sun.sun في Home Assistant: تُطبَّق ساعات «شاشة سوداء ليلًا»",
+  "Home presence sensor": "مستشعر الحضور في المنزل",
+  "Home's sun": "شمس المنزل",
+  "Hours": "الساعات",
+  "How bright": "مقدار السطوع",
+  "Night (from the hours)": "الليل (حسب الساعات)",
+  "Night (from the sun)": "الليل (حسب الشمس)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "الليل في ساعات «شاشة سوداء ليلًا»، حتى لو كان مفتاحه مطفأً",
+  "nobody": "لا أحد",
+  "On a touch or when someone arrives": "عند اللمس أو عند وصول شخص ما",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "على iPad لا يمكن قراءة ضوء الغرفة: الشمس أو الساعات تحدد النهار والليل.",
+  "Only in the gdahome app on Android.": "فقط في تطبيق gdahome على Android.",
+  "Orientation, theme, weather, rest, night, brightness, PIN":
+    "الاتجاه، السمة، الطقس، الراحة، الليل، السطوع، PIN",
+  "presence sensor": "مستشعر الحضور",
+  "Preview of a day": "معاينة يوم",
+  "RECOMMENDED": "موصى به",
+  "Resting, by day": "في الراحة، نهارًا",
+  "Room light": "ضوء الغرفة",
+  "Screen brightness": "سطوع الشاشة",
+  "Someone nearby": "شخص قريب",
+  "Someone nearby (example)": "شخص قريب (مثال)",
+  "tablet proximity": "قرب الجهاز اللوحي",
+  "Tablet proximity sensor": "مستشعر القرب في الجهاز اللوحي",
+  "The clock is readable, but it does not light up the room": "الساعة مقروءة، لكنها لا تضيء الغرفة",
+  "The iPad does not have one.": "جهاز iPad لا يملكه.",
+  "The panel sets it, only in the gdahome app on the tablet":
+    "تتحكم بها اللوحة، فقط في تطبيق gdahome على الجهاز اللوحي",
+  "This tablet does not have one.": "هذا الجهاز اللوحي لا يملكه.",
+  "This tablet has no light sensor: the home's sun applies":
+    "هذا الجهاز اللوحي بلا مستشعر ضوء: تُطبَّق شمس المنزل",
+  "This tablet has one.": "هذا الجهاز اللوحي يملكه.",
+  "Time with nobody nearby and no touches": "الوقت دون أحد قريب ودون لمسات",
+  "When someone is nearby": "عندما يكون شخص ما قريبًا",
+  "Who is nearby · one source is enough": "من القريب · يكفي مصدر واحد",
+  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
+    "بمستشعر الضوء في الجهاز اللوحي، فقط في تطبيق gdahome على Android. من دونه تُطبَّق شمس المنزل",
+  "With this tablet's light sensor: it is night when the room is dark":
+    "بمستشعر الضوء في هذا الجهاز اللوحي: يكون الليل عندما تكون الغرفة مظلمة",
 });

@@ -5483,10 +5483,7 @@ export default Object.freeze({
   "The wall dashboard is Premium": "दीवार पैनल Premium है",
   "This tablet's pages": "इस टैबलेट के पेज",
   "Use this dashboard on the wall": "इस डैशबोर्ड को दीवार पर उपयोग करें",
-  "Wakes up by itself": "अपने आप जागता है",
   "Warn about open windows": "खुली खिड़कियों की चेतावनी दें",
-  "When this sensor turns on (for example a presence sensor)":
-    "जब यह सेंसर चालू हो (जैसे उपस्थिति सेंसर)",
   "Who is home": "घर पर कौन है",
   windy: "हवादार",
   "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
@@ -5549,8 +5546,6 @@ export default Object.freeze({
   "On rest go back to the first page": "विश्राम पर पहले पेज पर लौटें",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "हर कमरे के लिए एक टाइल, तापमान, नमी और कितनी लाइटें जल रही हैं, लाइव। कमरे और उनके सेंसर स्रोत डैशबोर्ड से आते हैं।",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "दिशा, थीम, मौसम, विश्राम, रात, जागना, PIN",
   "Positive is drawn, negative is fed in": "धनात्मक लिया जाता है, ऋणात्मक दिया जाता है",
   "Power, in W or kW": "पावर, W या kW में",
   "Right now, at home": "अभी, घर पर",
@@ -6626,4 +6621,61 @@ export default Object.freeze({
   "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "${chi} के ${parola} होने तक रुकें (अधिकतम ${massimo} मिनट)",
   "When ${chi} goes from ${prima} to ${dopo}": "जब ${chi} ${prima} से ${dopo} हो",
   "When ${chi} is no longer ${prima}": "जब ${chi} ${prima} न रहे",
+  "0% = black screen, like “Black screen at night”":
+    "0% = काली स्क्रीन, “रात में काली स्क्रीन” की तरह",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "Home Assistant का एक सेंसर: mmWave, गति, उपस्थिति। जब यह चालू होता है तो पैनल जाग जाता है।",
+  "A touch on the screen also counts as “someone nearby”.":
+    "स्क्रीन पर एक स्पर्श भी “कोई पास है” माना जाता है।",
+  "At night": "रात में",
+  "By the sun: night from half an hour after sunset to sunrise":
+    "सूरज से: सूर्यास्त के आधे घंटे बाद से सूर्योदय तक रात",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "स्क्रीन के पास, कुछ सेंटीमीटर: पास आते हाथ के लिए उपयोगी। हर टैबलेट में नहीं होता।",
+  "Day and night from": "दिन और रात इससे",
+  "detecting": "पता चल रहा है",
+  "Dim after": "इसके बाद मंद करें",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "Home Assistant में sun.sun नहीं है: “रात में काली स्क्रीन” के घंटे लागू होते हैं",
+  "Home presence sensor": "घर का उपस्थिति सेंसर",
+  "Home's sun": "घर का सूरज",
+  "Hours": "समय",
+  "How bright": "कितनी चमक",
+  "Night (from the hours)": "रात (समय से)",
+  "Night (from the sun)": "रात (सूरज से)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "“रात में काली स्क्रीन” के घंटों में रात, भले उसका स्विच बंद हो",
+  "nobody": "कोई नहीं",
+  "On a touch or when someone arrives": "स्पर्श पर या जब कोई आए",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "iPad पर कमरे की रोशनी नहीं पढ़ी जा सकती: दिन और रात सूरज या समय से तय होते हैं।",
+  "Only in the gdahome app on Android.": "केवल Android पर gdahome ऐप में।",
+  "Orientation, theme, weather, rest, night, brightness, PIN":
+    "दिशा, थीम, मौसम, विश्राम, रात, चमक, PIN",
+  "presence sensor": "उपस्थिति सेंसर",
+  "Preview of a day": "एक दिन का पूर्वावलोकन",
+  "RECOMMENDED": "अनुशंसित",
+  "Resting, by day": "विश्राम में, दिन में",
+  "Room light": "कमरे की रोशनी",
+  "Screen brightness": "स्क्रीन की चमक",
+  "Someone nearby": "कोई पास है",
+  "Someone nearby (example)": "कोई पास है (उदाहरण)",
+  "tablet proximity": "टैबलेट की निकटता",
+  "Tablet proximity sensor": "टैबलेट का निकटता सेंसर",
+  "The clock is readable, but it does not light up the room":
+    "घड़ी पढ़ी जा सकती है, पर कमरा रोशन नहीं होता",
+  "The iPad does not have one.": "iPad में यह नहीं है।",
+  "The panel sets it, only in the gdahome app on the tablet":
+    "इसे पैनल नियंत्रित करता है, केवल टैबलेट पर gdahome ऐप में",
+  "This tablet does not have one.": "इस टैबलेट में यह नहीं है।",
+  "This tablet has no light sensor: the home's sun applies":
+    "इस टैबलेट में प्रकाश सेंसर नहीं है: घर का सूरज लागू होता है",
+  "This tablet has one.": "इस टैबलेट में यह है।",
+  "Time with nobody nearby and no touches": "बिना किसी के पास हुए और बिना स्पर्श का समय",
+  "When someone is nearby": "जब कोई पास हो",
+  "Who is nearby · one source is enough": "कौन पास है · एक स्रोत काफ़ी है",
+  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
+    "टैबलेट के प्रकाश सेंसर से, केवल Android पर gdahome ऐप में। इसके बिना घर का सूरज लागू होता है",
+  "With this tablet's light sensor: it is night when the room is dark":
+    "इस टैबलेट के प्रकाश सेंसर से: कमरे में अंधेरा होने पर रात होती है",
 });

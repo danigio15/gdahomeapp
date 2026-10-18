@@ -1354,6 +1354,53 @@ function versiDellaPlancia(energy) {
   return fuori;
 }
 
+/* ── la luminosita' dello schermo (#224) ────────────────────────────────────
+ *
+ * «Il pannello decide la luminosita' del tablet su cui gira: piena quando
+ * qualcuno si avvicina, bassa a riposo, quasi spenta di notte.» Tre livelli in
+ * percentuale, il tempo dopo cui si abbassa, e da dove si sa se e' notte: il
+ * sole di casa (`sun.sun`), la luce della stanza letta dal tablet, o l'orario
+ * della notte che c'era gia'. Lo applica l'app (`lo_schermo.dart`): in un
+ * browser lo schermo non e' della pagina. */
+export const SECONDI_PER_ABBASSARE = Object.freeze([15, 30, 45, 60, 120, 300]);
+export const GIORNO_E_NOTTE_DA = Object.freeze(["sole", "stanza", "orario"]);
+export const LUCE_SPENTA = Object.freeze({
+  attiva: false,
+  vicino: 90,
+  riposo: 20,
+  notte: 3,
+  dopo: 45,
+  giorno: "sole",
+  prossimita: false,
+});
+/* Col sole la notte comincia mezz'ora dopo il tramonto: al tramonto in casa
+ * si vede ancora, e lo schermo al minimo sembrerebbe spento troppo presto. */
+export const DOPO_IL_TRAMONTO_MS = 30 * 60 * 1000;
+
+const percentoDellaLuce = (valore, ripiego, minimo = 0) => {
+  const n = Math.round(Number(valore));
+  if (valore === "" || valore === null || !Number.isFinite(n)) return ripiego;
+  return Math.max(minimo, Math.min(100, n));
+};
+
+/** La luminosita' scritta nel config, pulita. */
+export function lucePulita(input) {
+  const dentro = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const dopo = Number(dentro.dopo);
+  return {
+    attiva: vero(dentro.attiva, false),
+    /* «Quando qualcuno e' vicino» non scende sotto il 10%: un tocco che non
+     * accende niente sembra un tablet rotto. */
+    vicino: percentoDellaLuce(dentro.vicino, LUCE_SPENTA.vicino, 10),
+    riposo: percentoDellaLuce(dentro.riposo, LUCE_SPENTA.riposo),
+    /* Di notte lo 0% vuol dire schermo nero, come «Di notte schermo nero». */
+    notte: percentoDellaLuce(dentro.notte, LUCE_SPENTA.notte),
+    dopo: SECONDI_PER_ABBASSARE.includes(dopo) ? dopo : LUCE_SPENTA.dopo,
+    giorno: scelta(dentro.giorno, GIORNO_E_NOTTE_DA, LUCE_SPENTA.giorno),
+    prossimita: vero(dentro.prossimita, false),
+  };
+}
+
 export const MURO_VUOTO = Object.freeze({
   attiva: false,
   fonte: PROFILO_DI_ORIGINE,
@@ -1367,6 +1414,7 @@ export const MURO_VUOTO = Object.freeze({
   avvisi: true,
   avvisiGrandi: true,
   risveglio: { attivo: false, entita: "" },
+  luce: LUCE_SPENTA,
   blocco: { attivo: false, pin: "" },
   batteria: { attiva: false, livello: "", carica: "" },
   pagine: [],
@@ -1436,10 +1484,18 @@ export function muroPulito(input) {
     /* Un avviso che si accende — l'allagamento, il fumo, l'antifurto che
      * suona — prende tutto lo schermo finche' qualcuno tocca «Ho visto». */
     avvisiGrandi: vero(dentro.avvisiGrandi, true),
+    /* «Si sveglia da solo»: il sensore di presenza di casa. Dal #224 e' la
+     * prima fonte di «Chi c'e' vicino» sotto «Luminosita' dello schermo», ma
+     * resta scritto qui com'era: i tablet con la plancia di prima continuano
+     * a svegliarsi col sensore di sempre, e nessun config va riscritto. */
     risveglio: {
       attivo: vero(risveglio.attivo, false) && Boolean(entita(risveglio.entita)),
       entita: entita(risveglio.entita),
     },
+    /* La luminosita' dello schermo (#224): spenta finche' qualcuno non la
+     * accende, cosi' chi aveva gia' il tablet a muro non vede cambiare
+     * niente. */
+    luce: lucePulita(dentro.luce),
     /* Senza PIN il blocco non c'e': un tablet bloccato senza la chiave per
      * uscire e' un tablet da smontare dal muro. */
     blocco: { attivo: vero(blocco.attivo, false) && Boolean(pin), pin },
@@ -2002,6 +2058,120 @@ export function eNotte(muro, adesso = new Date()) {
   const qui = adesso.getHours() * 60 + adesso.getMinutes();
   if (da === a) return false;
   return da < a ? qui >= da && qui < a : qui >= da || qui < a;
+}
+
+/* La fascia della notte scritta in «Di notte schermo nero», anche spenta:
+ * «Giorno e notte da: Orario» usa quelle due ore. */
+function dentroLaFascia(muro, adesso) {
+  const da = minutiDa(muro?.notte?.da || MURO_VUOTO.notte.da);
+  const a = minutiDa(muro?.notte?.a || MURO_VUOTO.notte.a);
+  const qui = adesso.getHours() * 60 + adesso.getMinutes();
+  if (da === a) return false;
+  return da < a ? qui >= da && qui < a : qui >= da || qui < a;
+}
+
+/**
+ * Se e' notte per il sole di casa: da mezz'ora dopo il tramonto all'alba.
+ *
+ * `sun.sun` dice se il sole e' sopra o sotto l'orizzonte e quando sara' il
+ * prossimo tramonto: col sole gia' sotto, il prossimo e' quello di domani, e
+ * quello di stasera e' un giorno prima (a pochi minuti, che qui non contano).
+ * Torna `null` se il sole non c'e' o non dice niente: decide l'orario.
+ */
+export function notteDalSole(sole, adesso = new Date()) {
+  const dove = String(sole?.state || "");
+  if (dove === "above_horizon") return false;
+  if (dove !== "below_horizon") return null;
+  const prossimo = Date.parse(sole?.attributes?.next_setting || "");
+  if (!Number.isFinite(prossimo)) return true;
+  const tramonto = prossimo - 24 * 60 * 60 * 1000;
+  return adesso.getTime() >= tramonto + DOPO_IL_TRAMONTO_MS;
+}
+
+/**
+ * Se e' notte per la luminosita' dello schermo.
+ *
+ * - `sole`: lo stato di `sun.sun`; senza, vale l'orario.
+ * - `stanza`: quello che dice il sensore di luce del tablet («buio»,
+ *   «penombra», «chiaro»). E' Premium, e c'e' solo nell'app su Android: senza
+ *   una lettura vale il sole, e senza sole l'orario.
+ * - `orario`: la fascia di «Di notte schermo nero», anche con l'interruttore
+ *   spento.
+ */
+export function eNotteDellaLuce(
+  muro,
+  { sole = null, stanza = "", premium = false, adesso = new Date() } = {},
+) {
+  const giorno = muro?.luce?.giorno || "sole";
+  if (giorno === "stanza" && premium && ["buio", "penombra", "chiaro"].includes(stanza))
+    return stanza === "buio";
+  if (giorno !== "orario") {
+    const dalSole = notteDalSole(sole, adesso);
+    if (dalSole !== null) return dalSole;
+  }
+  return dentroLaFascia(muro, adesso);
+}
+
+/**
+ * Chi c'e' vicino, adesso: basta una fonte. Un tocco vale sempre; il sensore
+ * di presenza di casa e quello di prossimita' del tablet sono Premium.
+ * Torna la fonte che l'ha detto per prima — e' quella che la pillola nomina.
+ */
+export function chiCeVicino(
+  muro,
+  { presenza = false, prossimita = false, toccato = 0, premium = false, adesso = Date.now() } = {},
+) {
+  if (premium && muro?.risveglio?.attivo && presenza) return "presenza";
+  if (premium && muro?.luce?.prossimita && prossimita) return "prossimita";
+  const dopo = (muro?.luce?.dopo || LUCE_SPENTA.dopo) * 1000;
+  if (adesso - Number(toccato || 0) < dopo) return "tocco";
+  return "";
+}
+
+/**
+ * La luminosita' da chiedere allo schermo, da 0 a 100; `null` se la
+ * luminosita' non e' accesa e lo schermo resta del sistema.
+ */
+export function livelloDellaLuce(muro, { vicino = false, notte = false } = {}) {
+  const luce = muro?.luce;
+  if (!luce?.attiva) return null;
+  if (vicino) return luce.vicino;
+  return notte ? luce.notte : luce.riposo;
+}
+
+/* La luce del tablet in tre parole, dal numero di lux. Le soglie non sono le
+ * stesse in salita e in discesa: una stanza a 6 lux che balla di uno non fa
+ * lampeggiare lo schermo fra notte e giorno. La stessa regola sta nell'app
+ * (`lo_schermo.dart`), che manda alla pagina solo la parola. */
+export function luceDellaStanza(lux, prima = "") {
+  const n = Number(lux);
+  if (!Number.isFinite(n) || n < 0) return prima;
+  if (prima === "buio" && n < 12) return "buio";
+  if (prima === "chiaro" && n > 50) return "chiaro";
+  if (n < 6) return "buio";
+  if (n > 80) return "chiaro";
+  return "penombra";
+}
+
+/**
+ * Una giornata di esempio, per l'anteprima del config: la luminosita' ora per
+ * ora con la notte data e qualcuno che passa la mattina, a pranzo e la sera.
+ * `notte` dice se un'ora del giorno (0–24, con i decimali) e' notte.
+ */
+export const PASSAGGI_DI_ESEMPIO = Object.freeze([
+  [7, 7.5],
+  [13, 13.4],
+  [19.5, 20.3],
+]);
+export function giornataDellaLuce(muro, notte, passi = 96) {
+  const luce = lucePulita(muro?.luce);
+  const punti = [];
+  for (let i = 0; i <= passi; i += 1) {
+    const quando = (i / passi) * 24;
+    const vicino = PASSAGGI_DI_ESEMPIO.some(([da, a]) => quando >= da && quando <= a);
+    punti.push([quando, vicino ? luce.vicino : notte(quando) ? luce.notte : luce.riposo]);
+  }
+  return punti;
 }
 
 /**

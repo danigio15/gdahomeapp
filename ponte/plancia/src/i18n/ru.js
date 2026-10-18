@@ -5516,10 +5516,7 @@ export default Object.freeze({
   "The wall dashboard is Premium": "Настенная панель — функция Premium",
   "This tablet's pages": "Страницы этого планшета",
   "Use this dashboard on the wall": "Использовать эту панель на стене",
-  "Wakes up by itself": "Просыпается сам",
   "Warn about open windows": "Предупреждать об открытых окнах",
-  "When this sensor turns on (for example a presence sensor)":
-    "Когда этот датчик включается (например, датчик присутствия)",
   "Who is home": "Кто дома",
   windy: "ветрено",
   "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
@@ -5583,8 +5580,6 @@ export default Object.freeze({
   "On rest go back to the first page": "В режиме покоя возвращаться на первую страницу",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "Одна плитка на комнату: температура, влажность и сколько света включено, в реальном времени. Комнаты и их датчики берутся из исходной панели.",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "Ориентация, тема, погода, покой, ночь, пробуждение, PIN",
   "Positive is drawn, negative is fed in": "Положительное — потребление, отрицательное — отдача",
   "Power, in W or kW": "Мощность, в Вт или кВт",
   "Right now, at home": "Прямо сейчас, дома",
@@ -6658,4 +6653,59 @@ export default Object.freeze({
   "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "жди, пока ${chi} станет ${parola} (не более ${massimo} мин)",
   "When ${chi} goes from ${prima} to ${dopo}": "Когда ${chi} переходит из ${prima} в ${dopo}",
   "When ${chi} is no longer ${prima}": "Когда ${chi} больше не ${prima}",
+  "0% = black screen, like “Black screen at night”": "0% = чёрный экран, как «Чёрный экран ночью»",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "Датчик Home Assistant: mmWave, движение, присутствие. Когда он срабатывает, панель просыпается.",
+  "A touch on the screen also counts as “someone nearby”.":
+    "Касание экрана тоже считается как «кто-то рядом».",
+  "At night": "Ночью",
+  "By the sun: night from half an hour after sunset to sunrise":
+    "По солнцу: ночь с получаса после заката до рассвета",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "Близко к экрану, несколько сантиметров: удобно для приближающейся руки. Есть не у каждого планшета.",
+  "Day and night from": "День и ночь по",
+  "detecting": "обнаруживает",
+  "Dim after": "Притушить через",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "В Home Assistant нет sun.sun: действуют часы из «Чёрный экран ночью»",
+  "Home presence sensor": "Датчик присутствия в доме",
+  "Home's sun": "Солнце дома",
+  "Hours": "Часы",
+  "How bright": "Насколько ярко",
+  "Night (from the hours)": "Ночь (по часам)",
+  "Night (from the sun)": "Ночь (по солнцу)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "Ночь в часы из «Чёрный экран ночью», даже если его переключатель выключен",
+  "nobody": "никого",
+  "On a touch or when someone arrives": "При касании или когда кто-то подходит",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "На iPad освещённость комнаты не считывается: день и ночь определяют солнце или часы.",
+  "Only in the gdahome app on Android.": "Только в приложении gdahome на Android.",
+  "Orientation, theme, weather, rest, night, brightness, PIN":
+    "Ориентация, тема, погода, покой, ночь, яркость, PIN",
+  "presence sensor": "датчик присутствия",
+  "Preview of a day": "Пример одного дня",
+  "RECOMMENDED": "РЕКОМЕНДУЕТСЯ",
+  "Resting, by day": "В покое, днём",
+  "Room light": "Свет в комнате",
+  "Screen brightness": "Яркость экрана",
+  "Someone nearby": "Кто-то рядом",
+  "Someone nearby (example)": "Кто-то рядом (пример)",
+  "tablet proximity": "приближение к планшету",
+  "Tablet proximity sensor": "Датчик приближения планшета",
+  "The clock is readable, but it does not light up the room": "Часы видны, но комнату не освещают",
+  "The iPad does not have one.": "У iPad его нет.",
+  "The panel sets it, only in the gdahome app on the tablet":
+    "Её задаёт панель, только в приложении gdahome на планшете",
+  "This tablet does not have one.": "У этого планшета его нет.",
+  "This tablet has no light sensor: the home's sun applies":
+    "У этого планшета нет датчика света: действует солнце дома",
+  "This tablet has one.": "У этого планшета он есть.",
+  "Time with nobody nearby and no touches": "Время без никого рядом и без касаний",
+  "When someone is nearby": "Когда кто-то рядом",
+  "Who is nearby · one source is enough": "Кто рядом · достаточно одного источника",
+  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
+    "С датчиком света планшета, только в приложении gdahome на Android. Без него действует солнце дома",
+  "With this tablet's light sensor: it is night when the room is dark":
+    "С датчиком света этого планшета: ночь, когда в комнате темно",
 });

@@ -5496,10 +5496,7 @@ export default Object.freeze({
   "The wall dashboard is Premium": "壁掛けパネルはPremium機能です",
   "This tablet's pages": "このタブレットのページ",
   "Use this dashboard on the wall": "このダッシュボードを壁掛けで使う",
-  "Wakes up by itself": "自動で復帰",
   "Warn about open windows": "開いている窓を警告",
-  "When this sensor turns on (for example a presence sensor)":
-    "このセンサーがオンになったとき（例: 人感センサー）",
   "Who is home": "在宅者",
   windy: "強風",
   "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
@@ -5562,8 +5559,6 @@ export default Object.freeze({
   "On rest go back to the first page": "待機時に最初のページへ戻る",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "部屋ごとに1枚のタイル。温度、湿度、点灯中の照明の数をライブで表示。部屋とセンサーは元のダッシュボードから取得します。",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "向き、テーマ、天気、待機、夜間、自動起動、PIN",
   "Positive is drawn, negative is fed in": "正は買電、負は売電",
   "Power, in W or kW": "電力 (W または kW)",
   "Right now, at home": "今、家で",
@@ -6642,4 +6637,53 @@ export default Object.freeze({
   "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "${chi} が ${parola} になるまで待つ（最大 ${massimo} 分）",
   "When ${chi} goes from ${prima} to ${dopo}": "${chi} が ${prima} から ${dopo} になったら",
   "When ${chi} is no longer ${prima}": "${chi} が ${prima} でなくなったら",
+  "0% = black screen, like “Black screen at night”": "0% = 黒い画面(「夜は黒い画面」と同じ)",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "Home Assistant のセンサー:mmWave、動き、在室。オンになるとパネルが復帰します。",
+  "A touch on the screen also counts as “someone nearby”.": "画面へのタッチも「誰かが近くにいる」とみなします。",
+  "At night": "夜",
+  "By the sun: night from half an hour after sunset to sunrise": "太陽で:日没の30分後から日の出まで夜",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "画面のすぐ近く、数センチ:近づく手に便利です。すべてのタブレットにあるわけではありません。",
+  "Day and night from": "昼と夜の判断",
+  "detecting": "検知中",
+  "Dim after": "暗くするまで",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "Home Assistant に sun.sun がありません:「夜は黒い画面」の時間帯を使います",
+  "Home presence sensor": "家の在室センサー",
+  "Home's sun": "家の太陽",
+  "Hours": "時刻",
+  "How bright": "明るさの目安",
+  "Night (from the hours)": "夜(時刻から)",
+  "Night (from the sun)": "夜(太陽から)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "「夜は黒い画面」の時間帯は夜(スイッチがオフでも)",
+  "nobody": "誰もいない",
+  "On a touch or when someone arrives": "タッチ時、または誰かが来たとき",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "iPad では部屋の明るさを読み取れません:昼と夜は太陽か時刻で決まります。",
+  "Only in the gdahome app on Android.": "Android の gdahome アプリのみ。",
+  "Orientation, theme, weather, rest, night, brightness, PIN": "向き、テーマ、天気、待機、夜、明るさ、PIN",
+  "presence sensor": "在室センサー",
+  "Preview of a day": "1日のプレビュー",
+  "RECOMMENDED": "おすすめ",
+  "Resting, by day": "待機中(昼)",
+  "Room light": "部屋の明るさ",
+  "Screen brightness": "画面の明るさ",
+  "Someone nearby": "誰かが近くにいます",
+  "Someone nearby (example)": "誰かが近くにいる(例)",
+  "tablet proximity": "タブレットの近接",
+  "Tablet proximity sensor": "タブレットの近接センサー",
+  "The clock is readable, but it does not light up the room": "時計は読めますが、部屋は照らしません",
+  "The iPad does not have one.": "iPad にはありません。",
+  "The panel sets it, only in the gdahome app on the tablet": "パネルが設定します(タブレットの gdahome アプリのみ)",
+  "This tablet does not have one.": "このタブレットにはありません。",
+  "This tablet has no light sensor: the home's sun applies": "このタブレットには光センサーがありません:家の太陽を使います",
+  "This tablet has one.": "このタブレットにはあります。",
+  "Time with nobody nearby and no touches": "誰も近くにおらずタッチもない時間",
+  "When someone is nearby": "誰かが近くにいるとき",
+  "Who is nearby · one source is enough": "近くにいるのは誰か · ひとつのソースで十分",
+  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
+    "タブレットの光センサーで(Android の gdahome アプリのみ)。ない場合は家の太陽を使います",
+  "With this tablet's light sensor: it is night when the room is dark": "このタブレットの光センサーで:部屋が暗いときは夜",
 });

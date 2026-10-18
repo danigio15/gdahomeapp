@@ -5477,9 +5477,7 @@ export default Object.freeze({
   "The wall dashboard is Premium": "벽걸이 패널은 Premium 기능입니다",
   "This tablet's pages": "이 태블릿의 페이지",
   "Use this dashboard on the wall": "이 대시보드를 벽에서 사용",
-  "Wakes up by itself": "자동으로 깨어남",
   "Warn about open windows": "열린 창문 경고",
-  "When this sensor turns on (for example a presence sensor)": "이 센서가 켜질 때 (예: 재실 센서)",
   "Who is home": "집에 있는 사람",
   windy: "바람",
   "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
@@ -5542,8 +5540,6 @@ export default Object.freeze({
   "On rest go back to the first page": "대기 시 첫 페이지로 돌아가기",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "방마다 타일 하나: 온도, 습도, 켜진 조명 수를 실시간으로. 방과 센서는 원본 대시보드에서 가져옵니다.",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "방향, 테마, 날씨, 대기, 야간, 깨우기, PIN",
   "Positive is drawn, negative is fed in": "양수는 수전, 음수는 송전",
   "Power, in W or kW": "전력, W 또는 kW",
   "Right now, at home": "지금, 집에서",
@@ -6621,4 +6617,54 @@ export default Object.freeze({
   "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "${chi}이(가) ${parola}이(가) 될 때까지 대기 (최대 ${massimo}분)",
   "When ${chi} goes from ${prima} to ${dopo}": "${chi}이(가) ${prima}에서 ${dopo}(으)로 바뀌면",
   "When ${chi} is no longer ${prima}": "${chi}이(가) 더 이상 ${prima}이(가) 아니면",
+  "0% = black screen, like “Black screen at night”": "0% = 검은 화면, “밤에는 검은 화면”과 같음",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "Home Assistant 센서: mmWave, 움직임, 재실. 켜지면 패널이 깨어납니다.",
+  "A touch on the screen also counts as “someone nearby”.": "화면을 터치해도 “누군가 가까이 있음”으로 봅니다.",
+  "At night": "밤",
+  "By the sun: night from half an hour after sunset to sunrise": "해 기준: 일몰 30분 후부터 일출까지 밤",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "화면 가까이, 몇 센티미터: 다가오는 손에 유용합니다. 모든 태블릿에 있는 것은 아닙니다.",
+  "Day and night from": "낮과 밤 기준",
+  "detecting": "감지 중",
+  "Dim after": "어둡게 하기까지",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "Home Assistant에 sun.sun이 없습니다: “밤에는 검은 화면”의 시간대를 사용합니다",
+  "Home presence sensor": "집의 재실 센서",
+  "Home's sun": "집의 해",
+  "Hours": "시간",
+  "How bright": "밝기",
+  "Night (from the hours)": "밤 (시간 기준)",
+  "Night (from the sun)": "밤 (해 기준)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "“밤에는 검은 화면”의 시간대에는 밤, 스위치가 꺼져 있어도",
+  "nobody": "없음",
+  "On a touch or when someone arrives": "터치하거나 누군가 다가올 때",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "iPad에서는 방의 밝기를 읽을 수 없습니다: 낮과 밤은 해나 시간으로 정합니다.",
+  "Only in the gdahome app on Android.": "Android의 gdahome 앱에서만.",
+  "Orientation, theme, weather, rest, night, brightness, PIN": "방향, 테마, 날씨, 대기, 밤, 밝기, PIN",
+  "presence sensor": "재실 센서",
+  "Preview of a day": "하루 미리보기",
+  "RECOMMENDED": "추천",
+  "Resting, by day": "대기 중, 낮",
+  "Room light": "방의 밝기",
+  "Screen brightness": "화면 밝기",
+  "Someone nearby": "누군가 가까이 있음",
+  "Someone nearby (example)": "누군가 가까이 있음 (예시)",
+  "tablet proximity": "태블릿 근접",
+  "Tablet proximity sensor": "태블릿 근접 센서",
+  "The clock is readable, but it does not light up the room": "시계는 읽히지만 방을 밝히지는 않습니다",
+  "The iPad does not have one.": "iPad에는 없습니다.",
+  "The panel sets it, only in the gdahome app on the tablet": "패널이 조절합니다, 태블릿의 gdahome 앱에서만",
+  "This tablet does not have one.": "이 태블릿에는 없습니다.",
+  "This tablet has no light sensor: the home's sun applies": "이 태블릿에는 조도 센서가 없습니다: 집의 해를 사용합니다",
+  "This tablet has one.": "이 태블릿에는 있습니다.",
+  "Time with nobody nearby and no touches": "가까이 아무도 없고 터치도 없는 시간",
+  "When someone is nearby": "누군가 가까이 있을 때",
+  "Who is nearby · one source is enough": "누가 가까이 있나 · 하나의 소스로 충분",
+  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
+    "태블릿의 조도 센서로, Android의 gdahome 앱에서만. 없으면 집의 해를 사용합니다",
+  "With this tablet's light sensor: it is night when the room is dark":
+    "이 태블릿의 조도 센서로: 방이 어두우면 밤입니다",
 });

@@ -3,9 +3,14 @@ package com.gdahome.gdahome
 import android.Manifest
 import android.app.KeyguardManager
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.os.SystemClock
 import android.view.WindowManager
 import com.gdahome.gdahome.auto.IlNavigatoreInAuto
 import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
@@ -62,7 +67,9 @@ class MainActivity : FlutterFragmentActivity() {
         /* L'orologio Wear OS. Nella versione col navigatore in auto l'ha gia'
          * collegato `IlNavigatoreInAuto`; rifarlo non fa danni. */
         IlTramiteDellOrologio.collega(flutterEngine.dartExecutor.binaryMessenger, this)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FINESTRA)
+        val canale = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FINESTRA)
+        canaleDellaFinestra = canale
+        canale
             .setMethodCallHandler { chiamata, risposta ->
                 when (chiamata.method) {
                     "riservata" -> {
@@ -83,6 +90,26 @@ class MainActivity : FlutterFragmentActivity() {
                             if (valore < 0f) WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
                             else valore.coerceIn(0f, 1f)
                         window.attributes = attributi
+                        risposta.success(null)
+                    }
+                    /* La luminosita' del pannello a muro (#224): cosa ha il
+                     * tablet, per la Config. Nessun permesso: luce e
+                     * prossimita' si leggono senza chiedere niente. */
+                    "sensori" -> {
+                        val sensori = getSystemService(SENSOR_SERVICE) as? SensorManager
+                        risposta.success(
+                            mapOf(
+                                "luce" to (sensori?.getDefaultSensor(Sensor.TYPE_LIGHT) != null),
+                                "prossimita" to (sensori?.getDefaultSensor(Sensor.TYPE_PROXIMITY) != null),
+                            ),
+                        )
+                    }
+                    /* Quali sensori ascoltare: quelli che il pannello vuole,
+                     * solo mentre e' acceso. Una lista vuota li spegne. */
+                    "ascolta" -> {
+                        val voluti = (chiamata.arguments as? List<*>)?.map { it.toString() }.orEmpty()
+                        sensoriVoluti = voluti.toSet()
+                        accordaISensori()
                         risposta.success(null)
                     }
                     /* Il campanello a muro (`lib/casa/lo_schermo.dart`): lo
@@ -150,6 +177,79 @@ class MainActivity : FlutterFragmentActivity() {
 
     private var microfonoInAttesa: MethodChannel.Result? = null
 
+    /*
+     * I sensori del tablet a muro (#224), per la luminosita' del pannello:
+     * la luce della stanza (giorno e notte) e la prossimita' (qualcuno
+     * vicino allo schermo). Si ascoltano solo quelli che il pannello vuole,
+     * solo mentre il pannello e' acceso e l'activity e' davanti; a Dart va
+     * la prossimita' quando cambia e la luce al piu' una volta al secondo.
+     * Le parole («buio», «c'e'») le sceglie Dart: qui solo i numeri.
+     */
+    private var canaleDellaFinestra: MethodChannel? = null
+    private var sensoriVoluti: Set<String> = emptySet()
+    private var sensoriInAscolto = false
+    private var vicinoDetto: Boolean? = null
+    private var luceDettaAlle = 0L
+
+    private val ascoltatore = object : SensorEventListener {
+        override fun onSensorChanged(evento: SensorEvent) {
+            val canale = canaleDellaFinestra ?: return
+            when (evento.sensor.type) {
+                Sensor.TYPE_PROXIMITY -> {
+                    /* Molti sensori dicono solo «vicino» (0) o «lontano» (il
+                     * massimo): vicino e' sotto il massimo, e sotto i 5 cm. */
+                    val massimo = evento.sensor.maximumRange
+                    val vicino = evento.values[0] < minOf(massimo, 5f)
+                    if (vicino == vicinoDetto) return
+                    vicinoDetto = vicino
+                    canale.invokeMethod("sensore", mapOf("tipo" to "prossimita", "vicino" to vicino))
+                }
+                Sensor.TYPE_LIGHT -> {
+                    val adesso = SystemClock.elapsedRealtime()
+                    if (adesso - luceDettaAlle < 1000L) return
+                    luceDettaAlle = adesso
+                    canale.invokeMethod("sensore", mapOf("tipo" to "luce", "lux" to evento.values[0].toDouble()))
+                }
+            }
+        }
+
+        override fun onAccuracyChanged(sensore: Sensor?, precisione: Int) {}
+    }
+
+    private fun accordaISensori() {
+        val sensori = getSystemService(SENSOR_SERVICE) as? SensorManager ?: return
+        if (sensoriInAscolto) {
+            sensori.unregisterListener(ascoltatore)
+            sensoriInAscolto = false
+        }
+        vicinoDetto = null
+        luceDettaAlle = 0L
+        if (sensoriVoluti.isEmpty()) return
+        val tipi = buildList {
+            if ("luce" in sensoriVoluti) add(Sensor.TYPE_LIGHT)
+            if ("prossimita" in sensoriVoluti) add(Sensor.TYPE_PROXIMITY)
+        }
+        for (tipo in tipi) {
+            val sensore = sensori.getDefaultSensor(tipo) ?: continue
+            if (sensori.registerListener(ascoltatore, sensore, SensorManager.SENSOR_DELAY_NORMAL)) {
+                sensoriInAscolto = true
+            }
+        }
+    }
+
+    /* Con l'activity dietro (schermo spento, un'altra app davanti) i sensori
+     * si fermano; tornando si riaccendono quelli che il pannello vuole. */
+    override fun onPause() {
+        super.onPause()
+        (getSystemService(SENSOR_SERVICE) as? SensorManager)?.unregisterListener(ascoltatore)
+        sensoriInAscolto = false
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (sensoriVoluti.isNotEmpty()) accordaISensori()
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -203,6 +303,9 @@ class MainActivity : FlutterFragmentActivity() {
     /* Il motore puo' restare acceso dopo l'activity: la finestra invece e'
      * di questa, e il filo che la tocca se ne va con lei. */
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        sensoriVoluti = emptySet()
+        accordaISensori()
+        canaleDellaFinestra = null
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FINESTRA).setMethodCallHandler(null)
         super.cleanUpFlutterEngine(flutterEngine)
     }

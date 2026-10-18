@@ -90,6 +90,9 @@ import {
   comandiDellaPagina,
   eCompatto,
   eNotte,
+  chiCeVicino,
+  eNotteDellaLuce,
+  livelloDellaLuce,
   eUnaScena,
   MODELLI_ELENCO,
   ambientiDellaFonte,
@@ -3171,7 +3174,9 @@ function chiudiFinestra() {
 
 function riposo(muro) {
   const o = orologio();
-  const notte = eNotte(muro);
+  /* Con la luminosita' accesa la notte la dice lei, e il nero e' il suo 0%:
+   * al 3% l'orologio resta, e il buio lo fa la retroilluminazione. */
+  const notte = muro.luce?.attiva ? Boolean(luce.notte && muro.luce.notte === 0) : eNotte(muro);
   const pagina = muro.pagine[0];
   if (muro.avvisi) for (const a of state.fonte?.avvisi || []) a.entita.forEach(segna);
   const avvisi = muro.avvisi
@@ -3219,7 +3224,7 @@ function riposo(muro) {
         ? persone.nomi.join(" · ")
         : `${persone.inCasa} ${t("in casa", "at home")}`;
   const aperte = finestreAperte().length;
-  return `<div class="mu-riposo${notte ? " fioco" : ""}" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
+  return `<div class="mu-riposo${notte && !muro.luce?.attiva ? " fioco" : ""}" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
     <div class="mu-et mu-data">${esc(o.lungo)}${pilaDelRiposo(muro)}</div>
@@ -3863,8 +3868,162 @@ function svegliaLoSchermo() {
   } catch (_errore) {}
 }
 
+/* ── la luminosita' dello schermo (#224) ────────────────────────────────────
+ *
+ * «Piena quando qualcuno si avvicina, bassa a riposo, quasi spenta di notte.»
+ * La decide il pannello e la applica l'app: le si manda `luce:<0-100>`
+ * quando cambia, e `luce:no` quando torna del sistema. La dissolvenza la fa
+ * l'app — sale in fretta, scende piano — perche' una pagina che manda cento
+ * numeri al secondo su un tablet economico si sente.
+ *
+ * «Qualcuno vicino» lo dice una fonte qualunque: un tocco, il sensore di
+ * presenza di casa (il «Si sveglia da solo» di prima), il sensore di
+ * prossimita' del tablet. I due sensori del tablet li legge l'app, solo
+ * mentre il pannello e' acceso e solo quelli che servono (`sensori:…`), e
+ * alla pagina arriva soltanto «c'e' / non c'e'» e «buio / penombra / chiaro»
+ * (`gdahome:schermo`, e `window.__GDAHOME_SCHERMO__` per chi arriva dopo). */
+const SCHERMO_DELL_APP = "__GDAHOME_SCHERMO__";
+const luce = {
+  /* L'ultimo livello detto all'app: `null` se lo schermo e' del sistema. */
+  detta: null,
+  /* I sensori chiesti all'app, come gliel'abbiamo detto. */
+  sensori: "no",
+  /* Chi era vicino al giro prima: "" vuol dire nessuno, schermo abbassato. */
+  fonte: "",
+  notte: false,
+  pillolaFino: 0,
+  pillolaDi: "",
+  timer: 0,
+};
+
+function quelloCheDiceIlTablet() {
+  const detto = root[SCHERMO_DELL_APP];
+  return detto && typeof detto === "object" ? detto : {};
+}
+
+function mandaAlloSchermo(messaggio) {
+  try {
+    root.gdahomeSchermo?.postMessage?.(messaggio);
+  } catch (_errore) {}
+}
+
+/* I sensori del tablet che servono adesso: la luce solo per «Giorno e notte
+ * da: Luce della stanza», la prossimita' solo se e' accesa fra le fonti. Tutti
+ * e due sono Premium; senza, l'app non ne accende nessuno. */
+function sensoriVoluti(muro) {
+  if (state.premium !== true) return "no";
+  const voluti = [];
+  if (muro.luce?.attiva && muro.luce.giorno === "stanza") voluti.push("luce");
+  if (muro.luce?.prossimita) voluti.push("prossimita");
+  return voluti.length ? voluti.join("+") : "no";
+}
+
+/** Decide la luce di adesso, e la dice all'app se e' cambiata. */
+function regolaLaLuce() {
+  const muro = state.muro;
+  if (!muro?.luce || !muroInScena() || editorAperto()) return;
+  const adesso = Date.now();
+  const premium = state.premium === true;
+  const tablet = quelloCheDiceIlTablet();
+  const voluti = sensoriVoluti(muro);
+  if (voluti !== luce.sensori) {
+    luce.sensori = voluti;
+    mandaAlloSchermo(`sensori:${voluti}`);
+  }
+  const sensore = muro.risveglio?.attivo ? muro.risveglio.entita : "";
+  const presenza = Boolean(sensore) && String(allStates()?.[sensore]?.state) === "on";
+  const fonte = chiCeVicino(muro, {
+    presenza,
+    prossimita: tablet.prossimita === "si",
+    toccato: state.toccato,
+    premium,
+    adesso,
+  });
+  const daUnSensore = fonte === "presenza" || fonte === "prossimita";
+  /* Chi arriva sveglia il pannello — il sensore di presenza lo faceva gia'
+   * (`svegliaSeServe`), la prossimita' del tablet si aggiunge qui — e con la
+   * luminosita' accesa la pillola dice per due secondi chi e' stato. */
+  if (daUnSensore && (luce.fonte === "" || state.riposo)) {
+    if (state.riposo) {
+      state.riposo = false;
+      state.toccato = adesso;
+    }
+    if (muro.luce.attiva) {
+      luce.pillolaFino = adesso + 2000;
+      luce.pillolaDi = fonte;
+      root.setTimeout?.(() => disegna(), 2050);
+    }
+  }
+  /* Finche' qualcuno resta vicino vale come un tocco: lo schermo non si
+   * abbassa e il riposo non arriva. Solo con la luminosita' accesa: senza, il
+   * sensore sveglia e basta, come e' sempre stato. */
+  if (muro.luce.attiva && daUnSensore) state.toccato = adesso;
+  luce.fonte = fonte;
+  luce.notte = eNotteDellaLuce(muro, {
+    sole: allStates()?.["sun.sun"] || null,
+    stanza: tablet.luce || "",
+    premium,
+    adesso: new Date(adesso),
+  });
+  /* Di notte lo 0% e' lo schermo nero: passato il tempo, il riposo nero. */
+  if (
+    muro.luce.attiva &&
+    luce.notte &&
+    muro.luce.notte === 0 &&
+    !fonte &&
+    !state.riposo &&
+    !state.finestra &&
+    !state.trascina
+  ) {
+    state.riposo = true;
+    if (muro.riposo.torna !== false) state.pagina = 0;
+  }
+  const livello = livelloDellaLuce(muro, { vicino: Boolean(fonte), notte: luce.notte });
+  const detta = livello === null ? null : String(livello);
+  if (detta !== luce.detta) {
+    mandaAlloSchermo(`luce:${detta ?? "no"}`);
+    luce.detta = detta;
+  }
+  /* Il prossimo giro: quando il tocco smette di valere. */
+  root.clearTimeout?.(luce.timer);
+  luce.timer = 0;
+  if (muro.luce.attiva && fonte === "tocco")
+    luce.timer =
+      root.setTimeout?.(
+        () => disegna(),
+        Math.max(250, state.toccato + muro.luce.dopo * 1000 - adesso + 50),
+      ) || 0;
+}
+
+/* La pillola verde in basso, per due secondi: «Qualcuno vicino · Presenza
+ * ingresso · 90%». Dice chi ha acceso lo schermo, che una luce che sale da
+ * sola senza un perche' sembra un guasto. */
+function pillolaDellaLuce(muro) {
+  if (!muro.luce?.attiva || Date.now() >= luce.pillolaFino) return "";
+  const sensore = muro.risveglio?.entita || "";
+  const chi =
+    luce.pillolaDi === "prossimita"
+      ? t("prossimità del tablet", "tablet proximity")
+      : clean(allStates()?.[sensore]?.attributes?.friendly_name) ||
+        t("sensore di presenza", "presence sensor");
+  return `<div class="mu-luce-pillola" role="status"><i aria-hidden="true"></i><span>${esc(t("Qualcuno vicino", "Someone nearby"))} · ${esc(chi)} · ${muro.luce.vicino}%</span></div>`;
+}
+
+/* Spento il pannello lo schermo torna del sistema, e i sensori si fermano. */
+function restituisciLoSchermo() {
+  root.clearTimeout?.(luce.timer);
+  luce.timer = 0;
+  luce.fonte = "";
+  luce.pillolaFino = 0;
+  if (luce.detta !== null) mandaAlloSchermo("luce:no");
+  luce.detta = null;
+  if (luce.sensori !== "no") mandaAlloSchermo("sensori:no");
+  luce.sensori = "no";
+}
+
 function togliLaTela() {
   smettiDiSquillare();
+  restituisciLoSchermo();
   diciAlloSchermo("acceso", false);
   diciAlloSchermo("spento", false);
   diciAlloSchermo("muro", false);
@@ -3948,6 +4107,11 @@ export function disegna() {
   const temaPlancia = doc.documentElement.getAttribute("data-theme") || "dark";
   nodo.dataset.tema = temaDelMomento(muro, new Date(), temaPlancia);
   misura(nodo, muro);
+  /* La luce prima del disegno: puo' togliere il riposo (qualcuno e' arrivato)
+   * o metterlo (lo 0% di notte). L'app la ascolta solo col pannello acceso,
+   * che quindi si dice prima. */
+  diciAlloSchermo("muro", true);
+  regolaLaLuce();
   if (state.pagina >= muro.pagine.length) state.pagina = 0;
   const pagina = muro.pagine[state.pagina];
   raccolta = { ids: new Set(), domini: new Set() };
@@ -3955,6 +4119,7 @@ export function disegna() {
   try {
     corpo = state.riposo ? riposo(muro) : `${paginaIntera(pagina, muro)}${finestra()}`;
     corpo += avvisoGrande();
+    corpo += pillolaDellaLuce(muro);
     /* Il riposo si sveglia per l'antifurto anche quando non lo mostra. */
     segna(centraleDelMuro(muro.pagine[0]));
     inVista = raccolta;
@@ -3990,11 +4155,12 @@ export function disegna() {
   battitoDellaMusica();
   rimettiLaVoce(nodo);
   if (state.riposo) posizionaIlRiposo(nodo);
-  diciAlloSchermo("muro", true);
   /* «Tieni lo schermo acceso»: con un campanello che puo' suonare, lo schermo
    * non si spegne da solo — di notte resta al minimo. */
   diciAlloSchermo("acceso", schermoSempreAcceso(muro));
-  diciAlloSchermo("spento", Boolean(state.riposo && eNotte(muro)));
+  /* Con la luminosita' accesa la notte la fa `luce:`: due voci che comandano
+   * la stessa luce si darebbero torto a vicenda. */
+  diciAlloSchermo("spento", Boolean(!muro.luce?.attiva && state.riposo && eNotte(muro)));
 }
 
 /* Il blocco del riposo va dove dice derivaDelRiposo, ma dentro lo spazio che
@@ -4624,6 +4790,9 @@ function percentualeDalDito(event, barra, verticale, minimo = 1) {
 
 function onPointerDown(event) {
   tocco();
+  /* Un tocco vale come «qualcuno vicino»: la luce sale subito, al dito, non
+   * al disegno che segue. */
+  if (state.muro?.luce?.attiva) regolaLaLuce();
   /* Un dito nuovo comincia da capo. La pressione lunga su una luce apre la
    * finestra e lascia il segno, perché il tocco che segue non la spenga; ma
    * il dito si alza sulla finestra, non sulla card, e quel tocco non arriva
@@ -5640,6 +5809,13 @@ ${MURO}[data-compatto="1"] .mu-sq-mini span{display:grid;justify-items:center;ga
 ${MURO}[data-compatto="1"] .mu-sq-mini img,${MURO}[data-compatto="1"] .mu-sq-mini .mu-sq-senza{position:static;width:52px;height:32px;border-radius:6px;object-fit:cover}
 @media (prefers-reduced-motion:reduce){${MURO} .mu-sq-campana .onda,${MURO} .mu-squillo.squilla .mu-sq-campana>svg{animation:none}}
 ${MURO}[data-compatto="1"] .mu-avviso-grande{gap:10px;padding:14px}
+/* La pillola di chi ha acceso lo schermo: due secondi, in basso al centro,
+ * sopra le card ma sotto gli avvisi grandi. */
+${MURO} .mu-luce-pillola{position:absolute;left:50%;bottom:16px;z-index:40;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:9px 18px;border-radius:999px;font-weight:700;font-size:16px;color:#bbf7d0;background:rgba(5,46,26,.94);box-shadow:inset 0 0 0 1px rgba(34,197,94,.45),0 8px 24px rgba(0,0,0,.3);pointer-events:none;animation:muLucePillola .25s ease-out}
+${MURO} .mu-luce-pillola span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${MURO} .mu-luce-pillola i{flex:none;width:9px;height:9px;border-radius:50%;background:#22c55e}
+${MURO}[data-compatto="1"] .mu-luce-pillola{font-size:13px;padding:7px 12px;bottom:10px}
+@keyframes muLucePillola{from{opacity:0;transform:translate(-50%,8px)}}
 ${MURO}[data-compatto="1"] .mu-avg-disco{width:92px;height:92px;box-shadow:0 0 0 10px rgba(255,255,255,.08)}
 ${MURO}[data-compatto="1"] .mu-avg-disco .dm-oggetto,${MURO}[data-compatto="1"] .mu-avg-disco svg{width:54px!important;height:54px!important}
 ${MURO}[data-compatto="1"] .mu-avg-tit{font-size:30px}
@@ -6341,6 +6517,12 @@ export function installPlanciaAMuro() {
     disegna();
   });
   root.addEventListener?.("resize", () => disegna());
+  /* Quello che dicono i sensori del tablet, dall'app (`lo_schermo.dart`):
+   * qualcuno vicino allo schermo, o la stanza che si fa buia. */
+  root.addEventListener?.("gdahome:schermo", (event) => {
+    const detto = event?.detail || {};
+    if ("prossimita" in detto || "luce" in detto) disegna();
+  });
   /* Un salvataggio del config, e il tablet che torna acceso: la fonte si
    * rilegge subito. */
   for (const evento of ["dashboardmodern:persistence-saved", "dashboardmodern:store-user-write"])
@@ -6374,6 +6556,7 @@ export function installPlanciaAMuro() {
       disegna();
     },
     stato: () => ({ ...state, trascina: null }),
+    luce: () => ({ ...luce }),
   };
   ancora();
   return true;

@@ -5494,10 +5494,7 @@ export default Object.freeze({
   "The wall dashboard is Premium": "Duvar paneli Premium'dur",
   "This tablet's pages": "Bu tabletin sayfaları",
   "Use this dashboard on the wall": "Bu paneli duvarda kullan",
-  "Wakes up by itself": "Kendiliğinden uyanır",
   "Warn about open windows": "Açık pencereler için uyar",
-  "When this sensor turns on (for example a presence sensor)":
-    "Bu sensör açıldığında (örneğin bir varlık sensörü)",
   "Who is home": "Evde kim var",
   windy: "rüzgârlı",
   "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
@@ -5560,8 +5557,6 @@ export default Object.freeze({
   "On rest go back to the first page": "Dinlenmede ilk sayfaya dön",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "Her oda için bir kart: sıcaklık, nem ve kaç ışığın açık olduğu, canlı. Odalar ve sensörleri kaynak panodan gelir.",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "Yön, tema, hava durumu, dinlenme, gece, uyanma, PIN",
   "Positive is drawn, negative is fed in": "Pozitif çekilir, negatif verilir",
   "Power, in W or kW": "Güç, W veya kW",
   "Right now, at home": "Şu anda, evde",
@@ -6639,4 +6634,59 @@ export default Object.freeze({
   "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "${chi} ${parola} olana dek bekle (en fazla ${massimo} dk)",
   "When ${chi} goes from ${prima} to ${dopo}": "${chi} ${prima} durumundan ${dopo} durumuna geçince",
   "When ${chi} is no longer ${prima}": "${chi} artık ${prima} değilken",
+  "0% = black screen, like “Black screen at night”": "%0 = siyah ekran, “Gece siyah ekran” gibi",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "Bir Home Assistant sensörü: mmWave, hareket, doluluk. Açıldığında panel uyanır.",
+  "A touch on the screen also counts as “someone nearby”.":
+    "Ekrana dokunmak da “yakında biri var” sayılır.",
+  "At night": "Gece",
+  "By the sun: night from half an hour after sunset to sunrise":
+    "Güneşe göre: gün batımından yarım saat sonradan gün doğumuna kadar gece",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "Ekrana yakın, birkaç santimetre: yaklaşan el için kullanışlı. Her tablette yoktur.",
+  "Day and night from": "Gece ve gündüz kaynağı",
+  "detecting": "algılıyor",
+  "Dim after": "Şu süreden sonra kıs",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "Home Assistant'ta sun.sun yok: “Gece siyah ekran” saatleri geçerli",
+  "Home presence sensor": "Evin varlık sensörü",
+  "Home's sun": "Evin güneşi",
+  "Hours": "Saatler",
+  "How bright": "Ne kadar parlak",
+  "Night (from the hours)": "Gece (saatlere göre)",
+  "Night (from the sun)": "Gece (güneşe göre)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "“Gece siyah ekran” saatlerinde gece, anahtarı kapalı olsa bile",
+  "nobody": "kimse yok",
+  "On a touch or when someone arrives": "Dokunulduğunda ya da biri geldiğinde",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "iPad'de odanın ışığı okunamaz: gece ve gündüzü güneş ya da saatler belirler.",
+  "Only in the gdahome app on Android.": "Yalnızca Android'deki gdahome uygulamasında.",
+  "Orientation, theme, weather, rest, night, brightness, PIN":
+    "Yön, tema, hava, dinlenme, gece, parlaklık, PIN",
+  "presence sensor": "varlık sensörü",
+  "Preview of a day": "Bir günün önizlemesi",
+  "RECOMMENDED": "ÖNERİLEN",
+  "Resting, by day": "Dinlenirken, gündüz",
+  "Room light": "Oda ışığı",
+  "Screen brightness": "Ekran parlaklığı",
+  "Someone nearby": "Yakında biri var",
+  "Someone nearby (example)": "Yakında biri var (örnek)",
+  "tablet proximity": "tablet yakınlığı",
+  "Tablet proximity sensor": "Tabletin yakınlık sensörü",
+  "The clock is readable, but it does not light up the room": "Saat okunur ama odayı aydınlatmaz",
+  "The iPad does not have one.": "iPad'de yok.",
+  "The panel sets it, only in the gdahome app on the tablet":
+    "Onu panel ayarlar, yalnızca tabletteki gdahome uygulamasında",
+  "This tablet does not have one.": "Bu tablette yok.",
+  "This tablet has no light sensor: the home's sun applies":
+    "Bu tablette ışık sensörü yok: evin güneşi geçerli",
+  "This tablet has one.": "Bu tablette var.",
+  "Time with nobody nearby and no touches": "Yakında kimse olmadan ve dokunulmadan geçen süre",
+  "When someone is nearby": "Yakında biri olduğunda",
+  "Who is nearby · one source is enough": "Yakında kim var · bir kaynak yeterli",
+  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
+    "Tabletin ışık sensörüyle, yalnızca Android'deki gdahome uygulamasında. O olmadan evin güneşi geçerli",
+  "With this tablet's light sensor: it is night when the room is dark":
+    "Bu tabletin ışık sensörüyle: oda karanlık olduğunda gecedir",
 });

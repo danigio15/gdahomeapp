@@ -44,6 +44,12 @@ import gdanav_app
       if chiamata.method == "riservata" {
         SceneDelegate.riservata = (chiamata.arguments as? Bool) == true
         risposta(nil)
+      } else if chiamata.method == "luminosita" {
+        /* La luminosita' del pannello a muro (#224, `lib/casa/lo_schermo.dart`):
+         * da 0 a 1, e -1 rimette quella che c'era prima del pannello. */
+        let valore = (chiamata.arguments as? NSNumber)?.doubleValue ?? -1
+        LaLuceDelMuro.shared.metti(valore < 0 ? nil : CGFloat(min(max(valore, 0), 1)))
+        risposta(nil)
       } else if chiamata.method == "acceso" {
         /* Il campanello del tablet a muro (`lib/casa/lo_schermo.dart`): lo
          * schermo non si spegne da solo finche' il pannello lo chiede. */
@@ -135,5 +141,57 @@ import gdanav_app
       if salito { self?.navigatore?.invokeMethod("accendi", arguments: nil) }
       LaCasaInCarPlay.inAuto(salito)
     }
+  }
+}
+
+/// La luminosita' del tablet a muro sull'iPad (#224).
+///
+/// Su Android il pannello cambia la luce della sola finestra, e uscendo
+/// dall'app torna quella di prima da sola. Sul tablet di Apple non c'e' una
+/// luce della finestra: c'e' quella dello schermo, che resta come l'ha
+/// lasciata l'app anche dopo. Quindi si ricorda quella di prima, la prima
+/// volta che il pannello la cambia, e la si rimette quando il pannello la
+/// rende (`-1`) o quando l'app va dietro; tornando davanti si rimette quella
+/// del pannello.
+final class LaLuceDelMuro {
+  static let shared = LaLuceDelMuro()
+
+  /// Quella di prima del pannello: `nil` finche' il pannello non la tocca.
+  private var diPrima: CGFloat?
+  /// Quella che il pannello vuole: `nil` se lo schermo e' del sistema.
+  private var voluta: CGFloat?
+
+  private init() {
+    let centro = NotificationCenter.default
+    centro.addObserver(
+      forName: UIApplication.willResignActiveNotification, object: nil, queue: .main
+    ) { [weak self] _ in self?.rendi() }
+    centro.addObserver(
+      forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+    ) { [weak self] _ in
+      guard let self, let voluta = self.voluta else { return }
+      self.applica(voluta)
+    }
+  }
+
+  /// La luce che il pannello chiede, o `nil` per rendere quella di prima.
+  func metti(_ valore: CGFloat?) {
+    voluta = valore
+    if let valore {
+      applica(valore)
+    } else {
+      rendi()
+    }
+  }
+
+  private func applica(_ valore: CGFloat) {
+    if diPrima == nil { diPrima = UIScreen.main.brightness }
+    UIScreen.main.brightness = valore
+  }
+
+  private func rendi() {
+    guard let prima = diPrima else { return }
+    UIScreen.main.brightness = prima
+    diPrima = nil
   }
 }
