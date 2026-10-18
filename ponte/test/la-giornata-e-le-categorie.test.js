@@ -376,6 +376,85 @@ test("ogni automazione porta il suo riassunto, letto dalla configurazione", asyn
   assert.equal(di("altra").it, "Alle 07:15 · 1 azione");
 });
 
+/* «Da un dispositivo (eddd506f61c3e0…)», dal campo: un innesco fatto col
+ * «Dispositivo» di Home Assistant porta il device_id e, al posto
+ * dell'entity_id, la voce del registro delle entita'. Il ponte i registri li
+ * ha: la voce torna entita', l'entita' torna nome; se no, il dispositivo. */
+test("i pezzi «device» si dicono coi nomi dei registri, mai con le cifre", async () => {
+  const LAVATRICE = "eddd506f61c3e0aa11bb22cc33dd44ee";
+  const VOCE_PRESA = "4f94e6a6aa11bb22cc33dd44ee556677";
+  const PULSANTE = "0a1b2c3d4e5f60718293a4b5c6d7e8f9";
+  const SPARITO = "ffffffffffffffffffffffffffffffff";
+  const mappa = new Map([
+    ["switch.lavatrice_presa", { state: "on", attributes: { friendly_name: "Presa lavatrice" } }],
+    ["automation.presa", { state: "on", attributes: { id: "presa", friendly_name: "Presa" } }],
+    ["automation.solo", { state: "on", attributes: { id: "solo", friendly_name: "Solo" } }],
+    ["automation.tasto", { state: "on", attributes: { id: "tasto", friendly_name: "Tasto" } }],
+    ["automation.boh", { state: "on", attributes: { id: "boh", friendly_name: "Boh" } }],
+    ["automation.ignoto", { state: "on", attributes: { id: "ignoto", friendly_name: "Ignoto" } }],
+  ]);
+  const device = (extra) => ({ trigger: "device", domain: "switch", ...extra });
+  const configurazioni = {
+    presa: {
+      triggers: [device({ device_id: LAVATRICE, entity_id: VOCE_PRESA, type: "turned_on" })],
+      actions: [
+        { device_id: LAVATRICE, domain: "switch", entity_id: VOCE_PRESA, type: "turn_off" },
+      ],
+    },
+    solo: { triggers: [device({ device_id: LAVATRICE, type: "turned_off" })], actions: [{}] },
+    tasto: {
+      triggers: [device({ device_id: PULSANTE, domain: "zha", type: "remote_button_short_press" })],
+    },
+    boh: { triggers: [device({ device_id: PULSANTE, domain: "zha", type: "chissa" })] },
+    ignoto: { triggers: [device({ device_id: SPARITO, entity_id: SPARITO, type: "chissa" })] },
+  };
+  const ponte = new Automazioni({
+    casa: {
+      api: async (_metodo, percorso) =>
+        structuredClone(configurazioni[decodeURIComponent(percorso.split("/").pop())]),
+      chiedi: async () => [],
+      ascolta: async () => async () => {},
+    },
+    stati: () => mappa,
+    configurazione: { leggi: () => ({ snapshot: { values: {} } }) },
+    registri: {
+      chiedi: async () => ({
+        dispositivi: [
+          { id: LAVATRICE, name: "Lavatrice di fabbrica", name_by_user: "Lavatrice" },
+          { id: PULSANTE, name: "Interruttore cucina" },
+        ],
+        entita: [{ id: VOCE_PRESA, entity_id: "switch.lavatrice_presa", device_id: LAVATRICE }],
+      }),
+    },
+    notifiche: { consegna: async () => {} },
+    licenze: { attive: true, premium: true },
+    ogni: () => null,
+  });
+  const elenco = await ponte.elencoDiCasa();
+  const di = (id) => elenco.find((a) => a.id === id).riassunto;
+  assert.equal(di("presa").it, "Quando Presa lavatrice si accende · spegni Presa lavatrice");
+  assert.equal(di("presa").en, "When Presa lavatrice turns on · turn off Presa lavatrice");
+  assert.equal(di("solo").it, "Quando Lavatrice si spegne · 1 azione");
+  assert.equal(di("tasto").it, "Quando si preme il pulsante Interruttore cucina");
+  assert.equal(di("boh").it, "Da Interruttore cucina");
+  assert.equal(di("boh").en, "From Interruttore cucina");
+  assert.equal(di("ignoto").it, "Da un dispositivo");
+  assert.doesNotMatch(JSON.stringify(elenco.map((a) => a.riassunto)), /[0-9a-f]{8,}/);
+  /* Senza registri (non rispondono): niente nome, ma nemmeno le cifre. */
+  assert.equal(
+    riassuntoDellAutomazione({
+      triggers: [device({ device_id: LAVATRICE, entity_id: VOCE_PRESA, type: "turned_on" })],
+    }).it,
+    "Quando un dispositivo si accende",
+  );
+  assert.equal(
+    riassuntoDellAutomazione({
+      triggers: [device({ device_id: LAVATRICE, entity_id: VOCE_PRESA, type: "chissa" })],
+    }).it,
+    "Da un dispositivo",
+  );
+});
+
 /* ─── Il riassunto in una riga ───────────────────────────────────────── */
 
 test("il riassunto racconta il primo innesco, gli altri, condizioni e azioni", () => {

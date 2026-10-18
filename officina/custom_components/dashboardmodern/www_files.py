@@ -136,6 +136,13 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 # La sottocartella dove finiscono i caricamenti, per non sparpagliare.
 UPLOAD_FOLDER = "dashboardmodern"
 
+# Le cartelle dentro quella dei caricamenti che chi carica puo' chiedere: le
+# foto dei riquadri stanno in `riquadri/`. Si sceglie da questo elenco e non
+# si scrive: un nome fuori elenco e' un no, cosi' nessun `../` arrivato dal
+# telefono puo' portare la foto fuori dalla cartella. E' lo stesso elenco del
+# ponte (`ponte/src/foto.js`, `CARTELLE_DEI_CARICAMENTI`).
+UPLOAD_SUBFOLDERS = ("riquadri",)
+
 # Quanto puo' contenere in tutto quella cartella. Dieci megabyte a foto non
 # bastano a proteggere il disco: dieci megabyte alla volta, per sempre, lo
 # riempiono lo stesso — e il disco e' quello di Home Assistant, dove stanno il
@@ -207,7 +214,9 @@ def _sembra_immagine(payload: bytes) -> bool:
     return payload[4:12] in (b"ftypavif", b"ftypavis")  # AVIF
 
 
-def save_www_upload(root: str, filename: str, payload: bytes) -> dict[str, Any] | None:
+def save_www_upload(
+    root: str, filename: str, payload: bytes, cartella: str = ""
+) -> dict[str, Any] | None:
     """Scrive una foto sotto ``config/www/dashboardmodern`` e ne da' il /local.
 
     Restituisce ``None`` per un file che non e' un'immagine o e' troppo
@@ -226,14 +235,18 @@ def save_www_upload(root: str, filename: str, payload: bytes) -> dict[str, Any] 
     # non saprebbe disegnarlo.
     if not _sembra_immagine(payload):
         return None
+    if cartella and cartella not in UPLOAD_SUBFOLDERS:
+        return None
     base = Path(root)
-    cartella = base / UPLOAD_FOLDER
+    dove = base / UPLOAD_FOLDER
+    if cartella:
+        dove = dove / cartella
     with _SCRITTURA:
-        cartella.mkdir(parents=True, exist_ok=True)
-        occupati, quanti = _occupato(cartella)
+        dove.mkdir(parents=True, exist_ok=True)
+        occupati, quanti = _occupato(dove)
         if occupati + len(payload) > MAX_FOLDER_BYTES or quanti + 1 > MAX_FOLDER_FILES:
             raise QuotaSuperata
-        return _scrivi(base, cartella, nome, payload)
+        return _scrivi(base, dove, nome, payload)
 
 
 def _scrivi(
@@ -259,4 +272,5 @@ def _scrivi(
             pezzi = Path(nome)
             destinazione = cartella / f"{pezzi.stem}-{contatore}{pezzi.suffix}"
             contatore += 1
-    return {"path": f"/local/{UPLOAD_FOLDER}/{destinazione.name}"}
+    relativa = destinazione.parent.relative_to(base).as_posix()
+    return {"path": f"/local/{relativa}/{destinazione.name}"}

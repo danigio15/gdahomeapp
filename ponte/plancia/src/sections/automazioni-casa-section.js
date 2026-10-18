@@ -53,6 +53,9 @@ import {
   riassuntoDi,
   rigaDellaVoce,
   scelteDelRaggruppa,
+  rifaiITastiDeiGruppi,
+  tastiDeiGruppiHtml,
+  tuttiIGruppi,
   ridisegna as ridisegnaLaPagina,
   scopriPremium,
   statoDelleAutomazioni,
@@ -213,7 +216,10 @@ function filtri({ app }) {
     statoDelleAutomazioni().ponte?.puoScrivere === true && (app || config)
       ? `<button type="button" class="ad-nuova" data-auc-nuova>＋ ${esc(t("Nuova", "Add new"))}</button>`
       : "";
-  return `<div class="ad-filtri">${scelteDelRaggruppa(state.per, "data-auc-per", "ad-seg")}<span class="ad-cerca-riga"><label class="ad-cerca"><span aria-hidden="true">🔍</span><input type="search" data-auc-cerca value="${esc(
+  return `<div class="ad-filtri"><span class="ad-seg-riga">${scelteDelRaggruppa(state.per, "data-auc-per", "ad-seg")}${tastiDeiGruppiHtml(
+    automazioniDiCasa(),
+    { per: state.per, cerca: state.cerca },
+  )}</span><span class="ad-cerca-riga"><label class="ad-cerca"><span aria-hidden="true">🔍</span><input type="search" data-auc-cerca value="${esc(
     state.cerca,
   )}" placeholder="${esc(t("Cerca un'automazione…", "Search an automation…"))}"></label>${nuova}</span>${
     app || !config
@@ -496,7 +502,7 @@ function onClick(event) {
     return;
   }
   const tocco = el.closest(
-    "[data-auc-scopri],[data-auc-led],[data-auc-per],[data-aug-apri],[data-auc-proposte],[data-auc-config],[data-auc-config-nuova],[data-auc-nuova],[data-auc-esegui],[data-auc-modifica],[data-auc-duplica],[data-auc-stanza],[data-auc-elimina],[data-auc-carta]",
+    "[data-auc-scopri],[data-auc-led],[data-auc-per],[data-aug-apri],[data-aug-tutti],[data-auc-proposte],[data-auc-config],[data-auc-config-nuova],[data-auc-nuova],[data-auc-esegui],[data-auc-modifica],[data-auc-duplica],[data-auc-stanza],[data-auc-elimina],[data-auc-carta]",
   );
   if (!tocco) return;
   const d = tocco.dataset;
@@ -522,6 +528,11 @@ function onClick(event) {
   }
   if (d.augApri) {
     alternaIlGruppo(d.augApri);
+    piuTardi();
+    return;
+  }
+  if (d.augTutti) {
+    tuttiIGruppi(automazioniDiCasa(), { per: state.per, apri: d.augTutti === "apri" });
     piuTardi();
     return;
   }
@@ -580,6 +591,10 @@ function onInput(event) {
   state.cerca = campo.value;
   const gruppi = campo.closest("[data-auc-casa]")?.querySelector("[data-auc-gruppi]");
   if (gruppi) gruppi.innerHTML = gruppiHtml(automazioniDiCasa());
+  rifaiITastiDeiGruppi(campo.closest("[data-auc-casa]"), automazioniDiCasa(), {
+    per: state.per,
+    cerca: state.cerca,
+  });
 }
 
 function onKey(event) {
@@ -618,6 +633,8 @@ ${S} .ad-pro small{display:block;font-size:11.5px;font-weight:600;color:var(--se
 ${S} .ad-pro em{margin-left:auto;font-style:normal;font-size:12px;font-weight:900;color:${VIOLA};white-space:nowrap}
 html[data-theme="dark"] ${S} .ad-pro em{color:#c4b5fd}
 ${S} .ad-filtri{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+${S} .ad-seg-riga{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;max-width:100%;min-width:0}
+${S} .ad-seg-riga .ad-seg{min-width:0}
 ${S} .ad-cerca-riga{flex:1 1 320px;max-width:520px;display:flex;align-items:center;gap:10px;min-width:0}
 ${S} .ad-seg{display:inline-flex;padding:4px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);box-shadow:0 12px 28px -22px rgba(15,23,42,.5)}
 ${S} .ad-seg button{border:0;background:none;cursor:pointer;padding:7px 14px;border-radius:999px;font:inherit;font-size:11px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
@@ -658,6 +675,11 @@ ${S} .ad-chiusa .carta small{font-size:11.5px;font-weight:600;color:var(--second
   ${S} .ad-kpi .pross b{font-size:20px}
   ${S} .ad-seg{max-width:100%;overflow-x:auto;scrollbar-width:none}
   ${S} .ad-seg button{padding:7px 11px;white-space:nowrap}
+  /* Il raggruppa e i due tasti stanno su una riga sola, anche a 390 px. */
+  ${S} .ad-seg-riga{gap:6px;width:100%}
+  ${S} .ad-seg-riga .ad-seg{padding:3px}
+  ${S} .ad-seg-riga .ad-seg button{padding:7px 9px;letter-spacing:.3px}
+  ${S} .ad-seg-riga .aug-tutto{width:34px;height:34px}
   ${S} .ad-cerca-riga{max-width:none;flex-basis:100%}
   ${S} .ad-cfg{display:none}
   ${S} .ad-chiusa .velo{padding-top:40px}

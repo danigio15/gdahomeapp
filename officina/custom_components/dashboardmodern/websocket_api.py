@@ -76,6 +76,7 @@ from .tickets import (
 )
 from .www_files import (
     MAX_UPLOAD_BYTES,
+    UPLOAD_SUBFOLDERS,
     QuotaSuperata,
     list_www_folder,
     save_www_upload,
@@ -392,7 +393,9 @@ async def async_list_www(
     connection.send_result(msg["id"], result)
 
 
-def _salva_foto(root: str, filename: str, data: str) -> dict[str, Any] | None:
+def _salva_foto(
+    root: str, filename: str, data: str, cartella: str = ""
+) -> dict[str, Any] | None:
     """Decodifica la foto e la scrive. Gira nell'executor, non nel loop.
 
     Il base64 di una foto da dieci megabyte sono tredici megabyte di testo, e
@@ -402,7 +405,7 @@ def _salva_foto(root: str, filename: str, data: str) -> dict[str, Any] | None:
     ``ValueError``, e il chiamante lo traduce in un errore parlante.
     """
     payload = base64.b64decode(data, validate=True)
-    return save_www_upload(root, filename, payload)
+    return save_www_upload(root, filename, payload, cartella)
 
 
 @websocket_api.websocket_command(
@@ -411,6 +414,9 @@ def _salva_foto(root: str, filename: str, data: str) -> dict[str, Any] | None:
         vol.Required("filename"): vol.All(str, vol.Length(min=1, max=255)),
         # Base64 della foto: il tetto tiene conto del +33% della codifica.
         vol.Required("data"): vol.All(str, vol.Length(min=1, max=MAX_UPLOAD_BYTES * 2)),
+        # Le foto dei riquadri vanno in una cartella loro: si sceglie da un
+        # elenco chiuso, e un nome fuori elenco non passa nemmeno lo schema.
+        vol.Optional("cartella", default=""): vol.In(("", *UPLOAD_SUBFOLDERS)),
     }
 )
 @websocket_api.async_response
@@ -439,7 +445,11 @@ async def async_upload_www(
         return
     try:
         result = await hass.async_add_executor_job(
-            _salva_foto, hass.config.path("www"), msg["filename"], msg["data"]
+            _salva_foto,
+            hass.config.path("www"),
+            msg["filename"],
+            msg["data"],
+            msg["cartella"],
         )
     except QuotaSuperata:
         connection.send_error(

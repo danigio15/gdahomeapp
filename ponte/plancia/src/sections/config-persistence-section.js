@@ -860,6 +860,12 @@ function refreshRuntimeAfterRestore(remote) {
       ["cdApplyNavVis", () => root.cdApplyNavVis?.()],
       ["buildTempCards", () => root.buildTempCards?.()],
       ["buildClimaCards", () => root.buildClimaCards?.()],
+      /* I Dispositivi della Home: il guscio li disegna solo all'avvio, da
+       * quello che il deposito del browser aveva in quel momento. Al primo
+       * avvio su un telefono nuovo — o con i dispositivi aggiunti da un altro
+       * — il deposito non li aveva, e la Home restava senza «Dispositivi»
+       * finche' non si ricaricava la pagina. */
+      ["buildDeviceCards", () => root.buildDeviceCards?.()],
       /* Il marchio: la testata la scrive l'avvio, da quello che il deposito
        * del browser aveva in quel momento. Nell'app con piu' case quel
        * deposito puo' essere di un'altra casa, e la configurazione appena

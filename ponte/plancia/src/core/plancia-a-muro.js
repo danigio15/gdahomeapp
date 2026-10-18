@@ -28,6 +28,7 @@ import {
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
 import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
+import { immaginePulita } from "./immagine-del-riquadro.js";
 import { lettoriConfigurati } from "./media-player.js";
 import { isDerivedEntity, powerPairSource, signedSource } from "./signed-energy.js";
 import { isCharging, nomeDellaPersona, personViewModel } from "./person-model.js";
@@ -264,10 +265,17 @@ export function comandoPulito(input) {
   const tipo = scelta(input.tipo, TIPI_DI_COMANDO, "");
   if (!tipo) return null;
   if (tipo === "vuoto") return { ...POSTO_VUOTO };
+  /* «Riquadri con l'immagine»: una foto di casa o un disegno da riquadro che
+   * riempie il posto (`immagine-del-riquadro.js`). Si tiene solo se e' una
+   * di casa — un indirizzo del ponte o di Home Assistant, o un disegno del
+   * catalogo — coi numeri dentro i loro confini; altrimenti il posto resta
+   * col suo disegno, come se non ci fosse. */
+  const immagine = immaginePulita(input.immagine);
   const aspetto = {
     nome: testo(input.nome, 40),
     sotto: testo(input.sotto, 80),
     disegno: testo(input.disegno, 32),
+    ...(immagine ? { immagine } : {}),
   };
   if (tipo === "azione") {
     const azione = testo(input.azione, 80);

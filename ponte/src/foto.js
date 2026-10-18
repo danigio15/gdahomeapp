@@ -51,6 +51,16 @@ export const BASE_DI_CASA = "/local";
 /* Dove finiscono i caricamenti, per non sparpagliare. */
 const SOTTOCARTELLA = "dashboardmodern";
 
+/* Le cartelle dentro quella dei caricamenti che chi carica puo' chiedere.
+ *
+ * «Riquadri con l'immagine»: le foto dei riquadri vanno in `riquadri/`, per
+ * stare insieme e non in mezzo alle foto delle auto. Chi carica puo' nominare
+ * la cartella, ma non scriverla: si sceglie da questo elenco, e tutto il
+ * resto — `../`, un percorso assoluto, un nome qualunque — e' un no. Un
+ * elenco chiuso e' l'unico modo in cui un nome che arriva dal telefono non
+ * puo' portare fuori dalla cartella, nemmeno sbagliando. */
+export const CARTELLE_DEI_CARICAMENTI = Object.freeze(["riquadri"]);
+
 const IMMAGINI = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".bmp", ".svg"]);
 const CARICABILI = new Set([...IMMAGINI].filter((suffisso) => suffisso !== ".svg"));
 const TIPI = Object.freeze({
@@ -208,8 +218,9 @@ export class Foto {
   }
 
   /* Mette via una foto e ne da' l'indirizzo. `null` per un file che non e'
-   * un'immagine, o troppo grande. */
-  carica(nomeFile, byte) {
+   * un'immagine, o troppo grande, o per una cartella che non e' nell'elenco
+   * (`CARTELLE_DEI_CARICAMENTI`). Senza cartella va dove e' sempre andata. */
+  carica(nomeFile, byte, { cartella: dentro = "" } = {}) {
     if (!this.cartella) return null;
     /* Nella cartella di Home Assistant non si scrive. E' roba di chi ci abita
      * — automazioni, temi, foto messe li' negli anni — e un add-on che ci
@@ -220,7 +231,9 @@ export class Foto {
     if (!CARICABILI.has(extname(nome))) return null;
     if (!Buffer.isBuffer(byte) || !byte.length || byte.length > FOTO_MASSIMA) return null;
     if (!sembraUnImmagine(byte)) return null;
-    const cartella = join(this.cartella, SOTTOCARTELLA);
+    if (dentro !== "" && !CARTELLE_DEI_CARICAMENTI.includes(dentro)) return null;
+    const relativa = dentro ? `${SOTTOCARTELLA}/${dentro}` : SOTTOCARTELLA;
+    const cartella = join(this.cartella, ...relativa.split("/"));
     mkdirSync(cartella, { recursive: true });
     const radice = nome.slice(0, nome.length - extname(nome).length);
     const suffisso = extname(nome);
@@ -243,7 +256,7 @@ export class Foto {
         destinazione = join(cartella, `${radice}-${contatore}${suffisso}`);
       }
     }
-    return { path: `${this.base}/${SOTTOCARTELLA}/${basename(destinazione)}` };
+    return { path: `${this.base}/${relativa}/${basename(destinazione)}` };
   }
 
   /* Una foto, dal percorso come lo chiede il browser. */

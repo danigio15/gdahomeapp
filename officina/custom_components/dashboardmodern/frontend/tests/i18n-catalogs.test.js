@@ -258,6 +258,8 @@ const LOCALE_IDENTITIES = {
      * cursore o accanto a una telecamera nessuno ne usa un'altra. */
     "Audio",
     "Zoom",
+    /* Il blocco «Immagine» dei riquadri: in francese l'immagine e' «image». */
+    "Image",
     /* La terza linguetta del Clima: il termostato si scrive come in inglese. */
     "Thermostat",
     "Thermostats",
