@@ -192,6 +192,7 @@ async function aggiornaLePrevisioni(entita) {
     if (!giornaliere && p.giornaliere.length) accogliLePrevisioniDeiGiorni(entita, p.giornaliere);
     p.chieste = Date.now();
     p.fallite = 0;
+    avvisaChiAspetta();
   } catch (errore) {
     /* Senza presa non si e' chiesto niente: la plancia si sta collegando, e
      * il suo annuncio fara' ridisegnare. */
@@ -229,6 +230,36 @@ async function aggiornaLaStoria(entita) {
     s.inVolo = false;
   }
   schedule();
+}
+
+/* Le previsioni per chi le mostra fuori da questa pagina: la pagina Meteo
+ * della plancia a muro. «Usa le previsioni come le prende gia' la sezione
+ * meteo»: la stessa domanda, la stessa mezz'ora, lo stesso minuto dopo un
+ * errore, e i giorni divisi con la card. Due pagine che chiedessero ognuna
+ * per conto suo farebbero due giri sul socket per le stesse righe.
+ *
+ * Restituisce quelle che ci sono adesso (vuote se sono di un'altra entita');
+ * `quandoArrivano` si chiama una volta, quando le prossime sono arrivate. */
+const chiAspetta = new Set();
+function avvisaChiAspetta() {
+  const tutti = [...chiAspetta];
+  chiAspetta.clear();
+  for (const avvisa of tutti) {
+    try {
+      avvisa();
+    } catch (_errore) {}
+  }
+}
+export function previsioniDelMeteo(entita, quandoArrivano = null) {
+  const nessuna = { orarie: [], giornaliere: [], pronte: false };
+  if (!clean(entita)) return nessuna;
+  if (typeof quandoArrivano === "function") chiAspetta.add(quandoArrivano);
+  aggiornaLePrevisioni(entita).catch(() => {});
+  const p = state.previsioni;
+  /* `pronte`: la domanda e' gia' tornata, e quello che manca manca davvero. */
+  return p.entita === entita
+    ? { orarie: p.orarie, giornaliere: p.giornaliere, pronte: Boolean(p.chieste) }
+    : nessuna;
 }
 
 /* La serie di un'entita', con il valore di adesso in fondo: la cronologia e'

@@ -28,6 +28,7 @@ import {
   comandiDellaPagina,
   ALTRE_MISURE_AL_MASSIMO,
   energiaDellaPagina,
+  entitaDelMeteoDelMuro,
   LETTORI_AL_MASSIMO,
   lettoriDellaPagina,
   postiDellaPagina,
@@ -49,6 +50,7 @@ import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import {
+  EVENTO_PREVISIONI,
   anteprimaDellaPagina,
   eUnVarco as eUnVarcoDelMuro,
   fonteDelMuro,
@@ -390,6 +392,7 @@ const MODELLI = () => [
   ["telecamere", t("Telecamere", "Cameras")],
   ["energia", t("Energia", "Energy")],
   ["musica", t("Musica", "Music")],
+  ["meteo", t("Meteo", "Weather")],
   ["mixer", t("Mixer audio", "Audio mixer")],
   ["telecamera", t("Telecamera con comandi", "Camera with controls")],
   ["comandi", t("Comandi di regia", "Control buttons")],
@@ -406,6 +409,7 @@ const DISEGNO_DI_SERIE = {
   telecamere: "telecamere",
   energia: "energia",
   musica: "media",
+  meteo: "meteo",
   mixer: "media",
   telecamera: "telecamere",
   comandi: "azioni",
@@ -683,6 +687,23 @@ function paginaMarkup(p, i, tutte) {
         cerca(`${via}.lettori.${k}`, p.lettori[k] || "", { domini: "media_player" }),
       ).join("")}</span>`,
     )}`;
+  } else if (p.modello === "meteo") {
+    /* Il meteo della pagina e' quello del tablet: in alto, sul riposo e qui
+     * lo stesso. Si sceglie una volta sola, in «Altre impostazioni». */
+    const id = entitaDelMeteoDelMuro(bozza(), f, allStates() || {});
+    dentro = `<div class="mu-ed-nota">${esc(
+      t(
+        "Il meteo a tutta pagina: com'è adesso in grande, con percepita, umidità, vento e pressione, poi le prossime ore e i prossimi giorni. Usa lo stesso meteo che il tablet mostra in alto e sul riposo.",
+        "Full-page weather: what it's like now, big, with feels-like, humidity, wind and pressure, then the coming hours and days. It uses the same weather the tablet shows at the top and on the rest screen.",
+      ),
+    )}</div><div class="mu-ed-riga" data-mu-ed-meteo="${esc(id)}"><div class="mu-ed-testo"><b>${esc(id ? nomeDi(id) : t("Nessun meteo", "No weather"))}</b><small>${esc(
+      id
+        ? `${id} · ${t("si cambia in Altre impostazioni › Meteo", "change it in More settings › Weather")}`
+        : t(
+            "Scegli l'entità meteo in Altre impostazioni › Meteo, o aggiungi un'integrazione meteo in Home Assistant",
+            "Choose the weather entity in More settings › Weather, or add a weather integration in Home Assistant",
+          ),
+    )}</small></div></div>`;
   } else if (p.modello === "mixer") {
     dentro = mixerMarkup(p, i);
   } else if (p.modello === "telecamera") {
@@ -970,7 +991,7 @@ function comandiMarkup(p, i) {
 
 /* Le pagine che la griglia non la scelgono: l'ingresso ha la sua forma,
  * l'energia le sue quattro tessere. */
-const SENZA_GRIGLIA = ["ingresso", "energia", "musica", "mixer", "telecamera", "comandi"];
+const SENZA_GRIGLIA = ["ingresso", "energia", "musica", "meteo", "mixer", "telecamera", "comandi"];
 const GRIGLIE_SCRITTE = () =>
   Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
 
@@ -2053,9 +2074,12 @@ export function installPlanciaAMuroEditor() {
     ensureMuroEditor();
   });
   onEditorRedraw("__dmMuroEditor", ancora);
-  root.addEventListener?.("dashboardmodern:state-changed", () => {
-    if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
-  });
+  /* Anche quando arrivano le previsioni della pagina Meteo: non sono uno
+   * stato della casa, e senza questo l'anteprima direbbe «in arrivo». */
+  for (const evento of ["dashboardmodern:state-changed", EVENTO_PREVISIONI])
+    root.addEventListener?.(evento, () => {
+      if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+    });
   root.addEventListener?.("resize", () => {
     if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
   });
