@@ -37,8 +37,12 @@ import {
   stileInLinea,
 } from "../core/immagine-del-riquadro.js";
 import {
+  CHIAVE_DELLE_IMMAGINI,
   PAGINE_CON_IMMAGINI,
   SUPERFICI_DA_VESTIRE,
+  conLImmagineSciolta,
+  idDellaCard,
+  immaginiSciolte,
   nomeDellaVoce,
   superficieConImmagine,
   voceDellaCard,
@@ -158,8 +162,11 @@ button.dm-rq{border:0;padding:0;margin:0;font:inherit;cursor:pointer;-webkit-tap
 /* Il testo si fa bianco; i tasti tengono il loro vestito (e il loro stato,
  * acceso o spento), col vetro dietro perche' si stacchino dalla foto. */
 .dm-rq-fondo{color:#fff}
-.dm-rq-fondo :where(div,span,b,strong,label,p,h1,h2,h3,h4,em,output):not(button *,button,select *,input,[class*="pill"],[class*="pill"] *,[class*="badge"] *,[class*="chip"] *){color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.dm-rq-fondo :where(div,span,b,strong,label,p,h1,h2,h3,h4,em,output):not(button *,button,select *,input,[class*="pill"],[class*="pill"] *,[class*="badge"] *,[class*="chip"] *,[class*="flag"],[class*="tag"]){color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .dm-rq-fondo :where(button){-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+/* La vasca con la sua foto: il disegno della piscina lascia il posto alla
+ * foto, e restano le scritte dello stato. */
+.dm-pool-stage.dm-rq-fondo>:is(.dm-pool-sky,.dm-pool-sun,.dm-pool-hedge,.dm-pool-plant,.dm-pool-deck,.dm-pool-lounger,.dm-pool-parasol,.dm-pool-basin){visibility:hidden}
 
 /* I Dispositivi della Home: la card del guscio col vestito nuovo. */
 html body .dev-card.dm-rq{padding:0;border:0;aspect-ratio:1;background:#0b1220}
@@ -911,8 +918,35 @@ function onCambiaDispositivo(evento) {
  * sono lo dice l'elenco del nucleo (`core/superfici-con-immagine.js`): una
  * card nuova lo prende aggiungendo una riga li'. */
 
-/* Le voci di una superficie, dove stanno scritte. */
+/* Il nome di una card che non e' la voce di un elenco: quello che dice a chi
+ * legge (`aria-label`), o la sua prima scritta. */
+function nomeDellaCard(card, ripiego) {
+  const detto = clean(card.getAttribute?.("aria-label"));
+  if (detto) return detto;
+  const scritta = card.querySelector?.(
+    "[class*='label'],[class*='name'],[class*='nome'],[class*='titolo'],strong,b",
+  );
+  return clean(scritta?.textContent).slice(0, 40) || ripiego;
+}
+
+/* Le voci di una superficie, dove stanno scritte. Quelle «mappa» sono le card
+ * che la pagina ha adesso, ognuna con la sua chiave. */
 function vociDi(superficie) {
+  if (superficie.forma === "mappa") {
+    const mappa = immaginiSciolte(readJson(CHIAVE_DELLE_IMMAGINI, {}));
+    const viste = new Map();
+    for (const card of doc?.querySelectorAll?.(superficie.selettore) || []) {
+      if (card.closest("#dm-muro")) continue;
+      const id = idDellaCard(superficie, card);
+      if (!id || viste.has(id)) continue;
+      viste.set(id, {
+        chiave: id,
+        name: nomeDellaCard(card, id),
+        immagine: mappa[`${superficie.chiave}:${id}`] || null,
+      });
+    }
+    return [...viste.values()];
+  }
   if (superficie.sezione) {
     const voci = section(superficie.sezione, []);
     return Array.isArray(voci) ? voci : [];
@@ -952,7 +986,8 @@ export function vestiLeCardDellaPlancia(radice = doc) {
   for (const superficie of SUPERFICI_DA_VESTIRE) {
     const card = [...radice.querySelectorAll(superficie.selettore)];
     if (!card.length) continue;
-    const voci = vociDi(superficie);
+    const voci =
+      superficie.forma === "mappa" ? readJson(CHIAVE_DELLE_IMMAGINI, {}) : vociDi(superficie);
     card.forEach((c, indice) => {
       /* Una card del muro o una gia' col vestito proprio non si tocca. */
       if (c.closest("#dm-muro") || c.classList.contains("dm-rq")) return;
@@ -1073,7 +1108,12 @@ export async function mettiLImmagineAllaVoce(chiaveSuperficie, indice, immagine)
   const voce = voci[indice];
   if (!voce) return false;
   const pulita = immaginePulita(immagine);
-  if (superficie.sezione) {
+  if (superficie.forma === "mappa") {
+    writeJsonIfChanged(
+      CHIAVE_DELLE_IMMAGINI,
+      conLImmagineSciolta(readJson(CHIAVE_DELLE_IMMAGINI, {}), superficie.chiave, voce.chiave, pulita),
+    );
+  } else if (superficie.sezione) {
     const store = dashboardStore();
     if (!store?.updateItem || !voce.id) return false;
     await store.updateItem(superficie.sezione, voce.id, { immagine: pulita });

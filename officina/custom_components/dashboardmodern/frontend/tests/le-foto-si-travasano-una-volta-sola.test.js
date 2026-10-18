@@ -268,10 +268,16 @@ test("togliere una chiave non alza la revisione", async () => {
    * legge dalla plancia principale. */
   /* E la 67 con quando l'antifurto su misura e' scattato
    * (`cd_antifurto_scattato`): la legge anche la casa, per la notifica. */
-  assert.equal(CONFIG_KEYS_REVISION, 67);
+  /* E la 68 con le immagini delle card che non sono voci di un elenco
+   * (`cd_immagini_riquadri`): messe dal telefono, si vedono dal tablet. */
+  assert.equal(CONFIG_KEYS_REVISION, 68);
   assert.ok(
     CONFIG_KEYS.includes("cd_antifurto_scattato"),
     "lo scattato su misura deve arrivare alla casa e agli altri schermi",
+  );
+  assert.ok(
+    CONFIG_KEYS.includes("cd_immagini_riquadri"),
+    "le immagini delle card devono arrivare agli altri schermi",
   );
   assert.ok(
     CONFIG_KEYS.includes("cd_automazioni"),

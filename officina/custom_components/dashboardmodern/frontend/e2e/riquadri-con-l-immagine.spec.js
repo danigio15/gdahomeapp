@@ -436,4 +436,143 @@ test.describe("i riquadri con l'immagine", () => {
       .evaluate((n) => getComputedStyle(n).color);
     expect(colore).toBe("rgb(255, 255, 255)");
   });
+
+  test("a muro senza eccezioni: energia, musica e preset prendono l'immagine dall'editor", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "l'editor si prova una volta");
+    const stati = {
+      ...STATI_DI_TUTTI,
+      "sensor.casa_power": { state: "1840", attributes: { unit_of_measurement: "W" } },
+      "media_player.sala": { state: "playing", attributes: { friendly_name: "Sala" } },
+      "button.preset_porta": { state: "unknown", attributes: { friendly_name: "Porta" } },
+    };
+    await apriLaCasaAMuro(page, testInfo, {
+      stati,
+      muro: {
+        attiva: true,
+        pagine: [
+          { id: "e", modello: "energia", energia: { casa: "sensor.casa_power" } },
+          { id: "m", modello: "musica", lettori: ["media_player.sala"] },
+          {
+            id: "t",
+            modello: "telecamera",
+            telecamera: { entita: "camera.cancello", preset: [{ entita: "button.preset_porta" }] },
+          },
+        ],
+      },
+    });
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.locator('.ed-tab[data-tab="muro"]').click();
+    const body = page.locator("#ed-body");
+    for (const [i, chiave, disegnoScelto, cerca] of [
+      [0, "casa", "soggiorno", "soggiorno"],
+      [1, "lettore:media_player.sala", "giradischi", "giradischi"],
+      [2, "preset:0", "portone", "portone"],
+    ]) {
+      const apri = body.locator(`[data-mu-ed-apri="${i}"]`);
+      if ((await apri.getAttribute("aria-expanded")) !== "true") await apri.click();
+      const via = `pagine.${i}.immagini.${chiave}`;
+      await body.locator(`[data-mu-ed-tessera="${via}"]`).click();
+      await scegliIlDisegno(body.locator(`[data-dm-rqi="${via}"]`), disegnoScelto, cerca);
+    }
+    await body.locator("[data-dm-save-all]").click();
+    const salvato = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_muro")));
+    expect(salvato.pagine[0].immagini.casa.src).toBe("disegno:soggiorno");
+    expect(salvato.pagine[1].immagini["lettore:media_player.sala"].src).toBe("disegno:giradischi");
+    expect(salvato.pagine[2].immagini["preset:0"].src).toBe("disegno:portone");
+
+    await page.evaluate(() => document.getElementById("editor-modal")?.remove());
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent("dashboardmodern:muro")));
+    const muro = page.locator("#dm-muro");
+    await expect(
+      muro.locator('.mu-energia.dm-rq-fondo[data-mu-misura="casa"] > img.dm-rq-img'),
+    ).toBeVisible();
+    await muro.locator('[data-mu-pagina="1"]').first().click();
+    await expect(muro.locator('.mu-mp.dm-rq-fondo[data-mu-mp="media_player.sala"]')).toBeVisible();
+    await muro.locator('[data-mu-pagina="2"]').first().click();
+    const preset = muro.locator('.mu-ptz-preset-t.dm-rq-fondo[data-mu-indice="0"]');
+    await expect(preset).toBeVisible();
+    await preset.click();
+    await expect
+      .poll(async () => (await servizi(page)).map((s) => s.data?.entity_id))
+      .toContain("button.preset_porta");
+  });
+
+  test("plancia senza eccezioni: Home, energia, irrigazione, piscina e l'auto col blocco Immagine", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "il pannello si prova una volta");
+    const seme = structuredClone(SEME_A_MURO);
+    seme.sections.ev = [{ id: "ev-uno", name: "Prima", brand: "Leapmotor", icon: "mdi:car" }];
+    seme.sections.irrigation = { zones: [{ id: "z1", name: "Prato", entity: "switch.prato" }] };
+    seme.sections.energyLoads = [{ id: "l1", name: "Forno", entity: "sensor.forno_power" }];
+    seme.sections.pool = { id: "vasca", name: "Piscina", pumpEnt: "switch.pompa" };
+    seme.visibility = {
+      ...seme.visibility,
+      ev: true,
+      energy: true,
+      piscina: true,
+      irrigazione: true,
+    };
+    await apriLaCasaAMuro(page, testInfo, {
+      premium: false,
+      muro: null,
+      seme,
+      stati: {
+        ...STATI,
+        "switch.pompa": { state: "on", attributes: {} },
+        "switch.prato": { state: "off", attributes: { friendly_name: "Prato" } },
+        "sensor.forno_power": { state: "1200", attributes: { unit_of_measurement: "W" } },
+      },
+      caselle: {
+        cd_immagini_riquadri: {
+          "energia:l1": disegno("forno"),
+          "irrigazione:0": disegno("irrigatore"),
+          "piscina:vasca": disegno("piscina"),
+        },
+      },
+    });
+    const vai = (tab) => page.locator(`.tab[data-tab="${tab}"]`).evaluate((n) => n.click());
+    await vai("energy");
+    await expect(page.locator('.dm-flow-node[data-dm-flow-node="l1"]').first()).toHaveClass(
+      /dm-rq-fondo/,
+    );
+    await vai("irrigazione");
+    await expect(page.locator('.dm-irr-card[data-dm-irr-card="0"]')).toHaveClass(/dm-rq-fondo/);
+    await vai("piscina");
+    await expect(page.locator(".dm-pool-block [data-dm-pool-stage]")).toHaveClass(/dm-rq-fondo/);
+
+    /* La tessera Luci della Home, dal pannello del config. */
+    await vai("home");
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.evaluate(() => window.editorSwitch("sez0"));
+    const pannello = page.locator("#ed-body [data-dm-rq-card-pannello]");
+    await pannello.locator('[data-dm-rq-apri-card="card:home:0"]').click();
+    await scegliIlDisegno(
+      pannello.locator('[data-dm-rqi="card:home:0"]'),
+      "lampadario",
+      "lampadario",
+    );
+    const sciolte = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("cd_immagini_riquadri")),
+    );
+    expect(Object.values(sciolte).some((v) => v.src === "disegno:lampadario")).toBe(true);
+
+    /* L'auto: il blocco «Immagine» sta nella scheda dell'auto, e la foto
+     * dell'auto diventa il disegno. */
+    await page.evaluate(() => window.editorSwitch("sez2"));
+    await page.locator("#ed-body [data-ev-edit]").first().click();
+    const blocco = page.locator('#ed-body [data-ev-photos] [data-dm-rqi^="auto:"]');
+    await blocco.scrollIntoViewIfNeeded();
+    await scegliIlDisegno(blocco, "auto-elettrica", "auto");
+    await expect(page.locator('[data-ev-photo="idle"] [data-ev-photo-input]')).toHaveValue(
+      "disegno:auto-elettrica",
+    );
+    await page.evaluate(() => document.getElementById("editor-modal")?.remove());
+    await vai("ev");
+    await expect(page.locator("#ev-mod-car-img")).toHaveAttribute("src", /^data:image\/svg\+xml/);
+    await vai("home");
+    await expect(page.locator(".dm-tile.dm-rq-fondo")).toHaveCount(1);
+  });
 });

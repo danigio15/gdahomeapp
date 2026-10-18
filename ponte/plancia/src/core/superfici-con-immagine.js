@@ -19,6 +19,9 @@
  *   l'elenco; oppure `casella`: la chiave di configurazione che lo tiene;
  * - `chiaveDellaVoce`: come si riconosce una voce — `entity`, `id`, o
  *   `indice` (la posizione nell'elenco, per le azioni rapide);
+ * - `forma: "mappa"`: la card non e' una voce di un elenco; la sua immagine
+ *   sta nella casella `CHIAVE_DELLE_IMMAGINI`, per «superficie:card», e
+ *   `voceDellaCard` vuole quella casella al posto dell'elenco;
  * - `forma: "righe"`: la casella e' un elenco dichiarato (`{ righe: [...] }`,
  *   `elenco-dichiarato.js`), non un elenco semplice;
  * - `pagine`: le pagine della plancia dove quelle card stanno. Si guardano
@@ -26,6 +29,8 @@
  * - `propria`: la superficie si veste da se' (i Dispositivi e le Prese hanno
  *   la loro card con l'immagine, e il loro blocco nel config).
  */
+
+import { immaginePulita } from "./immagine-del-riquadro.js";
 
 export const SUPERFICI_CON_IMMAGINE = Object.freeze([
   Object.freeze({
@@ -124,6 +129,63 @@ export const SUPERFICI_CON_IMMAGINE = Object.freeze([
     selettore: "#qa-grid .qa-btn",
     attributi: Object.freeze([]),
   }),
+  /* Le card che non sono una voce di un elenco — un nodo del flusso
+   * dell'energia, la vasca, una zona dell'irrigazione, una tessera della
+   * Home — tengono l'immagine in una casella sola (`CHIAVE_DELLE_IMMAGINI`),
+   * per «superficie:chiave della card». */
+  Object.freeze({
+    chiave: "energia",
+    /* Le sezioni del deposito le cui card sono queste. */
+    copre: Object.freeze(["energy", "energyLoads", "loads"]),
+    nome: Object.freeze({ it: "Energia", en: "Energy" }),
+    forma: "mappa",
+    chiaveDellaVoce: "mappa",
+    pagine: Object.freeze(["page-energy"]),
+    selettore: ".dm-flow-node[data-dm-flow-node]",
+    attributi: Object.freeze(["data-dm-flow-node"]),
+  }),
+  Object.freeze({
+    chiave: "piscina",
+    /* Le sezioni del deposito le cui card sono queste. */
+    copre: Object.freeze(["pool"]),
+    nome: Object.freeze({ it: "Piscina", en: "Pool" }),
+    forma: "mappa",
+    chiaveDellaVoce: "mappa",
+    pagine: Object.freeze(["page-piscina"]),
+    selettore: ".dm-pool-block[data-dm-pool]",
+    attributi: Object.freeze(["data-dm-pool"]),
+    /* La foto prende il posto del disegno della vasca: va sul palco. */
+    dentro: "[data-dm-pool-stage]",
+  }),
+  Object.freeze({
+    chiave: "irrigazione",
+    /* Le sezioni del deposito le cui card sono queste. */
+    copre: Object.freeze(["irrigation"]),
+    nome: Object.freeze({ it: "Irrigazione", en: "Irrigation" }),
+    forma: "mappa",
+    chiaveDellaVoce: "mappa",
+    pagine: Object.freeze(["page-irrigazione"]),
+    selettore: ".dm-irr-card[data-dm-irr-card]",
+    attributi: Object.freeze(["data-dm-irr-card"]),
+  }),
+  Object.freeze({
+    chiave: "home",
+    nome: Object.freeze({ it: "Home", en: "Home" }),
+    forma: "mappa",
+    chiaveDellaVoce: "mappa",
+    pagine: Object.freeze(["page-home"]),
+    selettore: ".dm-tile[data-dm-widget]",
+    attributi: Object.freeze(["data-dm-widget"]),
+  }),
+  /* L'auto ha la sua foto, e il blocco «Immagine» la sceglie li', nella
+   * scheda dell'auto (`ev-section.js`). */
+  Object.freeze({
+    chiave: "auto",
+    nome: Object.freeze({ it: "Auto", en: "Car" }),
+    sezione: "ev",
+    chiaveDellaVoce: "id",
+    propria: true,
+  }),
   Object.freeze({
     chiave: "dispositivi",
     nome: Object.freeze({ it: "Dispositivi", en: "Devices" }),
@@ -139,6 +201,32 @@ export const SUPERFICI_CON_IMMAGINE = Object.freeze([
     propria: true,
   }),
 ]);
+
+/** La casella delle immagini delle card che non sono voci di un elenco. */
+export const CHIAVE_DELLE_IMMAGINI = "cd_immagini_riquadri";
+const CHIAVE_SCIOLTA = /^[a-z]+:[A-Za-z0-9_.:-]{1,120}$/;
+export const IMMAGINI_SCIOLTE_AL_MASSIMO = 200;
+
+/** La casella pulita: solo chiavi «superficie:card» e immagini di casa. */
+export function immaginiSciolte(grezzo) {
+  if (!grezzo || typeof grezzo !== "object" || Array.isArray(grezzo)) return {};
+  const fuori = {};
+  for (const [chiave, valore] of Object.entries(grezzo).slice(0, IMMAGINI_SCIOLTE_AL_MASSIMO)) {
+    const pulita = CHIAVE_SCIOLTA.test(chiave) ? immaginePulita(valore) : null;
+    if (pulita) fuori[chiave] = pulita;
+  }
+  return fuori;
+}
+
+/** La stessa casella con questa immagine al suo posto (o tolta, con `null`). */
+export function conLImmagineSciolta(grezzo, superficie, id, immagine) {
+  const fuori = immaginiSciolte(grezzo);
+  const chiave = `${superficie}:${id}`;
+  const pulita = immaginePulita(immagine);
+  if (pulita && CHIAVE_SCIOLTA.test(chiave)) fuori[chiave] = pulita;
+  else delete fuori[chiave];
+  return fuori;
+}
 
 /** La superficie con questa chiave, o `null`. */
 export function superficieConImmagine(chiave) {
@@ -164,6 +252,11 @@ export function idDellaCard(superficie, card) {
  * della card fra le sue sorelle, per le superfici che si riconoscono cosi'.
  */
 export function voceDellaCard(superficie, elenco, card, indice = -1) {
+  if (superficie?.chiaveDellaVoce === "mappa") {
+    const id = idDellaCard(superficie, card);
+    const immagine = id ? immaginiSciolte(elenco)[`${superficie.chiave}:${id}`] : null;
+    return immagine ? { immagine } : null;
+  }
   const voci = Array.isArray(elenco) ? elenco : [];
   if (superficie?.chiaveDellaVoce === "indice") return voci[indice] || null;
   const id = idDellaCard(superficie, card);

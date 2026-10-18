@@ -17,6 +17,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  MODELLI,
   TIPI_DI_COMANDO,
   comandoPulito,
   muroPulito,
@@ -25,7 +26,10 @@ import {
 import { normalizeDevice } from "../src/core/device-model.js";
 import { migrateRooms } from "../src/core/migrations.js";
 import { anteprimaDellaPagina, facciaDelPosto } from "../src/sections/plancia-a-muro-section.js";
-import { siVedeLImmagine } from "../src/sections/plancia-a-muro-editor-section.js";
+import {
+  siVedeLImmagine,
+  tessereDellaPagina,
+} from "../src/sections/plancia-a-muro-editor-section.js";
 
 const IMMAGINE = Object.freeze({ src: "disegno:albero", fuoco: [50, 50], zoom: 1 });
 
@@ -335,4 +339,72 @@ test("le pagine che si riempiono da sole e la regia mostrano l'immagine", () => 
     anteprimaDellaPagina(muro, 6, FONTE),
     /class="mu-video dm-rq-fondo"><img class="dm-rq-img"/,
   );
+});
+
+/* Le pagine senza posti: ogni tessera ha la sua chiave, e l'immagine sta
+ * nella pagina (`immagini`). Ogni tipo di pagina deve dire dove va la sua. */
+const PAGINE_COI_POSTI = ["stanza", "personale", "scene"];
+const PAGINE_CHE_SI_RIEMPIONO = ["luci", "clima", "tapparelle", "telecamere", "ambienti"];
+const PAGINE_DELLA_REGIA = ["mixer", "comandi"];
+
+test("ogni tipo di pagina del muro ha l'immagine nelle sue tessere", () => {
+  for (const modello of MODELLI) {
+    if ([...PAGINE_COI_POSTI, ...PAGINE_CHE_SI_RIEMPIONO, ...PAGINE_DELLA_REGIA].includes(modello))
+      continue;
+    const pagina = muroPulito({
+      pagine: [
+        {
+          modello,
+          lettori: ["media_player.sala"],
+          telecamera: {
+            entita: "camera.cancello",
+            preset: [{ entita: "button.p1", nome: "Porta" }],
+          },
+        },
+      ],
+    }).pagine[0];
+    assert.ok(tessereDellaPagina(pagina).length, `la pagina «${modello}» non dice le sue tessere`);
+  }
+});
+
+test("le tessere delle pagine senza posti portano la loro immagine sul tablet", () => {
+  const immagini = {
+    casa: IMMAGINE,
+    adesso: IMMAGINE,
+    allarme: IMMAGINE,
+    citofono: IMMAGINE,
+    "lettore:media_player.sala": IMMAGINE,
+    "preset:0": IMMAGINE,
+    "chiave sbagliata": IMMAGINE,
+  };
+  const muro = muroPulito({
+    pagine: [
+      { modello: "energia", energia: { casa: "sensor.casa_battery_soc" }, immagini },
+      { modello: "musica", lettori: ["media_player.sala"], immagini },
+      { modello: "ingresso", ingresso: { telecamera: "camera.cancello" }, immagini },
+      {
+        modello: "telecamera",
+        telecamera: { entita: "camera.cancello", preset: [{ entita: "button.campanello" }] },
+        immagini,
+      },
+    ],
+  });
+  /* La chiave che non e' una chiave se ne va; le altre restano, pulite. */
+  assert.equal("chiave sbagliata" in muro.pagine[0].immagini, false);
+  assert.deepEqual(muro.pagine[0].immagini.casa, IMMAGINE);
+  assert.match(
+    anteprimaDellaPagina(muro, 0, FONTE),
+    /mu-energia dm-rq-fondo" [^>]*data-mu-misura="casa"><img class="dm-rq-img"/,
+  );
+  assert.match(
+    anteprimaDellaPagina(muro, 1, FONTE),
+    /class="mu-carta mu-mp [^"]*dm-rq-fondo" [^>]*data-mu-mp="media_player\.sala"><img class="dm-rq-img"/,
+  );
+  assert.match(anteprimaDellaPagina(muro, 2, FONTE), /dm-rq-fondo/);
+  assert.match(
+    anteprimaDellaPagina(muro, 3, FONTE),
+    /mu-ptz-preset-t dm-rq-fondo" data-mu-fa="preset" data-mu-indice="0"><img class="dm-rq-img"/,
+  );
+  /* Senza immagini, la pagina non porta la chiave. */
+  assert.equal("immagini" in muroPulito({ pagine: [{ modello: "meteo" }] }).pagine[0], false);
 });

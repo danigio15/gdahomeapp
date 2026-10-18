@@ -861,7 +861,7 @@ function paginaMarkup(p, i, tutte) {
     }
     ${riga(t("Colore", "Colour"), t("Della linguetta e del titolo", "Of the tab and the title"), colori(`${via}.colore`, p.colore))}
     <div class="mu-ed-anteprima-box"><div class="mu-ed-sotto-titolo">${esc(t("Anteprima dal vivo", "Live preview"))}</div><div class="mu-ed-anteprima" data-mu-ed-anteprima="${i}"></div></div>
-    ${dentro}</div>`;
+    ${dentro}${tessereMarkup(p, i)}</div>`;
 }
 
 /* ── la regia: i campi del mixer, della telecamera e dei comandi ─────────
@@ -881,6 +881,57 @@ const voce = (etichetta, dentro, entitaQui = false) =>
 const DOMINI_DEL_CANALE = "media_player,number,input_number,sensor,remote";
 const DOMINI_DEL_MUTO = "switch,input_boolean,remote,button,input_button,script";
 const telecomando = (id) => String(id || "").startsWith("remote.");
+/* Le tessere di una pagina senza posti, ognuna con la sua immagine: le
+ * misure dell'energia, i lettori della musica, il meteo di adesso, i
+ * riquadri dell'ingresso, i preset della telecamera. Una riga per tessera, e
+ * il blocco «Immagine» di quella aperta. */
+export function tessereDellaPagina(p) {
+  const f = state.fonte || {};
+  if (p.modello === "energia") {
+    const altre = (p.energia?.altre || []).map((id, n) => [`altra-${n}`, nomeDi(id)]);
+    return [
+      ["casa", t("Consumo della casa", "House consumption")],
+      ["solare", t("Produzione solare", "Solar production")],
+      ["rete", t("Rete", "Grid")],
+      ["batteria", t("Batteria", "Battery")],
+      ...altre,
+    ];
+  }
+  if (p.modello === "musica") {
+    const lettori = p.lettori.length ? p.lettori : lettoriDellaPagina({}, f).map((l) => l.entita);
+    return lettori.map((id) => [`lettore:${id}`, nomeDi(id)]);
+  }
+  if (p.modello === "meteo") return [["adesso", t("Meteo", "Weather")]];
+  if (p.modello === "ingresso")
+    return [
+      ["allarme", t("Antifurto", "Alarm")],
+      ["citofono", t("Citofono", "Intercom")],
+      ["letture", t("Altre letture", "Other readings")],
+      ["apri", t("Tasto grande", "Big button")],
+      ["apri2", t("Secondo tasto", "Second button")],
+      ["uscita", t("Esco", "Leaving")],
+      ["persone", t("Chi è in casa", "Who is home")],
+    ];
+  if (p.modello === "telecamera")
+    return (p.telecamera?.preset || []).map((x, k) => [`preset:${k}`, x.nome || nomeDi(x.entita)]);
+  return [];
+}
+
+function tessereMarkup(p, i) {
+  const tessere = tessereDellaPagina(p);
+  if (!tessere.length) return "";
+  return `<div class="mu-ed-sotto-titolo">${esc(t("Immagine", "Image"))}</div><div class="mu-ed-posti">${tessere
+    .map(([chiave, nome]) => {
+      const via = `pagine.${i}.immagini.${chiave}`;
+      const immagine = p.immagini?.[chiave] || null;
+      const aperta = state.tesseraAperta === via;
+      return `<div class="mu-ed-posto${immagine ? " pieno" : ""}" data-mu-ed-tessera-riga="${esc(chiave)}"><div class="mu-ed-posto-testa"><b class="mu-ed-cosa">${esc(nome)}</b><button type="button" class="mu-ed-copia" data-mu-ed-tessera="${esc(via)}" aria-expanded="${aperta}">🖼️ ${esc(t("Immagine", "Image"))}</button></div>${
+        aperta ? `<div class="mu-ed-posto-corpo">${bloccoDellaVoce(via, { immagine }, nome, "#0ea5e9")}</div>` : ""
+      }</div>`;
+    })
+    .join("")}</div>`;
+}
+
 /* Il blocco «Immagine» di una voce della regia — un canale, un comando, la
  * telecamera — che sul tablet tiene la sua forma e prende l'immagine come
  * fondo: l'anteprima e' il riquadro col nome, senza un «Acceso» che li' non
@@ -1733,6 +1784,14 @@ function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   /* «▶ Prova»: il suono scelto, una volta, al volume scelto. */
+  const tessera = event.target.closest("[data-mu-ed-tessera]");
+  if (tessera) {
+    event.preventDefault();
+    const chiave = tessera.dataset.muEdTessera;
+    state.tesseraAperta = state.tesseraAperta === chiave ? "" : chiave;
+    ridisegna();
+    return;
+  }
   const prova = event.target.closest("[data-mu-ed-prova]");
   if (prova) {
     event.preventDefault();
@@ -1898,6 +1957,21 @@ function onImmagine(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const via = String(event.detail?.chiave || "");
+  const tessera = /^pagine\.(\d+)\.immagini\.(.+)$/.exec(via);
+  if (tessera) {
+    /* La chiave di una tessera puo' avere un punto («lettore:media_player.sala»):
+     * qui si scrive direttamente, non per strada. */
+    const m = structuredClone(bozza());
+    const pagina = m.pagine?.[Number(tessera[1])];
+    if (!pagina) return;
+    const immagini = { ...(pagina.immagini || {}) };
+    if (event.detail?.immagine) immagini[tessera[2]] = event.detail.immagine;
+    else delete immagini[tessera[2]];
+    pagina.immagini = immagini;
+    state.bozza = muroPulito(m);
+    dopoUnaScritta();
+    return;
+  }
   if (!VIE_CON_IMMAGINE.test(via)) return;
   metti(`${via}.immagine`, event.detail?.immagine || null);
   dopoUnaScritta();

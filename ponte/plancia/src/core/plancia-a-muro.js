@@ -608,7 +608,24 @@ export function paginaPulita(input, indice = 0) {
       .map(pulsantePulito)
       .filter(Boolean),
     fermaTutto: fermaTuttoPulito(dentro.fermaTutto),
+    /* Le immagini delle tessere che non sono posti (l'energia, la musica, il
+     * meteo, l'ingresso, i preset): la chiave di casa la sa chi la disegna.
+     * Solo se ce n'e' qualcuna. */
+    ...immaginiDelleTessere(dentro.immagini),
   };
+}
+
+/* Le chiavi delle tessere: una parola, o «lettore:media_player.sala». */
+const CHIAVE_DELLA_TESSERA = /^[a-z0-9_]+(?::[a-z0-9_.-]+)?$/;
+export const TESSERE_CON_IMMAGINE_AL_MASSIMO = 40;
+function immaginiDelleTessere(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return {};
+  const fuori = {};
+  for (const [chiave, valore] of Object.entries(input).slice(0, TESSERE_CON_IMMAGINE_AL_MASSIMO)) {
+    const pulita = CHIAVE_DELLA_TESSERA.test(chiave) ? immaginePulita(valore) : null;
+    if (pulita) fuori[chiave] = pulita;
+  }
+  return Object.keys(fuori).length ? { immagini: fuori } : {};
 }
 
 /* ── la regia: mixer, telecamera, comandi ────────────────────────────────

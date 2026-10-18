@@ -16,27 +16,28 @@ import { conLeImmaginiDiPrima } from "../src/core/dashboard-store.js";
 import { rigaPulita } from "../src/core/elenco-dichiarato.js";
 import { SECTION_KEYS, normalizeSection } from "../src/core/migrations.js";
 import {
+  CHIAVE_DELLE_IMMAGINI,
   PAGINE_CON_IMMAGINI,
   SUPERFICI_CON_IMMAGINE,
   SUPERFICI_DA_VESTIRE,
+  conLImmagineSciolta,
+  immaginiSciolte,
   voceDellaCard,
 } from "../src/core/superfici-con-immagine.js";
 
 const IMMAGINE = Object.freeze({ src: "disegno:prato", fuoco: [50, 50], zoom: 1 });
 
-/* Le sezioni che non sono un elenco di card, e perche'. */
+/* L'unica sezione che non fa card: le entita' scelte per le caselle fisse
+ * (le misure dell'energia, la centrale), che si vedono nelle card degli
+ * altri. Tutto il resto ha la sua immagine — «senza eccezioni». */
 const NON_SONO_CARD = Object.freeze({
-  energy: "il modello dell'energia: misure e flussi, non card",
-  energyLoads: "i carichi del flusso dell'energia: nodi della mappa, non card",
-  entityOverrides: "le entita' scelte per le caselle fisse",
-  loads: "i carichi di prima, letti solo dalla migrazione verso energyLoads",
-  pool: "la piscina e' una pagina sola, non un elenco",
-  irrigation: "le zone dell'irrigazione sono righe di una pagina, non card",
-  ev: "l'auto e' la pagina intera dell'auto, col suo disegno della marca",
+  entityOverrides: "le entita' scelte per le caselle fisse: non sono card",
 });
 
 test("ogni sezione che fa card ha la sua superficie con l'immagine", () => {
-  const coperte = new Set(SUPERFICI_CON_IMMAGINE.map((s) => s.sezione || s.casella));
+  const coperte = new Set(
+    SUPERFICI_CON_IMMAGINE.flatMap((s) => [s.sezione, s.casella, ...(s.copre || [])]),
+  );
   for (const [sezione, casella] of Object.entries(SECTION_KEYS)) {
     if (NON_SONO_CARD[sezione]) continue;
     assert.ok(
@@ -53,7 +54,7 @@ test("ogni sezione che fa card ha la sua superficie con l'immagine", () => {
 });
 
 test("l'immagine passa la normalizzazione di ogni sezione, solo se e' di casa", () => {
-  for (const s of SUPERFICI_CON_IMMAGINE.filter((x) => x.sezione)) {
+  for (const s of SUPERFICI_CON_IMMAGINE.filter((x) => x.sezione && !x.propria)) {
     const voce = { id: "x1", name: "Cosa", entity: "switch.cosa", immagine: IMMAGINE };
     const [buona] = normalizeSection(s.sezione, [voce]);
     assert.deepEqual(buona.immagine, IMMAGINE, s.sezione);
@@ -96,10 +97,31 @@ test("ogni card trova la sua voce", () => {
     id: [{ id: "soggiorno", immagine: IMMAGINE }],
     indice: [{ name: "Uno" }, { name: "Due", immagine: IMMAGINE }],
   };
+  /* Le card «mappa» leggono la casella delle immagini sciolte. */
+  const sciolte = Object.fromEntries(
+    SUPERFICI_DA_VESTIRE.filter((s) => s.forma === "mappa").map((s) => [
+      `${s.chiave}:light.b`,
+      IMMAGINE,
+    ]),
+  );
+  voci.mappa = sciolte;
   for (const s of SUPERFICI_DA_VESTIRE) {
     const valore = s.chiaveDellaVoce === "id" ? "soggiorno" : "light.b";
     const attributi = Object.fromEntries((s.attributi || []).map((a) => [a, valore]));
     const trovata = voceDellaCard(s, voci[s.chiaveDellaVoce], card(attributi), 1);
     assert.deepEqual(trovata?.immagine, IMMAGINE, s.chiave);
   }
+});
+
+test("le immagini sciolte: solo «superficie:card» e immagini di casa", () => {
+  assert.equal(CHIAVE_DELLE_IMMAGINI, "cd_immagini_riquadri");
+  const pulite = immaginiSciolte({
+    "energia:casa": IMMAGINE,
+    "home:luci": { src: "https://x.example/a.png" },
+    "senza-due-punti": IMMAGINE,
+  });
+  assert.deepEqual(Object.keys(pulite), ["energia:casa"]);
+  const con = conLImmagineSciolta({}, "piscina", "p1", IMMAGINE);
+  assert.deepEqual(con, { "piscina:p1": IMMAGINE });
+  assert.deepEqual(conLImmagineSciolta(con, "piscina", "p1", null), {});
 });

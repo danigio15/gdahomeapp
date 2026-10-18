@@ -1134,6 +1134,17 @@ function cardConImmagine(
   });
 }
 
+/* Le tessere delle pagine che non hanno posti — l'energia, la musica, il
+ * meteo, l'ingresso, i preset della telecamera — portano la loro immagine
+ * nella pagina stessa (`immagini`, per chiave di tessera: «casa», «adesso»,
+ * «lettore:media_player.sala», «preset:0»). Si posa come fondo: la tessera
+ * resta com'e', coi suoi numeri e i suoi tasti, e il velo li fa leggere. */
+function immagineDellaTessera(chiave) {
+  return immaginePulita(state.muro?.pagine?.[state.pagina]?.immagini?.[chiave]);
+}
+const classeDellaTessera = (chiave) => classeDelFondo(immagineDellaTessera(chiave));
+const fondoDellaTessera = (chiave) => fondoMarkup(immagineDellaTessera(chiave));
+
 /* Tutti i riquadri con l'immagine del muro passano di qui. Quando l'editor
  * chiede la faccia di un posto (`facciaDelPosto`), qui si ferma quello che il
  * riquadro direbbe — lo stato, il comando in alto a destra — e l'anteprima
@@ -2251,7 +2262,7 @@ function lettoreGrande(l) {
   const sotto = [l.artista, l.album].filter(Boolean).join(" · ");
   const titolo =
     l.titolo || (l.spento ? t("Spento", "Off") : l.applicazione || l.sorgente || l.nome);
-  return `<div class="mu-carta mu-mp ${l.suona ? "mu-accesa" : ""}" style="--acc:#ec4899" data-mu-mp="${esc(l.entity)}">
+  return `<div class="mu-carta mu-mp ${l.suona ? "mu-accesa" : ""}${classeDellaTessera(`lettore:${l.entity}`)}" style="--acc:#ec4899" data-mu-mp="${esc(l.entity)}">${fondoDellaTessera(`lettore:${l.entity}`)}
     ${l.copertina ? `<img class="mu-mp-fondo" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="" aria-hidden="true">` : ""}
     <div class="mu-mp-testa">
       ${l.copertina ? `<img class="mu-mp-arte" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-arte mu-mp-arte-vuota">${disegno("media", 64, `mp-${l.entity}`)}</span>`}
@@ -2392,7 +2403,7 @@ function rigaDelLettore(l, scelto) {
     (compagni.length
       ? `${t("In gruppo con", "Grouped with")} ${compagni.map((id) => nomeDi(id)).join(", ")} · `
       : "") + (l.titolo ? [l.titolo, l.artista].filter(Boolean).join(" · ") : parolaDelLettore(l));
-  return `<div class="mu-carta mu-mp-riga${l.entity === scelto ? " si" : ""}${l.suona ? " mu-accesa" : ""}" style="--acc:#ec4899" data-mu-fa="mp-scegli" data-mu-entita="${esc(l.entity)}" role="button" tabindex="0">
+  return `<div class="mu-carta mu-mp-riga${l.entity === scelto ? " si" : ""}${l.suona ? " mu-accesa" : ""}${classeDellaTessera(`lettore:${l.entity}`)}" style="--acc:#ec4899" data-mu-fa="mp-scegli" data-mu-entita="${esc(l.entity)}" role="button" tabindex="0">${fondoDellaTessera(`lettore:${l.entity}`)}
     ${l.copertina ? `<img class="mu-mp-mini" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-mini mu-mp-arte-vuota">${disegno("media", 30, `mpr-${l.entity}`)}</span>`}
     <div class="mu-nome"><div class="mu-n">${esc(l.nome)}</div><div class="mu-sotto">${l.suona ? '<i class="mu-mp-onde" aria-hidden="true"><b></b><b></b><b></b></i>' : ""}${esc(riga)}</div></div>
     ${centro ? tastoMusica(l, "centro", centro === "pausa" ? "pausa" : centro === "accendi" ? "accendi" : "suona", { etichetta: l.nome }) : ""}
@@ -2592,7 +2603,7 @@ function paginaEnergia(pagina) {
     ]);
   const carte = tessere.map(
     ([k, d, acc, etichetta, valore, sotto, extra], i) =>
-      `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
+      `<div class="mu-carta mu-card mu-accesa mu-energia${classeDellaTessera(k)}" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">${fondoDellaTessera(k)}
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta)}</span></div>
       <div class="mu-grande">${esc(valore)}</div>${extra || ""}<div class="mu-sotto">${esc(sotto)}</div></div>`,
   );
@@ -2774,7 +2785,7 @@ function paginaMeteo(pagina) {
     );
   const frase = fraseDelMuro(v.frase);
   const temperatura = m.temperatura ? decimale(m.temperatura.valore, 0) : "—";
-  const adesso = `<div class="mu-carta mu-accesa mu-mt-adesso" style="--acc:${acc}" data-mu-meteo-blocco="adesso">
+  const adesso = `<div class="mu-carta mu-accesa mu-mt-adesso${classeDellaTessera("adesso")}" style="--acc:${acc}" data-mu-meteo-blocco="adesso">${fondoDellaTessera("adesso")}
     <div class="mu-mt-cielo">
       <span class="mu-mt-segno" aria-hidden="true">${segnoDelTempo(v.condizione)}</span>
       <div class="mu-mt-gradi">
@@ -3064,6 +3075,7 @@ function paginaIngressoCompatta(pagina) {
           attiva: true,
           dati: `data-mu-fa="finestra-antifurto"`,
           dove: "c-allarme",
+          immagine: immagineDellaTessera("allarme"),
         })
       : "",
     ing.telecamera
@@ -3075,6 +3087,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="finestra-citofono"`,
           dove: "c-citofono",
+          immagine: immagineDellaTessera("citofono"),
         })
       : "",
     ing.apri
@@ -3086,6 +3099,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}"`,
           dove: "c-apri1",
+          immagine: immagineDellaTessera("apri"),
         })
       : "",
     ing.apri2
@@ -3097,6 +3111,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}"`,
           dove: "c-apri2",
+          immagine: immagineDellaTessera("apri2"),
         })
       : "",
     uscita
@@ -3108,6 +3123,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="azione" data-mu-azione="${esc(uscita.name)}" data-mu-conferma="${pagina.confermaUscita ? 1 : ""}"`,
           dove: "c-uscita",
+          immagine: immagineDellaTessera("uscita"),
         })
       : "",
     ing.persone && persone.tutte
@@ -3118,6 +3134,7 @@ function paginaIngressoCompatta(pagina) {
           titolo: String(persone.inCasa),
           sotto: "",
           dove: "c-persone",
+          immagine: immagineDellaTessera("persone"),
         })
       : "",
     /* Le porte e le finestre scelte fra le «Altre letture»: il loro conto,
@@ -3131,6 +3148,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="ing-lettura" data-mu-gruppo="1"`,
           dove: "c-letture",
+          immagine: immagineDellaTessera("letture"),
         })
       : "",
   ]
@@ -3154,7 +3172,7 @@ function paginaIngresso(pagina) {
    * tutte insieme in una parola. Una sola: la card di sempre. */
   if (aree.length > 1) {
     const riassunto = riassuntoDelleAree(aree);
-    const carta = `<div class="mu-carta mu-accesa mu-allarme mu-allarme-aree" style="--acc:${accentoDellAllarme(riassunto.valore)}">
+    const carta = `<div class="mu-carta mu-accesa mu-allarme mu-allarme-aree${classeDellaTessera("allarme")}" style="--acc:${accentoDellAllarme(riassunto.valore)}">${fondoDellaTessera("allarme")}
       <div class="mu-riga1"><span class="mu-chip" style="--c:72px">${disegno("sicurezza", 44, "allarme")}</span>
         <div class="mu-allarme-dice"><span class="mu-et">${esc(quanteAree(aree.length))}</span><div class="mu-osw mu-stato-allarme">${esc(riassunto.testo)}${riassunto.suona.length ? ` · ${esc(riassunto.suona.map((a) => nomeDellArea(a, aree.indexOf(a))).join(", "))}` : ""}</div>
         ${avvisoFinestre}</div></div>
@@ -3175,7 +3193,7 @@ function paginaIngresso(pagina) {
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
   const modi = tastiDellAntifurto(s);
   const acceso = tastoAcceso(s, modi);
-  const carta = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
+  const carta = `<div class="mu-carta mu-accesa mu-allarme${classeDellaTessera("allarme")}" style="--acc:${accento}">${fondoDellaTessera("allarme")}
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
         <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(suonaSuMisura ? STATI_DELL_ALLARME().triggered : s ? statoDellaCentrale(s) : modi.find((m) => m.mode === acceso)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
         ${avvisoFinestre}</div></div>
@@ -3218,7 +3236,7 @@ function restoDellIngresso(pagina, carta, spento) {
   const altro = altroDellIngresso(ing);
   return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}">
     ${carta}
-    <div class="mu-carta mu-citofono">
+    <div class="mu-carta mu-citofono${classeDellaTessera("citofono")}">${fondoDellaTessera("citofono")}
       <div class="mu-video">${telecamera ? `<img data-mu-telecamera="${esc(telecamera)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera ? nomeDi(telecamera) : t("Nessuna telecamera", "No camera"))}</span></div>
       ${
         ing.apri || ing.apri2
@@ -3226,7 +3244,7 @@ function restoDellIngresso(pagina, carta, spento) {
           : ""
       }
     </div>
-    ${altro ? `<div class="mu-carta mu-ing-striscia">${altro}</div>` : ""}
+    ${altro ? `<div class="mu-carta mu-ing-striscia${classeDellaTessera("letture")}">${fondoDellaTessera("letture")}${altro}</div>` : ""}
     <div class="mu-piede">
       ${
         azioneUscita
@@ -3242,6 +3260,7 @@ function restoDellIngresso(pagina, carta, spento) {
               attiva: false,
               dati: `data-mu-fa="azione" data-mu-azione="${esc(azioneUscita.name)}" data-mu-conferma="${pagina.confermaUscita ? 1 : ""}"`,
               dove: "uscita",
+              immagine: immagineDellaTessera("uscita"),
             })
           : ""
       }
@@ -3254,6 +3273,7 @@ function restoDellIngresso(pagina, carta, spento) {
               titolo: String(persone.inCasa),
               sotto: persone.nomi.join(", ") || t("Nessuno", "Nobody"),
               dove: "persone",
+              immagine: immagineDellaTessera("persone"),
             })
           : ""
       }
@@ -3444,7 +3464,7 @@ function paginaTelecamera(pagina) {
   const preset = (tc.preset || [])
     .map(
       (p, k) =>
-        `<button type="button" class="mu-carta mu-ptz-preset-t" data-mu-fa="preset" data-mu-indice="${k}"><span>${esc(p.nome || nomeDi(p.entita))}</span></button>`,
+        `<button type="button" class="mu-carta mu-ptz-preset-t${classeDellaTessera(`preset:${k}`)}" data-mu-fa="preset" data-mu-indice="${k}">${fondoDellaTessera(`preset:${k}`)}<span>${esc(p.nome || nomeDi(p.entita))}</span></button>`,
     )
     .join("");
   return `<div class="mu-ptz${preset ? "" : " senza-preset"}">

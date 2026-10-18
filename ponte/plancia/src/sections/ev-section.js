@@ -21,7 +21,9 @@ import {
   vehiclePhoto,
   vehiclePhotos,
 } from "../core/vehicle-model.js";
+import { immaginePulita, srcDaMostrare } from "../core/immagine-del-riquadro.js";
 import { pickMediaImage } from "./media-picker-section.js";
+import { EVENTO_IMMAGINE, bloccoImmagineMarkup } from "./riquadri-con-immagine-section.js";
 import { dimenticaLeModifiche } from "./ricordati-di-salvare-section.js";
 import { allStates, clean, dashboardStore, doc, esc, installStyle, onEditorRedraw, readJson, root, section, setLexicalGlobal, t, wrapFunction, writeJsonIfChanged, senzaCadere } from "./shared.js";
 
@@ -62,6 +64,9 @@ export function resolveVehicleAsset(value, base = doc?.baseURI || root.location?
   let raw = typeof value === "string" ? value : value?.url || value?.path || "";
   raw = clean(raw).replaceAll("\\", "/");
   if (!raw) return "";
+  /* Un disegno del catalogo scelto col blocco «Immagine»: la foto dell'auto
+   * diventa il disegno, come una foto qualunque. */
+  if (raw.startsWith("disegno:")) return srcDaMostrare(immaginePulita({ src: raw }));
   if (/^(?:data:|blob:|https?:)/i.test(raw)) return raw;
   if (/^(?:file:|[a-z]:\/)/i.test(raw)) return "";
   if (raw.startsWith("/loca/")) raw = `/local/${raw.slice(6)}`;
@@ -577,7 +582,13 @@ function savePhotos(panelNode) {
      * `resolveVehicleAsset` ne tira fuori l'indirizzo di ADESSO, gettone di
      * cache compreso: salvare quello vorrebbe dire congelare lo scatto di
      * oggi e perdere il legame con l'integrazione, che e' tutto il punto. */
-    const stored = value ? (eUnaFotoDaEntita(value) ? value : resolveVehicleAsset(value) || value) : "";
+    /* Lo stesso per un disegno del catalogo: si salva la sua chiave, e il
+     * disegno lo fa `resolveVehicleAsset` ogni volta. */
+    const stored = value
+      ? eUnaFotoDaEntita(value) || value.startsWith("disegno:")
+        ? value
+        : resolveVehicleAsset(value) || value
+      : "";
     salvate[kind] = stored;
     if (scriveIlDisegno) root.localStorage?.setItem(EV_PHOTO_KEYS[kind], JSON.stringify(stored));
     // Written: what is on screen and what is stored say the same thing again.
@@ -682,6 +693,50 @@ function fotoDelProfiloInModifica() {
  * un'altra. */
 function fotoDi(car) {
   return vehiclePhotos(car);
+}
+
+/* «Riquadri con l'immagine»: anche l'auto si sceglie col blocco «Immagine»
+ * — una foto caricata dal telefono o un disegno del catalogo — e quello che
+ * si sceglie e' la sua foto «cavo staccato», la stessa casella di sempre:
+ * la vetrina, la cornice e lo sfondo sfocato la trattano come ogni altra
+ * foto. Il blocco si rifa' quando cambia l'auto o la sua foto. */
+function bloccoDellAuto(panelNode, diChi, idle) {
+  const firma = `${diChi}|${clean(idle)}`;
+  let posto = panelNode.querySelector(":scope > [data-ev-immagine]");
+  if (posto?.dataset.dmFirma === firma) return;
+  if (!posto) {
+    posto = doc.createElement("div");
+    posto.dataset.evImmagine = "true";
+    const salva = panelNode.querySelector("[data-ev-photos-save]");
+    if (salva) salva.before(posto);
+    else panelNode.append(posto);
+  }
+  posto.dataset.dmFirma = firma;
+  const auto = profiles().find((car) => uidDi(car) === diChi);
+  posto.innerHTML = diChi
+    ? bloccoImmagineMarkup({
+        chiave: `auto:${diChi}`,
+        immagine: immaginePulita({ src: clean(idle) }),
+        nome: clean(auto?.name) || t("Auto", "Car"),
+        accento: "#22c55e",
+        anteprima: { stato: "", acceso: false, destra: "", comandi: "", classi: "dm-rq-lettura" },
+      })
+    : "";
+}
+
+function onImmagineDellAuto(event) {
+  const m = /^auto:(.+)$/.exec(String(event.detail?.chiave || ""));
+  if (!m) return;
+  const panel = evEditorBody()?.querySelector(":scope > [data-ev-photos]");
+  if (!panel || panel.dataset.dmAutoFoto !== m[1]) return;
+  const field = panel.querySelector('[data-ev-photo="idle"]');
+  const input = field?.querySelector("[data-ev-photo-input]");
+  if (!input) return;
+  input.value = event.detail?.immagine?.src || "";
+  field.dataset.evPhotoEdited = "true";
+  paintPhotoPreview(field);
+  savePhotos(panel);
+  panel.dataset.saved = "true";
 }
 
 export function ensureVehiclePhotoEditor() {
@@ -818,6 +873,7 @@ export function ensureVehiclePhotoEditor() {
     }
   }
   panelNode.dataset.dmAutoFoto = diChi;
+  bloccoDellAuto(panelNode, diChi, photos.idle);
   for (const field of panelNode.querySelectorAll("[data-ev-photo]")) paintPhotoPreview(field);
   /* Il pannello scrive sull'auto attiva, e lo dice.
    *
@@ -2236,6 +2292,7 @@ export function installEvSection() {
   scheduleEvSync();
   if (!state.installed) {
     state.installed=true;
+    doc.addEventListener(EVENTO_IMMAGINE, onImmagineDellAuto);
     doc.addEventListener("click",(event)=>{if(event.target?.closest?.('[data-tab="ev"],[data-page="ev"],.ed-tab[data-tab="sez2"],.ed-acc-head'))root.setTimeout?.(scheduleEvSync,0);},true);
     for (const eventName of ["dashboardmodern:legacy-ready","dashboardmodern:runtime-ready","pageshow"]) root.addEventListener?.(eventName,()=>{installLegacyWrappers();seedActiveProfilePhotos();seedActiveProfileOverrides();scheduleEvSyncSettled();bindEditorEntryPoints();});
     /* La configurazione condivisa arriva dopo l'avvio e riscrive le caselle

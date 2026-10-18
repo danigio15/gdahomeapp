@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-HWULMN54.js";
+} from "../../chunk-PM4J6Y2Q.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -101278,8 +101278,23 @@ function paginaPulita(input, indice = 0) {
     mixer: mixerPulito(dentro3.mixer),
     telecamera: telecameraPulita(dentro3.telecamera),
     pulsanti: (Array.isArray(dentro3.pulsanti) ? dentro3.pulsanti : []).slice(0, PULSANTI_AL_MASSIMO).map(pulsantePulito).filter(Boolean),
-    fermaTutto: fermaTuttoPulito(dentro3.fermaTutto)
+    fermaTutto: fermaTuttoPulito(dentro3.fermaTutto),
+    /* Le immagini delle tessere che non sono posti (l'energia, la musica, il
+     * meteo, l'ingresso, i preset): la chiave di casa la sa chi la disegna.
+     * Solo se ce n'e' qualcuna. */
+    ...immaginiDelleTessere(dentro3.immagini)
   };
+}
+var CHIAVE_DELLA_TESSERA = /^[a-z0-9_]+(?::[a-z0-9_.-]+)?$/;
+var TESSERE_CON_IMMAGINE_AL_MASSIMO = 40;
+function immaginiDelleTessere(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return {};
+  const fuori = {};
+  for (const [chiave2, valore3] of Object.entries(input).slice(0, TESSERE_CON_IMMAGINE_AL_MASSIMO)) {
+    const pulita = CHIAVE_DELLA_TESSERA.test(chiave2) ? immaginePulita(valore3) : null;
+    if (pulita) fuori[chiave2] = pulita;
+  }
+  return Object.keys(fuori).length ? { immagini: fuori } : {};
 }
 var GRUPPI_AL_MASSIMO = 4;
 var CANALI_PER_GRUPPO = 8;
@@ -103242,6 +103257,11 @@ function cardConImmagine(c, i, {
     attributi: `data-mu-card="${i}" ${dati}`
   });
 }
+function immagineDellaTessera(chiave2) {
+  return immaginePulita(state115.muro?.pagine?.[state115.pagina]?.immagini?.[chiave2]);
+}
+var classeDellaTessera = (chiave2) => classeDelFondo(immagineDellaTessera(chiave2));
+var fondoDellaTessera = (chiave2) => fondoMarkup(immagineDellaTessera(chiave2));
 var facciaPresa = null;
 function vestito(argomenti) {
   if (facciaPresa) facciaPresa.presa ||= argomenti;
@@ -103922,7 +103942,7 @@ function lettoreGrande(l) {
   const volume = l.volume === null ? null : Math.round(l.volume * 100);
   const sotto = [l.artista, l.album].filter(Boolean).join(" · ");
   const titolo3 = l.titolo || (l.spento ? t("Spento", "Off") : l.applicazione || l.sorgente || l.nome);
-  return `<div class="mu-carta mu-mp ${l.suona ? "mu-accesa" : ""}" style="--acc:#ec4899" data-mu-mp="${esc(l.entity)}">
+  return `<div class="mu-carta mu-mp ${l.suona ? "mu-accesa" : ""}${classeDellaTessera(`lettore:${l.entity}`)}" style="--acc:#ec4899" data-mu-mp="${esc(l.entity)}">${fondoDellaTessera(`lettore:${l.entity}`)}
     ${l.copertina ? `<img class="mu-mp-fondo" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="" aria-hidden="true">` : ""}
     <div class="mu-mp-testa">
       ${l.copertina ? `<img class="mu-mp-arte" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-arte mu-mp-arte-vuota">${disegno("media", 64, `mp-${l.entity}`)}</span>`}
@@ -104013,7 +104033,7 @@ function rigaDelLettore(l, scelto) {
   const centro2 = ilTastoCentrale(l);
   const compagni = compagniDelGruppo(l);
   const riga3 = (compagni.length ? `${t("In gruppo con", "Grouped with")} ${compagni.map((id) => nomeDi8(id)).join(", ")} · ` : "") + (l.titolo ? [l.titolo, l.artista].filter(Boolean).join(" · ") : parolaDelLettore(l));
-  return `<div class="mu-carta mu-mp-riga${l.entity === scelto ? " si" : ""}${l.suona ? " mu-accesa" : ""}" style="--acc:#ec4899" data-mu-fa="mp-scegli" data-mu-entita="${esc(l.entity)}" role="button" tabindex="0">
+  return `<div class="mu-carta mu-mp-riga${l.entity === scelto ? " si" : ""}${l.suona ? " mu-accesa" : ""}${classeDellaTessera(`lettore:${l.entity}`)}" style="--acc:#ec4899" data-mu-fa="mp-scegli" data-mu-entita="${esc(l.entity)}" role="button" tabindex="0">${fondoDellaTessera(`lettore:${l.entity}`)}
     ${l.copertina ? `<img class="mu-mp-mini" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-mini mu-mp-arte-vuota">${disegno("media", 30, `mpr-${l.entity}`)}</span>`}
     <div class="mu-nome"><div class="mu-n">${esc(l.nome)}</div><div class="mu-sotto">${l.suona ? '<i class="mu-mp-onde" aria-hidden="true"><b></b><b></b><b></b></i>' : ""}${esc(riga3)}</div></div>
     ${centro2 ? tastoMusica(l, "centro", centro2 === "pausa" ? "pausa" : centro2 === "accendi" ? "accendi" : "suona", { etichetta: l.nome }) : ""}
@@ -104166,7 +104186,7 @@ function paginaEnergia(pagina2) {
       vuoto3(0, t("Scegli le misure nel config", "Choose the readings in the config"))
     ]);
   const carte = tessere2.map(
-    ([k, d, acc, etichetta3, valore3, sotto, extra], i) => `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
+    ([k, d, acc, etichetta3, valore3, sotto, extra], i) => `<div class="mu-carta mu-card mu-accesa mu-energia${classeDellaTessera(k)}" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">${fondoDellaTessera(k)}
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta3)}</span></div>
       <div class="mu-grande">${esc(valore3)}</div>${extra || ""}<div class="mu-sotto">${esc(sotto)}</div></div>`
   );
@@ -104307,7 +104327,7 @@ function paginaMeteo(pagina2) {
     );
   const frase4 = fraseDelMuro(v.frase);
   const temperatura = m.temperatura ? decimale2(m.temperatura.valore, 0) : "—";
-  const adesso = `<div class="mu-carta mu-accesa mu-mt-adesso" style="--acc:${acc}" data-mu-meteo-blocco="adesso">
+  const adesso = `<div class="mu-carta mu-accesa mu-mt-adesso${classeDellaTessera("adesso")}" style="--acc:${acc}" data-mu-meteo-blocco="adesso">${fondoDellaTessera("adesso")}
     <div class="mu-mt-cielo">
       <span class="mu-mt-segno" aria-hidden="true">${segnoDelTempo(v.condizione)}</span>
       <div class="mu-mt-gradi">
@@ -104508,7 +104528,8 @@ function paginaIngressoCompatta(pagina2) {
       sotto: "",
       attiva: true,
       dati: `data-mu-fa="finestra-antifurto"`,
-      dove: "c-allarme"
+      dove: "c-allarme",
+      immagine: immagineDellaTessera("allarme")
     }) : "",
     ing.telecamera ? tessera2({
       chiave: "citofono",
@@ -104517,7 +104538,8 @@ function paginaIngressoCompatta(pagina2) {
       titolo: nomeDi8(ing.telecamera),
       sotto: "",
       dati: `data-mu-fa="finestra-citofono"`,
-      dove: "c-citofono"
+      dove: "c-citofono",
+      immagine: immagineDellaTessera("citofono")
     }) : "",
     ing.apri ? tessera2({
       chiave: "varchi",
@@ -104526,7 +104548,8 @@ function paginaIngressoCompatta(pagina2) {
       titolo: nomeDi8(ing.apri, ing.nomeApri),
       sotto: "",
       dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}"`,
-      dove: "c-apri1"
+      dove: "c-apri1",
+      immagine: immagineDellaTessera("apri")
     }) : "",
     ing.apri2 ? tessera2({
       chiave: "aperture",
@@ -104535,7 +104558,8 @@ function paginaIngressoCompatta(pagina2) {
       titolo: nomeDi8(ing.apri2, ing.nomeApri2),
       sotto: "",
       dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}"`,
-      dove: "c-apri2"
+      dove: "c-apri2",
+      immagine: immagineDellaTessera("apri2")
     }) : "",
     uscita ? tessera2({
       chiave: spento ? "aperture" : "home",
@@ -104544,7 +104568,8 @@ function paginaIngressoCompatta(pagina2) {
       titolo: spento ? t("Esco", "Leaving") : t("Rientro", "I'm home"),
       sotto: "",
       dati: `data-mu-fa="azione" data-mu-azione="${esc(uscita.name)}" data-mu-conferma="${pagina2.confermaUscita ? 1 : ""}"`,
-      dove: "c-uscita"
+      dove: "c-uscita",
+      immagine: immagineDellaTessera("uscita")
     }) : "",
     ing.persone && persone4.tutte ? tessera2({
       chiave: "persone",
@@ -104552,7 +104577,8 @@ function paginaIngressoCompatta(pagina2) {
       etichetta: t("In casa", "At home"),
       titolo: String(persone4.inCasa),
       sotto: "",
-      dove: "c-persone"
+      dove: "c-persone",
+      immagine: immagineDellaTessera("persone")
     }) : "",
     /* Le porte e le finestre scelte fra le «Altre letture»: il loro conto,
      * e il tocco le elenca. */
@@ -104563,7 +104589,8 @@ function paginaIngressoCompatta(pagina2) {
       titolo: String(letture2.gruppo.aperte.length),
       sotto: "",
       dati: `data-mu-fa="ing-lettura" data-mu-gruppo="1"`,
-      dove: "c-letture"
+      dove: "c-letture",
+      immagine: immagineDellaTessera("letture")
     }) : ""
   ].filter(Boolean).slice(0, 6);
   return `<div class="mu-g6">${tessere2.join("")}</div>`;
@@ -104577,7 +104604,7 @@ function paginaIngresso(pagina2) {
   const avvisoFinestre = aperte.length ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>` : "";
   if (aree2.length > 1) {
     const riassunto3 = riassuntoDelleAree(aree2);
-    const carta2 = `<div class="mu-carta mu-accesa mu-allarme mu-allarme-aree" style="--acc:${accentoDellAllarme(riassunto3.valore)}">
+    const carta2 = `<div class="mu-carta mu-accesa mu-allarme mu-allarme-aree${classeDellaTessera("allarme")}" style="--acc:${accentoDellAllarme(riassunto3.valore)}">${fondoDellaTessera("allarme")}
       <div class="mu-riga1"><span class="mu-chip" style="--c:72px">${disegno("sicurezza", 44, "allarme")}</span>
         <div class="mu-allarme-dice"><span class="mu-et">${esc(quanteAree(aree2.length))}</span><div class="mu-osw mu-stato-allarme">${esc(riassunto3.testo)}${riassunto3.suona.length ? ` · ${esc(riassunto3.suona.map((a) => nomeDellArea(a, aree2.indexOf(a))).join(", "))}` : ""}</div>
         ${avvisoFinestre}</div></div>
@@ -104596,7 +104623,7 @@ function paginaIngresso(pagina2) {
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
   const modi = tastiDellAntifurto(s);
   const acceso6 = tastoAcceso(s, modi);
-  const carta = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
+  const carta = `<div class="mu-carta mu-accesa mu-allarme${classeDellaTessera("allarme")}" style="--acc:${accento}">${fondoDellaTessera("allarme")}
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
         <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(suonaSuMisura ? STATI_DELL_ALLARME().triggered : s ? statoDellaCentrale(s) : modi.find((m) => m.mode === acceso6)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
         ${avvisoFinestre}</div></div>
@@ -104623,11 +104650,11 @@ function restoDellIngresso(pagina2, carta, spento) {
   const altro = altroDellIngresso(ing);
   return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}">
     ${carta}
-    <div class="mu-carta mu-citofono">
+    <div class="mu-carta mu-citofono${classeDellaTessera("citofono")}">${fondoDellaTessera("citofono")}
       <div class="mu-video">${telecamera2 ? `<img data-mu-telecamera="${esc(telecamera2)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera2 ? nomeDi8(telecamera2) : t("Nessuna telecamera", "No camera"))}</span></div>
       ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${disegno("varchi", 26, "apri1")}${esc(nomeDi8(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${disegno("aperture", 26, "apri2")}${esc(nomeDi8(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}
     </div>
-    ${altro ? `<div class="mu-carta mu-ing-striscia">${altro}</div>` : ""}
+    ${altro ? `<div class="mu-carta mu-ing-striscia${classeDellaTessera("letture")}">${fondoDellaTessera("letture")}${altro}</div>` : ""}
     <div class="mu-piede">
       ${azioneUscita ? tessera2({
     chiave: spento ? "aperture" : "home",
@@ -104637,7 +104664,8 @@ function restoDellIngresso(pagina2, carta, spento) {
     sotto: azioneUscita.name === (spento ? t("Esco", "Leaving") : t("Rientro", "I'm home")) ? "" : azioneUscita.name,
     attiva: false,
     dati: `data-mu-fa="azione" data-mu-azione="${esc(azioneUscita.name)}" data-mu-conferma="${pagina2.confermaUscita ? 1 : ""}"`,
-    dove: "uscita"
+    dove: "uscita",
+    immagine: immagineDellaTessera("uscita")
   }) : ""}
       ${ing.persone && persone4.tutte ? tessera2({
     chiave: "persone",
@@ -104645,7 +104673,8 @@ function restoDellIngresso(pagina2, carta, spento) {
     etichetta: t("In casa", "At home"),
     titolo: String(persone4.inCasa),
     sotto: persone4.nomi.join(", ") || t("Nessuno", "Nobody"),
-    dove: "persone"
+    dove: "persone",
+    immagine: immagineDellaTessera("persone")
   }) : ""}
     </div>
   </div>`;
@@ -104769,7 +104798,7 @@ function paginaTelecamera(pagina2) {
       ${tc.zoomMeno ? tastoPtz(tc, "zoomMeno", "−", t("Zoom indietro", "Zoom out"), "mu-ptz-pm") : ""}</div>`;
   }
   const preset = (tc.preset || []).map(
-    (p, k) => `<button type="button" class="mu-carta mu-ptz-preset-t" data-mu-fa="preset" data-mu-indice="${k}"><span>${esc(p.nome || nomeDi8(p.entita))}</span></button>`
+    (p, k) => `<button type="button" class="mu-carta mu-ptz-preset-t${classeDellaTessera(`preset:${k}`)}" data-mu-fa="preset" data-mu-indice="${k}">${fondoDellaTessera(`preset:${k}`)}<span>${esc(p.nome || nomeDi8(p.entita))}</span></button>`
   ).join("");
   return `<div class="mu-ptz${preset ? "" : " senza-preset"}">
     <div class="mu-carta mu-ptz-video"><div class="mu-video${classeDelFondo(tc.immagine)}">${fondoMarkup(tc.immagine)}${tc.entita && !anteprimaInCorso ? `<img data-mu-telecamera="${esc(tc.entita)}" alt="">` : immaginePulita(tc.immagine) ? "" : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "ptz-vuota")}</div>`}<span class="mu-live">${esc(nome)}</span></div></div>
@@ -108648,7 +108677,7 @@ function paginaMarkup(p, i, tutte) {
   )}
     ${riga2(t("Colore", "Colour"), t("Della linguetta e del titolo", "Of the tab and the title"), colori(`${via}.colore`, p.colore))}
     <div class="mu-ed-anteprima-box"><div class="mu-ed-sotto-titolo">${esc(t("Anteprima dal vivo", "Live preview"))}</div><div class="mu-ed-anteprima" data-mu-ed-anteprima="${i}"></div></div>
-    ${dentro3}</div>`;
+    ${dentro3}${tessereMarkup(p, i)}</div>`;
 }
 var DA_PREMERE = "button,input_button,script,scene";
 var togli = (via, etichetta3) => `<button type="button" class="mu-ed-svuota" data-mu-ed-togli-voce="${esc(via)}" aria-label="${esc(etichetta3)}">✕</button>`;
@@ -108656,6 +108685,47 @@ var voce2 = (etichetta3, dentro3, entitaQui = false) => `<label class="mu-ed-voc
 var DOMINI_DEL_CANALE2 = "media_player,number,input_number,sensor,remote";
 var DOMINI_DEL_MUTO2 = "switch,input_boolean,remote,button,input_button,script";
 var telecomando = (id) => String(id || "").startsWith("remote.");
+function tessereDellaPagina(p) {
+  const f = state116.fonte || {};
+  if (p.modello === "energia") {
+    const altre = (p.energia?.altre || []).map((id, n) => [`altra-${n}`, nomeDi9(id)]);
+    return [
+      ["casa", t("Consumo della casa", "House consumption")],
+      ["solare", t("Produzione solare", "Solar production")],
+      ["rete", t("Rete", "Grid")],
+      ["batteria", t("Batteria", "Battery")],
+      ...altre
+    ];
+  }
+  if (p.modello === "musica") {
+    const lettori2 = p.lettori.length ? p.lettori : lettoriDellaPagina({}, f).map((l) => l.entita);
+    return lettori2.map((id) => [`lettore:${id}`, nomeDi9(id)]);
+  }
+  if (p.modello === "meteo") return [["adesso", t("Meteo", "Weather")]];
+  if (p.modello === "ingresso")
+    return [
+      ["allarme", t("Antifurto", "Alarm")],
+      ["citofono", t("Citofono", "Intercom")],
+      ["letture", t("Altre letture", "Other readings")],
+      ["apri", t("Tasto grande", "Big button")],
+      ["apri2", t("Secondo tasto", "Second button")],
+      ["uscita", t("Esco", "Leaving")],
+      ["persone", t("Chi è in casa", "Who is home")]
+    ];
+  if (p.modello === "telecamera")
+    return (p.telecamera?.preset || []).map((x, k) => [`preset:${k}`, x.nome || nomeDi9(x.entita)]);
+  return [];
+}
+function tessereMarkup(p, i) {
+  const tessere2 = tessereDellaPagina(p);
+  if (!tessere2.length) return "";
+  return `<div class="mu-ed-sotto-titolo">${esc(t("Immagine", "Image"))}</div><div class="mu-ed-posti">${tessere2.map(([chiave2, nome]) => {
+    const via = `pagine.${i}.immagini.${chiave2}`;
+    const immagine2 = p.immagini?.[chiave2] || null;
+    const aperta2 = state116.tesseraAperta === via;
+    return `<div class="mu-ed-posto${immagine2 ? " pieno" : ""}" data-mu-ed-tessera-riga="${esc(chiave2)}"><div class="mu-ed-posto-testa"><b class="mu-ed-cosa">${esc(nome)}</b><button type="button" class="mu-ed-copia" data-mu-ed-tessera="${esc(via)}" aria-expanded="${aperta2}">🖼️ ${esc(t("Immagine", "Image"))}</button></div>${aperta2 ? `<div class="mu-ed-posto-corpo">${bloccoDellaVoce(via, { immagine: immagine2 }, nome, "#0ea5e9")}</div>` : ""}</div>`;
+  }).join("")}</div>`;
+}
 var ANTEPRIMA_DEL_FONDO = Object.freeze({ stato: "", acceso: false, destra: "", comandi: "", classi: "dm-rq-lettura" });
 var bloccoDellaVoce = (via, voce3, nome, accento = "#22c55e") => bloccoImmagineMarkup({ chiave: via, immagine: voce3?.immagine, nome, accento, anteprima: ANTEPRIMA_DEL_FONDO });
 function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
@@ -109292,6 +109362,14 @@ function sposta2(elenco15, da, a) {
 function onClick27(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva6() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
+  const tessera3 = event.target.closest("[data-mu-ed-tessera]");
+  if (tessera3) {
+    event.preventDefault();
+    const chiave2 = tessera3.dataset.muEdTessera;
+    state116.tesseraAperta = state116.tesseraAperta === chiave2 ? "" : chiave2;
+    ridisegna9();
+    return;
+  }
   const prova = event.target.closest("[data-mu-ed-prova]");
   if (prova) {
     event.preventDefault();
@@ -109423,6 +109501,19 @@ function onImmagine(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva6() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const via = String(event.detail?.chiave || "");
+  const tessera3 = /^pagine\.(\d+)\.immagini\.(.+)$/.exec(via);
+  if (tessera3) {
+    const m = structuredClone(bozza());
+    const pagina2 = m.pagine?.[Number(tessera3[1])];
+    if (!pagina2) return;
+    const immagini = { ...pagina2.immagini || {} };
+    if (event.detail?.immagine) immagini[tessera3[2]] = event.detail.immagine;
+    else delete immagini[tessera3[2]];
+    pagina2.immagini = immagini;
+    state116.bozza = muroPulito(m);
+    dopoUnaScritta();
+    return;
+  }
   if (!VIE_CON_IMMAGINE.test(via)) return;
   metti3(`${via}.immagine`, event.detail?.immagine || null);
   dopoUnaScritta();
@@ -125033,7 +125124,7 @@ function avvisiInPopupMarkup() {
     <input type="checkbox" data-widget-avvisi-popup${acceso6 ? " checked" : ""}>
   </label>`;
 }
-function tessereMarkup() {
+function tessereMarkup2() {
   const { hidden, rows } = tessereOrdinate();
   return `<div class="ed-intro">${t(
     "Scegli quali tessere vedere in Home e in che ordine. Le tessere degli avvisi — batterie, allagamenti e avvisi personalizzati — compaiono da sole solo quando hanno qualcosa da dire.",
@@ -125129,7 +125220,7 @@ function evidenzaMarkup() {
   <button type="button" class="ed-btn-add" data-evid-add>＋ ${t("Aggiungi entità", "Add entity")}</button>`;
 }
 function bodyMarkup6() {
-  return `${tessereMarkup()}
+  return `${tessereMarkup2()}
   ${evidenzaMarkup()}
   ${avvisiMarkup2()}`;
 }
