@@ -28,6 +28,7 @@ import '../casa/collegamento.dart';
 import '../notifiche/giornata.dart';
 import '../parole.dart';
 import '../ponte/errori.dart';
+import '../vestito/elettrodomestici.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/pezzi.dart';
 import '../vestito/tema.dart';
@@ -747,24 +748,6 @@ String _disegnoPer(String icona) {
   };
 }
 
-/// Il disegno di un consumatore, dal suo nome.
-String _disegnoDelConsumatore(String nome) {
-  final n = nome.toLowerCase();
-  if (RegExp('pompa|riscald|caldaia|stufa').hasMatch(n)) return 'caldaia';
-  if (RegExp('clima|condizion|split').hasMatch(n)) return 'clima';
-  if (RegExp('frigo|freezer|congelat').hasMatch(n)) return 'temperatura';
-  if (RegExp('auto|wallbox|ricarica|colonnin').hasMatch(n)) return 'ev';
-  if (RegExp('boiler|scaldabagno|acqua').hasMatch(n)) return 'scaldabagno';
-  if (RegExp('luc|lamp').hasMatch(n)) return 'luci';
-  if (RegExp('piscina').hasMatch(n)) return 'piscina';
-  if (RegExp(r'\bpc\b|server|nas|computer').hasMatch(n)) return 'minipc';
-  if (RegExp('lava|asciug|forno|piano|induzion|cucina|microonde|forno')
-      .hasMatch(n)) {
-    return 'elettrodomestici';
-  }
-  return 'prese';
-}
-
 /* ─── la testa ──────────────────────────────────────────────────────────── */
 
 class _LaTesta extends StatelessWidget {
@@ -1386,7 +1369,10 @@ class _ChiHaConsumato extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 28,
-                    child: Oggetto(_disegnoDelConsumatore(uno.nome), lato: 22),
+                    child: Elettrodomestico(
+                      tipoDellElettrodomestico(uno.nome),
+                      lato: 26,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(

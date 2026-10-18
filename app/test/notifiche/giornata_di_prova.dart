@@ -43,7 +43,6 @@ const Map<String, dynamic> giornataDiProva = {
   'record': 'mese',
   'batteria': {
     'caricata': 6.8,
-    'caricataDalSole': 1,
     'usata': 5.1,
     'massimo': 100,
     'massimoAlle': '14:40',
@@ -51,8 +50,9 @@ const Map<String, dynamic> giornataDiProva = {
     'capacita': 10,
   },
   'fasce': {
-    'nomi': {'0': 'F1 · giorno', '2': 'F3 · notte'},
-    'prezzi': {'0': 0.175, '2': 0.135},
+    'nomi': {'0': 'F1', '1': 'F2', '2': 'F3'},
+    'piuBassa': {'nome': 'F3', 'dalle': '23:00'},
+    'prezzi': {'F1': 0.175, 'F2': 0.155, 'F3': 0.135},
   },
   'domani': {
     'met': [

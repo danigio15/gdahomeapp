@@ -3,6 +3,8 @@
 /// e i tasti del riepilogo della sera.
 library;
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
@@ -108,6 +110,95 @@ void main() {
       final g = GiornataDellaCasa.leggi({'batteria': 58});
       expect(g.batteria!.stasera, 58);
       expect(g.batteria!.caricata, isNull);
+    });
+  });
+
+  /* Le forme esatte che manda il ponte, come JSON: euroCeduti, le fasce coi
+   * prezzi sotto il nome, la batteria come oggetto, domani col massimo e il
+   * consiglio. */
+  const comeLoManda = '''
+{
+  "giornata": {
+    "d": "2026-10-18", "sole": 18.4, "casa": 11.6, "presi": 3.1,
+    "ceduti": 4.8, "usato": 13.6, "quotaInCasa": 0.74, "euroRete": 0.52,
+    "euroCeduti": 0.38, "risparmio": 2.41, "picco": 4.9, "piccoIl": "13:10",
+    "p": [0, 10, 49, 20, 0], "c": [4, 8, 9, 22, 5],
+    "perFascia": {"0": 0.6, "2": 2.5}
+  },
+  "conSole": true,
+  "fasce": {
+    "nomi": {"0": "F1", "1": "F2", "2": "F3"},
+    "piuBassa": {"nome": "F3", "dalle": "23:00"},
+    "prezzi": {"F1": 0.175, "F3": 0.135}
+  },
+  "batteria": {
+    "caricata": 6.8, "usata": null, "massimo": 100, "massimoAlle": "14:40",
+    "stasera": 62, "capacita": null
+  },
+  "domani": {
+    "met": [["9", "sole"], ["15", "poco"]], "soleFino": "15:00",
+    "pioggia": false, "max": 21, "consiglio": "Lavatrice entro le 13."
+  }
+}''';
+
+  group('le forme del ponte', () {
+    test('si leggono come le manda', () {
+      final g = GiornataDellaCasa.leggi(jsonDecode(comeLoManda));
+      expect(g.energia!.euroCeduti, 0.38);
+      expect(g.fasce.nomi, {0: 'F1', 1: 'F2', 2: 'F3'});
+      expect(g.fasce.prezzi, {0: 0.175, 2: 0.135});
+      expect(g.batteria!.caricata, 6.8);
+      expect(g.batteria!.usata, isNull);
+      expect(g.batteria!.capacita, isNull);
+      expect(g.batteria!.massimoAlle, '14:40');
+      expect(g.domani!.massima, 21);
+      expect(g.domani!.consiglio, 'Lavatrice entro le 13.');
+      expect(g.domani!.soleFino, '15:00');
+    });
+
+    test('e i null non rompono niente', () {
+      final g = GiornataDellaCasa.leggi({
+        'giornata': {'d': '2026-10-18', 'euroCeduti': null},
+        'fasce': {
+          'nomi': {'0': 'F1'},
+          'piuBassa': null,
+          'prezzi': null,
+        },
+        'batteria': null,
+        'domani': null,
+      });
+      expect(g.energia!.euroCeduti, isNull);
+      expect(g.fasce.prezzi, isEmpty);
+      expect(g.batteria, isNull);
+      expect(g.domani, isNull);
+    });
+
+    testWidgets('a schermo: le tessere coi null non ci sono', (tester) async {
+      tester.view.physicalSize = const Size(412 * 3, 4000 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _inUnaPagina(
+          PaginaDellaGiornata(
+            giornata: GiornataDellaCasa.leggi(jsonDecode(comeLoManda)),
+            tuttaLunga: true,
+          ),
+        ),
+      );
+      /* La batteria: caricata, massimo, stasera; non usata, non capacita'. */
+      expect(find.text('CARICATA'), findsOneWidget);
+      expect(find.text('USATA'), findsNothing);
+      expect(find.text('100%'), findsOneWidget);
+      expect(find.text('alle 14:40'), findsOneWidget);
+      /* I ceduti in euro, coi kWh sotto. */
+      expect(find.text('+0,38 €'), findsOneWidget);
+      /* Le fasce coi prezzi: costo = kWh × prezzo. */
+      expect(find.text('0,175'), findsOneWidget);
+      expect(find.text('0,34 €'), findsOneWidget);
+      /* Domani: il massimo e il consiglio. */
+      expect(find.text('sole fino alle 15 · max 21°'), findsOneWidget);
+      expect(find.text('Lavatrice entro le 13.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 

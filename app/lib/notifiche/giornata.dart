@@ -217,22 +217,36 @@ class FasceDellaRete {
   final Map<int, String> nomi;
   final Map<int, double> prezzi;
 
+  /// `{nomi: {"0": "F1", …}, prezzi: {"F1": 0.175, …}}`: i prezzi stanno
+  /// sotto il **nome** della fascia (o, da un ponte che li scrive cosi',
+  /// sotto il suo indice). Una fascia senza nome e' «F» e il suo numero.
   static FasceDellaRete leggi(Object? grezzo) {
     final f = _mappa(grezzo);
-    final nomi = _mappa(f?['nomi']) ?? const {};
+    final scritti = _mappa(f?['nomi']) ?? const {};
     final prezzi = _mappa(f?['prezzi']) ?? const {};
-    return FasceDellaRete(
-      nomi: {
-        for (final MapEntry(:key, :value) in nomi.entries)
-          if (int.tryParse(key) case final i? when _testo(value) != null)
-            i: _testo(value)!,
-      },
-      prezzi: {
-        for (final MapEntry(:key, :value) in prezzi.entries)
-          if (int.tryParse(key) case final i? when _numero(value) != null)
-            i: _numero(value)!,
-      },
-    );
+    final nomi = <int, String>{
+      for (final MapEntry(:key, :value) in scritti.entries)
+        if (int.tryParse(key) case final i? when _testo(value) != null)
+          i: _testo(value)!,
+    };
+    final perIndice = <int, double>{};
+    for (final MapEntry(:key, :value) in prezzi.entries) {
+      final prezzo = _numero(value);
+      if (prezzo == null) continue;
+      if (int.tryParse(key) case final i?) {
+        perIndice[i] = prezzo;
+        continue;
+      }
+      for (final MapEntry(key: i, value: nome) in nomi.entries) {
+        if (nome == key) perIndice[i] = prezzo;
+      }
+      /* «F2» senza nomi: la fascia numero due, indice uno. */
+      if (RegExp(r'^F(\d)$').firstMatch(key) case final m?
+          when !nomi.containsValue(key)) {
+        perIndice.putIfAbsent(int.parse(m.group(1)!) - 1, () => prezzo);
+      }
+    }
+    return FasceDellaRete(nomi: nomi, prezzi: perIndice);
   }
 }
 
