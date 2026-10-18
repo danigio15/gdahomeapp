@@ -1774,7 +1774,7 @@ un errore, quante code ci sono sullo schermo.
 ## 1.7.0
 
 **GdAHome Premium esiste nel codice, e resta spento.** Fin qui era un progetto
-scritto (`docs/LICENZE.md`) e niente altro: nessun file delle licenze, il
+scritto e niente altro: nessun file delle licenze, il
 centralino che non chiudeva nessuno, e nell'app la parola «premium» in un posto
 solo — per dire che Premium non c'era. Adesso c'è tutto: il quadro che rilascia
 i gettoni firmati e controlla le ricevute con Google e Apple, l'add-on che tiene
@@ -1821,8 +1821,7 @@ repository è pubblica e deve restarlo — è lei l'archivio di add-on che Home
 Assistant legge — quindi una credenziale che ci entra è pubblica per sempre:
 cancellarla dopo non la toglie dal commit di prima. Adesso c'è un guardiano fra
 le Prove (`npm run check:segreti`) che guarda i file tracciati e cerca le forme
-il cui incontro è sempre una perdita vera. Il conto di cosa è davvero aperto, e
-cosa lo protegge, sta in `docs/BLINDATURA.md`.
+il cui incontro è sempre una perdita vera.
 
 ## 1.6.11
 

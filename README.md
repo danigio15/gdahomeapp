@@ -439,6 +439,3 @@ nella propria attività; non si ripubblica, non si rivende e non si aggira
 Premium. Chi installa per i clienti lo fa con l'autorizzazione di CRV
 Immobiliare S.r.l.
 
----
-
-<sub>Per chi sviluppa: [`docs/SVILUPPO.md`](docs/SVILUPPO.md).</sub>

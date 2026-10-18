@@ -38,7 +38,7 @@ export const DOVE_STA_IL_CHANGELOG = join("ponte", "CHANGELOG.md");
  * prova. */
 export const COME_SI_PRENDE = `**L'add-on si aggiorna da se'**: Impostazioni → Add-on → GdAHome, e c'e' il
 tasto. Chi non ce l'ha ancora lo trova nel negozio degli add-on aggiungendo
-questa repository fra gli Archivi; COME_PROVARLA.md lo spiega per intero.
+questa repository fra gli Archivi; il README lo spiega per intero.
 
 **L'app arriva dal Play Store.** Qui il pacchetto non c'e', ed e' voluto:
 quello firmato da noi e quello firmato da Google non si installano uno sopra
