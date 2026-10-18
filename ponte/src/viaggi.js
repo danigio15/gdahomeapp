@@ -375,11 +375,10 @@ export function tastiDellAvviso(garage) {
         {
           id: "garage",
           parole: { it: "Apri il garage", en: "Open the garage" },
-          servizio: {
-            domain: "cover",
-            service: "open_cover",
-            service_data: { entity_id: garage.entity },
-          },
+          /* Nella forma dei tasti delle notifiche (`notifiche.js`, `_unTasto`):
+           * `cover.open_cover` e' fra i servizi che un tasto puo' chiamare, e
+           * l'entita' e' una copertura (`viaggioPulito`). */
+          servizio: { dominio: "cover", servizio: "open_cover", entita: [garage.entity] },
         },
       ]
     : [];
