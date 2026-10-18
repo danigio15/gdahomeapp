@@ -130,7 +130,8 @@ test("da schermo largo il nome ci sta e le tessere riempiono la riga", async () 
    * Stanze mostra le stesse, e il foglio deve valere anche li'. */
   assert.match(desktop[0], /:is\(#page-luci,#page-stanze,#page-prese\) \.dm-lucip-grid\{display:flex;flex-wrap:wrap\}/);
   // Il tetto serve: una stanza con una luce sola non diventa un cartellone.
-  assert.match(desktop[0], /:is\(#page-luci,#page-stanze,#page-prese\) \.dm-lucip-card\{flex:1 1 306px;max-width:396px\}/);
+  /* La card con l'immagine (`.dm-lucip-rq`) sta nella fila con le stesse misure. */
+  assert.match(desktop[0], /:is\(#page-luci,#page-stanze,#page-prese\) :is\(\.dm-lucip-card,\.dm-lucip-rq\)\{flex:1 1 306px;max-width:396px\}/);
   /* Il comando della stanza stava all'altro capo dello schermo, a un metro dal
    * conteggio che lo riguarda: da schermo largo torna accanto al suo. */
   assert.match(desktop[0], /\.dm-lucip-room-btn\{order:0\}/);

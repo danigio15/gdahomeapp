@@ -86,6 +86,11 @@ const RIGHE_DEL_VARCO = 8;
 const RIGHE_DEL_MOVIMENTO = 7;
 
 const W = 360;
+/* Le etichette dell'asse (10px, grassetto), in unita' del viewBox: quanto e'
+ * larga una lettera (misurata: «ieri 14:38» ne prende una quarantina), e
+ * mezza etichetta «00:00» con lo spazio fra due etichette. */
+const LETTERA = 4.4;
+const MEZZA_TACCA = 16;
 
 /* ── chi è il sensore ─────────────────────────────────────────────────── */
 
@@ -421,9 +426,19 @@ function asse(finestra, modo, y) {
   const inizio =
     modo === "ieri" ? "00:00" : `${t("ieri", "yesterday")} ${orario(finestra.start)}`;
   const fine = modo === "ieri" ? "24:00" : t("adesso", "now");
+  /* Quanto tempo coprono le etichette dei due capi, piu' mezza etichetta di
+   * una tacca e un respiro. Il testo sta nello stesso viewBox della striscia,
+   * quindi la misura in unita' del disegno vale a ogni larghezza. «ieri
+   * 14:38» copriva da sola tre ore e mezza, e la tacca delle 18 ci finiva
+   * sopra; «adesso» si mangiava le 12. */
+  const perUnita = (finestra.end - finestra.start) / W;
+  const coperto = (parola) => (String(parola).length * LETTERA + MEZZA_TACCA) * perUnita;
   return [
     tacca(finestra.start, inizio, "start"),
-    ...tacche(finestra.start, finestra.end).map((ms) => tacca(ms, orario(ms), "middle")),
+    ...tacche(finestra.start, finestra.end, {
+      margineInizio: coperto(inizio),
+      margineFine: coperto(fine),
+    }).map((ms) => tacca(ms, orario(ms), "middle")),
     tacca(finestra.end, fine, "end"),
   ].join("");
 }

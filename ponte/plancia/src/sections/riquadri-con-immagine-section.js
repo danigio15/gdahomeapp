@@ -116,6 +116,29 @@ html body .dev-card.dm-rq{padding:0;border:0;aspect-ratio:1;background:#0b1220}
 html body .dev-card.dm-rq.on,html body.dark-theme .dev-card.dm-rq.on{background:#0b1220;border:0}
 html body .dev-card.dm-rq .dm-rq-stato .dev-st{font-size:inherit;letter-spacing:inherit;color:inherit;font-weight:inherit}
 html body .dev-card.dm-rq .dm-rq-stato .dev-val{font:inherit;color:inherit;margin:0}
+/* Lo stato e la lettura su due righe: in una sola la wallbox diceva
+ * «IN FUNZI… · 4,20 KW · 7…», e non si leggeva ne' l'uno ne' l'altra. */
+html body .dev-card.dm-rq .dm-rq-stato{flex-wrap:wrap;row-gap:2px}
+html body .dev-card.dm-rq .dm-rq-stato>.dev-val{flex:1 0 100%;padding-left:13px;text-transform:none;letter-spacing:.02em}
+html body .dev-card.dm-rq .dm-rq-stato>.dev-val::before{content:none}
+
+/* I Dispositivi SENZA immagine, accesi, col tema scuro.
+ *
+ * Il guscio veste la card accesa d'azzurro chiaro (#e0f2fe → #bae6fd), e la
+ * versione notturna l'ha scritta sotto «body.dark-theme»: una classe che
+ * nessuno mette piu', perche' il tema scuro della plancia e'
+ * «html[data-theme="dark"]». Cosi' la card accesa restava azzurro chiaro
+ * anche al buio, col nome in «var(--text)» — quasi bianco — sopra: «Luce
+ * scale» non si leggeva. Qui la card accesa al buio fa come le altre card
+ * accese della plancia (le luci, le prese): il fondo scuro della carta con
+ * l'alone del colore della sezione, il bordo acceso, il testo chiaro. Col tema
+ * chiaro non cambia niente: queste righe vivono solo sotto l'attributo. */
+html[data-theme="dark"] .dev-card.on:not(.dm-rq){border-color:color-mix(in srgb,#0ea5e9 60%,transparent);
+  background:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,#0ea5e9 26%,transparent) 0%,transparent 62%),linear-gradient(150deg,color-mix(in srgb,#0ea5e9 16%,var(--card-bg,#141e34)),var(--card-bg,#141e34) 62%);
+  box-shadow:0 0 0 1px color-mix(in srgb,#0ea5e9 22%,transparent),0 14px 30px -16px color-mix(in srgb,#0ea5e9 60%,transparent)}
+html[data-theme="dark"] .dev-card.on:not(.dm-rq) .dev-nm,html[data-theme="dark"] .dev-card.on:not(.dm-rq) .dev-val{color:var(--text,#e6edf7)}
+html[data-theme="dark"] .dev-card.on:not(.dm-rq) .dev-st{color:#7dd3fc}
+html[data-theme="dark"] .dev-card.on:not(.dm-rq) .dev-pwr{background:rgba(14,165,233,.2);color:#7dd3fc;box-shadow:inset 0 0 0 1px rgba(125,211,252,.35)}
 
 /* Le prese con l'immagine: larghe come le altre card della griglia, e alte
  * abbastanza per la foto. Non portano la classe della card delle luci: il suo
@@ -123,7 +146,6 @@ html body .dev-card.dm-rq .dm-rq-stato .dev-val{font:inherit;color:inherit;margi
  * mette un altro. */
 .dm-rq.dm-lucip-rq{display:block;width:100%;aspect-ratio:16/9;min-height:150px}
 .dm-rq.dm-lucip-rq[data-dm-lucip-available="false"]{opacity:.55}
-
 /* ── il blocco «Immagine» degli editor ── */
 .dm-rqi{--rqi-bordo:var(--divider-color,#dbe4ee);--rqi-carta:var(--card-bg,var(--card-background-color,#fff));--rqi-testo:var(--text,var(--primary-text-color,#0f172a));--rqi-tenue:var(--text-dim,var(--secondary-text-color,#64748b));
   grid-column:1/-1;min-width:0;max-width:100%;display:grid;gap:12px;margin:10px 0 4px;padding:14px;border-radius:18px;border:1px solid var(--rqi-bordo);color:var(--rqi-testo);

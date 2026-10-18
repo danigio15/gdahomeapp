@@ -308,14 +308,20 @@ export function quieteDellaNotte(
 /**
  * Le tacche dell'asse: ogni sei ore dell'orologio (00, 06, 12, 18) dentro il
  * periodo, lontane almeno `margine` dai due capi, dove stanno già le
- * etichette dell'inizio e della fine.
+ * etichette dell'inizio e della fine. I due capi possono chiedere margini
+ * diversi (`margineInizio`, `margineFine`): «ieri 14:38» e' lunga il doppio
+ * di «adesso», e con lo stesso margine la tacca delle 18 ci finiva sopra.
  */
-export function tacche(start, end, { passo = 6, margine = 75 * UN_MINUTO } = {}) {
+export function tacche(
+  start,
+  end,
+  { passo = 6, margine = 75 * UN_MINUTO, margineInizio = margine, margineFine = margine } = {},
+) {
   const fuori = [];
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return fuori;
   for (let ora = inizioDellOra(start); ora <= end; ora = oraDopo(ora)) {
     if (new Date(ora).getHours() % passo !== 0) continue;
-    if (ora - start < margine || end - ora < margine) continue;
+    if (ora - start < margineInizio || end - ora < margineFine) continue;
     fuori.push(ora);
   }
   return fuori;

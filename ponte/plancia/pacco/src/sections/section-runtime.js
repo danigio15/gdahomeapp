@@ -552,7 +552,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-VEVDCCWP.js";
+} from "../../chunk-U6RFEAOI.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -27527,6 +27527,10 @@ function installStyles6() {
       overflow:hidden!important
     }
     html[data-theme="dark"] .dm-page-mast{box-shadow:0 18px 44px rgba(0,0,0,.42)!important}
+    /* Il titolo delle Prese e' color ardesia (#475569): sul chiaro si legge,
+     * sul fondo scuro della testata stava a 2,3 di contrasto, un'ombra.
+     * Al buio prende l'ardesia chiara. */
+    html[data-theme="dark"] .dm-page-mast[data-dm-page-mast="page-prese"] .dm-page-mast-title{color:#cbd5e1!important}
     .dm-page-mast::after{
       content:""!important;position:absolute!important;inset:auto 0 0 0!important;height:2px!important;
       background:linear-gradient(90deg,
@@ -56085,12 +56089,12 @@ function quieteDellaNotte(movimenti, { start, end, mezzanotte: mezzanotte3 = nul
   }
   return migliore;
 }
-function tacche(start, end, { passo = 6, margine = 75 * UN_MINUTO2 } = {}) {
+function tacche(start, end, { passo = 6, margine = 75 * UN_MINUTO2, margineInizio = margine, margineFine = margine } = {}) {
   const fuori = [];
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return fuori;
   for (let ora5 = inizioDellOra(start); ora5 <= end; ora5 = oraDopo(ora5)) {
     if (new Date(ora5).getHours() % passo !== 0) continue;
-    if (ora5 - start < margine || end - ora5 < margine) continue;
+    if (ora5 - start < margineInizio || end - ora5 < margineFine) continue;
     fuori.push(ora5);
   }
   return fuori;
@@ -56156,6 +56160,8 @@ var ATTRIBUTO = "data-dm-ultime";
 var RIGHE_DEL_VARCO = 8;
 var RIGHE_DEL_MOVIMENTO = 7;
 var W = 360;
+var LETTERA = 4.4;
+var MEZZA_TACCA = 16;
 function invertiti() {
   return insiemeInvertiti(readJson(CHIAVE_VERSI, {}));
 }
@@ -56412,9 +56418,14 @@ function asse(finestra6, modo, y) {
     <text x="${x(ms).toFixed(1)}" y="${y + 12}" text-anchor="${ancora2}" class="dm-ur-asse">${esc(parola)}</text>`;
   const inizio = modo === "ieri" ? "00:00" : `${t("ieri", "yesterday")} ${orario2(finestra6.start)}`;
   const fine = modo === "ieri" ? "24:00" : t("adesso", "now");
+  const perUnita = (finestra6.end - finestra6.start) / W;
+  const coperto = (parola) => (String(parola).length * LETTERA + MEZZA_TACCA) * perUnita;
   return [
     tacca(finestra6.start, inizio, "start"),
-    ...tacche(finestra6.start, finestra6.end).map((ms) => tacca(ms, orario2(ms), "middle")),
+    ...tacche(finestra6.start, finestra6.end, {
+      margineInizio: coperto(inizio),
+      margineFine: coperto(fine)
+    }).map((ms) => tacca(ms, orario2(ms), "middle")),
     tacca(finestra6.end, fine, "end")
   ].join("");
 }

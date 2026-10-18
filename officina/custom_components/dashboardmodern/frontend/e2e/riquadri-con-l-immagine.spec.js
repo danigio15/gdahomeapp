@@ -90,6 +90,47 @@ test.describe("i riquadri con l'immagine", () => {
       .toEqual(["light.toggle"]);
   });
 
+  test("Prese da schermo largo: la card con l'immagine sta nella fila come le altre", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "la fila larga e' del computer");
+    await apriLaCasaAMuro(page, testInfo, { premium: false, muro: null, stati: STATI });
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "cd_prese",
+        JSON.stringify([
+          {
+            id: "p1",
+            name: "TV",
+            entity: "switch.tv",
+            icon: "📺",
+            room_id: "",
+            immagine: { src: "disegno:tv" },
+          },
+          { id: "p2", name: "Modem", entity: "switch.modem", icon: "📡", room_id: "" },
+        ]),
+      );
+      const stati = eval("_RAW_STATES");
+      for (const id of ["switch.tv", "switch.modem"])
+        stati[id] = { entity_id: id, state: "on", attributes: {} };
+      window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
+    });
+    await page.locator('.tab[data-tab="prese"]').evaluate((nodo) => nodo.click());
+    const conImmagine = page.locator('#page-prese .dm-rq[data-dm-lucip="switch.tv"]');
+    const senza = page.locator('#page-prese .dm-lucip-card[data-dm-lucip="switch.modem"]');
+    await expect(conImmagine).toBeVisible({ timeout: 20_000 });
+    await expect(senza).toBeVisible();
+    /* Prima prendeva la fila intera: 1400 px di cartellone 16:9. Si misura
+     * finche' il disegno della pagina non si e' fermato. */
+    await expect
+      .poll(async () => {
+        const larga = (await conImmagine.boundingBox())?.width ?? 0;
+        const altra = (await senza.boundingBox())?.width ?? 0;
+        return larga > 0 && larga <= 400 && Math.abs(larga - altra) < 2;
+      })
+      .toBe(true);
+  });
+
   test("Dispositivi: si sceglie un disegno nella Home del config, e la card lo mostra", async ({
     page,
   }, testInfo) => {
