@@ -108,8 +108,8 @@ export default Object.freeze({
     "Wybierz cel i godzinę: powiem ci, kiedy wyjechać.",
   "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
     "Planuj podróże stąd i znajdź je w telefonie, CarPlay i Android Auto, z przypomnieniem o wyjeździe i wcześniej włączoną klimatyzacją auta. Odblokuj w aplikacji GdAHome, na stronie Premium.",
-  "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
-    "Planuj podróże stąd: znajdziesz je w gdanav w telefonie, CarPlay i Android Auto.",
+  "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.":
+    "Planuj podróże stąd: znajdziesz je w GdANav w telefonie, CarPlay i Android Auto.",
   "Planned trips": "Zaplanowane podróże",
   "Read-only: they do not count in the home average":
     "Tylko do odczytu: nie wliczają się do średniej domu",
@@ -118,7 +118,7 @@ export default Object.freeze({
   "The destination is missing.": "Brakuje celu.",
   "The garage": "Garaż",
   "The home is not answering: try again shortly.": "Dom nie odpowiada: spróbuj za chwilę.",
-  "The planner is part of gdanav Premium": "Planer jest częścią gdanav Premium",
+  "The planner is part of GdANav Premium": "Planer jest częścią GdANav Premium",
   "The route": "Trasa",
   "The trip was not saved: check destination, day and time.":
     "Podróż nie została zapisana: sprawdź cel, dzień i godzinę.",
@@ -151,13 +151,13 @@ export default Object.freeze({
     "I jeszcze jedna, która nie mieści się na tej liście.",
   Upcoming: "Nadchodzące",
   "Where to?": "Dokąd?",
-  "With traffic, estimated by gdanav": "Z ruchem, oszacowane przez gdanav",
-  "Without traffic, with a margin: gdanav recalculates with live traffic until you leave":
-    "Bez ruchu, z zapasem: gdanav przelicza z bieżącym ruchem aż do wyjazdu",
+  "With traffic, estimated by GdANav": "Z ruchem, oszacowane przez GdANav",
+  "Without traffic, with a margin: GdANav recalculates with live traffic until you leave":
+    "Bez ruchu, z zapasem: GdANav przelicza z bieżącym ruchem aż do wyjazdu",
   "You already have 50 trips: remove some.": "Masz już 50 podróży: usuń kilka.",
   "You arrive around": "Dotrzesz około",
-  "You find it right away in gdanav, on the phone and in the car.":
-    "Od razu znajdziesz ją w gdanav, w telefonie i w aucie.",
+  "You find it right away in GdANav, on the phone and in the car.":
+    "Od razu znajdziesz ją w GdANav, w telefonie i w aucie.",
   "appliance running": "urządzenie pracuje",
   Back: "Wstecz",
   "Choose the climate entity: it is the one starting with climate.":
@@ -317,8 +317,8 @@ export default Object.freeze({
   "for ${minuti} min": "od ${minuti} min",
   "for ${ore} h": "od ${ore} godz",
   "from before": "sprzed",
-  gdanav: "gdanav",
-  "gdanav Premium is needed.": "Potrzebny jest gdanav Premium.",
+  GdANav: "GdANav",
+  "GdANav Premium is needed.": "Potrzebny jest GdANav Premium.",
   "included here: the counter had already made them before its statistics began":
     "wliczone tutaj: licznik zarejestrował je, zanim zaczęły się jego statystyki",
   "leave at": "wyjazd o",
@@ -6143,7 +6143,7 @@ export default Object.freeze({
   "at departure ${via}": "przy wyjeździe ${via}",
   "Car battery: ${ora}": "Bateria auta: ${ora}",
   "Chargers": "Ładowarki",
-  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.": "Ładowarki: © OpenStreetMap i Piattaforma Unica Nazionale, w domu. W drodze gdanav sprawdza, czy są wolne, i w razie potrzeby zmienia postój.",
+  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.": "Ładowarki: © OpenStreetMap i Piattaforma Unica Nazionale, w domu. W drodze GdANav sprawdza, czy są wolne, i w razie potrzeby zmienia postój.",
   "Charging at home · ${fino} at ${ora}": "Ładuje się w domu · ${fino} o ${ora}",
   "Charging stops": "Postoje na ładowanie",
   "Charging: ${minuti} in ${n} stops": "Ładowanie: ${minuti}, postoje: ${n}",
@@ -6155,7 +6155,7 @@ export default Object.freeze({
   "from ${da} to ${a} · ${min} min": "z ${da} do ${a} · ${min} min",
   "From ${n} kW": "Od ${n} kW",
   "Full": "Pełna",
-  "gdanav picks the charger on the way": "gdanav wybiera ładowarkę w drodze",
+  "GdANav picks the charger on the way": "GdANav wybiera ładowarkę w drodze",
   "leave": "wyjazd",
   "leave ${alle}": "dalej ${alle}",
   "Minimum charge on arrival": "Minimalne naładowanie na miejscu",
@@ -6167,9 +6167,9 @@ export default Object.freeze({
   "range": "zasięg",
   "Stop ${n} · after ${km} km": "Postój ${n} · po ${km} km",
   "Stop around km ${km} · about ${min} min": "Postój w okolicy ${km} km · ok. ${min} min",
-  "Stops picked by gdanav on the way, with free chargers.": "Postoje wybrane przez gdanav w drodze, z wolnymi ładowarkami.",
+  "Stops picked by GdANav on the way, with free chargers.": "Postoje wybrane przez GdANav w drodze, z wolnymi ładowarkami.",
   "The battery is not answering": "Bateria nie odpowiada",
-  "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.": "Ładowarek nie ma jeszcze w domu: postoje według kilometrów. W drodze gdanav wybiera ładowarki i sprawdza, czy są wolne.",
+  "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "Ładowarek nie ma jeszcze w domu: postoje według kilometrów. W drodze GdANav wybiera ładowarki i sprawdza, czy są wolne.",
   "The electric car's battery and range, and the charging stops if it is not enough.": "Bateria i zasięg auta elektrycznego oraz postoje na ładowanie, jeśli nie wystarczy.",
   "The minimum power to stop at": "Minimalna moc, by się zatrzymać",
   "The stops come with the route": "Postoje przyjdą razem z trasą",

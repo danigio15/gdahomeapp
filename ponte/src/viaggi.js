@@ -858,7 +858,7 @@ export class Viaggi {
       viaggio.quando.modo === "arrivo"
         ? `arrive by ${viaggio.quando.ora}`
         : `leave at ${oraDetta(volta.partenza)}`;
-    const senzaStima = volta.stimata ? "" : " Apri gdanav per il tempo col traffico.";
+    const senzaStima = volta.stimata ? "" : " Apri GdANav per il tempo col traffico.";
     const garage = viaggio.prepara.garage;
     try {
       await this.notifiche.consegna({

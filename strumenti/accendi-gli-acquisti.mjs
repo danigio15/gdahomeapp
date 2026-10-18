@@ -209,8 +209,8 @@ function racconta(come, gdanav) {
   righe.push("");
   righe.push(
     gdanav
-      ? `gdanav e' qui accanto (${gdanav}): si aggiorna nello stesso giro.`
-      : "gdanav non e' qui accanto: la stessa chiave va rimessa li' a mano, con\n    `node strumenti/chiave-licenze.mjs --pubblica <la chiave> --gdanav <dove sta>`.",
+      ? `GdANav e' qui accanto (${gdanav}): si aggiorna nello stesso giro.`
+      : "GdANav non e' qui accanto: la stessa chiave va rimessa li' a mano, con\n    `node strumenti/chiave-licenze.mjs --pubblica <la chiave> --gdanav <dove sta>`.",
   );
   return righe.join("\n");
 }

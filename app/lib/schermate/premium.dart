@@ -928,7 +928,7 @@ List<(IconData, String, String)> _funzioni(bool sulWeb) {
     ),
     (
       Icons.navigation_outlined,
-      inLingua(it: 'gdanav Premium compreso', en: 'gdanav Premium included'),
+      inLingua(it: 'GdANav Premium compreso', en: 'GdANav Premium included'),
       inLingua(
         it: '$auto, soste alle colonnine, Home Assistant',
         en: '$auto, charging stops, Home Assistant',

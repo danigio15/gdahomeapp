@@ -108,8 +108,8 @@ export default Object.freeze({
     "Hedefi ve saati seç: ne zaman çıkman gerektiğini söyleyeyim.",
   "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
     "Yolculukları buradan planla; telefonda, CarPlay ve Android Auto'da bul. Çıkış hatırlatması ve önceden açılan araç kliması ile. GdAHome uygulamasında Premium sayfasından aç.",
-  "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
-    "Yolculukları buradan planla: gdanav'da telefonda, CarPlay ve Android Auto'da bulursun.",
+  "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.":
+    "Yolculukları buradan planla: GdANav'da telefonda, CarPlay ve Android Auto'da bulursun.",
   "Planned trips": "Planlanmış yolculuklar",
   "Read-only: they do not count in the home average":
     "Yalnızca okunur: evin ortalamasına dahil edilmez",
@@ -118,7 +118,7 @@ export default Object.freeze({
   "The destination is missing.": "Hedef eksik.",
   "The garage": "Garaj",
   "The home is not answering: try again shortly.": "Ev yanıt vermiyor: birazdan tekrar dene.",
-  "The planner is part of gdanav Premium": "Planlayıcı gdanav Premium'un parçasıdır",
+  "The planner is part of GdANav Premium": "Planlayıcı GdANav Premium'un parçasıdır",
   "The route": "Rota",
   "The trip was not saved: check destination, day and time.":
     "Yolculuk kaydedilmedi: hedefi, günü ve saati kontrol et.",
@@ -150,13 +150,13 @@ export default Object.freeze({
   "And one more that does not fit this list.": "Ve bu listeye sığmayan bir tane daha var.",
   Upcoming: "Yaklaşan",
   "Where to?": "Nereye?",
-  "With traffic, estimated by gdanav": "Trafikle, gdanav tahmini",
-  "Without traffic, with a margin: gdanav recalculates with live traffic until you leave":
-    "Trafiksiz, paylı: gdanav çıkışa kadar canlı trafikle yeniden hesaplar",
+  "With traffic, estimated by GdANav": "Trafikle, GdANav tahmini",
+  "Without traffic, with a margin: GdANav recalculates with live traffic until you leave":
+    "Trafiksiz, paylı: GdANav çıkışa kadar canlı trafikle yeniden hesaplar",
   "You already have 50 trips: remove some.": "Zaten 50 yolculuğun var: bazılarını sil.",
   "You arrive around": "Varış saati yaklaşık",
-  "You find it right away in gdanav, on the phone and in the car.":
-    "Hemen gdanav'da, telefonda ve araçta bulursun.",
+  "You find it right away in GdANav, on the phone and in the car.":
+    "Hemen GdANav'da, telefonda ve araçta bulursun.",
   "appliance running": "cihaz çalışıyor",
   Back: "Geri",
   "Choose the climate entity: it is the one starting with climate.":
@@ -316,8 +316,8 @@ export default Object.freeze({
   "for ${minuti} min": "${minuti} dakikadır",
   "for ${ore} h": "${ore} saattir",
   "from before": "şundan önce",
-  gdanav: "gdanav",
-  "gdanav Premium is needed.": "gdanav Premium gerekli.",
+  GdANav: "GdANav",
+  "GdANav Premium is needed.": "GdANav Premium gerekli.",
   "included here: the counter had already made them before its statistics began":
     "buraya dahil: sayaç bunları istatistikleri başlamadan önce saymıştı",
   "leave at": "çıkış",
@@ -6121,7 +6121,7 @@ export default Object.freeze({
   "at departure ${via}": "kalkışta ${via}",
   "Car battery: ${ora}": "Araç bataryası: ${ora}",
   "Chargers": "Şarj istasyonları",
-  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.": "Şarj istasyonları: © OpenStreetMap ve Piattaforma Unica Nazionale, evde. Yolda gdanav boş olup olmadıklarına bakar ve gerekirse molayı değiştirir.",
+  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.": "Şarj istasyonları: © OpenStreetMap ve Piattaforma Unica Nazionale, evde. Yolda GdANav boş olup olmadıklarına bakar ve gerekirse molayı değiştirir.",
   "Charging at home · ${fino} at ${ora}": "Evde şarj oluyor · ${fino}, saat ${ora}",
   "Charging stops": "Şarj molaları",
   "Charging: ${minuti} in ${n} stops": "Şarj: ${minuti}, ${n} molada",
@@ -6133,7 +6133,7 @@ export default Object.freeze({
   "from ${da} to ${a} · ${min} min": "${da} → ${a} · ${min} dk",
   "From ${n} kW": "${n} kW ve üzeri",
   "Full": "Dolu",
-  "gdanav picks the charger on the way": "Şarj istasyonunu gdanav yolda seçer",
+  "GdANav picks the charger on the way": "Şarj istasyonunu GdANav yolda seçer",
   "leave": "kalkış",
   "leave ${alle}": "yeniden yola: ${alle}",
   "Minimum charge on arrival": "Varışta en az şarj",
@@ -6145,9 +6145,9 @@ export default Object.freeze({
   "range": "menzil",
   "Stop ${n} · after ${km} km": "Mola ${n} · ${km} km sonra",
   "Stop around km ${km} · about ${min} min": "Yaklaşık ${km}. km'de mola · yaklaşık ${min} dk",
-  "Stops picked by gdanav on the way, with free chargers.": "Molaları gdanav yolda, boş istasyonlarla seçti.",
+  "Stops picked by GdANav on the way, with free chargers.": "Molaları GdANav yolda, boş istasyonlarla seçti.",
   "The battery is not answering": "Batarya yanıt vermiyor",
-  "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.": "Şarj istasyonları henüz evde değil: molalar kilometreye göre. Yolda gdanav istasyonları seçer ve boş olup olmadıklarına bakar.",
+  "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "Şarj istasyonları henüz evde değil: molalar kilometreye göre. Yolda GdANav istasyonları seçer ve boş olup olmadıklarına bakar.",
   "The electric car's battery and range, and the charging stops if it is not enough.": "Elektrikli aracın bataryası ve menzili, yetmezse şarj molaları.",
   "The minimum power to stop at": "Durmak için en düşük güç",
   "The stops come with the route": "Molalar rotayla birlikte gelir",

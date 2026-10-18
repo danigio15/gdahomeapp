@@ -108,8 +108,8 @@ export default Object.freeze({
     "Escolhe o destino e a hora: eu digo-te quando partir.",
   "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
     "Planeia viagens daqui e encontra-as no telemóvel, CarPlay e Android Auto, com aviso para partir e o clima do carro ligado antes. Desbloqueia na app GdAHome, na página Premium.",
-  "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
-    "Planeia viagens daqui: encontras no gdanav no telemóvel, CarPlay e Android Auto.",
+  "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.":
+    "Planeia viagens daqui: encontras no GdANav no telemóvel, CarPlay e Android Auto.",
   "Planned trips": "Viagens planeadas",
   "Read-only: they do not count in the home average": "Só se leem: não contam na média da casa",
   "Remind me": "Avisa-me",
@@ -118,7 +118,7 @@ export default Object.freeze({
   "The garage": "A garagem",
   "The home is not answering: try again shortly.":
     "A casa não responde: tenta de novo daqui a pouco.",
-  "The planner is part of gdanav Premium": "O planeador faz parte do gdanav Premium",
+  "The planner is part of GdANav Premium": "O planeador faz parte do GdANav Premium",
   "The route": "O percurso",
   "The trip was not saved: check destination, day and time.":
     "A viagem não foi guardada: verifica o destino, o dia e a hora.",
@@ -149,13 +149,13 @@ export default Object.freeze({
   "And one more that does not fit this list.": "E mais uma que não cabe nesta lista.",
   Upcoming: "Próximas",
   "Where to?": "Para onde vais?",
-  "With traffic, estimated by gdanav": "Com trânsito, estimado pelo gdanav",
-  "Without traffic, with a margin: gdanav recalculates with live traffic until you leave":
-    "Sem trânsito, com margem: o gdanav recalcula com o trânsito real até partires",
+  "With traffic, estimated by GdANav": "Com trânsito, estimado pelo GdANav",
+  "Without traffic, with a margin: GdANav recalculates with live traffic until you leave":
+    "Sem trânsito, com margem: o GdANav recalcula com o trânsito real até partires",
   "You already have 50 trips: remove some.": "Já tens 50 viagens: elimina algumas.",
   "You arrive around": "Chegas por volta das",
-  "You find it right away in gdanav, on the phone and in the car.":
-    "Encontras logo no gdanav, no telemóvel e no carro.",
+  "You find it right away in GdANav, on the phone and in the car.":
+    "Encontras logo no GdANav, no telemóvel e no carro.",
   "appliance running": "eletrodoméstico a funcionar",
   Back: "Voltar",
   "Choose the climate entity: it is the one starting with climate.":
@@ -315,8 +315,8 @@ export default Object.freeze({
   "for ${minuti} min": "há ${minuti} min",
   "for ${ore} h": "há ${ore} h",
   "from before": "desde antes de",
-  gdanav: "gdanav",
-  "gdanav Premium is needed.": "É preciso o gdanav Premium.",
+  GdANav: "GdANav",
+  "GdANav Premium is needed.": "É preciso o GdANav Premium.",
   "included here: the counter had already made them before its statistics began":
     "incluídos aqui: o contador já os tinha registado antes de começarem as suas estatísticas",
   "leave at": "partida às",
@@ -6147,7 +6147,7 @@ export default Object.freeze({
   "at departure ${via}": "à partida ${via}",
   "Car battery: ${ora}": "Bateria do carro: ${ora}",
   "Chargers": "Carregadores",
-  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.": "Carregadores: © OpenStreetMap e Piattaforma Unica Nazionale, em casa. Na estrada o gdanav verifica se estão livres e, se for preciso, muda a paragem.",
+  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.": "Carregadores: © OpenStreetMap e Piattaforma Unica Nazionale, em casa. Na estrada o GdANav verifica se estão livres e, se for preciso, muda a paragem.",
   "Charging at home · ${fino} at ${ora}": "A carregar em casa · ${fino} às ${ora}",
   "Charging stops": "Paragens de carregamento",
   "Charging: ${minuti} in ${n} stops": "Carregamento: ${minuti} em ${n} paragens",
@@ -6159,7 +6159,7 @@ export default Object.freeze({
   "from ${da} to ${a} · ${min} min": "de ${da} a ${a} · ${min} min",
   "From ${n} kW": "A partir de ${n} kW",
   "Full": "Cheia",
-  "gdanav picks the charger on the way": "O gdanav escolhe o carregador na estrada",
+  "GdANav picks the charger on the way": "O GdANav escolhe o carregador na estrada",
   "leave": "partes",
   "leave ${alle}": "partes ${alle}",
   "Minimum charge on arrival": "Carga mínima à chegada",
@@ -6171,9 +6171,9 @@ export default Object.freeze({
   "range": "autonomia",
   "Stop ${n} · after ${km} km": "Paragem ${n} · após ${km} km",
   "Stop around km ${km} · about ${min} min": "Paragem perto do km ${km} · cerca de ${min} min",
-  "Stops picked by gdanav on the way, with free chargers.": "Paragens escolhidas pelo gdanav na estrada, com carregadores livres.",
+  "Stops picked by GdANav on the way, with free chargers.": "Paragens escolhidas pelo GdANav na estrada, com carregadores livres.",
   "The battery is not answering": "A bateria não responde",
-  "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.": "Os carregadores ainda não estão em casa: paragens por quilómetro. Na estrada o gdanav escolhe os carregadores e verifica se estão livres.",
+  "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "Os carregadores ainda não estão em casa: paragens por quilómetro. Na estrada o GdANav escolhe os carregadores e verifica se estão livres.",
   "The electric car's battery and range, and the charging stops if it is not enough.": "A bateria e a autonomia do carro elétrico, e as paragens de carregamento se não chegar.",
   "The minimum power to stop at": "A potência mínima para parar",
   "The stops come with the route": "As paragens chegam com o percurso",

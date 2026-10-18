@@ -95,8 +95,8 @@ const PAGES = Object.freeze([
   {
     id: "page-gdanav",
     tint: ["37,99,235", "96,165,250"],
-    it: ["gdanav", "Viaggi pianificati"],
-    en: ["gdanav", "Planned trips"],
+    it: ["GdANav", "Viaggi pianificati"],
+    en: ["GdANav", "Planned trips"],
   },
   /* La pagina ospita aspirapolvere e tagliaerba insieme: il nome e il
    * sottotitolo non nominano una specie sola, o mentirebbero a quella che

@@ -156,7 +156,7 @@ test("da PC: i viaggi si vedono, una meta si cerca e il viaggio parte per la cas
   page,
 }, testInfo) => {
   const pagina = await apri(page, testInfo);
-  await expect(page.locator('nav.tabs .tab[data-tab="gdanav"] .text')).toHaveText("gdanav");
+  await expect(page.locator('nav.tabs .tab[data-tab="gdanav"] .text')).toHaveText("GdANav");
   await expect(pagina.locator(".dm-gn-viaggio")).toHaveCount(2);
   await expect(pagina.locator(".dm-gn-viaggio").first()).toContainText("Casa – Caserta");
   await expect(pagina.locator(".dm-gn-viaggio").first()).toContainText("parti alle 8:12");
@@ -192,7 +192,7 @@ test("senza gdanav Premium la pagina lo dice, e non si scrive niente", async ({
   page,
 }, testInfo) => {
   const pagina = await apri(page, testInfo, { sbloccato: false });
-  await expect(pagina.locator(".dm-gn-premium")).toContainText("gdanav Premium");
+  await expect(pagina.locator(".dm-gn-premium")).toContainText("GdANav Premium");
   await expect(pagina.locator("[data-gn-nuovo]")).toHaveCount(0);
   if (process.env.DM_FOTO)
     await page.screenshot({ path: `${process.env.DM_FOTO}/gdanav-pc-premium.png` });
@@ -318,5 +318,5 @@ test("nell'app la voce gdanav non c'e', nel browser si'", async ({ page }, testI
   );
   const voce = browser.locator('nav.tabs .tab[data-tab="gdanav"]');
   await expect(voce).toHaveCount(1);
-  await expect(voce.locator(".text")).toHaveText("gdanav");
+  await expect(voce.locator(".text")).toHaveText("GdANav");
 });

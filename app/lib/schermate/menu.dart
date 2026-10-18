@@ -167,7 +167,7 @@ enum Sezione {
     Sezione.dispositivi => inLingua(it: 'Dispositivi', en: 'Devices'),
     /* Il suo nome, e non «Navigatore»: e' un'app che c'e' anche da sola, e
      * chi la conosce la cerca con quel nome. */
-    Sezione.navigatore => 'gdanav',
+    Sezione.navigatore => 'GdANav',
     /* «Configurazione plancia», e non «Configurazione».
      *
      * Da quando nel menu c'e' anche «Impostazioni app», una voce che dice

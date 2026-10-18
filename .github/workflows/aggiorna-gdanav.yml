@@ -4,7 +4,7 @@
 # arriva dalla sua repository (danigio15/gdanav, packages/gdanav_app), fermo
 # al commit scritto in app/pubspec.lock. Questo workflow lo porta all'ultimo:
 # aggiorna il lucchetto, fa le prove dell'app, e se passano apre (o aggiorna)
-# la richiesta di unione «gdanav aggiornato». Se nella repository e' permessa
+# la richiesta di unione «GdANav aggiornato». Se nella repository e' permessa
 # l'unione automatica, si unisce da sola appena le Prove sono verdi.
 #
 # Quando:
@@ -14,7 +14,7 @@
 # - a mano, da «Run workflow».
 #
 # Gira dal ramo principale, come tutti i workflow a orario e ad avviso.
-name: Aggiorna gdanav
+name: Aggiorna GdANav
 
 on:
   repository_dispatch:
@@ -33,7 +33,7 @@ concurrency:
 
 jobs:
   aggiorna:
-    name: gdanav all'ultimo, con le prove
+    name: GdANav all'ultimo, con le prove
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
@@ -46,7 +46,7 @@ jobs:
           channel: stable
           cache: true
 
-      - name: L'ultimo gdanav
+      - name: L'ultimo GdANav
         id: gdanav
         working-directory: app
         run: |
@@ -56,10 +56,10 @@ jobs:
           echo "prima=$prima" >> "$GITHUB_OUTPUT"
           echo "dopo=$dopo" >> "$GITHUB_OUTPUT"
           if [ "$prima" = "$dopo" ]; then
-            echo "gdanav e' gia' all'ultimo (${dopo:0:7})."
+            echo "GdANav e' gia' all'ultimo (${dopo:0:7})."
             echo "cambiato=no" >> "$GITHUB_OUTPUT"
           else
-            echo "gdanav: ${prima:0:7} -> ${dopo:0:7}"
+            echo "GdANav: ${prima:0:7} -> ${dopo:0:7}"
             echo "cambiato=si" >> "$GITHUB_OUTPUT"
           fi
 
@@ -86,17 +86,17 @@ jobs:
           git config user.email "gdahome@users.noreply.github.com"
           git checkout -B "$ramo"
           git add app/pubspec.lock
-          git commit -m "gdanav aggiornato: ${PRIMA:0:7} -> ${DOPO:0:7}"
+          git commit -m "GdANav aggiornato: ${PRIMA:0:7} -> ${DOPO:0:7}"
           git push --force origin "$ramo"
-          corpo="gdanav (schermo, mappa, guida e Android Auto) passa da ${PRIMA:0:7} a ${DOPO:0:7}.
+          corpo="GdANav (schermo, mappa, guida e Android Auto) passa da ${PRIMA:0:7} a ${DOPO:0:7}.
 
           Cosa cambia: https://github.com/danigio15/gdanav/compare/${PRIMA}...${DOPO}
 
-          Analisi e prove dell'app gia' passate con questo gdanav."
+          Analisi e prove dell'app gia' passate con questo GdANav."
           if gh pr view "$ramo" --json state -q .state 2>/dev/null | grep -q OPEN; then
-            gh pr edit "$ramo" --title "gdanav aggiornato (${DOPO:0:7})" --body "$corpo"
+            gh pr edit "$ramo" --title "GdANav aggiornato (${DOPO:0:7})" --body "$corpo"
           else
-            gh pr create --head "$ramo" --title "gdanav aggiornato (${DOPO:0:7})" --body "$corpo"
+            gh pr create --head "$ramo" --title "GdANav aggiornato (${DOPO:0:7})" --body "$corpo"
           fi
           # Unione automatica appena le Prove sono verdi, se la repository la
           # permette (Settings → General → Allow auto-merge).
@@ -114,5 +114,5 @@ jobs:
           ramo="gdanav/aggiornato"
           if gh pr view "$ramo" --json state -q .state 2>/dev/null | grep -q OPEN; then
             gh pr close "$ramo" --delete-branch \
-              --comment "main usa gia' gdanav ${DOPO:0:7}: questa richiesta non serve piu'."
+              --comment "main usa gia' GdANav ${DOPO:0:7}: questa richiesta non serve piu'."
           fi

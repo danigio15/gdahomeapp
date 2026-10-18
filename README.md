@@ -151,7 +151,7 @@ di assistenza**, privata.
 </td>
 <td width="50%" valign="top" align="center">
 
-<img src="docs/immagini/menu-con-i-lucchetti.png" alt="Il menu dell'app: le plance, i dispositivi, Zigbee, la configurazione, gli aggiornamenti, l'assistenza" width="48%">
+<img src="docs/immagini/menu-con-i-lucchetti.png" alt="Il menu dell'app: la plancia, i dispositivi, GdANav, la configurazione, gli aggiornamenti, le notifiche, le automazioni, gli aiutanti, Zigbee" width="48%">
 <img src="docs/immagini/plance-col-lucchetto.png" alt="Le plance di questa casa: la principale, e le altre con Premium" width="48%">
 <br>
 <sub>Il menu, e le plance della casa. Il lucchetto segna quello che si apre con Premium.</sub>
@@ -160,21 +160,21 @@ di assistenza**, privata.
 </tr>
 </table>
 
-### In auto: gdanav, il navigatore
+### In auto: GdANav, il navigatore
 
-Nell'app c'è anche **gdanav**, un navigatore fatto per l'auto elettrica che
+Nell'app c'è anche **GdANav**, un navigatore fatto per l'auto elettrica che
 serve anche a chi guida a benzina o a gasolio. Il percorso, i distributori e i
 loro prezzi, il traffico, gli autovelox e il meteo lungo la strada. Per
 l'elettrica, con Premium: la batteria **letta dall'auto** e il percorso **con
 le soste alle colonnine**, col loro stato in tempo reale. Con **Android Auto**
 e **CarPlay** la casa è a un tasto: il cancello, il portone, «sto arrivando».
 
-gdanav esiste anche come app a sé, per chi non ha Home Assistant.
+GdANav esiste anche come app a sé, per chi non ha Home Assistant.
 
 <p align="center">
-  <img src="docs/immagini/gdanav-viaggio.png" alt="gdanav: un viaggio in auto elettrica, con l'orario di arrivo" width="30%">
+  <img src="docs/immagini/gdanav-viaggio.png" alt="GdANav: un viaggio in auto elettrica, con l'orario di arrivo" width="30%">
   &nbsp;
-  <img src="docs/immagini/gdanav-premium.png" alt="gdanav Premium" width="30%">
+  <img src="docs/immagini/gdanav-premium.png" alt="GdANav Premium" width="30%">
 </p>
 
 ## Da fuori casa
@@ -222,7 +222,7 @@ Assistant non esce mai dall'add-on.
 | La plancia a muro (tablet, NSPanel)     |               —                |                          ✅                          |
 | Al polso (Apple Watch, Wear OS)         |               —                |                          ✅                          |
 | In auto (Android Auto, CarPlay)         |               —                |                          ✅                          |
-| gdanav, il navigatore                   |       la versione gratis       |             **gdanav Premium compreso**              |
+| GdANav, il navigatore                   |       la versione gratis       |             **GdANav Premium compreso**              |
 | Segnalazioni e chat di assistenza       |               ✅               |                          ✅                          |
 | Account da fare                         |            nessuno             |                       nessuno                        |
 
@@ -273,7 +273,7 @@ da fare, l'app lo sa già — o ti manda un codice regalo.
 <table>
 <tr>
 <td width="50%" align="center" valign="top"><img src="docs/immagini/addon-licenza-base.png" alt="La licenza nella scheda dell'add-on: Base" width="100%"><br><sub>Base: una plancia, e solo da casa.</sub></td>
-<td width="50%" align="center" valign="top"><img src="docs/immagini/addon-licenza-premium.png" alt="La licenza nella scheda dell'add-on: Premium" width="100%"><br><sub>Premium: la seconda plancia, e gdanav compreso.</sub></td>
+<td width="50%" align="center" valign="top"><img src="docs/immagini/addon-licenza-premium.png" alt="La licenza nella scheda dell'add-on: Premium" width="100%"><br><sub>Premium: la seconda plancia, e GdANav compreso.</sub></td>
 </tr>
 </table>
 
@@ -285,9 +285,9 @@ scheda dell'add-on, e il codice regalo si può scrivere lì.
 Non si perde niente. La casa torna Base: la plancia principale resta, e le
 plance in più restano salvate dove sono — si rivedono appena Premium torna.
 
-### gdanav da solo
+### GdANav da solo
 
-|                            |             **gdanav**<br>gratis              |        **gdanav Premium**<br>2,99 € al mese · 29,99 € all'anno        |
+|                            |             **GdANav**<br>gratis              |        **GdANav Premium**<br>2,99 € al mese · 29,99 € all'anno        |
 | -------------------------- | :-------------------------------------------: | :-------------------------------------------------------------------: |
 | Auto a benzina o gasolio   |   completa: percorso, distributori, prezzi    |                               completa                                |
 | Auto elettrica             | batteria scritta a mano, percorso senza soste | batteria **letta dall'auto**, **soste alle colonnine** in tempo reale |
@@ -295,7 +295,7 @@ plance in più restano salvate dove sono — si rivedono appena Premium torna.
 | Home Assistant             |                       —                       |                                  ✅                                   |
 | Android Auto e CarPlay     |                       —                       |                                  ✅                                   |
 
-Anche gdanav Premium ha **i primi 14 giorni gratis**. E con **GdAHome Premium
+Anche GdANav Premium ha **i primi 14 giorni gratis**. E con **GdAHome Premium
 è già compreso**: la casa Premium sblocca tutto anche nel navigatore, senza un
 secondo abbonamento.
 
@@ -334,7 +334,7 @@ sempre. Per ognuna scegli:
   quando lo riscatta.
 
 Una licenza tolta, o un codice annullato prima di essere usato, **torna nel
-tuo pacchetto**. Nel pacchetto possono esserci anche licenze **gdanav
+tuo pacchetto**. Nel pacchetto possono esserci anche licenze **GdANav
 Premium**, per chi vuole solo il navigatore.
 
 **🙈 Cosa non vedi.** Non apri la plancia del cliente e non entri in casa sua:
@@ -422,7 +422,7 @@ tecnologici di Aversa (CE), abilitata agli impianti ai sensi del D.M. 37/2008
 (lettere A–G). Sede legale in Viale della Libertà 24, 81031 Aversa (CE);
 P. IVA e C.F. 03719610614; REA CE-266848; PEC crvimmobiliare@pec.it.
 
-Premium, per GdAHome e per gdanav, lo vende CRV Immobiliare S.r.l. attraverso
+Premium, per GdAHome e per GdANav, lo vende CRV Immobiliare S.r.l. attraverso
 l'App Store e Google Play: le ricevute arrivano da Apple o da Google, come per
 ogni abbonamento.
 

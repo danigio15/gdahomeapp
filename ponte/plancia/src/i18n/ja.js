@@ -108,8 +108,8 @@ export default Object.freeze({
     "目的地と時刻を選ぶと、出発時刻をお知らせします。",
   "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
     "ここでルートを計画し、スマホ・CarPlay・Android Auto で使えます。出発の通知や事前のエアコンも。GdAHome アプリの Premium ページで解除できます。",
-  "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
-    "ここでルートを計画：gdanav のスマホ・CarPlay・Android Auto に表示されます。",
+  "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.":
+    "ここでルートを計画：GdANav のスマホ・CarPlay・Android Auto に表示されます。",
   "Planned trips": "予定のルート",
   "Read-only: they do not count in the home average": "表示のみ：家の平均には含まれません",
   "Remind me": "通知する",
@@ -118,7 +118,7 @@ export default Object.freeze({
   "The garage": "ガレージ",
   "The home is not answering: try again shortly.":
     "家が応答しません。少ししてから再試行してください。",
-  "The planner is part of gdanav Premium": "プランナーは gdanav Premium の機能です",
+  "The planner is part of GdANav Premium": "プランナーは GdANav Premium の機能です",
   "The route": "ルート",
   "The trip was not saved: check destination, day and time.":
     "保存できませんでした。目的地・日付・時刻を確認してください。",
@@ -150,13 +150,13 @@ export default Object.freeze({
   "And one more that does not fit this list.": "この一覧に収まらないものが他に1件あります。",
   Upcoming: "今後",
   "Where to?": "どこへ？",
-  "With traffic, estimated by gdanav": "渋滞込み、gdanav の推定",
-  "Without traffic, with a margin: gdanav recalculates with live traffic until you leave":
-    "渋滞なし・余裕込み：出発まで gdanav が実際の渋滞で再計算します",
+  "With traffic, estimated by GdANav": "渋滞込み、GdANav の推定",
+  "Without traffic, with a margin: GdANav recalculates with live traffic until you leave":
+    "渋滞なし・余裕込み：出発まで GdANav が実際の渋滞で再計算します",
   "You already have 50 trips: remove some.": "すでに50件あります。いくつか削除してください。",
   "You arrive around": "到着予定",
-  "You find it right away in gdanav, on the phone and in the car.":
-    "すぐに gdanav（スマホと車）に表示されます。",
+  "You find it right away in GdANav, on the phone and in the car.":
+    "すぐに GdANav（スマホと車）に表示されます。",
   "appliance running": "台が稼働中",
   Back: "戻る",
   "Choose the climate entity: it is the one starting with climate.":
@@ -317,8 +317,8 @@ export default Object.freeze({
   "for ${minuti} min": "${minuti} 分前から",
   "for ${ore} h": "${ore} 時間前から",
   "from before": "それ以前から",
-  gdanav: "gdanav",
-  "gdanav Premium is needed.": "gdanav Premium が必要です。",
+  GdANav: "GdANav",
+  "GdANav Premium is needed.": "GdANav Premium が必要です。",
   "included here: the counter had already made them before its statistics began":
     "ここに含まれています：統計の記録が始まる前にメーターがすでに計測していた分です",
   "leave at": "出発",
@@ -6124,7 +6124,7 @@ export default Object.freeze({
   "at departure ${via}": "出発時 ${via}",
   "Car battery: ${ora}": "車のバッテリー: ${ora}",
   "Chargers": "充電スポット",
-  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.": "充電スポット: © OpenStreetMap と Piattaforma Unica Nazionale、自宅で。走行中は gdanav が空きを確認し、必要なら停車先を変更します。",
+  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.": "充電スポット: © OpenStreetMap と Piattaforma Unica Nazionale、自宅で。走行中は GdANav が空きを確認し、必要なら停車先を変更します。",
   "Charging at home · ${fino} at ${ora}": "自宅で充電中 · ${fino}（${ora}）",
   "Charging stops": "充電のための停車",
   "Charging: ${minuti} in ${n} stops": "充電: ${minuti}、${n}回の停車",
@@ -6136,7 +6136,7 @@ export default Object.freeze({
   "from ${da} to ${a} · ${min} min": "${da}→${a} · ${min}分",
   "From ${n} kW": "${n} kW 以上",
   "Full": "満充電",
-  "gdanav picks the charger on the way": "充電スポットは走行中に gdanav が選びます",
+  "GdANav picks the charger on the way": "充電スポットは走行中に GdANav が選びます",
   "leave": "出発",
   "leave ${alle}": "再出発 ${alle}",
   "Minimum charge on arrival": "到着時の最低充電量",
@@ -6148,9 +6148,9 @@ export default Object.freeze({
   "range": "航続距離",
   "Stop ${n} · after ${km} km": "停車 ${n} · ${km} km 走行後",
   "Stop around km ${km} · about ${min} min": "${km} km 付近で停車 · 約${min}分",
-  "Stops picked by gdanav on the way, with free chargers.": "走行中に gdanav が空いている充電スポットで選んだ停車です。",
+  "Stops picked by GdANav on the way, with free chargers.": "走行中に GdANav が空いている充電スポットで選んだ停車です。",
   "The battery is not answering": "バッテリーが応答しません",
-  "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.": "充電スポットはまだ自宅にありません: 停車はキロ単位です。走行中は gdanav が充電スポットを選び、空きを確認します。",
+  "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "充電スポットはまだ自宅にありません: 停車はキロ単位です。走行中は GdANav が充電スポットを選び、空きを確認します。",
   "The electric car's battery and range, and the charging stops if it is not enough.": "電気自動車のバッテリーと航続距離、足りない場合は充電のための停車。",
   "The minimum power to stop at": "停車する最低出力",
   "The stops come with the route": "停車はルートと一緒に届きます",

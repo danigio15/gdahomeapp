@@ -108,7 +108,7 @@ export default Object.freeze({
     "목적지와 시간을 고르면 언제 출발할지 알려드립니다.",
   "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
     "여기에서 여정을 계획하고 휴대폰, CarPlay, Android Auto에서 확인하세요. 출발 알림과 미리 켜지는 차량 공조도 포함됩니다. GdAHome 앱의 Premium 페이지에서 잠금 해제하세요.",
-  "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
+  "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.":
     "여기에서 여정을 계획하세요: gdanav의 휴대폰, CarPlay, Android Auto에서 볼 수 있습니다.",
   "Planned trips": "계획된 여정",
   "Read-only: they do not count in the home average": "읽기 전용: 집 평균에 포함되지 않습니다",
@@ -118,7 +118,7 @@ export default Object.freeze({
   "The garage": "차고",
   "The home is not answering: try again shortly.":
     "집이 응답하지 않습니다. 잠시 후 다시 시도하세요.",
-  "The planner is part of gdanav Premium": "플래너는 gdanav Premium 기능입니다",
+  "The planner is part of GdANav Premium": "플래너는 GdANav Premium 기능입니다",
   "The route": "경로",
   "The trip was not saved: check destination, day and time.":
     "여정이 저장되지 않았습니다. 목적지, 날짜, 시간을 확인하세요.",
@@ -150,12 +150,12 @@ export default Object.freeze({
   "And one more that does not fit this list.": "이 목록에 담기지 않은 항목이 하나 더 있습니다.",
   Upcoming: "예정",
   "Where to?": "어디로 가세요?",
-  "With traffic, estimated by gdanav": "교통 반영, gdanav 추정",
-  "Without traffic, with a margin: gdanav recalculates with live traffic until you leave":
+  "With traffic, estimated by GdANav": "교통 반영, GdANav 추정",
+  "Without traffic, with a margin: GdANav recalculates with live traffic until you leave":
     "교통 미반영, 여유 포함: 출발 전까지 gdanav가 실시간 교통으로 다시 계산합니다",
   "You already have 50 trips: remove some.": "이미 여정이 50개입니다. 일부를 삭제하세요.",
   "You arrive around": "도착 예상",
-  "You find it right away in gdanav, on the phone and in the car.":
+  "You find it right away in GdANav, on the phone and in the car.":
     "gdanav에서 휴대폰과 차량에 바로 표시됩니다.",
   "appliance running": "대 가동 중",
   Back: "뒤로",
@@ -317,8 +317,8 @@ export default Object.freeze({
   "for ${minuti} min": "${minuti}분째",
   "for ${ore} h": "${ore}시간째",
   "from before": "그 이전부터",
-  gdanav: "gdanav",
-  "gdanav Premium is needed.": "gdanav Premium이 필요합니다.",
+  GdANav: "GdANav",
+  "GdANav Premium is needed.": "GdANav Premium이 필요합니다.",
   "included here: the counter had already made them before its statistics began":
     "여기에 포함됨: 통계가 시작되기 전에 계량기가 이미 기록한 값입니다",
   "leave at": "출발",
@@ -6104,7 +6104,7 @@ export default Object.freeze({
   "at departure ${via}": "출발 시 ${via}",
   "Car battery: ${ora}": "차량 배터리: ${ora}",
   "Chargers": "충전소",
-  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.": "충전소: © OpenStreetMap 및 Piattaforma Unica Nazionale, 집에서. 주행 중에는 gdanav가 비어 있는지 확인하고 필요하면 정차를 바꿉니다.",
+  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.": "충전소: © OpenStreetMap 및 Piattaforma Unica Nazionale, 집에서. 주행 중에는 gdanav가 비어 있는지 확인하고 필요하면 정차를 바꿉니다.",
   "Charging at home · ${fino} at ${ora}": "집에서 충전 중 · ${fino}, ${ora}",
   "Charging stops": "충전 정차",
   "Charging: ${minuti} in ${n} stops": "충전: ${minuti}, 정차 ${n}회",
@@ -6116,7 +6116,7 @@ export default Object.freeze({
   "from ${da} to ${a} · ${min} min": "${da} → ${a} · ${min}분",
   "From ${n} kW": "${n}kW 이상",
   "Full": "완충",
-  "gdanav picks the charger on the way": "충전소는 주행 중 gdanav가 고릅니다",
+  "GdANav picks the charger on the way": "충전소는 주행 중 gdanav가 고릅니다",
   "leave": "출발",
   "leave ${alle}": "다시 출발 ${alle}",
   "Minimum charge on arrival": "도착 시 최소 충전량",
@@ -6128,9 +6128,9 @@ export default Object.freeze({
   "range": "주행 가능 거리",
   "Stop ${n} · after ${km} km": "정차 ${n} · ${km}km 후",
   "Stop around km ${km} · about ${min} min": "${km}km 부근 정차 · 약 ${min}분",
-  "Stops picked by gdanav on the way, with free chargers.": "주행 중 gdanav가 빈 충전소로 고른 정차입니다.",
+  "Stops picked by GdANav on the way, with free chargers.": "주행 중 gdanav가 빈 충전소로 고른 정차입니다.",
   "The battery is not answering": "배터리가 응답하지 않습니다",
-  "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.": "충전소 정보가 아직 집에 없습니다: 정차는 킬로미터 기준입니다. 주행 중 gdanav가 충전소를 고르고 비어 있는지 확인합니다.",
+  "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "충전소 정보가 아직 집에 없습니다: 정차는 킬로미터 기준입니다. 주행 중 gdanav가 충전소를 고르고 비어 있는지 확인합니다.",
   "The electric car's battery and range, and the charging stops if it is not enough.": "전기차의 배터리와 주행 가능 거리, 부족하면 충전 정차.",
   "The minimum power to stop at": "정차할 최소 출력",
   "The stops come with the route": "정차는 경로와 함께 옵니다",

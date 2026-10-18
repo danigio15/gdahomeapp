@@ -74,7 +74,7 @@ serve a non farlo usare a raffica. Se non scrivi, non parte niente.
 
 ## Il navigatore e l'auto
 
-Dentro l'app c'è un navigatore (gdanav), e si accende solo se lo apri — o se
+Dentro l'app c'è un navigatore (GdANav), e si accende solo se lo apri — o se
 colleghi il telefono all'auto con Android Auto o CarPlay. Per guidarti usa la
 **posizione del telefono**, anche a schermo spento mentre sei in viaggio, e la
 manda **solo** ai servizi che servono a guidare, senza nome né account:
@@ -134,7 +134,7 @@ transazione originale di Apple), che gli serve per chiedere a Google o ad
 Apple se l'abbonamento si è rinnovato. Il pagamento lo gestiscono Google e
 Apple: a GdAHome non arrivano né il nome né i dati della carta.
 
-gdanav da sola usa per i codici regalo un identificativo del telefono (`tel_…`)
+GdANav da sola usa per i codici regalo un identificativo del telefono (`tel_…`)
 fatto a caso sul telefono, che non dice chi sei.
 
 ## Quello che non c'è

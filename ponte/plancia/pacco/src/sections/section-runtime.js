@@ -552,7 +552,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-JOTBNCXF.js";
+} from "../../chunk-VS5IGZBM.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3131,7 +3131,7 @@ var SOURCE_INDEX = Object.freeze({
   "Col sole: notte da mezz'ora dopo il tramonto all'alba": "By the sun: night from half an hour after sunset to sunrise",
   "Col terreno già bagnato il programma delle ore fisse salta (con l'avviso in card); sotto la soglia bassa parte da solo, una volta al giorno.": "With the ground already wet the scheduled program skips (with the notice on the card); below the low threshold it starts on its own, once a day.",
   "col traffico": "with traffic",
-  "Col traffico, stimato da gdanav": "With traffic, estimated by gdanav",
+  "Col traffico, stimato da GdANav": "With traffic, estimated by GdANav",
   "Collana": "Necklace",
   "Collare": "Collar",
   "Collare quasi scarico": "Collar battery low",
@@ -3154,7 +3154,7 @@ var SOURCE_INDEX = Object.freeze({
   "Colonnina": "Charger",
   "Colonnina di ricarica": "Charging station",
   "Colonnine": "Chargers",
-  "Colonnine: © OpenStreetMap e Piattaforma Unica Nazionale, nella casa. In viaggio gdanav guarda se sono libere e, se serve, cambia sosta.": "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.",
+  "Colonnine: © OpenStreetMap e Piattaforma Unica Nazionale, nella casa. In viaggio GdANav guarda se sono libere e, se serve, cambia sosta.": "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.",
   "Colorati": "Coloured",
   "Colore": "Color",
   "Colore barba": "Beard color",
@@ -4191,7 +4191,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il percento di carica del pacco: è la riga senza cui il pacco non si vede.": "The pack's charge percentage: without it the pack does not show.",
   "Il periodo selezionato non contiene ancora dati.": "The selected period does not contain data yet.",
   "Il pH e il cloro": "The pH and the chlorine",
-  "Il pianificatore è di gdanav Premium": "The planner is part of gdanav Premium",
+  "Il pianificatore è di GdANav Premium": "The planner is part of GdANav Premium",
   "Il PIN è di 4-8 cifre.": "The PIN is 4-8 digits.",
   "Il più lungo tace da": "Longest silent for",
   "il più vicino": "the closest",
@@ -4549,7 +4549,7 @@ var SOURCE_INDEX = Object.freeze({
   "La coda da lavorare": "The queue to work on",
   "La colonnina è della casa, non di una macchina: si collega una volta e vale per tutte le vetture. Porta quello che misura: potenza, energia, tensione, temperatura, il cavo.": "The charger belongs to the house, not to one car: connect it once and it counts for every vehicle. It brings what it measures: power, energy, voltage, temperature, the cable.",
   "La colonnina e evcc": "The wallbox and evcc",
-  "La colonnina la sceglie gdanav in viaggio": "gdanav picks the charger on the way",
+  "La colonnina la sceglie GdANav in viaggio": "GdANav picks the charger on the way",
   "La comanda il pannello, solo nell'app GdAHome sul tablet": "The panel sets it, only in the GdAHome app on the tablet",
   "La configurazione di questa plancia è riservata al suo amministratore.": "This dashboard's configuration is reserved for its administrator.",
   "La configurazione è salvata": "Configuration is saved",
@@ -4677,7 +4677,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le caselle di una caldaia a pellet o a legna: la combustione, il serbatoio e l'obiettivo della centralina. Lasciale vuote se la tua caldaia va a gas: quello che non mappi non compare in pagina.": "The fields of a pellet or wood boiler: the combustion, the hopper and the controller's own target. Leave them empty if your boiler runs on gas: what you do not map does not appear on the page.",
   "Le casse": "Speakers",
   "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Se sta sullo stesso dispositivo del contatto, o si chiama come lui con «bypass» in fondo, la plancia lo trova da sola; altrimenti scrivilo qui. Nella pagina Varchi compare il tasto per escludere o includere questo varco. Acceso vuol dire escluso. Scrivi - per non mostrare il tasto.": "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. If it sits on the same device as the contact, or is named like it with «bypass» at the end, the dashboard finds it by itself; otherwise write it here. The button to bypass or re-include this opening shows up on the Openings page. On means bypassed. Write - to hide the button.",
-  "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio gdanav sceglie le colonnine e guarda se sono libere.": "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.",
+  "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio GdANav sceglie le colonnine e guarda se sono libere.": "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.",
   "Le condizioni": "Conditions",
   "Le coordinate scritte a mano vincono su tutto; se le lasci vuote vale la zona qui sopra, e se non scegli niente vale casa. Per un posto che non è casa tua, creagli una zona in Home Assistant: comparirà nella tendina col suo nome.": "Coordinates typed by hand win over everything; leave them empty and the zone above is used, and with no choice at all it is home. For somewhere that is not your house, give it a zone in Home Assistant: it shows up in the list under its own name.",
   "Le cose che la plancia sa gia'": "The things the dashboard already knows",
@@ -4816,7 +4816,7 @@ var SOURCE_INDEX = Object.freeze({
   "Lo stato dell'entità": "The entity state",
   "Lo stato viene da": "The state comes from",
   "lo storico dei consumi non è ancora arrivato": "the usage history has not arrived yet",
-  "Lo trovi subito in gdanav, sul telefono e in auto.": "You find it right away in gdanav, on the phone and in the car.",
+  "Lo trovi subito in GdANav, sul telefono e in auto.": "You find it right away in GdANav, on the phone and in the car.",
   "Lo vedi in Strumenti per sviluppatori → Eventi.": "You can see it in Developer tools → Events.",
   "Lo vedi solo tu, che amministri la casa": "Only you see this, as the home's administrator",
   "Locale tecnico": "Utility room",
@@ -5592,7 +5592,7 @@ var SOURCE_INDEX = Object.freeze({
   "pH troppo basso": "pH too low",
   "piani": "floors",
   "Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app GdAHome, nella pagina Premium.": "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.",
-  "Pianifica i viaggi da qui: li ritrovi in gdanav sul telefono, su CarPlay e su Android Auto.": "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.",
+  "Pianifica i viaggi da qui: li ritrovi in GdANav sul telefono, su CarPlay e su Android Auto.": "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.",
   "Piano": "Floor",
   "Piano (opz.)": "Floor (opt.)",
   "Piano cottura": "Cooktop",
@@ -6486,7 +6486,7 @@ var SOURCE_INDEX = Object.freeze({
   "Senza tasto Accendi/Spegni": "Without the On/Off button",
   "Senza tipo": "Untyped",
   "Senza titolo": "Untitled",
-  "Senza traffico, con un margine: gdanav lo ricalcola col traffico vero fino alla partenza": "Without traffic, with a margin: gdanav recalculates with live traffic until you leave",
+  "Senza traffico, con un margine: GdANav lo ricalcola col traffico vero fino alla partenza": "Without traffic, with a margin: GdANav recalculates with live traffic until you leave",
   "Senza, si legge quella del termostato.": "Without it, the thermostat's own reading is used.",
   "Serbatoio pieno": "Tank full",
   "Serbatoio pieno — svuotalo": "Tank full — empty it",
@@ -6500,7 +6500,7 @@ var SOURCE_INDEX = Object.freeze({
   "Serve almeno il nome, oppure un'entità in una delle caselle.": "At least a name is needed, or an entity in one of the fields.",
   "Serve almeno un'entità.": "At least one entity is required.",
   "Serve almeno una persona nella sezione Persone: è da lì che si sa se in casa c'è qualcuno. Finché non ce n'è nessuna, una telecamera spuntata resterebbe nascosta sempre — e per questo la spunta è spenta.": "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.",
-  "Serve gdanav Premium.": "gdanav Premium is needed.",
+  "Serve GdANav Premium.": "GdANav Premium is needed.",
   "serve kWh": "it needs kWh",
   "Serve l'add-on: è la casa a farla partire": "Needs the add-on: the home starts it",
   "Serve solo a dire quanto manca alla fine della carica: dalla percentuale che manca e dalla potenza della colonnina. Lasciandola vuota si contano 70 kWh, che è quello che la plancia ha sempre assunto — con una batteria diversa il tempo esce sbagliato in proporzione.": "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.",
@@ -6666,7 +6666,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sosta ${n} · dopo ${km} km": "Stop ${n} · after ${km} km",
   "Sosta intorno al km ${km} · circa ${min} min": "Stop around km ${km} · about ${min} min",
   "Soste di ricarica": "Charging stops",
-  "Soste scelte da gdanav in viaggio, con le colonnine libere.": "Stops picked by gdanav on the way, with free chargers.",
+  "Soste scelte da GdANav in viaggio, con le colonnine libere.": "Stops picked by GdANav on the way, with free chargers.",
   "Sostituirà la configurazione attuale.": "It will replace the current configuration.",
   "Sostituisci il servizio qui sotto con quello del tuo telefono.": "Replace the service below with your phone's.",
   "Sostituzioni, carichi, avvisi, testi, sezioni ed esportazione HTML": "Replacements, loads, alerts, texts, sections and HTML export",
@@ -26960,8 +26960,8 @@ var PAGES = Object.freeze([
   {
     id: "page-gdanav",
     tint: ["37,99,235", "96,165,250"],
-    it: ["gdanav", "Viaggi pianificati"],
-    en: ["gdanav", "Planned trips"]
+    it: ["GdANav", "Viaggi pianificati"],
+    en: ["GdANav", "Planned trips"]
   },
   /* La pagina ospita aspirapolvere e tagliaerba insieme: il nome e il
    * sottotitolo non nominano una specie sola, o mentirebbero a quella che
@@ -112395,7 +112395,7 @@ function ensureGdanavTab() {
   tab.className = "tab";
   tab.dataset.tab = GDANAV_TAB;
   tab.id = `tab-${GDANAV_TAB}`;
-  tab.innerHTML = `<span class="icon"><img class="dm-gn-tab-logo" src="${esc(logo())}" alt=""></span><span class="text">gdanav</span>`;
+  tab.innerHTML = `<span class="icon"><img class="dm-gn-tab-logo" src="${esc(logo())}" alt=""></span><span class="text">GdANav</span>`;
   tab.addEventListener("click", apri4);
   if (dopo) dopo.after(tab);
   else nav.prepend(tab);
@@ -112800,7 +112800,7 @@ function elencoDelleSoste(b2, partenza) {
         s.nome,
         s.operatore && s.operatore !== s.nome ? s.operatore : "",
         kw ? t(`fino a ${kw} kW`, `up to ${kw} kW`) : ""
-      ].filter(Boolean).join(" · ") : t("La colonnina la sceglie gdanav in viaggio", "gdanav picks the charger on the way");
+      ].filter(Boolean).join(" · ") : t("La colonnina la sceglie GdANav in viaggio", "GdANav picks the charger on the way");
       const da = pct2(s.da);
       const a = pct2(s.a);
       const carica2 = Number.isFinite(Number(s.da)) && Number.isFinite(Number(s.a)) && s.da !== null ? pillola2(
@@ -112812,14 +112812,14 @@ function elencoDelleSoste(b2, partenza) {
     return `<li class="dm-gn-fila arrivo"><span class="dm-gn-pallino rosso">🏁</span><span class="dm-gn-col"><b>${esc(corto(r.posto))}</b>${Number.isFinite(arrivo) ? pillola2(pct2(arrivo)) : ""}</span>${destra(r.alle, t("arrivi", "arrive"))}</li>`;
   });
   const fonti = b2.soste?.fonte === "gdanav" ? t(
-    "Soste scelte da gdanav in viaggio, con le colonnine libere.",
-    "Stops picked by gdanav on the way, with free chargers."
+    "Soste scelte da GdANav in viaggio, con le colonnine libere.",
+    "Stops picked by GdANav on the way, with free chargers."
   ) : state123.archivio ? t(
-    "Colonnine: © OpenStreetMap e Piattaforma Unica Nazionale, nella casa. In viaggio gdanav guarda se sono libere e, se serve, cambia sosta.",
-    "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop."
+    "Colonnine: © OpenStreetMap e Piattaforma Unica Nazionale, nella casa. In viaggio GdANav guarda se sono libere e, se serve, cambia sosta.",
+    "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop."
   ) : t(
-    "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio gdanav sceglie le colonnine e guarda se sono libere.",
-    "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free."
+    "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio GdANav sceglie le colonnine e guarda se sono libere.",
+    "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free."
   );
   const n = soste.length;
   const quante3 = n === 1 ? t("1 sosta", "1 stop") : t(`${n} soste`, `${n} stops`);
@@ -112874,7 +112874,7 @@ function editor2() {
       );
     }
     righe3.push(
-      b2.stima?.fonte === "traffico" ? `🚦 ${t("Col traffico, stimato da gdanav", "With traffic, estimated by gdanav")}` : `🔄 ${t("Senza traffico, con un margine: gdanav lo ricalcola col traffico vero fino alla partenza", "Without traffic, with a margin: gdanav recalculates with live traffic until you leave")}`
+      b2.stima?.fonte === "traffico" ? `🚦 ${t("Col traffico, stimato da GdANav", "With traffic, estimated by GdANav")}` : `🔄 ${t("Senza traffico, con un margine: GdANav lo ricalcola col traffico vero fino alla partenza", "Without traffic, with a margin: GdANav recalculates with live traffic until you leave")}`
     );
   }
   const arrivoDetto = tempi?.arrivo != null && !(b2.quando.modo === "arrivo" && b2.tipo !== "tappe") ? `<div class="dm-gn-riga" data-gn-arrivo>🏁 ${esc(t("Arrivi verso le", "You arrive around"))} <b>${esc(oraDi3(tempi.arrivo))}</b>${soste.length ? ` ${esc(sosteDette(soste.length))}` : ""}</div>` : "";
@@ -112913,13 +112913,13 @@ function editor2() {
         ${state123.errore ? `<div class="dm-gn-errore">${esc(state123.errore)}</div>` : ""}
         <button type="button" class="dm-gn-salva" data-gn-salva${state123.salvando ? " disabled" : ""}>${esc(state123.salvando ? t("Salvo…", "Saving…") : t("Salva il viaggio", "Save trip"))}</button>
         ${b2.id ? `<button type="button" class="dm-gn-elimina" data-gn-elimina>${esc(t("Elimina il viaggio", "Delete trip"))}</button>` : ""}
-        <div class="dm-gn-nota">${esc(t("Lo trovi subito in gdanav, sul telefono e in auto.", "You find it right away in gdanav, on the phone and in the car."))}</div>
+        <div class="dm-gn-nota">${esc(t("Lo trovi subito in GdANav, sul telefono e in auto.", "You find it right away in GdANav, on the phone and in the car."))}</div>
       </div>
     </div>`;
 }
 function premium() {
   return `<div class="dm-gn-card dm-gn-premium"><img src="${esc(logo())}" alt=""><div>
-    <div class="dm-gn-nome">${esc(t("Il pianificatore è di gdanav Premium", "The planner is part of gdanav Premium"))}</div>
+    <div class="dm-gn-nome">${esc(t("Il pianificatore è di GdANav Premium", "The planner is part of GdANav Premium"))}</div>
     <div class="dm-gn-sotto">${esc(t("Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app GdAHome, nella pagina Premium.", "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page."))}</div></div></div>`;
 }
 function corpo() {
@@ -112944,8 +112944,8 @@ function disegna7() {
   if (!posto) return;
   const attivo = doc.getElementById(GDANAV_PAGE_ID)?.classList.contains("active");
   if (!attivo && state123.caricato) return;
-  const testa2 = `<div class="dm-gn-capo"><div class="dm-gn-chi"><img src="${esc(logo())}" alt="gdanav">
-    <p>${esc(t("Pianifica i viaggi da qui: li ritrovi in gdanav sul telefono, su CarPlay e su Android Auto.", "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto."))}</p></div>
+  const testa2 = `<div class="dm-gn-capo"><div class="dm-gn-chi"><img src="${esc(logo())}" alt="GdANav">
+    <p>${esc(t("Pianifica i viaggi da qui: li ritrovi in GdANav sul telefono, su CarPlay e su Android Auto.", "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto."))}</p></div>
     ${state123.sbloccato ? `<button type="button" class="dm-gn-nuovo" data-gn-nuovo>＋ ${esc(t("Nuovo viaggio", "New trip"))}</button>` : ""}</div>`;
   if (!state123.caricato) {
     scrivi4(
@@ -113102,7 +113102,7 @@ async function salva18() {
     await carica();
   } catch (errore) {
     const perche4 = clean(errore?.message);
-    state123.errore = perche4 === "premium-richiesto" ? t("Serve gdanav Premium.", "gdanav Premium is needed.") : perche4 === "troppi-viaggi" ? t("Hai già 50 viaggi: togline qualcuno.", "You already have 50 trips: remove some.") : t(
+    state123.errore = perche4 === "premium-richiesto" ? t("Serve GdANav Premium.", "GdANav Premium is needed.") : perche4 === "troppi-viaggi" ? t("Hai già 50 viaggi: togline qualcuno.", "You already have 50 trips: remove some.") : t(
       "Il viaggio non si è salvato: controlla la meta, il giorno e l'ora.",
       "The trip was not saved: check destination, day and time."
     );
