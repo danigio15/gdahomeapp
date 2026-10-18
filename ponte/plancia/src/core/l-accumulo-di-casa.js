@@ -56,8 +56,13 @@ export const RIPOSO_W = 15;
 export const RIPOSO_A = 0.3;
 
 /* I BMS che il rilevamento sa riconoscere. «altro» è un BMS qualunque, messo a
- * mano: la pagina lo legge uguale, solo che non sa dirne la marca. */
-export const TIPI = Object.freeze(["jk", "jbd", "daly", "altro"]);
+ * mano: la pagina lo legge uguale, solo che non sa dirne la marca.
+ *
+ * «huawei» non è un BMS che si compra a parte: è la LUNA2000, che il suo BMS
+ * lo tiene dentro e lo fa parlare dall'inverter con l'integrazione Huawei
+ * Solar (#264). Sta qui perché chi apre la scheda col tipo da scegliere trovi
+ * la sua batteria per nome, invece di chiedersi quale dei tre BMS sia. */
+export const TIPI = Object.freeze(["jk", "jbd", "daly", "huawei", "altro"]);
 
 /* Le entità di un pacco, oltre al suo stato di carica. */
 export const CAMPI_DEL_PACCO = Object.freeze([
@@ -168,7 +173,13 @@ export function celleDellaRiga(riga) {
  *   · Daly (il componente di ESPHome): `battery_level`, `voltage`, `current`,
  *     `cell_1_voltage`…, `remaining_capacity`, `battery_cycles`;
  *   · bms_ble, che li parla tutti da Bluetooth: `battery`, `voltage`,
- *     `delta_voltage`, `stored_energy`, `cycles`.
+ *     `delta_voltage`, `stored_energy`, `cycles`;
+ *   · Huawei Solar, per la LUNA2000 (#264): `state_of_capacity`,
+ *     `charge_discharge_power`, `bus_voltage`, `bus_current`,
+ *     `maximum_temperature`, `rated_capacity`. Il prefisso è `battery` per
+ *     tutta la batteria e `battery_1`, `battery_2` per i moduli; celle non ne
+ *     pubblica, e la temperatura minima si lascia da parte come la cella più
+ *     bassa.
  *
  * Il prefisso è il più corto che lascia una coda conosciuta, così
  * `jk_bms_delta_cell_voltage` è il delta di `jk_bms` e non la tensione di
@@ -181,20 +192,24 @@ const CODE = Object.freeze([
   ["scarta", /^(.+?)_(?:min|max|average|avg|highest|lowest)_cell_voltage$/],
   ["scarta", /^(.+?)_cell_voltage_(?:min|max|average|avg)$/],
   ["scarta", /^(.+?)_(?:min|max)_voltage_cell$/],
+  ["scarta", /^(.+?)_minimum_temperature$/],
   [
     "delta",
     /^(.+?)_(?:delta_cell_voltage|cell_voltage_delta|cell_delta_voltage|delta_voltage|cell_voltage_difference|cell_delta)$/,
   ],
   ["cella", /^(.+?)_cell_voltage_?(\d{1,2})$/],
   ["cella", /^(.+?)_cell_?(\d{1,2})_voltage$/],
-  ["soc", /^(.+?)_(?:state_of_charge|soc|battery_level)$/],
+  ["soc", /^(.+?)_(?:state_of_charge|state_of_capacity|soc|battery_level)$/],
   ["soc", /^(.+?)_battery$/],
   ["soh", /^(.+?)_(?:state_of_health|soh)$/],
-  ["tensione", /^(.+?)_(?:total_voltage|battery_voltage|pack_voltage|voltage)$/],
-  ["corrente", /^(.+?)_(?:battery_current|current)$/],
-  ["potenza", /^(.+?)_(?:battery_power|power)$/],
+  ["tensione", /^(.+?)_(?:total_voltage|battery_voltage|pack_voltage|bus_voltage|voltage)$/],
+  ["corrente", /^(.+?)_(?:battery_current|bus_current|current)$/],
+  ["potenza", /^(.+?)_(?:charge_discharge_power|battery_power|power)$/],
   ["mos", /^(.+?)_(?:power_tube_temperature|mosfet_temperature|mos_temperature|temperature_mos)$/],
-  ["temperatura", /^(.+?)_(?:temperature_sensor_1|temperature_1|battery_temperature|temperature)$/],
+  [
+    "temperatura",
+    /^(.+?)_(?:temperature_sensor_1|temperature_1|battery_temperature|maximum_temperature|temperature)$/,
+  ],
   ["cicli", /^(.+?)_(?:charging_cycles|battery_cycles|cycle_count|cycles)$/],
   [
     "energia",
@@ -202,7 +217,7 @@ const CODE = Object.freeze([
   ],
   [
     "capacita",
-    /^(.+?)_(?:total_battery_capacity_setting|nominal_capacity|design_capacity|battery_capacity|total_capacity|capacity)$/,
+    /^(.+?)_(?:total_battery_capacity_setting|nominal_capacity|design_capacity|rated_capacity|battery_capacity|total_capacity|capacity)$/,
   ],
 ]);
 
@@ -265,10 +280,13 @@ function tipoDaNomi(testo, gruppo) {
   if (/(^|[^a-z])jk([^a-z]|$)|jkbms|jikong/.test(scritto)) return "jk";
   if (/jbd|xiaoxiang|overkill/.test(scritto)) return "jbd";
   if (/daly/.test(scritto)) return "daly";
+  if (/huawei|luna\s?2000/.test(scritto)) return "huawei";
   /* Senza la marca nel nome la dice la forma: il tubo di potenza è solo dei
-   * JK, la cella col numero in mezzo solo dei Daly. */
+   * JK, la cella col numero in mezzo solo dei Daly, lo «stato di capacità»
+   * solo di Huawei. */
   if (gruppo.jk) return "jk";
   if (gruppo.daly) return "daly";
+  if (gruppo.huawei) return "huawei";
   return "altro";
 }
 
@@ -322,6 +340,7 @@ export function pacchiDaImportare(states = {}, config, nomeDi = (entity) => enti
       nomi: [],
       jk: false,
       daly: false,
+      huawei: false,
     };
     gruppi.set(prefisso, gruppo);
     gruppo.nomi.push(pulito(stato?.attributes?.friendly_name));
@@ -331,18 +350,28 @@ export function pacchiDaImportare(states = {}, config, nomeDi = (entity) => enti
       continue;
     }
     if (campo === "mos" && /power_tube/.test(entity)) gruppo.jk = true;
+    if (campo === "soc" && /_state_of_capacity$/.test(entity)) gruppo.huawei = true;
     /* Il primo che arriva tiene il posto: due `temperature_sensor_1` non ci
      * sono, ma `temperature_1` e `temperature` sì, e la sonda numerata è la
      * più precisa. */
     if (!gruppo.campi[campo]) gruppo.campi[campo] = entity;
     else if (campo === "temperatura" && /_1$/.test(entity)) gruppo.campi[campo] = entity;
   }
+  const unPacco = (gruppo) =>
+    Boolean(
+      gruppo?.campi.soc &&
+        (gruppo.celle.length >= 2 || (gruppo.campi.tensione && gruppo.campi.corrente)),
+    );
   const pacchi = [];
   for (const [prefisso, gruppo] of gruppi) {
     const soc = gruppo.campi.soc;
     if (!soc || gia.has(soc)) continue;
-    const bms = gruppo.celle.length >= 2 || (gruppo.campi.tensione && gruppo.campi.corrente);
-    if (!bms) continue;
+    if (!unPacco(gruppo)) continue;
+    /* Huawei Solar pubblica la batteria due volte: tutta insieme sotto
+     * `battery` e modulo per modulo sotto `battery_1`, `battery_2`. Contarle
+     * tutte e tre vorrebbe dire la potenza due volte: coi moduli, la somma si
+     * lascia alla pagina. */
+    if (gruppo.huawei && unPacco(gruppi.get(`${prefisso}_1`))) continue;
     const nome =
       nomeComune(gruppo.nomi.filter(Boolean)) ||
       nomeDalPrefisso(prefisso) ||

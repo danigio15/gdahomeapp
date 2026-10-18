@@ -174,6 +174,71 @@ test("il rilevamento riconosce anche un Daly e un JBD", () => {
   );
 });
 
+/* Una LUNA2000 come la pubblica Huawei Solar (#264): tutta la batteria sotto
+ * `battery_` e un modulo per prefisso numerato. Celle non ce ne sono. */
+function luna(moduli = [1, 2], { dispositivo = "battery" } = {}) {
+  const nome = dispositivo === "battery" ? "Battery" : "Batteries";
+  const stati = {};
+  const metti = (prefisso, etichetta) => {
+    const fn = (coda) => ({ friendly_name: `${etichetta} ${coda}` });
+    stati[`sensor.${prefisso}_state_of_capacity`] = stato(64, "%", {
+      ...fn("State of capacity"),
+      device_class: "battery",
+    });
+    stati[`sensor.${prefisso}_charge_discharge_power`] = stato(900, "W", fn("Charge/Discharge power"));
+    stati[`sensor.${prefisso}_bus_voltage`] = stato(451.2, "V", fn("Bus voltage"));
+    stati[`sensor.${prefisso}_bus_current`] = stato(2, "A", fn("Bus current"));
+    stati[`sensor.${prefisso}_total_charge`] = stato(812, "kWh", fn("Total charge"));
+  };
+  metti(dispositivo, nome);
+  stati[`sensor.${dispositivo}_rated_capacity`] = stato(10000, "Wh", {
+    friendly_name: `${nome} Rated capacity`,
+  });
+  stati[`sensor.${dispositivo}_day_charge`] = stato(3.4, "kWh", { friendly_name: `${nome} Day charge` });
+  for (const n of moduli) {
+    metti(`${dispositivo}_${n}`, `${nome} ${n}`);
+    stati[`sensor.${dispositivo}_${n}_maximum_temperature`] = stato(24, "°C", {
+      friendly_name: `${nome} ${n} Maximum temperature`,
+    });
+    stati[`sensor.${dispositivo}_${n}_minimum_temperature`] = stato(21, "°C", {
+      friendly_name: `${nome} ${n} Minimum temperature`,
+    });
+  }
+  return stati;
+}
+
+test("una Huawei LUNA2000 si riconosce: i moduli, senza contare due volte la somma", () => {
+  const pacchi = pacchiDaImportare(luna([1, 2]), {});
+  assert.deepEqual(
+    pacchi.map((pacco) => pacco.entity),
+    ["sensor.battery_1_state_of_capacity", "sensor.battery_2_state_of_capacity"],
+  );
+  assert.deepEqual(pacchi[0], {
+    entity: "sensor.battery_1_state_of_capacity",
+    name: "Battery 1",
+    icon: "battery",
+    tipo: "huawei",
+    tensione: "sensor.battery_1_bus_voltage",
+    corrente: "sensor.battery_1_bus_current",
+    potenza: "sensor.battery_1_charge_discharge_power",
+    temperatura: "sensor.battery_1_maximum_temperature",
+  });
+  /* La temperatura minima non è un'altra temperatura del pacco. */
+  assert.equal(campoDelBms("sensor.battery_1_minimum_temperature", stato(21, "°C")), null);
+});
+
+test("una LUNA2000 senza moduli pubblicati è un pacco solo, con la sua capacità", () => {
+  const [pacco, ...altri] = pacchiDaImportare(luna([], { dispositivo: "batteries" }), {});
+  assert.equal(altri.length, 0);
+  assert.equal(pacco.entity, "sensor.batteries_state_of_capacity");
+  assert.equal(pacco.tipo, "huawei");
+  assert.equal(pacco.name, "Batteries");
+  assert.equal(pacco.capacita, "sensor.batteries_rated_capacity");
+  const letto = letturaDelPacco(pacco, luna([], { dispositivo: "batteries" }));
+  assert.equal(letto.capacitaKwh, 10);
+  assert.equal(letto.verso, "carica");
+});
+
 test("«Trova le celle» le prende dal prefisso delle altre entità del pacco", () => {
   const stati = { ...jk("jk_bms", { celle: SEDICI }), ...jk("jk_bms_2", { celle: [3.3, 3.31] }) };
   const celle = celleDelPacco(stati, { entity: "", tensione: "sensor.jk_bms_total_voltage" });

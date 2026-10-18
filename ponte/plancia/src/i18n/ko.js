@@ -5159,8 +5159,10 @@ export default Object.freeze({
   "ideal below ${soglia}": "${soglia} 미만이 이상적",
   "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.":
     "Ah, Wh 또는 kWh 단위. 비워 두면 충전량과 용량으로 계산합니다.",
-  "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
-    "JK, JBD, Daly BMS를 엔티티 이름으로 인식하고 접두사별로 묶습니다. 여기에 한 번만 행으로 추가하며, 그 뒤로는 사용자의 것입니다.",
+  "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
+    "JK, JBD, Daly BMS와 Huawei LUNA2000 배터리를 엔티티 이름으로 인식하고 접두사별로 묶습니다. 여기에 한 번만 행으로 추가하며, 그 뒤로는 사용자의 것입니다.",
+  "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one.":
+    "선택 사항입니다. 인버터를 통해 통신하는 배터리(Huawei Solar 통합을 쓰는 Huawei LUNA2000 등)에는 고를 BMS가 없습니다. 충전 상태, 전력, 에너지는 「에너지」의 「흐름과 엔티티」 탭에 있는 「Battery · charge」와 「Battery · discharge」 칸에 넣습니다. 이 탭은 팩이나 모듈을 하나씩 보기 위한 것입니다.",
   "max ${cifre(pacco.massima.volt, 3)} V · cell ${pacco.massima.numero}":
     "최대 ${cifre(pacco.massima.volt, 3)} V · 셀 ${pacco.massima.numero}",
   "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}":

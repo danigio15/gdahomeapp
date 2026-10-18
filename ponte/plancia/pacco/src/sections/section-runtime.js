@@ -545,7 +545,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GMFBQDEO.js";
+} from "../../chunk-QQW45MYA.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3780,6 +3780,7 @@ var SOURCE_INDEX = Object.freeze({
   "Facoltativa: mostrata durante la ricarica": "Optional: shown while charging",
   "Facoltativa: sostituisce il calcolo del giorno.": "Optional: overrides the daily calculation.",
   "Facoltativa: sostituisce il calcolo del mese corrente.": "Optional: overrides the current-month calculation.",
+  "Facoltativa. Una batteria che parla attraverso l'inverter — come la Huawei LUNA2000 con l'integrazione Huawei Solar — non ha un BMS da scegliere: stato di carica, potenza ed energia si mettono in Energia, linguetta «Flussi ed entità», nei riquadri «Batteria · carica» e «Batteria · scarica». Questa scheda serve solo a chi vuole vedere i pacchi, o i moduli, uno per uno.": "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one.",
   "facoltativo": "optional",
   "Facoltativo": "Optional",
   "Facoltativo: il «device» di remote.send_command": "Optional: the «device» of remote.send_command",
@@ -5994,7 +5995,7 @@ var SOURCE_INDEX = Object.freeze({
   "ricomincia da capo": "start over",
   "Riconnessione...": "Reconnecting…",
   "Riconnessione…": "Reconnecting…",
-  "Riconosce i BMS JK, JBD e Daly dai nomi delle loro entità e li raggruppa per prefisso. Li mette qui come righe, una volta sola: da lì in poi sono tuoi.": "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.",
+  "Riconosce i BMS JK, JBD e Daly e le batterie Huawei LUNA2000 dai nomi delle loro entità e li raggruppa per prefisso. Li mette qui come righe, una volta sola: da lì in poi sono tuoi.": "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.",
   "Riconosciuto come": "Recognised as",
   "Riempio io così": "This is what I will write",
   "Rientro": "I'm home",
@@ -41772,7 +41773,7 @@ var CHIAVE_ACCUMULO = "cd_accumulo";
 var SOGLIA_DELTA_MV = 30;
 var RIPOSO_W = 15;
 var RIPOSO_A = 0.3;
-var TIPI2 = Object.freeze(["jk", "jbd", "daly", "altro"]);
+var TIPI2 = Object.freeze(["jk", "jbd", "daly", "huawei", "altro"]);
 var CAMPI_DEL_PACCO = Object.freeze([
   "soh",
   "tensione",
@@ -41833,20 +41834,24 @@ var CODE = Object.freeze([
   ["scarta", /^(.+?)_(?:min|max|average|avg|highest|lowest)_cell_voltage$/],
   ["scarta", /^(.+?)_cell_voltage_(?:min|max|average|avg)$/],
   ["scarta", /^(.+?)_(?:min|max)_voltage_cell$/],
+  ["scarta", /^(.+?)_minimum_temperature$/],
   [
     "delta",
     /^(.+?)_(?:delta_cell_voltage|cell_voltage_delta|cell_delta_voltage|delta_voltage|cell_voltage_difference|cell_delta)$/
   ],
   ["cella", /^(.+?)_cell_voltage_?(\d{1,2})$/],
   ["cella", /^(.+?)_cell_?(\d{1,2})_voltage$/],
-  ["soc", /^(.+?)_(?:state_of_charge|soc|battery_level)$/],
+  ["soc", /^(.+?)_(?:state_of_charge|state_of_capacity|soc|battery_level)$/],
   ["soc", /^(.+?)_battery$/],
   ["soh", /^(.+?)_(?:state_of_health|soh)$/],
-  ["tensione", /^(.+?)_(?:total_voltage|battery_voltage|pack_voltage|voltage)$/],
-  ["corrente", /^(.+?)_(?:battery_current|current)$/],
-  ["potenza", /^(.+?)_(?:battery_power|power)$/],
+  ["tensione", /^(.+?)_(?:total_voltage|battery_voltage|pack_voltage|bus_voltage|voltage)$/],
+  ["corrente", /^(.+?)_(?:battery_current|bus_current|current)$/],
+  ["potenza", /^(.+?)_(?:charge_discharge_power|battery_power|power)$/],
   ["mos", /^(.+?)_(?:power_tube_temperature|mosfet_temperature|mos_temperature|temperature_mos)$/],
-  ["temperatura", /^(.+?)_(?:temperature_sensor_1|temperature_1|battery_temperature|temperature)$/],
+  [
+    "temperatura",
+    /^(.+?)_(?:temperature_sensor_1|temperature_1|battery_temperature|maximum_temperature|temperature)$/
+  ],
   ["cicli", /^(.+?)_(?:charging_cycles|battery_cycles|cycle_count|cycles)$/],
   [
     "energia",
@@ -41854,7 +41859,7 @@ var CODE = Object.freeze([
   ],
   [
     "capacita",
-    /^(.+?)_(?:total_battery_capacity_setting|nominal_capacity|design_capacity|battery_capacity|total_capacity|capacity)$/
+    /^(.+?)_(?:total_battery_capacity_setting|nominal_capacity|design_capacity|rated_capacity|battery_capacity|total_capacity|capacity)$/
   ]
 ]);
 var UNITA_DEL_CAMPO = Object.freeze({
@@ -41902,8 +41907,10 @@ function tipoDaNomi(testo4, gruppo) {
   if (/(^|[^a-z])jk([^a-z]|$)|jkbms|jikong/.test(scritto3)) return "jk";
   if (/jbd|xiaoxiang|overkill/.test(scritto3)) return "jbd";
   if (/daly/.test(scritto3)) return "daly";
+  if (/huawei|luna\s?2000/.test(scritto3)) return "huawei";
   if (gruppo.jk) return "jk";
   if (gruppo.daly) return "daly";
+  if (gruppo.huawei) return "huawei";
   return "altro";
 }
 var SIGLE2 = /* @__PURE__ */ new Set(["jk", "jbd", "bms", "ble", "soc", "lfp"]);
@@ -41936,7 +41943,8 @@ function pacchiDaImportare(states = {}, config, nomeDi17 = (entity2) => entity2)
       campi: {},
       nomi: [],
       jk: false,
-      daly: false
+      daly: false,
+      huawei: false
     };
     gruppi2.set(prefisso, gruppo);
     gruppo.nomi.push(pulito33(stato3?.attributes?.friendly_name));
@@ -41946,15 +41954,19 @@ function pacchiDaImportare(states = {}, config, nomeDi17 = (entity2) => entity2)
       continue;
     }
     if (campo5 === "mos" && /power_tube/.test(entity2)) gruppo.jk = true;
+    if (campo5 === "soc" && /_state_of_capacity$/.test(entity2)) gruppo.huawei = true;
     if (!gruppo.campi[campo5]) gruppo.campi[campo5] = entity2;
     else if (campo5 === "temperatura" && /_1$/.test(entity2)) gruppo.campi[campo5] = entity2;
   }
+  const unPacco2 = (gruppo) => Boolean(
+    gruppo?.campi.soc && (gruppo.celle.length >= 2 || gruppo.campi.tensione && gruppo.campi.corrente)
+  );
   const pacchi = [];
   for (const [prefisso, gruppo] of gruppi2) {
     const soc = gruppo.campi.soc;
     if (!soc || gia.has(soc)) continue;
-    const bms = gruppo.celle.length >= 2 || gruppo.campi.tensione && gruppo.campi.corrente;
-    if (!bms) continue;
+    if (!unPacco2(gruppo)) continue;
+    if (gruppo.huawei && unPacco2(gruppi2.get(`${prefisso}_1`))) continue;
     const nome = nomeComune(gruppo.nomi.filter(Boolean)) || nomeDalPrefisso(prefisso) || pulito33(nomeDi17(soc)) || soc;
     const riga3 = {
       entity: soc,
@@ -42256,6 +42268,7 @@ function tipoInParole(tipo) {
   if (tipo === "jk") return "JK BMS";
   if (tipo === "jbd") return "JBD BMS";
   if (tipo === "daly") return "Daly BMS";
+  if (tipo === "huawei") return "Huawei LUNA2000";
   return "BMS";
 }
 function quantiPacchi(quanti2) {
@@ -90111,6 +90124,40 @@ function minimumScore(plan) {
   return Math.max(1.5, base);
 }
 var CANDIDATES_PER_SLOT = 4;
+var NOTE2 = Object.freeze([
+  {
+    ref: "dm.energy_stato_carica_batteria",
+    id: /^sensor\.batter(?:y|ies)_state_of_capacity$/
+  },
+  {
+    ref: "dm.energy_potenza_batteria",
+    id: /^sensor\.batter(?:y|ies)_charge_discharge_power$/,
+    verso: "charge"
+  },
+  { ref: "dm.energy_batteria_caricata_oggi", id: /^sensor\.batter(?:y|ies)_day_charge$/ },
+  { ref: "dm.energy_batteria_scaricata_oggi", id: /^sensor\.batter(?:y|ies)_day_discharge$/ }
+]);
+function assegnateDaiNomi(records, plans, used) {
+  const fuori = [];
+  for (const plan of plans) {
+    const nota = NOTE2.find((voce3) => voce3.ref === plan.ref);
+    if (!nota) continue;
+    const trovate = records.filter((record3) => nota.id.test(record3.id) && !used.has(record3.id));
+    if (trovate.length !== 1) continue;
+    const [record2] = trovate;
+    used.add(record2.id);
+    fuori.push({
+      ref: plan.ref,
+      label: plan.label,
+      section: plan.section,
+      id: record2.id,
+      name: record2.name,
+      score: 99,
+      ...nota.verso ? { verso: nota.verso } : {}
+    });
+  }
+  return fuori;
+}
 function detectSlots(records, plans, { taken = /* @__PURE__ */ new Set(), postings = null, margin = 1.2 } = {}) {
   const lists = postings || buildPostings(records);
   const stamps = new Int32Array(records.length);
@@ -90118,8 +90165,11 @@ function detectSlots(records, plans, { taken = /* @__PURE__ */ new Set(), postin
   const pairs = [];
   const runnerUp = /* @__PURE__ */ new Map();
   let stamp = 0;
+  const used = new Set(taken);
+  const daiNomi = assegnateDaiNomi(records, plans, used);
+  const assigned = new Set(daiNomi.map((voce3) => voce3.ref));
   for (const plan of plans) {
-    if (!plan.keys.length) continue;
+    if (!plan.keys.length || assigned.has(plan.ref)) continue;
     stamp += 1;
     const candidates2 = gatherCandidates(plan, lists, stamps, stamp, buffer);
     const best = [];
@@ -90143,10 +90193,8 @@ function detectSlots(records, plans, { taken = /* @__PURE__ */ new Set(), postin
   pairs.sort(
     (left, right) => right.score - left.score || records[left.position].id.length - records[right.position].id.length || (left.ref < right.ref ? -1 : left.ref > right.ref ? 1 : 0)
   );
-  const assignments = [];
+  const assignments = [...daiNomi];
   const undecided = [];
-  const assigned = /* @__PURE__ */ new Set();
-  const used = new Set(taken);
   const ambiguous = /* @__PURE__ */ new Set();
   for (const pair of pairs) {
     if (assigned.has(pair.ref) || ambiguous.has(pair.ref)) continue;
@@ -90563,7 +90611,11 @@ async function writeEnergyAssignments(assignments) {
     for (const item of energy) {
       const [group, key] = ENERGY_SLOT_PATHS.get(item.ref);
       bersaglio[group] = { ...bersaglio[group] || {} };
-      if (!clean(bersaglio[group][key])) bersaglio[group][key] = item.id;
+      if (clean(bersaglio[group][key])) continue;
+      bersaglio[group][key] = item.id;
+      const dichiarato = bersaglio[group].signed;
+      if (item.verso && !clean(dichiarato?.positive))
+        bersaglio[group].signed = { ...dichiarato || {}, positive: item.verso };
     }
   });
   model2.metadata = { ...model2.metadata || {}, semantics_version: keptSemanticsVersion(model2.metadata) };
@@ -132496,6 +132548,12 @@ var scheda6 = costruisciSchedaDichiarata({
   rigaNuova: { tipo: "jk", icon: "battery" },
   campiInPiu: campiDellaRiga,
   bozzaInPiu: conICampiDellaRiga,
+  inTesta: () => `<div class="dm-dich-piu" data-dm-accu-inverter><small>🔌 ${esc(
+    t(
+      "Facoltativa. Una batteria che parla attraverso l'inverter — come la Huawei LUNA2000 con l'integrazione Huawei Solar — non ha un BMS da scegliere: stato di carica, potenza ed energia si mettono in Energia, linguetta «Flussi ed entità», nei riquadri «Batteria · carica» e «Batteria · scarica». Questa scheda serve solo a chi vuole vedere i pacchi, o i moduli, uno per uno.",
+      "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one."
+    )
+  )}</small></div>`,
   parole: {
     /* «Batteria di accumulo», e non «Batterie» come la linguetta in Energia:
      * nel Config c'era già una scheda «Batterie», quella delle pile dei
@@ -132532,8 +132590,8 @@ var scheda6 = costruisciSchedaDichiarata({
     ),
     presi: (quanti2) => t(`${quanti2} pacchi aggiunti`, `${quanti2} packs added`),
     notaImporta: t(
-      "Riconosce i BMS JK, JBD e Daly dai nomi delle loro entità e li raggruppa per prefisso. Li mette qui come righe, una volta sola: da lì in poi sono tuoi.",
-      "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours."
+      "Riconosce i BMS JK, JBD e Daly e le batterie Huawei LUNA2000 dai nomi delle loro entità e li raggruppa per prefisso. Li mette qui come righe, una volta sola: da lì in poi sono tuoi.",
+      "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours."
     )
   },
   /* Come stanno adesso i pacchi scritti: la pagina e la scheda li leggono

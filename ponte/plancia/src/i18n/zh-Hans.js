@@ -5088,8 +5088,10 @@ export default Object.freeze({
   "ideal below ${soglia}": "理想低于 ${soglia}",
   "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.":
     "单位为 Ah、Wh 或 kWh。留空则根据电量和容量计算。",
-  "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
-    "根据实体名称识别 JK、JBD 和 Daly BMS，并按前缀分组。只会以行的形式添加到这里一次：之后就归你管理。",
+  "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
+    "根据实体名称识别 JK、JBD 和 Daly BMS 以及 Huawei LUNA2000 电池，并按前缀分组。只会以行的形式添加到这里一次：之后就归你管理。",
+  "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one.":
+    "可选。通过逆变器通信的电池（例如使用 Huawei Solar 集成的 Huawei LUNA2000）没有需要选择的 BMS：充电状态、功率和能量在“能源”的“流向与实体”标签页中，填入“Battery · charge”和“Battery · discharge”两栏。此标签页仅用于逐个查看电池包或模块。",
   "max ${cifre(pacco.massima.volt, 3)} V · cell ${pacco.massima.numero}":
     "最高 ${cifre(pacco.massima.volt, 3)} V · 电芯 ${pacco.massima.numero}",
   "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}":

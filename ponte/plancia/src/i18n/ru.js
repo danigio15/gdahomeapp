@@ -5187,8 +5187,10 @@ export default Object.freeze({
   "ideal below ${soglia}": "идеально ниже ${soglia}",
   "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.":
     "В Ач, Вт·ч или кВт·ч. Если оставить пустым, вычисляется по заряду и ёмкости.",
-  "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
-    "Распознаёт BMS JK, JBD и Daly по именам их объектов и группирует по префиксу. Добавляет их сюда строками один раз: дальше они ваши.",
+  "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
+    "Распознаёт BMS JK, JBD и Daly и батареи Huawei LUNA2000 по именам их объектов и группирует по префиксу. Добавляет их сюда строками один раз: дальше они ваши.",
+  "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one.":
+    "Необязательно. У батареи, которая работает через инвертор, — например Huawei LUNA2000 с интеграцией Huawei Solar — нет BMS для выбора: уровень заряда, мощность и энергия задаются в разделе «Энергия», вкладка «Потоки и сущности», в блоках «Battery · charge» и «Battery · discharge». Эта вкладка нужна только для того, чтобы видеть блоки или модули по отдельности.",
   "max ${cifre(pacco.massima.volt, 3)} V · cell ${pacco.massima.numero}":
     "макс. ${cifre(pacco.massima.volt, 3)} В · ячейка ${pacco.massima.numero}",
   "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}":

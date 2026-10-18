@@ -5171,8 +5171,10 @@ export default Object.freeze({
   "ideal below ${soglia}": "ideal: ${soglia} altı",
   "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.":
     "Ah, Wh veya kWh cinsinden. Boş bırakılırsa şarj ve kapasiteden hesaplanır.",
-  "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
-    "JK, JBD ve Daly BMS'lerini varlık adlarından tanır ve öneke göre gruplar. Onları buraya bir kez satır olarak ekler: sonrasında sizindir.",
+  "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
+    "JK, JBD ve Daly BMS'lerini ve Huawei LUNA2000 bataryalarını varlık adlarından tanır ve öneke göre gruplar. Onları buraya bir kez satır olarak ekler: sonrasında sizindir.",
+  "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one.":
+    "İsteğe bağlı. İnvertör üzerinden konuşan bir batarya — Huawei Solar entegrasyonuyla Huawei LUNA2000 gibi — için seçilecek bir BMS yoktur: şarj durumu, güç ve enerji Enerji bölümünde, «Akışlar ve varlıklar» sekmesinde, «Battery · charge» ve «Battery · discharge» kutularına girilir. Bu sekme yalnızca paketleri ya da modülleri tek tek görmek içindir.",
   "max ${cifre(pacco.massima.volt, 3)} V · cell ${pacco.massima.numero}":
     "maks ${cifre(pacco.massima.volt, 3)} V · hücre ${pacco.massima.numero}",
   "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}":

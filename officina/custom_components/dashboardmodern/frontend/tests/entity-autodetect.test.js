@@ -393,3 +393,54 @@ test("i registri caricati per il rilevamento restano scritti per chi disegna", (
     dimenticaLeStanze();
   }
 });
+
+/* «Che menu devo selezionare per il BMS?» (#264). Una LUNA2000 con Huawei
+ * Solar: per le parole «state of capacity» non è lo stato di carica, e ogni
+ * cosa c'è due volte — tutta la batteria e il modulo 1 — quindi il rilevamento
+ * lasciava la batteria tutta in sospeso. I nomi dell'integrazione vincono. */
+test("the Huawei Solar battery fills the Energy battery slots by its own names", () => {
+  const s = (id, name, extra) => sensor(`sensor.${id}`, name, extra);
+  const energia = { dc: "energy", unit: "kWh", sc: "total_increasing" };
+  const records = buildEntityIndex(
+    [
+      s("battery_state_of_capacity", "Battery State of capacity", { dc: "battery", unit: "%" }),
+      s("battery_1_state_of_capacity", "Battery 1 State of capacity", { dc: "battery", unit: "%" }),
+      s("battery_charge_discharge_power", "Battery Charge/Discharge power", { dc: "power", unit: "W" }),
+      s("battery_1_charge_discharge_power", "Battery 1 Charge/Discharge power", { dc: "power", unit: "W" }),
+      s("battery_day_charge", "Battery Day charge", energia),
+      s("battery_day_discharge", "Battery Day discharge", energia),
+      s("battery_1_total_charge", "Battery 1 Total charge", energia),
+    ],
+    { version: `huawei${Math.random()}` },
+  ).records;
+  const plans = [
+    plan("dm.energy_stato_carica_batteria", "Stato carica batteria (%)"),
+    plan("dm.energy_potenza_batteria", "Potenza batteria (W)"),
+    plan("dm.energy_batteria_caricata_oggi", "Batteria caricata oggi (kWh)"),
+    plan("dm.energy_batteria_scaricata_oggi", "Batteria scaricata oggi (kWh)"),
+  ];
+  /* Prima di questi nomi, le quattro restavano tutte in sospeso. */
+  const { assignments } = detectSlots(records, plans, { postings: buildPostings(records) });
+  const per = Object.fromEntries(assignments.map((item) => [item.ref, item]));
+  assert.equal(per["dm.energy_stato_carica_batteria"].id, "sensor.battery_state_of_capacity");
+  assert.equal(per["dm.energy_potenza_batteria"].id, "sensor.battery_charge_discharge_power");
+  /* Huawei scrive la potenza positiva in carica: il verso viaggia con lei. */
+  assert.equal(per["dm.energy_potenza_batteria"].verso, "charge");
+  assert.equal(per["dm.energy_batteria_caricata_oggi"].id, "sensor.battery_day_charge");
+  assert.equal(per["dm.energy_batteria_scaricata_oggi"].id, "sensor.battery_day_discharge");
+
+  /* Già scritta altrove, o due batterie con lo stesso nome: il nome non decide. */
+  const presa = detectSlots(records, plans.slice(0, 1), {
+    taken: new Set(["sensor.battery_state_of_capacity"]),
+  });
+  assert.notEqual(presa.assignments[0]?.id, "sensor.battery_state_of_capacity");
+  const due = buildEntityIndex(
+    [
+      s("batteries_state_of_capacity", "Batteries State of capacity", { dc: "battery", unit: "%" }),
+      s("battery_state_of_capacity", "Battery State of capacity", { dc: "battery", unit: "%" }),
+    ],
+    { version: `huawei-due${Math.random()}` },
+  ).records;
+  const dubbio = detectSlots(due, plans.slice(0, 1));
+  assert.equal(dubbio.assignments.find((item) => item.score === 99), undefined);
+});

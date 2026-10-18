@@ -516,6 +516,60 @@ function minimumScore(plan) {
 
 const CANDIDATES_PER_SLOT = 4;
 
+/* Le entità che un'integrazione chiama sempre allo stesso modo, e che le parole
+ * da sole non trovano (#264).
+ *
+ * Huawei Solar descrive la batteria di una LUNA2000 con nomi suoi: lo stato di
+ * carica è «state of capacity», che con «Stato carica batteria» ha in comune
+ * una parola sola; e pubblica ogni cosa due volte, tutta la batteria sotto
+ * `battery_` e modulo per modulo sotto `battery_1_`, che per le parole sono
+ * candidati identici — il rilevamento li lasciava tutti in sospeso. Il nome
+ * intero però non è un'ipotesi: è quello dell'integrazione, e vince. Il
+ * dispositivo si chiama «Battery» nelle versioni vecchie e «Batteries» in
+ * quelle nuove.
+ *
+ * `verso` dice da che parte scrive la potenza: Huawei la scrive positiva in
+ * carica, al contrario di quello da cui parte la mappa, e chi la trova qui
+ * non deve scoprirlo dalle frecce. */
+const NOTE = Object.freeze([
+  {
+    ref: "dm.energy_stato_carica_batteria",
+    id: /^sensor\.batter(?:y|ies)_state_of_capacity$/,
+  },
+  {
+    ref: "dm.energy_potenza_batteria",
+    id: /^sensor\.batter(?:y|ies)_charge_discharge_power$/,
+    verso: "charge",
+  },
+  { ref: "dm.energy_batteria_caricata_oggi", id: /^sensor\.batter(?:y|ies)_day_charge$/ },
+  { ref: "dm.energy_batteria_scaricata_oggi", id: /^sensor\.batter(?:y|ies)_day_discharge$/ },
+]);
+
+/* Le caselle che un nome conosciuto riempie da solo, prima delle parole. */
+function assegnateDaiNomi(records, plans, used) {
+  const fuori = [];
+  for (const plan of plans) {
+    const nota = NOTE.find((voce) => voce.ref === plan.ref);
+    if (!nota) continue;
+    const trovate = records.filter((record) => nota.id.test(record.id) && !used.has(record.id));
+    /* Due inverter, due batterie: quale delle due è la casa non lo dice il
+     * nome, e la casella resta alle parole. */
+    if (trovate.length !== 1) continue;
+    const [record] = trovate;
+    used.add(record.id);
+    fuori.push({
+      ref: plan.ref,
+      label: plan.label,
+      section: plan.section,
+      id: record.id,
+      name: record.name,
+      score: 99,
+      ...(nota.verso ? { verso: nota.verso } : {}),
+    });
+  }
+  return fuori;
+}
+
 /**
  * Propose one entity per slot.
  *
@@ -537,9 +591,12 @@ export function detectSlots(
   const pairs = [];
   const runnerUp = new Map();
   let stamp = 0;
+  const used = new Set(taken);
+  const daiNomi = assegnateDaiNomi(records, plans, used);
+  const assigned = new Set(daiNomi.map((voce) => voce.ref));
 
   for (const plan of plans) {
-    if (!plan.keys.length) continue;
+    if (!plan.keys.length || assigned.has(plan.ref)) continue;
     stamp += 1;
     const candidates = gatherCandidates(plan, lists, stamps, stamp, buffer);
     const best = [];
@@ -570,10 +627,8 @@ export function detectSlots(
       (left.ref < right.ref ? -1 : left.ref > right.ref ? 1 : 0),
   );
 
-  const assignments = [];
+  const assignments = [...daiNomi];
   const undecided = [];
-  const assigned = new Set();
-  const used = new Set(taken);
   const ambiguous = new Set();
   for (const pair of pairs) {
     if (assigned.has(pair.ref) || ambiguous.has(pair.ref)) continue;

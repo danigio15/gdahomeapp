@@ -5160,8 +5160,10 @@ export default Object.freeze({
   "ideal below ${soglia}": "${soglia} से कम आदर्श",
   "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.":
     "Ah, Wh या kWh में। खाली छोड़ने पर यह चार्ज और क्षमता से निकाली जाती है।",
-  "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
-    "JK, JBD और Daly BMS को उनकी एंटिटी के नामों से पहचानता है और उपसर्ग के हिसाब से समूह बनाता है। उन्हें यहाँ एक बार पंक्तियों के रूप में रखता है: उसके बाद वे आपके हैं।",
+  "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
+    "JK, JBD और Daly BMS और Huawei LUNA2000 बैटरियों को उनकी एंटिटी के नामों से पहचानता है और उपसर्ग के हिसाब से समूह बनाता है। उन्हें यहाँ एक बार पंक्तियों के रूप में रखता है: उसके बाद वे आपके हैं।",
+  "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one.":
+    "वैकल्पिक। जो बैटरी इन्वर्टर के ज़रिए बात करती है — जैसे Huawei Solar इंटीग्रेशन के साथ Huawei LUNA2000 — उसमें चुनने के लिए कोई BMS नहीं होता: चार्ज की स्थिति, पावर और ऊर्जा «ऊर्जा» में, «प्रवाह और इकाइयाँ» टैब में, «Battery · charge» और «Battery · discharge» खानों में डाली जाती हैं। यह टैब केवल पैक या मॉड्यूल एक-एक करके देखने के लिए है।",
   "max ${cifre(pacco.massima.volt, 3)} V · cell ${pacco.massima.numero}":
     "अधिकतम ${cifre(pacco.massima.volt, 3)} V · सेल ${pacco.massima.numero}",
   "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}":
