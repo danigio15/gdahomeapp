@@ -394,6 +394,25 @@ bool _vaBenePer(String evento, Entita una) => switch (evento) {
   _ => false,
 };
 
+/// Le entita' da proporre in «Quali», in ordine: per il movimento prima le
+/// telecamere, poi i sensori (movimento, attraversamento, intrusione), ognuno
+/// in ordine di nome.
+@visibleForTesting
+List<Entita> entitaPerQuali(String evento, List<Entita> tutte) {
+  final adatte = [
+    for (final una in tutte)
+      if (_vaBenePer(evento, una)) una,
+  ];
+  if (evento != 'movimento') return adatte;
+  int peso(Entita una) => una.dominio == 'camera' ? 0 : 1;
+  return adatte..sort((a, b) {
+    final prima = peso(a).compareTo(peso(b));
+    return prima != 0
+        ? prima
+        : a.nome.toLowerCase().compareTo(b.nome.toLowerCase());
+  });
+}
+
 /// Un nome da leggere quando la casa non ne dice uno: `switch.lavatrice_2`
 /// diventa «Lavatrice 2».
 String nomeDallId(String id) {
@@ -478,18 +497,30 @@ class _StatoDelFoglio extends State<FoglioDellaVoce> {
     widget.cambia(nuova);
   }
 
+  /// «Quali»: le spunte valgono comunque si chiuda la finestra.
+  ///
+  /// «Spunto ingresso e balcone, chiudo, e c'e' ancora scritto "Tutte le
+  /// telecamere"»: le spunte si salvavano solo con «Fatto», e la finestra si
+  /// chiude anche trascinandola giu', toccando fuori o col tasto indietro —
+  /// e allora tornava `null`, e quello che si era spuntato si perdeva senza
+  /// dire niente. Adesso la finestra dice ogni spunta mentre la si mette
+  /// ([_SceltaDiPiu.cambiate]), e chiusa in qualunque modo vale l'ultima.
   Future<void> _sceglieQuali() async {
-    final adatte = [
-      for (final una in _entita)
-        if (_vaBenePer(_evento, una)) una,
-    ];
+    final adatte = entitaPerQuali(_evento, _entita);
+    List<String>? ultime;
     final scelte = await showModalBottomSheet<List<String>>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => _SceltaDiPiu(entita: adatte, scelte: _scelta.quali),
+      builder: (_) => _SceltaDiPiu(
+        entita: adatte,
+        scelte: _scelta.quali,
+        cambiate: (adesso) => ultime = adesso,
+      ),
     );
-    if (scelte != null) _cambia(_scelta.con(quali: scelte));
+    final nuove = scelte ?? ultime;
+    if (!mounted || nuove == null || listEquals(nuove, _scelta.quali)) return;
+    _cambia(_scelta.con(quali: nuove));
   }
 
   Future<void> _scriviLaSoglia() async {
@@ -652,7 +683,11 @@ class _StatoDelFoglio extends State<FoglioDellaVoce> {
               _RigaDelFoglio(
                 etichetta: inLingua(it: 'Quali', en: 'Which'),
                 tocca: _sceglieQuali,
-                child: Text(_qualiDetti, maxLines: 2),
+                child: Text(
+                  _qualiDetti,
+                  key: const Key('voce-quali'),
+                  maxLines: 2,
+                ),
               ),
             if (_evento == 'movimento')
               _RigaDelFoglio(
@@ -937,9 +972,17 @@ class _Pezzi extends StatelessWidget {
 
 /// Quali entita': piu' d'una, con la ricerca. Nessuna scelta vuol dire tutte.
 class _SceltaDiPiu extends StatefulWidget {
-  const _SceltaDiPiu({required this.entita, required this.scelte});
+  const _SceltaDiPiu({
+    required this.entita,
+    required this.scelte,
+    required this.cambiate,
+  });
   final List<Entita> entita;
   final List<String> scelte;
+
+  /// Le scelte di adesso, a ogni spunta: valgono anche se la finestra si
+  /// chiude senza «Fatto».
+  final ValueChanged<List<String>> cambiate;
 
   @override
   State<_SceltaDiPiu> createState() => _StatoDellaSceltaDiPiu();
@@ -948,6 +991,15 @@ class _SceltaDiPiu extends StatefulWidget {
 class _StatoDellaSceltaDiPiu extends State<_SceltaDiPiu> {
   late final Set<String> _scelte = {...widget.scelte};
   String _cerca = '';
+
+  /// Le scelte in ordine: quello della lista, poi quelle che la casa adesso
+  /// non dice (un'entita' tolta resta scelta finche' non la si toglie).
+  List<String> get _inOrdine => [
+    for (final una in widget.entita)
+      if (_scelte.contains(una.id)) una.id,
+    for (final id in _scelte)
+      if (!widget.entita.any((una) => una.id == id)) id,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -989,19 +1041,28 @@ class _StatoDellaSceltaDiPiu extends State<_SceltaDiPiu> {
               itemBuilder: (_, i) {
                 final una = trovate[i];
                 return CheckboxListTile(
+                  key: Key('quali-${una.id}'),
                   value: _scelte.contains(una.id),
+                  secondary: Icon(
+                    una.dominio == 'camera'
+                        ? Icons.videocam_rounded
+                        : Icons.sensors_rounded,
+                  ),
                   title: Text(una.nome),
                   subtitle: Text(
                     una.id,
                     style: const TextStyle(fontFamily: 'monospace'),
                   ),
-                  onChanged: (si) => setState(() {
-                    if (si == true) {
-                      _scelte.add(una.id);
-                    } else {
-                      _scelte.remove(una.id);
-                    }
-                  }),
+                  onChanged: (si) {
+                    setState(() {
+                      if (si == true) {
+                        _scelte.add(una.id);
+                      } else {
+                        _scelte.remove(una.id);
+                      }
+                    });
+                    widget.cambiate(_inOrdine);
+                  },
                 );
               },
             ),
@@ -1010,21 +1071,28 @@ class _StatoDellaSceltaDiPiu extends State<_SceltaDiPiu> {
             top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              /* I due tasti si dividono la riga. Il tema dell'app vuole i
+               * tasti pieni larghi quanto possono (`minimumSize` col solo
+               * alto, `vestito/tema.dart`): in una riga con uno `Spacer` in
+               * mezzo «Fatto» non aveva una larghezza, la riga non si
+               * disegnava, e la finestra si poteva solo chiudere
+               * trascinandola — perdendo le spunte. */
               child: Row(
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(<String>[]),
-                    child: Text(inLingua(it: 'Tutti', en: 'All')),
+                  Expanded(
+                    child: TextButton(
+                      key: const Key('quali-tutti'),
+                      onPressed: () => Navigator.of(context).pop(<String>[]),
+                      child: Text(inLingua(it: 'Tutti', en: 'All')),
+                    ),
                   ),
-                  const Spacer(),
-                  FilledButton(
-                    onPressed: () => Navigator.of(context).pop([
-                      for (final una in widget.entita)
-                        if (_scelte.contains(una.id)) una.id,
-                      for (final id in _scelte)
-                        if (!widget.entita.any((una) => una.id == id)) id,
-                    ]),
-                    child: Text(inLingua(it: 'Fatto', en: 'Done')),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      key: const Key('quali-fatto'),
+                      onPressed: () => Navigator.of(context).pop(_inOrdine),
+                      child: Text(inLingua(it: 'Fatto', en: 'Done')),
+                    ),
                   ),
                 ],
               ),

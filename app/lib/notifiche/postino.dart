@@ -267,11 +267,19 @@ Future<List<DarwinNotificationAttachment>?> _gliAllegati(
 /// della telecamera: su Android sotto la notifica, come «grande foto», con
 /// l'icona piccola a destra. Se il disegno non riesce, la notifica arriva
 /// semplice: col suo testo, come sempre.
-Future<void> mostra(NotificaDaMostrare quale) async {
+///
+/// Con [conIlDisegno] falso niente scheda e niente foto: e' la seconda prova,
+/// quando la prima non e' riuscita.
+Future<void> mostra(
+  NotificaDaMostrare quale, {
+  bool conIlDisegno = true,
+}) async {
   final notifica = quale.notifica;
   final canale = quale.canale;
   final tasti = quale.tasti;
-  final disegno = await _ilDisegnoDi(quale);
+  final disegno = conIlDisegno
+      ? await _ilDisegnoDi(quale)
+      : const DisegnoDellaNotifica();
   final grande = disegno.grande;
   final icona = disegno.icona;
   final allegati = await _gliAllegati(quale, disegno);
@@ -358,16 +366,60 @@ Future<void> mostra(NotificaDaMostrare quale) async {
 /// chiave cambiata — si mostra la frase di riserva: meglio «qualcosa e'
 /// successo» che niente. Una casa tolta da questo telefono invece tace
 /// ([eDiUnaCasaConosciuta]): non e' piu' sua.
+///
+/// Una notifica arrivata non si perde per strada: se il portachiavi non
+/// risponde, o il disegno della scheda non riesce, si mostra lo stesso — col
+/// suo testo, o almeno con la frase di riserva. Su Android, ad app chiusa,
+/// e' questo pezzo l'unico che la puo' mostrare: un errore qui era una
+/// notifica sparita senza traccia, e Firebase, che vede arrivare notifiche
+/// «urgenti» che non mostrano niente, le comincia a far aspettare.
 Future<NotificaDaMostrare?> apriEMostra(
   Map<String, dynamic> dati,
   Cassaforte cassaforte,
 ) async {
   if (!eUnaNostraSpinta(dati)) return null;
   final archivio = ArchivioDelleCase(cassaforte);
-  await archivio.apri();
-  final aperta = await apriQuellaArrivata(dati, archivio.tutte);
+  final NotificaDaMostrare? aperta;
+  try {
+    await archivio.apri();
+    aperta = await apriQuellaArrivata(dati, archivio.tutte);
+  } catch (_) {
+    /* Il portachiavi che non risponde: non si sa cosa c'e' dentro, ma che
+     * qualcosa e' successo si'. */
+    await _laFraseDiRiserva(dati);
+    return null;
+  }
   if (aperta == null) {
     if (!eDiUnaCasaConosciuta(dati, archivio.tutte)) return null;
+    await _laFraseDiRiserva(dati);
+    return null;
+  }
+  if (!await _eNuova(cassaforte, aperta.notifica.id)) return null;
+  try {
+    await mostra(aperta);
+  } catch (_) {
+    try {
+      await mostra(aperta, conIlDisegno: false);
+    } catch (_) {
+      await _laFraseDiRiserva(dati);
+    }
+  }
+  return aperta;
+}
+
+/// Se la notifica non e' gia' stata mostrata. Un portachiavi che non sa
+/// rispondere non la fa tacere: meglio una doppia che nessuna.
+Future<bool> _eNuova(Cassaforte cassaforte, String id) async {
+  try {
+    return await NotificheViste(cassaforte).segna(id);
+  } catch (_) {
+    return true;
+  }
+}
+
+/// «GdAHome: nuova notifica», per una busta che non si apre.
+Future<void> _laFraseDiRiserva(Map<String, dynamic> dati) async {
+  try {
     await _locali.show(
       id: (dati['b'] as String).hashCode & 0x7fffffff,
       title: fraseDiRiserva,
@@ -378,11 +430,9 @@ Future<NotificaDaMostrare?> apriEMostra(
         ),
       ),
     );
-    return null;
+  } catch (_) {
+    /* Nemmeno questa: non c'e' altro da fare. */
   }
-  if (!await NotificheViste(cassaforte).segna(aperta.notifica.id)) return null;
-  await mostra(aperta);
-  return aperta;
 }
 
 /// Ad app chiusa (Android): Android sveglia un pezzo di Dart solo per questo.
@@ -397,7 +447,11 @@ Future<void> quandoArrivaDaChiusa(RemoteMessage messaggio) async {
   /* Sull'iPhone la notifica la mostra gia' il sistema, aperta dall'estensione
    * (`ios/NotificheService`): mostrarne un'altra qui era la doppia. */
   if (!mostraLaCopiaLocale(defaultTargetPlatform, inPrimoPiano: false)) return;
-  await _locali.initialize(settings: _impostazioniLocali());
+  try {
+    await _locali.initialize(settings: _impostazioniLocali());
+  } catch (_) {
+    /* Gia' acceso in questo pezzo di Dart: si mostra lo stesso. */
+  }
   await apriEMostra(messaggio.data, const CassaforteDelSistema());
 }
 
@@ -414,6 +468,31 @@ bool mostraLaCopiaLocale(
   TargetPlatform piattaforma, {
   required bool inPrimoPiano,
 }) => piattaforma != TargetPlatform.iOS || inPrimoPiano;
+
+/// Se, per il sistema dell'iPhone, l'app e' in primo piano: e' li' che il
+/// sistema la notifica la tace e la passa all'app
+/// (`setForegroundNotificationPresentationOptions`).
+///
+/// Per l'iPhone «in primo piano» vuol dire anche **inattiva**: il centro
+/// notifiche tirato giu', il centro di controllo, il selettore delle app, una
+/// chiamata che arriva, l'attimo in cui si blocca lo schermo. Contare solo
+/// `resumed` voleva dire una notifica che il sistema taceva e l'app non
+/// mostrava: sparita. In sottofondo (`paused`, `hidden`) la notifica la
+/// mostra il sistema, e l'app non la vede nemmeno arrivare.
+@visibleForTesting
+bool inPrimoPianoPerLIphone(AppLifecycleState? stato) =>
+    stato == null ||
+    stato == AppLifecycleState.resumed ||
+    stato == AppLifecycleState.inactive;
+
+/// Fino a quando un gettone detto a una casa non si ridice: sei ore se la
+/// casa ha risposto, dieci minuti se no. Piu' spesso sarebbero richieste
+/// contate al centralino per niente; mai, e una casa che l'ha perso non lo
+/// riavrebbe finche' l'app non si riavvia.
+@visibleForTesting
+DateTime quandoRidirlo(DateTime adesso, {required bool riuscito}) => adesso.add(
+  riuscito ? const Duration(hours: 6) : const Duration(minutes: 10),
+);
 
 /// Il postino dell'app aperta.
 class Postino extends ChangeNotifier {
@@ -441,8 +520,12 @@ class Postino extends ChangeNotifier {
 
   bool get daChiedere => _permesso == AuthorizationStatus.notDetermined;
 
-  /// Le case a cui si e' gia' detto questo gettone, in questa vita dell'app.
-  final Map<String, String> _detto = {};
+  /// Le case a cui si e' gia' detto questo gettone, e fino a quando non serve
+  /// ridirlo ([quandoRidirlo]).
+  final Map<String, ({String gettone, DateTime finoA})> _detto = {};
+
+  /// L'ultima volta che si e' chiesto il gettone a Firebase senza averlo.
+  DateTime? _gettoneChiestoIl;
 
   final _tocchi = StreamController<ToccoDellaNotifica>.broadcast();
   final List<ToccoDellaNotifica> _inSospeso = [];
@@ -550,11 +633,12 @@ class Postino extends ChangeNotifier {
   }
 
   Future<void> _prendiIlGettone() async {
+    _gettoneChiestoIl = DateTime.now();
     try {
       _gettone = await FirebaseMessaging.instance.getToken();
     } catch (_) {
       /* Sull'iPhone il gettone arriva dopo quello di Apple: ci si riprova
-       * al prossimo ingresso in una casa. */
+       * al prossimo ingresso in una casa ([diloAllaCasa]). */
     }
   }
 
@@ -601,13 +685,35 @@ class Postino extends ChangeNotifier {
 
   /// Dice alla casa aperta adesso dove mandare le notifiche, se non gliel'ha
   /// gia' detto.
+  ///
+  /// Il gettone si ridice anche quando la casa l'ha gia' sentito, ogni tanto
+  /// ([quandoRidirlo]): la casa lo puo' aver perso — Firebase che per un
+  /// momento dice di non conoscerlo, un add-on reinstallato — e senza gettone
+  /// la casa non manda piu' niente a questo telefono, in silenzio, finche'
+  /// l'app non si riavvia. Su Android l'app resta viva per giorni.
   Future<void> diloAllaCasa({bool forza = false}) async {
-    final gettone = _gettone;
     final casa = collegamento.casa;
     final filo = collegamento.filo;
-    if (!_acceso || gettone == null || casa == null || filo == null) return;
-    if (!filo.dentro || (!forza && _detto[casa.id] == gettone)) return;
-    _detto[casa.id] = gettone;
+    if (!_acceso || casa == null || filo == null || !filo.dentro) return;
+    /* Il gettone che non c'era all'avvio (sull'iPhone, prima che Apple dia il
+     * suo): si richiede qui, al piu' una volta al minuto. */
+    if (_gettone == null && permesse && _sipuoRichiedereIlGettone()) {
+      await _prendiIlGettone();
+    }
+    final gettone = _gettone;
+    if (gettone == null) return;
+    final adesso = DateTime.now();
+    final detto = _detto[casa.id];
+    if (!forza &&
+        detto != null &&
+        detto.gettone == gettone &&
+        adesso.isBefore(detto.finoA)) {
+      return;
+    }
+    _detto[casa.id] = (
+      gettone: gettone,
+      finoA: quandoRidirlo(adesso, riuscito: true),
+    );
     try {
       final stato = await Notifiche(filo).registra(
         gettone: gettone,
@@ -618,9 +724,19 @@ class Postino extends ChangeNotifier {
       );
       await CopiaDelleNotifiche(cassaforte).scrivi(casa.id, stato);
     } catch (_) {
-      /* Un ponte di prima non conosce le notifiche: si riprova alla
-       * prossima apertura, non adesso. */
+      /* Un ponte di prima non conosce le notifiche, o il filo e' caduto a
+       * meta': si riprova fra un po', non a ogni cambiamento. */
+      _detto[casa.id] = (
+        gettone: gettone,
+        finoA: quandoRidirlo(adesso, riuscito: false),
+      );
     }
+  }
+
+  bool _sipuoRichiedereIlGettone() {
+    final chiesto = _gettoneChiestoIl;
+    return chiesto == null ||
+        DateTime.now().difference(chiesto) >= const Duration(minutes: 1);
   }
 
   /// Non mandarle piu' a questo telefono, da questa casa.
@@ -630,8 +746,9 @@ class Postino extends ChangeNotifier {
   }
 
   Future<void> _arrivataAdAppAperta(RemoteMessage messaggio) async {
-    final inPrimoPiano =
-        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    final inPrimoPiano = inPrimoPianoPerLIphone(
+      WidgetsBinding.instance.lifecycleState,
+    );
     if (!mostraLaCopiaLocale(
       defaultTargetPlatform,
       inPrimoPiano: inPrimoPiano,

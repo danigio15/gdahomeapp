@@ -596,6 +596,42 @@ Future<void> apriLeAutomazioni(WebViewController controllore) async {
   }
 }
 
+/// Apre una pagina della plancia per linguetta — la prima di [linguette]
+/// che c'e' — come se la si toccasse: e' dove porta il tocco su una
+/// notifica (`notifiche/dove_apre.dart`). Le linguette sono parole dell'app,
+/// e passano da `jsonEncode`.
+///
+/// Una pagina appena nata le linguette non le ha ancora: si riprova per
+/// qualche secondo. `false` se nessuna c'e': chi ha chiamato apre la pagina
+/// della notifica.
+Future<bool> apriLaLinguetta(
+  WebViewController controllore,
+  List<String> linguette,
+) async {
+  final quali = jsonEncode(linguette);
+  for (final fra in const [
+    Duration.zero,
+    Duration(milliseconds: 400),
+    Duration(milliseconds: 1200),
+    Duration(milliseconds: 2500),
+  ]) {
+    if (fra > Duration.zero) await Future<void>.delayed(fra);
+    try {
+      final fatto = await controllore.runJavaScriptReturningResult(
+        '(function(q){var t=Array.prototype.slice.call('
+        'document.querySelectorAll(".tab[data-tab]"));'
+        'for(var i=0;i<q.length;i++){for(var j=0;j<t.length;j++){'
+        'if(t[j].getAttribute("data-tab")===q[i]){t[j].click();return true;}}}'
+        'return false;})($quali)',
+      );
+      if (fatto == true || fatto.toString() == 'true') return true;
+    } catch (_) {
+      /* La pagina non c'e' ancora: c'e' il colpo dopo. */
+    }
+  }
+  return false;
+}
+
 /// Riporta la plancia dov'era prima delle Automazioni.
 Future<void> tornaDalleAutomazioni(WebViewController controllore) async {
   try {
