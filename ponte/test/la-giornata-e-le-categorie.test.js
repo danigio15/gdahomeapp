@@ -363,8 +363,15 @@ test("ogni automazione porta il suo riassunto, letto dalla configurazione", asyn
   const { ponte } = unaCasaConCategorie({ categorie: [], entita: [] });
   const elenco = await ponte.elencoDiCasa();
   const di = (id) => elenco.find((a) => a.id === id).riassunto;
-  assert.equal(di("luce").it, "Quando si apre Porta ingresso · 1 condizione · 3 azioni");
-  assert.equal(di("luce").en, "When Porta ingresso opens · 1 condition · 3 actions");
+  /* La prima azione col suo verbo; senza bersaglio, cosa sono («le luci»). */
+  assert.equal(
+    di("luce").it,
+    "Quando si apre Porta ingresso · 1 condizione · accendi le luci e altre 2 azioni",
+  );
+  assert.equal(
+    di("luce").en,
+    "When Porta ingresso opens · 1 condition · turn on the lights and 2 more actions",
+  );
   assert.equal(di("boiler").it, "Da blueprint «Scalda acqua»");
   assert.equal(di("altra").it, "Alle 07:15 · 1 azione");
 });
@@ -424,13 +431,130 @@ test("il riassunto racconta il primo innesco, gli altri, condizioni e azioni", (
   );
   assert.equal(r({ actions: [{}, {}] }), "Si avvia a mano · 2 azioni");
   assert.equal(r({ triggers: [{ trigger: "qualcosa_di_nuovo" }] }), "Quando succede qualcosa");
-  /* Senza nomi si usa l'entita'; senza configurazione niente riassunto. */
+  /* Senza nomi si dice dall'entita', mai con l'id; senza configurazione
+   * niente riassunto. */
   assert.equal(
     riassuntoDellAutomazione({
-      triggers: [{ trigger: "state", entity_id: "light.sala", to: "off" }],
+      triggers: [{ trigger: "state", entity_id: "light.sala_grande", to: "off" }],
     }).it,
-    "Quando si spegne light.sala",
+    "Quando si spegne sala grande",
   );
   assert.equal(riassuntoDellAutomazione(null), null);
   assert.equal(riassuntoDellAutomazione({ use_blueprint: {} }).it, "Da un blueprint");
+});
+
+/* ─── I servizi e gli stati in parole ─────────────────────────────────── */
+
+test("il riassunto dice i servizi col loro verbo, mai coi nomi di Home Assistant", () => {
+  const nomi = {
+    "climate.soggiorno": "Termostato soggiorno",
+    "alarm_control_panel.casa": "Antifurto",
+    "cover.sala": "Tapparelle sala",
+    "light.ingresso": "Luce ingresso",
+    "person.persona_1": "Persona 1",
+    "scene.cena": "Cena",
+  };
+  const r = (azioni, inneschi = [{ trigger: "time", at: "07:00" }]) =>
+    riassuntoDellAutomazione(
+      { triggers: inneschi, actions: azioni },
+      { nomeDi: (id) => nomi[id] || "" },
+    );
+  const it = (azioni, inneschi) => r(azioni, inneschi).it;
+  const target = (entity_id) => ({ entity_id });
+  assert.equal(
+    it([
+      {
+        action: "climate.set_temperature",
+        target: target("climate.soggiorno"),
+        data: { temperature: 21 },
+      },
+    ]),
+    "Alle 07:00 · imposta Termostato soggiorno a 21°",
+  );
+  assert.equal(
+    r([{ action: "climate.set_temperature", target: target("climate.soggiorno") }]).en,
+    "At 07:00 · adjust Termostato soggiorno",
+  );
+  assert.equal(
+    it([
+      {
+        action: "climate.set_hvac_mode",
+        target: target("climate.soggiorno"),
+        data: { hvac_mode: "cool" },
+      },
+    ]),
+    "Alle 07:00 · metti Termostato soggiorno in raffrescamento",
+  );
+  assert.equal(
+    it([
+      { action: "alarm_control_panel.alarm_arm_night", target: target("alarm_control_panel.casa") },
+    ]),
+    "Alle 07:00 · inserisci Antifurto (notte)",
+  );
+  assert.equal(
+    it([{ service: "alarm_control_panel.alarm_disarm", entity_id: "alarm_control_panel.casa" }]),
+    "Alle 07:00 · disinserisci Antifurto",
+  );
+  assert.equal(
+    it([
+      { action: "cover.set_cover_position", target: target("cover.sala"), data: { position: 40 } },
+    ]),
+    "Alle 07:00 · porta Tapparelle sala al 40%",
+  );
+  assert.equal(
+    it([
+      { action: "light.turn_on", target: target("light.ingresso"), data: { brightness_pct: 30 } },
+    ]),
+    "Alle 07:00 · accendi Luce ingresso al 30%",
+  );
+  assert.equal(it([{ action: "notify.mobile_app_telefono" }]), "Alle 07:00 · manda una notifica");
+  assert.equal(
+    it([{ action: "scene.turn_on", target: target("scene.cena") }]),
+    "Alle 07:00 · avvia la scena Cena",
+  );
+  assert.equal(
+    it([{ action: "lock.unlock", target: target("lock.portone") }]),
+    "Alle 07:00 · apri portone",
+  );
+  /* Uno che non si conosce: le sue parole, senza punti ne' trattini bassi. */
+  const ignoto = it([{ action: "backup.create_automatic" }]);
+  assert.equal(ignoto, "Alle 07:00 · esegue backup create automatic");
+  /* Un'attesa non dice cosa fa: si dice la prima che lo dice. */
+  assert.equal(
+    it([
+      { delay: { minutes: 1 } },
+      { action: "switch.turn_off", target: target("switch.router_casa") },
+    ]),
+    "Alle 07:00 · spegni router casa e un'altra azione",
+  );
+  /* E gli stati: «scatta», «esce di casa», non «triggered» o «not_home». */
+  assert.equal(
+    it([{}], [{ trigger: "state", entity_id: "alarm_control_panel.casa", to: "triggered" }]),
+    "Quando Antifurto scatta · 1 azione",
+  );
+  assert.equal(
+    r([{}], [{ trigger: "state", entity_id: "alarm_control_panel.casa", to: "armed_away" }]).en,
+    "When Antifurto is armed (away) · 1 action",
+  );
+  for (const stato of ["disarmed", "armed_night", "unavailable", "playing"]) {
+    const detto = it(
+      [{}],
+      [{ trigger: "state", entity_id: "alarm_control_panel.casa", to: stato }],
+    );
+    assert.doesNotMatch(detto, /[a-z]_[a-z]|«/, detto);
+  }
+  for (const [servizio, dati] of [
+    ["climate.set_temperature", {}],
+    ["water_heater.set_operation_mode", { operation_mode: "eco" }],
+    ["media_player.volume_set", { volume_level: 0.3 }],
+    ["vacuum.return_to_base", {}],
+    ["valve.open_valve", {}],
+    ["fan.set_percentage", { percentage: 50 }],
+    ["input_boolean.toggle", {}],
+    ["script.buonanotte", {}],
+  ]) {
+    const detto = r([{ action: servizio, data: dati }]);
+    for (const lingua of ["it", "en"])
+      assert.doesNotMatch(detto[lingua], /\w\.\w|_/, `${servizio}: ${detto[lingua]}`);
+  }
 });

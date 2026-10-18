@@ -62,6 +62,7 @@ export const CATEGORIE = Object.freeze([
   "luci",
   "clima",
   "tapparelle",
+  "irrigazione",
   "sicurezza",
   "avvisi",
   "energia",
@@ -1057,17 +1058,24 @@ export function dallaHomeAssistant(config, { statoDi = null, azioni = [], stati 
 /* ── per l'elenco ───────────────────────────────────────────────────────── */
 
 /* Tutte le entita' di un pezzo di configurazione, a qualunque profondita'. */
+/* Tutte le entita' nominate, a qualunque profondita': anche quelle dentro
+ * `target`, `data` e le scelte. (Prima l'«else» si attaccava all'«if»
+ * sbagliato e dentro `target` non si guardava: un'automazione che inserisce
+ * l'antifurto finiva fra le «Altre».) */
 function entitaDentro(x, fuori = new Set()) {
   if (Array.isArray(x)) for (const y of x) entitaDentro(y, fuori);
   else if (eOggetto(x))
     for (const [k, v] of Object.entries(x)) {
-      if (k === "entity_id")
-        for (const e of lista(v))
-          if (typeof e === "string") fuori.add(e);
-          else entitaDentro(v, fuori);
+      if (k === "entity_id") {
+        for (const e of lista(v)) if (typeof e === "string") fuori.add(e);
+      } else entitaDentro(v, fuori);
     }
   return fuori;
 }
+
+/* L'irrigazione si riconosce dal nome: di una valvola o di un interruttore,
+ * o dell'automazione stessa. */
+const IRRIGAZIONE = /irrig|sprinkl|annaff/i;
 
 function serviziDentro(x, fuori = new Set()) {
   if (Array.isArray(x)) for (const y of x) serviziDentro(y, fuori);
@@ -1097,7 +1105,17 @@ export function categoriaDi(config, statoDi = null) {
   const domini = (ids) => new Set(ids.map(dominioDi));
   const fatti = domini(fa);
   const tutti = domini([...guarda, ...fa]);
+  for (const s of servizi)
+    if (s.startsWith("alarm_control_panel.")) tutti.add("alarm_control_panel");
   if (["alarm_control_panel", "lock", "siren"].some((d) => tutti.has(d))) return "sicurezza";
+  /* L'irrigazione: una valvola, o un interruttore che si chiama come lei. */
+  const nomeDi = (id) => `${id} ${pulito(statoDi?.(id)?.attributes?.friendly_name)}`;
+  if (
+    fa.some((id) => ["valve", "switch"].includes(dominioDi(id)) && IRRIGAZIONE.test(nomeDi(id))) ||
+    fa.some((id) => dominioDi(id) === "valve" && !/gas|acqua_?generale/i.test(nomeDi(id))) ||
+    servizi.some((s) => IRRIGAZIONE.test(s))
+  )
+    return "irrigazione";
   for (const s of servizi) fatti.add(s.split(".")[0]);
   if (fatti.has("light")) return "luci";
   if (["climate", "humidifier", "fan"].some((d) => fatti.has(d))) return "clima";
@@ -1117,6 +1135,7 @@ export function categoriaDi(config, statoDi = null) {
   });
   if (energia || fatti.has("water_heater")) return "energia";
   if (avvisi.length) return "avvisi";
+  if (IRRIGAZIONE.test(pulito(config?.alias))) return "irrigazione";
   return "altre";
 }
 

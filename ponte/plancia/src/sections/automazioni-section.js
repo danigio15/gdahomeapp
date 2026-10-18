@@ -63,6 +63,12 @@ import {
 } from "../core/automazioni.js";
 import { CATEGORIE, EVENTO_AVVISA, normalizzata } from "../core/automazioni-ha.js";
 import { proposteDaMostrare } from "../core/automazioni-proposte.js";
+import {
+  diventaInParole,
+  nomeDaId,
+  servizioInParole,
+  statoInParole,
+} from "../core/parole-dei-servizi.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
@@ -164,8 +170,13 @@ const stati = () => {
 
 function nomeDi(id) {
   const s = stati()[id];
-  return clean(s?.attributes?.friendly_name) || clean(id).split(".").slice(1).join(".") || "—";
+  return clean(s?.attributes?.friendly_name) || nomeDaId(id) || "—";
 }
+
+/* Le parole dei servizi e degli stati (`core/parole-dei-servizi.js`) sono in
+ * italiano e in inglese: le altre lingue leggono l'inglese, come i nomi che
+ * arrivano da Home Assistant. */
+const detto = (coppia) => (activeLocale() === "it" ? coppia.it : coppia.en);
 
 const dominio = (id) => clean(id).split(".")[0];
 const classe = (s) => clean(s?.attributes?.device_class);
@@ -490,14 +501,15 @@ export function fraseDelQuando(q) {
     const chi = q.entita.length ? nomi(q.entita) : "…";
     const da = q.da;
     const a = q.a;
+    /* Gli stati con le loro parole: «Quando Antifurto scatta», non
+     * «diventa «triggered»». */
+    const prima = da ? detto(statoInParole(da)) : "";
+    const dopo = a ? detto(statoInParole(a)) : "";
     let frase = t(`Quando ${chi} cambia stato`, `When ${chi} changes state`);
     if (da && a)
-      frase = t(
-        `Quando ${chi} passa da «${da}» a «${a}»`,
-        `When ${chi} goes from «${da}» to «${a}»`,
-      );
-    else if (a) frase = t(`Quando ${chi} diventa «${a}»`, `When ${chi} becomes «${a}»`);
-    else if (da) frase = t(`Quando ${chi} non è più «${da}»`, `When ${chi} is no longer «${da}»`);
+      frase = t(`Quando ${chi} passa da ${prima} a ${dopo}`, `When ${chi} goes from ${prima} to ${dopo}`);
+    else if (a) frase = `${t("Quando", "When")} ${detto(diventaInParole(chi, a))}`;
+    else if (da) frase = t(`Quando ${chi} non è più ${prima}`, `When ${chi} is no longer ${prima}`);
     const per = q.per;
     return per ? t(`${frase} da ${per} min`, `${frase} for ${per} min`) : frase;
   }
@@ -540,7 +552,7 @@ export function fraseDellaCondizione(c) {
   if (c.tipo === "stato")
     return c.vale === "spento" ? t(`${chi} spento`, `${chi} off`) : t(`${chi} acceso`, `${chi} on`);
   if (c.tipo === "uguale") {
-    const valore = c.valore || "…";
+    const valore = c.valore ? detto(statoInParole(c.valore)) : "…";
     return c.non
       ? t(`${chi} non è «${valore}»`, `${chi} is not «${valore}»`)
       : t(`${chi} è «${valore}»`, `${chi} is «${valore}»`);
@@ -613,17 +625,16 @@ export function fraseDellAzione(a) {
         `aspetta che ${chi} salga sopra ${limite} (al massimo ${massimo} min)`,
         `wait until ${chi} rises above ${limite} (at most ${massimo} min)`,
       );
+    const parola = detto(statoInParole(stato));
     return t(
-      `aspetta che ${chi} diventi «${stato}» (al massimo ${massimo} min)`,
-      `wait until ${chi} becomes «${stato}» (at most ${massimo} min)`,
+      `aspetta che ${chi} diventi ${parola} (al massimo ${massimo} min)`,
+      `wait until ${chi} becomes ${parola} (at most ${massimo} min)`,
     );
   }
-  if (a.tipo === "servizio") {
-    const servizio = a.servizio;
-    return chi
-      ? t(`chiama ${servizio} su ${chi}`, `call ${servizio} on ${chi}`)
-      : t(`chiama ${servizio}`, `call ${servizio}`);
-  }
+  /* Un servizio col suo verbo: «imposta Termostato soggiorno a 21°», mai
+   * «chiama climate.set_temperature». */
+  if (a.tipo === "servizio")
+    return detto(servizioInParole(a.servizio, { chi: (a.entita || []).length ? chi : "", dati: a.dati }));
   if (a.modo === "spegni") return t(`spegni ${chi}`, `turn off ${chi}`);
   return t(`${chi} a ${a.gradi}°`, `${chi} to ${a.gradi}°`);
 }
@@ -658,6 +669,7 @@ export const CATEGORIA = () => ({
   luci: ["💡", t("Luci", "Lights"), "luci", "#f59e0b"],
   clima: ["🌡️", t("Clima", "Climate"), "clima", "#0ea5e9"],
   tapparelle: ["🪟", t("Tapparelle", "Shutters"), "tapparelle", "#6366f1"],
+  irrigazione: ["💧", t("Irrigazione", "Irrigation"), "irrigazione", "#10b981"],
   sicurezza: ["🛡️", t("Sicurezza", "Security"), "sicurezza", "#16a34a"],
   avvisi: ["🔔", t("Avvisi", "Alerts"), "allerte", "#f97316"],
   energia: ["⚡", t("Energia", "Energy"), "energia", "#eab308"],
@@ -750,7 +762,14 @@ export function gruppiDelleAutomazioni(elenco, { per = "", perStanza = false, ce
   const trovate = elenco.filter((v) => trovata(v, cerca, nomeDellaCategoria));
   const nomi = CATEGORIA();
   const vestito = (g) => {
-    const tipo = modo === "tipo" ? g.chiave : tipoDelGruppo(g.voci);
+    /* Una categoria che si chiama come l'irrigazione ha la sua goccia,
+     * qualunque cosa facciano le automazioni dentro. */
+    const tipo =
+      modo === "tipo"
+        ? g.chiave
+        : modo === "categoria" && /irrig|sprinkl|annaff/i.test(g.titolo)
+          ? "irrigazione"
+          : tipoDelGruppo(g.voci);
     return {
       ...g,
       chiave: `${modo}:${g.chiave}`,
@@ -930,9 +949,7 @@ function rigaDelTrigger(x) {
   if (tipo === "state") {
     const a = typeof x.to === "string" ? x.to : "";
     return {
-      testo: a
-        ? t(`${chi} diventa «${a}»`, `${chi} becomes «${a}»`)
-        : t(`${chi} cambia stato`, `${chi} changes state`),
+      testo: a ? detto(diventaInParole(chi, a)) : t(`${chi} cambia stato`, `${chi} changes state`),
     };
   }
   if (tipo === "numeric_state") {
@@ -984,8 +1001,11 @@ function righeDellaCondizione(c, rientra = false) {
   }
   let riga;
   if (tipo === "state") {
-    const stato = [].concat(c.state ?? "").join(", ");
-    riga = { testo: t(`${chi} è «${stato}»`, `${chi} is «${stato}»`) };
+    const stato = []
+      .concat(c.state ?? "")
+      .map((x) => detto(statoInParole(x)))
+      .join(", ");
+    riga = { testo: t(`${chi} è ${stato}`, `${chi} is ${stato}`) };
   } else if (tipo === "numeric_state") {
     const sopra = scritto(c.above);
     const sotto = scritto(c.below);
@@ -1018,27 +1038,9 @@ function righeDellaCondizione(c, rientra = false) {
 }
 
 function rigaDelServizio(x) {
-  const servizio = clean(x.action);
-  const [dominio, cosa] = servizio.split(".");
-  const chi = nomiDentro(x.target?.entity_id);
-  if (dominio === "notify" || dominio === "persistent_notification")
-    return t("manda una notifica", "sends a notification");
-  if (dominio === "script" && cosa !== "turn_on" && cosa !== "turn_off") {
-    const script = nomeDi(servizio);
-    return t(`esegue lo script «${script}»`, `runs the «${script}» script`);
-  }
-  if (chi) {
-    if (cosa === "turn_on") return t(`accendi ${chi}`, `turn on ${chi}`);
-    if (cosa === "turn_off") return t(`spegni ${chi}`, `turn off ${chi}`);
-    if (cosa === "toggle") return t(`accendi o spegni ${chi}`, `toggle ${chi}`);
-    if (cosa === "open_cover") return t(`apri ${chi}`, `open ${chi}`);
-    if (cosa === "close_cover") return t(`chiudi ${chi}`, `close ${chi}`);
-    if (cosa === "set_temperature")
-      return t(`porta ${chi} a una temperatura`, `set ${chi} to a temperature`);
-    return t(`${servizio} su ${chi}`, `${servizio} on ${chi}`);
-  }
-  if (x.target?.area_id) return t(`${servizio} in una stanza`, `${servizio} in a room`);
-  return servizio || t("un'azione", "an action");
+  const chi = nomiDentro(x.target?.entity_id ?? x.entity_id ?? x.data?.entity_id);
+  const frase = detto(servizioInParole(x.action, { chi, dati: x.data || {} }));
+  return !chi && x.target?.area_id ? t(`${frase} in una stanza`, `${frase} in a room`) : frase;
 }
 
 function righeDellAzione(x, sub = false) {

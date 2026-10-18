@@ -420,6 +420,9 @@ test("il config: tutte quelle di Home Assistant per categoria, le etichette, la 
     pagina.locator(".ha-riga", { hasText: "Scaldabagno" }).locator(".aug-fr"),
   ).toHaveText("Quando una condizione diventa vera · 1 azione");
   await expect(pagina.locator(".ha-tutte")).not.toContainText("Avanzata");
+  /* Mai la lingua di Home Assistant: niente «chiama climate.…», niente id. */
+  for (const riga of await pagina.locator(".aug-fr").allTextContents())
+    expect(riga).not.toMatch(/chiama |[a-z]\.[a-z]|_/);
   await expect(pagina.locator(".ha-riga", { hasText: "Clima spento" })).toHaveClass(/spenta/);
   /* Un gruppo si chiude (▸), e resta chiuso anche dopo un ridisegno. */
   await pagina.locator('[data-aug-apri="categoria:c_luci"]').click();

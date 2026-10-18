@@ -10,7 +10,20 @@
  * E' puro: legge la configurazione com'e' salvata in Home Assistant (le chiavi
  * nuove `triggers`/`conditions`/`actions` e le vecchie al singolare) e chiede
  * i nomi a chi lo chiama. Non indovina niente che non sia scritto.
+ *
+ * Mai la lingua di Home Assistant: la prima azione si dice col suo verbo
+ * («imposta Termostato soggiorno a 21°», «inserisci Antifurto (notte)») e
+ * uno stato con la sua parola («Quando Antifurto scatta»), con le stesse
+ * parole della plancia (`plancia/src/core/parole-dei-servizi.js`). Un nome
+ * che manca si dice dall'id, senza punti e trattini bassi.
  */
+
+import {
+  diventaInParole,
+  inParole,
+  nomeDaId,
+  servizioInParole,
+} from "../plancia/src/core/parole-dei-servizi.js";
 
 const elenco = (valore) => (Array.isArray(valore) ? valore : valore ? [valore] : []);
 
@@ -20,7 +33,7 @@ const primo = (valore) => elenco(valore)[0];
 function nomeDelle(entita, nomeDi) {
   const ids = elenco(entita).map(String).filter(Boolean);
   if (!ids.length) return "";
-  const uno = nomeDi(ids[0]) || ids[0];
+  const uno = nomeDi(ids[0]) || nomeDaId(ids[0]);
   return ids.length > 1 ? `${uno} +${ids.length - 1}` : uno;
 }
 
@@ -72,8 +85,11 @@ function innesco(t, { nomeDi, classeDi }) {
         return { it: `Quando ${chi} esce di casa`, en: `When ${chi} leaves home` };
       if (verso === "on") return { it: `Quando si accende ${chi}`, en: `When ${chi} turns on` };
       if (verso === "off") return { it: `Quando si spegne ${chi}`, en: `When ${chi} turns off` };
-      if (verso)
-        return { it: `Quando ${chi} diventa «${verso}»`, en: `When ${chi} becomes "${verso}"` };
+      if (verso) {
+        /* «Quando Antifurto scatta», non «diventa «triggered»». */
+        const detto = diventaInParole(chi, verso);
+        return { it: `Quando ${detto.it}`, en: `When ${detto.en}` };
+      }
       return { it: `Quando cambia ${chi}`, en: `When ${chi} changes` };
     }
     case "numeric_state": {
@@ -180,6 +196,45 @@ function nomeDelBlueprint(percorso) {
 
 const conta = (n, uno, molti) => `${n} ${n === 1 ? uno : molti}`;
 
+/* Un'azione in parole, `{it, en}`, o `null` se non si sa dire in breve. */
+function azione(a, { nomeDi }) {
+  if (!a || typeof a !== "object") return null;
+  const servizio = a.action ?? a.service;
+  if (typeof servizio === "string" && servizio.includes(".")) {
+    const entita = [
+      ...elenco(a.target?.entity_id),
+      ...elenco(a.entity_id),
+      ...elenco(a.data?.entity_id),
+    ].filter((x) => typeof x === "string");
+    const chi = nomeDelle(entita, nomeDi);
+    return servizioInParole(servizio, { chi, dati: a.data || a.service_data || {} });
+  }
+  if (a.scene) return servizioInParole("scene.turn_on", { chi: nomeDelle(a.scene, nomeDi) });
+  if (a.event) {
+    const evento = inParole(a.event);
+    return { it: `manda l'evento ${evento}`, en: `fires the ${evento} event` };
+  }
+  if (a.choose) {
+    const casi = elenco(a.choose).length;
+    return {
+      it: `sceglie fra ${conta(casi, "caso", "casi")}`,
+      en: `chooses among ${conta(casi, "case", "cases")}`,
+    };
+  }
+  if (a.if) return { it: "fa una cosa o l'altra", en: "does one thing or another" };
+  if (a.repeat) return { it: "ripete delle azioni", en: "repeats some actions" };
+  return null;
+}
+
+/* La prima azione che si sa dire (un'attesa non dice cosa fa). */
+function primaAzione(azioni, aiuti) {
+  for (const a of azioni) {
+    const detta = azione(a, aiuti);
+    if (detta) return detta;
+  }
+  return null;
+}
+
 /**
  * La riga di un'automazione, `{it, en}`, o `null` senza configurazione.
  * `nomeDi(entita)` → nome leggibile; `classeDi(entita)` → device_class.
@@ -210,7 +265,20 @@ export function riassuntoDellAutomazione(config, { nomeDi = () => "", classeDi =
     pezziIt.push(conta(condizioni.length, "condizione", "condizioni"));
     pezziEn.push(conta(condizioni.length, "condition", "conditions"));
   }
-  if (azioni.length) {
+  const detta = primaAzione(azioni, { nomeDi });
+  if (detta) {
+    const altre = azioni.length - 1;
+    pezziIt.push(
+      altre
+        ? `${detta.it} e ${altre === 1 ? "un'altra azione" : `altre ${altre} azioni`}`
+        : detta.it,
+    );
+    pezziEn.push(
+      altre
+        ? `${detta.en} and ${altre === 1 ? "1 more action" : `${altre} more actions`}`
+        : detta.en,
+    );
+  } else if (azioni.length) {
     pezziIt.push(conta(azioni.length, "azione", "azioni"));
     pezziEn.push(conta(azioni.length, "action", "actions"));
   }
