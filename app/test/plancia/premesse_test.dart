@@ -155,7 +155,8 @@ void main() {
     ]);
     /* Il nostro marchio si spezza come lo disegna la plancia, e come fa il
        ponte: la casa manda gli stessi nomi all'app e a Home Assistant. */
-    expect(Premesse.inDuePezzi('gdahome'), ['gda', 'home']);
+    expect(Premesse.inDuePezzi('gdahome'), ['GdA', 'Home']);
+    expect(Premesse.inDuePezzi('GdAHome'), ['GdA', 'Home']);
 
     /* E un `</script>` dentro un nome non chiude lo script. */
     final storta = _premesse(velo: '</script><script>alert(1)')

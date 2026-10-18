@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { cheImmagineE, Installatore } from "../src/installatore.js";
-import { inDuePezzi, laPagina, NOME, vestiDiGdahome } from "../src/marchio.js";
+import { inDuePezzi, laPagina, NOME_SCRITTO, vestiDiGdahome } from "../src/marchio.js";
 
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
 const CHI = "inst_0123456789abcdef";
@@ -190,11 +190,11 @@ const UN_PEZZO =
 test("senza installatore la plancia resta vestita di gdahome", () => {
   const fatto = vestiDiGdahome(IL_RUNTIME, Buffer.from(UN_PEZZO, "utf8"), "text/javascript");
   const testo = fatto.corpo.toString("utf8");
-  assert.match(testo, /alt="gdahome"/);
+  assert.match(testo, /alt="GdAHome"/);
   /* La scritta la sceglie la pagina al momento di disegnare, e di riserva
    * c'e' «gda home»: il runtime e' uno per tutte le plance della casa. */
-  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[0\]/);
-  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[1\]/);
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["GdA","Home"\]\)\[0\]/);
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["GdA","Home"\]\)\[1\]/);
   assert.equal(testo.includes("MODERN"), false);
 });
 
@@ -210,7 +210,7 @@ test("con un installatore la plancia porta il suo nome e il suo logo", () => {
   /* La scritta accanto al logo **non** porta il suo nome nel runtime: quel
    * file il browser lo tiene un anno, e un installatore si puo' rinominare.
    * Il nome lo porta la pagina (`__GDAHOME_TESTATA__`); qui resta gdahome. */
-  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[0\]/);
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["GdA","Home"\]\)\[0\]/);
   assert.equal(testo.includes('["Impianti","Rossi"]'), false);
 
   /* E il logo: gli stessi byte, col tipo che sono davvero. */
@@ -226,7 +226,8 @@ test("un nome di una parola sola non si spezza a meta', e il nostro si spezza co
     "il secondo pezzo resta vuoto invece di prendersi una sillaba",
   );
   assert.deepEqual(inDuePezzi("Impianti Rossi"), ["Impianti", "Rossi"]);
-  assert.deepEqual(inDuePezzi("gdahome"), ["gda", "home"]);
+  assert.deepEqual(inDuePezzi("gdahome"), ["GdA", "Home"]);
+  assert.deepEqual(inDuePezzi("GdAHome"), ["GdA", "Home"]);
 });
 
 test("un nome che arriva dal quadro non porta dentro dell'HTML", () => {
@@ -259,7 +260,7 @@ test("il titolo della pagina e la parola del velo prendono il suo nome", () => {
 
   /* E senza installatore, il nostro. */
   const nostra = laPagina("<title>Smart Home Dashboard</title><b>DashboardModern</b>");
-  assert.match(nostra, new RegExp(`<title>${NOME}</title>`));
+  assert.match(nostra, new RegExp(`<title>${NOME_SCRITTO}</title>`));
 });
 
 test("un logo grosso non finisce dentro il velo d'avvio", () => {
@@ -289,7 +290,7 @@ test("il segno in cima a Configurazione e' lo stesso logo della testata", () => 
   const pagina = laPagina(LA_PLANCIA, null);
   assert.match(pagina, /<div class="cfg-hero-ico"[^>]*><img src="\.\/logo\.png"/);
   assert.ok(!/cfg-hero-ico[^>]*>\s*<svg/.test(pagina), "la casetta disegnata a mano e' ancora li'");
-  assert.match(pagina, /<div class="cfg-hero-ico"[^>]*><img[^>]*alt="gdahome"/);
+  assert.match(pagina, /<div class="cfg-hero-ico"[^>]*><img[^>]*alt="GdAHome"/);
 
   /* E dove la casa ha un installatore col suo nome, quel nome ci va. */
   const sua = laPagina(LA_PLANCIA, { nome: "Impianti Rossi", logo: PNG, tipo: "image/png" });
