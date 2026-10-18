@@ -25,12 +25,30 @@
  * La frase d'analisi NON sta qui: «l'analisi non va nel popup auto ma nel
  * popup widget» — e nel popup dei widget c'e' gia'.
  */
-import { oraDiArrivo, oreEMinuti, tempoDellaRicarica } from "../core/il-tempo-della-ricarica.js";
+import {
+  durataInParole,
+  inKilowatt,
+  minutiDallaDurata,
+  oraDiArrivo,
+  oreEMinuti,
+  quandoFinisce,
+  tempoDellaRicarica,
+} from "../core/il-tempo-della-ricarica.js";
 import { inKilowattora } from "../core/period-service.js";
 import { capacitaDellAutoInUso } from "./auto-termica-section.js";
 import { liveState } from "./ev-section.js";
 import { codiceDellaRicaricaAdesso, kilowattDellaColonnina } from "./ev-stato-e-target-section.js";
-import { clean, doc, installStyle, root, t, wrapFunction, senzaCadere } from "./shared.js";
+import {
+  clean,
+  doc,
+  formatNumber,
+  installStyle,
+  locale,
+  root,
+  t,
+  wrapFunction,
+  senzaCadere,
+} from "./shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
 
 const KEY = "__DASHBOARDMODERN_POPUP_AUTO_RACCONTA__";
@@ -76,6 +94,22 @@ export function oraDiFineCarica(testo, adesso = Date.now()) {
   return oraInParole(oraDiArrivo(Number(preso[1]) * 60 + Number(preso[2]), adesso));
 }
 
+/* Quello che l'auto stessa dice della sua carica (GdAAuto e le integrazioni
+ * dei costruttori): la potenza che entra nella batteria e i minuti che
+ * mancano. Servono quando la colonnina non parla — chi carica da una presa,
+ * o da una colonnina senza integrazione — e il tempo dell'auto vince sul
+ * conto della plancia, che parte da una capacita' a volte assunta. */
+export function kilowattDellAuto() {
+  const stato = liveState("dm.ev_potenza_ricarica");
+  const kilowatt = inKilowatt(stato?.state, stato?.attributes?.unit_of_measurement);
+  return kilowatt !== null && kilowatt > 0 ? kilowatt : null;
+}
+
+function minutiDettiDallAuto() {
+  const stato = liveState("dm.ev_tempo_ricarica");
+  return minutiDallaDurata(stato?.state, stato?.attributes?.unit_of_measurement);
+}
+
 /** Quanto manca, adesso, con quello che la casa sa dire. */
 export function quantoManca() {
   const codice = codiceDellaRicaricaAdesso();
@@ -83,7 +117,8 @@ export function quantoManca() {
     codice,
     soc: numero(liveState("dm.ev_batteria_auto")?.state),
     target: numero(liveState("dm.ev_target_soc")?.state),
-    kilowatt: kilowattDellaColonnina(),
+    kilowatt: kilowattDellaColonnina() ?? kilowattDellAuto(),
+    minutiDellAuto: codice === "C" ? minutiDettiDallAuto() : null,
     /* La capacita' si chiede solo quando serve, cioe' quando c'e' un conto da
      * fare: leggerla vuol dire rileggere i profili delle auto, e questo giro
      * passa a ogni disegno del guscio. Ferma, il numero non lo usa nessuno. */
@@ -117,6 +152,34 @@ export function fineInParole(esito, adesso = Date.now()) {
   return "";
 }
 
+/* Accanto all'anello, il tempo si dice come lo si dice: «13 h 23 min», e
+ * sotto «fine domani alle 11:23». Il maiuscolo telegrafico — «13H 23M RIM.»
+ * — resta nelle caselle del guscio che lo hanno sempre avuto; qui la riga ha
+ * gia' la sua etichetta, «Tempo stimato», e non ha bisogno di gridare. */
+export function paroleCorteDelTempo(esito) {
+  if (esito?.stato === "completa") return t("Carica completa", "Fully charged");
+  if (esito?.stato === "raggiunto") return t("Target raggiunto", "Target reached");
+  if (esito?.stato === "carica" && esito.minuti != null) return durataInParole(esito.minuti);
+  return t("In attesa", "Standing by");
+}
+
+/** «fine alle 23:36», «fine domani alle 7:10», «fine lunedì alle 9:00». */
+export function fineCorta(esito, adesso = Date.now()) {
+  if (esito?.stato !== "carica" || esito.minuti == null) return "";
+  const quando = quandoFinisce(esito.minuti, adesso);
+  if (!quando) return "";
+  const { ora } = quando;
+  if (quando.giorno === "oggi") return t(`fine alle ${ora}`, `done at ${ora}`);
+  if (quando.giorno === "domani") return t(`fine domani alle ${ora}`, `done tomorrow at ${ora}`);
+  let giorno = "";
+  try {
+    giorno = quando.fine.toLocaleDateString(locale(), { weekday: "long" });
+  } catch (_errore) {
+    giorno = "";
+  }
+  return giorno ? t(`fine ${giorno} alle ${ora}`, `done ${giorno} at ${ora}`) : "";
+}
+
 /* Il tempo che manca, con sotto l'ora in cui finisce.
  *
  * «Nel tempo rimanente metti l'orario di fine.» «7H 13M RIM.» costringe a
@@ -145,8 +208,11 @@ function scriviIlTempo() {
   const esito = quantoManca();
   const parole = paroleDelTempo(esito);
   const fine = fineInParole(esito);
+  const corte = paroleCorteDelTempo(esito);
+  const fineBreve = fineCorta(esito);
   for (const nodo of doc?.querySelectorAll?.(".v-ev-remain") || [])
-    scriviNellaCasella(nodo, parole, fine);
+    if (nodo.classList?.contains("dm-evv-row-val")) scriviNellaCasella(nodo, corte, fineBreve);
+    else scriviNellaCasella(nodo, parole, fine);
   const popup = doc?.getElementById?.("v-ev-remain-popup");
   if (!popup) return;
   const ora = esito.stato === "carica" ? oraInParole(oraDiArrivo(esito.minuti)) : "";
@@ -164,6 +230,23 @@ function scriviIlTempo() {
   }
   const testo = ` · ${t(`verso le ${ora}`, `around ${ora}`)}`;
   if (verso.textContent !== testo) verso.textContent = testo;
+}
+
+/* La potenza accanto all'anello, quando la colonnina tace.
+ *
+ * La riga «Potenza» la scrive il guscio dalla colonnina: senza colonnina
+ * mappata diceva «—» anche con l'auto che dichiarava 1,2 kW, e la tessera
+ * «Potenza di ricarica dell'auto» lo diceva tre caselle piu' in la'. Si
+ * scrive qui, nello stesso giro del guscio — fra il suo trattino e il nostro
+ * numero non passa un fotogramma — e solo quando la colonnina non ha niente
+ * da dire: la sua misura, quando c'e', resta quella. */
+function scriviLaPotenza() {
+  if (kilowattDellaColonnina() !== null) return;
+  const kilowatt = codiceDellaRicaricaAdesso() === "C" ? kilowattDellAuto() : null;
+  if (kilowatt === null) return;
+  const testo = `${formatNumber(kilowatt, kilowatt >= 10 ? 1 : 2)} kW`;
+  for (const nodo of doc?.querySelectorAll?.(".dm-evv-row-val.v-ev-pow") || [])
+    if (nodo.textContent !== testo) nodo.textContent = testo;
 }
 
 /* ── l'energia della sessione ────────────────────────────────────────── */
@@ -228,6 +311,7 @@ function umanizzaCaselle() {
 function rivesti() {
   try {
     scriviIlTempo();
+    scriviLaPotenza();
     scriviLaSessione();
     umanizzaCaselle();
   } catch (_errore) {}
@@ -236,6 +320,8 @@ function rivesti() {
 const STILE = `
 #v-ev-remain-popup .dm-ev-verso{opacity:.75;font-weight:700}
 .v-ev-remain .dm-ev-fine{display:block;margin-top:2px;font-size:max(11px,.5em);line-height:1.2;letter-spacing:.06em;opacity:.7}
+.dm-evv-row-val.v-ev-remain{text-align:right}
+.dm-evv-row-val.v-ev-remain .dm-ev-fine{font-family:'Inter',sans-serif;font-size:11.5px;font-weight:600;letter-spacing:0;opacity:.72}
 `;
 
 export function installPopupAutoRacconta() {
