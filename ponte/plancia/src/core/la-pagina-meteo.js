@@ -114,21 +114,15 @@ export function spostaIlBlocco(ordine, blocco, verso) {
  * I blocchi che la pagina mostra adesso, nell'ordine scelto.
  *
  * `ci` dice quali hanno qualcosa da dire: un blocco senza dati non compare,
- * nemmeno vuoto. La stazione è l'eccezione: senza sensori, a chi può
- * configurare la plancia si mostra l'invito («Hai una stazione meteo?») al
- * suo posto; agli altri niente, perché un invito che non si può raccogliere è
- * solo una scritta in più.
+ * nemmeno vuoto. Nemmeno la stazione: senza sensori il suo posto resta
+ * vuoto, senza inviti a configurarla — la pagina di una sezione mostra la
+ * casa, non rimanda al Config.
  */
 export function blocchiDellaPagina(config, ci = {}) {
   const scelta = normalizzaMeteo(config);
   const fuori = [];
   for (const blocco of scelta.ordine) {
     if (scelta.spenti.includes(blocco)) continue;
-    if (blocco === "stazione") {
-      if (ci.stazione) fuori.push("stazione");
-      else if (ci.invito) fuori.push("invito");
-      continue;
-    }
     if (ci[blocco]) fuori.push(blocco);
   }
   return fuori;

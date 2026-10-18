@@ -194,10 +194,7 @@ function scriviLaSessione() {
             "Il contatore della sessione non sta rispondendo.",
             "The session meter is not answering.",
           )
-        : t(
-            "Nessun contatore della sessione: collega la colonnina o evcc nella scheda Auto, oppure scrivi l'entità in «Energia sessione».",
-            "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.",
-          );
+        : t("Nessun contatore della sessione.", "No session meter.");
   for (const casella of caselle) {
     if (casella.textContent !== testo) casella.textContent = testo;
     const riga = casella.closest(".lm-kpi-card,.lm-sess-kpi,.ev-popup-session-row") || casella;

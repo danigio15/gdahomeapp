@@ -141,10 +141,7 @@ const copy = () => ({
   cost: t("Costo", "Cost"),
   history: t("Storico", "History"),
   toggle: t("Accendi/Spegni", "Turn on/off"),
-  empty: t(
-    "Nessun elettrodomestico configurato. Usa il menu Impostazioni per aggiungerne uno.",
-    "No appliance configured. Use the Settings menu to add one.",
-  ),
+  empty: t("Nessun elettrodomestico configurato", "No appliance configured"),
   emptyFilter: t(
     "Nessun elettrodomestico corrisponde ai filtri selezionati.",
     "No appliance matches the selected filters.",

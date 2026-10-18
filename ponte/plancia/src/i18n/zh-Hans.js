@@ -158,8 +158,6 @@ export default Object.freeze({
     "行程未保存：请检查目的地、日期和时间。",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh":
     "最多再加 8 个：一个插座、热泵、正在充电的汽车、今天的 kWh",
-  "No sensor linked: pick one in Settings › Loads or Appliances.":
-    "未关联传感器：请在 设置 › 负载 或 家电 中选择一个。",
   "Reading consumption from Home Assistant…": "正在从 Home Assistant 读取用电量…",
   " — configured": " — 已配置",
   "${alzate} shutters up": "${alzate} 个卷帘已升起",
@@ -239,8 +237,6 @@ export default Object.freeze({
   "Load to watch": "要监视的负载",
   Lock: "上锁",
   "Looking…": "正在查看…",
-  "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.":
-    "流出的电力多于流入的：通常是某个传感器的方向反了，可在「能源」标签页中更改。",
   Motorcycle: "摩托车",
   "My sections": "我的板块",
   "Name the unit: it is what the card shows.": "给这台设备起个名字：卡片上显示的就是它。",
@@ -640,8 +636,6 @@ export default Object.freeze({
   "Add entity": "添加实体",
   "Add from an integration": "从集成添加",
   "Add intercom": "添加对讲机",
-  "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.":
-    "请在设置的“能源”选项卡中添加：仅凭 NUT 的状态，本页就知道有没有电。",
   "Add light": "添加灯光",
   "Add list": "添加列表",
   "Add load": "添加负载",
@@ -665,28 +659,13 @@ export default Object.freeze({
   "Add sensors to the Alerts Panel with a clean name, or create a":
     "用清楚的名字把传感器加进提醒面板，或者创建一个",
   "Add socket": "添加插座",
-  "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.":
-    "在设置的“插座”标签里添加：客厅电视、Firestick、光猫。",
   "Add solar plant": "添加太阳能系统",
   "Add something to do…": "添加一件待办…",
   "Add temperature": "添加温度",
-  "Add the irrigation zones from the editor to see the lawn.":
-    "在编辑器中添加灌溉分区后即可看到草坪。",
-  "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.":
-    "在设置的“垃圾”选项卡中添加类别：为每个类别指定说明收运时间的传感器或日历。",
-  "Add the pool entities from the editor to see the basin.":
-    "在编辑器中添加泳池实体后即可看到池体。",
-  "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.":
-    "在设置的“打印机”标签中添加打印机：只要填写说明是否就绪的实体即可，墨盒会自动找到。",
-  "Add the units from the dashboard configuration.": "在面板设置中添加这些设备。",
-  "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.":
-    "在设置的“警报”选项卡中添加：地震、民防预警、雷电、花粉、热舒适度和头顶航班，每项来自其集成的传感器。",
   "Add to ${nomeDellaLista(list)}": "添加到 ${nomeDellaLista(list)}",
   "Add water heater": "添加热水器",
   "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link":
     "添加你的电器（洗衣机、洗碗机、烤箱、微波炉…）。每台都可以关联",
-  "Add your cameras from Configuration: they will show up here with a live preview.":
-    "在“设置”中添加摄像头：它们会带着实时画面出现在这里。",
   "Added ${trovate.length} lists": "已添加${trovate.length}个列表",
   "Added ${trovati.length} calendars": "已添加 ${trovati.length} 个日历",
   "Administrator tools ·": "管理员工具 ·",
@@ -1441,8 +1420,6 @@ export default Object.freeze({
   February: "2 月",
   "Feed a portion": "喂一份",
   "Files in /local (config/www)": "/local (config/www) 中的文件",
-  "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.":
-    "在设置的“汽车”选项卡中填写汽车字段：燃油、续航、车门、发动机。",
   "Fill it in and the card shows the window open when the contact says so.":
     "填好后，门磁报告开启时卡片就会显示窗户已开。",
   "Filled ${count} fields: ${list}.": "已填入 ${count} 个字段：${list}。",
@@ -1631,12 +1608,6 @@ export default Object.freeze({
   Hob: "灶台",
   Home: "首页",
   "Home (fallback)": "首页（备用）",
-  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.":
-    "电池由 Home Assistant 自己声明——一个百分比传感器——无需任何配置就会出现在这里。如果没找到你的，请在设置的「电池」标签页里添加。",
-  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.":
-    "门窗接点由 Home Assistant 自己声明，不用配置就会出现在这里。如果你的没被找到，请在设置的“门窗”标签里添加。",
-  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.":
-    "移动或在家传感器由 Home Assistant 自己声明，不用配置就会出现在这里。如果找不到你的，请在设置的「在家」选项卡里添加。",
   "Home Assistant declares no machine and no network piece.":
     "Home Assistant 没有报告任何机器或网络设备。",
   "Home Assistant declares the air sensors itself — particulates, CO₂, monoxide, volatile compounds — and the tile appears on its own. Here you correct that: drop a sensor that should not count, add one that is not found, and move the boundaries between good, fair, poor and bad.":
@@ -2081,25 +2052,17 @@ export default Object.freeze({
   "No alerts configured": "尚未设置提醒",
   "No answer within eight seconds.": "八秒内没有回应。",
   "No appliance configured": "尚未设置电器",
-  "No appliance configured. Use the Settings menu to add one.":
-    "尚未配置家电。请在“设置”菜单中添加。",
   "No appliance has measurable consumption today.": "今天没有家电有可测量的用电。",
-  "No appliance in this load yet. Add them from the Loads editor.":
-    "这个负载里还没有家电。请在负载编辑器中添加。",
   "No appliance is running right now.": "当前没有家电在运行。",
   "No appliance matches the selected filters.": "没有家电符合所选的筛选条件。",
   "No appliance yet.": "还没有家电。",
   "No battery found": "没有找到电池",
   "No boiler configured": "未配置锅炉",
-  "No boiler configured: add one from the Thermal management tab in settings.":
-    "未配置锅炉：请在设置的“热管理”标签页里添加。",
   "No calendar configured": "尚未配置日历",
   "No calendar selected": "未选择日历",
   "No camera configured": "未配置摄像头",
   "No car field could be recognised from this device.": "无法从该设备识别出任何汽车字段。",
   "No cartridge found": "未找到墨盒",
-  "No cartridge found: if your printer reports them, write them in the Printers tab.":
-    "未找到墨盒：如果你的打印机会报告，请在“打印机”标签中填写。",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.":
     "在带设备的集成中没有充电桩：这里只有 evcc 的设备，而 evcc 通过另一个按钮连接。",
   "No charger field could be recognised from this device.": "从这个设备识别不到任何充电桩的字段。",
@@ -2109,8 +2072,6 @@ export default Object.freeze({
   "No configuration contains this word.": "没有配置包含这个词。",
   "No configured items.": "没有已配置的项目。",
   "No configured lights.": "没有已配置的灯光。",
-  "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.":
-    "没有已配置的灯光。请在编辑器的“灯光”标签页中添加：light.* 和 switch.* 实体都可以。",
   "No configured loads": "没有已配置的负载",
   "No contact found": "没有找到接点",
   "No custom button": "没有自定义按钮",
@@ -2133,8 +2094,6 @@ export default Object.freeze({
   "No entity added — type/pick and press ➕": "没有添加实体 —— 输入或挑选后按 ➕",
   "No entity bound: the circle stays empty in every view.":
     "没有绑定实体：这个圆圈在所有视图里都是空的。",
-  "No entity linked yet: open the settings and pick the device.":
-    "还没有关联任何实体：打开设置并选择设备。",
   "No entries": "无条目",
   "No extra command: the card carries the player's own buttons and nothing else.":
     "没有额外控制：卡片上只有播放器自己的按钮。",
@@ -2198,14 +2157,10 @@ export default Object.freeze({
     "从这个设备识别不到任何机器人：需要一个 vacuum.* 或 lawn_mower.* 实体。",
   "No robot configured": "未配置机器人",
   "No room": "无房间",
-  "No room has a humidity probe: add one from the Temperature tab.":
-    "没有房间配置湿度传感器：请在「温度」标签页中添加。",
   "No room has a temperature sensor configured yet.": "还没有房间配置温度传感器。",
   "No room with a sensor — add one in the editor's Temperature tab":
     "没有带传感器的房间 —— 请到编辑器的“温度”标签页添加一个",
   "No room. Add one below.": "没有房间。请在下面添加一个。",
-  "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.":
-    "还没有房间。请在编辑器的「房间」选项卡中添加：添加后，每个板块都可以把自己的实体归到某个房间。",
   "No sensor recognized": "未识别到传感器",
   "No shutter or curtain configured": "尚未配置卷帘或窗帘",
   "No signal": "没有信号",
@@ -2217,8 +2172,6 @@ export default Object.freeze({
   "No todo.* list found": "未找到 todo.* 列表",
   "No warning in force": "无生效预警",
   "No water heater configured": "尚未配置热水器",
-  "No water heater configured: add one from the Solar tab in settings.":
-    "尚未配置热水器：请在设置的「太阳能」标签页中添加。",
   "No window sits in a room that has a hygrometer: pick the room in the window's row, below.":
     "没有窗户位于装有湿度计的房间里：请在下方窗户所在的那一行选择房间。",
   "No zone configured": "未配置分区",
@@ -2245,8 +2198,6 @@ export default Object.freeze({
   "Nothing came in today.": "今天没有新来的。",
   "Nothing closed yet.": "还没有已关闭的内容。",
   "Nothing for a pet": "没有宠物相关的东西",
-  "Nothing here yet. Entities are assigned from each section's own tab.":
-    "这里还什么都没有。实体在各个板块自己的选项卡中归属。",
   "Nothing new": "没有新情况",
   "Nothing of this kind here.": "这里没有这一类的内容。",
   "Nothing playing": "没有在播放",
@@ -2670,7 +2621,6 @@ export default Object.freeze({
   "all up": "全部正常",
   Servers: "服务器",
   connected: "已连接",
-  "Choose what to highlight": "选择要突出的内容",
   "to work on": "待处理",
   "In today:": "今日新增:",
   "Nothing came in today": "今天没有新增",
@@ -2747,7 +2697,6 @@ export default Object.freeze({
   "Open all": "全部打开",
   "Open appliances running": "打开运行中的家电",
   "Open camera": "打开摄像头",
-  "Open configuration": "打开设置",
   "Open for": "已打开",
   "Open gate": "打开大门",
   "Open in map": "在地图中打开",
@@ -2867,8 +2816,6 @@ export default Object.freeze({
   "Pick a start before the end, and not in the future.": "请选择早于结束的开始时间，且不能在未来。",
   "Pick an image entity": "选择图像实体",
   "Pick from Appliances": "从家电中选择",
-  "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».":
-    "在设置的“小组件”选项卡中选择日历：Home Assistant 里已有的，点“检测”就会自动出现。",
   "Pick the device": "选择设备",
   "Pick the evcc loadpoint: the charge mode, the charge limit, the session and the solar share come along. The charger connects from the other button, and the fields add up.":
     "选择 evcc 的 loadpoint：充电模式、充电上限、本次会话和光伏占比会一并带入。充电桩通过另一个按钮连接，字段会叠加。",
@@ -3602,8 +3549,6 @@ export default Object.freeze({
     "内置动作的图标同样可以自定义，并显示在“首页”上。",
   "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.":
     "带来充电桩的集成：go-e、Easee、KEBA、Wallbox、openWB、Zaptec、Tesla。选择设备后，充电字段会自动填好 —— 功率、电量、电压、温度、充电线。",
-  "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.":
-    "对讲机和信箱在设置的「对讲与信箱」选项卡里声明：开门按钮、门铃，以及信箱的两个传感器。",
   "The inverted direction": "方向相反",
   "The latest reply": "最新回复",
   "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.":
@@ -3668,8 +3613,6 @@ export default Object.freeze({
   "The push comes from Home Assistant, not the dashboard: it runs on the server, so it arrives even when this page is closed. This automation is already written with your entities — paste it under Settings → Automations → ⋮ → Edit in YAML, and change the service to your phone's.":
     "推送是 Home Assistant 发的，不是这个面板：它跑在服务器上，所以这个页面关着也能收到。这段自动化已经用你的实体写好了——把它粘贴到 设置 → 自动化 → ⋮ → 用 YAML 编辑，再把服务换成你手机的那个。",
   "The quick actions": "快捷操作",
-  "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.":
-    "雷达地址不是瓦片地址（{z}/{x}/{y}）：请在 设置 → 天气 中修正，或从列表中选择一个服务。",
   "The radar is not reporting.": "雷达没有响应。",
   "The radiators": "暖气片",
   "The reading on the cover": "封面上的读数",
@@ -3720,8 +3663,6 @@ export default Object.freeze({
   "The state": "状态",
   "The station sensor, when the integration exposes one: it gives the name written next to the train.":
     "车站传感器（若集成提供）：列车旁显示的名称来自它。",
-  "The target is read-only: connect evcc in the Car tab to change it.":
-    "目标为只读：请在「汽车」标签页连接 evcc 后再修改。",
   "The temperatures": "温度",
   "The text of the report": "反馈正文",
   "The theme and the bar": "主题和导航栏",
@@ -3795,15 +3736,11 @@ export default Object.freeze({
     "这里必须填写 state_class 为 total 或 total_increasing 的累计 kWh 电表。不要在此填写月度传感器：该字段用于还原往期月份。",
   "This one wins: day, month, year, history and previous months are all derived from here through Recorder. While it is set, the period fields are not read.":
     "以它为准：日、月、年、历史和往期月份都通过 Recorder 从这里算出。只要它有值，周期字段就不会被读取。",
-  "This reading has no entity yet: map it in the configuration to see its history.":
-    "该读数还没有实体：在配置中映射后即可查看历史。",
   "This sensor is also configured in": "这个传感器也配置在",
   "This socket is configured as shown but not controllable: this window reports it, it never switches it.":
     "该插座被设置为仅显示、不可控制：此窗口只报告状态，从不开关它。",
   "This tab holds four of them and they are all taken: remove one to make room.":
     "这个选项卡最多放四个，现在已经放满：删掉一个腾出位置。",
-  "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.":
-    "此目标是只读传感器：要在此处修改，请在「汽车」标签页连接 evcc，或一个 number/select 实体。",
   "This week": "本周",
   "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.":
     "只有三个动作：＋ 新建车辆打开一张空白卡片，✏️ 打开已保存的车辆，开关决定它在 EV 板块里显示还是隐藏。下面先说明它是汽车还是摩托车，再填写名称、品牌、型号、实体和两张照片——保存只有一处：它会说明自己是在新建还是在修改，板块底部那个按钮也用同样的字。看哪一辆车在板块自己的标签页里选，不在这里。",
@@ -4140,8 +4077,6 @@ export default Object.freeze({
   "You have nothing in progress.": "你没有正在处理的内容。",
   "You need a": "你需要一个",
   "You need a hand configuring or understanding": "需要有人帮忙配置或理解",
-  "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.":
-    "已选择「我的地址」但没有填写地址：请在 设置 → 天气 中填写，或从列表中选择一个服务。",
   "Your alarm areas": "你的警戒区域",
   "Your name (optional)": "你的称呼（可选）",
   "Your own entities": "你的实体",
@@ -4693,8 +4628,6 @@ export default Object.freeze({
   "Home Assistant refused": "Home Assistant 拒绝了该请求",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.":
     "只用来计算充满还需多久：根据还差的百分比和充电桩的功率。留空时按 70 kWh 计算，这是仪表盘一直假设的数值——电池不同，时间就会按比例算错。",
-  "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.":
-    "没有本次充电的计量实体：在「汽车」标签页连接充电桩或 evcc，或在「本次充电电量」里填写实体。",
   Sunset: "日落",
   "TARGET REACHED": "已达目标",
   "The session meter is not answering.": "本次充电的计量实体没有响应。",
@@ -4707,8 +4640,6 @@ export default Object.freeze({
   empty: "空",
   "not responding": "无响应",
   "nothing on": "没有开启的设备",
-  "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.":
-    "底图没有响应。降雨是正常显示的：可以在 ⚙️ → 天气与雷达 中更换地图。",
   "ARMED ·": "已布防 ·",
   "Your own entities in the bar": "横条里你自己的实体",
   "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.":
@@ -4831,8 +4762,6 @@ export default Object.freeze({
   "Configure a camera above first: the privacy is its own.":
     "请先在上面配置一个摄像头：隐私是它自己的事。",
   "Private cameras": "私密摄像头",
-  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.":
-    "土壤传感器就在上方。在编辑器中添加灌溉分区，就能同时看到草坪。",
   "Contact entity": "触点实体",
   "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.":
     "它们会作为行一次性加进来：从此就是你的了——你可以改名、给它挑图，删掉的不会再回来。",
@@ -4982,8 +4911,6 @@ export default Object.freeze({
   "Save meter": "保存计量表",
   "Flowing for ${durata}": "已流动 ${durata}",
   "Flowing for over a day": "已流动超过一天",
-  "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.":
-    "在设置的「水和燃气」标签页里添加后，计量表就会出现在这里：水表和燃气表、水压和流量、软水机的盐。",
   "Not flowing": "未流动",
   "🪴 ${quante} plants added": "🪴 已添加 ${quante} 株植物",
   "${quante} doing well": "${quante} 株状态良好",
@@ -4992,8 +4919,6 @@ export default Object.freeze({
   "1 doing well": "1 株状态良好",
   "1 needs water": "1 株需要浇水",
   "1 waiting for rain": "1 株在等雨",
-  "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.":
-    "在设置的“植物”标签页中添加传感器后，植物就会显示在这里：土壤湿度，以及土壤温度（如果有）。",
   "Add a plant": "添加植物",
   "All doing well": "全部状态良好",
   "Below this moisture the soil is dry and the plant joins those that need water.":
@@ -5213,8 +5138,6 @@ export default Object.freeze({
   "Other BMS": "其他 BMS",
   "Pack 1": "电池组 1",
   "Pack saved": "电池组已保存",
-  "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
-    "在设置中“能源”下的“电池”标签中添加后，电池组会显示在这里：电量、电压、电芯。",
   "Current sign": "电流符号",
   "Positive when charging (JK, JBD, Daly)": "充电时为正（JK、JBD、Daly）",
   "Negative when charging": "充电时为负",
@@ -5338,8 +5261,6 @@ export default Object.freeze({
   "Lower the power": "降低功率",
   Modulating: "功率调节中",
   "No stove configured": "未配置取暖炉",
-  "No stove configured: add one from the Thermal management tab in settings.":
-    "未配置取暖炉：请在设置的“热能管理”标签页里添加。",
   "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.":
     "单靠它几乎就够了：开关、目标值、室温，以及（如果有）风扇模式。",
   "Pellet level, second hopper": "颗粒燃料余量（第二个料仓）",
@@ -5369,8 +5290,6 @@ export default Object.freeze({
   "Air conditioners out of season": "非当季的空调",
   "Radiators out of season": "非当季的暖气片",
   "They show: ${periodo}. Switched on, they show anyway.": "显示时间：${periodo}。开启时始终显示。",
-  "Each one has its months in the dashboard configuration. Switched on, they show anyway.":
-    "每台设备的月份在仪表板配置中设置。开启时始终显示。",
   "Show them anyway": "仍然显示",
   "🐠 The aquarium's entities": "🐠 鱼缸的实体",
   "🦎 The terrarium's entities": "🦎 爬宠箱的实体",
@@ -5391,10 +5310,6 @@ export default Object.freeze({
   "Humidity too low": "湿度过低",
   "Last cleaning": "上次清洁",
   Mister: "喷雾器",
-  "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.":
-    "还没有实体：打开设置，添加鱼缸的水温、pH、水位、灯光和过滤器。",
-  "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.":
-    "还没有实体：打开设置，添加爬宠箱的温度、湿度和灯。",
   "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.":
     "尚未记录：清洁当天点“今天已完成”，卡片会从那天开始计算天数。",
   "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.":
@@ -5943,7 +5858,6 @@ export default Object.freeze({
   "${probabile} chance": "概率 ${probabile}",
   "a camera or image entity you already have": "你已有的 camera 或 image 实体",
   "about ${quanta} in the next 24 hours": "未来24小时约 ${quanta}",
-  "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.": "在 ⚙️ Config › 天气 中添加它的传感器：这里会显示你家的测量值以及过去 24 小时。没有它们，页面只使用天气服务。",
   "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.": "全部可选，每种一个。温度、湿度、体感温度和风与主页页眉是同样的字段；降雨和雨强是灌溉已在使用的。只需选择一次，处处生效。",
   at: "于",
   "at most ${probabile} chance": "最多 ${probabile} 概率",
@@ -5951,7 +5865,6 @@ export default Object.freeze({
   Cloudy: "多云",
   "conditions, feels like, low and high": "天气状况、体感、最低和最高",
   "dew point": "露点",
-  "Do you have a weather station?": "你有气象站吗？",
   E: "东",
   east: "东",
   Exceptional: "异常",
@@ -5987,7 +5900,6 @@ export default Object.freeze({
   "north-west": "西北",
   "Now · My station · Forecast · Radar": "现在 · 我的气象站 · 预报 · 雷达",
   NW: "西北",
-  "Open Weather in Config": "在 Config 中打开天气",
   "Outdoor temperature": "室外温度",
   "Partly cloudy": "局部多云",
   Radar: "雷达",
@@ -6056,8 +5968,6 @@ export default Object.freeze({
   "Charging stops": "充电停靠",
   "Charging: ${minuti} in ${n} stops": "充电：${minuti}，${n} 次停靠",
   "Charging: ${minuti} in 1 stop": "充电：${minuti}，1 次停靠",
-  "Connect": "连接",
-  "Connect the car to see battery and stops": "连接汽车以查看电量和停靠",
   "For the stops, choose 100% at departure.": "要计算停靠，请在出发时选择 100%。",
   "For the way back you still have ${resta}: no need to charge": "回程还剩 ${resta}：无需充电",
   "from ${da} to ${a} · ${min} min": "${da} → ${a} · ${min} 分钟",
@@ -6069,7 +5979,6 @@ export default Object.freeze({
   "Minimum charge on arrival": "到达时最低电量",
   "now ${ora}": "现在 ${ora}",
   "on arrival ${fine}": "到达时 ${fine}",
-  "Only you see this, as the home's administrator": "只有你能看到，因为你是家庭管理员",
   "Parked · not charging": "停放 · 未充电",
   "Parked at home · not charging": "停在家中 · 未充电",
   "range": "续航",
@@ -6078,7 +5987,6 @@ export default Object.freeze({
   "Stops picked by GdANav on the way, with free chargers.": "途中由 GdANav 选择的停靠，充电站空闲。",
   "The battery is not answering": "电池没有响应",
   "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "家中还没有充电站数据：按公里给出停靠。途中 GdANav 会选择充电站并查看是否空闲。",
-  "The electric car's battery and range, and the charging stops if it is not enough.": "电动汽车的电量和续航，不够时的充电停靠。",
   "The minimum power to stop at": "停靠的最低功率",
   "The stops come with the route": "停靠会随路线一起给出",
   "the trip": "行程",
@@ -6132,11 +6040,9 @@ export default Object.freeze({
   "Charging · until ${fine}": "充电中 · 至 ${fine}",
   "Charging · until ${limite}% or ${fine}": "充电中 · 至 ${limite}% 或 ${fine}",
   "End of the window": "时段结束",
-  "Enter it to see what you spend": "填写后即可查看花费",
   "evcc set to ${modo}": "evcc 已设为 ${modo}",
   "Fast": "快速",
   "Finished at ${alle}": "${alle} 完成",
-  "From band ${fascia} in Settings → Energy": "来自 设置 → 能源 中的时段 ${fascia}",
   "Needs the add-on: the home starts it": "需要加载项：由家来启动",
   "Night charging": "夜间充电",
   "No days chosen": "未选择日期",
@@ -6512,12 +6418,10 @@ export default Object.freeze({
   "Convert": "转换",
   "Create and edit them in three steps": "三步即可创建和编辑",
   "Create the first one": "创建第一个",
-  "Create the first one in the config ›": "在配置中创建第一个 ›",
   "Delete «${v.nome}»?": "删除「${v.nome}」？",
   "depending on the sun": "根据太阳",
   "depending on what started it": "根据启动它的原因",
   "does several things at once": "同时做多件事",
-  "Edit in the config ›": "在配置中编辑 ›",
   "fires the ${evento} event": "触发事件 ${evento}",
   "Home Assistant → Settings → Automations": "Home Assistant → 设置 → 自动化",
   "Home Assistant did not save it: ${no}": "Home Assistant 未保存：${no}",
@@ -6527,7 +6431,6 @@ export default Object.freeze({
   "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant 的自动化通过 GdAHome 加载项读取：这里没有它。",
   "if something holds:": "如果某事成立：",
   "in HA as": "在 HA 中名为",
-  "in the config ›": "在配置中 ›",
   "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.": "它也会从 Home Assistant 中删除，且无法撤销。如果只想停止它，请用开关关闭。",
   "It is saved in": "保存于",
   "It was not changed: ${no}": "未更改：${no}",
@@ -6535,7 +6438,6 @@ export default Object.freeze({
   "It was not deleted: ${no}": "未删除：${no}",
   "labelled": "标签为",
   "Last time:": "上次：",
-  "Manage in the config ›": "在配置中管理 ›",
   "never": "从未",
   "No automation matches these words.": "没有与这些词匹配的自动化。",
   "No automations yet: start from a ready-made template.": "还没有自动化：从现成的模板开始吧。",
@@ -6733,4 +6635,23 @@ export default Object.freeze({
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "对讲机的事件（event.*），或在响铃时打开的传感器（binary_sensor）。按钮或开关也可以。",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "不能用作门铃：请选择一个事件（event.*）或会打开的传感器（binary_sensor.*）。",
   "Now · My station · Forecast": "现在 · 我的气象站 · 预报",
+  "From band ${fascia}": "来自时段 ${fascia}",
+  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.": "电池由 Home Assistant 自己声明——一个百分比传感器——无需任何配置就会出现在这里。",
+  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.": "门窗接点由 Home Assistant 自己声明，不用配置就会出现在这里。",
+  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.": "移动或在家传感器由 Home Assistant 自己声明，不用配置就会出现在这里。",
+  "More power is going out than coming in: usually a sensor's direction is reversed.": "流出的电力多于流入的：通常是某个传感器的方向反了。",
+  "No appliance in this load yet.": "这个负载里还没有家电。",
+  "No room has a humidity probe.": "没有房间配置湿度传感器。",
+  "No rooms configured yet.": "还没有房间。",
+  "No sensor linked.": "未关联传感器。",
+  "No session meter.": "没有本次充电的计量实体。",
+  "Nothing here yet.": "这里还什么都没有。",
+  "Switched on, they show anyway.": "开启时始终显示。",
+  "The base map is not answering. The rain is there.": "底图没有响应。降雨是正常显示的。",
+  "The radar address is not a tile address ({z}/{x}/{y}).": "雷达地址不是瓦片地址（{z}/{x}/{y}）。",
+  "The soil sensor is right above.": "土壤传感器就在上方。",
+  "The target is read-only.": "目标为只读。",
+  "This reading has no entity yet.": "该读数还没有实体。",
+  "This target is a read-only sensor.": "此目标是只读传感器。",
+  "You picked «An address of mine» but there is no address.": "已选择「我的地址」但没有填写地址。",
 });

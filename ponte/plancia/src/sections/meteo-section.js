@@ -51,7 +51,6 @@ import {
   previsioniDeiGiorniFresche,
 } from "./la-card-del-meteo-section.js";
 import { disegnaRadarIn, radarScelto } from "./radar-meteo-section.js";
-import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
 import { registraTitoloDiPagina } from "./page-masthead-section.js";
 import {
   allStates,
@@ -351,24 +350,6 @@ function accendiLaVoce(entita) {
   if (!serve && pagina?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
   return serve;
-}
-
-/* Il Config, aperto sulla scheda Meteo: l'invito della stazione porta li'. */
-export function apriMeteoNelConfig() {
-  if (typeof root.apriConfigEntita !== "function") return false;
-  root.apriConfigEntita();
-  let giri = 0;
-  const vai = () => {
-    if (doc?.querySelector?.(`#editor-modal .ed-tab[data-tab="${METEO_TAB}"]`)) {
-      try {
-        root.editorSwitch?.(METEO_TAB);
-      } catch (_errore) {}
-      return;
-    }
-    if (giri++ < 60) (root.requestAnimationFrame || root.setTimeout)?.(vai, 16);
-  };
-  vai();
-  return true;
 }
 
 /* ── le parole ────────────────────────────────────────────────────────── */
@@ -907,24 +888,6 @@ function stazioneMarkup(vista) {
     </section>`;
 }
 
-function invitoMarkup() {
-  return `<section class="dm-meteo-blocco" data-dm-meteo-blocco="invito">
-      <div class="dm-meteo-invito">
-        <span class="dm-meteo-ic" aria-hidden="true">${icona("thermometer", 30)}</span>
-        <div><strong>${esc(t("Hai una stazione meteo?", "Do you have a weather station?"))}</strong>
-        <span>${esc(
-          t(
-            "Aggiungi i suoi sensori in ⚙️ Config › Meteo: qui compaiono le misure di casa tua, con le ultime 24 ore. Senza, la pagina usa solo il servizio meteo.",
-            "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.",
-          ),
-        )}</span></div>
-        <button type="button" class="dm-meteo-invito-tasto" data-dm-meteo-apri-config>${esc(
-          t("Apri Meteo nel Config", "Open Weather in Config"),
-        )}</button>
-      </div>
-    </section>`;
-}
-
 function oreMarkup(vista) {
   const ore = vista.ore;
   const temperature = ore.map((voce) => voce.temperatura).filter(Number.isFinite);
@@ -1046,24 +1009,15 @@ export function vistaDelMeteo(states = allStates(), adesso = Date.now(), { entit
 }
 
 /** I blocchi che la pagina mostra con questa vista, nell'ordine scelto. */
-export function blocchiDellaVista(vista, { radar = true, invito = puoConfigurareAdesso() } = {}) {
+export function blocchiDellaVista(vista, { radar = true } = {}) {
   if (!vista) return [];
   return blocchiDellaPagina(readJson(CHIAVE_METEO, {}), {
     adesso: true,
     stazione: Object.keys(vista.stazione).length > 0,
-    invito,
     ore: vista.ore.length > 0,
     giorni: vista.giorni.length > 0,
     radar,
   });
-}
-
-function puoConfigurareAdesso() {
-  try {
-    return puoConfigurare() !== false;
-  } catch (_errore) {
-    return true;
-  }
 }
 
 /* ── il disegno ───────────────────────────────────────────────────────── */
@@ -1076,7 +1030,6 @@ export const stazioneDelMeteo = (vista) => stazioneMarkup(vista);
 const DISEGNI = Object.freeze({
   adesso: adessoMarkup,
   stazione: stazioneMarkup,
-  invito: invitoMarkup,
   ore: oreMarkup,
   giorni: giorniMarkup,
 });
@@ -1225,7 +1178,7 @@ function titoloDellaPagina() {
     radar: t("Radar", "Radar"),
   };
   const voci = [];
-  for (const blocco of blocchiDellaVista(vista, { invito: false })) {
+  for (const blocco of blocchiDellaVista(vista)) {
     const nome = nomi[blocco];
     if (nome && !voci.includes(nome)) voci.push(nome);
   }
@@ -1320,17 +1273,6 @@ export function foglioDelMeteo(P, { media = true } = {}) {
   ${P} .dm-meteo-uv-tacche{display:flex;justify-content:space-between;margin-top:6px;font-size:9.5px;font-weight:800;color:var(--text-dim,#94a3b8)}
   ${P} .dm-meteo-uv-tacche em{font-style:normal}
 
-  /* L'invito, senza stazione */
-  ${P} .dm-meteo-invito{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:20px;
-    border:1px dashed var(--card-border,#cbd5e1);background:var(--surface-2,#f8fafc)}
-  ${P} .dm-meteo-invito>div{display:grid;gap:3px;flex:1;min-width:0}
-  ${P} .dm-meteo-invito strong{font-size:14px;font-weight:900;color:var(--text,#0f172a)}
-  ${P} .dm-meteo-invito span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-  ${P} .dm-meteo-invito .dm-meteo-ic{--dm-meteo-c:#f97316;width:46px;height:46px}
-  ${P} .dm-meteo-invito .dm-meteo-ic svg{width:30px;height:30px}
-  ${P} .dm-meteo-invito-tasto{flex:0 0 auto;padding:10px 16px;border-radius:999px;border:0;cursor:pointer;
-    font:inherit;font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,#0ea5e9,#0369a1)}
-
   /* Prossime ore */
   ${P} .dm-meteo-ore-scheda{padding:14px 10px 12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   ${P} .dm-meteo-ore-scheda::-webkit-scrollbar{display:none}
@@ -1394,7 +1336,6 @@ function foglioDelleMisure(P) {
     ${P} .dm-meteo-giorno-ic{font-size:20px}
     ${P} .dm-meteo-giorno-p{font-size:10px}
     ${P} .dm-meteo-giorno-p em{display:none}
-    ${P} .dm-meteo-invito{flex-wrap:wrap}
     ${P} .dm-meteo-wrap{gap:18px}
   }
     `;
@@ -1404,12 +1345,6 @@ function installStyles() {
   installStyle("dm-meteo-section-style", foglioDelMeteo(`#${METEO_PAGE_ID}`));
 }
 
-function onClick(evento) {
-  if (!evento.target?.closest?.("[data-dm-meteo-apri-config]")) return;
-  evento.preventDefault();
-  apriMeteoNelConfig();
-}
-
 export function installMeteo() {
   if (!doc || state.installed) return false;
   state.installed = true;
@@ -1417,7 +1352,6 @@ export function installMeteo() {
   ensureMeteoPage();
   ensureMeteoTab();
   registraTitoloDiPagina(METEO_PAGE_ID, titoloDellaPagina);
-  doc.addEventListener?.("click", onClick);
   for (const nome of ["render", "cdApplyNavVis"]) {
     const precedente = root[nome];
     if (typeof precedente !== "function" || precedente.__dmMeteo) continue;

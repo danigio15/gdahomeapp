@@ -294,12 +294,6 @@ function testaMarkup(riassunto) {
 function vuotoMarkup() {
   return `<div class="dm-citofono-vuoto">
     <strong>${esc(t("Niente da mostrare, per ora", "Nothing to show yet"))}</strong>
-    <span>${esc(
-      t(
-        "Il citofono e la cassetta della posta si dichiarano dalla scheda Citofono e posta della configurazione: il tasto che apre, il campanello, e i due sensori della cassetta.",
-        "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.",
-      ),
-    )}</span>
   </div>`;
 }
 

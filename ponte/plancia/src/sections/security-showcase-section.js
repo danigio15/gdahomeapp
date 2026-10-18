@@ -230,12 +230,8 @@ const copy = () => ({
   cctvOn: t("TVCC attivo", "CCTV live"),
   cctvOff: t("TVCC offline", "CCTV offline"),
   cctvNone: t("TVCC non configurato", "CCTV not configured"),
+  /* Senza telecamere si dice e basta: la sezione non rimanda al Config. */
   empty: t("Nessuna telecamera configurata", "No camera configured"),
-  emptyHint: t(
-    "Aggiungi le tue telecamere dalla Configurazione: appariranno qui con anteprima live.",
-    "Add your cameras from Configuration: they will show up here with a live preview.",
-  ),
-  emptyCta: t("Apri configurazione", "Open configuration"),
   openCamera: t("Apri la telecamera", "Open camera"),
 });
 
@@ -939,8 +935,6 @@ function skeletonMarkup(labels) {
     <div class="dm-sec-empty" data-dm-cam-empty hidden>
       <span class="dm-sec-empty-ic" aria-hidden="true">${ICONS.camera}</span>
       <strong>${esc(labels.empty)}</strong>
-      <p>${esc(labels.emptyHint)}</p>
-      <button type="button" class="dm-sec-empty-cta" data-dm-open-config>${esc(labels.emptyCta)}</button>
     </div>
   </section>
 </div>`;
@@ -1209,11 +1203,6 @@ function onShellClick(event) {
         renderSecurity();
       } catch (_error) {}
     }
-    return;
-  }
-  if (target?.closest?.("[data-dm-open-config]")) {
-    event.preventDefault();
-    root.apriConfigEntita?.();
     return;
   }
   const card = target?.closest?.(".dm-cam[data-dm-cam]");
@@ -2033,15 +2022,6 @@ function securityCss() {
 }
 .dm-sec-empty-ic svg{width:28px;height:28px}
 .dm-sec-empty strong{font-size:15.5px;font-weight:900;color:var(--dm-sec-text);letter-spacing:.3px}
-.dm-sec-empty p{margin:0;max-width:430px;font-size:12.5px;font-weight:600;line-height:1.5}
-.dm-sec-empty-cta{
-  margin-top:6px;padding:11px 22px;border:none;border-radius:13px;cursor:pointer;
-  font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
-  color:#fff;background:linear-gradient(135deg,#06b6d4,#0284c7);box-shadow:0 12px 26px rgba(6,182,212,.30);
-  transition:transform .28s cubic-bezier(.16,1,.3,1),box-shadow .28s ease
-}
-.dm-sec-empty-cta:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(6,182,212,.40)}
-.dm-sec-empty-cta:active{transform:scale(.97)}
 
 /* ── responsive ──────────────────────────────────────────────────────── */
 /* Wide screens read better as "state on the left, keypad on the right"

@@ -231,12 +231,6 @@ function gruppoMarkup(gruppo, states) {
 function vuotoMarkup() {
   return `<div class="dm-lucip-empty">
       <strong>${esc(t("Nessuna presa configurata", "No socket configured"))}</strong>
-      <span>${esc(
-        t(
-          "Aggiungi le prese dalla scheda Prese della configurazione: la TV del salotto, il Firestick, il modem.",
-          "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.",
-        ),
-      )}</span>
     </div>`;
 }
 

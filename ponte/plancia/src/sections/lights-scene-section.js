@@ -341,7 +341,7 @@ export function renderLightsPopupMarkup(views) {
       ${summary.on ? `<div class="lgx-alloff" data-dm-light-all="off">${t("Spegni tutte", "Turn all off")}</div>` : ""}
     </div>`;
   if (!views.length)
-    return `${bar}<div class="dm-lightx-empty">${t("Nessuna luce configurata. Aggiungile dalla scheda Luci dell'editor: accetta sia entità light.* sia switch.*.", "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.")}</div>`;
+    return `${bar}<div class="dm-lightx-empty">${t("Nessuna luce configurata.", "No configured lights.")}</div>`;
   let floor = "";
   const body = lightGroups(views)
     .map((group) => {

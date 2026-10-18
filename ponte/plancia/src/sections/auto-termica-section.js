@@ -842,12 +842,7 @@ function quadroMarkup(lettura, tipo) {
   const tutte = `${tessere}${dati.tessere}`;
   const vuoto =
     !serbatoio && !righe && !tutte && !gomme.quadretto && !pillole.length
-      ? `<div class="dm-termica-vuoto">${esc(
-          t(
-            "Compila le caselle dell'auto — carburante, autonomia, portiere, motore — dalla scheda Auto della configurazione.",
-            "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.",
-          ),
-        )}</div>`
+      ? `<div class="dm-termica-vuoto">${esc(t("Nessuna lettura", "No reading"))}</div>`
       : "";
   return `<div class="dm-termica-testa">
       <span class="dm-termica-titolo">${esc(tipo === "ibrida" ? t("Motore termico", "Combustion engine") : t("L'auto", "The car"))}</span>

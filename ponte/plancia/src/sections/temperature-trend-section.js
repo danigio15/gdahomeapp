@@ -714,10 +714,7 @@ export function renderTemperatureTrend() {
             "Nessuno storico disponibile per questa stanza.",
             "No history yet for this room.",
           )
-        : t(
-            "Nessuna stanza ha una sonda dell'umidità: si aggiunge dalla scheda Temperature.",
-            "No room has a humidity probe: add one from the Temperature tab.",
-          );
+        : t("Nessuna stanza ha una sonda dell'umidità.", "No room has a humidity probe.");
     panel.dataset.state = "empty";
     return false;
   }

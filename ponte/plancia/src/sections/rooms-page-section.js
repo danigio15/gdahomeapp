@@ -1686,10 +1686,7 @@ export function indiceMarkup(pagine, states = {}) {
 export function roomPageMarkup(pagine, scelta, states = {}) {
   if (!pagine.length)
     return `<div class="ed-empty dm-stanze-empty">${esc(
-      t(
-        "Nessuna stanza configurata. Aggiungile dalla scheda Stanze dell'editor: da lì ogni sezione può assegnare le sue entità.",
-        "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.",
-      ),
+      t("Nessuna stanza configurata.", "No rooms configured yet."),
     )}</div>`;
   /* Senza una stanza scelta si vede l'elenco (#17): e' il punto di partenza
    * della pagina, e da li' si entra. La fila delle linguette resta dentro la
@@ -1708,10 +1705,7 @@ export function roomPageMarkup(pagine, scelta, states = {}) {
   const vuota = blocchi
     ? ""
     : `<div class="dm-stanze-empty">${esc(
-        t(
-          "Questa stanza non ha ancora niente. L'assegnazione si fa nella scheda di ogni sezione.",
-          "Nothing here yet. Entities are assigned from each section's own tab.",
-        ),
+        t("Questa stanza non ha ancora niente.", "Nothing here yet."),
       )}</div>`;
   const indietro = `<button type="button" class="dm-stanze-indietro" data-dm-stanze-indice>
       <span aria-hidden="true">←</span> ${esc(t("Le stanze", "The rooms"))}</button>`;

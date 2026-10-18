@@ -238,8 +238,8 @@ function vuotoMarkup() {
     <strong>${esc(t("Nessuna batteria trovata", "No battery found"))}</strong>
     <span>${esc(
       t(
-        "Una batteria la dichiara Home Assistant da sé — un sensore in percentuale — e compare qui senza configurare niente. Se la tua non viene trovata, aggiungila dalla scheda Batterie della configurazione.",
-        "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.",
+        "Una batteria la dichiara Home Assistant da sé — un sensore in percentuale — e compare qui senza configurare niente.",
+        "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.",
       ),
     )}</span>
   </div>`;

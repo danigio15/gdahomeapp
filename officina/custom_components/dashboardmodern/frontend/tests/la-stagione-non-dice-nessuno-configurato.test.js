@@ -35,7 +35,10 @@ test("con mesi diversi non si inventa un periodo solo", () => {
     { entity: "climate.studio", zone: "caldo", mesi: [11, 12, 1, 2] },
   ]);
   assert.match(html, /Termosifoni fuori stagione · 2/);
-  assert.match(html, /Ognuno ha i suoi mesi/);
+  assert.match(html, /Se li accendi compaiono comunque/);
+  assert.doesNotMatch(html, /Si vedono:/);
+  /* Senza rimandi al Config. */
+  assert.doesNotMatch(html, /Configurazione/);
 });
 
 test("la griglia sceglie il vuoto della stagione prima di quello della configurazione", () => {

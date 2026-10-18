@@ -408,12 +408,6 @@ function paccoMarkup(pacco) {
 function vuotoMarkup() {
   return `<div class="dm-accu-vuoto">
     <strong>${esc(t("Nessun pacco configurato", "No battery pack configured"))}</strong>
-    <span>${esc(
-      t(
-        "I pacchi compaiono qui quando li aggiungi nella scheda Batterie della famiglia Energia, in configurazione: lo stato di carica, le tensioni, le celle.",
-        "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.",
-      ),
-    )}</span>
   </div>`;
 }
 

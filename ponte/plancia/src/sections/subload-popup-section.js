@@ -284,10 +284,7 @@ function riconcilia(list, model) {
       element(
         "div",
         "dm-subload-empty",
-        t(
-          "Nessun dispositivo in questo carico. Aggiungili dall'editor Carichi.",
-          "No appliance in this load yet. Add them from the Loads editor.",
-        ),
+        t("Nessun dispositivo in questo carico.", "No appliance in this load yet."),
       ),
     );
   else if (model.count && vuoto) vuoto.remove?.();

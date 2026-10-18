@@ -161,8 +161,6 @@ export default Object.freeze({
     "여정이 저장되지 않았습니다. 목적지, 날짜, 시간을 확인하세요.",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh":
     "최대 8개 추가: 콘센트, 히트펌프, 충전 중인 차, 오늘의 kWh",
-  "No sensor linked: pick one in Settings › Loads or Appliances.":
-    "연결된 센서가 없습니다: 설정 › 부하 또는 가전에서 선택하세요.",
   "Reading consumption from Home Assistant…": "Home Assistant에서 소비량을 읽는 중…",
   " — configured": " — 설정됨",
   "${alzate} shutters up": "셔터 ${alzate}개 열림",
@@ -243,8 +241,6 @@ export default Object.freeze({
   "Load to watch": "감시할 부하",
   Lock: "잠금",
   "Looking…": "확인 중…",
-  "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.":
-    "들어오는 전력보다 나가는 전력이 많습니다. 보통 센서의 방향이 반대로 되어 있는 경우이며, 에너지 탭에서 바꿀 수 있습니다.",
   Motorcycle: "오토바이",
   "My sections": "내 섹션",
   "Name the unit: it is what the card shows.":
@@ -650,8 +646,6 @@ export default Object.freeze({
   "Add entity": "엔티티 추가",
   "Add from an integration": "통합에서 추가",
   "Add intercom": "인터폰 추가",
-  "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.":
-    "설정의 에너지 탭에서 추가하세요. NUT 상태만으로도 이 페이지는 전기가 있는지 압니다.",
   "Add light": "조명 추가",
   "Add list": "목록 추가",
   "Add load": "부하 추가",
@@ -675,28 +669,13 @@ export default Object.freeze({
   "Add sensors to the Alerts Panel with a clean name, or create a":
     "알아보기 쉬운 이름으로 센서를 알림 패널에 추가하거나,",
   "Add socket": "콘센트 추가",
-  "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.":
-    "설정의 콘센트 탭에서 추가하세요. 거실 TV, 파이어스틱, 모뎀 등.",
   "Add solar plant": "태양열 설비 추가",
   "Add something to do…": "할 일 추가…",
   "Add temperature": "온도 추가",
-  "Add the irrigation zones from the editor to see the lawn.":
-    "잔디를 보려면 편집기에서 관수 구역을 추가하세요.",
-  "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.":
-    "설정의 쓰레기 탭에서 분류를 추가하세요. 분류마다 수거 시기를 알려주는 센서나 캘린더를 지정합니다.",
-  "Add the pool entities from the editor to see the basin.":
-    "수영장을 보려면 편집기에서 수영장 엔티티를 추가하세요.",
-  "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.":
-    "설정의 프린터 탭에서 프린터를 추가하세요. 준비 여부를 알려주는 엔티티만 있으면 되고, 카트리지는 알아서 찾습니다.",
-  "Add the units from the dashboard configuration.": "대시보드 설정에서 기기를 추가하세요.",
-  "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.":
-    "설정의 알림 탭에서 추가하세요. 지진, 재난 경보, 낙뢰, 꽃가루, 온열 쾌적도, 상공 항공기. 각각 해당 통합의 센서에서 읽습니다.",
   "Add to ${nomeDellaLista(list)}": "${nomeDellaLista(list)}에 추가",
   "Add water heater": "온수기 추가",
   "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link":
     "가전을 추가하세요(세탁기, 식기세척기, 오븐, 전자레인지…). 각각에",
-  "Add your cameras from Configuration: they will show up here with a live preview.":
-    "카메라는 설정에서 추가하세요. 여기에 실시간 미리보기와 함께 나타납니다.",
   "Added ${trovate.length} lists": "목록 ${trovate.length}개 추가됨",
   "Added ${trovati.length} calendars": "캘린더 ${trovati.length}개 추가됨",
   "Administrator tools ·": "관리자 도구 ·",
@@ -1460,8 +1439,6 @@ export default Object.freeze({
   February: "2월",
   "Feed a portion": "한 끼 주기",
   "Files in /local (config/www)": "/local (config/www)의 파일",
-  "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.":
-    "설정의 차량 탭에서 차량 항목(연료, 주행 가능 거리, 문, 엔진)을 채우세요.",
   "Fill it in and the card shows the window open when the contact says so.":
     "이 항목을 채우면 접점이 알릴 때 카드가 창을 열린 상태로 표시합니다.",
   "Filled ${count} fields: ${list}.": "${count}개 항목을 채웠습니다: ${list}.",
@@ -1652,12 +1629,6 @@ export default Object.freeze({
   Hob: "쿡탑",
   Home: "홈",
   "Home (fallback)": "홈 (대체값)",
-  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.":
-    "배터리는 Home Assistant가 직접 알려 주며 — 퍼센트 센서 — 아무것도 설정하지 않아도 여기에 나타납니다. 찾지 못했다면 설정의 배터리 탭에서 추가하세요.",
-  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.":
-    "문이나 창문 접점은 Home Assistant가 스스로 알려 주며, 아무것도 설정하지 않아도 여기에 나타납니다. 내 것이 보이지 않으면 설정의 개폐 탭에서 추가하세요.",
-  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.":
-    "동작 센서나 재실 센서는 Home Assistant가 스스로 알려 주며, 아무것도 설정하지 않아도 여기에 나타납니다. 내 것이 보이지 않으면 설정의 재실 탭에서 추가하세요.",
   "Home Assistant declares no machine and no network piece.":
     "Home Assistant가 알리는 머신도 네트워크 장비도 없습니다.",
   "Home Assistant declares the air sensors itself — particulates, CO₂, monoxide, volatile compounds — and the tile appears on its own. Here you correct that: drop a sensor that should not count, add one that is not found, and move the boundaries between good, fair, poor and bad.":
@@ -2103,27 +2074,19 @@ export default Object.freeze({
   "No alerts configured": "설정된 알림이 없습니다",
   "No answer within eight seconds.": "8초 안에 응답이 없습니다.",
   "No appliance configured": "설정된 가전이 없습니다",
-  "No appliance configured. Use the Settings menu to add one.":
-    "설정된 가전이 없습니다. 설정 메뉴에서 추가하세요.",
   "No appliance has measurable consumption today.":
     "오늘은 측정 가능한 소비가 있는 가전이 없습니다.",
-  "No appliance in this load yet. Add them from the Loads editor.":
-    "이 부하에는 아직 가전이 없습니다. 부하 편집기에서 추가하세요.",
   "No appliance is running right now.": "지금 가동 중인 가전이 없습니다.",
   "No appliance matches the selected filters.": "선택한 조건에 맞는 가전이 없습니다.",
   "No appliance yet.": "아직 가전이 없습니다.",
   "No battery found": "배터리를 찾지 못했습니다",
   "No boiler configured": "보일러가 설정되지 않았습니다",
-  "No boiler configured: add one from the Thermal management tab in settings.":
-    "보일러가 설정되지 않았습니다. 설정의 열 관리 탭에서 추가하세요.",
   "No calendar configured": "설정된 캘린더 없음",
   "No calendar selected": "선택된 캘린더 없음",
   "No camera configured": "설정된 카메라가 없습니다",
   "No car field could be recognised from this device.":
     "이 기기에서 자동차 항목을 하나도 인식하지 못했습니다.",
   "No cartridge found": "카트리지를 찾지 못함",
-  "No cartridge found: if your printer reports them, write them in the Printers tab.":
-    "카트리지를 찾지 못했습니다. 프린터가 보고한다면 프린터 탭에 적어 주세요.",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.":
     "기기가 있는 통합 중에 충전기가 없습니다. 여기에는 evcc의 것만 있고, evcc는 다른 버튼으로 연결합니다.",
   "No charger field could be recognised from this device.":
@@ -2134,8 +2097,6 @@ export default Object.freeze({
   "No configuration contains this word.": "이 낱말이 들어 있는 설정이 없습니다.",
   "No configured items.": "설정된 항목이 없습니다.",
   "No configured lights.": "설정된 조명이 없습니다.",
-  "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.":
-    "설정된 조명이 없습니다. 편집기의 조명 탭에서 추가하세요. light.*와 switch.* 엔티티 모두 쓸 수 있습니다.",
   "No configured loads": "설정된 부하가 없습니다",
   "No contact found": "접점을 찾지 못했습니다",
   "No custom button": "맞춤 버튼 없음",
@@ -2159,8 +2120,6 @@ export default Object.freeze({
     "추가된 엔티티가 없습니다. 입력하거나 골라서 ➕ 를 누르세요",
   "No entity bound: the circle stays empty in every view.":
     "연결된 엔티티가 없습니다. 어느 화면에서도 원은 비어 있습니다.",
-  "No entity linked yet: open the settings and pick the device.":
-    "아직 연결된 엔티티가 없습니다. 설정을 열고 기기를 고르세요.",
   "No entries": "항목 없음",
   "No extra command: the card carries the player's own buttons and nothing else.":
     "추가 조작 없음: 카드에는 플레이어의 버튼만 나옵니다.",
@@ -2226,14 +2185,10 @@ export default Object.freeze({
     "이 기기에서는 로봇을 인식할 수 없습니다: vacuum.* 또는 lawn_mower.* 엔터티가 필요합니다.",
   "No robot configured": "구성된 로봇 없음",
   "No room": "방 없음",
-  "No room has a humidity probe: add one from the Temperature tab.":
-    "습도 센서가 있는 방이 없습니다. 온도 탭에서 추가하세요.",
   "No room has a temperature sensor configured yet.": "아직 온도 센서가 설정된 방이 없습니다.",
   "No room with a sensor — add one in the editor's Temperature tab":
     "센서가 있는 방이 없습니다. 편집기의 온도 탭에서 하나 추가하세요",
   "No room. Add one below.": "방이 없습니다. 아래에서 하나 추가하세요.",
-  "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.":
-    "아직 방이 없습니다. 편집기의 방 탭에서 추가하세요. 그러면 각 섹션에서 엔티티를 방에 배정할 수 있습니다.",
   "No sensor recognized": "인식된 센서가 없습니다",
   "No shutter or curtain configured": "설정된 셔터나 커튼이 없습니다",
   "No signal": "신호 없음",
@@ -2245,8 +2200,6 @@ export default Object.freeze({
   "No todo.* list found": "todo.* 목록을 찾을 수 없음",
   "No warning in force": "발효 중인 경보 없음",
   "No water heater configured": "설정된 온수기 없음",
-  "No water heater configured: add one from the Solar tab in settings.":
-    "설정된 온수기가 없습니다. 설정의 태양열 탭에서 추가하세요.",
   "No window sits in a room that has a hygrometer: pick the room in the window's row, below.":
     "습도계가 있는 방에 창문이 하나도 없습니다: 아래 창문 행에서 방을 선택하세요.",
   "No zone configured": "설정된 구역이 없습니다",
@@ -2273,8 +2226,6 @@ export default Object.freeze({
   "Nothing came in today.": "오늘은 아무것도 오지 않았습니다.",
   "Nothing closed yet.": "아직 닫힌 것이 없습니다.",
   "Nothing for a pet": "반려동물용은 없음",
-  "Nothing here yet. Entities are assigned from each section's own tab.":
-    "아직 아무것도 없습니다. 엔티티는 각 섹션의 탭에서 배정합니다.",
   "Nothing new": "새로운 것 없음",
   "Nothing of this kind here.": "여기에는 이런 종류가 없습니다.",
   "Nothing playing": "재생 중인 항목 없음",
@@ -2707,7 +2658,6 @@ export default Object.freeze({
   "all up": "모두 정상",
   Servers: "서버",
   connected: "연결됨",
-  "Choose what to highlight": "강조할 항목 선택",
   "to work on": "처리 대기",
   "In today:": "오늘 접수:",
   "Nothing came in today": "오늘은 들어온 것이 없어요",
@@ -2784,7 +2734,6 @@ export default Object.freeze({
   "Open all": "전체 열기",
   "Open appliances running": "가동 중인 가전 열기",
   "Open camera": "카메라 열기",
-  "Open configuration": "설정 열기",
   "Open for": "열린 지",
   "Open gate": "대문 열기",
   "Open in map": "지도에서 열기",
@@ -2908,8 +2857,6 @@ export default Object.freeze({
     "종료보다 앞선 시작을 고르세요. 미래는 안 됩니다.",
   "Pick an image entity": "이미지 엔티티 선택",
   "Pick from Appliances": "가전에서 선택",
-  "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».":
-    "설정의 위젯 탭에서 캘린더를 고르세요. Home Assistant에 이미 있는 것은 «감지»로 저절로 나타납니다.",
   "Pick the device": "장치 선택",
   "Pick the evcc loadpoint: the charge mode, the charge limit, the session and the solar share come along. The charger connects from the other button, and the fields add up.":
     "evcc loadpoint를 고르세요. 충전 모드, 충전 한도, 세션, 태양광 비율이 들어옵니다. 충전기는 다른 버튼으로 연결하고, 항목은 합쳐집니다.",
@@ -3654,8 +3601,6 @@ export default Object.freeze({
     "아이콘은 기본 동작에서도 바꿀 수 있고 홈에 표시됩니다.",
   "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.":
     "충전기를 가져오는 통합: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. 기기를 고르면 충전 항목이 저절로 채워집니다 — 전력, 에너지, 전압, 온도, 케이블.",
-  "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.":
-    "인터폰과 우편함은 설정의 「인터폰과 우편」 탭에서 지정합니다. 여는 버튼, 초인종, 그리고 우편함의 센서 두 개입니다.",
   "The inverted direction": "반대 방향",
   "The latest reply": "최근 답변",
   "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.":
@@ -3721,8 +3666,6 @@ export default Object.freeze({
   "The push comes from Home Assistant, not the dashboard: it runs on the server, so it arrives even when this page is closed. This automation is already written with your entities — paste it under Settings → Automations → ⋮ → Edit in YAML, and change the service to your phone's.":
     "푸시는 대시보드가 아니라 Home Assistant가 보냅니다. 서버에서 돌기 때문에 이 페이지를 닫아도 도착합니다. 이 자동화는 이미 당신의 엔티티로 작성되어 있습니다 — 설정 → 자동화 → ⋮ → YAML로 편집 에 붙여 넣고, 서비스를 사용 중인 휴대폰의 것으로 바꾸세요.",
   "The quick actions": "빠른 동작",
-  "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.":
-    "레이더 주소가 타일 주소({z}/{x}/{y})가 아닙니다. 설정 → 날씨에서 고치거나 목록에서 서비스를 고르세요.",
   "The radar is not reporting.": "레이더가 응답하지 않습니다.",
   "The radiators": "라디에이터",
   "The reading on the cover": "대표로 보여줄 측정값",
@@ -3775,8 +3718,6 @@ export default Object.freeze({
   "The state": "상태",
   "The station sensor, when the integration exposes one: it gives the name written next to the train.":
     "역 센서(통합이 제공하는 경우): 열차 옆에 쓰는 이름을 줍니다.",
-  "The target is read-only: connect evcc in the Car tab to change it.":
-    "목표가 읽기 전용입니다. 바꾸려면 자동차 탭에서 evcc를 연결하세요.",
   "The temperatures": "온도",
   "The text of the report": "제보 본문",
   "The theme and the bar": "테마와 막대",
@@ -3853,15 +3794,11 @@ export default Object.freeze({
     "여기에는 state_class가 total 또는 total_increasing인 누적 kWh 계량기를 넣어야 합니다. 월간 센서는 쓰지 마세요. 이 항목은 지난 달을 복원하는 데 필요합니다.",
   "This one wins: day, month, year, history and previous months are all derived from here through Recorder. While it is set, the period fields are not read.":
     "이쪽이 우선입니다. 일·월·연·기록·지난 달이 모두 Recorder를 통해 여기서 나옵니다. 설정되어 있는 동안에는 기간 항목을 읽지 않습니다.",
-  "This reading has no entity yet: map it in the configuration to see its history.":
-    "이 값에는 아직 엔티티가 없습니다. 기록을 보려면 설정에서 연결하세요.",
   "This sensor is also configured in": "이 센서는 다음에도 설정되어 있습니다:",
   "This socket is configured as shown but not controllable: this window reports it, it never switches it.":
     "이 콘센트는 표시만 되고 제어 불가로 설정되어 있습니다. 이 창은 상태만 알려 줄 뿐 켜거나 끄지 않습니다.",
   "This tab holds four of them and they are all taken: remove one to make room.":
     "이 탭에는 네 개까지 들어가며 모두 찼습니다. 하나를 지워 자리를 만드세요.",
-  "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.":
-    "이 목표는 읽기 전용 센서입니다. 여기서 바꾸려면 자동차 탭에서 evcc나 number/select 엔티티를 연결하세요.",
   "This week": "이번 주",
   "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.":
     "동작은 세 가지뿐입니다. ＋ 새 차량은 빈 카드를 열고, ✏️는 이미 저장한 차량을 열며, 스위치는 EV 섹션에서 그 차량을 켜거나 끓니다. 그 아래에서 자동차인지 오토바이인지 고르고 이름, 제조사, 모델, 엔티티, 사진 두 장을 채웁니다. 저장은 하나뿐이며 만드는 중인지 고치는 중인지 스스로 밝히고, 섹션 맨 아래 버튼도 같은 말을 씁니다. 어떤 차량을 볼지는 섹션의 탭에서 고르지, 여기에서 고르지 않습니다.",
@@ -4199,8 +4136,6 @@ export default Object.freeze({
   "You have nothing in progress.": "진행 중인 것이 없습니다.",
   "You need a": "필요한 것은",
   "You need a hand configuring or understanding": "설정하거나 이해하는 데 도움이 필요합니다",
-  "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.":
-    "«내 주소»를 골랐지만 주소가 없습니다. 설정 → 날씨에 적거나 목록에서 서비스를 고르세요.",
   "Your alarm areas": "내 경보 구역",
   "Your name (optional)": "이름 (선택)",
   "Your own entities": "내 엔티티",
@@ -4757,8 +4692,6 @@ export default Object.freeze({
   "Home Assistant refused": "Home Assistant가 거부했습니다",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.":
     "충전이 끝나기까지 남은 시간을 말하는 데에만 쓰입니다. 모자란 퍼센트와 충전기 출력으로 계산합니다. 비워 두면 70 kWh로 계산하며, 대시보드가 늘 가정해 온 값입니다 — 배터리가 다르면 시간도 그만큼 틀립니다.",
-  "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.":
-    "세션 계측기가 없습니다. 자동차 탭에서 충전기나 evcc를 연결하거나, 「세션 에너지」에 엔티티를 적으세요.",
   Sunset: "일몰",
   "TARGET REACHED": "목표 도달",
   "The session meter is not answering.": "세션 계측기가 응답하지 않습니다.",
@@ -4771,8 +4704,6 @@ export default Object.freeze({
   empty: "비어 있음",
   "not responding": "응답 없음",
   "nothing on": "켜진 것 없음",
-  "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.":
-    "배경 지도가 응답하지 않습니다. 비는 표시되고 있습니다: ⚙️ → 날씨와 레이더에서 지도를 바꿀 수 있습니다.",
   "ARMED ·": "경계 중 ·",
   "Your own entities in the bar": "띠에 넣은 내 엔티티",
   "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.":
@@ -4896,8 +4827,6 @@ export default Object.freeze({
   "Configure a camera above first: the privacy is its own.":
     "먼저 위에서 카메라를 설정하세요. 사생활 설정은 그 카메라의 것입니다.",
   "Private cameras": "비공개 카메라",
-  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.":
-    "토양 센서는 바로 위에 있습니다. 잔디도 보려면 편집기에서 관수 구역을 추가하세요.",
   "Contact entity": "접점 엔티티",
   "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.":
     "여기에 행으로 한 번만 들어옵니다. 그 뒤로는 당신 것입니다 — 이름을 바꾸고, 그림을 주고, 지운 것은 돌아오지 않습니다.",
@@ -5051,8 +4980,6 @@ export default Object.freeze({
   "Save meter": "계량기 저장",
   "Flowing for ${durata}": "${durata} 동안 흐르는 중",
   "Flowing for over a day": "하루 넘게 흐르는 중",
-  "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.":
-    "설정의 수도와 가스 탭에서 추가하면 여기에 계량기가 나타납니다. 수도·가스 계량기, 수압과 유량, 연수기 소금.",
   "Not flowing": "흐르지 않음",
   "🪴 ${quante} plants added": "🪴 식물 ${quante}개 추가됨",
   "${quante} doing well": "${quante}개 양호",
@@ -5061,8 +4988,6 @@ export default Object.freeze({
   "1 doing well": "1개 양호",
   "1 needs water": "1개 물 필요",
   "1 waiting for rain": "1개 비 기다리는 중",
-  "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.":
-    "설정의 식물 탭에서 센서를 추가하면 여기에 식물이 나타납니다. 토양 수분, 그리고 있다면 온도도 함께.",
   "Add a plant": "식물 추가",
   "All doing well": "모두 양호",
   "Below this moisture the soil is dry and the plant joins those that need water.":
@@ -5284,8 +5209,6 @@ export default Object.freeze({
   "Other BMS": "기타 BMS",
   "Pack 1": "팩 1",
   "Pack saved": "팩 저장됨",
-  "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
-    "설정의 에너지 아래 배터리 탭에서 추가하면 팩이 여기에 표시됩니다: 충전 상태, 전압, 셀.",
   "Current sign": "전류 부호",
   "Positive when charging (JK, JBD, Daly)": "충전 시 양수 (JK, JBD, Daly)",
   "Negative when charging": "충전 시 음수",
@@ -5409,8 +5332,6 @@ export default Object.freeze({
   "Lower the power": "화력 낮추기",
   Modulating: "출력 조절 중",
   "No stove configured": "난로가 설정되지 않았습니다",
-  "No stove configured: add one from the Thermal management tab in settings.":
-    "난로가 설정되지 않았습니다. 설정의 열 관리 탭에서 추가하세요.",
   "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.":
     "이것만으로 거의 다 됩니다: 켜고 끄기, 설정값, 실내 온도, 있다면 팬 모드까지.",
   "Pellet level, second hopper": "펠릿 잔량, 두 번째 탱크",
@@ -5441,8 +5362,6 @@ export default Object.freeze({
   "Radiators out of season": "시즌이 아닌 라디에이터",
   "They show: ${periodo}. Switched on, they show anyway.":
     "표시 기간: ${periodo}. 켜져 있으면 항상 표시됩니다.",
-  "Each one has its months in the dashboard configuration. Switched on, they show anyway.":
-    "각 기기의 월은 대시보드 설정에 있습니다. 켜져 있으면 항상 표시됩니다.",
   "Show them anyway": "그래도 표시",
   "🐠 The aquarium's entities": "🐠 어항 엔티티",
   "🦎 The terrarium's entities": "🦎 테라리움 엔티티",
@@ -5463,10 +5382,6 @@ export default Object.freeze({
   "Humidity too low": "습도가 너무 낮음",
   "Last cleaning": "마지막 청소",
   Mister: "분무기",
-  "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.":
-    "아직 엔티티가 없습니다. 설정을 열고 어항의 수온, pH, 수위, 조명, 여과기를 추가하세요.",
-  "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.":
-    "아직 엔티티가 없습니다. 설정을 열고 테라리움의 온도, 습도, 램프를 추가하세요.",
   "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.":
     "아직 기록이 없습니다. 청소한 날 ‘오늘 완료’를 누르면 그때부터 카드가 날짜를 셉니다.",
   "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.":
@@ -6033,7 +5948,6 @@ export default Object.freeze({
   "${probabile} chance": "확률 ${probabile}",
   "a camera or image entity you already have": "이미 있는 camera 또는 image 엔티티",
   "about ${quanta} in the next 24 hours": "앞으로 24시간 동안 약 ${quanta}",
-  "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.": "⚙️ Config › 날씨에서 센서를 추가하세요. 집의 측정값이 지난 24시간과 함께 여기에 표시됩니다. 센서가 없으면 페이지는 날씨 서비스만 사용합니다.",
   "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.": "모두 선택 사항이며 종류마다 하나입니다. 온도, 습도, 체감 온도, 바람은 홈 헤더와 같은 필드이고, 비와 강우 강도는 관개가 이미 사용하는 것입니다. 한 번 고르면 어디서나 적용됩니다.",
   at: "시각",
   "at most ${probabile} chance": "최대 확률 ${probabile}",
@@ -6041,7 +5955,6 @@ export default Object.freeze({
   Cloudy: "흐림",
   "conditions, feels like, low and high": "날씨, 체감, 최저와 최고",
   "dew point": "이슬점",
-  "Do you have a weather station?": "기상 관측소가 있나요?",
   E: "동",
   east: "동쪽",
   Exceptional: "이례적",
@@ -6077,7 +5990,6 @@ export default Object.freeze({
   "north-west": "북서쪽",
   "Now · My station · Forecast · Radar": "지금 · 내 관측소 · 예보 · 레이더",
   NW: "북서",
-  "Open Weather in Config": "Config에서 날씨 열기",
   "Outdoor temperature": "외부 온도",
   "Partly cloudy": "구름 조금",
   Radar: "레이더",
@@ -6146,8 +6058,6 @@ export default Object.freeze({
   "Charging stops": "충전 정차",
   "Charging: ${minuti} in ${n} stops": "충전: ${minuti}, 정차 ${n}회",
   "Charging: ${minuti} in 1 stop": "충전: ${minuti}, 정차 1회",
-  "Connect": "연결",
-  "Connect the car to see battery and stops": "배터리와 정차를 보려면 차량을 연결하세요",
   "For the stops, choose 100% at departure.": "정차를 계산하려면 출발 시 100%를 선택하세요.",
   "For the way back you still have ${resta}: no need to charge": "돌아올 때 ${resta} 남음: 충전할 필요 없음",
   "from ${da} to ${a} · ${min} min": "${da} → ${a} · ${min}분",
@@ -6159,7 +6069,6 @@ export default Object.freeze({
   "Minimum charge on arrival": "도착 시 최소 충전량",
   "now ${ora}": "현재 ${ora}",
   "on arrival ${fine}": "도착 시 ${fine}",
-  "Only you see this, as the home's administrator": "집 관리자인 당신에게만 보입니다",
   "Parked · not charging": "주차 중 · 충전 안 함",
   "Parked at home · not charging": "집에 주차 중 · 충전 안 함",
   "range": "주행 가능 거리",
@@ -6168,7 +6077,6 @@ export default Object.freeze({
   "Stops picked by GdANav on the way, with free chargers.": "주행 중 gdanav가 빈 충전소로 고른 정차입니다.",
   "The battery is not answering": "배터리가 응답하지 않습니다",
   "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "충전소 정보가 아직 집에 없습니다: 정차는 킬로미터 기준입니다. 주행 중 gdanav가 충전소를 고르고 비어 있는지 확인합니다.",
-  "The electric car's battery and range, and the charging stops if it is not enough.": "전기차의 배터리와 주행 가능 거리, 부족하면 충전 정차.",
   "The minimum power to stop at": "정차할 최소 출력",
   "The stops come with the route": "정차는 경로와 함께 옵니다",
   "the trip": "이동 거리",
@@ -6222,11 +6130,9 @@ export default Object.freeze({
   "Charging · until ${fine}": "충전 중 · ${fine}까지",
   "Charging · until ${limite}% or ${fine}": "충전 중 · ${limite}% 또는 ${fine}까지",
   "End of the window": "시간대 종료",
-  "Enter it to see what you spend": "입력하면 지출을 볼 수 있습니다",
   "evcc set to ${modo}": "evcc를 ${modo}(으)로 설정",
   "Fast": "빠르게",
   "Finished at ${alle}": "${alle}에 완료",
-  "From band ${fascia} in Settings → Energy": "설정 → 에너지의 시간대 ${fascia}에서",
   "Needs the add-on: the home starts it": "애드온이 필요합니다: 집이 시작합니다",
   "Night charging": "야간 충전",
   "No days chosen": "선택한 요일 없음",
@@ -6602,12 +6508,10 @@ export default Object.freeze({
   "Convert": "변환",
   "Create and edit them in three steps": "세 단계로 만들고 편집",
   "Create the first one": "첫 번째 만들기",
-  "Create the first one in the config ›": "설정에서 첫 번째 만들기 ›",
   "Delete «${v.nome}»?": "「${v.nome}」을(를) 삭제할까요?",
   "depending on the sun": "해에 따라",
   "depending on what started it": "무엇이 시작했는지에 따라",
   "does several things at once": "여러 일을 동시에 함",
-  "Edit in the config ›": "설정에서 편집 ›",
   "fires the ${evento} event": "${evento} 이벤트 발생",
   "Home Assistant → Settings → Automations": "Home Assistant → 설정 → 자동화",
   "Home Assistant did not save it: ${no}": "Home Assistant가 저장하지 않았습니다: ${no}",
@@ -6617,7 +6521,6 @@ export default Object.freeze({
   "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant의 자동화는 GdAHome 애드온으로 읽습니다: 여기에는 없습니다.",
   "if something holds:": "무언가가 참이면:",
   "in HA as": "HA에서의 이름",
-  "in the config ›": "설정에서 ›",
   "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.": "Home Assistant에서도 삭제되며 되돌릴 수 없습니다. 멈추기만 하려면 스위치로 끄세요.",
   "It is saved in": "저장 위치:",
   "It was not changed: ${no}": "변경되지 않음: ${no}",
@@ -6625,7 +6528,6 @@ export default Object.freeze({
   "It was not deleted: ${no}": "삭제되지 않음: ${no}",
   "labelled": "라벨",
   "Last time:": "마지막:",
-  "Manage in the config ›": "설정에서 관리 ›",
   "never": "없음",
   "No automation matches these words.": "이 단어와 일치하는 자동화가 없습니다.",
   "No automations yet: start from a ready-made template.": "아직 자동화가 없습니다: 준비된 템플릿으로 시작하세요.",
@@ -6825,4 +6727,23 @@ export default Object.freeze({
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "인터폰 이벤트(event.*) 또는 벨이 울리면 켜지는 센서(binary_sensor). 버튼이나 스위치도 됩니다.",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "은(는) 초인종으로 쓸 수 없습니다: 이벤트(event.*)나 켜지는 센서(binary_sensor.*)를 선택하세요.",
   "Now · My station · Forecast": "지금 · 내 관측소 · 예보",
+  "From band ${fascia}": "시간대 ${fascia}에서",
+  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.": "배터리는 Home Assistant가 직접 알려 주며 — 퍼센트 센서 — 아무것도 설정하지 않아도 여기에 나타납니다.",
+  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.": "문이나 창문 접점은 Home Assistant가 스스로 알려 주며, 아무것도 설정하지 않아도 여기에 나타납니다.",
+  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.": "동작 센서나 재실 센서는 Home Assistant가 스스로 알려 주며, 아무것도 설정하지 않아도 여기에 나타납니다.",
+  "More power is going out than coming in: usually a sensor's direction is reversed.": "들어오는 전력보다 나가는 전력이 많습니다. 보통 센서의 방향이 반대로 되어 있는 경우입니다.",
+  "No appliance in this load yet.": "이 부하에는 아직 가전이 없습니다.",
+  "No room has a humidity probe.": "습도 센서가 있는 방이 없습니다.",
+  "No rooms configured yet.": "아직 방이 없습니다.",
+  "No sensor linked.": "연결된 센서가 없습니다.",
+  "No session meter.": "세션 계측기가 없습니다.",
+  "Nothing here yet.": "아직 아무것도 없습니다.",
+  "Switched on, they show anyway.": "켜져 있으면 항상 표시됩니다.",
+  "The base map is not answering. The rain is there.": "배경 지도가 응답하지 않습니다. 비는 표시되고 있습니다.",
+  "The radar address is not a tile address ({z}/{x}/{y}).": "레이더 주소가 타일 주소({z}/{x}/{y})가 아닙니다.",
+  "The soil sensor is right above.": "토양 센서는 바로 위에 있습니다.",
+  "The target is read-only.": "목표가 읽기 전용입니다.",
+  "This reading has no entity yet.": "이 값에는 아직 엔티티가 없습니다.",
+  "This target is a read-only sensor.": "이 목표는 읽기 전용 센서입니다.",
+  "You picked «An address of mine» but there is no address.": "«내 주소»를 골랐지만 주소가 없습니다.",
 });

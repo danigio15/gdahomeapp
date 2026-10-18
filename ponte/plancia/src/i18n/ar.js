@@ -160,8 +160,6 @@ export default Object.freeze({
     "لم تُحفَظ الرحلة: تحقق من الوجهة واليوم والوقت.",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh":
     "حتى 8 إضافية: مقبس، المضخة الحرارية، السيارة قيد الشحن، كيلوواط ساعة اليوم",
-  "No sensor linked: pick one in Settings › Loads or Appliances.":
-    "لا يوجد مستشعر مرتبط: اختر واحدًا من الإعدادات › الأحمال أو الأجهزة المنزلية.",
   "Reading consumption from Home Assistant…": "جارٍ قراءة الاستهلاك من Home Assistant…",
   " — configured": " — مُهيّأة",
   "${alzate} shutters up": "${alzate} ستائر مرفوعة",
@@ -241,8 +239,6 @@ export default Object.freeze({
   "Load to watch": "الحمل المراد مراقبته",
   Lock: "قفل",
   "Looking…": "جارٍ البحث…",
-  "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.":
-    "الطاقة الخارجة أكبر من الداخلة: عادةً ما يكون اتجاه أحد المستشعرات معكوسًا، ويُغيَّر من تبويب الطاقة.",
   Motorcycle: "دراجة نارية",
   "My sections": "أقسامي",
   "Name the unit: it is what the card shows.": "امنح الوحدة اسمًا: هو ما تعرضه البطاقة.",
@@ -645,8 +641,6 @@ export default Object.freeze({
   "Add entity": "إضافة كيان",
   "Add from an integration": "إضافة من تكامل",
   "Add intercom": "أضف جهاز اتصال داخلي",
-  "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.":
-    "أضفه من تبويب الطاقة في الإعدادات: بحالة NUT وحدها تعرف هذه الصفحة إن كان هناك تيار.",
   "Add light": "إضافة ضوء",
   "Add list": "إضافة قائمة",
   "Add load": "إضافة حِمل",
@@ -670,28 +664,13 @@ export default Object.freeze({
   "Add sensors to the Alerts Panel with a clean name, or create a":
     "أضف مستشعرات إلى لوحة التنبيهات باسم واضح، أو أنشئ",
   "Add socket": "إضافة مقبس",
-  "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.":
-    "أضف المقابس من تبويب المقابس في الإعدادات: تلفزيون الصالة، الفايرستيك، المودم.",
   "Add solar plant": "إضافة منظومة شمسية",
   "Add something to do…": "أضف مهمة…",
   "Add temperature": "إضافة درجة حرارة",
-  "Add the irrigation zones from the editor to see the lawn.":
-    "أضف مناطق الري من المحرِّر لرؤية العشب.",
-  "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.":
-    "أضف المواد من تبويب النفايات في الإعدادات: لكل مادة المستشعر أو التقويم الذي يقول متى يأتي الجمع.",
-  "Add the pool entities from the editor to see the basin.":
-    "أضف كيانات المسبح من المحرِّر لرؤية الحوض.",
-  "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.":
-    "أضف الطابعة من تبويب الطابعات في الإعدادات: يكفي الكيان الذي يقول إن كانت جاهزة، والخراطيش تُعثر عليها وحدها.",
-  "Add the units from the dashboard configuration.": "أضف الوحدات من إعدادات اللوحة.",
-  "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.":
-    "أضفها من تبويب التنبيهات في الإعدادات: الزلازل، وتحذيرات الحماية المدنية، والصواعق، وحبوب اللقاح، والراحة الحرارية، والطائرات في السماء، كل منها من مستشعر تكامله.",
   "Add to ${nomeDellaLista(list)}": "أضف إلى ${nomeDellaLista(list)}",
   "Add water heater": "إضافة سخان",
   "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link":
     "أضف أجهزتك (الغسالة، غسالة الصحون، الفرن، الميكروويف…). يمكنك ربط",
-  "Add your cameras from Configuration: they will show up here with a live preview.":
-    "أضف كاميراتك من «الإعدادات»: ستظهر هنا مع معاينة مباشرة.",
   "Added ${trovate.length} lists": "تمت إضافة ${trovate.length} قوائم",
   "Added ${trovati.length} calendars": "تمت إضافة ${trovati.length} تقويمات",
   "Administrator tools ·": "أدوات المدير ·",
@@ -1452,8 +1431,6 @@ export default Object.freeze({
   February: "فبراير",
   "Feed a portion": "قدّم حصة",
   "Files in /local (config/www)": "الملفات في ‎/local (config/www)",
-  "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.":
-    "املأ حقول السيارة — الوقود، المدى، الأبواب، المحرك — من تبويب السيارة في الإعدادات.",
   "Fill it in and the card shows the window open when the contact says so.":
     "املأه وستُظهر البطاقة النافذة مفتوحة عندما يشير المُلامِس إلى ذلك.",
   "Filled ${count} fields: ${list}.": "تم ملء ${count} حقول: ${list}.",
@@ -1643,12 +1620,6 @@ export default Object.freeze({
   Hob: "سطح الطهي",
   Home: "المنزل",
   "Home (fallback)": "المنزل (بديل)",
-  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.":
-    "يصرّح Home Assistant بالبطارية بنفسه — مستشعر بالنسبة المئوية — وتظهر هنا دون أي إعداد. إذا لم يتم العثور على بطاريتك، أضفها من تبويب البطاريات في الإعدادات.",
-  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.":
-    "يعلن Home Assistant عن جهة تماس الباب أو النافذة بنفسه، وتظهر هنا دون أي إعداد. إن لم يُعثر على جهازك فأضفه من تبويب الفتحات في الإعدادات.",
-  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.":
-    "يعلن Home Assistant عن كاشف الحركة أو الحضور من تلقاء نفسه، فيظهر هنا دون أي إعداد. إذا لم يُعثر على كاشفك، أضفه من تبويب الحضور في الإعدادات.",
   "Home Assistant declares no machine and no network piece.":
     "لا يُعلن Home Assistant عن أي جهاز أو قطعة شبكة.",
   "Home Assistant declares the air sensors itself — particulates, CO₂, monoxide, volatile compounds — and the tile appears on its own. Here you correct that: drop a sensor that should not count, add one that is not found, and move the boundaries between good, fair, poor and bad.":
@@ -2095,26 +2066,18 @@ export default Object.freeze({
   "No alerts configured": "لم يُضبط أي تنبيه",
   "No answer within eight seconds.": "لا جواب خلال ثماني ثوانٍ.",
   "No appliance configured": "لم يُضبط أي جهاز",
-  "No appliance configured. Use the Settings menu to add one.":
-    "لا يوجد جهاز مُهيّأ. استخدم قائمة «الإعدادات» لإضافة واحد.",
   "No appliance has measurable consumption today.": "لا يوجد جهاز باستهلاك قابل للقياس اليوم.",
-  "No appliance in this load yet. Add them from the Loads editor.":
-    "لا توجد أجهزة في هذا الحِمل بعد. أضِفها من محرِّر الأحمال.",
   "No appliance is running right now.": "لا يوجد جهاز يعمل الآن.",
   "No appliance matches the selected filters.": "لا يوجد جهاز يطابق المرشِّحات المحدَّدة.",
   "No appliance yet.": "لا توجد أجهزة بعد.",
   "No battery found": "لم يتم العثور على بطارية",
   "No boiler configured": "لا يوجد مرجل مُعد",
-  "No boiler configured: add one from the Thermal management tab in settings.":
-    "لا يوجد مرجل مُعد: أضِفه من تبويب إدارة التدفئة في الإعدادات.",
   "No calendar configured": "لم يُضبط أي تقويم",
   "No calendar selected": "لم يُختر أي تقويم",
   "No camera configured": "لا توجد كاميرا مُهيّأة",
   "No car field could be recognised from this device.":
     "لم يتم التعرف على أي حقل للسيارة من هذا الجهاز.",
   "No cartridge found": "لم يتم العثور على خرطوشة",
-  "No cartridge found: if your printer reports them, write them in the Printers tab.":
-    "لم يتم العثور على خرطوشة: إذا كانت طابعتك تذكرها، فاكتبها في تبويب الطابعات.",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.":
     "لا يوجد شاحن بين التكاملات ذات الأجهزة: هنا فقط أجهزة evcc، وevcc يُربط من الزر الآخر.",
   "No charger field could be recognised from this device.":
@@ -2125,8 +2088,6 @@ export default Object.freeze({
   "No configuration contains this word.": "لا يوجد إعداد يحتوي على هذه الكلمة.",
   "No configured items.": "لا توجد عناصر مُهيّأة.",
   "No configured lights.": "لا توجد أضواء مُهيّأة.",
-  "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.":
-    "لا توجد أضواء مُهيّأة. أضِفها من تبويب الأضواء في المحرِّر: تُقبل كيانات light.* و switch.* معًا.",
   "No configured loads": "لا توجد أحمال مُهيّأة",
   "No contact found": "لم يُعثر على جهة تماس",
   "No custom button": "لا يوجد زر مخصص",
@@ -2149,8 +2110,6 @@ export default Object.freeze({
   "No entity added — type/pick and press ➕": "لم يُضف أي كيان — اكتب أو اختر ثم اضغط ➕",
   "No entity bound: the circle stays empty in every view.":
     "لا يوجد كيان مرتبط: تبقى الدائرة فارغة في كل العروض.",
-  "No entity linked yet: open the settings and pick the device.":
-    "لا يوجد كيان مرتبط بعد: افتح الإعدادات واختر الجهاز.",
   "No entries": "لا عناصر",
   "No extra command: the card carries the player's own buttons and nothing else.":
     "لا أزرار إضافية: البطاقة تحمل أزرار المشغّل ولا شيء غيرها.",
@@ -2216,14 +2175,10 @@ export default Object.freeze({
     "لا يمكن التعرّف على أي روبوت من هذا الجهاز: يلزم كيان vacuum.* أو lawn_mower.*.",
   "No robot configured": "لا روبوت مضبوط",
   "No room": "بلا غرفة",
-  "No room has a humidity probe: add one from the Temperature tab.":
-    "لا توجد غرفة بها مستشعر رطوبة: أضِف واحدًا من تبويب درجة الحرارة.",
   "No room has a temperature sensor configured yet.": "لم تُهيّأ بعد أي غرفة بحساس حرارة.",
   "No room with a sensor — add one in the editor's Temperature tab":
     "لا غرفة بها مستشعر — أضف واحدة من تبويب الحرارة في المحرّر",
   "No room. Add one below.": "لا غرف. أضف واحدة بالأسفل.",
-  "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.":
-    "لا توجد غرف بعد. أضِفها من تبويب الغرف في المحرِّر: عندئذٍ يمكن لكل قسم إسناد كياناته إلى واحدة منها.",
   "No sensor recognized": "لم يتم التعرف على أي مستشعر",
   "No shutter or curtain configured": "لا توجد ستارة معدنية أو قماشية مُهيّأة",
   "No signal": "لا توجد إشارة",
@@ -2235,8 +2190,6 @@ export default Object.freeze({
   "No todo.* list found": "لم يُعثر على قائمة todo.*",
   "No warning in force": "لا تحذيرات سارية",
   "No water heater configured": "لم يُضبط أي سخان",
-  "No water heater configured: add one from the Solar tab in settings.":
-    "لم يُضبط أي سخان: أضِفه من تبويب «الشمسي» في الإعدادات.",
   "No window sits in a room that has a hygrometer: pick the room in the window's row, below.":
     "لا توجد نافذة في غرفة لديها مقياس رطوبة: اختر الغرفة في سطر النافذة، بالأسفل.",
   "No zone configured": "لا توجد منطقة مُهيّأة",
@@ -2263,8 +2216,6 @@ export default Object.freeze({
   "Nothing came in today.": "لم يصل شيء اليوم.",
   "Nothing closed yet.": "لا شيء مغلق حتى الآن.",
   "Nothing for a pet": "لا شيء لحيوان",
-  "Nothing here yet. Entities are assigned from each section's own tab.":
-    "لا شيء هنا بعد. تُسنَد الكيانات من تبويب كل قسم.",
   "Nothing new": "لا جديد",
   "Nothing of this kind here.": "لا شيء من هذا النوع هنا.",
   "Nothing playing": "لا شيء قيد التشغيل",
@@ -2694,7 +2645,6 @@ export default Object.freeze({
   "all up": "الكل يعمل",
   Servers: "الخوادم",
   connected: "متصل",
-  "Choose what to highlight": "اختر ما تريد إبرازه",
   "to work on": "للعمل عليها",
   "In today:": "وصل اليوم:",
   "Nothing came in today": "لم يصل شيء اليوم",
@@ -2771,7 +2721,6 @@ export default Object.freeze({
   "Open all": "فتح الكل",
   "Open appliances running": "فتح الأجهزة العاملة",
   "Open camera": "فتح الكاميرا",
-  "Open configuration": "فتح الإعدادات",
   "Open for": "مفتوح منذ",
   "Open gate": "فتح البوابة",
   "Open in map": "افتح في الخريطة",
@@ -2894,8 +2843,6 @@ export default Object.freeze({
     "اختر بداية قبل النهاية، وليست في المستقبل.",
   "Pick an image entity": "اختر كيان صورة",
   "Pick from Appliances": "اختر من الأجهزة",
-  "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».":
-    "اختر التقاويم من تبويب الأدوات في الإعدادات: تظهر التقاويم الموجودة في Home Assistant من تلقاء نفسها بالضغط على «اكتشاف».",
   "Pick the device": "اختر الجهاز",
   "Pick the evcc loadpoint: the charge mode, the charge limit, the session and the solar share come along. The charger connects from the other button, and the fields add up.":
     "اختر نقطة شحن evcc: يأتي وضع الشحن، وحد الشحن، والجلسة، وحصة الشمس. يُربط الشاحن من الزر الآخر، وتُجمع الحقول.",
@@ -3635,8 +3582,6 @@ export default Object.freeze({
     "يمكن تخصيص الأيقونة للإجراءات المدمجة أيضًا، وتظهر في «المنزل».",
   "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.":
     "التكاملات التي تجلب شاحنًا: go-e، Easee، KEBA، Wallbox، openWB، Zaptec، Tesla. اختر الجهاز وستمتلئ حقول الشحن من تلقاء نفسها — القدرة، الطاقة، الجهد، الحرارة، الكابل.",
-  "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.":
-    "يُعرَّف الاتصال الداخلي وصندوق البريد في تبويب «الاتصال الداخلي والبريد» ضمن الإعدادات: الزر الذي يفتح، وجرس الباب، وحساسا الصندوق.",
   "The inverted direction": "الاتجاه المعكوس",
   "The latest reply": "آخر رد",
   "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.":
@@ -3701,8 +3646,6 @@ export default Object.freeze({
   "The push comes from Home Assistant, not the dashboard: it runs on the server, so it arrives even when this page is closed. This automation is already written with your entities — paste it under Settings → Automations → ⋮ → Edit in YAML, and change the service to your phone's.":
     "الإشعار يرسله Home Assistant لا اللوحة: فهو يعمل على الخادم، لذا يصل حتى وهذه الصفحة مغلقة. هذه الأتمتة مكتوبة بالفعل بكياناتك — الصقها في الإعدادات ← الأتمتة ← ⋮ ← تحرير YAML، وغيّر الخدمة إلى خدمة هاتفك.",
   "The quick actions": "الإجراءات السريعة",
-  "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.":
-    "عنوان الرادار ليس عنوان بلاطات ({z}/{x}/{y}): صحّحه في الإعدادات ← الطقس، أو اختر خدمة من القائمة.",
   "The radar is not reporting.": "الرادار لا يستجيب.",
   "The radiators": "المشعّات",
   "The reading on the cover": "القياس على الغلاف",
@@ -3755,8 +3698,6 @@ export default Object.freeze({
   "The state": "الحالة",
   "The station sensor, when the integration exposes one: it gives the name written next to the train.":
     "مستشعر المحطة، إن كان التكامل يوفره: يعطي الاسم المكتوب بجانب القطار.",
-  "The target is read-only: connect evcc in the Car tab to change it.":
-    "الهدف للقراءة فقط: اربط evcc في تبويب السيارة لتغييره.",
   "The temperatures": "درجات الحرارة",
   "The text of the report": "نص البلاغ",
   "The theme and the bar": "السمة والشريط",
@@ -3833,15 +3774,11 @@ export default Object.freeze({
     "يجب أن يكون هذا عدّادًا تراكميًا بالكيلوواط·ساعة بـ state_class إما total أو total_increasing. لا تستخدم هنا الحساس الشهري: هذا الحقل ضروري لإعادة بناء الأشهر السابقة.",
   "This one wins: day, month, year, history and previous months are all derived from here through Recorder. While it is set, the period fields are not read.":
     "هذا هو المعتمَد: فاليوم والشهر والسنة والسجل والأشهر السابقة تُشتقّ كلها من هنا عبر Recorder. وما دام محدَّدًا فحقول الفترة لا تُقرأ.",
-  "This reading has no entity yet: map it in the configuration to see its history.":
-    "هذه القراءة ليس لها كيان بعد: اربطها في الإعدادات لعرض سجلها.",
   "This sensor is also configured in": "هذا المستشعر مضبوط أيضًا في",
   "This socket is configured as shown but not controllable: this window reports it, it never switches it.":
     "هذا المقبس مضبوط على العرض دون التحكم: هذه النافذة تُبلغ عن حالته ولا تشغّله أبدًا.",
   "This tab holds four of them and they are all taken: remove one to make room.":
     "يتسع هذا التبويب لأربعة، وكلها مشغولة: احذف واحدًا لإفساح المجال.",
-  "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.":
-    "هذا الهدف مستشعر للقراءة فقط: لتغييره من هنا اربط evcc، أو كيان number/select، في تبويب السيارة.",
   "This week": "هذا الأسبوع",
   "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.":
     "ثلاث حركات لا أكثر: ＋ مركبة جديدة يفتح بطاقة فارغة، و✏️ يفتح مركبة محفوظة من قبل، والمفتاح يُظهرها أو يخفيها في قسم EV. تحتها تقول إن كانت سيارة أم دراجة نارية، وتملأ الاسم والعلامة والطراز والكيانات والصورتين — والحفظ واحد فقط: يقول إن كان ينشئ أم يعدّل، والزر في آخر القسم يحمل الكلمات نفسها. أي مركبة تنظر إليها يُختار من تبويبات القسم، لا من هنا.",
@@ -4179,8 +4116,6 @@ export default Object.freeze({
   "You have nothing in progress.": "ليس لديك أي شيء قيد العمل.",
   "You need a": "تحتاج إلى",
   "You need a hand configuring or understanding": "تحتاج مساعدة في الإعداد أو الفهم",
-  "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.":
-    "اخترت «عنوان خاص بي» لكن لا يوجد عنوان: اكتبه في الإعدادات ← الطقس، أو اختر خدمة من القائمة.",
   "Your alarm areas": "مناطق الإنذار لديك",
   "Your name (optional)": "ما اسمك (اختياري)",
   "Your own entities": "كياناتك",
@@ -4739,8 +4674,6 @@ export default Object.freeze({
   "Home Assistant refused": "رفض Home Assistant",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.":
     "تُستخدم فقط لمعرفة الوقت المتبقّي للشحن: من النسبة الناقصة ومن قدرة الشاحن. إذا تُركت فارغة تُحتسب 70 ك.و.س، وهو ما افترضته اللوحة دائمًا — ومع بطارية مختلفة يخرج الوقت خاطئًا بالتناسب.",
-  "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.":
-    "لا يوجد عدّاد للجلسة: اربط الشاحن أو evcc من تبويب السيارة، أو اكتب الكيان في «طاقة الجلسة».",
   Sunset: "الغروب",
   "TARGET REACHED": "تم بلوغ الهدف",
   "The session meter is not answering.": "عدّاد الجلسة لا يستجيب.",
@@ -4753,8 +4686,6 @@ export default Object.freeze({
   empty: "فارغة",
   "not responding": "لا يستجيب",
   "nothing on": "لا شيء قيد التشغيل",
-  "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.":
-    "خريطة الأساس لا تستجيب. المطر موجود: يمكنك تغيير الخريطة من ⚙️ ← الطقس والرادار.",
   "ARMED ·": "مُفعَّل ·",
   "Your own entities in the bar": "كياناتك في الشريط",
   "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.":
@@ -4877,8 +4808,6 @@ export default Object.freeze({
   "Configure a camera above first: the privacy is its own.":
     "اضبط أولاً كاميرا في الأعلى: الخصوصية خاصة بها.",
   "Private cameras": "كاميرات خاصة",
-  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.":
-    "مستشعر التربة موجود في الأعلى مباشرة. أضِف مناطق الري من المحرِّر لرؤية العشب أيضاً.",
   "Contact entity": "كِيان جهاز التلامس",
   "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.":
     "تُضاف هنا كصفوف مرة واحدة: بعدها تصبح لك — تُعيد تسميتها، وتمنحها رسماً، وما تحذفه لا يعود.",
@@ -5030,8 +4959,6 @@ export default Object.freeze({
   "Save meter": "حفظ العداد",
   "Flowing for ${durata}": "يجري منذ ${durata}",
   "Flowing for over a day": "يجري منذ أكثر من يوم",
-  "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.":
-    "يظهر العداد هنا بعد أن تضيفه من تبويب الماء والغاز في الإعدادات: عدادات الماء والغاز، وضغط الماء وتدفقه، وملح جهاز تحلية الماء.",
   "Not flowing": "لا يجري",
   "🪴 ${quante} plants added": "🪴 أُضيفت ${quante} نباتات",
   "${quante} doing well": "${quante} بحالة جيدة",
@@ -5040,8 +4967,6 @@ export default Object.freeze({
   "1 doing well": "1 بحالة جيدة",
   "1 needs water": "1 تحتاج إلى الماء",
   "1 waiting for rain": "1 تنتظر المطر",
-  "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.":
-    "تظهر النبتة هنا عندما تضيف مستشعرها في تبويب النباتات في الإعدادات: رطوبة التربة، ودرجة حرارتها إن وُجدت.",
   "Add a plant": "إضافة نبتة",
   "All doing well": "كلها بحالة جيدة",
   "Below this moisture the soil is dry and the plant joins those that need water.":
@@ -5263,8 +5188,6 @@ export default Object.freeze({
   "Other BMS": "نظام BMS آخر",
   "Pack 1": "الحزمة 1",
   "Pack saved": "تم حفظ الحزمة",
-  "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
-    "تظهر الحزم هنا عندما تضيفها في تبويب البطاريات ضمن الطاقة في الإعدادات: حالة الشحن، الجهود، الخلايا.",
   "Current sign": "إشارة التيار",
   "Positive when charging (JK, JBD, Daly)": "موجب أثناء الشحن (JK وJBD وDaly)",
   "Negative when charging": "سالب أثناء الشحن",
@@ -5390,8 +5313,6 @@ export default Object.freeze({
   "Lower the power": "خفّض القدرة",
   Modulating: "تعديل القدرة",
   "No stove configured": "لا توجد مدفأة مُعدّة",
-  "No stove configured: add one from the Thermal management tab in settings.":
-    "لا توجد مدفأة مُعدّة: أضِفها من تبويب إدارة الحرارة في الإعدادات.",
   "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.":
     "وحده يكفي تقريبًا لكل شيء: التشغيل والإطفاء، والهدف، وحرارة الغرفة، وأوضاع المروحة إن وُجدت.",
   "Pellet level, second hopper": "مستوى الحبيبات، الخزان الثاني",
@@ -5422,8 +5343,6 @@ export default Object.freeze({
   "Radiators out of season": "مشعات خارج الموسم",
   "They show: ${periodo}. Switched on, they show anyway.":
     "تظهر: ${periodo}. عند تشغيلها تظهر على أي حال.",
-  "Each one has its months in the dashboard configuration. Switched on, they show anyway.":
-    "لكل وحدة أشهرها في إعدادات اللوحة. عند تشغيلها تظهر على أي حال.",
   "Show them anyway": "اعرضها على أي حال",
   "🐠 The aquarium's entities": "🐠 كيانات حوض السمك",
   "🦎 The terrarium's entities": "🦎 كيانات التيراريوم",
@@ -5444,10 +5363,6 @@ export default Object.freeze({
   "Humidity too low": "الرطوبة منخفضة جدًا",
   "Last cleaning": "آخر تنظيف",
   Mister: "جهاز الرذاذ",
-  "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.":
-    "لا توجد كيانات بعد: افتح الإعدادات وأضف حرارة حوض السمك ودرجة الحموضة والمستوى والأضواء والفلتر.",
-  "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.":
-    "لا توجد كيانات بعد: افتح الإعدادات وأضف حرارة التيراريوم ورطوبته ومصابيحه.",
   "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.":
     "لم يُسجَّل بعد: اضغط «تم اليوم» في اليوم الذي تنظّفه فيه، ومن ذلك الحين تحسب البطاقة الأيام.",
   "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.":
@@ -6011,7 +5926,6 @@ export default Object.freeze({
   "${probabile} chance": "احتمال ${probabile}",
   "a camera or image entity you already have": "كيان camera أو image لديك بالفعل",
   "about ${quanta} in the next 24 hours": "حوالي ${quanta} خلال الـ24 ساعة القادمة",
-  "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.": "أضف مستشعراتها في ⚙️ Config › الطقس: تظهر هنا قراءات منزلك مع آخر 24 ساعة. بدونها تستخدم الصفحة خدمة الطقس فقط.",
   "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.": "كلها اختيارية، واحد لكل نوع. الحرارة والرطوبة والمحسوسة والرياح هي نفس حقول رأس الصفحة الرئيسية؛ المطر والشدة هما ما يستخدمه الري بالفعل. تُختار مرة واحدة وتسري في كل مكان.",
   at: "عند",
   "at most ${probabile} chance": "احتمال لا يتجاوز ${probabile}",
@@ -6019,7 +5933,6 @@ export default Object.freeze({
   Cloudy: "غائم",
   "conditions, feels like, low and high": "الأحوال والمحسوسة والصغرى والعظمى",
   "dew point": "نقطة الندى",
-  "Do you have a weather station?": "هل لديك محطة طقس؟",
   E: "شرق",
   east: "الشرق",
   Exceptional: "استثنائي",
@@ -6055,7 +5968,6 @@ export default Object.freeze({
   "north-west": "الشمال الغربي",
   "Now · My station · Forecast · Radar": "الآن · محطتي · التوقعات · الرادار",
   NW: "شمال غرب",
-  "Open Weather in Config": "افتح الطقس في Config",
   "Outdoor temperature": "درجة الحرارة الخارجية",
   "Partly cloudy": "غائم جزئيًا",
   Radar: "الرادار",
@@ -6124,8 +6036,6 @@ export default Object.freeze({
   "Charging stops": "توقفات الشحن",
   "Charging: ${minuti} in ${n} stops": "الشحن: ${minuti} في ${n} توقفات",
   "Charging: ${minuti} in 1 stop": "الشحن: ${minuti} في توقف واحد",
-  "Connect": "اربط",
-  "Connect the car to see battery and stops": "اربط السيارة لرؤية البطارية والتوقفات",
   "For the stops, choose 100% at departure.": "لحساب التوقفات اختر 100% عند الانطلاق.",
   "For the way back you still have ${resta}: no need to charge": "يبقى لك ${resta} للعودة: لا حاجة للشحن",
   "from ${da} to ${a} · ${min} min": "من ${da} إلى ${a} · ${min} د",
@@ -6137,7 +6047,6 @@ export default Object.freeze({
   "Minimum charge on arrival": "أدنى شحن عند الوصول",
   "now ${ora}": "الآن ${ora}",
   "on arrival ${fine}": "عند الوصول ${fine}",
-  "Only you see this, as the home's administrator": "تراه أنت فقط بصفتك مسؤول المنزل",
   "Parked · not charging": "متوقفة · لا تُشحن",
   "Parked at home · not charging": "متوقفة في المنزل · لا تُشحن",
   "range": "المدى",
@@ -6146,7 +6055,6 @@ export default Object.freeze({
   "Stops picked by GdANav on the way, with free chargers.": "توقفات اختارها GdANav في الطريق، بشواحن شاغرة.",
   "The battery is not answering": "البطارية لا تستجيب",
   "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "الشواحن ليست في المنزل بعد: التوقفات بحسب الكيلومتر. في الطريق يختار GdANav الشواحن ويتحقق من أنها شاغرة.",
-  "The electric car's battery and range, and the charging stops if it is not enough.": "بطارية السيارة الكهربائية ومداها، وتوقفات الشحن إن لم يكفِ.",
   "The minimum power to stop at": "أدنى قدرة للتوقف",
   "The stops come with the route": "تأتي التوقفات مع المسار",
   "the trip": "الرحلة",
@@ -6200,11 +6108,9 @@ export default Object.freeze({
   "Charging · until ${fine}": "يشحن · حتى ${fine}",
   "Charging · until ${limite}% or ${fine}": "يشحن · حتى ${limite}% أو ${fine}",
   "End of the window": "نهاية الفترة",
-  "Enter it to see what you spend": "أدخله لترى كم تنفق",
   "evcc set to ${modo}": "تم ضبط evcc على ${modo}",
   "Fast": "سريع",
   "Finished at ${alle}": "انتهت الساعة ${alle}",
-  "From band ${fascia} in Settings → Energy": "من الشريحة ${fascia} في الإعدادات ← الطاقة",
   "Needs the add-on: the home starts it": "تحتاج إلى الإضافة: المنزل هو من يبدأها",
   "Night charging": "الشحن الليلي",
   "No days chosen": "لم يتم اختيار أيام",
@@ -6580,12 +6486,10 @@ export default Object.freeze({
   "Convert": "تحويل",
   "Create and edit them in three steps": "تنشئها وتعدّلها في ثلاث خطوات",
   "Create the first one": "أنشئ الأولى",
-  "Create the first one in the config ›": "أنشئ الأولى في الإعدادات ›",
   "Delete «${v.nome}»?": "حذف «${v.nome}»؟",
   "depending on the sun": "حسب الشمس",
   "depending on what started it": "حسب ما شغّلها",
   "does several things at once": "يفعل عدة أشياء معًا",
-  "Edit in the config ›": "عدّل في الإعدادات ›",
   "fires the ${evento} event": "يطلق الحدث ${evento}",
   "Home Assistant → Settings → Automations": "Home Assistant ← الإعدادات ← الأتمتات",
   "Home Assistant did not save it: ${no}": "لم يحفظها Home Assistant: ${no}",
@@ -6595,7 +6499,6 @@ export default Object.freeze({
   "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "تُقرأ أتمتات Home Assistant عبر إضافة GdAHome: وهي غير موجودة هنا.",
   "if something holds:": "إذا تحقق شيء:",
   "in HA as": "في HA باسم",
-  "in the config ›": "في الإعدادات ›",
   "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.": "ستُحذف من Home Assistant أيضًا ولا يمكن التراجع. إذا أردت إيقافها فقط، أطفئها بالمفتاح.",
   "It is saved in": "تُحفظ في",
   "It was not changed: ${no}": "لم تتغير: ${no}",
@@ -6603,7 +6506,6 @@ export default Object.freeze({
   "It was not deleted: ${no}": "لم تُحذف: ${no}",
   "labelled": "بالوسم",
   "Last time:": "آخر مرة:",
-  "Manage in the config ›": "أدِر في الإعدادات ›",
   "never": "أبدًا",
   "No automation matches these words.": "لا توجد أتمتة تطابق هذه الكلمات.",
   "No automations yet: start from a ready-made template.": "لا توجد أتمتات بعد: ابدأ من قالب جاهز.",
@@ -6808,4 +6710,23 @@ export default Object.freeze({
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "حدث من جهاز الاتصال الداخلي (event.*)، أو مستشعر يعمل عندما يرن (binary_sensor). يصلح أيضًا زر أو مفتاح.",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "لا يمكن أن يكون جرس باب: اختر حدثًا (event.*) أو مستشعرًا يعمل (binary_sensor.*).",
   "Now · My station · Forecast": "الآن · محطتي · التوقعات",
+  "From band ${fascia}": "من الشريحة ${fascia}",
+  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.": "يصرّح Home Assistant بالبطارية بنفسه — مستشعر بالنسبة المئوية — وتظهر هنا دون أي إعداد.",
+  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.": "يعلن Home Assistant عن جهة تماس الباب أو النافذة بنفسه، وتظهر هنا دون أي إعداد.",
+  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.": "يعلن Home Assistant عن كاشف الحركة أو الحضور من تلقاء نفسه، فيظهر هنا دون أي إعداد.",
+  "More power is going out than coming in: usually a sensor's direction is reversed.": "الطاقة الخارجة أكبر من الداخلة: عادةً ما يكون اتجاه أحد المستشعرات معكوسًا.",
+  "No appliance in this load yet.": "لا توجد أجهزة في هذا الحِمل بعد.",
+  "No room has a humidity probe.": "لا توجد غرفة بها مستشعر رطوبة.",
+  "No rooms configured yet.": "لا توجد غرف بعد.",
+  "No sensor linked.": "لا يوجد مستشعر مرتبط.",
+  "No session meter.": "لا يوجد عدّاد للجلسة.",
+  "Nothing here yet.": "لا شيء هنا بعد.",
+  "Switched on, they show anyway.": "عند تشغيلها تظهر على أي حال.",
+  "The base map is not answering. The rain is there.": "خريطة الأساس لا تستجيب. المطر موجود.",
+  "The radar address is not a tile address ({z}/{x}/{y}).": "عنوان الرادار ليس عنوان بلاطات ({z}/{x}/{y}).",
+  "The soil sensor is right above.": "مستشعر التربة موجود في الأعلى مباشرة.",
+  "The target is read-only.": "الهدف للقراءة فقط.",
+  "This reading has no entity yet.": "هذه القراءة ليس لها كيان بعد.",
+  "This target is a read-only sensor.": "هذا الهدف مستشعر للقراءة فقط.",
+  "You picked «An address of mine» but there is no address.": "اخترت «عنوان خاص بي» لكن لا يوجد عنوان.",
 });

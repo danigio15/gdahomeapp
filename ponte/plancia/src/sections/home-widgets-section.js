@@ -10184,22 +10184,6 @@ function onClick(event) {
     voce?.click();
     return;
   }
-  /* «Scegli cosa tenere in evidenza»: la finestra chiude e si apre il Config
-   * sulla sua scheda, dove quelle voci si scelgono. */
-  const config = event.target?.closest?.("[data-dm-w-config]");
-  if (config) {
-    event.preventDefault();
-    const scheda = clean(config.dataset.dmWConfig);
-    chiudiPopup();
-    if (typeof root.apriConfigEntita !== "function") return;
-    root.apriConfigEntita();
-    root.setTimeout?.(() => {
-      try {
-        if (scheda) root.editorSwitch?.(scheda);
-      } catch (_errore) {}
-    }, 0);
-    return;
-  }
   const tutte = event.target?.closest?.("[data-dm-w-lights-off]");
   if (tutte) {
     event.preventDefault();

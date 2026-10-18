@@ -456,7 +456,7 @@ function lettureMarkup(vista) {
   const voci = Object.values(vista.letture).filter((voce) => voce && !voce.muto);
   const azioni = vista.azioni || [];
   if (!voci.length && !azioni.length)
-    return `<p class="dm-animale-nulla">${esc(t("Nessuna entità collegata: apri la configurazione e scegli il dispositivo.", "No entity linked yet: open the settings and pick the device."))}</p>`;
+    return `<p class="dm-animale-nulla">${esc(t("Nessuna entità", "No entity"))}</p>`;
   const fasce = ORDINE_GRUPPI.map((gruppo) => {
     const sue = voci.filter((voce) => voce.gruppo === gruppo);
     const suoi = azioni.filter((azione) => azione.gruppo === gruppo);

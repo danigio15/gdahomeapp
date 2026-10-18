@@ -682,10 +682,7 @@ export async function openHistory(event, entityId, name, range = ORE_DI_SERIE) {
     scriviTestoSeCambia(doc.getElementById("hist-title"), clean(name) || entity);
     setLoading(
       "empty",
-      t(
-        "Questa voce non ha ancora un'entità: mappala in Configurazione per vedere il suo storico.",
-        "This reading has no entity yet: map it in the configuration to see its history.",
-      ),
+      t("Questa voce non ha ancora un'entità.", "This reading has no entity yet."),
     );
     return false;
   }

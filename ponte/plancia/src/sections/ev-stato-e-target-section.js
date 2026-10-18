@@ -227,10 +227,7 @@ export function paintTarget() {
   const entita = entitaDi("dm.ev_target_soc");
   const stato = entita ? liveState("dm.ev_target_soc") : null;
   const titolo = solaLettura
-    ? t(
-        "Questo target è un sensore di sola lettura: per cambiarlo da qui collega evcc, o un'entità number/select, nella scheda Auto.",
-        "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.",
-      )
+    ? t("Questo target è un sensore di sola lettura.", "This target is a read-only sensor.")
     : "";
   /* Un'entita' che non pubblica niente non si comanda: mandarle un limite
    * vorrebbe dire scriverlo sopra una lettura che non c'e'. */
@@ -301,10 +298,7 @@ function installaIlComando() {
     if (targetDiSolaLettura()) {
       try {
         root.edToast?.(
-          t(
-            "Il target è di sola lettura: collega evcc nella scheda Auto per cambiarlo.",
-            "The target is read-only: connect evcc in the Car tab to change it.",
-          ),
+          t("Il target è di sola lettura.", "The target is read-only."),
         );
       } catch (_error) {}
       schedule();
