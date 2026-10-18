@@ -239,7 +239,7 @@ export class Portiere {
     if (this.versioneMinima?.troppoVecchia(detto.app)) {
       this._no(
         presa,
-        "questa versione di gdahome e' vecchia: aggiornala dal negozio per continuare",
+        "questa versione di GdAHome e' vecchia: aggiornala dal negozio per continuare",
         { motivo: MOTIVO.vecchia, minima: this.versioneMinima.minima },
       );
       return;
@@ -269,7 +269,7 @@ export class Portiere {
      * sta in mezzo non sappia gia', e all'app serve il `motivo` per portare
      * alla pagina Premium invece di dire «non trovo la casa». */
     if (String(da).startsWith("centralino") && this._soloInCasa()) {
-      this._no(presa, "con gdahome Base questa casa si apre solo da casa", {
+      this._no(presa, "con GdAHome Base questa casa si apre solo da casa", {
         motivo: MOTIVO.premium,
       });
       return;

@@ -1211,7 +1211,7 @@ function boxDellaCasa(elenco) {
 /* Da dove viene: nata dalla plancia, o da un blueprint. */
 export const etichettaDiOrigine = (v) =>
   v?.origine === "gdahome"
-    ? '<span class="ha-orig g">gdahome</span>'
+    ? '<span class="ha-orig g">GdAHome</span>'
     : v?.origine === "blueprint"
       ? '<span class="ha-orig b">Blueprint</span>'
       : "";
@@ -1276,8 +1276,8 @@ function salvataHtml() {
     t(`Salvata in Home Assistant ✓ «${v.nome}»`, `Saved in Home Assistant ✓ «${v.nome}»`),
   )}<small>${esc(
     t(
-      "La ritrovi in Impostazioni → Automazioni, con l'etichetta gdahome.",
-      "You'll find it in Settings → Automations, labelled gdahome.",
+      "La ritrovi in Impostazioni → Automazioni, con l'etichetta GdAHome.",
+      "You'll find it in Settings → Automations, labelled GdAHome.",
     ),
   )}</small></div>${apriInHA(v.id, t("Apri in HA ↗", "Open in HA ↗"))}</div>`;
 }
@@ -1294,8 +1294,8 @@ function inviteAConvertire() {
       : t(`${n} automazioni della versione di prova sono ferme`, `${n} automations from the trial version are idle`),
   )}</b><small>${esc(
     t(
-      "Adesso le automazioni le esegue Home Assistant: convertile e ripartono, con l'etichetta gdahome.",
-      "Home Assistant runs automations now: convert them and they start again, labelled gdahome.",
+      "Adesso le automazioni le esegue Home Assistant: convertile e ripartono, con l'etichetta GdAHome.",
+      "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.",
     ),
   )}</small></div><button type="button" data-au-converti>${esc(t("Converti", "Convert"))}</button></div>`;
 }
@@ -1304,8 +1304,8 @@ function noteDellaLista() {
   if (state.assente)
     return `<div class="au-nota">${esc(
       t(
-        "L'elenco e i salvataggi passano dall'add-on gdahome: qui non c'è.",
-        "The list and saving go through the gdahome add-on: it is not here.",
+        "L'elenco e i salvataggi passano dall'add-on GdAHome: qui non c'è.",
+        "The list and saving go through the GdAHome add-on: it is not here.",
       ),
     )}</div>`;
   if (state.ponte && !puoScrivere())
@@ -1345,8 +1345,8 @@ const INTRO = () =>
 /* La nota sotto ogni velo e ogni «Scopri Premium»: dove si compra. */
 export const DOVE_SI_COMPRA = () =>
   t(
-    "Si acquista solo dalle app gdahome su App Store e Google Play. Le app sono in arrivo.",
-    "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.",
+    "Si acquista solo dalle app GdAHome su App Store e Google Play. Le app sono in arrivo.",
+    "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.",
   );
 
 function velo(dentro) {
@@ -1380,7 +1380,7 @@ export function apriLoStore() {
     t("PREMIUM · IN ARRIVO", "PREMIUM · COMING SOON"),
   )}</span><h3 id="au-store-titolo">${esc(t("Premium arriva con le app", "Premium comes with the apps"))}</h3><p>${esc(
     t("Premium si acquista", "Premium is bought"),
-  )} <b>${esc(t("esclusivamente dalle app gdahome", "only from the gdahome apps"))}</b> ${esc(
+  )} <b>${esc(t("esclusivamente dalle app GdAHome", "only from the GdAHome apps"))}</b> ${esc(
     t(
       "su App Store e Google Play. Qui in Home Assistant non si paga nulla e non si inseriscono dati di pagamento.",
       "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.",
@@ -2548,7 +2548,7 @@ function piedeDelSalva(pulita) {
   )}</b>, ${esc(t("come", "as"))} <b>“${esc(nome)}”</b>${
     state.scheda && state.scheda.origine !== "gdahome"
       ? ""
-      : ` ${esc(t("con l'etichetta", "labelled"))} <b>gdahome</b>`
+      : ` ${esc(t("con l'etichetta", "labelled"))} <b>GdAHome</b>`
   }. ${esc(t("La trovi lì e la esegue Home Assistant.", "You'll find it there and Home Assistant runs it."))}</span></div>`;
 }
 

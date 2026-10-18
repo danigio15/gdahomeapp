@@ -238,11 +238,11 @@ class _SchermataDelleSegnalazioniState
                       it:
                           'Questa casa non passa da nessun centralino, e le '
                           'segnalazioni non hanno una strada per uscire. Si '
-                          'accende «da fuori casa» nelle opzioni di gdahome.',
+                          'accende «da fuori casa» nelle opzioni di GdAHome.',
                       en:
                           'This home goes through no relay, so reports have '
                           'no way out. You turn it on with “from away” in '
-                          'the gdahome options.',
+                          'the GdAHome options.',
                     ),
                   ),
                 ),

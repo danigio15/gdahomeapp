@@ -170,7 +170,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       setState(
         () => _male =
             '${errore.spiegazione} Inquadra quello che sta '
-            'nella scheda «gdahome», dentro Home Assistant.',
+            'nella scheda «GdAHome», dentro Home Assistant.',
       );
       return;
     } on InvitoTroppoNuovo catch (errore) {
@@ -341,7 +341,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     'che controlla il traffico, un filtro, o un indirizzo che '
                     'non comincia per https bastano.\n\nIntanto togli questo '
                     'abbinamento da «Telefoni abbinati», nella pagina di '
-                    'gdahome in Home Assistant: il posto resta occupato.',
+                    'GdAHome in Home Assistant: il posto resta occupato.',
                 en:
                     'Your home let me in, but this browser won\'t let me '
                     'remember it: you\'d have to pair again next time you '
@@ -350,7 +350,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     'secure” next to the address. An antivirus that inspects '
                     'traffic, a filter, or an address that doesn\'t start '
                     'with https are enough.\n\nIn the meantime remove this '
-                    'pairing from “Paired phones”, on the gdahome page in '
+                    'pairing from “Paired phones”, on the GdAHome page in '
                     'Home Assistant: the slot stays taken.',
               )
             : inLingua(
@@ -358,13 +358,13 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     'La casa mi ha fatto entrare, ma non riesco a ricordarlo '
                     'su questo telefono: riaprendo l\'app dovresti abbinarti '
                     'di nuovo.\n\nTogli questo abbinamento da «Telefoni '
-                    'abbinati», nella pagina di gdahome in Home Assistant, e '
+                    'abbinati», nella pagina di GdAHome in Home Assistant, e '
                     'riprova.\n\n($errore)',
                 en:
                     'Your home let me in, but I can\'t remember it on this '
                     'phone: you\'d have to pair again next time you open the '
                     'app.\n\nRemove this pairing from “Paired phones”, on the '
-                    'gdahome page in Home Assistant, and try again.'
+                    'GdAHome page in Home Assistant, and try again.'
                     '\n\n($errore)',
               );
       });
@@ -382,12 +382,12 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       return inLingua(
         it:
             'L\'accesso remoto di Home Assistant non arriva agli add-on: il '
-            'suo tunnel finisce dentro Home Assistant, e gdahome sta su una '
+            'suo tunnel finisce dentro Home Assistant, e GdAHome sta su una '
             'porta sua. Mettiti sul Wi-Fi di casa e scrivi l\'indirizzo che '
             'ha il tuo Home Assistant su quella rete.',
         en:
             'Home Assistant remote access doesn\'t reach add-ons: its tunnel '
-            'ends inside Home Assistant, and gdahome sits on a port of its '
+            'ends inside Home Assistant, and GdAHome sits on a port of its '
             'own. Get on your home Wi-Fi and type the address your Home '
             'Assistant has on that network.',
       );
@@ -395,10 +395,10 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     if (inCasa != null) {
       final detto = inLingua(
         it:
-            'Non trovo gdahome a quell\'indirizzo. Controlla che l\'add-on sia '
+            'Non trovo GdAHome a quell\'indirizzo. Controlla che l\'add-on sia '
             'acceso e che il telefono sia sulla rete di casa.',
         en:
-            'I can\'t find gdahome at that address. Check that the add-on is '
+            'I can\'t find GdAHome at that address. Check that the add-on is '
             'running and that the phone is on your home network.',
       );
       return '$detto\n\n(${errore.spiegazione})';
@@ -470,21 +470,21 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     dentroHomeAssistant
                         ? inLingua(
                             it:
-                                'Il codice lo fabbrica la console di gdahome, '
+                                'Il codice lo fabbrica la console di GdAHome, '
                                 'qui in Home Assistant. Aprila, premi «Genera '
                                 'QR code», e riporta qui il codice.',
                             en:
-                                'The code is made by the gdahome console, here '
+                                'The code is made by the GdAHome console, here '
                                 'in Home Assistant. Open it, press “Generate '
                                 'the QR code”, and bring the code back here.',
                           )
                         : inLingua(
                             it:
-                                'In Home Assistant apri «gdahome» dalla barra '
+                                'In Home Assistant apri «GdAHome» dalla barra '
                                 'laterale e premi «Genera QR code». Poi '
                                 'inquadralo.',
                             en:
-                                'In Home Assistant open “gdahome” from the '
+                                'In Home Assistant open “GdAHome” from the '
                                 'sidebar and press “Generate the QR code”. '
                                 'Then scan it.',
                           ),
@@ -503,8 +503,8 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                       icon: const Icon(Icons.qr_code_2),
                       label: Text(
                         inLingua(
-                          it: 'Apri la console di gdahome',
-                          en: 'Open the gdahome console',
+                          it: 'Apri la console di GdAHome',
+                          en: 'Open the GdAHome console',
                         ),
                       ),
                     ),

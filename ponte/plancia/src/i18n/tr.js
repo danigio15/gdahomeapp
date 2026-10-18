@@ -43,8 +43,8 @@ export default Object.freeze({
   "Pick a trip on the left, or make a new one.": "Soldan bir yolculuk seç ya da yenisini oluştur.",
   "Pick the destination and time: I will tell you when to leave.":
     "Hedefi ve saati seç: ne zaman çıkman gerektiğini söyleyeyim.",
-  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page.":
-    "Yolculukları buradan planla; telefonda, CarPlay ve Android Auto'da bul. Çıkış hatırlatması ve önceden açılan araç kliması ile. gdahome uygulamasında Premium sayfasından aç.",
+  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
+    "Yolculukları buradan planla; telefonda, CarPlay ve Android Auto'da bul. Çıkış hatırlatması ve önceden açılan araç kliması ile. GdAHome uygulamasında Premium sayfasından aç.",
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Yolculukları buradan planla: gdanav'da telefonda, CarPlay ve Android Auto'da bulursun.",
   "Planned trips": "Planlanmış yolculuklar",
@@ -4818,8 +4818,8 @@ export default Object.freeze({
   "Kitchen window": "Mutfak penceresi",
   "New opening": "Yeni açıklık",
   "Save opening": "Açıklığı kaydet",
-  "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.":
-    "Sayfada ve kutucukta görünen çizim. Bunlar gdahome'un kendi çizimleri: her telefonda aynı.",
+  "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.":
+    "Sayfada ve kutucukta görünen çizim. Bunlar GdAHome'un kendi çizimleri: her telefonda aynı.",
   "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.":
     "Evdeki açıklıklar: kapılar, pencereler, dış kapı, garaj kapısı. Her açıklığın kendi satırı vardır — kontak varlığı, istediğiniz ad, çizim — ve Açıklıklar sayfası bunları şu sırayla gösterir: yeşil kapalı, kırmızı açık, en üstte de şu anda kaçının açık olduğu.",
   "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.":
@@ -5497,8 +5497,8 @@ export default Object.freeze({
   "Warn about open windows": "Açık pencereler için uyar",
   "Who is home": "Evde kim var",
   windy: "rüzgârlı",
-  "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
-    "gdahome Base ile bu panel normal bir panel olarak kalır. Premium ile bir duvar tableti ekranına dönüşür: Oda, Sahneler veya Giriş, yatay ve dikey. Premium, gdahome uygulamasından açılır.",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.":
+    "GdAHome Base ile bu panel normal bir panel olarak kalır. Premium ile bir duvar tableti ekranına dönüşür: Oda, Sahneler veya Giriş, yatay ve dikey. Premium, GdAHome uygulamasından açılır.",
   "Wrong code": "Yanlış kod",
   "Yes, go": "Evet, devam",
   "All lights": "Tüm ışıklar",
@@ -5905,8 +5905,8 @@ export default Object.freeze({
   "What comes out of the battery": "Bataryadan çıkan",
   "What goes into the battery": "Bataryaya giren",
   "An automation handles it": "Bunu bir otomasyon yönetiyor",
-  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
-    "Okunamıyor: gdahome eklentisi çalışıyor olmalı ve yönetici olmalısın.",
+  "Can't read it: the GdAHome add-on must be running, and you must be an administrator.":
+    "Okunamıyor: GdAHome eklentisi çalışıyor olmalı ve yönetici olmalısın.",
   "Fine tonight": "Bu gece sorun yok",
   "Inner door": "İç kapı",
   "Leave it": "Böyle kalsın",
@@ -6522,10 +6522,10 @@ export default Object.freeze({
   "fires the ${evento} event": "${evento} olayını tetikler",
   "Home Assistant → Settings → Automations": "Home Assistant → Ayarlar → Otomasyonlar",
   "Home Assistant did not save it: ${no}": "Home Assistant kaydetmedi: ${no}",
-  "Home Assistant runs automations now: convert them and they start again, labelled gdahome.": "Artık otomasyonları Home Assistant çalıştırıyor: dönüştürün ve gdahome etiketiyle yeniden çalışsınlar.",
+  "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.": "Artık otomasyonları Home Assistant çalıştırıyor: dönüştürün ve GdAHome etiketiyle yeniden çalışsınlar.",
   "Home Assistant shuts down": "Home Assistant kapanıyor",
   "Home Assistant starts": "Home Assistant başlıyor",
-  "Home Assistant's automations are read through the gdahome add-on: it is not here.": "Home Assistant'ın otomasyonları gdahome eklentisiyle okunur: burada yok.",
+  "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant'ın otomasyonları GdAHome eklentisiyle okunur: burada yok.",
   "if something holds:": "bir şey doğruysa:",
   "in HA as": "HA'da şu adla",
   "in the config ›": "yapılandırmada ›",
@@ -6547,8 +6547,8 @@ export default Object.freeze({
   "on certain days": "bazı günlerde",
   "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.": "App Store ve Google Play'de. Burada, Home Assistant'ta hiçbir şey ödemezsiniz ve ödeme bilgisi girmezsiniz.",
   "One automation from the trial version is idle": "Deneme sürümünden bir otomasyon duruyor",
-  "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.": "Yalnızca App Store ve Google Play'deki gdahome uygulamalarından alınır. Uygulamalar yakında geliyor.",
-  "only from the gdahome apps": "yalnızca gdahome uygulamalarından",
+  "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.": "Yalnızca App Store ve Google Play'deki GdAHome uygulamalarından alınır. Uygulamalar yakında geliyor.",
+  "only from the GdAHome apps": "yalnızca GdAHome uygulamalarından",
   "Open in HA ↗": "HA'da aç ↗",
   "Open in Home Assistant ↗": "Home Assistant'ta aç ↗",
   "otherwise → ${altrimenti}": "değilse → ${altrimenti}",
@@ -6573,7 +6573,7 @@ export default Object.freeze({
   "the home did not answer": "ev yanıt vermedi",
   "The home that does it by itself: lights, climate, shutters and alerts that start when needed.": "Kendi kendine yapan ev: gerektiğinde başlayan ışıklar, iklim, panjurlar ve uyarılar.",
   "The home's automations": "Evin otomasyonları",
-  "The list and saving go through the gdahome add-on: it is not here.": "Liste ve kaydetme gdahome eklentisinden geçer: burada yok.",
+  "The list and saving go through the GdAHome add-on: it is not here.": "Liste ve kaydetme GdAHome eklentisinden geçer: burada yok.",
   "the new automation": "yeni otomasyon",
   "then → ${allora}": "o zaman → ${allora}",
   "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.": "Bu otomasyon bir Home Assistant dosyasında: burada açar, kapatır ve çalıştırırsınız, değişikliği orada yapılır.",
@@ -6584,7 +6584,7 @@ export default Object.freeze({
   "waits a while": "biraz bekler",
   "waits for something to happen": "bir şey olmasını bekler",
   "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.": "Uygulamalar mağazalara geldiğinde Premium'u uygulamadan etkinleştirirsiniz ve burada Otomasyonlar kendiliğinden açılır.",
-  "You'll find it in Settings → Automations, labelled gdahome.": "Ayarlar → Otomasyonlar'da gdahome etiketiyle bulursunuz.",
+  "You'll find it in Settings → Automations, labelled GdAHome.": "Ayarlar → Otomasyonlar'da GdAHome etiketiyle bulursunuz.",
   "You'll find it there and Home Assistant runs it.": "Orada bulursunuz ve Home Assistant çalıştırır.",
   "🚨 Removed": "🚨 Kaldırıldı",
   "🚨 Saved: the house knows when it goes off": "🚨 Kaydedildi: ev alarmın ne zaman çaldığını biliyor",
@@ -6661,7 +6661,7 @@ export default Object.freeze({
   "On a touch or when someone arrives": "Dokunulduğunda ya da biri geldiğinde",
   "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
     "iPad'de odanın ışığı okunamaz: gece ve gündüzü güneş ya da saatler belirler.",
-  "Only in the gdahome app on Android.": "Yalnızca Android'deki gdahome uygulamasında.",
+  "Only in the GdAHome app on Android.": "Yalnızca Android'deki GdAHome uygulamasında.",
   "Orientation, theme, weather, rest, night, brightness, PIN":
     "Yön, tema, hava, dinlenme, gece, parlaklık, PIN",
   "presence sensor": "varlık sensörü",
@@ -6676,8 +6676,8 @@ export default Object.freeze({
   "Tablet proximity sensor": "Tabletin yakınlık sensörü",
   "The clock is readable, but it does not light up the room": "Saat okunur ama odayı aydınlatmaz",
   "The iPad does not have one.": "iPad'de yok.",
-  "The panel sets it, only in the gdahome app on the tablet":
-    "Onu panel ayarlar, yalnızca tabletteki gdahome uygulamasında",
+  "The panel sets it, only in the GdAHome app on the tablet":
+    "Onu panel ayarlar, yalnızca tabletteki GdAHome uygulamasında",
   "This tablet does not have one.": "Bu tablette yok.",
   "This tablet has no light sensor: the home's sun applies":
     "Bu tablette ışık sensörü yok: evin güneşi geçerli",
@@ -6685,8 +6685,8 @@ export default Object.freeze({
   "Time with nobody nearby and no touches": "Yakında kimse olmadan ve dokunulmadan geçen süre",
   "When someone is nearby": "Yakında biri olduğunda",
   "Who is nearby · one source is enough": "Yakında kim var · bir kaynak yeterli",
-  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
-    "Tabletin ışık sensörüyle, yalnızca Android'deki gdahome uygulamasında. O olmadan evin güneşi geçerli",
+  "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies":
+    "Tabletin ışık sensörüyle, yalnızca Android'deki GdAHome uygulamasında. O olmadan evin güneşi geçerli",
   "With this tablet's light sensor: it is night when the room is dark":
     "Bu tabletin ışık sensörüyle: oda karanlık olduğunda gecedir",
 });

@@ -443,7 +443,7 @@ export class Licenze extends EventEmitter {
     const premium = this.premium;
     if (premium !== this._premiumPrima) {
       this.registro.info(
-        premium ? "questa casa e' gdahome Premium" : "questa casa e' tornata gdahome Base",
+        premium ? "questa casa e' GdAHome Premium" : "questa casa e' tornata GdAHome Base",
       );
       this._premiumPrima = premium;
     }

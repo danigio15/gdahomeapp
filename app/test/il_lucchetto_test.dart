@@ -107,7 +107,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(guardia.chieste, hasLength(1));
-    expect(guardia.chieste.first, contains('aprire gdahome'));
+    expect(guardia.chieste.first, contains('aprire GdAHome'));
     expect(impostazioni.lucchetto.allAvvio, isTrue);
     /* E con lui si accendono i due momenti suggeriti: sono le due cose che da
      * un telefono trovato aperto non si disfano. */

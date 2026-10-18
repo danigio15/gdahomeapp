@@ -576,8 +576,8 @@ class _Riassunto extends StatelessWidget {
                 Text(
                   aposto
                       ? inLingua(
-                          it: 'Home Assistant, gli add-on e gdahome.',
-                          en: 'Home Assistant, the add-ons and gdahome.',
+                          it: 'Home Assistant, gli add-on e GdAHome.',
+                          en: 'Home Assistant, the add-ons and GdAHome.',
                         )
                       : inLingua(
                           it: 'Li dice Home Assistant: qui si fanno.',

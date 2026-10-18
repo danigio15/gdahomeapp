@@ -715,10 +715,10 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
           ),
           sotto: inLingua(
             it:
-                'Forse gdahome in casa è di una versione di prima: aggiorna '
+                'Forse GdAHome in casa è di una versione di prima: aggiorna '
                 'l\'add-on in Home Assistant.',
             en:
-                'Maybe gdahome at home is an older version: update the '
+                'Maybe GdAHome at home is an older version: update the '
                 'add-on in Home Assistant.',
           ),
         );
@@ -988,8 +988,8 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
         (
           Icons.notifications_off_rounded,
           inLingua(
-            it: 'Il telefono non lascia mostrare le notifiche di gdahome.',
-            en: 'This phone doesn\'t allow gdahome notifications.',
+            it: 'Il telefono non lascia mostrare le notifiche di GdAHome.',
+            en: 'This phone doesn\'t allow GdAHome notifications.',
           ),
         ),
       if (!stato.centralino)
@@ -999,10 +999,10 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
             it:
                 'Le notifiche passano dal centralino, e questa casa adesso '
                 'non lo raggiunge: guarda «Da fuori casa» nella pagina di '
-                'gdahome in Home Assistant.',
+                'GdAHome in Home Assistant.',
             en:
                 'Notifications go through the relay, and this home can\'t '
-                'reach it right now: check «Away from home» on the gdahome '
+                'reach it right now: check «Away from home» on the GdAHome '
                 'page in Home Assistant.',
           ),
         ),
@@ -1174,8 +1174,8 @@ class _IlMaestro extends StatelessWidget {
                     children: [
                       Text(
                         inLingua(
-                          it: 'Notifiche di gdahome',
-                          en: 'gdahome notifications',
+                          it: 'Notifiche di GdAHome',
+                          en: 'GdAHome notifications',
                         ),
                         style: testi.titleMedium?.copyWith(
                           color: Colors.white,

@@ -1057,8 +1057,8 @@ function luceMarkup(m) {
               "This tablet has no light sensor: the home's sun applies",
             )
           : t(
-              "Col sensore di luce del tablet, solo nell'app gdahome su Android. Senza, vale il sole di casa",
-              "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies",
+              "Col sensore di luce del tablet, solo nell'app GdAHome su Android. Senza, vale il sole di casa",
+              "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies",
             )
       : l.giorno === "orario"
         ? t(
@@ -1122,9 +1122,9 @@ function luceMarkup(m) {
       ? t("Sull'iPad non c'è.", "The iPad does not have one.")
       : senzaVicino
         ? t("Questo tablet non ce l'ha.", "This tablet does not have one.")
-        : t("Solo nell'app gdahome su Android.", "Only in the gdahome app on Android.");
+        : t("Solo nell'app GdAHome su Android.", "Only in the GdAHome app on Android.");
   return `<div class="mu-ed-luce" data-mu-ed-luce>
-    <div class="mu-ed-luce-testa"><span class="mu-ed-luce-ic" aria-hidden="true">☀️</span><div class="mu-ed-testo"><b>${esc(t("Luminosità dello schermo", "Screen brightness"))}</b><small>${esc(t("La comanda il pannello, solo nell'app gdahome sul tablet", "The panel sets it, only in the gdahome app on the tablet"))}</small></div>${interruttore("luce.attiva", l.attiva, "luce")}</div>
+    <div class="mu-ed-luce-testa"><span class="mu-ed-luce-ic" aria-hidden="true">☀️</span><div class="mu-ed-testo"><b>${esc(t("Luminosità dello schermo", "Screen brightness"))}</b><small>${esc(t("La comanda il pannello, solo nell'app GdAHome sul tablet", "The panel sets it, only in the GdAHome app on the tablet"))}</small></div>${interruttore("luce.attiva", l.attiva, "luce")}</div>
     ${livelli}
     <div class="mu-ed-sotto-titolo">${esc(t("Chi c'è vicino · basta una fonte", "Who is nearby · one source is enough"))}</div>
     <div class="mu-ed-fonte" data-mu-ed-fonte="presenza">
@@ -1144,7 +1144,7 @@ function luceMarkup(m) {
 function corpoMarkup() {
   const m = bozza();
   const premium = state.premium === true;
-  const plance = state.plance?.length ? state.plance : [{ profilo: "primary", titolo: "gdahome" }];
+  const plance = state.plance?.length ? state.plance : [{ profilo: "primary", titolo: "GdAHome" }];
   const qui = currentProfile();
   /* Tutte le plance, questa compresa. «Quel flag che sceglievo da dove
    * prendere i dati facendo la plancia nuova non c'e' piu'»: l'elenco lasciava
@@ -1340,8 +1340,8 @@ function corpoMarkup() {
       <b>${esc(t("La plancia a muro è Premium", "The wall dashboard is Premium"))}</b>
       <p>${esc(
         t(
-          "Con gdahome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app gdahome.",
-          "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.",
+          "Con GdAHome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app GdAHome.",
+          "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.",
         ),
       )}</p></div></div>`;
 }

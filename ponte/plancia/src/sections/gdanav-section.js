@@ -905,7 +905,7 @@ function editor() {
 function premium() {
   return `<div class="dm-gn-card dm-gn-premium"><img src="${esc(logo())}" alt=""><div>
     <div class="dm-gn-nome">${esc(t("Il pianificatore è di gdanav Premium", "The planner is part of gdanav Premium"))}</div>
-    <div class="dm-gn-sotto">${esc(t("Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app gdahome, nella pagina Premium.", "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page."))}</div></div></div>`;
+    <div class="dm-gn-sotto">${esc(t("Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app GdAHome, nella pagina Premium.", "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page."))}</div></div></div>`;
 }
 
 /* Si disegna dentro `.dm-gn-corpo`, non in `#dm-gn`.

@@ -122,7 +122,7 @@ void main() {
       dopo.dispose();
     });
 
-    test('la risposta di /versioni si legge per gdahome, e solo un intero', () {
+    test('la risposta di /versioni si legge per GdAHome, e solo un intero', () {
       expect(
         minimaDa({
           'gdahome': {'minima': 1070000},
@@ -147,7 +147,7 @@ void main() {
       }
     });
 
-    test('i negozi: il Play Store di gdahome, e l\'App Store', () {
+    test('i negozi: il Play Store di GdAHome, e l\'App Store', () {
       expect(
         indirizzoNelPlayStore.toString(),
         'market://details?id=com.gdahome.gdahome',
@@ -181,7 +181,7 @@ void main() {
       await tester.pumpWidget(lApp(versione, apri: () async => aperto += 1));
       await tester.pump();
 
-      expect(find.text('C\'è una versione nuova di gdahome'), findsOneWidget);
+      expect(find.text('C\'è una versione nuova di GdAHome'), findsOneWidget);
       expect(find.textContaining('Aggiornala per continuare'), findsOneWidget);
       expect(find.text('la casa'), findsNothing);
       await tester.tap(find.byType(FilledButton));

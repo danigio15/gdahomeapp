@@ -47,7 +47,7 @@
     <!-- Senza Premium la casa in auto non c'e' (`LaLicenzaInAuto.kt`): una
          schermata sola, che dice cosa serve e dove si fa. Niente tasti per
          comprare: guidando non si compra. -->
-    <string name="auto_premium">gdahome Premium</string>
-    <string name="auto_serve_premium">La casa in auto è compresa in gdahome Premium.</string>
-    <string name="auto_comando_serve_premium">%1$s: serve gdahome Premium</string>
+    <string name="auto_premium">GdAHome Premium</string>
+    <string name="auto_serve_premium">La casa in auto è compresa in GdAHome Premium.</string>
+    <string name="auto_comando_serve_premium">%1$s: serve GdAHome Premium</string>
 </resources>

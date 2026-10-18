@@ -110,7 +110,7 @@ void main() {
       },
     })!;
     expect(pannello.percorso, 'dashboardmodern');
-    expect(pannello.titolo, 'gdahome');
+    expect(pannello.titolo, 'GdAHome');
     expect(pannello.profilo, 'primary');
     expect(pannello.istanza, '');
     expect(pannello.primario, isFalse);
@@ -134,7 +134,7 @@ void main() {
       'base': '/dashboardmodern_static/x/',
     })!;
     expect(scarna.base, '/dashboardmodern_static/x');
-    expect(scarna.titolo, 'gdahome');
+    expect(scarna.titolo, 'GdAHome');
     expect(scarna.varianti, isEmpty);
     /* Un ponte di ieri non dice le vesti: vuote, cioe' quelle di serie. */
     expect(scarna.velo, '');

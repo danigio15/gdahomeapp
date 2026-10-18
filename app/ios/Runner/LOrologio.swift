@@ -117,7 +117,7 @@ final class LOrologio: NSObject, WCSessionDelegate {
     /* Uno schermo rimasto aperto al polso mentre Premium finiva: non parte
      * niente, come in auto. */
     guard LaCasaInCarPlay.premium() else {
-      return risposta(["ok": false, "testo": "Serve gdahome Premium"])
+      return risposta(["ok": false, "testo": "Serve GdAHome Premium"])
     }
     switch cosa {
     case "comando":

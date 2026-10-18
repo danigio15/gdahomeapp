@@ -43,8 +43,8 @@ export default Object.freeze({
   "Pick a trip on the left, or make a new one.": "Elige un viaje a la izquierda o crea uno nuevo.",
   "Pick the destination and time: I will tell you when to leave.":
     "Elige el destino y la hora: te diré cuándo salir.",
-  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page.":
-    "Planifica viajes desde aquí y encuéntralos en el móvil, CarPlay y Android Auto, con aviso para salir y el clima del coche encendido antes. Se desbloquea en la app gdahome, en la página Premium.",
+  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
+    "Planifica viajes desde aquí y encuéntralos en el móvil, CarPlay y Android Auto, con aviso para salir y el clima del coche encendido antes. Se desbloquea en la app GdAHome, en la página Premium.",
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Planifica viajes desde aquí: los encuentras en gdanav en el móvil, CarPlay y Android Auto.",
   "Planned trips": "Viajes planificados",
@@ -4845,8 +4845,8 @@ export default Object.freeze({
   "Kitchen window": "Ventana de la cocina",
   "New opening": "Abertura nueva",
   "Save opening": "Guardar abertura",
-  "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.":
-    "El dibujo que sale en la página y en la tarjeta. Son los del catálogo de gdahome: iguales en cualquier teléfono.",
+  "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.":
+    "El dibujo que sale en la página y en la tarjeta. Son los del catálogo de GdAHome: iguales en cualquier teléfono.",
   "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.":
     "Las aberturas de casa: puertas, ventanas, portal, basculante. Cada abertura tiene su fila — la entidad del contacto, el nombre que quieras, el dibujo — y la página Aberturas muestra estas, en este orden: verde cerrada, rojo abierta, y arriba cuántas están abiertas ahora.",
   "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.":
@@ -5534,8 +5534,8 @@ export default Object.freeze({
   "Warn about open windows": "Avisar de ventanas abiertas",
   "Who is home": "Quién está en casa",
   windy: "ventoso",
-  "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
-    "Con gdahome Base este panel sigue siendo un panel normal. Con Premium se convierte en una pantalla para una tableta de pared: Habitación, Escenas o Entrada, horizontal y vertical. Premium se activa desde la app gdahome.",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.":
+    "Con GdAHome Base este panel sigue siendo un panel normal. Con Premium se convierte en una pantalla para una tableta de pared: Habitación, Escenas o Entrada, horizontal y vertical. Premium se activa desde la app GdAHome.",
   "Wrong code": "Código incorrecto",
   "Yes, go": "Sí, vamos",
   "All lights": "Todas las luces",
@@ -5944,8 +5944,8 @@ export default Object.freeze({
   "What comes out of the battery": "Lo que sale de la batería",
   "What goes into the battery": "Lo que entra en la batería",
   "An automation handles it": "Lo gestiona una automatización",
-  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
-    "No se puede leer: el complemento gdahome debe estar activo y debes ser administrador.",
+  "Can't read it: the GdAHome add-on must be running, and you must be an administrator.":
+    "No se puede leer: el complemento GdAHome debe estar activo y debes ser administrador.",
   "Fine tonight": "Vale por esta noche",
   "Inner door": "Puerta interior",
   "Leave it": "Dejar así",
@@ -6561,10 +6561,10 @@ export default Object.freeze({
   "fires the ${evento} event": "lanza el evento ${evento}",
   "Home Assistant → Settings → Automations": "Home Assistant → Ajustes → Automatizaciones",
   "Home Assistant did not save it: ${no}": "Home Assistant no la ha guardado: ${no}",
-  "Home Assistant runs automations now: convert them and they start again, labelled gdahome.": "Ahora las automatizaciones las ejecuta Home Assistant: conviértelas y vuelven a funcionar, con la etiqueta gdahome.",
+  "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.": "Ahora las automatizaciones las ejecuta Home Assistant: conviértelas y vuelven a funcionar, con la etiqueta GdAHome.",
   "Home Assistant shuts down": "Home Assistant se apaga",
   "Home Assistant starts": "Home Assistant se inicia",
-  "Home Assistant's automations are read through the gdahome add-on: it is not here.": "Las automatizaciones de Home Assistant se leen con el complemento gdahome: aquí no está.",
+  "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Las automatizaciones de Home Assistant se leen con el complemento GdAHome: aquí no está.",
   "if something holds:": "si se cumple algo:",
   "in HA as": "en HA como",
   "in the config ›": "en la configuración ›",
@@ -6586,8 +6586,8 @@ export default Object.freeze({
   "on certain days": "algunos días",
   "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.": "en App Store y Google Play. Aquí en Home Assistant no se paga nada ni se introducen datos de pago.",
   "One automation from the trial version is idle": "Una automatización de la versión de prueba está parada",
-  "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.": "Solo se compra en las apps gdahome de App Store y Google Play. Las apps llegarán pronto.",
-  "only from the gdahome apps": "solo en las apps gdahome",
+  "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.": "Solo se compra en las apps GdAHome de App Store y Google Play. Las apps llegarán pronto.",
+  "only from the GdAHome apps": "solo en las apps GdAHome",
   "Open in HA ↗": "Abrir en HA ↗",
   "Open in Home Assistant ↗": "Abrir en Home Assistant ↗",
   "otherwise → ${altrimenti}": "si no → ${altrimenti}",
@@ -6612,7 +6612,7 @@ export default Object.freeze({
   "the home did not answer": "la casa no ha respondido",
   "The home that does it by itself: lights, climate, shutters and alerts that start when needed.": "La casa que lo hace sola: luces, clima, persianas y avisos que se activan cuando hace falta.",
   "The home's automations": "Las automatizaciones de casa",
-  "The list and saving go through the gdahome add-on: it is not here.": "La lista y el guardado pasan por el complemento gdahome: aquí no está.",
+  "The list and saving go through the GdAHome add-on: it is not here.": "La lista y el guardado pasan por el complemento GdAHome: aquí no está.",
   "the new automation": "la nueva automatización",
   "then → ${allora}": "entonces → ${allora}",
   "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.": "Esta automatización está en un archivo de Home Assistant: aquí la enciendes, la apagas y la ejecutas, y se cambia allí.",
@@ -6623,7 +6623,7 @@ export default Object.freeze({
   "waits a while": "espera un rato",
   "waits for something to happen": "espera a que pase algo",
   "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.": "Cuando las apps estén en las tiendas, activas Premium desde la app y aquí las Automatizaciones se desbloquean solas.",
-  "You'll find it in Settings → Automations, labelled gdahome.": "La encontrarás en Ajustes → Automatizaciones, con la etiqueta gdahome.",
+  "You'll find it in Settings → Automations, labelled GdAHome.": "La encontrarás en Ajustes → Automatizaciones, con la etiqueta GdAHome.",
   "You'll find it there and Home Assistant runs it.": "La encontrarás allí y la ejecuta Home Assistant.",
   "🚨 Removed": "🚨 Quitado",
   "🚨 Saved: the house knows when it goes off": "🚨 Guardado: la casa sabe cuándo salta",
@@ -6701,7 +6701,7 @@ export default Object.freeze({
   "On a touch or when someone arrives": "Al tocar o cuando llega alguien",
   "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
     "En el iPad no se puede leer la luz de la habitación: el día y la noche los dicen el sol o el horario.",
-  "Only in the gdahome app on Android.": "Solo en la app gdahome en Android.",
+  "Only in the GdAHome app on Android.": "Solo en la app GdAHome en Android.",
   "Orientation, theme, weather, rest, night, brightness, PIN":
     "Orientación, tema, tiempo, reposo, noche, brillo, PIN",
   "presence sensor": "sensor de presencia",
@@ -6717,8 +6717,8 @@ export default Object.freeze({
   "The clock is readable, but it does not light up the room":
     "El reloj se lee, pero no ilumina la habitación",
   "The iPad does not have one.": "El iPad no lo tiene.",
-  "The panel sets it, only in the gdahome app on the tablet":
-    "Lo controla el panel, solo en la app gdahome en la tableta",
+  "The panel sets it, only in the GdAHome app on the tablet":
+    "Lo controla el panel, solo en la app GdAHome en la tableta",
   "This tablet does not have one.": "Esta tableta no lo tiene.",
   "This tablet has no light sensor: the home's sun applies":
     "Esta tableta no tiene sensor de luz: vale el sol de casa",
@@ -6726,8 +6726,8 @@ export default Object.freeze({
   "Time with nobody nearby and no touches": "Tiempo sin nadie cerca y sin toques",
   "When someone is nearby": "Cuando alguien está cerca",
   "Who is nearby · one source is enough": "Quién está cerca · basta una fuente",
-  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
-    "Con el sensor de luz de la tableta, solo en la app gdahome en Android. Sin él, vale el sol de casa",
+  "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies":
+    "Con el sensor de luz de la tableta, solo en la app GdAHome en Android. Sin él, vale el sol de casa",
   "With this tablet's light sensor: it is night when the room is dark":
     "Con el sensor de luz de esta tableta: es de noche cuando la habitación está a oscuras",
 });

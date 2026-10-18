@@ -81,8 +81,8 @@ private fun Radice(telefono: IlTelefono, vetrina: String = "") {
         Box(Modifier.fillMaxSize()) {
             val foto = telefono.foto
             when {
-                foto == null -> Spiegazione("Apri gdahome", "Apri gdahome sul telefono una volta: da lì in poi la casa la trovi qui.")
-                !foto.premium -> Spiegazione("gdahome Premium", "La casa al polso è compresa in gdahome Premium. Si attiva dall'app sul telefono.")
+                foto == null -> Spiegazione("Apri GdAHome", "Apri GdAHome sul telefono una volta: da lì in poi la casa la trovi qui.")
+                !foto.premium -> Spiegazione("GdAHome Premium", "La casa al polso è compresa in GdAHome Premium. Si attiva dall'app sul telefono.")
                 else -> SwipeDismissableNavHost(navController = nav, startDestination = "casa") {
                     composable("casa") { LaCasa(foto, telefono, nav) }
                     composable("navigatore") { IlNavigatore(foto.guida, telefono) }
@@ -241,7 +241,7 @@ private fun Azioni(foto: LaFoto, telefono: IlTelefono) {
              * dice prima. */
             Tasto(
                 a.nome,
-                sotto = if (a.subito) null else "Parte quando apri gdahome",
+                sotto = if (a.subito) null else "Parte quando apri GdAHome",
                 segno = "⚡",
                 attivo = !telefono.inCorso,
             ) { telefono.premi(a.id) }

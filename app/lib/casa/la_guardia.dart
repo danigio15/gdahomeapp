@@ -138,7 +138,7 @@ class LaGuardiaDelTelefono implements LaGuardia {
 /// dice niente a nessuno, e chi lo legge non sa se sta per aprire l'app o per
 /// cancellare una casa.
 String perche(PrimaDi? quale) => switch (quale) {
-  null => inLingua(it: 'Per aprire gdahome', en: 'To open gdahome'),
+  null => inLingua(it: 'Per aprire GdAHome', en: 'To open GdAHome'),
   PrimaDi.ilCruscotto => inLingua(
     it: 'Per aprire la gestione degli impianti',
     en: 'To open the installer management page',

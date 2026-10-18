@@ -1176,7 +1176,7 @@ export class Notifiche {
         this.registro.attenzione?.(`una notifica non si scrive: ${errore?.message || errore}`);
       }
     }
-    const parole = evento.parole?.[lingua] ?? evento.parole?.it ?? { titolo: "gdahome", testo: "" };
+    const parole = evento.parole?.[lingua] ?? evento.parole?.it ?? { titolo: "GdAHome", testo: "" };
     return { titolo: parole.titolo, testo: parole.testo, scheda: null };
   }
 
@@ -1448,7 +1448,7 @@ export class Notifiche {
       if (detto.type === LA_GIORNATA) {
         if (!utente) return no("unauthorized", "la giornata della casa si vede da un utente");
         if (!this.premium)
-          return no("premium-richiesto", "«La tua giornata» e' di gdahome Premium");
+          return no("premium-richiesto", "«La tua giornata» e' di GdAHome Premium");
         return si(await this.giornataDettagliata());
       }
       switch (detto.type) {
@@ -1514,7 +1514,7 @@ export class Notifiche {
             return no("invalid_format", "di questa notifica non c'e' un esempio");
           /* Il riepilogo della sera, in Base, non c'e' nemmeno di prova. */
           if (tipo === "riepilogo" && !regola && !this.premium)
-            return no("premium-richiesto", "il riepilogo della sera e' di gdahome Premium");
+            return no("premium-richiesto", "il riepilogo della sera e' di GdAHome Premium");
           const prova = regola ? this._provaDi(regola) : esempio || this._provaQualunque();
           if (esempio) {
             /* Lo stile e' quello che la voce avra' davvero. */

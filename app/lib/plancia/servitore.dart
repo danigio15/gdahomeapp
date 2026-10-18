@@ -999,11 +999,11 @@ class Servitore {
                       'In questa casa le plance sono riservate ad altri '
                       'utenti. Chiedi a chi amministra la casa di abilitare '
                       'la tua utenza: in Home Assistant, nella pagina di '
-                      'gdahome, ogni plancia ha «Chi la vede».',
+                      'GdAHome, ogni plancia ha «Chi la vede».',
                   en:
                       'In this home the dashboards are reserved for other '
                       'users. Ask whoever administers the home to enable your '
-                      'account: in Home Assistant, on the gdahome page, every '
+                      'account: in Home Assistant, on the GdAHome page, every '
                       'dashboard has a “Who sees it” list.',
                 )
               : errore.spiegazione,

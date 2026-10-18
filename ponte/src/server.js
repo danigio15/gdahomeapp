@@ -301,7 +301,7 @@ export function costruisciLaPortaDellApp({
      * normalizza e non esce dalla radice. */
     if (metodo === "GET" && (via === "/app" || via.startsWith("/app/"))) {
       if (!cartellaDellApp || !existsSync(cartellaDellApp)) {
-        male(risposta, 404, "questo add-on non si porta dietro gdahome da browser");
+        male(risposta, 404, "questo add-on non si porta dietro GdAHome da browser");
         return;
       }
       /* La barra in fondo: senza, il browser cerca i file dell'app un piano
@@ -530,7 +530,7 @@ export function costruisciLaConsole({
      * bianca. */
     if (via === "/app" || via.startsWith("/app/")) {
       if (!cartellaDellApp || !existsSync(cartellaDellApp)) {
-        male(risposta, 404, "questo add-on non si porta dietro gdahome da browser");
+        male(risposta, 404, "questo add-on non si porta dietro GdAHome da browser");
         return;
       }
       /* La barra in fondo non e' un dettaglio: senza, il browser crede che la
@@ -707,7 +707,7 @@ function laPortaChiusa(risposta, quale, perche = "utenti") {
     perche === "admin"
       ? "In questa casa questa plancia la vedono solo gli amministratori."
       : "In questa casa questa plancia la vedono solo alcuni utenti."
-  } Chi amministra la casa puo' cambiarlo dalla pagina di <b>gdahome</b>, alla
+  } Chi amministra la casa puo' cambiarlo dalla pagina di <b>GdAHome</b>, alla
   voce &laquo;Le plance&raquo;.</p>
 </main></body></html>`;
   const byte = Buffer.from(pagina, "utf8");
@@ -726,7 +726,7 @@ function soloChiAmministra(risposta) {
   const pagina = `<!doctype html>
 <html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>gdahome</title>
+<title>GdAHome</title>
 <style>
   :root { color-scheme: light dark; }
   body { margin: 0; min-height: 100vh; display: grid; place-items: center;

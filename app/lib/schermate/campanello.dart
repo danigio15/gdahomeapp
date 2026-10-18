@@ -350,7 +350,7 @@ class _StatoDelCampanello extends State<SchermataDelCampanello> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'gdahome · ${inLingua(it: 'Campanello', en: 'Doorbell')}',
+                      'GdAHome · ${inLingua(it: 'Campanello', en: 'Doorbell')}',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 16,

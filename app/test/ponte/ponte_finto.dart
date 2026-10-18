@@ -608,7 +608,7 @@ class PonteFinto {
   final List<Map<String, dynamic>> plance = [
     {
       'profilo': 'primary',
-      'titolo': 'gdahome',
+      'titolo': 'GdAHome',
       'istanza': 'gdahome',
       'primaria': true,
       'creata_il': 0,
@@ -1213,7 +1213,7 @@ class PonteFinto {
     'base': base,
     'impronta': base.split('/').last,
     'varianti': ['dashboard-en.html', 'dashboard.html'],
-    'titolo': 'gdahome',
+    'titolo': 'GdAHome',
     'istanza': 'gdahome',
     'profilo': 'primary',
     'primario': true,

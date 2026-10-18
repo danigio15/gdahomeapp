@@ -57,7 +57,7 @@ import 'scheda.dart';
 /// Quello che si legge quando la busta non si apre: la stessa frase che vede
 /// Apple, e che non dice niente a nessuno.
 String get fraseDiRiserva =>
-    inLingua(it: 'gdahome: nuova notifica', en: 'gdahome: new notification');
+    inLingua(it: 'GdAHome: nuova notifica', en: 'GdAHome: new notification');
 
 final FlutterLocalNotificationsPlugin _locali =
     FlutterLocalNotificationsPlugin();

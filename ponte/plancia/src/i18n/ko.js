@@ -43,8 +43,8 @@ export default Object.freeze({
   "Pick a trip on the left, or make a new one.": "왼쪽에서 여정을 고르거나 새로 만드세요.",
   "Pick the destination and time: I will tell you when to leave.":
     "목적지와 시간을 고르면 언제 출발할지 알려드립니다.",
-  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page.":
-    "여기에서 여정을 계획하고 휴대폰, CarPlay, Android Auto에서 확인하세요. 출발 알림과 미리 켜지는 차량 공조도 포함됩니다. gdahome 앱의 Premium 페이지에서 잠금 해제하세요.",
+  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
+    "여기에서 여정을 계획하고 휴대폰, CarPlay, Android Auto에서 확인하세요. 출발 알림과 미리 켜지는 차량 공조도 포함됩니다. GdAHome 앱의 Premium 페이지에서 잠금 해제하세요.",
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "여기에서 여정을 계획하세요: gdanav의 휴대폰, CarPlay, Android Auto에서 볼 수 있습니다.",
   "Planned trips": "계획된 여정",
@@ -4804,8 +4804,8 @@ export default Object.freeze({
   "Kitchen window": "주방 창문",
   "New opening": "새 개구부",
   "Save opening": "개구부 저장",
-  "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.":
-    "페이지와 타일에 나오는 그림입니다. gdahome 자체 그림이라 어느 휴대폰에서나 같습니다.",
+  "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.":
+    "페이지와 타일에 나오는 그림입니다. GdAHome 자체 그림이라 어느 휴대폰에서나 같습니다.",
   "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.":
     "집의 개구부 — 문, 창문, 현관문, 차고문. 개구부마다 한 줄씩 있고, 접점 엔티티와 원하는 이름과 그림을 가집니다. 개구부 페이지는 이것들을 초록은 닫힘, 빨강은 열림, 맨 위에 지금 몇 개가 열려 있는지 순서로 보여 줍니다.",
   "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.":
@@ -5480,8 +5480,8 @@ export default Object.freeze({
   "Warn about open windows": "열린 창문 경고",
   "Who is home": "집에 있는 사람",
   windy: "바람",
-  "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
-    "gdahome Base에서는 이 대시보드가 일반 대시보드로 남습니다. Premium에서는 벽걸이 태블릿용 패널이 됩니다: 방, 장면 또는 현관, 가로 및 세로. Premium은 gdahome 앱에서 켭니다.",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.":
+    "GdAHome Base에서는 이 대시보드가 일반 대시보드로 남습니다. Premium에서는 벽걸이 태블릿용 패널이 됩니다: 방, 장면 또는 현관, 가로 및 세로. Premium은 GdAHome 앱에서 켭니다.",
   "Wrong code": "잘못된 코드",
   "Yes, go": "예, 진행",
   "All lights": "모든 조명",
@@ -5888,8 +5888,8 @@ export default Object.freeze({
   "What comes out of the battery": "배터리에서 나가는 전력",
   "What goes into the battery": "배터리로 들어가는 전력",
   "An automation handles it": "자동화가 관리함",
-  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
-    "읽을 수 없음: gdahome 애드온이 실행 중이고 관리자여야 합니다.",
+  "Can't read it: the GdAHome add-on must be running, and you must be an administrator.":
+    "읽을 수 없음: GdAHome 애드온이 실행 중이고 관리자여야 합니다.",
   "Fine tonight": "오늘 밤은 괜찮음",
   "Inner door": "실내 문",
   "Leave it": "그대로 두기",
@@ -6505,10 +6505,10 @@ export default Object.freeze({
   "fires the ${evento} event": "${evento} 이벤트 발생",
   "Home Assistant → Settings → Automations": "Home Assistant → 설정 → 자동화",
   "Home Assistant did not save it: ${no}": "Home Assistant가 저장하지 않았습니다: ${no}",
-  "Home Assistant runs automations now: convert them and they start again, labelled gdahome.": "이제 Home Assistant가 자동화를 실행합니다: 변환하면 gdahome 라벨과 함께 다시 작동합니다.",
+  "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.": "이제 Home Assistant가 자동화를 실행합니다: 변환하면 GdAHome 라벨과 함께 다시 작동합니다.",
   "Home Assistant shuts down": "Home Assistant 종료",
   "Home Assistant starts": "Home Assistant 시작",
-  "Home Assistant's automations are read through the gdahome add-on: it is not here.": "Home Assistant의 자동화는 gdahome 애드온으로 읽습니다: 여기에는 없습니다.",
+  "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant의 자동화는 GdAHome 애드온으로 읽습니다: 여기에는 없습니다.",
   "if something holds:": "무언가가 참이면:",
   "in HA as": "HA에서의 이름",
   "in the config ›": "설정에서 ›",
@@ -6530,8 +6530,8 @@ export default Object.freeze({
   "on certain days": "특정 요일에",
   "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.": "App Store와 Google Play에서. 여기 Home Assistant에서는 아무것도 결제하지 않으며 결제 정보도 입력하지 않습니다.",
   "One automation from the trial version is idle": "평가판의 자동화 1개가 멈춰 있음",
-  "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.": "App Store와 Google Play의 gdahome 앱에서만 구매할 수 있습니다. 앱은 곧 출시됩니다.",
-  "only from the gdahome apps": "gdahome 앱에서만",
+  "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.": "App Store와 Google Play의 GdAHome 앱에서만 구매할 수 있습니다. 앱은 곧 출시됩니다.",
+  "only from the GdAHome apps": "GdAHome 앱에서만",
   "Open in HA ↗": "HA에서 열기 ↗",
   "Open in Home Assistant ↗": "Home Assistant에서 열기 ↗",
   "otherwise → ${altrimenti}": "그렇지 않으면 → ${altrimenti}",
@@ -6556,7 +6556,7 @@ export default Object.freeze({
   "the home did not answer": "집이 응답하지 않았습니다",
   "The home that does it by itself: lights, climate, shutters and alerts that start when needed.": "스스로 하는 집: 필요할 때 시작되는 조명, 냉난방, 셔터, 알림.",
   "The home's automations": "집의 자동화",
-  "The list and saving go through the gdahome add-on: it is not here.": "목록과 저장은 gdahome 애드온을 거칩니다: 여기에는 없습니다.",
+  "The list and saving go through the GdAHome add-on: it is not here.": "목록과 저장은 GdAHome 애드온을 거칩니다: 여기에는 없습니다.",
   "the new automation": "새 자동화",
   "then → ${allora}": "그다음 → ${allora}",
   "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.": "이 자동화는 Home Assistant 파일에 있습니다: 여기서는 켜고, 끄고, 실행하며, 변경은 그곳에서 합니다.",
@@ -6567,7 +6567,7 @@ export default Object.freeze({
   "waits a while": "잠시 기다림",
   "waits for something to happen": "무언가 일어나기를 기다림",
   "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.": "앱이 스토어에 나오면 앱에서 Premium을 켜고, 여기 자동화는 자동으로 잠금 해제됩니다.",
-  "You'll find it in Settings → Automations, labelled gdahome.": "설정 → 자동화에서 gdahome 라벨과 함께 찾을 수 있습니다.",
+  "You'll find it in Settings → Automations, labelled GdAHome.": "설정 → 자동화에서 GdAHome 라벨과 함께 찾을 수 있습니다.",
   "You'll find it there and Home Assistant runs it.": "그곳에서 찾을 수 있으며 Home Assistant가 실행합니다.",
   "🚨 Removed": "🚨 제거됨",
   "🚨 Saved: the house knows when it goes off": "🚨 저장됨: 집이 경보 작동을 알게 됩니다",
@@ -6642,7 +6642,7 @@ export default Object.freeze({
   "On a touch or when someone arrives": "터치하거나 누군가 다가올 때",
   "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
     "iPad에서는 방의 밝기를 읽을 수 없습니다: 낮과 밤은 해나 시간으로 정합니다.",
-  "Only in the gdahome app on Android.": "Android의 gdahome 앱에서만.",
+  "Only in the GdAHome app on Android.": "Android의 GdAHome 앱에서만.",
   "Orientation, theme, weather, rest, night, brightness, PIN": "방향, 테마, 날씨, 대기, 밤, 밝기, PIN",
   "presence sensor": "재실 센서",
   "Preview of a day": "하루 미리보기",
@@ -6656,15 +6656,15 @@ export default Object.freeze({
   "Tablet proximity sensor": "태블릿 근접 센서",
   "The clock is readable, but it does not light up the room": "시계는 읽히지만 방을 밝히지는 않습니다",
   "The iPad does not have one.": "iPad에는 없습니다.",
-  "The panel sets it, only in the gdahome app on the tablet": "패널이 조절합니다, 태블릿의 gdahome 앱에서만",
+  "The panel sets it, only in the GdAHome app on the tablet": "패널이 조절합니다, 태블릿의 GdAHome 앱에서만",
   "This tablet does not have one.": "이 태블릿에는 없습니다.",
   "This tablet has no light sensor: the home's sun applies": "이 태블릿에는 조도 센서가 없습니다: 집의 해를 사용합니다",
   "This tablet has one.": "이 태블릿에는 있습니다.",
   "Time with nobody nearby and no touches": "가까이 아무도 없고 터치도 없는 시간",
   "When someone is nearby": "누군가 가까이 있을 때",
   "Who is nearby · one source is enough": "누가 가까이 있나 · 하나의 소스로 충분",
-  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
-    "태블릿의 조도 센서로, Android의 gdahome 앱에서만. 없으면 집의 해를 사용합니다",
+  "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies":
+    "태블릿의 조도 센서로, Android의 GdAHome 앱에서만. 없으면 집의 해를 사용합니다",
   "With this tablet's light sensor: it is night when the room is dark":
     "이 태블릿의 조도 센서로: 방이 어두우면 밤입니다",
 });

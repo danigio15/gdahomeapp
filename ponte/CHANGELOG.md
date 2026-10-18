@@ -3,9 +3,9 @@
 Questo è quello che Home Assistant fa vedere quando dice «Aggiornamento
 disponibile»: prima di premere si legge cosa arriva.
 
-**Dalla 1.5.0 il numero è di gdahome.** Fino alla 1.4.32.16 era quello della
+**Dalla 1.5.0 il numero è di GdAHome.** Fino alla 1.4.32.16 era quello della
 plancia che l'add-on ha dentro, e il quarto numero — `1.4.32.2` — erano le
-correzioni dell'add-on fra due plance. Ma gdahome è più della plancia che
+correzioni dell'add-on fra due plance. Ma GdAHome è più della plancia che
 serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
@@ -18,7 +18,7 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
   fasce, batteria di casa, clima per stanza, riscaldamento, solare termico,
   auto elettrica con ricarica e scarica, acqua e gas, la giornata in casa,
   confronti e domani. Ogni parte c'è solo se in casa c'è quello che serve.
-- **Notifiche e Premium:** con gdahome Base arrivano le notifiche semplici;
+- **Notifiche e Premium:** con GdAHome Base arrivano le notifiche semplici;
   elaborate, foto delle telecamere e riepilogo della sera sono Premium. Gli
   avvisi di sicurezza arrivano sempre, e in Base una volta al giorno
   «🔋 Batterie da cambiare».
@@ -30,6 +30,9 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
   col sensore di presenza di casa o il sensore di prossimità del tablet.
 - **Batteria Huawei LUNA2000:** riconosciuta da sola, e la scheda «Batteria di
   accumulo» dice che è facoltativa.
+- **Il nome si scrive GdAHome:** così lo leggi nell'app, nella plancia, nelle
+  notifiche e in Home Assistant. Non cambia niente da fare: la casa, gli
+  abbinamenti e le impostazioni restano quelli di prima.
 
 ## 1.15.0
 

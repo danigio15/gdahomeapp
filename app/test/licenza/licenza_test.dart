@@ -232,10 +232,10 @@ void main() {
       expect(licenza.premiumQui.value, isTrue);
     });
 
-    test('la voce «gdahome Premium» c\'è solo quando si vende', () {
+    test('la voce «GdAHome Premium» c\'è solo quando si vende', () {
       expect(vociDellaBarra(), isNot(contains(Sezione.premium)));
       expect(vociDellaBarra(conPremium: true), contains(Sezione.premium));
-      expect(Sezione.premium.titolo, 'gdahome Premium');
+      expect(Sezione.premium.titolo, 'GdAHome Premium');
     });
 
     test('il codice regalo si scrive come si vuole', () {
@@ -856,7 +856,7 @@ void main() {
             isA<LicenzaRifiutata>().having(
               (no) => no.spiegazione,
               'spiegazione',
-              contains('aggiorna gdahome'),
+              contains('aggiorna GdAHome'),
             ),
           ),
         );

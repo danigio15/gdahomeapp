@@ -249,7 +249,7 @@ void main() {
     (tester) async {
       await unaCasa(tester);
       ponte.aggiornamenti.add(
-        _voce('update.gdahome_update', 'gdahome', a: '0.21.0', stacca: true),
+        _voce('update.gdahome_update', 'GdAHome', a: '0.21.0', stacca: true),
       );
       await apri(tester);
 
@@ -259,7 +259,7 @@ void main() {
 
       await tester.tap(find.widgetWithText(FilledButton, 'Installa'));
       await tester.pumpAndSettle();
-      expect(find.text('Aggiornare gdahome?'), findsOneWidget);
+      expect(find.text('Aggiornare GdAHome?'), findsOneWidget);
       expect(
         find.textContaining('l\'app resta senza collegamento'),
         findsOneWidget,
@@ -309,7 +309,7 @@ void main() {
       await apri(tester);
 
       expect(
-        find.textContaining('gdahome in casa è più vecchio dell\'app'),
+        find.textContaining('GdAHome in casa è più vecchio dell\'app'),
         findsOneWidget,
       );
     },

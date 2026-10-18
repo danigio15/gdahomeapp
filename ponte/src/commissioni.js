@@ -862,7 +862,7 @@ export class Commissioni {
        * da' nemmeno da leggere o da scrivere: sarebbe la stessa plancia, per
        * un'altra porta. */
       if (soloLaPrima && (detto?.profile ?? PROFILO_PRINCIPALE) !== PROFILO_PRINCIPALE) {
-        return no(id, "premium-richiesto", "con gdahome Base l'app vede la plancia principale");
+        return no(id, "premium-richiesto", "con GdAHome Base l'app vede la plancia principale");
       }
       /* E la configurazione di una plancia riservata a un altro non la legge
        * chi non la vede. L'elenco e l'apertura la nascondevano gia'; questa
@@ -1320,7 +1320,7 @@ export class Commissioni {
      * e glielo si dice col codice del contratto — l'app porta alla pagina
      * Premium invece di aprire in silenzio un'altra plancia. */
     if (soloLaPrima && voluto && voluto !== PROFILO_PRINCIPALE) {
-      return no(id, "premium-richiesto", "con gdahome Base l'app vede la plancia principale");
+      return no(id, "premium-richiesto", "con GdAHome Base l'app vede la plancia principale");
     }
     const sue = this._lePlanceSue(chiChiede, amministra, soloLaPrima);
     let quale = this.plance ? (voluto ? this.plance.quale(voluto) : this.plance.prima) : null;

@@ -182,10 +182,10 @@ class _Mirino extends StatelessWidget {
               child: Text(
                 inLingua(
                   it:
-                      'Il QR code è presente nella scheda «gdahome», dentro '
+                      'Il QR code è presente nella scheda «GdAHome», dentro '
                       'Home Assistant.',
                   en:
-                      'The QR code is on the “gdahome” page, inside Home '
+                      'The QR code is on the “GdAHome” page, inside Home '
                       'Assistant.',
                 ),
                 textAlign: TextAlign.center,
@@ -233,12 +233,12 @@ class _Guaio extends StatelessWidget {
                 negato
                     ? inLingua(
                         it:
-                            'gdahome non ha il permesso di usare la '
+                            'GdAHome non ha il permesso di usare la '
                             'fotocamera. Puoi darglielo dalle impostazioni '
                             'del telefono, oppure tornare indietro e inserire '
                             'il codice a mano.',
                         en:
-                            'gdahome doesn\'t have permission to use the '
+                            'GdAHome doesn\'t have permission to use the '
                             'camera. You can grant it in the phone settings, '
                             'or go back and enter the code by hand.',
                       )

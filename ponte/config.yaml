@@ -28,7 +28,7 @@
 # perche' e' quello che fa e perche' e' uno dei tre pezzi (il ponte, il
 # centralino, l'app). «gdahome» e' il nome del prodotto, e va dove il prodotto
 # si vede.
-name: gdahome
+name: GdAHome
 # Il numero: **suo**, e non piu' quello della plancia con un quarto pezzo
 # attaccato.
 #
@@ -50,7 +50,7 @@ slug: gdahome
 # Senza virgolette il manifesto non si legge — e un manifesto che non si legge
 # vuol dire un add-on che nel negozio non compare, senza nessun errore da
 # nessuna parte. E' andata cosi' per un giorno intero.
-description: "La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono."
+description: "La plancia e l'app di GdAHome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono."
 url: https://github.com/danigio15/gdahomeapp/tree/main/ponte
 arch:
   - aarch64
@@ -72,7 +72,7 @@ ingress_port: 8099
 # impostazioni. Il nome dice cosa si apre, e l'ingranaggio e' il segno che in
 # Home Assistant vuol dire «qui si configura».
 panel_icon: mdi:cog
-panel_title: Configura gdahome
+panel_title: Configura GdAHome
 # L'ingress si apre anche a chi non amministra, e deve.
 #
 # Le plance — quella di sempre e quelle a muro — passano da qui: la Plancia
@@ -93,7 +93,7 @@ panel_admin: false
 ports:
   8098/tcp: 8098
 ports_description:
-  8098/tcp: L'app di gdahome bussa qui. In casa basta cosi'; da fuori serve farla arrivare fin qui.
+  8098/tcp: L'app di GdAHome bussa qui. In casa basta cosi'; da fuori serve farla arrivare fin qui.
 
 # Il ponte parla con Home Assistant per conto dell'app, e per farlo gli serve
 # il segno del Supervisor. Quel segno non esce mai da questo add-on: e'

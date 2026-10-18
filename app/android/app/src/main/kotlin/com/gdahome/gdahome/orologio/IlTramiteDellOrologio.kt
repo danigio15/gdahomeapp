@@ -186,7 +186,7 @@ object IlTramiteDellOrologio {
         }
         /* Uno schermo rimasto aperto al polso mentre Premium finiva: non parte
          * niente, come in auto. */
-        if (!LaLicenzaInAuto.premium(context)) return risposta(false, "Serve gdahome Premium")
+        if (!LaLicenzaInAuto.premium(context)) return risposta(false, "Serve GdAHome Premium")
         return when (cosa) {
             "comando" -> {
                 val id = messaggio.optString("id", "").trim()

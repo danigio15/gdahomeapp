@@ -188,7 +188,7 @@ class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'gdahome',
+      title: 'GdAHome',
       debugShowCheckedModeBanner: false,
       theme: temaChiaro(),
       darkTheme: temaScuro(),

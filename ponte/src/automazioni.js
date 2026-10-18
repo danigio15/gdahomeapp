@@ -366,7 +366,7 @@ export class Automazioni {
     const titolo =
       String(d.titolo ?? "")
         .trim()
-        .slice(0, 80) || "gdahome";
+        .slice(0, 80) || "GdAHome";
     const ora = this.adesso();
     this._avvisiDetti = this._avvisiDetti.filter((t) => ora - t < FINESTRA_DEGLI_AVVISI);
     if (this._avvisiDetti.length >= AVVISI_AL_MASSIMO) return false;
@@ -663,7 +663,7 @@ export class Automazioni {
     const config = await this._configDi(id, { forza: true });
     if (!config) return { errore: "not_found", perche: "Home Assistant non la da'" };
     const nuovo = nuovoIdHA(this.adesso());
-    const alias = `${String(config.alias || "").trim() || "gdahome"} (copia)`.slice(0, 100);
+    const alias = `${String(config.alias || "").trim() || "GdAHome"} (copia)`.slice(0, 100);
     await this._api("POST", `config/automation/config/${encodeURIComponent(nuovo)}`, {
       ...config,
       id: nuovo,
@@ -846,7 +846,7 @@ export class Automazioni {
       if (amministra !== true)
         return no(id, "unauthorized", "le automazioni le cambia chi amministra Home Assistant");
       if (!this.sbloccato)
-        return no(id, "premium-richiesto", "le automazioni sono di gdahome Premium");
+        return no(id, "premium-richiesto", "le automazioni sono di GdAHome Premium");
     }
     try {
       if (tipo === COMANDO_DELLE_PROPOSTE) return si(id, await this.proposte());
