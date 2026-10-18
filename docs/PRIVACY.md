@@ -1,8 +1,8 @@
-# Privacy di gdahome
+# Privacy di GdAHome
 
 Ultimo aggiornamento: 14 ottobre 2026.
 
-gdahome è l'app che apre la plancia di Home Assistant sul telefono. Questa
+GdAHome è l'app che apre la plancia di Home Assistant sul telefono. Questa
 pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di
 mezzo, dove stanno e chi li può leggere**. È la stessa cosa che il Play Store
 e l'App Store chiedono di dichiarare, e vale la pena leggerla anche senza
@@ -10,12 +10,12 @@ avere niente da dichiarare a nessuno.
 
 ## La regola che viene prima di tutte
 
-**I dati della tua casa restano in casa tua.** gdahome non ha nessun server
+**I dati della tua casa restano in casa tua.** GdAHome non ha nessun server
 che li raccolga, non ha un account da fare, e non c'è nessun posto dove
 finiscano per essere guardati. Le luci, le temperature, le telecamere, le
 persone: quelle stanno nel tuo Home Assistant, e l'app le chiede a lui.
 
-Chi sviluppa gdahome non vede la tua casa. Non è una promessa di buona
+Chi sviluppa GdAHome non vede la tua casa. Non è una promessa di buona
 volontà: non c'è proprio il posto dove guardarla.
 
 ## Cosa c'è sul telefono
@@ -39,7 +39,7 @@ Due cose vanno dette con precisione:
   instrada e non può leggere niente di quello che gira;
 - il centralino tiene in piedi il collegamento e non conserva il contenuto.
 
-Il centralino di gdahome è `tramite.gdahome.org`. Chi vuole, se ne accende uno
+Il centralino di GdAHome è `tramite.gdahome.org`. Chi vuole, se ne accende uno
 suo — è nel codice, ed è gratis.
 
 ## Le segnalazioni e la chat di assistenza
@@ -53,19 +53,19 @@ quando la scrivi:
 - quello che scrivi nella chat di assistenza.
 
 **Le segnalazioni sono pubbliche.** Diventano pagine su GitHub, nella
-repository di gdahome: chiunque può leggerle, comprese le foto, i video e le
+repository di GdAHome: chiunque può leggerle, comprese le foto, i video e le
 righe su come sta l'app. Per questo non scriverci password, indirizzi o altri
 dati personali, e allega solo foto e video che non ti dispiace far vedere.
 
 **La chat di assistenza non è pubblica.** Non passa da GitHub: la legge solo
-chi mantiene gdahome, per risponderti.
+chi mantiene GdAHome, per risponderti.
 
 Niente di tutto questo viene usato per profilare o per fare pubblicità. Se non
 scrivi, non parte niente.
 
 ## Il modulo dei contatti sul sito
 
-Su gdahome.org c'è un modulo per scrivere a chi mantiene gdahome. Quello che ci
+Su gdahome.org c'è un modulo per scrivere a chi mantiene GdAHome. Quello che ci
 scrivi — il nome, l'indirizzo email e il messaggio — parte come una mail verso
 domotica@crvgroup.it, e serve a una cosa sola: risponderti. Sulla macchina
 che lo spedisce non resta niente del messaggio; resta, per un'ora e solo in
@@ -132,7 +132,7 @@ installatore), quando scade, se è nella prova gratuita, e l'identificativo
 dell'acquisto (il codice d'acquisto di Google Play o l'identificativo della
 transazione originale di Apple), che gli serve per chiedere a Google o ad
 Apple se l'abbonamento si è rinnovato. Il pagamento lo gestiscono Google e
-Apple: a gdahome non arrivano né il nome né i dati della carta.
+Apple: a GdAHome non arrivano né il nome né i dati della carta.
 
 gdanav da sola usa per i codici regalo un identificativo del telefono (`tel_…`)
 fatto a caso sul telefono, che non dice chi sei.
@@ -157,7 +157,7 @@ le loro foto e i video, si cancellano chiedendolo dalla chat di assistenza.
 
 ## Chi risponde
 
-gdahome è mantenuta da danigio15 — <https://github.com/danigio15/gdahomeapp>.
+GdAHome è mantenuta da danigio15 — <https://github.com/danigio15/gdahomeapp>.
 Per qualunque cosa su questa pagina, si apre una segnalazione dall'app o una
 issue sulla repository. Per una cosa che non vuoi rendere pubblica, scrivi
 nella chat di assistenza o ad domotica@crvgroup.it.

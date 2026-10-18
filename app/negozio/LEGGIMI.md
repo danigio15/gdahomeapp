@@ -123,7 +123,7 @@ Quindi l'ordine è questo, e costa dieci minuti di macchina:
 Chi rivede l'app per Google la prova da lontano, come chi la rivede per Apple,
 e lì non compra niente. Entra col codice della **casa di prova** (la scheda
 «Casa di prova» della console dell'add-on), e la casa di prova è **Premium**,
-regalata dalla Gestione gdahome: così vede tutto. È lo stesso codice delle note
+regalata dalla Gestione GdAHome: così vede tutto. È lo stesso codice delle note
 per Apple (`app-store.md`): ne esiste uno solo alla volta, dura 7 giorni, e
 entrano quanti telefoni servono (erano cinque: fra Apple, Google e le prove di
 casa il sesto è rimasto fuori, e Google ha rifiutato l'app per «credenziali che
@@ -137,9 +137,9 @@ content → Actioned → **Sign in details** → Manage: nome «Demo home», nom
 utente e password vuoti (o «Not needed (pairing code)» se li vuole per forza),
 e nelle altre informazioni, col codice al posto delle X:
 
-> gdahome needs a paired Home Assistant home. Open the app, tap "Enter the
+> GdAHome needs a paired Home Assistant home. Open the app, tap "Enter the
 > code" and type XXXX-XXXX-XXXX-XXXX (valid for 7 days, on several devices).
-> You enter our demo home as a non-admin user. The demo home has gdahome
+> You enter our demo home as a non-admin user. The demo home has GdAHome
 > Premium, so every feature is unlocked, also away from the home's Wi-Fi.
-> Premium is an auto-renewable subscription (☰ → gdahome Premium); buying it
+> Premium is an auto-renewable subscription (☰ → GdAHome Premium); buying it
 > is not needed to review the app.

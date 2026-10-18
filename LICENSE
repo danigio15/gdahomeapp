@@ -1,4 +1,4 @@
-Licenza d'uso di gdahome
+Licenza d'uso di GdAHome
 Versione 2.0 — in vigore dal 16 ottobre 2026
 
 Copyright (c) 2026 Giovanni d'Aniello. Tutti i diritti riservati.
@@ -12,13 +12,13 @@ licenza open source e non è approvata dalla Open Source Initiative. Non si
 concede nessun diritto oltre a quelli scritti qui, nemmeno in modo implicito.
 
 Il testo che vale è quello italiano; la traduzione inglese, in fondo, serve a
-chi non legge l'italiano. Questa versione sostituisce la gdahome License 1.0
+chi non legge l'italiano. Questa versione sostituisce la GdAHome License 1.0
 dal 16 ottobre 2026.
 
 1. DEFINIZIONI
 
    «Software»: il contenuto della repository
-   https://github.com/danigio15/gdahomeapp — l'app gdahome, l'add-on «ponte»
+   https://github.com/danigio15/gdahomeapp — l'app GdAHome, l'add-on «ponte»
    per Home Assistant con la sua plancia, il «centralino», il «quadro» e il
    sito — con il codice sorgente, le risorse, la documentazione e i pacchetti
    costruiti da essi, compresi quelli distribuiti dai negozi di applicazioni.
@@ -91,7 +91,7 @@ dal 16 ottobre 2026.
        integrazione o assistenza, salvo quanto la Sezione 2(d) permette agli
        Installatori autorizzati;
 
-   (g) usare i nomi «gdahome», «gdanav», «GDA», «ponte», «centralino» e
+   (g) usare i nomi «GdAHome», «gdanav», «GDA», «ponte», «centralino» e
        «quadro» nel senso in cui sono usati qui, il logo o i marchi del
        Software, o nomi che si possano confondere con questi, per indicare un
        derivato, un prodotto concorrente o un servizio.
@@ -139,7 +139,7 @@ dal 16 ottobre 2026.
 
 6. FUNZIONI A PAGAMENTO
 
-   Alcune funzioni del Software (gdahome Premium) sono a pagamento, e le vende
+   Alcune funzioni del Software (GdAHome Premium) sono a pagamento, e le vende
    il Distributore: dall'app, attraverso l'App Store di Apple e Google Play e
    alle condizioni di quei negozi, oppure con codici regalo e con i pacchetti
    di licenze per gli Installatori autorizzati. Un diritto a una funzione a
@@ -208,7 +208,7 @@ dal 16 ottobre 2026.
 
 -------------------------------------------------------------------------------
 
-gdahome License — English translation
+GdAHome License — English translation
 (for reference only: the Italian text above prevails)
 
 Version 2.0 — in force from 16 October 2026
@@ -222,12 +222,12 @@ This is a proprietary license. The source code is public so that anyone can
 read it and check what it does ("source available"), but this is NOT an open
 source license and it is not approved by the Open Source Initiative. No right
 beyond those written here is granted, not even by implication. This version
-replaces the gdahome License 1.0 from 16 October 2026.
+replaces the GdAHome License 1.0 from 16 October 2026.
 
 1. DEFINITIONS
 
    "Software": the contents of the repository
-   https://github.com/danigio15/gdahomeapp — the gdahome app, the "ponte" Home
+   https://github.com/danigio15/gdahomeapp — the GdAHome app, the "ponte" Home
    Assistant add-on with its dashboard, the "centralino", the "quadro" and the
    website — with their source code, assets, documentation and the packages
    built from them, including those distributed through application stores.
@@ -298,7 +298,7 @@ replaces the gdahome License 1.0 from 16 October 2026.
        installation, integration or support offering, except as Section 2(d)
        permits Authorized installers;
 
-   (g) use the names "gdahome", "gdanav", "GDA", "ponte", "centralino" and
+   (g) use the names "GdAHome", "gdanav", "GDA", "ponte", "centralino" and
        "quadro" as used here, the Software's logo or marks, or any confusingly
        similar name, to identify a derivative, a competing product or a
        service.
@@ -346,7 +346,7 @@ replaces the gdahome License 1.0 from 16 October 2026.
 
 6. PAID FEATURES
 
-   Some features of the Software (gdahome Premium) are paid, and they are sold
+   Some features of the Software (GdAHome Premium) are paid, and they are sold
    by the Distributor: from the app, through Apple's App Store and Google
    Play and under those stores' terms, or with gift codes and with the
    license packages for Authorized installers. An entitlement to a paid

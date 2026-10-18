@@ -26,7 +26,7 @@ un'altra no, e non se ne accorgerebbe nessuno finché non chiama un cliente.
 
 ## Due passi, con la stessa chiave
 
-Premium si vende nell'app gdahome, sull'iPhone e su Android, e vale per tutta
+Premium si vende nell'app GdAHome, sull'iPhone e su Android, e vale per tutta
 la casa: anche sugli altri telefoni abbinati e nel browser. Si accende in due
 passi.
 
@@ -79,7 +79,7 @@ l'etichetta `tramite` e si aggiorna da solo entro dieci minuti.
 
 La pubblica va nell'add-on e nell'app; il centralino resta senza, e il fuori
 casa aperto a tutti. Lo strumento rifiuta la pubblica di prova dei documenti.
-gdanav non si tocca: dentro gdahome segue la casa.
+gdanav non si tocca: dentro GdAHome segue la casa.
 
 Cosa fa l'app, e perché:
 
@@ -95,7 +95,7 @@ Cosa fa l'app, e perché:
 - **Niente «Ho un codice regalo» sull'iPhone.** Per l'App Store aprire una
   funzione con un codice nostro è una «chiave di licenza» (regola 3.1.1), e
   l'app torna indietro dalla revisione. I codici si riscattano dall'app per
-  Android, dalla scheda gdahome in Home Assistant o dal browser, e Premium
+  Android, dalla scheda GdAHome in Home Assistant o dal browser, e Premium
   arriva anche sull'iPhone: è della casa.
 - **Chi compra fuori casa entra subito.** Con la casa Base le strade di fuori
   sono chiuse, e la ricevuta aspetterebbe il Wi-Fi di casa. Invece la porta
@@ -147,7 +147,7 @@ alla Play Console, se ne crea uno nuovo solo per il quadro (IAM → Account di
 servizio → Crea), e gli si aggiunge una chiave JSON (Chiavi → Aggiungi chiave
 → JSON): si scarica un file. Nella Play Console lo si invita fra gli utenti
 (Utenti e autorizzazioni), con i permessi sui dati finanziari e su ordini e
-abbonamenti dell'app gdahome. Google può metterci qualche ora ad accettarlo.
+abbonamenti dell'app GdAHome. Google può metterci qualche ora ad accettarlo.
 
 **App Store: una chiave per gli acquisti in-app.** In App Store Connect, Utenti
 e accesso → Integrazioni → Acquisto in-app: si genera una chiave e si scarica
@@ -175,7 +175,7 @@ repository, né su GitHub, né in chat.
 1. **I prodotti nei negozi, attivi.** Nella Play Console l'abbonamento
    `gdahome_premium` con i piani base `mensile` e `annuale`; in App Store
    Connect i prodotti `gdahome_premium_mensile` e `gdahome_premium_annuale`
-   nel gruppo «gdahome Premium». Tutti con la prova di 14 giorni. _Perché
+   nel gruppo «GdAHome Premium». Tutti con la prova di 14 giorni. _Perché
    prima:_ una casa che diventa Base senza un prodotto da comprare ha un
    lucchetto e nessuna chiave.
 2. **Il rilascio che porta lo strumento sul quadro.** Con lui arriva anche

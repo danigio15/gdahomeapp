@@ -100,7 +100,7 @@ node collaudo/guarda-il-link.mjs
 ```
 
 Non e' lo stesso giro. Qui non c'e' nessuna casa e nessun abbinamento: si guarda
-**gdahome servita dall'add-on**, che e' il link che si apre dalla console.
+**GdAHome servita dall'add-on**, che e' il link che si apre dalla console.
 
 Accende il ponte vero con dentro `ponte/app/`, gli mette davanti un prefisso di
 ingress finto — uno di quelli che Home Assistant cambia a ogni riavvio — e apre

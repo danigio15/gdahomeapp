@@ -36,14 +36,14 @@ dell'integrazione.
   sezioni, le traduzioni, il registro dei biglietti, il diario delle versioni
   prima della 1.0.
 - **`custom_components/dashboardmodern/`** — l'integrazione per Home Assistant,
-  in Python. In gdahome **non si usa**: tutto quello che l'integrazione faceva
+  in Python. In GdAHome **non si usa**: tutto quello che l'integrazione faceva
   per la plancia lo fa il ponte (`ponte/src/commissioni.js`), ed è per questo
   che l'add-on non chiede di installare niente in Home Assistant. Sta qui
   perché è dove è scritto **come** rispondeva: quando il ponte deve rispondere
   come rispondeva lei, la risposta giusta si legge qui.
 - **`.github/`** — le macchine che costruivano la dashboard. Sono ferme: GitHub
   guarda solo il `.github/` alla radice della repository, e quello è di
-  gdahome. Stanno qui per lo stesso motivo dell'integrazione — dicono come si
+  GdAHome. Stanno qui per lo stesso motivo dell'integrazione — dicono come si
   faceva una cosa, il giorno che serve rifarla.
 - **`centralino/`**, **`README.md`**, **`info.md`**, **`hacs.json`**,
   **`package.json`**, **`package-lock.json`** — il resto della repository
@@ -51,14 +51,14 @@ dell'integrazione.
 - **`brand/`**, **`ARCHITECTURE.md`**, **`DECISIONS.md`**, **`CHANGELOG.md`**,
   **`CONTRIBUTING.md`** — il marchio e la memoria del progetto.
 - **`LICENSE`** — la licenza di questa cartella, che è la sua e non quella di
-  gdahome. La stessa carta sta accanto ai file serviti, in
+  GdAHome. La stessa carta sta accanto ai file serviti, in
   `ponte/plancia/LICENSE`, perché vale anche per quelli.
 
 ## Cosa non c'è, e perché
 
 **`docs/preview/`**: ventidue megabyte di anteprime generate. Le rifà
 `scripts/capture-previews.mjs` quando servono. Questa repository la clona ogni
-Home Assistant che ha gdahome fra gli Archivi, a ogni giro del negozio:
+Home Assistant che ha GdAHome fra gli Archivi, a ogni giro del negozio:
 ventidue megabyte di immagini che si rigenerano da sole li scaricherebbero
 tutti, per sempre, per niente.
 

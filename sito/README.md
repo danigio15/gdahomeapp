@@ -2,7 +2,7 @@
 
 Il posto dove il progetto si racconta a chi non l'ha mai visto: cos'è l'app,
 come fa la casa a rispondere da fuori senza che si apra niente sul router, e
-le due app — **gdahome** e **gdanav** — fatte vedere con le loro fotografie.
+le due app — **GdAHome** e **gdanav** — fatte vedere con le loro fotografie.
 
 Sta su **[gdahome.org](https://gdahome.org)**.
 
@@ -17,7 +17,7 @@ versione, e quando non c'era al suo posto compariva un riquadro con scritto
 niente, e lasciava un buco nel mezzo della pagina.
 
 Adesso le tre sezioni che raccontano le app — **la plancia** (`#plancia`),
-**l'app gdahome** (`#app`) e **gdanav** (`#gdanav`) — sono fatte di fotografie
+**l'app GdAHome** (`#app`) e **gdanav** (`#gdanav`) — sono fatte di fotografie
 vere e di schede di testo. Le fotografie stanno nella repository, dentro
 `sito/`, e ci sono sempre. `casa-in-pagina.js` e `statico/casa.js` restano
 perché lo script li infila ancora nella plancia che porta (vedi «Quello che non
@@ -39,7 +39,7 @@ pagina non ha.
 
 Il sito è fatto come i siti delle app che si conoscono: la plancia vera in
 copertina, sul computer e sul telefono, appoggiata a un palco col blu di
-gdahome; il blu anche sulle schede Premium; le sezioni che si alternano fra
+GdAHome; il blu anche sulle schede Premium; le sezioni che si alternano fra
 bianco e un azzurrino, così lo scorrimento ha un ritmo, e gdanav al buio,
 come lo schermo di un'auto; le schermate vere dentro telefoni, tablet e
 orologi disegnati, con un'ombra che le stacca dalla pagina; tasti e schede
@@ -91,7 +91,7 @@ con le due frecce; la pagina resta larga quanto lo schermo.
 ## Per chi installa, e dove scrivere
 
 Il **cruscotto installatore** ha una sezione sua (`#installatori`), perché è
-l'unico pezzo di gdahome che non è per chi abita la casa: come sta ogni casa,
+l'unico pezzo di GdAHome che non è per chi abita la casa: come sta ogni casa,
 le licenze Premium da dare ai clienti, e accanto cosa **non** vede, con le
 parole del quadro (`quadro/README.md`). Lo racconta a parole, senza
 fotografie: il sito fa vedere la plancia e il navigatore, non i pannelli di chi
@@ -128,7 +128,7 @@ Poi `http://127.0.0.1:8099/`.
 
 |                                   |                                                                                                                                                                                           |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.html`                      | la pagina: la copertina con la plancia, la plancia, come funziona, l'app gdahome, gdanav, quanto costa, per chi installa, scaricala, contatti                                             |
+| `index.html`                      | la pagina: la copertina con la plancia, la plancia, come funziona, l'app GdAHome, gdanav, quanto costa, per chi installa, scaricala, contatti                                             |
 | `privacy.html`                    | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                                                                                        |
 | `stile.css`                       | il vestito: i colori, i caratteri, il palco della copertina, telefoni, tablet e orologi, i nastri delle fotografie, le schede tecniche, i piani                                           |
 | `privacy.css`                     | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                                                                                              |

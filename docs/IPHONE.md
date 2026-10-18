@@ -1,4 +1,4 @@
-# gdahome su iPhone
+# GdAHome su iPhone
 
 Quello che l'app fa su Android, su iPhone lo fa uguale: la plancia, i comandi,
 le telecamere, il lucchetto col volto, le segnalazioni, il navigatore (gdanav)
@@ -11,7 +11,7 @@ si fa una volta sola dalla parte di Apple, e come esce una versione.
 | --- | --- | --- |
 | Android Auto col navigatore e la casa a un tasto | CarPlay, uguale: la mappa di gdanav, e dietro la casetta i comandi rapidi, i dispositivi, le azioni, come sta la casa | `app/ios/Runner/LaCasaInCarPlay.swift`, e CarPlay di gdanav |
 | «Quasi a casa», arrivando | Uguale, come avviso sopra la mappa | `LaCasaInCarPlay.swift` |
-| «Ok Google, naviga verso…» | «Ehi Siri, naviga con gdahome», «Portami a casa con gdahome», «Portami al lavoro con gdahome», «Aggiungi una tappa con gdahome»: anche in CarPlay, anche con l'app chiusa (dall'iOS 16). In italiano e in inglese | `app/ios/Runner/ComandiVocali.swift`, `it.lproj/AppShortcuts.strings` |
+| «Ok Google, naviga verso…» | «Ehi Siri, naviga con GdAHome», «Portami a casa con GdAHome», «Portami al lavoro con GdAHome», «Aggiungi una tappa con GdAHome»: anche in CarPlay, anche con l'app chiusa (dall'iOS 16). In italiano e in inglese | `app/ios/Runner/ComandiVocali.swift`, `it.lproj/AppShortcuts.strings` |
 | La prova di guida di Android Auto | In CarPlay → Menu → Impostazioni → **Prova di guida**: il percorso si fa da solo | gdanav |
 | Un motore Flutter per telefono e auto (`IlNavigatoreInAuto.kt`) | Lo stesso: acceso all'avvio in `AppDelegate` | `app/ios/Runner` |
 | Il comando dell'auto eseguito da un motore senza schermo (`IlPonteDellAuto.kt`) | Lo esegue il motore dell'app, che con CarPlay è sempre acceso: stesso file, stesso canale `gdahome/auto/guarda` | `lib/auto/in_auto.dart`, `lib/main.dart` |
@@ -37,7 +37,7 @@ navigatore con CarPlay acceso e il telefono in tasca.
    Identifiers → `+` → App IDs → `com.gdahome.gdahome`.
 3. **L'app in App Store Connect**
    ([appstoreconnect.apple.com](https://appstoreconnect.apple.com)) → Le mie
-   app → `+` → Nuova app: iOS, nome «gdahome», lingua italiano, bundle ID
+   app → `+` → Nuova app: iOS, nome «GdAHome», lingua italiano, bundle ID
    `com.gdahome.gdahome`, SKU `gdahome`.
 4. **La chiave per GitHub**: App Store Connect → Utenti e accesso →
    Integrazioni → App Store Connect API → Chiavi del team → `+`, ruolo
@@ -61,7 +61,7 @@ navigatore con CarPlay acceso e il telefono in tasca.
 ### CarPlay: il permesso di Apple
 
 In CarPlay la domotica da sola non entra — Apple tiene le categorie chiuse —
-ma gdahome ci entra come **navigatore**, perché dentro c'è gdanav, con la casa
+ma GdAHome ci entra come **navigatore**, perché dentro c'è gdanav, con la casa
 dietro il tasto con la casetta: esattamente come su Android Auto. Il permesso lo
 concede Apple app per app, e ci mette da qualche giorno a qualche settimana:
 si chiede subito su
@@ -153,7 +153,7 @@ revisione. La prima volta servono:
   solo dentro una segnalazione che si manda. Tutto per le funzionalità
   dell'app, niente collegato a un account, **niente tracciamento**;
 - **la classificazione per età** (il questionario: tutte «no»);
-- **per la revisione**: gdahome senza una casa non mostra niente. Nelle note
+- **per la revisione**: GdAHome senza una casa non mostra niente. Nelle note
   per chi rivede l'app va scritto come abbinarla a una casa di prova,
   altrimenti la risposta è la regola 2.1, «non si riesce a provare l'app».
   Il codice lo fa la scheda «Casa di prova» della console dell'add-on (dalla

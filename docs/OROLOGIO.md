@@ -1,4 +1,4 @@
-# gdahome al polso: Apple Watch e Wear OS
+# GdAHome al polso: Apple Watch e Wear OS
 
 Al polso c'è quello che c'è in auto, rifatto per uno schermo da guardare in
 due secondi:

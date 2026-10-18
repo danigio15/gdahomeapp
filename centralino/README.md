@@ -136,7 +136,7 @@ sopra ci passano i fili delle case.
 
 ## Le licenze
 
-Il fuori casa e' gdahome Premium (`docs/LICENZE.md`), e il centralino lo
+Il fuori casa e' GdAHome Premium (`docs/LICENZE.md`), e il centralino lo
 tiene in uno di tre modi, scritti in `MODO_LICENZE` dentro
 `/etc/tramite/ambiente` (lo script `accendi.sh` lo rilegge e lo riscrive a
 ogni giro, come gli altri):

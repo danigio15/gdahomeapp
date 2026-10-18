@@ -18,7 +18,7 @@ vede cosa, e cosa va acceso a mano.
                       Android: solo dati ◄──────────────────────┤
                       l'app apre la busta e mostra la notifica  │
                                                                 │
-                      iPhone: «gdahome: nuova notifica» ◄───────┘
+                      iPhone: «GdAHome: nuova notifica» ◄───────┘
                       la busta si apre quando la si tocca
 ```
 
@@ -68,7 +68,7 @@ dal segreto `GDAHOME_FIREBASE_ANDROID`, e solo per il pacchetto vero
 
 ## iPhone
 
-Apple consegna sempre una frase da mostrare: è quella di riserva, «gdahome:
+Apple consegna sempre una frase da mostrare: è quella di riserva, «GdAHome:
 nuova notifica», con la busta accanto. Dalla 1.13.0 la apre la **Notification
 Service Extension** (`app/ios/NotificheService`) mentre la notifica arriva, e
 sull'iPhone si legge il titolo e il testo veri.

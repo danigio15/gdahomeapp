@@ -24,7 +24,7 @@ installa**. Lo dice `repository.yaml`, in cima a questa repository:
 
 > Non serve nessun gettone, perché questa repository è pubblica.
 
-Chi installa gdahome incolla `https://github.com/danigio15/gdahomeapp` in
+Chi installa GdAHome incolla `https://github.com/danigio15/gdahomeapp` in
 Impostazioni → Add-on → Negozio → Archivi. Il Supervisor legge quel file e la
 cartella `ponte/`. **Se la repository diventa privata, il Supervisor non la
 legge più**: nessuno installa, e nessuno di quelli che l'hanno già riceve un
@@ -66,7 +66,7 @@ non si può:
   (§3f): chi installa per i clienti lo può fare solo con l'autorizzazione
   scritta della società (§2d);
 - aggirare i controlli di Premium: licenze, gettoni, codici regalo (§3e);
-- usare i nomi «gdahome», «GDA», «ponte», «centralino» o il logo per una cosa
+- usare i nomi «GdAHome», «GDA», «ponte», «centralino» o il logo per una cosa
   che non è questa (§3g).
 
 Un fork è permesso **solo** come modo tecnico di preparare una pull request, e
@@ -117,7 +117,7 @@ nuovi (`docs/LICENZE.md`, «La chiave» e «Il giorno dei pagamenti»).
 Il piano **è già pubblicato**:
 
 - il `README.md` di questa repository mostra le schermate di Premium —
-  `fuori-casa-serve-premium.png` («Fuori casa serve gdahome Premium»),
+  `fuori-casa-serve-premium.png` («Fuori casa serve GdAHome Premium»),
   `menu-con-i-lucchetti.png`, `plance-col-lucchetto.png`,
   `premium-prova-14-giorni.png`, `premium-attivo.png` e le altre. Adesso sono
   fotografie dell'app vera, fatte dalle prove (`app/test/foto/premium_foto.dart`)
@@ -209,7 +209,7 @@ invece di uscire firmata di prova (`app/android/app/build.gradle.kts`).
 | cosa si può fare | cosa si guadagna | cosa costa |
 | --- | --- | --- |
 | **Lasciare `gdahomeapp` pubblica** | l'add-on si installa e si aggiorna; la licenza continua a vietare tutto il resto | il codice si legge (ma si legge già da ogni add-on installato) |
-| Renderla privata | niente | **nessuno installa più gdahome, e nessuno riceve aggiornamenti**. Da non fare |
+| Renderla privata | niente | **nessuno installa più GdAHome, e nessuno riceve aggiornamenti**. Da non fare |
 | Spostare l'add-on in una repository pubblica sua, e chiudere il resto | l'app Flutter, il quadro e il centralino non si leggono più | **scartata da Giovanni**: «tutto ciò che è legato alle app non le possiamo tirare fuori da GitHub». E aveva ragione anche tecnicamente: due repository, due CI, i workflow da rifare, la storia da tagliare — e la plancia resterebbe leggibile comunque, perché viaggia dentro l'add-on |
 | Minificare o offuscare la plancia | qualche minuto in più a chi vuole leggerla | un errore dal campo non si legge più — che è il motivo per cui non si fa. Guadagno vicino a zero |
 | Rendere privata **`gdanav`** | il codice dell'app in auto non si legge | niente: gdanav si distribuisce dai negozi, non da GitHub. È l'unica chiusura che non rompe nulla |
