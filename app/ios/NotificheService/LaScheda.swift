@@ -181,6 +181,48 @@ enum LaScheda {
     UIImage(systemName: nome, withConfiguration: configurazione)?.draw(in: dove)
   }
 
+  /// I simboli di un elettrodomestico, dal tipo che manda la casa (`i`): gli
+  /// stessi tipi dei disegni dell'app (`assets/elettrodomestici/`). Per ogni
+  /// tipo piu' simboli in ordine, perche' non tutti ci sono su ogni iOS: si
+  /// prende il primo che c'e'. Le parole italiane sono quelle dei ponti di
+  /// prima. Prima il simbolo era sempre la lavatrice, anche per la
+  /// lavastoviglie.
+  static let simboliDegliElettrodomestici: [String: [String]] = [
+    "washer": ["washer.fill"], "lavatrice": ["washer.fill"],
+    "dryer": ["dryer.fill"], "asciugatrice": ["dryer.fill"],
+    "dishwasher": ["dishwasher.fill"], "lavastoviglie": ["dishwasher.fill"],
+    "oven": ["oven.fill"],
+    "microwave": ["microwave.fill"],
+    "fridge": ["refrigerator.fill"],
+    "cooktop": ["cooktop.fill", "stove.fill"],
+    "hood": ["wind"],
+    "air-fryer": ["frying.pan.fill", "flame.fill"],
+    "toaster": ["flame.fill"],
+    "kettle": ["mug.fill"],
+    "coffee": ["cup.and.saucer.fill"],
+    "iron": ["tshirt.fill"],
+    "television": ["tv.fill"],
+    "fan": ["fan.fill"],
+    "air-conditioner": ["air.conditioner.horizontal.fill", "snowflake"],
+    "heat-pump": ["heat.waves", "thermometer.sun.fill"],
+    "boiler": ["heater.vertical.fill", "drop.fill"],
+    "storage-boiler": ["heater.vertical.fill", "drop.fill"],
+    "vacuum": ["powerplug.fill"],
+    "robot-vacuum": ["circle.circle.fill"],
+    "wallbox": ["ev.charger.fill", "bolt.car.fill"],
+    "pool-pump": ["figure.pool.swim", "drop.fill"],
+  ]
+
+  /// Il simbolo da mettere in testa alla scheda di un ciclo: quello del tipo,
+  /// o la presa se il tipo non si conosce — mai la faccia di un'altra cosa.
+  static func simboloDelCiclo(_ tipo: Any?) -> String {
+    let candidati = simboliDegliElettrodomestici[(tipo as? String) ?? ""] ?? []
+    for nome in candidati + ["powerplug.fill"] where UIImage(systemName: nome) != nil {
+      return nome
+    }
+    return "bolt.fill"
+  }
+
   static func testa(_ simbolo: String, _ colori: [UIColor], _ titolo: String, _ sotto: String, finoA: CGFloat = 230) {
     LaScheda.simbolo(simbolo, CGRect(x: 14, y: 12, width: 30, height: 28), colori)
     scrivi(titolo.uppercased(), CGPoint(x: 52, y: 8), corpo: 18, peso: .bold, colore: .white, titolo: true, larga: finoA - 52)
@@ -260,7 +302,7 @@ enum LaScheda {
     var orari: [String] = []
     if let da = s["da"] as? String, let a = s["a"] as? String { orari.append("\(da) → \(a)") }
     if let minuti { orari.append(durata(minuti)) }
-    testa("washer.fill", [azzurro], (s["n"] as? String) ?? "", orari.joined(separator: " · "), finoA: 250)
+    testa(simboloDelCiclo(s["i"]), [azzurro], (s["n"] as? String) ?? "", orari.joined(separator: " · "), finoA: 250)
     let soldi = numero(s["eur"]), energia = numero(s["kwh"])
     if let soldi {
       scrivi(soldi == 0 ? detto("GRATIS", "FREE") : euro(soldi), CGPoint(x: 346, y: 4), corpo: 27, peso: .bold,

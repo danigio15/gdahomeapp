@@ -29,6 +29,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../parole.dart';
+import '../vestito/elettrodomestici.dart' show tipoDisegnabile;
 
 const double larghezzaDellaScheda = 360;
 const double altezzaDellaScheda = 180;
@@ -73,11 +74,11 @@ Future<DisegnoDellaNotifica> _disegna(
   }
   if (scheda == null) return const DisegnoDellaNotifica();
   final disegno = switch (tipo) {
-    'ciclo' => 'elettrodomestici',
-    'giornata' => scheda['pk'] == null ? 'energia' : 'solare',
-    'ups' => 'ups',
-    'antifurto' => 'sicurezza',
-    'movimento' => 'telecamere',
+    'ciclo' => disegnoDelCiclo(scheda),
+    'giornata' => 'oggetti/${scheda['pk'] == null ? 'energia' : 'solare'}',
+    'ups' => 'oggetti/ups',
+    'antifurto' => 'oggetti/sicurezza',
+    'movimento' => 'oggetti/telecamere',
     _ => null,
   };
   if (disegno == null) return const DisegnoDellaNotifica();
@@ -156,10 +157,24 @@ List<double> _serie(Object? cosa) => [
 
 /* ─── gli attrezzi ─────────────────────────────────────────────────────── */
 
+/// Il disegno in testa alla scheda di un elettrodomestico che ha finito:
+/// quello del suo tipo, lo stesso che ha sulla plancia
+/// (`assets/elettrodomestici/`). Il tipo lo manda la casa (`i`); se non c'e',
+/// o e' una parola di un ponte di prima, lo dice il nome (`n`). Prima era
+/// sempre il cestello della sezione: la lavastoviglie finita aveva la faccia
+/// della lavatrice.
+@visibleForTesting
+String disegnoDelCiclo(Map<String, dynamic> scheda) {
+  final tipo = scheda['i'];
+  return 'elettrodomestici/'
+      '${tipoDisegnabile(tipo is String ? tipo : null, '${scheda['n'] ?? ''}')}';
+}
+
+/// [nome] e' la cartella e il file: `oggetti/ups`, `elettrodomestici/oven`.
 Future<PictureInfo?> _ilDisegno(String nome) async {
   try {
     return await vg.loadPicture(
-      SvgAssetLoader('assets/oggetti/$nome.svg', assetBundle: rootBundle),
+      SvgAssetLoader('assets/$nome.svg', assetBundle: rootBundle),
       null,
     );
   } catch (_) {

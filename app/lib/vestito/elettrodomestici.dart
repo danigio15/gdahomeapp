@@ -5,8 +5,11 @@
 /// `canonicalArtworkType` e `applianceArtwork`). Qui ci sono **quelli**,
 /// copiati uno per file in `assets/elettrodomestici/` — il forno e' il forno
 /// della plancia, il frigo il suo frigo — e la stessa regola per riconoscerli
-/// dal nome. In piu' c'e' solo la pompa di calore, che la plancia non
-/// distingue e che in «Chi ha consumato di piu'» e' quasi sempre la prima.
+/// dal nome. In piu' ci sono la pompa di calore, che la plancia non
+/// distingue e che in «Chi ha consumato di piu'» e' quasi sempre la prima, e
+/// la pompa della piscina. Li usa anche la scheda delle notifiche
+/// (`lib/notifiche/scheda.dart`): la lavastoviglie che ha finito ha la faccia
+/// della lavastoviglie.
 ///
 /// Un nome che non si riconosce prende la presa generica, mai il disegno di
 /// un'altra cosa.
@@ -56,6 +59,9 @@ String tipoDellElettrodomestico(String nome) {
   if (c('caffe|caffè|coffee')) return 'coffee';
   if (c('tostapane|toaster')) return 'toaster';
   if (c('bollitore|kettle')) return 'kettle';
+  /* La pompa della piscina: come la pompa di calore, la plancia non la
+   * distingue. */
+  if (c('piscin|pool')) return 'pool-pump';
   return 'generic';
 }
 
@@ -83,8 +89,21 @@ const tipiDegliElettrodomestici = {
   'toaster',
   'kettle',
   'wallbox',
+  'pool-pump',
   'generic',
 };
+
+/// Il tipo di un elettrodomestico da quello che dice la casa: [tipo] se e'
+/// uno dei [tipiDegliElettrodomestici], altrimenti lo si riconosce da [tipo]
+/// e dal [nome] insieme — un ponte di prima manda `lavatrice` o `altro`, e
+/// `altro` vuol dire che a decidere e' il nome.
+String tipoDisegnabile(String? tipo, String nome) {
+  final detto = (tipo ?? '').trim();
+  if (detto != 'generic' && tipiDegliElettrodomestici.contains(detto)) {
+    return detto;
+  }
+  return tipoDellElettrodomestico('$detto $nome');
+}
 
 /// Il disegno di un elettrodomestico, dal suo tipo.
 class Elettrodomestico extends StatelessWidget {
