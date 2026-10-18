@@ -11,7 +11,7 @@ import { comeDirlo, ilNoDelSupervisore } from "../src/il-no-del-supervisore.js";
 
 /* Le parole vere, come le ha lette lui. */
 const QUELLA_VERA =
-  "Error updating gdahome: 'AddonManager.update' blocked from execution, no host internet connection";
+  "Error updating GdAHome: 'AddonManager.update' blocked from execution, no host internet connection";
 
 test("la segnalazione del 26 settembre si legge e si capisce", () => {
   const detto = ilNoDelSupervisore(QUELLA_VERA);

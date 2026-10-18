@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/immagini/banner.png" alt="gdahome" width="640">
+  <img src="docs/immagini/banner.png" alt="GdAHome" width="640">
 </p>
 
 <h3 align="center">La tua casa in una plancia. Anche fuori casa, senza aprire porte.</h3>
@@ -41,7 +41,7 @@
 
 ## Com'è fatta
 
-gdahome sono **due pezzi che lavorano insieme**:
+GdAHome sono **due pezzi che lavorano insieme**:
 
 |     |                                     |                                                                                                                                                                                                     |
 | :-: | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -86,19 +86,19 @@ questo indirizzo e premi **Aggiungi**:
 https://github.com/danigio15/gdahomeapp
 ```
 
-**2. Installa gdahome.** Nell'elenco compare la sezione **gdahome**: apri
+**2. Installa GdAHome.** Nell'elenco compare la sezione **GdAHome**: apri
 l'add-on, premi **Installa** e poi **Avvia**. La prima volta ci mette qualche
 minuto — su un Raspberry anche dieci — perché Home Assistant lo prepara sul
 posto. Gli aggiornamenti poi arrivano come per ogni altro add-on.
 
-**3. Genera il QR code.** Apri **gdahome** dalla barra laterale e premi
+**3. Genera il QR code.** Apri **GdAHome** dalla barra laterale e premi
 **Genera QR code**. Il codice vale una volta sola e per pochi minuti.
 
 <p align="center">
   <img src="docs/immagini/addon-genera-qr.png" alt="Abbina un telefono: premi Genera QR code e inquadralo con l'app" width="640">
 </p>
 
-**4. Inquadralo con l'app.** Scarica gdahome dal **Play Store** (Android) o
+**4. Inquadralo con l'app.** Scarica GdAHome dal **Play Store** (Android) o
 dall'**App Store** (iPhone e iPad), oppure apri
 **[webapp.gdahome.org](https://webapp.gdahome.org)** dal browser, e inquadra il
 codice. Senza fotocamera lo si digita: sedici caratteri, in quattro gruppi.
@@ -139,11 +139,11 @@ dispositivi, le azioni della plancia, com'è la casa, e la prossima manovra
 del navigatore.
 
 **🔄 Gli aggiornamenti di casa.** Nel menu compaiono quelli di Home Assistant,
-degli add-on, di gdahome e dei firmware: si installano da lì, e da lì si
+degli add-on, di GdAHome e dei firmware: si installano da lì, e da lì si
 riavvia la casa.
 
 **💬 Segnalazioni e assistenza.** Qualcosa non va? Si scrive dall'app, con
-foto e video, e arriva a chi sviluppa gdahome. Per una domanda c'è la **chat
+foto e video, e arriva a chi sviluppa GdAHome. Per una domanda c'è la **chat
 di assistenza**, privata.
 
 **🔒 Il lucchetto.** L'app si apre con l'impronta o col volto.
@@ -194,7 +194,7 @@ telefono sui dati — e senza fare niente:
 <table>
 <tr>
 <td width="35%" align="center" valign="top">
-<img src="docs/immagini/fuori-casa-serve-premium.png" alt="Fuori casa serve gdahome Premium" width="100%">
+<img src="docs/immagini/fuori-casa-serve-premium.png" alt="Fuori casa serve GdAHome Premium" width="100%">
 </td>
 <td valign="top">
 
@@ -295,13 +295,13 @@ plance in più restano salvate dove sono — si rivedono appena Premium torna.
 | Home Assistant             |                       —                       |                                  ✅                                   |
 | Android Auto e CarPlay     |                       —                       |                                  ✅                                   |
 
-Anche gdanav Premium ha **i primi 14 giorni gratis**. E con **gdahome Premium
+Anche gdanav Premium ha **i primi 14 giorni gratis**. E con **GdAHome Premium
 è già compreso**: la casa Premium sblocca tutto anche nel navigatore, senza un
 secondo abbonamento.
 
 ## Per chi installa
 
-Se metti in piedi impianti Home Assistant per i tuoi clienti, gdahome ha una
+Se metti in piedi impianti Home Assistant per i tuoi clienti, GdAHome ha una
 parte per te: **il cruscotto per installatori**. Una pagina sola con tutti gli
 impianti che segui, e da lì le licenze Premium da dare ai clienti.
 
@@ -324,7 +324,7 @@ stanze, dove sta una presa nuova — senza andare sul posto. Sono **interruttori
 nella scheda dell'add-on del cliente, spenti di serie**: li accende e li
 spegne chi abita la casa.
 
-**🎟️ Le licenze Premium per i clienti.** gdahome ti dà un **pacchetto di
+**🎟️ Le licenze Premium per i clienti.** GdAHome ti dà un **pacchetto di
 licenze**, diviso per durata — per esempio 10 da un mese, 5 da un anno, 2 per
 sempre. Per ognuna scegli:
 
@@ -347,7 +347,7 @@ plancia.
 1. **Chiedi l'accesso** dalla pagina dei contatti del sito:
    **[gdahome.org/#contatti](https://gdahome.org/#contatti)**. Ricevi il codice
    del tuo cruscotto e il tuo pacchetto di licenze.
-2. Sul **tuo** Home Assistant, nella configurazione dell'add-on gdahome,
+2. Sul **tuo** Home Assistant, nella configurazione dell'add-on GdAHome,
    accendi la parte **per chi installa** e scrivi il codice: compare il
    cruscotto, nella barra laterale e nell'app.
 3. Per ogni cliente, **dal cruscotto generi un codice di abbinamento**: il
@@ -362,7 +362,7 @@ plancia.
 nessun tracciamento. Da fuori casa i messaggi viaggiano cifrati fra il
 telefono e l'add-on. Per sapere se una casa è Premium, l'add-on manda solo un
 identificativo anonimo della casa: niente nomi, dispositivi, stati o
-posizione. Il pagamento lo gestiscono Google e Apple: a gdahome non arrivano
+posizione. Il pagamento lo gestiscono Google e Apple: a GdAHome non arrivano
 né il tuo nome né i dati della carta.
 
 Tutto per intero, anche per il navigatore, la fotocamera e le segnalazioni:
@@ -372,11 +372,11 @@ Tutto per intero, anche per il navigatore, la fotocamera e le segnalazioni:
 ## Domande
 
 **Si installa su Home Assistant in Docker?**
-No, e non dipende da gdahome: su **Home Assistant Container** (l'immagine
+No, e non dipende da GdAHome: su **Home Assistant Container** (l'immagine
 Docker da sola) e su **Home Assistant Core** il negozio degli add-on non
 esiste, e nessun add-on si installa. Serve il Supervisor.
 
-| Home Assistant                                                          |           gdahome            |
+| Home Assistant                                                          |           GdAHome            |
 | ----------------------------------------------------------------------- | :--------------------------: |
 | **OS** — il sistema completo, su Raspberry, mini PC o macchina virtuale |              ✅              |
 | **Supervised** — Debian con l'installatore ufficiale                    |              ✅              |
@@ -393,7 +393,7 @@ in tasca.
 
 **Devo installare anche l'integrazione DashboardModern?**
 No: la plancia è già dentro l'add-on. Chi l'integrazione ce l'ha già e ci ha
-configurato la plancia non ricomincia da zero: alla prima apertura gdahome
+configurato la plancia non ricomincia da zero: alla prima apertura GdAHome
 prende quella configurazione e la usa.
 
 **Siamo in quattro in casa: paghiamo quattro volte?**
@@ -406,7 +406,7 @@ Home Assistant. Se invece la licenza l'ha assegnata lui alla casa, non c'è
 niente da fare.
 
 **Ho perso il telefono.**
-Apri gdahome in Home Assistant e, fra i **telefoni abbinati**, premi **Togli
+Apri GdAHome in Home Assistant e, fra i **telefoni abbinati**, premi **Togli
 associazione** accanto a quello perso: da quel momento non entra più.
 
 **Dove finiscono le cose che segnalo?**
@@ -417,12 +417,12 @@ conversazione privata che non finisce su nessuna pagina pubblica.
 
 ## Chi c'è dietro
 
-gdahome la fa **CRV Immobiliare S.r.l.**, impresa di impianti elettrici e
+GdAHome la fa **CRV Immobiliare S.r.l.**, impresa di impianti elettrici e
 tecnologici di Aversa (CE), abilitata agli impianti ai sensi del D.M. 37/2008
 (lettere A–G). Sede legale in Viale della Libertà 24, 81031 Aversa (CE);
 P. IVA e C.F. 03719610614; REA CE-266848; PEC crvimmobiliare@pec.it.
 
-Premium, per gdahome e per gdanav, lo vende CRV Immobiliare S.r.l. attraverso
+Premium, per GdAHome e per gdanav, lo vende CRV Immobiliare S.r.l. attraverso
 l'App Store e Google Play: le ricevute arrivano da Apple o da Google, come per
 ogni abbonamento.
 
@@ -432,13 +432,10 @@ ogni abbonamento.
 
 ## Licenza
 
-Il codice di gdahome è pubblico, ma non è open source: vale la **Licenza d'uso
-di gdahome** ([`LICENSE`](LICENSE)), in italiano con la traduzione inglese. In
+Il codice di GdAHome è pubblico, ma non è open source: vale la **Licenza d'uso
+di GdAHome** ([`LICENSE`](LICENSE)), in italiano con la traduzione inglese. In
 breve: si legge e si controlla cosa fa, si installa e si usa a casa propria o
 nella propria attività; non si ripubblica, non si rivende e non si aggira
 Premium. Chi installa per i clienti lo fa con l'autorizzazione di CRV
 Immobiliare S.r.l.
 
----
-
-<sub>Per chi sviluppa: [`docs/SVILUPPO.md`](docs/SVILUPPO.md).</sub>

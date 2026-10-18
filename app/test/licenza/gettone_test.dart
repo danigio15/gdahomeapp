@@ -157,7 +157,7 @@ void main() {
     expect(diUnTelefono!.vale(), isFalse);
   });
 
-  test('gdahome vale anche per gdanav, gdanav non vale per gdahome', () async {
+  test('GdAHome vale anche per gdanav, gdanav non vale per GdAHome', () async {
     final diGdahome = await leggiIlGettone(
       await firmaUnGettone(),
       chiave: chiaveDiProva,

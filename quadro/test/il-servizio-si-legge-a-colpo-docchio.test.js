@@ -98,7 +98,7 @@ test("i conti del quadro e del tramite ci sono tutti, ognuno con la sua parola",
   for (const [quanti, cosa] of [
     ["7", "case seguite"],
     ["2", "installatori"],
-    ["11", "impianti con gdahome"],
+    ["11", "impianti con GdAHome"],
     ["6", "collegati adesso"],
     ["4", "la guardano dall&#39;app"],
     ["2", "la guardano dal browser"],
@@ -197,7 +197,7 @@ test("ogni mattonella del tramite risponde a una domanda sola", () => {
 
   /* Quanti hanno installato, e quanti di quelli sono accesi adesso. Sono due
    * numeri, e il secondo non e' mai piu' grande del primo. */
-  assert.match(html, /<b>152<\/b><span>impianti con gdahome<\/span>/);
+  assert.match(html, /<b>152<\/b><span>impianti con GdAHome<\/span>/);
   assert.match(html, /<b>140<\/b><span>collegati adesso<\/span>/);
 
   /* E chi sta guardando, diviso per come. */
@@ -220,7 +220,7 @@ test("i numeri che un tramite vecchio non dice non diventano zeri", () => {
     ...IL_QUADRO,
     tramite: { ...IL_TRAMITE, installate: null, web: null },
   });
-  assert.doesNotMatch(html, /impianti con gdahome/);
+  assert.doesNotMatch(html, /impianti con GdAHome/);
   assert.doesNotMatch(html, /la guardano dal browser/);
 
   /* Quello che sa dire lo dice come sempre. */
@@ -233,6 +233,6 @@ test("i numeri che un tramite vecchio non dice non diventano zeri", () => {
  * e' una cosa vera. */
 test("uno zero contato si scrive", () => {
   const html = disegna({ ...IL_QUADRO, tramite: { ...IL_TRAMITE, installate: 0, web: 0 } });
-  assert.match(html, /<b>0<\/b><span>impianti con gdahome<\/span>/);
+  assert.match(html, /<b>0<\/b><span>impianti con GdAHome<\/span>/);
   assert.match(html, /<b>0<\/b><span>la guardano dal browser<\/span>/);
 });

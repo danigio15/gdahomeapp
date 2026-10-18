@@ -545,10 +545,10 @@ export function costruisciIlServer({
     if (via === "/" && metodo === "GET") {
       risposta.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
       risposta.end(
-        "Il quadro di gdahome.\n\n" +
+        "Il quadro di GdAHome.\n\n" +
           "Qui le case installate depositano poche righe di numeri, e chi le ha\n" +
           "installate le guarda. Non si entra in nessuna casa da qui.\n\n" +
-          "Se hai un codice, va incollato nella scheda dell'add-on gdahome di\n" +
+          "Se hai un codice, va incollato nella scheda dell'add-on GdAHome di\n" +
           "casa tua, non qui. La console degli installatori sta su /console/.\n",
       );
       return;
@@ -1428,7 +1428,7 @@ export function costruisciIlServer({
         tipo: "prova",
         case: [],
         testo:
-          "Questa e' una prova del quadro di gdahome. " +
+          "Questa e' una prova del quadro di GdAHome. " +
           "Se la stai leggendo, gli avvisi arrivano dove devono.",
       });
       /* Si' o no, e nient'altro: ne' il codice che ha risposto chi riceve,
@@ -1629,7 +1629,7 @@ export function costruisciIlServer({
         male(
           risposta,
           409,
-          "questo impianto non manda ancora l'elenco delle plance: aggiorna l'add-on gdahome di casa",
+          "questo impianto non manda ancora l'elenco delle plance: aggiorna l'add-on GdAHome di casa",
         );
         return;
       }
@@ -1674,7 +1674,7 @@ export function costruisciIlServer({
         male(
           risposta,
           409,
-          "questo impianto non manda ancora l'elenco delle plance: aggiorna l'add-on gdahome di casa",
+          "questo impianto non manda ancora l'elenco delle plance: aggiorna l'add-on GdAHome di casa",
         );
         return;
       }

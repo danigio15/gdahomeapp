@@ -287,7 +287,7 @@ async function prova(che, fai) {
  * prova guarda che ci siano davvero. */
 for (const [id, nome, almeno] of [
   ["plancia", "la plancia", 3],
-  ["app", "l'app gdahome", 4],
+  ["app", "l'app GdAHome", 4],
   ["gdanav", "gdanav", 6],
 ]) {
   await prova(`${nome}: la sezione, la voce nel menu, le fotografie`, async () => {

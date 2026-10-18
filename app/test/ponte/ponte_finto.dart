@@ -229,7 +229,7 @@ class PonteFinto {
                 'success': false,
                 'error': {
                   'code': 'premium-richiesto',
-                  'message': 'serve gdahome Premium',
+                  'message': 'serve GdAHome Premium',
                 },
               },
       );
@@ -1540,7 +1540,7 @@ class TelefonoCollegato {
       _presa.add(
         jsonEncode({
           'v': versioneDelProtocollo,
-          'no': 'questa versione di gdahome e\' vecchia',
+          'no': 'questa versione di GdAHome e\' vecchia',
           'motivo': 'aggiorna-l-app',
           'minima': minima,
         }),

@@ -64,7 +64,7 @@ async function unaConsole({ cartellaDellApp, chat } = {}) {
 function appFinta() {
   const cartella = mkdtempSync(join(tmpdir(), "app-web-"));
   mkdirSync(join(cartella, "canvaskit"), { recursive: true });
-  writeFileSync(join(cartella, "index.html"), "<!doctype html><title>gdahome</title>");
+  writeFileSync(join(cartella, "index.html"), "<!doctype html><title>GdAHome</title>");
   writeFileSync(join(cartella, "main.dart.js"), "console.log('ciao');");
   writeFileSync(join(cartella, "canvaskit", "canvaskit.wasm"), Buffer.from([0, 97, 115, 109]));
   return cartella;
@@ -93,7 +93,7 @@ test("la pagina si serve, e i file si possono tenere; la pagina no", async () =>
     const pagina = await c.chiedi("/app/");
     assert.equal(pagina.status, 200);
     assert.match(pagina.headers.get("content-type"), /^text\/html/);
-    assert.match(await pagina.text(), /gdahome/);
+    assert.match(await pagina.text(), /GdAHome/);
     /* Niente si usa senza chiedere prima: `no-cache` vuol dire «tienilo, ma
      * prima di usarlo chiedimi se va ancora bene». */
     assert.equal(pagina.headers.get("cache-control"), "no-cache");
@@ -443,7 +443,7 @@ test("in casa l'app si apre da questa porta, senza passare da fuori", async () =
 
     const pagina = await porta.chiedi("/app/");
     assert.equal(pagina.status, 200);
-    assert.match(await pagina.text(), /gdahome/);
+    assert.match(await pagina.text(), /GdAHome/);
 
     const suo = await porta.chiedi("/app/main.dart.js");
     assert.equal(suo.status, 200);

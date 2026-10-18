@@ -37,7 +37,7 @@ test("la pagina servita non dice piu' il nome di prima", (t) => {
   assert.equal(testo.includes(NOME_DI_PRIMA), false);
 });
 
-test("il logo servito e' quello di gdahome, non quello della dashboard", (t) => {
+test("il logo servito e' quello di GdAHome, non quello della dashboard", (t) => {
   if (!plancia.cE) return t.skip("senza plancia non c'e' niente da vestire");
   const servito = plancia.leggi(dove("legacy/logo.png"));
   assert.equal(servito.stato, 200);
@@ -52,7 +52,7 @@ test("il logo servito e' quello di gdahome, non quello della dashboard", (t) => 
   assert.notDeepEqual(servito.corpo, suo);
 });
 
-test("l'alt del logo, dentro il runtime, dice gdahome", (t) => {
+test("l'alt del logo, dentro il runtime, dice GdAHome", (t) => {
   if (!plancia.cE) return t.skip("senza plancia non c'e' niente da vestire");
   const servito = plancia.leggi(dove("legacy/dashboard-runtime-it.js"));
   assert.equal(servito.stato, 200);
@@ -117,7 +117,7 @@ test("vestire non solleva mai, e quello che non riguarda passa com'e'", () => {
   assert.equal(NOME, "gdahome");
 });
 
-test("il manifesto dice gdahome tre volte: il nome, lo slug e la voce nella barra", () => {
+test("il manifesto dice GdAHome tre volte: il nome, lo slug e la voce nella barra", () => {
   const manifesto = readFileSync(fileURLToPath(new URL("../config.yaml", import.meta.url)), "utf8");
 
   /* Tre righe, e tre mestieri diversi: il `name` e' quello che si legge nel

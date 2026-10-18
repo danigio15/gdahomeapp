@@ -132,7 +132,7 @@ cosa ricevere lo sceglie ogni telefono nella pagina «Notifiche» dell'app.
 Ogni notifica parte già cifrata per quel telefono e passa dal centralino:
 serve `da_fuori_casa` acceso. Ricevono solo i telefoni intestati a un utente
 attivo, e le foto delle telecamere le chiede l'app dopo, con le regole della
-plancia. Tutto in `docs/NOTIFICHE.md`.
+plancia.
 
 ## La casa di prova
 
@@ -233,8 +233,7 @@ dentro la cartella `addons` di Home Assistant — con Samba, un terminale o
 Studio Code Server, finché c'è `addons/gdahome/config.yaml` — poi **Negozio
 degli add-on → i tre puntini → Ricarica**. Una copia così non ha nessun negozio
 dietro: per aggiornarla si ricopia la cartella e si ripete **Ricarica**, e
-nella pagina dell'add-on compare **Aggiorna** ([`COME_PROVARLA.md`](../COME_PROVARLA.md)
-lo fa anche in un colpo solo, dal terminale). Dentro la pagina di GdAHome non
+nella pagina dell'add-on compare **Aggiorna**. Dentro la pagina di GdAHome non
 c'è più un bottone che lo fa da sé: voleva la cartella `addons` in scrittura, e
 l'add-on non la chiede più — il perché sta in `config.yaml`.
 

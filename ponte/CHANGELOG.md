@@ -101,8 +101,8 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 - **Plance per chi non amministra:** si aprono di nuovo, la plancia di sempre
   e quelle a muro. Dal Supervisor 2026.10.2 Home Assistant rispondeva
   «403: Forbidden» agli utenti che non amministrano la casa. Chi vede quale
-  plancia lo decide sempre gdahome, alla voce «Le plance». La voce
-  «Configura gdahome» adesso compare anche nella loro barra, e apre solo la
+  plancia lo decide sempre GdAHome, alla voce «Le plance». La voce
+  «Configura GdAHome» adesso compare anche nella loro barra, e apre solo la
   pagina che dice che è per gli amministratori.
 - **Pianificatore:** la **cartina** si vede (prima restava vuota), e la
   ricerca trova anche il **numero civico**: «via Roma 12» porta al 12.
@@ -133,7 +133,7 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
   primo servizio non risponde prova il secondo, e dice «nessun posto» o «il
   servizio non risponde» invece di restare vuota. Sotto la meta scelta c'è la
   **cartina** con la strada da casa.
-- **Notifiche:** sull'iPhone niente più «gdahome · nuova notifica» doppia dopo
+- **Notifiche:** sull'iPhone niente più «GdAHome · nuova notifica» doppia dopo
   aver riabbinato il telefono; il **citofono di Ring** suona come gli altri
   campanelli. Togliendo una casa dall'app, la casa smette di mandare notifiche
   a quel telefono (serve anche l'app aggiornata).
@@ -206,11 +206,11 @@ dalle abitudini delle ultime due settimane; e impara dalle risposte.
   invertire il segno; la batteria dice «In carica» o «In scarica». Le
   linguette delle pagine tengono il nome finché ci sta. Nell'Ingresso le
   finestre stanno nel riquadro dell'antifurto.
-- **La scheda Runtime** del config dice la versione di gdahome, sempre in
+- **La scheda Runtime** del config dice la versione di GdAHome, sempre in
   pari.
 - **Android Auto e CarPlay:** niente «fallo dal telefono»; il navigatore in
   auto resta Premium. Cerca e Casa anche fra i tasti di lato su CarPlay.
-- **gdanav:** l'auto ibrida (anche e-Power), e dentro gdahome niente
+- **gdanav:** l'auto ibrida (anche e-Power), e dentro GdAHome niente
   abbinamento a Home Assistant col QR (la casa ce l'ha già).
 - **Correzioni:** la testata della pagina gdanav non lampeggia più; la prima
   fila della testata su iPad torna dopo l'Energia; il riepilogo della sera
@@ -240,7 +240,7 @@ traffico. È Premium.
   «Dove andiamo?»: si tocca e si parte, con tutte le tappe.
 
 **iPhone: le notifiche col testo vero.** Sull'iPhone le notifiche della casa
-dicevano solo «gdahome: nuova notifica», e il testo si leggeva toccandole.
+dicevano solo «GdAHome: nuova notifica», e il testo si leggeva toccandole.
 Adesso un pezzo nuovo dell'app apre la notifica mentre arriva e mostra subito
 cosa è successo. La notifica resta cifrata fino al telefono, come prima: al
 pezzo nuovo l'app lascia solo la chiave che apre le notifiche, non quella
@@ -316,15 +316,15 @@ telefono: si muoveva al ritmo dello schermo del telefono, che bloccato è
 spento. Adesso segue lo schermo dell'auto.
 
 **App: mai più il logo DashboardModern all'avvio.** Al posto della schermata
-di caricamento col vecchio logo c'è il marchio di gdahome (dalla 1.12.1), e
+di caricamento col vecchio logo c'è il marchio di GdAHome (dalla 1.12.1), e
 anche il velo con cui parte la plancia, quando arriva direttamente da Home
-Assistant, mostra il logo di gdahome invece di quello di serie.
+Assistant, mostra il logo di GdAHome invece di quello di serie.
 
 ## 1.12.1
 
-**App: all'avvio il marchio di gdahome.** Il caricamento dell'app mostrava
+**App: all'avvio il marchio di GdAHome.** Il caricamento dell'app mostrava
 per un attimo il vecchio logo «DASHBOARDMODERN»: adesso c'è quello di
-gdahome, con la rotella e «Caricamento…».
+GdAHome, con la rotella e «Caricamento…».
 
 **Notifiche push nell'app.** Nel menu dell'app, sul telefono, c'è
 «Notifiche»: antifurto, allagamento, fumo e gas, campanello (a tutto schermo,
@@ -335,7 +335,7 @@ entità. Ore di silenzio, con le urgenti che passano comunque. Le notifiche
 partono cifrate dalla casa e si aprono solo sul telefono: Google, Apple e il
 tramite non possono leggerle. Arrivano solo ai telefoni abbinati a un utente
 attivo di Home Assistant; i telefoni abbinati prima vanno abbinati di nuovo.
-Sull'iPhone, a telefono bloccato, si legge «gdahome: nuova notifica» finché
+Sull'iPhone, a telefono bloccato, si legge «GdAHome: nuova notifica» finché
 non la apri.
 
 **Chiedi alla casa capisce le domande.** «Fa freddo in camera?», «le luci
@@ -365,7 +365,7 @@ insieme, invece di saltare a ogni lettura del GPS; anche sugli schermi
 dell'auto.
 
 **In auto, Premium resta Premium.** A volte Android Auto, aprendo i comandi
-rapidi della casa, diceva «La casa in auto è compresa in gdahome Premium» a
+rapidi della casa, diceva «La casa in auto è compresa in GdAHome Premium» a
 chi Premium l'aveva: all'apertura dell'app due scritture del permesso per
 l'auto si sovrapponevano, e poteva restare quella sbagliata. Adesso si
 scrive una volta sola, nell'ordine giusto.
@@ -763,7 +763,7 @@ come fa Safari con una scheda.
 
 **Pannello a muro: il ☰ apre il menu laterale.** Premeva il ☰ della plancia
 sotto il pannello, che col chiosco fa uscire la barra in basso. Adesso chiede il
-menu a chi ce l'ha: l'app gdahome apre il suo, Home Assistant la sua barra
+menu a chi ce l'ha: l'app GdAHome apre il suo, Home Assistant la sua barra
 laterale.
 
 **Pannello a muro: l'antifurto segue la plancia.** Gli stessi tasti della
@@ -876,7 +876,7 @@ partono sotto la barra di stato, e il tasto «Chiudi» non finisce più sotto
 l'ora e la batteria. La finestra della luce si chiude anche con Esc (#214, #215).
 
 **Codice regalo:** si riscatta anche quando l'app non ha ancora aperto il
-collegamento con la casa: il codice lo porta il server di gdahome, e se nemmeno
+collegamento con la casa: il codice lo porta il server di GdAHome, e se nemmeno
 lui ci riesce l'app aspetta la casa qualche secondo invece di dire subito che
 non è collegata.
 
@@ -903,10 +903,10 @@ come farla.
 
 ## 1.11.0
 
-**gdahome anche al polso, su Apple Watch e Wear OS.** I comandi rapidi scelti
+**GdAHome anche al polso, su Apple Watch e Wear OS.** I comandi rapidi scelti
 per l'auto, i dispositivi, le azioni rapide e chi è in casa; e il navigatore,
 con la prossima manovra, l'arrivo e «Portami a casa». È la stessa app del
-telefono, che la porta sull'orologio, e fa parte di gdahome Premium. Le
+telefono, che la porta sull'orologio, e fa parte di GdAHome Premium. Le
 serrature chiedono «Sei sicuro?» prima di partire, al polso e in auto.
 
 **Il config del tablet, e solo quello.** Sul pannello a muro, tenendo premuto
@@ -992,7 +992,7 @@ traffico dentro la linea celeste del percorso, come in Waze.
 
 **In auto la batteria c'è.** Con la casa Premium il navigatore diceva «La
 batteria letta dall'auto fa parte di Premium» e in macchina «Non so quanta
-batteria hai», mentre gdahome la mostrava. Il Premium della casa arrivava
+batteria hai», mentre GdAHome la mostrava. Il Premium della casa arrivava
 mentre il navigatore si accendeva, e andava perso: adesso lo segue da subito.
 
 **I comandi rapidi in auto senza aprire la pagina.** Le azioni rapide della
@@ -1002,7 +1002,7 @@ sul telefono non si è mai aperta «Comandi rapidi in auto».
 ## 1.10.7
 
 **I codici arrivano ai cruscotti.** Dall'app, «Gestione installatore» e
-«Gestione gdahome» si aprono di nuovo senza chiedere la chiave: l'app la
+«Gestione GdAHome» si aprono di nuovo senza chiedere la chiave: l'app la
 scrive dentro la pagina, e i cruscotti adesso la prendono.
 
 **Le persone, scritte bene.** Sotto il nome non compare più «home» né lo
@@ -1160,7 +1160,7 @@ La correzione è tutta nell'app: l'add-on cambia solo numero.
 ## 1.10.2
 
 **In auto «Dispositivi» non chiude più l'app.** Sulla mappa del navigatore,
-il tasto con la casa e poi «Dispositivi» facevano chiudere gdahome. La barra
+il tasto con la casa e poi «Dispositivi» facevano chiudere GdAHome. La barra
 in alto di quella schermata aveva due tasti scritti, «Azioni» e «Casa», ma
 sopra una griglia Android Auto ne accetta uno solo: l'altro dev'essere
 un'icona. Adesso le azioni rapide hanno il fulmine, lo stesso della loro
@@ -1168,7 +1168,7 @@ schermata, e «Casa» resta scritto.
 
 **In auto la scheda della colonnina si apre.** Toccando una colonnina sulla
 mappa, l'auto mostrava «Si è verificato un errore imprevisto nell'app
-gdahome»: Android Auto rifiutava la scheda disegnata sopra la mappa, un
+GdAHome»: Android Auto rifiutava la scheda disegnata sopra la mappa, un
 modello che nella libreria dell'app è ancora sperimentale. Adesso la scheda si
 apre come pagina a sé, col cerchio dello stato, la potenza, le prese libere,
 il prezzo e «Vai»; la freccia in alto riporta alla mappa.
@@ -1205,7 +1205,7 @@ chi l'ha già usata. Se il negozio non risponde, restano i prezzi di prima.
 
 ## 1.10.0
 
-**gdahome Premium si accende.** Da questa versione una casa è Premium se ha una
+**GdAHome Premium si accende.** Da questa versione una casa è Premium se ha una
 licenza, comprata nell'app o regalata, e Base se non ce l'ha. La licenza è della
 casa: sono Premium insieme a lei tutti i telefoni abbinati e il browser.
 
@@ -1215,7 +1215,7 @@ casa: sono Premium insieme a lei tutti i telefoni abbinati e il browser.
   configurazione della plancia e i dispositivi Zigbee dall'app, e gdanav
   Premium compreso.
 
-**Premium si compra nell'app gdahome, sull'iPhone e su Android.** C'è
+**Premium si compra nell'app GdAHome, sull'iPhone e su Android.** C'è
 l'abbonamento mensile e quello annuale, ai prezzi scritti nel negozio, e la
 prima volta i primi 14 giorni sono gratis. Si disdice dal negozio, quando si
 vuole. Chi cambia telefono ritrova l'abbonamento con «Ripristina
@@ -1244,7 +1244,7 @@ novità della 1.9.0 e della 1.9.2, con le icone della 1.8.0: la stanza come
 tavola di comandi, le batterie di accumulo, la cottura e i varchi da escludere
 dall'antifurto.
 
-**Nella Gestione gdahome ci sono gli abbonamenti.** Una pagina nuova,
+**Nella Gestione GdAHome ci sono gli abbonamenti.** Una pagina nuova,
 «Abbonamenti», dice quanti abbonamenti ci sono su App Store e su Google Play,
 quanti mensili e quanti annuali, quanti in prova gratuita e quanti disdetti,
 quanti sono finiti negli ultimi 30 giorni e quante prove sono passate a
@@ -1335,7 +1335,7 @@ chiaro perché su quelle case la plancia nuova non partiva.
 
 **La scheda Licenza della console dice meglio le cose.** Base è una sola
 plancia nell'app e nel browser, con l'accesso solo dalla rete di casa. Premium
-si acquista dall'app gdahome per iPhone e vale anche su Android e nel browser.
+si acquista dall'app GdAHome per iPhone e vale anche su Android e nel browser.
 
 Il resto della 1.9.0 resta com'è.
 
@@ -1498,7 +1498,7 @@ che tiene accesa la posizione. E il lucchetto
 averla chiusa.
 
 **Premium resta spento.** Nel codice continua il lavoro sulle licenze, ma per
-chi ha gdahome non cambia niente: nessun lucchetto, nessun limite, e da fuori
+chi ha GdAHome non cambia niente: nessun lucchetto, nessun limite, e da fuori
 casa si entra come prima.
 
 ## 1.8.0
@@ -1773,8 +1773,8 @@ un errore, quante code ci sono sullo schermo.
 
 ## 1.7.0
 
-**gdahome Premium esiste nel codice, e resta spento.** Fin qui era un progetto
-scritto (`docs/LICENZE.md`) e niente altro: nessun file delle licenze, il
+**GdAHome Premium esiste nel codice, e resta spento.** Fin qui era un progetto
+scritto e niente altro: nessun file delle licenze, il
 centralino che non chiudeva nessuno, e nell'app la parola «premium» in un posto
 solo — per dire che Premium non c'era. Adesso c'è tutto: il quadro che rilascia
 i gettoni firmati e controlla le ricevute con Google e Apple, l'add-on che tiene
@@ -1785,7 +1785,7 @@ di licenze da dare agli installatori.
 **E oggi non cambia niente per nessuno.** L'interruttore è uno solo — la chiave
 pubblica delle licenze — ed è vuoto: nessun gettone vale, l'add-on non limita
 niente, l'app non mette lucchetti, il centralino lascia passare tutti. Chi ha
-gdahome installato non si accorge di nulla, e l'accesso da fuori casa resta di
+GdAHome installato non si accorge di nulla, e l'accesso da fuori casa resta di
 tutti. Si accende un altro giorno, con `strumenti/accendi-gli-acquisti.mjs`, che
 di suo non accende niente: guarda e racconta a che punto si è.
 
@@ -1821,8 +1821,7 @@ repository è pubblica e deve restarlo — è lei l'archivio di add-on che Home
 Assistant legge — quindi una credenziale che ci entra è pubblica per sempre:
 cancellarla dopo non la toglie dal commit di prima. Adesso c'è un guardiano fra
 le Prove (`npm run check:segreti`) che guarda i file tracciati e cerca le forme
-il cui incontro è sempre una perdita vera. Il conto di cosa è davvero aperto, e
-cosa lo protegge, sta in `docs/BLINDATURA.md`.
+il cui incontro è sempre una perdita vera.
 
 ## 1.6.11
 
@@ -1858,7 +1857,7 @@ un'etichetta non si sposta.
 
 ## 1.6.10
 
-**Le modalità di ricarica le dice evcc, non le sa a memoria gdahome.** evcc ha
+**Le modalità di ricarica le dice evcc, non le sa a memoria GdAHome.** evcc ha
 rifatto le sue modalità: `pv` adesso si chiama **smart** — «intelligente», e
 copre anche chi il fotovoltaico non ce l'ha e usa evcc per le tariffe orarie —
 e `minpv` non c'è più. Qui i quattro tasti erano scritti a mano, e il tasto
@@ -1895,7 +1894,7 @@ si ferma il filo, invece di lasciare a indovinare.
 ## 1.6.9
 
 **In macchina parte il navigatore.** gdanav — il navigatore che finora era
-un'app a parte — adesso è dentro gdahome, come voce «gdanav» del menu, e in
+un'app a parte — adesso è dentro GdAHome, come voce «gdanav» del menu, e in
 Android Auto è quello che si apre salendo in macchina: la mappa davanti, e la
 casa dietro un tasto. È l'app di sempre, con lo stesso nome e la stessa firma:
 non c'è niente da installare in più e niente da abbinare. Sul telefono la
@@ -2017,7 +2016,7 @@ e dentro casa plancia, ponte e cruscotto sono quelli di prima.
 
 ## 1.6.6
 
-**In macchina si vedono i dispositivi, e si premono.** Fino a ieri gdahome in
+**In macchina si vedono i dispositivi, e si premono.** Fino a ieri GdAHome in
 auto apriva tre numeri del fotovoltaico e due tasti per altre due schermate:
 informazioni sulla casa, non roba da premere. Adesso la prima cosa che si vede
 è la griglia dei dispositivi — sei, col nome, com'è messo ognuno e un tocco per
@@ -2138,7 +2137,7 @@ ribattezzare il Salone.
 **Il negozio rifiutava il pacchetto.** Costruito bene, firmato bene, e il Play
 Console lo rimandava indietro: nel manifesto c'erano dichiarate insieme due
 cose che si somigliano solo nel nome. Android **Auto** è l'app che gira sul
-telefono e in macchina ci arriva proiettata — è quello che gdahome fa; Android
+telefono e in macchina ci arriva proiettata — è quello che GdAHome fa; Android
 **Automotive** è il sistema che sta dentro l'auto. Google non lascia dichiarare
 tutte e due, e ha ragione: sono due prodotti diversi. Ne resta una, quella
 vera.
@@ -2151,7 +2150,7 @@ In casa non cambia niente.
 ## 1.6.4.1
 
 **L'app della 1.6.4 non è mai uscita.** Il pacchetto per il telefono non si
-costruiva: il pezzo nuovo che porta gdahome in macchina si metteva in ascolto
+costruiva: il pezzo nuovo che porta GdAHome in macchina si metteva in ascolto
 della sessione dell'auto sovrascrivendo un metodo che in quella libreria non
 esiste, e la costruzione si fermava lì — con l'etichetta già messa e il
 negozio già aperto a mano. In casa non cambia niente, la 1.6.4 dell'add-on è
@@ -2165,7 +2164,7 @@ etichettata.
 
 ## 1.6.4
 
-**gdahome sale in macchina.** Android Auto mostra i suoi modelli — un pannello,
+**GdAHome sale in macchina.** Android Auto mostra i suoi modelli — un pannello,
 una lista, una griglia — e li disegna lui col carattere e i colori dell'auto:
 non c'è la plancia, c'è il poco che si guarda guidando. Quanto tira la casa e
 quanto fa il sole, chi è rientrato, e i tasti delle azioni rapide.
@@ -2266,7 +2265,7 @@ se dopo c'è ancora si dice — dicendo anche cosa fare, perché quasi sempre è
 apparecchio che dorme e l'ordine di uscire non lo sente finché non si sveglia.
 
 **Negli aggiornamenti mancava proprio la nostra icona.** Nel cruscotto Duck
-DNS, Git pull e Home Assistant Core avevano il loro marchio e gdahome una «G».
+DNS, Git pull e Home Assistant Core avevano il loro marchio e GdAHome una «G».
 Il modo in cui l'icona viaggia funziona — la casa la prende dal Supervisor e la
 manda col rapporto — ma in un rapporto un'icona ci sta fino a 64 KiB, e la
 nostra ne pesava 102: sopra quel peso il ponte non dice «oggi non ce l'ho», dice
@@ -2339,7 +2338,7 @@ sapeva quale credere. Adesso il numero è uno: quello a fasce, quando le fasce
 ci sono. Sopra e sotto si legge la stessa cifra, e il risparmio si conta da
 quella.
 
-**La «Gestione installatori» si chiama Cruscotto gdahome.** Nella barra
+**La «Gestione installatori» si chiama Cruscotto GdAHome.** Nella barra
 laterale di Home Assistant, nel titolo della scheda e in cima alla pagina.
 
 **Il riquadro «Il servizio» si legge a colpo d'occhio.** Erano due paragrafi
@@ -2388,7 +2387,7 @@ un telefono si abbina, e i due pezzi devono parlare la stessa lingua.
 - **Abbinare un telefono nuovo** vuole l'add-on e l'app di questa versione.
   I telefoni già abbinati continuano a funzionare come prima, senza fare
   niente.
-- **La console di gdahome la apre chi amministra Home Assistant.** Gli altri
+- **La console di GdAHome la apre chi amministra Home Assistant.** Gli altri
   utenti di casa continuano a vedere e usare la plancia; non ne cambiano la
   configurazione e non fanno codici di abbinamento.
 - **Un telefono intestato a chi non amministra** usa la casa — luci, clima,
@@ -2598,7 +2597,7 @@ perché il sole a nessuna ora ha un prezzo.
 
 **La rete Zigbee si apre davvero, e il rifiuto non è più colpa dell'add-on.**
 «No perché non mi fa aprire la rete.» Erano due cose. La prima: quando Home
-Assistant rifiutava il comando, la plancia diceva «gdahome in casa è più
+Assistant rifiutava il comando, la plancia diceva «GdAHome in casa è più
 vecchio dell'app, aggiorna l'add-on» — e mandava ad aggiornare una cosa che era
 già aggiornata. Adesso il messaggio riporta le parole di Home Assistant e dice
 di controllare che ZHA o Zigbee2MQTT siano accesi e l'antenna collegata.
@@ -3008,7 +3007,7 @@ all'avvio, tornandoci dopo un minuto, e prima delle tre cose che da un
 telefono trovato aperto non si disfano: il cruscotto, un comando, togliere una
 casa. Il volto e l'impronta **non escono dal telefono**: restano nel suo
 coprocessore, e da lì torna un sì o un no — non passano dall'app, non arrivano
-né a gdahome né alla casa. La scheda lo scrive, e scrive anche cosa non copre:
+né a GdAHome né alla casa. La scheda lo scrive, e scrive anche cosa non copre:
 porte e cancelli si aprono dalla plancia, e lì la guardia è il PIN
 dell'azione. Di serie è spento, e accendendolo si prova subito: un lucchetto
 che si chiude e non si apre più è peggio di nessun lucchetto, e chi si trova
@@ -3522,7 +3521,7 @@ home; il **nome all'avvio** compare col suo logo mentre la pagina si apre,
 nell'app e dentro Home Assistant. Arrivano in casa col rapporto dopo. Fino a
 ieri la prima plancia prendeva da sola il nome dell'installatore, e nel menu
 laterale compariva «giovanni» al posto di «Casa»: quello non succede più, e in
-quelle case il titolo torna «gdahome» finché lui non ne sceglie uno. Un titolo
+quelle case il titolo torna «GdAHome» finché lui non ne sceglie uno. Un titolo
 scritto in casa, dall'app, resta finché l'installatore non sceglie qualcos'altro.
 Per farlo, il rapporto porta anche **profilo e titolo di ogni plancia** — nomi
 di cose in casa, non di chi ci abita — e lo si legge, come tutto il resto,
@@ -3873,11 +3872,11 @@ invece di tirare a indovinare.
 
 **La plancia diceva di essere la 1.4.32.** Si leggeva in due posti: sotto
 «CONFIGURAZIONE» e nella diagnostica runtime. Quei numeri li scrive uno script
-della plancia quando la si costruisce, e di gdahome non sa niente; adesso si
+della plancia quando la si costruisce, e di GdAHome non sa niente; adesso si
 rimettono in pari col nostro al momento di servirla, e non possono più
 divergere.
 
-**E il segno in cima a Configurazione è il logo di gdahome.** Prima c'era una
+**E il segno in cima a Configurazione è il logo di GdAHome.** Prima c'era una
 casetta azzurra disegnata dentro la pagina — non il logo di nessuno, e nemmeno
 il nostro — e aprendo quella schermata il marchio cambiava sotto gli occhi.
 Adesso è lo stesso file della testata: il nostro, o quello di chi ti ha montato
@@ -3901,11 +3900,11 @@ che siano lo stesso numero.
 
 **La plancia porta il nome e il logo di chi ti ha fatto l'impianto.** Se la casa
 te l'ha montata un installatore e lui il suo marchio l'ha caricato, la voce
-nella barra laterale prende il suo nome al posto di «gdahome», e in cima alla
+nella barra laterale prende il suo nome al posto di «GdAHome», e in cima alla
 plancia c'è il suo logo. Serve a te: il giorno che qualcosa non va, hai davanti
 il nome di chi chiamare invece del nostro.
 
-**Se togli l'installatore, torna gdahome — e non perdi niente.** È la domanda
+**Se togli l'installatore, torna GdAHome — e non perdi niente.** È la domanda
 che conta, e la risposta è nel come: si cambia **solo il titolo**. La
 configurazione della plancia sta sotto il _profilo_, e il profilo non si sfiora:
 cambiare il titolo è come cambiare la targhetta sulla porta, quello che c'è
@@ -3913,7 +3912,7 @@ dentro la stanza non si muove. Tessere, colori, stanze, avvisi: tutto dov'era.
 
 **E se la plancia l'hai rinominata tu, quel nome non lo tocca nessuno.** Né un
 installatore che arriva, né uno che se ne va, né l'interruttore qui sotto. Si
-tocca solo quello che ci abbiamo messo noi: «gdahome», o il nome che ci aveva
+tocca solo quello che ci abbiamo messo noi: «GdAHome», o il nome che ci aveva
 messo l'installatore di prima.
 
 **Il logo lo scarica il ponte, non il tuo browser.** Potrebbe prenderselo la
@@ -3924,7 +3923,7 @@ tua si guarda la plancia. Lo prende l'add-on, una volta al giorno, e da lì in
 poi lo serve lui dalla rete di casa.
 
 **C'è l'interruttore per dire di no:** _Casa › Lascia che la plancia porti il
-marchio di chi ti ha fatto l'impianto_, acceso di serie. Spento resta gdahome, e
+marchio di chi ti ha fatto l'impianto_, acceso di serie. Spento resta GdAHome, e
 non cambia nient'altro — il rapporto parte lo stesso.
 
 **E nel cruscotto dell'installatore** il suo marchio sta in testata al posto del
@@ -3936,7 +3935,7 @@ fino a 128 kB.
 > **Prima di aggiornare, tieni sotto mano il codice del quadro** (e, se le usi,
 > le chiavi del cruscotto e della gestione). Le caselle cambiano posto, e
 > secondo come si comporta il Supervisor potrebbe toccarti rimetterle una
-> volta. Le trovi dove sono adesso: Impostazioni › Add-on › gdahome ›
+> volta. Le trovi dove sono adesso: Impostazioni › Add-on › GdAHome ›
 > Configurazione.
 
 **La configurazione è in sezioni.** Erano tredici caselle una sotto l'altra, e
@@ -3947,7 +3946,7 @@ gestione» senza nessun modo di capire che non lo riguardavano.
 Adesso sono cinque gruppi con un titolo:
 
 - **La casa** — la tua parte, e per quasi tutti l'unica che conta
-- **Chi installa** — solo se gdahome lo monti in casa d'altri
+- **Chi installa** — solo se GdAHome lo monti in casa d'altri
 - **Chi tiene il quadro** e **L'assistenza** — una casa sola al mondo ciascuna
 - **Avanzate** — due numeri che non cambia quasi nessuno
 
@@ -3982,7 +3981,7 @@ funziona — da una parte o dall'altra, sotto c'è sempre qualcosa.
 Adesso non lo si scansa: **gli si fa spazio.** La pagina si accorge da sola di
 stare dentro un riquadro e gli lascia il posto in cima, e solo lì: aperta in un
 browser quel tasto non c'è, e un buco sarebbe solo un buco. Il bollo resta dove
-serve davvero — accanto agli aggiornamenti di gdahome, dove distingue la roba
+serve davvero — accanto agli aggiornamenti di GdAHome, dove distingue la roba
 nostra senza scaricare niente.
 
 **Dal cruscotto si installa.** Era il pezzo che mancava: il quadro faceva
@@ -4024,7 +4023,7 @@ chiede conferma due volte, perché non stai premendo un tasto sul tuo computer.
 
 **Dove si accende, detto dove serve.** Quando una casa non ha aperto la
 manutenzione, il cruscotto dell'installatore adesso non dice solo «è chiusa»:
-dice la strada esatta da fare — _Impostazioni › Add-on › gdahome ›
+dice la strada esatta da fare — _Impostazioni › Add-on › GdAHome ›
 Configurazione_, la casella col suo nome per intero — perché è lui che deve
 spiegarla al cliente al telefono. Da lì non si accende: sarebbe il permesso che
 se lo dà da solo.
@@ -4351,7 +4350,7 @@ la plancia viene dall'add-on. Non faceva danno e non la vedeva nessuno._
 **Se la casa te l'ha montata un installatore, adesso può accorgersi da solo
 che qualcosa non va.**
 
-Nella console di gdahome c'è una scheda nuova, «Il quadro». Chi ti ha fatto
+Nella console di GdAHome c'è una scheda nuova, «Il quadro». Chi ti ha fatto
 l'impianto ti dà un codice, tu lo incolli lì, e da quel momento questa casa
 gli manda ogni quarto d'ora **poche righe di numeri**: le versioni, quanto è
 pieno il disco, quali add-on girano, quante entità non rispondono. Così si
@@ -4583,7 +4582,7 @@ non del ferro — e senza l'integrazione System Monitor restano vuote invece di
 diventare zero: uno zero rassicurante su una scheda in ginocchio è peggio di
 niente.
 
-Non passa dal centralino di gdahome: va dalla casa al quadro e basta.
+Non passa dal centralino di GdAHome: va dalla casa al quadro e basta.
 
 **E lo puoi leggere e fermare da qui.** In questa pagina, dove quella casella è
 piena, compare la scheda «Il quadro di chi ti ha fatto l'impianto»: c'è scritto
@@ -4694,7 +4693,7 @@ Assistant a rifiutarlo. Quella strada, dentro Home Assistant, è un
 passaggio verso il Supervisor con le **sue** regole di permesso: il segno
 che l'add-on ha è quello del Supervisor, non di un utente amministratore,
 e per l'icona di un add-on che non è lui la risposta è no. Per l'icona di
-gdahome no, perché quella è la sua.
+GdAHome no, perché quella è la sua.
 
 Al Supervisor la stessa cosa si chiede diretta, col suo segno — ed è
 proprio per questo che il manifesto dichiara `hassio_role: manager`. Una
@@ -4745,7 +4744,7 @@ la plancia nuova.
 
 **Gli aggiornamenti di casa, con i loghi, e queste note lette dentro l'app.**
 
-Se stai leggendo questo **dentro gdahome**, in un foglio che è salito dal
+Se stai leggendo questo **dentro GdAHome**, in un foglio che è salito dal
 basso e che porta «Installa» in fondo, allora la cosa principale di questa
 versione funziona: prima quel tasto si chiamava «Cosa cambia in questa
 versione» e apriva una pagina di GitHub nel browser — su un telefono voleva
@@ -4763,7 +4762,7 @@ restare bianco, e offre la pagina di fuori come ultima spiaggia.
 
 **E ogni riga ha il suo segno.** Sei righe con sei nomi scritti si leggono una
 per una; col logo davanti si riconosce quello che si cerca senza leggere. Il
-quadrato di gdahome, la casa di Home Assistant, il marchio dell'add-on: li
+quadrato di GdAHome, la casa di Home Assistant, il marchio dell'add-on: li
 dichiara Home Assistant, e li va a prendere l'add-on — l'icona di un add-on
 dalla casa, col suo segno, e il marchio di un'integrazione dai marchi di Home
 Assistant. Chi non ne ha uno tiene la sua iniziale in un quadrato come gli
@@ -4789,7 +4788,7 @@ Guardando la sezione, tre cose che si vedono e basta:
 
 «FortiGuard Intrusion Prevention — Access Blocked», al posto dell'app, con
 scritto `Category: Newly Registered Domain`. Chi l'ha vista ha pensato che
-fosse rotto qualcosa, o peggio che gdahome fosse su una lista nera, e l'ha
+fosse rotto qualcosa, o peggio che GdAHome fosse su una lista nera, e l'ha
 mandata a chiedere.
 
 Non e' ne' l'una ne' l'altra: quella categoria guarda **la data di
@@ -4903,14 +4902,14 @@ e non lo diceva a nessuno. Adesso lo dice nella sua scheda e con un avviso in
 Home Assistant, col nome della voce e dove si leva (Impostazioni → Dashboard).
 Non la tocca: una dashboard è di chi ci abita.
 
-**E l'anello del pannello si è aperto.** Nella console il tasto «Apri gdahome»
+**E l'anello del pannello si è aperto.** Nella console il tasto «Apri GdAHome»
 apre l'app in questa stessa scheda — deve restare così, se no quell'indirizzo
 dopo qualche minuto risponde 401. Ma l'app, senza nessuna casa abbinata,
-diceva «apri gdahome dalla barra laterale e premi Genera QR code», e la barra
+diceva «apri GdAHome dalla barra laterale e premi Genera QR code», e la barra
 laterale riportava all'app: il codice non si generava **mai**. Adesso l'app sa
 di essere servita dall'add-on, e ha un tasto che riporta alla console.
 
-E nella scheda dell'add-on, in cima: **gdahome è un add-on, non
+E nella scheda dell'add-on, in cima: **GdAHome è un add-on, non
 un'integrazione, e su HACS non si mette.** HACS lo rifiuta e non dice perché.
 
 ## 1.4.32.3
@@ -4948,7 +4947,7 @@ fare.
 Il motivo era uno: il file che disegna quella pagina sta nella cartella `www`
 della configurazione, e Home Assistant apre quella cartella **soltanto quando
 parte**. In una casa che non l'aveva — quasi tutte — la cartella la fa
-gdahome al primo avvio, e fino al riavvio dopo Home Assistant quel file non lo
+GdAHome al primo avvio, e fino al riavvio dopo Home Assistant quel file non lo
 serve a nessuno.
 
 Adesso l'add-on lo chiede a Home Assistant invece di darlo per fatto, e quando
@@ -4971,7 +4970,7 @@ testata, e quarantadue file cambiati.
 
 ## 1.4.32
 
-Gli **aggiornamenti di casa nel menu dell'app**: chi usa gdahome dal telefono
+Gli **aggiornamenti di casa nel menu dell'app**: chi usa GdAHome dal telefono
 vede gli aggiornamenti che Home Assistant ha da fare, li installa da lì e può
 riavviare, senza entrare in Home Assistant.
 
@@ -4990,7 +4989,7 @@ La plancia **1.4.28**.
 
 ## 1.4.27
 
-La plancia **1.4.27**, e in mezzo: gdahome parla **italiano e inglese** — l'app,
+La plancia **1.4.27**, e in mezzo: GdAHome parla **italiano e inglese** — l'app,
 la plancia, questa scheda e le opzioni qui sotto — il menu dell'app si apre dai
 tre trattini della plancia e dal tasto indietro, e in casa il telefono va
 dritto al ponte invece di fare il giro dal centralino.
@@ -5008,5 +5007,5 @@ opzioni: una casella che tutti lasciano vuota prima o poi qualcuno la riempie.
 
 ## 1.4.24
 
-L'add-on si chiama **gdahome**. Prima si chiamava «ponte», che è come si chiama
+L'add-on si chiama **GdAHome**. Prima si chiamava «ponte», che è come si chiama
 ancora dentro il programma: lì è quello che fa, qui è quello che si vede.

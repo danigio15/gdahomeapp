@@ -69,7 +69,7 @@ test("un gettone del quadro, per questa casa, vale; e dice cosa c'e' dentro", ()
   assert.equal(detto.sog, CASA);
 });
 
-test("un gettone gdahome vale anche per gdanav, uno gdanav non vale per gdahome", () => {
+test("un gettone GdAHome vale anche per gdanav, uno gdanav non vale per GdAHome", () => {
   const gdahome = unGettone({ sog: CASA }, { adesso: ADESSO });
   const gdanav = unGettone({ sog: CASA, app: "gdanav" }, { adesso: ADESSO });
   assert.ok(vale(gdahome, { app: "gdanav" }));

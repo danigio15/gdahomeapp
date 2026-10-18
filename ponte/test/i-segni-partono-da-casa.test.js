@@ -209,7 +209,7 @@ test("un'icona che non ci sta si dice nel registro, e non si richiede ogni minut
   );
 });
 
-test("l'icona di gdahome ci sta in un rapporto: è l'unica che dipende da noi", async () => {
+test("l'icona di GdAHome ci sta in un rapporto: è l'unica che dipende da noi", async () => {
   /* Dal campo, con lo scatto del cruscotto: «negli aggiornamenti non esce
    * icona gdahome, cioè proprio la nostra». Duck DNS, Git pull, Home Assistant
    * Core avevano il loro marchio; gdahome la lettera «G».

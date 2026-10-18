@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Gestione gdahome</title>
+    <title>Gestione GdAHome</title>
     <!--
       LA GESTIONE DEGLI INSTALLATORI: la pagina di chi tiene il quadro.
       (Nel programma si chiama «gestione installatori», e cosi' la cerca una
@@ -4288,7 +4288,7 @@
         <div class="testata">
           <div class="tondo" aria-hidden="true"><span>gd</span></div>
           <div class="nomi">
-            <h1>Gestione gdahome</h1>
+            <h1>Gestione GdAHome</h1>
             <p id="sottotitolo"></p>
           </div>
           <button
@@ -5428,7 +5428,7 @@
                  ${
                    /* già HTML */ t.installate === null
                      ? ""
-                     : mattonella("blu", "casa", t.installate, "impianti con gdahome")
+                     : mattonella("blu", "casa", t.installate, "impianti con GdAHome")
                  }
                  ${/* già HTML */ mattonella("verde", "filo", Number(t.case) || 0, "collegati adesso")}
                  ${/* già HTML */ mattonella("verde", "telefono", Number(t.app) || 0, "la guardano dall'app")}
@@ -5449,7 +5449,7 @@
         return `
           <section class="scheda">
             <h3><span class="tondino verde">${LE_ICONE["quadro"]}</span>Il servizio</h3>
-            <p class="sotto">I server di gdahome: se uno si ferma, si vede qui per primo.</p>
+            <p class="sotto">I server di GdAHome: se uno si ferma, si vede qui per primo.</p>
             <ul class="elenco">
               ${/* già HTML */ delQuadro}
               ${/* già HTML */ delTramite}
@@ -5864,7 +5864,7 @@
           <div class="capo-sezione">
             <div>
               <h2>Collegamenti</h2>
-              <p>Quante case hanno gdahome, quante sono collegate da fuori adesso, e da dove le guardano.</p>
+              <p>Quante case hanno GdAHome, quante sono collegate da fuori adesso, e da dove le guardano.</p>
             </div>
           </div>`;
         if (!t)
@@ -5882,7 +5882,7 @@
             ? "Il tramite è acceso da " + daQuantoAcceso(t.accesoDa) + "."
             : "Il tramite adesso non risponde.";
         const sulTotale = (quante) =>
-          installate ? `${Math.round((quante / installate) * 100)}% delle case con gdahome` : "";
+          installate ? `${Math.round((quante / installate) * 100)}% delle case con GdAHome` : "";
         const grande = (icona, etichetta, valore, dettaglio) => `
           <div class="numerone">
             <span class="etichetta">${LE_ICONE[icona]}${testo(etichetta)}</span>
@@ -5891,17 +5891,17 @@
           </div>`;
         return `${/* già HTML */ capo}
           <div class="griglia griglia-4">
-            ${/* già HTML */ grande("casa", "Hanno installato gdahome", installate, installate === null ? "il tramite non lo dice ancora: va aggiornato" : "case registrate, anche se adesso sono spente")}
+            ${/* già HTML */ grande("casa", "Hanno installato GdAHome", installate, installate === null ? "il tramite non lo dice ancora: va aggiornato" : "case registrate, anche se adesso sono spente")}
             ${/* già HTML */ grande("filo", "Collegate da fuori adesso", collegate, sulTotale(collegate) || "case col filo aperto verso il tramite")}
-            ${/* già HTML */ grande("telefono", "Guardano dall'app gdahome", app, "telefoni e tablet collegati adesso")}
+            ${/* già HTML */ grande("telefono", "Guardano dall'app GdAHome", app, "telefoni e tablet collegati adesso")}
             ${/* già HTML */ grande("browser", "Guardano dal browser", web, web === null ? "il tramite non lo dice ancora" : "pagine aperte adesso")}
           </div>
           <section class="scheda">
             <h3><span class="tondino">${LE_ICONE["filo"]}</span>Come si leggono</h3>
             <ul class="elenco">
-              <li><span class="riga-testo"><b>Hanno installato gdahome</b><span>Le case che si sono presentate almeno una volta al tramite: restano contate anche quando la casa è spenta.</span></span></li>
+              <li><span class="riga-testo"><b>Hanno installato GdAHome</b><span>Le case che si sono presentate almeno una volta al tramite: restano contate anche quando la casa è spenta.</span></span></li>
               <li><span class="riga-testo"><b>Collegate da fuori adesso</b><span>Le case accese in questo momento, raggiungibili da fuori casa.</span></span></li>
-              <li><span class="riga-testo"><b>App e browser</b><span>Chi le sta guardando adesso: dall'app gdahome sul telefono o sul tablet, o da una pagina del browser.</span></span></li>
+              <li><span class="riga-testo"><b>App e browser</b><span>Chi le sta guardando adesso: dall'app GdAHome sul telefono o sul tablet, o da una pagina del browser.</span></span></li>
             </ul>
             <p class="minuta">${testo(daQuando)} I numeri si aggiornano da soli ogni minuto, o col pallino in alto.</p>
           </section>`;
@@ -6255,7 +6255,7 @@
           <div class="capo-sezione">
             <div>
               <h2>Installatori</h2>
-              <p>Chi monta gdahome per i suoi clienti. Tocca un installatore per vederne le case e cambiare le sue regole.${riassunto ? ` <b>${testo(riassunto)}</b>` : ""}</p>
+              <p>Chi monta GdAHome per i suoi clienti. Tocca un installatore per vederne le case e cambiare le sue regole.${riassunto ? ` <b>${testo(riassunto)}</b>` : ""}</p>
             </div>
             <button type="button" class="tasto forte" data-nuovo>${LE_ICONE["aggiungi"]}Nuovo installatore</button>
           </div>
@@ -6433,7 +6433,7 @@
        * lui a dirlo.
        * ─────────────────────────────────────────────────────────────────── */
 
-      const IL_NOME_DELLA_APP = { gdahome: "gdahome Premium", gdanav: "gdanav Premium" };
+      const IL_NOME_DELLA_APP = { gdahome: "GdAHome Premium", gdanav: "gdanav Premium" };
       const DA_DOVE = {
         negozio: "dal negozio",
         regalo: "regalo del gestore",
@@ -6791,7 +6791,7 @@
           <div class="capo-sezione">
             <div>
               <h2>Abbonamenti</h2>
-              <p>gdahome Premium comprato nell'app, su App Store e su Google Play. Il quadro li richiede al negozio una volta al giorno: chi disdice si vede il giorno dopo. I regali stanno in «Regali e codici».</p>
+              <p>GdAHome Premium comprato nell'app, su App Store e su Google Play. Il quadro li richiede al negozio una volta al giorno: chi disdice si vede il giorno dopo. I regali stanno in «Regali e codici».</p>
             </div>
           </div>`;
         if (!A)
@@ -7023,7 +7023,7 @@
         const diProva =
           ilFiltro === "tutti" || ilFiltro === "test" ? elenco.filter((uno) => uno.sandbox) : [];
         const corpo = !elenco.length
-          ? `<div class="vuoto"><b>Ancora nessun abbonamento</b> Compaiono qui da soli quando qualcuno compra gdahome Premium nell'app.</div>`
+          ? `<div class="vuoto"><b>Ancora nessun abbonamento</b> Compaiono qui da soli quando qualcuno compra GdAHome Premium nell'app.</div>`
           : `${
               veri.length
                 ? `<ul class="elenco si-tocca">${veri.map(riga).join("")}</ul>`
@@ -7185,7 +7185,7 @@
           <div class="capo-sezione">
             <div>
               <h2>Regali e codici</h2>
-              <p>Premium regalato da te o dagli installatori. gdahome Premium è <b>della casa</b>: tutti i telefoni abbinati a quella casa sono Premium insieme. gdanav Premium da solo è <b>del telefono</b>, e si regala con un codice. Chi compra nell'app sta in «Abbonamenti».</p>
+              <p>Premium regalato da te o dagli installatori. GdAHome Premium è <b>della casa</b>: tutti i telefoni abbinati a quella casa sono Premium insieme. gdanav Premium da solo è <b>del telefono</b>, e si regala con un codice. Chi compra nell'app sta in «Abbonamenti».</p>
             </div>
           </div>
 
@@ -7204,7 +7204,7 @@
             CODICI_APPENA
               ? `<section class="chiave-nuova">
                    <b>${plurale(CODICI_APPENA.codici.length, "codice", "codici")} ${testo(IL_NOME_DELLA_APP[CODICI_APPENA.app] || "")} · ${testo(quantiMesi(CODICI_APPENA.mesi))}</b>
-                   <p>Ognuno vale <b>una volta sola</b>: si riscatta dall'app gdahome (per la casa) o da gdanav (per il telefono), in «Ho un codice regalo». Restano anche nell'elenco qui sotto finché nessuno li usa.</p>
+                   <p>Ognuno vale <b>una volta sola</b>: si riscatta dall'app GdAHome (per la casa) o da gdanav (per il telefono), in «Ho un codice regalo». Restano anche nell'elenco qui sotto finché nessuno li usa.</p>
                    <div class="codici-fatti">
                      ${CODICI_APPENA.codici.map((uno) => `<div class="valore">${testo(uno)}</div>`).join("")}
                    </div>
@@ -7232,7 +7232,7 @@
                 <div class="campo">
                   <label for="regalo-app">App</label>
                   <select id="regalo-app">
-                    <option value="gdahome">gdahome Premium</option>
+                    <option value="gdahome">GdAHome Premium</option>
                     <option value="gdanav">gdanav Premium</option>
                   </select>
                 </div>
@@ -7257,7 +7257,7 @@
                 <div class="campo">
                   <label for="codici-app">Per</label>
                   <select id="codici-app">
-                    <option value="gdahome">gdahome Premium</option>
+                    <option value="gdahome">GdAHome Premium</option>
                     <option value="gdanav">gdanav Premium</option>
                   </select>
                 </div>
@@ -7379,7 +7379,7 @@
           PACCHETTI_APERTI.delete(chi);
           BOZZE.delete(chi);
           if (riga) riga.hidden = true;
-          avvisa(`${ilNomeDi(chi)}: ${quante("gdahome")} gdahome e ${quante("gdanav")} gdanav`);
+          avvisa(`${ilNomeDi(chi)}: ${quante("gdahome")} GdAHome e ${quante("gdanav")} gdanav`);
         });
       }
 
@@ -7565,7 +7565,7 @@
         const una = CONTI?.tutte.find((altra) => altra.matricola === casa.casa);
 
         const versioni = [
-          ["gdahome (il ponte)", c.ponte, c.aggiornamenti?.gdahome],
+          ["GdAHome (il ponte)", c.ponte, c.aggiornamenti?.gdahome],
           ["la plancia", c.plancia, false],
           ["Home Assistant Core", c.ha, c.aggiornamenti?.ha],
           ["Supervisor", c.supervisor, false],
@@ -8065,7 +8065,7 @@
               <p class="nota">
                 ${
                   quanti > 0
-                    ? `${plurale(quanti, "aggiornamento in attesa", "aggiornamenti in attesa")}, ma questa casa non manda l'elenco: è una versione di gdahome precedente alla 1.5.9.`
+                    ? `${plurale(quanti, "aggiornamento in attesa", "aggiornamenti in attesa")}, ma questa casa non manda l'elenco: è una versione di GdAHome precedente alla 1.5.9.`
                     : "Nessun aggiornamento in attesa: la casa è aggiornata."
                 }
               </p>

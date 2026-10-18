@@ -159,16 +159,10 @@ export const LE_ECCEZIONI = Object.freeze([
       "il certificato autofirmato per «posta.prova» e 127.0.0.1: la chiave sta accanto al certificato proprio perche' non protegge niente, e senza di lei la prova non puo' alzare un server in TLS",
   },
   {
-    file: "docs/LICENZE.md",
-    segno: "chiave-ed25519-grezza",
-    perche:
-      "la coppia di prova delle licenze, scritta nel documento perche' chi prova ne ha bisogno e non deve inventarsene una. Quella vera nasce sulla macchina del quadro (`quadro/le-licenze.mjs chiave`), e la sua privata sta solo li'",
-  },
-  {
     file: "quadro/test/le-licenze.test.js",
     segno: "chiave-ed25519-grezza",
     perche:
-      "la stessa coppia di prova di `docs/LICENZE.md`: il quadro ci firma i gettoni delle prove, e le prove degli altri pezzi li verificano con la pubblica di prova. Non vale in nessuna casa: quella vera e' un'altra, nata sulla macchina del quadro, e `strumenti/chiave-licenze.mjs` rifiuta di scrivere questa",
+      "la coppia di prova delle licenze: il quadro ci firma i gettoni delle prove, e le prove degli altri pezzi li verificano con la pubblica di prova. Non vale in nessuna casa: quella vera e' un'altra, nata sulla macchina del quadro, e `strumenti/chiave-licenze.mjs` rifiuta di scrivere questa",
   },
   {
     file: "quadro/test/le-licenze-tolte-arrivano-al-centralino.test.js",
