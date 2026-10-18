@@ -242,7 +242,33 @@ function giornataNuova(giorno) {
     piccoIl: 0,
     /* I cicli finiti oggi, per «la lavatrice e' andata col sole». */
     cicli: [],
+    /* Ogni carico che si misura, per «chi ha consumato di piu'»: Wh, quanti
+     * dal sole, dalla batteria e dalla rete, e gli euro della rete. Come i
+     * cicli, ma per tutta la giornata e anche per cio' che non fa cicli (la
+     * pompa di calore, il forno). Le chiavi sono entita': restano in casa. */
+    perCarico: {},
   };
+}
+
+/* Quanti carichi al piu' si contano in un giorno: una casa vera ne ha una
+ * ventina, e un elenco senza fine sul disco non serve a nessuno. */
+const CARICHI_AL_MASSIMO = 80;
+/* Quanti se ne tengono nei giorni passati, i piu' grossi. */
+export const CARICHI_NEI_GIORNI = 5;
+
+/* I carichi di una giornata, dal piu' grosso: `[{id, kwh, eur, sole}]`.
+ * `eur` e' `null` quando non c'era mai un prezzo; `sole` e' la quota (0–1)
+ * venuta dal sole. Sotto i 10 Wh non vale la pena dirlo. */
+export function carichiDellaGiornata(perCarico = {}) {
+  return Object.entries(perCarico || {})
+    .filter(([, c]) => c && c.wh >= 10)
+    .map(([id, c]) => ({
+      id,
+      kwh: arrotonda(c.wh / 1000, 2),
+      eur: c.conPrezzo ? arrotonda(c.eur, 2) : null,
+      sole: c.wh > 0 ? arrotonda(c.sole / c.wh, 2) : 0,
+    }))
+    .sort((a, b) => b.kwh - a.kwh || a.id.localeCompare(b.id));
 }
 
 /**
@@ -293,6 +319,10 @@ export class TaccuinoDellEnergia {
       casa: arrotonda((g.casaOggiLetto ?? g.casa / 1000) || 0, 2),
       eur: arrotonda(g.euroRete, 2),
       ris: arrotonda(g.risparmio, 2),
+      /* I piu' grossi, per «la settimana»: [id, kWh, €, quota di sole]. */
+      top: carichiDellaGiornata(g.perCarico)
+        .slice(0, CARICHI_NEI_GIORNI)
+        .map((c) => [c.id, c.kwh, c.eur, c.sole]),
     });
     giorni.sort((a, b) => (a.d < b.d ? -1 : 1));
     this.archivio.dati.giorni = giorni.slice(-GIORNI_TENUTI);
@@ -357,6 +387,31 @@ export class TaccuinoDellEnergia {
     for (const chiave of ["soleOggi", "casaOggi", "preseOggi", "cedutiOggi"])
       if (letture[chiave] !== null && letture[chiave] !== undefined)
         g[`${chiave}Letto`] = letture[chiave];
+
+    /* Ogni carico misurato, tutto il giorno: la stessa divisione fra sole,
+     * batteria e rete dei cicli. `carichi` (tutte le potenze della plancia)
+     * quando c'e', altrimenti gli elettrodomestici. */
+    if (dt > 0) {
+      if (!g.perCarico || typeof g.perCarico !== "object") g.perCarico = {};
+      const carichi = letture.carichi || letture.apparecchi || {};
+      for (const [id, w] of Object.entries(carichi)) {
+        if (w === null || w === undefined || !(w > 0)) continue;
+        let c = g.perCarico[id];
+        if (!c) {
+          if (Object.keys(g.perCarico).length >= CARICHI_AL_MASSIMO) continue;
+          c = g.perCarico[id] = { wh: 0, sole: 0, batt: 0, rete: 0, eur: 0, conPrezzo: false };
+        }
+        const q = quoteDelMomento({ app: w, sole, casa, rete });
+        c.wh += w * ore;
+        c.sole += q.sole * ore;
+        c.batt += q.batteria * ore;
+        c.rete += q.rete * ore;
+        if (conPrezzo) {
+          c.eur += ((q.rete * ore) / 1000) * euro;
+          c.conPrezzo = true;
+        }
+      }
+    }
 
     /* Gli elettrodomestici: un ciclo si apre sopra la soglia e si integra
      * finche' qualcuno non lo chiude (`chiudiIlCiclo`). */
@@ -492,6 +547,7 @@ export class TaccuinoDellEnergia {
         Object.entries(g.perFascia).map(([k, wh]) => [k, arrotonda(wh / 1000, 1)]),
       ),
       cicli: g.cicli.slice(),
+      carichi: carichiDellaGiornata(g.perCarico),
     };
   }
 
@@ -511,6 +567,36 @@ export class TaccuinoDellEnergia {
       );
     }
   }
+}
+
+/**
+ * I carichi che la plancia misura: elettrodomestici e carichi della pagina
+ * Energia, ognuno con l'entita' della sua potenza e il nome che gli ha dato
+ * chi abita. `[{id, nome}]`, senza doppioni. Si legge da
+ * `dm_dashboard_state` cosi' com'e' salvato (oggetto o testo).
+ */
+export function carichiDellaPlancia(valori = {}) {
+  let stato = valori?.dm_dashboard_state;
+  if (typeof stato === "string") {
+    try {
+      stato = JSON.parse(stato);
+    } catch (_errore) {
+      stato = null;
+    }
+  }
+  const sezioni = stato && typeof stato === "object" ? stato.sections || {} : {};
+  const visti = new Set();
+  const fuori = [];
+  for (const sezione of ["appliances", "loads"]) {
+    const elenco = Array.isArray(sezioni[sezione]) ? sezioni[sezione] : [];
+    for (const voce of elenco) {
+      const id = String(voce?.power_entity || voce?.power || "").trim();
+      if (!/^[a-z_]+\.[a-z0-9_]+$/.test(id) || visti.has(id)) continue;
+      visti.add(id);
+      fuori.push({ id, nome: String(voce?.name || voce?.report_label || "").trim() });
+    }
+  }
+  return fuori;
 }
 
 /**

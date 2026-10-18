@@ -67,6 +67,9 @@ const PER_TELEFONO_ALL_ORA = 30;
 /* E di prova, per non farne un campanello. */
 const PROVE_OGNI_DIECI_MINUTI = 3;
 
+/** La pagina «La tua giornata» dell'app: la chiede un telefono con un utente. */
+export const LA_GIORNATA = "ponte/energia/giornata";
+
 /* Quante notifiche personalizzate per casa. */
 export const PERSONALIZZATE_AL_PIU = 40;
 
@@ -1084,7 +1087,58 @@ export class Notifiche {
   /* ─── Quello che chiede il telefono ────────────────────────────────── */
 
   riconosce(tipo) {
-    return typeof tipo === "string" && tipo.startsWith("ponte/notifiche/");
+    return (
+      typeof tipo === "string" && (tipo.startsWith("ponte/notifiche/") || tipo === LA_GIORNATA)
+    );
+  }
+
+  /**
+   * La giornata della casa per la pagina «La tua giornata» dell'app: quello
+   * che il riepilogo della sera racconta, con tutti i numeri. Solo numeri e
+   * nomi dei carichi: niente entita', niente dati di altri telefoni. `null`
+   * se oggi il taccuino non ha visto niente.
+   */
+  async giornataDettagliata() {
+    const s = this.sentinella;
+    const dati = s?._laGiornataDaRaccontare?.() || {};
+    const g = dati.giornata;
+    if (!g) return { giornata: null };
+    let domani = null;
+    try {
+      domani = await this._ilTempoDiDomani();
+    } catch (_errore) {
+      domani = null;
+    }
+    const passati = s.taccuino?.giorniPassati?.() || [];
+    return {
+      giornata: {
+        d: g.d,
+        sole: g.sole,
+        casa: g.casa,
+        presi: g.presi,
+        ceduti: g.ceduti,
+        usato: g.usato,
+        quotaInCasa: g.quotaInCasa,
+        euroRete: g.euroRete,
+        risparmio: g.risparmio,
+        picco: g.picco,
+        piccoIl: g.piccoIl,
+        p: g.p,
+        c: g.c,
+        perFascia: g.perFascia,
+      },
+      conSole: Boolean(dati.conSole),
+      /* Chi ha consumato di piu', dal piu' grosso. */
+      piu: Array.isArray(dati.piu) ? dati.piu : [],
+      ieri: dati.ieri ?? null,
+      media: dati.media ?? null,
+      record: dati.record ?? null,
+      batteria: dati.batteria ?? null,
+      fasce: dati.fasce ?? null,
+      domani,
+      /* La settimana: i totali dei sette giorni prima. */
+      settimana: passati.slice(-7).map((x) => ({ d: x.d, pk: x.pk, casa: x.casa, eur: x.eur })),
+    };
   }
 
   /* `dispositivo`: il telefono di questo filo, gia' riconosciuto. `amministra`:
@@ -1102,6 +1156,11 @@ export class Notifiche {
     if (!telefono) return no("unauthorized", "prima bisogna entrare");
     const utente = dispositivo.utente || "";
     try {
+      /* La pagina «La tua giornata»: solo chi ha un utente sul filo. */
+      if (detto.type === LA_GIORNATA) {
+        if (!utente) return no("unauthorized", "la giornata della casa si vede da un utente");
+        return si(await this.giornataDettagliata());
+      }
       switch (detto.type) {
         case "ponte/notifiche/stato":
           return si(await this._stato(telefono, utente, amministra));

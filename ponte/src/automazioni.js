@@ -88,6 +88,7 @@ import {
   proposteDaiDispositivi,
   proposteDalleAbitudini,
 } from "../plancia/src/core/automazioni-proposte.js";
+import { riassuntoDellAutomazione } from "./riassunto-delle-automazioni.js";
 
 export const COMANDO_DELLO_STATO = "ponte/automazioni/stato";
 export const COMANDO_DEL_SALVA = "ponte/automazioni/salva";
@@ -420,6 +421,32 @@ export class Automazioni {
     return nomi;
   }
 
+  /* Le categorie che chi abita ha dato alle automazioni in Home Assistant:
+   * `{category_id: {id, nome, icona}}`. Solo quelle salvate li': nessuna
+   * inventata, nessuna dedotta. Durano quanto le stanze. */
+  async _categorieHa() {
+    const ora = this.adesso();
+    if (this._categorie && ora - this._categorie.il < AREE_DURANO) return this._categorie.tutte;
+    const tutte = {};
+    try {
+      const elenco = await this.casa?.chiedi?.({
+        type: "config/category_registry/list",
+        scope: "automation",
+      });
+      for (const c of Array.isArray(elenco) ? elenco : [])
+        if (c?.category_id)
+          tutte[c.category_id] = {
+            id: String(c.category_id),
+            nome: String(c.name || c.category_id),
+            icona: String(c.icon || ""),
+          };
+    } catch (errore) {
+      this.registro.debug?.(`le categorie non si leggono: ${errore?.message || errore}`);
+    }
+    this._categorie = { il: ora, tutte };
+    return tutte;
+  }
+
   async _registri() {
     try {
       return (await this.registri?.chiedi?.()) || null;
@@ -456,12 +483,15 @@ export class Automazioni {
     }
     const registri = await this._registri();
     const nomiDelleAree = await this._nomiDelleAree();
+    const categorieHa = await this._categorieHa();
     const areaDelDispositivo = new Map();
     for (const d of Array.isArray(registri?.dispositivi) ? registri.dispositivi : [])
       if (d?.id) areaDelDispositivo.set(d.id, d.area_id || "");
     const voceDi = new Map();
     for (const v of Array.isArray(registri?.entita) ? registri.entita : [])
       if (v?.entity_id) voceDi.set(v.entity_id, v);
+    const nomeDi = (id) => String(statoDi(id)?.attributes?.friendly_name || "");
+    const classeDi = (id) => String(statoDi(id)?.attributes?.device_class || "");
     const azioni = this._azioni();
     const fuori = [];
     for (const [entity, s] of voci) {
@@ -478,6 +508,15 @@ export class Automazioni {
         modello = null;
       }
       const ultima = Date.parse(attributi.last_triggered || "");
+      /* La categoria di Home Assistant, se chi abita gliel'ha data e esiste
+       * ancora; altrimenti nessuna («Senza categoria» la mette la plancia). */
+      const idCategoria = String(voce?.categories?.automation || "");
+      let riassunto = null;
+      try {
+        riassunto = riassuntoDellAutomazione(config, { nomeDi, classeDi });
+      } catch (_errore) {
+        riassunto = null;
+      }
       fuori.push({
         entity_id: entity,
         id: idBuono(id) ? id : "",
@@ -487,6 +526,8 @@ export class Automazioni {
         area: areaId ? nomiDelleAree[areaId] || "" : "",
         areaId,
         categoria: config ? categoriaDi(config, statoDi) : "altre",
+        categoriaHa: categorieHa[idCategoria] ? idCategoria : null,
+        riassunto,
         origine: origineDi(config),
         modello: modello ? { ...modello, attiva } : null,
         /* Si modifica dalla plancia solo se Home Assistant ne da' la
@@ -510,15 +551,20 @@ export class Automazioni {
 
   async stato({ amministra = false } = {}) {
     const nomi = await this._nomiDelleAree();
+    const automazioni = await this.elencoDiCasa({ conConfig: amministra === true });
+    const categorie = await this._categorieHa();
     return {
       premium: this.sbloccato,
       /* Chi puo' scrivere: chi amministra Home Assistant, con Premium. */
       puoScrivere: amministra === true && this.sbloccato,
       adesso: this.adesso(),
-      automazioni: await this.elencoDiCasa({ conConfig: amministra === true }),
+      automazioni,
       aree: Object.entries(nomi)
         .map(([id, nome]) => ({ id, nome }))
         .sort((a, b) => a.nome.localeCompare(b.nome)),
+      /* Le categorie di Home Assistant in ordine di nome, come le mostra
+       * Home Assistant; «Senza categoria» in fondo la aggiunge la plancia. */
+      categorie: Object.values(categorie).sort((a, b) => a.nome.localeCompare(b.nome)),
       rimasteNellaPlancia: this.rimasteNellaPlancia().length,
     };
   }

@@ -36,7 +36,13 @@ import {
   CHIAVE_ANTIFURTO_SU_MISURA,
 } from "../plancia/src/core/antifurto-su-misura.js";
 import { gliUps } from "./gli-ups.js";
-import { fasciaPiuBassa, giornoDi, letturaDellEnergia, prezzoAllOra } from "./l-energia-di-casa.js";
+import {
+  carichiDellaPlancia,
+  fasciaPiuBassa,
+  giornoDi,
+  letturaDellEnergia,
+  prezzoAllOra,
+} from "./l-energia-di-casa.js";
 import { risolutoreDalla } from "./ricarica-di-notte.js";
 import {
   paroleDelBlackout,
@@ -443,6 +449,11 @@ export class Sentinella {
     this._ultimeLetture = letture;
     letture.apparecchi = {};
     for (const id of this._prese()) letture.apparecchi[id] = this._watt(this.stati.get(id));
+    /* Per «chi ha consumato di piu'»: i carichi della plancia e gli
+     * elettrodomestici trovati dal nome, ognuno una volta. */
+    letture.carichi = { ...letture.apparecchi };
+    for (const { id } of carichiDellaPlancia(valori))
+      if (!(id in letture.carichi)) letture.carichi[id] = this._watt(this.stati.get(id));
     this.taccuino.campiona(letture, (istante) => this.prezzo(istante, valori));
   }
 
@@ -1661,6 +1672,16 @@ export class Sentinella {
         )
       : [];
     const grosso = g.cicli.slice().sort((a, b) => (b.kwh || 0) - (a.kwh || 0))[0];
+    /* Chi ha consumato di piu': i carichi contati tutto il giorno, col nome
+     * che gli ha dato la plancia (o quello di Home Assistant). */
+    const nomiDellaPlancia = new Map(
+      carichiDellaPlancia(this._valori()).map(({ id, nome }) => [id, nome]),
+    );
+    const nomeDelCarico = (id) => nomiDellaPlancia.get(id) || nomeDellaPresa(id);
+    const piu = (g.carichi || [])
+      .filter((c) => c.kwh >= 0.05)
+      .slice(0, 5)
+      .map((c) => ({ nome: nomeDelCarico(c.id), kwh: c.kwh, eur: c.eur, sole: c.sole }));
     const valori = this._valori();
     const bassa = fasciaPiuBassa(valori.cd_fasce_kwh);
     const nomi = {};
@@ -1673,8 +1694,12 @@ export class Sentinella {
       oggi,
       record,
       colSole,
-      piuAcceso:
-        !conSole && grosso?.kwh > 0.2 ? { nome: nomeDellaPresa(grosso.id), kwh: grosso.kwh } : null,
+      piu,
+      piuAcceso: piu.length
+        ? { nome: piu[0].nome, kwh: piu[0].kwh }
+        : !conSole && grosso?.kwh > 0.2
+          ? { nome: nomeDellaPresa(grosso.id), kwh: grosso.kwh }
+          : null,
       batteria: this._ultimeLetture?.carica ?? null,
       fasce: {
         nomi,

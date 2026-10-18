@@ -732,7 +732,16 @@ export class Commissioni {
      *
      * I tasti nuovi (spegni sirena, disinserisci, inserisci col modo su
      * misura) sono comandi preparati dal ponte per quella notifica e quel
-     * telefono, come gli altri tasti: il telefono dice solo quale tasto. */
+     * telefono, come gli altri tasti: il telefono dice solo quale tasto.
+     *
+     * `ponte/energia/giornata` (la pagina «La tua giornata» dell'app) passa
+     * per la stessa porta: solo da un telefono abbinato **con un utente** di
+     * Home Assistant — senza, `unauthorized` — e risponde in sola lettura coi
+     * numeri del taccuino dell'energia (sole, casa, rete, ora per ora, chi ha
+     * consumato di piu' col nome che gli ha dato la plancia, i sette giorni
+     * prima, il cielo di domani). Niente entita', niente dati di altri
+     * telefoni, e nel ponte non si vede nulla: nessuna pagina, nessuna
+     * console, niente che esca di casa. */
     /* La ricarica di notte (`ricarica-di-notte.js`): cosa sta facendo la
      * casa con l'auto, in sola lettura. Le impostazioni non passano di qui —
      * stanno nella configurazione della plancia, con le sue regole. */
@@ -750,7 +759,12 @@ export class Commissioni {
      *  - `ponte/automazioni/stato`: tutte le automazioni di Home Assistant,
      *    con la stanza, l'ultima volta, il gruppo «Per tipo» e, se ci sta, la
      *    forma della plancia. La configurazione intera arriva solo a chi
-     *    amministra Home Assistant;
+     *    amministra Home Assistant. Porta anche le categorie che chi abita ha
+     *    salvato in Home Assistant (`config/category_registry/list`, scope
+     *    «automation», e `categories.automation` dal registro delle entita':
+     *    solo lette, mai scritte, nessuna inventata) e per ognuna un
+     *    riassunto in una riga (quando parte, quante condizioni e azioni),
+     *    calcolato nel ponte dalla configurazione che gia' legge;
      *  - `ponte/automazioni/salva`, `…/elimina`, `…/rinomina`, `…/duplica`:
      *    scrivono in Home Assistant col segno dell'add-on, e allora vogliono
      *    in piu' **chi amministra Home Assistant** (`puoAmministrare`), che e'
