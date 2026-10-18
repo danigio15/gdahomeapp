@@ -67,6 +67,7 @@ import { oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
 import {
+  activeLocale,
   allStates,
   chiamaServizio,
   chiediAHomeAssistant,
@@ -107,8 +108,9 @@ const state = (root[KEY] ||= {
   salvando: false,
   /* L'ultima salvata, per il «Salvata in Home Assistant ✓» in cima. */
   salvata: null,
-  /* «Per tipo» o «Per stanza», e la ricerca. */
-  perStanza: false,
+  /* «Per categoria» (le categorie di Home Assistant), «Per tipo» o «Per
+   * stanza», e la ricerca. */
+  per: "categoria",
   cerca: "",
   /* Gli interruttori appena toccati: valgono finche' Home Assistant non dice
    * lo stesso, al piu' dieci secondi. */
@@ -676,39 +678,214 @@ export function fraseDellaVoce(v) {
 /** «ultima volta: oggi 07:15», o «mai». */
 export const ultimaVoltaDi = (v) => (v?.ultima ? quandoFu(v.ultima) : t("mai", "never"));
 
-/* La ricerca guarda il nome, la stanza e la frase. */
-function trovata(v, cerca) {
+/**
+ * La riga di una voce, in parole: la frase della plancia («Alle 07:15 → apri
+ * Tapparelle soggiorno») se ci sta, se no il riassunto che manda il ponte
+ * («Quando si apre Porta ingresso · 2 azioni»), letto dalla configurazione
+ * in Home Assistant. Al posto di «Avanzata…», che non diceva niente.
+ */
+export function rigaDellaVoce(v) {
+  const f = fraseDellaVoce(v);
+  if (f) return `${f.quando} → ${f.allora}`;
+  const r = v?.riassunto;
+  if (r && typeof r === "object") {
+    /* Il ponte lo scrive in italiano e in inglese: le altre lingue leggono
+     * l'inglese, come per i nomi che arrivano da Home Assistant. */
+    const detto = clean(activeLocale() === "it" ? r.it : r.en) || clean(r.it);
+    if (detto) return detto;
+  }
+  return t("Avanzata: usa template, scelte o blueprint", "Advanced: uses templates, choices or blueprints");
+}
+
+/** Le categorie salvate in Home Assistant, nell'ordine in cui le manda il ponte: per nome. */
+export function categorieDiCasa() {
+  const elenco = Array.isArray(state.ponte?.categorie) ? state.ponte.categorie : [];
+  return elenco.filter((c) => clean(c?.id)).map((c) => ({ id: clean(c.id), nome: clean(c.nome) || clean(c.id) }));
+}
+
+/* La ricerca guarda il nome, la stanza, la categoria e la riga. */
+function trovata(v, cerca, nomeDellaCategoria) {
   const q = clean(cerca).toLowerCase();
   if (!q) return true;
-  const f = fraseDellaVoce(v);
-  return [v.nome, v.area, f?.quando, f?.allora].some((x) => clean(x).toLowerCase().includes(q));
+  return [v.nome, v.area, nomeDellaCategoria(v), rigaDellaVoce(v)].some((x) =>
+    clean(x).toLowerCase().includes(q),
+  );
+}
+
+/** I tre modi di raggruppare: le categorie di Home Assistant, il tipo, la stanza. */
+export const RAGGRUPPA = ["categoria", "tipo", "stanza"];
+
+/* «Per categoria» c'e' solo se chi abita ha delle categorie in Home
+ * Assistant: senza, sarebbe un gruppo solo, «Senza categoria», e si torna
+ * a «Per tipo». */
+export const raggruppaDavvero = (per) =>
+  per === "stanza" ? "stanza" : per === "tipo" || !categorieDiCasa().length ? "tipo" : "categoria";
+
+/* Il tipo che conta di piu' in un gruppo: ne da' il disegno e il colore. */
+function tipoDelGruppo(voci) {
+  const conte = new Map();
+  for (const v of voci) conte.set(categoriaDi(v), (conte.get(categoriaDi(v)) || 0) + 1);
+  let meglio = "altre";
+  let quante = 0;
+  for (const k of CATEGORIE)
+    if ((conte.get(k) || 0) > quante) {
+      meglio = k;
+      quante = conte.get(k);
+    }
+  return meglio;
 }
 
 /**
- * Le automazioni a gruppi: «Per tipo» nell'ordine delle categorie, o «Per
- * stanza» in ordine di nome, con quelle senza stanza in fondo. Solo i gruppi
- * che hanno qualcosa, e solo quello che la ricerca trova.
+ * Le automazioni a gruppi. «Per categoria»: le categorie di Home Assistant
+ * col loro nome e nel loro ordine (per nome, come le mostra Home Assistant),
+ * e «Senza categoria» in fondo. «Per tipo»: nell'ordine dei tipi. «Per
+ * stanza»: per nome, con quelle senza stanza in fondo. Solo i gruppi che
+ * hanno qualcosa, e solo quello che la ricerca trova. Ogni gruppo porta il
+ * disegno e il colore del tipo che ci conta di piu'.
  */
-export function gruppiDelleAutomazioni(elenco, { perStanza = false, cerca = "" } = {}) {
-  const trovate = elenco.filter((v) => trovata(v, cerca));
-  if (perStanza) {
+export function gruppiDelleAutomazioni(elenco, { per = "", perStanza = false, cerca = "" } = {}) {
+  const modo = raggruppaDavvero(per || (perStanza ? "stanza" : "categoria"));
+  const categorie = categorieDiCasa();
+  const nomeDellaCategoria = (v) => categorie.find((c) => c.id === clean(v?.categoriaHa))?.nome || "";
+  const trovate = elenco.filter((v) => trovata(v, cerca, nomeDellaCategoria));
+  const nomi = CATEGORIA();
+  const vestito = (g) => {
+    const tipo = modo === "tipo" ? g.chiave : tipoDelGruppo(g.voci);
+    return {
+      ...g,
+      chiave: `${modo}:${g.chiave}`,
+      disegno: modo === "stanza" ? "stanze" : nomi[tipo][2],
+      colore: modo === "stanza" ? "#7c3aed" : nomi[tipo][3],
+    };
+  };
+  if (modo === "stanza") {
     const stanze = [...new Set(trovate.map((v) => clean(v.area)).filter(Boolean))].sort((a, b) =>
       a.localeCompare(b, locale()),
     );
     return [...stanze, ""]
       .map((stanza) => ({
         chiave: stanza || "-",
-        titolo: stanza ? `🏠 ${stanza}` : t("Senza stanza", "No room"),
+        titolo: stanza || t("Senza stanza", "No room"),
         voci: trovate.filter((v) => clean(v.area) === stanza),
       }))
-      .filter((g) => g.voci.length);
+      .filter((g) => g.voci.length)
+      .map(vestito);
   }
-  const nomi = CATEGORIA();
+  if (modo === "categoria") {
+    const conosciute = new Set(categorie.map((c) => c.id));
+    const senza = (v) => !conosciute.has(clean(v.categoriaHa));
+    return [
+      ...categorie.map((c) => ({
+        chiave: c.id,
+        titolo: c.nome,
+        voci: trovate.filter((v) => clean(v.categoriaHa) === c.id),
+      })),
+      { chiave: "-", titolo: t("Senza categoria", "Uncategorized"), voci: trovate.filter(senza) },
+    ]
+      .filter((g) => g.voci.length)
+      .map(vestito);
+  }
   return CATEGORIE.map((k) => ({
     chiave: k,
-    titolo: `${nomi[k][0]} ${nomi[k][1]}`,
+    titolo: nomi[k][1],
     voci: trovate.filter((v) => categoriaDi(v) === k),
-  })).filter((g) => g.voci.length);
+  }))
+    .filter((g) => g.voci.length)
+    .map(vestito);
+}
+
+/* ── i gruppi che si chiudono ───────────────────────────────────────────── *
+ *
+ * Come in Home Assistant: ▾ aperto, ▸ chiuso, e il numero accanto. Chi
+ * guarda si ritrova i gruppi come li ha lasciati: lo ricorda questo browser
+ * (o questo telefono), non la configurazione della casa — un gruppo chiuso
+ * da uno non si chiude per tutti. */
+
+export const CHIAVE_GRUPPI_CHIUSI = "dm_automazioni_gruppi_chiusi";
+
+function gruppiChiusi() {
+  try {
+    const scritto = JSON.parse(root.localStorage?.getItem?.(CHIAVE_GRUPPI_CHIUSI) || "[]");
+    return Array.isArray(scritto) ? scritto.map(String) : [];
+  } catch (_errore) {
+    return [];
+  }
+}
+
+/** Apre o chiude un gruppo («categoria:<id>», «tipo:luci», «stanza:Cucina»). */
+export function alternaIlGruppo(chiave) {
+  const chiusi = new Set(gruppiChiusi());
+  if (chiusi.has(chiave)) chiusi.delete(chiave);
+  else chiusi.add(chiave);
+  try {
+    root.localStorage?.setItem?.(CHIAVE_GRUPPI_CHIUSI, JSON.stringify([...chiusi]));
+  } catch (_errore) {}
+}
+
+/** «Per categoria · Per tipo · Per stanza»: `attributo` e' quello dei tocchi di chi lo disegna. */
+export function scelteDelRaggruppa(per, attributo, classe = "") {
+  const modo = raggruppaDavvero(per);
+  const voci = [
+    ["categoria", t("Per categoria", "By category")],
+    ["tipo", t("Per tipo", "By type")],
+    ["stanza", t("Per stanza", "By room")],
+  ].filter(([k]) => k !== "categoria" || categorieDiCasa().length);
+  return `<span class="${classe}" role="group">${voci
+    .map(
+      ([k, nome]) =>
+        `<button type="button" ${attributo}="${k}" class="${modo === k ? "si" : ""}" aria-pressed="${modo === k}">${esc(nome)}</button>`,
+    )
+    .join("")}</span>`;
+}
+
+/**
+ * I gruppi in righe compatte, la stessa faccia nella dashboard, nell'app e
+ * nel config: una riga sola per automazione — il disegno, il nome, la riga
+ * in parole, l'ultima volta e l'interruttore. Chi la usa dice come si chiama
+ * (`prefisso`, che tiene unici i disegni) e cosa porta ogni riga
+ * (`attributi(v)`, i suoi tocchi; `interruttore(v)`; `etichetta(v)`). Con
+ * una ricerca in corso i gruppi stanno tutti aperti: quello che si cerca
+ * non si nasconde.
+ */
+export function gruppiCompattiHtml(
+  elenco,
+  { per = "categoria", cerca = "", prefisso = "aug", attributi = () => "", interruttore = () => "", etichetta = () => "", classeRiga = "" } = {},
+) {
+  const gruppi = gruppiDelleAutomazioni(elenco, { per, cerca });
+  if (!gruppi.length) return "";
+  const chiusi = new Set(clean(cerca) ? [] : gruppiChiusi());
+  const nomi = CATEGORIA();
+  return `<div class="aug-griglia">${gruppi
+    .map((g, gi) => {
+      const chiuso = chiusi.has(g.chiave);
+      const accese = g.voci.filter((v) => v.attiva).length;
+      const righe = chiuso
+        ? ""
+        : `<div class="aug-righe">${g.voci
+            .map((v, ri) => {
+              const tipo = categoriaDi(v);
+              const [, , oggetto, colore] = nomi[tipo];
+              /* Il grigio delle «Altre» su un interruttore acceso si confonde
+               * con lo spento: acceso, e' il viola delle automazioni. */
+              const acceso = tipo === "altre" ? "#7c3aed" : colore;
+              return `<div class="aug-riga${classeRiga ? ` ${classeRiga}` : ""}${v.attiva ? "" : " spenta"}" style="--c:${colore};--c-acceso:${acceso}"${attributi(v)}><span class="aug-orb">${oggettoWidget(
+                oggetto,
+                "",
+                `${prefisso}-r${gi}-${ri}`,
+              )}</span><span class="aug-testo"><b class="aug-nome"><span>${esc(v.nome)}</span>${etichetta(v)}</b><small class="aug-fr">${esc(
+                rigaDellaVoce(v),
+              )}</small></span><span class="aug-quando">${esc(ultimaVoltaDi(v))}</span>${interruttore(v)}</div>`;
+            })
+            .join("")}</div>`;
+      return `<section class="aug${chiuso ? " chiuso" : ""}" style="--c:${g.colore}" data-aug="${esc(g.chiave)}"><button type="button" class="aug-testa" data-aug-apri="${esc(
+        g.chiave,
+      )}" aria-expanded="${!chiuso}"><span class="aug-freccia" aria-hidden="true">${chiuso ? "▸" : "▾"}</span><span class="aug-ico">${oggettoWidget(
+        g.disegno,
+        "",
+        `${prefisso}-g${gi}`,
+      )}</span><span class="aug-titolo">${esc(g.titolo)}</span><span class="aug-conta" data-on="${accese > 0}">${accese}/${g.voci.length}</span></button>${righe}</section>`;
+    })
+    .join("")}</div>`;
 }
 
 /** Cosa viene dopo: la prima delle accese che ha un'ora. */
@@ -1037,51 +1214,41 @@ export const etichettaDiOrigine = (v) =>
       ? '<span class="ha-orig b">Blueprint</span>'
       : "";
 
-function rigaDellaLista(v) {
-  const frase = fraseDellaVoce(v);
-  const cat = CATEGORIA()[categoriaDi(v)];
-  const apribile = puoScrivere() && v.modificabile;
-  const fu = ultimaVoltaDi(v);
-  return `<div class="au-riga ha-riga${v.attiva ? "" : " spenta"}"${apribile ? ` data-au-apri="${esc(v.entity_id)}" role="button" tabindex="0"` : ""}>
-<span class="au-ico">${disegno(cat[2], `riga-${v.entity_id}`)}</span>
-<div class="au-frase"><div class="ha-nome">${esc(v.nome)}${etichettaDiOrigine(v)}</div>${
-    frase
-      ? `<div class="ha-fr">${esc(frase.quando)}<span class="fr">→</span>${esc(frase.allora)}</div>`
-      : `<div class="ha-fr av">${esc(t("Avanzata: usa template, scelte o blueprint", "Advanced: uses templates, choices or blueprints"))}</div>`
-  }<div class="au-ultima">${esc(t(`ultima volta: ${fu}`, `last time: ${fu}`))}</div></div>
-<button type="button" class="au-int" role="switch" aria-checked="${v.attiva}" data-au-attiva="${esc(v.entity_id)}" aria-label="${esc(t("Attiva o spenta", "On or off"))}"><i></i></button>${
-    apribile ? '<span class="au-fr" aria-hidden="true">›</span>' : ""
-  }</div>`;
-}
+/* L'interruttore di una riga: la accende o la spegne in Home Assistant,
+ * senza aprirla. */
+const interruttoreDellaRiga = (v) =>
+  `<button type="button" class="aug-int" role="switch" aria-checked="${v.attiva}" data-au-attiva="${esc(v.entity_id)}" aria-label="${esc(
+    t(`Accendi o spegni ${v.nome}`, `Turn ${v.nome} on or off`),
+  )}"></button>`;
+
+/* Si apre (l'editor, o la scheda di una complessa) solo se la si puo' scrivere. */
+const attributiDellaRiga = (v) =>
+  puoScrivere() && v.modificabile ? ` data-au-apri="${esc(v.entity_id)}" role="button" tabindex="0"` : "";
 
 function gruppiHtml(elenco) {
-  const gruppi = gruppiDelleAutomazioni(elenco, { perStanza: state.perStanza, cerca: state.cerca });
-  if (!gruppi.length)
-    return `<div class="au-lista au-lista-vuota"><p>${esc(
-      elenco.length
-        ? t("Nessuna automazione con queste parole.", "No automation matches these words.")
-        : t("Nessuna automazione, per ora: comincia da un modello pronto.", "No automations yet: start from a ready-made template."),
-    )}</p></div>`;
-  return gruppi
-    .map(
-      (g) =>
-        `<div class="ha-gruppo" data-au-gruppo="${esc(g.chiave)}">${esc(g.titolo)}<span>${g.voci.length}</span></div><div class="au-lista">${g.voci
-          .map(rigaDellaLista)
-          .join("")}</div>`,
-    )
-    .join("");
+  const gruppi = gruppiCompattiHtml(elenco, {
+    per: state.per,
+    cerca: state.cerca,
+    prefisso: "aug-au",
+    attributi: attributiDellaRiga,
+    interruttore: interruttoreDellaRiga,
+    etichetta: etichettaDiOrigine,
+    classeRiga: "ha-riga",
+  });
+  if (gruppi) return gruppi;
+  return `<div class="au-lista au-lista-vuota"><p>${esc(
+    elenco.length
+      ? t("Nessuna automazione con queste parole.", "No automation matches these words.")
+      : t("Nessuna automazione, per ora: comincia da un modello pronto.", "No automations yet: start from a ready-made template."),
+  )}</p></div>`;
 }
 
-/* «Per tipo» o «Per stanza», la ricerca e «＋ Nuova». */
+/* «Per categoria», «Per tipo» o «Per stanza», la ricerca e «＋ Nuova». */
 function barraDellaLista(elenco, { chiuso = false } = {}) {
   const n = elenco.length;
   return `<div class="ha-barra au-testa"><h3>${esc(t("Le automazioni di casa", "The home's automations"))} <small>· ${esc(
     t(`${n}, da Home Assistant`, `${n}, from Home Assistant`),
-  )}</small></h3><span class="ha-seg" role="group"><button type="button" data-au-per="tipo" class="${state.perStanza ? "" : "si"}">${esc(
-    t("Per tipo", "By type"),
-  )}</button><button type="button" data-au-per="stanza" class="${state.perStanza ? "si" : ""}">${esc(
-    t("Per stanza", "By room"),
-  )}</button></span><label class="ha-cerca"><span aria-hidden="true">🔍</span><input type="search" data-au-cerca value="${esc(
+  )}</small></h3>${scelteDelRaggruppa(state.per, "data-au-per", "ha-seg")}<label class="ha-cerca"><span aria-hidden="true">🔍</span><input type="search" data-au-cerca value="${esc(
     state.cerca,
   )}" placeholder="${esc(t("Cerca un'automazione…", "Search an automation…"))}"></label>${
     chiuso
@@ -3073,7 +3240,7 @@ function onClick(event) {
     return;
   }
   const el = event.target.closest(
-    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta],[data-au-per],[data-au-esegui],[data-au-duplica],[data-au-converti]",
+    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta],[data-au-per],[data-aug-apri],[data-au-esegui],[data-au-duplica],[data-au-converti]",
   );
   if (!el) {
     if (state.tendina) {
@@ -3117,7 +3284,9 @@ function onClick(event) {
     return;
   }
   if (d.auPer) {
-    state.perStanza = d.auPer === "stanza";
+    state.per = RAGGRUPPA.includes(d.auPer) ? d.auPer : "categoria";
+  } else if (d.augApri) {
+    alternaIlGruppo(d.augApri);
   } else if (d.auVai) {
     state.vista = d.auVai;
     state.salvata = null;
@@ -3702,21 +3871,53 @@ html[data-theme="dark"] .au .pro-tutte{color:#7dd3fc}
 .au .ha-cerca input{flex:1;min-width:0;border:0;background:none;outline:none;padding:8px 0;font:inherit;font-weight:600;color:var(--au-tx)}
 .au .ha-barra .au-piu{margin-left:auto}
 .au .au-piu.chiuso{background:var(--au-tenue);color:var(--au-dim);cursor:default}
-.au .ha-gruppo{display:flex;align-items:center;gap:8px;margin:16px 4px 7px;font-size:13px;font-weight:900;color:var(--au-tx)}
-.au .ha-gruppo span{font-size:11.5px;font-weight:800;color:var(--au-dim);padding:1px 8px;border-radius:999px;background:var(--au-tenue)}
-.au .ha-tutte>.ha-gruppo:first-child{margin-top:6px}
-.au .ha-nome{font-size:14px;font-weight:900;line-height:1.3;color:var(--au-tx)}
+.au .ha-tutte{margin-top:4px}
+/* I gruppi in righe compatte: gli stessi nella dashboard, nell'app e qui. */
+.aug-griglia{--aug-carta:var(--card-bg,#fff);--aug-bordo:var(--divider-color,#e2e8f0);--aug-tx:var(--text,#0f172a);--aug-dim:var(--secondary-text-color,#64748b);display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px;align-items:start;min-width:0}
+.aug{min-width:0;border:1px solid var(--aug-bordo);border-radius:20px;background:var(--aug-carta);box-shadow:0 12px 28px -24px rgba(15,23,42,.45);overflow:hidden}
+.aug-testa{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;cursor:pointer;font-family:inherit;color:var(--aug-tx)}
+.aug-testa:focus-visible{outline:2px solid var(--c);outline-offset:-2px;border-radius:20px}
+.aug-freccia{width:14px;flex:none;text-align:center;font-size:13px;line-height:1;color:var(--aug-dim)}
+.aug-ico{width:32px;height:32px;flex:none;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 15%,transparent)}
+.aug-ico svg{width:22px;height:22px}
+.aug-titolo{flex:1;min-width:0;font-size:15px;font-weight:800;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aug-conta{flex:none;font-size:11.5px;font-weight:900;padding:2px 9px;border-radius:999px;color:var(--aug-dim);background:color-mix(in srgb,var(--aug-tx) 7%,transparent);font-variant-numeric:tabular-nums}
+.aug-conta[data-on="true"]{color:color-mix(in srgb,var(--c) 78%,#000);background:color-mix(in srgb,var(--c) 15%,transparent)}
+html[data-theme="dark"] .aug-conta[data-on="true"]{color:color-mix(in srgb,var(--c) 65%,#fff)}
+.aug-righe{border-top:1px solid var(--aug-bordo)}
+.aug-riga{display:flex;align-items:center;gap:11px;min-width:0;padding:9px 14px;border-top:1px solid var(--aug-bordo)}
+.aug-riga:first-child{border-top:0}
+.aug-riga[role="button"]{cursor:pointer}
+.aug-riga[role="button"]:hover{background:color-mix(in srgb,var(--aug-tx) 4%,transparent)}
+.aug-orb{width:32px;height:32px;flex:none;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 14%,transparent)}
+.aug-orb svg{width:22px;height:22px}
+.aug-testo{flex:1;min-width:0;display:grid;gap:1px}
+.aug-nome{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px;font-weight:800;line-height:1.3;color:var(--aug-tx)}
+.aug-nome>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aug-nome>.ha-orig{flex:none;margin:0}
+.aug-fr{font-size:12px;font-weight:600;line-height:1.35;color:var(--aug-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aug-quando{flex:none;font-size:11.5px;font-weight:700;color:var(--aug-dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+.aug-int{flex:none;position:relative;width:40px;height:24px;border:0;padding:0;border-radius:999px;background:color-mix(in srgb,var(--aug-tx) 18%,transparent);cursor:pointer;transition:background .15s ease}
+.aug-int[aria-checked="true"]{background:var(--c-acceso,var(--c))}
+.aug-int::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.35);transition:transform .15s ease}
+.aug-int[aria-checked="true"]::after{transform:translateX(16px)}
+.aug-riga.spenta .aug-nome{color:var(--aug-dim)}
+.aug-riga.spenta .aug-orb{filter:grayscale(1);opacity:.6}
+.aug.chiuso .aug-righe{display:none}
+/* Nel config la pagina e' piu' stretta: due colonne larghe invece di tre strette. */
+.au .aug-griglia{grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))}
+/* Al telefono la riga in parole va a capo, al piu' due righe, e l'ora
+ * dell'ultima volta lascia il posto (sta nel foglio). */
+@media (max-width:560px){
+  .aug-griglia{gap:12px}
+  .aug-fr{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+  .aug-quando{display:none}
+}
 .au .ha-orig{display:inline-block;margin-left:6px;vertical-align:1px;font-size:10px;font-weight:800;letter-spacing:.02em;padding:1px 7px;border-radius:6px;border:1px solid var(--au-bordo);color:var(--au-dim)}
 .au .ha-orig.g{color:#0284c7;border-color:color-mix(in srgb,#0ea5e9 45%,transparent);background:color-mix(in srgb,#0ea5e9 8%,transparent)}
 html[data-theme="dark"] .au .ha-orig.g{color:#7dd3fc}
 .au .ha-orig.b{color:#7c3aed;border-color:color-mix(in srgb,#8b5cf6 45%,transparent);background:color-mix(in srgb,#8b5cf6 8%,transparent)}
 html[data-theme="dark"] .au .ha-orig.b{color:#c4b5fd}
-.au .ha-fr{font-size:12.5px;font-weight:700;line-height:1.35;margin-top:2px;color:var(--au-tx)}
-.au .ha-fr .fr{color:#0ea5e9;font-weight:900;margin:0 4px}
-.au .ha-fr.av{color:var(--au-dim);font-style:italic;font-weight:600}
-.au .ha-riga:not([data-au-apri]){cursor:default}
-.au .ha-riga.spenta .ha-nome,.au .ha-riga.spenta .ha-fr{color:var(--au-dim)}
-.au .ha-riga.spenta .au-ico{opacity:.5}
 .au .ha-ok{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,#16a34a 40%,var(--au-bordo));background:color-mix(in srgb,#16a34a 9%,var(--au-carta));font-size:13px;font-weight:700;color:var(--au-tx)}
 .au .ha-ok .s{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#16a34a;color:#fff;font-weight:900;flex:none}
 .au .ha-ok small{display:block;font-weight:600;color:var(--au-dim);font-size:12px;margin-top:1px}

@@ -6203,7 +6203,6 @@ export default Object.freeze({
   "it is night": "إنه الليل",
   "It reads:": "تُقرأ هكذا:",
   "Last run": "آخر تشغيل",
-  "last time: ${fu}": "آخر مرة: ${fu}",
   "leaves home": "يغادر المنزل",
   "Light with motion": "ضوء مع الحركة",
   "Lights and climate when someone arrives": "الأضواء والتكييف عند وصول أحد",
@@ -6604,4 +6603,8 @@ export default Object.freeze({
   "to confirm": "للتأكيد",
   "To decide": "لم يُحدد",
   "What the ${quale} meter measures": "ما يقيسه عداد ${quale}",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "حسب الفئة",
+  Uncategorized: "بلا فئة",
+  "In short": "باختصار",
 });

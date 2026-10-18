@@ -6224,7 +6224,6 @@ export default Object.freeze({
   "it is night": "밤일 때",
   "It reads:": "이렇게 읽힙니다:",
   "Last run": "최근 실행",
-  "last time: ${fu}": "마지막: ${fu}",
   "leaves home": "집을 나감",
   "Light with motion": "움직임에 조명",
   "Lights and climate when someone arrives": "누군가 오면 조명과 냉난방",
@@ -6625,4 +6624,8 @@ export default Object.freeze({
   "to confirm": "확인 필요",
   "To decide": "미정",
   "What the ${quale} meter measures": "${quale} 계량기가 재는 것",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "카테고리별",
+  Uncategorized: "카테고리 없음",
+  "In short": "요약",
 });

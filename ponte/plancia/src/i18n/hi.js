@@ -6229,7 +6229,6 @@ export default Object.freeze({
   "it is night": "रात है",
   "It reads:": "यह ऐसे पढ़ा जाता है:",
   "Last run": "अंतिम चलाए गए",
-  "last time: ${fu}": "पिछली बार: ${fu}",
   "leaves home": "घर से निकलता है",
   "Light with motion": "गति पर रोशनी",
   "Lights and climate when someone arrives": "कोई आए तो लाइट और जलवायु",
@@ -6630,4 +6629,8 @@ export default Object.freeze({
   "to confirm": "पुष्टि बाकी",
   "To decide": "तय करना है",
   "What the ${quale} meter measures": "${quale} मीटर क्या मापता है",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "श्रेणी के अनुसार",
+  Uncategorized: "बिना श्रेणी",
+  "In short": "संक्षेप में",
 });

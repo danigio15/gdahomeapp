@@ -6242,7 +6242,6 @@ export default Object.freeze({
   "it is night": "gece",
   "It reads:": "Şöyle okunur:",
   "Last run": "Son çalışanlar",
-  "last time: ${fu}": "son kez: ${fu}",
   "leaves home": "evden çıkar",
   "Light with motion": "Hareketle ışık",
   "Lights and climate when someone arrives": "Biri gelince ışık ve iklim",
@@ -6643,4 +6642,8 @@ export default Object.freeze({
   "to confirm": "onaylanacak",
   "To decide": "Karar verilecek",
   "What the ${quale} meter measures": "${quale} sayacının ölçtükleri",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "Kategoriye göre",
+  Uncategorized: "Kategorisiz",
+  "In short": "Kısaca",
 });

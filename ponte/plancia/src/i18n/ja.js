@@ -6245,7 +6245,6 @@ export default Object.freeze({
   "it is night": "夜である",
   "It reads:": "読み方:",
   "Last run": "最近の実行",
-  "last time: ${fu}": "前回: ${fu}",
   "leaves home": "外出する",
   "Light with motion": "動きで照明",
   "Lights and climate when someone arrives": "誰かが帰ると照明と空調",
@@ -6646,4 +6645,8 @@ export default Object.freeze({
   "to confirm": "確認待ち",
   "To decide": "未定",
   "What the ${quale} meter measures": "${quale} のメーターが測るもの",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "カテゴリ別",
+  Uncategorized: "カテゴリなし",
+  "In short": "概要",
 });

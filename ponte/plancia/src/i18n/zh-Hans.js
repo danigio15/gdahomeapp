@@ -6135,7 +6135,6 @@ export default Object.freeze({
   "it is night": "夜间",
   "It reads:": "读作：",
   "Last run": "最近执行",
-  "last time: ${fu}": "上次：${fu}",
   "leaves home": "离家",
   "Light with motion": "有人移动时开灯",
   "Lights and climate when someone arrives": "有人到家时开灯和空调",
@@ -6536,4 +6535,8 @@ export default Object.freeze({
   "to confirm": "待确认",
   "To decide": "待定",
   "What the ${quale} meter measures": "${quale} 电表测量的内容",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "按类别",
+  Uncategorized: "未分类",
+  "In short": "简而言之",
 });

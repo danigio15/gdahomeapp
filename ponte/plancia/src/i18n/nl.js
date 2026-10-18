@@ -6268,7 +6268,6 @@ export default Object.freeze({
   "it is night": "het is nacht",
   "It reads:": "Zo leest het:",
   "Last run": "Laatst uitgevoerd",
-  "last time: ${fu}": "laatst: ${fu}",
   "leaves home": "gaat van huis",
   "Light with motion": "Licht bij beweging",
   "Lights and climate when someone arrives": "Licht en klimaat als er iemand thuiskomt",
@@ -6669,4 +6668,8 @@ export default Object.freeze({
   "to confirm": "te bevestigen",
   "To decide": "Nog kiezen",
   "What the ${quale} meter measures": "Wat de meter ${quale} meet",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "Per categorie",
+  Uncategorized: "Zonder categorie",
+  "In short": "In het kort",
 });

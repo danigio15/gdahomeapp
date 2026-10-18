@@ -6264,7 +6264,6 @@ export default Object.freeze({
   "it is night": "jest noc",
   "It reads:": "Czyta się tak:",
   "Last run": "Ostatnio wykonane",
-  "last time: ${fu}": "ostatnio: ${fu}",
   "leaves home": "wychodzi z domu",
   "Light with motion": "Światło przy ruchu",
   "Lights and climate when someone arrives": "Światła i klimat, gdy ktoś przychodzi",
@@ -6665,4 +6664,8 @@ export default Object.freeze({
   "to confirm": "do potwierdzenia",
   "To decide": "Do ustalenia",
   "What the ${quale} meter measures": "Co mierzy licznik ${quale}",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "Według kategorii",
+  Uncategorized: "Bez kategorii",
+  "In short": "W skrócie",
 });
