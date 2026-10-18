@@ -6483,6 +6483,8 @@ export default Object.freeze({
   "a «${quale}» trigger": "bir «${quale}» tetikleyicisi",
   "a device action": "bir cihaz eylemi",
   "a device does something": "bir cihaz bir şey yapar",
+  "Expand all": "Tümünü genişlet",
+  "Collapse all": "Tümünü daralt",
   "${nome} does something": "${nome} bir şey yapar",
   "a condition on ${nome}": "${nome} üzerinde bir koşul",
   "a condition on a device": "bir cihaz üzerinde bir koşul",

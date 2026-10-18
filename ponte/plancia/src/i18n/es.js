@@ -6522,6 +6522,8 @@ export default Object.freeze({
   "a «${quale}» trigger": "un disparador «${quale}»",
   "a device action": "una acción de dispositivo",
   "a device does something": "un dispositivo hace algo",
+  "Expand all": "Expandir todo",
+  "Collapse all": "Contraer todo",
   "${nome} does something": "${nome} hace algo",
   "a condition on ${nome}": "una condición sobre ${nome}",
   "a condition on a device": "una condición sobre un dispositivo",

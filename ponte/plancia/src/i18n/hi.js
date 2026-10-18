@@ -6470,6 +6470,8 @@ export default Object.freeze({
   "a «${quale}» trigger": "एक «${quale}» ट्रिगर",
   "a device action": "एक डिवाइस कार्रवाई",
   "a device does something": "कोई डिवाइस कुछ करता है",
+  "Expand all": "सभी फैलाएँ",
+  "Collapse all": "सभी समेटें",
   "${nome} does something": "${nome} कुछ करता है",
   "a condition on ${nome}": "${nome} पर एक शर्त",
   "a condition on a device": "किसी डिवाइस पर एक शर्त",

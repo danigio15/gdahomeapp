@@ -6502,6 +6502,8 @@ export default Object.freeze({
   "a «${quale}» trigger": "триггер «${quale}»",
   "a device action": "действие устройства",
   "a device does something": "устройство что-то делает",
+  "Expand all": "Развернуть все",
+  "Collapse all": "Свернуть все",
   "${nome} does something": "${nome} что-то делает",
   "a condition on ${nome}": "условие для ${nome}",
   "a condition on a device": "условие для устройства",

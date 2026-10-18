@@ -6509,6 +6509,8 @@ export default Object.freeze({
   "a «${quale}» trigger": "een trigger «${quale}»",
   "a device action": "een apparaatactie",
   "a device does something": "een apparaat doet iets",
+  "Expand all": "Alles uitklappen",
+  "Collapse all": "Alles inklappen",
   "${nome} does something": "${nome} doet iets",
   "a condition on ${nome}": "een voorwaarde op ${nome}",
   "a condition on a device": "een voorwaarde op een apparaat",

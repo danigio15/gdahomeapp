@@ -6444,6 +6444,8 @@ export default Object.freeze({
   "a «${quale}» trigger": "مشغّل «${quale}»",
   "a device action": "إجراء جهاز",
   "a device does something": "جهاز يفعل شيئًا",
+  "Expand all": "توسيع الكل",
+  "Collapse all": "طي الكل",
   "${nome} does something": "${nome} يفعل شيئًا",
   "a condition on ${nome}": "شرط على ${nome}",
   "a condition on a device": "شرط على جهاز",

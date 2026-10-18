@@ -34,7 +34,14 @@ magazzino.set(
   }),
 );
 
-const { CHIAVE_GRUPPI_APERTI, alternaIlGruppo, gruppiCompattiHtml, riassuntoDi } = await import(
+const {
+  CHIAVE_GRUPPI_APERTI,
+  alternaIlGruppo,
+  gruppiCompattiHtml,
+  riassuntoDi,
+  tastiDeiGruppiHtml,
+  tuttiIGruppi,
+} = await import(
   `../src/sections/automazioni-section.js?raggruppate=${Date.now()}`
 );
 const {
@@ -105,6 +112,49 @@ test("senza disco (finestra privata, dati bloccati) si disegna lo stesso, chiuso
   } finally {
     globalThis.localStorage = disco;
   }
+});
+
+/* ── «Espandi tutto» e «Ritrai tutto» ─────────────────────────────────── */
+
+const spento = (html, fai) =>
+  new RegExp(`data-aug-tutti="${fai}" disabled`).test(html);
+
+test("«Espandi tutto» apre i gruppi del raggruppamento di adesso, e si spegne", () => {
+  magazzino.set(CHIAVE_GRUPPI_APERTI, JSON.stringify(["stanza:-"]));
+  let tasti = tastiDeiGruppiHtml(ELENCO, { per: "tipo" });
+  assert.match(tasti, /Espandi tutto/);
+  assert.match(tasti, /Ritrai tutto/);
+  assert.match(tasti, /⊞/);
+  assert.match(tasti, /⊟/);
+  assert.equal(spento(tasti, "apri"), false);
+  assert.equal(spento(tasti, "chiudi"), true, "tutto chiuso: «Ritrai tutto» non fa niente");
+  tuttiIGruppi(ELENCO, { per: "tipo", apri: true });
+  assert.deepEqual(JSON.parse(magazzino.get(CHIAVE_GRUPPI_APERTI)).sort(), [
+    "stanza:-",
+    "tipo:clima",
+    "tipo:luci",
+  ]);
+  assert.equal(chiusi(gruppiCompattiHtml(ELENCO, { per: "tipo" })), 0);
+  tasti = tastiDeiGruppiHtml(ELENCO, { per: "tipo" });
+  assert.equal(spento(tasti, "apri"), true, "tutto aperto: «Espandi tutto» non fa niente");
+  assert.equal(spento(tasti, "chiudi"), false);
+  /* A meta': tutti e due accesi. */
+  alternaIlGruppo("tipo:luci");
+  tasti = tastiDeiGruppiHtml(ELENCO, { per: "tipo" });
+  assert.equal(spento(tasti, "apri") || spento(tasti, "chiudi"), false);
+});
+
+test("«Ritrai tutto» chiude solo i gruppi di questo raggruppamento", () => {
+  magazzino.set(CHIAVE_GRUPPI_APERTI, JSON.stringify(["tipo:luci", "tipo:clima", "stanza:-"]));
+  tuttiIGruppi(ELENCO, { per: "tipo", apri: false });
+  assert.deepEqual(JSON.parse(magazzino.get(CHIAVE_GRUPPI_APERTI)), ["stanza:-"]);
+  assert.equal(chiusi(gruppiCompattiHtml(ELENCO, { per: "tipo" })), 2);
+});
+
+test("con una ricerca in corso i due tasti non si vedono", () => {
+  assert.match(tastiDeiGruppiHtml(ELENCO, { per: "tipo", cerca: "luce" }), /data-aug-tasti hidden/);
+  assert.doesNotMatch(tastiDeiGruppiHtml(ELENCO, { per: "tipo" }), /data-aug-tasti hidden/);
+  assert.match(tastiDeiGruppiHtml([], { per: "tipo" }), /data-aug-tasti hidden/);
 });
 
 /* ── i dispositivi ────────────────────────────────────────────────────── */

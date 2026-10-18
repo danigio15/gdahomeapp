@@ -6486,6 +6486,8 @@ export default Object.freeze({
   "a «${quale}» trigger": "「${quale}」トリガー",
   "a device action": "デバイスのアクション",
   "a device does something": "デバイスが何かをする",
+  "Expand all": "すべて展開",
+  "Collapse all": "すべて折りたたむ",
   "${nome} does something": "${nome} が何かをする",
   "a condition on ${nome}": "${nome} の条件",
   "a condition on a device": "デバイスの条件",

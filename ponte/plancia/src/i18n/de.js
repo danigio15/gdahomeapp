@@ -6528,6 +6528,8 @@ export default Object.freeze({
   "a «${quale}» trigger": "ein Auslöser «${quale}»",
   "a device action": "eine Geräteaktion",
   "a device does something": "ein Gerät tut etwas",
+  "Expand all": "Alle aufklappen",
+  "Collapse all": "Alle zuklappen",
   "${nome} does something": "${nome} tut etwas",
   "a condition on ${nome}": "eine Bedingung für ${nome}",
   "a condition on a device": "eine Bedingung für ein Gerät",

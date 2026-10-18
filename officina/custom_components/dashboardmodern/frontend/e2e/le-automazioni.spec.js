@@ -431,6 +431,27 @@ test("il config: tutte quelle di Home Assistant per categoria, le etichette, la 
   await expect(pagina.locator(".aug.chiuso")).toHaveCount(3);
   await expect(pagina.locator(".ha-riga")).toHaveCount(0);
   await expect(pagina.locator(".aug-testa").first()).toHaveAttribute("aria-expanded", "false");
+  /* «Espandi tutto» e «Ritrai tutto», accanto al raggruppa: quello che non
+   * farebbe niente e' spento. */
+  const espandi = pagina.locator('.ha-barra [data-aug-tutti="apri"]');
+  const ritrai = pagina.locator('.ha-barra [data-aug-tutti="chiudi"]');
+  await expect(espandi).toHaveAttribute("aria-label", "Espandi tutto");
+  await expect(ritrai).toHaveAttribute("aria-label", "Ritrai tutto");
+  await expect(ritrai).toBeDisabled();
+  await espandi.click();
+  await expect(pagina.locator(".ha-riga")).toHaveCount(5);
+  await expect(pagina.locator(".aug.chiuso")).toHaveCount(0);
+  await expect(espandi).toBeDisabled();
+  await expect(ritrai).toBeEnabled();
+  expect(
+    await page.evaluate(() => JSON.parse(localStorage.getItem("dm_automazioni_gruppi_aperti"))),
+  ).toEqual(["categoria:c_clima", "categoria:c_luci", "categoria:-"]);
+  await ritrai.click();
+  await expect(pagina.locator(".ha-riga")).toHaveCount(0);
+  await expect(ritrai).toBeDisabled();
+  expect(
+    await page.evaluate(() => JSON.parse(localStorage.getItem("dm_automazioni_gruppi_aperti"))),
+  ).toEqual([]);
   /* Un gruppo si apre (▾), e resta aperto anche dopo un ridisegno. */
   await pagina.locator('[data-aug-apri="categoria:c_luci"]').click();
   const luci = pagina.locator('[data-aug="categoria:c_luci"]');
@@ -491,8 +512,11 @@ test("il config: tutte quelle di Home Assistant per categoria, le etichette, la 
   await pagina.locator("[data-au-cerca]").fill("mattina");
   await expect(pagina.locator(".ha-riga")).toHaveCount(1);
   await expect(pagina.locator(".aug.chiuso")).toHaveCount(0);
+  /* Con la ricerca i due tasti non servono, e non si vedono. */
+  await expect(pagina.locator(".ha-barra [data-aug-tasti]")).toBeHidden();
   await expect(pagina.locator("[data-au-cerca]")).toBeFocused();
   await pagina.locator("[data-au-cerca]").fill("");
+  await expect(pagina.locator(".ha-barra [data-aug-tasti]")).toBeVisible();
   await expect(pagina.locator(".ha-riga")).toHaveCount(0);
   await pagina.locator('[data-aug-apri="stanza:Soggiorno"]').click();
   /* L'interruttore la spegne in Home Assistant, senza aprirla. */
@@ -831,10 +855,31 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
   /* Raggruppate: i gruppi partono chiusi, e chi vuole li apre. */
   await expect(sezione.locator(".aug-freccia")).toHaveText(["▸", "▸", "▸"]);
   await expect(sezione.locator("[data-auc-carta]")).toHaveCount(0);
-  for (const g of ["categoria:c_clima", "categoria:c_luci", "categoria:-"])
-    await sezione.locator(`[data-aug-apri="${g}"]`).click();
+  /* «Espandi tutto» e «Ritrai tutto» nella barra dei filtri, accanto al
+   * raggruppa e sulla stessa riga anche sul telefono. */
+  const espandi = sezione.locator('.ad-filtri [data-aug-tutti="apri"]');
+  const ritrai = sezione.locator('.ad-filtri [data-aug-tutti="chiudi"]');
+  await expect(ritrai).toBeDisabled();
+  const riga = await sezione
+    .locator(".ad-seg-riga")
+    .evaluate((n) =>
+      [n.querySelector(".ad-seg"), ...n.querySelectorAll(".aug-tutto")].map(
+        (x) => x.getBoundingClientRect().top + x.getBoundingClientRect().height / 2,
+      ),
+    );
+  expect(Math.max(...riga) - Math.min(...riga)).toBeLessThan(4);
+  if (testInfo.project.name !== "desktop")
+    await expect(espandi.locator(".aug-tutto-t")).toBeHidden();
+  await espandi.click();
   await expect(sezione.locator(".aug-freccia")).toHaveText(["▾", "▾", "▾"]);
   await expect(sezione.locator("[data-auc-carta]")).toHaveCount(5);
+  await expect(espandi).toBeDisabled();
+  await ritrai.click();
+  await expect(sezione.locator("[data-auc-carta]")).toHaveCount(0);
+  for (const g of ["categoria:c_clima", "categoria:c_luci", "categoria:-"])
+    await sezione.locator(`[data-aug-apri="${g}"]`).click();
+  await expect(sezione.locator("[data-auc-carta]")).toHaveCount(5);
+  await expect(espandi).toBeDisabled();
   /* «＋ Nuova» sta nella barra dei filtri. */
   await expect(sezione.locator(".ad-filtri [data-auc-nuova]")).toBeVisible();
   const carta = sezione.locator('[data-auc-carta="automation.a1001"]');
@@ -929,8 +974,7 @@ test("nell'app: niente linguetta e niente voce, la pagina del menu con «＋ Nuo
   /* Anche nell'app partono raggruppate: chiuse, finche' non le si apre. */
   await expect(pagina.locator(".aug.chiuso")).toHaveCount(3);
   await expect(pagina.locator("[data-auc-carta]")).toHaveCount(0);
-  for (const g of ["categoria:c_clima", "categoria:c_luci", "categoria:-"])
-    await pagina.locator(`[data-aug-apri="${g}"]`).click();
+  await pagina.locator('.ad-filtri [data-aug-tutti="apri"]').click();
   await expect(pagina.locator("[data-auc-carta]")).toHaveCount(5);
   /* «＋ Nuova» sta nella barra dei filtri, non galleggia sopra la pagina. */
   const nuova = pagina.locator(".ad-filtri [data-auc-nuova]");

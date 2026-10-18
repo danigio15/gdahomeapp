@@ -6376,6 +6376,8 @@ export default Object.freeze({
   "a «${quale}» trigger": "「${quale}」触发器",
   "a device action": "设备动作",
   "a device does something": "某个设备做了某事",
+  "Expand all": "全部展开",
+  "Collapse all": "全部收起",
   "${nome} does something": "${nome} 做了某事",
   "a condition on ${nome}": "关于 ${nome} 的条件",
   "a condition on a device": "关于设备的条件",
