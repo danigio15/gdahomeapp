@@ -28,6 +28,11 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
   anche incollare un collegamento di windy.com. La mappa di Windy si vede in
   un riquadro centrato su casa; a Windy arrivano solo il punto, lo zoom e lo
   strato, e il riquadro non può leggere né la plancia né Home Assistant.
+- **Campanello sul pannello a muro:** quando suona, il pannello si sveglia e
+  apre il citofono anche con un evento del citofono (`event.*`): prima la
+  plancia scartava lo squillo. Vanno un evento, un sensore che si accende
+  (`binary_sensor`), un button o un interruttore; l'editor lo dice e propone
+  prima i campanelli.
 - **«Apri la giornata»** apre la giornata anche dalla prova del riepilogo.
 - **Quando partire:** il tasto «Apri il garage» della notifica apre davvero
   il garage.
