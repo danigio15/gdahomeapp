@@ -741,7 +741,35 @@ export class Commissioni {
      * consumato di piu' col nome che gli ha dato la plancia, i sette giorni
      * prima, il cielo di domani). Niente entita', niente dati di altri
      * telefoni, e nel ponte non si vede nulla: nessuna pagina, nessuna
-     * console, niente che esca di casa. */
+     * console, niente che esca di casa.
+     *
+     * La stessa risposta porta anche il resto della giornata, dal diario
+     * della casa (`la-giornata-di-casa.js`, `/data/giornata-di-casa.json`):
+     * il clima delle stanze ora per ora e fuori, il riscaldamento (minuti
+     * acceso, comfort, finestre aperte), il solare termico (collettore,
+     * bollitore, pompa, resistenza, pressione), l'auto (le ricariche con la
+     * quota di sole e gli euro, i viaggi dalla batteria che scende, i
+     * chilometri dall'odometro o stimati), l'acqua, il gas e l'irrigazione,
+     * gli eventi della giornata, i conti (porte, automazioni, avvisi), il
+     * mese, il confronto con ieri, la settimana e il mese prima, le cose da
+     * sistemare e «In breve». Gli stessi dati Home Assistant che il ponte
+     * legge gia' per le notifiche, annotati in casa: nessun nome di persona
+     * (gli eventi dicono «Prima persona sveglia», «qualcuno», e ogni testo
+     * passa dal filtro dei nomi), nessuna entita', nessun dato di altri
+     * telefoni. Li usano **solo gli utenti loggati** — un telefono abbinato
+     * e intestato a un utente di Home Assistant — e nella pagina web del
+     * ponte non si vede niente di tutto questo: nessuna pagina, nessuna
+     * console, nessun server di fuori.
+     *
+     * Premium (lo stesso criterio di `automazioni.js`: gdahome Premium, o
+     * licenze spente). In Base le notifiche partono tutte **semplici**,
+     * senza foto della telecamera, il riepilogo della sera non esiste (le
+     * righe che un telefono aveva messo «nel riepilogo» partono subito,
+     * semplici) e `ponte/energia/giornata` risponde `premium-richiesto`. Gli
+     * avvisi di sicurezza — antifurto, allarmi, perdite, blackout — partono
+     * sempre. `ponte/notifiche/stato` dice `premium: bool`, cosi' l'app
+     * mette il lucchetto dove serve; gli acquisti si fanno solo dalle app
+     * sugli store, mai di qui. */
     /* La ricarica di notte (`ricarica-di-notte.js`): cosa sta facendo la
      * casa con l'auto, in sola lettura. Le impostazioni non passano di qui —
      * stanno nella configurazione della plancia, con le sue regole. */

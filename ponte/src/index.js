@@ -450,6 +450,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     postino: chiamata,
     registro,
     configurazione,
+    /* Premium o Base: lo stile, la foto, il riepilogo, «La tua giornata». */
+    licenze,
   });
   chiamata.alGettoneMorto = (telefono) => notifiche.gettoneMorto(telefono);
   ponte.notifiche = notifiche;

@@ -1575,29 +1575,7 @@ export class Sentinella {
   /* Quello che va sistemato, in una notifica sola. `null` se non c'e' niente:
    * un riepilogo vuoto non si manda. */
   riepilogo() {
-    const batterie = [];
-    let aggiornamenti = 0;
-    /* «Non ci sono 65 dispositivi non connessi»: qui si contavano le entita'
-     * mute che hanno un dispositivo, non i dispositivi. Adesso la regola e'
-     * quella del cruscotto di chi installa (`salute.js`) e della pagina «Non
-     * connessi» della plancia: un dispositivo e' giu' quando NESSUNA delle sue
-     * entita' risponde, e conta una volta. Un canale non usato di uno switch
-     * acceso, il blocco bambini di un'asciugatrice spenta, non lo fanno giu'. */
-    const muti = new Set();
-    const vivi = new Set();
-    for (const [id, stato] of this.stati) {
-      const dominio = dominioDi(id);
-      if (dominio === "sensor" && stato.attributes?.device_class === "battery") {
-        const n = numero(stato.state);
-        if (n !== null && n <= 15) batterie.push(nomeDi(stato, id));
-      }
-      if (dominio === "update" && stato.state === "on") aggiornamenti += 1;
-      const suo = this.dispositivoDi?.[id];
-      if (!suo) continue;
-      if (stato.state === "unavailable") muti.add(suo);
-      else vivi.add(suo);
-    }
-    const spenti = [...muti].filter((suo) => !vivi.has(suo)).length;
+    const { batterie, spenti, aggiornamenti } = this.cosaSistemare();
     const daSistemare = { batterie: batterie.length, spenti, aggiornamenti };
     const dati = { ...this._laGiornataDaRaccontare(), daSistemare };
     const nienteDaSistemare = !batterie.length && !spenti && !aggiornamenti;
@@ -1635,6 +1613,36 @@ export class Sentinella {
         en: { titolo: "🔋 Tonight's summary", testo: pezziEn.join(", ") },
       },
     };
+  }
+
+  /* Quello che va sistemato: le batterie scariche (col nome e la carica,
+   * per la pagina «La tua giornata»), quanti dispositivi non rispondono e
+   * quanti aggiornamenti aspettano. Lo usano il riepilogo e la pagina. */
+  cosaSistemare() {
+    const batterie = [];
+    let aggiornamenti = 0;
+    /* «Non ci sono 65 dispositivi non connessi»: qui si contavano le entita'
+     * mute che hanno un dispositivo, non i dispositivi. Adesso la regola e'
+     * quella del cruscotto di chi installa (`salute.js`) e della pagina «Non
+     * connessi» della plancia: un dispositivo e' giu' quando NESSUNA delle sue
+     * entita' risponde, e conta una volta. Un canale non usato di uno switch
+     * acceso, il blocco bambini di un'asciugatrice spenta, non lo fanno giu'. */
+    const muti = new Set();
+    const vivi = new Set();
+    for (const [id, stato] of this.stati) {
+      const dominio = dominioDi(id);
+      if (dominio === "sensor" && stato.attributes?.device_class === "battery") {
+        const n = numero(stato.state);
+        if (n !== null && n <= 15) batterie.push({ nome: nomeDi(stato, id), carica: n });
+      }
+      if (dominio === "update" && stato.state === "on") aggiornamenti += 1;
+      const suo = this.dispositivoDi?.[id];
+      if (!suo) continue;
+      if (stato.state === "unavailable") muti.add(suo);
+      else vivi.add(suo);
+    }
+    const spenti = [...muti].filter((suo) => !vivi.has(suo)).length;
+    return { batterie, spenti, aggiornamenti };
   }
 
   /* La giornata della casa, per il riepilogo: quello che il taccuino ha visto

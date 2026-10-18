@@ -48,6 +48,14 @@ import { chiudiLaFoto, chiudiLaSpinta, CONTENUTO_MASSIMO, FOTO_MASSIMA } from ".
 import { vedeQualcosa } from "./plance.js";
 import { PROFILO_PRINCIPALE } from "./configurazione.js";
 import { TaccuinoDellEnergia } from "./l-energia-di-casa.js";
+import {
+  DiarioDellaCasa,
+  daSistemare,
+  ilConfronto,
+  ilMese,
+  inBreve,
+  senzaNomiDiPersone,
+} from "./la-giornata-di-casa.js";
 import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
 
 const MINUTO = 60 * 1000;
@@ -341,9 +349,14 @@ export class Notifiche {
      * caselle dell'energia, gli UPS, l'antifurto su misura. Senza, le regole
      * che ne hanno bisogno tacciono. */
     configurazione = null,
+    /* Le licenze (`licenze.js`): le elaborate, la foto, il riepilogo della
+     * sera e «La tua giornata» sono di gdahome Premium. Senza — nelle prove
+     * — vale come con le licenze spente: tutto acceso. */
+    licenze = null,
     adesso = () => Date.now(),
   } = {}) {
     this.configurazione = configurazione;
+    this.licenze = licenze;
     this.dispositivi = dispositivi;
     this.utenti = utenti;
     this.casa = casa;
@@ -366,6 +379,11 @@ export class Notifiche {
       registro: this.registro,
       capire: new CapireLaCasa({ cartella, adesso }),
       quando: (evento) => {
+        try {
+          this.diario.evento(evento);
+        } catch (_errore) {
+          /* Il diario non ferma una notifica. */
+        }
         void this.consegna(evento);
       },
     });
@@ -377,7 +395,16 @@ export class Notifiche {
       adesso,
       registro: this.registro,
     });
-    /** Le righe che un telefono ha voluto «nel riepilogo della sera». */
+    /* Il diario della casa: il clima, il riscaldamento, il solare termico,
+     * l'auto, l'acqua e quello che e' successo, per «La tua giornata». */
+    this.diario = new DiarioDellaCasa({
+      cartella: cartella || "",
+      adesso,
+      registro: this.registro,
+    });
+    /** Le righe che un telefono ha voluto «nel riepilogo della sera»: il
+     * titolo, e l'evento per mandarlo da solo se il Premium finisce prima
+     * della sera. */
     this._inCoda = new Map();
     /** Le notifiche che aspettano la loro soglia (il blackout «oltre N minuti»). */
     this._attese = [];
@@ -399,6 +426,31 @@ export class Notifiche {
     this._disdici = null;
     this._previsioneIl = 0;
     this._registriIl = 0;
+  }
+
+  /* ─── Premium ──────────────────────────────────────────────────────────
+   *
+   * Lo decide il ponte, con lo stesso criterio delle automazioni
+   * (`automazioni.js`, `sbloccato`): gdahome Premium, o le licenze spente.
+   *
+   *  - Base: solo notifiche **semplici**, nessuna foto della telecamera,
+   *    nessun riepilogo della sera (ne' testo ne' scheda), e la pagina «La
+   *    tua giornata» risponde `premium-richiesto`. Le righe che un telefono
+   *    aveva messo «nel riepilogo» partono subito, semplici.
+   *  - Gli avvisi di sicurezza — antifurto, allarmi, perdite, blackout e
+   *    batteria dell'UPS — partono sempre: Premium cambia come si vedono,
+   *    mai se arrivano.
+   *
+   * Si guarda a ogni notifica: quando il Premium scade si torna da soli alle
+   * semplici, e le impostazioni del telefono restano com'erano per quando
+   * torna. */
+  get premium() {
+    try {
+      if (!this.licenze?.attive) return true;
+      return this.licenze.premium === true;
+    } catch (_errore) {
+      return false;
+    }
   }
 
   /* La configurazione della plancia principale, come la tengono i
@@ -434,8 +486,18 @@ export class Notifiche {
         "state_changed",
         (evento) => {
           const dati = evento?.data;
-          if (dati?.entity_id)
-            this.sentinella.cambia(dati.entity_id, dati.new_state, dati.old_state);
+          if (!dati?.entity_id) return;
+          this.sentinella.cambia(dati.entity_id, dati.new_state, dati.old_state);
+          try {
+            this.diario.cambia(
+              dati.entity_id,
+              dati.new_state,
+              dati.old_state,
+              this.sentinella.stati,
+            );
+          } catch (errore) {
+            this.registro.debug?.(`il diario della casa: ${errore?.message || errore}`);
+          }
         },
         {
           onCaduto: () => {
@@ -558,7 +620,24 @@ export class Notifiche {
     this.sentinella.capire.gestiteDaAutomazioni([...gestite]);
   }
 
+  /* Il diario della casa, a ogni battito: con le potenze che la sentinella
+   * ha appena letto, per dividere la ricarica dell'auto fra sole e rete. */
+  _campionaIlDiario() {
+    try {
+      const valori = this._valori();
+      this.diario.campiona({
+        stati: this.sentinella.stati,
+        valori,
+        energia: this.sentinella._ultimeLetture ?? null,
+        prezzo: (istante) => this.sentinella.prezzo(istante, valori),
+      });
+    } catch (errore) {
+      this.registro.errore?.(`il diario della casa: ${errore?.message || errore}`);
+    }
+  }
+
   ferma() {
+    this.diario?.scrivi?.();
     clearInterval(this._giro);
     this._giro = null;
     const disdici = this._disdici;
@@ -572,6 +651,7 @@ export class Notifiche {
       (voce) => suDi(impostazioniPulite(voce?.impostazioni), "movimento").quando === "sempre",
     );
     this.sentinella.battito();
+    this._campionaIlDiario();
     await this._leAttese();
     this.sincronizza();
     await this._riepiloghi();
@@ -611,6 +691,16 @@ export class Notifiche {
    * della casa, il meteo di domani e le notifiche che ha voluto lasciare per
    * la sera. */
   async _riepiloghi() {
+    /* In Base il riepilogo non c'e': le righe messe da parte quando il
+     * Premium c'era partono adesso, ognuna da sola e semplice. */
+    if (!this.premium) {
+      const code = [...this._inCoda];
+      this._inCoda.clear();
+      for (const [telefono, righe] of code)
+        for (const riga of righe)
+          if (riga?.evento) await this.consegna(riga.evento, { soloA: telefono });
+      return;
+    }
     const ora = new Date(this.adesso());
     const adessoInMinuti = ora.getHours() * 60 + ora.getMinutes();
     const oggi = ora.toDateString();
@@ -626,7 +716,7 @@ export class Notifiche {
         riepilogo = this.sentinella.riepilogo();
         if (riepilogo) riepilogo.componi.dati.domani = await this._ilTempoDiDomani();
       }
-      const inCoda = this._inCoda.get(telefono) || [];
+      const inCoda = (this._inCoda.get(telefono) || []).map((riga) => riga.titolo);
       this._inCoda.delete(telefono);
       if (!riepilogo && !inCoda.length) continue;
       const base = riepilogo ?? {
@@ -851,6 +941,9 @@ export class Notifiche {
   /* Manda un evento a chi lo deve sapere. Torna quanti telefoni l'hanno
    * avuto. `soloA`: un telefono solo (il riepilogo, la prova). */
   async consegna(evento, { soloA = null } = {}) {
+    const premium = this.premium;
+    /* Il riepilogo della sera in Base non esiste. */
+    if (evento?.tipo === "riepilogo" && !premium) return 0;
     const elenco = this.dispositivi.elenco();
     const chiCe = await this._chiCe();
     const ora = this.adesso();
@@ -885,8 +978,10 @@ export class Notifiche {
       if (!this._lovuole(imp, evento, utente)) continue;
       const su = suDi(imp, evento.tipo);
       /* «Nel riepilogo della sera»: non parte adesso, si mette da parte una
-       * riga. L'urgente parte sempre — una cosa urgente la sera non serve. */
+       * riga. L'urgente parte sempre — una cosa urgente la sera non serve.
+       * Senza Premium il riepilogo non c'e', e la notifica parte subito. */
       if (
+        premium &&
         su.come === "riepilogo" &&
         evento.tipo !== "riepilogo" &&
         evento.tipo !== "prova" &&
@@ -894,7 +989,7 @@ export class Notifiche {
       ) {
         const { titolo } = this._parole(evento, imp.lingua, { stile: "semplice", su });
         const coda = this._inCoda.get(dispositivo.id) || [];
-        coda.push(String(titolo).slice(0, 90));
+        coda.push({ titolo: String(titolo).slice(0, 90), evento });
         this._inCoda.set(dispositivo.id, coda.slice(-6));
         continue;
       }
@@ -926,12 +1021,19 @@ export class Notifiche {
       const camera = this._vedeLaTelecamera(utente, amministra, evento.camera)
         ? evento.camera
         : null;
-      const stile = evento.stileDellaVoce || stileDi(imp, evento.tipo);
+      /* Senza Premium tutte semplici, qualunque cosa abbia scelto il telefono. */
+      const stile = premium ? evento.stileDellaVoce || stileDi(imp, evento.tipo) : "semplice";
       /* La foto solo a chi ha scelto le elaborate, e solo della telecamera che
        * gli si mostra. Va al centralino prima della busta, che porta il numero
        * che il centralino le ha dato. */
       let foto = null;
-      if (stile === "elaborata" && evento.conFoto && camera && this.postino?.mandaLaFoto) {
+      if (
+        premium &&
+        stile === "elaborata" &&
+        evento.conFoto &&
+        camera &&
+        this.postino?.mandaLaFoto
+      ) {
         const byte = await this._laFoto(evento, camera);
         if (byte) {
           try {
@@ -1094,15 +1196,34 @@ export class Notifiche {
 
   /**
    * La giornata della casa per la pagina «La tua giornata» dell'app: quello
-   * che il riepilogo della sera racconta, con tutti i numeri. Solo numeri e
-   * nomi dei carichi: niente entita', niente dati di altri telefoni. `null`
-   * se oggi il taccuino non ha visto niente.
+   * che il riepilogo della sera racconta, con tutti i numeri, e il resto
+   * della casa dal diario (`la-giornata-di-casa.js`): il clima delle stanze,
+   * il riscaldamento, il solare termico, l'auto, l'acqua, gli eventi, i
+   * conti, il mese, il confronto, le cose da sistemare e «In breve». Ogni
+   * sezione c'e' solo se in casa c'e' quello che serve, altrimenti `null`.
+   * Solo numeri, orari e nomi delle cose: niente entita', niente nomi di
+   * persone, niente dati di altri telefoni. `{giornata: null}` se oggi non
+   * si e' visto niente.
    */
   async giornataDettagliata() {
     const s = this.sentinella;
     const dati = s?._laGiornataDaRaccontare?.() || {};
     const g = dati.giornata;
-    if (!g) return { giornata: null };
+    let casa = null;
+    try {
+      casa = this.diario.laGiornata({ stati: s.stati, valori: this._valori() });
+    } catch (errore) {
+      this.registro.attenzione?.(`il diario della casa: ${errore?.message || errore}`);
+    }
+    const sezioni = casa || {};
+    const qualcosa =
+      sezioni.clima ||
+      sezioni.riscaldamento ||
+      sezioni.solareTermico ||
+      sezioni.auto ||
+      sezioni.acqua ||
+      sezioni.eventi?.length;
+    if (!g && !qualcosa) return { giornata: null };
     let domani = null;
     try {
       domani = await this._ilTempoDiDomani();
@@ -1110,23 +1231,31 @@ export class Notifiche {
       domani = null;
     }
     const passati = s.taccuino?.giorniPassati?.() || [];
-    return {
-      giornata: {
-        d: g.d,
-        sole: g.sole,
-        casa: g.casa,
-        presi: g.presi,
-        ceduti: g.ceduti,
-        usato: g.usato,
-        quotaInCasa: g.quotaInCasa,
-        euroRete: g.euroRete,
-        risparmio: g.risparmio,
-        picco: g.picco,
-        piccoIl: g.piccoIl,
-        p: g.p,
-        c: g.c,
-        perFascia: g.perFascia,
-      },
+    let sistemare = [];
+    try {
+      sistemare = daSistemare(s.cosaSistemare());
+    } catch (_errore) {
+      sistemare = [];
+    }
+    const risposta = {
+      giornata: g
+        ? {
+            d: g.d,
+            sole: g.sole,
+            casa: g.casa,
+            presi: g.presi,
+            ceduti: g.ceduti,
+            usato: g.usato,
+            quotaInCasa: g.quotaInCasa,
+            euroRete: g.euroRete,
+            risparmio: g.risparmio,
+            picco: g.picco,
+            piccoIl: g.piccoIl,
+            p: g.p,
+            c: g.c,
+            perFascia: g.perFascia,
+          }
+        : null,
       conSole: Boolean(dati.conSole),
       /* Chi ha consumato di piu', dal piu' grosso. */
       piu: Array.isArray(dati.piu) ? dati.piu : [],
@@ -1138,7 +1267,28 @@ export class Notifiche {
       domani,
       /* La settimana: i totali dei sette giorni prima. */
       settimana: passati.slice(-7).map((x) => ({ d: x.d, pk: x.pk, casa: x.casa, eur: x.eur })),
+      clima: sezioni.clima ?? null,
+      riscaldamento: sezioni.riscaldamento ?? null,
+      solareTermico: sezioni.solareTermico ?? null,
+      auto: sezioni.auto ?? null,
+      acqua: sezioni.acqua ?? null,
+      eventi: sezioni.eventi ?? [],
+      conti: sezioni.conti ?? null,
+      mese: g ? ilMese(passati, g) : null,
+      confronto: g
+        ? ilConfronto({ passati, giornata: g, conSole: Boolean(dati.conSole), media: dati.media })
+        : null,
+      daSistemare: sistemare,
     };
+    risposta.inBreve = inBreve(risposta);
+    /* Ultima cosa prima di partire: nessun nome di chi abita, in nessun
+     * testo. Ne' delle persone di Home Assistant ne' degli utenti. */
+    const chiCe = (await this._chiCe()) ?? [];
+    const nomi = [
+      ...s.persone().map(([, stato]) => String(stato?.attributes?.friendly_name || "")),
+      ...chiCe.map((uno) => String(uno?.nome || "")),
+    ].filter(Boolean);
+    return senzaNomiDiPersone(risposta, nomi);
   }
 
   /* `dispositivo`: il telefono di questo filo, gia' riconosciuto. `amministra`:
@@ -1159,6 +1309,8 @@ export class Notifiche {
       /* La pagina «La tua giornata»: solo chi ha un utente sul filo. */
       if (detto.type === LA_GIORNATA) {
         if (!utente) return no("unauthorized", "la giornata della casa si vede da un utente");
+        if (!this.premium)
+          return no("premium-richiesto", "«La tua giornata» e' di gdahome Premium");
         return si(await this.giornataDettagliata());
       }
       switch (detto.type) {
@@ -1222,6 +1374,9 @@ export class Notifiche {
           const esempio = !regola && tipo ? esempioDi(tipo, this.adesso()) : null;
           if (tipo && !regola && !esempio)
             return no("invalid_format", "di questa notifica non c'e' un esempio");
+          /* Il riepilogo della sera, in Base, non c'e' nemmeno di prova. */
+          if (tipo === "riepilogo" && !regola && !this.premium)
+            return no("premium-richiesto", "il riepilogo della sera e' di gdahome Premium");
           const prova = regola ? this._provaDi(regola) : esempio || this._provaQualunque();
           if (esempio) {
             /* Lo stile e' quello che la voce avra' davvero. */
@@ -1322,6 +1477,9 @@ export class Notifiche {
         })),
       io: utente,
       amministra: amministra === true,
+      /* gdahome Premium: senza, l'app mette il lucchetto su «Elaborate» e sul
+       * «Riepilogo della sera». */
+      premium: this.premium,
     };
   }
 
