@@ -825,13 +825,14 @@ test("le elaborate stanno nella busta: ogni esempio sotto il limite, la scheda c
   }
 });
 
-test("le prove di fila: le semplici partono, il limite dice quanto aspettare", async () => {
+test("le prove di fila: nessun limite, e non tolgono posto alle vere", async () => {
   const banco = unBanco();
   try {
     await banco.registra();
-    /* Si provano le voci una dopo l'altra, nello stile semplice. */
+    /* Si provano le voci una dopo l'altra, nello stile semplice: prima dalla
+     * quarta in poi «non e' partita». */
     const tipi = ["elettrodomestici", "blackout", "movimento", "antifurto"];
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 40; i += 1) {
       const risposta = await banco.notifiche.rispondi(
         { id: 10 + i, type: "ponte/notifiche/prova", tipo: tipi[i % tipi.length] },
         { dispositivo: banco.a.dispositivo },
@@ -839,21 +840,9 @@ test("le prove di fila: le semplici partono, il limite dice quanto aspettare", a
       assert.equal(risposta.success, true, `prova ${i + 1}`);
       assert.equal(banco.apri(banco.spinte.at(-1)).stile, "s");
     }
-    const troppe = await banco.notifiche.rispondi(
-      { id: 30, type: "ponte/notifiche/prova", tipo: "blackout" },
-      { dispositivo: banco.a.dispositivo },
-    );
-    assert.equal(troppe.success, false);
-    assert.equal(troppe.error.code, "rate_limited");
-    assert.match(troppe.error.message, /fra \d+ minut/);
+    assert.equal(banco.spinte.length, 40);
     /* Le prove non contano fra le trenta dell'ora: una notifica vera parte. */
     assert.ok(banco.notifiche._cePosto(banco.a.dispositivo.id, { tipo: "movimento" }));
-    banco.orologio.ora += 10 * MINUTO;
-    const dopo = await banco.notifiche.rispondi(
-      { id: 31, type: "ponte/notifiche/prova", tipo: "blackout" },
-      { dispositivo: banco.a.dispositivo },
-    );
-    assert.equal(dopo.success, true);
   } finally {
     banco.spegni();
   }

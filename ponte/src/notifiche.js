@@ -84,10 +84,6 @@ const TASTI_TENUTI_AL_PIU = 500;
  * Una casa che ne vuole mandare di piu' ha un sensore impazzito, e trenta
  * notifiche in un'ora sono gia' un telefono da buttare dalla finestra. */
 const PER_TELEFONO_ALL_ORA = 30;
-/* E di prova, per non farne un campanello. Erano tre, e provando le voci
- * una dopo l'altra — arrivi, porta, freezer… — dalla quarta in poi «non e'
- * partita»: sembrava che le semplici non andassero, ed era il limite. */
-const PROVE_OGNI_DIECI_MINUTI = 10;
 
 /* I tasti del riepilogo della sera: «Apri la giornata» apre la pagina
  * nell'app, «OK» la chiude. Nessuno dei due comanda niente in casa. */
@@ -1002,30 +998,13 @@ export class Notifiche {
     return true;
   }
 
-  /* Fra quanti minuti questo telefono puo' fare un'altra prova: 0 adesso. */
-  _fraQuantoLaProva(telefono) {
-    const ora = this.adesso();
-    const prove = (this._conti.get(`${telefono}|prova`) || []).filter(
-      (una) => ora - una < 10 * MINUTO,
-    );
-    if (prove.length < PROVE_OGNI_DIECI_MINUTI) return 0;
-    return Math.max(1, Math.ceil((Math.min(...prove) + 10 * MINUTO - ora) / MINUTO));
-  }
-
   _cePosto(telefono, evento) {
     const ora = this.adesso();
     const volte = (this._conti.get(telefono) || []).filter((una) => ora - una < ORA);
-    if (evento.tipo === "prova") {
-      const prove = (this._conti.get(`${telefono}|prova`) || []).filter(
-        (una) => ora - una < 10 * MINUTO,
-      );
-      if (prove.length >= PROVE_OGNI_DIECI_MINUTI) return false;
-      prove.push(ora);
-      this._conti.set(`${telefono}|prova`, prove);
-      /* Le prove hanno il loro limite e non contano fra le trenta dell'ora:
-       * provare le voci non deve zittire le notifiche vere. */
-      return true;
-    }
+    /* Le prove non hanno limite e non contano fra le trenta dell'ora:
+     * «non deve esserci alcun limite». Le preme a mano chi le vuole, e
+     * provare le voci non deve zittire le notifiche vere. */
+    if (evento.tipo === "prova") return true;
     if (volte.length >= PER_TELEFONO_ALL_ORA) return false;
     volte.push(ora);
     this._conti.set(telefono, volte);
@@ -1518,12 +1497,6 @@ export class Notifiche {
             prova.stileDellaVoce = stileDi(imp, tipo);
             prova.suDellaVoce = suDi(imp, tipo);
           }
-          const fra = this._fraQuantoLaProva(telefono);
-          if (fra > 0)
-            return no(
-              "rate_limited",
-              `tante prove di fila: la prossima fra ${fra} ${fra === 1 ? "minuto" : "minuti"}`,
-            );
           const mandate = await this.consegna(prova, { soloA: telefono });
           if (!mandate) return no("not_sent", "non e' partita: riprova fra qualche minuto");
           return si({ mandata: true });

@@ -255,6 +255,20 @@ enum Sezione {
   /// Nella webapp non ci sono proprio: non sono spente, non sono grigie, non
   /// ci sono. Vedi `vociDellaBarra`.
   final bool soloNellApp;
+
+  /// Le voci di gdahome Premium. Nel menu portano il bollino ✨ PREMIUM
+  /// quando la casa e' Premium, e il lucchetto quando non lo e' (vedi
+  /// `_bloccate` in `home.dart`).
+  ///
+  /// «Hai messo il tag premium su automazioni, mettilo anche sulle altre
+  /// cose presenti nell'app, tipo zigbee, aiutanti eccetera.»
+  bool get diPremium => switch (this) {
+    Sezione.configurazione ||
+    Sezione.automazioni ||
+    Sezione.zigbee ||
+    Sezione.aiutanti => true,
+    _ => false,
+  };
 }
 
 /// I gruppi della barra, dall'alto in basso.

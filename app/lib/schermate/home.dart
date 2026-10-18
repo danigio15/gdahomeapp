@@ -354,7 +354,10 @@ class _HomeState extends State<Home> {
   Set<Sezione> get _bloccate {
     final licenza = widget.collegamento.licenza;
     if (!licenza.controlliAccesi || licenza.premium) return const {};
-    return const {Sezione.configurazione, Sezione.zigbee, Sezione.automazioni};
+    return {
+      for (final una in Sezione.values)
+        if (una.diPremium) una,
+    };
   }
 
   /* Con Android Auto acceso il navigatore e' sullo schermo dell'auto, e sul

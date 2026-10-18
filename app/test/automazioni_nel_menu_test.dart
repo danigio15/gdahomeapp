@@ -68,13 +68,16 @@ void main() {
     expect(File('assets/oggetti/automazioni.svg').existsSync(), isTrue);
   });
 
-  test('senza Premium la voce ha il lucchetto, come la Configurazione', () {
+  test('le voci Premium: configurazione, automazioni, zigbee, aiutanti', () {
+    expect(Sezione.values.where((s) => s.diPremium).toSet(), {
+      Sezione.configurazione,
+      Sezione.automazioni,
+      Sezione.zigbee,
+      Sezione.aiutanti,
+    });
     final casa = File('lib/schermate/home.dart').readAsStringSync();
     final bloccate = casa.substring(casa.indexOf('Set<Sezione> get _bloccate'));
-    expect(
-      bloccate.substring(0, 500),
-      matches(RegExp(r'Sezione\.automazioni\b')),
-    );
+    expect(bloccate.substring(0, 300), contains('una.diPremium'));
     expect(casa, contains('PerchePremium.automazioni'));
   });
 
@@ -99,15 +102,23 @@ void main() {
     await prova.pumpWidget(_conLaBarra(chiave));
     chiave.currentState!.apri();
     await prova.pumpAndSettle();
-    expect(find.byKey(const Key('bollino-premium')), findsOneWidget);
+    /* Configurazione, Automazioni e Aiutanti: Zigbee c'e' solo dove c'e' la
+     * rete. */
+    expect(find.byKey(const Key('bollino-premium')), findsNWidgets(3));
 
     final chiusa = GlobalKey<BarraDelleSezioniState>();
     await prova.pumpWidget(
-      _conLaBarra(chiusa, bloccate: const {Sezione.automazioni}),
+      _conLaBarra(
+        chiusa,
+        bloccate: {
+          for (final una in Sezione.values)
+            if (una.diPremium) una,
+        },
+      ),
     );
     chiusa.currentState!.apri();
     await prova.pumpAndSettle();
     expect(find.byKey(const Key('bollino-premium')), findsNothing);
-    expect(find.byIcon(Icons.lock_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.lock_rounded), findsNWidgets(3));
   });
 }
