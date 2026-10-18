@@ -195,7 +195,7 @@ test("il riepilogo: «chi ha consumato di piu'» nella semplice, il piu' grosso 
   assert.match(semplice.testo, /Forno 1,9/);
   assert.doesNotMatch(semplice.testo, /Il più acceso/, "una volta sola");
   const elaborata = paroleDelRiepilogo(dati, "it", { stile: "elaborata" });
-  assert.match(elaborata.testo, /^Il più: Pompa di calore 4,2 kWh/);
+  assert.match(elaborata.testo, /^⚡ Ha consumato di più: Pompa di calore, 4,2 kWh/);
   assert.equal(elaborata.scheda.piu.length, 3, "nella scheda i primi tre");
   assert.deepEqual(elaborata.scheda.piu[0], ["Pompa di calore", 4.2, 0.84]);
   /* Senza carichi contati torna il «piu' acceso» di prima. */

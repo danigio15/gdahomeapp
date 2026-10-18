@@ -681,3 +681,134 @@ test("`ponte/energia/giornata` con Premium: le sezioni nuove, compatte e senza n
     banco.spegni();
   }
 });
+
+/* ─── Le batterie da cambiare, e i tasti del riepilogo ───────────────── */
+
+const BATTERIE = [
+  { entity_id: "person.persona_1", state: "home", attributes: { friendly_name: "Persona 1" } },
+  {
+    entity_id: "sensor.porta_ingresso_batteria",
+    state: "12",
+    attributes: { device_class: "battery", friendly_name: "Sensore porta ingresso" },
+  },
+  {
+    entity_id: "sensor.telefono_batteria",
+    state: "5",
+    attributes: { device_class: "battery", friendly_name: "iPhone di Persona 1" },
+  },
+  {
+    entity_id: "sensor.termostato_batteria",
+    state: "9",
+    attributes: { device_class: "battery", friendly_name: "Termostato di Persona 1" },
+  },
+];
+
+const unaGiornata = () => ({
+  giornata: {
+    d: "2026-10-18",
+    sole: 18.4,
+    casa: 11.6,
+    presi: 3.1,
+    ceduti: 4.8,
+    usato: 13.6,
+    quotaInCasa: 0.74,
+    euroRete: 0.52,
+    risparmio: 2.41,
+    picco: 4.9,
+    piccoIl: "13:10",
+    p: Array(24).fill(0),
+    c: Array(24).fill(0),
+    perFascia: {},
+    cicli: [],
+  },
+  conSole: true,
+  piu: [{ nome: "Pompa di calore", kwh: 4.2, eur: 0.38, sole: 0.62 }],
+  fasce: { nomi: {}, piuBassa: null },
+});
+
+test("Base: «🔋 Batterie da cambiare» alla sera, semplice, una volta, senza i telefoni", async () => {
+  const banco = unBanco({ licenze: { attive: true, premium: false }, adesso: alle(20, 25) });
+  try {
+    await conGettoneElaborate(banco);
+    banco.notifiche.sentinella.carica(BATTERIE);
+    await banco.notifiche._riepiloghi();
+    assert.equal(banco.spinte.length, 0, "non prima dell'ora del riepilogo");
+    banco.orologio.ora = alle(20, 31);
+    await banco.notifiche._riepiloghi();
+    assert.equal(banco.spinte.length, 1);
+    const detto = banco.apri(banco.spinte[0]);
+    assert.equal(detto.titolo, "🔋 Batterie da cambiare");
+    assert.equal(detto.testo, "Termostato di qualcuno 9% · Sensore porta ingresso 12%");
+    assert.equal(detto.stile, "s");
+    assert.doesNotMatch(JSON.stringify(detto), /Persona 1|iPhone|sensor\./);
+    /* Una volta al giorno. */
+    banco.orologio.ora = alle(20, 35);
+    await banco.notifiche._riepiloghi();
+    assert.equal(banco.spinte.length, 1);
+    /* Senza batterie scariche, niente. */
+    banco.notifiche.sentinella.carica(BATTERIE.slice(0, 1));
+    banco.orologio.ora = new Date(2026, 9, 19, 20, 31).getTime();
+    await banco.notifiche._riepiloghi();
+    assert.equal(banco.spinte.length, 1);
+  } finally {
+    banco.spegni();
+  }
+});
+
+test("Premium: col riepilogo spento le batterie a parte, acceso dentro il riepilogo e basta", async () => {
+  const banco = unBanco({ licenze: { attive: true, premium: true }, adesso: alle(20, 31) });
+  try {
+    await conGettoneElaborate(banco);
+    await banco.chiedi({
+      type: "ponte/notifiche/imposta",
+      impostazioni: { eventi: { riepilogo: false } },
+    });
+    banco.notifiche.sentinella.carica(BATTERIE);
+    await banco.notifiche._riepiloghi();
+    assert.equal(banco.spinte.length, 1);
+    assert.equal(banco.apri(banco.spinte[0]).titolo, "🔋 Batterie da cambiare");
+
+    /* Il giorno dopo, col riepilogo acceso: una notifica sola, il riepilogo. */
+    await banco.chiedi({
+      type: "ponte/notifiche/imposta",
+      impostazioni: { eventi: { riepilogo: true } },
+    });
+    banco.notifiche.sentinella._laGiornataDaRaccontare = unaGiornata;
+    banco.orologio.ora = new Date(2026, 9, 19, 20, 31).getTime();
+    await banco.notifiche._riepiloghi();
+    assert.equal(banco.spinte.length, 2);
+    const detto = banco.apri(banco.spinte[1]);
+    assert.equal(detto.titolo, "☀️ La tua giornata · 18,4 kWh dal sole");
+    assert.deepEqual(detto.testo.split("\n"), [
+      "⚡ Ha consumato di più: Pompa di calore, 4,2 kWh",
+      "💶 Rete 0,52 € · risparmiati 2,41 €",
+      "⚠️ Da sistemare: 2 batterie scariche",
+    ]);
+    assert.deepEqual(detto.azioni, [
+      { id: "giornata", etichetta: "Apri la giornata", apre: true },
+      { id: "ok", etichetta: "OK" },
+    ]);
+  } finally {
+    banco.spegni();
+  }
+});
+
+test("i tasti del riepilogo parlano la lingua del telefono", async () => {
+  const banco = unBanco({ adesso: alle(20, 31) });
+  try {
+    await conGettoneElaborate(banco);
+    await banco.chiedi({ type: "ponte/notifiche/imposta", impostazioni: { lingua: "en" } });
+    banco.notifiche.sentinella._laGiornataDaRaccontare = unaGiornata;
+    await banco.notifiche._riepiloghi();
+    const detto = banco.apri(banco.spinte[0]);
+    assert.deepEqual(
+      detto.azioni.map((a) => [a.id, a.etichetta]),
+      [
+        ["giornata", "Open your day"],
+        ["ok", "OK"],
+      ],
+    );
+  } finally {
+    banco.spegni();
+  }
+});

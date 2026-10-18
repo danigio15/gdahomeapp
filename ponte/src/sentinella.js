@@ -44,6 +44,7 @@ import {
   prezzoAllOra,
 } from "./l-energia-di-casa.js";
 import { risolutoreDalla } from "./ricarica-di-notte.js";
+import { batterieDiCasa } from "./la-giornata-di-casa.js";
 import {
   paroleDelBlackout,
   paroleDelCiclo,
@@ -1575,7 +1576,11 @@ export class Sentinella {
   /* Quello che va sistemato, in una notifica sola. `null` se non c'e' niente:
    * un riepilogo vuoto non si manda. */
   riepilogo() {
-    const { batterie, spenti, aggiornamenti } = this.cosaSistemare();
+    const tutto = this.cosaSistemare();
+    const { spenti, aggiornamenti } = tutto;
+    /* Le batterie dei telefoni e degli orologi sono di qualcuno: non si
+     * contano fra le cose di casa da sistemare. */
+    const batterie = batterieDiCasa(tutto.batterie);
     const daSistemare = { batterie: batterie.length, spenti, aggiornamenti };
     const dati = { ...this._laGiornataDaRaccontare(), daSistemare };
     const nienteDaSistemare = !batterie.length && !spenti && !aggiornamenti;

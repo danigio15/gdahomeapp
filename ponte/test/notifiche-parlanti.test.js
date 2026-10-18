@@ -270,7 +270,11 @@ test("il riepilogo col fotovoltaico: sole, soldi, record, domani e da sistemare"
     "⚠️ Da sistemare: 1 batteria scarica, 1 aggiornamento",
   ]);
   const elaborata = paroleDelRiepilogo(dati, "it", { stile: "elaborata" });
-  assert.equal(elaborata.titolo, "☀️ 18,4 kWh dal sole · 2,41 € risparmiati");
+  assert.equal(elaborata.titolo, "☀️ La tua giornata · 18,4 kWh dal sole");
+  assert.deepEqual(elaborata.testo.split("\n"), [
+    "💶 Rete 0,52 € · risparmiati 2,41 €",
+    "⚠️ Da sistemare: 1 batteria scarica, 1 aggiornamento",
+  ]);
   assert.equal(elaborata.scheda.t, "giornata");
   assert.equal(elaborata.scheda.rec, "ottobre");
   assert.equal(elaborata.scheda.p.length, 24);

@@ -767,7 +767,12 @@ export class Commissioni {
      * righe che un telefono aveva messo «nel riepilogo» partono subito,
      * semplici) e `ponte/energia/giornata` risponde `premium-richiesto`. Gli
      * avvisi di sicurezza — antifurto, allarmi, perdite, blackout — partono
-     * sempre. `ponte/notifiche/stato` dice `premium: bool`, cosi' l'app
+     * sempre, e cosi' le batterie scariche: chi il riepilogo non lo riceve
+     * (Base, o riepilogo spento) ha «🔋 Batterie da cambiare», semplice, una
+     * volta al giorno all'ora del riepilogo, coi dispositivi di casa e la
+     * loro carica (non i telefoni ne' gli orologi, che sono di qualcuno);
+     * chi lo riceve le trova dentro il riepilogo, senza doppioni. I tasti
+     * del riepilogo sono «Apri la giornata» (`giornata`) e «OK» (`ok`). `ponte/notifiche/stato` dice `premium: bool`, cosi' l'app
      * mette il lucchetto dove serve; gli acquisti si fanno solo dalle app
      * sugli store, mai di qui. */
     /* La ricarica di notte (`ricarica-di-notte.js`): cosa sta facendo la

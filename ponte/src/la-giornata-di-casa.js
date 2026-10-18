@@ -1085,6 +1085,14 @@ export function ilConfronto({ passati = [], giornata = null, conSole = false, me
   return { ieriSolePct, settimanaPct, meseRetePct };
 }
 
+/** Le batterie scariche dei dispositivi di casa: senza telefoni, tablet e
+ * orologi, che sono di qualcuno. */
+export function batterieDiCasa(batterie = []) {
+  return (Array.isArray(batterie) ? batterie : []).filter(
+    (b) => b && typeof b.carica === "number" && !DI_QUALCUNO.test(String(b.nome || "")),
+  );
+}
+
 /**
  * Le cose da sistemare, scritte: le batterie scariche col nome del
  * dispositivo (non quelle dei telefoni e degli orologi, che sono di
@@ -1092,7 +1100,7 @@ export function ilConfronto({ passati = [], giornata = null, conSole = false, me
  */
 export function daSistemare({ batterie = [], spenti = 0, aggiornamenti = 0 } = {}) {
   const fuori = [];
-  const diCasa = batterie.filter((b) => !DI_QUALCUNO.test(String(b?.nome || "")));
+  const diCasa = batterieDiCasa(batterie);
   for (const b of diCasa.slice(0, 3))
     fuori.push({ icona: "batteria", testo: `${b.nome} al ${Math.round(b.carica)}%` });
   if (diCasa.length > 3)

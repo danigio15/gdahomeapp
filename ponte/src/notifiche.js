@@ -50,6 +50,7 @@ import { PROFILO_PRINCIPALE } from "./configurazione.js";
 import { TaccuinoDellEnergia } from "./l-energia-di-casa.js";
 import {
   DiarioDellaCasa,
+  batterieDiCasa,
   daSistemare,
   ilConfronto,
   ilMese,
@@ -74,6 +75,17 @@ const TASTI_TENUTI_AL_PIU = 500;
 const PER_TELEFONO_ALL_ORA = 30;
 /* E di prova, per non farne un campanello. */
 const PROVE_OGNI_DIECI_MINUTI = 3;
+
+/* I tasti del riepilogo della sera: «Apri la giornata» apre la pagina
+ * nell'app, «OK» la chiude. Nessuno dei due comanda niente in casa. */
+export const TASTI_DEL_RIEPILOGO = Object.freeze([
+  Object.freeze({
+    id: "giornata",
+    parole: Object.freeze({ it: "Apri la giornata", en: "Open your day" }),
+    apre: true,
+  }),
+  Object.freeze({ id: "ok", parole: Object.freeze({ it: "OK", en: "OK" }) }),
+]);
 
 /** La pagina «La tua giornata» dell'app: la chiede un telefono con un utente. */
 export const LA_GIORNATA = "ponte/energia/giornata";
@@ -691,27 +703,37 @@ export class Notifiche {
    * della casa, il meteo di domani e le notifiche che ha voluto lasciare per
    * la sera. */
   async _riepiloghi() {
+    const premium = this.premium;
     /* In Base il riepilogo non c'e': le righe messe da parte quando il
      * Premium c'era partono adesso, ognuna da sola e semplice. */
-    if (!this.premium) {
+    if (!premium) {
       const code = [...this._inCoda];
       this._inCoda.clear();
       for (const [telefono, righe] of code)
         for (const riga of righe)
           if (riga?.evento) await this.consegna(riga.evento, { soloA: telefono });
-      return;
     }
     const ora = new Date(this.adesso());
     const adessoInMinuti = ora.getHours() * 60 + ora.getMinutes();
     const oggi = ora.toDateString();
     let riepilogo;
+    let batterie;
     for (const [telefono, voce] of Object.entries(this.archivio.dati.telefoni)) {
       const imp = impostazioniPulite(voce.impostazioni);
-      if (!imp.eventi.riepilogo) continue;
       const quando = minutiDi(imp.riepilogo);
       if (adessoInMinuti < quando || adessoInMinuti > quando + 10) continue;
       if (this._riepilogoDel.get(telefono) === oggi) continue;
       this._riepilogoDel.set(telefono, oggi);
+      /* Chi il riepilogo non lo riceve — una casa Base, o un telefono che
+       * l'ha spento — le batterie da cambiare le sa lo stesso, alla stessa
+       * ora: e' un avviso di sicurezza, mai dietro Premium. Chi lo riceve le
+       * trova dentro il riepilogo, una volta sola. */
+      if (!premium || !imp.eventi.riepilogo) {
+        if (batterie === undefined) batterie = await this._leBatterieDaCambiare();
+        if (batterie)
+          await this.consegna({ ...batterie, quando: this.adesso() }, { soloA: telefono });
+        continue;
+      }
       if (riepilogo === undefined) {
         riepilogo = this.sentinella.riepilogo();
         if (riepilogo) riepilogo.componi.dati.domani = await this._ilTempoDiDomani();
@@ -731,14 +753,59 @@ export class Notifiche {
         {
           ...base,
           quando: this.adesso(),
-          azioni: base.componi.dati.giornata
-            ? [{ id: "energia", parole: { it: "Apri Energia", en: "Open Energy" }, apre: true }]
-            : [],
+          azioni: base.componi.dati.giornata ? TASTI_DEL_RIEPILOGO.map((t) => ({ ...t })) : [],
           componi: { ...base.componi, dati: { ...base.componi.dati, inCoda } },
         },
         { soloA: telefono },
       );
     }
+  }
+
+  /* «🔋 Batterie da cambiare»: le batterie scariche dei dispositivi di casa,
+   * col nome e la carica. Non quelle dei telefoni e degli orologi, che sono
+   * di qualcuno, e nessun nome di persona. `null` se non ce n'e'. */
+  async _leBatterieDaCambiare() {
+    let elenco = [];
+    try {
+      elenco = batterieDiCasa(this.sentinella.cosaSistemare().batterie);
+    } catch (_errore) {
+      elenco = [];
+    }
+    if (!elenco.length) return null;
+    const chiCe = (await this._chiCe()) ?? [];
+    const nomi = [
+      ...this.sentinella
+        .persone()
+        .map(([, stato]) => String(stato?.attributes?.friendly_name || "")),
+      ...chiCe.map((uno) => String(uno?.nome || "")),
+    ].filter(Boolean);
+    const righe = senzaNomiDiPersone(
+      elenco
+        .slice()
+        .sort((a, b) => a.carica - b.carica)
+        .map((b) => `${b.nome} ${Math.round(b.carica)}%`),
+      nomi,
+    );
+    const mostrate = righe.slice(0, 5);
+    const altre = righe.length - mostrate.length;
+    const testo = (ancora) => [...mostrate, ...(altre ? [ancora] : [])].join(" · ");
+    return {
+      tipo: "riepilogo",
+      /* Passa anche col riepilogo spento, e in Base: non e' il riepilogo. */
+      sempre: true,
+      stileDellaVoce: "semplice",
+      urgenza: "normale",
+      chiave: "batterie-da-cambiare",
+      pausa: 20 * ORA,
+      parole: {
+        it: {
+          titolo: "🔋 Batterie da cambiare",
+          testo: testo(altre === 1 ? "+1 altra" : `+${altre} altre`),
+        },
+        en: { titolo: "🔋 Batteries to replace", testo: testo(`+${altre} more`) },
+      },
+      azioni: [],
+    };
   }
 
   /* Il cielo di domani dalle nove alle cinque, per il consiglio del
@@ -880,7 +947,8 @@ export class Notifiche {
   _lovuole(imp, evento, utente) {
     if (!imp.acceso) return false;
     if (evento.tipo === "prova") return true;
-    if (imp.eventi[evento.tipo] === false) return false;
+    /* Le batterie da cambiare passano anche col riepilogo spento. */
+    if (imp.eventi[evento.tipo] === false && !evento.sempre) return false;
     if (evento.tipo === "suggerimenti" && imp.assistente === "importanti" && !evento.importante)
       return false;
     if (evento.tipo === "arrivi" && !imp.persone.includes(evento.persona)) return false;
@@ -943,7 +1011,7 @@ export class Notifiche {
   async consegna(evento, { soloA = null } = {}) {
     const premium = this.premium;
     /* Il riepilogo della sera in Base non esiste. */
-    if (evento?.tipo === "riepilogo" && !premium) return 0;
+    if (evento?.tipo === "riepilogo" && !evento.sempre && !premium) return 0;
     const elenco = this.dispositivi.elenco();
     const chiCe = await this._chiCe();
     const ora = this.adesso();
@@ -1671,46 +1739,50 @@ export function esempioDi(tipo, adesso = Date.now()) {
     case "riepilogo": {
       const p = [0, 0, 0, 0, 0, 0, 1, 5, 14, 25, 35, 43, 48, 49, 46, 39, 29, 17, 6, 1, 0, 0, 0, 0];
       const c = [4, 3, 3, 3, 3, 3, 5, 9, 7, 6, 19, 21, 8, 7, 6, 7, 12, 9, 14, 22, 16, 10, 7, 5];
-      return conParole(base, COMPOSITORI.riepilogo, {
-        giornata: {
-          d: new Date(adesso).toISOString().slice(0, 10),
-          sole: 18.4,
-          casa: 16.7,
-          presi: 3.1,
-          ceduti: 4.8,
-          usato: 13.6,
-          quotaInCasa: 0.74,
-          euroRete: 0.52,
-          risparmio: 2.41,
-          picco: 4.9,
-          piccoIl: "13:10",
-          p,
-          c,
-          perFascia: {},
-          cicli: [],
+      return conParole(
+        { ...base, azioni: TASTI_DEL_RIEPILOGO.map((t) => ({ ...t })) },
+        COMPOSITORI.riepilogo,
+        {
+          giornata: {
+            d: new Date(adesso).toISOString().slice(0, 10),
+            sole: 18.4,
+            casa: 16.7,
+            presi: 3.1,
+            ceduti: 4.8,
+            usato: 13.6,
+            quotaInCasa: 0.74,
+            euroRete: 0.52,
+            risparmio: 2.41,
+            picco: 4.9,
+            piccoIl: "13:10",
+            p,
+            c,
+            perFascia: {},
+            cicli: [],
+          },
+          conSole: true,
+          ieri: 16.4,
+          media: 15.1,
+          record: "mese",
+          colSole: ["Lavatrice", "Lavastoviglie"],
+          piuAcceso: null,
+          batteria: 62,
+          domani: {
+            met: [
+              [9, "sole"],
+              [11, "sole"],
+              [13, "sole"],
+              [15, "poco"],
+              [17, "nuvole"],
+            ],
+            soleFino: "15:00",
+            pioggia: false,
+          },
+          fasce: { nomi: {}, piuBassa: null },
+          daSistemare: { batterie: 1, spenti: 0, aggiornamenti: 1 },
+          inCoda: [],
         },
-        conSole: true,
-        ieri: 16.4,
-        media: 15.1,
-        record: "mese",
-        colSole: ["Lavatrice", "Lavastoviglie"],
-        piuAcceso: null,
-        batteria: 62,
-        domani: {
-          met: [
-            [9, "sole"],
-            [11, "sole"],
-            [13, "sole"],
-            [15, "poco"],
-            [17, "nuvole"],
-          ],
-          soleFino: "15:00",
-          pioggia: false,
-        },
-        fasce: { nomi: {}, piuBassa: null },
-        daSistemare: { batterie: 1, spenti: 0, aggiornamenti: 1 },
-        inCoda: [],
-      });
+      );
     }
     case "blackout":
       return conParole(base, COMPOSITORI.blackout, {
