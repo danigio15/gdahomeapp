@@ -10,6 +10,8 @@
 /// parola in meno da tradurre fra le due punte.
 library;
 
+import '../parole.dart';
+
 /// Gli eventi di ogni categoria, nell'ordine della pagina. Sono gli stessi di
 /// `CATEGORIE` in `ponte/src/sentinella.js`.
 const Map<String, List<String>> categorieDelleNotifiche = {
@@ -542,9 +544,15 @@ class StatoDelleNotifiche {
     this.personalizzate = const [],
     this.io = '',
     this.amministra = false,
+    this.premium,
   });
 
   final ImpostazioniDelleNotifiche impostazioni;
+
+  /// Se la casa e' Premium, come la vede il ponte (`licenze.premium`, o
+  /// licenze spente). `null` da un ponte di prima, che non lo dice: allora
+  /// decide la licenza che l'app conosce.
+  final bool? premium;
 
   /// Se questo telefono ha gia' detto alla casa dove mandarle.
   final bool registrato;
@@ -576,6 +584,7 @@ class StatoDelleNotifiche {
     personalizzate: personalizzate ?? this.personalizzate,
     io: io,
     amministra: amministra,
+    premium: premium,
   );
 
   Map<String, Object> inJson() => {
@@ -595,6 +604,7 @@ class StatoDelleNotifiche {
     ],
     'io': io,
     'amministra': amministra,
+    'premium': ?premium,
   };
 
   static StatoDelleNotifiche leggi(Object? grezzo) {
@@ -627,18 +637,51 @@ class StatoDelleNotifiche {
       ),
       io: grezzo['io']?.toString() ?? '',
       amministra: grezzo['amministra'] == true,
+      premium: grezzo['premium'] is bool ? grezzo['premium'] as bool : null,
     );
   }
 }
 
 /// Un tasto sotto una notifica.
 class TastoDellaNotifica {
-  const TastoDellaNotifica(this.id, this.etichetta, {this.apre = false});
+  const TastoDellaNotifica(
+    this.id,
+    this.etichetta, {
+    this.apre = false,
+    this.chiude = false,
+  });
   final String id;
   final String etichetta;
 
   /// `true` per «Guarda»: apre l'app e basta, non chiede niente alla casa.
   final bool apre;
+
+  /// `true` per «OK»: toglie la notifica e basta. Non apre l'app e non
+  /// chiede niente alla casa.
+  final bool chiude;
+}
+
+/// Il tasto che apre «La tua giornata». Un ponte di prima lo chiamava
+/// `energia` («Apri Energia»): vale lo stesso.
+const tastoDellaGiornata = 'giornata';
+
+/// I tasti del riepilogo della sera, come li vuole il disegno: «Apri la
+/// giornata» e «OK». Il ponte manda `giornata` e `ok`; uno di prima solo
+/// `energia`. Senza nessuno dei due (il riepilogo di Base, «Batterie da
+/// cambiare») restano quelli che sono — cioe' nessuno.
+List<TastoDellaNotifica> tastiDelRiepilogo(List<TastoDellaNotifica> tasti) {
+  final ids = {for (final uno in tasti) uno.id};
+  if (!ids.contains(tastoDellaGiornata) && !ids.contains('energia')) {
+    return tasti;
+  }
+  return [
+    TastoDellaNotifica(
+      tastoDellaGiornata,
+      inLingua(it: 'Apri la giornata', en: 'Open your day'),
+      apre: true,
+    ),
+    const TastoDellaNotifica('ok', 'OK', chiude: true),
+  ];
 }
 
 /// Una notifica arrivata, aperta.
@@ -689,6 +732,11 @@ class NotificaArrivata {
 
   bool get elaborata => scheda != null || foto != null;
 
+  /// Se toccandola si apre «La tua giornata»: il riepilogo della sera che ne
+  /// porta il tasto. Il riepilogo semplice di Base no: si legge e basta.
+  bool get apreLaGiornata =>
+      tipo == 'riepilogo' && tasti.any((uno) => uno.id == tastoDellaGiornata);
+
   bool get urgente => urgenza == 'urgente';
 
   /// Se e' ancora buona: una notifica scaduta non si mostra, e i suoi tasti
@@ -701,13 +749,25 @@ class NotificaArrivata {
     if (grezzo['v'] != 1 || id is! String || titolo is! String) return null;
     DateTime ora(Object? ms) =>
         DateTime.fromMillisecondsSinceEpoch((ms as num?)?.toInt() ?? 0);
-    final tasti = grezzo['azioni'];
+    final azioni = grezzo['azioni'];
     final scheda = grezzo['scheda'];
+    final tipo = grezzo['tipo']?.toString() ?? '';
+    final letti = [
+      if (azioni is List)
+        for (final uno in azioni)
+          if (uno is Map && uno['id'] is String)
+            TastoDellaNotifica(
+              uno['id'] as String,
+              '${uno['etichetta'] ?? uno['id']}',
+              apre: uno['apre'] == true,
+              chiude: uno['id'] == 'ok',
+            ),
+    ];
     final foto = grezzo['foto'];
     final idDellaFoto = foto is Map ? foto['id'] : null;
     return NotificaArrivata(
       id: id,
-      tipo: grezzo['tipo']?.toString() ?? '',
+      tipo: tipo,
       categoria: grezzo['cat']?.toString() ?? '',
       urgenza: switch (grezzo['urg']) {
         'urgente' => 'urgente',
@@ -721,16 +781,7 @@ class NotificaArrivata {
       entita: grezzo['entita'] as String?,
       camera: grezzo['camera'] as String?,
       chiamata: grezzo['chiamata'] == true,
-      tasti: [
-        if (tasti is List)
-          for (final uno in tasti)
-            if (uno is Map && uno['id'] is String)
-              TastoDellaNotifica(
-                uno['id'] as String,
-                '${uno['etichetta'] ?? uno['id']}',
-                apre: uno['apre'] == true,
-              ),
-      ],
+      tasti: tipo == 'riepilogo' ? tastiDelRiepilogo(letti) : letti,
       scheda: scheda is Map<String, dynamic> && scheda['v'] == 1
           ? scheda
           : null,

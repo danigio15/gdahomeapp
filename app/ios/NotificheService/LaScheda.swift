@@ -18,7 +18,6 @@ enum LaScheda {
   // MARK: i colori
 
   static let bluA = UIColor(rgb: 0x1E3A5F), bluB = UIColor(rgb: 0x0F172A)
-  static let soleA = UIColor(rgb: 0x7C4A03), soleB = UIColor(rgb: 0x2A1A05)
   static let rossoA = UIColor(rgb: 0x7F1D1D), rossoB = UIColor(rgb: 0x2A0A0A)
   static let chiaro = UIColor(rgb: 0xE2E8F0), spento = UIColor(rgb: 0x94A3B8)
   static let giallo = UIColor(rgb: 0xFBBF24), gialloChiaro = UIColor(rgb: 0xFDE68A)
@@ -319,11 +318,97 @@ enum LaScheda {
   }
 
   // MARK: la giornata
+  //
+  // La griglia di `lib/notifiche/scheda.dart` (`_Griglia`), con le stesse
+  // misure: due colonne, 176 | il resto; tre righe, 22 | il resto | 16; tutto
+  // in due terzi del disegno approvato (540×270). In alto la data e il record,
+  // a sinistra il numero grande e in fondo i due numeri, a destra il grafico
+  // ora per ora e sotto la sua legenda.
+
+  enum Griglia {
+    static let k: CGFloat = 2.0 / 3.0
+    static let sinistra: CGFloat = 22 * k
+    static let destra: CGFloat = 360 - 20 * k
+    static let colonna: CGFloat = 176 * k
+    static let grafico: CGFloat = sinistra + colonna + 20 * k
+    static let riga1: CGFloat = 18 * k
+    static let altezza1: CGFloat = 22 * k
+    static let riga2: CGFloat = riga1 + altezza1 + 10 * k
+    static let altezza2: CGFloat = 180 * k
+    static let riga3: CGFloat = riga2 + altezza2 + 10 * k
+    static let altezza3: CGFloat = 16 * k
+    static let fondo: CGFloat = riga3 + altezza3
+  }
+
+  static let usatoInCasa = UIColor(rgb: 0xD97706)
+  static let marrone = UIColor(rgb: 0x422006)
+  static let testoChiaro = UIColor(rgb: 0xCBD5E1)
+
+  /// Il corpo piu' grande (dal suo, fino ai sette decimi) a cui il testo ci
+  /// sta in `larga`.
+  static func corpoPer(
+    _ testo: String, _ corpo: CGFloat, _ peso: UIFont.Weight, larga: CGFloat, titolo: Bool = false
+  ) -> CGFloat {
+    var c = corpo
+    while misura(testo, corpo: c, peso: peso, titolo: titolo).width > larga, c - 0.5 >= corpo * 0.7 { c -= 0.5 }
+    return c
+  }
+
+  static func sfumatura(_ colori: [UIColor], _ posti: [CGFloat]) -> CGGradient? {
+    CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colori.map(\.cgColor) as CFArray, locations: posti)
+  }
 
   static func giornata(_ c: CGContext, _ s: [String: Any]) {
-    let conSole = numero(s["pk"]) != nil
-    fondo(c, conSole ? [soleA, soleB, bluB] : [bluA, bluB])
-    var data = ""
+    let dalSole = numero(s["pk"])
+    let conSole = dalSole != nil
+    let tutto = CGRect(x: 0, y: 0, width: larga, height: alta)
+    c.saveGState()
+    UIBezierPath(roundedRect: tutto, cornerRadius: 22 * Griglia.k).addClip()
+    c.scaleBy(x: 1, y: 0.5)
+    let colori = conSole
+      ? [UIColor(rgb: 0x3A2507), UIColor(rgb: 0x141B2E), UIColor(rgb: 0x0B1222)]
+      : [UIColor(rgb: 0x1E3A5F), UIColor(rgb: 0x141B2E), UIColor(rgb: 0x0B1222)]
+    if let fondo = sfumatura(colori, [0, 0.45, 1]) {
+      c.drawRadialGradient(
+        fondo, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: larga * 1.2,
+        options: [.drawsAfterEndLocation])
+    }
+    c.restoreGState()
+    let bordo = UIBezierPath(roundedRect: tutto.insetBy(dx: 0.35, dy: 0.35), cornerRadius: 22 * Griglia.k)
+    bordo.lineWidth = 0.7
+    UIColor(white: 1, alpha: 0.07).setStroke()
+    bordo.stroke()
+
+    // La prima riga: la data a sinistra, il record a destra.
+    var finoAllaData = Griglia.destra
+    if let record = s["rec"] as? String, !record.isEmpty {
+      let anno = record == "anno" || record == "year"
+      let scritta = anno
+        ? detto("Record dell'anno", "Record of the year") : detto("Record di \(record)", "\(record) record")
+      let massimo = (Griglia.destra - Griglia.sinistra) / 2 - 24
+      let corpo = corpoPer(scritta, 11 * Griglia.k, .heavy, larga: massimo)
+      let quanto = misura(scritta, corpo: corpo, peso: .heavy)
+      let largaScritta = min(quanto.width, massimo)
+      let dentro = 10 * Griglia.k
+      let largaPillola = dentro + 7 + 3 + largaScritta + dentro
+      let altaPillola = quanto.height + 8 * Griglia.k
+      let pillola = CGRect(
+        x: Griglia.destra - largaPillola, y: Griglia.riga1 + (Griglia.altezza1 - altaPillola) / 2,
+        width: largaPillola, height: altaPillola)
+      c.saveGState()
+      UIBezierPath(roundedRect: pillola, cornerRadius: altaPillola / 2).addClip()
+      if let oro = sfumatura([gialloChiaro, arancio], [0, 1]) {
+        c.drawLinearGradient(
+          oro, start: CGPoint(x: pillola.minX, y: pillola.minY), end: CGPoint(x: pillola.maxX, y: pillola.maxY),
+          options: [])
+      }
+      c.restoreGState()
+      simbolo("trophy.fill", CGRect(x: pillola.minX + dentro, y: pillola.midY - 3.5, width: 7, height: 7), [marrone])
+      scrivi(
+        scritta, CGPoint(x: pillola.minX + dentro + 10, y: pillola.midY - quanto.height / 2), corpo: corpo,
+        peso: .heavy, colore: marrone, larga: largaScritta + 1)
+      finoAllaData = pillola.minX - 8
+    }
     if let testo = s["d"] as? String {
       let leggi = DateFormatter()
       leggi.dateFormat = "yyyy-MM-dd"
@@ -331,91 +416,191 @@ enum LaScheda {
         let formato = DateFormatter()
         formato.locale = Locale(identifier: italiano ? "it_IT" : "en_US")
         formato.dateFormat = italiano ? "EEEE d MMMM" : "EEEE MMMM d"
-        data = formato.string(from: giorno)
+        let data = formato.string(from: giorno).uppercased()
+        let corpo = 10.5 * Griglia.k
+        let alto = misura(data, corpo: corpo, peso: .heavy).height
+        scrivi(
+          data, CGPoint(x: Griglia.sinistra, y: Griglia.riga1 + (Griglia.altezza1 - alto) / 2), corpo: corpo,
+          peso: .heavy, colore: spento, larga: finoAllaData - Griglia.sinistra)
       }
     }
-    testa(conSole ? "sun.max.fill" : "bolt.fill", conSole ? [giallo] : [arancio],
-      detto("La tua giornata", "Your day"), data, finoA: 220)
-    if let record = s["rec"] as? String, !record.isEmpty {
-      let quanto = misura("RECORD", corpo: 9, peso: .black).width
-      let pillola = CGRect(x: 346 - quanto - 18, y: 12, width: quanto + 18, height: 17)
-      gialloChiaro.setFill()
-      UIBezierPath(roundedRect: pillola, cornerRadius: 9).fill()
-      scrivi("RECORD", CGPoint(x: pillola.minX + 9, y: pillola.minY + 2), corpo: 9, peso: .black, colore: UIColor(rgb: 0x422006))
-      scrivi(detto("il giorno più solare di \(record)", "sunniest day of \(record)"), CGPoint(x: 346, y: 32),
-        corpo: 8, peso: .bold, colore: gialloChiaro, larga: 140, allinea: .right)
+
+    // A sinistra: il numero grande, e cosa vuol dire.
+    if let grande = conSole ? dalSole : numero(s["rk"]) {
+      let unita = misura("kWh", corpo: 14 * Griglia.k, peso: .semibold)
+      let cifra = decimali(grande, grande >= 100 ? 0 : 1)
+      let corpo = corpoPer(cifra, 60 * Griglia.k, .bold, larga: Griglia.colonna - unita.width - 4, titolo: true)
+      let font = carattere(corpo, .bold, titolo: true)
+      let sopra = Griglia.riga2 - 60 * Griglia.k * 0.05
+      let quanto = scrivi(
+        cifra, CGPoint(x: Griglia.sinistra, y: sopra), corpo: corpo, peso: .bold, colore: gialloChiaro,
+        titolo: true, larga: Griglia.colonna)
+      let base = sopra + font.ascender
+      let piccolo = carattere(14 * Griglia.k, .semibold, titolo: false)
+      scrivi(
+        "kWh", CGPoint(x: Griglia.sinistra + quanto.width + 4, y: base - piccolo.ascender), corpo: 14 * Griglia.k,
+        peso: .semibold, colore: chiaro, larga: 40)
+      scrivi(
+        conSole ? detto("prodotti dal sole oggi", "from the sun today") : detto("consumati oggi", "used today"),
+        CGPoint(x: Griglia.sinistra, y: Griglia.riga2 + 60 * Griglia.k * 0.9 + 4), corpo: 12.5 * Griglia.k,
+        colore: testoChiaro, larga: Griglia.colonna)
     }
-    var tessere: [(String, String, UIColor)] = []
+
+    // A sinistra, in fondo: i due numeri, divisi da una linea.
+    var coppia: [(String, String)] = []
     if conSole {
-      tessere.append((detto("DAL SOLE", "FROM SUN"), kwh(numero(s["pk"]) ?? 0), gialloChiaro))
-      if let casa = numero(s["casa"]) { tessere.append((detto("IN CASA", "AT HOME"), percento(casa), .white)) }
-      if let ris = numero(s["ris"]) { tessere.append((detto("RISPARMIATI", "SAVED"), euro(ris), verdeChiaro)) }
+      if let casa = numero(s["casa"]) { coppia.append((percento(casa), detto("usato in casa", "used at home"))) }
+      if let ris = numero(s["ris"]) { coppia.append((euro(ris), detto("risparmiati", "saved"))) }
     } else {
-      if let rete = numero(s["rk"]) { tessere.append((detto("CONSUMO", "USED"), kwh(rete), .white)) }
-      if let soldi = numero(s["re"]) { tessere.append((detto("COSTO", "COST"), euro(soldi), gialloChiaro)) }
+      if let soldi = numero(s["re"]) { coppia.append((euro(soldi), detto("dalla rete", "from the grid"))) }
+      if let batteria = numero(s["batt"]) {
+        coppia.append((percento(batteria), detto("batteria stasera", "battery tonight")))
+      }
     }
-    for (i, (etichetta, valore, colore)) in tessere.enumerated() {
-      let riquadro = CGRect(x: 14, y: 50 + CGFloat(i) * 41, width: 96, height: 36)
-      UIColor(white: 1, alpha: 0.06).setFill()
-      UIBezierPath(roundedRect: riquadro, cornerRadius: 10).fill()
-      scrivi(etichetta, CGPoint(x: riquadro.minX + 8, y: riquadro.minY + 4), corpo: 7, peso: .heavy, colore: spento, larga: 84)
-      scrivi(valore, CGPoint(x: riquadro.minX + 8, y: riquadro.minY + 14), corpo: 16, peso: .bold, colore: colore,
-        titolo: true, larga: 84)
+    if !coppia.isEmpty {
+      let meta = Griglia.colonna / 2
+      let valore = 24 * Griglia.k
+      let etichetta = 10.5 * Griglia.k
+      let altoValore = carattere(valore, .bold, titolo: true).lineHeight
+      let altoEtichetta = carattere(etichetta, .semibold, titolo: false).lineHeight
+      let sopraIlValore = 10 * Griglia.k
+      let riga = Griglia.fondo - altoValore - 2 - altoEtichetta - sopraIlValore
+      let pennello = UIBezierPath()
+      pennello.move(to: CGPoint(x: Griglia.sinistra, y: riga))
+      pennello.addLine(to: CGPoint(x: Griglia.sinistra + Griglia.colonna, y: riga))
+      if coppia.count > 1 {
+        pennello.move(to: CGPoint(x: Griglia.sinistra + meta, y: riga + sopraIlValore))
+        pennello.addLine(to: CGPoint(x: Griglia.sinistra + meta, y: Griglia.fondo))
+      }
+      pennello.lineWidth = 0.7
+      UIColor(white: 1, alpha: 0.1).setStroke()
+      pennello.stroke()
+      for (i, (numero, parola)) in coppia.prefix(2).enumerated() {
+        let x = Griglia.sinistra + (i == 0 ? 0 : meta + 12 * Griglia.k)
+        let spazio = meta - (i == 0 ? 6 : 12 * Griglia.k)
+        scrivi(
+          numero, CGPoint(x: x, y: riga + sopraIlValore), corpo: valore, peso: .bold, colore: .white, titolo: true,
+          larga: spazio)
+        scrivi(
+          parola, CGPoint(x: x, y: riga + sopraIlValore + altoValore + 2), corpo: etichetta, colore: spento,
+          larga: spazio)
+      }
     }
-    let prodotta = serie(s["p"]).map { $0 / 10 }, consumata = serie(s["c"]).map { $0 / 10 }
-    let grafico = CGRect(x: 122, y: 54, width: 224, height: 82)
+
+    // A destra: il grafico ora per ora (viewBox 300×200, base a 178).
+    let prodotta = conSole ? serie(s["p"]).map { $0 / 10 } : []
+    let consumata = serie(s["c"]).map { $0 / 10 }
+    let dove = CGRect(
+      x: Griglia.grafico, y: Griglia.riga2, width: Griglia.destra - Griglia.grafico, height: Griglia.altezza2)
+    let y = dove.height / 200
+    let base = dove.minY + 178 * y
+    let piano = CGRect(x: dove.minX, y: dove.minY, width: dove.width, height: base - dove.minY)
+    let righe = UIBezierPath()
+    for riga in 1...5 {
+      let quota = base - CGFloat(riga) * 32.95 * y
+      righe.move(to: CGPoint(x: dove.minX, y: quota))
+      righe.addLine(to: CGPoint(x: dove.maxX, y: quota))
+    }
+    righe.lineWidth = 0.6
+    UIColor(white: 1, alpha: 0.06).setStroke()
+    righe.stroke()
+    let asse = UIBezierPath()
+    asse.move(to: CGPoint(x: dove.minX, y: base))
+    asse.addLine(to: CGPoint(x: dove.maxX, y: base))
+    asse.lineWidth = 0.7
+    UIColor(white: 1, alpha: 0.18).setStroke()
+    asse.stroke()
     let tutti = prodotta + consumata
-    if !tutti.isEmpty {
-      let massimo = max(tutti.max() ?? 0.5, 0.5) * 1.1
-      asse(grafico)
+    if tutti.count > 1 {
+      let massimo = max(tutti.max() ?? 0.1, 0.1) * 1.1
       if prodotta.count > 1 {
-        gialloChiaro.withAlphaComponent(0.55).setFill()
-        area(prodotta, grafico, massimo).fill()
+        c.saveGState()
+        area(prodotta, piano, massimo).addClip()
+        if let ambra = sfumatura(
+          [usatoInCasa.withAlphaComponent(0.55), usatoInCasa.withAlphaComponent(0.08)], [0, 1])
+        {
+          c.drawLinearGradient(
+            ambra, start: CGPoint(x: piano.midX, y: piano.minY), end: CGPoint(x: piano.midX, y: piano.maxY),
+            options: [])
+        }
+        c.restoreGState()
+        let curva = linea(prodotta, piano, massimo)
+        curva.lineWidth = 1.3
+        curva.lineJoinStyle = .round
+        arancio.setStroke()
+        curva.stroke()
         let usata = prodotta.indices.map { i in i < consumata.count ? min(prodotta[i], consumata[i]) : 0 }
-        arancio.setFill()
-        area(usata, grafico, massimo).fill()
+        usatoInCasa.setFill()
+        area(usata, piano, massimo).fill()
       }
       if consumata.count > 1 {
-        let curva = linea(consumata, grafico, massimo)
-        curva.lineWidth = 1.8
+        let curva = linea(consumata, piano, massimo)
+        curva.lineWidth = 1.45
         curva.lineJoinStyle = .round
         azzurro.setStroke()
         curva.stroke()
       }
-      if let picco = numero(s["pkw"]), prodotta.count > 1, let alto = prodotta.max(),
-        let dove = prodotta.firstIndex(of: alto)
+      if conSole, let picco = numero(s["pkw"]), prodotta.count > 1, let alto = prodotta.max(),
+        let i = prodotta.firstIndex(of: alto)
       {
-        let p = punti(prodotta, grafico, massimo)[dove]
-        UIColor.white.setFill()
-        UIBezierPath(ovalIn: CGRect(x: p.x - 3, y: p.y - 3, width: 6, height: 6)).fill()
+        let p = punti(prodotta, piano, massimo)[i]
+        let cerchio = UIBezierPath(ovalIn: CGRect(x: p.x - 3, y: p.y - 3, width: 6, height: 6))
+        UIColor(rgb: 0x0F172A).setFill()
+        cerchio.fill()
+        cerchio.lineWidth = 1.6
+        giallo.setStroke()
+        cerchio.stroke()
         let ora = (s["pora"] as? String).map { " · \($0)" } ?? ""
-        scrivi("\(decimali(picco, 1)) kW\(ora)", CGPoint(x: p.x + 5, y: max(p.y - 12, grafico.minY - 4)), corpo: 7.5,
-          peso: .heavy, colore: gialloChiaro, larga: 90)
-      }
-      for ora in [0, 6, 12, 18, 24] {
-        scrivi("\(ora)", CGPoint(x: grafico.minX + CGFloat(ora) * grafico.width / 24, y: 138), corpo: 7, colore: spento,
-          larga: 20, allinea: .center)
+        let scritta = "\(decimali(picco, 1)) kW\(ora)"
+        let quanto = misura(scritta, corpo: 6.8, peso: .bold)
+        var x = p.x + 5.3
+        if x + quanto.width > dove.maxX { x = p.x - 5.3 - quanto.width }
+        let sopra = max(p.y - 3.6 - carattere(6.8, .bold, titolo: false).ascender, dove.minY - quanto.height / 2)
+        scrivi(scritta, CGPoint(x: x, y: sopra), corpo: 6.8, peso: .bold, colore: gialloChiaro, larga: dove.width / 2)
       }
     }
-    var x: CGFloat = 126
-    for uno in ((s["met"] as? [[Any]]) ?? []).prefix(6) where uno.count >= 2 {
-      let nome: String
-      switch "\(uno[1])" {
-      case "sole": nome = "sun.max.fill"
-      case "poco": nome = "cloud.sun.fill"
-      case "pioggia": nome = "cloud.rain.fill"
-      default: nome = "cloud.fill"
-      }
-      simbolo(nome, CGRect(x: x + 1, y: 151, width: 11, height: 10), [chiaro, giallo, azzurro])
-      scrivi("\(uno[0])", CGPoint(x: x + 6, y: 165), corpo: 6.5, colore: spento, larga: 20, allinea: .center)
-      x += 20
+    let piccolo = carattere(6.5, .semibold, titolo: false)
+    for ora in [0, 6, 12, 18, 24] {
+      let testo = String(format: "%02d", ora)
+      let x = dove.minX + CGFloat(ora) * dove.width / 24
+      let allinea: NSTextAlignment = ora == 0 ? .left : (ora == 24 ? .right : .center)
+      scrivi(
+        testo, CGPoint(x: x, y: dove.minY + 196 * y - piccolo.ascender), corpo: 6.5, colore: spento, larga: 20,
+        allinea: allinea)
     }
-    if let consiglio = s["cons"] as? String, !consiglio.isEmpty {
-      scrivi("\(detto("Domani", "Tomorrow")): \(consiglio)", CGPoint(x: x + 6, y: 152), corpo: 8, peso: .bold,
-        colore: gialloChiaro, larga: 346 - x - 6, righe: 2)
-    } else if let batteria = numero(s["batt"]) {
-      scrivi(detto("Batteria di casa \(percento(batteria)) per la notte", "Home battery \(percento(batteria)) for the night"),
-        CGPoint(x: x + 6, y: 156), corpo: 8, peso: .bold, colore: verdeChiaro, larga: 346 - x - 6)
+
+    // La legenda, nella terza riga, allineata al grafico.
+    var voci: [(UIColor, String)] = []
+    if prodotta.count > 1 {
+      voci.append((arancio.withAlphaComponent(0.55), detto("Sole", "Sun")))
+      voci.append((usatoInCasa, detto("Usato in casa", "Used at home")))
+    }
+    if consumata.count > 1 { voci.append((azzurro, detto("Consumo", "Consumption"))) }
+    if !voci.isEmpty {
+      let quadratino = 9 * Griglia.k
+      let accanto = 5 * Griglia.k
+      let fra = 14 * Griglia.k
+      var corpo = 10.5 * Griglia.k
+      func larghezza(_ corpo: CGFloat) -> CGFloat {
+        voci.reduce(0) { $0 + misura($1.1, corpo: corpo, peso: .semibold).width + quadratino + accanto }
+          + fra * CGFloat(voci.count - 1)
+      }
+      while larghezza(corpo) > dove.width, corpo - 0.5 >= 10.5 * Griglia.k * 0.7 { corpo -= 0.5 }
+      var x = Griglia.grafico
+      let centro = Griglia.riga3 + Griglia.altezza3 / 2
+      for (colore, parola) in voci {
+        colore.setFill()
+        UIBezierPath(
+          roundedRect: CGRect(x: x, y: centro - quadratino / 2, width: quadratino, height: quadratino),
+          cornerRadius: 3 * Griglia.k
+        ).fill()
+        x += quadratino + accanto
+        let quanto = misura(parola, corpo: corpo, peso: .semibold)
+        scrivi(
+          parola, CGPoint(x: x, y: centro - quanto.height / 2), corpo: corpo, colore: testoChiaro,
+          larga: quanto.width + 1)
+        x += quanto.width + fra
+      }
     }
   }
 

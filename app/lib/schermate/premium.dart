@@ -100,6 +100,175 @@ abstract final class PerchePremium {
         'Away from home you need gdahome Premium. On your home Wi-Fi you get '
         'in as always.',
   );
+
+  static String get notifiche => inLingua(
+    it:
+        'Le notifiche elaborate — la scheda col grafico, la foto della '
+        'telecamera — e il riepilogo della sera sono di gdahome Premium. Gli '
+        'avvisi di sicurezza arrivano sempre, anche senza.',
+    en:
+        'Rich notifications — the chart card, the camera photo — and the '
+        'evening summary are part of gdahome Premium. Safety alerts always '
+        'arrive, even without it.',
+  );
+
+  static String get giornata => inLingua(
+    it:
+        '«La tua giornata» — il sole, i soldi, il clima, l\'auto, ora per '
+        'ora — è di gdahome Premium.',
+    en:
+        '«Your day» — the sun, the money, the climate, the car, hour by '
+        'hour — is part of gdahome Premium.',
+  );
+
+  /// Dove si compra: solo dalle app sugli store.
+  static String get soloDagliStore => inLingua(
+    it:
+        'Premium si attiva solo dall\'app gdahome scaricata dall\'App Store o '
+        'da Google Play: l\'acquisto lo fa il negozio, e vale per tutta la '
+        'casa e per tutti i suoi telefoni.',
+    en:
+        'Premium can only be activated from the gdahome app downloaded from '
+        'the App Store or Google Play: the store handles the purchase, and it '
+        'covers the whole home and all its phones.',
+  );
+}
+
+/// Il lucchetto spiegato, in un foglio: perche' qui c'e' un lucchetto, e che
+/// Premium si compra solo dalle app sugli store. Con [collegamento], sotto
+/// c'e' il tasto per la pagina Premium.
+Future<void> spiegaIlPremium(
+  BuildContext context, {
+  required String perche,
+  Collegamento? collegamento,
+}) => showModalBottomSheet<void>(
+  context: context,
+  showDragHandle: true,
+  isScrollControlled: true,
+  builder: (contesto) => SafeArea(
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      child: SpiegazioneDelPremium(
+        perche: perche,
+        apriLaPagina: collegamento == null
+            ? null
+            : () {
+                Navigator.of(contesto).pop();
+                unawaited(
+                  apriLaPaginaPremium(context, collegamento, perche: perche),
+                );
+              },
+      ),
+    ),
+  ),
+);
+
+/// Perche' c'e' un lucchetto, e dove si compra.
+class SpiegazioneDelPremium extends StatelessWidget {
+  const SpiegazioneDelPremium({
+    super.key,
+    required this.perche,
+    this.apriLaPagina,
+  });
+
+  final String perche;
+  final VoidCallback? apriLaPagina;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+    return Column(
+      key: const Key('spiegazione-premium'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: Colori.ambraScura,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.lock_rounded,
+                size: 19,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'gdahome Premium',
+                style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(perche, style: t.bodyMedium),
+        const SizedBox(height: 10),
+        Text(
+          PerchePremium.soloDagliStore,
+          key: const Key('premium-solo-dagli-store'),
+          style: t.bodyMedium?.copyWith(color: s.onSurfaceVariant),
+        ),
+        if (apriLaPagina != null) ...[
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: apriLaPagina,
+              icon: const Icon(Icons.workspace_premium),
+              label: Text(
+                inLingua(
+                  it: 'Scopri gdahome Premium',
+                  en: 'Discover gdahome Premium',
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Il bollino «PREMIUM» col lucchetto, accanto a una voce chiusa.
+class BollinoPremium extends StatelessWidget {
+  const BollinoPremium({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    final scritta = scuro ? const Color(0xFF3B2800) : Colors.white;
+    return Container(
+      key: const Key('bollino-premium'),
+      padding: const EdgeInsets.fromLTRB(5, 2, 7, 2),
+      decoration: BoxDecoration(
+        color: scuro ? Colori.ambra : Colori.ambraScura,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.lock_rounded, size: 11, color: scritta),
+          const SizedBox(width: 3),
+          Text(
+            'PREMIUM',
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+              color: scritta,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class SchermataPremium extends StatefulWidget {

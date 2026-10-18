@@ -210,6 +210,31 @@ class PonteFinto {
       });
       return;
     }
+    /* «La tua giornata» (`ponte/energia/giornata`): quella in [giornata],
+     * o `premium-richiesto` se la casa e' Base. */
+    if (detto['type'] == 'ponte/energia/giornata') {
+      chieste.add(detto);
+      _manda(
+        presa,
+        giornataPremium
+            ? {
+                'id': id,
+                'type': 'result',
+                'success': true,
+                'result': giornata ?? {'giornata': null},
+              }
+            : {
+                'id': id,
+                'type': 'result',
+                'success': false,
+                'error': {
+                  'code': 'premium-richiesto',
+                  'message': 'serve gdahome Premium',
+                },
+              },
+      );
+      return;
+    }
     /* Le notifiche di questo telefono (`ponte/src/notifiche.js`): qui sono
      * una mappa in memoria, e ogni domanda si segna in [chieste]. */
     if (detto['type'] case final String t
@@ -478,6 +503,12 @@ class PonteFinto {
   /// I `ponte/telefono/chi-sono` ricevuti: marca, modello, di chi e'.
   final List<Map<String, dynamic>> presentazioni = [];
 
+  /// La risposta a `ponte/energia/giornata`; `null`, una giornata vuota.
+  Map<String, dynamic>? giornata;
+
+  /// Se `false` la casa e' Base, e la giornata risponde `premium-richiesto`.
+  bool giornataPremium = true;
+
   /// Quello che il ponte sa delle notifiche di questo telefono: la risposta
   /// a `ponte/notifiche/stato`.
   final Map<String, dynamic> notifiche = {
@@ -496,6 +527,8 @@ class PonteFinto {
     'personalizzate': <Map<String, dynamic>>[],
     'io': 'a' * 32,
     'amministra': true,
+    /* La casa e' Premium: le elaborate e il riepilogo ci sono. */
+    'premium': true,
   };
 
   Object? _notifiche(String tipo, Map<String, dynamic> detto) {
