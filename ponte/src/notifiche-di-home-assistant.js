@@ -116,10 +116,11 @@ export function segniDi({ titolo = "", messaggio = "", data = null } = {}) {
   return {
     conFoto: Boolean(d.image || d.attachment?.url || telecameraDi(d)),
     conTasti: Array.isArray(d.actions) && d.actions.length > 0,
+    /* Urgente solo quando lo e' davvero: la critica dell'iPhone o il canale
+     * della sveglia su Android. `priority: high` e `ttl: 0` no — molte
+     * automazioni li mettono solo per svegliare il telefono, e passerebbero
+     * le ore di silenzio. */
     urgente:
-      String(d.priority ?? "").toLowerCase() === "high" ||
-      d.ttl === 0 ||
-      d.ttl === "0" ||
       String(push["interruption-level"] ?? "").toLowerCase() === "critical" ||
       (push.sound && typeof push.sound === "object" && Number(push.sound.critical) === 1) ||
       /alarm/i.test(canale),

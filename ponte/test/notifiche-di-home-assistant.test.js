@@ -139,8 +139,9 @@ test("com'e' fatta: foto, tasti, urgente, testo che cambia", () => {
     urgente: false,
     testoCheCambia: false,
   });
-  assert.equal(segniDi({ data: { priority: "high" } }).urgente, true);
-  assert.equal(segniDi({ data: { ttl: 0 } }).urgente, true);
+  assert.equal(segniDi({ data: { priority: "high" } }).urgente, false);
+  assert.equal(segniDi({ data: { ttl: 0 } }).urgente, false);
+  assert.equal(segniDi({ data: { channel: "alarm_stream" } }).urgente, true);
   assert.equal(segniDi({ data: { channel: "alarm_stream" } }).urgente, true);
   assert.equal(
     telecameraDi({ image: "https://x/api/camera_proxy/camera.porta?token=1" }),
