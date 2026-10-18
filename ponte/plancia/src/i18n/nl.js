@@ -6826,6 +6826,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "Een apparaat op Start kan een foto of tekening hebben die zijn tegel vult. Naam en status blijven wit op de donkere sluier onderaan.",
   "Choose from the drawings": "Kiezen uit de tekeningen",
   "Device images": "Afbeeldingen van apparaten",
+  "Tile images": "Afbeeldingen van tegels",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "Elke kaart van het dashboard kan een foto of tekening hebben die hem vult: lampen, klimaat, rolluiken, camera's, kamers, snelle acties. De bediening blijft er leesbaar bovenop; aan de muur verschijnt dezelfde afbeelding op de pagina's die zichzelf vullen.",
   "Drag to move": "Sleep om te verplaatsen",
   "Drawing (when there is no image)": "Tekening (als er geen afbeelding is)",
   "Fills the tile instead of the drawing": "Vult de tegel in plaats van de tekening",

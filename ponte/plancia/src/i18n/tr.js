@@ -6798,6 +6798,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "Ana sayfadaki bir cihazın kutusunu dolduran bir fotoğrafı veya çizimi olabilir. Ad ve durum alttaki koyu perdenin üzerinde beyaz kalır.",
   "Choose from the drawings": "Çizimlerden seç",
   "Device images": "Cihaz görselleri",
+  "Tile images": "Kutucuk görselleri",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "Panodaki her kart onu dolduran bir fotoğraf ya da çizim alabilir: ışıklar, iklim, panjurlar, kameralar, odalar, hızlı eylemler. Kontroller üstte, okunaklı kalır; duvarda aynı görsel kendiliğinden dolan sayfalarda görünür.",
   "Drag to move": "Taşımak için sürükleyin",
   "Drawing (when there is no image)": "Çizim (görsel yokken)",
   "Fills the tile instead of the drawing": "Çizimin yerine kutuyu doldurur",

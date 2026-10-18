@@ -6759,6 +6759,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "يمكن لجهاز في الصفحة الرئيسية أن يحمل صورة أو رسمًا يملأ مربعه. يبقى الاسم والحالة باللون الأبيض على الستار الداكن في الأسفل.",
   "Choose from the drawings": "اختر من الرسوم",
   "Device images": "صور الأجهزة",
+  "Tile images": "صور البطاقات",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "يمكن لكل بطاقة في اللوحة أن تحمل صورة أو رسمًا يملؤها: الأضواء، التكييف، الستائر، الكاميرات، الغرف، الإجراءات السريعة. تبقى أدوات التحكم فوقها وواضحة؛ وعلى الجدار تظهر الصورة نفسها في الصفحات التي تمتلئ تلقائيًا.",
   "Drag to move": "اسحب للتحريك",
   "Drawing (when there is no image)": "الرسم (عند عدم وجود صورة)",
   "Fills the tile instead of the drawing": "يملأ المربع بدل الرسم",

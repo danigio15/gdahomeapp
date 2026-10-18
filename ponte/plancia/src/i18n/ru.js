@@ -6817,6 +6817,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "У устройства на главной может быть фото или рисунок на всю плитку. Имя и состояние остаются белыми на тёмной вуали внизу.",
   "Choose from the drawings": "Выбрать из рисунков",
   "Device images": "Изображения устройств",
+  "Tile images": "Изображения плиток",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "Каждая карточка панели может иметь фото или рисунок, заполняющий её: свет, климат, жалюзи, камеры, комнаты, быстрые действия. Элементы управления остаются сверху и читаются; на стене то же изображение появляется на страницах, которые заполняются сами.",
   "Drag to move": "Перетащите, чтобы сдвинуть",
   "Drawing (when there is no image)": "Рисунок (когда нет изображения)",
   "Fills the tile instead of the drawing": "Заполняет плитку вместо рисунка",

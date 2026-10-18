@@ -23,6 +23,7 @@ import {
   genereDelComando,
 } from "./comandi-accanto.js";
 import { conservaIlConfigurato } from "./device-model.js";
+import { immaginePulita } from "./immagine-del-riquadro.js";
 import { SOURCE_LOCALE, getLocale, pick } from "./i18n.js";
 import { nomeAccantoAlDispositivo } from "./nome-accanto-al-dispositivo.js";
 import {
@@ -145,6 +146,8 @@ export function elencoMappe(input) {
 }
 
 /** Un robot, coi campi che la configurazione conosce. */
+const senzaImmagine = ({ immagine: _grezza, ...resto } = {}) => resto;
+
 export function normalizeRobot(input = {}, index = 0) {
   /* E tutto quello che qui sotto non e' nominato.
    *
@@ -179,8 +182,10 @@ export function normalizeRobot(input = {}, index = 0) {
        * vedere sulla scheda. Come i comandi, sopravvivono alla
        * normalizzazione o sparirebbero a ogni salvataggio. */
       letture: elencoLetture(input.letture ?? input.readings),
+      /* «Riquadri con l'immagine»: la foto o il disegno della card, pulita. */
+      ...(immaginePulita(input.immagine) ? { immagine: immaginePulita(input.immagine) } : {}),
     },
-    input,
+    senzaImmagine(input),
     "robots",
   );
 }

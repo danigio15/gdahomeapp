@@ -6795,6 +6795,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "ホームのデバイスには、タイル全体を埋める写真やイラストを付けられます。名前と状態は下部の暗いベールの上に白で表示されます。",
   "Choose from the drawings": "イラストから選ぶ",
   "Device images": "デバイスの画像",
+  "Tile images": "タイルの画像",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "ダッシュボードのどのカードにも、全体を埋める写真やイラストを設定できます：照明、空調、シャッター、カメラ、部屋、クイックアクション。操作ボタンは上に読みやすく残り、壁掛けパネルでは自動で埋まるページに同じ画像が表示されます。",
   "Drag to move": "ドラッグして移動",
   "Drawing (when there is no image)": "イラスト（画像がないとき）",
   "Fills the tile instead of the drawing": "イラストの代わりにタイルを埋めます",

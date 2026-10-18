@@ -6821,6 +6821,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "Urządzenie na stronie głównej może mieć zdjęcie lub rysunek wypełniający jego kafelek. Nazwa i stan zostają białe na ciemnej zasłonie u dołu.",
   "Choose from the drawings": "Wybierz z rysunków",
   "Device images": "Obrazy urządzeń",
+  "Tile images": "Obrazy kafelków",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "Każda karta pulpitu może mieć zdjęcie lub rysunek, który ją wypełnia: światła, klimatyzacja, rolety, kamery, pokoje, szybkie akcje. Sterowanie pozostaje na wierzchu, czytelne; na ścianie ten sam obraz pojawia się na stronach, które wypełniają się same.",
   "Drag to move": "Przeciągnij, aby przesunąć",
   "Drawing (when there is no image)": "Rysunek (gdy nie ma obrazu)",
   "Fills the tile instead of the drawing": "Wypełnia kafelek zamiast rysunku",

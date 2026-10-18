@@ -7,7 +7,7 @@
  * vestito. Su desktop e su telefono. */
 import { expect, test } from "@playwright/test";
 import { disegnoDaRiquadro } from "../src/core/disegni-da-riquadro.js";
-import { STATI_A_MURO, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
+import { SEME_A_MURO, STATI_A_MURO, apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
 
 const MURO_PERSONALE = {
   attiva: true,
@@ -354,6 +354,85 @@ test.describe("i riquadri con l'immagine", () => {
     /* I tasti si leggono: bianchi sul vetro scuro. */
     const colore = await clima
       .locator('[data-mu-fa="meno"]')
+      .evaluate((n) => getComputedStyle(n).color);
+    expect(colore).toBe("rgb(255, 255, 255)");
+  });
+
+  test("plancia: ogni card configurata prende l'immagine dal config, e i suoi comandi restano", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "il pannello si prova una volta");
+    const seme = structuredClone(SEME_A_MURO);
+    seme.sections.climate[0].immagine = disegno("condizionatore");
+    seme.sections.covers[0].immagine = disegno("tapparella");
+    seme.sections.cameras[0].immagine = disegno("cancello");
+    seme.sections.rooms[0].immagine = disegno("soggiorno");
+    await apriLaCasaAMuro(page, testInfo, { premium: false, muro: null, stati: STATI, seme });
+    /* Dal config: «Immagini dei riquadri», la luce del soggiorno. */
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.evaluate(() => window.editorSwitch("sez0"));
+    const pannello = page.locator("#ed-body [data-dm-rq-card-pannello]");
+    await expect(pannello).toBeVisible();
+    for (const gruppo of ["Luci", "Clima", "Tapparelle", "Telecamere", "Stanze", "Azioni rapide"])
+      await expect(pannello).toContainText(gruppo);
+    await pannello.locator('[data-dm-rq-apri-card="card:luci:0"]').click();
+    const blocco = pannello.locator('[data-dm-rqi="card:luci:0"]');
+    await expect(blocco).toBeVisible();
+    await scegliIlDisegno(blocco, "lampione", "lampione");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            JSON.parse(localStorage.getItem("dm_dashboard_state")).sections.lights[0].immagine?.src,
+        ),
+      )
+      .toBe("disegno:lampione");
+    /* E un'azione rapida, che sta in un'altra casella. */
+    await pannello.locator('[data-dm-rq-apri-card="card:azioni:4"]').click();
+    await scegliIlDisegno(
+      pannello.locator('[data-dm-rqi="card:azioni:4"]'),
+      "proiettore",
+      "proiet",
+    );
+    expect(
+      await page.evaluate(
+        () => JSON.parse(localStorage.getItem("cd_quick_actions"))[4].immagine.src,
+      ),
+    ).toBe("disegno:proiettore");
+    await page.evaluate(() => document.getElementById("editor-modal")?.remove());
+
+    /* Le card del guscio col fondo: la foto, il velo, e i loro comandi. */
+    const vai = (tab) => page.locator(`.tab[data-tab="${tab}"]`).evaluate((n) => n.click());
+    await vai("luci");
+    const luce = page.locator('.dm-lucip-card[data-dm-lucip="light.soggiorno"]');
+    await expect(luce).toHaveClass(/dm-rq-fondo/);
+    await expect(luce.locator(":scope > img.dm-rq-img")).toHaveAttribute(
+      "src",
+      /^data:image\/svg\+xml/,
+    );
+    await expect(luce.locator("[data-dm-lucip-brightness]")).toBeVisible();
+    await expect(page.locator('.dm-lucip-card[data-dm-lucip="light.cucina"]')).not.toHaveClass(
+      /dm-rq-fondo/,
+    );
+    await vai("clima");
+    await expect(page.locator('.dm-cl-card[data-dm-cl="climate.soggiorno"]')).toHaveClass(
+      /dm-rq-fondo/,
+    );
+    await vai("tapparelle");
+    const tapparella = page.locator('.tapp-card[data-tapp="cover.soggiorno"]');
+    await expect(tapparella).toHaveClass(/dm-rq-fondo/);
+    await vai("security");
+    await expect(
+      page.locator('.cam-card[data-dm-entity="camera.cancello"] .dm-cam-feed'),
+    ).toHaveClass(/dm-rq-fondo/);
+    await vai("stanze");
+    await expect(page.locator('.dm-stanze-tessera[data-dm-stanza="soggiorno"]')).toHaveClass(
+      /dm-rq-fondo/,
+    );
+    await expect(page.locator(".qa-btn").nth(4)).toHaveClass(/dm-rq-fondo/);
+    /* Il testo sul velo e' bianco. */
+    const colore = await page
+      .locator('.dm-stanze-tessera[data-dm-stanza="soggiorno"] .dm-stanze-tessera-nome')
       .evaluate((n) => getComputedStyle(n).color);
     expect(colore).toBe("rgb(255, 255, 255)");
   });

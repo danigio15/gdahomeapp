@@ -6684,6 +6684,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "首页上的设备可以有一张照片或一幅插图铺满它的卡片。名称和状态以白色留在底部的深色蒙层上。",
   "Choose from the drawings": "从插图中选择",
   "Device images": "设备图片",
+  "Tile images": "图块图片",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "仪表板中的每张卡片都可以有一张填满它的照片或插画：灯光、空调、卷帘、摄像头、房间、快捷操作。控件仍清晰地显示在上方；在墙板上，同一张图片会出现在自动填充的页面中。",
   "Drag to move": "拖动以移动",
   "Drawing (when there is no image)": "图标（没有图片时）",
   "Fills the tile instead of the drawing": "代替图标铺满卡片",

@@ -6776,6 +6776,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "홈의 기기에는 타일 전체를 채우는 사진이나 그림을 넣을 수 있습니다. 이름과 상태는 아래쪽 어두운 베일 위에 흰색으로 남습니다.",
   "Choose from the drawings": "그림에서 고르기",
   "Device images": "기기 이미지",
+  "Tile images": "타일 이미지",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "대시보드의 모든 카드에 카드를 채우는 사진이나 그림을 넣을 수 있습니다: 조명, 냉난방, 블라인드, 카메라, 방, 빠른 동작. 조작 버튼은 위에 그대로 읽기 쉽게 남고, 벽 패널에서는 스스로 채워지는 페이지에 같은 이미지가 보입니다.",
   "Drag to move": "끌어서 이동",
   "Drawing (when there is no image)": "그림 (이미지가 없을 때)",
   "Fills the tile instead of the drawing": "그림 대신 타일을 채웁니다",
