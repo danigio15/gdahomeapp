@@ -418,7 +418,7 @@ test("la console serve la sua pagina e non esce dalla sua cartella", async () =>
   try {
     const pagina = await prendi(`${b.consolle}/`);
     assert.equal(pagina.status, 200);
-    assert.match(await pagina.text(), /<h1>gdahome<\/h1>/);
+    assert.match(await pagina.text(), /<h1>GdAHome<\/h1>/);
 
     const fuori = mkdtempSync(join(tmpdir(), "fuori-"));
     writeFileSync(join(fuori, "segreto.txt"), "questo non si deve leggere", "utf8");
@@ -621,7 +621,7 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
     assert.deepEqual(prima.plance, [
       {
         profilo: "primary",
-        titolo: "gdahome",
+        titolo: "GdAHome",
         istanza: "gdahome",
         primaria: true,
         creata_il: 0,

@@ -1373,7 +1373,7 @@ class _IlLucchetto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: 'gdahome Premium',
+      message: 'GdAHome Premium',
       child: Container(
         width: 22,
         height: 22,

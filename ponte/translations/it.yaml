@@ -44,14 +44,14 @@ configuration:
     name: La casa
     description: >-
       Queste sono le tue, e per quasi tutti sono le uniche che contano. Le altre sezioni qui
-      sotto servono a chi gdahome lo monta in casa d'altri: se la casa e' la tua, la' dentro non
+      sotto servono a chi GdAHome lo monta in casa d'altri: se la casa e' la tua, la' dentro non
       c'e' niente da toccare.
     fields:
       da_fuori_casa:
         name: Da fuori casa
         description: >-
           L'app entra anche quando non sei in casa, passando dal centralino di
-          gdahome: nessuna porta da aprire sul router, nessun indirizzo pubblico,
+          GdAHome: nessuna porta da aprire sul router, nessun indirizzo pubblico,
           niente da installare. Spento, la casa si raggiunge solo dalla sua rete.
       quadro:
         name: Il codice di chi ti ha fatto l'impianto
@@ -66,7 +66,7 @@ configuration:
           cucina» — e quello delle cose che hanno un aggiornamento da fare. Tutto
           il resto no — se le luci sono accese o le porte aperte, le persone, il
           nome del tuo Wi-Fi, il tuo indirizzo pubblico. Quello che parte lo leggi
-          parola per parola nella console di gdahome, alla voce Installatore, dove
+          parola per parola nella console di GdAHome, alla voce Installatore, dove
           c'e' anche il tasto per smettere.
       quadro_ogni:
         name: Ogni quanto parte un rapporto
@@ -105,9 +105,9 @@ configuration:
         name: Lascia che la plancia porti il marchio di chi ti ha fatto l'impianto
         description: >-
           Acceso — ed e' cosi' di serie — la voce nella barra laterale prende il
-          suo nome al posto di «gdahome», e in cima alla plancia c'e' il suo
+          suo nome al posto di «GdAHome», e in cima alla plancia c'e' il suo
           logo. Serve a te: il giorno che qualcosa non va, hai davanti il nome
-          di chi chiamare invece del nostro. Spento, resta gdahome, e non cambia
+          di chi chiamare invece del nostro. Spento, resta GdAHome, e non cambia
           nient'altro. Se la plancia l'hai gia' rinominata tu, quel nome non lo
           tocca nessuno.
       minuti_del_codice:
@@ -129,15 +129,15 @@ configuration:
   chi_installa:
     name: Chi installa
     description: >-
-      Solo se gdahome lo monti in casa d'altri. Questo Home Assistant e' il tuo, quello da cui
+      Solo se GdAHome lo monti in casa d'altri. Questo Home Assistant e' il tuo, quello da cui
       tieni d'occhio gli impianti che hai montato; in casa di un cliente queste due restano
       com'e'.
     fields:
       acceso:
         name: Questo Home Assistant e' di chi installa
         description: >-
-          Lascialo spento: serve a chi gdahome lo monta in casa d'altri. Acceso, e
-          col codice scritto qui sotto, nella console di gdahome compare il tuo
+          Lascialo spento: serve a chi GdAHome lo monta in casa d'altri. Acceso, e
+          col codice scritto qui sotto, nella console di GdAHome compare il tuo
           cruscotto — da cui guardi gli impianti che hai montato — e nell'app e
           nella barra laterale compare la voce per aprirlo. Da solo non accende
           niente. Va acceso sul tuo Home Assistant, non su quello di un cliente.
@@ -175,7 +175,7 @@ configuration:
           le altre non cambia niente e non si vede niente.
     network:
       8098/tcp: >-
-        L'app di gdahome bussa qui. In casa basta cosi'; da fuori serve farla
+        L'app di GdAHome bussa qui. In casa basta cosi'; da fuori serve farla
         arrivare fin qui.
   avanzate:
     name: Avanzate

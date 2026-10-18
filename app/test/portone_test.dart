@@ -345,7 +345,7 @@ void main() {
     await tester.tap(find.text('Inquadra il QR code'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('non è un codice di gdahome'), findsOneWidget);
+    expect(find.textContaining('non è un codice di GdAHome'), findsOneWidget);
   });
 
   testWidgets('un QR code di un ponte più nuovo manda ad aggiornare', (

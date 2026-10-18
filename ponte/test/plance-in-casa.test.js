@@ -645,7 +645,7 @@ test("una Plancia per plancia, nella barra laterale", async () => {
     assert.deepEqual(
       b.casa.plance.map((una) => [una.url_path, una.title, una.show_in_sidebar, una.require_admin]),
       [
-        ["gdahome-primary", "gdahome", true, false],
+        ["gdahome-primary", "GdAHome", true, false],
         ["gdahome-casa-al-mare", "Casa al mare", true, false],
       ],
     );
@@ -936,7 +936,7 @@ test("l'esito elenca tutte le Plance, e dice quali non sono nostre", async () =>
     const esito = await b.in_casa.sistema();
     assert.deepEqual(esito.altre_plance, [
       { dove: "dashboardmodern", titolo: "gdahome", nostra: false },
-      { dove: "gdahome-primary", titolo: "gdahome", nostra: true },
+      { dove: "gdahome-primary", titolo: "GdAHome", nostra: true },
     ]);
     assert.ok(b.casa.plance.some((una) => una.url_path === "dashboardmodern"));
   } finally {
@@ -1289,7 +1289,7 @@ test("la nota nella Plancia dice il riavvio per primo, coi passi, in due lingue"
     );
     assert.ok(testo.includes(`## ${IL_RIAVVIO.title}`));
     assert.ok(testo.includes(`**${IL_RIAVVIO.steps}**`));
-    assert.match(testo, /«gdahome» è pronta/);
+    assert.match(testo, /«GdAHome» è pronta/);
     assert.match(testo, /compare qui da sola/);
     assert.doesNotMatch(testo, LA_RICARICA);
   } finally {
@@ -1303,7 +1303,7 @@ test("la campanella dice il riavvio coi passi, e se ne va appena Home Assistant 
     await b.in_casa.sistema();
     const avviso = b.casa.avvisi.get("gdahome_riavvia_home_assistant");
     assert.ok(avviso, "l'avviso non c'e'");
-    assert.equal(avviso.title, "gdahome: serve riavviare Home Assistant una volta");
+    assert.equal(avviso.title, "GdAHome: serve riavviare Home Assistant una volta");
     assert.ok(avviso.message.startsWith(`**${IL_RIAVVIO.passi}**`));
     assert.ok(avviso.message.includes(IL_RIAVVIO.steps));
     assert.doesNotMatch(avviso.message, LA_RICARICA);

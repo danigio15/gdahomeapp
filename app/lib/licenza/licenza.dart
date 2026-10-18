@@ -540,10 +540,10 @@ class GestoreLicenza extends ChangeNotifier {
       return inLingua(
         it:
             'L\'add-on di questa casa non conosce ancora le licenze: '
-            'aggiorna gdahome in Home Assistant.',
+            'aggiorna GdAHome in Home Assistant.',
         en:
             'This home\'s add-on doesn\'t know about licences yet: update '
-            'gdahome in Home Assistant.',
+            'GdAHome in Home Assistant.',
       );
     }
     if (tutto.contains('409') || tutto.contains('usato')) {

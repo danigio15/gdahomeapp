@@ -116,7 +116,7 @@ export class VersioneMinima {
     }
     if (sua !== null && sua < this.minima) {
       this.registro.attenzione(
-        `gdahome nel browser di questo add-on e' la ${sua}, sotto la minima ${this.minima}: va ricostruita`,
+        `GdAHome nel browser di questo add-on e' la ${sua}, sotto la minima ${this.minima}: va ricostruita`,
       );
     }
   }

@@ -43,8 +43,8 @@ export default Object.freeze({
   "Pick a trip on the left, or make a new one.": "बाईं ओर से कोई यात्रा चुनें, या नई बनाएँ।",
   "Pick the destination and time: I will tell you when to leave.":
     "गंतव्य और समय चुनें: मैं बताऊँगा कब निकलना है।",
-  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page.":
-    "यहाँ से यात्राएँ प्लान करें और उन्हें फ़ोन, CarPlay और Android Auto पर पाएँ, निकलने की याद और पहले से चालू कार क्लाइमेट के साथ। gdahome ऐप के Premium पेज से अनलॉक करें।",
+  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
+    "यहाँ से यात्राएँ प्लान करें और उन्हें फ़ोन, CarPlay और Android Auto पर पाएँ, निकलने की याद और पहले से चालू कार क्लाइमेट के साथ। GdAHome ऐप के Premium पेज से अनलॉक करें।",
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "यहाँ से यात्राएँ प्लान करें: ये gdanav में फ़ोन, CarPlay और Android Auto पर मिलेंगी।",
   "Planned trips": "योजनाबद्ध यात्राएँ",
@@ -4806,8 +4806,8 @@ export default Object.freeze({
   "Kitchen window": "रसोई की खिड़की",
   "New opening": "नया द्वार",
   "Save opening": "द्वार सहेजें",
-  "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.":
-    "वह चित्र जो पेज पर और टाइल पर दिखता है। ये gdahome के अपने हैं: हर फ़ोन पर एक जैसे।",
+  "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.":
+    "वह चित्र जो पेज पर और टाइल पर दिखता है। ये GdAHome के अपने हैं: हर फ़ोन पर एक जैसे।",
   "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.":
     "घर के द्वार: दरवाज़े, खिड़कियाँ, मुख्य द्वार, गैराज का शटर। हर द्वार की अपनी पंक्ति होती है — संपर्क सेंसर की एंटिटी, आपका दिया नाम, चित्र — और द्वार पेज इन्हीं को इसी क्रम में दिखाता है: हरा बंद, लाल खुला, और ऊपर कितने अभी खुले हैं।",
   "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.":
@@ -5486,8 +5486,8 @@ export default Object.freeze({
   "Warn about open windows": "खुली खिड़कियों की चेतावनी दें",
   "Who is home": "घर पर कौन है",
   windy: "हवादार",
-  "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
-    "gdahome Base के साथ यह डैशबोर्ड सामान्य डैशबोर्ड ही रहता है। Premium के साथ यह दीवार टैबलेट के लिए पैनल बन जाता है: कमरा, दृश्य या प्रवेश, लैंडस्केप और पोर्ट्रेट। Premium को gdahome ऐप से चालू किया जाता है।",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.":
+    "GdAHome Base के साथ यह डैशबोर्ड सामान्य डैशबोर्ड ही रहता है। Premium के साथ यह दीवार टैबलेट के लिए पैनल बन जाता है: कमरा, दृश्य या प्रवेश, लैंडस्केप और पोर्ट्रेट। Premium को GdAHome ऐप से चालू किया जाता है।",
   "Wrong code": "गलत कोड",
   "Yes, go": "हाँ, चलें",
   "All lights": "सभी लाइटें",
@@ -5892,8 +5892,8 @@ export default Object.freeze({
   "What comes out of the battery": "बैटरी से जो निकलता है",
   "What goes into the battery": "बैटरी में जो जाता है",
   "An automation handles it": "एक ऑटोमेशन इसे संभालता है",
-  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
-    "पढ़ा नहीं जा सकता: gdahome ऐड-ऑन चालू होना चाहिए और आपको व्यवस्थापक होना चाहिए।",
+  "Can't read it: the GdAHome add-on must be running, and you must be an administrator.":
+    "पढ़ा नहीं जा सकता: GdAHome ऐड-ऑन चालू होना चाहिए और आपको व्यवस्थापक होना चाहिए।",
   "Fine tonight": "आज रात ठीक है",
   "Inner door": "अंदर का दरवाज़ा",
   "Leave it": "ऐसे ही रहने दें",
@@ -6509,10 +6509,10 @@ export default Object.freeze({
   "fires the ${evento} event": "${evento} इवेंट भेजता है",
   "Home Assistant → Settings → Automations": "Home Assistant → सेटिंग्स → ऑटोमेशन",
   "Home Assistant did not save it: ${no}": "Home Assistant ने इसे नहीं सहेजा: ${no}",
-  "Home Assistant runs automations now: convert them and they start again, labelled gdahome.": "अब ऑटोमेशन Home Assistant चलाता है: उन्हें बदलें और वे gdahome लेबल के साथ फिर से चलेंगे।",
+  "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.": "अब ऑटोमेशन Home Assistant चलाता है: उन्हें बदलें और वे GdAHome लेबल के साथ फिर से चलेंगे।",
   "Home Assistant shuts down": "Home Assistant बंद हो रहा है",
   "Home Assistant starts": "Home Assistant शुरू हो रहा है",
-  "Home Assistant's automations are read through the gdahome add-on: it is not here.": "Home Assistant के ऑटोमेशन gdahome ऐड-ऑन से पढ़े जाते हैं: यह यहाँ नहीं है।",
+  "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant के ऑटोमेशन GdAHome ऐड-ऑन से पढ़े जाते हैं: यह यहाँ नहीं है।",
   "if something holds:": "अगर कुछ सही हो:",
   "in HA as": "HA में इस नाम से",
   "in the config ›": "कॉन्फ़िग में ›",
@@ -6534,8 +6534,8 @@ export default Object.freeze({
   "on certain days": "कुछ दिनों में",
   "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.": "App Store और Google Play पर। यहाँ Home Assistant में आप कुछ नहीं चुकाते और भुगतान की कोई जानकारी नहीं डालते।",
   "One automation from the trial version is idle": "ट्रायल संस्करण का एक ऑटोमेशन रुका हुआ है",
-  "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.": "केवल App Store और Google Play पर gdahome ऐप्स से मिलता है। ऐप्स जल्द आ रहे हैं।",
-  "only from the gdahome apps": "केवल gdahome ऐप्स से",
+  "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.": "केवल App Store और Google Play पर GdAHome ऐप्स से मिलता है। ऐप्स जल्द आ रहे हैं।",
+  "only from the GdAHome apps": "केवल GdAHome ऐप्स से",
   "Open in HA ↗": "HA में खोलें ↗",
   "Open in Home Assistant ↗": "Home Assistant में खोलें ↗",
   "otherwise → ${altrimenti}": "वरना → ${altrimenti}",
@@ -6560,7 +6560,7 @@ export default Object.freeze({
   "the home did not answer": "घर ने जवाब नहीं दिया",
   "The home that does it by itself: lights, climate, shutters and alerts that start when needed.": "घर जो अपने आप करता है: लाइट, क्लाइमेट, शटर और अलर्ट जो ज़रूरत पर शुरू होते हैं।",
   "The home's automations": "घर के ऑटोमेशन",
-  "The list and saving go through the gdahome add-on: it is not here.": "सूची और सहेजना gdahome ऐड-ऑन से होते हैं: यह यहाँ नहीं है।",
+  "The list and saving go through the GdAHome add-on: it is not here.": "सूची और सहेजना GdAHome ऐड-ऑन से होते हैं: यह यहाँ नहीं है।",
   "the new automation": "नया ऑटोमेशन",
   "then → ${allora}": "तब → ${allora}",
   "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.": "यह ऑटोमेशन Home Assistant की एक फ़ाइल में है: यहाँ आप इसे चालू, बंद और चलाते हैं, और बदलाव वहीं होता है।",
@@ -6571,7 +6571,7 @@ export default Object.freeze({
   "waits a while": "थोड़ा रुकता है",
   "waits for something to happen": "कुछ होने का इंतज़ार करता है",
   "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.": "जब ऐप्स स्टोर में होंगे, आप ऐप से Premium चालू करेंगे और यहाँ ऑटोमेशन अपने आप खुल जाएँगे।",
-  "You'll find it in Settings → Automations, labelled gdahome.": "आप इसे सेटिंग्स → ऑटोमेशन में gdahome लेबल के साथ पाएँगे।",
+  "You'll find it in Settings → Automations, labelled GdAHome.": "आप इसे सेटिंग्स → ऑटोमेशन में GdAHome लेबल के साथ पाएँगे।",
   "You'll find it there and Home Assistant runs it.": "आप इसे वहाँ पाएँगे और Home Assistant इसे चलाता है।",
   "🚨 Removed": "🚨 हटाया गया",
   "🚨 Saved: the house knows when it goes off": "🚨 सहेजा गया: घर जानता है कि अलार्म कब बजता है",
@@ -6649,7 +6649,7 @@ export default Object.freeze({
   "On a touch or when someone arrives": "स्पर्श पर या जब कोई आए",
   "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
     "iPad पर कमरे की रोशनी नहीं पढ़ी जा सकती: दिन और रात सूरज या समय से तय होते हैं।",
-  "Only in the gdahome app on Android.": "केवल Android पर gdahome ऐप में।",
+  "Only in the GdAHome app on Android.": "केवल Android पर GdAHome ऐप में।",
   "Orientation, theme, weather, rest, night, brightness, PIN":
     "दिशा, थीम, मौसम, विश्राम, रात, चमक, PIN",
   "presence sensor": "उपस्थिति सेंसर",
@@ -6665,8 +6665,8 @@ export default Object.freeze({
   "The clock is readable, but it does not light up the room":
     "घड़ी पढ़ी जा सकती है, पर कमरा रोशन नहीं होता",
   "The iPad does not have one.": "iPad में यह नहीं है।",
-  "The panel sets it, only in the gdahome app on the tablet":
-    "इसे पैनल नियंत्रित करता है, केवल टैबलेट पर gdahome ऐप में",
+  "The panel sets it, only in the GdAHome app on the tablet":
+    "इसे पैनल नियंत्रित करता है, केवल टैबलेट पर GdAHome ऐप में",
   "This tablet does not have one.": "इस टैबलेट में यह नहीं है।",
   "This tablet has no light sensor: the home's sun applies":
     "इस टैबलेट में प्रकाश सेंसर नहीं है: घर का सूरज लागू होता है",
@@ -6674,8 +6674,8 @@ export default Object.freeze({
   "Time with nobody nearby and no touches": "बिना किसी के पास हुए और बिना स्पर्श का समय",
   "When someone is nearby": "जब कोई पास हो",
   "Who is nearby · one source is enough": "कौन पास है · एक स्रोत काफ़ी है",
-  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
-    "टैबलेट के प्रकाश सेंसर से, केवल Android पर gdahome ऐप में। इसके बिना घर का सूरज लागू होता है",
+  "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies":
+    "टैबलेट के प्रकाश सेंसर से, केवल Android पर GdAHome ऐप में। इसके बिना घर का सूरज लागू होता है",
   "With this tablet's light sensor: it is night when the room is dark":
     "इस टैबलेट के प्रकाश सेंसर से: कमरे में अंधेरा होने पर रात होती है",
 });

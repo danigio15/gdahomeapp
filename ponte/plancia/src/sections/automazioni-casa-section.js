@@ -269,8 +269,8 @@ function corpo({ app }) {
   if (st.assente)
     return avviso(
       t(
-        "Le automazioni di Home Assistant si leggono con l'add-on gdahome: qui non c'è.",
-        "Home Assistant's automations are read through the gdahome add-on: it is not here.",
+        "Le automazioni di Home Assistant si leggono con l'add-on GdAHome: qui non c'è.",
+        "Home Assistant's automations are read through the GdAHome add-on: it is not here.",
       ),
     );
   if (!st.ponte) return `${tessere([])}${avviso(t("Leggo le automazioni di casa…", "Reading the home's automations…"))}`;

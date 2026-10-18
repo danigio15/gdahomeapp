@@ -145,7 +145,7 @@ export function eDiQuestaVita(quale, istanza) {
 export const QUANTE_AL_MASSIMO = 30;
 
 /* Come si chiama la prima plancia, quella che c'e' sempre. */
-const TITOLO_DELLA_PRIMA = "gdahome";
+const TITOLO_DELLA_PRIMA = "GdAHome";
 
 /* Come si chiamava prima, e perche' si cambia in casa di chi ce l'ha gia'.
  *
@@ -156,6 +156,11 @@ const TITOLO_DELLA_PRIMA = "gdahome";
  * titolo che chi ci abita ha scritto lui non si tocca, nemmeno se somiglia a
  * questo. */
 const TITOLO_DI_PRIMA = "DashboardModern";
+
+/* E come l'avevamo scritta noi fino alla 1.15, tutta minuscola. E' lo stesso
+ * nome, scritto come non si legge: chi non l'ha toccata la ritrova «GdAHome».
+ * Vale la regola di sopra, solo se e' ancora quello. */
+const TITOLI_NOSTRI_DI_PRIMA = Object.freeze([TITOLO_DI_PRIMA, "gdahome"]);
 
 const DIFETTO = Object.freeze({ plance: [] });
 
@@ -251,7 +256,7 @@ export class QuellaPlanciaNo extends Error {
  * lo riconosce e porta alla pagina Premium invece di scrivere un errore. */
 export class PremiumRichiesto extends Error {
   constructor(
-    spiegazione = "con gdahome Base la plancia e' una, la principale: le altre sono Premium",
+    spiegazione = "con GdAHome Base la plancia e' una, la principale: le altre sono Premium",
   ) {
     super(spiegazione);
     this.codice = "premium-richiesto";
@@ -343,7 +348,7 @@ export class Plance {
     /* La prima plancia che si chiama ancora come il prodotto di prima prende
      * il nome nuovo. Una volta sola, e solo se nessuno l'ha rinominata. */
     for (const una of buone) {
-      if (una.profilo === PROFILO_PRINCIPALE && una.titolo === TITOLO_DI_PRIMA) {
+      if (una.profilo === PROFILO_PRINCIPALE && TITOLI_NOSTRI_DI_PRIMA.includes(una.titolo)) {
         una.titolo = TITOLO_DELLA_PRIMA;
       }
     }
@@ -498,7 +503,7 @@ export class Plance {
      * nasce il giorno che la casa e' Premium. */
     if (this._limitata()) {
       this.registro.attenzione(
-        `la plancia «${nome}» voluta da chi segue la casa non nasce: con gdahome Base la plancia e' una`,
+        `la plancia «${nome}» voluta da chi segue la casa non nasce: con GdAHome Base la plancia e' una`,
       );
       return false;
     }

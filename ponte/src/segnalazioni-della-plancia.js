@@ -75,7 +75,7 @@ export const STATI = Object.freeze({
  * in mezzo. E' l'unica parola di questa finestra che gdahome cambia di senso,
  * ed e' meglio di una vuota: chi legge deve poter sapere per mano di chi passa
  * quello che scrive. */
-export const CHI_FIRMA = "gdahome";
+export const CHI_FIRMA = "GdAHome";
 
 const quandoInMillesimi = (quando) => {
   const letto = Date.parse(String(quando || ""));
@@ -261,7 +261,7 @@ export class SegnalazioniDellaPlancia {
     return {
       ...this.laFirma(),
       niente_da_collegare: true,
-      perche: "Da Home Assistant le segnalazioni passano da gdahome: non serve collegare niente.",
+      perche: "Da Home Assistant le segnalazioni passano da GdAHome: non serve collegare niente.",
     };
   }
 }

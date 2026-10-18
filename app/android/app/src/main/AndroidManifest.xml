@@ -63,7 +63,7 @@
          riabbina, come e' giusto. `allowBackup` vale fino ad Android 11,
          `dataExtractionRules` da Android 12 in poi. -->
     <application
-        android:label="gdahome"
+        android:label="GdAHome"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"

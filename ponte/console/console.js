@@ -113,8 +113,8 @@
       "There are already thirty dashboards: remove one before adding another.",
     ],
     "premium-richiesto": [
-      "Con gdahome Base la plancia è una, la principale: le altre sono comprese in Premium.",
-      "With gdahome Base there is one dashboard, the main one: the others come with Premium.",
+      "Con GdAHome Base la plancia è una, la principale: le altre sono comprese in Premium.",
+      "With GdAHome Base there is one dashboard, the main one: the others come with Premium.",
     ],
     senza_titolo: ["Scrivi un nome.", "Type a name."],
     non_la_prima: ["La prima plancia non si toglie.", "The first dashboard can't be removed."],
@@ -453,8 +453,8 @@
         come: "bene",
         corto: due("risponde", "answering"),
         lungo: due(
-          "Home Assistant risponde, e gdahome è in piedi.",
-          "Home Assistant answers, and gdahome is up.",
+          "Home Assistant risponde, e GdAHome è in piedi.",
+          "Home Assistant answers, and GdAHome is up.",
         ),
       };
     }
@@ -475,15 +475,15 @@
     trova("spiega-casa").textContent = laCasa.lungo;
     if (laCasa.come === "bene") {
       trova("riga-casa").textContent = due(
-        "gdahome lo raggiunge e lo comanda.",
-        "gdahome reaches it and drives it.",
+        "GdAHome lo raggiunge e lo comanda.",
+        "GdAHome reaches it and drives it.",
       );
       scriviIlRimedio("rimedio-casa", "", "");
       return;
     }
     trova("riga-casa").textContent = due(
-      "gdahome adesso non riesce a parlargli.",
-      "gdahome can't talk to it right now.",
+      "GdAHome adesso non riesce a parlargli.",
+      "GdAHome can't talk to it right now.",
     );
     scriviIlRimedio(
       "rimedio-casa",
@@ -763,8 +763,8 @@
       come = "spento";
       corto = due("solo con Premium", "Premium only");
       riga = due(
-        "Il collegamento c'è, ma da fuori casa l'app entra solo con gdahome Premium. Sulla rete di casa entra sempre.",
-        "The connection is there, but from away the app gets in only with gdahome Premium. On your home network it always gets in.",
+        "Il collegamento c'è, ma da fuori casa l'app entra solo con GdAHome Premium. Sulla rete di casa entra sempre.",
+        "The connection is there, but from away the app gets in only with GdAHome Premium. On your home network it always gets in.",
       );
     } else {
       come = "bene";
@@ -862,8 +862,8 @@
     trova("targhetta").textContent = versione;
     trova("targhetta").hidden = false;
     trova("riepilogo-versione").textContent = due(
-      "gdahome " + versione + " · gli aggiornamenti arrivano da Home Assistant",
-      "gdahome " + versione + " · updates come from Home Assistant",
+      "GdAHome " + versione + " · gli aggiornamenti arrivano da Home Assistant",
+      "GdAHome " + versione + " · updates come from Home Assistant",
     );
   }
 
@@ -889,8 +889,8 @@
         "Settings \u2192 System \u2192 Restart (top right \u23fb) \u2192 Restart Home Assistant",
       ),
       perche: due(
-        "La cartella «www» non c'era quando Home Assistant è partito: l'ha creata gdahome. Dopo il riavvio la plancia compare da sola nelle «Plance», entro un minuto, su tutti i dispositivi.",
-        "The “www” folder wasn't there when Home Assistant started: gdahome created it. After the restart the dashboard shows up by itself in “Dashboards”, within a minute, on every device.",
+        "La cartella «www» non c'era quando Home Assistant è partito: l'ha creata GdAHome. Dopo il riavvio la plancia compare da sola nelle «Plance», entro un minuto, su tutti i dispositivi.",
+        "The “www” folder wasn't there when Home Assistant started: GdAHome created it. After the restart the dashboard shows up by itself in “Dashboards”, within a minute, on every device.",
       ),
       corto: due("da fare", "to do"),
     };
@@ -999,10 +999,10 @@
           quanti + " paired · " + collegati + " connected right now",
         );
     trova("telefoni-spiega").textContent = due(
-      "I telefoni e i tablet che usano gdahome per questa casa. Ne puoi abbinare fino a " +
+      "I telefoni e i tablet che usano GdAHome per questa casa. Ne puoi abbinare fino a " +
         massimi +
         ".",
-      "The phones and tablets that use gdahome for this home. You can pair up to " + massimi + ".",
+      "The phones and tablets that use GdAHome for this home. You can pair up to " + massimi + ".",
     );
     /* «3 di 10»: era «1 di 10 telefono», con la parola che si accordava col
      * numero sbagliato. Il numero da solo si legge meglio, e non sbaglia.
@@ -1338,16 +1338,16 @@
     var nota = trova("plance-premium");
     if (soloBase) {
       nota.textContent = due(
-        "Con gdahome Base la plancia è una, la principale. Con Premium, fino a otto.",
-        "With gdahome Base there is one dashboard, the main one. With Premium, up to eight.",
+        "Con GdAHome Base la plancia è una, la principale. Con Premium, fino a otto.",
+        "With GdAHome Base there is one dashboard, the main one. With Premium, up to eight.",
       );
       nota.hidden = false;
       return;
     }
     if (premium === false) {
       nota.textContent = due(
-        "Con gdahome Base, nell'app e nel browser si apre solo la principale: le altre sono comprese in Premium. In Home Assistant, fra le Dashboard, ci sono tutte.",
-        "With gdahome Base, the app and the browser open only the main one: the others come with Premium. In Home Assistant, among the Dashboards, they are all there.",
+        "Con GdAHome Base, nell'app e nel browser si apre solo la principale: le altre sono comprese in Premium. In Home Assistant, fra le Dashboard, ci sono tutte.",
+        "With GdAHome Base, the app and the browser open only the main one: the others come with Premium. In Home Assistant, among the Dashboards, they are all there.",
       );
       nota.hidden = false;
       return;
@@ -1690,11 +1690,11 @@
      * chi le tessere di gdahome le usa ancora. Si dice per chi. */
     if (esito.tessere === true) {
       riga += due(
-        " La risorsa di Lovelace resta per chi usa le tessere di gdahome (" +
+        " La risorsa di Lovelace resta per chi usa le tessere di GdAHome (" +
           chiUsaLeTessere(esito) +
           ")" +
           (esito.risorsa_in_elenco === false ? ", ma ⚠️ Lovelace non ce l'ha in elenco." : "."),
-        " The Lovelace resource stays for whoever uses gdahome's cards (" +
+        " The Lovelace resource stays for whoever uses GdAHome's cards (" +
           chiUsaLeTessere(esito) +
           ")" +
           (esito.risorsa_in_elenco === false ? ", but ⚠️ Lovelace doesn't list it." : "."),
@@ -1727,13 +1727,13 @@
         due(
           " ⚠️ Nella barra laterale c'è ancora " +
             nomi +
-            ", dell'integrazione DashboardModern e non di gdahome." +
+            ", dell'integrazione DashboardModern e non di GdAHome." +
             " Se l'integrazione non c'è più, quella voce apre con «Errore di configurazione»" +
             " e non si aggiusta riavviando: si leva da Impostazioni → Dashboard." +
             " Questo add-on non la tocca.",
           " ⚠️ Your sidebar still has " +
             nomi +
-            ", from the DashboardModern integration and not from gdahome." +
+            ", from the DashboardModern integration and not from GdAHome." +
             " If the integration is gone, that entry opens with a configuration error" +
             " and restarting won't fix it: remove it from Settings → Dashboards." +
             " This add-on doesn't touch it.",
@@ -1823,14 +1823,14 @@
       /* Solo per chi le tessere le usa: alla plancia la risorsa non serve. */
       testo =
         due(
-          "Le tessere di gdahome (" +
+          "Le tessere di GdAHome (" +
             chiUsaLeTessere(esito) +
             ") vogliono la loro risorsa di Lovelace, e Lovelace non la vuole dichiarare. " +
             "Quasi sempre vuol dire che questa casa tiene le dashboard in YAML: lì va " +
             "dichiarata a mano in configuration.yaml — lovelace: resources: - url: " +
             "/local/gdahome/caricatore.js?giro=1  type: module. La plancia non ne ha " +
             "bisogno, e si apre comunque. Lovelace ha risposto: ",
-          "gdahome's cards (" +
+          "GdAHome's cards (" +
             chiUsaLeTessere(esito) +
             ") need their Lovelace resource, and Lovelace won't declare it. Nearly always " +
             "this means this home keeps its dashboards in YAML: there it has to be declared " +
@@ -1923,8 +1923,8 @@
     trova("azione-browser-apri").href = indirizzo;
     trova("link-di-fuori-riga").textContent = conBase
       ? due(
-          "Con gdahome Base, da questo indirizzo la casa non si apre: serve Premium. Con l'app sul telefono, sulla rete di casa, si entra sempre.",
-          "With gdahome Base, this address doesn't open the home: it needs Premium. With the app on the phone, on your home network, you always get in.",
+          "Con GdAHome Base, da questo indirizzo la casa non si apre: serve Premium. Con l'app sul telefono, sulla rete di casa, si entra sempre.",
+          "With GdAHome Base, this address doesn't open the home: it needs Premium. With the app on the phone, on your home network, you always get in.",
         )
       : due(
           "Un indirizzo vero: si salva fra i preferiti, si può mandare. Funziona da casa e da fuori.",
@@ -2002,8 +2002,8 @@
           "Updates come from Home Assistant, like for any other add-on.",
         );
       trova("aggiornamento-spiega").textContent = due(
-        "Quando ce n'è uno nuovo: Impostazioni → Componenti aggiuntivi → gdahome → Aggiorna.",
-        "When there is a new one: Settings → Add-ons → gdahome → Update.",
+        "Quando ce n'è uno nuovo: Impostazioni → Componenti aggiuntivi → GdAHome → Aggiorna.",
+        "When there is a new one: Settings → Add-ons → GdAHome → Update.",
       );
       trova("aggiorna-il-ponte").hidden = true;
       trova("riguarda").hidden = true;
@@ -2019,10 +2019,10 @@
     if (stato.cE === true) {
       riga += due(" C'è la " + stato.nuova + ".", " There is " + stato.nuova + ".");
       spiega = due(
-        "gdahome se la scarica, la mette al posto di questa e si ricostruisce. " +
+        "GdAHome se la scarica, la mette al posto di questa e si ricostruisce. " +
           "Ci mette qualche minuto, e mentre lo fa questa pagina non risponde: è normale, " +
           "torna da sé.",
-        "gdahome downloads it, puts it in place of this one and rebuilds itself. " +
+        "GdAHome downloads it, puts it in place of this one and rebuilds itself. " +
           "It takes a few minutes, and while it does this page doesn't answer: that's " +
           "normal, it comes back by itself.",
       );
@@ -2163,8 +2163,8 @@
         pastiglia("pas-casa", "male", due("non si legge", "can't be read"));
         coloraLaFaccia("faccia-casa", "male");
         trova("riga-casa").textContent = due(
-          "La console non riesce a leggere lo stato di gdahome.",
-          "The console can't read gdahome's state.",
+          "La console non riesce a leggere lo stato di GdAHome.",
+          "The console can't read GdAHome's state.",
         );
         trova("spiega-casa").textContent = trova("riga-casa").textContent;
         scriviIlRimedio(
@@ -2957,7 +2957,7 @@
         ? due("Premium per sempre", "Premium for good")
         : due("Premium fino al ", "Premium until ") + unGiorno(finoAl),
     );
-    if (sua.compresa) pezzi.push(due("compreso in gdahome Premium", "included in gdahome Premium"));
+    if (sua.compresa) pezzi.push(due("compreso in GdAHome Premium", "included in GdAHome Premium"));
     else {
       if (daDove(sua.origine)) pezzi.push(daDove(sua.origine));
       if (nelMargine) pezzi.push(due("rinnovo in attesa", "renewal pending"));
@@ -3014,7 +3014,7 @@
     premium = Boolean(gdahome.attiva);
     var elenco = trova("elenco-licenze");
     elenco.textContent = "";
-    elenco.appendChild(unaRigaDiLicenza("gdahome", gdahome, perBaseGdahome()));
+    elenco.appendChild(unaRigaDiLicenza("GdAHome", gdahome, perBaseGdahome()));
     elenco.appendChild(
       unaRigaDiLicenza(
         "gdanav",

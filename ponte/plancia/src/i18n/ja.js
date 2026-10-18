@@ -43,8 +43,8 @@ export default Object.freeze({
   "Pick a trip on the left, or make a new one.": "左からルートを選ぶか、新しく作成してください。",
   "Pick the destination and time: I will tell you when to leave.":
     "目的地と時刻を選ぶと、出発時刻をお知らせします。",
-  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page.":
-    "ここでルートを計画し、スマホ・CarPlay・Android Auto で使えます。出発の通知や事前のエアコンも。gdahome アプリの Premium ページで解除できます。",
+  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
+    "ここでルートを計画し、スマホ・CarPlay・Android Auto で使えます。出発の通知や事前のエアコンも。GdAHome アプリの Premium ページで解除できます。",
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "ここでルートを計画：gdanav のスマホ・CarPlay・Android Auto に表示されます。",
   "Planned trips": "予定のルート",
@@ -4820,8 +4820,8 @@ export default Object.freeze({
   "Kitchen window": "キッチンの窓",
   "New opening": "新しい開口部",
   "Save opening": "開口部を保存",
-  "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.":
-    "ページとタイルに出る絵です。gdahome 独自のもので、どの端末でも同じ見た目になります。",
+  "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.":
+    "ページとタイルに出る絵です。GdAHome 独自のもので、どの端末でも同じ見た目になります。",
   "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.":
     "家の開口部——ドア、窓、玄関、ガレージのシャッター。開口部ごとに一行あり、接点のエンティティ、好きな名前、絵を持ちます。開口部ページはこれらを、緑が閉、赤が開、上に今いくつ開いているかの順で表示します。",
   "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.":
@@ -5499,8 +5499,8 @@ export default Object.freeze({
   "Warn about open windows": "開いている窓を警告",
   "Who is home": "在宅者",
   windy: "強風",
-  "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
-    "gdahome Baseでは、このダッシュボードは通常のダッシュボードのままです。Premiumでは壁掛けタブレット用のパネルになります: 部屋・シーン・玄関、横向きと縦向き。PremiumはgdahomeアプリでONにします。",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.":
+    "GdAHome Baseでは、このダッシュボードは通常のダッシュボードのままです。Premiumでは壁掛けタブレット用のパネルになります: 部屋・シーン・玄関、横向きと縦向き。PremiumはGdAHomeアプリでONにします。",
   "Wrong code": "コードが違います",
   "Yes, go": "はい、実行",
   "All lights": "すべての照明",
@@ -5908,8 +5908,8 @@ export default Object.freeze({
   "What comes out of the battery": "バッテリーから出る電力",
   "What goes into the battery": "バッテリーに入る電力",
   "An automation handles it": "オートメーションが管理",
-  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
-    "読み込めません：gdahome アドオンが動作していて、管理者である必要があります。",
+  "Can't read it: the GdAHome add-on must be running, and you must be an administrator.":
+    "読み込めません：GdAHome アドオンが動作していて、管理者である必要があります。",
   "Fine tonight": "今夜は大丈夫",
   "Inner door": "室内ドア",
   "Leave it": "このまま",
@@ -6525,10 +6525,10 @@ export default Object.freeze({
   "fires the ${evento} event": "イベント ${evento} を発行",
   "Home Assistant → Settings → Automations": "Home Assistant → 設定 → オートメーション",
   "Home Assistant did not save it: ${no}": "Home Assistant が保存しませんでした: ${no}",
-  "Home Assistant runs automations now: convert them and they start again, labelled gdahome.": "今はオートメーションを Home Assistant が実行します: 変換すると gdahome ラベル付きで再び動きます。",
+  "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.": "今はオートメーションを Home Assistant が実行します: 変換すると GdAHome ラベル付きで再び動きます。",
   "Home Assistant shuts down": "Home Assistant が停止する",
   "Home Assistant starts": "Home Assistant が起動する",
-  "Home Assistant's automations are read through the gdahome add-on: it is not here.": "Home Assistant のオートメーションは gdahome アドオンで読み込みます: ここにはありません。",
+  "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant のオートメーションは GdAHome アドオンで読み込みます: ここにはありません。",
   "if something holds:": "何かが成り立つなら:",
   "in HA as": "HA での名前",
   "in the config ›": "設定で ›",
@@ -6550,8 +6550,8 @@ export default Object.freeze({
   "on certain days": "特定の曜日に",
   "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.": "App Store と Google Play で。ここ Home Assistant では支払いは一切なく、支払い情報も入力しません。",
   "One automation from the trial version is idle": "試用版のオートメーション 1 件が停止中",
-  "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.": "App Store と Google Play の gdahome アプリでのみ購入できます。アプリは近日公開です。",
-  "only from the gdahome apps": "gdahome アプリでのみ",
+  "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.": "App Store と Google Play の GdAHome アプリでのみ購入できます。アプリは近日公開です。",
+  "only from the GdAHome apps": "GdAHome アプリでのみ",
   "Open in HA ↗": "HA で開く ↗",
   "Open in Home Assistant ↗": "Home Assistant で開く ↗",
   "otherwise → ${altrimenti}": "それ以外 → ${altrimenti}",
@@ -6576,7 +6576,7 @@ export default Object.freeze({
   "the home did not answer": "家が応答しませんでした",
   "The home that does it by itself: lights, climate, shutters and alerts that start when needed.": "自分で動く家: 必要なときに動き出す照明、空調、シャッター、お知らせ。",
   "The home's automations": "家のオートメーション",
-  "The list and saving go through the gdahome add-on: it is not here.": "一覧と保存は gdahome アドオンを経由します: ここにはありません。",
+  "The list and saving go through the GdAHome add-on: it is not here.": "一覧と保存は GdAHome アドオンを経由します: ここにはありません。",
   "the new automation": "新しいオートメーション",
   "then → ${allora}": "その後 → ${allora}",
   "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.": "このオートメーションは Home Assistant のファイルにあります: ここではオン・オフと実行ができ、変更はそちらで行います。",
@@ -6587,7 +6587,7 @@ export default Object.freeze({
   "waits a while": "少し待つ",
   "waits for something to happen": "何かが起きるのを待つ",
   "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.": "アプリがストアに並んだら、アプリで Premium を有効にすると、ここのオートメーションも自動で解放されます。",
-  "You'll find it in Settings → Automations, labelled gdahome.": "設定 → オートメーションで gdahome ラベル付きで見つかります。",
+  "You'll find it in Settings → Automations, labelled GdAHome.": "設定 → オートメーションで GdAHome ラベル付きで見つかります。",
   "You'll find it there and Home Assistant runs it.": "そこで見つかり、Home Assistant が実行します。",
   "🚨 Removed": "🚨 削除しました",
   "🚨 Saved: the house knows when it goes off": "🚨 保存しました：作動したことを家が把握します",
@@ -6662,7 +6662,7 @@ export default Object.freeze({
   "On a touch or when someone arrives": "タッチ時、または誰かが来たとき",
   "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
     "iPad では部屋の明るさを読み取れません:昼と夜は太陽か時刻で決まります。",
-  "Only in the gdahome app on Android.": "Android の gdahome アプリのみ。",
+  "Only in the GdAHome app on Android.": "Android の GdAHome アプリのみ。",
   "Orientation, theme, weather, rest, night, brightness, PIN": "向き、テーマ、天気、待機、夜、明るさ、PIN",
   "presence sensor": "在室センサー",
   "Preview of a day": "1日のプレビュー",
@@ -6676,14 +6676,14 @@ export default Object.freeze({
   "Tablet proximity sensor": "タブレットの近接センサー",
   "The clock is readable, but it does not light up the room": "時計は読めますが、部屋は照らしません",
   "The iPad does not have one.": "iPad にはありません。",
-  "The panel sets it, only in the gdahome app on the tablet": "パネルが設定します(タブレットの gdahome アプリのみ)",
+  "The panel sets it, only in the GdAHome app on the tablet": "パネルが設定します(タブレットの GdAHome アプリのみ)",
   "This tablet does not have one.": "このタブレットにはありません。",
   "This tablet has no light sensor: the home's sun applies": "このタブレットには光センサーがありません:家の太陽を使います",
   "This tablet has one.": "このタブレットにはあります。",
   "Time with nobody nearby and no touches": "誰も近くにおらずタッチもない時間",
   "When someone is nearby": "誰かが近くにいるとき",
   "Who is nearby · one source is enough": "近くにいるのは誰か · ひとつのソースで十分",
-  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
-    "タブレットの光センサーで(Android の gdahome アプリのみ)。ない場合は家の太陽を使います",
+  "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies":
+    "タブレットの光センサーで(Android の GdAHome アプリのみ)。ない場合は家の太陽を使います",
   "With this tablet's light sensor: it is night when the room is dark": "このタブレットの光センサーで:部屋が暗いときは夜",
 });

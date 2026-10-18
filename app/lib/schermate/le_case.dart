@@ -133,18 +133,18 @@ class LeCase extends StatelessWidget {
           inLingua(
             it:
                 'La casa sparisce da questo telefono. Per riaverla dovrai '
-                'abbinarla di nuovo col QR di gdahome in Home Assistant.'
+                'abbinarla di nuovo col QR di GdAHome in Home Assistant.'
                 '${unica ? '' : '\n\nSe era quella aperta, si apre un\'altra delle tue case.'}'
                 '\n\nDalla parte della casa il telefono resta nell\'elenco: '
                 'per toglierlo del tutto, eliminalo anche dalla pagina di '
-                'gdahome in Home Assistant.',
+                'GdAHome in Home Assistant.',
             en:
                 'The home disappears from this phone. To get it back you will '
-                'have to pair it again with the gdahome QR code in Home '
+                'have to pair it again with the GdAHome QR code in Home '
                 'Assistant.'
                 '${unica ? '' : '\n\nIf it was the open one, another of your homes opens.'}'
                 '\n\nOn the home\'s side the phone stays listed: to remove it '
-                'completely, delete it from the gdahome page in Home Assistant '
+                'completely, delete it from the GdAHome page in Home Assistant '
                 'as well.',
           ),
         ),

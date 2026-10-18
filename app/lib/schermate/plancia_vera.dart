@@ -446,10 +446,10 @@ class PlanciaVeraState extends State<PlanciaVera> {
               inLingua(
                 it:
                     'Riabbina la casa con un QR code nuovo, dalla scheda '
-                    'gdahome in Home Assistant.',
+                    'GdAHome in Home Assistant.',
                 en:
                     'Pair your home again with a new QR code, from the '
-                    'gdahome page in Home Assistant.',
+                    'GdAHome page in Home Assistant.',
               ),
         );
       case ComeVa.irraggiungibile when collegamento.siRiconnette:
@@ -466,12 +466,12 @@ class PlanciaVeraState extends State<PlanciaVera> {
           sotto: inLingua(
             it:
                 '«${collegamento.casa?.nome ?? 'Casa'}» non risponde ancora. '
-                'Succede per qualche minuto quando l\'add-on gdahome si '
+                'Succede per qualche minuto quando l\'add-on GdAHome si '
                 'aggiorna o Home Assistant si riavvia: riprovo da solo, e '
                 'appena torna si apre.',
             en:
                 '“${collegamento.casa?.nome ?? 'Home'}” isn\'t answering yet. '
-                'This happens for a few minutes while the gdahome add-on '
+                'This happens for a few minutes while the GdAHome add-on '
                 'updates or Home Assistant restarts: I keep trying, and it '
                 'opens as soon as it\'s back.',
           ),
@@ -486,18 +486,18 @@ class PlanciaVeraState extends State<PlanciaVera> {
           inCima: inCima,
           icona: Icons.system_update_alt_rounded,
           titolo: inLingua(
-            it: 'Aggiorna l\'add-on gdahome',
-            en: 'Update the gdahome add-on',
+            it: 'Aggiorna l\'add-on GdAHome',
+            en: 'Update the GdAHome add-on',
           ),
           sotto: inLingua(
             it:
-                'Per entrare da fuori casa serve gdahome Premium, ma l\'add-on '
+                'Per entrare da fuori casa serve GdAHome Premium, ma l\'add-on '
                 'di «${collegamento.casa?.nome ?? 'casa'}» è una versione '
                 'vecchia che non lo supporta. Aggiornalo in Home Assistant. '
                 'Quando sei connesso al Wi-Fi di casa, l\'app funziona come '
                 'sempre.',
             en:
-                'To get in from away you need gdahome Premium, but the add-on '
+                'To get in from away you need GdAHome Premium, but the add-on '
                 'of “${collegamento.casa?.nome ?? 'home'}” is an old version '
                 'that doesn\'t support it. Update it in Home Assistant. On '
                 'your home Wi-Fi the app works as always.',
@@ -517,8 +517,8 @@ class PlanciaVeraState extends State<PlanciaVera> {
             icon: const Icon(Icons.star_rounded),
             label: Text(
               inLingua(
-                it: 'Scopri gdahome Premium',
-                en: 'Discover gdahome Premium',
+                it: 'Scopri GdAHome Premium',
+                en: 'Discover GdAHome Premium',
               ),
             ),
           ),
@@ -532,8 +532,8 @@ class PlanciaVeraState extends State<PlanciaVera> {
           inCima: inCima,
           icona: Icons.wifi_lock_rounded,
           titolo: inLingua(
-            it: 'Fuori casa serve gdahome Premium',
-            en: 'Away from home you need gdahome Premium',
+            it: 'Fuori casa serve GdAHome Premium',
+            en: 'Away from home you need GdAHome Premium',
           ),
           sotto: inLingua(
             it:
@@ -560,8 +560,8 @@ class PlanciaVeraState extends State<PlanciaVera> {
             icon: const Icon(Icons.star_rounded),
             label: Text(
               inLingua(
-                it: 'Scopri gdahome Premium',
-                en: 'Discover gdahome Premium',
+                it: 'Scopri GdAHome Premium',
+                en: 'Discover GdAHome Premium',
               ),
             ),
           ),
@@ -616,12 +616,12 @@ class PlanciaVeraState extends State<PlanciaVera> {
             it:
                 'In questa casa le plance sono riservate ad altri utenti. '
                 'Chiedi a chi amministra la casa di abilitare la tua utenza: '
-                'in Home Assistant, nella pagina di gdahome, ogni plancia ha '
+                'in Home Assistant, nella pagina di GdAHome, ogni plancia ha '
                 '«Chi la vede».',
             en:
                 'In this home the dashboards are reserved for other users. '
                 'Ask whoever administers the home to enable your account: in '
-                'Home Assistant, on the gdahome page, every dashboard has a '
+                'Home Assistant, on the GdAHome page, every dashboard has a '
                 '“Who sees it” list.',
           ),
         );
@@ -637,11 +637,11 @@ class PlanciaVeraState extends State<PlanciaVera> {
         ),
         sotto: inLingua(
           it:
-              'La plancia arriva con l\'add-on: aggiorna gdahome in Home '
+              'La plancia arriva con l\'add-on: aggiorna GdAHome in Home '
               'Assistant e comparirà qui. Intanto, dalla barra, ci sono i '
               'dispositivi.',
           en:
-              'The dashboard comes with the add-on: update gdahome in Home '
+              'The dashboard comes with the add-on: update GdAHome in Home '
               'Assistant and it will show up here. In the meantime, the bar '
               'has your devices.',
         ),
@@ -686,14 +686,14 @@ class PlanciaVeraState extends State<PlanciaVera> {
                     'su un indirizzo che comincia per https, o su localhost. '
                     'Da un indirizzo http la casa si comanda lo stesso — '
                     'dispositivi, configurazione, tutto — ma la plancia resta '
-                    'fuori. Apri gdahome dall\'indirizzo sicuro della tua '
+                    'fuori. Apri GdAHome dall\'indirizzo sicuro della tua '
                     'Home Assistant.',
                 en:
                     'Browsers only run what the dashboard needs on an address '
                     'that starts with https, or on localhost. From an http '
                     'address you can still control your home — devices, '
                     'config, everything — but the dashboard stays out. Open '
-                    'gdahome from your Home Assistant secure address.',
+                    'GdAHome from your Home Assistant secure address.',
               )
             : inLingua(
                 it: 'Riprova, o riapri l\'app.',

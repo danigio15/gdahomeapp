@@ -215,14 +215,14 @@ enum Sezione {
       en: 'Installer management',
     ),
     Sezione.gestione => inLingua(
-      it: 'Gestione gdahome',
-      en: 'gdahome management',
+      it: 'Gestione GdAHome',
+      en: 'GdAHome management',
     ),
     Sezione.aiutanti => inLingua(it: 'Aiutanti', en: 'Helpers'),
     Sezione.zigbee => inLingua(it: 'Zigbee', en: 'Zigbee'),
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),
     /* Il nome del prodotto, uguale nelle due lingue. */
-    Sezione.premium => 'gdahome Premium',
+    Sezione.premium => 'GdAHome Premium',
   };
 
   /// In quale gruppo della barra sta.

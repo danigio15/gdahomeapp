@@ -3,7 +3,7 @@
   La pagina che apre la plancia dentro le «Plance» di Home Assistant.
 
   Sta in `www/gdahome/` e Home Assistant la serve da `/local/gdahome/apri.html`:
-  la Plancia che gdahome si fabbrica ha dentro una tessera «pagina web» di Home
+  la Plancia che GdAHome si fabbrica ha dentro una tessera «pagina web» di Home
   Assistant (`iframe`) che apre questo indirizzo. Nessuna tessera nostra, quindi
   nessuna risorsa di Lovelace da dichiarare, e nessuna pagina da ricaricare
   perche' quella risorsa arrivi. Il perche' intero sta in testa a
@@ -38,7 +38,7 @@
     <!-- Il segno con cui l'add-on riconosce questa pagina quando chiede a
          Home Assistant se la serve: una risposta «200» da sola non basta. -->
     <meta name="gdahome" content="apri" />
-    <title>gdahome</title>
+    <title>GdAHome</title>
     <style>
       html,
       body {
@@ -205,8 +205,8 @@
                 )) +
               " " +
               due(
-                "Chi amministra la casa può cambiarlo dalla pagina di gdahome, alla voce «Le plance».",
-                "Whoever runs the home can change it from the gdahome page, under “Dashboards”.",
+                "Chi amministra la casa può cambiarlo dalla pagina di GdAHome, alla voce «Le plance».",
+                "Whoever runs the home can change it from the GdAHome page, under “Dashboards”.",
               ),
           );
         }
@@ -302,10 +302,10 @@
           var tasto = due("Riprova adesso", "Try again now");
           if (errore && errore.tipo === "fermo") {
             scrivi(
-              due("gdahome non è in funzione", "gdahome isn’t running"),
+              due("GdAHome non è in funzione", "GdAHome isn’t running"),
               due(
-                "La plancia si apre da sola appena l’add-on riparte. Se non riparte, chi amministra la casa lo avvia da Impostazioni → Componenti aggiuntivi → gdahome.",
-                "The dashboard opens by itself as soon as the add-on is running again. If it doesn’t restart, whoever runs the home starts it from Settings → Add-ons → gdahome.",
+                "La plancia si apre da sola appena l’add-on riparte. Se non riparte, chi amministra la casa lo avvia da Impostazioni → Componenti aggiuntivi → GdAHome.",
+                "The dashboard opens by itself as soon as the add-on is running again. If it doesn’t restart, whoever runs the home starts it from Settings → Add-ons → GdAHome.",
               ),
               tasto,
             );

@@ -158,7 +158,7 @@ test("senza app dentro, il ponte lo dice invece di dare una pagina rotta", async
   try {
     const risposta = await c.chiedi("/app/");
     assert.equal(risposta.status, 404);
-    assert.match(await risposta.text(), /gdahome/);
+    assert.match(await risposta.text(), /GdAHome/);
 
     const stato = await (await c.chiedi("/api/stato")).json();
     assert.equal(

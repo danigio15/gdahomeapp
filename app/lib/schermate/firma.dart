@@ -42,7 +42,7 @@ class Firma extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(top: spazioSopra),
       child: Text(
-        'gdahome $numeroDiQuestApp',
+        'GdAHome $numeroDiQuestApp',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: colori.onSurfaceVariant.withValues(alpha: 0.7),

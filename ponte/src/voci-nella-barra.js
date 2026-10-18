@@ -80,7 +80,7 @@ export const IL_CRUSCOTTO = Object.freeze({
 
 export const LA_GESTIONE = Object.freeze({
   dove: "gdahome-gestione",
-  titolo: "Gestione gdahome",
+  titolo: "Gestione GdAHome",
   segno: "mdi:account-key",
   pagina: "gestore",
 });

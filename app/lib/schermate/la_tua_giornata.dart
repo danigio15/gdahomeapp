@@ -175,10 +175,10 @@ class _StatoDellaGiornata extends State<SchermataDellaGiornata> {
         sotto: vecchio
             ? inLingua(
                 it:
-                    'Forse gdahome in casa è di una versione di prima: '
+                    'Forse GdAHome in casa è di una versione di prima: '
                     'aggiorna l\'add-on in Home Assistant.',
                 en:
-                    'Maybe gdahome at home is an older version: update the '
+                    'Maybe GdAHome at home is an older version: update the '
                     'add-on in Home Assistant.',
               )
             : '$errore',

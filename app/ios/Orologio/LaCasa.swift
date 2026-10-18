@@ -79,7 +79,7 @@ struct Dispositivi: View {
   var body: some View {
     List {
       if foto.dispositivi.isEmpty {
-        Text("Nessun dispositivo da comandare. Configura varchi, luci o prese in gdahome sul telefono.")
+        Text("Nessun dispositivo da comandare. Configura varchi, luci o prese in GdAHome sul telefono.")
           .font(.footnote)
           .foregroundStyle(.secondary)
       }
@@ -125,7 +125,7 @@ struct Azioni: View {
             /* «Fatto» su una cosa che parte fra mezz'ora sarebbe una bugia:
              * si dice prima. */
             if !a.subito {
-              Text("Parte quando apri gdahome sul telefono")
+              Text("Parte quando apri GdAHome sul telefono")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
             }

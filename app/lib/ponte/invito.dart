@@ -83,8 +83,8 @@ class Invito {
     if (pezzi.isEmpty || pezzi[0].trim().toLowerCase() != _nome) {
       throw InvitoIllegibile(
         inLingua(
-          it: 'Questo non è un codice di gdahome.',
-          en: 'This isn\'t a gdahome code.',
+          it: 'Questo non è un codice di GdAHome.',
+          en: 'This isn\'t a GdAHome code.',
         ),
       );
     }
@@ -93,8 +93,8 @@ class Invito {
     if (quale == null || quale < 1) {
       throw InvitoIllegibile(
         inLingua(
-          it: 'Questo non è un codice di gdahome.',
-          en: 'This isn\'t a gdahome code.',
+          it: 'Questo non è un codice di GdAHome.',
+          en: 'This isn\'t a GdAHome code.',
         ),
       );
     }

@@ -953,11 +953,11 @@ class Collegamento {
       throw LicenzaRifiutata(
         inLingua(
           it:
-              'Per riscattarlo da fuori casa aggiorna gdahome in Home '
+              'Per riscattarlo da fuori casa aggiorna GdAHome in Home '
               'Assistant. Intanto puoi riscattarlo dalla console dell\'add-on, '
               'o da qui quando sei a casa.',
           en:
-              'To redeem it away from home, update gdahome in Home Assistant. '
+              'To redeem it away from home, update GdAHome in Home Assistant. '
               'Meanwhile you can redeem it from the add-on\'s console, or '
               'from here when you\'re at home.',
         ),

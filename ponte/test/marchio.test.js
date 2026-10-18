@@ -128,8 +128,13 @@ test("il manifesto dice gdahome tre volte: il nome, lo slug e la voce nella barr
    * vedrebbe come un add-on **nuovo**, e chi ce l'ha si ritroverebbe senza
    * opzioni, senza telefoni abbinati e senza plance. Cambiarlo si puo' — si e'
    * fatto, da `ponte` a `gdahome`, quando ce l'aveva una macchina di prova
-   * sola — ma deve essere una cosa voluta, non un riordino. */
-  assert.match(manifesto, new RegExp(`^name: ${NOME}$`, "m"));
+   * sola — ma deve essere una cosa voluta, non un riordino.
+   *
+   * Il `name` si legge, e si scrive come si legge: «GdAHome». Lo slug e' un
+   * nome di cosa, e resta tutto minuscolo com'e' sempre stato. */
+  const SCRITTO = "GdAHome";
+  assert.equal(SCRITTO.toLowerCase(), NOME);
+  assert.match(manifesto, new RegExp(`^name: ${SCRITTO}$`, "m"));
   assert.match(manifesto, new RegExp(`^slug: ${NOME}$`, "m"));
 
   /* La voce nella barra dice **cosa apre**, e porta il nome dentro.
@@ -144,7 +149,7 @@ test("il manifesto dice gdahome tre volte: il nome, lo slug e la voce nella barr
    * chiunque, una che dice solo «Configura» non dice di chi e'. */
   const voce = /^panel_title: (.*)$/m.exec(manifesto);
   assert.ok(voce, "nel manifesto non c'e' nessun «panel_title:»");
-  assert.ok(voce[1].includes(NOME), `la voce nella barra non dice «${NOME}»: «${voce[1]}»`);
+  assert.ok(voce[1].includes(SCRITTO), `la voce nella barra non dice «${SCRITTO}»: «${voce[1]}»`);
   assert.match(manifesto, /^panel_icon: mdi:cog$/m);
 
   /* E il nome di prima non sta in nessuna delle righe che Home Assistant

@@ -183,7 +183,7 @@ Future<PresaCifrata> stringiLaMano(
     laPrima: (detto, grezzo) async {
       if (detto['v'] != versioneDelProtocollo) {
         throw const StrettaRifiutata(
-          'questa casa parla una lingua che non conosco: aggiorna gdahome, o l\'app',
+          'questa casa parla una lingua che non conosco: aggiorna GdAHome, o l\'app',
         );
       }
       final no = detto['no'];
@@ -205,18 +205,18 @@ Future<PresaCifrata> stringiLaMano(
             identical(0, 0.0)
                 ? inLingua(
                     it:
-                        'c\'è una versione nuova di gdahome: ricarica la '
+                        'c\'è una versione nuova di GdAHome: ricarica la '
                         'pagina per continuare',
                     en:
-                        'there\'s a new version of gdahome: reload the page '
+                        'there\'s a new version of GdAHome: reload the page '
                         'to continue',
                   )
                 : inLingua(
                     it:
-                        'c\'è una versione nuova di gdahome: aggiornala per '
+                        'c\'è una versione nuova di GdAHome: aggiornala per '
                         'continuare',
                     en:
-                        'there\'s a new version of gdahome: update it to '
+                        'there\'s a new version of GdAHome: update it to '
                         'continue',
                   ),
             minima: minima is int ? minima : null,
@@ -259,12 +259,12 @@ Future<PresaCifrata> stringiLaMano(
             it:
                 'la casa ha risposto in un modo meno sicuro di come fa di '
                 'solito, e non entro: qualcuno potrebbe essersi messo in '
-                'mezzo. Se hai rimesso una versione vecchia di gdahome in '
+                'mezzo. Se hai rimesso una versione vecchia di GdAHome in '
                 'Home Assistant, aggiornala o riabbina il telefono',
             en:
                 'your home answered in a less secure way than it usually '
                 'does, so I\'m not going in: someone may be in the middle. If '
-                'you put an older version of gdahome back in Home Assistant, '
+                'you put an older version of GdAHome back in Home Assistant, '
                 'update it or pair the phone again',
           ),
         );
@@ -320,10 +320,10 @@ ErroreDelPonte rifiutoDellAbbinamento(Map<String, dynamic> detto, String no) {
     return StrettaRifiutata(
       inLingua(
         it:
-            'gdahome su questa casa è di una versione vecchia: aggiornalo in '
+            'GdAHome su questa casa è di una versione vecchia: aggiornalo in '
             'Home Assistant, poi riprova',
         en:
-            'gdahome on this home is an old version: update it in Home '
+            'GdAHome on this home is an old version: update it in Home '
             'Assistant, then try again',
       ),
     );

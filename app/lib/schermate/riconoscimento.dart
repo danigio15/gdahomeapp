@@ -125,11 +125,11 @@ class IlVeloDelRiconoscimento extends StatelessWidget {
                           : inLingua(
                               it:
                                   'Guarda il telefono, o appoggia il dito. Il '
-                                  'volto e l\'impronta restano lì: gdahome '
+                                  'volto e l\'impronta restano lì: GdAHome '
                                   'riceve un sì e basta.',
                               en:
                                   'Look at the phone, or rest your finger. '
-                                  'Face and fingerprint stay there: gdahome '
+                                  'Face and fingerprint stay there: GdAHome '
                                   'gets a yes and nothing more.',
                             ),
                       textAlign: TextAlign.center,

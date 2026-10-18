@@ -5,13 +5,13 @@ configuration:
     name: Your home
     description: >-
       These are yours, and for almost everyone they are the only ones that matter. The sections
-      below are for people who install gdahome in other people's homes: if this home is yours,
+      below are for people who install GdAHome in other people's homes: if this home is yours,
       there is nothing to touch in there.
     fields:
       da_fuori_casa:
         name: From away
         description: >-
-          The app gets in when you are not at home too, through the gdahome relay:
+          The app gets in when you are not at home too, through the GdAHome relay:
           no port to open on the router, no public address, nothing to install.
           Off, your home is reachable only on its own network.
       quadro:
@@ -28,7 +28,7 @@ configuration:
           they read "Kitchen light" — and the things that have an update waiting.
           Nothing else — not whether the lights are on or the doors open, not
           people, not your Wi-Fi name, not your public address. What does go out
-          you can read word for word in the gdahome console, under Installer,
+          you can read word for word in the GdAHome console, under Installer,
           where the button to stop it also is.
       quadro_ogni:
         name: How often a status report goes out
@@ -67,9 +67,9 @@ configuration:
         name: Let the dashboard carry the mark of whoever installed your home
         description: >-
           On — and it is on by default — the sidebar entry takes their name
-          instead of "gdahome", and their logo sits at the top of the dashboard.
+          instead of "GdAHome", and their logo sits at the top of the dashboard.
           It is for you: the day something goes wrong, you have in front of you
-          the name of who to call instead of ours. Off, it stays gdahome, and
+          the name of who to call instead of ours. Off, it stays GdAHome, and
           nothing else changes. If you have already renamed the dashboard
           yourself, nobody touches that name.
       minuti_del_codice:
@@ -91,14 +91,14 @@ configuration:
   chi_installa:
     name: The installer
     description: >-
-      Only if you install gdahome in other people's homes. This Home Assistant is yours, the one
+      Only if you install GdAHome in other people's homes. This Home Assistant is yours, the one
       you watch your installations from; in a customer's home these two stay as they are.
     fields:
       acceso:
         name: This Home Assistant belongs to an installer
         description: >-
-          Leave it off: it is for whoever installs gdahome in other people's homes.
-          On, and with the code below filled in, the gdahome console gains your
+          Leave it off: it is for whoever installs GdAHome in other people's homes.
+          On, and with the code below filled in, the GdAHome console gains your
           panel — where you watch the systems you installed — and the app and the
           sidebar gain the entry that opens it. On its own it turns nothing on.
           Turn it on in your own Home Assistant, not in a client's.
@@ -136,7 +136,7 @@ configuration:
           other home it changes nothing and shows nothing.
     network:
       8098/tcp: >-
-        The gdahome app knocks here. At home that is all it takes; from away it
+        The GdAHome app knocks here. At home that is all it takes; from away it
         has to be able to reach this port.
   avanzate:
     name: Advanced

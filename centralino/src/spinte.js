@@ -64,7 +64,7 @@ export const SPINTE_IN_TUTTO_ALL_ORA = 200_000;
 
 /* La frase che vede chi non ha la chiave: Apple, e l'iPhone prima che l'app
  * apra la busta. */
-export const FRASE_DI_RISERVA = Object.freeze({ titolo: "gdahome", testo: "nuova notifica" });
+export const FRASE_DI_RISERVA = Object.freeze({ titolo: "GdAHome", testo: "nuova notifica" });
 
 const TELEFONO_BUONO = /^dm_[0-9a-f]{16}$/;
 const GETTONE_BUONO = /^[A-Za-z0-9_:\-.]{20,4096}$/;

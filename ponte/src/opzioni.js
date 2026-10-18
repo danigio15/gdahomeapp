@@ -136,7 +136,7 @@ export function leggiIlQuadro(scritto, dillo = () => {}) {
     dillo(
       errore instanceof CodiceIllegibile
         ? `il codice del quadro non si legge (${errore.message}): questa casa non manda nessun rapporto`
-        : `${errore.message}: questa casa non manda nessun rapporto finche' non si aggiorna gdahome`,
+        : `${errore.message}: questa casa non manda nessun rapporto finche' non si aggiorna GdAHome`,
     );
     return null;
   }

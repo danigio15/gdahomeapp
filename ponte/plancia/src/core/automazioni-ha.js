@@ -49,7 +49,7 @@ const pulito = (valore) => String(valore ?? "").trim();
 /* Come si riconoscono quelle nate dalla plancia: la descrizione lo dice a chi
  * le apre in Home Assistant, e il segno `#gdahome` lo dice a noi. */
 export const SEGNO_GDAHOME = "#gdahome";
-export const DESCRIZIONE_GDAHOME = `Creata con la plancia gdahome. ${SEGNO_GDAHOME}`;
+export const DESCRIZIONE_GDAHOME = `Creata con la plancia GdAHome. ${SEGNO_GDAHOME}`;
 
 /** L'evento che porta un avviso dai telefoni: lo ascolta il ponte. */
 export const EVENTO_AVVISA = "gdahome_avvisa";
@@ -624,7 +624,7 @@ export function inHomeAssistant(dato, { azioni = [], stati = {}, descrizione = n
   if (!a) return null;
   const testa = {
     id: a.id,
-    alias: a.nome || "gdahome",
+    alias: a.nome || "GdAHome",
     description: descrizione ?? DESCRIZIONE_GDAHOME,
   };
   if (a.tipo === "crono") {

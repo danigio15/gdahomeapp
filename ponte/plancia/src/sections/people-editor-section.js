@@ -682,8 +682,8 @@ function cosaCeInCasaMarkup() {
   if (casa.stato === "no")
     return `<div class="dm-people-casa">${titolo}<small>${esc(
       t(
-        "Non si legge: serve l'add-on gdahome acceso, e chi amministra la casa.",
-        "Can't read it: the gdahome add-on must be running, and you must be an administrator.",
+        "Non si legge: serve l'add-on GdAHome acceso, e chi amministra la casa.",
+        "Can't read it: the GdAHome add-on must be running, and you must be an administrator.",
       ),
     )}</small></div>`;
   const perche = PERCHE();

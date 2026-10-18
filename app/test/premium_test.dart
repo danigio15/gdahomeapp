@@ -172,7 +172,7 @@ void main() {
       ),
     );
     expect(find.text('Premium'), findsOneWidget);
-    expect(find.text('gdahome Premium'), findsOneWidget);
+    expect(find.text('GdAHome Premium'), findsOneWidget);
     expect(find.textContaining('14 giorni di prova gratuita'), findsOneWidget);
     expect(find.text('Più plance e più case'), findsOneWidget);
     expect(find.textContaining('Gratis per tutti'), findsOneWidget);
@@ -577,7 +577,7 @@ void main() {
         SchermataPremium(collegamento: collegamento, sulWeb: false),
       );
       expect(find.byKey(const Key('premium-addon-vecchio')), findsOneWidget);
-      expect(find.text('Aggiorna prima l\'add-on gdahome'), findsOneWidget);
+      expect(find.text('Aggiorna prima l\'add-on GdAHome'), findsOneWidget);
       expect(find.byKey(const Key('compra-premium')), findsNothing);
       /* Un codice regalo li' non arriverebbe a nessuno: non si propone. */
       expect(find.byKey(const Key('codice-regalo')), findsNothing);

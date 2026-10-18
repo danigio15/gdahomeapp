@@ -70,7 +70,7 @@ const STATI = {
 
 /* Le automazioni di Home Assistant di questa casa: due nate dalla plancia,
  * una scritta a mano, una complessa e una da blueprint. */
-const SEGNO = "Creata con la plancia gdahome. #gdahome";
+const SEGNO = "Creata con la plancia GdAHome. #gdahome";
 const HA = {
   1001: {
     id: "1001",
@@ -408,7 +408,7 @@ test("il config: tutte quelle di Home Assistant per categoria, le etichette, la 
   await expect(pagina.locator(".aug-conta")).toHaveText(["1/2", "1/1", "2/2"]);
   await expect(pagina.locator(".aug-freccia").first()).toHaveText("▾");
   const tapparelle = pagina.locator(".ha-riga", { hasText: "Tapparelle mattina" });
-  await expect(tapparelle.locator(".ha-orig.g")).toHaveText("gdahome");
+  await expect(tapparelle.locator(".ha-orig.g")).toHaveText("GdAHome");
   await expect(tapparelle.locator(".aug-fr")).toContainText("Alle 07:15");
   await expect(tapparelle.locator(".aug-fr")).toContainText("apri Tapparelle soggiorno");
   await expect(tapparelle.locator(".aug-quando")).toContainText("oggi");
@@ -513,7 +513,7 @@ test("dai modelli all'editor: si crea e si salva in Home Assistant", async ({ pa
   });
   const ok = pagina.locator(".ha-ok");
   await expect(ok).toContainText("Salvata in Home Assistant ✓ «Luce corridoio di notte»");
-  await expect(ok).toContainText("Impostazioni → Automazioni, con l'etichetta gdahome");
+  await expect(ok).toContainText("Impostazioni → Automazioni, con l'etichetta GdAHome");
   await expect(ok.locator(".ha-link")).toHaveAttribute("href", "/config/automation/edit/2000");
   await expect(pagina.locator(".ha-riga")).toHaveCount(1);
 });
@@ -742,7 +742,7 @@ test("senza Premium: il config velato, e «Scopri Premium» dice dove si compra"
   await expect(velo.locator(".au-prem")).toHaveText("PREMIUM · IN ARRIVO");
   await expect(velo.locator("h3")).toHaveText("Automazioni con Premium");
   await expect(velo).toContainText(
-    "Si acquista solo dalle app gdahome su App Store e Google Play. Le app sono in arrivo.",
+    "Si acquista solo dalle app GdAHome su App Store e Google Play. Le app sono in arrivo.",
   );
   /* Sotto il velo non si tocca niente. */
   await expect(page.locator("#ed-body .au-sotto")).toHaveAttribute("inert", "");

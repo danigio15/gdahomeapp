@@ -545,7 +545,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-XQNUWGPM.js";
+} from "../../chunk-VF737FBI.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2259,7 +2259,7 @@ var SOURCE_INDEX = Object.freeze({
   "Adesso avanzano ${kw} kW dal fotovoltaico.": "${kw} kW of solar to spare right now.",
   "Adesso è spento: scrivi una quota fra 30 e 95 per accenderlo, zero lo rispegne.": "Right now it is off: write a level between 30 and 95 to turn it on, zero turns it back off.",
   "Adesso l'attributo": "Now the attribute",
-  "Adesso le automazioni le esegue Home Assistant: convertile e ripartono, con l'etichetta gdahome.": "Home Assistant runs automations now: convert them and they start again, labelled gdahome.",
+  "Adesso le automazioni le esegue Home Assistant: convertile e ripartono, con l'etichetta GdAHome.": "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.",
   "adesso non c'è": "not there right now",
   "Adesso non c'è una lettura per questo carico.": "There is no reading for this load right now.",
   "Adesso risponde tutto. Se qualcosa smette di farlo compare qui, e in Home compare la sua tessera.": "Everything is answering right now. If something stops, it shows up here, and its card shows up on Home.",
@@ -3097,7 +3097,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cofano chiuso": "Bonnet closed",
   "Cofano motore (chiuso/aperto)": "Bonnet (closed/open)",
   "Col segno che usa il BMS: se in carica la scrive negativa, sceglilo in «Segno della corrente».": "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.",
-  "Col sensore di luce del tablet, solo nell'app gdahome su Android. Senza, vale il sole di casa": "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies",
+  "Col sensore di luce del tablet, solo nell'app GdAHome su Android. Senza, vale il sole di casa": "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies",
   "Col sensore di luce di questo tablet: è notte quando la stanza è buia": "With this tablet's light sensor: it is night when the room is dark",
   "col sole sopra l'orizzonte": "with the sun above the horizon",
   "col sole sotto l'orizzonte": "with the sun below the horizon",
@@ -3186,7 +3186,7 @@ var SOURCE_INDEX = Object.freeze({
   "Con calma, quando hai un minuto.": "No rush, when you have a minute.",
   "con credenziali": "with credentials",
   "Con esclusioni": "With bypass",
-  "Con gdahome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app gdahome.": "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.",
+  "Con GdAHome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app GdAHome.": "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.",
   "con l'etichetta": "labelled",
   "Con l'orario": "By the clock",
   "Con l'orario: chiaro di giorno, scuro la sera": "By the clock: light by day, dark in the evening",
@@ -3762,7 +3762,7 @@ var SOURCE_INDEX = Object.freeze({
   "Esclusa dall'allarme": "Bypassed from the alarm",
   "esclusa dall'antifurto": "bypassed by the alarm",
   "Esclusione dall'antifurto": "Alarm bypass",
-  "esclusivamente dalle app gdahome": "only from the gdahome apps",
+  "esclusivamente dalle app GdAHome": "only from the GdAHome apps",
   "Escluso": "Bypassed",
   "Esco": "Leaving",
   "Esegui": "Run",
@@ -4126,7 +4126,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il contatore totale comanda: questi campi non vengono letti": "The total meter wins: these fields are not read",
   "Il conto alla rovescia lo tiene Home Assistant: puoi chiudere la plancia e l'unità si spegne lo stesso.": "Home Assistant keeps the countdown: you can close the dashboard and the unit still switches off.",
   "Il conto del disagio da caldo e umidità. Il livello della sezione è il più alto fra i quattro: un indice che grida non resta nascosto dietro una percezione tranquilla.": "The count of heat-and-humidity discomfort. The section's level is the highest of the four: an index that shouts does not stay hidden behind a quiet perception.",
-  "Il disegno che esce nella pagina e nella tessera. Sono quelli del catalogo di gdahome: uguali su ogni telefono.": "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.",
+  "Il disegno che esce nella pagina e nella tessera. Sono quelli del catalogo di GdAHome: uguali su ogni telefono.": "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.",
   "Il download qui non passa: usa «Copia»": "Download blocked here: use “Copy”",
   "Il file non si legge.": "The file cannot be read.",
   "Il filtro dell'acqua va cambiato.": "The water filter needs changing.",
@@ -4444,7 +4444,7 @@ var SOURCE_INDEX = Object.freeze({
   "L'editor delle entità": "The entity editor",
   "L'elenco dei fotogrammi del servizio non arriva: riprova fra un momento.": "The service's list of frames does not arrive: try again in a moment.",
   "L'elenco diviso per tipo, come prima": "The list split by type, as before",
-  "L'elenco e i salvataggi passano dall'add-on gdahome: qui non c'è.": "The list and saving go through the gdahome add-on: it is not here.",
+  "L'elenco e i salvataggi passano dall'add-on GdAHome: qui non c'è.": "The list and saving go through the GdAHome add-on: it is not here.",
   "L'elettrodomestico non è entrato nello store": "Appliance did not enter the store",
   "L'entità che dice che l'antifurto sta suonando: un interruttore, un sensore o un aiutante. Quando vale «scattato» la Sicurezza, la tessera della Home e il pannello a muro diventano rossi, e la casa manda la notifica urgente.": "The entity that says the alarm is going off: a switch, a sensor or a helper. When it reads “triggered” Security, the Home tile and the wall panel turn red, and the house sends the urgent notification.",
   "L'entità che dice se è acceso o spento": "The entity that says whether it is on or off",
@@ -4498,7 +4498,7 @@ var SOURCE_INDEX = Object.freeze({
   "La colonnina è della casa, non di una macchina: si collega una volta e vale per tutte le vetture. Porta quello che misura: potenza, energia, tensione, temperatura, il cavo.": "The charger belongs to the house, not to one car: connect it once and it counts for every vehicle. It brings what it measures: power, energy, voltage, temperature, the cable.",
   "La colonnina e evcc": "The wallbox and evcc",
   "La colonnina la sceglie gdanav in viaggio": "gdanav picks the charger on the way",
-  "La comanda il pannello, solo nell'app gdahome sul tablet": "The panel sets it, only in the gdahome app on the tablet",
+  "La comanda il pannello, solo nell'app GdAHome sul tablet": "The panel sets it, only in the GdAHome app on the tablet",
   "La configurazione di questa plancia è riservata al suo amministratore.": "This dashboard's configuration is reserved for its administrator.",
   "La configurazione è salvata": "Configuration is saved",
   "La cottura compare quando fra gli elettrodomestici c'è una friggitrice, un forno, un microonde, un piano cottura o una cappa.": "Cooking shows up once the appliances include an air fryer, an oven, a microwave, a cooktop or a hood.",
@@ -4557,7 +4557,7 @@ var SOURCE_INDEX = Object.freeze({
   "La risposta finisce sotto la segnalazione, e chi l'ha aperta la trova nella sua plancia.": "The reply goes under the report, and whoever opened it finds it in their own dashboard.",
   "La risposta finisce sotto la segnalazione, su GitHub: chi l'ha aperta la legge li'.": "The reply goes under the report, on GitHub: whoever opened it reads it there.",
   "La ritiro?": "Retract it?",
-  "La ritrovi in Impostazioni → Automazioni, con l'etichetta gdahome.": "You'll find it in Settings → Automations, labelled gdahome.",
+  "La ritrovi in Impostazioni → Automazioni, con l'etichetta GdAHome.": "You'll find it in Settings → Automations, labelled GdAHome.",
   "La sabbia che RESTA, in percentuale: quando scende sotto la soglia la scheda avvisa che sta per finire. È l'opposto del cassetto dei rifiuti, che invece si riempie.": "The litter that is LEFT, as a percentage: when it drops below the threshold the card warns you it is running out. It is the opposite of the waste drawer, which fills up.",
   "La sabbia sta finendo": "Litter is running out",
   "La sabbia sta finendo: aggiungine.": "Litter is running out: top it up.",
@@ -4616,7 +4616,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le aperture della sezione Sicurezza: portone, porta di casa, cancello. Ogni porta ha la sua card; il tocco chiede conferma e, se imposti un PIN, il codice.": "The openings of the Security section: front door, house door, gate. Each door gets its own card; a tap asks to confirm and, with a PIN set, asks for the code.",
   "Le automazioni accendono, spengono e avvisano da sole: a un orario, quando si apre una porta, quando esci di casa. Qui le vedrai tutte, anche quelle di Home Assistant.": "Automations turn things on and off and alert you by themselves: at a time, when a door opens, when you leave home. You'll see them all here, Home Assistant's too.",
   "Le automazioni di casa": "The home's automations",
-  "Le automazioni di Home Assistant si leggono con l'add-on gdahome: qui non c'è.": "Home Assistant's automations are read through the gdahome add-on: it is not here.",
+  "Le automazioni di Home Assistant si leggono con l'add-on GdAHome: qui non c'è.": "Home Assistant's automations are read through the GdAHome add-on: it is not here.",
   "Le automazioni le crea e le modifica chi amministra Home Assistant: qui si accendono e si spengono.": "Automations are created and edited by whoever administers Home Assistant: here you turn them on and off.",
   "Le azioni rapide": "The quick actions",
   "Le batterie che vuoi tenere d'occhio. Ogni riga è una batteria — l'entità in percentuale, il nome che vuoi tu, il disegno — e la pagina Batterie le mostra dalla più scarica alla più piena, con in cima quante sono da cambiare.": "The batteries you want to keep an eye on. Each row is a battery — the entity in percent, the name you want, the drawing — and the Batteries page shows them from the flattest to the fullest, with how many need replacing on top.",
@@ -5304,7 +5304,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non si è cambiata: ${no}": "It was not changed: ${no}",
   "Non si è copiata: ${no}": "It was not copied: ${no}",
   "Non si è eliminata: ${no}": "It was not deleted: ${no}",
-  "Non si legge: serve l'add-on gdahome acceso, e chi amministra la casa.": "Can't read it: the gdahome add-on must be running, and you must be an administrator.",
+  "Non si legge: serve l'add-on GdAHome acceso, e chi amministra la casa.": "Can't read it: the GdAHome add-on must be running, and you must be an administrator.",
   "Non si riesce a leggere la libreria.": "The library cannot be read.",
   "Non si sa": "Unknown",
   "Non so dove metterlo: scegli tu qui sotto. Un dispositivo che non ha una sezione sua sta bene fra le tue entità.": "I do not know where this goes: pick below. A device with no section of its own belongs with your own entities.",
@@ -5518,7 +5518,7 @@ var SOURCE_INDEX = Object.freeze({
   "pH troppo alto": "pH too high",
   "pH troppo basso": "pH too low",
   "piani": "floors",
-  "Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app gdahome, nella pagina Premium.": "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page.",
+  "Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app GdAHome, nella pagina Premium.": "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.",
   "Pianifica i viaggi da qui: li ritrovi in gdanav sul telefono, su CarPlay e su Android Auto.": "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.",
   "Piano": "Floor",
   "Piano (opz.)": "Floor (opt.)",
@@ -6457,7 +6457,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sfondo": "Background",
   "sì": "yes",
   "Sì": "Yes",
-  "Si acquista solo dalle app gdahome su App Store e Google Play. Le app sono in arrivo.": "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.",
+  "Si acquista solo dalle app GdAHome su App Store e Google Play. Le app sono in arrivo.": "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.",
   "si aggiorna da solo": "updates by itself",
   "si apre": "opens",
   "si apre / si chiude": "opens / closes",
@@ -6541,7 +6541,7 @@ var SOURCE_INDEX = Object.freeze({
   "Solo col terreno sotto (%)": "Only with the soil below (%)",
   "Solo l'importante": "Only what matters",
   "Solo lettura": "Read only",
-  "Solo nell'app gdahome su Android.": "Only in the gdahome app on Android.",
+  "Solo nell'app GdAHome su Android.": "Only in the GdAHome app on Android.",
   "Solo per il campanello: non cambia il volume del tablet.": "Only for the doorbell: it does not change the tablet's volume.",
   "Solo per questa finestra: ferma a questa percentuale o sotto conta come chiusa. Vuota, vale la soglia di casa scritta in cima.": "For this window only: resting at this percentage or below counts as closed. Empty, the house threshold at the top applies.",
   "Solo per questa finestra: quando l'umidità della sua stanza supera questa quota, la card dice di aprirla per arieggiare. Vuota, vale la soglia di casa scritta in cima; zero spegne il consiglio su questa finestra.": "For this window only: when its room's humidity goes above this level, the card says to open it to air out. Empty, the house threshold at the top applies; zero turns the advice off on this window.",
@@ -102096,8 +102096,8 @@ function luceMarkup(m) {
     "Questo tablet non ha il sensore di luce: vale il sole di casa",
     "This tablet has no light sensor: the home's sun applies"
   ) : t(
-    "Col sensore di luce del tablet, solo nell'app gdahome su Android. Senza, vale il sole di casa",
-    "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies"
+    "Col sensore di luce del tablet, solo nell'app GdAHome su Android. Senza, vale il sole di casa",
+    "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies"
   ) : l.giorno === "orario" ? t(
     "Notte nella fascia di «Di notte schermo nero», anche con l'interruttore spento",
     "Night in the hours of “Black screen at night”, even with its switch off"
@@ -102141,9 +102141,9 @@ function luceMarkup(m) {
   const sensore = m.risveglio.entita;
   const letto = sensore ? allStates()?.[sensore] : null;
   const statoDelSensore = letto ? `<span class="mu-ed-stato-sensore" data-mu-ed-stato-sensore><i class="${letto.state === "on" ? "on" : ""}"></i>${esc(clean(letto.attributes?.friendly_name) || t("sensore di presenza", "presence sensor"))} · ${esc(letto.state === "on" ? t("rileva", "detecting") : t("nessuno", "nobody"))}</span>` : "";
-  const notaDelTablet = capacita?.prossimita ? t("Questo tablet ce l'ha.", "This tablet has one.") : sullIPad ? t("Sull'iPad non c'è.", "The iPad does not have one.") : senzaVicino ? t("Questo tablet non ce l'ha.", "This tablet does not have one.") : t("Solo nell'app gdahome su Android.", "Only in the gdahome app on Android.");
+  const notaDelTablet = capacita?.prossimita ? t("Questo tablet ce l'ha.", "This tablet has one.") : sullIPad ? t("Sull'iPad non c'è.", "The iPad does not have one.") : senzaVicino ? t("Questo tablet non ce l'ha.", "This tablet does not have one.") : t("Solo nell'app GdAHome su Android.", "Only in the GdAHome app on Android.");
   return `<div class="mu-ed-luce" data-mu-ed-luce>
-    <div class="mu-ed-luce-testa"><span class="mu-ed-luce-ic" aria-hidden="true">☀️</span><div class="mu-ed-testo"><b>${esc(t("Luminosità dello schermo", "Screen brightness"))}</b><small>${esc(t("La comanda il pannello, solo nell'app gdahome sul tablet", "The panel sets it, only in the gdahome app on the tablet"))}</small></div>${interruttore("luce.attiva", l.attiva, "luce")}</div>
+    <div class="mu-ed-luce-testa"><span class="mu-ed-luce-ic" aria-hidden="true">☀️</span><div class="mu-ed-testo"><b>${esc(t("Luminosità dello schermo", "Screen brightness"))}</b><small>${esc(t("La comanda il pannello, solo nell'app GdAHome sul tablet", "The panel sets it, only in the GdAHome app on the tablet"))}</small></div>${interruttore("luce.attiva", l.attiva, "luce")}</div>
     ${livelli}
     <div class="mu-ed-sotto-titolo">${esc(t("Chi c'è vicino · basta una fonte", "Who is nearby · one source is enough"))}</div>
     <div class="mu-ed-fonte" data-mu-ed-fonte="presenza">
@@ -102162,7 +102162,7 @@ function luceMarkup(m) {
 function corpoMarkup7() {
   const m = bozza();
   const premium2 = state113.premium === true;
-  const plance = state113.plance?.length ? state113.plance : [{ profilo: "primary", titolo: "gdahome" }];
+  const plance = state113.plance?.length ? state113.plance : [{ profilo: "primary", titolo: "GdAHome" }];
   const qui = currentProfile();
   const altre = plance;
   const sporca = bozzaSporca();
@@ -102318,8 +102318,8 @@ function corpoMarkup7() {
       <b>${esc(t("La plancia a muro è Premium", "The wall dashboard is Premium"))}</b>
       <p>${esc(
     t(
-      "Con gdahome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app gdahome.",
-      "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app."
+      "Con GdAHome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app GdAHome.",
+      "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app."
     )
   )}</p></div></div>`;
 }
@@ -103470,8 +103470,8 @@ function strisciaMarkup(scheda8, indice, scelto) {
   ).join("")}</div>
     <small>${esc(
     parole4.aiutoIcona || t(
-      "Il disegno che esce nella pagina e nella tessera. Sono quelli del catalogo di gdahome: uguali su ogni telefono.",
-      "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone."
+      "Il disegno che esce nella pagina e nella tessera. Sono quelli del catalogo di GdAHome: uguali su ogni telefono.",
+      "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone."
     )
   )}</small>
     <input type="hidden" data-dm-dich-campo="icon" data-dm-dich-riga="${indice}" value="${esc(scelto)}" data-dm-dich-sezione="${esc(nome)}">
@@ -107133,7 +107133,7 @@ function prossimiEventi2(automazioni, adesso, statoDi6 = null, quanti2 = 3) {
 // src/core/automazioni-ha.js
 var pulito60 = (valore3) => String(valore3 ?? "").trim();
 var SEGNO_GDAHOME = "#gdahome";
-var DESCRIZIONE_GDAHOME = `Creata con la plancia gdahome. ${SEGNO_GDAHOME}`;
+var DESCRIZIONE_GDAHOME = `Creata con la plancia GdAHome. ${SEGNO_GDAHOME}`;
 var EVENTO_AVVISA = "gdahome_avvisa";
 var CATEGORIE4 = Object.freeze([
   "luci",
@@ -108444,7 +108444,7 @@ function boxDellaCasa(elenco15) {
 <div class="au-box blu"><div class="au-et">${esc(t("Prossimo", "Next"))}</div>${pross}</div>
 <div class="au-box"><div class="au-et">${esc(t("Ultime eseguite", "Last run"))}</div>${ult}</div></div>`;
 }
-var etichettaDiOrigine = (v) => v?.origine === "gdahome" ? '<span class="ha-orig g">gdahome</span>' : v?.origine === "blueprint" ? '<span class="ha-orig b">Blueprint</span>' : "";
+var etichettaDiOrigine = (v) => v?.origine === "gdahome" ? '<span class="ha-orig g">GdAHome</span>' : v?.origine === "blueprint" ? '<span class="ha-orig b">Blueprint</span>' : "";
 var interruttoreDellaRiga = (v) => `<button type="button" class="aug-int" role="switch" aria-checked="${v.attiva}" data-au-attiva="${esc(v.entity_id)}" aria-label="${esc(
   t(`Accendi o spegni ${v.nome}`, `Turn ${v.nome} on or off`)
 )}"></button>`;
@@ -108481,8 +108481,8 @@ function salvataHtml() {
     t(`Salvata in Home Assistant ✓ «${v.nome}»`, `Saved in Home Assistant ✓ «${v.nome}»`)
   )}<small>${esc(
     t(
-      "La ritrovi in Impostazioni → Automazioni, con l'etichetta gdahome.",
-      "You'll find it in Settings → Automations, labelled gdahome."
+      "La ritrovi in Impostazioni → Automazioni, con l'etichetta GdAHome.",
+      "You'll find it in Settings → Automations, labelled GdAHome."
     )
   )}</small></div>${apriInHA(v.id, t("Apri in HA ↗", "Open in HA ↗"))}</div>`;
 }
@@ -108494,8 +108494,8 @@ function inviteAConvertire() {
     n === 1 ? t("Un'automazione della versione di prova è ferma", "One automation from the trial version is idle") : t(`${n} automazioni della versione di prova sono ferme`, `${n} automations from the trial version are idle`)
   )}</b><small>${esc(
     t(
-      "Adesso le automazioni le esegue Home Assistant: convertile e ripartono, con l'etichetta gdahome.",
-      "Home Assistant runs automations now: convert them and they start again, labelled gdahome."
+      "Adesso le automazioni le esegue Home Assistant: convertile e ripartono, con l'etichetta GdAHome.",
+      "Home Assistant runs automations now: convert them and they start again, labelled GdAHome."
     )
   )}</small></div><button type="button" data-au-converti>${esc(t("Converti", "Convert"))}</button></div>`;
 }
@@ -108503,8 +108503,8 @@ function noteDellaLista() {
   if (state121.assente)
     return `<div class="au-nota">${esc(
       t(
-        "L'elenco e i salvataggi passano dall'add-on gdahome: qui non c'è.",
-        "The list and saving go through the gdahome add-on: it is not here."
+        "L'elenco e i salvataggi passano dall'add-on GdAHome: qui non c'è.",
+        "The list and saving go through the GdAHome add-on: it is not here."
       )
     )}</div>`;
   if (state121.ponte && !puoScrivere())
@@ -108535,8 +108535,8 @@ var INTRO = () => `<p class="au-intro">${esc(
   )
 )} <span class="au-prem">PREMIUM</span></p>`;
 var DOVE_SI_COMPRA = () => t(
-  "Si acquista solo dalle app gdahome su App Store e Google Play. Le app sono in arrivo.",
-  "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon."
+  "Si acquista solo dalle app GdAHome su App Store e Google Play. Le app sono in arrivo.",
+  "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon."
 );
 function velo3(dentro3) {
   return `<div class="au-velato"><div class="au-sotto" aria-hidden="true" inert>${dentro3}</div><div class="au-velo"><span class="st">✨</span><span class="au-prem">${esc(
@@ -108561,7 +108561,7 @@ function apriLoStore() {
     t("PREMIUM · IN ARRIVO", "PREMIUM · COMING SOON")
   )}</span><h3 id="au-store-titolo">${esc(t("Premium arriva con le app", "Premium comes with the apps"))}</h3><p>${esc(
     t("Premium si acquista", "Premium is bought")
-  )} <b>${esc(t("esclusivamente dalle app gdahome", "only from the gdahome apps"))}</b> ${esc(
+  )} <b>${esc(t("esclusivamente dalle app GdAHome", "only from the GdAHome apps"))}</b> ${esc(
     t(
       "su App Store e Google Play. Qui in Home Assistant non si paga nulla e non si inseriscono dati di pagamento.",
       "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details."
@@ -109455,7 +109455,7 @@ function piedeDelSalva(pulita) {
   )}</button>
 <div class="ha-salva-dove"><span aria-hidden="true">🏠</span><span>${esc(t("Si salva in", "It is saved in"))} <b>${esc(
     t("Home Assistant → Impostazioni → Automazioni", "Home Assistant → Settings → Automations")
-  )}</b>, ${esc(t("come", "as"))} <b>“${esc(nome)}”</b>${state121.scheda && state121.scheda.origine !== "gdahome" ? "" : ` ${esc(t("con l'etichetta", "labelled"))} <b>gdahome</b>`}. ${esc(t("La trovi lì e la esegue Home Assistant.", "You'll find it there and Home Assistant runs it."))}</span></div>`;
+  )}</b>, ${esc(t("come", "as"))} <b>“${esc(nome)}”</b>${state121.scheda && state121.scheda.origine !== "gdahome" ? "" : ` ${esc(t("con l'etichetta", "labelled"))} <b>GdAHome</b>`}. ${esc(t("La trovi lì e la esegue Home Assistant.", "You'll find it there and Home Assistant runs it."))}</span></div>`;
 }
 function righeDelRiassunto(righe3) {
   return `<ul>${righe3.map(
@@ -111350,7 +111350,7 @@ function editor2() {
 function premium() {
   return `<div class="dm-gn-card dm-gn-premium"><img src="${esc(logo())}" alt=""><div>
     <div class="dm-gn-nome">${esc(t("Il pianificatore è di gdanav Premium", "The planner is part of gdanav Premium"))}</div>
-    <div class="dm-gn-sotto">${esc(t("Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app gdahome, nella pagina Premium.", "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page."))}</div></div></div>`;
+    <div class="dm-gn-sotto">${esc(t("Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app GdAHome, nella pagina Premium.", "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page."))}</div></div></div>`;
 }
 function corpo() {
   const casa = doc?.getElementById?.("dm-gn");
@@ -116962,8 +116962,8 @@ function cosaCeInCasaMarkup() {
   if (casa.stato === "no")
     return `<div class="dm-people-casa">${titolo3}<small>${esc(
       t(
-        "Non si legge: serve l'add-on gdahome acceso, e chi amministra la casa.",
-        "Can't read it: the gdahome add-on must be running, and you must be an administrator."
+        "Non si legge: serve l'add-on GdAHome acceso, e chi amministra la casa.",
+        "Can't read it: the GdAHome add-on must be running, and you must be an administrator."
       )
     )}</small></div>`;
   const perche4 = PERCHE();
@@ -119603,8 +119603,8 @@ function corpo3({ app }) {
   if (st.assente)
     return avviso(
       t(
-        "Le automazioni di Home Assistant si leggono con l'add-on gdahome: qui non c'è.",
-        "Home Assistant's automations are read through the gdahome add-on: it is not here."
+        "Le automazioni di Home Assistant si leggono con l'add-on GdAHome: qui non c'è.",
+        "Home Assistant's automations are read through the GdAHome add-on: it is not here."
       )
     );
   if (!st.ponte) return `${tessere([])}${avviso(t("Leggo le automazioni di casa…", "Reading the home's automations…"))}`;

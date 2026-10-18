@@ -41,8 +41,8 @@ export default Object.freeze({
   "Pick a trip on the left, or make a new one.": "在左侧选择一个行程，或新建一个。",
   "Pick the destination and time: I will tell you when to leave.":
     "选择目的地和时间：我会告诉你何时出发。",
-  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page.":
-    "在这里规划行程，即可在手机、CarPlay 和 Android Auto 上使用，并提供出发提醒和提前开启车内空调。在 gdahome 应用的 Premium 页面解锁。",
+  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
+    "在这里规划行程，即可在手机、CarPlay 和 Android Auto 上使用，并提供出发提醒和提前开启车内空调。在 GdAHome 应用的 Premium 页面解锁。",
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "在这里规划行程：可在 gdanav 的手机、CarPlay 和 Android Auto 中找到。",
   "Planned trips": "计划的行程",
@@ -4739,8 +4739,8 @@ export default Object.freeze({
   "Kitchen window": "厨房窗",
   "New opening": "新建开口",
   "Save opening": "保存开口",
-  "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.":
-    "显示在页面和磁贴上的图。这些是 gdahome 自己的图：在每台手机上都一样。",
+  "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.":
+    "显示在页面和磁贴上的图。这些是 GdAHome 自己的图：在每台手机上都一样。",
   "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.":
     "家里的开口：门、窗、大门、车库门。每个开口都有自己的一行——触点实体、你想要的名字、图——「开口」页面显示的正是这些，顺序是：绿色关闭、红色打开，最上面是现在有几个开着。",
   "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.":
@@ -5406,8 +5406,8 @@ export default Object.freeze({
   "Warn about open windows": "提醒未关的窗户",
   "Who is home": "谁在家",
   windy: "有风",
-  "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
-    "使用 gdahome Base 时，此面板仍是普通面板。使用 Premium 时，它会变为壁挂平板的显示屏：房间、场景或入口，横屏和竖屏。Premium 在 gdahome 应用中开启。",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.":
+    "使用 GdAHome Base 时，此面板仍是普通面板。使用 Premium 时，它会变为壁挂平板的显示屏：房间、场景或入口，横屏和竖屏。Premium 在 GdAHome 应用中开启。",
   "Wrong code": "密码错误",
   "Yes, go": "是，开始",
   "All lights": "所有灯光",
@@ -5798,8 +5798,8 @@ export default Object.freeze({
   "What comes out of the battery": "从电池流出的",
   "What goes into the battery": "流入电池的",
   "An automation handles it": "由自动化处理",
-  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
-    "无法读取：gdahome 加载项必须在运行，且你需要是管理员。",
+  "Can't read it: the GdAHome add-on must be running, and you must be an administrator.":
+    "无法读取：GdAHome 加载项必须在运行，且你需要是管理员。",
   "Fine tonight": "今晚没关系",
   "Inner door": "室内门",
   "Leave it": "保持原样",
@@ -6415,10 +6415,10 @@ export default Object.freeze({
   "fires the ${evento} event": "触发事件 ${evento}",
   "Home Assistant → Settings → Automations": "Home Assistant → 设置 → 自动化",
   "Home Assistant did not save it: ${no}": "Home Assistant 未保存：${no}",
-  "Home Assistant runs automations now: convert them and they start again, labelled gdahome.": "现在由 Home Assistant 运行自动化：转换后它们会带着 gdahome 标签重新运行。",
+  "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.": "现在由 Home Assistant 运行自动化：转换后它们会带着 GdAHome 标签重新运行。",
   "Home Assistant shuts down": "Home Assistant 关闭",
   "Home Assistant starts": "Home Assistant 启动",
-  "Home Assistant's automations are read through the gdahome add-on: it is not here.": "Home Assistant 的自动化通过 gdahome 加载项读取：这里没有它。",
+  "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant 的自动化通过 GdAHome 加载项读取：这里没有它。",
   "if something holds:": "如果某事成立：",
   "in HA as": "在 HA 中名为",
   "in the config ›": "在配置中 ›",
@@ -6440,8 +6440,8 @@ export default Object.freeze({
   "on certain days": "在某些日子",
   "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.": "在 App Store 和 Google Play 上。在 Home Assistant 中您无需付费，也不会输入任何付款信息。",
   "One automation from the trial version is idle": "试用版中有 1 个自动化已停止",
-  "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.": "仅可在 App Store 和 Google Play 的 gdahome 应用中购买。应用即将推出。",
-  "only from the gdahome apps": "仅在 gdahome 应用中",
+  "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.": "仅可在 App Store 和 Google Play 的 GdAHome 应用中购买。应用即将推出。",
+  "only from the GdAHome apps": "仅在 GdAHome 应用中",
   "Open in HA ↗": "在 HA 中打开 ↗",
   "Open in Home Assistant ↗": "在 Home Assistant 中打开 ↗",
   "otherwise → ${altrimenti}": "否则 → ${altrimenti}",
@@ -6466,7 +6466,7 @@ export default Object.freeze({
   "the home did not answer": "家没有回应",
   "The home that does it by itself: lights, climate, shutters and alerts that start when needed.": "会自己做事的家：在需要时启动的灯光、空调、卷帘和提醒。",
   "The home's automations": "家中的自动化",
-  "The list and saving go through the gdahome add-on: it is not here.": "列表和保存都通过 gdahome 加载项：这里没有它。",
+  "The list and saving go through the GdAHome add-on: it is not here.": "列表和保存都通过 GdAHome 加载项：这里没有它。",
   "the new automation": "新的自动化",
   "then → ${allora}": "然后 → ${allora}",
   "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.": "此自动化位于 Home Assistant 的文件中：您可以在这里开启、关闭和运行它，修改需在那里进行。",
@@ -6477,7 +6477,7 @@ export default Object.freeze({
   "waits a while": "稍等片刻",
   "waits for something to happen": "等待某事发生",
   "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.": "当应用上架后，您可在应用中开启 Premium，这里的自动化会自动解锁。",
-  "You'll find it in Settings → Automations, labelled gdahome.": "您可以在 设置 → 自动化 中找到它，带有 gdahome 标签。",
+  "You'll find it in Settings → Automations, labelled GdAHome.": "您可以在 设置 → 自动化 中找到它，带有 GdAHome 标签。",
   "You'll find it there and Home Assistant runs it.": "您可以在那里找到它，由 Home Assistant 运行。",
   "🚨 Removed": "🚨 已移除",
   "🚨 Saved: the house knows when it goes off": "🚨 已保存：家里会知道何时触发警报",
@@ -6551,7 +6551,7 @@ export default Object.freeze({
   "On a touch or when someone arrives": "触摸时或有人到来时",
   "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
     "iPad 上无法读取房间光线:白天和夜间由太阳或时段决定。",
-  "Only in the gdahome app on Android.": "仅限 Android 上的 gdahome 应用。",
+  "Only in the GdAHome app on Android.": "仅限 Android 上的 GdAHome 应用。",
   "Orientation, theme, weather, rest, night, brightness, PIN": "方向、主题、天气、休眠、夜间、亮度、PIN",
   "presence sensor": "存在传感器",
   "Preview of a day": "一天的预览",
@@ -6565,14 +6565,14 @@ export default Object.freeze({
   "Tablet proximity sensor": "平板的接近传感器",
   "The clock is readable, but it does not light up the room": "能看清时钟,但不会照亮房间",
   "The iPad does not have one.": "iPad 没有。",
-  "The panel sets it, only in the gdahome app on the tablet": "由面板控制,仅限平板上的 gdahome 应用",
+  "The panel sets it, only in the GdAHome app on the tablet": "由面板控制,仅限平板上的 GdAHome 应用",
   "This tablet does not have one.": "这台平板没有。",
   "This tablet has no light sensor: the home's sun applies": "这台平板没有光线传感器:使用家里的太阳",
   "This tablet has one.": "这台平板有。",
   "Time with nobody nearby and no touches": "附近无人且无触摸的时间",
   "When someone is nearby": "有人在附近时",
   "Who is nearby · one source is enough": "谁在附近 · 一个来源就够",
-  "With the tablet's light sensor, only in the gdahome app on Android. Without it, the home's sun applies":
-    "用平板的光线传感器,仅限 Android 上的 gdahome 应用。没有时使用家里的太阳",
+  "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies":
+    "用平板的光线传感器,仅限 Android 上的 GdAHome 应用。没有时使用家里的太阳",
   "With this tablet's light sensor: it is night when the room is dark": "用这台平板的光线传感器:房间暗时为夜间",
 });
