@@ -45,20 +45,17 @@ Widget _conLaBarra(
 );
 
 void main() {
-  test(
-    'sta in testa alle Avanzate, ed e\' pronta',
-    () {
-      expect(Sezione.automazioni.gruppo, GruppoDellaBarra.avanzate);
-      expect(Sezione.automazioni.pronta, isTrue);
-      final avanzate = vociDellaBarra(
-        conLaConsole: true,
-        conIlCruscotto: true,
-        conLaGestione: true,
-        conZigbee: true,
-      ).where((s) => s.gruppo == GruppoDellaBarra.avanzate).toList();
-      expect(avanzate.first, Sezione.automazioni);
-    },
-  );
+  test('sta in testa alle Avanzate, ed e\' pronta', () {
+    expect(Sezione.automazioni.gruppo, GruppoDellaBarra.avanzate);
+    expect(Sezione.automazioni.pronta, isTrue);
+    final avanzate = vociDellaBarra(
+      conLaConsole: true,
+      conIlCruscotto: true,
+      conLaGestione: true,
+      conZigbee: true,
+    ).where((s) => s.gruppo == GruppoDellaBarra.avanzate).toList();
+    expect(avanzate.first, Sezione.automazioni);
+  });
 
   test('c\'e\' anche nella webapp: la pagina e\' della plancia', () {
     expect(Sezione.automazioni.soloNellApp, isFalse);
