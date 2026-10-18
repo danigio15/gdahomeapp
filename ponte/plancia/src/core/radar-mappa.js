@@ -512,6 +512,175 @@ export function indirizzoRitirato(modello) {
   return OSPITI_RITIRATI.some((forma) => forma.test(ospite));
 }
 
+/* ── Windy, che non e' un servizio di tessere ─────────────────────────────
+ *
+ * «Vorrei il radar di Windy.» Windy non pubblica quadratini gratuiti: offre
+ * una mappa da mettere dentro una pagina, `embed.windy.com/embed.html`, che
+ * ha la sua pioggia, la sua legenda e il suo orologio. Non e' un modello da
+ * riempire ma una pagina intera, e allora si mostra com'e', in un riquadro.
+ *
+ * Un riquadro e' una porta piu' larga di un'immagine, e qui la porta e' una
+ * sola: l'indirizzo lo costruisce SEMPRE questo modulo, partendo da un'origine
+ * scritta qui sotto e da tre numeri e una parola — punto, zoom, strato. Un
+ * collegamento incollato non entra mai nel riquadro: se ne leggono i numeri e
+ * si rifa' l'indirizzo da capo. Prima di metterlo nel riquadro lo si controlla
+ * ancora (`cornicePermessa`), cosi' anche un difetto di qui sopra non apre la
+ * plancia a un'altra pagina. */
+export const SERVIZIO_WINDY = "windy";
+export const ORIGINE_WINDY = "https://embed.windy.com";
+const PAGINA_WINDY = "/embed.html";
+/* Le pagine di Windy da cui si sanno leggere i numeri: la seconda e' quella
+ * vecchia del suo generatore, che c'e' ancora nei collegamenti in giro. */
+const PAGINE_WINDY_LETTE = new Set([PAGINA_WINDY, "/embed2.html"]);
+const OSPITI_DEL_SITO_WINDY = new Set(["windy.com", "www.windy.com"]);
+/* Gli strati che hanno senso in un radar della pioggia: il radar vero, e la
+ * pioggia prevista. Un collegamento col vento o con le nuvole diventa radar:
+ * il riquadro si chiama «Radar pioggia». */
+export const STRATI_WINDY = Object.freeze(["radar", "rain"]);
+/* La mappa di Windy va da tutto il mondo alle strade; per la pioggia
+ * intorno a casa servono i livelli di mezzo, da regione a citta'. */
+export const ZOOM_WINDY = Object.freeze({ minimo: 3, massimo: 11, diSerie: 8 });
+/* Cosa serve alla pagina di Windy per funzionare, e niente di piu':
+ * - gli script, senza i quali e' una pagina bianca;
+ * - la sua origine, perche' tiene le sue preferenze nella sua memoria — senza
+ *   e' un'origine opaca e quella memoria la rifiuta. E' un'origine diversa
+ *   dalla plancia, quindi non vede niente della plancia ne' di Home Assistant.
+ * Niente finestre nuove, niente moduli, niente navigazione della pagina di
+ * sopra: un tocco sul suo logo non porta via la plancia. */
+export const SANDBOX_WINDY = "allow-scripts allow-same-origin";
+
+const NUMERO_SCRITTO = /^-?\d{1,3}(\.\d+)?$/;
+
+/** Uno zoom per Windy, dentro i livelli che servono a un radar, o `null`. */
+export function zoomWindy(valore) {
+  const n = numero(valore);
+  if (n === null) return null;
+  return Math.max(ZOOM_WINDY.minimo, Math.min(ZOOM_WINDY.massimo, Math.round(n)));
+}
+
+function stratoWindy(parola) {
+  const detta = stringa(parola).toLowerCase();
+  return STRATI_WINDY.includes(detta) ? detta : "radar";
+}
+
+/**
+ * L'indirizzo della mappa di Windy, costruito da qui: punto, zoom e strato,
+ * piu' le unita' — millimetri, gradi e chilometri orari. Nient'altro della
+ * plancia ci finisce dentro. Vuoto se il punto non e' un punto.
+ */
+export function indirizzoWindy({ lat, lon, zoom, strato } = {}) {
+  const dove = latitudine(lat);
+  const quanto = longitudine(lon);
+  if (dove === null || quanto === null) return "";
+  const overlay = stratoWindy(strato);
+  const parametri = new URLSearchParams({
+    type: "map",
+    location: "coordinates",
+    metricRain: "mm",
+    metricTemp: "°C",
+    metricWind: "km/h",
+    zoom: String(zoomWindy(zoom) ?? ZOOM_WINDY.diSerie),
+    overlay,
+    product: overlay === "radar" ? "radar" : "ecmwf",
+    level: "surface",
+    lat: dove.toFixed(4),
+    lon: quanto.toFixed(4),
+  });
+  return `${ORIGINE_WINDY}${PAGINA_WINDY}?${parametri}`;
+}
+
+/**
+ * Se un indirizzo si puo' mettere nel riquadro: solo la pagina di Windy fatta
+ * per stare dentro le altre, in https, senza credenziali, porte o ancore.
+ * Qualunque altra cosa — un altro sito, `javascript:`, `data:`, un ospite che
+ * somiglia — e' un no.
+ */
+export function cornicePermessa(indirizzo) {
+  const testo = stringa(indirizzo);
+  if (!testo) return false;
+  let url;
+  try {
+    url = new URL(testo);
+  } catch (_errore) {
+    return false;
+  }
+  return (
+    url.protocol === "https:" &&
+    url.origin === ORIGINE_WINDY &&
+    !url.username &&
+    !url.password &&
+    !url.port &&
+    !url.hash &&
+    url.pathname === PAGINA_WINDY
+  );
+}
+
+/**
+ * Un collegamento di Windy incollato, letto: dove guardava, a che zoom e con
+ * quale strato. `null` se non e' di Windy.
+ *
+ * I collegamenti del sito hanno i numeri dopo il punto di domanda —
+ * `windy.com/-Radar-radar?radar,45.46,9.19,8`, `windy.com/?45.46,9.19,8` — a
+ * volte con un'ora in mezzo (`?rain,2026101812,45.4,9.1,8`), che non e' una
+ * latitudine e si salta. Quelli della pagina da incorporare li hanno per
+ * nome: `lat`, `lon`, `zoom`, `overlay`. Un collegamento di Windy senza
+ * numeri e' comunque Windy: il posto lo da' casa.
+ */
+export function daIndirizzoWindy(indirizzo) {
+  const testo = stringa(indirizzo);
+  if (!testo || !/^https?:\/\//i.test(testo)) return null;
+  let url;
+  try {
+    url = new URL(testo);
+  } catch (_errore) {
+    return null;
+  }
+  if (url.username || url.password || url.port) return null;
+  const ospite = url.hostname.toLowerCase();
+  if (ospite === "embed.windy.com") {
+    if (!PAGINE_WINDY_LETTE.has(url.pathname)) return null;
+    const p = url.searchParams;
+    const lat = latitudine(p.get("lat"));
+    const lon = longitudine(p.get("lon"));
+    const insieme = lat !== null && lon !== null;
+    return {
+      lat: insieme ? lat : null,
+      lon: insieme ? lon : null,
+      zoom: zoomWindy(p.get("zoom")),
+      strato: stratoWindy(p.get("overlay")),
+    };
+  }
+  if (!OSPITI_DEL_SITO_WINDY.has(ospite)) return null;
+  let domanda = "";
+  try {
+    domanda = decodeURIComponent(url.search.slice(1));
+  } catch (_errore) {
+    domanda = url.search.slice(1);
+  }
+  const pezzi = domanda.split(/[,&]/).map((pezzo) => pezzo.trim());
+  let lat = null;
+  let lon = null;
+  let zoom = null;
+  for (let i = 0; i + 1 < pezzi.length; i += 1) {
+    if (!NUMERO_SCRITTO.test(pezzi[i]) || !NUMERO_SCRITTO.test(pezzi[i + 1])) continue;
+    const a = latitudine(pezzi[i]);
+    const b = longitudine(pezzi[i + 1]);
+    if (a === null || b === null) continue;
+    lat = a;
+    lon = b;
+    zoom = /^\d{1,2}$/.test(pezzi[i + 2] || "") ? zoomWindy(pezzi[i + 2]) : null;
+    break;
+  }
+  /* Lo strato: la prima parola della domanda, o l'ultima del percorso
+   * (`/-Radar-radar`, `/it/-Pioggia-neve-rain`). */
+  const parola = pezzi.find((pezzo) => /^[a-z]+$/i.test(pezzo));
+  const delPercorso = url.pathname.split(/[/-]/).filter(Boolean).pop() || "";
+  const strato = STRATI_WINDY.includes(stringa(parola).toLowerCase())
+    ? stringa(parola).toLowerCase()
+    : stratoWindy(delPercorso);
+  return { lat, lon, zoom, strato };
+}
+
 /* Quanti fotogrammi si tengono per animare: sei, cioe' l'ultima ora.
  *
  * RainViewer ne pubblica uno ogni dieci minuti e ne tiene un paio d'ore. Sei

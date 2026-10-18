@@ -6688,4 +6688,9 @@ export default Object.freeze({
   "Snow around ${ora}": "${ora}左右有雪",
   "Stops around ${ora}": "${ora}左右停止",
   "This weather gives no forecast": "此天气不提供预报",
+  "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those.": "这是 Windy 链接:雷达会在框中显示 Windy 地图,若链接带有位置和缩放级别则使用它们。Windy 只会收到这些。",
+  "Windy (map in a frame)": "Windy(框中的地图)",
+  "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "无法在这里测试 Windy:它是框里的一个页面,浏览器不会告诉仪表盘它是否已加载。如果框一直是空的,说明此设备无法访问 embed.windy.com。",
+  "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "Windy 会在框中显示自己的地图、降雨和图例,以下方选择的位置为中心。Windy 只会收到位置、缩放级别和图层:框无法读取仪表盘或 Home Assistant。",
+  "Windy weather radar": "Windy 气象雷达",
 });

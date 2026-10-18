@@ -44,3 +44,18 @@ bool eUnQuadroSicuro(Uri quale) {
 
 bool _eQui(String casa) =>
     casa == 'localhost' || casa == '127.0.0.1' || casa == '::1';
+
+/// Una cornice che la plancia puo' tenere dentro di se': solo la mappa di
+/// Windy (`embed.windy.com`), in `https`, senza porte ne' credenziali.
+///
+/// Il radar della plancia puo' mostrare Windy in un riquadro, e il WebView
+/// chiede anche per i riquadri se si puo' andare: su iPhone un riquadro che
+/// non e' della casa veniva aperto nel browser del telefono, e chi apriva il
+/// meteo si trovava fuori dall'app. Vale solo per i riquadri — la pagina
+/// intera resta quella della casa — e solo per questa origine: l'indirizzo
+/// esatto lo costruisce e lo controlla la plancia (`core/radar-mappa.js`).
+bool eUnaCorniceAmmessa(Uri quale) =>
+    quale.scheme == 'https' &&
+    quale.host == 'embed.windy.com' &&
+    !quale.hasPort &&
+    quale.userInfo.isEmpty;

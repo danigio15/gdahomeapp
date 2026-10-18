@@ -24,6 +24,10 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 - **Prova delle notifiche per tutte le voci:** «Prova: mandamela adesso» manda
   un esempio di ogni notifica, con le parole e i tasti di quella vera (i tasti
   di una prova non comandano niente).
+- **Radar pioggia con Windy:** nella tendina del radar c'è «Windy», e si può
+  anche incollare un collegamento di windy.com. La mappa di Windy si vede in
+  un riquadro centrato su casa; a Windy arrivano solo il punto, lo zoom e lo
+  strato, e il riquadro non può leggere né la plancia né Home Assistant.
 - **«Apri la giornata»** apre la giornata anche dalla prova del riepilogo.
 - **Quando partire:** il tasto «Apri il garage» della notifica apre davvero
   il garage.

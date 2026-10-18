@@ -6802,4 +6802,9 @@ export default Object.freeze({
   "Snow around ${ora}": "${ora} civarı kar",
   "Stops around ${ora}": "${ora} civarı durur",
   "This weather gives no forecast": "Bu hava durumu tahmin vermiyor",
+  "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those.": "Bu bir Windy bağlantısı: radar, Windy haritasını bir çerçeve içinde, varsa bağlantıdaki nokta ve yakınlaştırmayla gösterir. Windy yalnızca bunları alır.",
+  "Windy (map in a frame)": "Windy (çerçevede harita)",
+  "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "Windy buradan denenemez: bir çerçevenin içindeki bir sayfadır ve tarayıcı panoya gelip gelmediğini söylemez. Çerçeve boş kalırsa bu cihaz embed.windy.com adresine ulaşamıyordur.",
+  "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "Windy, aşağıda seçilen yere ortalanmış kendi haritası, yağmuru ve açıklamasıyla bir çerçevede görünür. Windy yalnızca noktayı, yakınlaştırmayı ve katmanı alır: çerçeve ne panoyu ne de Home Assistant'ı okuyabilir.",
+  "Windy weather radar": "Windy hava radarı",
 });
