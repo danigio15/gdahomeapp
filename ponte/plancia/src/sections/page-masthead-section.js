@@ -983,6 +983,10 @@ function installStyles() {
       overflow:hidden!important
     }
     html[data-theme="dark"] .dm-page-mast{box-shadow:0 18px 44px rgba(0,0,0,.42)!important}
+    /* Il titolo delle Prese e' color ardesia (#475569): sul chiaro si legge,
+     * sul fondo scuro della testata stava a 2,3 di contrasto, un'ombra.
+     * Al buio prende l'ardesia chiara. */
+    html[data-theme="dark"] .dm-page-mast[data-dm-page-mast="page-prese"] .dm-page-mast-title{color:#cbd5e1!important}
     .dm-page-mast::after{
       content:""!important;position:absolute!important;inset:auto 0 0 0!important;height:2px!important;
       background:linear-gradient(90deg,

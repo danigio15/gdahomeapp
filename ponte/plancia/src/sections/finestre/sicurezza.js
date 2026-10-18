@@ -36,6 +36,7 @@ import {
   segnoDelTipo,
 } from "../../core/rilevamenti-telecamera.js";
 import { getLocale } from "../../core/i18n.js";
+import { attributiPerLeUltime } from "../ultime-rilevazioni-section.js";
 
 export const FINESTRE_SICUREZZA = Object.freeze([
   "sicurezza",
@@ -460,9 +461,19 @@ function disegnaVarchi(widget) {
           : t("tutto chiuso", "all closed"),
       )}</b>${sotto ? `<span class="dm-f-${k}-sotto">${esc(sotto)}</span>` : ""}</div>
     </div>`;
+  /* Ogni riga apre le sue ultime 24 ore (#269), come la carta della pagina
+   * Varchi: lo stesso tocco, lo stesso foglio, sopra questa finestra. */
+  const ultime = (riga) =>
+    attributiPerLeUltime({
+      entity: riga.entity,
+      famiglia: "varco",
+      nome: riga.name,
+      glifo: riga.glyph,
+      tipo: riga.tipo,
+    });
   const aperto = (riga) => {
     const quanto = durata(riga.da);
-    return `<div class="dm-f-${k}-aperto">
+    return `<div class="dm-f-${k}-aperto"${ultime(riga)}>
         <span class="dm-f-${k}-ic">${icona(riga, "door")}</span>
         <div class="dm-f-${k}-nome"><b>${esc(riga.name)}</b><span>${esc(parolaDelTipo2(riga))} · ${esc(
           t("aperta", "open"),
@@ -474,13 +485,13 @@ function disegnaVarchi(widget) {
         }
       </div>`;
   };
-  const chiuso = (riga) => `<div class="dm-f-${k}-ch"${riga.escluso ? ' data-escluso="true"' : ""}>
+  const chiuso = (riga) => `<div class="dm-f-${k}-ch"${riga.escluso ? ' data-escluso="true"' : ""}${ultime(riga)}>
       <span class="dm-f-${k}-ic">${icona(riga, "door")}</span><b>${esc(riga.name)}</b>${
         riga.escluso ? `<small>${esc(t("esclusa", "bypassed"))}</small>` : ""
       }<i aria-hidden="true"></i></div>`;
   const muto = (riga) => {
     const quanto = durata(riga.da);
-    return `<div class="dm-f-${k}-muto"><span class="dm-f-${k}-ic">${icona(riga, "door")}</span><b>${esc(
+    return `<div class="dm-f-${k}-muto"${ultime(riga)}><span class="dm-f-${k}-ic">${icona(riga, "door")}</span><b>${esc(
       riga.name,
     )}</b>${quanto ? `<small>${esc(t("da", "for"))} ${esc(quanto)}</small>` : ""}</div>`;
   };
@@ -550,6 +561,9 @@ function disegnaPresenza(widget) {
       da,
       stabile: quelle.some((riga) => riga.stabile),
       glyph: (attive[0] || posto.righe[0])?.glyph || "",
+      /* Il rilevatore che il foglio delle ultime 24 ore racconta (#269): quello
+       * che rileva adesso, o il primo del posto. */
+      entity: clean((attive[0] || quelle[0] || posto.righe[0])?.entity),
     };
   });
   const occupati = letti.filter((posto) => posto.stato === "attivo");
@@ -578,6 +592,12 @@ function disegnaPresenza(widget) {
         )}</b></div>
         ${frase ? `<p>${esc(frase)}</p>` : ""}</div>
     </div>`;
+  /* Ogni stanza apre le ultime 24 ore del suo rilevatore (#269). Il nome e'
+   * quello della stanza, che e' quello che si legge sulla piastrella. */
+  const ultimeDelPosto = (posto) =>
+    posto.entity
+      ? attributiPerLeUltime({ entity: posto.entity, famiglia: "movimento", nome: posto.nome })
+      : "";
   const piastrella = (posto) => {
     const quanto = durata(posto.da);
     const testo =
@@ -590,7 +610,7 @@ function disegnaPresenza(widget) {
         : quanto
           ? `${t("Libero da", "Free for")} ${quanto}`
           : t("Libero", "Free");
-    return `<div class="dm-f-${k}-st" data-on="${posto.stato === "attivo" ? "true" : "false"}">
+    return `<div class="dm-f-${k}-st" data-on="${posto.stato === "attivo" ? "true" : "false"}"${ultimeDelPosto(posto)}>
         <span class="dm-f-${k}-ic" aria-hidden="true">${posto.glyph}</span>
         <b>${esc(posto.nome)}</b>
         <span class="dm-f-${k}-come">${posto.stato === "attivo" ? '<i aria-hidden="true"></i>' : ""}${esc(testo)}</span>
@@ -598,7 +618,7 @@ function disegnaPresenza(widget) {
   };
   const muto = (posto) => {
     const quanto = durata(posto.da);
-    return `<div class="dm-f-${k}-muto"><span class="dm-f-${k}-ic" aria-hidden="true">${posto.glyph}</span><b>${esc(
+    return `<div class="dm-f-${k}-muto"${ultimeDelPosto(posto)}><span class="dm-f-${k}-ic" aria-hidden="true">${posto.glyph}</span><b>${esc(
       posto.nome,
     )}</b>${quanto ? `<small>${esc(t("da", "for"))} ${esc(quanto)}</small>` : ""}</div>`;
   };

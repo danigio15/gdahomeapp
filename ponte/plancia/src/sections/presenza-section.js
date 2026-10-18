@@ -41,6 +41,7 @@ import {
   segnaContenuto,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
+import { attributiPerLeUltime } from "./ultime-rilevazioni-section.js";
 
 const KEY = "__DASHBOARDMODERN_PRESENZA__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "", sveglia: 0 });
@@ -199,8 +200,12 @@ function daQuandoMarkup(riga) {
   return `<small>${esc(daQuandoTesto(riga))}</small>`;
 }
 
+/* Toccata, la carta apre le sue ultime 24 ore (#269): quando c'e' stato
+ * movimento, la prima rilevazione del mattino, la quiete della notte. */
 function rigaMarkup(riga) {
-  return `<article class="dm-presenza" data-presenza="${esc(riga.stato || "muto")}">
+  return `<article class="dm-presenza" data-presenza="${esc(riga.stato || "muto")}"${attributiPerLeUltime(
+    { entity: riga.entity, famiglia: "movimento", nome: riga.name, glifo: riga.glifo },
+  )}>
     <span class="dm-presenza-ic" aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 30, ripiego: "motion" })}</span>
     <div class="dm-presenza-testo">
       <strong>${esc(riga.name)}</strong>

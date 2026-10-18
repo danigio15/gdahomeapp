@@ -10,6 +10,27 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.1
+
+- **Riquadri con l'immagine:** i Dispositivi della Home, le prese e i posti
+  del pannello a muro possono avere un'immagine al posto dell'icona: una
+  foto tua o un disegno scelto da un catalogo di 151 (cucina, bagno, clima,
+  giardino, garage, feste e tanto altro), con la ricerca, lo zoom e il punto
+  da inquadrare. Il nome resta leggibile sopra, e l'interruttore comanda come
+  sempre. Le foto restano in casa, nell'add-on.
+- **Ultime rilevazioni:** varchi, presenza e sicurezza aprono le ultime 24 ore
+  col filo del tempo: chi si è aperto, quando e per quanto.
+- **Automazioni:** i gruppi partono chiusi, con «Espandi tutto» e «Ritrai
+  tutto»; nei riassunti ci sono i nomi dei dispositivi.
+- **Tema scuro:** i Dispositivi accesi senza immagine ora si leggono, e il
+  titolo della pagina Prese anche.
+- **Correzioni:** i Dispositivi della Home compaiono subito anche su un
+  telefono nuovo; la presa con l'immagine sul computer non prende più tutta
+  la riga; gli orari delle ultime 24 ore non si sovrappongono; la potenza
+  della wallbox non è più tagliata.
+- **gdanav in auto:** la freccia segue l'auto in modo continuo, niente più
+  «non risponde», e senza percorso la mappa è in 3D e più vicina.
+
 ## 1.16.0
 
 - **La tua giornata (Premium):** il riepilogo della sera ha la scheda nuova

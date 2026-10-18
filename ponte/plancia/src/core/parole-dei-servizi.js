@@ -15,8 +15,20 @@
 
 const pulito = (x) => (x === undefined || x === null ? "" : String(x).trim());
 
-/** «light.cabina_armadio» → «cabina armadio»: mai l'id cosi' com'e'. */
+/**
+ * Un id che nessuno sa leggere: quello di un dispositivo o di una voce del
+ * registro delle entita' (trentadue cifre esadecimali, «eddd506f61c3e0…»), o
+ * un UUID. Un'automazione fatta col «Dispositivo» di Home Assistant li porta
+ * al posto degli entity_id, e a chi abita non dicono niente.
+ */
+export function eUnIdCrudo(id) {
+  const s = pulito(id);
+  return /^[0-9a-f]{16,}$/i.test(s) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-/i.test(s);
+}
+
+/** «light.cabina_armadio» → «cabina armadio»: mai l'id cosi' com'e'. Un id crudo → «». */
 export function nomeDaId(id) {
+  if (eUnIdCrudo(id)) return "";
   const resto = pulito(id).split(".").slice(1).join(".") || pulito(id);
   return resto.replace(/[._]+/g, " ").replace(/\s+/g, " ").trim();
 }
@@ -299,4 +311,201 @@ function servizioCrudo(servizio, { chi = "", dati = {} } = {}) {
   return chi
     ? coppia(`esegue ${detto} su ${chi}`, `runs ${detto} on ${chi}`)
     : coppia(`esegue ${detto}`, `runs ${detto}`);
+}
+
+/* ── i dispositivi ──────────────────────────────────────────────────────── *
+ *
+ * Un innesco, una condizione o un'azione fatti col «Dispositivo» di Home
+ * Assistant non hanno un entity_id da dire: hanno un `device_id`, spesso un
+ * `entity_id` che e' la voce del registro (un id crudo), e un `type` che dice
+ * cosa succede («turned_on», «remote_button_short_press»). Qui il `type`
+ * diventa un verbo; il nome lo passa chi chiama, gia' risolto, e se non c'e'
+ * si dice «un dispositivo». */
+
+/* «Lavatrice si accende»: il soggetto e il verbo. */
+const DEL_DISPOSITIVO = {
+  turned_on: DIVENTA.on,
+  turned_off: DIVENTA.off,
+  opened: DIVENTA.open,
+  closed: DIVENTA.closed,
+  not_opened: DIVENTA.closed,
+  opening: ["inizia ad aprirsi", "starts opening"],
+  closing: ["inizia a chiudersi", "starts closing"],
+  locked: DIVENTA.locked,
+  unlocked: ["si sblocca", "unlocks"],
+  triggered: DIVENTA.triggered,
+  armed_away: DIVENTA.armed_away,
+  armed_home: DIVENTA.armed_home,
+  armed_night: DIVENTA.armed_night,
+  armed_vacation: DIVENTA.armed_vacation,
+  disarmed: DIVENTA.disarmed,
+  playing: DIVENTA.playing,
+  paused: DIVENTA.paused,
+  idle: ["si ferma", "goes idle"],
+  cleaning: DIVENTA.cleaning,
+  docked: DIVENTA.docked,
+  connected: ["si collega", "connects"],
+  not_connected: ["si scollega", "disconnects"],
+  bat_low: ["ha la batteria scarica", "runs low on battery"],
+  smoke: ["sente del fumo", "detects smoke"],
+  gas: ["sente del gas", "detects gas"],
+  moist: ["sente dell'acqua", "detects water"],
+  problem: ["ha un problema", "has a problem"],
+  changed_states: ["cambia stato", "changes state"],
+  hvac_mode_changed: ["cambia modalità", "changes mode"],
+  enters: ["entra in una zona", "enters a zone"],
+  leaves: ["esce da una zona", "leaves a zone"],
+};
+
+const MOVIMENTO_SI = ["motion", "occupied", "present"];
+const MOVIMENTO_NO = ["no_motion", "not_occupied", "not_present"];
+
+/* Un pulsante: «remote_button_short_press», «button_double_press», «pressed». */
+const ePulsante = (tipo) =>
+  /press|click|(^|_)(tap|hold|held|release|released|button)(_|$)/.test(tipo);
+
+/* Il numero del tasto, se il `subtype` lo dice («button_2», «2»): niente altro. */
+function tastoDi(subtype) {
+  const m = /^(?:button_?|b)?(\d{1,2})$/i.exec(pulito(subtype));
+  return m ? m[1] : "";
+}
+
+/* Una soglia scritta (anche 0), o «». */
+const soglia = (x) => (x === undefined || x === null || x === "" ? "" : numero(x));
+const sogliaEn = (x) => (x === undefined || x === null || x === "" ? "" : numeroEn(x));
+
+/**
+ * Un innesco «device», `{it, en}` senza il «Quando» davanti («Lavatrice si
+ * accende», «si preme il pulsante Interruttore cucina»), o `null` se il suo
+ * `type` non si sa dire: chi chiama allora dice solo da chi viene. `chi` e'
+ * un nome gia' detto, mai un id.
+ */
+export function innescoDelDispositivoInParole(innesco, chi = "") {
+  const tipo = pulito(innesco?.type).toLowerCase();
+  const nome = pulito(chi);
+  const it = nome || "un dispositivo";
+  const en = nome || "a device";
+  const sopra = soglia(innesco?.above);
+  const sotto = soglia(innesco?.below);
+  if (sopra && sotto)
+    return coppia(
+      `${it} sta fra ${sopra} e ${sotto}`,
+      `${en} is between ${sogliaEn(innesco.above)} and ${sogliaEn(innesco.below)}`,
+    );
+  if (sopra) return coppia(`${it} supera ${sopra}`, `${en} goes above ${sogliaEn(innesco.above)}`);
+  if (sotto)
+    return coppia(`${it} scende sotto ${sotto}`, `${en} drops below ${sogliaEn(innesco.below)}`);
+  if (!tipo) return null;
+  if (MOVIMENTO_SI.includes(tipo))
+    return coppia(`c'è movimento in ${it}`, `there's motion in ${en}`);
+  if (MOVIMENTO_NO.includes(tipo))
+    return coppia(`non c'è più movimento in ${it}`, `motion stops in ${en}`);
+  const noto = DEL_DISPOSITIVO[tipo];
+  if (noto) return coppia(`${it} ${noto[0]}`, `${en} ${noto[1]}`);
+  if (ePulsante(tipo)) {
+    const tasto = tastoDi(innesco?.subtype);
+    const qualeIt = `${nome ? `il pulsante ${nome}` : "un pulsante"}${tasto ? ` (tasto ${tasto})` : ""}`;
+    const qualeEn = `${nome || "a button"}${tasto ? ` (button ${tasto})` : ""}`;
+    if (/double/.test(tipo))
+      return coppia(`si preme due volte ${qualeIt}`, `${qualeEn} is pressed twice`);
+    if (/triple/.test(tipo))
+      return coppia(`si preme tre volte ${qualeIt}`, `${qualeEn} is pressed three times`);
+    if (/long|hold|held/.test(tipo))
+      return coppia(`si tiene premuto ${qualeIt}`, `${qualeEn} is held down`);
+    if (/release/.test(tipo)) return coppia(`si lascia ${qualeIt}`, `${qualeEn} is released`);
+    return coppia(`si preme ${qualeIt}`, `${qualeEn} is pressed`);
+  }
+  return null;
+}
+
+/* I `type` delle condizioni «device»: gli stati, al presente. */
+const STATO_DEL_DISPOSITIVO = {
+  is_on: "on",
+  is_off: "off",
+  is_open: "open",
+  is_not_open: "closed",
+  is_closed: "closed",
+  is_locked: "locked",
+  is_unlocked: "unlocked",
+  is_home: "home",
+  is_not_home: "not_home",
+  is_triggered: "triggered",
+  is_disarmed: "disarmed",
+  is_armed_away: "armed_away",
+  is_armed_home: "armed_home",
+  is_armed_night: "armed_night",
+  is_armed_vacation: "armed_vacation",
+  is_playing: "playing",
+  is_paused: "paused",
+  is_idle: "idle",
+  is_cleaning: "cleaning",
+  is_docked: "docked",
+};
+
+/**
+ * Una condizione «device», `{it, en}` («Lavatrice è acceso»), o `null` se il
+ * suo `type` non si sa dire.
+ */
+export function condizioneDelDispositivoInParole(condizione, chi = "") {
+  const tipo = pulito(condizione?.type).toLowerCase();
+  const nome = pulito(chi);
+  const it = nome || "un dispositivo";
+  const en = nome || "a device";
+  const sopra = soglia(condizione?.above);
+  const sotto = soglia(condizione?.below);
+  if (sopra) return coppia(`${it} sopra ${sopra}`, `${en} above ${sogliaEn(condizione.above)}`);
+  if (sotto) return coppia(`${it} sotto ${sotto}`, `${en} below ${sogliaEn(condizione.below)}`);
+  const stato = STATO_DEL_DISPOSITIVO[tipo];
+  if (stato) {
+    const a = statoInParole(stato);
+    return coppia(`${it} è ${a.it}`, `${en} is ${a.en}`);
+  }
+  if (tipo === "is_motion") return coppia(`c'è movimento in ${it}`, `there's motion in ${en}`);
+  if (tipo === "is_no_motion") return coppia(`non c'è movimento in ${it}`, `no motion in ${en}`);
+  return null;
+}
+
+/* Il `type` di un'azione «device» e il servizio che vuol dire, per dominio. */
+const AZIONI_DEL_DISPOSITIVO = {
+  turn_on: () => "turn_on",
+  turn_off: () => "turn_off",
+  toggle: () => "toggle",
+  open: (d) => (d === "cover" ? "open_cover" : d === "valve" ? "open_valve" : "open"),
+  close: (d) => (d === "cover" ? "close_cover" : d === "valve" ? "close_valve" : "close"),
+  stop: (d) => (d === "cover" ? "stop_cover" : d === "valve" ? "stop_valve" : "stop"),
+  lock: () => "lock",
+  unlock: () => "unlock",
+  press: () => "press",
+  arm_away: () => "alarm_arm_away",
+  arm_home: () => "alarm_arm_home",
+  arm_night: () => "alarm_arm_night",
+  arm_vacation: () => "alarm_arm_vacation",
+  disarm: () => "alarm_disarm",
+  trigger: () => "alarm_trigger",
+  clean: () => "start",
+  dock: () => "return_to_base",
+};
+
+/**
+ * Un'azione «device», `{it, en}` col suo verbo («spegni Lavatrice», «manda
+ * una notifica a Telefono»), o `null` se il suo `type` non si sa dire.
+ */
+export function azioneDelDispositivoInParole(azione, chi = "") {
+  const tipo = pulito(azione?.type).toLowerCase();
+  const dominio = pulito(azione?.domain).toLowerCase();
+  const nome = pulito(chi);
+  if (tipo === "notify" || dominio === "mobile_app")
+    return nome
+      ? coppia(`manda una notifica a ${nome}`, `sends a notification to ${nome}`)
+      : coppia("manda una notifica", "sends a notification");
+  const servizio = AZIONI_DEL_DISPOSITIVO[tipo];
+  if (!servizio || !dominio) return null;
+  if (!nome && !QUALI[dominio]) {
+    const detto = servizioCrudo(`${dominio}.${servizio(dominio)}`, { chi: SEGNAPOSTO });
+    return coppia(
+      detto.it.replace(SEGNAPOSTO, "un dispositivo"),
+      detto.en.replace(SEGNAPOSTO, "a device"),
+    );
+  }
+  return servizioInParole(`${dominio}.${servizio(dominio)}`, { chi: nome });
 }

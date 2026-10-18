@@ -103,7 +103,10 @@ async function blobBase64(blob) {
 // WebSocket sforandone il limite di messaggio.
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
-export async function storeImage(blob, name) {
+/* `cartella` e' una delle cartelle che il ponte e l'integrazione conoscono
+ * (oggi `riquadri`, per le foto dei riquadri): non si scrive a mano, si
+ * sceglie. Senza, la foto va dove e' sempre andata. */
+export async function storeImage(blob, name, { cartella = "" } = {}) {
   if (Number(blob?.size) > MAX_UPLOAD_BYTES)
     throw new Error(t("la foto supera i 10 MB", "the photo exceeds 10 MB"));
   try {
@@ -111,6 +114,7 @@ export async function storeImage(blob, name) {
       {
         type: "dashboardmodern/www/upload",
         filename: clean(name) || "foto.png",
+        ...(cartella ? { cartella } : {}),
         data: await blobBase64(blob),
       },
       30000,

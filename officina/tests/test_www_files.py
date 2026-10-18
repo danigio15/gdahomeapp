@@ -160,6 +160,28 @@ def test_upload_un_nome_ostile_resta_nella_cartella(tmp_path: Path) -> None:
     assert not (tmp_path.parent / "fuori.png").exists()
 
 
+def test_upload_le_foto_dei_riquadri_vanno_in_riquadri(tmp_path: Path) -> None:
+    from custom_components.dashboardmodern.www_files import save_www_upload
+
+    esito = save_www_upload(str(tmp_path), "Terrazza.png", PNG, "riquadri")
+    assert esito == {"path": "/local/dashboardmodern/riquadri/terrazza.png"}
+    assert (tmp_path / "dashboardmodern" / "riquadri" / "terrazza.png").read_bytes() == PNG
+    seconda = save_www_upload(str(tmp_path), "terrazza.png", PNG, "riquadri")
+    assert seconda == {"path": "/local/dashboardmodern/riquadri/terrazza-2.png"}
+
+
+@pytest.mark.parametrize(
+    "cartella",
+    ["..", "../..", "../fuori", "riquadri/..", "/etc", "riquadri/sotto", "Riquadri", "x"],
+)
+def test_upload_una_cartella_fuori_elenco_non_si_scrive(tmp_path: Path, cartella: str) -> None:
+    from custom_components.dashboardmodern.www_files import save_www_upload
+
+    assert save_www_upload(str(tmp_path), "x.png", PNG, cartella) is None
+    assert not (tmp_path / "dashboardmodern").exists()
+    assert not (tmp_path.parent / "x.png").exists()
+
+
 def test_upload_un_nome_fuori_alfabeto_tiene_la_sua_estensione(tmp_path: Path) -> None:
     from custom_components.dashboardmodern.www_files import save_www_upload
 

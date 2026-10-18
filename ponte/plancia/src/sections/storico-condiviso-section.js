@@ -80,7 +80,7 @@ export function serieDi(entity, ore = 3) {
         return righe;
       })
       .catch(() => {
-        state.cache.set(chiave, { righe: [], quando: Date.now(), fallita: true });
+        state.cache.set(chiave, { righe: [], quando: Date.now(), fallita: true, errore: true });
         return [];
       })
       .finally(() => {
@@ -95,6 +95,30 @@ export function serieDi(entity, ore = 3) {
       }),
   );
   return avuta?.righe ?? null;
+}
+
+/* La chiave in memoria di una domanda: la stessa che usa `serieDi`. */
+function chiaveDi(entity, ore) {
+  const intervallo = intervalloDa(ore) || intervalloDa(3);
+  return `${clean(entity)}@${chiaveDellIntervallo(intervallo)}`;
+}
+
+/**
+ * Se l'ultima domanda per questa entita' e' finita in errore — il Recorder non
+ * ha risposto, il socket non c'era — e non in una storia vuota.
+ *
+ * `serieDi` torna `[]` in tutti e due i casi, ed e' giusto per chi disegna una
+ * curva: non c'e' niente da disegnare. Il foglio «Ultime 24 ore» invece deve
+ * dire quale dei due (#269): «nessun cambio in questo periodo» e «lo storico
+ * non e' arrivato» sono due notizie diverse, e solo la seconda si riprova.
+ */
+export function storicoFallito(entity, ore = 3) {
+  return state.cache.get(chiaveDi(entity, ore))?.errore === true;
+}
+
+/** Dimentica la risposta tenuta in memoria: la prossima `serieDi` richiede. */
+export function dimenticaLoStorico(entity, ore = 3) {
+  state.cache.delete(chiaveDi(entity, ore));
 }
 
 /** Chiamami quando arriva una risposta. Torna la funzione per disiscriversi. */

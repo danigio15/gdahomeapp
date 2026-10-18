@@ -7,7 +7,14 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { BASE_DELLE_FOTO, BASE_DI_CASA, Foto, FOTO_MASSIMA, nomePulito } from "../src/foto.js";
+import {
+  BASE_DELLE_FOTO,
+  BASE_DI_CASA,
+  CARTELLE_DEI_CARICAMENTI,
+  Foto,
+  FOTO_MASSIMA,
+  nomePulito,
+} from "../src/foto.js";
 
 const PNG = Buffer.concat([Buffer.from("\x89PNG\r\n\x1a\n", "latin1"), Buffer.alloc(16, 1)]);
 const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(16, 2)]);
@@ -91,6 +98,55 @@ test("si rifiuta quello che non e' un'immagine, o e' troppo grande, o e' un SVG"
   );
   assert.equal(foto.carica("documento.pdf", PNG), null, "l'estensione conta");
   assert.equal(foto.carica("x.png", "non un buffer"), null);
+  via();
+});
+
+test("le foto dei riquadri vanno nella loro cartella, e si servono da li'", () => {
+  const { foto, via } = cartella();
+  const messa = foto.carica("Terrazza.webp", WEBP, { cartella: "riquadri" });
+  assert.deepEqual(messa, { path: `${BASE_DELLE_FOTO}/dashboardmodern/riquadri/terrazza.webp` });
+  const seconda = foto.carica("terrazza.webp", WEBP, { cartella: "riquadri" });
+  assert.deepEqual(seconda, {
+    path: `${BASE_DELLE_FOTO}/dashboardmodern/riquadri/terrazza-2.webp`,
+  });
+  assert.equal(foto.leggi(messa.path).stato, 200);
+  assert.equal(foto.leggi(messa.path).tipo, "image/webp");
+  assert.deepEqual(
+    foto.elenca("dashboardmodern/riquadri").images.map((una) => una.name),
+    ["terrazza-2.webp", "terrazza.webp"],
+  );
+  /* Senza cartella, dove e' sempre andata. */
+  assert.deepEqual(foto.carica("auto.png", PNG, {}), {
+    path: `${BASE_DELLE_FOTO}/dashboardmodern/auto.png`,
+  });
+  assert.equal(CARTELLE_DEI_CARICAMENTI.includes("riquadri"), true);
+  via();
+});
+
+test("una cartella fuori elenco non si scrive: niente ../, niente percorsi, niente nomi nuovi", () => {
+  const { foto, via } = cartella();
+  for (const cattiva of [
+    "..",
+    "../..",
+    "../fuori",
+    "riquadri/..",
+    "riquadri/../..",
+    "/etc",
+    "/",
+    "riquadri/sotto",
+    "Riquadri",
+    "riquadri ",
+    "riquadri\0",
+    "..\\..",
+    "auto",
+    "dashboardmodern",
+  ]) {
+    assert.equal(foto.carica("x.png", PNG, { cartella: cattiva }), null, cattiva);
+  }
+  /* Niente e' finito da nessuna parte: la cartella dei caricamenti non e'
+   * nemmeno nata, e fuori da www non c'e' niente di nuovo. */
+  assert.deepEqual(foto.elenca().folders, []);
+  assert.equal(foto.leggi(`${BASE_DELLE_FOTO}/fuori/x.png`).stato, 404);
   via();
 });
 

@@ -19,7 +19,9 @@
  */
 
 import {
+  azioneDelDispositivoInParole,
   diventaInParole,
+  innescoDelDispositivoInParole,
   inParole,
   nomeDaId,
   servizioInParole,
@@ -29,13 +31,21 @@ const elenco = (valore) => (Array.isArray(valore) ? valore : valore ? [valore] :
 
 const primo = (valore) => elenco(valore)[0];
 
-/* Come si chiama un'entita' (o la prima di un elenco). */
+/* Come si chiama un'entita' (o la prima di un elenco). Un id crudo che
+ * `nomeDi` non sa dire resta senza nome: mai le cifre. */
 function nomeDelle(entita, nomeDi) {
   const ids = elenco(entita).map(String).filter(Boolean);
   if (!ids.length) return "";
   const uno = nomeDi(ids[0]) || nomeDaId(ids[0]);
+  if (!uno) return "";
   return ids.length > 1 ? `${uno} +${ids.length - 1}` : uno;
 }
+
+/* Il nome di cio' di cui parla un pezzo «device»: la sua entita' (anche
+ * scritta come voce del registro, che `nomeDi` sa risolvere), se no il
+ * dispositivo. «» se non si sa: meglio «un dispositivo» che delle cifre. */
+const nomeDelDispositivo = (pezzo, { nomeDi, dispositivoDi }) =>
+  nomeDelle(pezzo?.entity_id, nomeDi) || String(dispositivoDi(pezzo?.device_id) || "").trim();
 
 const DOMINIO = (id) => String(id || "").split(".")[0];
 
@@ -62,7 +72,7 @@ const orario = (valore) => {
 };
 
 /* Il primo innesco, in parole. `{it, en}`. */
-function innesco(t, { nomeDi, classeDi }) {
+function innesco(t, { nomeDi, classeDi, dispositivoDi }) {
   const tipo = String(t?.trigger || t?.platform || "");
   const chi = nomeDelle(t?.entity_id, nomeDi);
   const classe = classeDi(primo(t?.entity_id));
@@ -161,10 +171,14 @@ function innesco(t, { nomeDi, classeDi }) {
       };
     case "template":
       return { it: "Quando una condizione diventa vera", en: "When a condition becomes true" };
-    case "device":
-      return chi
-        ? { it: `Da un dispositivo (${chi})`, en: `From a device (${chi})` }
+    case "device": {
+      const nome = nomeDelDispositivo(t, { nomeDi, dispositivoDi });
+      const detto = innescoDelDispositivoInParole(t, nome);
+      if (detto) return { it: `Quando ${detto.it}`, en: `When ${detto.en}` };
+      return nome
+        ? { it: `Da ${nome}`, en: `From ${nome}` }
         : { it: "Da un dispositivo", en: "From a device" };
+    }
     case "webhook":
       return { it: "Da un webhook", en: "From a webhook" };
     case "mqtt":
@@ -197,8 +211,10 @@ function nomeDelBlueprint(percorso) {
 const conta = (n, uno, molti) => `${n} ${n === 1 ? uno : molti}`;
 
 /* Un'azione in parole, `{it, en}`, o `null` se non si sa dire in breve. */
-function azione(a, { nomeDi }) {
+function azione(a, { nomeDi, dispositivoDi }) {
   if (!a || typeof a !== "object") return null;
+  if (a.device_id && !(a.action ?? a.service))
+    return azioneDelDispositivoInParole(a, nomeDelDispositivo(a, { nomeDi, dispositivoDi }));
   const servizio = a.action ?? a.service;
   if (typeof servizio === "string" && servizio.includes(".")) {
     const entita = [
@@ -237,9 +253,14 @@ function primaAzione(azioni, aiuti) {
 
 /**
  * La riga di un'automazione, `{it, en}`, o `null` senza configurazione.
- * `nomeDi(entita)` → nome leggibile; `classeDi(entita)` → device_class.
+ * `nomeDi(entita)` → nome leggibile (anche di una voce del registro delle
+ * entita', l'id crudo che portano i pezzi «device»); `classeDi(entita)` →
+ * device_class; `dispositivoDi(device_id)` → il nome del dispositivo.
  */
-export function riassuntoDellAutomazione(config, { nomeDi = () => "", classeDi = () => "" } = {}) {
+export function riassuntoDellAutomazione(
+  config,
+  { nomeDi = () => "", classeDi = () => "", dispositivoDi = () => "" } = {},
+) {
   if (!config || typeof config !== "object") return null;
   if (config.use_blueprint) {
     const nome = nomeDelBlueprint(config.use_blueprint.path);
@@ -253,7 +274,7 @@ export function riassuntoDellAutomazione(config, { nomeDi = () => "", classeDi =
   const pezziIt = [];
   const pezziEn = [];
   if (inneschi.length) {
-    const quando = innesco(inneschi[0], { nomeDi, classeDi });
+    const quando = innesco(inneschi[0], { nomeDi, classeDi, dispositivoDi });
     const altri = inneschi.length - 1;
     pezziIt.push(altri ? `${quando.it} (e ${conta(altri, "altro", "altri")})` : quando.it);
     pezziEn.push(altri ? `${quando.en} (and ${altri} more)` : quando.en);
@@ -265,7 +286,7 @@ export function riassuntoDellAutomazione(config, { nomeDi = () => "", classeDi =
     pezziIt.push(conta(condizioni.length, "condizione", "condizioni"));
     pezziEn.push(conta(condizioni.length, "condition", "conditions"));
   }
-  const detta = primaAzione(azioni, { nomeDi });
+  const detta = primaAzione(azioni, { nomeDi, dispositivoDi });
   if (detta) {
     const altre = azioni.length - 1;
     pezziIt.push(

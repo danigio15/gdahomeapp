@@ -70,6 +70,7 @@ import {
   segnaContenuto,
 } from "./shared.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
+import { attributiPerLeUltime } from "./ultime-rilevazioni-section.js";
 
 const KEY = "__DASHBOARDMODERN_VARCHI__";
 const state = (root[KEY] ||= {
@@ -358,9 +359,19 @@ function erroreMarkup(riga) {
   )}${perche ? `: ${esc(perche)}` : ""}</span></small>`;
 }
 
+/* Toccata, la carta apre le sue ultime 24 ore (#269): quante volte si e'
+ * aperta, quanto, quando. Lo scudo dentro la carta resta il suo tasto — il
+ * foglio si apre dal resto della carta, mai da un tasto che sta dentro, e lo
+ * scudo premuto dice `preventDefault`, che il foglio rispetta. */
 function rigaMarkup(riga, states = {}) {
   return `<article class="dm-varco" data-varco="${esc(riga.stato || "muto")}"
-    data-escluso="${riga.escluso === "escluso"}">
+    data-escluso="${riga.escluso === "escluso"}"${attributiPerLeUltime({
+      entity: riga.entity,
+      famiglia: "varco",
+      nome: riga.name,
+      glifo: riga.glifo,
+      tipo: riga.tipo,
+    })}>
     <span class="dm-varco-ic" aria-hidden="true">${disegnoDiCasa(riga.glifo, { misura: 30, ripiego: "door" })}</span>
     <div class="dm-varco-testo">
       <strong>${esc(riga.name)}</strong>

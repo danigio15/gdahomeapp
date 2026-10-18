@@ -119,6 +119,7 @@ import { installRobotSection } from "./robot-section.js";
 import { installGdanavSection } from "./gdanav-section.js";
 import { installAnimaliSection } from "./animali-section.js";
 import { installPreseSection } from "./prese-section.js";
+import { installRiquadriConImmagine } from "./riquadri-con-immagine-section.js";
 import { installEnergyPlantsSection } from "./energy-plants-section.js";
 import { installLaSogliaDellaPotenza } from "./la-soglia-della-potenza-section.js";
 import { installRoomAssignSection } from "./room-assign-section.js";
@@ -164,6 +165,7 @@ import { installRifiutiEditor } from "./rifiuti-editor-section.js";
 import { installVarchi } from "./varchi-section.js";
 import { installVarchiEditor } from "./varchi-editor-section.js";
 import { installPresenza } from "./presenza-section.js";
+import { installUltimeRilevazioni } from "./ultime-rilevazioni-section.js";
 import { installPresenzaEditor } from "./presenza-editor-section.js";
 import { installCitofono } from "./citofono-section.js";
 import { installCitofonoEditor } from "./citofono-editor-section.js";
@@ -1101,6 +1103,11 @@ export function installSectionRuntime() {
     senzaCadere(installRobotSection);
     senzaCadere(installGdanavSection);
     senzaCadere(installPreseSection);
+    /* I riquadri con l'immagine: il loro vestito, il blocco «Immagine» degli
+     * editor, e i Dispositivi della Home che il guscio disegna da se'. Dopo le
+     * Prese, che ne usano il vestito, e prima delle Stanze, che ne riusano
+     * le card. */
+    senzaCadere(installRiquadriConImmagine);
     senzaCadere(installRobotEditorSection);
     senzaCadere(installAutoIntegrazione);
     senzaCadere(installEnergiaCerchiStorico);
@@ -1206,6 +1213,10 @@ export function installSectionRuntime() {
     senzaCadere(installVarchiEditor);
     senzaCadere(installPresenza);
     senzaCadere(installPresenzaEditor);
+    /* Il foglio «Ultime 24 ore» (#269): si apre toccando la carta di un
+     * varco o di un rilevatore, nelle due pagine qui sopra e nelle loro
+     * finestre in Home. */
+    senzaCadere(installUltimeRilevazioni);
     senzaCadere(installCitofono);
     senzaCadere(installCitofonoEditor);
     senzaCadere(installStampanti);
@@ -1353,6 +1364,7 @@ export function installSectionRuntime() {
         "varchi",
         "varchi-editor",
         "presenza",
+        "ultime-rilevazioni",
         "presenza-editor",
         "stampanti",
         "stampanti-editor",
