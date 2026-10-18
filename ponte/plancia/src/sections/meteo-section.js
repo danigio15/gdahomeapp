@@ -993,6 +993,7 @@ function sottotitoloDelRadar() {
   const scelto = radarScelto();
   if (!scelto) return "";
   if (scelto.modo === "entita") return t("dalla tua camera", "from your camera");
+  if (scelto.modo === "windy") return "Windy";
   return [
     scelto.animato ? t("l'ultima ora", "the last hour") : t("adesso", "now"),
     `${scelto.raggio}${SPAZIO}km`,

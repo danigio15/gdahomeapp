@@ -6829,4 +6829,9 @@ export default Object.freeze({
   "Snow around ${ora}": "Neve por volta das ${ora}",
   "Stops around ${ora}": "Para por volta das ${ora}",
   "This weather gives no forecast": "Esta meteorologia não dá previsões",
+  "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those.": "É um link do Windy: o radar mostra o mapa do Windy numa moldura, com o ponto e o zoom do link se os tiver. O Windy só recebe isso.",
+  "Windy (map in a frame)": "Windy (mapa numa moldura)",
+  "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "O Windy não pode ser testado daqui: é uma página dentro de uma moldura, e o navegador não diz ao painel se chegou. Se a moldura ficar vazia, este dispositivo não alcança embed.windy.com.",
+  "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "O Windy aparece numa moldura com o seu próprio mapa, chuva e legenda, centrado no local escolhido abaixo. O Windy só recebe o ponto, o zoom e a camada: a moldura não consegue ler o painel nem o Home Assistant.",
+  "Windy weather radar": "Radar meteorológico do Windy",
 });

@@ -54,4 +54,27 @@ void main() {
       expect(eUnPagamentoFuori(Uri.parse('https://github.com/x')), isFalse);
     },
   );
+
+  test('dentro la plancia si tiene solo il riquadro di Windy', () {
+    expect(
+      eUnaCorniceAmmessa(
+        Uri.parse(
+          'https://embed.windy.com/embed.html?type=map&lat=45.46&lon=9.19&zoom=8',
+        ),
+      ),
+      isTrue,
+    );
+    for (final no in [
+      'http://embed.windy.com/embed.html',
+      'https://www.windy.com/?45.46,9.19,8',
+      'https://embed.windy.com.esempio.org/embed.html',
+      'https://esempio.org/embed.html',
+      'https://embed.windy.com:8443/embed.html',
+      'https://qualcuno@embed.windy.com/embed.html',
+      'javascript:alert(1)',
+      'about:blank',
+    ]) {
+      expect(eUnaCorniceAmmessa(Uri.parse(no)), isFalse, reason: no);
+    }
+  });
 }

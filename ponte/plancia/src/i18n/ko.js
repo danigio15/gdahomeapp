@@ -6780,4 +6780,9 @@ export default Object.freeze({
   "Snow around ${ora}": "${ora}경 눈",
   "Stops around ${ora}": "${ora}경 그침",
   "This weather gives no forecast": "이 날씨는 예보를 제공하지 않습니다",
+  "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those.": "Windy 링크입니다. 레이더는 Windy 지도를 틀 안에 보여 주며, 링크에 지점과 확대 수준이 있으면 그것을 씁니다. Windy에는 그것만 전달됩니다.",
+  "Windy (map in a frame)": "Windy(틀 안의 지도)",
+  "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "Windy는 여기서 테스트할 수 없습니다. 틀 안의 페이지이고, 브라우저는 도착 여부를 대시보드에 알려 주지 않습니다. 틀이 비어 있으면 이 기기가 embed.windy.com에 닿지 못하는 것입니다.",
+  "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "Windy는 자체 지도·비·범례와 함께 틀 안에 표시되며, 아래에서 고른 장소가 중심이 됩니다. Windy에는 지점, 확대 수준, 레이어만 전달되며, 틀은 대시보드도 Home Assistant도 읽을 수 없습니다.",
+  "Windy weather radar": "Windy 기상 레이더",
 });

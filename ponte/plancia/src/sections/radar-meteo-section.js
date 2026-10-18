@@ -56,8 +56,13 @@ import {
   indirizzoRitirato,
   FONDO_DI_SERIE,
   NIENTE,
+  SANDBOX_WINDY,
   SERVIZI_RADAR,
   SERVIZIO_DI_SERIE,
+  SERVIZIO_WINDY,
+  cornicePermessa,
+  daIndirizzoWindy,
+  indirizzoWindy,
   finestraDellaPioggia,
   finestraDiTessere,
   fotogrammaRainViewer,
@@ -70,6 +75,8 @@ import {
   problemaDellIndirizzo,
   urlDellaTessera,
   zoomDellaPioggia,
+  zoomPerRaggio,
+  zoomWindy,
   zoneDisponibili,
 } from "../core/radar-mappa.js";
 import { loadCameraFrame } from "./live-ui-section.js";
@@ -170,6 +177,11 @@ export function servizioScelto(grezzo = {}) {
   const servizio = clean(grezzo?.servizio);
   if (NIENTE.includes(servizio.toLowerCase())) return "";
   if (SERVIZI_RADAR[servizio]) return servizio;
+  if (servizio === SERVIZIO_WINDY) return SERVIZIO_WINDY;
+  /* Un collegamento di Windy incollato al posto dell'indirizzo delle tessere
+   * non e' un errore da correggere: e' Windy, detto con un collegamento. */
+  if ((servizio === "modello" || !servizio) && daIndirizzoWindy(grezzo?.modello))
+    return SERVIZIO_WINDY;
   /* Un indirizzo scritto a mano vale finche' il suo servizio risponde. Quello
    * di CARTO non risponde piu' — manda la scritta «Zoom Level Not Supported»
    * al posto della pioggia — e chi ce l'ha ancora scritto torna al servizio di
@@ -192,6 +204,7 @@ export function servizioScelto(grezzo = {}) {
  * la plancia sta bussando: prima li' non c'era scritto niente, e una plancia
  * che chiede la pioggia a un servizio sbagliato non aveva modo di dirlo. */
 export function nomeDelServizio(scelto = {}) {
+  if (scelto?.servizio === SERVIZIO_WINDY) return "Windy";
   const noto = SERVIZI_RADAR[scelto?.servizio]?.nome;
   if (noto) return noto;
   const indirizzo = clean(scelto?.modello);
@@ -299,6 +312,22 @@ export function radarScelto(stored = configurazione()) {
    * gia' il radar dentro Home Assistant. */
   if (entity.includes(".") && CON_IMMAGINE.has(entity.split(".")[0]))
     return { ...scelto, modo: "entita" };
+  /* Windy: un riquadro con la sua mappa. Se il collegamento incollato diceva
+   * dove guardare e a che zoom, vale quello; se no il posto e' quello scelto
+   * qui — casa, una zona, le coordinate — e lo zoom viene dal raggio. */
+  if (servizio === SERVIZIO_WINDY && radarToccato(grezzo)) {
+    const letto = daIndirizzoWindy(modello) || {};
+    return {
+      ...scelto,
+      modo: "windy",
+      windy: {
+        lat: letto.lat ?? null,
+        lon: letto.lon ?? null,
+        zoom: letto.zoom ?? null,
+        strato: letto.strato || "radar",
+      },
+    };
+  }
   if (servizio && radarToccato(grezzo)) return { ...scelto, modo: "mappa" };
   return null;
 }
@@ -774,6 +803,95 @@ function daTessere(scelto, nodo) {
   scriviLaNota(nodo, scelto, luogo, finestraTessere, finestraPioggia);
 }
 
+/* ── il radar di Windy, in un riquadro ────────────────────────────────── */
+
+const CORNICE = "dm-radar-windy";
+
+/* Il riquadro di Windy se ne va quando si sceglie un'altra strada: le tessere
+ * e la camera disegnano nello stesso quadro, e una pagina di Windy rimasta
+ * sotto continuerebbe a girare senza che nessuno la veda. */
+function togliLaCornice(nodo) {
+  const dove = nodo?.querySelector?.(".dm-radar-tessere");
+  const cornice = dove?.querySelector?.(`.${CORNICE}`);
+  if (!cornice) return;
+  cornice.remove();
+  if (String(dove.dataset.dmFirma || "").startsWith("windy:")) dove.dataset.dmFirma = "";
+}
+
+/** Dove e a che zoom guarda Windy, o `null` se il posto non si sa ancora. */
+export function vistaWindy(scelto, latoPx = 320, altoPx = ALTEZZA_MINIMA) {
+  const detto = scelto?.windy || {};
+  const luogo =
+    detto.lat !== null && detto.lat !== undefined && detto.lon !== null && detto.lon !== undefined
+      ? { lat: detto.lat, lon: detto.lon, nome: "", da: "collegamento" }
+      : luogoDelRadar(scelto || {}, allStates(), casaNota());
+  if (!luogo) return null;
+  /* Lo zoom del collegamento vince; senza, quello che fa entrare il raggio nel
+   * riquadro — lo stesso conto delle tessere. */
+  const zoom =
+    zoomWindy(detto.zoom) ??
+    zoomWindy(zoomPerRaggio(luogo.lat, scelto?.raggio || RAGGIO_DI_SERIE, Math.min(latoPx, altoPx)));
+  const src = indirizzoWindy({ lat: luogo.lat, lon: luogo.lon, zoom, strato: detto.strato });
+  return { luogo, zoom, src };
+}
+
+function daWindy(scelto, nodo) {
+  const quadro = nodo.querySelector(".dm-radar-quadro");
+  const dove = nodo.querySelector(".dm-radar-tessere");
+  if (!quadro || !dove) return;
+  /* Qui la mappa di fondo e la legenda sono di Windy: il verdetto sul nostro
+   * fondo, e la sua firma, non dicono niente. */
+  delete nodo.dataset.dmFondo;
+  scriviTestoSeCambia(nodo.querySelector("[data-dm-radar-firma-fondo]"), "");
+  const nota = nodo.querySelector(".dm-radar-nota");
+  const misure = misureDelQuadro(quadro);
+  quadro.style.height = `${misure.altoPx}px`;
+  const vista = vistaWindy(scelto, misure.latoPx, misure.altoPx);
+  if (!vista) {
+    nodo.dataset.dmRadar = chiediLaCasa() ? "attesa" : "muto";
+    togliLaCornice(nodo);
+    scriviTestoSeCambia(nota, [t("posto sconosciuto", "place unknown"), "Windy"].join(" · "));
+    return;
+  }
+  const { luogo, zoom, src } = vista;
+  scriviTestoSeCambia(
+    nota,
+    [luogo.nome || `${luogo.lat.toFixed(3)}, ${luogo.lon.toFixed(3)}`, `z${zoom}`, "Windy"].join(
+      " · ",
+    ),
+  );
+  /* L'ultimo cancello: nel riquadro va solo la pagina di Windy. */
+  if (!cornicePermessa(src)) {
+    togliLaCornice(nodo);
+    nodo.dataset.dmRadar = "muto";
+    return;
+  }
+  const firma = `windy:${src}`;
+  if (dove.dataset.dmFirma === firma && dove.querySelector(`.${CORNICE}`)) return;
+  const cornice = doc.createElement("iframe");
+  cornice.className = CORNICE;
+  cornice.setAttribute("sandbox", SANDBOX_WINDY);
+  /* L'indirizzo della plancia non va a Windy: sotto l'ingress di Home
+   * Assistant porta un gettone. */
+  cornice.setAttribute("referrerpolicy", "no-referrer");
+  cornice.setAttribute("loading", "lazy");
+  cornice.setAttribute("title", t("Radar meteo di Windy", "Windy weather radar"));
+  /* `load` dice che il riquadro ha finito, non che Windy ha risposto: se la
+   * rete non ci arriva il browser mette la sua pagina d'errore li' dentro, e
+   * da fuori non si puo' leggere. Fino ad allora si resta in attesa. */
+  cornice.addEventListener(
+    "load",
+    () => {
+      if (cornice.isConnected) nodo.dataset.dmRadar = "vivo";
+    },
+    { once: true },
+  );
+  cornice.src = src;
+  dove.replaceChildren(cornice);
+  dove.dataset.dmFirma = firma;
+  nodo.dataset.dmRadar = "attesa";
+}
+
 export function disegnaRadar() {
   const scelto = radarScelto();
   /* Prima i posti fuori dalla finestra: la pagina Meteo ha il suo blocco, e
@@ -811,6 +929,7 @@ export function disegnaRadar() {
 /* Il blocco che dice cosa correggere, al posto del radar. */
 function scriviIlGuasto(avviso, guasto) {
   avviso.hidden = false;
+  togliLaCornice(avviso);
   avviso.dataset.dmModo = "guasto";
   const titolo = avviso.querySelector(".dm-radar-nome");
   if (titolo) titolo.textContent = t("Radar meteo", "Weather radar");
@@ -824,6 +943,12 @@ function disegnaNelBlocco(nodo, scelto) {
   nodo.dataset.dmModo = scelto.modo;
   const nome = nodo.querySelector(".dm-radar-nome");
   if (nome) nome.textContent = scelto.nome || t("Radar meteo", "Weather radar");
+  if (scelto.modo === "windy") {
+    fermaLAnimazione();
+    daWindy(scelto, nodo);
+    return true;
+  }
+  togliLaCornice(nodo);
   if (scelto.modo === "entita") {
     const nota = nodo.querySelector(".dm-radar-nota");
     if (nota) nota.textContent = t("Dove piove adesso", "Where it is raining now");
@@ -1139,7 +1264,7 @@ function numeroScritto(valore) {
  * tendina resta su quello che si e' scelto, e sotto c'e' scritto cosa non va. */
 function sceltaDelServizio(config) {
   const grezzo = clean(config?.servizio);
-  if (grezzo === "modello" || SERVIZI_RADAR[grezzo]) return grezzo;
+  if (grezzo === "modello" || grezzo === SERVIZIO_WINDY || SERVIZI_RADAR[grezzo]) return grezzo;
   return servizioScelto(config);
 }
 
@@ -1175,6 +1300,21 @@ function fraseDellEsito(motivo) {
       );
     case "troppo-lenta":
       return t("Nessuna risposta in otto secondi.", "No answer within eight seconds.");
+    case "windy":
+      return t(
+        "Windy si mostra in un riquadro con la sua mappa, la sua pioggia e la sua legenda, centrato sul posto scelto qui sotto. A Windy arrivano solo il punto, lo zoom e lo strato: il riquadro non può leggere né la plancia né Home Assistant.",
+        "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.",
+      );
+    case "windy-collegamento":
+      return t(
+        "È un collegamento di Windy: il radar mostra la mappa di Windy in un riquadro, con il punto e lo zoom del collegamento se li ha. A Windy arrivano solo quelli.",
+        "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those.",
+      );
+    case "windy-prova":
+      return t(
+        "Windy non si prova da qui: è una pagina dentro un riquadro, e il browser non dice alla plancia se è arrivata. Se il riquadro resta vuoto, questo dispositivo non raggiunge embed.windy.com.",
+        "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.",
+      );
     default:
       return t(
         "Non arriva. Controlla l'indirizzo, e che il servizio si lasci leggere da qui.",
@@ -1186,7 +1326,16 @@ function fraseDellEsito(motivo) {
 /* Quello che non va dell'indirizzo scritto a mano, se qualcosa non va. */
 function problemaDellaScelta(config) {
   if (clean(config?.servizio) !== "modello") return "";
+  if (daIndirizzoWindy(config?.modello)) return "";
   return problemaDellIndirizzo(clean(config?.modello));
+}
+
+/* Quale frase di Windy va sotto la tendina, se ce n'e' una. */
+function fraseWindyDellaScelta(config) {
+  const servizio = clean(config?.servizio);
+  if (servizio === SERVIZIO_WINDY) return "windy";
+  if (servizio === "modello" && daIndirizzoWindy(config?.modello)) return "windy-collegamento";
+  return "";
 }
 
 /* La riga sotto la casella dice subito cosa non va, non solo dopo «Prova»:
@@ -1200,7 +1349,13 @@ function mostraIlProblema(dentro, config) {
     esito.textContent = fraseDellEsito(problema);
     return true;
   }
-  if (esito.dataset.dmEsito === "male") {
+  const diWindy = fraseWindyDellaScelta(config);
+  if (diWindy) {
+    esito.dataset.dmEsito = "windy";
+    scriviTestoSeCambia(esito, fraseDellEsito(diWindy));
+    return false;
+  }
+  if (esito.dataset.dmEsito === "male" || esito.dataset.dmEsito === "windy") {
     delete esito.dataset.dmEsito;
     esito.textContent = FRASE_DI_SERIE();
   }
@@ -1243,6 +1398,10 @@ function serviziMarkup(scelta) {
       ([chiave, servizio]) =>
         `<option value="${esc(chiave)}"${chiave === scelta ? " selected" : ""}>${esc(servizio.nome)}</option>`,
     ),
+    /* Windy non e' un servizio di tessere: e' la sua mappa in un riquadro. */
+    `<option value="${SERVIZIO_WINDY}"${scelta === SERVIZIO_WINDY ? " selected" : ""}>${esc(
+      t("Windy (mappa in un riquadro)", "Windy (map in a frame)"),
+    )}</option>`,
     `<option value="modello"${scelta === "modello" ? " selected" : ""}>${esc(
       t("Un indirizzo mio ({z}/{x}/{y})", "An address of mine ({z}/{x}/{y})"),
     )}</option>`,
@@ -1286,14 +1445,22 @@ function fondiMarkup(scelta) {
 function aggiornaVisibilita(dentro) {
   const servizio = clean(dentro?.querySelector?.('[data-dm-radar-campo="servizio"]')?.value);
   const fondo = clean(dentro?.querySelector?.('[data-dm-radar-campo="fondo"]')?.value);
+  const modello = dentro?.querySelector?.('[data-dm-radar-campo="modello"]')?.value;
+  /* Con Windy — scelto o incollato — la mappa di fondo, il tetto della
+   * pioggia, l'animazione e la prova dei quadratini non c'entrano: e' tutto
+   * suo. */
+  const diWindy =
+    servizio === SERVIZIO_WINDY || (servizio === "modello" && Boolean(daIndirizzoWindy(modello)));
   for (const riga of dentro?.querySelectorAll?.("[data-dm-radar-solo]") || []) {
     const quando = clean(riga.dataset.dmRadarSolo);
     riga.hidden =
       quando === "modello"
         ? servizio !== "modello"
         : quando === "fondo-modello"
-          ? fondo !== "modello"
-          : false;
+          ? fondo !== "modello" || diWindy
+          : quando === "tessere"
+            ? diWindy
+            : false;
   }
 }
 
@@ -1310,7 +1477,9 @@ function aggiornaVisibilita(dentro) {
 /** Da quale strada arriva il radar adesso: «entita», «mappa» o «nessuno». */
 export function fonteDelRadar(config = configurazione()) {
   const scelto = radarScelto(config);
-  if (scelto) return scelto.modo;
+  /* Windy e' un servizio di mappe come gli altri, per chi sceglie: la sua
+   * strada e' quella delle mappe. */
+  if (scelto) return scelto.modo === "windy" ? "mappa" : scelto.modo;
   /* La camera scelta prima di avere scritto quale: la strada resta quella, e
    * la casella aspetta l'entita'. */
   if (clean(config?.strada) === "entita") return "entita";
@@ -1341,7 +1510,8 @@ function conLaFonte(config, fonte, proposta = "") {
   } else if (fonte === "mappa") {
     prossima.entity = "";
     const servizio = clean(config.servizio);
-    if (!SERVIZI_RADAR[servizio] && servizio !== "modello") prossima.servizio = SERVIZIO_DI_SERIE;
+    if (!SERVIZI_RADAR[servizio] && servizio !== "modello" && servizio !== SERVIZIO_WINDY)
+      prossima.servizio = SERVIZIO_DI_SERIE;
   } else if (fonte === "entita") {
     prossima.entity = clean(config.entity) || proposta;
     /* Senza un'entita' la camera non c'e' ancora, e il radar resta spento:
@@ -1428,7 +1598,7 @@ function mappaMarkup(config) {
       <label><span class="dm-radar-lbl">${esc(t("Servizio radar", "Radar service"))}</span>
         <select class="ed-input" data-dm-radar-campo="servizio">${serviziMarkup(sceltaDelServizio(config))}</select>
       </label>
-      <label><span class="dm-radar-lbl">${esc(t("Mappa di fondo", "Base map"))}</span>
+      <label data-dm-radar-solo="tessere"><span class="dm-radar-lbl">${esc(t("Mappa di fondo", "Base map"))}</span>
         <select class="ed-input" data-dm-radar-campo="fondo">${fondiMarkup(fondoScelto(config))}</select>
       </label>
     </div>
@@ -1438,7 +1608,7 @@ function mappaMarkup(config) {
     <span class="ed-form-row" data-dm-radar-solo="fondo-modello"><input class="ed-input mono"
       data-dm-radar-campo="fondoModello" value="${esc(fondoMio(config))}"
       placeholder="https://…/{z}/{x}/{y}.png" autocomplete="off" spellcheck="false"></span>
-    <span class="ed-form-row dm-radar-prova-riga"><button
+    <span class="ed-form-row dm-radar-prova-riga" data-dm-radar-solo="tessere"><button
       type="button" class="dm-radar-prova" data-dm-radar-prova>${esc(t("Prova", "Test"))}</button></span>
     <small class="dm-radar-esito" data-dm-radar-esito>${esc(FRASE_DI_SERIE())}</small>
     <div class="dm-radar-dove">
@@ -1448,16 +1618,16 @@ function mappaMarkup(config) {
       <label><span class="dm-radar-lbl">${esc(t("Raggio (km)", "Radius (km)"))}</span>
         <input class="ed-input" type="number" min="1" max="500" data-dm-radar-campo="raggio"
           value="${esc(String(config.raggio ?? RAGGIO_DI_SERIE))}"></label>
-      <label><span class="dm-radar-lbl">${esc(t("Zoom massimo della pioggia", "Rain zoom cap"))}</span>
+      <label data-dm-radar-solo="tessere"><span class="dm-radar-lbl">${esc(t("Zoom massimo della pioggia", "Rain zoom cap"))}</span>
         <input class="ed-input" type="number" min="0" max="12" step="1"
           data-dm-radar-campo="zoomPioggia" value="${esc(numeroScritto(config.zoomPioggia))}"
           placeholder="${esc(numeroScritto(zoomDellaPioggia({}, servizioScelto(config))))}"></label>
     </div>
-    <label class="dm-radar-animato"><input type="checkbox" data-dm-radar-campo="animato"
+    <label class="dm-radar-animato" data-dm-radar-solo="tessere"><input type="checkbox" data-dm-radar-campo="animato"
       ${clean(config.animato) === "no" ? "" : "checked"}><span>${esc(
         t("Radar animato", "Animated radar"),
       )}</span></label>
-    <small>${esc(
+    <small data-dm-radar-solo="tessere">${esc(
       t(
         "Acceso, il radar mostra l'ultima ora di pioggia in movimento: si vede da che parte va il fronte, non solo dov'è adesso. Sono sei fotogrammi invece di uno, quindi sei giri di quadratini: spegnilo se la connessione è lenta o se preferisci una sola immagine.",
         "On, the radar plays the last hour of rain: you see which way the front is moving, not only where it is now. That is six frames instead of one, so six rounds of tiles: turn it off on a slow connection, or if you prefer a single image.",
@@ -1548,6 +1718,14 @@ async function onClick(event) {
     if (!dentro || !esito) return;
     const config = raccogli(dentro);
     salva(config);
+    /* Windy non ha un quadratino da scaricare: si dice perche', invece di
+     * provare una cosa che non c'e'. */
+    if (radarScelto(config)?.modo === "windy") {
+      esito.dataset.dmEsito = "windy";
+      esito.textContent = fraseDellEsito("windy-prova");
+      disegnaRadar();
+      return;
+    }
     state.provando = true;
     esito.dataset.dmEsito = "prova";
     esito.textContent = t("Provo…", "Testing…");
@@ -1609,6 +1787,21 @@ function installStyles() {
       #weather-modal .dm-radar-scala{flex:0 0 96px;height:8px;border-radius:4px;background:linear-gradient(90deg,#a1d7ff,#3b8bff,#1d4ed8,#facc15,#f97316,#dc2626)}
       #weather-modal .dm-radar-vuoto{margin-left:auto;font-style:italic}
       #weather-modal .dm-radar-blocco[data-dm-modo="entita"] .dm-radar-legenda{display:none}
+      /* Windy porta la sua legenda, il suo orologio e la sua mappa: le nostre
+         sopra sarebbero un doppione che non corrisponde a quello che si vede.
+         Il riquadro sta dentro la stessa cornice arrotondata del radar a
+         tessere, chiaro o scuro che sia il tema. */
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-legenda,
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-mirino,
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-img,
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-ora,
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-fondo-muto{display:none}
+      /* color-scheme normale: con il tema scuro della plancia e una pagina
+         dentro che non ne dichiara uno, il browser stende un fondo bianco
+         opaco sotto il riquadro; cosi' finche' Windy non disegna si vede il
+         fondo del quadro, scuro o chiaro come il resto. */
+      #weather-modal .dm-radar-windy{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;
+        background:var(--bg-sculpted,#0b1220);color-scheme:normal}
       /* Configurato male: resta la testa con la spiegazione, il quadro no. */
       #weather-modal .dm-radar-blocco[data-dm-modo="guasto"] .dm-radar-quadro,
       #weather-modal .dm-radar-blocco[data-dm-modo="guasto"] .dm-radar-legenda{display:none}
@@ -1688,6 +1881,7 @@ function installStyles() {
         font:inherit;font-size:12px;font-weight:800;color:var(--primary-color,#0ea5e9)}
       #ed-body .dm-radar-esito[data-dm-esito="bene"]{color:#059669;font-weight:700}
       #ed-body .dm-radar-esito[data-dm-esito="male"]{color:#dc2626;font-weight:700}
+      #ed-body .dm-radar-esito[data-dm-esito="windy"]{color:var(--text,#0f172a);font-weight:600}
       #ed-body .dm-radar-dove{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0}
       /* Le caselle dell'indirizzo si vedono solo con «un indirizzo mio»: la
          riga del guscio ha un display suo, e hidden da solo non la batte. */

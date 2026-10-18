@@ -111,6 +111,14 @@ WebViewController costruisciIlControllore({
         },
         onNavigationRequest: (richiesta) {
           if (siPuoAndare(richiesta.url)) return NavigationDecision.navigate;
+          /* Il radar di Windy, dentro la plancia: un riquadro, mai la pagina
+           * intera, e solo dalla sua origine (`fuori.dart`). */
+          final quale = Uri.tryParse(richiesta.url);
+          if (!richiesta.isMainFrame &&
+              quale != null &&
+              eUnaCorniceAmmessa(quale)) {
+            return NavigationDecision.navigate;
+          }
           unawaited(_fuori(richiesta.url));
           return NavigationDecision.prevent;
         },

@@ -6799,4 +6799,9 @@ export default Object.freeze({
   "Snow around ${ora}": "${ora}ごろ雪",
   "Stops around ${ora}": "${ora}ごろ止む",
   "This weather gives no forecast": "この天気は予報を提供していません",
+  "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those.": "Windy のリンクです。レーダーは Windy の地図を枠の中に表示し、リンクに地点とズームがあればそれを使います。Windy に渡るのはそれだけです。",
+  "Windy (map in a frame)": "Windy(枠内の地図)",
+  "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "Windy はここではテストできません。枠の中のページで、届いたかどうかをブラウザはダッシュボードに伝えません。枠が空のままなら、この端末は embed.windy.com に届いていません。",
+  "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "Windy は独自の地図・雨・凡例とともに枠の中に表示され、下で選んだ場所が中心になります。Windy に渡るのは地点・ズーム・レイヤーだけで、枠からダッシュボードや Home Assistant は読めません。",
+  "Windy weather radar": "Windy 気象レーダー",
 });

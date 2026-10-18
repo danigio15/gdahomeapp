@@ -28,7 +28,10 @@ const SEME = {
   visibility: { home: true },
 };
 
-const SITO = "https://www.windy.com/it/-Pioggia-neve-rain?rain,41.902,12.496,8";
+/* La pagina di un sito qualsiasi. Quella di Windy della segnalazione adesso
+ * si riconosce e si mostra in un riquadro (`il-radar-di-windy.spec.js`): qui
+ * resta un sito che non e' ne' tessere ne' Windy. */
+const SITO = "https://meteo.example.org/radar/?rain,41.902,12.496,8";
 
 async function boot(page, testInfo, radar) {
   test.setTimeout(testInfo.project.name === "webkit-ipad" ? 120_000 : 75_000);

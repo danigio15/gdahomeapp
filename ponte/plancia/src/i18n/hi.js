@@ -6791,4 +6791,9 @@ export default Object.freeze({
   "Snow around ${ora}": "लगभग ${ora} बर्फ़",
   "Stops around ${ora}": "लगभग ${ora} रुकेगी",
   "This weather gives no forecast": "यह मौसम कोई पूर्वानुमान नहीं देता",
+  "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those.": "यह Windy का लिंक है: रडार Windy का नक्शा एक फ़्रेम में दिखाता है, लिंक में बिंदु और ज़ूम हों तो उन्हीं के साथ। Windy को सिर्फ़ यही मिलता है।",
+  "Windy (map in a frame)": "Windy (फ़्रेम में नक्शा)",
+  "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "Windy को यहाँ से जाँचा नहीं जा सकता: यह एक फ़्रेम के अंदर का पेज है, और ब्राउज़र डैशबोर्ड को नहीं बताता कि वह आया या नहीं। अगर फ़्रेम खाली रहे, तो यह डिवाइस embed.windy.com तक नहीं पहुँच पा रहा।",
+  "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "Windy एक फ़्रेम में अपने नक्शे, अपनी बारिश और अपनी लेजेंड के साथ दिखता है, नीचे चुनी गई जगह पर केंद्रित। Windy को सिर्फ़ बिंदु, ज़ूम और परत मिलती है: फ़्रेम न डैशबोर्ड पढ़ सकता है न Home Assistant।",
+  "Windy weather radar": "Windy मौसम रडार",
 });

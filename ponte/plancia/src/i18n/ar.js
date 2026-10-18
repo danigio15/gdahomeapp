@@ -6763,4 +6763,9 @@ export default Object.freeze({
   "Snow around ${ora}": "ثلج نحو ${ora}",
   "Stops around ${ora}": "يتوقف نحو ${ora}",
   "This weather gives no forecast": "هذا الطقس لا يقدّم توقعات",
+  "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those.": "هذا رابط Windy: يعرض الرادار خريطة Windy داخل إطار، مع نقطة الرابط ومستوى تكبيره إن وُجدا. لا يتلقى Windy سوى ذلك.",
+  "Windy (map in a frame)": "Windy (خريطة داخل إطار)",
+  "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "لا يمكن اختبار Windy من هنا: إنها صفحة داخل إطار، والمتصفح لا يخبر اللوحة إن كانت قد وصلت. إذا بقي الإطار فارغًا فهذا الجهاز لا يصل إلى embed.windy.com.",
+  "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "يظهر Windy داخل إطار بخريطته وأمطاره ومفتاحه الخاص، متمركزًا على المكان المختار أدناه. لا يتلقى Windy سوى النقطة ومستوى التكبير والطبقة: لا يستطيع الإطار قراءة اللوحة ولا Home Assistant.",
+  "Windy weather radar": "رادار الطقس من Windy",
 });

@@ -552,7 +552,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-SPKR6W3Q.js";
+} from "../../chunk-Q2EG5R4N.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3639,6 +3639,7 @@ var SOURCE_INDEX = Object.freeze({
   "È tardi e ${accese.length} luci sono ancora accese": "It's late and ${accese.length} lights are still on",
   "È tardi e ${accese[0].name} è ancora accesa": "It's late and ${accese[0].name} is still on",
   "è un climatizzatore": "it is a climate unit",
+  "È un collegamento di Windy: il radar mostra la mappa di Windy in un riquadro, con il punto e lo zoom del collegamento se li ha. A Windy arrivano solo quelli.": "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those.",
   "È un contatore di energia (kWh): dice quanto ha consumato in tutto, non quanto assorbe adesso. Qui viene ignorato — va nel campo «Energia totale per storico e Report».": "This is an energy meter (kWh): it says how much it has consumed overall, not how much it is drawing right now. It is ignored here — it belongs in the “Total energy for history and Report” field.",
   "è un sensore del garage": "it is a garage sensor",
   "è un sensore di apertura": "it is an opening sensor",
@@ -6050,6 +6051,7 @@ var SOURCE_INDEX = Object.freeze({
   "Raccolta differenziata · Prossimi ritiri": "Recycling · Next collections",
   "Radar animato": "Animated radar",
   "Radar meteo": "Weather radar",
+  "Radar meteo di Windy": "Windy weather radar",
   "Radar pioggia": "Rain radar",
   "Radiazione solare": "Solar radiation",
   "raffica": "gust",
@@ -7478,6 +7480,9 @@ var SOURCE_INDEX = Object.freeze({
   "WebSocket WebRTC non raggiungibile": "WebRTC WebSocket unreachable",
   "Widget": "Widgets",
   "Widget di avviso": "Alert widgets",
+  "Windy (mappa in un riquadro)": "Windy (map in a frame)",
+  "Windy non si prova da qui: è una pagina dentro un riquadro, e il browser non dice alla plancia se è arrivata. Se il riquadro resta vuoto, questo dispositivo non raggiunge embed.windy.com.": "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.",
+  "Windy si mostra in un riquadro con la sua mappa, la sua pioggia e la sua legenda, centrato sul posto scelto qui sotto. A Windy arrivano solo il punto, lo zoom e lo strato: il riquadro non può leggere né la plancia né Home Assistant.": "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.",
   "zona": "zone",
   "Zona": "Zone",
   "Zona giorno": "Day zone",
@@ -96728,6 +96733,105 @@ function indirizzoRitirato(modello2) {
   if (!ospite3) return false;
   return OSPITI_RITIRATI.some((forma2) => forma2.test(ospite3));
 }
+var SERVIZIO_WINDY = "windy";
+var ORIGINE_WINDY = "https://embed.windy.com";
+var PAGINA_WINDY = "/embed.html";
+var PAGINE_WINDY_LETTE = /* @__PURE__ */ new Set([PAGINA_WINDY, "/embed2.html"]);
+var OSPITI_DEL_SITO_WINDY = /* @__PURE__ */ new Set(["windy.com", "www.windy.com"]);
+var STRATI_WINDY = Object.freeze(["radar", "rain"]);
+var ZOOM_WINDY = Object.freeze({ minimo: 3, massimo: 11, diSerie: 8 });
+var SANDBOX_WINDY = "allow-scripts allow-same-origin";
+var NUMERO_SCRITTO2 = /^-?\d{1,3}(\.\d+)?$/;
+function zoomWindy(valore3) {
+  const n = numero48(valore3);
+  if (n === null) return null;
+  return Math.max(ZOOM_WINDY.minimo, Math.min(ZOOM_WINDY.massimo, Math.round(n)));
+}
+function stratoWindy(parola) {
+  const detta = stringa(parola).toLowerCase();
+  return STRATI_WINDY.includes(detta) ? detta : "radar";
+}
+function indirizzoWindy({ lat, lon, zoom, strato } = {}) {
+  const dove = latitudine(lat);
+  const quanto = longitudine(lon);
+  if (dove === null || quanto === null) return "";
+  const overlay = stratoWindy(strato);
+  const parametri = new URLSearchParams({
+    type: "map",
+    location: "coordinates",
+    metricRain: "mm",
+    metricTemp: "°C",
+    metricWind: "km/h",
+    zoom: String(zoomWindy(zoom) ?? ZOOM_WINDY.diSerie),
+    overlay,
+    product: overlay === "radar" ? "radar" : "ecmwf",
+    level: "surface",
+    lat: dove.toFixed(4),
+    lon: quanto.toFixed(4)
+  });
+  return `${ORIGINE_WINDY}${PAGINA_WINDY}?${parametri}`;
+}
+function cornicePermessa(indirizzo) {
+  const testo4 = stringa(indirizzo);
+  if (!testo4) return false;
+  let url;
+  try {
+    url = new URL(testo4);
+  } catch (_errore) {
+    return false;
+  }
+  return url.protocol === "https:" && url.origin === ORIGINE_WINDY && !url.username && !url.password && !url.port && !url.hash && url.pathname === PAGINA_WINDY;
+}
+function daIndirizzoWindy(indirizzo) {
+  const testo4 = stringa(indirizzo);
+  if (!testo4 || !/^https?:\/\//i.test(testo4)) return null;
+  let url;
+  try {
+    url = new URL(testo4);
+  } catch (_errore) {
+    return null;
+  }
+  if (url.username || url.password || url.port) return null;
+  const ospite3 = url.hostname.toLowerCase();
+  if (ospite3 === "embed.windy.com") {
+    if (!PAGINE_WINDY_LETTE.has(url.pathname)) return null;
+    const p = url.searchParams;
+    const lat2 = latitudine(p.get("lat"));
+    const lon2 = longitudine(p.get("lon"));
+    const insieme3 = lat2 !== null && lon2 !== null;
+    return {
+      lat: insieme3 ? lat2 : null,
+      lon: insieme3 ? lon2 : null,
+      zoom: zoomWindy(p.get("zoom")),
+      strato: stratoWindy(p.get("overlay"))
+    };
+  }
+  if (!OSPITI_DEL_SITO_WINDY.has(ospite3)) return null;
+  let domanda = "";
+  try {
+    domanda = decodeURIComponent(url.search.slice(1));
+  } catch (_errore) {
+    domanda = url.search.slice(1);
+  }
+  const pezzi = domanda.split(/[,&]/).map((pezzo2) => pezzo2.trim());
+  let lat = null;
+  let lon = null;
+  let zoom = null;
+  for (let i = 0; i + 1 < pezzi.length; i += 1) {
+    if (!NUMERO_SCRITTO2.test(pezzi[i]) || !NUMERO_SCRITTO2.test(pezzi[i + 1])) continue;
+    const a = latitudine(pezzi[i]);
+    const b2 = longitudine(pezzi[i + 1]);
+    if (a === null || b2 === null) continue;
+    lat = a;
+    lon = b2;
+    zoom = /^\d{1,2}$/.test(pezzi[i + 2] || "") ? zoomWindy(pezzi[i + 2]) : null;
+    break;
+  }
+  const parola = pezzi.find((pezzo2) => /^[a-z]+$/i.test(pezzo2));
+  const delPercorso = url.pathname.split(/[/-]/).filter(Boolean).pop() || "";
+  const strato = STRATI_WINDY.includes(stringa(parola).toLowerCase()) ? stringa(parola).toLowerCase() : stratoWindy(delPercorso);
+  return { lat, lon, zoom, strato };
+}
 var FOTOGRAMMI_ANIMATI = 6;
 function fotogrammiRainViewer(elenco15, quanti2 = FOTOGRAMMI_ANIMATI) {
   const host2 = stringa(elenco15?.host);
@@ -96845,6 +96949,9 @@ function servizioScelto(grezzo = {}) {
   const servizio2 = clean(grezzo?.servizio);
   if (NIENTE.includes(servizio2.toLowerCase())) return "";
   if (SERVIZI_RADAR[servizio2]) return servizio2;
+  if (servizio2 === SERVIZIO_WINDY) return SERVIZIO_WINDY;
+  if ((servizio2 === "modello" || !servizio2) && daIndirizzoWindy(grezzo?.modello))
+    return SERVIZIO_WINDY;
   const indirizzo = clean(grezzo?.modello);
   const scritto3 = /\{[zxy]\}/.test(indirizzo);
   const ritirato = scritto3 && indirizzoRitirato(indirizzo);
@@ -96853,6 +96960,7 @@ function servizioScelto(grezzo = {}) {
   return "";
 }
 function nomeDelServizio(scelto = {}) {
+  if (scelto?.servizio === SERVIZIO_WINDY) return "Windy";
   const noto = SERVIZI_RADAR[scelto?.servizio]?.nome;
   if (noto) return noto;
   const indirizzo = clean(scelto?.modello);
@@ -96930,6 +97038,19 @@ function radarScelto(stored = configurazione12()) {
   };
   if (entity2.includes(".") && CON_IMMAGINE.has(entity2.split(".")[0]))
     return { ...scelto, modo: "entita" };
+  if (servizio2 === SERVIZIO_WINDY && radarToccato(grezzo)) {
+    const letto = daIndirizzoWindy(modello2) || {};
+    return {
+      ...scelto,
+      modo: "windy",
+      windy: {
+        lat: letto.lat ?? null,
+        lon: letto.lon ?? null,
+        zoom: letto.zoom ?? null,
+        strato: letto.strato || "radar"
+      }
+    };
+  }
   if (servizio2 && radarToccato(grezzo)) return { ...scelto, modo: "mappa" };
   return null;
 }
@@ -97222,6 +97343,70 @@ function daTessere(scelto, nodo2) {
   }
   scriviLaNota(nodo2, scelto, luogo, finestraTessere, finestraPioggia);
 }
+var CORNICE = "dm-radar-windy";
+function togliLaCornice(nodo2) {
+  const dove = nodo2?.querySelector?.(".dm-radar-tessere");
+  const cornice = dove?.querySelector?.(`.${CORNICE}`);
+  if (!cornice) return;
+  cornice.remove();
+  if (String(dove.dataset.dmFirma || "").startsWith("windy:")) dove.dataset.dmFirma = "";
+}
+function vistaWindy(scelto, latoPx = 320, altoPx = ALTEZZA_MINIMA) {
+  const detto3 = scelto?.windy || {};
+  const luogo = detto3.lat !== null && detto3.lat !== void 0 && detto3.lon !== null && detto3.lon !== void 0 ? { lat: detto3.lat, lon: detto3.lon, nome: "", da: "collegamento" } : luogoDelRadar(scelto || {}, allStates(), casaNota());
+  if (!luogo) return null;
+  const zoom = zoomWindy(detto3.zoom) ?? zoomWindy(zoomPerRaggio(luogo.lat, scelto?.raggio || RAGGIO_DI_SERIE, Math.min(latoPx, altoPx)));
+  const src = indirizzoWindy({ lat: luogo.lat, lon: luogo.lon, zoom, strato: detto3.strato });
+  return { luogo, zoom, src };
+}
+function daWindy(scelto, nodo2) {
+  const quadro = nodo2.querySelector(".dm-radar-quadro");
+  const dove = nodo2.querySelector(".dm-radar-tessere");
+  if (!quadro || !dove) return;
+  delete nodo2.dataset.dmFondo;
+  scriviTestoSeCambia(nodo2.querySelector("[data-dm-radar-firma-fondo]"), "");
+  const nota = nodo2.querySelector(".dm-radar-nota");
+  const misure = misureDelQuadro(quadro);
+  quadro.style.height = `${misure.altoPx}px`;
+  const vista2 = vistaWindy(scelto, misure.latoPx, misure.altoPx);
+  if (!vista2) {
+    nodo2.dataset.dmRadar = chiediLaCasa() ? "attesa" : "muto";
+    togliLaCornice(nodo2);
+    scriviTestoSeCambia(nota, [t("posto sconosciuto", "place unknown"), "Windy"].join(" · "));
+    return;
+  }
+  const { luogo, zoom, src } = vista2;
+  scriviTestoSeCambia(
+    nota,
+    [luogo.nome || `${luogo.lat.toFixed(3)}, ${luogo.lon.toFixed(3)}`, `z${zoom}`, "Windy"].join(
+      " · "
+    )
+  );
+  if (!cornicePermessa(src)) {
+    togliLaCornice(nodo2);
+    nodo2.dataset.dmRadar = "muto";
+    return;
+  }
+  const firma2 = `windy:${src}`;
+  if (dove.dataset.dmFirma === firma2 && dove.querySelector(`.${CORNICE}`)) return;
+  const cornice = doc.createElement("iframe");
+  cornice.className = CORNICE;
+  cornice.setAttribute("sandbox", SANDBOX_WINDY);
+  cornice.setAttribute("referrerpolicy", "no-referrer");
+  cornice.setAttribute("loading", "lazy");
+  cornice.setAttribute("title", t("Radar meteo di Windy", "Windy weather radar"));
+  cornice.addEventListener(
+    "load",
+    () => {
+      if (cornice.isConnected) nodo2.dataset.dmRadar = "vivo";
+    },
+    { once: true }
+  );
+  cornice.src = src;
+  dove.replaceChildren(cornice);
+  dove.dataset.dmFirma = firma2;
+  nodo2.dataset.dmRadar = "attesa";
+}
 function disegnaRadar() {
   const scelto = radarScelto();
   disegnaNeiPosti(scelto);
@@ -97242,6 +97427,7 @@ function disegnaRadar() {
 }
 function scriviIlGuasto(avviso2, guasto) {
   avviso2.hidden = false;
+  togliLaCornice(avviso2);
   avviso2.dataset.dmModo = "guasto";
   const titolo3 = avviso2.querySelector(".dm-radar-nome");
   if (titolo3) titolo3.textContent = t("Radar meteo", "Weather radar");
@@ -97253,6 +97439,12 @@ function disegnaNelBlocco(nodo2, scelto) {
   nodo2.dataset.dmModo = scelto.modo;
   const nome = nodo2.querySelector(".dm-radar-nome");
   if (nome) nome.textContent = scelto.nome || t("Radar meteo", "Weather radar");
+  if (scelto.modo === "windy") {
+    fermaLAnimazione();
+    daWindy(scelto, nodo2);
+    return true;
+  }
+  togliLaCornice(nodo2);
   if (scelto.modo === "entita") {
     const nota = nodo2.querySelector(".dm-radar-nota");
     if (nota) nota.textContent = t("Dove piove adesso", "Where it is raining now");
@@ -97450,7 +97642,7 @@ function numeroScritto2(valore3) {
 }
 function sceltaDelServizio(config) {
   const grezzo = clean(config?.servizio);
-  if (grezzo === "modello" || SERVIZI_RADAR[grezzo]) return grezzo;
+  if (grezzo === "modello" || grezzo === SERVIZIO_WINDY || SERVIZI_RADAR[grezzo]) return grezzo;
   return servizioScelto(config);
 }
 function fraseDellEsito(motivo) {
@@ -97483,6 +97675,21 @@ function fraseDellEsito(motivo) {
       );
     case "troppo-lenta":
       return t("Nessuna risposta in otto secondi.", "No answer within eight seconds.");
+    case "windy":
+      return t(
+        "Windy si mostra in un riquadro con la sua mappa, la sua pioggia e la sua legenda, centrato sul posto scelto qui sotto. A Windy arrivano solo il punto, lo zoom e lo strato: il riquadro non può leggere né la plancia né Home Assistant.",
+        "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant."
+      );
+    case "windy-collegamento":
+      return t(
+        "È un collegamento di Windy: il radar mostra la mappa di Windy in un riquadro, con il punto e lo zoom del collegamento se li ha. A Windy arrivano solo quelli.",
+        "This is a Windy link: the radar shows the Windy map in a frame, with the link's point and zoom if it has them. Windy only receives those."
+      );
+    case "windy-prova":
+      return t(
+        "Windy non si prova da qui: è una pagina dentro un riquadro, e il browser non dice alla plancia se è arrivata. Se il riquadro resta vuoto, questo dispositivo non raggiunge embed.windy.com.",
+        "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com."
+      );
     default:
       return t(
         "Non arriva. Controlla l'indirizzo, e che il servizio si lasci leggere da qui.",
@@ -97492,7 +97699,14 @@ function fraseDellEsito(motivo) {
 }
 function problemaDellaScelta(config) {
   if (clean(config?.servizio) !== "modello") return "";
+  if (daIndirizzoWindy(config?.modello)) return "";
   return problemaDellIndirizzo(clean(config?.modello));
+}
+function fraseWindyDellaScelta(config) {
+  const servizio2 = clean(config?.servizio);
+  if (servizio2 === SERVIZIO_WINDY) return "windy";
+  if (servizio2 === "modello" && daIndirizzoWindy(config?.modello)) return "windy-collegamento";
+  return "";
 }
 function mostraIlProblema(dentro3, config) {
   const esito2 = dentro3?.querySelector?.("[data-dm-radar-esito]");
@@ -97503,7 +97717,13 @@ function mostraIlProblema(dentro3, config) {
     esito2.textContent = fraseDellEsito(problema);
     return true;
   }
-  if (esito2.dataset.dmEsito === "male") {
+  const diWindy = fraseWindyDellaScelta(config);
+  if (diWindy) {
+    esito2.dataset.dmEsito = "windy";
+    scriviTestoSeCambia(esito2, fraseDellEsito(diWindy));
+    return false;
+  }
+  if (esito2.dataset.dmEsito === "male" || esito2.dataset.dmEsito === "windy") {
     delete esito2.dataset.dmEsito;
     esito2.textContent = FRASE_DI_SERIE();
   }
@@ -97530,6 +97750,10 @@ function serviziMarkup(scelta3) {
     ...Object.entries(SERVIZI_RADAR).map(
       ([chiave2, servizio2]) => `<option value="${esc(chiave2)}"${chiave2 === scelta3 ? " selected" : ""}>${esc(servizio2.nome)}</option>`
     ),
+    /* Windy non e' un servizio di tessere: e' la sua mappa in un riquadro. */
+    `<option value="${SERVIZIO_WINDY}"${scelta3 === SERVIZIO_WINDY ? " selected" : ""}>${esc(
+      t("Windy (mappa in un riquadro)", "Windy (map in a frame)")
+    )}</option>`,
     `<option value="modello"${scelta3 === "modello" ? " selected" : ""}>${esc(
       t("Un indirizzo mio ({z}/{x}/{y})", "An address of mine ({z}/{x}/{y})")
     )}</option>`
@@ -97563,14 +97787,16 @@ function fondiMarkup(scelta3) {
 function aggiornaVisibilita(dentro3) {
   const servizio2 = clean(dentro3?.querySelector?.('[data-dm-radar-campo="servizio"]')?.value);
   const fondo = clean(dentro3?.querySelector?.('[data-dm-radar-campo="fondo"]')?.value);
+  const modello2 = dentro3?.querySelector?.('[data-dm-radar-campo="modello"]')?.value;
+  const diWindy = servizio2 === SERVIZIO_WINDY || servizio2 === "modello" && Boolean(daIndirizzoWindy(modello2));
   for (const riga3 of dentro3?.querySelectorAll?.("[data-dm-radar-solo]") || []) {
     const quando4 = clean(riga3.dataset.dmRadarSolo);
-    riga3.hidden = quando4 === "modello" ? servizio2 !== "modello" : quando4 === "fondo-modello" ? fondo !== "modello" : false;
+    riga3.hidden = quando4 === "modello" ? servizio2 !== "modello" : quando4 === "fondo-modello" ? fondo !== "modello" || diWindy : quando4 === "tessere" ? diWindy : false;
   }
 }
 function fonteDelRadar(config = configurazione12()) {
   const scelto = radarScelto(config);
-  if (scelto) return scelto.modo;
+  if (scelto) return scelto.modo === "windy" ? "mappa" : scelto.modo;
   if (clean(config?.strada) === "entita") return "entita";
   return problemaDellaScelta(config) ? "mappa" : "nessuno";
 }
@@ -97590,7 +97816,8 @@ function conLaFonte(config, fonte, proposta = "") {
   } else if (fonte === "mappa") {
     prossima.entity = "";
     const servizio2 = clean(config.servizio);
-    if (!SERVIZI_RADAR[servizio2] && servizio2 !== "modello") prossima.servizio = SERVIZIO_DI_SERIE;
+    if (!SERVIZI_RADAR[servizio2] && servizio2 !== "modello" && servizio2 !== SERVIZIO_WINDY)
+      prossima.servizio = SERVIZIO_DI_SERIE;
   } else if (fonte === "entita") {
     prossima.entity = clean(config.entity) || proposta;
     if (!prossima.entity) prossima.servizio = "nessuno";
@@ -97660,7 +97887,7 @@ function mappaMarkup(config) {
       <label><span class="dm-radar-lbl">${esc(t("Servizio radar", "Radar service"))}</span>
         <select class="ed-input" data-dm-radar-campo="servizio">${serviziMarkup(sceltaDelServizio(config))}</select>
       </label>
-      <label><span class="dm-radar-lbl">${esc(t("Mappa di fondo", "Base map"))}</span>
+      <label data-dm-radar-solo="tessere"><span class="dm-radar-lbl">${esc(t("Mappa di fondo", "Base map"))}</span>
         <select class="ed-input" data-dm-radar-campo="fondo">${fondiMarkup(fondoScelto(config))}</select>
       </label>
     </div>
@@ -97670,7 +97897,7 @@ function mappaMarkup(config) {
     <span class="ed-form-row" data-dm-radar-solo="fondo-modello"><input class="ed-input mono"
       data-dm-radar-campo="fondoModello" value="${esc(fondoMio(config))}"
       placeholder="https://…/{z}/{x}/{y}.png" autocomplete="off" spellcheck="false"></span>
-    <span class="ed-form-row dm-radar-prova-riga"><button
+    <span class="ed-form-row dm-radar-prova-riga" data-dm-radar-solo="tessere"><button
       type="button" class="dm-radar-prova" data-dm-radar-prova>${esc(t("Prova", "Test"))}</button></span>
     <small class="dm-radar-esito" data-dm-radar-esito>${esc(FRASE_DI_SERIE())}</small>
     <div class="dm-radar-dove">
@@ -97680,16 +97907,16 @@ function mappaMarkup(config) {
       <label><span class="dm-radar-lbl">${esc(t("Raggio (km)", "Radius (km)"))}</span>
         <input class="ed-input" type="number" min="1" max="500" data-dm-radar-campo="raggio"
           value="${esc(String(config.raggio ?? RAGGIO_DI_SERIE))}"></label>
-      <label><span class="dm-radar-lbl">${esc(t("Zoom massimo della pioggia", "Rain zoom cap"))}</span>
+      <label data-dm-radar-solo="tessere"><span class="dm-radar-lbl">${esc(t("Zoom massimo della pioggia", "Rain zoom cap"))}</span>
         <input class="ed-input" type="number" min="0" max="12" step="1"
           data-dm-radar-campo="zoomPioggia" value="${esc(numeroScritto2(config.zoomPioggia))}"
           placeholder="${esc(numeroScritto2(zoomDellaPioggia({}, servizioScelto(config))))}"></label>
     </div>
-    <label class="dm-radar-animato"><input type="checkbox" data-dm-radar-campo="animato"
+    <label class="dm-radar-animato" data-dm-radar-solo="tessere"><input type="checkbox" data-dm-radar-campo="animato"
       ${clean(config.animato) === "no" ? "" : "checked"}><span>${esc(
     t("Radar animato", "Animated radar")
   )}</span></label>
-    <small>${esc(
+    <small data-dm-radar-solo="tessere">${esc(
     t(
       "Acceso, il radar mostra l'ultima ora di pioggia in movimento: si vede da che parte va il fronte, non solo dov'è adesso. Sono sei fotogrammi invece di uno, quindi sei giri di quadratini: spegnilo se la connessione è lenta o se preferisci una sola immagine.",
       "On, the radar plays the last hour of rain: you see which way the front is moving, not only where it is now. That is six frames instead of one, so six rounds of tiles: turn it off on a slow connection, or if you prefer a single image."
@@ -97762,6 +97989,12 @@ async function onClick25(event) {
     if (!dentro3 || !esito2) return;
     const config = raccogli8(dentro3);
     salva15(config);
+    if (radarScelto(config)?.modo === "windy") {
+      esito2.dataset.dmEsito = "windy";
+      esito2.textContent = fraseDellEsito("windy-prova");
+      disegnaRadar();
+      return;
+    }
     state112.provando = true;
     esito2.dataset.dmEsito = "prova";
     esito2.textContent = t("Provo…", "Testing…");
@@ -97806,6 +98039,21 @@ function installStyles51() {
       #weather-modal .dm-radar-scala{flex:0 0 96px;height:8px;border-radius:4px;background:linear-gradient(90deg,#a1d7ff,#3b8bff,#1d4ed8,#facc15,#f97316,#dc2626)}
       #weather-modal .dm-radar-vuoto{margin-left:auto;font-style:italic}
       #weather-modal .dm-radar-blocco[data-dm-modo="entita"] .dm-radar-legenda{display:none}
+      /* Windy porta la sua legenda, il suo orologio e la sua mappa: le nostre
+         sopra sarebbero un doppione che non corrisponde a quello che si vede.
+         Il riquadro sta dentro la stessa cornice arrotondata del radar a
+         tessere, chiaro o scuro che sia il tema. */
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-legenda,
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-mirino,
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-img,
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-ora,
+      #weather-modal .dm-radar-blocco[data-dm-modo="windy"] .dm-radar-fondo-muto{display:none}
+      /* color-scheme normale: con il tema scuro della plancia e una pagina
+         dentro che non ne dichiara uno, il browser stende un fondo bianco
+         opaco sotto il riquadro; cosi' finche' Windy non disegna si vede il
+         fondo del quadro, scuro o chiaro come il resto. */
+      #weather-modal .dm-radar-windy{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;
+        background:var(--bg-sculpted,#0b1220);color-scheme:normal}
       /* Configurato male: resta la testa con la spiegazione, il quadro no. */
       #weather-modal .dm-radar-blocco[data-dm-modo="guasto"] .dm-radar-quadro,
       #weather-modal .dm-radar-blocco[data-dm-modo="guasto"] .dm-radar-legenda{display:none}
@@ -97885,6 +98133,7 @@ function installStyles51() {
         font:inherit;font-size:12px;font-weight:800;color:var(--primary-color,#0ea5e9)}
       #ed-body .dm-radar-esito[data-dm-esito="bene"]{color:#059669;font-weight:700}
       #ed-body .dm-radar-esito[data-dm-esito="male"]{color:#dc2626;font-weight:700}
+      #ed-body .dm-radar-esito[data-dm-esito="windy"]{color:var(--text,#0f172a);font-weight:600}
       #ed-body .dm-radar-dove{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0}
       /* Le caselle dell'indirizzo si vedono solo con «un indirizzo mio»: la
          riga del guscio ha un display suo, e hidden da solo non la batte. */
@@ -98942,6 +99191,7 @@ function sottotitoloDelRadar() {
   const scelto = radarScelto();
   if (!scelto) return "";
   if (scelto.modo === "entita") return t("dalla tua camera", "from your camera");
+  if (scelto.modo === "windy") return "Windy";
   return [
     scelto.animato ? t("l'ultima ora", "the last hour") : t("adesso", "now"),
     `${scelto.raggio}${SPAZIO5}km`
