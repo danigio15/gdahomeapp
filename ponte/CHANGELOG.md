@@ -10,6 +10,24 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.2
+
+- **Meteo sul pannello a muro:** nuova pagina «Meteo» in «Aggiungi una
+  pagina»: adesso in grande, la prossima pioggia, percepita, umidità, vento e
+  pressione, le prossime 12 ore e i prossimi 7 giorni. Usa il meteo già
+  scelto per il muro; va bene sul tablet grande, su quello piccolo e in
+  verticale.
+- **Elettrodomestico finito:** ogni elettrodomestico ha la sua icona sulla
+  scheda (lavastoviglie, lavatrice, asciugatrice e gli altri), e una presa
+  a muro per quelli che non si riconoscono (disegno nuovo anche nella
+  plancia).
+- **Prova delle notifiche per tutte le voci:** «Prova: mandamela adesso» manda
+  un esempio di ogni notifica, con le parole e i tasti di quella vera (i tasti
+  di una prova non comandano niente).
+- **«Apri la giornata»** apre la giornata anche dalla prova del riepilogo.
+- **Quando partire:** il tasto «Apri il garage» della notifica apre davvero
+  il garage.
+
 ## 1.16.1
 
 - **Riquadri con l'immagine:** i Dispositivi della Home, le prese e i posti
