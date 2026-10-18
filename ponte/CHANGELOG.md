@@ -30,6 +30,13 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
   col sensore di presenza di casa o il sensore di prossimità del tablet.
 - **Batteria Huawei LUNA2000:** riconosciuta da sola, e la scheda «Batteria di
   accumulo» dice che è facoltativa.
+- **Notifiche da Home Assistant:** GdAHome trova le automazioni che mandano
+  notifiche al telefono e, se le accendi, le manda uguali anche nell'app
+  (Notifiche → «Da Home Assistant»). Partono tutte spente. Con Premium anche
+  foto, tasti e invio agli altri telefoni.
+- **Prove delle notifiche senza limite**, e non tolgono posto a quelle vere.
+- **Menu dell'app:** Automazioni fra le Avanzate, e il bollino PREMIUM su
+  tutte le voci Premium.
 - **Il nome si scrive GdAHome:** così lo leggi nell'app, nella plancia, nelle
   notifiche e in Home Assistant. Non cambia niente da fare: la casa, gli
   abbinamenti e le impostazioni restano quelli di prima.
