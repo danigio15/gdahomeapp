@@ -47,8 +47,8 @@ export default Object.freeze({
     "Choisissez la destination et l'heure : je vous dirai quand partir.",
   "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
     "Planifiez vos trajets ici et retrouvez-les sur le téléphone, CarPlay et Android Auto, avec un rappel de départ et la clim de la voiture allumée à l'avance. À débloquer dans l'app GdAHome, page Premium.",
-  "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
-    "Planifiez vos trajets ici : vous les retrouvez dans gdanav sur le téléphone, CarPlay et Android Auto.",
+  "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.":
+    "Planifiez vos trajets ici : vous les retrouvez dans GdANav sur le téléphone, CarPlay et Android Auto.",
   "Planned trips": "Trajets planifiés",
   "Read-only: they do not count in the home average":
     "Lecture seule : elles ne comptent pas dans la moyenne de la maison",
@@ -58,7 +58,7 @@ export default Object.freeze({
   "The garage": "Le garage",
   "The home is not answering: try again shortly.":
     "La maison ne répond pas : réessayez dans un instant.",
-  "The planner is part of gdanav Premium": "Le planificateur fait partie de gdanav Premium",
+  "The planner is part of GdANav Premium": "Le planificateur fait partie de GdANav Premium",
   "The route": "L'itinéraire",
   "The trip was not saved: check destination, day and time.":
     "Le trajet n'a pas été enregistré : vérifiez la destination, le jour et l'heure.",
@@ -90,14 +90,14 @@ export default Object.freeze({
   "And one more that does not fit this list.": "Et une autre qui ne tient pas dans cette liste.",
   Upcoming: "À venir",
   "Where to?": "Où allez-vous ?",
-  "With traffic, estimated by gdanav": "Avec le trafic, estimé par gdanav",
-  "Without traffic, with a margin: gdanav recalculates with live traffic until you leave":
-    "Sans trafic, avec une marge : gdanav recalcule avec le trafic réel jusqu'au départ",
+  "With traffic, estimated by GdANav": "Avec le trafic, estimé par GdANav",
+  "Without traffic, with a margin: GdANav recalculates with live traffic until you leave":
+    "Sans trafic, avec une marge : GdANav recalcule avec le trafic réel jusqu'au départ",
   "You already have 50 trips: remove some.":
     "Vous avez déjà 50 trajets : supprimez-en quelques-uns.",
   "You arrive around": "Arrivée vers",
-  "You find it right away in gdanav, on the phone and in the car.":
-    "Vous le retrouvez aussitôt dans gdanav, sur le téléphone et en voiture.",
+  "You find it right away in GdANav, on the phone and in the car.":
+    "Vous le retrouvez aussitôt dans GdANav, sur le téléphone et en voiture.",
   "appliance running": "appareil en marche",
   Back: "Retour",
   "Choose the climate entity: it is the one starting with climate.":
@@ -259,8 +259,8 @@ export default Object.freeze({
   "for ${minuti} min": "depuis ${minuti} min",
   "for ${ore} h": "depuis ${ore} h",
   "from before": "depuis avant",
-  gdanav: "gdanav",
-  "gdanav Premium is needed.": "gdanav Premium est nécessaire.",
+  GdANav: "GdANav",
+  "GdANav Premium is needed.": "GdANav Premium est nécessaire.",
   "included here: the counter had already made them before its statistics began":
     "inclus ici : le compteur les avait déjà enregistrés avant le début de ses statistiques",
   "leave at": "départ à",
@@ -6120,7 +6120,7 @@ export default Object.freeze({
   "at departure ${via}": "au départ ${via}",
   "Car battery: ${ora}": "Batterie de la voiture : ${ora}",
   "Chargers": "Bornes",
-  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.": "Bornes : © OpenStreetMap et Piattaforma Unica Nazionale, dans la maison. En route, gdanav vérifie qu'elles sont libres et, si besoin, change l'arrêt.",
+  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.": "Bornes : © OpenStreetMap et Piattaforma Unica Nazionale, dans la maison. En route, GdANav vérifie qu'elles sont libres et, si besoin, change l'arrêt.",
   "Charging at home · ${fino} at ${ora}": "En charge à la maison · ${fino} à ${ora}",
   "Charging stops": "Arrêts de recharge",
   "Charging: ${minuti} in ${n} stops": "Recharge : ${minuti} en ${n} arrêts",
@@ -6132,7 +6132,7 @@ export default Object.freeze({
   "from ${da} to ${a} · ${min} min": "de ${da} à ${a} · ${min} min",
   "From ${n} kW": "Dès ${n} kW",
   "Full": "Pleine",
-  "gdanav picks the charger on the way": "gdanav choisit la borne en route",
+  "GdANav picks the charger on the way": "GdANav choisit la borne en route",
   "leave": "départ",
   "leave ${alle}": "repartez ${alle}",
   "Minimum charge on arrival": "Charge minimale à l'arrivée",
@@ -6144,9 +6144,9 @@ export default Object.freeze({
   "range": "autonomie",
   "Stop ${n} · after ${km} km": "Arrêt ${n} · après ${km} km",
   "Stop around km ${km} · about ${min} min": "Arrêt vers le km ${km} · environ ${min} min",
-  "Stops picked by gdanav on the way, with free chargers.": "Arrêts choisis par gdanav en route, avec des bornes libres.",
+  "Stops picked by GdANav on the way, with free chargers.": "Arrêts choisis par GdANav en route, avec des bornes libres.",
   "The battery is not answering": "La batterie ne répond pas",
-  "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.": "Les bornes ne sont pas encore dans la maison : arrêts au kilomètre. En route, gdanav choisit les bornes et vérifie qu'elles sont libres.",
+  "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "Les bornes ne sont pas encore dans la maison : arrêts au kilomètre. En route, GdANav choisit les bornes et vérifie qu'elles sont libres.",
   "The electric car's battery and range, and the charging stops if it is not enough.": "La batterie et l'autonomie de la voiture électrique, et les arrêts de recharge si elle ne suffit pas.",
   "The minimum power to stop at": "La puissance minimale pour s'arrêter",
   "The stops come with the route": "Les arrêts arrivent avec l'itinéraire",

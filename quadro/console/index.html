@@ -4194,7 +4194,7 @@
        * dire di no, e qui si vede prima di premere.
        * ─────────────────────────────────────────────────────────────────── */
 
-      const IL_NOME_DELLA_APP = { gdahome: "GdAHome Premium", gdanav: "gdanav Premium" };
+      const IL_NOME_DELLA_APP = { gdahome: "GdAHome Premium", gdanav: "GdANav Premium" };
       const LE_APP = ["gdahome", "gdanav"];
 
       /* Una durata a parole: «1 mese», «1 anno», «per sempre». I mesi
@@ -4280,7 +4280,7 @@
         return `
           <h1 class="titolone">Licenze</h1>
           <p class="sottotitolo">
-            Le licenze Premium che puoi regalare ai tuoi clienti. <b>GdAHome Premium</b> vale per tutta la casa, e comprende gdanav Premium; <b>gdanav Premium</b> da solo vale per un telefono, e si consegna con un codice.
+            Le licenze Premium che puoi regalare ai tuoi clienti. <b>GdAHome Premium</b> vale per tutta la casa, e comprende GdANav Premium; <b>GdANav Premium</b> da solo vale per un telefono, e si consegna con un codice.
           </p>
 
           <div class="abbina">
@@ -4306,7 +4306,7 @@
                     <label for="licenza-app">App</label>
                     <select id="licenza-app">
                       <option value="gdahome"${primaApp === "gdahome" ? " selected" : ""}>GdAHome Premium</option>
-                      <option value="gdanav"${primaApp === "gdanav" ? " selected" : ""}>gdanav Premium</option>
+                      <option value="gdanav"${primaApp === "gdanav" ? " selected" : ""}>GdANav Premium</option>
                     </select>
                   </div>
                   <div class="campo">
@@ -5418,7 +5418,7 @@
                   maxlength="40"
                   data-veste-velo
                   value="${testo(sue.velo || "")}"
-                  placeholder="${testo(IO.nome || "gdahome")}"
+                  placeholder="${testo(IO.nome || "GdAHome")}"
                   autocomplete="off"
                 />
               </label>
@@ -5524,7 +5524,7 @@
                   type="text"
                   maxlength="40"
                   data-nuova-velo
-                  placeholder="${testo(IO.nome || "gdahome")}"
+                  placeholder="${testo(IO.nome || "GdAHome")}"
                   autocomplete="off"
                   ${alLimite ? "disabled" : ""}
                 />

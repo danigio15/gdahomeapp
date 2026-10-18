@@ -128,7 +128,7 @@ dependencies:
       url: https://github.com/danigio15/gdanav.git
       path: packages/gdanav_app
       # Il commit preciso sta in pubspec.lock, e lo porta avanti il workflow
-      # «Aggiorna gdanav».
+      # «Aggiorna GdANav».
       ref: main
 
   # Le notifiche della casa (`lib/notifiche/`, `docs/NOTIFICHE.md`).

@@ -5738,7 +5738,7 @@
               tinta: "ambra",
               icona: "abbonamenti",
               titolo: `${nomi.get(uno.sog) || (String(uno.sog).startsWith("tel_") ? "Un telefono" : "Una casa")} ha disdetto l'abbonamento`,
-              sotto: `${uno.app === "gdanav" ? "gdanav" : "gdahome"} Premium finisce${uno.pagato ? ` ${conLArticolo("il", uno.pagato)}` : " alla scadenza"}`,
+              sotto: `${uno.app === "gdanav" ? "GdANav" : "GdAHome"} Premium finisce${uno.pagato ? ` ${conLArticolo("il", uno.pagato)}` : " alla scadenza"}`,
               vai: "abbonamenti",
               filtro: "disdetto",
             });
@@ -6433,7 +6433,7 @@
        * lui a dirlo.
        * ─────────────────────────────────────────────────────────────────── */
 
-      const IL_NOME_DELLA_APP = { gdahome: "GdAHome Premium", gdanav: "gdanav Premium" };
+      const IL_NOME_DELLA_APP = { gdahome: "GdAHome Premium", gdanav: "GdANav Premium" };
       const DA_DOVE = {
         negozio: "dal negozio",
         regalo: "regalo del gestore",
@@ -6873,7 +6873,7 @@
                 : uno.piano || "Piano non detto"
           }${uno.prezzo && cat !== "prova" ? ` ${iSoldi(uno.prezzo, uno.valuta)}` : ""}`;
           const pezzi = [
-            `${uno.app === "gdanav" ? "gdanav · " : ""}${dove}`,
+            `${uno.app === "gdanav" ? "GdANav · " : ""}${dove}`,
             piano,
             ...(uno.inizio ? [conLArticolo("dal", uno.inizio)] : []),
             ...(uno.pagato && cat !== "test" ? [laFraseDellaRiga(uno)] : []),
@@ -7185,7 +7185,7 @@
           <div class="capo-sezione">
             <div>
               <h2>Regali e codici</h2>
-              <p>Premium regalato da te o dagli installatori. GdAHome Premium è <b>della casa</b>: tutti i telefoni abbinati a quella casa sono Premium insieme. gdanav Premium da solo è <b>del telefono</b>, e si regala con un codice. Chi compra nell'app sta in «Abbonamenti».</p>
+              <p>Premium regalato da te o dagli installatori. GdAHome Premium è <b>della casa</b>: tutti i telefoni abbinati a quella casa sono Premium insieme. GdANav Premium da solo è <b>del telefono</b>, e si regala con un codice. Chi compra nell'app sta in «Abbonamenti».</p>
             </div>
           </div>
 
@@ -7204,7 +7204,7 @@
             CODICI_APPENA
               ? `<section class="chiave-nuova">
                    <b>${plurale(CODICI_APPENA.codici.length, "codice", "codici")} ${testo(IL_NOME_DELLA_APP[CODICI_APPENA.app] || "")} · ${testo(quantiMesi(CODICI_APPENA.mesi))}</b>
-                   <p>Ognuno vale <b>una volta sola</b>: si riscatta dall'app GdAHome (per la casa) o da gdanav (per il telefono), in «Ho un codice regalo». Restano anche nell'elenco qui sotto finché nessuno li usa.</p>
+                   <p>Ognuno vale <b>una volta sola</b>: si riscatta dall'app GdAHome (per la casa) o da GdANav (per il telefono), in «Ho un codice regalo». Restano anche nell'elenco qui sotto finché nessuno li usa.</p>
                    <div class="codici-fatti">
                      ${CODICI_APPENA.codici.map((uno) => `<div class="valore">${testo(uno)}</div>`).join("")}
                    </div>
@@ -7233,7 +7233,7 @@
                   <label for="regalo-app">App</label>
                   <select id="regalo-app">
                     <option value="gdahome">GdAHome Premium</option>
-                    <option value="gdanav">gdanav Premium</option>
+                    <option value="gdanav">GdANav Premium</option>
                   </select>
                 </div>
                 <div class="campo">
@@ -7258,7 +7258,7 @@
                   <label for="codici-app">Per</label>
                   <select id="codici-app">
                     <option value="gdahome">GdAHome Premium</option>
-                    <option value="gdanav">gdanav Premium</option>
+                    <option value="gdanav">GdANav Premium</option>
                   </select>
                 </div>
                 <div class="campo">
@@ -7379,7 +7379,7 @@
           PACCHETTI_APERTI.delete(chi);
           BOZZE.delete(chi);
           if (riga) riga.hidden = true;
-          avvisa(`${ilNomeDi(chi)}: ${quante("gdahome")} GdAHome e ${quante("gdanav")} gdanav`);
+          avvisa(`${ilNomeDi(chi)}: ${quante("gdahome")} GdAHome e ${quante("gdanav")} GdANav`);
         });
       }
 

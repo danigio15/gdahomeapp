@@ -176,10 +176,10 @@ part 'notifiche_da_home_assistant.dart';
         titolo: inLingua(it: 'Quando partire', en: 'When to leave'),
         sotto: inLingua(
           it:
-              'I viaggi pianificati in gdanav, col traffico: arriva anche '
+              'I viaggi pianificati in GdANav, col traffico: arriva anche '
               'nelle ore di silenzio',
           en:
-              'Trips planned in gdanav, with traffic: it comes even during '
+              'Trips planned in GdANav, with traffic: it comes even during '
               'quiet hours',
         ),
       ),

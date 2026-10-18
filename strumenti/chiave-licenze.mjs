@@ -67,7 +67,7 @@ function leggiGliArgomenti(argv) {
     else if (uno === "--senza-centralino") detti.senzaCentralino = true;
     else if (uno === "--aiuto" || uno === "-h" || uno === "--help") {
       process.stdout.write(
-        "node strumenti/chiave-licenze.mjs [--gdanav <cartella di gdanav>] [--pubblica <x>] [--radice <cartella>]\n" +
+        "node strumenti/chiave-licenze.mjs [--gdanav <cartella di GdANav>] [--pubblica <x>] [--radice <cartella>]\n" +
           "node strumenti/chiave-licenze.mjs --senza-centralino --pubblica <x> [--radice <cartella>]\n",
       );
       process.exit(0);
@@ -154,7 +154,7 @@ if (detti.senzaCentralino && !x)
   );
 if (detti.senzaCentralino && detti.gdanav)
   fermati(
-    "--senza-centralino non tocca gdanav: dentro GdAHome segue la casa, e da sola non e' ancora nel negozio",
+    "--senza-centralino non tocca GdANav: dentro GdAHome segue la casa, e da sola non e' ancora nel negozio",
   );
 if (x) {
   if (!eUnaChiave(x))
@@ -189,7 +189,7 @@ for (const via of DI_QUI_DART)
 if (detti.gdanav) {
   const cartella = resolve(detti.gdanav);
   if (!existsSync(join(cartella, "packages")))
-    fermati(`${cartella} non sembra gdanav: non c'e' packages/`);
+    fermati(`${cartella} non sembra GdANav: non c'e' packages/`);
   const file = join(cartella, IN_GDANAV_DART);
   scritti.push([file, scriviNelDart(file, x)]);
 }
@@ -208,7 +208,7 @@ process.stdout.write(
         "  resta aperto finche' non si rilancia senza --senza-centralino.\n"
       : detti.gdanav
         ? ""
-        : "\n  gdanav non e' stato toccato: rilancia con --pubblica e --gdanav <cartella>.\n"),
+        : "\n  GdANav non e' stato toccato: rilancia con --pubblica e --gdanav <cartella>.\n"),
 );
 
 if (d) {
@@ -221,7 +221,7 @@ if (d) {
       "  Poi cancellala da qui: non va in nessun file della repository, in\n" +
       "  nessun segreto di GitHub e in nessuna chat. Chi ce l'ha fa Premium\n" +
       "  chiunque. Se esce, si rilancia questo script e si rilascia tutto.\n\n" +
-      "  Prima del rilascio: ponte, centralino, app GdAHome e gdanav\n" +
+      "  Prima del rilascio: ponte, centralino, app GdAHome e GdANav\n" +
       "  devono uscire tutti con questa pubblica.\n\n",
   );
 }

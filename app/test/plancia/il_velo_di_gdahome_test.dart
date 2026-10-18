@@ -11,7 +11,7 @@ void main() {
   test('il velo di serie diventa quello di GdAHome: logo e parola', () {
     final fatto = colVeloDiGdahome(diSerie);
     expect(fatto, isNot(contains('DashboardModern')));
-    expect(fatto, contains('<b>gdahome</b>'));
+    expect(fatto, contains('<b>GdAHome</b>'));
     expect(fatto, contains('<img src="data:image/webp;base64,$logoDelVelo"'));
     expect(fatto, isNot(contains('base64,AAAA')));
   });

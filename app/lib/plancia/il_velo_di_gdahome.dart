@@ -93,6 +93,6 @@ String colVeloDiGdahome(String pagina, {String velo = ''}) {
       )
       .replaceFirst(
         _parolaDiSerie,
-        '<b>${parola.isEmpty ? 'gdahome' : parola}</b>',
+        '<b>${parola.isEmpty ? 'GdAHome' : parola}</b>',
       );
 }

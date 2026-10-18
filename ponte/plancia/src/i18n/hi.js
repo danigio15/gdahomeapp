@@ -45,8 +45,8 @@ export default Object.freeze({
     "गंतव्य और समय चुनें: मैं बताऊँगा कब निकलना है।",
   "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
     "यहाँ से यात्राएँ प्लान करें और उन्हें फ़ोन, CarPlay और Android Auto पर पाएँ, निकलने की याद और पहले से चालू कार क्लाइमेट के साथ। GdAHome ऐप के Premium पेज से अनलॉक करें।",
-  "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
-    "यहाँ से यात्राएँ प्लान करें: ये gdanav में फ़ोन, CarPlay और Android Auto पर मिलेंगी।",
+  "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.":
+    "यहाँ से यात्राएँ प्लान करें: ये GdANav में फ़ोन, CarPlay और Android Auto पर मिलेंगी।",
   "Planned trips": "योजनाबद्ध यात्राएँ",
   "Read-only: they do not count in the home average":
     "केवल पढ़ने के लिए: ये घर के औसत में नहीं गिने जाते",
@@ -56,7 +56,7 @@ export default Object.freeze({
   "The garage": "गैराज",
   "The home is not answering: try again shortly.":
     "घर जवाब नहीं दे रहा: थोड़ी देर में फिर कोशिश करें।",
-  "The planner is part of gdanav Premium": "प्लानर gdanav Premium का हिस्सा है",
+  "The planner is part of GdANav Premium": "प्लानर GdANav Premium का हिस्सा है",
   "The route": "रास्ता",
   "The trip was not saved: check destination, day and time.":
     "यात्रा सहेजी नहीं गई: गंतव्य, दिन और समय जाँचें।",
@@ -87,13 +87,13 @@ export default Object.freeze({
   "And one more that does not fit this list.": "और एक अन्य जो इस सूची में नहीं आती।",
   Upcoming: "आगामी",
   "Where to?": "कहाँ जाना है?",
-  "With traffic, estimated by gdanav": "ट्रैफ़िक सहित, gdanav का अनुमान",
-  "Without traffic, with a margin: gdanav recalculates with live traffic until you leave":
-    "बिना ट्रैफ़िक, मार्जिन के साथ: निकलने तक gdanav लाइव ट्रैफ़िक से फिर गणना करता है",
+  "With traffic, estimated by GdANav": "ट्रैफ़िक सहित, GdANav का अनुमान",
+  "Without traffic, with a margin: GdANav recalculates with live traffic until you leave":
+    "बिना ट्रैफ़िक, मार्जिन के साथ: निकलने तक GdANav लाइव ट्रैफ़िक से फिर गणना करता है",
   "You already have 50 trips: remove some.": "आपकी पहले से 50 यात्राएँ हैं: कुछ हटाएँ।",
   "You arrive around": "पहुँचने का समय लगभग",
-  "You find it right away in gdanav, on the phone and in the car.":
-    "यह तुरंत gdanav में, फ़ोन पर और कार में मिल जाएगी।",
+  "You find it right away in GdANav, on the phone and in the car.":
+    "यह तुरंत GdANav में, फ़ोन पर और कार में मिल जाएगी।",
   "appliance running": "उपकरण चल रहा है",
   Back: "वापस",
   "Choose the climate entity: it is the one starting with climate.":
@@ -253,8 +253,8 @@ export default Object.freeze({
   "for ${minuti} min": "${minuti} मिनट से",
   "for ${ore} h": "${ore} घंटे से",
   "from before": "इससे पहले से",
-  gdanav: "gdanav",
-  "gdanav Premium is needed.": "gdanav Premium चाहिए।",
+  GdANav: "GdANav",
+  "GdANav Premium is needed.": "GdANav Premium चाहिए।",
   "included here: the counter had already made them before its statistics began":
     "यहाँ शामिल: मीटर ने इन्हें अपने आँकड़े शुरू होने से पहले ही दर्ज कर लिया था",
   "leave at": "निकलें",
@@ -6045,7 +6045,7 @@ export default Object.freeze({
   "at departure ${via}": "निकलते समय ${via}",
   "Car battery: ${ora}": "कार की बैटरी: ${ora}",
   "Chargers": "चार्जर",
-  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.": "चार्जर: © OpenStreetMap और Piattaforma Unica Nazionale, घर में। रास्ते में gdanav देखता है कि वे खाली हैं और ज़रूरत हो तो पड़ाव बदल देता है।",
+  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.": "चार्जर: © OpenStreetMap और Piattaforma Unica Nazionale, घर में। रास्ते में GdANav देखता है कि वे खाली हैं और ज़रूरत हो तो पड़ाव बदल देता है।",
   "Charging at home · ${fino} at ${ora}": "घर पर चार्ज हो रही है · ${fino}, ${ora} तक",
   "Charging stops": "चार्जिंग पड़ाव",
   "Charging: ${minuti} in ${n} stops": "चार्जिंग: ${minuti}, ${n} पड़ावों में",
@@ -6057,7 +6057,7 @@ export default Object.freeze({
   "from ${da} to ${a} · ${min} min": "${da} से ${a} · ${min} मिनट",
   "From ${n} kW": "${n} kW से",
   "Full": "पूरी",
-  "gdanav picks the charger on the way": "gdanav रास्ते में चार्जर चुनता है",
+  "GdANav picks the charger on the way": "GdANav रास्ते में चार्जर चुनता है",
   "leave": "निकलें",
   "leave ${alle}": "फिर निकलें ${alle}",
   "Minimum charge on arrival": "पहुँचने पर न्यूनतम चार्ज",
@@ -6069,9 +6069,9 @@ export default Object.freeze({
   "range": "रेंज",
   "Stop ${n} · after ${km} km": "पड़ाव ${n} · ${km} किमी बाद",
   "Stop around km ${km} · about ${min} min": "लगभग ${km} किमी पर पड़ाव · करीब ${min} मिनट",
-  "Stops picked by gdanav on the way, with free chargers.": "रास्ते में gdanav द्वारा चुने गए पड़ाव, खाली चार्जरों के साथ।",
+  "Stops picked by GdANav on the way, with free chargers.": "रास्ते में GdANav द्वारा चुने गए पड़ाव, खाली चार्जरों के साथ।",
   "The battery is not answering": "बैटरी जवाब नहीं दे रही",
-  "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.": "चार्जर अभी घर में नहीं हैं: पड़ाव किलोमीटर के हिसाब से। रास्ते में gdanav चार्जर चुनता है और देखता है कि वे खाली हैं।",
+  "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "चार्जर अभी घर में नहीं हैं: पड़ाव किलोमीटर के हिसाब से। रास्ते में GdANav चार्जर चुनता है और देखता है कि वे खाली हैं।",
   "The electric car's battery and range, and the charging stops if it is not enough.": "इलेक्ट्रिक कार की बैटरी और रेंज, और कम पड़े तो चार्जिंग पड़ाव।",
   "The minimum power to stop at": "रुकने के लिए न्यूनतम पावर",
   "The stops come with the route": "पड़ाव रास्ते के साथ आते हैं",

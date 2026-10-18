@@ -43,8 +43,8 @@ export default Object.freeze({
     "选择目的地和时间：我会告诉你何时出发。",
   "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
     "在这里规划行程，即可在手机、CarPlay 和 Android Auto 上使用，并提供出发提醒和提前开启车内空调。在 GdAHome 应用的 Premium 页面解锁。",
-  "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
-    "在这里规划行程：可在 gdanav 的手机、CarPlay 和 Android Auto 中找到。",
+  "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.":
+    "在这里规划行程：可在 GdANav 的手机、CarPlay 和 Android Auto 中找到。",
   "Planned trips": "计划的行程",
   "Read-only: they do not count in the home average": "仅供查看：不计入全屋平均值",
   "Remind me": "提醒我",
@@ -52,7 +52,7 @@ export default Object.freeze({
   "The destination is missing.": "缺少目的地。",
   "The garage": "车库",
   "The home is not answering: try again shortly.": "家中设备无响应：请稍后重试。",
-  "The planner is part of gdanav Premium": "行程规划属于 gdanav Premium",
+  "The planner is part of GdANav Premium": "行程规划属于 GdANav Premium",
   "The route": "路线",
   "The trip was not saved: check destination, day and time.":
     "行程未保存：请检查目的地、日期和时间。",
@@ -83,13 +83,13 @@ export default Object.freeze({
   "And one more that does not fit this list.": "还有 1 项未列在此处。",
   Upcoming: "即将出发",
   "Where to?": "去哪里？",
-  "With traffic, estimated by gdanav": "含路况，由 gdanav 估算",
-  "Without traffic, with a margin: gdanav recalculates with live traffic until you leave":
-    "未含路况，留有余量：出发前 gdanav 会按实时路况重新计算",
+  "With traffic, estimated by GdANav": "含路况，由 GdANav 估算",
+  "Without traffic, with a margin: GdANav recalculates with live traffic until you leave":
+    "未含路况，留有余量：出发前 GdANav 会按实时路况重新计算",
   "You already have 50 trips: remove some.": "已有 50 个行程：请删除一些。",
   "You arrive around": "预计到达",
-  "You find it right away in gdanav, on the phone and in the car.":
-    "立即出现在 gdanav 中，手机和车上都能看到。",
+  "You find it right away in GdANav, on the phone and in the car.":
+    "立即出现在 GdANav 中，手机和车上都能看到。",
   "appliance running": "台家电运行中",
   Back: "返回",
   "Choose the climate entity: it is the one starting with climate.":
@@ -247,8 +247,8 @@ export default Object.freeze({
   "for ${minuti} min": "已 ${minuti} 分钟",
   "for ${ore} h": "已 ${ore} 小时",
   "from before": "早于",
-  gdanav: "gdanav",
-  "gdanav Premium is needed.": "需要 gdanav Premium。",
+  GdANav: "GdANav",
+  "GdANav Premium is needed.": "需要 GdANav Premium。",
   "included here: the counter had already made them before its statistics began":
     "已计入此处：统计开始之前电表就已经计量过这些电量",
   "leave at": "出发",
@@ -5951,7 +5951,7 @@ export default Object.freeze({
   "at departure ${via}": "出发时 ${via}",
   "Car battery: ${ora}": "汽车电量：${ora}",
   "Chargers": "充电站",
-  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.": "充电站：© OpenStreetMap 和 Piattaforma Unica Nazionale，在家中。途中 gdanav 会查看是否空闲，必要时更换停靠点。",
+  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.": "充电站：© OpenStreetMap 和 Piattaforma Unica Nazionale，在家中。途中 GdANav 会查看是否空闲，必要时更换停靠点。",
   "Charging at home · ${fino} at ${ora}": "在家充电中 · ${fino}，${ora}",
   "Charging stops": "充电停靠",
   "Charging: ${minuti} in ${n} stops": "充电：${minuti}，${n} 次停靠",
@@ -5963,7 +5963,7 @@ export default Object.freeze({
   "from ${da} to ${a} · ${min} min": "${da} → ${a} · ${min} 分钟",
   "From ${n} kW": "${n} kW 起",
   "Full": "充满",
-  "gdanav picks the charger on the way": "途中由 gdanav 选择充电站",
+  "GdANav picks the charger on the way": "途中由 GdANav 选择充电站",
   "leave": "出发",
   "leave ${alle}": "再出发 ${alle}",
   "Minimum charge on arrival": "到达时最低电量",
@@ -5975,9 +5975,9 @@ export default Object.freeze({
   "range": "续航",
   "Stop ${n} · after ${km} km": "停靠 ${n} · 行驶 ${km} 公里后",
   "Stop around km ${km} · about ${min} min": "约在 ${km} 公里处停靠 · 约 ${min} 分钟",
-  "Stops picked by gdanav on the way, with free chargers.": "途中由 gdanav 选择的停靠，充电站空闲。",
+  "Stops picked by GdANav on the way, with free chargers.": "途中由 GdANav 选择的停靠，充电站空闲。",
   "The battery is not answering": "电池没有响应",
-  "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.": "家中还没有充电站数据：按公里给出停靠。途中 gdanav 会选择充电站并查看是否空闲。",
+  "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "家中还没有充电站数据：按公里给出停靠。途中 GdANav 会选择充电站并查看是否空闲。",
   "The electric car's battery and range, and the charging stops if it is not enough.": "电动汽车的电量和续航，不够时的充电停靠。",
   "The minimum power to stop at": "停靠的最低功率",
   "The stops come with the route": "停靠会随路线一起给出",

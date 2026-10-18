@@ -3017,7 +3017,7 @@
     elenco.appendChild(unaRigaDiLicenza("GdAHome", gdahome, perBaseGdahome()));
     elenco.appendChild(
       unaRigaDiLicenza(
-        "gdanav",
+        "GdANav",
         gdanav,
         due(
           "Base: navigazione completa per l'auto termica",

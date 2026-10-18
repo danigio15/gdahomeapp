@@ -45,8 +45,8 @@ export default Object.freeze({
     "اختر الوجهة والوقت: سأخبرك متى تغادر.",
   "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
     "خطّط للرحلات من هنا وستجدها على الهاتف وCarPlay وAndroid Auto، مع تذكير بالمغادرة وتشغيل تكييف السيارة مسبقًا. يُفتح من تطبيق GdAHome في صفحة Premium.",
-  "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
-    "خطّط للرحلات من هنا: تجدها في gdanav على الهاتف وCarPlay وAndroid Auto.",
+  "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.":
+    "خطّط للرحلات من هنا: تجدها في GdANav على الهاتف وCarPlay وAndroid Auto.",
   "Planned trips": "الرحلات المخططة",
   "Read-only: they do not count in the home average": "للقراءة فقط: لا تُحتسب في متوسط المنزل",
   "Remind me": "ذكّرني",
@@ -54,7 +54,7 @@ export default Object.freeze({
   "The destination is missing.": "الوجهة غير محددة.",
   "The garage": "المرآب",
   "The home is not answering: try again shortly.": "المنزل لا يستجيب: حاول بعد قليل.",
-  "The planner is part of gdanav Premium": "المخطِّط جزء من gdanav Premium",
+  "The planner is part of GdANav Premium": "المخطِّط جزء من GdANav Premium",
   "The route": "المسار",
   "The trip was not saved: check destination, day and time.":
     "لم تُحفَظ الرحلة: تحقق من الوجهة واليوم والوقت.",
@@ -85,13 +85,13 @@ export default Object.freeze({
   "And one more that does not fit this list.": "وواحدة أخرى لا تتسع لها هذه القائمة.",
   Upcoming: "القادمة",
   "Where to?": "إلى أين؟",
-  "With traffic, estimated by gdanav": "مع حركة المرور، بتقدير gdanav",
-  "Without traffic, with a margin: gdanav recalculates with live traffic until you leave":
-    "بدون حركة مرور مع هامش: يعيد gdanav الحساب بحركة المرور الحية حتى تغادر",
+  "With traffic, estimated by GdANav": "مع حركة المرور، بتقدير GdANav",
+  "Without traffic, with a margin: GdANav recalculates with live traffic until you leave":
+    "بدون حركة مرور مع هامش: يعيد GdANav الحساب بحركة المرور الحية حتى تغادر",
   "You already have 50 trips: remove some.": "لديك 50 رحلة بالفعل: احذف بعضها.",
   "You arrive around": "تصل حوالي",
-  "You find it right away in gdanav, on the phone and in the car.":
-    "تجدها فورًا في gdanav على الهاتف وفي السيارة.",
+  "You find it right away in GdANav, on the phone and in the car.":
+    "تجدها فورًا في GdANav على الهاتف وفي السيارة.",
   "appliance running": "جهاز يعمل",
   Back: "رجوع",
   "Choose the climate entity: it is the one starting with climate.":
@@ -251,8 +251,8 @@ export default Object.freeze({
   "for ${minuti} min": "منذ ${minuti} دقيقة",
   "for ${ore} h": "منذ ${ore} ساعة",
   "from before": "من قبل",
-  gdanav: "gdanav",
-  "gdanav Premium is needed.": "يلزم gdanav Premium.",
+  GdANav: "GdANav",
+  "GdANav Premium is needed.": "يلزم GdANav Premium.",
   "included here: the counter had already made them before its statistics began":
     "محسوبة هنا: كان العدّاد قد سجّلها قبل أن تبدأ إحصاءاته",
   "leave at": "المغادرة",
@@ -6019,7 +6019,7 @@ export default Object.freeze({
   "at departure ${via}": "عند الانطلاق ${via}",
   "Car battery: ${ora}": "بطارية السيارة: ${ora}",
   "Chargers": "الشواحن",
-  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.": "الشواحن: © OpenStreetMap وPiattaforma Unica Nazionale، في المنزل. في الطريق يتحقق gdanav من أنها شاغرة ويغيّر التوقف إذا لزم الأمر.",
+  "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.": "الشواحن: © OpenStreetMap وPiattaforma Unica Nazionale، في المنزل. في الطريق يتحقق GdANav من أنها شاغرة ويغيّر التوقف إذا لزم الأمر.",
   "Charging at home · ${fino} at ${ora}": "تُشحن في المنزل · ${fino} عند ${ora}",
   "Charging stops": "توقفات الشحن",
   "Charging: ${minuti} in ${n} stops": "الشحن: ${minuti} في ${n} توقفات",
@@ -6031,7 +6031,7 @@ export default Object.freeze({
   "from ${da} to ${a} · ${min} min": "من ${da} إلى ${a} · ${min} د",
   "From ${n} kW": "من ${n} كيلوواط",
   "Full": "ممتلئة",
-  "gdanav picks the charger on the way": "يختار gdanav الشاحن في الطريق",
+  "GdANav picks the charger on the way": "يختار GdANav الشاحن في الطريق",
   "leave": "انطلق",
   "leave ${alle}": "انطلق مجدداً ${alle}",
   "Minimum charge on arrival": "أدنى شحن عند الوصول",
@@ -6043,9 +6043,9 @@ export default Object.freeze({
   "range": "المدى",
   "Stop ${n} · after ${km} km": "التوقف ${n} · بعد ${km} كم",
   "Stop around km ${km} · about ${min} min": "توقف قرب الكيلومتر ${km} · نحو ${min} د",
-  "Stops picked by gdanav on the way, with free chargers.": "توقفات اختارها gdanav في الطريق، بشواحن شاغرة.",
+  "Stops picked by GdANav on the way, with free chargers.": "توقفات اختارها GdANav في الطريق، بشواحن شاغرة.",
   "The battery is not answering": "البطارية لا تستجيب",
-  "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.": "الشواحن ليست في المنزل بعد: التوقفات بحسب الكيلومتر. في الطريق يختار gdanav الشواحن ويتحقق من أنها شاغرة.",
+  "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "الشواحن ليست في المنزل بعد: التوقفات بحسب الكيلومتر. في الطريق يختار GdANav الشواحن ويتحقق من أنها شاغرة.",
   "The electric car's battery and range, and the charging stops if it is not enough.": "بطارية السيارة الكهربائية ومداها، وتوقفات الشحن إن لم يكفِ.",
   "The minimum power to stop at": "أدنى قدرة للتوقف",
   "The stops come with the route": "تأتي التوقفات مع المسار",

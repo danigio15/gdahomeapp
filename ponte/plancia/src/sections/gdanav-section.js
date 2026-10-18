@@ -182,7 +182,7 @@ export function ensureGdanavTab() {
   tab.className = "tab";
   tab.dataset.tab = GDANAV_TAB;
   tab.id = `tab-${GDANAV_TAB}`;
-  tab.innerHTML = `<span class="icon"><img class="dm-gn-tab-logo" src="${esc(logo())}" alt=""></span><span class="text">gdanav</span>`;
+  tab.innerHTML = `<span class="icon"><img class="dm-gn-tab-logo" src="${esc(logo())}" alt=""></span><span class="text">GdANav</span>`;
   tab.addEventListener("click", apri);
   if (dopo) dopo.after(tab);
   else nav.prepend(tab);
@@ -745,7 +745,7 @@ function elencoDelleSoste(b, partenza) {
           ]
             .filter(Boolean)
             .join(" · ")
-        : t("La colonnina la sceglie gdanav in viaggio", "gdanav picks the charger on the way");
+        : t("La colonnina la sceglie GdANav in viaggio", "GdANav picks the charger on the way");
       const da = pct(s.da);
       const a = pct(s.a);
       const carica =
@@ -762,17 +762,17 @@ function elencoDelleSoste(b, partenza) {
   const fonti =
     b.soste?.fonte === "gdanav"
       ? t(
-          "Soste scelte da gdanav in viaggio, con le colonnine libere.",
-          "Stops picked by gdanav on the way, with free chargers.",
+          "Soste scelte da GdANav in viaggio, con le colonnine libere.",
+          "Stops picked by GdANav on the way, with free chargers.",
         )
       : state.archivio
         ? t(
-            "Colonnine: © OpenStreetMap e Piattaforma Unica Nazionale, nella casa. In viaggio gdanav guarda se sono libere e, se serve, cambia sosta.",
-            "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way gdanav checks they are free and, if needed, changes the stop.",
+            "Colonnine: © OpenStreetMap e Piattaforma Unica Nazionale, nella casa. In viaggio GdANav guarda se sono libere e, se serve, cambia sosta.",
+            "Chargers: © OpenStreetMap and Piattaforma Unica Nazionale, in the home. On the way GdANav checks they are free and, if needed, changes the stop.",
           )
         : t(
-            "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio gdanav sceglie le colonnine e guarda se sono libere.",
-            "The chargers are not in the home yet: stops are by kilometre. On the way gdanav picks the chargers and checks they are free.",
+            "Le colonnine non ci sono ancora in casa: le soste sono a chilometro. In viaggio GdANav sceglie le colonnine e guarda se sono libere.",
+            "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.",
           );
   const n = soste.length;
   const quante = n === 1 ? t("1 sosta", "1 stop") : t(`${n} soste`, `${n} stops`);
@@ -851,8 +851,8 @@ function editor() {
     }
     righe.push(
       b.stima?.fonte === "traffico"
-        ? `🚦 ${t("Col traffico, stimato da gdanav", "With traffic, estimated by gdanav")}`
-        : `🔄 ${t("Senza traffico, con un margine: gdanav lo ricalcola col traffico vero fino alla partenza", "Without traffic, with a margin: gdanav recalculates with live traffic until you leave")}`,
+        ? `🚦 ${t("Col traffico, stimato da GdANav", "With traffic, estimated by GdANav")}`
+        : `🔄 ${t("Senza traffico, con un margine: GdANav lo ricalcola col traffico vero fino alla partenza", "Without traffic, with a margin: GdANav recalculates with live traffic until you leave")}`,
     );
   }
   const arrivoDetto =
@@ -897,14 +897,14 @@ function editor() {
         ${state.errore ? `<div class="dm-gn-errore">${esc(state.errore)}</div>` : ""}
         <button type="button" class="dm-gn-salva" data-gn-salva${state.salvando ? " disabled" : ""}>${esc(state.salvando ? t("Salvo…", "Saving…") : t("Salva il viaggio", "Save trip"))}</button>
         ${b.id ? `<button type="button" class="dm-gn-elimina" data-gn-elimina>${esc(t("Elimina il viaggio", "Delete trip"))}</button>` : ""}
-        <div class="dm-gn-nota">${esc(t("Lo trovi subito in gdanav, sul telefono e in auto.", "You find it right away in gdanav, on the phone and in the car."))}</div>
+        <div class="dm-gn-nota">${esc(t("Lo trovi subito in GdANav, sul telefono e in auto.", "You find it right away in GdANav, on the phone and in the car."))}</div>
       </div>
     </div>`;
 }
 
 function premium() {
   return `<div class="dm-gn-card dm-gn-premium"><img src="${esc(logo())}" alt=""><div>
-    <div class="dm-gn-nome">${esc(t("Il pianificatore è di gdanav Premium", "The planner is part of gdanav Premium"))}</div>
+    <div class="dm-gn-nome">${esc(t("Il pianificatore è di GdANav Premium", "The planner is part of GdANav Premium"))}</div>
     <div class="dm-gn-sotto">${esc(t("Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app GdAHome, nella pagina Premium.", "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page."))}</div></div></div>`;
 }
 
@@ -940,8 +940,8 @@ export function disegna() {
   if (!posto) return;
   const attivo = doc.getElementById(GDANAV_PAGE_ID)?.classList.contains("active");
   if (!attivo && state.caricato) return;
-  const testa = `<div class="dm-gn-capo"><div class="dm-gn-chi"><img src="${esc(logo())}" alt="gdanav">
-    <p>${esc(t("Pianifica i viaggi da qui: li ritrovi in gdanav sul telefono, su CarPlay e su Android Auto.", "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto."))}</p></div>
+  const testa = `<div class="dm-gn-capo"><div class="dm-gn-chi"><img src="${esc(logo())}" alt="GdANav">
+    <p>${esc(t("Pianifica i viaggi da qui: li ritrovi in GdANav sul telefono, su CarPlay e su Android Auto.", "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto."))}</p></div>
     ${state.sbloccato ? `<button type="button" class="dm-gn-nuovo" data-gn-nuovo>＋ ${esc(t("Nuovo viaggio", "New trip"))}</button>` : ""}</div>`;
   if (!state.caricato) {
     scrivi(
@@ -1122,7 +1122,7 @@ async function salva() {
     const perche = clean(errore?.message);
     state.errore =
       perche === "premium-richiesto"
-        ? t("Serve gdanav Premium.", "gdanav Premium is needed.")
+        ? t("Serve GdANav Premium.", "GdANav Premium is needed.")
         : perche === "troppi-viaggi"
           ? t("Hai già 50 viaggi: togline qualcuno.", "You already have 50 trips: remove some.")
           : t(

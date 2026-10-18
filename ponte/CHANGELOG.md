@@ -129,7 +129,7 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.14.3
 
-- **Pianificatore (pagina gdanav):** la ricerca trova strade e luoghi — se il
+- **Pianificatore (pagina GdANav):** la ricerca trova strade e luoghi — se il
   primo servizio non risponde prova il secondo, e dice «nessun posto» o «il
   servizio non risponde» invece di restare vuota. Sotto la meta scelta c'è la
   **cartina** con la strada da casa.
@@ -210,30 +210,30 @@ dalle abitudini delle ultime due settimane; e impara dalle risposte.
   pari.
 - **Android Auto e CarPlay:** niente «fallo dal telefono»; il navigatore in
   auto resta Premium. Cerca e Casa anche fra i tasti di lato su CarPlay.
-- **gdanav:** l'auto ibrida (anche e-Power), e dentro GdAHome niente
+- **GdANav:** l'auto ibrida (anche e-Power), e dentro GdAHome niente
   abbinamento a Home Assistant col QR (la casa ce l'ha già).
-- **Correzioni:** la testata della pagina gdanav non lampeggia più; la prima
+- **Correzioni:** la testata della pagina GdANav non lampeggia più; la prima
   fila della testata su iPad torna dopo l'Energia; il riepilogo della sera
   conta i dispositivi e non le entità; un elettrodomestico finito si dice
   una volta.
 
 ## 1.13.0
 
-**gdanav: il Pianificatore.** Tre modi di pianificare un viaggio: per un
+**GdANav: il Pianificatore.** Tre modi di pianificare un viaggio: per un
 giorno («arrivo entro le 9:00 a Caserta, domani»), ogni settimana («Casa –
 Lavoro, dal lunedì al venerdì») e un giro a tappe con le soste. Si dice
 dove e a che ora arrivare, e il navigatore dice a che ora partire, col
 traffico. È Premium.
 
 - **Dal telefono e da PC.** I viaggi stanno nella casa: si scrivono nel
-  navigatore dell'app o nella nuova pagina **gdanav** della plancia, dal
+  navigatore dell'app o nella nuova pagina **GdANav** della plancia, dal
   computer, e sono gli stessi. Ognuno vede solo i suoi: la casa li tiene per
   chi li ha scritti, e nel ponte da fuori non si vede nulla.
 - **L'avviso quando partire.** Dieci minuti prima (o quanto si sceglie)
   arriva la notifica «Parti fra 10 minuti», anche nelle ore di silenzio; si
   spegne in Notifiche → Viaggi. Prima di partire il navigatore ricalcola la
   strada col traffico, così l'ora è giusta.
-- **L'auto pronta.** Dalla pagina gdanav si può scegliere il clima dell'auto
+- **L'auto pronta.** Dalla pagina GdANav si può scegliere il clima dell'auto
   da accendere prima e il garage: nell'avviso c'è il tasto per aprirlo, e si
   apre solo se lo si preme.
 - **In auto.** Su CarPlay e Android Auto i viaggi salvati sono in cima a
@@ -744,7 +744,7 @@ giallo fermo o in rosso che respira.
 
 **Navigatore: temperature, velocità e potenza arrivano.** Temperatura della
 batteria, velocità e potenza in uso non hanno una casella nella plancia, e
-gdanav diceva «non arriva». L'app le trova fra i sensori del dispositivo
+GdANav diceva «non arriva». L'app le trova fra i sensori del dispositivo
 dell'auto in Home Assistant, insieme alla temperatura di fuori quando non è
 mappata (anche se si chiama «outdoor»).
 
@@ -1011,7 +1011,7 @@ città, oppure niente.
 
 **Le persone di casa nel navigatore.** «Apri in mappa» porta il navigatore
 sulla persona, senza calcolare il percorso: la strada si chiede toccando il
-suo segnaposto. Sulla mappa di gdanav ci sono tutte le persone della plancia,
+suo segnaposto. Sulla mappa di GdANav ci sono tutte le persone della plancia,
 e un tasto le inquadra insieme.
 
 **Le tue case.** Il cestino chiede «Eliminare?» e dice cosa succede; la casa
@@ -1111,12 +1111,12 @@ spiega come attivarlo.
 **Il navigatore, nell'app.**
 
 - In guida la mappa non resta più ferma: se il GPS del telefono smette di
-  mandare posizioni, e con Android Auto succede, gdanav se ne accorge in pochi
+  mandare posizioni, e con Android Auto succede, GdANav se ne accorge in pochi
   secondi e lo fa ripartire. Intanto sullo schermo c'è «GPS assente».
 - La linea del percorso non resta mai vuota.
 - L'autonomia è quella dell'auto anche se la sua lettura è di qualche ora
   prima: non più una stima che col consumo di città arrivava al doppio.
-- Con Android Auto, se l'auto passa la sua posizione, gdanav usa quella.
+- Con Android Auto, se l'auto passa la sua posizione, GdANav usa quella.
 
 La plancia e la sicurezza arrivano con l'add-on; il navigatore e la casa in
 auto con l'app 1.10.5.
@@ -1212,7 +1212,7 @@ casa: sono Premium insieme a lei tutti i telefoni abbinati e il browser.
 - **Base**, gratis: una casa, la plancia principale, l'accesso dalla rete di
   casa.
 - **Premium**: fino a 8 plance e 10 case, l'accesso da fuori casa, la
-  configurazione della plancia e i dispositivi Zigbee dall'app, e gdanav
+  configurazione della plancia e i dispositivi Zigbee dall'app, e GdANav
   Premium compreso.
 
 **Premium si compra nell'app GdAHome, sull'iPhone e su Android.** C'è
@@ -1744,7 +1744,7 @@ la barra di sistema di Android la barra della plancia lasciava diciotto punti
 di vuoto, che si vedevano scorrendo.
 
 **Il navigatore conosce tutte le colonnine d'Italia, e sa quali sono
-libere.** gdanav arriva all'ultimo. Le colonnine vengono dalla Piattaforma
+libere.** GdANav arriva all'ultimo. Le colonnine vengono dalla Piattaforma
 Unica Nazionale, dove i gestori le devono scrivere, e sulla mappa ci sono
 tutte — più di quarantacinquemila — non solo le venticinque più vicine, coi
 nomi dei gestori al posto delle sigle. Lo stato di adesso, libera, occupata o
@@ -1767,7 +1767,7 @@ comunica, la scheda lo dice invece di tacere.
 
 **Le corsie agli svincoli tornano**, anche coi percorsi di TomTom: le frecce di
 ogni corsia, accese quelle giuste. **E il traffico in auto** ha le linee più
-spesse, e quando non si vede la voce «Android Auto» del menu di gdanav dice
+spesse, e quando non si vede la voce «Android Auto» del menu di GdANav dice
 dove si ferma: se lo strato c'è, se i riquadri arrivano da TomTom o tornano con
 un errore, quante code ci sono sullo schermo.
 
@@ -1877,7 +1877,7 @@ anche quando il sole non basta» — e tre scelte: **Mai**, **Sempre**,
 **Stavolta**. Si vede solo dove ha senso: da spenti non si carica, e in Fast si
 carica al massimo comunque.
 
-**Il navigatore in auto risponde a «Ok Google, portami a…».** gdanav arriva
+**Il navigatore in auto risponde a «Ok Google, portami a…».** GdANav arriva
 all'ultimo, e con lui i requisiti che Google mette ai navigatori: in guida la
 manovra, le corsie e l'orario di arrivo li disegna Android Auto nelle sue schede
 — sulla mappa restano la velocità, il limite e gli avvisi — la prossima svolta
@@ -1893,8 +1893,8 @@ si ferma il filo, invece di lasciare a indovinare.
 
 ## 1.6.9
 
-**In macchina parte il navigatore.** gdanav — il navigatore che finora era
-un'app a parte — adesso è dentro GdAHome, come voce «gdanav» del menu, e in
+**In macchina parte il navigatore.** GdANav — il navigatore che finora era
+un'app a parte — adesso è dentro GdAHome, come voce «GdANav» del menu, e in
 Android Auto è quello che si apre salendo in macchina: la mappa davanti, e la
 casa dietro un tasto. È l'app di sempre, con lo stesso nome e la stessa firma:
 non c'è niente da installare in più e niente da abbinare. Sul telefono la
@@ -1910,7 +1910,7 @@ navigatore se ne accorge in quel momento. Le termiche restano fuori, perché di
 autonomia elettrica non ne hanno.
 
 **I comandi rapidi in auto: scelti sul telefono, premuti sulla mappa.** Dal
-menu di gdanav si compone la griglia — fino a dodici, i primi sei su ogni
+menu di GdANav si compone la griglia — fino a dodici, i primi sei su ogni
 auto, gli altri dove lo schermo è più grande. Dentro ci vanno le azioni rapide
 della plancia, tutte, e le cose di casa che si premono: scene, script,
 cancelli e tapparelle, serrature, luci, prese, pulsanti. Ce ne puoi anche
@@ -1925,7 +1925,7 @@ scegli. Lo propone solo se prima eri lontano davvero, così non lo ripete
 girando intorno all'isolato.
 
 **Il menu laterale ridisegnato.** In testa la casa, e sotto la tessera di
-gdanav, viva: batteria, nome e autonomia dell'auto, e i due tasti «A casa» e
+GdANav, viva: batteria, nome e autonomia dell'auto, e i due tasti «A casa» e
 «Al lavoro» che accendono il navigatore e calcolano il viaggio. Le altre voci
 in tre gruppi — Casa, Avanzate, Aiuto — e l'aiuto in fondo, dove si cerca.
 Con più di una plancia nella casa, la tessera della plancia dice quale stai

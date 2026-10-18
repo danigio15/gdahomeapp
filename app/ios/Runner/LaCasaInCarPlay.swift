@@ -215,7 +215,7 @@ enum LaCasaInCarPlay {
       /* Un elenco vuoto e non `CPInformationTemplate`: un'app di navigazione
        * (carplay-maps) non lo puo' usare, e CarPlay la chiuderebbe. */
       let t = CPListTemplate(title: "Comandi rapidi", sections: [])
-      t.emptyViewTitleVariants = ["Nessun comando scelto. Sul telefono: gdanav, menu, Comandi rapidi in auto."]
+      t.emptyViewTitleVariants = ["Nessun comando scelto. Sul telefono: GdANav, menu, Comandi rapidi in auto."]
       t.trailingNavigationBarButtons = [
         CPBarButton(title: "Dispositivi") { [weak controllore] _ in
           guard let controllore else { return }
