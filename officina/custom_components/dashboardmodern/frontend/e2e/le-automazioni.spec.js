@@ -7,8 +7,8 @@
  *
  *  - il config: la voce «Automazioni» dopo «Azioni», col bollino PREMIUM;
  *    tutte quelle di Home Assistant in righe compatte, a gruppi (le categorie
- *    di Home Assistant, Per tipo, Per stanza) che si chiudono e si
- *    ricordano chiusi, la riga in parole al posto di «Avanzata…», la
+ *    di Home Assistant, Per tipo, Per stanza) che partono chiusi e si
+ *    ricordano aperti, la riga in parole al posto di «Avanzata…», la
  *    ricerca, le etichette gdahome e Blueprint, l'interruttore che chiama
  *    `automation.turn_off`; l'editor che salva in Home Assistant e il
  *    «Salvata in Home Assistant ✓»; una semplice che si modifica, una
@@ -172,6 +172,21 @@ const PROPOSTE = [
   },
 ];
 
+/* I gruppi partono chiusi, e si ricordano quelli aperti. Le prove che non
+ * guardano i gruppi li trovano gia' aperti tutti, come se chi guarda li
+ * avesse aperti una volta; quelle che li guardano partono da `aperti: []`. */
+const TUTTI_APERTI = [
+  "categoria:c_clima",
+  "categoria:c_luci",
+  "categoria:-",
+  ...["luci", "clima", "tapparelle", "irrigazione", "sicurezza", "avvisi", "energia", "altre"].map(
+    (k) => `tipo:${k}`,
+  ),
+  "stanza:Corridoio",
+  "stanza:Soggiorno",
+  "stanza:-",
+];
+
 async function avvia(
   page,
   testInfo,
@@ -182,6 +197,7 @@ async function avvia(
     proposte = [],
     rimaste = [],
     amministra = true,
+    aperti = TUTTI_APERTI,
   } = {},
 ) {
   test.setTimeout(150_000);
@@ -213,9 +229,13 @@ async function avvia(
       categorie,
       categoriaDi,
       riassunti,
+      aperti,
     }) => {
       const HA = await import("/src/core/automazioni-ha.js");
       localStorage.setItem("cd_automazioni", JSON.stringify(rimaste));
+      if (aperti.length)
+        localStorage.setItem("dm_automazioni_gruppi_aperti", JSON.stringify(aperti));
+      else localStorage.removeItem("dm_automazioni_gruppi_aperti");
       const grezzi = window.eval("_RAW_STATES");
       const metti = (id, stato) => {
         grezzi[id] = { entity_id: id, ...stato };
@@ -363,6 +383,7 @@ async function avvia(
       categorie: CATEGORIE_HA,
       categoriaDi: CATEGORIA_DI,
       riassunti: RIASSUNTI,
+      aperti,
     },
   );
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
@@ -386,7 +407,7 @@ const configDi = (page, id) => page.evaluate((id) => window.__CASA__.config[id],
 test("il config: tutte quelle di Home Assistant per categoria, le etichette, la ricerca e l'interruttore", async ({
   page,
 }, testInfo) => {
-  await avvia(page, testInfo);
+  await avvia(page, testInfo, { aperti: [] });
   const voce = await apriLaVoce(page);
   await expect(voce.locator(".au-tab-prem")).toHaveText("PREMIUM");
   expect(
@@ -397,7 +418,6 @@ test("il config: tutte quelle di Home Assistant per categoria, le etichette, la 
   const pagina = page.locator("#ed-body .au-web");
   await expect(pagina.locator(".ha-barra h3")).toContainText("Le automazioni di casa");
   await expect(pagina.locator(".ha-barra h3 small")).toContainText("5, da Home Assistant");
-  await expect(pagina.locator(".ha-riga")).toHaveCount(5);
   /* Per categoria: quelle di Home Assistant per nome, «Senza categoria» in fondo. */
   await expect(pagina.locator('.ha-seg [data-au-per="categoria"]')).toHaveClass(/si/);
   await expect(pagina.locator(".aug-titolo")).toHaveText([
@@ -406,7 +426,28 @@ test("il config: tutte quelle di Home Assistant per categoria, le etichette, la 
     "Senza categoria",
   ]);
   await expect(pagina.locator(".aug-conta")).toHaveText(["1/2", "1/1", "2/2"]);
-  await expect(pagina.locator(".aug-freccia").first()).toHaveText("▾");
+  /* I gruppi partono chiusi (▸): chi vuole li apre. */
+  await expect(pagina.locator(".aug-freccia")).toHaveText(["▸", "▸", "▸"]);
+  await expect(pagina.locator(".aug.chiuso")).toHaveCount(3);
+  await expect(pagina.locator(".ha-riga")).toHaveCount(0);
+  await expect(pagina.locator(".aug-testa").first()).toHaveAttribute("aria-expanded", "false");
+  /* Un gruppo si apre (▾), e resta aperto anche dopo un ridisegno. */
+  await pagina.locator('[data-aug-apri="categoria:c_luci"]').click();
+  const luci = pagina.locator('[data-aug="categoria:c_luci"]');
+  await expect(luci).not.toHaveClass(/chiuso/);
+  await expect(luci.locator(".aug-freccia")).toHaveText("▾");
+  await expect(luci.locator(".ha-riga")).toHaveCount(1);
+  await expect(pagina.locator(".ha-riga")).toHaveCount(1);
+  expect(
+    await page.evaluate(() => JSON.parse(localStorage.getItem("dm_automazioni_gruppi_aperti"))),
+  ).toEqual(["categoria:c_luci"]);
+  await pagina.locator('[data-au-per="tipo"]').click();
+  await pagina.locator('[data-au-per="categoria"]').click();
+  await expect(pagina.locator('[data-aug="categoria:c_luci"]')).not.toHaveClass(/chiuso/);
+  await expect(pagina.locator('[data-aug="categoria:c_clima"]')).toHaveClass(/chiuso/);
+  await pagina.locator('[data-aug-apri="categoria:c_clima"]').click();
+  await pagina.locator('[data-aug-apri="categoria:-"]').click();
+  await expect(pagina.locator(".ha-riga")).toHaveCount(5);
   const tapparelle = pagina.locator(".ha-riga", { hasText: "Tapparelle mattina" });
   await expect(tapparelle.locator(".ha-orig.g")).toHaveText("GdAHome");
   await expect(tapparelle.locator(".aug-fr")).toContainText("Alle 07:15");
@@ -424,21 +465,15 @@ test("il config: tutte quelle di Home Assistant per categoria, le etichette, la 
   for (const riga of await pagina.locator(".aug-fr").allTextContents())
     expect(riga).not.toMatch(/chiama |[a-z]\.[a-z]|_/);
   await expect(pagina.locator(".ha-riga", { hasText: "Clima spento" })).toHaveClass(/spenta/);
-  /* Un gruppo si chiude (▸), e resta chiuso anche dopo un ridisegno. */
+  /* E si richiude (▸): fra gli aperti non c'e' piu'. */
   await pagina.locator('[data-aug-apri="categoria:c_luci"]').click();
-  const luci = pagina.locator('[data-aug="categoria:c_luci"]');
   await expect(luci).toHaveClass(/chiuso/);
   await expect(luci.locator(".aug-freccia")).toHaveText("▸");
   await expect(luci.locator(".ha-riga")).toHaveCount(0);
   await expect(pagina.locator(".ha-riga")).toHaveCount(4);
   expect(
-    await page.evaluate(() => JSON.parse(localStorage.getItem("dm_automazioni_gruppi_chiusi"))),
-  ).toEqual(["categoria:c_luci"]);
-  await pagina.locator('[data-au-per="tipo"]').click();
-  await pagina.locator('[data-au-per="categoria"]').click();
-  await expect(pagina.locator('[data-aug="categoria:c_luci"]')).toHaveClass(/chiuso/);
-  await pagina.locator('[data-aug-apri="categoria:c_luci"]').click();
-  await expect(pagina.locator(".ha-riga")).toHaveCount(5);
+    await page.evaluate(() => JSON.parse(localStorage.getItem("dm_automazioni_gruppi_aperti"))),
+  ).toEqual(["categoria:c_clima", "categoria:-"]);
   /* Per tipo: luci, clima, tapparelle, energia, altre. */
   await pagina.locator('[data-au-per="tipo"]').click();
   await expect(pagina.locator(".aug-titolo")).toHaveText([
@@ -451,10 +486,15 @@ test("il config: tutte quelle di Home Assistant per categoria, le etichette, la 
   /* Per stanza, e la ricerca. */
   await pagina.locator('[data-au-per="stanza"]').click();
   await expect(pagina.locator(".aug-titolo").first()).toHaveText("Corridoio");
+  await expect(pagina.locator(".aug.chiuso")).toHaveCount(3);
+  /* Con una ricerca i gruppi stanno aperti: quello che si cerca non si nasconde. */
   await pagina.locator("[data-au-cerca]").fill("mattina");
   await expect(pagina.locator(".ha-riga")).toHaveCount(1);
+  await expect(pagina.locator(".aug.chiuso")).toHaveCount(0);
   await expect(pagina.locator("[data-au-cerca]")).toBeFocused();
   await pagina.locator("[data-au-cerca]").fill("");
+  await expect(pagina.locator(".ha-riga")).toHaveCount(0);
+  await pagina.locator('[data-aug-apri="stanza:Soggiorno"]').click();
   /* L'interruttore la spegne in Home Assistant, senza aprirla. */
   await pagina.locator('[data-au-attiva="automation.a1001"]').click();
   await expect
@@ -768,7 +808,7 @@ const linguette = (page) =>
 test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gruppi per categoria e il foglio", async ({
   page,
 }, testInfo) => {
-  await avvia(page, testInfo);
+  await avvia(page, testInfo, { aperti: [] });
   await expect
     .poll(async () => (await linguette(page)).slice(-2))
     .toEqual(["automazioni", "config"]);
@@ -788,6 +828,13 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
     "Luci",
     "Senza categoria",
   ]);
+  /* Raggruppate: i gruppi partono chiusi, e chi vuole li apre. */
+  await expect(sezione.locator(".aug-freccia")).toHaveText(["▸", "▸", "▸"]);
+  await expect(sezione.locator("[data-auc-carta]")).toHaveCount(0);
+  for (const g of ["categoria:c_clima", "categoria:c_luci", "categoria:-"])
+    await sezione.locator(`[data-aug-apri="${g}"]`).click();
+  await expect(sezione.locator(".aug-freccia")).toHaveText(["▾", "▾", "▾"]);
+  await expect(sezione.locator("[data-auc-carta]")).toHaveCount(5);
   /* «＋ Nuova» sta nella barra dei filtri. */
   await expect(sezione.locator(".ad-filtri [data-auc-nuova]")).toBeVisible();
   const carta = sezione.locator('[data-auc-carta="automation.a1001"]');
@@ -817,6 +864,7 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
   await expect(sezione.locator(".aug-titolo").first()).toHaveText("Luci");
   await sezione.locator('[data-auc-per="stanza"]').click();
   await expect(sezione.locator(".aug-titolo").first()).toHaveText("Corridoio");
+  await sezione.locator('[data-aug-apri="stanza:Corridoio"]').click();
   /* Il foglio: in sola lettura, con «Esegui ora» e «Modifica nel config ›». */
   await sezione.locator('[data-auc-carta="automation.a1002"]').click();
   const foglio = page.locator("#auc-foglio .ad-foglio");
@@ -864,7 +912,7 @@ test("la sezione della dashboard senza Premium: velata, e la finestra dello stor
 test("nell'app: niente linguetta e niente voce, la pagina del menu con «＋ Nuova» nei filtri e il foglio", async ({
   page,
 }, testInfo) => {
-  await avvia(page, testInfo, { app: true });
+  await avvia(page, testInfo, { app: true, aperti: [] });
   expect(await linguette(page)).not.toContain("automazioni");
   await page.evaluate(() => window.apriConfigEntita?.());
   await expect(page.locator("#editor-modal .ed-tab").first()).toBeVisible();
@@ -878,6 +926,11 @@ test("nell'app: niente linguetta e niente voce, la pagina del menu con «＋ Nuo
   await expect(pagina).toHaveClass(/active/);
   await expect(pagina.locator(".dm-page-mast-sub")).toHaveText("Tutte quelle di casa");
   await expect(pagina.locator(".ad-cfg")).toHaveCount(0);
+  /* Anche nell'app partono raggruppate: chiuse, finche' non le si apre. */
+  await expect(pagina.locator(".aug.chiuso")).toHaveCount(3);
+  await expect(pagina.locator("[data-auc-carta]")).toHaveCount(0);
+  for (const g of ["categoria:c_clima", "categoria:c_luci", "categoria:-"])
+    await pagina.locator(`[data-aug-apri="${g}"]`).click();
   await expect(pagina.locator("[data-auc-carta]")).toHaveCount(5);
   /* «＋ Nuova» sta nella barra dei filtri, non galleggia sopra la pagina. */
   const nuova = pagina.locator(".ad-filtri [data-auc-nuova]");

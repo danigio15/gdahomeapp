@@ -64,11 +64,16 @@ import {
 import { CATEGORIE, EVENTO_AVVISA, normalizzata } from "../core/automazioni-ha.js";
 import { proposteDaMostrare } from "../core/automazioni-proposte.js";
 import {
+  azioneDelDispositivoInParole,
+  condizioneDelDispositivoInParole,
   diventaInParole,
+  eUnIdCrudo,
+  innescoDelDispositivoInParole,
   nomeDaId,
   servizioInParole,
   statoInParole,
 } from "../core/parole-dei-servizi.js";
+import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
@@ -815,16 +820,20 @@ export function gruppiDelleAutomazioni(elenco, { per = "", perStanza = false, ce
 
 /* ── i gruppi che si chiudono ───────────────────────────────────────────── *
  *
- * Come in Home Assistant: ▾ aperto, ▸ chiuso, e il numero accanto. Chi
- * guarda si ritrova i gruppi come li ha lasciati: lo ricorda questo browser
- * (o questo telefono), non la configurazione della casa — un gruppo chiuso
- * da uno non si chiude per tutti. */
+ * Come in Home Assistant: ▾ aperto, ▸ chiuso, e il numero accanto. Dal
+ * campo: «fai in modo che le automazioni escono raggruppate e se uno vuole
+ * le espande, non mettere per default espanso». Quindi i gruppi partono
+ * chiusi, e si ricordano quelli che chi guarda ha APERTO: lo ricorda questo
+ * browser (o questo telefono), non la configurazione della casa — un gruppo
+ * aperto da uno non si apre per tutti. La chiave di prima
+ * (`dm_automazioni_gruppi_chiusi`, i chiusi) non si legge piu': diceva il
+ * contrario. */
 
-export const CHIAVE_GRUPPI_CHIUSI = "dm_automazioni_gruppi_chiusi";
+export const CHIAVE_GRUPPI_APERTI = "dm_automazioni_gruppi_aperti";
 
-function gruppiChiusi() {
+function gruppiAperti() {
   try {
-    const scritto = JSON.parse(root.localStorage?.getItem?.(CHIAVE_GRUPPI_CHIUSI) || "[]");
+    const scritto = JSON.parse(root.localStorage?.getItem?.(CHIAVE_GRUPPI_APERTI) || "[]");
     return Array.isArray(scritto) ? scritto.map(String) : [];
   } catch (_errore) {
     return [];
@@ -833,11 +842,11 @@ function gruppiChiusi() {
 
 /** Apre o chiude un gruppo («categoria:<id>», «tipo:luci», «stanza:Cucina»). */
 export function alternaIlGruppo(chiave) {
-  const chiusi = new Set(gruppiChiusi());
-  if (chiusi.has(chiave)) chiusi.delete(chiave);
-  else chiusi.add(chiave);
+  const aperti = new Set(gruppiAperti());
+  if (aperti.has(chiave)) aperti.delete(chiave);
+  else aperti.add(chiave);
   try {
-    root.localStorage?.setItem?.(CHIAVE_GRUPPI_CHIUSI, JSON.stringify([...chiusi]));
+    root.localStorage?.setItem?.(CHIAVE_GRUPPI_APERTI, JSON.stringify([...aperti]));
   } catch (_errore) {}
 }
 
@@ -872,11 +881,12 @@ export function gruppiCompattiHtml(
 ) {
   const gruppi = gruppiDelleAutomazioni(elenco, { per, cerca });
   if (!gruppi.length) return "";
-  const chiusi = new Set(clean(cerca) ? [] : gruppiChiusi());
+  const cercando = Boolean(clean(cerca));
+  const aperti = new Set(cercando ? [] : gruppiAperti());
   const nomi = CATEGORIA();
   return `<div class="aug-griglia">${gruppi
     .map((g, gi) => {
-      const chiuso = chiusi.has(g.chiave);
+      const chiuso = !cercando && !aperti.has(g.chiave);
       const accese = g.voci.filter((v) => v.attiva).length;
       const righe = chiuso
         ? ""
@@ -929,6 +939,22 @@ export function prossimaDiCasa(elenco = automazioniDiCasa()) {
 const nomiDentro = (v) => nomiDi((Array.isArray(v) ? v : v ? [v] : []).filter((x) => clean(x).includes(".")));
 const comeCodice = (testo) => clean(testo).slice(0, 120);
 
+/* Il nome di cio' di cui parla un pezzo «device»: l'entita', se e' scritta
+ * come entity_id; se no il dispositivo, dalle mappe ricordate. La voce del
+ * registro (trentadue cifre) la plancia non la sa risolvere, e non la
+ * mostra: meglio «un dispositivo» che delle cifre. */
+function nomeDelDispositivo(x) {
+  const entita = [].concat(x?.entity_id || []).map(clean).find((e) => e.includes(".") && !eUnIdCrudo(e));
+  if (entita) return nomeDi(entita);
+  let nomi = {};
+  try {
+    nomi = iDispositiviRicordati()?.nomi || {};
+  } catch (_errore) {
+    nomi = {};
+  }
+  return clean(nomi[clean(x?.device_id)]);
+}
+
 const scritto = (v) => (v !== undefined && v !== null && typeof v !== "object" ? String(v) : "");
 const testiDi = (azioni) =>
   [].concat(azioni || []).flatMap((y) => righeDellAzione(y)).map((r) => r.testo).join(", ");
@@ -978,7 +1004,16 @@ function rigaDelTrigger(x) {
   if (tipo === "time_pattern") return { testo: t("a intervalli regolari", "at regular intervals") };
   if (tipo === "zone")
     return { testo: t(`${chi} entra o esce da una zona`, `${chi} enters or leaves a zone`) };
-  if (tipo === "device") return { testo: t("un dispositivo fa qualcosa", "a device does something") };
+  if (tipo === "device") {
+    const nome = nomeDelDispositivo(x);
+    const frase = innescoDelDispositivoInParole(x, nome);
+    if (frase) return { testo: detto(frase) };
+    return {
+      testo: nome
+        ? t(`${nome} fa qualcosa`, `${nome} does something`)
+        : t("un dispositivo fa qualcosa", "a device does something"),
+    };
+  }
   return { testo: t(`un trigger «${quale}»`, `a «${quale}» trigger`) };
 }
 
@@ -1033,7 +1068,17 @@ function righeDellaCondizione(c, rientra = false) {
     };
   else if (tipo === "trigger")
     riga = { testo: t("secondo cosa l'ha fatta partire", "depending on what started it") };
-  else riga = { testo: t(`una condizione «${quale}»`, `a «${quale}» condition`) };
+  else if (tipo === "device") {
+    const nome = nomeDelDispositivo(c);
+    const frase = condizioneDelDispositivoInParole(c, nome);
+    riga = {
+      testo: frase
+        ? detto(frase)
+        : nome
+          ? t(`una condizione su ${nome}`, `a condition on ${nome}`)
+          : t("una condizione su un dispositivo", "a condition on a device"),
+    };
+  } else riga = { testo: t(`una condizione «${quale}»`, `a «${quale}» condition`) };
   return [{ ...riga, sub: rientra }];
 }
 
@@ -1102,7 +1147,19 @@ function righeDellAzione(x, sub = false) {
     const scena = nomeDi(x.scene);
     return [{ testo: t(`attiva la scena ${scena}`, `activates the ${scena} scene`), sub }];
   }
-  if (x.device_id) return [{ testo: t("un'azione di un dispositivo", "a device action"), sub }];
+  if (x.device_id) {
+    const nome = nomeDelDispositivo(x);
+    const frase = azioneDelDispositivoInParole(x, nome);
+    if (frase) return [{ testo: detto(frase), sub }];
+    return [
+      {
+        testo: nome
+          ? t(`un'azione di ${nome}`, `an action of ${nome}`)
+          : t("un'azione di un dispositivo", "a device action"),
+        sub,
+      },
+    ];
+  }
   return [{ testo: t("un'altra azione", "another action"), sub }];
 }
 
