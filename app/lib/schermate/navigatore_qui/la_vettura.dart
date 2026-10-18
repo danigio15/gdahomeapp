@@ -77,6 +77,17 @@ class LaVettura {
   static const velocita = 'dm.ev_velocita';
   static const potenzaInUso = 'dm.ev_potenza_istantanea';
 
+  /// Le caselle del consumo, coi nomi del contratto delle sorelle
+  /// (`docs/DATI-AUTO.md` di GdAAuto, che le riempie da sola).
+  static const capacitaBatteria = 'dm.ev_capacita_batteria';
+  static const energiaResidua = 'dm.ev_energia_residua';
+  static const consumoMedio = 'dm.ev_consumo_medio';
+  static const potenzaClima = 'dm.ev_potenza_riscaldatore';
+  static const climaAcceso = 'dm.ev_clima';
+  static const comandoClima = 'dm.ev_comando_clima';
+  static const batteriaInRiscaldamento = 'dm.ev_batteria_in_riscaldamento';
+  static const temperaturaInterna = 'dm.ev_temperatura_interna';
+
   /// Il sensore della batteria, se e' mappato: da lui si trova il dispositivo.
   String? get sensoreDellaBatteria {
     for (final c in batteria) {
@@ -202,6 +213,54 @@ class LaVettura {
       velocitaKmh: _kmh(oDaVicino(velocita, eVelocita)),
       potenzaKw: _kw(oDaVicino(potenzaInUso, ePotenzaInUso)),
     );
+  }
+
+  /// Il sensore di una casella, se e' mappato e risponde.
+  Entita? _entita(Entita? Function(String id) stato, String casella) {
+    final id = sensori[casella];
+    if (id == null || id.startsWith('dm.')) return null;
+    final e = stato(id);
+    return e == null || e.muta ? null : e;
+  }
+
+  /// L'auto con la capacita' detta dal suo sensore, quando nella plancia non
+  /// e' scritta: lo scritto vince, ma una casella vuota non vuol dire piu'
+  /// «non lo so» quando l'auto lo sa (`capacitaDellaBatteria` della pagina).
+  AutoDiGdahome autoConLaCapacita(Entita? Function(String id) stato) {
+    if (auto.kwh != null) return auto;
+    final kwh = _kwh(_entita(stato, capacitaBatteria));
+    if (kwh == null) return auto;
+    return AutoDiGdahome(
+      nome: auto.nome,
+      marca: auto.marca,
+      modello: auto.modello,
+      kwh: kwh,
+    );
+  }
+
+  /// I dati del consumo per gdanav, coi nomi del contratto delle sorelle:
+  /// solo quelli che ci sono. Un dato che manca lascia il conto com'era.
+  Map<String, Object> datiDelConsumo(Entita? Function(String id) stato) {
+    final fuori = <String, Object>{};
+    void metti(String nome, Object? valore) {
+      if (valore != null) fuori[nome] = valore;
+    }
+
+    metti('energia_kwh', _kwh(_entita(stato, energiaResidua)));
+    metti('capacita_kwh', auto.kwh ?? _kwh(_entita(stato, capacitaBatteria)));
+    metti('consumo_medio_kwh100', _kwh100(_entita(stato, consumoMedio)));
+    metti('potenza_clima_w', _w(_entita(stato, potenzaClima)));
+    metti(
+      'clima_acceso',
+      _acceso(_entita(stato, climaAcceso)) ??
+          _acceso(_entita(stato, comandoClima)),
+    );
+    metti(
+      'batteria_in_riscaldamento',
+      _acceso(_entita(stato, batteriaInRiscaldamento)),
+    );
+    metti('temperatura_interna_c', _gradi(_entita(stato, temperaturaInterna)));
+    return fuori;
   }
 
   /// Quanto e' vecchia davvero la lettura: «Da gdahome · 2 h fa» quando ABRP,
@@ -441,6 +500,51 @@ class LaVettura {
     return (e!.unita ?? '').contains('F') ? (n - 32) * 5 / 9 : n;
   }
 
+  static double? _kwh(Entita? e) {
+    final n = _numero(e?.stato);
+    if (n == null || n <= 0) return null;
+    return switch ((e!.unita ?? '').toLowerCase()) {
+      'wh' => n / 1000,
+      'mwh' => n * 1000,
+      _ => n,
+    };
+  }
+
+  static double? _w(Entita? e) {
+    final n = _numero(e?.stato);
+    if (n == null) return null;
+    return switch ((e!.unita ?? '').toLowerCase()) {
+      'kw' => n * 1000,
+      'mw' => n * 1000000,
+      _ => n,
+    };
+  }
+
+  /// Il consumo in kWh ogni 100 km, dall'unita' dello stato; fuori da 5-60
+  /// non sta in piedi (`consumoMisurato` della pagina).
+  static double? _kwh100(Entita? e) {
+    final n = _numero(e?.stato);
+    if (n == null || n <= 0) return null;
+    const miglio = 1.609344;
+    final v = switch ((e!.unita ?? '').toLowerCase().replaceAll(' ', '')) {
+      '' || 'kwh/100km' => n,
+      'kwh/100mi' => n / miglio,
+      'wh/km' => n / 10,
+      'wh/mi' => n / 10 / miglio,
+      'km/kwh' => 100 / n,
+      'mi/kwh' => 100 / (n * miglio),
+      _ => null,
+    };
+    return v == null || v < 5 || v > 60 ? null : v;
+  }
+
+  static bool? _acceso(Entita? e) =>
+      switch ((e?.stato ?? '').trim().toLowerCase()) {
+        'on' || 'true' || '1' => true,
+        'off' || 'false' || '0' => false,
+        _ => null,
+      };
+
   /* ── La configurazione ──────────────────────────────────────────────── */
 
   /// `pickVehicle` della pagina: per uid, poi per posizione, se no la prima.
@@ -617,7 +721,7 @@ class IlFiloDellaVettura {
       }
       _vettura = vettura;
       if (persone != null) _diCasa = lePersoneDallaPlancia(tutti);
-      fonte.descrivi(_vettura?.auto);
+      fonte.descrivi(_vettura?.autoConLaCapacita(_statoDi));
       await _abbonati(filo);
       _aggiorna();
     } catch (_) {
@@ -834,15 +938,43 @@ class IlFiloDellaVettura {
     /* I suoi sensori dall'abbonamento; e se qualcun altro ha gia' chiesto
      * tutta la casa (l'elenco dei dispositivi, un ponte di prima), anche da
      * li'. */
-    final casa = collegamento.stato;
-    Entita? stato(String id) => _conRicordo(id, _valori[id] ?? casa?[id]);
+    Entita? stato(String id) => _statoDi(id);
     persone?.aggiorna([for (final p in _diCasa) ?sullaMappa(p, stato)]);
     final v = _vettura;
     if (v == null) return;
+    fonte.descrivi(v.autoConLaCapacita(stato));
+    _mandaIlConsumo(v.datiDelConsumo(stato));
     final l = v.lettura(stato);
     if (l == null || _uguale(l, _mandata)) return;
     _mandata = l;
     fonte.manda(l);
+  }
+
+  /// Lo stato di un sensore: dall'abbonamento, o dalla casa intera se
+  /// qualcun altro l'ha gia' chiesta, con il ricordo delle temperature.
+  Entita? _statoDi(String id) =>
+      _conRicordo(id, _valori[id] ?? collegamento.stato?[id]);
+
+  /* ── I dati del consumo, a gdanav ──────────────────────────────────────
+   *
+   * L'energia che resta, la capacita' vera, il consumo misurato, il clima:
+   * gdanav li usa al posto delle sue stime (`docs/DATI-AUTO.md` di GdAAuto).
+   * `StatoAuto` non ha dove metterli, e vanno alla fonte accanto alla
+   * lettura, coi nomi del contratto. Il gdanav di prima non li prende: si
+   * prova una volta, e se non c'e' dove si smette. */
+  bool _consumoSenzaPosto = false;
+  String _consumoMandato = '';
+
+  void _mandaIlConsumo(Map<String, Object> dati) {
+    if (_consumoSenzaPosto) return;
+    final firma = jsonEncode(dati);
+    if (firma == _consumoMandato) return;
+    _consumoMandato = firma;
+    try {
+      (fonte as dynamic).datiDelConsumo = dati;
+    } on NoSuchMethodError {
+      _consumoSenzaPosto = true;
+    }
   }
 
   static bool _uguale(StatoAuto a, StatoAuto? b) =>

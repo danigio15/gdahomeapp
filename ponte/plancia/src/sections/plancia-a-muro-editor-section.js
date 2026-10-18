@@ -28,6 +28,7 @@ import {
   comandiDellaPagina,
   ALTRE_MISURE_AL_MASSIMO,
   energiaDellaPagina,
+  entitaDelMeteoDelMuro,
   LETTORI_AL_MASSIMO,
   lettoriDellaPagina,
   postiDellaPagina,
@@ -49,12 +50,17 @@ import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import {
+  EVENTO_PREVISIONI,
   anteprimaDellaPagina,
   eUnVarco as eUnVarcoDelMuro,
   fonteDelMuro,
   premiumDellaCasa,
 } from "./plancia-a-muro-section.js";
-import { opzioniDelCampanello } from "../core/il-campanello-a-muro.js";
+import {
+  DOMINI_DEL_CAMPANELLO,
+  opzioniDelCampanello,
+  tipoDelCampanello,
+} from "../core/il-campanello-a-muro.js";
 import { suonaIlCampanello } from "./il-suono-del-campanello.js";
 import { EVENTO_IMMAGINE, bloccoImmagineMarkup } from "./riquadri-con-immagine-section.js";
 import {
@@ -158,6 +164,35 @@ const campo = (via, valore, segnaposto = "", tipo = "text") =>
   `<input class="ed-input${tipo === "text" ? " mono" : ""} mu-ed-campo" type="${tipo}" data-mu-ed-campo="${esc(via)}" value="${esc(valore)}" placeholder="${esc(segnaposto)}" autocomplete="off" spellcheck="false"${tipo === "password" ? ' inputmode="numeric"' : ""}>`;
 const riga = (titolo, nota, destra) =>
   `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(titolo)}</b>${nota ? `<small>${esc(nota)}</small>` : ""}</div><div class="mu-ed-dx">${destra}</div></div>`;
+
+/* Il campanello: quale entita' lo dice. «Cosa si aspetta di entita'?» La
+ * risposta sta scritta sotto il campo, e la ricerca propone per primi gli
+ * eventi del citofono e i sensori che si chiamano campanello. Un'entita' che
+ * non sa fare da campanello (un sensore qualunque) lo dice subito, invece di
+ * lasciare il tablet muto il giorno che suonano. */
+function rigaDelCampanello(via, ing) {
+  const id = clean(ing.campanello);
+  const avviso =
+    id && !tipoDelCampanello(id)
+      ? `<small class="mu-ed-avviso" data-mu-ed-campanello-avviso><b>${esc(id)}</b> ${esc(
+          t(
+            "non può fare da campanello: scegli un evento (event.*) o un sensore che si accende (binary_sensor.*).",
+            "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).",
+          ),
+        )}</small>`
+      : "";
+  return `<div class="mu-ed-riga" data-mu-ed-campanello><div class="mu-ed-testo"><b>${esc(t("Campanello", "Doorbell"))}</b><small>${esc(
+    t(
+      "Quando suona, il pannello si sveglia e apre il citofono da solo",
+      "When it rings, the panel wakes up and opens the intercom by itself",
+    ),
+  )}</small><small class="mu-ed-aiuto" data-mu-ed-campanello-aiuto>${esc(
+    t(
+      "Un evento del citofono (event.*), o un sensore che si accende quando suona (binary_sensor). Vanno anche un button o un interruttore.",
+      "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.",
+    ),
+  )}</small>${avviso}</div><div class="mu-ed-dx">${cerca(`${via}.ingresso.campanello`, ing.campanello, { domini: DOMINI_DEL_CAMPANELLO.join(","), segnaposto: "event.campanello" })}</div></div>`;
+}
 
 /* Come suona il campanello sul tablet (`core/il-campanello-a-muro.js`): il
  * suono con la sua prova, il volume, lo schermo che si accende e che resta
@@ -390,6 +425,7 @@ const MODELLI = () => [
   ["telecamere", t("Telecamere", "Cameras")],
   ["energia", t("Energia", "Energy")],
   ["musica", t("Musica", "Music")],
+  ["meteo", t("Meteo", "Weather")],
   ["mixer", t("Mixer audio", "Audio mixer")],
   ["telecamera", t("Telecamera con comandi", "Camera with controls")],
   ["comandi", t("Comandi di regia", "Control buttons")],
@@ -406,6 +442,7 @@ const DISEGNO_DI_SERIE = {
   telecamere: "telecamere",
   energia: "energia",
   musica: "media",
+  meteo: "meteo",
   mixer: "media",
   telecamera: "telecamere",
   comandi: "azioni",
@@ -683,6 +720,23 @@ function paginaMarkup(p, i, tutte) {
         cerca(`${via}.lettori.${k}`, p.lettori[k] || "", { domini: "media_player" }),
       ).join("")}</span>`,
     )}`;
+  } else if (p.modello === "meteo") {
+    /* Il meteo della pagina e' quello del tablet: in alto, sul riposo e qui
+     * lo stesso. Si sceglie una volta sola, in «Altre impostazioni». */
+    const id = entitaDelMeteoDelMuro(bozza(), f, allStates() || {});
+    dentro = `<div class="mu-ed-nota">${esc(
+      t(
+        "Il meteo a tutta pagina: com'è adesso in grande, con percepita, umidità, vento e pressione, poi le prossime ore e i prossimi giorni. Usa lo stesso meteo che il tablet mostra in alto e sul riposo.",
+        "Full-page weather: what it's like now, big, with feels-like, humidity, wind and pressure, then the coming hours and days. It uses the same weather the tablet shows at the top and on the rest screen.",
+      ),
+    )}</div><div class="mu-ed-riga" data-mu-ed-meteo="${esc(id)}"><div class="mu-ed-testo"><b>${esc(id ? nomeDi(id) : t("Nessun meteo", "No weather"))}</b><small>${esc(
+      id
+        ? `${id} · ${t("si cambia in Altre impostazioni › Meteo", "change it in More settings › Weather")}`
+        : t(
+            "Scegli l'entità meteo in Altre impostazioni › Meteo, o aggiungi un'integrazione meteo in Home Assistant",
+            "Choose the weather entity in More settings › Weather, or add a weather integration in Home Assistant",
+          ),
+    )}</small></div></div>`;
   } else if (p.modello === "mixer") {
     dentro = mixerMarkup(p, i);
   } else if (p.modello === "telecamera") {
@@ -758,7 +812,7 @@ function paginaMarkup(p, i, tutte) {
     )}
     <div class="mu-ed-sotto-titolo">${esc(t("Citofono / telecamera", "Intercom / camera"))}</div>
     ${riga(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
-    ${riga(t("Campanello", "Doorbell"), t("Quando suona, il pannello si sveglia e apre il citofono da solo", "When it rings, the panel wakes up and opens the intercom by itself"), cerca(`${via}.ingresso.campanello`, ing.campanello, { domini: "binary_sensor,event,input_boolean,switch" }))}
+    ${rigaDelCampanello(via, ing)}
     ${campanelloMarkup(i, via, ing)}
     ${riga(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga(t("Nome del tasto grande", "Big button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo(`${via}.ingresso.nomeApri`, ing.nomeApri, ing.apri ? nomeDi(ing.apri) : t("Cancello", "Gate")))}
@@ -970,7 +1024,7 @@ function comandiMarkup(p, i) {
 
 /* Le pagine che la griglia non la scelgono: l'ingresso ha la sua forma,
  * l'energia le sue quattro tessere. */
-const SENZA_GRIGLIA = ["ingresso", "energia", "musica", "mixer", "telecamera", "comandi"];
+const SENZA_GRIGLIA = ["ingresso", "energia", "musica", "meteo", "mixer", "telecamera", "comandi"];
 const GRIGLIE_SCRITTE = () =>
   Object.entries(GRIGLIE).map(([n, g]) => [n, `${g.colonne}×${g.righe}`]);
 
@@ -1890,6 +1944,8 @@ function stili() {
 #ed-body .mu-ed-testo{flex:1 1 220px;min-width:0}
 #ed-body .mu-ed-testo b{display:block;font-size:13px}
 #ed-body .mu-ed-testo small{display:block;margin-top:2px;font-size:11.5px;line-height:1.4;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-testo small.mu-ed-aiuto{margin-top:6px;padding:6px 9px;border-radius:8px;background:color-mix(in srgb,#0ea5e9 9%,transparent);color:var(--text,inherit)}
+#ed-body .mu-ed-testo small.mu-ed-avviso{margin-top:6px;padding:6px 9px;border-radius:8px;background:color-mix(in srgb,#f59e0b 14%,transparent);color:var(--text,inherit)}
 #ed-body .mu-ed-dx{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;flex:0 1 auto;min-width:0;max-width:100%;margin-left:auto}
 #ed-body .mu-ed-dx .ed-input{margin:0;width:auto;min-width:150px;max-width:260px}
 #ed-body .mu-ed-dx input[type="time"]{min-width:0;width:110px}
@@ -2053,9 +2109,12 @@ export function installPlanciaAMuroEditor() {
     ensureMuroEditor();
   });
   onEditorRedraw("__dmMuroEditor", ancora);
-  root.addEventListener?.("dashboardmodern:state-changed", () => {
-    if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
-  });
+  /* Anche quando arrivano le previsioni della pagina Meteo: non sono uno
+   * stato della casa, e senza questo l'anteprima direbbe «in arrivo». */
+  for (const evento of ["dashboardmodern:state-changed", EVENTO_PREVISIONI])
+    root.addEventListener?.(evento, () => {
+      if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+    });
   root.addEventListener?.("resize", () => {
     if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
   });

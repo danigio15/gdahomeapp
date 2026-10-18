@@ -12,9 +12,15 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 import { INDIRIZZO_DELLE_COLONNINE } from "../src/colonnine.js";
+import { Dispositivi } from "../src/dispositivi.js";
+import { Notifiche } from "../src/notifiche.js";
+import { apriLaSpinta } from "../src/spinta.js";
 import { chilometriDellaLinea, puntoAlKm } from "../src/soste.js";
 import {
   autoDelViaggio,
@@ -215,7 +221,96 @@ test("il clima si accende prima; il garage e' solo un tasto nell'avviso", async 
   await viaggi.battito();
   const [avviso] = notifiche.consegnate;
   assert.equal(avviso.azioni[0].id, "garage");
-  assert.deepEqual(avviso.azioni[0].servizio.service_data, { entity_id: "cover.garage" });
+  assert.deepEqual(avviso.azioni[0].servizio, {
+    dominio: "cover",
+    servizio: "open_cover",
+    entita: ["cover.garage"],
+  });
+});
+
+test("«Apri il garage» dall'avviso vero: premuto, apre il garage", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "viaggi-garage-"));
+  const orologio = { ora: new Date(2026, 9, 16, 7, 40).getTime() };
+  const dispositivi = new Dispositivi({ cartella, adesso: () => orologio.ora });
+  const UTENTE = "a".repeat(32);
+  const a = dispositivi.abbina({ nome: "Telefono A", utente: UTENTE });
+  const spinte = [];
+  const chiamate = [];
+  const notifiche = new Notifiche({
+    cartella,
+    dispositivi,
+    utenti: {
+      elenco: async () => [{ id: UTENTE, nome: "Persona 1", amministratore: true, attivo: true }],
+      eVivo: async () => true,
+    },
+    casa: {
+      chiedi: async (comando) => {
+        chiamate.push(comando);
+        return [];
+      },
+      ascolta: async () => () => {},
+    },
+    commissioni: { telecamereChiuse: () => new Set() },
+    postino: {
+      pronto: true,
+      spingi: (spinta) => {
+        spinte.push(spinta);
+        return true;
+      },
+      diIGettoni: () => {},
+    },
+    adesso: () => orologio.ora,
+  });
+  const viaggi = new Viaggi({
+    notifiche,
+    casa: { chiedi: async () => null },
+    adesso: () => orologio.ora,
+    licenze: null,
+    ogni: () => null,
+  });
+  try {
+    await notifiche.rispondi(
+      { id: 1, type: "ponte/notifiche/registra", gettone: `gettone-${"x".repeat(30)}` },
+      { dispositivo: a.dispositivo },
+    );
+    const { viaggio } = viaggi.salva(
+      UTENTE,
+      unViaggio({
+        quando: { modo: "partenza", ora: "08:00", giorno: "2026-10-16" },
+        prepara: { garage: { entity: "cover.garage" } },
+      }),
+    );
+    orologio.ora = new Date(2026, 9, 16, 7, 50).getTime();
+    await viaggi.battito();
+    assert.equal(spinte.length, 1, "l'avviso e' partito");
+    const busta = apriLaSpinta({
+      chiaveDelFilo: a.chiave,
+      telefono: a.dispositivo.id,
+      busta: spinte[0].busta,
+    });
+    assert.equal(busta.tipo, "viaggi");
+    assert.deepEqual(
+      busta.azioni.map((t) => [t.id, t.etichetta]),
+      [["garage", "Apri il garage"]],
+    );
+    assert.ok(!chiamate.some((c) => c.domain === "cover"), "non si apre da solo");
+    const premuto = await notifiche.rispondi(
+      { id: 2, type: "ponte/notifiche/azione", notifica: busta.id, azione: "garage" },
+      { dispositivo: a.dispositivo, utente: UTENTE },
+    );
+    assert.equal(premuto.success, true, JSON.stringify(premuto.error));
+    assert.deepEqual(chiamate.at(-1), {
+      type: "call_service",
+      domain: "cover",
+      service: "open_cover",
+      target: { entity_id: ["cover.garage"] },
+    });
+    assert.ok(viaggio);
+  } finally {
+    viaggi.ferma();
+    notifiche.ferma();
+    rmSync(cartella, { recursive: true, force: true });
+  }
 });
 
 test("senza Premium i viaggi restano, ma non si salvano di nuovi e non si avvisa", async () => {

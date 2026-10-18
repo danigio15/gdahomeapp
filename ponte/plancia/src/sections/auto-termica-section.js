@@ -26,11 +26,16 @@
  */
 import { CAPACITA_DI_SERIE } from "../core/il-tempo-della-ricarica.js";
 import {
+  CASELLE_DELL_AUTO,
   CASELLE_TERMICHE,
+  RIFERIMENTI_DELL_AUTO,
   RIFERIMENTI_TERMICI,
   RUOTE,
+  casellaDellAuto,
+  istanteDetto,
   letturaTermica,
   ruoteDellAuto,
+  senzaParentesi,
 } from "../core/auto-termica.js";
 import {
   CAPACITA_DI_CASA_KEY,
@@ -39,7 +44,9 @@ import {
   TIPI_MOTORE,
   VEHICLE_CAPACITY_FIELD,
   VEHICLE_KEY_FIELD,
+  CASELLA_DELLA_CAPACITA,
   capacitaDellaBatteria,
+  kilowattoraDalloStato,
   mezzoInUso,
   motoreDellaVettura,
   siRicarica,
@@ -63,6 +70,7 @@ import {
   formatNumber,
   installStyle,
   lexicalGlobal,
+  locale,
   onEditorRedraw,
   readJson,
   root,
@@ -199,8 +207,12 @@ export function etichettaDellaCasella(ref) {
       return `${t("Pressione pneumatici", "Tyre pressure")} — ${parolaDellaRuota("postSx")}`;
     case "dm.ev_pneumatico_post_dx":
       return `${t("Pressione pneumatici", "Tyre pressure")} — ${parolaDellaRuota("postDx")}`;
-    default:
-      return clean(ref);
+    default: {
+      /* I dati dell'auto connessa portano l'etichetta con se': una tabella
+       * sola per la scheda, la pagina e la finestra in Home. */
+      const voce = casellaDellAuto(ref);
+      return voce ? t(voce.it, voce.en) : clean(ref);
+    }
   }
 }
 
@@ -264,13 +276,19 @@ export function mettiLeCaselle() {
   if (/auto elettrica|electric|^.?\s*auto$|^.?\s*car$/i.test(String(sezione.label || "")))
     sezione.label = `🚗 ${t("Veicoli", "Vehicles")}`;
   let aggiunte = 0;
-  for (const voce of CASELLE_TERMICHE) {
-    if (sezione.slots.some((slot) => slot?.ref === voce.ref)) continue;
+  const aggiungi = (voce) => {
+    if (sezione.slots.some((slot) => slot?.ref === voce.ref)) return;
     sezione.slots.push({ ref: voce.ref, lbl: etichettaDellaCasella(voce.ref) });
     aggiunte += 1;
-  }
+  };
+  for (const voce of CASELLE_TERMICHE) aggiungi(voce);
+  /* Dopo quelle termiche, i dati dell'auto connessa: sono le caselle che
+   * GdAAuto riempie da sola, e chi ha un'altra integrazione le sceglie qui a
+   * mano, una per una. */
+  for (const voce of CASELLE_DELL_AUTO) aggiungi(voce);
   const refs = lexicalGlobal("CD_SLOT_REFS");
-  if (refs && typeof refs.add === "function") for (const ref of RIFERIMENTI_TERMICI) refs.add(ref);
+  if (refs && typeof refs.add === "function")
+    for (const ref of [...RIFERIMENTI_TERMICI, ...RIFERIMENTI_DELL_AUTO]) refs.add(ref);
   return aggiunte > 0;
 }
 
@@ -513,9 +531,33 @@ export function scriviLaCapacita(valore) {
  * La vettura se l'ha dichiarata, altrimenti quella della plancia, altrimenti i
  * settanta di serie — che restano l'assunzione di sempre, detta invece che
  * nascosta.
+ *
+ * Fra lo scritto e i settanta c'e' quella che l'auto dice di se': il sensore
+ * della capacita' (`dm.ev_capacita_batteria`, che GdAAuto riempie). Lo
+ * scritto vince — chi l'ha battuto sa qualcosa — ma una casella vuota non
+ * vuol dire piu' «settanta» quando l'auto lo sa.
  */
 export function capacitaDellAutoInUso() {
-  return capacitaDellaBatteria(activeVehicle() || {}) ?? capacitaDiCasa() ?? CAPACITA_DI_SERIE;
+  const auto = activeVehicle();
+  return (
+    capacitaDellaBatteria(auto || {}) ??
+    (auto ? null : capacitaDiCasa()) ??
+    capacitaDalSensore() ??
+    capacitaDiCasa() ??
+    CAPACITA_DI_SERIE
+  );
+}
+
+/* La capacita' che dice il sensore dell'auto in uso, dalla mappatura viva. */
+function capacitaDalSensore() {
+  let entita = "";
+  try {
+    entita = clean(root.resolveEntity?.(CASELLA_DELLA_CAPACITA));
+  } catch (_error) {
+    entita = "";
+  }
+  if (!entita || entita === CASELLA_DELLA_CAPACITA) return null;
+  return kilowattoraDalloStato(allStates()?.[entita]);
 }
 
 /* ── il quadro nella pagina ───────────────────────────────────────────── */
@@ -587,11 +629,120 @@ function gommeMarkup(lettura) {
   return { riassunto, quadretto };
 }
 
+/* Una tessera con una parola invece di un numero: la marcia, gli orari. */
+function parolaInTessera(glifo, etichetta, testo, ref) {
+  if (!clean(testo)) return "";
+  const nome = etichettaScelta(ref, etichetta);
+  return `<button type="button" class="dm-termica-misura" data-dm-storico="${esc(ref)}" data-dm-nome="${esc(nome)}">
+    <i aria-hidden="true">${glifo}</i>
+    <span class="dm-termica-misura-testo"><small>${esc(nome)}</small><b>${esc(testo)}</b></span>
+  </button>`;
+}
+
+/* Le misure che a zero non dicono niente: un'auto ferma ha velocita' zero,
+ * zero kilowatt e zero minuti alla fine di una carica che non c'e'. */
+const MOMENTANEE = new Set([
+  "dm.ev_velocita",
+  "dm.ev_potenza_istantanea",
+  "dm.ev_potenza_riscaldatore",
+  "dm.ev_potenza_ricarica",
+  "dm.ev_tempo_ricarica",
+]);
+
+/* Quelli che si comandano: lo stato lo dice gia' un'altra casella. Il clima
+ * comandabile vale come «clima acceso» solo quando quella casella manca —
+ * GdAAuto non la crea, se il clima si puo' accendere. */
+const COMANDI = new Set(["dm.ev_comando_clima", "dm.ev_comando_ricarica"]);
+
+/**
+ * I dati dell'auto connessa, per la pagina: una tessera per ogni misura
+ * mappata, una pillola per ogni cosa accesa.
+ *
+ * Valgono per qualunque motore: l'energia che resta, il consumo medio, il
+ * clima, la ricarica programmata, l'auto che dorme. Le etichette sono quelle
+ * della scheda senza la parentesi dell'unita' — l'unita' la scrive il
+ * sensore — e un nome dato a mano vince anche qui.
+ */
+export function datiMarkup(lettura, adesso = Date.now()) {
+  const caselle = lettura?.caselle || {};
+  const valore = (campo) => {
+    const v = caselle[campo]?.valore;
+    return v === undefined ? null : v;
+  };
+  /* Le tessere il nome scelto lo cercano da se'; le pillole no. */
+  const diSerie = (ref) => senzaParentesi(etichettaDellaCasella(ref));
+  const nomeDi = (ref) => etichettaScelta(ref, diSerie(ref));
+  const tessere = [];
+  const pillole = [];
+  for (const voce of CASELLE_DELL_AUTO) {
+    const casella = caselle[voce.campo];
+    const v = casella ? casella.valore : null;
+    if (v === null || v === undefined) continue;
+    switch (voce.tipo) {
+      case "misura":
+      case "gradi": {
+        if (MOMENTANEE.has(voce.ref) && v === 0) break;
+        let unita = voce.tipo === "gradi" ? "°" : casella.unita ? ` ${casella.unita}` : "";
+        /* Il tipo dell'ultima ricarica accanto alla sua energia: «12,4 kWh ·
+         * DC» si legge in un colpo. */
+        if (voce.ref === "dm.ev_ultima_ricarica_energia" && clean(valore("ultimaRicaricaTipo")))
+          unita += ` · ${clean(valore("ultimaRicaricaTipo")).toUpperCase()}`;
+        const cifre = Number.isInteger(v) || Math.abs(v) >= 100 ? 0 : 1;
+        tessere.push(misura(voce.glifo, diSerie(voce.ref), v, unita, voce.ref, cifre));
+        break;
+      }
+      case "marcia":
+        tessere.push(parolaInTessera(voce.glifo, diSerie(voce.ref), v, voce.ref));
+        break;
+      case "acceso": {
+        if (COMANDI.has(voce.ref)) break;
+        if (v !== true) break;
+        if (voce.ref === "dm.ev_ricarica_programmata") {
+          const dalle = clean(valore("ricaricaInizio"));
+          const alle = clean(valore("ricaricaFine"));
+          const orari = dalle && alle ? ` · ${dalle}–${alle}` : dalle ? ` · ${dalle}` : "";
+          pillole.push(pillola(voce.glifo, `${nomeDi(voce.ref)}${orari}`, "acceso"));
+          break;
+        }
+        /* L'auto che dorme non e' una cosa accesa: e' una cosa da sapere. */
+        const tono = voce.ref === "dm.ev_in_sonno" ? "spento" : "acceso";
+        pillole.push(pillola(voce.glifo, nomeDi(voce.ref), tono));
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  if (valore("clima") === null && valore("comandoClima") === true)
+    pillole.unshift(pillola("❄️", nomeDi("dm.ev_clima"), "acceso"));
+  /* Quando l'auto ha mandato i dati: conta soprattutto se dorme, perche' i
+   * numeri sono di quando si e' addormentata. */
+  const aggiornata = valore("ultimoAggiornamento");
+  if (aggiornata !== null) {
+    const ref = "dm.ev_ultimo_aggiornamento";
+    const detto = istanteDetto(aggiornata, { lingua: locale(), adesso });
+    tessere.push(parolaInTessera("🕒", diSerie(ref), detto, ref));
+  }
+  return { pillole, tessere: tessere.join("") };
+}
+
 /* Sull'auto elettrica il blocco porta solo le gomme, con la sua testata. */
 function gommeSoleMarkup(gomme) {
   return `<div class="dm-termica-testa">
       <span class="dm-termica-titolo">${esc(t("Pneumatici", "Tyres"))}</span>
     </div>
+    ${gomme.quadretto}
+    ${gomme.riassunto ? `<div class="dm-termica-griglia">${gomme.riassunto}</div>` : ""}`;
+}
+
+/* Sull'auto elettrica, con i dati dell'auto connessa: le pillole, le
+ * tessere, e sotto le gomme. */
+function datiSoliMarkup(dati, gomme) {
+  return `<div class="dm-termica-testa">
+      <span class="dm-termica-titolo">${esc(t("L'auto", "The car"))}</span>
+      <div class="dm-termica-pillole">${dati.pillole.join("")}</div>
+    </div>
+    ${dati.tessere ? `<div class="dm-termica-griglia">${dati.tessere}</div>` : ""}
     ${gomme.quadretto}
     ${gomme.riassunto ? `<div class="dm-termica-griglia">${gomme.riassunto}</div>` : ""}`;
 }
@@ -685,8 +836,12 @@ function quadroMarkup(lettura, tipo) {
     misura("⛽", t("Consumato in totale", "Total fuel used"), lettura.carburanteTotale, " L", "dm.ev_carburante_totale"),
     gomme.riassunto,
   ].join("");
+  /* I dati dell'auto connessa, dopo quelli del motore. */
+  const dati = datiMarkup(lettura);
+  pillole.push(...dati.pillole);
+  const tutte = `${tessere}${dati.tessere}`;
   const vuoto =
-    !serbatoio && !righe && !tessere && !gomme.quadretto && !pillole.length
+    !serbatoio && !righe && !tutte && !gomme.quadretto && !pillole.length
       ? `<div class="dm-termica-vuoto">${esc(
           t(
             "Compila le caselle dell'auto — carburante, autonomia, portiere, motore — dalla scheda Auto della configurazione.",
@@ -699,7 +854,7 @@ function quadroMarkup(lettura, tipo) {
       <div class="dm-termica-pillole">${pillole.join("")}</div>
     </div>
     <div class="dm-termica-quadro">${serbatoio}<div class="dm-termica-righe">${righe}</div></div>
-    ${tessere ? `<div class="dm-termica-griglia">${tessere}</div>` : ""}
+    ${tutte ? `<div class="dm-termica-griglia">${tutte}</div>` : ""}
     ${gomme.quadretto}
     ${vuoto}`;
 }
@@ -743,8 +898,13 @@ function dipingi() {
    * anche loro. Quando il motore non e' termico resta solo il quadretto delle
    * ruote, che vale per qualunque auto. */
   const gomme = gommeMarkup(lettura);
-  const soloGomme = !tipo;
-  if (soloGomme && !gomme.quadretto && !gomme.riassunto) {
+  const elettrica = !tipo;
+  /* E i dati dell'auto connessa, che valgono per ogni motore: l'energia che
+   * resta, il consumo, il clima, la ricarica programmata. */
+  const dati = datiMarkup(lettura);
+  const conDati = Boolean(dati.tessere || dati.pillole.length);
+  const soloGomme = elettrica && !conDati;
+  if (elettrica && !conDati && !gomme.quadretto && !gomme.riassunto) {
     if (blocco) blocco.remove();
     state.firma = "";
     return;
@@ -762,7 +922,11 @@ function dipingi() {
   }
   blocco.dataset.soloGomme = String(soloGomme);
   blocco.dataset.attenzione = String(Boolean(lettura.attenzione));
-  blocco.innerHTML = soloGomme ? gommeSoleMarkup(gomme) : quadroMarkup(lettura, tipo);
+  blocco.innerHTML = !elettrica
+    ? quadroMarkup(lettura, tipo)
+    : conDati
+      ? datiSoliMarkup(dati, gomme)
+      : gommeSoleMarkup(gomme);
 }
 
 function schedule() {

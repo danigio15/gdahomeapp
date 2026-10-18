@@ -25,6 +25,7 @@ import {
   bozzaNuova,
   caricaAllaPartenza,
   caricaDopo,
+  consumoMisurato,
   consumoStimato,
   durataDetta,
   durataStimata,
@@ -46,12 +47,14 @@ import {
 } from "../core/il-tempo-della-ricarica.js";
 import { FONDI_MAPPA } from "../core/radar-mappa.js";
 import {
+  CASELLA_DELLA_CAPACITA,
   capacitaDellaBatteria,
+  kilowattoraDalloStato,
   siRicarica,
   VEHICLE_KEY_FIELD,
   vehicleLabel,
 } from "../core/vehicle-model.js";
-import { capacitaDellAutoInUso } from "./auto-termica-section.js";
+import { capacitaDiCasa } from "./auto-termica-section.js";
 import { nellApp } from "./automazioni-section.js";
 import { activeVehicle, profiles, vehicleBatteryEntity, vehiclePlugged } from "./ev-section.js";
 import { codiceDellaRicaricaAdesso, kilowattDellaColonnina } from "./ev-stato-e-target-section.js";
@@ -407,7 +410,8 @@ function opzioniDiEntita(domini, scelta) {
  * l'obiettivo e la potenza della carica di casa. Qui si legge l'auto scelta per
  * il viaggio, si dice con quanta carica si parte, e la casa — che sa la strada
  * e le colonnine rapide — risponde con le soste (`ponte/src/soste.js`). Il
- * consumo non lo dice nessuna entita': lo si ricava dalla batteria e
+ * consumo lo dice l'auto quando lo misura (`dm.ev_consumo_medio`, il
+ * `consumo_medio` di GdAAuto); se no lo si ricava dalla batteria e
  * dall'autonomia che l'auto stima, o sono 17 kWh ogni 100 km.
  *
  * Le auto che contano sono quelle che si ricaricano: elettriche e ibride. Una
@@ -433,6 +437,32 @@ function statoDi(id) {
 function numeroDi(stato) {
   const n = Number.parseFloat(String(stato?.state ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : null;
+}
+
+/* Acceso, spento, o non si sa: un binary_sensor o un interruttore. */
+function accesoDi(stato) {
+  const detto = String(stato?.state ?? "")
+    .trim()
+    .toLowerCase();
+  if (/^(on|true|1)$/.test(detto)) return true;
+  if (/^(off|false|0)$/.test(detto)) return false;
+  return null;
+}
+
+/* I watt di uno stato, dall'unita' che dichiara. */
+function wattDi(stato) {
+  const n = numeroDi(stato);
+  if (n === null) return null;
+  return /^kw$/i.test(String(stato?.attributes?.unit_of_measurement ?? "").trim()) ? n * 1000 : n;
+}
+
+/* I gradi centigradi di uno stato, anche se Home Assistant li mostra in °F. */
+function gradiDi(stato) {
+  const n = numeroDi(stato);
+  if (n === null) return null;
+  return /f$/i.test(String(stato?.attributes?.unit_of_measurement ?? "").trim())
+    ? Math.round((((n - 32) * 5) / 9) * 10) / 10
+    : n;
 }
 
 /* L'entita' di una casella per quest'auto: la sua, o — se e' l'auto in uso —
@@ -474,10 +504,19 @@ function datiDellAuto(car) {
     const detto = clean(statoDi(entitaDi(car, "dm.ev_stato_ricarica", false))?.state);
     inCarica = /^[cd]$|charg|in carica|ricaric/i.test(detto);
   }
-  const kwh =
+  /* La capacita': scritta (sulla vettura, o sulla plancia da chi profili non
+   * ne ha), o detta dal sensore dell'auto — GdAAuto la sa —, o i settanta di
+   * serie. Lo stesso ordine della pagina Auto (`capacitaDellAutoInUso`). */
+  const capacitaVera =
     capacitaDellaBatteria(car) ??
-    (profiles().length ? null : capacitaDellAutoInUso()) ??
-    CAPACITA_DI_SERIE;
+    (profiles().length ? null : capacitaDiCasa()) ??
+    kilowattoraDalloStato(statoDi(entitaDi(car, CASELLA_DELLA_CAPACITA, inUso)));
+  const kwh = capacitaVera ?? CAPACITA_DI_SERIE;
+  /* Il consumo misurato dall'auto vince sulla stima. */
+  const consumoMedio = consumoMisurato(statoDi(entitaDi(car, "dm.ev_consumo_medio", inUso)));
+  const clima =
+    accesoDi(statoDi(entitaDi(car, "dm.ev_clima", inUso))) ??
+    accesoDi(statoDi(entitaDi(car, "dm.ev_comando_clima", inUso)));
   const fine =
     inCarica && carica !== null && obiettivo !== null
       ? tempoDellaRicarica({
@@ -499,7 +538,21 @@ function datiDellAuto(car) {
     collegata,
     fineAlle: fine?.stato === "carica" ? Date.now() + fine.minuti * 60_000 : null,
     kwh,
-    consumo: consumoStimato({ kwh, carica, autonomia }),
+    consumo: consumoMedio ?? consumoStimato({ kwh, carica, autonomia }),
+    /* I dati del consumo per gdanav, coi nomi del contratto delle sorelle
+     * (`docs/DATI-AUTO.md` di GdAAuto). Un dato che manca resta `null`, e il
+     * conto di la' resta com'era. */
+    perGdanav: {
+      energia_kwh: kilowattoraDalloStato(statoDi(entitaDi(car, "dm.ev_energia_residua", inUso))),
+      capacita_kwh: capacitaVera,
+      consumo_medio_kwh100: consumoMedio,
+      potenza_clima_w: wattDi(statoDi(entitaDi(car, "dm.ev_potenza_riscaldatore", inUso))),
+      clima_acceso: clima,
+      batteria_in_riscaldamento: accesoDi(
+        statoDi(entitaDi(car, "dm.ev_batteria_in_riscaldamento", inUso)),
+      ),
+      temperatura_interna_c: gradiDi(statoDi(entitaDi(car, "dm.ev_temperatura_interna", inUso))),
+    },
   };
 }
 
@@ -540,6 +593,11 @@ function autoPerLaStrada(b) {
   const scelte = opzioniDellAuto(b, dati);
   const batteria = caricaAllaPartenza(scelte.partenza, dati.carica, dati.obiettivo);
   if (batteria === null) return null;
+  /* Accanto, quello che l'auto misura, coi nomi del contratto: solo i dati
+   * che ci sono. */
+  const misurati = Object.fromEntries(
+    Object.entries(dati.perGdanav || {}).filter(([, valore]) => valore !== null),
+  );
   return {
     batteria: Math.round(batteria),
     kwh: dati.kwh,
@@ -547,6 +605,7 @@ function autoPerLaStrada(b) {
     kwMax: null,
     minimaArrivo: scelte.minimaArrivo,
     kwColonnine: scelte.kwColonnine,
+    ...misurati,
   };
 }
 

@@ -220,6 +220,76 @@ void main() {
     expect(LaVettura.inCarica(null, kw: 11), isTrue);
   });
 
+  /* GdAAuto dice la capacita' e il consumo: la capacita' vale quando nella
+   * plancia non e' scritta, e i dati del consumo vanno a gdanav coi nomi del
+   * contratto delle sorelle. */
+  test('la capacita\' e il consumo dell\'auto, coi nomi del contratto', () {
+    final b10 = {
+      'uid': 'auto-3',
+      'name': 'B10',
+      'ov': {
+        'dm.ev_batteria_auto': 'sensor.b10_batteria',
+        'dm.ev_capacita_batteria': 'sensor.b10_capacita_batteria',
+        'dm.ev_energia_residua': 'sensor.b10_energia_residua',
+        'dm.ev_consumo_medio': 'sensor.b10_consumo_medio',
+        'dm.ev_potenza_riscaldatore': 'sensor.b10_potenza_riscaldatore',
+        'dm.ev_comando_clima': 'switch.b10_clima',
+        'dm.ev_batteria_in_riscaldamento': 'binary_sensor.b10_scalda',
+        'dm.ev_temperatura_interna': 'sensor.b10_temperatura_interna',
+      },
+    };
+    final stati = {
+      'sensor.b10_capacita_batteria': e(
+        'sensor.b10_capacita_batteria',
+        '67.1',
+        {'unit_of_measurement': 'kWh'},
+      ),
+      'sensor.b10_energia_residua': e('sensor.b10_energia_residua', '40200', {
+        'unit_of_measurement': 'Wh',
+      }),
+      'sensor.b10_consumo_medio': e('sensor.b10_consumo_medio', '15.8', {
+        'unit_of_measurement': 'kWh/100 km',
+      }),
+      'sensor.b10_potenza_riscaldatore': e(
+        'sensor.b10_potenza_riscaldatore',
+        '1200',
+        {'unit_of_measurement': 'W'},
+      ),
+      'switch.b10_clima': e('switch.b10_clima', 'on'),
+      'binary_sensor.b10_scalda': e('binary_sensor.b10_scalda', 'off'),
+      'sensor.b10_temperatura_interna': e(
+        'sensor.b10_temperatura_interna',
+        '21.5',
+        {'unit_of_measurement': '°C'},
+      ),
+    };
+    Entita? stato(String id) => stati[id];
+    final v = LaVettura.daiValori(valori(auto: [b10]))!;
+    expect(v.auto.kwh, isNull);
+    expect(v.autoConLaCapacita(stato).kwh, 67.1);
+    expect(v.autoConLaCapacita(stato).etichetta, 'B10');
+    expect(v.datiDelConsumo(stato), {
+      'energia_kwh': 40.2,
+      'capacita_kwh': 67.1,
+      'consumo_medio_kwh100': 15.8,
+      'potenza_clima_w': 1200.0,
+      'clima_acceso': true,
+      'batteria_in_riscaldamento': false,
+      'temperatura_interna_c': 21.5,
+    });
+    /* Lo scritto vince sul sensore. */
+    final scritta = LaVettura.daiValori(
+      valori(
+        auto: [
+          {...b10, 'kwh': '66'},
+        ],
+      ),
+    )!;
+    expect(scritta.autoConLaCapacita(stato).kwh, 66);
+    /* Un dato che manca non si inventa. */
+    expect(v.datiDelConsumo((_) => null), isEmpty);
+  });
+
   /* Tutto insieme, sul filo vero: il ponte da' la configurazione della
    * plancia e gli stati, e un cambiamento della batteria arriva a gdanav
    * senza che nessuno abbini niente. */

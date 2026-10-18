@@ -349,6 +349,41 @@ const oraDetta = (ms) => {
   return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
 };
 
+/**
+ * Le parole dell'avviso «Parti fra 10 minuti»: per l'avviso vero e per
+ * l'esempio di «Prova: mandamela adesso» (`notifiche.js`). `minuti` alla
+ * partenza, `nome` del viaggio (o la meta), `arrivo` l'ora «entro le» se il
+ * viaggio e' a ora d'arrivo, `partenza` l'istante in cui partire, `stimata`
+ * se la durata viene da una stima.
+ */
+export function paroleDellAvviso({ minuti, nome, arrivo = null, partenza, stimata }) {
+  const titoloIt = minuti > 1 ? `Parti fra ${minuti} minuti` : "È ora di partire";
+  const titoloEn = minuti > 1 ? `Leave in ${minuti} minutes` : "Time to leave";
+  const arrivoIt = arrivo ? `arrivo entro le ${arrivo}` : `partenza alle ${oraDetta(partenza)}`;
+  const arrivoEn = arrivo ? `arrive by ${arrivo}` : `leave at ${oraDetta(partenza)}`;
+  const senzaStima = stimata ? "" : " Apri GdANav per il tempo col traffico.";
+  return {
+    it: { titolo: titoloIt, testo: `${nome}: ${arrivoIt}.${senzaStima}` },
+    en: { titolo: titoloEn, testo: `${nome}: ${arrivoEn}.` },
+  };
+}
+
+/** Il tasto dell'avviso: «Apri il garage», se il viaggio ne ha uno. Mai da solo. */
+export function tastiDellAvviso(garage) {
+  return garage
+    ? [
+        {
+          id: "garage",
+          parole: { it: "Apri il garage", en: "Open the garage" },
+          /* Nella forma dei tasti delle notifiche (`notifiche.js`, `_unTasto`):
+           * `cover.open_cover` e' fra i servizi che un tasto puo' chiamare, e
+           * l'entita' e' una copertura (`viaggioPulito`). */
+          servizio: { dominio: "cover", servizio: "open_cover", entita: [garage.entity] },
+        },
+      ]
+    : [];
+}
+
 export class Viaggi {
   constructor({
     cartella = "",
@@ -847,19 +882,7 @@ export class Viaggi {
     if (!this.notifiche?.consegna) return;
     const meta = viaggio.tappe[viaggio.tappe.length - 1]?.nome || "la meta";
     const minuti = Math.max(0, Math.round((volta.partenza - this.adesso()) / MINUTO));
-    const titoloIt = minuti > 1 ? `Parti fra ${minuti} minuti` : "È ora di partire";
-    const titoloEn = minuti > 1 ? `Leave in ${minuti} minutes` : "Time to leave";
     const nome = viaggio.nome || meta;
-    const arrivoIt =
-      viaggio.quando.modo === "arrivo"
-        ? `arrivo entro le ${viaggio.quando.ora}`
-        : `partenza alle ${oraDetta(volta.partenza)}`;
-    const arrivoEn =
-      viaggio.quando.modo === "arrivo"
-        ? `arrive by ${viaggio.quando.ora}`
-        : `leave at ${oraDetta(volta.partenza)}`;
-    const senzaStima = volta.stimata ? "" : " Apri GdANav per il tempo col traffico.";
-    const garage = viaggio.prepara.garage;
     try {
       await this.notifiche.consegna({
         tipo: "viaggi",
@@ -867,23 +890,14 @@ export class Viaggi {
         urgenza: "normale",
         oltreIlSilenzio: true,
         solo: [viaggio.utente],
-        parole: {
-          it: { titolo: titoloIt, testo: `${nome}: ${arrivoIt}.${senzaStima}` },
-          en: { titolo: titoloEn, testo: `${nome}: ${arrivoEn}.` },
-        },
-        azioni: garage
-          ? [
-              {
-                id: "garage",
-                parole: { it: "Apri il garage", en: "Open the garage" },
-                servizio: {
-                  domain: "cover",
-                  service: "open_cover",
-                  service_data: { entity_id: garage.entity },
-                },
-              },
-            ]
-          : [],
+        parole: paroleDellAvviso({
+          minuti,
+          nome,
+          arrivo: viaggio.quando.modo === "arrivo" ? viaggio.quando.ora : null,
+          partenza: volta.partenza,
+          stimata: volta.stimata,
+        }),
+        azioni: tastiDellAvviso(viaggio.prepara.garage),
       });
     } catch (errore) {
       this.registro.attenzione(`l'avviso del viaggio non e' partito: ${errore?.message || errore}`);

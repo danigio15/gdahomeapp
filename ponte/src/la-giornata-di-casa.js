@@ -59,11 +59,14 @@ import { wattsFromState } from "../plancia/src/core/signed-energy.js";
 import { codiceDellaRicarica } from "../plancia/src/core/stato-della-ricarica.js";
 import {
   CAPACITA_DI_CASA_KEY,
+  CASELLA_DELLA_CAPACITA,
   MOTORE_DI_CASA_KEY,
   capacitaDellaBatteria,
+  kilowattoraDalloStato,
   siRicarica,
   tipoMotore,
 } from "../plancia/src/core/vehicle-model.js";
+import { consumoMisurato } from "../plancia/src/core/i-viaggi.js";
 
 const MINUTO = 60 * 1000;
 const ORA = 60 * MINUTO;
@@ -443,6 +446,10 @@ export class DiarioDellaCasa {
         entita,
         potenza: leggi("dm.ev_potenza_ricarica", "dm.ev_charge_power", "dm.ev_potenza_wallbox"),
         odometro: leggi("dm.ev_odometro"),
+        /* Quello che l'auto dice di se' (GdAAuto): quanti kWh tiene, e quanto
+         * consuma davvero. */
+        capacitaDetta: leggi(CASELLA_DELLA_CAPACITA),
+        consumoDetto: leggi("dm.ev_consumo_medio"),
       });
     }
     /* L'acqua e il gas: i contatori della plancia, o quelli dichiarati. */
@@ -620,7 +627,16 @@ export class DiarioDellaCasa {
       collegata: lettura.collegata,
       potenza: watt,
     });
-    const capacita = una.kwh || CAPACITA_DI_SERIE;
+    /* La capacita' scritta; se non c'e', quella del sensore dell'auto; se no
+     * i settanta di serie. */
+    const capacita =
+      una.kwh ||
+      (una.capacitaDetta ? kilowattoraDalloStato(c(una.capacitaDetta)) : null) ||
+      CAPACITA_DI_SERIE;
+    /* Il consumo per stimare i chilometri senza odometro: quello misurato
+     * dall'auto, se lo dice, o i 17 di un'elettrica media. */
+    const consumo =
+      (una.consumoDetto ? consumoMisurato(c(una.consumoDetto)) : null) ?? KWH_OGNI_100_KM;
     let odometro = una.odometro ? numero(c(una.odometro)?.state) : null;
     if (odometro !== null && /mi/i.test(String(c(una.odometro)?.attributes?.unit_of_measurement)))
       odometro *= 1.609344;
@@ -638,6 +654,7 @@ export class DiarioDellaCasa {
     });
     a.nome = una.nome;
     a.capacita = capacita;
+    a.consumo = consumo;
     a.conOdometro = Boolean(una.odometro);
     const salita = soc !== null && memoria.soc !== null ? soc - memoria.soc : 0;
     const inCarica =
@@ -991,7 +1008,7 @@ export class DiarioDellaCasa {
           ? v.odoA - v.odoDa
           : null;
       if (km === null && pct > 0) {
-        km = ((pct / 100) * a.capacita * 100) / KWH_OGNI_100_KM;
+        km = ((pct / 100) * a.capacita * 100) / (a.consumo || KWH_OGNI_100_KM);
         stimati = true;
       }
       const ore = (v.a - v.da) / ORA;

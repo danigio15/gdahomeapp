@@ -32,6 +32,13 @@ import { inKilowatt } from "../../core/il-tempo-della-ricarica.js";
 import { roomGlyph } from "../../core/personalization-catalog.js";
 import { disegnoDelCatalogo } from "../../core/catalogo-disegni.js";
 import { AUTO_DALL_ALTO } from "../../core/auto-dallalto.js";
+import {
+  CASELLE_DELL_AUTO,
+  casellaDellAuto,
+  istanteDetto,
+  marciaDalloStato,
+  senzaParentesi,
+} from "../../core/auto-termica.js";
 import { activeVehiclePhoto, resolveVehicleAsset } from "../ev-section.js";
 
 const P = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
@@ -446,7 +453,28 @@ const NOMI_EV = Object.freeze({
   "dm.ev_cofano": () => t("Cofano", "Bonnet"),
   "dm.ev_motore": () => t("Motore", "Engine"),
   "dm.ev_km_dall_ultima_ricarica": () => t("Dall'ultima carica", "Since last charge"),
+  /* I dati dell'auto connessa: le stesse parole della scheda, senza la
+   * parentesi dell'unita', che il valore scrive gia'. */
+  ...Object.fromEntries(
+    CASELLE_DELL_AUTO.map((voce) => [voce.ref, () => senzaParentesi(t(voce.it, voce.en))]),
+  ),
 });
+
+/* Il valore di un dato dell'auto connessa come si legge: l'ora invece del
+ * timestamp di Home Assistant, la lettera della marcia invece di «avanti»,
+ * «DC» invece di «dc». Il resto resta com'e' arrivato. */
+export function valoreDellaRiga(riga) {
+  const dato = casellaDellAuto(riga?.rif);
+  const grezzo = clean(riga?.stato);
+  if (dato?.tipo === "ora" && grezzo) {
+    const detto = istanteDetto(Date.parse(grezzo), { lingua: locale() });
+    if (detto) return detto;
+  }
+  if (dato?.tipo === "marcia" && grezzo) return marciaDalloStato(grezzo) || clean(riga?.value);
+  if (dato?.ref === "dm.ev_ultima_ricarica_tipo" && /^(ac|dc)$/i.test(grezzo))
+    return grezzo.toUpperCase();
+  return clean(riga?.value);
+}
 
 /* Le caselle che la finestra dice gia' altrove — nell'anello, nel chip della
  * ricarica, fra le gomme, in «Dov'e'» — e che in fondo sarebbero doppioni. */
@@ -690,7 +718,7 @@ function disegnaUnAuto(vettura, righe, conNome) {
   });
   const altreMarkup = altre.length
     ? `${titoletto(t("Le altre letture", "Other readings"))}<div class="dm-f-ev-due">${altre
-        .map((riga) => casella(nomeSenzaAuto(riga), esc(riga.value)))
+        .map((riga) => casella(nomeSenzaAuto(riga), esc(valoreDellaRiga(riga))))
         .join("")}</div>`
     : "";
 

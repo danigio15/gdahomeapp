@@ -101,6 +101,34 @@ export function consumoStimato({ kwh, carica, autonomia } = {}) {
 }
 
 /**
+ * Il consumo che l'auto ha misurato, in kWh ogni 100 km, da uno stato di Home
+ * Assistant: `dm.ev_consumo_medio`, che GdAAuto riempie con il suo
+ * `consumo_medio`. Vale piu' della stima, che divide la batteria per
+ * un'autonomia detta dall'auto con i suoi ottimismi. Si converte dall'unita'
+ * dello stato — Wh/km, km/kWh, le miglia — e un numero che non sta in piedi
+ * (fuori da 5-60, gli stessi confini della casa) e' `null`: niente si inventa,
+ * e resta la stima.
+ */
+export function consumoMisurato(stato) {
+  const n = numero(stato?.state);
+  if (n === null || n <= 0) return null;
+  const unita = String(stato?.attributes?.unit_of_measurement ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+  const MIGLIO = 1.609344;
+  let kwh100 = null;
+  if (unita === "" || unita === "kwh/100km") kwh100 = n;
+  else if (unita === "kwh/100mi") kwh100 = n / MIGLIO;
+  else if (unita === "wh/km") kwh100 = n / 10;
+  else if (unita === "wh/mi") kwh100 = n / 10 / MIGLIO;
+  else if (unita === "km/kwh") kwh100 = 100 / n;
+  else if (unita === "mi/kwh") kwh100 = 100 / (n * MIGLIO);
+  if (kwh100 === null || kwh100 < 5 || kwh100 > 60) return null;
+  return Math.round(kwh100 * 10) / 10;
+}
+
+/**
  * La carica con cui si parte, secondo la scelta: «adesso» quella di adesso,
  * «obiettivo» quella a cui arriva la carica di casa (mai meno di adesso), 100
  * piena. `null` se non si sa.

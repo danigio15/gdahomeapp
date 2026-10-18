@@ -10,6 +10,48 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.2
+
+- **Meteo sul pannello a muro:** nuova pagina «Meteo» in «Aggiungi una
+  pagina»: adesso in grande, la prossima pioggia, percepita, umidità, vento e
+  pressione, le prossime 12 ore e i prossimi 7 giorni. Usa il meteo già
+  scelto per il muro; va bene sul tablet grande, su quello piccolo e in
+  verticale.
+- **Elettrodomestico finito:** ogni elettrodomestico ha la sua icona sulla
+  scheda (lavastoviglie, lavatrice, asciugatrice e gli altri), e una presa
+  a muro per quelli che non si riconoscono (disegno nuovo anche nella
+  plancia).
+- **Prova delle notifiche per tutte le voci:** «Prova: mandamela adesso» manda
+  un esempio di ogni notifica, con le parole e i tasti di quella vera (i tasti
+  di una prova non comandano niente).
+- **Radar pioggia con Windy:** nella tendina del radar c'è «Windy», e si può
+  anche incollare un collegamento di windy.com. La mappa di Windy si vede in
+  un riquadro centrato su casa; a Windy arrivano solo il punto, lo zoom e lo
+  strato, e il riquadro non può leggere né la plancia né Home Assistant.
+- **Campanello sul pannello a muro:** quando suona, il pannello si sveglia e
+  apre il citofono anche con un evento del citofono (`event.*`): prima la
+  plancia scartava lo squillo. Vanno un evento, un sensore che si accende
+  (`binary_sensor`), un button o un interruttore; l'editor lo dice e propone
+  prima i campanelli.
+- **«Apri la giornata»** apre la giornata anche dalla prova del riepilogo.
+- **Quando partire:** il tasto «Apri il garage» della notifica apre davvero
+  il garage.
+- **Auto da GdAAuto:** scegliendo l'auto di GdAAuto da «Aggiungi da
+  un'integrazione» si riempiono tutte le caselle, riconosciute dalla chiave e
+  non dal nome: energia residua, capacità e consumo medio, clima, ricarica
+  programmata, ultima ricarica, marcia, auto in sonno e il resto. Le stesse
+  caselle si scelgono a mano nella scheda dell'auto, e si vedono nella
+  pagina Auto e nella finestra dell'auto in Home.
+- **Capacità e consumo veri:** con la capacità vuota vale quella che l'auto
+  dice, e il consumo misurato dall'auto prende il posto della stima nei
+  viaggi e nella giornata.
+- **Auto da altre integrazioni:** l'autonomia di omologazione, a carburante
+  o totale non è più l'autonomia; la batteria da 12 V non è più quella di
+  trazione; potenza, tempo che manca, pulsanti e ricarica programmata non
+  sono più lo stato della ricarica; il consumo dell'ultimo viaggio non è
+  l'ultimo viaggio; la temperatura delle gomme non è la pressione; un limite
+  in ampere non è il traguardo della carica.
+
 ## 1.16.1
 
 - **Riquadri con l'immagine:** i Dispositivi della Home, le prese e i posti

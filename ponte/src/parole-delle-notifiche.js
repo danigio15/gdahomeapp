@@ -57,13 +57,16 @@ const EMOJI_DEL_GENERE = Object.freeze({
   asciugatrice: "🌀",
 });
 
-/* L'icona per la scheda: quella che l'app sa disegnare. */
+/* Il disegno per la scheda dal genere, quando il tipo non c'e': con le parole
+ * dei disegni della plancia (vedi `il-tipo-dell-elettrodomestico.js`). */
+const TIPO_DEL_GENERE = Object.freeze({
+  lavatrice: "washer",
+  lavasciuga: "washer",
+  lavastoviglie: "dishwasher",
+  asciugatrice: "dryer",
+});
 export function iconaDelGenere(genere) {
-  return ["lavatrice", "lavastoviglie", "asciugatrice"].includes(genere)
-    ? genere
-    : genere === "lavasciuga"
-      ? "lavatrice"
-      : "altro";
+  return TIPO_DEL_GENERE[genere] || "generic";
 }
 
 /** «0,05 €» in italiano, «€0.05» in inglese. */
@@ -144,7 +147,7 @@ export function paroleDelCiclo(
         v: 1,
         t: "ciclo",
         n: nome,
-        i: iconaDelGenere(dati.genere),
+        i: dati.tipo || iconaDelGenere(dati.genere),
         da: c.da,
         a: c.a,
         min: c.min,

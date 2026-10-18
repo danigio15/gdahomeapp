@@ -80,6 +80,12 @@ export const CASELLE_SENZA_MOTO = Object.freeze([
   "dm.ev_finestrini",
   "dm.ev_bagagliaio",
   "dm.ev_cofano",
+  /* E dei dati dell'auto connessa, quelli dell'abitacolo: una moto non ha un
+   * parabrezza da sbrinare ne' un clima da accendere. */
+  "dm.ev_sbrinamento",
+  "dm.ev_clima",
+  "dm.ev_comando_clima",
+  "dm.ev_temperatura_interna",
 ]);
 
 /** Il disegno di un veicolo: la moto se l'ha dichiarato, se no l'automobile. */

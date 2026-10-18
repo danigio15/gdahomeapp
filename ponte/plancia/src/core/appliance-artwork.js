@@ -84,7 +84,7 @@ function artworkBody(type) {
     toaster: `${panel}<rect ${shell} x="16" y="31" width="64" height="43" rx="15"/><rect ${face} x="23" y="38" width="50" height="27" rx="9"/><path ${line} d="M28 31c0-13 7-20 17-20s17 7 17 20M31 24h28M73 43h9M80 43v17"/>`,
     kettle: `${panel}<path ${shell} d="M29 23h34l8 14v35a12 12 0 0 1-12 12H33a12 12 0 0 1-12-12V37z"/><path ${face} d="M31 31h26l6 10v26a8 8 0 0 1-8 8H37a8 8 0 0 1-8-8V41z"/><path ${window} d="M34 51h24v16H34z"/><path ${line} d="M63 32c17 2 19 26 4 32M36 16h20"/>`,
     wallbox: `${panel}<rect ${shell} x="22" y="9" width="52" height="66" rx="12"/><rect ${face} x="29" y="16" width="38" height="26" rx="7"/><path ${accent} d="M52 20l-11 15h8l-3 11 12-16h-8z"/><circle ${window} cx="40" cy="55" r="5"/><circle ${window} cx="56" cy="55" r="5"/><path ${line} d="M30 66h36M74 40c9 3 13 10 13 20v12a7 7 0 0 1-14 0"/>`,
-    generic: `${panel}<rect ${shell} x="19" y="17" width="58" height="62" rx="15"/><rect ${face} x="27" y="25" width="42" height="46" rx="10"/><path ${line} d="M39 36v13M57 36v13M38 50h20c0 9-4 14-10 14s-10-5-10-14z"/><circle ${accent} cx="65" cy="29" r="3"/>`,
+    generic: `${panel}<rect ${shell} x="19" y="17" width="58" height="62" rx="15"/><circle ${face} cx="48" cy="48" r="20"/><rect fill="#94a3b8" x="44.5" y="29" width="7" height="5" rx="1.5"/><rect fill="#94a3b8" x="44.5" y="62" width="7" height="5" rx="1.5"/><circle ${shell} cx="40" cy="48" r="3.6"/><circle ${shell} cx="56" cy="48" r="3.6"/><circle ${accent} cx="68" cy="26" r="3"/>`,
   };
   return bodies[type] || "";
 }

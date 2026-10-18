@@ -522,6 +522,45 @@ test("l'auto senza odometro: i chilometri si stimano, e un punto perso da ferma 
   assert.equal(auto.ricariche.length, 0);
 });
 
+test("l'auto che dice capacita' e consumo: i chilometri si stimano coi suoi numeri", () => {
+  /* GdAAuto dice quanti kWh tiene la batteria e quanto consuma davvero: la
+   * stima dei chilometri senza odometro usa quelli, non 70 kWh e 17 kWh/100. */
+  const stati = new Map([
+    ["sensor.auto_batteria", st(80, { unit_of_measurement: "%" })],
+    ["sensor.auto_capacita", st(50, { unit_of_measurement: "kWh" })],
+    ["sensor.auto_consumo", st(14, { unit_of_measurement: "kWh/100 km" })],
+  ]);
+  const valori = {
+    cd_entity_overrides: {
+      "dm.ev_batteria_auto": "sensor.auto_batteria",
+      "dm.ev_capacita_batteria": "sensor.auto_capacita",
+      "dm.ev_consumo_medio": "sensor.auto_consumo",
+    },
+  };
+  const orologio = { ora: alle(3) };
+  const diario = new DiarioDellaCasa({ adesso: () => orologio.ora });
+  const passa = (minuti, prima = () => {}) => {
+    for (let i = 0; i < minuti * 2; i += 1) {
+      orologio.ora += 30 * 1000;
+      prima();
+      diario.campiona({ stati, valori });
+    }
+  };
+  diario.campiona({ stati, valori });
+  passa(14, () => {
+    const soc = Number(stati.get("sensor.auto_batteria").state);
+    if (orologio.ora % (60 * 1000) === 0)
+      stati.set("sensor.auto_batteria", st(soc - 1, { unit_of_measurement: "%" }));
+  });
+  passa(30);
+  const [auto] = diario.laGiornata({ stati, valori }).auto;
+  assert.equal(auto.viaggi.length, 1);
+  assert.equal(auto.viaggi[0].soc, 14);
+  /* 14% di 50 kWh = 7 kWh, a 14 kWh/100 km: 50 km. */
+  assert.equal(auto.viaggi[0].km, 50);
+  assert.equal(auto.kmStimati, true);
+});
+
 test("il diario resta sul disco, e ieri resta per il confronto", () => {
   const cartella = mkdtempSync(join(tmpdir(), "diario-"));
   try {

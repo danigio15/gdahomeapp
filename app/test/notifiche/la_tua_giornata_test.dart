@@ -423,6 +423,31 @@ void main() {
       }
     });
 
+    test(
+      'la prova del riepilogo («Prova: mandamela adesso») apre la giornata',
+      () {
+        final letta = NotificaArrivata.leggi({
+          ...riepilogo(const [
+            {'id': 'giornata', 'etichetta': 'Apri la giornata', 'apre': true},
+            {'id': 'ok', 'etichetta': 'OK'},
+          ]),
+          'tipo': 'prova',
+        })!;
+        expect(letta.tasti.map((t) => t.id), ['giornata', 'ok']);
+        expect(letta.tasti.last.chiude, isTrue);
+        expect(letta.apreLaGiornata, isTrue);
+      },
+    );
+
+    test('una prova qualunque non apre la giornata', () {
+      final letta = NotificaArrivata.leggi({
+        ...riepilogo(const []),
+        'tipo': 'prova',
+        'titolo': '✅ Notifica di prova',
+      })!;
+      expect(letta.apreLaGiornata, isFalse);
+    });
+
     test('il riepilogo di Base («Batterie da cambiare») resta semplice', () {
       final letta = NotificaArrivata.leggi({
         ...riepilogo(const []),

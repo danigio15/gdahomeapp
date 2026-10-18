@@ -741,9 +741,9 @@ class NotificaArrivata {
   bool get elaborata => scheda != null || foto != null;
 
   /// Se toccandola si apre «La tua giornata»: il riepilogo della sera che ne
-  /// porta il tasto. Il riepilogo semplice di Base no: si legge e basta.
-  bool get apreLaGiornata =>
-      tipo == 'riepilogo' && tasti.any((uno) => uno.id == tastoDellaGiornata);
+  /// porta il tasto, anche quello di prova (che arriva come `prova`). Il
+  /// riepilogo semplice di Base no: senza il tasto si legge e basta.
+  bool get apreLaGiornata => tasti.any((uno) => uno.id == tastoDellaGiornata);
 
   bool get urgente => urgenza == 'urgente';
 
@@ -789,7 +789,13 @@ class NotificaArrivata {
       entita: grezzo['entita'] as String?,
       camera: grezzo['camera'] as String?,
       chiamata: grezzo['chiamata'] == true,
-      tasti: tipo == 'riepilogo' ? tastiDelRiepilogo(letti) : letti,
+      /* Anche la prova del riepilogo («Prova: mandamela adesso»), che
+       * arriva come `prova` ma porta «Apri la giornata». */
+      tasti:
+          tipo == 'riepilogo' ||
+              letti.any((uno) => uno.id == tastoDellaGiornata)
+          ? tastiDelRiepilogo(letti)
+          : letti,
       scheda: scheda is Map<String, dynamic> && scheda['v'] == 1
           ? scheda
           : null,

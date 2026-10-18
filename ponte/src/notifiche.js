@@ -42,7 +42,7 @@ import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 
 import { Archivio } from "./archivio.js";
-import { CapireLaCasa } from "./capire-la-casa.js";
+import { CapireLaCasa, cosaApre } from "./capire-la-casa.js";
 import {
   CATEGORIE,
   EVENTI,
@@ -50,7 +50,22 @@ import {
   URGENZE,
   categoriaDi,
   genereDiElettrodomestico,
+  paroleDelCampanello,
+  paroleDelFrigoCaldo,
+  paroleDellAllarme,
+  paroleDellApertura,
+  paroleDellArrivo,
+  paroleDellInserimento,
+  paroleDellUscito,
+  paroleDellaPioggia,
+  paroleDelleLuci,
+  tastiDelCampanello,
+  tastiDellApertura,
+  tastiDellUscito,
+  tastiDelleLuci,
+  tastoGuarda,
 } from "./sentinella.js";
+import { paroleDellAvviso, tastiDellAvviso } from "./viaggi.js";
 import { chiudiLaFoto, chiudiLaSpinta, CONTENUTO_MASSIMO, FOTO_MASSIMA } from "./spinta.js";
 import { vedeQualcosa } from "./plance.js";
 import { PROFILO_PRINCIPALE } from "./configurazione.js";
@@ -477,6 +492,18 @@ export class Notifiche {
     try {
       if (!this.licenze?.attive) return true;
       return this.licenze.premium === true;
+    } catch (_errore) {
+      return false;
+    }
+  }
+
+  /* Se il pianificatore dei viaggi avvisa: lo stesso criterio di
+   * `Viaggi.sbloccato` — gdanav Premium (che gdahome Premium comprende), o
+   * le licenze spente. */
+  get _viaggiSbloccati() {
+    try {
+      if (!this.licenze?.attive) return true;
+      return this.licenze.gdanav === true;
     } catch (_errore) {
       return false;
     }
@@ -1213,7 +1240,13 @@ export class Notifiche {
       v: 1,
       id: randomBytes(9).toString("base64url"),
       tipo: evento.tipo,
-      cat: categoriaDi(evento.tipo) ?? "prova",
+      /* Una prova arriva nella categoria della notifica che imita: e' quella
+       * che sceglie il canale sul telefono (il riepilogo senza suono). */
+      cat:
+        categoriaDi(evento.tipo) ??
+        (evento.tipo === "prova" && Object.hasOwn(CATEGORIE, evento.categoria ?? "")
+          ? evento.categoria
+          : "prova"),
       urg: evento.urgenza,
       titolo: String(titolo || "").slice(0, 120),
       testo: String(testo || "").slice(0, 600),
@@ -1263,7 +1296,10 @@ export class Notifiche {
   _ricordaITasti(id, telefono, evento) {
     const azioni = {};
     for (const una of evento.azioni || []) {
-      if (una.servizio) azioni[una.id] = { servizio: una.servizio };
+      /* I tasti di una prova si vedono come quelli veri, ma non comandano
+       * niente: premuti, dicono che era una prova. */
+      if (evento.tipo === "prova") azioni[una.id] = { prova: true };
+      else if (una.servizio) azioni[una.id] = { servizio: una.servizio };
       else if (una.piuTardi) azioni[una.id] = { piuTardi: true, chiave: evento.chiave };
       else if (Array.isArray(una.resta)) azioni[una.id] = { resta: una.resta.slice(0, 40) };
       else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
@@ -1515,6 +1551,10 @@ export class Notifiche {
           /* Il riepilogo della sera, in Base, non c'e' nemmeno di prova. */
           if (tipo === "riepilogo" && !regola && !this.premium)
             return no("premium-richiesto", "il riepilogo della sera e' di GdAHome Premium");
+          /* «Quando partire» lo manda il pianificatore dei viaggi, che e' di
+           * Premium (`viaggi.js`, `sbloccato`): senza, nemmeno di prova. */
+          if (tipo === "viaggi" && !regola && !this._viaggiSbloccati)
+            return no("premium-richiesto", "i viaggi pianificati sono di Premium");
           const prova = regola ? this._provaDi(regola) : esempio || this._provaQualunque();
           if (esempio) {
             /* Lo stile e' quello che la voce avra' davvero. */
@@ -1666,6 +1706,8 @@ export class Notifiche {
     if (!azione) return no("not_found", "questo tasto non c'e'");
     /* Una volta sola: un secondo tocco, o un messaggio rigiocato, non rifa'. */
     delete tasti.azioni[String(detto.azione)];
+    if (azione.prova)
+      return no("not_supported", "era una notifica di prova: il tasto non fa niente");
     if (azione.piuTardi) {
       this._rimandati.set(`${telefono}|${azione.chiave}`, this.adesso() + ORA);
       return si({ fatto: true });
@@ -1792,6 +1834,17 @@ export function cieloDiDomani(previsione, adesso) {
  * racconta niente.
  */
 export function esempioDi(tipo, adesso = Date.now()) {
+  const esempio = unEsempio(tipo, adesso);
+  /* La categoria di quella vera: sul telefono sceglie il canale. */
+  return esempio ? { ...esempio, categoria: categoriaDi(tipo) } : null;
+}
+
+/* I tasti di un esempio: com'e' scritto quello vero, senza niente da fare.
+ * Una prova non comanda la casa. */
+const soloEtichette = (azioni) =>
+  azioni.map((una) => ({ id: una.id, parole: una.parole, ...(una.apre ? { apre: true } : {}) }));
+
+function unEsempio(tipo, adesso) {
   const curva = [
     30, 1900, 2050, 1980, 400, 180, 160, 170, 150, 160, 170, 600, 620, 180, 170, 160, 600, 650, 700,
     300, 120, 110, 400, 450, 380, 60, 40, 20, 10,
@@ -1885,7 +1938,7 @@ export function esempioDi(tipo, adesso = Date.now()) {
       );
     }
     case "blackout":
-      return conParole(base, COMPOSITORI.blackout, {
+      return conParole({ ...base, urgenza: "urgente" }, COMPOSITORI.blackout, {
         nome: "UPS di casa",
         carica: 96,
         minuti: 25,
@@ -1903,7 +1956,7 @@ export function esempioDi(tipo, adesso = Date.now()) {
         notte: false,
       });
     case "antifurto":
-      return conParole(base, COMPOSITORI.antifurto, {
+      return conParole({ ...base, urgenza: "urgente" }, COMPOSITORI.antifurto, {
         nome: "Antifurto",
         zona: "Finestra cucina",
         ora: "18:22",
@@ -1915,6 +1968,91 @@ export function esempioDi(tipo, adesso = Date.now()) {
           ["18:21", "Movimento · Cucina", "a"],
         ],
       });
+    /* Quelle senza racconto: le parole e i tasti delle regole vere
+     * (`sentinella.js`, `viaggi.js`), con una casa d'esempio. Niente nomi di
+     * persone: «Persona 1». */
+    case "allarmi":
+      return {
+        ...base,
+        urgenza: "urgente",
+        parole: paroleDellAllarme("moisture", "Bagno"),
+        azioni: soloEtichette([tastoGuarda()]),
+      };
+    case "campanello":
+      /* Come una chiamata, col tasto del cancello. */
+      return {
+        ...base,
+        urgenza: "urgente",
+        chiamata: true,
+        parole: paroleDelCampanello("Porta d'ingresso"),
+        azioni: soloEtichette(
+          tastiDelCampanello({ dominio: "cover", servizio: "open_cover", entita: [] }),
+        ),
+      };
+    case "inserimenti":
+      return {
+        ...base,
+        parole: paroleDellInserimento("armed_away", "Antifurto di casa", "Persona 1"),
+        azioni: soloEtichette([tastoGuarda()]),
+      };
+    case "uscito":
+      return {
+        ...base,
+        parole: paroleDellUscito("Persona 1"),
+        azioni: soloEtichette(tastiDellUscito("alarm_control_panel.casa")),
+      };
+    case "aperture":
+      return {
+        ...base,
+        parole: paroleDellApertura({
+          dove: "Garage",
+          cosa: cosaApre("cover.garage", "Garage", "garage"),
+          vuota: true,
+          da: 25 * MINUTO,
+          ultima: "9:12",
+        }),
+        azioni: soloEtichette(tastiDellApertura("cover.garage", { copertura: true, vuota: true })),
+      };
+    case "frigo":
+      return {
+        ...base,
+        parole: paroleDelFrigoCaldo({
+          nome: "Congelatore",
+          valore: "-9.5",
+          unita: "°C",
+          da: 20 * MINUTO,
+        }),
+      };
+    case "pioggia":
+      return {
+        ...base,
+        parole: paroleDellaPioggia(["Finestra cucina", "Finestra camera"], { fra: 15 }),
+      };
+    case "arrivi":
+      return { ...base, urgenza: "bassa", parole: paroleDellArrivo("Persona 1", true) };
+    case "suggerimenti":
+      return {
+        ...base,
+        urgenza: "bassa",
+        parole: paroleDelleLuci({
+          per: 45 * MINUTO,
+          accese: ["Cucina", "Soggiorno"],
+          lasciate: ["Acquario"],
+        }),
+        azioni: soloEtichette(tastiDelleLuci(["light.cucina", "light.soggiorno"])),
+      };
+    case "viaggi":
+      return {
+        ...base,
+        parole: paroleDellAvviso({
+          minuti: 10,
+          nome: "Ufficio",
+          arrivo: "09:00",
+          partenza: adesso + 10 * MINUTO,
+          stimata: true,
+        }),
+        azioni: soloEtichette(tastiDellAvviso({ entity: "cover.garage" })),
+      };
     default:
       return null;
   }
