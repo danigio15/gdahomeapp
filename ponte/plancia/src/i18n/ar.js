@@ -6768,4 +6768,6 @@ export default Object.freeze({
   "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "لا يمكن اختبار Windy من هنا: إنها صفحة داخل إطار، والمتصفح لا يخبر اللوحة إن كانت قد وصلت. إذا بقي الإطار فارغًا فهذا الجهاز لا يصل إلى embed.windy.com.",
   "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "يظهر Windy داخل إطار بخريطته وأمطاره ومفتاحه الخاص، متمركزًا على المكان المختار أدناه. لا يتلقى Windy سوى النقطة ومستوى التكبير والطبقة: لا يستطيع الإطار قراءة اللوحة ولا Home Assistant.",
   "Windy weather radar": "رادار الطقس من Windy",
+  "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "حدث من جهاز الاتصال الداخلي (event.*)، أو مستشعر يعمل عندما يرن (binary_sensor). يصلح أيضًا زر أو مفتاح.",
+  "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "لا يمكن أن يكون جرس باب: اختر حدثًا (event.*) أو مستشعرًا يعمل (binary_sensor.*).",
 });

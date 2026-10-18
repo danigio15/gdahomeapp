@@ -6785,4 +6785,6 @@ export default Object.freeze({
   "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "Windy는 여기서 테스트할 수 없습니다. 틀 안의 페이지이고, 브라우저는 도착 여부를 대시보드에 알려 주지 않습니다. 틀이 비어 있으면 이 기기가 embed.windy.com에 닿지 못하는 것입니다.",
   "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "Windy는 자체 지도·비·범례와 함께 틀 안에 표시되며, 아래에서 고른 장소가 중심이 됩니다. Windy에는 지점, 확대 수준, 레이어만 전달되며, 틀은 대시보드도 Home Assistant도 읽을 수 없습니다.",
   "Windy weather radar": "Windy 기상 레이더",
+  "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "인터폰 이벤트(event.*) 또는 벨이 울리면 켜지는 센서(binary_sensor). 버튼이나 스위치도 됩니다.",
+  "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "은(는) 초인종으로 쓸 수 없습니다: 이벤트(event.*)나 켜지는 센서(binary_sensor.*)를 선택하세요.",
 });

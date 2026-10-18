@@ -116,10 +116,16 @@ export function installStateEventGate(
   root = globalThis,
   { delay = 500, chiavi = [] } = {},
 ) {
-  if (!broker || typeof broker.ingestState !== "function" || broker.__dmStateEventGate)
-    return false;
+  if (!broker || typeof broker.ingestState !== "function") return false;
+  /* Il cancello c'e' gia': l'ha messo `armStateEventGate`, appena il servizio
+   * dell'energia e' nato — e quello non sa le chiavi. Le chiavi vere arrivano
+   * qui, dopo, da chi lo installa (`section-runtime.js`): prima tornava
+   * indietro senza prenderle, e il cancello restava per sempre senza la
+   * configurazione salvata — il campanello del muro, le azioni, le persone
+   * passavano solo se qualcuno le stava disegnando. */
+  if (broker.__dmStateEventGate) return broker.__dmStateEventGate.aggiungiChiavi?.(chiavi) || false;
 
-  const osservate = chiaviDate(chiavi);
+  const osservate = new Set(chiaviDate(chiavi));
   const original = broker.ingestState;
   const pendingIds = new Set();
   let lastState = null;
@@ -128,8 +134,15 @@ export function installStateEventGate(
   let interests = null;
 
   const currentInterests = () => {
-    if (!interests) interests = entitaConfigurate(root, osservate);
+    if (!interests) interests = entitaConfigurate(root, [...osservate]);
     return interests;
+  };
+  const aggiungiChiavi = (nuove) => {
+    const prima = osservate.size;
+    for (const chiave of chiaviDate(nuove)) osservate.add(chiave);
+    if (osservate.size === prima) return false;
+    interests = null;
+    return true;
   };
   /* Non si ricalcola qui: si dimentica, e il primo evento che passa lo rifa'.
    * Un salvataggio ne annuncia spesso piu' d'uno di seguito — il negozio
@@ -140,7 +153,9 @@ export function installStateEventGate(
     () => {
       interests = null;
     },
-    new Set(osservate),
+    /* Lo stesso insieme, non una copia: le chiavi aggiunte dopo si guardano
+     * anche nelle scritture. */
+    osservate,
   );
 
   const flush = () => {
@@ -205,7 +220,7 @@ export function installStateEventGate(
   };
 
   Object.defineProperty(broker, "__dmStateEventGate", {
-    value: Object.freeze({ flush, pendingIds, currentInterests }),
+    value: Object.freeze({ flush, pendingIds, currentInterests, aggiungiChiavi }),
     configurable: false,
     enumerable: false,
     writable: false,

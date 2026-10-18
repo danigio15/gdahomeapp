@@ -324,6 +324,17 @@ const HINT_RULES = Object.freeze([
     domains: ["switch", "input_boolean"],
   },
   {
+    /* Il campanello del pannello a muro: un evento del citofono (`event.*`
+     * con la classe doorbell), o un sensore che si accende quando suona. Il
+     * nome lo dice in tante lingue, e le parole in `also` premiano le
+     * entita' che si chiamano cosi' anche se il campo dice solo «campanello». */
+    words: ["campanello", "doorbell", "citofono", "videocitofono", "intercom"],
+    dc: ["doorbell"],
+    units: [],
+    domains: ["event", "binary_sensor"],
+    also: ["campanello", "doorbell", "citofono", "ring", "ding"],
+  },
+  {
     words: ["porta", "door", "finestra", "window", "contatto", "apertura"],
     dc: ["door", "window", "opening", "garage_door"],
     units: [],
@@ -416,6 +427,8 @@ const KNOWN_DOMAINS = new Set([
   "water_heater",
   "valve",
   "button",
+  "input_button",
+  "event",
   "person",
   "device_tracker",
   "alarm_control_panel",
@@ -499,6 +512,7 @@ export function fieldHints(descriptor = {}) {
     for (const domain of rule.domains) domains.add(domain);
     for (const dc of rule.dc) deviceClasses.add(dc);
     for (const unit of rule.units) units.add(unit);
+    for (const word of rule.also || []) if (!keywords.includes(word)) keywords.push(word);
   }
   for (const word of words) {
     if (keywords.length >= 6) break;

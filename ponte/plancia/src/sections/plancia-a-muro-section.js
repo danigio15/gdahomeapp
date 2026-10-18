@@ -131,12 +131,14 @@ import { piattaformeConosciute } from "./di-chi-e-unentita-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import { loadCameraFrame } from "./live-ui-section.js";
 import {
+  campanelloSuona as squilloDelCampanello,
   conLaFoto,
   conLoSquillo,
   durataScritta,
   faseDelloSquillo,
   opzioniDelCampanello,
   quantoFa,
+  ricordoDelCampanello,
   schermoSempreAcceso,
   storiaPulita,
 } from "../core/il-campanello-a-muro.js";
@@ -349,6 +351,8 @@ export function eInVista(id) {
   /* Le aree dell'antifurto si guardano sempre: una che scatta sveglia il
    * tablet anche se la pagina aperta non la mostra. */
   if (state.fonte?.centrali?.includes(chiave)) return true;
+  /* E i campanelli: lo squillo deve arrivare anche se non si disegnano. */
+  if (eUnCampanello(chiave)) return true;
   return Boolean(muro.risveglio?.attivo && muro.risveglio.entita === chiave);
 }
 
@@ -5335,18 +5339,15 @@ function battito() {
  * sensore che si accende, o un evento di Home Assistant (il citofono di
  * molte marche e' un `event.*`, che a ogni squillo cambia la sua ora). Il
  * primo sguardo non suona: si ricorda com'era e basta, o ogni riavvio del
- * tablet aprirebbe il citofono. */
-export function campanelloSuona(id, prima, ora) {
-  if (prima === undefined || !ora || ora === prima) return false;
-  if (ora === "unavailable" || ora === "unknown") return false;
-  return dominio(id) === "event" ? true : ora === "on";
-}
+ * tablet aprirebbe il citofono. Le regole — quali entita', quando e' uno
+ * squillo — stanno in `core/il-campanello-a-muro.js`. */
+export const campanelloSuona = squilloDelCampanello;
 
 function campanelliDelMuro(muro = state.muro) {
   const visti = new Set();
   const fuori = [];
   (muro?.pagine || []).forEach((pagina, indice) => {
-    const id = pagina.modello === "ingresso" ? pagina.ingresso?.campanello || "" : "";
+    const id = pagina.modello === "ingresso" ? clean(pagina.ingresso?.campanello) : "";
     if (!id || visti.has(id)) return;
     visti.add(id);
     fuori.push({ indice, id });
@@ -5354,23 +5355,45 @@ function campanelliDelMuro(muro = state.muro) {
   return fuori;
 }
 
-function ricordaICampanelli() {
+/* I campanelli si guardano sempre, come le aree dell'antifurto: non si
+ * disegnano da nessuna parte, e senza questa domanda il cancello degli stati
+ * (`state-event-gate.js`) buttava il loro squillo come chiacchiere della casa
+ * — il campanello sta nella configurazione del muro, non fra le entita' delle
+ * sezioni. */
+const eUnCampanello = (id) => campanelliDelMuro().some((c) => c.id === id);
+
+/* Si ricorda com'era ogni campanello, ma solo quando lo stato c'e' davvero:
+ * prima che arrivino gli stati di Home Assistant non si sa niente, e
+ * ricordarsi «niente» farebbe suonare il primo stato vero — che e' solo il
+ * vecchio squillo. `except` sono quelli appena cambiati: il loro valore e'
+ * gia' quello nuovo, e ricordarlo vorrebbe dire non sentirlo. */
+function ricordaICampanelli(except = []) {
   const visti = (state.campanelli ||= {});
-  for (const { id } of campanelliDelMuro())
-    if (!(id in visti)) visti[id] = String(stato(id)?.state ?? "");
+  for (const { id } of campanelliDelMuro()) {
+    if (id in visti || except.includes(id)) continue;
+    const letto = allStates()?.[id];
+    if (letto) visti[id] = ricordoDelCampanello(undefined, letto.state);
+  }
 }
 
 function suonaIlCampanello(event) {
-  if (!state.muro?.attiva || !state.premium) return;
+  if (!state.muro?.attiva) return;
   const ids =
     event?.detail?.entity_ids || (event?.detail?.entity_id ? [event.detail.entity_id] : []);
+  ricordaICampanelli(ids);
+  /* Senza Premium il pannello non c'e', e nemmeno lo squillo: ma il ricordo
+   * si aggiorna lo stesso, o la licenza che arriva dopo farebbe suonare un
+   * campanello vecchio. */
+  const suona = state.premium === true;
   const visti = (state.campanelli ||= {});
   for (const { indice, id } of campanelliDelMuro()) {
     if (ids.length && !ids.includes(id)) continue;
-    const ora = String(stato(id)?.state ?? "");
+    const letto = allStates()?.[id];
+    if (!letto) continue;
+    const ora = String(letto.state ?? "");
     const prima = visti[id];
-    visti[id] = ora;
-    if (!campanelloSuona(id, prima, ora)) continue;
+    visti[id] = ricordoDelCampanello(prima, ora);
+    if (!suona || !campanelloSuona(id, prima, ora)) continue;
     state.riposo = false;
     state.pagina = indice;
     tocco();
@@ -6947,7 +6970,12 @@ export function installPlanciaAMuro() {
     "dashboardmodern:muro",
   ])
     root.addEventListener?.(evento, ancora);
-  root.addEventListener?.("dashboardmodern:states-ready", () => disegna());
+  root.addEventListener?.("dashboardmodern:states-ready", () => {
+    /* Gli stati di Home Assistant ci sono: e' il momento di ricordarsi com'e'
+     * ogni campanello, anche se il pannello non si e' ancora disegnato. */
+    ricordaICampanelli();
+    disegna();
+  });
   root[IN_VISTA_KEY] = eInVista;
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
     controllaLOrecchio();

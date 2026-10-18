@@ -6830,4 +6830,6 @@ export default Object.freeze({
   "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "Windy nie da się tu przetestować: to strona w ramce, a przeglądarka nie mówi panelowi, czy dotarła. Jeśli ramka pozostaje pusta, to urządzenie nie łączy się z embed.windy.com.",
   "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "Windy pojawia się w ramce z własną mapą, deszczem i legendą, wyśrodkowaną na miejscu wybranym poniżej. Windy dostaje tylko punkt, powiększenie i warstwę: ramka nie może odczytać ani panelu, ani Home Assistant.",
   "Windy weather radar": "Radar pogodowy Windy",
+  "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "Zdarzenie domofonu (event.*) albo czujnik, który włącza się, gdy dzwoni (binary_sensor). Działa też przycisk lub przełącznik.",
+  "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "nie może służyć jako dzwonek: wybierz zdarzenie (event.*) lub czujnik, który się włącza (binary_sensor.*).",
 });

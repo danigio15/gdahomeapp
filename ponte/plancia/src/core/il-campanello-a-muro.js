@@ -63,6 +63,68 @@ export function schermoSempreAcceso(muro) {
   );
 }
 
+/* ── che cosa puo' fare da campanello ─────────────────────────────────────
+ *
+ * «Cosa si aspetta di entita'?» Due famiglie, perche' Home Assistant dice
+ * uno squillo in due modi:
+ *
+ *  - «a ora»: un `event.*` (il citofono di molte marche), un `button.*` o un
+ *    `input_button.*`. Lo stato e' l'ora dell'ultima pressione: ogni ora
+ *    nuova e' uno squillo. «unknown» e «unavailable» non sono un'ora.
+ *  - «acceso»: un `binary_sensor.*`, un `input_boolean.*` o uno `switch.*`
+ *    che si accende quando suona. Suona il passaggio a «on».
+ *
+ * Il resto (un sensore qualunque, una luce) non e' un campanello: un sensore
+ * che cambia valore ogni minuto aprirebbe il citofono ogni minuto. */
+export const CAMPANELLI_A_ORA = Object.freeze(["event", "button", "input_button"]);
+export const CAMPANELLI_ACCESI = Object.freeze(["binary_sensor", "input_boolean", "switch"]);
+export const DOMINI_DEL_CAMPANELLO = Object.freeze([...CAMPANELLI_A_ORA, ...CAMPANELLI_ACCESI]);
+
+const dominioDi = (id) => pulito(id).split(".")[0];
+const senzaValore = (valore) => {
+  const v = pulito(valore);
+  return !v || v === "unknown" || v === "unavailable";
+};
+
+/** «ora», «acceso», o "" per un'entita' che non sa fare da campanello. */
+export function tipoDelCampanello(id) {
+  const dominio = dominioDi(id);
+  if (CAMPANELLI_A_ORA.includes(dominio)) return "ora";
+  if (CAMPANELLI_ACCESI.includes(dominio)) return "acceso";
+  return "";
+}
+
+/**
+ * Se il passaggio da `prima` a `ora` e' uno squillo.
+ *
+ * `prima` e' quello che il tablet si ricorda (`ricordoDelCampanello`):
+ * `undefined` vuol dire «non l'ho mai visto», e il primo sguardo non suona —
+ * o ogni riavvio del tablet aprirebbe il citofono. "" vuol dire «l'ho visto,
+ * ma non aveva ancora un'ora»: un `event.*` appena creato e' «unknown», e la
+ * sua prima pressione deve suonare.
+ */
+export function campanelloSuona(id, prima, ora) {
+  if (prima === undefined || senzaValore(ora)) return false;
+  const adesso = pulito(ora);
+  if (adesso === pulito(prima)) return false;
+  const tipo = tipoDelCampanello(id);
+  if (tipo === "ora") return true;
+  if (tipo === "acceso") return adesso === "on";
+  return false;
+}
+
+/**
+ * Quello da ricordare dopo aver visto `ora`.
+ *
+ * Un campanello che cade («unavailable») e torna con la stessa ora di prima
+ * non ha suonato: il tablet tiene l'ultima ora vera e lascia passare il buco.
+ * Visto per la prima volta senza valore, si ricorda "" (visto, niente ora).
+ */
+export function ricordoDelCampanello(prima, ora) {
+  if (senzaValore(ora)) return prima === undefined ? "" : prima;
+  return pulito(ora);
+}
+
 /* ── il suono ─────────────────────────────────────────────────────────────── */
 
 /**

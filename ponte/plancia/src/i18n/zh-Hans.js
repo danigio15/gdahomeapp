@@ -6693,4 +6693,6 @@ export default Object.freeze({
   "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "无法在这里测试 Windy:它是框里的一个页面,浏览器不会告诉仪表盘它是否已加载。如果框一直是空的,说明此设备无法访问 embed.windy.com。",
   "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "Windy 会在框中显示自己的地图、降雨和图例,以下方选择的位置为中心。Windy 只会收到位置、缩放级别和图层:框无法读取仪表盘或 Home Assistant。",
   "Windy weather radar": "Windy 气象雷达",
+  "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "对讲机的事件（event.*），或在响铃时打开的传感器（binary_sensor）。按钮或开关也可以。",
+  "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "不能用作门铃：请选择一个事件（event.*）或会打开的传感器（binary_sensor.*）。",
 });

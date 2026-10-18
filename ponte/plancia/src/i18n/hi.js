@@ -6796,4 +6796,6 @@ export default Object.freeze({
   "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "Windy को यहाँ से जाँचा नहीं जा सकता: यह एक फ़्रेम के अंदर का पेज है, और ब्राउज़र डैशबोर्ड को नहीं बताता कि वह आया या नहीं। अगर फ़्रेम खाली रहे, तो यह डिवाइस embed.windy.com तक नहीं पहुँच पा रहा।",
   "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "Windy एक फ़्रेम में अपने नक्शे, अपनी बारिश और अपनी लेजेंड के साथ दिखता है, नीचे चुनी गई जगह पर केंद्रित। Windy को सिर्फ़ बिंदु, ज़ूम और परत मिलती है: फ़्रेम न डैशबोर्ड पढ़ सकता है न Home Assistant।",
   "Windy weather radar": "Windy मौसम रडार",
+  "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "इंटरकॉम का एक इवेंट (event.*), या एक सेंसर जो घंटी बजने पर चालू होता है (binary_sensor)। एक बटन या स्विच भी चलता है।",
+  "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "डोरबेल का काम नहीं कर सकता: एक इवेंट (event.*) या चालू होने वाला सेंसर (binary_sensor.*) चुनें।",
 });

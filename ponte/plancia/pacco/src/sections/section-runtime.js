@@ -552,7 +552,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-POJVBCN5.js";
+} from "../../chunk-JTT53BOM.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1124,9 +1124,9 @@ function inVista(root7, id) {
   }
 }
 function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiavi: chiavi2 = [] } = {}) {
-  if (!broker2 || typeof broker2.ingestState !== "function" || broker2.__dmStateEventGate)
-    return false;
-  const osservate = chiaviDate(chiavi2);
+  if (!broker2 || typeof broker2.ingestState !== "function") return false;
+  if (broker2.__dmStateEventGate) return broker2.__dmStateEventGate.aggiungiChiavi?.(chiavi2) || false;
+  const osservate = new Set(chiaviDate(chiavi2));
   const original = broker2.ingestState;
   const pendingIds = /* @__PURE__ */ new Set();
   let lastState = null;
@@ -1134,15 +1134,24 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
   let timerSubito = false;
   let interests = null;
   const currentInterests = () => {
-    if (!interests) interests = entitaConfigurate(root7, osservate);
+    if (!interests) interests = entitaConfigurate(root7, [...osservate]);
     return interests;
+  };
+  const aggiungiChiavi = (nuove) => {
+    const prima = osservate.size;
+    for (const chiave2 of chiaviDate(nuove)) osservate.add(chiave2);
+    if (osservate.size === prima) return false;
+    interests = null;
+    return true;
   };
   osservaLaConfigurazione(
     root7,
     () => {
       interests = null;
     },
-    new Set(osservate)
+    /* Lo stesso insieme, non una copia: le chiavi aggiunte dopo si guardano
+     * anche nelle scritture. */
+    osservate
   );
   const flush = () => {
     timer = 0;
@@ -1194,7 +1203,7 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
     }
   };
   Object.defineProperty(broker2, "__dmStateEventGate", {
-    value: Object.freeze({ flush, pendingIds, currentInterests }),
+    value: Object.freeze({ flush, pendingIds, currentInterests, aggiungiChiavi }),
     configurable: false,
     enumerable: false,
     writable: false
@@ -5366,6 +5375,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non lo so": "I do not know",
   "Non più di una volta ogni": "No more than once every",
   "Non protetto": "Unprotected",
+  "non può fare da campanello: scegli un evento (event.*) o un sensore che si accende (binary_sensor.*).": "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).",
   "Non raggiungibile": "Unavailable",
   "Non riesco a copiare la foto in Home Assistant (${clean(error?.message)}). Mettila in /config/www e scrivi /local/nomefile.": "Cannot copy the photo into Home Assistant (${clean(error?.message)}). Put it in /config/www and type /local/filename.",
   "Non riesco a leggere": "Cannot read",
@@ -7250,6 +7260,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un dispositivo della Home può avere una foto o un disegno che riempie il suo riquadro. Nome e stato restano sul velo scuro in fondo, in bianco.": "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.",
   "un dispositivo fa qualcosa": "a device does something",
   "un elettrodomestico finisce": "an appliance finishes",
+  "Un evento del citofono (event.*), o un sensore che si accende quando suona (binary_sensor). Vanno anche un button o un interruttore.": "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.",
   "un evento di Home Assistant": "a Home Assistant event",
   "Un fan, un number o un select. Senza, si usano i modi del ventilatore del termostato, se li ha.": "A fan, a number or a select. Without it, the thermostat's fan modes are used, if it has any.",
   "Un file JSON con la configurazione di adesso.": "A JSON file with the configuration as it is now.",
@@ -90198,6 +90209,17 @@ var HINT_RULES = Object.freeze([
     domains: ["switch", "input_boolean"]
   },
   {
+    /* Il campanello del pannello a muro: un evento del citofono (`event.*`
+     * con la classe doorbell), o un sensore che si accende quando suona. Il
+     * nome lo dice in tante lingue, e le parole in `also` premiano le
+     * entita' che si chiamano cosi' anche se il campo dice solo «campanello». */
+    words: ["campanello", "doorbell", "citofono", "videocitofono", "intercom"],
+    dc: ["doorbell"],
+    units: [],
+    domains: ["event", "binary_sensor"],
+    also: ["campanello", "doorbell", "citofono", "ring", "ding"]
+  },
+  {
     words: ["porta", "door", "finestra", "window", "contatto", "apertura"],
     dc: ["door", "window", "opening", "garage_door"],
     units: [],
@@ -90288,6 +90310,8 @@ var KNOWN_DOMAINS = /* @__PURE__ */ new Set([
   "water_heater",
   "valve",
   "button",
+  "input_button",
+  "event",
   "person",
   "device_tracker",
   "alarm_control_panel",
@@ -90357,6 +90381,7 @@ function fieldHints(descriptor = {}) {
     for (const domain of rule.domains) domains.add(domain);
     for (const dc of rule.dc) deviceClasses.add(dc);
     for (const unit of rule.units) units.add(unit);
+    for (const word of rule.also || []) if (!keywords.includes(word)) keywords.push(word);
   }
   for (const word of words) {
     if (keywords.length >= 6) break;
@@ -99602,6 +99627,33 @@ function schermoSempreAcceso(muro) {
     (pagina2) => pagina2?.modello === "ingresso" && pulito59(pagina2.ingresso?.campanello) && opzioniDelCampanello(pagina2.ingresso).tieniAcceso
   );
 }
+var CAMPANELLI_A_ORA = Object.freeze(["event", "button", "input_button"]);
+var CAMPANELLI_ACCESI = Object.freeze(["binary_sensor", "input_boolean", "switch"]);
+var DOMINI_DEL_CAMPANELLO = Object.freeze([...CAMPANELLI_A_ORA, ...CAMPANELLI_ACCESI]);
+var dominioDi7 = (id) => pulito59(id).split(".")[0];
+var senzaValore = (valore3) => {
+  const v = pulito59(valore3);
+  return !v || v === "unknown" || v === "unavailable";
+};
+function tipoDelCampanello(id) {
+  const dominio5 = dominioDi7(id);
+  if (CAMPANELLI_A_ORA.includes(dominio5)) return "ora";
+  if (CAMPANELLI_ACCESI.includes(dominio5)) return "acceso";
+  return "";
+}
+function campanelloSuona(id, prima, ora5) {
+  if (prima === void 0 || senzaValore(ora5)) return false;
+  const adesso = pulito59(ora5);
+  if (adesso === pulito59(prima)) return false;
+  const tipo = tipoDelCampanello(id);
+  if (tipo === "ora") return true;
+  if (tipo === "acceso") return adesso === "on";
+  return false;
+}
+function ricordoDelCampanello(prima, ora5) {
+  if (senzaValore(ora5)) return prima === void 0 ? "" : prima;
+  return pulito59(ora5);
+}
 var NOTE_DEI_SUONI = Object.freeze({
   dindon: Object.freeze({
     giro: 3.2,
@@ -99835,7 +99887,7 @@ var DOMINI_CHE_DICONO_LO_STATO = Object.freeze(["switch", "input_boolean", "ligh
 function servizioDelTasto(id) {
   const pulita = entita2(id);
   if (!pulita) return null;
-  const d = dominioDi7(pulita);
+  const d = dominioDi8(pulita);
   const data = { entity_id: pulita };
   if (DOMINI_CHE_SI_PREMONO.includes(d)) return { domain: d, service: "press", data };
   if (DOMINI_CHE_PARTONO.includes(d)) return { domain: d, service: "turn_on", data };
@@ -99848,7 +99900,7 @@ function statoDeiDueTasti(comando) {
   const scritto3 = entita2(comando.stato);
   if (scritto3) return scritto3;
   const on = entita2(comando.entita);
-  return DOMINI_CHE_DICONO_LO_STATO.includes(dominioDi7(on)) ? on : "";
+  return DOMINI_CHE_DICONO_LO_STATO.includes(dominioDi8(on)) ? on : "";
 }
 function scenaPulita(input) {
   if (!input || typeof input !== "object") return null;
@@ -99902,14 +99954,14 @@ var DOMINI_DA_LEGGERE = Object.freeze([
 ]);
 var DOMINI_DA_TOCCARE = Object.freeze(["lock", "cover"]);
 function eLetturaDellIngresso(id) {
-  return DOMINI_DA_LEGGERE.includes(dominioDi7(entita2(id)));
+  return DOMINI_DA_LEGGERE.includes(dominioDi8(entita2(id)));
 }
 function eComandoDellIngresso(voce3) {
   const { entity: entity2, comando } = partiDelComando(voce3);
   if (!entita2(entity2)) return false;
   if (comando) return true;
   const genere = genereDelComando(entity2);
-  return genere && genere !== "tendina" || DOMINI_DA_TOCCARE.includes(dominioDi7(entity2));
+  return genere && genere !== "tendina" || DOMINI_DA_TOCCARE.includes(dominioDi8(entity2));
 }
 var unici = (voci4) => [...new Set(voci4.filter(Boolean))];
 var voci = (valore3) => Array.isArray(valore3) ? valore3 : [];
@@ -99967,7 +100019,7 @@ var CLASSI_DELLE_APERTURE = Object.freeze({
 });
 function lettureDellIngresso2(letture2 = [], stati2 = {}) {
   const ids = elenco10(letture2).map(entita2).filter(Boolean);
-  const classe3 = (id) => dominioDi7(id) === "binary_sensor" ? CLASSI_DELLE_APERTURE[String(stati2?.[id]?.attributes?.device_class || "")] || "" : "";
+  const classe3 = (id) => dominioDi8(id) === "binary_sensor" ? CLASSI_DELLE_APERTURE[String(stati2?.[id]?.attributes?.device_class || "")] || "" : "";
   const aperture = ids.filter((id) => classe3(id));
   if (aperture.length < 2) return { gruppo: null, singole: ids };
   const tipi = unici(aperture.map(classe3));
@@ -100079,12 +100131,12 @@ var DOMINI_DA_PREMERE = Object.freeze([
   "remote"
 ]);
 var SI_SPENGONO3 = /* @__PURE__ */ new Set(["switch", "input_boolean", "light", "fan", "automation"]);
-var siSpegne = (id, comando = "") => SI_SPENGONO3.has(dominioDi7(id)) || dominioDi7(id) === "remote" && !comando;
+var siSpegne = (id, comando = "") => SI_SPENGONO3.has(dominioDi8(id)) || dominioDi8(id) === "remote" && !comando;
 var DIREZIONI = Object.freeze(["su", "giu", "sinistra", "destra", "stop"]);
-var dominioDi7 = (id) => String(id || "").split(".")[0];
+var dominioDi8 = (id) => String(id || "").split(".")[0];
 function entitaDi3(valore3, domini2) {
   const id = entita2(valore3);
-  return id && domini2.includes(dominioDi7(id)) ? id : "";
+  return id && domini2.includes(dominioDi8(id)) ? id : "";
 }
 var colorePulito = (valore3) => COLORI_DELLE_PAGINE.includes(String(valore3 || "").toLowerCase()) ? String(valore3).toLowerCase() : "";
 var parolaDelComando2 = (valore3) => testo3(valore3, 64);
@@ -100094,11 +100146,11 @@ function canalePulito(input) {
   if (!dentro3 || typeof dentro3 !== "object") return null;
   const id = entitaDi3(dentro3.entita, DOMINI_DEL_CANALE);
   if (!id) return null;
-  const d = dominioDi7(id);
+  const d = dominioDi8(id);
   const muto2 = entitaDi3(dentro3.muto, DOMINI_DEL_MUTO);
   const letto = d === "sensor" ? "" : entitaDi3(dentro3.letto, ["sensor"]);
   const telecomando2 = d === "remote";
-  const mutoDaComando = telecomando2 || dominioDi7(muto2) === "remote";
+  const mutoDaComando = telecomando2 || dominioDi8(muto2) === "remote";
   const conScala = d === "sensor" || Boolean(letto);
   return {
     entita: id,
@@ -100143,7 +100195,7 @@ function telecameraPulita(input) {
   const fuori = { entita: entitaDi3(dentro3.entita, ["camera"]) };
   const tasto2 = (chiave2) => {
     fuori[chiave2] = entitaDi3(dentro3[chiave2], DOMINI_DA_PREMERE);
-    fuori[`${chiave2}Comando`] = dominioDi7(fuori[chiave2]) === "remote" ? parolaDelComando2(dentro3[`${chiave2}Comando`]) || COMANDI_DELLA_TELECAMERA[chiave2] : "";
+    fuori[`${chiave2}Comando`] = dominioDi8(fuori[chiave2]) === "remote" ? parolaDelComando2(dentro3[`${chiave2}Comando`]) || COMANDI_DELLA_TELECAMERA[chiave2] : "";
   };
   for (const d of DIREZIONI) tasto2(d);
   fuori.zoom = entitaDi3(dentro3.zoom, ["number", "input_number"]);
@@ -100154,16 +100206,16 @@ function telecameraPulita(input) {
     return {
       entita: id,
       nome: testo3(p.nome, 24),
-      comando: dominioDi7(id) === "remote" ? parolaDelComando2(p.comando) : ""
+      comando: dominioDi8(id) === "remote" ? parolaDelComando2(p.comando) : ""
     };
   }).filter((p) => p.entita).slice(0, PRESET_AL_MASSIMO);
   fuori.preset.forEach((p, k) => {
-    if (dominioDi7(p.entita) === "remote" && !p.comando) p.comando = `preset_${k + 1}`;
+    if (dominioDi8(p.entita) === "remote" && !p.comando) p.comando = `preset_${k + 1}`;
   });
   fuori.dispositivo = telecomandiDellaTelecamera(fuori) ? testo3(dentro3.dispositivo, 64) : "";
   return fuori;
 }
-var telecomandiDellaTelecamera = (tc) => [...DIREZIONI, "zoomPiu", "zoomMeno"].some((k) => dominioDi7(tc[k]) === "remote") || tc.preset.some((p) => dominioDi7(p.entita) === "remote");
+var telecomandiDellaTelecamera = (tc) => [...DIREZIONI, "zoomPiu", "zoomMeno"].some((k) => dominioDi8(tc[k]) === "remote") || tc.preset.some((p) => dominioDi8(p.entita) === "remote");
 function pulsantePulito(input) {
   if (!input || typeof input !== "object") return null;
   const fuori = {
@@ -100174,15 +100226,15 @@ function pulsantePulito(input) {
     stop: entitaDi3(input.stop, DOMINI_DA_PREMERE),
     stato: entita2(input.stato)
   };
-  fuori.avvioComando = dominioDi7(fuori.avvio) === "remote" ? parolaDelComando2(input.avvioComando) : "";
-  fuori.stopComando = dominioDi7(fuori.stop) === "remote" ? parolaDelComando2(input.stopComando) : "";
-  fuori.dispositivo = dominioDi7(fuori.avvio) === "remote" || dominioDi7(fuori.stop) === "remote" ? testo3(input.dispositivo, 64) : "";
+  fuori.avvioComando = dominioDi8(fuori.avvio) === "remote" ? parolaDelComando2(input.avvioComando) : "";
+  fuori.stopComando = dominioDi8(fuori.stop) === "remote" ? parolaDelComando2(input.stopComando) : "";
+  fuori.dispositivo = dominioDi8(fuori.avvio) === "remote" || dominioDi8(fuori.stop) === "remote" ? testo3(input.dispositivo, 64) : "";
   return fuori.nome || fuori.avvio || fuori.stop ? fuori : null;
 }
 function fermaTuttoPulito(input) {
   const dentro3 = input && typeof input === "object" ? input : {};
   const id = entitaDi3(dentro3.entita, DOMINI_DA_PREMERE);
-  const telecomando2 = dominioDi7(id) === "remote";
+  const telecomando2 = dominioDi8(id) === "remote";
   return {
     attivo: vero2(dentro3.attivo, false),
     entita: id,
@@ -100232,11 +100284,11 @@ function misuraDelSensore(id, canale, stati2, accanto = null) {
 }
 function letturaDelCanale(canale, stati2 = {}) {
   const id = canale?.entita || "";
-  const d = dominioDi7(id);
+  const d = dominioDi8(id);
   const s = stati2?.[id];
   const a = s?.attributes || {};
   const muto2 = canale?.muto || "";
-  const mutoInterruttore = ["switch", "input_boolean"].includes(dominioDi7(muto2));
+  const mutoInterruttore = ["switch", "input_boolean"].includes(dominioDi8(muto2));
   const statoMuto = muto2 ? String(stati2?.[muto2]?.state ?? "") : "";
   const tipo = d === "media_player" ? "volume" : d === "sensor" ? "misura" : d === "remote" ? "telecomando" : "numero";
   const base = {
@@ -100332,7 +100384,7 @@ function valoreDallaPosizione(posizione, lettura3) {
 }
 function servizioDelFader(canale, posizione, lettura3) {
   const id = canale?.entita || lettura3?.entita || "";
-  const d = dominioDi7(id);
+  const d = dominioDi8(id);
   if (!id || !DOMINI_DEL_FADER.includes(d)) return null;
   const valore3 = valoreDallaPosizione(posizione, lettura3);
   if (d === "media_player")
@@ -100340,7 +100392,7 @@ function servizioDelFader(canale, posizione, lettura3) {
   return { domain: d, service: "set_value", data: { entity_id: id, value: valore3 } };
 }
 function comandoAlTelecomando(id, comando, dispositivo = "") {
-  if (dominioDi7(id) !== "remote" || !comando) return null;
+  if (dominioDi8(id) !== "remote" || !comando) return null;
   const data = { entity_id: id, command: comando };
   if (dispositivo) data.device = dispositivo;
   return { domain: "remote", service: "send_command", data };
@@ -100349,7 +100401,7 @@ function servizioDelMuto(canale, lettura3) {
   if (!lettura3?.puoMuto) return null;
   const muto2 = canale?.muto || "";
   if (muto2) {
-    const d = dominioDi7(muto2);
+    const d = dominioDi8(muto2);
     if (d === "switch" || d === "input_boolean")
       return {
         domain: d,
@@ -100364,13 +100416,13 @@ function servizioDelMuto(canale, lettura3) {
       );
     return servizioDaPremere(muto2);
   }
-  if (dominioDi7(canale?.entita) === "remote")
+  if (dominioDi8(canale?.entita) === "remote")
     return comandoAlTelecomando(
       canale.entita,
       canale.mutoComando || COMANDI_DEL_CANALE.muto,
       canale.dispositivo
     );
-  if (dominioDi7(canale?.entita) !== "media_player") return null;
+  if (dominioDi8(canale?.entita) !== "media_player") return null;
   return {
     domain: "media_player",
     service: "volume_mute",
@@ -100378,12 +100430,12 @@ function servizioDelMuto(canale, lettura3) {
   };
 }
 function servizioDelPasso(canale, verso2 = "su") {
-  if (dominioDi7(canale?.entita) !== "remote") return null;
+  if (dominioDi8(canale?.entita) !== "remote") return null;
   const comando = verso2 === "giu" ? canale.giuComando || COMANDI_DEL_CANALE.giu : canale.suComando || COMANDI_DEL_CANALE.su;
   return comandoAlTelecomando(canale.entita, comando, canale.dispositivo);
 }
 function servizioDaPremere(id, comando = "", dispositivo = "") {
-  const d = dominioDi7(id);
+  const d = dominioDi8(id);
   if (!id || !DOMINI_DA_PREMERE.includes(d)) return null;
   if (d === "remote" && comando) return comandoAlTelecomando(id, comando, dispositivo);
   if (d === "button" || d === "input_button")
@@ -100403,7 +100455,7 @@ var ACCESI_DEI_PULSANTI = /* @__PURE__ */ new Set(["on", "playing", "open", "hom
 function pulsanteAcceso(pulsante, stati2 = {}) {
   const id = pulsante?.stato || pulsante?.avvio || "";
   if (!id) return false;
-  const d = dominioDi7(id);
+  const d = dominioDi8(id);
   if (["button", "input_button", "scene"].includes(d)) return false;
   if (!pulsante?.stato && d === "remote" && pulsante?.avvioComando) return false;
   return ACCESI_DEI_PULSANTI.has(String(stati2?.[id]?.state ?? "").toLowerCase());
@@ -100416,12 +100468,12 @@ function servizioDelPulsante(pulsante, verso2 = "avvio", stati2 = {}) {
   const stop = pulsante?.stop || "";
   const dispositivo = pulsante?.dispositivo || "";
   const spegni2 = (id) => ({
-    domain: dominioDi7(id),
+    domain: dominioDi8(id),
     service: "turn_off",
     data: { entity_id: id }
   });
   if (verso2 === "stop") {
-    if (dominioDi7(stop) === "remote")
+    if (dominioDi8(stop) === "remote")
       return pulsante?.stopComando ? comandoAlTelecomando(stop, pulsante.stopComando, dispositivo) : spegni2(stop);
     if (stop && stop !== avvio) return servizioDaPremere(stop);
     if (avvio && siSpegne(avvio, pulsante?.avvioComando)) return spegni2(avvio);
@@ -100436,7 +100488,7 @@ function chiamateDelFermaTutto(pagina2, stati2 = {}) {
   const ferma3 = pagina2?.fermaTutto;
   if (!ferma3?.attivo) return [];
   if (ferma3.entita) {
-    if (dominioDi7(ferma3.entita) === "remote" && !ferma3.comando)
+    if (dominioDi8(ferma3.entita) === "remote" && !ferma3.comando)
       return [{ domain: "remote", service: "turn_off", data: { entity_id: ferma3.entita } }];
     return [servizioDaPremere(ferma3.entita, ferma3.comando, ferma3.dispositivo)];
   }
@@ -101425,6 +101477,7 @@ function eInVista(id) {
   const chiave2 = String(id || "");
   if (inVista2.ids.has(chiave2) || inVista2.domini.has(chiave2.split(".")[0])) return true;
   if (state116.fonte?.centrali?.includes(chiave2)) return true;
+  if (eUnCampanello(chiave2)) return true;
   return Boolean(muro.risveglio?.attivo && muro.risveglio.entita === chiave2);
 }
 var stato2 = (id) => {
@@ -104988,37 +105041,41 @@ function battito2() {
   }
   disegna6();
 }
-function campanelloSuona(id, prima, ora5) {
-  if (prima === void 0 || !ora5 || ora5 === prima) return false;
-  if (ora5 === "unavailable" || ora5 === "unknown") return false;
-  return dominio2(id) === "event" ? true : ora5 === "on";
-}
+var campanelloSuona2 = campanelloSuona;
 function campanelliDelMuro(muro = state116.muro) {
   const visti = /* @__PURE__ */ new Set();
   const fuori = [];
   (muro?.pagine || []).forEach((pagina2, indice) => {
-    const id = pagina2.modello === "ingresso" ? pagina2.ingresso?.campanello || "" : "";
+    const id = pagina2.modello === "ingresso" ? clean(pagina2.ingresso?.campanello) : "";
     if (!id || visti.has(id)) return;
     visti.add(id);
     fuori.push({ indice, id });
   });
   return fuori;
 }
-function ricordaICampanelli() {
+var eUnCampanello = (id) => campanelliDelMuro().some((c) => c.id === id);
+function ricordaICampanelli(except = []) {
   const visti = state116.campanelli ||= {};
-  for (const { id } of campanelliDelMuro())
-    if (!(id in visti)) visti[id] = String(stato2(id)?.state ?? "");
+  for (const { id } of campanelliDelMuro()) {
+    if (id in visti || except.includes(id)) continue;
+    const letto = allStates()?.[id];
+    if (letto) visti[id] = ricordoDelCampanello(void 0, letto.state);
+  }
 }
 function suonaIlCampanello2(event) {
-  if (!state116.muro?.attiva || !state116.premium) return;
+  if (!state116.muro?.attiva) return;
   const ids = event?.detail?.entity_ids || (event?.detail?.entity_id ? [event.detail.entity_id] : []);
+  ricordaICampanelli(ids);
+  const suona = state116.premium === true;
   const visti = state116.campanelli ||= {};
   for (const { indice, id } of campanelliDelMuro()) {
     if (ids.length && !ids.includes(id)) continue;
-    const ora5 = String(stato2(id)?.state ?? "");
+    const letto = allStates()?.[id];
+    if (!letto) continue;
+    const ora5 = String(letto.state ?? "");
     const prima = visti[id];
-    visti[id] = ora5;
-    if (!campanelloSuona(id, prima, ora5)) continue;
+    visti[id] = ricordoDelCampanello(prima, ora5);
+    if (!suona || !campanelloSuona2(id, prima, ora5)) continue;
     state116.riposo = false;
     state116.pagina = indice;
     tocco();
@@ -106452,7 +106509,10 @@ function installPlanciaAMuro() {
     "dashboardmodern:muro"
   ])
     root.addEventListener?.(evento, ancora2);
-  root.addEventListener?.("dashboardmodern:states-ready", () => disegna6());
+  root.addEventListener?.("dashboardmodern:states-ready", () => {
+    ricordaICampanelli();
+    disegna6();
+  });
   root[IN_VISTA_KEY] = eInVista;
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
     controllaLOrecchio();
@@ -106569,6 +106629,26 @@ var tendina2 = (via, valore3, voci4, vuota = "") => `<select class="ed-input mu-
 )}${valore3 && !voci4.some(([v]) => String(v) === String(valore3)) ? `<option value="${esc(valore3)}" selected>${esc(valore3)}</option>` : ""}</select>`;
 var campo3 = (via, valore3, segnaposto = "", tipo = "text") => `<input class="ed-input${tipo === "text" ? " mono" : ""} mu-ed-campo" type="${tipo}" data-mu-ed-campo="${esc(via)}" value="${esc(valore3)}" placeholder="${esc(segnaposto)}" autocomplete="off" spellcheck="false"${tipo === "password" ? ' inputmode="numeric"' : ""}>`;
 var riga2 = (titolo3, nota, destra) => `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(titolo3)}</b>${nota ? `<small>${esc(nota)}</small>` : ""}</div><div class="mu-ed-dx">${destra}</div></div>`;
+function rigaDelCampanello(via, ing) {
+  const id = clean(ing.campanello);
+  const avviso2 = id && !tipoDelCampanello(id) ? `<small class="mu-ed-avviso" data-mu-ed-campanello-avviso><b>${esc(id)}</b> ${esc(
+    t(
+      "non può fare da campanello: scegli un evento (event.*) o un sensore che si accende (binary_sensor.*).",
+      "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*)."
+    )
+  )}</small>` : "";
+  return `<div class="mu-ed-riga" data-mu-ed-campanello><div class="mu-ed-testo"><b>${esc(t("Campanello", "Doorbell"))}</b><small>${esc(
+    t(
+      "Quando suona, il pannello si sveglia e apre il citofono da solo",
+      "When it rings, the panel wakes up and opens the intercom by itself"
+    )
+  )}</small><small class="mu-ed-aiuto" data-mu-ed-campanello-aiuto>${esc(
+    t(
+      "Un evento del citofono (event.*), o un sensore che si accende quando suona (binary_sensor). Vanno anche un button o un interruttore.",
+      "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too."
+    )
+  )}</small>${avviso2}</div><div class="mu-ed-dx">${cerca2(`${via}.ingresso.campanello`, ing.campanello, { domini: DOMINI_DEL_CAMPANELLO.join(","), segnaposto: "event.campanello" })}</div></div>`;
+}
 var SUONI = () => [
   ["dindon", t("Din don", "Ding dong")],
   ["classico", t("Campanello classico", "Classic bell")],
@@ -107034,7 +107114,7 @@ function paginaMarkup(p, i, tutte) {
     )}
     <div class="mu-ed-sotto-titolo">${esc(t("Citofono / telecamera", "Intercom / camera"))}</div>
     ${riga2(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca2(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
-    ${riga2(t("Campanello", "Doorbell"), t("Quando suona, il pannello si sveglia e apre il citofono da solo", "When it rings, the panel wakes up and opens the intercom by itself"), cerca2(`${via}.ingresso.campanello`, ing.campanello, { domini: "binary_sensor,event,input_boolean,switch" }))}
+    ${rigaDelCampanello(via, ing)}
     ${campanelloMarkup(i, via, ing)}
     ${riga2(t("Tasto grande", "Big button"), t("Per esempio: apri cancello", "For example: open the gate"), cerca2(`${via}.ingresso.apri`, ing.apri, { domini: "button,lock,cover,switch,script,input_button" }))}
     ${riga2(t("Nome del tasto grande", "Big button name"), t("Vuoto: il nome dell'entità", "Empty: the entity name"), campo3(`${via}.ingresso.nomeApri`, ing.nomeApri, ing.apri ? nomeDi9(ing.apri) : t("Cancello", "Gate")))}
@@ -107893,6 +107973,8 @@ function stili2() {
 #ed-body .mu-ed-testo{flex:1 1 220px;min-width:0}
 #ed-body .mu-ed-testo b{display:block;font-size:13px}
 #ed-body .mu-ed-testo small{display:block;margin-top:2px;font-size:11.5px;line-height:1.4;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-testo small.mu-ed-aiuto{margin-top:6px;padding:6px 9px;border-radius:8px;background:color-mix(in srgb,#0ea5e9 9%,transparent);color:var(--text,inherit)}
+#ed-body .mu-ed-testo small.mu-ed-avviso{margin-top:6px;padding:6px 9px;border-radius:8px;background:color-mix(in srgb,#f59e0b 14%,transparent);color:var(--text,inherit)}
 #ed-body .mu-ed-dx{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;flex:0 1 auto;min-width:0;max-width:100%;margin-left:auto}
 #ed-body .mu-ed-dx .ed-input{margin:0;width:auto;min-width:150px;max-width:260px}
 #ed-body .mu-ed-dx input[type="time"]{min-width:0;width:110px}
@@ -111569,11 +111651,11 @@ function servizioPermesso(scritto3) {
 }
 var ENTITA_BUONA = /^[a-z_]+\.[a-z0-9_]+$/;
 var ORA_BUONA2 = /^([01]\d|2[0-3]):[0-5]\d$/;
-var dominioDi8 = (id) => pulito61(id).split(".")[0];
+var dominioDi9 = (id) => pulito61(id).split(".")[0];
 function entitaDi4(valore3, domini2 = null) {
   const id = pulito61(valore3).toLowerCase().slice(0, 255);
   if (!ENTITA_BUONA.test(id)) return "";
-  if (domini2 && !domini2.includes(dominioDi8(id))) return "";
+  if (domini2 && !domini2.includes(dominioDi9(id))) return "";
   return id;
 }
 function elencoDiEntita3(valore3, domini2, quante3 = ENTITA_AL_MASSIMO) {
@@ -111757,7 +111839,7 @@ function condizionePulita(dato) {
   } : null;
 }
 var MAI_SULLE_COSE = /* @__PURE__ */ new Set(["lock", "alarm_control_panel"]);
-var sulleCose = (valore3) => elencoDiEntita3(valore3).filter((e) => !MAI_SULLE_COSE.has(dominioDi8(e)));
+var sulleCose = (valore3) => elencoDiEntita3(valore3).filter((e) => !MAI_SULLE_COSE.has(dominioDi9(e)));
 function azionePulita(dato) {
   const d = dato && typeof dato === "object" ? dato : {};
   if (!ALLORA.includes(d.tipo)) return null;
@@ -111774,12 +111856,12 @@ function azionePulita(dato) {
   if (tipo === "accendi") {
     const entita3 = sulleCose(d.entita);
     if (!entita3.length) return null;
-    const livello = entita3.some((e) => dominioDi8(e) === "light") ? intero(d.livello, 1, 100, null) : null;
+    const livello = entita3.some((e) => dominioDi9(e) === "light") ? intero(d.livello, 1, 100, null) : null;
     return livello === null ? { tipo, entita: entita3 } : { tipo, entita: entita3, livello };
   }
   if (tipo === "spegni") {
     const entita3 = sulleCose(d.entita).filter(
-      (e) => !["script", "scene", "button", "input_button"].includes(dominioDi8(e))
+      (e) => !["script", "scene", "button", "input_button"].includes(dominioDi9(e))
     );
     return entita3.length ? { tipo, entita: entita3 } : null;
   }

@@ -6834,4 +6834,6 @@ export default Object.freeze({
   "Windy cannot be tested from here: it is a page inside a frame, and the browser does not tell the dashboard whether it arrived. If the frame stays empty, this device cannot reach embed.windy.com.": "O Windy não pode ser testado daqui: é uma página dentro de uma moldura, e o navegador não diz ao painel se chegou. Se a moldura ficar vazia, este dispositivo não alcança embed.windy.com.",
   "Windy shows up in a frame with its own map, rain and legend, centred on the place chosen below. Windy only receives the point, the zoom and the layer: the frame cannot read the dashboard or Home Assistant.": "O Windy aparece numa moldura com o seu próprio mapa, chuva e legenda, centrado no local escolhido abaixo. O Windy só recebe o ponto, o zoom e a camada: a moldura não consegue ler o painel nem o Home Assistant.",
   "Windy weather radar": "Radar meteorológico do Windy",
+  "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "Um evento do intercomunicador (event.*), ou um sensor que liga quando toca (binary_sensor). Um botão ou um interruptor também servem.",
+  "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "não pode servir de campainha: escolha um evento (event.*) ou um sensor que liga (binary_sensor.*).",
 });
