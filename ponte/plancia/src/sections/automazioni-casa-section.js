@@ -1,18 +1,22 @@
 /* «Automazioni», la sezione della dashboard.
  *
  * Tutte le automazioni di Home Assistant, a gruppi, con la faccia delle
- * altre sezioni: la testata, le tre tessere (Attive · Spente · Prossima), le
- * carte di Luci con l'interruttore, i gruppi «Per tipo» o «Per stanza». Qui
- * si guardano, si accendono e si spengono, e si fanno partire; si modificano
- * nel config, dove sta l'editor (`automazioni-section.js`). La linguetta sta
- * subito prima di «Config», col suo orologio viola.
+ * altre sezioni: la testata, le tre tessere (Attive · Spente · Prossima), e
+ * sotto i gruppi in righe compatte — una riga per automazione, col disegno,
+ * il nome, cosa fa in parole e l'interruttore. I gruppi sono le categorie
+ * che chi abita ha dato in Home Assistant («Per categoria», con «Senza
+ * categoria» in fondo), oppure «Per tipo» o «Per stanza», e si chiudono e si
+ * aprono come in Home Assistant (▾ ▸). Qui si guardano, si accendono e si
+ * spengono, e si fanno partire; si modificano nel config, dove sta l'editor
+ * (`automazioni-section.js`). La linguetta sta subito prima di «Config», col
+ * suo orologio viola.
  *
  * La stessa faccia e' la pagina dell'app: nell'app la linguetta in basso non
  * c'e', e le automazioni si aprono dal menu laterale («Automazioni ✨
  * PREMIUM»), a schermo pieno. Li' la pagina e' una sola: senza «Gestisci nel
- * config», con «＋ Nuova» in basso a destra (sopra la bolla dell'assistente,
- * mai sotto), e il foglio di una carta porta anche «✏️ Modifica», «Duplica»,
- * «Stanza e nome» ed «Elimina» — l'editor si apre nella stessa pagina.
+ * config», con «＋ Nuova» nella barra dei filtri, e il foglio di una riga
+ * porta anche «✏️ Modifica», «Duplica», «Stanza e nome» ed «Elimina» —
+ * l'editor si apre nella stessa pagina.
  *
  * Tutto e' Premium: senza, il contenuto si vede sfocato sotto un velo che
  * dice cosa fa e dove si compra. Niente elenco gratuito, niente interruttori.
@@ -30,6 +34,7 @@ import {
   apriNelConfig,
   apriPerModificare,
   automazioniDiCasa,
+  categorieDiCasa,
   chiediAllaCasa,
   duplicaInCasa,
   eseguiOra,
@@ -37,13 +42,17 @@ import {
   fraseDellAllora,
   fraseDellaCondizione,
   fraseDellaVoce,
-  gruppiDelleAutomazioni,
+  gruppiCompattiHtml,
   leProposte,
   nellApp,
   prestaLaListaDellApp,
   prossimaDiCasa,
   quandoCambiaLaCasa,
+  RAGGRUPPA,
+  alternaIlGruppo,
   riassuntoDi,
+  rigaDellaVoce,
+  scelteDelRaggruppa,
   ridisegna as ridisegnaLaPagina,
   scopriPremium,
   statoDelleAutomazioni,
@@ -55,7 +64,8 @@ import { clean, doc, esc, installStyle, root, t } from "./shared.js";
 const KEY = "__DASHBOARDMODERN_AUTOMAZIONI_CASA__";
 const state = (root[KEY] ||= {
   installed: false,
-  perStanza: false,
+  /* «Per categoria» (le categorie di Home Assistant), «Per tipo», «Per stanza». */
+  per: "categoria",
   cerca: "",
   /* La carta aperta nel foglio: l'entita'. */
   foglio: "",
@@ -65,6 +75,8 @@ const state = (root[KEY] ||= {
 export const AUTOMAZIONI_CASA_TAB = "automazioni";
 export const ID_DELLA_SEZIONE = "page-automazioni-casa";
 const ID_DEL_FOGLIO = "auc-foglio";
+/* Il «＋ Nuova» che galleggiava in basso a destra nell'app: adesso sta nella
+ * barra dei filtri, e quello vecchio si toglie se c'e' ancora. */
 const ID_DEL_TASTO = "auc-nuova";
 const VIOLA = "#7c3aed";
 
@@ -191,48 +203,41 @@ function strisciaDelleProposte({ app }) {
   )}</em></button>`;
 }
 
+/* «Per categoria · Per tipo · Per stanza», la ricerca, «＋ Nuova» e, nella
+ * dashboard, «Gestisci nel config». «＋ Nuova» c'e' solo per chi puo'
+ * scrivere: nell'app apre i modelli nella stessa pagina, nella dashboard nel
+ * config. */
 function filtri({ app }) {
-  return `<div class="ad-filtri"><span class="ad-seg" role="group"><button type="button" data-auc-per="tipo" class="${state.perStanza ? "" : "si"}">${esc(
-    t("Per tipo", "By type"),
-  )}</button><button type="button" data-auc-per="stanza" class="${state.perStanza ? "si" : ""}">${esc(
-    t("Per stanza", "By room"),
-  )}</button></span><label class="ad-cerca"><span aria-hidden="true">🔍</span><input type="search" data-auc-cerca value="${esc(
+  const config = typeof root.apriConfigEntita === "function";
+  const nuova =
+    statoDelleAutomazioni().ponte?.puoScrivere === true && (app || config)
+      ? `<button type="button" class="ad-nuova" data-auc-nuova>＋ ${esc(t("Nuova", "Add new"))}</button>`
+      : "";
+  return `<div class="ad-filtri">${scelteDelRaggruppa(state.per, "data-auc-per", "ad-seg")}<span class="ad-cerca-riga"><label class="ad-cerca"><span aria-hidden="true">🔍</span><input type="search" data-auc-cerca value="${esc(
     state.cerca,
-  )}" placeholder="${esc(t("Cerca un'automazione…", "Search an automation…"))}"></label>${
-    app || typeof root.apriConfigEntita !== "function"
+  )}" placeholder="${esc(t("Cerca un'automazione…", "Search an automation…"))}"></label>${nuova}</span>${
+    app || !config
       ? ""
       : `<button type="button" class="ad-cfg" data-auc-config>⚙️ ${esc(t("Gestisci nel config ›", "Manage in the config ›"))}</button>`
   }</div>`;
 }
 
-function carta(v) {
-  const [, , oggetto, colore] = CATEGORIA()[v.categoria] || CATEGORIA().altre;
-  const frase = fraseDellaVoce(v);
-  const fu = ultimaVoltaDi(v);
-  return `<article class="dm-lucip-card${v.attiva ? " is-on" : ""}" data-auc-carta="${esc(v.entity_id)}" style="--dm-light-segno:${colore};--dm-light-color:${colore}" role="button" tabindex="0"><span class="dm-lucip-glow"></span>
-<div class="dm-lucip-main"><span class="dm-lucip-orb">${disegno(oggetto)}</span><span class="dm-lucip-title"><strong>${esc(v.nome)}</strong><span class="ad-frase">${
-    frase
-      ? `${esc(frase.quando)}<i>→</i>${esc(frase.allora)}`
-      : esc(t("Avanzata: usa template, scelte o blueprint", "Advanced: uses templates, choices or blueprints"))
-  }</span><span class="dm-lucip-meta"><small class="dm-lucip-state">${esc(t(`ultima volta: ${fu}`, `last time: ${fu}`))}</small>${
-    v.attiva ? "" : `<span class="dm-lucip-badge" data-kind="bloccata">${esc(t("SPENTA", "OFF"))}</span>`
-  }</span></span><button type="button" class="dm-lucip-led" aria-pressed="${v.attiva}" data-auc-led="${esc(v.entity_id)}" aria-label="${esc(
+/* La riga si apre nel foglio; l'interruttore la accende o la spegne. */
+const attributiDellaRiga = (v) => ` data-auc-carta="${esc(v.entity_id)}" role="button" tabindex="0"`;
+const interruttoreDellaRiga = (v) =>
+  `<button type="button" class="aug-int" role="switch" aria-checked="${v.attiva}" data-auc-led="${esc(v.entity_id)}" aria-label="${esc(
     t(`Accendi o spegni ${v.nome}`, `Turn ${v.nome} on or off`),
-  )}"></button></div></article>`;
-}
+  )}"></button>`;
 
 function gruppiHtml(elenco) {
-  const gruppi = gruppiDelleAutomazioni(elenco, { perStanza: state.perStanza, cerca: state.cerca });
-  if (!gruppi.length)
-    return `<p class="ad-nessuna">${esc(t("Nessuna automazione con queste parole.", "No automation matches these words."))}</p>`;
-  return gruppi
-    .map((g) => {
-      const accese = g.voci.filter((v) => v.attiva).length;
-      return `<div class="dm-lucip-room" data-auc-gruppo="${esc(g.chiave)}"><span class="dm-lucip-room-name">${esc(g.titolo)}</span><span class="dm-lucip-room-count" data-on="${accese > 0}">${accese}/${g.voci.length}</span></div><div class="dm-lucip-grid">${g.voci
-        .map(carta)
-        .join("")}</div>`;
-    })
-    .join("");
+  const gruppi = gruppiCompattiHtml(elenco, {
+    per: state.per,
+    cerca: state.cerca,
+    prefisso: "aug-auc",
+    attributi: attributiDellaRiga,
+    interruttore: interruttoreDellaRiga,
+  });
+  return gruppi || `<p class="ad-nessuna">${esc(t("Nessuna automazione con queste parole.", "No automation matches these words."))}</p>`;
 }
 
 function vuoto({ app }) {
@@ -335,7 +340,9 @@ function bloccoDelFoglio(v) {
       lista(r.allora),
     )}`;
   }
-  return `<div class="riga av">${esc(
+  /* Senza la configurazione (chi non amministra Home Assistant non la
+   * riceve) resta il riassunto del ponte, e il dettaglio in Home Assistant. */
+  return `${v.riassunto ? righe(t("In breve", "In short"), "q", esc(rigaDellaVoce(v))) : ""}<div class="riga av">${esc(
     t(
       "Un'automazione avanzata: il dettaglio si legge in Home Assistant.",
       "An advanced automation: the details are in Home Assistant.",
@@ -348,7 +355,11 @@ function htmlDelFoglio(v, { app }) {
   const st = statoDelleAutomazioni();
   const puo = st.ponte?.puoScrivere && v.modificabile;
   const fu = ultimaVoltaDi(v);
-  const dove = [`${emoji} ${nomeCat}`, clean(v.area)].filter(Boolean).join(" · ");
+  /* La categoria di Home Assistant, se gliel'hanno data, prima del tipo. */
+  const categoriaHa = categorieDiCasa().find((c) => c.id === clean(v.categoriaHa))?.nome || "";
+  const dove = [categoriaHa === nomeCat ? "" : categoriaHa, `${emoji} ${nomeCat}`, clean(v.area)]
+    .filter(Boolean)
+    .join(" · ");
   const modifica = !puo
     ? ""
     : app
@@ -437,33 +448,10 @@ export function disegna() {
   return true;
 }
 
-/* «＋ Nuova» nella pagina dell'app: in basso a destra, sopra la bolla
- * dell'assistente quando c'e', mai sotto. */
+/* Il «＋ Nuova» che galleggiava sopra la pagina dell'app (fino alla 1.15):
+ * adesso sta nella barra dei filtri. Se e' rimasto nella pagina, si toglie. */
 function aggiornaIlTasto() {
-  const st = statoDelleAutomazioni();
-  const serve =
-    st.inApp &&
-    st.vista === "lista" &&
-    st.premium !== false &&
-    st.ponte?.puoScrivere === true &&
-    doc.getElementById("page-automazioni")?.classList?.contains("active");
-  let tasto = doc.getElementById(ID_DEL_TASTO);
-  if (!serve) {
-    tasto?.remove();
-    return;
-  }
-  if (!tasto) {
-    tasto = doc.createElement("button");
-    tasto.type = "button";
-    tasto.id = ID_DEL_TASTO;
-    tasto.className = "auc-nuova";
-    tasto.dataset.aucNuova = "";
-    tasto.textContent = `＋ ${t("Nuova", "Add new")}`;
-    doc.body.append(tasto);
-  }
-  const bolla = doc.querySelector(".dm-assist-tasto");
-  const sopra = Boolean(bolla && bolla.getClientRects?.().length);
-  tasto.classList.toggle("sopra-la-bolla", sopra);
+  doc.getElementById(ID_DEL_TASTO)?.remove();
 }
 
 /* Lo stile delle carte di Luci, prestato a questa pagina: e' lo stesso
@@ -508,7 +496,7 @@ function onClick(event) {
     return;
   }
   const tocco = el.closest(
-    "[data-auc-scopri],[data-auc-led],[data-auc-per],[data-auc-proposte],[data-auc-config],[data-auc-config-nuova],[data-auc-nuova],[data-auc-esegui],[data-auc-modifica],[data-auc-duplica],[data-auc-stanza],[data-auc-elimina],[data-auc-carta]",
+    "[data-auc-scopri],[data-auc-led],[data-auc-per],[data-aug-apri],[data-auc-proposte],[data-auc-config],[data-auc-config-nuova],[data-auc-nuova],[data-auc-esegui],[data-auc-modifica],[data-auc-duplica],[data-auc-stanza],[data-auc-elimina],[data-auc-carta]",
   );
   if (!tocco) return;
   const d = tocco.dataset;
@@ -528,7 +516,12 @@ function onClick(event) {
     return;
   }
   if (d.aucPer) {
-    state.perStanza = d.aucPer === "stanza";
+    state.per = RAGGRUPPA.includes(d.aucPer) ? d.aucPer : "categoria";
+    piuTardi();
+    return;
+  }
+  if (d.augApri) {
+    alternaIlGruppo(d.augApri);
     piuTardi();
     return;
   }
@@ -546,8 +539,10 @@ function onClick(event) {
     return;
   }
   if (d.aucNuova !== undefined) {
-    vaiA("modelli");
-    aggiornaIlTasto();
+    if (app) {
+      vaiA("modelli");
+      root.scrollTo?.(0, 0);
+    } else apriNelConfig({ vista: "modelli" });
     return;
   }
   const v = voceDi(state.foglio);
@@ -623,23 +618,14 @@ ${S} .ad-pro small{display:block;font-size:11.5px;font-weight:600;color:var(--se
 ${S} .ad-pro em{margin-left:auto;font-style:normal;font-size:12px;font-weight:900;color:${VIOLA};white-space:nowrap}
 html[data-theme="dark"] ${S} .ad-pro em{color:#c4b5fd}
 ${S} .ad-filtri{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+${S} .ad-cerca-riga{flex:1 1 320px;max-width:520px;display:flex;align-items:center;gap:10px;min-width:0}
 ${S} .ad-seg{display:inline-flex;padding:4px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);box-shadow:0 12px 28px -22px rgba(15,23,42,.5)}
 ${S} .ad-seg button{border:0;background:none;cursor:pointer;padding:7px 14px;border-radius:999px;font:inherit;font-size:11px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
 ${S} .ad-seg button.si{background:${VIOLA};color:#fff;box-shadow:0 6px 14px -6px ${VIOLA}}
-${S} .ad-cerca{flex:1 1 220px;max-width:360px;display:flex;align-items:center;gap:8px;padding:0 16px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);font-size:13px;color:var(--secondary-text-color,#94a3b8)}
+${S} .ad-cerca{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;padding:0 16px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);font-size:13px;color:var(--secondary-text-color,#94a3b8)}
 ${S} .ad-cerca input{flex:1;min-width:0;border:0;background:none;outline:none;padding:10px 0;font:inherit;font-weight:600;color:var(--text,#0f172a)}
+${S} .ad-nuova{flex:none;border:0;border-radius:999px;padding:10px 18px;background:${VIOLA};color:#fff;cursor:pointer;font:inherit;font-size:13px;font-weight:900;letter-spacing:.2px;white-space:nowrap;box-shadow:0 10px 22px -12px ${VIOLA}}
 ${S} .ad-cfg{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);background:transparent;cursor:pointer;font:inherit;font-size:11px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
-${S} .auc .dm-lucip-room-count[data-on="true"]{color:${VIOLA};border-color:color-mix(in srgb,${VIOLA} 40%,transparent);background:color-mix(in srgb,${VIOLA} 10%,transparent)}
-html[data-theme="dark"] ${S} .auc .dm-lucip-room-count[data-on="true"]{color:#c4b5fd}
-${S} .dm-lucip-card{cursor:pointer}
-${S} .dm-lucip-main{align-items:flex-start}
-${S} .ad-frase{font-size:12.5px;font-weight:700;line-height:1.38;color:var(--text,#0f172a);opacity:.86;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:1px 0 3px}
-${S} .ad-frase i{font-style:normal;color:var(--dm-light-segno);font-weight:900;margin:0 3px}
-${S} .dm-lucip-card:not(.is-on) .ad-frase{opacity:.55}
-${S} .dm-lucip-led{margin-top:4px;width:46px;height:27px;flex:none}
-${S} .dm-lucip-led::after{width:21px;height:21px}
-${S} .dm-lucip-card.is-on .dm-lucip-led::after{transform:translateX(19px)}
-${S} .dm-lucip-orb svg{width:28px;height:28px}
 ${S} .ad-nessuna,${S} .ad-avviso{margin:4px 2px;font-size:13px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 ${S} .ad-vuoto{display:grid;justify-items:center;text-align:center;gap:10px;padding:46px 20px 50px;border-radius:26px;border:1px dashed color-mix(in srgb,${VIOLA} 35%,var(--divider-color,#dbe4ee));background:radial-gradient(80% 70% at 50% 0%,color-mix(in srgb,${VIOLA} 9%,transparent),transparent 70%),var(--card-bg,#fff)}
 ${S} .ad-vuoto .ill,${S} .ad-chiusa .ill{position:relative;width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,color-mix(in srgb,${VIOLA} 14%,#fff),color-mix(in srgb,${VIOLA} 26%,var(--card-bg,#fff)));box-shadow:0 20px 40px -24px ${VIOLA}}
@@ -670,7 +656,9 @@ ${S} .ad-chiusa .carta small{font-size:11.5px;font-weight:600;color:var(--second
   ${S} .ad-kpi .dm-lucip-kpi{padding:10px 12px}
   ${S} .ad-kpi b{font-size:26px}
   ${S} .ad-kpi .pross b{font-size:20px}
-  ${S} .ad-cerca{max-width:none;order:3;flex-basis:100%}
+  ${S} .ad-seg{max-width:100%;overflow-x:auto;scrollbar-width:none}
+  ${S} .ad-seg button{padding:7px 11px;white-space:nowrap}
+  ${S} .ad-cerca-riga{max-width:none;flex-basis:100%}
   ${S} .ad-cfg{display:none}
   ${S} .ad-chiusa .velo{padding-top:40px}
 }
@@ -704,9 +692,6 @@ ${S} .ad-chiusa .carta small{font-size:11.5px;font-weight:600;color:var(--second
 .ad-foglio .op-mod{display:flex;gap:8px;margin-top:10px}
 .ad-foglio .op-mod button{flex:1;border-radius:14px;padding:11px 6px;font:inherit;font-size:12.5px;font-weight:800;border:1px solid var(--divider-color,#dbe4ee);background:transparent;color:var(--text,#0f172a);cursor:pointer}
 .ad-foglio .op-mod button.r{color:#dc2626}
-/* «＋ Nuova» nella pagina dell'app. */
-.auc-nuova{position:fixed;right:16px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:9001;border:0;border-radius:999px;padding:15px 22px;background:${VIOLA};color:#fff;font:900 14px Inter,sans-serif;letter-spacing:.3px;box-shadow:0 14px 30px -10px ${VIOLA};cursor:pointer}
-.auc-nuova.sopra-la-bolla{bottom:calc(162px + env(safe-area-inset-bottom,0px))}
 `,
   );
 }
