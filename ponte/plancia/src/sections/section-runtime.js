@@ -119,6 +119,7 @@ import { installRobotSection } from "./robot-section.js";
 import { installGdanavSection } from "./gdanav-section.js";
 import { installAnimaliSection } from "./animali-section.js";
 import { installPreseSection } from "./prese-section.js";
+import { installRiquadriConImmagine } from "./riquadri-con-immagine-section.js";
 import { installEnergyPlantsSection } from "./energy-plants-section.js";
 import { installLaSogliaDellaPotenza } from "./la-soglia-della-potenza-section.js";
 import { installRoomAssignSection } from "./room-assign-section.js";
@@ -1102,6 +1103,11 @@ export function installSectionRuntime() {
     senzaCadere(installRobotSection);
     senzaCadere(installGdanavSection);
     senzaCadere(installPreseSection);
+    /* I riquadri con l'immagine: il loro vestito, il blocco «Immagine» degli
+     * editor, e i Dispositivi della Home che il guscio disegna da se'. Dopo le
+     * Prese, che ne usano il vestito, e prima delle Stanze, che ne riusano
+     * le card. */
+    senzaCadere(installRiquadriConImmagine);
     senzaCadere(installRobotEditorSection);
     senzaCadere(installAutoIntegrazione);
     senzaCadere(installEnergiaCerchiStorico);

@@ -20,6 +20,8 @@
  * Il modulo e' puro: entra quello che c'e' salvato, esce un elenco in ordine.
  */
 
+import { immaginePulita } from "./immagine-del-riquadro.js";
+
 const pulito = (valore) => String(valore ?? "").trim();
 
 const chiave = (valore) =>
@@ -55,8 +57,14 @@ function nomeDiRipiego(entity, indice) {
 function normalizzata(voce, indice) {
   const entity = pulito(voce?.entity || voce?.entita || voce?.entity_id);
   const name = pulito(voce?.name || voce?.nome) || nomeDiRipiego(entity, indice);
+  /* «Riquadri con l'immagine»: la foto o il disegno che riempie la card
+   * (`immagine-del-riquadro.js`). Una che non e' di casa se ne va, invece di
+   * restare scritta in configurazione ad aspettare di essere mostrata. */
+  const { immagine: grezza, ...resto } = voce || {};
+  const immagine = immaginePulita(grezza);
   return {
-    ...voce,
+    ...resto,
+    ...(immagine ? { immagine } : {}),
     id: pulito(voce?.id) || `presa-${chiave(name) || indice + 1}`,
     name,
     entity,

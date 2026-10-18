@@ -48,9 +48,15 @@ import {
 import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
-import { anteprimaDellaPagina, fonteDelMuro, premiumDellaCasa } from "./plancia-a-muro-section.js";
+import {
+  anteprimaDellaPagina,
+  eUnVarco as eUnVarcoDelMuro,
+  fonteDelMuro,
+  premiumDellaCasa,
+} from "./plancia-a-muro-section.js";
 import { opzioniDelCampanello } from "../core/il-campanello-a-muro.js";
 import { suonaIlCampanello } from "./il-suono-del-campanello.js";
+import { EVENTO_IMMAGINE, bloccoImmagineMarkup } from "./riquadri-con-immagine-section.js";
 import {
   allStates,
   clean,
@@ -302,6 +308,26 @@ function dueTastiMarkup(via, c) {
       <label class="mu-ed-voce"><span>${esc(t("Icona", "Icon"))}</span>${tendina(`${via}.disegno`, c.disegno || "", DISEGNI(), null)}</label>`;
 }
 
+/* «Riquadri con l'immagine»: il blocco «Immagine» sotto «Disegno», per i
+ * posti che sul tablet la sanno mostrare — una luce, un'entita' qualunque, una
+ * scena, un cancello. Il clima, la tapparella e i due tasti hanno i loro
+ * comandi sulla card, e un'immagine li coprirebbe. */
+function siVedeLImmagine(c) {
+  if (!c || c.tipo === "vuoto" || c.tipo === "duetasti" || c.tipo === "clima") return false;
+  if (c.tipo === "tapparella") return eUnVarcoDelMuro(allStates()?.[c.entita]?.attributes || {});
+  return true;
+}
+const ACCENTO_DEL_POSTO = Object.freeze({ luce: "#f59e0b", azione: "#8b5cf6", tapparella: "#22c55e" });
+function immagineDelPosto(via, c) {
+  if (!siVedeLImmagine(c)) return "";
+  return bloccoImmagineMarkup({
+    chiave: via,
+    immagine: c.immagine,
+    nome: clean(c.nome) || c.azione || nomeDi(c.entita),
+    accento: ACCENTO_DEL_POSTO[c.tipo] || "#f59e0b",
+  });
+}
+
 function postoMarkup(i, lista, k, c, posti = 6) {
   const via = `pagine.${i}.${lista}.${k}`;
   const inCorso = lista === "comandi" ? dueTastiInCorso()[via] : null;
@@ -338,7 +364,8 @@ function postoMarkup(i, lista, k, c, posti = 6) {
         pieno
           ? `<label class="mu-ed-voce"><span>${esc(t("Nome sul tablet", "Name on the tablet"))}</span>${campo(`${via}.nome`, c.nome || "", c.azione || nomeDi(c.entita))}</label>
       <label class="mu-ed-voce"><span>${esc(t("Riga sotto", "Line below"))}</span>${campo(`${via}.sotto`, c.sotto || "", t("Facoltativa", "Optional"))}</label>
-      <label class="mu-ed-voce"><span>${esc(t("Disegno", "Drawing"))}</span>${tendina(`${via}.disegno`, c.disegno || "", DISEGNI(), null)}</label>`
+      <label class="mu-ed-voce"><span>${esc(c.immagine ? t("Disegno (se non c'è immagine)", "Drawing (when there is no image)") : t("Disegno", "Drawing"))}</span>${tendina(`${via}.disegno`, c.disegno || "", DISEGNI(), null)}</label>
+      ${immagineDelPosto(via, c)}`
           : ""
       }`
       }
@@ -1470,6 +1497,7 @@ function metti(via, valore) {
           nome: prima.nome || "",
           sotto: prima.sotto || "",
           disegno: prima.disegno || "",
+          ...(prima.immagine ? { immagine: prima.immagine } : {}),
         };
         if (valore === "duetasti") {
           const bozzaDelPosto = {
@@ -1526,6 +1554,9 @@ function metti(via, valore) {
         nome: cambiato ? "" : ora.nome || "",
         sotto: ora.sotto || "",
         disegno: ora.disegno || "",
+        /* L'immagine e' del posto, non dell'entita': chi cambia la luce del
+         * terrazzo con un'altra tiene la foto del terrazzo. */
+        ...(ora.immagine ? { immagine: ora.immagine } : {}),
       };
       if (campo === "entita")
         posti[k] = scritto
@@ -1786,6 +1817,27 @@ function onChange(event) {
 const SCRITTE =
   /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin|Comando|\.comando|\.dispositivo|\.min|\.max)$/;
 
+/* L'immagine scelta nel blocco di un posto: la chiave del blocco e' la via
+ * del posto. Si scrive nella bozza come una scritta — il blocco si e' gia'
+ * rifatto da se', e ridisegnare la scheda chiuderebbe la scelta dei disegni
+ * sotto il dito — e l'anteprima del tablet la mostra subito. */
+function onImmagine(event) {
+  const body = doc?.getElementById("ed-body");
+  if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
+  const via = String(event.detail?.chiave || "");
+  if (!/^pagine\.\d+\.(comandi|scene)\.\d+$/.test(via)) return;
+  metti(`${via}.immagine`, event.detail?.immagine || null);
+  dopoUnaScritta();
+  /* Il nome accanto al «Disegno» dice «se non c'e' immagine» solo quando
+   * un'immagine c'e': quella riga si aggiorna senza rifare la scheda. */
+  const voce = body.querySelector(`[data-mu-ed-campo="${via}.disegno"]`)?.closest(".mu-ed-voce");
+  const scritta = voce?.querySelector(":scope > span");
+  if (scritta)
+    scritta.textContent = event.detail?.immagine
+      ? t("Disegno (se non c'è immagine)", "Drawing (when there is no image)")
+      : t("Disegno", "Drawing");
+}
+
 /* Le scritte non ridisegnano la scheda, ma l'anteprima e l'avviso «non
  * salvate» si': sono fuori dai campi, e non rubano il tocco a nessuno. */
 function dopoUnaScritta() {
@@ -1969,6 +2021,7 @@ export function installPlanciaAMuroEditor() {
   stili();
   doc.addEventListener("click", onClick);
   doc.addEventListener("change", onChange);
+  doc.addEventListener(EVENTO_IMMAGINE, onImmagine);
   doc.addEventListener("input", (event) => {
     /* Il volume si legge mentre il dito scorre; si scrive al rilascio. */
     if (event.target?.dataset?.muEdCampo?.endsWith(".ingresso.volume")) {
