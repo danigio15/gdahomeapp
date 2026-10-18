@@ -752,7 +752,10 @@ export class Commissioni {
      * chilometri dall'odometro o stimati), l'acqua, il gas e l'irrigazione,
      * gli eventi della giornata, i conti (porte, automazioni, avvisi), il
      * mese, il confronto con ieri, la settimana e il mese prima, le cose da
-     * sistemare e «In breve». Gli stessi dati Home Assistant che il ponte
+     * sistemare e «In breve»; e i soldi del sole ceduto (col prezzo di
+     * cessione scritto nella plancia), il prezzo di ogni fascia usata, la
+     * batteria di casa (caricata, usata, massimo, stasera), la massima e il
+     * consiglio per domani. Gli stessi dati Home Assistant che il ponte
      * legge gia' per le notifiche, annotati in casa: nessun nome di persona
      * (gli eventi dicono «Prima persona sveglia», «qualcuno», e ogni testo
      * passa dal filtro dei nomi), nessuna entita', nessun dato di altri

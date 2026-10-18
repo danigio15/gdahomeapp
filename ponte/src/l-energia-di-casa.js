@@ -74,6 +74,8 @@ export const CASELLE_DELL_ENERGIA = Object.freeze({
   casaOggi: "dm.energy_consumo_casa_oggi",
   preseOggi: "dm.energy_energia_prelevata_oggi",
   cedutiOggi: "dm.energy_energia_immessa_oggi",
+  battCaricataOggi: "dm.energy_batteria_caricata_oggi",
+  battScaricataOggi: "dm.energy_batteria_scaricata_oggi",
 });
 
 const numero = (valore) => {
@@ -289,6 +291,8 @@ export class TaccuinoDellEnergia {
     this.cicli = new Map();
     this._ultimo = null;
     this._scrittoIl = 0;
+    /* L'ultima carica della batteria di casa vista. */
+    this._socPrima = null;
   }
 
   get oggi() {
@@ -384,7 +388,30 @@ export class TaccuinoDellEnergia {
       g.picco = sole;
       g.piccoIl = ora;
     }
-    for (const chiave of ["soleOggi", "casaOggi", "preseOggi", "cedutiOggi"])
+    /* La batteria di casa: la carica piu' alta e quando, l'ultima, e quanto
+     * e' salita e scesa (in punti), per chi non ha i contatori del giorno. */
+    const soc = letture.carica;
+    if (typeof soc === "number" && Number.isFinite(soc) && soc >= 0 && soc <= 100) {
+      if (g.battMax === undefined || g.battMax === null || soc > g.battMax) {
+        g.battMax = soc;
+        g.battMaxIl = ora;
+      }
+      if (this._socPrima !== null) {
+        const passo = soc - this._socPrima;
+        if (passo > 0) g.battSu = (g.battSu || 0) + passo;
+        else g.battGiu = (g.battGiu || 0) - passo;
+      }
+      this._socPrima = soc;
+      g.battUltima = soc;
+    }
+    for (const chiave of [
+      "soleOggi",
+      "casaOggi",
+      "preseOggi",
+      "cedutiOggi",
+      "battCaricataOggi",
+      "battScaricataOggi",
+    ])
       if (letture[chiave] !== null && letture[chiave] !== undefined)
         g[`${chiave}Letto`] = letture[chiave];
 
@@ -551,6 +578,35 @@ export class TaccuinoDellEnergia {
     };
   }
 
+  /**
+   * La batteria di casa oggi: `{caricata, usata}` in kWh — dai contatori del
+   * giorno se ci sono, altrimenti dai punti saliti e scesi per la capacita'
+   * — `massimo` e `stasera` in %, `massimoAlle` «HH:MM», `capacita` in kWh.
+   * `null` se la casa non ha una batteria che si legge.
+   */
+  laBatteria(capacita = null) {
+    const g = this.archivio.dati.oggi;
+    if (!g) return null;
+    const letto = (chiave) => {
+      const v = g[`${chiave}Letto`];
+      return v !== undefined && v !== null && v >= 0 ? v : null;
+    };
+    const conSoc = g.battMax !== undefined && g.battMax !== null;
+    const caricataLetta = letto("battCaricataOggi");
+    const usataLetta = letto("battScaricataOggi");
+    if (!conSoc && caricataLetta === null && usataLetta === null) return null;
+    const cap = typeof capacita === "number" && capacita > 0 ? capacita : null;
+    const dalSoc = (punti) => (conSoc && cap ? ((punti || 0) / 100) * cap : null);
+    return {
+      caricata: arrotonda(caricataLetta ?? dalSoc(g.battSu), 1),
+      usata: arrotonda(usataLetta ?? dalSoc(g.battGiu), 1),
+      massimo: conSoc ? Math.round(g.battMax) : null,
+      massimoAlle: conSoc && g.battMaxIl ? oraDi(g.battMaxIl) : null,
+      stasera: conSoc ? Math.round(g.battUltima) : null,
+      capacita: cap ? arrotonda(cap, 1) : null,
+    };
+  }
+
   /** I totali dei giorni passati (senza oggi). */
   giorniPassati() {
     return this.archivio.dati.giorni.slice();
@@ -624,5 +680,7 @@ export function letturaDellEnergia(risolvi, stato) {
     casaOggi: leggi(c.casaOggi, true),
     preseOggi: leggi(c.preseOggi, true),
     cedutiOggi: leggi(c.cedutiOggi, true),
+    battCaricataOggi: leggi(c.battCaricataOggi, true),
+    battScaricataOggi: leggi(c.battScaricataOggi, true),
   };
 }

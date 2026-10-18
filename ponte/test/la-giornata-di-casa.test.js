@@ -22,13 +22,18 @@ import { test } from "node:test";
 import { Dispositivi } from "../src/dispositivi.js";
 import {
   DiarioDellaCasa,
+  capacitaDellAccumulo,
+  consiglioPerDomani,
   daSistemare,
   ilConfronto,
   ilMese,
   inBreve,
+  prezziDelleFasce,
+  prezzoDiCessione,
   senzaNomiDiPersone,
 } from "../src/la-giornata-di-casa.js";
-import { LA_GIORNATA, Notifiche } from "../src/notifiche.js";
+import { TaccuinoDellEnergia } from "../src/l-energia-di-casa.js";
+import { cieloDiDomani, LA_GIORNATA, Notifiche } from "../src/notifiche.js";
 import { apriLaSpinta } from "../src/spinta.js";
 
 const MINUTO = 60 * 1000;
@@ -808,6 +813,180 @@ test("i tasti del riepilogo parlano la lingua del telefono", async () => {
         ["ok", "OK"],
       ],
     );
+  } finally {
+    banco.spegni();
+  }
+});
+
+/* ─── I campi in piu' per la pagina ──────────────────────────────────── */
+
+test("la batteria di casa: caricata, usata, massimo, stasera, dai punti o dai contatori", () => {
+  const orologio = { ora: alle(8) };
+  const taccuino = new TaccuinoDellEnergia({ adesso: () => orologio.ora });
+  assert.equal(taccuino.laBatteria(10), null, "senza batteria, niente");
+  const carica = (soc, ore, minuti = 0, extra = {}) => {
+    orologio.ora = alle(ore, minuti);
+    taccuino.campiona({ sole: 0, rete: 0, carica: soc, ...extra });
+  };
+  carica(50, 8);
+  carica(80, 12);
+  carica(100, 14, 40);
+  carica(62, 21);
+  assert.deepEqual(taccuino.laBatteria(10), {
+    caricata: 5,
+    usata: 3.8,
+    massimo: 100,
+    massimoAlle: "14:40",
+    stasera: 62,
+    capacita: 10,
+  });
+  assert.equal(taccuino.laBatteria(null).caricata, null, "senza capacita' i kWh non si sanno");
+  /* I contatori del giorno valgono piu' dei punti. */
+  carica(62, 21, 30, { battCaricataOggi: 6.8, battScaricataOggi: 5.1 });
+  const conContatori = taccuino.laBatteria(null);
+  assert.equal(conContatori.caricata, 6.8);
+  assert.equal(conContatori.usata, 5.1);
+});
+
+test("i prezzi: la cessione solo se scritta, le fasce usate, la capacita' dell'accumulo", () => {
+  assert.equal(prezzoDiCessione({}), null);
+  assert.equal(prezzoDiCessione({ cd_prezzo_immissione: "0,08" }), 0.08);
+  assert.equal(
+    prezzoDiCessione(
+      { cd_prezzo_immissione: "sensor.prezzo_cessione" },
+      { "sensor.prezzo_cessione": { state: "0.11" } },
+    ),
+    0.11,
+  );
+  const fasce = {
+    quante: 3,
+    voci: [
+      { dalle: "08:00", prezzo: 0.175 },
+      { dalle: "19:00", prezzo: 0.15 },
+      { dalle: "23:00", prezzo: 0.135 },
+    ],
+  };
+  assert.deepEqual(prezziDelleFasce(fasce, { 0: 0.6, 2: 2.5 }), { F1: 0.175, F3: 0.135 });
+  assert.deepEqual(prezziDelleFasce(JSON.stringify(fasce), { 1: 1 }), { F2: 0.15 });
+  assert.equal(prezziDelleFasce({}, { 0: 1 }), null);
+  assert.equal(
+    capacitaDellAccumulo(
+      { cd_accumulo: { righe: [{ entity: "sensor.bms_soc", capacita: "10", unita: "kWh" }] } },
+      { "sensor.bms_soc": { state: "60", attributes: { unit_of_measurement: "%" } } },
+    ),
+    10,
+  );
+  assert.equal(capacitaDellAccumulo({}, {}), null);
+});
+
+test("domani: la massima, e il consiglio solo col sole e con qualcosa a cui dirlo", () => {
+  const adesso = new Date(2026, 9, 17, 20, 30).getTime();
+  const ora = (h, condition, temperature) => ({
+    datetime: new Date(2026, 9, 18, h, 0).toISOString(),
+    condition,
+    temperature,
+  });
+  const cielo = cieloDiDomani(
+    [ora(9, "sunny", 14), ora(11, "sunny", 19), ora(13, "sunny", 21), ora(15, "cloudy", 20.5)],
+    adesso,
+  );
+  assert.equal(cielo.max, 21);
+  assert.equal(cielo.soleFino, "14:00");
+  const domani = { soleFino: "15:00", soleDa: 9 };
+  assert.equal(
+    consiglioPerDomani({
+      domani,
+      conSole: true,
+      elettrodomestici: ["lavatrice", "lavastoviglie", "Forno"],
+      conAuto: true,
+    }),
+    "Lavatrice e lavastoviglie entro le 13: gratis col sole. Auto: ricarica dalle 10.",
+  );
+  assert.equal(
+    consiglioPerDomani({ domani, conSole: true, elettrodomestici: ["lavatrice"] }),
+    "Lavatrice entro le 13: gratis col sole.",
+  );
+  assert.equal(consiglioPerDomani({ domani, conSole: true }), null, "niente a cui dirlo");
+  assert.equal(consiglioPerDomani({ domani, elettrodomestici: ["lavatrice"] }), null);
+  assert.equal(
+    consiglioPerDomani({
+      domani: { soleFino: null },
+      conSole: true,
+      elettrodomestici: ["lavatrice"],
+    }),
+    null,
+  );
+});
+
+test("`ponte/energia/giornata`: euroCeduti, prezzi delle fasce, batteria e domani", async () => {
+  const banco = unBanco({ licenze: { attive: true, premium: true }, adesso: alle(21) });
+  try {
+    const n = banco.notifiche;
+    n._valori = () => ({
+      cd_prezzo_immissione: "0.08",
+      cd_fasce_kwh: {
+        quante: 3,
+        voci: [
+          { dalle: "08:00", prezzo: 0.175 },
+          { dalle: "19:00", prezzo: 0.15 },
+          { dalle: "23:00", prezzo: 0.135 },
+        ],
+      },
+    });
+    n.sentinella.carica([
+      {
+        entity_id: "sensor.lavatrice_w",
+        state: "0",
+        attributes: { unit_of_measurement: "W", friendly_name: "Lavatrice" },
+      },
+    ]);
+    const g = unaGiornata();
+    g.giornata.perFascia = { 0: 0.6, 2: 2.5 };
+    g.fasce = { nomi: { 0: "F1", 2: "F3" }, piuBassa: null };
+    g.batteria = 62;
+    n.sentinella._laGiornataDaRaccontare = () => g;
+    n.sentinella.taccuino.laBatteria = (capacita) => ({
+      caricata: 6.8,
+      usata: 5.1,
+      massimo: 100,
+      massimoAlle: "14:40",
+      stasera: 62,
+      capacita,
+    });
+    n._ilTempoDiDomani = async () => ({
+      met: [[9, "sole"]],
+      soleFino: "15:00",
+      pioggia: false,
+      max: 21,
+      soleDa: 9,
+    });
+    const r = (await banco.chiedi({ type: LA_GIORNATA })).result;
+    assert.equal(r.giornata.euroCeduti, 0.38, "4,8 kWh a 0,08 €");
+    assert.deepEqual(r.fasce, {
+      nomi: { 0: "F1", 2: "F3" },
+      piuBassa: null,
+      prezzi: { F1: 0.175, F3: 0.135 },
+    });
+    assert.deepEqual(r.batteria, {
+      caricata: 6.8,
+      usata: 5.1,
+      massimo: 100,
+      massimoAlle: "14:40",
+      stasera: 62,
+      capacita: null,
+    });
+    assert.deepEqual(r.domani, {
+      met: [[9, "sole"]],
+      soleFino: "15:00",
+      pioggia: false,
+      max: 21,
+      consiglio: "Lavatrice entro le 13: gratis col sole.",
+    });
+    /* Senza prezzo di cessione il guadagno non si inventa. */
+    n._valori = () => ({});
+    const senza = (await banco.chiedi({ type: LA_GIORNATA })).result;
+    assert.equal(senza.giornata.euroCeduti, null);
+    assert.equal(senza.fasce.prezzi, null);
   } finally {
     banco.spegni();
   }

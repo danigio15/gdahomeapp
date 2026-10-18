@@ -51,6 +51,9 @@ import {
   inLitri,
   righeDeiContatori,
 } from "../plancia/src/core/contatori-di-casa.js";
+import { resolveRate } from "../plancia/src/core/energy-calculations.js";
+import { normalizzaLeFasce, nomeDellaFascia } from "../plancia/src/core/fasce-della-tariffa.js";
+import { accumuloDiCasa } from "../plancia/src/core/l-accumulo-di-casa.js";
 import { entitaDellaRicarica, letturaDellAuto } from "../plancia/src/core/ricarica-di-notte.js";
 import { wattsFromState } from "../plancia/src/core/signed-energy.js";
 import { codiceDellaRicarica } from "../plancia/src/core/stato-della-ricarica.js";
@@ -1125,6 +1128,87 @@ export function daSistemare({ batterie = [], spenti = 0, aggiornamenti = 0 } = {
       testo: spenti === 1 ? "1 dispositivo non connesso" : `${spenti} dispositivi non connessi`,
     });
   return fuori;
+}
+
+/* ─── I prezzi, la batteria di casa, il consiglio per domani ─────────────── */
+
+/**
+ * Il prezzo a cui si vende il kWh ceduto (`cd_prezzo_immissione`: un numero
+ * o l'entita' che lo dice), o `null` se non e' scritto: qui non si assume il
+ * prezzo di serie della plancia, perche' un guadagno inventato non si dice.
+ * `stati` come oggetto (`states[id].state`).
+ */
+export function prezzoDiCessione(valori = {}, stati = {}) {
+  return resolveRate(valori?.cd_prezzo_immissione, stati, null);
+}
+
+/**
+ * Il prezzo di ogni fascia in cui oggi si e' preso dalla rete, per le
+ * colonne «€/kWh» e «costo» della pagina: `{F1: 0.175, F3: 0.135}`. `null`
+ * se nessuna di quelle fasce ha un prezzo.
+ */
+export function prezziDelleFasce(fasce, perFascia = {}) {
+  const normali = normalizzaLeFasce(leggiJson(fasce) || {});
+  const prezzi = {};
+  for (const indice of Object.keys(perFascia || {})) {
+    const prezzo = normali.voci[Number(indice)]?.prezzo;
+    if (typeof prezzo === "number" && prezzo > 0) prezzi[nomeDellaFascia(indice)] = prezzo;
+  }
+  return Object.keys(prezzi).length ? prezzi : null;
+}
+
+/**
+ * Quanti kWh tiene la batteria di casa: la somma delle capacita' dei pacchi
+ * dell'accumulo (`cd_accumulo`), scritte o lette. `null` se non si sa.
+ */
+export function capacitaDellAccumulo(valori = {}, stati = {}) {
+  try {
+    const pacchi = accumuloDiCasa(stati, leggiJson(valori?.cd_accumulo) || {});
+    const capacita = pacchi.reduce((s, p) => s + (p.capacitaKwh > 0 ? p.capacitaKwh : 0), 0);
+    return capacita > 0 ? capacita : null;
+  } catch (_errore) {
+    return null;
+  }
+}
+
+const NOMI_DEGLI_ELETTRODOMESTICI = Object.freeze({
+  lavatrice: "lavatrice",
+  lavastoviglie: "lavastoviglie",
+  asciugatrice: "asciugatrice",
+  lavasciuga: "lavasciuga",
+});
+
+/**
+ * Il consiglio per domani, una frase in italiano: «Lavatrice e
+ * lavastoviglie entro le 13: gratis col sole. Auto: ricarica dalle 10.»
+ * Solo con il fotovoltaico, il sole previsto fino almeno a mezzogiorno
+ * (`domani.soleFino`), e qualcosa in casa a cui dirlo: gli elettrodomestici
+ * che ci sono (`elettrodomestici`, i generi) o l'auto. Altrimenti `null`.
+ */
+export function consiglioPerDomani({
+  domani,
+  conSole = false,
+  elettrodomestici = [],
+  conAuto = false,
+}) {
+  if (!conSole || !domani?.soleFino) return null;
+  const fine = Number(String(domani.soleFino).slice(0, 2));
+  if (!Number.isFinite(fine)) return null;
+  const pezzi = [];
+  const nomi = [
+    ...new Set(
+      (Array.isArray(elettrodomestici) ? elettrodomestici : [])
+        .map((g) => NOMI_DEGLI_ELETTRODOMESTICI[g])
+        .filter(Boolean),
+    ),
+  ].slice(0, 2);
+  if (nomi.length) {
+    const elenco = nomi.length === 1 ? nomi[0] : `${nomi[0]} e ${nomi[1]}`;
+    const entro = Math.max(11, fine - 2);
+    pezzi.push(`${elenco[0].toUpperCase()}${elenco.slice(1)} entro le ${entro}: gratis col sole.`);
+  }
+  if (conAuto) pezzi.push(`Auto: ricarica dalle ${Math.max(10, Number(domani.soleDa) || 10)}.`);
+  return pezzi.length ? pezzi.join(" ") : null;
 }
 
 const virgola = (n, cifre = 1) =>

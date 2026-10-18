@@ -43,7 +43,14 @@ import { randomBytes } from "node:crypto";
 
 import { Archivio } from "./archivio.js";
 import { CapireLaCasa } from "./capire-la-casa.js";
-import { CATEGORIE, EVENTI, Sentinella, URGENZE, categoriaDi } from "./sentinella.js";
+import {
+  CATEGORIE,
+  EVENTI,
+  Sentinella,
+  URGENZE,
+  categoriaDi,
+  genereDiElettrodomestico,
+} from "./sentinella.js";
 import { chiudiLaFoto, chiudiLaSpinta, CONTENUTO_MASSIMO, FOTO_MASSIMA } from "./spinta.js";
 import { vedeQualcosa } from "./plance.js";
 import { PROFILO_PRINCIPALE } from "./configurazione.js";
@@ -51,10 +58,14 @@ import { TaccuinoDellEnergia } from "./l-energia-di-casa.js";
 import {
   DiarioDellaCasa,
   batterieDiCasa,
+  capacitaDellAccumulo,
+  consiglioPerDomani,
   daSistemare,
   ilConfronto,
   ilMese,
   inBreve,
+  prezziDelleFasce,
+  prezzoDiCessione,
   senzaNomiDiPersone,
 } from "./la-giornata-di-casa.js";
 import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
@@ -1277,9 +1288,11 @@ export class Notifiche {
     const s = this.sentinella;
     const dati = s?._laGiornataDaRaccontare?.() || {};
     const g = dati.giornata;
+    const valori = this._valori();
+    const statiComeOggetto = s.statiComeOggetto();
     let casa = null;
     try {
-      casa = this.diario.laGiornata({ stati: s.stati, valori: this._valori() });
+      casa = this.diario.laGiornata({ stati: s.stati, valori });
     } catch (errore) {
       this.registro.attenzione?.(`il diario della casa: ${errore?.message || errore}`);
     }
@@ -1299,6 +1312,37 @@ export class Notifiche {
       domani = null;
     }
     const passati = s.taccuino?.giorniPassati?.() || [];
+    /* Domani: la massima, e il consiglio per gli elettrodomestici che ci sono
+     * e per l'auto, se c'e'. */
+    if (domani) {
+      const elettrodomestici = s
+        ._prese()
+        .map((id) =>
+          genereDiElettrodomestico(`${id} ${s.stati.get(id)?.attributes?.friendly_name || ""}`),
+        );
+      domani = {
+        met: domani.met,
+        soleFino: domani.soleFino,
+        pioggia: domani.pioggia,
+        max: domani.max ?? null,
+        consiglio: consiglioPerDomani({
+          domani,
+          conSole: Boolean(dati.conSole),
+          elettrodomestici,
+          conAuto: Boolean(sezioni.auto?.length),
+        }),
+      };
+    }
+    /* Quello che il sole ceduto ha fatto guadagnare, col prezzo di cessione
+     * scritto nella plancia; e il prezzo di ogni fascia usata. */
+    const cessione = prezzoDiCessione(valori, statiComeOggetto);
+    const prezzi = g ? prezziDelleFasce(valori.cd_fasce_kwh, g.perFascia) : null;
+    let batteria = null;
+    try {
+      batteria = s.taccuino?.laBatteria?.(capacitaDellAccumulo(valori, statiComeOggetto)) ?? null;
+    } catch (_errore) {
+      batteria = null;
+    }
     let sistemare = [];
     try {
       sistemare = daSistemare(s.cosaSistemare());
@@ -1313,6 +1357,10 @@ export class Notifiche {
             casa: g.casa,
             presi: g.presi,
             ceduti: g.ceduti,
+            euroCeduti:
+              cessione && typeof g.ceduti === "number"
+                ? Math.round(g.ceduti * cessione * 100) / 100
+                : null,
             usato: g.usato,
             quotaInCasa: g.quotaInCasa,
             euroRete: g.euroRete,
@@ -1330,8 +1378,11 @@ export class Notifiche {
       ieri: dati.ieri ?? null,
       media: dati.media ?? null,
       record: dati.record ?? null,
-      batteria: dati.batteria ?? null,
-      fasce: dati.fasce ?? null,
+      /* La batteria di casa per la pagina (`laBatteria`); il riepilogo usa
+       * ancora il numero della carica di stasera. */
+      batteria,
+      fasce:
+        dati.fasce || prezzi ? { ...(dati.fasce || { nomi: {}, piuBassa: null }), prezzi } : null,
       domani,
       /* La settimana: i totali dei sette giorni prima. */
       settimana: passati.slice(-7).map((x) => ({ d: x.d, pk: x.pk, casa: x.casa, eur: x.eur })),
@@ -1665,10 +1716,15 @@ export function cieloDiDomani(previsione, adesso) {
   domani.setDate(domani.getDate() + 1);
   const giorno = domani.toDateString();
   const perOra = new Map();
+  /* La temperatura di ogni ora di domani, per la massima. */
+  const gradi = [];
   for (const una of Array.isArray(previsione) ? previsione : []) {
     const quando = new Date(Date.parse(una?.datetime || ""));
     if (Number.isNaN(quando.getTime()) || quando.toDateString() !== giorno) continue;
     perOra.set(quando.getHours(), CIELI[una?.condition] || "nuvole");
+    const t = Number(una?.temperature);
+    if (una?.temperature !== null && una?.temperature !== undefined && Number.isFinite(t))
+      gradi.push(t);
   }
   if (!perOra.size) return null;
   const met = [9, 11, 13, 15, 17].filter((h) => perOra.has(h)).map((h) => [h, perOra.get(h)]);
@@ -1681,7 +1737,20 @@ export function cieloDiDomani(previsione, adesso) {
   }
   if (soleFino && Number(soleFino.slice(0, 2)) < 12) soleFino = null;
   const pioggia = [...perOra.entries()].some(([h, c]) => h >= 8 && h <= 20 && c === "pioggia");
-  return { met, soleFino, pioggia };
+  /* Da che ora c'e' il sole, per «Auto: ricarica dalle 10». */
+  let soleDa = null;
+  for (let h = 8; h <= 17 && soleFino; h += 1)
+    if (perOra.get(h) === "sole" || perOra.get(h) === "poco") {
+      soleDa = h;
+      break;
+    }
+  return {
+    met,
+    soleFino,
+    pioggia,
+    max: gradi.length ? Math.round(Math.max(...gradi) * 10) / 10 : null,
+    soleDa,
+  };
 }
 
 /* ─── Gli esempi ─────────────────────────────────────────────────────────── */
