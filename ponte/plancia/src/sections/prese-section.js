@@ -26,6 +26,7 @@ import { eEntitaDiPresa, normalizzaPrese, presePerStanza } from "../core/prese-m
 import { wattsFromState } from "../core/signed-energy.js";
 import { iconGlyphMarkup, openIconPicker } from "./icon-engine-section.js";
 import { pageCardMarkup, pageSummaryMarkup } from "./lights-page-section.js";
+import { EVENTO_IMMAGINE, bloccoImmagineMarkup } from "./riquadri-con-immagine-section.js";
 import {
   allStates,
   clean,
@@ -128,6 +129,9 @@ function vistaDi(presa, states = allStates()) {
     /* La scheda e' quella delle luci, e una luce un wattmetro non ce l'ha: il
      * campo esce solo di qui, e li' si disegna solo se c'e'. */
     consumo: consumoDellaPresa(presa, states),
+    /* «Riquadri con l'immagine»: la foto o il disegno della presa, che la
+     * card delle luci sa mostrare. */
+    immagine: presa.immagine || null,
   };
 }
 
@@ -241,7 +245,7 @@ function firma(gruppi, states) {
     .flatMap((gruppo) =>
       gruppo.prese.map(
         (presa) =>
-          `${gruppo.room}~${presa.entity}~${presa.name}~${clean(states?.[presa.entity]?.state)}~${siComanda(presa.entity)}~${consumoDellaPresa(presa, states)}`,
+          `${gruppo.room}~${presa.entity}~${presa.name}~${clean(states?.[presa.entity]?.state)}~${siComanda(presa.entity)}~${consumoDellaPresa(presa, states)}~${JSON.stringify(presa.immagine || null)}`,
       ),
     )
     .join("|");
@@ -348,6 +352,12 @@ export function renderPreseEditor(target) {
         "For sockets that must not be switched off: the fridge, the modem, the freezer. The row stays where it is, the button stops responding.",
       ),
     )}</small></span></label>
+    ${bloccoImmagineMarkup({
+      chiave: CHIAVE_DEL_BLOCCO,
+      immagine: state.immagine !== undefined ? state.immagine : corrente?.immagine,
+      nome: corrente?.name || "",
+      accento: "#f59e0b",
+    })}
     <output data-presa-error class="dm-presa-error"></output>
     <button type="button" class="ed-btn-add" data-presa-save>${corrente ? `💾 ${esc(t("Salva modifiche", "Save changes"))}` : `＋ ${esc(t("Aggiungi presa", "Add socket"))}`}</button>
     ${corrente ? `<button type="button" class="ed-btn-add" data-presa-cancel>${esc(t("Annulla modifica", "Cancel edit"))}</button>` : ""}
@@ -365,6 +375,15 @@ export function renderPreseEditor(target) {
     campoIcona.addEventListener("change", dipingiIcona);
   }
   return true;
+}
+
+/* Il blocco «Immagine» della presa che si sta scrivendo: quello che vi si
+ * sceglie resta qui finche' non si salva, come il resto del modulo.
+ * `undefined` vuol dire «non toccata»: resta quella che la presa ha gia'. */
+const CHIAVE_DEL_BLOCCO = "presa";
+function onImmagine(event) {
+  if (event.detail?.chiave !== CHIAVE_DEL_BLOCCO) return;
+  state.immagine = event.detail.immagine || null;
 }
 
 function leggiModulo() {
@@ -407,6 +426,7 @@ function onEditorClick(event) {
   if (event.target.closest("[data-presa-cancel]")) {
     event.preventDefault();
     state.modifica = null;
+    state.immagine = undefined;
     ridisegnaScheda();
     return;
   }
@@ -442,6 +462,10 @@ function onEditorClick(event) {
       room_id: modulo.room_id,
       power: modulo.power,
     };
+    if (state.immagine !== undefined) {
+      if (state.immagine) voce.immagine = state.immagine;
+      else delete voce.immagine;
+    }
     /* Se la riga cambia entita', il blocco non resta appeso alla vecchia:
      * cd_solo_lettura e' la guardia condivisa coi comandi di tutta la
      * plancia, e un marcatore orfano lasciava non comandabile un'entita'
@@ -460,6 +484,7 @@ function onEditorClick(event) {
      * continua ad essere comandata». */
     segnaSoloLettura(modulo.entity, modulo.bloccata);
     state.modifica = null;
+    state.immagine = undefined;
     ridisegnaScheda();
     schedule();
     return;
@@ -471,6 +496,7 @@ function onEditorClick(event) {
   if (event.target.closest("[data-presa-edit]")) {
     event.preventDefault();
     state.modifica = state.modifica === indice ? null : indice;
+    state.immagine = undefined;
     ridisegnaScheda();
     return;
   }
@@ -484,6 +510,7 @@ function onEditorClick(event) {
     const domanda = t(`Elimino "${nome}"?`, `Remove "${nome}"?`);
     if (root.confirm && !root.confirm(domanda)) return;
     state.modifica = null;
+    state.immagine = undefined;
     /* La presa se ne va col suo eventuale blocco: il marcatore orfano in
      * cd_solo_lettura teneva non comandabile un'entita' non piu' protetta. */
     const entitaVia = clean(prese[indice]?.entity);
@@ -525,6 +552,7 @@ export function installPreseSection() {
   insegnaLaVisibilita();
   ensurePreseTab();
   doc.addEventListener("click", onEditorClick);
+  doc.addEventListener(EVENTO_IMMAGINE, onImmagine);
   onEditorRedraw("__dmPreseEditor", ridisegnaScheda);
   for (const nome of ["render", "cdApplyNavVis"]) wrapFunction(nome, "__dmPreseSection", schedule);
   quandoSiCambiaPagina(schedule);

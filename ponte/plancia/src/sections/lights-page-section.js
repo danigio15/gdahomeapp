@@ -28,6 +28,7 @@ import {
   lightsSignature,
   readableInk,
 } from "../core/light-model.js";
+import { immaginePulita, riquadroConImmagineMarkup } from "../core/immagine-del-riquadro.js";
 import { configuredLightGroups } from "./lights-alerts-section.js";
 import { openLightControl } from "./lights-scene-section.js";
 import {
@@ -202,7 +203,39 @@ export function renderLightsHeroMarkup(views) {
   </section>`;
 }
 
+/* «Riquadri con l'immagine»: la card di una presa che ha una foto o un
+ * disegno (`immagine-del-riquadro.js`). La stessa card — gli stessi
+ * `data-dm-lucip…`, quindi la levetta, lo stato e il riallineamento restano
+ * quelli di sempre — col vestito del riquadro: l'immagine piena, il velo in
+ * fondo col nome e lo stato in bianco, la levetta in vetro in alto. Una
+ * presa che si guarda e basta la levetta non ce l'ha, e il tocco apre le
+ * informazioni come sulla card di sempre. */
+function cardConImmagineMarkup(view) {
+  const color = cardColor(view);
+  const bloccata = view.comandabile === false;
+  const levetta = bloccata
+    ? ""
+    : `<button type="button" class="dm-rq-int" data-dm-lucip-toggle aria-pressed="${view.on}" aria-label="${t("Interruttore di", "Switch for")} ${esc(view.name)}"><i></i></button>`;
+  const consumo = view.consumo
+    ? `<span class="dm-rq-val" data-kind="consumo">${esc(view.consumo)}</span>`
+    : "";
+  return riquadroConImmagineMarkup({
+    immagine: view.immagine,
+    nome: view.name,
+    stato: stateText(view),
+    acceso: false,
+    accento: coloreDelSegno(color),
+    destra: levetta,
+    tag: "article",
+    classi: `dm-lucip-rq ${view.on ? "is-on" : ""}`,
+    attributi: `data-dm-lucip="${esc(view.id)}" data-dm-lucip-available="${view.available}" data-dm-lucip-comandabile="${!bloccata}"${bloccata ? " data-dm-lucip-open" : ""}`,
+    extraStato: consumo,
+    attributiStato: "data-dm-lucip-state",
+  });
+}
+
 export function pageCardMarkup(view) {
+  if (immaginePulita(view?.immagine)) return cardConImmagineMarkup(view);
   const badge = capabilityBadge(view);
   const level = cardLevel(view);
   const color = cardColor(view);

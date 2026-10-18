@@ -29,6 +29,7 @@ import {
   obiettivoDaMuovere,
 } from "../core/i-due-obiettivi-del-clima.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { immaginePulita, riquadroConImmagineMarkup } from "../core/immagine-del-riquadro.js";
 import {
   ALARM_DISARM,
   ALARM_MODES,
@@ -1053,12 +1054,64 @@ const colorabile = (id) =>
     ["hs", "rgb", "rgbw", "rgbww", "xy"].includes(m),
   );
 
+/* ── i riquadri con l'immagine ──────────────────────────────────────────
+ *
+ * «Riquadri con l'immagine»: un posto puo' portare una foto di casa o un
+ * disegno da riquadro (`immagine-del-riquadro.js`) che lo riempie tutto. Il
+ * riquadro e' lo stesso per la luce, per un'entita' qualunque, per una scena
+ * e per un cancello: l'immagine, il velo scuro in fondo col nome e lo stato
+ * in bianco, e in alto a destra il comando in vetro — l'interruttore, o il
+ * tasto «Apri». Il tocco resta quello della card di sempre: gli stessi
+ * `data-mu-…`, quindi chi ascolta i tocchi non sa che e' cambiato il vestito.
+ * Il clima, la tapparella e i due tasti hanno troppi comandi per un'immagine,
+ * e restano come sono. */
+function cardConImmagine(c, i, { nome, stato: parola, acceso: on, accento, destra = "", dati = "", tag = "div" }) {
+  if (!immaginePulita(c?.immagine)) return "";
+  return riquadroConImmagineMarkup({
+    immagine: c.immagine,
+    nome,
+    stato: parola,
+    acceso: on,
+    accento,
+    destra,
+    tag,
+    classi: "mu-card mu-rq",
+    attributi: `data-mu-card="${i}" ${dati}`,
+  });
+}
+/* L'interruttore in vetro: un tasto vero nella card della luce, un segno
+ * dentro le tessere (che sono gia' un tasto, e un tasto dentro un tasto non
+ * si fa). */
+const interruttoreDiVetro = (id, on, etichetta) =>
+  `<button type="button" class="dm-rq-int ${on ? "on" : ""}" data-mu-fa="interruttore" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(etichetta)}"><i></i></button>`;
+const segnoDiVetro = (vetro) =>
+  vetro?.tipo === "int"
+    ? `<span class="dm-rq-int ${vetro.on ? "on" : ""}" aria-hidden="true"><i></i></span>`
+    : vetro?.tipo === "tasto"
+      ? `<span class="dm-rq-tasto" aria-hidden="true"><b></b>${esc(vetro.testo)}</span>`
+      : "";
+
 function cardLuce(c, i) {
   const id = c.entita;
   const on = acceso(id);
   const pct = luminosita(id);
   const dimmer = dimmerabile(id);
   const manca = !stato(id);
+  const conImmagine = cardConImmagine(c, i, {
+    nome: nomeDi(id, c.nome),
+    stato: manca
+      ? t("Non trovata", "Not found")
+      : on
+        ? dimmer
+          ? `${t("Accesa", "On")} · ${pct}%`
+          : t("Accesa", "On")
+        : t("Spenta", "Off"),
+    acceso: on,
+    accento: ACCENTI.luce,
+    destra: interruttoreDiVetro(id, on, nomeDi(id, c.nome)),
+    dati: `data-mu-entita="${esc(id)}"`,
+  });
+  if (conImmagine) return conImmagine;
   /* La luce nella forma della famiglia (`tessera`): il disco e lo stato in
    * alto, l'interruttore in alto a destra, il nome grande in fondo. La barra
    * della luminosita' viene sotto il nome, e se la casella e' bassa se ne va
@@ -1497,6 +1550,16 @@ function cardVarco(c, i) {
       ? ["giu", t("Chiudi", "Close")]
       : ["su", t("Apri", "Open")];
   const acc = "#22c55e";
+  /* Con l'immagine: il tasto in vetro al posto dell'interruttore. */
+  const conImmagine = cardConImmagine(c, i, {
+    nome: nomeDi(id, c.nome),
+    stato: parola,
+    acceso: aperto || muove,
+    accento: acc,
+    destra: `<button type="button" class="dm-rq-tasto" data-mu-fa="${fa}" data-mu-entita="${esc(id)}"><b aria-hidden="true"></b>${esc(tasto)}</button>`,
+    dati: `data-mu-entita="${esc(id)}"`,
+  });
+  if (conImmagine) return conImmagine;
   /* Nella forma della famiglia: il disegno e «Aperto»/«Chiuso» in alto, il
    * tasto in alto a destra dove gli altri hanno l'interruttore, il nome
    * grande in fondo. Il tasto largo in fondo, sotto il nome, su un pannello
@@ -1585,7 +1648,24 @@ function tessera({
   destra = "",
   conStato = false,
   statoAcceso = false,
+  immagine = null,
+  vetro = null,
 }) {
+  /* Con l'immagine la tessera e' un riquadro con l'immagine: lo stesso tasto,
+   * gli stessi dati per il tocco. Lo stato e la riga sotto vanno insieme sul
+   * velo, «Spento · ieri 07:10». */
+  if (immaginePulita(immagine))
+    return riquadroConImmagineMarkup({
+      immagine,
+      nome: titolo,
+      stato: [etichetta, sotto].map(clean).filter(Boolean).join(" · "),
+      acceso: Boolean(attiva),
+      accento,
+      destra: segnoDiVetro(vetro),
+      tag: "button",
+      classi: `mu-card mu-rq mu-tessera ${classi} ${grande ? "grande" : ""}`,
+      attributi: dati,
+    });
   /* Chi dice uno stato (acceso, aperto) lo scrive come le luci, col colore
    * quando e' acceso; una scena o un gesto hanno la loro etichetta grigia. */
   const parola =
@@ -1614,6 +1694,7 @@ function cardAzione(c, i, grande = false) {
     grande,
     dati: `data-mu-fa="azione" data-mu-azione="${esc(azione.name)}"`,
     dove: `az-${i}-${grande ? "g" : "p"}`,
+    immagine: c.immagine,
   });
 }
 
@@ -1669,6 +1750,8 @@ function cardEntita(c, i, grande = false) {
         : `<span class="mu-verbo" aria-hidden="true">${esc(verbo)}</span>`,
       dati: `data-mu-fa="entita" data-mu-entita="${esc(id)}"`,
       dove: `en-${i}-p`,
+      immagine: c.immagine,
+      vetro: interruttore ? { tipo: "int", on } : { tipo: "tasto", testo: verbo },
     });
   }
   return tessera({
@@ -1687,6 +1770,7 @@ function cardEntita(c, i, grande = false) {
       ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"`
       : `data-mu-entita="${esc(id)}" aria-disabled="true"`,
     dove: `en-${i}-${grande ? "g" : "p"}`,
+    immagine: c.immagine,
   });
 }
 
@@ -5491,6 +5575,12 @@ ${MURO}[data-tema="dark"]{${tokens("dark")}}
 ${MURO}[data-tema="light"]{${tokens("light")}}
 ${MURO} *{box-sizing:border-box}
 ${MURO} button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;text-align:inherit;-webkit-tap-highlight-color:transparent}
+/* I comandi in vetro dei riquadri con l'immagine (\`riquadri-con-immagine-section.js\`):
+   la regola qui sopra spoglia ogni tasto del pannello, e il vetro sopra la foto
+   e' proprio il fondo del tasto. */
+${MURO} .dm-rq button.dm-rq-int,${MURO} .dm-rq button.dm-rq-tasto{background:rgba(15,23,42,.42);color:#fff}
+${MURO} .dm-rq button.dm-rq-int.on{background:var(--acc)}
+${MURO} .dm-rq button.dm-rq-tasto{font-size:clamp(10.5px,5.6cqi,15px);font-weight:800}
 ${MURO} .mu-tela{position:relative;transform-origin:0 0}
 ${MURO} .mu-pagina{display:grid;grid-template-rows:auto auto 1fr;gap:16px;padding:22px;height:100%}
 ${MURO} .mu-pag-scene,${MURO} .mu-pag-ingresso,${MURO} .mu-pag-personale,${MURO} .mu-pag-luci{grid-template-rows:auto 1fr}

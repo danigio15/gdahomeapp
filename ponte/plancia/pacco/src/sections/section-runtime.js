@@ -44,6 +44,7 @@ import {
   ENERGY_SLOT_MAP,
   ESITI_ELENCO,
   ETICHETTE_TERMICHE,
+  EVENTO_IMMAGINE,
   EVENTO_VEICOLO_IN_SCHEDA,
   FASI_STUFA,
   FRONTALE,
@@ -125,6 +126,7 @@ import {
   batterieLette,
   bindLettoreToDevice,
   bindRobotToDevice,
+  bloccoImmagineMarkup,
   bozzaAperta,
   bricioleDellaSezione,
   bridgeRequest,
@@ -274,6 +276,7 @@ import {
   ilSempreEInVigore,
   ilTastoCentrale,
   ilValoreDelSempreAcceso,
+  immaginePulita,
   impiantiScelti,
   impiantiSolari,
   impiantoDellElettrodomestico,
@@ -296,6 +299,7 @@ import {
   installMinipcShowcaseSection,
   installPreseSection,
   installRicordatiDiSalvare,
+  installRiquadriConImmagine,
   installStyle,
   installTelecameraCapacita,
   installTelecameraSubito,
@@ -444,6 +448,7 @@ import {
   righeDellaStoria,
   righeDichiarate,
   rilevatoriDaImportare,
+  riquadroConImmagineMarkup,
   robotActions,
   robotCommand,
   robotFanCommand,
@@ -547,7 +552,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-WJ7J2YDK.js";
+} from "../../chunk-VEVDCCWP.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2456,6 +2461,7 @@ var SOURCE_INDEX = Object.freeze({
   "altre voci": "more items",
   "Altre zone": "Other areas",
   "ALTRE ZONE": "OTHER AREAS",
+  "Altri": "Others",
   "Altri animali": "Other pets",
   "Altri comandi": "Other commands",
   "Altri comandi del robot": "Other robot commands",
@@ -2910,9 +2916,11 @@ var SOURCE_INDEX = Object.freeze({
   "CARICA COMPLETA": "FULLY CHARGED",
   "Carica minima all'arrivo": "Minimum charge on arrival",
   "carica più bassa": "lowest charge",
+  "Carica una foto": "Upload a photo",
   "CARICAMENTO": "LOADING",
   "Caricamento dati Energia…": "Loading Energy data…",
   "Caricamento dati storici...": "Loading historical data...",
+  "Caricamento non riuscito": "Upload failed",
   "Caricamento non riuscito (${clean(error?.message)}).": "Upload failed (${clean(error?.message)}).",
   "Caricamento storico...": "Loading history...",
   "Caricamento...": "Loading...",
@@ -3008,6 +3016,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cerca in tutta la configurazione…": "Search the whole configuration…",
   "Cerca luce": "Search light",
   "Cerca nella configurazione": "Search the configuration",
+  "Cerca un disegno…": "Search a drawing…",
   "Cerca un dispositivo…": "Search a device…",
   "Cerca un'automazione…": "Search an automation…",
   "Cerca…": "Search…",
@@ -3451,6 +3460,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dal Recorder di Home Assistant di casa · niente esce dalla rete": "From the Home Assistant Recorder at home · nothing leaves the network",
   "Dal sole": "From the sun",
   "Dal sole:": "From the sun:",
+  "Dal telefono o dal computer · JPG, PNG, HEIC": "From the phone or the computer · JPG, PNG, HEIC",
   "dal vivo": "live",
   "Dal vivo": "Live",
   "Dall'integrazione": "From the integration",
@@ -3530,6 +3540,7 @@ var SOURCE_INDEX = Object.freeze({
   "Disco": "Disk",
   "Discreta": "Fair",
   "Disegno": "Drawing",
+  "Disegno (se non c'è immagine)": "Drawing (when there is no image)",
   "Disinserimento Antifurto": "Disarm Alarm",
   "Disinserimento…": "Disarming…",
   "Disinserisci": "Disarm",
@@ -3563,6 +3574,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dopodomani": "Day after tomorrow",
   "Dov'è e quanto ha fatto": "Where it is and how far it went",
   "Dove": "Where",
+  "Dove guardare": "Where to look",
   "Dove lo metto?": "Where does it go?",
   "Dove non c'è colore non piove.": "No colour means no rain.",
   "Dove piove adesso": "Where it is raining now",
@@ -3916,6 +3928,7 @@ var SOURCE_INDEX = Object.freeze({
   "flusso": "stream",
   "fonte": "source",
   "fonti": "sources",
+  "Forma": "Shape",
   "Forno": "Oven",
   "Forza (ignora pioggia)": "Force (ignore rain)",
   "Foto": "Photo",
@@ -4248,7 +4261,9 @@ var SOURCE_INDEX = Object.freeze({
   "Il wattmetro della presa, se ce l'ha: la card scrive quanto sta consumando accanto allo stato. Senza, la card resta com'è.": "The socket's power meter, if it has one: the card writes how much it is drawing next to its state. Without it the card stays as it is.",
   "Il wizard finisce qui: luci, entità, stanze e tutto il resto si configurano nell'editor — lo stesso strumento che userai per ogni modifica futura.": "The wizard ends here: lights, entities, rooms and everything else are configured in the editor — the same tool you will use for every future change.",
   "Illuminazione": "Lighting",
+  "Immagine": "Image",
   "Immagine personalizzata (URL)": "Custom image (URL)",
+  "Immagini dei Dispositivi": "Device images",
   "Immessa oggi": "Exported today",
   "Immissione": "Supply",
   "Immissione (in casa)": "Supply (into the house)",
@@ -4371,6 +4386,7 @@ var SOURCE_INDEX = Object.freeze({
   "Indice UV": "UV index",
   "Indietro": "Back",
   "Indifferenziato": "General waste",
+  "indirizzo non valido": "invalid address",
   "Indirizzo RTSP della telecamera": "Camera RTSP address",
   "Inferriata": "Grate",
   "Inferriata aperta": "Grate open",
@@ -4384,6 +4400,8 @@ var SOURCE_INDEX = Object.freeze({
   "Ingresso": "Entrance",
   "Iniziato ${quando}": "Started ${quando}",
   "Inizio": "Starts",
+  "Inquadratura · il disegno": "Framing · the drawing",
+  "Inquadratura · la tua foto": "Framing · your photo",
   "Insegnante": "Teacher",
   "Inserimento Casa": "Arm Home",
   "Inserimento Parziale": "Arm Partial",
@@ -4546,6 +4564,7 @@ var SOURCE_INDEX = Object.freeze({
   "la fonte si sceglie qui sopra": "the source is chosen above",
   "La forcella in cui l'acqua di casa deve stare: da 2 a 4 bar per quasi tutte. Fuori, la pagina si colora d'ambra.": "The range a home's water should stay in: 2 to 4 bar for almost all of them. Outside it, the page turns amber.",
   "La foto dell'auto": "The car photo",
+  "La foto si salva nell'add-on GdAHome, con le altre foto della plancia. Prima di partire il telefono la riduce a 1200 px; non passa da nessun server esterno.": "The photo is saved in the GdAHome add-on, with the dashboard's other photos. Before it leaves, the phone shrinks it to 1200 px; it goes through no outside server.",
   "la foto supera i 10 MB": "the photo exceeds 10 MB",
   "La lavatrice ha finito": "The washer is done",
   "la lettiera": "the litter box",
@@ -4673,6 +4692,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le frecce, OK, indietro, la schermata iniziale e i canali della TV, sotto la sua scheda e solo a TV accesa. Serve l'entità remote.* della TV: Samsung (integrazione Samsung Smart TV), Sony Bravia, Philips, Android TV e Google TV, Apple TV, Roku. Le LG webOS non ne hanno bisogno.": "The TV's arrows, OK, back, home screen and channels, under its card and only while the TV is on. It needs the TV's remote.* entity: Samsung (Samsung Smart TV integration), Sony Bravia, Philips, Android TV and Google TV, Apple TV, Roku. LG webOS TVs don't need it.",
   "Le gomme": "The tyres",
   "Le gomme e le letture": "The tyres and the readings",
+  "Le illustrazioni della plancia": "The dashboard's illustrations",
   "Le immagini dal vivo": "Live pictures",
   "Le integrazioni che portano una colonnina: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Scegli il dispositivo e le caselle della ricarica si riempiono da sole — potenza, energia, tensione, temperatura, il cavo.": "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.",
   "Le integrazioni di Home Assistant, ufficiali o da HACS, con i dispositivi che portano. Scegli il dispositivo: le caselle entrano da sole.": "Home Assistant integrations, official or from HACS, with the devices they bring. Pick the device: the fields come along by themselves.",
@@ -5017,6 +5037,7 @@ var SOURCE_INDEX = Object.freeze({
   "Movimento da": "Movement for",
   "Movimento rilevato": "Movement detected",
   "Muratore": "Builder",
+  "Muro 3:2": "Wall 3:2",
   "Musica": "Music",
   "Muta/attiva": "Mute/unmute",
   "mute": "silent",
@@ -5075,6 +5096,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessun dato registrato": "No recorded data",
   "Nessun dato storico trovato in questo periodo": "No history found in this period",
   "Nessun disagio": "No discomfort",
+  "Nessun disegno con questo nome.": "No drawing by that name.",
   "nessun dispositivo": "no appliance",
   "Nessun dispositivo con questo nome.": "No device by that name.",
   "Nessun dispositivo in questo carico. Aggiungili dall'editor Carichi.": "No appliance in this load yet. Add them from the Loads editor.",
@@ -6050,6 +6072,7 @@ var SOURCE_INDEX = Object.freeze({
   "Resistenza accesa": "Heating element on",
   "Resistenza spenta": "Heating element off",
   "Resta così": "Leave it",
+  "Resta in casa, nell'add-on": "It stays at home, in the add-on",
   "Resta qui": "Stay here",
   "Restano scritti qui perché si sappia che ci sono. Col campanello tornano nell'avviso, se sono ancora muti.": "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.",
   "restano senza piano: non vengono cancellate.": "are left with no floor: they are not deleted.",
@@ -6081,6 +6104,8 @@ var SOURCE_INDEX = Object.freeze({
   "Riconnessione…": "Reconnecting…",
   "Riconosce i BMS JK, JBD e Daly e le batterie Huawei LUNA2000 dai nomi delle loro entità e li raggruppa per prefisso. Li mette qui come righe, una volta sola: da lì in poi sono tuoi.": "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.",
   "Riconosciuto come": "Recognised as",
+  "Riduco e carico la foto…": "Shrinking and uploading the photo…",
+  "Riempie il riquadro al posto del disegno": "Fills the tile instead of the drawing",
   "Riempio io così": "This is what I will write",
   "Rientro": "I'm home",
   "Riepilogo:": "Summary:",
@@ -6127,6 +6152,7 @@ var SOURCE_INDEX = Object.freeze({
   "Riprova": "Try again",
   "Riprova a contattarli": "Try reaching them again",
   "Riprova da «Le mie».": "Try again from «Mine».",
+  "Riquadro": "Tile",
   "Riscaldamento": "Heating",
   "Riscaldamento · Raffrescamento · Zone": "Heating · Cooling · Zones",
   "Riscaldamento a pavimento": "Underfloor heating",
@@ -6281,6 +6307,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scegli cosa suonare": "Choose what to play",
   "Scegli cosa tenere in evidenza": "Choose what to highlight",
   "Scegli da Elettrodomestici": "Pick from Appliances",
+  "Scegli dai disegni": "Choose from the drawings",
   "Scegli dove cercare": "Choose where to look",
   "Scegli entità": "Choose entity",
   "Scegli i calendari dalla scheda Widget della configurazione: quelli che hai già in Home Assistant compaiono da soli con «Rileva».": "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».",
@@ -6453,6 +6480,7 @@ var SOURCE_INDEX = Object.freeze({
   "Senza entità questa riga non si vede da nessuna parte: né nella pagina Rifiuti, né nella tessera in Home. Scegline una, oppure — se il calendario non ce l'hai — scrivi il turno di casa qui sotto, che non vuole nessuna entità.": "Without an entity this row is nowhere to be seen: not on the Waste page, not on the Home tile. Pick one, or — if you have no calendar — write the two-week rota below, which needs no entity at all.",
   "Senza foto la scheda mostra il disegno del tipo.": "Without a photo the card shows the drawing of its type.",
   "Senza FV": "Without PV",
+  "Senza immagine": "No image",
   "Senza piano": "No floor",
   "Senza stanza questa finestra non ha un'umidità da guardare: sceglila qui sopra.": "Without a room this window has no humidity to watch: pick one above.",
   "Senza tasto Accendi/Spegni": "Without the On/Off button",
@@ -6542,6 +6570,7 @@ var SOURCE_INDEX = Object.freeze({
   "Si riempie da sola con tutte le luci della plancia di origine: una luce aggiunta là compare anche qui.": "It fills itself with every light of the source dashboard: a light added there shows up here too.",
   "Si riempie da sola con tutte le tapparelle della plancia di origine: su, stop e giù per ognuna.": "It fills itself with every blind of the source dashboard: up, stop and down for each one.",
   "Si salva in": "It is saved in",
+  "Si salva solo dove guardare e lo zoom: la foto resta intera, e ogni forma di riquadro la taglia da lì.": "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.",
   "Si segna dalla pagina con «Fatto oggi»; qui si corregge.": "It is recorded from the page with “Done today”; here you can correct it.",
   "si spegne da sola a": "switches itself off at",
   "Si spegne quando apri, riparte quando chiudi": "Turns off when you open, back on when you close",
@@ -7024,6 +7053,7 @@ var SOURCE_INDEX = Object.freeze({
   "Togli il gruppo": "Remove the group",
   "Togli il preset": "Remove the preset",
   "Togli il ritratto (torna a emoji o iniziali)": "Remove the portrait (back to emoji or initials)",
+  "Togli immagine": "Remove image",
   "Togli l'entità da questo campo": "Remove the entity from this field",
   "Togli l'orario": "Remove the time",
   "Togli la foto": "Remove the photo",
@@ -7040,6 +7070,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tolti dall'avviso": "Removed from the warning",
   "Tondi": "Round",
   "Torna alla base": "Returning to dock",
+  "Torna il disegno di sempre.": "The usual drawing comes back.",
   "Torna sotto": "It drops below",
   "Tostapane": "Toaster",
   "Totale": "Total",
@@ -7049,6 +7080,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tramonto": "Sunset",
   "Tranquillo": "Calm",
   "Trascina per dire quando serve il caldo": "Drag to say when heating is needed",
+  "Trascina per spostare": "Drag to move",
   "Trascina per spostare · rotella o pizzico per ingrandire": "Drag to move · wheel or pinch to zoom",
   "trascina sulle barre": "drag on the bars",
   "Tre fasce": "Three bands",
@@ -7198,6 +7230,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un contatto porta-finestra lo dichiara Home Assistant da sé e compare qui senza configurare niente. Se il tuo non viene trovato, aggiungilo dalla scheda Varchi della configurazione.": "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.",
   "Un contatto sulla cassetta: quando il postino apre lo sportello la pastiglia della posta compare, si muove per farsi notare e resta lì finché qualcuno non la tocca. La posta arriva mentre non si guarda, quindi non basta un lampo di due secondi.": "A contact on the mailbox: when the postman opens the flap the mail pill appears, moves to be noticed and stays there until somebody taps it. Mail arrives while nobody is looking, so a two-second flash is no use.",
   "Un deumidificatore non è un termostato: scegli la sua entità humidifier e la pagina del Clima gli dà una card sua, con l'umidità di adesso, l'obiettivo, le modalità, la ventola e l'avviso del serbatoio pieno. Le altre caselle si riempiono da sole quando salvi.": "A dehumidifier is not a thermostat: pick its humidifier entity and the Climate page gives it a card of its own, with the current humidity, the target, the modes, the fan and the tank-full warning. The other fields fill themselves in when you save.",
+  "Un dispositivo della Home può avere una foto o un disegno che riempie il suo riquadro. Nome e stato restano sul velo scuro in fondo, in bianco.": "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.",
   "un dispositivo fa qualcosa": "a device does something",
   "un elettrodomestico finisce": "an appliance finishes",
   "un evento di Home Assistant": "a Home Assistant event",
@@ -96254,10 +96287,12 @@ function comandoPulito(input) {
   const tipo = scelta(input.tipo, TIPI_DI_COMANDO, "");
   if (!tipo) return null;
   if (tipo === "vuoto") return { ...POSTO_VUOTO };
+  const immagine2 = immaginePulita(input.immagine);
   const aspetto = {
     nome: testo2(input.nome, 40),
     sotto: testo2(input.sotto, 80),
-    disegno: testo2(input.disegno, 32)
+    disegno: testo2(input.disegno, 32),
+    ...immagine2 ? { immagine: immagine2 } : {}
   };
   if (tipo === "azione") {
     const azione = testo2(input.azione, 80);
@@ -98352,12 +98387,37 @@ var dimmerabile = (id) => {
 var colorabile = (id) => (attributi(id).supported_color_modes || []).some(
   (m) => ["hs", "rgb", "rgbw", "rgbww", "xy"].includes(m)
 );
+function cardConImmagine(c, i, { nome, stato: parola, acceso: on, accento, destra = "", dati = "", tag = "div" }) {
+  if (!immaginePulita(c?.immagine)) return "";
+  return riquadroConImmagineMarkup({
+    immagine: c.immagine,
+    nome,
+    stato: parola,
+    acceso: on,
+    accento,
+    destra,
+    tag,
+    classi: "mu-card mu-rq",
+    attributi: `data-mu-card="${i}" ${dati}`
+  });
+}
+var interruttoreDiVetro = (id, on, etichetta3) => `<button type="button" class="dm-rq-int ${on ? "on" : ""}" data-mu-fa="interruttore" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(etichetta3)}"><i></i></button>`;
+var segnoDiVetro = (vetro) => vetro?.tipo === "int" ? `<span class="dm-rq-int ${vetro.on ? "on" : ""}" aria-hidden="true"><i></i></span>` : vetro?.tipo === "tasto" ? `<span class="dm-rq-tasto" aria-hidden="true"><b></b>${esc(vetro.testo)}</span>` : "";
 function cardLuce(c, i) {
   const id = c.entita;
   const on = acceso4(id);
   const pct4 = luminosita(id);
   const dimmer = dimmerabile(id);
   const manca = !stato2(id);
+  const conImmagine = cardConImmagine(c, i, {
+    nome: nomeDi8(id, c.nome),
+    stato: manca ? t("Non trovata", "Not found") : on ? dimmer ? `${t("Accesa", "On")} · ${pct4}%` : t("Accesa", "On") : t("Spenta", "Off"),
+    acceso: on,
+    accento: ACCENTI.luce,
+    destra: interruttoreDiVetro(id, on, nomeDi8(id, c.nome)),
+    dati: `data-mu-entita="${esc(id)}"`
+  });
+  if (conImmagine) return conImmagine;
   return `<div class="mu-carta mu-card mu-fam mu-luce ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
     <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span><span class="mu-stato ${on ? "" : "spento"}">${esc(manca ? t("Non trovata", "Not found") : on ? dimmer ? `${t("Accesa", "On")} · ${pct4}%` : t("Accesa", "On") : t("Spenta", "Off"))}</span>
       <button type="button" class="mu-inter ${on ? "on" : ""}" data-mu-fa="interruttore" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(nomeDi8(id, c.nome))}"><i></i></button></div>
@@ -98613,6 +98673,15 @@ function cardVarco(c, i) {
   }[s] || s || "—";
   const [fa, tasto2] = muove ? ["ferma", t("Ferma", "Stop")] : aperto2 ? ["giu", t("Chiudi", "Close")] : ["su", t("Apri", "Open")];
   const acc = "#22c55e";
+  const conImmagine = cardConImmagine(c, i, {
+    nome: nomeDi8(id, c.nome),
+    stato: parola,
+    acceso: aperto2 || muove,
+    accento: acc,
+    destra: `<button type="button" class="dm-rq-tasto" data-mu-fa="${fa}" data-mu-entita="${esc(id)}"><b aria-hidden="true"></b>${esc(tasto2)}</button>`,
+    dati: `data-mu-entita="${esc(id)}"`
+  });
+  if (conImmagine) return conImmagine;
   return `<div class="mu-carta mu-card mu-fam mu-varco ${aperto2 || muove ? "mu-accesa" : ""}" style="--acc:${acc}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
     <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegnoDelCatalogo(DISEGNO_DEL_VARCO[attributi(id).device_class], 32)}</span><span class="mu-stato ${aperto2 || muove ? "" : "spento"}">${esc(parola)}</span>
       <button type="button" class="mu-btn ${muove ? "" : "pieno"} mu-varco-tasto" style="--acc:${acc}" data-mu-fa="${fa}" data-mu-entita="${esc(id)}">${esc(tasto2)}</button></div>
@@ -98652,8 +98721,22 @@ function tessera({
   classi = "",
   destra = "",
   conStato = false,
-  statoAcceso = false
+  statoAcceso = false,
+  immagine: immagine2 = null,
+  vetro = null
 }) {
+  if (immaginePulita(immagine2))
+    return riquadroConImmagineMarkup({
+      immagine: immagine2,
+      nome: titolo3,
+      stato: [etichetta3, sotto].map(clean).filter(Boolean).join(" · "),
+      acceso: Boolean(attiva2),
+      accento,
+      destra: segnoDiVetro(vetro),
+      tag: "button",
+      classi: `mu-card mu-rq mu-tessera ${classi} ${grande ? "grande" : ""}`,
+      attributi: dati
+    });
   const parola = destra || conStato ? `<span class="mu-stato ${statoAcceso ? "" : "spento"}">${esc(etichetta3)}</span>` : `<span class="mu-et">${esc(etichetta3)}</span>`;
   const pastiglia3 = !destra && !conStato && attiva2 ? `<span class="mu-pasti">${esc(t("attiva", "active"))}</span>` : "";
   return `<button type="button" class="mu-carta mu-card mu-fam mu-tessera ${classi} ${attiva2 ? "mu-accesa" : ""} ${grande ? "grande" : ""}" style="--acc:${accento}" ${dati}>
@@ -98672,7 +98755,8 @@ function cardAzione(c, i, grande = false) {
     attiva: state113.attiva === azione.name,
     grande,
     dati: `data-mu-fa="azione" data-mu-azione="${esc(azione.name)}"`,
-    dove: `az-${i}-${grande ? "g" : "p"}`
+    dove: `az-${i}-${grande ? "g" : "p"}`,
+    immagine: c.immagine
   });
 }
 var INTERRUTTORI2 = Object.freeze(["switch", "input_boolean", "fan", "siren", "humidifier"]);
@@ -98701,7 +98785,9 @@ function cardEntita(c, i, grande = false) {
       classi: "mu-comando",
       destra: interruttore3 ? `<span class="mu-inter ${on ? "on" : ""}" aria-hidden="true"><i></i></span>` : `<span class="mu-verbo" aria-hidden="true">${esc(verbo)}</span>`,
       dati: `data-mu-fa="entita" data-mu-entita="${esc(id)}"`,
-      dove: `en-${i}-p`
+      dove: `en-${i}-p`,
+      immagine: c.immagine,
+      vetro: interruttore3 ? { tipo: "int", on } : { tipo: "tasto", testo: verbo }
     });
   }
   return tessera({
@@ -98717,7 +98803,8 @@ function cardEntita(c, i, grande = false) {
     statoAcceso: on,
     grande,
     dati: servizio2 ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`,
-    dove: `en-${i}-${grande ? "g" : "p"}`
+    dove: `en-${i}-${grande ? "g" : "p"}`,
+    immagine: c.immagine
   });
 }
 function cardDato(c, i, s) {
@@ -101496,6 +101583,12 @@ ${MURO}[data-tema="dark"]{${tokens("dark")}}
 ${MURO}[data-tema="light"]{${tokens("light")}}
 ${MURO} *{box-sizing:border-box}
 ${MURO} button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;text-align:inherit;-webkit-tap-highlight-color:transparent}
+/* I comandi in vetro dei riquadri con l'immagine (\`riquadri-con-immagine-section.js\`):
+   la regola qui sopra spoglia ogni tasto del pannello, e il vetro sopra la foto
+   e' proprio il fondo del tasto. */
+${MURO} .dm-rq button.dm-rq-int,${MURO} .dm-rq button.dm-rq-tasto{background:rgba(15,23,42,.42);color:#fff}
+${MURO} .dm-rq button.dm-rq-int.on{background:var(--acc)}
+${MURO} .dm-rq button.dm-rq-tasto{font-size:clamp(10.5px,5.6cqi,15px);font-weight:800}
 ${MURO} .mu-tela{position:relative;transform-origin:0 0}
 ${MURO} .mu-pagina{display:grid;grid-template-rows:auto auto 1fr;gap:16px;padding:22px;height:100%}
 ${MURO} .mu-pag-scene,${MURO} .mu-pag-ingresso,${MURO} .mu-pag-personale,${MURO} .mu-pag-luci{grid-template-rows:auto 1fr}
@@ -102722,6 +102815,21 @@ function dueTastiMarkup(via, c) {
   )}</small>
       <label class="mu-ed-voce"><span>${esc(t("Icona", "Icon"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI2(), null)}</label>`;
 }
+function siVedeLImmagine(c) {
+  if (!c || c.tipo === "vuoto" || c.tipo === "duetasti" || c.tipo === "clima") return false;
+  if (c.tipo === "tapparella") return eUnVarco2(allStates()?.[c.entita]?.attributes || {});
+  return true;
+}
+var ACCENTO_DEL_POSTO = Object.freeze({ luce: "#f59e0b", azione: "#8b5cf6", tapparella: "#22c55e" });
+function immagineDelPosto(via, c) {
+  if (!siVedeLImmagine(c)) return "";
+  return bloccoImmagineMarkup({
+    chiave: via,
+    immagine: c.immagine,
+    nome: clean(c.nome) || c.azione || nomeDi9(c.entita),
+    accento: ACCENTO_DEL_POSTO[c.tipo] || "#f59e0b"
+  });
+}
 function postoMarkup(i, lista7, k, c, posti = 6) {
   const via = `pagine.${i}.${lista7}.${k}`;
   const inCorso2 = lista7 === "comandi" ? dueTastiInCorso()[via] : null;
@@ -102740,7 +102848,8 @@ function postoMarkup(i, lista7, k, c, posti = 6) {
       ${azioni2.length ? `<label class="mu-ed-voce"><span>${esc(t("oppure un'azione", "or an action"))}</span>${tendina2(`${via}.azione`, c?.azione || "", azioni2, t("Nessuna", "None"))}</label>` : ""}
       ${pieno ? `<label class="mu-ed-voce"><span>${esc(t("Nome sul tablet", "Name on the tablet"))}</span>${campo3(`${via}.nome`, c.nome || "", c.azione || nomeDi9(c.entita))}</label>
       <label class="mu-ed-voce"><span>${esc(t("Riga sotto", "Line below"))}</span>${campo3(`${via}.sotto`, c.sotto || "", t("Facoltativa", "Optional"))}</label>
-      <label class="mu-ed-voce"><span>${esc(t("Disegno", "Drawing"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI2(), null)}</label>` : ""}`}
+      <label class="mu-ed-voce"><span>${esc(c.immagine ? t("Disegno (se non c'è immagine)", "Drawing (when there is no image)") : t("Disegno", "Drawing"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI2(), null)}</label>
+      ${immagineDelPosto(via, c)}` : ""}`}
     </div></div>`;
 }
 function postiMarkup(i, lista7, posti, quanti2 = 6) {
@@ -103608,7 +103717,8 @@ function metti3(via, valore3) {
         const aspettoDiPrima = {
           nome: prima.nome || "",
           sotto: prima.sotto || "",
-          disegno: prima.disegno || ""
+          disegno: prima.disegno || "",
+          ...prima.immagine ? { immagine: prima.immagine } : {}
         };
         if (valore3 === "duetasti") {
           const bozzaDelPosto = {
@@ -103651,7 +103761,10 @@ function metti3(via, valore3) {
       const aspetto = {
         nome: cambiato ? "" : ora5.nome || "",
         sotto: ora5.sotto || "",
-        disegno: ora5.disegno || ""
+        disegno: ora5.disegno || "",
+        /* L'immagine e' del posto, non dell'entita': chi cambia la luce del
+         * terrazzo con un'altra tiene la foto del terrazzo. */
+        ...ora5.immagine ? { immagine: ora5.immagine } : {}
       };
       if (campo5 === "entita")
         posti[k] = scritto3 ? {
@@ -103860,6 +103973,18 @@ function onChange7(event) {
   else dopoUnaScritta();
 }
 var SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin|Comando|\.comando|\.dispositivo|\.min|\.max)$/;
+function onImmagine(event) {
+  const body = doc?.getElementById("ed-body");
+  if (!body || schedaAttiva6() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
+  const via = String(event.detail?.chiave || "");
+  if (!/^pagine\.\d+\.(comandi|scene)\.\d+$/.test(via)) return;
+  metti3(`${via}.immagine`, event.detail?.immagine || null);
+  dopoUnaScritta();
+  const voce3 = body.querySelector(`[data-mu-ed-campo="${via}.disegno"]`)?.closest(".mu-ed-voce");
+  const scritta = voce3?.querySelector(":scope > span");
+  if (scritta)
+    scritta.textContent = event.detail?.immagine ? t("Disegno (se non c'è immagine)", "Drawing (when there is no image)") : t("Disegno", "Drawing");
+}
 function dopoUnaScritta() {
   rinfrescaLAnteprima();
   const avviso2 = doc?.querySelector?.("#ed-body .mu-ed-sporca");
@@ -104035,6 +104160,7 @@ function installPlanciaAMuroEditor() {
   stili2();
   doc.addEventListener("click", onClick26);
   doc.addEventListener("change", onChange7);
+  doc.addEventListener(EVENTO_IMMAGINE, onImmagine);
   doc.addEventListener("input", (event) => {
     if (event.target?.dataset?.muEdCampo?.endsWith(".ingresso.volume")) {
       const scritta = event.target.parentElement?.querySelector?.("[data-mu-ed-volume]");
@@ -139549,6 +139675,7 @@ function installSectionRuntime() {
     senzaCadere(installRobotSection);
     senzaCadere(installGdanavSection);
     senzaCadere(installPreseSection);
+    senzaCadere(installRiquadriConImmagine);
     senzaCadere(installRobotEditorSection);
     senzaCadere(installAutoIntegrazione);
     senzaCadere(installEnergiaCerchiStorico);

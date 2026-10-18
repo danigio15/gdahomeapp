@@ -10,7 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
@@ -1363,6 +1363,60 @@ test("le foto si caricano e si elencano dal ponte, e la pagina le riceve come fi
   assert.equal(servita.result.stato, 200);
   assert.equal(servita.result.tipo, "image/png");
   assert.deepEqual(Buffer.from(servita.result.corpo, "base64"), png);
+  assert.equal(chieste.length, 0);
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("le foto dei riquadri vanno in riquadri/, e una cartella fuori elenco e' un no", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-riquadri-"));
+  const { scarica, chieste } = scaricaFinto();
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    scarica,
+    foto: new Foto({ cartella: join(cartella, "www") }),
+  });
+  const webp = Buffer.concat([
+    Buffer.from("RIFF"),
+    Buffer.alloc(4),
+    Buffer.from("WEBP"),
+    Buffer.alloc(8),
+  ]);
+  const messa = await con.rispondi({
+    id: 1,
+    type: "dashboardmodern/www/upload",
+    filename: "terrazza.webp",
+    cartella: "riquadri",
+    data: webp.toString("base64"),
+  });
+  assert.equal(messa.success, true);
+  assert.equal(messa.result.path, `${BASE_DELLE_FOTO}/dashboardmodern/riquadri/terrazza.webp`);
+  const servita = await con.rispondi({ id: 2, type: TIPO, percorso: messa.result.path });
+  assert.equal(servita.result.stato, 200);
+  assert.equal(servita.result.tipo, "image/webp");
+
+  let id = 10;
+  for (const cattiva of ["../", "..", "riquadri/../..", "/etc", "x", 7, null, ["riquadri"], {}]) {
+    const no = await con.rispondi({
+      id: (id += 1),
+      type: "dashboardmodern/www/upload",
+      filename: "x.webp",
+      cartella: cattiva,
+      data: webp.toString("base64"),
+    });
+    /* `null` vale come «nessuna cartella», come se non ci fosse. */
+    if (cattiva === null) {
+      assert.equal(no.success, true);
+      continue;
+    }
+    assert.equal(no.success, false, String(cattiva));
+    assert.equal(no.error.code, "invalid_format", String(cattiva));
+  }
+  assert.deepEqual(
+    readdirSync(join(cartella, "www", "dashboardmodern")).sort(),
+    ["riquadri", "x.webp"],
+    "niente e' finito fuori dalle due cartelle",
+  );
   assert.equal(chieste.length, 0);
   rmSync(cartella, { recursive: true, force: true });
 });

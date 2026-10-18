@@ -71,7 +71,7 @@ import {
   STATO,
 } from "./configurazione.js";
 import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
-import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
+import { BASE_DELLE_FOTO, BASE_DI_CASA, CARTELLE_DEI_CARICAMENTI, FOTO_MASSIMA } from "./foto.js";
 import { BASE as BASE_DELLA_PLANCIA } from "./plancia.js";
 import { ChatHaDettoNo } from "./chat.js";
 import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
@@ -2296,13 +2296,19 @@ export class Commissioni {
       return no(id, "invalid_format", "manca il nome del file");
     if (typeof detto.data !== "string" || !detto.data || detto.data.length > FOTO_MASSIMA * 2)
       return no(id, "invalid_format", "manca la foto");
+    /* La cartella e' facoltativa e si sceglie da un elenco (`foto.js`,
+     * `CARTELLE_DEI_CARICAMENTI`): un nome fuori elenco e' un no detto
+     * chiaro, non una foto messa da un'altra parte. */
+    const cartella = detto.cartella ?? "";
+    if (cartella !== "" && !CARTELLE_DEI_CARICAMENTI.includes(cartella))
+      return no(id, "invalid_format", "questa cartella non c'e' fra quelle delle foto");
     let byte;
     try {
       byte = Buffer.from(detto.data, "base64");
     } catch (_errore) {
       return no(id, "invalid_data", "La foto non e' leggibile.");
     }
-    const messa = this.foto.carica(detto.filename, byte);
+    const messa = this.foto.carica(detto.filename, byte, { cartella });
     if (!messa)
       return no(id, "invalid_upload", "Il file non e' un'immagine, o e' piu' grande di 10 MB.");
     return si(id, messa);

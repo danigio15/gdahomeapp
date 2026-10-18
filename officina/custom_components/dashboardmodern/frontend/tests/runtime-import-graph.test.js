@@ -1562,8 +1562,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/ultime-rilevazioni.js` — tratti, aperture, conti, ore e quiete della
   // notte — e `sections/ultime-rilevazioni-section.js`, il foglio che si apre
   // dalle carte dei Varchi, della Presenza e delle loro finestre in Home.
+  // 470 coi riquadri con l'immagine: il nucleo puro
+  // `core/immagine-del-riquadro.js` (cosa si salva, come si posa la foto), il
+  // catalogo `core/disegni-da-riquadro.js` dei disegni che riempiono un
+  // riquadro, e `sections/riquadri-con-immagine-section.js` — il vestito del
+  // riquadro, il blocco «Immagine» degli editor e i Dispositivi della Home.
   assert.ok(
-    relative.length <= 467,
+    relative.length <= 470,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
