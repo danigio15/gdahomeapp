@@ -27,6 +27,13 @@ import {
 } from "./antifurto-su-misura.js";
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
+import {
+  fraseDelleProssimeOre,
+  misureDiAdesso,
+  prossimeOre,
+  prossimiGiorni,
+  spicchioDelVento,
+} from "./la-pagina-meteo.js";
 import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { immaginePulita } from "./immagine-del-riquadro.js";
 import { lettoriConfigurati } from "./media-player.js";
@@ -51,7 +58,11 @@ export const CHIAVE_MURO = "cd_muro";
  * - `energia`: quanto consuma la casa adesso, quanto fa il solare, la rete e
  *   la batteria;
  * - `musica`: il lettore che suona, grande, con la copertina, i tasti, il
- *   volume e le sorgenti; accanto gli altri lettori della casa. */
+ *   volume e le sorgenti; accanto gli altri lettori della casa;
+ * - `meteo`: «la sezione meteo della plancia su un tablet grande e' bella,
+ *   la vorrei a muro come pagina intera». Com'e' adesso in grande, ora per
+ *   ora e i prossimi giorni, dallo stesso meteo che il tablet mostra gia' in
+ *   alto e sul riposo: niente da configurare in piu'. */
 export const MODELLI = Object.freeze([
   "stanza",
   "scene",
@@ -64,6 +75,7 @@ export const MODELLI = Object.freeze([
   "telecamere",
   "energia",
   "musica",
+  "meteo",
   /* «Cerca di creare una cosa del genere per wall»: le pagine di una regia —
    * un pannello da sala riunioni, da auditorium, da chiesa — dove a muro non
    * si accendono le luci ma si alzano i microfoni, si gira la telecamera e si
@@ -1948,6 +1960,67 @@ export function temperaturaDelMuro(muro, fonte = {}) {
   const stanza = nome ? elenco(fonte?.stanze).find((s) => s?.name === nome) || null : null;
   const sua = entita(stanza?.temp);
   return { sonda: sua, fuori: Boolean(sua) && fuori };
+}
+
+/* ── la pagina Meteo ─────────────────────────────────────────────────────── */
+
+/**
+ * Quale meteo guarda il tablet: quello scelto per il muro («Altre
+ * impostazioni › Meteo»), poi quello della config della plancia di origine,
+ * poi `weather.home` come fa la plancia, e solo alla fine il primo che Home
+ * Assistant ha. Vuoto se non ce n'e' nessuno. E' lo stesso in alto accanto
+ * all'ora, sul riposo e nella pagina Meteo: tre posti che dicessero tre tempi
+ * diversi non direbbero niente.
+ */
+export function entitaDelMeteoDelMuro(muro, fonte = {}, stati = {}) {
+  const tutti = stati && typeof stati === "object" ? stati : {};
+  const fisso = entita(muro?.meteo) || entita(fonte?.meteo);
+  if (fisso && tutti[fisso]) return fisso;
+  if (tutti["weather.home"]) return "weather.home";
+  return Object.keys(tutti).find((k) => k.startsWith("weather.")) || "";
+}
+
+/** Quante ore e quanti giorni mostra la pagina Meteo del tablet. */
+export const ORE_DEL_METEO = 12;
+export const GIORNI_DEL_METEO = 7;
+
+/**
+ * Cosa dice la pagina Meteo: le misure di adesso dall'entita' weather, le
+ * prossime ore e i prossimi giorni dalle previsioni (`weather.get_forecasts`,
+ * le stesse che chiede la pagina Meteo della plancia). Le letture sono quelle
+ * di `la-pagina-meteo.js`: due pagine meteo che arrotondassero diverso
+ * direbbero due tempi. `null` senza entita'.
+ */
+export function meteoDelMuro(
+  statoMeteo,
+  {
+    orarie = [],
+    giornaliere = [],
+    adesso = Date.now(),
+    ore = ORE_DEL_METEO,
+    giorni = GIORNI_DEL_METEO,
+  } = {},
+) {
+  if (!statoMeteo || typeof statoMeteo !== "object") return null;
+  const attributi = statoMeteo.attributes || {};
+  const unita = testo(attributi.precipitation_unit, 8) || "mm";
+  const misure = misureDiAdesso({ meteo: statoMeteo });
+  const condizione = testo(statoMeteo.state, 32).toLowerCase();
+  const fila = prossimeOre(orarie, { adesso, ore, unita }).filter((voce) =>
+    Number.isFinite(voce.temperatura),
+  );
+  const elencoDeiGiorni = prossimiGiorni(giornaliere, { adesso, giorni, unita });
+  const oggi = elencoDeiGiorni.find((voce) => voce.oggi);
+  return {
+    condizione,
+    disponibile: !["", "unavailable", "unknown"].includes(condizione),
+    misure,
+    spicchio: misure.direzione ? spicchioDelVento(misure.direzione.valore) : null,
+    ore: fila,
+    giorni: elencoDeiGiorni,
+    oggi: oggi ? { alta: oggi.temperatura, bassa: oggi.bassa } : null,
+    frase: fraseDelleProssimeOre(orarie, { adesso, ore: 24, unita }),
+  };
 }
 
 /** I comandi che la pagina mostra adesso: quelli scelti, o quelli proposti.

@@ -53,6 +53,8 @@ import {
   OMBRA_DELLA_CARTA,
 } from "../core/le-vesti-della-carta.js";
 import { climaScalda } from "../core/device-model.js";
+import { segnoDelTempo } from "../core/la-card-del-meteo.js";
+import { parolaDellaCondizione, previsioniDelMeteo } from "./meteo-section.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { IN_VISTA_KEY } from "../core/state-event-gate.js";
 import {
@@ -99,6 +101,8 @@ import {
   ambientiDellaFonte,
   altreMisureDellaPagina,
   energiaDellaPagina,
+  entitaDelMeteoDelMuro,
+  meteoDelMuro,
   potenzaConIlSegno,
   grigliaPer,
   fonteDaiValori,
@@ -587,6 +591,7 @@ const MODELLI_SCRITTI = () => ({
   telecamere: t("Telecamere", "Cameras"),
   energia: t("Energia", "Energy"),
   musica: t("Musica", "Music"),
+  meteo: t("Meteo", "Weather"),
   mixer: t("Audio", "Audio"),
   telecamera: t("Telecamera", "Camera"),
   comandi: t("Comandi", "Controls"),
@@ -603,6 +608,7 @@ const SOTTO = () => ({
   telecamere: t("Le immagini dal vivo", "Live pictures"),
   energia: t("Adesso, in casa", "Right now, at home"),
   musica: t("Cosa suona in casa", "What's playing at home"),
+  meteo: t("Adesso · Ora per ora · Prossimi giorni", "Now · Hour by hour · Next days"),
   mixer: t("Livelli e muto di ogni canale", "Level and mute for every channel"),
   telecamera: t("Movimento · Zoom · Preset", "Pan · Zoom · Presets"),
   comandi: t("Avvio e spegnimento", "Start and shutdown"),
@@ -619,6 +625,7 @@ const DISEGNO_DEL_MODELLO = {
   telecamere: "telecamere",
   energia: "energia",
   musica: "media",
+  meteo: "meteo",
   mixer: "media",
   telecamera: "telecamere",
   comandi: "azioni",
@@ -635,6 +642,7 @@ const ACCENTO_DEL_MODELLO = {
   telecamere: "#2563eb",
   energia: "#10b981",
   musica: "#ec4899",
+  meteo: "#0ea5e9",
   mixer: "#f59e0b",
   telecamera: "#0ea5e9",
   comandi: "#10b981",
@@ -657,17 +665,17 @@ function orologio(adesso = new Date()) {
   };
 }
 
-function meteo() {
-  /* Prima quello scelto per il tablet, poi quello della config della plancia
-   * di origine, poi `weather.home` come fa la plancia, e solo alla fine il
-   * primo che c'e'. */
-  const stati = allStates() || {};
+/* Prima quello scelto per il tablet, poi quello della config della plancia
+ * di origine, poi `weather.home` come fa la plancia, e solo alla fine il
+ * primo che c'e' (`entitaDelMeteoDelMuro`). */
+function entitaDelMeteo() {
   const fisso = clean(state.muro?.meteo) || clean(state.fonte?.meteo);
   if (!fisso) segnaDominio("weather");
-  const id =
-    (fisso && stati[fisso] && fisso) ||
-    (stati["weather.home"] && "weather.home") ||
-    Object.keys(stati).find((k) => k.startsWith("weather."));
+  return entitaDelMeteoDelMuro(state.muro, state.fonte || {}, allStates() || {});
+}
+
+function meteo() {
+  const id = entitaDelMeteo();
   if (!id) return null;
   const s = stato(id);
   return { temperatura: s?.attributes?.temperature, condizione: s?.state };
@@ -715,6 +723,10 @@ function titoloLungo(titolo) {
 
 function testa(pagina, muro) {
   const o = orologio();
+  /* Sulla pagina Meteo il meteo in alto ripeterebbe in piccolo quello che la
+   * pagina dice in grande: resta solo la temperatura di casa, se e' quella
+   * scelta, che la pagina non dice. */
+  const suMeteo = pagina.modello === "meteo";
   const m = pagina.riga?.meteo !== false ? meteo() : null;
   /* «Temperatura mostrata»: quella del meteo, o quella di casa. Con quella di
    * casa il disegno e la parola del meteo restano (dicono che tempo fa fuori),
@@ -731,7 +743,7 @@ function testa(pagina, muro) {
   const parolaDelMeteo = m ? PAROLE_DEL_METEO()[m.condizione] || "" : "";
   const chipDelMeteo = inCasa
     ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([doveDellaTemperatura(sensore.fuori), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>`
-    : m && numero(m.temperatura) !== null
+    : m && !suMeteo && numero(m.temperatura) !== null
       ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>`
       : "";
   const accento = accentoDi(pagina);
@@ -2353,6 +2365,222 @@ function paginaEnergia(pagina) {
   );
 }
 
+/* ── la pagina Meteo ──────────────────────────────────────────────────────
+ *
+ * «La sezione meteo della plancia principale su un tablet grande e' bella:
+ * la vorrei a muro come pagina intera.» Com'e' adesso in grande — il segno
+ * del tempo, i gradi, la condizione, la percepita, l'umidita', il vento e la
+ * pressione — poi le prossime ore in una striscia e i prossimi giorni con la
+ * loro forbice. Il meteo e' lo stesso che il tablet mostra in alto e sul
+ * riposo (`entitaDelMeteo`), e le previsioni le chiede la pagina Meteo della
+ * plancia (`previsioniDelMeteo`): la stessa domanda, la stessa mezz'ora.
+ *
+ * La striscia delle ore non scorre: sul tablet il dito che scorre di lato
+ * cambia pagina. Ci stanno dodici ore sul tablet grande e otto sul piccolo,
+ * e le altre se ne vanno (CSS). */
+const SIGLE_DEL_VENTO = () => [
+  t("N", "N"),
+  t("NE", "NE"),
+  t("E", "E"),
+  t("SE", "SE"),
+  t("S", "S"),
+  t("SO", "SW"),
+  t("O", "W"),
+  t("NO", "NW"),
+];
+
+function oraDelMeteo(quando) {
+  try {
+    return new Date(quando).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
+  } catch (_errore) {
+    return "";
+  }
+}
+
+function giornoDelMeteo(voce) {
+  if (voce.oggi) return t("Oggi", "Today");
+  try {
+    const nome = new Intl.DateTimeFormat(locale(), { weekday: "short", day: "numeric" })
+      .format(new Date(voce.quando))
+      .replace(/\./g, "");
+    return nome.charAt(0).toLocaleUpperCase(locale()) + nome.slice(1);
+  } catch (_errore) {
+    return "";
+  }
+}
+
+/* La frase sulle prossime ore, corta: sul muro si legge da lontano. */
+function fraseDelMuro(frase) {
+  if (!frase) return null;
+  const ora = oraDelMeteo(frase.quando);
+  const probabile = Number.isFinite(frase.probabilita) ? Math.round(frase.probabilita) : null;
+  if (frase.tipo === "arriva")
+    return {
+      stato: "pioggia",
+      segno: frase.neve ? "❄️" : "☔",
+      testo: frase.neve
+        ? t(`Neve verso le ${ora}`, `Snow around ${ora}`)
+        : t(`Pioggia verso le ${ora}`, `Rain around ${ora}`),
+      sotto: probabile === null ? "" : t(`${probabile}% di probabilità`, `${probabile}% chance`),
+    };
+  if (frase.tipo === "smette")
+    return {
+      stato: "pioggia",
+      segno: "🌦️",
+      testo: t(`Smette verso le ${ora}`, `Stops around ${ora}`),
+      sotto: "",
+    };
+  if (frase.tipo === "continua")
+    return {
+      stato: "pioggia",
+      segno: "🌧️",
+      testo: t("Pioggia per tutte le prossime ore", "Rain for all the coming hours"),
+      sotto: "",
+    };
+  return {
+    stato: "asciutto",
+    segno: "🌤️",
+    testo: t("Niente pioggia nelle prossime 24 ore", "No rain in the next 24 hours"),
+    sotto: "",
+  };
+}
+
+export const EVENTO_PREVISIONI = "dashboardmodern:muro-previsioni";
+function previsioniArrivate() {
+  disegna();
+  try {
+    root.dispatchEvent?.(new CustomEvent(EVENTO_PREVISIONI));
+  } catch (_errore) {}
+}
+
+function meteoVuoto(acc) {
+  return `<div class="mu-carta mu-mt-vuoto" style="--acc:${acc}" data-mu-meteo-vuoto>
+    <span class="mu-chip mu-acc" style="--c:96px">${disegno("meteo", 60, "meteo-vuoto")}</span>
+    <b>${esc(t("Nessun meteo da mostrare", "No weather to show"))}</b>
+    <span>${esc(
+      t(
+        "Scegli l'entità meteo in ⚙️ Config › A muro › Altre impostazioni › Meteo, oppure aggiungi un'integrazione meteo in Home Assistant.",
+        "Choose the weather entity in ⚙️ Config › On the wall › More settings › Weather, or add a weather integration in Home Assistant.",
+      ),
+    )}</span>
+  </div>`;
+}
+
+function paginaMeteo(pagina) {
+  const acc = accentoDi(pagina);
+  const id = entitaDelMeteo();
+  if (!id) return `<div class="mu-mt mu-mt-solo">${meteoVuoto(acc)}</div>`;
+  /* Arrivate le previsioni si ridisegna il tablet, e l'anteprima del config
+   * se e' aperta (`EVENTO_PREVISIONI`). */
+  const previsioni = previsioniDelMeteo(id, previsioniArrivate);
+  const v = meteoDelMuro(stato(id), { ...previsioni, adesso: Date.now() });
+  if (!v) return `<div class="mu-mt mu-mt-solo">${meteoVuoto(acc)}</div>`;
+  const m = v.misure;
+  const gradi = (n) => (Number.isFinite(n) ? `${Math.round(n)}°` : "—");
+  const forbice = [
+    v.oggi?.bassa != null ? `${esc(t("Min", "Min"))} <b>${gradi(v.oggi.bassa)}</b>` : "",
+    v.oggi?.alta != null ? `${esc(t("Max", "Max"))} <b>${gradi(v.oggi.alta)}</b>` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const misura = (chiave, disegnoDi, etichetta, valore, sotto = "") =>
+    `<div class="mu-mt-misura" data-mu-meteo-misura="${chiave}"><span class="mu-mt-misura-testa">${disegno(disegnoDi, 22, `mt-${chiave}`)}<span class="mu-et">${esc(etichetta)}</span></span><b>${valore}</b>${sotto ? `<small>${esc(sotto)}</small>` : ""}</div>`;
+  const misure = [];
+  if (m.percepita)
+    misure.push(
+      misura("percepita", "temperatura", t("Percepita", "Feels like"), `${decimale(m.percepita.valore, 0)}°`),
+    );
+  if (m.umidita)
+    misure.push(
+      misura("umidita", "umidita", t("Umidità", "Humidity"), `${decimale(m.umidita.valore, 0)}<i>%</i>`),
+    );
+  if (m.vento) {
+    const sigla = v.spicchio === null ? "" : SIGLE_DEL_VENTO()[v.spicchio];
+    const raffica = m.raffica ? `${t("raffiche", "gusts")} ${decimale(m.raffica.valore, 0)}` : "";
+    misure.push(
+      misura(
+        "vento",
+        "aria",
+        t("Vento", "Wind"),
+        `${decimale(m.vento.valore, 0)}<i>${esc(m.vento.unita)}</i>${sigla ? `<em>${esc(sigla)}</em>` : ""}`,
+        raffica,
+      ),
+    );
+  }
+  if (m.pressione)
+    misure.push(
+      misura(
+        "pressione",
+        "contatori",
+        t("Pressione", "Pressure"),
+        /* Senza il punto delle migliaia: «1.014 hPa» si legge «un ettopascal». */
+        `${esc(Math.round(m.pressione.valore).toString())}<i>${esc(m.pressione.unita)}</i>`,
+      ),
+    );
+  const frase = fraseDelMuro(v.frase);
+  const temperatura = m.temperatura ? decimale(m.temperatura.valore, 0) : "—";
+  const adesso = `<div class="mu-carta mu-accesa mu-mt-adesso" style="--acc:${acc}" data-mu-meteo-blocco="adesso">
+    <div class="mu-mt-cielo">
+      <span class="mu-mt-segno" aria-hidden="true">${segnoDelTempo(v.condizione)}</span>
+      <div class="mu-mt-gradi">
+        <b data-mu-meteo-gradi>${esc(temperatura)}<i>°</i></b>
+        <span class="mu-mt-cond">${esc(v.disponibile ? parolaDellaCondizione(v.condizione) : t("Non disponibile", "Unavailable"))}</span>
+        ${forbice ? `<small class="mu-mt-forbice">${forbice}</small>` : ""}
+      </div>
+    </div>
+    ${frase ? `<div class="mu-mt-frase" data-stato="${frase.stato}"><span aria-hidden="true">${frase.segno}</span><b>${esc(frase.testo)}</b>${frase.sotto ? `<small>${esc(frase.sotto)}</small>` : ""}</div>` : ""}
+    ${misure.length ? `<div class="mu-mt-misure" style="--n:${misure.length}">${misure.join("")}</div>` : ""}
+  </div>`;
+  const inArrivo = previsioni.pronte
+    ? t("Questo meteo non dà previsioni", "This weather gives no forecast")
+    : t("Previsioni in arrivo…", "Forecast on its way…");
+  const titoletto = (testo) => `<div class="mu-et mu-mt-titolo">${esc(testo)}</div>`;
+  const ore = v.ore.length
+    ? `<div class="mu-mt-fila" style="--n:${v.ore.length}">${v.ore
+        .map((voce, i) => {
+          const p = Number.isFinite(voce.probabilita) ? Math.round(voce.probabilita) : null;
+          return `<div class="mu-mt-ora${i === 0 ? " ora" : ""}" data-mu-meteo-ora="${voce.quando}">
+          <span class="mu-mt-ora-h">${esc(i === 0 ? t("Ora", "Now") : oraDelMeteo(voce.quando))}</span>
+          <span class="mu-mt-ora-segno" aria-hidden="true">${segnoDelTempo(voce.condizione)}</span>
+          <b>${gradi(voce.temperatura)}</b>
+          <span class="mu-mt-goccia${p ? "" : " zero"}" style="--p:${p ?? 0}%"><i></i></span>
+          <small>${p === null ? "" : `${p}%`}</small>
+        </div>`;
+        })
+        .join("")}</div>`
+    : `<div class="mu-mt-attesa">${esc(inArrivo)}</div>`;
+  const giorni = v.giorni;
+  const bassi = giorni.map((g) => g.bassa ?? g.temperatura).filter(Number.isFinite);
+  const alti = giorni.map((g) => g.temperatura ?? g.bassa).filter(Number.isFinite);
+  const fondo = Math.min(...bassi, ...alti);
+  const cima = Math.max(...bassi, ...alti);
+  const posto = (n) => ((n - fondo) / (cima - fondo || 1)) * 100;
+  const righe = giorni.length
+    ? `<div class="mu-mt-giorni" style="--n:${giorni.length}">${giorni
+        .map((g) => {
+          const min = g.bassa ?? g.temperatura;
+          const max = g.temperatura ?? g.bassa;
+          const p = Number.isFinite(g.probabilita) && g.probabilita > 0 ? Math.round(g.probabilita) : null;
+          const da = Number.isFinite(min) ? posto(min) : 0;
+          const a = Number.isFinite(max) ? posto(max) : 100;
+          return `<div class="mu-mt-giorno${g.oggi ? " oggi" : ""}" data-mu-meteo-giorno="${g.quando}">
+          <span class="mu-mt-giorno-n">${esc(giornoDelMeteo(g))}</span>
+          <span class="mu-mt-giorno-segno" aria-hidden="true">${segnoDelTempo(g.condizione)}</span>
+          <span class="mu-mt-giorno-p">${p === null ? "" : `💧 ${p}%`}</span>
+          <b class="mu-mt-min">${gradi(min)}</b>
+          <span class="mu-mt-barra"><i style="left:${da.toFixed(1)}%;right:${(100 - a).toFixed(1)}%"></i></span>
+          <b class="mu-mt-max">${gradi(max)}</b>
+        </div>`;
+        })
+        .join("")}</div>`
+    : `<div class="mu-mt-attesa">${esc(inArrivo)}</div>`;
+  return `<div class="mu-mt" data-mu-meteo="${esc(id)}">
+    ${adesso}
+    <div class="mu-carta mu-mt-scheda mu-mt-prossimi" data-mu-meteo-blocco="giorni">${titoletto(t("Prossimi giorni", "Next days"))}${righe}</div>
+    <div class="mu-carta mu-mt-scheda mu-mt-ore" data-mu-meteo-blocco="ore">${titoletto(t("Ora per ora", "Hour by hour"))}${ore}</div>
+  </div>`;
+}
+
 function finestreAperte() {
   /* Una finestra che si apre adesso era chiusa un attimo fa: si guarda tutto
    * il dominio, non solo quelle aperte. */
@@ -3038,6 +3266,7 @@ function corpoDellaPagina(pagina) {
   if (pagina.modello === "telecamere") return paginaTelecamere(pagina);
   if (pagina.modello === "energia") return paginaEnergia(pagina);
   if (pagina.modello === "musica") return paginaMusica(pagina);
+  if (pagina.modello === "meteo") return paginaMeteo(pagina);
   if (pagina.modello === "mixer") return paginaMixer(pagina);
   if (pagina.modello === "telecamera") return paginaTelecamera(pagina);
   if (pagina.modello === "comandi") return paginaComandi(pagina);
@@ -5722,6 +5951,111 @@ ${MURO} .mu-cam{padding:8px}
 ${MURO} .mu-cam .mu-video{height:100%;min-height:0}
 ${MURO} .mu-energia .mu-grande{margin-top:auto;font-size:72px}
 ${MURO} .mu-energia .mu-cosa-fa{font-size:22px;font-weight:600;margin-top:4px}
+/* La pagina Meteo: adesso a sinistra, i prossimi giorni a destra, le ore
+   sotto per tutta la larghezza. Sul pannello piccolo le ore salgono a destra
+   sotto i giorni; in verticale tutto in colonna. */
+${MURO} .mu-pag-meteo{grid-template-rows:auto 1fr}
+${MURO} .mu-mt{--mt-pioggia:#0369a1;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"adesso giorni" "ore ore";gap:16px;min-height:0;min-width:0}
+${MURO}[data-tema="dark"] .mu-mt{--mt-pioggia:#7dd3fc}
+${MURO} .mu-mt.mu-mt-solo{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"adesso"}
+${MURO} .mu-mt-adesso{grid-area:adesso;display:flex;flex-direction:column;gap:16px;padding:24px 26px;min-height:0;min-width:0}
+${MURO} .mu-mt-cielo{flex:1 1 auto;display:flex;align-items:center;gap:24px;min-width:0;min-height:0}
+${MURO} .mu-mt-segno{flex:none;font-size:116px;line-height:1;filter:drop-shadow(0 12px 18px rgba(15,23,42,.2))}
+${MURO} .mu-mt-gradi{display:flex;flex-direction:column;gap:8px;min-width:0}
+${MURO} .mu-mt-gradi>b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:118px;line-height:.86;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+${MURO} .mu-mt-gradi>b i{font-style:normal;font-size:.48em;vertical-align:top;margin-left:2px;color:var(--text-dim)}
+${MURO} .mu-mt-cond{font-size:24px;font-weight:800;line-height:1.15;color:color-mix(in srgb,var(--acc) 70%,var(--text));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mt-forbice{font-size:17px;font-weight:700;color:var(--text-dim);white-space:nowrap}
+${MURO} .mu-mt-forbice b{color:var(--text);font-weight:800}
+${MURO} .mu-mt-frase{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:16px;min-width:0;
+  background:color-mix(in srgb,#0284c7 11%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,#0284c7 30%,transparent)}
+${MURO} .mu-mt-frase[data-stato="asciutto"]{background:color-mix(in srgb,#16a34a 10%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,#16a34a 28%,transparent)}
+${MURO} .mu-mt-frase>span{flex:none;font-size:24px;line-height:1}
+${MURO} .mu-mt-frase>b{font-size:17px;font-weight:800;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mt-frase>small{margin-left:auto;flex:none;font-size:14px;font-weight:700;color:var(--text-dim)}
+${MURO} .mu-mt-misure{margin-top:auto;display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:10px}
+${MURO} .mu-mt-misura{display:flex;flex-direction:column;gap:7px;padding:12px 14px;border-radius:16px;min-width:0;
+  background:color-mix(in srgb,var(--text) 4%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+${MURO} .mu-mt-misura-testa{display:flex;align-items:center;gap:6px;min-width:0}
+${MURO} .mu-mt-misura-testa .dm-oggetto{flex:none}
+${MURO} .mu-mt-misura-testa .mu-et{font-size:10.5px;letter-spacing:.08em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mt-misura>b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:30px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+${MURO} .mu-mt-misura>b i,${MURO} .mu-mt-misura>b em{font-style:normal;font-family:Inter,system-ui,sans-serif;font-size:13px;font-weight:700;margin-left:4px;color:var(--text-dim)}
+${MURO} .mu-mt-misura>b em{font-weight:900;color:color-mix(in srgb,var(--acc) 75%,var(--text))}
+${MURO} .mu-mt-misura>small{font-size:11.5px;font-weight:700;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mt-scheda{display:flex;flex-direction:column;gap:10px;padding:18px 20px;min-height:0;min-width:0}
+${MURO} .mu-mt-titolo{flex:none}
+${MURO} .mu-mt-prossimi{grid-area:giorni}
+${MURO} .mu-mt-ore{grid-area:ore}
+${MURO} .mu-mt-fila{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;min-width:0}
+${MURO} .mu-mt-ora{display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 2px;border-radius:16px;min-width:0}
+${MURO} .mu-mt-ora.ora{background:color-mix(in srgb,var(--acc) 13%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 34%,transparent)}
+${MURO} .mu-mt-ora-h{font-size:13px;font-weight:800;color:var(--text-dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+${MURO} .mu-mt-ora.ora .mu-mt-ora-h{color:color-mix(in srgb,var(--acc) 70%,var(--text))}
+${MURO} .mu-mt-ora-segno{font-size:30px;line-height:1}
+${MURO} .mu-mt-ora>b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:25px;line-height:1;font-variant-numeric:tabular-nums}
+${MURO} .mu-mt-goccia{position:relative;width:min(36px,80%);height:5px;border-radius:999px;overflow:hidden;background:color-mix(in srgb,#0284c7 16%,transparent)}
+${MURO} .mu-mt-goccia i{position:absolute;inset:0 auto 0 0;width:var(--p);border-radius:inherit;background:#0ea5e9}
+${MURO} .mu-mt-ora>small{min-height:14px;font-size:12px;font-weight:800;line-height:1.15;color:var(--mt-pioggia)}
+${MURO} .mu-mt-giorni{flex:1;display:grid;grid-auto-rows:minmax(0,1fr);min-height:0}
+${MURO} .mu-mt-giorno{display:grid;grid-template-columns:minmax(64px,1fr) 34px minmax(54px,.75fr) 40px minmax(56px,1.3fr) 40px;align-items:center;gap:10px;min-height:0;border-top:1px solid color-mix(in srgb,var(--text) 8%,transparent)}
+${MURO} .mu-mt-giorno:first-child{border-top:0}
+${MURO} .mu-mt-giorno-n{font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-mt-giorno.oggi .mu-mt-giorno-n{color:color-mix(in srgb,var(--acc) 70%,var(--text))}
+${MURO} .mu-mt-giorno-segno{font-size:27px;line-height:1;text-align:center}
+${MURO} .mu-mt-giorno-p{font-size:13px;font-weight:800;color:var(--mt-pioggia);white-space:nowrap;overflow:hidden}
+${MURO} .mu-mt-min,${MURO} .mu-mt-max{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:23px;line-height:1;font-variant-numeric:tabular-nums}
+${MURO} .mu-mt-min{text-align:right;color:var(--text-dim)}
+${MURO} .mu-mt-barra{position:relative;height:8px;border-radius:999px;background:color-mix(in srgb,var(--text) 9%,transparent)}
+${MURO} .mu-mt-barra i{position:absolute;top:0;bottom:0;min-width:8px;border-radius:inherit;background:linear-gradient(90deg,#38bdf8,#f59e0b 60%,#ef4444)}
+${MURO} .mu-mt-attesa{flex:1;display:grid;place-items:center;padding:12px;font-size:16px;font-weight:700;color:var(--text-dim);text-align:center}
+${MURO} .mu-mt-vuoto{grid-area:adesso;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:40px;text-align:center}
+${MURO} .mu-mt-vuoto>b{font-size:30px;font-weight:800}
+${MURO} .mu-mt-vuoto>span:last-child{max-width:640px;font-size:18px;font-weight:600;line-height:1.45;color:var(--text-dim)}
+${MURO}[data-verso="verticale"] .mu-mt{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"adesso" "ore" "giorni"}
+${MURO}[data-compatto="1"] .mu-mt{gap:10px;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"adesso giorni" "adesso ore"}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-mt{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"adesso" "ore" "giorni"}
+${MURO}[data-compatto="1"] .mu-mt-adesso{padding:14px 16px;gap:10px}
+${MURO}[data-compatto="1"] .mu-mt-cielo{gap:12px}
+${MURO}[data-compatto="1"] .mu-mt-segno{font-size:60px}
+${MURO}[data-compatto="1"] .mu-mt-gradi{gap:5px}
+${MURO}[data-compatto="1"] .mu-mt-gradi>b{font-size:64px}
+${MURO}[data-compatto="1"] .mu-mt-cond{font-size:16px}
+${MURO}[data-compatto="1"] .mu-mt-forbice{font-size:12.5px}
+${MURO}[data-compatto="1"] .mu-mt-frase{padding:7px 10px;gap:8px;border-radius:12px}
+${MURO}[data-compatto="1"] .mu-mt-frase>span{font-size:17px}
+${MURO}[data-compatto="1"] .mu-mt-frase>b{font-size:13px}
+${MURO}[data-compatto="1"] .mu-mt-frase>small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-misure{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+${MURO}[data-compatto="1"] .mu-mt-misura{padding:6px 10px;gap:3px;border-radius:12px}
+${MURO}[data-compatto="1"] .mu-mt-misura-testa .dm-oggetto{width:16px!important;height:16px!important}
+${MURO}[data-compatto="1"] .mu-mt-misura-testa .mu-et{font-size:9px}
+${MURO}[data-compatto="1"] .mu-mt-misura>b{font-size:20px}
+${MURO}[data-compatto="1"] .mu-mt-misura>b i,${MURO}[data-compatto="1"] .mu-mt-misura>b em{font-size:10.5px;margin-left:3px}
+${MURO}[data-compatto="1"] .mu-mt-misura>small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-scheda{padding:10px 12px;gap:6px;border-radius:18px}
+${MURO}[data-compatto="1"] .mu-mt-titolo{font-size:10px}
+${MURO}[data-compatto="1"] .mu-mt-fila{gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-ora{gap:4px;padding:5px 1px;border-radius:12px}
+${MURO}[data-compatto="1"] .mu-mt-ora:nth-child(n+7){display:none}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-mt-ora:nth-child(n+7){display:flex}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-mt-ora:nth-child(n+9){display:none}
+${MURO}[data-compatto="1"] .mu-mt-ora-h{font-size:11px}
+${MURO}[data-compatto="1"] .mu-mt-ora-segno{font-size:20px}
+${MURO}[data-compatto="1"] .mu-mt-ora>b{font-size:17px}
+${MURO}[data-compatto="1"] .mu-mt-ora>small{font-size:10px;min-height:11px}
+${MURO}[data-compatto="1"] .mu-mt-goccia{height:4px}
+${MURO}[data-compatto="1"] .mu-mt-giorno{grid-template-columns:minmax(46px,1fr) 22px 30px minmax(28px,1fr) 30px;gap:6px}
+${MURO}[data-compatto="1"] .mu-mt-giorno:nth-child(n+6){display:none}
+${MURO}[data-compatto="1"] .mu-mt-giorno-p{display:none}
+${MURO}[data-compatto="1"] .mu-mt-giorno-n{font-size:13px}
+${MURO}[data-compatto="1"] .mu-mt-giorno-segno{font-size:18px}
+${MURO}[data-compatto="1"] .mu-mt-min,${MURO}[data-compatto="1"] .mu-mt-max{font-size:16px}
+${MURO}[data-compatto="1"] .mu-mt-barra{height:6px}
+${MURO}[data-compatto="1"] .mu-mt-vuoto{padding:18px;gap:10px}
+${MURO}[data-compatto="1"] .mu-mt-vuoto>b{font-size:20px}
+${MURO}[data-compatto="1"] .mu-mt-vuoto>span:last-child{font-size:13px}
+${MURO}[data-compatto="1"] .mu-mt-vuoto .mu-chip{--c:64px!important}
 ${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}
