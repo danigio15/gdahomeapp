@@ -3500,6 +3500,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Now",
   "NOW",
   "Now · Hour by hour · Next days",
+  "Now · My station · Forecast",
   "Now · My station · Forecast · Radar",
   "now ${ora}",
   "now ${oraLetta}°",

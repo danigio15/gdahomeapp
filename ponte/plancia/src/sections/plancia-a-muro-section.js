@@ -54,7 +54,16 @@ import {
 } from "../core/le-vesti-della-carta.js";
 import { climaScalda } from "../core/device-model.js";
 import { segnoDelTempo } from "../core/la-card-del-meteo.js";
-import { parolaDellaCondizione, previsioniDelMeteo } from "./meteo-section.js";
+import {
+  adessoDelMeteo,
+  foglioDelMeteo,
+  parolaDellaCondizione,
+  previsioniDelMeteo,
+  sensoriDellaStazione,
+  stazioneDelMeteo,
+  storiaDellaStazione,
+  vistaDelMeteo,
+} from "./meteo-section.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { IN_VISTA_KEY } from "../core/state-event-gate.js";
 import {
@@ -725,6 +734,14 @@ function titoloLungo(titolo) {
   return lettere > 12 ? " mu-tit-xl" : lettere > 8 ? " mu-tit-l" : "";
 }
 
+/* Il sottotitolo: quello del tipo di pagina, e per il Meteo con la stazione
+ * quello della pagina Meteo della plancia. */
+function sottoDellaPagina(pagina) {
+  if (pagina.modello === "meteo" && Object.keys(sensoriDellaStazione()).length)
+    return t("Adesso · La mia stazione · Previsioni", "Now · My station · Forecast");
+  return SOTTO()[pagina.modello];
+}
+
 function testa(pagina, muro) {
   const o = orologio();
   /* Sulla pagina Meteo il meteo in alto ripeterebbe in piccolo quello che la
@@ -768,7 +785,7 @@ function testa(pagina, muro) {
       : "";
   return `<div class="mu-carta mu-testa${lato ? " mu-testa-lato" : ""}" style="--acc:${accento}">
     ${lato ? "" : tastoDelMenu()}
-    <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina))}">${esc(titoloDi(pagina))}</div><div class="mu-et mu-sot">${esc(SOTTO()[pagina.modello])}</div></div>
+    <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina))}">${esc(titoloDi(pagina))}</div><div class="mu-et mu-sot">${esc(sottoDellaPagina(pagina))}</div></div>
     ${linguette}
     <div class="mu-ora" data-mu-orologio>${chipDelMeteo}<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
   </div>`;
@@ -2477,8 +2494,24 @@ function paginaMeteo(pagina) {
   /* Arrivate le previsioni si ridisegna il tablet, e l'anteprima del config
    * se e' aperta (`EVENTO_PREVISIONI`). */
   const previsioni = previsioniDelMeteo(id, previsioniArrivate);
-  const v = meteoDelMuro(stato(id), { ...previsioni, adesso: Date.now() });
+  /* L'adesso al minuto: le linee delle ultime 24 ore si ricampionano
+   * sull'adesso, e al millisecondo cambierebbero a ogni battito, rifacendo il
+   * tablet intero ogni quindici secondi per un pixel. */
+  const minuto = Math.floor(Date.now() / 60_000) * 60_000;
+  /* La stazione e' quella della pagina Meteo della plancia, con la sua
+   * configurazione: niente da scegliere qui. I suoi sensori non si segnano fra
+   * quelli che ridisegnano subito: un anemometro che scrive ogni pochi
+   * secondi rifarebbe il tablet altrettanto spesso, e il battito dei quindici
+   * secondi li legge comunque. */
+  const vista = vistaDelMeteo(allStates() || {}, minuto, { entita: id, prefisso: "muro-" });
+  const v = meteoDelMuro(stato(id), { ...previsioni, stazione: vista?.stazione, adesso: minuto });
   if (!v) return `<div class="mu-mt mu-mt-solo">${meteoVuoto(acc)}</div>`;
+  if (vista?.tessere?.length) {
+    /* La cronologia la chiede la pagina Meteo della plancia, con la sua cache
+     * e i suoi cinque minuti: qui la si ricorda soltanto a ogni ridisegno. */
+    storiaDellaStazione(vista.sensori, previsioniArrivate);
+    segna("sun.sun");
+  }
   const m = v.misure;
   const gradi = (n) => (Number.isFinite(n) ? `${Math.round(n)}°` : "—");
   const forbice = [
@@ -2578,6 +2611,18 @@ function paginaMeteo(pagina) {
         })
         .join("")}</div>`
     : `<div class="mu-mt-attesa">${esc(inArrivo)}</div>`;
+  const blocchiDelleOre = `<div class="mu-carta mu-mt-scheda mu-mt-prossimi" data-mu-meteo-blocco="giorni">${titoletto(t("Prossimi giorni", "Next days"))}${righe}</div>
+    <div class="mu-carta mu-mt-scheda mu-mt-ore" data-mu-meteo-blocco="ore">${titoletto(t("Ora per ora", "Hour by hour"))}${ore}</div>`;
+  /* Con la stazione la pagina e' quella della plancia: «Adesso» con le sue
+   * pastiglie e la riga della provenienza, «La mia stazione» con le tessere e
+   * le ultime 24 ore, disegnati dalla sezione Meteo stessa; accanto i giorni e
+   * le ore del muro. */
+  if (vista?.tessere?.length)
+    return `<div class="mu-mt mu-mt-stazione" data-mu-meteo="${esc(id)}" data-mu-meteo-tessere="${vista.tessere.length}" style="--acc:${acc}">
+    <div class="mu-mt-pl mu-mt-pl-adesso">${adessoDelMeteo(vista)}</div>
+    <div class="mu-mt-pl mu-mt-pl-stazione">${stazioneDelMeteo(vista)}</div>
+    ${blocchiDelleOre}
+  </div>`;
   return `<div class="mu-mt" data-mu-meteo="${esc(id)}">
     ${adesso}
     <div class="mu-carta mu-mt-scheda mu-mt-prossimi" data-mu-meteo-blocco="giorni">${titoletto(t("Prossimi giorni", "Next days"))}${righe}</div>
@@ -6079,6 +6124,115 @@ ${MURO}[data-compatto="1"] .mu-mt-vuoto{padding:18px;gap:10px}
 ${MURO}[data-compatto="1"] .mu-mt-vuoto>b{font-size:20px}
 ${MURO}[data-compatto="1"] .mu-mt-vuoto>span:last-child{font-size:13px}
 ${MURO}[data-compatto="1"] .mu-mt-vuoto .mu-chip{--c:64px!important}
+/* La pagina Meteo con la stazione: quella della plancia, adattata al muro.
+   «Adesso» per tutta la larghezza come in plancia; sotto, a sinistra, «La mia
+   stazione» con le tessere su quattro colonne e due file (il vento largo
+   due), a destra i prossimi giorni e le prossime ore. I pezzi della plancia
+   portano il loro foglio (foglioDelMeteo); qui le carte prendono la carta
+   del muro, e il tema del muro (non quello della plancia sotto). */
+${foglioDelMeteo(`${MURO} .mu-mt-stazione`, { media: false })}
+${MURO} .mu-mt.mu-mt-stazione{--card-border:color-mix(in srgb,var(--text) 10%,transparent);--surface-2:color-mix(in srgb,var(--text) 5%,var(--card-bg));--dm-meteo-gap:12px;
+  grid-template-columns:minmax(0,1fr) minmax(0,368px);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"adesso adesso" "stazione giorni" "stazione ore";gap:14px}
+${MURO} .mu-mt-pl{min-width:0;min-height:0;display:flex;flex-direction:column}
+${MURO} .mu-mt-pl-adesso{grid-area:adesso}
+${MURO} .mu-mt-pl-stazione{grid-area:stazione}
+${MURO} .mu-mt-pl>.dm-meteo-blocco{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+${MURO} .mu-mt-stazione :is(.dm-meteo-adesso,.dm-meteo-tessera){border:0;border-radius:22px;background:${FONDO_DELLA_CARTA};box-shadow:${OMBRA_DELLA_CARTA}}
+${MURO} .mu-mt-stazione .dm-meteo-adesso{padding:18px 24px;gap:24px;background:radial-gradient(120% 160% at 0% 0%,rgba(14,165,233,.14),transparent 55%),${FONDO_DELLA_CARTA}}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-ic{font-size:84px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-gradi>b{font-size:72px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-cond{font-size:14px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-gradi small{font-size:14px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-dx{gap:10px}
+${MURO} .mu-mt-stazione .dm-meteo-frase{padding:10px 14px}
+${MURO} .mu-mt-stazione .dm-meteo-frase strong{font-size:16px}
+${MURO} .mu-mt-stazione .dm-meteo-pill{font-size:13px;padding:6px 12px}
+${MURO} .mu-mt-stazione .dm-meteo-fonte{font-size:11.5px}
+${MURO} .mu-mt-stazione .dm-meteo-titolo{margin:0 0 8px 4px;flex:none}
+${MURO} .mu-mt-stazione .dm-meteo-tessere{flex:1 1 auto;min-height:0;grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr)}
+${MURO} .mu-mt-stazione .dm-meteo-tessera{grid-template-rows:auto auto auto minmax(0,1fr);gap:5px;padding:14px 16px 10px;min-height:0}
+${MURO} .mu-mt-stazione .dm-meteo-larga>.dm-meteo-bussola{grid-row:1/span 4}
+/* La testa della tessera: il nome va a capo invece di finire nei puntini, e
+   lo stato («in aumento», «asciutto») scende sotto il nome, che sul muro le
+   tessere sono strette e la pastiglia accanto lascerebbe al nome tre lettere. */
+${MURO} .mu-mt-stazione .dm-meteo-tessera-testa{display:grid;grid-template-columns:auto minmax(0,1fr);grid-auto-rows:auto;align-content:center;column-gap:10px;row-gap:3px;min-height:38px}
+${MURO} .mu-mt-stazione .dm-meteo-tessera-testa>.dm-meteo-ic{grid-row:1/span 2}
+${MURO} .mu-mt-stazione .dm-meteo-nome{grid-column:2;align-self:end;font-size:11px;letter-spacing:.7px;line-height:1.2;white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+${MURO} .mu-mt-stazione .dm-meteo-tessera-testa>.dm-meteo-nome:last-child{grid-row:1/span 2;align-self:center}
+${MURO} .mu-mt-stazione .dm-meteo-stato{grid-column:2;justify-self:start;align-self:start;margin-left:0;padding:2px 8px;font-size:9.5px}
+${MURO} .mu-mt-stazione .dm-meteo-valore{margin-top:2px}
+${MURO} .mu-mt-stazione .dm-meteo-valore b{font-size:38px}
+${MURO} .mu-mt-stazione .dm-meteo-valore i{font-size:14px}
+${MURO} .mu-mt-stazione .dm-meteo-sotto{font-size:12px;min-height:0}
+${MURO} .mu-mt-stazione .dm-meteo-grafico{align-self:end;height:44px;margin-top:12px}
+${MURO} .mu-mt-stazione .dm-meteo-spark{height:44px}
+${MURO} .mu-mt-stazione .dm-meteo-uv{align-self:end}
+${MURO} .mu-mt-stazione .mu-mt-scheda{padding:14px 18px}
+${MURO} .mu-mt-stazione .mu-mt-giorno{grid-template-columns:minmax(60px,1fr) 30px minmax(40px,.7fr) 34px minmax(44px,1.1fr) 34px;gap:8px}
+${MURO} .mu-mt-stazione .mu-mt-giorno-n{font-size:15px}
+${MURO} .mu-mt-stazione .mu-mt-giorno-segno{font-size:23px}
+${MURO} .mu-mt-stazione .mu-mt-min,${MURO} .mu-mt-stazione .mu-mt-max{font-size:20px}
+${MURO} .mu-mt-stazione .mu-mt-giorno-p{font-size:12px}
+${MURO} .mu-mt-stazione .mu-mt-ore .mu-mt-ora:nth-child(n+7){display:none}
+${MURO} .mu-mt-stazione .mu-mt-ora{padding:8px 2px;gap:6px}
+${MURO} .mu-mt-stazione .mu-mt-ora-segno{font-size:26px}
+${MURO} .mu-mt-stazione .mu-mt-ora>b{font-size:22px}
+/* In verticale: in colonna come in plancia, «Adesso» e poi la stazione; in
+   fondo le ore e i giorni affiancati, le stesse due carte della colonna di
+   destra del tablet orizzontale. */
+${MURO}[data-verso="verticale"] .mu-mt.mu-mt-stazione{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"adesso adesso" "stazione stazione" "ore giorni"}
+${MURO}[data-verso="verticale"] .mu-mt-stazione .mu-mt-ore .mu-mt-fila{flex:1;align-items:center}
+/* Il pannello piccolo: «Adesso» in colonna accanto a quattro tessere, le ore
+   sotto. Restano la linea delle 24 ore e il numero; la riga sotto, la
+   bussola e i giorni se ne vanno (i giorni li dice la minima e la massima di
+   oggi, e la frase sulla pioggia). */
+${MURO}[data-compatto="1"] .mu-mt.mu-mt-stazione{gap:8px;--dm-meteo-gap:6px;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"adesso stazione" "ore ore"}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-mt.mu-mt-stazione{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"adesso" "stazione" "ore"}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-prossimi{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso{grid-template-columns:minmax(0,1fr);gap:8px;padding:10px 12px;border-radius:16px;align-content:center}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-sx{gap:10px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-ic{font-size:40px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi{gap:2px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi>b{font-size:40px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi>b i{font-size:24px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-cond{font-size:11px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi small{font-size:10.5px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-dx{gap:6px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase{padding:6px 9px;gap:8px;border-radius:12px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase>span{font-size:16px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase strong{font-size:11.5px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-pills{gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-pill{font-size:9.5px;padding:2px 7px;gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-fonte{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-titolo{margin:0 0 4px 2px;font-size:10px;letter-spacing:1px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-titolo svg{width:15px;height:15px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-titolo small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessere{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessera:nth-child(n+5){display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessera{grid-template-rows:auto auto minmax(0,1fr);gap:1px;padding:6px 9px 4px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-larga{grid-column:auto;grid-template-columns:minmax(0,1fr)}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-larga>*{grid-column:1}
+${MURO}[data-compatto="1"] .mu-mt-stazione :is(.dm-meteo-bussola,.dm-meteo-sotto,.dm-meteo-stato,.dm-meteo-24){display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-ic{width:20px;height:20px;border-radius:7px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-ic svg{width:15px;height:15px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessera-testa{column-gap:6px;min-height:20px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-nome{font-size:9px;letter-spacing:.5px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-valore{margin-top:0;gap:4px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-valore b{font-size:22px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-valore i{font-size:10px}
+${MURO}[data-compatto="1"] .mu-mt-stazione :is(.dm-meteo-grafico,.dm-meteo-spark){height:20px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-grafico{margin-top:2px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-uv{padding:4px 0 0}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-uv-tacche{font-size:8px;margin-top:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-scheda{padding:8px 10px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ore .mu-mt-ora:nth-child(n+7){display:flex}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ore .mu-mt-ora:nth-child(n+9){display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora{padding:4px 1px;gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora-segno{font-size:18px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora>b{font-size:16px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora>small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-scheda{gap:4px}
 ${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}

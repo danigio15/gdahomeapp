@@ -554,7 +554,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-URJ62I7I.js";
+} from "../../chunk-4BUKZI3B.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2281,6 +2281,7 @@ var SOURCE_INDEX = Object.freeze({
   "adesso": "now",
   "Adesso": "Now",
   "ADESSO": "NOW",
+  "Adesso · La mia stazione · Previsioni": "Now · My station · Forecast",
   "Adesso · La mia stazione · Previsioni · Radar": "Now · My station · Forecast · Radar",
   "Adesso · Ora per ora · Prossimi giorni": "Now · Hour by hour · Next days",
   "adesso ${ora}": "now ${ora}",
@@ -97057,6 +97058,71 @@ function misureDiAdesso({ stazione = {}, meteo: meteo3 = null } = {}) {
   }
   return fuori;
 }
+function letturaDellaStazione(sensori = {}, states = {}) {
+  const fuori = {};
+  for (const [chiave2, entity2] of Object.entries(sensori || {})) {
+    const lettura3 = letturaDi3(states?.[entity2]);
+    if (lettura3) fuori[chiave2] = { ...lettura3, entity: entity2 };
+  }
+  return fuori;
+}
+var TESSERE_DELLA_STAZIONE = Object.freeze([
+  "temperatura",
+  "umidita",
+  "pressione",
+  "pioggia",
+  "vento",
+  "uv",
+  "sole"
+]);
+var LETTURE_DELLA_TESSERA = Object.freeze({
+  temperatura: ["temperatura"],
+  umidita: ["umidita"],
+  pressione: ["pressione"],
+  pioggia: ["pioggiaOggi", "intensita"],
+  vento: ["vento"],
+  uv: ["uv"],
+  sole: ["radiazione", "luminosita"]
+});
+function tessereDellaStazione(stazione = {}) {
+  return TESSERE_DELLA_STAZIONE.filter(
+    (tessera3) => LETTURE_DELLA_TESSERA[tessera3].some((chiave2) => stazione?.[chiave2])
+  );
+}
+function vistaDelMeteoDa({
+  entita: entita3 = "",
+  meteo: meteo3 = null,
+  stazione = {},
+  orarie = [],
+  giornaliere = [],
+  sole = null,
+  adesso = Date.now(),
+  ore = 24,
+  giorni = 7
+} = {}) {
+  if (!pulito58(entita3) && !meteo3) return null;
+  const letture2 = stazione && typeof stazione === "object" ? stazione : {};
+  const unita3 = pulito58(meteo3?.attributes?.precipitation_unit) || "mm";
+  const misure = misureDiAdesso({ stazione: letture2, meteo: meteo3 });
+  const fila2 = prossimeOre(orarie, { adesso, ore, unita: unita3 }).filter(
+    (voce3) => Number.isFinite(voce3.temperatura)
+  );
+  const elencoDeiGiorni = prossimiGiorni(giornaliere, { adesso, giorni, unita: unita3 });
+  const oggi = elencoDeiGiorni.find((voce3) => voce3.oggi);
+  return {
+    adesso,
+    entita: pulito58(entita3),
+    meteo: meteo3,
+    stazione: letture2,
+    tessere: tessereDellaStazione(letture2),
+    misure,
+    ore: fila2,
+    giorni: elencoDeiGiorni,
+    oggi: oggi ? { alta: oggi.temperatura, bassa: oggi.bassa } : null,
+    frase: fraseDelleProssimeOre(orarie, { adesso, ore: 24, unita: unita3 }),
+    sole: sole || null
+  };
+}
 
 // src/core/radar-mappa.js
 var LATO_TESSERA = 256;
@@ -99028,14 +99094,6 @@ function sensoriDellaStazione() {
   }
   return fuori;
 }
-function letturaDellaStazione(sensori, states) {
-  const fuori = {};
-  for (const [chiave2, entity2] of Object.entries(sensori)) {
-    const lettura3 = letturaDi3(states?.[entity2]);
-    if (lettura3) fuori[chiave2] = { ...lettura3, entity: entity2 };
-  }
-  return fuori;
-}
 function serveLeggere4() {
   if (!planciaVisibile()) return false;
   return Boolean(doc?.getElementById?.(METEO_PAGE_ID)?.classList?.contains("active"));
@@ -99109,6 +99167,14 @@ async function aggiornaLaStoria(entita3) {
     s.firma = firma2;
     s.chiesta = Date.now();
     s.fallita = 0;
+    const tutti = [...chiAspettaLaStoria];
+    chiAspettaLaStoria.clear();
+    for (const avvisa4 of tutti) {
+      try {
+        avvisa4();
+      } catch (_errore) {
+      }
+    }
   } catch (errore) {
     if (errore?.message !== "socket") s.fallita = Date.now();
     s.firma = firma2;
@@ -99138,10 +99204,18 @@ function previsioniDelMeteo(entita3, quandoArrivano = null) {
   const p = state114.previsioni;
   return p.entita === entita3 ? { orarie: p.orarie, giornaliere: p.giornaliere, pronte: Boolean(p.chieste) } : nessuna2;
 }
-function serieDi2(entity2, lettura3) {
+var chiAspettaLaStoria = /* @__PURE__ */ new Set();
+function storiaDellaStazione(sensori, quandoArriva = null) {
+  const elenco15 = Object.values(sensori || {}).filter((entity2) => clean(entity2).includes("."));
+  if (!elenco15.length) return false;
+  if (typeof quandoArriva === "function") chiAspettaLaStoria.add(quandoArriva);
+  aggiornaLaStoria(elenco15).catch(() => {
+  });
+  return Boolean(state114.storia.chiesta);
+}
+function serieDi2(entity2, lettura3, adesso = Date.now()) {
   const serie2 = Array.isArray(state114.storia.serie?.[entity2]) ? [...state114.storia.serie[entity2]] : [];
-  if (lettura3 && Number.isFinite(lettura3.valore))
-    serie2.push({ quando: Date.now(), valore: lettura3.valore });
+  if (lettura3 && Number.isFinite(lettura3.valore)) serie2.push({ quando: adesso, valore: lettura3.valore });
   return serie2;
 }
 function ultimaPagina9() {
@@ -99340,7 +99414,7 @@ function fraseInParole(frase4) {
   };
 }
 var icona2 = (nome, misura7 = 26) => disegnoDelCatalogo(nome, misura7) || "";
-function spark(valori, { colore, alto = 46, secondo = null, id = "s" } = {}) {
+function spark(valori, { colore, alto = 46, secondo = null, id = "s", prefisso = "" } = {}) {
   const tutti = (secondo ? valori.concat(secondo) : valori).filter(Number.isFinite);
   if (valori.length < 2 || !tutti.length) return "";
   const basso = Math.min(...tutti);
@@ -99352,9 +99426,9 @@ function spark(valori, { colore, alto = 46, secondo = null, id = "s" } = {}) {
   const linea = (vv) => vv.map((v, i) => `${i ? "L" : "M"}${x(i, vv.length).toFixed(1)},${y(v).toFixed(1)}`).join("");
   const area = `${linea(valori)}L${W2},${alto}L0,${alto}Z`;
   return `<svg class="dm-meteo-spark" viewBox="0 0 ${W2} ${alto}" preserveAspectRatio="none" aria-hidden="true">
-      <defs><linearGradient id="dm-meteo-g-${id}" x1="0" y1="0" x2="0" y2="1">
+      <defs><linearGradient id="dm-meteo-g-${prefisso}${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${colore}" stop-opacity=".28"/><stop offset="1" stop-color="${colore}" stop-opacity="0"/></linearGradient></defs>
-      <path d="${area}" fill="url(#dm-meteo-g-${id})"/>
+      <path d="${area}" fill="url(#dm-meteo-g-${prefisso}${id})"/>
       ${secondo && secondo.length > 1 ? `<path d="${linea(secondo)}" fill="none" stroke="${colore}" stroke-opacity=".38" stroke-width="1.6" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>` : ""}
       <path d="${linea(valori)}" fill="none" stroke="${colore}" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
       <circle cx="${W2}" cy="${y(valori[valori.length - 1]).toFixed(1)}" r="3.2" fill="${colore}"/>
@@ -99477,13 +99551,14 @@ function adessoMarkup3(vista2) {
 }
 function stazioneMarkup(vista2) {
   const { stazione, adesso } = vista2;
+  const prefisso = clean(vista2.prefisso);
   const inizio = adesso - 24 * H6;
-  const passo = (lettura3) => serieAPassoFisso(serieDi2(lettura3.entity, lettura3), { inizio, fine: adesso });
+  const passo = (lettura3) => serieAPassoFisso(serieDi2(lettura3.entity, lettura3, adesso), { inizio, fine: adesso });
   const tessere2 = [];
   const quando4 = (punto2) => oraDi3(punto2?.quando);
   const temp = stazione.temperatura;
   if (temp) {
-    const estremi2 = minimoEMassimo(serieDi2(temp.entity, temp), { da: inizio });
+    const estremi2 = minimoEMassimo(serieDi2(temp.entity, temp, adesso), { da: inizio });
     tessere2.push(
       tessera({
         chiave: "temperatura",
@@ -99492,7 +99567,7 @@ function stazioneMarkup(vista2) {
         valore: numeroBello(temp.valore, 1),
         unita: temp.unita || "°C",
         sotto: estremi2 ? `${esc(t("min", "min"))} ${b(`${numeroBello(estremi2.minimo.valore, 1)}°`)} ${esc(t("alle", "at"))} ${esc(quando4(estremi2.minimo))} · ${esc(t("max", "max"))} ${b(`${numeroBello(estremi2.massimo.valore, 1)}°`)} ${esc(t("alle", "at"))} ${esc(quando4(estremi2.massimo))}` : "",
-        grafico: spark(passo(temp), { colore: "#f97316", id: "temperatura" }),
+        grafico: spark(passo(temp), { colore: "#f97316", id: "temperatura", prefisso }),
         colore: "#f97316"
       })
     );
@@ -99509,14 +99584,14 @@ function stazioneMarkup(vista2) {
         valore: numeroBello(umidita.valore, 0),
         unita: umidita.unita || "%",
         sotto: rugiada === null ? "" : `${esc(t("punto di rugiada", "dew point"))} ${b(`${numeroBello(rugiada, 1)}°`)}`,
-        grafico: spark(passo(umidita), { colore: "#0ea5e9", id: "umidita" }),
+        grafico: spark(passo(umidita), { colore: "#0ea5e9", id: "umidita", prefisso }),
         colore: "#0ea5e9"
       })
     );
   }
   const pressione2 = stazione.pressione;
   if (pressione2) {
-    const tendenza2 = tendenzaDellaPressione(serieDi2(pressione2.entity, pressione2), {
+    const tendenza2 = tendenzaDellaPressione(serieDi2(pressione2.entity, pressione2, adesso), {
       adesso,
       unita: pressione2.unita || "hPa"
     });
@@ -99532,7 +99607,7 @@ function stazioneMarkup(vista2) {
         unita: pressione2.unita || "hPa",
         stato: stato3,
         sotto: tendenza2 ? `${b(differenza)} ${esc(t("nelle ultime 3 ore", "in the last 3 hours"))}${esc(giudizio)}` : "",
-        grafico: spark(passo(pressione2), { colore: "#8b5cf6", id: "pressione" }),
+        grafico: spark(passo(pressione2), { colore: "#8b5cf6", id: "pressione", prefisso }),
         colore: "#8b5cf6"
       })
     );
@@ -99542,7 +99617,7 @@ function stazioneMarkup(vista2) {
   if (oggi || intensita) {
     const adessoMmH = intensita ? inMillimetri(intensita.valore, intensita.unita) : null;
     const piove = adessoMmH !== null && stapiovendo(adessoMmH);
-    const ore = oggi ? pioggiaOraPerOra(serieDi2(oggi.entity, oggi), { adesso, unita: oggi.unita || "mm" }) : [];
+    const ore = oggi ? pioggiaOraPerOra(serieDi2(oggi.entity, oggi, adesso), { adesso, unita: oggi.unita || "mm" }) : [];
     const ultima = [...ore].reverse().find((casella6) => casella6.mm > 0);
     const valore3 = oggi ? inMillimetri(oggi.valore, oggi.unita) : adessoMmH;
     tessere2.push(
@@ -99560,7 +99635,7 @@ function stazioneMarkup(vista2) {
         grafico: oggi ? barre(
           ore.map((casella6) => casella6.mm),
           "#0284c7"
-        ) : spark(passo(intensita), { colore: "#0284c7", id: "pioggia" }),
+        ) : spark(passo(intensita), { colore: "#0284c7", id: "pioggia", prefisso }),
         colore: "#0284c7"
       })
     );
@@ -99586,6 +99661,7 @@ function stazioneMarkup(vista2) {
         grafico: spark(passo(vento), {
           colore: "#14b8a6",
           id: "vento",
+          prefisso,
           secondo: raffica ? passo(raffica) : null
         }),
         colore: "#14b8a6",
@@ -99597,7 +99673,7 @@ function stazioneMarkup(vista2) {
   if (uv) {
     const mezzanotte3 = new Date(adesso);
     mezzanotte3.setHours(0, 0, 0, 0);
-    const estremi2 = minimoEMassimo(serieDi2(uv.entity, uv), { da: mezzanotte3.getTime() });
+    const estremi2 = minimoEMassimo(serieDi2(uv.entity, uv, adesso), { da: mezzanotte3.getTime() });
     tessere2.push(
       tessera({
         chiave: "uv",
@@ -99616,7 +99692,7 @@ function stazioneMarkup(vista2) {
   if (radiazione || luce2) {
     const principale = radiazione || luce2;
     const lux = (lettura3) => /^lx$/i.test(lettura3.unita) && lettura3.valore >= 1e3 ? `${numeroBello(lettura3.valore / 1e3, 0)} klx` : `${numeroBello(lettura3.valore, 0)} ${lettura3.unita || "lx"}`;
-    const picco = minimoEMassimo(serieDi2(principale.entity, principale), { da: inizio })?.massimo;
+    const picco = minimoEMassimo(serieDi2(principale.entity, principale, adesso), { da: inizio })?.massimo;
     const valoreLuce = !radiazione && /^lx$/i.test(luce2.unita) && luce2.valore >= 1e3;
     tessere2.push(
       tessera({
@@ -99629,7 +99705,7 @@ function stazioneMarkup(vista2) {
           radiazione && luce2 ? `${esc(t("luminosità", "brightness"))} ${b(lux(luce2))}` : "",
           picco && picco.valore > 0 ? `${esc(t("picco", "peak"))} ${b(`${numeroBello(picco.valore, 0)} ${principale.unita}`)} ${esc(t("alle", "at"))} ${esc(quando4(picco))}` : ""
         ].filter(Boolean).join(" · "),
-        grafico: spark(passo(principale), { colore: "#f59e0b", id: "sole" }),
+        grafico: spark(passo(principale), { colore: "#f59e0b", id: "sole", prefisso }),
         colore: "#f59e0b"
       })
     );
@@ -99740,33 +99816,21 @@ function soleDiOggi(states) {
   const tramonto = oraDi3(Date.parse(clean(sole.next_setting)));
   return alba || tramonto ? { alba, tramonto } : null;
 }
-function vistaDelMeteo(states = allStates(), adesso = Date.now()) {
-  const entita3 = entitaDelMeteo(states);
-  if (!entita3) return null;
-  const meteo3 = states?.[entita3] || null;
+function vistaDelMeteo(states = allStates(), adesso = Date.now(), { entita: entita3 = "", prefisso = "" } = {}) {
+  const scelta3 = clean(entita3) || entitaDelMeteo(states);
+  if (!scelta3) return null;
   const sensori = sensoriDellaStazione();
-  const stazione = letturaDellaStazione(sensori, states);
-  const misure = misureDiAdesso({ stazione, meteo: meteo3 });
-  const unita3 = clean(meteo3?.attributes?.precipitation_unit) || "mm";
-  const p = state114.previsioni.entita === entita3 ? state114.previsioni : { orarie: [], giornaliere: [] };
-  const ore = prossimeOre(p.orarie, { adesso, ore: 24, unita: unita3 }).filter(
-    (voce3) => Number.isFinite(voce3.temperatura)
-  );
-  const giorni = prossimiGiorni(p.giornaliere, { adesso, giorni: 7, unita: unita3 });
-  const oggi = giorni.find((voce3) => voce3.oggi);
-  return {
-    adesso,
-    entita: entita3,
-    meteo: meteo3,
-    sensori,
-    stazione,
-    misure,
-    ore,
-    giorni,
-    oggi: oggi ? { alta: oggi.temperatura, bassa: oggi.bassa } : null,
-    frase: fraseDelleProssimeOre(p.orarie, { adesso, ore: 24, unita: unita3 }),
-    sole: soleDiOggi(states)
-  };
+  const p = state114.previsioni.entita === scelta3 ? state114.previsioni : { orarie: [], giornaliere: [] };
+  const vista2 = vistaDelMeteoDa({
+    entita: scelta3,
+    meteo: states?.[scelta3] || null,
+    stazione: letturaDellaStazione(sensori, states),
+    orarie: p.orarie,
+    giornaliere: p.giornaliere,
+    sole: soleDiOggi(states),
+    adesso
+  });
+  return vista2 ? { ...vista2, sensori, prefisso: clean(prefisso) } : null;
 }
 function blocchiDellaVista(vista2, { radar = true, invito = puoConfigurareAdesso() } = {}) {
   if (!vista2) return [];
@@ -99786,6 +99850,8 @@ function puoConfigurareAdesso() {
     return true;
   }
 }
+var adessoDelMeteo = (vista2) => adessoMarkup3(vista2);
+var stazioneDelMeteo = (vista2) => stazioneMarkup(vista2);
 var DISEGNI2 = Object.freeze({
   adesso: adessoMarkup3,
   stazione: stazioneMarkup,
@@ -99916,11 +99982,8 @@ function titoloDellaPagina2() {
   }
   return voci4.length ? { subtitle: voci4.join(" · ") } : null;
 }
-function installStyles52() {
-  const P7 = `#${METEO_PAGE_ID}`;
-  installStyle(
-    "dm-meteo-section-style",
-    `
+function foglioDelMeteo(P7, { media: media3 = true } = {}) {
+  return `
   ${P7}{--dm-meteo-gap:16px}
   ${P7} .dm-meteo-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:22px;padding:0 0 40px}
   ${P7} .dm-meteo-posto{grid-column:1/-1;min-width:0}
@@ -100047,7 +100110,10 @@ function installStyles52() {
   ${P7} .dm-meteo-radar-scheda{padding:14px}
   ${P7} .dm-meteo-radar-posto .dm-radar-blocco{margin:0}
   ${P7} .dm-meteo-radar-posto .dm-radar-blocco:not([data-dm-modo="guasto"]) .dm-radar-testa{display:none}
-
+${media3 ? foglioDelleMisure(P7) : ""}`;
+}
+function foglioDelleMisure(P7) {
+  return `
   @media(max-width:1100px){
     ${P7} .dm-meteo-tessere{grid-template-columns:repeat(2,minmax(0,1fr))}
     ${P7} .dm-meteo-wrap{grid-template-columns:minmax(0,1fr)}
@@ -100073,8 +100139,10 @@ function installStyles52() {
     ${P7} .dm-meteo-invito{flex-wrap:wrap}
     ${P7} .dm-meteo-wrap{gap:18px}
   }
-    `
-  );
+    `;
+}
+function installStyles52() {
+  installStyle("dm-meteo-section-style", foglioDelMeteo(`#${METEO_PAGE_ID}`));
 }
 function onClick26(evento) {
   if (!evento.target?.closest?.("[data-dm-meteo-apri-config]")) return;
@@ -101514,29 +101582,32 @@ var GIORNI_DEL_METEO = 7;
 function meteoDelMuro(statoMeteo, {
   orarie = [],
   giornaliere = [],
+  stazione = {},
+  sole = null,
   adesso = Date.now(),
   ore = ORE_DEL_METEO,
-  giorni = GIORNI_DEL_METEO
+  giorni = GIORNI_DEL_METEO,
+  entita: id = ""
 } = {}) {
   if (!statoMeteo || typeof statoMeteo !== "object") return null;
-  const attributi2 = statoMeteo.attributes || {};
-  const unita3 = testo3(attributi2.precipitation_unit, 8) || "mm";
-  const misure = misureDiAdesso({ meteo: statoMeteo });
+  const vista2 = vistaDelMeteoDa({
+    entita: id || testo3(statoMeteo.entity_id, 120),
+    meteo: statoMeteo,
+    stazione,
+    orarie,
+    giornaliere,
+    sole,
+    adesso,
+    ore,
+    giorni
+  });
   const condizione = testo3(statoMeteo.state, 32).toLowerCase();
-  const fila2 = prossimeOre(orarie, { adesso, ore, unita: unita3 }).filter(
-    (voce3) => Number.isFinite(voce3.temperatura)
-  );
-  const elencoDeiGiorni = prossimiGiorni(giornaliere, { adesso, giorni, unita: unita3 });
-  const oggi = elencoDeiGiorni.find((voce3) => voce3.oggi);
+  const misure = vista2.misure;
   return {
+    ...vista2,
     condizione,
     disponibile: !["", "unavailable", "unknown"].includes(condizione),
-    misure,
-    spicchio: misure.direzione ? spicchioDelVento(misure.direzione.valore) : null,
-    ore: fila2,
-    giorni: elencoDeiGiorni,
-    oggi: oggi ? { alta: oggi.temperatura, bassa: oggi.bassa } : null,
-    frase: fraseDelleProssimeOre(orarie, { adesso, ore: 24, unita: unita3 })
+    spicchio: misure.direzione ? spicchioDelVento(misure.direzione.valore) : null
   };
 }
 function comandiDellaPagina(pagina2, fonte = {}, zona = "", { aCoppia: aCoppia2 = null } = {}) {
@@ -102288,6 +102359,11 @@ function titoloLungo(titolo3) {
   const lettere = String(titolo3 || "").length;
   return lettere > 12 ? " mu-tit-xl" : lettere > 8 ? " mu-tit-l" : "";
 }
+function sottoDellaPagina(pagina2) {
+  if (pagina2.modello === "meteo" && Object.keys(sensoriDellaStazione()).length)
+    return t("Adesso · La mia stazione · Previsioni", "Now · My station · Forecast");
+  return SOTTO()[pagina2.modello];
+}
 function testa(pagina2, muro) {
   const o = orologio3();
   const suMeteo = pagina2.modello === "meteo";
@@ -102303,7 +102379,7 @@ function testa(pagina2, muro) {
   ).join("")}</div>` : "";
   return `<div class="mu-carta mu-testa${lato ? " mu-testa-lato" : ""}" style="--acc:${accento}">
     ${lato ? "" : tastoDelMenu()}
-    <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina2))}">${esc(titoloDi(pagina2))}</div><div class="mu-et mu-sot">${esc(SOTTO()[pagina2.modello])}</div></div>
+    <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina2))}">${esc(titoloDi(pagina2))}</div><div class="mu-et mu-sot">${esc(sottoDellaPagina(pagina2))}</div></div>
     ${linguette3}
     <div class="mu-ora" data-mu-orologio>${chipDelMeteo}<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
   </div>`;
@@ -103416,8 +103492,14 @@ function paginaMeteo(pagina2) {
   const id = entitaDelMeteo2();
   if (!id) return `<div class="mu-mt mu-mt-solo">${meteoVuoto(acc)}</div>`;
   const previsioni = previsioniDelMeteo(id, previsioniArrivate);
-  const v = meteoDelMuro(stato2(id), { ...previsioni, adesso: Date.now() });
+  const minuto = Math.floor(Date.now() / 6e4) * 6e4;
+  const vista2 = vistaDelMeteo(allStates() || {}, minuto, { entita: id, prefisso: "muro-" });
+  const v = meteoDelMuro(stato2(id), { ...previsioni, stazione: vista2?.stazione, adesso: minuto });
   if (!v) return `<div class="mu-mt mu-mt-solo">${meteoVuoto(acc)}</div>`;
+  if (vista2?.tessere?.length) {
+    storiaDellaStazione(vista2.sensori, previsioniArrivate);
+    segna("sun.sun");
+  }
   const m = v.misure;
   const gradi9 = (n) => Number.isFinite(n) ? `${Math.round(n)}°` : "—";
   const forbice = [
@@ -103504,6 +103586,14 @@ function paginaMeteo(pagina2) {
           <b class="mu-mt-max">${gradi9(max)}</b>
         </div>`;
   }).join("")}</div>` : `<div class="mu-mt-attesa">${esc(inArrivo2)}</div>`;
+  const blocchiDelleOre = `<div class="mu-carta mu-mt-scheda mu-mt-prossimi" data-mu-meteo-blocco="giorni">${titoletto4(t("Prossimi giorni", "Next days"))}${righe3}</div>
+    <div class="mu-carta mu-mt-scheda mu-mt-ore" data-mu-meteo-blocco="ore">${titoletto4(t("Ora per ora", "Hour by hour"))}${ore}</div>`;
+  if (vista2?.tessere?.length)
+    return `<div class="mu-mt mu-mt-stazione" data-mu-meteo="${esc(id)}" data-mu-meteo-tessere="${vista2.tessere.length}" style="--acc:${acc}">
+    <div class="mu-mt-pl mu-mt-pl-adesso">${adessoDelMeteo(vista2)}</div>
+    <div class="mu-mt-pl mu-mt-pl-stazione">${stazioneDelMeteo(vista2)}</div>
+    ${blocchiDelleOre}
+  </div>`;
   return `<div class="mu-mt" data-mu-meteo="${esc(id)}">
     ${adesso}
     <div class="mu-carta mu-mt-scheda mu-mt-prossimi" data-mu-meteo-blocco="giorni">${titoletto4(t("Prossimi giorni", "Next days"))}${righe3}</div>
@@ -106146,6 +106236,115 @@ ${MURO}[data-compatto="1"] .mu-mt-vuoto{padding:18px;gap:10px}
 ${MURO}[data-compatto="1"] .mu-mt-vuoto>b{font-size:20px}
 ${MURO}[data-compatto="1"] .mu-mt-vuoto>span:last-child{font-size:13px}
 ${MURO}[data-compatto="1"] .mu-mt-vuoto .mu-chip{--c:64px!important}
+/* La pagina Meteo con la stazione: quella della plancia, adattata al muro.
+   «Adesso» per tutta la larghezza come in plancia; sotto, a sinistra, «La mia
+   stazione» con le tessere su quattro colonne e due file (il vento largo
+   due), a destra i prossimi giorni e le prossime ore. I pezzi della plancia
+   portano il loro foglio (foglioDelMeteo); qui le carte prendono la carta
+   del muro, e il tema del muro (non quello della plancia sotto). */
+${foglioDelMeteo(`${MURO} .mu-mt-stazione`, { media: false })}
+${MURO} .mu-mt.mu-mt-stazione{--card-border:color-mix(in srgb,var(--text) 10%,transparent);--surface-2:color-mix(in srgb,var(--text) 5%,var(--card-bg));--dm-meteo-gap:12px;
+  grid-template-columns:minmax(0,1fr) minmax(0,368px);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"adesso adesso" "stazione giorni" "stazione ore";gap:14px}
+${MURO} .mu-mt-pl{min-width:0;min-height:0;display:flex;flex-direction:column}
+${MURO} .mu-mt-pl-adesso{grid-area:adesso}
+${MURO} .mu-mt-pl-stazione{grid-area:stazione}
+${MURO} .mu-mt-pl>.dm-meteo-blocco{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+${MURO} .mu-mt-stazione :is(.dm-meteo-adesso,.dm-meteo-tessera){border:0;border-radius:22px;background:${FONDO_DELLA_CARTA};box-shadow:${OMBRA_DELLA_CARTA}}
+${MURO} .mu-mt-stazione .dm-meteo-adesso{padding:18px 24px;gap:24px;background:radial-gradient(120% 160% at 0% 0%,rgba(14,165,233,.14),transparent 55%),${FONDO_DELLA_CARTA}}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-ic{font-size:84px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-gradi>b{font-size:72px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-cond{font-size:14px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-gradi small{font-size:14px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-dx{gap:10px}
+${MURO} .mu-mt-stazione .dm-meteo-frase{padding:10px 14px}
+${MURO} .mu-mt-stazione .dm-meteo-frase strong{font-size:16px}
+${MURO} .mu-mt-stazione .dm-meteo-pill{font-size:13px;padding:6px 12px}
+${MURO} .mu-mt-stazione .dm-meteo-fonte{font-size:11.5px}
+${MURO} .mu-mt-stazione .dm-meteo-titolo{margin:0 0 8px 4px;flex:none}
+${MURO} .mu-mt-stazione .dm-meteo-tessere{flex:1 1 auto;min-height:0;grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr)}
+${MURO} .mu-mt-stazione .dm-meteo-tessera{grid-template-rows:auto auto auto minmax(0,1fr);gap:5px;padding:14px 16px 10px;min-height:0}
+${MURO} .mu-mt-stazione .dm-meteo-larga>.dm-meteo-bussola{grid-row:1/span 4}
+/* La testa della tessera: il nome va a capo invece di finire nei puntini, e
+   lo stato («in aumento», «asciutto») scende sotto il nome, che sul muro le
+   tessere sono strette e la pastiglia accanto lascerebbe al nome tre lettere. */
+${MURO} .mu-mt-stazione .dm-meteo-tessera-testa{display:grid;grid-template-columns:auto minmax(0,1fr);grid-auto-rows:auto;align-content:center;column-gap:10px;row-gap:3px;min-height:38px}
+${MURO} .mu-mt-stazione .dm-meteo-tessera-testa>.dm-meteo-ic{grid-row:1/span 2}
+${MURO} .mu-mt-stazione .dm-meteo-nome{grid-column:2;align-self:end;font-size:11px;letter-spacing:.7px;line-height:1.2;white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+${MURO} .mu-mt-stazione .dm-meteo-tessera-testa>.dm-meteo-nome:last-child{grid-row:1/span 2;align-self:center}
+${MURO} .mu-mt-stazione .dm-meteo-stato{grid-column:2;justify-self:start;align-self:start;margin-left:0;padding:2px 8px;font-size:9.5px}
+${MURO} .mu-mt-stazione .dm-meteo-valore{margin-top:2px}
+${MURO} .mu-mt-stazione .dm-meteo-valore b{font-size:38px}
+${MURO} .mu-mt-stazione .dm-meteo-valore i{font-size:14px}
+${MURO} .mu-mt-stazione .dm-meteo-sotto{font-size:12px;min-height:0}
+${MURO} .mu-mt-stazione .dm-meteo-grafico{align-self:end;height:44px;margin-top:12px}
+${MURO} .mu-mt-stazione .dm-meteo-spark{height:44px}
+${MURO} .mu-mt-stazione .dm-meteo-uv{align-self:end}
+${MURO} .mu-mt-stazione .mu-mt-scheda{padding:14px 18px}
+${MURO} .mu-mt-stazione .mu-mt-giorno{grid-template-columns:minmax(60px,1fr) 30px minmax(40px,.7fr) 34px minmax(44px,1.1fr) 34px;gap:8px}
+${MURO} .mu-mt-stazione .mu-mt-giorno-n{font-size:15px}
+${MURO} .mu-mt-stazione .mu-mt-giorno-segno{font-size:23px}
+${MURO} .mu-mt-stazione .mu-mt-min,${MURO} .mu-mt-stazione .mu-mt-max{font-size:20px}
+${MURO} .mu-mt-stazione .mu-mt-giorno-p{font-size:12px}
+${MURO} .mu-mt-stazione .mu-mt-ore .mu-mt-ora:nth-child(n+7){display:none}
+${MURO} .mu-mt-stazione .mu-mt-ora{padding:8px 2px;gap:6px}
+${MURO} .mu-mt-stazione .mu-mt-ora-segno{font-size:26px}
+${MURO} .mu-mt-stazione .mu-mt-ora>b{font-size:22px}
+/* In verticale: in colonna come in plancia, «Adesso» e poi la stazione; in
+   fondo le ore e i giorni affiancati, le stesse due carte della colonna di
+   destra del tablet orizzontale. */
+${MURO}[data-verso="verticale"] .mu-mt.mu-mt-stazione{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"adesso adesso" "stazione stazione" "ore giorni"}
+${MURO}[data-verso="verticale"] .mu-mt-stazione .mu-mt-ore .mu-mt-fila{flex:1;align-items:center}
+/* Il pannello piccolo: «Adesso» in colonna accanto a quattro tessere, le ore
+   sotto. Restano la linea delle 24 ore e il numero; la riga sotto, la
+   bussola e i giorni se ne vanno (i giorni li dice la minima e la massima di
+   oggi, e la frase sulla pioggia). */
+${MURO}[data-compatto="1"] .mu-mt.mu-mt-stazione{gap:8px;--dm-meteo-gap:6px;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"adesso stazione" "ore ore"}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-mt.mu-mt-stazione{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"adesso" "stazione" "ore"}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-prossimi{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso{grid-template-columns:minmax(0,1fr);gap:8px;padding:10px 12px;border-radius:16px;align-content:center}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-sx{gap:10px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-ic{font-size:40px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi{gap:2px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi>b{font-size:40px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi>b i{font-size:24px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-cond{font-size:11px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi small{font-size:10.5px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-dx{gap:6px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase{padding:6px 9px;gap:8px;border-radius:12px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase>span{font-size:16px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase strong{font-size:11.5px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-pills{gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-pill{font-size:9.5px;padding:2px 7px;gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-fonte{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-titolo{margin:0 0 4px 2px;font-size:10px;letter-spacing:1px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-titolo svg{width:15px;height:15px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-titolo small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessere{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessera:nth-child(n+5){display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessera{grid-template-rows:auto auto minmax(0,1fr);gap:1px;padding:6px 9px 4px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-larga{grid-column:auto;grid-template-columns:minmax(0,1fr)}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-larga>*{grid-column:1}
+${MURO}[data-compatto="1"] .mu-mt-stazione :is(.dm-meteo-bussola,.dm-meteo-sotto,.dm-meteo-stato,.dm-meteo-24){display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-ic{width:20px;height:20px;border-radius:7px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-ic svg{width:15px;height:15px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessera-testa{column-gap:6px;min-height:20px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-nome{font-size:9px;letter-spacing:.5px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-valore{margin-top:0;gap:4px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-valore b{font-size:22px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-valore i{font-size:10px}
+${MURO}[data-compatto="1"] .mu-mt-stazione :is(.dm-meteo-grafico,.dm-meteo-spark){height:20px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-grafico{margin-top:2px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-uv{padding:4px 0 0}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-uv-tacche{font-size:8px;margin-top:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-scheda{padding:8px 10px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ore .mu-mt-ora:nth-child(n+7){display:flex}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ore .mu-mt-ora:nth-child(n+9){display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora{padding:4px 1px;gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora-segno{font-size:18px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora>b{font-size:16px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora>small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-scheda{gap:4px}
 ${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}

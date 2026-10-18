@@ -6824,4 +6824,5 @@ export default Object.freeze({
   "Windy weather radar": "Windy 기상 레이더",
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "인터폰 이벤트(event.*) 또는 벨이 울리면 켜지는 센서(binary_sensor). 버튼이나 스위치도 됩니다.",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "은(는) 초인종으로 쓸 수 없습니다: 이벤트(event.*)나 켜지는 센서(binary_sensor.*)를 선택하세요.",
+  "Now · My station · Forecast": "지금 · 내 관측소 · 예보",
 });

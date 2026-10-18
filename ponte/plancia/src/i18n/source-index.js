@@ -675,6 +675,7 @@ export const SOURCE_INDEX = Object.freeze({
   "adesso": "now",
   "Adesso": "Now",
   "ADESSO": "NOW",
+  "Adesso · La mia stazione · Previsioni": "Now · My station · Forecast",
   "Adesso · La mia stazione · Previsioni · Radar": "Now · My station · Forecast · Radar",
   "Adesso · Ora per ora · Prossimi giorni": "Now · Hour by hour · Next days",
   "adesso ${ora}": "now ${ora}",

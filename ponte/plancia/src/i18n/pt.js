@@ -6873,4 +6873,5 @@ export default Object.freeze({
   "Windy weather radar": "Radar meteorológico do Windy",
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "Um evento do intercomunicador (event.*), ou um sensor que liga quando toca (binary_sensor). Um botão ou um interruptor também servem.",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "não pode servir de campainha: escolha um evento (event.*) ou um sensor que liga (binary_sensor.*).",
+  "Now · My station · Forecast": "Agora · A minha estação · Previsão",
 });

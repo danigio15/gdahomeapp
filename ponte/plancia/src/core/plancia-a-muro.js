@@ -27,13 +27,7 @@ import {
 } from "./antifurto-su-misura.js";
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
-import {
-  fraseDelleProssimeOre,
-  misureDiAdesso,
-  prossimeOre,
-  prossimiGiorni,
-  spicchioDelVento,
-} from "./la-pagina-meteo.js";
+import { spicchioDelVento, vistaDelMeteoDa } from "./la-pagina-meteo.js";
 import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { immaginePulita } from "./immagine-del-riquadro.js";
 import { lettoriConfigurati } from "./media-player.js";
@@ -1985,41 +1979,47 @@ export const ORE_DEL_METEO = 12;
 export const GIORNI_DEL_METEO = 7;
 
 /**
- * Cosa dice la pagina Meteo: le misure di adesso dall'entita' weather, le
- * prossime ore e i prossimi giorni dalle previsioni (`weather.get_forecasts`,
- * le stesse che chiede la pagina Meteo della plancia). Le letture sono quelle
- * di `la-pagina-meteo.js`: due pagine meteo che arrotondassero diverso
- * direbbero due tempi. `null` senza entita'.
+ * Cosa dice la pagina Meteo: com'e' adesso, le prossime ore e i prossimi
+ * giorni (`weather.get_forecasts`, le stesse previsioni che chiede la pagina
+ * Meteo della plancia) e le tessere della stazione. E' la vista della pagina
+ * Meteo della plancia (`vistaDelMeteoDa`): con una stazione nella sua
+ * configurazione le misure di adesso sono le sue, e il tablet non dice i 18°
+ * dell'entita' weather mentre la stazione ne misura 19,6. Senza stazione
+ * (`stazione` vuota) le misure sono quelle dell'entita' weather e le tessere
+ * non ci sono. `null` senza entita'.
  */
 export function meteoDelMuro(
   statoMeteo,
   {
     orarie = [],
     giornaliere = [],
+    stazione = {},
+    sole = null,
     adesso = Date.now(),
     ore = ORE_DEL_METEO,
     giorni = GIORNI_DEL_METEO,
+    entita: id = "",
   } = {},
 ) {
   if (!statoMeteo || typeof statoMeteo !== "object") return null;
-  const attributi = statoMeteo.attributes || {};
-  const unita = testo(attributi.precipitation_unit, 8) || "mm";
-  const misure = misureDiAdesso({ meteo: statoMeteo });
+  const vista = vistaDelMeteoDa({
+    entita: id || testo(statoMeteo.entity_id, 120),
+    meteo: statoMeteo,
+    stazione,
+    orarie,
+    giornaliere,
+    sole,
+    adesso,
+    ore,
+    giorni,
+  });
   const condizione = testo(statoMeteo.state, 32).toLowerCase();
-  const fila = prossimeOre(orarie, { adesso, ore, unita }).filter((voce) =>
-    Number.isFinite(voce.temperatura),
-  );
-  const elencoDeiGiorni = prossimiGiorni(giornaliere, { adesso, giorni, unita });
-  const oggi = elencoDeiGiorni.find((voce) => voce.oggi);
+  const misure = vista.misure;
   return {
+    ...vista,
     condizione,
     disponibile: !["", "unavailable", "unknown"].includes(condizione),
-    misure,
     spicchio: misure.direzione ? spicchioDelVento(misure.direzione.valore) : null,
-    ore: fila,
-    giorni: elencoDeiGiorni,
-    oggi: oggi ? { alta: oggi.temperatura, bassa: oggi.bassa } : null,
-    frase: fraseDelleProssimeOre(orarie, { adesso, ore: 24, unita }),
   };
 }
 
