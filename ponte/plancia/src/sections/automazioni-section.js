@@ -64,11 +64,16 @@ import {
 import { CATEGORIE, EVENTO_AVVISA, normalizzata } from "../core/automazioni-ha.js";
 import { proposteDaMostrare } from "../core/automazioni-proposte.js";
 import {
+  azioneDelDispositivoInParole,
+  condizioneDelDispositivoInParole,
   diventaInParole,
+  eUnIdCrudo,
+  innescoDelDispositivoInParole,
   nomeDaId,
   servizioInParole,
   statoInParole,
 } from "../core/parole-dei-servizi.js";
+import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
@@ -815,16 +820,20 @@ export function gruppiDelleAutomazioni(elenco, { per = "", perStanza = false, ce
 
 /* ── i gruppi che si chiudono ───────────────────────────────────────────── *
  *
- * Come in Home Assistant: ▾ aperto, ▸ chiuso, e il numero accanto. Chi
- * guarda si ritrova i gruppi come li ha lasciati: lo ricorda questo browser
- * (o questo telefono), non la configurazione della casa — un gruppo chiuso
- * da uno non si chiude per tutti. */
+ * Come in Home Assistant: ▾ aperto, ▸ chiuso, e il numero accanto. Dal
+ * campo: «fai in modo che le automazioni escono raggruppate e se uno vuole
+ * le espande, non mettere per default espanso». Quindi i gruppi partono
+ * chiusi, e si ricordano quelli che chi guarda ha APERTO: lo ricorda questo
+ * browser (o questo telefono), non la configurazione della casa — un gruppo
+ * aperto da uno non si apre per tutti. La chiave di prima
+ * (`dm_automazioni_gruppi_chiusi`, i chiusi) non si legge piu': diceva il
+ * contrario. */
 
-export const CHIAVE_GRUPPI_CHIUSI = "dm_automazioni_gruppi_chiusi";
+export const CHIAVE_GRUPPI_APERTI = "dm_automazioni_gruppi_aperti";
 
-function gruppiChiusi() {
+function gruppiAperti() {
   try {
-    const scritto = JSON.parse(root.localStorage?.getItem?.(CHIAVE_GRUPPI_CHIUSI) || "[]");
+    const scritto = JSON.parse(root.localStorage?.getItem?.(CHIAVE_GRUPPI_APERTI) || "[]");
     return Array.isArray(scritto) ? scritto.map(String) : [];
   } catch (_errore) {
     return [];
@@ -833,12 +842,70 @@ function gruppiChiusi() {
 
 /** Apre o chiude un gruppo («categoria:<id>», «tipo:luci», «stanza:Cucina»). */
 export function alternaIlGruppo(chiave) {
-  const chiusi = new Set(gruppiChiusi());
-  if (chiusi.has(chiave)) chiusi.delete(chiave);
-  else chiusi.add(chiave);
+  const aperti = new Set(gruppiAperti());
+  if (aperti.has(chiave)) aperti.delete(chiave);
+  else aperti.add(chiave);
+  scriviGliAperti(aperti);
+}
+
+function scriviGliAperti(aperti) {
   try {
-    root.localStorage?.setItem?.(CHIAVE_GRUPPI_CHIUSI, JSON.stringify([...chiusi]));
+    root.localStorage?.setItem?.(CHIAVE_GRUPPI_APERTI, JSON.stringify([...aperti]));
   } catch (_errore) {}
+}
+
+/* ── «Espandi tutto» e «Ritrai tutto» ──────────────────────────────────── *
+ *
+ * Dal campo: «metti due pulsanti espandi tutto e ritrai tutto». Valgono per
+ * il raggruppamento di adesso: «Espandi tutto» per categoria apre tutte le
+ * categorie e lascia come sono i tipi e le stanze; «Ritrai tutto» toglie
+ * dagli aperti solo i gruppi di questo raggruppamento. Quello che non
+ * cambierebbe niente e' spento; con una ricerca in corso i gruppi sono gia'
+ * tutti aperti, e i due tasti non si vedono. */
+
+/* Le chiavi dei gruppi di adesso, senza la ricerca: «categoria:c_luci», … */
+const chiaviDeiGruppi = (elenco, per) =>
+  gruppiDelleAutomazioni(elenco, { per }).map((g) => g.chiave);
+
+/** Apre (`apri`) o chiude tutti i gruppi del raggruppamento `per`. */
+export function tuttiIGruppi(elenco, { per = "categoria", apri = true } = {}) {
+  const aperti = new Set(gruppiAperti());
+  if (apri) for (const k of chiaviDeiGruppi(elenco, per)) aperti.add(k);
+  else {
+    const modo = `${raggruppaDavvero(per)}:`;
+    for (const k of [...aperti]) if (k.startsWith(modo)) aperti.delete(k);
+  }
+  scriviGliAperti(aperti);
+}
+
+/**
+ * I due tasti, accanto a «Per categoria · Per tipo · Per stanza». Il tocco
+ * porta `data-aug-tutti="apri"` o `"chiudi"`, uguale dappertutto, come
+ * `data-aug-apri`.
+ */
+export function tastiDeiGruppiHtml(elenco, { per = "categoria", cerca = "" } = {}) {
+  const chiavi = chiaviDeiGruppi(elenco, per);
+  const aperti = new Set(gruppiAperti());
+  const quanti = chiavi.filter((k) => aperti.has(k)).length;
+  const nascosti = Boolean(clean(cerca)) || !chiavi.length;
+  const tasto = (fai, segno, nome, spento) =>
+    `<button type="button" class="aug-tutto" data-aug-tutti="${fai}"${spento ? " disabled" : ""} title="${esc(
+      nome,
+    )}" aria-label="${esc(nome)}"><span class="aug-tutto-s" aria-hidden="true">${segno}</span><span class="aug-tutto-t">${esc(
+      nome,
+    )}</span></button>`;
+  return `<span class="aug-tutti" data-aug-tasti${nascosti ? " hidden" : ""}>${tasto(
+    "apri",
+    "⊞",
+    t("Espandi tutto", "Expand all"),
+    quanti === chiavi.length,
+  )}${tasto("chiudi", "⊟", t("Ritrai tutto", "Collapse all"), quanti === 0)}</span>`;
+}
+
+/** Dopo una lettera nella ricerca: i due tasti si rifanno al loro posto. */
+export function rifaiITastiDeiGruppi(dove, elenco, opzioni) {
+  const vecchi = dove?.querySelector?.("[data-aug-tasti]");
+  if (vecchi) vecchi.outerHTML = tastiDeiGruppiHtml(elenco, opzioni);
 }
 
 /** «Per categoria · Per tipo · Per stanza»: `attributo` e' quello dei tocchi di chi lo disegna. */
@@ -872,11 +939,12 @@ export function gruppiCompattiHtml(
 ) {
   const gruppi = gruppiDelleAutomazioni(elenco, { per, cerca });
   if (!gruppi.length) return "";
-  const chiusi = new Set(clean(cerca) ? [] : gruppiChiusi());
+  const cercando = Boolean(clean(cerca));
+  const aperti = new Set(cercando ? [] : gruppiAperti());
   const nomi = CATEGORIA();
   return `<div class="aug-griglia">${gruppi
     .map((g, gi) => {
-      const chiuso = chiusi.has(g.chiave);
+      const chiuso = !cercando && !aperti.has(g.chiave);
       const accese = g.voci.filter((v) => v.attiva).length;
       const righe = chiuso
         ? ""
@@ -929,6 +997,22 @@ export function prossimaDiCasa(elenco = automazioniDiCasa()) {
 const nomiDentro = (v) => nomiDi((Array.isArray(v) ? v : v ? [v] : []).filter((x) => clean(x).includes(".")));
 const comeCodice = (testo) => clean(testo).slice(0, 120);
 
+/* Il nome di cio' di cui parla un pezzo «device»: l'entita', se e' scritta
+ * come entity_id; se no il dispositivo, dalle mappe ricordate. La voce del
+ * registro (trentadue cifre) la plancia non la sa risolvere, e non la
+ * mostra: meglio «un dispositivo» che delle cifre. */
+function nomeDelDispositivo(x) {
+  const entita = [].concat(x?.entity_id || []).map(clean).find((e) => e.includes(".") && !eUnIdCrudo(e));
+  if (entita) return nomeDi(entita);
+  let nomi = {};
+  try {
+    nomi = iDispositiviRicordati()?.nomi || {};
+  } catch (_errore) {
+    nomi = {};
+  }
+  return clean(nomi[clean(x?.device_id)]);
+}
+
 const scritto = (v) => (v !== undefined && v !== null && typeof v !== "object" ? String(v) : "");
 const testiDi = (azioni) =>
   [].concat(azioni || []).flatMap((y) => righeDellAzione(y)).map((r) => r.testo).join(", ");
@@ -978,7 +1062,16 @@ function rigaDelTrigger(x) {
   if (tipo === "time_pattern") return { testo: t("a intervalli regolari", "at regular intervals") };
   if (tipo === "zone")
     return { testo: t(`${chi} entra o esce da una zona`, `${chi} enters or leaves a zone`) };
-  if (tipo === "device") return { testo: t("un dispositivo fa qualcosa", "a device does something") };
+  if (tipo === "device") {
+    const nome = nomeDelDispositivo(x);
+    const frase = innescoDelDispositivoInParole(x, nome);
+    if (frase) return { testo: detto(frase) };
+    return {
+      testo: nome
+        ? t(`${nome} fa qualcosa`, `${nome} does something`)
+        : t("un dispositivo fa qualcosa", "a device does something"),
+    };
+  }
   return { testo: t(`un trigger «${quale}»`, `a «${quale}» trigger`) };
 }
 
@@ -1033,7 +1126,17 @@ function righeDellaCondizione(c, rientra = false) {
     };
   else if (tipo === "trigger")
     riga = { testo: t("secondo cosa l'ha fatta partire", "depending on what started it") };
-  else riga = { testo: t(`una condizione «${quale}»`, `a «${quale}» condition`) };
+  else if (tipo === "device") {
+    const nome = nomeDelDispositivo(c);
+    const frase = condizioneDelDispositivoInParole(c, nome);
+    riga = {
+      testo: frase
+        ? detto(frase)
+        : nome
+          ? t(`una condizione su ${nome}`, `a condition on ${nome}`)
+          : t("una condizione su un dispositivo", "a condition on a device"),
+    };
+  } else riga = { testo: t(`una condizione «${quale}»`, `a «${quale}» condition`) };
   return [{ ...riga, sub: rientra }];
 }
 
@@ -1102,7 +1205,19 @@ function righeDellAzione(x, sub = false) {
     const scena = nomeDi(x.scene);
     return [{ testo: t(`attiva la scena ${scena}`, `activates the ${scena} scene`), sub }];
   }
-  if (x.device_id) return [{ testo: t("un'azione di un dispositivo", "a device action"), sub }];
+  if (x.device_id) {
+    const nome = nomeDelDispositivo(x);
+    const frase = azioneDelDispositivoInParole(x, nome);
+    if (frase) return [{ testo: detto(frase), sub }];
+    return [
+      {
+        testo: nome
+          ? t(`un'azione di ${nome}`, `an action of ${nome}`)
+          : t("un'azione di un dispositivo", "a device action"),
+        sub,
+      },
+    ];
+  }
   return [{ testo: t("un'altra azione", "another action"), sub }];
 }
 
@@ -1250,7 +1365,10 @@ function barraDellaLista(elenco, { chiuso = false } = {}) {
   const n = elenco.length;
   return `<div class="ha-barra au-testa"><h3>${esc(t("Le automazioni di casa", "The home's automations"))} <small>· ${esc(
     t(`${n}, da Home Assistant`, `${n}, from Home Assistant`),
-  )}</small></h3>${scelteDelRaggruppa(state.per, "data-au-per", "ha-seg")}<label class="ha-cerca"><span aria-hidden="true">🔍</span><input type="search" data-au-cerca value="${esc(
+  )}</small></h3>${scelteDelRaggruppa(state.per, "data-au-per", "ha-seg")}${tastiDeiGruppiHtml(elenco, {
+    per: state.per,
+    cerca: state.cerca,
+  })}<label class="ha-cerca"><span aria-hidden="true">🔍</span><input type="search" data-au-cerca value="${esc(
     state.cerca,
   )}" placeholder="${esc(t("Cerca un'automazione…", "Search an automation…"))}"></label>${
     chiuso
@@ -3242,7 +3360,7 @@ function onClick(event) {
     return;
   }
   const el = event.target.closest(
-    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta],[data-au-per],[data-aug-apri],[data-au-esegui],[data-au-duplica],[data-au-converti]",
+    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta],[data-au-per],[data-aug-apri],[data-aug-tutti],[data-au-esegui],[data-au-duplica],[data-au-converti]",
   );
   if (!el) {
     if (state.tendina) {
@@ -3289,6 +3407,8 @@ function onClick(event) {
     state.per = RAGGRUPPA.includes(d.auPer) ? d.auPer : "categoria";
   } else if (d.augApri) {
     alternaIlGruppo(d.augApri);
+  } else if (d.augTutti) {
+    tuttiIGruppi(automazioniDiCasa(), { per: state.per, apri: d.augTutti === "apri" });
   } else if (d.auVai) {
     state.vista = d.auVai;
     state.salvata = null;
@@ -3380,6 +3500,7 @@ function onInput(event) {
     state.cerca = event.target.value;
     const tutte = contenitore()?.querySelector?.(".ha-tutte");
     if (tutte) tutte.innerHTML = gruppiHtml(automazioniDiCasa());
+    rifaiITastiDeiGruppi(contenitore(), automazioniDiCasa(), { per: state.per, cerca: state.cerca });
     return;
   }
   const via = event.target?.dataset?.auTesto;
@@ -3876,6 +3997,13 @@ html[data-theme="dark"] .au .pro-tutte{color:#7dd3fc}
 .au .ha-tutte{margin-top:4px}
 /* I gruppi in righe compatte: gli stessi nella dashboard, nell'app e qui. */
 .aug-griglia{--aug-carta:var(--card-bg,#fff);--aug-bordo:var(--divider-color,#e2e8f0);--aug-tx:var(--text,#0f172a);--aug-dim:var(--secondary-text-color,#64748b);display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px;align-items:start;min-width:0}
+.aug-tutti{display:inline-flex;align-items:center;gap:6px;flex:none}
+.aug-tutti[hidden]{display:none}
+.aug-tutto{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 12px;border:1px solid var(--divider-color,#dbe4ee);border-radius:999px;background:var(--card-bg,#fff);color:var(--secondary-text-color,#64748b);font:inherit;font-size:11px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;cursor:pointer}
+.aug-tutto-s{font-size:16px;line-height:1;letter-spacing:0}
+.aug-tutto:disabled{opacity:.42;cursor:default}
+.aug-tutto:not(:disabled):hover{color:#7c3aed;border-color:#c4b5fd}
+@media (max-width:560px){.aug-tutto{width:36px;height:36px;padding:0}.aug-tutto-t{display:none}}
 .aug{min-width:0;border:1px solid var(--aug-bordo);border-radius:20px;background:var(--aug-carta);box-shadow:0 12px 28px -24px rgba(15,23,42,.45);overflow:hidden}
 .aug-testa{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;cursor:pointer;font-family:inherit;color:var(--aug-tx)}
 .aug-testa:focus-visible{outline:2px solid var(--c);outline-offset:-2px;border-radius:20px}

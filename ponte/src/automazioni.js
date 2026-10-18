@@ -485,13 +485,32 @@ export class Automazioni {
     const nomiDelleAree = await this._nomiDelleAree();
     const categorieHa = await this._categorieHa();
     const areaDelDispositivo = new Map();
+    const nomeDelDispositivo = new Map();
     for (const d of Array.isArray(registri?.dispositivi) ? registri.dispositivi : [])
-      if (d?.id) areaDelDispositivo.set(d.id, d.area_id || "");
+      if (d?.id) {
+        areaDelDispositivo.set(d.id, d.area_id || "");
+        const nome = String(d.name_by_user || d.name || "").trim();
+        if (nome) nomeDelDispositivo.set(d.id, nome);
+      }
     const voceDi = new Map();
+    /* I pezzi «device» di un'automazione non portano l'entity_id ma la voce
+     * del registro (`id`, trentadue cifre): da li' si torna all'entita'. */
+    const entitaDellaVoce = new Map();
     for (const v of Array.isArray(registri?.entita) ? registri.entita : [])
-      if (v?.entity_id) voceDi.set(v.entity_id, v);
-    const nomeDi = (id) => String(statoDi(id)?.attributes?.friendly_name || "");
-    const classeDi = (id) => String(statoDi(id)?.attributes?.device_class || "");
+      if (v?.entity_id) {
+        voceDi.set(v.entity_id, v);
+        if (v.id) entitaDellaVoce.set(String(v.id), v.entity_id);
+      }
+    const entitaDi = (id) => entitaDellaVoce.get(String(id)) || String(id || "");
+    const nomeDi = (id) => {
+      const entita = entitaDi(id);
+      const voce = voceDi.get(entita);
+      return String(
+        statoDi(entita)?.attributes?.friendly_name || voce?.name || voce?.original_name || "",
+      );
+    };
+    const classeDi = (id) => String(statoDi(entitaDi(id))?.attributes?.device_class || "");
+    const dispositivoDi = (id) => nomeDelDispositivo.get(String(id || "")) || "";
     const azioni = this._azioni();
     const fuori = [];
     for (const [entity, s] of voci) {
@@ -513,7 +532,7 @@ export class Automazioni {
       const idCategoria = String(voce?.categories?.automation || "");
       let riassunto = null;
       try {
-        riassunto = riassuntoDellAutomazione(config, { nomeDi, classeDi });
+        riassunto = riassuntoDellAutomazione(config, { nomeDi, classeDi, dispositivoDi });
       } catch (_errore) {
         riassunto = null;
       }
