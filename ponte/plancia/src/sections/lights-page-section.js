@@ -879,7 +879,10 @@ function installStyles() {
          * occupano la larghezza intera invece di lasciare mezzo metro di
          * bianco a destra, e una luce sola non diventa un cartellone. */
         :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-grid{display:flex;flex-wrap:wrap}
-        :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-card{flex:1 1 306px;max-width:396px}
+        /* Anche la card con l'immagine (.dm-lucip-rq, che la classe della
+         * card non la porta): larga «100%», prendeva la fila intera — un
+         * cartellone 16:9 largo tutto lo schermo. */
+        :is(#page-luci,#page-stanze,#page-prese) :is(.dm-lucip-card,.dm-lucip-rq){flex:1 1 306px;max-width:396px}
         :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-bulk{flex:0 1 560px}
         :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-kpi{min-width:132px}
         :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-room{margin-top:14px}

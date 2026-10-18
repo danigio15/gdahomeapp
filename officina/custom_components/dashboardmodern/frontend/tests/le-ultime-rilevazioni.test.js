@@ -253,6 +253,24 @@ test("le tacche cadono ogni sei ore, lontane dai capi", () => {
   assert.deepEqual(tacche(ieriTutto.start, ieriTutto.end), [ieri(6, 0), ieri(12, 0), ieri(18, 0)]);
 });
 
+test("ogni capo tiene lontane le tacche quanto e' lunga la sua etichetta", () => {
+  /* Alle 14:38: «ieri 14:38» copre quasi quattro ore, «adesso» quasi tre.
+   * Con lo stesso margine di 75 minuti la tacca delle 18 di ieri finiva
+   * sotto la prima, e quella delle 12 sotto la seconda. */
+  const adesso = oggi(14, 38);
+  const finestra = finestraDelleUltime24(adesso);
+  assert.deepEqual(tacche(finestra.start, finestra.end), [
+    ieri(18, 0),
+    oggi(0, 0),
+    oggi(6, 0),
+    oggi(12, 0),
+  ]);
+  assert.deepEqual(
+    tacche(finestra.start, finestra.end, { margineInizio: 4 * 60 * MIN, margineFine: 2.8 * 60 * MIN }),
+    [oggi(0, 0), oggi(6, 0)],
+  );
+});
+
 test("l'elenco dice il gruppo, e la sera e' sera solo se lo e' tutta", () => {
   const elenco = elencoDegliEventi(
     [
