@@ -83,10 +83,15 @@ test("il tempo di fine si calcola anche se la colonnina non parla la norma", asy
   test.setTimeout(120_000);
   await avvia(page, testInfo);
   /* Da 30 a 80 su una batteria da 40 kWh sono 20 kWh: a 10 kW, due ore. */
-  const casella = page.locator("#page-ev .v-ev-remain").first();
+  const casella = page.locator("#page-ev .lm-session-card .v-ev-remain").first();
   await expect(casella).toContainText("2H 0M RIM.");
   /* Sotto, l'ora in cui finisce: «Nel tempo rimanente metti l'orario di fine». */
   await expect(casella.locator(".dm-ev-fine")).toHaveText(/^FINE (DOMANI )?ALLE \d{1,2}:\d{2}$/);
+  /* Accanto all'anello lo stesso tempo si dice come lo si dice: «2 h», e
+   * sotto «fine alle …», senza maiuscolo telegrafico. */
+  const accanto = page.locator("#page-ev .dm-evv-row-val.v-ev-remain");
+  await expect(accanto).toContainText("2 h");
+  await expect(accanto.locator(".dm-ev-fine")).toHaveText(/^fine (domani )?alle \d{1,2}:\d{2}$/);
   if (process.env.DM_FOTO) {
     await casella.scrollIntoViewIfNeeded();
     await page.waitForTimeout(600);

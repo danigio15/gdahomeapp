@@ -377,11 +377,13 @@ test("il nome dato a una lettura arriva fino alla card dell'auto (#326)", async 
   /* Vale per la casella, per la gomma e per il titolo dello storico che si
    * apre toccandola: un nome dato una volta vale ovunque. */
   assert.match(sezione, /const nome = etichettaScelta\(ref, etichetta\);/);
+  /* Sulla carta delle gomme la ruota ha il suo nome corto («Ant. sx»), ma
+   * quello dato a mano vince lo stesso. */
   assert.match(
     sezione,
-    /const nome = etichettaScelta\(voce\?\.ref, parolaDellaRuota\(voce\?\.ruota\)\);/,
+    /const nome = etichettaScelta\(voce\?\.ref, parolaCortaDellaRuota\(voce\?\.ruota\)\);/,
   );
   assert.match(sezione, /etichettaScelta\("dm\.ev_carburante", t\("Carburante", "Fuel"\)\)/);
   /* E un rinominamento ridisegna: la lettura non e' cambiata, la parola si'. */
-  assert.match(sezione, /JSON\.stringify\(\[tipo, lettura, readJson\("cd_slot_labels", \{\}\)\]\)/);
+  assert.match(sezione, /JSON\.stringify\(\[tipo, mezzo, lettura, readJson\("cd_slot_labels", \{\}\)\]\)/);
 });
