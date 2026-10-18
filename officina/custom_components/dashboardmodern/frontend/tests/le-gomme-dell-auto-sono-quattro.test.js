@@ -171,8 +171,10 @@ test("sull'auto elettrica il blocco resta, con le sole gomme", async () => {
     /if \(elettrica && !conDati && !gomme\.quadretto && !gomme\.riassunto\)/,
   );
   assert.match(sezione, /const soloGomme = elettrica && !conDati;/);
-  assert.match(sezione, /: gommeSoleMarkup\(gomme\);/);
-  assert.match(sezione, /\? quadroMarkup\(lettura, tipo\)/);
+  /* La carta delle gomme vale per ogni motore; il quadro del serbatoio solo
+   * per chi va a carburante. */
+  assert.match(sezione, /const cartaGomme = cartaDelleGomme\(gomme\);/);
+  assert.match(sezione, /!elettrica \? quadroMarkup\(lettura, tipo,/);
 });
 
 test("il quadretto disegna quattro posti, anche quelli non mappati", async () => {

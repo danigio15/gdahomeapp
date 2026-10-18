@@ -25,17 +25,23 @@
  * puo' fare. Un'ibrida tiene tutti e due i quadri, perche' li ha tutti e due.
  */
 import { CAPACITA_DI_SERIE } from "../core/il-tempo-della-ricarica.js";
+import { AUTO_DALL_ALTO } from "../core/auto-dallalto.js";
 import {
   CASELLE_DELL_AUTO,
   CASELLE_TERMICHE,
   RIFERIMENTI_DELL_AUTO,
+  RIFERIMENTI_IN_BLOCCO,
   RIFERIMENTI_TERMICI,
   RUOTE,
   casellaDellAuto,
+  comeStannoLeGomme,
+  cosaFaLAuto,
+  energiaDiOggi,
   istanteDetto,
+  laSettimana,
   letturaTermica,
-  ruoteDellAuto,
   senzaParentesi,
+  temperatureDellAuto,
 } from "../core/auto-termica.js";
 import {
   CAPACITA_DI_CASA_KEY,
@@ -57,14 +63,17 @@ import {
   activeVehicle,
   bozzaAperta,
   editedVehicle,
+  liveState,
   profiles,
   salvaAuto,
   vehicleBatteryEntity,
+  vehiclePlugged,
 } from "./ev-section.js";
 import { registraTitoloDiPagina, renderPageMastheads } from "./page-masthead-section.js";
 import {
   allStates,
   clean,
+  disegnoDiCasa,
   doc,
   esc,
   formatNumber,
@@ -89,6 +98,10 @@ const state = (root[KEY] ||= {
    * finche' non c'e' un profilo a cui attaccarla. Vedi `scriviLaCapacita`. */
   capacitaInBozza: "",
   autoPrimaDellaBozza: null,
+  /* «Altri dati» aperto o chiuso: il blocco si ridisegna a ogni cambio di
+   * stato, e chi l'ha aperto non deve vederselo richiudere sotto le dita. */
+  altriAperti: false,
+  testa: "",
 });
 
 const ARC_RADIUS = 50;
@@ -562,6 +575,28 @@ function capacitaDalSensore() {
 
 /* ── il quadro nella pagina ───────────────────────────────────────────── */
 
+/* «Nella sezione Auto riesci a fare qualcosa di piu' bello con tutti sti dati,
+ * cosi' non si capisce niente.» Sotto la foto c'era una griglia di diciotto
+ * tessere uguali, con etichette lunghe in maiuscolo: il consumo accanto alla
+ * marcia, l'energia di oggi in tre caselle, «1045 min». Adesso la pagina e'
+ * fatta di blocchi, e ogni blocco risponde a una domanda:
+ *
+ *  - com'e' l'auto adesso — accanto all'anello della batteria: l'autonomia in
+ *    grande, le pillole di quello che sta facendo (parcheggiata, in marcia
+ *    con la sua marcia, il freno, le portiere) e, in piccolo, quando ha
+ *    mandato i dati;
+ *  - la ricarica — le righe accanto all'anello, solo col cavo attaccato, con
+ *    la potenza e il tempo che l'auto dichiara quando la colonnina tace;
+ *  - quanto ha usato oggi — una barra sola divisa in guida, clima e resto;
+ *  - la settimana — chilometri, energia e consumo, letti insieme;
+ *  - le temperature — batteria, abitacolo, fuori, olio;
+ *  - le gomme — l'auto vista dall'alto con le quattro pressioni dove stanno;
+ *  - e «Altri dati», chiuso, con tutto quello che non sta in un blocco:
+ *    niente di configurato si perde.
+ *
+ * Le etichette sono corte e in minuscolo, i numeri grandi e l'unita' piccola.
+ * Un blocco senza dati non si disegna. */
+
 function arco(percentuale) {
   const valore = Number.isFinite(percentuale) ? Math.max(0, Math.min(100, percentuale)) : 0;
   const pieno = (valore / 100) * ARC_LENGTH;
@@ -572,6 +607,18 @@ function pillola(glifo, testo, tono) {
   return `<span class="dm-termica-pillola" data-tono="${esc(tono)}"><i aria-hidden="true">${glifo}</i>${esc(testo)}</span>`;
 }
 
+/* Quante cifre dopo la virgola: nessuna per i numeri interi e per quelli
+ * grandi, una per gli altri. */
+const cifreDi = (valore) => (Number.isInteger(valore) || Math.abs(valore) >= 100 ? 0 : 1);
+
+/* Il numero grande e la sua unita' piccola accanto. */
+function numeroConUnita(valore, unita, cifre = cifreDi(valore)) {
+  return `${esc(formatNumber(valore, cifre))}${unita ? `<small>${esc(unita)}</small>` : ""}`;
+}
+
+/* Gli attributi che aprono lo storico di una lettura, toccandola. */
+const storico = (ref, nome) => `data-dm-storico="${esc(ref)}" data-dm-nome="${esc(nome)}"`;
+
 function misura(glifo, etichetta, valore, unita, ref, cifre = 0) {
   if (valore === null || valore === undefined) return "";
   const nome = etichettaScelta(ref, etichetta);
@@ -581,34 +628,70 @@ function misura(glifo, etichetta, valore, unita, ref, cifre = 0) {
   </button>`;
 }
 
+/* La testata di una carta: il disegno del catalogo di casa e il titolo. */
+function testaDellaCarta(disegno, titolo, accanto = "") {
+  return `<div class="dm-auto-carta-testa">
+      <span class="dm-auto-carta-ico" aria-hidden="true">${disegnoDiCasa(disegno, { misura: 24 })}</span>
+      <span class="dm-auto-carta-titolo">${esc(titolo)}</span>${accanto}
+    </div>`;
+}
+
+/* ── le gomme ─────────────────────────────────────────────────────────── */
+
 /* Le quattro ruote come stanno sull'auto: due davanti, due dietro.
  *
  * «E' possibile inserire un solo pneumatico, spero al prossimo rilascio sia
  * possibile inserirne 4» (#319). Chi ne ha mappata una sola vede la casella di
- * sempre, identica; chi ne ha mappate due o piu' vede il quadretto, e quelle
- * che non ha mappato restano vuote invece di sparire — una gomma che manca si
- * vede meglio di una che non c'e'. */
+ * sempre, identica; chi ne ha mappate due o piu' vede l'auto dall'alto con le
+ * pressioni accanto alle ruote, e quelle che non ha mappato restano vuote
+ * invece di sparire — una gomma che manca si vede meglio di una che non c'e'.
+ *
+ * L'auto dall'alto e' quella della finestra dell'auto in Home e di gdanav:
+ * un'immagine sola per tutta la casa. Ogni pressione ha il colore di come sta
+ * (`comeStannoLeGomme`): verde a posto, ambra bassa, alta o in avviso. */
+/* Sulla carta le ruote si chiamano corte — «Ant. sx» — perche' stanno
+ * accanto al disegno e il disegno dice gia' quale sono. Un nome dato a mano
+ * vince anche qui. */
+export function parolaCortaDellaRuota(ruota) {
+  if (ruota === "antSx") return t("Ant. sx", "Front L");
+  if (ruota === "antDx") return t("Ant. dx", "Front R");
+  if (ruota === "postSx") return t("Post. sx", "Rear L");
+  return t("Post. dx", "Rear R");
+}
+
 function gomma(voce) {
-  const nome = etichettaScelta(voce?.ref, parolaDellaRuota(voce?.ruota));
+  const nome = etichettaScelta(voce?.ref, parolaCortaDellaRuota(voce?.ruota));
   if (!voce) return "";
+  const tono = esc(voce.tono || "");
   if (voce.pressione !== null)
-    return `<button type="button" class="dm-termica-gomma" data-dm-storico="${esc(voce.ref)}" data-dm-nome="${esc(nome)}">
+    return `<button type="button" class="dm-termica-gomma" data-dm-storico="${esc(voce.ref)}" data-dm-nome="${esc(nome)}" data-ruota="${esc(voce.ruota)}" data-tono="${tono}" title="${esc(nome)}">
       <small>${esc(nome)}</small><b>${esc(formatNumber(voce.pressione, 1))}<em>${esc(voce.unita ? ` ${voce.unita}` : "")}</em></b>
     </button>`;
-  return `<span class="dm-termica-gomma" data-tono="${voce.avviso ? "attento" : "bene"}">
+  return `<span class="dm-termica-gomma" data-ruota="${esc(voce.ruota)}" data-tono="${voce.avviso ? "attento" : "bene"}" title="${esc(nome)}">
     <small>${esc(nome)}</small><b>${esc(voce.avviso ? t("Da controllare", "Check it") : "OK")}</b>
   </span>`;
 }
 
-function gommeMarkup(lettura) {
-  const ruote = ruoteDellAuto(lettura);
+function gommeMarkup(lettura, mezzo = "auto") {
+  const { ruote, verdetto } = comeStannoLeGomme(lettura);
   const riepilogo = lettura.pneumatici;
-  const riassunto = !riepilogo
-    ? ""
-    : riepilogo.pressione !== null
+  /* Il verdetto e' una didascalia, non una tessera: «Pneumatici a posto» sotto
+   * le ruote. Un riepilogo con un numero — un sensore solo, la pressione di
+   * tutte — resta una misura da toccare. */
+  const didascalia = verdetto
+    ? pillola(
+        "🛞",
+        verdetto === "attento"
+          ? t("Pneumatici da controllare", "Check the tyres")
+          : t("Pneumatici a posto", "Tyres fine"),
+        verdetto === "attento" ? "attento" : "bene",
+      )
+    : "";
+  const riassunto =
+    riepilogo && riepilogo.pressione !== null
       ? misura("🛞", t("Pneumatici", "Tyres"), riepilogo.pressione, ` ${riepilogo.unita}`, "dm.ev_pneumatici", 1)
-      : pillola("🛞", riepilogo.avviso ? t("Pneumatici da controllare", "Check the tyres") : t("Pneumatici a posto", "Tyres fine"), riepilogo.avviso ? "attento" : "bene");
-  if (!ruote.length) return { riassunto, quadretto: "" };
+      : "";
+  if (!ruote.length) return { riassunto, didascalia, quadretto: "" };
   const perRuota = new Map(ruote.map((voce) => [voce.ruota, voce]));
   const cella = (ruota) => {
     const voce = perRuota.get(ruota);
@@ -618,138 +701,60 @@ function gommeMarkup(lettura) {
     const posto = RUOTE.find((riga) => riga.ruota === ruota);
     return voce
       ? gomma(voce)
-      : `<span class="dm-termica-gomma" data-vuota="true"><small>${esc(etichettaScelta(posto?.ref, parolaDellaRuota(ruota)))}</small><b>—</b></span>`;
+      : `<span class="dm-termica-gomma" data-vuota="true" data-ruota="${esc(ruota)}"><small>${esc(etichettaScelta(posto?.ref, parolaCortaDellaRuota(ruota)))}</small><b>—</b></span>`;
   };
-  const quadretto = `<div class="dm-termica-gomme">
-      <span class="dm-termica-gomme-titolo"><i aria-hidden="true">🛞</i>${esc(t("Pneumatici", "Tyres"))}</span>
-      <div class="dm-termica-gomme-quadro">
+  /* Una moto non ha quattro ruote ne' un tetto da guardare dall'alto: le sue
+   * gomme stanno in fila, senza disegno. */
+  const disegno =
+    mezzo === "moto"
+      ? ""
+      : `<img class="dm-termica-gomme-auto" src="${AUTO_DALL_ALTO}" alt="" aria-hidden="true">`;
+  const quadretto = `<div class="dm-termica-gomme-quadro" data-mezzo="${esc(mezzo)}">
         ${cella("antSx")}${cella("antDx")}${cella("postSx")}${cella("postDx")}
-      </div>
-    </div>`;
-  return { riassunto, quadretto };
+        ${disegno}
+      </div>`;
+  return { riassunto, didascalia, quadretto };
 }
 
-/* Una tessera con una parola invece di un numero: la marcia, gli orari. */
-function parolaInTessera(glifo, etichetta, testo, ref) {
-  if (!clean(testo)) return "";
-  const nome = etichettaScelta(ref, etichetta);
-  return `<button type="button" class="dm-termica-misura" data-dm-storico="${esc(ref)}" data-dm-nome="${esc(nome)}">
-    <i aria-hidden="true">${glifo}</i>
-    <span class="dm-termica-misura-testo"><small>${esc(nome)}</small><b>${esc(testo)}</b></span>
-  </button>`;
+/* La carta delle gomme: il quadretto, il riassunto e la didascalia. */
+function cartaDelleGomme(gomme) {
+  if (!gomme.quadretto && !gomme.riassunto && !gomme.didascalia) return "";
+  return `<section class="dm-auto-carta dm-termica-gomme" data-carta="gomme">
+      ${testaDellaCarta("manometro", t("Pneumatici", "Tyres"))}
+      ${gomme.quadretto}
+      ${gomme.riassunto ? `<div class="dm-termica-righe">${gomme.riassunto}</div>` : ""}
+      ${gomme.didascalia ? `<div class="dm-auto-didascalia">${gomme.didascalia}</div>` : ""}
+    </section>`;
 }
 
-/* Le misure che a zero non dicono niente: un'auto ferma ha velocita' zero,
- * zero kilowatt e zero minuti alla fine di una carica che non c'e'. */
-const MOMENTANEE = new Set([
-  "dm.ev_velocita",
-  "dm.ev_potenza_istantanea",
-  "dm.ev_potenza_riscaldatore",
-  "dm.ev_potenza_ricarica",
-  "dm.ev_tempo_ricarica",
-]);
+/* ── le pillole: com'e' l'auto adesso ─────────────────────────────────── */
 
-/* Quelli che si comandano: lo stato lo dice gia' un'altra casella. Il clima
- * comandabile vale come «clima acceso» solo quando quella casella manca —
- * GdAAuto non la crea, se il clima si puo' accendere. */
-const COMANDI = new Set(["dm.ev_comando_clima", "dm.ev_comando_ricarica"]);
+/* Quello che fa l'auto, con la lettera della marcia in un tondino: «P
+ * Parcheggiata», «D In marcia». Il freno di stazionamento e' una pillola a
+ * parte, piccola. */
+function pillolaDellaMarcia(lettura) {
+  const fa = cosaFaLAuto(lettura);
+  if (!fa) return "";
+  const marcia = lettura.marcia || "";
+  const lettera = marcia ? `<b class="dm-auto-marcia">${esc(marcia)}</b>` : "";
+  const testo =
+    fa === "ferma"
+      ? t("Parcheggiata", "Parked")
+      : marcia === "R"
+        ? t("In retromarcia", "Reversing")
+        : marcia === "N"
+          ? t("In folle", "In neutral")
+          : t("In marcia", "Moving");
+  return `<span class="dm-termica-pillola" data-tono="${fa === "marcia" ? "acceso" : "spento"}" data-dm-marcia="${esc(marcia)}">${lettera || `<i aria-hidden="true">🚗</i>`}${esc(testo)}</span>`;
+}
 
-/**
- * I dati dell'auto connessa, per la pagina: una tessera per ogni misura
- * mappata, una pillola per ogni cosa accesa.
- *
- * Valgono per qualunque motore: l'energia che resta, il consumo medio, il
- * clima, la ricarica programmata, l'auto che dorme. Le etichette sono quelle
- * della scheda senza la parentesi dell'unita' — l'unita' la scrive il
- * sensore — e un nome dato a mano vince anche qui.
- */
-export function datiMarkup(lettura, adesso = Date.now()) {
-  const caselle = lettura?.caselle || {};
-  const valore = (campo) => {
-    const v = caselle[campo]?.valore;
-    return v === undefined ? null : v;
-  };
-  /* Le tessere il nome scelto lo cercano da se'; le pillole no. */
-  const diSerie = (ref) => senzaParentesi(etichettaDellaCasella(ref));
-  const nomeDi = (ref) => etichettaScelta(ref, diSerie(ref));
-  const tessere = [];
+/* Le pillole dell'auto ferma in garage: motore, portiere, finestrini,
+ * bagagliaio, cofano, allarme, dove sta. Sono le stesse per ogni motore; il
+ * motore spento si dice solo su un'auto a carburante, perche' su un'elettrica
+ * spenta e' la normalita'. */
+function pilloleDellAuto(lettura, tipo) {
   const pillole = [];
-  for (const voce of CASELLE_DELL_AUTO) {
-    const casella = caselle[voce.campo];
-    const v = casella ? casella.valore : null;
-    if (v === null || v === undefined) continue;
-    switch (voce.tipo) {
-      case "misura":
-      case "gradi": {
-        if (MOMENTANEE.has(voce.ref) && v === 0) break;
-        let unita = voce.tipo === "gradi" ? "°" : casella.unita ? ` ${casella.unita}` : "";
-        /* Il tipo dell'ultima ricarica accanto alla sua energia: «12,4 kWh ·
-         * DC» si legge in un colpo. */
-        if (voce.ref === "dm.ev_ultima_ricarica_energia" && clean(valore("ultimaRicaricaTipo")))
-          unita += ` · ${clean(valore("ultimaRicaricaTipo")).toUpperCase()}`;
-        const cifre = Number.isInteger(v) || Math.abs(v) >= 100 ? 0 : 1;
-        tessere.push(misura(voce.glifo, diSerie(voce.ref), v, unita, voce.ref, cifre));
-        break;
-      }
-      case "marcia":
-        tessere.push(parolaInTessera(voce.glifo, diSerie(voce.ref), v, voce.ref));
-        break;
-      case "acceso": {
-        if (COMANDI.has(voce.ref)) break;
-        if (v !== true) break;
-        if (voce.ref === "dm.ev_ricarica_programmata") {
-          const dalle = clean(valore("ricaricaInizio"));
-          const alle = clean(valore("ricaricaFine"));
-          const orari = dalle && alle ? ` · ${dalle}–${alle}` : dalle ? ` · ${dalle}` : "";
-          pillole.push(pillola(voce.glifo, `${nomeDi(voce.ref)}${orari}`, "acceso"));
-          break;
-        }
-        /* L'auto che dorme non e' una cosa accesa: e' una cosa da sapere. */
-        const tono = voce.ref === "dm.ev_in_sonno" ? "spento" : "acceso";
-        pillole.push(pillola(voce.glifo, nomeDi(voce.ref), tono));
-        break;
-      }
-      default:
-        break;
-    }
-  }
-  if (valore("clima") === null && valore("comandoClima") === true)
-    pillole.unshift(pillola("❄️", nomeDi("dm.ev_clima"), "acceso"));
-  /* Quando l'auto ha mandato i dati: conta soprattutto se dorme, perche' i
-   * numeri sono di quando si e' addormentata. */
-  const aggiornata = valore("ultimoAggiornamento");
-  if (aggiornata !== null) {
-    const ref = "dm.ev_ultimo_aggiornamento";
-    const detto = istanteDetto(aggiornata, { lingua: locale(), adesso });
-    tessere.push(parolaInTessera("🕒", diSerie(ref), detto, ref));
-  }
-  return { pillole, tessere: tessere.join("") };
-}
-
-/* Sull'auto elettrica il blocco porta solo le gomme, con la sua testata. */
-function gommeSoleMarkup(gomme) {
-  return `<div class="dm-termica-testa">
-      <span class="dm-termica-titolo">${esc(t("Pneumatici", "Tyres"))}</span>
-    </div>
-    ${gomme.quadretto}
-    ${gomme.riassunto ? `<div class="dm-termica-griglia">${gomme.riassunto}</div>` : ""}`;
-}
-
-/* Sull'auto elettrica, con i dati dell'auto connessa: le pillole, le
- * tessere, e sotto le gomme. */
-function datiSoliMarkup(dati, gomme) {
-  return `<div class="dm-termica-testa">
-      <span class="dm-termica-titolo">${esc(t("L'auto", "The car"))}</span>
-      <div class="dm-termica-pillole">${dati.pillole.join("")}</div>
-    </div>
-    ${dati.tessere ? `<div class="dm-termica-griglia">${dati.tessere}</div>` : ""}
-    ${gomme.quadretto}
-    ${gomme.riassunto ? `<div class="dm-termica-griglia">${gomme.riassunto}</div>` : ""}`;
-}
-
-function quadroMarkup(lettura, tipo) {
-  const pillole = [];
-  if (lettura.motore === true || lettura.motore === false)
+  if (lettura.motore === true || (tipo === "termica" && lettura.motore === false))
     pillole.push(
       pillola("🔑", lettura.motore ? t("Motore acceso", "Engine running") : t("Motore spento", "Engine off"), lettura.motore ? "acceso" : "spento"),
     );
@@ -801,6 +806,360 @@ function quadroMarkup(lettura, tipo) {
         lettura.posizione === "casa" ? "bene" : "spento",
       ),
     );
+  return pillole;
+}
+
+/* Le misure che a zero non dicono niente: un'auto ferma ha velocita' zero,
+ * zero kilowatt e zero minuti alla fine di una carica che non c'e'. */
+const MOMENTANEE = new Set([
+  "dm.ev_velocita",
+  "dm.ev_potenza_istantanea",
+  "dm.ev_potenza_riscaldatore",
+  "dm.ev_potenza_ricarica",
+  "dm.ev_tempo_ricarica",
+]);
+
+/* Quelli che si comandano: lo stato lo dice gia' un'altra casella. Il clima
+ * comandabile vale come «clima acceso» solo quando quella casella manca —
+ * GdAAuto non la crea, se il clima si puo' accendere. */
+const COMANDI = new Set(["dm.ev_comando_clima", "dm.ev_comando_ricarica"]);
+
+/* Le parole corte delle pillole: la scheda dice «Freno di stazionamento
+ * (tirato/rilasciato)» per spiegare che entita' scegliere, la pillola dice
+ * quello che si vede. */
+function parolaDellaPillola(ref, nomeDi) {
+  if (ref === "dm.ev_freno_stazionamento") return etichettaScelta(ref, t("Freno tirato", "Brake on"));
+  return nomeDi(ref);
+}
+
+/* Quando l'auto ha mandato i dati, in piccolo: conta soprattutto se dorme,
+ * perche' i numeri sono di quando si e' addormentata. */
+function aggiornataMarkup(lettura, adesso = Date.now()) {
+  const quando = lettura?.caselle?.ultimoAggiornamento?.valore;
+  if (quando === null || quando === undefined) return "";
+  const detto = istanteDetto(quando, { lingua: locale(), adesso });
+  if (!detto) return "";
+  const oggi = new Date(adesso).toDateString() === new Date(quando).toDateString();
+  const testo = oggi ? t(`Aggiornata alle ${detto}`, `Updated at ${detto}`) : t(`Aggiornata il ${detto}`, `Updated on ${detto}`);
+  return `<p class="dm-auto-aggiornata"><i aria-hidden="true">🕒</i>${esc(testo)}</p>`;
+}
+
+/**
+ * I dati dell'auto connessa, per la pagina: le pillole di quello che e'
+ * acceso, le carte dei blocchi e le righe degli altri dati.
+ *
+ * Valgono per qualunque motore: l'energia che resta, il consumo medio, il
+ * clima, la ricarica programmata, l'auto che dorme. Le etichette sono quelle
+ * della scheda senza la parentesi dell'unita' — l'unita' la scrive il
+ * sensore — e un nome dato a mano vince anche qui.
+ */
+export function datiMarkup(lettura, { tipo = "", aperti = false } = {}) {
+  const caselle = lettura?.caselle || {};
+  const valore = (campo) => {
+    const v = caselle[campo]?.valore;
+    return v === undefined ? null : v;
+  };
+  /* Le tessere il nome scelto lo cercano da se'; le pillole no. */
+  const diSerie = (ref) => senzaParentesi(etichettaDellaCasella(ref));
+  const nomeDi = (ref) => etichettaScelta(ref, diSerie(ref));
+  const pillole = [];
+  const altri = [];
+  const riga = (glifo, ref, nome, v, unita, cifre = cifreDi(v), segno = "") =>
+    altri.push(`<button type="button" class="dm-auto-riga" ${storico(ref, nome)}>
+        <i aria-hidden="true">${glifo}</i><span>${esc(nome)}</span><b>${numeroConUnita(v, unita, cifre)}${esc(segno)}</b>
+      </button>`);
+  for (const voce of CASELLE_DELL_AUTO) {
+    const casella = caselle[voce.campo];
+    const v = casella ? casella.valore : null;
+    if (v === null || v === undefined) continue;
+    switch (voce.tipo) {
+      case "misura":
+      case "gradi": {
+        /* Quello che ha un blocco suo si legge li', non due volte. */
+        if (RIFERIMENTI_IN_BLOCCO.has(voce.ref)) break;
+        if (MOMENTANEE.has(voce.ref) && v === 0) break;
+        riga(voce.glifo, voce.ref, nomeDi(voce.ref), v, voce.tipo === "gradi" ? "" : casella.unita || "", cifreDi(v), voce.tipo === "gradi" ? "°" : "");
+        break;
+      }
+      case "acceso": {
+        if (COMANDI.has(voce.ref)) break;
+        if (v !== true) break;
+        if (voce.ref === "dm.ev_ricarica_programmata") {
+          const dalle = clean(valore("ricaricaInizio"));
+          const alle = clean(valore("ricaricaFine"));
+          const orari = dalle && alle ? ` · ${dalle}–${alle}` : dalle ? ` · ${dalle}` : "";
+          pillole.push(pillola(voce.glifo, `${nomeDi(voce.ref)}${orari}`, "acceso"));
+          break;
+        }
+        /* L'auto che dorme non e' una cosa accesa: e' una cosa da sapere. Il
+         * freno tirato nemmeno: e' come sta un'auto parcheggiata. */
+        const tono = ["dm.ev_in_sonno", "dm.ev_freno_stazionamento"].includes(voce.ref) ? "spento" : "acceso";
+        pillole.push(pillola(voce.glifo, parolaDellaPillola(voce.ref, nomeDi), tono));
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  if (valore("clima") === null && valore("comandoClima") === true)
+    pillole.unshift(pillola("❄️", nomeDi("dm.ev_clima"), "acceso"));
+  /* Su un'auto che non e' a carburante le letture del quadro termico non
+   * hanno un quadro dove stare: la batteria da 12 V, il contachilometri,
+   * l'ultimo viaggio. Vanno fra gli altri dati, con la loro unita'. */
+  if (tipo !== "termica" && tipo !== "ibrida") {
+    if (lettura.batteriaServizio !== null && lettura.batteriaServizio !== undefined)
+      riga(
+        "🔋",
+        "dm.ev_batteria_servizio",
+        etichettaScelta("dm.ev_batteria_servizio", t("Batteria 12 V", "12 V battery")),
+        lettura.batteriaServizio,
+        lettura.batteriaServizioUnita,
+        lettura.batteriaServizioUnita === "%" ? 0 : 1,
+      );
+    if (lettura.odometro !== null && lettura.odometro !== undefined)
+      riga("🧭", "dm.ev_odometro", etichettaScelta("dm.ev_odometro", t("Odometro", "Odometer")), lettura.odometro, lettura.odometroUnita, 0);
+    if (lettura.ultimoViaggio !== null && lettura.ultimoViaggio !== undefined)
+      riga("🧭", "dm.ev_ultimo_viaggio", etichettaScelta("dm.ev_ultimo_viaggio", t("Ultimo viaggio", "Last trip")), lettura.ultimoViaggio, "km", 1);
+  }
+  const carte = [
+    cartaDellEnergia(lettura),
+    cartaDellaSettimana(lettura),
+    cartaDelleTemperature(lettura),
+    cartaDellUltimaRicarica(lettura),
+  ].filter(Boolean);
+  const altriMarkup = altri.length
+    ? `<details class="dm-auto-carta dm-auto-altri" data-carta="altri"${aperti ? " open" : ""}>
+        <summary><span class="dm-auto-carta-titolo">${esc(t("Altri dati", "More data"))}</span><small>${esc(String(altri.length))}</small></summary>
+        <div class="dm-auto-elenco">${altri.join("")}</div>
+      </details>`
+    : "";
+  return { pillole, carte, altri: altriMarkup };
+}
+
+/* ── le carte ─────────────────────────────────────────────────────────── */
+
+/* Un dato grande con la sua parola sotto, che si tocca per lo storico. */
+function dato(ref, nome, v, unita, cifre = cifreDi(v), segno = "") {
+  const corpo = `<b class="dm-auto-num">${numeroConUnita(v, unita, cifre)}${esc(segno)}</b><span>${esc(nome)}</span>`;
+  return ref
+    ? `<button type="button" class="dm-auto-dato" ${storico(ref, nome)}>${corpo}</button>`
+    : `<div class="dm-auto-dato">${corpo}</div>`;
+}
+
+/* I kilowattora con le cifre giuste: «0,1», «4,2», «12,4», «57». */
+const cifreKwh = (kwh) => (kwh === 0 ? 0 : kwh >= 100 ? 0 : 1);
+
+/* L'energia di oggi: una barra sola, divisa in guida, clima e resto. */
+function cartaDellEnergia(lettura) {
+  const energia = energiaDiOggi(lettura);
+  if (!energia) return "";
+  const nomi = {
+    guida: t("Guida", "On the road"),
+    clima: t("Clima", "Climate"),
+    altro: t("Resto", "The rest"),
+  };
+  const barra = energia.parti
+    .filter((parte) => parte.kwh > 0)
+    .map((parte) => `<span data-parte="${esc(parte.parte)}" style="flex-grow:${parte.quota.toFixed(4)}"></span>`)
+    .join("");
+  const legenda = energia.parti
+    .map((parte) => {
+      const nome = etichettaScelta(parte.ref, nomi[parte.parte]);
+      return `<button type="button" class="dm-auto-voce" data-parte="${esc(parte.parte)}" ${storico(parte.ref, nome)}>
+          <i aria-hidden="true"></i><span>${esc(nome)}</span><b>${numeroConUnita(parte.kwh, "kWh", cifreKwh(parte.kwh))}</b>
+        </button>`;
+    })
+    .join("");
+  return `<section class="dm-auto-carta" data-carta="energia">
+      ${testaDellaCarta("strike", t("Energia di oggi", "Energy today"), `<b class="dm-auto-num dm-auto-totale">${numeroConUnita(energia.totale, "kWh", cifreKwh(energia.totale))}</b>`)}
+      <div class="dm-auto-barra" data-vuota="${energia.totale > 0 ? "false" : "true"}" role="img" aria-label="${esc(
+        energia.parti.map((parte) => `${nomi[parte.parte]} ${formatNumber(parte.kwh, cifreKwh(parte.kwh))} kWh`).join(", "),
+      )}">${barra}</div>
+      <div class="dm-auto-legenda">${legenda}</div>
+    </section>`;
+}
+
+/* Gli ultimi sette giorni: chilometri, energia e consumo, uno accanto
+ * all'altro. Il consumo calcolato si dice calcolato. */
+function cartaDellaSettimana(lettura) {
+  const settimana = laSettimana(lettura);
+  if (!settimana) return "";
+  const unitaKm = clean(lettura?.caselle?.km7Giorni?.unita) || "km";
+  const dati = [
+    settimana.km !== null ? dato("dm.ev_km_7_giorni", t("Percorsi", "Driven"), settimana.km, unitaKm, 0) : "",
+    settimana.kwh !== null ? dato("dm.ev_energia_7_giorni", t("Energia", "Energy"), settimana.kwh, "kWh", cifreKwh(settimana.kwh)) : "",
+    settimana.consumo !== null
+      ? dato(
+          settimana.calcolato ? "" : "dm.ev_consumo_medio",
+          settimana.calcolato
+            ? t("Consumo, calcolato", "Consumption, worked out")
+            : etichettaScelta("dm.ev_consumo_medio", t("Consumo", "Consumption")),
+          settimana.consumo,
+          "kWh/100 km",
+          1,
+        )
+      : "",
+  ].join("");
+  return `<section class="dm-auto-carta" data-carta="settimana">
+      ${testaDellaCarta("calendar", t("Ultimi 7 giorni", "Last 7 days"))}
+      <div class="dm-auto-dati">${dati}</div>
+    </section>`;
+}
+
+/* Le temperature dell'auto, insieme. */
+function cartaDelleTemperature(lettura) {
+  const temperature = temperatureDellAuto(lettura);
+  if (!temperature.length) return "";
+  const nomi = {
+    batteria: t("Batteria", "Battery"),
+    abitacolo: t("Abitacolo", "Cabin"),
+    esterna: t("Fuori", "Outside"),
+    olio: t("Olio", "Oil"),
+  };
+  const dati = temperature
+    .map((voce) => dato(voce.ref, etichettaScelta(voce.ref, nomi[voce.chi]), voce.gradi, "", Number.isInteger(voce.gradi) ? 0 : 1, "°"))
+    .join("");
+  return `<section class="dm-auto-carta" data-carta="temperature">
+      ${testaDellaCarta("thermometer", t("Temperature", "Temperatures"))}
+      <div class="dm-auto-dati">${dati}</div>
+    </section>`;
+}
+
+/* L'ultima ricarica: quanta energia, AC o DC, da quando a quando. */
+function cartaDellUltimaRicarica(lettura) {
+  const caselle = lettura?.caselle || {};
+  const energia = caselle.ultimaRicaricaEnergia?.valore;
+  if (energia === null || energia === undefined) return "";
+  const tipo = clean(caselle.ultimaRicaricaTipo?.valore).toUpperCase();
+  const inizio = caselle.ultimaRicaricaInizio?.valore;
+  const fine = caselle.ultimaRicaricaFine?.valore;
+  const lingua = locale();
+  const dalle = Number.isFinite(inizio) ? istanteDetto(inizio, { lingua }) : "";
+  const alle = Number.isFinite(fine) ? istanteDetto(fine, { lingua }) : "";
+  const quando = dalle && alle ? `${dalle} – ${alle}` : dalle || alle;
+  const nome = etichettaScelta("dm.ev_ultima_ricarica_energia", t("Energia", "Energy"));
+  const unita = clean(caselle.ultimaRicaricaEnergia?.unita) || "kWh";
+  return `<section class="dm-auto-carta" data-carta="ultima-ricarica">
+      ${testaDellaCarta("plug", t("Ultima ricarica", "Last charge"), tipo ? `<span class="dm-auto-sigla">${esc(tipo)}</span>` : "")}
+      <div class="dm-auto-dati">${dato("dm.ev_ultima_ricarica_energia", nome, energia, unita, cifreKwh(energia))}</div>
+      ${quando ? `<p class="dm-auto-aggiornata">${esc(quando)}</p>` : ""}
+    </section>`;
+}
+
+/* ── accanto all'anello ───────────────────────────────────────────────── */
+
+/* L'autonomia in grande, con le altre autonomie dell'auto in piccolo sotto:
+ * quella di omologazione, quella totale di un'ibrida, quella a carburante. */
+function autonomiaMarkup(lettura) {
+  if (lettura.autonomia === null || lettura.autonomia === undefined) return "";
+  const nome = etichettaScelta("dm.ev_autonomia", t("Autonomia", "Range"));
+  const unita = lettura.autonomiaUnita || "km";
+  const altre = [
+    ["autonomiaNominale", t("omologazione", "rated")],
+    ["autonomiaTotale", t("totale", "total")],
+    ["autonomiaCarburante", t("a carburante", "on fuel")],
+  ]
+    .map(([campo, parola]) => {
+      const v = lettura?.caselle?.[campo]?.valore;
+      return v === null || v === undefined ? "" : `${parola} ${formatNumber(v, 0)} ${clean(lettura.caselle[campo].unita) || unita}`;
+    })
+    .filter(Boolean)
+    .join(" · ");
+  return `<button type="button" class="dm-auto-autonomia" ${storico("dm.ev_autonomia", nome)}>
+      <small>${esc(nome)}</small>
+      <b class="dm-auto-num">${numeroConUnita(lettura.autonomia, unita, 0)}</b>
+      ${altre ? `<span>${esc(altre)}</span>` : ""}
+    </button>`;
+}
+
+/* La testa accanto all'anello: autonomia, pillole, quando ha parlato. */
+function testaMarkup(lettura, tipo, pilloleDeiDati) {
+  const pillole = [pillolaDellaMarcia(lettura), ...pilloleDellAuto(lettura, tipo), ...pilloleDeiDati].filter(Boolean);
+  const autonomia = autonomiaMarkup(lettura);
+  const aggiornata = aggiornataMarkup(lettura);
+  if (!autonomia && !pillole.length && !aggiornata) return "";
+  return `${autonomia}
+    ${pillole.length ? `<div class="dm-termica-pillole">${pillole.join("")}</div>` : ""}
+    ${aggiornata}`;
+}
+
+/* Le righe accanto all'anello parlano di ricarica: si riconoscono dalla
+ * classe del valore che il guscio ci scrive, e si segnano una volta. */
+function segnaLeRighe(potenza) {
+  for (const riga of potenza.querySelectorAll(".dm-evv-row")) {
+    if (riga.dataset.dmRiga) continue;
+    if (riga.querySelector(".v-ev-pow")) riga.dataset.dmRiga = "potenza";
+    else if (riga.querySelector(".v-ev-remain")) riga.dataset.dmRiga = "tempo";
+    else if (riga.querySelector(".v-auto-limite")) riga.dataset.dmRiga = "target";
+  }
+}
+
+/* Il target detto col suo numero: «Autonomia al 100%» invece di «al target»,
+ * che e' una parola della configurazione. Senza un numero resta com'era. */
+function parolaDelTarget(potenza) {
+  const etichetta = potenza.querySelector('.dm-evv-row[data-dm-riga="target"] .dm-evv-row-lbl');
+  if (!etichetta) return;
+  const n = Number.parseFloat(clean(liveState("dm.ev_target_soc")?.state));
+  const pct = Math.round(n);
+  const testo = Number.isFinite(n)
+    ? t(`Autonomia al ${pct}%`, `Range at ${pct}%`)
+    : t("Autonomia al target", "Range at target");
+  if (etichetta.textContent !== testo) etichetta.textContent = testo;
+}
+
+/* L'anello della batteria e' il primo blocco sotto la foto: ci si mette
+ * accanto la testa dell'auto, e le righe della ricarica si spengono quando il
+ * cavo e' staccato — «Potenza —» e «Tempo stimato —» sotto un'auto in garage
+ * non dicono niente. Solo quando il cavo si sa staccato: con nessuna fonte che
+ * lo dica, le righe restano come sono sempre state. */
+function accantoAllAnello(page, testa) {
+  const potenza = page.querySelector(".dm-evv-power");
+  if (!potenza) return;
+  segnaLeRighe(potenza);
+  parolaDelTarget(potenza);
+  /* «Autonomia al target» stava tre volte nella pagina: accanto all'anello,
+   * in una tessera sotto la sessione e nella carta del target. La tessera e'
+   * il doppione: si spegne finche' la riga accanto all'anello c'e'. */
+  const riga = potenza.querySelector('.dm-evv-row[data-dm-riga="target"]');
+  const doppia = Boolean(riga && !riga.hidden);
+  for (const valore of page.querySelectorAll(".lm-stat-card .v-auto-limite")) {
+    const tessera = valore.closest(".lm-stat-card");
+    if (tessera && tessera.dataset.dmDoppia !== String(doppia)) tessera.dataset.dmDoppia = String(doppia);
+  }
+  let ricarica = "";
+  try {
+    ricarica = vehiclePlugged() === false ? "ferma" : "";
+  } catch (_error) {
+    ricarica = "";
+  }
+  if ((potenza.dataset.dmRicarica || "") !== ricarica) {
+    if (ricarica) potenza.dataset.dmRicarica = ricarica;
+    else delete potenza.dataset.dmRicarica;
+  }
+  let nodo = potenza.querySelector(".dm-auto-testa");
+  const righe = potenza.querySelector(".dm-evv-rows");
+  righe?.classList.toggle("dm-auto-con-testa", Boolean(testa));
+  if (!testa) {
+    nodo?.remove();
+    state.testa = "";
+    return;
+  }
+  if (!righe) return;
+  if (!nodo) {
+    nodo = doc.createElement("div");
+    nodo.className = "dm-auto-testa";
+    righe.prepend(nodo);
+    state.testa = "";
+  }
+  if (state.testa !== testa) {
+    nodo.innerHTML = testa;
+    state.testa = testa;
+  }
+}
+
+/* ── il quadro dell'auto a carburante ─────────────────────────────────── */
+
+function quadroMarkup(lettura, tipo, pillole = [], { conAltro = false } = {}) {
   const carburante = lettura.carburante;
   const serbatoio =
     carburante === null || carburante === undefined
@@ -817,9 +1176,6 @@ function quadroMarkup(lettura, tipo) {
     misura("🛣️", t("Autonomia", "Range"), lettura.autonomia, ` ${lettura.autonomiaUnita}`, "dm.ev_autonomia"),
     misura("🧭", t("Odometro", "Odometer"), lettura.odometro, ` ${lettura.odometroUnita}`, "dm.ev_odometro"),
     misura("🧭", t("Ultimo viaggio", "Last trip"), lettura.ultimoViaggio, " km", "dm.ev_ultimo_viaggio", 1),
-  ].join("");
-  const gomme = gommeMarkup(lettura);
-  const tessere = [
     /* L'unita' e' quella letta dal sensore — percento o volt — e non un «%»
      * scritto qui: «e' a 14 V, mi da' 14%» (#348). I volt vogliono un decimale,
      * perche' fra 12,4 e 12,8 c'e' la differenza fra carica e scarica. */
@@ -831,27 +1187,22 @@ function quadroMarkup(lettura, tipo) {
       "dm.ev_batteria_servizio",
       lettura.batteriaServizioUnita === "%" ? 0 : 1,
     ),
-    misura("🛢️", t("Olio", "Oil"), lettura.olio, "°", "dm.ev_temperatura_olio"),
-    misura("🌡️", t("Esterna", "Outside"), lettura.esterna, "°", "dm.ev_temperatura_esterna"),
     misura("⛽", t("Consumato in totale", "Total fuel used"), lettura.carburanteTotale, " L", "dm.ev_carburante_totale"),
-    gomme.riassunto,
   ].join("");
-  /* I dati dell'auto connessa, dopo quelli del motore. */
-  const dati = datiMarkup(lettura);
-  pillole.push(...dati.pillole);
-  const tutte = `${tessere}${dati.tessere}`;
+  const aggiornata = tipo === "termica" ? aggiornataMarkup(lettura) : "";
   const vuoto =
-    !serbatoio && !righe && !tutte && !gomme.quadretto && !pillole.length
+    !serbatoio && !righe && !pillole.length && !conAltro
       ? `<div class="dm-termica-vuoto">${esc(t("Nessuna lettura", "No reading"))}</div>`
       : "";
-  return `<div class="dm-termica-testa">
-      <span class="dm-termica-titolo">${esc(tipo === "ibrida" ? t("Motore termico", "Combustion engine") : t("L'auto", "The car"))}</span>
-      <div class="dm-termica-pillole">${pillole.join("")}</div>
-    </div>
-    <div class="dm-termica-quadro">${serbatoio}<div class="dm-termica-righe">${righe}</div></div>
-    ${tutte ? `<div class="dm-termica-griglia">${tutte}</div>` : ""}
-    ${gomme.quadretto}
-    ${vuoto}`;
+  return `<section class="dm-auto-carta dm-termica-blocco" data-carta="quadro">
+      <div class="dm-termica-testa">
+        <span class="dm-termica-titolo">${esc(tipo === "ibrida" ? t("Motore termico", "Combustion engine") : t("L'auto", "The car"))}</span>
+        <div class="dm-termica-pillole">${pillole.join("")}</div>
+      </div>
+      <div class="dm-termica-quadro" data-vuoto="${!serbatoio && !righe}">${serbatoio}<div class="dm-termica-righe">${righe}</div></div>
+      ${aggiornata}
+      ${vuoto}
+    </section>`;
 }
 
 function dipingi() {
@@ -884,44 +1235,66 @@ function dipingi() {
   page.dataset.dmBatteria = String(Number.isFinite(carica));
   let blocco = page.querySelector(":scope .dm-termica");
   const lettura = letturaTermica(auto?.ov || auto?.overrides || {}, allStates(), root.resolveEntity);
+  const mezzo = mezzoInPagina();
   /* Le gomme non sono del motore.
    *
    * Il quadro termico parla di carburante, olio e scarico, e su un'auto
    * elettrica non si disegna: giusto. Le gomme pero' stavano dentro quel
    * quadro, e sparivano con lui — chi ha un'elettrica compilava le caselle in
    * configurazione e non le vedeva da nessuna parte, e il TPMS ce l'hanno
-   * anche loro. Quando il motore non e' termico resta solo il quadretto delle
+   * anche loro. Quando il motore non e' termico resta solo la carta delle
    * ruote, che vale per qualunque auto. */
-  const gomme = gommeMarkup(lettura);
+  const gomme = gommeMarkup(lettura, mezzo);
   const elettrica = !tipo;
   /* E i dati dell'auto connessa, che valgono per ogni motore: l'energia che
    * resta, il consumo, il clima, la ricarica programmata. */
-  const dati = datiMarkup(lettura);
-  const conDati = Boolean(dati.tessere || dati.pillole.length);
+  const dati = datiMarkup(lettura, { tipo, aperti: state.altriAperti });
+  const conDati = Boolean(dati.carte.length || dati.altri || dati.pillole.length);
   const soloGomme = elettrica && !conDati;
+  /* Accanto all'anello: la testa dell'auto, se non e' a carburante — su
+   * quella le pillole stanno nel suo quadro, perche' l'anello della
+   * ricarica non c'e'. */
+  accantoAllAnello(page, tipo === "termica" ? "" : testaMarkup(lettura, tipo, dati.pillole));
   if (elettrica && !conDati && !gomme.quadretto && !gomme.riassunto) {
     if (blocco) blocco.remove();
     state.firma = "";
     return;
   }
+  /* Il blocco va DOPO l'anello: prima com'e' l'auto adesso, poi il resto. */
+  const potenza = page.querySelector(".dm-evv-power");
+  const dopo = potenza && potenza.parentElement === hero.parentElement ? potenza : hero;
+  if (blocco && blocco.previousElementSibling !== dopo) dopo.insertAdjacentElement("afterend", blocco);
   /* I nomi scelti stanno nella firma: rinominare una lettura in
    * configurazione e tornare qui deve cambiare quello che si legge, e la
    * lettura in se' non e' cambiata di una virgola. */
-  const firma = JSON.stringify([tipo, lettura, readJson("cd_slot_labels", {})]);
+  const firma = JSON.stringify([tipo, mezzo, lettura, readJson("cd_slot_labels", {})]);
   if (state.firma === firma && blocco) return;
   state.firma = firma;
   if (!blocco) {
     blocco = doc.createElement("section");
     blocco.className = "dm-termica";
-    hero.insertAdjacentElement("afterend", blocco);
+    dopo.insertAdjacentElement("afterend", blocco);
   }
   blocco.dataset.soloGomme = String(soloGomme);
   blocco.dataset.attenzione = String(Boolean(lettura.attenzione));
-  blocco.innerHTML = !elettrica
-    ? quadroMarkup(lettura, tipo)
-    : conDati
-      ? datiSoliMarkup(dati, gomme)
-      : gommeSoleMarkup(gomme);
+  const pilloleDelQuadro =
+    tipo === "termica"
+      ? [pillolaDellaMarcia(lettura), ...pilloleDellAuto(lettura, tipo), ...dati.pillole].filter(Boolean)
+      : [];
+  /* Le gomme a parte, le altre carte in una colonna loro: da schermo largo
+   * l'auto vista dall'alto sta a sinistra e le carte le stanno accanto, su
+   * un telefono vengono prima le carte e in fondo le gomme. */
+  const cartaGomme = cartaDelleGomme(gomme);
+  const altre = dati.carte.join("");
+  const carte =
+    cartaGomme || altre
+      ? `<div class="dm-auto-carte" data-con-gomme="${Boolean(cartaGomme && altre)}">
+        ${altre ? `<div class="dm-auto-colonna">${altre}</div>` : ""}${cartaGomme}
+      </div>`
+      : "";
+  blocco.innerHTML = `${!elettrica ? quadroMarkup(lettura, tipo, pilloleDelQuadro, { conAltro: Boolean(carte || dati.altri) }) : ""}
+    ${carte}
+    ${dati.altri}`;
 }
 
 function schedule() {
@@ -978,7 +1351,12 @@ function evVisible() {
 }
 
 function onClick(event) {
-  const misuraToccata = event.target?.closest?.(".dm-termica-misura[data-dm-storico]");
+  /* Ogni lettura della pagina si tocca per vederne lo storico: le misure del
+   * quadro, i dati delle carte, le gomme, le righe degli altri dati,
+   * l'autonomia accanto all'anello. */
+  const misuraToccata = event.target?.closest?.(
+    "#page-ev :is(.dm-termica,.dm-auto-testa) [data-dm-storico]",
+  );
   if (misuraToccata) {
     event.preventDefault();
     try {
@@ -1037,26 +1415,136 @@ function installStyles() {
     #page-ev[data-dm-motore="termica"][data-dm-batteria="false"] .lm-batt-section{display:none!important}
     #page-ev[data-dm-motore="termica"] .dm-evv-power{justify-content:center}
 
-    #page-ev .dm-termica{
-      display:grid;gap:14px;margin:14px 0 0;padding:16px 18px;border-radius:24px;
-      border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);
-      box-shadow:var(--shadow-glass,0 8px 30px rgba(0,0,0,.06))}
-    #page-ev .dm-termica[data-attenzione="true"]{box-shadow:0 0 0 1px rgba(245,158,11,.4),0 14px 34px -14px rgba(245,158,11,.6)}
-    #page-ev .dm-termica-testa{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    #page-ev .dm-termica-titolo{
-      font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-    #page-ev .dm-termica-pillole{display:flex;flex-wrap:wrap;gap:6px}
+    /* I blocchi della pagina Auto: carte come le altre della pagina, numeri in
+       Oswald grandi con l'unita' piccola, etichette corte in minuscolo. */
+    #page-ev .dm-termica{display:grid;gap:14px;margin:0;min-width:0}
+    #page-ev .dm-auto-carta{
+      display:grid;gap:12px;align-content:start;min-width:0;padding:16px;
+      border-radius:var(--evv-r-s,18px);border:1px solid var(--card-border,rgba(148,163,184,.18));
+      background:var(--evv-surface,var(--card-bg,#fff));color:var(--text,#0f172a);
+      box-shadow:var(--evv-shadow-s,0 8px 30px rgba(0,0,0,.06))}
+    #page-ev .dm-termica[data-attenzione="true"] .dm-termica-gomme,
+    #page-ev .dm-termica[data-attenzione="true"] .dm-termica-blocco{
+      box-shadow:0 0 0 1px rgba(245,158,11,.45),0 14px 34px -16px rgba(245,158,11,.55)}
+    /* Le carte: le gomme, che sono alte, a sinistra; le altre accanto, due
+       per riga, e quella che resta sola prende tutta la riga. Su un telefono
+       una colonna sola, con le gomme in fondo. */
+    #page-ev .dm-auto-carte{display:grid;gap:14px;min-width:0}
+    #page-ev .dm-auto-colonna{
+      display:grid;gap:14px;align-content:start;min-width:0;
+      grid-template-columns:repeat(auto-fit,minmax(max(min(100%,250px),calc((100% - 14px) / 2)),1fr))}
+    #page-ev .dm-auto-colonna>:last-child:nth-child(odd){grid-column:1/-1}
+    @media (min-width:700px){
+      #page-ev .dm-auto-carte[data-con-gomme="true"]{grid-template-columns:minmax(min(280px,100%),.85fr) minmax(0,2fr);align-items:start}
+      #page-ev .dm-auto-carte[data-con-gomme="true"]>.dm-termica-gomme{order:-1}
+    }
+    #page-ev .dm-auto-carta-testa{display:flex;align-items:center;gap:9px;min-width:0}
+    #page-ev .dm-auto-carta-ico{display:grid;place-items:center;width:28px;height:28px;flex:0 0 28px}
+    #page-ev .dm-auto-carta-ico svg{width:28px;height:28px}
+    #page-ev .dm-auto-carta-titolo{
+      font-size:13px;font-weight:800;letter-spacing:.01em;color:var(--text,#0f172a);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+    #page-ev .dm-auto-carta-testa>.dm-auto-totale,#page-ev .dm-auto-carta-testa>.dm-auto-sigla{margin-left:auto}
+    #page-ev .dm-auto-num{
+      font-family:'Oswald',sans-serif;font-weight:600;font-size:26px;line-height:1;letter-spacing:-.01em;
+      font-variant-numeric:tabular-nums;color:var(--text,#0f172a);white-space:nowrap}
+    #page-ev .dm-auto-num small{
+      font-family:'Inter',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:0;
+      margin-left:3px;color:var(--text-dim,#64748b)}
+    #page-ev .dm-auto-totale{font-size:22px}
+    #page-ev .dm-auto-sigla{
+      padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.06em;
+      background:rgba(14,165,233,.14);color:#0369a1}
+
+    /* I dati uno accanto all'altro: tre per riga finche' ci stanno. */
+    #page-ev .dm-auto-dati{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px}
+    #page-ev .dm-auto-dato{
+      display:grid;gap:6px;align-content:start;min-width:0;padding:10px 11px;border-radius:14px;
+      border:0;background:var(--surface-2,#f8fafc);font:inherit;text-align:left;color:inherit}
+    #page-ev button.dm-auto-dato{cursor:pointer}
+    #page-ev .dm-auto-dato>span{font-size:11.5px;font-weight:600;color:var(--text-dim,#64748b);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #page-ev .dm-auto-dato .dm-auto-num{font-size:24px;white-space:normal}
+    #page-ev .dm-auto-dato .dm-auto-num small{display:inline-block;white-space:nowrap}
+
+    /* L'energia di oggi: una barra sola, tre colori. */
+    #page-ev .dm-auto-barra{
+      display:flex;gap:2px;height:12px;border-radius:999px;overflow:hidden;
+      background:var(--surface-2,#eef2f6)}
+    #page-ev .dm-auto-barra>span{min-width:6px;flex-basis:0}
+    #page-ev [data-parte="guida"]{--parte:#16a34a}
+    #page-ev [data-parte="clima"]{--parte:#0ea5e9}
+    #page-ev [data-parte="altro"]{--parte:#f59e0b}
+    #page-ev .dm-auto-barra>span{background:var(--parte)}
+    #page-ev .dm-auto-legenda{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:6px}
+    #page-ev .dm-auto-voce{
+      display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:6px;row-gap:2px;
+      padding:4px 2px;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;min-width:0}
+    #page-ev .dm-auto-voce i{width:9px;height:9px;border-radius:3px;background:var(--parte)}
+    #page-ev .dm-auto-voce span{font-size:11.5px;font-weight:600;color:var(--text-dim,#64748b);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #page-ev .dm-auto-voce b{grid-column:1/-1;font-family:'Oswald',sans-serif;font-size:17px;font-weight:600;
+      font-variant-numeric:tabular-nums;white-space:nowrap}
+    #page-ev .dm-auto-voce b small{font-family:'Inter',sans-serif;font-size:10.5px;font-weight:700;
+      margin-left:2px;color:var(--text-dim,#64748b)}
+
+    /* Le pillole: quello che l'auto sta facendo, e come sta. */
+    #page-ev .dm-termica-pillole{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
     #page-ev .dm-termica-pillola{
-      display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;
-      font-size:11.5px;font-weight:800;background:var(--surface-3,#f1f5f9);color:var(--text,#0f172a)}
+      display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;max-width:100%;
+      font-size:11.5px;font-weight:700;background:var(--surface-3,#f1f5f9);color:var(--text,#0f172a)}
     #page-ev .dm-termica-pillola i{font-style:normal}
     #page-ev .dm-termica-pillola[data-tono="acceso"]{background:#dcfce7;color:#166534}
     #page-ev .dm-termica-pillola[data-tono="bene"]{background:#dcfce7;color:#166534}
     #page-ev .dm-termica-pillola[data-tono="attento"]{background:#fef3c7;color:#b45309}
     #page-ev .dm-termica-pillola[data-tono="male"]{background:#fee2e2;color:#b91c1c}
     #page-ev .dm-termica-pillola[data-tono="spento"]{color:var(--text-dim,#64748b)}
+    /* La lettera della marcia in un tondino, come sul cruscotto. */
+    #page-ev .dm-auto-marcia{
+      display:inline-grid;place-items:center;width:18px;height:18px;margin-left:-5px;border-radius:50%;
+      font-family:'Oswald',sans-serif;font-size:11.5px;font-weight:700;line-height:1;
+      background:var(--text,#0f172a);color:var(--card-bg,#fff)}
+    #page-ev .dm-termica-pillola[data-tono="acceso"] .dm-auto-marcia{background:#166534;color:#dcfce7}
+    #page-ev .dm-auto-aggiornata{
+      display:flex;align-items:center;gap:6px;margin:0;font-size:11.5px;font-weight:600;
+      color:var(--text-dim,#64748b)}
+    #page-ev .dm-auto-aggiornata i{font-style:normal;font-size:12px;opacity:.8}
 
+    /* Accanto all'anello: l'autonomia in grande, poi le pillole. */
+    #page-ev .dm-auto-testa{display:grid;gap:10px;min-width:0;padding-bottom:12px;
+      border-bottom:1px solid color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent)}
+    #page-ev .dm-auto-testa:last-child{padding-bottom:0;border-bottom:0}
+    #page-ev .dm-auto-autonomia{
+      display:grid;justify-items:start;gap:4px;padding:0;border:0;background:none;font:inherit;
+      color:inherit;text-align:left;cursor:pointer;min-width:0}
+    #page-ev .dm-auto-autonomia>small{font-size:11.5px;font-weight:600;color:var(--text-dim,#64748b)}
+    #page-ev .dm-auto-autonomia .dm-auto-num{font-size:34px}
+    #page-ev .dm-auto-autonomia .dm-auto-num small{font-size:14px}
+    #page-ev .dm-auto-autonomia>span{font-size:11.5px;font-weight:600;color:var(--text-dim,#64748b)}
+    #page-ev .lm-stat-card[data-dm-doppia="true"]{display:none!important}
+    #page-ev .dm-evv-power[data-dm-ricarica="ferma"] .dm-evv-row[data-dm-riga="potenza"],
+    #page-ev .dm-evv-power[data-dm-ricarica="ferma"] .dm-evv-row[data-dm-riga="tempo"]{display:none!important}
+    /* La prima riga della ricarica resta verde anche con la testa sopra. */
+    #page-ev.dm-evv .dm-auto-testa+.dm-evv-row .dm-evv-row-val{color:var(--evv-green-deep,#15803d)}
+    [data-theme="dark"] #page-ev.dm-evv .dm-auto-testa+.dm-evv-row .dm-evv-row-val{color:#4ade80}
+    #page-ev .dm-evv-power>.dm-evv-gauge{align-self:center}
+    /* Da schermo largo la testa e le righe della ricarica stanno affiancate:
+       a sinistra com'e' l'auto, a destra come sta caricando. */
+    @media (min-width:860px){
+      #page-ev .dm-evv-rows.dm-auto-con-testa{
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px;align-items:center}
+      #page-ev .dm-auto-con-testa>.dm-auto-testa{
+        grid-column:1;grid-row:1/span 3;align-self:center;padding:0 28px 0 0;border-bottom:0;
+        border-right:1px solid color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent)}
+      #page-ev .dm-auto-con-testa>.dm-evv-row{grid-column:2}
+      #page-ev .dm-evv-power[data-dm-ricarica="ferma"] .dm-auto-con-testa>.dm-evv-row{grid-row:1/span 3;align-self:center}
+    }
+
+    /* Il quadro dell'auto a carburante: il serbatoio e le sue misure. */
+    #page-ev .dm-termica-testa{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    #page-ev .dm-termica-titolo{font-size:13px;font-weight:800;letter-spacing:.01em;color:var(--text,#0f172a)}
     #page-ev .dm-termica-quadro{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+    #page-ev .dm-termica-quadro[data-vuoto="true"]{display:none}
     #page-ev .dm-termica-serbatoio{
       position:relative;width:140px;height:140px;display:flex;flex-direction:column;
       align-items:center;justify-content:center;gap:2px;text-align:center}
@@ -1065,56 +1553,108 @@ function installStyles() {
     #page-ev .dm-termica-arc{stroke:#f59e0b;transition:stroke-dasharray .8s cubic-bezier(.16,1,.3,1)}
     #page-ev .dm-termica-serbatoio[data-riserva="true"] .dm-termica-arc{stroke:#ef4444}
     #page-ev .dm-termica-serbatoio b{
-      position:relative;font-family:'Oswald',sans-serif;font-size:32px;font-weight:500;line-height:1;
+      position:relative;font-family:'Oswald',sans-serif;font-size:34px;font-weight:500;line-height:1;
       color:var(--text,#0f172a);font-variant-numeric:tabular-nums}
     #page-ev .dm-termica-serbatoio b i{font-style:normal;font-size:.5em;margin-left:1px;opacity:.75}
     #page-ev .dm-termica-serbatoio span{
-      position:relative;font-size:9.5px;font-weight:900;letter-spacing:.08em;
-      text-transform:uppercase;color:var(--text-dim,#64748b)}
+      position:relative;font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
     #page-ev .dm-termica-serbatoio[data-riserva="true"] span{color:#dc2626}
-    #page-ev .dm-termica-righe{display:grid;gap:6px;min-width:0}
+    #page-ev .dm-termica-righe{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;min-width:0}
     #page-ev .dm-termica-misura{
-      display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;text-align:left;
-      border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc);cursor:pointer;
+      display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;text-align:left;
+      border:0;background:var(--surface-2,#f8fafc);cursor:pointer;
       font:inherit;color:var(--text,#0f172a);min-width:0}
     #page-ev .dm-termica-misura i{font-style:normal;font-size:16px;flex:0 0 auto}
-    #page-ev .dm-termica-misura-testo{display:grid;gap:1px;min-width:0}
+    #page-ev .dm-termica-misura-testo{display:grid;gap:3px;min-width:0}
     #page-ev .dm-termica-misura small{
-      font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-    #page-ev .dm-termica-misura b{font-size:17px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
-    #page-ev .dm-termica-misura b em{font-style:normal;font-size:.7em;font-weight:800;opacity:.75}
-    #page-ev .dm-termica-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+      font-size:11.5px;font-weight:600;color:var(--text-dim,#64748b);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #page-ev .dm-termica-misura b{font-family:'Oswald',sans-serif;font-size:21px;font-weight:600;line-height:1.05;
+      font-variant-numeric:tabular-nums;white-space:nowrap}
+    #page-ev .dm-termica-misura b em{font-family:'Inter',sans-serif;font-style:normal;font-size:11.5px;font-weight:700;
+      color:var(--text-dim,#64748b)}
 
-    /* Le quattro ruote, disposte come stanno sull'auto: due davanti, due
-       dietro (#319). La corsia in mezzo e' l'auto, e non serve disegnarla. */
-    #page-ev .dm-termica-gomme{display:grid;gap:8px}
-    #page-ev .dm-termica-gomme-titolo{
-      display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:900;
-      letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-    #page-ev .dm-termica-gomme-titolo i{font-style:normal;font-size:13px}
+    /* Le gomme: l'auto vista dall'alto, una pressione accanto a ogni ruota. */
     #page-ev .dm-termica-gomme-quadro{
-      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 34px;
-      position:relative;padding:2px 0}
-    #page-ev .dm-termica-gomme-quadro::before{
-      content:"";position:absolute;top:4px;bottom:4px;left:50%;width:2px;
-      transform:translateX(-50%);border-radius:2px;background:var(--surface-3,#e2e8f0)}
+      display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      grid-template-areas:"as auto ad" "ps auto pd";gap:10px 12px;align-items:center}
+    #page-ev .dm-termica-gomme-auto{
+      grid-area:auto;height:148px;width:auto;justify-self:center;
+      filter:drop-shadow(0 6px 10px rgba(6,14,22,.28))}
+    #page-ev .dm-termica-gomma[data-ruota="antSx"]{grid-area:as}
+    #page-ev .dm-termica-gomma[data-ruota="antDx"]{grid-area:ad}
+    #page-ev .dm-termica-gomma[data-ruota="postSx"]{grid-area:ps}
+    #page-ev .dm-termica-gomma[data-ruota="postDx"]{grid-area:pd}
+    #page-ev .dm-termica-gomma[data-ruota$="Sx"]{text-align:right;justify-items:end}
+    #page-ev .dm-termica-gomme-quadro[data-mezzo="moto"]{
+      grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"as ad" "ps pd"}
+    #page-ev .dm-termica-gomme-quadro[data-mezzo="moto"] .dm-termica-gomma{text-align:left;justify-items:start}
     #page-ev .dm-termica-gomma{
-      display:grid;gap:1px;padding:8px 12px;border-radius:14px;text-align:left;min-width:0;
-      border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc);
-      font:inherit;color:var(--text,#0f172a)}
+      display:grid;gap:4px;padding:8px 10px;border-radius:14px;min-width:0;
+      border:0;background:var(--surface-2,#f8fafc);font:inherit;color:var(--text,#0f172a)}
     #page-ev button.dm-termica-gomma{cursor:pointer}
     #page-ev .dm-termica-gomma small{
-      font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-      color:var(--text-dim,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      font-size:11px;font-weight:600;color:var(--text-dim,#64748b);max-width:100%;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #page-ev .dm-termica-gomma b{
-      font-size:17px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
-    #page-ev .dm-termica-gomma b em{font-style:normal;font-size:.7em;font-weight:800;opacity:.75}
-    #page-ev .dm-termica-gomma[data-tono="attento"]{
-      border-color:rgba(245,158,11,.5);background:#fef3c7;color:#b45309}
-    #page-ev .dm-termica-gomma[data-tono="bene"] b{font-size:13px;color:#166534}
-    #page-ev .dm-termica-gomma[data-vuota="true"]{border-style:dashed;background:transparent}
+      font-family:'Oswald',sans-serif;font-size:22px;font-weight:600;line-height:1;
+      font-variant-numeric:tabular-nums;white-space:nowrap}
+    #page-ev .dm-termica-gomma b em{font-family:'Inter',sans-serif;font-style:normal;font-size:11px;font-weight:700;
+      color:var(--text-dim,#64748b)}
+    #page-ev .dm-termica-gomma[data-tono="bene"] b{color:#15803d}
+    #page-ev .dm-termica-gomma:is([data-tono="bassa"],[data-tono="alta"],[data-tono="avviso"],[data-tono="attento"]){
+      background:#fef3c7;color:#b45309;box-shadow:inset 0 0 0 1px rgba(245,158,11,.5)}
+    #page-ev .dm-termica-gomma:is([data-tono="bassa"],[data-tono="alta"],[data-tono="avviso"],[data-tono="attento"]) :is(b,small,em){color:#b45309}
+    #page-ev span.dm-termica-gomma[data-tono="bene"] b{font-size:15px}
+    #page-ev span.dm-termica-gomma[data-tono="attento"] b{font-size:14px;white-space:normal}
+    #page-ev .dm-termica-gomma[data-vuota="true"]{background:transparent;box-shadow:inset 0 0 0 1px var(--card-border,#e2e8f0)}
     #page-ev .dm-termica-gomma[data-vuota="true"] b{color:var(--text-dim,#94a3b8)}
+    #page-ev .dm-auto-didascalia{display:flex;justify-content:center}
+
+    /* Altri dati: chiuso, una riga per lettura. */
+    #page-ev details.dm-auto-altri{padding:0!important;gap:0;margin:0!important}
+    #page-ev .dm-auto-altri>summary{
+      display:flex;align-items:center;gap:8px;padding:14px 16px!important;margin:0!important;cursor:pointer;list-style:none}
+    #page-ev .dm-auto-altri>summary::-webkit-details-marker{display:none}
+    #page-ev .dm-auto-altri>summary::after{
+      content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--text-dim,#64748b);
+      border-bottom:2px solid var(--text-dim,#64748b);transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s ease}
+    #page-ev .dm-auto-altri[open]>summary::after{transform:rotate(-135deg) translate(-2px,-2px)}
+    #page-ev .dm-auto-altri>summary small{
+      padding:1px 8px;border-radius:999px;font-size:11px;font-weight:800;
+      background:var(--surface-2,#f1f5f9);color:var(--text-dim,#64748b)}
+    #page-ev .dm-auto-elenco{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:0 18px;padding:0 16px 10px}
+    #page-ev .dm-auto-riga{
+      display:flex;align-items:center;gap:10px;padding:10px 0;min-width:0;border:0;
+      border-top:1px solid color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent);
+      background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+    #page-ev .dm-auto-riga i{font-style:normal;font-size:15px;flex:0 0 auto}
+    #page-ev .dm-auto-riga span{flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--text-dim,#64748b);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #page-ev .dm-auto-riga b{font-family:'Oswald',sans-serif;font-size:17px;font-weight:600;white-space:nowrap;
+      font-variant-numeric:tabular-nums}
+    #page-ev .dm-auto-riga b small{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;margin-left:3px;
+      color:var(--text-dim,#64748b)}
     #page-ev .dm-termica-vuoto{font-size:12px;font-weight:700;color:var(--text-dim,#64748b);text-align:center;padding:6px}
+
+    /* Al buio i colori delle pillole e delle gomme si scuriscono. */
+    [data-theme="dark"] #page-ev .dm-auto-carta{border-color:rgba(148,163,184,.14)}
+    [data-theme="dark"] #page-ev :is(.dm-auto-dato,.dm-termica-misura,.dm-termica-gomma){background:rgba(148,163,184,.08)}
+    [data-theme="dark"] #page-ev .dm-auto-barra{background:rgba(148,163,184,.14)}
+    [data-theme="dark"] #page-ev .dm-termica-pillola{background:rgba(148,163,184,.14);color:#e2e8f0}
+    [data-theme="dark"] #page-ev .dm-termica-pillola:is([data-tono="acceso"],[data-tono="bene"]){background:rgba(34,197,94,.16);color:#86efac}
+    [data-theme="dark"] #page-ev .dm-termica-pillola[data-tono="attento"]{background:rgba(245,158,11,.18);color:#fcd34d}
+    [data-theme="dark"] #page-ev .dm-termica-pillola[data-tono="male"]{background:rgba(239,68,68,.2);color:#fca5a5}
+    [data-theme="dark"] #page-ev .dm-termica-pillola[data-tono="spento"]{color:#94a3b8}
+    [data-theme="dark"] #page-ev .dm-auto-marcia{background:#e2e8f0;color:#0f172a}
+    [data-theme="dark"] #page-ev .dm-termica-pillola[data-tono="acceso"] .dm-auto-marcia{background:#86efac;color:#052e16}
+    [data-theme="dark"] #page-ev .dm-termica-gomma[data-tono="bene"] b{color:#4ade80}
+    [data-theme="dark"] #page-ev .dm-termica-gomma:is([data-tono="bassa"],[data-tono="alta"],[data-tono="avviso"],[data-tono="attento"]){
+      background:rgba(245,158,11,.16);box-shadow:inset 0 0 0 1px rgba(245,158,11,.45)}
+    [data-theme="dark"] #page-ev .dm-termica-gomma:is([data-tono="bassa"],[data-tono="alta"],[data-tono="avviso"],[data-tono="attento"]) :is(b,small,em){color:#fcd34d}
+    [data-theme="dark"] #page-ev .dm-auto-sigla{background:rgba(56,189,248,.16);color:#7dd3fc}
+    [data-theme="dark"] #page-ev .dm-auto-altri>summary small{background:rgba(148,163,184,.14)}
 
     #ed-body .dm-termica-tipo{display:block;margin:0 0 10px}
     #ed-body .dm-termica-tipo small{
@@ -1123,6 +1663,11 @@ function installStyles() {
     @media (max-width:640px){
       #page-ev .dm-termica-quadro{grid-template-columns:1fr;justify-items:center}
       #page-ev .dm-termica-righe{width:100%}
+      #page-ev .dm-auto-carta{padding:14px}
+      #page-ev .dm-auto-autonomia .dm-auto-num{font-size:30px}
+      #page-ev .dm-termica-gomme-auto{height:124px}
+      #page-ev .dm-termica-gomma{padding:7px 8px}
+      #page-ev .dm-termica-gomma b{font-size:19px}
     }
     `,
   );
@@ -1136,6 +1681,15 @@ export function installAutoTermica() {
   mettiLeCaselle();
   doc.addEventListener("click", onClick);
   doc.addEventListener("change", onChange);
+  /* «toggle» non risale il documento: si ascolta mentre scende. */
+  doc.addEventListener(
+    "toggle",
+    (event) => {
+      const tendina = event.target;
+      if (tendina?.classList?.contains?.("dm-auto-altri")) state.altriAperti = Boolean(tendina.open);
+    },
+    true,
+  );
   wrapFunction("apriConfigEntita", "__dmAutoTermica", () => {
     mettiLeCaselle();
     rinominaLaLinguettaDellAuto();

@@ -702,6 +702,7 @@ class NotificaArrivata {
     this.scheda,
     this.foto,
     this.fonte,
+    this.apri,
   });
 
   final String id;
@@ -734,6 +735,12 @@ class NotificaArrivata {
   /// Da dove viene, sotto il testo: «Automazione di Home Assistant ·
   /// Lavatrice finita». Solo le notifiche di Home Assistant ce l'hanno.
   final String? fonte;
+
+  /// Dove porta il tocco, come lo dice la casa (`apri` in
+  /// `ponte/src/notifiche.js`): la sezione — `sicurezza`, `varchi`,
+  /// `telecamera`… — e la cosa di cui parla. `null` da un ponte di prima:
+  /// allora la si ricava dal [tipo] (`dove_apre.dart`).
+  final ({String sezione, String? entita})? apri;
 
   /// Una notifica di un'automazione di Home Assistant, anche in GdAHome.
   bool get daHomeAssistant => tipo == 'ha_notify';
@@ -807,9 +814,22 @@ class NotificaArrivata {
       fonte: grezzo['fonte'] is String && (grezzo['fonte'] as String).isNotEmpty
           ? grezzo['fonte'] as String
           : null,
+      apri: switch (grezzo['apri']) {
+        {'sezione': final String sezione} when _parola.hasMatch(sezione) => (
+          sezione: sezione,
+          entita: switch (grezzo['apri']['entita']) {
+            final String entita when _entita.hasMatch(entita) => entita,
+            _ => null,
+          },
+        ),
+        _ => null,
+      },
     );
   }
 }
+
+final RegExp _parola = RegExp(r'^[a-z]{2,20}$');
+final RegExp _entita = RegExp(r'^[a-z_]+\.[a-z0-9_]+$');
 
 /// Un telefono di GdAHome della casa, per «Chi la riceve»: col nome che chi
 /// lo usa ha scritto nell'app, mai quello di una persona di Home Assistant.

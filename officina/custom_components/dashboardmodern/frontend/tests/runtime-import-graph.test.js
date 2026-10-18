@@ -1567,8 +1567,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // catalogo `core/disegni-da-riquadro.js` dei disegni che riempiono un
   // riquadro, e `sections/riquadri-con-immagine-section.js` — il vestito del
   // riquadro, il blocco «Immagine» degli editor e i Dispositivi della Home.
+  // 471 coi segni degli aggiornamenti: il nucleo puro
+  // `core/loghi-degli-aggiornamenti.js` — quando si chiede un'icona al ponte,
+  // quando si richiede e quale indirizzo diretto vale fuori dal ponte.
   assert.ok(
-    relative.length <= 470,
+    relative.length <= 471,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -70,6 +70,7 @@ export function tempoDellaRicarica({
   target = null,
   kilowatt = null,
   capacita = CAPACITA_DI_SERIE,
+  minutiDellAuto = null,
 } = {}) {
   const adesso = numero(soc);
   const limite = numero(target);
@@ -78,6 +79,16 @@ export function tempoDellaRicarica({
   if (adesso !== null && adesso >= 100) return { stato: "completa", minuti: null };
   if (adesso !== null && limite !== null && adesso >= limite)
     return { stato: "raggiunto", minuti: null };
+  /* Quando e' l'auto stessa a dire quanto manca, si crede a lei.
+   *
+   * «Tempo alla fine della ricarica 1045 min» in una tessera, e accanto
+   * all'anello «13H 23M RIM.» contati dalla plancia: due risposte alla stessa
+   * domanda, sulla stessa pagina. L'auto conosce la sua curva di carica, il
+   * suo limite e la sua batteria; il conto della plancia parte da una
+   * capacita' che a volte e' assunta. Il conto resta quando l'auto tace. */
+  const dettiDallAuto = numero(minutiDellAuto);
+  if (codice === "C" && dettiDallAuto !== null && dettiDallAuto > 0)
+    return { stato: "carica", minuti: Math.max(1, Math.round(dettiDallAuto)) };
   /* Si conta solo quando sta caricando davvero: con la carica ferma il numero
    * sarebbe una promessa che nessuno sta mantenendo. */
   if (codice !== "C" || potenza === null || potenza <= 0 || adesso === null || limite === null)
@@ -99,4 +110,56 @@ export function oraDiArrivo(minuti, adesso = Date.now()) {
   const totale = numero(minuti);
   if (totale === null || totale < 0) return null;
   return new Date(adesso + totale * 60000);
+}
+
+/**
+ * I minuti di un sensore di durata, qualunque unita' dichiari: Home Assistant
+ * lascia scegliere fra secondi, minuti, ore e giorni. Senza unita' sono
+ * minuti, che e' quello che le integrazioni delle auto pubblicano quasi
+ * sempre. `null` se non e' un numero.
+ */
+export function minutiDallaDurata(valore, unita = "") {
+  const letto = numero(typeof valore === "string" ? valore.trim() : valore);
+  if (letto === null || letto < 0) return null;
+  const nome = String(unita || "")
+    .trim()
+    .toLowerCase();
+  if (nome === "s") return letto / 60;
+  if (nome === "h") return letto * 60;
+  if (nome === "d") return letto * 1440;
+  return letto;
+}
+
+/**
+ * Una durata come la si dice: «13 h 23 min», «45 min», «2 h».
+ *
+ * «Tempo alla fine della ricarica 1045 min» non lo legge nessuno: diciassette
+ * ore si dicono in ore. Le unita' sono i simboli del sistema internazionale,
+ * che si leggono uguali in tutte le lingue della plancia. Vuoto se non e' un
+ * numero.
+ */
+export function durataInParole(minuti) {
+  const totale = numero(minuti);
+  if (totale === null || totale < 0) return "";
+  const tondo = Math.round(totale);
+  if (tondo < 60) return `${tondo} min`;
+  const ore = Math.floor(tondo / 60);
+  const resto = tondo % 60;
+  return resto ? `${ore} h ${resto} min` : `${ore} h`;
+}
+
+/**
+ * Quando arriva la fine, rispetto a oggi: `{ giorno, ora }`, con `giorno`
+ * «oggi», «domani» o «poi» (piu' in la'), e `ora` come «11:23». `null` se non
+ * c'e' un numero.
+ */
+export function quandoFinisce(minuti, adesso = Date.now()) {
+  const fine = oraDiArrivo(minuti, adesso);
+  if (!fine) return null;
+  const oggi = new Date(adesso);
+  const domani = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + 1);
+  const dopodomani = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + 2);
+  const ora = `${fine.getHours()}:${String(fine.getMinutes()).padStart(2, "0")}`;
+  const giorno = fine < domani ? "oggi" : fine < dopodomani ? "domani" : "poi";
+  return { giorno, ora, fine };
 }

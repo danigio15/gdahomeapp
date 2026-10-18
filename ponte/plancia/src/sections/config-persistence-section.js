@@ -489,7 +489,15 @@ function sharedStoreEnabled() {
   return Boolean(hostedBridge() && currentProfile());
 }
 
-export function bridgeRequest(type, payload = {}) {
+/* `attesa`: quanto si aspetta la risposta. `rimanda`: per le sole letture —
+ * la domanda partita prima dell'`auth_ok` (vedi i 25 ms qui sotto) si rimanda
+ * quando l'`auth_ok` arriva. Dentro l'app la cucitura butta quello che le
+ * arriva prima di averlo detto (`app/lib/plancia/cucitura.dart`), e su un
+ * telefono che si riapre il filo verso casa ci mette piu' di 25 ms a tornare:
+ * la domanda andava persa, e la risposta non arrivava mai. Una lettura
+ * mandata due volte torna due volte, e la seconda non la ascolta nessuno; una
+ * scrittura no, e per quelle resta com'era. */
+export function bridgeRequest(type, payload = {}, { attesa = 8000, rimanda = false } = {}) {
   if (!hostedBridge()) return Promise.resolve(null);
   return new Promise((resolve, reject) => {
     const Socket = root.__DASHBOARDMODERN_BRIDGE_WS__ || root.WebSocket;
@@ -504,7 +512,7 @@ export function bridgeRequest(type, payload = {}) {
       } catch (_error) {}
       finished = true;
       reject(new Error(`${type} timed out`));
-    }, 8000);
+    }, attesa);
     const finish = (callback, value) => {
       if (finished) return;
       finished = true;
@@ -514,8 +522,11 @@ export function bridgeRequest(type, payload = {}) {
       } catch (_error) {}
       callback(value);
     };
-    const send = () => {
-      if (sent || finished) return;
+    let primaDellaPorta = false;
+    const send = (allaPorta = false) => {
+      if (finished) return;
+      if (sent && !(allaPorta && primaDellaPorta && rimanda)) return;
+      primaDellaPorta = !allaPorta && !sent;
       sent = true;
       try {
         socket.send(JSON.stringify({ id, type, ...payload }));
@@ -533,13 +544,17 @@ export function bridgeRequest(type, payload = {}) {
           return;
         }
         if (message.type === "auth_ok") {
-          send();
+          send(true);
           return;
         }
         if (message.type !== "result" || message.id !== id) return;
-        if (message.success === false)
-          finish(reject, new Error(message.error?.message || `${type} failed`));
-        else finish(resolve, message.result);
+        if (message.success === false) {
+          /* Il codice viaggia con l'errore: «non conosco» e «non c'e'» sono
+           * due risposte diverse, e chi chiede le distingue. */
+          const errore = new Error(message.error?.message || `${type} failed`);
+          if (message.error?.code) errore.code = String(message.error.code);
+          finish(reject, errore);
+        } else finish(resolve, message.result);
       };
       socket.onerror = () => finish(reject, new Error(`${type} bridge error`));
       root.setTimeout?.(() => {
