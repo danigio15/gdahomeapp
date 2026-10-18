@@ -1558,8 +1558,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 465 con le parole dei servizi: il nucleo puro `core/parole-dei-servizi.js`,
   // che dice in italiano i servizi e gli stati di Home Assistant, e che legge
   // anche il ponte per il riassunto delle automazioni.
+  // 467 col foglio «Ultime 24 ore» (#269): il nucleo puro
+  // `core/ultime-rilevazioni.js` — tratti, aperture, conti, ore e quiete della
+  // notte — e `sections/ultime-rilevazioni-section.js`, il foglio che si apre
+  // dalle carte dei Varchi, della Presenza e delle loro finestre in Home.
   assert.ok(
-    relative.length <= 465,
+    relative.length <= 467,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -164,6 +164,7 @@ import { installRifiutiEditor } from "./rifiuti-editor-section.js";
 import { installVarchi } from "./varchi-section.js";
 import { installVarchiEditor } from "./varchi-editor-section.js";
 import { installPresenza } from "./presenza-section.js";
+import { installUltimeRilevazioni } from "./ultime-rilevazioni-section.js";
 import { installPresenzaEditor } from "./presenza-editor-section.js";
 import { installCitofono } from "./citofono-section.js";
 import { installCitofonoEditor } from "./citofono-editor-section.js";
@@ -1206,6 +1207,10 @@ export function installSectionRuntime() {
     senzaCadere(installVarchiEditor);
     senzaCadere(installPresenza);
     senzaCadere(installPresenzaEditor);
+    /* Il foglio «Ultime 24 ore» (#269): si apre toccando la carta di un
+     * varco o di un rilevatore, nelle due pagine qui sopra e nelle loro
+     * finestre in Home. */
+    senzaCadere(installUltimeRilevazioni);
     senzaCadere(installCitofono);
     senzaCadere(installCitofonoEditor);
     senzaCadere(installStampanti);
@@ -1353,6 +1358,7 @@ export function installSectionRuntime() {
         "varchi",
         "varchi-editor",
         "presenza",
+        "ultime-rilevazioni",
         "presenza-editor",
         "stampanti",
         "stampanti-editor",
