@@ -52,7 +52,7 @@ import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import {
   EVENTO_PREVISIONI,
   anteprimaDellaPagina,
-  eUnVarco as eUnVarcoDelMuro,
+  facciaDelPosto,
   fonteDelMuro,
   premiumDellaCasa,
 } from "./plancia-a-muro-section.js";
@@ -340,26 +340,29 @@ function dueTastiMarkup(via, c) {
           "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used.",
         ),
       )}</small>
-      <label class="mu-ed-voce"><span>${esc(t("Icona", "Icon"))}</span>${tendina(`${via}.disegno`, c.disegno || "", DISEGNI(), null)}</label>`;
+      <label class="mu-ed-voce"><span data-mu-ed-icona>${esc(t("Icona", "Icon"))}</span>${tendina(`${via}.disegno`, c.disegno || "", DISEGNI(), null)}</label>
+      ${immagineDelPosto(via, { ...c, tipo: "duetasti" })}`;
 }
 
-/* «Riquadri con l'immagine»: il blocco «Immagine» sotto «Disegno», per i
- * posti che sul tablet la sanno mostrare — una luce, un'entita' qualunque, una
- * scena, un cancello. Il clima, la tapparella e i due tasti hanno i loro
- * comandi sulla card, e un'immagine li coprirebbe. */
-function siVedeLImmagine(c) {
-  if (!c || c.tipo === "vuoto" || c.tipo === "duetasti" || c.tipo === "clima") return false;
-  if (c.tipo === "tapparella") return eUnVarcoDelMuro(allStates()?.[c.entita]?.attributes || {});
-  return true;
+/* «Riquadri con l'immagine»: il blocco «Immagine» sotto «Disegno», per ogni
+ * posto che c'e' — «lo devi aggiungere a tutti». La luce, i due tasti, il
+ * clima e il termostato, la tapparella e il cancello, un sensore, una scena:
+ * sul tablet ognuno porta l'immagine coi suoi comandi in vetro sopra
+ * (`cardDelPosto` nel muro). L'anteprima del blocco dice quello che dira' il
+ * tablet (`facciaDelPosto`): «76 %» per la batteria, ON e OFF per i due tasti. */
+export function siVedeLImmagine(c) {
+  return Boolean(c && c.tipo && c.tipo !== "vuoto");
 }
 const ACCENTO_DEL_POSTO = Object.freeze({ luce: "#f59e0b", azione: "#8b5cf6", tapparella: "#22c55e" });
-function immagineDelPosto(via, c) {
+function immagineDelPosto(via, c, lista = "comandi") {
   if (!siVedeLImmagine(c)) return "";
+  const anteprima = facciaDelPosto(c, { scena: lista === "scene", fonte: state.fonte || {} });
   return bloccoImmagineMarkup({
     chiave: via,
     immagine: c.immagine,
     nome: clean(c.nome) || c.azione || nomeDi(c.entita),
-    accento: ACCENTO_DEL_POSTO[c.tipo] || "#f59e0b",
+    accento: anteprima?.accento || ACCENTO_DEL_POSTO[c.tipo] || "#f59e0b",
+    anteprima,
   });
 }
 
@@ -400,7 +403,7 @@ function postoMarkup(i, lista, k, c, posti = 6) {
           ? `<label class="mu-ed-voce"><span>${esc(t("Nome sul tablet", "Name on the tablet"))}</span>${campo(`${via}.nome`, c.nome || "", c.azione || nomeDi(c.entita))}</label>
       <label class="mu-ed-voce"><span>${esc(t("Riga sotto", "Line below"))}</span>${campo(`${via}.sotto`, c.sotto || "", t("Facoltativa", "Optional"))}</label>
       <label class="mu-ed-voce"><span>${esc(c.immagine ? t("Disegno (se non c'è immagine)", "Drawing (when there is no image)") : t("Disegno", "Drawing"))}</span>${tendina(`${via}.disegno`, c.disegno || "", DISEGNI(), null)}</label>
-      ${immagineDelPosto(via, c)}`
+      ${immagineDelPosto(via, c, lista)}`
           : ""
       }`
       }
@@ -878,6 +881,14 @@ const voce = (etichetta, dentro, entitaQui = false) =>
 const DOMINI_DEL_CANALE = "media_player,number,input_number,sensor,remote";
 const DOMINI_DEL_MUTO = "switch,input_boolean,remote,button,input_button,script";
 const telecomando = (id) => String(id || "").startsWith("remote.");
+/* Il blocco «Immagine» di una voce della regia — un canale, un comando, la
+ * telecamera — che sul tablet tiene la sua forma e prende l'immagine come
+ * fondo: l'anteprima e' il riquadro col nome, senza un «Acceso» che li' non
+ * c'e'. */
+const ANTEPRIMA_DEL_FONDO = Object.freeze({ stato: "", acceso: false, destra: "", comandi: "", classi: "dm-rq-lettura" });
+const bloccoDellaVoce = (via, voce, nome, accento = "#22c55e") =>
+  bloccoImmagineMarkup({ chiave: via, immagine: voce?.immagine, nome, accento, anteprima: ANTEPRIMA_DEL_FONDO });
+
 function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
   const pieno = Boolean(c?.entita);
   const sensore = String(c?.entita || "").startsWith("sensor.");
@@ -903,7 +914,8 @@ function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
         conComandi
           ? `<div class="mu-ed-comandi">${comando("mutoComando", t("Comando del muto", "Mute command"), "mute")}${comando("dispositivo", t("Dispositivo (facoltativo)", "Device (optional)"), "")}</div>`
           : ""
-      }`
+      }
+      ${bloccoDellaVoce(via, c, clean(c.nome) || nomeDi(c.entita))}`
           : ""
       }
     </div></div>`;
@@ -974,6 +986,7 @@ function telecameraMarkup(p, i) {
     ),
   )}</div>
   ${riga(t("Telecamera", "Camera"), "", cerca(`${via}.entita`, tc.entita, { domini: "camera" }))}
+  ${bloccoDellaVoce(via, tc, tc.entita ? nomeDi(tc.entita) : t("Telecamera", "Camera"), "#0ea5e9")}
   ${tasto("su", t("Su", "Up"))}
   ${tasto("giu", t("Giù", "Down"))}
   ${tasto("sinistra", t("Sinistra", "Left"))}
@@ -1007,7 +1020,8 @@ function comandiMarkup(p, i) {
         ${telecomando(c.avvio) || telecomando(c.stop) ? voce(t("Dispositivo (facoltativo)", "Device (optional)"), campo(`${v}.dispositivo`, c.dispositivo || "", "")) : ""}
         ${voce(t("Stato (facoltativo)", "State (optional)"), cerca(`${v}.stato`, c.stato || "", { domini: "switch,input_boolean,binary_sensor,script,media_player", segnaposto: t("Acceso quando è acceso", "On when it's on") }), true)}
         ${voce(t("Disegno", "Drawing"), tendina(`${v}.disegno`, c.disegno || "", DISEGNI(), null))}
-        ${voce(t("Colore", "Colour"), colori(`${v}.colore`, c.colore))}`
+        ${voce(t("Colore", "Colour"), colori(`${v}.colore`, c.colore))}
+        ${bloccoDellaVoce(v, c, c.nome || nomeDi(c.avvio || c.stop), c.colore || "#22c55e")}`
             : ""
         }
       </div></div>`;
@@ -1871,6 +1885,11 @@ function onChange(event) {
 const SCRITTE =
   /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin|Comando|\.comando|\.dispositivo|\.min|\.max)$/;
 
+/* Le voci che portano un'immagine: i posti e le scene, i comandi della regia,
+ * i canali del mixer e il volume totale, la telecamera con i comandi. */
+const VIE_CON_IMMAGINE =
+  /^pagine\.\d+\.((comandi|scene|pulsanti)\.\d+|mixer\.(master|gruppi\.\d+\.canali\.\d+)|telecamera)$/;
+
 /* L'immagine scelta nel blocco di un posto: la chiave del blocco e' la via
  * del posto. Si scrive nella bozza come una scritta — il blocco si e' gia'
  * rifatto da se', e ridisegnare la scheda chiuderebbe la scelta dei disegni
@@ -1879,13 +1898,13 @@ function onImmagine(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const via = String(event.detail?.chiave || "");
-  if (!/^pagine\.\d+\.(comandi|scene)\.\d+$/.test(via)) return;
+  if (!VIE_CON_IMMAGINE.test(via)) return;
   metti(`${via}.immagine`, event.detail?.immagine || null);
   dopoUnaScritta();
   /* Il nome accanto al «Disegno» dice «se non c'e' immagine» solo quando
    * un'immagine c'e': quella riga si aggiorna senza rifare la scheda. */
   const voce = body.querySelector(`[data-mu-ed-campo="${via}.disegno"]`)?.closest(".mu-ed-voce");
-  const scritta = voce?.querySelector(":scope > span");
+  const scritta = voce?.querySelector(":scope > span:not([data-mu-ed-icona])");
   if (scritta)
     scritta.textContent = event.detail?.immagine
       ? t("Disegno (se non c'è immagine)", "Drawing (when there is no image)")

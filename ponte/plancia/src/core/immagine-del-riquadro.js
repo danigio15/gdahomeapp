@@ -212,6 +212,22 @@ export function immagineMarkup(immagine, classe = "dm-rq-img") {
   return `<img class="${scappa(classe)}" src="${scappa(srcDaMostrare(pulita))}" alt="" draggable="false" decoding="async" style="${scappa(stileInLinea(pulita))}">`;
 }
 
+/**
+ * L'immagine come fondo di una card che resta la sua: la foto sotto e un velo
+ * scuro sopra, da mettere in testa alla card insieme alla classe
+ * `dm-rq-fondo` (vedi `classeDelFondo`). Serve dove la card ha gia' la sua
+ * forma e i suoi comandi — la striscia di un canale del mixer, la colonna di
+ * avvio e stop, il video di una telecamera spenta, le card del guscio — e
+ * rifarla da capo vorrebbe dire perderne qualcuno. "" senza un'immagine buona.
+ */
+export function fondoMarkup(immagine) {
+  const img = immagineMarkup(immagine);
+  return img ? `${img}<span class="dm-rq-velo" aria-hidden="true"></span>` : "";
+}
+
+/** La classe che la card con un fondo porta: "" se l'immagine non c'e'. */
+export const classeDelFondo = (immagine) => (immaginePulita(immagine) ? " dm-rq-fondo" : "");
+
 /* Il segno della foto caricata, in alto a sinistra: dice che quella non e' un
  * disegno della plancia ma una foto di casa. */
 const SEGNO_DELLA_FOTO = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>`;
@@ -227,7 +243,9 @@ export function segnoDellaFoto(immagine) {
  * Il riquadro intero con l'immagine: la stessa forma per tutti quelli che ne
  * hanno una. `destra` e' il comando in alto a destra (l'interruttore, il tasto
  * «Apri») gia' scritto da chi chiama, `attributi` quello che serve al tocco.
- * Il nome e lo stato si scappano qui.
+ * Il nome e lo stato si scappano qui. `comandi` e' una fila di comandi gia'
+ * scritta che va sul velo sotto lo stato: il meno, i gradi e il piu' del
+ * clima, che in alto a destra non ci starebbero.
  */
 export function riquadroConImmagineMarkup({
   immagine,
@@ -242,11 +260,12 @@ export function riquadroConImmagineMarkup({
   extraStato = "",
   stile = "",
   attributiStato = "",
+  comandi = "",
 } = {}) {
   const fondo = immagineMarkup(immagine);
   if (!fondo) return "";
   const etichetta = tag === "button" ? ' type="button"' : "";
   return `<${tag}${etichetta} class="dm-rq ${acceso ? "on" : ""} ${scappa(classi)}" style="--acc:${scappa(accento)}${stile ? `;${scappa(stile)}` : ""}" ${attributi}>${fondo}
     <div class="dm-rq-alto">${segnoDellaFoto(immagine)}${destra}</div>
-    <div class="dm-rq-basso"><div class="dm-rq-nome">${scappa(nome)}</div><div class="dm-rq-stato"><i aria-hidden="true"></i><span${attributiStato ? ` ${attributiStato}` : ""}>${scappa(stato)}</span>${extraStato}</div></div></${tag}>`;
+    <div class="dm-rq-basso"><div class="dm-rq-nome">${scappa(nome)}</div><div class="dm-rq-stato"><i aria-hidden="true"></i><span${attributiStato ? ` ${attributiStato}` : ""}>${scappa(stato)}</span>${extraStato}</div>${comandi ? `<div class="dm-rq-comandi">${comandi}</div>` : ""}</div></${tag}>`;
 }

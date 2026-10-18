@@ -754,7 +754,16 @@ export function canalePulito(input) {
     dispositivo: mutoDaComando ? testo(dentro.dispositivo, 64) : "",
     min: conScala ? numeroOVuoto(dentro.min) : null,
     max: conScala ? numeroOVuoto(dentro.max) : null,
+    ...conImmagine(dentro),
   };
+}
+
+/* «Lo devi aggiungere a tutti»: ogni voce che sul tablet e' una card — un
+ * posto, un canale, un comando della regia, la telecamera — puo' portare la
+ * sua immagine. Solo se e' di casa; senza, la chiave non c'e'. */
+function conImmagine(dentro) {
+  const immagine = immaginePulita(dentro?.immagine);
+  return immagine ? { immagine } : {};
 }
 
 /** Il canale vuoto: il volume totale che nessuno ha scelto. */
@@ -828,6 +837,9 @@ function telecameraPulita(input) {
     if (dominioDi(p.entita) === "remote" && !p.comando) p.comando = `preset_${k + 1}`;
   });
   fuori.dispositivo = telecomandiDellaTelecamera(fuori) ? testo(dentro.dispositivo, 64) : "";
+  /* L'immagine della telecamera: il fondo del video quando il video non c'e'
+   * (la telecamera spenta, o non ancora scelta). */
+  Object.assign(fuori, conImmagine(dentro));
   return fuori;
 }
 
@@ -856,6 +868,7 @@ function pulsantePulito(input) {
     dominioDi(fuori.avvio) === "remote" || dominioDi(fuori.stop) === "remote"
       ? testo(input.dispositivo, 64)
       : "";
+  Object.assign(fuori, conImmagine(input));
   return fuori.nome || fuori.avvio || fuori.stop ? fuori : null;
 }
 
@@ -1701,6 +1714,7 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
          * altre sonde della stanza, oltre alla prima. */
         outdoor: stanzaAllAperto(s),
         sonde: unici(temperatureEntries(s).map((e) => entita(e.temp))),
+        ...conImmagine(s),
       })),
     luci: dispositivi("lights"),
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
@@ -2047,14 +2061,17 @@ export function comandiDellElenco(modello, fonte = {}, { aCoppia = null } = {}) 
   /* Tutto quello che la plancia chiama luce fa la card della luce, anche una
    * presa o un interruttore (`switch.*`): «nel wall le luci si vedono
    * diverse». Come nelle stanze, dove le luci proposte sono gia' tutte uguali. */
+  /* L'immagine viene con la cosa: quella scelta per la luce, la tapparella o
+   * il clima nella plancia di origine (`immagine` sul dispositivo) si vede
+   * anche qui. */
   if (modello === "luci")
     return elenco(fonte.luci).map((d) => {
-      const comando = comandoPulito({ tipo: "luce", entita: d.entity });
+      const comando = comandoPulito({ tipo: "luce", entita: d.entity, immagine: d.immagine });
       return comando && { ...comando, tipo: "luce" };
     });
   if (modello === "tapparelle")
     return elenco(fonte.tapparelle).map((d) =>
-      comandoPulito({ tipo: "tapparella", entita: d.entity }),
+      comandoPulito({ tipo: "tapparella", entita: d.entity, immagine: d.immagine }),
     );
   /* Il termostato a coppia sta nella sua linguetta e fuori dalle altre due:
    * una card sola, coi due numeri insieme, invece di una in Caldo che muove
@@ -2063,11 +2080,11 @@ export function comandiDellElenco(modello, fonte = {}, { aCoppia = null } = {}) 
   if (modello === "termostato")
     return elenco(fonte.clima)
       .filter(doppio)
-      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
+      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity, immagine: d.immagine }));
   if (modello === "freddo" || modello === "caldo")
     return elenco(fonte.clima)
       .filter((d) => !doppio(d) && zoneDelClima(d.tipo).includes(modello))
-      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
+      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity, immagine: d.immagine }));
   return [];
 }
 
@@ -2109,7 +2126,11 @@ export function ambientiDellaFonte(fonte = {}) {
 
 /** Le telecamere della pagina: tutte quelle della plancia di origine. */
 export function telecamereDellaFonte(fonte = {}) {
-  return elenco(fonte.telecamere).map((d) => ({ entita: d.entity, nome: testo(d.name) }));
+  return elenco(fonte.telecamere).map((d) => ({
+    entita: d.entity,
+    nome: testo(d.name),
+    ...conImmagine(d),
+  }));
 }
 
 export function ingressoProposto(fonte = {}) {

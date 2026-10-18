@@ -110,6 +110,46 @@ button.dm-rq{border:0;padding:0;margin:0;font:inherit;cursor:pointer;-webkit-tap
 .dm-rq .dm-rq-foto{flex:none;display:grid;place-items:center;width:clamp(20px,10cqi,26px);height:clamp(20px,10cqi,26px);border-radius:8px;
   background:rgba(15,23,42,.42);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
 .dm-rq:focus-visible{outline:3px solid color-mix(in srgb,var(--acc,#0ea5e9) 70%,#fff);outline-offset:2px}
+/* Piu' tasti in vetro: ON e OFF, ▲ ■ ▼, il meno e il piu' del clima. Alti
+ * almeno quanto un dito anche nel riquadro piu' piccolo. */
+.dm-rq .dm-rq-due{margin:0 0 0 auto;flex:none;display:flex;gap:clamp(4px,2.4cqi,8px)}
+.dm-rq .dm-rq-dt{flex:none;box-sizing:border-box;display:inline-grid;place-items:center;min-width:clamp(34px,17cqi,62px);height:clamp(30px,14cqi,44px);padding:0 clamp(6px,3.4cqi,12px);
+  border:0;border-radius:999px;cursor:pointer;font:inherit;font-size:clamp(11px,5.2cqi,15px);font-weight:900;letter-spacing:.06em;color:#fff;white-space:nowrap;
+  background:rgba(15,23,42,.46);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.32);transition:background .2s ease,transform .1s ease}
+.dm-rq .dm-rq-dt:active{transform:scale(.95)}
+.dm-rq .dm-rq-alto>.dm-rq-acceso{margin-left:auto}
+.dm-rq .dm-rq-dt:disabled{opacity:.4;cursor:default}
+.dm-rq .dm-rq-dt.si,.dm-rq .dm-rq-dt-on.si{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1f2937;box-shadow:0 0 16px -2px #f59e0bcc}
+.dm-rq .dm-rq-dt-off.si{background:rgba(255,255,255,.34);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.6)}
+.dm-rq .dm-rq-dt.dm-rq-acceso.si{background:var(--acc,#0ea5e9);color:#fff;box-shadow:0 0 14px color-mix(in srgb,var(--acc,#0ea5e9) 70%,transparent)}
+.dm-rq .dm-rq-dt.premuto{outline:2px solid #fff;outline-offset:2px}
+/* La fila dei comandi sul velo, sotto lo stato: il modo, il meno, i gradi, il
+ * piu'; la barra della luminosita'. */
+.dm-rq .dm-rq-comandi{margin-top:clamp(5px,3cqi,10px);display:flex;flex-wrap:wrap;align-items:center;gap:clamp(4px,2.4cqi,8px);min-width:0}
+.dm-rq .dm-rq-gradi{margin-left:auto;display:inline-flex;align-items:center;gap:clamp(4px,2.4cqi,8px)}
+.dm-rq .dm-rq-gradi>b{min-width:2.6em;text-align:center;font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:clamp(17px,9cqi,30px);line-height:1;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.dm-rq .dm-rq-estremo{flex:1 1 100%;display:flex;align-items:center;gap:8px;min-width:0}
+.dm-rq .dm-rq-estremo>i{font-style:normal;font-size:clamp(10px,4.6cqi,12px);font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--est,#fff) 55%,#fff)}
+.dm-rq .dm-rq-modo{min-width:0;letter-spacing:.02em}
+.dm-rq .dm-rq-barra{flex:1 1 100%;min-width:0}
+/* Una lettura (un sensore che dice un numero): il numero grande sul velo,
+ * l'immagine sempre a colori — «spento» non vuol dire niente per una
+ * batteria al 76 %. */
+.dm-rq.dm-rq-lettura:not(.on):not(.is-on)>.dm-rq-img{filter:saturate(1.05)}
+.dm-rq.dm-rq-lettura .dm-rq-stato{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:clamp(17px,10cqi,34px);letter-spacing:.01em;text-transform:none;color:#fff}
+.dm-rq.dm-rq-lettura .dm-rq-stato>i{display:none}
+/* L'immagine di fondo di una card che non e' un riquadro con l'immagine (le
+ * card del guscio, le strisce del mixer): la foto sotto, un velo scuro sopra,
+ * e la card con tutti i suoi comandi al suo posto, in chiaro. */
+.dm-rq-fondo{position:relative;isolation:isolate;overflow:hidden}
+.dm-rq-fondo>.dm-rq-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;margin:0;padding:0;border:0;max-width:none;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.dm-rq-fondo>.dm-rq-velo{position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(to top,rgba(4,9,20,.88) 0%,rgba(4,9,20,.62) 45%,rgba(4,9,20,.42) 100%)}
+/* Il testo si fa bianco; i tasti tengono il loro vestito (e il loro stato,
+ * acceso o spento), col vetro dietro perche' si stacchino dalla foto. */
+.dm-rq-fondo{color:#fff}
+.dm-rq-fondo :where(div,span,b,strong,small,label,p,h1,h2,h3,h4,em,output):not(button *,button,select *,input){color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.dm-rq-fondo :where(button){-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 
 /* I Dispositivi della Home: la card del guscio col vestito nuovo. */
 html body .dev-card.dm-rq{padding:0;border:0;aspect-ratio:1;background:#0b1220}
@@ -277,7 +317,18 @@ function grigliaDeiDisegni(chiave, scelta) {
     .join("");
 }
 
-function corpoDelBlocco(chiave, immagine, { nome, accento }) {
+/* Come il riquadro parla nell'anteprima: quello che dira' sul tablet, se chi
+ * ospita il blocco lo sa (`anteprima`), o un «Acceso» con l'interruttore. */
+const ANTEPRIMA_DI_SERIE = () => ({
+  stato: t("Acceso", "On"),
+  acceso: true,
+  destra: `<span class="dm-rq-int on" aria-hidden="true"><i></i></span>`,
+  comandi: "",
+  classi: "",
+});
+
+function corpoDelBlocco(chiave, immagine, { nome, accento, anteprima = null }) {
+  const come = anteprima && typeof anteprima === "object" ? anteprima : ANTEPRIMA_DI_SERIE();
   const s = statoDel(chiave);
   const pulita = immaginePulita(immagine);
   const scelta = chiaveDelDisegno(pulita);
@@ -295,13 +346,15 @@ function corpoDelBlocco(chiave, immagine, { nome, accento }) {
         <div class="dm-rqi-sub">${esc(t("Forma", "Shape"))}</div>
         <div class="dm-rqi-seg" role="group"><button type="button" class="${forma === 1 ? "si" : ""}" data-dm-rqi-forma="1" aria-pressed="${forma === 1}">${esc(t("Home 1:1", "Home 1:1"))}</button><button type="button" class="${forma === 1.5 ? "si" : ""}" data-dm-rqi-forma="1.5" aria-pressed="${forma === 1.5}">${esc(t("Muro 3:2", "Wall 3:2"))}</button></div>
         <label class="dm-rqi-zoom"><span>${esc(t("Zoom", "Zoom"))} <b data-dm-rqi-zoom-letto>${zoom}%</b></span><input type="range" min="${ZOOM_MINIMO * 100}" max="${ZOOM_MASSIMO * 100}" step="5" value="${zoom}" data-dm-rqi-zoom aria-label="${esc(t("Zoom", "Zoom"))}"></label>
-        <div class="dm-rqi-anteprima" data-dm-rqi-anteprima>${riquadroConImmagineMarkup({
+        <div class="dm-rqi-anteprima" data-dm-rqi-anteprima inert>${riquadroConImmagineMarkup({
           immagine: pulita,
           nome: nome || t("Riquadro", "Tile"),
-          stato: t("Acceso", "On"),
-          acceso: true,
-          accento,
-          destra: `<span class="dm-rq-int on" aria-hidden="true"><i></i></span>`,
+          stato: String(come.stato ?? ""),
+          acceso: Boolean(come.acceso),
+          accento: come.accento || accento,
+          destra: String(come.destra || ""),
+          comandi: String(come.comandi || ""),
+          classi: String(come.classi || ""),
           stile: `aspect-ratio:${forma}`,
         })}</div>
         <div class="dm-rqi-mini">${esc(t("Si salva solo dove guardare e lo zoom: la foto resta intera, e ogni forma di riquadro la taglia da lì.", "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there."))}</div>
@@ -329,9 +382,24 @@ function corpoDelBlocco(chiave, immagine, { nome, accento }) {
  * configura. `chiave` dice di chi e' (una scheda puo' averne piu' d'uno):
  * torna nell'evento `dm-rqi-cambia`, con l'immagine nuova (o `null`).
  */
-export function bloccoImmagineMarkup({ chiave, immagine, nome = "", accento = "#0ea5e9" }) {
+export function bloccoImmagineMarkup({
+  chiave,
+  immagine,
+  nome = "",
+  accento = "#0ea5e9",
+  anteprima = null,
+}) {
   const pulita = immaginePulita(immagine);
-  return `<section class="dm-rqi" data-dm-rqi="${esc(chiave)}" data-dm-rqi-nome="${esc(nome)}" data-dm-rqi-accento="${esc(accento)}" data-dm-rqi-valore="${esc(JSON.stringify(pulita))}">${corpoDelBlocco(chiave, pulita, { nome, accento })}</section>`;
+  const come = anteprima && typeof anteprima === "object" ? anteprima : null;
+  return `<section class="dm-rqi" data-dm-rqi="${esc(chiave)}" data-dm-rqi-nome="${esc(nome)}" data-dm-rqi-accento="${esc(accento)}"${come ? ` data-dm-rqi-come="${esc(JSON.stringify(come))}"` : ""} data-dm-rqi-valore="${esc(JSON.stringify(pulita))}">${corpoDelBlocco(chiave, pulita, { nome, accento, anteprima: come })}</section>`;
+}
+
+function anteprimaDel(blocco) {
+  try {
+    return JSON.parse(blocco?.dataset?.dmRqiCome || "null");
+  } catch (_errore) {
+    return null;
+  }
 }
 
 function valoreDel(blocco) {
@@ -347,6 +415,7 @@ function ridipingi(blocco) {
   blocco.innerHTML = corpoDelBlocco(blocco.dataset.dmRqi, valoreDel(blocco), {
     nome: blocco.dataset.dmRqiNome || "",
     accento: blocco.dataset.dmRqiAccento || "#0ea5e9",
+    anteprima: anteprimaDel(blocco),
   });
 }
 

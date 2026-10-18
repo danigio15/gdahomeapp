@@ -9,6 +9,7 @@ import { normalizeRobots } from "./robot-model.js";
 import { SIGNED_GROUPS } from "./signed-energy.js";
 import { normalizzaPrese } from "./prese-model.js";
 import { stanzaAllAperto } from "./room-overview.js";
+import { immaginePulita } from "./immagine-del-riquadro.js";
 
 export const SECTION_KEYS = Object.freeze({
   rooms: "cd_stanze",
@@ -36,6 +37,8 @@ function slug(value = "") {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
+
+const senzaImmagine = ({ immagine: _grezza, ...resto } = {}) => resto;
 
 export function migrateRooms(input = []) {
   const used = new Set();
@@ -79,8 +82,10 @@ export function migrateRooms(input = []) {
         /* All'aperto (#251) e' un si' o un no. Chi non l'ha mai scelto non se
          * lo trova scritto addosso: la chiave c'e' solo se c'era. */
         ...(room.outdoor !== undefined ? { outdoor: stanzaAllAperto(room) } : {}),
+        /* L'immagine della stanza («Riquadri con l'immagine»): solo pulita. */
+        ...(immaginePulita(room.immagine) ? { immagine: immaginePulita(room.immagine) } : {}),
       },
-      room,
+      senzaImmagine(room),
       "rooms",
     );
   });

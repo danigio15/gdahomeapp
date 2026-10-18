@@ -65,6 +65,7 @@ export function canonicalClimateType(value) {
 import { pick } from "./i18n.js";
 import { LOAD_PLANT_FIELD } from "./energy-plants.js";
 import { contactEntity, inferriataEntity } from "./shutter-window.js";
+import { immaginePulita } from "./immagine-del-riquadro.js";
 import {
   COVER_SLOTS,
   coverClosedThreshold,
@@ -609,6 +610,12 @@ export function normalizeDevice(input = {}, section, context = {}) {
     metadata: { ...(input.metadata || {}) },
   };
   if (input.entity || entities[0]) base.entity = String(input.entity || entities[0]);
+  /* «Riquadri con l'immagine»: la foto di casa o il disegno che riempie la
+   * card della cosa — la luce, il clima, la tapparella, la telecamera — in
+   * plancia e a muro. Vale la riga qui sotto: un campo non dichiarato qui
+   * sparisce alla prima normalizzazione. Solo se e' di casa. */
+  const immagine = immaginePulita(input.immagine);
+  if (immagine) base.immagine = immagine;
   if (section === "climate") {
     base.type = canonicalClimateType(input.type);
     /* La valvola termostatica (#300): l'entita' con la posizione, scelta da
@@ -827,5 +834,8 @@ export function normalizeDevice(input = {}, section, context = {}) {
     ];
     if (deviceEntityIds.length) base.device_entities = deviceEntityIds;
   }
-  return conservaIlConfigurato(base, input, section);
+  /* L'immagine passa solo pulita: quella grezza non torna dalla porta di
+   * servizio di `conservaIlConfigurato`. */
+  const { immagine: _grezza, ...resto } = input;
+  return conservaIlConfigurato(base, resto, section);
 }

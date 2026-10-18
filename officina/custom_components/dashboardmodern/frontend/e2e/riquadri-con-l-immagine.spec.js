@@ -32,6 +32,87 @@ const STATI = {
 
 const servizi = (page) => page.evaluate(() => window.__SERVIZI__.slice());
 
+/* «Lo devi aggiungere a tutti»: il camino coi due tasti, la batteria che dice
+ * il suo numero, la serranda coi suoi tre tasti, il condizionatore coi gradi.
+ * Tutti con un disegno del catalogo. */
+const disegno = (chiave) => ({ src: `disegno:${chiave}` });
+const STATI_DI_TUTTI = {
+  ...STATI,
+  "script.accendi_caminetto": { state: "off", attributes: { friendly_name: "Accendi caminetto" } },
+  "script.spegni_caminetto": { state: "off", attributes: { friendly_name: "Spegni caminetto" } },
+  "sensor.casa_battery_soc": {
+    state: "76",
+    attributes: { friendly_name: "Batteria", unit_of_measurement: "%", device_class: "battery" },
+  },
+  "cover.serranda_soggiorno": {
+    state: "open",
+    attributes: {
+      friendly_name: "Serranda soggiorno",
+      current_position: 40,
+      supported_features: 15,
+    },
+  },
+  "climate.condizionatore": {
+    state: "cool",
+    attributes: {
+      friendly_name: "Condizionatore",
+      current_temperature: 26.5,
+      temperature: 24,
+      hvac_modes: ["off", "cool", "heat"],
+      hvac_action: "cooling",
+      target_temp_step: 0.5,
+      min_temp: 16,
+      max_temp: 30,
+    },
+  },
+};
+const CAMINO = {
+  tipo: "duetasti",
+  nome: "Camino",
+  entita: "script.accendi_caminetto",
+  entitaOff: "script.spegni_caminetto",
+};
+const MURO_DI_TUTTI = {
+  attiva: true,
+  tema: "scuro",
+  pagine: [
+    {
+      id: "p1",
+      modello: "personale",
+      titolo: "Casa",
+      scelti: true,
+      comandi: [
+        { ...CAMINO, immagine: disegno("camino") },
+        {
+          tipo: "entita",
+          entita: "sensor.casa_battery_soc",
+          nome: "Batteria",
+          immagine: disegno("batteria-casa"),
+        },
+        {
+          tipo: "tapparella",
+          entita: "cover.serranda_soggiorno",
+          nome: "Serranda soggiorno",
+          immagine: disegno("tapparella"),
+        },
+        {
+          tipo: "clima",
+          entita: "climate.condizionatore",
+          nome: "Condizionatore",
+          immagine: disegno("condizionatore"),
+        },
+        {
+          tipo: "luce",
+          entita: "light.soggiorno",
+          nome: "Soggiorno",
+          immagine: disegno("lampione"),
+        },
+        { tipo: "azione", azione: "Cinema", immagine: disegno("proiettore") },
+      ],
+    },
+  ],
+};
+
 async function scegliIlDisegno(blocco, chiave, cerca) {
   await blocco.locator("[data-dm-rqi-disegni]").click();
   await blocco.locator("[data-dm-rqi-cerca]").fill(cerca);
@@ -178,5 +259,102 @@ test.describe("i riquadri con l'immagine", () => {
       window.buildDeviceCards();
     });
     await expect(card).not.toHaveClass(/dm-rq/);
+  });
+
+  test("a muro: il camino coi due tasti prende il disegno dall'editor, e ON e OFF chiamano i loro script", async ({
+    page,
+  }, testInfo) => {
+    await apriLaCasaAMuro(page, testInfo, {
+      stati: STATI_DI_TUTTI,
+      muro: {
+        attiva: true,
+        pagine: [{ id: "p1", modello: "personale", scelti: true, comandi: [CAMINO] }],
+      },
+    });
+    await page.evaluate(() => window.apriConfigEntita());
+    await page.locator('.ed-tab[data-tab="muro"]').click();
+    const body = page.locator("#ed-body");
+    await expect(body.locator(".mu-ed")).toBeVisible();
+    /* «Qui non c'e' per scegliere»: adesso c'e', sotto l'Icona. */
+    const blocco = body.locator('[data-dm-rqi="pagine.0.comandi.0"]');
+    await blocco.scrollIntoViewIfNeeded();
+    await expect(blocco).toBeVisible();
+    await scegliIlDisegno(blocco, "camino", "camino");
+    /* L'anteprima e' quella del tablet: ON e OFF, non «Acceso». */
+    const anteprima = blocco.locator("[data-dm-rqi-anteprima] .dm-rq");
+    await expect(anteprima.locator('[data-mu-verso="on"]')).toHaveText("ON");
+    await expect(anteprima.locator('[data-mu-verso="off"]')).toHaveText("OFF");
+    await expect(anteprima.locator(".dm-rq-stato")).not.toContainText(/Acces/i);
+    await body.locator("[data-dm-save-all]").click();
+    const salvato = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_muro")));
+    expect(salvato.pagine[0].comandi[0]).toMatchObject({
+      tipo: "duetasti",
+      entita: "script.accendi_caminetto",
+      entitaOff: "script.spegni_caminetto",
+      immagine: { src: "disegno:camino", zoom: 1 },
+    });
+
+    await page.evaluate(() => document.getElementById("editor-modal")?.remove());
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent("dashboardmodern:muro")));
+    const riquadro = page.locator("#dm-muro .dm-rq.mu-duetasti");
+    await expect(riquadro).toBeVisible();
+    await expect(riquadro.locator("img.dm-rq-img")).toHaveAttribute("src", /^data:image\/svg\+xml/);
+    await expect(riquadro.locator(".dm-rq-nome")).toHaveText("Camino");
+    await riquadro.locator('[data-mu-verso="on"]').click();
+    await riquadro.locator('[data-mu-verso="off"]').click();
+    expect(await servizi(page)).toEqual([
+      { domain: "script", service: "turn_on", data: { entity_id: "script.accendi_caminetto" } },
+      { domain: "script", service: "turn_on", data: { entity_id: "script.spegni_caminetto" } },
+    ]);
+    /* Nessuna finestra: i tasti fanno il loro comando e basta. */
+    await expect(page.locator("#dm-muro .mu-finestra")).toHaveCount(0);
+  });
+
+  test("a muro: la batteria con l'immagine dice 76 %, la serranda e il condizionatore comandano sopra l'immagine", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await apriLaCasaAMuro(page, testInfo, { stati: STATI_DI_TUTTI, muro: MURO_DI_TUTTI });
+    const muro = page.locator("#dm-muro");
+    await expect(muro).toBeVisible();
+    /* Sei riquadri con l'immagine, nessuno col disco di sempre. */
+    await expect(muro.locator(".mu-g6 > .dm-rq")).toHaveCount(6);
+    const batteria = muro.locator('.dm-rq[data-mu-entita="sensor.casa_battery_soc"]');
+    await expect(batteria.locator("img.dm-rq-img")).toBeVisible();
+    await expect(batteria.locator(".dm-rq-stato")).toHaveText("76 %");
+    await expect(batteria.locator(".dm-rq-nome")).toHaveText("Batteria");
+
+    const serranda = muro.locator('.dm-rq[data-mu-entita="cover.serranda_soggiorno"]');
+    await expect(serranda.locator(".dm-rq-stato")).toContainText("40%");
+    for (const [fa, servizio] of [
+      ["su", "open_cover"],
+      ["ferma", "stop_cover"],
+      ["giu", "close_cover"],
+    ]) {
+      const prima = (await servizi(page)).length;
+      await serranda.locator(`[data-mu-fa="${fa}"]`).click();
+      await expect
+        .poll(async () => (await servizi(page)).slice(prima).map((s) => s.service))
+        .toContain(servizio);
+    }
+
+    const clima = muro.locator('.dm-rq[data-mu-entita="climate.condizionatore"]');
+    await expect(clima.locator(".dm-rq-gradi > b")).toHaveText("24°");
+    await expect(clima.locator(".dm-rq-stato")).toContainText("26,5°");
+    await expect(clima.locator('[data-mu-fa="modo"]')).toBeVisible();
+    await clima.locator('[data-mu-fa="piu"]').click();
+    await expect(clima.locator(".dm-rq-gradi > b")).toHaveText("24,5°");
+    await expect
+      .poll(async () =>
+        (await servizi(page)).some(
+          (s) => s.service === "set_temperature" && s.data.entity_id === "climate.condizionatore",
+        ),
+      )
+      .toBe(true);
+    /* I tasti si leggono: bianchi sul vetro scuro. */
+    const colore = await clima
+      .locator('[data-mu-fa="meno"]')
+      .evaluate((n) => getComputedStyle(n).color);
+    expect(colore).toBe("rgb(255, 255, 255)");
   });
 });

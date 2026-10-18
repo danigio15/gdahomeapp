@@ -38,6 +38,7 @@ import {
   DEFAULT_EXPORT_RATE,
   DEFAULT_IMPORT_RATE,
   DEFAULT_LOCALE,
+  DISEGNI_DA_RIQUADRO,
   DURA_LA_DOMANDA_DELLO_SCUDO,
   DURA_L_ANNULLA_DELLO_SCUDO,
   DURA_L_ERRORE_DELLO_SCUDO,
@@ -146,6 +147,7 @@ import {
   chiaviDaProvare,
   chiediAHomeAssistant,
   chiediLeCapacitaDiTutte,
+  classeDelFondo,
   clean,
   climaAccesoDaiWatt,
   climaScalda,
@@ -248,6 +250,7 @@ import {
   finite,
   finiteOrNull,
   foglioDegliOggetti,
+  fondoMarkup,
   formatNumber,
   formatPowerLabel,
   fraQuanto,
@@ -554,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-I7YUY6X3.js";
+} from "../../chunk-Q4ZCHDOW.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -8298,14 +8301,14 @@ function installTavolozzeSection() {
   installStyles();
   const avvolto = root.applyTheme;
   if (typeof avvolto === "function" && !avvolto[MARKER]) {
-    let vestito = function(...argomenti) {
+    let vestito2 = function(...argomenti) {
       const risposta = avvolto.apply(this, argomenti);
       vestiIlDocumento();
       return risposta;
     };
-    Object.assign(vestito, avvolto);
-    vestito[MARKER] = true;
-    root.applyTheme = vestito;
+    Object.assign(vestito2, avvolto);
+    vestito2[MARKER] = true;
+    root.applyTheme = vestito2;
   }
   const scelto = root.setTheme;
   if (typeof scelto === "function" && !scelto[MARKER]) {
@@ -15240,7 +15243,7 @@ var COLORI_VESTITO = Object.freeze(["blu", "verde", "rosso", "giallo", "viola", 
 var CON_CAPELLI = new Set(AVATAR_PERSONE.filter((voce3) => voce3.capelli).map((voce3) => voce3.key));
 var personaHaCapelli = (persona) => CON_CAPELLI.has(persona);
 var RICOLORABILI = new Set(AVATAR_VESTITI.filter((voce3) => voce3.ricolorabile).map((v) => v.key));
-var vestitoRicolorabile = (vestito) => RICOLORABILI.has(vestito);
+var vestitoRicolorabile = (vestito2) => RICOLORABILI.has(vestito2);
 var SINTETICI = Object.fromEntries(
   AVATAR_VESTITI.filter((voce3) => voce3.sintetico).map((voce3) => [voce3.key, voce3.sintetico])
 );
@@ -15345,28 +15348,28 @@ var ABITI_ATTESA = {
   viola: { rgb: [124, 92, 214] },
   grigio: { rgb: [120, 126, 138] }
 };
-function ricoloreAbito(vestito, colore) {
+function ricoloreAbito(vestito2, colore) {
   const scelta3 = (tavolozza, finestra6) => {
     const voce3 = tavolozza[colore];
     if (!voce3) return null;
     const { rgb, desatura } = Array.isArray(voce3) ? { rgb: voce3 } : voce3;
     return { tipo: "ricoloraAbito", rgb, ...finestra6, ...desatura != null ? { desatura } : {} };
   };
-  if (vestito === "casual" || vestito === "saluto" || vestito === "polo")
+  if (vestito2 === "casual" || vestito2 === "saluto" || vestito2 === "polo")
     return scelta3(MAGLIE, FINESTRA_MAGLIA);
-  if (vestito === "camicia") return scelta3(CAMICIE, FINESTRA_MAGLIA);
-  if (vestito === "ufficio") return scelta3(COMPLETI, FINESTRA_COMPLETO);
-  if (vestito === "medico") return scelta3(CAMICI, FINESTRA_CAMICE);
-  if (vestito === "attesa") return scelta3(ABITI_ATTESA, FINESTRA_ABITO);
+  if (vestito2 === "camicia") return scelta3(CAMICIE, FINESTRA_MAGLIA);
+  if (vestito2 === "ufficio") return scelta3(COMPLETI, FINESTRA_COMPLETO);
+  if (vestito2 === "medico") return scelta3(CAMICI, FINESTRA_CAMICE);
+  if (vestito2 === "attesa") return scelta3(ABITI_ATTESA, FINESTRA_ABITO);
   return null;
 }
 var POLO_BLU = [43, 122, 204];
-function colletto(vestito, colore) {
-  if (vestito === "polo") {
+function colletto(vestito2, colore) {
+  if (vestito2 === "polo") {
     const rgb = colore === "blu" || !MAGLIE[colore] ? POLO_BLU : MAGLIE[colore];
     return { tipo: "colletto", rgb, bottoni: 2 };
   }
-  if (vestito === "camicia") {
+  if (vestito2 === "camicia") {
     const tela2 = CAMICIE[colore] || CAMICIE.blu;
     const rgb = colore === "blu" ? [200, 204, 212] : tela2.rgb;
     return { tipo: "colletto", rgb, bottoni: 3 };
@@ -32501,10 +32504,10 @@ function letturaRifiuti(config, states = {}, resolve = (value) => value, adesso 
     const stato3 = leggi3(riga3.entity);
     const data = dataDelRitiro(stato3, adesso);
     const giorni = data ? giorniFra(adesso, data) : null;
-    const vestito = vestitoDellaRiga(riga3);
+    const vestito2 = vestitoDellaRiga(riga3);
     return {
       ...riga3,
-      ...vestito ? { materiale: vestito.chiave, icona: vestito.icona, colore: vestito.colore } : {},
+      ...vestito2 ? { materiale: vestito2.chiave, icona: vestito2.icona, colore: vestito2.colore } : {},
       muto: !risponde2(stato3),
       data,
       giorni,
@@ -38587,10 +38590,10 @@ var MATTONELLA = Object.freeze({
   comando: { vestito: "pump", glifo: "🔌" }
 });
 function mattonellaMarkup(lettura3) {
-  const { vestito, glifo: glifo2 } = MATTONELLA[lettura3.genere] || MATTONELLA.comando;
+  const { vestito: vestito2, glifo: glifo2 } = MATTONELLA[lettura3.genere] || MATTONELLA.comando;
   const acceso6 = lettura3.acceso === true;
   const comandabile = !lettura3.muto && siComanda(lettura3.entity);
-  return `<button type="button" class="dm-pool-tile" data-dm-pool-tile="${vestito}" data-on="${acceso6}"
+  return `<button type="button" class="dm-pool-tile" data-dm-pool-tile="${vestito2}" data-on="${acceso6}"
       aria-pressed="${acceso6}" data-dm-acq-comando="${esc(lettura3.entity)}"${comandabile ? "" : ' aria-disabled="true"'}>
     <span class="dm-pool-tile-icon" aria-hidden="true">${glifo2}</span>
     <span class="dm-pool-tile-label">${esc(lettura3.name)}</span>
@@ -71713,7 +71716,7 @@ function roomPages() {
 var CHIAVE_AZIONI_RAPIDE = "cd_quick_actions";
 function assignedItems(mappa2 = readJson(ROOM_ASSIGN_KEY, {}), states = allStates(), azioni2 = readJson(CHIAVE_AZIONI_RAPIDE, [])) {
   const stanze4 = /* @__PURE__ */ new Map();
-  const vestito = /* @__PURE__ */ new Map();
+  const vestito2 = /* @__PURE__ */ new Map();
   const dove = (entity2, stanza2) => {
     const id = clean(entity2);
     const room_id = clean(stanza2);
@@ -71725,21 +71728,21 @@ function assignedItems(mappa2 = readJson(ROOM_ASSIGN_KEY, {}), states = allState
     const id = clean(voce3.entity);
     if (!id) continue;
     dove(id, voce3.room_id);
-    if (!vestito.has(id))
-      vestito.set(id, { nome: clean(voce3.nome), icona: clean(voce3.icona) });
+    if (!vestito2.has(id))
+      vestito2.set(id, { nome: clean(voce3.nome), icona: clean(voce3.icona) });
   }
   if (Array.isArray(azioni2))
     for (const azione of azioni2) {
       const id = clean(azione?.entity);
-      if (!id || vestito.has(id)) continue;
-      vestito.set(id, { nome: clean(azione?.name), icona: clean(azione?.icon) });
+      if (!id || vestito2.has(id)) continue;
+      vestito2.set(id, { nome: clean(azione?.name), icona: clean(azione?.icon) });
     }
   return [...stanze4].map(([id, room_id]) => ({
     entity: id,
-    name: clean(vestito.get(id)?.nome) || clean(states?.[id]?.attributes?.friendly_name) || id,
+    name: clean(vestito2.get(id)?.nome) || clean(states?.[id]?.attributes?.friendly_name) || id,
     /* L'icona si scrive dove la riga la cerca gia': `emojiScelta` guarda
      * `icon`, e accetta solo quello che un glifo lo e' davvero. */
-    icon: clean(vestito.get(id)?.icona),
+    icon: clean(vestito2.get(id)?.icona),
     /* La classe che Home Assistant scrive sull'entita': e' quello che la
      * riga sa dire di se' quando nessuna scheda la descrive. */
     device_class: clean(states?.[id]?.attributes?.device_class),
@@ -78799,7 +78802,7 @@ function alCatalogo() {
 function aggancia() {
   const originale = root.apriApplianceDetail;
   if (typeof originale !== "function" || originale.__dmApdeVestito) return false;
-  function vestito(indice, ...resto) {
+  function vestito2(indice, ...resto) {
     const esito2 = originale.call(this, indice, ...resto);
     try {
       riveste(Number(indice));
@@ -78807,10 +78810,10 @@ function aggancia() {
     }
     return esito2;
   }
-  Object.assign(vestito, originale);
-  vestito.__dmApdeVestito = true;
-  vestito.__dmPrevious = originale;
-  root.apriApplianceDetail = vestito;
+  Object.assign(vestito2, originale);
+  vestito2.__dmApdeVestito = true;
+  vestito2.__dmPrevious = originale;
+  root.apriApplianceDetail = vestito2;
   return true;
 }
 function css2() {
@@ -88617,7 +88620,7 @@ function decora(tipo) {
 function aggancia4() {
   const originale = root.apriDettagli;
   if (typeof originale !== "function" || originale.__dmClpdVestito) return false;
-  function vestito(evento, tipo, ...resto) {
+  function vestito2(evento, tipo, ...resto) {
     const esito2 = originale.call(this, evento, tipo, ...resto);
     try {
       decora(tipo);
@@ -88625,10 +88628,10 @@ function aggancia4() {
     }
     return esito2;
   }
-  Object.assign(vestito, originale);
-  vestito.__dmClpdVestito = true;
-  vestito.__dmPrevious = originale;
-  root.apriDettagli = vestito;
+  Object.assign(vestito2, originale);
+  vestito2.__dmClpdVestito = true;
+  vestito2.__dmPrevious = originale;
+  root.apriDettagli = vestito2;
   return true;
 }
 var STILE12 = `
@@ -100902,8 +100905,13 @@ function canalePulito(input) {
     mutoComando: mutoDaComando ? parolaDelComando2(dentro3.mutoComando) || COMANDI_DEL_CANALE.muto : "",
     dispositivo: mutoDaComando ? testo3(dentro3.dispositivo, 64) : "",
     min: conScala ? numeroOVuoto(dentro3.min) : null,
-    max: conScala ? numeroOVuoto(dentro3.max) : null
+    max: conScala ? numeroOVuoto(dentro3.max) : null,
+    ...conImmagine(dentro3)
   };
+}
+function conImmagine(dentro3) {
+  const immagine2 = immaginePulita(dentro3?.immagine);
+  return immagine2 ? { immagine: immagine2 } : {};
 }
 var CANALE_VUOTO = Object.freeze({
   entita: "",
@@ -100953,6 +100961,7 @@ function telecameraPulita(input) {
     if (dominioDi8(p.entita) === "remote" && !p.comando) p.comando = `preset_${k + 1}`;
   });
   fuori.dispositivo = telecomandiDellaTelecamera(fuori) ? testo3(dentro3.dispositivo, 64) : "";
+  Object.assign(fuori, conImmagine(dentro3));
   return fuori;
 }
 var telecomandiDellaTelecamera = (tc) => [...DIREZIONI, "zoomPiu", "zoomMeno"].some((k) => dominioDi8(tc[k]) === "remote") || tc.preset.some((p) => dominioDi8(p.entita) === "remote");
@@ -100969,6 +100978,7 @@ function pulsantePulito(input) {
   fuori.avvioComando = dominioDi8(fuori.avvio) === "remote" ? parolaDelComando2(input.avvioComando) : "";
   fuori.stopComando = dominioDi8(fuori.stop) === "remote" ? parolaDelComando2(input.stopComando) : "";
   fuori.dispositivo = dominioDi8(fuori.avvio) === "remote" || dominioDi8(fuori.stop) === "remote" ? testo3(input.dispositivo, 64) : "";
+  Object.assign(fuori, conImmagine(input));
   return fuori.nome || fuori.avvio || fuori.stop ? fuori : null;
 }
 function fermaTuttoPulito(input) {
@@ -101585,7 +101595,8 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
        * tablet non la scrive «in casa» (`temperaturaDelMuro`). Con lei le
        * altre sonde della stanza, oltre alla prima. */
       outdoor: stanzaAllAperto(s),
-      sonde: unici(temperatureEntries(s).map((e) => entita2(e.temp)))
+      sonde: unici(temperatureEntries(s).map((e) => entita2(e.temp))),
+      ...conImmagine(s)
     })),
     luci: dispositivi("lights"),
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
@@ -101782,18 +101793,18 @@ function comandiDellaPagina(pagina2, fonte = {}, zona = "", { aCoppia: aCoppia2 
 function comandiDellElenco(modello2, fonte = {}, { aCoppia: aCoppia2 = null } = {}) {
   if (modello2 === "luci")
     return elenco10(fonte.luci).map((d) => {
-      const comando = comandoPulito({ tipo: "luce", entita: d.entity });
+      const comando = comandoPulito({ tipo: "luce", entita: d.entity, immagine: d.immagine });
       return comando && { ...comando, tipo: "luce" };
     });
   if (modello2 === "tapparelle")
     return elenco10(fonte.tapparelle).map(
-      (d) => comandoPulito({ tipo: "tapparella", entita: d.entity })
+      (d) => comandoPulito({ tipo: "tapparella", entita: d.entity, immagine: d.immagine })
     );
   const doppio = (d) => typeof aCoppia2 === "function" && Boolean(aCoppia2(d.entity));
   if (modello2 === "termostato")
-    return elenco10(fonte.clima).filter(doppio).map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
+    return elenco10(fonte.clima).filter(doppio).map((d) => comandoPulito({ tipo: "clima", entita: d.entity, immagine: d.immagine }));
   if (modello2 === "freddo" || modello2 === "caldo")
-    return elenco10(fonte.clima).filter((d) => !doppio(d) && zoneDelClima(d.tipo).includes(modello2)).map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
+    return elenco10(fonte.clima).filter((d) => !doppio(d) && zoneDelClima(d.tipo).includes(modello2)).map((d) => comandoPulito({ tipo: "clima", entita: d.entity, immagine: d.immagine }));
   return [];
 }
 function eUnaScena(azione) {
@@ -101810,7 +101821,11 @@ function ambientiDellaFonte(fonte = {}) {
   })).filter((a) => a.stanza.temp || a.stanza.hum || a.luci.length);
 }
 function telecamereDellaFonte(fonte = {}) {
-  return elenco10(fonte.telecamere).map((d) => ({ entita: d.entity, nome: testo3(d.name) }));
+  return elenco10(fonte.telecamere).map((d) => ({
+    entita: d.entity,
+    nome: testo3(d.name),
+    ...conImmagine(d)
+  }));
 }
 function ingressoProposto(fonte = {}) {
   const centrali2 = elenco10(fonte.centrali);
@@ -102753,20 +102768,37 @@ var dimmerabile = (id) => {
 var colorabile = (id) => (attributi(id).supported_color_modes || []).some(
   (m) => ["hs", "rgb", "rgbw", "rgbww", "xy"].includes(m)
 );
-function cardConImmagine(c, i, { nome, stato: parola, acceso: on, accento, destra = "", dati = "", tag = "div" }) {
+function cardConImmagine(c, i, {
+  nome,
+  stato: parola,
+  acceso: on,
+  accento,
+  destra = "",
+  dati = "",
+  tag = "div",
+  classi = "",
+  comandi = ""
+}) {
   if (!immaginePulita(c?.immagine)) return "";
-  return riquadroConImmagineMarkup({
+  return vestito({
     immagine: c.immagine,
     nome,
     stato: parola,
     acceso: on,
     accento,
     destra,
+    comandi,
     tag,
-    classi: "mu-card mu-rq",
+    classi: `mu-card mu-rq ${classi}`.trim(),
     attributi: `data-mu-card="${i}" ${dati}`
   });
 }
+var facciaPresa = null;
+function vestito(argomenti) {
+  if (facciaPresa) facciaPresa.presa ||= argomenti;
+  return riquadroConImmagineMarkup(argomenti);
+}
+var tastoDiVetro = ({ classi = "", dati = "", scritta, etichetta: etichetta3, extra = "" }) => `<button type="button" class="dm-rq-dt ${classi}" ${dati} aria-label="${esc(etichetta3)}"${extra}>${scritta}</button>`;
 var interruttoreDiVetro = (id, on, etichetta3) => `<button type="button" class="dm-rq-int ${on ? "on" : ""}" data-mu-fa="interruttore" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(etichetta3)}"><i></i></button>`;
 var segnoDiVetro = (vetro) => vetro?.tipo === "int" ? `<span class="dm-rq-int ${vetro.on ? "on" : ""}" aria-hidden="true"><i></i></span>` : vetro?.tipo === "tasto" ? `<span class="dm-rq-tasto" aria-hidden="true"><b></b>${esc(vetro.testo)}</span>` : "";
 function cardLuce(c, i) {
@@ -102775,15 +102807,17 @@ function cardLuce(c, i) {
   const pct4 = luminosita(id);
   const dimmer = dimmerabile(id);
   const manca = !stato2(id);
-  const conImmagine = cardConImmagine(c, i, {
+  const conImmagine2 = cardConImmagine(c, i, {
     nome: nomeDi8(id, c.nome),
     stato: manca ? t("Non trovata", "Not found") : on ? dimmer ? `${t("Accesa", "On")} · ${pct4}%` : t("Accesa", "On") : t("Spenta", "Off"),
     acceso: on,
     accento: ACCENTI.luce,
     destra: interruttoreDiVetro(id, on, nomeDi8(id, c.nome)),
-    dati: `data-mu-entita="${esc(id)}"`
+    dati: `data-mu-entita="${esc(id)}"`,
+    /* La luminosita' resta: la barra di sempre, sul velo sotto lo stato. */
+    comandi: dimmer ? `<div class="mu-bar dm-rq-barra" data-mu-cursore="luce" data-mu-entita="${esc(id)}" aria-label="${esc(t("Luminosità", "Brightness"))}"><i style="width:${on ? pct4 : 0}%"></i>${on ? `<u style="left:${pct4}%"></u>` : ""}</div>` : ""
   });
-  if (conImmagine) return conImmagine;
+  if (conImmagine2) return conImmagine2;
   return `<div class="mu-carta mu-card mu-fam mu-luce ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
     <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span><span class="mu-stato ${on ? "" : "spento"}">${esc(manca ? t("Non trovata", "Not found") : on ? dimmer ? `${t("Accesa", "On")} · ${pct4}%` : t("Accesa", "On") : t("Spenta", "Off"))}</span>
       <button type="button" class="mu-inter ${on ? "on" : ""}" data-mu-fa="interruttore" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(nomeDi8(id, c.nome))}"><i></i></button></div>
@@ -102803,19 +102837,30 @@ function cardDueTasti(c, i) {
   const inviato = !sa ? state116.inviati?.[chiaveDeiDueTasti(c)] || "" : "";
   const icona3 = clean(c.disegno) ? disegno(clean(c.disegno), 30, `dt-${i}`) : bulbo(on ? "#1f2937" : "var(--text-dim)");
   const parola = manca ? t("Non trovata", "Not found") : sa ? on ? t("Accesa", "On") : t("Spenta", "Off") : inviato ? `✓ ${t("Inviato", "Sent")}` : t("Comando", "Command");
-  const tasto2 = (verso2, id, scritta, etichetta3) => {
+  const tasto2 = (verso2, id, scritta, etichetta3, forma2 = "mu-tasto") => {
     const classi = [
-      "mu-tasto",
-      `mu-tasto-${verso2}`,
+      forma2,
+      `${forma2}-${verso2}`,
       sa && verso2 === "on" && on ? "si" : "",
       sa && verso2 === "off" && !on ? "si" : "",
       inviato === verso2 ? "premuto" : ""
     ].filter(Boolean).join(" ");
     return `<button type="button" class="${classi}" data-mu-fa="duetasti" data-mu-verso="${verso2}" data-mu-entita="${esc(id)}" data-mu-stato="${esc(sa ? letto : "")}" data-mu-chiave="${esc(chiaveDeiDueTasti(c))}"${sa ? ` aria-pressed="${verso2 === "on" ? on : !on}"` : ""} aria-label="${esc(etichetta3)}">${scritta}</button>`;
   };
+  const accendi = `${t("Accendi", "Turn on")} ${nome}`;
+  const spegni2 = `${t("Spegni", "Turn off")} ${nome}`;
+  const conImmagine2 = cardConImmagine(c, i, {
+    nome,
+    stato: parola,
+    acceso: on,
+    accento: ACCENTI.luce,
+    destra: `<div class="dm-rq-due">${tasto2("on", c.entita, "ON", accendi, "dm-rq-dt")}${tasto2("off", c.entitaOff, "OFF", spegni2, "dm-rq-dt")}</div>`,
+    classi: "mu-duetasti"
+  });
+  if (conImmagine2) return conImmagine2;
   return `<div class="mu-carta mu-card mu-fam mu-duetasti ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}">
     <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${icona3}</span><span class="mu-stato ${on ? "" : "spento"}${inviato ? " mu-inviato" : ""}">${esc(parola)}</span>
-      <div class="mu-due">${tasto2("on", c.entita, "ON", `${t("Accendi", "Turn on")} ${nome}`)}${tasto2("off", c.entitaOff, "OFF", `${t("Spegni", "Turn off")} ${nome}`)}</div></div>
+      <div class="mu-due">${tasto2("on", c.entita, "ON", accendi)}${tasto2("off", c.entitaOff, "OFF", spegni2)}</div></div>
     <div class="mu-osw mu-fam-nome mu-n">${esc(nome)}</div></div>`;
 }
 function premiIlTasto2(bersaglio) {
@@ -102924,6 +102969,25 @@ function righeDelTermostato(id) {
     return `<div class="mu-est" data-mu-estremo="${estremo}" style="--est:${acc}"><span class="mu-est-n">${icona3}<span class="mu-est-p">${esc(parola)}</span></span><b class="mu-est-v">${valore3 === null ? "—" : `${esc(decimale2(valore3))}°`}</b><button type="button" class="mu-tondo mu-est-t" data-mu-fa="meno" data-mu-estremo="${estremo}" data-mu-entita="${esc(id)}" aria-label="${esc(giu)}"${fermo(-1)}>−</button><button type="button" class="mu-tondo mu-est-t" data-mu-fa="piu" data-mu-estremo="${estremo}" data-mu-entita="${esc(id)}" aria-label="${esc(su)}"${fermo(1)}>+</button></div>`;
   }).join("");
 }
+var accensioneDiVetro = (id, on) => `<button type="button" class="dm-rq-dt dm-rq-acceso ${on ? "si" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>`;
+var menoGradiPiu = (id, gradi9, estremo = "", fermo = () => "") => {
+  const quale = estremo ? ` data-mu-estremo="${estremo}"` : "";
+  return `<span class="dm-rq-gradi"><button type="button" class="dm-rq-dt" data-mu-fa="meno"${quale} data-mu-entita="${esc(id)}" aria-label="−"${fermo(-1)}>−</button><b>${gradi9}</b><button type="button" class="dm-rq-dt" data-mu-fa="piu"${quale} data-mu-entita="${esc(id)}" aria-label="+"${fermo(1)}>+</button></span>`;
+};
+function righeDiVetro(id) {
+  const coppia2 = coppiaDelMuro(id);
+  const a = attributi(id);
+  const passo = numero49(a.target_temp_step) || 0.5;
+  const scala2 = [numero49(a.min_temp) ?? 7, numero49(a.max_temp) ?? 35];
+  return [
+    ["basso", t("Caldo", "Heating"), "#f97316"],
+    ["alto", t("Freddo", "Cooling"), "#0ea5e9"]
+  ].map(([estremo, parola, acc]) => {
+    const valore3 = coppia2 ? coppia2[estremo] : null;
+    const fermo = (verso2) => !coppia2 || !coppiaSpostata(coppia2, estremo, verso2, { passo, scala: scala2 }) ? " disabled" : "";
+    return `<span class="dm-rq-estremo" data-mu-estremo="${estremo}" style="--est:${acc}"><i>${esc(parola)}</i>${menoGradiPiu(id, valore3 === null ? "—" : `${esc(decimale2(valore3))}°`, estremo, fermo)}</span>`;
+  }).join("");
+}
 function cardTermostato(c, i) {
   const id = c.entita;
   const a = attributi(id);
@@ -102931,6 +102995,17 @@ function cardTermostato(c, i) {
   const atteso = state116.inAttesa[id]?.acceso;
   const on = typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
   const modo = on ? PAROLE_DEL_CLIMA()[s] || s : t("Spento", "Off");
+  const conImmagine2 = cardConImmagine(c, i, {
+    nome: nomeDi8(id, c.nome),
+    stato: `${t("ora", "now")} ${decimale2(a.current_temperature)}°`,
+    acceso: on,
+    accento: ACCENTO_DEL_TERMOSTATO,
+    destra: accensioneDiVetro(id, on),
+    dati: `data-mu-entita="${esc(id)}" data-mu-lato="termostato"`,
+    classi: "mu-clima-rq mu-termostato-rq",
+    comandi: `<button type="button" class="dm-rq-dt dm-rq-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(modo)}</button>${righeDiVetro(id)}`
+  });
+  if (conImmagine2) return conImmagine2;
   return `<div class="mu-carta mu-card mu-termostato ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTO_DEL_TERMOSTATO}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="termostato">
     <div class="mu-ter-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno("temperatura", 24, `ter-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi8(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale2(a.current_temperature)}°</div></div><button type="button" class="mu-pasti mu-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(modo)}</button><button type="button" class="mu-tondo mu-ter-acceso ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button></div>
     <div class="mu-ter-righe">${righeDelTermostato(id)}</div>
@@ -103004,6 +103079,17 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
   const on = typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
   const azione = a.hvac_action ? AZIONI_DEL_CLIMA()[a.hvac_action] : on ? PAROLE_DEL_CLIMA()[s] : t("Spento", "Off");
   const gradi9 = gradiVoluti(id, zona);
+  const conImmagine2 = cardConImmagine(c, i, {
+    nome: nomeDi8(id, c.nome),
+    stato: [azione, `${t("ora", "now")} ${decimale2(a.current_temperature)}°`].filter(Boolean).join(" · "),
+    acceso: on,
+    accento: faccia.accento,
+    destra: accensioneDiVetro(id, on),
+    dati: `data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}"`,
+    classi: "mu-clima-rq",
+    comandi: `${on ? `<button type="button" class="dm-rq-dt dm-rq-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}${menoGradiPiu(id, gradi9)}`
+  });
+  if (conImmagine2) return conImmagine2;
   if (state116.compatto)
     return `<div class="mu-carta mu-card mu-clima-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi8(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale2(a.current_temperature)}°</div></div><span class="mu-mini-t">${gradi9}</span></div>
@@ -103039,7 +103125,7 @@ function cardVarco(c, i) {
   }[s] || s || "—";
   const [fa, tasto2] = muove ? ["ferma", t("Ferma", "Stop")] : aperto2 ? ["giu", t("Chiudi", "Close")] : ["su", t("Apri", "Open")];
   const acc = "#22c55e";
-  const conImmagine = cardConImmagine(c, i, {
+  const conImmagine2 = cardConImmagine(c, i, {
     nome: nomeDi8(id, c.nome),
     stato: parola,
     acceso: aperto2 || muove,
@@ -103047,7 +103133,7 @@ function cardVarco(c, i) {
     destra: `<button type="button" class="dm-rq-tasto" data-mu-fa="${fa}" data-mu-entita="${esc(id)}"><b aria-hidden="true"></b>${esc(tasto2)}</button>`,
     dati: `data-mu-entita="${esc(id)}"`
   });
-  if (conImmagine) return conImmagine;
+  if (conImmagine2) return conImmagine2;
   return `<div class="mu-carta mu-card mu-fam mu-varco ${aperto2 || muove ? "mu-accesa" : ""}" style="--acc:${acc}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
     <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegnoDelCatalogo(DISEGNO_DEL_VARCO[attributi(id).device_class], 32)}</span><span class="mu-stato ${aperto2 || muove ? "" : "spento"}">${esc(parola)}</span>
       <button type="button" class="mu-btn ${muove ? "" : "pieno"} mu-varco-tasto" style="--acc:${acc}" data-mu-fa="${fa}" data-mu-entita="${esc(id)}">${esc(tasto2)}</button></div>
@@ -103066,6 +103152,23 @@ function cardTapparella(c, i) {
     ferma: ["■", t("Stop", "Stop")],
     giu: ["▼", t("Giù", "Down")]
   };
+  const conImmagine2 = cardConImmagine(c, i, {
+    nome: nomeDi8(id, c.nome),
+    stato: parola,
+    acceso: Boolean(s && s !== "closed"),
+    accento: ACCENTI.tapparella,
+    destra: tasti.length ? `<div class="dm-rq-due">${tasti.map(
+      (k) => tastoDiVetro({
+        classi: `dm-rq-dt-${k}`,
+        dati: `data-mu-fa="${k}" data-mu-entita="${esc(id)}"`,
+        scritta: TASTI[k][0],
+        etichetta: TASTI[k][1]
+      })
+    ).join("")}</div>` : "",
+    dati: `data-mu-entita="${esc(id)}"`,
+    classi: "mu-tapparella"
+  });
+  if (conImmagine2) return conImmagine2;
   return `<div class="mu-carta mu-card mu-fam mu-tapparella ${s && s !== "closed" ? "mu-accesa" : ""}" style="--acc:${ACCENTI.tapparella}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
     <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegno("tapparelle", 32, `tapp-${i}`)}</span><span class="mu-stato">${esc(parola)}</span></div>
     <div class="mu-fam-fondo"><div class="mu-osw mu-fam-nome">${esc(nomeDi8(id, c.nome))}</div><span class="mu-tap-stato" aria-hidden="true">${esc(s === "open" && pos !== null && pos < 100 ? `${pos}%` : parola)}</span></div>
@@ -103092,7 +103195,7 @@ function tessera2({
   vetro = null
 }) {
   if (immaginePulita(immagine2))
-    return riquadroConImmagineMarkup({
+    return vestito({
       immagine: immagine2,
       nome: titolo3,
       stato: [etichetta3, sotto].map(clean).filter(Boolean).join(" · "),
@@ -103180,6 +103283,16 @@ function cardDato(c, i, s) {
   const id = c.entita;
   const unita3 = clean(s.attributes?.unit_of_measurement);
   const valore3 = decimale2(n, Number.isInteger(n) ? 0 : 1);
+  if (immaginePulita(c.immagine))
+    return vestito({
+      immagine: c.immagine,
+      nome: nomeDi8(id, c.nome),
+      stato: [unita3 ? `${valore3} ${unita3}` : valore3, clean(c.sotto)].filter(Boolean).join(" · "),
+      acceso: false,
+      accento: ACCENTI.azione,
+      classi: "mu-card mu-rq mu-dato-rq dm-rq-lettura",
+      attributi: `data-mu-entita="${esc(id)}" aria-disabled="true"`
+    });
   return `<div class="mu-carta mu-card mu-dato" style="--acc:${ACCENTI.azione}" data-mu-entita="${esc(id)}" aria-disabled="true">
     <div class="mu-dato-testa">${disegno(clean(c.disegno) || disegnoDellEntita(id), 22, `da-${i}`)}<span class="mu-dato-n">${esc(nomeDi8(id, c.nome))}</span></div>
     <div class="mu-dato-v">${esc(valore3)}${unita3 ? `<small>${esc(unita3)}</small>` : ""}</div>
@@ -103187,6 +103300,45 @@ function cardDato(c, i, s) {
   </div>`;
 }
 var vuoto3 = (i, perche4 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche4 || t("Posto libero", "Empty slot"))}</span></div>`;
+function cardDelPosto(c, i, zona = "", { scena: scena2 = false } = {}) {
+  if (!c || c.tipo === "vuoto") return vuoto3(i);
+  if (scena2) return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
+  if (c.tipo === "luce") return cardLuce(c, i);
+  if (c.tipo === "clima") return cardClima(c, i, zona);
+  if (c.tipo === "tapparella") return cardTapparella(c, i);
+  if (c.tipo === "entita") return cardEntita(c, i);
+  if (c.tipo === "duetasti") return cardDueTasti(c, i);
+  return cardAzione(c, i);
+}
+function facciaDelPosto(c, { scena: scena2 = false, fonte = state116.fonte } = {}) {
+  if (!c || c.tipo === "vuoto") return null;
+  const prima = { fonte: state116.fonte, compatto: state116.compatto };
+  const raccoltaPrima = raccolta;
+  raccolta = null;
+  facciaPresa = {};
+  try {
+    state116.fonte = fonte || state116.fonte || {};
+    state116.compatto = false;
+    const immagine2 = immaginePulita(c.immagine) || {
+      src: `disegno:${DISEGNI_DA_RIQUADRO[0].chiave}`
+    };
+    cardDelPosto({ ...c, immagine: immagine2 }, 0, "", { scena: scena2 });
+    const presa = facciaPresa.presa;
+    if (!presa) return null;
+    return {
+      stato: presa.stato || "",
+      acceso: Boolean(presa.acceso),
+      accento: presa.accento || "",
+      destra: presa.destra || "",
+      comandi: presa.comandi || "",
+      classi: String(presa.classi || "").split(/\s+/).filter((k) => k.startsWith("dm-rq-")).join(" ")
+    };
+  } finally {
+    facciaPresa = null;
+    raccolta = raccoltaPrima;
+    Object.assign(state116, prima);
+  }
+}
 function paginaStanza(pagina2) {
   const zona = pagina2.modello === "clima" ? zonaDellaPagina(pagina2) : "";
   const comandi = comandiDellaPagina(pagina2, state116.fonte, zona, { aCoppia });
@@ -103202,16 +103354,7 @@ function paginaStanza(pagina2) {
   const quante3 = elenco15 ? Math.max(comandi.length, 1) : posti;
   if (elenco15 && !comandi.length)
     return `${linguette3}<div class="mu-g6" style="${stileDellaGriglia(pagina2)}">${vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
-  const carte = Array.from({ length: quante3 }, (_, i) => {
-    const c = comandi[i];
-    if (!c || c.tipo === "vuoto") return vuoto3(i);
-    if (c.tipo === "luce") return cardLuce(c, i);
-    if (c.tipo === "clima") return cardClima(c, i, zona);
-    if (c.tipo === "tapparella") return cardTapparella(c, i);
-    if (c.tipo === "entita") return cardEntita(c, i);
-    if (c.tipo === "duetasti") return cardDueTasti(c, i);
-    return cardAzione(c, i);
-  });
+  const carte = Array.from({ length: quante3 }, (_, i) => cardDelPosto(comandi[i], i, zona));
   const riga3 = pagina2.modello === "stanza" ? pillole(pagina2) : linguette3;
   return `${riga3}${griglia2(pagina2, carte, quante3)}`;
 }
@@ -103235,8 +103378,7 @@ function paginaScene(pagina2) {
   const scene = pagina2.scene.length ? pagina2.scene : [];
   const carte = Array.from({ length: postiDellaPagina(pagina2) }, (_, i) => {
     const c = scene[i];
-    if (!c || c.tipo === "vuoto") return vuoto3(i);
-    return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
+    return cardDelPosto(c, i, "", { scena: true });
   });
   return griglia2(pagina2, carte);
 }
@@ -103251,6 +103393,20 @@ function paginaAmbienti(pagina2) {
     const umid = stanza2.hum ? numero49(stato2(stanza2.hum)?.state) : null;
     const accese = luci.filter((id) => acceso4(id)).length;
     const accento = accese ? ACCENTI.luce : "#ef4444";
+    if (immaginePulita(stanza2.immagine))
+      return vestito({
+        immagine: stanza2.immagine,
+        nome: stanza2.name,
+        stato: [
+          temp === null ? "" : `${decimale2(temp)}°`,
+          umid === null ? "" : `${decimale2(umid, 0)}%`,
+          luci.length ? accese ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}` : t("Luci spente", "Lights off") : ""
+        ].filter(Boolean).join(" · "),
+        acceso: accese > 0,
+        accento,
+        classi: "mu-card mu-rq mu-ambiente",
+        attributi: `data-mu-card="${i}"`
+      });
     return `<div class="mu-carta mu-card mu-fam mu-ambiente ${accese ? "mu-accesa" : ""}" style="--acc:${accento}" data-mu-card="${i}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno("stanze", 26, `amb-${i}`)}</span>${luci.length ? `<span class="mu-stato ${accese ? "" : "spento"}">${esc(accese ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}` : t("Luci spente", "Lights off"))}</span>` : ""}</div>
       <div class="mu-fam-fondo"><div class="mu-osw mu-fam-nome">${esc(stanza2.name)}</div><div class="mu-target">${stanza2.temp ? `<span class="mu-grande">${temp === null ? "—" : `${decimale2(temp)}°`}</span>` : luci.length ? `<span class="mu-grande">${accese}/${luci.length}</span><span class="mu-et">${esc(t("luci", "lights"))}</span>` : ""}${umid === null ? "" : `<span class="mu-et mu-umido">${decimale2(umid, 0)}% ${esc(t("umidità", "humidity"))}</span>`}</div></div></div>`;
@@ -103264,7 +103420,7 @@ function paginaTelecamere(pagina2) {
       vuoto3(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))
     ]);
   const carte = telecamere3.map(
-    (k, i) => `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video">${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi8(k.entita))}</span></div></button>`
+    (k, i) => `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video${classeDelFondo(k.immagine)}">${fondoMarkup(k.immagine)}${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi8(k.entita))}</span></div></button>`
   );
   return griglia2(pagina2, carte);
 }
@@ -104102,7 +104258,7 @@ function tastoMuto(canale, lettura3, master = false) {
 var lettoSotto = (l) => l.misura && l.tipo !== "telecomando" ? `<small class="mu-can-l" data-mu-letto>${esc(testoDellaMisura(l.misura))}</small>` : "";
 function canaleDelMixer(canale) {
   const l = canaleOra(canale);
-  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"} mu-can-${l.tipo}" data-mu-canale="${esc(canale.entita)}">
+  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"} mu-can-${l.tipo}${classeDelFondo(canale.immagine)}" data-mu-canale="${esc(canale.entita)}">${fondoMarkup(canale.immagine)}
     <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>${lettoSotto(l)}
     ${comandoDelCanale(canale, l)}
     <span class="mu-can-n">${esc(nomeDi8(canale.entita, canale.nome))}</span>
@@ -104122,7 +104278,7 @@ function paginaMixer(pagina2) {
   let totale = "";
   if (master?.entita) {
     const l = canaleOra(master);
-    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""} mu-can-${l.tipo}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
+    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""} mu-can-${l.tipo}${classeDelFondo(master.immagine)}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">${fondoMarkup(master.immagine)}
       <span class="mu-mix-tit">${esc(master.nome || t("Volume totale", "Master volume"))}</span>
       ${tastoMuto(master, l, true)}
       ${comandoDelCanale(master, l, { sdraiato: true })}
@@ -104167,7 +104323,7 @@ function paginaTelecamera(pagina2) {
     (p, k) => `<button type="button" class="mu-carta mu-ptz-preset-t" data-mu-fa="preset" data-mu-indice="${k}"><span>${esc(p.nome || nomeDi8(p.entita))}</span></button>`
   ).join("");
   return `<div class="mu-ptz${preset ? "" : " senza-preset"}">
-    <div class="mu-carta mu-ptz-video"><div class="mu-video">${tc.entita && !anteprimaInCorso ? `<img data-mu-telecamera="${esc(tc.entita)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "ptz-vuota")}</div>`}<span class="mu-live">${esc(nome)}</span></div></div>
+    <div class="mu-carta mu-ptz-video"><div class="mu-video${classeDelFondo(tc.immagine)}">${fondoMarkup(tc.immagine)}${tc.entita && !anteprimaInCorso ? `<img data-mu-telecamera="${esc(tc.entita)}" alt="">` : immaginePulita(tc.immagine) ? "" : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "ptz-vuota")}</div>`}<span class="mu-live">${esc(nome)}</span></div></div>
     <div class="mu-carta mu-ptz-comandi${conZoom ? "" : " senza-zoom"}">${zoom}${pad}</div>
     ${preset ? `<div class="mu-ptz-preset">${preset}</div>` : ""}
   </div>`;
@@ -104195,11 +104351,22 @@ function paginaComandi(pagina2) {
   const icona3 = (p, k, misura7) => clean(p.disegno) ? disegno(p.disegno, misura7, `reg-${misura7}-${k}`) : segno("accendi", Math.round(misura7 * 0.7));
   const grandi = tutti.filter(({ p }) => !p.stop).map(({ p, k }) => {
     const on = comandoAcceso(p);
+    if (immaginePulita(p.immagine))
+      return vestito({
+        immagine: p.immagine,
+        nome: p.nome || nomeDi8(p.avvio),
+        stato: diceLoStato(p) ? on ? t("Acceso", "On") : t("Spento", "Off") : "",
+        acceso: on,
+        accento: p.colore || "#22c55e",
+        tag: "button",
+        classi: "mu-reg-tasto mu-rq",
+        attributi: `data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio" aria-pressed="${on}"`
+      });
     return `<button type="button" class="mu-carta mu-reg-tasto${on ? " mu-accesa" : ""}" style="--acc:${p.colore || "#22c55e"}" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio" aria-pressed="${on}"><span class="mu-reg-icona">${icona3(p, k, 56)}</span><span class="mu-osw mu-reg-nome">${esc(p.nome || nomeDi8(p.avvio))}</span>${parola(p, on)}</button>`;
   });
   const coppie = tutti.filter(({ p }) => p.stop).map(({ p, k }) => {
     const on = comandoAcceso(p);
-    return `<div class="mu-carta mu-reg-coppia${on ? " mu-accesa" : ""}" style="--acc:${p.colore || "#22c55e"}"><div class="mu-reg-testa"><span class="mu-reg-icona">${icona3(p, k, 34)}</span><span class="mu-reg-nome">${esc(p.nome || nomeDi8(p.avvio || p.stop))}</span>${parola(p, on)}</div>
+    return `<div class="mu-carta mu-reg-coppia${on ? " mu-accesa" : ""}${classeDelFondo(p.immagine)}" style="--acc:${p.colore || "#22c55e"}">${fondoMarkup(p.immagine)}<div class="mu-reg-testa"><span class="mu-reg-icona">${icona3(p, k, 34)}</span><span class="mu-reg-nome">${esc(p.nome || nomeDi8(p.avvio || p.stop))}</span>${parola(p, on)}</div>
         ${p.avvio ? `<button type="button" class="mu-reg-avvio${on ? " si" : ""}" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio">${segno("avvia", 34)}<span>${esc(t("Avvio", "Start"))}</span></button>` : ""}
         <button type="button" class="mu-reg-stop" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="stop">${segno("ferma", 30)}<span>${esc(t("Stop", "Stop"))}</span></button></div>`;
   });
@@ -106151,6 +106318,15 @@ ${MURO} button{font:inherit;color:inherit;border:0;background:none;cursor:pointe
 ${MURO} .dm-rq button.dm-rq-int,${MURO} .dm-rq button.dm-rq-tasto{background:rgba(15,23,42,.42);color:#fff}
 ${MURO} .dm-rq button.dm-rq-int.on{background:var(--acc)}
 ${MURO} .dm-rq button.dm-rq-tasto{font-size:clamp(10.5px,5.6cqi,15px);font-weight:800}
+${MURO} .dm-rq button.dm-rq-dt{background:rgba(15,23,42,.46);color:#fff;display:inline-grid;place-items:center;text-align:center;font-weight:900}
+${MURO} .dm-rq button.dm-rq-dt.si,${MURO} .dm-rq button.dm-rq-dt-on.si{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1f2937}
+${MURO} .dm-rq button.dm-rq-dt-off.si{background:rgba(255,255,255,.34);color:#fff}
+${MURO} .dm-rq button.dm-rq-dt.dm-rq-acceso.si{background:var(--acc);color:#fff}
+${MURO} .dm-rq .dm-rq-barra{--acc:#fbbf24}
+${MURO} .dm-rq-fondo>.dm-rq-img,${MURO} .dm-rq-fondo>.dm-rq-velo{position:absolute}
+${MURO} .mu-carta.dm-rq-fondo::before{content:none}
+${MURO} .dm-rq-fondo .mu-et,${MURO} .dm-rq-fondo .mu-can-n,${MURO} .dm-rq-fondo .mu-can-v,${MURO} .dm-rq-fondo .mu-reg-nome{color:#fff}
+${MURO} .dm-rq [data-mu-cursore].mu-bar::before{background:rgba(255,255,255,.28)}
 ${MURO} .mu-tela{position:relative;transform-origin:0 0}
 ${MURO} .mu-pagina{display:grid;grid-template-rows:auto auto 1fr;gap:16px;padding:22px;height:100%}
 ${MURO} .mu-pag-scene,${MURO} .mu-pag-ingresso,${MURO} .mu-pag-personale,${MURO} .mu-pag-luci{grid-template-rows:auto 1fr}
@@ -107612,21 +107788,22 @@ function dueTastiMarkup(via, c) {
       "Buttons, switches, scripts, scenes and automations all work: the ON button turns on or presses its entity, the OFF button does the same with its own. If both entities are switches and the state is empty, the ON button's state is used."
     )
   )}</small>
-      <label class="mu-ed-voce"><span>${esc(t("Icona", "Icon"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI3(), null)}</label>`;
+      <label class="mu-ed-voce"><span data-mu-ed-icona>${esc(t("Icona", "Icon"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI3(), null)}</label>
+      ${immagineDelPosto(via, { ...c, tipo: "duetasti" })}`;
 }
 function siVedeLImmagine(c) {
-  if (!c || c.tipo === "vuoto" || c.tipo === "duetasti" || c.tipo === "clima") return false;
-  if (c.tipo === "tapparella") return eUnVarco2(allStates()?.[c.entita]?.attributes || {});
-  return true;
+  return Boolean(c && c.tipo && c.tipo !== "vuoto");
 }
 var ACCENTO_DEL_POSTO = Object.freeze({ luce: "#f59e0b", azione: "#8b5cf6", tapparella: "#22c55e" });
-function immagineDelPosto(via, c) {
+function immagineDelPosto(via, c, lista7 = "comandi") {
   if (!siVedeLImmagine(c)) return "";
+  const anteprima3 = facciaDelPosto(c, { scena: lista7 === "scene", fonte: state117.fonte || {} });
   return bloccoImmagineMarkup({
     chiave: via,
     immagine: c.immagine,
     nome: clean(c.nome) || c.azione || nomeDi9(c.entita),
-    accento: ACCENTO_DEL_POSTO[c.tipo] || "#f59e0b"
+    accento: anteprima3?.accento || ACCENTO_DEL_POSTO[c.tipo] || "#f59e0b",
+    anteprima: anteprima3
   });
 }
 function postoMarkup(i, lista7, k, c, posti = 6) {
@@ -107648,7 +107825,7 @@ function postoMarkup(i, lista7, k, c, posti = 6) {
       ${pieno ? `<label class="mu-ed-voce"><span>${esc(t("Nome sul tablet", "Name on the tablet"))}</span>${campo3(`${via}.nome`, c.nome || "", c.azione || nomeDi9(c.entita))}</label>
       <label class="mu-ed-voce"><span>${esc(t("Riga sotto", "Line below"))}</span>${campo3(`${via}.sotto`, c.sotto || "", t("Facoltativa", "Optional"))}</label>
       <label class="mu-ed-voce"><span>${esc(c.immagine ? t("Disegno (se non c'è immagine)", "Drawing (when there is no image)") : t("Disegno", "Drawing"))}</span>${tendina2(`${via}.disegno`, c.disegno || "", DISEGNI3(), null)}</label>
-      ${immagineDelPosto(via, c)}` : ""}`}
+      ${immagineDelPosto(via, c, lista7)}` : ""}`}
     </div></div>`;
 }
 function postiMarkup(i, lista7, posti, quanti2 = 6) {
@@ -108030,6 +108207,8 @@ var voce2 = (etichetta3, dentro3, entitaQui = false) => `<label class="mu-ed-voc
 var DOMINI_DEL_CANALE2 = "media_player,number,input_number,sensor,remote";
 var DOMINI_DEL_MUTO2 = "switch,input_boolean,remote,button,input_button,script";
 var telecomando = (id) => String(id || "").startsWith("remote.");
+var ANTEPRIMA_DEL_FONDO = Object.freeze({ stato: "", acceso: false, destra: "", comandi: "", classi: "dm-rq-lettura" });
+var bloccoDellaVoce = (via, voce3, nome, accento = "#22c55e") => bloccoImmagineMarkup({ chiave: via, immagine: voce3?.immagine, nome, accento, anteprima: ANTEPRIMA_DEL_FONDO });
 function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
   const pieno = Boolean(c?.entita);
   const sensore2 = String(c?.entita || "").startsWith("sensor.");
@@ -108044,7 +108223,8 @@ function canaleMarkup(via, c, k, { togliVia = "" } = {}) {
       ${sensore2 ? "" : voce2(t("Livello letto (facoltativo)", "Read level (optional)"), cerca2(`${via}.letto`, c.letto || "", { domini: "sensor", segnaposto: t("Un sensore col livello", "A sensor with the level") }), true)}
       ${sensore2 || c.letto ? `<div class="mu-ed-comandi">${voce2(t("Scala: da", "Scale: from"), campo3(`${via}.min`, c.min ?? "", t("Automatica", "Automatic"), "number"))}${voce2(t("Scala: a", "Scale: to"), campo3(`${via}.max`, c.max ?? "", t("Automatica", "Automatic"), "number"))}</div>` : ""}
       ${voce2(t("Muto (facoltativo)", "Mute (optional)"), cerca2(`${via}.muto`, c.muto || "", { domini: DOMINI_DEL_MUTO2, segnaposto: t("Acceso = muto", "On = muted") }), true)}
-      ${conComandi ? `<div class="mu-ed-comandi">${comando("mutoComando", t("Comando del muto", "Mute command"), "mute")}${comando("dispositivo", t("Dispositivo (facoltativo)", "Device (optional)"), "")}</div>` : ""}` : ""}
+      ${conComandi ? `<div class="mu-ed-comandi">${comando("mutoComando", t("Comando del muto", "Mute command"), "mute")}${comando("dispositivo", t("Dispositivo (facoltativo)", "Device (optional)"), "")}</div>` : ""}
+      ${bloccoDellaVoce(via, c, clean(c.nome) || nomeDi9(c.entita))}` : ""}
     </div></div>`;
 }
 function mixerMarkup(p, i) {
@@ -108102,6 +108282,7 @@ function telecameraMarkup(p, i) {
     )
   )}</div>
   ${riga2(t("Telecamera", "Camera"), "", cerca2(`${via}.entita`, tc.entita, { domini: "camera" }))}
+  ${bloccoDellaVoce(via, tc, tc.entita ? nomeDi9(tc.entita) : t("Telecamera", "Camera"), "#0ea5e9")}
   ${tasto2("su", t("Su", "Up"))}
   ${tasto2("giu", t("Giù", "Down"))}
   ${tasto2("sinistra", t("Sinistra", "Left"))}
@@ -108132,7 +108313,8 @@ function comandiMarkup2(p, i) {
         ${telecomando(c.avvio) || telecomando(c.stop) ? voce2(t("Dispositivo (facoltativo)", "Device (optional)"), campo3(`${v}.dispositivo`, c.dispositivo || "", "")) : ""}
         ${voce2(t("Stato (facoltativo)", "State (optional)"), cerca2(`${v}.stato`, c.stato || "", { domini: "switch,input_boolean,binary_sensor,script,media_player", segnaposto: t("Acceso quando è acceso", "On when it's on") }), true)}
         ${voce2(t("Disegno", "Drawing"), tendina2(`${v}.disegno`, c.disegno || "", DISEGNI3(), null))}
-        ${voce2(t("Colore", "Colour"), colori(`${v}.colore`, c.colore))}` : ""}
+        ${voce2(t("Colore", "Colour"), colori(`${v}.colore`, c.colore))}
+        ${bloccoDellaVoce(v, c, c.nome || nomeDi9(c.avvio || c.stop), c.colore || "#22c55e")}` : ""}
       </div></div>`;
     }
   ).join("");
@@ -108787,15 +108969,16 @@ function onChange7(event) {
   else dopoUnaScritta();
 }
 var SCRITTE = /(\.nome|\.sotto|\.titolo|\.nomeApri2?|^blocco\.pin|Comando|\.comando|\.dispositivo|\.min|\.max)$/;
+var VIE_CON_IMMAGINE = /^pagine\.\d+\.((comandi|scene|pulsanti)\.\d+|mixer\.(master|gruppi\.\d+\.canali\.\d+)|telecamera)$/;
 function onImmagine(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva6() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
   const via = String(event.detail?.chiave || "");
-  if (!/^pagine\.\d+\.(comandi|scene)\.\d+$/.test(via)) return;
+  if (!VIE_CON_IMMAGINE.test(via)) return;
   metti3(`${via}.immagine`, event.detail?.immagine || null);
   dopoUnaScritta();
   const voce3 = body.querySelector(`[data-mu-ed-campo="${via}.disegno"]`)?.closest(".mu-ed-voce");
-  const scritta = voce3?.querySelector(":scope > span");
+  const scritta = voce3?.querySelector(":scope > span:not([data-mu-ed-icona])");
   if (scritta)
     scritta.textContent = event.detail?.immagine ? t("Disegno (se non c'è immagine)", "Drawing (when there is no image)") : t("Disegno", "Drawing");
 }
@@ -114137,7 +114320,7 @@ function gruppiDelleAutomazioni(elenco15, { per = "", perStanza = false, cerca: 
   const nomeDellaCategoria2 = (v) => categorie.find((c) => c.id === clean(v?.categoriaHa))?.nome || "";
   const trovate = elenco15.filter((v) => trovata(v, cerca4, nomeDellaCategoria2));
   const nomi2 = CATEGORIA();
-  const vestito = (g) => {
+  const vestito2 = (g) => {
     const tipo = modo === "tipo" ? g.chiave : modo === "categoria" && /irrig|sprinkl|annaff/i.test(g.titolo) ? "irrigazione" : tipoDelGruppo(g.voci);
     return {
       ...g,
@@ -114154,7 +114337,7 @@ function gruppiDelleAutomazioni(elenco15, { per = "", perStanza = false, cerca: 
       chiave: stanza2 || "-",
       titolo: stanza2 || t("Senza stanza", "No room"),
       voci: trovate.filter((v) => clean(v.area) === stanza2)
-    })).filter((g) => g.voci.length).map(vestito);
+    })).filter((g) => g.voci.length).map(vestito2);
   }
   if (modo === "categoria") {
     const conosciute = new Set(categorie.map((c) => c.id));
@@ -114166,13 +114349,13 @@ function gruppiDelleAutomazioni(elenco15, { per = "", perStanza = false, cerca: 
         voci: trovate.filter((v) => clean(v.categoriaHa) === c.id)
       })),
       { chiave: "-", titolo: t("Senza categoria", "Uncategorized"), voci: trovate.filter(senza) }
-    ].filter((g) => g.voci.length).map(vestito);
+    ].filter((g) => g.voci.length).map(vestito2);
   }
   return CATEGORIE4.map((k) => ({
     chiave: k,
     titolo: nomi2[k][1],
     voci: trovate.filter((v) => categoriaDi(v) === k)
-  })).filter((g) => g.voci.length).map(vestito);
+  })).filter((g) => g.voci.length).map(vestito2);
 }
 var CHIAVE_GRUPPI_APERTI = "dm_automazioni_gruppi_aperti";
 function gruppiAperti() {
