@@ -275,10 +275,17 @@ Future<void> mostra(NotificaDaMostrare quale) async {
   final grande = disegno.grande;
   final icona = disegno.icona;
   final allegati = await _gliAllegati(quale, disegno);
+  final corpo = notifica.testo.isEmpty ? quale.casa.nome : notifica.testo;
+  /* Le notifiche di Home Assistant dicono da dove vengono: su Android nella
+   * riga sotto il testo, sull'iPhone (che quella riga non ce l'ha) in fondo
+   * al testo, come fa l'estensione (`ios/NotificheService`). */
+  final fonte = notifica.fonte;
   await _locali.show(
     id: quale.numero,
     title: notifica.titolo,
-    body: notifica.testo.isEmpty ? quale.casa.nome : notifica.testo,
+    body: fonte != null && defaultTargetPlatform == TargetPlatform.iOS
+        ? '$corpo\n$fonte'
+        : corpo,
     payload: quale.daPortare,
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
@@ -297,7 +304,9 @@ Future<void> mostra(NotificaDaMostrare quale) async {
           CanaleDelleNotifiche.manutenzione => Importance.low,
         },
         priority: notifica.urgente ? Priority.max : Priority.high,
-        subText: quale.casa.nome,
+        subText: notifica.daHomeAssistant
+            ? '${quale.casa.nome} · Home Assistant'
+            : quale.casa.nome,
         groupKey: 'gdahome_${quale.casa.id}',
         when: notifica.quando.millisecondsSinceEpoch,
         /* Il campanello come una chiamata: una notifica che suona e si vede
@@ -312,7 +321,7 @@ Future<void> mostra(NotificaDaMostrare quale) async {
         timeoutAfter: notifica.chiamata ? 60 * 1000 : null,
         largeIcon: icona == null ? null : ByteArrayAndroidBitmap(icona),
         styleInformation: grande == null
-            ? BigTextStyleInformation(notifica.testo)
+            ? BigTextStyleInformation(notifica.testo, summaryText: fonte)
             : BigPictureStyleInformation(
                 ByteArrayAndroidBitmap(grande),
                 contentTitle: notifica.titolo,

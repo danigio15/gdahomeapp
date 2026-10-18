@@ -701,6 +701,7 @@ class NotificaArrivata {
     this.tasti = const [],
     this.scheda,
     this.foto,
+    this.fonte,
   });
 
   final String id;
@@ -729,6 +730,13 @@ class NotificaArrivata {
   /// cifrata con la chiave di questo telefono, per dieci minuti
   /// (`foto_di_passaggio.dart`). L'identificativo e basta.
   final String? foto;
+
+  /// Da dove viene, sotto il testo: «Automazione di Home Assistant ·
+  /// Lavatrice finita». Solo le notifiche di Home Assistant ce l'hanno.
+  final String? fonte;
+
+  /// Una notifica di un'automazione di Home Assistant, anche in GdAHome.
+  bool get daHomeAssistant => tipo == 'ha_notify';
 
   bool get elaborata => scheda != null || foto != null;
 
@@ -790,6 +798,249 @@ class NotificaArrivata {
               RegExp(r'^[0-9a-f]{32}$').hasMatch(idDellaFoto)
           ? idDellaFoto
           : null,
+      fonte: grezzo['fonte'] is String && (grezzo['fonte'] as String).isNotEmpty
+          ? grezzo['fonte'] as String
+          : null,
+    );
+  }
+}
+
+/// Un telefono di GdAHome della casa, per «Chi la riceve»: col nome che chi
+/// lo usa ha scritto nell'app, mai quello di una persona di Home Assistant.
+class TelefonoDellaCasa {
+  const TelefonoDellaCasa({
+    required this.id,
+    required this.nome,
+    this.modello = '',
+    this.io = false,
+  });
+
+  final String id;
+  final String nome;
+  final String modello;
+
+  /// Se e' questo telefono.
+  final bool io;
+}
+
+/// Un'automazione di Home Assistant che manda notifiche ai telefoni (con
+/// l'app di Home Assistant), e se riceverla anche qui. I nomi dei campi sono
+/// quelli del ponte (`ponte/src/notifiche-di-home-assistant.js`).
+class AutomazioneCheAvvisa {
+  const AutomazioneCheAvvisa({
+    required this.chiave,
+    required this.alias,
+    this.quando,
+    this.ultimaVolta,
+    this.bersaglio = 'questo',
+    this.telefoni = const [],
+    this.anteprimaTitolo,
+    this.anteprimaTesto,
+    this.ultimoTitolo,
+    this.ultimoTesto,
+    this.ultimoIl,
+    this.conFoto = false,
+    this.conTasti = false,
+    this.urgente = false,
+    this.testoCheCambia = false,
+    this.acceso = false,
+    this.a = 'questo',
+    this.silenzio = true,
+    this.nuova = false,
+  });
+
+  /// L'`id` dell'automazione in Home Assistant (o la sua entita').
+  final String chiave;
+  final String alias;
+
+  /// «Quando Lavatrice · potenza resta sotto 5 W per 3 minuti».
+  final String? quando;
+
+  /// L'ultima volta che e' scattata.
+  final DateTime? ultimaVolta;
+
+  /// A chi la manda Home Assistant: `questo` (al telefono di chi guarda),
+  /// `tutti`, `altro` (al telefono di un altro), `nessuno` (a un telefono
+  /// senza GdAHome).
+  final String bersaglio;
+
+  /// Con `altro`: i telefoni di GdAHome a cui va.
+  final List<String> telefoni;
+
+  /// Com'e' scritta, coi template diventati «…». `null` se non si vede.
+  final String? anteprimaTitolo;
+  final String? anteprimaTesto;
+
+  /// L'ultima arrivata davvero, col testo scritto da Home Assistant.
+  final String? ultimoTitolo;
+  final String? ultimoTesto;
+  final DateTime? ultimoIl;
+
+  final bool conFoto;
+  final bool conTasti;
+  final bool urgente;
+  final bool testoCheCambia;
+
+  /// Se riceverla anche in GdAHome (di serie no).
+  final bool acceso;
+
+  /// Dove: `questo`, `tutti`, o l'id di un telefono della casa.
+  final String a;
+
+  /// Se rispetta le ore di silenzio.
+  final bool silenzio;
+
+  /// Trovata da poco («Proponimi le nuove»).
+  final bool nuova;
+
+  /// Se Home Assistant la manda a questo telefono (o a tutti).
+  bool get perMe => bersaglio == 'questo' || bersaglio == 'tutti';
+
+  /// Il testo da mostrare: l'ultimo vero, o com'e' scritta.
+  String get testo => ultimoTesto ?? anteprimaTesto ?? '';
+
+  /// Il titolo da mostrare: quello di Home Assistant, o il nome.
+  String get titolo => (ultimoTitolo?.isNotEmpty ?? false)
+      ? ultimoTitolo!
+      : (anteprimaTitolo?.isNotEmpty ?? false)
+      ? anteprimaTitolo!
+      : alias;
+
+  AutomazioneCheAvvisa con({bool? acceso, String? a, bool? silenzio}) =>
+      AutomazioneCheAvvisa(
+        chiave: chiave,
+        alias: alias,
+        quando: quando,
+        ultimaVolta: ultimaVolta,
+        bersaglio: bersaglio,
+        telefoni: telefoni,
+        anteprimaTitolo: anteprimaTitolo,
+        anteprimaTesto: anteprimaTesto,
+        ultimoTitolo: ultimoTitolo,
+        ultimoTesto: ultimoTesto,
+        ultimoIl: ultimoIl,
+        conFoto: conFoto,
+        conTasti: conTasti,
+        urgente: urgente,
+        testoCheCambia: testoCheCambia,
+        acceso: acceso ?? this.acceso,
+        a: a ?? this.a,
+        silenzio: silenzio ?? this.silenzio,
+        nuova: false,
+      );
+
+  static AutomazioneCheAvvisa? leggi(Object? grezzo) {
+    if (grezzo is! Map) return null;
+    final chiave = grezzo['chiave'];
+    final alias = grezzo['alias'];
+    if (chiave is! String || alias is! String) return null;
+    DateTime? ora(Object? ms) =>
+        ms is num ? DateTime.fromMillisecondsSinceEpoch(ms.toInt()) : null;
+    String? testo(Object? cosa) => cosa is String ? cosa : null;
+    final quando = grezzo['quando'];
+    final anteprima = grezzo['anteprima'];
+    final ultimo = grezzo['ultimo'];
+    final telefoni = grezzo['telefoni'];
+    return AutomazioneCheAvvisa(
+      chiave: chiave,
+      alias: alias,
+      quando: quando is Map
+          ? testo(quando[inLingua(it: 'it', en: 'en')] ?? quando['it'])
+          : null,
+      ultimaVolta: ora(grezzo['ultimaVolta']),
+      bersaglio: switch (grezzo['bersaglio']) {
+        'tutti' => 'tutti',
+        'altro' => 'altro',
+        'nessuno' => 'nessuno',
+        _ => 'questo',
+      },
+      telefoni: [
+        if (telefoni is List)
+          for (final uno in telefoni)
+            if (uno is String) uno,
+      ],
+      anteprimaTitolo: anteprima is Map ? testo(anteprima['titolo']) : null,
+      anteprimaTesto: anteprima is Map ? testo(anteprima['testo']) : null,
+      ultimoTitolo: ultimo is Map ? testo(ultimo['titolo']) : null,
+      ultimoTesto: ultimo is Map ? testo(ultimo['testo']) : null,
+      ultimoIl: ultimo is Map ? ora(ultimo['il']) : null,
+      conFoto: grezzo['conFoto'] == true,
+      conTasti: grezzo['conTasti'] == true,
+      urgente: grezzo['urgente'] == true,
+      testoCheCambia: grezzo['testoCheCambia'] == true,
+      acceso: grezzo['acceso'] == true,
+      a: grezzo['a'] is String ? grezzo['a'] as String : 'questo',
+      silenzio: grezzo['silenzio'] != false,
+      nuova: grezzo['nuova'] == true,
+    );
+  }
+}
+
+/// Quello che il ponte dice delle notifiche di Home Assistant, per questo
+/// telefono: `ponte/notifiche/ha/elenco`.
+class NotificheDaHomeAssistant {
+  const NotificheDaHomeAssistant({
+    this.premium,
+    this.proponi = true,
+    this.telefoni = const [],
+    this.automazioni = const [],
+  });
+
+  /// `null` da un ponte che non lo dice.
+  final bool? premium;
+
+  /// «Proponimi le nuove».
+  final bool proponi;
+  final List<TelefonoDellaCasa> telefoni;
+  final List<AutomazioneCheAvvisa> automazioni;
+
+  TelefonoDellaCasa? telefono(String id) {
+    for (final uno in telefoni) {
+      if (uno.id == id) return uno;
+    }
+    return null;
+  }
+
+  /// Questo telefono, se il ponte lo conosce.
+  TelefonoDellaCasa? get questo {
+    for (final uno in telefoni) {
+      if (uno.io) return uno;
+    }
+    return null;
+  }
+
+  NotificheDaHomeAssistant con({
+    bool? proponi,
+    List<AutomazioneCheAvvisa>? automazioni,
+  }) => NotificheDaHomeAssistant(
+    premium: premium,
+    proponi: proponi ?? this.proponi,
+    telefoni: telefoni,
+    automazioni: automazioni ?? this.automazioni,
+  );
+
+  static NotificheDaHomeAssistant leggi(Object? grezzo) {
+    if (grezzo is! Map) return const NotificheDaHomeAssistant();
+    final telefoni = grezzo['telefoni'];
+    final automazioni = grezzo['automazioni'];
+    return NotificheDaHomeAssistant(
+      premium: grezzo['premium'] is bool ? grezzo['premium'] as bool : null,
+      proponi: grezzo['proponi'] != false,
+      telefoni: [
+        if (telefoni is List)
+          for (final uno in telefoni)
+            if (uno is Map && uno['id'] is String)
+              TelefonoDellaCasa(
+                id: uno['id'] as String,
+                nome: '${uno['nome'] ?? ''}',
+                modello: '${uno['modello'] ?? ''}',
+                io: uno['io'] == true,
+              ),
+      ],
+      automazioni: [
+        if (automazioni is List)
+          for (final una in automazioni) ?AutomazioneCheAvvisa.leggi(una),
+      ],
     );
   }
 }

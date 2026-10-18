@@ -71,6 +71,9 @@ export const CATEGORIE = Object.freeze({
   personalizzate: ["personalizzata"],
   /* I viaggi pianificati di gdanav (`viaggi.js`): «parti fra 10 minuti». */
   viaggi: ["viaggi"],
+  /* Le notifiche delle automazioni di Home Assistant, anche in GdAHome
+   * (`notifiche-di-home-assistant.js`). */
+  homeassistant: ["ha_notify"],
 });
 
 export const EVENTI = Object.freeze(Object.values(CATEGORIE).flat());

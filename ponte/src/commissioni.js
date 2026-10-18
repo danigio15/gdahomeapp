@@ -777,7 +777,28 @@ export class Commissioni {
      * chi lo riceve le trova dentro il riepilogo, senza doppioni. I tasti
      * del riepilogo sono «Apri la giornata» (`giornata`) e «OK» (`ok`). `ponte/notifiche/stato` dice `premium: bool`, cosi' l'app
      * mette il lucchetto dove serve; gli acquisti si fanno solo dalle app
-     * sugli store, mai di qui. */
+     * sugli store, mai di qui.
+     *
+     * Le notifiche di Home Assistant anche in GdAHome
+     * (`notifiche-di-home-assistant.js`) passano per la stessa porta, e anche
+     * loro non hanno comandi di qui: `ponte/notifiche/ha/elenco` (le
+     * automazioni che mandano notifiche, con a chi vanno, com'e' fatta la
+     * notifica, l'ultimo testo arrivato e l'ultima volta che e' partita),
+     * `ponte/notifiche/ha/imposta` (accesa o spenta, a quale telefono, le
+     * ore di silenzio: per questo telefono) e `ponte/notifiche/ha/proponi`
+     * («Proponimi le nuove»). Li usano **solo gli utenti loggati** — un
+     * telefono abbinato e intestato a un utente di Home Assistant; senza,
+     * `unauthorized` — e nella pagina web del ponte non si vede niente:
+     * nessuna pagina, nessuna console. Il ponte legge le configurazioni delle
+     * automazioni e degli script che chiamano (`automation/config`,
+     * `script/config`) e ascolta `automation_triggered`, `call_service` (solo
+     * `notify`) e `automation_reloaded`; un tasto premuto torna a Home
+     * Assistant come `mobile_app_notification_action`. I telefoni si
+     * chiamano col nome che chi li usa ha scritto nell'app, mai coi nomi
+     * delle persone di Home Assistant, e il testo di una notifica che va al
+     * telefono di un altro lo vede solo chi amministra. Niente di nuovo esce
+     * di casa: le buste prendono la strada delle altre notifiche, e la foto
+     * (Premium) quella delle elaborate. */
     /* La ricarica di notte (`ricarica-di-notte.js`): cosa sta facendo la
      * casa con l'auto, in sola lettura. Le impostazioni non passano di qui —
      * stanno nella configurazione della plancia, con le sue regole. */

@@ -71,6 +71,30 @@ class Notifiche {
     'regola': id,
   });
 
+  /// Le automazioni di Home Assistant che mandano notifiche, e quali
+  /// ricevere anche qui. Un ponte di prima non le conosce: allora nessuna.
+  Future<NotificheDaHomeAssistant> daHomeAssistant() async =>
+      NotificheDaHomeAssistant.leggi(
+        await _filo.risultato({'type': 'ponte/notifiche/ha/elenco'}),
+      );
+
+  /// Le scelte di una o piu' automazioni: chiave → `{acceso, a, silenzio}`.
+  /// Tutte o nessuna.
+  Future<NotificheDaHomeAssistant> impostaDaHomeAssistant(
+    Map<String, Map<String, Object>> voci,
+  ) async => NotificheDaHomeAssistant.leggi(
+    await _filo.risultato({'type': 'ponte/notifiche/ha/imposta', 'voci': voci}),
+  );
+
+  /// «Proponimi le nuove».
+  Future<NotificheDaHomeAssistant> proponiLeNuove(bool acceso) async =>
+      NotificheDaHomeAssistant.leggi(
+        await _filo.risultato({
+          'type': 'ponte/notifiche/ha/proponi',
+          'acceso': acceso,
+        }),
+      );
+
   /// Un tasto premuto sotto una notifica: la casa esegue quello che aveva
   /// preparato per questo telefono, una volta sola.
   Future<void> premi(String notifica, String tasto) => _filo.risultato({

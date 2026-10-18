@@ -69,6 +69,7 @@ import {
   senzaNomiDiPersone,
 } from "./la-giornata-di-casa.js";
 import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
+import { NotificheDiHomeAssistant } from "./notifiche-di-home-assistant.js";
 
 const MINUTO = 60 * 1000;
 const ORA = 60 * MINUTO;
@@ -447,6 +448,13 @@ export class Notifiche {
     this._disdici = null;
     this._previsioneIl = 0;
     this._registriIl = 0;
+    /** Le notifiche che le automazioni di Home Assistant mandano ai telefoni,
+     * anche qui (`notifiche-di-home-assistant.js`). */
+    this.daHomeAssistant = new NotificheDiHomeAssistant({
+      notifiche: this,
+      registro: this.registro,
+      adesso,
+    });
   }
 
   /* ─── Premium ──────────────────────────────────────────────────────────
@@ -495,6 +503,7 @@ export class Notifiche {
       this._giro.unref?.();
     }
     await this._abbonati();
+    this.daHomeAssistant.parti();
   }
 
   async _abbonati() {
@@ -658,6 +667,7 @@ export class Notifiche {
   }
 
   ferma() {
+    this.daHomeAssistant?.ferma();
     this.diario?.scrivi?.();
     clearInterval(this._giro);
     this._giro = null;
@@ -1215,6 +1225,11 @@ export class Notifiche {
       ...(camera ? { camera } : {}),
       ...(evento.chiamata ? { chiamata: true } : {}),
       ...(scheda ? { scheda: structuredClone(scheda) } : {}),
+      /* Da dove viene, sotto il testo: «Automazione di Home Assistant ·
+       * Lavatrice finita». */
+      ...(evento.fonte
+        ? { fonte: String(evento.fonte[lingua] ?? evento.fonte.it ?? "").slice(0, 120) }
+        : {}),
       ...(foto ? { foto } : {}),
       azioni: (evento.azioni || []).slice(0, 3).map((una) => ({
         id: una.id,
@@ -1252,6 +1267,7 @@ export class Notifiche {
       else if (una.piuTardi) azioni[una.id] = { piuTardi: true, chiave: evento.chiave };
       else if (Array.isArray(una.resta)) azioni[una.id] = { resta: una.resta.slice(0, 40) };
       else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
+      else if (typeof una.haAzione === "string") azioni[una.id] = { haAzione: una.haAzione };
     }
     if (!Object.keys(azioni).length) return;
     this._tasti.set(id, { telefono, azioni, scade: this.adesso() + VITA_DEI_TASTI });
@@ -1420,6 +1436,15 @@ export class Notifiche {
     const utente = dispositivo.utente || "";
     try {
       /* La pagina «La tua giornata»: solo chi ha un utente sul filo. */
+      /* Le notifiche di Home Assistant anche qui: solo chi ha un utente. */
+      if (this.daHomeAssistant.riconosce(detto.type))
+        return await this.daHomeAssistant.rispondi(detto, {
+          telefono,
+          utente,
+          amministra,
+          si,
+          no,
+        });
       if (detto.type === LA_GIORNATA) {
         if (!utente) return no("unauthorized", "la giornata della casa si vede da un utente");
         if (!this.premium)
@@ -1660,6 +1685,18 @@ export class Notifiche {
     }
     if (!utente || (this.utenti && !(await this.utenti.eVivo(utente).catch(() => false))))
       return no("unauthorized", "l'utente di questo telefono non c'e' piu'");
+    /* Un tasto di una notifica di Home Assistant: torna a Home Assistant come
+     * lo manda la sua app, `mobile_app_notification_action` con l'azione, e
+     * le automazioni che lo aspettano vanno avanti. Non comanda niente da se'. */
+    if (azione.haAzione) {
+      await this.casa.chiedi({
+        type: "fire_event",
+        event_type: "mobile_app_notification_action",
+        event_data: { action: azione.haAzione },
+      });
+      this.registro.info(`dal tasto di una notifica di Home Assistant`);
+      return si({ fatto: true });
+    }
     const { dominio, servizio, entita, dati } = azione.servizio;
     if (!SERVIZI_DEI_TASTI.has(`${dominio}.${servizio}`))
       return no("unauthorized", "questo tasto no");

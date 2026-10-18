@@ -33,6 +33,7 @@ import 'notifica_personalizzata.dart';
 import 'premium.dart';
 
 part 'notifiche_su_misura.dart';
+part 'notifiche_da_home_assistant.dart';
 
 /// Il disegno, il nome e la riga sotto di ogni evento.
 ({String disegno, String titolo, String sotto}) comeSiChiama(String evento) =>
@@ -249,6 +250,7 @@ class SchermataDelleNotifiche extends StatefulWidget {
     this.nuda = false,
     this.visibile = true,
     this.statoIniziale,
+    this.daHomeAssistantIniziale,
     this.nomeDelTelefono,
   });
 
@@ -264,6 +266,10 @@ class SchermataDelleNotifiche extends StatefulWidget {
   /// Quello che si mostra prima che la casa risponda: per le prove, e per i
   /// disegni della pagina.
   final StatoDelleNotifiche? statoIniziale;
+
+  /// Le automazioni di Home Assistant che mandano notifiche, prima che la
+  /// casa risponda: per le prove e i disegni.
+  final NotificheDaHomeAssistant? daHomeAssistantIniziale;
 
   /// «iPhone» o «telefono»: per la riga «Attive su questo …».
   final String? nomeDelTelefono;
@@ -295,10 +301,18 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
     ),
   );
 
+  /// Le notifiche delle automazioni di Home Assistant: `null` finche' la casa
+  /// non risponde, e da un ponte di prima che non le conosce.
+  NotificheDaHomeAssistant? _daHA;
+
+  /// Il Premium per le notifiche di Home Assistant: lo dice il ponte.
+  bool get _premiumDaHA => _daHA?.premium ?? _premium;
+
   @override
   void initState() {
     super.initState();
     _stato = widget.statoIniziale;
+    _daHA = widget.daHomeAssistantIniziale;
     _ascolto = _collegamento.cambiamenti.listen((_) => _forseLeggi());
     widget.postino?.addListener(_ridisegna);
     /* Da un ponte di prima il Premium lo dice la licenza dell'app: se cambia,
@@ -358,10 +372,116 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
         _stato = stato;
         _perche = null;
       });
+      unawaited(_leggiDaHA());
     } catch (errore) {
       _letteDi = null;
       if (mounted) setState(() => _perche = '$errore');
     }
+  }
+
+  /* Le automazioni di Home Assistant che mandano notifiche. Un ponte di
+   * prima non le conosce: la sezione non c'e', e il resto della pagina e'
+   * quello di sempre. */
+  Future<void> _leggiDaHA() async {
+    final filo = _collegamento.filo;
+    if (filo == null) return;
+    try {
+      final dati = await Notifiche(filo).daHomeAssistant();
+      if (mounted) setState(() => _daHA = dati);
+    } catch (_) {
+      if (mounted) setState(() => _daHA = null);
+    }
+  }
+
+  /// Le scelte di una o piu' automazioni: subito a schermo, poi sulla casa.
+  /// Torna quello che la casa ha salvato, o `null` se non e' andata.
+  Future<NotificheDaHomeAssistant?> _cambiaDaHA(
+    Map<String, Map<String, Object>> voci,
+  ) async {
+    final prima = _daHA;
+    final filo = _collegamento.filo;
+    if (prima == null) return null;
+    setState(
+      () => _daHA = prima.con(
+        automazioni: [
+          for (final riga in prima.automazioni)
+            if (voci[riga.chiave] case final Map<String, Object> voce)
+              riga.con(
+                acceso: voce['acceso'] as bool?,
+                a: voce['a'] as String?,
+                silenzio: voce['silenzio'] as bool?,
+              )
+            else
+              riga,
+        ],
+      ),
+    );
+    if (filo == null) {
+      setState(() => _daHA = prima);
+      _dici(
+        inLingua(
+          it: 'La casa adesso non risponde: riprova fra poco',
+          en: 'The home isn\'t answering right now: try again shortly',
+        ),
+      );
+      return null;
+    }
+    try {
+      final dopo = await Notifiche(filo).impostaDaHomeAssistant(voci);
+      if (mounted) setState(() => _daHA = dopo);
+      return dopo;
+    } catch (errore) {
+      if (!mounted) return null;
+      setState(() => _daHA = prima);
+      if ('$errore'.contains('premium-richiesto')) {
+        _spiegaIlPremium();
+      } else {
+        _dici('$errore');
+      }
+      return null;
+    }
+  }
+
+  Future<void> _proponiDaHA(bool acceso) async {
+    final prima = _daHA;
+    final filo = _collegamento.filo;
+    if (prima == null || filo == null) return;
+    setState(() => _daHA = prima.con(proponi: acceso));
+    try {
+      final dopo = await Notifiche(filo).proponiLeNuove(acceso);
+      if (mounted) setState(() => _daHA = dopo);
+    } catch (errore) {
+      if (!mounted) return;
+      setState(() => _daHA = prima);
+      _dici('$errore');
+    }
+  }
+
+  /// Il foglio di un'automazione di Home Assistant.
+  Future<void> _apriDaHA(AutomazioneCheAvvisa riga) async {
+    final dati = _daHA;
+    final stato = _stato;
+    if (dati == null || stato == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => FoglioDaHomeAssistant(
+        riga: riga,
+        dati: dati,
+        premium: _premiumDaHA,
+        silenzio: stato.impostazioni.silenzio,
+        spiegaIlPremium: _spiegaIlPremium,
+        cambia: (voce) async {
+          final dopo = await _cambiaDaHA({riga.chiave: voce});
+          if (dopo == null) return null;
+          for (final una in dopo.automazioni) {
+            if (una.chiave == riga.chiave) return una;
+          }
+          return null;
+        },
+      ),
+    );
   }
 
   /// Cambia le impostazioni: subito a schermo, poi sulla casa.
@@ -754,6 +874,19 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
           ),
         ),
         const SizedBox(height: 20),
+        if (_daHA case final NotificheDaHomeAssistant daHA
+            when daHA.automazioni.isNotEmpty) ...[
+          SezioneDaHomeAssistant(
+            dati: daHA,
+            premium: _premiumDaHA,
+            spento: spente,
+            cambia: (voci) => unawaited(_cambiaDaHA(voci)),
+            proponi: (si) => unawaited(_proponiDaHA(si)),
+            apri: (riga) => unawaited(_apriDaHA(riga)),
+            spiegaIlPremium: _spiegaIlPremium,
+          ),
+          const SizedBox(height: 20),
+        ],
         _Titolo(
           disegno: 'agenda',
           testo: inLingua(it: 'Quando', en: 'When'),

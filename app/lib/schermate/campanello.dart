@@ -175,6 +175,16 @@ class _StatoDelFoglio extends State<_IlFoglio> {
             Text(notifica.titolo, style: testi.titleLarge),
             const SizedBox(height: 6),
             Text(notifica.testo, style: testi.bodyLarge),
+            /* Da dove viene: «Automazione di Home Assistant · …». */
+            if (notifica.fonte case final String fonte) ...[
+              const SizedBox(height: 6),
+              Text(
+                fonte,
+                style: testi.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             if (_foto != null) ...[
               const SizedBox(height: 14),
               ClipRRect(

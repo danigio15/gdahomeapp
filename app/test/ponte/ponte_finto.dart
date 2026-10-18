@@ -531,8 +531,32 @@ class PonteFinto {
     'premium': true,
   };
 
+  /// Quello che risponde `ponte/notifiche/ha/elenco`: le automazioni di Home
+  /// Assistant che mandano notifiche. `null` e' un ponte di prima.
+  Map<String, dynamic>? daHomeAssistant;
+
   Object? _notifiche(String tipo, Map<String, dynamic> detto) {
+    final ha = daHomeAssistant;
     switch (tipo) {
+      case 'ponte/notifiche/ha/elenco':
+        return ha ?? {'fatto': true};
+      case 'ponte/notifiche/ha/imposta':
+        if (ha == null) return {'fatto': true};
+        final voci = detto['voci'] as Map;
+        for (final riga in ha['automazioni'] as List) {
+          final voce = voci[(riga as Map)['chiave']];
+          if (voce is Map) {
+            for (final MapEntry(:key, :value) in voce.entries) {
+              riga[key] = value;
+            }
+            riga['nuova'] = false;
+          }
+        }
+        return ha;
+      case 'ponte/notifiche/ha/proponi':
+        if (ha == null) return {'fatto': true};
+        ha['proponi'] = detto['acceso'] == true;
+        return ha;
       case 'ponte/notifiche/stato':
         return notifiche;
       case 'ponte/notifiche/registra':
