@@ -554,7 +554,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-4BUKZI3B.js";
+} from "../../chunk-X3VKTKNG.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -88844,7 +88844,11 @@ var state95 = root[KEY99] ||= {
   riprove: 0,
   barraSorvegliata: null,
   sorvegliante: null,
-  disegnoInCoda: false
+  disegnoInCoda: false,
+  tela: null,
+  firmaDeiNomi: "",
+  nomiInCoda: false,
+  nomiInAscolto: false
 };
 var SCROLLER_CLASS = "dm-nav-scroll";
 var ARROW_CLASS = "dm-nav-arrow";
@@ -88852,6 +88856,15 @@ var CAN_SCROLL_CLASS = "dm-nav-can-scroll";
 var DRAGGING_CLASS = "dm-nav-dragging";
 var DRAG_THRESHOLD = 6;
 var EDGE2 = 2;
+var VOCE_MINIMA = 44;
+var VOCE_FIANCO = 2;
+var BARRA_FIANCO = 4;
+var POSTO_COMODO = 52;
+var TESTO_DI_SERIE = 10;
+var TESTO_MINIMO = 9.5;
+var INTERLINEA = 1.12;
+var PASSO_DEL_TESTO = 0.25;
+var MARGINE_DELLA_MISURA = 1.5;
 function installStyles41() {
   installStyle(
     "dm-navigation-section-style",
@@ -89216,6 +89229,40 @@ function installStyles41() {
         nav.tabs.bottom-nav-bar .${ARROW_CLASS}-next::before{transform:rotate(-45deg)!important;margin-right:3px!important}
         html[data-theme="dark"] nav.tabs.bottom-nav-bar .${ARROW_CLASS},html.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS},body[data-theme="dark"] nav.tabs.bottom-nav-bar .${ARROW_CLASS},body.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS},.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS}{background:#25324b!important;border-color:#52627f!important;color:#cbd5e1!important;box-shadow:0 6px 16px rgba(0,0,0,.32)!important}
         html[data-theme="dark"] nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]),html.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]),body[data-theme="dark"] nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]),body.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]),.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]){background:#31415f!important;color:#fff!important}
+      }
+      /* Il nome della sezione si legge tutto, sempre.
+       *
+       * «Il nome deve leggersi»: su un iPhone la barra diceva HOME, ENERGIA,
+       * «ELETTRO…», AUTO, «GESTIONE…». Il foglio del tocco tiene ogni voce
+       * dentro settantadue punti, scrive il nome in sette e quello che avanza
+       * lo taglia coi puntini — e «GESTIONE…» non dice quale gestione.
+       *
+       * Qui il nome non si taglia piu'. Prima va a capo, su due righe strette e
+       * centrate; se la voce e' ancora troppo larga per stare con le altre il
+       * suo nome si rimpicciolisce un poco, mai sotto i nove punti e mezzo; e
+       * una parola sola troppo lunga si spezza fra due sillabe
+       * («ELETTRO / DOMESTICI»). Quanto e' larga ogni voce lo misura
+       * «tieniINomiLeggibili», qui sotto: la voce e' larga almeno quanto il suo
+       * nome su due righe, le voci si dividono la riga, e quando non ci stanno
+       * comunque la barra scorre come ha sempre fatto.
+       *
+       * Fuori dal blocco del tablet, che il nome lo scrive in dodici punti su
+       * una riga e la voce la allarga quanto serve: li' non si tagliava gia'. */
+      html body nav.tabs.bottom-nav-bar .tab .text{text-overflow:clip!important}
+      @media not all and (min-width:768px) and (min-height:600px){
+        html body nav.tabs.bottom-nav-bar.bottom-nav-bar{padding-left:${BARRA_FIANCO}px!important;padding-right:${BARRA_FIANCO}px!important}
+        html body nav.tabs.bottom-nav-bar .tab,
+        html body nav.tabs.bottom-nav-bar .tab.active{
+          flex:1 1 0px!important;min-width:var(--dm-voce-larga,${VOCE_MINIMA}px)!important;max-width:none!important;
+          overflow:visible!important;justify-content:flex-start!important;
+          padding:6px ${VOCE_FIANCO}px!important;gap:3px!important}
+        html body nav.tabs.bottom-nav-bar .tab .text{
+          display:block!important;width:100%!important;max-width:100%!important;
+          font-size:var(--dm-voce-testo,${TESTO_DI_SERIE}px)!important;line-height:${INTERLINEA}!important;
+          letter-spacing:0!important;text-align:center!important;
+          white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
+          overflow-wrap:break-word!important;word-break:normal!important;
+          -webkit-hyphens:auto!important;hyphens:auto!important;text-wrap:balance}
       }
     `
   );
@@ -89631,7 +89678,9 @@ function sorvegliaLaBarra() {
   if (state95.barraSorvegliata === barra2) return false;
   state95.sorvegliante?.disconnect?.();
   state95.barraSorvegliata = barra2;
-  state95.sorvegliante = new Sorvegliante(() => {
+  state95.sorvegliante = new Sorvegliante((cambi) => {
+    accodaINomi();
+    if (!cambi?.some?.((cambio) => cambio.type === "childList")) return;
     if (state95.disegnoInCoda) return;
     const chiedi7 = root.requestAnimationFrame || root.setTimeout;
     if (typeof chiedi7 !== "function") return;
@@ -89641,7 +89690,13 @@ function sorvegliaLaBarra() {
       disegniNellaBarra();
     });
   });
-  state95.sorvegliante.observe(barra2, { childList: true, subtree: true });
+  state95.sorvegliante.observe(barra2, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ["style", "class", "hidden"]
+  });
   return true;
 }
 var ATTESA_MASSIMA_DELLA_BARRA = 2500;
@@ -89891,6 +89946,283 @@ function installaLaCima() {
     `
   );
 }
+var VOCALI = "aeiouàèéìíòóùúy";
+var LIQUIDE_E_NASALI = "lmnr";
+function sillabeDi(parola = "") {
+  const lettere = [...String(parola).toLocaleLowerCase("it")];
+  const vocale = (c) => VOCALI.includes(c);
+  const lettera = (c) => /\p{L}/u.test(c);
+  if (lettere.length < 6 || !lettere.every(lettera)) return [];
+  const tagli = [];
+  let prima = -1;
+  for (let i = 0; i < lettere.length; i += 1) {
+    if (!vocale(lettere[i])) continue;
+    const gruppo = i - prima - 1;
+    if (prima >= 0 && gruppo > 0) {
+      const c1 = lettere[prima + 1];
+      const c2 = lettere[prima + 2];
+      let taglio = prima + 1;
+      if (gruppo >= 2) {
+        if (c1 === c2 || LIQUIDE_E_NASALI.includes(c1) || c1 === "c" && c2 === "q") {
+          taglio = prima + 2;
+        }
+      }
+      if (taglio >= 3 && lettere.length - taglio >= 3) tagli.push(taglio);
+    }
+    prima = i;
+  }
+  return tagli;
+}
+function tagliaAMeta(parola = "") {
+  const lunga = [...String(parola)].length;
+  let meglio = -1;
+  for (const taglio of sillabeDi(parola)) {
+    if (meglio < 0 || Math.abs(taglio - lunga / 2) < Math.abs(meglio - lunga / 2)) meglio = taglio;
+  }
+  return meglio;
+}
+function spezzaLaParola(parola = "", troppoLarga = () => false, pezzoTroppoLargo = troppoLarga) {
+  if (!troppoLarga(parola)) return [parola];
+  const taglio = tagliaAMeta(parola);
+  if (taglio < 0) return [parola];
+  const lettere = [...parola];
+  return [
+    ...spezzaLaParola(lettere.slice(0, taglio).join(""), pezzoTroppoLargo),
+    ...spezzaLaParola(lettere.slice(taglio).join(""), pezzoTroppoLargo)
+  ];
+}
+function righeCon(gettoni, larghezza) {
+  let righe3 = 1;
+  let riga3 = 0;
+  for (let i = 0; i < gettoni.length; i += 1) {
+    const { w } = gettoni[i];
+    if (i === 0) {
+      riga3 = w;
+      continue;
+    }
+    const conIlPrecedente = riga3 + gettoni[i - 1].dopo + w;
+    if (conIlPrecedente <= larghezza + 0.01) riga3 = conIlPrecedente;
+    else {
+      righe3 += 1;
+      riga3 = w;
+    }
+  }
+  return righe3;
+}
+function larghezzaPerRighe(gettoni = [], righe3 = 2) {
+  if (!gettoni.length) return 0;
+  const candidate = /* @__PURE__ */ new Set();
+  for (let i = 0; i < gettoni.length; i += 1) {
+    let riga3 = 0;
+    for (let j = i; j < gettoni.length; j += 1) {
+      riga3 += (j > i ? gettoni[j - 1].dopo : 0) + gettoni[j].w;
+      candidate.add(riga3);
+    }
+  }
+  const minimo = Math.max(...gettoni.map((g) => g.w));
+  for (const larghezza of [...candidate].sort((a, b2) => a - b2)) {
+    if (larghezza < minimo) continue;
+    if (righeCon(gettoni, larghezza) <= righe3) return larghezza;
+  }
+  return Math.max(...candidate);
+}
+function comeStaIlNome(testo4 = "", misura7 = (s) => s.length * 6, posto = 60) {
+  const parole4 = String(testo4).replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  if (!parole4.length) return { larghezza: 0, righe: 0, parole: [] };
+  const spazio = misura7(" ");
+  const pezzi = parole4.map(
+    (parola) => spezzaLaParola(
+      parola,
+      (p) => misura7(p) > posto,
+      (p) => misura7(p) > posto * 1.5
+    )
+  );
+  const gettoni = [];
+  pezzi.forEach((pezziDellaParola, p) => {
+    pezziDellaParola.forEach((pezzo2, k) => {
+      const ultimo = k === pezziDellaParola.length - 1;
+      gettoni.push({
+        w: misura7(pezzo2),
+        dopo: ultimo ? p < pezzi.length - 1 ? spazio : 0 : 0
+      });
+    });
+  });
+  const unaRiga = larghezzaPerRighe(gettoni, 1);
+  if (unaRiga <= posto) return { larghezza: unaRiga, righe: 1, parole: pezzi };
+  const due3 = larghezzaPerRighe(gettoni, 2);
+  const tre = larghezzaPerRighe(gettoni, 3);
+  if (due3 > posto * 1.5 && tre < due3) return { larghezza: tre, righe: 3, parole: pezzi };
+  return { larghezza: due3, righe: 2, parole: pezzi };
+}
+function disponiLeVoci(nomi2 = [], {
+  misuraCon = (px) => (s) => s.length * px * 0.7,
+  riga: riga3 = Infinity,
+  spazio = 0,
+  posto = 70,
+  minima = VOCE_MINIMA,
+  fianco = VOCE_FIANCO,
+  testo: testo4 = TESTO_DI_SERIE,
+  testoMinimo = TESTO_MINIMO
+} = {}) {
+  const calcola = (voce3) => {
+    const come2 = comeStaIlNome(voce3.nome, misuraCon(voce3.testo), posto);
+    voce3.parole = come2.parole;
+    voce3.righe = come2.righe;
+    voce3.larga = Math.max(minima, Math.ceil(come2.larghezza + MARGINE_DELLA_MISURA + 2 * fianco));
+    return voce3;
+  };
+  const voci4 = nomi2.map((nome) => calcola({ nome, testo: testo4 }));
+  const totale = () => voci4.reduce((somma2, voce3) => somma2 + voce3.larga, 0) + spazio * Math.max(0, voci4.length - 1);
+  if (totale() <= riga3) return voci4;
+  const piene = voci4.map((voce3) => ({ ...voce3 }));
+  for (let giro = 0; giro < 400 && totale() > riga3; giro += 1) {
+    const larga = voci4.filter((voce3) => voce3.testo > testoMinimo && voce3.larga > minima).sort((a, b2) => b2.larga - a.larga)[0];
+    if (!larga) break;
+    larga.testo = Math.max(testoMinimo, +(larga.testo - PASSO_DEL_TESTO).toFixed(2));
+    calcola(larga);
+  }
+  return totale() <= riga3 ? voci4 : piene;
+}
+function laTela() {
+  if (!state95.tela) {
+    try {
+      state95.tela = doc.createElement("canvas").getContext("2d") || null;
+    } catch (_errore) {
+      state95.tela = null;
+    }
+  }
+  return state95.tela;
+}
+function misuratoreDi(stile6) {
+  const tela2 = laTela();
+  const maiuscolo = stile6.textTransform === "uppercase";
+  return (px) => {
+    const font = `${stile6.fontStyle} ${stile6.fontWeight} ${px}px ${stile6.fontFamily}`;
+    return (testo4) => {
+      const scritto3 = maiuscolo ? testo4.toLocaleUpperCase("it") : testo4;
+      if (!tela2) return scritto3.length * px * 0.72;
+      tela2.font = font;
+      return tela2.measureText(scritto3).width;
+    };
+  };
+}
+function scriviIlNome(nodo2, parole4) {
+  const voluto = parole4.map((pezzi) => pezzi.join("|")).join(" ");
+  const figli = [...nodo2.childNodes];
+  if (!figli.every((figlio) => figlio.nodeType === 3 || figlio.nodeName === "WBR")) return;
+  const adesso = figli.map((figlio) => figlio.nodeType === 3 ? figlio.textContent : "|").join("").replace(/\s+/g, " ").trim();
+  if (adesso === voluto) return;
+  const spezzata = parole4.some((pezzi) => pezzi.length > 1);
+  if (!spezzata && !figli.some((figlio) => figlio.nodeName === "WBR")) return;
+  const nuovi = [];
+  parole4.forEach((pezzi, p) => {
+    pezzi.forEach((pezzo2, k) => {
+      if (k > 0) nuovi.push(doc.createElement("wbr"));
+      nuovi.push(doc.createTextNode(pezzo2));
+    });
+    if (p < parole4.length - 1) nuovi.push(doc.createTextNode(" "));
+  });
+  nodo2.replaceChildren(...nuovi);
+}
+function scriviLaProprieta(nodo2, nome, valore3) {
+  if (valore3 == null) {
+    if (nodo2.style.getPropertyValue(nome)) nodo2.style.removeProperty(nome);
+    return;
+  }
+  if (nodo2.style.getPropertyValue(nome).trim() !== valore3) nodo2.style.setProperty(nome, valore3);
+}
+var MISURA_DEL_TABLET = "(min-width:768px) and (min-height:600px)";
+function firmaDeiNomi(nav, voci4, tablet) {
+  return [
+    tablet ? "t" : "m",
+    nav.clientWidth,
+    ...voci4.map((voce3) => {
+      const nome = voce3.querySelector(":scope > .text");
+      return `${voce3.dataset.tab}:${nome?.textContent || ""}:${nome?.childElementCount || 0}`;
+    })
+  ].join("|");
+}
+function adattaINomi() {
+  const nav = navigationBar();
+  if (!nav || !root.getComputedStyle) return false;
+  let tablet = false;
+  try {
+    tablet = Boolean(root.matchMedia?.(MISURA_DEL_TABLET)?.matches);
+  } catch (_errore) {
+  }
+  const tutte = [...nav.querySelectorAll(".tab")];
+  const voci4 = tutte.filter((voce3) => root.getComputedStyle(voce3).display !== "none");
+  const firma2 = firmaDeiNomi(nav, voci4, tablet);
+  if (firma2 === state95.firmaDeiNomi) return false;
+  if (tablet || !voci4.length || !nav.clientWidth) {
+    for (const voce3 of tutte) {
+      scriviLaProprieta(voce3, "--dm-voce-larga", null);
+      scriviLaProprieta(voce3, "--dm-voce-testo", null);
+    }
+    state95.firmaDeiNomi = firmaDeiNomi(nav, voci4, tablet);
+    return true;
+  }
+  const nomi2 = voci4.map((voce3) => voce3.querySelector(":scope > .text"));
+  const campione = nomi2.find(Boolean);
+  if (!campione) return false;
+  const misuraCon = misuratoreDi(root.getComputedStyle(campione));
+  const porta = nav.querySelector(`:scope > .${SCROLLER_CLASS}`);
+  const contenitore4 = porta && root.getComputedStyle(porta).display !== "contents" ? porta : nav;
+  const stile6 = root.getComputedStyle(contenitore4);
+  const spazio = parseFloat(stile6.columnGap) || 0;
+  const dock = contenitore4 !== nav;
+  const riga3 = dock ? Infinity : contenitore4.clientWidth - (parseFloat(stile6.paddingLeft) || 0) - (parseFloat(stile6.paddingRight) || 0);
+  const posto = dock ? 96 : Math.max(
+    POSTO_COMODO,
+    Math.floor((riga3 - spazio * (voci4.length - 1)) / voci4.length) - 2 * VOCE_FIANCO
+  );
+  const disposte = disponiLeVoci(
+    nomi2.map((nome) => nome?.textContent || ""),
+    { misuraCon, riga: riga3, spazio, posto }
+  );
+  disposte.forEach((disposta, i) => {
+    const voce3 = voci4[i];
+    scriviLaProprieta(voce3, "--dm-voce-larga", `${disposta.larga}px`);
+    scriviLaProprieta(
+      voce3,
+      "--dm-voce-testo",
+      disposta.testo === TESTO_DI_SERIE ? null : `${disposta.testo}px`
+    );
+    if (nomi2[i]) scriviIlNome(nomi2[i], disposta.parole);
+  });
+  state95.firmaDeiNomi = firmaDeiNomi(nav, voci4, tablet);
+  return true;
+}
+function accodaINomi() {
+  const chiedi7 = root.requestAnimationFrame || root.setTimeout;
+  if (state95.nomiInCoda || typeof chiedi7 !== "function") return;
+  state95.nomiInCoda = true;
+  chiedi7.call(root, () => {
+    state95.nomiInCoda = false;
+    try {
+      adattaINomi();
+    } catch (_errore) {
+    }
+  });
+}
+function nomiDaCapo() {
+  state95.firmaDeiNomi = "";
+  accodaINomi();
+}
+function tieniINomiLeggibili() {
+  if (state95.nomiInAscolto) return;
+  state95.nomiInAscolto = true;
+  root.addEventListener?.("resize", accodaINomi);
+  root.addEventListener?.("orientationchange", accodaINomi);
+  for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"])
+    root.addEventListener?.(evento, accodaINomi);
+  try {
+    doc.fonts?.addEventListener?.("loadingdone", nomiDaCapo);
+    doc.fonts?.ready?.then?.(nomiDaCapo);
+  } catch (_errore) {
+  }
+  accodaINomi();
+}
 function installNavigationSection() {
   if (!doc || state95.installed) return;
   state95.installed = true;
@@ -89926,6 +90258,7 @@ function installNavigationSection() {
   if (!installScroller()) {
     doc.addEventListener("DOMContentLoaded", () => installScroller(), { once: true });
   }
+  tieniINomiLeggibili();
 }
 if (doc?.readyState === "loading") {
   doc.addEventListener("DOMContentLoaded", installNavigationSection, { once: true });

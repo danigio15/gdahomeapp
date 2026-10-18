@@ -22,6 +22,10 @@ const state = (root[KEY] ||= {
   barraSorvegliata: null,
   sorvegliante: null,
   disegnoInCoda: false,
+  tela: null,
+  firmaDeiNomi: "",
+  nomiInCoda: false,
+  nomiInAscolto: false,
 });
 
 /* The dock is sized on its content (`width:max-content`), so with every section
@@ -35,6 +39,24 @@ const CAN_SCROLL_CLASS = "dm-nav-can-scroll";
 const DRAGGING_CLASS = "dm-nav-dragging";
 const DRAG_THRESHOLD = 6;
 const EDGE = 2;
+
+/* Le misure del nome di una voce, sul telefono (vedi «tieniINomiLeggibili»).
+ * Quarantaquattro punti e' quanto deve essere larga una cosa da premere col
+ * dito; nove e mezzo e' il punto sotto cui un nome non si legge piu'. */
+export const VOCE_MINIMA = 44;
+export const VOCE_FIANCO = 2;
+export const BARRA_FIANCO = 4;
+/* Il posto che si da' a un nome prima di spezzarne le parole, anche quando
+ * le voci sono tante e a dividere la riga ne toccherebbe meno: una barra
+ * che scorre comunque non deve per questo scrivere «ENER / GIA». */
+export const POSTO_COMODO = 52;
+export const TESTO_DI_SERIE = 10;
+export const TESTO_MINIMO = 9.5;
+export const INTERLINEA = 1.12;
+const PASSO_DEL_TESTO = 0.25;
+/* Quanto si concede al disegno vero di una riga rispetto alla misura fatta
+ * sulla tela: un punto e mezzo, perche' il browser arrotonda a modo suo. */
+const MARGINE_DELLA_MISURA = 1.5;
 
 function installStyles() {
   installStyle(
@@ -400,6 +422,40 @@ function installStyles() {
         nav.tabs.bottom-nav-bar .${ARROW_CLASS}-next::before{transform:rotate(-45deg)!important;margin-right:3px!important}
         html[data-theme="dark"] nav.tabs.bottom-nav-bar .${ARROW_CLASS},html.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS},body[data-theme="dark"] nav.tabs.bottom-nav-bar .${ARROW_CLASS},body.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS},.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS}{background:#25324b!important;border-color:#52627f!important;color:#cbd5e1!important;box-shadow:0 6px 16px rgba(0,0,0,.32)!important}
         html[data-theme="dark"] nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]),html.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]),body[data-theme="dark"] nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]),body.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]),.dark nav.tabs.bottom-nav-bar .${ARROW_CLASS}:hover:not([disabled]){background:#31415f!important;color:#fff!important}
+      }
+      /* Il nome della sezione si legge tutto, sempre.
+       *
+       * «Il nome deve leggersi»: su un iPhone la barra diceva HOME, ENERGIA,
+       * «ELETTRO…», AUTO, «GESTIONE…». Il foglio del tocco tiene ogni voce
+       * dentro settantadue punti, scrive il nome in sette e quello che avanza
+       * lo taglia coi puntini — e «GESTIONE…» non dice quale gestione.
+       *
+       * Qui il nome non si taglia piu'. Prima va a capo, su due righe strette e
+       * centrate; se la voce e' ancora troppo larga per stare con le altre il
+       * suo nome si rimpicciolisce un poco, mai sotto i nove punti e mezzo; e
+       * una parola sola troppo lunga si spezza fra due sillabe
+       * («ELETTRO / DOMESTICI»). Quanto e' larga ogni voce lo misura
+       * «tieniINomiLeggibili», qui sotto: la voce e' larga almeno quanto il suo
+       * nome su due righe, le voci si dividono la riga, e quando non ci stanno
+       * comunque la barra scorre come ha sempre fatto.
+       *
+       * Fuori dal blocco del tablet, che il nome lo scrive in dodici punti su
+       * una riga e la voce la allarga quanto serve: li' non si tagliava gia'. */
+      html body nav.tabs.bottom-nav-bar .tab .text{text-overflow:clip!important}
+      @media not all and (min-width:768px) and (min-height:600px){
+        html body nav.tabs.bottom-nav-bar.bottom-nav-bar{padding-left:${BARRA_FIANCO}px!important;padding-right:${BARRA_FIANCO}px!important}
+        html body nav.tabs.bottom-nav-bar .tab,
+        html body nav.tabs.bottom-nav-bar .tab.active{
+          flex:1 1 0px!important;min-width:var(--dm-voce-larga,${VOCE_MINIMA}px)!important;max-width:none!important;
+          overflow:visible!important;justify-content:flex-start!important;
+          padding:6px ${VOCE_FIANCO}px!important;gap:3px!important}
+        html body nav.tabs.bottom-nav-bar .tab .text{
+          display:block!important;width:100%!important;max-width:100%!important;
+          font-size:var(--dm-voce-testo,${TESTO_DI_SERIE}px)!important;line-height:${INTERLINEA}!important;
+          letter-spacing:0!important;text-align:center!important;
+          white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
+          overflow-wrap:break-word!important;word-break:normal!important;
+          -webkit-hyphens:auto!important;hyphens:auto!important;text-wrap:balance}
       }
     `,
   );
@@ -1023,7 +1079,15 @@ function sorvegliaLaBarra() {
   if (state.barraSorvegliata === barra) return false;
   state.sorvegliante?.disconnect?.();
   state.barraSorvegliata = barra;
-  state.sorvegliante = new Sorvegliante(() => {
+  state.sorvegliante = new Sorvegliante((cambi) => {
+    /* I nomi delle voci si rimisurano a ogni cambio, e la firma in
+     * `adattaINomi` fa costare una lettura sola quelli che non cambiano
+     * niente. */
+    accodaINomi();
+    /* I disegni invece guardano solo chi entra e chi esce: gli stili, che il
+     * guscio riscrive a ogni giro di visibilita', per loro non sono una
+     * notizia. */
+    if (!cambi?.some?.((cambio) => cambio.type === "childList")) return;
     if (state.disegnoInCoda) return;
     const chiedi = root.requestAnimationFrame || root.setTimeout;
     if (typeof chiedi !== "function") return;
@@ -1033,9 +1097,16 @@ function sorvegliaLaBarra() {
       disegniNellaBarra();
     });
   });
-  /* Solo chi entra e chi esce: gli stili, che il guscio riscrive a ogni giro di
-   * visibilita', non sono una notizia. */
-  state.sorvegliante.observe(barra, { childList: true, subtree: true });
+  /* Chi entra e chi esce, il testo dei nomi, e le voci che si accendono e si
+   * spengono: per i nomi una voce spenta e' una voce che lascia posto alle
+   * altre, e lo dice soltanto il suo stile. */
+  state.sorvegliante.observe(barra, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ["style", "class", "hidden"],
+  });
   return true;
 }
 
@@ -1502,6 +1573,376 @@ function installaLaCima() {
   );
 }
 
+/* ── il nome della voce si legge tutto ─────────────────────────────────────
+ *
+ * «Il nome deve leggersi.» Sul telefono la barra tagliava coi puntini ogni
+ * nome che non stava nella sua linguetta: «ELETTRO…», «GESTIONE…». I nomi
+ * delle sezioni li sceglie chi abita la casa, quindi non si puo' sapere prima
+ * quanto sono lunghi: si misurano.
+ *
+ * Per ogni voce si cerca quanto deve essere larga perche' il suo nome stia su
+ * due righe al massimo. Le parole si spezzano solo dove sono gia' spazi, e una
+ * parola sola si spezza fra due sillabe soltanto se da sola e' piu' larga del
+ * posto che toccherebbe a una voce. Se le voci, cosi', non stanno nella riga,
+ * il nome di quelle larghe si rimpicciolisce un quarto di punto alla volta,
+ * fino a nove e mezzo; e se non bastasse nemmeno quello, la barra scorre come
+ * ha sempre fatto e ogni nome resta della sua misura piena. In nessun caso si
+ * taglia.
+ *
+ * La misura si fa sulla tela (canvas), non sulla pagina: non sposta niente e
+ * non costringe il browser a impaginare a ogni voce. */
+
+const VOCALI = "aeiouàèéìíòóùúy";
+const LIQUIDE_E_NASALI = "lmnr";
+
+/* Dove si puo' andare a capo dentro una parola italiana, fra due sillabe.
+ *
+ * Le regole di scuola, quelle che servono a un nome di sezione: una consonante
+ * fra due vocali va con la seconda (CA-SA); due consonanti uguali si dividono
+ * (LET-TO), e cosi' una L, M, N o R davanti a un'altra consonante (AL-TO,
+ * AN-CHE) e la C davanti alla Q (AC-QUA); la S davanti a una consonante va con
+ * quella che segue (PA-STA), e ogni altro gruppo pure (A-TRIO). Fra due vocali
+ * non si va a capo: dittongo o iato, meglio non indovinare. Un pezzo di meno
+ * di tre lettere non si stacca. */
+export function sillabeDi(parola = "") {
+  const lettere = [...String(parola).toLocaleLowerCase("it")];
+  const vocale = (c) => VOCALI.includes(c);
+  const lettera = (c) => /\p{L}/u.test(c);
+  if (lettere.length < 6 || !lettere.every(lettera)) return [];
+  const tagli = [];
+  let prima = -1;
+  for (let i = 0; i < lettere.length; i += 1) {
+    if (!vocale(lettere[i])) continue;
+    const gruppo = i - prima - 1;
+    if (prima >= 0 && gruppo > 0) {
+      const c1 = lettere[prima + 1];
+      const c2 = lettere[prima + 2];
+      let taglio = prima + 1;
+      if (gruppo >= 2) {
+        if (c1 === c2 || LIQUIDE_E_NASALI.includes(c1) || (c1 === "c" && c2 === "q")) {
+          taglio = prima + 2;
+        }
+      }
+      if (taglio >= 3 && lettere.length - taglio >= 3) tagli.push(taglio);
+    }
+    prima = i;
+  }
+  return tagli;
+}
+
+/** Il taglio piu' vicino a meta' parola, o -1 se la parola non si spezza. */
+export function tagliaAMeta(parola = "") {
+  const lunga = [...String(parola)].length;
+  let meglio = -1;
+  for (const taglio of sillabeDi(parola)) {
+    if (meglio < 0 || Math.abs(taglio - lunga / 2) < Math.abs(meglio - lunga / 2)) meglio = taglio;
+  }
+  return meglio;
+}
+
+/* Una parola in pezzi, finche' i pezzi sono troppo larghi e si possono
+ * ancora spezzare fra due sillabe. */
+export function spezzaLaParola(
+  parola = "",
+  troppoLarga = () => false,
+  pezzoTroppoLargo = troppoLarga,
+) {
+  if (!troppoLarga(parola)) return [parola];
+  const taglio = tagliaAMeta(parola);
+  if (taglio < 0) return [parola];
+  const lettere = [...parola];
+  /* I due pezzi si rispezzano solo se restano molto piu' larghi del posto:
+   * «ELETTRO / DOMESTICI» si legge, «ELETTRO / DOME / STICI» no. */
+  return [
+    ...spezzaLaParola(lettere.slice(0, taglio).join(""), pezzoTroppoLargo),
+    ...spezzaLaParola(lettere.slice(taglio).join(""), pezzoTroppoLargo),
+  ];
+}
+
+/* Quante righe fa il browser con una data larghezza: va a capo appena il
+ * pezzo dopo non ci sta, che e' quello che fa lui. `dopo` e' quanto costa
+ * restare sulla stessa riga del pezzo che segue: uno spazio, o niente fra due
+ * sillabe della stessa parola. */
+function righeCon(gettoni, larghezza) {
+  let righe = 1;
+  let riga = 0;
+  for (let i = 0; i < gettoni.length; i += 1) {
+    const { w } = gettoni[i];
+    if (i === 0) {
+      riga = w;
+      continue;
+    }
+    const conIlPrecedente = riga + gettoni[i - 1].dopo + w;
+    if (conIlPrecedente <= larghezza + 0.01) riga = conIlPrecedente;
+    else {
+      righe += 1;
+      riga = w;
+    }
+  }
+  return righe;
+}
+
+/** La larghezza piu' stretta con cui i pezzi stanno in `righe` righe. */
+export function larghezzaPerRighe(gettoni = [], righe = 2) {
+  if (!gettoni.length) return 0;
+  const candidate = new Set();
+  for (let i = 0; i < gettoni.length; i += 1) {
+    let riga = 0;
+    for (let j = i; j < gettoni.length; j += 1) {
+      riga += (j > i ? gettoni[j - 1].dopo : 0) + gettoni[j].w;
+      candidate.add(riga);
+    }
+  }
+  const minimo = Math.max(...gettoni.map((g) => g.w));
+  for (const larghezza of [...candidate].sort((a, b) => a - b)) {
+    if (larghezza < minimo) continue;
+    if (righeCon(gettoni, larghezza) <= righe) return larghezza;
+  }
+  return Math.max(...candidate);
+}
+
+/* Come si dispone un nome in una voce. `misura` dice quanto e' largo un pezzo
+ * di testo; `posto` e' quanto toccherebbe al nome se le voci si dividessero
+ * la riga in parti uguali. Due righe di regola; tre solo per un nome cosi'
+ * lungo che su due farebbe una voce larga una volta e mezza il suo posto. */
+export function comeStaIlNome(testo = "", misura = (s) => s.length * 6, posto = 60) {
+  const parole = String(testo).replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  if (!parole.length) return { larghezza: 0, righe: 0, parole: [] };
+  const spazio = misura(" ");
+  const pezzi = parole.map((parola) =>
+    spezzaLaParola(
+      parola,
+      (p) => misura(p) > posto,
+      (p) => misura(p) > posto * 1.5,
+    ),
+  );
+  const gettoni = [];
+  pezzi.forEach((pezziDellaParola, p) => {
+    pezziDellaParola.forEach((pezzo, k) => {
+      const ultimo = k === pezziDellaParola.length - 1;
+      gettoni.push({
+        w: misura(pezzo),
+        dopo: ultimo ? (p < pezzi.length - 1 ? spazio : 0) : 0,
+      });
+    });
+  });
+  const unaRiga = larghezzaPerRighe(gettoni, 1);
+  if (unaRiga <= posto) return { larghezza: unaRiga, righe: 1, parole: pezzi };
+  const due = larghezzaPerRighe(gettoni, 2);
+  const tre = larghezzaPerRighe(gettoni, 3);
+  if (due > posto * 1.5 && tre < due) return { larghezza: tre, righe: 3, parole: pezzi };
+  return { larghezza: due, righe: 2, parole: pezzi };
+}
+
+/* Le voci di una barra, coi loro nomi, messe in una riga larga `riga`.
+ * Ogni voce chiede la sua larghezza minima; se la somma non ci sta, il nome
+ * delle voci piu' larghe scende di un quarto di punto alla volta. Se nemmeno
+ * col nome al minimo la riga basta, si torna alla misura piena: la barra
+ * scorrera', e rimpicciolire non avrebbe comprato niente. */
+export function disponiLeVoci(
+  nomi = [],
+  {
+    misuraCon = (px) => (s) => s.length * px * 0.7,
+    riga = Infinity,
+    spazio = 0,
+    posto = 70,
+    minima = VOCE_MINIMA,
+    fianco = VOCE_FIANCO,
+    testo = TESTO_DI_SERIE,
+    testoMinimo = TESTO_MINIMO,
+  } = {},
+) {
+  const calcola = (voce) => {
+    const come = comeStaIlNome(voce.nome, misuraCon(voce.testo), posto);
+    voce.parole = come.parole;
+    voce.righe = come.righe;
+    voce.larga = Math.max(minima, Math.ceil(come.larghezza + MARGINE_DELLA_MISURA + 2 * fianco));
+    return voce;
+  };
+  const voci = nomi.map((nome) => calcola({ nome, testo }));
+  const totale = () =>
+    voci.reduce((somma, voce) => somma + voce.larga, 0) + spazio * Math.max(0, voci.length - 1);
+  if (totale() <= riga) return voci;
+  const piene = voci.map((voce) => ({ ...voce }));
+  for (let giro = 0; giro < 400 && totale() > riga; giro += 1) {
+    const larga = voci
+      .filter((voce) => voce.testo > testoMinimo && voce.larga > minima)
+      .sort((a, b) => b.larga - a.larga)[0];
+    if (!larga) break;
+    larga.testo = Math.max(testoMinimo, +(larga.testo - PASSO_DEL_TESTO).toFixed(2));
+    calcola(larga);
+  }
+  return totale() <= riga ? voci : piene;
+}
+
+function laTela() {
+  if (!state.tela) {
+    try {
+      state.tela = doc.createElement("canvas").getContext("2d") || null;
+    } catch (_errore) {
+      state.tela = null;
+    }
+  }
+  return state.tela;
+}
+
+function misuratoreDi(stile) {
+  const tela = laTela();
+  const maiuscolo = stile.textTransform === "uppercase";
+  return (px) => {
+    const font = `${stile.fontStyle} ${stile.fontWeight} ${px}px ${stile.fontFamily}`;
+    return (testo) => {
+      const scritto = maiuscolo ? testo.toLocaleUpperCase("it") : testo;
+      if (!tela) return scritto.length * px * 0.72;
+      tela.font = font;
+      return tela.measureText(scritto).width;
+    };
+  };
+}
+
+/* Il nome con i suoi punti di a capo fra le sillabe. Si usa <wbr>, che non e'
+ * testo: chi legge il nome della voce (textContent) trova il nome di sempre. */
+function scriviIlNome(nodo, parole) {
+  const voluto = parole.map((pezzi) => pezzi.join("|")).join(" ");
+  const figli = [...nodo.childNodes];
+  if (!figli.every((figlio) => figlio.nodeType === 3 || figlio.nodeName === "WBR")) return;
+  const adesso = figli
+    .map((figlio) => (figlio.nodeType === 3 ? figlio.textContent : "|"))
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (adesso === voluto) return;
+  const spezzata = parole.some((pezzi) => pezzi.length > 1);
+  if (!spezzata && !figli.some((figlio) => figlio.nodeName === "WBR")) return;
+  const nuovi = [];
+  parole.forEach((pezzi, p) => {
+    pezzi.forEach((pezzo, k) => {
+      if (k > 0) nuovi.push(doc.createElement("wbr"));
+      nuovi.push(doc.createTextNode(pezzo));
+    });
+    if (p < parole.length - 1) nuovi.push(doc.createTextNode(" "));
+  });
+  nodo.replaceChildren(...nuovi);
+}
+
+function scriviLaProprieta(nodo, nome, valore) {
+  if (valore == null) {
+    if (nodo.style.getPropertyValue(nome)) nodo.style.removeProperty(nome);
+    return;
+  }
+  if (nodo.style.getPropertyValue(nome).trim() !== valore) nodo.style.setProperty(nome, valore);
+}
+
+const MISURA_DEL_TABLET = "(min-width:768px) and (min-height:600px)";
+
+function firmaDeiNomi(nav, voci, tablet) {
+  return [
+    tablet ? "t" : "m",
+    nav.clientWidth,
+    ...voci.map((voce) => {
+      const nome = voce.querySelector(":scope > .text");
+      return `${voce.dataset.tab}:${nome?.textContent || ""}:${nome?.childElementCount || 0}`;
+    }),
+  ].join("|");
+}
+
+/** Misura i nomi delle voci e dice a ognuna quanto essere larga. */
+export function adattaINomi() {
+  const nav = navigationBar();
+  if (!nav || !root.getComputedStyle) return false;
+  let tablet = false;
+  try {
+    tablet = Boolean(root.matchMedia?.(MISURA_DEL_TABLET)?.matches);
+  } catch (_errore) {}
+  const tutte = [...nav.querySelectorAll(".tab")];
+  const voci = tutte.filter((voce) => root.getComputedStyle(voce).display !== "none");
+  const firma = firmaDeiNomi(nav, voci, tablet);
+  if (firma === state.firmaDeiNomi) return false;
+  if (tablet || !voci.length || !nav.clientWidth) {
+    for (const voce of tutte) {
+      scriviLaProprieta(voce, "--dm-voce-larga", null);
+      scriviLaProprieta(voce, "--dm-voce-testo", null);
+    }
+    state.firmaDeiNomi = firmaDeiNomi(nav, voci, tablet);
+    return true;
+  }
+  const nomi = voci.map((voce) => voce.querySelector(":scope > .text"));
+  const campione = nomi.find(Boolean);
+  if (!campione) return false;
+  const misuraCon = misuratoreDi(root.getComputedStyle(campione));
+  /* Su un telefono la barra e' larga quanto lo schermo e scorre da se'. Sul
+   * computer, sotto i seicento punti di altezza, e' un dock largo quanto il
+   * suo contenuto: li' non c'e' una riga da dividere e nessun nome si
+   * rimpicciolisce. */
+  const porta = nav.querySelector(`:scope > .${SCROLLER_CLASS}`);
+  const contenitore =
+    porta && root.getComputedStyle(porta).display !== "contents" ? porta : nav;
+  const stile = root.getComputedStyle(contenitore);
+  const spazio = parseFloat(stile.columnGap) || 0;
+  const dock = contenitore !== nav;
+  const riga = dock
+    ? Infinity
+    : contenitore.clientWidth - (parseFloat(stile.paddingLeft) || 0) - (parseFloat(stile.paddingRight) || 0);
+  const posto = dock
+    ? 96
+    : Math.max(
+        POSTO_COMODO,
+        Math.floor((riga - spazio * (voci.length - 1)) / voci.length) - 2 * VOCE_FIANCO,
+      );
+  const disposte = disponiLeVoci(
+    nomi.map((nome) => nome?.textContent || ""),
+    { misuraCon, riga, spazio, posto },
+  );
+  disposte.forEach((disposta, i) => {
+    const voce = voci[i];
+    scriviLaProprieta(voce, "--dm-voce-larga", `${disposta.larga}px`);
+    scriviLaProprieta(
+      voce,
+      "--dm-voce-testo",
+      disposta.testo === TESTO_DI_SERIE ? null : `${disposta.testo}px`,
+    );
+    if (nomi[i]) scriviIlNome(nomi[i], disposta.parole);
+  });
+  state.firmaDeiNomi = firmaDeiNomi(nav, voci, tablet);
+  return true;
+}
+
+/* Si rimisura quando la barra cambia davvero: una voce accesa o spenta, un
+ * nome riscritto (lo dice il sorvegliante della barra, `sorvegliaLaBarra`),
+ * lo schermo girato, i caratteri arrivati. La firma qui sopra fa si' che il
+ * giro di visibilita' del guscio, che riscrive gli stili delle voci ogni tre
+ * secondi, costi una lettura e niente di piu'. */
+function accodaINomi() {
+  const chiedi = root.requestAnimationFrame || root.setTimeout;
+  if (state.nomiInCoda || typeof chiedi !== "function") return;
+  state.nomiInCoda = true;
+  chiedi.call(root, () => {
+    state.nomiInCoda = false;
+    try {
+      adattaINomi();
+    } catch (_errore) {}
+  });
+}
+
+function nomiDaCapo() {
+  state.firmaDeiNomi = "";
+  accodaINomi();
+}
+
+function tieniINomiLeggibili() {
+  if (state.nomiInAscolto) return;
+  state.nomiInAscolto = true;
+  root.addEventListener?.("resize", accodaINomi);
+  root.addEventListener?.("orientationchange", accodaINomi);
+  for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"])
+    root.addEventListener?.(evento, accodaINomi);
+  try {
+    doc.fonts?.addEventListener?.("loadingdone", nomiDaCapo);
+    doc.fonts?.ready?.then?.(nomiDaCapo);
+  } catch (_errore) {}
+  accodaINomi();
+}
+
 export function installNavigationSection() {
   if (!doc || state.installed) return;
   state.installed = true;
@@ -1558,6 +1999,7 @@ export function installNavigationSection() {
   if (!installScroller()) {
     doc.addEventListener("DOMContentLoaded", () => installScroller(), { once: true });
   }
+  tieniINomiLeggibili();
 }
 
 if (doc?.readyState === "loading") {
