@@ -1,6 +1,6 @@
 {
-    "name": "gdahome",
-    "short_name": "gdahome",
+    "name": "GdAHome",
+    "short_name": "GdAHome",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F4F6FA",
