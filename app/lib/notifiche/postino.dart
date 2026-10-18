@@ -113,6 +113,12 @@ const _categorieDellIphone = <String, List<(String, String, String)>>{
     ('guarda', 'Guarda', 'View'),
     ('inserisci', 'Inserisci antifurto', 'Arm alarm'),
   ],
+  /* Il riepilogo della sera: «Apri la giornata» apre la pagina, «OK» la
+   * toglie e basta (non apre nemmeno l'app). */
+  'gdahome_giornata': [
+    ('giornata', 'Apri la giornata', 'Open your day'),
+    ('ok', 'OK', 'OK'),
+  ],
 };
 
 String? _categoriaPer(List<TastoDellaNotifica> tasti) {
@@ -127,6 +133,9 @@ String? _categoriaPer(List<TastoDellaNotifica> tasti) {
   if (ids.contains('spegni-sirena')) return 'gdahome_scattato';
   if (ids.contains('disinserisci')) return 'gdahome_disinserisci';
   if (ids.contains('guarda')) return 'gdahome_guarda';
+  if (ids.contains('giornata') || ids.contains('energia')) {
+    return 'gdahome_giornata';
+  }
   return null;
 }
 
@@ -193,8 +202,11 @@ InitializationSettings _impostazioniLocali() => InitializationSettings(
                 inLingua(it: it, en: en),
                 /* Si apre l'app: e' dall'app, col filo e il suo segno, che
                  * il tasto arriva alla casa. Col telefono bloccato iOS
-                 * chiede prima di sbloccarlo. */
-                options: {DarwinNotificationActionOption.foreground},
+                 * chiede prima di sbloccarlo. «OK» invece toglie la
+                 * notifica e basta. */
+                options: id == 'ok'
+                    ? const <DarwinNotificationActionOption>{}
+                    : {DarwinNotificationActionOption.foreground},
               ),
           ],
         ),
@@ -315,7 +327,7 @@ Future<void> mostra(NotificaDaMostrare quale) async {
               /* Il tasto apre l'app, e l'app lo porta alla casa sul suo filo,
                * col suo segno. Col telefono bloccato Android chiede prima di
                * sbloccarlo: «Apri cancello» non si preme dalla tasca. */
-              showsUserInterface: true,
+              showsUserInterface: !tasto.chiude,
               cancelNotification: true,
             ),
         ],

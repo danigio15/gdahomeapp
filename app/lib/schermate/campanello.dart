@@ -29,6 +29,7 @@ import '../notifiche/modello.dart';
 import '../notifiche/postino.dart';
 import '../parole.dart';
 import '../vestito/tema.dart';
+import 'la_tua_giornata.dart';
 
 /// La foto di una telecamera, chiesta alla casa sul filo.
 Future<Uint8List?> laFotoDi(Collegamento collegamento, String camera) async {
@@ -57,6 +58,22 @@ Future<void> apriLaNotifica(
   Postino? postino,
 }) async {
   final notifica = tocco.notifica;
+  /* «OK»: la notifica e' gia' tolta, e non c'e' altro da fare. */
+  if (tocco.tasto == 'ok') return;
+  /* Il riepilogo della sera: «Apri la giornata» (o «Apri Energia», da un
+   * ponte di prima), o il tocco sulla notifica, aprono la pagina. Il
+   * riepilogo semplice di Base, senza quel tasto, si legge nel foglio. */
+  if (notifica.apreLaGiornata &&
+      (tocco.tasto == null ||
+          tocco.tasto == tastoDellaGiornata ||
+          tocco.tasto == 'energia')) {
+    await apriLaTuaGiornata(
+      context,
+      collegamento: collegamento,
+      casa: tocco.casa,
+    );
+    return;
+  }
   /* Un tasto premuto dalla notifica: si porta alla casa e basta. */
   if (tocco.tasto != null) {
     final tasto = notifica.tasti.where((uno) => uno.id == tocco.tasto);
@@ -171,7 +188,7 @@ class _StatoDelFoglio extends State<_IlFoglio> {
               runSpacing: 10,
               children: [
                 for (final tasto in notifica.tasti)
-                  if (!tasto.apre && vale)
+                  if (!tasto.apre && !tasto.chiude && vale)
                     FilledButton.tonal(
                       onPressed: () async {
                         final fatto = await _premi(

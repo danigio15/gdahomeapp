@@ -11,13 +11,17 @@ part of 'notifiche.dart';
  * come scriverla (`su` in `ponte/src/notifiche.js`). */
 
 /// Le paroline sotto una voce: «NUOVA», e come arriva.
+///
+/// In una casa Base ([premium] falso) le elaborate non ci sono: tutte
+/// «SEMPLICE».
 List<(String, Color)> etichetteDellaVoce(
   ImpostazioniDelleNotifiche imp,
-  String evento,
-) => [
+  String evento, {
+  bool premium = true,
+}) => [
   if (evento == 'blackout') (inLingua(it: 'NUOVA', en: 'NEW'), Colori.bene),
   if (eventiElaborabili.contains(evento))
-    imp.elaborata(evento)
+    premium && imp.elaborata(evento)
         ? (inLingua(it: 'ELABORATA', en: 'RICH'), _viola)
         : (inLingua(it: 'SEMPLICE', en: 'SIMPLE'), _ardesia),
 ];
@@ -60,12 +64,16 @@ class _ComeLeVuoi extends StatelessWidget {
     required this.iPhone,
     required this.cambia,
     this.spento = false,
+    this.bloccata,
   });
 
   final String stile;
   final bool iPhone;
   final bool spento;
   final ValueChanged<String> cambia;
+
+  /// In una casa Base: «Elaborate» ha il lucchetto, e al tocco si spiega.
+  final VoidCallback? bloccata;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +115,10 @@ class _ComeLeVuoi extends StatelessWidget {
                       en: 'With the chart card and the camera photos.',
                     ),
                     anteprima: const _Anteprima(elaborata: true),
-                    tocca: spento ? null : () => cambia('elaborate'),
+                    bloccata: bloccata != null,
+                    tocca: spento
+                        ? null
+                        : bloccata ?? () => cambia('elaborate'),
                   ),
                 ),
               ],
@@ -185,8 +196,10 @@ class _UnoStile extends StatelessWidget {
     required this.sotto,
     required this.anteprima,
     required this.tocca,
+    this.bloccata = false,
   });
 
+  final bool bloccata;
   final Key chiave;
   final bool scelto;
   final String titolo;
@@ -234,8 +247,18 @@ class _UnoStile extends StatelessWidget {
                       size: 18,
                       color: colori.primary,
                     ),
+                  if (bloccata)
+                    Icon(
+                      Icons.lock_rounded,
+                      size: 16,
+                      color: colori.onSurfaceVariant,
+                    ),
                 ],
               ),
+              if (bloccata) ...[
+                const SizedBox(height: 4),
+                const BollinoPremium(),
+              ],
               const SizedBox(height: 3),
               Text(
                 sotto,
@@ -394,9 +417,16 @@ class FoglioDellaVoce extends StatefulWidget {
     this.entita = const [],
     this.chiediLeEntita,
     this.prova,
+    this.premium = true,
+    this.spiegaIlPremium,
   });
 
   final String evento;
+
+  /// Se la casa e' Premium. In Base «Elaborata» e «Nel riepilogo della
+  /// sera» hanno il lucchetto: al tocco [spiegaIlPremium].
+  final bool premium;
+  final VoidCallback? spiegaIlPremium;
   final SceltaDellaVoce scelta;
 
   /// `semplici` o `elaborate`, per dire cosa vuol dire «come tutte».
@@ -604,7 +634,9 @@ class _StatoDelFoglio extends State<FoglioDellaVoce> {
                 etichetta: inLingua(it: 'Stile', en: 'Style'),
                 child: _Pezzi(
                   chiave: const Key('voce-stile'),
-                  scelto: _scelta.stile,
+                  scelto: widget.premium ? _scelta.stile : 'semplice',
+                  bloccate: widget.premium ? const {} : const {'elaborata'},
+                  spiega: widget.spiegaIlPremium,
                   voci: {
                     'come-tutte': inLingua(
                       it: 'Come tutte ($generale)',
@@ -729,7 +761,9 @@ class _StatoDelFoglio extends State<FoglioDellaVoce> {
                 etichetta: inLingua(it: 'Come', en: 'How'),
                 child: _Pezzi(
                   chiave: const Key('voce-come'),
-                  scelto: _scelta.come,
+                  scelto: widget.premium ? _scelta.come : 'subito',
+                  bloccate: widget.premium ? const {} : const {'riepilogo'},
+                  spiega: widget.spiegaIlPremium,
                   voci: {
                     'subito': inLingua(it: 'Subito', en: 'Right away'),
                     'riepilogo': inLingua(
@@ -863,12 +897,19 @@ class _Pezzi extends StatelessWidget {
     required this.scelto,
     required this.voci,
     required this.cambia,
+    this.bloccate = const {},
+    this.spiega,
   });
 
   final Key chiave;
   final String scelto;
   final Map<String, String> voci;
   final ValueChanged<String> cambia;
+
+  /// Le scelte di Premium, in una casa Base: col lucchetto, e al tocco
+  /// [spiega].
+  final Set<String> bloccate;
+  final VoidCallback? spiega;
 
   @override
   Widget build(BuildContext context) => Wrap(
@@ -877,11 +918,19 @@ class _Pezzi extends StatelessWidget {
     runSpacing: 6,
     children: [
       for (final MapEntry(:key, :value) in voci.entries)
-        ChoiceChip(
-          label: Text(value),
-          selected: key == scelto,
-          onSelected: (_) => cambia(key),
-        ),
+        if (bloccate.contains(key))
+          ActionChip(
+            key: Key('${(chiave as ValueKey).value}-$key-bloccata'),
+            avatar: const Icon(Icons.lock_rounded, size: 16),
+            label: Text(value),
+            onPressed: () => spiega?.call(),
+          )
+        else
+          ChoiceChip(
+            label: Text(value),
+            selected: key == scelto,
+            onSelected: (_) => cambia(key),
+          ),
     ],
   );
 }

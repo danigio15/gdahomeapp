@@ -140,6 +140,7 @@ enum Busta {
     "gdahome_scattato": ["spegni-sirena", "disinserisci", "guarda"],
     "gdahome_disinserisci": ["disinserisci", "guarda"],
     "gdahome_guarda_inserisci": ["guarda", "inserisci"],
+    "gdahome_giornata": ["giornata", "ok"],
   ]
 
   static func categoria(per tasti: [String]) -> String? {
@@ -150,6 +151,9 @@ enum Busta {
     if quali.contains("spegni-sirena") { return "gdahome_scattato" }
     if quali.contains("disinserisci") { return "gdahome_disinserisci" }
     if quali.contains("guarda") { return "gdahome_guarda" }
+    /* Il riepilogo della sera: «Apri la giornata» e «OK» (un ponte di prima
+     * mandava solo «energia»). */
+    if quali.contains("giornata") || quali.contains("energia") { return "gdahome_giornata" }
     return nil
   }
 

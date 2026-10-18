@@ -28,7 +28,9 @@ import '../parole.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/pezzi.dart';
 import '../vestito/tema.dart';
+import 'la_tua_giornata.dart';
 import 'notifica_personalizzata.dart';
+import 'premium.dart';
 
 part 'notifiche_su_misura.dart';
 
@@ -279,12 +281,29 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
 
   Collegamento get _collegamento => widget.collegamento;
 
+  /// Se la casa e' Premium: lo dice il ponte (`premium` nello stato); un
+  /// ponte di prima non lo dice, e allora vale la licenza che l'app conosce.
+  /// In Base le elaborate e il riepilogo della sera non ci sono.
+  bool get _premium => _stato?.premium ?? _collegamento.licenza.premium;
+
+  /// Il lucchetto toccato: perche', e che si compra solo dalle app.
+  void _spiegaIlPremium() => unawaited(
+    spiegaIlPremium(
+      context,
+      perche: PerchePremium.notifiche,
+      collegamento: _collegamento,
+    ),
+  );
+
   @override
   void initState() {
     super.initState();
     _stato = widget.statoIniziale;
     _ascolto = _collegamento.cambiamenti.listen((_) => _forseLeggi());
     widget.postino?.addListener(_ridisegna);
+    /* Da un ponte di prima il Premium lo dice la licenza dell'app: se cambia,
+     * cambiano i lucchetti. */
+    _collegamento.licenza.addListener(_ridisegna);
     _forseLeggi();
   }
 
@@ -298,6 +317,7 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
   void dispose() {
     _ascolto?.cancel();
     widget.postino?.removeListener(_ridisegna);
+    _collegamento.licenza.removeListener(_ridisegna);
     super.dispose();
   }
 
@@ -476,7 +496,9 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
       builder: (_) => FoglioDellaVoce(
         evento: evento,
         scelta: stato.impostazioni.sceltaDi(evento),
-        stileGenerale: stato.impostazioni.stile,
+        stileGenerale: _premium ? stato.impostazioni.stile : 'semplici',
+        premium: _premium,
+        spiegaIlPremium: _spiegaIlPremium,
         entita: _collegamento.stato?.tutte() ?? const [],
         chiediLeEntita: _chiediLeEntita,
         cambia: (scelta) {
@@ -585,6 +607,7 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
     }
     final imp = stato.impostazioni;
     final spente = !imp.acceso;
+    final premium = _premium;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
@@ -608,7 +631,8 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
           testo: inLingua(it: 'Come le vuoi', en: 'How you want them'),
         ),
         _ComeLeVuoi(
-          stile: imp.stile,
+          stile: premium ? imp.stile : 'semplici',
+          bloccata: premium ? null : _spiegaIlPremium,
           iPhone: defaultTargetPlatform == TargetPlatform.iOS,
           spento: spente,
           cambia: (stile) => _imposta(imp.con(stile: stile)),
@@ -632,16 +656,34 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
               children: [
                 for (final (i, evento) in eventi.indexed) ...[
                   if (i > 0) const _Riga(),
-                  _Interruttore(
-                    disegno: comeSiChiama(evento).disegno,
-                    titolo: comeSiChiama(evento).titolo,
-                    sotto: comeSiChiama(evento).sotto,
-                    valore: imp.evento(evento),
-                    spento: spente,
-                    cambia: (si) => _imposta(imp.conEvento(evento, si)),
-                    etichette: etichetteDellaVoce(imp, evento),
-                    apri: () => _apriLaVoce(evento),
-                  ),
+                  /* Il riepilogo della sera in Base non c'e': il lucchetto,
+                   * e al tocco la spiegazione. */
+                  if (evento == 'riepilogo' && !premium)
+                    _Interruttore(
+                      chiave: const Key('voce-riepilogo-bloccata'),
+                      disegno: comeSiChiama(evento).disegno,
+                      titolo: comeSiChiama(evento).titolo,
+                      sotto: comeSiChiama(evento).sotto,
+                      valore: false,
+                      spento: spente,
+                      cambia: (_) => _spiegaIlPremium(),
+                      bloccata: _spiegaIlPremium,
+                    )
+                  else
+                    _Interruttore(
+                      disegno: comeSiChiama(evento).disegno,
+                      titolo: comeSiChiama(evento).titolo,
+                      sotto: comeSiChiama(evento).sotto,
+                      valore: imp.evento(evento),
+                      spento: spente,
+                      cambia: (si) => _imposta(imp.conEvento(evento, si)),
+                      etichette: etichetteDellaVoce(
+                        imp,
+                        evento,
+                        premium: premium,
+                      ),
+                      apri: () => _apriLaVoce(evento),
+                    ),
                 ],
                 if (categoria == 'persone')
                   _LePersone(
@@ -661,7 +703,7 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
                     },
                     cambia: (quale) => _imposta(imp.con(assistente: quale)),
                   ),
-                if (categoria == 'manutenzione')
+                if (categoria == 'manutenzione' && premium) ...[
                   _UnOrario(
                     rientro: 62,
                     pezzi: [
@@ -673,6 +715,12 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
                       (ora) => _imposta(imp.con(riepilogo: ora)),
                     ),
                   ),
+                  const _Riga(),
+                  _LaGiornata(
+                    tocca: () =>
+                        apriLaTuaGiornata(context, collegamento: _collegamento),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1101,10 +1149,12 @@ class _Titolo extends StatelessWidget {
         children: [
           Oggetto(disegno, lato: 20),
           const SizedBox(width: 8),
-          Text(
-            testo,
-            style: Theme.of(context).textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w700),
+          Flexible(
+            child: Text(
+              testo,
+              style: Theme.of(context).textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(width: 8),
           if (bollino != null)
@@ -1164,6 +1214,8 @@ class _Riga extends StatelessWidget {
 /// foglio della voce; le [etichette] dicono come arriva.
 class _Interruttore extends StatelessWidget {
   const _Interruttore({
+    this.chiave,
+    this.bloccata,
     this.disegno,
     this.icona,
     required this.titolo,
@@ -1184,12 +1236,19 @@ class _Interruttore extends StatelessWidget {
   final ValueChanged<bool> cambia;
   final List<(String, Color)> etichette;
   final VoidCallback? apri;
+  final Key? chiave;
+
+  /// Una voce di Premium, in una casa Base: il lucchetto e il bollino, e
+  /// al tocco la spiegazione.
+  final VoidCallback? bloccata;
 
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
+    final apri = bloccata ?? this.apri;
     final riga = Padding(
+      key: chiave,
       padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
       child: Row(
         children: [
@@ -1210,10 +1269,28 @@ class _Interruttore extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  titolo,
-                  style: testi.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
+                if (bloccata == null)
+                  Text(
+                    titolo,
+                    style: testi.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        titolo,
+                        style: testi.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const BollinoPremium(),
+                    ],
+                  ),
                 if (sotto.isNotEmpty)
                   Text(
                     sotto,
@@ -1235,25 +1312,91 @@ class _Interruttore extends StatelessWidget {
               ],
             ),
           ),
-          if (apri != null)
+          if (apri != null && bloccata == null)
             Icon(
               Icons.chevron_right_rounded,
               color: colori.onSurfaceVariant,
               size: 22,
             ),
           const SizedBox(width: 4),
-          Switch(
-            value: valore,
-            onChanged: spento ? null : cambia,
-            activeTrackColor: colori.primary,
-            activeThumbColor: colori.onPrimary,
-          ),
+          if (bloccata != null)
+            Icon(Icons.lock_rounded, color: colori.onSurfaceVariant, size: 20)
+          else
+            Switch(
+              value: valore,
+              onChanged: spento ? null : cambia,
+              activeTrackColor: colori.primary,
+              activeThumbColor: colori.onPrimary,
+            ),
+          if (bloccata != null) const SizedBox(width: 12),
         ],
       ),
     );
     return Opacity(
       opacity: spento ? 0.5 : 1,
       child: apri == null || spento ? riga : InkWell(onTap: apri, child: riga),
+    );
+  }
+}
+
+/// La riga che apre «La tua giornata»: la pagina del riepilogo, quando la
+/// si vuole vedere senza aspettare la sera.
+class _LaGiornata extends StatelessWidget {
+  const _LaGiornata({required this.tocca});
+  final VoidCallback tocca;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return InkWell(
+      key: const Key('apri-la-giornata'),
+      onTap: tocca,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 16, 12),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: colori.surfaceContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Oggetto('solare', lato: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    inLingua(it: 'La tua giornata', en: 'Your day'),
+                    style: testi.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    inLingua(
+                      it: 'Il sole, i soldi, la casa di oggi: adesso',
+                      en: 'Today\'s sun, money and home: right now',
+                    ),
+                    style: testi.bodySmall?.copyWith(
+                      color: colori.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: colori.onSurfaceVariant,
+              size: 22,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
