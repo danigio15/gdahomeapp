@@ -231,6 +231,244 @@ export function perQuanto(ms, lingua = "it") {
   return lingua === "en" ? `${ore} h` : `${ore} h`;
 }
 
+/* ─── Le parole delle regole ───────────────────────────────────────────
+ *
+ * Come si dice ogni notifica che non ha un racconto
+ * (`parole-delle-notifiche.js`): le stesse funzioni per la regola vera e per
+ * l'esempio di «Prova: mandamela adesso» (`notifiche.js`, `esempioDi`), cosi'
+ * la prova arriva con le parole e i tasti di quella vera. */
+
+/** «Guarda», sotto una notifica: apre l'app. */
+export const tastoGuarda = () => ({ id: "guarda", parole: duePassi("Guarda", "View"), apre: true });
+
+/** L'antifurto inserito in un modo, o disinserito. `null` per uno stato che non si dice. */
+export function paroleDellInserimento(stato, nome, chi = "") {
+  const modo = MODI_DELL_ANTIFURTO[stato];
+  if (!modo) return null;
+  return {
+    it: {
+      titolo: `${modo.emoji} Antifurto · ${modo.it}`,
+      testo: chi ? `${nome} · da ${chi}` : nome,
+    },
+    en: {
+      titolo: `${modo.emoji} Alarm · ${modo.en}`,
+      testo: chi ? `${nome} · by ${chi}` : nome,
+    },
+  };
+}
+
+/** Allagamento, fumo, gas, monossido: `classe` e' la `device_class`. */
+export function paroleDellAllarme(classe, nome) {
+  const cosa = ALLARMI[classe];
+  if (!cosa) return null;
+  return {
+    it: {
+      titolo: `${cosa.emoji} ${cosa.it} · ${nome}`,
+      testo: "Il sensore se n'è accorto adesso",
+    },
+    en: { titolo: `${cosa.emoji} ${cosa.en} · ${nome}`, testo: "The sensor just noticed" },
+  };
+}
+
+export function paroleDelCampanello(nome) {
+  return {
+    it: { titolo: "🔔 Suona il campanello", testo: `${nome} · adesso` },
+    en: { titolo: "🔔 Someone's at the door", testo: `${nome} · now` },
+  };
+}
+
+/** I tasti del campanello: «Apri cancello» se c'e' un cancello, e «Ignora». */
+export function tastiDelCampanello(cancello) {
+  return [
+    ...(cancello
+      ? [{ id: "apri", parole: duePassi("Apri cancello", "Open gate"), servizio: cancello }]
+      : []),
+    { id: "ignora", parole: duePassi("Ignora", "Ignore"), ignora: true },
+  ];
+}
+
+/** Una persona che arriva (`arriva`) o che esce. */
+export function paroleDellArrivo(nome, arriva) {
+  return arriva
+    ? {
+        it: { titolo: `🏠 ${nome} è arrivato a casa`, testo: "Adesso" },
+        en: { titolo: `🏠 ${nome} got home`, testo: "Just now" },
+      }
+    : {
+        it: { titolo: `👋 ${nome} è uscito`, testo: "Adesso" },
+        en: { titolo: `👋 ${nome} left`, testo: "Just now" },
+      };
+}
+
+/** L'ultimo esce e l'antifurto e' spento. */
+export function paroleDellUscito(chi) {
+  return {
+    it: {
+      titolo: "🛡️ Uscito senza antifurto",
+      testo: `${chi} è l'ultimo a uscire e l'antifurto è spento`,
+    },
+    en: {
+      titolo: "🛡️ Left without the alarm",
+      testo: `${chi} was the last to leave and the alarm is off`,
+    },
+  };
+}
+
+/** «Inserisci» e «Più tardi»; con una centrale che vuole il codice, l'app. */
+export function tastiDellUscito(centrale, { conCodice = false } = {}) {
+  return conCodice
+    ? [{ id: "guarda", parole: duePassi("Apri l'app", "Open the app"), apre: true }]
+    : [
+        {
+          id: "inserisci",
+          parole: duePassi("Inserisci", "Arm"),
+          servizio: {
+            dominio: "alarm_control_panel",
+            servizio: "alarm_arm_away",
+            entita: [centrale],
+          },
+        },
+        { id: "piu-tardi", parole: duePassi("Più tardi", "Later"), piuTardi: true },
+      ];
+}
+
+/** Una porta, una finestra o un garage rimasti aperti. `cosa` viene da
+ * `cosaApre`; `da` sono i millisecondi; `ultima` l'ora dell'ultima uscita. */
+export function paroleDellApertura({ dove, cosa, vuota, da, ultima = null }) {
+  return {
+    it: {
+      titolo:
+        vuota === true
+          ? `🚪 ${dove}: ${cosa.it} aperta, in casa non c'è nessuno`
+          : `🚪 ${dove}: la ${cosa.it} è ancora aperta`,
+      testo:
+        vuota === true
+          ? `Aperta da ${perQuanto(da)}${ultima ? `, uscita l'ultima persona alle ${ultima}` : ""}.`
+          : "In casa si dorme. Di solito di notte è chiusa.",
+    },
+    en: {
+      titolo:
+        vuota === true
+          ? `🚪 ${dove}: ${cosa.en} open, nobody's home`
+          : `🚪 ${dove}: the ${cosa.en} is still open`,
+      testo:
+        vuota === true
+          ? `Open for ${perQuanto(da, "en")}${ultima ? `, last person left at ${ultima}` : ""}.`
+          : "The house is asleep. It's usually closed at night.",
+    },
+  };
+}
+
+/** «Chiudi» (solo per una copertura), «Va bene così/stanotte», «Più tardi». */
+export function tastiDellApertura(id, { copertura = false, vuota = false } = {}) {
+  return [
+    ...(copertura
+      ? [
+          {
+            id: "chiudi",
+            parole: duePassi("Chiudi", "Close"),
+            servizio: { dominio: "cover", servizio: "close_cover", entita: [id] },
+          },
+        ]
+      : []),
+    {
+      id: "va-bene",
+      parole:
+        vuota === true
+          ? duePassi("Va bene così", "That's fine")
+          : duePassi("Va bene stanotte", "Fine tonight"),
+      vaBene: [id],
+    },
+    { id: "piu-tardi", parole: duePassi("Più tardi", "Later"), piuTardi: true },
+  ];
+}
+
+/** Il frigo o il congelatore troppo caldi: `valore` com'e' lo stato, `da` in ms. */
+export function paroleDelFrigoCaldo({ nome, valore, unita = "°C", da }) {
+  return {
+    it: { titolo: `🧊 ${nome}: troppo caldo`, testo: `${valore} ${unita} da ${perQuanto(da)}` },
+    en: {
+      titolo: `🧊 ${nome}: too warm`,
+      testo: `${valore} ${unita} for ${perQuanto(da, "en")}`,
+    },
+  };
+}
+
+export function paroleDellaPortaDelFrigo({ nome, da }) {
+  return {
+    it: { titolo: `🧊 ${nome}: porta aperta`, testo: `Aperta da ${perQuanto(da)}` },
+    en: { titolo: `🧊 ${nome}: door open`, testo: `Open for ${perQuanto(da, "en")}` },
+  };
+}
+
+/** Piove (o piovera' fra `fra` minuti) con queste finestre aperte. */
+export function paroleDellaPioggia(aperte, { fra = null } = {}) {
+  const quali = aperte.slice(0, 3).join(", ");
+  return fra
+    ? {
+        it: { titolo: `🌧️ Tra ${fra} min piove`, testo: `Finestre aperte: ${quali}` },
+        en: { titolo: `🌧️ Rain in ${fra} min`, testo: `Open windows: ${quali}` },
+      }
+    : {
+        it: { titolo: "🌧️ Piove", testo: `Finestre aperte: ${quali}` },
+        en: { titolo: "🌧️ It's raining", testo: `Open windows: ${quali}` },
+      };
+}
+
+/** Le luci accese con la casa vuota da `per` ms: `accese` i nomi da spegnere,
+ * `lasciate` quelli che l'assistente lascia stare. */
+export function paroleDelleLuci({ per, accese, lasciate = [] }) {
+  const quante = accese.length;
+  /* Quelle lasciate stare si dicono, in una riga: chi legge sa che
+   * l'assistente le ha viste, e perche' non le tocca. */
+  const nomiLasciati = lasciate.slice(0, 2);
+  const restaIt = nomiLasciati.length
+    ? ` Restano accese ${nomiLasciati.join(", ")}${lasciate.length > 2 ? ` e altre ${lasciate.length - 2}` : ""}.`
+    : "";
+  const restaEn = nomiLasciati.length
+    ? ` Leaving on ${nomiLasciati.join(", ")}${lasciate.length > 2 ? ` and ${lasciate.length - 2} more` : ""}.`
+    : "";
+  const elenco = (lingua) =>
+    quante === 1
+      ? accese[0]
+      : `${accese.slice(0, 3).join(", ")}${quante > 3 ? (lingua === "en" ? ` and ${quante - 3} more` : ` e altre ${quante - 3}`) : ""}`;
+  return {
+    it: {
+      titolo: `💡 Nessuno in casa da ${perQuanto(per)}`,
+      testo: `${quante === 1 ? "Accesa" : "Accese"}: ${elenco("it")}.${restaIt} ${quante === 1 ? "La spengo?" : "Le spengo?"}`,
+    },
+    en: {
+      titolo: `💡 Nobody home for ${perQuanto(per, "en")}`,
+      testo: `On: ${elenco("en")}.${restaEn} Turn ${quante === 1 ? "it" : "them"} off?`,
+    },
+  };
+}
+
+/** «Spegni» spegne solo `entita` (non quelle lasciate stare), «Restano così»
+ * se le ricorda, «Più tardi» rimanda. */
+export function tastiDelleLuci(entita) {
+  const quante = entita.length;
+  return [
+    {
+      id: "spegni",
+      parole:
+        quante === 1
+          ? duePassi("Spegni", "Turn off")
+          : duePassi(`Spegni le ${quante} luci`, `Turn off ${quante} lights`),
+      servizio: { dominio: "light", servizio: "turn_off", entita: entita.slice(0, 40) },
+    },
+    {
+      id: "resta",
+      parole:
+        quante === 1
+          ? duePassi("Resta così", "Leave it on")
+          : duePassi("Restano così", "Leave them on"),
+      resta: entita.slice(0, 40),
+    },
+    { id: "piu-tardi", parole: duePassi("Più tardi", "Later"), piuTardi: true },
+  ];
+}
+
 /* ─── La sentinella ────────────────────────────────────────────────────── */
 
 export class Sentinella {
@@ -756,7 +994,7 @@ export class Sentinella {
         }
       }
     }
-    azioni.push({ id: "guarda", parole: duePassi("Guarda", "View"), apre: true });
+    azioni.push(tastoGuarda());
     const parole = inDueLingue(paroleDellAntifurto, dati);
     if (centrale?.attributes?.changed_by && !zona)
       parole.it.testo = `Da ${String(centrale.attributes.changed_by).slice(0, 40)}`;
@@ -833,17 +1071,8 @@ export class Sentinella {
         chiave: `inserimenti:${id}`,
         pausa: 0,
         entita: id,
-        parole: {
-          it: {
-            titolo: `${modo.emoji} Antifurto · ${modo.it}`,
-            testo: chi ? `${nome} · da ${chi}` : nome,
-          },
-          en: {
-            titolo: `${modo.emoji} Alarm · ${modo.en}`,
-            testo: chi ? `${nome} · by ${chi}` : nome,
-          },
-        },
-        azioni: [{ id: "guarda", parole: duePassi("Guarda", "View"), apre: true }],
+        parole: paroleDellInserimento(dopo.state, nome, chi),
+        azioni: [tastoGuarda()],
       });
       return;
     }
@@ -854,21 +1083,14 @@ export class Sentinella {
         this._piove(id);
         return;
       }
-      const cosa = ALLARMI[classe];
       this._dici({
         tipo: "allarmi",
         urgenza: "urgente",
         chiave: `allarmi:${id}`,
         pausa: 10 * MINUTO,
         entita: id,
-        parole: {
-          it: {
-            titolo: `${cosa.emoji} ${cosa.it} · ${nome}`,
-            testo: "Il sensore se n'è accorto adesso",
-          },
-          en: { titolo: `${cosa.emoji} ${cosa.en} · ${nome}`, testo: "The sensor just noticed" },
-        },
-        azioni: [{ id: "guarda", parole: duePassi("Guarda", "View"), apre: true }],
+        parole: paroleDellAllarme(classe, nome),
+        azioni: [tastoGuarda()],
       });
       return;
     }
@@ -897,7 +1119,6 @@ export class Sentinella {
         dopo.state === "on" &&
         era === "off");
     if (suona) {
-      const cancello = this.cancello();
       this._dici({
         tipo: "campanello",
         urgenza: "urgente",
@@ -906,16 +1127,8 @@ export class Sentinella {
         entita: id,
         camera: this.telecameraPer(id),
         chiamata: true,
-        parole: {
-          it: { titolo: "🔔 Suona il campanello", testo: `${nome} · adesso` },
-          en: { titolo: "🔔 Someone's at the door", testo: `${nome} · now` },
-        },
-        azioni: [
-          ...(cancello
-            ? [{ id: "apri", parole: duePassi("Apri cancello", "Open gate"), servizio: cancello }]
-            : []),
-          { id: "ignora", parole: duePassi("Ignora", "Ignore"), ignora: true },
-        ],
+        parole: paroleDelCampanello(nome),
+        azioni: tastiDelCampanello(this.cancello()),
       });
       return;
     }
@@ -932,15 +1145,7 @@ export class Sentinella {
           pausa: 5 * MINUTO,
           entita: id,
           persona: id,
-          parole: arriva
-            ? {
-                it: { titolo: `🏠 ${nome} è arrivato a casa`, testo: "Adesso" },
-                en: { titolo: `🏠 ${nome} got home`, testo: "Just now" },
-              }
-            : {
-                it: { titolo: `👋 ${nome} è uscito`, testo: "Adesso" },
-                en: { titolo: `👋 ${nome} left`, testo: "Just now" },
-              },
+          parole: paroleDellArrivo(nome, arriva),
         });
       }
       if (vuotaPrima === false && this.casaVuota() === true) this._casaAppenaVuota(nome);
@@ -982,10 +1187,7 @@ export class Sentinella {
           perche: vuota ? "casa-vuota" : notte ? "notte" : "giorno",
           componi: { tipo: "movimento", dati },
           parole: inDueLingue(paroleDelMovimento, dati),
-          azioni: [
-            { id: "guarda", parole: duePassi("Guarda", "View"), apre: true },
-            ...this._tastoInserisci(),
-          ],
+          azioni: [tastoGuarda(), ...this._tastoInserisci()],
         });
       }
       return;
@@ -1121,22 +1323,13 @@ export class Sentinella {
   _piove(id, { fra = null } = {}) {
     const aperte = this._finestreAperte();
     if (!aperte.length) return;
-    const quali = aperte.slice(0, 3).join(", ");
     this._dici({
       tipo: "pioggia",
       urgenza: "normale",
       chiave: "pioggia",
       pausa: 2 * ORA,
       entita: id,
-      parole: fra
-        ? {
-            it: { titolo: `🌧️ Tra ${fra} min piove`, testo: `Finestre aperte: ${quali}` },
-            en: { titolo: `🌧️ Rain in ${fra} min`, testo: `Open windows: ${quali}` },
-          }
-        : {
-            it: { titolo: "🌧️ Piove", testo: `Finestre aperte: ${quali}` },
-            en: { titolo: "🌧️ It's raining", testo: `Open windows: ${quali}` },
-          },
+      parole: paroleDellaPioggia(aperte, { fra }),
     });
   }
 
@@ -1159,36 +1352,16 @@ export class Sentinella {
   _casaAppenaVuota(chi) {
     for (const [id, stato] of this.stati) {
       if (dominioDi(id) !== "alarm_control_panel" || stato.state !== "disarmed") continue;
-      const azioni = stato.attributes?.code_arm_required
-        ? [{ id: "guarda", parole: duePassi("Apri l'app", "Open the app"), apre: true }]
-        : [
-            {
-              id: "inserisci",
-              parole: duePassi("Inserisci", "Arm"),
-              servizio: {
-                dominio: "alarm_control_panel",
-                servizio: "alarm_arm_away",
-                entita: [id],
-              },
-            },
-            { id: "piu-tardi", parole: duePassi("Più tardi", "Later"), piuTardi: true },
-          ];
+      const azioni = tastiDellUscito(id, {
+        conCodice: Boolean(stato.attributes?.code_arm_required),
+      });
       this._dici({
         tipo: "uscito",
         urgenza: "normale",
         chiave: `uscito:${id}`,
         pausa: 30 * MINUTO,
         entita: id,
-        parole: {
-          it: {
-            titolo: "🛡️ Uscito senza antifurto",
-            testo: `${chi} è l'ultimo a uscire e l'antifurto è spento`,
-          },
-          en: {
-            titolo: "🛡️ Left without the alarm",
-            testo: `${chi} was the last to leave and the alarm is off`,
-          },
-        },
+        parole: paroleDellUscito(chi),
         azioni,
       });
       return;
@@ -1299,48 +1472,8 @@ export class Sentinella {
           pausa: ORA,
           entita: id,
           camera: this.telecameraPer(id),
-          parole: {
-            it: {
-              titolo:
-                vuota === true
-                  ? `🚪 ${dove}: ${cosa.it} aperta, in casa non c'è nessuno`
-                  : `🚪 ${dove}: la ${cosa.it} è ancora aperta`,
-              testo:
-                vuota === true
-                  ? `Aperta da ${perQuanto(da)}${ultima ? `, uscita l'ultima persona alle ${ultima}` : ""}.`
-                  : "In casa si dorme. Di solito di notte è chiusa.",
-            },
-            en: {
-              titolo:
-                vuota === true
-                  ? `🚪 ${dove}: ${cosa.en} open, nobody's home`
-                  : `🚪 ${dove}: the ${cosa.en} is still open`,
-              testo:
-                vuota === true
-                  ? `Open for ${perQuanto(da, "en")}${ultima ? `, last person left at ${ultima}` : ""}.`
-                  : "The house is asleep. It's usually closed at night.",
-            },
-          },
-          azioni: [
-            ...(dominio === "cover"
-              ? [
-                  {
-                    id: "chiudi",
-                    parole: duePassi("Chiudi", "Close"),
-                    servizio: { dominio: "cover", servizio: "close_cover", entita: [id] },
-                  },
-                ]
-              : []),
-            {
-              id: "va-bene",
-              parole:
-                vuota === true
-                  ? duePassi("Va bene così", "That's fine")
-                  : duePassi("Va bene stanotte", "Fine tonight"),
-              vaBene: [id],
-            },
-            { id: "piu-tardi", parole: duePassi("Più tardi", "Later"), piuTardi: true },
-          ],
+          parole: paroleDellApertura({ dove, cosa, vuota, da, ultima }),
+          azioni: tastiDellApertura(id, { copertura: dominio === "cover", vuota }),
         });
       }
 
@@ -1366,16 +1499,12 @@ export class Sentinella {
               chiave: `frigo:${id}`,
               pausa: ORA,
               entita: id,
-              parole: {
-                it: {
-                  titolo: `🧊 ${nome}: troppo caldo`,
-                  testo: `${stato.state} ${unita} da ${perQuanto(ora - daQuando)}`,
-                },
-                en: {
-                  titolo: `🧊 ${nome}: too warm`,
-                  testo: `${stato.state} ${unita} for ${perQuanto(ora - daQuando, "en")}`,
-                },
-              },
+              parole: paroleDelFrigoCaldo({
+                nome,
+                valore: stato.state,
+                unita,
+                da: ora - daQuando,
+              }),
             });
           }
         }
@@ -1392,10 +1521,7 @@ export class Sentinella {
             chiave: `portafrigo:${id}`,
             pausa: 30 * MINUTO,
             entita: id,
-            parole: {
-              it: { titolo: `🧊 ${nome}: porta aperta`, testo: `Aperta da ${perQuanto(da)}` },
-              en: { titolo: `🧊 ${nome}: door open`, testo: `Open for ${perQuanto(da, "en")}` },
-            },
+            parole: paroleDellaPortaDelFrigo({ nome, da }),
           });
         }
       }
@@ -1451,62 +1577,20 @@ export class Sentinella {
     const luciLunghe =
       luciAccese.length && ora - Math.max(luciDa, vuotaDa) >= LUCI_CON_CASA_VUOTA_DA;
     if (this._unaVolta("suggerimenti:luci", Boolean(luciLunghe))) {
-      const quante = luciAccese.length;
-      const daQuando = perQuanto(ora - Math.max(luciDa, vuotaDa));
-      /* Quelle lasciate stare si dicono, in una riga: chi legge sa che
-       * l'assistente le ha viste, e perche' non le tocca. «Spegni» spegne
-       * solo le altre: prima spegneva tutte le luci accese, acquario
-       * compreso. */
-      const nomiLasciati = lasciate.slice(0, 2).map((l) => l.nome);
-      const restaIt = nomiLasciati.length
-        ? ` Restano accese ${nomiLasciati.join(", ")}${lasciate.length > 2 ? ` e altre ${lasciate.length - 2}` : ""}.`
-        : "";
-      const restaEn = nomiLasciati.length
-        ? ` Leaving on ${nomiLasciati.join(", ")}${lasciate.length > 2 ? ` and ${lasciate.length - 2} more` : ""}.`
-        : "";
-      const elenco = (lingua) =>
-        quante === 1
-          ? luciAccese[0]
-          : `${luciAccese.slice(0, 3).join(", ")}${quante > 3 ? (lingua === "en" ? ` and ${quante - 3} more` : ` e altre ${quante - 3}`) : ""}`;
+      /* «Spegni» spegne solo quelle da spegnere: prima spegneva tutte le
+       * luci accese, acquario compreso. */
       this._dici({
         tipo: "suggerimenti",
         urgenza: "bassa",
         importante: true,
         chiave: "suggerimenti:luci",
         pausa: 2 * ORA,
-        parole: {
-          it: {
-            titolo: `💡 Nessuno in casa da ${daQuando}`,
-            testo: `${quante === 1 ? "Accesa" : "Accese"}: ${elenco("it")}.${restaIt} ${quante === 1 ? "La spengo?" : "Le spengo?"}`,
-          },
-          en: {
-            titolo: `💡 Nobody home for ${perQuanto(ora - Math.max(luciDa, vuotaDa), "en")}`,
-            testo: `On: ${elenco("en")}.${restaEn} Turn ${quante === 1 ? "it" : "them"} off?`,
-          },
-        },
-        azioni: [
-          {
-            id: "spegni",
-            parole:
-              quante === 1
-                ? duePassi("Spegni", "Turn off")
-                : duePassi(`Spegni le ${quante} luci`, `Turn off ${quante} lights`),
-            servizio: {
-              dominio: "light",
-              servizio: "turn_off",
-              entita: luciDaSpegnere.slice(0, 40),
-            },
-          },
-          {
-            id: "resta",
-            parole:
-              quante === 1
-                ? duePassi("Resta così", "Leave it on")
-                : duePassi("Restano così", "Leave them on"),
-            resta: luciDaSpegnere.slice(0, 40),
-          },
-          { id: "piu-tardi", parole: duePassi("Più tardi", "Later"), piuTardi: true },
-        ],
+        parole: paroleDelleLuci({
+          per: ora - Math.max(luciDa, vuotaDa),
+          accese: luciAccese,
+          lasciate: lasciate.map((l) => l.nome),
+        }),
+        azioni: tastiDelleLuci(luciDaSpegnere),
       });
     }
     const climaLungo =

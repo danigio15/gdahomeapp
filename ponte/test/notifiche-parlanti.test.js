@@ -21,7 +21,7 @@ import {
   Notifiche,
   stileDi,
 } from "../src/notifiche.js";
-import { Sentinella } from "../src/sentinella.js";
+import { EVENTI, Sentinella, categoriaDi } from "../src/sentinella.js";
 import { apriLaFoto, apriLaSpinta, CONTENUTO_MASSIMO } from "../src/spinta.js";
 import {
   curvaCompatta,
@@ -822,6 +822,142 @@ test("le elaborate stanno nella busta: ogni esempio sotto il limite, la scheda c
     assert.equal(no.success, false);
   } finally {
     banco.spegni();
+  }
+});
+
+/* «Prova: mandamela adesso» c'e' nel foglio di ogni voce della pagina
+ * Notifiche. La personalizzata si prova dal suo editor (con la regola), e
+ * le notifiche di Home Assistant non hanno una prova per voce. */
+const CON_UN_ESEMPIO = EVENTI.filter((tipo) => !["personalizzata", "ha_notify"].includes(tipo));
+
+test("ogni voce ha il suo esempio, in italiano e in inglese, nella sua categoria", () => {
+  const adesso = mezzogiorno();
+  for (const tipo of CON_UN_ESEMPIO) {
+    const esempio = esempioDi(tipo, adesso);
+    assert.ok(esempio, `${tipo}: l'esempio c'e'`);
+    /* Una prova: non ha limiti, non conta fra le vere, non ha pause. */
+    assert.equal(esempio.tipo, "prova", tipo);
+    assert.equal(esempio.chiave, "prova", tipo);
+    assert.equal(esempio.categoria, categoriaDi(tipo), tipo);
+    for (const lingua of ["it", "en"]) {
+      assert.ok(String(esempio.parole?.[lingua]?.titolo || "").trim(), `${tipo} ${lingua}: titolo`);
+      assert.ok(String(esempio.parole?.[lingua]?.testo || "").trim(), `${tipo} ${lingua}: testo`);
+    }
+    /* I tasti si vedono, ma non portano niente da eseguire. */
+    for (const tasto of esempio.azioni)
+      assert.deepEqual(
+        Object.keys(tasto).filter((k) => !["id", "parole", "apre"].includes(k)),
+        [],
+        `${tipo}: ${tasto.id}`,
+      );
+    /* Niente entita' ne' nomi di persone: «Persona 1». */
+    assert.doesNotMatch(JSON.stringify(esempio), /person\.|light\.|cover\.|alarm_control/, tipo);
+  }
+});
+
+test("gli esempi hanno le parole, l'urgenza e i tasti delle notifiche vere", () => {
+  const adesso = mezzogiorno();
+  const campanello = esempioDi("campanello", adesso);
+  assert.equal(campanello.urgenza, "urgente");
+  assert.equal(campanello.chiamata, true, "il campanello arriva come una chiamata");
+  assert.equal(campanello.parole.it.titolo, "🔔 Suona il campanello");
+  assert.deepEqual(
+    campanello.azioni.map((t) => t.id),
+    ["apri", "ignora"],
+  );
+  assert.equal(esempioDi("allarmi", adesso).urgenza, "urgente");
+  assert.equal(esempioDi("antifurto", adesso).urgenza, "urgente");
+  assert.equal(esempioDi("arrivi", adesso).urgenza, "bassa");
+  assert.equal(esempioDi("suggerimenti", adesso).urgenza, "bassa");
+  assert.equal(esempioDi("viaggi", adesso).parole.it.titolo, "Parti fra 10 minuti");
+  assert.deepEqual(
+    esempioDi("viaggi", adesso).azioni.map((t) => t.parole.it),
+    ["Apri il garage"],
+  );
+  assert.deepEqual(
+    esempioDi("aperture", adesso).azioni.map((t) => t.parole.it),
+    ["Chiudi", "Va bene così", "Più tardi"],
+  );
+  assert.deepEqual(
+    esempioDi("uscito", adesso).azioni.map((t) => t.parole.it),
+    ["Inserisci", "Più tardi"],
+  );
+  assert.equal(esempioDi("ha_notify", adesso), null);
+  assert.equal(esempioDi("personalizzata", adesso), null);
+});
+
+test("«Prova: mandamela adesso» parte per ogni voce, e i suoi tasti non comandano niente", async () => {
+  const banco = unBanco();
+  try {
+    await banco.registra();
+    for (const [i, tipo] of CON_UN_ESEMPIO.entries()) {
+      const risposta = await banco.notifiche.rispondi(
+        { id: 100 + i, type: "ponte/notifiche/prova", tipo },
+        { dispositivo: banco.a.dispositivo },
+      );
+      assert.equal(risposta.success, true, `${tipo}: ${JSON.stringify(risposta.error)}`);
+      assert.doesNotMatch(JSON.stringify(risposta), /non c'e' un esempio/, tipo);
+      const contenuto = banco.apri(banco.spinte.at(-1));
+      assert.equal(contenuto.tipo, "prova", tipo);
+      assert.equal(contenuto.cat, categoriaDi(tipo), tipo);
+      assert.ok(contenuto.titolo.trim() && contenuto.testo.trim(), tipo);
+      const esempio = esempioDi(tipo, banco.orologio.ora);
+      assert.equal(contenuto.urg, esempio.urgenza, tipo);
+      assert.equal(banco.spinte.at(-1).urgente, esempio.urgenza === "urgente", tipo);
+      assert.equal(contenuto.chiamata === true, tipo === "campanello", tipo);
+      assert.equal(contenuto.azioni.length, esempio.azioni.length, tipo);
+      /* Premuto, un tasto di prova non tocca la casa. */
+      for (const tasto of contenuto.azioni) {
+        const prima = banco.chiamate.length;
+        const premuto = await banco.notifiche.rispondi(
+          { id: 1, type: "ponte/notifiche/azione", notifica: contenuto.id, azione: tasto.id },
+          { dispositivo: banco.a.dispositivo, utente: UTENTE_A },
+        );
+        assert.equal(premuto.success, false, `${tipo}: ${tasto.id}`);
+        assert.match(premuto.error.message, /prova/, `${tipo}: ${tasto.id}`);
+        assert.equal(banco.chiamate.length, prima, `${tipo}: ${tasto.id}`);
+      }
+    }
+    /* Quelle che non hanno una prova per voce. */
+    for (const tipo of ["ha_notify", "personalizzata"]) {
+      const no = await banco.notifiche.rispondi(
+        { id: 200, type: "ponte/notifiche/prova", tipo },
+        { dispositivo: banco.a.dispositivo },
+      );
+      assert.equal(no.success, false, tipo);
+    }
+  } finally {
+    banco.spegni();
+  }
+});
+
+test("«Quando partire» di prova solo col pianificatore dei viaggi sbloccato", async () => {
+  for (const [licenze, parte] of [
+    [null, true],
+    [{ attive: true, premium: true, gdanav: true }, true],
+    [{ attive: true, premium: false, gdanav: true }, true],
+    [{ attive: true, premium: false, gdanav: false }, false],
+  ]) {
+    const banco = unBanco();
+    try {
+      banco.notifiche.licenze = licenze;
+      await banco.registra();
+      const risposta = await banco.notifiche.rispondi(
+        { id: 3, type: "ponte/notifiche/prova", tipo: "viaggi" },
+        { dispositivo: banco.a.dispositivo },
+      );
+      assert.equal(risposta.success, parte, JSON.stringify(licenze));
+      if (!parte) assert.equal(risposta.error.code, "premium-richiesto");
+      /* In Base, le altre voci si provano: semplici. */
+      const campanello = await banco.notifiche.rispondi(
+        { id: 4, type: "ponte/notifiche/prova", tipo: "campanello" },
+        { dispositivo: banco.a.dispositivo },
+      );
+      assert.equal(campanello.success, true);
+      assert.equal(banco.apri(banco.spinte.at(-1)).stile, "s");
+    } finally {
+      banco.spegni();
+    }
   }
 });
 
