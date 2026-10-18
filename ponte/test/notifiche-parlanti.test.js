@@ -218,7 +218,7 @@ test("la lavatrice che finisce dice durata, kWh e costo col sole, e la scheda pe
   assert.equal(finita.misura.euro, 0);
   const elaborata = paroleDelCiclo(finita.componi.dati, "it", { stile: "elaborata" });
   assert.equal(elaborata.scheda.t, "ciclo");
-  assert.equal(elaborata.scheda.i, "lavatrice");
+  assert.equal(elaborata.scheda.i, "washer");
   assert.match(elaborata.titolo, /· gratis$/);
 });
 

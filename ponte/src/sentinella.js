@@ -46,6 +46,10 @@ import {
 import { risolutoreDalla } from "./ricarica-di-notte.js";
 import { batterieDiCasa } from "./la-giornata-di-casa.js";
 import {
+  elettrodomesticoDellaPlancia,
+  tipoDellElettrodomestico,
+} from "./il-tipo-dell-elettrodomestico.js";
+import {
   paroleDelBlackout,
   paroleDelCiclo,
   paroleDelMovimento,
@@ -1051,14 +1055,16 @@ export class Sentinella {
     const ultimo = this._memoria.get(chiave);
     if (ultimo != null && ora - ultimo < STESSO_ELETTRODOMESTICO) return;
     this._memoria.set(chiave, ora);
+    const nomeDiCasa = nome;
     nome = nomeDellElettrodomestico(nome);
     /* I conti del ciclo, se il taccuino l'ha seguito: dalla presa di questa
      * entita', o — quando a dire «finito» e' lo stato dell'elettrodomestico —
      * dalla presa dello stesso genere. */
     let ciclo = null;
+    let dove = null;
     const valori = this._valori();
     if (this.taccuino) {
-      let dove = this.taccuino.haUnCiclo(id) ? id : null;
+      dove = this.taccuino.haUnCiclo(id) ? id : null;
       if (!dove)
         for (const altro of this.taccuino.cicli.keys())
           if (
@@ -1073,9 +1079,16 @@ export class Sentinella {
           prezzoMigliore: fasciaPiuBassa(valori.cd_fasce_kwh),
         });
     }
+    /* Che cosa disegnare sulla scheda: lo dice prima l'elettrodomestico
+     * configurato nella plancia, poi il nome che gli da' Home Assistant. */
+    const tipo = tipoDellElettrodomestico({
+      voce: elettrodomesticoDellaPlancia(valori, id, dove),
+      parole: [nomeDiCasa, id],
+    });
     const dati = {
       nome,
       genere,
+      tipo,
       ciclo,
       conSole: this._conSole,
       fascia: ciclo ? this.prezzo(finitoIl ?? ora, valori).fascia : "",

@@ -46,6 +46,8 @@ void main() {
     ...schedeDiProva,
     for (final MapEntry(:key, :value) in schedeLunghe.entries)
       'lunga-$key': value,
+    for (final MapEntry(:key, :value) in schedeDegliElettrodomestici.entries)
+      'ciclo-$key': value,
   }.entries) {
     testWidgets('la scheda $nome', (tester) async {
       final disegno = (await tester.runAsync(

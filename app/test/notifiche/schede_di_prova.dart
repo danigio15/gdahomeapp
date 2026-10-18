@@ -195,6 +195,29 @@ const Map<String, Map<String, dynamic>> schedeDiProva = {
   'movimento': {'v': 1, 't': 'movimento', 'cam': 'Ingresso', 'ora': '18:22:07'},
 };
 
+/// Il ciclo di elettrodomestici diversi: ognuno deve avere la sua faccia in
+/// testa alla scheda. Il tipo (`i`) e' quello che manda la casa
+/// (`ponte/src/il-tipo-dell-elettrodomestico.js`); l'ultimo non lo sa
+/// nessuno, e prende il disegno generico.
+final Map<String, Map<String, dynamic>> schedeDegliElettrodomestici = {
+  for (final (nome, tipo, euro) in const [
+    ('Lavastoviglie', 'dishwasher', 0.0),
+    ('Lavatrice', 'washer', 0.05),
+    ('Asciugatrice', 'dryer', 0.31),
+    ('Forno', 'oven', 0.12),
+    ('Condizionatore', 'air-conditioner', 0.0),
+    ('Pompa piscina', 'pool-pump', 0.08),
+    ('Presa studio', 'generic', 0.02),
+  ])
+    tipo: {
+      ...schedeDiProva['ciclo']!,
+      'n': nome,
+      'i': tipo,
+      'eur': euro,
+      'sole': euro == 0 ? 0.82 : 0.72,
+    },
+};
+
 /// Una foto finta di telecamera: il disegno di una porta.
 Uint8List fotoDiProva() =>
     File('test/notifiche/porta-di-prova.jpg').readAsBytesSync();

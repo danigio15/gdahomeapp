@@ -26,6 +26,7 @@ void main() {
       'Piano cottura': 'cooktop',
       'Piano a induzione': 'cooktop',
       'Microonde': 'microwave',
+      'Pompa piscina': 'pool-pump',
       'Presa studio': 'generic',
       'Qualcosa di strano': 'generic',
     };
