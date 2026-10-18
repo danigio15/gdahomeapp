@@ -177,6 +177,21 @@ export function eNotte(data) {
   return ora >= 22 || ora < 6;
 }
 
+/* Le parole che dicono dov'e' una cosa: dall'identificativo e dal nome, senza
+ * quelle che dicono cos'e' («motion», «camera», «rilevamento»…), che due
+ * sensori di due telecamere diverse hanno uguali. */
+const PAROLE_DI_TUTTI =
+  /^(binary|sensor|sensore|camera|telecamera|motion|movimento|detection|detected|rilevamento|rilevato|line|crossing|attraversamento|intrusion|intrusione|occupancy|presence|presenza|field|alarm|allarme|stream|main|snapshot)$/;
+export function paroleDelNome(id, nome = "") {
+  const testo = `${String(id || "").split(".")[1] || ""} ${String(nome || "")}`
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  return new Set(
+    testo.split(/[^a-z0-9]+/).filter((una) => una.length > 3 && !PAROLE_DI_TUTTI.test(una)),
+  );
+}
+
 const nomeDi = (stato, id) =>
   String(stato?.attributes?.friendly_name || id.split(".")[1]?.replace(/_/g, " ") || id).slice(
     0,
@@ -829,11 +844,28 @@ export class Sentinella {
       const stessa = telecamere.find((una) => this.dispositivoDi?.[una] === suo);
       if (stessa) return stessa;
     }
-    const parole = String(id.split(".")[1] || "")
-      .split("_")
-      .filter((una) => una.length > 3);
-    const vicina = telecamere.find((una) => parole.some((parola) => una.includes(parola)));
-    if (vicina) return vicina;
+    /* Le parole in comune, nell'identificativo e nel nome: vince la
+     * telecamera che ne ha di piu' (e di piu' lunghe). Prima vinceva la prima
+     * che ne aveva una qualunque, e con due telecamere dello stesso modello —
+     * `camera.ds_2cd…_<seriale>_101` — il modello bastava: il movimento del
+     * balcone arrivava con la telecamera dell'ingresso. A pari merito non se
+     * ne sceglie nessuna: meglio niente foto che quella sbagliata. */
+    const sue = paroleDelNome(id, nomeDi(this.stati.get(id), ""));
+    let migliore = null;
+    let punti = 0;
+    let pari = false;
+    for (const una of telecamere) {
+      const sueDellaTelecamera = paroleDelNome(una, nomeDi(this.stati.get(una), ""));
+      let quanti = 0;
+      for (const parola of sue)
+        if (sueDellaTelecamera.has(parola) || una.includes(parola)) quanti += parola.length;
+      if (quanti > punti) {
+        migliore = una;
+        punti = quanti;
+        pari = false;
+      } else if (quanti && quanti === punti) pari = true;
+    }
+    if (migliore && !pari) return migliore;
     /* L'unica telecamera di casa va bene per l'antifurto — fa vedere la casa —
      * ma non per il movimento della camera da letto: la foto sarebbe del
      * cancello. */

@@ -1,7 +1,9 @@
 /// Una notifica toccata: cosa c'era dentro, e i suoi tasti.
 ///
-/// Due forme. Il **campanello** si apre a tutto schermo, come una chiamata:
-/// la foto della porta, «Ignora» e «Apri». Ogni altra notifica sale in un
+/// Tre forme. Il **campanello** si apre a tutto schermo, come una chiamata:
+/// la foto della porta, «Ignora» e «Apri». «Guarda» su una notifica con la sua
+/// telecamera — il movimento, l'antifurto — apre **la telecamera**
+/// ([SchermataDellaTelecamera]), dal vivo. Ogni altra notifica sale in un
 /// foglio dal basso, col testo intero e i tasti che la casa le ha messo
 /// sotto.
 ///
@@ -30,6 +32,19 @@ import '../notifiche/postino.dart';
 import '../parole.dart';
 import '../vestito/tema.dart';
 import 'la_tua_giornata.dart';
+
+/// Se un tocco su questa notifica apre la telecamera: «Guarda», o il tocco
+/// sulla notifica del movimento. Serve che la notifica ne porti una — il
+/// ponte la mette solo se a chi tiene il telefono quella telecamera si
+/// mostra — e vale in Base come in Premium: la foto la da' la casa sul filo,
+/// e dal nostro server non passa.
+@visibleForTesting
+bool apreLaTelecamera(ToccoDellaNotifica tocco) {
+  final notifica = tocco.notifica;
+  if (notifica.camera == null || notifica.chiamata) return false;
+  if (tocco.tasto == 'guarda') return true;
+  return tocco.tasto == null && notifica.tipo == 'movimento';
+}
 
 /// La foto di una telecamera, chiesta alla casa sul filo.
 Future<Uint8List?> laFotoDi(Collegamento collegamento, String camera) async {
@@ -83,6 +98,30 @@ Future<void> apriLaNotifica(
     }
   }
   if (!context.mounted) return;
+  /* La notifica e' di un'altra casa: ci si sposta, come per un tasto, se no
+   * la foto la si chiederebbe alla casa sbagliata. */
+  if (collegamento.casa?.id != tocco.casa &&
+      collegamento.archivio.quella(tocco.casa) != null) {
+    try {
+      await collegamento.archivio.scegli(tocco.casa);
+      unawaited(collegamento.apri(forza: true));
+    } catch (_) {
+      /* Resta dov'era: la foto, se non arriva, non arriva. */
+    }
+    if (!context.mounted) return;
+  }
+  if (apreLaTelecamera(tocco)) {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SchermataDellaTelecamera(
+          tocco: tocco,
+          collegamento: collegamento,
+          postino: postino,
+        ),
+      ),
+    );
+    return;
+  }
   if (notifica.chiamata && notifica.valeAncora(DateTime.now())) {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -146,18 +185,41 @@ class _IlFoglio extends StatefulWidget {
 
 class _StatoDelFoglio extends State<_IlFoglio> {
   Uint8List? _foto;
+  Timer? _ancora;
 
   @override
   void initState() {
     super.initState();
     final camera = widget.tocco.notifica.camera;
     if (camera != null) {
-      unawaited(
-        laFotoDi(widget.collegamento, camera).then((foto) {
-          if (mounted) setState(() => _foto = foto);
-        }),
+      /* L'app aperta da una notifica ha il filo che si sta ancora aprendo: la
+       * foto chiesta una volta sola, subito, non arrivava mai. Si richiede
+       * ogni due secondi finche' arriva, per mezzo minuto al piu'. */
+      var volte = 0;
+      Future<void> prova() async {
+        volte += 1;
+        final foto = await laFotoDi(widget.collegamento, camera);
+        if (!mounted) return;
+        if (foto != null) {
+          _ancora?.cancel();
+          setState(() => _foto = foto);
+        } else if (volte >= 15) {
+          _ancora?.cancel();
+        }
+      }
+
+      unawaited(prova());
+      _ancora = Timer.periodic(
+        const Duration(seconds: 2),
+        (_) => unawaited(prova()),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _ancora?.cancel();
+    super.dispose();
   }
 
   @override
@@ -216,6 +278,234 @@ class _StatoDelFoglio extends State<_IlFoglio> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// La telecamera di una notifica: «Guarda» sul movimento o sull'antifurto.
+///
+/// Come il campanello: una foto ogni due secondi, chiesta alla casa sul filo
+/// con le regole della plancia — chi non vede quella telecamera nella
+/// plancia non la vede nemmeno qui (il ponte risponde di no). Sotto, il testo
+/// della notifica e i suoi tasti che fanno qualcosa (Inserisci, Disinserisci,
+/// Spegni sirena), finche' la notifica vale. Con l'app appena aperta il filo
+/// si sta ancora aprendo: le prime foto non arrivano, e si continua a
+/// chiedere.
+class SchermataDellaTelecamera extends StatefulWidget {
+  const SchermataDellaTelecamera({
+    super.key,
+    required this.tocco,
+    required this.collegamento,
+    this.postino,
+    this.fotoIniziale,
+    this.adesso,
+  });
+
+  final ToccoDellaNotifica tocco;
+  final Collegamento collegamento;
+  final Postino? postino;
+
+  /// La foto da mostrare senza chiederla: per le prove e i disegni.
+  final Uint8List? fotoIniziale;
+
+  /// L'ora per decidere se i tasti valgono ancora: per le prove.
+  final DateTime? adesso;
+
+  @override
+  State<SchermataDellaTelecamera> createState() => _StatoDellaTelecamera();
+}
+
+class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
+  Uint8List? _foto;
+  Timer? _giro;
+  bool _chiesta = false;
+  String? _premuto;
+
+  NotificaArrivata get _notifica => widget.tocco.notifica;
+
+  @override
+  void initState() {
+    super.initState();
+    _foto = widget.fotoIniziale;
+    final camera = _notifica.camera;
+    if (camera != null && widget.fotoIniziale == null) {
+      unawaited(_unaFoto(camera));
+      _giro = Timer.periodic(
+        const Duration(seconds: 2),
+        (_) => _unaFoto(camera),
+      );
+    }
+  }
+
+  Future<void> _unaFoto(String camera) async {
+    final foto = await laFotoDi(widget.collegamento, camera);
+    if (!mounted) return;
+    setState(() {
+      _chiesta = true;
+      if (foto != null) _foto = foto;
+    });
+  }
+
+  @override
+  void dispose() {
+    _giro?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _tasto(TastoDellaNotifica tasto) async {
+    if (_premuto != null) return;
+    setState(() => _premuto = tasto.id);
+    await _premi(context, widget.tocco, tasto, widget.postino);
+    if (mounted) setState(() => _premuto = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ora = TimeOfDay.fromDateTime(_notifica.quando);
+    String due(int n) => n.toString().padLeft(2, '0');
+    final vale = _notifica.valeAncora(widget.adesso ?? DateTime.now());
+    final tasti = [
+      for (final tasto in _notifica.tasti)
+        if (!tasto.apre && !tasto.chiude && vale) tasto,
+    ];
+    final foto = _foto;
+    return Scaffold(
+      backgroundColor: const Color(0xFF14110F),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        title: Text(
+          _notifica.titolo,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              /* Al piu' meta' dello schermo: su un telefono di traverso, o su
+               * un tablet, la foto si fa piu' piccola invece di spingere fuori
+               * i tasti. */
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.5,
+                ),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: 1,
+                  child: AspectRatio(
+                    aspectRatio: 16 / 10,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(22),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (foto != null)
+                            Image.memory(
+                              foto,
+                              key: const Key('telecamera-foto'),
+                              fit: BoxFit.cover,
+                              gaplessPlayback: true,
+                            )
+                          else
+                            Container(
+                              color: const Color(0xFF2E2A26),
+                              alignment: Alignment.center,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.videocam_rounded,
+                                    size: 52,
+                                    color: Colors.white38,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    _chiesta
+                                        ? inLingua(
+                                            it: 'La casa non manda ancora la foto…',
+                                            en:
+                                                'The home isn\'t sending the '
+                                                'picture yet…',
+                                          )
+                                        : inLingua(
+                                            it: 'Si chiede la foto alla casa…',
+                                            en: 'Asking the home for the picture…',
+                                          ),
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Positioned(
+                            left: 12,
+                            top: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.circle,
+                                    size: 10,
+                                    color: Color(0xFFEF4444),
+                                  ),
+                                  const SizedBox(width: 7),
+                                  Text(
+                                    inLingua(it: 'DAL VIVO', en: 'LIVE'),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                /* Il testo del movimento porta gia' l'ora («21:59 · casa
+                 * vuota»); senza testo, l'ora. */
+                _notifica.testo.isNotEmpty
+                    ? _notifica.testo
+                    : '${due(ora.hour)}:${due(ora.minute)}',
+                style: const TextStyle(color: Colors.white70, fontSize: 17),
+              ),
+              const Spacer(),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final tasto in tasti)
+                    FilledButton.tonal(
+                      onPressed: _premuto == null ? () => _tasto(tasto) : null,
+                      child: Text(tasto.etichetta),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

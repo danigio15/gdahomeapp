@@ -976,3 +976,124 @@ test("il citofono di Ring: un evento senza classe, col nome o l'evento che dice 
   sentinella.cambia(id, stato(id, "2026-10-14T12:00:00Z", attributi));
   assert.ok(!dette.some((d) => d.tipo === "campanello"));
 });
+
+/* ─── Il movimento davanti alle telecamere ────────────────────────────── */
+
+/* Due telecamere dello stesso modello: gli identificativi hanno in comune il
+ * modello, e cambia solo il seriale. Il movimento del balcone e' del balcone. */
+const SERIALE_INGRESSO = "i20230101aawrk11111111";
+const SERIALE_BALCONE = "i20230101aawrk22222222";
+const duePortoni = () => [
+  stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }),
+  stato(`camera.ds_2cd2143g2_${SERIALE_INGRESSO}_101`, "idle", { friendly_name: "Ingresso" }),
+  stato(`camera.ds_2cd2143g2_${SERIALE_BALCONE}_101`, "idle", { friendly_name: "Balcone" }),
+  stato(`binary_sensor.ds_2cd2143g2_${SERIALE_BALCONE}_motion`, "off", {
+    device_class: "motion",
+    friendly_name: "Balcone Motion",
+  }),
+  stato(`binary_sensor.ds_2cd2143g2_${SERIALE_INGRESSO}_line_crossing`, "off", {
+    device_class: "motion",
+    friendly_name: "Ingresso Line Crossing",
+  }),
+];
+
+test("il movimento di una telecamera porta quella telecamera, non una dello stesso modello", () => {
+  const { sentinella, dette } = unaSentinella(duePortoni());
+  const sensore = `binary_sensor.ds_2cd2143g2_${SERIALE_BALCONE}_motion`;
+  sentinella.cambia(
+    sensore,
+    stato(sensore, "on", { device_class: "motion", friendly_name: "Balcone Motion" }),
+  );
+  assert.equal(dette.at(-1).tipo, "movimento");
+  assert.equal(dette.at(-1).camera, `camera.ds_2cd2143g2_${SERIALE_BALCONE}_101`);
+  assert.equal(dette.at(-1).conFoto, true);
+
+  const linea = `binary_sensor.ds_2cd2143g2_${SERIALE_INGRESSO}_line_crossing`;
+  sentinella.cambia(
+    linea,
+    stato(linea, "on", { device_class: "motion", friendly_name: "Ingresso Line Crossing" }),
+  );
+  assert.equal(dette.at(-1).camera, `camera.ds_2cd2143g2_${SERIALE_INGRESSO}_101`);
+});
+
+test("col nome soltanto in comune vale il nome, e a pari merito nessuna telecamera", () => {
+  const { sentinella, dette } = unaSentinella([
+    stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }),
+    stato("camera.cam_a", "idle", { friendly_name: "Giardino" }),
+    stato("camera.cam_b", "idle", { friendly_name: "Garage" }),
+    stato("binary_sensor.pir_1", "off", { device_class: "motion", friendly_name: "PIR Garage" }),
+    stato("binary_sensor.pir_2", "off", { device_class: "motion", friendly_name: "PIR corridoio" }),
+  ]);
+  sentinella.cambia(
+    "binary_sensor.pir_1",
+    stato("binary_sensor.pir_1", "on", { device_class: "motion", friendly_name: "PIR Garage" }),
+  );
+  assert.equal(dette.at(-1).camera, "camera.cam_b");
+  sentinella.cambia(
+    "binary_sensor.pir_2",
+    stato("binary_sensor.pir_2", "on", { device_class: "motion", friendly_name: "PIR corridoio" }),
+  );
+  assert.equal(dette.at(-1).camera, null, "nessuna telecamera e' vicina: niente foto sbagliata");
+});
+
+test("«Quali» del movimento: si salvano, e passano solo le telecamere scelte", async () => {
+  const banco = unBanco();
+  try {
+    await banco.registra(banco.a);
+    const balcone = `camera.ds_2cd2143g2_${SERIALE_BALCONE}_101`;
+    const ingresso = `camera.ds_2cd2143g2_${SERIALE_INGRESSO}_101`;
+    /* Come le manda l'app (`SceltaDellaVoce.inJson`): coi campi vuoti a null. */
+    const detto = await banco.notifiche.rispondi(
+      {
+        id: 9,
+        type: "ponte/notifiche/imposta",
+        impostazioni: {
+          su: {
+            movimento: {
+              stile: "come-tutte",
+              quali: [ingresso, balcone],
+              soglia: null,
+              suono: "normale",
+              orari: null,
+              come: "subito",
+              dentro: ["durata"],
+              quando: "sempre",
+            },
+          },
+        },
+      },
+      { dispositivo: banco.a.dispositivo },
+    );
+    assert.equal(detto.success, true);
+    assert.deepEqual(detto.result.impostazioni.su.movimento.quali, [ingresso, balcone]);
+    assert.deepEqual(banco.notifiche.impostazioniDi(banco.a.dispositivo.id).su.movimento.quali, [
+      ingresso,
+      balcone,
+    ]);
+
+    const movimento = (camera, entita) => ({
+      tipo: "movimento",
+      urgenza: "normale",
+      chiave: `movimento:${entita}`,
+      entita,
+      camera,
+      perche: "casa-vuota",
+      parole: { it: { titolo: "Movimento", testo: "" } },
+      azioni: [],
+    });
+    assert.equal(
+      await banco.notifiche.consegna(
+        movimento(balcone, `binary_sensor.ds_2cd2143g2_${SERIALE_BALCONE}_motion`),
+      ),
+      1,
+      "dal sensore della telecamera scelta: passa",
+    );
+    assert.equal(
+      await banco.notifiche.consegna(movimento("camera.giardino", "binary_sensor.pir_giardino")),
+      0,
+      "da una telecamera non scelta: no",
+    );
+  } finally {
+    banco.spegni();
+  }
+});
