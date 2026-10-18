@@ -58,12 +58,36 @@ function huawei() {
   };
   for (const n of [1, 2]) {
     const nome = `Battery ${n}`;
-    metti(`battery_${n}_state_of_capacity`, n === 1 ? 66 : 62, "%", `${nome} State of capacity`, "battery");
-    metti(`battery_${n}_charge_discharge_power`, n === 1 ? 940 : 890, "W", `${nome} Charge/Discharge power`, "power");
+    metti(
+      `battery_${n}_state_of_capacity`,
+      n === 1 ? 66 : 62,
+      "%",
+      `${nome} State of capacity`,
+      "battery",
+    );
+    metti(
+      `battery_${n}_charge_discharge_power`,
+      n === 1 ? 940 : 890,
+      "W",
+      `${nome} Charge/Discharge power`,
+      "power",
+    );
     metti(`battery_${n}_bus_voltage`, 451.2, "V", `${nome} Bus voltage`, "voltage");
     metti(`battery_${n}_bus_current`, n === 1 ? 2.1 : 2.0, "A", `${nome} Bus current`, "current");
-    metti(`battery_${n}_maximum_temperature`, n === 1 ? 24 : 25, "°C", `${nome} Maximum temperature`, "temperature");
-    metti(`battery_${n}_minimum_temperature`, n === 1 ? 21 : 22, "°C", `${nome} Minimum temperature`, "temperature");
+    metti(
+      `battery_${n}_maximum_temperature`,
+      n === 1 ? 24 : 25,
+      "°C",
+      `${nome} Maximum temperature`,
+      "temperature",
+    );
+    metti(
+      `battery_${n}_minimum_temperature`,
+      n === 1 ? 21 : 22,
+      "°C",
+      `${nome} Minimum temperature`,
+      "temperature",
+    );
     metti(`battery_${n}_total_charge`, 812, "kWh", `${nome} Total charge`, "energy");
   }
   return stati;

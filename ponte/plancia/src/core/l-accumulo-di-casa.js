@@ -360,7 +360,7 @@ export function pacchiDaImportare(states = {}, config, nomeDi = (entity) => enti
   const unPacco = (gruppo) =>
     Boolean(
       gruppo?.campi.soc &&
-        (gruppo.celle.length >= 2 || (gruppo.campi.tensione && gruppo.campi.corrente)),
+      (gruppo.celle.length >= 2 || (gruppo.campi.tensione && gruppo.campi.corrente)),
     );
   const pacchi = [];
   for (const [prefisso, gruppo] of gruppi) {
