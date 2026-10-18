@@ -113,7 +113,6 @@ Future<DisegnoDellaNotifica> _disegna(
 /* ─── i colori ─────────────────────────────────────────────────────────── */
 
 const _blu = [Color(0xFF1E3A5F), Color(0xFF0F172A)];
-const _sole = [Color(0xFF7C4A03), Color(0xFF2A1A05), Color(0xFF0F172A)];
 const _rosso = [Color(0xFF7F1D1D), Color(0xFF2A0A0A)];
 const _chiaro = Color(0xFFE2E8F0);
 const _spento = Color(0xFF94A3B8);
@@ -594,234 +593,565 @@ void _ilCiclo(Canvas tela, Map<String, dynamic> s, PictureInfo? svg) {
   }
 }
 
-/* ─── la giornata (il riepilogo della sera) ────────────────────────────── */
+/* ─── la giornata (il riepilogo della sera) ────────────────────────────── *
+ *
+ * La griglia della scheda approvata (`report.png`): 540×270 nel disegno, qui
+ * in punti della scheda (360×180, due terzi). Due colonne, 176 | il resto,
+ * con venti di spazio; tre righe: 22 | il resto | 16, con dieci di spazio.
+ *
+ *  - in alto la data a sinistra e il record a destra, sulla stessa riga;
+ *  - a sinistra il numero grande, e in fondo i due numeri divisi da una linea,
+ *    che finiscono dove finisce la legenda;
+ *  - a destra il grafico ora per ora, e sotto la sua legenda.
+ *
+ * Il meteo di domani e il consiglio non ci stanno piu': sono nel testo della
+ * notifica, e nella pagina «La tua giornata». */
+
+/// Le misure della griglia, in punti della scheda.
+abstract final class _Griglia {
+  static const k = 2 / 3;
+  static const sinistra = 22 * k;
+  static const destra = 360 - 20 * k;
+  static const colonna = 176 * k;
+  static const grafico = sinistra + colonna + 20 * k;
+  static const riga1 = 18 * k;
+  static const altezza1 = 22 * k;
+  static const riga2 = riga1 + altezza1 + 10 * k;
+  static const altezza2 = 180 * k;
+  static const riga3 = riga2 + altezza2 + 10 * k;
+  static const altezza3 = 16 * k;
+  static const fondo = riga3 + altezza3;
+}
+
+const _usatoInCasa = Color(0xFFD97706);
+const _marrone = Color(0xFF422006);
+const _lineaSottile = Color(0x1AFFFFFF);
+const _testoChiaro = Color(0xFFCBD5E1);
 
 void _laGiornata(Canvas tela, Map<String, dynamic> s, PictureInfo? svg) {
-  final conSole = _numero(s['pk']) != null;
-  _fondo(tela, const Rect.fromLTWH(0, 0, 360, 180), conSole ? _sole : _blu);
-  final data = DateTime.tryParse('${s['d'] ?? ''}');
-  _testa(
-    tela,
-    svg,
-    inLingua(it: 'La tua giornata', en: 'Your day'),
-    data == null ? '' : _giorno(data),
-    finoA: 220,
+  final dalSole = _numero(s['pk']);
+  final conSole = dalSole != null;
+  const tutto = Rect.fromLTWH(0, 0, 360, 180);
+  final forma = RRect.fromRectAndRadius(
+    tutto,
+    const Radius.circular(22 * _Griglia.k),
   );
+  tela.save();
+  tela.clipRRect(forma);
+  /* radial-gradient(120% 120% at 0% 0%): un'ellisse larga quanto la scheda
+   * e alta quanto lei, schiacciata. */
+  tela.save();
+  tela.scale(1, 0.5);
+  tela.drawRect(
+    const Rect.fromLTWH(0, 0, 360, 360),
+    Paint()
+      ..shader = ui.Gradient.radial(
+        Offset.zero,
+        360 * 1.2,
+        conSole
+            ? const [Color(0xFF3A2507), Color(0xFF141B2E), Color(0xFF0B1222)]
+            : const [Color(0xFF1E3A5F), Color(0xFF141B2E), Color(0xFF0B1222)],
+        const [0, 0.45, 1],
+      ),
+  );
+  tela.restore();
+  tela.restore();
+  tela.drawRRect(
+    forma.deflate(0.35),
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.7
+      ..color = const Color(0x12FFFFFF),
+  );
+
+  /* ── la prima riga: la data, il record ── */
   final record = s['rec'];
+  var finoAllaData = _Griglia.destra;
   if (record is String && record.isNotEmpty) {
-    final scritto = TextPainter(
-      text: const TextSpan(
-        text: 'RECORD',
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 9,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.8,
-          color: Color(0xFF422006),
+    finoAllaData = _ilRecord(tela, record) - 8;
+  }
+  final data = DateTime.tryParse('${s['d'] ?? ''}');
+  if (data != null) {
+    final scritta = _misurato(
+      _giorno(data).toUpperCase(),
+      const TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 10.5 * _Griglia.k,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 10.5 * _Griglia.k * 0.12,
+        color: _spento,
+      ),
+      finoAllaData - _Griglia.sinistra,
+    );
+    scritta.paint(
+      tela,
+      Offset(
+        _Griglia.sinistra,
+        _Griglia.riga1 + (_Griglia.altezza1 - scritta.height) / 2,
+      ),
+    );
+    scritta.dispose();
+  }
+
+  /* ── a sinistra: il numero grande ── */
+  final grande = conSole ? dalSole : _numero(s['rk']);
+  if (grande != null) {
+    final unita = _misurato(
+      'kWh',
+      const TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 14 * _Griglia.k,
+        fontWeight: FontWeight.w600,
+        color: _chiaro,
+      ),
+      40,
+    );
+    final numero = _misurato(
+      _decimali(grande, grande >= 100 ? 0 : 1),
+      const TextStyle(
+        fontFamily: 'Oswald',
+        fontSize: 60 * _Griglia.k,
+        fontWeight: FontWeight.w700,
+        color: _gialloChiaro,
+        height: 1,
+      ),
+      _Griglia.colonna - unita.width - 4,
+    );
+    /* line-height .9: la scatola del numero e' un decimo piu' bassa del
+     * corpo, e il numero ci sta centrato. */
+    final sopra = _Griglia.riga2 - 60 * _Griglia.k * 0.05;
+    numero.paint(tela, Offset(_Griglia.sinistra, sopra));
+    final base =
+        sopra + numero.computeDistanceToActualBaseline(TextBaseline.alphabetic);
+    unita.paint(
+      tela,
+      Offset(
+        _Griglia.sinistra + numero.width + 4,
+        base - unita.computeDistanceToActualBaseline(TextBaseline.alphabetic),
+      ),
+    );
+    final sotto = _misurato(
+      conSole
+          ? inLingua(it: 'prodotti dal sole oggi', en: 'from the sun today')
+          : inLingua(it: 'consumati oggi', en: 'used today'),
+      const TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 12.5 * _Griglia.k,
+        fontWeight: FontWeight.w600,
+        color: _testoChiaro,
+      ),
+      _Griglia.colonna,
+    );
+    sotto.paint(
+      tela,
+      Offset(_Griglia.sinistra, _Griglia.riga2 + 60 * _Griglia.k * 0.9 + 4),
+    );
+    numero.dispose();
+    unita.dispose();
+    sotto.dispose();
+  }
+
+  /* ── a sinistra, in fondo: i due numeri ── */
+  final batteria = _numero(s['batt']);
+  final coppia = <(String, String)>[
+    if (conSole) ...[
+      if (_numero(s['casa']) case final casa?)
+        (_percento(casa), inLingua(it: 'usato in casa', en: 'used at home')),
+      if (_numero(s['ris']) case final risparmio?)
+        (_euro(risparmio), inLingua(it: 'risparmiati', en: 'saved')),
+    ] else ...[
+      if (_numero(s['re']) case final euro?)
+        (_euro(euro), inLingua(it: 'dalla rete', en: 'from the grid')),
+      if (batteria != null)
+        (
+          _percento(batteria),
+          inLingua(it: 'batteria stasera', en: 'battery tonight'),
         ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    final pillola = Rect.fromLTWH(
-      346 - scritto.width - 18,
-      12,
-      scritto.width + 18,
-      17,
-    );
-    tela.drawRRect(
-      RRect.fromRectAndRadius(pillola, const Radius.circular(9)),
-      Paint()
-        ..shader = ui.Gradient.linear(pillola.topLeft, pillola.bottomRight, [
-          _gialloChiaro,
-          _arancio,
-        ]),
-    );
-    scritto.paint(tela, Offset(pillola.left + 9, pillola.top + 3.5));
-    scritto.dispose();
-    _scrivi(
-      tela,
-      inLingua(
-        it: 'il giorno più solare di $record',
-        en: 'sunniest day of $record',
-      ),
-      const Offset(346, 32),
-      corpo: 8,
-      peso: FontWeight.w700,
-      colore: _gialloChiaro,
-      allinea: TextAlign.right,
-      larghezza: 140,
-    );
-  }
-  // A sinistra tre numeri.
-  final tessere = conSole
-      ? [
-          (
-            inLingua(it: 'DAL SOLE', en: 'FROM SUN'),
-            _kwh(_numero(s['pk'])!),
-            _gialloChiaro,
-          ),
-          if (_numero(s['casa']) case final casa?)
-            (inLingua(it: 'IN CASA', en: 'AT HOME'), _percento(casa), _bianco),
-          if (_numero(s['ris']) case final risparmio?)
-            (
-              inLingua(it: 'RISPARMIATI', en: 'SAVED'),
-              _euro(risparmio),
-              _verdeChiaro,
-            ),
-        ]
-      : [
-          if (_numero(s['rk']) case final rete?)
-            (inLingua(it: 'CONSUMO', en: 'USED'), _kwh(rete), _bianco),
-          if (_numero(s['re']) case final euro?)
-            (inLingua(it: 'COSTO', en: 'COST'), _euro(euro), _gialloChiaro),
-        ];
-  for (final (i, (etichetta, valore, colore)) in tessere.indexed) {
-    final riquadro = Rect.fromLTWH(14, 50 + i * 41.0, 96, 36);
-    tela.drawRRect(
-      RRect.fromRectAndRadius(riquadro, const Radius.circular(10)),
-      Paint()..color = const Color(0x10FFFFFF),
-    );
-    _scrivi(
-      tela,
-      etichetta,
-      riquadro.topLeft + const Offset(8, 5),
-      corpo: 7,
-      peso: FontWeight.w800,
-      colore: _spento,
-      larghezza: 84,
-      spaziatura: 0.5,
-    );
-    _scrivi(
-      tela,
-      valore,
-      riquadro.topLeft + const Offset(8, 15),
-      corpo: 15,
-      peso: FontWeight.w700,
-      colore: colore,
-      titolo: true,
-      larghezza: 84,
-    );
-  }
-  // A destra il grafico: la produzione, il sole usato, il consumo.
-  final prodotta = [for (final uno in _serie(s['p'])) uno / 10];
+    ],
+  ];
+  if (coppia.isNotEmpty) _laCoppia(tela, coppia.take(2).toList());
+
+  /* ── a destra: il grafico, e la sua legenda ── */
+  final prodotta = conSole
+      ? [for (final uno in _serie(s['p'])) uno / 10]
+      : const <double>[];
   final consumata = [for (final uno in _serie(s['c'])) uno / 10];
-  const grafico = Rect.fromLTWH(122, 54, 224, 82);
-  final tutti = [...prodotta, ...consumata];
-  if (tutti.isNotEmpty) {
-    final massimo = math.max(tutti.reduce(math.max), 0.5) * 1.1;
-    tela.drawLine(
-      grafico.bottomLeft,
-      grafico.bottomRight,
-      Paint()..color = const Color(0x22FFFFFF),
+  _ilGraficoDellaGiornata(
+    tela,
+    prodotta: prodotta,
+    consumata: consumata,
+    picco: conSole ? _numero(s['pkw']) : null,
+    ora: s['pora'] is String ? s['pora'] as String : null,
+  );
+  _laLegenda(tela, [
+    if (prodotta.length > 1) ...[
+      (_arancio.withValues(alpha: 0.55), inLingua(it: 'Sole', en: 'Sun')),
+      (_usatoInCasa, inLingua(it: 'Usato in casa', en: 'Used at home')),
+    ],
+    if (consumata.length > 1)
+      (_azzurro, inLingua(it: 'Consumo', en: 'Consumption')),
+  ]);
+}
+
+/// La pillola del record, a destra nella prima riga. Torna dove comincia.
+double _ilRecord(Canvas tela, String record) {
+  final anno = record == 'anno' || record == 'year';
+  final scritta = _misurato(
+    anno
+        ? inLingua(it: 'Record dell\'anno', en: 'Record of the year')
+        : inLingua(it: 'Record di $record', en: '$record record'),
+    const TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 11 * _Griglia.k,
+      fontWeight: FontWeight.w800,
+      color: _marrone,
+    ),
+    /* Al piu' meta' riga: la data ha bisogno del suo posto. */
+    (_Griglia.destra - _Griglia.sinistra) / 2 - 24,
+  );
+  const coppa = 7.0;
+  const dentro = 10 * _Griglia.k;
+  final larga = dentro + coppa + 3 + scritta.width + dentro;
+  final alta = scritta.height + 8 * _Griglia.k;
+  final pillola = Rect.fromLTWH(
+    _Griglia.destra - larga,
+    _Griglia.riga1 + (_Griglia.altezza1 - alta) / 2,
+    larga,
+    alta,
+  );
+  tela.drawRRect(
+    RRect.fromRectAndRadius(pillola, Radius.circular(alta / 2)),
+    Paint()
+      ..shader = ui.Gradient.linear(
+        pillola.topLeft,
+        pillola.bottomRight,
+        const [_gialloChiaro, _arancio],
+      ),
+  );
+  _laCoppa(
+    tela,
+    Rect.fromLTWH(
+      pillola.left + dentro,
+      pillola.center.dy - coppa / 2,
+      coppa,
+      coppa,
+    ),
+  );
+  scritta.paint(
+    tela,
+    Offset(
+      pillola.left + dentro + coppa + 3,
+      pillola.center.dy - scritta.height / 2,
+    ),
+  );
+  scritta.dispose();
+  return pillola.left;
+}
+
+/// Una coppa, disegnata: l'emoji del trofeo non c'e' su tutti i telefoni, e
+/// dove c'e' ognuno la fa a modo suo.
+void _laCoppa(Canvas tela, Rect dove) {
+  final colore = Paint()..color = _marrone;
+  final w = dove.width;
+  final h = dove.height;
+  final x = dove.left;
+  final y = dove.top;
+  final calice = Path()
+    ..moveTo(x + w * 0.2, y)
+    ..lineTo(x + w * 0.8, y)
+    ..lineTo(x + w * 0.76, y + h * 0.42)
+    ..quadraticBezierTo(x + w * 0.7, y + h * 0.62, x + w * 0.5, y + h * 0.64)
+    ..quadraticBezierTo(x + w * 0.3, y + h * 0.62, x + w * 0.24, y + h * 0.42)
+    ..close();
+  tela.drawPath(calice, colore);
+  final manici = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = w * 0.1
+    ..color = _marrone;
+  tela.drawArc(
+    Rect.fromLTWH(x + w * 0.02, y + h * 0.06, w * 0.36, h * 0.36),
+    math.pi / 2,
+    math.pi,
+    false,
+    manici,
+  );
+  tela.drawArc(
+    Rect.fromLTWH(x + w * 0.62, y + h * 0.06, w * 0.36, h * 0.36),
+    -math.pi / 2,
+    math.pi,
+    false,
+    manici,
+  );
+  tela.drawRect(
+    Rect.fromLTWH(x + w * 0.44, y + h * 0.62, w * 0.12, h * 0.2),
+    colore,
+  );
+  tela.drawRRect(
+    RRect.fromRectAndRadius(
+      Rect.fromLTWH(x + w * 0.26, y + h * 0.82, w * 0.48, h * 0.16),
+      Radius.circular(w * 0.05),
+    ),
+    colore,
+  );
+}
+
+/// I due numeri in fondo a sinistra, divisi da una linea sopra e una in mezzo.
+void _laCoppia(Canvas tela, List<(String, String)> coppia) {
+  const valore = TextStyle(
+    fontFamily: 'Oswald',
+    fontSize: 24 * _Griglia.k,
+    fontWeight: FontWeight.w700,
+    color: _bianco,
+    height: 1,
+  );
+  const etichetta = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 10.5 * _Griglia.k,
+    fontWeight: FontWeight.w600,
+    color: _spento,
+  );
+  const sopraIlValore = 10 * _Griglia.k;
+  const fraIDue = 3 * _Griglia.k;
+  const rientro = 12 * _Griglia.k;
+  final meta = _Griglia.colonna / 2;
+  final scritti = [
+    for (final (i, (numero, parola)) in coppia.indexed)
+      (
+        _misurato(numero, valore, meta - (i == 0 ? 6 : rientro)),
+        _misurato(parola, etichetta, meta - (i == 0 ? 6 : rientro)),
+      ),
+  ];
+  final alto = scritti.fold<double>(
+    0,
+    (prima, uno) => math.max(prima, uno.$1.height + fraIDue + uno.$2.height),
+  );
+  final linea = _Griglia.fondo - alto - sopraIlValore;
+  final pennello = Paint()
+    ..color = _lineaSottile
+    ..strokeWidth = 0.7;
+  tela.drawLine(
+    Offset(_Griglia.sinistra, linea),
+    Offset(_Griglia.sinistra + _Griglia.colonna, linea),
+    pennello,
+  );
+  for (final (i, (numero, parola)) in scritti.indexed) {
+    final x = _Griglia.sinistra + (i == 0 ? 0 : meta + rientro);
+    if (i > 0) {
+      tela.drawLine(
+        Offset(_Griglia.sinistra + meta, linea + sopraIlValore),
+        Offset(_Griglia.sinistra + meta, _Griglia.fondo),
+        pennello,
+      );
+    }
+    numero.paint(tela, Offset(x, linea + sopraIlValore));
+    parola.paint(
+      tela,
+      Offset(x, linea + sopraIlValore + numero.height + fraIDue),
     );
+    numero.dispose();
+    parola.dispose();
+  }
+}
+
+/// Il grafico ora per ora: il sole (area ambra), quanto ne e' rimasto in
+/// casa (pieno), il consumo (linea azzurra), il picco.
+///
+/// Le misure sono quelle del disegno (`viewBox 0 0 300 200`): la base a 178,
+/// cinque righe leggere sopra, le ore sotto a 196.
+void _ilGraficoDellaGiornata(
+  Canvas tela, {
+  required List<double> prodotta,
+  required List<double> consumata,
+  double? picco,
+  String? ora,
+}) {
+  const dove = Rect.fromLTWH(
+    _Griglia.grafico,
+    _Griglia.riga2,
+    _Griglia.destra - _Griglia.grafico,
+    _Griglia.altezza2,
+  );
+  /* La scala verticale del disegno: 200 unita' nell'altezza della riga. */
+  final y = dove.height / 200;
+  final base = dove.top + 178 * y;
+  final piano = Rect.fromLTRB(dove.left, dove.top, dove.right, base);
+  final sottile = Paint()
+    ..color = const Color(0x0FFFFFFF)
+    ..strokeWidth = 0.6;
+  for (var riga = 1; riga <= 5; riga += 1) {
+    final quota = base - riga * 32.95 * y;
+    tela.drawLine(Offset(dove.left, quota), Offset(dove.right, quota), sottile);
+  }
+  tela.drawLine(
+    Offset(dove.left, base),
+    Offset(dove.right, base),
+    Paint()
+      ..color = const Color(0x2EFFFFFF)
+      ..strokeWidth = 0.7,
+  );
+  final tutti = [...prodotta, ...consumata];
+  if (tutti.length > 1) {
+    final massimo = math.max(tutti.reduce(math.max), 0.1) * 1.1;
     if (prodotta.length > 1) {
       tela.drawPath(
-        _area(prodotta, grafico, massimo),
+        _area(prodotta, piano, massimo),
         Paint()
-          ..shader = ui.Gradient.linear(
-            grafico.topCenter,
-            grafico.bottomCenter,
-            [_gialloChiaro, _arancio.withValues(alpha: 0.25)],
-          ),
+          ..shader = ui.Gradient.linear(piano.topCenter, piano.bottomCenter, [
+            _usatoInCasa.withValues(alpha: 0.55),
+            _usatoInCasa.withValues(alpha: 0.08),
+          ]),
+      );
+      tela.drawPath(
+        _linea(prodotta, piano, massimo),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.3
+          ..strokeJoin = StrokeJoin.round
+          ..color = _arancio,
       );
       final usata = [
         for (var i = 0; i < prodotta.length; i += 1)
           i < consumata.length ? math.min(prodotta[i], consumata[i]) : 0.0,
       ];
-      tela.drawPath(_area(usata, grafico, massimo), Paint()..color = _arancio);
+      tela.drawPath(
+        _area(usata, piano, massimo),
+        Paint()..color = _usatoInCasa,
+      );
     }
     if (consumata.length > 1) {
       tela.drawPath(
-        _linea(consumata, grafico, massimo),
+        _linea(consumata, piano, massimo),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.8
+          ..strokeWidth = 1.45
           ..strokeJoin = StrokeJoin.round
           ..color = _azzurro,
       );
     }
-    final picco = _numero(s['pkw']);
     if (picco != null && prodotta.length > 1) {
-      final dove = prodotta.indexOf(prodotta.reduce(math.max));
-      final x = grafico.left + dove * grafico.width / (prodotta.length - 1);
-      final y = grafico.bottom - (prodotta[dove] / massimo) * grafico.height;
-      tela.drawCircle(Offset(x, y), 3, Paint()..color = _bianco);
+      final alto = prodotta.reduce(math.max);
+      final i = prodotta.indexOf(alto);
+      final punto = Offset(
+        piano.left + i * piano.width / (prodotta.length - 1),
+        piano.bottom - (alto / massimo) * piano.height,
+      );
+      tela.drawCircle(punto, 3, Paint()..color = const Color(0xFF0F172A));
       tela.drawCircle(
-        Offset(x, y),
+        punto,
         3,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.6
-          ..color = _arancio,
+          ..color = _giallo,
       );
-      _scrivi(
-        tela,
-        '${_decimali(picco, 1)} kW${s['pora'] is String ? ' · ${s['pora']}' : ''}',
-        Offset(x + 5, math.max(y - 12, grafico.top - 4)),
-        corpo: 7.5,
-        peso: FontWeight.w800,
-        colore: _gialloChiaro,
-        larghezza: 90,
+      final scritta = _misurato(
+        '${_decimali(picco, 1)} kW${ora == null ? '' : ' · $ora'}',
+        const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 6.8,
+          fontWeight: FontWeight.w700,
+          color: _gialloChiaro,
+        ),
+        dove.width / 2,
       );
-    }
-    for (final ora in const [0, 6, 12, 18, 24]) {
-      _scrivi(
-        tela,
-        '$ora',
-        Offset(grafico.left + ora * grafico.width / 24, 138),
-        corpo: 7,
-        colore: _spento,
-        allinea: TextAlign.center,
-        larghezza: 20,
+      /* A destra del punto; se non ci sta, a sinistra. */
+      var x = punto.dx + 5.3;
+      if (x + scritta.width > dove.right) x = punto.dx - 5.3 - scritta.width;
+      final sopra = math.max(
+        punto.dy -
+            3.6 -
+            scritta.computeDistanceToActualBaseline(TextBaseline.alphabetic),
+        dove.top - scritta.height / 2,
       );
-    }
-  }
-  // Sotto: domani, ora per ora, e il consiglio.
-  final meteo = s['met'];
-  var x = 126.0;
-  if (meteo is List) {
-    for (final uno in meteo.take(6)) {
-      if (uno is! List || uno.length < 2) continue;
-      _ilTempo(tela, Offset(x + 6, 158), '${uno[1]}');
-      _scrivi(
-        tela,
-        '${uno[0]}',
-        Offset(x + 6, 166),
-        corpo: 6.5,
-        colore: _spento,
-        allinea: TextAlign.center,
-        larghezza: 20,
-      );
-      x += 20;
+      scritta.paint(tela, Offset(x, sopra));
+      scritta.dispose();
     }
   }
-  final consiglio = s['cons'];
-  if (consiglio is String && consiglio.isNotEmpty) {
-    _scrivi(
-      tela,
-      '${inLingua(it: 'Domani', en: 'Tomorrow')}: $consiglio',
-      Offset(x + 6, 154),
-      corpo: 8,
-      peso: FontWeight.w700,
-      colore: _gialloChiaro,
-      larghezza: 346 - x - 6,
-      righe: 2,
-    );
-  }
-  final batteria = _numero(s['batt']);
-  if (batteria != null && consiglio == null) {
-    _scrivi(
-      tela,
-      inLingua(
-        it: 'Batteria di casa ${_percento(batteria)} per la notte',
-        en: 'Home battery ${_percento(batteria)} for the night',
+  for (final ora in const [0, 6, 12, 18, 24]) {
+    final scritta = _misurato(
+      ora.toString().padLeft(2, '0'),
+      const TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 6.5,
+        fontWeight: FontWeight.w600,
+        color: _spento,
       ),
-      Offset(x + 6, 158),
-      corpo: 8,
-      peso: FontWeight.w700,
-      colore: _verdeChiaro,
-      larghezza: 346 - x - 6,
+      20,
     );
+    final x = dove.left + ora * dove.width / 24;
+    final dx = switch (ora) {
+      0 => x,
+      24 => x - scritta.width,
+      _ => x - scritta.width / 2,
+    };
+    scritta.paint(
+      tela,
+      Offset(
+        dx,
+        dove.top +
+            196 * y -
+            scritta.computeDistanceToActualBaseline(TextBaseline.alphabetic),
+      ),
+    );
+    scritta.dispose();
+  }
+}
+
+/// La legenda sotto il grafico, nella terza riga: quadratini e parole. Se non
+/// ci sta, le parole si rimpiccioliscono tutte insieme.
+void _laLegenda(Canvas tela, List<(Color, String)> voci) {
+  if (voci.isEmpty) return;
+  const larga = _Griglia.destra - _Griglia.grafico;
+  const quadratino = 9 * _Griglia.k;
+  const accanto = 5 * _Griglia.k;
+  const fra = 14 * _Griglia.k;
+  var corpo = 10.5 * _Griglia.k;
+  final minimo = corpo * 0.7;
+  List<TextPainter> scritte;
+  while (true) {
+    scritte = [
+      for (final (_, parola) in voci)
+        TextPainter(
+          text: TextSpan(
+            text: parola,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: corpo,
+              fontWeight: FontWeight.w600,
+              color: _testoChiaro,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+        )..layout(),
+    ];
+    final tutta =
+        scritte.fold<double>(0, (p, s) => p + s.width + quadratino + accanto) +
+        fra * (voci.length - 1);
+    if (tutta <= larga) break;
+    if (corpo - 0.5 < minimo) {
+      testiTagliati.add(voci.map((v) => v.$2).join(' · '));
+      break;
+    }
+    for (final s in scritte) {
+      s.dispose();
+    }
+    corpo -= 0.5;
+  }
+  var x = _Griglia.grafico;
+  const centro = _Griglia.riga3 + _Griglia.altezza3 / 2;
+  for (final (i, (colore, _)) in voci.indexed) {
+    tela.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(x, centro - quadratino / 2, quadratino, quadratino),
+        const Radius.circular(3 * _Griglia.k),
+      ),
+      Paint()..color = colore,
+    );
+    x += quadratino + accanto;
+    scritte[i].paint(tela, Offset(x, centro - scritte[i].height / 2));
+    x += scritte[i].width + fra;
+    scritte[i].dispose();
   }
 }
 
@@ -876,47 +1206,6 @@ String _giorno(DateTime data) {
     it: '${giorniIt[data.weekday - 1]} ${data.day} ${mesiIt[data.month - 1]}',
     en: '${giorniEn[data.weekday - 1]} ${mesiEn[data.month - 1]} ${data.day}',
   );
-}
-
-/// Un tempo di domani, in piccolo: sole, poco nuvoloso, nuvole, pioggia.
-void _ilTempo(Canvas tela, Offset centro, String com) {
-  final sole = Paint()..color = _giallo;
-  final nuvola = Paint()..color = const Color(0xFFCBD5E1);
-  void laNuvola(Offset dove) {
-    tela
-      ..drawCircle(dove + const Offset(-2.5, 0.5), 2.6, nuvola)
-      ..drawCircle(dove + const Offset(1.2, -0.8), 3.2, nuvola)
-      ..drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(dove.dx - 5, dove.dy, 10, 3.2),
-          const Radius.circular(1.6),
-        ),
-        nuvola,
-      );
-  }
-
-  switch (com) {
-    case 'sole':
-      tela.drawCircle(centro, 3.6, sole);
-    case 'poco':
-      tela.drawCircle(centro + const Offset(-1.5, -1.5), 3, sole);
-      laNuvola(centro + const Offset(1.5, 1));
-    case 'pioggia':
-      laNuvola(centro);
-      final goccia = Paint()
-        ..color = _azzurro
-        ..strokeWidth = 1
-        ..strokeCap = StrokeCap.round;
-      for (final dx in const [-3.0, 0.0, 3.0]) {
-        tela.drawLine(
-          centro + Offset(dx, 4.2),
-          centro + Offset(dx - 0.8, 6),
-          goccia,
-        );
-      }
-    default:
-      laNuvola(centro);
-  }
 }
 
 /* ─── l'UPS: manca la corrente ─────────────────────────────────────────── */

@@ -1,10 +1,10 @@
-# gdahome
+# GdAHome
 
 La tua casa sul telefono. Questo add-on serve la **plancia** — quella di
-DashboardModern — all'app di gdahome, da dentro e da fuori casa, e tiene il
+DashboardModern — all'app di GdAHome, da dentro e da fuori casa, e tiene il
 segreto di Home Assistant al posto suo: sul telefono non ci finisce mai.
 
-Nella barra laterale di Home Assistant compare **gdahome**: è la sua pagina, ed
+Nella barra laterale di Home Assistant compare **GdAHome**: è la sua pagina, ed
 è da lì che si fa tutto.
 
 > **È un add-on, non un'integrazione: su HACS non si mette.** HACS lo rifiuta,
@@ -19,9 +19,9 @@ Nella barra laterale di Home Assistant compare **gdahome**: è la sua pagina, ed
 
 ## Comincia da qui
 
-1. Apri **gdahome** dalla barra laterale.
+1. Apri **GdAHome** dalla barra laterale.
 2. Premi **Genera QR code**: compare il QR code.
-3. Apri gdahome sul telefono e inquadralo.
+3. Apri GdAHome sul telefono e inquadralo.
 
 Fatto: il telefono è dentro, e da quel momento entra da solo. Il codice vale
 **cinque minuti e una volta sola**; sotto al QR code ci sono le stesse cose in
@@ -32,8 +32,8 @@ cioè su quali indirizzi la si trova sul Wi-Fi e a quale centralino chiama. È i
 motivo per cui non si deve scrivere nessun indirizzo, nemmeno la prima volta e
 nemmeno da fuori.
 
-Non hai il telefono sotto mano? Nella Panoramica c'è **gdahome nel browser**:
-la stessa app, dentro il browser, senza installare niente. Con gdahome Base,
+Non hai il telefono sotto mano? Nella Panoramica c'è **GdAHome nel browser**:
+la stessa app, dentro il browser, senza installare niente. Con GdAHome Base,
 da quell'indirizzo la casa non si apre: serve Premium.
 
 ## Cosa c'è nella pagina
@@ -49,7 +49,7 @@ dov'era.
 | **Plance**       | se ne tengono fino a otto, ognuna con le sue sezioni, le sue tessere, le sue stanze, e ognuna con i suoi utenti abilitati. Compaiono anche fra le «Plance» di Home Assistant                                                                         |
 | **Licenza**      | Base o Premium, il codice regalo e la matricola della casa. C'è solo dove le licenze sono accese                                                                                                                                                     |
 | **Installatore** | chi ti ha fatto l'impianto, **cosa vede e cosa non vede**, l'ultimo rapporto parola per parola e il tasto per smettere. C'è solo dove la casa manda il rapporto, o sull'Home Assistant di chi installa                                               |
-| **Avanzate**     | il link per aprire gdahome nel browser, la versione, e la **casa di prova** — solo sull'Home Assistant del gestore. Chi risponde alle segnalazioni ci trova anche «Se qualcosa non torna»                                                            |
+| **Avanzate**     | il link per aprire GdAHome nel browser, la versione, e la **casa di prova** — solo sull'Home Assistant del gestore. Chi risponde alle segnalazioni ci trova anche «Se qualcosa non torna»                                                            |
 
 ## Chi vede quale plancia
 
@@ -106,7 +106,7 @@ cambiare queste spunte, perché questa pagina la aprono gli amministratori.
 
 ## Da fuori casa
 
-In casa l'app trova gdahome da sola, sulla porta 8098. Da fuori è **la casa che
+In casa l'app trova GdAHome da sola, sulla porta 8098. Da fuori è **la casa che
 chiama**: apre un filo verso il centralino e ci resta in attesa, e i telefoni
 arrivano da quella parte. Nessuna porta da aprire sul router, nessun indirizzo
 pubblico da avere, nessuna VPN da installare — e funziona anche senza un
@@ -114,7 +114,7 @@ dominio e senza abbonamenti. Il centralino instrada e non può leggere niente:
 fra il telefono e la casa c'è uno scambio di chiavi che gli passa davanti senza
 che lui ne ricavi nulla.
 
-L'indirizzo non si scrive da nessuna parte: è quello di gdahome, sta dentro
+L'indirizzo non si scrive da nessuna parte: è quello di GdAHome, sta dentro
 l'add-on, e **nella configurazione non c'è nessuna casella per metterlo**.
 C'era, e stava sempre vuota: una casella che non va toccata è una casella che
 prima o poi qualcuno tocca. Dove chiama questa casa lo dice la pastiglia **Da
@@ -173,7 +173,7 @@ casa ne riguarda **una**.
 
 |                         |                                                                                                                                             |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `da_fuori_casa`         | acceso: si passa dal centralino di gdahome, e non c'è niente da scrivere. Spento: solo la rete di casa                                      |
+| `da_fuori_casa`         | acceso: si passa dal centralino di GdAHome, e non c'è niente da scrivere. Spento: solo la rete di casa                                      |
 | `quadro`                | il codice che ti ha dato chi ti ha fatto l'impianto. Vuoto: non parte niente                                                                |
 | `quadro_ogni`           | ogni quanti minuti parte un rapporto (1)                                                                                                    |
 | `quadro_manutenzione`   | lascia che chi ti ha fatto l'impianto faccia partire un aggiornamento da lontano. Spento di serie                                           |
@@ -182,7 +182,7 @@ casa ne riguarda **una**.
 | `giorni_di_silenzio`    | dopo quanto un telefono sparito viene tolto da solo; zero vuol dire mai (90)                                                                |
 | `dispositivi_massimi`   | quanti telefoni possono restare abbinati insieme (10)                                                                                       |
 
-### `chi_installa` — solo se gdahome lo monti in casa d'altri
+### `chi_installa` — solo se GdAHome lo monti in casa d'altri
 
 |          |                                                                                           |
 | -------- | ----------------------------------------------------------------------------------------- |
@@ -221,7 +221,7 @@ Dal negozio di Home Assistant, come qualunque altro add-on:
 1. **Impostazioni → Add-on → Negozio degli add-on**, i tre puntini in alto a
    destra → **Archivi**.
 2. Incolla `https://github.com/danigio15/gdahomeapp` e premi **Aggiungi**.
-3. Nell'elenco compare **gdahome**: si installa e si avvia.
+3. Nell'elenco compare **GdAHome**: si installa e si avvia.
 
 La prima volta ci mette qualche minuto — su un Raspberry anche dieci — perché
 Home Assistant non se lo scarica già pronto: se lo **costruisce sul posto** dai
@@ -234,7 +234,7 @@ Studio Code Server, finché c'è `addons/gdahome/config.yaml` — poi **Negozio
 degli add-on → i tre puntini → Ricarica**. Una copia così non ha nessun negozio
 dietro: per aggiornarla si ricopia la cartella e si ripete **Ricarica**, e
 nella pagina dell'add-on compare **Aggiorna** ([`COME_PROVARLA.md`](../COME_PROVARLA.md)
-lo fa anche in un colpo solo, dal terminale). Dentro la pagina di gdahome non
+lo fa anche in un colpo solo, dal terminale). Dentro la pagina di GdAHome non
 c'è più un bottone che lo fa da sé: voleva la cartella `addons` in scrittura, e
 l'add-on non la chiede più — il perché sta in `config.yaml`.
 
@@ -246,15 +246,15 @@ l'add-on non la chiede più — il perché sta in `config.yaml`.
 
 |             | dove arriva                                                        | cosa si può fare                                                                                                                            |
 | ----------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ingress** | solo da Home Assistant, che ci mette davanti la sua autenticazione | fabbricare un codice, vedere i telefoni, staccarli, aprire gdahome nel browser                                                              |
-| **8098**    | l'unica che può finire esposta                                     | chiedere se è vivo, presentare un codice, aprire il filo con un segno già avuto, scaricare i file di gdahome per il browser e della plancia |
+| **ingress** | solo da Home Assistant, che ci mette davanti la sua autenticazione | fabbricare un codice, vedere i telefoni, staccarli, aprire GdAHome nel browser                                                              |
+| **8098**    | l'unica che può finire esposta                                     | chiedere se è vivo, presentare un codice, aprire il filo con un segno già avuto, scaricare i file di GdAHome per il browser e della plancia |
 
 Un codice di abbinamento **nasce solo dalla pagina**. Sulla porta esposta non
 c'è nessuna via per farne nascere uno: da lì si può soltanto presentarne uno che
 esiste già. È la differenza fra un ponte e una porta aperta.
 
 Le vie della porta dell'app: `GET /salute` dice che è vivo, `WS /casa` apre il
-filo, e `GET /app/…` e `GET /dashboardmodern_static/…` danno i file di gdahome
+filo, e `GET /app/…` e `GET /dashboardmodern_static/…` danno i file di GdAHome
 per il browser e quelli della plancia — così un browser di casa non fa il giro
 del centralino. Sono file e basta, gli stessi byte che il centralino pubblica a
 tutti e che stanno in questa repository: niente segreti, e senza un segno valido
@@ -335,7 +335,7 @@ Il manifesto, però, la cartella di Home Assistant la monta **in scrittura**
 (`homeassistant_config:rw`), e va detto chiaro: Home Assistant non sa montarne
 un pezzo solo, e la pagina che apre le «Plance» deve stare lì dentro. L'add-on ci
 scrive una cartella sola, `www/gdahome/` — quella pagina, la cartina per chi usa
-le tessere di gdahome nelle sue dashboard, e un `LEGGIMI.txt` che dice di chi è — e una prova tiene fermo che non scriva altrove. Disinstallando
+le tessere di GdAHome nelle sue dashboard, e un `LEGGIMI.txt` che dice di chi è — e una prova tiene fermo che non scriva altrove. Disinstallando
 l'add-on quella cartella resta: si cancella a mano, e non rompe niente.
 
 ### Cosa finisce sul disco

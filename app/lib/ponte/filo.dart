@@ -430,8 +430,8 @@ class Filo {
       entro,
       onTimeout: () => throw PonteIrraggiungibile(
         inLingua(
-          it: 'gdahome in casa non risponde',
-          en: 'gdahome at home is not answering',
+          it: 'GdAHome in casa non risponde',
+          en: 'GdAHome at home is not answering',
         ),
       ),
     );

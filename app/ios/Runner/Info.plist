@@ -12,7 +12,7 @@
 		<string>it</string>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>gdahome</string>
+	<string>GdAHome</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -40,7 +40,7 @@
 	     lasciar usare Face ID, e la mostra a chi installa. Il volto resta nel
 	     telefono: da qui arriva un sì o un no, e basta. -->
 	<key>NSFaceIDUsageDescription</key>
-	<string>Serve a riconoscerti quando apri gdahome, se accendi il lucchetto. Il tuo volto resta nel telefono: gdahome riceve solo un sì o un no.</string>
+	<string>Serve a riconoscerti quando apri GdAHome, se accendi il lucchetto. Il tuo volto resta nel telefono: GdAHome riceve solo un sì o un no.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Serve se registri un video da allegare a una segnalazione, e per «Parla» del citofono sul tablet a muro.</string>
 	<!-- La casa sta sulla rete di casa, e da iOS 14 arrivarci vuole un

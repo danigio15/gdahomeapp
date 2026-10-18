@@ -193,12 +193,18 @@ WebViewController costruisciIlControllore({
     );
   }
   /* Lo schermo del tablet a muro: barre di sistema e luminosita' le comanda
-   * l'app, su richiesta del pannello (`casa/lo_schermo.dart`). */
+   * l'app, su richiesta del pannello (`casa/lo_schermo.dart`). Quello che
+   * l'app ha da dire indietro — cosa sa fare il tablet, i suoi sensori —
+   * torna alla stessa pagina che ha parlato. */
   unawaited(
     controllore.addJavaScriptChannel(
       canaleDelloSchermo,
-      onMessageReceived: (messaggio) =>
-          unawaited(loSchermoDice(messaggio.message)),
+      onMessageReceived: (messaggio) => unawaited(
+        loSchermoDice(
+          messaggio.message,
+          allaPagina: (detto) => _diciAlPannello(controllore, detto),
+        ),
+      ),
     ),
   );
   if (iPhone) {
@@ -406,6 +412,26 @@ Future<void> diciLeMisure(
     );
   } catch (_) {
     /* La pagina non c'e' ancora, o se n'e' andata: alla prossima. */
+  }
+}
+
+/* Quello che l'app dice al pannello a muro (`lo_schermo.dart`): si somma in
+ * `window.__GDAHOME_SCHERMO__`, per chi lo legge dopo, e arriva come evento
+ * `gdahome:schermo` a chi ascolta adesso. Passa da `jsonEncode`: e' fatto di
+ * parole decise dall'app, ma finisce dentro un programma che si esegue. */
+Future<void> _diciAlPannello(
+  WebViewController controllore,
+  Map<String, Object?> detto,
+) async {
+  final json = jsonEncode(detto);
+  try {
+    await controllore.runJavaScript(
+      'window.__GDAHOME_SCHERMO__=Object.assign('
+      'window.__GDAHOME_SCHERMO__||{},$json);'
+      'window.dispatchEvent(new CustomEvent("gdahome:schermo",{detail:$json}));',
+    );
+  } catch (_) {
+    /* La pagina se n'e' andata: alla prossima lettura. */
   }
 }
 

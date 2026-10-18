@@ -100,8 +100,12 @@ export function cheImmagineE(byte) {
   return null;
 }
 
-/* Come si chiama questo, dove si vede. */
+/* Come si chiama questo, dentro: istanza, cassetti, chiavi. Resta com'e'. */
 export const NOME = "gdahome";
+
+/* E come si legge: nella testata, nel titolo della pagina, nell'`alt` del
+ * logo. «GdAHome», con «GdA» in chiaro e «Home» in azzurro. */
+export const NOME_SCRITTO = "GdAHome";
 
 /* Il nome di prima, quello da coprire. Sta scritto qui una volta: se un giorno
  * la dashboard cambiasse il suo, questa e' la riga da cambiare. */
@@ -283,7 +287,7 @@ export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "")
        * ricorda dove era arrivata, e la seconda domanda risponde dal punto
        * sbagliato. Sostituire e confrontare non ha memoria. */
       const fatto = testo
-        .replace(L_ALT_DEL_LOGO, `alt="${perUnAttributo(chi ? chi.nome : NOME)}"`)
+        .replace(L_ALT_DEL_LOGO, `alt="${perUnAttributo(chi ? chi.nome : NOME_SCRITTO)}"`)
         .replace(LA_SCRITTA_DEL_LOGO, `$1${laTestata(0)}$2${laTestata(1)}$3`);
       if (fatto === testo) return { corpo, tipo };
       return { corpo: Buffer.from(fatto, "utf8"), tipo };
@@ -307,7 +311,7 @@ export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "")
  * porta la pagina, che non sta in cache, ed e' questa la riga che glielo
  * lascia fare. */
 function laTestata(quale) {
-  return `\${(window.__GDAHOME_TESTATA__||${JSON.stringify(inDuePezzi(NOME))})[${quale}]}`;
+  return `\${(window.__GDAHOME_TESTATA__||${JSON.stringify(inDuePezzi(NOME_SCRITTO))})[${quale}]}`;
 }
 
 /* Chi ha montato l'impianto, se c'e' e se ha qualcosa da far vedere.
@@ -324,7 +328,7 @@ function daInstallatore(suo) {
   /* Anche senza nome: dopo un riavvio il nome arriva col primo rapporto, il
    * logo e i nomi scelti sono gia' sul disco e si indossano subito. */
   if (!nome && !logo && !titolo && !velo) return null;
-  return { nome: nome || NOME, logo, tipo: String(suo?.tipo || ""), titolo, velo };
+  return { nome: nome || NOME_SCRITTO, logo, tipo: String(suo?.tipo || ""), titolo, velo };
 }
 
 /* Il nome di un installatore, ripulito per finire dentro una pagina.
@@ -363,7 +367,8 @@ function numeroDiVersione(quale) {
  * vuol dire una parola sola, giusta, invece di una spezzata a meta' a caso. */
 export function inDuePezzi(nome) {
   const pulito = perDisegnare(nome);
-  if (pulito === NOME) return ["gda", "home"];
+  /* Il nostro, anche scritto come prima, tutto minuscolo. */
+  if (pulito === NOME_SCRITTO || pulito.toLowerCase() === NOME) return ["GdA", "Home"];
   const spazio = pulito.indexOf(" ");
   if (spazio <= 0) return [pulito, ""];
   return [pulito.slice(0, spazio), pulito.slice(spazio + 1)];
@@ -380,7 +385,7 @@ export function laPagina(testo, suo = null) {
    * lo stesso. `./logo.png` perche' questa pagina sta in `legacy/`, come lui. */
   fatto = fatto.replace(
     IL_SEGNO_DI_CONFIGURAZIONE,
-    `$1<img src="./logo.png" alt="${perUnAttributo(chi ? chi.nome : NOME)}" width="52" height="52" style="display:block;object-fit:contain;border-radius:13px" />$2`,
+    `$1<img src="./logo.png" alt="${perUnAttributo(chi ? chi.nome : NOME_SCRITTO)}" width="52" height="52" style="display:block;object-fit:contain;border-radius:13px" />$2`,
   );
   /* Il velo d'avvio: l'immagine si cambia solo se ce n'e' una da mettere. Il
    * logo di un installatore in un `data:` dentro la pagina pesa quanto pesa —
@@ -400,7 +405,7 @@ export function laPagina(testo, suo = null) {
    * la prova la usa da sola, e domani la usera' qualcun altro — e un nome che
    * arriva dal quadro finisce dentro un `<title>`. Una funzione che si fida di
    * chi la chiama e' una funzione che un giorno qualcuno chiama male. */
-  const nome = perDisegnare(chi ? chi.nome : NOME) || NOME;
+  const nome = perDisegnare(chi ? chi.nome : NOME_SCRITTO) || NOME_SCRITTO;
   /* La parola del velo: quella scelta per questa plancia se la si conosce
    * gia' qui — la pagina servita dentro Home Assistant sa quale plancia e' —
    * e comunque, subito dopo, lo script che la rilegge da `__GDAHOME_VELO__`:

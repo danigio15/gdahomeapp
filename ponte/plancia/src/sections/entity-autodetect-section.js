@@ -417,7 +417,13 @@ async function writeEnergyAssignments(assignments) {
     for (const item of energy) {
       const [group, key] = ENERGY_SLOT_PATHS.get(item.ref);
       bersaglio[group] = { ...(bersaglio[group] || {}) };
-      if (!clean(bersaglio[group][key])) bersaglio[group][key] = item.id;
+      if (clean(bersaglio[group][key])) continue;
+      bersaglio[group][key] = item.id;
+      /* Il verso che il nome conosciuto porta con sé (#264): solo se nessuno
+       * ne ha già dichiarato uno. */
+      const dichiarato = bersaglio[group].signed;
+      if (item.verso && !clean(dichiarato?.positive))
+        bersaglio[group].signed = { ...(dichiarato || {}), positive: item.verso };
     }
   });
   model.metadata = { ...(model.metadata || {}), semantics_version: keptSemanticsVersion(model.metadata) };

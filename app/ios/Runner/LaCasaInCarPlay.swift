@@ -114,9 +114,9 @@ enum LaCasaInCarPlay {
   /// vuoto col suo messaggio, come «Comandi rapidi» senza comandi: un'app di
   /// navigazione `CPInformationTemplate` non lo puo' usare.
   static func senzaPremium() -> CPTemplate {
-    let t = CPListTemplate(title: "gdahome Premium", sections: [])
+    let t = CPListTemplate(title: "GdAHome Premium", sections: [])
     t.emptyViewTitleVariants = [
-      "La casa in auto è compresa in gdahome Premium. Si attiva dall'app gdahome sul telefono, a macchina ferma."
+      "La casa in auto è compresa in GdAHome Premium. Si attiva dall'app GdAHome sul telefono, a macchina ferma."
     ]
     return t
   }
@@ -127,14 +127,14 @@ enum LaCasaInCarPlay {
   static func premi(_ id: String, _ nome: String, subito: Bool) {
     /* Uno schermo rimasto aperto mentre Premium finiva: il tasto non parte. */
     guard premium() else {
-      GdanavCarPlay.mostra("\(nome): serve gdahome Premium")
+      GdanavCarPlay.mostra("\(nome): serve GdAHome Premium")
       return
     }
     let scritto = lascia(id)
     GdanavCarPlay.mostra(
       !scritto
         ? "\(nome): non sono riuscito a scriverlo"
-        : subito ? "\(nome): fatto" : "\(nome): parte appena apri gdahome sul telefono, entro due minuti"
+        : subito ? "\(nome): fatto" : "\(nome): parte appena apri GdAHome sul telefono, entro due minuti"
     )
   }
 
@@ -266,8 +266,8 @@ enum LaCasaInCarPlay {
       let t = CPListTemplate(title: titolo, sections: [])
       t.emptyViewTitleVariants = [
         foto == nil
-          ? "gdahome non ha ancora mandato niente all'auto. Apri l'app sul telefono una volta: da lì in poi la trovi qui."
-          : "Nessun dispositivo da comandare. Apri gdahome sul telefono e configura varchi, luci o prese: da lì in poi li trovi qui."
+          ? "GdAHome non ha ancora mandato niente all'auto. Apri l'app sul telefono una volta: da lì in poi la trovi qui."
+          : "Nessun dispositivo da comandare. Apri GdAHome sul telefono e configura varchi, luci o prese: da lì in poi li trovi qui."
       ]
       t.trailingNavigationBarButtons = barra
       return t
@@ -327,7 +327,7 @@ enum LaCasaInCarPlay {
     let t = CPListTemplate(title: "Come sta la casa", sections: [CPListSection(items: Array(righe.prefix(6)))])
     t.emptyViewTitleVariants = [
       laFoto() == nil
-        ? "gdahome non ha ancora mandato niente all'auto. Apri l'app sul telefono una volta: da lì in poi la trovi qui."
+        ? "GdAHome non ha ancora mandato niente all'auto. Apri l'app sul telefono una volta: da lì in poi la trovi qui."
         : "Non c'è ancora niente da dire su questa casa"
     ]
     return t

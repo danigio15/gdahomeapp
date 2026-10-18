@@ -270,7 +270,11 @@ test("il riepilogo col fotovoltaico: sole, soldi, record, domani e da sistemare"
     "⚠️ Da sistemare: 1 batteria scarica, 1 aggiornamento",
   ]);
   const elaborata = paroleDelRiepilogo(dati, "it", { stile: "elaborata" });
-  assert.equal(elaborata.titolo, "☀️ 18,4 kWh dal sole · 2,41 € risparmiati");
+  assert.equal(elaborata.titolo, "☀️ La tua giornata · 18,4 kWh dal sole");
+  assert.deepEqual(elaborata.testo.split("\n"), [
+    "💶 Rete 0,52 € · risparmiati 2,41 €",
+    "⚠️ Da sistemare: 1 batteria scarica, 1 aggiornamento",
+  ]);
   assert.equal(elaborata.scheda.t, "giornata");
   assert.equal(elaborata.scheda.rec, "ottobre");
   assert.equal(elaborata.scheda.p.length, 24);
@@ -816,6 +820,29 @@ test("le elaborate stanno nella busta: ogni esempio sotto il limite, la scheda c
       { dispositivo: banco.a.dispositivo },
     );
     assert.equal(no.success, false);
+  } finally {
+    banco.spegni();
+  }
+});
+
+test("le prove di fila: nessun limite, e non tolgono posto alle vere", async () => {
+  const banco = unBanco();
+  try {
+    await banco.registra();
+    /* Si provano le voci una dopo l'altra, nello stile semplice: prima dalla
+     * quarta in poi «non e' partita». */
+    const tipi = ["elettrodomestici", "blackout", "movimento", "antifurto"];
+    for (let i = 0; i < 40; i += 1) {
+      const risposta = await banco.notifiche.rispondi(
+        { id: 10 + i, type: "ponte/notifiche/prova", tipo: tipi[i % tipi.length] },
+        { dispositivo: banco.a.dispositivo },
+      );
+      assert.equal(risposta.success, true, `prova ${i + 1}`);
+      assert.equal(banco.apri(banco.spinte.at(-1)).stile, "s");
+    }
+    assert.equal(banco.spinte.length, 40);
+    /* Le prove non contano fra le trenta dell'ora: una notifica vera parte. */
+    assert.ok(banco.notifiche._cePosto(banco.a.dispositivo.id, { tipo: "movimento" }));
   } finally {
     banco.spegni();
   }

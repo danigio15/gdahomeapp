@@ -25,6 +25,11 @@ const _dominio = 'dashboardmodern';
 /// piu' vecchio di questa app.
 const _gdahome = 'gdahome';
 
+/// Lo stesso nome, scritto come lo si legge: il titolo della plancia quando
+/// il ponte non ne dice uno. [_gdahome] resta per il percorso e l'istanza,
+/// che sono nomi di cose e non si mostrano.
+const _ilNome = 'GdAHome';
+
 /// Una delle plance di questa casa, nell'elenco che si sceglie.
 ///
 /// Nella dashboard ognuna e' una **istanza** dell'integrazione, e chi ne ha due
@@ -252,7 +257,7 @@ PannelloDellaPlancia? leggiLaPlanciaDelPonte(Object? risposta) {
     percorso: _gdahome,
     titolo: switch (risposta['titolo']) {
       final String s when s.isNotEmpty => s,
-      _ => _gdahome,
+      _ => _ilNome,
     },
     base: base.replaceAll(RegExp(r'/+$'), ''),
     istanza: risposta['istanza']?.toString() ?? _gdahome,
@@ -314,7 +319,7 @@ PannelloDellaPlancia? leggiIPannelli(Object? risposta) {
             : voce.key.toString(),
         titolo: switch (config['title']) {
           final String s when s.isNotEmpty => s,
-          _ => 'gdahome',
+          _ => _ilNome,
         },
         base: base.replaceAll(RegExp(r'/+$'), ''),
         istanza: config['instance_id']?.toString() ?? '',

@@ -201,12 +201,12 @@ test("il velo e la testata si rivestono dalla pagina, e il runtime resta JavaScr
   ).corpo.toString("utf8");
   assert.equal(
     runtime,
-    '`<span>${(window.__GDAHOME_TESTATA__||["gda","home"])[0]}</span>' +
-      '<span class="b">${(window.__GDAHOME_TESTATA__||["gda","home"])[1]}</span>`',
+    '`<span>${(window.__GDAHOME_TESTATA__||["GdA","Home"])[0]}</span>' +
+      '<span class="b">${(window.__GDAHOME_TESTATA__||["GdA","Home"])[1]}</span>`',
   );
   const valuta = (testata) =>
     new Function("window", `return ${runtime};`)({ __GDAHOME_TESTATA__: testata });
-  assert.equal(valuta(undefined), '<span>gda</span><span class="b">home</span>');
+  assert.equal(valuta(undefined), '<span>GdA</span><span class="b">Home</span>');
   assert.equal(valuta(["Casa", "Rossi"]), '<span>Casa</span><span class="b">Rossi</span>');
   assert.equal(valuta(["Casa", ""]), '<span>Casa</span><span class="b"></span>');
 });

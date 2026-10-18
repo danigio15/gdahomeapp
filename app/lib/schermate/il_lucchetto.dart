@@ -415,12 +415,12 @@ class _LaPromessa extends StatelessWidget {
               inLingua(
                 it:
                     'A dire sì o no è il telefono: volto e impronta non escono '
-                    'di lì, e non arrivano né a gdahome né alla casa. Porte e '
+                    'di lì, e non arrivano né a GdAHome né alla casa. Porte e '
                     'cancelli si aprono dalla plancia, e lì la guardia è il '
                     'PIN dell\'azione.',
                 en:
                     'The phone is what says yes or no: face and fingerprint '
-                    'never leave it, and reach neither gdahome nor the home. '
+                    'never leave it, and reach neither GdAHome nor the home. '
                     'Doors and gates open from the dashboard, and there the '
                     'guard is the action PIN.',
               ),

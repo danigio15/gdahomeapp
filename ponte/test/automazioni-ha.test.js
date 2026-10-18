@@ -16,6 +16,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  CATEGORIE,
   DESCRIZIONE_GDAHOME,
   EVENTO_AVVISA,
   categoriaDi,
@@ -258,6 +259,68 @@ test("il gruppo «Per tipo»: sicurezza prima, poi cosa fa, gli avvisi, l'energi
     }),
     "altre",
   );
+});
+
+test("il gruppo «Per tipo»: l'antifurto nel target e' sicurezza, l'irrigazione ha il suo", () => {
+  const cat = (config, stati = {}) => categoriaDi(config, (id) => stati[id] || null);
+  /* L'antifurto nominato solo dentro `target`, o solo dal servizio. */
+  assert.equal(
+    cat({
+      triggers: [{ trigger: "time", at: "23:30:00" }],
+      actions: [
+        {
+          action: "alarm_control_panel.alarm_arm_night",
+          target: { entity_id: "alarm_control_panel.casa" },
+        },
+      ],
+    }),
+    "sicurezza",
+  );
+  assert.equal(
+    cat({
+      triggers: [{ trigger: "state", entity_id: "person.persona_1", to: "home" }],
+      actions: [
+        { action: "alarm_control_panel.alarm_disarm" },
+        { action: "notify.notify", data: { message: "Spento" } },
+      ],
+    }),
+    "sicurezza",
+  );
+  /* Le luci nel target restano luci. */
+  assert.equal(
+    cat({
+      triggers: [{ trigger: "sun", event: "sunset" }],
+      actions: [{ action: "light.turn_on", target: { entity_id: "light.giardino" } }],
+    }),
+    "luci",
+  );
+  /* Irrigazione: una valvola, un interruttore che si chiama cosi', o il nome. */
+  assert.equal(
+    cat({
+      triggers: [{ trigger: "time", at: "06:00:00" }],
+      actions: [{ action: "valve.open_valve", target: { entity_id: "valve.prato" } }],
+    }),
+    "irrigazione",
+  );
+  assert.equal(
+    cat(
+      {
+        triggers: [{ trigger: "time", at: "06:00:00" }],
+        actions: [{ action: "switch.turn_on", target: { entity_id: "switch.zona_3" } }],
+      },
+      { "switch.zona_3": { attributes: { friendly_name: "Irrigazione orto" } } },
+    ),
+    "irrigazione",
+  );
+  assert.equal(
+    cat({
+      alias: "Salta l'irrigazione se piove",
+      triggers: [{ trigger: "numeric_state", entity_id: "sensor.pioggia", above: 5 }],
+      actions: [{ action: "automation.turn_off", target: { entity_id: "automation.prato" } }],
+    }),
+    "irrigazione",
+  );
+  assert.ok(CATEGORIE.includes("irrigazione"));
 });
 
 /* ── nel ponte ───────────────────────────────────────────────────────────── */

@@ -49,19 +49,6 @@ enum Sezione {
    * con l'auto della plancia (vedi `BarraDelleSezioni.tessera`). */
   navigatore('ev', pronta: true, soloNellApp: true),
   configurazione('impostazioni', pronta: true),
-  /* Le automazioni della casa (Premium): tutte quelle di Home Assistant, a
-   * gruppi, con l'interruttore, e quelle nuove scritte con Quando · Solo se ·
-   * Allora. Le esegue Home Assistant, che le ha fra le sue — anche ad app
-   * chiusa — e la plancia le scrive passando dal ponte
-   * (`ponte/src/automazioni.js`).
-   *
-   * Sta nella Casa accanto a «Configurazione plancia», col bollino ✨ PREMIUM.
-   * Nell'app e' l'unica porta: la plancia non ha ne' la linguetta in basso ne'
-   * la voce nel config, e questa voce apre la pagina delle Automazioni a
-   * schermo pieno — la stessa faccia della sezione della dashboard, con
-   * «＋ Nuova» e l'editor dentro. C'e' anche nella webapp, perche' la pagina e'
-   * della plancia e la plancia c'e'. */
-  automazioni('automazioni', pronta: true),
   comeVaLApp('minipc', pronta: true),
   /* Le impostazioni dell'**app**, e dentro la sicurezza: il lucchetto, il
    * volto, l'impronta, e i momenti in cui l'app li chiede.
@@ -102,6 +89,21 @@ enum Sezione {
   notifiche('allerte', pronta: true, soloNellApp: true),
   segnalazioni('segnalazioni', pronta: true),
   assistenza('assistenza', pronta: true),
+  /* Le automazioni della casa (Premium): tutte quelle di Home Assistant, a
+   * gruppi, con l'interruttore, e quelle nuove scritte con Quando · Solo se ·
+   * Allora. Le esegue Home Assistant, che le ha fra le sue — anche ad app
+   * chiusa — e la plancia le scrive passando dal ponte
+   * (`ponte/src/automazioni.js`).
+   *
+   * Sta in testa alle Avanzate, col bollino ✨ PREMIUM: «Le automazioni vanno
+   * nella parte avanzate». Prima stava nella Casa accanto a «Configurazione
+   * plancia».
+   * Nell'app e' l'unica porta: la plancia non ha ne' la linguetta in basso ne'
+   * la voce nel config, e questa voce apre la pagina delle Automazioni a
+   * schermo pieno — la stessa faccia della sezione della dashboard, con
+   * «＋ Nuova» e l'editor dentro. C'e' anche nella webapp, perche' la pagina e'
+   * della plancia e la plancia c'e'. */
+  automazioni('automazioni', pronta: true),
   /* La coda di chi risponde. Non e' una voce come le altre: compare **in una
    * casa sola al mondo**, quella che nelle opzioni del ponte ha la chiave
    * della console. Chi la voce ce l'ha lo decide il ponte, non l'app — vedi
@@ -213,14 +215,14 @@ enum Sezione {
       en: 'Installer management',
     ),
     Sezione.gestione => inLingua(
-      it: 'Gestione gdahome',
-      en: 'gdahome management',
+      it: 'Gestione GdAHome',
+      en: 'GdAHome management',
     ),
     Sezione.aiutanti => inLingua(it: 'Aiutanti', en: 'Helpers'),
     Sezione.zigbee => inLingua(it: 'Zigbee', en: 'Zigbee'),
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),
     /* Il nome del prodotto, uguale nelle due lingue. */
-    Sezione.premium => 'gdahome Premium',
+    Sezione.premium => 'GdAHome Premium',
   };
 
   /// In quale gruppo della barra sta.
@@ -229,7 +231,6 @@ enum Sezione {
     Sezione.dispositivi ||
     Sezione.navigatore ||
     Sezione.configurazione ||
-    Sezione.automazioni ||
     Sezione.aggiornamenti ||
     Sezione.notifiche => GruppoDellaBarra.casa,
     /* Con «Come va l'app»: sono le due voci che parlano dell'app e non della
@@ -254,6 +255,20 @@ enum Sezione {
   /// Nella webapp non ci sono proprio: non sono spente, non sono grigie, non
   /// ci sono. Vedi `vociDellaBarra`.
   final bool soloNellApp;
+
+  /// Le voci di gdahome Premium. Nel menu portano il bollino ✨ PREMIUM
+  /// quando la casa e' Premium, e il lucchetto quando non lo e' (vedi
+  /// `_bloccate` in `home.dart`).
+  ///
+  /// «Hai messo il tag premium su automazioni, mettilo anche sulle altre
+  /// cose presenti nell'app, tipo zigbee, aiutanti eccetera.»
+  bool get diPremium => switch (this) {
+    Sezione.configurazione ||
+    Sezione.automazioni ||
+    Sezione.zigbee ||
+    Sezione.aiutanti => true,
+    _ => false,
+  };
 }
 
 /// I gruppi della barra, dall'alto in basso.

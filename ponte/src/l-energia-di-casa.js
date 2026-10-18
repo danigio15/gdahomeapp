@@ -74,6 +74,8 @@ export const CASELLE_DELL_ENERGIA = Object.freeze({
   casaOggi: "dm.energy_consumo_casa_oggi",
   preseOggi: "dm.energy_energia_prelevata_oggi",
   cedutiOggi: "dm.energy_energia_immessa_oggi",
+  battCaricataOggi: "dm.energy_batteria_caricata_oggi",
+  battScaricataOggi: "dm.energy_batteria_scaricata_oggi",
 });
 
 const numero = (valore) => {
@@ -242,7 +244,33 @@ function giornataNuova(giorno) {
     piccoIl: 0,
     /* I cicli finiti oggi, per «la lavatrice e' andata col sole». */
     cicli: [],
+    /* Ogni carico che si misura, per «chi ha consumato di piu'»: Wh, quanti
+     * dal sole, dalla batteria e dalla rete, e gli euro della rete. Come i
+     * cicli, ma per tutta la giornata e anche per cio' che non fa cicli (la
+     * pompa di calore, il forno). Le chiavi sono entita': restano in casa. */
+    perCarico: {},
   };
+}
+
+/* Quanti carichi al piu' si contano in un giorno: una casa vera ne ha una
+ * ventina, e un elenco senza fine sul disco non serve a nessuno. */
+const CARICHI_AL_MASSIMO = 80;
+/* Quanti se ne tengono nei giorni passati, i piu' grossi. */
+export const CARICHI_NEI_GIORNI = 5;
+
+/* I carichi di una giornata, dal piu' grosso: `[{id, kwh, eur, sole}]`.
+ * `eur` e' `null` quando non c'era mai un prezzo; `sole` e' la quota (0–1)
+ * venuta dal sole. Sotto i 10 Wh non vale la pena dirlo. */
+export function carichiDellaGiornata(perCarico = {}) {
+  return Object.entries(perCarico || {})
+    .filter(([, c]) => c && c.wh >= 10)
+    .map(([id, c]) => ({
+      id,
+      kwh: arrotonda(c.wh / 1000, 2),
+      eur: c.conPrezzo ? arrotonda(c.eur, 2) : null,
+      sole: c.wh > 0 ? arrotonda(c.sole / c.wh, 2) : 0,
+    }))
+    .sort((a, b) => b.kwh - a.kwh || a.id.localeCompare(b.id));
 }
 
 /**
@@ -263,6 +291,8 @@ export class TaccuinoDellEnergia {
     this.cicli = new Map();
     this._ultimo = null;
     this._scrittoIl = 0;
+    /* L'ultima carica della batteria di casa vista. */
+    this._socPrima = null;
   }
 
   get oggi() {
@@ -293,6 +323,10 @@ export class TaccuinoDellEnergia {
       casa: arrotonda((g.casaOggiLetto ?? g.casa / 1000) || 0, 2),
       eur: arrotonda(g.euroRete, 2),
       ris: arrotonda(g.risparmio, 2),
+      /* I piu' grossi, per «la settimana»: [id, kWh, €, quota di sole]. */
+      top: carichiDellaGiornata(g.perCarico)
+        .slice(0, CARICHI_NEI_GIORNI)
+        .map((c) => [c.id, c.kwh, c.eur, c.sole]),
     });
     giorni.sort((a, b) => (a.d < b.d ? -1 : 1));
     this.archivio.dati.giorni = giorni.slice(-GIORNI_TENUTI);
@@ -354,9 +388,57 @@ export class TaccuinoDellEnergia {
       g.picco = sole;
       g.piccoIl = ora;
     }
-    for (const chiave of ["soleOggi", "casaOggi", "preseOggi", "cedutiOggi"])
+    /* La batteria di casa: la carica piu' alta e quando, l'ultima, e quanto
+     * e' salita e scesa (in punti), per chi non ha i contatori del giorno. */
+    const soc = letture.carica;
+    if (typeof soc === "number" && Number.isFinite(soc) && soc >= 0 && soc <= 100) {
+      if (g.battMax === undefined || g.battMax === null || soc > g.battMax) {
+        g.battMax = soc;
+        g.battMaxIl = ora;
+      }
+      if (this._socPrima !== null) {
+        const passo = soc - this._socPrima;
+        if (passo > 0) g.battSu = (g.battSu || 0) + passo;
+        else g.battGiu = (g.battGiu || 0) - passo;
+      }
+      this._socPrima = soc;
+      g.battUltima = soc;
+    }
+    for (const chiave of [
+      "soleOggi",
+      "casaOggi",
+      "preseOggi",
+      "cedutiOggi",
+      "battCaricataOggi",
+      "battScaricataOggi",
+    ])
       if (letture[chiave] !== null && letture[chiave] !== undefined)
         g[`${chiave}Letto`] = letture[chiave];
+
+    /* Ogni carico misurato, tutto il giorno: la stessa divisione fra sole,
+     * batteria e rete dei cicli. `carichi` (tutte le potenze della plancia)
+     * quando c'e', altrimenti gli elettrodomestici. */
+    if (dt > 0) {
+      if (!g.perCarico || typeof g.perCarico !== "object") g.perCarico = {};
+      const carichi = letture.carichi || letture.apparecchi || {};
+      for (const [id, w] of Object.entries(carichi)) {
+        if (w === null || w === undefined || !(w > 0)) continue;
+        let c = g.perCarico[id];
+        if (!c) {
+          if (Object.keys(g.perCarico).length >= CARICHI_AL_MASSIMO) continue;
+          c = g.perCarico[id] = { wh: 0, sole: 0, batt: 0, rete: 0, eur: 0, conPrezzo: false };
+        }
+        const q = quoteDelMomento({ app: w, sole, casa, rete });
+        c.wh += w * ore;
+        c.sole += q.sole * ore;
+        c.batt += q.batteria * ore;
+        c.rete += q.rete * ore;
+        if (conPrezzo) {
+          c.eur += ((q.rete * ore) / 1000) * euro;
+          c.conPrezzo = true;
+        }
+      }
+    }
 
     /* Gli elettrodomestici: un ciclo si apre sopra la soglia e si integra
      * finche' qualcuno non lo chiude (`chiudiIlCiclo`). */
@@ -492,6 +574,36 @@ export class TaccuinoDellEnergia {
         Object.entries(g.perFascia).map(([k, wh]) => [k, arrotonda(wh / 1000, 1)]),
       ),
       cicli: g.cicli.slice(),
+      carichi: carichiDellaGiornata(g.perCarico),
+    };
+  }
+
+  /**
+   * La batteria di casa oggi: `{caricata, usata}` in kWh — dai contatori del
+   * giorno se ci sono, altrimenti dai punti saliti e scesi per la capacita'
+   * — `massimo` e `stasera` in %, `massimoAlle` «HH:MM», `capacita` in kWh.
+   * `null` se la casa non ha una batteria che si legge.
+   */
+  laBatteria(capacita = null) {
+    const g = this.archivio.dati.oggi;
+    if (!g) return null;
+    const letto = (chiave) => {
+      const v = g[`${chiave}Letto`];
+      return v !== undefined && v !== null && v >= 0 ? v : null;
+    };
+    const conSoc = g.battMax !== undefined && g.battMax !== null;
+    const caricataLetta = letto("battCaricataOggi");
+    const usataLetta = letto("battScaricataOggi");
+    if (!conSoc && caricataLetta === null && usataLetta === null) return null;
+    const cap = typeof capacita === "number" && capacita > 0 ? capacita : null;
+    const dalSoc = (punti) => (conSoc && cap ? ((punti || 0) / 100) * cap : null);
+    return {
+      caricata: arrotonda(caricataLetta ?? dalSoc(g.battSu), 1),
+      usata: arrotonda(usataLetta ?? dalSoc(g.battGiu), 1),
+      massimo: conSoc ? Math.round(g.battMax) : null,
+      massimoAlle: conSoc && g.battMaxIl ? oraDi(g.battMaxIl) : null,
+      stasera: conSoc ? Math.round(g.battUltima) : null,
+      capacita: cap ? arrotonda(cap, 1) : null,
     };
   }
 
@@ -511,6 +623,36 @@ export class TaccuinoDellEnergia {
       );
     }
   }
+}
+
+/**
+ * I carichi che la plancia misura: elettrodomestici e carichi della pagina
+ * Energia, ognuno con l'entita' della sua potenza e il nome che gli ha dato
+ * chi abita. `[{id, nome}]`, senza doppioni. Si legge da
+ * `dm_dashboard_state` cosi' com'e' salvato (oggetto o testo).
+ */
+export function carichiDellaPlancia(valori = {}) {
+  let stato = valori?.dm_dashboard_state;
+  if (typeof stato === "string") {
+    try {
+      stato = JSON.parse(stato);
+    } catch (_errore) {
+      stato = null;
+    }
+  }
+  const sezioni = stato && typeof stato === "object" ? stato.sections || {} : {};
+  const visti = new Set();
+  const fuori = [];
+  for (const sezione of ["appliances", "loads"]) {
+    const elenco = Array.isArray(sezioni[sezione]) ? sezioni[sezione] : [];
+    for (const voce of elenco) {
+      const id = String(voce?.power_entity || voce?.power || "").trim();
+      if (!/^[a-z_]+\.[a-z0-9_]+$/.test(id) || visti.has(id)) continue;
+      visti.add(id);
+      fuori.push({ id, nome: String(voce?.name || voce?.report_label || "").trim() });
+    }
+  }
+  return fuori;
 }
 
 /**
@@ -538,5 +680,7 @@ export function letturaDellEnergia(risolvi, stato) {
     casaOggi: leggi(c.casaOggi, true),
     preseOggi: leggi(c.preseOggi, true),
     cedutiOggi: leggi(c.cedutiOggi, true),
+    battCaricataOggi: leggi(c.battCaricataOggi, true),
+    battScaricataOggi: leggi(c.battScaricataOggi, true),
   };
 }

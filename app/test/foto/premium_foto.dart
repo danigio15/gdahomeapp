@@ -587,7 +587,12 @@ void main() {
               BarraDelleSezioni(
                 key: chiave,
                 sezioni: vociDellaBarra(conZigbee: true, conPremium: true),
-                bloccate: const {Sezione.configurazione, Sezione.zigbee},
+                /* Come in Base nell'app (`_bloccate` in home.dart): ogni
+                 * voce di Premium col lucchetto. */
+                bloccate: {
+                  for (final una in Sezione.values)
+                    if (una.diPremium) una,
+                },
                 aperta: Sezione.plancia,
                 vai: (_) {},
                 vaiAlleCase: () {},

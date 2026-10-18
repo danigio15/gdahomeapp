@@ -437,7 +437,7 @@ class PlanciaDiGdahome extends HTMLElement {
       (soloAdmin
         ? "In questa casa questa plancia la vedono solo gli amministratori."
         : "In questa casa questa plancia la vedono solo alcuni utenti.") +
-      " Chi amministra la casa puo' cambiarlo dalla pagina di gdahome, alla voce \u00abLe plance\u00bb.";
+      " Chi amministra la casa puo' cambiarlo dalla pagina di GdAHome, alla voce \u00abLe plance\u00bb.";
   }
 
   _male(errore) {
@@ -699,7 +699,7 @@ class RiquadroDiGdahome extends HTMLElement {
         .menu svg { width: 22px; height: 22px; display: block; }
       </style>
       <div class="tutto">
-        <iframe title="gdahome" allow="fullscreen"></iframe>
+        <iframe title="GdAHome" allow="fullscreen"></iframe>
         <button type="button" class="menu" title="Il menu di Home Assistant"
                 aria-label="Apri il menu di Home Assistant">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
@@ -726,8 +726,8 @@ window.customCards = window.customCards || [];
 if (!window.customCards.some((una) => una.type === NOME)) {
   window.customCards.push({
     type: NOME,
-    name: "gdahome",
-    description: "La plancia di gdahome, servita dall'add-on.",
+    name: "GdAHome",
+    description: "La plancia di GdAHome, servita dall'add-on.",
     preview: false,
   });
 }

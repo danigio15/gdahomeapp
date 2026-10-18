@@ -23,20 +23,20 @@ import '../parole.dart';
 /// Quello che si dice a chi e' fuori casa con una casa che non e' Premium.
 String get fuoriCasaServePremium => inLingua(
   it:
-      'Fuori casa serve gdahome Premium: senza, la casa si raggiunge solo '
+      'Fuori casa serve GdAHome Premium: senza, la casa si raggiunge solo '
       'dal suo Wi-Fi.',
   en:
-      'Away from home you need gdahome Premium: without it, your home can '
+      'Away from home you need GdAHome Premium: without it, your home can '
       'only be reached on its own Wi-Fi.',
 );
 
 /// Quello che si dice a chi e' fuori casa con una casa dall'add-on vecchio.
 String get fuoriCasaAggiornaLAddon => inLingua(
   it:
-      'Per entrare da fuori casa l\'add-on gdahome della casa va aggiornato: '
+      'Per entrare da fuori casa l\'add-on GdAHome della casa va aggiornato: '
       'intanto la casa si raggiunge dal suo Wi-Fi.',
   en:
-      'To get in from away, your home\'s gdahome add-on needs updating: '
+      'To get in from away, your home\'s GdAHome add-on needs updating: '
       'meanwhile your home can be reached on its own Wi-Fi.',
 );
 

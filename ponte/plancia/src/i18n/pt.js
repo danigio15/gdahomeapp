@@ -43,8 +43,8 @@ export default Object.freeze({
   "Pick a trip on the left, or make a new one.": "Escolhe uma viagem à esquerda, ou cria uma nova.",
   "Pick the destination and time: I will tell you when to leave.":
     "Escolhe o destino e a hora: eu digo-te quando partir.",
-  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page.":
-    "Planeia viagens daqui e encontra-as no telemóvel, CarPlay e Android Auto, com aviso para partir e o clima do carro ligado antes. Desbloqueia na app gdahome, na página Premium.",
+  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
+    "Planeia viagens daqui e encontra-as no telemóvel, CarPlay e Android Auto, com aviso para partir e o clima do carro ligado antes. Desbloqueia na app GdAHome, na página Premium.",
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "Planeia viagens daqui: encontras no gdanav no telemóvel, CarPlay e Android Auto.",
   "Planned trips": "Viagens planeadas",
@@ -4837,8 +4837,8 @@ export default Object.freeze({
   "Kitchen window": "Janela da cozinha",
   "New opening": "Abertura nova",
   "Save opening": "Guardar abertura",
-  "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.":
-    "O desenho que aparece na página e no mosaico. São os do catálogo do gdahome: iguais em qualquer telemóvel.",
+  "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.":
+    "O desenho que aparece na página e no mosaico. São os do catálogo do GdAHome: iguais em qualquer telemóvel.",
   "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.":
     "As aberturas de casa: portas, janelas, portão, basculante. Cada abertura tem a sua linha — a entidade do contacto, o nome que quiser, o desenho — e a página Aberturas mostra estas, por esta ordem: verde fechada, vermelho aberta, e no topo quantas estão abertas agora.",
   "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.":
@@ -5191,8 +5191,10 @@ export default Object.freeze({
   "ideal below ${soglia}": "ideal abaixo de ${soglia}",
   "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.":
     "Em Ah, Wh ou kWh. Se ficar vazia, é calculada a partir da carga e da capacidade.",
-  "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
-    "Reconhece os BMS JK, JBD e Daly pelos nomes das suas entidades e agrupa-os por prefixo. Coloca-os aqui como linhas, uma só vez: a partir daí são seus.",
+  "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
+    "Reconhece os BMS JK, JBD e Daly e as baterias Huawei LUNA2000 pelos nomes das suas entidades e agrupa-os por prefixo. Coloca-os aqui como linhas, uma só vez: a partir daí são seus.",
+  "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one.":
+    "Opcional. Uma bateria que comunica através do inversor — como a Huawei LUNA2000 com a integração Huawei Solar — não tem um BMS para escolher: o estado de carga, a potência e a energia vão em Energia, separador «Fluxos e entidades», nos quadros «Battery · charge» e «Battery · discharge». Este separador serve só para ver os blocos, ou os módulos, um a um.",
   "max ${cifre(pacco.massima.volt, 3)} V · cell ${pacco.massima.numero}":
     "máx ${cifre(pacco.massima.volt, 3)} V · célula ${pacco.massima.numero}",
   "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}":
@@ -5518,14 +5520,11 @@ export default Object.freeze({
   "The wall dashboard is Premium": "O painel de parede é Premium",
   "This tablet's pages": "Páginas deste tablet",
   "Use this dashboard on the wall": "Usar este painel na parede",
-  "Wakes up by itself": "Acorda sozinho",
   "Warn about open windows": "Avisar sobre janelas abertas",
-  "When this sensor turns on (for example a presence sensor)":
-    "Quando este sensor liga (por exemplo um sensor de presença)",
   "Who is home": "Quem está em casa",
   windy: "vento",
-  "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
-    "Com o gdahome Base este painel continua a ser um painel normal. Com o Premium torna-se um ecrã para um tablet de parede: Divisão, Cenas ou Entrada, horizontal e vertical. O Premium ativa-se a partir da app gdahome.",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.":
+    "Com o GdAHome Base este painel continua a ser um painel normal. Com o Premium torna-se um ecrã para um tablet de parede: Divisão, Cenas ou Entrada, horizontal e vertical. O Premium ativa-se a partir da app GdAHome.",
   "Wrong code": "Código errado",
   "Yes, go": "Sim, avançar",
   "All lights": "Todas as luzes",
@@ -5584,8 +5583,6 @@ export default Object.freeze({
   "On rest go back to the first page": "Em repouso voltar à primeira página",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "Um cartão por divisão, com temperatura, humidade e quantas luzes estão acesas, ao vivo. As divisões e os seus sensores vêm do painel de origem.",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "Orientação, tema, meteorologia, repouso, noite, despertar, PIN",
   "Positive is drawn, negative is fed in": "Positivo é consumido da rede, negativo é injetado",
   "Power, in W or kW": "Potência, em W ou kW",
   "Right now, at home": "Agora mesmo, em casa",
@@ -5934,8 +5931,8 @@ export default Object.freeze({
   "What comes out of the battery": "O que sai da bateria",
   "What goes into the battery": "O que entra na bateria",
   "An automation handles it": "Uma automação trata disso",
-  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
-    "Não é possível ler: o add-on gdahome tem de estar ligado e tens de ser administrador.",
+  "Can't read it: the GdAHome add-on must be running, and you must be an administrator.":
+    "Não é possível ler: o add-on GdAHome tem de estar ligado e tens de ser administrador.",
   "Fine tonight": "Tudo bem esta noite",
   "Inner door": "Porta interior",
   "Leave it": "Deixar assim",
@@ -6268,7 +6265,6 @@ export default Object.freeze({
   "it is night": "é noite",
   "It reads:": "Lê-se assim:",
   "Last run": "Últimas executadas",
-  "last time: ${fu}": "última vez: ${fu}",
   "leaves home": "sai de casa",
   "Light with motion": "Luz com movimento",
   "Lights and climate when someone arrives": "Luzes e clima quando alguém chega",
@@ -6379,8 +6375,6 @@ export default Object.freeze({
   "at most": "no máximo",
   "becomes": "passa a",
   "below the horizon": "abaixo do horizonte",
-  "call ${servizio}": "chama ${servizio}",
-  "call ${servizio} on ${chi}": "chama ${servizio} em ${chi}",
   "call a service": "chamar um serviço",
   "Conditions": "Condições",
   "equals": "é igual a",
@@ -6418,14 +6412,10 @@ export default Object.freeze({
   "The home does not call this service by itself.": "A casa não chama este serviço sozinha.",
   "the sun is…": "o sol está…",
   "volume": "volume de som",
-  "wait until ${chi} becomes «${stato}» (at most ${massimo} min)": "espera até ${chi} passar a «${stato}» (máx. ${massimo} min)",
   "wait until…": "esperar até…",
   "When ${attributo} of ${chi} becomes «${valore}»": "Quando ${attributo} de ${chi} passa a «${valore}»",
   "When ${attributo} of ${chi} changes": "Quando ${attributo} de ${chi} muda",
-  "When ${chi} becomes «${a}»": "Quando ${chi} passa a «${a}»",
   "When ${chi} changes state": "Quando ${chi} muda de estado",
-  "When ${chi} goes from «${da}» to «${a}»": "Quando ${chi} passa de «${da}» para «${a}»",
-  "When ${chi} is no longer «${da}»": "Quando ${chi} deixa de ser «${da}»",
   "When the ${evento} event arrives": "Quando chega o evento ${evento}",
   "with": "com",
   "with the sun above the horizon": "com o sol acima do horizonte",
@@ -6505,19 +6495,15 @@ export default Object.freeze({
   "🔁 ${fatte} converted, ${no} not: try again": "🔁 ${fatte} convertidas, ${no} não: tente outra vez",
   "🗑 «${v.nome}» deleted": "🗑 «${v.nome}» eliminada",
   "${chi} above ${sopra}": "${chi} acima de ${sopra}",
-  "${chi} becomes «${a}»": "${chi} passa a «${a}»",
   "${chi} below ${sotto}": "${chi} abaixo de ${sotto}",
   "${chi} changes state": "${chi} muda de estado",
   "${chi} changes value": "${chi} muda de valor",
   "${chi} drops below ${sotto}": "${chi} desce abaixo de ${sotto}",
   "${chi} enters or leaves a zone": "${chi} entra ou sai de uma zona",
   "${chi} goes above ${sopra}": "${chi} sobe acima de ${sopra}",
-  "${chi} is «${stato}»": "${chi} está «${stato}»",
   "${n} automations from the trial version are idle": "${n} automatizações da versão de teste estão paradas",
   "${n} suggestions for your home": "${n} sugestões para a sua casa",
   "${n}, from Home Assistant": "${n}, do Home Assistant",
-  "${servizio} in a room": "${servizio} numa divisão",
-  "${servizio} on ${chi}": "${servizio} em ${chi}",
   "1 suggestion for your home": "1 sugestão para a sua casa",
   "a «${quale}» condition": "uma condição «${quale}»",
   "a «${quale}» trigger": "um acionador «${quale}»",
@@ -6532,7 +6518,6 @@ export default Object.freeze({
   "all of these:": "todas estas:",
   "All the home's ones": "Todas as da casa",
   "All the home's ones · from Home Assistant": "Todas as da casa · do Home Assistant",
-  "an action": "uma ação",
   "An advanced automation: the details are in Home Assistant.": "Uma automatização avançada: os detalhes estão no Home Assistant.",
   "another action": "outra ação",
   "any of these": "uma destas",
@@ -6563,10 +6548,10 @@ export default Object.freeze({
   "fires the ${evento} event": "dispara o evento ${evento}",
   "Home Assistant → Settings → Automations": "Home Assistant → Definições → Automatizações",
   "Home Assistant did not save it: ${no}": "O Home Assistant não a guardou: ${no}",
-  "Home Assistant runs automations now: convert them and they start again, labelled gdahome.": "Agora é o Home Assistant que executa as automatizações: converta-as e voltam a funcionar, com a etiqueta gdahome.",
+  "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.": "Agora é o Home Assistant que executa as automatizações: converta-as e voltam a funcionar, com a etiqueta GdAHome.",
   "Home Assistant shuts down": "O Home Assistant desliga-se",
   "Home Assistant starts": "O Home Assistant arranca",
-  "Home Assistant's automations are read through the gdahome add-on: it is not here.": "As automatizações do Home Assistant leem-se com o add-on gdahome: aqui não existe.",
+  "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "As automatizações do Home Assistant leem-se com o add-on GdAHome: aqui não existe.",
   "if something holds:": "se algo se verificar:",
   "in HA as": "no HA como",
   "in the config ›": "na configuração ›",
@@ -6588,8 +6573,8 @@ export default Object.freeze({
   "on certain days": "em certos dias",
   "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.": "na App Store e no Google Play. Aqui no Home Assistant não se paga nada nem se introduzem dados de pagamento.",
   "One automation from the trial version is idle": "Uma automatização da versão de teste está parada",
-  "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.": "Só se compra nas apps gdahome na App Store e no Google Play. As apps estão a chegar.",
-  "only from the gdahome apps": "exclusivamente nas apps gdahome",
+  "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.": "Só se compra nas apps GdAHome na App Store e no Google Play. As apps estão a chegar.",
+  "only from the GdAHome apps": "exclusivamente nas apps GdAHome",
   "Open in HA ↗": "Abrir no HA ↗",
   "Open in Home Assistant ↗": "Abrir no Home Assistant ↗",
   "otherwise → ${altrimenti}": "senão → ${altrimenti}",
@@ -6602,34 +6587,30 @@ export default Object.freeze({
   "repeats some actions": "repete algumas ações",
   "Room and name": "Divisão e nome",
   "Run now": "Executar agora",
-  "runs the «${script}» script": "executa o script «${script}»",
   "SAVE IN HOME ASSISTANT": "GUARDAR NO HOME ASSISTANT",
   "Saved in Home Assistant ✓ «${v.nome}»": "Guardada no Home Assistant ✓ «${v.nome}»",
   "SAVING…": "A GUARDAR…",
   "Search an automation…": "Procurar uma automatização…",
   "See ›": "Ver ›",
   "See all the home's automations, turn them on and off, create new ones in three steps and get suggestions designed for your home.": "Veja todas as automatizações da casa, ligue-as e desligue-as, crie novas em três passos e receba sugestões pensadas para a sua casa.",
-  "sends a notification": "envia uma notificação",
-  "set ${chi} to a temperature": "põe ${chi} a uma temperatura",
   "stopped for now": "paradas por agora",
   "Suggestions designed for your home": "Sugestões pensadas para a sua casa",
   "the ${evento} event arrives": "chega o evento ${evento}",
   "the home did not answer": "a casa não respondeu",
   "The home that does it by itself: lights, climate, shutters and alerts that start when needed.": "A casa que faz sozinha: luzes, clima, estores e avisos que arrancam quando é preciso.",
   "The home's automations": "As automatizações da casa",
-  "The list and saving go through the gdahome add-on: it is not here.": "A lista e a gravação passam pelo add-on gdahome: aqui não existe.",
+  "The list and saving go through the GdAHome add-on: it is not here.": "A lista e a gravação passam pelo add-on GdAHome: aqui não existe.",
   "the new automation": "a nova automatização",
   "then → ${allora}": "então → ${allora}",
   "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.": "Esta automatização está num ficheiro do Home Assistant: aqui liga-a, desliga-a e executa-a, e altera-se lá.",
   "This automation uses advanced features (a choice between cases, a template, a blueprint…): here you can turn it on and off, run it, rename it and change its room. For the rest:": "Esta automatização usa funções avançadas (uma escolha entre casos, um modelo, um blueprint…): aqui pode ligá-la, desligá-la, executá-la, mudar-lhe o nome e a divisão. Para o resto:",
-  "toggle ${chi}": "alterna ${chi}",
   "Turn ${v.nome} on or off": "Ligar ou desligar ${v.nome}",
   "Turn them on and off with a tap": "Liga-as e desliga-as com um toque",
   "wait ${min} min": "espera ${min} min",
   "waits a while": "espera um pouco",
   "waits for something to happen": "espera que algo aconteça",
   "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.": "Quando as apps estiverem nas lojas, ativa o Premium na app e aqui as Automatizações desbloqueiam-se sozinhas.",
-  "You'll find it in Settings → Automations, labelled gdahome.": "Encontra-a em Definições → Automatizações, com a etiqueta gdahome.",
+  "You'll find it in Settings → Automations, labelled GdAHome.": "Encontra-a em Definições → Automatizações, com a etiqueta GdAHome.",
   "You'll find it there and Home Assistant runs it.": "Encontra-a lá e o Home Assistant executa-a.",
   "🚨 Removed": "🚨 Removido",
   "🚨 Saved: the house knows when it goes off": "🚨 Guardado: a casa sabe quando dispara",
@@ -6669,4 +6650,70 @@ export default Object.freeze({
   "to confirm": "a confirmar",
   "To decide": "A decidir",
   "What the ${quale} meter measures": "O que mede o contador ${quale}",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "Por categoria",
+  Uncategorized: "Sem categoria",
+  "In short": "Em resumo",
+  /* Automazioni: gli stati e i servizi in parole. */
+  "${chi} is ${stato}": "${chi} está ${stato}",
+  "${frase} in a room": "${frase} numa divisão",
+  "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "espera até ${chi} passar a ${parola} (máx. ${massimo} min)",
+  "When ${chi} goes from ${prima} to ${dopo}": "Quando ${chi} passa de ${prima} para ${dopo}",
+  "When ${chi} is no longer ${prima}": "Quando ${chi} deixa de ser ${prima}",
+  "0% = black screen, like “Black screen at night”": "0% = ecrã preto, como «Ecrã preto à noite»",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "Um sensor do Home Assistant: mmWave, movimento, ocupação. Quando liga, o painel acorda.",
+  "A touch on the screen also counts as “someone nearby”.":
+    "Um toque no ecrã também conta como «alguém por perto».",
+  "At night": "À noite",
+  "By the sun: night from half an hour after sunset to sunrise":
+    "Pelo sol: noite desde meia hora depois do pôr do sol até ao nascer do sol",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "Perto do ecrã, poucos centímetros: útil para a mão que se aproxima. Nem todos os tablets o têm.",
+  "Day and night from": "Dia e noite pelo",
+  "detecting": "deteta",
+  "Dim after": "Baixar após",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "O Home Assistant não tem sun.sun: valem as horas de «Ecrã preto à noite»",
+  "Home presence sensor": "Sensor de presença da casa",
+  "Home's sun": "Sol da casa",
+  "Hours": "Horário",
+  "How bright": "Que brilho",
+  "Night (from the hours)": "Noite (pelo horário)",
+  "Night (from the sun)": "Noite (pelo sol)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "Noite nas horas de «Ecrã preto à noite», mesmo com o interruptor desligado",
+  "nobody": "ninguém",
+  "On a touch or when someone arrives": "Com um toque ou quando alguém chega",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "No iPad a luz da divisão não se lê: o dia e a noite são dados pelo sol ou pelo horário.",
+  "Only in the GdAHome app on Android.": "Só na app GdAHome no Android.",
+  "Orientation, theme, weather, rest, night, brightness, PIN":
+    "Orientação, tema, meteorologia, repouso, noite, brilho, PIN",
+  "presence sensor": "sensor de presença",
+  "Preview of a day": "Pré-visualização de um dia",
+  "RECOMMENDED": "RECOMENDADO",
+  "Resting, by day": "Em repouso, de dia",
+  "Room light": "Luz da divisão",
+  "Screen brightness": "Brilho do ecrã",
+  "Someone nearby": "Alguém por perto",
+  "Someone nearby (example)": "Alguém por perto (exemplo)",
+  "tablet proximity": "proximidade do tablet",
+  "Tablet proximity sensor": "Sensor de proximidade do tablet",
+  "The clock is readable, but it does not light up the room":
+    "O relógio lê-se, mas não ilumina a divisão",
+  "The iPad does not have one.": "O iPad não o tem.",
+  "The panel sets it, only in the GdAHome app on the tablet":
+    "É o painel que o controla, só na app GdAHome no tablet",
+  "This tablet does not have one.": "Este tablet não o tem.",
+  "This tablet has no light sensor: the home's sun applies":
+    "Este tablet não tem sensor de luz: vale o sol da casa",
+  "This tablet has one.": "Este tablet tem.",
+  "Time with nobody nearby and no touches": "Tempo sem ninguém por perto e sem toques",
+  "When someone is nearby": "Quando alguém está por perto",
+  "Who is nearby · one source is enough": "Quem está por perto · basta uma fonte",
+  "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies":
+    "Com o sensor de luz do tablet, só na app GdAHome no Android. Sem ele, vale o sol da casa",
+  "With this tablet's light sensor: it is night when the room is dark":
+    "Com o sensor de luz deste tablet: é noite quando a divisão está escura",
 });

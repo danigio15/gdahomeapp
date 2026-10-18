@@ -118,7 +118,7 @@ const Map<String, Map<String, dynamic>> schedeDiProva = {
   'giornata': {
     'v': 1,
     't': 'giornata',
-    'd': '2026-10-17',
+    'd': '2026-10-18',
     'pk': 18.4,
     'casa': 0.74,
     'ris': 2.41,
@@ -145,6 +145,11 @@ const Map<String, Map<String, dynamic>> schedeDiProva = {
     ],
     'cons': 'lavatrice entro le 13',
     'batt': 0.62,
+    'piu': [
+      ['Pompa di calore', 4.2, 0.38],
+      ['Forno', 1.9, 0.31],
+      ['Lavastoviglie', 1.08, 0.0],
+    ],
   },
   'giornata-senza-sole': {
     'v': 1,

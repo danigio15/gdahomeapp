@@ -65,41 +65,210 @@ abstract final class PerchePremium {
   );
 
   static String get altrePlance => inLingua(
-    it: 'Le plance oltre la principale sono comprese in gdahome Premium.',
-    en: 'Dashboards beyond the main one come with gdahome Premium.',
+    it: 'Le plance oltre la principale sono comprese in GdAHome Premium.',
+    en: 'Dashboards beyond the main one come with GdAHome Premium.',
   );
 
   static String get configurazione => inLingua(
-    it: 'La configurazione della plancia dall\'app è di gdahome Premium.',
-    en: 'Configuring the dashboard from the app is part of gdahome Premium.',
+    it: 'La configurazione della plancia dall\'app è di GdAHome Premium.',
+    en: 'Configuring the dashboard from the app is part of GdAHome Premium.',
   );
 
   static String get zigbee => inLingua(
     it:
         'Aggiungere dispositivi Zigbee dall\'app, scegliendo dove metterli, è '
-        'di gdahome Premium.',
+        'di GdAHome Premium.',
     en:
         'Adding Zigbee devices from the app, and choosing where they go, is '
-        'part of gdahome Premium.',
+        'part of GdAHome Premium.',
   );
 
   static String get automazioni => inLingua(
     it:
         'Le automazioni — luci, tapparelle, clima e avvisi che partono da '
-        'soli — sono di gdahome Premium.',
+        'soli — sono di GdAHome Premium.',
     en:
         'Automations — lights, shutters, climate and alerts that start by '
-        'themselves — are part of gdahome Premium.',
+        'themselves — are part of GdAHome Premium.',
   );
 
   static String get fuoriCasa => inLingua(
     it:
-        'Fuori casa serve gdahome Premium. Sotto il Wi-Fi di casa si entra '
+        'Fuori casa serve GdAHome Premium. Sotto il Wi-Fi di casa si entra '
         'come sempre.',
     en:
-        'Away from home you need gdahome Premium. On your home Wi-Fi you get '
+        'Away from home you need GdAHome Premium. On your home Wi-Fi you get '
         'in as always.',
   );
+
+  static String get notifiche => inLingua(
+    it:
+        'Le notifiche elaborate — la scheda col grafico, la foto della '
+        'telecamera — e il riepilogo della sera sono di GdAHome Premium. Gli '
+        'avvisi di sicurezza arrivano sempre, anche senza.',
+    en:
+        'Rich notifications — the chart card, the camera photo — and the '
+        'evening summary are part of GdAHome Premium. Safety alerts always '
+        'arrive, even without it.',
+  );
+
+  static String get giornata => inLingua(
+    it:
+        '«La tua giornata» — il sole, i soldi, il clima, l\'auto, ora per '
+        'ora — è di GdAHome Premium.',
+    en:
+        '«Your day» — the sun, the money, the climate, the car, hour by '
+        'hour — is part of GdAHome Premium.',
+  );
+
+  /// Dove si compra: solo dalle app sugli store.
+  static String get soloDagliStore => inLingua(
+    it:
+        'Premium si attiva solo dall\'app GdAHome scaricata dall\'App Store o '
+        'da Google Play: l\'acquisto lo fa il negozio, e vale per tutta la '
+        'casa e per tutti i suoi telefoni.',
+    en:
+        'Premium can only be activated from the GdAHome app downloaded from '
+        'the App Store or Google Play: the store handles the purchase, and it '
+        'covers the whole home and all its phones.',
+  );
+}
+
+/// Il lucchetto spiegato, in un foglio: perche' qui c'e' un lucchetto, e che
+/// Premium si compra solo dalle app sugli store. Con [collegamento], sotto
+/// c'e' il tasto per la pagina Premium.
+Future<void> spiegaIlPremium(
+  BuildContext context, {
+  required String perche,
+  Collegamento? collegamento,
+}) => showModalBottomSheet<void>(
+  context: context,
+  showDragHandle: true,
+  isScrollControlled: true,
+  builder: (contesto) => SafeArea(
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      child: SpiegazioneDelPremium(
+        perche: perche,
+        apriLaPagina: collegamento == null
+            ? null
+            : () {
+                Navigator.of(contesto).pop();
+                unawaited(
+                  apriLaPaginaPremium(context, collegamento, perche: perche),
+                );
+              },
+      ),
+    ),
+  ),
+);
+
+/// Perche' c'e' un lucchetto, e dove si compra.
+class SpiegazioneDelPremium extends StatelessWidget {
+  const SpiegazioneDelPremium({
+    super.key,
+    required this.perche,
+    this.apriLaPagina,
+  });
+
+  final String perche;
+  final VoidCallback? apriLaPagina;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+    return Column(
+      key: const Key('spiegazione-premium'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: Colori.ambraScura,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.lock_rounded,
+                size: 19,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'GdAHome Premium',
+                style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(perche, style: t.bodyMedium),
+        const SizedBox(height: 10),
+        Text(
+          PerchePremium.soloDagliStore,
+          key: const Key('premium-solo-dagli-store'),
+          style: t.bodyMedium?.copyWith(color: s.onSurfaceVariant),
+        ),
+        if (apriLaPagina != null) ...[
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: apriLaPagina,
+              icon: const Icon(Icons.workspace_premium),
+              label: Text(
+                inLingua(
+                  it: 'Scopri GdAHome Premium',
+                  en: 'Discover GdAHome Premium',
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Il bollino «PREMIUM» col lucchetto, accanto a una voce chiusa.
+class BollinoPremium extends StatelessWidget {
+  const BollinoPremium({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    final scritta = scuro ? const Color(0xFF3B2800) : Colors.white;
+    return Container(
+      key: const Key('bollino-premium'),
+      padding: const EdgeInsets.fromLTRB(5, 2, 7, 2),
+      decoration: BoxDecoration(
+        color: scuro ? Colori.ambra : Colori.ambraScura,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.lock_rounded, size: 11, color: scritta),
+          const SizedBox(width: 3),
+          Text(
+            'PREMIUM',
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+              color: scritta,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class SchermataPremium extends StatefulWidget {
@@ -236,7 +405,7 @@ class _SchermataPremiumState extends State<SchermataPremium> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'gdahome Premium',
+                'GdAHome Premium',
                 style: t.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
@@ -288,22 +457,22 @@ class _SchermataPremiumState extends State<SchermataPremium> {
             chiave: const Key('premium-addon-vecchio'),
             icona: Icons.system_update_alt_rounded,
             titolo: inLingua(
-              it: 'Aggiorna prima l\'add-on gdahome',
-              en: 'Update the gdahome add-on first',
+              it: 'Aggiorna prima l\'add-on GdAHome',
+              en: 'Update the GdAHome add-on first',
             ),
             testo: inLingua(
               it:
-                  'L\'add-on gdahome installato in «${casa?.nome ?? 'questa '
+                  'L\'add-on GdAHome installato in «${casa?.nome ?? 'questa '
                           'casa'}» è una versione vecchia e non può attivare '
                   'Premium. Per questo l\'acquisto non è disponibile. '
                   'Aggiorna l\'add-on in Home Assistant (Impostazioni → '
-                  'Componenti aggiuntivi → gdahome → Aggiorna), poi torna su '
+                  'Componenti aggiuntivi → GdAHome → Aggiorna), poi torna su '
                   'questa pagina.',
               en:
-                  'The gdahome add-on installed in “${casa?.nome ?? 'this '
+                  'The GdAHome add-on installed in “${casa?.nome ?? 'this '
                           'home'}” is an old version and can\'t turn on Premium, '
                   'so buying isn\'t available. Update the add-on in Home '
-                  'Assistant (Settings → Add-ons → gdahome → Update), then '
+                  'Assistant (Settings → Add-ons → GdAHome → Update), then '
                   'come back to this page.',
             ),
             azione: inLingua(
@@ -984,11 +1153,11 @@ class _SulWeb extends StatelessWidget {
               inLingua(
                 it:
                     'Dal browser non si può acquistare. Abbonati dall\'app '
-                    'gdahome sul telefono, iPhone o Android, con 14 giorni di '
+                    'GdAHome sul telefono, iPhone o Android, con 14 giorni di '
                     'prova gratuita: Premium si attiva anche qui. Un codice '
                     'regalo, invece, puoi usarlo anche dal browser.',
                 en:
-                    'You can\'t buy from here: subscribe in the gdahome app '
+                    'You can\'t buy from here: subscribe in the GdAHome app '
                     'on your phone, iPhone or Android, with a 14-day free '
                     'trial, and Premium shows up here too. A gift code, '
                     'though, can be redeemed from the browser as well.',

@@ -54,8 +54,8 @@ function strisciaMarkup(scheda, indice, scelto) {
     <small>${esc(
       parole.aiutoIcona ||
         t(
-          "Il disegno che esce nella pagina e nella tessera. Sono quelli del catalogo di gdahome: uguali su ogni telefono.",
-          "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.",
+          "Il disegno che esce nella pagina e nella tessera. Sono quelli del catalogo di GdAHome: uguali su ogni telefono.",
+          "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.",
         ),
     )}</small>
     <input type="hidden" data-dm-dich-campo="icon" data-dm-dich-riga="${indice}" value="${esc(scelto)}" data-dm-dich-sezione="${esc(nome)}">

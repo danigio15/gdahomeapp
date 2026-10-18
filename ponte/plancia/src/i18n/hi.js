@@ -43,8 +43,8 @@ export default Object.freeze({
   "Pick a trip on the left, or make a new one.": "बाईं ओर से कोई यात्रा चुनें, या नई बनाएँ।",
   "Pick the destination and time: I will tell you when to leave.":
     "गंतव्य और समय चुनें: मैं बताऊँगा कब निकलना है।",
-  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the gdahome app, on the Premium page.":
-    "यहाँ से यात्राएँ प्लान करें और उन्हें फ़ोन, CarPlay और Android Auto पर पाएँ, निकलने की याद और पहले से चालू कार क्लाइमेट के साथ। gdahome ऐप के Premium पेज से अनलॉक करें।",
+  "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.":
+    "यहाँ से यात्राएँ प्लान करें और उन्हें फ़ोन, CarPlay और Android Auto पर पाएँ, निकलने की याद और पहले से चालू कार क्लाइमेट के साथ। GdAHome ऐप के Premium पेज से अनलॉक करें।",
   "Plan trips from here: you find them in gdanav on the phone, CarPlay and Android Auto.":
     "यहाँ से यात्राएँ प्लान करें: ये gdanav में फ़ोन, CarPlay और Android Auto पर मिलेंगी।",
   "Planned trips": "योजनाबद्ध यात्राएँ",
@@ -4806,8 +4806,8 @@ export default Object.freeze({
   "Kitchen window": "रसोई की खिड़की",
   "New opening": "नया द्वार",
   "Save opening": "द्वार सहेजें",
-  "The drawing that shows on the page and on the tile. They are gdahome's own: the same on every phone.":
-    "वह चित्र जो पेज पर और टाइल पर दिखता है। ये gdahome के अपने हैं: हर फ़ोन पर एक जैसे।",
+  "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.":
+    "वह चित्र जो पेज पर और टाइल पर दिखता है। ये GdAHome के अपने हैं: हर फ़ोन पर एक जैसे।",
   "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.":
     "घर के द्वार: दरवाज़े, खिड़कियाँ, मुख्य द्वार, गैराज का शटर। हर द्वार की अपनी पंक्ति होती है — संपर्क सेंसर की एंटिटी, आपका दिया नाम, चित्र — और द्वार पेज इन्हीं को इसी क्रम में दिखाता है: हरा बंद, लाल खुला, और ऊपर कितने अभी खुले हैं।",
   "The sensor that says open or closed: binary_sensor.*, or a cover.* if it is motorised.":
@@ -5160,8 +5160,10 @@ export default Object.freeze({
   "ideal below ${soglia}": "${soglia} से कम आदर्श",
   "In Ah, Wh or kWh. Left empty, it is worked out from the charge and the capacity.":
     "Ah, Wh या kWh में। खाली छोड़ने पर यह चार्ज और क्षमता से निकाली जाती है।",
-  "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
-    "JK, JBD और Daly BMS को उनकी एंटिटी के नामों से पहचानता है और उपसर्ग के हिसाब से समूह बनाता है। उन्हें यहाँ एक बार पंक्तियों के रूप में रखता है: उसके बाद वे आपके हैं।",
+  "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.":
+    "JK, JBD और Daly BMS और Huawei LUNA2000 बैटरियों को उनकी एंटिटी के नामों से पहचानता है और उपसर्ग के हिसाब से समूह बनाता है। उन्हें यहाँ एक बार पंक्तियों के रूप में रखता है: उसके बाद वे आपके हैं।",
+  "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one.":
+    "वैकल्पिक। जो बैटरी इन्वर्टर के ज़रिए बात करती है — जैसे Huawei Solar इंटीग्रेशन के साथ Huawei LUNA2000 — उसमें चुनने के लिए कोई BMS नहीं होता: चार्ज की स्थिति, पावर और ऊर्जा «ऊर्जा» में, «प्रवाह और इकाइयाँ» टैब में, «Battery · charge» और «Battery · discharge» खानों में डाली जाती हैं। यह टैब केवल पैक या मॉड्यूल एक-एक करके देखने के लिए है।",
   "max ${cifre(pacco.massima.volt, 3)} V · cell ${pacco.massima.numero}":
     "अधिकतम ${cifre(pacco.massima.volt, 3)} V · सेल ${pacco.massima.numero}",
   "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}":
@@ -5481,14 +5483,11 @@ export default Object.freeze({
   "The wall dashboard is Premium": "दीवार पैनल Premium है",
   "This tablet's pages": "इस टैबलेट के पेज",
   "Use this dashboard on the wall": "इस डैशबोर्ड को दीवार पर उपयोग करें",
-  "Wakes up by itself": "अपने आप जागता है",
   "Warn about open windows": "खुली खिड़कियों की चेतावनी दें",
-  "When this sensor turns on (for example a presence sensor)":
-    "जब यह सेंसर चालू हो (जैसे उपस्थिति सेंसर)",
   "Who is home": "घर पर कौन है",
   windy: "हवादार",
-  "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.":
-    "gdahome Base के साथ यह डैशबोर्ड सामान्य डैशबोर्ड ही रहता है। Premium के साथ यह दीवार टैबलेट के लिए पैनल बन जाता है: कमरा, दृश्य या प्रवेश, लैंडस्केप और पोर्ट्रेट। Premium को gdahome ऐप से चालू किया जाता है।",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.":
+    "GdAHome Base के साथ यह डैशबोर्ड सामान्य डैशबोर्ड ही रहता है। Premium के साथ यह दीवार टैबलेट के लिए पैनल बन जाता है: कमरा, दृश्य या प्रवेश, लैंडस्केप और पोर्ट्रेट। Premium को GdAHome ऐप से चालू किया जाता है।",
   "Wrong code": "गलत कोड",
   "Yes, go": "हाँ, चलें",
   "All lights": "सभी लाइटें",
@@ -5547,8 +5546,6 @@ export default Object.freeze({
   "On rest go back to the first page": "विश्राम पर पहले पेज पर लौटें",
   "One tile per room, with temperature, humidity and how many lights are on, live. Rooms and their sensors come from the source dashboard.":
     "हर कमरे के लिए एक टाइल, तापमान, नमी और कितनी लाइटें जल रही हैं, लाइव। कमरे और उनके सेंसर स्रोत डैशबोर्ड से आते हैं।",
-  "Orientation, theme, weather, rest, night, wake-up, PIN":
-    "दिशा, थीम, मौसम, विश्राम, रात, जागना, PIN",
   "Positive is drawn, negative is fed in": "धनात्मक लिया जाता है, ऋणात्मक दिया जाता है",
   "Power, in W or kW": "पावर, W या kW में",
   "Right now, at home": "अभी, घर पर",
@@ -5895,8 +5892,8 @@ export default Object.freeze({
   "What comes out of the battery": "बैटरी से जो निकलता है",
   "What goes into the battery": "बैटरी में जो जाता है",
   "An automation handles it": "एक ऑटोमेशन इसे संभालता है",
-  "Can't read it: the gdahome add-on must be running, and you must be an administrator.":
-    "पढ़ा नहीं जा सकता: gdahome ऐड-ऑन चालू होना चाहिए और आपको व्यवस्थापक होना चाहिए।",
+  "Can't read it: the GdAHome add-on must be running, and you must be an administrator.":
+    "पढ़ा नहीं जा सकता: GdAHome ऐड-ऑन चालू होना चाहिए और आपको व्यवस्थापक होना चाहिए।",
   "Fine tonight": "आज रात ठीक है",
   "Inner door": "अंदर का दरवाज़ा",
   "Leave it": "ऐसे ही रहने दें",
@@ -6229,7 +6226,6 @@ export default Object.freeze({
   "it is night": "रात है",
   "It reads:": "यह ऐसे पढ़ा जाता है:",
   "Last run": "अंतिम चलाए गए",
-  "last time: ${fu}": "पिछली बार: ${fu}",
   "leaves home": "घर से निकलता है",
   "Light with motion": "गति पर रोशनी",
   "Lights and climate when someone arrives": "कोई आए तो लाइट और जलवायु",
@@ -6340,8 +6336,6 @@ export default Object.freeze({
   "at most": "अधिकतम",
   "becomes": "बन जाता है",
   "below the horizon": "क्षितिज के नीचे",
-  "call ${servizio}": "${servizio} कॉल करें",
-  "call ${servizio} on ${chi}": "${chi} पर ${servizio} कॉल करें",
   "call a service": "सेवा कॉल करें",
   "Conditions": "शर्तें",
   "equals": "बराबर है",
@@ -6379,14 +6373,10 @@ export default Object.freeze({
   "The home does not call this service by itself.": "घर यह सेवा खुद कॉल नहीं करता।",
   "the sun is…": "सूर्य है…",
   "volume": "वॉल्यूम",
-  "wait until ${chi} becomes «${stato}» (at most ${massimo} min)": "${chi} के «${stato}» होने तक रुकें (अधिकतम ${massimo} मिनट)",
   "wait until…": "तब तक रुकें…",
   "When ${attributo} of ${chi} becomes «${valore}»": "जब ${chi} का ${attributo} «${valore}» हो",
   "When ${attributo} of ${chi} changes": "जब ${chi} का ${attributo} बदले",
-  "When ${chi} becomes «${a}»": "जब ${chi} «${a}» हो",
   "When ${chi} changes state": "जब ${chi} की स्थिति बदले",
-  "When ${chi} goes from «${da}» to «${a}»": "जब ${chi} «${da}» से «${a}» हो",
-  "When ${chi} is no longer «${da}»": "जब ${chi} «${da}» न रहे",
   "When the ${evento} event arrives": "जब ${evento} इवेंट आए",
   "with": "के साथ",
   "with the sun above the horizon": "सूर्य क्षितिज के ऊपर हो तो",
@@ -6466,19 +6456,15 @@ export default Object.freeze({
   "🔁 ${fatte} converted, ${no} not: try again": "🔁 ${fatte} बदले गए, ${no} नहीं: फिर से कोशिश करें",
   "🗑 «${v.nome}» deleted": "🗑 «${v.nome}» हटाया गया",
   "${chi} above ${sopra}": "${chi} ${sopra} से ऊपर",
-  "${chi} becomes «${a}»": "${chi} «${a}» बन जाता है",
   "${chi} below ${sotto}": "${chi} ${sotto} से नीचे",
   "${chi} changes state": "${chi} की स्थिति बदलती है",
   "${chi} changes value": "${chi} का मान बदलता है",
   "${chi} drops below ${sotto}": "${chi} ${sotto} से नीचे जाता है",
   "${chi} enters or leaves a zone": "${chi} किसी ज़ोन में आता या निकलता है",
   "${chi} goes above ${sopra}": "${chi} ${sopra} से ऊपर जाता है",
-  "${chi} is «${stato}»": "${chi} «${stato}» है",
   "${n} automations from the trial version are idle": "ट्रायल संस्करण के ${n} ऑटोमेशन रुके हुए हैं",
   "${n} suggestions for your home": "आपके घर के लिए ${n} सुझाव",
   "${n}, from Home Assistant": "${n}, Home Assistant से",
-  "${servizio} in a room": "एक कमरे में ${servizio}",
-  "${servizio} on ${chi}": "${chi} पर ${servizio}",
   "1 suggestion for your home": "आपके घर के लिए 1 सुझाव",
   "a «${quale}» condition": "एक «${quale}» शर्त",
   "a «${quale}» trigger": "एक «${quale}» ट्रिगर",
@@ -6493,7 +6479,6 @@ export default Object.freeze({
   "all of these:": "ये सभी:",
   "All the home's ones": "घर के सभी",
   "All the home's ones · from Home Assistant": "घर के सभी · Home Assistant से",
-  "an action": "एक कार्रवाई",
   "An advanced automation: the details are in Home Assistant.": "एक उन्नत ऑटोमेशन: विवरण Home Assistant में हैं।",
   "another action": "दूसरी कार्रवाई",
   "any of these": "इनमें से कोई",
@@ -6524,10 +6509,10 @@ export default Object.freeze({
   "fires the ${evento} event": "${evento} इवेंट भेजता है",
   "Home Assistant → Settings → Automations": "Home Assistant → सेटिंग्स → ऑटोमेशन",
   "Home Assistant did not save it: ${no}": "Home Assistant ने इसे नहीं सहेजा: ${no}",
-  "Home Assistant runs automations now: convert them and they start again, labelled gdahome.": "अब ऑटोमेशन Home Assistant चलाता है: उन्हें बदलें और वे gdahome लेबल के साथ फिर से चलेंगे।",
+  "Home Assistant runs automations now: convert them and they start again, labelled GdAHome.": "अब ऑटोमेशन Home Assistant चलाता है: उन्हें बदलें और वे GdAHome लेबल के साथ फिर से चलेंगे।",
   "Home Assistant shuts down": "Home Assistant बंद हो रहा है",
   "Home Assistant starts": "Home Assistant शुरू हो रहा है",
-  "Home Assistant's automations are read through the gdahome add-on: it is not here.": "Home Assistant के ऑटोमेशन gdahome ऐड-ऑन से पढ़े जाते हैं: यह यहाँ नहीं है।",
+  "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant के ऑटोमेशन GdAHome ऐड-ऑन से पढ़े जाते हैं: यह यहाँ नहीं है।",
   "if something holds:": "अगर कुछ सही हो:",
   "in HA as": "HA में इस नाम से",
   "in the config ›": "कॉन्फ़िग में ›",
@@ -6549,8 +6534,8 @@ export default Object.freeze({
   "on certain days": "कुछ दिनों में",
   "on the App Store and Google Play. Here in Home Assistant you pay nothing and enter no payment details.": "App Store और Google Play पर। यहाँ Home Assistant में आप कुछ नहीं चुकाते और भुगतान की कोई जानकारी नहीं डालते।",
   "One automation from the trial version is idle": "ट्रायल संस्करण का एक ऑटोमेशन रुका हुआ है",
-  "Only available from the gdahome apps on the App Store and Google Play. The apps are coming soon.": "केवल App Store और Google Play पर gdahome ऐप्स से मिलता है। ऐप्स जल्द आ रहे हैं।",
-  "only from the gdahome apps": "केवल gdahome ऐप्स से",
+  "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.": "केवल App Store और Google Play पर GdAHome ऐप्स से मिलता है। ऐप्स जल्द आ रहे हैं।",
+  "only from the GdAHome apps": "केवल GdAHome ऐप्स से",
   "Open in HA ↗": "HA में खोलें ↗",
   "Open in Home Assistant ↗": "Home Assistant में खोलें ↗",
   "otherwise → ${altrimenti}": "वरना → ${altrimenti}",
@@ -6563,34 +6548,30 @@ export default Object.freeze({
   "repeats some actions": "कुछ कार्रवाइयाँ दोहराता है",
   "Room and name": "कमरा और नाम",
   "Run now": "अभी चलाएँ",
-  "runs the «${script}» script": "«${script}» स्क्रिप्ट चलाता है",
   "SAVE IN HOME ASSISTANT": "HOME ASSISTANT में सहेजें",
   "Saved in Home Assistant ✓ «${v.nome}»": "Home Assistant में सहेजा गया ✓ «${v.nome}»",
   "SAVING…": "सहेज रहा है…",
   "Search an automation…": "ऑटोमेशन खोजें…",
   "See ›": "देखें ›",
   "See all the home's automations, turn them on and off, create new ones in three steps and get suggestions designed for your home.": "घर के सभी ऑटोमेशन देखें, उन्हें चालू और बंद करें, तीन चरणों में नए बनाएँ और अपने घर के लिए सुझाव पाएँ।",
-  "sends a notification": "सूचना भेजता है",
-  "set ${chi} to a temperature": "${chi} को एक तापमान पर सेट करता है",
   "stopped for now": "अभी के लिए रुके हुए",
   "Suggestions designed for your home": "आपके घर के लिए सुझाव",
   "the ${evento} event arrives": "${evento} इवेंट आता है",
   "the home did not answer": "घर ने जवाब नहीं दिया",
   "The home that does it by itself: lights, climate, shutters and alerts that start when needed.": "घर जो अपने आप करता है: लाइट, क्लाइमेट, शटर और अलर्ट जो ज़रूरत पर शुरू होते हैं।",
   "The home's automations": "घर के ऑटोमेशन",
-  "The list and saving go through the gdahome add-on: it is not here.": "सूची और सहेजना gdahome ऐड-ऑन से होते हैं: यह यहाँ नहीं है।",
+  "The list and saving go through the GdAHome add-on: it is not here.": "सूची और सहेजना GdAHome ऐड-ऑन से होते हैं: यह यहाँ नहीं है।",
   "the new automation": "नया ऑटोमेशन",
   "then → ${allora}": "तब → ${allora}",
   "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.": "यह ऑटोमेशन Home Assistant की एक फ़ाइल में है: यहाँ आप इसे चालू, बंद और चलाते हैं, और बदलाव वहीं होता है।",
   "This automation uses advanced features (a choice between cases, a template, a blueprint…): here you can turn it on and off, run it, rename it and change its room. For the rest:": "यह ऑटोमेशन उन्नत सुविधाएँ इस्तेमाल करता है (स्थितियों में चुनाव, टेम्पलेट, blueprint…): यहाँ आप इसे चालू, बंद, चला, नाम बदल और कमरा बदल सकते हैं। बाकी के लिए:",
-  "toggle ${chi}": "${chi} टॉगल करें",
   "Turn ${v.nome} on or off": "${v.nome} चालू या बंद करें",
   "Turn them on and off with a tap": "एक टैप से चालू और बंद करें",
   "wait ${min} min": "${min} मिनट रुकें",
   "waits a while": "थोड़ा रुकता है",
   "waits for something to happen": "कुछ होने का इंतज़ार करता है",
   "When the apps are in the stores, you turn on Premium from the app and Automations unlock here by themselves.": "जब ऐप्स स्टोर में होंगे, आप ऐप से Premium चालू करेंगे और यहाँ ऑटोमेशन अपने आप खुल जाएँगे।",
-  "You'll find it in Settings → Automations, labelled gdahome.": "आप इसे सेटिंग्स → ऑटोमेशन में gdahome लेबल के साथ पाएँगे।",
+  "You'll find it in Settings → Automations, labelled GdAHome.": "आप इसे सेटिंग्स → ऑटोमेशन में GdAHome लेबल के साथ पाएँगे।",
   "You'll find it there and Home Assistant runs it.": "आप इसे वहाँ पाएँगे और Home Assistant इसे चलाता है।",
   "🚨 Removed": "🚨 हटाया गया",
   "🚨 Saved: the house knows when it goes off": "🚨 सहेजा गया: घर जानता है कि अलार्म कब बजता है",
@@ -6630,4 +6611,71 @@ export default Object.freeze({
   "to confirm": "पुष्टि बाकी",
   "To decide": "तय करना है",
   "What the ${quale} meter measures": "${quale} मीटर क्या मापता है",
+  /* Automazioni: le categorie di Home Assistant. */
+  "By category": "श्रेणी के अनुसार",
+  Uncategorized: "बिना श्रेणी",
+  "In short": "संक्षेप में",
+  /* Automazioni: gli stati e i servizi in parole. */
+  "${chi} is ${stato}": "${chi} ${stato} है",
+  "${frase} in a room": "एक कमरे में ${frase}",
+  "wait until ${chi} becomes ${parola} (at most ${massimo} min)": "${chi} के ${parola} होने तक रुकें (अधिकतम ${massimo} मिनट)",
+  "When ${chi} goes from ${prima} to ${dopo}": "जब ${chi} ${prima} से ${dopo} हो",
+  "When ${chi} is no longer ${prima}": "जब ${chi} ${prima} न रहे",
+  "0% = black screen, like “Black screen at night”":
+    "0% = काली स्क्रीन, “रात में काली स्क्रीन” की तरह",
+  "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up.":
+    "Home Assistant का एक सेंसर: mmWave, गति, उपस्थिति। जब यह चालू होता है तो पैनल जाग जाता है।",
+  "A touch on the screen also counts as “someone nearby”.":
+    "स्क्रीन पर एक स्पर्श भी “कोई पास है” माना जाता है।",
+  "At night": "रात में",
+  "By the sun: night from half an hour after sunset to sunrise":
+    "सूरज से: सूर्यास्त के आधे घंटे बाद से सूर्योदय तक रात",
+  "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.":
+    "स्क्रीन के पास, कुछ सेंटीमीटर: पास आते हाथ के लिए उपयोगी। हर टैबलेट में नहीं होता।",
+  "Day and night from": "दिन और रात इससे",
+  "detecting": "पता चल रहा है",
+  "Dim after": "इसके बाद मंद करें",
+  "Home Assistant has no sun.sun: the hours of “Black screen at night” apply":
+    "Home Assistant में sun.sun नहीं है: “रात में काली स्क्रीन” के घंटे लागू होते हैं",
+  "Home presence sensor": "घर का उपस्थिति सेंसर",
+  "Home's sun": "घर का सूरज",
+  "Hours": "समय",
+  "How bright": "कितनी चमक",
+  "Night (from the hours)": "रात (समय से)",
+  "Night (from the sun)": "रात (सूरज से)",
+  "Night in the hours of “Black screen at night”, even with its switch off":
+    "“रात में काली स्क्रीन” के घंटों में रात, भले उसका स्विच बंद हो",
+  "nobody": "कोई नहीं",
+  "On a touch or when someone arrives": "स्पर्श पर या जब कोई आए",
+  "On the iPad the room light cannot be read: the sun or the hours tell day from night.":
+    "iPad पर कमरे की रोशनी नहीं पढ़ी जा सकती: दिन और रात सूरज या समय से तय होते हैं।",
+  "Only in the GdAHome app on Android.": "केवल Android पर GdAHome ऐप में।",
+  "Orientation, theme, weather, rest, night, brightness, PIN":
+    "दिशा, थीम, मौसम, विश्राम, रात, चमक, PIN",
+  "presence sensor": "उपस्थिति सेंसर",
+  "Preview of a day": "एक दिन का पूर्वावलोकन",
+  "RECOMMENDED": "अनुशंसित",
+  "Resting, by day": "विश्राम में, दिन में",
+  "Room light": "कमरे की रोशनी",
+  "Screen brightness": "स्क्रीन की चमक",
+  "Someone nearby": "कोई पास है",
+  "Someone nearby (example)": "कोई पास है (उदाहरण)",
+  "tablet proximity": "टैबलेट की निकटता",
+  "Tablet proximity sensor": "टैबलेट का निकटता सेंसर",
+  "The clock is readable, but it does not light up the room":
+    "घड़ी पढ़ी जा सकती है, पर कमरा रोशन नहीं होता",
+  "The iPad does not have one.": "iPad में यह नहीं है।",
+  "The panel sets it, only in the GdAHome app on the tablet":
+    "इसे पैनल नियंत्रित करता है, केवल टैबलेट पर GdAHome ऐप में",
+  "This tablet does not have one.": "इस टैबलेट में यह नहीं है।",
+  "This tablet has no light sensor: the home's sun applies":
+    "इस टैबलेट में प्रकाश सेंसर नहीं है: घर का सूरज लागू होता है",
+  "This tablet has one.": "इस टैबलेट में यह है।",
+  "Time with nobody nearby and no touches": "बिना किसी के पास हुए और बिना स्पर्श का समय",
+  "When someone is nearby": "जब कोई पास हो",
+  "Who is nearby · one source is enough": "कौन पास है · एक स्रोत काफ़ी है",
+  "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies":
+    "टैबलेट के प्रकाश सेंसर से, केवल Android पर GdAHome ऐप में। इसके बिना घर का सूरज लागू होता है",
+  "With this tablet's light sensor: it is night when the room is dark":
+    "इस टैबलेट के प्रकाश सेंसर से: कमरे में अंधेरा होने पर रात होती है",
 });

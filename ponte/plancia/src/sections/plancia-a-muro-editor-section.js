@@ -39,6 +39,11 @@ import {
   muroPulito,
   nomeDellaPersonaDelMuro,
   nuovaPagina,
+  eNotteAllOra,
+  notteDellaGiornata,
+  PASSAGGI_DI_ESEMPIO,
+  SECONDI_PER_ABBASSARE,
+  giornataDellaLuce,
 } from "../core/plancia-a-muro.js";
 import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
@@ -953,10 +958,193 @@ function colori(via, valore) {
     .join("")}</span>`;
 }
 
+/* ── la luminosita' dello schermo (#224) ────────────────────────────────────
+ *
+ * «Luminosita' dello schermo»: tre livelli, il tempo, il giorno e la notte, e
+ * sotto «Chi c'e' vicino», le fonti che la alzano. La prima fonte e' il
+ * sensore che prima stava in «Si sveglia da solo» (`risveglio`): lo stesso
+ * campo, spostato qui, che sveglia il pannello anche a luminosita' spenta.
+ *
+ * Cosa ha il tablet lo dice l'app, quando la Config si apre dentro l'app
+ * (`capacita?` sul canale dello schermo). Aperta da un altro telefono o da un
+ * browser non lo sa nessuno, e le righe lo dicono invece di indovinare. */
+function capacitaDelTablet() {
+  const detto = root.__GDAHOME_SCHERMO__;
+  const capacita = detto && typeof detto === "object" ? detto.capacita : null;
+  return capacita && typeof capacita === "object" ? capacita : null;
+}
+
+function chiediLeCapacita() {
+  if (state.capacitaChieste || capacitaDelTablet()) return;
+  state.capacitaChieste = true;
+  try {
+    root.gdahomeSchermo?.postMessage?.("capacita?");
+  } catch (_errore) {}
+}
+
+const cursore = (via, valore, minimo, etichetta) =>
+  `<span class="mu-ed-volume mu-ed-luce-cursore"><input type="range" min="${minimo}" max="100" step="1" data-mu-ed-campo="${esc(via)}" value="${valore}" aria-label="${esc(etichetta)}"><b data-mu-ed-percento>${valore}%</b></span>`;
+
+/* La giornata d'esempio: la notte vera del sole di casa quando c'e', se no
+ * la fascia dell'orario (`notteDellaGiornata`). Le ore sono quelle del tablet
+ * che guarda.
+ *
+ * Il disegno si allunga su tutta la larghezza della scheda e resta alto
+ * uguale: il tracciato e' in percentuali (`preserveAspectRatio="none"`, con
+ * le linee che non si ingrossano), e le scritte degli assi sono testo vero
+ * accanto, che non si stira e resta leggibile dal telefono al monitor. */
+function anteprimaDellaGiornata(m) {
+  const notte = notteDellaGiornata(m, allStates()?.["sun.sun"]);
+  const x = (ora) => ((ora / 24) * 1000).toFixed(1);
+  const y = (v) => (100 - v).toFixed(1);
+  const fasce = (
+    notte.da > notte.a
+      ? [
+          [0, notte.a],
+          [notte.da, 24],
+        ]
+      : [[notte.da, notte.a]]
+  )
+    .map(
+      ([i, f]) =>
+        `<rect class="notte" x="${x(i)}" y="0" width="${(x(f) - x(i)).toFixed(1)}" height="100"/>`,
+    )
+    .join("");
+  const righe = [0, 50, 100]
+    .map((v) => `<line x1="0" x2="1000" y1="${y(v)}" y2="${y(v)}"/>`)
+    .join("");
+  const vicini = PASSAGGI_DI_ESEMPIO.map(
+    ([i, f]) =>
+      `<rect class="vicino" x="${x(i)}" y="96" width="${(x(f) - x(i)).toFixed(1)}" height="4"/>`,
+  ).join("");
+  /* A gradini: la luce cambia di colpo (la dissolvenza la fa l'app). */
+  let linea = "";
+  let prima = null;
+  for (const [ora, v] of giornataDellaLuce(m, (ora) => eNotteAllOra(notte, ora))) {
+    linea += prima === null ? `M${x(ora)},${y(v)}` : `L${x(ora)},${y(prima)}L${x(ora)},${y(v)}`;
+    prima = v;
+  }
+  const ore = [0, 6, 12, 18, 24]
+    .map((o) => `<span style="left:${(o / 24) * 100}%">${String(o).padStart(2, "0")}</span>`)
+    .join("");
+  return `<div class="mu-ed-giornata" data-mu-ed-giornata data-notte="${notte.da.toFixed(2)}-${notte.a.toFixed(2)}">
+    <div class="mu-ed-leg"><span><i class="luce"></i>${esc(t("Luminosità", "Brightness"))}</span><span><i class="vicino"></i>${esc(t("Qualcuno vicino (esempio)", "Someone nearby (example)"))}</span><span><i class="notte"></i>${esc(notte.dalSole ? t("Notte (dal sole)", "Night (from the sun)") : t("Notte (dall'orario)", "Night (from the hours)"))}</span></div>
+    <div class="mu-ed-grafico">
+      <div class="mu-ed-asse-y" aria-hidden="true"><span>100%</span><span>50%</span><span>0%</span></div>
+      <svg viewBox="0 0 1000 100" preserveAspectRatio="none" role="img" aria-label="${esc(t("Anteprima di una giornata", "Preview of a day"))}">${fasce}${righe}${vicini}<path class="luce" d="${linea}"/></svg>
+      <div class="mu-ed-ore" aria-hidden="true">${ore}</div>
+    </div>
+  </div>`;
+}
+
+function luceMarkup(m) {
+  const l = m.luce;
+  const capacita = capacitaDelTablet();
+  const sullIPad = capacita?.piattaforma === "ios";
+  const senzaLuce = Boolean(capacita) && !capacita.luce;
+  const senzaVicino = Boolean(capacita) && !capacita.prossimita;
+  const sole = allStates()?.["sun.sun"];
+  const notaDelGiorno =
+    l.giorno === "stanza"
+      ? capacita?.luce
+        ? t(
+            "Col sensore di luce di questo tablet: è notte quando la stanza è buia",
+            "With this tablet's light sensor: it is night when the room is dark",
+          )
+        : senzaLuce
+          ? t(
+              "Questo tablet non ha il sensore di luce: vale il sole di casa",
+              "This tablet has no light sensor: the home's sun applies",
+            )
+          : t(
+              "Col sensore di luce del tablet, solo nell'app GdAHome su Android. Senza, vale il sole di casa",
+              "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies",
+            )
+      : l.giorno === "orario"
+        ? t(
+            "Notte nella fascia di «Di notte schermo nero», anche con l'interruttore spento",
+            "Night in the hours of “Black screen at night”, even with its switch off",
+          )
+        : sole
+          ? t(
+              "Col sole: notte da mezz'ora dopo il tramonto all'alba",
+              "By the sun: night from half an hour after sunset to sunrise",
+            )
+          : t(
+              "Home Assistant non ha sun.sun: vale l'orario di «Di notte schermo nero»",
+              "Home Assistant has no sun.sun: the hours of “Black screen at night” apply",
+            );
+  const voci = [
+    ["sole", t("Sole di casa", "Home's sun"), false],
+    ["stanza", t("Luce della stanza", "Room light"), sullIPad || senzaLuce],
+    ["orario", t("Orario", "Hours"), false],
+  ];
+  const giorno = `<span class="mu-ed-seg">${voci
+    .map(
+      ([v, testo, spento]) =>
+        `<button type="button" class="${v === l.giorno ? "si" : ""}" data-mu-ed-metti="luce.giorno" data-mu-ed-valore="${v}"${spento && v !== l.giorno ? " disabled" : ""}>${esc(testo)}</button>`,
+    )
+    .join("")}</span>`;
+  const livelli = l.attiva
+    ? `<div class="mu-ed-sotto-titolo">${esc(t("Quanto è luminoso", "How bright"))}</div>
+    ${riga(t("Quando qualcuno è vicino", "When someone is nearby"), t("Al tocco o all'arrivo di qualcuno", "On a touch or when someone arrives"), cursore("luce.vicino", l.vicino, 10, t("Quando qualcuno è vicino", "When someone is nearby")))}
+    ${riga(t("A riposo, di giorno", "Resting, by day"), t("Si legge l'orologio, ma non illumina la stanza", "The clock is readable, but it does not light up the room"), cursore("luce.riposo", l.riposo, 0, t("A riposo, di giorno", "Resting, by day")))}
+    ${riga(t("Di notte", "At night"), t("0% = schermo nero, come «Di notte schermo nero»", "0% = black screen, like “Black screen at night”"), cursore("luce.notte", l.notte, 0, t("Di notte", "At night")))}
+    ${riga(
+      t("Abbassa dopo", "Dim after"),
+      t("Tempo senza nessuno vicino e senza tocchi", "Time with nobody nearby and no touches"),
+      tendina(
+        "luce.dopo",
+        l.dopo,
+        SECONDI_PER_ABBASSARE.map((n) => [n, n < 60 ? `${n} s` : `${n / 60} min`]),
+        null,
+      ),
+    )}
+    ${riga(
+      t("Giorno e notte da", "Day and night from"),
+      notaDelGiorno,
+      `${giorno}${l.giorno === "orario" ? `${campo("notte.da", m.notte.da, "23:00", "time")}${campo("notte.a", m.notte.a, "06:30", "time")}` : ""}`,
+    )}
+    ${sullIPad ? `<div class="mu-ed-nota">${esc(t("Sull'iPad la luce della stanza non si legge: giorno e notte li dice il sole o l'orario.", "On the iPad the room light cannot be read: the sun or the hours tell day from night."))}</div>` : ""}
+    <div class="mu-ed-sotto-titolo">${esc(t("Anteprima di una giornata", "Preview of a day"))}</div>
+    ${anteprimaDellaGiornata(m)}`
+    : "";
+  const sensore = m.risveglio.entita;
+  const letto = sensore ? allStates()?.[sensore] : null;
+  /* Il sensore scelto sta gia' nella casella a destra: qui solo come sta
+   * adesso, col nome che gli ha dato Home Assistant, non con l'entita'. */
+  const statoDelSensore = letto
+    ? `<span class="mu-ed-stato-sensore" data-mu-ed-stato-sensore><i class="${letto.state === "on" ? "on" : ""}"></i>${esc(clean(letto.attributes?.friendly_name) || t("sensore di presenza", "presence sensor"))} · ${esc(letto.state === "on" ? t("rileva", "detecting") : t("nessuno", "nobody"))}</span>`
+    : "";
+  const notaDelTablet = capacita?.prossimita
+    ? t("Questo tablet ce l'ha.", "This tablet has one.")
+    : sullIPad
+      ? t("Sull'iPad non c'è.", "The iPad does not have one.")
+      : senzaVicino
+        ? t("Questo tablet non ce l'ha.", "This tablet does not have one.")
+        : t("Solo nell'app GdAHome su Android.", "Only in the GdAHome app on Android.");
+  return `<div class="mu-ed-luce" data-mu-ed-luce>
+    <div class="mu-ed-luce-testa"><span class="mu-ed-luce-ic" aria-hidden="true">☀️</span><div class="mu-ed-testo"><b>${esc(t("Luminosità dello schermo", "Screen brightness"))}</b><small>${esc(t("La comanda il pannello, solo nell'app GdAHome sul tablet", "The panel sets it, only in the GdAHome app on the tablet"))}</small></div>${interruttore("luce.attiva", l.attiva, "luce")}</div>
+    ${livelli}
+    <div class="mu-ed-sotto-titolo">${esc(t("Chi c'è vicino · basta una fonte", "Who is nearby · one source is enough"))}</div>
+    <div class="mu-ed-fonte" data-mu-ed-fonte="presenza">
+      <span class="mu-ed-fonte-em" aria-hidden="true">📡</span>
+      <div class="mu-ed-testo"><b>${esc(t("Sensore di presenza di casa", "Home presence sensor"))} <span class="mu-ed-chip">${esc(t("CONSIGLIATO", "RECOMMENDED"))}</span></b><small>${esc(t("Un sensore di Home Assistant: mmWave, movimento, occupazione. Quando si accende il pannello si sveglia.", "A Home Assistant sensor: mmWave, motion, occupancy. When it turns on the panel wakes up."))}</small>${statoDelSensore}</div>
+      <div class="mu-ed-dx">${cerca("risveglio.entita", sensore, { domini: "binary_sensor" })}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}</div>
+    </div>
+    <div class="mu-ed-fonte${senzaVicino ? " assente" : ""}" data-mu-ed-fonte="prossimita">
+      <span class="mu-ed-fonte-em" aria-hidden="true">📳</span>
+      <div class="mu-ed-testo"><b>${esc(t("Sensore di prossimità del tablet", "Tablet proximity sensor"))}</b><small>${esc(t("Vicino allo schermo, pochi centimetri: utile per la mano che si avvicina. Non tutti i tablet lo hanno.", "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one."))} ${esc(notaDelTablet)}</small></div>
+      <div class="mu-ed-dx">${senzaVicino && !l.prossimita ? `<span class="mu-ed-int fermo" aria-checked="false"><i></i></span>` : interruttore("luce.prossimita", l.prossimita, "prossimita")}</div>
+    </div>
+    <div class="mu-ed-nota">${esc(t("Anche un tocco sullo schermo vale come «qualcuno vicino».", "A touch on the screen also counts as “someone nearby”."))}</div>
+  </div>`;
+}
+
 function corpoMarkup() {
   const m = bozza();
   const premium = state.premium === true;
-  const plance = state.plance?.length ? state.plance : [{ profilo: "primary", titolo: "gdahome" }];
+  const plance = state.plance?.length ? state.plance : [{ profilo: "primary", titolo: "GdAHome" }];
   const qui = currentProfile();
   /* Tutte le plance, questa compresa. «Quel flag che sceglievo da dove
    * prendere i dati facendo la plancia nuova non c'e' piu'»: l'elenco lasciava
@@ -1016,7 +1204,7 @@ function corpoMarkup() {
           .join("")}</div>`
       : ""
   }
-  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, meteo, riposo, notte, risveglio, PIN", "Orientation, theme, weather, rest, night, wake-up, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state.altro ? "▾" : "▸"}</span></button>
+  <button type="button" class="mu-ed-altro" data-mu-ed-altro aria-expanded="${state.altro}"><span>⚙️ ${esc(t("Altre impostazioni", "More settings"))}</span><small>${esc(t("Orientamento, tema, meteo, riposo, notte, luminosità, PIN", "Orientation, theme, weather, rest, night, brightness, PIN"))}</small><span class="mu-ed-freccia" aria-hidden="true">${state.altro ? "▾" : "▸"}</span></button>
   ${
     state.altro
       ? `<div class="mu-ed-blocco">
@@ -1108,16 +1296,9 @@ function corpoMarkup() {
     ${riga(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
     ${m.temperatura === "casa" ? "" : riga(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}${m.temperatura === "casa" ? "" : dovesta(m)}
     ${riga(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo("notte.da", m.notte.da, "23:00", "time")}${campo("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
+    ${luceMarkup(m)}
     ${riga(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga(t("Avvisi a tutto schermo", "Full-screen alerts"), t("Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»", "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”"), interruttore("avvisiGrandi", m.avvisiGrandi, "avvisi-grandi"))}
-    ${riga(
-      t("Si sveglia da solo", "Wakes up by itself"),
-      t(
-        "Quando questo sensore si accende (per esempio una presenza)",
-        "When this sensor turns on (for example a presence sensor)",
-      ),
-      `${cerca("risveglio.entita", m.risveglio.entita, { domini: "binary_sensor" })}${interruttore("risveglio.attivo", m.risveglio.attivo, "risveglio")}`,
-    )}
     ${riga(
       t("Batteria del tablet", "Tablet battery"),
       t(
@@ -1159,8 +1340,8 @@ function corpoMarkup() {
       <b>${esc(t("La plancia a muro è Premium", "The wall dashboard is Premium"))}</b>
       <p>${esc(
         t(
-          "Con gdahome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app gdahome.",
-          "With gdahome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the gdahome app.",
+          "Con GdAHome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app GdAHome.",
+          "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.",
         ),
       )}</p></div></div>`;
 }
@@ -1180,6 +1361,7 @@ export function ensureMuroEditor() {
     return false;
   }
   if (state.fonte === null && state.premium === null && !state.chiedendo) chiediAlPonte();
+  chiediLeCapacita();
   const firma = JSON.stringify([
     bozza(),
     Boolean(state.fonte),
@@ -1737,6 +1919,43 @@ html[data-theme="dark"] #ed-body .mu-ed-sporca{color:#fde68a;background:#78350f5
 #ed-body .mu-ed-elenco-voce>.mu-ed-frecce{margin-left:0}
 #ed-body .mu-ed-anteprima{margin-top:8px;width:100%;max-width:720px;overflow:hidden;border-radius:14px;border:1px solid var(--divider-color,#dbe4ee)}
 #ed-body .mu-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}
+#ed-body .mu-ed-luce{margin-top:8px;padding:12px;border-radius:14px;border:1px solid color-mix(in srgb,#f59e0b 40%,var(--divider-color,#dbe4ee));background:color-mix(in srgb,#f59e0b 5%,transparent)}
+#ed-body .mu-ed-luce-testa{display:flex;align-items:center;gap:12px}
+#ed-body .mu-ed-luce-testa .mu-ed-testo b{font-size:15px}
+#ed-body .mu-ed-luce-ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:linear-gradient(135deg,#fde68a,#f59e0b)}
+#ed-body .mu-ed-luce-cursore{width:280px;max-width:100%}
+#ed-body .mu-ed-luce-cursore input{flex:1 1 auto;width:auto;min-width:0;accent-color:#f59e0b}
+#ed-body .mu-ed-luce-cursore b{font-family:Oswald,Inter,sans-serif;font-size:16px;color:#b45309;text-align:right}
+html[data-theme="dark"] #ed-body .mu-ed-luce-cursore b{color:#fde68a}
+#ed-body .mu-ed-luce .mu-ed-seg button[disabled]{opacity:.4;cursor:not-allowed}
+#ed-body .mu-ed-fonte{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:10px 12px;margin-top:8px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
+#ed-body .mu-ed-fonte.assente{opacity:.65}
+#ed-body .mu-ed-fonte-em{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:color-mix(in srgb,var(--text,#0f172a) 7%,transparent)}
+#ed-body .mu-ed-fonte>.mu-ed-testo{flex:1 1 200px}
+#ed-body .mu-ed-chip{display:inline-block;margin-left:4px;padding:2px 7px;border-radius:6px;font-size:9.5px;font-weight:900;letter-spacing:.08em;vertical-align:1px;color:#1d4ed8;background:color-mix(in srgb,#3b82f6 14%,transparent)}
+html[data-theme="dark"] #ed-body .mu-ed-chip{color:#bfdbfe}
+#ed-body .mu-ed-stato-sensore{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);overflow-wrap:anywhere}
+#ed-body .mu-ed-stato-sensore i{flex:none;width:8px;height:8px;border-radius:50%;background:#94a3b8}
+#ed-body .mu-ed-stato-sensore i.on{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
+#ed-body .mu-ed-giornata{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
+#ed-body .mu-ed-grafico{display:grid;grid-template-columns:auto 1fr;column-gap:8px}
+#ed-body .mu-ed-grafico svg{grid-column:2;display:block;width:100%;height:130px;overflow:visible}
+#ed-body .mu-ed-asse-y{grid-row:1;display:flex;flex-direction:column;justify-content:space-between;height:142px;margin:-6px 0;line-height:12px;font-size:10.5px;font-weight:700;text-align:right;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-ore{grid-column:2;position:relative;height:18px;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-ore span{position:absolute;top:0;transform:translateX(-50%)}
+#ed-body .mu-ed-ore span:first-child{transform:none}
+#ed-body .mu-ed-ore span:last-child{transform:translateX(-100%)}
+@media (max-width:600px){#ed-body .mu-ed-fonte>.mu-ed-dx{flex:1 1 100%}#ed-body .mu-ed-grafico svg{height:110px}#ed-body .mu-ed-asse-y{height:122px}}
+#ed-body .mu-ed-giornata line{stroke:color-mix(in srgb,var(--text,#0f172a) 12%,transparent);vector-effect:non-scaling-stroke}
+#ed-body .mu-ed-giornata rect.notte{fill:color-mix(in srgb,#64748b 26%,transparent)}
+#ed-body .mu-ed-giornata rect.vicino{fill:#22c55e}
+#ed-body .mu-ed-giornata path.luce{fill:none;stroke:#f59e0b;stroke-width:2.5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#ed-body .mu-ed-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:14px;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-leg span{display:inline-flex;align-items:center;gap:6px}
+#ed-body .mu-ed-leg i{width:10px;height:10px;border-radius:3px}
+#ed-body .mu-ed-leg i.luce{background:#f59e0b}
+#ed-body .mu-ed-leg i.vicino{background:#22c55e}
+#ed-body .mu-ed-leg i.notte{background:color-mix(in srgb,#64748b 45%,transparent)}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}
 #ed-body .mu-ed-lucchetto b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:26px;text-transform:uppercase}
 #ed-body .mu-ed-lucchetto p{max-width:520px;font-size:14px;line-height:1.55;color:var(--text-dim,#64748b)}
@@ -1754,6 +1973,12 @@ export function installPlanciaAMuroEditor() {
     /* Il volume si legge mentre il dito scorre; si scrive al rilascio. */
     if (event.target?.dataset?.muEdCampo?.endsWith(".ingresso.volume")) {
       const scritta = event.target.parentElement?.querySelector?.("[data-mu-ed-volume]");
+      if (scritta) scritta.textContent = `${event.target.value}%`;
+      return;
+    }
+    /* Lo stesso per i tre livelli della luminosita'. */
+    if (/^luce\.(vicino|riposo|notte)$/.test(event.target?.dataset?.muEdCampo || "")) {
+      const scritta = event.target.parentElement?.querySelector?.("[data-mu-ed-percento]");
       if (scritta) scritta.textContent = `${event.target.value}%`;
       return;
     }
@@ -1780,6 +2005,10 @@ export function installPlanciaAMuroEditor() {
   });
   root.addEventListener?.("resize", () => {
     if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+  });
+  /* L'app ha detto cosa ha il tablet: le righe dei sensori si riscrivono. */
+  root.addEventListener?.("gdahome:schermo", (event) => {
+    if (event?.detail?.capacita && schedaAttiva() === MURO_EDITOR_TAB && state.altro) ridisegna();
   });
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
     root.addEventListener?.(evento, ancora);

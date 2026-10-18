@@ -329,10 +329,10 @@ String spiegaLErrore(Object errore) => switch (errore) {
   ComandoRifiutato(codice: 'senza_centralino') => inLingua(
     it:
         'Questa casa non passa da nessun centralino: le segnalazioni non si '
-        'possono spedire. Accendi «da fuori casa» nelle opzioni di gdahome.',
+        'possono spedire. Accendi «da fuori casa» nelle opzioni di GdAHome.',
     en:
         'This home goes through no relay: reports have no way out. Turn on '
-        '“from away” in the gdahome options.',
+        '“from away” in the GdAHome options.',
   ),
   ComandoRifiutato(codice: 'non_configurate') => inLingua(
     it:
@@ -346,10 +346,10 @@ String spiegaLErrore(Object errore) => switch (errore) {
   ),
   ComandoRifiutato(codice: 'non_ti_riconosco') => inLingua(
     it:
-        'Il centralino non riconosce questa casa: gdahome in casa deve prima '
+        'Il centralino non riconosce questa casa: GdAHome in casa deve prima '
         'collegarsi da fuori una volta.',
     en:
-        'The relay doesn\'t recognise this home: gdahome at home has to '
+        'The relay doesn\'t recognise this home: GdAHome at home has to '
         'connect from away once first.',
   ),
   /* Le note di una versione che Home Assistant non ha dato. Ha un caso suo
@@ -385,10 +385,10 @@ String spiegaLErrore(Object errore) => switch (errore) {
     ),
   ComandoRifiutato(codice: 'unknown_command') => inLingua(
     it:
-        'gdahome in casa è più vecchio dell\'app e questa cosa non la sa '
+        'GdAHome in casa è più vecchio dell\'app e questa cosa non la sa '
         'ancora fare: aggiorna l\'add-on in Home Assistant.',
     en:
-        'gdahome at home is older than the app and can\'t do this yet: '
+        'GdAHome at home is older than the app and can\'t do this yet: '
         'update the add-on in Home Assistant.',
   ),
   ComandoRifiutato(codice: 'troppo_grande') => inLingua(

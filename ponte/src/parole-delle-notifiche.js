@@ -239,6 +239,8 @@ function finitaDi(nome) {
  *  - `record`: `"mese"` | `"anno"` | `null`;
  *  - `colSole`: nomi degli elettrodomestici andati (quasi) tutti col sole;
  *  - `piuAcceso`: `{nome, kwh, ora}` o `null`;
+ *  - `piu`: chi ha consumato di piu' oggi, `[{nome, kwh, eur, sole}]` dal
+ *    piu' grosso (al piu' cinque), o vuoto;
  *  - `batteria`: carica della batteria di casa adesso (%), o `null`;
  *  - `domani`: `{met: [[ora, cielo]…], soleFino: "15:00"|null, pioggia: bool}`;
  *  - `fasce`: `{nomi: {indice: "F1"}, piuBassa: {dalle, nome}}`;
@@ -273,17 +275,14 @@ export function paroleDelRiepilogo(dati, lingua = "it", { stile = "semplice" } =
       : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}% su ieri`;
   };
   const righe = [];
+  const piu = Array.isArray(dati.piu) ? dati.piu.filter((c) => c?.nome && c.kwh > 0) : [];
   let titolo;
-  let titoloCorto;
   if (conSole) {
     const grigia = dati.media && g.sole < dati.media * 0.5;
     const emoji = grigia ? "⛅" : "☀️";
     titolo = en
       ? `${emoji} Your day · ${decimale(g.sole, 1, lingua)} kWh from the sun`
       : `${emoji} La tua giornata · ${decimale(g.sole, 1, lingua)} kWh dal sole`;
-    titoloCorto = en
-      ? `${emoji} ${decimale(g.sole, 1, lingua)} kWh from the sun · ${euro(g.risparmio, lingua)} saved`
-      : `${emoji} ${decimale(g.sole, 1, lingua)} kWh dal sole · ${euro(g.risparmio, lingua)} risparmiati`;
     if (g.quotaInCasa !== null)
       righe.push(
         en
@@ -325,9 +324,6 @@ export function paroleDelRiepilogo(dati, lingua = "it", { stile = "semplice" } =
     titolo = en
       ? `⚡ Your day · ${decimale(kwh, 1, lingua)} kWh`
       : `⚡ La tua giornata · ${decimale(kwh, 1, lingua)} kWh`;
-    titoloCorto = en
-      ? `⚡ ${decimale(kwh, 1, lingua)} kWh · ${euro(g.euroRete, lingua)}`
-      : `⚡ ${decimale(kwh, 1, lingua)} kWh · ${euro(g.euroRete, lingua)}`;
     const perFascia = Object.entries(g.perFascia || {})
       .filter(([, v]) => v > 0.05)
       .sort(([a], [b]) => Number(a) - Number(b))
@@ -343,13 +339,23 @@ export function paroleDelRiepilogo(dati, lingua = "it", { stile = "semplice" } =
     );
     const quanto = confronto(kwh, dati.ieri);
     if (quanto) righe.push(quanto);
-    if (dati.piuAcceso)
+    if (dati.piuAcceso && !piu.length)
       righe.push(
         en
           ? `💡 The biggest: ${dati.piuAcceso.nome}, ${decimale(dati.piuAcceso.kwh, 1, lingua)} kWh`
           : `💡 Il più acceso: ${dati.piuAcceso.nome}, ${decimale(dati.piuAcceso.kwh, 1, lingua)} kWh`,
       );
   }
+  if (piu.length)
+    righe.push(
+      `💡 ${en ? "Used the most" : "Chi ha consumato di più"}: ${piu
+        .slice(0, 3)
+        .map(
+          (c, i) =>
+            `${c.nome} ${decimale(c.kwh, 1, lingua)}${i === 0 ? " kWh" : ""}${c.eur !== null && c.eur !== undefined && i === 0 ? ` (${euro(c.eur, lingua)})` : ""}`,
+        )
+        .join(" · ")}`,
+    );
   if (dati.batteria !== null && dati.batteria !== undefined)
     righe.push(
       en
@@ -362,19 +368,31 @@ export function paroleDelRiepilogo(dati, lingua = "it", { stile = "semplice" } =
   if (sistemare) righe.push(`⚠️ ${sistemare}`);
 
   if (stile === "elaborata") {
+    /* Come nel disegno approvato: il titolo della giornata, poi tre righe —
+     * chi ha consumato di piu', la rete e il risparmio, e le cose da
+     * sistemare solo se ci sono. Il resto sta nella scheda e nella pagina
+     * «La tua giornata». Le righe «nel riepilogo» in fondo. */
     const corta = [];
-    if (conSole)
-      corta.push(en ? `Grid ${euro(g.euroRete, lingua)}` : `Rete ${euro(g.euroRete, lingua)}`);
-    if (dati.batteria !== null && dati.batteria !== undefined)
+    const ilPiu = piu[0] || dati.piuAcceso;
+    if (ilPiu?.nome && ilPiu.kwh > 0)
       corta.push(
         en
-          ? `🔋 ${Math.round(dati.batteria)}% for the night`
-          : `🔋 ${Math.round(dati.batteria)}% per la notte`,
+          ? `⚡ Used the most: ${ilPiu.nome}, ${decimale(ilPiu.kwh, 1, lingua)} kWh`
+          : `⚡ Ha consumato di più: ${ilPiu.nome}, ${decimale(ilPiu.kwh, 1, lingua)} kWh`,
       );
+    corta.push(
+      conSole
+        ? en
+          ? `💶 Grid ${euro(g.euroRete, lingua)} · saved ${euro(g.risparmio, lingua)}`
+          : `💶 Rete ${euro(g.euroRete, lingua)} · risparmiati ${euro(g.risparmio, lingua)}`
+        : en
+          ? `💶 Grid ${euro(g.euroRete, lingua)}`
+          : `💶 Rete ${euro(g.euroRete, lingua)}`,
+    );
     if (sistemare) corta.push(`⚠️ ${sistemare}`);
     return {
-      titolo: titoloCorto,
-      testo: [corta.join(" · "), ...coda].filter(Boolean).join("\n"),
+      titolo,
+      testo: [...corta, ...coda].join("\n"),
       scheda: {
         v: 1,
         t: "giornata",
@@ -392,6 +410,8 @@ export function paroleDelRiepilogo(dati, lingua = "it", { stile = "semplice" } =
         c: g.c,
         met: dati.domani?.met || [],
         cons: consiglio?.corto || null,
+        /* Chi ha consumato di piu': [nome, kWh, €], i primi tre. */
+        piu: piu.slice(0, 3).map((c) => [String(c.nome).slice(0, 24), c.kwh, c.eur ?? null]),
         batt:
           dati.batteria !== null && dati.batteria !== undefined
             ? Math.round(dati.batteria) / 100

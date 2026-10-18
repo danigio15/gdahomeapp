@@ -210,6 +210,31 @@ class PonteFinto {
       });
       return;
     }
+    /* «La tua giornata» (`ponte/energia/giornata`): quella in [giornata],
+     * o `premium-richiesto` se la casa e' Base. */
+    if (detto['type'] == 'ponte/energia/giornata') {
+      chieste.add(detto);
+      _manda(
+        presa,
+        giornataPremium
+            ? {
+                'id': id,
+                'type': 'result',
+                'success': true,
+                'result': giornata ?? {'giornata': null},
+              }
+            : {
+                'id': id,
+                'type': 'result',
+                'success': false,
+                'error': {
+                  'code': 'premium-richiesto',
+                  'message': 'serve gdahome Premium',
+                },
+              },
+      );
+      return;
+    }
     /* Le notifiche di questo telefono (`ponte/src/notifiche.js`): qui sono
      * una mappa in memoria, e ogni domanda si segna in [chieste]. */
     if (detto['type'] case final String t
@@ -478,6 +503,12 @@ class PonteFinto {
   /// I `ponte/telefono/chi-sono` ricevuti: marca, modello, di chi e'.
   final List<Map<String, dynamic>> presentazioni = [];
 
+  /// La risposta a `ponte/energia/giornata`; `null`, una giornata vuota.
+  Map<String, dynamic>? giornata;
+
+  /// Se `false` la casa e' Base, e la giornata risponde `premium-richiesto`.
+  bool giornataPremium = true;
+
   /// Quello che il ponte sa delle notifiche di questo telefono: la risposta
   /// a `ponte/notifiche/stato`.
   final Map<String, dynamic> notifiche = {
@@ -496,10 +527,36 @@ class PonteFinto {
     'personalizzate': <Map<String, dynamic>>[],
     'io': 'a' * 32,
     'amministra': true,
+    /* La casa e' Premium: le elaborate e il riepilogo ci sono. */
+    'premium': true,
   };
 
+  /// Quello che risponde `ponte/notifiche/ha/elenco`: le automazioni di Home
+  /// Assistant che mandano notifiche. `null` e' un ponte di prima.
+  Map<String, dynamic>? daHomeAssistant;
+
   Object? _notifiche(String tipo, Map<String, dynamic> detto) {
+    final ha = daHomeAssistant;
     switch (tipo) {
+      case 'ponte/notifiche/ha/elenco':
+        return ha ?? {'fatto': true};
+      case 'ponte/notifiche/ha/imposta':
+        if (ha == null) return {'fatto': true};
+        final voci = detto['voci'] as Map;
+        for (final riga in ha['automazioni'] as List) {
+          final voce = voci[(riga as Map)['chiave']];
+          if (voce is Map) {
+            for (final MapEntry(:key, :value) in voce.entries) {
+              riga[key] = value;
+            }
+            riga['nuova'] = false;
+          }
+        }
+        return ha;
+      case 'ponte/notifiche/ha/proponi':
+        if (ha == null) return {'fatto': true};
+        ha['proponi'] = detto['acceso'] == true;
+        return ha;
       case 'ponte/notifiche/stato':
         return notifiche;
       case 'ponte/notifiche/registra':
@@ -551,7 +608,7 @@ class PonteFinto {
   final List<Map<String, dynamic>> plance = [
     {
       'profilo': 'primary',
-      'titolo': 'gdahome',
+      'titolo': 'GdAHome',
       'istanza': 'gdahome',
       'primaria': true,
       'creata_il': 0,
@@ -1156,7 +1213,7 @@ class PonteFinto {
     'base': base,
     'impronta': base.split('/').last,
     'varianti': ['dashboard-en.html', 'dashboard.html'],
-    'titolo': 'gdahome',
+    'titolo': 'GdAHome',
     'istanza': 'gdahome',
     'profilo': 'primary',
     'primario': true,

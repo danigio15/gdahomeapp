@@ -57,7 +57,7 @@ import 'scheda.dart';
 /// Quello che si legge quando la busta non si apre: la stessa frase che vede
 /// Apple, e che non dice niente a nessuno.
 String get fraseDiRiserva =>
-    inLingua(it: 'gdahome: nuova notifica', en: 'gdahome: new notification');
+    inLingua(it: 'GdAHome: nuova notifica', en: 'GdAHome: new notification');
 
 final FlutterLocalNotificationsPlugin _locali =
     FlutterLocalNotificationsPlugin();
@@ -113,6 +113,12 @@ const _categorieDellIphone = <String, List<(String, String, String)>>{
     ('guarda', 'Guarda', 'View'),
     ('inserisci', 'Inserisci antifurto', 'Arm alarm'),
   ],
+  /* Il riepilogo della sera: «Apri la giornata» apre la pagina, «OK» la
+   * toglie e basta (non apre nemmeno l'app). */
+  'gdahome_giornata': [
+    ('giornata', 'Apri la giornata', 'Open your day'),
+    ('ok', 'OK', 'OK'),
+  ],
 };
 
 String? _categoriaPer(List<TastoDellaNotifica> tasti) {
@@ -127,6 +133,9 @@ String? _categoriaPer(List<TastoDellaNotifica> tasti) {
   if (ids.contains('spegni-sirena')) return 'gdahome_scattato';
   if (ids.contains('disinserisci')) return 'gdahome_disinserisci';
   if (ids.contains('guarda')) return 'gdahome_guarda';
+  if (ids.contains('giornata') || ids.contains('energia')) {
+    return 'gdahome_giornata';
+  }
   return null;
 }
 
@@ -193,8 +202,11 @@ InitializationSettings _impostazioniLocali() => InitializationSettings(
                 inLingua(it: it, en: en),
                 /* Si apre l'app: e' dall'app, col filo e il suo segno, che
                  * il tasto arriva alla casa. Col telefono bloccato iOS
-                 * chiede prima di sbloccarlo. */
-                options: {DarwinNotificationActionOption.foreground},
+                 * chiede prima di sbloccarlo. «OK» invece toglie la
+                 * notifica e basta. */
+                options: id == 'ok'
+                    ? const <DarwinNotificationActionOption>{}
+                    : {DarwinNotificationActionOption.foreground},
               ),
           ],
         ),
@@ -263,10 +275,17 @@ Future<void> mostra(NotificaDaMostrare quale) async {
   final grande = disegno.grande;
   final icona = disegno.icona;
   final allegati = await _gliAllegati(quale, disegno);
+  final corpo = notifica.testo.isEmpty ? quale.casa.nome : notifica.testo;
+  /* Le notifiche di Home Assistant dicono da dove vengono: su Android nella
+   * riga sotto il testo, sull'iPhone (che quella riga non ce l'ha) in fondo
+   * al testo, come fa l'estensione (`ios/NotificheService`). */
+  final fonte = notifica.fonte;
   await _locali.show(
     id: quale.numero,
     title: notifica.titolo,
-    body: notifica.testo.isEmpty ? quale.casa.nome : notifica.testo,
+    body: fonte != null && defaultTargetPlatform == TargetPlatform.iOS
+        ? '$corpo\n$fonte'
+        : corpo,
     payload: quale.daPortare,
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
@@ -285,7 +304,9 @@ Future<void> mostra(NotificaDaMostrare quale) async {
           CanaleDelleNotifiche.manutenzione => Importance.low,
         },
         priority: notifica.urgente ? Priority.max : Priority.high,
-        subText: quale.casa.nome,
+        subText: notifica.daHomeAssistant
+            ? '${quale.casa.nome} · Home Assistant'
+            : quale.casa.nome,
         groupKey: 'gdahome_${quale.casa.id}',
         when: notifica.quando.millisecondsSinceEpoch,
         /* Il campanello come una chiamata: una notifica che suona e si vede
@@ -300,7 +321,7 @@ Future<void> mostra(NotificaDaMostrare quale) async {
         timeoutAfter: notifica.chiamata ? 60 * 1000 : null,
         largeIcon: icona == null ? null : ByteArrayAndroidBitmap(icona),
         styleInformation: grande == null
-            ? BigTextStyleInformation(notifica.testo)
+            ? BigTextStyleInformation(notifica.testo, summaryText: fonte)
             : BigPictureStyleInformation(
                 ByteArrayAndroidBitmap(grande),
                 contentTitle: notifica.titolo,
@@ -315,7 +336,7 @@ Future<void> mostra(NotificaDaMostrare quale) async {
               /* Il tasto apre l'app, e l'app lo porta alla casa sul suo filo,
                * col suo segno. Col telefono bloccato Android chiede prima di
                * sbloccarlo: «Apri cancello» non si preme dalla tasca. */
-              showsUserInterface: true,
+              showsUserInterface: !tasto.chiude,
               cancelNotification: true,
             ),
         ],

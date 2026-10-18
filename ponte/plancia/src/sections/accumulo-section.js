@@ -128,6 +128,7 @@ export function tipoInParole(tipo) {
   if (tipo === "jk") return "JK BMS";
   if (tipo === "jbd") return "JBD BMS";
   if (tipo === "daly") return "Daly BMS";
+  if (tipo === "huawei") return "Huawei LUNA2000";
   return "BMS";
 }
 

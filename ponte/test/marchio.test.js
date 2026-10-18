@@ -26,8 +26,8 @@ test("la pagina servita non dice piu' il nome di prima", (t) => {
 
   /* Il titolo nella linguetta del browser, e la parola in maiuscolo sotto il
    * logo del velo d'avvio: e' la prima cosa che si vede aprendo. */
-  assert.match(testo, /<title>gdahome<\/title>/);
-  assert.match(testo, /<b>gdahome<\/b>/);
+  assert.match(testo, /<title>GdAHome<\/title>/);
+  assert.match(testo, /<b>GdAHome<\/b>/);
   /* E l'immagine del velo e' la nostra. Si guarda il formato e non i byte:
    * quelli cambiano il giorno che si ridisegna il marchio, il fatto che sia
    * WebP e non piu' il PNG della dashboard no. */
@@ -57,7 +57,7 @@ test("l'alt del logo, dentro il runtime, dice gdahome", (t) => {
   const servito = plancia.leggi(dove("legacy/dashboard-runtime-it.js"));
   assert.equal(servito.stato, 200);
   const testo = servito.corpo.toString("utf8");
-  assert.match(testo, /alt="gdahome"/);
+  assert.match(testo, /alt="GdAHome"/);
   assert.equal(testo.includes('alt="Dashboard Modern"'), false);
 
   /* Ma i **nomi delle cose** restano: `window.DashboardModernModules` e i
@@ -78,15 +78,15 @@ test("e la scritta accanto al logo dice gda home", (t) => {
   /* La parola la sceglie la pagina al momento di disegnare — e' il nome che
    * chi installa ha dato a quella plancia, se gliel'ha dato — e di riserva
    * c'e' «gda home». Il runtime e' un file solo per tutte le plance. */
-  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[0\]\}<\/span>/);
-  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[1\]\}<\/span>/);
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["GdA","Home"\]\)\[0\]\}<\/span>/);
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["GdA","Home"\]\)\[1\]\}<\/span>/);
   assert.equal(testo.includes(">MODERN</span>"), false, "la parola di prima non c'e' piu'");
 
   /* E anche in inglese: e' lo stesso marchio, e una testata vestita a meta'
    * si vedrebbe solo a chi cambia lingua. */
   const inglese = plancia.leggi(dove("legacy/dashboard-runtime-en.js"));
   const suo = inglese.corpo.toString("utf8");
-  assert.match(suo, /\["gda","home"\]\)\[0\]/);
+  assert.match(suo, /\["GdA","Home"\]\)\[0\]/);
   assert.equal(suo.includes(">MODERN</span>"), false);
 });
 
@@ -128,8 +128,13 @@ test("il manifesto dice gdahome tre volte: il nome, lo slug e la voce nella barr
    * vedrebbe come un add-on **nuovo**, e chi ce l'ha si ritroverebbe senza
    * opzioni, senza telefoni abbinati e senza plance. Cambiarlo si puo' — si e'
    * fatto, da `ponte` a `gdahome`, quando ce l'aveva una macchina di prova
-   * sola — ma deve essere una cosa voluta, non un riordino. */
-  assert.match(manifesto, new RegExp(`^name: ${NOME}$`, "m"));
+   * sola — ma deve essere una cosa voluta, non un riordino.
+   *
+   * Il `name` si legge, e si scrive come si legge: «GdAHome». Lo slug e' un
+   * nome di cosa, e resta tutto minuscolo com'e' sempre stato. */
+  const SCRITTO = "GdAHome";
+  assert.equal(SCRITTO.toLowerCase(), NOME);
+  assert.match(manifesto, new RegExp(`^name: ${SCRITTO}$`, "m"));
   assert.match(manifesto, new RegExp(`^slug: ${NOME}$`, "m"));
 
   /* La voce nella barra dice **cosa apre**, e porta il nome dentro.
@@ -144,7 +149,7 @@ test("il manifesto dice gdahome tre volte: il nome, lo slug e la voce nella barr
    * chiunque, una che dice solo «Configura» non dice di chi e'. */
   const voce = /^panel_title: (.*)$/m.exec(manifesto);
   assert.ok(voce, "nel manifesto non c'e' nessun «panel_title:»");
-  assert.ok(voce[1].includes(NOME), `la voce nella barra non dice «${NOME}»: «${voce[1]}»`);
+  assert.ok(voce[1].includes(SCRITTO), `la voce nella barra non dice «${SCRITTO}»: «${voce[1]}»`);
   assert.match(manifesto, /^panel_icon: mdi:cog$/m);
 
   /* E il nome di prima non sta in nessuna delle righe che Home Assistant

@@ -49,7 +49,7 @@ final class IlTelefono: NSObject, ObservableObject {
   private func manda(_ messaggio: [String: Any]) {
     let s = WCSession.default
     guard s.activationState == .activated, s.isReachable else {
-      return dici("Il telefono non risponde. Tienilo vicino, con gdahome installata.", bene: false)
+      return dici("Il telefono non risponde. Tienilo vicino, con GdAHome installata.", bene: false)
     }
     inCorso = true
     s.sendMessage(messaggio) { [weak self] risposta in

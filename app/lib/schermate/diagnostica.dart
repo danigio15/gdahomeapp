@@ -176,7 +176,7 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                 inLingua(it: 'Centralino', en: 'Relay'),
                 centralinoDiDifetto == null
                     ? inLingua(it: 'nessuno', en: 'none')
-                    : inLingua(it: 'gdahome', en: 'gdahome'),
+                    : 'GdAHome',
               ),
             ],
           ),

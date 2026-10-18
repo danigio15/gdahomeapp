@@ -282,15 +282,15 @@ class Sonda {
       return inLingua(
         it:
             'L\'accesso remoto di Home Assistant non arriva agli add-on: il '
-            'suo tunnel finisce dentro Home Assistant, e gdahome sta su una '
+            'suo tunnel finisce dentro Home Assistant, e GdAHome sta su una '
             'porta sua. Non è una cosa che si possa configurare — e non '
-            'serve: gdahome chiama fuori da solo, e il centralino ce l\'ha '
+            'serve: GdAHome chiama fuori da solo, e il centralino ce l\'ha '
             'già scritto dentro.',
         en:
             'Home Assistant remote access doesn\'t reach add-ons: its tunnel '
-            'ends inside Home Assistant, and gdahome sits on a port of its '
+            'ends inside Home Assistant, and GdAHome sits on a port of its '
             'own. This isn\'t something you can configure — and there\'s no '
-            'need: gdahome calls out by itself, and the relay is already '
+            'need: GdAHome calls out by itself, and the relay is already '
             'written inside it.',
       );
     }
@@ -310,13 +310,13 @@ class Sonda {
         it:
             'Da questa pagina non posso chiamare «${casa.nome}»: il suo '
             'indirizzo non è cifrato, e un browser aperto su https non lascia '
-            'passare le chiamate in chiaro. Apri gdahome dall\'app sul '
+            'passare le chiamate in chiaro. Apri GdAHome dall\'app sul '
             'telefono, oppure dall\'indirizzo della tua Home Assistant. Non '
             'è un problema del certificato di questo sito.',
         en:
             'I can\'t call “${casa.nome}” from this page: its address isn\'t '
             'encrypted, and a browser opened over https won\'t let plain '
-            'requests through. Open gdahome from the phone app, or from your '
+            'requests through. Open GdAHome from the phone app, or from your '
             'Home Assistant address. This is not a problem with this site\'s '
             'certificate.',
       );
@@ -325,11 +325,11 @@ class Sonda {
       return inLingua(
         it:
             'Non trovo «${casa.nome}». Questa casa si raggiunge solo dalla '
-            'sua rete: nella scheda di gdahome, in Home Assistant, «da fuori '
+            'sua rete: nella scheda di GdAHome, in Home Assistant, «da fuori '
             'casa» è spento, e senza un centralino da fuori non si entra.',
         en:
             'I can\'t find “${casa.nome}”. This home can only be reached on '
-            'its own network: on the gdahome page, in Home Assistant, “da '
+            'its own network: on the GdAHome page, in Home Assistant, “da '
             'fuori casa” is off, and without a relay there is no way in from '
             'away.',
       );

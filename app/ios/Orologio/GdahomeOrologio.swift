@@ -38,15 +38,15 @@ struct Radice: View {
         } else {
           Spiegazione(
             simbolo: "star.circle",
-            titolo: "gdahome Premium",
-            testo: "La casa al polso è compresa in gdahome Premium. Si attiva dall'app sul telefono."
+            titolo: "GdAHome Premium",
+            testo: "La casa al polso è compresa in GdAHome Premium. Si attiva dall'app sul telefono."
           )
         }
       } else {
         Spiegazione(
           simbolo: "iphone",
-          titolo: "Apri gdahome",
-          testo: "Apri gdahome sul telefono una volta: da lì in poi la casa la trovi qui."
+          titolo: "Apri GdAHome",
+          testo: "Apri GdAHome sul telefono una volta: da lì in poi la casa la trovi qui."
         )
       }
     }

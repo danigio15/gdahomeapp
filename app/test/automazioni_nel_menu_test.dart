@@ -3,9 +3,9 @@
 ///
 /// Prima era una voce spenta fra le Avanzate, che un giorno avrebbe aperto le
 /// automazioni di Home Assistant. Adesso apre le nostre — la pagina
-/// Automazioni della plancia, a schermo pieno — e sta nella Casa accanto a
-/// «Configurazione plancia», col bollino PREMIUM; senza Premium ha il
-/// lucchetto, come la Configurazione e Zigbee.
+/// Automazioni della plancia, a schermo pieno — e sta in testa alle Avanzate,
+/// col bollino PREMIUM; senza Premium ha il lucchetto, come la Configurazione
+/// e Zigbee.
 library;
 
 import 'dart:io';
@@ -45,18 +45,17 @@ Widget _conLaBarra(
 );
 
 void main() {
-  test(
-    'sta nella Casa, subito dopo «Configurazione plancia», ed e\' pronta',
-    () {
-      expect(Sezione.automazioni.gruppo, GruppoDellaBarra.casa);
-      expect(Sezione.automazioni.pronta, isTrue);
-      final voci = vociDellaBarra();
-      expect(
-        voci.indexOf(Sezione.automazioni),
-        voci.indexOf(Sezione.configurazione) + 1,
-      );
-    },
-  );
+  test('sta in testa alle Avanzate, ed e\' pronta', () {
+    expect(Sezione.automazioni.gruppo, GruppoDellaBarra.avanzate);
+    expect(Sezione.automazioni.pronta, isTrue);
+    final avanzate = vociDellaBarra(
+      conLaConsole: true,
+      conIlCruscotto: true,
+      conLaGestione: true,
+      conZigbee: true,
+    ).where((s) => s.gruppo == GruppoDellaBarra.avanzate).toList();
+    expect(avanzate.first, Sezione.automazioni);
+  });
 
   test('c\'e\' anche nella webapp: la pagina e\' della plancia', () {
     expect(Sezione.automazioni.soloNellApp, isFalse);
@@ -69,13 +68,16 @@ void main() {
     expect(File('assets/oggetti/automazioni.svg').existsSync(), isTrue);
   });
 
-  test('senza Premium la voce ha il lucchetto, come la Configurazione', () {
+  test('le voci Premium: configurazione, automazioni, zigbee, aiutanti', () {
+    expect(Sezione.values.where((s) => s.diPremium).toSet(), {
+      Sezione.configurazione,
+      Sezione.automazioni,
+      Sezione.zigbee,
+      Sezione.aiutanti,
+    });
     final casa = File('lib/schermate/home.dart').readAsStringSync();
     final bloccate = casa.substring(casa.indexOf('Set<Sezione> get _bloccate'));
-    expect(
-      bloccate.substring(0, 500),
-      matches(RegExp(r'Sezione\.automazioni\b')),
-    );
+    expect(bloccate.substring(0, 300), contains('una.diPremium'));
     expect(casa, contains('PerchePremium.automazioni'));
   });
 
@@ -100,15 +102,23 @@ void main() {
     await prova.pumpWidget(_conLaBarra(chiave));
     chiave.currentState!.apri();
     await prova.pumpAndSettle();
-    expect(find.byKey(const Key('bollino-premium')), findsOneWidget);
+    /* Configurazione, Automazioni e Aiutanti: Zigbee c'e' solo dove c'e' la
+     * rete. */
+    expect(find.byKey(const Key('bollino-premium')), findsNWidgets(3));
 
     final chiusa = GlobalKey<BarraDelleSezioniState>();
     await prova.pumpWidget(
-      _conLaBarra(chiusa, bloccate: const {Sezione.automazioni}),
+      _conLaBarra(
+        chiusa,
+        bloccate: {
+          for (final una in Sezione.values)
+            if (una.diPremium) una,
+        },
+      ),
     );
     chiusa.currentState!.apri();
     await prova.pumpAndSettle();
     expect(find.byKey(const Key('bollino-premium')), findsNothing);
-    expect(find.byIcon(Icons.lock_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.lock_rounded), findsNWidgets(3));
   });
 }

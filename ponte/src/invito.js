@@ -67,12 +67,12 @@ export function leggiLInvito(scritto) {
     .split(SEPARATORE);
 
   if (pezzi[0]?.trim().toLowerCase() !== NOME) {
-    throw new InvitoIllegibile("questo non e' un codice di gdahome");
+    throw new InvitoIllegibile("questo non e' un codice di GdAHome");
   }
 
   const quale = Number(pezzi[1]);
   if (!Number.isInteger(quale) || quale < 1) {
-    throw new InvitoIllegibile("questo non e' un codice di gdahome");
+    throw new InvitoIllegibile("questo non e' un codice di GdAHome");
   }
   if (quale > VERSIONE) {
     throw new InvitoTroppoNuovo("questo codice viene da un ponte piu' nuovo di questa app");

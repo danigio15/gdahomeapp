@@ -732,7 +732,73 @@ export class Commissioni {
      *
      * I tasti nuovi (spegni sirena, disinserisci, inserisci col modo su
      * misura) sono comandi preparati dal ponte per quella notifica e quel
-     * telefono, come gli altri tasti: il telefono dice solo quale tasto. */
+     * telefono, come gli altri tasti: il telefono dice solo quale tasto.
+     *
+     * `ponte/energia/giornata` (la pagina «La tua giornata» dell'app) passa
+     * per la stessa porta: solo da un telefono abbinato **con un utente** di
+     * Home Assistant — senza, `unauthorized` — e risponde in sola lettura coi
+     * numeri del taccuino dell'energia (sole, casa, rete, ora per ora, chi ha
+     * consumato di piu' col nome che gli ha dato la plancia, i sette giorni
+     * prima, il cielo di domani). Niente entita', niente dati di altri
+     * telefoni, e nel ponte non si vede nulla: nessuna pagina, nessuna
+     * console, niente che esca di casa.
+     *
+     * La stessa risposta porta anche il resto della giornata, dal diario
+     * della casa (`la-giornata-di-casa.js`, `/data/giornata-di-casa.json`):
+     * il clima delle stanze ora per ora e fuori, il riscaldamento (minuti
+     * acceso, comfort, finestre aperte), il solare termico (collettore,
+     * bollitore, pompa, resistenza, pressione), l'auto (le ricariche con la
+     * quota di sole e gli euro, i viaggi dalla batteria che scende, i
+     * chilometri dall'odometro o stimati), l'acqua, il gas e l'irrigazione,
+     * gli eventi della giornata, i conti (porte, automazioni, avvisi), il
+     * mese, il confronto con ieri, la settimana e il mese prima, le cose da
+     * sistemare e «In breve»; e i soldi del sole ceduto (col prezzo di
+     * cessione scritto nella plancia), il prezzo di ogni fascia usata, la
+     * batteria di casa (caricata, usata, massimo, stasera), la massima e il
+     * consiglio per domani. Gli stessi dati Home Assistant che il ponte
+     * legge gia' per le notifiche, annotati in casa: nessun nome di persona
+     * (gli eventi dicono «Prima persona sveglia», «qualcuno», e ogni testo
+     * passa dal filtro dei nomi), nessuna entita', nessun dato di altri
+     * telefoni. Li usano **solo gli utenti loggati** — un telefono abbinato
+     * e intestato a un utente di Home Assistant — e nella pagina web del
+     * ponte non si vede niente di tutto questo: nessuna pagina, nessuna
+     * console, nessun server di fuori.
+     *
+     * Premium (lo stesso criterio di `automazioni.js`: gdahome Premium, o
+     * licenze spente). In Base le notifiche partono tutte **semplici**,
+     * senza foto della telecamera, il riepilogo della sera non esiste (le
+     * righe che un telefono aveva messo «nel riepilogo» partono subito,
+     * semplici) e `ponte/energia/giornata` risponde `premium-richiesto`. Gli
+     * avvisi di sicurezza — antifurto, allarmi, perdite, blackout — partono
+     * sempre, e cosi' le batterie scariche: chi il riepilogo non lo riceve
+     * (Base, o riepilogo spento) ha «🔋 Batterie da cambiare», semplice, una
+     * volta al giorno all'ora del riepilogo, coi dispositivi di casa e la
+     * loro carica (non i telefoni ne' gli orologi, che sono di qualcuno);
+     * chi lo riceve le trova dentro il riepilogo, senza doppioni. I tasti
+     * del riepilogo sono «Apri la giornata» (`giornata`) e «OK» (`ok`). `ponte/notifiche/stato` dice `premium: bool`, cosi' l'app
+     * mette il lucchetto dove serve; gli acquisti si fanno solo dalle app
+     * sugli store, mai di qui.
+     *
+     * Le notifiche di Home Assistant anche in GdAHome
+     * (`notifiche-di-home-assistant.js`) passano per la stessa porta, e anche
+     * loro non hanno comandi di qui: `ponte/notifiche/ha/elenco` (le
+     * automazioni che mandano notifiche, con a chi vanno, com'e' fatta la
+     * notifica, l'ultimo testo arrivato e l'ultima volta che e' partita),
+     * `ponte/notifiche/ha/imposta` (accesa o spenta, a quale telefono, le
+     * ore di silenzio: per questo telefono) e `ponte/notifiche/ha/proponi`
+     * («Proponimi le nuove»). Li usano **solo gli utenti loggati** — un
+     * telefono abbinato e intestato a un utente di Home Assistant; senza,
+     * `unauthorized` — e nella pagina web del ponte non si vede niente:
+     * nessuna pagina, nessuna console. Il ponte legge le configurazioni delle
+     * automazioni e degli script che chiamano (`automation/config`,
+     * `script/config`) e ascolta `automation_triggered`, `call_service` (solo
+     * `notify`) e `automation_reloaded`; un tasto premuto torna a Home
+     * Assistant come `mobile_app_notification_action`. I telefoni si
+     * chiamano col nome che chi li usa ha scritto nell'app, mai coi nomi
+     * delle persone di Home Assistant, e il testo di una notifica che va al
+     * telefono di un altro lo vede solo chi amministra. Niente di nuovo esce
+     * di casa: le buste prendono la strada delle altre notifiche, e la foto
+     * (Premium) quella delle elaborate. */
     /* La ricarica di notte (`ricarica-di-notte.js`): cosa sta facendo la
      * casa con l'auto, in sola lettura. Le impostazioni non passano di qui —
      * stanno nella configurazione della plancia, con le sue regole. */
@@ -750,7 +816,12 @@ export class Commissioni {
      *  - `ponte/automazioni/stato`: tutte le automazioni di Home Assistant,
      *    con la stanza, l'ultima volta, il gruppo «Per tipo» e, se ci sta, la
      *    forma della plancia. La configurazione intera arriva solo a chi
-     *    amministra Home Assistant;
+     *    amministra Home Assistant. Porta anche le categorie che chi abita ha
+     *    salvato in Home Assistant (`config/category_registry/list`, scope
+     *    «automation», e `categories.automation` dal registro delle entita':
+     *    solo lette, mai scritte, nessuna inventata) e per ognuna un
+     *    riassunto in una riga (quando parte, quante condizioni e azioni),
+     *    calcolato nel ponte dalla configurazione che gia' legge;
      *  - `ponte/automazioni/salva`, `…/elimina`, `…/rinomina`, `…/duplica`:
      *    scrivono in Home Assistant col segno dell'add-on, e allora vogliono
      *    in piu' **chi amministra Home Assistant** (`puoAmministrare`), che e'
@@ -791,7 +862,7 @@ export class Commissioni {
        * da' nemmeno da leggere o da scrivere: sarebbe la stessa plancia, per
        * un'altra porta. */
       if (soloLaPrima && (detto?.profile ?? PROFILO_PRINCIPALE) !== PROFILO_PRINCIPALE) {
-        return no(id, "premium-richiesto", "con gdahome Base l'app vede la plancia principale");
+        return no(id, "premium-richiesto", "con GdAHome Base l'app vede la plancia principale");
       }
       /* E la configurazione di una plancia riservata a un altro non la legge
        * chi non la vede. L'elenco e l'apertura la nascondevano gia'; questa
@@ -1249,7 +1320,7 @@ export class Commissioni {
      * e glielo si dice col codice del contratto — l'app porta alla pagina
      * Premium invece di aprire in silenzio un'altra plancia. */
     if (soloLaPrima && voluto && voluto !== PROFILO_PRINCIPALE) {
-      return no(id, "premium-richiesto", "con gdahome Base l'app vede la plancia principale");
+      return no(id, "premium-richiesto", "con GdAHome Base l'app vede la plancia principale");
     }
     const sue = this._lePlanceSue(chiChiede, amministra, soloLaPrima);
     let quale = this.plance ? (voluto ? this.plance.quale(voluto) : this.plance.prima) : null;

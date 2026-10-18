@@ -469,7 +469,7 @@ class Abbinamento {
     final chiave = corpo['chiave'];
     final dispositivo = corpo['dispositivo'];
     if (segno is! String || segno.isEmpty) {
-      throw const PonteIrraggiungibile('gdahome ha risposto senza segno');
+      throw const PonteIrraggiungibile('GdAHome ha risposto senza segno');
     }
     if (chiave is! String || chiave.isEmpty) {
       throw const PonteIrraggiungibile(
@@ -479,7 +479,7 @@ class Abbinamento {
     final identificativo = dispositivo is Map ? dispositivo['id'] : null;
     if (identificativo is! String || identificativo.isEmpty) {
       throw const PonteIrraggiungibile(
-        'gdahome ha risposto senza dire chi siamo',
+        'GdAHome ha risposto senza dire chi siamo',
       );
     }
 

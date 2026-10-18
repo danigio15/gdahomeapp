@@ -6,7 +6,9 @@
  * Le traduzioni si provano nel ponte; qui si guarda la plancia:
  *
  *  - il config: la voce «Automazioni» dopo «Azioni», col bollino PREMIUM;
- *    tutte quelle di Home Assistant a gruppi (Per tipo / Per stanza), la
+ *    tutte quelle di Home Assistant in righe compatte, a gruppi (le categorie
+ *    di Home Assistant, Per tipo, Per stanza) che si chiudono e si
+ *    ricordano chiusi, la riga in parole al posto di «Avanzata…», la
  *    ricerca, le etichette gdahome e Blueprint, l'interruttore che chiama
  *    `automation.turn_off`; l'editor che salva in Home Assistant e il
  *    «Salvata in Home Assistant ✓»; una semplice che si modifica, una
@@ -14,12 +16,13 @@
  *    conferma; il cronotermostato; i pezzi di tutta Home Assistant; le
  *    proposte; l'invito a convertire quelle della versione di prova;
  *  - la sezione della dashboard: la linguetta subito prima di Config, le tre
- *    tessere, i gruppi con le carte, l'interruttore, il foglio di una carta;
+ *    tessere, i gruppi per categoria con le righe compatte, «＋ Nuova»,
+ *    l'interruttore, il foglio di una riga;
  *  - senza Premium: tutto velato, e «Scopri Premium» che in Home Assistant
  *    apre la finestra «Premium arriva con le app»;
  *  - nell'app: niente linguetta e niente voce del config; la pagina del menu
- *    con la faccia della dashboard, «＋ Nuova» sopra la bolla
- *    dell'assistente, e il foglio con «✏️ Modifica».
+ *    con la faccia della dashboard, «＋ Nuova» nella barra dei filtri, e il
+ *    foglio con «✏️ Modifica».
  *
  * La casa qui e' finta: tiene le configurazioni come Home Assistant e
  * risponde ai comandi del ponte con lo stesso traduttore.
@@ -62,12 +65,12 @@ const STATI = {
   },
   "cover.soggiorno": { state: "open", attributes: { friendly_name: "Tapparelle soggiorno" } },
   "water_heater.boiler": { state: "eco", attributes: { friendly_name: "Scaldabagno" } },
-  "person.anna": { state: "home", attributes: { friendly_name: "Anna" } },
+  "person.persona_1": { state: "home", attributes: { friendly_name: "Persona 1" } },
 };
 
 /* Le automazioni di Home Assistant di questa casa: due nate dalla plancia,
  * una scritta a mano, una complessa e una da blueprint. */
-const SEGNO = "Creata con la plancia gdahome. #gdahome";
+const SEGNO = "Creata con la plancia GdAHome. #gdahome";
 const HA = {
   1001: {
     id: "1001",
@@ -131,6 +134,23 @@ const HA = {
 const AREE = { 1001: "soggiorno", 1002: "corridoio", 1003: "soggiorno" };
 const SPENTE = ["1003"];
 
+/* Le categorie che chi abita ha dato in Home Assistant, come le manda il
+ * ponte (per nome), e a chi le ha date: le altre sono «Senza categoria». */
+const CATEGORIE_HA = [
+  { id: "c_clima", nome: "Clima e tapparelle", icona: "mdi:snowflake" },
+  { id: "c_luci", nome: "Luci", icona: "mdi:lightbulb" },
+];
+const CATEGORIA_DI = { 1001: "c_clima", 1002: "c_luci", 1003: "c_clima" };
+/* Il riassunto in una riga che il ponte scrive per ognuna
+ * (`ponte/src/riassunto-delle-automazioni.js`). */
+const RIASSUNTI = {
+  1004: {
+    it: "Quando una condizione diventa vera · 1 azione",
+    en: "When a condition becomes true · 1 action",
+  },
+  1005: { it: "Da blueprint «Batterie»", en: 'From blueprint "Batterie"' },
+};
+
 /* Una proposta come la manda la casa (`core/automazioni-proposte.js`). */
 const PROPOSTE = [
   {
@@ -182,7 +202,18 @@ async function avvia(
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true);
   await page.evaluate(
-    async ({ stati, configurazioni, aree, spente, proposte, rimaste, amministra }) => {
+    async ({
+      stati,
+      configurazioni,
+      aree,
+      spente,
+      proposte,
+      rimaste,
+      amministra,
+      categorie,
+      categoriaDi,
+      riassunti,
+    }) => {
       const HA = await import("/src/core/automazioni-ha.js");
       localStorage.setItem("cd_automazioni", JSON.stringify(rimaste));
       const grezzi = window.eval("_RAW_STATES");
@@ -230,6 +261,8 @@ async function avvia(
             area: NOMI[casa.aree[id]] || "",
             areaId: casa.aree[id] || "",
             categoria: HA.categoriaDi(config, statoDi),
+            categoriaHa: categoriaDi[id] || null,
+            riassunto: riassunti[id] || { it: config.alias, en: config.alias },
             origine: HA.origineDi(config),
             modello,
             modificabile: true,
@@ -247,6 +280,7 @@ async function avvia(
               { id: "corridoio", nome: "Corridoio" },
               { id: "soggiorno", nome: "Soggiorno" },
             ],
+            categorie,
           };
         if (m.type === "ponte/automazioni/salva") {
           const id = m.automazione_id || String(2000 + Object.keys(casa.config).length);
@@ -326,6 +360,9 @@ async function avvia(
       proposte,
       rimaste,
       amministra,
+      categorie: CATEGORIE_HA,
+      categoriaDi: CATEGORIA_DI,
+      riassunti: RIASSUNTI,
     },
   );
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
@@ -346,7 +383,7 @@ const configDi = (page, id) => page.evaluate((id) => window.__CASA__.config[id],
 
 /* ── il config ───────────────────────────────────────────────────────────── */
 
-test("il config: tutte quelle di Home Assistant a gruppi, le etichette, la ricerca e l'interruttore", async ({
+test("il config: tutte quelle di Home Assistant per categoria, le etichette, la ricerca e l'interruttore", async ({
   page,
 }, testInfo) => {
   await avvia(page, testInfo);
@@ -361,30 +398,60 @@ test("il config: tutte quelle di Home Assistant a gruppi, le etichette, la ricer
   await expect(pagina.locator(".ha-barra h3")).toContainText("Le automazioni di casa");
   await expect(pagina.locator(".ha-barra h3 small")).toContainText("5, da Home Assistant");
   await expect(pagina.locator(".ha-riga")).toHaveCount(5);
-  /* Per tipo: tapparelle, luci, clima, energia, altre. */
-  await expect(pagina.locator(".ha-gruppo")).toHaveText([
-    /Luci/,
-    /Clima/,
-    /Tapparelle/,
-    /Energia/,
-    /Altre/,
+  /* Per categoria: quelle di Home Assistant per nome, «Senza categoria» in fondo. */
+  await expect(pagina.locator('.ha-seg [data-au-per="categoria"]')).toHaveClass(/si/);
+  await expect(pagina.locator(".aug-titolo")).toHaveText([
+    "Clima e tapparelle",
+    "Luci",
+    "Senza categoria",
   ]);
+  await expect(pagina.locator(".aug-conta")).toHaveText(["1/2", "1/1", "2/2"]);
+  await expect(pagina.locator(".aug-freccia").first()).toHaveText("▾");
   const tapparelle = pagina.locator(".ha-riga", { hasText: "Tapparelle mattina" });
-  await expect(tapparelle.locator(".ha-orig.g")).toHaveText("gdahome");
-  await expect(tapparelle.locator(".ha-fr")).toContainText("Alle 07:15");
-  await expect(tapparelle.locator(".ha-fr")).toContainText("apri Tapparelle soggiorno");
-  await expect(tapparelle.locator(".au-ultima")).toContainText("ultima volta: oggi");
+  await expect(tapparelle.locator(".ha-orig.g")).toHaveText("GdAHome");
+  await expect(tapparelle.locator(".aug-fr")).toContainText("Alle 07:15");
+  await expect(tapparelle.locator(".aug-fr")).toContainText("apri Tapparelle soggiorno");
+  await expect(tapparelle.locator(".aug-quando")).toContainText("oggi");
   await expect(
     pagina.locator(".ha-riga", { hasText: "Batterie scariche" }).locator(".ha-orig.b"),
   ).toHaveText("Blueprint");
+  /* Una complessa dice cosa fa, non «Avanzata…». */
   await expect(
-    pagina.locator(".ha-riga", { hasText: "Scaldabagno" }).locator(".ha-fr"),
-  ).toHaveClass(/av/);
+    pagina.locator(".ha-riga", { hasText: "Scaldabagno" }).locator(".aug-fr"),
+  ).toHaveText("Quando una condizione diventa vera · 1 azione");
+  await expect(pagina.locator(".ha-tutte")).not.toContainText("Avanzata");
+  /* Mai la lingua di Home Assistant: niente «chiama climate.…», niente id. */
+  for (const riga of await pagina.locator(".aug-fr").allTextContents())
+    expect(riga).not.toMatch(/chiama |[a-z]\.[a-z]|_/);
   await expect(pagina.locator(".ha-riga", { hasText: "Clima spento" })).toHaveClass(/spenta/);
+  /* Un gruppo si chiude (▸), e resta chiuso anche dopo un ridisegno. */
+  await pagina.locator('[data-aug-apri="categoria:c_luci"]').click();
+  const luci = pagina.locator('[data-aug="categoria:c_luci"]');
+  await expect(luci).toHaveClass(/chiuso/);
+  await expect(luci.locator(".aug-freccia")).toHaveText("▸");
+  await expect(luci.locator(".ha-riga")).toHaveCount(0);
+  await expect(pagina.locator(".ha-riga")).toHaveCount(4);
+  expect(
+    await page.evaluate(() => JSON.parse(localStorage.getItem("dm_automazioni_gruppi_chiusi"))),
+  ).toEqual(["categoria:c_luci"]);
+  await pagina.locator('[data-au-per="tipo"]').click();
+  await pagina.locator('[data-au-per="categoria"]').click();
+  await expect(pagina.locator('[data-aug="categoria:c_luci"]')).toHaveClass(/chiuso/);
+  await pagina.locator('[data-aug-apri="categoria:c_luci"]').click();
+  await expect(pagina.locator(".ha-riga")).toHaveCount(5);
+  /* Per tipo: luci, clima, tapparelle, energia, altre. */
+  await pagina.locator('[data-au-per="tipo"]').click();
+  await expect(pagina.locator(".aug-titolo")).toHaveText([
+    "Luci",
+    "Clima",
+    "Tapparelle",
+    "Energia",
+    "Altre",
+  ]);
   /* Per stanza, e la ricerca. */
   await pagina.locator('[data-au-per="stanza"]').click();
-  await expect(pagina.locator(".ha-gruppo").first()).toContainText("Corridoio");
-  await pagina.locator("[data-au-cerca]").fill("tapparelle");
+  await expect(pagina.locator(".aug-titolo").first()).toHaveText("Corridoio");
+  await pagina.locator("[data-au-cerca]").fill("mattina");
   await expect(pagina.locator(".ha-riga")).toHaveCount(1);
   await expect(pagina.locator("[data-au-cerca]")).toBeFocused();
   await pagina.locator("[data-au-cerca]").fill("");
@@ -446,7 +513,7 @@ test("dai modelli all'editor: si crea e si salva in Home Assistant", async ({ pa
   });
   const ok = pagina.locator(".ha-ok");
   await expect(ok).toContainText("Salvata in Home Assistant ✓ «Luce corridoio di notte»");
-  await expect(ok).toContainText("Impostazioni → Automazioni, con l'etichetta gdahome");
+  await expect(ok).toContainText("Impostazioni → Automazioni, con l'etichetta GdAHome");
   await expect(ok.locator(".ha-link")).toHaveAttribute("href", "/config/automation/edit/2000");
   await expect(pagina.locator(".ha-riga")).toHaveCount(1);
 });
@@ -675,7 +742,7 @@ test("senza Premium: il config velato, e «Scopri Premium» dice dove si compra"
   await expect(velo.locator(".au-prem")).toHaveText("PREMIUM · IN ARRIVO");
   await expect(velo.locator("h3")).toHaveText("Automazioni con Premium");
   await expect(velo).toContainText(
-    "Si acquista solo dalle app gdahome su App Store e Google Play. Le app sono in arrivo.",
+    "Si acquista solo dalle app GdAHome su App Store e Google Play. Le app sono in arrivo.",
   );
   /* Sotto il velo non si tocca niente. */
   await expect(page.locator("#ed-body .au-sotto")).toHaveAttribute("inert", "");
@@ -698,7 +765,7 @@ const linguette = (page) =>
     [...document.querySelectorAll("nav.tabs .tab[data-tab]")].map((t) => t.dataset.tab),
   );
 
-test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gruppi e il foglio", async ({
+test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gruppi per categoria e il foglio", async ({
   page,
 }, testInfo) => {
   await avvia(page, testInfo);
@@ -714,22 +781,42 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
   );
   await expect(sezione.locator("[data-auc-attive] b")).toHaveText("4");
   await expect(sezione.locator("[data-auc-spente] b")).toHaveText("1");
-  await expect(sezione.locator(".dm-lucip-room")).toHaveCount(5);
+  /* I gruppi sono le categorie di Home Assistant, «Senza categoria» in fondo. */
+  await expect(sezione.locator('[data-auc-per="categoria"]')).toHaveClass(/si/);
+  await expect(sezione.locator(".aug-titolo")).toHaveText([
+    "Clima e tapparelle",
+    "Luci",
+    "Senza categoria",
+  ]);
+  /* «＋ Nuova» sta nella barra dei filtri. */
+  await expect(sezione.locator(".ad-filtri [data-auc-nuova]")).toBeVisible();
   const carta = sezione.locator('[data-auc-carta="automation.a1001"]');
-  await expect(carta.locator("strong")).toHaveText("Tapparelle mattina");
-  await expect(carta.locator(".ad-frase")).toContainText("Alle 07:15");
-  await expect(sezione.locator('[data-auc-carta="automation.a1003"] .dm-lucip-badge')).toHaveText(
-    "SPENTA",
+  await expect(carta.locator(".aug-nome")).toHaveText("Tapparelle mattina");
+  await expect(carta.locator(".aug-fr")).toContainText("Alle 07:15");
+  /* Una riga sola: il nome e la riga in parole stanno accanto all'interruttore. */
+  const altezza = await carta.evaluate((n) => n.getBoundingClientRect().height);
+  expect(altezza).toBeLessThan(testInfo.project.name === "desktop" ? 64 : 80);
+  await expect(sezione.locator('[data-auc-carta="automation.a1004"] .aug-fr')).toHaveText(
+    "Quando una condizione diventa vera · 1 azione",
   );
-  /* L'interruttore della carta la spegne in Home Assistant. */
+  await expect(sezione.locator('[data-auc-carta="automation.a1003"]')).toHaveClass(/spenta/);
+  /* L'interruttore della riga la spegne in Home Assistant. */
   await carta.locator("[data-auc-led]").click();
   await expect
     .poll(() => servizi(page))
     .toContainEqual({ service: "turn_off", data: { entity_id: "automation.a1001" } });
-  await expect(carta).not.toHaveClass(/is-on/);
-  /* Per stanza. */
+  await expect(sezione.locator('[data-auc-carta="automation.a1001"]')).toHaveClass(/spenta/);
+  /* Un gruppo si chiude come in Home Assistant. */
+  await sezione.locator('[data-aug-apri="categoria:-"]').click();
+  await expect(sezione.locator('[data-aug="categoria:-"] .aug-freccia')).toHaveText("▸");
+  await expect(sezione.locator("[data-auc-carta]")).toHaveCount(3);
+  await sezione.locator('[data-aug-apri="categoria:-"]').click();
+  await expect(sezione.locator("[data-auc-carta]")).toHaveCount(5);
+  /* Per tipo, e per stanza. */
+  await sezione.locator('[data-auc-per="tipo"]').click();
+  await expect(sezione.locator(".aug-titolo").first()).toHaveText("Luci");
   await sezione.locator('[data-auc-per="stanza"]').click();
-  await expect(sezione.locator(".dm-lucip-room-name").first()).toHaveText("🏠 Corridoio");
+  await expect(sezione.locator(".aug-titolo").first()).toHaveText("Corridoio");
   /* Il foglio: in sola lettura, con «Esegui ora» e «Modifica nel config ›». */
   await sezione.locator('[data-auc-carta="automation.a1002"]').click();
   const foglio = page.locator("#auc-foglio .ad-foglio");
@@ -774,7 +861,7 @@ test("la sezione della dashboard senza Premium: velata, e la finestra dello stor
 
 /* ── nell'app ────────────────────────────────────────────────────────────── */
 
-test("nell'app: niente linguetta e niente voce, la pagina del menu con «＋ Nuova» e il foglio", async ({
+test("nell'app: niente linguetta e niente voce, la pagina del menu con «＋ Nuova» nei filtri e il foglio", async ({
   page,
 }, testInfo) => {
   await avvia(page, testInfo, { app: true });
@@ -792,17 +879,10 @@ test("nell'app: niente linguetta e niente voce, la pagina del menu con «＋ Nuo
   await expect(pagina.locator(".dm-page-mast-sub")).toHaveText("Tutte quelle di casa");
   await expect(pagina.locator(".ad-cfg")).toHaveCount(0);
   await expect(pagina.locator("[data-auc-carta]")).toHaveCount(5);
-  /* «＋ Nuova» non sta sotto la bolla dell'assistente. */
-  const nuova = page.locator("#auc-nuova");
+  /* «＋ Nuova» sta nella barra dei filtri, non galleggia sopra la pagina. */
+  const nuova = pagina.locator(".ad-filtri [data-auc-nuova]");
   await expect(nuova).toBeVisible();
-  const bolla = page.locator(".dm-assist-tasto");
-  if (await bolla.isVisible().catch(() => false)) {
-    const a = await nuova.boundingBox();
-    const b = await bolla.boundingBox();
-    const sovrapposti =
-      a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-    expect(sovrapposti).toBe(false);
-  }
+  await expect(page.locator("#auc-nuova")).toHaveCount(0);
   /* Il foglio porta «✏️ Modifica» e le tre cose sotto. */
   await pagina.locator('[data-auc-carta="automation.a1002"]').click();
   const foglio = page.locator("#auc-foglio .ad-foglio");
@@ -819,11 +899,10 @@ test("nell'app: niente linguetta e niente voce, la pagina del menu con «＋ Nuo
   await expect(nuova).toHaveCount(0);
   await pagina.locator('.au-indietro[data-au-vai="lista"]').click();
   await expect(pagina.locator("[data-auc-carta]")).toHaveCount(5);
-  await expect(page.locator("#auc-nuova")).toBeVisible();
+  await expect(nuova).toBeVisible();
   /* «＋ Nuova»: i modelli, nella stessa pagina. */
-  await page.locator("#auc-nuova").click();
+  await nuova.click();
   await expect(pagina.locator(".au-mod")).toHaveCount(8);
   await page.evaluate(() => window.gdahomeTornaDalleAutomazioni());
   await expect(page.locator("#page-automazioni")).toHaveCount(0);
-  await expect(page.locator("#auc-nuova")).toHaveCount(0);
 });

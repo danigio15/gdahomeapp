@@ -1105,10 +1105,10 @@ class _StatoDellaMattonella extends State<_Mattonella> {
           Positioned(top: 8, right: 8, child: _Quanti(widget.quanti)),
         if (widget.bloccata)
           Positioned(top: 8, right: 8, child: _IlLucchetto(sulloScuro: scelta)),
-        /* Le Automazioni sono Premium anche quando la casa lo e': il bollino lo
-         * dice, come la voce del config nella plancia. Senza Premium al suo
-         * posto c'e' il lucchetto. */
-        if (sezione == Sezione.automazioni && !widget.bloccata)
+        /* Le voci Premium lo dicono anche quando la casa lo e': il bollino,
+         * come la voce del config nella plancia. Senza Premium al suo posto
+         * c'e' il lucchetto. Sopra un numero (gli aggiornamenti) no. */
+        if (sezione.diPremium && !widget.bloccata && widget.quanti == 0)
           Positioned(
             top: 8,
             right: 8,
@@ -1373,7 +1373,7 @@ class _IlLucchetto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: 'gdahome Premium',
+      message: 'GdAHome Premium',
       child: Container(
         width: 22,
         height: 22,

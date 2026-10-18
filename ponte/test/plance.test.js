@@ -49,7 +49,7 @@ test("la prima plancia c'e' sempre, e si chiama come il prodotto", () => {
     assert.deepEqual(plance.elenco(), [
       {
         profilo: "primary",
-        titolo: "gdahome",
+        titolo: "GdAHome",
         istanza: "gdahome",
         primaria: true,
         creata_il: 0,
@@ -206,6 +206,35 @@ test("una plancia rifatta con lo stesso titolo ha un'istanza nuova, e il cassett
   }
 });
 
+test("la prima plancia scritta «gdahome» dalle versioni di prima diventa «GdAHome»", () => {
+  const { cartella, via } = unPosto();
+  try {
+    writeFileSync(
+      join(cartella, "plance.json"),
+      JSON.stringify({
+        plance: [
+          { profilo: "primary", titolo: "gdahome", creata_il: 0 },
+          /* Solo la prima, e solo se e' ancora il nome che le avevamo dato
+           * noi: un titolo scritto da chi ci abita non si tocca. */
+          { profilo: "mare", titolo: "gdahome", creata_il: 5 },
+        ],
+      }),
+    );
+    const plance = lePlance(cartella);
+    assert.equal(plance.prima.titolo, "GdAHome");
+    assert.equal(plance.prima.istanza, "gdahome");
+    assert.equal(plance.quale("mare").titolo, "gdahome");
+
+    writeFileSync(
+      join(cartella, "plance.json"),
+      JSON.stringify({ plance: [{ profilo: "primary", titolo: "Casa", creata_il: 0 }] }),
+    );
+    assert.equal(lePlance(cartella).prima.titolo, "Casa");
+  } finally {
+    via();
+  }
+});
+
 test("le plance nate prima della nascita tengono l'istanza di sempre", () => {
   const { cartella, via } = unPosto();
   try {
@@ -339,7 +368,7 @@ test("la plancia si veste col titolo scelto, e lo rida' indietro quando la scelt
 
     /* Via le scelte: la prima torna nostra, l'altra torna com'era in casa. */
     assert.equal(plance.vesti({}), true);
-    assert.equal(plance.quale().titolo, "gdahome");
+    assert.equal(plance.quale().titolo, "GdAHome");
     assert.equal(plance.quale("suocero").titolo, "Suocero");
     assert.equal(plance.vesti({}), false);
   } finally {
@@ -423,7 +452,7 @@ test("la scelta sopravvive a una riaccensione, e una plancia che non c'e' non si
     assert.equal(dopo.quale("fantasma"), null);
     assert.equal(dopo.vesti({ primary: { titolo: "Casa Rossi" } }), false);
     assert.equal(dopo.vesti({}), true);
-    assert.equal(dopo.quale().titolo, "gdahome");
+    assert.equal(dopo.quale().titolo, "GdAHome");
   } finally {
     via();
   }
@@ -432,7 +461,7 @@ test("la scelta sopravvive a una riaccensione, e una plancia che non c'e' non si
 test("il titolo che fino a ieri prendeva il nome dell'installatore torna nostro", () => {
   /* Fino alla 1.5.9.12 la prima plancia prendeva da sola il nome di chi
    * segue la casa, e lo segnava in `daInstallatore`. Dopo l'aggiornamento,
-   * alla prima risposta senza scelte, quel titolo torna «gdahome»: il nome
+   * alla prima risposta senza scelte, quel titolo torna «GdAHome»: il nome
    * da solo non va piu' nel menu laterale, ci va quello scelto. */
   const { cartella, via } = unPosto();
   try {
@@ -454,7 +483,7 @@ test("il titolo che fino a ieri prendeva il nome dell'installatore torna nostro"
     const plance = lePlance(cartella);
     assert.equal(plance.quale().titolo, "Impianti Rossi");
     assert.equal(plance.vesti({}), true);
-    assert.equal(plance.quale().titolo, "gdahome");
+    assert.equal(plance.quale().titolo, "GdAHome");
   } finally {
     via();
   }

@@ -28,9 +28,12 @@ import '../parole.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/pezzi.dart';
 import '../vestito/tema.dart';
+import 'la_tua_giornata.dart';
 import 'notifica_personalizzata.dart';
+import 'premium.dart';
 
 part 'notifiche_su_misura.dart';
+part 'notifiche_da_home_assistant.dart';
 
 /// Il disegno, il nome e la riga sotto di ogni evento.
 ({String disegno, String titolo, String sotto}) comeSiChiama(String evento) =>
@@ -247,6 +250,7 @@ class SchermataDelleNotifiche extends StatefulWidget {
     this.nuda = false,
     this.visibile = true,
     this.statoIniziale,
+    this.daHomeAssistantIniziale,
     this.nomeDelTelefono,
   });
 
@@ -262,6 +266,10 @@ class SchermataDelleNotifiche extends StatefulWidget {
   /// Quello che si mostra prima che la casa risponda: per le prove, e per i
   /// disegni della pagina.
   final StatoDelleNotifiche? statoIniziale;
+
+  /// Le automazioni di Home Assistant che mandano notifiche, prima che la
+  /// casa risponda: per le prove e i disegni.
+  final NotificheDaHomeAssistant? daHomeAssistantIniziale;
 
   /// «iPhone» o «telefono»: per la riga «Attive su questo …».
   final String? nomeDelTelefono;
@@ -279,12 +287,37 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
 
   Collegamento get _collegamento => widget.collegamento;
 
+  /// Se la casa e' Premium: lo dice il ponte (`premium` nello stato); un
+  /// ponte di prima non lo dice, e allora vale la licenza che l'app conosce.
+  /// In Base le elaborate e il riepilogo della sera non ci sono.
+  bool get _premium => _stato?.premium ?? _collegamento.licenza.premium;
+
+  /// Il lucchetto toccato: perche', e che si compra solo dalle app.
+  void _spiegaIlPremium() => unawaited(
+    spiegaIlPremium(
+      context,
+      perche: PerchePremium.notifiche,
+      collegamento: _collegamento,
+    ),
+  );
+
+  /// Le notifiche delle automazioni di Home Assistant: `null` finche' la casa
+  /// non risponde, e da un ponte di prima che non le conosce.
+  NotificheDaHomeAssistant? _daHA;
+
+  /// Il Premium per le notifiche di Home Assistant: lo dice il ponte.
+  bool get _premiumDaHA => _daHA?.premium ?? _premium;
+
   @override
   void initState() {
     super.initState();
     _stato = widget.statoIniziale;
+    _daHA = widget.daHomeAssistantIniziale;
     _ascolto = _collegamento.cambiamenti.listen((_) => _forseLeggi());
     widget.postino?.addListener(_ridisegna);
+    /* Da un ponte di prima il Premium lo dice la licenza dell'app: se cambia,
+     * cambiano i lucchetti. */
+    _collegamento.licenza.addListener(_ridisegna);
     _forseLeggi();
   }
 
@@ -298,6 +331,7 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
   void dispose() {
     _ascolto?.cancel();
     widget.postino?.removeListener(_ridisegna);
+    _collegamento.licenza.removeListener(_ridisegna);
     super.dispose();
   }
 
@@ -338,10 +372,116 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
         _stato = stato;
         _perche = null;
       });
+      unawaited(_leggiDaHA());
     } catch (errore) {
       _letteDi = null;
       if (mounted) setState(() => _perche = '$errore');
     }
+  }
+
+  /* Le automazioni di Home Assistant che mandano notifiche. Un ponte di
+   * prima non le conosce: la sezione non c'e', e il resto della pagina e'
+   * quello di sempre. */
+  Future<void> _leggiDaHA() async {
+    final filo = _collegamento.filo;
+    if (filo == null) return;
+    try {
+      final dati = await Notifiche(filo).daHomeAssistant();
+      if (mounted) setState(() => _daHA = dati);
+    } catch (_) {
+      if (mounted) setState(() => _daHA = null);
+    }
+  }
+
+  /// Le scelte di una o piu' automazioni: subito a schermo, poi sulla casa.
+  /// Torna quello che la casa ha salvato, o `null` se non e' andata.
+  Future<NotificheDaHomeAssistant?> _cambiaDaHA(
+    Map<String, Map<String, Object>> voci,
+  ) async {
+    final prima = _daHA;
+    final filo = _collegamento.filo;
+    if (prima == null) return null;
+    setState(
+      () => _daHA = prima.con(
+        automazioni: [
+          for (final riga in prima.automazioni)
+            if (voci[riga.chiave] case final Map<String, Object> voce)
+              riga.con(
+                acceso: voce['acceso'] as bool?,
+                a: voce['a'] as String?,
+                silenzio: voce['silenzio'] as bool?,
+              )
+            else
+              riga,
+        ],
+      ),
+    );
+    if (filo == null) {
+      setState(() => _daHA = prima);
+      _dici(
+        inLingua(
+          it: 'La casa adesso non risponde: riprova fra poco',
+          en: 'The home isn\'t answering right now: try again shortly',
+        ),
+      );
+      return null;
+    }
+    try {
+      final dopo = await Notifiche(filo).impostaDaHomeAssistant(voci);
+      if (mounted) setState(() => _daHA = dopo);
+      return dopo;
+    } catch (errore) {
+      if (!mounted) return null;
+      setState(() => _daHA = prima);
+      if ('$errore'.contains('premium-richiesto')) {
+        _spiegaIlPremium();
+      } else {
+        _dici('$errore');
+      }
+      return null;
+    }
+  }
+
+  Future<void> _proponiDaHA(bool acceso) async {
+    final prima = _daHA;
+    final filo = _collegamento.filo;
+    if (prima == null || filo == null) return;
+    setState(() => _daHA = prima.con(proponi: acceso));
+    try {
+      final dopo = await Notifiche(filo).proponiLeNuove(acceso);
+      if (mounted) setState(() => _daHA = dopo);
+    } catch (errore) {
+      if (!mounted) return;
+      setState(() => _daHA = prima);
+      _dici('$errore');
+    }
+  }
+
+  /// Il foglio di un'automazione di Home Assistant.
+  Future<void> _apriDaHA(AutomazioneCheAvvisa riga) async {
+    final dati = _daHA;
+    final stato = _stato;
+    if (dati == null || stato == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => FoglioDaHomeAssistant(
+        riga: riga,
+        dati: dati,
+        premium: _premiumDaHA,
+        silenzio: stato.impostazioni.silenzio,
+        spiegaIlPremium: _spiegaIlPremium,
+        cambia: (voce) async {
+          final dopo = await _cambiaDaHA({riga.chiave: voce});
+          if (dopo == null) return null;
+          for (final una in dopo.automazioni) {
+            if (una.chiave == riga.chiave) return una;
+          }
+          return null;
+        },
+      ),
+    );
   }
 
   /// Cambia le impostazioni: subito a schermo, poi sulla casa.
@@ -476,7 +616,9 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
       builder: (_) => FoglioDellaVoce(
         evento: evento,
         scelta: stato.impostazioni.sceltaDi(evento),
-        stileGenerale: stato.impostazioni.stile,
+        stileGenerale: _premium ? stato.impostazioni.stile : 'semplici',
+        premium: _premium,
+        spiegaIlPremium: _spiegaIlPremium,
         entita: _collegamento.stato?.tutte() ?? const [],
         chiediLeEntita: _chiediLeEntita,
         cambia: (scelta) {
@@ -573,10 +715,10 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
           ),
           sotto: inLingua(
             it:
-                'Forse gdahome in casa è di una versione di prima: aggiorna '
+                'Forse GdAHome in casa è di una versione di prima: aggiorna '
                 'l\'add-on in Home Assistant.',
             en:
-                'Maybe gdahome at home is an older version: update the '
+                'Maybe GdAHome at home is an older version: update the '
                 'add-on in Home Assistant.',
           ),
         );
@@ -585,6 +727,7 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
     }
     final imp = stato.impostazioni;
     final spente = !imp.acceso;
+    final premium = _premium;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
@@ -608,7 +751,8 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
           testo: inLingua(it: 'Come le vuoi', en: 'How you want them'),
         ),
         _ComeLeVuoi(
-          stile: imp.stile,
+          stile: premium ? imp.stile : 'semplici',
+          bloccata: premium ? null : _spiegaIlPremium,
           iPhone: defaultTargetPlatform == TargetPlatform.iOS,
           spento: spente,
           cambia: (stile) => _imposta(imp.con(stile: stile)),
@@ -632,16 +776,34 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
               children: [
                 for (final (i, evento) in eventi.indexed) ...[
                   if (i > 0) const _Riga(),
-                  _Interruttore(
-                    disegno: comeSiChiama(evento).disegno,
-                    titolo: comeSiChiama(evento).titolo,
-                    sotto: comeSiChiama(evento).sotto,
-                    valore: imp.evento(evento),
-                    spento: spente,
-                    cambia: (si) => _imposta(imp.conEvento(evento, si)),
-                    etichette: etichetteDellaVoce(imp, evento),
-                    apri: () => _apriLaVoce(evento),
-                  ),
+                  /* Il riepilogo della sera in Base non c'e': il lucchetto,
+                   * e al tocco la spiegazione. */
+                  if (evento == 'riepilogo' && !premium)
+                    _Interruttore(
+                      chiave: const Key('voce-riepilogo-bloccata'),
+                      disegno: comeSiChiama(evento).disegno,
+                      titolo: comeSiChiama(evento).titolo,
+                      sotto: comeSiChiama(evento).sotto,
+                      valore: false,
+                      spento: spente,
+                      cambia: (_) => _spiegaIlPremium(),
+                      bloccata: _spiegaIlPremium,
+                    )
+                  else
+                    _Interruttore(
+                      disegno: comeSiChiama(evento).disegno,
+                      titolo: comeSiChiama(evento).titolo,
+                      sotto: comeSiChiama(evento).sotto,
+                      valore: imp.evento(evento),
+                      spento: spente,
+                      cambia: (si) => _imposta(imp.conEvento(evento, si)),
+                      etichette: etichetteDellaVoce(
+                        imp,
+                        evento,
+                        premium: premium,
+                      ),
+                      apri: () => _apriLaVoce(evento),
+                    ),
                 ],
                 if (categoria == 'persone')
                   _LePersone(
@@ -661,7 +823,7 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
                     },
                     cambia: (quale) => _imposta(imp.con(assistente: quale)),
                   ),
-                if (categoria == 'manutenzione')
+                if (categoria == 'manutenzione' && premium) ...[
                   _UnOrario(
                     rientro: 62,
                     pezzi: [
@@ -673,6 +835,12 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
                       (ora) => _imposta(imp.con(riepilogo: ora)),
                     ),
                   ),
+                  const _Riga(),
+                  _LaGiornata(
+                    tocca: () =>
+                        apriLaTuaGiornata(context, collegamento: _collegamento),
+                  ),
+                ],
               ],
             ),
           ),
@@ -706,6 +874,19 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
           ),
         ),
         const SizedBox(height: 20),
+        if (_daHA case final NotificheDaHomeAssistant daHA
+            when daHA.automazioni.isNotEmpty) ...[
+          SezioneDaHomeAssistant(
+            dati: daHA,
+            premium: _premiumDaHA,
+            spento: spente,
+            cambia: (voci) => unawaited(_cambiaDaHA(voci)),
+            proponi: (si) => unawaited(_proponiDaHA(si)),
+            apri: (riga) => unawaited(_apriDaHA(riga)),
+            spiegaIlPremium: _spiegaIlPremium,
+          ),
+          const SizedBox(height: 20),
+        ],
         _Titolo(
           disegno: 'agenda',
           testo: inLingua(it: 'Quando', en: 'When'),
@@ -807,8 +988,8 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
         (
           Icons.notifications_off_rounded,
           inLingua(
-            it: 'Il telefono non lascia mostrare le notifiche di gdahome.',
-            en: 'This phone doesn\'t allow gdahome notifications.',
+            it: 'Il telefono non lascia mostrare le notifiche di GdAHome.',
+            en: 'This phone doesn\'t allow GdAHome notifications.',
           ),
         ),
       if (!stato.centralino)
@@ -818,10 +999,10 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
             it:
                 'Le notifiche passano dal centralino, e questa casa adesso '
                 'non lo raggiunge: guarda «Da fuori casa» nella pagina di '
-                'gdahome in Home Assistant.',
+                'GdAHome in Home Assistant.',
             en:
                 'Notifications go through the relay, and this home can\'t '
-                'reach it right now: check «Away from home» on the gdahome '
+                'reach it right now: check «Away from home» on the GdAHome '
                 'page in Home Assistant.',
           ),
         ),
@@ -993,8 +1174,8 @@ class _IlMaestro extends StatelessWidget {
                     children: [
                       Text(
                         inLingua(
-                          it: 'Notifiche di gdahome',
-                          en: 'gdahome notifications',
+                          it: 'Notifiche di GdAHome',
+                          en: 'GdAHome notifications',
                         ),
                         style: testi.titleMedium?.copyWith(
                           color: Colors.white,
@@ -1101,10 +1282,12 @@ class _Titolo extends StatelessWidget {
         children: [
           Oggetto(disegno, lato: 20),
           const SizedBox(width: 8),
-          Text(
-            testo,
-            style: Theme.of(context).textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w700),
+          Flexible(
+            child: Text(
+              testo,
+              style: Theme.of(context).textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(width: 8),
           if (bollino != null)
@@ -1164,6 +1347,8 @@ class _Riga extends StatelessWidget {
 /// foglio della voce; le [etichette] dicono come arriva.
 class _Interruttore extends StatelessWidget {
   const _Interruttore({
+    this.chiave,
+    this.bloccata,
     this.disegno,
     this.icona,
     required this.titolo,
@@ -1184,12 +1369,19 @@ class _Interruttore extends StatelessWidget {
   final ValueChanged<bool> cambia;
   final List<(String, Color)> etichette;
   final VoidCallback? apri;
+  final Key? chiave;
+
+  /// Una voce di Premium, in una casa Base: il lucchetto e il bollino, e
+  /// al tocco la spiegazione.
+  final VoidCallback? bloccata;
 
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
+    final apri = bloccata ?? this.apri;
     final riga = Padding(
+      key: chiave,
       padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
       child: Row(
         children: [
@@ -1210,10 +1402,28 @@ class _Interruttore extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  titolo,
-                  style: testi.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
+                if (bloccata == null)
+                  Text(
+                    titolo,
+                    style: testi.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        titolo,
+                        style: testi.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const BollinoPremium(),
+                    ],
+                  ),
                 if (sotto.isNotEmpty)
                   Text(
                     sotto,
@@ -1235,25 +1445,91 @@ class _Interruttore extends StatelessWidget {
               ],
             ),
           ),
-          if (apri != null)
+          if (apri != null && bloccata == null)
             Icon(
               Icons.chevron_right_rounded,
               color: colori.onSurfaceVariant,
               size: 22,
             ),
           const SizedBox(width: 4),
-          Switch(
-            value: valore,
-            onChanged: spento ? null : cambia,
-            activeTrackColor: colori.primary,
-            activeThumbColor: colori.onPrimary,
-          ),
+          if (bloccata != null)
+            Icon(Icons.lock_rounded, color: colori.onSurfaceVariant, size: 20)
+          else
+            Switch(
+              value: valore,
+              onChanged: spento ? null : cambia,
+              activeTrackColor: colori.primary,
+              activeThumbColor: colori.onPrimary,
+            ),
+          if (bloccata != null) const SizedBox(width: 12),
         ],
       ),
     );
     return Opacity(
       opacity: spento ? 0.5 : 1,
       child: apri == null || spento ? riga : InkWell(onTap: apri, child: riga),
+    );
+  }
+}
+
+/// La riga che apre «La tua giornata»: la pagina del riepilogo, quando la
+/// si vuole vedere senza aspettare la sera.
+class _LaGiornata extends StatelessWidget {
+  const _LaGiornata({required this.tocca});
+  final VoidCallback tocca;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return InkWell(
+      key: const Key('apri-la-giornata'),
+      onTap: tocca,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 16, 12),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: colori.surfaceContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Oggetto('solare', lato: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    inLingua(it: 'La tua giornata', en: 'Your day'),
+                    style: testi.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    inLingua(
+                      it: 'Il sole, i soldi, la casa di oggi: adesso',
+                      en: 'Today\'s sun, money and home: right now',
+                    ),
+                    style: testi.bodySmall?.copyWith(
+                      color: colori.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: colori.onSurfaceVariant,
+              size: 22,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

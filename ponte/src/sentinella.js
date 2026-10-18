@@ -36,8 +36,15 @@ import {
   CHIAVE_ANTIFURTO_SU_MISURA,
 } from "../plancia/src/core/antifurto-su-misura.js";
 import { gliUps } from "./gli-ups.js";
-import { fasciaPiuBassa, giornoDi, letturaDellEnergia, prezzoAllOra } from "./l-energia-di-casa.js";
+import {
+  carichiDellaPlancia,
+  fasciaPiuBassa,
+  giornoDi,
+  letturaDellEnergia,
+  prezzoAllOra,
+} from "./l-energia-di-casa.js";
 import { risolutoreDalla } from "./ricarica-di-notte.js";
+import { batterieDiCasa } from "./la-giornata-di-casa.js";
 import {
   paroleDelBlackout,
   paroleDelCiclo,
@@ -64,6 +71,9 @@ export const CATEGORIE = Object.freeze({
   personalizzate: ["personalizzata"],
   /* I viaggi pianificati di gdanav (`viaggi.js`): «parti fra 10 minuti». */
   viaggi: ["viaggi"],
+  /* Le notifiche delle automazioni di Home Assistant, anche in GdAHome
+   * (`notifiche-di-home-assistant.js`). */
+  homeassistant: ["ha_notify"],
 });
 
 export const EVENTI = Object.freeze(Object.values(CATEGORIE).flat());
@@ -443,6 +453,11 @@ export class Sentinella {
     this._ultimeLetture = letture;
     letture.apparecchi = {};
     for (const id of this._prese()) letture.apparecchi[id] = this._watt(this.stati.get(id));
+    /* Per «chi ha consumato di piu'»: i carichi della plancia e gli
+     * elettrodomestici trovati dal nome, ognuno una volta. */
+    letture.carichi = { ...letture.apparecchi };
+    for (const { id } of carichiDellaPlancia(valori))
+      if (!(id in letture.carichi)) letture.carichi[id] = this._watt(this.stati.get(id));
     this.taccuino.campiona(letture, (istante) => this.prezzo(istante, valori));
   }
 
@@ -1564,29 +1579,11 @@ export class Sentinella {
   /* Quello che va sistemato, in una notifica sola. `null` se non c'e' niente:
    * un riepilogo vuoto non si manda. */
   riepilogo() {
-    const batterie = [];
-    let aggiornamenti = 0;
-    /* «Non ci sono 65 dispositivi non connessi»: qui si contavano le entita'
-     * mute che hanno un dispositivo, non i dispositivi. Adesso la regola e'
-     * quella del cruscotto di chi installa (`salute.js`) e della pagina «Non
-     * connessi» della plancia: un dispositivo e' giu' quando NESSUNA delle sue
-     * entita' risponde, e conta una volta. Un canale non usato di uno switch
-     * acceso, il blocco bambini di un'asciugatrice spenta, non lo fanno giu'. */
-    const muti = new Set();
-    const vivi = new Set();
-    for (const [id, stato] of this.stati) {
-      const dominio = dominioDi(id);
-      if (dominio === "sensor" && stato.attributes?.device_class === "battery") {
-        const n = numero(stato.state);
-        if (n !== null && n <= 15) batterie.push(nomeDi(stato, id));
-      }
-      if (dominio === "update" && stato.state === "on") aggiornamenti += 1;
-      const suo = this.dispositivoDi?.[id];
-      if (!suo) continue;
-      if (stato.state === "unavailable") muti.add(suo);
-      else vivi.add(suo);
-    }
-    const spenti = [...muti].filter((suo) => !vivi.has(suo)).length;
+    const tutto = this.cosaSistemare();
+    const { spenti, aggiornamenti } = tutto;
+    /* Le batterie dei telefoni e degli orologi sono di qualcuno: non si
+     * contano fra le cose di casa da sistemare. */
+    const batterie = batterieDiCasa(tutto.batterie);
     const daSistemare = { batterie: batterie.length, spenti, aggiornamenti };
     const dati = { ...this._laGiornataDaRaccontare(), daSistemare };
     const nienteDaSistemare = !batterie.length && !spenti && !aggiornamenti;
@@ -1626,6 +1623,36 @@ export class Sentinella {
     };
   }
 
+  /* Quello che va sistemato: le batterie scariche (col nome e la carica,
+   * per la pagina «La tua giornata»), quanti dispositivi non rispondono e
+   * quanti aggiornamenti aspettano. Lo usano il riepilogo e la pagina. */
+  cosaSistemare() {
+    const batterie = [];
+    let aggiornamenti = 0;
+    /* «Non ci sono 65 dispositivi non connessi»: qui si contavano le entita'
+     * mute che hanno un dispositivo, non i dispositivi. Adesso la regola e'
+     * quella del cruscotto di chi installa (`salute.js`) e della pagina «Non
+     * connessi» della plancia: un dispositivo e' giu' quando NESSUNA delle sue
+     * entita' risponde, e conta una volta. Un canale non usato di uno switch
+     * acceso, il blocco bambini di un'asciugatrice spenta, non lo fanno giu'. */
+    const muti = new Set();
+    const vivi = new Set();
+    for (const [id, stato] of this.stati) {
+      const dominio = dominioDi(id);
+      if (dominio === "sensor" && stato.attributes?.device_class === "battery") {
+        const n = numero(stato.state);
+        if (n !== null && n <= 15) batterie.push({ nome: nomeDi(stato, id), carica: n });
+      }
+      if (dominio === "update" && stato.state === "on") aggiornamenti += 1;
+      const suo = this.dispositivoDi?.[id];
+      if (!suo) continue;
+      if (stato.state === "unavailable") muti.add(suo);
+      else vivi.add(suo);
+    }
+    const spenti = [...muti].filter((suo) => !vivi.has(suo)).length;
+    return { batterie, spenti, aggiornamenti };
+  }
+
   /* La giornata della casa, per il riepilogo: quello che il taccuino ha visto
    * e le cose belle — il record, gli elettrodomestici andati col sole, la
    * batteria per la notte. Senza taccuino, niente giornata. */
@@ -1661,6 +1688,16 @@ export class Sentinella {
         )
       : [];
     const grosso = g.cicli.slice().sort((a, b) => (b.kwh || 0) - (a.kwh || 0))[0];
+    /* Chi ha consumato di piu': i carichi contati tutto il giorno, col nome
+     * che gli ha dato la plancia (o quello di Home Assistant). */
+    const nomiDellaPlancia = new Map(
+      carichiDellaPlancia(this._valori()).map(({ id, nome }) => [id, nome]),
+    );
+    const nomeDelCarico = (id) => nomiDellaPlancia.get(id) || nomeDellaPresa(id);
+    const piu = (g.carichi || [])
+      .filter((c) => c.kwh >= 0.05)
+      .slice(0, 5)
+      .map((c) => ({ nome: nomeDelCarico(c.id), kwh: c.kwh, eur: c.eur, sole: c.sole }));
     const valori = this._valori();
     const bassa = fasciaPiuBassa(valori.cd_fasce_kwh);
     const nomi = {};
@@ -1673,8 +1710,12 @@ export class Sentinella {
       oggi,
       record,
       colSole,
-      piuAcceso:
-        !conSole && grosso?.kwh > 0.2 ? { nome: nomeDellaPresa(grosso.id), kwh: grosso.kwh } : null,
+      piu,
+      piuAcceso: piu.length
+        ? { nome: piu[0].nome, kwh: piu[0].kwh }
+        : !conSole && grosso?.kwh > 0.2
+          ? { nome: nomeDellaPresa(grosso.id), kwh: grosso.kwh }
+          : null,
       batteria: this._ultimeLetture?.carica ?? null,
       fasce: {
         nomi,

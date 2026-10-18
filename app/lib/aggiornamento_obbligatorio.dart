@@ -361,8 +361,8 @@ class PaginaAggiornala extends StatelessWidget {
                     const SizedBox(height: 26),
                     Text(
                       inLingua(
-                        it: 'C\'è una versione nuova di gdahome',
-                        en: 'There\'s a new version of gdahome',
+                        it: 'C\'è una versione nuova di GdAHome',
+                        en: 'There\'s a new version of GdAHome',
                       ),
                       textAlign: TextAlign.center,
                       style: testi.headlineSmall?.copyWith(

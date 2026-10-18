@@ -43,12 +43,33 @@ import { randomBytes } from "node:crypto";
 
 import { Archivio } from "./archivio.js";
 import { CapireLaCasa } from "./capire-la-casa.js";
-import { CATEGORIE, EVENTI, Sentinella, URGENZE, categoriaDi } from "./sentinella.js";
+import {
+  CATEGORIE,
+  EVENTI,
+  Sentinella,
+  URGENZE,
+  categoriaDi,
+  genereDiElettrodomestico,
+} from "./sentinella.js";
 import { chiudiLaFoto, chiudiLaSpinta, CONTENUTO_MASSIMO, FOTO_MASSIMA } from "./spinta.js";
 import { vedeQualcosa } from "./plance.js";
 import { PROFILO_PRINCIPALE } from "./configurazione.js";
 import { TaccuinoDellEnergia } from "./l-energia-di-casa.js";
+import {
+  DiarioDellaCasa,
+  batterieDiCasa,
+  capacitaDellAccumulo,
+  consiglioPerDomani,
+  daSistemare,
+  ilConfronto,
+  ilMese,
+  inBreve,
+  prezziDelleFasce,
+  prezzoDiCessione,
+  senzaNomiDiPersone,
+} from "./la-giornata-di-casa.js";
 import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
+import { NotificheDiHomeAssistant } from "./notifiche-di-home-assistant.js";
 
 const MINUTO = 60 * 1000;
 const ORA = 60 * MINUTO;
@@ -64,8 +85,20 @@ const TASTI_TENUTI_AL_PIU = 500;
  * Una casa che ne vuole mandare di piu' ha un sensore impazzito, e trenta
  * notifiche in un'ora sono gia' un telefono da buttare dalla finestra. */
 const PER_TELEFONO_ALL_ORA = 30;
-/* E di prova, per non farne un campanello. */
-const PROVE_OGNI_DIECI_MINUTI = 3;
+
+/* I tasti del riepilogo della sera: «Apri la giornata» apre la pagina
+ * nell'app, «OK» la chiude. Nessuno dei due comanda niente in casa. */
+export const TASTI_DEL_RIEPILOGO = Object.freeze([
+  Object.freeze({
+    id: "giornata",
+    parole: Object.freeze({ it: "Apri la giornata", en: "Open your day" }),
+    apre: true,
+  }),
+  Object.freeze({ id: "ok", parole: Object.freeze({ it: "OK", en: "OK" }) }),
+]);
+
+/** La pagina «La tua giornata» dell'app: la chiede un telefono con un utente. */
+export const LA_GIORNATA = "ponte/energia/giornata";
 
 /* Quante notifiche personalizzate per casa. */
 export const PERSONALIZZATE_AL_PIU = 40;
@@ -338,9 +371,14 @@ export class Notifiche {
      * caselle dell'energia, gli UPS, l'antifurto su misura. Senza, le regole
      * che ne hanno bisogno tacciono. */
     configurazione = null,
+    /* Le licenze (`licenze.js`): le elaborate, la foto, il riepilogo della
+     * sera e «La tua giornata» sono di gdahome Premium. Senza — nelle prove
+     * — vale come con le licenze spente: tutto acceso. */
+    licenze = null,
     adesso = () => Date.now(),
   } = {}) {
     this.configurazione = configurazione;
+    this.licenze = licenze;
     this.dispositivi = dispositivi;
     this.utenti = utenti;
     this.casa = casa;
@@ -363,6 +401,11 @@ export class Notifiche {
       registro: this.registro,
       capire: new CapireLaCasa({ cartella, adesso }),
       quando: (evento) => {
+        try {
+          this.diario.evento(evento);
+        } catch (_errore) {
+          /* Il diario non ferma una notifica. */
+        }
         void this.consegna(evento);
       },
     });
@@ -374,7 +417,16 @@ export class Notifiche {
       adesso,
       registro: this.registro,
     });
-    /** Le righe che un telefono ha voluto «nel riepilogo della sera». */
+    /* Il diario della casa: il clima, il riscaldamento, il solare termico,
+     * l'auto, l'acqua e quello che e' successo, per «La tua giornata». */
+    this.diario = new DiarioDellaCasa({
+      cartella: cartella || "",
+      adesso,
+      registro: this.registro,
+    });
+    /** Le righe che un telefono ha voluto «nel riepilogo della sera»: il
+     * titolo, e l'evento per mandarlo da solo se il Premium finisce prima
+     * della sera. */
     this._inCoda = new Map();
     /** Le notifiche che aspettano la loro soglia (il blackout «oltre N minuti»). */
     this._attese = [];
@@ -396,6 +448,38 @@ export class Notifiche {
     this._disdici = null;
     this._previsioneIl = 0;
     this._registriIl = 0;
+    /** Le notifiche che le automazioni di Home Assistant mandano ai telefoni,
+     * anche qui (`notifiche-di-home-assistant.js`). */
+    this.daHomeAssistant = new NotificheDiHomeAssistant({
+      notifiche: this,
+      registro: this.registro,
+      adesso,
+    });
+  }
+
+  /* ─── Premium ──────────────────────────────────────────────────────────
+   *
+   * Lo decide il ponte, con lo stesso criterio delle automazioni
+   * (`automazioni.js`, `sbloccato`): gdahome Premium, o le licenze spente.
+   *
+   *  - Base: solo notifiche **semplici**, nessuna foto della telecamera,
+   *    nessun riepilogo della sera (ne' testo ne' scheda), e la pagina «La
+   *    tua giornata» risponde `premium-richiesto`. Le righe che un telefono
+   *    aveva messo «nel riepilogo» partono subito, semplici.
+   *  - Gli avvisi di sicurezza — antifurto, allarmi, perdite, blackout e
+   *    batteria dell'UPS — partono sempre: Premium cambia come si vedono,
+   *    mai se arrivano.
+   *
+   * Si guarda a ogni notifica: quando il Premium scade si torna da soli alle
+   * semplici, e le impostazioni del telefono restano com'erano per quando
+   * torna. */
+  get premium() {
+    try {
+      if (!this.licenze?.attive) return true;
+      return this.licenze.premium === true;
+    } catch (_errore) {
+      return false;
+    }
   }
 
   /* La configurazione della plancia principale, come la tengono i
@@ -419,6 +503,7 @@ export class Notifiche {
       this._giro.unref?.();
     }
     await this._abbonati();
+    this.daHomeAssistant.parti();
   }
 
   async _abbonati() {
@@ -431,8 +516,18 @@ export class Notifiche {
         "state_changed",
         (evento) => {
           const dati = evento?.data;
-          if (dati?.entity_id)
-            this.sentinella.cambia(dati.entity_id, dati.new_state, dati.old_state);
+          if (!dati?.entity_id) return;
+          this.sentinella.cambia(dati.entity_id, dati.new_state, dati.old_state);
+          try {
+            this.diario.cambia(
+              dati.entity_id,
+              dati.new_state,
+              dati.old_state,
+              this.sentinella.stati,
+            );
+          } catch (errore) {
+            this.registro.debug?.(`il diario della casa: ${errore?.message || errore}`);
+          }
         },
         {
           onCaduto: () => {
@@ -555,7 +650,25 @@ export class Notifiche {
     this.sentinella.capire.gestiteDaAutomazioni([...gestite]);
   }
 
+  /* Il diario della casa, a ogni battito: con le potenze che la sentinella
+   * ha appena letto, per dividere la ricarica dell'auto fra sole e rete. */
+  _campionaIlDiario() {
+    try {
+      const valori = this._valori();
+      this.diario.campiona({
+        stati: this.sentinella.stati,
+        valori,
+        energia: this.sentinella._ultimeLetture ?? null,
+        prezzo: (istante) => this.sentinella.prezzo(istante, valori),
+      });
+    } catch (errore) {
+      this.registro.errore?.(`il diario della casa: ${errore?.message || errore}`);
+    }
+  }
+
   ferma() {
+    this.daHomeAssistant?.ferma();
+    this.diario?.scrivi?.();
     clearInterval(this._giro);
     this._giro = null;
     const disdici = this._disdici;
@@ -569,6 +682,7 @@ export class Notifiche {
       (voce) => suDi(impostazioniPulite(voce?.impostazioni), "movimento").quando === "sempre",
     );
     this.sentinella.battito();
+    this._campionaIlDiario();
     await this._leAttese();
     this.sincronizza();
     await this._riepiloghi();
@@ -608,22 +722,42 @@ export class Notifiche {
    * della casa, il meteo di domani e le notifiche che ha voluto lasciare per
    * la sera. */
   async _riepiloghi() {
+    const premium = this.premium;
+    /* In Base il riepilogo non c'e': le righe messe da parte quando il
+     * Premium c'era partono adesso, ognuna da sola e semplice. */
+    if (!premium) {
+      const code = [...this._inCoda];
+      this._inCoda.clear();
+      for (const [telefono, righe] of code)
+        for (const riga of righe)
+          if (riga?.evento) await this.consegna(riga.evento, { soloA: telefono });
+    }
     const ora = new Date(this.adesso());
     const adessoInMinuti = ora.getHours() * 60 + ora.getMinutes();
     const oggi = ora.toDateString();
     let riepilogo;
+    let batterie;
     for (const [telefono, voce] of Object.entries(this.archivio.dati.telefoni)) {
       const imp = impostazioniPulite(voce.impostazioni);
-      if (!imp.eventi.riepilogo) continue;
       const quando = minutiDi(imp.riepilogo);
       if (adessoInMinuti < quando || adessoInMinuti > quando + 10) continue;
       if (this._riepilogoDel.get(telefono) === oggi) continue;
       this._riepilogoDel.set(telefono, oggi);
+      /* Chi il riepilogo non lo riceve — una casa Base, o un telefono che
+       * l'ha spento — le batterie da cambiare le sa lo stesso, alla stessa
+       * ora: e' un avviso di sicurezza, mai dietro Premium. Chi lo riceve le
+       * trova dentro il riepilogo, una volta sola. */
+      if (!premium || !imp.eventi.riepilogo) {
+        if (batterie === undefined) batterie = await this._leBatterieDaCambiare();
+        if (batterie)
+          await this.consegna({ ...batterie, quando: this.adesso() }, { soloA: telefono });
+        continue;
+      }
       if (riepilogo === undefined) {
         riepilogo = this.sentinella.riepilogo();
         if (riepilogo) riepilogo.componi.dati.domani = await this._ilTempoDiDomani();
       }
-      const inCoda = this._inCoda.get(telefono) || [];
+      const inCoda = (this._inCoda.get(telefono) || []).map((riga) => riga.titolo);
       this._inCoda.delete(telefono);
       if (!riepilogo && !inCoda.length) continue;
       const base = riepilogo ?? {
@@ -638,14 +772,59 @@ export class Notifiche {
         {
           ...base,
           quando: this.adesso(),
-          azioni: base.componi.dati.giornata
-            ? [{ id: "energia", parole: { it: "Apri Energia", en: "Open Energy" }, apre: true }]
-            : [],
+          azioni: base.componi.dati.giornata ? TASTI_DEL_RIEPILOGO.map((t) => ({ ...t })) : [],
           componi: { ...base.componi, dati: { ...base.componi.dati, inCoda } },
         },
         { soloA: telefono },
       );
     }
+  }
+
+  /* «🔋 Batterie da cambiare»: le batterie scariche dei dispositivi di casa,
+   * col nome e la carica. Non quelle dei telefoni e degli orologi, che sono
+   * di qualcuno, e nessun nome di persona. `null` se non ce n'e'. */
+  async _leBatterieDaCambiare() {
+    let elenco = [];
+    try {
+      elenco = batterieDiCasa(this.sentinella.cosaSistemare().batterie);
+    } catch (_errore) {
+      elenco = [];
+    }
+    if (!elenco.length) return null;
+    const chiCe = (await this._chiCe()) ?? [];
+    const nomi = [
+      ...this.sentinella
+        .persone()
+        .map(([, stato]) => String(stato?.attributes?.friendly_name || "")),
+      ...chiCe.map((uno) => String(uno?.nome || "")),
+    ].filter(Boolean);
+    const righe = senzaNomiDiPersone(
+      elenco
+        .slice()
+        .sort((a, b) => a.carica - b.carica)
+        .map((b) => `${b.nome} ${Math.round(b.carica)}%`),
+      nomi,
+    );
+    const mostrate = righe.slice(0, 5);
+    const altre = righe.length - mostrate.length;
+    const testo = (ancora) => [...mostrate, ...(altre ? [ancora] : [])].join(" · ");
+    return {
+      tipo: "riepilogo",
+      /* Passa anche col riepilogo spento, e in Base: non e' il riepilogo. */
+      sempre: true,
+      stileDellaVoce: "semplice",
+      urgenza: "normale",
+      chiave: "batterie-da-cambiare",
+      pausa: 20 * ORA,
+      parole: {
+        it: {
+          titolo: "🔋 Batterie da cambiare",
+          testo: testo(altre === 1 ? "+1 altra" : `+${altre} altre`),
+        },
+        en: { titolo: "🔋 Batteries to replace", testo: testo(`+${altre} more`) },
+      },
+      azioni: [],
+    };
   }
 
   /* Il cielo di domani dalle nove alle cinque, per il consiglio del
@@ -787,7 +966,8 @@ export class Notifiche {
   _lovuole(imp, evento, utente) {
     if (!imp.acceso) return false;
     if (evento.tipo === "prova") return true;
-    if (imp.eventi[evento.tipo] === false) return false;
+    /* Le batterie da cambiare passano anche col riepilogo spento. */
+    if (imp.eventi[evento.tipo] === false && !evento.sempre) return false;
     if (evento.tipo === "suggerimenti" && imp.assistente === "importanti" && !evento.importante)
       return false;
     if (evento.tipo === "arrivi" && !imp.persone.includes(evento.persona)) return false;
@@ -831,14 +1011,10 @@ export class Notifiche {
   _cePosto(telefono, evento) {
     const ora = this.adesso();
     const volte = (this._conti.get(telefono) || []).filter((una) => ora - una < ORA);
-    if (evento.tipo === "prova") {
-      const prove = (this._conti.get(`${telefono}|prova`) || []).filter(
-        (una) => ora - una < 10 * MINUTO,
-      );
-      if (prove.length >= PROVE_OGNI_DIECI_MINUTI) return false;
-      prove.push(ora);
-      this._conti.set(`${telefono}|prova`, prove);
-    }
+    /* Le prove non hanno limite e non contano fra le trenta dell'ora:
+     * «non deve esserci alcun limite». Le preme a mano chi le vuole, e
+     * provare le voci non deve zittire le notifiche vere. */
+    if (evento.tipo === "prova") return true;
     if (volte.length >= PER_TELEFONO_ALL_ORA) return false;
     volte.push(ora);
     this._conti.set(telefono, volte);
@@ -848,6 +1024,9 @@ export class Notifiche {
   /* Manda un evento a chi lo deve sapere. Torna quanti telefoni l'hanno
    * avuto. `soloA`: un telefono solo (il riepilogo, la prova). */
   async consegna(evento, { soloA = null } = {}) {
+    const premium = this.premium;
+    /* Il riepilogo della sera in Base non esiste. */
+    if (evento?.tipo === "riepilogo" && !evento.sempre && !premium) return 0;
     const elenco = this.dispositivi.elenco();
     const chiCe = await this._chiCe();
     const ora = this.adesso();
@@ -882,8 +1061,10 @@ export class Notifiche {
       if (!this._lovuole(imp, evento, utente)) continue;
       const su = suDi(imp, evento.tipo);
       /* «Nel riepilogo della sera»: non parte adesso, si mette da parte una
-       * riga. L'urgente parte sempre — una cosa urgente la sera non serve. */
+       * riga. L'urgente parte sempre — una cosa urgente la sera non serve.
+       * Senza Premium il riepilogo non c'e', e la notifica parte subito. */
       if (
+        premium &&
         su.come === "riepilogo" &&
         evento.tipo !== "riepilogo" &&
         evento.tipo !== "prova" &&
@@ -891,7 +1072,7 @@ export class Notifiche {
       ) {
         const { titolo } = this._parole(evento, imp.lingua, { stile: "semplice", su });
         const coda = this._inCoda.get(dispositivo.id) || [];
-        coda.push(String(titolo).slice(0, 90));
+        coda.push({ titolo: String(titolo).slice(0, 90), evento });
         this._inCoda.set(dispositivo.id, coda.slice(-6));
         continue;
       }
@@ -923,12 +1104,19 @@ export class Notifiche {
       const camera = this._vedeLaTelecamera(utente, amministra, evento.camera)
         ? evento.camera
         : null;
-      const stile = evento.stileDellaVoce || stileDi(imp, evento.tipo);
+      /* Senza Premium tutte semplici, qualunque cosa abbia scelto il telefono. */
+      const stile = premium ? evento.stileDellaVoce || stileDi(imp, evento.tipo) : "semplice";
       /* La foto solo a chi ha scelto le elaborate, e solo della telecamera che
        * gli si mostra. Va al centralino prima della busta, che porta il numero
        * che il centralino le ha dato. */
       let foto = null;
-      if (stile === "elaborata" && evento.conFoto && camera && this.postino?.mandaLaFoto) {
+      if (
+        premium &&
+        stile === "elaborata" &&
+        evento.conFoto &&
+        camera &&
+        this.postino?.mandaLaFoto
+      ) {
         const byte = await this._laFoto(evento, camera);
         if (byte) {
           try {
@@ -988,7 +1176,7 @@ export class Notifiche {
         this.registro.attenzione?.(`una notifica non si scrive: ${errore?.message || errore}`);
       }
     }
-    const parole = evento.parole?.[lingua] ?? evento.parole?.it ?? { titolo: "gdahome", testo: "" };
+    const parole = evento.parole?.[lingua] ?? evento.parole?.it ?? { titolo: "GdAHome", testo: "" };
     return { titolo: parole.titolo, testo: parole.testo, scheda: null };
   }
 
@@ -1037,6 +1225,11 @@ export class Notifiche {
       ...(camera ? { camera } : {}),
       ...(evento.chiamata ? { chiamata: true } : {}),
       ...(scheda ? { scheda: structuredClone(scheda) } : {}),
+      /* Da dove viene, sotto il testo: «Automazione di Home Assistant ·
+       * Lavatrice finita». */
+      ...(evento.fonte
+        ? { fonte: String(evento.fonte[lingua] ?? evento.fonte.it ?? "").slice(0, 120) }
+        : {}),
       ...(foto ? { foto } : {}),
       azioni: (evento.azioni || []).slice(0, 3).map((una) => ({
         id: una.id,
@@ -1074,6 +1267,7 @@ export class Notifiche {
       else if (una.piuTardi) azioni[una.id] = { piuTardi: true, chiave: evento.chiave };
       else if (Array.isArray(una.resta)) azioni[una.id] = { resta: una.resta.slice(0, 40) };
       else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
+      else if (typeof una.haAzione === "string") azioni[una.id] = { haAzione: una.haAzione };
     }
     if (!Object.keys(azioni).length) return;
     this._tasti.set(id, { telefono, azioni, scade: this.adesso() + VITA_DEI_TASTI });
@@ -1084,7 +1278,146 @@ export class Notifiche {
   /* ─── Quello che chiede il telefono ────────────────────────────────── */
 
   riconosce(tipo) {
-    return typeof tipo === "string" && tipo.startsWith("ponte/notifiche/");
+    return (
+      typeof tipo === "string" && (tipo.startsWith("ponte/notifiche/") || tipo === LA_GIORNATA)
+    );
+  }
+
+  /**
+   * La giornata della casa per la pagina «La tua giornata» dell'app: quello
+   * che il riepilogo della sera racconta, con tutti i numeri, e il resto
+   * della casa dal diario (`la-giornata-di-casa.js`): il clima delle stanze,
+   * il riscaldamento, il solare termico, l'auto, l'acqua, gli eventi, i
+   * conti, il mese, il confronto, le cose da sistemare e «In breve». Ogni
+   * sezione c'e' solo se in casa c'e' quello che serve, altrimenti `null`.
+   * Solo numeri, orari e nomi delle cose: niente entita', niente nomi di
+   * persone, niente dati di altri telefoni. `{giornata: null}` se oggi non
+   * si e' visto niente.
+   */
+  async giornataDettagliata() {
+    const s = this.sentinella;
+    const dati = s?._laGiornataDaRaccontare?.() || {};
+    const g = dati.giornata;
+    const valori = this._valori();
+    const statiComeOggetto = s.statiComeOggetto();
+    let casa = null;
+    try {
+      casa = this.diario.laGiornata({ stati: s.stati, valori });
+    } catch (errore) {
+      this.registro.attenzione?.(`il diario della casa: ${errore?.message || errore}`);
+    }
+    const sezioni = casa || {};
+    const qualcosa =
+      sezioni.clima ||
+      sezioni.riscaldamento ||
+      sezioni.solareTermico ||
+      sezioni.auto ||
+      sezioni.acqua ||
+      sezioni.eventi?.length;
+    if (!g && !qualcosa) return { giornata: null };
+    let domani = null;
+    try {
+      domani = await this._ilTempoDiDomani();
+    } catch (_errore) {
+      domani = null;
+    }
+    const passati = s.taccuino?.giorniPassati?.() || [];
+    /* Domani: la massima, e il consiglio per gli elettrodomestici che ci sono
+     * e per l'auto, se c'e'. */
+    if (domani) {
+      const elettrodomestici = s
+        ._prese()
+        .map((id) =>
+          genereDiElettrodomestico(`${id} ${s.stati.get(id)?.attributes?.friendly_name || ""}`),
+        );
+      domani = {
+        met: domani.met,
+        soleFino: domani.soleFino,
+        pioggia: domani.pioggia,
+        max: domani.max ?? null,
+        consiglio: consiglioPerDomani({
+          domani,
+          conSole: Boolean(dati.conSole),
+          elettrodomestici,
+          conAuto: Boolean(sezioni.auto?.length),
+        }),
+      };
+    }
+    /* Quello che il sole ceduto ha fatto guadagnare, col prezzo di cessione
+     * scritto nella plancia; e il prezzo di ogni fascia usata. */
+    const cessione = prezzoDiCessione(valori, statiComeOggetto);
+    const prezzi = g ? prezziDelleFasce(valori.cd_fasce_kwh, g.perFascia) : null;
+    let batteria = null;
+    try {
+      batteria = s.taccuino?.laBatteria?.(capacitaDellAccumulo(valori, statiComeOggetto)) ?? null;
+    } catch (_errore) {
+      batteria = null;
+    }
+    let sistemare = [];
+    try {
+      sistemare = daSistemare(s.cosaSistemare());
+    } catch (_errore) {
+      sistemare = [];
+    }
+    const risposta = {
+      giornata: g
+        ? {
+            d: g.d,
+            sole: g.sole,
+            casa: g.casa,
+            presi: g.presi,
+            ceduti: g.ceduti,
+            euroCeduti:
+              cessione && typeof g.ceduti === "number"
+                ? Math.round(g.ceduti * cessione * 100) / 100
+                : null,
+            usato: g.usato,
+            quotaInCasa: g.quotaInCasa,
+            euroRete: g.euroRete,
+            risparmio: g.risparmio,
+            picco: g.picco,
+            piccoIl: g.piccoIl,
+            p: g.p,
+            c: g.c,
+            perFascia: g.perFascia,
+          }
+        : null,
+      conSole: Boolean(dati.conSole),
+      /* Chi ha consumato di piu', dal piu' grosso. */
+      piu: Array.isArray(dati.piu) ? dati.piu : [],
+      ieri: dati.ieri ?? null,
+      media: dati.media ?? null,
+      record: dati.record ?? null,
+      /* La batteria di casa per la pagina (`laBatteria`); il riepilogo usa
+       * ancora il numero della carica di stasera. */
+      batteria,
+      fasce:
+        dati.fasce || prezzi ? { ...(dati.fasce || { nomi: {}, piuBassa: null }), prezzi } : null,
+      domani,
+      /* La settimana: i totali dei sette giorni prima. */
+      settimana: passati.slice(-7).map((x) => ({ d: x.d, pk: x.pk, casa: x.casa, eur: x.eur })),
+      clima: sezioni.clima ?? null,
+      riscaldamento: sezioni.riscaldamento ?? null,
+      solareTermico: sezioni.solareTermico ?? null,
+      auto: sezioni.auto ?? null,
+      acqua: sezioni.acqua ?? null,
+      eventi: sezioni.eventi ?? [],
+      conti: sezioni.conti ?? null,
+      mese: g ? ilMese(passati, g) : null,
+      confronto: g
+        ? ilConfronto({ passati, giornata: g, conSole: Boolean(dati.conSole), media: dati.media })
+        : null,
+      daSistemare: sistemare,
+    };
+    risposta.inBreve = inBreve(risposta);
+    /* Ultima cosa prima di partire: nessun nome di chi abita, in nessun
+     * testo. Ne' delle persone di Home Assistant ne' degli utenti. */
+    const chiCe = (await this._chiCe()) ?? [];
+    const nomi = [
+      ...s.persone().map(([, stato]) => String(stato?.attributes?.friendly_name || "")),
+      ...chiCe.map((uno) => String(uno?.nome || "")),
+    ].filter(Boolean);
+    return senzaNomiDiPersone(risposta, nomi);
   }
 
   /* `dispositivo`: il telefono di questo filo, gia' riconosciuto. `amministra`:
@@ -1102,6 +1435,22 @@ export class Notifiche {
     if (!telefono) return no("unauthorized", "prima bisogna entrare");
     const utente = dispositivo.utente || "";
     try {
+      /* La pagina «La tua giornata»: solo chi ha un utente sul filo. */
+      /* Le notifiche di Home Assistant anche qui: solo chi ha un utente. */
+      if (this.daHomeAssistant.riconosce(detto.type))
+        return await this.daHomeAssistant.rispondi(detto, {
+          telefono,
+          utente,
+          amministra,
+          si,
+          no,
+        });
+      if (detto.type === LA_GIORNATA) {
+        if (!utente) return no("unauthorized", "la giornata della casa si vede da un utente");
+        if (!this.premium)
+          return no("premium-richiesto", "«La tua giornata» e' di GdAHome Premium");
+        return si(await this.giornataDettagliata());
+      }
       switch (detto.type) {
         case "ponte/notifiche/stato":
           return si(await this._stato(telefono, utente, amministra));
@@ -1163,6 +1512,9 @@ export class Notifiche {
           const esempio = !regola && tipo ? esempioDi(tipo, this.adesso()) : null;
           if (tipo && !regola && !esempio)
             return no("invalid_format", "di questa notifica non c'e' un esempio");
+          /* Il riepilogo della sera, in Base, non c'e' nemmeno di prova. */
+          if (tipo === "riepilogo" && !regola && !this.premium)
+            return no("premium-richiesto", "il riepilogo della sera e' di GdAHome Premium");
           const prova = regola ? this._provaDi(regola) : esempio || this._provaQualunque();
           if (esempio) {
             /* Lo stile e' quello che la voce avra' davvero. */
@@ -1263,6 +1615,9 @@ export class Notifiche {
         })),
       io: utente,
       amministra: amministra === true,
+      /* gdahome Premium: senza, l'app mette il lucchetto su «Elaborate» e sul
+       * «Riepilogo della sera». */
+      premium: this.premium,
     };
   }
 
@@ -1330,6 +1685,18 @@ export class Notifiche {
     }
     if (!utente || (this.utenti && !(await this.utenti.eVivo(utente).catch(() => false))))
       return no("unauthorized", "l'utente di questo telefono non c'e' piu'");
+    /* Un tasto di una notifica di Home Assistant: torna a Home Assistant come
+     * lo manda la sua app, `mobile_app_notification_action` con l'azione, e
+     * le automazioni che lo aspettano vanno avanti. Non comanda niente da se'. */
+    if (azione.haAzione) {
+      await this.casa.chiedi({
+        type: "fire_event",
+        event_type: "mobile_app_notification_action",
+        event_data: { action: azione.haAzione },
+      });
+      this.registro.info(`dal tasto di una notifica di Home Assistant`);
+      return si({ fatto: true });
+    }
     const { dominio, servizio, entita, dati } = azione.servizio;
     if (!SERVIZI_DEI_TASTI.has(`${dominio}.${servizio}`))
       return no("unauthorized", "questo tasto no");
@@ -1380,10 +1747,15 @@ export function cieloDiDomani(previsione, adesso) {
   domani.setDate(domani.getDate() + 1);
   const giorno = domani.toDateString();
   const perOra = new Map();
+  /* La temperatura di ogni ora di domani, per la massima. */
+  const gradi = [];
   for (const una of Array.isArray(previsione) ? previsione : []) {
     const quando = new Date(Date.parse(una?.datetime || ""));
     if (Number.isNaN(quando.getTime()) || quando.toDateString() !== giorno) continue;
     perOra.set(quando.getHours(), CIELI[una?.condition] || "nuvole");
+    const t = Number(una?.temperature);
+    if (una?.temperature !== null && una?.temperature !== undefined && Number.isFinite(t))
+      gradi.push(t);
   }
   if (!perOra.size) return null;
   const met = [9, 11, 13, 15, 17].filter((h) => perOra.has(h)).map((h) => [h, perOra.get(h)]);
@@ -1396,7 +1768,20 @@ export function cieloDiDomani(previsione, adesso) {
   }
   if (soleFino && Number(soleFino.slice(0, 2)) < 12) soleFino = null;
   const pioggia = [...perOra.entries()].some(([h, c]) => h >= 8 && h <= 20 && c === "pioggia");
-  return { met, soleFino, pioggia };
+  /* Da che ora c'e' il sole, per «Auto: ricarica dalle 10». */
+  let soleDa = null;
+  for (let h = 8; h <= 17 && soleFino; h += 1)
+    if (perOra.get(h) === "sole" || perOra.get(h) === "poco") {
+      soleDa = h;
+      break;
+    }
+  return {
+    met,
+    soleFino,
+    pioggia,
+    max: gradi.length ? Math.round(Math.max(...gradi) * 10) / 10 : null,
+    soleDa,
+  };
 }
 
 /* ─── Gli esempi ─────────────────────────────────────────────────────────── */
@@ -1454,46 +1839,50 @@ export function esempioDi(tipo, adesso = Date.now()) {
     case "riepilogo": {
       const p = [0, 0, 0, 0, 0, 0, 1, 5, 14, 25, 35, 43, 48, 49, 46, 39, 29, 17, 6, 1, 0, 0, 0, 0];
       const c = [4, 3, 3, 3, 3, 3, 5, 9, 7, 6, 19, 21, 8, 7, 6, 7, 12, 9, 14, 22, 16, 10, 7, 5];
-      return conParole(base, COMPOSITORI.riepilogo, {
-        giornata: {
-          d: new Date(adesso).toISOString().slice(0, 10),
-          sole: 18.4,
-          casa: 16.7,
-          presi: 3.1,
-          ceduti: 4.8,
-          usato: 13.6,
-          quotaInCasa: 0.74,
-          euroRete: 0.52,
-          risparmio: 2.41,
-          picco: 4.9,
-          piccoIl: "13:10",
-          p,
-          c,
-          perFascia: {},
-          cicli: [],
+      return conParole(
+        { ...base, azioni: TASTI_DEL_RIEPILOGO.map((t) => ({ ...t })) },
+        COMPOSITORI.riepilogo,
+        {
+          giornata: {
+            d: new Date(adesso).toISOString().slice(0, 10),
+            sole: 18.4,
+            casa: 16.7,
+            presi: 3.1,
+            ceduti: 4.8,
+            usato: 13.6,
+            quotaInCasa: 0.74,
+            euroRete: 0.52,
+            risparmio: 2.41,
+            picco: 4.9,
+            piccoIl: "13:10",
+            p,
+            c,
+            perFascia: {},
+            cicli: [],
+          },
+          conSole: true,
+          ieri: 16.4,
+          media: 15.1,
+          record: "mese",
+          colSole: ["Lavatrice", "Lavastoviglie"],
+          piuAcceso: null,
+          batteria: 62,
+          domani: {
+            met: [
+              [9, "sole"],
+              [11, "sole"],
+              [13, "sole"],
+              [15, "poco"],
+              [17, "nuvole"],
+            ],
+            soleFino: "15:00",
+            pioggia: false,
+          },
+          fasce: { nomi: {}, piuBassa: null },
+          daSistemare: { batterie: 1, spenti: 0, aggiornamenti: 1 },
+          inCoda: [],
         },
-        conSole: true,
-        ieri: 16.4,
-        media: 15.1,
-        record: "mese",
-        colSole: ["Lavatrice", "Lavastoviglie"],
-        piuAcceso: null,
-        batteria: 62,
-        domani: {
-          met: [
-            [9, "sole"],
-            [11, "sole"],
-            [13, "sole"],
-            [15, "poco"],
-            [17, "nuvole"],
-          ],
-          soleFino: "15:00",
-          pioggia: false,
-        },
-        fasce: { nomi: {}, piuBassa: null },
-        daSistemare: { batterie: 1, spenti: 0, aggiornamenti: 1 },
-        inCoda: [],
-      });
+      );
     }
     case "blackout":
       return conParole(base, COMPOSITORI.blackout, {

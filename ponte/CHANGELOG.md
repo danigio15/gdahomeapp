@@ -3,12 +3,43 @@
 Questo è quello che Home Assistant fa vedere quando dice «Aggiornamento
 disponibile»: prima di premere si legge cosa arriva.
 
-**Dalla 1.5.0 il numero è di gdahome.** Fino alla 1.4.32.16 era quello della
+**Dalla 1.5.0 il numero è di GdAHome.** Fino alla 1.4.32.16 era quello della
 plancia che l'add-on ha dentro, e il quarto numero — `1.4.32.2` — erano le
-correzioni dell'add-on fra due plance. Ma gdahome è più della plancia che
+correzioni dell'add-on fra due plance. Ma GdAHome è più della plancia che
 serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
+
+## 1.16.0
+
+- **La tua giornata (Premium):** il riepilogo della sera ha la scheda nuova
+  col grafico del sole e «Apri la giornata», che apre nell'app il report
+  completo: in breve, energia ora per ora, chi ha consumato di più, soldi e
+  fasce, batteria di casa, clima per stanza, riscaldamento, solare termico,
+  auto elettrica con ricarica e scarica, acqua e gas, la giornata in casa,
+  confronti e domani. Ogni parte c'è solo se in casa c'è quello che serve.
+- **Notifiche e Premium:** con GdAHome Base arrivano le notifiche semplici;
+  elaborate, foto delle telecamere e riepilogo della sera sono Premium. Gli
+  avvisi di sicurezza arrivano sempre, e in Base una volta al giorno
+  «🔋 Batterie da cambiare».
+- **Automazioni compatte:** una riga ciascuna, raggruppate per le categorie
+  di Home Assistant (▾/▸), oppure per tipo o per stanza; i riassunti in
+  parole («imposta Termostato soggiorno a 21°»), «＋ Nuova» nella barra.
+- **Luminosità del pannello a muro (Premium):** vicino, a riposo e di notte;
+  giorno e notte dal sole, dalla luce della stanza o dall'orario; si sveglia
+  col sensore di presenza di casa o il sensore di prossimità del tablet.
+- **Batteria Huawei LUNA2000:** riconosciuta da sola, e la scheda «Batteria di
+  accumulo» dice che è facoltativa.
+- **Notifiche da Home Assistant:** GdAHome trova le automazioni che mandano
+  notifiche al telefono e, se le accendi, le manda uguali anche nell'app
+  (Notifiche → «Da Home Assistant»). Partono tutte spente. Con Premium anche
+  foto, tasti e invio agli altri telefoni.
+- **Prove delle notifiche senza limite**, e non tolgono posto a quelle vere.
+- **Menu dell'app:** Automazioni fra le Avanzate, e il bollino PREMIUM su
+  tutte le voci Premium.
+- **Il nome si scrive GdAHome:** così lo leggi nell'app, nella plancia, nelle
+  notifiche e in Home Assistant. Non cambia niente da fare: la casa, gli
+  abbinamenti e le impostazioni restano quelli di prima.
 
 ## 1.15.0
 

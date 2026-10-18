@@ -99,8 +99,8 @@ void main() {
     final collegamento = await fuoriCasa(tester, addonVecchio: false);
     expect(collegamento.fuoriCasaSenzaPremium, isTrue);
     await mostra(tester, collegamento);
-    expect(find.text('Scopri gdahome Premium'), findsOneWidget);
-    expect(find.text('Aggiorna l\'add-on gdahome'), findsNothing);
+    expect(find.text('Scopri GdAHome Premium'), findsOneWidget);
+    expect(find.text('Aggiorna l\'add-on GdAHome'), findsNothing);
   });
 
   testWidgets('con l\'add-on vecchio, fuori casa si chiede di aggiornarlo', (
@@ -113,7 +113,7 @@ void main() {
       ComeStaLaLicenza.casaSenzaLicenze,
     );
     await mostra(tester, collegamento);
-    expect(find.text('Aggiorna l\'add-on gdahome'), findsOneWidget);
+    expect(find.text('Aggiorna l\'add-on GdAHome'), findsOneWidget);
     expect(find.textContaining('è una versione vecchia'), findsOneWidget);
   });
 
@@ -150,7 +150,7 @@ void main() {
       addTearDown(() => tester.runAsync(collegamento.chiudi));
       expect(collegamento.fuoriCasaSenzaPremium, isTrue);
       await mostra(tester, collegamento);
-      expect(find.text('Scopri gdahome Premium'), findsOneWidget);
+      expect(find.text('Scopri GdAHome Premium'), findsOneWidget);
     },
   );
 }

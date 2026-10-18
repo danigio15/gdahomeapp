@@ -122,7 +122,7 @@ test("la console e le sue vie sono di chi amministra", async () => {
     assert.match(testo, /Solo per gli amministratori/);
     assert.ok(!testo.includes("console.js"), "la console vera non arriva");
     /* E a chi amministra, la console. */
-    assert.match(await (await c.chiedi("/")).text(), /<h1>gdahome<\/h1>/);
+    assert.match(await (await c.chiedi("/")).text(), /<h1>GdAHome<\/h1>/);
   } finally {
     await c.spegni();
   }

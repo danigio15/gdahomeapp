@@ -15,8 +15,16 @@
  * entità del pacco.
  *
  * Alla prima apertura la scheda si riempie da sola dei pacchi che il
- * rilevamento riconosce — JK, JBD, Daly, raggruppati per prefisso — e da lì
- * in poi sono righe come le altre: si rinominano, si correggono, si tolgono.
+ * rilevamento riconosce — JK, JBD, Daly, i moduli di una Huawei LUNA2000,
+ * raggruppati per prefisso — e da lì in poi sono righe come le altre: si
+ * rinominano, si correggono, si tolgono.
+ *
+ * «Sbaglio qualcosa nella configurazione? Che menu devo selezionare per il
+ * BMS?» (#264). Chi ha la batteria dell'inverter apriva questa scheda — è
+ * l'unica che nel Config si chiama «batteria» — e ci trovava un BMS da
+ * scegliere fra tre che non aveva. La sua batteria va in Energia, nei due
+ * riquadri della batteria di «Flussi ed entità», e questa scheda è
+ * facoltativa: adesso lo dice in testa, prima di chiedere qualunque cosa.
  */
 import {
   CAMPI_DEL_PACCO,
@@ -198,6 +206,14 @@ const scheda = costruisciSchedaDichiarata({
   campiInPiu: campiDellaRiga,
   bozzaInPiu: conICampiDellaRiga,
 
+  inTesta: () =>
+    `<div class="dm-dich-piu" data-dm-accu-inverter><small>🔌 ${esc(
+      t(
+        "Facoltativa. Una batteria che parla attraverso l'inverter — come la Huawei LUNA2000 con l'integrazione Huawei Solar — non ha un BMS da scegliere: stato di carica, potenza ed energia si mettono in Energia, linguetta «Flussi ed entità», nei riquadri «Batteria · carica» e «Batteria · scarica». Questa scheda serve solo a chi vuole vedere i pacchi, o i moduli, uno per uno.",
+        "Optional. A battery that talks through the inverter — like the Huawei LUNA2000 with the Huawei Solar integration — has no BMS to choose: state of charge, power and energy go in Energy, “Flows & entities” tab, in the “Battery · charge” and “Battery · discharge” boxes. This tab is only for seeing the packs, or the modules, one by one.",
+      ),
+    )}</small></div>`,
+
   parole: {
     /* «Batteria di accumulo», e non «Batterie» come la linguetta in Energia:
      * nel Config c'era già una scheda «Batterie», quella delle pile dei
@@ -235,8 +251,8 @@ const scheda = costruisciSchedaDichiarata({
       ),
     presi: (quanti) => t(`${quanti} pacchi aggiunti`, `${quanti} packs added`),
     notaImporta: t(
-      "Riconosce i BMS JK, JBD e Daly dai nomi delle loro entità e li raggruppa per prefisso. Li mette qui come righe, una volta sola: da lì in poi sono tuoi.",
-      "It recognises JK, JBD and Daly BMS from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.",
+      "Riconosce i BMS JK, JBD e Daly e le batterie Huawei LUNA2000 dai nomi delle loro entità e li raggruppa per prefisso. Li mette qui come righe, una volta sola: da lì in poi sono tuoi.",
+      "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours.",
     ),
   },
 

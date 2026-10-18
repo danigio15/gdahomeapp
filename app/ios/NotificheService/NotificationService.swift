@@ -42,12 +42,32 @@ final class NotificationService: UNNotificationServiceExtension {
     }
     nuova.title = aperta.titolo
     nuova.body = aperta.testo
+    /* Le notifiche di Home Assistant dicono da dove vengono, sotto il testo:
+     * «Automazione di Home Assistant · Lavatrice finita». */
+    if let fonte = aperta.fonte, !fonte.isEmpty { nuova.body = "\(aperta.testo)\n\(fonte)" }
     if let casa = aperta.casa { nuova.threadIdentifier = "gdahome_\(casa)" }
     /* I tasti: le stesse categorie che l'app dichiara all'avvio
      * (`_categorieDellIphone` in `lib/notifiche/postino.dart`). */
-    if let categoria = Busta.categoria(per: aperta.tasti) { nuova.categoryIdentifier = categoria }
+    if let categoria = Busta.categoria(per: aperta.tasti) {
+      nuova.categoryIdentifier = categoria
+    } else if !aperta.etichette.isEmpty {
+      /* I tasti di un'automazione di Home Assistant li sceglie chi l'ha
+       * scritta: la categoria si fa adesso, con quei nomi, prima di
+       * consegnare. Se il tempo finisce prima, il testo vero c'e' gia'. */
+      conIlTesto = nuova.copy() as? UNNotificationContent
+      TastiDiHomeAssistant.registra(aperta.etichette) { [weak self] categoria in
+        nuova.categoryIdentifier = categoria
+        self?.prosegui(nuova, aperta: aperta)
+      }
+      return
+    }
+    prosegui(nuova, aperta: aperta)
+  }
+
+  /// La scheda e la foto, se ci sono; poi si consegna.
+  private func prosegui(_ nuova: UNMutableNotificationContent, aperta: Busta.Aperta) {
     guard aperta.scheda != nil || aperta.foto != nil else {
-      contentHandler(nuova)
+      consegnaUnaVolta(nuova)
       return
     }
     conIlTesto = nuova.copy() as? UNNotificationContent
@@ -92,6 +112,35 @@ final class NotificationService: UNNotificationServiceExtension {
   }
 }
 
+/// I tasti di una notifica di Home Assistant: una categoria per ogni
+/// combinazione di nomi, fatta quando arriva. Se ne tengono al piu' venti:
+/// l'app, quando si apre, dichiara di nuovo le sue (e queste si rifanno alla
+/// notifica dopo).
+enum TastiDiHomeAssistant {
+  static let prefisso = "gdahome_ha_"
+
+  static func registra(_ tasti: [(String, String)], fatto: @escaping (String) -> Void) {
+    let firma = tasti.map { "\($0.0)=\($0.1)" }.joined(separator: "|")
+    let impronta = SHA256.hash(data: Data(firma.utf8)).prefix(8)
+      .map { String(format: "%02x", $0) }.joined()
+    let nome = prefisso + impronta
+    let centro = UNUserNotificationCenter.current()
+    centro.getNotificationCategories { esistenti in
+      if !esistenti.contains(where: { $0.identifier == nome }) {
+        let azioni = tasti.map {
+          UNNotificationAction(identifier: $0.0, title: $0.1, options: [.foreground])
+        }
+        let nuova = UNNotificationCategory(
+          identifier: nome, actions: azioni, intentIdentifiers: [], options: [])
+        let fisse = esistenti.filter { !$0.identifier.hasPrefix(prefisso) }
+        let dinamiche = esistenti.filter { $0.identifier.hasPrefix(prefisso) }.prefix(19)
+        centro.setNotificationCategories(fisse.union(dinamiche).union([nuova]))
+      }
+      fatto(nome)
+    }
+  }
+}
+
 /// Un'immagine come allegato: un file nella cartella dei provvisori, che il
 /// sistema si prende.
 enum Allegato {
@@ -119,6 +168,11 @@ enum Busta {
     let testo: String
     let casa: String?
     let tasti: [String]
+    /// I tasti col loro nome, per quelli che nessuna categoria fissa conosce
+    /// (le notifiche di Home Assistant).
+    var etichette: [(String, String)] = []
+    /// «Automazione di Home Assistant · …», sotto il testo.
+    var fonte: String? = nil
     /// Le elaborate: i numeri da disegnare, e la foto da prendere.
     var scheda: [String: Any]? = nil
     var foto: String? = nil
@@ -140,6 +194,7 @@ enum Busta {
     "gdahome_scattato": ["spegni-sirena", "disinserisci", "guarda"],
     "gdahome_disinserisci": ["disinserisci", "guarda"],
     "gdahome_guarda_inserisci": ["guarda", "inserisci"],
+    "gdahome_giornata": ["giornata", "ok"],
   ]
 
   static func categoria(per tasti: [String]) -> String? {
@@ -150,6 +205,9 @@ enum Busta {
     if quali.contains("spegni-sirena") { return "gdahome_scattato" }
     if quali.contains("disinserisci") { return "gdahome_disinserisci" }
     if quali.contains("guarda") { return "gdahome_guarda" }
+    /* Il riepilogo della sera: «Apri la giornata» e «OK» (un ponte di prima
+     * mandava solo «energia»). */
+    if quali.contains("giornata") || quali.contains("energia") { return "gdahome_giornata" }
     return nil
   }
 
@@ -181,7 +239,8 @@ enum Busta {
         let titolo = dentro["titolo"] as? String, !titolo.isEmpty
       else { return nil }
       let testo = (dentro["testo"] as? String) ?? ""
-      let tasti = ((dentro["azioni"] as? [[String: Any]]) ?? []).compactMap { $0["id"] as? String }
+      let azioni = (dentro["azioni"] as? [[String: Any]]) ?? []
+      let tasti = azioni.compactMap { $0["id"] as? String }
       var aperta = Aperta(
         titolo: titolo,
         testo: testo.isEmpty ? (voce["n"] ?? "") : testo,
@@ -195,6 +254,13 @@ enum Busta {
         foto.count == 32, foto.allSatisfy({ $0.isHexDigit })
       {
         aperta.foto = foto
+      }
+      if dentro["tipo"] as? String == "ha_notify" {
+        aperta.etichette = azioni.compactMap { una in
+          guard let id = una["id"] as? String, let nome = una["etichetta"] as? String else { return nil }
+          return (id, nome)
+        }
+        aperta.fonte = dentro["fonte"] as? String
       }
       aperta.telefono = telefono
       aperta.chiave = chiave

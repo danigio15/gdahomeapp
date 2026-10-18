@@ -1702,7 +1702,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
     /* Senza chiedere niente si ha la **prima**: e' la risposta di sempre, e
      * un'app di ieri non si accorge che da oggi ce ne possono essere altre. */
     const sola = await con.rispondi({ id: 1, type: "ponte/plancia" });
-    assert.equal(sola.result.titolo, "gdahome");
+    assert.equal(sola.result.titolo, "GdAHome");
     assert.equal(sola.result.istanza, "gdahome");
     assert.equal(sola.result.profilo, "primary");
     assert.equal(sola.result.primario, true);
@@ -1725,7 +1725,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
     assert.equal(aggiunta.result.quale.profilo, "casa-al-mare");
     assert.deepEqual(
       aggiunta.result.plance.map((una) => una.titolo),
-      ["gdahome", "Casa al mare"],
+      ["GdAHome", "Casa al mare"],
     );
 
     /* Chiedendo quella, si apre quella: stessi file, altro cassetto, altra

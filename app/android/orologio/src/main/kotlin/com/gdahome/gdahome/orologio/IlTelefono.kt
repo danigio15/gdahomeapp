@@ -96,7 +96,7 @@ class IlTelefono(context: Context, private val vetrina: Boolean = false) {
             .addOnSuccessListener { info ->
                 val nodo = info.nodes.firstOrNull { it.isNearby } ?: info.nodes.firstOrNull()
                 if (nodo == null) {
-                    if (!zitto) finito(false, "Il telefono non risponde. Tienilo vicino, con gdahome installata.")
+                    if (!zitto) finito(false, "Il telefono non risponde. Tienilo vicino, con GdAHome installata.")
                     return@addOnSuccessListener
                 }
                 Wearable.getMessageClient(contesto)

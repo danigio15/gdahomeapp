@@ -571,7 +571,7 @@ export class PlanceInCasa {
     }
     if (risorsa === "tolta") {
       this.registro.info(
-        "la risorsa di Lovelace di gdahome non serve piu' a nessuno e l'ho tolta: " +
+        "la risorsa di Lovelace di GdAHome non serve piu' a nessuno e l'ho tolta: " +
           "la plancia si apre con una tessera di Home Assistant",
       );
     }
@@ -663,13 +663,13 @@ export class PlanceInCasa {
           service: "create",
           service_data: {
             notification_id: AVVISO,
-            title: `gdahome: s${IL_RIAVVIO.titolo.slice(1)}`,
+            title: `GdAHome: s${IL_RIAVVIO.titolo.slice(1)}`,
             message:
               `**${IL_RIAVVIO.passi}**\n\n` +
               "La plancia \u00e8 pronta: dopo il riavvio compare da sola nelle Plance, " +
               "su tutti i dispositivi, e questo avviso sparisce. Serve perch\u00e9 la " +
               "cartella `www` della configurazione non c\u2019era quando Home Assistant " +
-              "\u00e8 partito: l\u2019ha creata gdahome adesso.\n\n" +
+              "\u00e8 partito: l\u2019ha creata GdAHome adesso.\n\n" +
               `_${IL_RIAVVIO.title}: ${IL_RIAVVIO.steps}. The dashboard then shows up ` +
               "by itself, and this notice goes away._",
           },
@@ -743,11 +743,11 @@ export class PlanceInCasa {
         service: "create",
         service_data: {
           notification_id: AVVISO_DI_PRIMA,
-          title: "gdahome: una plancia di prima e' rimasta nella barra laterale",
+          title: "GdAHome: una plancia di prima e' rimasta nella barra laterale",
           message:
             `Nella barra laterale c'e' ancora ${nomi}: e' dell'**integrazione** ` +
             "DashboardModern, non di questo add-on. Adesso la plancia la porta " +
-            "gdahome, e la sua voce e' un'altra.\n\nSe l'integrazione non c'e' " +
+            "GdAHome, e la sua voce e' un'altra.\n\nSe l'integrazione non c'e' " +
             "piu', quella voce si apre con **«Errore di configurazione»** e non " +
             "si aggiusta riavviando: si leva da **Impostazioni → Dashboard**, " +
             "coi tre puntini accanto al suo nome.\n\nQuesto add-on non la tocca: " +
@@ -830,10 +830,10 @@ export class PlanceInCasa {
     try {
       writeFileSync(
         join(dirname(this.doveVaLApertura), "LEGGIMI.txt"),
-        "Questa cartella la tiene l'add-on «gdahome».\n" +
+        "Questa cartella la tiene l'add-on «GdAHome».\n" +
           "Dentro c'e' la pagina che apre la plancia nelle Plance di Home\n" +
           "Assistant (apri.html), e la cartina per chi usa le tessere di\n" +
-          "gdahome nelle sue dashboard. Si rifa' da se' a ogni avvio dell'add-on.\n" +
+          "GdAHome nelle sue dashboard. Si rifa' da se' a ogni avvio dell'add-on.\n" +
           "Cancellarla non rompe niente: torna al prossimo avvio.\n",
         "utf8",
       );
@@ -1174,7 +1174,7 @@ export class PlanceInCasa {
                 "",
                 "The dashboard is ready. After the restart it shows up here by itself within a minute, on every device. Whoever runs the home can restart it, from the phone app too.",
                 "",
-                "<sub>Il file che apre questa pagina sta nella cartella `www`, che Home Assistant apre solo quando parte: in questa casa l\u2019ha creata gdahome adesso. \u00b7 The file that opens this page lives in the `www` folder, which Home Assistant only opens at startup: gdahome just created it.</sub>",
+                "<sub>Il file che apre questa pagina sta nella cartella `www`, che Home Assistant apre solo quando parte: in questa casa l\u2019ha creata GdAHome adesso. \u00b7 The file that opens this page lives in the `www` folder, which Home Assistant only opens at startup: GdAHome just created it.</sub>",
               ].join("\n"),
             },
           ],
